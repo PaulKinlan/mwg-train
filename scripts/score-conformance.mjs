@@ -48,15 +48,19 @@ function resolveTarget(family) {
 }
 
 async function capture({ chrome, projectDir, port, runDir }) {
-  const server = await startServer(projectDir, { port, dbPath: join(runDir, `${port}.sqlite`) });
-  const page = await chrome.newPage({ viewport: TARGET_VIEWPORT });
+  let server = null;
+  let page = null;
   try {
+    server = await startServer(projectDir, { port, dbPath: join(runDir, `${port}.sqlite`) });
+    page = await chrome.newPage({ viewport: TARGET_VIEWPORT });
     await page.goto(`http://127.0.0.1:${port}/`);
     await page.waitForSettled();
     return await page.evaluate(SIGNATURE_SCRIPT);
   } finally {
-    await page.close();
-    await stopServer(server);
+    // Both closes are guarded: if `newPage` rejected there is no page, and a throwing close must not
+    // skip the server stop - that would leave a project listening on the port after the run.
+    if (page) await page.close().catch(() => {});
+    if (server) await stopServer(server);
   }
 }
 
@@ -91,6 +95,7 @@ async function main() {
     await chrome.close();
     rmSync(corpusRoot, { recursive: true, force: true });
     rmSync(resolve('.conformance-uplifted', runId), { recursive: true, force: true });
+    rmSync(runDir, { recursive: true, force: true });
   }
 
   const meanDelta = results.reduce((sum, row) => sum + row.delta, 0) / results.length;

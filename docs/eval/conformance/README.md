@@ -23,12 +23,15 @@ worse.
 
 `src/eval/conformance.mjs` scores three cheap, explainable things from a browser signature:
 
-- **structural** (weight 0.40) - the element tree: 0.6 × longest-common-subsequence order + 0.4 ×
-  multiset composition. A framework may wrap a form differently; the same kinds of element in the
-  same order still score well.
-- **geometry** (weight 0.35) - mean IoU of normalised bounding boxes, unmatched boxes counting as
-  zero. This is the honest version of "pixel similarity": no image decoder, and no punishing a
-  framework for anti-aliasing.
+- **structural** (weight 0.40) - the element tags in document order: 0.6 × longest-common-subsequence
+  order + 0.4 × multiset composition. Depth is deliberately not in the token: one wrapper
+  `<div id="root">` - which every React and Vue page has - would otherwise shift every child a level
+  and make an identical page score 0.
+- **geometry** (weight 0.35) - boxes matched within each tag class by nearest position, scored half on
+  centre distance and half on size agreement, with unmatched boxes counting as zero. IoU was tried and
+  rejected: it is translation-sensitive, so a page that renders the same form 80px lower because it
+  has a header scored 0 on every field. This is the honest version of "pixel similarity": no image
+  decoder, and no punishing a framework for anti-aliasing.
 - **controls** (weight 0.25) - the same form controls, and how many of the candidate's carry a label.
 
 The signature is captured in the browser by `SIGNATURE_SCRIPT`; the metrics are pure functions of two
@@ -59,12 +62,13 @@ the target, and writes `docs/eval/conformance/<family>.{json,md}`.
 
 ## Result
 
-`docs/eval/conformance/booking.md` is the first family scored. Read it as a finding, not a
-sales figure: the deterministic accessibility uplift does not move a page *towards* its target design,
-and on the booking family it slightly lowers the structural score (2 extra controls and 1 extra label
-change the element tree). That is exactly what the axis is for - it makes visible that a11y uplift and
-visual conformance are different objectives, so an arm cannot claim "conforms to the design" on the
-strength of a rule bundle.
+`docs/eval/conformance/booking.md` is the first family scored. The booking family means: raw 0.652,
+arm 0.659, mean delta **+0.004** (preact -0.001, the rest +0.001 to +0.006). Read that as a finding,
+not a sales figure: the deterministic accessibility uplift is roughly neutral for *visual*
+conformance, within noise. That is exactly what the axis is for - it makes visible that a11y uplift
+and visual conformance are different objectives, so an arm cannot claim "conforms to the design" on
+the strength of a rule bundle. The raw absolute of ~0.65 is expected: a bare pilot project has a
+plain stacked form, not the target's header, nav and aside.
 
 ## Adding a family
 

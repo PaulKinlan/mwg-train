@@ -9,8 +9,9 @@
  *   - structural  the element tree: the same kinds of things in the same order (a `form` where a
  *                 `form` belongs), so a page that renders the right components scores well even if a
  *                 framework emits a different wrapper.
- *   - geometry    the layout: normalised bounding boxes, so a card grid that is in the right place
- *                 scores well even if the markup differs.
+ *   - geometry    the layout: normalised bounding boxes matched within each tag class by nearest
+ *                 position, so a page that moved down because header markup sits above it, or that
+ *                 added one field, does not collapse every later element to zero.
  *   - controls    the things a person operates: the same inputs, with labels.
  *
  * All three read a *signature* captured in the browser (`SIGNATURE_SCRIPT`), which is plain data. The
@@ -41,17 +42,16 @@ export const SIGNATURE_SCRIPT = `return (() => {
     }
   };
   walk(document.body, 0);
-  const boxes = {};
-  const seen = {};
+  const boxes = [];
   const boxTags = ['header', 'nav', 'main', 'aside', 'footer', 'form', 'fieldset', 'label', 'input', 'select', 'textarea', 'button', 'h1', 'h2', 'h3', 'ul', 'li', 'article', 'section', 'table'];
   for (const element of document.querySelectorAll(boxTags.join(','))) {
     const tag = element.tagName.toLowerCase();
-    seen[tag] = (seen[tag] ?? 0) + 1;
     const rect = element.getBoundingClientRect();
-    boxes[tag + ':' + (seen[tag] - 1)] = {
+    boxes.push({
+      tag,
       x: +(rect.x / innerWidth).toFixed(4), y: +(rect.y / innerHeight).toFixed(4),
       w: +(rect.width / innerWidth).toFixed(4), h: +(rect.height / innerHeight).toFixed(4),
-    };
+    });
   }
   const labels = [];
   for (const label of document.querySelectorAll('label[for]')) labels.push({ for: label.getAttribute('for'), text: (label.textContent ?? '').trim().slice(0, 80) });
@@ -70,8 +70,16 @@ export const SIGNATURE_SCRIPT = `return (() => {
 
 const round = (value) => Math.round(value * 10000) / 10000;
 
+/**
+ * Tags in document order, without depth.
+ *
+ * Depth was in the token and it made the metric useless: one wrapper `<div id="root">` - which
+ * every React and Vue page has - shifted every child down a level, `form@1` stopped matching
+ * `form@2`, and an otherwise identical page scored 0. The contract is "the same kinds of thing in the
+ * same order"; that is what this tokenises. A wrapper costs one extra `div` token, not a failure.
+ */
 function tokens(nodes) {
-  return (nodes ?? []).map((node) => `${node.tag}@${node.depth}`);
+  return (nodes ?? []).map((node) => node.tag);
 }
 
 /** Length of the longest common subsequence - order-sensitive, so a rearranged page scores lower. */
@@ -113,27 +121,63 @@ export function structuralSimilarity(target, candidate) {
   return round(0.6 * order + 0.4 * multisetJaccard(a, b));
 }
 
-function iou(box, other) {
-  const left = Math.max(box.x, other.x);
-  const top = Math.max(box.y, other.y);
-  const right = Math.min(box.x + box.w, other.x + other.w);
-  const bottom = Math.min(box.y + box.h, other.y + other.h);
-  const overlap = Math.max(0, right - left) * Math.max(0, bottom - top);
-  const union = box.w * box.h + other.w * other.h - overlap;
-  return union <= 0 ? (overlap > 0 ? 1 : 0) : overlap / union;
+/**
+ * How alike two boxes are: half position, half size.
+ *
+ * IoU was the obvious choice and the wrong one. IoU is translation-sensitive, so a page that renders
+ * the same form 80px lower because it has a header scored 0 on every field - which is how the
+ * booking family first came out at 0.054 geometry not because its layout was wrong but because it had
+ * moved. Position is measured as centre distance in viewport units, so a modest shift costs a little
+ * and a genuine rearrangement costs a lot; size is the aspect-and-area agreement.
+ */
+function boxScore(box, other) {
+  const distance = Math.hypot(box.x + box.w / 2 - (other.x + other.w / 2), box.y + box.h / 2 - (other.y + other.h / 2));
+  const position = Math.max(0, 1 - distance);
+  const widthRatio = Math.max(box.w, other.w) === 0 ? 0 : Math.min(box.w, other.w) / Math.max(box.w, other.w);
+  const heightRatio = Math.max(box.h, other.h) === 0 ? 0 : Math.min(box.h, other.h) / Math.max(box.h, other.h);
+  return 0.5 * position + 0.5 * widthRatio * heightRatio;
 }
 
-/** The layout: mean IoU over every keyed box the target or the candidate has, unmatched counting as 0. */
+/**
+ * The layout: boxes matched within each tag class by maximum-weight greedy pairing, unmatched boxes
+ * counting as zero against a denominator of `max(target, candidate)` per tag.
+ *
+ * Pairing by index instead collapses on an insertion: one extra `<label>` early shifts every later
+ * `label:n`, so every subsequent field's IoU is computed against the wrong box and the whole page
+ * reads as rearranged. Matching by position keeps the insertion local - the extra box is the only
+ * one that goes unmatched.
+ */
 export function geometrySimilarity(target, candidate) {
-  const keys = new Set([...Object.keys(target?.boxes ?? {}), ...Object.keys(candidate?.boxes ?? {})]);
-  if (keys.size === 0) return 1;
-  let total = 0;
-  for (const key of keys) {
-    const box = target?.boxes?.[key];
-    const other = candidate?.boxes?.[key];
-    total += box && other ? iou(box, other) : 0;
+  const group = (boxes) => {
+    const map = new Map();
+    for (const box of boxes ?? []) {
+      if (!map.has(box.tag)) map.set(box.tag, []);
+      map.get(box.tag).push(box);
+    }
+    return map;
+  };
+  const targetGroups = group(target?.boxes);
+  const candidateGroups = group(candidate?.boxes);
+  const tags = new Set([...targetGroups.keys(), ...candidateGroups.keys()]);
+  let score = 0;
+  let denominator = 0;
+  for (const tag of tags) {
+    const boxes = targetGroups.get(tag) ?? [];
+    const others = candidateGroups.get(tag) ?? [];
+    denominator += Math.max(boxes.length, others.length);
+    const pairs = [];
+    boxes.forEach((box, i) => others.forEach((other, j) => pairs.push({ i, j, score: boxScore(box, other) })));
+    pairs.sort((a, b) => b.score - a.score);
+    const usedTarget = new Set();
+    const usedCandidate = new Set();
+    for (const pair of pairs) {
+      if (usedTarget.has(pair.i) || usedCandidate.has(pair.j)) continue;
+      usedTarget.add(pair.i);
+      usedCandidate.add(pair.j);
+      score += pair.score;
+    }
   }
-  return round(total / keys.size);
+  return denominator === 0 ? 1 : round(score / denominator);
 }
 
 const controlDescriptor = (control) => `${control.tag}[${control.type ?? ''}][${control.name ?? ''}]`;
@@ -166,6 +210,10 @@ export function conformanceScore(target, candidate) {
 /**
  * The three numbers the endpoint reports per arm: the raw baseline, the arm's conformance to the
  * target, and the delta. `raw` and `arm` are signatures; `target` is the family's target signature.
+ *
+ * This is the secondary continuous axis, consumed by `scripts/score-conformance.mjs`. It is not
+ * emitted by `src/eval/endpoint.mjs`, whose pass-rate endpoint is frozen by the preregistration; a
+ * caller wanting these numbers reads the conformance report, it does not look in an endpoint result.
  */
 export function scoreArm({ target, raw, arm }) {
   const baseline = conformanceScore(target, raw);
