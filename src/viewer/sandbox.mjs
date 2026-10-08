@@ -28,7 +28,7 @@
  */
 import { spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, rmSync } from 'node:fs';
+import { existsSync, lstatSync, mkdirSync, rmSync } from 'node:fs';
 import http from 'node:http';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -73,6 +73,10 @@ export class Sandbox {
     this.log = '';
     this.startedAt = null;
     this.lastUsedAt = null;
+    // The bridge directory is writable by the site (the in-namespace socat creates the socket
+    // there), so a hostile site could replace it. The proxy pins and re-checks this identity on
+    // every connection; a replaced or symlinked socket is refused.
+    this.socketIdentity = null;
   }
 
   async start() {
@@ -114,6 +118,9 @@ export class Sandbox {
     this.startedAt = new Date();
     this.lastUsedAt = this.startedAt;
     await this.waitHealthy();
+    const stat = lstatSync(this.socketPath);
+    if (!stat.isSocket()) throw new Error(`sandbox '${this.id}' bridge is not a socket`);
+    this.socketIdentity = { dev: stat.dev, ino: stat.ino };
   }
 
   /** Poll the relay socket until the site's /__health answers or the timeout bites. */

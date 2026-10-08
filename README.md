@@ -28,23 +28,32 @@ npm run scan:owner-auth     # owner-auth gate: no owner-identifying material in 
 
 ## Corpus viewer (owner-only)
 
-`npm run viewer -- --corpus pilot --port 7700` serves the corpus for browsing and testing:
+`npm run viewer -- --corpus pilot` serves the corpus on TWO ports, both fronted by exe.dev auth:
 
-- an index of every project with archetype, framework, accept/reject state (rejects are shown with
-  their category - acceptance bias is only inspectable if they stay visible), tree SHAs, and live
-  links, filterable by archetype / framework / state / rule;
-- a per-pair evidence page: original vs uplifted rule measurements with the deciding detail,
-  browser journeys, security checks, console errors, screenshots;
-- **live instances**: the real site server, spawned sandboxed (bubblewrap: own network namespace
-  with no route off it, scrubbed environment, read-only site tree, no host filesystem beyond the
-  runtime) and proxied under `/live/<project>/<version>/` with all owner auth material stripped
-  and cookies namespaced per site. Uplifted snapshots come from the run's kept tree or are
-  regenerated deterministically and verified against the recorded SHA before serving.
+- **7700, the viewer** — index of every project with archetype, framework, accept/reject state
+  (rejects stay visible with their category - acceptance bias is only inspectable then), tree
+  SHAs, and filters by archetype / framework / state / rule; per-pair evidence pages (original vs
+  uplifted rule measurements with the deciding detail, browser journeys, security checks, console,
+  screenshots).
+- **7701, the live origin** — serves ONLY the sandboxed sites under `/live/<project>/<version>/`.
+  Untrusted site code never shares an origin with the evidence pages: a different port is a
+  different origin, so site JavaScript cannot read them. (Cookies are host-scoped, not
+  port-scoped, which is exactly why the proxy namespaces every cookie a site sets and forwards
+  only those back.)
 
-The viewer carries NO auth of its own: the exe.dev proxy in front of the port is the gate, and the
-served artefacts are auth-free by construction. The other direction is enforced: the owner-auth
-scan (`scripts/scan-owner-auth.mjs`, config `docs/eval/owner-identity.json`) fails closed - a pair
-that cannot be shown free of owner-identifying material is neither accepted nor served.
+Live instances run the real site server sandboxed with bubblewrap: its own network namespace with
+no route off it (the host's loopback proxies and the outside network are unreachable), an
+allowlisted environment, a read-only site tree, and no host filesystem beyond the runtime. The
+viewer reaches the site through a pinned unix-socket bridge; the proxy forwards request headers
+from an allowlist and re-scans the outbound set before every request, so owner auth material can
+never reach a site. Uplifted snapshots come from the run's kept tree or a deterministic
+regeneration that must reproduce the recorded SHA - a mismatch is refused, not served.
+
+The viewer carries NO auth of its own: the exe.dev proxy in front of each port is the gate, and
+the served artefacts are auth-free by construction. The other direction is enforced: the
+owner-auth scan (`scripts/scan-owner-auth.mjs`, config `docs/eval/owner-identity.json`) fails
+closed - a pair that cannot be shown free of owner-identifying material (in its trees AND its
+corpus records) is neither accepted nor served.
 
 Design decisions and their reasons are recorded in the bead for each change and in the documents
 above; a number in the docs is only as good as the check that recomputes it.

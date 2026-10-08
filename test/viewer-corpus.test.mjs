@@ -134,7 +134,7 @@ test('the index shows accepted and rejected with equal prominence, and escaping 
   t.after(() => rmSync(root, { recursive: true, force: true }));
   const corpus = loadCorpus(root);
   const views = corpus.projects.map((project) => projectView(project));
-  const html = renderIndex({ views, allViews: views, filters: {}, runId: corpus.runId, runs: corpus.runs, yieldReport: null, scanAvailable: true });
+  const html = renderIndex({ views, allViews: views, filters: {}, runId: corpus.runId, runs: corpus.runs, yieldReport: null, scanAvailable: true, liveOrigin: 'http://127.0.0.1:7701' });
   assert.match(html, /ACCEPTED/);
   assert.match(html, /rejected: no-warranted-change/);
   assert.match(html, /no run recorded/);
@@ -150,10 +150,33 @@ test('record content is escaped: evidence text cannot inject markup into the vie
   project.decision.detail = ['<script>alert(1)</script>'];
   project.spec.archetype_title = '<img src=x onerror=alert(1)>';
   const view = projectView(project);
-  const html = renderProject({ view, runId: corpus.runId, runs: corpus.runs });
+  const html = renderProject({ view, runId: corpus.runId, runs: corpus.runs, liveOrigin: 'http://127.0.0.1:7701' });
   assert.ok(!html.includes('<script>alert(1)</script>'));
   assert.ok(!html.includes('<img src=x onerror=alert(1)>'));
   assert.match(html, /&lt;script&gt;/);
+});
+
+test('a hostile decision category cannot inject markup (independent-review finding)', (t) => {
+  const root = buildFixtureCorpus();
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const corpus = loadCorpus(root);
+  const project = corpus.projects.find((p) => p.id === 'catalogue-react');
+  project.decision.category = '<img src=x onerror=alert(1)>';
+  const view = projectView(project);
+  const html = renderProject({ view, runId: corpus.runId, runs: corpus.runs, liveOrigin: 'http://127.0.0.1:7701' });
+  assert.ok(!html.includes('<img src=x onerror=alert(1)>'), 'the category must be escaped everywhere it renders');
+  assert.match(html, /&lt;img src=x/);
+});
+
+test('live links point at the live origin, not the viewer origin', (t) => {
+  const root = buildFixtureCorpus();
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const corpus = loadCorpus(root);
+  const cleanScan = { status: 'PASS', original: { status: 'PASS' }, uplifted: { status: 'PASS' } };
+  const views = corpus.projects.map((project) => projectView(project, { scan: cleanScan }));
+  const html = renderIndex({ views, allViews: views, filters: {}, runId: corpus.runId, runs: corpus.runs, yieldReport: null, scanAvailable: true, liveOrigin: 'http://127.0.0.1:7701' });
+  assert.match(html, /action="http:\/\/127\.0\.0\.1:7701\/live\/booking-raw\/original\/start"/);
+  assert.ok(!html.includes('action="/live/'), 'live forms must not target the viewer origin');
 });
 
 test('the project page renders per-rule before/after with the deciding detail', (t) => {
@@ -161,7 +184,7 @@ test('the project page renders per-rule before/after with the deciding detail', 
   t.after(() => rmSync(root, { recursive: true, force: true }));
   const corpus = loadCorpus(root);
   const view = projectView(corpus.projects.find((p) => p.id === 'booking-raw'));
-  const html = renderProject({ view, runId: corpus.runId, runs: corpus.runs });
+  const html = renderProject({ view, runId: corpus.runId, runs: corpus.runs, liveOrigin: 'http://127.0.0.1:7701' });
   assert.match(html, /forms\/required-field-feedback/);
   assert.match(html, /FAIL/);
   assert.match(html, /PASS/);

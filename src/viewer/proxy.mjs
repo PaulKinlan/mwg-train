@@ -17,6 +17,7 @@
  *    (see sandbox.mjs); this proxy is the only process holding its socket.
  */
 import http from 'node:http';
+import { lstatSync } from 'node:fs';
 
 import { rewriteCss, rewriteHtml, rewriteJs, rewriteLocation, rewriteSetCookie, restoreCookieNamespace } from './rewrite.mjs';
 
@@ -85,10 +86,27 @@ export function assertNoAuthHeaders(headers) {
  * @param {http.IncomingMessage} args.request
  * @param {http.ServerResponse} args.response
  * @param {string} args.socketPath  unix socket of the sandbox relay
+ * @param {{dev:number, ino:number}} [args.socketIdentity]  pinned identity of the relay socket
  * @param {string} args.prefix      the URL prefix this site is served under, e.g. /live/booking-raw/original
  * @param {string} args.sitePath    the request path with the prefix stripped, including query
  */
-export async function proxyRequest({ request, response, socketPath, prefix, sitePath, cookieNamespace }) {
+export async function proxyRequest({ request, response, socketPath, socketIdentity = null, prefix, sitePath, cookieNamespace }) {
+  // The bridge directory is writable by the untrusted site. Before connecting, re-check that the
+  // socket is the very socket the sandbox pinned at start: not a symlink, still a socket, same
+  // device+inode. A replaced socket would let the site redirect the viewer's connection at a host
+  // unix socket it could never otherwise reach.
+  try {
+    const stat = lstatSync(socketPath);
+    if (stat.isSymbolicLink() || !stat.isSocket()) throw new Error('bridge socket replaced');
+    if (socketIdentity && (stat.dev !== socketIdentity.dev || stat.ino !== socketIdentity.ino)) {
+      throw new Error('bridge socket identity changed');
+    }
+  } catch (error) {
+    response.writeHead(502, { 'content-type': 'text/plain; charset=utf-8' });
+    response.end(`bridge socket check failed: ${error.message}`);
+    return;
+  }
+
   const chunks = [];
   for await (const chunk of request) chunks.push(chunk);
   const body = Buffer.concat(chunks);

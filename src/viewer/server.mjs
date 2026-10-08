@@ -5,16 +5,26 @@
  * the port is the gate (Paul, 2026-10-08: the served artefact stays auth-free). What the app does
  * enforce is the other direction - nothing owner-identifying may flow INTO a site.
  *
- * Routes:
+ * TWO ORIGINS, because the sites are untrusted:
+ *   - the VIEWER (default 7700) serves the index, evidence pages and evidence files;
+ *   - the LIVE origin (default 7701) serves only the sandboxed sites under /live/<id>/<version>/.
+ * A different port is a different origin, so a site's JavaScript cannot same-origin-read the
+ * viewer's pages (independent review, 2026-10-08: subpath isolation is not containment). Cookies
+ * are host-scoped rather than port-scoped, which is exactly why the proxy namespaces every cookie
+ * a site sets and forwards only those back (see proxy.mjs).
+ *
+ * Viewer routes:
  *   GET  /                              index: every project, filters, accept/reject, live links
  *   GET  /project/<id>[?run=]           pair evidence: rules, journeys, security, screenshots
+ *   GET  /evidence/<id>/<file>[?run=]   screenshots and traces, path- and symlink-confined
+ *   GET  /healthz
+ *
+ * Live routes (live origin only):
  *   POST /live/<id>/<version>/start     spawn the sandbox, redirect into it
  *   ANY  /live/<id>/<version>/...       the site itself, proxied from its sandbox
- *   GET  /evidence/<id>/<file>[?run=]   screenshots and traces, path-confined
- *   GET  /healthz
  */
 import { createServer } from 'node:http';
-import { existsSync, mkdirSync } from 'node:fs';
+import { existsSync, lstatSync, mkdirSync, realpathSync } from 'node:fs';
 import { mkdir, readFile, rm } from 'node:fs/promises';
 import { dirname, extname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -42,7 +52,15 @@ const textResponse = (response, body, status = 200) => {
   response.end(body);
 };
 
-export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(REPO_ROOT, 'docs/eval/owner-identity.json'), repoRoot = REPO_ROOT }) {
+/** The live origin for links from viewer pages: same host name as the request, the live port. */
+export function liveOriginFor(request, livePort) {
+  const host = String(request.headers.host ?? '127.0.0.1');
+  const hostname = host.replace(/:\d+$/, '');
+  const scheme = hostname.endsWith('.exe.xyz') ? 'https' : 'http';
+  return `${scheme}://${hostname}:${livePort}`;
+}
+
+export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(REPO_ROOT, 'docs/eval/owner-identity.json'), repoRoot = REPO_ROOT, livePort = 7701 }) {
   mkdirSync(stateDir, { recursive: true });
   const pool = new SandboxPool({ stateDir });
   const scanCache = new Map();
@@ -72,8 +90,8 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
 
   /**
    * Pair-level owner-auth status. PASS requires both trees present and clean; PARTIAL means the
-   * original is clean but the uplifted snapshot was not kept (the corpus gate scans before the
-   * run's cleanup - the viewer reports what it can see); FAIL/ERROR fail closed.
+   * original is clean but the uplifted snapshot was not kept (it is regenerated, hash-verified and
+   * scanned at serve time); FAIL/ERROR fail closed.
    */
   function scanFor(project) {
     const original = scanTreeCached(project.originalTreeDir);
@@ -86,13 +104,11 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
   }
 
   /**
-   * Where the uplifted tree comes from, in order: the run's own --keep output; deterministic
-   * regeneration with the repo's uplift tool, verified against the recorded sha; unavailable.
+   * Where the uplifted tree comes from: the run's kept tree, or a deterministic regeneration with
+   * the repo's uplift tool that MUST reproduce the recorded uplifted sha. Fail-closed: a
+   * regeneration that does not hash to the recorded value is not served at all, and a cached
+   * regeneration is re-hashed before every reuse (independent review, 2026-10-08).
    */
-  function resolveUpliftedTreeDir() {
-    return null;
-  }
-
   async function ensureUpliftedTree(project) {
     if (project.upliftedTreeDir && existsSync(project.upliftedTreeDir)) {
       return { dir: project.upliftedTreeDir, source: 'run-snapshot' };
@@ -102,16 +118,26 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
       return { dir: null, source: 'unavailable', reason: 'the uplift tool (src/corpus/uplift.mjs) is not present in this checkout' };
     }
     const expected = project.decision?.uplifted_sha ?? null;
-    const cacheKey = `${project.id}-${(expected ?? 'norecord').replace(/[^a-z0-9]/gi, '').slice(0, 24)}`;
+    if (!expected) {
+      return { dir: null, source: 'unrecorded', reason: 'no uplifted sha is recorded for this pair, so a regenerated tree could not be verified' };
+    }
+    const cacheKey = `${project.id}-${expected.replace(/[^a-z0-9]/gi, '').slice(0, 24)}`;
     const cacheDir = join(stateDir, 'uplifted', cacheKey);
-    if (existsSync(cacheDir)) return { dir: cacheDir, source: 'regenerated-cache', expected };
-    const { upliftProject } = await import(upliftPath);
+    if (existsSync(cacheDir)) {
+      if (hashTree(cacheDir) === expected) return { dir: cacheDir, source: 'regenerated-verified', expected };
+      await rm(cacheDir, { recursive: true, force: true });
+    }
     mkdirSync(dirname(cacheDir), { recursive: true });
-    await rm(cacheDir, { recursive: true, force: true });
+    const { upliftProject } = await import(upliftPath);
     upliftProject(project.originalTreeDir, project.spec, cacheDir);
     const actual = hashTree(cacheDir);
-    if (expected && actual !== expected) {
-      return { dir: cacheDir, source: 'regenerated-mismatch', expected, actual };
+    if (actual !== expected) {
+      await rm(cacheDir, { recursive: true, force: true });
+      return {
+        dir: null,
+        source: 'regeneration-mismatch',
+        reason: `deterministic regeneration did not reproduce the recorded uplifted sha (expected ${expected}, got ${actual}); refusing to serve an unverified tree`,
+      };
     }
     return { dir: cacheDir, source: 'regenerated-verified', expected, actual };
   }
@@ -143,6 +169,7 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
     try {
       const url = new URL(request.url, 'http://viewer.internal');
       const path = url.pathname;
+      const liveOrigin = liveOriginFor(request, livePort);
 
       if (path === '/healthz') return textResponse(response, 'ok');
 
@@ -167,6 +194,7 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
             runs: corpus.runs,
             yieldReport: corpus.yieldReport,
             scanAvailable: allViews.every((view) => view.scan?.status !== 'ERROR'),
+            liveOrigin,
           }),
         );
       }
@@ -179,10 +207,7 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
         if (!project) return textResponse(response, 'no such project', 404);
         const scan = scanFor(project);
         const view = projectView(project, { scan, verification: verification(project) });
-        return htmlResponse(
-          response,
-          renderProject({ view, runId: corpus.runId, runs: corpus.runs }),
-        );
+        return htmlResponse(response, renderProject({ view, runId: corpus.runId, runs: corpus.runs, liveOrigin }));
       }
 
       const evidenceMatch = path.match(/^\/evidence\/([a-z0-9-]+)\/([a-z0-9.-]+)$/i);
@@ -197,87 +222,120 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
         if (!fullPath.startsWith(resolve(project.evidenceDir))) return textResponse(response, 'confined', 403);
         if (!EVIDENCE_EXTENSIONS.has(extname(file).toLowerCase())) return textResponse(response, 'type not served', 403);
         if (!existsSync(fullPath)) return textResponse(response, 'not found', 404);
-        const body = await readFile(fullPath);
+        // Symlinks are refused and the real path must stay inside the real evidence directory:
+        // an imported run dir must not become a read primitive over the host filesystem.
+        if (lstatSync(fullPath).isSymbolicLink()) return textResponse(response, 'symlinks are not served', 403);
+        const realFile = realpathSync(fullPath);
+        const realDir = realpathSync(project.evidenceDir);
+        if (realFile !== join(realDir, file)) return textResponse(response, 'confined', 403);
+        const body = await readFile(realFile);
         const type = extname(file).toLowerCase() === '.png' ? 'image/png' : extname(file).toLowerCase() === '.json' ? 'application/json' : 'application/octet-stream';
         response.writeHead(200, { 'content-type': type, 'cache-control': 'no-store' });
         return response.end(body);
       }
 
-      const liveMatch = path.match(/^\/live\/([a-z0-9-]+)\/(original|uplifted)(\/.*)?$/i);
-      if (liveMatch) {
-        const [, id, version, rest] = liveMatch;
-        if (!VERSIONS.has(version)) return textResponse(response, 'bad version', 400);
-        const corpus = load(null);
-        const project = findProject(corpus, id);
-        if (!project) return textResponse(response, 'no such project', 404);
-
-        const scan = scanFor(project);
-        if (scan.status === 'ERROR') {
-          return htmlResponse(
-            response,
-            page('refused', `<h1>live serving refused</h1><p class="danger">The owner-auth scan cannot run (${escapeHtml(scan.reason ?? 'unknown')}), and the rule is fail-closed: a tree that cannot be shown clean of owner-identifying material is not served.</p>`),
-            403,
-          );
-        }
-
-        // Resolve the tree first, then scan exactly the tree that will be served: a regenerated
-        // uplifted snapshot is scanned after regeneration, before it is reachable.
-        let siteDir;
-        let snapshotNote = null;
-        if (version === 'original') {
-          siteDir = project.originalTreeDir;
-        } else {
-          const resolved = await ensureUpliftedTree(project);
-          if (!resolved.dir) {
-            return htmlResponse(
-              response,
-              page('snapshot unavailable', `<h1>uplifted snapshot unavailable</h1><p class="notice">${escapeHtml(resolved.reason ?? 'the run did not keep the uplifted tree')}</p><p>Re-run the pilot with <code>--keep</code>, or merge the uplift tool, to serve this version.</p>`),
-              404,
-            );
-          }
-          if (resolved.source === 'regenerated-mismatch') {
-            snapshotNote = `regenerated tree does NOT match the recorded uplifted sha (expected ${resolved.expected}, got ${resolved.actual}) - serving the regenerated tree and saying so`;
-          }
-          siteDir = resolved.dir;
-        }
-
-        const treeScan = scanTreeCached(siteDir);
-        if (treeScan.status !== 'PASS') {
-          return htmlResponse(
-            response,
-            page('refused', `<h1>live serving refused</h1><p class="danger">The owner-auth scan of the ${escapeHtml(version)} tree is ${escapeHtml(treeScan.status)}, and the rule is fail-closed: a tree that cannot be shown clean of owner-identifying material is not served. See the <a href="/project/${escapeHtml(id)}">evidence page</a> for the findings.</p>`),
-            403,
-          );
-        }
-
-        let sandbox = pool.get(id, version);
-        if (!sandbox?.alive) {
-          try {
-            sandbox = await pool.start({ projectId: id, version, siteDir });
-          } catch (error) {
-            return htmlResponse(response, page('sandbox failed', `<h1>the sandboxed site did not start</h1><pre>${escapeHtml(error.message)}</pre>`), 502);
-          }
-        }
-        sandbox.touch();
-
-        if (request.method === 'POST' && rest === '/start') {
-          response.writeHead(303, { location: `/live/${id}/${version}/` });
-          return response.end();
-        }
-
-        const prefix = `/live/${id}/${version}`;
-        const sitePath = `${rest ?? '/'}${url.search}`;
-        const cookieNamespace = `__vw_${id.replace(/[^a-z0-9]/gi, '')}_${version}_`;
-        return proxyRequest({ request, response, socketPath: sandbox.socketPath, prefix, sitePath, cookieNamespace });
-      }
-
+      // Live sites are served from the LIVE ORIGIN only. A /live path on the viewer origin is a
+      // hard 404, so no untrusted bytes are ever same-origin with the evidence pages.
       return textResponse(response, 'not found', 404);
     } catch (error) {
       return textResponse(response, `viewer error: ${error.message}`, 500);
     }
   });
 
-  return { server, pool };
+  /** The live origin: only /live/<id>/<version>/... exists here. */
+  const liveServer = createServer(async (request, response) => {
+    try {
+      const url = new URL(request.url, 'http://live.internal');
+      const path = url.pathname;
+
+      if (path === '/healthz') return textResponse(response, 'ok');
+
+      const liveMatch = path.match(/^\/live\/([a-z0-9-]+)\/(original|uplifted)(\/.*)?$/i);
+      if (!liveMatch) {
+        if (path === '/' && request.method === 'GET') {
+          return htmlResponse(
+            response,
+            page('live origin', `<h1>mwg-train live site origin</h1><p class="muted">This origin serves only sandboxed corpus sites under <code>/live/&lt;project&gt;/&lt;version&gt;/</code>. It is deliberately a separate origin from the viewer so untrusted site code cannot read the evidence pages. Start sites from the <a href="/">viewer index</a>.</p>`),
+          );
+        }
+        return textResponse(response, 'not found', 404);
+      }
+
+      const [, id, version, rest] = liveMatch;
+      if (!VERSIONS.has(version)) return textResponse(response, 'bad version', 400);
+      const corpus = load(null);
+      const project = findProject(corpus, id);
+      if (!project) return textResponse(response, 'no such project', 404);
+
+      const scan = scanFor(project);
+      if (scan.status === 'ERROR') {
+        return htmlResponse(
+          response,
+          page('refused', `<h1>live serving refused</h1><p class="danger">The owner-auth scan cannot run (${escapeHtml(scan.reason ?? 'unknown')}), and the rule is fail-closed: a tree that cannot be shown clean of owner-identifying material is not served.</p>`),
+          403,
+        );
+      }
+
+      // Resolve the tree first, then scan exactly the tree that will be served: a regenerated
+      // uplifted snapshot is scanned after regeneration and hash verification, before it is
+      // reachable.
+      let siteDir;
+      if (version === 'original') {
+        siteDir = project.originalTreeDir;
+      } else {
+        const resolved = await ensureUpliftedTree(project);
+        if (!resolved.dir) {
+          return htmlResponse(
+            response,
+            page('snapshot unavailable', `<h1>uplifted snapshot unavailable</h1><p class="notice">${escapeHtml(resolved.reason ?? 'the run did not keep the uplifted tree')}</p>`),
+            404,
+          );
+        }
+        siteDir = resolved.dir;
+      }
+
+      const treeScan = scanTreeCached(siteDir);
+      if (treeScan.status !== 'PASS') {
+        return htmlResponse(
+          response,
+          page('refused', `<h1>live serving refused</h1><p class="danger">The owner-auth scan of the ${escapeHtml(version)} tree is ${escapeHtml(treeScan.status)}, and the rule is fail-closed: a tree that cannot be shown clean of owner-identifying material is not served.</p>`),
+          403,
+        );
+      }
+
+      let sandbox = pool.get(id, version);
+      if (!sandbox?.alive) {
+        try {
+          sandbox = await pool.start({ projectId: id, version, siteDir });
+        } catch (error) {
+          return htmlResponse(response, page('sandbox failed', `<h1>the sandboxed site did not start</h1><pre>${escapeHtml(error.message)}</pre>`), 502);
+        }
+      }
+      sandbox.touch();
+
+      if (request.method === 'POST' && rest === '/start') {
+        response.writeHead(303, { location: `/live/${id}/${version}/` });
+        return response.end();
+      }
+
+      const prefix = `/live/${id}/${version}`;
+      const sitePath = `${rest ?? '/'}${url.search}`;
+      const cookieNamespace = `__vw_${id.replace(/[^a-z0-9]/gi, '')}_${version}_`;
+      return proxyRequest({
+        request,
+        response,
+        socketPath: sandbox.socketPath,
+        socketIdentity: sandbox.socketIdentity,
+        prefix,
+        sitePath,
+        cookieNamespace,
+      });
+    } catch (error) {
+      return textResponse(response, `live origin error: ${error.message}`, 500);
+    }
+  });
+
+  return { server, liveServer, pool };
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
@@ -287,17 +345,22 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   };
   const corpusRoot = resolve(arg('corpus', 'pilot'));
   const port = Number(arg('port', '7700'));
+  const livePort = Number(arg('live-port', '7701'));
   const host = arg('host', '0.0.0.0');
   const stateDir = resolve(arg('state', '.viewer-state'));
-  const { server, pool } = createViewer({ corpusRoot, stateDir });
+  const { server, liveServer, pool } = createViewer({ corpusRoot, stateDir, livePort });
   const shutdown = () => {
     pool.stopAll();
-    server.close(() => process.exit(0));
+    server.close();
+    liveServer.close();
     setTimeout(() => process.exit(0), 2000).unref();
   };
   process.on('SIGTERM', shutdown);
   process.on('SIGINT', shutdown);
   server.listen(port, host, () => {
     console.log(`mwg-train corpus viewer on http://${host}:${port}/ reading corpus ${corpusRoot}`);
+  });
+  liveServer.listen(livePort, host, () => {
+    console.log(`mwg-train live site origin on http://${host}:${livePort}/ (sandboxed sites only)`);
   });
 }

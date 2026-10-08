@@ -16,6 +16,7 @@
  * Findings report the pattern id, the file and the line number - NEVER the matched text, which may
  * itself be a secret value.
  */
+import { createHash } from 'node:crypto';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 
@@ -34,6 +35,18 @@ export function loadScanConfig(path) {
   for (const key of REQUIRED_CONFIG_KEYS) {
     if (!Array.isArray(config[key])) throw new ScanConfigError(`owner-identity config is invalid: '${key}' must be an array`);
   }
+  // Every literal entry must be a non-empty string, and there must be at least one literal
+  // overall: a config that yields no literals cannot detect the owner and must not report PASS.
+  let literals = 0;
+  for (const key of REQUIRED_CONFIG_KEYS.filter((k) => k !== 'token_patterns')) {
+    for (const entry of config[key]) {
+      if (typeof entry !== 'string' || entry.length === 0) {
+        throw new ScanConfigError(`owner-identity config is invalid: '${key}' contains a non-string or empty entry`);
+      }
+      literals += 1;
+    }
+  }
+  if (literals === 0) throw new ScanConfigError('owner-identity config is invalid: no literal patterns configured');
   for (const pattern of config.token_patterns) {
     if (typeof pattern?.id !== 'string' || typeof pattern?.regex !== 'string') {
       throw new ScanConfigError('owner-identity config is invalid: every token_patterns entry needs an id and a regex');
@@ -47,7 +60,11 @@ export function loadScanConfig(path) {
   return config;
 }
 
-/** Build the matcher list once. Literal entries are case-insensitive substrings; tokens are regexes. */
+/**
+ * Build the matcher list once. Literal entries are case-insensitive substrings; tokens are
+ * regexes. Matcher ids are OPAQUE: a finding names the pattern's hash, never the pattern itself,
+ * so a private overlay identifier cannot leak through a finding that matches it.
+ */
 export function buildMatchers(config) {
   const literals = [];
   for (const [kind, values] of [
@@ -57,7 +74,10 @@ export function buildMatchers(config) {
     ['proxy-endpoint', config.proxy_endpoints],
   ]) {
     for (const value of values) {
-      if (typeof value === 'string' && value.length > 0) literals.push({ kind, id: `${kind}:${value.toLowerCase()}`, needle: value.toLowerCase() });
+      if (typeof value === 'string' && value.length > 0) {
+        const fingerprint = createHash('sha256').update(value.toLowerCase()).digest('hex').slice(0, 16);
+        literals.push({ kind, id: `${kind}:${fingerprint}`, needle: value.toLowerCase() });
+      }
     }
   }
   const regexes = config.token_patterns.map((pattern) => ({
@@ -88,16 +108,18 @@ function* walkFiles(root, skipDirs) {
 }
 
 /**
- * Scan one tree for owner-identifying material. Returns { status: 'PASS' | 'FAIL', findings }.
- * `findings` entries: { file, line, patternId, kind }. The matched text is deliberately absent.
+ * Scan one tree (or a single file) for owner-identifying material. Returns
+ * { status: 'PASS' | 'FAIL', findings }. `findings` entries: { file, line, patternId, kind }.
+ * The matched text is deliberately absent.
  */
 export function scanTree(root, matchers, options = {}) {
-  const skipDirs = options.skipDirs ?? ['node_modules', '.git'];
-  const skipExtensions = options.skipExtensions ?? [];
-  const maxBytes = options.maxFileBytes ?? 1_048_576;
+  const skipDirs = options.skip_dirs ?? options.skipDirs ?? ['node_modules', '.git'];
+  const skipExtensions = options.skip_extensions ?? options.skipExtensions ?? [];
+  const maxBytes = options.max_file_bytes ?? options.maxFileBytes ?? 1_048_576;
   const findings = [];
   if (!existsSync(root)) return { status: 'FAIL', findings: [{ file: null, line: null, patternId: 'tree-missing', kind: 'scan-error' }] };
-  for (const file of walkFiles(root, skipDirs)) {
+  const files = statSync(root).isFile() ? [root] : [...walkFiles(root, skipDirs)];
+  for (const file of files) {
     const ext = file.slice(file.lastIndexOf('.')).toLowerCase();
     if (skipExtensions.includes(ext)) continue;
     const size = statSync(file).size;
@@ -110,7 +132,7 @@ export function scanTree(root, matchers, options = {}) {
     const text = buffer.toString('utf8');
     const lowered = text.toLowerCase();
     const lines = text.split('\n');
-    const rel = relative(root, file);
+    const rel = relative(root, file) || file;
     for (const literal of matchers.literals) {
       let index = lowered.indexOf(literal.needle);
       while (index !== -1) {
@@ -129,6 +151,21 @@ export function scanTree(root, matchers, options = {}) {
   }
   const errorFindings = findings.filter((finding) => finding.kind === 'scan-error');
   return { status: findings.length === 0 ? 'PASS' : 'FAIL', findings, scan_errors: errorFindings.length };
+}
+
+/**
+ * Scan the corpus RECORDS of a pair (decision.json, the two run records, evidence JSON). The rule
+ * covers the corpus record, not only the site source: a record that embeds owner material
+ * contaminates exactly as surely as a page that embeds it.
+ */
+export function scanRecordFiles(files, matchers, options = {}) {
+  const findings = [];
+  for (const file of files) {
+    if (!existsSync(file)) continue;
+    const result = scanTree(file, matchers, options);
+    findings.push(...result.findings);
+  }
+  return { status: findings.length === 0 ? 'PASS' : 'FAIL', findings };
 }
 
 function lineNumberAt(text, index, lines) {

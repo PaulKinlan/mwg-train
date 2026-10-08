@@ -8,7 +8,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { buildMatchers, loadScanConfig, scanPair, scanTree, ScanConfigError } from '../src/viewer/owner-auth.mjs';
+import { buildMatchers, loadScanConfig, scanPair, scanRecordFiles, scanTree, ScanConfigError } from '../src/viewer/owner-auth.mjs';
 
 const CONFIG_PATH = new URL('../docs/eval/owner-identity.json', import.meta.url).pathname;
 
@@ -129,4 +129,44 @@ test('proxy headers and endpoints are detected', () => {
   assert.ok(ids.some((id) => id.includes('proxy-header-name')));
   assert.ok(ids.some((id) => id.includes('proxy-endpoint')));
   rmSync(dir, { recursive: true, force: true });
+});
+
+test('finding ids are opaque: they never contain the matched identifier (review finding)', () => {
+  const dir = makeTree({ 'leak.md': 'contact paulkinlan for details' });
+  const config = loadScanConfig(CONFIG_PATH);
+  const result = scanTree(dir, buildMatchers(config));
+  assert.equal(result.status, 'FAIL');
+  for (const finding of result.findings) {
+    assert.ok(!finding.patternId.includes('paulkinlan'), `pattern id leaked the identifier: ${finding.patternId}`);
+  }
+  rmSync(dir, { recursive: true, force: true });
+});
+
+test('config validation rejects non-string entries and empty literal sets (fail-closed)', () => {
+  const bad1 = makeTree({ 'c.json': JSON.stringify({ owner_identifiers: [42], credential_env_names: [], proxy_header_names: [], proxy_endpoints: [], token_patterns: [] }) });
+  assert.throws(() => loadScanConfig(join(bad1, 'c.json')), ScanConfigError);
+  const bad2 = makeTree({ 'c.json': JSON.stringify({ owner_identifiers: [], credential_env_names: [], proxy_header_names: [], proxy_endpoints: [], token_patterns: [] }) });
+  assert.throws(() => loadScanConfig(join(bad2, 'c.json')), /no literal patterns/);
+  rmSync(bad1, { recursive: true, force: true });
+  rmSync(bad2, { recursive: true, force: true });
+});
+
+test('the snake_case scan options in the shipped config are honoured', () => {
+  // skip_extensions must actually skip: a planted identifier inside a .png is not a finding.
+  const dir = makeTree({ 'shot.png': 'paulkinlan', 'index.html': 'hello' });
+  const config = loadScanConfig(CONFIG_PATH);
+  const result = scanTree(dir, buildMatchers(config), config.scan);
+  assert.equal(result.status, 'PASS', JSON.stringify(result.findings));
+  rmSync(dir, { recursive: true, force: true });
+});
+
+test('corpus records are scanned too: a decision record embedding the owner fails the pair', () => {
+  const dir = makeTree({ 'decision.json': JSON.stringify({ project_id: 'x', note: 'uplift by paulkinlan' }) });
+  const config = loadScanConfig(CONFIG_PATH);
+  const result = scanRecordFiles([join(dir, 'decision.json')], buildMatchers(config), config.scan);
+  assert.equal(result.status, 'FAIL');
+  const clean = makeTree({ 'decision.json': JSON.stringify({ project_id: 'x' }) });
+  assert.equal(scanRecordFiles([join(clean, 'decision.json'), join(clean, 'absent.json')], buildMatchers(config), config.scan).status, 'PASS');
+  rmSync(dir, { recursive: true, force: true });
+  rmSync(clean, { recursive: true, force: true });
 });
