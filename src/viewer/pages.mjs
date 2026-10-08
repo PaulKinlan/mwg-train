@@ -79,7 +79,8 @@ export function renderMarkdown(md) {
   const inline = (text) =>
     escapeHtml(text)
       .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-      .replace(/`([^`]+)`/g, '<code>$1</code>');
+      .replace(/`([^`]+)`/g, '<code>$1</code>')
+      .replace(/\*([^*\n]+)\*/g, '<em>$1</em>');
   const out = [];
   let list = null;
   let table = null;
@@ -123,7 +124,14 @@ Stages 1–6 are built, measured, and active. Roles: <strong>EVAL INSTRUMENT</st
 
 export function stateBadge(view) {
   if (!view.hasRun) return '<span class="badge no-run">NOT YET RUN</span>';
-  if (view.accepted) return '<span class="badge accepted" title="a brief and an output that passed acceptance; these alone may become training data">ACCEPTED PAIR</span>';
+  if (view.accepted) {
+    // The recorded measurement decision and the owner-auth gate are distinct things: a pair is
+    // presented as gate-clean only when the scan is a full PASS on both trees and the records.
+    const gate = view.scan?.status;
+    if (gate === 'PASS') return '<span class="badge accepted" title="recorded acceptance, and the owner-auth gate PASSes both trees and the records">ACCEPTED PAIR — gate-clean</span>';
+    if (gate === 'PARTIAL') return '<span class="badge accepted" title="recorded acceptance; baseline and records clean, the target is hash-verified and scanned at serve time">ACCEPTED PAIR — recorded; target scanned at serve</span>';
+    return `<span class="badge warn">recorded acceptance — owner-auth gate ${escapeHtml(gate ?? 'not run')}: NOT gate-approved</span>`;
+  }
   return `<span class="badge rejected" title="${escapeHtml(view.category)}">REJECTED ATTEMPT · ${escapeHtml(view.category)}</span>`;
 }
 
@@ -232,7 +240,7 @@ export function renderIndex({ views, allViews, filters, runId, runs, yieldReport
 <h1>mwg-train corpus</h1>
 ${PIPELINE_STRIP}
 ${scanNotice}
-<p class="muted">Roles: <strong>BASELINE</strong> = raw model output, kept to measure improvement FROM · <strong>TARGET</strong> = the ideal site to build TOWARDS · <strong>ACCEPTED PAIR</strong> = a brief and an output that passed acceptance (these alone may become training data) · <strong>REJECTED ATTEMPT</strong> = kept as negative example &amp; repair material.</p>
+<p class="muted">Roles: <strong>BASELINE</strong> = raw model output, kept to measure improvement FROM · <strong>TARGET</strong> = the deterministic MWG repair floor to build TOWARDS · <strong>ACCEPTED PAIR</strong> = passed eval acceptance (training data comes only from accepted pairs of the DISJOINT training corpus — the eval set is never trained on) · <strong>REJECTED ATTEMPT</strong> = kept as negative example &amp; repair material.</p>
 <p>${counts.accepted} accepted pair(s) · ${counts.rejected} rejected attempt(s) · ${counts.noRun} not yet run — of ${allViews.length} project(s).</p>
 ${yieldLine}
 <form class="filters" method="get" action="/">
@@ -326,7 +334,8 @@ export function renderProject({ view, runId, runs, liveOrigin }) {
   const decisionBlock = !view.hasRun
     ? '<p class="notice">No pilot run has recorded an acceptance decision for this project yet (UNKNOWN).</p>'
     : `<div class="panel">
-  <h3>${decision.accepted ? 'ACCEPTED PAIR — eligible to become training data' : `REJECTED ATTEMPT (${escapeHtml(decision.category)}) — kept as negative example &amp; repair material`}</h3>
+  <h3>${decision.accepted ? 'ACCEPTED PAIR — recorded eval acceptance' : `REJECTED ATTEMPT (${escapeHtml(decision.category)}) — kept as negative example &amp; repair material`}</h3>
+  ${decision.accepted ? '<p class="muted">This is the EVAL corpus: acceptance here is measurement, and the eval set is never trained on. Training-data eligibility applies only to accepted pairs of the disjoint training corpus (mwg-train-0ov).</p>' : ''}
   <ul>${decision.decisionDetail.map((line) => `<li>${escapeHtml(line)}</li>`).join('')}</ul>
   ${decision.improvedRules.length > 0 ? `<p>rules improved: <span class="chips">${decision.improvedRules.map((rule) => `<span class="chip">${escapeHtml(rule)}</span>`).join('')}</span></p>` : ''}
   ${decision.regressedRules.length > 0 ? `<p class="danger">rules regressed: ${escapeHtml(decision.regressedRules.join(', '))}</p>` : ''}
