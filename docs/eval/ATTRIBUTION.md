@@ -94,6 +94,7 @@ schema, the markdown reports and the viewer cannot drift apart:
 | `docs/pilot/yield.json`, `docs/pilot/records.json` | the same fields on the measurement record |
 | `docs/eval/conformance/<family>.json` and `<family>-identity.json` | the same fields, so the numbers attribute themselves and not only the summary rendered from them |
 | `docs/pilot/README.md`, `docs/eval/conformance/README.md` | the attribution line above the result summaries |
+| `docs/train/corpus/tokens.json` | the same fields: it accounts for corpus size by variant, including the uplifted variant |
 | the corpus viewer | the floor panel and the roles line |
 
 The first pass of this work registered six reports. Review then found two more that state a floor -
@@ -121,10 +122,19 @@ without the label fails, and a report claiming web-uplift's authorship fails eve
 The registry is declared rather than globbed, because a glob silently expands when a report is added
 and silently shrinks when one is renamed.
 
-`docs/train/corpus/SERVED.md` is deliberately **not** registered: it reports which routes the generated
-server serves - a measurement of the scaffold, not a floor value - and it has no committed generator to
-carry the label, because it was rendered ad hoc. If it is promoted to a floor report it needs a
-generator first.
+Deliberately **not** registered, with the reason rather than a silent omission:
+
+| artifact | why it is not a floor report |
+| --- | --- |
+| `docs/train/corpus/SERVED.md` and `served-routes-baseline.json` | report which routes the generated server serves - a property of the scaffold, not a floor value; the markdown also has no committed generator, since it was rendered ad hoc |
+| `docs/eval/quotes.jsonl` | a provider pricing table, not a measurement of any corpus |
+| `pilot/TRAINING_CORPUS.json` | records corpus composition and tree hashes and states no floor result; its only mention of uplift is a round-trip comment about disjointness |
+| `pilot/plan.json`, `data/A6_evaluation/targets/manifest.jsonl` | inputs (a plan, and the eval target set), not measurements of our floor |
+
+That table exists because the registry was wrong three times: six artifacts, then ten, then twenty-one.
+Each round was a list I believed complete, and each was extended by a reviewer reading the tree rather
+than by me re-reading my own reasoning. The lesson is in the count, not in the ritual: "every X" is a
+claim about a list, so the list has to be checked against the tree.
 
 ### Relabelling a report must not mean re-measuring it
 

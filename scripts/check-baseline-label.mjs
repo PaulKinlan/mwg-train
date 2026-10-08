@@ -20,6 +20,15 @@
  *     was rendered ad hoc. If it is ever promoted to a floor report it needs a generator first.
  *   docs/eval/quotes.jsonl  is a provider PRICING table (per-million-token training prices), not a
  *     measurement of any corpus, so there is no floor result in it to attribute.
+ *   docs/train/corpus/served-routes-baseline.json  is the machine-readable form of SERVED.md, excluded
+ *     for the same reason: served routes are a property of the scaffold, not a floor value.
+ *   pilot/TRAINING_CORPUS.json  records corpus composition and tree hashes and states no floor result -
+ *     its only mention of uplift is a comment about disjointness from pilot/CORPUS.json.
+ *   pilot/plan.json  and  data/A6_evaluation/targets/manifest.jsonl  are inputs (a plan, and the eval
+ *     target set), not measurements of our floor.
+ * A floor value that reaches a new artifact without being listed here is still a gap this check cannot
+ * see, so the registry is reviewed whenever a report is added - that has now happened three times, which
+ * is the honest reason this comment is long.
  *   docs/train/briefs/manifest.jsonl  is the briefs corpus, not a floor result.
  * A floor value that reaches a new artifact without being listed here is a gap this check cannot see,
  * so the registry is reviewed whenever a report is added.
@@ -54,6 +63,8 @@ const REGISTRY = [
   // Static result summaries that quote the same numbers.
   'docs/pilot/README.md',
   'docs/eval/conformance/README.md',
+  // Accounts for corpus size by variant, including the uplifted variant, so it states a floor measurement.
+  'docs/train/corpus/tokens.json',
 ];
 
 /**

@@ -36,6 +36,7 @@ import { fileURLToPath } from 'node:url';
 import { buildProject } from '../pilot/projects.mjs';
 import { writeProject } from '../pilot/frameworks.mjs';
 import { upliftProject } from '../src/corpus/uplift.mjs';
+import { BASELINE_FIELDS } from '../src/eval/ruleset.mjs';
 import { estimateTokensFromCharacters } from '../src/eval/cost.mjs';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -359,6 +360,9 @@ export function measurePilotCorpusTokens(options = {}) {
     };
 
     const outPayload = {
+      // The report measures the UPLIFTED variant of every project, so it states a floor measurement and
+      // attributes it like the other floor artifacts (bead mwg-train-6ek).
+      ...BASELINE_FIELDS,
       plan: relative(repoRoot, planPath),
       headline_scope: 'app_sources',
       counts: {

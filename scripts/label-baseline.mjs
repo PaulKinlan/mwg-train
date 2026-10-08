@@ -31,6 +31,7 @@ export const FLOOR_DOCUMENTS = [
   'docs/eval/conformance/event-registration-identity.json',
   'docs/eval/conformance/booking.json',
   'docs/train/corpus/records.json',
+  'docs/train/corpus/tokens.json',
   'pilot/CORPUS.json',
 ];
 

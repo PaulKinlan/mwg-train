@@ -42,6 +42,7 @@ const REPORTS = [
   'docs/eval/conformance/event-registration-identity.json',
   'docs/pilot/README.md',
   'docs/eval/conformance/README.md',
+  'docs/train/corpus/tokens.json',
 ];
 
 test('every registered floor report carries the label', () => {
