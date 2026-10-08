@@ -2,7 +2,7 @@
 
 The training briefs (`docs/train/briefs/manifest.jsonl`) specify the synthetic project requirements used to train student models.
 
-**What the briefs drive, and what they do not.** Each corpus project's form controls come from its own brief's `fields`, and the journey the harness drives is that brief's `journey` - authored from the brief's `topic`, `prompt`, `journeys` and `assertions`. All 30 families declare theirs (`npm run check:brief-schema -- --expect-all`), and every project records `schema_source: "brief"`. The `archetype` still supplies the server shape - how a record is stored and read back - so the archetype decides the plumbing, not the form. Declaring a schema is NOT the same as implementing the brief: the journey is a single generic submit-and-read-back, so it never drives a `select`, never spans two pages, and never updates an existing record, and 5 of 30 families do not emit every route their brief lists. See `docs/train/corpus/README.md` for what that does and does not establish.
+**What the briefs drive, and what they do not.** Each corpus project's form controls come from its own brief's `fields`, and the journey the harness drives is that brief's `journey` - authored from the brief's `topic`, `prompt`, `journeys` and `assertions`. All 30 families declare theirs (`npm run check:brief-schema -- --expect-all`), and every project records `schema_source: "brief"`. The `archetype` still supplies the server shape - how a record is stored and read back - so the archetype decides the plumbing, not the form. Declaring a schema is NOT the same as implementing the brief: the journey fills and chooses within ONE page, so it never spans two pages and never updates an existing record, and 5 of 30 families do not emit every route their brief lists. See `docs/train/corpus/README.md` for what that does and does not establish.
 
 > **Deliberately NOT the sealed evaluation schema:**
 > This schema is deliberately distinct from the held-out evaluation schema in `docs/eval/briefs/SCHEMA.md`.
@@ -60,7 +60,8 @@ a coffee-subscription brief would render whatever form that archetype happens to
 | --- | --- | --- |
 | `startPath` | string | Absolute path serving the form, normally `/`. |
 | `formSelector` | string | `form#<id>`; the builder derives the form id from it. |
-| `fill` | object | Map of `input[name=x]` / `textarea[name=x]` selector to the value typed in. A `<select>` must not appear here: the browser driver cannot type into one, and selects take their first option. |
+| `fill` | object | Map of `input[name=x]` / `textarea[name=x]` selector to the value typed in. A `<select>` must not appear here: the browser driver cannot type into one. |
+| `select` | object | Map of `select[name=x]` selector to the option to choose. The option must be one the field offers and must not be its first, since an untouched select already submits that. Every `select` field marked `required` must appear here, or the journey leaves it on its default and the value the server stores is the markup's rather than the brief's. |
 | `expectText` | string | Text asserted on the read page; must be exactly the value typed into the echoed field. |
 
 Both variants of a family must carry identical `fields` and `journey` - they are the same brief

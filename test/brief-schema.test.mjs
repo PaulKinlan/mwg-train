@@ -46,16 +46,23 @@ test('a journey that types into an undeclared field is refused', () => {
   assert.ok(found.some((p) => /types into 'member', which this brief does not declare/.test(p)), found.join('\n'));
 });
 
-test('a select in fill is not itself an error, but it cannot be the echoed field', () => {
-  // Selects are legal controls; what must not happen is the harness trying to read the
-  // record back through one, because the journey cannot type into it.
+test('a select is driven with its own key, and cannot be the echoed field', () => {
+  // Selects are legal controls; what must not happen is the harness trying to read the record back
+  // through one, because the journey cannot type into it. They also need `journey.select` rather
+  // than `fill`, so a required select driven here is what makes the schema valid.
   const fields = [
     { slug: 'pew', name: 'pew', type: 'select', label: 'Pew', required: true, options: ['left', 'right'] },
     { slug: 'attendee', name: 'attendee', type: 'text', label: 'Name', required: true },
   ];
   const row = brief({
     fields,
-    journey: { startPath: '/', formSelector: 'form#f', fill: { 'input[name=attendee]': 'Ada' }, expectText: 'Ada' },
+    journey: {
+      startPath: '/',
+      formSelector: 'form#f',
+      fill: { 'input[name=attendee]': 'Ada' },
+      select: { 'select[name=pew]': 'right' },
+      expectText: 'Ada',
+    },
   });
   assert.deepEqual(validateBriefSchema(row), []);
   assert.equal(echoFieldFor(fields), 'attendee', 'the echoed field must fall to the text field, not the select');
@@ -189,4 +196,73 @@ test('a field that states required and optional contradictorily is refused', () 
     journey: { startPath: '/', formSelector: 'form#f', fill: { 'input[name=x]': 'v' }, expectText: 'v' },
   });
   assert.ok(problems(row).some((p) => /contradicts required:true/.test(p)), problems(row).join('\n'));
+});
+
+// A `<select>` cannot be typed into, so leaving one alone leaves it on its first option and the value
+// that reaches the server is the markup's, not the brief's. These are the rules that make the corpus
+// able to say the journey drives the select rather than that the control renders.
+const withSelect = (journey, { required = true } = {}) => ({
+  brief_id: 'tr-99-v1',
+  fields: [
+    { slug: 'customer', name: 'customer', type: 'text', label: 'Name', required: true, echoed: true },
+    { slug: 'grind', name: 'grind', type: 'select', label: 'Grind', required, options: ['Whole bean', 'Espresso', 'Filter'] },
+  ],
+  journey,
+});
+
+test('a journey that drives a required select with a non-default option validates', () => {
+  const row = withSelect({
+    startPath: '/',
+    formSelector: 'form#f',
+    fill: { 'input[name=customer]': 'Ada' },
+    select: { 'select[name=grind]': 'Espresso' },
+    expectText: 'Ada',
+  });
+  assert.deepEqual(validateBriefSchema(row), []);
+});
+
+test('a required select the journey never drives is refused', () => {
+  const row = withSelect({ startPath: '/', formSelector: 'form#f', fill: { 'input[name=customer]': 'Ada' }, expectText: 'Ada' });
+  assert.ok(
+    problems(row).some((p) => /does not choose 'grind', which its own fields mark required/.test(p)),
+    problems(row).join('\n'),
+  );
+});
+
+test('choosing the first option is refused: an untouched select already submits it', () => {
+  const row = withSelect({
+    startPath: '/',
+    formSelector: 'form#f',
+    fill: { 'input[name=customer]': 'Ada' },
+    select: { 'select[name=grind]': 'Whole bean' },
+    expectText: 'Ada',
+  });
+  assert.ok(problems(row).some((p) => /which is what an untouched select already submits/.test(p)), problems(row).join('\n'));
+});
+
+test('an option the field does not offer is refused', () => {
+  const row = withSelect({
+    startPath: '/',
+    formSelector: 'form#f',
+    fill: { 'input[name=customer]': 'Ada' },
+    select: { 'select[name=grind]': 'Turkish' },
+    expectText: 'Ada',
+  });
+  assert.ok(problems(row).some((p) => /is not one of \["Whole bean","Espresso","Filter"\]/.test(p)), problems(row).join('\n'));
+});
+
+test('a select instruction that addresses a non-select field is refused', () => {
+  const row = withSelect({
+    startPath: '/',
+    formSelector: 'form#f',
+    fill: { 'input[name=customer]': 'Ada' },
+    select: { 'input[name=customer]': 'Ada' },
+    expectText: 'Ada',
+  });
+  assert.ok(problems(row).some((p) => /does not address a select this brief declares/.test(p)), problems(row).join('\n'));
+});
+
+test('an optional select may be left alone', () => {
+  const row = withSelect({ startPath: '/', formSelector: 'form#f', fill: { 'input[name=customer]': 'Ada' }, expectText: 'Ada' }, { required: false });
+  assert.deepEqual(validateBriefSchema(row), []);
 });

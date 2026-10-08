@@ -73,6 +73,17 @@ async function driveJourney(page, base, journey) {
     for (const [selector, value] of Object.entries(journey.fill)) await page.type(selector, value);
     record('fill', { fields: Object.keys(journey.fill) });
   }
+  // A `<select>` cannot be typed into, so a journey that leaves one alone never exercises it and the
+  // corpus could only claim the control renders. Choosing an option moves it off the first
+  // (default) option, which is what makes the submitted value the journey's rather than the markup's.
+  if (journey.select) {
+    const chosen = {};
+    for (const [selector, option] of Object.entries(journey.select)) {
+      await page.selectOption(selector, option);
+      chosen[selector] = option;
+    }
+    record('select', { options: chosen });
+  }
   const submit = await page.submit(journey.formSelector ?? 'form');
   const afterSubmit = await page.url();
   record('submit', {

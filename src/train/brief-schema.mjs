@@ -162,7 +162,7 @@ export function validateBriefSchema(row) {
     return findings;
   }
   for (const key of Object.keys(journey)) {
-    if (!['startPath', 'formSelector', 'fill', 'expectText'].includes(key)) {
+    if (!['startPath', 'formSelector', 'fill', 'select', 'expectText'].includes(key)) {
       at(`journey.${key}`, 'is not a journey property this format defines');
     }
   }
@@ -217,6 +217,36 @@ export function validateBriefSchema(row) {
     for (const name of serverRequiredFieldNames(fields)) {
       if (!filled.has(name)) {
         at('journey.fill', `does not fill '${name}', which its own fields mark required - the server will reject the submission`);
+      }
+    }
+  }
+
+  // A select cannot be typed into, so it needs its own instruction. Requiring every required select
+  // to be driven is what lets the corpus say the journey exercises the form rather than only that the
+  // control renders: leaving one alone leaves it on its default option, so the value that reaches the
+  // server is the markup's, not the brief's.
+  const selects = fields.filter((field) => isString(field.name) && field.type === 'select');
+  const chosen = journey.select;
+  if (chosen !== undefined && (typeof chosen !== 'object' || chosen === null || Array.isArray(chosen))) {
+    at('journey.select', 'must be a map of selector -> option');
+  } else {
+    for (const [selector, option] of Object.entries(chosen ?? {})) {
+      const name = selectorFieldName(selector);
+      const field = name ? selects.find((candidate) => candidate.name === name) : undefined;
+      if (!field) {
+        at(`journey.select['${selector}']`, `does not address a select this brief declares (${selects.map((s) => s.name).join(', ') || 'none'})`);
+        continue;
+      }
+      if (!Array.isArray(field.options) || !field.options.includes(option)) {
+        at(`journey.select['${selector}']`, `option '${option}' is not one of ${JSON.stringify(field.options)}`);
+      } else if (field.options[0] === option) {
+        at(`journey.select['${selector}']`, `selects '${option}', the first option, which is what an untouched select already submits - choose one that moves it`);
+      }
+    }
+    for (const field of selects.filter((candidate) => candidate.required === true)) {
+      const driven = Object.keys(chosen ?? {}).some((selector) => selectorFieldName(selector) === field.name);
+      if (!driven) {
+        at('journey.select', `does not choose '${field.name}', which its own fields mark required - the select would submit its first option`);
       }
     }
   }
