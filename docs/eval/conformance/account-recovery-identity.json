@@ -1,0 +1,291 @@
+{
+  "family": "account-recovery",
+  "target_signature": "data/A6_evaluation/targets/account-recovery/signature.json",
+  "target_sha256": "56be640e0b4ea36550647af277d15c8234d33d3aecd8b3dbacad884564078058",
+  "generated_at": "2026-10-08T12:22:16.005Z",
+  "variants": [
+    {
+      "framework": "raw",
+      "raw": 0.5394,
+      "target": 0.5545,
+      "delta": 0.0151,
+      "axes": {
+        "raw": {
+          "structural": 0.4556,
+          "geometry": 0.4133,
+          "controls": 0.85,
+          "overall": 0.5394
+        },
+        "arm": {
+          "structural": 0.4897,
+          "geometry": 0.4175,
+          "controls": 0.85,
+          "overall": 0.5545
+        }
+      }
+    },
+    {
+      "framework": "react",
+      "raw": 0.5545,
+      "target": 0.5545,
+      "delta": 0,
+      "axes": {
+        "raw": {
+          "structural": 0.4897,
+          "geometry": 0.4175,
+          "controls": 0.85,
+          "overall": 0.5545
+        },
+        "arm": {
+          "structural": 0.4897,
+          "geometry": 0.4175,
+          "controls": 0.85,
+          "overall": 0.5545
+        }
+      }
+    },
+    {
+      "framework": "preact",
+      "raw": 0.5545,
+      "target": 0.5545,
+      "delta": 0,
+      "axes": {
+        "raw": {
+          "structural": 0.4897,
+          "geometry": 0.4175,
+          "controls": 0.85,
+          "overall": 0.5545
+        },
+        "arm": {
+          "structural": 0.4897,
+          "geometry": 0.4175,
+          "controls": 0.85,
+          "overall": 0.5545
+        }
+      }
+    },
+    {
+      "framework": "vue",
+      "raw": 0.5579,
+      "target": 0.5545,
+      "delta": -0.0034,
+      "axes": {
+        "raw": {
+          "structural": 0.4897,
+          "geometry": 0.4272,
+          "controls": 0.85,
+          "overall": 0.5579
+        },
+        "arm": {
+          "structural": 0.4897,
+          "geometry": 0.4175,
+          "controls": 0.85,
+          "overall": 0.5545
+        }
+      }
+    },
+    {
+      "framework": "hono",
+      "raw": 0.5545,
+      "target": 0.5545,
+      "delta": 0,
+      "axes": {
+        "raw": {
+          "structural": 0.4897,
+          "geometry": 0.4175,
+          "controls": 0.85,
+          "overall": 0.5545
+        },
+        "arm": {
+          "structural": 0.4897,
+          "geometry": 0.4175,
+          "controls": 0.85,
+          "overall": 0.5545
+        }
+      }
+    }
+  ],
+  "identity": {
+    "target_conformance": [
+      {
+        "framework": "raw",
+        "structural": 0.4556,
+        "geometry": 0.4133,
+        "controls": 0.85,
+        "overall": 0.5394
+      },
+      {
+        "framework": "react",
+        "structural": 0.4897,
+        "geometry": 0.4175,
+        "controls": 0.85,
+        "overall": 0.5545
+      },
+      {
+        "framework": "preact",
+        "structural": 0.4897,
+        "geometry": 0.4175,
+        "controls": 0.85,
+        "overall": 0.5545
+      },
+      {
+        "framework": "vue",
+        "structural": 0.4897,
+        "geometry": 0.4272,
+        "controls": 0.85,
+        "overall": 0.5579
+      },
+      {
+        "framework": "hono",
+        "structural": 0.4897,
+        "geometry": 0.4175,
+        "controls": 0.85,
+        "overall": 0.5545
+      }
+    ],
+    "pairwise": [
+      {
+        "a": "raw",
+        "b": "react",
+        "structural": 0.6818,
+        "geometry": 0.9862,
+        "controls": 1,
+        "overall": 0.8679
+      },
+      {
+        "a": "raw",
+        "b": "preact",
+        "structural": 0.9375,
+        "geometry": 0.9862,
+        "controls": 1,
+        "overall": 0.9702
+      },
+      {
+        "a": "raw",
+        "b": "vue",
+        "structural": 0.6818,
+        "geometry": 0.9437,
+        "controls": 1,
+        "overall": 0.853
+      },
+      {
+        "a": "raw",
+        "b": "hono",
+        "structural": 0.9375,
+        "geometry": 0.9862,
+        "controls": 1,
+        "overall": 0.9702
+      },
+      {
+        "a": "react",
+        "b": "preact",
+        "structural": 0.7273,
+        "geometry": 1,
+        "controls": 1,
+        "overall": 0.8909
+      },
+      {
+        "a": "react",
+        "b": "vue",
+        "structural": 1,
+        "geometry": 0.9621,
+        "controls": 1,
+        "overall": 0.9867
+      },
+      {
+        "a": "react",
+        "b": "hono",
+        "structural": 0.7273,
+        "geometry": 1,
+        "controls": 1,
+        "overall": 0.8909
+      },
+      {
+        "a": "preact",
+        "b": "vue",
+        "structural": 0.7273,
+        "geometry": 0.9621,
+        "controls": 1,
+        "overall": 0.8777
+      },
+      {
+        "a": "preact",
+        "b": "hono",
+        "structural": 1,
+        "geometry": 1,
+        "controls": 1,
+        "overall": 1
+      },
+      {
+        "a": "vue",
+        "b": "hono",
+        "structural": 0.7273,
+        "geometry": 0.9621,
+        "controls": 1,
+        "overall": 0.8777
+      }
+    ],
+    "identity": {
+      "structural": 0.8148,
+      "geometry": 0.9789,
+      "controls": 1,
+      "overall": 0.9185
+    },
+    "variance": {
+      "structural": 0.0165,
+      "geometry": 0.0004,
+      "controls": 0,
+      "overall": 0.0028
+    },
+    "weakest_pair": {
+      "a": "raw",
+      "b": "vue",
+      "structural": 0.6818,
+      "geometry": 0.9437,
+      "controls": 1,
+      "overall": 0.853
+    },
+    "weakest_by_axis": {
+      "structural": {
+        "a": "raw",
+        "b": "react",
+        "structural": 0.6818,
+        "geometry": 0.9862,
+        "controls": 1,
+        "overall": 0.8679
+      },
+      "geometry": {
+        "a": "raw",
+        "b": "vue",
+        "structural": 0.6818,
+        "geometry": 0.9437,
+        "controls": 1,
+        "overall": 0.853
+      },
+      "controls": {
+        "a": "raw",
+        "b": "react",
+        "structural": 0.6818,
+        "geometry": 0.9862,
+        "controls": 1,
+        "overall": 0.8679
+      },
+      "overall": {
+        "a": "raw",
+        "b": "vue",
+        "structural": 0.6818,
+        "geometry": 0.9437,
+        "controls": 1,
+        "overall": 0.853
+      }
+    },
+    "degenerate": false
+  },
+  "budget": {
+    "structural": 0.75,
+    "geometry": 0.9,
+    "controls": 0.95,
+    "overall": 0.8
+  },
+  "findings": []
+}

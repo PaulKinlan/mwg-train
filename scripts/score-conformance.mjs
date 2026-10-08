@@ -22,10 +22,10 @@ import { join, resolve } from 'node:path';
 import process from 'node:process';
 
 import { launchChrome } from '../src/corpus/cdp.mjs';
-import { startServer, stopServer } from '../src/corpus/harness.mjs';
 import { upliftProject } from '../src/corpus/uplift.mjs';
-import { SIGNATURE_SCRIPT, scoreArm } from '../src/eval/conformance.mjs';
-import { TARGETS_STORAGE, TARGET_VIEWPORT } from '../src/eval/targets.mjs';
+import { scoreArm } from '../src/eval/conformance.mjs';
+import { captureSignature } from '../src/eval/render.mjs';
+import { TARGETS_STORAGE } from '../src/eval/targets.mjs';
 import { generateCorpus, readPlan } from '../pilot/generate.mjs';
 
 const ROOT = resolve(process.cwd());
@@ -47,23 +47,6 @@ function resolveTarget(family) {
   return { relativePath, absolutePath, signature: JSON.parse(readFileSync(absolutePath, 'utf8')) };
 }
 
-async function capture({ chrome, projectDir, port, runDir }) {
-  let server = null;
-  let page = null;
-  try {
-    server = await startServer(projectDir, { port, dbPath: join(runDir, `${port}.sqlite`) });
-    page = await chrome.newPage({ viewport: TARGET_VIEWPORT });
-    await page.goto(`http://127.0.0.1:${port}/`);
-    await page.waitForSettled();
-    return await page.evaluate(SIGNATURE_SCRIPT);
-  } finally {
-    // Both closes are guarded: if `newPage` rejected there is no page, and a throwing close must not
-    // skip the server stop - that would leave a project listening on the port after the run.
-    if (page) await page.close().catch(() => {});
-    if (server) await stopServer(server);
-  }
-}
-
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   const runId = new Date().toISOString().replace(/[:.]/g, '-');
@@ -83,10 +66,10 @@ async function main() {
   let port = args.port;
   try {
     for (const project of generated) {
-      const raw = await capture({ chrome, projectDir: project.dir, port: port++, runDir });
+      const raw = await captureSignature({ chrome, projectDir: project.dir, port: port++, runDir });
       const upliftedDir = resolve('.conformance-uplifted', runId, project.projectId);
       upliftProject(project.dir, project.spec, upliftedDir);
-      const arm = await capture({ chrome, projectDir: upliftedDir, port: port++, runDir });
+      const arm = await captureSignature({ chrome, projectDir: upliftedDir, port: port++, runDir });
       const score = scoreArm({ target: target.signature, raw, arm });
       results.push({ framework: project.framework, ...score });
       console.log(`score-conformance: ${project.projectId} raw ${score.raw.toFixed(3)} -> target ${score.target.toFixed(3)} (delta ${score.delta >= 0 ? '+' : ''}${score.delta.toFixed(3)})`);

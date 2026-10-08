@@ -30,3 +30,16 @@ export const TARGET_FAMILIES = Object.freeze([
 ]);
 
 export const TARGET_VIEWPORT = Object.freeze({ width: 1280, height: 900 });
+
+/**
+ * The R2 identity budget: how much two framework variants that share a target may differ before the
+ * difference is a finding rather than a framework's markup convention.
+ *
+ * The floors are the measured per-axis minimum across the five pilot families, less a deliberate
+ * margin - structural measured 0.805 (budget 0.75), geometry 0.972 (0.90), controls 1.000 (0.95),
+ * overall 0.912 (0.80). A budget that simply admits the measurement would never fire; one set far
+ * below it (0.6 everywhere) leaves a third of the range free and would rubber-stamp a real
+ * regression. `controls` is tightest because a form is a form in every framework; `structural`
+ * allows the most, because that is where a framework's own wrapper and template scaffolding live.
+ */
+export const IDENTITY_BUDGET = Object.freeze({ structural: 0.75, geometry: 0.9, controls: 0.95, overall: 0.8 });
