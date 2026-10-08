@@ -537,4 +537,123 @@ test('only CSS whitespace is allowed around the operator', () => {
   // The characters CSS does treat as whitespace, in every position, must keep working.
   assert.equal(completeSelectorFieldName('input[\tname\r=\n\u000Cx\t]'), 'x');
   assert.equal(completeSelectorFieldName('input[ name = x ]'), 'x');
+
+test('a search flow must name a query, an id results container, and a negative case', () => {
+  const base = () => ({
+    brief_id: 'tr-01-v1',
+    family_id: 'tr-01',
+    fields: [
+      { slug: 'customer', name: 'customer', type: 'text', label: 'Full name', required: true, echoed: true },
+      { slug: 'phone', name: 'phone', type: 'tel', label: 'Phone', required: true },
+    ],
+    journey: {
+      startPath: '/',
+      formSelector: 'form#booking-form',
+      fill: { 'input[name=customer]': 'Ada Lovelace', 'input[name=phone]': '+44 7700 900123' },
+      expectText: 'Ada Lovelace',
+    },
+  });
+  const search = (over) => {
+    const row = base();
+    row.journey.search = {
+      path: '/search',
+      queryParam: 'q',
+      query: 'Ada',
+      resultsSelector: '#search-results',
+      expectIncludes: ['Ada Lovelace'],
+      ...over,
+    };
+    return validateBriefSchema(row);
+  };
+
+  assert.deepEqual(search({}), [], 'a complete search flow is valid');
+
+  // The negative case is the whole point: a search that filters nothing still shows the record that was
+  // written, so the flow has to say one record must NOT appear.
+  assert.deepEqual(search({ expectAbsent: ['Grace Hopper'] }), []);
+
+  assert.ok(search({ resultsSelector: '.results' }).some((f) => f.at === 'journey.search.resultsSelector'));
+  assert.ok(search({ resultsSelector: undefined }).some((f) => f.at === 'journey.search.resultsSelector'));
+  assert.ok(search({ queryParam: 'q"x' }).some((f) => f.at === 'journey.search.queryParam'));
+  assert.ok(search({ query: undefined }).some((f) => f.at === 'journey.search.query'));
+  assert.ok(search({ expectIncludes: [] }).some((f) => f.at === 'journey.search.expectIncludes'));
+  assert.ok(search({ expectAbsent: ['Ada Lovelace'] }).some((f) => f.at === 'journey.search'));
+  assert.ok(search({ path: 'search' }).some((f) => f.at === 'journey.search.path'));
+  assert.ok(search({ extra: 1 }).some((f) => f.at === 'journey.search.extra'));
+});
+
+test('an update flow must change a declared field to a value the create step did not submit', () => {
+  const row = () => ({
+    brief_id: 'tr-01-v1',
+    family_id: 'tr-01',
+    fields: [
+      { slug: 'customer', name: 'customer', type: 'text', label: 'Full name', required: true, echoed: true },
+      { slug: 'phone', name: 'phone', type: 'tel', label: 'Phone', required: true },
+      { slug: 'package', name: 'package', type: 'select', label: 'Package', required: true, options: ['Basic', 'Full'] },
+    ],
+    journey: {
+      startPath: '/',
+      formSelector: 'form#booking-form',
+      fill: { 'input[name=customer]': 'Ada Lovelace', 'input[name=phone]': '+44 7700 900123' },
+      select: { 'select[name=package]': 'Full' },
+      expectText: 'Ada Lovelace',
+    },
+  });
+
+  const withUpdate = (update) => {
+    const r = row();
+    r.journey.update = update;
+    return validateBriefSchema(r);
+  };
+
+  assert.deepEqual(withUpdate({ field: 'customer', newValue: 'Grace Hopper' }), []);
+
+  assert.ok(
+    withUpdate({ field: 'customer', newValue: 'Ada Lovelace' }).some((f) => f.at === 'journey.update.newValue'),
+    're-submitting the value the create step used would change nothing',
+  );
+  assert.ok(withUpdate({ field: 'nickname', newValue: 'Grace' }).some((f) => f.at === 'journey.update.field'));
+  assert.ok(withUpdate({ field: 'package', newValue: 'Basic' }).some((f) => f.at === 'journey.update.field'), 'a select cannot be typed into');
+  assert.ok(withUpdate({ field: 'customer' }).some((f) => f.at === 'journey.update.newValue'));
+  assert.ok(withUpdate({ field: 'customer', newValue: 'X', extra: 1 }).some((f) => f.at === 'journey.update.extra'));
+});
+
+test('a multi-step flow only counts as stateful when a later page shows an earlier choice', () => {
+  const row = (steps) => ({
+    brief_id: 'tr-01-v1',
+    family_id: 'tr-01',
+    fields: [
+      { slug: 'customer', name: 'customer', type: 'text', label: 'Full name', required: true, echoed: true },
+      { slug: 'slot', name: 'slot', type: 'select', label: 'Slot', required: true, options: ['Morning', 'Afternoon'] },
+    ],
+    journey: {
+      startPath: '/',
+      formSelector: 'form#booking-form',
+      fill: { 'input[name=customer]': 'Ada Lovelace' },
+      select: { 'select[name=slot]': 'Afternoon' },
+      expectText: 'Ada Lovelace',
+      steps,
+    },
+  });
+
+  // Carried: step 0 chooses 'Afternoon' and step 1 asserts the next page shows it.
+  assert.deepEqual(
+    validateBriefSchema(
+      row([
+        { path: '/step-one', select: { 'select[name=slot]': 'Afternoon' } },
+        { path: '/step-two', expectText: 'Afternoon' },
+      ]),
+    ),
+    [],
+  );
+
+  // Not carried: the expected text is prose no step supplied, so this is two static pages, not a workflow.
+  assert.ok(
+    validateBriefSchema(row([{ path: '/step-one' }, { path: '/step-two', expectText: 'Your selection' }])).some(
+      (f) => f.at === 'journey.steps[1].expectText',
+    ),
+  );
+  assert.ok(validateBriefSchema(row([{ path: '/step-one', expectText: 'Afternoon' }])).some((f) => f.at === 'journey.steps[0].expectText'));
+  assert.ok(validateBriefSchema(row([{ path: '/step-one', expectText: 42 }])).some((f) => f.at === 'journey.steps[0].expectText'));
+});
 });
