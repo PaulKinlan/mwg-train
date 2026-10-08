@@ -17,9 +17,12 @@ one. Only a separate private repository is a boundary.
    the quarantine tree **by default** (`src/provenance/store.mjs` routes by arm rights class). The
    public tree receives material only through the explicit promote step (`scripts/promote.mjs`),
    which appends to `docs/provenance/promotions.jsonl`.
-2. **No submodule.** The store is a sibling checkout (`../mwg-quarantine` by default, or
-   `$MWG_TRAIN_QUARANTINE`), so no public build, deploy, or CI path can fetch it — there is no
-   `.gitmodules` entry to recurse.
+2. **The submodule is a pointer, never a working location.** The public repo pins the store's
+   commit at `quarantine/` as a provenance record ("this public commit corresponds to that store
+   state"). The pin is inert: this repo has no CI, no build, and no recursive-fetch path, and a
+   plain clone does not fetch submodules. Working checkouts are SIBLINGS (`../mwg-quarantine` by
+   default, or `$MWG_TRAIN_QUARANTINE`) — `src/provenance/store.mjs` refuses a store located
+   inside the public tree, so initialising the submodule for work is rejected by construction.
 3. **The public surface check:** `curl -i https://api.github.com/repos/PaulKinlan/mwg-quarantine`
    unauthenticated must return **404**. Anything else is a leak.
 4. **Publication boundary, not a training-permission boundary.** The store decides *visibility*;
