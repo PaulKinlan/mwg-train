@@ -116,7 +116,12 @@ export function renderMarkdown(md) {
   return out.join('\n');
 }
 
-/** The strip the index shows above the table: the whole pipeline at a glance, with its position. */
+/** Legibility banners (Paul, 2026-10-08): every page says what it shows and why it matters. */
+export const INDEX_BANNER = `
+<div class="notice"><strong>What this page is:</strong> the pilot corpus — 25 generated sites (5 archetypes × 5 rendering arms), each measured BASELINE vs deterministic MWG repair (the TARGET floor). This is pipeline stages 3–5 (GENERATE → MEASURE → RECORD): the <a href="/pipeline">pipeline doc</a> shows the whole flow. <strong>Why it matters:</strong> every acceptance is backed by browser-run evidence you can click through and replay live; rejected attempts stay visible because acceptance bias is only inspectable when they do. This is the EVAL instrument — training data comes only from a separate, disjoint corpus.</div>`;
+
+export const PROJECT_BANNER = `
+<div class="notice"><strong>What this page is:</strong> one corpus project's full record — attribution, acceptance, the measured BASELINE vs TARGET evidence, the owner-auth gate, and live sandboxed instances of both trees. <strong>How to read it:</strong> the TARGET is the deterministic mechanical-repair floor, not a model's work; the gap above it is what training exists to close. Everything shown is hash-verified against the recorded corpus; anything that cannot be reproduced to its recorded SHA is refused, not served.</div>`;
 export const PIPELINE_STRIP = `
 <p class="muted"><strong>Pipeline</strong> (<a href="/pipeline">full doc</a>):
 1 BRIEFS → 2 RULES → 3 GENERATE → 4 MEASURE → 5 RECORD/VERIFY → 6 PRICE → <strong>7 TRAIN — queued behind disjoint training-set generation (mwg-train-0ov); the sealed eval set is never trained on</strong>.
@@ -184,15 +189,22 @@ function attributionBlock(view) {
 
 function liveLinks(view, liveOrigin, runId) {
   const scan = view.scan;
-  const originalOk = scan?.original?.status === 'PASS';
-  const upliftedOk = scan?.uplifted?.status === 'PASS' || scan?.uplifted?.status === 'MISSING';
-  const scanBroken = !scan || scan.status === 'ERROR';
+  // The buttons mirror the serving gate: a pair-level FAIL (a dirty tree OR a dirty record)
+  // means the request would be refused, so the button is disabled rather than offered.
+  const pairOk = scan && (scan.status === 'PASS' || scan.status === 'PARTIAL');
+  const originalOk = pairOk && scan?.original?.status === 'PASS';
+  const upliftedOk = pairOk && (scan?.uplifted?.status === 'PASS' || scan?.uplifted?.status === 'MISSING');
+  const why = !scan
+    ? 'owner-auth scan cannot run (fail-closed)'
+    : !pairOk
+      ? `owner-auth scan: ${escapeHtml(scan.status)} - the pair is refused, records included`
+      : null;
   const runPath = runId ? `/run/${encodeURIComponent(runId)}` : '';
   const button = (version, label, ok) =>
     ok
       ? `<form method="post" action="${escapeHtml(liveOrigin)}/live/${escapeHtml(view.id)}/${version}${escapeHtml(runPath)}/start" style="display:inline"><button type="submit">serve ${label} live</button></form>`
-      : `<button type="button" disabled title="${scanBroken ? 'owner-auth scan cannot run (fail-closed)' : `owner-auth scan: ${escapeHtml(scan?.[version]?.status ?? 'ERROR')}`}">serve ${label} live</button>`;
-  return `${button('original', 'BASELINE', !scanBroken && originalOk)} ${button('uplifted', 'TARGET', !scanBroken && upliftedOk)}`;
+      : `<button type="button" disabled title="${why ?? `owner-auth scan: ${escapeHtml(scan?.[version]?.status ?? 'ERROR')}`}">serve ${label} live</button>`;
+  return `${button('original', 'BASELINE', originalOk)} ${button('uplifted', 'TARGET', upliftedOk)}`;
 }
 
 export function renderIndex({ views, allViews, filters, runId, runs, yieldReport, scanAvailable, liveOrigin }) {
@@ -238,6 +250,7 @@ export function renderIndex({ views, allViews, filters, runId, runs, yieldReport
 
   return page('corpus index', `
 <h1>mwg-train corpus</h1>
+${INDEX_BANNER}
 ${PIPELINE_STRIP}
 ${scanNotice}
 <p class="muted">Roles: <strong>BASELINE</strong> = raw model output, kept to measure improvement FROM · <strong>TARGET</strong> = the deterministic MWG repair floor to build TOWARDS · <strong>ACCEPTED PAIR</strong> = passed eval acceptance (training data comes only from accepted pairs of the DISJOINT training corpus — the eval set is never trained on) · <strong>REJECTED ATTEMPT</strong> = kept as negative example &amp; repair material.</p>
@@ -357,6 +370,7 @@ export function renderProject({ view, runId, runs, liveOrigin }) {
 
   return page(view.id, `
 <h1><code>${escapeHtml(view.id)}</code> ${stateBadge(view)} ${scanBadge(view.scan)}</h1>
+${PROJECT_BANNER}
 <p class="muted">${escapeHtml(view.archetype)}${view.archetypeTitle ? ` — ${escapeHtml(view.archetypeTitle)}` : ''} · ${escapeHtml(view.framework)}${view.frameworkVersion ? ` ${escapeHtml(view.frameworkVersion)}` : ''}${view.frameworkFamily ? ` (${escapeHtml(view.frameworkFamily)})` : ''}</p>
 ${runSelector}
 ${attributionBlock(view)}

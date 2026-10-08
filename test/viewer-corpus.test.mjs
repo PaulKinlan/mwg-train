@@ -156,6 +156,20 @@ test('record content is escaped: evidence text cannot inject markup into the vie
   assert.match(html, /&lt;script&gt;/);
 });
 
+test('a record-level owner-auth failure disables BOTH live buttons (the pair is refused)', (t) => {
+  const root = buildFixtureCorpus();
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const corpus = loadCorpus(root);
+  const views = corpus.projects.map((project) =>
+    projectView(project, {
+      scan: { status: 'FAIL', original: { status: 'PASS', findings: [] }, uplifted: { status: 'PASS', findings: [] }, records: { status: 'FAIL', findings: [{ file: 'decision.json', line: 1, patternId: 'x', kind: 'identity-name' }] } },
+    }),
+  );
+  const html = renderIndex({ views, allViews: views, filters: {}, runId: corpus.runId, runs: corpus.runs, yieldReport: null, scanAvailable: true, liveOrigin: 'http://127.0.0.1:7701' });
+  assert.equal(html.includes('/live/booking-raw/original'), false, 'a pair whose records FAIL offers no live action');
+  assert.match(html, /disabled/);
+});
+
 test('a hostile decision category cannot inject markup (independent-review finding)', (t) => {
   const root = buildFixtureCorpus();
   t.after(() => rmSync(root, { recursive: true, force: true }));
