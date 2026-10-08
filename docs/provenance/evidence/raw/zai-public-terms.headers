@@ -1,0 +1,14 @@
+HTTP/1.1 404 Not Found
+Date: Thu, 08 Oct 2026 08:21:48 GMT
+Content-Type: text/html; charset=utf-8
+Transfer-Encoding: chunked
+Connection: keep-alive
+Set-Cookie: acw_tc=0a0f6bd517914477084341822e4a2f7ff666ab1042154f6bd6f0e4ed0d76ec;path=/;HttpOnly;Max-Age=1800
+set-cookie: NEXT_LOCALE=en; Path=/; SameSite=lax
+x-middleware-rewrite: /en/terms
+Vary: rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch, Accept-Encoding
+Link: <https://static.bigmodel.cn/z-ai-website/_next/static/media/BlackOpsOne_Regular-s.p.3w_f6bdgxj0kl.ttf>; rel=preload; as="font"; crossorigin=""; type="font/ttf", <https://static.bigmodel.cn/z-ai-website/_next/static/media/MiSansLatin_Demibold.p.3upk0x1qgcle4.woff2>; rel=preload; as="font"; crossorigin=""; type="font/woff2", <https://static.bigmodel.cn/z-ai-website/_next/static/media/MiSansLatin_Medium.p.41s73q1h4zcv-.otf>; rel=preload; as="font"; crossorigin=""; type="font/otf", <https://static.bigmodel.cn/z-ai-website/_next/static/media/MiSansLatin_Regular.p.3izq-fxbshnyq.otf>; rel=preload; as="font"; crossorigin=""; type="font/otf", <https://static.bigmodel.cn/z-ai-website/_next/static/media/MiSansLatin_Semibold.p.21f0mop_xxmdf.otf>; rel=preload; as="font"; crossorigin=""; type="font/otf", <https://static.bigmodel.cn/z-ai-website/_next/static/chunks/1-tstwuo4w-3d.css>; rel=preload; as="style", <https://static.bigmodel.cn/z-ai-website/_next/static/chunks/1nxvti5vtie6l.css>; rel=preload; as="style", <https://static.bigmodel.cn/z-ai-website/_next/static/chunks/2nrcci13sfuv4.css>; rel=preload; as="style", <https://static.bigmodel.cn/z-ai-website/_next/static/chunks/1-u57ojluhjh5.css>; rel=preload; as="style"
+X-Powered-By: Next.js
+Cache-Control: private, no-cache, no-store, max-age=0, must-revalidate
+Content-Encoding: gzip
+

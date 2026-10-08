@@ -1,0 +1,25 @@
+HTTP/2 200 
+content-type: text/html; charset=utf-8
+vary: Sec-Fetch-Dest, Sec-Fetch-Mode, Sec-Fetch-Site
+vary: Sec-CH-Prefers-Color-Scheme
+x-ua-compatible: IE=edge
+cache-control: no-cache, no-store, max-age=0, must-revalidate
+pragma: no-cache
+expires: Mon, 01 Jan 1990 00:00:00 GMT
+date: Thu, 08 Oct 2026 08:21:45 GMT
+p3p: CP="This is not a P3P policy! See g.co/p3phelp for more info."
+accept-ch: Sec-CH-Prefers-Color-Scheme
+cross-origin-resource-policy: same-site
+content-security-policy: require-trusted-types-for 'script';report-uri /_/IdentityPoliciesUi/cspreport
+content-security-policy: script-src 'report-sample' 'nonce-lnccYzFPc3NEV-ZK3MIPmA' 'unsafe-inline';object-src 'none';base-uri 'self';report-uri /_/IdentityPoliciesUi/cspreport;worker-src 'self'
+cross-origin-opener-policy: same-origin
+permissions-policy: ch-ua-arch=*, ch-ua-bitness=*, ch-ua-full-version=*, ch-ua-full-version-list=*, ch-ua-model=*, ch-ua-wow64=*, ch-ua-form-factors=*, ch-ua-platform=*, ch-ua-platform-version=*
+reporting-endpoints: default="/_/IdentityPoliciesUi/web-reports?context=eJzjytHikmII1JBiaL15jnUyEJcsOs_aBMRdQDwDiA0VLrHaA3GRxBXWBiD-VHWDVaD6Buu3Yl82lhIgfuvPZhoSyOYMxHfYQtjWPwph2wjEZSVhbJ5Lw9nW9EWxPemIYbsyO5ZNiJtj5tK519gETiy5xaqkmZRfGJ-ZkppXkllSWZCfk5mcmVpcnFpUlloUb2RgZGZoYGCuZ2AcX2AAAD3-PRI"
+content-encoding: gzip
+server: ESF
+x-xss-protection: 0
+x-frame-options: SAMEORIGIN
+x-content-type-options: nosniff
+set-cookie: NID=CuYBCAESmAEBOxGDSJ971eXjLlgWdLux29EBcpaNtX0xszcEPbxCu-x-WqEoCnE-WAgnzRW0mI66OKfSetlB6M8oK5obuwWZQLTmr9XoCAAHGcBtXtP3JflbYBw5Nos1EW5YyGu9QWJ2k1tLFXtmlCizrqJuBQ4eo6X6Es5Tm6aDuh-HDKpkeGDIOibkTezuZD_vggZrVoTiQgG0TJx7zigBMkUB0qwHz8gv9GoPyQpRvY5HfBqq0ZzA0Qj70lBaaWjF4UkO_c2EmLkArI5RDVjN3iX4ixRoKoTIuKNJESG6husmvcWAvQw; expires=Fri, 09-Apr-2027 08:21:45 GMT; path=/; domain=.google.com; HttpOnly
+alt-svc: h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
+

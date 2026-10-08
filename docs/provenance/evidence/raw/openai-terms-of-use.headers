@@ -1,0 +1,24 @@
+HTTP/2 403 
+date: Thu, 08 Oct 2026 08:21:44 GMT
+content-type: text/html; charset=UTF-8
+accept-ch: Sec-CH-UA-Bitness, Sec-CH-UA-Arch, Sec-CH-UA-Full-Version, Sec-CH-UA-Mobile, Sec-CH-UA-Model, Sec-CH-UA-Platform-Version, Sec-CH-UA-Full-Version-List, Sec-CH-UA-Platform, Sec-CH-UA, UA-Bitness, UA-Arch, UA-Full-Version, UA-Mobile, UA-Model, UA-Platform-Version, UA-Platform, UA
+cf-mitigated: challenge
+x-frame-options: SAMEORIGIN
+server: cloudflare
+critical-ch: Sec-CH-UA-Bitness, Sec-CH-UA-Arch, Sec-CH-UA-Full-Version, Sec-CH-UA-Mobile, Sec-CH-UA-Model, Sec-CH-UA-Platform-Version, Sec-CH-UA-Full-Version-List, Sec-CH-UA-Platform, Sec-CH-UA, UA-Bitness, UA-Arch, UA-Full-Version, UA-Mobile, UA-Model, UA-Platform-Version, UA-Platform, UA
+cross-origin-embedder-policy: require-corp
+cross-origin-opener-policy: same-origin
+cross-origin-resource-policy: same-origin
+origin-agent-cluster: ?1
+permissions-policy: accelerometer=(),camera=(),clipboard-read=(),clipboard-write=(),geolocation=(),gyroscope=(),hid=(),magnetometer=(),microphone=(),payment=(),publickey-credentials-get=(),screen-wake-lock=(),serial=(),sync-xhr=(),usb=(),xr-spatial-tracking=*
+referrer-policy: same-origin
+server-timing: chlray;desc="a473bbd64e655913"
+x-content-type-options: nosniff
+strict-transport-security: max-age=31536000; includeSubDomains; preload
+set-cookie: __cf_bm=JBMUUDWrLvbN0ySp.8KMZoSOHLYsw7fNRIqSF4Tku08-1791447704.0412762-1.0.1.1-ThytDLKiWLjjnU08hvZGUhaE5gpIGQNc8iJsGt28x3FUmuyJlDoKBBi0hUx3524CxWMjLsqMphrJSZmJxUNsMd0nACnTh0Td7lUOfHioBZf8Rkxoe52Dnjp6P43WQ0WR; HttpOnly; SameSite=None; Secure; Path=/; Domain=openai.com; Expires=Thu, 08 Oct 2026 08:51:44 GMT
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=N7HfijtEwrL2evC48lyNG7ExWOCKgixWNUcRyiCHU17edD9i57XqinO4Eev1DJG7ZuP%2BAozrAv7EyHzQ0t4wzQ4V5WB1ulKsMKDUIqfuBrQc75yic9Gx2cmJzEQ%3D"}]}
+nel: {"report_to":"cf-nel","success_fraction":0.01,"max_age":604800}
+content-encoding: br
+cf-ray: a473bbd64e655913-PDX
+alt-svc: h3=":443"; ma=86400
+

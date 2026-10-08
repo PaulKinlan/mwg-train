@@ -1,0 +1,25 @@
+HTTP/2 401 
+content-type: text/plain; charset=utf-8
+content-length: 129
+date: Thu, 08 Oct 2026 08:21:49 GMT
+etag: W/"81-1UNEgv5onTXmkKRlwCZPc15VtJU"
+x-powered-by: huggingface-moon
+x-request-id: Root=1-6ac7529d-5d68c016209cff452f6463d8
+ratelimit: "resolvers";r=2995;t=159
+ratelimit-policy: "fixed window";"resolvers";q=3000;w=300
+cross-origin-opener-policy: same-origin
+referrer-policy: strict-origin-when-cross-origin
+access-control-max-age: 86400
+access-control-allow-origin: https://huggingface.co
+vary: Origin
+access-control-expose-headers: X-Repo-Commit,X-Request-Id,X-Error-Code,X-Error-Message,X-Total-Count,ETag,Link,Accept-Ranges,Content-Range,X-Linked-Size,X-Linked-ETag,X-Xet-Hash
+x-error-code: GatedRepo
+x-error-message: Access to model google/gemma-3-12b-it is restricted. You must have access to it and be authenticated to access it. Please log in.
+www-authenticate: Bearer realm="Authentication required", charset="UTF-8"
+x-cache: Error from cloudfront
+via: 1.1 f17401b1ec04d969fad954494abb89fc.cloudfront.net (CloudFront)
+x-amz-cf-pop: HIO52-P5
+alt-svc: h3=":443"; ma=86400
+x-amz-cf-id: 3qu_kSZJ0qRd_pvqidJaldlv63juOtz_2jJgohj62sc0_vlumMJksw==
+strict-transport-security: max-age=31536000
+
