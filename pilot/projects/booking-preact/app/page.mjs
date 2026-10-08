@@ -5,31 +5,29 @@ function Page() {
   return html`
       <h1>Evening class booking</h1>
       <p>A training centre takes bookings for evening classes and shows the booking back to the student.</p>
-    <form id="booking-form" method="post" action="/book" >
+    <form id="booking-form" method="post" action="/book">
       <div class="field">
       <label for="name">Full name</label>
       <input type="text" id="name" name="name" required autocomplete="name" />
+      <p id="name-error" class="error-msg" hidden><span aria-hidden="true">✕</span> Please fill in full name.</p>
       <label for="email">Email</label>
       <input type="email" id="email" name="email" required autocomplete="username" />
+      <p id="email-error" class="error-msg" hidden><span aria-hidden="true">✕</span> Please fill in email.</p>
       <label for="address">Delivery address</label>
       <input type="text" id="address" name="address" required />
+      <p id="address-error" class="error-msg" hidden><span aria-hidden="true">✕</span> Please fill in delivery address.</p>
       <label for="postcode">Postcode</label>
       <input type="text" id="postcode" name="postcode" required />
+      <p id="postcode-error" class="error-msg" hidden><span aria-hidden="true">✕</span> Please fill in postcode.</p>
       <label for="notes">Anything we should know?</label>
       <textarea id="notes" name="notes" required></textarea>
-      </div>
-      <div class="errors">
-      <p id="name-error" class="error-msg" hidden><span aria-hidden="true">✕</span> Please fill in full name.</p>
-      <p id="email-error" class="error-msg" hidden><span aria-hidden="true">✕</span> Please fill in email.</p>
-      <p id="address-error" class="error-msg" hidden><span aria-hidden="true">✕</span> Please fill in delivery address.</p>
-      <p id="postcode-error" class="error-msg" hidden><span aria-hidden="true">✕</span> Please fill in postcode.</p>
       <p id="notes-error" class="error-msg" hidden><span aria-hidden="true">✕</span> Please fill in anything we should know?.</p>
       </div>
       <button type="submit">Submit</button>
     </form>
       <section class="record" aria-labelledby="record-heading">
         <h2 id="record-heading">Your submission</h2>
-        <div id="record-echo" data-echo-field="notes"></div>
+        <div id="record-echo" data-echo-field="notes" data-echo-source="record" data-echo-param=""></div>
       </section>`;
 }
 

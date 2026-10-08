@@ -7,7 +7,8 @@ if (container && ref) {
   const response = await fetch(`/api/record/${encodeURIComponent(ref)}`);
   if (response.ok) {
     const data = await response.json();
-  // DEFECT: user-supplied text inserted as live HTML.
-    container.innerHTML = data[container.dataset.echoField] ?? '';
+    const value = data[container.dataset.echoField] ?? '';
+    // DEFECT: user-supplied text inserted as live HTML.
+    container.innerHTML = value;
   }
 }

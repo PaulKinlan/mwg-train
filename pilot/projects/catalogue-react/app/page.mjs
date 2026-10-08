@@ -5,19 +5,20 @@ function Page() {
   return html`
       <h1>Searchable reference catalogue</h1>
       <p>A parts catalogue with server-side search, paging and a session cart.</p>
-    <form id="catalogue-form" method="post" action="/cart" >
+    <form id="search-form" method="get" action="/search">
       <div role="alert" aria-live="assertive" class="form-status" data-form-status></div>
       <div class="field">
       <label for="query">Search parts</label>
       <input type="search" id="query" name="q" inputmode="search" />
       <label for="quantity">Quantity</label>
       <input type="number" id="quantity" name="quantity" inputmode="numeric" />
+
       </div>
       <button type="submit">Submit</button>
     </form>
       <section class="record" aria-labelledby="record-heading">
         <h2 id="record-heading">Your submission</h2>
-        <div id="record-echo" data-echo-field="query"></div>
+        <div id="record-echo" data-echo-field="query" data-echo-source="query" data-echo-param="q"></div>
       </section>`;
 }
 

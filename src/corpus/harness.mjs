@@ -60,6 +60,7 @@ async function stopServer(server) {
 
 /** One journey: the archetype's server-persistence flow, driven for real. */
 async function driveJourney(page, base, journey) {
+  const kind = journey.kind ?? 'post-redirect-reload';
   const steps = [];
   const record = (name, detail) => steps.push({ step: name, ...detail });
   await page.goto(`${base}${journey.startPath}`);
@@ -74,7 +75,14 @@ async function driveJourney(page, base, journey) {
   }
   const submit = await page.submit(journey.formSelector ?? 'form');
   const afterSubmit = await page.url();
-  record('submit', { url: afterSubmit, status: page.network.filter((entry) => entry.url === afterSubmit).at(-1)?.status ?? null, method: 'POST', valid: submit.valid });
+  record('submit', {
+    url: afterSubmit,
+    status: page.network.filter((entry) => entry.url === afterSubmit).at(-1)?.status ?? null,
+    // The method matters: a GET form is a different server journey from a POST that redirects, and the
+    // pilot covers both rather than assuming every archetype submits the same way.
+    method: kind === 'get-query-reload' ? 'GET' : 'POST',
+    valid: submit.valid,
+  });
 
   // Server persistence: a reload of the same URL must still show the record. This is the clause that
   // separates a real server journey from a client-side illusion.
@@ -208,6 +216,13 @@ export async function runProjectVersion({ chrome, projectDir, spec, label, port,
       journey: {
         submitContent: async (payload) => {
           if (!spec.content_journey) return false;
+          if (spec.content_journey.source === 'query') {
+            // A reflected-query project: the untrusted value is in the URL the server rendered, so the
+            // journey is a plain navigation, and the page's own script is what inserts it.
+            await page.goto(`${base}${spec.content_journey.path}?${spec.content_journey.param}=${encodeURIComponent(payload)}`);
+            await page.waitFor(spec.echo_container ?? '#record-echo', { timeout: 5000 });
+            return true;
+          }
           // Submit the payload as this project's echoed field, through the project's own route, so the
           // sanitisation rule tests the real path a user-supplied value takes.
           await page.goto(`${base}${spec.journey.startPath}`);

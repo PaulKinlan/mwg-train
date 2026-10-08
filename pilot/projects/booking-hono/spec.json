@@ -1,0 +1,154 @@
+{
+  "project_id": "booking-hono",
+  "archetype": "booking",
+  "archetype_title": "Evening class booking",
+  "framework": {
+    "name": "hono",
+    "version": "4.9.12",
+    "dialect": "html",
+    "family": "hono",
+    "markupFile": "app/page.mjs",
+    "stylesFile": "app/styles.css",
+    "enhanceFile": "app/enhance.js"
+  },
+  "routes": [
+    {
+      "method": "GET",
+      "path": "/",
+      "kind": "page"
+    },
+    {
+      "method": "POST",
+      "path": "/book",
+      "kind": "write"
+    },
+    {
+      "method": "GET",
+      "path": "/booking/:ref",
+      "kind": "read-by-reference"
+    },
+    {
+      "method": "GET",
+      "path": "/roster",
+      "kind": "list"
+    }
+  ],
+  "fields": [
+    {
+      "slug": "name",
+      "name": "name",
+      "type": "text",
+      "autocomplete": "name"
+    },
+    {
+      "slug": "email",
+      "name": "email",
+      "type": "email",
+      "autocomplete": "username"
+    },
+    {
+      "slug": "address",
+      "name": "address",
+      "type": "text",
+      "autocomplete": "street-address"
+    },
+    {
+      "slug": "postcode",
+      "name": "postcode",
+      "type": "text",
+      "autocomplete": "postal-code"
+    },
+    {
+      "slug": "notes",
+      "name": "notes",
+      "type": "textarea",
+      "autocomplete": null
+    }
+  ],
+  "seeded_defects": [
+    "no-required",
+    "eager-invalid",
+    "no-aria-sync",
+    "no-autofill-address",
+    "xss-innerhtml"
+  ],
+  "journey": {
+    "startPath": "/",
+    "formSelector": "form#booking-form",
+    "fill": {
+      "input[name=name]": "Ada Lovelace",
+      "input[name=email]": "ada@example.test",
+      "input[name=address]": "12 Bridge Row",
+      "input[name=postcode]": "AB1 2CD",
+      "textarea[name=notes]": "Window seat please"
+    },
+    "expectText": "Ada Lovelace"
+  },
+  "echo_expect": "Window seat please",
+  "content_journey": {
+    "source": "record",
+    "path": "/booking/REF",
+    "param": null,
+    "inputSelector": "[name=notes]",
+    "formSelector": "form#booking-form",
+    "echoField": "notes"
+  },
+  "echo_source": "record",
+  "session_routes": [],
+  "echo_container": "#record-echo",
+  "security_journey": null,
+  "session": false,
+  "check_context": {
+    "formSelector": "form#booking-form",
+    "primaryField": "[name=name]",
+    "usernameField": "[name=email]",
+    "passwordField": "[name=password]",
+    "addressField": "[name=address]",
+    "postcodeField": "[name=postcode]"
+  },
+  "primaryFields": [
+    {
+      "slug": "name",
+      "name": "name",
+      "elementPattern": "<input[^>]*name=\"name\"[^>]*>",
+      "elementPatternFirst": "<input[^>]*name=\"name\"[^>]*>"
+    },
+    {
+      "slug": "email",
+      "name": "email",
+      "elementPattern": "<input[^>]*name=\"email\"[^>]*>",
+      "elementPatternFirst": "<input[^>]*name=\"email\"[^>]*>"
+    },
+    {
+      "slug": "address",
+      "name": "address",
+      "elementPattern": "<input[^>]*name=\"address\"[^>]*>",
+      "elementPatternFirst": "<input[^>]*name=\"address\"[^>]*>"
+    },
+    {
+      "slug": "postcode",
+      "name": "postcode",
+      "elementPattern": "<input[^>]*name=\"postcode\"[^>]*>",
+      "elementPatternFirst": "<input[^>]*name=\"postcode\"[^>]*>"
+    },
+    {
+      "slug": "notes",
+      "name": "notes",
+      "elementPattern": "<textarea[^>]*name=\"notes\"[^>]*>",
+      "elementPatternFirst": "<textarea[^>]*name=\"notes\"[^>]*>"
+    }
+  ],
+  "autofill": {
+    "usernamePattern": "(<input[^>]*type=\"email\"[^>]*>)",
+    "passwordPattern": "(<input[^>]*type=\"password\"[^>]*>)",
+    "streetPattern": "(<input[^>]*name=\"address\"[^>]*>)",
+    "postcodePattern": "(<input[^>]*name=\"postcode\"[^>]*>)"
+  },
+  "required_rules": [
+    "forms/required-field-feedback",
+    "forms/validate-input-after-interaction",
+    "accessibility/accessible-error-announcement",
+    "forms/autofill-address-form",
+    "security/sanitize-untrusted-html"
+  ]
+}

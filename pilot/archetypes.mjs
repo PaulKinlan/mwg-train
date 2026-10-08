@@ -104,10 +104,17 @@ export const ARCHETYPES = {
     ],
     fields: [
       { slug: 'query', name: 'q', type: 'search', label: 'Search parts', echoed: true },
-      { slug: 'quantity', name: 'quantity', type: 'number', label: 'Quantity' },
+      // Optional, and deliberately so: the uplift tool must not mark a field required that the project
+      // never asked for, and a required-but-unfilled field made the browser refuse the journey's submit.
+      { slug: 'quantity', name: 'quantity', type: 'number', label: 'Quantity', optional: true },
     ],
-    echo: { field: 'query', container: '#search-summary', route: 'search' },
+    // This archetype's echoed value is the query the user typed, reflected by the server-rendered
+    // search page. Its journey is therefore a GET that reloads, not a POST that redirects: the pilot
+    // covers both server-journey shapes rather than assuming every archetype is a form submission.
+    echo: { field: 'query', source: 'query', param: 'q' },
+    form: { method: 'get', action: '/search' },
     journey: {
+      kind: 'get-query-reload',
       startPath: '/',
       formSelector: 'form#search-form',
       fill: { 'input[name=q]': 'bearing' },
@@ -133,7 +140,8 @@ export const ARCHETYPES = {
       { slug: 'password', name: 'password', type: 'password', label: 'Password' },
       { slug: 'displayName', name: 'displayName', type: 'text', label: 'Display name', echoed: true },
     ],
-    echo: { field: 'displayName', container: '#account-name', route: 'read-session' },
+    // This archetype's answer is held by the session the server issued, not by a record reference.
+    echo: { field: 'displayName', source: 'session' },
     journey: {
       startPath: '/',
       formSelector: 'form#signup-form',

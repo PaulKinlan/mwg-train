@@ -5,7 +5,7 @@ function Page() {
   return html`
       <h1>Event registration with capacity</h1>
       <p>Registration for a limited-capacity event, with a server-enforced waitlist.</p>
-    <form id="event-registration-form" method="post" action="/register" >
+    <form id="registration-form" method="post" action="/register">
       <div role="alert" aria-live="assertive" class="form-status" data-form-status></div>
       <div class="field">
       <label for="name">Attendee name</label>
@@ -18,12 +18,13 @@ function Page() {
         <option value="accessible">accessible</option>
         <option value="student">student</option>
       </select>
+
       </div>
       <button type="submit">Submit</button>
     </form>
       <section class="record" aria-labelledby="record-heading">
         <h2 id="record-heading">Your submission</h2>
-        <div id="record-echo" data-echo-field="name"></div>
+        <div id="record-echo" data-echo-field="name" data-echo-source="record" data-echo-param=""></div>
       </section>`;
 }
 

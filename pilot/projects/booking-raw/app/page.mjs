@@ -2,7 +2,7 @@ export async function renderPage(data = {}) {
   return `
       <h1>Evening class booking</h1>
       <p>A training centre takes bookings for evening classes and shows the booking back to the student.</p>
-    <form id="booking-form" method="post" action="/book" >
+    <form id="booking-form" method="post" action="/book">
       <div class="field">
       <label for="name">Full name</label>
       <input type="text" id="name" name="name" autocomplete="name">
@@ -14,12 +14,13 @@ export async function renderPage(data = {}) {
       <input type="text" id="postcode" name="postcode">
       <label for="notes">Anything we should know?</label>
       <textarea id="notes" name="notes"></textarea>
+
       </div>
       <button type="submit">Submit</button>
     </form>
       <section class="record" aria-labelledby="record-heading">
         <h2 id="record-heading">Your submission</h2>
-        <div id="record-echo" data-echo-field="notes"></div>
+        <div id="record-echo" data-echo-field="notes" data-echo-source="record" data-echo-param=""></div>
       </section>`;
 }
 

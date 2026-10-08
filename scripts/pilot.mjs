@@ -24,16 +24,17 @@ import { runProjectVersion, hashTree } from '../src/corpus/harness.mjs';
 import { decidePair, renderYieldReport, summarizeYield } from '../src/corpus/accept.mjs';
 
 function parseArgs(argv) {
-  const args = { projects: 'pilot/projects', out: 'pilot/out', limit: null, only: null, keep: false, port: 4300 };
+  const args = { projects: 'pilot/projects', out: 'pilot/out', limit: null, only: null, framework: null, keep: false, port: 4300 };
   for (let i = 0; i < argv.length; i += 1) {
     if (argv[i] === '--projects') args.projects = argv[++i];
     else if (argv[i] === '--out') args.out = argv[++i];
     else if (argv[i] === '--limit') args.limit = Number(argv[++i]);
     else if (argv[i] === '--only') args.only = argv[++i];
+    else if (argv[i] === '--framework') args.framework = argv[++i];
     else if (argv[i] === '--keep') args.keep = true;
     else if (argv[i] === '--port') args.port = Number(argv[++i]);
     else if (argv[i] === '--help' || argv[i] === '-h') {
-      console.error('usage: node scripts/pilot.mjs [--projects <dir>] [--out <dir>] [--limit N] [--only <id>] [--port N]');
+      console.error('usage: node scripts/pilot.mjs [--projects <dir>] [--out <dir>] [--limit N] [--only <id>] [--framework <name>] [--port N]');
       process.exit(0);
     } else {
       console.error(`pilot: unknown argument '${argv[i]}'`);
@@ -55,6 +56,9 @@ async function main() {
     .map((entry) => entry.name)
     .sort()
     .filter((id) => (args.only ? id === args.only : true))
+    // One arm at a time: 25 projects x 2 versions x (2 journeys + 5 checks) is more than a single bound
+    // should carry on a two-core box, and re-running one arm should not re-measure the others.
+    .filter((id) => (args.framework ? id.endsWith(`-${args.framework}`) : true))
     .slice(0, args.limit ?? undefined);
 
   console.log(`pilot: ${projectIds.length} project(s) -> ${runDir}`);
@@ -81,7 +85,10 @@ async function main() {
       });
       port += 1;
 
-      const upliftDir = join(runDir, 'uplifted', projectId);
+      // The uplifted copy must live inside the repository: away from the repo root, Node cannot resolve
+      // `htm/react`, `preact` or `vue`, and every framework arm tied with "server did not become ready"
+      // instead of being measured. Only the raw arm survived, because its page imports nothing.
+      const upliftDir = join(resolve('.pilot-uplifted', runId), projectId);
       const uplift = upliftProject(projectDir, spec, upliftDir);
       const uplifted = await runProjectVersion({
         chrome,

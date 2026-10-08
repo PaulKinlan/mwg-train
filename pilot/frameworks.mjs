@@ -22,7 +22,15 @@ import { ARCHETYPES } from './archetypes.mjs';
 
 const slug = (value) => value.replace(/[^a-z0-9]+/gi, '-').toLowerCase();
 
+/** The form's id comes from the journey's selector, so the markup and the journey cannot drift apart. */
+const formIdOf = (archetype) => archetype.journey.formSelector.replace(/^form#/, '');
+
 export const FRAMEWORKS = {
+  // Hono is the non-virtual-DOM modern arm: it routes on the server and its `hono/html` templates are
+  // tagged template literals that produce HTML strings. That matters for this pilot - there is no
+  // compile step and no virtual DOM, so the markup a browser receives is the markup in the file, and
+  // the deterministic uplift tool can edit it exactly as it edits the raw arm.
+  hono: { name: 'hono', version: '4.9.12', dialect: 'html', markupFile: 'app/page.mjs', stylesFile: 'app/styles.css', enhanceFile: 'app/enhance.js', family: 'hono' },
   raw: { name: 'raw', version: 'platform (no framework)', dialect: 'html', markupFile: 'app/page.mjs', stylesFile: 'app/styles.css', enhanceFile: 'app/enhance.js', family: 'raw-web-platform' },
   react: { name: 'react', version: '19.2.0', dialect: 'react', markupFile: 'app/page.mjs', stylesFile: 'app/styles.css', enhanceFile: 'app/enhance.js', family: 'react' },
   preact: { name: 'preact', version: '10.27.2', dialect: 'preact', markupFile: 'app/page.mjs', stylesFile: 'app/styles.css', enhanceFile: 'app/enhance.js', family: 'react-family' },
@@ -30,22 +38,21 @@ export const FRAMEWORKS = {
 };
 
 /** Field markup. Attributes come from the archetype, and the defects decide which are left out. */
-function fieldMarkup(field, { defects, dialect }) {
-  const nameAttr = 'name';
+function fieldMarkup(field, { defects }) {
   if (field.type === 'textarea') {
     const required = defects.includes('no-required') ? '' : ' required';
     return `      <label for="${field.slug}">${field.label}</label>
-      <textarea id="${field.slug}" ${nameAttr}="${field.name}"${required}></textarea>`;
+      <textarea id="${field.slug}" name="${field.name}"${required}></textarea>`;
   }
   if (field.type === 'select') {
     const options = (field.options ?? []).map((option) => `        <option value="${option}">${option}</option>`).join('\n');
     return `      <label for="${field.slug}">${field.label}</label>
-      <select id="${field.slug}" ${nameAttr}="${field.name}">
+      <select id="${field.slug}" name="${field.name}">
 ${options}
       </select>`;
   }
-  const attrs = [`type="${field.type}"`, `id="${field.slug}"`, `${nameAttr}="${field.name}"`];
-  if (!defects.includes('no-required')) attrs.push('required');
+  const attrs = [`type="${field.type}"`, `id="${field.slug}"`, `name="${field.name}"`];
+  if (!defects.includes('no-required') && !field.optional) attrs.push('required');
   // `no-autofill` is the whole-form defect; the per-purpose tokens are separate so a project can be
   // missing only the address hints (which is the realistic case: sign-in is usually done first).
   const autofillBlocked =
@@ -58,29 +65,36 @@ ${options}
       <input ${attrs.join(' ')}>`;
 }
 
+/**
+ * The error text for a field, emitted immediately after its control.
+ *
+ * It used to be collected into a separate `.errors` block at the end of the form. The CSS that reveals
+ * it uses a sibling combinator, so with that structure the message could never be shown - the uplift
+ * added the attribute and the text and the field still reported nothing. Beside the field is also where
+ * the guidance puts it.
+ */
+const errorText = (field, { defects }) =>
+  defects.includes('no-required') || field.optional ? '' : `      <p id="${field.slug}-error" class="error-msg" hidden><span aria-hidden="true">✕</span> Please fill in ${field.label.toLowerCase()}.</p>`;
+
 function formMarkup(archetype, { defects }) {
-  const action = archetype.routes.find((route) => route.method === 'POST' && route.kind.startsWith('write')).path;
-  const fields = archetype.fields.map((field) => fieldMarkup(field, { defects, dialect: 'html' })).join('\n');
-  const errorBlocks = defects.includes('no-required')
-    ? ''
-    : archetype.fields
-        .filter((field) => field.slug !== 'ticket')
-        .map((field) => `      <p id="${field.slug}-error" class="error-msg" hidden><span aria-hidden="true">✕</span> Please fill in ${field.label.toLowerCase()}.</p>`)
-        .join('\n');
+  const form = archetype.form ?? { method: 'post', action: archetype.routes.find((route) => route.method === 'POST' && route.kind.startsWith('write')).path };
+  const fields = archetype.fields
+    .map((field) => `${fieldMarkup(field, { defects })}\n${errorText(field, { defects })}`)
+    .join('\n')
+    .replace(/\n{2,}/g, '\n');
   const live = defects.includes('no-aria-sync') ? '' : '      <div role="alert" aria-live="assertive" class="form-status" data-form-status></div>\n';
-  const aria = defects.includes('no-required') ? '' : '';
-  return `    <form id="${archetype.id}-form" method="post" action="${action}" >
+  return `    <form id="${formIdOf(archetype)}" method="${form.method}" action="${form.action}">
 ${live}      <div class="field">
 ${fields}
       </div>
-${errorBlocks ? `      <div class="errors">\n${errorBlocks}\n      </div>\n` : ''}      <button type="submit">Submit</button>
-    </form>${aria}`;
+      <button type="submit">Submit</button>
+    </form>`;
 }
 
 function echoMarkup(archetype) {
   return `      <section class="record" aria-labelledby="record-heading">
         <h2 id="record-heading">Your submission</h2>
-        <div id="record-echo" data-echo-field="${archetype.echo.field}"></div>
+        <div id="record-echo" data-echo-field="${archetype.echo.field}" data-echo-source="${archetype.echo.source ?? 'record'}" data-echo-param="${archetype.echo.param ?? ''}"></div>
       </section>`;
 }
 
@@ -126,6 +140,35 @@ export async function renderDocument({ title = '${archetype.title}', data = {} }
     <script type="module" src="/app/enhance.js"></script>
   </body>
 </html>\`;
+}
+`;
+  }
+  if (framework.name === 'hono') {
+    return `import { html } from 'hono/html';
+
+// One tagged template for the page body, exposed two ways so the route handler can hand Hono a full
+// document and the tests can read the body alone.
+const body = html\`${body}\`;
+
+export async function renderPage() {
+  return body.toString();
+}
+
+export async function renderDocument({ title = '${archetype.title}' } = {}) {
+  return html\`<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>\${title}</title>
+    <link rel="stylesheet" href="/app/styles.css">
+  </head>
+  <body>
+    <main>\${body}
+    </main>
+    <script type="module" src="/app/enhance.js"></script>
+  </body>
+</html>\`.toString();
 }
 `;
   }
@@ -222,35 +265,75 @@ function enhanceSource(archetype, { defects }) {
   const unsafe = defects.includes('xss-innerhtml');
   const a11y = defects.includes('no-aria-sync')
     ? '// DEFECT: no aria-invalid synchronisation, so the error state exists only visually.'
-    : `function syncValidity(input) {
-  if (input.matches(':user-invalid')) input.setAttribute('aria-invalid', 'true');
-  else input.removeAttribute('aria-invalid');
+    : `function syncValidity(field) {
+  if (field.matches(':user-invalid')) field.setAttribute('aria-invalid', 'true');
+  else field.removeAttribute('aria-invalid');
 }
-for (const input of document.querySelectorAll('input, textarea, select')) {
-  for (const event of ['blur', 'input', 'change']) input.addEventListener(event, () => syncValidity(input));
+for (const field of document.querySelectorAll('input, textarea, select')) {
+  for (const event of ['blur', 'input', 'change']) field.addEventListener(event, () => syncValidity(field));
 }`;
-  const insertion = unsafe
-    ? `  // DEFECT: user-supplied text inserted as live HTML.
-    container.innerHTML = data[container.dataset.echoField] ?? '';`
-    : `  // MWG security/sanitize-untrusted-html: parse user-supplied text as inert content.
-  // TODO(baseline/element.sethtml): drop the textContent fallback and call setHTML directly.
-  const value = data[container.dataset.echoField] ?? '';
-  if (typeof container.setHTML === 'function') container.setHTML(value);
-  else container.textContent = value;`;
-  return `// Progressive enhancement for the ${archetype.id} flow: one plain script for every arm.
-${a11y}
-
-const container = document.getElementById('record-echo');
+  const insertion = (indent) => {
+    const pad = ' '.repeat(indent);
+    return unsafe
+      ? `${pad}// DEFECT: user-supplied text inserted as live HTML.\n${pad}container.innerHTML = value;`
+      : `${pad}// MWG security/sanitize-untrusted-html: user-supplied markup is parsed as inert content.\n${pad}// TODO(baseline/element.sethtml): drop the textContent fallback and call setHTML directly.\n${pad}if (typeof container.setHTML === 'function') container.setHTML(value);\n${pad}else container.textContent = value;`;
+  };
+  // One branch, chosen at generation time. The first version emitted both and guarded the record path
+  // with a top-level `return`, which is a syntax error in a module - so no project echoed anything and
+  // the persistence assertion failed for all twenty-five. A generated script has to be valid for the
+  // source it was generated for.
+  const source = archetype.echo.source ?? 'record';
+  const body =
+    source === 'query'
+      ? `const container = document.getElementById('record-echo');
+if (container) {
+  // The value this project reflects is the user's query, which the server rendered into the URL.
+  const value = new URLSearchParams(location.search).get(container.dataset.echoParam) ?? '';
+${insertion(2)}
+}`
+      : source === 'session'
+      ? `const container = document.getElementById('record-echo');
+if (container) {
+  // The value comes from the session the server issued, so this is a session journey rather than a
+  // record-reference journey - a third shape the pilot covers on purpose.
+  const response = await fetch('/api/me');
+  if (response.ok) {
+    const data = await response.json();
+    const value = data[container.dataset.echoField] ?? '';
+${insertion(4)}
+  }
+}`
+      : `const container = document.getElementById('record-echo');
 const ref = location.pathname.split('/').filter(Boolean).pop();
 if (container && ref) {
   const response = await fetch(\`/api/record/\${encodeURIComponent(ref)}\`);
   if (response.ok) {
     const data = await response.json();
-${insertion}
+    const value = data[container.dataset.echoField] ?? '';
+${insertion(4)}
   }
-}
+}`;
+  return `// Progressive enhancement for the ${archetype.id} flow: one plain script for every arm.
+${a11y}
+
+${body}
 `;
 }
+
+/**
+ * The session tables and statements, emitted only for a session-backed archetype.
+ *
+ * Built from quoted strings rather than a nested template literal, so the generated code needs no
+ * escaping of its own - a nested backtick here is a syntax error in the generator.
+ */
+const sessionTables = (archetype) =>
+  archetype.session
+    ? [
+        "db.exec('CREATE TABLE IF NOT EXISTS sessions (sid TEXT PRIMARY KEY, ref TEXT NOT NULL, created_at TEXT NOT NULL)');",
+        "const insertSession = db.prepare('INSERT INTO sessions (sid, ref, created_at) VALUES (?, ?, ?)');",
+        "const selectSession = db.prepare('SELECT ref FROM sessions WHERE sid = ?');",
+      ].join('\n')
+    : '';
 
 function serverSource(archetype, framework) {
   const writeRoute = archetype.routes.find((route) => route.method === 'POST' && route.kind.startsWith('write'));
@@ -290,8 +373,10 @@ db.exec(\`CREATE TABLE IF NOT EXISTS accounts (email TEXT PRIMARY KEY, password 
 
 const insert = db.prepare('INSERT INTO records (ref, created_at, payload) VALUES (?, ?, ?)');
 const select = db.prepare('SELECT ref, created_at, payload FROM records WHERE ref = ?');
+${sessionTables(archetype)}
 const count = db.prepare('SELECT COUNT(*) AS n FROM records');
 const list = db.prepare('SELECT ref, payload FROM records ORDER BY created_at DESC LIMIT 50');
+
 
 const parseBody = (request) =>
   new Promise((resolve) => {
@@ -311,7 +396,7 @@ const json = (response, value, status = 200, headers = {}) => {
   response.end(JSON.stringify(value));
 };
 
-const REQUIRED = ${JSON.stringify(archetype.fields.filter((field) => field.type !== 'select').map((field) => field.name))};
+const REQUIRED = ${JSON.stringify(archetype.fields.filter((field) => field.type !== 'select' && !field.optional).map((field) => field.name))};
 
 const server = createServer(async (request, response) => {
   const url = new URL(request.url, \`http://\${request.headers.host ?? '127.0.0.1'}\`);
@@ -345,8 +430,11 @@ const server = createServer(async (request, response) => {
       return html(response, document.replace('<h1>', \`<p role="alert">Missing: \${missing.join(', ')}</p><h1>\`), 422);
     }
     const ref = randomUUID().slice(0, 8);
-${archetype.session ? `    const headers = { 'set-cookie': \`sid=\${randomUUID()}; ${cookieFlags}\` };` : '    const headers = {};'}
     insert.run(ref, new Date().toISOString(), JSON.stringify(body));
+${archetype.session ? `    // The session is what makes the follow-up page show the right record, so it is stored, not guessed.
+    const sid = randomUUID();
+    insertSession.run(sid, ref, new Date().toISOString());
+    const headers = { 'set-cookie': \`sid=\${sid}; ${cookieFlags}\` };` : '    const headers = {};'}
     response.writeHead(303, { location: \`${writeRoute.redirect('${ref}')}\`.replace('\${ref}', ref), ...headers });
     return response.end();
   }
@@ -362,10 +450,29 @@ ${archetype.session ? `    const headers = { 'set-cookie': \`sid=\${randomUUID()
     return html(response, await renderDocument({ title: 'Your submission', data: { ref: row.ref } }));
   }
 
+  if (path === '/api/me' && request.method === 'GET') {
+    // The session echo: who the server thinks you are, from the cookie it issued.
+    const sid = (request.headers.cookie ?? '')
+      .split(';')
+      .map((part) => part.trim())
+      .find((part) => part.startsWith('sid='))
+      ?.slice('sid='.length);
+    const session = sid ? selectSession.get(sid) : undefined;
+    const record = session ? select.get(session.ref) : undefined;
+    if (!record) return json(response, { error: 'no session' }, 401);
+    return json(response, { ref: record.ref, ...JSON.parse(record.payload) });
+  }
+
   if (path.startsWith('/api/record/') && request.method === 'GET') {
     const row = select.get(path.split('/').pop());
     if (!row) return json(response, { error: 'not found' }, 404);
     return json(response, { ref: row.ref, ...JSON.parse(row.payload) });
+  }
+
+  // A route the archetype declares is a route the server must serve: /account was declared as the
+  // account flow's page and never implemented, so the journey landed on a 404.
+  if (${JSON.stringify(archetype.routes.filter((route) => route.kind === 'read-session').map((route) => route.path))}.includes(path) && request.method === 'GET') {
+    return html(response, await renderDocument({ title: 'Your account' }));
   }
 
   if (path === '/roster' || path === '/inbox' || path === '/attendees' || path === '/cart') {
@@ -389,6 +496,147 @@ server.listen(port, '127.0.0.1', () => {
 `;
 }
 
+
+/** The Hono arm's server: Hono owns routing and responses, node:http only carries them. */
+function honoServerSource(archetype, framework) {
+  const writeRoute = archetype.routes.find((route) => route.method === 'POST' && route.kind.startsWith('write'));
+  const cookieFlags = archetype.session ? 'HttpOnly; SameSite=Lax; Path=/; Max-Age=3600' : null;
+  return `/**
+ * ${archetype.id} server, hono arm: routing in Hono, pages as hono/html templates, records in SQLite.
+ *
+ * Hono runs on the server, so this arm keeps the same journey contract as the others (a POST that
+ * writes, a GET that reads the record back, a JSON endpoint the enhancement script reads) while the
+ * markup stays plain HTML strings rather than a virtual DOM.
+ */
+import { createServer } from 'node:http';
+import { readFileSync } from 'node:fs';
+import { randomUUID } from 'node:crypto';
+import { DatabaseSync } from 'node:sqlite';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+import { Hono } from 'hono';
+import { renderDocument, renderPage } from './app/page.mjs';
+
+const here = dirname(fileURLToPath(import.meta.url));
+const arg = (name, fallback) => {
+  const index = process.argv.indexOf(\`--\${name}\`);
+  return index === -1 ? fallback : process.argv[index + 1];
+};
+const port = Number(arg('port', process.env.PILOT_PORT ?? 3000));
+const dbPath = arg('db', join(here, 'pilot.sqlite'));
+
+const db = new DatabaseSync(dbPath);
+db.exec(\`CREATE TABLE IF NOT EXISTS records (ref TEXT PRIMARY KEY, created_at TEXT NOT NULL, payload TEXT NOT NULL)\`);
+const insert = db.prepare('INSERT INTO records (ref, created_at, payload) VALUES (?, ?, ?)');
+const select = db.prepare('SELECT ref, created_at, payload FROM records WHERE ref = ?');
+const list = db.prepare('SELECT ref, payload FROM records ORDER BY created_at DESC LIMIT 50');
+
+const REQUIRED = ${JSON.stringify(archetype.fields.filter((field) => field.type !== 'select' && !field.optional).map((field) => field.name))};
+${sessionTables(archetype)}
+const app = new Hono();
+
+app.get('/__health', (c) => c.json({ ok: true }));
+
+app.get('/app/:file', (c) => {
+  const name = c.req.param('file');
+  try {
+    const body = readFileSync(join(here, 'app', name));
+    const type = name.endsWith('.css') ? 'text/css' : name.endsWith('.js') ? 'text/javascript' : 'text/plain';
+    return c.body(body, 200, { 'content-type': \`\${type}; charset=utf-8\` });
+  } catch {
+    return c.text('not found', 404);
+  }
+});
+
+app.get('/', (c) => c.html(renderDocument({ title: ${JSON.stringify(archetype.title)} })));
+
+app.post('${writeRoute.path}', async (c) => {
+  const body = await c.req.parseBody();
+  const missing = REQUIRED.filter((field) => !String(body[field] ?? '').trim());
+  if (missing.length > 0) {
+    const document = await renderDocument({ title: 'Please correct the form' });
+    // The rejected submission returns a usable page with the form, plus the reason.
+    return c.html(document.replace('<h1>', \`<p role="alert">Missing: \${missing.join(', ')}</p><h1>\`), 422);
+  }
+  const ref = randomUUID().slice(0, 8);
+  insert.run(ref, new Date().toISOString(), JSON.stringify(body));
+${archetype.session ? `  const sid = randomUUID();
+  insertSession.run(sid, ref, new Date().toISOString());
+  c.header('set-cookie', \`sid=\${sid}; ${cookieFlags}\`);` : ''}
+  return c.redirect(\`${writeRoute.redirect('${ref}')}\`.replace('\${ref}', ref), 303);
+});
+
+const readPath = ${JSON.stringify(archetype.routes.find((route) => route.kind === 'read-by-reference')?.path ?? '/record/:ref')};
+app.get(readPath, (c) => {
+  const row = select.get(c.req.param('ref'));
+  if (!row) return c.text('We could not find that record.', 404);
+  return c.html(renderDocument({ title: 'Your submission' }));
+});
+
+app.get('/api/me', (c) => {
+  const sid = (c.req.header('cookie') ?? '')
+    .split(';')
+    .map((part) => part.trim())
+    .find((part) => part.startsWith('sid='))
+    ?.slice('sid='.length);
+  const session = sid ? selectSession.get(sid) : undefined;
+  const record = session ? select.get(session.ref) : undefined;
+  if (!record) return c.json({ error: 'no session' }, 401);
+  return c.json({ ref: record.ref, ...JSON.parse(record.payload) });
+});
+
+app.get('/api/record/:ref', (c) => {
+  const row = select.get(c.req.param('ref'));
+  if (!row) return c.json({ error: 'not found' }, 404);
+  return c.json({ ref: row.ref, ...JSON.parse(row.payload) });
+});
+
+for (const sessionPage of ${JSON.stringify(archetype.routes.filter((route) => route.kind === 'read-session').map((route) => route.path))}) {
+  app.get(sessionPage, (c) => c.html(renderDocument({ title: 'Your account' })));
+}
+
+for (const listing of ['/roster', '/inbox', '/attendees', '/cart']) {
+  app.get(listing, (c) => c.html(renderDocument({ title: 'Records' })));
+}
+
+app.get('/search', (c) => c.html(renderDocument({ title: \`Search: \${c.req.query('q') ?? ''}\` })));
+
+app.get('/page', async (c) => c.text(await renderPage()));
+
+// Bridge node:http onto Hono's fetch handler: the request and response objects are translated and
+// nothing else is shared, so this arm really does route through Hono.
+const server = createServer(async (request, response) => {
+  const url = \`http://\${request.headers.host ?? '127.0.0.1'}\${request.url}\`;
+  const chunks = [];
+  if (request.method !== 'GET' && request.method !== 'HEAD') {
+    for await (const chunk of request) chunks.push(chunk);
+  }
+  const headers = new Headers();
+  for (const [key, value] of Object.entries(request.headers)) if (typeof value === 'string') headers.set(key, value);
+  const fetchRequest = new Request(url, {
+    method: request.method,
+    headers,
+    body: chunks.length > 0 ? Buffer.concat(chunks) : undefined,
+  });
+  const fetchResponse = await app.fetch(fetchRequest);
+  const outgoing = {};
+  fetchResponse.headers.forEach((value, key) => {
+    if (key.toLowerCase() === 'set-cookie') return;
+    outgoing[key] = value;
+  });
+  const cookies = fetchResponse.headers.getSetCookie?.() ?? [];
+  if (cookies.length > 0) outgoing['set-cookie'] = cookies;
+  response.writeHead(fetchResponse.status, outgoing);
+  response.end(Buffer.from(await fetchResponse.arrayBuffer()));
+});
+
+server.listen(port, '127.0.0.1', () => {
+  console.log(\`listening on \${port} with \${dbPath}\`);
+});
+`;
+}
+
 export function buildProject({ archetypeId, frameworkName, defects = [], flags = {} }) {
   const archetype = ARCHETYPES[archetypeId];
   if (!archetype) throw new Error(`unknown archetype ${archetypeId}`);
@@ -397,7 +645,7 @@ export function buildProject({ archetypeId, frameworkName, defects = [], flags =
   const projectId = `${archetypeId}-${frameworkName}${flags.variant ? `-${flags.variant}` : ''}`;
 
   const files = {
-    'server.mjs': serverSource(archetype, framework),
+    'server.mjs': framework.name === 'hono' ? honoServerSource(archetype, framework) : serverSource(archetype, framework),
     [framework.markupFile]: pageSource(archetype, { defects, framework }),
     [framework.stylesFile]: stylesSource({ defects, framework }),
     [framework.enhanceFile]: enhanceSource(archetype, { defects }),
@@ -413,14 +661,33 @@ export function buildProject({ archetypeId, frameworkName, defects = [], flags =
     seeded_defects: defects,
     journey: archetype.journey,
     // The value the page must show back after a reload: the echoed field's own input, not the name.
-    echo_expect: archetype.echo ? archetype.journey.fill[`[name=${archetype.echo.field}]`] : null,
-    content_journey: archetype.echo
-      ? { path: `${archetype.routes.find((route) => route.kind === 'read-by-reference')?.path.replace(':ref', 'REF') ?? '/'}`, inputSelector: `[name=${archetype.echo.field}]`, formSelector: `form#${archetype.id}-form`, echoField: archetype.echo.field }
+    // The fill keys are selectors with an element prefix (`textarea[name=notes]`), so the expected
+    // echoed value is found by suffix. Looking it up as a bare `[name=...]` returned undefined, which
+    // silently skipped the persistence assertion entirely.
+    echo_expect: archetype.echo
+      ? (Object.entries(archetype.journey.fill ?? {}).find(([selector]) =>
+          selector.endsWith(`[name=${archetype.fields.find((field) => field.slug === archetype.echo.field).name}]`),
+        )?.[1] ?? null)
       : null,
+    // The field is addressed by its *name* (`q`), not its slug (`query`): using the slug made every
+    // content journey fail with "type([name=query]) failed: not found" on a form that has the field.
+    content_journey: archetype.echo
+      ? {
+          source: archetype.echo.source ?? 'record',
+          path: archetype.echo.source === 'query' ? (archetype.form?.action ?? '/') : (archetype.routes.find((route) => route.kind === 'read-by-reference')?.path.replace(':ref', 'REF') ?? '/'),
+          param: archetype.echo.param ?? null,
+          inputSelector: `[name=${archetype.fields.find((field) => field.slug === archetype.echo.field).name}]`,
+          formSelector: archetype.journey.formSelector,
+          echoField: archetype.echo.field,
+        }
+      : null,
+    echo_source: archetype.echo?.source ?? 'record',
+    session_routes: archetype.routes.filter((route) => route.kind === 'read-session').map((route) => route.path),
+    echo_container: '#record-echo',
     security_journey: archetype.securityJourney ?? null,
     session: Boolean(archetype.session),
     check_context: {
-      formSelector: `form#${archetype.id}-form`,
+      formSelector: archetype.journey.formSelector,
       primaryField: `[name=${archetype.fields[0].name}]`,
       usernameField: `[name=email]`,
       passwordField: `[name=password]`,
@@ -430,8 +697,10 @@ export function buildProject({ archetypeId, frameworkName, defects = [], flags =
     // Blocks the uplift tool reads. These are part of the spec contract: when they were missing the
     // tool reported "not iterable" and quietly improved nothing, which the pilot then measured as a
     // coverage gap rather than as the naming bug it was.
+    // Only fields the project treats as required. A field the user may leave empty is not a field the
+    // uplift tool should start requiring: that would change the task, which acceptance forbids.
     primaryFields: archetype.fields
-      .filter((field) => field.type !== 'select')
+      .filter((field) => field.type !== 'select' && !field.optional)
       .map((field) => ({
         slug: field.slug,
         name: field.name,

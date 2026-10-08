@@ -15,3 +15,5 @@ docs/eval/quotes.raw/*
 
 # Pilot run output: records, screenshots and traces are evidence, regenerated per run.
 pilot/out/
+# Uplifted copies of the pilot projects: regenerated per run, inside the repo so module resolution works.
+.pilot-uplifted/

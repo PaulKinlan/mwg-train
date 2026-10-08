@@ -51,6 +51,7 @@
     "xss-innerhtml"
   ],
   "journey": {
+    "kind": "get-query-reload",
     "startPath": "/",
     "formSelector": "form#search-form",
     "fill": {
@@ -58,16 +59,24 @@
     },
     "expectText": "bearing"
   },
+  "echo_expect": "bearing",
   "content_journey": {
-    "path": "/",
-    "inputSelector": "[name=query]",
-    "formSelector": "form#catalogue-form",
+    "source": "query",
+    "path": "/search",
+    "param": "q",
+    "inputSelector": "[name=q]",
+    "formSelector": "form#search-form",
     "echoField": "query"
   },
+  "echo_source": "query",
+  "session_routes": [
+    "/cart"
+  ],
+  "echo_container": "#record-echo",
   "security_journey": null,
   "session": true,
   "check_context": {
-    "formSelector": "form#catalogue-form",
+    "formSelector": "form#search-form",
     "primaryField": "[name=q]",
     "usernameField": "[name=email]",
     "passwordField": "[name=password]",
@@ -80,12 +89,6 @@
       "name": "q",
       "elementPattern": "<input[^>]*name=\"q\"[^>]*>",
       "elementPatternFirst": "<input[^>]*name=\"q\"[^>]*>"
-    },
-    {
-      "slug": "quantity",
-      "name": "quantity",
-      "elementPattern": "<input[^>]*name=\"quantity\"[^>]*>",
-      "elementPatternFirst": "<input[^>]*name=\"quantity\"[^>]*>"
     }
   ],
   "autofill": {

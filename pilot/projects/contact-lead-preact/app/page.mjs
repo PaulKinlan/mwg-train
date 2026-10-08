@@ -5,7 +5,7 @@ function Page() {
   return html`
       <h1>Public-service enquiry form</h1>
       <p>A council service takes enquiries, validates them, and shows the enquirer their reference.</p>
-    <form id="contact-lead-form" method="post" action="/enquiry" >
+    <form id="enquiry-form" method="post" action="/enquiry">
       <div class="field">
       <label for="name">Your name</label>
       <input type="text" id="name" name="name" autocomplete="name" />
@@ -13,12 +13,13 @@ function Page() {
       <input type="email" id="email" name="email" autocomplete="email" />
       <label for="message">How can we help?</label>
       <textarea id="message" name="message"></textarea>
+
       </div>
       <button type="submit">Submit</button>
     </form>
       <section class="record" aria-labelledby="record-heading">
         <h2 id="record-heading">Your submission</h2>
-        <div id="record-echo" data-echo-field="message"></div>
+        <div id="record-echo" data-echo-field="message" data-echo-source="record" data-echo-param=""></div>
       </section>`;
 }
 

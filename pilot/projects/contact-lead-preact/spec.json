@@ -67,16 +67,22 @@
     },
     "expectText": "Grace Hopper"
   },
+  "echo_expect": "Please repair the street light",
   "content_journey": {
+    "source": "record",
     "path": "/enquiry/REF",
+    "param": null,
     "inputSelector": "[name=message]",
-    "formSelector": "form#contact-lead-form",
+    "formSelector": "form#enquiry-form",
     "echoField": "message"
   },
+  "echo_source": "record",
+  "session_routes": [],
+  "echo_container": "#record-echo",
   "security_journey": null,
   "session": false,
   "check_context": {
-    "formSelector": "form#contact-lead-form",
+    "formSelector": "form#enquiry-form",
     "primaryField": "[name=name]",
     "usernameField": "[name=email]",
     "passwordField": "[name=password]",

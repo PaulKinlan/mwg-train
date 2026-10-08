@@ -67,16 +67,22 @@
     },
     "expectText": "Katherine Johnson"
   },
+  "echo_expect": "Katherine Johnson",
   "content_journey": {
+    "source": "record",
     "path": "/registration/REF",
+    "param": null,
     "inputSelector": "[name=name]",
-    "formSelector": "form#event-registration-form",
+    "formSelector": "form#registration-form",
     "echoField": "name"
   },
+  "echo_source": "record",
+  "session_routes": [],
+  "echo_container": "#record-echo",
   "security_journey": null,
   "session": false,
   "check_context": {
-    "formSelector": "form#event-registration-form",
+    "formSelector": "form#registration-form",
     "primaryField": "[name=name]",
     "usernameField": "[name=email]",
     "passwordField": "[name=password]",

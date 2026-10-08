@@ -72,12 +72,20 @@
     },
     "expectText": "Alan T"
   },
+  "echo_expect": "Alan T",
   "content_journey": {
+    "source": "session",
     "path": "/reset/REF",
+    "param": null,
     "inputSelector": "[name=displayName]",
-    "formSelector": "form#account-recovery-form",
+    "formSelector": "form#signup-form",
     "echoField": "displayName"
   },
+  "echo_source": "session",
+  "session_routes": [
+    "/account"
+  ],
+  "echo_container": "#record-echo",
   "security_journey": {
     "path": "/",
     "formSelector": "form#signup-form",
@@ -85,7 +93,7 @@
   },
   "session": true,
   "check_context": {
-    "formSelector": "form#account-recovery-form",
+    "formSelector": "form#signup-form",
     "primaryField": "[name=email]",
     "usernameField": "[name=email]",
     "passwordField": "[name=password]",

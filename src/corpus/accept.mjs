@@ -27,7 +27,11 @@ export function journeyWorks(record) {
     const reload = persistence.steps?.find((step) => step.step === 'reload');
     if (!reload) problems.push('the reload step did not run');
     const expected = record.echo_expect;
-    if (expected && !(persistence.echoedText ?? persistence.persistedText ?? '').includes(expected)) {
+    if (typeof expected !== 'string' || expected === '') {
+      // Fail closed: without an expected value this clause cannot be checked, and a missing expectation
+      // must not read as a pass - that is a gate that verifies nothing while reporting success.
+      problems.push('the harness has no expected echoed value, so server persistence was not asserted');
+    } else if (!(persistence.echoedText ?? persistence.persistedText ?? '').includes(expected)) {
       problems.push(`the page shown after a reload does not contain "${expected}", so the record did not persist as served`);
     }
     const submit = persistence.steps?.find((step) => step.step === 'submit');

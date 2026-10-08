@@ -82,12 +82,18 @@
     },
     "expectText": "Ada Lovelace"
   },
+  "echo_expect": "Window seat please",
   "content_journey": {
+    "source": "record",
     "path": "/booking/REF",
+    "param": null,
     "inputSelector": "[name=notes]",
     "formSelector": "form#booking-form",
     "echoField": "notes"
   },
+  "echo_source": "record",
+  "session_routes": [],
+  "echo_container": "#record-echo",
   "security_journey": null,
   "session": false,
   "check_context": {
