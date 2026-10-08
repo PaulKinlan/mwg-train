@@ -8,13 +8,13 @@ const body = html`
     <form id="registration-form" method="post" action="/register">
       <div class="field">
       <label for="name">Attendee name</label>
-      <input type="text" id="name" name="name" required>
+      <input type="text" id="name" name="name" required aria-errormessage="name-error">
       <p id="name-error" class="error-msg" hidden><span aria-hidden="true">✕</span> Please fill in attendee name.</p>
       <label for="email">Email</label>
-      <input type="email" id="email" name="email" required autocomplete="email">
+      <input type="email" id="email" name="email" required aria-errormessage="email-error" autocomplete="email">
       <p id="email-error" class="error-msg" hidden><span aria-hidden="true">✕</span> Please fill in email.</p>
       <label for="ticket">Ticket</label>
-      <select id="ticket" name="ticket">
+      <select id="ticket" name="ticket" required aria-errormessage="ticket-error">
         <option value="standard">standard</option>
         <option value="accessible">accessible</option>
         <option value="student">student</option>

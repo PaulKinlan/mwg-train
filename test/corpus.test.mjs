@@ -138,6 +138,32 @@ test('a form id is the one its journey selects', () => {
   }
 });
 
+test('the clean baseline satisfies every rule it is not seeded to fail', () => {
+  // The control arm of this pilot is a project with no seeded defects. When the baseline was
+  // incomplete the control failed rules it should have satisfied, and the uplift scored a "fix" on it -
+  // which is how a corpus bug becomes an inflated yield.
+  for (const archetypeId of ARCHETYPE_IDS) {
+    const { files, spec: built } = buildProject({ archetypeId, frameworkName: 'raw', defects: [] });
+    const markup = files[built.framework.markupFile];
+    const styles = files[built.framework.stylesFile];
+    const script = files[built.framework.enhanceFile];
+
+    // required-field-feedback: the requirement, the error text, and the link between them
+    assert.ok(markup.includes(' required'), `${archetypeId}: nothing is marked required`);
+    assert.ok(markup.includes('aria-errormessage="'), `${archetypeId}: no field points at its error text`);
+    assert.ok(markup.includes('-error"'), `${archetypeId}: the error text it points at does not exist`);
+    // validate-input-after-interaction: the error is styled only after interaction
+    assert.ok(styles.includes(':user-invalid'), `${archetypeId}: no :user-invalid styling`);
+    assert.ok(!/(?<!user-):invalid\b/.test(styles), `${archetypeId}: the baseline styles :invalid eagerly`);
+    // accessible-error-announcement: a live region, and the script that fills it
+    assert.ok(markup.includes('role="alert"'), `${archetypeId}: no live region`);
+    assert.ok(script.includes('function announce('), `${archetypeId}: nothing ever fills the live region`);
+    assert.ok(script.includes('syncValidity'), `${archetypeId}: no aria-invalid synchronisation`);
+    // sanitize-untrusted-html: user text is never inserted as live HTML
+    assert.ok(!script.includes('innerHTML'), `${archetypeId}: the baseline inserts untrusted text as HTML`);
+  }
+});
+
 test('the content journey addresses fields by name, not slug', () => {
   // The catalogue's echoed field has slug `query` and name `q`; addressing it by slug made every
   // content journey fail with "type([name=query]) failed: not found" on a form that has the field.

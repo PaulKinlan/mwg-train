@@ -8,7 +8,7 @@ const template = `
       <div role="alert" aria-live="assertive" class="form-status" data-form-status></div>
       <div class="field">
       <label for="query">Search parts</label>
-      <input type="search" id="query" name="q" required inputmode="search">
+      <input type="search" id="query" name="q" required aria-errormessage="query-error" inputmode="search">
       <p id="query-error" class="error-msg" hidden><span aria-hidden="true">✕</span> Please fill in search parts.</p>
       <label for="quantity">Quantity</label>
       <input type="number" id="quantity" name="quantity" inputmode="numeric">

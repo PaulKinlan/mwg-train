@@ -129,7 +129,7 @@ input:user-invalid + .error-msg, input:user-invalid ~ .error-msg { display: bloc
 input:user-invalid ~ .error-msg[hidden] { display: block; }
 `;
 
-const a11yScript = `
+export const A11Y_SCRIPT = `
 /* MWG accessibility/accessible-error-announcement: an assertive live region that carries the error
    text while the field is invalid, and aria-invalid kept in step so the state is not colour-only. */
 function messages(form) {
@@ -233,8 +233,11 @@ export const TRANSFORMS = [
     apply(files, spec) {
       const script = spec.framework.enhanceFile;
       const current = files.get(script);
-      if (current.includes('syncValidity')) return 'skipped: already present';
-      files.write(script, `${current}\n${a11yScript}`);
+      // Satisfied when the script tracks the visual state *and* writes the failure text into the live
+      // region. Checking only for the first made the tool report "already present" on a page whose
+      // region nothing ever filled - and the check then failed on a project the tool claimed was fine.
+      if (current.includes('syncValidity') && current.includes('function announce(')) return 'skipped: already present';
+      files.write(script, `${current}\n${A11Y_SCRIPT}`);
       files.edits.push({ rule: 'accessibility/accessible-error-announcement', file: script, kind: 'append-js' });
       // A live region has to exist for the failure text to be announced as it appears.
       const target = spec.framework.markupFile;

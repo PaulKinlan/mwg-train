@@ -9,13 +9,13 @@ function Page() {
       <div role="alert" aria-live="assertive" class="form-status" data-form-status></div>
       <div class="field">
       <label for="email">Email</label>
-      <input type="email" id="email" name="email" required />
+      <input type="email" id="email" name="email" required aria-errormessage="email-error" />
       <p id="email-error" class="error-msg" hidden><span aria-hidden="true">✕</span> Please fill in email.</p>
       <label for="password">Password</label>
-      <input type="password" id="password" name="password" required />
+      <input type="password" id="password" name="password" required aria-errormessage="password-error" />
       <p id="password-error" class="error-msg" hidden><span aria-hidden="true">✕</span> Please fill in password.</p>
       <label for="displayName">Display name</label>
-      <input type="text" id="displayName" name="displayName" required />
+      <input type="text" id="displayName" name="displayName" required aria-errormessage="displayName-error" />
       <p id="displayName-error" class="error-msg" hidden><span aria-hidden="true">✕</span> Please fill in display name.</p>
       </div>
       <button type="submit">Submit</button>

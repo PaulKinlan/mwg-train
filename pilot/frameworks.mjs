@@ -18,6 +18,7 @@
  * The generator takes a defect list, so an original with a known MWG gap is produced from the same
  * code that produces a clean one - and the uplift tool is measured against the gap it was given.
  */
+import { A11Y_SCRIPT } from '../src/corpus/uplift.mjs';
 import { ARCHETYPES } from './archetypes.mjs';
 
 const slug = (value) => value.replace(/[^a-z0-9]+/gi, '-').toLowerCase();
@@ -266,15 +267,12 @@ th, td { text-align: left; border-bottom: 1px solid #d5d8dd; padding: 0.4rem 0.3
 
 function enhanceSource(archetype, { defects }) {
   const unsafe = defects.includes('xss-innerhtml');
+  // The clean baseline is the *same* script the uplift tool injects, imported rather than retyped:
+  // when the two drifted, a project with no seeded defect still failed the announcement rule.
   const a11y = defects.includes('no-aria-sync')
     ? '// DEFECT: no aria-invalid synchronisation, so the error state exists only visually.'
-    : `function syncValidity(field) {
-  if (field.matches(':user-invalid')) field.setAttribute('aria-invalid', 'true');
-  else field.removeAttribute('aria-invalid');
-}
-for (const field of document.querySelectorAll('input, textarea, select')) {
-  for (const event of ['blur', 'input', 'change']) field.addEventListener(event, () => syncValidity(field));
-}`;
+    : A11Y_SCRIPT;
+
   const insertion = (indent) => {
     const pad = ' '.repeat(indent);
     return unsafe
