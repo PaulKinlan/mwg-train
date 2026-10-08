@@ -1,0 +1,119 @@
+{
+  "project_id": "event-registration-hono",
+  "archetype": "event-registration",
+  "archetype_title": "Event registration with capacity",
+  "framework": {
+    "name": "hono",
+    "version": "4.9.12",
+    "dialect": "html",
+    "family": "hono",
+    "markupFile": "app/page.mjs",
+    "stylesFile": "app/styles.css",
+    "enhanceFile": "app/enhance.js"
+  },
+  "routes": [
+    {
+      "method": "GET",
+      "path": "/",
+      "kind": "page"
+    },
+    {
+      "method": "POST",
+      "path": "/register",
+      "kind": "write-with-capacity"
+    },
+    {
+      "method": "GET",
+      "path": "/registration/:ref",
+      "kind": "read-by-reference"
+    },
+    {
+      "method": "GET",
+      "path": "/attendees",
+      "kind": "list"
+    }
+  ],
+  "fields": [
+    {
+      "slug": "name",
+      "name": "name",
+      "type": "text",
+      "autocomplete": null
+    },
+    {
+      "slug": "email",
+      "name": "email",
+      "type": "email",
+      "autocomplete": "email"
+    },
+    {
+      "slug": "ticket",
+      "name": "ticket",
+      "type": "select",
+      "autocomplete": null
+    }
+  ],
+  "seeded_defects": [
+    "eager-invalid",
+    "no-aria-sync",
+    "no-autofill-address"
+  ],
+  "journey": {
+    "startPath": "/",
+    "formSelector": "form#registration-form",
+    "fill": {
+      "input[name=name]": "Katherine Johnson",
+      "input[name=email]": "kj@example.test"
+    },
+    "expectText": "Katherine Johnson"
+  },
+  "echo_expect": "Katherine Johnson",
+  "content_journey": {
+    "source": "record",
+    "path": "/registration/REF",
+    "param": null,
+    "inputSelector": "[name=name]",
+    "formSelector": "form#registration-form",
+    "echoField": "name"
+  },
+  "echo_source": "record",
+  "write_journey": null,
+  "session_routes": [],
+  "echo_container": "#record-echo",
+  "security_journey": null,
+  "session": false,
+  "check_context": {
+    "formSelector": "form#registration-form",
+    "primaryField": "[name=name]",
+    "usernameField": "[name=email]",
+    "passwordField": "[name=password]",
+    "addressField": "[name=address]",
+    "postcodeField": "[name=postcode]"
+  },
+  "primaryFields": [
+    {
+      "slug": "name",
+      "name": "name",
+      "elementPattern": "<input[^>]*name=\"name\"[^>]*>",
+      "elementPatternFirst": "<input[^>]*name=\"name\"[^>]*>"
+    },
+    {
+      "slug": "email",
+      "name": "email",
+      "elementPattern": "<input[^>]*name=\"email\"[^>]*>",
+      "elementPatternFirst": "<input[^>]*name=\"email\"[^>]*>"
+    }
+  ],
+  "autofill": {
+    "usernamePattern": "(<input[^>]*type=\"email\"[^>]*>)",
+    "passwordPattern": "(<input[^>]*type=\"password\"[^>]*>)",
+    "streetPattern": "(<input[^>]*name=\"address\"[^>]*>)",
+    "postcodePattern": "(<input[^>]*name=\"postcode\"[^>]*>)"
+  },
+  "required_rules": [
+    "forms/required-field-feedback",
+    "forms/validate-input-after-interaction",
+    "accessibility/accessible-error-announcement",
+    "security/sanitize-untrusted-html"
+  ]
+}

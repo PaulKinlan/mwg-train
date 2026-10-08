@@ -1,0 +1,8 @@
+{
+  "name": "pilot-account-recovery-vue",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs"
+  }
+}

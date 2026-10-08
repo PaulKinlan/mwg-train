@@ -1,0 +1,126 @@
+{
+  "project_id": "contact-lead-hono",
+  "archetype": "contact-lead",
+  "archetype_title": "Public-service enquiry form",
+  "framework": {
+    "name": "hono",
+    "version": "4.9.12",
+    "dialect": "html",
+    "family": "hono",
+    "markupFile": "app/page.mjs",
+    "stylesFile": "app/styles.css",
+    "enhanceFile": "app/enhance.js"
+  },
+  "routes": [
+    {
+      "method": "GET",
+      "path": "/",
+      "kind": "page"
+    },
+    {
+      "method": "POST",
+      "path": "/enquiry",
+      "kind": "write"
+    },
+    {
+      "method": "GET",
+      "path": "/enquiry/:ref",
+      "kind": "read-by-reference"
+    },
+    {
+      "method": "GET",
+      "path": "/inbox",
+      "kind": "list"
+    }
+  ],
+  "fields": [
+    {
+      "slug": "name",
+      "name": "name",
+      "type": "text",
+      "autocomplete": "name"
+    },
+    {
+      "slug": "email",
+      "name": "email",
+      "type": "email",
+      "autocomplete": "email"
+    },
+    {
+      "slug": "message",
+      "name": "message",
+      "type": "textarea",
+      "autocomplete": null
+    }
+  ],
+  "seeded_defects": [
+    "no-required",
+    "eager-invalid",
+    "xss-innerhtml"
+  ],
+  "journey": {
+    "startPath": "/",
+    "formSelector": "form#enquiry-form",
+    "fill": {
+      "input[name=name]": "Grace Hopper",
+      "input[name=email]": "grace@example.test",
+      "textarea[name=message]": "Please repair the street light"
+    },
+    "expectText": "Grace Hopper"
+  },
+  "echo_expect": "Please repair the street light",
+  "content_journey": {
+    "source": "record",
+    "path": "/enquiry/REF",
+    "param": null,
+    "inputSelector": "[name=message]",
+    "formSelector": "form#enquiry-form",
+    "echoField": "message"
+  },
+  "echo_source": "record",
+  "write_journey": null,
+  "session_routes": [],
+  "echo_container": "#record-echo",
+  "security_journey": null,
+  "session": false,
+  "check_context": {
+    "formSelector": "form#enquiry-form",
+    "primaryField": "[name=name]",
+    "usernameField": "[name=email]",
+    "passwordField": "[name=password]",
+    "addressField": "[name=address]",
+    "postcodeField": "[name=postcode]"
+  },
+  "primaryFields": [
+    {
+      "slug": "name",
+      "name": "name",
+      "elementPattern": "<input[^>]*name=\"name\"[^>]*>",
+      "elementPatternFirst": "<input[^>]*name=\"name\"[^>]*>"
+    },
+    {
+      "slug": "email",
+      "name": "email",
+      "elementPattern": "<input[^>]*name=\"email\"[^>]*>",
+      "elementPatternFirst": "<input[^>]*name=\"email\"[^>]*>"
+    },
+    {
+      "slug": "message",
+      "name": "message",
+      "elementPattern": "<textarea[^>]*name=\"message\"[^>]*>",
+      "elementPatternFirst": "<textarea[^>]*name=\"message\"[^>]*>"
+    }
+  ],
+  "autofill": {
+    "usernamePattern": "(<input[^>]*type=\"email\"[^>]*>)",
+    "passwordPattern": "(<input[^>]*type=\"password\"[^>]*>)",
+    "streetPattern": "(<input[^>]*name=\"address\"[^>]*>)",
+    "postcodePattern": "(<input[^>]*name=\"postcode\"[^>]*>)"
+  },
+  "required_rules": [
+    "forms/required-field-feedback",
+    "forms/validate-input-after-interaction",
+    "accessibility/accessible-error-announcement",
+    "security/sanitize-untrusted-html"
+  ]
+}

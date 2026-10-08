@@ -1,0 +1,137 @@
+{
+  "project_id": "account-recovery-vue",
+  "archetype": "account-recovery",
+  "archetype_title": "Account sign-in and recovery",
+  "framework": {
+    "name": "vue",
+    "version": "3.5.22",
+    "dialect": "vue",
+    "family": "vue",
+    "markupFile": "app/page.mjs",
+    "stylesFile": "app/styles.css",
+    "enhanceFile": "app/enhance.js"
+  },
+  "routes": [
+    {
+      "method": "GET",
+      "path": "/",
+      "kind": "page"
+    },
+    {
+      "method": "POST",
+      "path": "/signup",
+      "kind": "write-account"
+    },
+    {
+      "method": "GET",
+      "path": "/account",
+      "kind": "read-session"
+    },
+    {
+      "method": "POST",
+      "path": "/reset",
+      "kind": "write-reset"
+    },
+    {
+      "method": "GET",
+      "path": "/reset/:ref",
+      "kind": "read-by-reference"
+    }
+  ],
+  "fields": [
+    {
+      "slug": "email",
+      "name": "email",
+      "type": "email",
+      "autocomplete": "username"
+    },
+    {
+      "slug": "password",
+      "name": "password",
+      "type": "password",
+      "autocomplete": null
+    },
+    {
+      "slug": "displayName",
+      "name": "displayName",
+      "type": "text",
+      "autocomplete": null
+    }
+  ],
+  "seeded_defects": [
+    "eager-invalid",
+    "xss-innerhtml"
+  ],
+  "journey": {
+    "startPath": "/",
+    "formSelector": "form#signup-form",
+    "fill": {
+      "input[name=email]": "alan@example.test",
+      "input[name=password]": "correct horse battery",
+      "input[name=displayName]": "Alan T"
+    },
+    "expectText": "Alan T"
+  },
+  "echo_expect": "Alan T",
+  "content_journey": {
+    "source": "session",
+    "path": "/reset/REF",
+    "param": null,
+    "inputSelector": "[name=displayName]",
+    "formSelector": "form#signup-form",
+    "echoField": "displayName"
+  },
+  "echo_source": "session",
+  "write_journey": null,
+  "session_routes": [
+    "/account"
+  ],
+  "echo_container": "#record-echo",
+  "security_journey": {
+    "path": "/",
+    "formSelector": "form#signup-form",
+    "fill": {}
+  },
+  "session": true,
+  "check_context": {
+    "formSelector": "form#signup-form",
+    "primaryField": "[name=email]",
+    "usernameField": "[name=email]",
+    "passwordField": "[name=password]",
+    "addressField": "[name=address]",
+    "postcodeField": "[name=postcode]"
+  },
+  "primaryFields": [
+    {
+      "slug": "email",
+      "name": "email",
+      "elementPattern": "<input[^>]*name=\"email\"[^>]*>",
+      "elementPatternFirst": "<input[^>]*name=\"email\"[^>]*>"
+    },
+    {
+      "slug": "password",
+      "name": "password",
+      "elementPattern": "<input[^>]*name=\"password\"[^>]*>",
+      "elementPatternFirst": "<input[^>]*name=\"password\"[^>]*>"
+    },
+    {
+      "slug": "displayName",
+      "name": "displayName",
+      "elementPattern": "<input[^>]*name=\"displayName\"[^>]*>",
+      "elementPatternFirst": "<input[^>]*name=\"displayName\"[^>]*>"
+    }
+  ],
+  "autofill": {
+    "usernamePattern": "(<input[^>]*type=\"email\"[^>]*>)",
+    "passwordPattern": "(<input[^>]*type=\"password\"[^>]*>)",
+    "streetPattern": "(<input[^>]*name=\"address\"[^>]*>)",
+    "postcodePattern": "(<input[^>]*name=\"postcode\"[^>]*>)"
+  },
+  "required_rules": [
+    "forms/required-field-feedback",
+    "forms/validate-input-after-interaction",
+    "accessibility/accessible-error-announcement",
+    "security/sanitize-untrusted-html",
+    "forms/autofill-sign-up-form"
+  ]
+}

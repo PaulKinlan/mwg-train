@@ -16,7 +16,20 @@
     "quotes:fetch": "bash scripts/fetch-quotes.sh",
     "price:sheets": "node scripts/price-dry-run.mjs --out docs/eval/pricing.sheets.md",
     "check:briefs": "node scripts/validate-briefs.mjs docs/eval/briefs/manifest.jsonl --expect-seal sha256:91d75f29afe10fa419b53fc412abdfaf970068d7725fe40c69894e64c36ed59e",
-    "check:originals": "node scripts/verify-originals.mjs docs/provenance/manifest.example.jsonl"
+    "check:originals": "node scripts/verify-originals.mjs docs/provenance/manifest.example.jsonl",
+    "pilot:scaffold": "node scripts/scaffold-pilot.mjs",
+    "pilot:run": "node scripts/pilot.mjs",
+    "pilot:corpus": "node scripts/pilot-corpus.mjs --record",
+    "check:pilot-corpus": "node scripts/pilot-corpus.mjs --verify"
   },
-  "license": "UNLICENSED"
+  "license": "UNLICENSED",
+  "dependencies": {
+    "hono": "^4.9.12",
+    "htm": "^3.1.1",
+    "preact": "^10.27.2",
+    "preact-render-to-string": "^6.6.3",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "vue": "^3.5.22"
+  }
 }

@@ -12,3 +12,9 @@ docs/provenance/evidence/text/
 # fetched.json (URLs, dates, byte counts, sha256) IS committed so anyone can re-fetch and check.
 docs/eval/quotes.raw/*
 !docs/eval/quotes.raw/fetched.json
+
+# Pilot run output: records, screenshots and traces are evidence, regenerated per run.
+pilot/out/
+# Uplifted copies of the pilot projects: regenerated per run, inside the repo so module resolution works.
+.pilot-uplifted/
+.pilot-corpus/

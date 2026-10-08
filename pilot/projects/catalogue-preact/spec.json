@@ -1,0 +1,127 @@
+{
+  "project_id": "catalogue-preact",
+  "archetype": "catalogue",
+  "archetype_title": "Searchable reference catalogue",
+  "framework": {
+    "name": "preact",
+    "version": "10.27.2",
+    "dialect": "preact",
+    "family": "react-family",
+    "markupFile": "app/page.mjs",
+    "stylesFile": "app/styles.css",
+    "enhanceFile": "app/enhance.js"
+  },
+  "routes": [
+    {
+      "method": "GET",
+      "path": "/",
+      "kind": "page"
+    },
+    {
+      "method": "GET",
+      "path": "/search",
+      "kind": "search"
+    },
+    {
+      "method": "POST",
+      "path": "/cart",
+      "kind": "write-session"
+    },
+    {
+      "method": "GET",
+      "path": "/cart",
+      "kind": "read-session"
+    }
+  ],
+  "fields": [
+    {
+      "slug": "query",
+      "name": "q",
+      "type": "search",
+      "autocomplete": null
+    },
+    {
+      "slug": "quantity",
+      "name": "quantity",
+      "type": "number",
+      "autocomplete": null
+    },
+    {
+      "slug": "item",
+      "name": "item",
+      "type": "text",
+      "autocomplete": null
+    }
+  ],
+  "seeded_defects": [
+    "eager-invalid"
+  ],
+  "journey": {
+    "kind": "get-query-reload",
+    "startPath": "/",
+    "formSelector": "form#search-form",
+    "fill": {
+      "input[name=q]": "bearing"
+    },
+    "expectText": "bearing"
+  },
+  "echo_expect": "bearing",
+  "content_journey": {
+    "source": "query",
+    "path": "/search",
+    "param": "q",
+    "inputSelector": "[name=q]",
+    "formSelector": "form#search-form",
+    "echoField": "query"
+  },
+  "echo_source": "query",
+  "write_journey": {
+    "startPath": "/",
+    "formSelector": "form#cart-form",
+    "itemField": "input[name=item]",
+    "fill": {
+      "input[name=quantity]": "2"
+    },
+    "readPath": "/api/records"
+  },
+  "session_routes": [
+    "/cart"
+  ],
+  "echo_container": "#record-echo",
+  "security_journey": null,
+  "session": true,
+  "check_context": {
+    "formSelector": "form#search-form",
+    "primaryField": "[name=q]",
+    "usernameField": "[name=email]",
+    "passwordField": "[name=password]",
+    "addressField": "[name=address]",
+    "postcodeField": "[name=postcode]"
+  },
+  "primaryFields": [
+    {
+      "slug": "query",
+      "name": "q",
+      "elementPattern": "<input[^>]*name=\"q\"[^>]*>",
+      "elementPatternFirst": "<input[^>]*name=\"q\"[^>]*>"
+    },
+    {
+      "slug": "item",
+      "name": "item",
+      "elementPattern": "<input[^>]*name=\"item\"[^>]*>",
+      "elementPatternFirst": "<input[^>]*name=\"item\"[^>]*>"
+    }
+  ],
+  "autofill": {
+    "usernamePattern": "(<input[^>]*type=\"email\"[^>]*>)",
+    "passwordPattern": "(<input[^>]*type=\"password\"[^>]*>)",
+    "streetPattern": "(<input[^>]*name=\"address\"[^>]*>)",
+    "postcodePattern": "(<input[^>]*name=\"postcode\"[^>]*>)"
+  },
+  "required_rules": [
+    "forms/required-field-feedback",
+    "forms/validate-input-after-interaction",
+    "accessibility/accessible-error-announcement",
+    "security/sanitize-untrusted-html"
+  ]
+}
