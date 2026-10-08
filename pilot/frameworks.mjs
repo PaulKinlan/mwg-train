@@ -2,7 +2,7 @@
  * The pilot's framework axis, and the project builder.
  *
  * Paul, 2026-10-08: framework diversity is a first-class axis - "usage of raw web platform, react and
- * many new frameworks". The pilot covers four rendering idioms over the same five archetypes:
+ * many new frameworks". The pilot covers seven rendering idioms over the same five archetypes:
  *
  *   raw    - semantic HTML and platform APIs, no framework at all. This is the interesting control:
  *            much of what MWG is about (modern elements, form design, cookies, transitions) is
@@ -11,6 +11,12 @@
  *            needs no build step per project)
  *   preact - a second React-family runtime, same component shape, different engine
  *   vue    - Vue 3 with its runtime template compiler, server-rendered
+ *   hono   - Hono 4, server-rendered HTML strings, no virtual DOM
+ *   webcomponents - the platform's own component model: custom elements + shadow DOM, no build and no
+ *            dependency, wrapping the same server-rendered tree
+ *   svelte - Svelte 5, server-rendered. The one arm with a build step; the compile boundary is named
+ *            in src/corpus/svelte.mjs and crossed by the scaffolder and by the uplift tool, never at
+ *            request time
  *
  * Every arm renders the page server-side and enhances it with one plain-JS script, because the point
  * of the pilot is the *server journey*: a client-only arm would make the persistence test meaningless.
@@ -19,6 +25,7 @@
  * code that produces a clean one - and the uplift tool is measured against the gap it was given.
  */
 import { A11Y_SCRIPT } from '../src/corpus/uplift.mjs';
+import { compileSvelteServer } from '../src/corpus/svelte.mjs';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
@@ -39,6 +46,12 @@ export const FRAMEWORKS = {
   react: { name: 'react', version: '19.2.0', dialect: 'react', markupFile: 'app/page.mjs', stylesFile: 'app/styles.css', enhanceFile: 'app/enhance.js', serverFile: 'server.mjs', family: 'react' },
   preact: { name: 'preact', version: '10.27.2', dialect: 'preact', markupFile: 'app/page.mjs', stylesFile: 'app/styles.css', enhanceFile: 'app/enhance.js', serverFile: 'server.mjs', family: 'react-family' },
   vue: { name: 'vue', version: '3.5.22', dialect: 'vue', markupFile: 'app/page.mjs', stylesFile: 'app/styles.css', enhanceFile: 'app/enhance.js', serverFile: 'server.mjs', family: 'vue' },
+  // The two arms added for R3. `webcomponents` has no dependency at all: custom elements ship with the
+  // platform, so it is the same no-build, editable-markup shape as `raw`. `svelte` is the one arm with
+  // a compile step - `markupFile` is the template a person edits, `compiledFile` is the build output,
+  // and the server imports the whole build output through `app/page.mjs`.
+  webcomponents: { name: 'webcomponents', version: 'platform (custom elements + shadow DOM)', dialect: 'html', markupFile: 'app/page.mjs', stylesFile: 'app/styles.css', enhanceFile: 'app/enhance.js', serverFile: 'server.mjs', family: 'web-components' },
+  svelte: { name: 'svelte', version: '5.57.2', dialect: 'html', markupFile: 'app/page.svelte', compiledFile: 'app/page.compiled.mjs', stylesFile: 'app/styles.css', enhanceFile: 'app/enhance.js', serverFile: 'server.mjs', family: 'svelte' },
 };
 
 /** Field markup. Attributes come from the archetype, and the defects decide which are left out. */
@@ -153,8 +166,17 @@ function pageSource(archetype, { defects, framework }) {
       <p>${archetype.story}</p>
 ${formMarkup(archetype, { defects })}
 ${echoMarkup(archetype)}`;
-  const body = framework.name === 'react' || framework.name === 'preact' ? selfCloseVoids(rawBody) : rawBody;
-  if (framework.name === 'raw') {
+  // The web-components arm renders the same tree as the raw arm and wraps the record section in a
+  // custom element. Wrapping rather than replacing is deliberate: the server-rendered children stay in
+  // the light DOM, so the markup the browser receives is still the markup the conformance signature
+  // and every other tool reads, and the shadow root carries encapsulation rather than the content.
+  const body =
+    framework.name === 'react' || framework.name === 'preact'
+      ? selfCloseVoids(rawBody)
+      : framework.name === 'webcomponents'
+        ? rawBody.replace(echoMarkup(archetype), `<record-echo>${echoMarkup(archetype)}</record-echo>`)
+        : rawBody;
+  if (framework.name === 'raw' || framework.name === 'webcomponents') {
     return `export async function renderPage(data = {}) {
   return \`${body}\`;
 }
@@ -241,6 +263,12 @@ export async function renderDocument({ title = '${archetype.title}' } = {}) {
 }
 `;
   }
+  if (framework.name === 'svelte') {
+    // The component template. Svelte compiles it, but the template itself is plain HTML-like markup -
+    // deliberate, because the uplift tool edits markup and a dialect it cannot read is a dialect it
+    // cannot uplift. The compile boundary is crossed by the scaffolder and the uplift tool, not here.
+    return `${body}\n`;
+  }
   // vue: runtime template compiler, no build step
   return `import { createSSRApp } from 'vue';
 import { renderToString } from 'vue/server-renderer';
@@ -296,7 +324,34 @@ th, td { text-align: left; border-bottom: 1px solid #d5d8dd; padding: 0.4rem 0.3
 `;
 }
 
-function enhanceSource(archetype, { defects }) {
+/**
+ * The custom element the web-components arm defines.
+ *
+ * Shadow DOM is used for what it is for - style encapsulation for the component's own box - and a
+ * <slot> keeps the server-rendered children in the page. A shadow root that swallowed the content
+ * would make the arm's markup unreadable to the conformance signature, the a11y script and the uplift
+ * tool all at once, which would measure the harness rather than the arm.
+ *
+ * The style is built with DOM calls rather than `innerHTML`, even though the string is a constant: the
+ * arm's security property is read from the source (does this file assign live HTML anywhere?), and a
+ * literal `innerHTML` in the clean baseline reads as a defect the project does not have.
+ */
+const WC_SCRIPT = `
+// Web Components: the record section is a custom element, defined here with the platform's own APIs.
+// No build step and no dependency; if the element never upgrades, the rendered markup still works.
+class RecordEcho extends HTMLElement {
+  connectedCallback() {
+    if (this.shadowRoot) return;
+    const root = this.attachShadow({ mode: 'open' });
+    const style = document.createElement('style');
+    style.textContent = ':host{display:block}';
+    root.append(style, document.createElement('slot'));
+  }
+}
+if (!customElements.get('record-echo')) customElements.define('record-echo', RecordEcho);
+`;
+
+function enhanceSource(archetype, { defects, framework }) {
   const unsafe = defects.includes('xss-innerhtml');
   // The clean baseline is the *same* script the uplift tool injects, imported rather than retyped:
   // when the two drifted, a project with no seeded defect still failed the announcement rule.
@@ -350,7 +405,7 @@ ${insertion(4)}
 ${a11y}
 
 ${body}
-`;
+${framework?.name === 'webcomponents' ? WC_SCRIPT : ''}`;
 }
 
 /**
@@ -719,6 +774,43 @@ server.listen(port, '127.0.0.1', () => {
 }
 
 /**
+ * The Svelte arm's page module - the stable importer the shared server uses.
+ *
+ * The compiled component is a build output, so the module that renders it is kept separate: editing or
+ * rebuilding the template never touches this file, and every arm's `server.mjs` still imports exactly
+ * `./app/page.mjs`. That is what keeps one server source shared across seven arms.
+ */
+function sveltePageModule(archetype) {
+  return `import { render } from 'svelte/server';
+
+import Page from './page.compiled.mjs';
+
+/** SSR the compiled component. No client runtime is involved in producing the document. */
+export async function renderPage() {
+  const { body } = render(Page, { props: {} });
+  return body;
+}
+
+export async function renderDocument({ title = '${archetype.title}' } = {}) {
+  return \`<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>\${title}</title>
+    <link rel="stylesheet" href="/app/styles.css">
+  </head>
+  <body>
+    <main>\${await renderPage()}
+    </main>
+    <script type="module" src="/app/enhance.js"></script>
+  </body>
+</html>\`;
+}
+`;
+}
+
+/**
  * Write one generated project to disk.
  *
  * The scaffolder and the corpus recorder must agree byte for byte, so there is exactly one
@@ -751,8 +843,15 @@ export function buildProject({ archetypeId, frameworkName, defects = [], flags =
     'server.mjs': framework.name === 'hono' ? honoServerSource(archetype, framework) : serverSource(archetype, framework),
     [framework.markupFile]: pageSource(archetype, { defects, framework }),
     [framework.stylesFile]: stylesSource({ defects, framework }),
-    [framework.enhanceFile]: enhanceSource(archetype, { defects }),
+    [framework.enhanceFile]: enhanceSource(archetype, { defects, framework }),
   };
+  // An arm that declares a compile boundary (Svelte) also ships the compiled module and the page
+  // module that imports it. Both are build outputs of the template above, so they are produced here
+  // rather than hand-maintained beside it - and a project's tree hash therefore covers them.
+  if (framework.compiledFile) {
+    files[framework.compiledFile] = compileSvelteServer(files[framework.markupFile], framework.markupFile);
+    files['app/page.mjs'] = sveltePageModule(archetype);
+  }
 
   const spec = {
     project_id: projectId,

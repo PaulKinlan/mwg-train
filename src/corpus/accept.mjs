@@ -85,6 +85,15 @@ export function decidePair({ original, uplifted, spec, uplift }) {
     result.detail = originalRunnable.problems;
     return result;
   }
+  if ((uplift.failed ?? []).length > 0) {
+    // The tool named a step it could not complete. A partially-applied uplift is not a measured uplift:
+    // for the Svelte arm the failed step is the template rebuild, which would leave the server serving
+    // the *pre-edit* compiled page while the decision still listed the rule edits - the pair would be
+    // scored on a page the tool never actually produced. Refuse rather than score it.
+    result.category = 'uplift-incomplete';
+    result.detail = uplift.failed.map((failure) => `${failure.rule}: ${failure.reason}`);
+    return result;
+  }
   if (!upliftedRunnable.ok) {
     result.category = 'uplift-broke-the-flow';
     result.detail = upliftedRunnable.problems;
@@ -266,6 +275,7 @@ export function renderYieldReport({ summary, decisions, runId, generatedAt, note
     accepted: 'the uplifted version preserved the task and improved at least one measured MWG property',
     'original-not-runnable': 'the original did not complete its own journey, so there was nothing to uplift',
     'uplift-broke-the-flow': 'the uplifted version no longer completed the journey → **tool or rule bug**',
+    'uplift-incomplete': 'a step the tool reported it could not complete, so the uplifted tree is not the tool’s output → **tool bug**',
     'rule-regression': 'a property that passed before now fails → **rule bug**',
     'security-regression': 'the uplift introduced a security finding → **rule bug**',
     'no-mwg-improvement': 'defects were seeded but the tool changed none of the measured properties → coverage gap',

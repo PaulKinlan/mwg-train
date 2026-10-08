@@ -180,8 +180,11 @@ test('the sheet prices only from pinned quotes, and refuses a rate it cannot poi
   assert.equal(sheet.comparison.cheaper_backend, 'cluster');
   assert.equal(fireworks.status, 'ESTIMATE', 'pinned rates over an estimated token count and wall-clock');
 
-  assert.equal(sheet.yield.accepted_pairs, 24, 'the denominator is the measured pilot yield');
-  assert.equal(sheet.yield.attempted_pairs, 25);
+  // Derived from the committed yield rather than typed: the old hardcoded 24/25 was the 25-project run's
+  // number, so it went stale the moment the framework matrix grew.
+  const measured = pilotYield();
+  assert.equal(sheet.yield.accepted_pairs, measured.accepted_pairs, 'the denominator is the measured pilot yield');
+  assert.equal(sheet.yield.attempted_pairs, measured.attempted_pairs);
   assert.ok(sheet.corpus.characters > 0, 'the token estimate needs a corpus to come from');
   assert.equal(corpusCharacters().rows, 79);
   assert.ok(pilotYield().accepted_pairs > 0, 'the denominator is a measurement, not a placeholder');

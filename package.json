@@ -37,6 +37,7 @@
     "preact-render-to-string": "^6.6.3",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "svelte": "5.57.2",
     "vue": "^3.5.22"
   }
 }

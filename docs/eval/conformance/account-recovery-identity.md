@@ -11,16 +11,18 @@ Shared target: `data/A6_evaluation/targets/account-recovery/signature.json` (sha
 | preact | 0.554 | 0.554 | +0.000 |
 | vue | 0.558 | 0.554 | -0.003 |
 | hono | 0.554 | 0.554 | +0.000 |
+| webcomponents | 0.537 | 0.552 | +0.015 |
+| svelte | 0.539 | 0.554 | +0.015 |
 
 ## Cross-variant identity (raw variants, pairwise)
 
 | axis | agreement | variance | budget |
 | --- | --- | --- | --- |
-| structural | 0.815 | 0.0165 | >= 0.75 |
-| geometry | 0.979 | 0.0004 | >= 0.9 |
+| structural | 0.830 | 0.0168 | >= 0.75 |
+| geometry | 0.981 | 0.0004 | >= 0.9 |
 | controls | 1.000 | 0.0000 | >= 0.95 |
-| overall | 0.918 | 0.0028 | >= 0.8 |
+| overall | 0.925 | 0.0031 | >= 0.8 |
 
-Weakest pair: raw/vue at 0.853.
+Weakest pair: vue/webcomponents at 0.848.
 
 **All axes within budget.**

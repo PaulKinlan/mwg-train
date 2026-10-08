@@ -1,4 +1,4 @@
-# The instrumented pilot: 25 projects, five arms, one deterministic uplift
+# The instrumented pilot: 35 projects, seven arms, one deterministic uplift
 
 This pilot measures one thing: **when the uplift tool is pointed at a project that violates a Modern
 Web Guidance rule, how often does the result actually preserve the task and improve the property the
@@ -16,7 +16,7 @@ arm that renders only in the browser — every project is server-rendered, has a
 the server **write** to SQLite, and a read that proves the value is there. The catalogue is the one
 archetype whose own journey is a reflected query rather than a form POST, so it carries a second form and
 a second, separately driven write journey; the gate refuses a pair whose declared write journey was not
-driven or did not persist, which is what keeps that sentence true of all twenty-five.
+driven or did not persist, which is what keeps that sentence true of all thirty-five.
 
 | Archetype | Server journey | Echo source | What it exercises |
 | --- | --- | --- | --- |
@@ -37,14 +37,26 @@ uplift rule that only works on one of them is a rule that works on a third of th
 | `preact` | 10.27.2 | `htm/preact` + `preact-render-to-string` | A second runtime in the same family |
 | `vue` | 3.5.22 | runtime template compiler + `@vue/server-renderer` | A non-React framework |
 | `hono` | 4.9.12 | Hono routing + `hono/html` templates | A modern server framework, no virtual DOM |
+| `webcomponents` | platform, no dependency | custom elements + shadow DOM | The platform's own component primitive: no build and no dependency, upgrading the same server-rendered tree |
+| `svelte` | 5.57.2 | Svelte 5, server-rendered | The one arm with a compile step; the boundary is named below |
 
-Versions are pinned in the root `package.json`; no arm needs a build step, which is deliberate — a
-compile step would mean the markup a browser receives is not the markup in the file, and the uplift
-tool edits markup.
+Versions are pinned in the root `package.json`. Six of the seven arms need no build step, which is
+deliberate — a compile step would mean the markup a browser receives is not the markup in the file, and
+the uplift tool edits markup.
+
+### The one compile step, named
+
+Svelte is the exception, so its boundary is explicit rather than hidden: `app/page.svelte` is the
+editable template, `app/page.compiled.mjs` is the build output, and `app/page.mjs` is the stable
+importer that every arm's shared `server.mjs` uses. `compileSvelteServer` (`src/corpus/svelte.mjs`) is
+called by exactly two things — the scaffolder when it writes a project, and the uplift tool after it has
+edited the template — never at request time. That is what keeps the arm honest: the template stays the
+source a person reads and edits, the uplift's edits provably reach the rendered page, and the build
+output is a pure function of the template, so a tree hash over either is stable.
 
 The composition lives in `pilot/plan.json` as data, and `pilot/archetypes.mjs` /
 `pilot/frameworks.mjs` generate every project from it, so the corpus is one reviewable plan rather
-than twenty-five hand-written directories.
+than thirty-five hand-written directories.
 
 ## What is measured
 
@@ -104,6 +116,7 @@ different facts about the pipeline and only one of them is a bug:
 | `no-warranted-change` | The original already satisfied everything measured (a valid control, not a positive pair) |
 | `no-mwg-improvement` | Defects were seeded but the tool changed none of the measured properties (coverage gap) |
 | `uplift-broke-the-flow` | The journey no longer completes — **tool or rule bug** |
+| `uplift-incomplete` | A step the tool reported it could not complete, so the uplifted tree is not the tool's output — **tool bug** |
 | `rule-regression` | A property that passed now fails — **rule bug** |
 | `security-regression` | The uplift introduced a security finding — **rule bug** |
 | `original-not-runnable` | The original did not complete its own journey; nothing could be measured |
@@ -142,7 +155,7 @@ The corpus is generated, so the guarantee that matters is not "we kept a copy" b
 be produced again, and so can the uplifts":
 
 ```bash
-node scripts/pilot.mjs --out pilot/out           # generate the 25 projects and measure them (needs Chrome)
+node scripts/pilot.mjs --out pilot/out           # generate the 35 projects and measure them (needs Chrome)
 node scripts/pilot-corpus.mjs --record <runDir>  # pin the measured corpus to pilot/CORPUS.json
 npm run check:pilot-corpus                       # re-derive every original and every uplift, compare
 node scripts/scaffold-pilot.mjs --clean          # optional: write the same corpus to pilot/projects
@@ -156,7 +169,7 @@ over from an earlier revision was measured and then reported as a corpus that co
 implementation of "the corpus on disk" (`pilot/generate.mjs`) is used by the run, the recorder and the
 scaffolder, and a test generates the plan twice and requires identical tree hashes.
 
-`check:pilot-corpus` regenerates all 25 projects from the plan and re-runs the uplift tool on each,
+`check:pilot-corpus` regenerates all 35 projects from the plan and re-runs the uplift tool on each,
 then compares tree hashes with the record. A mismatch means the measured artefact can no longer be
 reproduced, which makes the yield numbers stale by definition. Recording a partial run is refused: a
 partial corpus is not the corpus.
@@ -185,9 +198,9 @@ each catalogue project drove a write journey that posted a value and read that v
 
 | Category | Count |
 | --- | --- |
-| `accepted` | 24 |
+| `accepted` | 34 |
 | `no-warranted-change` | 1 |
-| `no-mwg-improvement`, `uplift-broke-the-flow`, `rule-regression`, `security-regression`, `rule-not-measured`, `original-not-runnable` | 0 |
+| `no-mwg-improvement`, `uplift-broke-the-flow`, `uplift-incomplete`, `rule-regression`, `security-regression`, `rule-not-measured`, `original-not-runnable` | 0 |
 
 The single refusal is `catalogue-vue`, the project with no seeded defects: the tool made **zero edits**
 to it, which is the result the control exists to produce. No pair was refused because the uplift broke
@@ -197,20 +210,23 @@ checkable rather than asserted.
 
 | Arm | Accepted | Attempted | Which properties improved, in how many pairs |
 | --- | --- | --- | --- |
-| `raw` | 5 | 5 | `accessibility/accessible-error-announcement` 19, `security/sanitize-untrusted-html` 16, `forms/required-field-feedback` 15, `forms/validate-input-after-interaction` 15, `forms/autofill-sign-up-form` 4, `forms/autofill-address-form` 5 (counts are across all arms, not the `raw` arm alone) |
+| `raw` | 5 | 5 | `accessibility/accessible-error-announcement` 27, `security/sanitize-untrusted-html` 24, `forms/required-field-feedback` 23, `forms/validate-input-after-interaction` 23, `forms/autofill-address-form` 7, `forms/autofill-sign-up-form` 6 (counts are across all arms, not the `raw` arm alone) |
 | `react` | 5 | 5 | |
 | `preact` | 5 | 5 | |
 | `hono` | 5 | 5 | |
+| `webcomponents` | 5 | 5 | |
+| `svelte` | 5 | 5 | |
 | `vue` | 4 | 5 | the missing pair is the control |
 
 Those counts, and the `FAIL`-then-`PASS` behind each one, are asserted against `records.json` by the test
 below rather than typed once and trusted: a wrong "5" for the autofill family sat in this table through
 four reviews before a reviewer compared it with the committed summaries.
 
-Every archetype scored 5/5 except `catalogue` (4/5, the control). The evenness across arms is itself a
-finding: the same generator writes all five, so the arms differ mainly in dialect, and the uplift tool
-handles all five dialects — including Hono's `hono/html` templates and Vue's runtime-compiled ones —
-without a rule failing on any of them.
+Every archetype scored 7/7 except `catalogue` (6/7, the control). The evenness across arms is itself a
+finding: the same generator writes all seven, so the arms differ mainly in dialect, and the uplift tool
+handles all seven dialects — including Hono's `hono/html` templates, Vue's runtime-compiled ones, the
+custom-element arm and the Svelte arm, whose template the tool recompiles after editing it — without a
+rule failing on any of them.
 
 ### Eight corrections the pilot made to itself, and why they are in the record
 
@@ -240,7 +256,7 @@ tool. The failures and the corrections are more useful than the final figure, so
    that only recognised `PASS → FAIL` as a regression; two interaction checks that credited a stylesheet
    *string* (satisfiable by a comment) and *any* visible live region rather than the tested field's error;
    a sanitisation check that accepted the presence of a marker without tying it to the payload; and a
-   claim about the twenty-five projects that the twenty-fifth did not satisfy. All five are fixed, with a
+   claim about every project in the corpus that one of them did not satisfy. All five are fixed, with a
    test each.
 
 5. **The second review round found three more predicates proving less than they claimed.** The write
@@ -308,7 +324,7 @@ measurement of the pipeline, not a survey of the web. Specifically:
 ## Running it
 
 ```bash
-npm run pilot:scaffold            # (re)generate the 25 projects from the plan
+npm run pilot:scaffold            # (re)generate the 35 projects from the plan
 npm run pilot:run -- --out pilot/out        # all arms; --framework raw for one arm
 npm test                          # the corpus tests, which need no browser
 npm run check:pilot-corpus        # reproducibility gate over the recorded corpus

@@ -320,6 +320,19 @@ test('acceptance requires an improvement, and classifies every refusal', () => {
   });
   assert.equal(broken.category, 'uplift-broke-the-flow');
 
+  // A step the tool reported it could not complete means the uplifted tree is not the tool's output.
+  // For the Svelte arm that step is the template rebuild, and scoring the pair would measure the
+  // pre-edit page while the decision still listed the rule edits.
+  const incomplete = decidePair({
+    ...base,
+    original: unchanged,
+    uplifted: improved,
+    uplift: { applied: ['forms/required-field-feedback'], skipped: [], failed: [{ rule: 'compile/svelte-template', reason: 'template did not parse' }] },
+  });
+  assert.equal(incomplete.category, 'uplift-incomplete');
+  assert.equal(incomplete.accepted, false);
+  assert.match(incomplete.detail.join(' '), /compile\/svelte-template/);
+
   const unrunnable = decidePair({
     ...base,
     original: workbook({ journeys: [] }),
@@ -657,6 +670,32 @@ test('a project with no seeded defects gets no edits at all', () => {
   }
 });
 
+test('the Svelte arm crosses its compile boundary in the scaffolder and again in the uplift tool', () => {
+  // The arm's whole claim is that the template stays the editable source while the served page is the
+  // compiled one. That only holds if the uplift rebuilds after editing, so this pins both halves: the
+  // scaffolder writes a build output plus the stable importer, and the tool's edits change the rebuilt
+  // module. Without the rebuild the arm's uplift would silently measure the pre-edit page.
+  const { files, spec: built } = buildProject({ archetypeId: 'booking', frameworkName: 'svelte', defects: ['no-required'] });
+  assert.ok(files['app/page.compiled.mjs']?.includes('svelte'), 'the scaffolder writes a compiled server module');
+  assert.ok(files['app/page.mjs']?.includes("from './page.compiled.mjs'"), 'and a stable page module that imports it');
+  const root = mkdtempSync(join(tmpdir(), 'svelte-'));
+  const out = mkdtempSync(join(tmpdir(), 'svelte-up-'));
+  try {
+    writeProject(root, { projectId: 'booking-svelte', files, spec: built });
+    const result = upliftProject(root, built, out);
+    assert.deepEqual(result.compiled, ['app/page.compiled.mjs'], 'the rebuild is reported as a build step');
+    assert.ok(result.applied.includes('forms/required-field-feedback'), 'the rule edits are still reported as edits');
+    assert.notEqual(
+      readFileSync(join(out, 'app/page.compiled.mjs'), 'utf8'),
+      files['app/page.compiled.mjs'],
+      'the served module is rebuilt from the edited template',
+    );
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+    rmSync(out, { recursive: true, force: true });
+  }
+});
+
 test('the generator is deterministic, so the measured tree is the verified tree', () => {
   // The pilot used to measure whatever was in pilot/projects while the recorder regenerated the plan,
   // so a stale directory was measured silently and then reported as unreproducible. Both now come from
@@ -679,7 +718,7 @@ test('the generator is deterministic, so the measured tree is the verified tree'
         a.projects[index].projectId + ': two generations of the same plan differ',
       );
     }
-    assert.equal(a.projects.length, 25);
+    assert.equal(a.projects.length, ARCHETYPE_IDS.length * Object.keys(FRAMEWORKS).length, 'the corpus is the whole archetype x framework matrix');
   } finally {
     rmSync(first, { recursive: true, force: true });
     rmSync(second, { recursive: true, force: true });
@@ -713,8 +752,8 @@ test('the committed records support every claim the report makes', () => {
   // test is what keeps the report's claims tied to it.
   const records = JSON.parse(readFileSync(join(repoRoot, 'docs', 'pilot', 'records.json'), 'utf8'));
   const report = JSON.parse(readFileSync(join(repoRoot, 'docs', 'pilot', 'yield.json'), 'utf8'));
-  assert.equal(records.projects.length, 25, 'every project is recorded');
-  assert.equal(report.decisions.length, 25, 'every project has a decision');
+  assert.equal(records.projects.length, ARCHETYPE_IDS.length * Object.keys(FRAMEWORKS).length, 'every project is recorded');
+  assert.equal(report.decisions.length, ARCHETYPE_IDS.length * Object.keys(FRAMEWORKS).length, 'every project has a decision');
 
   for (const project of records.projects) {
     const where = project.project_id;
@@ -776,10 +815,10 @@ test('the committed records support every claim the report makes', () => {
   }
 
   const observations = records.projects.map((project) => project.validation_observation);
-  assert.equal(observations.filter((value) => value === 'refused-observed').length, 23);
+  assert.equal(observations.filter((value) => value === 'refused-observed').length, 33);
   assert.equal(observations.filter((value) => value === 'accepted-empty').length, 2);
   assert.equal(observations.filter((value) => value === 'blocked-without-evidence').length, 0);
-  assert.match(readFileSync(join(repoRoot, 'docs', 'pilot', 'YIELD.md'), 'utf8'), /23 of 25 originals/);
+  assert.match(readFileSync(join(repoRoot, 'docs', 'pilot', 'YIELD.md'), 'utf8'), /33 of 35 originals/);
 
   // The README's table of which properties improved, and in how many pairs, against the decisions it
   // summarises. Those counts were typed by hand, and one of them was wrong for four reviews.

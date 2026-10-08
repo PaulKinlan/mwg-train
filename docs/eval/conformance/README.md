@@ -69,15 +69,17 @@ writes `docs/eval/conformance/<family>-identity.{json,md}` with both halves of t
   weakest pair named and the per-axis variance reported rather than averaged away.
 
 `IDENTITY_BUDGET` in `src/eval/targets.mjs` is the declared tolerance per axis: the measured minimum
-across the five families less a deliberate margin (`structural` 0.805 -> 0.75, `geometry` 0.972 ->
-0.90, `controls` 1.000 -> 0.95, `overall` 0.912 -> 0.80). `controls` is tightest because a form is a
-form in every framework; `structural` allows the most, because that is where a framework's own
+across the families less a deliberate margin (`structural` measured 0.830 -> floor 0.75, `geometry`
+0.977 -> 0.90, `controls` 1.000 -> 0.95, `overall` 0.925 -> 0.80). `controls` is tightest because a
+form is a form in every framework; `structural` allows the most, because that is where a framework's own
 wrapper and template scaffolding live. The floors are deliberately close to the measurement - a
 budget far below it (0.6 everywhere) leaves a third of the range free and would rubber-stamp a real
-regression. A variant that leaves the budget is a finding, and the finding names the pair that is
-weakest *on that axis*, not the overall-worst pair. `variantIdentity` also marks a family whose
-variants measure nothing as `degenerate` and raises a finding, because two blank pages otherwise
-agree perfectly.
+regression. The floors were first set from the five-arm matrix (structural minimum 0.805) and still
+hold unchanged when the two R3 arms are added (0.830), which is the check that matters: the budget was
+not moved to admit the new arms. A variant that leaves the budget is a finding, and the finding names
+the pair that is weakest *on that axis*, not the overall-worst pair. `variantIdentity` also marks a
+family whose variants measure nothing as `degenerate` and raises a finding, because two blank pages
+otherwise agree perfectly.
 
 The identity axis is a statement about *how different the frameworks are allowed to be*, not an
 assertion that they are identical: distinct frameworks legitimately emit different markup, and the
@@ -85,29 +87,35 @@ budget says how much of that difference still counts as the same design.
 
 ### Framework set
 
-The pilot builds each archetype in five frameworks: `raw` (the web platform), `react`, `preact`,
-`vue` and `hono`. Those five are the measured comparison set. Svelte needs a compile step and a Web
-Components arm needs a client-side custom-element runtime; neither is in the pilot because the pilot's
-whole premise is that the markup a browser receives is the markup in the file, so the deterministic
-uplift tool can edit it. Widening the matrix to those two arms is tracked separately as
-`mwg-train-mn7`, so this axis stays a statement about identity rather than a moving framework set.
+The pilot builds each archetype in seven frameworks: `raw` (the web platform), `react`, `preact`,
+`vue`, `hono`, `webcomponents` (custom elements + shadow DOM, no build and no dependency) and `svelte`
+(Svelte 5, server-rendered — the one arm with a compile step, whose boundary is named in
+`src/corpus/svelte.mjs` and crossed by the scaffolder and by the uplift tool, never by the server).
 
-### Measured identity (five pilot families)
+Six of the seven keep the property the identity axis relies on: the markup a browser receives is the
+markup in the file, so the deterministic uplift tool can edit it. The Svelte arm keeps the same property
+*observably* — its template is recompiled after the tool edits it, and the uplifted page is what gets
+measured — rather than by having no build step at all.
+
+### Measured identity (seven pilot families' arms)
 
 | family | identity | structural | geometry | controls | weakest pair |
 | --- | --- | --- | --- | --- | --- |
-| catalogue | 0.953 | 0.891 | 0.989 | 1.000 | react/preact 0.918 |
-| booking | 0.930 | 0.846 | 0.976 | 1.000 | raw/preact 0.843 |
-| event-registration | 0.927 | 0.835 | 0.981 | 1.000 | raw/hono 0.885 |
-| account-recovery | 0.918 | 0.815 | 0.979 | 1.000 | raw/vue 0.853 |
-| contact-lead | 0.912 | 0.805 | 0.972 | 1.000 | raw/react 0.854 |
+| catalogue | 0.958 | 0.902 | 0.992 | 1.000 | react/webcomponents 0.913 |
+| booking | 0.945 | 0.878 | 0.982 | 1.000 | preact/webcomponents 0.840 |
+| event-registration | 0.937 | 0.856 | 0.986 | 1.000 | hono/webcomponents 0.880 |
+| account-recovery | 0.925 | 0.830 | 0.981 | 1.000 | vue/webcomponents 0.848 |
+| contact-lead | 0.925 | 0.833 | 0.977 | 1.000 | react/webcomponents 0.850 |
 
-The reading is the point of the axis. **Geometry 0.97-0.99** and **controls 1.000**: the frameworks
+The reading is the point of the axis. **Geometry 0.98-0.99** and **controls 1.000**: the frameworks
 build the same set of controls in the same places, so framework choice is not moving the layout or the
-form. The only real divergence is **structural** (0.80-0.89) - React, Vue and Preact scaffold the same
-tree with their own wrapper elements, which is exactly a framework convention and not an aesthetic
-decision. That is the distinction R2 needed: a variant may differ in markup, and the budget reports
-how much of that difference is still the same design.
+form. The only real divergence is **structural** (0.83-0.90) - each framework's own wrapper and template
+scaffolding. With the R3 arms in place that is visible rather than argued away: the weakest pair in
+all five families is `webcomponents`, and it is weakest precisely because its custom element *is* one
+extra element in the tree, while `svelte` scores structurally identical to `raw` (0.535 against the
+booking target, the same as raw) because its SSR emits the same markup. That is the distinction R2
+needed, and R3 tests it: a variant may differ in markup, and the budget says how much of that difference
+is still the same design.
 
 Controls identity is 1.000 *by construction of the pilot*: `pilot/frameworks.mjs` injects the same
 `formMarkup(...)` string into every framework template, so no framework can move the form. Read it as
@@ -131,7 +139,8 @@ the target, and writes `docs/eval/conformance/<family>.{json,md}`.
 ## Result
 
 `docs/eval/conformance/booking.md` is the first family scored. The booking family means: raw 0.652,
-arm 0.659, mean delta **+0.004** (preact -0.001, the rest +0.001 to +0.006). Read that as a finding,
+arm 0.659, mean delta **+0.005** across the seven arms (preact -0.001, the rest +0.001 to +0.007). Read
+that as a finding,
 not a sales figure: the deterministic accessibility uplift is roughly neutral for *visual*
 conformance, within noise. That is exactly what the axis is for - it makes visible that a11y uplift
 and visual conformance are different objectives, so an arm cannot claim "conforms to the design" on

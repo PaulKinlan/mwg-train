@@ -1,10 +1,10 @@
 {
-  "$comment": "The pilot's composition, as data. 25 projects: five archetypes x five rendering arms (raw, React, Preact, Vue, Hono). `defects` is what the original is seeded with; the pilot measures whether the deterministic uplift tool removes them. Rules map to real ids in the pinned MWG snapshot (docs/eval/rules.json).",
+  "$comment": "The pilot's composition, as data. 35 projects: five archetypes x seven rendering arms (raw, React, Preact, Vue, Hono, Web Components, Svelte). `defects` is what the original is seeded with; the pilot measures whether the deterministic uplift tool removes them. Rules map to real ids in the pinned MWG snapshot (docs/eval/rules.json).",
   "targets": {
     "archetypes": 5,
-    "frameworks": 5,
-    "projects": 25,
-    "with_server_journeys": 20
+    "frameworks": 7,
+    "projects": 35,
+    "with_server_journeys": 35
   },
   "projects": [
     {
@@ -221,6 +221,100 @@
         "eager-invalid",
         "no-aria-sync",
         "no-autofill-address"
+      ]
+    },
+    {
+      "archetype": "booking",
+      "framework": "webcomponents",
+      "defects": [
+        "no-required",
+        "eager-invalid",
+        "no-aria-sync",
+        "no-autofill-address",
+        "xss-innerhtml"
+      ]
+    },
+    {
+      "archetype": "booking",
+      "framework": "svelte",
+      "defects": [
+        "no-required",
+        "eager-invalid",
+        "no-aria-sync",
+        "no-autofill-address",
+        "xss-innerhtml"
+      ]
+    },
+    {
+      "archetype": "contact-lead",
+      "framework": "webcomponents",
+      "defects": [
+        "no-required",
+        "eager-invalid",
+        "no-aria-sync",
+        "xss-innerhtml"
+      ]
+    },
+    {
+      "archetype": "contact-lead",
+      "framework": "svelte",
+      "defects": [
+        "no-required",
+        "eager-invalid",
+        "no-aria-sync",
+        "xss-innerhtml"
+      ]
+    },
+    {
+      "archetype": "catalogue",
+      "framework": "webcomponents",
+      "defects": [
+        "xss-innerhtml"
+      ]
+    },
+    {
+      "archetype": "catalogue",
+      "framework": "svelte",
+      "defects": [
+        "xss-innerhtml"
+      ]
+    },
+    {
+      "archetype": "account-recovery",
+      "framework": "webcomponents",
+      "defects": [
+        "no-required",
+        "eager-invalid",
+        "no-aria-sync",
+        "no-autofill"
+      ]
+    },
+    {
+      "archetype": "account-recovery",
+      "framework": "svelte",
+      "defects": [
+        "no-required",
+        "eager-invalid",
+        "no-aria-sync",
+        "no-autofill"
+      ]
+    },
+    {
+      "archetype": "event-registration",
+      "framework": "webcomponents",
+      "defects": [
+        "no-required",
+        "eager-invalid",
+        "xss-innerhtml"
+      ]
+    },
+    {
+      "archetype": "event-registration",
+      "framework": "svelte",
+      "defects": [
+        "no-required",
+        "eager-invalid",
+        "xss-innerhtml"
       ]
     }
   ]

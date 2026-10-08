@@ -9,5 +9,7 @@ Target: `data/A6_evaluation/targets/booking/signature.json` (sha256 `c70494945de
 | preact | 0.655 | 0.654 | -0.001 | 0.524 | 0.557 | 1.000 |
 | vue | 0.658 | 0.659 | +0.001 | 0.535 | 0.557 | 1.000 |
 | hono | 0.652 | 0.659 | +0.006 | 0.535 | 0.557 | 1.000 |
+| webcomponents | 0.650 | 0.656 | +0.007 | 0.529 | 0.557 | 1.000 |
+| svelte | 0.652 | 0.659 | +0.006 | 0.535 | 0.557 | 1.000 |
 
-Mean delta across 5 framework(s): +0.004
+Mean delta across 7 framework(s): +0.005

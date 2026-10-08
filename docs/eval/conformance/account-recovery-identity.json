@@ -2,7 +2,7 @@
   "family": "account-recovery",
   "target_signature": "data/A6_evaluation/targets/account-recovery/signature.json",
   "target_sha256": "56be640e0b4ea36550647af277d15c8234d33d3aecd8b3dbacad884564078058",
-  "generated_at": "2026-10-08T12:22:16.005Z",
+  "generated_at": "2026-10-08T12:42:16.126Z",
   "variants": [
     {
       "framework": "raw",
@@ -103,6 +103,46 @@
           "overall": 0.5545
         }
       }
+    },
+    {
+      "framework": "webcomponents",
+      "raw": 0.537,
+      "target": 0.5522,
+      "delta": 0.0152,
+      "axes": {
+        "raw": {
+          "structural": 0.4496,
+          "geometry": 0.4133,
+          "controls": 0.85,
+          "overall": 0.537
+        },
+        "arm": {
+          "structural": 0.4839,
+          "geometry": 0.4175,
+          "controls": 0.85,
+          "overall": 0.5522
+        }
+      }
+    },
+    {
+      "framework": "svelte",
+      "raw": 0.5394,
+      "target": 0.5545,
+      "delta": 0.0151,
+      "axes": {
+        "raw": {
+          "structural": 0.4556,
+          "geometry": 0.4133,
+          "controls": 0.85,
+          "overall": 0.5394
+        },
+        "arm": {
+          "structural": 0.4897,
+          "geometry": 0.4175,
+          "controls": 0.85,
+          "overall": 0.5545
+        }
+      }
     }
   ],
   "identity": {
@@ -141,6 +181,20 @@
         "geometry": 0.4175,
         "controls": 0.85,
         "overall": 0.5545
+      },
+      {
+        "framework": "webcomponents",
+        "structural": 0.4496,
+        "geometry": 0.4133,
+        "controls": 0.85,
+        "overall": 0.537
+      },
+      {
+        "framework": "svelte",
+        "structural": 0.4556,
+        "geometry": 0.4133,
+        "controls": 0.85,
+        "overall": 0.5394
       }
     ],
     "pairwise": [
@@ -177,6 +231,22 @@
         "overall": 0.9702
       },
       {
+        "a": "raw",
+        "b": "webcomponents",
+        "structural": 0.9375,
+        "geometry": 1,
+        "controls": 1,
+        "overall": 0.975
+      },
+      {
+        "a": "raw",
+        "b": "svelte",
+        "structural": 1,
+        "geometry": 1,
+        "controls": 1,
+        "overall": 1
+      },
+      {
         "a": "react",
         "b": "preact",
         "structural": 0.7273,
@@ -201,6 +271,22 @@
         "overall": 0.8909
       },
       {
+        "a": "react",
+        "b": "webcomponents",
+        "structural": 0.67,
+        "geometry": 0.9862,
+        "controls": 1,
+        "overall": 0.8632
+      },
+      {
+        "a": "react",
+        "b": "svelte",
+        "structural": 0.6818,
+        "geometry": 0.9862,
+        "controls": 1,
+        "overall": 0.8679
+      },
+      {
         "a": "preact",
         "b": "vue",
         "structural": 0.7273,
@@ -217,42 +303,98 @@
         "overall": 1
       },
       {
+        "a": "preact",
+        "b": "webcomponents",
+        "structural": 0.9154,
+        "geometry": 0.9862,
+        "controls": 1,
+        "overall": 0.9613
+      },
+      {
+        "a": "preact",
+        "b": "svelte",
+        "structural": 0.9375,
+        "geometry": 0.9862,
+        "controls": 1,
+        "overall": 0.9702
+      },
+      {
         "a": "vue",
         "b": "hono",
         "structural": 0.7273,
         "geometry": 0.9621,
         "controls": 1,
         "overall": 0.8777
+      },
+      {
+        "a": "vue",
+        "b": "webcomponents",
+        "structural": 0.67,
+        "geometry": 0.9437,
+        "controls": 1,
+        "overall": 0.8483
+      },
+      {
+        "a": "vue",
+        "b": "svelte",
+        "structural": 0.6818,
+        "geometry": 0.9437,
+        "controls": 1,
+        "overall": 0.853
+      },
+      {
+        "a": "hono",
+        "b": "webcomponents",
+        "structural": 0.9154,
+        "geometry": 0.9862,
+        "controls": 1,
+        "overall": 0.9613
+      },
+      {
+        "a": "hono",
+        "b": "svelte",
+        "structural": 0.9375,
+        "geometry": 0.9862,
+        "controls": 1,
+        "overall": 0.9702
+      },
+      {
+        "a": "webcomponents",
+        "b": "svelte",
+        "structural": 0.9375,
+        "geometry": 1,
+        "controls": 1,
+        "overall": 0.975
       }
     ],
     "identity": {
-      "structural": 0.8148,
-      "geometry": 0.9789,
+      "structural": 0.8301,
+      "geometry": 0.9806,
       "controls": 1,
-      "overall": 0.9185
+      "overall": 0.9253
     },
     "variance": {
-      "structural": 0.0165,
+      "structural": 0.0168,
       "geometry": 0.0004,
       "controls": 0,
-      "overall": 0.0028
+      "overall": 0.0031
     },
     "weakest_pair": {
-      "a": "raw",
-      "b": "vue",
-      "structural": 0.6818,
+      "a": "vue",
+      "b": "webcomponents",
+      "structural": 0.67,
       "geometry": 0.9437,
       "controls": 1,
-      "overall": 0.853
+      "overall": 0.8483
     },
     "weakest_by_axis": {
       "structural": {
-        "a": "raw",
-        "b": "react",
-        "structural": 0.6818,
+        "a": "react",
+        "b": "webcomponents",
+        "structural": 0.67,
         "geometry": 0.9862,
         "controls": 1,
-        "overall": 0.8679
+        "overall": 0.8632
       },
       "geometry": {
         "a": "raw",
@@ -271,12 +413,12 @@
         "overall": 0.8679
       },
       "overall": {
-        "a": "raw",
-        "b": "vue",
-        "structural": 0.6818,
+        "a": "vue",
+        "b": "webcomponents",
+        "structural": 0.67,
         "geometry": 0.9437,
         "controls": 1,
-        "overall": 0.853
+        "overall": 0.8483
       }
     },
     "degenerate": false

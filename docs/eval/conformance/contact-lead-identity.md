@@ -11,16 +11,18 @@ Shared target: `data/A6_evaluation/targets/contact-lead/signature.json` (sha256 
 | preact | 0.598 | 0.602 | +0.004 |
 | vue | 0.597 | 0.598 | +0.001 |
 | hono | 0.604 | 0.602 | -0.002 |
+| webcomponents | 0.595 | 0.600 | +0.004 |
+| svelte | 0.598 | 0.602 | +0.004 |
 
 ## Cross-variant identity (raw variants, pairwise)
 
 | axis | agreement | variance | budget |
 | --- | --- | --- | --- |
-| structural | 0.805 | 0.0159 | >= 0.75 |
-| geometry | 0.972 | 0.0003 | >= 0.9 |
+| structural | 0.833 | 0.0169 | >= 0.75 |
+| geometry | 0.977 | 0.0004 | >= 0.9 |
 | controls | 1.000 | 0.0000 | >= 0.95 |
-| overall | 0.912 | 0.0031 | >= 0.8 |
+| overall | 0.925 | 0.0034 | >= 0.8 |
 
-Weakest pair: raw/react at 0.854.
+Weakest pair: react/webcomponents at 0.850.
 
 **All axes within budget.**
