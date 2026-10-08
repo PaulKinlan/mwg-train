@@ -4,9 +4,10 @@
  * The rule (bead mwg-train-291, Paul's conditions 2026-10-08):
  *   - corpus tooling writes quarantined-arm material to the quarantine tree BY DEFAULT; the
  *     public tree receives it only through the explicit promote step (scripts/promote.mjs);
- *   - the store is a separate PRIVATE companion repo (the journal/journal-data pattern), checked
- *     out as a SIBLING of this repo - deliberately not a submodule, so no public build, deploy or
- *     CI path can fetch it recursively;
+ *   - the store is a separate PRIVATE companion repo (the journal/journal-data pattern). Working
+ *     checkouts are SIBLINGS of this repo; the public repo pins the store's commit at quarantine/
+ *     as a provenance pointer only - it is never a working location (this module refuses a store
+ *     inside the public tree), and no public build, deploy or CI path fetches it;
  *   - the store is a PUBLICATION boundary, not a training-permission boundary: rights sign-off is
  *     the provenance layer's job (src/provenance/arms.mjs), this layer's job is that unpublished
  *     material is simply not in the public tree.
