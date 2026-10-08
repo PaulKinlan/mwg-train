@@ -1,0 +1,20 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Community fun run registration</title><link rel="stylesheet" href="../base.css"></head>
+<body>
+<header><nav aria-label="Main"><a href="/" aria-current="page">Register</a><a href="/attendees">Attendees</a></nav></header>
+<main>
+  <h1>Community fun run</h1>
+  <p class="lede">A 5km run through the park on the first Sunday in June.</p>
+  <section aria-label="Event details"><dl><dt>Date</dt><dd>Sunday 7 June, 10am</dd><dt>Start</dt><dd>The north gate</dd><dt>Places</dt><dd>Limited, with a waitlist</dd></dl></section>
+  <form id="registration-form" method="post" action="/register">
+    <fieldset>
+      <legend>Register a runner</legend>
+      <div><label for="name">Attendee name</label><input id="name" name="name" type="text" required></div>
+      <div><label for="email">Email</label><input id="email" name="email" type="email" autocomplete="email" required></div>
+      <div><label for="ticket">Ticket</label><select id="ticket" name="ticket"><option>standard</option><option>accessible</option><option>student</option></select></div>
+      <div><button type="submit">Register</button></div>
+    </fieldset>
+  </form>
+  <aside><h2>On the day</h2><p class="hint">Collect your number from the desk from 9am. Water is available at the finish.</p></aside>
+</main>
+<footer><p>Organised by the village sports club.</p></footer>
+</body></html>

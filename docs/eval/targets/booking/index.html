@@ -1,0 +1,21 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Evening class booking - Riverside Training Centre</title><link rel="stylesheet" href="../base.css"></head>
+<body>
+<header><nav aria-label="Main"><a href="/" aria-current="page">Evening classes</a><a href="/roster">Roster</a></nav></header>
+<main>
+  <h1>Book an evening class</h1>
+  <p class="lede">Pick a class, tell us who is coming, and we will keep your place.</p>
+  <form id="booking-form" method="post" action="/book">
+    <fieldset>
+      <legend>Your details</legend>
+      <div><label for="name">Full name</label><input id="name" name="name" type="text" autocomplete="name" required></div>
+      <div><label for="email">Email</label><input id="email" name="email" type="email" autocomplete="username" required></div>
+      <div><label for="address">Address</label><input id="address" name="address" type="text" autocomplete="street-address" required></div>
+      <div><label for="postcode">Postcode</label><input id="postcode" name="postcode" type="text" autocomplete="postal-code" required></div>
+      <div><label for="notes">Anything we should know?</label><textarea id="notes" name="notes" rows="3"></textarea></div>
+      <div><button type="submit">Confirm booking</button></div>
+    </fieldset>
+  </form>
+  <aside><h2>Opening hours</h2><p>Monday to Thursday, 6pm to 9pm.</p><p class="hint">Bookings close two hours before a class starts.</p></aside>
+</main>
+<footer><p>Riverside Training Centre, 4 Bridge Row.</p></footer>
+</body></html>

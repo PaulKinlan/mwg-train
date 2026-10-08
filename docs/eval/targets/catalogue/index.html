@@ -1,0 +1,16 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Parts catalogue</title><link rel="stylesheet" href="../base.css"></head>
+<body>
+<header><nav aria-label="Main"><a href="/" aria-current="page">Catalogue</a><a href="/cart">Cart</a></nav></header>
+<main>
+  <h1>Parts catalogue</h1>
+  <form id="search-form" method="get" action="/search"><label for="q">Search parts</label><input id="q" name="q" type="search"><button type="submit">Search</button></form>
+  <section aria-label="Results"><div class="grid">
+    <article><h3>Bearing 12mm</h3><p>Sealed steel bearing, pack of two.</p><p class="hint">In stock</p></article>
+    <article><h3>Bearing 15mm</h3><p>Sealed steel bearing, pack of two.</p><p class="hint">In stock</p></article>
+    <article><h3>Bushing 12mm</h3><p>Bronze bushing for light loads.</p><p class="hint">Ordered on request</p></article>
+  </div></section>
+  <nav aria-label="Pagination"><ul class="pagination"><li><a href="/search?page=1" aria-current="page">1</a></li><li><a href="/search?page=2">2</a></li><li><a href="/search?page=3">3</a></li></ul></nav>
+  <aside><h2>Your cart</h2><form id="cart-form" method="post" action="/cart"><div><label for="item">Part number</label><input id="item" name="item" type="text"></div><div><label for="quantity">Quantity</label><input id="quantity" name="quantity" type="number" min="1"></div><button type="submit">Add to cart</button></form></aside>
+</main>
+<footer><p>Catalogue prices include VAT.</p></footer>
+</body></html>

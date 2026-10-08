@@ -1,0 +1,402 @@
+{
+  "title": "Your account",
+  "viewport": {
+    "width": 1280,
+    "height": 900
+  },
+  "nodes": [
+    {
+      "tag": "header",
+      "depth": 0,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "nav",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "main",
+      "depth": 0,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h1",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "form",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "fieldset",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "legend",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 4,
+      "type": "email",
+      "name": "email",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 4,
+      "type": "password",
+      "name": "password",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 4,
+      "type": "text",
+      "name": "displayName",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "button",
+      "depth": 4,
+      "type": "submit",
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "form",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 2,
+      "type": "email",
+      "name": "email",
+      "role": null
+    },
+    {
+      "tag": "button",
+      "depth": 2,
+      "type": "submit",
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "aside",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h2",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "footer",
+      "depth": 0,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    }
+  ],
+  "boxes": [
+    {
+      "tag": "header",
+      "x": 0,
+      "y": 0,
+      "w": 1,
+      "h": 0.0544
+    },
+    {
+      "tag": "nav",
+      "x": 0.1125,
+      "y": 0,
+      "w": 0.775,
+      "h": 0.0533
+    },
+    {
+      "tag": "main",
+      "x": 0.1125,
+      "y": 0.0544,
+      "w": 0.775,
+      "h": 0.7293
+    },
+    {
+      "tag": "h1",
+      "x": 0.125,
+      "y": 0.0811,
+      "w": 0.75,
+      "h": 0.0507
+    },
+    {
+      "tag": "form",
+      "x": 0.125,
+      "y": 0.2118,
+      "w": 0.4875,
+      "h": 0.3928
+    },
+    {
+      "tag": "fieldset",
+      "x": 0.1383,
+      "y": 0.2307,
+      "w": 0.4609,
+      "h": 0.3551
+    },
+    {
+      "tag": "label",
+      "x": 0.1383,
+      "y": 0.2573,
+      "w": 0.4609,
+      "h": 0.0267
+    },
+    {
+      "tag": "input",
+      "x": 0.1383,
+      "y": 0.2885,
+      "w": 0.4609,
+      "h": 0.0484
+    },
+    {
+      "tag": "label",
+      "x": 0.1383,
+      "y": 0.3502,
+      "w": 0.4609,
+      "h": 0.0267
+    },
+    {
+      "tag": "input",
+      "x": 0.1383,
+      "y": 0.3813,
+      "w": 0.4609,
+      "h": 0.0484
+    },
+    {
+      "tag": "label",
+      "x": 0.1383,
+      "y": 0.4431,
+      "w": 0.4609,
+      "h": 0.0267
+    },
+    {
+      "tag": "input",
+      "x": 0.1383,
+      "y": 0.4742,
+      "w": 0.4609,
+      "h": 0.0484
+    },
+    {
+      "tag": "button",
+      "x": 0.1383,
+      "y": 0.536,
+      "w": 0.1342,
+      "h": 0.0498
+    },
+    {
+      "tag": "form",
+      "x": 0.6312,
+      "y": 0.2118,
+      "w": 0.2437,
+      "h": 0.1671
+    },
+    {
+      "tag": "label",
+      "x": 0.6445,
+      "y": 0.2307,
+      "w": 0.2172,
+      "h": 0.0267
+    },
+    {
+      "tag": "input",
+      "x": 0.6445,
+      "y": 0.2618,
+      "w": 0.2172,
+      "h": 0.0484
+    },
+    {
+      "tag": "button",
+      "x": 0.6445,
+      "y": 0.3102,
+      "w": 0.1466,
+      "h": 0.0498
+    },
+    {
+      "tag": "aside",
+      "x": 0.125,
+      "y": 0.6313,
+      "w": 0.4875,
+      "h": 0.1258
+    },
+    {
+      "tag": "h2",
+      "x": 0.1383,
+      "y": 0.6502,
+      "w": 0.4609,
+      "h": 0.032
+    },
+    {
+      "tag": "footer",
+      "x": 0.1125,
+      "y": 0.7837,
+      "w": 0.775,
+      "h": 0.0978
+    }
+  ],
+  "labels": [
+    {
+      "for": "email",
+      "text": "Email"
+    },
+    {
+      "for": "password",
+      "text": "Password"
+    },
+    {
+      "for": "displayName",
+      "text": "Display name"
+    },
+    {
+      "for": "reset-email",
+      "text": "Forgot your password?"
+    }
+  ],
+  "controls": [
+    {
+      "tag": "input",
+      "type": "email",
+      "name": "email",
+      "label": "Email"
+    },
+    {
+      "tag": "input",
+      "type": "password",
+      "name": "password",
+      "label": "Password"
+    },
+    {
+      "tag": "input",
+      "type": "text",
+      "name": "displayName",
+      "label": "Display name"
+    },
+    {
+      "tag": "input",
+      "type": "email",
+      "name": "email",
+      "label": "Forgot your password?"
+    }
+  ],
+  "headings": [
+    "Sign in or create an account",
+    "Keep it safe"
+  ]
+}

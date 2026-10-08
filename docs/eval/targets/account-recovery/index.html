@@ -1,0 +1,20 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Your account</title><link rel="stylesheet" href="../base.css"></head>
+<body>
+<header><nav aria-label="Main"><a href="/" aria-current="page">Account</a></nav></header>
+<main>
+  <h1>Sign in or create an account</h1>
+  <p class="lede">One account for classes, bookings and your history.</p>
+  <form id="signup-form" method="post" action="/signup">
+    <fieldset>
+      <legend>Create an account</legend>
+      <div><label for="email">Email</label><input id="email" name="email" type="email" autocomplete="username" required></div>
+      <div><label for="password">Password</label><input id="password" name="password" type="password" autocomplete="new-password" required></div>
+      <div><label for="displayName">Display name</label><input id="displayName" name="displayName" type="text" required></div>
+      <div><button type="submit">Create account</button></div>
+    </fieldset>
+  </form>
+  <form id="reset-form" method="post" action="/reset"><label for="reset-email">Forgot your password?</label><input id="reset-email" name="email" type="email" autocomplete="username" required><button type="submit">Send a reset link</button></form>
+  <aside><h2>Keep it safe</h2><p class="hint">Use a password you do not use anywhere else. We will email you a reset link.</p></aside>
+</main>
+<footer><p>Your account is protected by a session cookie.</p></footer>
+</body></html>

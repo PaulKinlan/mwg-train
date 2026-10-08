@@ -24,7 +24,7 @@ import { RULES, SECURITY_CHECKS } from './rules.mjs';
 const READY_TIMEOUT_MS = 20_000;
 
 /** Start a project's server and wait for it to answer. */
-async function startServer(projectDir, { port, dbPath }) {
+export async function startServer(projectDir, { port, dbPath }) {
   const child = spawn(process.execPath, [join(projectDir, 'server.mjs'), '--port', String(port), '--db', dbPath], {
     cwd: projectDir,
     stdio: ['ignore', 'pipe', 'pipe'],
@@ -51,7 +51,7 @@ async function startServer(projectDir, { port, dbPath }) {
   throw new Error(`server did not become ready in ${READY_TIMEOUT_MS}ms:\n${log}`);
 }
 
-async function stopServer(server) {
+export async function stopServer(server) {
   if (!server?.child) return;
   server.child.kill('SIGTERM');
   await delay(150);
