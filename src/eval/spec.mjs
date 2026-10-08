@@ -57,6 +57,9 @@ const isBoolean = (value) => typeof value === 'boolean';
 const FIELD_KEYS = new Set(['slug', 'name', 'type', 'label', 'autocomplete', 'required', 'optional', 'echoed', 'options']);
 export { FIELD_KEYS };
 
+/** The functional-route capabilities a specification may opt into. A closed set, like FIELD_KEYS. */
+export const CAPABILITY_KEYS = new Set(['list_pages', 'detail_page', 'auth']);
+
 /** The field names a selector types into, from `[name=x]` / `[name="x"]` / `[name='x']`. */
 function selectorFieldNames(selector) {
   return [...String(selector).matchAll(/\[name=["']?([^\]"']+)["']?\]/g)].map((match) => match[1]);
@@ -216,6 +219,48 @@ export function validateSpec(spec) {
   }
   if (spec.session !== undefined && !isBoolean(spec.session)) at('session', 'must be a boolean when present');
   if (spec.capacity !== undefined && spec.capacity !== null && !Number.isInteger(spec.capacity)) at('capacity', 'must be an integer when present');
+
+  // Capabilities opt a project into the FUNCTIONAL routes (list pages, a detail page, account
+  // login/logout). They default off: a specification without them must regenerate byte-identically,
+  // which is what keeps the frozen pilot trees frozen (mwg-train-37a's hard gate).
+  if (spec.capabilities !== undefined) {
+    if (!isObject(spec.capabilities)) at('capabilities', 'must be an object when present');
+    else {
+      for (const [key, value] of Object.entries(spec.capabilities)) {
+        if (!CAPABILITY_KEYS.has(key)) at(`capabilities.${key}`, `unknown capability - the set is closed: ${[...CAPABILITY_KEYS].join(', ')}`);
+        else if (!isBoolean(value)) at(`capabilities.${key}`, 'must be a boolean');
+      }
+      if (spec.capabilities.auth === true && spec.session === true) {
+        at('capabilities.auth', 'cannot combine with session: both own the sid cookie and /api/me');
+      }
+      if (spec.capabilities.list_pages === true) {
+        const lists = (spec.routes ?? []).filter((route) => route?.kind === 'list');
+        if (lists.length === 0) at('capabilities.list_pages', 'is on, but no route has kind list');
+      }
+      if (spec.capabilities.detail_page === true) {
+        const detail = (spec.routes ?? []).filter((route) => route?.kind === 'read-by-reference');
+        if (detail.length === 0) at('capabilities.detail_page', 'is on, but no route is read-by-reference');
+      }
+    }
+  }
+  if (spec.seed_accounts !== undefined) {
+    if (!Array.isArray(spec.seed_accounts)) at('seed_accounts', 'must be an array when present');
+    else {
+      for (const [index, account] of spec.seed_accounts.entries()) {
+        const where = `seed_accounts[${index}]`;
+        if (!isObject(account)) at(where, 'must be an object');
+        else {
+          for (const key of Object.keys(account)) if (!['email', 'password', 'display_name'].includes(key)) at(`${where}.${key}`, 'unknown key');
+          if (!isString(account.email) || !account.email.includes('@')) at(`${where}.email`, 'must be an email address');
+          if (!isString(account.password)) at(`${where}.password`, 'must be a non-empty string');
+          if (account.display_name !== undefined && !isString(account.display_name)) at(`${where}.display_name`, 'must be a string when present');
+        }
+      }
+    }
+  }
+  if (spec.seed_accounts !== undefined && spec.capabilities?.auth !== true) {
+    at('seed_accounts', 'only meaningful with capabilities.auth - accounts need a login to be for');
+  }
   return problems;
 }
 
@@ -267,6 +312,8 @@ export function archetypeFromSpec(spec) {
     ...(spec.session === undefined ? {} : { session: spec.session }),
     ...(spec.capacity === undefined ? {} : { capacity: spec.capacity }),
     ...(spec.password_field === undefined ? {} : { passwordField: spec.password_field }),
+    ...(spec.capabilities === undefined ? {} : { capabilities: spec.capabilities }),
+    ...(spec.seed_accounts === undefined ? {} : { seedAccounts: spec.seed_accounts }),
   };
 }
 
