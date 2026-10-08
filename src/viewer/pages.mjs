@@ -116,12 +116,27 @@ export function renderMarkdown(md) {
   return out.join('\n');
 }
 
-/** Legibility banners (Paul, 2026-10-08): every page says what it shows and why it matters. */
-export const INDEX_BANNER = `
-<div class="notice"><strong>What this page is:</strong> the pilot corpus — 25 generated sites (5 archetypes × 5 rendering arms), each measured BASELINE vs deterministic MWG repair (the TARGET floor). This is pipeline stages 3–5 (GENERATE → MEASURE → RECORD): the <a href="/pipeline">pipeline doc</a> shows the whole flow. <strong>Why it matters:</strong> every acceptance is backed by browser-run evidence you can click through and replay live; rejected attempts stay visible because acceptance bias is only inspectable when they do. This is the EVAL instrument — training data comes only from a separate, disjoint corpus.</div>`;
+/**
+ * Legibility banners (Paul, 2026-10-08): every page says what it shows and why it matters - and
+ * only claims what this checkout can actually show. Run evidence (journeys, rule measurements,
+ * screenshots) exists only where a pilot run executed locally (pilot/out/ is gitignored); the
+ * committed record (CORPUS.json) carries decisions and tree SHAs, and says so.
+ */
+export function indexBanner({ runEvidence }) {
+  const evidenceLine = runEvidence
+    ? 'acceptance is backed by browser-run evidence you can click through (journeys, rule measurements, screenshots)'
+    : 'this checkout has the committed record (CORPUS.json: decisions, tree SHAs, improved rules) but no local run records - journey-level evidence appears here after a local `npm run pilot:run`';
+  return `
+<div class="notice"><strong>What this page is:</strong> the pilot corpus - 25 generated sites (5 archetypes × 5 rendering arms), each measured BASELINE vs deterministic MWG repair (the TARGET floor). This is pipeline stages 3-5 (GENERATE → MEASURE → RECORD): the <a href="/pipeline">pipeline doc</a> shows the whole flow. <strong>Why it matters:</strong> ${evidenceLine}; rejected attempts stay visible because acceptance bias is only inspectable when they do. This is the EVAL instrument - training data comes only from a separate, disjoint corpus.</div>`;
+}
 
-export const PROJECT_BANNER = `
-<div class="notice"><strong>What this page is:</strong> one corpus project's full record — attribution, acceptance, the measured BASELINE vs TARGET evidence, the owner-auth gate, and live sandboxed instances of both trees. <strong>How to read it:</strong> the TARGET is the deterministic mechanical-repair floor, not a model's work; the gap above it is what training exists to close. Everything shown is hash-verified against the recorded corpus; anything that cannot be reproduced to its recorded SHA is refused, not served.</div>`;
+export function projectBanner({ runEvidence }) {
+  const evidenceLine = runEvidence
+    ? 'the measured BASELINE vs TARGET evidence (journeys, rule tables, screenshots)'
+    : 'the committed decision and SHAs (journey-level evidence exists after a local `npm run pilot:run`)';
+  return `
+<div class="notice"><strong>What this page is:</strong> one corpus project's record - attribution, acceptance, ${evidenceLine}, the owner-auth gate, and live sandboxed instances of both trees. <strong>How to read it:</strong> the TARGET is the deterministic mechanical-repair floor, not a model's work; the gap above it is what training exists to close. The served TREES are hash-verified against the recorded corpus; anything that cannot be reproduced to its recorded SHA is refused, not served.</div>`;
+}
 export const PIPELINE_STRIP = `
 <p class="muted"><strong>Pipeline</strong> (<a href="/pipeline">full doc</a>):
 1 BRIEFS → 2 RULES → 3 GENERATE → 4 MEASURE → 5 RECORD/VERIFY → 6 PRICE → <strong>7 TRAIN — queued behind disjoint training-set generation (mwg-train-0ov); the sealed eval set is never trained on</strong>.
@@ -208,6 +223,7 @@ function liveLinks(view, liveOrigin, runId) {
 }
 
 export function renderIndex({ views, allViews, filters, runId, runs, yieldReport, scanAvailable, liveOrigin }) {
+  const runEvidence = allViews.some((view) => view.runDir);
   const archetypes = [...new Set(allViews.map((view) => view.archetype))].sort();
   const frameworks = [...new Set(allViews.map((view) => view.framework))].sort();
   const categories = [...new Set(allViews.filter((view) => view.hasRun && !view.accepted).map((view) => view.category))].sort();
@@ -250,7 +266,7 @@ export function renderIndex({ views, allViews, filters, runId, runs, yieldReport
 
   return page('corpus index', `
 <h1>mwg-train corpus</h1>
-${INDEX_BANNER}
+${indexBanner({ runEvidence })}
 ${PIPELINE_STRIP}
 ${scanNotice}
 <p class="muted">Roles: <strong>BASELINE</strong> = raw model output, kept to measure improvement FROM · <strong>TARGET</strong> = the deterministic MWG repair floor to build TOWARDS · <strong>ACCEPTED PAIR</strong> = passed eval acceptance (training data comes only from accepted pairs of the DISJOINT training corpus — the eval set is never trained on) · <strong>REJECTED ATTEMPT</strong> = kept as negative example &amp; repair material.</p>
@@ -339,6 +355,7 @@ function renderShots(view, version, runId) {
 
 export function renderProject({ view, runId, runs, liveOrigin }) {
   const decision = view;
+  const runEvidence = !!view.runDir;
   const runSelector =
     runs.length > 0
       ? `<form method="get" action="/project/${escapeHtml(view.id)}"><label>run <select name="run" onchange="this.form.submit()">${runs.map((run) => `<option value="${escapeHtml(run)}"${run === runId ? ' selected' : ''}>${escapeHtml(run)}</option>`).join('')}</select></label></form>`
@@ -370,7 +387,7 @@ export function renderProject({ view, runId, runs, liveOrigin }) {
 
   return page(view.id, `
 <h1><code>${escapeHtml(view.id)}</code> ${stateBadge(view)} ${scanBadge(view.scan)}</h1>
-${PROJECT_BANNER}
+${projectBanner({ runEvidence })}
 <p class="muted">${escapeHtml(view.archetype)}${view.archetypeTitle ? ` — ${escapeHtml(view.archetypeTitle)}` : ''} · ${escapeHtml(view.framework)}${view.frameworkVersion ? ` ${escapeHtml(view.frameworkVersion)}` : ''}${view.frameworkFamily ? ` (${escapeHtml(view.frameworkFamily)})` : ''}</p>
 ${runSelector}
 ${attributionBlock(view)}
