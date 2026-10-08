@@ -166,33 +166,111 @@ export async function launchChrome({ proxy = null, args = [] } = {}) {
     },
   );
 
-  const endpoint = await new Promise((resolve, reject) => {
-    let buffer = '';
-    const timer = setTimeout(() => reject(new CdpError('CHROME_TIMEOUT', 'Chrome did not report a debugger endpoint')), 20_000);
-    const onData = (chunk) => {
-      buffer += chunk.toString();
-      const match = buffer.match(/DevTools listening on (ws:\/\/\S+)/);
-      if (match) {
-        clearTimeout(timer);
-        resolve(match[1]);
-      }
-    };
-    child.stderr.on('data', onData);
-    child.on('exit', (code) => {
-      clearTimeout(timer);
-      reject(new CdpError('CHROME_EXIT', `Chrome exited early with code ${code}`));
-    });
-  });
+  /** Kill the browser and everything it spawned. */
+  const killTree = () => {
+    child.kill('SIGKILL');
+    try {
+      process.kill(-child.pid, 'SIGKILL');
+    } catch {
+      /* already reaped, or never got its own group */
+    }
+  };
+  // The other half of the detached-group bargain. Giving Chrome its own group is what lets `close()` reap
+  // the crashpad handler and the rest of the tree, but it also means a signal aimed at *this* process no
+  // longer reaches the browser: a harness that is terminated (a `timeout`, a reaper sweep, a stopped agent)
+  // used to leave the browser running, and that is how several were orphaned. These handlers make the
+  // browser go down with us. SIGKILL cannot be caught - the reaper's own browser sweep is the backstop.
+  const SIGNALS = ['SIGTERM', 'SIGINT', 'SIGHUP'];
+  // Exit with the code the shell expects for that signal. `timeout` and the fleet's gate tooling read 143
+  // as "the bound killed it" - exiting 1 instead would report a killed run as an ordinary failure, which
+  // is the sort of misreading that costs an hour of someone else's afternoon.
+  const EXIT_FOR = { SIGTERM: 143, SIGINT: 130, SIGHUP: 129 };
+  const onSignal = (signal) => {
+    // Take the whole launch down now rather than let the watchdog do it on its next poll: killing only the
+    // browser here left a `sleep` and the profile directory for up to five seconds, which is a window in
+    // which a sweep sees an orphan.
+    killTree();
+    stopWatchdog();
+    rmSync(userDataDir, { recursive: true, force: true });
+    process.exit(EXIT_FOR[signal] ?? 1);
+  };
+  for (const signal of SIGNALS) process.on(signal, onSignal);
+  process.on('exit', killTree);
 
-  const ws = new WebSocket(endpoint);
-  await new Promise((resolve, reject) => {
-    ws.addEventListener('open', resolve, { once: true });
-    ws.addEventListener('error', () => reject(new CdpError('WS_ERROR', 'could not open the CDP websocket')), { once: true });
-  });
-  const connection = new Connection(ws);
+  // A watchdog, because the signal handlers above cannot catch SIGKILL: a harness killed outright still
+  // leaves the browser behind, and that is what the reaper kept finding - a review subagent's verification
+  // run, gone, with a 12-process browser still holding a gigabyte. The watchdog polls this process and, the
+  // moment it is gone, kills the browser's group and removes the profile. It is killed in `close()` so it
+  // does not linger for a process that launches browsers one after another.
+  const watchdog = spawn(
+    '/bin/sh',
+    ['-c', `while kill -0 ${process.pid} 2>/dev/null; do sleep 5; done; kill -9 -${child.pid} 2>/dev/null; rm -rf "${userDataDir}" 2>/dev/null`],
+    { detached: true, stdio: 'ignore' },
+  );
+  watchdog.unref();
+
+  /** Stop the watchdog, and its `sleep` child with it, so no timer outlives this launch. */
+  const stopWatchdog = () => {
+    try {
+      // Its own group: killing only the shell leaves an in-flight `sleep 5` reparented to init.
+      process.kill(-watchdog.pid, 'SIGKILL');
+    } catch {
+      watchdog.kill('SIGKILL');
+    }
+  };
+  /** Undo everything this launch installed: browser tree, watchdog, signal handlers. */
+  const teardown = () => {
+    killTree();
+    stopWatchdog();
+    for (const signal of SIGNALS) process.off(signal, onSignal);
+    process.off('exit', killTree);
+  };
+
+  // If Chrome never reports an endpoint - a timeout, an early exit, a refused websocket - this function
+  // rejects and the caller never receives a handle, so `close()` is never reached. Without this the
+  // watchdog would keep polling and the signal handlers would stay installed for the life of the process,
+  // leaking exactly what the watchdog exists to prevent.
+  let built;
+  try {
+    built = await connect();
+  } catch (error) {
+    teardown();
+    rmSync(userDataDir, { recursive: true, force: true });
+    throw error;
+  }
+
+  async function connect() {
+    const endpoint = await new Promise((resolve, reject) => {
+      let buffer = '';
+      const timer = setTimeout(() => reject(new CdpError('CHROME_TIMEOUT', 'Chrome did not report a debugger endpoint')), 20_000);
+      const onData = (chunk) => {
+        buffer += chunk.toString();
+        const match = buffer.match(/DevTools listening on (ws:\/\/\S+)/);
+        if (match) {
+          clearTimeout(timer);
+          resolve(match[1]);
+        }
+      };
+      child.stderr.on('data', onData);
+      child.on('exit', (code) => {
+        clearTimeout(timer);
+        reject(new CdpError('CHROME_EXIT', `Chrome exited early with code ${code}`));
+      });
+    });
+
+    const ws = new WebSocket(endpoint);
+    await new Promise((resolve, reject) => {
+      ws.addEventListener('open', resolve, { once: true });
+      ws.addEventListener('error', () => reject(new CdpError('WS_ERROR', 'could not open the CDP websocket')), { once: true });
+    });
+    const connection = new Connection(ws);
+    return { ws, connection, version: await connection.send('Browser.getVersion') };
+  }
+
+  const { ws, connection } = built;
 
   return {
-    version: await connection.send('Browser.getVersion'),
+    version: built.version,
     async newPage({ viewport = { width: 1280, height: 900 }, mobile = false } = {}) {
       const { targetId } = await connection.send('Target.createTarget', { url: 'about:blank' });
       const { sessionId } = await connection.send('Target.attachToTarget', { targetId, flatten: true });
@@ -219,12 +297,10 @@ export async function launchChrome({ proxy = null, args = [] } = {}) {
       // kill-by-profile-dir sweep: one from a launch of ours ran 46 minutes after the browser was gone. The
       // `--disable-breakpad` and `--disable-crash-reporter` flags were tried and do not stop it on Chrome
       // 155, so the group is the only reliable handle on the pieces.
-      child.kill('SIGKILL');
-      try {
-        process.kill(-child.pid, 'SIGKILL');
-      } catch {
-        /* already reaped, or never got its own group */
-      }
+      killTree();
+      stopWatchdog();
+      for (const signal of SIGNALS) process.off(signal, onSignal);
+      process.off('exit', killTree);
       // Wait briefly for the browser to release the profile, then remove it. The directory is created per
       // launch and was never cleaned up, so a day of runs left dozens of them (and a few hundred MB) in
       // /tmp; nothing reads it once the browser is gone, and it is ours. Retried, because a single attempt

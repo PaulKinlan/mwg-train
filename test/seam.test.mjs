@@ -1,5 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
+import { chmodSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 import {
   BACKENDS,
@@ -9,6 +13,7 @@ import {
   runTraining,
   totalCost,
   validateArtifact,
+  validateCorpusGates,
   validateJob,
 } from '../src/train/seam.mjs';
 import { FIREWORKS_TRAINABLE, bandFor, reachability } from '../src/train/reachability.mjs';
@@ -39,6 +44,33 @@ const manifest = (overrides = {}) => ({
   adapter: { uri: 'accounts/x/models/y', sha256: ADAPTER, format: 'lora-fireworks' },
   ...overrides,
 });
+
+/**
+ * Write a real, minimal, valid training corpus to a temp file and return its path, true digest and
+ * row count. Families live in the `tr-` namespace by default, so the file is disjoint from the sealed
+ * eval families (`cf-*`/`fam-*`) and the five A6 target families. The caller owns the temp dir and
+ * must clean it up.
+ */
+function makeCorpusFixture({ family_id = 'tr-fixture', rows = 1 } = {}) {
+  const dir = mkdtempSync(join(tmpdir(), 'seam-corpus-'));
+  const path = join(dir, 'corpus.jsonl');
+  const corpusRows = Array.from({ length: rows }, (_, index) => ({
+    brief_id: `${family_id}-${index + 1}`,
+    family_id,
+    split: 'train',
+  }));
+  const text = corpusRows.map((row) => JSON.stringify(row)).join('\n') + '\n';
+  const bytes = Buffer.from(text, 'utf8');
+  writeFileSync(path, bytes);
+  const sha256 = `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
+  const rowCount = text.split('\n').map((line) => line.trim()).filter((line) => line !== '').length;
+  return { dir, path, sha256, rows: rowCount };
+}
+
+/** A job whose corpus is the fixture's real path, digest and row count. */
+function jobWithCorpus(fixture, overrides = {}) {
+  return job({ corpus: { path: fixture.path, sha256: fixture.sha256, rows: fixture.rows }, ...overrides });
+}
 
 test('a valid job produces no findings', () => {
   assert.deepEqual(validateJob(job()), []);
@@ -155,39 +187,54 @@ test('two adapters are comparable only when the modelling held still', () => {
 });
 
 test('the seam refuses an unknown backend, a missing adapter and an invalid job', async () => {
-  await assert.rejects(() => runTraining({ backend: 'somewhere-else', job: job(), adapters: {} }), (error) => error.code === 'UNKNOWN_BACKEND');
-  await assert.rejects(() => runTraining({ backend: 'fireworks', job: job(), adapters: {} }), (error) => error.code === 'NO_ADAPTER');
-  await assert.rejects(
-    () => runTraining({ backend: 'fireworks', job: job(), adapters: { fireworks: { plan: 'not a function', run() {} } } }),
-    (error) => error.code === 'BAD_ADAPTER',
-  );
-  // An adapter that returns nothing is a refusal, not a crash.
-  await assert.rejects(
-    () => runTraining({ backend: 'fireworks', job: job(), adapters: { fireworks: { plan() {}, run() {} } } }),
-    (error) => error.code === 'INVALID_ARTIFACT' && /not an object with a manifest/.test(error.message),
-  );
-  await assert.rejects(
-    () => runTraining({ backend: 'cluster', job: job({ base: { ...job().base, revision: 'main' } }), adapters: { cluster: { plan() {}, run() {} } } }),
-    (error) => error.code === 'INVALID_JOB',
-  );
+  const fixture = makeCorpusFixture();
+  try {
+    await assert.rejects(() => runTraining({ backend: 'somewhere-else', job: job(), adapters: {} }), (error) => error.code === 'UNKNOWN_BACKEND');
+    await assert.rejects(() => runTraining({ backend: 'fireworks', job: job(), adapters: {} }), (error) => error.code === 'NO_ADAPTER');
+    await assert.rejects(
+      () => runTraining({ backend: 'fireworks', job: job(), adapters: { fireworks: { plan: 'not a function', run() {} } } }),
+      (error) => error.code === 'BAD_ADAPTER',
+    );
+    // An adapter that returns nothing is a refusal, not a crash.
+    await assert.rejects(
+      () => runTraining({ backend: 'fireworks', job: jobWithCorpus(fixture), adapters: { fireworks: { plan() {}, run() {} } } }),
+      (error) => error.code === 'INVALID_ARTIFACT' && /not an object with a manifest/.test(error.message),
+    );
+    await assert.rejects(
+      () => runTraining({ backend: 'cluster', job: job({ base: { ...job().base, revision: 'main' } }), adapters: { cluster: { plan() {}, run() {} } } }),
+      (error) => error.code === 'INVALID_JOB',
+    );
+  } finally {
+    rmSync(fixture.dir, { recursive: true, force: true });
+  }
 });
 
 test('an adapter that produces an unusable manifest is refused, not trusted', async () => {
-  const adapters = {
-    cluster: {
-      plan: () => ({ backend: 'cluster' }),
-      // No resolved revision, no corpus hash, no token counts: the shape the seam exists to insist on.
-      run: async () => ({ artifact: { uri: 'x' }, manifest: { backend: 'cluster' } }),
-    },
-  };
-  await assert.rejects(() => runTraining({ backend: 'cluster', job: job(), adapters }), (error) => error.code === 'INVALID_ARTIFACT');
+  const fixture = makeCorpusFixture();
+  try {
+    const adapters = {
+      cluster: {
+        plan: () => ({ backend: 'cluster' }),
+        // No resolved revision, no corpus hash, no token counts: the shape the seam exists to insist on.
+        run: async () => ({ artifact: { uri: 'x' }, manifest: { backend: 'cluster' } }),
+      },
+    };
+    await assert.rejects(() => runTraining({ backend: 'cluster', job: jobWithCorpus(fixture), adapters }), (error) => error.code === 'INVALID_ARTIFACT');
+  } finally {
+    rmSync(fixture.dir, { recursive: true, force: true });
+  }
 });
 
 test('a well-formed adapter result passes the seam', async () => {
-  const adapters = { cluster: { plan: () => ({ backend: 'cluster' }), run: async () => ({ artifact: { uri: 'out' }, manifest: manifest({ backend: 'cluster' }) }) } };
-  const result = await runTraining({ backend: 'cluster', job: job(), adapters });
-  assert.equal(result.manifest.backend, 'cluster');
-  assert.equal(result.artifact.uri, 'out');
+  const fixture = makeCorpusFixture();
+  try {
+    const adapters = { cluster: { plan: () => ({ backend: 'cluster' }), run: async () => ({ artifact: { uri: 'out' }, manifest: manifest({ backend: 'cluster' }) }) } };
+    const result = await runTraining({ backend: 'cluster', job: jobWithCorpus(fixture), adapters });
+    assert.equal(result.manifest.backend, 'cluster');
+    assert.equal(result.artifact.uri, 'out');
+  } finally {
+    rmSync(fixture.dir, { recursive: true, force: true });
+  }
 });
 
 test('both adapters plan the same job to the same declared facts', () => {
@@ -268,11 +315,16 @@ test('a comparison over different recipes, bases or a missing tokenizer is refus
 });
 
 test('an adapter that records a different base than the job declared is refused', async () => {
-  const adapters = { fireworks: { plan: () => ({}), run: async () => ({ artifact: { uri: 'x' }, manifest: manifest({ base_model_id: 'qwen3-14b' }) }) } };
-  await assert.rejects(
-    () => runTraining({ backend: 'fireworks', job: job(), adapters }),
-    (error) => error.code === 'INVALID_ARTIFACT' && /base_model_id/.test(error.message),
-  );
+  const fixture = makeCorpusFixture();
+  try {
+    const adapters = { fireworks: { plan: () => ({}), run: async () => ({ artifact: { uri: 'x' }, manifest: manifest({ base_model_id: 'qwen3-14b' }) }) } };
+    await assert.rejects(
+      () => runTraining({ backend: 'fireworks', job: jobWithCorpus(fixture), adapters }),
+      (error) => error.code === 'INVALID_ARTIFACT' && /base_model_id/.test(error.message),
+    );
+  } finally {
+    rmSync(fixture.dir, { recursive: true, force: true });
+  }
 });
 
 test('the cluster plan carries every declared hyperparameter, not only the ones with obvious flags', () => {
@@ -306,4 +358,167 @@ test('the reachability map says which checkpoints a comparison may use', () => {
     'every listed checkpoint is trainable by both methods, with a LoRA shape',
   );
   assert.ok(!FIREWORKS_TRAINABLE.some((model) => model.params > 80_000_000_000), 'nothing teacher-class is listed as a student');
+});
+
+test('validateCorpusGates reports findings instead of throwing, whatever it is handed', () => {
+  for (const value of [null, undefined, 0, 'job', [], true, {}, { corpus: 'no' }, { corpus: { path: '' } }]) {
+    assert.doesNotThrow(() => validateCorpusGates(value));
+    const findings = validateCorpusGates(value);
+    assert.ok(Array.isArray(findings));
+    assert.ok(findings.length > 0, 'an uncheckable corpus is refused, not passed');
+  }
+});
+
+test('validateCorpusGates passes a real, valid, disjoint corpus', () => {
+  const fixture = makeCorpusFixture();
+  try {
+    assert.deepEqual(validateCorpusGates(jobWithCorpus(fixture)), []);
+  } finally {
+    rmSync(fixture.dir, { recursive: true, force: true });
+  }
+});
+
+test('a corpus sharing a held-out family is refused, naming FAMILY_IN_BOTH_MANIFESTS', async () => {
+  // 'cf-01' is a real family in the sealed eval manifest, so this corpus is not disjoint.
+  const fixture = makeCorpusFixture({ family_id: 'cf-01' });
+  try {
+    await assert.rejects(
+      () => runTraining({ backend: 'cluster', job: jobWithCorpus(fixture), adapters: { cluster: { plan() {}, run() {} } } }),
+      (error) => error.code === 'CORPUS_NOT_DISJOINT' && /FAMILY_IN_BOTH_MANIFESTS/.test(error.message) && error.message.includes("'cf-01'"),
+    );
+  } finally {
+    rmSync(fixture.dir, { recursive: true, force: true });
+  }
+});
+
+test('a corpus whose declared hash does not match its bytes is refused, naming both digests', async () => {
+  const fixture = makeCorpusFixture();
+  try {
+    const wrongSha = `sha256:${'0'.repeat(64)}`;
+    const badJob = job({ corpus: { path: fixture.path, sha256: wrongSha, rows: fixture.rows } });
+    await assert.rejects(
+      () => runTraining({ backend: 'cluster', job: badJob, adapters: { cluster: { plan() {}, run() {} } } }),
+      (error) => error.code === 'INVALID_JOB' && error.message.includes(wrongSha) && error.message.includes(fixture.sha256),
+    );
+  } finally {
+    rmSync(fixture.dir, { recursive: true, force: true });
+  }
+});
+
+test('a corpus whose declared row count is wrong is refused', async () => {
+  const fixture = makeCorpusFixture({ rows: 2 });
+  try {
+    const badJob = job({ corpus: { path: fixture.path, sha256: fixture.sha256, rows: fixture.rows + 1 } });
+    await assert.rejects(
+      () => runTraining({ backend: 'cluster', job: badJob, adapters: { cluster: { plan() {}, run() {} } } }),
+      (error) => error.code === 'INVALID_JOB' && /corpus\.rows/.test(error.message),
+    );
+  } finally {
+    rmSync(fixture.dir, { recursive: true, force: true });
+  }
+});
+
+test('a missing or unreadable corpus path is refused, failing closed', async () => {
+  const fixture = makeCorpusFixture();
+  try {
+    const missing = join(fixture.dir, 'does-not-exist.jsonl');
+    await assert.rejects(
+      () => runTraining({ backend: 'cluster', job: job({ corpus: { path: missing, sha256: fixture.sha256, rows: fixture.rows } }), adapters: { cluster: { plan() {}, run() {} } } }),
+      (error) => error.code === 'INVALID_JOB' && /corpus\.path/.test(error.message),
+    );
+
+    // A directory is not readable as a corpus file either, and must be refused the same way.
+    await assert.rejects(
+      () => runTraining({ backend: 'cluster', job: job({ corpus: { path: fixture.dir, sha256: fixture.sha256, rows: fixture.rows } }), adapters: { cluster: { plan() {}, run() {} } } }),
+      (error) => error.code === 'INVALID_JOB' && /corpus\.path/.test(error.message),
+    );
+  } finally {
+    rmSync(fixture.dir, { recursive: true, force: true });
+  }
+});
+
+test('a valid disjoint corpus passes the gate and the adapter is reached', async () => {
+  const fixture = makeCorpusFixture();
+  try {
+    let planned = false;
+    const adapters = {
+      cluster: {
+        plan: () => { planned = true; return { backend: 'cluster' }; },
+        run: async () => ({ artifact: { uri: 'out' }, manifest: manifest({ backend: 'cluster' }) }),
+      },
+    };
+    const result = await runTraining({ backend: 'cluster', job: jobWithCorpus(fixture), adapters });
+    assert.equal(planned, true, 'the adapter must be reached for a proven-disjoint corpus');
+    assert.equal(result.artifact.uri, 'out');
+  } finally {
+    rmSync(fixture.dir, { recursive: true, force: true });
+  }
+});
+
+test('the adapter receives the verified bytes, not the mutable path (TOCTOU)', async () => {
+  const fixture = makeCorpusFixture();
+  try {
+    let seenPath = null;
+    let seenDigest = null;
+    const adapters = {
+      cluster: {
+        plan: (jobArg) => {
+          // Replace the ORIGINAL corpus file after the gate has verified it, before the adapter runs.
+          // The adapter must already be pointing at the immutable snapshot, so this tamper is invisible.
+          writeFileSync(fixture.path, '{"brief_id":"tampered","family_id":"tr-tamper","split":"train"}\n');
+          seenPath = jobArg.corpus.path;
+          seenDigest = `sha256:${createHash('sha256').update(readFileSync(jobArg.corpus.path)).digest('hex')}`;
+          return { backend: 'cluster' };
+        },
+        run: async () => ({ artifact: { uri: 'out' }, manifest: manifest({ backend: 'cluster' }) }),
+      },
+    };
+    await runTraining({ backend: 'cluster', job: jobWithCorpus(fixture), adapters });
+    assert.equal(seenDigest, fixture.sha256, 'the adapter must be handed the verified bytes, not the replaced path');
+    assert.notEqual(seenPath, fixture.path, 'the adapter must not be handed the mutable original path');
+    assert.match(seenPath, /mwg-verified-corpus-[a-f0-9]{64}\.jsonl$/);
+  } finally {
+    rmSync(fixture.dir, { recursive: true, force: true });
+  }
+});
+
+test('the verified-corpus snapshot is reused deterministically for the same corpus', async () => {
+  const fixture = makeCorpusFixture();
+  try {
+    const seen = [];
+    const adapters = {
+      cluster: {
+        plan: (jobArg) => { seen.push(jobArg.corpus.path); return { backend: 'cluster' }; },
+        run: async () => ({ artifact: { uri: 'out' }, manifest: manifest({ backend: 'cluster' }) }),
+      },
+    };
+    await runTraining({ backend: 'cluster', job: jobWithCorpus(fixture), adapters });
+    await runTraining({ backend: 'cluster', job: jobWithCorpus(fixture), adapters });
+    assert.equal(seen.length, 2);
+    assert.equal(seen[0], seen[1], 'the same verified corpus must resolve to the same snapshot path');
+  } finally {
+    rmSync(fixture.dir, { recursive: true, force: true });
+  }
+});
+
+test('an unwritable snapshot location refuses rather than falling back to the mutable path', async () => {
+  const fixture = makeCorpusFixture();
+  const unwritable = mkdtempSync(join(tmpdir(), 'seam-snapshot-ro-'));
+  try {
+    chmodSync(unwritable, 0o555);
+    const adapters = {
+      cluster: {
+        plan: () => ({}),
+        run: async () => ({ artifact: { uri: 'x' }, manifest: manifest({ backend: 'cluster' }) }),
+      },
+    };
+    await assert.rejects(
+      () => runTraining({ backend: 'cluster', job: jobWithCorpus(fixture), adapters, snapshotDir: unwritable }),
+      (error) => error.code === 'CORPUS_SNAPSHOT_UNWRITABLE',
+    );
+  } finally {
+    chmodSync(unwritable, 0o755); // restore write so the directory can be removed
+    rmSync(unwritable, { recursive: true, force: true });
+    rmSync(fixture.dir, { recursive: true, force: true });
+  }
 });

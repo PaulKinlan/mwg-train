@@ -25,6 +25,9 @@ Validation is fail-closed and never throws:
 | A manifest with no token count | No training cost can be derived from it, and a missing count is not a zero. |
 | An adapter result that is not an object with a manifest | The seam must refuse, not crash: it did crash with a `TypeError` until a test for exactly that shape was written. |
 | A manifest that does not name its base model, or names a different one than the job declared | A commit hash alone does not name the repository the weights came from, and an adapter that trained something else is exactly the silent substitution the seam exists to catch. |
+| A corpus whose declared hash or row count does not match its own bytes | Until this gate existed the corpus hash was checked for **shape only** - a job could name any hash for any corpus and still be planned and launched. The declared counts are now re-derived from the file. |
+| A corpus that shares a family or a target design with the sealed evaluation | The split is only a split if it is proven one. `assertDisjointTrainingCorpus` refuses a corpus reusing a sealed `family_id`, a pilot/evaluation target family, or a target design hash, and refuses to run when the seal itself has moved. |
+| A corpus that cannot be read at all | A corpus that cannot be checked is not a corpus; the gate fails closed rather than treating an unreadable manifest as empty. |
 
 ## Costing never guesses
 
