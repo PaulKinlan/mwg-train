@@ -433,10 +433,57 @@ if (container && ref) {
 ${insertion(4)}
   }
 }`;
+  const searchEnhance = archetype.journey?.search
+    ? `
+const searchContainer = document.getElementById(${JSON.stringify(archetype.journey.search.resultsSelector.replace(/^#/, ''))});
+if (searchContainer) {
+  const query = new URLSearchParams(location.search).get(${JSON.stringify(archetype.journey.search.queryParam)}) ?? '';
+  const searchInput = document.querySelector(\`input[name="\${${JSON.stringify(archetype.journey.search.queryParam)}}"]\`);
+  if (searchInput && query) searchInput.value = query;
+  const res = await fetch('/api/records?q=' + encodeURIComponent(query));
+  if (res.ok) {
+    const records = await res.json();
+    while (searchContainer.firstChild) searchContainer.removeChild(searchContainer.firstChild);
+    if (records.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'empty-results';
+      empty.textContent = 'No matching records found';
+      searchContainer.appendChild(empty);
+    } else {
+      for (const rec of records) {
+        const item = document.createElement('div');
+        item.setAttribute('data-ref', rec.ref);
+        item.textContent = Object.values(rec).join(' ');
+        searchContainer.appendChild(item);
+      }
+    }
+  }
+}`
+    : '';
+
+  const updateEnhance = archetype.journey?.update
+    ? `
+const editForm = document.querySelector('form[action*="/edit/"]');
+const refForEdit = location.pathname.split('/').filter(Boolean).pop();
+if (editForm && refForEdit) {
+  editForm.action = '/edit/' + encodeURIComponent(refForEdit);
+  const editInput = editForm.querySelector(\`[name="\${${JSON.stringify(archetype.journey.update.field)}}"]\`);
+  if (editInput) {
+    const editRes = await fetch(\`/api/record/\${encodeURIComponent(refForEdit)}\`);
+    if (editRes.ok) {
+      const editRecord = await editRes.json();
+      if (editRecord[${JSON.stringify(archetype.journey.update.field)}] !== undefined) {
+        editInput.value = editRecord[${JSON.stringify(archetype.journey.update.field)}];
+      }
+    }
+  }
+}`
+    : '';
+
   return `// Progressive enhancement for the ${archetype.id} flow: one plain script for every arm.
 ${a11y}
 ${enterSubmit}
-${body}
+${body}${searchEnhance}${updateEnhance}
 ${framework?.name === 'webcomponents' ? WC_SCRIPT : ''}`;
 }
 
@@ -454,6 +501,93 @@ const sessionTables = (archetype) =>
         "const selectSession = db.prepare('SELECT ref FROM sessions WHERE sid = ?');",
       ].join('\n')
     : '';
+
+function stepPageDocument(step, index, steps, archetype) {
+  const nextPath = index < steps.length - 1 ? steps[index + 1].path : archetype.journey.startPath;
+  const controls = [];
+  for (const selector of Object.keys(step.fill ?? {})) {
+    const name = selector.match(/name=["']?([^\]"']+)["']?/)?.[1] ?? '';
+    const field = archetype.fields.find((f) => f.name === name);
+    const label = field?.label ?? name;
+    const type = field?.type ?? 'text';
+    controls.push(`      <div class="field">
+        <label for="step-${name}">${label}</label>
+        <input type="${type}" id="step-${name}" name="${name}">
+      </div>`);
+  }
+  for (const [selector, option] of Object.entries(step.select ?? {})) {
+    const name = selector.match(/name=["']?([^\]"']+)["']?/)?.[1] ?? '';
+    const field = archetype.fields.find((f) => f.name === name);
+    const label = field?.label ?? name;
+    const options = field?.options ?? [option];
+    const opts = options.map((opt) => `          <option value="${opt}">${opt}</option>`).join('\n');
+    controls.push(`      <div class="field">
+        <label for="step-${name}">${label}</label>
+        <select id="step-${name}" name="${name}">
+${opts}
+        </select>
+      </div>`);
+  }
+  let submitAttr = '';
+  if (step.submit) {
+    const idMatch = step.submit.match(/#([A-Za-z0-9_-]+)/);
+    const classMatch = step.submit.match(/\.([A-Za-z0-9_-]+)/);
+    if (idMatch) submitAttr += ` id="${idMatch[1]}"`;
+    if (classMatch) submitAttr += ` class="${classMatch[1]}"`;
+  }
+  const hasControls = controls.length > 0;
+  const formHtml = hasControls
+    ? `      <form method="post" action="/draft?next=${encodeURIComponent(nextPath)}">
+${controls.join('\n')}
+        <button type="submit"${submitAttr}>Continue</button>
+      </form>`
+    : `      <form method="get" action="${nextPath}">
+        <button type="submit"${submitAttr}>Continue</button>
+      </form>`;
+
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Step ${index + 1}</title>
+    <link rel="stylesheet" href="/app/styles.css">
+  </head>
+  <body>
+    <main>
+      <h1>Step ${index + 1}</h1>
+      \${carriedHtml}
+${formHtml}
+    </main>
+    <script type="module" src="/app/enhance.js"></script>
+  </body>
+</html>`;
+}
+
+function searchPageDocument(search) {
+  const containerId = search.resultsSelector.replace(/^#/, '');
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Search</title>
+    <link rel="stylesheet" href="/app/styles.css">
+  </head>
+  <body>
+    <main>
+      <h1>Search</h1>
+      <form method="get" action="${search.path}">
+        <label for="${search.queryParam}">Search</label>
+        <input id="${search.queryParam}" name="${search.queryParam}" value="\${query.replace(/"/g, '&quot;')}">
+        <button type="submit">Search</button>
+      </form>
+      <div id="${containerId}"></div>
+    </main>
+    <script type="module" src="/app/enhance.js"></script>
+  </body>
+</html>`;
+}
 
 function serverSource(archetype, framework, defects = []) {
   const writeRoute = archetype.routes.find((route) => route.method === 'POST' && route.kind.startsWith('write'));
@@ -503,7 +637,7 @@ db.exec(\`CREATE TABLE IF NOT EXISTS accounts (email TEXT PRIMARY KEY, password 
 
 const insert = db.prepare('INSERT INTO records (ref, created_at, payload) VALUES (?, ?, ?)');
 const select = db.prepare('SELECT ref, created_at, payload FROM records WHERE ref = ?');
-${sessionTables(archetype)}
+${sessionTables(archetype)}${archetype.journey?.update ? `\nconst updateRecord = db.prepare('UPDATE records SET payload = ? WHERE ref = ?');` : ''}${archetype.journey?.steps ? `\ndb.exec('CREATE TABLE IF NOT EXISTS drafts (sid TEXT, name TEXT, value TEXT, PRIMARY KEY (sid, name))');\nconst insertDraft = db.prepare('INSERT OR REPLACE INTO drafts (sid, name, value) VALUES (?, ?, ?)');\nconst selectDrafts = db.prepare('SELECT name, value FROM drafts WHERE sid = ?');` : ''}
 const count = db.prepare('SELECT COUNT(*) AS n FROM records');
 const list = db.prepare('SELECT ref, payload FROM records ORDER BY created_at DESC LIMIT 50');
 
@@ -571,7 +705,33 @@ const server = createServer(async (request, response) => {
     }
   }
 
-  if (path === '/' && request.method === 'GET') return html(response, await renderDocument({ title: ${JSON.stringify(archetype.title)} }));
+  ${archetype.journey?.steps ? `if (path === '/' && request.method === 'GET') {
+    const sidCookie = (request.headers.cookie ?? '')
+      .split(';')
+      .map((part) => part.trim())
+      .find((part) => part.startsWith('sid='))
+      ?.slice('sid='.length);
+    const draftRows = sidCookie ? selectDrafts.all(sidCookie) : [];
+    let doc = await renderDocument({ title: ${JSON.stringify(archetype.title)} });
+    if (draftRows.length > 0) {
+      const carriedHtml = \`<div class="draft-carried">\${draftRows.map((d) => \`<p class="carried-value">\${d.value}</p>\`).join('\\n')}</div>\`;
+      doc = doc.replace('</main>', \`\${carriedHtml}</main>\`);
+    }
+    return html(response, doc);
+  }${archetype.journey.startPath !== '/' ? `\n\n  if (path === ${JSON.stringify(archetype.journey.startPath)} && request.method === 'GET') {
+    const sidCookie = (request.headers.cookie ?? '')
+      .split(';')
+      .map((part) => part.trim())
+      .find((part) => part.startsWith('sid='))
+      ?.slice('sid='.length);
+    const draftRows = sidCookie ? selectDrafts.all(sidCookie) : [];
+    let doc = await renderDocument({ title: ${JSON.stringify(archetype.title)} });
+    if (draftRows.length > 0) {
+      const carriedHtml = \`<div class="draft-carried">\${draftRows.map((d) => \`<p class="carried-value">\${d.value}</p>\`).join('\\n')}</div>\`;
+      doc = doc.replace('</main>', \`\${carriedHtml}</main>\`);
+    }
+    return html(response, doc);
+  }` : ''}` : `if (path === '/' && request.method === 'GET') return html(response, await renderDocument({ title: ${JSON.stringify(archetype.title)} }));`}
 
   ${parameterisedWrite ? `const writeMatch = path.match(new RegExp(${JSON.stringify(writeMatchSource)}));
   if (writeMatch && request.method === 'POST') {` : `if (path === '${writeRoute.path}' && request.method === 'POST') {`}
@@ -613,8 +773,36 @@ ${archetype.session ? `    // The session is what makes the follow-up page show 
       response.writeHead(404, { 'content-type': 'text/html; charset=utf-8' });
       return response.end('<!doctype html><title>Not found</title><p>We could not find that record.</p>');
     }
-    return html(response, await renderDocument({ title: 'Your submission', data: { ref: row.ref } }));
-  }
+    ${archetype.journey?.update ? `const payload = JSON.parse(row.payload);
+    const targetVal = String(payload[${JSON.stringify(archetype.journey.update.field)}] ?? '').replace(/"/g, '&quot;');
+    const editForm = \`<form id="edit-form" method="post" action="/edit/\${row.ref}">
+      <label for="edit-${archetype.journey.update.field}">${archetype.fields.find((f) => f.name === archetype.journey.update.field)?.label ?? archetype.journey.update.field}</label>
+      <input id="edit-${archetype.journey.update.field}" name="${archetype.journey.update.field}" value="\${targetVal}">
+      <button type="submit">Update</button>
+    </form>\`;
+    let doc = await renderDocument({ title: 'Your submission', data: { ref: row.ref } });
+    return html(response, doc.replace('</main>', \`\${editForm}</main>\`));` : `return html(response, await renderDocument({ title: 'Your submission', data: { ref: row.ref } }));`}
+  }${archetype.journey?.update ? `\n\n  const editMatch = path.match(/^\\/edit\\/([^/]+)$/);
+  if (editMatch && request.method === 'POST') {
+    const editRef = editMatch[1];
+    const row = select.get(editRef);
+    if (!row) {
+      response.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });
+      return response.end('not found');
+    }
+    const body = await parseBody(request);
+    const existing = JSON.parse(row.payload);
+    const updated = { ...existing, ...body };
+    const missing = REQUIRED.filter((field) => !String(updated[field] ?? '').trim());
+    if (missing.length > 0) {
+      const document = await renderDocument({ title: 'Please correct the form', data: { errorSummary: \`Missing: \${missing.join(', ')}\` } });
+      return html(response, document.replace('<h1>', \`<p role="alert">Missing: \${missing.join(', ')}</p><h1>\`), 422);
+    }
+    updateRecord.run(JSON.stringify(updated), editRef);
+    const readUrl = readRoute.replace(/:[A-Za-z0-9_]+/g, editRef);
+    response.writeHead(303, { location: readUrl });
+    return response.end();
+  }` : ''}
 
   if (path === '/api/me' && request.method === 'GET') {
     // The session echo: who the server thinks you are, from the cookie it issued.
@@ -630,8 +818,11 @@ ${archetype.session ? `    // The session is what makes the follow-up page show 
   }
 
   if (path === '/api/records' && request.method === 'GET') {
-    // The write journey's read side: what the server actually stored, listed back to the caller.
-    return json(response, list.all().map((row) => ({ ref: row.ref, ...JSON.parse(row.payload) })));
+    ${archetype.journey?.search ? `const q = url.searchParams.get('q');
+    let rows = list.all();
+    if (q) rows = rows.filter((row) => row.payload.toLowerCase().includes(q.toLowerCase()));
+    return json(response, rows.map((row) => ({ ref: row.ref, ...JSON.parse(row.payload) })));` : `// The write journey's read side: what the server actually stored, listed back to the caller.
+    return json(response, list.all().map((row) => ({ ref: row.ref, ...JSON.parse(row.payload) })));`}
   }
 
   if (path.startsWith('/api/record/') && request.method === 'GET') {
@@ -651,11 +842,56 @@ ${archetype.session ? `    // The session is what makes the follow-up page show 
     return html(response, await renderDocument({ title: 'Records', data: { rows } }));
   }
 
+  ${archetype.journey?.search
+    ? (archetype.journey.search.path === '/search'
+        ? `if (path === '/search' && request.method === 'GET') {
+    const query = url.searchParams.get(${JSON.stringify(archetype.journey.search.queryParam)}) ?? '';
+    return html(response, \`${searchPageDocument(archetype.journey.search)}\`);
+  }`
+        : `if (path === ${JSON.stringify(archetype.journey.search.path)} && request.method === 'GET') {
+    const query = url.searchParams.get(${JSON.stringify(archetype.journey.search.queryParam)}) ?? '';
+    return html(response, \`${searchPageDocument(archetype.journey.search)}\`);
+  }
+
   if (path === '/search' && request.method === 'GET') {
     const query = url.searchParams.get('q') ?? '';
     const rows = list.all().map((row) => ({ ref: row.ref, ...JSON.parse(row.payload) })).filter((row) => JSON.stringify(row).toLowerCase().includes(query.toLowerCase()));
     return html(response, await renderDocument({ title: \`Search: \${query}\`, data: { query, rows } }));
+  }`)
+    : `if (path === '/search' && request.method === 'GET') {
+    const query = url.searchParams.get('q') ?? '';
+    const rows = list.all().map((row) => ({ ref: row.ref, ...JSON.parse(row.payload) })).filter((row) => JSON.stringify(row).toLowerCase().includes(query.toLowerCase()));
+    return html(response, await renderDocument({ title: \`Search: \${query}\`, data: { query, rows } }));
+  }`}${archetype.journey?.steps ? `\n\n  if ((path === '/draft' || ${JSON.stringify(archetype.journey.steps.map((s) => s.path))}.includes(path)) && request.method === 'POST') {
+    const sidCookie = (request.headers.cookie ?? '')
+      .split(';')
+      .map((part) => part.trim())
+      .find((part) => part.startsWith('sid='))
+      ?.slice('sid='.length);
+    const sid = sidCookie || randomUUID();
+    const body = await parseBody(request);
+    for (const [key, value] of Object.entries(body)) {
+      if (key !== 'next') insertDraft.run(sid, key, String(value));
+    }
+    const stepNextMap = ${JSON.stringify(Object.fromEntries(archetype.journey.steps.map((s, idx, arr) => [s.path, idx < arr.length - 1 ? arr[idx + 1].path : archetype.journey.startPath])))};
+    const nextUrl = url.searchParams.get('next') || stepNextMap[path] || ${JSON.stringify(archetype.journey.startPath)};
+    const headers = { 'set-cookie': \`sid=\${sid}; Path=/; HttpOnly; SameSite=Lax; Max-Age=3600\`, location: nextUrl };
+    response.writeHead(303, headers);
+    return response.end();
   }
+
+  ${archetype.journey.steps.map((step, idx) => `if (path === '${step.path}' && request.method === 'GET') {
+    const sidCookie = (request.headers.cookie ?? '')
+      .split(';')
+      .map((part) => part.trim())
+      .find((part) => part.startsWith('sid='))
+      ?.slice('sid='.length);
+    const draftRows = sidCookie ? selectDrafts.all(sidCookie) : [];
+    const carriedHtml = draftRows.length > 0
+      ? \`<div class="draft-carried">\${draftRows.map((d) => \`<p class="carried-value">\${d.value}</p>\`).join('\\n')}</div>\`
+      : '';
+    return html(response, \`${stepPageDocument(step, idx, archetype.journey.steps, archetype)}\`);
+  }`).join('\n  ')}` : ''}
 
   response.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });
   response.end('not found');
@@ -705,7 +941,7 @@ const db = new DatabaseSync(dbPath);
 db.exec(\`CREATE TABLE IF NOT EXISTS records (ref TEXT PRIMARY KEY, created_at TEXT NOT NULL, payload TEXT NOT NULL)\`);
 const insert = db.prepare('INSERT INTO records (ref, created_at, payload) VALUES (?, ?, ?)');
 const select = db.prepare('SELECT ref, created_at, payload FROM records WHERE ref = ?');
-const list = db.prepare('SELECT ref, payload FROM records ORDER BY created_at DESC LIMIT 50');
+${archetype.journey?.update ? `const updateRecord = db.prepare('UPDATE records SET payload = ? WHERE ref = ?');\n` : ''}${archetype.journey?.steps ? `db.exec('CREATE TABLE IF NOT EXISTS drafts (sid TEXT, name TEXT, value TEXT, PRIMARY KEY (sid, name))');\nconst insertDraft = db.prepare('INSERT OR REPLACE INTO drafts (sid, name, value) VALUES (?, ?, ?)');\nconst selectDrafts = db.prepare('SELECT name, value FROM drafts WHERE sid = ?');\n` : ''}const list = db.prepare('SELECT ref, payload FROM records ORDER BY created_at DESC LIMIT 50');
 
 const REQUIRED = ${JSON.stringify(archetype.fields.filter((field) => field.type !== 'select' && !field.optional).map((field) => field.name))};
 
@@ -741,7 +977,33 @@ app.get('/app/:file', (c) => {
   }
 });
 
-app.get('/', (c) => c.html(renderDocument({ title: ${JSON.stringify(archetype.title)} })));
+${archetype.journey?.steps ? `app.get('/', (c) => {
+  const sidCookie = (c.req.header('cookie') ?? '')
+    .split(';')
+    .map((part) => part.trim())
+    .find((part) => part.startsWith('sid='))
+    ?.slice('sid='.length);
+  const draftRows = sidCookie ? selectDrafts.all(sidCookie) : [];
+  let doc = renderDocument({ title: ${JSON.stringify(archetype.title)} });
+  if (draftRows.length > 0) {
+    const carriedHtml = \`<div class="draft-carried">\${draftRows.map((d) => \`<p class="carried-value">\${d.value}</p>\`).join('\\n')}</div>\`;
+    doc = doc.replace('</main>', \`\${carriedHtml}</main>\`);
+  }
+  return c.html(doc);
+});${archetype.journey.startPath !== '/' ? `\n\napp.get(${JSON.stringify(archetype.journey.startPath)}, (c) => {
+  const sidCookie = (c.req.header('cookie') ?? '')
+    .split(';')
+    .map((part) => part.trim())
+    .find((part) => part.startsWith('sid='))
+    ?.slice('sid='.length);
+  const draftRows = sidCookie ? selectDrafts.all(sidCookie) : [];
+  let doc = renderDocument({ title: ${JSON.stringify(archetype.title)} });
+  if (draftRows.length > 0) {
+    const carriedHtml = \`<div class="draft-carried">\${draftRows.map((d) => \`<p class="carried-value">\${d.value}</p>\`).join('\\n')}</div>\`;
+    doc = doc.replace('</main>', \`\${carriedHtml}</main>\`);
+  }
+  return c.html(doc);
+});` : ''}` : `app.get('/', (c) => c.html(renderDocument({ title: ${JSON.stringify(archetype.title)} })));`}
 
 app.post('${writeRoute.path}', async (c) => {
   const body = await c.req.parseBody();
@@ -774,10 +1036,38 @@ const readPath = ${JSON.stringify(archetype.routes.find((route) => route.kind ==
 app.get(readPath, (c) => {
   const row = select.get(c.req.param('ref'));
   if (!row) return c.text('We could not find that record.', 404);
-  return c.html(renderDocument({ title: 'Your submission' }));
-});
+  ${archetype.journey?.update ? `const payload = JSON.parse(row.payload);
+  const targetVal = String(payload[${JSON.stringify(archetype.journey.update.field)}] ?? '').replace(/"/g, '&quot;');
+  const editForm = \`<form id="edit-form" method="post" action="/edit/\${row.ref}">
+    <label for="edit-${archetype.journey.update.field}">${archetype.fields.find((f) => f.name === archetype.journey.update.field)?.label ?? archetype.journey.update.field}</label>
+    <input id="edit-${archetype.journey.update.field}" name="${archetype.journey.update.field}" value="\${targetVal}">
+    <button type="submit">Update</button>
+  </form>\`;
+  let doc = renderDocument({ title: 'Your submission' });
+  return c.html(doc.replace('</main>', \`\${editForm}</main>\`));` : `return c.html(renderDocument({ title: 'Your submission' }));`}
+});${archetype.journey?.update ? `\n\napp.post('/edit/:ref', async (c) => {
+  const editRef = c.req.param('ref');
+  const row = select.get(editRef);
+  if (!row) return c.text('not found', 404);
+  const body = await c.req.parseBody();
+  const existing = JSON.parse(row.payload);
+  const updated = { ...existing, ...body };
+  const missing = REQUIRED.filter((field) => !String(updated[field] ?? '').trim());
+  if (missing.length > 0) {
+    const document = await renderDocument({ title: 'Please correct the form' });
+    return c.html(document.replace('<h1>', \`<p role="alert">Missing: \${missing.join(', ')}</p><h1>\`), 422);
+  }
+  updateRecord.run(JSON.stringify(updated), editRef);
+  const readUrl = readPath.replace(/:[A-Za-z0-9_]+/g, editRef);
+  return c.redirect(readUrl, 303);
+});` : ''}
 
-app.get('/api/records', (c) => c.json(list.all().map((row) => ({ ref: row.ref, ...JSON.parse(row.payload) }))));
+${archetype.journey?.search ? `app.get('/api/records', (c) => {
+  const q = c.req.query('q');
+  let rows = list.all();
+  if (q) rows = rows.filter((row) => row.payload.toLowerCase().includes(q.toLowerCase()));
+  return c.json(rows.map((row) => ({ ref: row.ref, ...JSON.parse(row.payload) })));
+});` : `app.get('/api/records', (c) => c.json(list.all().map((row) => ({ ref: row.ref, ...JSON.parse(row.payload) }))));`}
 
 app.get('/api/me', (c) => {
   const sid = (c.req.header('cookie') ?? '')
@@ -805,7 +1095,64 @@ for (const listing of ['/roster', '/inbox', '/attendees', '/cart']) {
   app.get(listing, (c) => c.html(renderDocument({ title: 'Records' })));
 }
 
-app.get('/search', (c) => c.html(renderDocument({ title: \`Search: \${c.req.query('q') ?? ''}\` })));
+${archetype.journey?.search
+  ? (archetype.journey.search.path === '/search'
+      ? `app.get('/search', (c) => {
+  const query = c.req.query(${JSON.stringify(archetype.journey.search.queryParam)}) ?? '';
+  return c.html(\`${searchPageDocument(archetype.journey.search)}\`);
+});`
+      : `app.get(${JSON.stringify(archetype.journey.search.path)}, (c) => {
+  const query = c.req.query(${JSON.stringify(archetype.journey.search.queryParam)}) ?? '';
+  return c.html(\`${searchPageDocument(archetype.journey.search)}\`);
+});
+
+app.get('/search', (c) => c.html(renderDocument({ title: \`Search: \${c.req.query('q') ?? ''}\` })));`)
+  : `app.get('/search', (c) => c.html(renderDocument({ title: \`Search: \${c.req.query('q') ?? ''}\` })));`}${archetype.journey?.steps ? `\n\napp.post('/draft', async (c) => {
+  const sidCookie = (c.req.header('cookie') ?? '')
+    .split(';')
+    .map((part) => part.trim())
+    .find((part) => part.startsWith('sid='))
+    ?.slice('sid='.length);
+  const sid = sidCookie || randomUUID();
+  const body = await c.req.parseBody();
+  for (const [key, value] of Object.entries(body)) {
+    if (key !== 'next') insertDraft.run(sid, key, String(value));
+  }
+  const nextUrl = c.req.query('next') || ${JSON.stringify(archetype.journey.startPath)};
+  c.header('set-cookie', \`sid=\${sid}; Path=/; HttpOnly; SameSite=Lax; Max-Age=3600\`);
+  return c.redirect(nextUrl, 303);
+});
+
+${archetype.journey.steps.map((step, idx, arr) => {
+  const nextPath = idx < arr.length - 1 ? arr[idx + 1].path : archetype.journey.startPath;
+  return `app.post('${step.path}', async (c) => {
+  const sidCookie = (c.req.header('cookie') ?? '')
+    .split(';')
+    .map((part) => part.trim())
+    .find((part) => part.startsWith('sid='))
+    ?.slice('sid='.length);
+  const sid = sidCookie || randomUUID();
+  const body = await c.req.parseBody();
+  for (const [key, value] of Object.entries(body)) {
+    if (key !== 'next') insertDraft.run(sid, key, String(value));
+  }
+  c.header('set-cookie', \`sid=\${sid}; Path=/; HttpOnly; SameSite=Lax; Max-Age=3600\`);
+  return c.redirect('${nextPath}', 303);
+});
+
+app.get('${step.path}', (c) => {
+  const sidCookie = (c.req.header('cookie') ?? '')
+    .split(';')
+    .map((part) => part.trim())
+    .find((part) => part.startsWith('sid='))
+    ?.slice('sid='.length);
+  const draftRows = sidCookie ? selectDrafts.all(sidCookie) : [];
+  const carriedHtml = draftRows.length > 0
+    ? \`<div class="draft-carried">\${draftRows.map((d) => \`<p class="carried-value">\${d.value}</p>\`).join('\\n')}</div>\`
+    : '';
+  return c.html(\`${stepPageDocument(step, idx, archetype.journey.steps, archetype)}\`);
+});`;
+}).join('\n\n')}` : ''}
 
 app.get('/page', async (c) => c.text(await renderPage()));
 
