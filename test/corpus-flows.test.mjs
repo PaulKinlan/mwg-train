@@ -403,3 +403,28 @@ test('server execution: drafts table carries state across steps', async () => {
 
   rmSync(dir, { recursive: true, force: true });
 });
+
+test('a flow and a capability page compose: the edit form is appended to whichever document the read route renders', () => {
+  // The reviewer's P1, kept as a test because the combination was unexercised - no training archetype
+  // declares both, which is exactly why the silent drop of one of them survived until a reviewer built the
+  // case by hand. The generator must not choose between the two features: the capability renders the
+  // document and the flow's form is appended to it.
+  const make = (extra) => {
+    const base = Object.values(TRAINING_ARCHETYPES).find((a) => a.id && a.journey?.fill && a.fields?.length);
+    return { ...base, ...extra, journey: { ...base.journey, ...(extra.journey ?? {}) } };
+  };
+  const update = { update: { field: 'customer', newValue: 'Grace Hopper' } };
+  const cases = [
+    ['both', make({ capabilities: { detail_page: true }, journey: update }), true, true],
+    ['flow only', make({ journey: update }), true, false],
+    ['capability only', make({ capabilities: { detail_page: true } }), false, true],
+    ['neither', make({}), false, false],
+  ];
+  for (const frameworkName of ['raw', 'hono']) {
+    for (const [label, archetype, wantEditForm, wantDetailPage] of cases) {
+      const source = buildProjectFor(archetype, { frameworkName, defects: [] }).files['server.mjs'];
+      assert.equal(source.includes('edit-form'), wantEditForm, `${frameworkName} ${label}: edit form`);
+      assert.equal(source.includes('detailPage(row)'), wantDetailPage, `${frameworkName} ${label}: capability page`);
+    }
+  }
+});

@@ -924,7 +924,7 @@ ${caps.detail_page && caps.auth ? `${RAW_AUTH_GUARD}\n` : ''}    const row = sel
       <input id="edit-${archetype.journey.update.field}" name="${archetype.journey.update.field}" value="\${targetVal}">
       <button type="submit">Update</button>
     </form>\`;
-    let doc = await renderDocument({ title: 'Your submission', data: { ref: row.ref } });
+    let doc = ${caps.detail_page ? 'detailPage(row)' : "await renderDocument({ title: 'Your submission', data: { ref: row.ref } })"};
     return html(response, doc.replace('</main>', \`\${editForm}</main>\`));` : `${caps.detail_page ? `return html(response, detailPage(row));` : `return html(response, await renderDocument({ title: 'Your submission', data: { ref: row.ref } }));`}`}
   }${archetype.journey?.update ? `\n\n  const editMatch = path.match(/^\\/edit\\/([^/]+)$/);
   if (editMatch && request.method === 'POST') {
@@ -1205,7 +1205,7 @@ ${caps.detail_page && caps.auth ? "  if (!authSessionEmail(c.req.header('cookie'
     <input id="edit-${archetype.journey.update.field}" name="${archetype.journey.update.field}" value="\${targetVal}">
     <button type="submit">Update</button>
   </form>\`;
-  let doc = await renderDocument({ title: 'Your submission' });
+  let doc = ${caps.detail_page ? 'detailPage(row)' : "await renderDocument({ title: 'Your submission' })"};
   return c.html(doc.replace('</main>', \`\${editForm}</main>\`));` : `${caps.detail_page ? `return c.html(detailPage(row));` : `return c.html(renderDocument({ title: 'Your submission' }));`}`}
 });${archetype.journey?.update ? `\n\napp.post('/edit/:ref', async (c) => {
   const editRef = c.req.param('ref');
