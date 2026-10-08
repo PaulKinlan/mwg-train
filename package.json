@@ -20,7 +20,8 @@
     "pilot:scaffold": "node scripts/scaffold-pilot.mjs",
     "pilot:run": "node scripts/pilot.mjs",
     "pilot:corpus": "node scripts/pilot-corpus.mjs --record",
-    "check:pilot-corpus": "node scripts/pilot-corpus.mjs --verify"
+    "check:pilot-corpus": "node scripts/pilot-corpus.mjs --verify",
+    "price:two-backends": "node scripts/price-two-backends.mjs"
   },
   "license": "UNLICENSED",
   "dependencies": {

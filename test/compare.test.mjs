@@ -129,3 +129,40 @@ test('the rendered table shows UNVERIFIED where a line could not be priced', () 
   assert.match(table, /no pinned GPU-hour rate was supplied/);
   assert.match(table, /\| Backend \| USD per accepted pair \|/);
 });
+
+test('the sheet prices only from pinned quotes, and refuses a rate it cannot point at', async () => {
+  const { buildSheet, loadQuotes, corpusCharacters, pilotYield } = await import('../scripts/price-two-backends.mjs');
+  const quotes = loadQuotes();
+  assert.throws(() => quotes.require('fireworks-gpu-hour-imaginary'), (error) => error.code === 'UNKNOWN_QUOTE');
+
+  const sheet = await buildSheet({ servingGpuHours: 2 });
+  const used = sheet.comparison.results.flatMap((result) => result.cost_lines.flatMap((line) => line.quote_ids ?? []));
+  const known = new Set(quotes.rows.map((row) => row.quote_id));
+  for (const quoteId of used) assert.ok(known.has(quoteId), quoteId + ' is not a row in quotes.jsonl');
+
+  // The Fireworks serving line cannot be pinned: serverless per-token serving of your own LoRA is not
+  // available, so serving needs a dedicated deployment and there is no pinned GPU-hour rate for it. The
+  // comparison must therefore refuse to name a winner rather than price the side it can price.
+  const fireworks = sheet.comparison.results.find((result) => result.backend === 'fireworks');
+  assert.equal(fireworks.usd_per_accepted_pair, null);
+  assert.equal(sheet.comparison.cheaper_backend, null);
+  assert.equal(sheet.comparison.verdict, 'INCOMPLETE');
+
+  assert.equal(sheet.yield.accepted_pairs, 24, 'the denominator is the measured pilot yield');
+  assert.equal(sheet.yield.attempted_pairs, 25);
+  assert.ok(sheet.corpus.characters > 0, 'the token estimate needs a corpus to come from');
+  assert.equal(corpusCharacters().rows, 79);
+  assert.ok(pilotYield().accepted_pairs > 0, 'the denominator is a measurement, not a placeholder');
+});
+
+test('the same checkpoints are reachable on both backends, under each backend own name', async () => {
+  const { sharedCheckpoints, resolveBackendModel } = await import('../src/train/reachability.mjs');
+  const shared = sharedCheckpoints();
+  assert.ok(shared.length >= 1, 'a platform comparison needs at least one shared checkpoint');
+  for (const checkpoint of shared) {
+    assert.equal(resolveBackendModel('fireworks', checkpoint.id), checkpoint.fireworks_id);
+    assert.equal(resolveBackendModel('cluster', checkpoint.id), checkpoint.cluster_id);
+    assert.ok(checkpoint.params <= 16_000_000_000, checkpoint.id + ' must sit in the band the sheet prices with');
+  }
+  assert.equal(resolveBackendModel('cluster', 'qwen3p5-9b'), null, 'a checkpoint only Fireworks can train is not shared');
+});

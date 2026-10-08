@@ -16,11 +16,14 @@
  *      one of the two backends is how a comparison comes out flattering.
  */
 import { TrainingSeamError } from '../seam.mjs';
-import { CLUSTER_TRAINABLE } from '../reachability.mjs';
+import { CLUSTER_TRAINABLE, resolveBackendModel } from '../reachability.mjs';
 
 /** The command and environment this backend would run. Implemented, so the seam can be exercised. */
 export function plan(job) {
-  const model = CLUSTER_TRAINABLE.find((candidate) => candidate.id === job.base.repo || candidate.id === job.base.model_id);
+  // Resolved through the shared-checkpoint table, because the two providers name the same weights
+  // differently and the job may carry either the canonical id or this backend's.
+  const canonical = resolveBackendModel('cluster', job.base.model_id) ?? job.base.model_id;
+  const model = CLUSTER_TRAINABLE.find((candidate) => candidate.id === resolveBackendModel('cluster', job.base.repo) || candidate.id === resolveBackendModel('cluster', canonical));
   if (!model) {
     const known = CLUSTER_TRAINABLE.map((candidate) => candidate.id).join(', ');
     throw new TrainingSeamError('UNREACHABLE_BASE', `"${job.base.repo}" is not in the cluster's declared set (${known})`);

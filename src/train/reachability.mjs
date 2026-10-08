@@ -83,10 +83,29 @@ export const CLUSTER_TRAINABLE = [
   { id: 'google/gemma-4-12b-it', params: 12_000_000_000, family: 'Gemma 4', licence: 'apache-2.0' },
 ];
 
-/** The checkpoints both backends can train, which is what a platform-cost comparison needs. */
-export function sharedCheckpoints(byId = (id) => id) {
-  const cluster = new Set(CLUSTER_TRAINABLE.map((model) => model.id));
-  return FIREWORKS_TRAINABLE.filter((model) => [...cluster].some((candidate) => byId(candidate) === byId(model.id)));
+/**
+ * The checkpoints both backends can train, which is what a platform-cost comparison needs.
+ *
+ * The two providers name the same weights differently - `qwen3-8b` on Fireworks, `Qwen/Qwen3-8B` on the
+ * cluster - so "the same checkpoint" has to be derived from the two lists rather than typed twice, and
+ * the canonical id is the one the job declares. This was a real gap: using the seam to price a shared
+ * checkpoint failed with UNREACHABLE_BASE because the job's repo name was neither backend's id.
+ */
+export function sharedCheckpoints() {
+  return FIREWORKS_TRAINABLE.flatMap((model) => {
+    const cluster = CLUSTER_TRAINABLE.find((candidate) => candidate.id.split('/').pop().toLowerCase() === model.id.toLowerCase());
+    return cluster
+      ? [{ id: model.id, params: model.params, licence: model.licence, fireworks_id: model.id, cluster_id: cluster.id }]
+      : [];
+  });
+}
+
+/** The id a given backend calls a canonical checkpoint, or null if that backend cannot train it. */
+export function resolveBackendModel(backend, modelId) {
+  const shared = sharedCheckpoints().find((candidate) => candidate.id === modelId);
+  if (backend === 'fireworks') return FIREWORKS_TRAINABLE.find((model) => model.id === modelId)?.id ?? null;
+  if (backend === 'cluster') return shared?.cluster_id ?? CLUSTER_TRAINABLE.find((model) => model.id === modelId)?.id ?? null;
+  return null;
 }
 
 /** Which backend can train a checkpoint, as a table rather than a claim in prose. */
