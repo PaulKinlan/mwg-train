@@ -175,15 +175,22 @@ export function validateSpec(spec) {
     }
   }
 
-  // If persistence says the read route takes a reference the server issued, the write route has to
-  // actually issue one: a redirect template without `:ref` silently builds a static redirect, and the
-  // reference the specification promises would never exist.
-  if (/reference/i.test(spec.persistence?.reference ?? '')) {
-    for (const route of spec.routes ?? []) {
-      if (route?.kind?.startsWith('write') && isString(route.redirect) && !route.redirect.includes(':ref')) {
-        at(`routes(${route.method} ${route.path}).redirect`, 'persistence promises a server-issued reference, but this write redirects without one');
-      }
-    }
+  // A write route that redirects to a reference-addressed read route has to actually put the reference in
+  // the redirect. Checked structurally, against the read route's own path and kind, rather than against
+  // the prose in `persistence.reference`: keying it on the word "reference" was both too narrow - it
+  // missed the second write route of a family whose prose described the first - and too broad - it would
+  // have demanded a reference from every write route of a family that mentioned the word.
+  const stripRef = (path) => String(path).replace(/\/:ref$/, '');
+  const reads = (spec.routes ?? []).filter((route) => route?.method === 'GET');
+  const served = new Set(reads.map((route) => stripRef(route.path)));
+  const readByReference = new Set(reads.filter((route) => route?.kind === 'read-by-reference').map((route) => stripRef(route.path)));
+  for (const route of spec.routes ?? []) {
+    if (!route?.kind?.startsWith('write') || !isString(route.redirect)) continue;
+    const target = stripRef(route.redirect);
+    const where = `routes(${route.method} ${route.path}).redirect`;
+    if (!served.has(target)) at(where, `redirects to ${target}, which this specification does not serve as a GET`);
+    else if (readByReference.has(target) && !route.redirect.includes(':ref')) at(where, `${target} is read by reference, so this write must issue one`);
+    else if (!readByReference.has(target) && route.redirect.includes(':ref')) at(where, `issues a reference, but ${target} is not a reference-addressed read route`);
   }
 
   if (!isObject(spec.echo)) at('echo', 'every archetype shows a value back to the user');

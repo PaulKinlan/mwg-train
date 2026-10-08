@@ -132,6 +132,14 @@ test('the specification states the functional facts the generator implements', (
       `${familyId}: required-ness drifted`,
     );
     assert.ok(reduced.fields.every((field) => !('required' in field)), `${familyId}: the reduced field still carries the specification's spelling`);
+    // `defined()` filters before comparing, so a property the reduction invented would be invisible to the
+    // assertion above. Assert the reduced shape directly as well: every key it hands the templates has to
+    // be one the format defines.
+    for (const field of reduced.fields) {
+      for (const key of Object.keys(field)) {
+        assert.ok(FIELD_KEYS.has(key), `${familyId}: the reduction invented the field property ${key}`);
+      }
+    }
 
     // The archetype table carries `pattern` on some fields and nothing reads it: the generator computes
     // its element patterns from the field's type and name, and `pattern` never reaches the built project.
@@ -241,10 +249,38 @@ test('a specification that is missing a functional fact is refused, not rebuilt'
   );
 
   const noRef = clone();
-  noRef.routes.find((route) => route.kind === 'write').redirect = '/thanks';
+  noRef.routes.find((route) => route.kind === 'write').redirect = '/booking';
   assert.ok(
-    validateSpec(noRef).some((problem) => problem.includes('server-issued reference')),
-    'a write route must issue the reference the persistence promises',
+    validateSpec(noRef).some((problem) => problem.includes('read by reference')),
+    'a write route must issue the reference the read route it lands on takes',
+  );
+
+  const nowhere = clone();
+  nowhere.routes.find((route) => route.kind === 'write').redirect = '/thanks';
+  assert.ok(
+    validateSpec(nowhere).some((problem) => problem.includes('does not serve as a GET')),
+    'a write route must redirect to a route the specification actually serves',
+  );
+
+  // The second write route of a family whose persistence prose describes the first: the check has to be
+  // structural, or this one is missed. `/signup` redirecting to a session-addressed `/account` must
+  // still be accepted, and only the `:ref` one is required to carry a reference.
+  const account = structuredClone(read('account-recovery'));
+  assert.deepEqual(validateSpec(account), [], 'the session-addressed write route must not be flagged');
+  account.routes.find((route) => route.path === '/reset').redirect = '/reset';
+  assert.ok(
+    validateSpec(account).some((problem) => problem.startsWith('routes(POST /reset).redirect')),
+    'the second write route must be checked, not only the one the prose describes',
+  );
+  assert.ok(
+    !validateSpec(account).some((problem) => problem.startsWith('routes(POST /signup).redirect')),
+    'the session-addressed write route must not be flagged',
+  );
+  const sessionRef = structuredClone(read('account-recovery'));
+  sessionRef.routes.find((route) => route.path === '/signup').redirect = '/account/:ref';
+  assert.ok(
+    validateSpec(sessionRef).some((problem) => problem.includes('not a reference-addressed read route')),
+    'a reference issued for a route that is not read by reference is refused',
   );
 
   const unknownKey = clone();

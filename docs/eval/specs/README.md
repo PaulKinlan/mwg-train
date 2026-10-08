@@ -70,12 +70,15 @@ acceptance function.
 The specification is not uniformly executable, and it should not pretend to be.
 
 - **Executable**: `routes` (method, path, kind, redirect template), `fields`, `journey`, `form`,
-  `extra_form`, `write_journey`, `security_journey`, `echo`, `session`, `capacity`. These are what the
-  templates consume, and the byte-for-byte rebuild test is what proves they are sufficient.
+  `extra_form`, `write_journey`, `security_journey`, `echo`, `session`, `capacity`, `password_field`.
+  These are what the templates consume, and the byte-for-byte rebuild test is what proves they are
+  sufficient.
 - **Checked against the executable part**: `validation.required_fields` (against the fields),
-  every journey selector (against the declared fields), the redirect template (against what
-  `persistence.reference` promises), and every table and column under `state` (against the generated
-  server).
+  every journey selector (against the declared fields), and the redirect template (against the kind of
+  the read route it points at — a write that lands on a reference-addressed route must issue one, checked
+  on the route kinds rather than on the prose, so a family with a second write route is covered too).
+- **Checked against the built project**: every table and column named under `state` (against the
+  generated server's schema).
 - **Documentation, deliberately**: `story`, `effect`, `persistence` prose and `acceptance`. Nothing parses
   these, and they are the part most likely to drift, so they are written to be read — by a person
   deciding whether a rebuilt project still does the job, and by whoever picks this up next. The
