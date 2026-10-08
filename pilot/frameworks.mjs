@@ -37,6 +37,12 @@ import { dirname, join } from 'node:path';
 
 const slug = (value) => value.replace(/[^a-z0-9]+/gi, '-').toLowerCase();
 
+// The reference of the record an edit-flow form edits. A parameterised write route
+// (/subscriptions/:id/edit) is an UPDATE of an existing record, so the server seeds one under this
+// reference and the form's action substitutes it for the route's :param - the literal ':id' must
+// never reach a browser (mwg-train-q7v). Literal write paths (every pilot route) emit neither.
+const EDIT_SEED_REF = 'current';
+
 /** The form's id comes from the journey's selector, so the markup and the journey cannot drift apart. */
 const formIdOf = (archetype) => archetype.journey.formSelector.replace(/^form#/, '');
 
@@ -135,7 +141,12 @@ ${fields}
     </form>`;
 }
 function formMarkup(archetype, { defects }) {
-  const form = archetype.form ?? { method: 'post', action: archetype.routes.find((route) => route.method === 'POST' && route.kind.startsWith('write')).path };
+  const writePath = archetype.routes.find((route) => route.method === 'POST' && route.kind.startsWith('write')).path;
+  const form = archetype.form ?? { method: 'post', action: writePath };
+  // A parameterised write route is an edit flow: the form posts to the seeded record, with the
+  // seed's reference standing in for each :param. Literal write paths keep their action verbatim.
+  // A local, not a mutation: an archetype object must be reusable across builds unchanged.
+  const action = /:[A-Za-z0-9_]+/.test(writePath) ? form.action.replace(/:[A-Za-z0-9_]+/g, EDIT_SEED_REF) : form.action;
   const chosen = form.fields ? archetype.fields.filter((field) => form.fields.includes(field.slug)) : archetype.fields;
   const fields = chosen
     .map((field) => fieldWithError(field, { defects }))
@@ -145,7 +156,7 @@ function formMarkup(archetype, { defects }) {
     ? '\n' + extraFormMarkup(archetype, { defects })
     : '';
   const live = defects.includes('no-aria-sync') ? '' : '      <div role="alert" aria-live="assertive" class="form-status" data-form-status></div>\n';
-  return `    <form id="${formIdOf(archetype)}" method="${form.method}" action="${form.action}">
+  return `    <form id="${formIdOf(archetype)}" method="${form.method}" action="${action}">
 ${live}      <div class="field">
 ${fields}
       </div>
@@ -588,8 +599,135 @@ function searchPageDocument(search) {
   </body>
 </html>`;
 }
+/*
+ * The functional-route capabilities (mwg-train-37a): list pages, a detail page, and account
+ * login/logout. Every block below is emitted ONLY when the archetype's spec opts in
+ * (`capabilities` / `seed_accounts`); a spec that declares none of them regenerates byte-identically,
+ * which is the hard gate on the 35 frozen pilot trees. The fragments are built from quoted strings,
+ * like sessionTables, so the generated code needs no escaping of its own.
+ */
+
+const capabilitiesOf = (archetype) => ({ list_pages: false, detail_page: false, auth: false, ...(archetype.capabilities ?? {}) });
+
+/** The small page renderers the capability handlers share, emitted only when a capability needs them. */
+const capabilityPages = () =>
+  [
+    "const esc = (value) => String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;');",
+    "const capabilityPage = (title, body) => '<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><title>' + esc(title) + '</title><link rel=\"stylesheet\" href=\"/app/styles.css\"></head><body><main>' + body + '</main></body></html>';",
+    "const loginPage = (error) => capabilityPage('Sign in', '<h1>Sign in</h1>' + (error ? '<p role=\"alert\">' + esc(error) + '</p>' : '') + '<form method=\"post\" action=\"/login\"><label for=\"email\">Email</label><input type=\"email\" id=\"email\" name=\"email\" required autocomplete=\"username\"><label for=\"password\">Password</label><input type=\"password\" id=\"password\" name=\"password\" required autocomplete=\"current-password\"><button type=\"submit\">Sign in</button></form>');",
+    "const listPage = (title, detailPrefix, rows) => capabilityPage(title, '<h1>' + esc(title) + '</h1><ul>' + rows.map((row) => '<li><a href=\"' + detailPrefix + esc(row.ref) + '\">' + esc(row.ref) + '</a> ' + esc(JSON.stringify(row.payload)) + '</li>').join('') + '</ul>');",
+    "const detailPage = (row) => capabilityPage('Record ' + row.ref, '<h1>Record ' + esc(row.ref) + '</h1><dl>' + Object.entries(JSON.parse(row.payload)).map(([key, value]) => '<dt>' + esc(key) + '</dt><dd>' + esc(value) + '</dd>').join('') + '</dl>');",
+  ].join('\n');
+
+/** The auth capability's tables, statements and seed accounts (the accounts table itself is per-arm). */
+const authTables = (archetype) =>
+  [
+    "db.exec('CREATE TABLE IF NOT EXISTS auth_sessions (sid TEXT PRIMARY KEY, email TEXT NOT NULL, created_at TEXT NOT NULL)');",
+    "const insertAuthSession = db.prepare('INSERT INTO auth_sessions (sid, email, created_at) VALUES (?, ?, ?)');",
+    "const selectAuthSession = db.prepare('SELECT email FROM auth_sessions WHERE sid = ?');",
+    "const deleteAuthSession = db.prepare('DELETE FROM auth_sessions WHERE sid = ?');",
+    "const selectAccount = db.prepare('SELECT email, display_name FROM accounts WHERE email = ? AND password = ?');",
+    ...(archetype.seedAccounts ?? []).map(
+      (account) =>
+        `db.prepare('INSERT OR IGNORE INTO accounts (email, password, display_name) VALUES (?, ?, ?)').run(${JSON.stringify(account.email)}, ${JSON.stringify(account.password)}, ${JSON.stringify(account.display_name ?? null)});`,
+    ),
+    'const sessionSid = (cookieHeader) =>',
+    "  (cookieHeader ?? '')",
+    "    .split(';')",
+    '    .map((part) => part.trim())',
+    "    .find((part) => part.startsWith('sid='))",
+    "    ?.slice('sid='.length);",
+    'const authSessionEmail = (cookieHeader) => {',
+    '  const sid = sessionSid(cookieHeader);',
+    '  return sid ? selectAuthSession.get(sid)?.email : undefined;',
+    '};',
+  ].join('\n');
+
+/** The login/logout handlers, raw arm. */
+const rawAuthRoutes = () =>
+  [
+    "  if (path === '/login' && request.method === 'GET') return html(response, loginPage());",
+    "  if (path === '/login' && request.method === 'POST') {",
+    '    const body = await parseBody(request);',
+    "    const account = selectAccount.get(String(body.email ?? ''), String(body.password ?? ''));",
+    "    if (!account) return html(response, loginPage('Those credentials did not match an account.'), 401);",
+    '    const sid = randomUUID();',
+    '    insertAuthSession.run(sid, account.email, new Date().toISOString());',
+    "    response.writeHead(303, { location: '/', 'set-cookie': 'sid=' + sid + '; HttpOnly; SameSite=Lax; Path=/; Max-Age=3600' });",
+    '    return response.end();',
+    '  }',
+    "  if (path === '/logout' && request.method === 'POST') {",
+    '    const sid = sessionSid(request.headers.cookie);',
+    '    if (sid) deleteAuthSession.run(sid);',
+    "    response.writeHead(303, { location: '/', 'set-cookie': 'sid=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0' });",
+    '    return response.end();',
+    '  }',
+  ].join('\n');
+
+/** The login/logout handlers, hono arm. */
+const honoAuthRoutes = () =>
+  [
+    "app.get('/login', (c) => c.html(loginPage()));",
+    "app.post('/login', async (c) => {",
+    '  const body = await c.req.parseBody();',
+    "  const account = selectAccount.get(String(body.email ?? ''), String(body.password ?? ''));",
+    "  if (!account) return c.html(loginPage('Those credentials did not match an account.'), 401);",
+    '  const sid = randomUUID();',
+    '  insertAuthSession.run(sid, account.email, new Date().toISOString());',
+    "  c.header('set-cookie', 'sid=' + sid + '; HttpOnly; SameSite=Lax; Path=/; Max-Age=3600');",
+    "  return c.redirect('/', 303);",
+    '});',
+    "app.post('/logout', (c) => {",
+    "  const sid = sessionSid(c.req.header('cookie'));",
+    '  if (sid) deleteAuthSession.run(sid);',
+    "  c.header('set-cookie', 'sid=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0');",
+    "  return c.redirect('/', 303);",
+    '});',
+  ].join('\n');
+
+/** The auth guard a protected page runs first (raw arm). */
+const RAW_AUTH_GUARD = [
+  '    if (!authSessionEmail(request.headers.cookie)) {',
+    "      response.writeHead(303, { location: '/login' });",
+    '      return response.end();',
+    '    }',
+].join('\n');
+
+/** The functional list-page handlers, raw arm: one per declared list route. */
+const rawListRoutes = (archetype, auth) => {
+  const detailPrefix = archetype.routes.find((route) => route.kind === 'read-by-reference')?.path.replace(/:ref.*$/, '') ?? '/record/';
+  return archetype.routes
+    .filter((route) => route.kind === 'list')
+    .map((route) =>
+      [
+        `  if (path === ${JSON.stringify(route.path)} && request.method === 'GET') {`,
+        ...(auth ? [RAW_AUTH_GUARD] : []),
+        '    const rows = list.all();',
+        `    return html(response, listPage(${JSON.stringify(route.path)}, ${JSON.stringify(detailPrefix)}, rows));`,
+        '  }',
+      ].join('\n'),
+    )
+    .join('\n\n');
+};
+
+/** The functional list-page handlers, hono arm. */
+const honoListRoutes = (archetype, auth) => {
+  const detailPrefix = archetype.routes.find((route) => route.kind === 'read-by-reference')?.path.replace(/:ref.*$/, '') ?? '/record/';
+  return archetype.routes
+    .filter((route) => route.kind === 'list')
+    .map((route) =>
+      [
+        `app.get(${JSON.stringify(route.path)}, (c) => {`,
+        ...(auth ? ["  if (!authSessionEmail(c.req.header('cookie'))) return c.redirect('/login', 303);"] : []),
+        `  return c.html(listPage(${JSON.stringify(route.path)}, ${JSON.stringify(detailPrefix)}, list.all()));`,
+        '});',
+      ].join('\n'),
+    )
+    .join('\n');
+};
 
 function serverSource(archetype, framework, defects = []) {
+  const caps = capabilitiesOf(archetype);
   const writeRoute = archetype.routes.find((route) => route.method === 'POST' && route.kind.startsWith('write'));
   const insecureCookie = archetype.session && !framework.cookieFlags;
   const cookieFlags = archetype.session
@@ -638,10 +776,14 @@ db.exec(\`CREATE TABLE IF NOT EXISTS accounts (email TEXT PRIMARY KEY, password 
 const insert = db.prepare('INSERT INTO records (ref, created_at, payload) VALUES (?, ?, ?)');
 const select = db.prepare('SELECT ref, created_at, payload FROM records WHERE ref = ?');
 ${sessionTables(archetype)}${archetype.journey?.update ? `\nconst updateRecord = db.prepare('UPDATE records SET payload = ? WHERE ref = ?');` : ''}${archetype.journey?.steps ? `\ndb.exec('CREATE TABLE IF NOT EXISTS drafts (sid TEXT, name TEXT, value TEXT, PRIMARY KEY (sid, name))');\nconst insertDraft = db.prepare('INSERT OR REPLACE INTO drafts (sid, name, value) VALUES (?, ?, ?)');\nconst selectDrafts = db.prepare('SELECT name, value FROM drafts WHERE sid = ?');` : ''}
-const count = db.prepare('SELECT COUNT(*) AS n FROM records');
+${caps.auth ? `${authTables(archetype)}\n` : ''}const count = db.prepare('SELECT COUNT(*) AS n FROM records');
 const list = db.prepare('SELECT ref, payload FROM records ORDER BY created_at DESC LIMIT 50');
 
+${parameterisedWrite ? `// An edit flow edits something: the seeded record is what the form's action points at.
+db.prepare('INSERT OR IGNORE INTO records (ref, created_at, payload) VALUES (?, ?, ?)').run('${EDIT_SEED_REF}', new Date().toISOString(), '{}');
+const upsert = db.prepare('INSERT OR REPLACE INTO records (ref, created_at, payload) VALUES (?, ?, ?)');
 
+` : ''}
 const parseBody = (request) =>
   new Promise((resolve) => {
     let body = '';
@@ -660,7 +802,7 @@ const json = (response, value, status = 200, headers = {}) => {
   response.end(JSON.stringify(value));
 };
 
-const REQUIRED = ${JSON.stringify(archetype.fields.filter((field) => field.type !== 'select' && !field.optional).map((field) => field.name))};
+${caps.list_pages || caps.detail_page || caps.auth ? `${capabilityPages()}\n` : ''}const REQUIRED = ${JSON.stringify(archetype.fields.filter((field) => field.type !== 'select' && !field.optional).map((field) => field.name))};
 
 ${enforceMin ? `const MIN_BOUNDS = ${JSON.stringify(minBounds)};\n` : ''}// The cart form has its own fields. Validating it against the search form's required list refused every
 // cart POST with 422, which the write journey caught: a second form on one page needs a second rule.
@@ -753,10 +895,12 @@ const server = createServer(async (request, response) => {
       const document = await renderDocument({ title: 'Please correct the form', data: { errorSummary: \`Below minimum: \${underMinimum.join(', ')}\` } });
       return html(response, document.replace('<h1>', \`<p role="alert">Below minimum: \${underMinimum.join(', ')}</p><h1>\`), 422);
     }
-    ` : ''}const ref = randomUUID().slice(0, 8);
+    ` : ''}${parameterisedWrite ? `// The edit target's own reference is the record key: posting an edit route updates THAT
+    // record, so the ref is the captured segment and the write is an upsert, never a new row.
+    const ref = writeMatch[1];` : 'const ref = randomUUID().slice(0, 8);'}
     ${defects.includes('client-only-state')
       ? '// DEFECT (client-only-state): the submission is kept only in component state, so nothing is written to the store and a reload of the confirmation route finds no record.'
-      : 'insert.run(ref, new Date().toISOString(), JSON.stringify(body));'}
+      : `${parameterisedWrite ? 'upsert' : 'insert'}.run(ref, new Date().toISOString(), JSON.stringify(body));`}
 ${archetype.session ? `    // The session is what makes the follow-up page show the right record, so it is stored, not guessed.
     const sid = randomUUID();
     insertSession.run(sid, ref, new Date().toISOString());
@@ -768,7 +912,7 @@ ${archetype.session ? `    // The session is what makes the follow-up page show 
   const readRoute = ${JSON.stringify(archetype.routes.find((route) => route.kind === 'read-by-reference')?.path ?? '/record/:ref')};
   const readMatch = path.match(new RegExp('^' + readRoute.replace(':ref', '([^/]+)').replace(/\\//g, '\\\\/') + '$'));
   if (readMatch && request.method === 'GET') {
-    const row = select.get(readMatch[1]);
+${caps.detail_page && caps.auth ? `${RAW_AUTH_GUARD}\n` : ''}    const row = select.get(readMatch[1]);
     if (!row) {
       response.writeHead(404, { 'content-type': 'text/html; charset=utf-8' });
       return response.end('<!doctype html><title>Not found</title><p>We could not find that record.</p>');
@@ -781,7 +925,7 @@ ${archetype.session ? `    // The session is what makes the follow-up page show 
       <button type="submit">Update</button>
     </form>\`;
     let doc = await renderDocument({ title: 'Your submission', data: { ref: row.ref } });
-    return html(response, doc.replace('</main>', \`\${editForm}</main>\`));` : `return html(response, await renderDocument({ title: 'Your submission', data: { ref: row.ref } }));`}
+    return html(response, doc.replace('</main>', \`\${editForm}</main>\`));` : `${caps.detail_page ? `return html(response, detailPage(row));` : `return html(response, await renderDocument({ title: 'Your submission', data: { ref: row.ref } }));`}`}
   }${archetype.journey?.update ? `\n\n  const editMatch = path.match(/^\\/edit\\/([^/]+)$/);
   if (editMatch && request.method === 'POST') {
     const editRef = editMatch[1];
@@ -805,7 +949,11 @@ ${archetype.session ? `    // The session is what makes the follow-up page show 
   }` : ''}
 
   if (path === '/api/me' && request.method === 'GET') {
-    // The session echo: who the server thinks you are, from the cookie it issued.
+${caps.auth ? `    // The account session echo: which account the login cookie belongs to.
+    const email = authSessionEmail(request.headers.cookie);
+    if (!email) return json(response, { error: 'no session' }, 401);
+    return json(response, { email });
+` : `    // The session echo: who the server thinks you are, from the cookie it issued.
     const sid = (request.headers.cookie ?? '')
       .split(';')
       .map((part) => part.trim())
@@ -815,10 +963,10 @@ ${archetype.session ? `    // The session is what makes the follow-up page show 
     const record = session ? select.get(session.ref) : undefined;
     if (!record) return json(response, { error: 'no session' }, 401);
     return json(response, { ref: record.ref, ...JSON.parse(record.payload) });
-  }
+`}  }
 
   if (path === '/api/records' && request.method === 'GET') {
-    ${archetype.journey?.search ? `const q = url.searchParams.get('q');
+${caps.auth ? `    if (!authSessionEmail(request.headers.cookie)) return json(response, { error: 'no session' }, 401);\n` : ''}    ${archetype.journey?.search ? `const q = url.searchParams.get('q');
     let rows = list.all();
     if (q) rows = rows.filter((row) => row.payload.toLowerCase().includes(q.toLowerCase()));
     return json(response, rows.map((row) => ({ ref: row.ref, ...JSON.parse(row.payload) })));` : `// The write journey's read side: what the server actually stored, listed back to the caller.
@@ -826,7 +974,8 @@ ${archetype.session ? `    // The session is what makes the follow-up page show 
   }
 
   if (path.startsWith('/api/record/') && request.method === 'GET') {
-    const row = select.get(path.split('/').pop());
+${caps.auth ? `    if (!authSessionEmail(request.headers.cookie)) return json(response, { error: 'no session' }, 401);
+` : ''}    const row = select.get(path.split('/').pop());
     if (!row) return json(response, { error: 'not found' }, 404);
     return json(response, { ref: row.ref, ...JSON.parse(row.payload) });
   }
@@ -834,13 +983,13 @@ ${archetype.session ? `    // The session is what makes the follow-up page show 
   // A route the archetype declares is a route the server must serve: /account was declared as the
   // account flow's page and never implemented, so the journey landed on a 404.
   if (${JSON.stringify(archetype.routes.filter((route) => route.kind === 'read-session').map((route) => route.path))}.includes(path) && request.method === 'GET') {
-    return html(response, await renderDocument({ title: 'Your account' }));
+${caps.auth ? `${RAW_AUTH_GUARD}\n` : ''}    return html(response, await renderDocument({ title: 'Your account' }));
   }
 
-  if (path === '/roster' || path === '/inbox' || path === '/attendees' || path === '/cart') {
+${caps.auth ? `${rawAuthRoutes()}\n\n` : ''}${caps.list_pages ? rawListRoutes(archetype, caps.auth) : `  if (path === '/roster' || path === '/inbox' || path === '/attendees' || path === '/cart') {
     const rows = list.all().map((row) => ({ ref: row.ref, ...JSON.parse(row.payload) }));
     return html(response, await renderDocument({ title: 'Records', data: { rows } }));
-  }
+  }`}
 
   ${archetype.journey?.search
     ? (archetype.journey.search.path === '/search'
@@ -906,7 +1055,11 @@ server.listen(port, '127.0.0.1', () => {
 
 /** The Hono arm's server: Hono owns routing and responses, node:http only carries them. */
 function honoServerSource(archetype, framework, defects = []) {
+  const caps = capabilitiesOf(archetype);
   const writeRoute = archetype.routes.find((route) => route.method === 'POST' && route.kind.startsWith('write'));
+  // Hono routes :param segments natively; the FIRST parameter of an edit route is the record key.
+  const parameterisedWrite = /:[A-Za-z0-9_]+/.test(writeRoute.path);
+  const writeParam = writeRoute.path.match(/:([A-Za-z0-9_]+)/)?.[1] ?? 'id';
   const cookieFlags = archetype.session ? 'HttpOnly; SameSite=Lax; Path=/; Max-Age=3600' : null;
   // Hono routes :param segments natively, so a parameterised write path needs no rewrite here. Only the
   // training-only bounds validation and client-only-state tokens differ; the pilot passes neither.
@@ -943,7 +1096,11 @@ const insert = db.prepare('INSERT INTO records (ref, created_at, payload) VALUES
 const select = db.prepare('SELECT ref, created_at, payload FROM records WHERE ref = ?');
 ${archetype.journey?.update ? `const updateRecord = db.prepare('UPDATE records SET payload = ? WHERE ref = ?');\n` : ''}${archetype.journey?.steps ? `db.exec('CREATE TABLE IF NOT EXISTS drafts (sid TEXT, name TEXT, value TEXT, PRIMARY KEY (sid, name))');\nconst insertDraft = db.prepare('INSERT OR REPLACE INTO drafts (sid, name, value) VALUES (?, ?, ?)');\nconst selectDrafts = db.prepare('SELECT name, value FROM drafts WHERE sid = ?');\n` : ''}const list = db.prepare('SELECT ref, payload FROM records ORDER BY created_at DESC LIMIT 50');
 
-const REQUIRED = ${JSON.stringify(archetype.fields.filter((field) => field.type !== 'select' && !field.optional).map((field) => field.name))};
+${parameterisedWrite ? `// An edit flow edits something: the seeded record is what the form's action points at.
+db.prepare('INSERT OR IGNORE INTO records (ref, created_at, payload) VALUES (?, ?, ?)').run('${EDIT_SEED_REF}', new Date().toISOString(), '{}');
+const upsert = db.prepare('INSERT OR REPLACE INTO records (ref, created_at, payload) VALUES (?, ?, ?)');
+
+` : ''}const REQUIRED = ${JSON.stringify(archetype.fields.filter((field) => field.type !== 'select' && !field.optional).map((field) => field.name))};
 
 ${enforceMin ? `const MIN_BOUNDS = ${JSON.stringify(minBounds)};\n` : ''}// The cart form has its own fields. Validating it against the search form's required list refused every
 // cart POST with 422, which the write journey caught: a second form on one page needs a second rule.
@@ -956,7 +1113,10 @@ const EXTRA_REQUIRED = ${JSON.stringify([
 ])};
 const requiredFor = (path) => (EXTRA_ACTION !== '' && path === EXTRA_ACTION ? EXTRA_REQUIRED : REQUIRED);
 ${sessionTables(archetype)}
-const requestLog = [];
+${caps.auth ? `db.exec('CREATE TABLE IF NOT EXISTS accounts (email TEXT PRIMARY KEY, password TEXT NOT NULL, display_name TEXT)');
+${authTables(archetype)}
+` : ''}${caps.list_pages || caps.detail_page || caps.auth ? `${capabilityPages()}
+` : ''}const requestLog = [];
 const app = new Hono();
 app.use('*', async (c, next) => {
   await next();
@@ -1022,10 +1182,12 @@ app.post('${writeRoute.path}', async (c) => {
     const document = await renderDocument({ title: 'Please correct the form' });
     return c.html(document.replace('<h1>', \`<p role="alert">Below minimum: \${underMinimum.join(', ')}</p><h1>\`), 422);
   }
-  ` : ''}const ref = randomUUID().slice(0, 8);
+  ` : ''}${parameterisedWrite ? `// The edit target's own reference is the record key: posting an edit route updates THAT
+  // record, so the ref is the captured parameter and the write is an upsert, never a new row.
+  const ref = c.req.param('${writeParam}');` : 'const ref = randomUUID().slice(0, 8);'}
   ${defects.includes('client-only-state')
     ? '// DEFECT (client-only-state): the submission is kept only in component state, so nothing is written to the store and a reload of the confirmation route finds no record.'
-    : 'insert.run(ref, new Date().toISOString(), JSON.stringify(body));'}
+    : `${parameterisedWrite ? 'upsert' : 'insert'}.run(ref, new Date().toISOString(), JSON.stringify(body));`}
 ${archetype.session ? `  const sid = randomUUID();
   insertSession.run(sid, ref, new Date().toISOString());
   c.header('set-cookie', \`sid=\${sid}; ${cookieFlags}\`);` : ''}
@@ -1034,7 +1196,7 @@ ${archetype.session ? `  const sid = randomUUID();
 
 const readPath = ${JSON.stringify(archetype.routes.find((route) => route.kind === 'read-by-reference')?.path ?? '/record/:ref')};
 app.get(readPath, ${archetype.journey?.update ? 'async ' : ''}(c) => {
-  const row = select.get(c.req.param('ref'));
+${caps.detail_page && caps.auth ? "  if (!authSessionEmail(c.req.header('cookie'))) return c.redirect('/login', 303);\n" : ''}  const row = select.get(c.req.param('ref'));
   if (!row) return c.text('We could not find that record.', 404);
   ${archetype.journey?.update ? `const payload = JSON.parse(row.payload);
   const targetVal = String(payload[${JSON.stringify(archetype.journey.update.field)}] ?? '').replace(/"/g, '&quot;');
@@ -1044,7 +1206,7 @@ app.get(readPath, ${archetype.journey?.update ? 'async ' : ''}(c) => {
     <button type="submit">Update</button>
   </form>\`;
   let doc = await renderDocument({ title: 'Your submission' });
-  return c.html(doc.replace('</main>', \`\${editForm}</main>\`));` : `return c.html(renderDocument({ title: 'Your submission' }));`}
+  return c.html(doc.replace('</main>', \`\${editForm}</main>\`));` : `${caps.detail_page ? `return c.html(detailPage(row));` : `return c.html(renderDocument({ title: 'Your submission' }));`}`}
 });${archetype.journey?.update ? `\n\napp.post('/edit/:ref', async (c) => {
   const editRef = c.req.param('ref');
   const row = select.get(editRef);
@@ -1062,14 +1224,18 @@ app.get(readPath, ${archetype.journey?.update ? 'async ' : ''}(c) => {
   return c.redirect(readUrl, 303);
 });` : ''}
 
-${archetype.journey?.search ? `app.get('/api/records', (c) => {
-  const q = c.req.query('q');
+${caps.auth || archetype.journey?.search ? `app.get('/api/records', (c) => {
+${caps.auth ? "  if (!authSessionEmail(c.req.header('cookie'))) return c.json({ error: 'no session' }, 401);\n" : ''}${archetype.journey?.search ? `  const q = c.req.query('q');
   let rows = list.all();
   if (q) rows = rows.filter((row) => row.payload.toLowerCase().includes(q.toLowerCase()));
-  return c.json(rows.map((row) => ({ ref: row.ref, ...JSON.parse(row.payload) })));
+  return c.json(rows.map((row) => ({ ref: row.ref, ...JSON.parse(row.payload) })));` : `  return c.json(list.all().map((row) => ({ ref: row.ref, ...JSON.parse(row.payload) })));`}
 });` : `app.get('/api/records', (c) => c.json(list.all().map((row) => ({ ref: row.ref, ...JSON.parse(row.payload) }))));`}
 
-app.get('/api/me', (c) => {
+${caps.auth ? `app.get('/api/me', (c) => {
+  const email = authSessionEmail(c.req.header('cookie'));
+  if (!email) return c.json({ error: 'no session' }, 401);
+  return c.json({ email });
+});` : `app.get('/api/me', (c) => {
   const sid = (c.req.header('cookie') ?? '')
     .split(';')
     .map((part) => part.trim())
@@ -1079,21 +1245,26 @@ app.get('/api/me', (c) => {
   const record = session ? select.get(session.ref) : undefined;
   if (!record) return c.json({ error: 'no session' }, 401);
   return c.json({ ref: record.ref, ...JSON.parse(record.payload) });
-});
+});`}
 
 app.get('/api/record/:ref', (c) => {
-  const row = select.get(c.req.param('ref'));
+${caps.auth ? "  if (!authSessionEmail(c.req.header('cookie'))) return c.json({ error: 'no session' }, 401);\n" : ''}  const row = select.get(c.req.param('ref'));
   if (!row) return c.json({ error: 'not found' }, 404);
   return c.json({ ref: row.ref, ...JSON.parse(row.payload) });
 });
 
 for (const sessionPage of ${JSON.stringify(archetype.routes.filter((route) => route.kind === 'read-session').map((route) => route.path))}) {
-  app.get(sessionPage, (c) => c.html(renderDocument({ title: 'Your account' })));
+${caps.auth ? `  app.get(sessionPage, (c) => {
+    if (!authSessionEmail(c.req.header('cookie'))) return c.redirect('/login', 303);
+    return c.html(renderDocument({ title: 'Your account' }));
+  });` : "  app.get(sessionPage, (c) => c.html(renderDocument({ title: 'Your account' })));"}
 }
 
-for (const listing of ['/roster', '/inbox', '/attendees', '/cart']) {
+${caps.auth ? `${honoAuthRoutes()}
+
+` : ''}${caps.list_pages ? `${honoListRoutes(archetype, caps.auth)}` : `for (const listing of ['/roster', '/inbox', '/attendees', '/cart']) {
   app.get(listing, (c) => c.html(renderDocument({ title: 'Records' })));
-}
+}`}
 
 ${archetype.journey?.search
   ? (archetype.journey.search.path === '/search'
