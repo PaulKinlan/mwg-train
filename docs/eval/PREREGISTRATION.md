@@ -122,6 +122,11 @@ enforced by `validate-briefs.mjs`, not by convention.
 | `dev` | 6 (18 briefs) | 5 | 1 | prompt wording, judge rubric, thresholds — everything tunable |
 | `test` | 10 (30 briefs) | 20 | 2 | **sealed**; touched once, at the end |
 
+Authored independently of the corpus and of each other: the 48 in-family briefs were written by two
+authors (24 each) and the 25 out-of-family plus 6 repair briefs by a third, each validating against
+the pinned rule set before the three files were merged by prompt family. Variants of a family differ
+only in `prompt`, `brief_id` and `variant_of` — that invariance is a check in `validate-briefs.mjs`.
+
 The training corpus is a **separate manifest** whose `family_id`s must not overlap this one:
 `scripts/validate-briefs.mjs --corpus <corpus manifest>` fails on any shared family. Near-duplicate
 project structures are capped in the corpus itself; a paraphrase of a training brief is not new
@@ -219,12 +224,17 @@ a rater disagree, both are reported.
 ```
 brief manifest: docs/eval/briefs/manifest.jsonl
 rule set:       docs/eval/rules.json  (sha256:f6301c020f138ed70287b663107033c757e11120fa87d947248ce5e4b4cdca19)
-seal hash:      <filled by scripts/validate-briefs.mjs --seal at freeze time>
-sealed at:      <UTC timestamp>
+seal hash:      sha256:8791ebccecc89509efe68e6cf93f27d737eb7fab4f4d7b1a7c5a39e43fe269c3
+sealed at:      computed 2026-10-08; the freeze is taken at the start of the first run
+composition:    79 briefs / 44 families (dev 12 families, test 32 families)
+                A_familiar 36, B_heldout_combination 12, C_out_of_family 25, R_repair 6
+                already-modern rows inside C: 8
 ```
 
 Results are only reportable against this hash. Editing the briefs after the seal invalidates it: a
-new seal, dated, with the edit recorded in §14.
+new seal, dated, with the edit recorded in §14. The hash is computed by
+`node scripts/validate-briefs.mjs docs/eval/briefs/manifest.jsonl --seal`; `test/briefs.test.mjs`
+recomputes it, so a hand-edited manifest cannot keep a stale seal.
 
 ## 14. Deviations log
 
