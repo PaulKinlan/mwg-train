@@ -45,6 +45,12 @@
       "name": "quantity",
       "type": "number",
       "autocomplete": null
+    },
+    {
+      "slug": "item",
+      "name": "item",
+      "type": "text",
+      "autocomplete": null
     }
   ],
   "seeded_defects": [
@@ -72,10 +78,10 @@
   "write_journey": {
     "startPath": "/",
     "formSelector": "form#cart-form",
+    "itemField": "input[name=item]",
     "fill": {
       "input[name=quantity]": "2"
     },
-    "itemValue": "bearing",
     "readPath": "/api/records"
   },
   "session_routes": [
@@ -98,6 +104,12 @@
       "name": "q",
       "elementPattern": "<input[^>]*name=\"q\"[^>]*>",
       "elementPatternFirst": "<input[^>]*name=\"q\"[^>]*>"
+    },
+    {
+      "slug": "item",
+      "name": "item",
+      "elementPattern": "<input[^>]*name=\"item\"[^>]*>",
+      "elementPatternFirst": "<input[^>]*name=\"item\"[^>]*>"
     }
   ],
   "autofill": {

@@ -1,0 +1,112 @@
+#!/usr/bin/env node
+/**
+ * Turn a pilot run into a compact, committable record of what was actually measured.
+ *
+ * The report is committed and the evidence behind it was not: the journeys, the rule statuses and the
+ * tree hashes lived only in the run directory, so no claim in the report could be checked from the
+ * repository. This writes the parts worth checking - per project version, the journeys and their
+ * observations, every rule and security status, and the tree hashes - at a size that belongs in git.
+ *
+ *   node scripts/pilot-records.mjs --run /tmp/pilot-v11/<run-id> --out docs/pilot/records.json
+ */
+import { readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
+
+function parseArgs(argv) {
+  const args = {};
+  for (let index = 0; index < argv.length; index += 1) {
+    const token = argv[index];
+    if (!token.startsWith('--')) continue;
+    args[token.slice(2)] = argv[index + 1];
+    index += 1;
+  }
+  return args;
+}
+
+/** The evidence a journey carried, without the raw page text. */
+function journeySummary(journey) {
+  const wanted = [
+    'name', 'url', 'afterSubmit', 'status', 'landedStatus', 'posted', 'persisted', 'submittedValue',
+    'readStatus', 'observedLength', 'echoed', 'textLength', 'stillOnForm', 'urlUnchanged',
+    'serverRefused', 'invalidCount', 'visibleErrors', 'path',
+  ];
+  const summary = {};
+  for (const key of wanted) if (journey[key] !== undefined) summary[key] = journey[key];
+  return summary;
+}
+
+function statusMap(entries) {
+  const map = {};
+  for (const entry of entries ?? []) map[entry.rule ?? entry.check] = entry.status;
+  return map;
+}
+
+function summarizeVersion(record) {
+  return {
+    rules: statusMap(record.rules),
+    security: statusMap(record.security),
+    journeys: (record.journeys ?? []).map(journeySummary),
+    errors: record.errors ?? [],
+  };
+}
+
+const args = parseArgs(process.argv.slice(2));
+if (!args.run || !args.out) {
+  console.error('usage: pilot-records.mjs --run <run-directory> --out <file>');
+  process.exit(2);
+}
+
+const runDir = args.run;
+const yieldPath = join(runDir, 'yield.json');
+let run;
+try {
+  run = JSON.parse(readFileSync(yieldPath, 'utf8'));
+} catch (error) {
+  console.error(`pilot-records: cannot read ${yieldPath}: ${error.message}`);
+  process.exit(1);
+}
+
+const projectDirs = readdirSync(runDir)
+  .filter((name) => statSync(join(runDir, name)).isDirectory())
+  .sort();
+
+const projects = [];
+for (const projectId of projectDirs) {
+  const versions = {};
+  for (const version of ['original', 'uplifted']) {
+    const file = join(runDir, projectId, `${version}.json`);
+    try {
+      versions[version] = summarizeVersion(JSON.parse(readFileSync(file, 'utf8')));
+    } catch {
+      // A missing version is recorded as missing rather than silently left out: a summary that
+      // quietly omits what it could not read is how a zero comes to look like a clean result.
+      versions[version] = null;
+    }
+  }
+  projects.push({ project_id: projectId, ...versions });
+}
+
+const decision = new Map(run.decisions.map((entry) => [entry.project_id, entry]));
+for (const project of projects) {
+  const entry = decision.get(project.project_id);
+  project.category = entry?.category ?? null;
+  project.accepted = entry?.accepted ?? null;
+  project.validation_observation = entry?.validation_observation ?? null;
+  project.original_sha = entry?.original_sha ?? null;
+  project.uplifted_sha = entry?.uplifted_sha ?? null;
+}
+
+const document = {
+  run_id: run.run_id,
+  generated_at: run.generated_at,
+  summary: run.summary,
+  note: 'Compact per-project evidence for docs/pilot/YIELD.md: journeys and observations, every rule and security status, and the measured tree hashes. Produced by scripts/pilot-records.mjs from a run directory.',
+  projects,
+};
+
+writeFileSync(args.out, `${JSON.stringify(document, null, 2)}\n`);
+console.log(`pilot-records: wrote ${projects.length} projects to ${args.out}`);
+void repoRoot;

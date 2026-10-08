@@ -427,56 +427,71 @@ test('the recorded corpus covers the plan, with a hash for every original and ev
   }
 });
 
-test('every check compiles its browser expression', async () => {
-  // The checks build JavaScript as a string and send it to the browser. A stray backtick or an
-  // unescaped quote inside that string is a syntax error at runtime and nothing else here would catch
-  // it - this has cost two debugging rounds, so the expressions are compiled here instead.
+test('every check compiles every browser expression it can reach', async () => {
+  // The checks build JavaScript as a string and send it to the browser, so a stray backtick or an
+  // unescaped quote is a runtime syntax error. The first version of this test was vacuous: its stub
+  // returned {} for every call, so any check that returns early never compiled its later expressions,
+  // and it matched only the literal word SyntaxError in the message. It now drives each check along a
+  // full path (every value truthy) and an empty path, and requires every evaluate() call site in the
+  // check's own source to have been executed at least once.
   const checks = [...Object.entries(RULES), ...Object.entries(SECURITY_CHECKS)];
   assert.ok(checks.length >= 8, 'the vector should have at least eight checks');
+
+  const truthy = (depth = 0) => new Proxy(function () {}, {
+    get(_target, prop) {
+      if (prop === 'then') return undefined;
+      if (prop === Symbol.iterator) return function* () {};
+      if (prop === Symbol.toPrimitive) return () => '';
+      if (prop === 'toString') return () => '';
+      if (prop === 'length') return 0;
+      if (prop === 'offsetParent') return {};
+      if (prop === 'textContent') return 'stub';
+      return truthy(depth + 1);
+    },
+    apply() { return truthy(depth + 1); },
+  });
+
+  const syntaxError = (error) => error instanceof SyntaxError
+    || error?.name === 'SyntaxError'
+    || /SyntaxError|Unexpected token|Unexpected identifier|Invalid or unexpected token|missing \) after argument list/.test(String(error?.message ?? ''));
+
   for (const [id, check] of checks) {
+    const source = check.check.toString();
+    const siteCount = (source.match(/page\.evaluate\(/g) ?? []).length;
     const compiled = [];
-    const stub = {
-      async evaluate(expression) {
-        assert.equal(typeof expression, 'string', `${id}: evaluate was not given a string`);
-        // Compile exactly what the driver wraps it in (src/corpus/cdp.mjs evaluate).
-        new Function('(async () => { ' + expression + ' })()');
-        compiled.push(expression);
-        return {};
-      },
-      async touchEmpty() {},
-      async goto() {},
-      async waitFor() {},
-      async realType() {},
-      async realKey() {},
-      async url() { return ''; },
-      async cookies() { return []; },
-    };
-    const ctx = {
-      primaryField: '[name=name]',
-      formSelector: 'form',
-      usernameField: '[name=email]',
-      passwordField: '[name=password]',
-      addressField: '[name=address]',
-      postcodeField: '[name=postcode]',
-      base: 'http://127.0.0.1',
-      startPath: '/',
-      journey: { submitContent: async () => true },
-    };
-    try {
-      await check.check(stub, ctx);
-    } catch (error) {
-      assert.ok(
-        !/SyntaxError/.test(String(error && error.message)),
-        `${id}: its browser expression is not valid JavaScript - ${error && error.message}`,
-      );
+    for (const value of [truthy(), undefined]) {
+      const stub = {
+        async evaluate(expression) {
+          assert.equal(typeof expression, 'string', id + ': evaluate was not given a string');
+          new Function('(async () => { ' + expression + ' })()');
+          compiled.push(expression);
+          return value;
+        },
+        async touchEmpty() {}, async goto() {}, async waitFor() {}, async realType() {},
+        async realKey() {}, async url() { return ''; }, async cookies() { return []; },
+      };
+      const ctx = {
+        primaryField: '[name=name]', formSelector: 'form', usernameField: '[name=email]',
+        passwordField: '[name=password]', addressField: '[name=address]', postcodeField: '[name=postcode]',
+        base: 'http://127.0.0.1', startPath: '/', journey: { submitContent: async () => true },
+      };
+      try {
+        await check.check(stub, ctx);
+      } catch (error) {
+        assert.ok(!syntaxError(error), id + ': its browser expression is not valid JavaScript - ' + (error?.message ?? error));
+      }
     }
-    // A check that reads cookies through CDP builds no expression at all; one that does must have
-    // compiled something, or the loop above proved nothing about it.
-    if (check.check.toString().includes('page.evaluate')) {
-      assert.ok(compiled.length > 0, `${id}: builds a browser expression but none was compiled`);
+    if (source.includes('page.evaluate')) {
+      assert.ok(compiled.length > 0, id + ': builds a browser expression but none was compiled');
+      assert.ok(
+        compiled.length >= siteCount,
+        id + ': ' + compiled.length + ' expression(s) compiled but ' + siteCount
+          + ' call site(s) exist, so an unreached branch holds an uncompiled expression',
+      );
     }
   }
 });
+
 test('the yield report counts the observations its decisions carry', () => {
   // The report looked for the original record under a key decisions do not have, defaulted every
   // observation to 'not-driven', and printed '0 of 25 ... 0 accepted it' - a section that looked
@@ -497,7 +512,7 @@ test('the yield report counts the observations its decisions carry', () => {
 
   const summary = summarizeYield([decision]);
   const report = renderYieldReport({ summary, decisions: [decision], runId: 'test', generatedAt: 'now' });
-  assert.match(report, /0 of 1 originals refused an empty submission; 1 accepted it\./);
+  assert.match(report, /1 accepted it; 0 left the page with neither an observed refusal nor an error\./);
 
   const stripped = renderYieldReport({
     summary,
@@ -522,7 +537,7 @@ test('an original that accepts an empty form is still assessable', () => {
   const refused = workbook({
     validation: { path: '/', invalidCount: 1, visibleErrors: 0, stillOnForm: true, urlUnchanged: true, serverRefused: false },
   });
-  assert.equal(validationObservation({ ...refused, echo_expect: 'Window seat please' }), 'refused');
+  assert.equal(validationObservation({ ...refused, echo_expect: 'Window seat please' }), 'refused-observed');
   assert.equal(validationObservation({ journeys: [] }), 'not-driven');
 });
 test('a declared write journey must be driven and shown to persist', () => {
@@ -549,6 +564,15 @@ test('a declared write journey must be driven and shown to persist', () => {
   assert.equal(notPersisted.category, 'original-not-runnable');
   assert.ok(notPersisted.detail.some((line) => /did not show the posted value stored/.test(line)));
 
+  const refusedPost = decidePair({
+    spec: spec(specWithWrite),
+    original: workbook({ journeys: [...workbook().journeys, { name: 'write-journey', posted: false, landedStatus: 422, persisted: false }] }),
+    uplifted: workbook({ ...passing, journeys: [...workbook().journeys, write] }),
+    uplift,
+  });
+  assert.equal(refusedPost.category, 'original-not-runnable');
+  assert.ok(refusedPost.detail.some((line) => /refused it \(status 422\)/.test(line)));
+
   const good = decidePair({
     spec: spec(specWithWrite),
     original: workbook({ journeys: [...workbook().journeys, write] }),
@@ -556,6 +580,64 @@ test('a declared write journey must be driven and shown to persist', () => {
     uplift,
   });
   assert.equal(good.accepted, true);
+});
+
+test('the write journey posts a value that cannot already be stored', () => {
+  // A fixed posted value can be satisfied by a row already in the database, so the read-back would
+  // report a successful write that never happened.
+  const catalogue = Object.values(ARCHETYPES).find((archetype) => archetype.id === 'catalogue');
+  assert.ok(catalogue.writeJourney, 'the catalogue declares a write journey');
+  assert.equal(catalogue.writeJourney.itemValue, undefined, 'no fixed posted value');
+  assert.equal(catalogue.writeJourney.itemField, 'input[name=item]');
+  assert.ok(catalogue.extraForm.fields.includes('item'), 'the posted field is part of the cart form');
+  const item = Object.values(ARCHETYPES).flatMap((archetype) => archetype.fields ?? [])
+    .find((field) => field.slug === 'item');
+  assert.ok(item && !item.optional, 'the part number is required, so the server validates it');
+  const source = readFileSync(join(repoRoot, 'src', 'corpus', 'harness.mjs'), 'utf8');
+  assert.match(source, /const unique = /, 'the harness generates the posted value');
+  assert.match(source, /body\.includes\(unique\)/, 'the read-back is checked against the generated value');
+  assert.match(source, /posted:/, 'the POST status is recorded');
+});
+
+test('the committed records support every claim the report makes', () => {
+  // The report was committed and its evidence was not, so none of its numbers could be checked from
+  // the repository. docs/pilot/records.json is the run's journeys, rule statuses and hashes, and this
+  // test is what keeps the report's claims tied to it.
+  const records = JSON.parse(readFileSync(join(repoRoot, 'docs', 'pilot', 'records.json'), 'utf8'));
+  const report = JSON.parse(readFileSync(join(repoRoot, 'docs', 'pilot', 'yield.json'), 'utf8'));
+  assert.equal(records.projects.length, 25, 'every project is recorded');
+  assert.equal(report.decisions.length, 25, 'every project has a decision');
+
+  for (const project of records.projects) {
+    const where = project.project_id;
+    for (const version of ['original', 'uplifted']) {
+      assert.ok(project[version], where + ': ' + version + ' record is missing');
+      const statuses = { ...project[version].rules, ...project[version].security };
+      assert.ok(Object.keys(statuses).length >= 4, where + ': ' + version + ' has too few measured properties');
+      for (const [subject, status] of Object.entries(statuses)) {
+        assert.notEqual(status, 'ERROR', where + ': ' + version + ' ' + subject + ' could not be measured');
+      }
+      assert.ok(project[version].journeys.length >= 2, where + ': ' + version + ' recorded too few journeys');
+    }
+    // The write claim is only true if a write journey was actually driven and shown to persist, from a
+    // value posted in that attempt - not merely read back.
+    if (project.project_id.startsWith('catalogue')) {
+      for (const version of ['original', 'uplifted']) {
+        const write = project[version].journeys.find((journey) => journey.name === 'write-journey');
+        assert.ok(write, where + ': ' + version + ' has no write journey');
+        assert.equal(write.posted, true, where + ': ' + version + ' posted to a refused route');
+        assert.equal(write.persisted, true, where + ': ' + version + ' did not persist its posted value');
+        assert.ok(write.submittedValue, where + ': the posted value was not recorded');
+      }
+    }
+  }
+
+  // The report's observation counts must be the counts in the records, not a second opinion.
+  const observations = records.projects.map((project) => project.validation_observation);
+  assert.equal(observations.filter((value) => value === 'refused-observed').length, 23);
+  assert.equal(observations.filter((value) => value === 'accepted-empty').length, 2);
+  assert.equal(observations.filter((value) => value === 'blocked-without-evidence').length, 0);
+  assert.match(readFileSync(join(repoRoot, 'docs', 'pilot', 'YIELD.md'), 'utf8'), /23 of 25 originals/);
 });
 
 test('the clean baseline satisfies every rule it is not seeded to fail, in every arm', () => {

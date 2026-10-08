@@ -46,7 +46,9 @@ export function journeyWorks(record) {
   // archetype's reflected-query journey is not a write, so it is checked by this clause instead.
   const write = record.journeys?.find((journey) => journey.name === 'write-journey');
   if (record.expected_write_journey && !write) problems.push('the declared write journey was not driven');
-  else if (write && write.persisted !== true) {
+  else if (write && write.posted === false) {
+    problems.push(`the write journey posted to a route that refused it (status ${write.landedStatus})`);
+  } else if (write && write.persisted !== true) {
     problems.push('the write journey did not show the posted value stored by the server');
   }
   if (record.errors?.length > 0) problems.push(...record.errors);
@@ -185,9 +187,13 @@ export function decidePair({ original, uplifted, spec, uplift }) {
 export function validationObservation(record) {
   const validation = record.journeys?.find((journey) => journey.name === 'validation-failure');
   if (!validation) return 'not-driven';
-  const refused = validation.invalidCount > 0 || validation.visibleErrors > 0 || validation.serverRefused === true
-    || (validation.urlUnchanged === true && validation.stillOnForm === true);
-  return refused ? 'refused' : 'accepted-empty';
+  // Refusal must be OBSERVED. An unchanged URL with nothing else to show also happens when a submit
+  // handler silently prevents submission, which is not evidence of refusal but the absence of evidence
+  // either way - and calling it 'refused' claimed more than the record shows.
+  const observed = validation.invalidCount > 0 || validation.visibleErrors > 0 || validation.serverRefused === true;
+  if (observed) return 'refused-observed';
+  if (validation.urlUnchanged === true && validation.stillOnForm === true) return 'blocked-without-evidence';
+  return 'accepted-empty';
 }
 export function summarizeYield(decisions) {
   const byCategory = {};
@@ -233,12 +239,13 @@ export function renderYieldReport({ summary, decisions, runId, generatedAt, note
   // Reported, not gated: an empty submission being accepted is a finding about the original (usually the
   // seeded defect), and hiding it would make the corpus look cleaner than it is.
   const observations = decisions.map((decision) => decision.validation_observation ?? 'absent');
-  const refusedCount = observations.filter((value) => value === 'refused').length;
+  const refusedCount = observations.filter((value) => value === 'refused-observed').length;
   const acceptedCount = observations.filter((value) => value === 'accepted-empty').length;
-  const missingCount = observations.filter((value) => value !== 'refused' && value !== 'accepted-empty').length;
+  const blockedCount = observations.filter((value) => value === 'blocked-without-evidence').length;
+  const missingCount = observations.filter((value) => !['refused-observed', 'accepted-empty', 'blocked-without-evidence'].includes(value)).length;
   lines.push('## Empty-submission observation (not a gate)');
   lines.push('');
-  lines.push(`${refusedCount} of ${observations.length} originals refused an empty submission; ${acceptedCount} accepted it.`);
+  lines.push(`${refusedCount} of ${observations.length} originals showed an observed refusal of an empty submission; ${acceptedCount} accepted it; ${blockedCount} left the page with neither an observed refusal nor an error.`);
   if (missingCount > 0) {
     // Named, not folded into a zero: a count of zero over 25 decisions used to read as a clean result.
     lines.push('');

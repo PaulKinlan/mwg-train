@@ -1,0 +1,2048 @@
+{
+  "run_id": "2026-10-08T10-54-49-381Z",
+  "generated_at": "2026-10-08T10:57:17.545Z",
+  "summary": {
+    "attempted": 25,
+    "accepted": 24,
+    "yield": 0.96,
+    "by_category": {
+      "accepted": 24,
+      "no-warranted-change": 1
+    },
+    "by_framework": {
+      "hono": {
+        "total": 5,
+        "accepted": 5
+      },
+      "preact": {
+        "total": 5,
+        "accepted": 5
+      },
+      "raw": {
+        "total": 5,
+        "accepted": 5
+      },
+      "react": {
+        "total": 5,
+        "accepted": 5
+      },
+      "vue": {
+        "total": 5,
+        "accepted": 4
+      }
+    },
+    "by_archetype": {
+      "account-recovery": {
+        "total": 5,
+        "accepted": 5
+      },
+      "booking": {
+        "total": 5,
+        "accepted": 5
+      },
+      "catalogue": {
+        "total": 5,
+        "accepted": 4
+      },
+      "contact-lead": {
+        "total": 5,
+        "accepted": 5
+      },
+      "event-registration": {
+        "total": 5,
+        "accepted": 5
+      }
+    },
+    "rules_improved": {
+      "accessibility/accessible-error-announcement": 19,
+      "security/sanitize-untrusted-html": 16,
+      "forms/required-field-feedback": 15,
+      "forms/validate-input-after-interaction": 15,
+      "forms/autofill-sign-up-form": 5,
+      "forms/autofill-address-form": 5
+    }
+  },
+  "note": "Compact per-project evidence for docs/pilot/YIELD.md: journeys and observations, every rule and security status, and the measured tree hashes. Produced by scripts/pilot-records.mjs from a run directory.",
+  "projects": [
+    {
+      "project_id": "account-recovery-hono",
+      "original": {
+        "rules": {
+          "forms/required-field-feedback": "FAIL",
+          "accessibility/accessible-error-announcement": "FAIL",
+          "forms/validate-input-after-interaction": "FAIL",
+          "forms/autofill-sign-up-form": "FAIL",
+          "security/sanitize-untrusted-html": "FAIL"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4300/account"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4300/signup",
+            "stillOnForm": false,
+            "urlUnchanged": false,
+            "serverRefused": true,
+            "invalidCount": 0,
+            "visibleErrors": 1,
+            "path": "/signup"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4300/reset/account"
+          }
+        ],
+        "errors": []
+      },
+      "uplifted": {
+        "rules": {
+          "forms/required-field-feedback": "PASS",
+          "accessibility/accessible-error-announcement": "PASS",
+          "forms/validate-input-after-interaction": "PASS",
+          "forms/autofill-sign-up-form": "PASS",
+          "security/sanitize-untrusted-html": "PASS"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4301/account"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4301/",
+            "stillOnForm": true,
+            "urlUnchanged": true,
+            "serverRefused": false,
+            "invalidCount": 3,
+            "visibleErrors": 4,
+            "path": "/"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4301/reset/account"
+          }
+        ],
+        "errors": []
+      },
+      "category": "accepted",
+      "accepted": true,
+      "validation_observation": "refused-observed",
+      "original_sha": "sha256:6271163e4b55dbc6932dd529938197e13a2cedb47fa277507910d3ca365291d0",
+      "uplifted_sha": "sha256:4c7a3e3518190fd8199faf38913510b61f5c57861694a658644f47352be15c18"
+    },
+    {
+      "project_id": "account-recovery-preact",
+      "original": {
+        "rules": {
+          "forms/required-field-feedback": "FAIL",
+          "accessibility/accessible-error-announcement": "FAIL",
+          "forms/validate-input-after-interaction": "PASS",
+          "forms/autofill-sign-up-form": "FAIL",
+          "security/sanitize-untrusted-html": "PASS"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4302/account"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4302/signup",
+            "stillOnForm": false,
+            "urlUnchanged": false,
+            "serverRefused": true,
+            "invalidCount": 0,
+            "visibleErrors": 1,
+            "path": "/signup"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4302/reset/account"
+          }
+        ],
+        "errors": []
+      },
+      "uplifted": {
+        "rules": {
+          "forms/required-field-feedback": "PASS",
+          "accessibility/accessible-error-announcement": "PASS",
+          "forms/validate-input-after-interaction": "PASS",
+          "forms/autofill-sign-up-form": "PASS",
+          "security/sanitize-untrusted-html": "PASS"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4303/account"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4303/",
+            "stillOnForm": true,
+            "urlUnchanged": true,
+            "serverRefused": false,
+            "invalidCount": 3,
+            "visibleErrors": 4,
+            "path": "/"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4303/reset/account"
+          }
+        ],
+        "errors": []
+      },
+      "category": "accepted",
+      "accepted": true,
+      "validation_observation": "refused-observed",
+      "original_sha": "sha256:a630f95f6c5d0f9a0690ced972effc9c53af0072fae21664553e3413ebd34149",
+      "uplifted_sha": "sha256:ad7515cac86fdc2535e0d11f5b18ee74f2c548b100ec0d9b0f813a29cab0f3e7"
+    },
+    {
+      "project_id": "account-recovery-raw",
+      "original": {
+        "rules": {
+          "forms/required-field-feedback": "FAIL",
+          "accessibility/accessible-error-announcement": "FAIL",
+          "forms/validate-input-after-interaction": "FAIL",
+          "forms/autofill-sign-up-form": "FAIL",
+          "security/sanitize-untrusted-html": "PASS"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4304/account"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4304/signup",
+            "stillOnForm": false,
+            "urlUnchanged": false,
+            "serverRefused": true,
+            "invalidCount": 0,
+            "visibleErrors": 1,
+            "path": "/signup"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4304/reset/account"
+          }
+        ],
+        "errors": []
+      },
+      "uplifted": {
+        "rules": {
+          "forms/required-field-feedback": "PASS",
+          "accessibility/accessible-error-announcement": "PASS",
+          "forms/validate-input-after-interaction": "PASS",
+          "forms/autofill-sign-up-form": "PASS",
+          "security/sanitize-untrusted-html": "PASS"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4305/account"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4305/",
+            "stillOnForm": true,
+            "urlUnchanged": true,
+            "serverRefused": false,
+            "invalidCount": 3,
+            "visibleErrors": 4,
+            "path": "/"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4305/reset/account"
+          }
+        ],
+        "errors": []
+      },
+      "category": "accepted",
+      "accepted": true,
+      "validation_observation": "refused-observed",
+      "original_sha": "sha256:4edafd8b94e3eb5d9caeb22edf16a60ae77432cc23f04783bd6ca29bce140ad0",
+      "uplifted_sha": "sha256:f6f3d8862afffb8780c01428214bee28ab6eba9d973584b0924198189bc183f6"
+    },
+    {
+      "project_id": "account-recovery-react",
+      "original": {
+        "rules": {
+          "forms/required-field-feedback": "PASS",
+          "accessibility/accessible-error-announcement": "PASS",
+          "forms/validate-input-after-interaction": "PASS",
+          "forms/autofill-sign-up-form": "FAIL",
+          "security/sanitize-untrusted-html": "FAIL"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4306/account"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4306/",
+            "stillOnForm": true,
+            "urlUnchanged": true,
+            "serverRefused": false,
+            "invalidCount": 3,
+            "visibleErrors": 4,
+            "path": "/"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4306/reset/account"
+          }
+        ],
+        "errors": []
+      },
+      "uplifted": {
+        "rules": {
+          "forms/required-field-feedback": "PASS",
+          "accessibility/accessible-error-announcement": "PASS",
+          "forms/validate-input-after-interaction": "PASS",
+          "forms/autofill-sign-up-form": "PASS",
+          "security/sanitize-untrusted-html": "PASS"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4307/account"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4307/",
+            "stillOnForm": true,
+            "urlUnchanged": true,
+            "serverRefused": false,
+            "invalidCount": 3,
+            "visibleErrors": 4,
+            "path": "/"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4307/reset/account"
+          }
+        ],
+        "errors": []
+      },
+      "category": "accepted",
+      "accepted": true,
+      "validation_observation": "refused-observed",
+      "original_sha": "sha256:3b8965946865ca992adc09055d9aa90dc7527b37c0c571ed3cd7ea8b010f8eb4",
+      "uplifted_sha": "sha256:f07f0920c6d37c08f7b61c12817e17103e4adf4c4eadefcb0054c7674f5a17ad"
+    },
+    {
+      "project_id": "account-recovery-vue",
+      "original": {
+        "rules": {
+          "forms/required-field-feedback": "PASS",
+          "accessibility/accessible-error-announcement": "PASS",
+          "forms/validate-input-after-interaction": "FAIL",
+          "forms/autofill-sign-up-form": "FAIL",
+          "security/sanitize-untrusted-html": "FAIL"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4308/account"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4308/",
+            "stillOnForm": true,
+            "urlUnchanged": true,
+            "serverRefused": false,
+            "invalidCount": 3,
+            "visibleErrors": 4,
+            "path": "/"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4308/reset/account"
+          }
+        ],
+        "errors": []
+      },
+      "uplifted": {
+        "rules": {
+          "forms/required-field-feedback": "PASS",
+          "accessibility/accessible-error-announcement": "PASS",
+          "forms/validate-input-after-interaction": "PASS",
+          "forms/autofill-sign-up-form": "PASS",
+          "security/sanitize-untrusted-html": "PASS"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4309/account"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4309/",
+            "stillOnForm": true,
+            "urlUnchanged": true,
+            "serverRefused": false,
+            "invalidCount": 3,
+            "visibleErrors": 4,
+            "path": "/"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4309/reset/account"
+          }
+        ],
+        "errors": []
+      },
+      "category": "accepted",
+      "accepted": true,
+      "validation_observation": "refused-observed",
+      "original_sha": "sha256:8f2c00d6c0b36ba32eb0d6cc24fb55450a5272706c196ca78151d847805fe88d",
+      "uplifted_sha": "sha256:15ef807f9b6b5cea870ee102cdf1dd3b059c3897c8c8c31036e425bb5f35cca8"
+    },
+    {
+      "project_id": "booking-hono",
+      "original": {
+        "rules": {
+          "forms/required-field-feedback": "FAIL",
+          "accessibility/accessible-error-announcement": "FAIL",
+          "forms/validate-input-after-interaction": "FAIL",
+          "forms/autofill-sign-up-form": "PASS",
+          "forms/autofill-address-form": "FAIL",
+          "security/sanitize-untrusted-html": "FAIL"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4310/booking/cbb1138b"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4310/book",
+            "stillOnForm": false,
+            "urlUnchanged": false,
+            "serverRefused": true,
+            "invalidCount": 0,
+            "visibleErrors": 1,
+            "path": "/book"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4310/booking/cbb1138b"
+          }
+        ],
+        "errors": []
+      },
+      "uplifted": {
+        "rules": {
+          "forms/required-field-feedback": "PASS",
+          "accessibility/accessible-error-announcement": "PASS",
+          "forms/validate-input-after-interaction": "PASS",
+          "forms/autofill-sign-up-form": "PASS",
+          "forms/autofill-address-form": "PASS",
+          "security/sanitize-untrusted-html": "PASS"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4311/booking/0174868f"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4311/",
+            "stillOnForm": true,
+            "urlUnchanged": true,
+            "serverRefused": false,
+            "invalidCount": 4,
+            "visibleErrors": 5,
+            "path": "/"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4311/booking/0174868f"
+          }
+        ],
+        "errors": []
+      },
+      "category": "accepted",
+      "accepted": true,
+      "validation_observation": "refused-observed",
+      "original_sha": "sha256:f71f3831901eefb4fbf55e9113f3e788d6bfc1a7e94da66c7dbbee8ee1d6fa4e",
+      "uplifted_sha": "sha256:8f4bb2a07c4ff00ed0515f60a63cf20d80ab1cb8152cde19710114bab40ab08f"
+    },
+    {
+      "project_id": "booking-preact",
+      "original": {
+        "rules": {
+          "forms/required-field-feedback": "PASS",
+          "accessibility/accessible-error-announcement": "FAIL",
+          "forms/validate-input-after-interaction": "FAIL",
+          "forms/autofill-sign-up-form": "PASS",
+          "forms/autofill-address-form": "FAIL",
+          "security/sanitize-untrusted-html": "PASS"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4312/booking/5a003a31"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4312/",
+            "stillOnForm": true,
+            "urlUnchanged": true,
+            "serverRefused": false,
+            "invalidCount": 5,
+            "visibleErrors": 5,
+            "path": "/"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4312/booking/5a003a31"
+          }
+        ],
+        "errors": []
+      },
+      "uplifted": {
+        "rules": {
+          "forms/required-field-feedback": "PASS",
+          "accessibility/accessible-error-announcement": "PASS",
+          "forms/validate-input-after-interaction": "PASS",
+          "forms/autofill-sign-up-form": "PASS",
+          "forms/autofill-address-form": "PASS",
+          "security/sanitize-untrusted-html": "PASS"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4313/booking/3a157af1"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4313/",
+            "stillOnForm": true,
+            "urlUnchanged": true,
+            "serverRefused": false,
+            "invalidCount": 5,
+            "visibleErrors": 6,
+            "path": "/"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4313/booking/3a157af1"
+          }
+        ],
+        "errors": []
+      },
+      "category": "accepted",
+      "accepted": true,
+      "validation_observation": "refused-observed",
+      "original_sha": "sha256:aa88f7b78827df2f415f42406408fd3c22e02ee31b1a37857e6e7019a5a65f75",
+      "uplifted_sha": "sha256:f215c423c91ab38a98f51e950f1f39aa0bdd4c6be6b0eaa554c1e289db4dbba9"
+    },
+    {
+      "project_id": "booking-raw",
+      "original": {
+        "rules": {
+          "forms/required-field-feedback": "FAIL",
+          "accessibility/accessible-error-announcement": "FAIL",
+          "forms/validate-input-after-interaction": "FAIL",
+          "forms/autofill-sign-up-form": "PASS",
+          "forms/autofill-address-form": "FAIL",
+          "security/sanitize-untrusted-html": "FAIL"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4314/booking/4dd3e60b"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4314/book",
+            "stillOnForm": false,
+            "urlUnchanged": false,
+            "serverRefused": true,
+            "invalidCount": 0,
+            "visibleErrors": 1,
+            "path": "/book"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4314/booking/4dd3e60b"
+          }
+        ],
+        "errors": []
+      },
+      "uplifted": {
+        "rules": {
+          "forms/required-field-feedback": "PASS",
+          "accessibility/accessible-error-announcement": "PASS",
+          "forms/validate-input-after-interaction": "PASS",
+          "forms/autofill-sign-up-form": "PASS",
+          "forms/autofill-address-form": "PASS",
+          "security/sanitize-untrusted-html": "PASS"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4315/booking/b55d0f70"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4315/",
+            "stillOnForm": true,
+            "urlUnchanged": true,
+            "serverRefused": false,
+            "invalidCount": 4,
+            "visibleErrors": 5,
+            "path": "/"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4315/booking/b55d0f70"
+          }
+        ],
+        "errors": []
+      },
+      "category": "accepted",
+      "accepted": true,
+      "validation_observation": "refused-observed",
+      "original_sha": "sha256:8c6d2fc0a82fcfa051e34e547f4d1d06af0692ddf8080a5ae01bc925acfd1775",
+      "uplifted_sha": "sha256:2c78c9dabdeb84c3a9543bd518e082518245cd27860f3079be35f87b1a6eb4dc"
+    },
+    {
+      "project_id": "booking-react",
+      "original": {
+        "rules": {
+          "forms/required-field-feedback": "FAIL",
+          "accessibility/accessible-error-announcement": "FAIL",
+          "forms/validate-input-after-interaction": "FAIL",
+          "forms/autofill-sign-up-form": "PASS",
+          "forms/autofill-address-form": "FAIL",
+          "security/sanitize-untrusted-html": "FAIL"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4316/booking/60877ab5"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4316/book",
+            "stillOnForm": false,
+            "urlUnchanged": false,
+            "serverRefused": true,
+            "invalidCount": 0,
+            "visibleErrors": 1,
+            "path": "/book"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4316/booking/60877ab5"
+          }
+        ],
+        "errors": []
+      },
+      "uplifted": {
+        "rules": {
+          "forms/required-field-feedback": "PASS",
+          "accessibility/accessible-error-announcement": "PASS",
+          "forms/validate-input-after-interaction": "PASS",
+          "forms/autofill-sign-up-form": "PASS",
+          "forms/autofill-address-form": "PASS",
+          "security/sanitize-untrusted-html": "PASS"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4317/booking/411ef913"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4317/",
+            "stillOnForm": true,
+            "urlUnchanged": true,
+            "serverRefused": false,
+            "invalidCount": 4,
+            "visibleErrors": 5,
+            "path": "/"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4317/booking/411ef913"
+          }
+        ],
+        "errors": []
+      },
+      "category": "accepted",
+      "accepted": true,
+      "validation_observation": "refused-observed",
+      "original_sha": "sha256:f6fb4bc6299ffa1aa38d54d314bf7720fb79883e37de005e5943335f849f240f",
+      "uplifted_sha": "sha256:5da9f047adcda8bbdf4bc911c92f74af4b0b4bb767c829c1348881096422c4c7"
+    },
+    {
+      "project_id": "booking-vue",
+      "original": {
+        "rules": {
+          "forms/required-field-feedback": "FAIL",
+          "accessibility/accessible-error-announcement": "FAIL",
+          "forms/validate-input-after-interaction": "PASS",
+          "forms/autofill-sign-up-form": "PASS",
+          "forms/autofill-address-form": "FAIL",
+          "security/sanitize-untrusted-html": "PASS"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4318/booking/73cee29f"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4318/book",
+            "stillOnForm": false,
+            "urlUnchanged": false,
+            "serverRefused": true,
+            "invalidCount": 0,
+            "visibleErrors": 1,
+            "path": "/book"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4318/booking/73cee29f"
+          }
+        ],
+        "errors": []
+      },
+      "uplifted": {
+        "rules": {
+          "forms/required-field-feedback": "PASS",
+          "accessibility/accessible-error-announcement": "PASS",
+          "forms/validate-input-after-interaction": "PASS",
+          "forms/autofill-sign-up-form": "PASS",
+          "forms/autofill-address-form": "PASS",
+          "security/sanitize-untrusted-html": "PASS"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4319/booking/f440bef8"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4319/",
+            "stillOnForm": true,
+            "urlUnchanged": true,
+            "serverRefused": false,
+            "invalidCount": 4,
+            "visibleErrors": 5,
+            "path": "/"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4319/booking/f440bef8"
+          }
+        ],
+        "errors": []
+      },
+      "category": "accepted",
+      "accepted": true,
+      "validation_observation": "refused-observed",
+      "original_sha": "sha256:f73fd1481973fdb68facefad97479de3a548124bd1952329d479b18d278f35a8",
+      "uplifted_sha": "sha256:7c0e554c90bc525d459406e962232d88dd8903e6b9e63c222cba720fc7c9d67d"
+    },
+    {
+      "project_id": "catalogue-hono",
+      "original": {
+        "rules": {
+          "forms/required-field-feedback": "FAIL",
+          "accessibility/accessible-error-announcement": "FAIL",
+          "forms/validate-input-after-interaction": "PASS",
+          "security/sanitize-untrusted-html": "FAIL"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4320/search?q=bearing"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4320/search?q=",
+            "stillOnForm": false,
+            "urlUnchanged": false,
+            "serverRefused": false,
+            "invalidCount": 0,
+            "visibleErrors": 0,
+            "path": "/search"
+          },
+          {
+            "name": "write-journey",
+            "status": 200,
+            "landedStatus": 200,
+            "posted": true,
+            "persisted": true,
+            "submittedValue": "part-muzf7r2e-8mgmuz",
+            "readStatus": 200,
+            "observedLength": 65
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4320/search"
+          }
+        ],
+        "errors": []
+      },
+      "uplifted": {
+        "rules": {
+          "forms/required-field-feedback": "PASS",
+          "accessibility/accessible-error-announcement": "PASS",
+          "forms/validate-input-after-interaction": "PASS",
+          "security/sanitize-untrusted-html": "PASS"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4321/search?q=bearing"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4321/",
+            "stillOnForm": true,
+            "urlUnchanged": true,
+            "serverRefused": false,
+            "invalidCount": 1,
+            "visibleErrors": 2,
+            "path": "/"
+          },
+          {
+            "name": "write-journey",
+            "status": 200,
+            "landedStatus": 200,
+            "posted": true,
+            "persisted": true,
+            "submittedValue": "part-muzf7t9f-7ptgp0",
+            "readStatus": 200,
+            "observedLength": 65
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4321/search"
+          }
+        ],
+        "errors": []
+      },
+      "category": "accepted",
+      "accepted": true,
+      "validation_observation": "accepted-empty",
+      "original_sha": "sha256:bc28648042d315a476091c281894c894159aca77ae63e397318810eb2975c2f6",
+      "uplifted_sha": "sha256:6a72e116424b6abaa4bc9d0696918616ba8d995506ef7033c229791b8671ddb0"
+    },
+    {
+      "project_id": "catalogue-preact",
+      "original": {
+        "rules": {
+          "forms/required-field-feedback": "PASS",
+          "accessibility/accessible-error-announcement": "PASS",
+          "forms/validate-input-after-interaction": "FAIL",
+          "security/sanitize-untrusted-html": "PASS"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4322/search?q=bearing"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4322/",
+            "stillOnForm": true,
+            "urlUnchanged": true,
+            "serverRefused": false,
+            "invalidCount": 1,
+            "visibleErrors": 2,
+            "path": "/"
+          },
+          {
+            "name": "write-journey",
+            "status": 200,
+            "landedStatus": 200,
+            "posted": true,
+            "persisted": true,
+            "submittedValue": "part-muzf7vgb-rpcnf2",
+            "readStatus": 200,
+            "observedLength": 65
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4322/search"
+          }
+        ],
+        "errors": []
+      },
+      "uplifted": {
+        "rules": {
+          "forms/required-field-feedback": "PASS",
+          "accessibility/accessible-error-announcement": "PASS",
+          "forms/validate-input-after-interaction": "PASS",
+          "security/sanitize-untrusted-html": "PASS"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4323/search?q=bearing"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4323/",
+            "stillOnForm": true,
+            "urlUnchanged": true,
+            "serverRefused": false,
+            "invalidCount": 1,
+            "visibleErrors": 2,
+            "path": "/"
+          },
+          {
+            "name": "write-journey",
+            "status": 200,
+            "landedStatus": 200,
+            "posted": true,
+            "persisted": true,
+            "submittedValue": "part-muzf7xrk-wn86hg",
+            "readStatus": 200,
+            "observedLength": 65
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4323/search"
+          }
+        ],
+        "errors": []
+      },
+      "category": "accepted",
+      "accepted": true,
+      "validation_observation": "refused-observed",
+      "original_sha": "sha256:593d7578029f5104b4bebb37aa2ff5701ae8d919459fc88719bc7cde76abcb05",
+      "uplifted_sha": "sha256:4034aa7a9cac0545395966496e9e90c2a9d97bcd81938247f729ff539fafe5cf"
+    },
+    {
+      "project_id": "catalogue-raw",
+      "original": {
+        "rules": {
+          "forms/required-field-feedback": "PASS",
+          "accessibility/accessible-error-announcement": "PASS",
+          "forms/validate-input-after-interaction": "PASS",
+          "security/sanitize-untrusted-html": "FAIL"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4324/search?q=bearing"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4324/",
+            "stillOnForm": true,
+            "urlUnchanged": true,
+            "serverRefused": false,
+            "invalidCount": 1,
+            "visibleErrors": 2,
+            "path": "/"
+          },
+          {
+            "name": "write-journey",
+            "status": 200,
+            "landedStatus": 200,
+            "posted": true,
+            "persisted": true,
+            "submittedValue": "part-muzf7zum-oobhkz",
+            "readStatus": 200,
+            "observedLength": 65
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4324/search"
+          }
+        ],
+        "errors": []
+      },
+      "uplifted": {
+        "rules": {
+          "forms/required-field-feedback": "PASS",
+          "accessibility/accessible-error-announcement": "PASS",
+          "forms/validate-input-after-interaction": "PASS",
+          "security/sanitize-untrusted-html": "PASS"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4325/search?q=bearing"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4325/",
+            "stillOnForm": true,
+            "urlUnchanged": true,
+            "serverRefused": false,
+            "invalidCount": 1,
+            "visibleErrors": 2,
+            "path": "/"
+          },
+          {
+            "name": "write-journey",
+            "status": 200,
+            "landedStatus": 200,
+            "posted": true,
+            "persisted": true,
+            "submittedValue": "part-muzf820s-xtkg3i",
+            "readStatus": 200,
+            "observedLength": 65
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4325/search"
+          }
+        ],
+        "errors": []
+      },
+      "category": "accepted",
+      "accepted": true,
+      "validation_observation": "refused-observed",
+      "original_sha": "sha256:874b63ae1256c6b8007b6fd80c50bae5efc422d53d0606987b13b0d902a8d0a8",
+      "uplifted_sha": "sha256:1af9e739320e7dc01be05b3fb72694d03254c34d573e2371285bc0ca119fc694"
+    },
+    {
+      "project_id": "catalogue-react",
+      "original": {
+        "rules": {
+          "forms/required-field-feedback": "FAIL",
+          "accessibility/accessible-error-announcement": "FAIL",
+          "forms/validate-input-after-interaction": "PASS",
+          "security/sanitize-untrusted-html": "FAIL"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4326/search?q=bearing"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4326/search?q=",
+            "stillOnForm": false,
+            "urlUnchanged": false,
+            "serverRefused": false,
+            "invalidCount": 0,
+            "visibleErrors": 0,
+            "path": "/search"
+          },
+          {
+            "name": "write-journey",
+            "status": 200,
+            "landedStatus": 200,
+            "posted": true,
+            "persisted": true,
+            "submittedValue": "part-muzf846r-ok81ol",
+            "readStatus": 200,
+            "observedLength": 65
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4326/search"
+          }
+        ],
+        "errors": []
+      },
+      "uplifted": {
+        "rules": {
+          "forms/required-field-feedback": "PASS",
+          "accessibility/accessible-error-announcement": "PASS",
+          "forms/validate-input-after-interaction": "PASS",
+          "security/sanitize-untrusted-html": "PASS"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4327/search?q=bearing"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4327/",
+            "stillOnForm": true,
+            "urlUnchanged": true,
+            "serverRefused": false,
+            "invalidCount": 1,
+            "visibleErrors": 2,
+            "path": "/"
+          },
+          {
+            "name": "write-journey",
+            "status": 200,
+            "landedStatus": 200,
+            "posted": true,
+            "persisted": true,
+            "submittedValue": "part-muzf86cl-6c0pe4",
+            "readStatus": 200,
+            "observedLength": 65
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4327/search"
+          }
+        ],
+        "errors": []
+      },
+      "category": "accepted",
+      "accepted": true,
+      "validation_observation": "accepted-empty",
+      "original_sha": "sha256:f1f53096c37ec7375d067df74f159843a5369215a376c3858b7e48bacf5260fd",
+      "uplifted_sha": "sha256:996558ec890e0a42d5918699e808d17e08a29fc17a423d14633777a2e22ac7bd"
+    },
+    {
+      "project_id": "catalogue-vue",
+      "original": {
+        "rules": {
+          "forms/required-field-feedback": "PASS",
+          "accessibility/accessible-error-announcement": "PASS",
+          "forms/validate-input-after-interaction": "PASS",
+          "security/sanitize-untrusted-html": "PASS"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4328/search?q=bearing"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4328/",
+            "stillOnForm": true,
+            "urlUnchanged": true,
+            "serverRefused": false,
+            "invalidCount": 1,
+            "visibleErrors": 2,
+            "path": "/"
+          },
+          {
+            "name": "write-journey",
+            "status": 200,
+            "landedStatus": 200,
+            "posted": true,
+            "persisted": true,
+            "submittedValue": "part-muzf88r1-6i5flm",
+            "readStatus": 200,
+            "observedLength": 65
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4328/search"
+          }
+        ],
+        "errors": []
+      },
+      "uplifted": {
+        "rules": {
+          "forms/required-field-feedback": "PASS",
+          "accessibility/accessible-error-announcement": "PASS",
+          "forms/validate-input-after-interaction": "PASS",
+          "security/sanitize-untrusted-html": "PASS"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4329/search?q=bearing"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4329/",
+            "stillOnForm": true,
+            "urlUnchanged": true,
+            "serverRefused": false,
+            "invalidCount": 1,
+            "visibleErrors": 2,
+            "path": "/"
+          },
+          {
+            "name": "write-journey",
+            "status": 200,
+            "landedStatus": 200,
+            "posted": true,
+            "persisted": true,
+            "submittedValue": "part-muzf8axi-cpuawr",
+            "readStatus": 200,
+            "observedLength": 65
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4329/search"
+          }
+        ],
+        "errors": []
+      },
+      "category": "no-warranted-change",
+      "accepted": false,
+      "validation_observation": "refused-observed",
+      "original_sha": "sha256:cbf74c6fa2cb66cc9fbddf7d8b563d1cb18c27e98781dbfa466c9596cd68dba3",
+      "uplifted_sha": "sha256:e1dc702fa833d663e767bdc372fa839e062b1bcbf57d7959a86c04bc87d38c50"
+    },
+    {
+      "project_id": "contact-lead-hono",
+      "original": {
+        "rules": {
+          "forms/required-field-feedback": "FAIL",
+          "accessibility/accessible-error-announcement": "FAIL",
+          "forms/validate-input-after-interaction": "FAIL",
+          "security/sanitize-untrusted-html": "FAIL"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4330/enquiry/aa4eaa4c"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4330/enquiry",
+            "stillOnForm": false,
+            "urlUnchanged": false,
+            "serverRefused": true,
+            "invalidCount": 0,
+            "visibleErrors": 1,
+            "path": "/enquiry"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4330/enquiry/aa4eaa4c"
+          }
+        ],
+        "errors": []
+      },
+      "uplifted": {
+        "rules": {
+          "forms/required-field-feedback": "PASS",
+          "accessibility/accessible-error-announcement": "PASS",
+          "forms/validate-input-after-interaction": "PASS",
+          "security/sanitize-untrusted-html": "PASS"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4331/enquiry/9214949a"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4331/",
+            "stillOnForm": true,
+            "urlUnchanged": true,
+            "serverRefused": false,
+            "invalidCount": 2,
+            "visibleErrors": 3,
+            "path": "/"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4331/enquiry/9214949a"
+          }
+        ],
+        "errors": []
+      },
+      "category": "accepted",
+      "accepted": true,
+      "validation_observation": "refused-observed",
+      "original_sha": "sha256:12f35942bc13b95e68134161d3bd409ae7ead4da9427ff2b2acfa2ef892c1122",
+      "uplifted_sha": "sha256:51d01a827f42de55aea85466254ddcefd8b353e8f18524e7479c9d189ca6b6b1"
+    },
+    {
+      "project_id": "contact-lead-preact",
+      "original": {
+        "rules": {
+          "forms/required-field-feedback": "FAIL",
+          "accessibility/accessible-error-announcement": "FAIL",
+          "forms/validate-input-after-interaction": "PASS",
+          "security/sanitize-untrusted-html": "PASS"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4332/enquiry/0ed01d85"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4332/enquiry",
+            "stillOnForm": false,
+            "urlUnchanged": false,
+            "serverRefused": true,
+            "invalidCount": 0,
+            "visibleErrors": 1,
+            "path": "/enquiry"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4332/enquiry/0ed01d85"
+          }
+        ],
+        "errors": []
+      },
+      "uplifted": {
+        "rules": {
+          "forms/required-field-feedback": "PASS",
+          "accessibility/accessible-error-announcement": "PASS",
+          "forms/validate-input-after-interaction": "PASS",
+          "security/sanitize-untrusted-html": "PASS"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4333/enquiry/ec68fda7"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4333/",
+            "stillOnForm": true,
+            "urlUnchanged": true,
+            "serverRefused": false,
+            "invalidCount": 2,
+            "visibleErrors": 3,
+            "path": "/"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4333/enquiry/ec68fda7"
+          }
+        ],
+        "errors": []
+      },
+      "category": "accepted",
+      "accepted": true,
+      "validation_observation": "refused-observed",
+      "original_sha": "sha256:8ee65ef7ab4638ad7b3f172b4113c624954e08e623e0b41285c2942d9f7bad4c",
+      "uplifted_sha": "sha256:bfd36016feaae3536d90d82b8742cffc516aa605f5d37200375a251181fa2d4c"
+    },
+    {
+      "project_id": "contact-lead-raw",
+      "original": {
+        "rules": {
+          "forms/required-field-feedback": "FAIL",
+          "accessibility/accessible-error-announcement": "FAIL",
+          "forms/validate-input-after-interaction": "FAIL",
+          "security/sanitize-untrusted-html": "FAIL"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4334/enquiry/35a28ad5"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4334/enquiry",
+            "stillOnForm": false,
+            "urlUnchanged": false,
+            "serverRefused": true,
+            "invalidCount": 0,
+            "visibleErrors": 1,
+            "path": "/enquiry"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4334/enquiry/35a28ad5"
+          }
+        ],
+        "errors": []
+      },
+      "uplifted": {
+        "rules": {
+          "forms/required-field-feedback": "PASS",
+          "accessibility/accessible-error-announcement": "PASS",
+          "forms/validate-input-after-interaction": "PASS",
+          "security/sanitize-untrusted-html": "PASS"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4335/enquiry/ec39df84"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4335/",
+            "stillOnForm": true,
+            "urlUnchanged": true,
+            "serverRefused": false,
+            "invalidCount": 2,
+            "visibleErrors": 3,
+            "path": "/"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4335/enquiry/ec39df84"
+          }
+        ],
+        "errors": []
+      },
+      "category": "accepted",
+      "accepted": true,
+      "validation_observation": "refused-observed",
+      "original_sha": "sha256:d29d80b5903e86748e2a4867ff1b63a559531d90c9d33f25a29005ce6e2deb1b",
+      "uplifted_sha": "sha256:2a979bf07da5639678ea7a632ce2cf9e02b5f48ca4d70d5f8a99043a3c0fd0f8"
+    },
+    {
+      "project_id": "contact-lead-react",
+      "original": {
+        "rules": {
+          "forms/required-field-feedback": "PASS",
+          "accessibility/accessible-error-announcement": "PASS",
+          "forms/validate-input-after-interaction": "FAIL",
+          "security/sanitize-untrusted-html": "FAIL"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4336/enquiry/1a7ac89b"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4336/",
+            "stillOnForm": true,
+            "urlUnchanged": true,
+            "serverRefused": false,
+            "invalidCount": 3,
+            "visibleErrors": 4,
+            "path": "/"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4336/enquiry/1a7ac89b"
+          }
+        ],
+        "errors": []
+      },
+      "uplifted": {
+        "rules": {
+          "forms/required-field-feedback": "PASS",
+          "accessibility/accessible-error-announcement": "PASS",
+          "forms/validate-input-after-interaction": "PASS",
+          "security/sanitize-untrusted-html": "PASS"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4337/enquiry/5a731630"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4337/",
+            "stillOnForm": true,
+            "urlUnchanged": true,
+            "serverRefused": false,
+            "invalidCount": 3,
+            "visibleErrors": 4,
+            "path": "/"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4337/enquiry/5a731630"
+          }
+        ],
+        "errors": []
+      },
+      "category": "accepted",
+      "accepted": true,
+      "validation_observation": "refused-observed",
+      "original_sha": "sha256:ea18d41282cbc706826bf0716b1e395e0a4b11672a009e48bc26d8f73c3e7249",
+      "uplifted_sha": "sha256:6173dd1d9c72a3f43510f2c104a081fc691ea2b03bf03d29207af56c6eba37e5"
+    },
+    {
+      "project_id": "contact-lead-vue",
+      "original": {
+        "rules": {
+          "forms/required-field-feedback": "PASS",
+          "accessibility/accessible-error-announcement": "FAIL",
+          "forms/validate-input-after-interaction": "FAIL",
+          "security/sanitize-untrusted-html": "FAIL"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4338/enquiry/d2212666"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4338/",
+            "stillOnForm": true,
+            "urlUnchanged": true,
+            "serverRefused": false,
+            "invalidCount": 3,
+            "visibleErrors": 3,
+            "path": "/"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4338/enquiry/d2212666"
+          }
+        ],
+        "errors": []
+      },
+      "uplifted": {
+        "rules": {
+          "forms/required-field-feedback": "PASS",
+          "accessibility/accessible-error-announcement": "PASS",
+          "forms/validate-input-after-interaction": "PASS",
+          "security/sanitize-untrusted-html": "PASS"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4339/enquiry/d191527f"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4339/",
+            "stillOnForm": true,
+            "urlUnchanged": true,
+            "serverRefused": false,
+            "invalidCount": 3,
+            "visibleErrors": 4,
+            "path": "/"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4339/enquiry/d191527f"
+          }
+        ],
+        "errors": []
+      },
+      "category": "accepted",
+      "accepted": true,
+      "validation_observation": "refused-observed",
+      "original_sha": "sha256:cbd7a5a2461a4c3989aedf2cca2ee6ea2a4f6278afca2140c952b373e85ed6b6",
+      "uplifted_sha": "sha256:a228c8bf04cb6b826561e94a7227a11e156189d54584809c1f02d3d91cd8ae3d"
+    },
+    {
+      "project_id": "event-registration-hono",
+      "original": {
+        "rules": {
+          "forms/required-field-feedback": "PASS",
+          "accessibility/accessible-error-announcement": "FAIL",
+          "forms/validate-input-after-interaction": "FAIL",
+          "security/sanitize-untrusted-html": "PASS"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4340/registration/9ca8a6b1"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4340/",
+            "stillOnForm": true,
+            "urlUnchanged": true,
+            "serverRefused": false,
+            "invalidCount": 2,
+            "visibleErrors": 3,
+            "path": "/"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4340/registration/9ca8a6b1"
+          }
+        ],
+        "errors": []
+      },
+      "uplifted": {
+        "rules": {
+          "forms/required-field-feedback": "PASS",
+          "accessibility/accessible-error-announcement": "PASS",
+          "forms/validate-input-after-interaction": "PASS",
+          "security/sanitize-untrusted-html": "PASS"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4341/registration/dc774ac7"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4341/",
+            "stillOnForm": true,
+            "urlUnchanged": true,
+            "serverRefused": false,
+            "invalidCount": 2,
+            "visibleErrors": 4,
+            "path": "/"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4341/registration/dc774ac7"
+          }
+        ],
+        "errors": []
+      },
+      "category": "accepted",
+      "accepted": true,
+      "validation_observation": "refused-observed",
+      "original_sha": "sha256:16531aadd6e0c5b8731bf66bbe878515d519fc13c1f18206898199f0ebb67af6",
+      "uplifted_sha": "sha256:da294413f5bb31cff3a1b5aa079fc93c396ad1906d60e9a3c19ac4873906e3d7"
+    },
+    {
+      "project_id": "event-registration-preact",
+      "original": {
+        "rules": {
+          "forms/required-field-feedback": "FAIL",
+          "accessibility/accessible-error-announcement": "FAIL",
+          "forms/validate-input-after-interaction": "PASS",
+          "security/sanitize-untrusted-html": "FAIL"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4342/registration/b7e9d8a9"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4342/register",
+            "stillOnForm": false,
+            "urlUnchanged": false,
+            "serverRefused": true,
+            "invalidCount": 0,
+            "visibleErrors": 1,
+            "path": "/register"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4342/registration/b7e9d8a9"
+          }
+        ],
+        "errors": []
+      },
+      "uplifted": {
+        "rules": {
+          "forms/required-field-feedback": "PASS",
+          "accessibility/accessible-error-announcement": "PASS",
+          "forms/validate-input-after-interaction": "PASS",
+          "security/sanitize-untrusted-html": "PASS"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4343/registration/15e14301"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4343/",
+            "stillOnForm": true,
+            "urlUnchanged": true,
+            "serverRefused": false,
+            "invalidCount": 2,
+            "visibleErrors": 3,
+            "path": "/"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4343/registration/15e14301"
+          }
+        ],
+        "errors": []
+      },
+      "category": "accepted",
+      "accepted": true,
+      "validation_observation": "refused-observed",
+      "original_sha": "sha256:628a60fb05898b33ca1268b2cbcc23f55e141cabbce3a0901abf9f203415172f",
+      "uplifted_sha": "sha256:960547b5bf93875b26b6d945c8eb1c9e54755c3fc8efb3a1e96176d8d5ad8101"
+    },
+    {
+      "project_id": "event-registration-raw",
+      "original": {
+        "rules": {
+          "forms/required-field-feedback": "FAIL",
+          "accessibility/accessible-error-announcement": "FAIL",
+          "forms/validate-input-after-interaction": "FAIL",
+          "security/sanitize-untrusted-html": "FAIL"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4344/registration/39b4a309"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4344/register",
+            "stillOnForm": false,
+            "urlUnchanged": false,
+            "serverRefused": true,
+            "invalidCount": 0,
+            "visibleErrors": 1,
+            "path": "/register"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4344/registration/39b4a309"
+          }
+        ],
+        "errors": []
+      },
+      "uplifted": {
+        "rules": {
+          "forms/required-field-feedback": "PASS",
+          "accessibility/accessible-error-announcement": "PASS",
+          "forms/validate-input-after-interaction": "PASS",
+          "security/sanitize-untrusted-html": "PASS"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4345/registration/2eda708e"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4345/",
+            "stillOnForm": true,
+            "urlUnchanged": true,
+            "serverRefused": false,
+            "invalidCount": 2,
+            "visibleErrors": 3,
+            "path": "/"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4345/registration/2eda708e"
+          }
+        ],
+        "errors": []
+      },
+      "category": "accepted",
+      "accepted": true,
+      "validation_observation": "refused-observed",
+      "original_sha": "sha256:6843d5b3a4e296b2163f358ed838500d3153bd159627093e4bc37cce07ad15e0",
+      "uplifted_sha": "sha256:e3640972bc6e3cb666653403189c2ee71d90014afd8ce2584f4c0fcc1fcee35f"
+    },
+    {
+      "project_id": "event-registration-react",
+      "original": {
+        "rules": {
+          "forms/required-field-feedback": "PASS",
+          "accessibility/accessible-error-announcement": "FAIL",
+          "forms/validate-input-after-interaction": "PASS",
+          "security/sanitize-untrusted-html": "FAIL"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4346/registration/5bb27199"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4346/",
+            "stillOnForm": true,
+            "urlUnchanged": true,
+            "serverRefused": false,
+            "invalidCount": 2,
+            "visibleErrors": 3,
+            "path": "/"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4346/registration/5bb27199"
+          }
+        ],
+        "errors": []
+      },
+      "uplifted": {
+        "rules": {
+          "forms/required-field-feedback": "PASS",
+          "accessibility/accessible-error-announcement": "PASS",
+          "forms/validate-input-after-interaction": "PASS",
+          "security/sanitize-untrusted-html": "PASS"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4347/registration/4b8789de"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4347/",
+            "stillOnForm": true,
+            "urlUnchanged": true,
+            "serverRefused": false,
+            "invalidCount": 2,
+            "visibleErrors": 4,
+            "path": "/"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4347/registration/4b8789de"
+          }
+        ],
+        "errors": []
+      },
+      "category": "accepted",
+      "accepted": true,
+      "validation_observation": "refused-observed",
+      "original_sha": "sha256:2a22e7f166acda6222364d667ac70c5488255609403c2cd74b04ba105f071fa6",
+      "uplifted_sha": "sha256:ee9598924c7ca6e9e6c30f8fb2bd192eba132ead18341b8408badc55100a69b9"
+    },
+    {
+      "project_id": "event-registration-vue",
+      "original": {
+        "rules": {
+          "forms/required-field-feedback": "FAIL",
+          "accessibility/accessible-error-announcement": "FAIL",
+          "forms/validate-input-after-interaction": "FAIL",
+          "security/sanitize-untrusted-html": "PASS"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4348/registration/e2668d6b"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4348/register",
+            "stillOnForm": false,
+            "urlUnchanged": false,
+            "serverRefused": true,
+            "invalidCount": 0,
+            "visibleErrors": 1,
+            "path": "/register"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4348/registration/e2668d6b"
+          }
+        ],
+        "errors": []
+      },
+      "uplifted": {
+        "rules": {
+          "forms/required-field-feedback": "PASS",
+          "accessibility/accessible-error-announcement": "PASS",
+          "forms/validate-input-after-interaction": "PASS",
+          "security/sanitize-untrusted-html": "PASS"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4349/registration/e8a78243"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4349/",
+            "stillOnForm": true,
+            "urlUnchanged": true,
+            "serverRefused": false,
+            "invalidCount": 2,
+            "visibleErrors": 3,
+            "path": "/"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4349/registration/e8a78243"
+          }
+        ],
+        "errors": []
+      },
+      "category": "accepted",
+      "accepted": true,
+      "validation_observation": "refused-observed",
+      "original_sha": "sha256:838246d54e5bd60ebd373e00f3c3de00628deed0644b8041e00c21321b74a54d",
+      "uplifted_sha": "sha256:0f21c142d8b9e23e80a05d6642b9ec7b128bdf0a5283e39844d24a882d341443"
+    }
+  ]
+}

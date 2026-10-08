@@ -1,13 +1,13 @@
-# Pilot acceptance yield (2026-10-08T10-46-08-473Z)
+# Pilot acceptance yield (2026-10-08T10-54-49-381Z)
 
-Generated 2026-10-08T10:48:42.508Z by `scripts/pilot.mjs`. 25 pairs attempted, 24 accepted: **96.0%**.
+Generated 2026-10-08T10:57:17.546Z by `scripts/pilot.mjs`. 25 pairs attempted, 24 accepted: **96.0%**.
 
 Every number here comes from a record produced by driving the project in a real browser; the
 per-project records and their screenshots and traces are next to this file.
 
 ## Empty-submission observation (not a gate)
 
-23 of 25 originals refused an empty submission; 2 accepted it.
+23 of 25 originals showed an observed refusal of an empty submission; 2 accepted it; 0 left the page with neither an observed refusal nor an error.
 
 The originals that accepted it are the ones seeded without client-side requirements. That is the
 defect two rules measure on both versions, so it is reported here and judged there, never used

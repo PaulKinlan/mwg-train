@@ -55,7 +55,7 @@ const json = (response, value, status = 200, headers = {}) => {
   response.end(JSON.stringify(value));
 };
 
-const REQUIRED = ["q"];
+const REQUIRED = ["q","item"];
 
 // The cart form has its own fields. Validating it against the search form's required list refused every
 // cart POST with 422, which the write journey caught: a second form on one page needs a second rule.

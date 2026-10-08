@@ -115,7 +115,12 @@ async function driveJourney(page, base, journey) {
  */
 async function driveWriteJourney(page, base, writeJourney) {
   await page.goto(`${base}${writeJourney.startPath}`);
-  for (const [selector, value] of Object.entries(writeJourney.fill ?? {})) await page.type(selector, value);
+  // Unique per attempt. With a fixed value, a row already in the database satisfies the read-back and
+  // the journey reports a successful write that never happened.
+  const unique = `part-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+  const fill = { ...(writeJourney.fill ?? {}) };
+  if (writeJourney.itemField) fill[writeJourney.itemField] = unique;
+  for (const [selector, value] of Object.entries(fill)) await page.type(selector, value);
   const submit = await page.submit(writeJourney.formSelector);
   const landed = await page.url();
   const status = page.network.filter((entry) => entry.url === landed).at(-1)?.status ?? null;
@@ -131,7 +136,11 @@ async function driveWriteJourney(page, base, writeJourney) {
     status,
     valid: submit?.valid ?? null,
     readStatus: stored.status,
-    persisted: stored.status === 200 && stored.body.includes(writeJourney.itemValue),
+    // A refused POST cannot have written anything, so its status is part of the evidence too.
+    landedStatus: status,
+    posted: status === null || (status >= 200 && status < 400),
+    submittedValue: unique,
+    persisted: stored.status === 200 && stored.body.includes(unique),
     observedLength: stored.body.length,
   };
 }

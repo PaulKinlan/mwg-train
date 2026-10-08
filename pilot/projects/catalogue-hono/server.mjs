@@ -29,7 +29,7 @@ const insert = db.prepare('INSERT INTO records (ref, created_at, payload) VALUES
 const select = db.prepare('SELECT ref, created_at, payload FROM records WHERE ref = ?');
 const list = db.prepare('SELECT ref, payload FROM records ORDER BY created_at DESC LIMIT 50');
 
-const REQUIRED = ["q"];
+const REQUIRED = ["q","item"];
 
 // The cart form has its own fields. Validating it against the search form's required list refused every
 // cart POST with 422, which the write journey caught: a second form on one page needs a second rule.

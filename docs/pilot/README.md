@@ -159,8 +159,10 @@ partial corpus is not the corpus.
 time. The full report is [YIELD.md](YIELD.md); the per-project hashes, applied rules and verdicts are
 in `pilot/CORPUS.json`, which `npm run check:pilot-corpus` re-derives from `pilot/plan.json` and the
 uplift tool. The run's own decisions — every verdict, the rules each pair improved, the tree hashes and
-each original's empty-submission observation — are committed as [yield.json](yield.json), so the numbers
-above can be checked from the repository rather than taken on trust.
+each original's empty-submission observation — are committed as [yield.json](yield.json), and the
+journeys, rule statuses and tree hashes behind them as [records.json](records.json). A test asserts that
+every claim below is supported by those files: no property in any version carries an `ERROR` status, and
+each catalogue project drove a write journey that posted a value and read that value back.
 
 | Category | Count |
 | --- | --- |
@@ -170,7 +172,9 @@ above can be checked from the repository rather than taken on trust.
 
 The single refusal is `catalogue-vue`, the project with no seeded defects: the tool made **zero edits**
 to it, which is the result the control exists to produce. No pair was refused because the uplift broke
-a journey, regressed a rule, introduced a security finding, or left a rule unmeasured.
+a journey, regressed a rule, introduced a security finding, or left a rule unmeasured — and
+`records.json` shows every measured property in both versions of every project, so that sentence is
+checkable rather than asserted.
 
 | Arm | Accepted | Attempted | Which properties improved, in how many pairs |
 | --- | --- | --- | --- |
@@ -185,7 +189,7 @@ finding: the same generator writes all five, so the arms differ mainly in dialec
 handles all five dialects — including Hono's `hono/html` templates and Vue's runtime-compiled ones —
 without a rule failing on any of them.
 
-### Five corrections the pilot made to itself, and why they are in the record
+### Six corrections the pilot made to itself, and why they are in the record
 
 The first full run measured 1/20 and the second 25/25; neither number survived scrutiny, and the three
 runs of 24/25 or 22/25 that followed each hid a different defect in the measurement rather than in the
@@ -216,7 +220,16 @@ tool. The failures and the corrections are more useful than the final figure, so
    claim about the twenty-five projects that the twenty-fifth did not satisfy. All five are fixed, with a
    test each.
 
-5. **24/25 was survivorship, and the report measured nothing.** Two more of the same class, both found
+5. **The second review round found three more predicates proving less than they claimed.** The write
+   journey accepted a *fixed* posted value, so a row already in the database plus a refused POST would
+   have read as a successful write: the harness now posts a value generated for that attempt and
+   requires the POST to have succeeded. The expression-compilation test was vacuous - its stub returned
+   `{}` for every call, so any check that returned early never compiled its later expressions, which is
+   the exact bug the test exists to catch - and it now drives each check along a full-truth and an
+   empty path and requires every call site to have executed. And `refused` did not require an observed
+   refusal: a handler that silently prevented submission leaves the same trace as one that refused, so
+   the observation is now `refused-observed`, `accepted-empty`, or `blocked-without-evidence`.
+6. **24/25 was survivorship, and the report measured nothing.** Two more of the same class, both found
    while folding the review's fixes in. The gate required the *original* to refuse an empty submission,
    but the arms seeded without a client-side requirement legitimately cannot - so it labelled exactly
    the most defective pairs `original-not-runnable` and dropped them from the yield, biasing the number

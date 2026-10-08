@@ -107,6 +107,9 @@ export const ARCHETYPES = {
       // Optional, and deliberately so: the uplift tool must not mark a field required that the project
       // never asked for, and a required-but-unfilled field made the browser refuse the journey's submit.
       { slug: 'quantity', name: 'quantity', type: 'number', label: 'Quantity', optional: true },
+      // A real, fillable field rather than a hidden constant: the write journey generates a unique part
+      // number per attempt, so the read-back can only be satisfied by this POST.
+      { slug: 'item', name: 'item', type: 'text', label: 'Part number' },
     ],
     // This archetype's echoed value is the query the user typed, reflected by the server-rendered
     // search page. Its journey is therefore a GET that reloads, not a POST that redirects: the pilot
@@ -116,12 +119,14 @@ export const ARCHETYPES = {
     // and adding to a cart (a POST that writes). The pilot drives both, so this project has a real
     // server write journey like the other twenty-four, and the reflected-query journey on top of it.
     form: { method: 'get', action: '/search', fields: ['query'] },
-    extraForm: { id: 'cart-form', method: 'post', action: '/cart', fields: ['quantity'], hidden: { item: 'bearing' }, submit: 'Add to cart' },
+    extraForm: { id: 'cart-form', method: 'post', action: '/cart', fields: ['item', 'quantity'], submit: 'Add to cart' },
     writeJourney: {
       startPath: '/',
       formSelector: 'form#cart-form',
+      // Generated per attempt by the harness (see driveWriteJourney): a fixed value can be satisfied by
+      // a row that was already stored, so the read-back would prove nothing about this POST.
+      itemField: 'input[name=item]',
       fill: { 'input[name=quantity]': '2' },
-      itemValue: 'bearing',
       readPath: '/api/records',
     },
     journey: {

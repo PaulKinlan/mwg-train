@@ -1,7 +1,7 @@
 {
   "$comment": "The corpus the pilot measured: generated projects, their tree hashes, and the hash of the uplift the tool produced from each. `node scripts/pilot-corpus.mjs --verify` re-derives all of it; a mismatch means the measured artefact can no longer be reproduced.",
-  "run_id": "2026-10-08T10-46-08-473Z",
-  "generated_at": "2026-10-08T10:48:42.507Z",
+  "run_id": "2026-10-08T10-54-49-381Z",
+  "generated_at": "2026-10-08T10:57:17.545Z",
   "generator": "scripts/scaffold-pilot.mjs",
   "uplift_tool": "src/corpus/uplift.mjs",
   "summary": {
@@ -331,8 +331,8 @@
         "no-required",
         "xss-innerhtml"
       ],
-      "original_sha": "sha256:9910a38bb2d93221e395903096de5aafca1c26e15e55668c891da09068337ae5",
-      "uplift_sha": "sha256:59b1f0c7a9d3eb91faf0db1354dc8ff58e3ffd2869bc259cf23a31b416ba9911",
+      "original_sha": "sha256:bc28648042d315a476091c281894c894159aca77ae63e397318810eb2975c2f6",
+      "uplift_sha": "sha256:6a72e116424b6abaa4bc9d0696918616ba8d995506ef7033c229791b8671ddb0",
       "uplift_applied": [
         "forms/required-field-feedback",
         "security/sanitize-untrusted-html"
@@ -352,9 +352,10 @@
       "defects": [
         "eager-invalid"
       ],
-      "original_sha": "sha256:38b31ed810eee7323afa73cd51333bd280b12268c124bae116cdf4db4bda0e51",
-      "uplift_sha": "sha256:ab8eca47c0535aa82db9393ad1a77033c795bc65f190ec7557ddea3f7fb8a0ec",
+      "original_sha": "sha256:593d7578029f5104b4bebb37aa2ff5701ae8d919459fc88719bc7cde76abcb05",
+      "uplift_sha": "sha256:4034aa7a9cac0545395966496e9e90c2a9d97bcd81938247f729ff539fafe5cf",
       "uplift_applied": [
+        "forms/required-field-feedback",
         "forms/validate-input-after-interaction"
       ],
       "improved_rules": [
@@ -370,9 +371,10 @@
       "defects": [
         "xss-innerhtml"
       ],
-      "original_sha": "sha256:2cf478aa05c82e9a696764561a9b89a70fa7eb9200c3cc2130d4a7ffbe4ce1af",
-      "uplift_sha": "sha256:6d7107b6b8638615a8911e8acac6b49d5065ab338bbd98a09b8cf6ec5e122fff",
+      "original_sha": "sha256:874b63ae1256c6b8007b6fd80c50bae5efc422d53d0606987b13b0d902a8d0a8",
+      "uplift_sha": "sha256:1af9e739320e7dc01be05b3fb72694d03254c34d573e2371285bc0ca119fc694",
       "uplift_applied": [
+        "forms/required-field-feedback",
         "security/sanitize-untrusted-html"
       ],
       "improved_rules": [
@@ -389,8 +391,8 @@
         "no-required",
         "xss-innerhtml"
       ],
-      "original_sha": "sha256:b559566534e8c6d4acdaaa5e3a42c2c122237d264429311c6347afe423832811",
-      "uplift_sha": "sha256:5b2d5993fe8b3e9bd7a1a16979f507cd6c2dc1a2b102fcb40e5551ab15e520f1",
+      "original_sha": "sha256:f1f53096c37ec7375d067df74f159843a5369215a376c3858b7e48bacf5260fd",
+      "uplift_sha": "sha256:996558ec890e0a42d5918699e808d17e08a29fc17a423d14633777a2e22ac7bd",
       "uplift_applied": [
         "forms/required-field-feedback",
         "security/sanitize-untrusted-html"
@@ -408,9 +410,11 @@
       "archetype": "catalogue",
       "framework": "vue",
       "defects": [],
-      "original_sha": "sha256:2e5c278fdf0ddfc84e4708f44da20535df61057473af573be86f11db2af5de4a",
-      "uplift_sha": "sha256:2e5c278fdf0ddfc84e4708f44da20535df61057473af573be86f11db2af5de4a",
-      "uplift_applied": [],
+      "original_sha": "sha256:cbf74c6fa2cb66cc9fbddf7d8b563d1cb18c27e98781dbfa466c9596cd68dba3",
+      "uplift_sha": "sha256:e1dc702fa833d663e767bdc372fa839e062b1bcbf57d7959a86c04bc87d38c50",
+      "uplift_applied": [
+        "forms/required-field-feedback"
+      ],
       "improved_rules": [],
       "accepted": false,
       "category": "no-warranted-change"

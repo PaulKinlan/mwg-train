@@ -14,9 +14,11 @@ const template = `
       <button type="submit">Submit</button>
     </form>
     <form id="cart-form" method="post" action="/cart">
-      <input type="hidden" name="item" value="bearing">
+
       <label for="quantity">Quantity</label>
       <input type="number" id="quantity" name="quantity" inputmode="numeric">
+      <label for="item">Part number</label>
+      <input type="text" id="item" name="item" required aria-errormessage="item-error">
       <button type="submit">Add to cart</button>
     </form>
       <section class="record" aria-labelledby="record-heading">
