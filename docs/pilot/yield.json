@@ -1,0 +1,2502 @@
+{
+  "run_id": "2026-10-08T10-46-08-473Z",
+  "generated_at": "2026-10-08T10:48:42.507Z",
+  "summary": {
+    "attempted": 25,
+    "accepted": 24,
+    "yield": 0.96,
+    "by_category": {
+      "accepted": 24,
+      "no-warranted-change": 1
+    },
+    "by_framework": {
+      "hono": {
+        "total": 5,
+        "accepted": 5
+      },
+      "preact": {
+        "total": 5,
+        "accepted": 5
+      },
+      "raw": {
+        "total": 5,
+        "accepted": 5
+      },
+      "react": {
+        "total": 5,
+        "accepted": 5
+      },
+      "vue": {
+        "total": 5,
+        "accepted": 4
+      }
+    },
+    "by_archetype": {
+      "account-recovery": {
+        "total": 5,
+        "accepted": 5
+      },
+      "booking": {
+        "total": 5,
+        "accepted": 5
+      },
+      "catalogue": {
+        "total": 5,
+        "accepted": 4
+      },
+      "contact-lead": {
+        "total": 5,
+        "accepted": 5
+      },
+      "event-registration": {
+        "total": 5,
+        "accepted": 5
+      }
+    },
+    "rules_improved": {
+      "accessibility/accessible-error-announcement": 19,
+      "security/sanitize-untrusted-html": 16,
+      "forms/required-field-feedback": 15,
+      "forms/validate-input-after-interaction": 15,
+      "forms/autofill-sign-up-form": 5,
+      "forms/autofill-address-form": 5
+    }
+  },
+  "decisions": [
+    {
+      "project_id": "account-recovery-hono",
+      "archetype": "account-recovery",
+      "framework": "hono",
+      "framework_family": "hono",
+      "seeded_defects": [
+        "no-required",
+        "eager-invalid",
+        "no-autofill",
+        "xss-innerhtml"
+      ],
+      "uplift_applied": [
+        "forms/required-field-feedback",
+        "forms/validate-input-after-interaction",
+        "forms/autofill-sign-up-form",
+        "security/sanitize-untrusted-html"
+      ],
+      "uplift_skipped": [
+        {
+          "rule": "accessibility/accessible-error-announcement",
+          "reason": "already present"
+        },
+        {
+          "rule": "forms/autofill-address-form",
+          "reason": "already present"
+        }
+      ],
+      "uplift_failed": [],
+      "accepted": true,
+      "category": "accepted",
+      "improved_rules": [
+        "forms/required-field-feedback",
+        "accessibility/accessible-error-announcement",
+        "forms/validate-input-after-interaction",
+        "forms/autofill-sign-up-form",
+        "security/sanitize-untrusted-html"
+      ],
+      "regressed_rules": [],
+      "new_security_findings": [],
+      "detail": [
+        "improved forms/required-field-feedback, accessibility/accessible-error-announcement, forms/validate-input-after-interaction, forms/autofill-sign-up-form, security/sanitize-untrusted-html"
+      ],
+      "validation_observation": "refused",
+      "original_sha": "sha256:6271163e4b55dbc6932dd529938197e13a2cedb47fa277507910d3ca365291d0",
+      "uplifted_sha": "sha256:4c7a3e3518190fd8199faf38913510b61f5c57861694a658644f47352be15c18",
+      "uplift_edits": [
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "required",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "aria-errormessage",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "required",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "aria-errormessage",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "required",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "aria-errormessage",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/styles.css",
+          "kind": "append-css"
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "insert-markup",
+          "blocks": 3
+        },
+        {
+          "rule": "forms/validate-input-after-interaction",
+          "file": "app/styles.css",
+          "kind": "replace-selector"
+        },
+        {
+          "rule": "forms/autofill-sign-up-form",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "autocomplete",
+          "elements": 1
+        },
+        {
+          "rule": "forms/autofill-sign-up-form",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "autocomplete",
+          "elements": 1
+        },
+        {
+          "rule": "security/sanitize-untrusted-html",
+          "file": "app/enhance.js",
+          "kind": "replace-insertion",
+          "sites": 1
+        }
+      ]
+    },
+    {
+      "project_id": "account-recovery-preact",
+      "archetype": "account-recovery",
+      "framework": "preact",
+      "framework_family": "react-family",
+      "seeded_defects": [
+        "no-required",
+        "no-autofill"
+      ],
+      "uplift_applied": [
+        "forms/required-field-feedback",
+        "forms/autofill-sign-up-form"
+      ],
+      "uplift_skipped": [
+        {
+          "rule": "forms/validate-input-after-interaction",
+          "reason": "no eager :invalid styling"
+        },
+        {
+          "rule": "accessibility/accessible-error-announcement",
+          "reason": "already present"
+        },
+        {
+          "rule": "forms/autofill-address-form",
+          "reason": "already present"
+        },
+        {
+          "rule": "security/sanitize-untrusted-html",
+          "reason": "no innerHTML insertion"
+        }
+      ],
+      "uplift_failed": [],
+      "accepted": true,
+      "category": "accepted",
+      "improved_rules": [
+        "forms/required-field-feedback",
+        "accessibility/accessible-error-announcement",
+        "forms/autofill-sign-up-form"
+      ],
+      "regressed_rules": [],
+      "new_security_findings": [],
+      "detail": [
+        "improved forms/required-field-feedback, accessibility/accessible-error-announcement, forms/autofill-sign-up-form"
+      ],
+      "validation_observation": "refused",
+      "original_sha": "sha256:a630f95f6c5d0f9a0690ced972effc9c53af0072fae21664553e3413ebd34149",
+      "uplifted_sha": "sha256:ad7515cac86fdc2535e0d11f5b18ee74f2c548b100ec0d9b0f813a29cab0f3e7",
+      "uplift_edits": [
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "required",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "aria-errormessage",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "required",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "aria-errormessage",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "required",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "aria-errormessage",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "insert-markup",
+          "blocks": 3
+        },
+        {
+          "rule": "forms/autofill-sign-up-form",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "autocomplete",
+          "elements": 1
+        },
+        {
+          "rule": "forms/autofill-sign-up-form",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "autocomplete",
+          "elements": 1
+        }
+      ]
+    },
+    {
+      "project_id": "account-recovery-raw",
+      "archetype": "account-recovery",
+      "framework": "raw",
+      "framework_family": "raw-web-platform",
+      "seeded_defects": [
+        "no-required",
+        "eager-invalid",
+        "no-aria-sync",
+        "no-autofill"
+      ],
+      "uplift_applied": [
+        "forms/required-field-feedback",
+        "forms/validate-input-after-interaction",
+        "accessibility/accessible-error-announcement",
+        "forms/autofill-sign-up-form"
+      ],
+      "uplift_skipped": [
+        {
+          "rule": "forms/autofill-address-form",
+          "reason": "already present"
+        },
+        {
+          "rule": "security/sanitize-untrusted-html",
+          "reason": "no innerHTML insertion"
+        }
+      ],
+      "uplift_failed": [],
+      "accepted": true,
+      "category": "accepted",
+      "improved_rules": [
+        "forms/required-field-feedback",
+        "accessibility/accessible-error-announcement",
+        "forms/validate-input-after-interaction",
+        "forms/autofill-sign-up-form"
+      ],
+      "regressed_rules": [],
+      "new_security_findings": [],
+      "detail": [
+        "improved forms/required-field-feedback, accessibility/accessible-error-announcement, forms/validate-input-after-interaction, forms/autofill-sign-up-form"
+      ],
+      "validation_observation": "refused",
+      "original_sha": "sha256:4edafd8b94e3eb5d9caeb22edf16a60ae77432cc23f04783bd6ca29bce140ad0",
+      "uplifted_sha": "sha256:f6f3d8862afffb8780c01428214bee28ab6eba9d973584b0924198189bc183f6",
+      "uplift_edits": [
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "required",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "aria-errormessage",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "required",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "aria-errormessage",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "required",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "aria-errormessage",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/styles.css",
+          "kind": "append-css"
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "insert-markup",
+          "blocks": 3
+        },
+        {
+          "rule": "forms/validate-input-after-interaction",
+          "file": "app/styles.css",
+          "kind": "replace-selector"
+        },
+        {
+          "rule": "accessibility/accessible-error-announcement",
+          "file": "app/enhance.js",
+          "kind": "append-js"
+        },
+        {
+          "rule": "accessibility/accessible-error-announcement",
+          "file": "app/page.mjs",
+          "kind": "replace"
+        },
+        {
+          "rule": "forms/autofill-sign-up-form",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "autocomplete",
+          "elements": 1
+        },
+        {
+          "rule": "forms/autofill-sign-up-form",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "autocomplete",
+          "elements": 1
+        }
+      ]
+    },
+    {
+      "project_id": "account-recovery-react",
+      "archetype": "account-recovery",
+      "framework": "react",
+      "framework_family": "react",
+      "seeded_defects": [
+        "no-autofill",
+        "xss-innerhtml"
+      ],
+      "uplift_applied": [
+        "forms/autofill-sign-up-form",
+        "security/sanitize-untrusted-html"
+      ],
+      "uplift_skipped": [
+        {
+          "rule": "forms/required-field-feedback",
+          "reason": "already present"
+        },
+        {
+          "rule": "forms/validate-input-after-interaction",
+          "reason": "no eager :invalid styling"
+        },
+        {
+          "rule": "accessibility/accessible-error-announcement",
+          "reason": "already present"
+        },
+        {
+          "rule": "forms/autofill-address-form",
+          "reason": "already present"
+        }
+      ],
+      "uplift_failed": [],
+      "accepted": true,
+      "category": "accepted",
+      "improved_rules": [
+        "forms/autofill-sign-up-form",
+        "security/sanitize-untrusted-html"
+      ],
+      "regressed_rules": [],
+      "new_security_findings": [],
+      "detail": [
+        "improved forms/autofill-sign-up-form, security/sanitize-untrusted-html"
+      ],
+      "validation_observation": "refused",
+      "original_sha": "sha256:3b8965946865ca992adc09055d9aa90dc7527b37c0c571ed3cd7ea8b010f8eb4",
+      "uplifted_sha": "sha256:f07f0920c6d37c08f7b61c12817e17103e4adf4c4eadefcb0054c7674f5a17ad",
+      "uplift_edits": [
+        {
+          "rule": "forms/autofill-sign-up-form",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "autocomplete",
+          "elements": 1
+        },
+        {
+          "rule": "forms/autofill-sign-up-form",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "autocomplete",
+          "elements": 1
+        },
+        {
+          "rule": "security/sanitize-untrusted-html",
+          "file": "app/enhance.js",
+          "kind": "replace-insertion",
+          "sites": 1
+        }
+      ]
+    },
+    {
+      "project_id": "account-recovery-vue",
+      "archetype": "account-recovery",
+      "framework": "vue",
+      "framework_family": "vue",
+      "seeded_defects": [
+        "eager-invalid",
+        "xss-innerhtml"
+      ],
+      "uplift_applied": [
+        "forms/validate-input-after-interaction",
+        "forms/autofill-sign-up-form",
+        "security/sanitize-untrusted-html"
+      ],
+      "uplift_skipped": [
+        {
+          "rule": "forms/required-field-feedback",
+          "reason": "already present"
+        },
+        {
+          "rule": "accessibility/accessible-error-announcement",
+          "reason": "already present"
+        },
+        {
+          "rule": "forms/autofill-address-form",
+          "reason": "already present"
+        }
+      ],
+      "uplift_failed": [],
+      "accepted": true,
+      "category": "accepted",
+      "improved_rules": [
+        "forms/validate-input-after-interaction",
+        "forms/autofill-sign-up-form",
+        "security/sanitize-untrusted-html"
+      ],
+      "regressed_rules": [],
+      "new_security_findings": [],
+      "detail": [
+        "improved forms/validate-input-after-interaction, forms/autofill-sign-up-form, security/sanitize-untrusted-html"
+      ],
+      "validation_observation": "refused",
+      "original_sha": "sha256:8f2c00d6c0b36ba32eb0d6cc24fb55450a5272706c196ca78151d847805fe88d",
+      "uplifted_sha": "sha256:15ef807f9b6b5cea870ee102cdf1dd3b059c3897c8c8c31036e425bb5f35cca8",
+      "uplift_edits": [
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/styles.css",
+          "kind": "append-css"
+        },
+        {
+          "rule": "forms/validate-input-after-interaction",
+          "file": "app/styles.css",
+          "kind": "replace-selector"
+        },
+        {
+          "rule": "forms/autofill-sign-up-form",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "autocomplete",
+          "elements": 1
+        },
+        {
+          "rule": "security/sanitize-untrusted-html",
+          "file": "app/enhance.js",
+          "kind": "replace-insertion",
+          "sites": 1
+        }
+      ]
+    },
+    {
+      "project_id": "booking-hono",
+      "archetype": "booking",
+      "framework": "hono",
+      "framework_family": "hono",
+      "seeded_defects": [
+        "no-required",
+        "eager-invalid",
+        "no-aria-sync",
+        "no-autofill-address",
+        "xss-innerhtml"
+      ],
+      "uplift_applied": [
+        "forms/required-field-feedback",
+        "forms/validate-input-after-interaction",
+        "accessibility/accessible-error-announcement",
+        "forms/autofill-address-form",
+        "security/sanitize-untrusted-html"
+      ],
+      "uplift_skipped": [
+        {
+          "rule": "forms/autofill-sign-up-form",
+          "reason": "already present"
+        }
+      ],
+      "uplift_failed": [],
+      "accepted": true,
+      "category": "accepted",
+      "improved_rules": [
+        "forms/required-field-feedback",
+        "accessibility/accessible-error-announcement",
+        "forms/validate-input-after-interaction",
+        "forms/autofill-address-form",
+        "security/sanitize-untrusted-html"
+      ],
+      "regressed_rules": [],
+      "new_security_findings": [],
+      "detail": [
+        "improved forms/required-field-feedback, accessibility/accessible-error-announcement, forms/validate-input-after-interaction, forms/autofill-address-form, security/sanitize-untrusted-html"
+      ],
+      "validation_observation": "refused",
+      "original_sha": "sha256:f71f3831901eefb4fbf55e9113f3e788d6bfc1a7e94da66c7dbbee8ee1d6fa4e",
+      "uplifted_sha": "sha256:8f4bb2a07c4ff00ed0515f60a63cf20d80ab1cb8152cde19710114bab40ab08f",
+      "uplift_edits": [
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "required",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "aria-errormessage",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "required",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "aria-errormessage",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "required",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "aria-errormessage",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "required",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "aria-errormessage",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "required",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "aria-errormessage",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/styles.css",
+          "kind": "append-css"
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "insert-markup",
+          "blocks": 5
+        },
+        {
+          "rule": "forms/validate-input-after-interaction",
+          "file": "app/styles.css",
+          "kind": "replace-selector"
+        },
+        {
+          "rule": "accessibility/accessible-error-announcement",
+          "file": "app/enhance.js",
+          "kind": "append-js"
+        },
+        {
+          "rule": "accessibility/accessible-error-announcement",
+          "file": "app/page.mjs",
+          "kind": "replace"
+        },
+        {
+          "rule": "forms/autofill-address-form",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "autocomplete",
+          "elements": 1
+        },
+        {
+          "rule": "forms/autofill-address-form",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "autocomplete",
+          "elements": 1
+        },
+        {
+          "rule": "security/sanitize-untrusted-html",
+          "file": "app/enhance.js",
+          "kind": "replace-insertion",
+          "sites": 1
+        }
+      ]
+    },
+    {
+      "project_id": "booking-preact",
+      "archetype": "booking",
+      "framework": "preact",
+      "framework_family": "react-family",
+      "seeded_defects": [
+        "eager-invalid",
+        "no-aria-sync",
+        "no-autofill-address"
+      ],
+      "uplift_applied": [
+        "forms/validate-input-after-interaction",
+        "accessibility/accessible-error-announcement",
+        "forms/autofill-address-form"
+      ],
+      "uplift_skipped": [
+        {
+          "rule": "forms/required-field-feedback",
+          "reason": "already present"
+        },
+        {
+          "rule": "forms/autofill-sign-up-form",
+          "reason": "already present"
+        },
+        {
+          "rule": "security/sanitize-untrusted-html",
+          "reason": "no innerHTML insertion"
+        }
+      ],
+      "uplift_failed": [],
+      "accepted": true,
+      "category": "accepted",
+      "improved_rules": [
+        "accessibility/accessible-error-announcement",
+        "forms/validate-input-after-interaction",
+        "forms/autofill-address-form"
+      ],
+      "regressed_rules": [],
+      "new_security_findings": [],
+      "detail": [
+        "improved accessibility/accessible-error-announcement, forms/validate-input-after-interaction, forms/autofill-address-form"
+      ],
+      "validation_observation": "refused",
+      "original_sha": "sha256:aa88f7b78827df2f415f42406408fd3c22e02ee31b1a37857e6e7019a5a65f75",
+      "uplifted_sha": "sha256:f215c423c91ab38a98f51e950f1f39aa0bdd4c6be6b0eaa554c1e289db4dbba9",
+      "uplift_edits": [
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/styles.css",
+          "kind": "append-css"
+        },
+        {
+          "rule": "forms/validate-input-after-interaction",
+          "file": "app/styles.css",
+          "kind": "replace-selector"
+        },
+        {
+          "rule": "accessibility/accessible-error-announcement",
+          "file": "app/enhance.js",
+          "kind": "append-js"
+        },
+        {
+          "rule": "accessibility/accessible-error-announcement",
+          "file": "app/page.mjs",
+          "kind": "replace"
+        },
+        {
+          "rule": "forms/autofill-address-form",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "autocomplete",
+          "elements": 1
+        },
+        {
+          "rule": "forms/autofill-address-form",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "autocomplete",
+          "elements": 1
+        }
+      ]
+    },
+    {
+      "project_id": "booking-raw",
+      "archetype": "booking",
+      "framework": "raw",
+      "framework_family": "raw-web-platform",
+      "seeded_defects": [
+        "no-required",
+        "eager-invalid",
+        "no-aria-sync",
+        "no-autofill-address",
+        "xss-innerhtml"
+      ],
+      "uplift_applied": [
+        "forms/required-field-feedback",
+        "forms/validate-input-after-interaction",
+        "accessibility/accessible-error-announcement",
+        "forms/autofill-address-form",
+        "security/sanitize-untrusted-html"
+      ],
+      "uplift_skipped": [
+        {
+          "rule": "forms/autofill-sign-up-form",
+          "reason": "already present"
+        }
+      ],
+      "uplift_failed": [],
+      "accepted": true,
+      "category": "accepted",
+      "improved_rules": [
+        "forms/required-field-feedback",
+        "accessibility/accessible-error-announcement",
+        "forms/validate-input-after-interaction",
+        "forms/autofill-address-form",
+        "security/sanitize-untrusted-html"
+      ],
+      "regressed_rules": [],
+      "new_security_findings": [],
+      "detail": [
+        "improved forms/required-field-feedback, accessibility/accessible-error-announcement, forms/validate-input-after-interaction, forms/autofill-address-form, security/sanitize-untrusted-html"
+      ],
+      "validation_observation": "refused",
+      "original_sha": "sha256:8c6d2fc0a82fcfa051e34e547f4d1d06af0692ddf8080a5ae01bc925acfd1775",
+      "uplifted_sha": "sha256:2c78c9dabdeb84c3a9543bd518e082518245cd27860f3079be35f87b1a6eb4dc",
+      "uplift_edits": [
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "required",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "aria-errormessage",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "required",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "aria-errormessage",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "required",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "aria-errormessage",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "required",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "aria-errormessage",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "required",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "aria-errormessage",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/styles.css",
+          "kind": "append-css"
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "insert-markup",
+          "blocks": 5
+        },
+        {
+          "rule": "forms/validate-input-after-interaction",
+          "file": "app/styles.css",
+          "kind": "replace-selector"
+        },
+        {
+          "rule": "accessibility/accessible-error-announcement",
+          "file": "app/enhance.js",
+          "kind": "append-js"
+        },
+        {
+          "rule": "accessibility/accessible-error-announcement",
+          "file": "app/page.mjs",
+          "kind": "replace"
+        },
+        {
+          "rule": "forms/autofill-address-form",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "autocomplete",
+          "elements": 1
+        },
+        {
+          "rule": "forms/autofill-address-form",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "autocomplete",
+          "elements": 1
+        },
+        {
+          "rule": "security/sanitize-untrusted-html",
+          "file": "app/enhance.js",
+          "kind": "replace-insertion",
+          "sites": 1
+        }
+      ]
+    },
+    {
+      "project_id": "booking-react",
+      "archetype": "booking",
+      "framework": "react",
+      "framework_family": "react",
+      "seeded_defects": [
+        "no-required",
+        "eager-invalid",
+        "no-aria-sync",
+        "no-autofill-address",
+        "xss-innerhtml"
+      ],
+      "uplift_applied": [
+        "forms/required-field-feedback",
+        "forms/validate-input-after-interaction",
+        "accessibility/accessible-error-announcement",
+        "forms/autofill-address-form",
+        "security/sanitize-untrusted-html"
+      ],
+      "uplift_skipped": [
+        {
+          "rule": "forms/autofill-sign-up-form",
+          "reason": "already present"
+        }
+      ],
+      "uplift_failed": [],
+      "accepted": true,
+      "category": "accepted",
+      "improved_rules": [
+        "forms/required-field-feedback",
+        "accessibility/accessible-error-announcement",
+        "forms/validate-input-after-interaction",
+        "forms/autofill-address-form",
+        "security/sanitize-untrusted-html"
+      ],
+      "regressed_rules": [],
+      "new_security_findings": [],
+      "detail": [
+        "improved forms/required-field-feedback, accessibility/accessible-error-announcement, forms/validate-input-after-interaction, forms/autofill-address-form, security/sanitize-untrusted-html"
+      ],
+      "validation_observation": "refused",
+      "original_sha": "sha256:f6fb4bc6299ffa1aa38d54d314bf7720fb79883e37de005e5943335f849f240f",
+      "uplifted_sha": "sha256:5da9f047adcda8bbdf4bc911c92f74af4b0b4bb767c829c1348881096422c4c7",
+      "uplift_edits": [
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "required",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "aria-errormessage",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "required",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "aria-errormessage",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "required",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "aria-errormessage",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "required",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "aria-errormessage",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "required",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "aria-errormessage",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/styles.css",
+          "kind": "append-css"
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "insert-markup",
+          "blocks": 5
+        },
+        {
+          "rule": "forms/validate-input-after-interaction",
+          "file": "app/styles.css",
+          "kind": "replace-selector"
+        },
+        {
+          "rule": "accessibility/accessible-error-announcement",
+          "file": "app/enhance.js",
+          "kind": "append-js"
+        },
+        {
+          "rule": "accessibility/accessible-error-announcement",
+          "file": "app/page.mjs",
+          "kind": "replace"
+        },
+        {
+          "rule": "forms/autofill-address-form",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "autocomplete",
+          "elements": 1
+        },
+        {
+          "rule": "forms/autofill-address-form",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "autocomplete",
+          "elements": 1
+        },
+        {
+          "rule": "security/sanitize-untrusted-html",
+          "file": "app/enhance.js",
+          "kind": "replace-insertion",
+          "sites": 1
+        }
+      ]
+    },
+    {
+      "project_id": "booking-vue",
+      "archetype": "booking",
+      "framework": "vue",
+      "framework_family": "vue",
+      "seeded_defects": [
+        "no-required",
+        "no-autofill-address"
+      ],
+      "uplift_applied": [
+        "forms/required-field-feedback",
+        "forms/autofill-address-form"
+      ],
+      "uplift_skipped": [
+        {
+          "rule": "forms/validate-input-after-interaction",
+          "reason": "no eager :invalid styling"
+        },
+        {
+          "rule": "accessibility/accessible-error-announcement",
+          "reason": "already present"
+        },
+        {
+          "rule": "forms/autofill-sign-up-form",
+          "reason": "already present"
+        },
+        {
+          "rule": "security/sanitize-untrusted-html",
+          "reason": "no innerHTML insertion"
+        }
+      ],
+      "uplift_failed": [],
+      "accepted": true,
+      "category": "accepted",
+      "improved_rules": [
+        "forms/required-field-feedback",
+        "accessibility/accessible-error-announcement",
+        "forms/autofill-address-form"
+      ],
+      "regressed_rules": [],
+      "new_security_findings": [],
+      "detail": [
+        "improved forms/required-field-feedback, accessibility/accessible-error-announcement, forms/autofill-address-form"
+      ],
+      "validation_observation": "refused",
+      "original_sha": "sha256:f73fd1481973fdb68facefad97479de3a548124bd1952329d479b18d278f35a8",
+      "uplifted_sha": "sha256:7c0e554c90bc525d459406e962232d88dd8903e6b9e63c222cba720fc7c9d67d",
+      "uplift_edits": [
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "required",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "aria-errormessage",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "required",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "aria-errormessage",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "required",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "aria-errormessage",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "required",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "aria-errormessage",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "required",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "aria-errormessage",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "insert-markup",
+          "blocks": 5
+        },
+        {
+          "rule": "forms/autofill-address-form",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "autocomplete",
+          "elements": 1
+        },
+        {
+          "rule": "forms/autofill-address-form",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "autocomplete",
+          "elements": 1
+        }
+      ]
+    },
+    {
+      "project_id": "catalogue-hono",
+      "archetype": "catalogue",
+      "framework": "hono",
+      "framework_family": "hono",
+      "seeded_defects": [
+        "no-required",
+        "xss-innerhtml"
+      ],
+      "uplift_applied": [
+        "forms/required-field-feedback",
+        "security/sanitize-untrusted-html"
+      ],
+      "uplift_skipped": [
+        {
+          "rule": "forms/validate-input-after-interaction",
+          "reason": "no eager :invalid styling"
+        },
+        {
+          "rule": "accessibility/accessible-error-announcement",
+          "reason": "already present"
+        },
+        {
+          "rule": "forms/autofill-sign-up-form",
+          "reason": "already present"
+        },
+        {
+          "rule": "forms/autofill-address-form",
+          "reason": "already present"
+        }
+      ],
+      "uplift_failed": [],
+      "accepted": true,
+      "category": "accepted",
+      "improved_rules": [
+        "forms/required-field-feedback",
+        "accessibility/accessible-error-announcement",
+        "security/sanitize-untrusted-html"
+      ],
+      "regressed_rules": [],
+      "new_security_findings": [],
+      "detail": [
+        "improved forms/required-field-feedback, accessibility/accessible-error-announcement, security/sanitize-untrusted-html"
+      ],
+      "validation_observation": "accepted-empty",
+      "original_sha": "sha256:9910a38bb2d93221e395903096de5aafca1c26e15e55668c891da09068337ae5",
+      "uplifted_sha": "sha256:59b1f0c7a9d3eb91faf0db1354dc8ff58e3ffd2869bc259cf23a31b416ba9911",
+      "uplift_edits": [
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "required",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "aria-errormessage",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "insert-markup",
+          "blocks": 1
+        },
+        {
+          "rule": "security/sanitize-untrusted-html",
+          "file": "app/enhance.js",
+          "kind": "replace-insertion",
+          "sites": 1
+        }
+      ]
+    },
+    {
+      "project_id": "catalogue-preact",
+      "archetype": "catalogue",
+      "framework": "preact",
+      "framework_family": "react-family",
+      "seeded_defects": [
+        "eager-invalid"
+      ],
+      "uplift_applied": [
+        "forms/validate-input-after-interaction"
+      ],
+      "uplift_skipped": [
+        {
+          "rule": "forms/required-field-feedback",
+          "reason": "already present"
+        },
+        {
+          "rule": "accessibility/accessible-error-announcement",
+          "reason": "already present"
+        },
+        {
+          "rule": "forms/autofill-sign-up-form",
+          "reason": "already present"
+        },
+        {
+          "rule": "forms/autofill-address-form",
+          "reason": "already present"
+        },
+        {
+          "rule": "security/sanitize-untrusted-html",
+          "reason": "no innerHTML insertion"
+        }
+      ],
+      "uplift_failed": [],
+      "accepted": true,
+      "category": "accepted",
+      "improved_rules": [
+        "forms/validate-input-after-interaction"
+      ],
+      "regressed_rules": [],
+      "new_security_findings": [],
+      "detail": [
+        "improved forms/validate-input-after-interaction"
+      ],
+      "validation_observation": "refused",
+      "original_sha": "sha256:38b31ed810eee7323afa73cd51333bd280b12268c124bae116cdf4db4bda0e51",
+      "uplifted_sha": "sha256:ab8eca47c0535aa82db9393ad1a77033c795bc65f190ec7557ddea3f7fb8a0ec",
+      "uplift_edits": [
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/styles.css",
+          "kind": "append-css"
+        },
+        {
+          "rule": "forms/validate-input-after-interaction",
+          "file": "app/styles.css",
+          "kind": "replace-selector"
+        }
+      ]
+    },
+    {
+      "project_id": "catalogue-raw",
+      "archetype": "catalogue",
+      "framework": "raw",
+      "framework_family": "raw-web-platform",
+      "seeded_defects": [
+        "xss-innerhtml"
+      ],
+      "uplift_applied": [
+        "security/sanitize-untrusted-html"
+      ],
+      "uplift_skipped": [
+        {
+          "rule": "forms/required-field-feedback",
+          "reason": "already present"
+        },
+        {
+          "rule": "forms/validate-input-after-interaction",
+          "reason": "no eager :invalid styling"
+        },
+        {
+          "rule": "accessibility/accessible-error-announcement",
+          "reason": "already present"
+        },
+        {
+          "rule": "forms/autofill-sign-up-form",
+          "reason": "already present"
+        },
+        {
+          "rule": "forms/autofill-address-form",
+          "reason": "already present"
+        }
+      ],
+      "uplift_failed": [],
+      "accepted": true,
+      "category": "accepted",
+      "improved_rules": [
+        "security/sanitize-untrusted-html"
+      ],
+      "regressed_rules": [],
+      "new_security_findings": [],
+      "detail": [
+        "improved security/sanitize-untrusted-html"
+      ],
+      "validation_observation": "refused",
+      "original_sha": "sha256:2cf478aa05c82e9a696764561a9b89a70fa7eb9200c3cc2130d4a7ffbe4ce1af",
+      "uplifted_sha": "sha256:6d7107b6b8638615a8911e8acac6b49d5065ab338bbd98a09b8cf6ec5e122fff",
+      "uplift_edits": [
+        {
+          "rule": "security/sanitize-untrusted-html",
+          "file": "app/enhance.js",
+          "kind": "replace-insertion",
+          "sites": 1
+        }
+      ]
+    },
+    {
+      "project_id": "catalogue-react",
+      "archetype": "catalogue",
+      "framework": "react",
+      "framework_family": "react",
+      "seeded_defects": [
+        "no-required",
+        "xss-innerhtml"
+      ],
+      "uplift_applied": [
+        "forms/required-field-feedback",
+        "security/sanitize-untrusted-html"
+      ],
+      "uplift_skipped": [
+        {
+          "rule": "forms/validate-input-after-interaction",
+          "reason": "no eager :invalid styling"
+        },
+        {
+          "rule": "accessibility/accessible-error-announcement",
+          "reason": "already present"
+        },
+        {
+          "rule": "forms/autofill-sign-up-form",
+          "reason": "already present"
+        },
+        {
+          "rule": "forms/autofill-address-form",
+          "reason": "already present"
+        }
+      ],
+      "uplift_failed": [],
+      "accepted": true,
+      "category": "accepted",
+      "improved_rules": [
+        "forms/required-field-feedback",
+        "accessibility/accessible-error-announcement",
+        "security/sanitize-untrusted-html"
+      ],
+      "regressed_rules": [],
+      "new_security_findings": [],
+      "detail": [
+        "improved forms/required-field-feedback, accessibility/accessible-error-announcement, security/sanitize-untrusted-html"
+      ],
+      "validation_observation": "accepted-empty",
+      "original_sha": "sha256:b559566534e8c6d4acdaaa5e3a42c2c122237d264429311c6347afe423832811",
+      "uplifted_sha": "sha256:5b2d5993fe8b3e9bd7a1a16979f507cd6c2dc1a2b102fcb40e5551ab15e520f1",
+      "uplift_edits": [
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "required",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "aria-errormessage",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "insert-markup",
+          "blocks": 1
+        },
+        {
+          "rule": "security/sanitize-untrusted-html",
+          "file": "app/enhance.js",
+          "kind": "replace-insertion",
+          "sites": 1
+        }
+      ]
+    },
+    {
+      "project_id": "catalogue-vue",
+      "archetype": "catalogue",
+      "framework": "vue",
+      "framework_family": "vue",
+      "seeded_defects": [],
+      "uplift_applied": [],
+      "uplift_skipped": [
+        {
+          "rule": "forms/required-field-feedback",
+          "reason": "already present"
+        },
+        {
+          "rule": "forms/validate-input-after-interaction",
+          "reason": "no eager :invalid styling"
+        },
+        {
+          "rule": "accessibility/accessible-error-announcement",
+          "reason": "already present"
+        },
+        {
+          "rule": "forms/autofill-sign-up-form",
+          "reason": "already present"
+        },
+        {
+          "rule": "forms/autofill-address-form",
+          "reason": "already present"
+        },
+        {
+          "rule": "security/sanitize-untrusted-html",
+          "reason": "no innerHTML insertion"
+        }
+      ],
+      "uplift_failed": [],
+      "accepted": false,
+      "category": "no-warranted-change",
+      "improved_rules": [],
+      "regressed_rules": [],
+      "new_security_findings": [],
+      "detail": [
+        "the original already satisfied every measured property"
+      ],
+      "validation_observation": "refused",
+      "original_sha": "sha256:2e5c278fdf0ddfc84e4708f44da20535df61057473af573be86f11db2af5de4a",
+      "uplifted_sha": "sha256:2e5c278fdf0ddfc84e4708f44da20535df61057473af573be86f11db2af5de4a",
+      "uplift_edits": []
+    },
+    {
+      "project_id": "contact-lead-hono",
+      "archetype": "contact-lead",
+      "framework": "hono",
+      "framework_family": "hono",
+      "seeded_defects": [
+        "no-required",
+        "eager-invalid",
+        "xss-innerhtml"
+      ],
+      "uplift_applied": [
+        "forms/required-field-feedback",
+        "forms/validate-input-after-interaction",
+        "security/sanitize-untrusted-html"
+      ],
+      "uplift_skipped": [
+        {
+          "rule": "accessibility/accessible-error-announcement",
+          "reason": "already present"
+        },
+        {
+          "rule": "forms/autofill-sign-up-form",
+          "reason": "already present"
+        },
+        {
+          "rule": "forms/autofill-address-form",
+          "reason": "already present"
+        }
+      ],
+      "uplift_failed": [],
+      "accepted": true,
+      "category": "accepted",
+      "improved_rules": [
+        "forms/required-field-feedback",
+        "accessibility/accessible-error-announcement",
+        "forms/validate-input-after-interaction",
+        "security/sanitize-untrusted-html"
+      ],
+      "regressed_rules": [],
+      "new_security_findings": [],
+      "detail": [
+        "improved forms/required-field-feedback, accessibility/accessible-error-announcement, forms/validate-input-after-interaction, security/sanitize-untrusted-html"
+      ],
+      "validation_observation": "refused",
+      "original_sha": "sha256:12f35942bc13b95e68134161d3bd409ae7ead4da9427ff2b2acfa2ef892c1122",
+      "uplifted_sha": "sha256:51d01a827f42de55aea85466254ddcefd8b353e8f18524e7479c9d189ca6b6b1",
+      "uplift_edits": [
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "required",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "aria-errormessage",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "required",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "aria-errormessage",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "required",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "aria-errormessage",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/styles.css",
+          "kind": "append-css"
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "insert-markup",
+          "blocks": 3
+        },
+        {
+          "rule": "forms/validate-input-after-interaction",
+          "file": "app/styles.css",
+          "kind": "replace-selector"
+        },
+        {
+          "rule": "security/sanitize-untrusted-html",
+          "file": "app/enhance.js",
+          "kind": "replace-insertion",
+          "sites": 1
+        }
+      ]
+    },
+    {
+      "project_id": "contact-lead-preact",
+      "archetype": "contact-lead",
+      "framework": "preact",
+      "framework_family": "react-family",
+      "seeded_defects": [
+        "no-required",
+        "no-aria-sync"
+      ],
+      "uplift_applied": [
+        "forms/required-field-feedback",
+        "accessibility/accessible-error-announcement"
+      ],
+      "uplift_skipped": [
+        {
+          "rule": "forms/validate-input-after-interaction",
+          "reason": "no eager :invalid styling"
+        },
+        {
+          "rule": "forms/autofill-sign-up-form",
+          "reason": "already present"
+        },
+        {
+          "rule": "forms/autofill-address-form",
+          "reason": "already present"
+        },
+        {
+          "rule": "security/sanitize-untrusted-html",
+          "reason": "no innerHTML insertion"
+        }
+      ],
+      "uplift_failed": [],
+      "accepted": true,
+      "category": "accepted",
+      "improved_rules": [
+        "forms/required-field-feedback",
+        "accessibility/accessible-error-announcement"
+      ],
+      "regressed_rules": [],
+      "new_security_findings": [],
+      "detail": [
+        "improved forms/required-field-feedback, accessibility/accessible-error-announcement"
+      ],
+      "validation_observation": "refused",
+      "original_sha": "sha256:8ee65ef7ab4638ad7b3f172b4113c624954e08e623e0b41285c2942d9f7bad4c",
+      "uplifted_sha": "sha256:bfd36016feaae3536d90d82b8742cffc516aa605f5d37200375a251181fa2d4c",
+      "uplift_edits": [
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "required",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "aria-errormessage",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "required",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "aria-errormessage",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "required",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "aria-errormessage",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "insert-markup",
+          "blocks": 3
+        },
+        {
+          "rule": "accessibility/accessible-error-announcement",
+          "file": "app/enhance.js",
+          "kind": "append-js"
+        },
+        {
+          "rule": "accessibility/accessible-error-announcement",
+          "file": "app/page.mjs",
+          "kind": "replace"
+        }
+      ]
+    },
+    {
+      "project_id": "contact-lead-raw",
+      "archetype": "contact-lead",
+      "framework": "raw",
+      "framework_family": "raw-web-platform",
+      "seeded_defects": [
+        "no-required",
+        "eager-invalid",
+        "no-aria-sync",
+        "xss-innerhtml"
+      ],
+      "uplift_applied": [
+        "forms/required-field-feedback",
+        "forms/validate-input-after-interaction",
+        "accessibility/accessible-error-announcement",
+        "security/sanitize-untrusted-html"
+      ],
+      "uplift_skipped": [
+        {
+          "rule": "forms/autofill-sign-up-form",
+          "reason": "already present"
+        },
+        {
+          "rule": "forms/autofill-address-form",
+          "reason": "already present"
+        }
+      ],
+      "uplift_failed": [],
+      "accepted": true,
+      "category": "accepted",
+      "improved_rules": [
+        "forms/required-field-feedback",
+        "accessibility/accessible-error-announcement",
+        "forms/validate-input-after-interaction",
+        "security/sanitize-untrusted-html"
+      ],
+      "regressed_rules": [],
+      "new_security_findings": [],
+      "detail": [
+        "improved forms/required-field-feedback, accessibility/accessible-error-announcement, forms/validate-input-after-interaction, security/sanitize-untrusted-html"
+      ],
+      "validation_observation": "refused",
+      "original_sha": "sha256:d29d80b5903e86748e2a4867ff1b63a559531d90c9d33f25a29005ce6e2deb1b",
+      "uplifted_sha": "sha256:2a979bf07da5639678ea7a632ce2cf9e02b5f48ca4d70d5f8a99043a3c0fd0f8",
+      "uplift_edits": [
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "required",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "aria-errormessage",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "required",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "aria-errormessage",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "required",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "aria-errormessage",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/styles.css",
+          "kind": "append-css"
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "insert-markup",
+          "blocks": 3
+        },
+        {
+          "rule": "forms/validate-input-after-interaction",
+          "file": "app/styles.css",
+          "kind": "replace-selector"
+        },
+        {
+          "rule": "accessibility/accessible-error-announcement",
+          "file": "app/enhance.js",
+          "kind": "append-js"
+        },
+        {
+          "rule": "accessibility/accessible-error-announcement",
+          "file": "app/page.mjs",
+          "kind": "replace"
+        },
+        {
+          "rule": "security/sanitize-untrusted-html",
+          "file": "app/enhance.js",
+          "kind": "replace-insertion",
+          "sites": 1
+        }
+      ]
+    },
+    {
+      "project_id": "contact-lead-react",
+      "archetype": "contact-lead",
+      "framework": "react",
+      "framework_family": "react",
+      "seeded_defects": [
+        "eager-invalid",
+        "xss-innerhtml"
+      ],
+      "uplift_applied": [
+        "forms/validate-input-after-interaction",
+        "security/sanitize-untrusted-html"
+      ],
+      "uplift_skipped": [
+        {
+          "rule": "forms/required-field-feedback",
+          "reason": "already present"
+        },
+        {
+          "rule": "accessibility/accessible-error-announcement",
+          "reason": "already present"
+        },
+        {
+          "rule": "forms/autofill-sign-up-form",
+          "reason": "already present"
+        },
+        {
+          "rule": "forms/autofill-address-form",
+          "reason": "already present"
+        }
+      ],
+      "uplift_failed": [],
+      "accepted": true,
+      "category": "accepted",
+      "improved_rules": [
+        "forms/validate-input-after-interaction",
+        "security/sanitize-untrusted-html"
+      ],
+      "regressed_rules": [],
+      "new_security_findings": [],
+      "detail": [
+        "improved forms/validate-input-after-interaction, security/sanitize-untrusted-html"
+      ],
+      "validation_observation": "refused",
+      "original_sha": "sha256:ea18d41282cbc706826bf0716b1e395e0a4b11672a009e48bc26d8f73c3e7249",
+      "uplifted_sha": "sha256:6173dd1d9c72a3f43510f2c104a081fc691ea2b03bf03d29207af56c6eba37e5",
+      "uplift_edits": [
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/styles.css",
+          "kind": "append-css"
+        },
+        {
+          "rule": "forms/validate-input-after-interaction",
+          "file": "app/styles.css",
+          "kind": "replace-selector"
+        },
+        {
+          "rule": "security/sanitize-untrusted-html",
+          "file": "app/enhance.js",
+          "kind": "replace-insertion",
+          "sites": 1
+        }
+      ]
+    },
+    {
+      "project_id": "contact-lead-vue",
+      "archetype": "contact-lead",
+      "framework": "vue",
+      "framework_family": "vue",
+      "seeded_defects": [
+        "eager-invalid",
+        "no-aria-sync",
+        "xss-innerhtml"
+      ],
+      "uplift_applied": [
+        "forms/validate-input-after-interaction",
+        "accessibility/accessible-error-announcement",
+        "security/sanitize-untrusted-html"
+      ],
+      "uplift_skipped": [
+        {
+          "rule": "forms/required-field-feedback",
+          "reason": "already present"
+        },
+        {
+          "rule": "forms/autofill-sign-up-form",
+          "reason": "already present"
+        },
+        {
+          "rule": "forms/autofill-address-form",
+          "reason": "already present"
+        }
+      ],
+      "uplift_failed": [],
+      "accepted": true,
+      "category": "accepted",
+      "improved_rules": [
+        "accessibility/accessible-error-announcement",
+        "forms/validate-input-after-interaction",
+        "security/sanitize-untrusted-html"
+      ],
+      "regressed_rules": [],
+      "new_security_findings": [],
+      "detail": [
+        "improved accessibility/accessible-error-announcement, forms/validate-input-after-interaction, security/sanitize-untrusted-html"
+      ],
+      "validation_observation": "refused",
+      "original_sha": "sha256:cbd7a5a2461a4c3989aedf2cca2ee6ea2a4f6278afca2140c952b373e85ed6b6",
+      "uplifted_sha": "sha256:a228c8bf04cb6b826561e94a7227a11e156189d54584809c1f02d3d91cd8ae3d",
+      "uplift_edits": [
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/styles.css",
+          "kind": "append-css"
+        },
+        {
+          "rule": "forms/validate-input-after-interaction",
+          "file": "app/styles.css",
+          "kind": "replace-selector"
+        },
+        {
+          "rule": "accessibility/accessible-error-announcement",
+          "file": "app/enhance.js",
+          "kind": "append-js"
+        },
+        {
+          "rule": "accessibility/accessible-error-announcement",
+          "file": "app/page.mjs",
+          "kind": "replace"
+        },
+        {
+          "rule": "security/sanitize-untrusted-html",
+          "file": "app/enhance.js",
+          "kind": "replace-insertion",
+          "sites": 1
+        }
+      ]
+    },
+    {
+      "project_id": "event-registration-hono",
+      "archetype": "event-registration",
+      "framework": "hono",
+      "framework_family": "hono",
+      "seeded_defects": [
+        "eager-invalid",
+        "no-aria-sync",
+        "no-autofill-address"
+      ],
+      "uplift_applied": [
+        "forms/validate-input-after-interaction",
+        "accessibility/accessible-error-announcement"
+      ],
+      "uplift_skipped": [
+        {
+          "rule": "forms/required-field-feedback",
+          "reason": "already present"
+        },
+        {
+          "rule": "forms/autofill-sign-up-form",
+          "reason": "already present"
+        },
+        {
+          "rule": "forms/autofill-address-form",
+          "reason": "already present"
+        },
+        {
+          "rule": "security/sanitize-untrusted-html",
+          "reason": "no innerHTML insertion"
+        }
+      ],
+      "uplift_failed": [],
+      "accepted": true,
+      "category": "accepted",
+      "improved_rules": [
+        "accessibility/accessible-error-announcement",
+        "forms/validate-input-after-interaction"
+      ],
+      "regressed_rules": [],
+      "new_security_findings": [],
+      "detail": [
+        "improved accessibility/accessible-error-announcement, forms/validate-input-after-interaction"
+      ],
+      "validation_observation": "refused",
+      "original_sha": "sha256:16531aadd6e0c5b8731bf66bbe878515d519fc13c1f18206898199f0ebb67af6",
+      "uplifted_sha": "sha256:da294413f5bb31cff3a1b5aa079fc93c396ad1906d60e9a3c19ac4873906e3d7",
+      "uplift_edits": [
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/styles.css",
+          "kind": "append-css"
+        },
+        {
+          "rule": "forms/validate-input-after-interaction",
+          "file": "app/styles.css",
+          "kind": "replace-selector"
+        },
+        {
+          "rule": "accessibility/accessible-error-announcement",
+          "file": "app/enhance.js",
+          "kind": "append-js"
+        },
+        {
+          "rule": "accessibility/accessible-error-announcement",
+          "file": "app/page.mjs",
+          "kind": "replace"
+        }
+      ]
+    },
+    {
+      "project_id": "event-registration-preact",
+      "archetype": "event-registration",
+      "framework": "preact",
+      "framework_family": "react-family",
+      "seeded_defects": [
+        "no-required",
+        "xss-innerhtml"
+      ],
+      "uplift_applied": [
+        "forms/required-field-feedback",
+        "security/sanitize-untrusted-html"
+      ],
+      "uplift_skipped": [
+        {
+          "rule": "forms/validate-input-after-interaction",
+          "reason": "no eager :invalid styling"
+        },
+        {
+          "rule": "accessibility/accessible-error-announcement",
+          "reason": "already present"
+        },
+        {
+          "rule": "forms/autofill-sign-up-form",
+          "reason": "already present"
+        },
+        {
+          "rule": "forms/autofill-address-form",
+          "reason": "already present"
+        }
+      ],
+      "uplift_failed": [],
+      "accepted": true,
+      "category": "accepted",
+      "improved_rules": [
+        "forms/required-field-feedback",
+        "accessibility/accessible-error-announcement",
+        "security/sanitize-untrusted-html"
+      ],
+      "regressed_rules": [],
+      "new_security_findings": [],
+      "detail": [
+        "improved forms/required-field-feedback, accessibility/accessible-error-announcement, security/sanitize-untrusted-html"
+      ],
+      "validation_observation": "refused",
+      "original_sha": "sha256:628a60fb05898b33ca1268b2cbcc23f55e141cabbce3a0901abf9f203415172f",
+      "uplifted_sha": "sha256:960547b5bf93875b26b6d945c8eb1c9e54755c3fc8efb3a1e96176d8d5ad8101",
+      "uplift_edits": [
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "required",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "aria-errormessage",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "required",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "aria-errormessage",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "insert-markup",
+          "blocks": 2
+        },
+        {
+          "rule": "security/sanitize-untrusted-html",
+          "file": "app/enhance.js",
+          "kind": "replace-insertion",
+          "sites": 1
+        }
+      ]
+    },
+    {
+      "project_id": "event-registration-raw",
+      "archetype": "event-registration",
+      "framework": "raw",
+      "framework_family": "raw-web-platform",
+      "seeded_defects": [
+        "no-required",
+        "eager-invalid",
+        "xss-innerhtml"
+      ],
+      "uplift_applied": [
+        "forms/required-field-feedback",
+        "forms/validate-input-after-interaction",
+        "security/sanitize-untrusted-html"
+      ],
+      "uplift_skipped": [
+        {
+          "rule": "accessibility/accessible-error-announcement",
+          "reason": "already present"
+        },
+        {
+          "rule": "forms/autofill-sign-up-form",
+          "reason": "already present"
+        },
+        {
+          "rule": "forms/autofill-address-form",
+          "reason": "already present"
+        }
+      ],
+      "uplift_failed": [],
+      "accepted": true,
+      "category": "accepted",
+      "improved_rules": [
+        "forms/required-field-feedback",
+        "accessibility/accessible-error-announcement",
+        "forms/validate-input-after-interaction",
+        "security/sanitize-untrusted-html"
+      ],
+      "regressed_rules": [],
+      "new_security_findings": [],
+      "detail": [
+        "improved forms/required-field-feedback, accessibility/accessible-error-announcement, forms/validate-input-after-interaction, security/sanitize-untrusted-html"
+      ],
+      "validation_observation": "refused",
+      "original_sha": "sha256:6843d5b3a4e296b2163f358ed838500d3153bd159627093e4bc37cce07ad15e0",
+      "uplifted_sha": "sha256:e3640972bc6e3cb666653403189c2ee71d90014afd8ce2584f4c0fcc1fcee35f",
+      "uplift_edits": [
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "required",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "aria-errormessage",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "required",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "aria-errormessage",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/styles.css",
+          "kind": "append-css"
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "insert-markup",
+          "blocks": 2
+        },
+        {
+          "rule": "forms/validate-input-after-interaction",
+          "file": "app/styles.css",
+          "kind": "replace-selector"
+        },
+        {
+          "rule": "security/sanitize-untrusted-html",
+          "file": "app/enhance.js",
+          "kind": "replace-insertion",
+          "sites": 1
+        }
+      ]
+    },
+    {
+      "project_id": "event-registration-react",
+      "archetype": "event-registration",
+      "framework": "react",
+      "framework_family": "react",
+      "seeded_defects": [
+        "no-aria-sync",
+        "xss-innerhtml"
+      ],
+      "uplift_applied": [
+        "accessibility/accessible-error-announcement",
+        "security/sanitize-untrusted-html"
+      ],
+      "uplift_skipped": [
+        {
+          "rule": "forms/required-field-feedback",
+          "reason": "already present"
+        },
+        {
+          "rule": "forms/validate-input-after-interaction",
+          "reason": "no eager :invalid styling"
+        },
+        {
+          "rule": "forms/autofill-sign-up-form",
+          "reason": "already present"
+        },
+        {
+          "rule": "forms/autofill-address-form",
+          "reason": "already present"
+        }
+      ],
+      "uplift_failed": [],
+      "accepted": true,
+      "category": "accepted",
+      "improved_rules": [
+        "accessibility/accessible-error-announcement",
+        "security/sanitize-untrusted-html"
+      ],
+      "regressed_rules": [],
+      "new_security_findings": [],
+      "detail": [
+        "improved accessibility/accessible-error-announcement, security/sanitize-untrusted-html"
+      ],
+      "validation_observation": "refused",
+      "original_sha": "sha256:2a22e7f166acda6222364d667ac70c5488255609403c2cd74b04ba105f071fa6",
+      "uplifted_sha": "sha256:ee9598924c7ca6e9e6c30f8fb2bd192eba132ead18341b8408badc55100a69b9",
+      "uplift_edits": [
+        {
+          "rule": "accessibility/accessible-error-announcement",
+          "file": "app/enhance.js",
+          "kind": "append-js"
+        },
+        {
+          "rule": "accessibility/accessible-error-announcement",
+          "file": "app/page.mjs",
+          "kind": "replace"
+        },
+        {
+          "rule": "security/sanitize-untrusted-html",
+          "file": "app/enhance.js",
+          "kind": "replace-insertion",
+          "sites": 1
+        }
+      ]
+    },
+    {
+      "project_id": "event-registration-vue",
+      "archetype": "event-registration",
+      "framework": "vue",
+      "framework_family": "vue",
+      "seeded_defects": [
+        "no-required",
+        "eager-invalid",
+        "no-aria-sync"
+      ],
+      "uplift_applied": [
+        "forms/required-field-feedback",
+        "forms/validate-input-after-interaction",
+        "accessibility/accessible-error-announcement"
+      ],
+      "uplift_skipped": [
+        {
+          "rule": "forms/autofill-sign-up-form",
+          "reason": "already present"
+        },
+        {
+          "rule": "forms/autofill-address-form",
+          "reason": "already present"
+        },
+        {
+          "rule": "security/sanitize-untrusted-html",
+          "reason": "no innerHTML insertion"
+        }
+      ],
+      "uplift_failed": [],
+      "accepted": true,
+      "category": "accepted",
+      "improved_rules": [
+        "forms/required-field-feedback",
+        "accessibility/accessible-error-announcement",
+        "forms/validate-input-after-interaction"
+      ],
+      "regressed_rules": [],
+      "new_security_findings": [],
+      "detail": [
+        "improved forms/required-field-feedback, accessibility/accessible-error-announcement, forms/validate-input-after-interaction"
+      ],
+      "validation_observation": "refused",
+      "original_sha": "sha256:838246d54e5bd60ebd373e00f3c3de00628deed0644b8041e00c21321b74a54d",
+      "uplifted_sha": "sha256:0f21c142d8b9e23e80a05d6642b9ec7b128bdf0a5283e39844d24a882d341443",
+      "uplift_edits": [
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "required",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "aria-errormessage",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "required",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "attribute",
+          "attribute": "aria-errormessage",
+          "elements": 1
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/styles.css",
+          "kind": "append-css"
+        },
+        {
+          "rule": "forms/required-field-feedback",
+          "file": "app/page.mjs",
+          "kind": "insert-markup",
+          "blocks": 2
+        },
+        {
+          "rule": "forms/validate-input-after-interaction",
+          "file": "app/styles.css",
+          "kind": "replace-selector"
+        },
+        {
+          "rule": "accessibility/accessible-error-announcement",
+          "file": "app/enhance.js",
+          "kind": "append-js"
+        },
+        {
+          "rule": "accessibility/accessible-error-announcement",
+          "file": "app/page.mjs",
+          "kind": "replace"
+        }
+      ]
+    }
+  ]
+}

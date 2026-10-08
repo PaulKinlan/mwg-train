@@ -158,7 +158,9 @@ partial corpus is not the corpus.
 **24 of 25 pairs accepted (96.0%)**, measured on 2026-10-08 in 154s, one Chrome, one project at a
 time. The full report is [YIELD.md](YIELD.md); the per-project hashes, applied rules and verdicts are
 in `pilot/CORPUS.json`, which `npm run check:pilot-corpus` re-derives from `pilot/plan.json` and the
-uplift tool.
+uplift tool. The run's own decisions — every verdict, the rules each pair improved, the tree hashes and
+each original's empty-submission observation — are committed as [yield.json](yield.json), so the numbers
+above can be checked from the repository rather than taken on trust.
 
 | Category | Count |
 | --- | --- |
