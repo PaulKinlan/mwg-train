@@ -9,7 +9,9 @@
  * The briefs manifest (`docs/train/briefs/manifest.jsonl`) is the source of truth for the tr-* corpus.
  * Each family maps to a training archetype by its `archetype` field (looked up in
  * pilot/training-archetypes.mjs, NOT the pilot table), and the family's own `topic`/`routes` relabel the
- * concrete archetype's title, story, and routes; the fields and journey stay the archetype's. Every family
+ * concrete archetype's title, story, and routes. The family's `fields` and `journey` - authored in the
+ * brief - are what the form renders and what the harness drives, so the archetype supplies the server
+ * shape around the form rather than the form itself. Every family
  * is then built across the seven rendering frameworks in pilot/frameworks.mjs via the same
  * `buildProjectFor` the pilot uses.
  *
@@ -25,6 +27,7 @@ import process from 'node:process';
 
 import { buildProjectFor, FRAMEWORKS } from '../pilot/frameworks.mjs';
 import { TRAINING_ARCHETYPES } from '../pilot/training-archetypes.mjs';
+import { builderFields, echoFieldFor, validateBriefSchema } from '../src/train/brief-schema.mjs';
 import { hashTree } from '../src/corpus/harness.mjs';
 
 const FRAMEWORK_NAMES = Object.keys(FRAMEWORKS);
@@ -243,6 +246,21 @@ function familyArchetype(family, base) {
     story: `${capitalize(family.topic)}: a server-backed flow that stores each submission and shows it back on reload.`,
   };
   if (!base.session) overrides.routes = deriveRoutes(family, base);
+  // A brief that carries its own schema supplies the form and the journey, so the
+  // project renders what the brief describes rather than the archetype's form under a
+  // different title. Without one, the family keeps the archetype's fields and journey.
+  if (family.fields && family.journey) {
+    // The server decides its required set as
+    // `fields.filter(f => f.type !== 'select' && !f.optional)` (pilot/frameworks.mjs), while a
+    // brief states requiredness as `required`. Without this translation every non-select field is
+    // server-required no matter what the brief says, so a brief that marks a field optional would
+    // render a form that agrees with it and a server that 422s the same POST - the form and the
+    // server would disagree about the same field. tr-27 was rejected `original-not-runnable` for
+    // exactly this: the journey filled its fields, but the server still demanded `phone`.
+    overrides.fields = builderFields(family.fields);
+    overrides.journey = family.journey;
+    overrides.echo = { ...base.echo, field: echoFieldFor(family.fields) };
+  }
   return { ...base, ...overrides };
 }
 
@@ -302,6 +320,18 @@ function main() {
       process.exit(2);
     }
     if (!/^tr-\d{2}$/.test(family.family_id)) badFamilies.push(family.family_id);
+    // A brief carrying its own schema must have one that builds: authoring a form whose
+    // journey types into fields the brief does not declare would produce a project that
+    // looks brief-faithful while exercising the wrong form, so it is refused here.
+    if (family.fields || family.journey) {
+      const schemaFindings = validateBriefSchema(family);
+      if (schemaFindings.length > 0) {
+        for (const finding of schemaFindings) {
+          console.error(`scaffold-training-corpus: ${finding.brief_id} ${finding.at}: ${finding.problem}`);
+        }
+        process.exit(2);
+      }
+    }
     const archetype = familyArchetype(family, base);
     const { injected, unrepresentable, notes } = defectsForFamily(family);
     const emittedWriteRoute = archetype.routes.find((route) => route.method === 'POST' && route.kind.startsWith('write'))?.path ?? null;
@@ -331,6 +361,8 @@ function main() {
         route_conformed: routeConformed,
         brief_write_route: briefWriteRoute,
         emitted_write_route: emittedWriteRoute,
+        schema_source: family.fields ? 'brief' : 'archetype',
+        fields: archetype.fields,
         topic: family.topic,
         routes: family.routes,
         tree_sha: treeSha,

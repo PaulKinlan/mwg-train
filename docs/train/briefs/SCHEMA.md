@@ -2,7 +2,7 @@
 
 The training briefs (`docs/train/briefs/manifest.jsonl`) specify the synthetic project requirements used to train student models.
 
-**What the briefs do and do not drive.** The scaffolded corpus projects are generated from each brief's `archetype`, `topic` and `routes` - NOT from its `fields`, `journeys` or `assertions`. A generated project is therefore an archetype template relabelled to the brief's topic, not a brief-faithful implementation: the form fields and the journey come from the archetype. See `docs/train/corpus/README.md` for the worked example.
+**What the briefs drive, and what they do not.** Each corpus project's form controls come from its own brief's `fields`, and the journey the harness drives is that brief's `journey` - authored from the brief's `topic`, `prompt`, `journeys` and `assertions`. All 30 families declare theirs (`npm run check:brief-schema -- --expect-all`), and every project records `schema_source: "brief"`. The `archetype` still supplies the server shape - how a record is stored and read back - so the archetype decides the plumbing, not the form. Declaring a schema is NOT the same as implementing the brief: the journey is a single generic submit-and-read-back, so it never drives a `select`, never spans two pages, and never updates an existing record, and 5 of 30 families do not emit every route their brief lists. See `docs/train/corpus/README.md` for what that does and does not establish.
 
 > **Deliberately NOT the sealed evaluation schema:**
 > This schema is deliberately distinct from the held-out evaluation schema in `docs/eval/briefs/SCHEMA.md`.
@@ -35,6 +35,40 @@ One JSON object per line in JSONL format.
 | `required_rules` | string[] | Required rule subset from `applicable_rules` (2 to 4 entries). |
 | `non_goals` | string[] | Explicitly out-of-scope capabilities. |
 | `seeded_defects` | string[] | Planted defects to repair; empty array `[]` for `generate`, non-empty for `repair`. |
+| `fields` | object[] | The form controls the brief's flow needs, authored from its own `topic`, `prompt`, `journeys` and `assertions`. Optional: a family without one is scaffolded from its archetype's form instead. |
+| `journey` | object | The journey the harness drives through that form. Optional, and required in practice whenever `fields` is present. |
+
+### `fields` and `journey`
+
+A family that declares `fields` and `journey` gets a project built from ITS brief, rather than
+wearing an archetype's form under a different title. Without them a generated project is an
+archetype template: the fields and journey belong to the archetype (`booking`, `web-shop`, ...), so
+a coffee-subscription brief would render whatever form that archetype happens to have.
+
+| `fields[]` | Type | Description |
+| --- | --- | --- |
+| `slug` | string | Identifier; normally the same as `name`. |
+| `name` | string | The control's `name` attribute. Unique within the form. |
+| `type` | enum | One of `text`, `tel`, `email`, `date`, `time`, `number`, `select`, `search`, `textarea`. |
+| `label` | string | Human-readable label. |
+| `required` | boolean | Must be stated explicitly, never implied by absence. |
+| `autocomplete` | string \| null | Optional autofill token (`name`, `tel`, `email`, `street-address`, ...). |
+| `options` | string[] | Required for a `select` (at least two); refused on any other type. |
+| `echoed` | boolean | Optional. On exactly one text or textarea field: the field the read page shows the saved record back through. |
+
+| `journey` | Type | Description |
+| --- | --- | --- |
+| `startPath` | string | Absolute path serving the form, normally `/`. |
+| `formSelector` | string | `form#<id>`; the builder derives the form id from it. |
+| `fill` | object | Map of `input[name=x]` / `textarea[name=x]` selector to the value typed in. A `<select>` must not appear here: the browser driver cannot type into one, and selects take their first option. |
+| `expectText` | string | Text asserted on the read page; must be exactly the value typed into the echoed field. |
+
+Both variants of a family must carry identical `fields` and `journey` - they are the same brief
+at two frameworks, so a form that differed between them would make the pair comparison meaningless.
+`node scripts/set-brief-schema.mjs <patch.json>` writes them to both variants, validating the whole
+patch before writing anything, and `npm run check:brief-schema` reports which families are still
+riding the archetype's form. The rules above are enforced by `src/train/brief-schema.mjs`, which
+the scaffold also applies at build time, so a brief cannot validate here and fail to build.
 
 ## Invariants and Integrity Rules
 

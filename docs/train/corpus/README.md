@@ -2,12 +2,13 @@
 
 ## What these projects are (and are not)
 
-The `tr-*` corpus is **archetype-template projects with independent targets and verified harness journeys** — not brief-faithful implementations. Concretely:
+The `tr-*` corpus is **brief-authored projects**: each project's form controls are declared in its own brief, and its targets are independent of the evaluation set. All 30 families declare their schema and all 210 projects are built from it (`schema_source: "brief"`). What that does and does not establish:
 
-- **Fields and journey come from the archetype, not the brief.** Each project is scaffolded from its family's **archetype** template (looked up in `pilot/training-archetypes.mjs`); the form fields and the journey are that archetype's, not the brief's. Only the title, story, and routes are relabelled to the brief's topic.
-- **A project does not implement its brief's specific flow.** For example, the `tr-26` brief describes a coffee-subscription renewal, but its generated project is the archetype's generic `web-shop` form with `items`/`collection` fields, and its journey fills those archetype values rather than the brief's subscription fields.
-- **What was verified is the harness journey, not brief conformance.** 40 of the 210 projects were driven in a real browser through the pilot's harness and passed its journeys (see `YIELD.md`); that verifies the harness journeys, not conformance to the briefs.
-- The remaining 170 projects carry the status `scaffolded / unverified journey`; no project has been shown to build or serve beyond those sampled 40.
+- **The form is the brief's.** Each family declares its own `fields` and `journey` in `docs/train/briefs/manifest.jsonl`. The rendered project carries those controls - names and types, labels, requiredness and select options (the spec record holds slug/name/type/autocomplete; the rest is in the rendered source). The `tr-26` brief describes a coffee-subscription renewal and its project has subscription controls (`subscriber`, `beans`, `grind`, `frequency`, `bags`).
+- **The journey is one generic submit-and-read-back, not the brief's full flow.** The harness fills the brief's inputs, submits once, and waits for the echoed value on the read page. It does not exercise `select` controls at all, so `tr-26` never changes grind or frequency even though its brief says to; it does not span more than one page, so `tr-05`'s brief flow (register, log out, log back in) is not driven; and where a brief describes search, filtering, or updating an existing record, the journey still creates a new one. The 40/40 acceptance below is those generic journeys passing on those trees - it is **not** brief-flow conformance.
+- **Routes: 25 of 30 families emit every route their brief lists** (comparing placeholder-insensitively, so `/bookings/:id` matches `/bookings/:ref`). Five do not: `tr-05` is missing `/login` and `/volunteer/profile` - a whole capability its assertions require - and `tr-09`, `tr-12`, `tr-13`, `tr-16` each lack a listing's detail route (`/courses/:id`, `/jobs/:id`, `/docs/:slug`, `/cultivars/:id`). The per-project `route_conformed` field is narrower than it sounds: it compares only the **write** route, so it reads `true` for `tr-05`.
+- **The archetype still supplies the server shape** (`pilot/training-archetypes.mjs`): how a record is stored and read back, and the routes' kinds. The form comes from the brief; the journey driven through it is the generic one described above, not the brief's own flow.
+- **What was verified, and what was not.** 40 of the 210 projects were driven in a real browser through those journeys and passed (see `YIELD.md`). The other 170 carry `scaffolded / unverified journey`, and none has been shown to build or serve beyond the sampled 40. `npm run check:brief-schema -- --expect-all` holds the field-level claim true for all 30 families - that every family declares a buildable schema and its journey fills every non-select field its own brief marks required (a select is exempt because it always submits a value, which is why tr-26's three required selects are never driven) - but no check establishes that a project implements its brief's whole flow.
 - The token figures below are **derived from characters** (`characters / 4`), not tokenizer-measured.
 
 ## Overview
@@ -31,16 +32,23 @@ Recorded in `pilot/TRAINING_CORPUS.json`, spanning 30 synthetic families (`tr-01
 
 | Scope | Original (chars) | Uplifted (chars) | Total (chars) | Derived Tokens | Band (±25%) | Role in Sizing |
 |---|---:|---:|---:|---:|---|---|
-| **`app_sources`** | **2,886,579** | **3,022,814** | **5,909,393** | **1,477,348** | **[1,108,011, 1,846,685]** | **PRIMARY headline figure** |
+| **`app_sources`** | **3,026,754** | **3,174,700** | **6,201,454** | **1,550,364** | **[1,162,773, 1,937,954]** | **PRIMARY headline figure** |
 | `project_manifest` | 26,190 | 26,190 | 52,380 | 13,095 | [9,821, 16,369] | `package.json` dependencies & scripts |
-| `harness_metadata` | 707,706 | 707,706 | 1,415,412 | 353,853 | [265,390, 442,316] | `spec.json` harness metadata (EXCLUDED) |
+| `harness_metadata` | 791,797 | 791,797 | 1,583,594 | 395,899 | [296,924, 494,873] | `spec.json` harness metadata (EXCLUDED) |
 | `prompt` | 0 | 0 | 0 | 0 | [0, 0] | Measured zero (documented gap; see below) |
-| *full_tree (all)* | *3,620,475* | *3,756,710* | *7,377,185* | *1,844,296* | *[1,383,222, 2,305,370]* | *Total on-disk tree for comparison* |
+| *full_tree (all)* | *3,844,741* | *3,992,687* | *7,837,428* | *1,959,357* | *[1,469,518, 2,449,196]* | *Total on-disk tree for comparison* |
 
-- **Headline Characters (`app_sources`):** **5,909,393 characters** (2,886,579 original + 3,022,814 uplifted)
-- **Headline Derived Tokens:** **1,477,348 tokens**
-- **Uncertainty Band:** **[1,108,011, 1,846,685] tokens** (±25% margin)
-- **Epoch Scaling:** 1 epoch = **1,477,348 tokens**; $N$ epochs = $N \times 1,477,348$ tokens.
+- **Headline Characters (`app_sources`):** **6,201,454 characters** (3,026,754 original + 3,174,700 uplifted)
+- **Headline Derived Tokens:** **1,550,364 tokens**
+- **Uncertainty Band:** **[1,162,773, 1,937,954] tokens** (±25% margin)
+- **Epoch Scaling:** 1 epoch = **1,550,364 tokens**; $N$ epochs = $N \times 1,550,364$ tokens.
+
+> **These figures moved twice on 2026-10-08** while all 30 families were re-authored to declare their
+> own form controls (`mwg-train-p3e`). The headline went 1,477,348 → 1,556,588 → **1,550,364**. The
+> middle figure was measured before a fix changed every generated server's required-field list, so it
+> described a corpus that no longer existed; the figure above is the one that reproduces from the
+> committed trees. Any cost projection built from an earlier number is off by up to 5.4% at the
+> headline - still derived from characters, so the ±25% band dominates it.
 
 ---
 
@@ -85,7 +93,7 @@ Token counts are derived using the repository's single canonical derivation func
 > As explicitly stated in `src/eval/cost.mjs`:
 > *"ESTIMATE from characters/4. Replace with an exact count from the training tokenizer before quoting a per-token price."*
 >
-> The spend boundary and preregistration discipline require that any price sheet presented to the owner state its derivation and uncertainty band plainly. An estimate cannot be cited as a measured fact. While these character-derived figures reliably anchor the order of magnitude (~1.48M tokens for `tr-*`, ~237k tokens for pilot), they must be replaced by a token count from the training tokenizer for the pinned base model (e.g. Qwen BPE tokenizer for `Qwen/Qwen2.5-Coder-7B-Instruct` or `Qwen/Qwen3.8-27B`) before treating any per-token price as a committed quote.
+> The spend boundary and preregistration discipline require that any price sheet presented to the owner state its derivation and uncertainty band plainly. An estimate cannot be cited as a measured fact. While these character-derived figures reliably anchor the order of magnitude (~1.55M tokens for `tr-*`, ~237k tokens for pilot), they must be replaced by a token count from the training tokenizer for the pinned base model (e.g. Qwen BPE tokenizer for `Qwen/Qwen2.5-Coder-7B-Instruct` or `Qwen/Qwen3.8-27B`) before treating any per-token price as a committed quote.
 
 ---
 
