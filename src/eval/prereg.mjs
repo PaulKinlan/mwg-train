@@ -10,6 +10,8 @@
  * what the briefs are used for.
  */
 
+import { createHash } from 'node:crypto';
+
 export const BRIEF_ID_PATTERN = /^[a-z0-9][a-z0-9-]{2,63}$/;
 export const SPLITS = Object.freeze(['dev', 'test']);
 export const STRATA = Object.freeze(['A_familiar', 'B_heldout_combination', 'C_out_of_family', 'R_repair']);
@@ -111,7 +113,16 @@ export function ruleIndex(rules) {
   for (const [category, guides] of Object.entries(rules.categories)) {
     for (const guide of guides) ids.add(`${category}/${guide}`);
   }
-  return { ids, hash: rules.rule_set_hash ?? '', skillVersion: rules.skill_version ?? '' };
+  return {
+    ids,
+    hash: rules.rule_set_hash ?? '',
+    skillVersion: rules.skill_version ?? '',
+    // Recompute the vocabulary hash instead of trusting the field beside it. Without this, a rules
+    // file could advertise the pinned hash while containing a vocabulary the pinned snapshot never
+    // had, and the validator would bless any brief that used the invented rule. The recipe is the
+    // one scripts/extract-mwg-rules.mjs uses: sha256 over the sorted `category/guide` ids.
+    computedHash: `sha256:${createHash('sha256').update([...ids].sort().join('\n')).digest('hex')}`,
+  };
 }
 
 function checkField(row, field, spec, findings) {
@@ -150,6 +161,21 @@ export function validateBriefs(rows, index) {
   const findings = [];
   if (!Array.isArray(rows)) {
     return { ok: false, findings: [finding('NOT_AN_ARRAY', 'a brief manifest must be an array of rows')], counts: null };
+  }
+  // An empty manifest satisfies every per-row invariant, so without this check `validate-briefs`
+  // prints PASS on a file with nothing in it. A gate that a blank file passes is not a gate.
+  if (rows.length === 0) {
+    findings.push(finding('EMPTY_MANIFEST', 'the manifest contains no briefs; there is nothing to evaluate', 'manifest'));
+  }
+  if (index && index.hash && index.computedHash && index.hash !== index.computedHash) {
+    findings.push(
+      finding(
+        'RULE_HASH_MISMATCH',
+        `rule_set_hash '${index.hash}' is not the hash of the vocabulary in this file (${index.computedHash}); the briefs are being checked against an unpinned rule set`,
+        'manifest',
+        'rule_set_hash',
+      ),
+    );
   }
 
   const byBriefId = new Map();
@@ -225,6 +251,14 @@ export function validateBriefs(rows, index) {
       if (row.variant_of !== null) {
         if (!ids.has(row.variant_of)) findings.push(finding('BAD_VARIANT_OF', `variant_of '${row.variant_of}' is not in family '${familyId}'`, row.brief_id, 'variant_of'));
         if (row.variant_of === row.brief_id) findings.push(finding('BAD_VARIANT_OF', 'a brief cannot be its own variant', row.brief_id, 'variant_of'));
+        // The schema says a variant points at the family's canonical `-v1` row. Pointing at a sibling
+        // variant would silently re-root the family and make the invariance check compare the wrong
+        // pair.
+        if (ids.has(row.variant_of) && row.variant_of !== row.brief_id && row.variant_of !== canonical && ids.has(canonical)) {
+          findings.push(
+            finding('BAD_VARIANT_OF', `variant_of must name the family's canonical brief '${canonical}', not sibling '${row.variant_of}'`, row.brief_id, 'variant_of'),
+          );
+        }
       } else if (row.brief_id !== canonical && familyRows.length > 1) {
         findings.push(finding('BAD_VARIANT_OF', `the canonical brief of '${familyId}' must be '${canonical}' or declare variant_of`, row.brief_id, 'variant_of'));
       }
@@ -279,8 +313,42 @@ export function validateBriefs(rows, index) {
     );
   }
 
-  const counts = summarizeBriefs(rows);
+  const summary = summarizeBriefs(rows);
+  // An all-dev manifest would let a "preregistered" verdict be computed on the split that tuning is
+  // allowed to use; a manifest with nothing sealed in it cannot support a test-set result at all.
+  if (rows.length > 0 && (summary.familiesBySplit.test ?? 0) === 0) {
+    findings.push(finding('NO_TEST_SPLIT', 'no family is in the test split; nothing here is held out', 'manifest', 'split'));
+  }
+
+  const counts = summary;
   return { ok: findings.length === 0, findings, counts };
+}
+
+/**
+ * Canonical JSON for the seal: object keys sorted recursively, strings normalised to NFC, fixed
+ * separators. Without it the same manifest has more than one valid serialisation, so a seal would
+ * depend on how the file happened to be written rather than on what it contains.
+ */
+export function canonicalJson(value) {
+  if (typeof value === 'string') return JSON.stringify(value.normalize('NFC'));
+  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(',')}]`;
+  if (value && typeof value === 'object') {
+    const body = Object.keys(value)
+      .sort()
+      .map((key) => `${JSON.stringify(key.normalize('NFC'))}:${canonicalJson(value[key])}`)
+      .join(',');
+    return `{${body}}`;
+  }
+  return JSON.stringify(value) ?? 'null';
+}
+
+/** The seal is versioned so a change of canonical form is a recorded event, not a silent one. */
+export const SEAL_FORM = 'v2 (sorted keys, NFC, sorted rows, sha256 of newline-joined rows)';
+
+/** The seal over the brief content that must not change after the preregistration is frozen. */
+export function sealHash(rows) {
+  const canonical = [...rows].sort((a, b) => String(a.brief_id).localeCompare(String(b.brief_id))).map(canonicalJson);
+  return `sha256:${createHash('sha256').update(canonical.join('\n')).digest('hex')}`;
 }
 
 /** Counts used by the preregistration's sample-size section. */

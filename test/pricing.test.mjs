@@ -15,7 +15,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { decodeHtml, normaliseText, parseJsonl, valueNearVerbatim } from '../src/eval/quotes.mjs';
+import { decodeHtml, labelAppearsInVerbatim, normaliseText, parseJsonl, valueNearVerbatim } from '../src/eval/quotes.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const QUOTES = resolve(ROOT, 'docs/eval/quotes.jsonl');
@@ -161,6 +161,63 @@ test('the verifier rejects a quote whose body does not contain the number', () =
       assert.match(output, /VERBATIM_NOT_FOUND|SHA_MISMATCH/);
     }
     assert.equal(failed, true, 'a fabricated quote must fail verification');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('the verifier attributes a price to a product, not just to a page', () => {
+  // A cross-card transplant - another card's price *and* its snippet in this row - passed the first
+  // version of the proximity check, which only asked whether a number sat near a snippet.
+  const a10 = quotes.find((row) => row.quote_id === 'lambda-nvidia-a10-1-29');
+  const a100 = quotes.find((row) => row.gpu === 'NVIDIA A100 SXM' && row.value === 2.79);
+  assert.ok(a10 && a100, 'expected the Lambda A10 and A100 SXM rows to be priced');
+
+  const transplant = { ...a10, value: a100.value, verbatim: a100.verbatim };
+  const label = labelAppearsInVerbatim(transplant.verbatim, transplant);
+  assert.equal(label.found, false, 'another card\'s snippet must not satisfy this row\'s label');
+  assert.equal(label.reason, 'LABEL_NOT_IN_VERBATIM');
+
+  // A prefix must not match either: 'NVIDIA A10' is a prefix of 'NVIDIA A100'.
+  assert.equal(labelAppearsInVerbatim('NVIDIA A100 SXM 80 GB $2.79', { gpu: 'NVIDIA A10' }).found, false);
+  assert.equal(labelAppearsInVerbatim('NVIDIA A10 24 GB 226 GiB $1.29', { gpu: 'NVIDIA A10' }).found, true);
+  // Size bands compare on the page's own wording, without our parenthetical.
+  assert.equal(labelAppearsInVerbatim('Models up to 16B parameters $0.50 $1.00 $1.00 $2.00', { model_size_band: 'up to 16B parameters (LoRA SFT)' }).found, true);
+});
+
+test('a value must be a whole numeric token, not a prefix of a longer price', () => {
+  // $0.2 occurs inside $0.27; a substring test would accept a rate that is not on the page.
+  const page = 'RTX A5000 24 GB VRAM 25 GB RAM 9 vCPUs $ 0.27 /hr Deploy RTX A5000';
+  assert.equal(valueNearVerbatim(page, 'RTX A5000 24 GB VRAM 25 GB RAM 9 vCPUs $ 0.27 /hr', 0.2).found, false);
+  assert.equal(valueNearVerbatim(page, 'RTX A5000 24 GB VRAM 25 GB RAM 9 vCPUs $ 0.27 /hr', 0.27).found, true);
+});
+
+test('every disclosure is printed in full, and quote precision is preserved', () => {
+  const sheets = readFileSync(SHEETS, 'utf8');
+  // The Lambda rows carry an inference; a 110-character truncation used to cut the disclaimer off.
+  assert.match(sheets, /treat the plan as unverified, the price as fetched/, 'the inferred-plan disclaimer must survive into the sheets');
+  assert.ok(!/the plan toggle is client-side so the label is not in the\s*\|/.test(sheets), 'no disclosure may be truncated inside a table cell');
+  // $4.103 is the quoted rate; it was displayed rounded to $4.10.
+  const quoted = quotes.find((row) => /Qwen 3\.8 27B/.test(row.model_size_band ?? '') && String(row.value).includes('4.103'));
+  if (quoted) assert.match(sheets, /\$4\.103/, 'the quoted precision must be preserved in the sheets');
+});
+
+test('the generator refuses to price a row that does not verify', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'mwg-price-verify-'));
+  try {
+    const broken = quotes.map((row) => (row.quote_id === 'lambda-nvidia-a10-1-29' ? { ...row, gpu: 'NVIDIA H100 Fake Edition' } : row));
+    const file = join(dir, 'quotes.jsonl');
+    writeFileSync(file, `${broken.map((row) => JSON.stringify(row)).join('\n')}\n`);
+    let output = '';
+    let failed = false;
+    try {
+      execFileSync(process.execPath, [resolve(ROOT, 'scripts/price-dry-run.mjs'), '--quotes', file, '--out', join(dir, 'x.md')], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+    } catch (error) {
+      failed = true;
+      output = `${error.stdout ?? ''}${error.stderr ?? ''}`;
+    }
+    assert.equal(failed, true, 'a mislabelled row must stop the generator');
+    assert.match(output, /LABEL_NOT_IN_VERBATIM|refusing to price/);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

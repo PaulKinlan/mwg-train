@@ -54,8 +54,11 @@ export function parseJsonl(text) {
 /**
  * Is the number actually present in the page next to the snippet it is claimed to come from?
  *
- * Searching the whole page is not enough: a page lists many prices, so a wrong row could match some
- * other card's number. The value must occur within `window` characters of the verbatim snippet.
+ * Two failure modes are guarded here. Searching the whole page is not enough, because a page lists
+ * many prices and a wrong row could match some other card's number - so the value must occur within
+ * `window` characters of the verbatim snippet. And the match must be a whole numeric token, not a
+ * prefix: `$0.2` occurs inside `$0.27`, so a substring test would accept a price that is not on the
+ * page at all.
  */
 export function valueNearVerbatim(haystack, verbatim, value, window = 240) {
   const text = normaliseText(haystack);
@@ -64,7 +67,38 @@ export function valueNearVerbatim(haystack, verbatim, value, window = 240) {
   if (at === -1) return { found: false, reason: 'VERBATIM_NOT_FOUND' };
   const from = Math.max(0, at - window);
   const nearby = text.slice(from, at + needle.length + window);
-  const forms = [`$${Number(value).toFixed(2)}`, `$${value}`, String(value)];
-  const matched = forms.find((form) => nearby.includes(form));
+  const forms = [...new Set([String(value), Number(value).toFixed(2), Number(value).toFixed(3), Number(value).toFixed(4)])];
+  const matched = forms.find((form) => new RegExp(`(?:^|[^0-9.])${form.replace('.', '\\.')}(?![0-9])`).test(nearby));
   return matched ? { found: true, matched } : { found: false, reason: 'VALUE_NOT_NEAR_VERBATIM' };
+}
+
+/**
+ * The label a row claims its number belongs to: the GPU for a rented hour, the model (or size band)
+ * inside `model_size_band` for a per-token rate. The label's parenthetical is metadata we add, so
+ * only the part that should appear on the page is used.
+ */
+export function labelOf(row) {
+  const raw = typeof row.gpu === 'string' && row.gpu.trim() !== '' ? row.gpu : typeof row.model_size_band === 'string' ? row.model_size_band : '';
+  if (raw.trim() === '') return '';
+  // Strip the metadata we add around the page's own wording: the parenthetical, and the word
+  // "parameters" that a size band carries for readability. What is left is the text that has to be
+  // on the page for the row to be about the thing it says it is about.
+  return raw.split('(')[0].replace(/\s+parameters?\s*$/i, '').trim();
+}
+
+/**
+ * Does the snippet actually mention the thing the row says it prices? Proximity alone does not stop
+ * a cross-card transplant: taking another card's price *and* its snippet passes the proximity test
+ * while the row's own label belongs to a different product. Requiring the label to appear in the
+ * snippet is what ties the number to the product.
+ */
+export function labelAppearsInVerbatim(verbatim, row) {
+  const label = labelOf(row);
+  if (label === '') return { found: false, reason: 'NO_LABEL' };
+  const haystack = normaliseText(verbatim);
+  const needle = normaliseText(label).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  // Whole-token match: "NVIDIA A10" must not be satisfied by "NVIDIA A100 SXM", which is exactly how
+  // a cross-card transplant slipped through a plain substring test.
+  const pattern = new RegExp(`(?:^|[^a-z0-9])${needle.replace(/ /g, '\\s+')}(?![a-z0-9])`);
+  return pattern.test(haystack) ? { found: true, label } : { found: false, reason: 'LABEL_NOT_IN_VERBATIM', label };
 }

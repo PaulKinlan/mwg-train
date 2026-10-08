@@ -13,15 +13,29 @@ import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
 import process from 'node:process';
 
-import { familyOverlap, parseBriefs, ruleIndex, summarizeBriefs, validateBriefs } from '../src/eval/prereg.mjs';
+import {
+  BriefError,
+  SEAL_FORM,
+  canonicalJson,
+  familyOverlap,
+  parseBriefs,
+  ruleIndex,
+  sealHash,
+  summarizeBriefs,
+  validateBriefs,
+} from '../src/eval/prereg.mjs';
 
 function parseArgs(argv) {
-  const args = { rules: 'docs/eval/rules.json', corpus: null, seal: false, sealOut: null };
+  const args = { rules: 'docs/eval/rules.json', corpus: null, seal: false, sealOut: null, expectSeal: null };
   for (let i = 0; i < argv.length; i += 1) {
     if (argv[i] === '--rules') args.rules = argv[++i];
     else if (argv[i] === '--corpus') args.corpus = argv[++i];
     else if (argv[i] === '--seal') args.seal = true;
     else if (argv[i] === '--seal-out') args.sealOut = argv[++i];
+    else if (argv[i] === '--expect-seal') {
+      args.seal = true;
+      args.expectSeal = argv[++i];
+    }
     else if (argv[i] === '--help' || argv[i] === '-h') args.help = true;
     else if (argv[i].startsWith('--')) {
       console.error(`validate-briefs: unknown argument '${argv[i]}'`);
@@ -35,25 +49,29 @@ function parseArgs(argv) {
   return args;
 }
 
-/**
- * Seal hash over the brief content that must not change after the seal: the prompts, the property
- * sets and the ids, in a canonical order. Sorted by brief_id so formatting or row order in the file
- * cannot change the hash.
- */
-export function sealHash(rows) {
-  const canonical = [...rows].sort((a, b) => String(a.brief_id).localeCompare(String(b.brief_id))).map((row) => JSON.stringify(row));
-  return `sha256:${createHash('sha256').update(canonical.join('\n')).digest('hex')}`;
-}
+/** Re-exported so callers and tests have one canonical-form implementation to import. */
+export { canonicalJson, sealHash, SEAL_FORM };
 
 function main() {
   const args = parseArgs(process.argv.slice(2));
   if (args.help || !args.manifest) {
-    console.error('usage: node scripts/validate-briefs.mjs <manifest.jsonl> [--rules rules.json] [--corpus <path>] [--seal]');
+    console.error('usage: node scripts/validate-briefs.mjs <manifest.jsonl> [--rules rules.json] [--corpus <path>] [--seal] [--expect-seal sha256:…]');
     process.exit(args.help ? 0 : 2);
   }
 
-  const rows = parseBriefs(readFileSync(args.manifest, 'utf8'));
-  const index = ruleIndex(JSON.parse(readFileSync(args.rules, 'utf8')));
+  // Hostile or truncated input is a finding, not a stack trace: this validator is pointed at files
+  // it did not write (a corpus manifest, a corpus someone edited by hand).
+  let rows;
+  let index;
+  try {
+    rows = parseBriefs(readFileSync(args.manifest, 'utf8'));
+    index = ruleIndex(JSON.parse(readFileSync(args.rules, 'utf8')));
+  } catch (error) {
+    console.log(`ERROR ${error instanceof BriefError ? error.code : 'UNREADABLE_INPUT'} manifest ${error.message}`);
+    console.error('validate-briefs: FAIL - the manifest could not be read');
+    process.exit(1);
+  }
+
   const { ok, findings, counts } = validateBriefs(rows, index);
 
   console.log(
@@ -75,16 +93,24 @@ function main() {
     console.log(`${f.severity.toUpperCase()} ${f.code} ${f.id}${f.field ? ` [${f.field}]` : ''} ${f.message}`);
   }
 
+  let sealMismatch = false;
   if (args.seal) {
     const hash = sealHash(rows);
     console.log(`validate-briefs: seal ${hash}`);
+    console.log(`validate-briefs: seal form ${SEAL_FORM}`);
+    // --expect-seal turns printing into asserting, so CI can hold a commit to the preregistered hash
+    // rather than to whatever the file currently contains.
+    if (args.expectSeal && args.expectSeal !== hash) {
+      console.log(`ERROR SEAL_MISMATCH manifest hashes to ${hash}, expected ${args.expectSeal}`);
+      sealMismatch = true;
+    }
     if (args.sealOut) {
       writeFileSync(args.sealOut, `${hash}\n`);
       console.log(`validate-briefs: wrote ${args.sealOut}`);
     }
   }
 
-  if (!ok || overlap.length > 0) {
+  if (!ok || overlap.length > 0 || sealMismatch) {
     console.error('validate-briefs: FAIL - the brief manifest does not satisfy the preregistration');
     process.exit(1);
   }

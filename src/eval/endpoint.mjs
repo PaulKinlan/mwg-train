@@ -51,9 +51,37 @@ export function briefPasses(result, requiredRules) {
     if (applied[rule] !== true) return false;
   }
   for (const blocker of BLOCKER_CHECKS) {
-    if ((result[blocker] ?? 0) > 0) return false;
+    // Fail closed: a result that never recorded the accessibility or security finding count has not
+    // demonstrated zero findings, and defaulting a missing count to 0 would let an unevaluated
+    // blocker pass the endpoint.
+    if (typeof result[blocker] !== 'number' || !Number.isFinite(result[blocker]) || result[blocker] > 0) return false;
   }
   return true;
+}
+
+/**
+ * The universe the preregistered verdict may be computed over.
+ *
+ * PREREGISTRATION §6 seals the `test` split and §7 excludes the repair task from the primary
+ * endpoint. Nothing in the arithmetic enforces either, so a caller could pass the dev briefs - the
+ * split tuning is allowed to touch - and get a reproducible, apparently preregistered verdict. This
+ * is the check that makes the sealed universe a precondition rather than a convention.
+ */
+export function checkUniverse(briefs, { split = 'test', task = 'generate', requireSeal = null } = {}) {
+  const problems = [];
+  const wrongSplit = briefs.filter((brief) => brief?.split !== split);
+  const wrongTask = briefs.filter((brief) => brief?.task !== task);
+  for (const brief of wrongSplit) {
+    problems.push({ code: 'OUTSIDE_SEALED_SPLIT', brief_id: brief?.brief_id, message: `brief is in split '${brief?.split}', not the sealed '${split}' split` });
+  }
+  for (const brief of wrongTask) {
+    problems.push({ code: 'OUTSIDE_PRIMARY_TASK', brief_id: brief?.brief_id, message: `brief has task '${brief?.task}'; the primary endpoint covers '${task}'` });
+  }
+  if (requireSeal) {
+    const actual = sealHash(briefs);
+    if (actual !== requireSeal) problems.push({ code: 'UNSEALED_BRIEFS', brief_id: '(set)', message: `the brief set hashes to ${actual}, not the sealed ${requireSeal}` });
+  }
+  return problems;
 }
 
 /**
@@ -175,15 +203,23 @@ export function decide(primary, controls) {
   const h1 = primary.point * 100 >= MIN_EFFECT_OF_INTEREST && inPoints(primary.ci95[0]) > 0;
   const nullResult = inPoints(primary.ci95[0]) <= 0 || inPoints(primary.ci95[1]) < MIN_EFFECT_OF_INTEREST;
 
-  const strongControls = controls.filter((c) => ['C2_base_mwg_prompt', 'C3_base_uplift_tool'].includes(c.arm_b));
+  // H2 is non-inferiority against BOTH strong controls, so a comparison that omits one of them cannot
+  // support it: the earlier form tested only the controls it was given, which made "the adapter is no
+  // worse than the best prompt and the best tool" true on the strength of the prompt alone.
+  const STRONG_CONTROLS = ['C2_base_mwg_prompt', 'C3_base_uplift_tool'];
+  const strongControls = controls.filter((c) => STRONG_CONTROLS.includes(c.arm_b));
+  const missingStrong = STRONG_CONTROLS.filter((arm) => !strongControls.some((c) => c.arm_b === arm));
   const nonInferior = strongControls.filter((c) => inPoints(c.ci95[0]) > NON_INFERIORITY_MARGIN);
-  const h2 = nonInferior.length === strongControls.length && strongControls.length > 0;
+  const h2 = missingStrong.length === 0 && nonInferior.length === strongControls.length && strongControls.length > 0;
   const h2Detail = strongControls.map((c) => ({
     control: c.arm_b,
     delta_pp: percent(c.point),
     ci95_pp: [percent(c.ci95[0]), percent(c.ci95[1])],
     non_inferior: inPoints(c.ci95[0]) > NON_INFERIORITY_MARGIN,
   }));
+  if (missingStrong.length > 0) {
+    h2Detail.push({ control: missingStrong.join(', '), delta_pp: null, ci95_pp: null, non_inferior: null, note: 'no comparison supplied; H2 is not evaluable without it' });
+  }
 
   const negativeReasons = [];
   if (primary.ci95[1] < 0) negativeReasons.push('functional pass rate below the unguided base with an interval excluding zero');
@@ -247,7 +283,16 @@ export function perFamily(results, briefs, arms = ARMS) {
   return rows.sort((a, b) => a.family_id.localeCompare(b.family_id));
 }
 
-/** Per-rule application rate with the applicable denominator. A rule no brief required is omitted. */
+import { sealHash } from './prereg.mjs';
+
+/**
+ * Per-rule application rate with the applicable denominator. A rule no brief required is omitted.
+ *
+ * WEIGHTING: rates here count BRIEFS, so a three-variant family carries three times the weight of a
+ * singleton family. That is fine for describing which rules are applied, which is all this function
+ * is used for; it is not a family-weighted estimate and must not be read as one. Inferential claims
+ * go through `pairedDifference`, which resamples families.
+ */
 export function perRule(results, briefs, arms = ARMS) {
   const rules = new Map();
   for (const brief of briefs) {

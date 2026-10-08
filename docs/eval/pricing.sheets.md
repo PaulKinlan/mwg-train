@@ -4,63 +4,112 @@
 ## Fetched quotes
 
 Every rate below was read from the provider's own page on the retrieval date, and the response body is hashed.
-Rows: **46 verified**, 7 recorded as unverified.
+Rows: **46 verified**, 5 recorded as unverified.
 
 ### Rented GPU, per GPU-hour
 
 | GPU | VRAM | mode | USD/hour | billing | fetched | notes | source |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| RTX A5000 (RunPod) | 24 GB | on-demand | $0.27 | per hour | 2026-10-08 | listed with 25 GB RAM and 9 vCPUs | [RunPod](https://www.runpod.io/pricing) |
-| A40 (RunPod) | 48 GB | on-demand | $0.49 | per hour | 2026-10-08 | listed with 50 GB RAM and 9 vCPUs | [RunPod](https://www.runpod.io/pricing) |
-| L4 (RunPod) | 24 GB | on-demand | $0.49 | per hour | 2026-10-08 | listed with 50 GB RAM and 12 vCPUs | [RunPod](https://www.runpod.io/pricing) |
-| RTX A6000 (RunPod) | 48 GB | on-demand | $0.53 | per hour | 2026-10-08 | listed with 50 GB RAM and 9 vCPUs | [RunPod](https://www.runpod.io/pricing) |
-| Pro 6000 MIG 24GB (RunPod) | 24 GB | on-demand | $0.59 | per hour | 2026-10-08 | listed with 31 GB RAM and 4 vCPUs | [RunPod](https://www.runpod.io/pricing) |
-| NVIDIA Quadro RTX 6000 (Lambda) | 24 GB | on-demand | $0.69 | per GPU per hour | 2026-10-08 | plan INFERRED as unknown from 14 vCPUs (26 per GPU); the plan toggle is client-side so the label is not in the | [Lambda](https://lambda.ai/service/gpu-cloud) |
-| RTX 4090 (RunPod) | 24 GB | on-demand | $0.74 | per hour | 2026-10-08 | listed with 41 GB RAM and 6 vCPUs | [RunPod](https://www.runpod.io/pricing) |
-| NVIDIA Tesla V100 (Lambda) | 16 GB | on-demand | $0.79 | per GPU per hour | 2026-10-08 | plan INFERRED as unknown from 88 vCPUs (26 per GPU); the plan toggle is client-side so the label is not in the | [Lambda](https://lambda.ai/service/gpu-cloud) |
-| L40 (RunPod) | 48 GB | on-demand | $0.82 | per hour | 2026-10-08 | listed with 94 GB RAM and 8 vCPUs | [RunPod](https://www.runpod.io/pricing) |
-| RTX 6000 Ada (RunPod) | 48 GB | on-demand | $0.84 | per hour | 2026-10-08 | listed with 167 GB RAM and 10 vCPUs | [RunPod](https://www.runpod.io/pricing) |
-| RTX 5090 (RunPod) | 32 GB | on-demand | $0.99 | per hour | 2026-10-08 | listed with 35 GB RAM and 9 vCPUs | [RunPod](https://www.runpod.io/pricing) |
-| NVIDIA A6000 (Lambda) | 48 GB | on-demand | $1.09 | per GPU per hour | 2026-10-08 | plan INFERRED as unknown from 56 vCPUs (26 per GPU); the plan toggle is client-side so the label is not in the | [Lambda](https://lambda.ai/service/gpu-cloud) |
-| L40S (RunPod) | 48 GB | on-demand | $1.09 | per hour | 2026-10-08 | listed with 94 GB RAM and 16 vCPUs | [RunPod](https://www.runpod.io/pricing) |
-| Pro 6000 MIG 48GB (RunPod) | 48 GB | on-demand | $1.09 | per hour | 2026-10-08 | listed with 62 GB RAM and 8 vCPUs | [RunPod](https://www.runpod.io/pricing) |
-| NVIDIA A10 (Lambda) | 24 GB | on-demand | $1.29 | per GPU per hour | 2026-10-08 | plan INFERRED as unknown from 30 vCPUs (26 per GPU); the plan toggle is client-side so the label is not in the | [Lambda](https://lambda.ai/service/gpu-cloud) |
-| A100 PCIe (RunPod) | 80 GB | on-demand | $1.59 | per hour | 2026-10-08 | listed with 117 GB RAM and 8 vCPUs | [RunPod](https://www.runpod.io/pricing) |
-| A100 SXM (RunPod) | 80 GB | on-demand | $1.59 | per hour | 2026-10-08 | listed with 125 GB RAM and 16 vCPUs | [RunPod](https://www.runpod.io/pricing) |
-| NVIDIA A100 PCIe (Lambda) | 40 GB | on-demand | $1.99 | per GPU per hour | 2026-10-08 | plan INFERRED as unknown from 120 vCPUs (26 per GPU); the plan toggle is client-side so the label is not in th | [Lambda](https://lambda.ai/service/gpu-cloud) |
-| NVIDIA A100 SXM (Lambda) | 40 GB | on-demand | $1.99 | per GPU per hour | 2026-10-08 | plan INFERRED as unknown from 124 vCPUs (26 per GPU); the plan toggle is client-side so the label is not in th | [Lambda](https://lambda.ai/service/gpu-cloud) |
-| RTX Pro 6000 (RunPod) | 96 GB | on-demand | $2.09 | per hour | 2026-10-08 | listed with 188 GB RAM and 16 vCPUs | [RunPod](https://www.runpod.io/pricing) |
-| NVIDIA GH200 (Lambda) | 96 GB | on-demand | $2.29 | per GPU per hour | 2026-10-08 | plan INFERRED as unknown from 64 vCPUs (26 per GPU); the plan toggle is client-side so the label is not in the | [Lambda](https://lambda.ai/service/gpu-cloud) |
-| NVIDIA A100 SXM (Lambda) | 80 GB | on-demand | $2.79 | per GPU per hour | 2026-10-08 | plan INFERRED as unknown from 240 vCPUs (26 per GPU); the plan toggle is client-side so the label is not in th | [Lambda](https://lambda.ai/service/gpu-cloud) |
-| H100 PCIe (RunPod) | 80 GB | on-demand | $2.89 | per hour | 2026-10-08 | listed with 188 GB RAM and 16 vCPUs | [RunPod](https://www.runpod.io/pricing) |
-| H100 NVL (RunPod) | 94 GB | on-demand | $3.19 | per hour | 2026-10-08 | listed with 94 GB RAM and 16 vCPUs | [RunPod](https://www.runpod.io/pricing) |
-| NVIDIA H100 PCIe (Lambda) | 80 GB | on-demand | $3.29 | per GPU per hour | 2026-10-08 | plan INFERRED as 1x from 26 vCPUs (26 per GPU); the plan toggle is client-side so the label is not in the fetc | [Lambda](https://lambda.ai/service/gpu-cloud) |
-| H100 SXM (RunPod) | 80 GB | on-demand | $3.49 | per hour | 2026-10-08 | listed with 125 GB RAM and 20 vCPUs | [RunPod](https://www.runpod.io/pricing) |
-| NVIDIA H100 SXM (Lambda) | 80 GB | on-demand | $3.99 | per GPU per hour | 2026-10-08 | plan INFERRED as 8x from 208 vCPUs (26 per GPU); the plan toggle is client-side so the label is not in the fet | [Lambda](https://lambda.ai/service/gpu-cloud) |
-| NVIDIA H100 SXM (Lambda) | 80 GB | on-demand | $4.09 | per GPU per hour | 2026-10-08 | plan INFERRED as 4x from 104 vCPUs (26 per GPU); the plan toggle is client-side so the label is not in the fet | [Lambda](https://lambda.ai/service/gpu-cloud) |
-| NVIDIA H100 SXM (Lambda) | 80 GB | on-demand | $4.19 | per GPU per hour | 2026-10-08 | plan INFERRED as 2x from 52 vCPUs (26 per GPU); the plan toggle is client-side so the label is not in the fetc | [Lambda](https://lambda.ai/service/gpu-cloud) |
-| NVIDIA H100 SXM (Lambda) | 80 GB | on-demand | $4.29 | per GPU per hour | 2026-10-08 | plan INFERRED as 1x from 26 vCPUs (26 per GPU); the plan toggle is client-side so the label is not in the fetc | [Lambda](https://lambda.ai/service/gpu-cloud) |
-| H200 (RunPod) | 141 GB | on-demand | $4.59 | per hour | 2026-10-08 | listed with 276 GB RAM and 24 vCPUs | [RunPod](https://www.runpod.io/pricing) |
-| NVIDIA B200 SXM6 (Lambda) | 180 GB | on-demand | $6.69 | per GPU per hour | 2026-10-08 | plan INFERRED as 8x from 208 vCPUs (26 per GPU); the plan toggle is client-side so the label is not in the fet | [Lambda](https://lambda.ai/service/gpu-cloud) |
-| NVIDIA B200 SXM6 (Lambda) | 180 GB | on-demand | $6.79 | per GPU per hour | 2026-10-08 | plan INFERRED as 4x from 104 vCPUs (26 per GPU); the plan toggle is client-side so the label is not in the fet | [Lambda](https://lambda.ai/service/gpu-cloud) |
-| B200 (RunPod) | 180 GB | on-demand | $6.79 | per hour | 2026-10-08 | listed with 283 GB RAM and 28 vCPUs | [RunPod](https://www.runpod.io/pricing) |
-| NVIDIA B200 SXM6 (Lambda) | 180 GB | on-demand | $6.89 | per GPU per hour | 2026-10-08 | plan INFERRED as 2x from 52 vCPUs (26 per GPU); the plan toggle is client-side so the label is not in the fetc | [Lambda](https://lambda.ai/service/gpu-cloud) |
-| NVIDIA B200 SXM6 (Lambda) | 180 GB | on-demand | $6.99 | per GPU per hour | 2026-10-08 | plan INFERRED as 1x from 26 vCPUs (26 per GPU); the plan toggle is client-side so the label is not in the fetc | [Lambda](https://lambda.ai/service/gpu-cloud) |
+| RTX A5000 (RunPod) | 24 GB | on-demand | $0.27 | per hour | 2026-10-08 | [^1] | [RunPod](https://www.runpod.io/pricing) |
+| A40 (RunPod) | 48 GB | on-demand | $0.49 | per hour | 2026-10-08 | [^2] | [RunPod](https://www.runpod.io/pricing) |
+| L4 (RunPod) | 24 GB | on-demand | $0.49 | per hour | 2026-10-08 | [^3] | [RunPod](https://www.runpod.io/pricing) |
+| RTX A6000 (RunPod) | 48 GB | on-demand | $0.53 | per hour | 2026-10-08 | [^4] | [RunPod](https://www.runpod.io/pricing) |
+| Pro 6000 MIG 24GB (RunPod) | 24 GB | on-demand | $0.59 | per hour | 2026-10-08 | [^5] | [RunPod](https://www.runpod.io/pricing) |
+| NVIDIA Quadro RTX 6000 (Lambda) | 24 GB | on-demand | $0.69 | per GPU per hour | 2026-10-08 | [^6] | [Lambda](https://lambda.ai/service/gpu-cloud) |
+| RTX 4090 (RunPod) | 24 GB | on-demand | $0.74 | per hour | 2026-10-08 | [^7] | [RunPod](https://www.runpod.io/pricing) |
+| NVIDIA Tesla V100 (Lambda) | 16 GB | on-demand | $0.79 | per GPU per hour | 2026-10-08 | [^8] | [Lambda](https://lambda.ai/service/gpu-cloud) |
+| L40 (RunPod) | 48 GB | on-demand | $0.82 | per hour | 2026-10-08 | [^9] | [RunPod](https://www.runpod.io/pricing) |
+| RTX 6000 Ada (RunPod) | 48 GB | on-demand | $0.84 | per hour | 2026-10-08 | [^10] | [RunPod](https://www.runpod.io/pricing) |
+| RTX 5090 (RunPod) | 32 GB | on-demand | $0.99 | per hour | 2026-10-08 | [^11] | [RunPod](https://www.runpod.io/pricing) |
+| NVIDIA A6000 (Lambda) | 48 GB | on-demand | $1.09 | per GPU per hour | 2026-10-08 | [^12] | [Lambda](https://lambda.ai/service/gpu-cloud) |
+| L40S (RunPod) | 48 GB | on-demand | $1.09 | per hour | 2026-10-08 | [^13] | [RunPod](https://www.runpod.io/pricing) |
+| Pro 6000 MIG 48GB (RunPod) | 48 GB | on-demand | $1.09 | per hour | 2026-10-08 | [^14] | [RunPod](https://www.runpod.io/pricing) |
+| NVIDIA A10 (Lambda) | 24 GB | on-demand | $1.29 | per GPU per hour | 2026-10-08 | [^15] | [Lambda](https://lambda.ai/service/gpu-cloud) |
+| A100 PCIe (RunPod) | 80 GB | on-demand | $1.59 | per hour | 2026-10-08 | [^16] | [RunPod](https://www.runpod.io/pricing) |
+| A100 SXM (RunPod) | 80 GB | on-demand | $1.59 | per hour | 2026-10-08 | [^17] | [RunPod](https://www.runpod.io/pricing) |
+| NVIDIA A100 PCIe (Lambda) | 40 GB | on-demand | $1.99 | per GPU per hour | 2026-10-08 | [^18] | [Lambda](https://lambda.ai/service/gpu-cloud) |
+| NVIDIA A100 SXM (Lambda) | 40 GB | on-demand | $1.99 | per GPU per hour | 2026-10-08 | [^19] | [Lambda](https://lambda.ai/service/gpu-cloud) |
+| RTX Pro 6000 (RunPod) | 96 GB | on-demand | $2.09 | per hour | 2026-10-08 | [^20] | [RunPod](https://www.runpod.io/pricing) |
+| NVIDIA GH200 (Lambda) | 96 GB | on-demand | $2.29 | per GPU per hour | 2026-10-08 | [^21] | [Lambda](https://lambda.ai/service/gpu-cloud) |
+| NVIDIA A100 SXM (Lambda) | 80 GB | on-demand | $2.79 | per GPU per hour | 2026-10-08 | [^22] | [Lambda](https://lambda.ai/service/gpu-cloud) |
+| H100 PCIe (RunPod) | 80 GB | on-demand | $2.89 | per hour | 2026-10-08 | [^23] | [RunPod](https://www.runpod.io/pricing) |
+| H100 NVL (RunPod) | 94 GB | on-demand | $3.19 | per hour | 2026-10-08 | [^24] | [RunPod](https://www.runpod.io/pricing) |
+| NVIDIA H100 PCIe (Lambda) | 80 GB | on-demand | $3.29 | per GPU per hour | 2026-10-08 | [^25] | [Lambda](https://lambda.ai/service/gpu-cloud) |
+| H100 SXM (RunPod) | 80 GB | on-demand | $3.49 | per hour | 2026-10-08 | [^26] | [RunPod](https://www.runpod.io/pricing) |
+| NVIDIA H100 SXM (Lambda) | 80 GB | on-demand | $3.99 | per GPU per hour | 2026-10-08 | [^27] | [Lambda](https://lambda.ai/service/gpu-cloud) |
+| NVIDIA H100 SXM (Lambda) | 80 GB | on-demand | $4.09 | per GPU per hour | 2026-10-08 | [^28] | [Lambda](https://lambda.ai/service/gpu-cloud) |
+| NVIDIA H100 SXM (Lambda) | 80 GB | on-demand | $4.19 | per GPU per hour | 2026-10-08 | [^29] | [Lambda](https://lambda.ai/service/gpu-cloud) |
+| NVIDIA H100 SXM (Lambda) | 80 GB | on-demand | $4.29 | per GPU per hour | 2026-10-08 | [^30] | [Lambda](https://lambda.ai/service/gpu-cloud) |
+| H200 (RunPod) | 141 GB | on-demand | $4.59 | per hour | 2026-10-08 | [^31] | [RunPod](https://www.runpod.io/pricing) |
+| NVIDIA B200 SXM6 (Lambda) | 180 GB | on-demand | $6.69 | per GPU per hour | 2026-10-08 | [^32] | [Lambda](https://lambda.ai/service/gpu-cloud) |
+| NVIDIA B200 SXM6 (Lambda) | 180 GB | on-demand | $6.79 | per GPU per hour | 2026-10-08 | [^33] | [Lambda](https://lambda.ai/service/gpu-cloud) |
+| B200 (RunPod) | 180 GB | on-demand | $6.79 | per hour | 2026-10-08 | [^34] | [RunPod](https://www.runpod.io/pricing) |
+| NVIDIA B200 SXM6 (Lambda) | 180 GB | on-demand | $6.89 | per GPU per hour | 2026-10-08 | [^35] | [Lambda](https://lambda.ai/service/gpu-cloud) |
+| NVIDIA B200 SXM6 (Lambda) | 180 GB | on-demand | $6.99 | per GPU per hour | 2026-10-08 | [^36] | [Lambda](https://lambda.ai/service/gpu-cloud) |
 
 ### Managed fine-tuning, per million training tokens
 
 | service | size band | USD / 1M training tokens | fetched | notes | source |
 | --- | --- | --- | --- | --- | --- |
-| Fireworks | up to 16B parameters (LoRA SFT) | $0.50 | 2026-10-08 | same table: LoRA DPO $1.00, full-parameter SFT $1.00, full-parameter DPO $2.00 per 1M tokens | [Fireworks](https://fireworks.ai/pricing) |
-| Fireworks | 16.1B - 80B parameters (LoRA SFT) | $3.00 | 2026-10-08 | same table: LoRA DPO $6.00, full-parameter SFT $6.00, full-parameter DPO $12.00 per 1M tokens | [Fireworks](https://fireworks.ai/pricing) |
-| Fireworks | Qwen 3.8 27B (128K context, Train / 1M column) | $4.10 | 2026-10-08 | same row: prefill $1.86, cached prefill $0.372, sample $5.595 per 1M | [Fireworks](https://fireworks.ai/pricing) |
-| Fireworks | DeepSeek V4 Flash 0731 (262K context, Train / 1M column) | $5.20 | 2026-10-08 | same row: prefill $1.74, cached prefill $0.35, sample $4.33 per 1M | [Fireworks](https://fireworks.ai/pricing) |
-| Fireworks | Muse Glimmer 30B (128K context, Train / 1M column) | $5.86 | 2026-10-08 | same row: prefill $1.96, cached prefill $0.39, sample $4.88 per 1M | [Fireworks](https://fireworks.ai/pricing) |
-| Fireworks | 80B - 300B (e.g. Qwen3-235B, gpt-oss-120B) parameters (LoRA SFT) | $6.00 | 2026-10-08 | same table: LoRA DPO $12.00, full-parameter SFT $12.00, full-parameter DPO $24.00 per 1M tokens | [Fireworks](https://fireworks.ai/pricing) |
-| Fireworks | GLM 5.3 Flash (200K context, Train / 1M column) | $8.89 | 2026-10-08 | same row: prefill $2.96, cached prefill $0.593, sample $7.41 per 1M | [Fireworks](https://fireworks.ai/pricing) |
-| Fireworks | >300B (e.g. DeepSeek V3, Kimi K2) parameters (LoRA SFT) | $10.00 | 2026-10-08 | same table: LoRA DPO $20.00, full-parameter SFT $20.00, full-parameter DPO $40.00 per 1M tokens | [Fireworks](https://fireworks.ai/pricing) |
-| Fireworks | GLM 5.3 (262K context, Train / 1M column) | $14.58 | 2026-10-08 | same row: prefill $4.86, cached prefill $0.972, sample $12.15 per 1M | [Fireworks](https://fireworks.ai/pricing) |
-| Fireworks | Kimi K3 (192K context, Train / 1M column) | $32.55 | 2026-10-08 | same row: prefill $10.87, cached prefill $2.17, sample $27.11 per 1M | [Fireworks](https://fireworks.ai/pricing) |
+| Fireworks | up to 16B parameters (LoRA SFT) | $0.50 | 2026-10-08 | [^37] | [Fireworks](https://fireworks.ai/pricing) |
+| Fireworks | 16.1B - 80B parameters (LoRA SFT) | $3.00 | 2026-10-08 | [^38] | [Fireworks](https://fireworks.ai/pricing) |
+| Fireworks | Qwen 3.8 27B (128K context, Train / 1M column) | $4.103 | 2026-10-08 | [^39] | [Fireworks](https://fireworks.ai/pricing) |
+| Fireworks | DeepSeek V4 Flash 0731 (262K context, Train / 1M column) | $5.20 | 2026-10-08 | [^40] | [Fireworks](https://fireworks.ai/pricing) |
+| Fireworks | Muse Glimmer 30B (128K context, Train / 1M column) | $5.86 | 2026-10-08 | [^41] | [Fireworks](https://fireworks.ai/pricing) |
+| Fireworks | 80B - 300B (e.g. Qwen3-235B, gpt-oss-120B) parameters (LoRA SFT) | $6.00 | 2026-10-08 | [^42] | [Fireworks](https://fireworks.ai/pricing) |
+| Fireworks | GLM 5.3 Flash (200K context, Train / 1M column) | $8.89 | 2026-10-08 | [^43] | [Fireworks](https://fireworks.ai/pricing) |
+| Fireworks | >300B (e.g. DeepSeek V3, Kimi K2) parameters (LoRA SFT) | $10.00 | 2026-10-08 | [^44] | [Fireworks](https://fireworks.ai/pricing) |
+| Fireworks | GLM 5.3 (262K context, Train / 1M column) | $14.58 | 2026-10-08 | [^45] | [Fireworks](https://fireworks.ai/pricing) |
+| Fireworks | Kimi K3 (192K context, Train / 1M column) | $32.55 | 2026-10-08 | [^46] | [Fireworks](https://fireworks.ai/pricing) |
+
+Notes on the rows above (nothing here is truncated):
+
+- [^1] runpod-rtx-a5000-ondemand: listed with 25 GB RAM and 9 vCPUs
+- [^2] runpod-a40-ondemand: listed with 50 GB RAM and 9 vCPUs
+- [^3] runpod-l4-ondemand: listed with 50 GB RAM and 12 vCPUs
+- [^4] runpod-rtx-a6000-ondemand: listed with 50 GB RAM and 9 vCPUs
+- [^5] runpod-pro-6000-mig-24gb-ondemand: listed with 31 GB RAM and 4 vCPUs
+- [^6] lambda-nvidia-quadro-rtx-6000-0-69: plan INFERRED as unknown from 14 vCPUs (26 per GPU); the plan toggle is client-side so the label is not in the fetched HTML - treat the plan as unverified, the price as fetched
+- [^7] runpod-rtx-4090-ondemand: listed with 41 GB RAM and 6 vCPUs
+- [^8] lambda-nvidia-tesla-v100-0-79: plan INFERRED as unknown from 88 vCPUs (26 per GPU); the plan toggle is client-side so the label is not in the fetched HTML - treat the plan as unverified, the price as fetched
+- [^9] runpod-l40-ondemand: listed with 94 GB RAM and 8 vCPUs
+- [^10] runpod-rtx-6000-ada-ondemand: listed with 167 GB RAM and 10 vCPUs
+- [^11] runpod-rtx-5090-ondemand: listed with 35 GB RAM and 9 vCPUs
+- [^12] lambda-nvidia-a6000-1-09: plan INFERRED as unknown from 56 vCPUs (26 per GPU); the plan toggle is client-side so the label is not in the fetched HTML - treat the plan as unverified, the price as fetched
+- [^13] runpod-l40s-ondemand: listed with 94 GB RAM and 16 vCPUs
+- [^14] runpod-pro-6000-mig-48gb-ondemand: listed with 62 GB RAM and 8 vCPUs
+- [^15] lambda-nvidia-a10-1-29: plan INFERRED as unknown from 30 vCPUs (26 per GPU); the plan toggle is client-side so the label is not in the fetched HTML - treat the plan as unverified, the price as fetched
+- [^16] runpod-a100-pcie-ondemand: listed with 117 GB RAM and 8 vCPUs
+- [^17] runpod-a100-sxm-ondemand: listed with 125 GB RAM and 16 vCPUs
+- [^18] lambda-nvidia-a100-pcie-1-99: plan INFERRED as unknown from 120 vCPUs (26 per GPU); the plan toggle is client-side so the label is not in the fetched HTML - treat the plan as unverified, the price as fetched
+- [^19] lambda-nvidia-a100-sxm-1-99: plan INFERRED as unknown from 124 vCPUs (26 per GPU); the plan toggle is client-side so the label is not in the fetched HTML - treat the plan as unverified, the price as fetched
+- [^20] runpod-rtx-pro-6000-ondemand: listed with 188 GB RAM and 16 vCPUs
+- [^21] lambda-nvidia-gh200-2-29: plan INFERRED as unknown from 64 vCPUs (26 per GPU); the plan toggle is client-side so the label is not in the fetched HTML - treat the plan as unverified, the price as fetched
+- [^22] lambda-nvidia-a100-sxm-2-79: plan INFERRED as unknown from 240 vCPUs (26 per GPU); the plan toggle is client-side so the label is not in the fetched HTML - treat the plan as unverified, the price as fetched
+- [^23] runpod-h100-pcie-ondemand: listed with 188 GB RAM and 16 vCPUs
+- [^24] runpod-h100-nvl-ondemand: listed with 94 GB RAM and 16 vCPUs
+- [^25] lambda-nvidia-h100-pcie-3-29: plan INFERRED as 1x from 26 vCPUs (26 per GPU); the plan toggle is client-side so the label is not in the fetched HTML - treat the plan as unverified, the price as fetched
+- [^26] runpod-h100-sxm-ondemand: listed with 125 GB RAM and 20 vCPUs
+- [^27] lambda-nvidia-h100-sxm-3-99: plan INFERRED as 8x from 208 vCPUs (26 per GPU); the plan toggle is client-side so the label is not in the fetched HTML - treat the plan as unverified, the price as fetched
+- [^28] lambda-nvidia-h100-sxm-4-09: plan INFERRED as 4x from 104 vCPUs (26 per GPU); the plan toggle is client-side so the label is not in the fetched HTML - treat the plan as unverified, the price as fetched
+- [^29] lambda-nvidia-h100-sxm-4-19: plan INFERRED as 2x from 52 vCPUs (26 per GPU); the plan toggle is client-side so the label is not in the fetched HTML - treat the plan as unverified, the price as fetched
+- [^30] lambda-nvidia-h100-sxm-4-29: plan INFERRED as 1x from 26 vCPUs (26 per GPU); the plan toggle is client-side so the label is not in the fetched HTML - treat the plan as unverified, the price as fetched
+- [^31] runpod-h200-ondemand: listed with 276 GB RAM and 24 vCPUs
+- [^32] lambda-nvidia-b200-sxm6-6-69: plan INFERRED as 8x from 208 vCPUs (26 per GPU); the plan toggle is client-side so the label is not in the fetched HTML - treat the plan as unverified, the price as fetched
+- [^33] lambda-nvidia-b200-sxm6-6-79: plan INFERRED as 4x from 104 vCPUs (26 per GPU); the plan toggle is client-side so the label is not in the fetched HTML - treat the plan as unverified, the price as fetched
+- [^34] runpod-b200-ondemand: listed with 283 GB RAM and 28 vCPUs
+- [^35] lambda-nvidia-b200-sxm6-6-89: plan INFERRED as 2x from 52 vCPUs (26 per GPU); the plan toggle is client-side so the label is not in the fetched HTML - treat the plan as unverified, the price as fetched
+- [^36] lambda-nvidia-b200-sxm6-6-99: plan INFERRED as 1x from 26 vCPUs (26 per GPU); the plan toggle is client-side so the label is not in the fetched HTML - treat the plan as unverified, the price as fetched
+- [^37] fireworks-lora-sft-up-to-16b: same table: LoRA DPO $1.00, full-parameter SFT $1.00, full-parameter DPO $2.00 per 1M tokens
+- [^38] fireworks-lora-sft-16-1b-80b: same table: LoRA DPO $6.00, full-parameter SFT $6.00, full-parameter DPO $12.00 per 1M tokens
+- [^39] fireworks-train-qwen-3-8-27b: same row: prefill $1.86, cached prefill $0.372, sample $5.595 per 1M
+- [^40] fireworks-train-deepseek-v4-flash-0731: same row: prefill $1.74, cached prefill $0.35, sample $4.33 per 1M
+- [^41] fireworks-train-muse-glimmer-30b: same row: prefill $1.96, cached prefill $0.39, sample $4.88 per 1M
+- [^42] fireworks-lora-sft-80b-300b-e-g-qwen3-235b-gpt-oss-120b-: same table: LoRA DPO $12.00, full-parameter SFT $12.00, full-parameter DPO $24.00 per 1M tokens
+- [^43] fireworks-train-glm-5-3-flash: same row: prefill $2.96, cached prefill $0.593, sample $7.41 per 1M
+- [^44] fireworks-lora-sft--300b-e-g-deepseek-v3-kimi-k2-: same table: LoRA DPO $20.00, full-parameter SFT $20.00, full-parameter DPO $40.00 per 1M tokens
+- [^45] fireworks-train-glm-5-3: same row: prefill $4.86, cached prefill $0.972, sample $12.15 per 1M
+- [^46] fireworks-train-kimi-k3: same row: prefill $10.87, cached prefill $2.17, sample $27.11 per 1M
 
 ### What every row must carry to be usable
 
@@ -72,8 +121,6 @@ the number. Anything that could not be fetched is not priced at all; it is liste
 
 | provider | claim | why unverified | url |
 | --- | --- | --- | --- |
-| together | none extracted | page fetched (f535a19de9b1) but it contains no price this extractor can read without executing JavaScript or parsing a client-side table | https://www.together.ai/pricing |
-| vast | none extracted | page fetched (5691c3ab232a) but it contains no price this extractor can read without executing JavaScript or parsing a client-side table | https://vast.ai/pricing |
 | Together AI | observed supervised fine-tuning prices for small models: $0.34, $0.38 per 1M tokens (two tables; which is LoRA and which is full-parameter is not determinable from the fetched HTML) | the fetched page contains two fine-tuning tables (LoRA and full-parameter, about 11% apart) plus a $4.00 minimum charge per job, but the toggle that labels each table is client-side, so a per-table price cannot be priced without guessing which table it came from | https://www.together.ai/pricing |
 | Vast.ai |  | the pricing table is populated client-side; the fetched HTML has no per-GPU numbers | https://vast.ai/pricing |
 | Predibase |  | HTTP 403 to a plain client | https://predibase.com/pricing |

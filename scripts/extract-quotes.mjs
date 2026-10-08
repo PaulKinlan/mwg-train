@@ -249,10 +249,15 @@ function main() {
   // Pages we fetched that yielded no number, plus providers we could not fetch at all. These are
   // recorded as unverified: a priced sheet must not contain a number nobody read.
   const unverified = [];
+  // A page that yields nothing is reported once, by name, and only if no hand-written entry already
+  // covers that provider - otherwise the file carries two rows for the same absence, one of them
+  // lowercase and confusing.
+  const curated = ['Together AI', 'Vast.ai', 'Predibase', 'OpenAI', 'Lyceum'];
   for (const entry of coverage) {
-    if (entry.extracted === 0) {
+    const name = entry.provider.charAt(0).toUpperCase() + entry.provider.slice(1);
+    if (entry.extracted === 0 && !curated.some((provider) => provider.toLowerCase().startsWith(entry.provider))) {
       unverified.push({
-        provider: entry.provider,
+        provider: name,
         claim_source: 'fetched page',
         claim: 'none extracted',
         why_unverified: `page fetched (${entry.sha.slice(0, 12)}) but it contains no price this extractor can read without executing JavaScript or parsing a client-side table`,

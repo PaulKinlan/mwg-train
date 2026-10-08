@@ -97,9 +97,12 @@ non-inferiority margin against the strong controls is **−5 percentage points**
   tokens or per GPU-minute). A prettier screenshot or a higher frequency of rule-sounding names is
   not evidence against a negative; it is the shape a negative often takes.
 
-The study is powered for a **large** effect only. With 12 sealed test families (see §6) the interval
-on δ is dominated by between-family variance; a genuine +5pp improvement is not resolvable here and
-will not be claimed. This is a limitation, not a detail (§15).
+The study is powered for a **large** effect only. With 32 sealed test families (see §6: 10
+in-family, 20 out-of-family, 2 repair) the interval on δ is dominated by between-family variance; a
+genuine +5pp improvement is not resolvable here and will not be claimed. This is a limitation, not a
+detail (§15). The effective sample size is families, not briefs: the three variants of a family
+share their phrasing-independent content, so they are one cluster, and `pairedDifference` resamples
+families for exactly that reason.
 
 ## 5. Equal inference budget
 
@@ -199,7 +202,7 @@ a rater disagree, both are reported.
 ## 11. Threats to validity, stated in advance
 
 - Variants within a family share a property set, so the effective sample is the **family**, which
-  is small (12 sealed test families). Intervals will be wide.
+  is small (32 sealed test families). Intervals will be wide.
 - The corpus does not exist yet; the acceptance yield used for costing is from the pilot, and the
   pilot's acceptance rate is an upper bound on the corpus's.
 - Guidance applicability is assigned by us, per brief, before seeing outputs. Where a rule is
@@ -224,7 +227,8 @@ a rater disagree, both are reported.
 ```
 brief manifest: docs/eval/briefs/manifest.jsonl
 rule set:       docs/eval/rules.json  (sha256:f6301c020f138ed70287b663107033c757e11120fa87d947248ce5e4b4cdca19)
-seal hash:      sha256:8791ebccecc89509efe68e6cf93f27d737eb7fab4f4d7b1a7c5a39e43fe269c3
+seal hash:      sha256:91d75f29afe10fa419b53fc412abdfaf970068d7725fe40c69894e64c36ed59e
+seal form:      v2 (sorted keys, NFC, sorted rows, sha256 of newline-joined rows)
 sealed at:      computed 2026-10-08; the freeze is taken at the start of the first run
 composition:    79 briefs / 44 families (dev 12 families, test 32 families)
                 A_familiar 36, B_heldout_combination 12, C_out_of_family 25, R_repair 6
@@ -233,14 +237,17 @@ composition:    79 briefs / 44 families (dev 12 families, test 32 families)
 
 Results are only reportable against this hash. Editing the briefs after the seal invalidates it: a
 new seal, dated, with the edit recorded in §14. The hash is computed by
-`node scripts/validate-briefs.mjs docs/eval/briefs/manifest.jsonl --seal`; `test/briefs.test.mjs`
-recomputes it, so a hand-edited manifest cannot keep a stale seal.
+`node scripts/validate-briefs.mjs docs/eval/briefs/manifest.jsonl --seal`, and `test/briefs.test.mjs`
+compares the computed seal against the hash written here, so a hand-edited manifest fails the suite
+rather than leaving a stale seal standing. The canonical form is stated above so the hash can be
+recomputed by a reader without this repository: sort rows by `brief_id`, serialise each row as JSON
+with object keys sorted at every depth and strings normalised to NFC, join with `\n`, sha256.
 
 ## 14. Deviations log
 
 | date | deviation | reason | recorded by |
 | --- | --- | --- | --- |
-| — | *(none yet; the seal has not been taken)* | | |
+| 2026-10-08 | the seal moved from `sha256:8791ebcc…` to `sha256:91d75f29…`, before any training run and before any outcome was seen | two changes, both required by adversarial review: (1) the canonical form now sorts object keys and normalises Unicode, because the first form let a re-serialised manifest hash differently (`SEAL_FORM` v2); (2) `fam-09-v2` asked for an address that its siblings and the shared oracle never mention, so the paraphrase added a deliverable — the phrase was removed | rev: gpt-6-sol + gemini-3.8-flash (adversarial passes), author mwg-train-prov |
 
 ## 15. Limitations
 
@@ -248,3 +255,20 @@ Small family count; large-effect-only power; judge-based secondary endpoints are
 advisory; the corpus's acceptance yield is unmeasured until the pilot runs; the teacher arm is
 descriptive and quarantined; and this preregistration cannot make the training data's provenance
 clean — that is a separate gate, in `docs/provenance/`.
+
+Two further limitations found by adversarial review on 2026-10-08, recorded rather than papered over:
+
+- **The already-modern items are not yet measurable.** Eight out-of-family briefs are marked
+  `already-modern: no uplift required`, and the schema gives a brief no way to carry the existing
+  site it is about, so nothing currently lets a run demonstrate "leave everything else exactly as it
+  is" or count the pages it changed. The rows are written against an existing site's copy, but the
+  baseline projects and their before/after oracle are not authored yet. Until they are, over-application
+  is measured by the rule bundle alone, which is weaker, and the secondary endpoint is reported as
+  unmeasured rather than as a pass.
+- **The repair endpoint is not yet executable.** The two sealed repair families name seeded defects
+  and share them across their variants, but no defective starter project ships with them, so a
+  repair run has nothing to run against. The `R_repair` stratum is excluded from the primary
+  endpoint (§7) and stays reported as not-run until the starters exist.
+
+Both are tracked as follow-up work on `mwg-train-kf0`; neither changes the primary endpoint, and
+neither is a reason to report a number we cannot produce.

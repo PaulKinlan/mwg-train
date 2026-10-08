@@ -11,10 +11,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
+import { tmpdir } from 'node:os';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { IN_FAMILY_ARCHETYPES, familyOverlap, parseBriefs, ruleIndex, summarizeBriefs, validateBriefs } from '../src/eval/prereg.mjs';
+import { IN_FAMILY_ARCHETYPES, familyOverlap, parseBriefs, ruleIndex, sealHash, summarizeBriefs, validateBriefs } from '../src/eval/prereg.mjs';
+import { sealHash as cliSealHash } from '../scripts/validate-briefs.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const MANIFEST = resolve(ROOT, 'docs/eval/briefs/manifest.jsonl');
@@ -69,6 +71,79 @@ test('the briefs are held out: no family may also be a training family', () => {
   assert.deepEqual(familyOverlap(rows, corpus), [], 'a family appears in both the held-out briefs and the corpus');
   // ...and the check is not vacuous: the same family in both must be reported
   assert.deepEqual(familyOverlap(rows, [{ family_id: rows[0].family_id, split: 'train' }]), [rows[0].family_id]);
+});
+
+test('the committed manifest matches the seal recorded in the preregistration', () => {
+  // The preregistration says a hand-edited manifest cannot keep a stale seal. That is only true if a
+  // test compares the computed seal against the RECORDED one; checking that the hash is well-formed
+  // and that an edit moves it would leave an edited manifest green with a stale document.
+  const prereg = readFileSync(resolve(ROOT, 'docs/eval/PREREGISTRATION.md'), 'utf8');
+  const recorded = prereg.match(/seal hash:\s*(sha256:[0-9a-f]{64})/)?.[1];
+  assert.ok(recorded, 'PREREGISTRATION.md must record a seal hash');
+  assert.match(prereg, /seal form\s+v2|seal form:\s*v2/i, 'the canonical form must be stated so the seal can be reproduced independently');
+  assert.equal(sealHash(parseBriefs(readFileSync(MANIFEST, 'utf8'))), recorded, 'the manifest no longer matches the recorded seal');
+});
+
+test('the seal is canonical: key order and unicode form cannot move it', () => {
+  const rows = parseBriefs(readFileSync(MANIFEST, 'utf8'));
+  const original = sealHash(rows);
+  // The same content with keys written in a different order must seal identically, or a
+  // re-serialised manifest would look like an edit (and an editor could say "I only reformatted it").
+  const reordered = rows.map((row) => Object.fromEntries(Object.entries(row).reverse()));
+  assert.equal(sealHash(reordered), original, 'key order must not change the seal');
+  // ...and a real content change must move it.
+  const edited = rows.map((row, index) => (index === 0 ? { ...row, prompt: `${row.prompt} Also add a FAQ.` } : row));
+  assert.notEqual(sealHash(edited), original, 'an edited prompt must move the seal');
+  // The CLI and the library must agree on the canonical form.
+  assert.equal(cliSealHash(rows), original);
+});
+
+test('the validator refuses an empty manifest and reports hostile input instead of throwing', () => {
+  const empty = join(tmpdir(), 'mwg-briefs-empty.jsonl');
+  writeFileSync(empty, '');
+  let refused = null;
+  try {
+    execFileSync(process.execPath, [resolve(ROOT, 'scripts/validate-briefs.mjs'), empty], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+  } catch (error) {
+    refused = `${error.stdout ?? ''}${error.stderr ?? ''}`;
+  }
+  assert.ok(refused !== null, 'an empty manifest must not exit 0');
+  assert.match(refused, /EMPTY_MANIFEST/, 'the empty manifest must be reported as such');
+
+  const broken = join(tmpdir(), 'mwg-briefs-broken.jsonl');
+  writeFileSync(broken, '{"brief_id": "truncated"\n');
+  let output = '';
+  let code = 0;
+  try {
+    output = execFileSync(process.execPath, [resolve(ROOT, 'scripts/validate-briefs.mjs'), broken], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+  } catch (error) {
+    code = error.status ?? 1;
+    output = `${error.stdout ?? ''}${error.stderr ?? ''}`;
+  }
+  assert.equal(code, 1, 'malformed JSONL must exit 1');
+  assert.ok(!/^\s*at /m.test(output.split('\n').slice(1).join('\n')), `malformed input must be a finding, not a stack trace:\n${output}`);
+  assert.match(output, /ERROR/);
+});
+
+test('the validator does not trust the rule_set_hash beside the vocabulary', () => {
+  const rules = JSON.parse(readFileSync(resolve(ROOT, 'docs/eval/rules.json'), 'utf8'));
+  const tampered = JSON.parse(JSON.stringify(rules));
+  tampered.categories.forms = [...tampered.categories.forms, 'invented-guide'];
+  const index = ruleIndex(tampered);
+  assert.notEqual(index.computedHash, index.hash, 'the recomputed vocabulary hash must differ from the declared one');
+  const { ok, findings } = validateBriefs(parseBriefs(readFileSync(MANIFEST, 'utf8')), index);
+  assert.equal(ok, false);
+  assert.ok(findings.some((f) => f.code === 'RULE_HASH_MISMATCH'), 'an unpinned vocabulary must be reported');
+});
+
+test('a variant must point at its family canonical brief', () => {
+  const rows = parseBriefs(readFileSync(MANIFEST, 'utf8'));
+  const index = ruleIndex(JSON.parse(readFileSync(resolve(ROOT, 'docs/eval/rules.json'), 'utf8')));
+  const victim = rows.find((row) => row.variant_of && row.brief_id.endsWith('-v2'));
+  const mutated = rows.map((row) => (row.brief_id === victim.brief_id ? { ...row, variant_of: row.brief_id.replace('v2', 'v3') } : row));
+  const { ok, findings } = validateBriefs(mutated, index);
+  assert.equal(ok, false, 'pointing at a sibling variant must be rejected');
+  assert.ok(findings.some((f) => f.code === 'BAD_VARIANT_OF'));
 });
 
 test('the seal hash is deterministic and covers the brief content', () => {

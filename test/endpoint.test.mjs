@@ -1,19 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import {
-  ARMS,
-  EndpointError,
-  briefPasses,
-  checkDesign,
-  decide,
-  failureTaxonomy,
-  pairedDifference,
-  passRate,
-  perFamily,
-  perRule,
-  rng,
-} from '../src/eval/endpoint.mjs';
+import { ARMS, EndpointError, briefPasses, checkDesign, checkUniverse, decide, failureTaxonomy, pairedDifference, passRate, perFamily, perRule, rng } from '../src/eval/endpoint.mjs';
 
 const RULE = 'accessibility/accessibility';
 
@@ -124,11 +112,15 @@ test('a consistent effect across many families is decided as a positive', () => 
   }
   const primary = pairedDifference(results, briefs, 'T_trained_adapter', 'C1_bare_base', { iterations: 3000, seed: 20261008 });
   const control2 = pairedDifference(results, briefs, 'T_trained_adapter', 'C2_base_mwg_prompt', { iterations: 3000, seed: 20261008 });
+  const control3 = pairedDifference(results, briefs, 'T_trained_adapter', 'C3_base_uplift_tool', { iterations: 3000, seed: 20261008 });
 
   assert.equal(primary.point, 0.5, '(16 - 4) / 24: eight improved families against two control families');
   assert.ok(primary.ci95[0] > 0, `interval should exclude zero: ${JSON.stringify(primary.ci95)}`);
 
-  const decision = decide(primary, [{ ...control2, arm_b: 'C2_base_mwg_prompt' }]);
+  const decision = decide(primary, [
+    { ...control2, arm_b: 'C2_base_mwg_prompt' },
+    { ...control3, arm_b: 'C3_base_uplift_tool' },
+  ]);
   assert.equal(decision.h1_supported, true);
   assert.equal(decision.null_result, false);
   assert.equal(decision.negative, false);
@@ -230,4 +222,51 @@ test('the seeded rng is deterministic and bounded', () => {
   assert.ok(first.every((x) => x >= 0 && x < 1));
   assert.notDeepEqual(first, [rng(2)(), rng(2)(), rng(2)()]);
   assert.throws(() => briefPasses({ brief_id: 'x' }, 'nope'), EndpointError);
+});
+
+test('H2 is not evaluable without a comparison against every strong control', () => {
+  // H2 says the adapter is no worse than BOTH the guidance prompt and the uplift tool. If only one
+  // comparison is supplied, the honest answer is "not evaluable" - the earlier form would return true
+  // on the strength of whichever control happened to be passed.
+  const complete = decide({ point: 0.2, ci95: [0.1, 0.3] }, [
+    { arm_b: 'C2_base_mwg_prompt', point: 0, ci95: [0, 0.1] },
+    { arm_b: 'C3_base_uplift_tool', point: 0, ci95: [0, 0.1] },
+  ]);
+  assert.equal(complete.h2_non_inferior_to_strong_controls, true);
+
+  const missingC3 = decide({ point: 0.2, ci95: [0.1, 0.3] }, [{ arm_b: 'C2_base_mwg_prompt', point: 0, ci95: [0, 0.1] }]);
+  assert.equal(missingC3.h2_non_inferior_to_strong_controls, false, 'a missing strong control must not support H2');
+  assert.ok(missingC3.h2_detail.some((row) => row.non_inferior === null && /not evaluable/.test(row.note ?? '')));
+});
+
+test('a result without explicit blocker counts does not pass the endpoint', () => {
+  // Fail closed: a missing accessibility or security count is not evidence of zero findings.
+  const noBlockers = { runnable: true, functional: true, rule_results: { 'accessibility/accessibility': true } };
+  assert.equal(briefPasses(noBlockers, ['accessibility/accessibility']), false, 'missing blocker counts must fail');
+  assert.equal(
+    briefPasses({ ...noBlockers, blocker_accessibility: 0, blocker_security: 0 }, ['accessibility/accessibility']),
+    true,
+    'explicit zero counts pass',
+  );
+  assert.equal(briefPasses({ ...noBlockers, blocker_accessibility: 1, blocker_security: 0 }, ['accessibility/accessibility']), false);
+});
+
+test('the universe the verdict is computed over is checked, not assumed', () => {
+  const briefs = [
+    { brief_id: 'dev-01', family_id: 'dev-01', split: 'dev', task: 'generate' },
+    { brief_id: 'test-01', family_id: 'test-01', split: 'test', task: 'generate' },
+    { brief_id: 'test-02', family_id: 'test-02', split: 'test', task: 'repair' },
+  ];
+  assert.deepEqual(checkUniverse([briefs[1]]), []);
+  const problems = checkUniverse(briefs);
+  assert.ok(problems.some((p) => p.code === 'OUTSIDE_SEALED_SPLIT' && p.brief_id === 'dev-01'), 'dev briefs must be rejected');
+  assert.ok(problems.some((p) => p.code === 'OUTSIDE_PRIMARY_TASK' && p.brief_id === 'test-02'), 'repair briefs must be rejected');
+  const sealProblems = checkUniverse([briefs[1]], { requireSeal: 'sha256:deadbeef' });
+  assert.ok(sealProblems.some((p) => p.code === 'UNSEALED_BRIEFS'), 'a set that does not match the seal must be rejected');
+  // ...and a dev brief must not be able to produce a pass rate at all: the arithmetic is paired, so a
+  // caller that skips checkUniverse gets a number, which is why the check exists.
+  const devBrief = { ...briefs[0], required_rules: [] };
+  const result = { brief_id: 'dev-01', arm: 'T_trained_adapter', runnable: true, functional: true, blocker_accessibility: 0, blocker_security: 0 };
+  assert.equal(typeof passRate([result], [devBrief], 'T_trained_adapter'), 'number');
+  assert.ok(checkUniverse([devBrief]).some((p) => p.code === 'OUTSIDE_SEALED_SPLIT'), 'the same brief must be refused by checkUniverse');
 });

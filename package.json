@@ -15,7 +15,7 @@
     "quotes:verify": "node scripts/verify-quotes.mjs",
     "quotes:fetch": "bash scripts/fetch-quotes.sh",
     "price:sheets": "node scripts/price-dry-run.mjs --out docs/eval/pricing.sheets.md",
-    "check:briefs": "node scripts/validate-briefs.mjs docs/eval/briefs/manifest.jsonl",
+    "check:briefs": "node scripts/validate-briefs.mjs docs/eval/briefs/manifest.jsonl --expect-seal sha256:91d75f29afe10fa419b53fc412abdfaf970068d7725fe40c69894e64c36ed59e",
     "check:originals": "node scripts/verify-originals.mjs docs/provenance/manifest.example.jsonl"
   },
   "license": "UNLICENSED"

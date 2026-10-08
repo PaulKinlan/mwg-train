@@ -22,7 +22,7 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import process from 'node:process';
 
-import { parseJsonl, valueNearVerbatim } from '../src/eval/quotes.mjs';
+import { labelAppearsInVerbatim, normaliseText, parseJsonl, valueNearVerbatim } from '../src/eval/quotes.mjs';
 
 const UNITS = new Set(['usd_per_gpu_hour', 'usd_per_million_training_tokens', 'usd_per_gb_month', 'usd_per_gb']);
 
@@ -55,6 +55,23 @@ export function verifyQuote(row, { rawDir } = {}) {
   require(typeof row.value === 'number' && Number.isFinite(row.value) && row.value > 0, 'value must be a positive number');
   require(typeof row.retrieved_at === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(row.retrieved_at), 'retrieved_at must be an ISO timestamp');
   require(typeof row.verbatim === 'string' && row.verbatim.trim().length >= 8, 'a verbatim snippet is required');
+  // The hash and size are what bind a row to the bytes it came from, so they are required rather
+  // than checked only when present: a row without them is a price with a story attached.
+  require(typeof row.sha256 === 'string' && /^[0-9a-f]{64}$/.test(row.sha256), 'the body sha256 is required');
+  require(Number.isInteger(row.bytes) && row.bytes > 0, 'the body byte count is required');
+  // The snippet must name the product, or a cross-card transplant (another card's price *and* its
+  // snippet) would pass the proximity test while pricing something else.
+  const label = labelAppearsInVerbatim(row.verbatim ?? '', row);
+  if (!label.found) {
+    problems.push({
+      quote_id: row.quote_id,
+      code: label.reason,
+      message:
+        label.reason === 'NO_LABEL'
+          ? 'the row names neither a GPU nor a size band, so the price cannot be attributed'
+          : `the row's label '${label.label}' does not appear in its verbatim snippet; the number and the snippet must describe the same product`,
+    });
+  }
   if (row.unit === 'usd_per_gpu_hour') require(typeof row.vram_gb === 'number' && row.vram_gb > 0, 'a per-GPU-hour quote must record VRAM');
   if (row.unit === 'usd_per_million_training_tokens') require(typeof row.model_size_band === 'string' && row.model_size_band !== '', 'a per-token quote must record the size band');
 
@@ -70,10 +87,10 @@ export function verifyQuote(row, { rawDir } = {}) {
 
   const body = readFileSync(rawPath);
   const sha = createHash('sha256').update(body).digest('hex');
-  if (row.sha256 && sha !== row.sha256) {
+  if (sha !== row.sha256) {
     problems.push({ quote_id: row.quote_id, code: 'SHA_MISMATCH', message: `body hashes to ${sha}, row says ${row.sha256}` });
   }
-  if (row.bytes && body.length !== row.bytes) {
+  if (body.length !== row.bytes) {
     problems.push({ quote_id: row.quote_id, code: 'BYTES_MISMATCH', message: `body is ${body.length} bytes, row says ${row.bytes}` });
   }
 
@@ -90,6 +107,11 @@ export function verifyQuote(row, { rawDir } = {}) {
           ? 'the verbatim snippet does not occur in the raw body'
           : `the value ${row.value} does not occur within 240 characters of the verbatim snippet`, // eslint-disable-line
     });
+  }
+  // ...and the snippet must occur in the body it claims to come from, which is what stops a real
+  // price being paired with a snippet invented for a different page.
+  if (!normaliseText(text).includes(normaliseText(row.verbatim ?? '\u0000'))) {
+    problems.push({ quote_id: row.quote_id, code: 'VERBATIM_NOT_IN_BODY', message: 'the snippet does not occur in this page' });
   }
   return { quote_id: row.quote_id, raw: rawPath, problems };
 }

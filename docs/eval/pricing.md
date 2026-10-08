@@ -97,6 +97,15 @@ a comment:
   two fine-tuning tables about 11% apart (LoRA and full-parameter) and the static page carries both
   with the label supplied client-side, so Together appears in `quotes.unverified.jsonl` with its
   observed range rather than in the sheet with a guessed label.
+
+  The Lambda rows are the harder case and are handled the other way round, which is worth stating
+  plainly because the difference is easy to miss. There, the *GPU and the rate are on the page in
+  text* and only the instance-plan label is client-side; the row therefore records the price as
+  fetched and the plan as **inferred** from the per-GPU vCPU count, and the inference travels with the
+  number into every table (`treat the plan as unverified, the price as fetched`). The distinction is:
+  a rate whose *product* is unknown is not priced at all, while a rate whose product is certain and
+  whose billing tier is inferred is priced with the inference attached. Nothing in the sheet presents
+  an inferred plan as a fact, and the generator refuses to print a row the verifier rejects.
 - **Estimated, and labelled** — the VRAM requirements and the throughput-dependent parts of the cost.
   The estimates expose each term; two errors in an earlier draft of the estimator are worth naming
   because both would have changed a purchase: the activation heuristic was ~10× too high, and billed
