@@ -25,6 +25,7 @@
  * scripts/validate-briefs.mjs) so there is exactly one implementation of "what the eval
  * manifest hashes to". The target families come from src/eval/targets.mjs, likewise one list.
  */
+import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 
 import { familyOverlap, parseBriefs, sealHash } from '../eval/prereg.mjs';
@@ -35,6 +36,14 @@ export const EVAL_MANIFEST = 'docs/eval/briefs/manifest.jsonl';
 
 /** The eval target designs: each row's image_sha256 is a design training must never see. */
 export const EVAL_TARGETS_MANIFEST = 'data/A6_evaluation/targets/manifest.jsonl';
+
+/**
+ * The sha256 of the committed targets manifest FILE BYTES (not its parsed rows). A training row that
+ * declares a real target hash must not be able to hide behind a substituted targets manifest whose
+ * booking row carries a different hash: pinning the bytes means the manifest the hashes were read
+ * from is provably the committed one.
+ */
+export const EVAL_TARGETS_SEAL = 'sha256:4ba07d58873525d57a043cb6b9d76664fc9d8c2952d16aea819b28cfa290d7c4';
 
 /**
  * The seal recorded in the preregistration (docs/eval/PREREGISTRATION.md and package.json
@@ -75,6 +84,52 @@ function readManifest(path) {
   } catch (error) {
     return { error: `cannot parse ${path}: ${error.message}` };
   }
+}
+
+/** Read a file's raw text. Returns { text } or { error }; never throws. */
+function readTextFile(path) {
+  try {
+    return { text: readFileSync(path, 'utf8') };
+  } catch (error) {
+    return { error: `cannot read ${path}: ${error.message}` };
+  }
+}
+
+/** Hash a file's raw bytes (never its parsed rows) so a substituted manifest cannot change the seal. */
+function sealOfFileBytes(path) {
+  try {
+    return `sha256:${createHash('sha256').update(readFileSync(path)).digest('hex')}`;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Parse a training manifest line by line, refusing (not silently dropping) any non-empty line that
+ * is not a JSON object. Returns { rows, malformed } where rows are the parsed objects and malformed
+ * names each refused line. Never throws.
+ */
+function parseTrainingManifest(text) {
+  const rows = [];
+  const malformed = [];
+  text.split('\n').forEach((line, index) => {
+    const trimmed = line.trim();
+    if (trimmed === '') return;
+    let value;
+    try {
+      value = JSON.parse(trimmed);
+    } catch (error) {
+      malformed.push({ code: 'TRAINING_ROW_UNPARSEABLE', line: index + 1, message: `training manifest line ${index + 1} is not valid JSON: ${error.message}` });
+      return;
+    }
+    if (!isPlainObject(value)) {
+      const kind = value === null ? 'null' : Array.isArray(value) ? 'an array' : typeof value;
+      malformed.push({ code: 'TRAINING_ROW_NOT_OBJECT', line: index + 1, message: `training manifest line ${index + 1} parses to ${kind}, not a JSON object` });
+      return;
+    }
+    rows.push(value);
+  });
+  return { rows, malformed };
 }
 
 /**
@@ -134,13 +189,19 @@ function check({ trainManifestPath, evalManifestPath, targetsManifestPath, expec
   }
 
   // 2. The training side: nothing usable to check is a finding, because "no corpus" is not the
-  //    same statement as "a disjoint corpus".
-  const trainRead = readManifest(trainManifestPath);
+  //    same statement as "a disjoint corpus". Every non-empty line must parse to a JSON OBJECT; a
+  //    line that is null, a number, a string, an array, or invalid JSON is a finding, never a row
+  //    that is silently discarded (which would read a malformed corpus as a clean one).
+  const trainRead = readTextFile(trainManifestPath);
   let trainRows = [];
   if (trainRead.error) {
     findings.push({ code: 'TRAINING_MANIFEST_EMPTY_OR_UNREADABLE', message: `training manifest: ${trainRead.error}`, path: trainManifestPath });
   } else {
-    trainRows = trainRead.rows.filter(isPlainObject);
+    const parsed = parseTrainingManifest(trainRead.text);
+    trainRows = parsed.rows;
+    for (const malformed of parsed.malformed) {
+      findings.push({ code: malformed.code, message: malformed.message, path: trainManifestPath, line: malformed.line });
+    }
     if (trainRows.length === 0) {
       findings.push({ code: 'TRAINING_MANIFEST_EMPTY_OR_UNREADABLE', message: `training manifest ${trainManifestPath} has no usable rows`, path: trainManifestPath });
     }
@@ -171,6 +232,18 @@ function check({ trainManifestPath, evalManifestPath, targetsManifestPath, expec
   //    family shares its design with the 'booking' target even though familyOverlap - which
   //    compares against the held-out brief families - says nothing.
   const targetsRead = readManifest(targetsManifestPath);
+  // The targets manifest is pinned by its file bytes: a substituted path or an edited manifest would
+  // otherwise let a caller rewrite which hashes training must never see, laundering a real collision.
+  const targetsSeal = sealOfFileBytes(targetsManifestPath);
+  if (targetsSeal !== EVAL_TARGETS_SEAL) {
+    findings.push({
+      code: 'TARGETS_MANIFEST_UNPINNED',
+      message: `eval targets manifest ${targetsManifestPath} ${targetsSeal === null ? 'could not be read' : `hashes to ${targetsSeal}`}, not the pinned ${EVAL_TARGETS_SEAL}; a substituted or edited targets manifest can conceal a target-hash collision`,
+      path: targetsManifestPath,
+      expected: EVAL_TARGETS_SEAL,
+      actual: targetsSeal,
+    });
+  }
   const targetByHash = new Map();
   const targetByFamily = new Map();
   if (targetsRead.error) {

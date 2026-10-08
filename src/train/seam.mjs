@@ -14,8 +14,9 @@
  */
 
 import { createHash } from 'node:crypto';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
 
 import { assertDisjointTrainingCorpus } from './disjoint.mjs';
 
@@ -146,21 +147,27 @@ function inspectJob(job) {
  */
 export function validateCorpusGates(job, { cwd = process.cwd() } = {}) {
   try {
-    return checkCorpusGates(job, cwd);
+    return readAndVerifyCorpus(job, cwd).findings;
   } catch (error) {
     return [{ field: 'corpus', message: `the corpus could not be checked (${error?.message ?? error}), so it is refused rather than launched` }];
   }
 }
 
-function checkCorpusGates(job, cwd) {
+/**
+ * Read and verify a job's corpus, returning both the findings and the exact bytes that were verified.
+ * This is the I/O layer `validateCorpusGates` exposes, plus the verified bytes so the seam can hand a
+ * backend an immutable snapshot of what was actually checked rather than the mutable path it came from.
+ */
+function readAndVerifyCorpus(job, cwd) {
+  const empty = { findings: [], bytes: null, resolvedPath: null, digest: null };
   if (!isPlainObject(job?.corpus)) {
-    return [{ field: 'corpus', message: 'no corpus was declared' }];
+    return { ...empty, findings: [{ field: 'corpus', message: 'no corpus was declared' }] };
   }
 
   const declaredPath = job.corpus.path;
   const resolvedPath = typeof declaredPath === 'string' && declaredPath !== '' ? resolve(cwd, declaredPath) : null;
   if (resolvedPath === null) {
-    return [{ field: 'corpus.path', message: 'the corpus has no path' }];
+    return { ...empty, findings: [{ field: 'corpus.path', message: 'the corpus has no path' }] };
   }
 
   // Fail closed: a corpus that cannot be read is not a corpus, and there is nothing to hash, count
@@ -169,16 +176,16 @@ function checkCorpusGates(job, cwd) {
   try {
     bytes = readFileSync(resolvedPath);
   } catch (error) {
-    return [{ field: 'corpus.path', message: `the corpus cannot be read at ${resolvedPath}: ${error.message}` }];
+    return { ...empty, resolvedPath, findings: [{ field: 'corpus.path', message: `the corpus cannot be read at ${resolvedPath}: ${error.message}` }] };
   }
 
   const findings = [];
 
-  const actualDigest = `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
-  if (actualDigest !== job.corpus.sha256) {
+  const digest = `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
+  if (digest !== job.corpus.sha256) {
     findings.push({
       field: 'corpus.sha256',
-      message: `the corpus bytes hash to ${actualDigest}, not the declared ${job.corpus.sha256}`,
+      message: `the corpus bytes hash to ${digest}, not the declared ${job.corpus.sha256}`,
     });
   }
 
@@ -197,7 +204,57 @@ function checkCorpusGates(job, cwd) {
     findings.push({ field: 'corpus', message: `${finding.code}: ${finding.message}` });
   }
 
-  return findings;
+  return { findings, bytes, resolvedPath, digest };
+}
+
+/** Read an existing snapshot and require its bytes to hash to the expected digest; never trust the name. */
+function readVerifiedSnapshot(snapshotPath, expectedDigest) {
+  const existing = readFileSync(snapshotPath);
+  const existingDigest = `sha256:${createHash('sha256').update(existing).digest('hex')}`;
+  if (existingDigest !== expectedDigest) {
+    throw new TrainingSeamError('CORPUS_SNAPSHOT_MISMATCH', `the verified-corpus snapshot ${snapshotPath} hashes to ${existingDigest}, not the verified ${expectedDigest}; refusing to reuse it`);
+  }
+  return existing;
+}
+
+/**
+ * Write the verified corpus bytes to an immutable, content-addressed snapshot and return a job whose
+ * `corpus.path` points at that snapshot. Verification of a path is not verification of the bytes that
+ * get consumed: between the gate reading `job.corpus.path` and a backend opening it, the file can be
+ * swapped. Pinning the verified bytes to a read-only file named by their own digest makes the bytes a
+ * backend consumes identical to the bytes that were verified.
+ */
+function materializeVerifiedCorpus(job, verified, snapshotDir) {
+  const hex = verified.digest.slice('sha256:'.length);
+  const snapshotPath = join(snapshotDir, `mwg-verified-corpus-${hex}.jsonl`);
+
+  if (existsSync(snapshotPath)) {
+    try {
+      readVerifiedSnapshot(snapshotPath, verified.digest);
+    } catch (error) {
+      if (error instanceof TrainingSeamError) throw error;
+      throw new TrainingSeamError('CORPUS_SNAPSHOT_UNREADABLE', `the verified-corpus snapshot ${snapshotPath} could not be read: ${error.message}`);
+    }
+  } else {
+    try {
+      writeFileSync(snapshotPath, verified.bytes, { mode: 0o444, flag: 'wx' });
+    } catch (error) {
+      if (error?.code === 'EEXIST') {
+        // Lost the creation race: reuse only if the winner's bytes are the verified bytes.
+        try {
+          readVerifiedSnapshot(snapshotPath, verified.digest);
+        } catch (verifyError) {
+          if (verifyError instanceof TrainingSeamError) throw verifyError;
+          throw new TrainingSeamError('CORPUS_SNAPSHOT_UNREADABLE', `the verified-corpus snapshot ${snapshotPath} appeared but could not be read: ${verifyError.message}`);
+        }
+      } else {
+        throw new TrainingSeamError('CORPUS_SNAPSHOT_UNWRITABLE', `the verified corpus could not be materialized at ${snapshotPath}: ${error.message}`);
+      }
+    }
+  }
+
+  // A shallow copy: the caller's job object is not mutated, and the declared hash/row count are kept.
+  return { ...job, corpus: { ...job.corpus, path: snapshotPath } };
 }
 
 /**
@@ -409,7 +466,7 @@ export function assertComparable(left, right) {
  * Run a job on a backend. The adapter is looked up rather than imported here, so a backend can be added
  * without editing this file - but it must present the same shape, which is checked before it runs.
  */
-export async function runTraining({ backend, job, adapters, context = {} }) {
+export async function runTraining({ backend, job, adapters, context = {}, snapshotDir = tmpdir() } = {}) {
   if (!BACKENDS.includes(backend)) {
     throw new TrainingSeamError('UNKNOWN_BACKEND', `unknown backend "${backend}" (known: ${BACKENDS.join(', ')})`);
   }
@@ -429,7 +486,8 @@ export async function runTraining({ backend, job, adapters, context = {} }) {
   // A job whose corpus is not proven disjoint - or whose corpus bytes do not match the declared hash
   // and row count - never reaches a backend. This is the I/O gate `validateJob` deliberately stays
   // pure of, so a corpus nobody actually checked cannot be planned and launched on a declared hash.
-  const corpusFindings = validateCorpusGates(job);
+  const verified = readAndVerifyCorpus(job, process.cwd());
+  const corpusFindings = verified.findings;
   if (corpusFindings.length > 0) {
     const integrityFindings = corpusFindings.filter((finding) => finding.field !== 'corpus');
     const disjointFindings = corpusFindings.filter((finding) => finding.field === 'corpus');
@@ -439,8 +497,12 @@ export async function runTraining({ backend, job, adapters, context = {} }) {
     throw new TrainingSeamError('CORPUS_NOT_DISJOINT', `the training corpus is not proven disjoint from the sealed evaluation: ${disjointFindings.map((finding) => finding.message).join('; ')}`);
   }
 
-  const planned = await adapter.plan(job, context);
-  const result = await adapter.run(job, context);
+  // Hand the adapter the verified BYTES, not the mutable path they were read from: verification of a
+  // path is not verification of the bytes that get consumed (see materializeVerifiedCorpus).
+  const snapshotJob = materializeVerifiedCorpus(job, verified, snapshotDir);
+
+  const planned = await adapter.plan(snapshotJob, context);
+  const result = await adapter.run(snapshotJob, context);
   // Shape before dereference: reading `.manifest` off whatever an adapter returned threw a TypeError
   // from inside the seam, which is a crash rather than a refusal, and a crash in a seam is a seam that
   // cannot be trusted to fail closed.

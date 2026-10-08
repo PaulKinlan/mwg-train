@@ -6,18 +6,25 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { parseBriefs, sealHash } from '../src/eval/prereg.mjs';
-import { EVAL_MANIFEST, EVAL_SEAL, EVAL_TARGETS_MANIFEST, assertDisjointTrainingCorpus } from '../src/train/disjoint.mjs';
+import { EVAL_MANIFEST, EVAL_SEAL, EVAL_TARGETS_MANIFEST, EVAL_TARGETS_SEAL, assertDisjointTrainingCorpus } from '../src/train/disjoint.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const TRAIN_MANIFEST = resolve(ROOT, 'docs/train/briefs/manifest.jsonl');
+const COMMITTED_TARGETS = resolve(ROOT, EVAL_TARGETS_MANIFEST);
 
 const TARGET_HASH = 'aa'.repeat(32);
+
+// The booking target's real image_sha256 from the committed targets manifest. The reviewer's bypass
+// used exactly this: a training row carrying the REAL hash, plus a substituted manifest naming a fake
+// hash for booking, so the collision vanished. The pin (EVAL_TARGETS_SEAL) is what defeats it.
+const BOOKING_TARGET_HASH = '00b96c509d7c555cafd07073e5761a189a5702d5ea7b1846a03654f3846e47e5';
 
 const EVAL_ROWS = [
   { brief_id: 'eval-01', family_id: 'held-out-a', split: 'test' },
@@ -55,7 +62,9 @@ const run = (fixture, overrides = {}) =>
 
 test('a disjoint synthetic pair passes and reports the recomputed seal', () => {
   const fixture = makeFixture({ trainRows: [{ brief_id: 'corpus-1', family_id: 'corpus-1', split: 'train' }] });
-  const result = run(fixture);
+  // The pin applies to whatever targets manifest is supplied, so a clean synthetic corpus must be
+  // checked against the committed (pinned) targets manifest to pass.
+  const result = run(fixture, { targetsManifestPath: COMMITTED_TARGETS });
   assert.equal(result.ok, true, result.findings.map((f) => `${f.code}: ${f.message}`).join('\n'));
   assert.deepEqual(result.findings, []);
   assert.equal(result.evalSeal, fixture.seal);
@@ -201,7 +210,7 @@ test('a row colliding on both sides gets one finding per side, each naming the o
   const family = result.findings.find((f) => f.code === 'TARGET_FAMILY_IN_TRAINING');
   const hash = result.findings.find((f) => f.code === 'TARGET_HASH_MIRRORED');
   assert.ok(family && hash, `expected both sides, got ${result.findings.map((f) => f.code).join(', ')}`);
-  assert.equal(result.findings.length, 2, 'exactly one finding per side, no duplicates');
+  assert.equal(result.findings.filter((f) => f.code === 'TARGET_FAMILY_IN_TRAINING' || f.code === 'TARGET_HASH_MIRRORED').length, 2, 'exactly one finding per side, no duplicates');
   assert.ok(family.message.includes('the same collision is also seen from the hash side'));
   assert.ok(hash.message.includes('the same collision is also seen from the family side'));
 });
@@ -221,7 +230,96 @@ test('the real sealed eval manifest and targets manifest satisfy the exported co
   assert.equal(EVAL_MANIFEST, 'docs/eval/briefs/manifest.jsonl');
   assert.equal(EVAL_TARGETS_MANIFEST, 'data/A6_evaluation/targets/manifest.jsonl');
   assert.equal(EVAL_SEAL, 'sha256:89a1f47d638c5eab733074d87bc19d6615401aeb9a77ecbd86cf10b443e272b1');
+  assert.equal(EVAL_TARGETS_SEAL, 'sha256:4ba07d58873525d57a043cb6b9d76664fc9d8c2952d16aea819b28cfa290d7c4');
   // And the committed eval manifest must actually seal to that value, else every default fails.
   const evalRows = parseBriefs(readFileSync(resolve(ROOT, EVAL_MANIFEST), 'utf8'));
   assert.equal(sealHash(evalRows), EVAL_SEAL);
+  // The targets seal is over the FILE BYTES, not the parsed rows, so a substituted manifest cannot match it.
+  const targetsBytes = readFileSync(COMMITTED_TARGETS);
+  assert.equal(`sha256:${createHash('sha256').update(targetsBytes).digest('hex')}`, EVAL_TARGETS_SEAL);
+});
+
+test('the reviewer bypass fails: a substituted targets manifest cannot conceal a real target hash', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'disjoint-bypass-'));
+  try {
+    // A training row carrying the REAL booking target hash. Against the committed manifest this is a
+    // TARGET_HASH_MIRRORED collision.
+    const trainPath = join(dir, 'train.jsonl');
+    writeFileSync(trainPath, toJsonl([{ brief_id: 'corpus-1', family_id: 'corpus-1', split: 'train', image_sha256: BOOKING_TARGET_HASH }]));
+    // A substituted targets manifest whose booking row carries a FAKE 64-hex hash, so the real hash
+    // no longer appears in targetByHash. This used to return ok:true.
+    const fakeTargetsPath = join(dir, 'targets.jsonl');
+    writeFileSync(fakeTargetsPath, toJsonl([{ id: 'target-booking', arm: 'A6_evaluation', kind: 'asset', family_id: 'booking', excluded_from_training: true, image_sha256: 'f'.repeat(64) }]));
+
+    const result = assertDisjointTrainingCorpus({ trainManifestPath: trainPath, targetsManifestPath: fakeTargetsPath });
+    assert.equal(result.ok, false, 'the substituted manifest must fail the gate');
+    assert.ok(result.findings.some((f) => f.code === 'TARGETS_MANIFEST_UNPINNED'), `expected TARGETS_MANIFEST_UNPINNED, got ${result.findings.map((f) => f.code).join(', ')}`);
+
+    // The same row against the committed manifest IS a collision, so the pin is what stops the bypass,
+    // not a coincidental absence of collision.
+    const committedResult = assertDisjointTrainingCorpus({ trainManifestPath: trainPath, targetsManifestPath: COMMITTED_TARGETS });
+    assert.ok(committedResult.findings.some((f) => f.code === 'TARGET_HASH_MIRRORED'), 'the committed manifest reports the real-hash collision');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('a substituted or edited targets manifest is refused as UNPINNED even when the corpus is clean', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'disjoint-unpin-'));
+  try {
+    const trainPath = join(dir, 'train.jsonl');
+    writeFileSync(trainPath, toJsonl([{ brief_id: 'corpus-1', family_id: 'corpus-1', split: 'train' }]));
+
+    // A structurally-clean but substituted manifest (a different booking hash, no collision with the
+    // clean corpus) would have read as ok:true before the pin.
+    const substituted = join(dir, 'targets-substituted.jsonl');
+    writeFileSync(substituted, toJsonl([{ id: 'target-booking', arm: 'A6_evaluation', kind: 'asset', family_id: 'booking', excluded_from_training: true, image_sha256: 'e'.repeat(64) }]));
+    // An edited copy of the committed manifest: same rows, one extra byte, so the FILE seal changes.
+    const edited = join(dir, 'targets-edited.jsonl');
+    writeFileSync(edited, Buffer.concat([readFileSync(COMMITTED_TARGETS), Buffer.from('\n')]));
+
+    for (const [label, targetsManifestPath] of [
+      ['substituted', substituted],
+      ['edited', edited],
+      ['unreadable', join(dir, 'no-such-targets.jsonl')],
+    ]) {
+      const result = assertDisjointTrainingCorpus({ trainManifestPath: trainPath, targetsManifestPath });
+      assert.equal(result.ok, false, `${label} targets must fail the gate`);
+      assert.ok(result.findings.some((f) => f.code === 'TARGETS_MANIFEST_UNPINNED'), `${label} targets should report TARGETS_MANIFEST_UNPINNED`);
+    }
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('the committed targets manifest still passes (pinned)', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'disjoint-pinned-'));
+  try {
+    const trainPath = join(dir, 'train.jsonl');
+    writeFileSync(trainPath, toJsonl([{ brief_id: 'corpus-1', family_id: 'corpus-1', split: 'train' }]));
+    const result = assertDisjointTrainingCorpus({ trainManifestPath: trainPath, targetsManifestPath: COMMITTED_TARGETS });
+    assert.equal(result.ok, true, result.findings.map((f) => `${f.code}: ${f.message}`).join('\n'));
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('a training row that is null, a number, a string or an array is refused, not silently dropped', () => {
+  for (const bad of ['null', '42', '"hello"', '[1,2,3]']) {
+    const fixture = makeFixture({ trainText: `${JSON.stringify({ brief_id: 'x', family_id: 'tr-x', split: 'train' })}\n${bad}\n` });
+    const result = run(fixture);
+    assert.equal(result.ok, false, `line ${bad} must fail the corpus`);
+    assert.equal(result.trainRows, 1, `line ${bad} must not count as a row`);
+    assert.ok(result.findings.some((f) => f.code === 'TRAINING_ROW_NOT_OBJECT'), `line ${bad} should report TRAINING_ROW_NOT_OBJECT`);
+  }
+});
+
+test('a truncated or invalid JSON training line is refused as TRAINING_ROW_UNPARSEABLE', () => {
+  for (const bad of ['{"brief_id":', 'not json at all', '{"a":1} trailing']) {
+    const fixture = makeFixture({ trainText: `${JSON.stringify({ brief_id: 'x', family_id: 'tr-x', split: 'train' })}\n${bad}\n` });
+    const result = run(fixture);
+    assert.equal(result.ok, false, `line ${JSON.stringify(bad)} must fail the corpus`);
+    assert.equal(result.trainRows, 1);
+    assert.ok(result.findings.some((f) => f.code === 'TRAINING_ROW_UNPARSEABLE'), `line ${JSON.stringify(bad)} should report TRAINING_ROW_UNPARSEABLE`);
+  }
 });

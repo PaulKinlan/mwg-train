@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -451,6 +451,74 @@ test('a valid disjoint corpus passes the gate and the adapter is reached', async
     assert.equal(planned, true, 'the adapter must be reached for a proven-disjoint corpus');
     assert.equal(result.artifact.uri, 'out');
   } finally {
+    rmSync(fixture.dir, { recursive: true, force: true });
+  }
+});
+
+test('the adapter receives the verified bytes, not the mutable path (TOCTOU)', async () => {
+  const fixture = makeCorpusFixture();
+  try {
+    let seenPath = null;
+    let seenDigest = null;
+    const adapters = {
+      cluster: {
+        plan: (jobArg) => {
+          // Replace the ORIGINAL corpus file after the gate has verified it, before the adapter runs.
+          // The adapter must already be pointing at the immutable snapshot, so this tamper is invisible.
+          writeFileSync(fixture.path, '{"brief_id":"tampered","family_id":"tr-tamper","split":"train"}\n');
+          seenPath = jobArg.corpus.path;
+          seenDigest = `sha256:${createHash('sha256').update(readFileSync(jobArg.corpus.path)).digest('hex')}`;
+          return { backend: 'cluster' };
+        },
+        run: async () => ({ artifact: { uri: 'out' }, manifest: manifest({ backend: 'cluster' }) }),
+      },
+    };
+    await runTraining({ backend: 'cluster', job: jobWithCorpus(fixture), adapters });
+    assert.equal(seenDigest, fixture.sha256, 'the adapter must be handed the verified bytes, not the replaced path');
+    assert.notEqual(seenPath, fixture.path, 'the adapter must not be handed the mutable original path');
+    assert.match(seenPath, /mwg-verified-corpus-[a-f0-9]{64}\.jsonl$/);
+  } finally {
+    rmSync(fixture.dir, { recursive: true, force: true });
+  }
+});
+
+test('the verified-corpus snapshot is reused deterministically for the same corpus', async () => {
+  const fixture = makeCorpusFixture();
+  try {
+    const seen = [];
+    const adapters = {
+      cluster: {
+        plan: (jobArg) => { seen.push(jobArg.corpus.path); return { backend: 'cluster' }; },
+        run: async () => ({ artifact: { uri: 'out' }, manifest: manifest({ backend: 'cluster' }) }),
+      },
+    };
+    await runTraining({ backend: 'cluster', job: jobWithCorpus(fixture), adapters });
+    await runTraining({ backend: 'cluster', job: jobWithCorpus(fixture), adapters });
+    assert.equal(seen.length, 2);
+    assert.equal(seen[0], seen[1], 'the same verified corpus must resolve to the same snapshot path');
+  } finally {
+    rmSync(fixture.dir, { recursive: true, force: true });
+  }
+});
+
+test('an unwritable snapshot location refuses rather than falling back to the mutable path', async () => {
+  const fixture = makeCorpusFixture();
+  const unwritable = mkdtempSync(join(tmpdir(), 'seam-snapshot-ro-'));
+  try {
+    chmodSync(unwritable, 0o555);
+    const adapters = {
+      cluster: {
+        plan: () => ({}),
+        run: async () => ({ artifact: { uri: 'x' }, manifest: manifest({ backend: 'cluster' }) }),
+      },
+    };
+    await assert.rejects(
+      () => runTraining({ backend: 'cluster', job: jobWithCorpus(fixture), adapters, snapshotDir: unwritable }),
+      (error) => error.code === 'CORPUS_SNAPSHOT_UNWRITABLE',
+    );
+  } finally {
+    chmodSync(unwritable, 0o755); // restore write so the directory can be removed
+    rmSync(unwritable, { recursive: true, force: true });
     rmSync(fixture.dir, { recursive: true, force: true });
   }
 });
