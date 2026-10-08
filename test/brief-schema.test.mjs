@@ -8,7 +8,17 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { BRIEF_FIELD_TYPES, builderFields, echoFieldFor, selectorFieldName, serverRequiredFieldNames, validateBriefSchema } from '../src/train/brief-schema.mjs';
+import {
+  BRIEF_FIELD_TYPES,
+  builderFields,
+  completeSelectorFieldName,
+  hasUnpairedSurrogate,
+  UNSAFE_FIELD_NAME,
+  echoFieldFor,
+  selectorFieldName,
+  serverRequiredFieldNames,
+  validateBriefSchema,
+} from '../src/train/brief-schema.mjs';
 
 /** A valid brief schema, with a `journey.fill` that types into its echoed field. */
 function brief(overrides = {}) {
@@ -46,16 +56,23 @@ test('a journey that types into an undeclared field is refused', () => {
   assert.ok(found.some((p) => /types into 'member', which this brief does not declare/.test(p)), found.join('\n'));
 });
 
-test('a select in fill is not itself an error, but it cannot be the echoed field', () => {
-  // Selects are legal controls; what must not happen is the harness trying to read the
-  // record back through one, because the journey cannot type into it.
+test('a select is driven with its own key, and cannot be the echoed field', () => {
+  // Selects are legal controls; what must not happen is the harness trying to read the record back
+  // through one, because the journey cannot type into it. They also need `journey.select` rather
+  // than `fill`, so a required select driven here is what makes the schema valid.
   const fields = [
     { slug: 'pew', name: 'pew', type: 'select', label: 'Pew', required: true, options: ['left', 'right'] },
     { slug: 'attendee', name: 'attendee', type: 'text', label: 'Name', required: true },
   ];
   const row = brief({
     fields,
-    journey: { startPath: '/', formSelector: 'form#f', fill: { 'input[name=attendee]': 'Ada' }, expectText: 'Ada' },
+    journey: {
+      startPath: '/',
+      formSelector: 'form#f',
+      fill: { 'input[name=attendee]': 'Ada' },
+      select: { 'select[name=pew]': 'right' },
+      expectText: 'Ada',
+    },
   });
   assert.deepEqual(validateBriefSchema(row), []);
   assert.equal(echoFieldFor(fields), 'attendee', 'the echoed field must fall to the text field, not the select');
@@ -189,4 +206,335 @@ test('a field that states required and optional contradictorily is refused', () 
     journey: { startPath: '/', formSelector: 'form#f', fill: { 'input[name=x]': 'v' }, expectText: 'v' },
   });
   assert.ok(problems(row).some((p) => /contradicts required:true/.test(p)), problems(row).join('\n'));
+});
+
+// A `<select>` cannot be typed into, so leaving one alone leaves it on its first option and the value
+// that reaches the server is the markup's, not the brief's. These are the rules that make the corpus
+// able to say the journey drives the select rather than that the control renders.
+const withSelect = (journey, { required = true } = {}) => ({
+  brief_id: 'tr-99-v1',
+  fields: [
+    { slug: 'customer', name: 'customer', type: 'text', label: 'Name', required: true, echoed: true },
+    { slug: 'grind', name: 'grind', type: 'select', label: 'Grind', required, options: ['Whole bean', 'Espresso', 'Filter'] },
+  ],
+  journey,
+});
+
+test('a journey that drives a required select with a non-default option validates', () => {
+  const row = withSelect({
+    startPath: '/',
+    formSelector: 'form#f',
+    fill: { 'input[name=customer]': 'Ada' },
+    select: { 'select[name=grind]': 'Espresso' },
+    expectText: 'Ada',
+  });
+  assert.deepEqual(validateBriefSchema(row), []);
+});
+
+test('a required select the journey never drives is refused', () => {
+  const row = withSelect({ startPath: '/', formSelector: 'form#f', fill: { 'input[name=customer]': 'Ada' }, expectText: 'Ada' });
+  assert.ok(
+    problems(row).some((p) => /does not choose 'grind', which its own fields mark required/.test(p)),
+    problems(row).join('\n'),
+  );
+});
+
+test('choosing the first option is refused: an untouched select already submits it', () => {
+  const row = withSelect({
+    startPath: '/',
+    formSelector: 'form#f',
+    fill: { 'input[name=customer]': 'Ada' },
+    select: { 'select[name=grind]': 'Whole bean' },
+    expectText: 'Ada',
+  });
+  assert.ok(problems(row).some((p) => /which is what an untouched select already submits/.test(p)), problems(row).join('\n'));
+});
+
+test('an option the field does not offer is refused', () => {
+  const row = withSelect({
+    startPath: '/',
+    formSelector: 'form#f',
+    fill: { 'input[name=customer]': 'Ada' },
+    select: { 'select[name=grind]': 'Turkish' },
+    expectText: 'Ada',
+  });
+  assert.ok(problems(row).some((p) => /is not one of \["Whole bean","Espresso","Filter"\]/.test(p)), problems(row).join('\n'));
+});
+
+test('a select instruction that addresses a non-select field is refused', () => {
+  const row = withSelect({
+    startPath: '/',
+    formSelector: 'form#f',
+    fill: { 'input[name=customer]': 'Ada' },
+    select: { 'input[name=customer]': 'Ada' },
+    expectText: 'Ada',
+  });
+  assert.ok(problems(row).some((p) => /does not address a select this brief declares/.test(p)), problems(row).join('\n'));
+});
+
+test('an optional select may be left alone', () => {
+  const row = withSelect({ startPath: '/', formSelector: 'form#f', fill: { 'input[name=customer]': 'Ada' }, expectText: 'Ada' }, { required: false });
+  assert.deepEqual(validateBriefSchema(row), []);
+});
+
+// A flow that spans more than one page visits earlier pages before the form page. These steps are
+// validated like the main page, so a step cannot quietly exercise a control the brief never declared.
+const withSteps = (steps) => ({
+  brief_id: 'tr-98-v1',
+  fields: [
+    { slug: 'ground', name: 'ground', type: 'text', label: 'Ground', required: true, echoed: true },
+    { slug: 'roast', name: 'roast', type: 'select', label: 'Roast', required: true, options: ['Light', 'Medium'] },
+  ],
+  journey: {
+    startPath: '/results',
+    formSelector: 'form#pick',
+    fill: { 'input[name=ground]': 'filter' },
+    select: { 'select[name=roast]': 'Medium' },
+    expectText: 'filter',
+    steps,
+  },
+});
+
+test('a journey may visit an earlier page before the form page', () => {
+  const row = withSteps([{ path: '/search', fill: { 'input[name=ground]': 'kaffe' }, submit: 'form#s' }]);
+  assert.deepEqual(validateBriefSchema(row), []);
+});
+
+test('a step that types into a field the brief does not declare is refused', () => {
+  const row = withSteps([{ path: '/search', fill: { 'input[name=budget]': '10' } }]);
+  assert.ok(problems(row).some((p) => /types into 'budget', which this brief does not declare/.test(p)), problems(row).join('\n'));
+});
+
+test('a step must name an absolute path', () => {
+  const row = withSteps([{ path: 'search' }]);
+  assert.ok(problems(row).some((p) => /must be an absolute path starting with \//.test(p)), problems(row).join('\n'));
+});
+
+test('a step may not carry a property the format does not define', () => {
+  const row = withSteps([{ path: '/search', click: 'form#s' }]);
+  assert.ok(problems(row).some((p) => /journey\.steps\[0\]\.click is not a step property this format defines/.test(p)), problems(row).join('\n'));
+});
+
+test('a step select must choose an option the field offers', () => {
+  const row = withSteps([{ path: '/search', select: { 'select[name=roast]': 'Burnt' } }]);
+  assert.ok(problems(row).some((p) => /option 'Burnt' is not one of \["Light","Medium"\]/.test(p)), problems(row).join('\n'));
+});
+
+test('steps must be an array, not a single object', () => {
+  const row = withSteps({ path: '/search' });
+  assert.ok(problems(row).some((p) => /journey\.steps must be an array of steps/.test(p)), problems(row).join('\n'));
+});
+
+// The reviewer's counterexample: validation read the field name out of the FIRST `[name=...]` in the
+// selector, while the browser resolves the whole string with `querySelector`. A compound selector can
+// therefore name one field to this check and drive another, which would let a required select be left
+// on its default while the schema reported it as driven.
+test('a compound selector cannot stand in for a required select', () => {
+  const row = brief({
+    fields: [
+      { slug: 'grind', name: 'grind', type: 'select', label: 'Grind', required: true, options: ['A', 'B'] },
+      { slug: 'other', name: 'other', type: 'select', label: 'Other', required: false, options: ['A', 'B'] },
+      { slug: 'c', name: 'c', type: 'text', label: 'C', required: true, echoed: true },
+    ],
+    journey: {
+      startPath: '/',
+      formSelector: 'form#f',
+      fill: { 'input[name=c]': 'x' },
+      select: { 'select[name=grind]:not(*), select[name=other]': 'B' },
+      expectText: 'x',
+    },
+  });
+  const found = problems(row);
+  assert.ok(found.some((p) => /does not address a select this brief declares/.test(p)), found.join('\n'));
+  assert.ok(found.some((p) => /does not choose 'grind'/.test(p)), found.join('\n'));
+  assert.equal(completeSelectorFieldName('select[name=grind]:not(*), select[name=other]'), null);
+});
+
+test('a compound fill selector is refused for the same reason', () => {
+  const row = brief({
+    fields: [
+      { slug: 'a', name: 'a', type: 'text', label: 'A', required: true, echoed: true },
+      { slug: 'b', name: 'b', type: 'text', label: 'B', required: true },
+    ],
+    journey: {
+      startPath: '/',
+      formSelector: 'form#f',
+      fill: { 'input[name=a], input[name=b]': 'x' },
+      expectText: 'x',
+    },
+  });
+  assert.ok(problems(row).some((p) => /must be one complete selector/.test(p)), problems(row).join('\n'));
+});
+
+test('complete selectors still pass, in every quote style', () => {
+  assert.equal(completeSelectorFieldName('input[name=customer]'), 'customer');
+  assert.equal(completeSelectorFieldName('select[name="grind"]'), 'grind');
+  assert.equal(completeSelectorFieldName("textarea[name='notes']"), 'notes');
+  assert.equal(completeSelectorFieldName('input[name=a][type=text]'), null);
+  assert.equal(completeSelectorFieldName('form input[name=a]'), null);
+});
+
+// A name outside the unquoted charset is legitimate HTML and `field.name` accepts any non-empty
+// string, so the selector rule must be able to reach it rather than rejecting the brief. Quoting is
+// how: `input[name="contact.email"]` addresses that field exactly, with nothing ambiguous about it.
+test('a name outside the unquoted charset is reachable by quoting it', () => {
+  assert.equal(completeSelectorFieldName('input[name="contact.email"]'), 'contact.email');
+  assert.equal(completeSelectorFieldName("input[name='a b']"), 'a b');
+  const row = brief({
+    fields: [
+      { slug: 'contact-email', name: 'contact.email', type: 'text', label: 'Email', required: true, echoed: true },
+    ],
+    journey: {
+      startPath: '/',
+      formSelector: 'form#f',
+      fill: { 'input[name="contact.email"]': 'ada@example.test' },
+      expectText: 'ada@example.test',
+    },
+  });
+  assert.deepEqual(validateBriefSchema(row), []);
+});
+
+// CSS escapes make the validator and the browser disagree about which field a selector names: this
+// rule reports the literal characters it sees, while `querySelector` resolves `\67 rind` to `grind`.
+// A required select could therefore count as driven while the page left it on its first option, which
+// is exactly the hole the complete-selector rule exists to close - so escapes are refused outright.
+test('a CSS escape cannot stand in for a required select', () => {
+  assert.equal(completeSelectorFieldName('select[name="\\67 rind"]'), null);
+  assert.equal(completeSelectorFieldName('input[name=\\67rind]'), null);
+  const row = brief({
+    fields: [
+      { slug: 'esc', name: '\\67 rind', type: 'select', label: 'Esc', required: true, options: ['A', 'B'] },
+      { slug: 'grind', name: 'grind', type: 'select', label: 'Grind', required: false, options: ['A', 'B'] },
+      { slug: 'c', name: 'c', type: 'text', label: 'C', required: true, echoed: true },
+    ],
+    journey: {
+      startPath: '/',
+      formSelector: 'form#f',
+      fill: { 'input[name=c]': 'x' },
+      select: { 'select[name="\\67 rind"]': 'B' },
+      expectText: 'x',
+    },
+  });
+  assert.ok(problems(row).some((p) => /does not address a select this brief declares/.test(p)), problems(row).join('\n'));
+  assert.ok(problems(row).some((p) => /does not choose '\\67 rind'/.test(p)), problems(row).join('\n'));
+});
+
+// A field may legitimately be named with an apostrophe, and its selector is then double-quoted; the
+// rule must allow the opposite quote inside a quoted value rather than refusing a usable selector.
+test('a name containing the opposite quote is reachable', () => {
+  assert.equal(completeSelectorFieldName('input[name="o\'brien"]'), 'o\'brien');
+  assert.equal(completeSelectorFieldName('input[name=\'a "b\']'), 'a "b');
+  const row = brief({
+    fields: [{ slug: 'who', name: "o'brien", type: 'text', label: 'Who', required: true, echoed: true }],
+    journey: {
+      startPath: '/',
+      formSelector: 'form#f',
+      fill: { 'input[name="o\'brien"]': 'ada' },
+      expectText: 'ada',
+    },
+  });
+  assert.deepEqual(validateBriefSchema(row), []);
+});
+
+test('whitespace around the operator is insignificant, and a raw newline is not', () => {
+  assert.equal(completeSelectorFieldName('input[name = customer]'), 'customer');
+  assert.equal(completeSelectorFieldName('input[ name = customer ]'), 'customer');
+  // Measured in Chrome: all three of those forms match, and an upper-case tag name matches too,
+  // because HTML tag names are case-insensitive. The name a selector resolves to is unchanged by
+  // either, so accepting them cannot make reading and driving disagree.
+  assert.equal(completeSelectorFieldName('INPUT[name=customer]'), 'customer');
+  assert.equal(completeSelectorFieldName('Select[name=grind]'), 'grind');
+  assert.equal(completeSelectorFieldName('input[name="a\nb"]'), null);
+  assert.equal(completeSelectorFieldName('input[name=1x]'), null, 'an unquoted value must be a valid CSS identifier');
+});
+
+// The builders interpolate `name="${field.name}"` into the form RAW, so the HTML parser reinterprets
+// anything entity-like: a field named `a&#32;b` reaches the DOM as `a b`, and a selector quoting either
+// literal name matches the OTHER field - measured in Chrome, which is how a required select could be
+// left on its default while validation counted it driven.
+test('a field name the HTML parser would rewrite is refused', () => {
+  const unsafe = ['a&#32;b', 'a&amp;b', 'a&copy', 'a"b', 'a\\b', 'a\nb', 'a\u0000b', 'a\u000Cb', '\uD800', 'a\uDC00b'];
+  for (const name of unsafe) {
+    // Two mechanisms refuse a name: the character set, and the unpaired-surrogate check.
+    assert.ok(
+      UNSAFE_FIELD_NAME.test(name) || hasUnpairedSurrogate(name),
+      `expected '${name}' to be refused`,
+    );
+    const row = brief({
+      fields: [
+        { slug: 'bad', name, type: 'text', label: 'Bad', required: true, echoed: true },
+        { slug: 'ok', name: 'ok', type: 'text', label: 'Ok', required: true },
+      ],
+      journey: { startPath: '/', formSelector: 'form#f', fill: { 'input[name=ok]': 'x' }, expectText: 'x' },
+    });
+    assert.ok(
+      problems(row).some((p) => /cannot be written into the form and read back unchanged/.test(p)),
+      `expected '${name}' to be refused by the validator`,
+    );
+  }
+});
+
+// The rule is deliberately no broader than the measurement: in the same Chrome probe these names all
+// reached the DOM unchanged AND matched a quoted selector, so refusing them would reject usable briefs.
+test('an unpaired surrogate is detected and a valid pair is not', () => {
+  assert.equal(hasUnpairedSurrogate('\uD800'), true, 'a lone high surrogate');
+  assert.equal(hasUnpairedSurrogate('a\uDC00b'), true, 'a lone low surrogate');
+  assert.equal(hasUnpairedSurrogate('\u{1F600}'), false, 'a valid pair is one code point above the range');
+  assert.equal(hasUnpairedSurrogate('a\u{10000}b'), false);
+  assert.equal(hasUnpairedSurrogate('customer'), false);
+});
+
+test('names Chrome round-trips unchanged are allowed', () => {
+  for (const name of ['customer', 'contact.email', "o'brien", 'a b', 'a<b', 'a=b', 'a$b', 'line-item', 'field1', 'a\tb', 'a\u007Fb', '\uFFFD', 'a\u00A0b', 'a\u2028b', '\u{1F600}', 'a\u{10000}b']) {
+    assert.equal(UNSAFE_FIELD_NAME.test(name) || hasUnpairedSurrogate(name), false, `${name} should be allowed`);
+  }
+  const row = brief({
+    fields: [
+      { slug: 'who', name: "o'brien", type: 'text', label: 'Who', required: true, echoed: true },
+      { slug: 'note', name: 'a b', type: 'text', label: 'Note', required: true },
+    ],
+    journey: {
+      startPath: '/',
+      formSelector: 'form#f',
+      fill: { 'input[name="o\'brien"]': 'ada', 'input[name="a b"]': 'x' },
+      expectText: 'ada',
+    },
+  });
+  assert.deepEqual(validateBriefSchema(row), []);
+});
+
+
+// An unquoted attribute value must be a valid CSS identifier. Measured in Chrome: `[name=-foo]` and
+// `[name=--foo]` parse, while `[name=-1]` and `[name=-]` throw a SyntaxError, because a hyphen
+// followed by a digit or by nothing does not start an identifier. The rule accepted both before, so a
+// brief could write a selector the browser cannot parse - the same class of bug as the CSS escape,
+// caught one shape later. Quoting reaches every one of these names, so nothing became unaddressable.
+test('an unquoted name must be a valid CSS identifier', () => {
+  assert.equal(completeSelectorFieldName('input[name=-1]'), null, 'a hyphen then a digit is not an identifier');
+  assert.equal(completeSelectorFieldName('input[name=-]'), null, 'a lone hyphen is not an identifier');
+  assert.equal(completeSelectorFieldName('input[name=1x]'), null);
+  for (const ident of ['-foo', '--foo', '-a-', 'x-', 'a--b', '_x', 'x1', 'customer']) {
+    assert.equal(completeSelectorFieldName(`input[name=${ident}]`), ident, `${ident} is a valid identifier`);
+  }
+  // The quoted form still reaches a name the unquoted form cannot express.
+  assert.equal(completeSelectorFieldName('input[name="-1"]'), '-1');
+  const row = brief({
+    fields: [{ slug: 'minus', name: '-1', type: 'text', label: 'Minus', required: true, echoed: true }],
+    journey: { startPath: '/', formSelector: 'form#f', fill: { 'input[name="-1"]': 'x' }, expectText: 'x' },
+  });
+  assert.deepEqual(validateBriefSchema(row), [], 'a legitimate -1 field is addressable when quoted');
+});
+
+// JavaScript's `\s` is a wider set than CSS whitespace: it also matches NBSP, vertical tab and the
+// Unicode spaces. Measured in Chrome, `input[<NBSP>name=x]` (and NBSP in three other positions here)
+// PARSES but matches nothing, and a vertical tab makes the browser throw - so the validator accepted a
+// selector that resolves to no element at all, which is the same silent failure as the compound and
+// escape cases. The class is now exactly what CSS accepts around the operator.
+test('only CSS whitespace is allowed around the operator', () => {
+  for (const bad of ['input[\u00A0name=x]', 'input[name\u00A0=x]', 'input[name=\u00A0x]', 'input[name=x\u00A0]', 'input[\u000Bname=x]', 'input[name=\u000Bx]', 'input[name=\u2028x]', 'input[\u3000name=x]', 'input[\uFEFFname=x]']) {
+    assert.equal(completeSelectorFieldName(bad), null, `${JSON.stringify(bad)} is not CSS whitespace`);
+  }
+  // The characters CSS does treat as whitespace, in every position, must keep working.
+  assert.equal(completeSelectorFieldName('input[\tname\r=\n\u000Cx\t]'), 'x');
+  assert.equal(completeSelectorFieldName('input[ name = x ]'), 'x');
 });

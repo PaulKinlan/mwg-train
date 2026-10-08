@@ -5,10 +5,12 @@
 The `tr-*` corpus is **brief-authored projects**: each project's form controls are declared in its own brief, and its targets are independent of the evaluation set. All 30 families declare their schema and all 210 projects are built from it (`schema_source: "brief"`). What that does and does not establish:
 
 - **The form is the brief's.** Each family declares its own `fields` and `journey` in `docs/train/briefs/manifest.jsonl`. The rendered project carries those controls - names and types, labels, requiredness and select options (the spec record holds slug/name/type/autocomplete; the rest is in the rendered source). The `tr-26` brief describes a coffee-subscription renewal and its project has subscription controls (`subscriber`, `beans`, `grind`, `frequency`, `bags`).
-- **The journey is one generic submit-and-read-back, not the brief's full flow.** The harness fills the brief's inputs, submits once, and waits for the echoed value on the read page. It does not exercise `select` controls at all, so `tr-26` never changes grind or frequency even though its brief says to; it does not span more than one page, so `tr-05`'s brief flow (register, log out, log back in) is not driven; and where a brief describes search, filtering, or updating an existing record, the journey still creates a new one. The 40/40 acceptance below is those generic journeys passing on those trees - it is **not** brief-flow conformance.
-- **Routes: 25 of 30 families emit every route their brief lists** (comparing placeholder-insensitively, so `/bookings/:id` matches `/bookings/:ref`). Five do not: `tr-05` is missing `/login` and `/volunteer/profile` - a whole capability its assertions require - and `tr-09`, `tr-12`, `tr-13`, `tr-16` each lack a listing's detail route (`/courses/:id`, `/jobs/:id`, `/docs/:slug`, `/cultivars/:id`). The per-project `route_conformed` field is narrower than it sounds: it compares only the **write** route, so it reads `true` for `tr-05`.
+- **The journey drives the brief's form, but is still one page and one submit.** The harness fills the brief's inputs, chooses its selects, submits once, and waits for the echoed value on the read page. It does **not** span more than one page, so `tr-05`'s brief flow (register, log out, log back in) is not driven; and where a brief describes search, filtering, or updating an existing record, the journey still creates a new one. The 40/40 acceptance below is those journeys passing on those trees - it is **not** brief-flow conformance.
+- **Routes: 29 of 30 families declare every route their brief lists**, checked by `npm run check:route-conformance` (comparing placeholder-insensitively, so `/bookings/:id` matches `/bookings/:ref`). `tr-05` is excused by an explicit waiver: it needs `/login` and `/volunteer/profile`, which the shared builder cannot serve at all (no login page, no login POST, no logout; the builder bead owns that). The waiver is checked both ways - a family that starts declaring its excused routes fails as a stale waiver.
+
+  **Declaring a route is not serving it.** The emitted `spec.json` carries every route, but the generated server handles only some of them, so a declared `list` route at, say, `/courses` answers 404. `npm run check:served-routes` measures that against real servers and `docs/train/corpus/SERVED.md` records what it found. The per-project `route_conformed` field is narrower than it sounds: it compares only the **write** route, so it reads `true` for `tr-05`.
 - **The archetype still supplies the server shape** (`pilot/training-archetypes.mjs`): how a record is stored and read back, and the routes' kinds. The form comes from the brief; the journey driven through it is the generic one described above, not the brief's own flow.
-- **What was verified, and what was not.** 40 of the 210 projects were driven in a real browser through those journeys and passed (see `YIELD.md`). The other 170 carry `scaffolded / unverified journey`, and none has been shown to build or serve beyond the sampled 40. `npm run check:brief-schema -- --expect-all` holds the field-level claim true for all 30 families - that every family declares a buildable schema and its journey fills every non-select field its own brief marks required (a select is exempt because it always submits a value, which is why tr-26's three required selects are never driven) - but no check establishes that a project implements its brief's whole flow.
+- **What was verified, and what was not.** 40 of the 210 projects were driven in a real browser through those journeys and passed (see `YIELD.md`). The other 170 carry `scaffolded / unverified journey`, and none has been shown to build or serve beyond the sampled 40. `npm run check:brief-schema -- --expect-all` holds the field-level claim true for all 30 families - that every family declares a buildable schema, its journey fills every non-select field its own brief marks required, and it chooses an option for every select its brief marks required (all 52 of them) - but no check establishes that a project implements its brief's whole flow.
 - The token figures below are **derived from characters** (`characters / 4`), not tokenizer-measured.
 
 ## Overview
@@ -34,9 +36,9 @@ Recorded in `pilot/TRAINING_CORPUS.json`, spanning 30 synthetic families (`tr-01
 |---|---:|---:|---:|---:|---|---|
 | **`app_sources`** | **3,026,754** | **3,174,700** | **6,201,454** | **1,550,364** | **[1,162,773, 1,937,954]** | **PRIMARY headline figure** |
 | `project_manifest` | 26,190 | 26,190 | 52,380 | 13,095 | [9,821, 16,369] | `package.json` dependencies & scripts |
-| `harness_metadata` | 791,797 | 791,797 | 1,583,594 | 395,899 | [296,924, 494,873] | `spec.json` harness metadata (EXCLUDED) |
+| `harness_metadata` | 817,144 | 817,144 | 1,634,288 | 408,572 | [306,429, 510,715] | `spec.json` harness metadata (EXCLUDED) |
 | `prompt` | 0 | 0 | 0 | 0 | [0, 0] | Measured zero (documented gap; see below) |
-| *full_tree (all)* | *3,844,741* | *3,992,687* | *7,837,428* | *1,959,357* | *[1,469,518, 2,449,196]* | *Total on-disk tree for comparison* |
+| *full_tree (all)* | *3,870,088* | *4,018,034* | *7,888,122* | *1,972,031* | *[1,479,023, 2,465,038]* | *Total on-disk tree for comparison* |
 
 - **Headline Characters (`app_sources`):** **6,201,454 characters** (3,026,754 original + 3,174,700 uplifted)
 - **Headline Derived Tokens:** **1,550,364 tokens**
@@ -49,6 +51,11 @@ Recorded in `pilot/TRAINING_CORPUS.json`, spanning 30 synthetic families (`tr-01
 > described a corpus that no longer existed; the figure above is the one that reproduces from the
 > committed trees. Any cost projection built from an earlier number is off by up to 5.4% at the
 > headline - still derived from characters, so the ±25% band dominates it.
+>
+> The `full_tree` and `harness_metadata` scopes moved again on `mwg-train-7d6` (`harness_metadata`
+> 395,899 → **408,572**, `full_tree` 1,959,357 → **1,972,031**) because the scaffold now declares each
+> brief's listing-detail route rather than dropping it. The **headline is unchanged**: `app_sources`
+> excludes `spec.json`, which is the only thing that grew.
 
 ---
 

@@ -172,6 +172,18 @@ function journeyResults(record, spec) {
   journeys.push({
     name: 'server-persistence',
     passed: persistenceOk(record, spec),
+    // What the journey actually DID, not only that it passed. Without this the committed record
+    // cannot show that a select was moved off its default (`SELECT_NOT_APPLIED` would have failed
+    // the run, but a reader should not have to take that on trust), and the evidence would live only
+    // in the run's output directory.
+    steps: (persistence?.steps ?? [])
+      .filter((step) => ['fill', 'select', 'submit', 'reload', 'step', 'step-fill', 'step-select', 'step-submit'].includes(step.step))
+      .map((step) => ({
+        step: step.step,
+        ...(step.options ? { options: step.options } : {}),
+        ...(step.fields ? { fields: step.fields } : {}),
+        ...(step.status !== undefined ? { status: step.status } : {}),
+      })),
     detail: persistence
       ? {
           submit_status: persistence.steps?.find((step) => step.step === 'submit')?.status ?? null,
@@ -320,12 +332,31 @@ async function main() {
   console.log(`train-corpus-run: corpus ${allProjects.length} projects, sample ${selected.length}, running ${selectedIds.length}`);
   console.log(`train-corpus-run: originals ${resolve(REPO_ROOT, PROJECTS_ROOT)}, run dir ${runDir}`);
 
-  const chrome = await launchChrome();
+  // A fresh browser per project, not one for the whole run. Forty projects take about an hour, and a
+  // browser that old is killed by the reaper mid-measurement (its limit is 45 minutes), so the run
+  // could never finish - it died at ~30/40 twice with no result. One browser per project keeps every
+  // browser well inside the limit; the startup cost is seconds against ~90 seconds of measurement.
+  let chrome = null;
   const decisions = [];
+  // A hard kill must not orphan a browser. Without this, a run stopped by its bound leaves Chrome
+  // behind for the reaper to find minutes later, holding memory and a profile directory.
+  for (const [signal, code] of [
+    ['SIGTERM', 143],
+    ['SIGINT', 130],
+    ['SIGHUP', 129],
+  ]) {
+    process.on(signal, () => {
+      const closing = chrome ? chrome.close().catch(() => {}) : Promise.resolve();
+      const leave = setTimeout(() => process.exit(code), 5000);
+      leave.unref();
+      closing.finally(() => process.exit(code));
+    });
+  }
   const records = [];
   let port = args.port;
   try {
     for (const projectId of selectedIds) {
+      chrome = await launchChrome();
       const corpusEntry = byId.get(projectId);
       const projectDir = join(resolve(REPO_ROOT, PROJECTS_ROOT), projectId);
       const spec = JSON.parse(readFileSync(join(projectDir, 'spec.json'), 'utf8'));
@@ -399,9 +430,11 @@ async function main() {
       writeFileSync(join(projectRunDir, 'uplifted.json'), `${JSON.stringify(uplifted, null, 2)}\n`);
       writeFileSync(join(projectRunDir, 'decision.json'), `${JSON.stringify(decision, null, 2)}\n`);
       console.log(`train-corpus-run:   ${decision.accepted ? 'ACCEPTED' : `rejected (${decision.category})`}`);
+      await chrome.close();
+      chrome = null;
     }
   } finally {
-    await chrome.close();
+    if (chrome) await chrome.close().catch(() => {});
   }
 
   // Journeys driven / passed across both versions of every sampled project.

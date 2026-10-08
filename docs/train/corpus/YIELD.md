@@ -1,6 +1,6 @@
-# Training-corpus acceptance yield (2026-10-08T16-56-18-423Z)
+# Training-corpus acceptance yield (2026-10-08T18-48-36-067Z)
 
-Generated 2026-10-08T17:03:23.096Z by `scripts/train-corpus-run.mjs`. 40 sampled pairs, 240 journeys driven, 240 passed.
+Generated 2026-10-08T18:54:07.054Z by `scripts/train-corpus-run.mjs`. 40 sampled pairs, 240 journeys driven, 240 passed.
 
 The SAMPLED projects' numbers come from records produced by driving the project in a real
 browser; the per-project records, screenshots and traces are under the run output directory.

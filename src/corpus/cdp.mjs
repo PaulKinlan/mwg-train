@@ -404,10 +404,48 @@ export class Page {
 
   /** One trusted key press. */
   async realKey(key) {
-    const codes = { Backspace: 8, Tab: 9, Enter: 13, Escape: 27, ArrowDown: 40 };
+    const codes = { Backspace: 8, Tab: 9, Enter: 13, Escape: 27, ArrowUp: 38, ArrowDown: 40 };
     const params = { key, code: key, windowsVirtualKeyCode: codes[key], nativeVirtualKeyCode: codes[key] };
     await this.send('Input.dispatchKeyEvent', { type: 'keyDown', ...params });
     await this.send('Input.dispatchKeyEvent', { type: 'keyUp', ...params });
+  }
+
+  /**
+   * Choose an option in a `<select>` the way a user does: focus it and press an arrow key until the
+   * wanted option is selected.
+   *
+   * Setting `el.value` and dispatching a synthetic `change` would be shorter and wrong for exactly
+   * the reason `realType` exists: a page that reads its state from real interaction does not see a
+   * synthetic event, so the page under measurement would not be the page a user gets. Arrow keys on
+   * a focused closed select are trusted input, so the browser fires its own `input`/`change` and any
+   * handler the project attached runs.
+   *
+   * The move is relative to wherever the select currently is rather than assumed to start at the
+   * first option, because a project may preselect one.
+   */
+  async selectOption(selector, value) {
+    const { target, current, options } = await this.evaluate(`
+      const el = document.querySelector(${JSON.stringify(selector)});
+      if (!el) throw new Error('selectOption: no element for ' + ${JSON.stringify(selector)});
+      if (el.tagName !== 'SELECT') throw new Error('selectOption: ' + ${JSON.stringify(selector)} + ' is a ' + el.tagName + ', not a select');
+      const options = [...el.options].map((option) => option.value);
+      const target = [...el.options].findIndex((option) => option.value === ${JSON.stringify(value)} || option.textContent.trim() === ${JSON.stringify(value)});
+      el.focus();
+      return { target, current: el.selectedIndex, options };
+    `);
+    if (target < 0) {
+      throw new CdpError('NO_SUCH_OPTION', `${selector} has no option '${value}'; it offers: ${options.join(', ')}`);
+    }
+    const key = target > current ? 'ArrowDown' : 'ArrowUp';
+    for (let step = Math.abs(target - current); step > 0; step -= 1) await this.realKey(key);
+    // Read the result back rather than trusting that the keys landed. A select that stayed put would
+    // submit its default option while the journey reported the option it meant to choose, which is
+    // the difference between driving a control and describing one.
+    const settled = await this.evaluate(`return document.querySelector(${JSON.stringify(selector)})?.value ?? null`);
+    if (settled !== value) {
+      throw new CdpError('SELECT_NOT_APPLIED', `${selector} is '${settled}' after choosing '${value}'`);
+    }
+    return true;
   }
 
   /** Type into a field, delete it, and leave the field the way a user leaves a required field empty. */

@@ -1,0 +1,2286 @@
+{
+  "convention": "served = status < 400, or another 4xx that means the handler ran (422); 404 and 405 = NOT SERVED; >= 500 or network failure = ERROR. Write routes are probed with POST and read-by-reference routes with a record the server created",
+  "timestamp": "2026-10-08T18:38:28.217Z",
+  "scope": {
+    "limit": 30,
+    "families": [
+      "tr-01",
+      "tr-02",
+      "tr-03",
+      "tr-04",
+      "tr-05",
+      "tr-06",
+      "tr-07",
+      "tr-08",
+      "tr-09",
+      "tr-10",
+      "tr-11",
+      "tr-12",
+      "tr-13",
+      "tr-14",
+      "tr-15",
+      "tr-16",
+      "tr-17",
+      "tr-18",
+      "tr-19",
+      "tr-20",
+      "tr-21",
+      "tr-22",
+      "tr-23",
+      "tr-24",
+      "tr-25",
+      "tr-26",
+      "tr-27",
+      "tr-28",
+      "tr-29",
+      "tr-30"
+    ],
+    "projects_checked": 30
+  },
+  "summary": {
+    "declared_routes": 135,
+    "served": 91,
+    "not_served": 44,
+    "errors": 0,
+    "by_kind": {
+      "page": {
+        "declared": 30,
+        "served": 30,
+        "not_served": 0,
+        "errors": 0
+      },
+      "write": {
+        "declared": 29,
+        "served": 29,
+        "not_served": 0,
+        "errors": 0
+      },
+      "read-by-reference": {
+        "declared": 29,
+        "served": 29,
+        "not_served": 0,
+        "errors": 0
+      },
+      "read-session": {
+        "declared": 1,
+        "served": 1,
+        "not_served": 0,
+        "errors": 0
+      },
+      "list": {
+        "declared": 41,
+        "served": 1,
+        "not_served": 40,
+        "errors": 0
+      },
+      "list-detail": {
+        "declared": 4,
+        "served": 0,
+        "not_served": 4,
+        "errors": 0
+      },
+      "search": {
+        "declared": 0,
+        "served": 0,
+        "not_served": 0,
+        "errors": 0
+      },
+      "write-account": {
+        "declared": 1,
+        "served": 1,
+        "not_served": 0,
+        "errors": 0
+      }
+    }
+  },
+  "not_served_routes": [
+    {
+      "project_id": "tr-01-hono",
+      "family_id": "tr-01",
+      "archetype": "booking",
+      "kind": "list",
+      "declared_path": "/services",
+      "probed_path": "/services",
+      "declared_method": "GET",
+      "status": 404
+    },
+    {
+      "project_id": "tr-02-hono",
+      "family_id": "tr-02",
+      "archetype": "web-shop",
+      "kind": "list",
+      "declared_path": "/ciders",
+      "probed_path": "/ciders",
+      "declared_method": "GET",
+      "status": 404
+    },
+    {
+      "project_id": "tr-03-hono",
+      "family_id": "tr-03",
+      "archetype": "booking",
+      "kind": "list",
+      "declared_path": "/kilns",
+      "probed_path": "/kilns",
+      "declared_method": "GET",
+      "status": 404
+    },
+    {
+      "project_id": "tr-03-hono",
+      "family_id": "tr-03",
+      "archetype": "booking",
+      "kind": "list",
+      "declared_path": "/schedule",
+      "probed_path": "/schedule",
+      "declared_method": "GET",
+      "status": 404
+    },
+    {
+      "project_id": "tr-04-hono",
+      "family_id": "tr-04",
+      "archetype": "dashboard",
+      "kind": "list",
+      "declared_path": "/generation",
+      "probed_path": "/generation",
+      "declared_method": "GET",
+      "status": 404
+    },
+    {
+      "project_id": "tr-04-hono",
+      "family_id": "tr-04",
+      "archetype": "dashboard",
+      "kind": "list",
+      "declared_path": "/credits",
+      "probed_path": "/credits",
+      "declared_method": "GET",
+      "status": 404
+    },
+    {
+      "project_id": "tr-06-hono",
+      "family_id": "tr-06",
+      "archetype": "directory-listing",
+      "kind": "list",
+      "declared_path": "/makers",
+      "probed_path": "/makers",
+      "declared_method": "GET",
+      "status": 404
+    },
+    {
+      "project_id": "tr-06-hono",
+      "family_id": "tr-06",
+      "archetype": "directory-listing",
+      "kind": "list",
+      "declared_path": "/disciplines",
+      "probed_path": "/disciplines",
+      "declared_method": "GET",
+      "status": 404
+    },
+    {
+      "project_id": "tr-07-hono",
+      "family_id": "tr-07",
+      "archetype": "event-registration",
+      "kind": "list",
+      "declared_path": "/events",
+      "probed_path": "/events",
+      "declared_method": "GET",
+      "status": 404
+    },
+    {
+      "project_id": "tr-08-hono",
+      "family_id": "tr-08",
+      "archetype": "support-helpdesk",
+      "kind": "list",
+      "declared_path": "/tickets",
+      "probed_path": "/tickets",
+      "declared_method": "GET",
+      "status": 404
+    },
+    {
+      "project_id": "tr-09-hono",
+      "family_id": "tr-09",
+      "archetype": "course-enrolment",
+      "kind": "list",
+      "declared_path": "/courses",
+      "probed_path": "/courses",
+      "declared_method": "GET",
+      "status": 404
+    },
+    {
+      "project_id": "tr-09-hono",
+      "family_id": "tr-09",
+      "archetype": "course-enrolment",
+      "kind": "list-detail",
+      "declared_path": "/courses/:id",
+      "probed_path": "/courses/1",
+      "declared_method": "GET",
+      "status": 404
+    },
+    {
+      "project_id": "tr-10-hono",
+      "family_id": "tr-10",
+      "archetype": "survey-form",
+      "kind": "list",
+      "declared_path": "/results",
+      "probed_path": "/results",
+      "declared_method": "GET",
+      "status": 404
+    },
+    {
+      "project_id": "tr-11-hono",
+      "family_id": "tr-11",
+      "archetype": "restaurant-ordering",
+      "kind": "list",
+      "declared_path": "/menu",
+      "probed_path": "/menu",
+      "declared_method": "GET",
+      "status": 404
+    },
+    {
+      "project_id": "tr-12-hono",
+      "family_id": "tr-12",
+      "archetype": "job-board",
+      "kind": "list",
+      "declared_path": "/jobs",
+      "probed_path": "/jobs",
+      "declared_method": "GET",
+      "status": 404
+    },
+    {
+      "project_id": "tr-12-hono",
+      "family_id": "tr-12",
+      "archetype": "job-board",
+      "kind": "list-detail",
+      "declared_path": "/jobs/:id",
+      "probed_path": "/jobs/1",
+      "declared_method": "GET",
+      "status": 404
+    },
+    {
+      "project_id": "tr-13-hono",
+      "family_id": "tr-13",
+      "archetype": "docs-site",
+      "kind": "list",
+      "declared_path": "/docs",
+      "probed_path": "/docs",
+      "declared_method": "GET",
+      "status": 404
+    },
+    {
+      "project_id": "tr-13-hono",
+      "family_id": "tr-13",
+      "archetype": "docs-site",
+      "kind": "list-detail",
+      "declared_path": "/docs/:slug",
+      "probed_path": "/docs/sample-item",
+      "declared_method": "GET",
+      "status": 404
+    },
+    {
+      "project_id": "tr-13-hono",
+      "family_id": "tr-13",
+      "archetype": "docs-site",
+      "kind": "list",
+      "declared_path": "/soil-tests",
+      "probed_path": "/soil-tests",
+      "declared_method": "GET",
+      "status": 404
+    },
+    {
+      "project_id": "tr-14-hono",
+      "family_id": "tr-14",
+      "archetype": "directory-listing",
+      "kind": "list",
+      "declared_path": "/stops",
+      "probed_path": "/stops",
+      "declared_method": "GET",
+      "status": 404
+    },
+    {
+      "project_id": "tr-15-hono",
+      "family_id": "tr-15",
+      "archetype": "expense-tracker",
+      "kind": "list",
+      "declared_path": "/expenses",
+      "probed_path": "/expenses",
+      "declared_method": "GET",
+      "status": 404
+    },
+    {
+      "project_id": "tr-16-hono",
+      "family_id": "tr-16",
+      "archetype": "library-catalogue",
+      "kind": "list",
+      "declared_path": "/cultivars",
+      "probed_path": "/cultivars",
+      "declared_method": "GET",
+      "status": 404
+    },
+    {
+      "project_id": "tr-16-hono",
+      "family_id": "tr-16",
+      "archetype": "library-catalogue",
+      "kind": "list-detail",
+      "declared_path": "/cultivars/:id",
+      "probed_path": "/cultivars/1",
+      "declared_method": "GET",
+      "status": 404
+    },
+    {
+      "project_id": "tr-17-hono",
+      "family_id": "tr-17",
+      "archetype": "booking",
+      "kind": "list",
+      "declared_path": "/services",
+      "probed_path": "/services",
+      "declared_method": "GET",
+      "status": 404
+    },
+    {
+      "project_id": "tr-18-hono",
+      "family_id": "tr-18",
+      "archetype": "web-shop",
+      "kind": "list",
+      "declared_path": "/products",
+      "probed_path": "/products",
+      "declared_method": "GET",
+      "status": 404
+    },
+    {
+      "project_id": "tr-18-hono",
+      "family_id": "tr-18",
+      "archetype": "web-shop",
+      "kind": "list",
+      "declared_path": "/basket",
+      "probed_path": "/basket",
+      "declared_method": "GET",
+      "status": 404
+    },
+    {
+      "project_id": "tr-19-hono",
+      "family_id": "tr-19",
+      "archetype": "booking",
+      "kind": "list",
+      "declared_path": "/skiffs",
+      "probed_path": "/skiffs",
+      "declared_method": "GET",
+      "status": 404
+    },
+    {
+      "project_id": "tr-19-hono",
+      "family_id": "tr-19",
+      "archetype": "booking",
+      "kind": "list",
+      "declared_path": "/safety-log",
+      "probed_path": "/safety-log",
+      "declared_method": "GET",
+      "status": 404
+    },
+    {
+      "project_id": "tr-20-hono",
+      "family_id": "tr-20",
+      "archetype": "community-forum",
+      "kind": "list",
+      "declared_path": "/tunes",
+      "probed_path": "/tunes",
+      "declared_method": "GET",
+      "status": 404
+    },
+    {
+      "project_id": "tr-21-hono",
+      "family_id": "tr-21",
+      "archetype": "booking",
+      "kind": "list",
+      "declared_path": "/rides",
+      "probed_path": "/rides",
+      "declared_method": "GET",
+      "status": 404
+    },
+    {
+      "project_id": "tr-21-hono",
+      "family_id": "tr-21",
+      "archetype": "booking",
+      "kind": "list",
+      "declared_path": "/dispatch",
+      "probed_path": "/dispatch",
+      "declared_method": "GET",
+      "status": 404
+    },
+    {
+      "project_id": "tr-22-hono",
+      "family_id": "tr-22",
+      "archetype": "dashboard",
+      "kind": "list",
+      "declared_path": "/trees",
+      "probed_path": "/trees",
+      "declared_method": "GET",
+      "status": 404
+    },
+    {
+      "project_id": "tr-22-hono",
+      "family_id": "tr-22",
+      "archetype": "dashboard",
+      "kind": "list",
+      "declared_path": "/canopy-summary",
+      "probed_path": "/canopy-summary",
+      "declared_method": "GET",
+      "status": 404
+    },
+    {
+      "project_id": "tr-23-hono",
+      "family_id": "tr-23",
+      "archetype": "survey-form",
+      "kind": "list",
+      "declared_path": "/calculator",
+      "probed_path": "/calculator",
+      "declared_method": "GET",
+      "status": 404
+    },
+    {
+      "project_id": "tr-24-hono",
+      "family_id": "tr-24",
+      "archetype": "booking",
+      "kind": "list",
+      "declared_path": "/pitches",
+      "probed_path": "/pitches",
+      "declared_method": "GET",
+      "status": 404
+    },
+    {
+      "project_id": "tr-24-hono",
+      "family_id": "tr-24",
+      "archetype": "booking",
+      "kind": "list",
+      "declared_path": "/market-layout",
+      "probed_path": "/market-layout",
+      "declared_method": "GET",
+      "status": 404
+    },
+    {
+      "project_id": "tr-25-hono",
+      "family_id": "tr-25",
+      "archetype": "docs-site",
+      "kind": "list",
+      "declared_path": "/interviews",
+      "probed_path": "/interviews",
+      "declared_method": "GET",
+      "status": 404
+    },
+    {
+      "project_id": "tr-26-hono",
+      "family_id": "tr-26",
+      "archetype": "web-shop",
+      "kind": "list",
+      "declared_path": "/subscriptions",
+      "probed_path": "/subscriptions",
+      "declared_method": "GET",
+      "status": 404
+    },
+    {
+      "project_id": "tr-27-hono",
+      "family_id": "tr-27",
+      "archetype": "booking",
+      "kind": "list",
+      "declared_path": "/concerts",
+      "probed_path": "/concerts",
+      "declared_method": "GET",
+      "status": 404
+    },
+    {
+      "project_id": "tr-28-hono",
+      "family_id": "tr-28",
+      "archetype": "support-helpdesk",
+      "kind": "list",
+      "declared_path": "/gear",
+      "probed_path": "/gear",
+      "declared_method": "GET",
+      "status": 404
+    },
+    {
+      "project_id": "tr-28-hono",
+      "family_id": "tr-28",
+      "archetype": "support-helpdesk",
+      "kind": "list",
+      "declared_path": "/tickets",
+      "probed_path": "/tickets",
+      "declared_method": "GET",
+      "status": 404
+    },
+    {
+      "project_id": "tr-29-hono",
+      "family_id": "tr-29",
+      "archetype": "expense-tracker",
+      "kind": "list",
+      "declared_path": "/funds",
+      "probed_path": "/funds",
+      "declared_method": "GET",
+      "status": 404
+    },
+    {
+      "project_id": "tr-29-hono",
+      "family_id": "tr-29",
+      "archetype": "expense-tracker",
+      "kind": "list",
+      "declared_path": "/ledger",
+      "probed_path": "/ledger",
+      "declared_method": "GET",
+      "status": 404
+    },
+    {
+      "project_id": "tr-30-hono",
+      "family_id": "tr-30",
+      "archetype": "event-registration",
+      "kind": "list",
+      "declared_path": "/cleanups",
+      "probed_path": "/cleanups",
+      "declared_method": "GET",
+      "status": 404
+    }
+  ],
+  "verification": {
+    "tested_ports": [
+      43769,
+      35785,
+      36057,
+      46215,
+      44543,
+      39287,
+      45899,
+      40203,
+      46425,
+      43479,
+      45489,
+      40761,
+      34689,
+      34615,
+      34999,
+      39231,
+      41867,
+      41497,
+      43107,
+      38067,
+      46191,
+      46859,
+      41261,
+      44239,
+      38973,
+      33039,
+      34229,
+      46619,
+      40965,
+      42279
+    ],
+    "lingering_listeners": 0,
+    "remaining_temp_dbs": 0
+  },
+  "projects": [
+    {
+      "project_id": "tr-01-hono",
+      "family_id": "tr-01",
+      "archetype": "booking",
+      "framework": "hono",
+      "server_ready": true,
+      "routes": [
+        {
+          "declared_path": "/",
+          "probed_path": "/",
+          "declared_method": "GET",
+          "kind": "page",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/book",
+          "probed_path": "/book",
+          "declared_method": "POST",
+          "kind": "write",
+          "status": 303,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/bookings/:ref",
+          "probed_path": "the reference the server returned",
+          "declared_method": "GET",
+          "kind": "read-by-reference",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": true
+        },
+        {
+          "declared_path": "/services",
+          "probed_path": "/services",
+          "declared_method": "GET",
+          "kind": "list",
+          "status": 404,
+          "outcome": "not-served",
+          "is_served": false,
+          "probed_with_created_record": false
+        }
+      ],
+      "served": 3,
+      "not_served": 1,
+      "errors": 0
+    },
+    {
+      "project_id": "tr-02-hono",
+      "family_id": "tr-02",
+      "archetype": "web-shop",
+      "framework": "hono",
+      "server_ready": true,
+      "routes": [
+        {
+          "declared_path": "/",
+          "probed_path": "/",
+          "declared_method": "GET",
+          "kind": "page",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/checkout",
+          "probed_path": "/checkout",
+          "declared_method": "POST",
+          "kind": "write",
+          "status": 303,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/orders/:ref",
+          "probed_path": "the reference the server returned",
+          "declared_method": "GET",
+          "kind": "read-by-reference",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": true
+        },
+        {
+          "declared_path": "/ciders",
+          "probed_path": "/ciders",
+          "declared_method": "GET",
+          "kind": "list",
+          "status": 404,
+          "outcome": "not-served",
+          "is_served": false,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/cart",
+          "probed_path": "/cart",
+          "declared_method": "GET",
+          "kind": "list",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        }
+      ],
+      "served": 4,
+      "not_served": 1,
+      "errors": 0
+    },
+    {
+      "project_id": "tr-03-hono",
+      "family_id": "tr-03",
+      "archetype": "booking",
+      "framework": "hono",
+      "server_ready": true,
+      "routes": [
+        {
+          "declared_path": "/",
+          "probed_path": "/",
+          "declared_method": "GET",
+          "kind": "page",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/reserve",
+          "probed_path": "/reserve",
+          "declared_method": "POST",
+          "kind": "write",
+          "status": 303,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/reservations/:ref",
+          "probed_path": "the reference the server returned",
+          "declared_method": "GET",
+          "kind": "read-by-reference",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": true
+        },
+        {
+          "declared_path": "/kilns",
+          "probed_path": "/kilns",
+          "declared_method": "GET",
+          "kind": "list",
+          "status": 404,
+          "outcome": "not-served",
+          "is_served": false,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/schedule",
+          "probed_path": "/schedule",
+          "declared_method": "GET",
+          "kind": "list",
+          "status": 404,
+          "outcome": "not-served",
+          "is_served": false,
+          "probed_with_created_record": false
+        }
+      ],
+      "served": 3,
+      "not_served": 2,
+      "errors": 0
+    },
+    {
+      "project_id": "tr-04-hono",
+      "family_id": "tr-04",
+      "archetype": "dashboard",
+      "framework": "hono",
+      "server_ready": true,
+      "routes": [
+        {
+          "declared_path": "/",
+          "probed_path": "/",
+          "declared_method": "GET",
+          "kind": "page",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/log",
+          "probed_path": "/log",
+          "declared_method": "POST",
+          "kind": "write",
+          "status": 303,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/credits/:ref",
+          "probed_path": "the reference the server returned",
+          "declared_method": "GET",
+          "kind": "read-by-reference",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": true
+        },
+        {
+          "declared_path": "/generation",
+          "probed_path": "/generation",
+          "declared_method": "GET",
+          "kind": "list",
+          "status": 404,
+          "outcome": "not-served",
+          "is_served": false,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/credits",
+          "probed_path": "/credits",
+          "declared_method": "GET",
+          "kind": "list",
+          "status": 404,
+          "outcome": "not-served",
+          "is_served": false,
+          "probed_with_created_record": false
+        }
+      ],
+      "served": 3,
+      "not_served": 2,
+      "errors": 0
+    },
+    {
+      "project_id": "tr-05-hono",
+      "family_id": "tr-05",
+      "archetype": "onboarding-auth",
+      "framework": "hono",
+      "server_ready": true,
+      "routes": [
+        {
+          "declared_path": "/",
+          "probed_path": "/",
+          "declared_method": "GET",
+          "kind": "page",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/register",
+          "probed_path": "/register",
+          "declared_method": "POST",
+          "kind": "write-account",
+          "status": 303,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/profile",
+          "probed_path": "/profile",
+          "declared_method": "GET",
+          "kind": "read-session",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        }
+      ],
+      "served": 3,
+      "not_served": 0,
+      "errors": 0
+    },
+    {
+      "project_id": "tr-06-hono",
+      "family_id": "tr-06",
+      "archetype": "directory-listing",
+      "framework": "hono",
+      "server_ready": true,
+      "routes": [
+        {
+          "declared_path": "/",
+          "probed_path": "/",
+          "declared_method": "GET",
+          "kind": "page",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/note",
+          "probed_path": "/note",
+          "declared_method": "POST",
+          "kind": "write",
+          "status": 303,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/makers/:ref",
+          "probed_path": "the reference the server returned",
+          "declared_method": "GET",
+          "kind": "read-by-reference",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": true
+        },
+        {
+          "declared_path": "/makers",
+          "probed_path": "/makers",
+          "declared_method": "GET",
+          "kind": "list",
+          "status": 404,
+          "outcome": "not-served",
+          "is_served": false,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/disciplines",
+          "probed_path": "/disciplines",
+          "declared_method": "GET",
+          "kind": "list",
+          "status": 404,
+          "outcome": "not-served",
+          "is_served": false,
+          "probed_with_created_record": false
+        }
+      ],
+      "served": 3,
+      "not_served": 2,
+      "errors": 0
+    },
+    {
+      "project_id": "tr-07-hono",
+      "family_id": "tr-07",
+      "archetype": "event-registration",
+      "framework": "hono",
+      "server_ready": true,
+      "routes": [
+        {
+          "declared_path": "/",
+          "probed_path": "/",
+          "declared_method": "GET",
+          "kind": "page",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/register/:eventId",
+          "probed_path": "/register/1",
+          "declared_method": "POST",
+          "kind": "write",
+          "status": 303,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/passes/:ref",
+          "probed_path": "the reference the server returned",
+          "declared_method": "GET",
+          "kind": "read-by-reference",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": true
+        },
+        {
+          "declared_path": "/events",
+          "probed_path": "/events",
+          "declared_method": "GET",
+          "kind": "list",
+          "status": 404,
+          "outcome": "not-served",
+          "is_served": false,
+          "probed_with_created_record": false
+        }
+      ],
+      "served": 3,
+      "not_served": 1,
+      "errors": 0
+    },
+    {
+      "project_id": "tr-08-hono",
+      "family_id": "tr-08",
+      "archetype": "support-helpdesk",
+      "framework": "hono",
+      "server_ready": true,
+      "routes": [
+        {
+          "declared_path": "/",
+          "probed_path": "/",
+          "declared_method": "GET",
+          "kind": "page",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/tickets/new",
+          "probed_path": "/tickets/new",
+          "declared_method": "POST",
+          "kind": "write",
+          "status": 303,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/tickets/:ref",
+          "probed_path": "the reference the server returned",
+          "declared_method": "GET",
+          "kind": "read-by-reference",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": true
+        },
+        {
+          "declared_path": "/tickets",
+          "probed_path": "/tickets",
+          "declared_method": "GET",
+          "kind": "list",
+          "status": 404,
+          "outcome": "not-served",
+          "is_served": false,
+          "probed_with_created_record": false
+        }
+      ],
+      "served": 3,
+      "not_served": 1,
+      "errors": 0
+    },
+    {
+      "project_id": "tr-09-hono",
+      "family_id": "tr-09",
+      "archetype": "course-enrolment",
+      "framework": "hono",
+      "server_ready": true,
+      "routes": [
+        {
+          "declared_path": "/",
+          "probed_path": "/",
+          "declared_method": "GET",
+          "kind": "page",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/enrol",
+          "probed_path": "/enrol",
+          "declared_method": "POST",
+          "kind": "write",
+          "status": 303,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/enrolments/:ref",
+          "probed_path": "the reference the server returned",
+          "declared_method": "GET",
+          "kind": "read-by-reference",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": true
+        },
+        {
+          "declared_path": "/courses",
+          "probed_path": "/courses",
+          "declared_method": "GET",
+          "kind": "list",
+          "status": 404,
+          "outcome": "not-served",
+          "is_served": false,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/courses/:id",
+          "probed_path": "/courses/1",
+          "declared_method": "GET",
+          "kind": "list-detail",
+          "status": 404,
+          "outcome": "not-served",
+          "is_served": false,
+          "probed_with_created_record": false
+        }
+      ],
+      "served": 3,
+      "not_served": 2,
+      "errors": 0
+    },
+    {
+      "project_id": "tr-10-hono",
+      "family_id": "tr-10",
+      "archetype": "survey-form",
+      "framework": "hono",
+      "server_ready": true,
+      "routes": [
+        {
+          "declared_path": "/",
+          "probed_path": "/",
+          "declared_method": "GET",
+          "kind": "page",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/survey",
+          "probed_path": "/survey",
+          "declared_method": "POST",
+          "kind": "write",
+          "status": 303,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/survey/complete/:ref",
+          "probed_path": "the reference the server returned",
+          "declared_method": "GET",
+          "kind": "read-by-reference",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": true
+        },
+        {
+          "declared_path": "/results",
+          "probed_path": "/results",
+          "declared_method": "GET",
+          "kind": "list",
+          "status": 404,
+          "outcome": "not-served",
+          "is_served": false,
+          "probed_with_created_record": false
+        }
+      ],
+      "served": 3,
+      "not_served": 1,
+      "errors": 0
+    },
+    {
+      "project_id": "tr-11-hono",
+      "family_id": "tr-11",
+      "archetype": "restaurant-ordering",
+      "framework": "hono",
+      "server_ready": true,
+      "routes": [
+        {
+          "declared_path": "/",
+          "probed_path": "/",
+          "declared_method": "GET",
+          "kind": "page",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/order",
+          "probed_path": "/order",
+          "declared_method": "POST",
+          "kind": "write",
+          "status": 303,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/orders/:ref",
+          "probed_path": "the reference the server returned",
+          "declared_method": "GET",
+          "kind": "read-by-reference",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": true
+        },
+        {
+          "declared_path": "/menu",
+          "probed_path": "/menu",
+          "declared_method": "GET",
+          "kind": "list",
+          "status": 404,
+          "outcome": "not-served",
+          "is_served": false,
+          "probed_with_created_record": false
+        }
+      ],
+      "served": 3,
+      "not_served": 1,
+      "errors": 0
+    },
+    {
+      "project_id": "tr-12-hono",
+      "family_id": "tr-12",
+      "archetype": "job-board",
+      "framework": "hono",
+      "server_ready": true,
+      "routes": [
+        {
+          "declared_path": "/",
+          "probed_path": "/",
+          "declared_method": "GET",
+          "kind": "page",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/jobs/:id/apply",
+          "probed_path": "/jobs/1/apply",
+          "declared_method": "POST",
+          "kind": "write",
+          "status": 303,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/applications/:ref",
+          "probed_path": "the reference the server returned",
+          "declared_method": "GET",
+          "kind": "read-by-reference",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": true
+        },
+        {
+          "declared_path": "/jobs",
+          "probed_path": "/jobs",
+          "declared_method": "GET",
+          "kind": "list",
+          "status": 404,
+          "outcome": "not-served",
+          "is_served": false,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/jobs/:id",
+          "probed_path": "/jobs/1",
+          "declared_method": "GET",
+          "kind": "list-detail",
+          "status": 404,
+          "outcome": "not-served",
+          "is_served": false,
+          "probed_with_created_record": false
+        }
+      ],
+      "served": 3,
+      "not_served": 2,
+      "errors": 0
+    },
+    {
+      "project_id": "tr-13-hono",
+      "family_id": "tr-13",
+      "archetype": "docs-site",
+      "framework": "hono",
+      "server_ready": true,
+      "routes": [
+        {
+          "declared_path": "/",
+          "probed_path": "/",
+          "declared_method": "GET",
+          "kind": "page",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/soil-tests/new",
+          "probed_path": "/soil-tests/new",
+          "declared_method": "POST",
+          "kind": "write",
+          "status": 303,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/soil-tests/:ref",
+          "probed_path": "the reference the server returned",
+          "declared_method": "GET",
+          "kind": "read-by-reference",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": true
+        },
+        {
+          "declared_path": "/docs",
+          "probed_path": "/docs",
+          "declared_method": "GET",
+          "kind": "list",
+          "status": 404,
+          "outcome": "not-served",
+          "is_served": false,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/docs/:slug",
+          "probed_path": "/docs/sample-item",
+          "declared_method": "GET",
+          "kind": "list-detail",
+          "status": 404,
+          "outcome": "not-served",
+          "is_served": false,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/soil-tests",
+          "probed_path": "/soil-tests",
+          "declared_method": "GET",
+          "kind": "list",
+          "status": 404,
+          "outcome": "not-served",
+          "is_served": false,
+          "probed_with_created_record": false
+        }
+      ],
+      "served": 3,
+      "not_served": 3,
+      "errors": 0
+    },
+    {
+      "project_id": "tr-14-hono",
+      "family_id": "tr-14",
+      "archetype": "directory-listing",
+      "framework": "hono",
+      "server_ready": true,
+      "routes": [
+        {
+          "declared_path": "/",
+          "probed_path": "/",
+          "declared_method": "GET",
+          "kind": "page",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/stops/:id/comment",
+          "probed_path": "/stops/1/comment",
+          "declared_method": "POST",
+          "kind": "write",
+          "status": 303,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/stops/:ref",
+          "probed_path": "the reference the server returned",
+          "declared_method": "GET",
+          "kind": "read-by-reference",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": true
+        },
+        {
+          "declared_path": "/stops",
+          "probed_path": "/stops",
+          "declared_method": "GET",
+          "kind": "list",
+          "status": 404,
+          "outcome": "not-served",
+          "is_served": false,
+          "probed_with_created_record": false
+        }
+      ],
+      "served": 3,
+      "not_served": 1,
+      "errors": 0
+    },
+    {
+      "project_id": "tr-15-hono",
+      "family_id": "tr-15",
+      "archetype": "expense-tracker",
+      "framework": "hono",
+      "server_ready": true,
+      "routes": [
+        {
+          "declared_path": "/",
+          "probed_path": "/",
+          "declared_method": "GET",
+          "kind": "page",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/expenses/new",
+          "probed_path": "/expenses/new",
+          "declared_method": "POST",
+          "kind": "write",
+          "status": 303,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/expenses/:ref",
+          "probed_path": "the reference the server returned",
+          "declared_method": "GET",
+          "kind": "read-by-reference",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": true
+        },
+        {
+          "declared_path": "/expenses",
+          "probed_path": "/expenses",
+          "declared_method": "GET",
+          "kind": "list",
+          "status": 404,
+          "outcome": "not-served",
+          "is_served": false,
+          "probed_with_created_record": false
+        }
+      ],
+      "served": 3,
+      "not_served": 1,
+      "errors": 0
+    },
+    {
+      "project_id": "tr-16-hono",
+      "family_id": "tr-16",
+      "archetype": "library-catalogue",
+      "framework": "hono",
+      "server_ready": true,
+      "routes": [
+        {
+          "declared_path": "/",
+          "probed_path": "/",
+          "declared_method": "GET",
+          "kind": "page",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/request",
+          "probed_path": "/request",
+          "declared_method": "POST",
+          "kind": "write",
+          "status": 303,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/requests/:ref",
+          "probed_path": "the reference the server returned",
+          "declared_method": "GET",
+          "kind": "read-by-reference",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": true
+        },
+        {
+          "declared_path": "/cultivars",
+          "probed_path": "/cultivars",
+          "declared_method": "GET",
+          "kind": "list",
+          "status": 404,
+          "outcome": "not-served",
+          "is_served": false,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/cultivars/:id",
+          "probed_path": "/cultivars/1",
+          "declared_method": "GET",
+          "kind": "list-detail",
+          "status": 404,
+          "outcome": "not-served",
+          "is_served": false,
+          "probed_with_created_record": false
+        }
+      ],
+      "served": 3,
+      "not_served": 2,
+      "errors": 0
+    },
+    {
+      "project_id": "tr-17-hono",
+      "family_id": "tr-17",
+      "archetype": "booking",
+      "framework": "hono",
+      "server_ready": true,
+      "routes": [
+        {
+          "declared_path": "/",
+          "probed_path": "/",
+          "declared_method": "GET",
+          "kind": "page",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/book-visit",
+          "probed_path": "/book-visit",
+          "declared_method": "POST",
+          "kind": "write",
+          "status": 303,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/visits/:ref",
+          "probed_path": "the reference the server returned",
+          "declared_method": "GET",
+          "kind": "read-by-reference",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": true
+        },
+        {
+          "declared_path": "/services",
+          "probed_path": "/services",
+          "declared_method": "GET",
+          "kind": "list",
+          "status": 404,
+          "outcome": "not-served",
+          "is_served": false,
+          "probed_with_created_record": false
+        }
+      ],
+      "served": 3,
+      "not_served": 1,
+      "errors": 0
+    },
+    {
+      "project_id": "tr-18-hono",
+      "family_id": "tr-18",
+      "archetype": "web-shop",
+      "framework": "hono",
+      "server_ready": true,
+      "routes": [
+        {
+          "declared_path": "/",
+          "probed_path": "/",
+          "declared_method": "GET",
+          "kind": "page",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/checkout",
+          "probed_path": "/checkout",
+          "declared_method": "POST",
+          "kind": "write",
+          "status": 303,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/orders/:ref",
+          "probed_path": "the reference the server returned",
+          "declared_method": "GET",
+          "kind": "read-by-reference",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": true
+        },
+        {
+          "declared_path": "/products",
+          "probed_path": "/products",
+          "declared_method": "GET",
+          "kind": "list",
+          "status": 404,
+          "outcome": "not-served",
+          "is_served": false,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/basket",
+          "probed_path": "/basket",
+          "declared_method": "GET",
+          "kind": "list",
+          "status": 404,
+          "outcome": "not-served",
+          "is_served": false,
+          "probed_with_created_record": false
+        }
+      ],
+      "served": 3,
+      "not_served": 2,
+      "errors": 0
+    },
+    {
+      "project_id": "tr-19-hono",
+      "family_id": "tr-19",
+      "archetype": "booking",
+      "framework": "hono",
+      "server_ready": true,
+      "routes": [
+        {
+          "declared_path": "/",
+          "probed_path": "/",
+          "declared_method": "GET",
+          "kind": "page",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/book-outing",
+          "probed_path": "/book-outing",
+          "declared_method": "POST",
+          "kind": "write",
+          "status": 303,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/outings/:ref",
+          "probed_path": "the reference the server returned",
+          "declared_method": "GET",
+          "kind": "read-by-reference",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": true
+        },
+        {
+          "declared_path": "/skiffs",
+          "probed_path": "/skiffs",
+          "declared_method": "GET",
+          "kind": "list",
+          "status": 404,
+          "outcome": "not-served",
+          "is_served": false,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/safety-log",
+          "probed_path": "/safety-log",
+          "declared_method": "GET",
+          "kind": "list",
+          "status": 404,
+          "outcome": "not-served",
+          "is_served": false,
+          "probed_with_created_record": false
+        }
+      ],
+      "served": 3,
+      "not_served": 2,
+      "errors": 0
+    },
+    {
+      "project_id": "tr-20-hono",
+      "family_id": "tr-20",
+      "archetype": "community-forum",
+      "framework": "hono",
+      "server_ready": true,
+      "routes": [
+        {
+          "declared_path": "/",
+          "probed_path": "/",
+          "declared_method": "GET",
+          "kind": "page",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/tunes/:id/notes",
+          "probed_path": "/tunes/1/notes",
+          "declared_method": "POST",
+          "kind": "write",
+          "status": 303,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/tunes/:ref",
+          "probed_path": "the reference the server returned",
+          "declared_method": "GET",
+          "kind": "read-by-reference",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": true
+        },
+        {
+          "declared_path": "/tunes",
+          "probed_path": "/tunes",
+          "declared_method": "GET",
+          "kind": "list",
+          "status": 404,
+          "outcome": "not-served",
+          "is_served": false,
+          "probed_with_created_record": false
+        }
+      ],
+      "served": 3,
+      "not_served": 1,
+      "errors": 0
+    },
+    {
+      "project_id": "tr-21-hono",
+      "family_id": "tr-21",
+      "archetype": "booking",
+      "framework": "hono",
+      "server_ready": true,
+      "routes": [
+        {
+          "declared_path": "/",
+          "probed_path": "/",
+          "declared_method": "GET",
+          "kind": "page",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/book-ride",
+          "probed_path": "/book-ride",
+          "declared_method": "POST",
+          "kind": "write",
+          "status": 303,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/rides/:ref",
+          "probed_path": "the reference the server returned",
+          "declared_method": "GET",
+          "kind": "read-by-reference",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": true
+        },
+        {
+          "declared_path": "/rides",
+          "probed_path": "/rides",
+          "declared_method": "GET",
+          "kind": "list",
+          "status": 404,
+          "outcome": "not-served",
+          "is_served": false,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/dispatch",
+          "probed_path": "/dispatch",
+          "declared_method": "GET",
+          "kind": "list",
+          "status": 404,
+          "outcome": "not-served",
+          "is_served": false,
+          "probed_with_created_record": false
+        }
+      ],
+      "served": 3,
+      "not_served": 2,
+      "errors": 0
+    },
+    {
+      "project_id": "tr-22-hono",
+      "family_id": "tr-22",
+      "archetype": "dashboard",
+      "framework": "hono",
+      "server_ready": true,
+      "routes": [
+        {
+          "declared_path": "/",
+          "probed_path": "/",
+          "declared_method": "GET",
+          "kind": "page",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/trees/:id/log",
+          "probed_path": "/trees/1/log",
+          "declared_method": "POST",
+          "kind": "write",
+          "status": 303,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/trees/:ref",
+          "probed_path": "the reference the server returned",
+          "declared_method": "GET",
+          "kind": "read-by-reference",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": true
+        },
+        {
+          "declared_path": "/trees",
+          "probed_path": "/trees",
+          "declared_method": "GET",
+          "kind": "list",
+          "status": 404,
+          "outcome": "not-served",
+          "is_served": false,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/canopy-summary",
+          "probed_path": "/canopy-summary",
+          "declared_method": "GET",
+          "kind": "list",
+          "status": 404,
+          "outcome": "not-served",
+          "is_served": false,
+          "probed_with_created_record": false
+        }
+      ],
+      "served": 3,
+      "not_served": 2,
+      "errors": 0
+    },
+    {
+      "project_id": "tr-23-hono",
+      "family_id": "tr-23",
+      "archetype": "survey-form",
+      "framework": "hono",
+      "server_ready": true,
+      "routes": [
+        {
+          "declared_path": "/",
+          "probed_path": "/",
+          "declared_method": "GET",
+          "kind": "page",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/calculator/submit",
+          "probed_path": "/calculator/submit",
+          "declared_method": "POST",
+          "kind": "write",
+          "status": 303,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/reports/:ref",
+          "probed_path": "the reference the server returned",
+          "declared_method": "GET",
+          "kind": "read-by-reference",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": true
+        },
+        {
+          "declared_path": "/calculator",
+          "probed_path": "/calculator",
+          "declared_method": "GET",
+          "kind": "list",
+          "status": 404,
+          "outcome": "not-served",
+          "is_served": false,
+          "probed_with_created_record": false
+        }
+      ],
+      "served": 3,
+      "not_served": 1,
+      "errors": 0
+    },
+    {
+      "project_id": "tr-24-hono",
+      "family_id": "tr-24",
+      "archetype": "booking",
+      "framework": "hono",
+      "server_ready": true,
+      "routes": [
+        {
+          "declared_path": "/",
+          "probed_path": "/",
+          "declared_method": "GET",
+          "kind": "page",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/pitches/book",
+          "probed_path": "/pitches/book",
+          "declared_method": "POST",
+          "kind": "write",
+          "status": 303,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/bookings/:ref",
+          "probed_path": "the reference the server returned",
+          "declared_method": "GET",
+          "kind": "read-by-reference",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": true
+        },
+        {
+          "declared_path": "/pitches",
+          "probed_path": "/pitches",
+          "declared_method": "GET",
+          "kind": "list",
+          "status": 404,
+          "outcome": "not-served",
+          "is_served": false,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/market-layout",
+          "probed_path": "/market-layout",
+          "declared_method": "GET",
+          "kind": "list",
+          "status": 404,
+          "outcome": "not-served",
+          "is_served": false,
+          "probed_with_created_record": false
+        }
+      ],
+      "served": 3,
+      "not_served": 2,
+      "errors": 0
+    },
+    {
+      "project_id": "tr-25-hono",
+      "family_id": "tr-25",
+      "archetype": "docs-site",
+      "framework": "hono",
+      "server_ready": true,
+      "routes": [
+        {
+          "declared_path": "/",
+          "probed_path": "/",
+          "declared_method": "GET",
+          "kind": "page",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/interviews/:id/notes",
+          "probed_path": "/interviews/1/notes",
+          "declared_method": "POST",
+          "kind": "write",
+          "status": 303,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/interviews/:ref",
+          "probed_path": "the reference the server returned",
+          "declared_method": "GET",
+          "kind": "read-by-reference",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": true
+        },
+        {
+          "declared_path": "/interviews",
+          "probed_path": "/interviews",
+          "declared_method": "GET",
+          "kind": "list",
+          "status": 404,
+          "outcome": "not-served",
+          "is_served": false,
+          "probed_with_created_record": false
+        }
+      ],
+      "served": 3,
+      "not_served": 1,
+      "errors": 0
+    },
+    {
+      "project_id": "tr-26-hono",
+      "family_id": "tr-26",
+      "archetype": "web-shop",
+      "framework": "hono",
+      "server_ready": true,
+      "routes": [
+        {
+          "declared_path": "/",
+          "probed_path": "/",
+          "declared_method": "GET",
+          "kind": "page",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/subscriptions/:id/edit",
+          "probed_path": "/subscriptions/1/edit",
+          "declared_method": "POST",
+          "kind": "write",
+          "status": 303,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/subscriptions/:ref",
+          "probed_path": "the reference the server returned",
+          "declared_method": "GET",
+          "kind": "read-by-reference",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": true
+        },
+        {
+          "declared_path": "/subscriptions",
+          "probed_path": "/subscriptions",
+          "declared_method": "GET",
+          "kind": "list",
+          "status": 404,
+          "outcome": "not-served",
+          "is_served": false,
+          "probed_with_created_record": false
+        }
+      ],
+      "served": 3,
+      "not_served": 1,
+      "errors": 0
+    },
+    {
+      "project_id": "tr-27-hono",
+      "family_id": "tr-27",
+      "archetype": "booking",
+      "framework": "hono",
+      "server_ready": true,
+      "routes": [
+        {
+          "declared_path": "/",
+          "probed_path": "/",
+          "declared_method": "GET",
+          "kind": "page",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/concerts/:id/reserve",
+          "probed_path": "/concerts/1/reserve",
+          "declared_method": "POST",
+          "kind": "write",
+          "status": 303,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/reservations/:ref",
+          "probed_path": "the reference the server returned",
+          "declared_method": "GET",
+          "kind": "read-by-reference",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": true
+        },
+        {
+          "declared_path": "/concerts",
+          "probed_path": "/concerts",
+          "declared_method": "GET",
+          "kind": "list",
+          "status": 404,
+          "outcome": "not-served",
+          "is_served": false,
+          "probed_with_created_record": false
+        }
+      ],
+      "served": 3,
+      "not_served": 1,
+      "errors": 0
+    },
+    {
+      "project_id": "tr-28-hono",
+      "family_id": "tr-28",
+      "archetype": "support-helpdesk",
+      "framework": "hono",
+      "server_ready": true,
+      "routes": [
+        {
+          "declared_path": "/",
+          "probed_path": "/",
+          "declared_method": "GET",
+          "kind": "page",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/tickets/new",
+          "probed_path": "/tickets/new",
+          "declared_method": "POST",
+          "kind": "write",
+          "status": 303,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/tickets/:ref",
+          "probed_path": "the reference the server returned",
+          "declared_method": "GET",
+          "kind": "read-by-reference",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": true
+        },
+        {
+          "declared_path": "/gear",
+          "probed_path": "/gear",
+          "declared_method": "GET",
+          "kind": "list",
+          "status": 404,
+          "outcome": "not-served",
+          "is_served": false,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/tickets",
+          "probed_path": "/tickets",
+          "declared_method": "GET",
+          "kind": "list",
+          "status": 404,
+          "outcome": "not-served",
+          "is_served": false,
+          "probed_with_created_record": false
+        }
+      ],
+      "served": 3,
+      "not_served": 2,
+      "errors": 0
+    },
+    {
+      "project_id": "tr-29-hono",
+      "family_id": "tr-29",
+      "archetype": "expense-tracker",
+      "framework": "hono",
+      "server_ready": true,
+      "routes": [
+        {
+          "declared_path": "/",
+          "probed_path": "/",
+          "declared_method": "GET",
+          "kind": "page",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/contribute",
+          "probed_path": "/contribute",
+          "declared_method": "POST",
+          "kind": "write",
+          "status": 303,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/contributions/:ref",
+          "probed_path": "the reference the server returned",
+          "declared_method": "GET",
+          "kind": "read-by-reference",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": true
+        },
+        {
+          "declared_path": "/funds",
+          "probed_path": "/funds",
+          "declared_method": "GET",
+          "kind": "list",
+          "status": 404,
+          "outcome": "not-served",
+          "is_served": false,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/ledger",
+          "probed_path": "/ledger",
+          "declared_method": "GET",
+          "kind": "list",
+          "status": 404,
+          "outcome": "not-served",
+          "is_served": false,
+          "probed_with_created_record": false
+        }
+      ],
+      "served": 3,
+      "not_served": 2,
+      "errors": 0
+    },
+    {
+      "project_id": "tr-30-hono",
+      "family_id": "tr-30",
+      "archetype": "event-registration",
+      "framework": "hono",
+      "server_ready": true,
+      "routes": [
+        {
+          "declared_path": "/",
+          "probed_path": "/",
+          "declared_method": "GET",
+          "kind": "page",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/cleanups/:id/register",
+          "probed_path": "/cleanups/1/register",
+          "declared_method": "POST",
+          "kind": "write",
+          "status": 303,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": false
+        },
+        {
+          "declared_path": "/passes/:ref",
+          "probed_path": "the reference the server returned",
+          "declared_method": "GET",
+          "kind": "read-by-reference",
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
+          "probed_with_created_record": true
+        },
+        {
+          "declared_path": "/cleanups",
+          "probed_path": "/cleanups",
+          "declared_method": "GET",
+          "kind": "list",
+          "status": 404,
+          "outcome": "not-served",
+          "is_served": false,
+          "probed_with_created_record": false
+        }
+      ],
+      "served": 3,
+      "not_served": 1,
+      "errors": 0
+    }
+  ]
+}
