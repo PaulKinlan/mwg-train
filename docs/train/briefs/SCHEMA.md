@@ -48,7 +48,7 @@ a coffee-subscription brief would render whatever form that archetype happens to
 | `fields[]` | Type | Description |
 | --- | --- | --- |
 | `slug` | string | Identifier; normally the same as `name`. |
-| `name` | string | The control's `name` attribute. Unique within the form. |
+| `name` | string | The control's `name` attribute. Unique within the form. Must survive being written into the markup and read back: the builders interpolate it into `name="..."` raw, so a name containing `"`, `&`, a backslash, a control character (NUL, form feed, newline) or an unpaired surrogate is refused. Each of those was measured to change or destroy the name in the DOM - a selector written for the declared name then names a different element, or none - so the rest are allowed deliberately, including spaces, apostrophes, `<`, `=`, `.`, `$`, DEL and valid non-ASCII such as emoji. |
 | `type` | enum | One of `text`, `tel`, `email`, `date`, `time`, `number`, `select`, `search`, `textarea`. |
 | `label` | string | Human-readable label. |
 | `required` | boolean | Must be stated explicitly, never implied by absence. |
@@ -60,7 +60,7 @@ a coffee-subscription brief would render whatever form that archetype happens to
 | --- | --- | --- |
 | `startPath` | string | Absolute path serving the form, normally `/`. |
 | `formSelector` | string | `form#<id>`; the builder derives the form id from it. |
-| `fill` | object | Map of `input[name=x]` / `textarea[name=x]` selector to the value typed in. A `<select>` must not appear here: the browser driver cannot type into one. |
+| `fill` | object | Map of `input[name=x]` / `textarea[name=x]` selector to the value typed in. A `<select>` must not appear here: the browser driver cannot type into one. Each key must be ONE complete selector of that form: the browser resolves the whole string, so a compound selector could name one field to the validator and drive another. |
 | `select` | object | Map of `select[name=x]` selector to the option to choose. The option must be one the field offers and must not be its first, since an untouched select already submits that. Every `select` field marked `required` must appear here, or the journey leaves it on its default and the value the server stores is the markup's rather than the brief's. |
 | `steps` | object[] | Optional. Pages the flow visits BEFORE the form page, each `{ path, fill?, select?, submit? }`, for a flow that spans more than one page. `startPath` stays the form page, so the validation-failure journey and the rule and security checks still start where the form is, and exactly one step is named `submit` so the acceptance decision still resolves the form's POST. **No family uses this yet**: the shared builder serves only a handful of paths, so a second page would 404 until the builder work lands (a separate bead). |
 | `expectText` | string | Text asserted on the read page; must be exactly the value typed into the echoed field. |
