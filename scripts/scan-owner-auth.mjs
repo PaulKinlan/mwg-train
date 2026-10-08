@@ -17,12 +17,15 @@
  */
 import { existsSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import process from 'node:process';
 
 import { listRuns, loadCorpus } from '../src/viewer/corpus.mjs';
 import { scanTree, scanPairRecords, loadScanConfig, buildMatchers } from '../src/viewer/owner-auth.mjs';
 import { hashTree } from '../src/viewer/hashtree.mjs';
+
+const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 const DEFAULT_CONFIG = resolve(process.cwd(), 'docs/eval/owner-identity.json');
 
@@ -54,7 +57,7 @@ function report(label, result) {
  * the recorded sha. Returns the directory to scan, or null when regeneration is impossible or
  * fails verification (the caller then fails closed).
  */
-async function regenerateUplifted(project, corpusRoot) {
+async function regenerateUplifted(project, originalDir, corpusRoot) {
   const expected = project.decision?.uplifted_sha;
   if (!expected || !project.spec) return null;
   const upliftTool = resolve(corpusRoot, '..', 'src/corpus/uplift.mjs');
@@ -62,7 +65,7 @@ async function regenerateUplifted(project, corpusRoot) {
   const dir = mkdtempSync(join(tmpdir(), 'owner-auth-uplift-'));
   try {
     const { upliftProject } = await import(upliftTool);
-    upliftProject(project.originalTreeDir, project.spec, dir);
+    upliftProject(originalDir, project.spec, dir);
     const actual = hashTree(dir);
     if (actual !== expected) {
       console.log(`    regeneration mismatch for ${project.id}: expected ${expected}, got ${actual}`);
@@ -73,6 +76,22 @@ async function regenerateUplifted(project, corpusRoot) {
     console.log(`    regeneration failed for ${project.id}: ${error.message}`);
     return null;
   }
+}
+
+/** The plan-materialized measured originals, generated once per invocation. */
+let materializedDir = null;
+async function materializeMeasuredOriginals() {
+  if (materializedDir !== null) return materializedDir || null;
+  const generatePath = resolve(repoRoot, 'pilot/generate.mjs');
+  if (!existsSync(generatePath)) {
+    materializedDir = '';
+    return null;
+  }
+  const outDir = mkdtempSync(join(tmpdir(), 'owner-auth-originals-'));
+  const { generateCorpus } = await import(generatePath);
+  generateCorpus({ outDir, planPath: resolve(repoRoot, 'pilot/plan.json') });
+  materializedDir = outDir;
+  return outDir;
 }
 
 async function main() {
@@ -118,17 +137,43 @@ async function main() {
         console.log(`SKIP ${project.id} - no accepted pair recorded (state: ${project.decision?.category ?? 'no run'})`);
         continue;
       }
-      scanOne(`${project.id} (original)`, project.originalTreeDir);
-      // The rule covers the corpus RECORD as well as the site source, and the three records are
-      // mandatory once a run covers the project: a missing record fails the pair.
+      // The original of record is the MEASURED tree: the committed tree when it still hashes to
+      // the recorded original sha, otherwise the plan-regenerated one. A drifted committed tree
+      // cannot smuggle a clean scan over a tree the record never measured.
+      const expectedOriginal = project.decision?.original_sha ?? null;
+      if (!expectedOriginal) {
+        failed += 1;
+        console.log(`FAIL ${project.id} - the accepted decision records no original sha`);
+        continue;
+      }
+      let originalDir = project.originalTreeDir;
+      if (hashTree(originalDir) !== expectedOriginal) {
+        const materialized = await materializeMeasuredOriginals();
+        const candidate = materialized ? join(materialized, project.id) : null;
+        if (candidate && existsSync(candidate) && hashTree(candidate) === expectedOriginal) {
+          originalDir = candidate;
+        } else {
+          failed += 1;
+          console.log(`FAIL ${project.id} - the measured original cannot be reproduced to its recorded sha`);
+          continue;
+        }
+      }
+      scanOne(`${project.id} (original)`, originalDir);
+      // The rule covers the corpus RECORD as well as the site source. A local run dir: the three
+      // mandatory records plus evidence JSON (missing = FAIL). A manifest-backed decision: the
+      // committed CORPUS.json is the record and its content is scanned.
       scanned += 1;
-      const recordResult = scanPairRecords(project, matchers, scanOptions);
+      const recordResult = project.runDir
+        ? scanPairRecords(project, matchers, scanOptions)
+        : project.decision?.record_source === 'manifest'
+          ? scanTree(join(args.corpus, 'CORPUS.json'), matchers, scanOptions)
+          : { status: 'FAIL', findings: [{ file: 'record', line: null, patternId: 'record-missing', kind: 'scan-error' }] };
       if (recordResult.status !== 'PASS') failed += 1;
       report(`${project.id} (corpus records)`, recordResult);
       if (project.upliftedTreeDir) {
         scanOne(`${project.id} (uplifted)`, project.upliftedTreeDir);
       } else {
-        const regenerated = await regenerateUplifted(project, args.corpus);
+        const regenerated = await regenerateUplifted(project, originalDir, args.corpus);
         if (regenerated) scanOne(`${project.id} (uplifted, regenerated+verified)`, regenerated);
         else {
           failed += 1;

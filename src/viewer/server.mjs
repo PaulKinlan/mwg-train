@@ -124,14 +124,20 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
   /**
    * The corpus RECORD scan for one project, cached by the CONTENT of the records (name + size +
    * bytes), never by path alone: a record edited after a clean scan must not inherit the PASS.
+   * When the decision comes from the committed manifest rather than a local run dir, the manifest
+   * itself is the record and its content is what gets scanned.
    */
   const recordsCache = new Map();
   function recordsScan(project) {
-    if (!project.runDir) return { status: 'NO-RUN', findings: [] };
+    const manifestPath = join(corpusRoot, 'CORPUS.json');
+    const manifestBacked = !project.runDir && project.decision?.record_source === 'manifest';
+    if (!project.runDir && !manifestBacked) return { status: 'NO-RUN', findings: [] };
     if (!matchers) return { status: 'ERROR', reason: matchersError, findings: [] };
     const hash = createHash('sha256');
-    const files = ['decision.json', 'original.json', 'uplifted.json'].map((f) => join(project.runDir, f));
-    if (project.evidenceDir && existsSync(project.evidenceDir)) {
+    const files = manifestBacked
+      ? [manifestPath]
+      : ['decision.json', 'original.json', 'uplifted.json'].map((f) => join(project.runDir, f));
+    if (!manifestBacked && project.evidenceDir && existsSync(project.evidenceDir)) {
       files.push(
         ...readdirSync(project.evidenceDir)
           .filter((f) => f.endsWith('.json'))
@@ -150,7 +156,14 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
       }
     }
     const key = hash.digest('hex');
-    if (!recordsCache.has(key)) recordsCache.set(key, scanPairRecords(project, matchers, scanOptions));
+    if (!recordsCache.has(key)) {
+      recordsCache.set(
+        key,
+        manifestBacked
+          ? (existsSync(manifestPath) ? scanTree(manifestPath, matchers, scanOptions) : { status: 'FAIL', findings: [{ file: manifestPath, line: null, patternId: 'record-missing', kind: 'scan-error' }] })
+          : scanPairRecords(project, matchers, scanOptions),
+      );
+    }
     return recordsCache.get(key);
   }
 
@@ -202,8 +215,12 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
    * Returns { dir, source } or { dir: null, reason }.
    */
   async function measuredOriginalTree(project) {
+    // A recorded decision without a recorded original sha is a broken record: nothing may be
+    // served as the measured original. Only decision-less (unpaired) projects serve the working
+    // tree unchecked.
+    if (!project.decision) return { dir: project.originalTreeDir, source: 'working-tree' };
     const expected = project.decision?.original_sha ?? null;
-    if (!expected) return { dir: project.originalTreeDir, source: 'working-tree' };
+    if (!expected) return { dir: null, reason: 'the recorded decision carries no original sha, so the measured original cannot be verified' };
     if (hashTree(project.originalTreeDir) === expected) return { dir: project.originalTreeDir, source: 'working-tree-verified' };
     const materialized = await materializeMeasuredOriginals();
     if (!materialized) {
@@ -227,12 +244,16 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
    */
   async function ensureUpliftedTree(project) {
     const expected = project.decision?.uplifted_sha ?? null;
-    // A kept snapshot is authoritative ONLY if it still hashes to the recorded sha; a drifted kept
-    // tree is not served as the measured pair member - fall through to verified regeneration.
+    // A kept snapshot is authoritative ONLY if it still hashes to the recorded sha; a decision
+    // without a recorded uplift sha cannot vouch for any tree, kept or regenerated.
+    if (project.decision && !expected) {
+      return { dir: null, source: 'unrecorded', reason: 'the recorded decision carries no uplift sha, so no uplifted tree can be verified' };
+    }
     if (project.upliftedTreeDir && existsSync(project.upliftedTreeDir)) {
-      if (!expected || hashTree(project.upliftedTreeDir) === expected) {
+      if (expected && hashTree(project.upliftedTreeDir) === expected) {
         return { dir: project.upliftedTreeDir, source: 'run-snapshot' };
       }
+      if (!expected) return { dir: null, source: 'unrecorded', reason: 'the kept uplifted tree has no recorded sha to verify against' };
     }
     const upliftPath = join(repoRoot, 'src/corpus/uplift.mjs');
     if (!existsSync(upliftPath)) {

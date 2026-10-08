@@ -71,9 +71,9 @@ ${body}
 }
 
 export function stateBadge(view) {
-  if (!view.hasRun) return '<span class="badge no-run">no run recorded</span>';
-  if (view.accepted) return '<span class="badge accepted">ACCEPTED</span>';
-  return `<span class="badge rejected" title="${escapeHtml(view.category)}">rejected: ${escapeHtml(view.category)}</span>`;
+  if (!view.hasRun) return '<span class="badge no-run">NOT YET RUN</span>';
+  if (view.accepted) return '<span class="badge accepted" title="a brief and an output that passed acceptance; these alone may become training data">ACCEPTED PAIR</span>';
+  return `<span class="badge rejected" title="${escapeHtml(view.category)}">REJECTED ATTEMPT · ${escapeHtml(view.category)}</span>`;
 }
 
 export function scanBadge(scan) {
@@ -102,17 +102,38 @@ const num = (value) => {
   return Number.isFinite(n) ? String(n) : '0';
 };
 
+/**
+ * Attribution for the artefact (Paul, 2026-10-08): every project/run view shows who or what made
+ * it - the generating model with exact provider/id (or an explicit non-model source), the brief,
+ * the framework with its pinned version, the generator with its timestamp, and the acceptance
+ * status. Historical or unrecorded fields say UNKNOWN rather than implying a value.
+ */
+function attributionBlock(view) {
+  const a = view.attribution ?? {};
+  const row = (label, value) => `<dt>${label}</dt><dd>${escapeHtml(value ?? 'UNKNOWN (unrecorded)')}</dd>`;
+  return `<section class="panel">
+  <h2>attribution</h2>
+  <dl>
+    ${row('generating model', a.model)}
+    ${row('brief', a.brief)}
+    ${row('framework', a.framework)}
+    ${row('generator', a.generator)}
+    ${row('acceptance', a.acceptance)}
+  </dl>
+</section>`;
+}
+
 function liveLinks(view, liveOrigin, runId) {
   const scan = view.scan;
   const originalOk = scan?.original?.status === 'PASS';
   const upliftedOk = scan?.uplifted?.status === 'PASS' || scan?.uplifted?.status === 'MISSING';
   const scanBroken = !scan || scan.status === 'ERROR';
   const runPath = runId ? `/run/${encodeURIComponent(runId)}` : '';
-  const button = (version, ok) =>
+  const button = (version, label, ok) =>
     ok
-      ? `<form method="post" action="${escapeHtml(liveOrigin)}/live/${escapeHtml(view.id)}/${version}${escapeHtml(runPath)}/start" style="display:inline"><button type="submit">serve ${version} live</button></form>`
-      : `<button type="button" disabled title="${scanBroken ? 'owner-auth scan cannot run (fail-closed)' : `owner-auth scan: ${escapeHtml(scan?.[version]?.status ?? 'ERROR')}`}">serve ${version} live</button>`;
-  return `${button('original', !scanBroken && originalOk)} ${button('uplifted', !scanBroken && upliftedOk)}`;
+      ? `<form method="post" action="${escapeHtml(liveOrigin)}/live/${escapeHtml(view.id)}/${version}${escapeHtml(runPath)}/start" style="display:inline"><button type="submit">serve ${label} live</button></form>`
+      : `<button type="button" disabled title="${scanBroken ? 'owner-auth scan cannot run (fail-closed)' : `owner-auth scan: ${escapeHtml(scan?.[version]?.status ?? 'ERROR')}`}">serve ${label} live</button>`;
+  return `${button('original', 'BASELINE', !scanBroken && originalOk)} ${button('uplifted', 'TARGET', !scanBroken && upliftedOk)}`;
 }
 
 export function renderIndex({ views, allViews, filters, runId, runs, yieldReport, scanAvailable, liveOrigin }) {
@@ -159,7 +180,8 @@ export function renderIndex({ views, allViews, filters, runId, runs, yieldReport
   return page('corpus index', `
 <h1>mwg-train corpus</h1>
 ${scanNotice}
-<p>${counts.accepted} accepted · ${counts.rejected} rejected · ${counts.noRun} without a run — of ${allViews.length} project(s).</p>
+<p class="muted">Roles: <strong>BASELINE</strong> = raw model output, kept to measure improvement FROM · <strong>TARGET</strong> = the ideal site to build TOWARDS · <strong>ACCEPTED PAIR</strong> = a brief and an output that passed acceptance (these alone may become training data) · <strong>REJECTED ATTEMPT</strong> = kept as negative example &amp; repair material.</p>
+<p>${counts.accepted} accepted pair(s) · ${counts.rejected} rejected attempt(s) · ${counts.noRun} not yet run — of ${allViews.length} project(s).</p>
 ${yieldLine}
 <form class="filters" method="get" action="/">
   ${runSelector}
@@ -167,10 +189,10 @@ ${yieldLine}
   <label>framework <select name="framework"><option value="">(all)</option>${frameworks.map((f) => option(f, f, filters.framework)).join('')}</select></label>
   <label>state <select name="state">
     ${option('', '(all)', filters.state)}
-    ${option('accepted', 'accepted', filters.state)}
-    ${option('rejected', 'rejected (any category)', filters.state)}
-    ${categories.map((c) => option(c, `rejected: ${c}`, filters.state)).join('')}
-    ${option('no-run', 'no run recorded', filters.state)}
+    ${option('accepted', 'ACCEPTED PAIR', filters.state)}
+    ${option('rejected', 'REJECTED ATTEMPT (any category)', filters.state)}
+    ${categories.map((c) => option(c, `REJECTED ATTEMPT · ${c}`, filters.state)).join('')}
+    ${option('no-run', 'NOT YET RUN', filters.state)}
   </select></label>
   <label>rule <select name="rule"><option value="">(all)</option>${rules.map((r) => option(r, r, filters.rule)).join('')}</select></label>
   <button type="submit">filter</button>
@@ -203,7 +225,7 @@ function renderRuleRows(view) {
 </tr>`;
     })
     .join('\n');
-  return `<table><thead><tr><th>rule</th><th>original</th><th>uplifted</th><th>deciding detail</th></tr></thead><tbody>${rows}</tbody></table>`;
+  return `<table><thead><tr><th>rule</th><th>BASELINE</th><th>TARGET</th><th>deciding detail</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 
 function renderJourney(record, title) {
@@ -250,9 +272,9 @@ export function renderProject({ view, runId, runs, liveOrigin }) {
       : '';
 
   const decisionBlock = !view.hasRun
-    ? '<p class="notice">No pilot run has recorded a decision for this project yet.</p>'
+    ? '<p class="notice">No pilot run has recorded an acceptance decision for this project yet (UNKNOWN).</p>'
     : `<div class="panel">
-  <h3>decision: ${decision.accepted ? 'ACCEPTED' : `rejected (${escapeHtml(decision.category)})`}</h3>
+  <h3>${decision.accepted ? 'ACCEPTED PAIR — eligible to become training data' : `REJECTED ATTEMPT (${escapeHtml(decision.category)}) — kept as negative example &amp; repair material`}</h3>
   <ul>${decision.decisionDetail.map((line) => `<li>${escapeHtml(line)}</li>`).join('')}</ul>
   ${decision.improvedRules.length > 0 ? `<p>rules improved: <span class="chips">${decision.improvedRules.map((rule) => `<span class="chip">${escapeHtml(rule)}</span>`).join('')}</span></p>` : ''}
   ${decision.regressedRules.length > 0 ? `<p class="danger">rules regressed: ${escapeHtml(decision.regressedRules.join(', '))}</p>` : ''}
@@ -260,7 +282,7 @@ export function renderProject({ view, runId, runs, liveOrigin }) {
   <p class="muted">seeded defects: ${decision.seededDefects.length > 0 ? escapeHtml(decision.seededDefects.join(', ')) : 'none (already-clean control)'}</p>
   ${
     decision.upliftEdits
-      ? `<details><summary>uplift edits (${decision.upliftApplied.length} applied, ${decision.upliftSkipped.length} skipped, ${decision.upliftFailed.length} failed)</summary><pre>${escapeHtml(JSON.stringify(decision.upliftEdits, null, 2))}</pre></details>`
+      ? `<details><summary>repair edits — what turns the BASELINE into the TARGET (${decision.upliftApplied.length} applied, ${decision.upliftSkipped.length} skipped, ${decision.upliftFailed.length} failed)</summary><pre>${escapeHtml(JSON.stringify(decision.upliftEdits, null, 2))}</pre></details>`
       : ''
   }
 </div>`;
@@ -276,19 +298,20 @@ export function renderProject({ view, runId, runs, liveOrigin }) {
 <h1><code>${escapeHtml(view.id)}</code> ${stateBadge(view)} ${scanBadge(view.scan)}</h1>
 <p class="muted">${escapeHtml(view.archetype)}${view.archetypeTitle ? ` — ${escapeHtml(view.archetypeTitle)}` : ''} · ${escapeHtml(view.framework)}${view.frameworkVersion ? ` ${escapeHtml(view.frameworkVersion)}` : ''}${view.frameworkFamily ? ` (${escapeHtml(view.frameworkFamily)})` : ''}</p>
 ${runSelector}
+${attributionBlock(view)}
 <h2>live instances ${verificationBadge(view.verification, 'original')} ${verificationBadge(view.verification, 'uplifted')}</h2>
 <p>${liveLinks(view, liveOrigin, runId)}</p>
-<p class="muted">Live instances are the real servers, sandboxed (no network, no host filesystem, no environment beyond an allowlist), proxied with all owner auth material stripped. Tree SHAs: original <span class="sha">${escapeHtml(view.originalSha ?? 'unrecorded')}</span> · uplifted <span class="sha">${escapeHtml(view.upliftedSha ?? 'unrecorded')}</span></p>
-<h2>pair decision</h2>
+<p class="muted">Live instances are the real servers, sandboxed (no network, no host filesystem, no environment beyond an allowlist), proxied with all owner auth material stripped. Tree SHAs: BASELINE <span class="sha">${escapeHtml(view.originalSha ?? 'unrecorded')}</span> · TARGET <span class="sha">${escapeHtml(view.upliftedSha ?? 'unrecorded')}</span></p>
+<h2>acceptance</h2>
 ${decisionBlock}
-<h2>MWG rule measurements (original vs uplifted)</h2>
+<h2>MWG rule measurements (BASELINE vs TARGET)</h2>
 ${renderRuleRows(view)}
 <h2>owner-auth scan</h2>
 ${scanBlock}
 <div class="pair">
   <div class="panel">
-    <h3>original — browser journeys</h3>
-    ${renderJourney(view.original, 'original')}
+    <h3>BASELINE — browser journeys</h3>
+    ${renderJourney(view.original, 'baseline')}
     <h4>security checks</h4>
     ${renderSecurity(view.original)}
     <h4>console</h4>
@@ -298,8 +321,8 @@ ${scanBlock}
     ${view.original?.errors?.length ? `<p class="danger">errors: ${escapeHtml(view.original.errors.join('; '))}</p>` : ''}
   </div>
   <div class="panel">
-    <h3>uplifted — browser journeys</h3>
-    ${renderJourney(view.uplifted, 'uplifted')}
+    <h3>TARGET — browser journeys</h3>
+    ${renderJourney(view.uplifted, 'target')}
     <h4>security checks</h4>
     ${renderSecurity(view.uplifted)}
     <h4>console</h4>
@@ -321,5 +344,5 @@ function renderScanFindings(scan) {
       .map((finding) => `<li><code>${escapeHtml(finding.file ?? '?')}</code>${finding.line ? `:${finding.line}` : ''} — ${escapeHtml(finding.patternId)}</li>`)
       .join('')}</ul>`;
   };
-  return `${scan.reason ? `<p class="danger">${escapeHtml(scan.reason)}</p>` : ''}${side('original', scan.original)}${side('uplifted', scan.uplifted)}`;
+  return `${scan.reason ? `<p class="danger">${escapeHtml(scan.reason)}</p>` : ''}${side('BASELINE', scan.original)}${side('TARGET', scan.uplifted)}`;
 }

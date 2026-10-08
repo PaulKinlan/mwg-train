@@ -135,9 +135,9 @@ test('the index shows accepted and rejected with equal prominence, and escaping 
   const corpus = loadCorpus(root);
   const views = corpus.projects.map((project) => projectView(project));
   const html = renderIndex({ views, allViews: views, filters: {}, runId: corpus.runId, runs: corpus.runs, yieldReport: null, scanAvailable: true, liveOrigin: 'http://127.0.0.1:7701' });
-  assert.match(html, /ACCEPTED/);
-  assert.match(html, /rejected: no-warranted-change/);
-  assert.match(html, /no run recorded/);
+  assert.match(html, /ACCEPTED PAIR/);
+  assert.match(html, /REJECTED ATTEMPT · no-warranted-change/);
+  assert.match(html, /NOT YET RUN/);
   assert.match(html, /booking-raw/);
   assert.match(html, /catalogue-react/);
 });

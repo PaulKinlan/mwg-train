@@ -119,17 +119,55 @@ export function loadCorpus(corpusRoot, runId = null) {
           original_sha: entry.original_sha ?? null,
           uplifted_sha: entry.uplift_sha ?? null,
           uplift_applied: entry.uplift_applied ?? [],
+          record_source: 'manifest',
         };
       }
       // The manifest's SHAs are the record even when a run dir exists locally.
       project.decision.original_sha ??= entry.original_sha ?? null;
       project.decision.uplifted_sha ??= entry.uplift_sha ?? null;
     }
-    if (!selectedRun && corpusManifest.run_id && !runs.includes(corpusManifest.run_id)) {
+    // The manifest's run id is a valid selection in every view it applies to - including explicit
+    // ?run= requests - or the live URLs the index generates would 404 on their own run.
+    if (corpusManifest.run_id && !runs.includes(corpusManifest.run_id)) {
       runs.unshift(corpusManifest.run_id);
     }
   }
   const effectiveRunId = selectedRun ?? (manifestApplies ? corpusManifest?.run_id : null) ?? null;
+
+  // Attribution (Paul, 2026-10-08): every artefact carries who/what made it. Unrecorded fields
+  // are UNKNOWN, never implied. The pinned framework version comes from the repo's installed
+  // dependency when the framework is a package.
+  const repoRootGuess = dirname(corpusRoot);
+  for (const project of projects) {
+    const spec = project.spec ?? {};
+    const frameworkName = spec.framework?.name ?? project.decision?.framework ?? 'unknown';
+    let frameworkVersion = spec.framework?.version ?? null;
+    if (frameworkName && frameworkName !== 'raw' && frameworkName !== 'unknown') {
+      const pkgPath = join(repoRootGuess, 'node_modules', frameworkName, 'package.json');
+      if (existsSync(pkgPath)) {
+        try {
+          const installed = JSON.parse(readFileSync(pkgPath, 'utf8')).version;
+          frameworkVersion = frameworkVersion && frameworkVersion !== 'platform (no framework)' ? `${frameworkVersion} (installed: ${installed})` : `installed: ${installed}`;
+        } catch {
+          /* version stays as recorded */
+        }
+      }
+    }
+    const decision = project.decision;
+    project.attribution = {
+      model: spec.seeded_by ?? 'none — deterministic generator (no model wrote this artefact)',
+      brief: `pilot/plan.json → ${project.id} (archetype: ${spec.archetype ?? decision?.archetype ?? 'unknown'})`,
+      framework: frameworkVersion ? `${frameworkName} @ ${frameworkVersion}` : frameworkName,
+      generator: corpusManifest?.generator
+        ? `${corpusManifest.generator} @ ${corpusManifest.generated_at ?? 'UNKNOWN'}${corpusManifest.uplift_tool ? ` (target via ${corpusManifest.uplift_tool})` : ''}`
+        : 'UNKNOWN (no corpus manifest)',
+      acceptance: !decision
+        ? 'UNKNOWN (not yet run)'
+        : decision.accepted
+          ? 'ACCEPTED PAIR'
+          : `REJECTED ATTEMPT · ${decision.category ?? 'unspecified'}`,
+    };
+  }
   return { corpusRoot, runId: effectiveRunId, runs, projects, yieldReport: yieldReport ?? (corpusManifest ? { summary: corpusManifest.summary } : null), corpusManifest };
 }
 
@@ -168,6 +206,7 @@ export function projectView(project, { scan = null, verification = null } = {}) 
     runDir: project.runDir,
     originalTreeDir: project.originalTreeDir,
     upliftedTreeDir: project.upliftedTreeDir,
+    attribution: project.attribution ?? null,
     scan,
     verification,
   };
