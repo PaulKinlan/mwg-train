@@ -20,6 +20,7 @@ import { join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 
 import { RULES, SECURITY_CHECKS } from './rules.mjs';
+import { completeSelectorFieldName, selectorFieldName } from '../train/brief-schema.mjs';
 
 const READY_TIMEOUT_MS = 20_000;
 
@@ -58,11 +59,129 @@ export async function stopServer(server) {
   if (!server.child.killed) server.child.kill('SIGKILL');
 }
 
+/**
+ * The verdicts for the declared search / update / carried-step flows.
+ *
+ * Every verdict is a PURE function over evidence the CDP driver has already collected, so the
+ * decision that separates a working flow from a plausible-looking one is unit-testable without a
+ * browser, and the driving code around it stays thin. Each returns `{ passed, detail }`; `detail`
+ * is what the committed record shows a reviewer, so it names every sub-assertion rather than only
+ * the aggregate.
+ */
+
+/**
+ * How many rows a `/api/records` body holds, or null when the body is not a shape this harness can
+ * count. The row count is the update flow's "did not create a second row" witness, so an
+ * uncountable body must fail the verdict rather than waive it.
+ */
+export function recordRowCount(body) {
+  try {
+    const parsed = JSON.parse(body);
+    if (Array.isArray(parsed)) return parsed.length;
+    if (parsed && Array.isArray(parsed.records)) return parsed.records.length;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * SEARCH / FILTER (`journey.search`).
+ *
+ * The control that makes an exclusion evidence rather than decoration: a token the query must hide
+ * only proves filtering if the server actually HOLDS that token, so every excluded token must be
+ * present in the UNFILTERED listing (`unfilteredText`). A filtered page that omits a record the
+ * server never had is consistent with a search that ignores its query entirely.
+ */
+export function searchVerdict({ containerFound, filteredText, filteredRefs = [], unfilteredText, includes = [], excludes = [] }) {
+  const filtered = typeof filteredText === 'string' ? filteredText : '';
+  const unfiltered = typeof unfilteredText === 'string' ? unfilteredText : '';
+  const includesFound = includes.filter((token) => filtered.includes(token));
+  const includesMissing = includes.filter((token) => !filtered.includes(token));
+  const excludesLeaked = excludes.filter((token) => filtered.includes(token));
+  const controlPresent = excludes.filter((token) => unfiltered.includes(token));
+  const controlMissing = excludes.filter((token) => !unfiltered.includes(token));
+  const passed =
+    containerFound === true &&
+    includes.length > 0 &&
+    includesMissing.length === 0 &&
+    excludesLeaked.length === 0 &&
+    excludes.length > 0 &&
+    controlMissing.length === 0;
+  return {
+    passed,
+    detail: {
+      containerFound: containerFound === true,
+      includesFound,
+      includesMissing,
+      excludesLeaked,
+      controlPresent,
+      controlMissing,
+      filteredRefs,
+    },
+  };
+}
+
+/**
+ * UPDATE-EXISTING (`journey.update`).
+ *
+ * Three assertions, all required: the new value is visible on the record page after a reload; the
+ * server's own API for that ref shows the new value and no longer the old one; and the row count is
+ * UNCHANGED - an "edit" route that creates a second row passes the first two checks, which is
+ * exactly the failure mode (tr-26) the count exists to catch. An API answer that is not 200 makes
+ * "old value gone" vacuous, so it cannot pass the verdict.
+ */
+export function updateVerdict({ ref, oldValue, newValue, pageText, apiStatus, apiText, rowsBefore, rowsAfter }) {
+  const apiAnswered = apiStatus === 200;
+  const visibleAfterReload = typeof pageText === 'string' && pageText.includes(newValue);
+  const newValueStored = apiAnswered && typeof apiText === 'string' && apiText.includes(newValue);
+  const oldValueGone = apiAnswered && typeof apiText === 'string' && oldValue != null && !apiText.includes(oldValue);
+  const rowCountUnchanged = Number.isInteger(rowsBefore) && rowsBefore === rowsAfter;
+  const passed = Boolean(ref) && visibleAfterReload && newValueStored && oldValueGone && rowCountUnchanged;
+  return {
+    passed,
+    detail: {
+      ref: ref ?? null,
+      oldValue: oldValue ?? null,
+      newValue,
+      visibleAfterReload,
+      apiStatus: apiStatus ?? null,
+      newValueStored,
+      oldValueGone,
+      rowsBefore,
+      rowsAfter,
+      rowCountUnchanged,
+    },
+  };
+}
+
+/**
+ * MULTI-STEP CARRY (`journey.steps[].expectText`).
+ *
+ * A multi-step flow is stateful only if a later page shows a value an earlier page supplied, AND
+ * that value reaches the record the flow finally submits. A step whose expected text is missing
+ * from the page it landed on, or from the submitted record, is two static pages, not a workflow.
+ */
+export function carryVerdict({ expectations = [], recordText }) {
+  const text = typeof recordText === 'string' ? recordText : '';
+  const steps = expectations.map(({ index, expectText, pageText }) => ({
+    index,
+    expectText,
+    visible: typeof pageText === 'string' && pageText.includes(expectText),
+    carriedToRecord: text.includes(expectText),
+  }));
+  const passed = steps.length > 0 && steps.every((step) => step.visible && step.carriedToRecord);
+  return { passed, detail: { steps } };
+}
+
 /** One journey: the archetype's server-persistence flow, driven for real. */
 async function driveJourney(page, base, journey) {
   const kind = journey.kind ?? 'post-redirect-reload';
   const steps = [];
   const record = (name, detail) => steps.push({ step: name, ...detail });
+  // The values a multi-step flow expects a later page to show, captured step by step so the carry
+  // verdict can check both the landed page and the final record.
+  const expectations = [];
   // Pages the flow visits before the form page. A flow that spans more than one page needs somewhere
   // to say so, and putting them here rather than folding them into `startPath` keeps two things true
   // that the rest of the harness depends on: `startPath` stays the FORM page (the validation-failure
@@ -89,6 +208,13 @@ async function driveJourney(page, base, journey) {
         url: landed,
         status: page.network.filter((entry) => entry.url === landed).at(-1)?.status ?? null,
       });
+    }
+    if (typeof step.expectText === 'string') {
+      // The page the step LANDED on must show the value an earlier page supplied; reading the body
+      // text here, after the step's own submit, is what makes a carried value observable.
+      const landedText = await page.evaluate('return document.body.innerText');
+      expectations.push({ index, expectText: step.expectText, pageText: landedText });
+      record('step-expect', { index, expectText: step.expectText, visible: landedText.includes(step.expectText) });
     }
   }
   await page.goto(`${base}${journey.startPath}`);
@@ -142,7 +268,10 @@ async function driveJourney(page, base, journey) {
   const persisted = await page.evaluate(`return { url: location.href, text: document.body.innerText, echoed: document.getElementById('record-echo')?.innerText ?? '' }`);
   record('reload', { url: persisted.url, textLength: persisted.text.length, echoed: persisted.echoed.slice(0, 120) });
 
-  return { steps, afterSubmit, persistedText: persisted.text, echoedText: persisted.echoed };
+  // The carried values must reach the final record, not just the intermediate pages.
+  const carry = expectations.length > 0 ? carryVerdict({ expectations, recordText: persisted.text }) : null;
+
+  return { steps, afterSubmit, persistedText: persisted.text, echoedText: persisted.echoed, carry };
 }
 
 /** Ask the server what it has answered so far. */
@@ -227,6 +356,153 @@ async function driveWriteJourney(page, base, writeJourney) {
     persisted: stored.status === 200 && stored.body.includes(unique),
     observedLength: stored.body.length,
   };
+}
+
+/**
+ * The search journey (`journey.search`): a query run against records the flow itself created.
+ *
+ * Two records are seeded through the project's own create form with unique tokens - one containing
+ * the query verbatim, one guaranteed not to - and the search page is then asked for the query. The
+ * verdict (`searchVerdict`) passes only when the results container exists, every expected token is
+ * in it, the must-not-match token is NOT, and that same token IS in the unfiltered `/api/records`
+ * listing: without the unfiltered control, "absent from the results" would be consistent with a
+ * record that was never written and would prove nothing about filtering.
+ *
+ * The token is seeded into the journey's ECHOED field (`seedField`, the field the record page shows
+ * back): that is the one field the harness knows becomes searchable record text.
+ */
+async function driveSearchJourney(page, base, journey, search, { seedField }) {
+  if (!seedField) throw new Error('search journey: the journey has no echoed field to seed through');
+  const suffix = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+  const matchToken = `${search.query}-${suffix}`;
+  const missToken = `zzz-unmatched-${suffix}`;
+  const seedRecord = async (token) => {
+    await page.goto(`${base}${journey.startPath}`);
+    for (const [selector, value] of Object.entries(journey.fill ?? {})) {
+      await page.type(selector, selectorFieldName(selector) === seedField ? token : value);
+    }
+    if (journey.select) {
+      for (const [selector, option] of Object.entries(journey.select)) await page.selectOption(selector, option);
+    }
+    await page.submit(journey.formSelector ?? 'form');
+  };
+  await seedRecord(matchToken);
+  await seedRecord(missToken);
+
+  // The control is read FIRST and straight from the server: the excluded token must be in the
+  // unfiltered listing, or its absence from the filtered results says nothing.
+  const unfiltered = await page.evaluate(`
+    const response = await fetch('/api/records');
+    return { status: response.status, body: (await response.text()).slice(0, 20000) };
+  `);
+
+  const url = `${base}${search.path}?${search.queryParam}=${encodeURIComponent(search.query)}`;
+  await page.goto(url);
+  let containerFound = false;
+  try {
+    await page.waitFor(search.resultsSelector, { timeout: 5000 });
+    containerFound = true;
+  } catch {
+    /* the container never rendered; the verdict reports it */
+  }
+  const filtered = await page.evaluate(`
+    const container = document.querySelector(${JSON.stringify(search.resultsSelector)});
+    return {
+      text: container?.innerText ?? '',
+      refs: [...(container?.querySelectorAll('[data-ref]') ?? [])].map((el) => el.getAttribute('data-ref')),
+    };
+  `);
+
+  const verdict = searchVerdict({
+    containerFound,
+    filteredText: filtered.text,
+    filteredRefs: filtered.refs,
+    unfilteredText: unfiltered.status === 200 ? unfiltered.body : '',
+    includes: [...(search.expectIncludes ?? []), matchToken],
+    excludes: [...(search.expectAbsent ?? []), missToken],
+  });
+  return {
+    name: 'search',
+    path: url,
+    seeded: { match: matchToken, miss: missToken },
+    unfilteredStatus: unfiltered.status,
+    containerFound,
+    verdict,
+  };
+}
+
+/**
+ * The update-existing journey (`journey.update`): change one field of the record the create step
+ * just wrote, and prove the change landed IN PLACE.
+ *
+ * The ref comes from the create step's redirect target (or `/api/me` for a session flow). The edit
+ * page is the record page plus `/edit`; the field is addressed by name, which the schema has already
+ * confined to characters a selector can carry. The verdict (`updateVerdict`) requires all three of:
+ * the new value visible on the reloaded record page, the server's API for the ref showing the new
+ * value and not the old one, and an UNCHANGED row count - the last is what catches an "edit" route
+ * that silently creates a second row.
+ */
+async function driveUpdateJourney(page, base, journey, update, { recordUrl = null } = {}) {
+  let ref = recordUrl ? recordUrl.split('/').filter(Boolean).pop() : null;
+  if (!ref) {
+    const me = await page.evaluate(`
+      const response = await fetch('/api/me');
+      return { status: response.status, body: (await response.text()).slice(0, 4000) };
+    `);
+    if (me.status === 200) {
+      try {
+        const parsed = JSON.parse(me.body);
+        ref = parsed?.ref ?? parsed?.id ?? null;
+      } catch {
+        /* no ref to be had; the verdict reports it */
+      }
+    }
+  }
+  const recordPath = recordUrl ? new URL(recordUrl).pathname : null;
+
+  // The old value is the one the create step submitted for this field; the schema has already
+  // refused a journey whose create step does not fill the update field.
+  const oldEntry = Object.entries(journey.fill ?? {}).find(([selector]) => completeSelectorFieldName(selector) === update.field);
+  const oldValue = oldEntry ? String(oldEntry[1]) : null;
+
+  const countRows = () =>
+    page.evaluate(`
+      const response = await fetch('/api/records');
+      return { status: response.status, body: (await response.text()).slice(0, 20000) };
+    `);
+  const before = await countRows();
+  const rowsBefore = recordRowCount(before.body);
+
+  let pageText = '';
+  if (recordPath) {
+    await page.goto(`${base}${recordPath}/edit`);
+    await page.type(`[name=${JSON.stringify(update.field)}]`, update.newValue);
+    await page.submit('form');
+    // Visible after a RELOAD of the record page, not merely on whatever the submit redirected to.
+    await page.goto(`${base}${recordPath}`);
+    pageText = await page.evaluate('return document.body.innerText');
+  }
+  const after = await countRows();
+  const rowsAfter = recordRowCount(after.body);
+
+  const api = ref
+    ? await page.evaluate(`
+        const response = await fetch('/api/records/' + ${JSON.stringify(ref)});
+        return { status: response.status, body: (await response.text()).slice(0, 8000) };
+      `)
+    : { status: null, body: '' };
+
+  const verdict = updateVerdict({
+    ref,
+    oldValue,
+    newValue: update.newValue,
+    pageText,
+    apiStatus: api.status,
+    apiText: api.body,
+    rowsBefore,
+    rowsAfter,
+  });
+  return { name: 'update-existing', ref, editPath: recordPath ? `${recordPath}/edit` : null, verdict };
 }
 
 /** The validation-failure path: submitting an empty form must not silently succeed. */
@@ -328,6 +604,18 @@ export async function runProjectVersion({ chrome, projectDir, spec, label, port,
       record.journeys.push({ name: 'validation-failure', ...(await driveValidationFailure(page, base, spec.journey)) });
       if (spec.write_journey) {
         record.journeys.push(await driveWriteJourney(page, base, spec.write_journey));
+      }
+      if (spec.journey.search) {
+        // The search seeds through the journey's echoed field - the one field the harness knows
+        // becomes searchable record text. The brief schema guarantees the journey fills it.
+        const seedField = spec.content_journey?.inputSelector ? selectorFieldName(spec.content_journey.inputSelector) : null;
+        record.journeys.push(await driveSearchJourney(page, base, spec.journey, spec.journey.search, { seedField }));
+      }
+      if (spec.journey.update) {
+        // The record to update is the one the create step just redirected to.
+        record.journeys.push(
+          await driveUpdateJourney(page, base, spec.journey, spec.journey.update, { recordUrl: record.journeys[0]?.afterSubmit ?? null }),
+        );
       }
       if (spec.content_journey) {
         // The content journey needs the reference the server just issued; without substituting it the

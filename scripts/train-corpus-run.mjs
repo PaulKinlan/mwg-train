@@ -171,6 +171,8 @@ function journeyResults(record, spec) {
   const validation = record.journeys?.find((journey) => journey.name === 'validation-failure');
   const write = record.journeys?.find((journey) => journey.name === 'write-journey');
   const content = record.journeys?.find((journey) => journey.name === 'content');
+  const search = record.journeys?.find((journey) => journey.name === 'search');
+  const update = record.journeys?.find((journey) => journey.name === 'update-existing');
 
   journeys.push({
     name: 'server-persistence',
@@ -180,7 +182,7 @@ function journeyResults(record, spec) {
     // the run, but a reader should not have to take that on trust), and the evidence would live only
     // in the run's output directory.
     steps: (persistence?.steps ?? [])
-      .filter((step) => ['fill', 'select', 'submit', 'reload', 'step', 'step-fill', 'step-select', 'step-submit'].includes(step.step))
+      .filter((step) => ['fill', 'select', 'submit', 'reload', 'step', 'step-fill', 'step-select', 'step-submit', 'step-expect'].includes(step.step))
       .map((step) => ({
         step: step.step,
         ...(step.options ? { options: step.options } : {}),
@@ -194,6 +196,9 @@ function journeyResults(record, spec) {
           echoed: (persistence.echoedText ?? '').slice(0, 120),
         }
       : null,
+    // A multi-step flow's carry verdict: the intermediate pages showed the values earlier steps
+    // supplied, and those values reached the final record. Absent for a single-page journey.
+    ...(persistence?.carry ? { carry: persistence.carry } : {}),
   });
 
   const observation = validationObservation(record);
@@ -208,6 +213,12 @@ function journeyResults(record, spec) {
   }
   if (content) {
     journeys.push({ name: 'content', passed: true, url: content.url ?? null });
+  }
+  if (search) {
+    journeys.push({ name: 'search', passed: search.verdict?.passed === true, path: search.path ?? null, detail: search.verdict?.detail ?? null });
+  }
+  if (update) {
+    journeys.push({ name: 'update-existing', passed: update.verdict?.passed === true, ref: update.ref ?? null, detail: update.verdict?.detail ?? null });
   }
   return journeys;
 }
@@ -528,6 +539,14 @@ async function main() {
   );
 
   const acceptance = summarizeYield(decisions);
+
+  // The declared search / update / carried-step flows, counted alongside journeys_run/_passed.
+  // These are ADDITIVE counters: existing fields keep their names and meanings so committed
+  // records.json files and their re-rendered reports keep working unchanged.
+  const versions = records.flatMap((record) => [record.original, record.uplifted]);
+  const flowCount = (name) => versions.filter((version) => version.journeys.some((journey) => journey.name === name)).length;
+  const flowPass = (name) => versions.filter((version) => version.journeys.some((journey) => journey.name === name && journey.passed === true)).length;
+  const carried = versions.map((version) => version.journeys.find((journey) => journey.name === 'server-persistence')?.carry).filter(Boolean);
   const scoredIds = new Set(records.map((record) => record.project_id));
   const unscored = allProjects.filter((project) => !scoredIds.has(project.project_id));
   const coverage = {
@@ -551,6 +570,12 @@ async function main() {
     versions_driven: records.length * 2,
     journeys_run: journeysRun,
     journeys_passed: journeysPassed,
+    searches_run: flowCount('search'),
+    searches_passed: flowPass('search'),
+    updates_run: flowCount('update-existing'),
+    updates_passed: flowPass('update-existing'),
+    carries_run: carried.length,
+    carries_passed: carried.filter((carry) => carry.passed === true).length,
     acceptance: { attempted: acceptance.attempted, accepted: acceptance.accepted, yield: acceptance.yield },
     by_category: acceptance.by_category,
     by_framework: acceptance.by_framework,
