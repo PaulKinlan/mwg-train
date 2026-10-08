@@ -16,13 +16,12 @@
  */
 
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, join } from 'node:path';
 
-import { validateCapture, validateFlow } from './schema.mjs';
+import { validateCapture, validateFlow, resolveCaptureOutputPath } from './schema.mjs';
 import { validateSpec, buildProjectFromSpec, SPEC_VERSION } from '../eval/spec.mjs';
 import { FRAMEWORKS, writeProject } from '../../pilot/frameworks.mjs';
-import { assetStoragePath, REPO_ROOT, QuarantineError } from '../provenance/store.mjs';
-import { isInside } from '../provenance/arms.mjs';
+import { assetStoragePath, REPO_ROOT } from '../provenance/store.mjs';
 
 export class TranslationError extends Error {
   constructor(reason) {
@@ -126,16 +125,18 @@ export function translateCapture({ capture, flow }) {
     throw new TranslationError('no POST form found in capture: nothing to clean-room reconstruct');
   }
 
-  // Match the form driven by the flow's submit step if present, otherwise first POST form
+  // A specified submit must identify a captured POST form, never silently choose another.
   const submitStep = flow.steps.find((s) => s.action === 'submit');
   let chosen = postForms[0];
-  if (submitStep?.target) {
-    const targetIdMatch = submitStep.target.match(/^form#([A-Za-z0-9_-]+)$/);
-    if (targetIdMatch) {
-      const targetId = targetIdMatch[1];
-      const match = postForms.find(({ form }) => form.id === targetId);
-      if (match) chosen = match;
+  if (submitStep) {
+    if (postForms.length === 1 && !postForms[0].form.id) {
+      const form = postForms[0].form;
+      throw new TranslationError(`captured POST form (action: ${form.action}, method: ${form.method}, controls: ${form.controls.map((control) => control.name).join(', ')}) has no id: generator requires form selector in the form form#id; submit target '${submitStep.target}' cannot match it`);
     }
+    const targetIdMatch = submitStep.target.match(/^form#([A-Za-z][A-Za-z0-9_-]*)$/);
+    const match = targetIdMatch && postForms.find(({ form }) => form.id === targetIdMatch[1]);
+    if (!match) throw new TranslationError(`submit target '${submitStep.target}' does not match a captured POST form#id`);
+    chosen = match;
   }
   const { form: postForm } = chosen;
 
@@ -163,12 +164,11 @@ export function translateCapture({ capture, flow }) {
   // 3. Flow control verification: flow must not touch unrecorded controls
   for (const step of flow.steps) {
     if (step.action === 'fill' || step.action === 'select') {
-      const match = step.target?.match(/\[name=([A-Za-z0-9_-]+)\]/);
-      if (match) {
-        const targetName = match[1];
-        if (!recordedNames.has(targetName)) {
-          throw new TranslationError(`flow touches control '${targetName}' which was never recorded in capture`);
-        }
+      const match = step.target.match(/^(?:input|select|textarea)\[name=([A-Za-z][A-Za-z0-9_-]*)\]$/);
+      if (!match) throw new TranslationError(`flow ${step.action} target '${step.target}' does not name a captured field with [name=...]`);
+      const targetName = match[1];
+      if (!recordedNames.has(targetName)) {
+        throw new TranslationError(`flow touches control '${targetName}' which was never recorded in capture (target '${step.target}')`);
       }
     }
   }
@@ -387,7 +387,7 @@ export function translateCapture({ capture, flow }) {
  * written into the quarantine store (honouring MWG_TRAIN_QUARANTINE). Writing into
  * the repository tree is strictly prohibited.
  */
-export function buildCapturedProjects({ spec, outDir = null, framework = null, quarantineRoot = null, repoRoot = null } = {}) {
+export function buildCapturedProjects({ spec, outDir = null, framework = null, quarantineRoot = null, repoRoot = null, testTempDir = null } = {}) {
   const problems = validateSpec(spec);
   if (problems.length > 0) {
     throw new TranslationError(`spec is invalid:\n  ${problems.join('\n  ')}`);
@@ -395,20 +395,23 @@ export function buildCapturedProjects({ spec, outDir = null, framework = null, q
 
   const effectiveRepo = repoRoot ?? REPO_ROOT;
 
-  // Protect against writes into the public repo tree
-  if (outDir !== null) {
-    const resolvedOut = resolve(outDir);
-    if (isInside(effectiveRepo, resolvedOut)) {
-      throw new QuarantineError('REPO_WRITE_PROHIBITED', `refusing to write generated projects into the repo tree: ${resolvedOut}`);
-    }
-  }
+  // Explicit destinations may only name a verified store location or a caller-supplied temp directory.
+  const outputOptions = {
+    repoRoot: effectiveRepo,
+    env: {
+      ...process.env,
+      ...(quarantineRoot ? { MWG_TRAIN_QUARANTINE: quarantineRoot } : {}),
+      ...(testTempDir ? { MWG_TRAIN_CAPTURE_TEST_TEMP: testTempDir } : {}),
+    },
+  };
+  const outputDir = outDir !== null ? resolveCaptureOutputPath(outDir, outputOptions) : null;
 
   const options = { quarantineRoot, repoRoot: effectiveRepo };
 
   // Write spec
   const specRelPath = `specs/${spec.family_id}.json`;
-  const specPath = outDir !== null
-    ? join(resolve(outDir), `${spec.family_id}.json`)
+  const specPath = outputDir !== null
+    ? resolveCaptureOutputPath(join(outputDir, `${spec.family_id}.json`), outputOptions)
     : assetStoragePath('A4_clean_room_reproduction', specRelPath, options);
 
   mkdirSync(dirname(specPath), { recursive: true });
@@ -425,8 +428,8 @@ export function buildCapturedProjects({ spec, outDir = null, framework = null, q
     }
     const built = buildProjectFromSpec({ spec, frameworkName: fw });
     const projectRelPath = `projects/${built.projectId}`;
-    const projectDir = outDir !== null
-      ? join(resolve(outDir), built.projectId)
+    const projectDir = outputDir !== null
+      ? resolveCaptureOutputPath(join(outputDir, built.projectId), outputOptions)
       : assetStoragePath('A4_clean_room_reproduction', projectRelPath, options);
 
     writeProject(projectDir, built);

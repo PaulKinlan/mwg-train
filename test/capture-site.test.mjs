@@ -355,9 +355,11 @@ test('captureSite handles DOM edge cases (unnamed submit buttons, options in sel
   <form action="/complex" method="post">
     <!-- Unnamed submit button -->
     <button type="submit">Submit Unnamed</button>
-    <!-- Control with non-NAME_SAFE name should be omitted -->
+    <!-- Control with non-NAME_SAFE name should be omitted and reported -->
     <input type="text" name="user[email]" value="ignored">
-    <!-- Control with unrenderable type range should be omitted -->
+    <!-- Control with unrenderable type range should be omitted and reported -->
+    <button type="button" name="other">Not a submit</button>
+    <button type="reset">Unnamed Reset</button>
     <input type="range" name="volume" min="0" max="100">
     <!-- Valid text input -->
     <input type="text" name="query" required>
@@ -399,8 +401,18 @@ test('captureSite handles DOM edge cases (unnamed submit buttons, options in sel
 
   const form = capture.pages[0].forms[0];
   assert.equal(form.id, '');
-  assert.match(warning.mock.calls[0]?.arguments[0] ?? '', /POST form at \/.*action: \/complex.*controls: submit, query, category.*has no id and cannot be clean-room translated/);
+  assert.ok(warning.mock.calls.some(({ arguments: args }) => /POST form at \/.*action: \/complex.*controls: submit, query, category.*has no id and cannot be clean-room translated/.test(args[0])));
   assert.equal(form.controls.length, 3);
+  assert.deepEqual(capture.pages[0].dropped_controls, [
+    { name: 'user[email]', type: 'text', reason: 'name is not NAME_SAFE' },
+    { name: 'other', type: 'button', reason: 'unsupported control type' },
+    { name: 'unnamed button', type: 'reset', reason: 'unsupported control type' },
+    { name: 'volume', type: 'range', reason: 'unsupported control type' },
+  ]);
+  for (const dropped of capture.pages[0].dropped_controls) {
+    assert.ok(warning.mock.calls.some(({ arguments: args }) => args[0].includes(dropped.name) && args[0].includes(dropped.type) && args[0].includes(dropped.reason)), `missing run warning for ${dropped.name}`);
+  }
+  assert.deepEqual(JSON.parse(readFileSync(capture.capturePath, 'utf8')).pages[0].dropped_controls, capture.pages[0].dropped_controls);
   // Unnamed submit button became 'submit'
   assert.equal(form.controls[0].name, 'submit');
   assert.equal(form.controls[0].type, 'submit');
@@ -429,6 +441,7 @@ test('CLI: scripts/capture-site.mjs executes and validates correctly', async (t)
     return new Promise((resolveRun, rejectRun) => {
       const cp = spawn('node', [scriptPath, ...args], {
         env,
+        timeout: 30000,
         stdio: ['ignore', 'pipe', 'pipe'],
       });
       let stdout = '';
@@ -470,9 +483,22 @@ test('CLI: scripts/capture-site.mjs executes and validates correctly', async (t)
   // Verify assets on disk in quarantine store
   const cliCaptureJson = assetStoragePath('A5_black_box_reproduction', 'cli-captured-site/capture.json', { quarantineRoot: quarantineStore });
   assert.ok(existsSync(cliCaptureJson));
+  for (const file of ['desktop.png', 'mobile.png', 'dom.html']) {
+    assert.ok(existsSync(join(quarantineStore, 'data/A5_black_box_reproduction/cli-captured-site', file)));
+    assert.ok(!existsSync(join(REPO_ROOT, file)));
+  }
+  assert.ok(!existsSync(join(REPO_ROOT, 'data/A5_black_box_reproduction/cli-captured-site')));
   const written = JSON.parse(readFileSync(cliCaptureJson, 'utf8'));
   assert.deepEqual(validateCapture(written), []);
   assert.equal(written.pages.length, 2);
   assert.equal(written.pages[0].path, '/');
   assert.equal(written.pages[1].path, '/about');
+
+  const rejected = join(REPO_ROOT, 'data/capture-site-refused');
+  const refusal = await runCli(['--url', baseUrl, '--rights-ref', 'docs/ref.md', '--out', rejected]);
+  assert.notEqual(refusal.code, 0);
+  assert.match(refusal.stderr, /refus|repo tree/i);
+  assert.ok(refusal.stderr.includes(rejected));
+  assert.ok(!existsSync(rejected));
+  assert.ok(!existsSync(join(quarantineStore, 'data/A5_black_box_reproduction', rejected.slice(1))));
 });

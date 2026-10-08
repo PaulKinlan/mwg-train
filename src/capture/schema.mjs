@@ -1,3 +1,8 @@
+import { tmpdir } from 'node:os';
+import { isAbsolute, resolve } from 'node:path';
+import { isInside } from '../provenance/arms.mjs';
+import { assertQuarantineStore, assertResolvesInside, quarantineRoot, QuarantineError, REPO_ROOT } from '../provenance/store.mjs';
+
 // Capture and flow schemas (capture bead mwg-train-c0u).
 //
 // A capture is EVIDENCE about a third-party site and is quarantined (arm A5). A flow is a recorded sequence of
@@ -10,6 +15,38 @@
 
 export const CAPTURE_VERSION = 1;
 export const FLOW_VERSION = 1;
+
+/** Explicit output paths must remain in the verified store or an explicitly supplied test temp directory. */
+export function resolveCaptureOutputPath(path, { env = process.env, repoRoot = REPO_ROOT } = {}) {
+  if (typeof path !== 'string' || !isAbsolute(path)) {
+    throw new QuarantineError('OUTPUT_NOT_ABSOLUTE', `refusing output path '${path}': explicit destination must be absolute`);
+  }
+  const destination = resolve(path);
+  if (isInside(repoRoot, destination)) {
+    throw new QuarantineError('REPO_WRITE_PROHIBITED', `refusing output path '${destination}': repo tree is not a quarantine store`);
+  }
+  const store = quarantineRoot({ repoRoot, env });
+  if (isInside(store, destination)) {
+    try {
+      assertQuarantineStore(store, { repoRoot });
+      return assertResolvesInside(store, destination, 'capture output');
+    } catch (err) {
+      throw new QuarantineError('OUTPUT_OUTSIDE_QUARANTINE', `refusing output path '${destination}': ${err.message}`);
+    }
+  }
+  const temp = resolve(tmpdir());
+  const testTemp = env.MWG_TRAIN_CAPTURE_TEST_TEMP;
+  if (testTemp && isAbsolute(testTemp) && isInside(temp, resolve(testTemp)) && resolve(testTemp) !== temp
+      && isInside(resolve(testTemp), destination)) {
+    try {
+      assertResolvesInside(temp, resolve(testTemp), 'test temp directory');
+      return assertResolvesInside(resolve(testTemp), destination, 'capture output');
+    } catch (err) {
+      throw new QuarantineError('OUTPUT_OUTSIDE_QUARANTINE', `refusing output path '${destination}': ${err.message}`);
+    }
+  }
+  throw new QuarantineError('OUTPUT_OUTSIDE_QUARANTINE', `refusing output path '${destination}': outside quarantine store and explicitly supplied test temp directory`);
+}
 
 // Capturing a third-party site and re-implementing it are both quarantined activities. Nothing here may claim a
 // trainable or public arm: A1/A6 belong to this repo's own authored corpora, whose manifests forbid third-party
@@ -85,6 +122,17 @@ export function validateCapture(capture) {
         if (!Array.isArray(page[key])) fail(`${at}.${key}`, 'must be an array');
       }
       if (!isString(page.text_excerpt)) fail(`${at}.text_excerpt`, 'must be a string');
+
+      if (page.dropped_controls !== undefined) {
+        if (!Array.isArray(page.dropped_controls)) fail(`${at}.dropped_controls`, 'must be an array');
+        else page.dropped_controls.forEach((drop, di) => {
+          const dat = `${at}.dropped_controls[${di}]`;
+          if (!isObject(drop)) return fail(dat, 'must be an object');
+          for (const key of ['name', 'type', 'reason']) {
+            if (!isNonEmpty(drop[key])) fail(`${dat}.${key}`, 'must be a non-empty string');
+          }
+        });
+      }
 
       if (!Array.isArray(page.forms)) fail(`${at}.forms`, 'must be an array');
       else page.forms.forEach((form, fi) => {
@@ -182,6 +230,13 @@ export function validateFlow(flow) {
     }
     if (step.action === 'click' || step.action === 'submit') {
       if (!SELECTOR.test(step.target ?? '')) fail(`${at}.target`, 'must name exactly one complete element, e.g. button#pay or form#checkout');
+    }
+    if (step.unobserved_expectText !== undefined) {
+      const drop = step.unobserved_expectText;
+      if (!isObject(drop) || (drop.requested !== true && !isNonEmpty(drop.requested)) || !isNonEmpty(drop.reason)) {
+        fail(`${at}.unobserved_expectText`, 'must name a requested value (or true) and a non-empty reason');
+      }
+      if (step.expectText !== undefined) fail(`${at}.expectText`, 'cannot claim verification for an unobserved request');
     }
     if (step.expectText !== undefined) {
       if (!isNonEmpty(step.expectText)) fail(`${at}.expectText`, 'must be a non-empty string when present');

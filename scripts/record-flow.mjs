@@ -4,7 +4,7 @@ import { isAbsolute, resolve } from 'node:path';
 import process from 'node:process';
 
 import { recordFlow } from '../src/capture/flow.mjs';
-import { validateFlow } from '../src/capture/schema.mjs';
+import { validateFlow, resolveCaptureOutputPath } from '../src/capture/schema.mjs';
 import { launchChrome } from '../src/corpus/cdp.mjs';
 
 function parseArgs(argv) {
@@ -61,6 +61,17 @@ async function main() {
     process.exit(1);
   }
 
+  const outArg = flags['out'];
+  let absOutPath = null;
+  if (outArg !== undefined) {
+    try {
+      absOutPath = resolveCaptureOutputPath(outArg);
+    } catch (err) {
+      console.error(`Error: ${err.message}`);
+      process.exit(1);
+    }
+  }
+
   let chrome = null;
   let exitCode = 0;
 
@@ -75,9 +86,12 @@ async function main() {
       exitCode = 1;
     } else {
       const formatted = JSON.stringify(flow, null, 2);
-      const outArg = flags['out'];
-      if (outArg && typeof outArg === 'string') {
-        const absOutPath = isAbsolute(outArg) ? outArg : resolve(process.cwd(), outArg);
+      for (const step of flow.steps) {
+        if (step.unobserved_expectText) {
+          console.error(`Unobserved expectText at step ${step.index}: ${JSON.stringify(step.unobserved_expectText.requested)}: ${step.unobserved_expectText.reason}; not verified`);
+        }
+      }
+      if (absOutPath) {
         writeFileSync(absOutPath, formatted, 'utf8');
       } else {
         console.log(formatted);

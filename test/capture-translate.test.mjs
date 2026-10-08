@@ -4,6 +4,7 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import process from 'node:process';
 
 import { translateCapture, buildCapturedProjects, TranslationError, MAPPABLE_CONTROL_TYPES } from '../src/capture/translate.mjs';
 import { validateSpec } from '../src/eval/spec.mjs';
@@ -162,6 +163,27 @@ test('refuses translation if no step observes a supplied value', () => {
   );
 });
 
+test('refuses a submit target that cannot identify the captured POST form', () => {
+  for (const target of ['button#send', 'form#other']) {
+    const flow = fixtureFlow();
+    flow.steps[4].target = target;
+    assert.throws(
+      () => translateCapture({ capture: fixtureCapture(), flow }),
+      (err) => err instanceof TranslationError && err.message.includes(target),
+      `submit target ${target} must be named in refusal`,
+    );
+  }
+});
+
+test('refuses a fill selector without an exact captured field name', () => {
+  const flow = fixtureFlow();
+  flow.steps[1].target = 'input#name';
+  assert.throws(
+    () => translateCapture({ capture: fixtureCapture(), flow }),
+    (err) => err instanceof TranslationError && err.message.includes('input#name'),
+  );
+});
+
 test('refuses translation if flow touches a control never recorded in capture', () => {
   const flow = fixtureFlow();
   flow.steps[1].target = 'input[name=unrecorded_control]';
@@ -260,7 +282,7 @@ test('clean-room boundary: translating and generating does not open or read raw 
   const tempOut = mkdtempSync(join(tmpdir(), 'clean-room-boundary-'));
   t.after(() => rmSync(tempOut, { recursive: true, force: true }));
 
-  const { specPath, projects } = buildCapturedProjects({ spec, outDir: tempOut });
+  const { specPath, projects } = buildCapturedProjects({ spec, outDir: tempOut, testTempDir: tempOut });
   assert.ok(existsSync(specPath));
   assert.equal(Object.keys(projects).length, 7);
   for (const [framework, dir] of Object.entries(projects)) {
@@ -328,7 +350,7 @@ test('capture-to-projects CLI builds spec and projects via command-line argument
   const stdout = execFileSync(
     'node',
     [scriptPath, '--capture', capFile, '--flow', flowFile, '--framework', 'raw', '--out', outDir],
-    { encoding: 'utf8' },
+    { encoding: 'utf8', timeout: 30000, env: { ...process.env, MWG_TRAIN_CAPTURE_TEST_TEMP: tempDir } },
   );
 
   assert.match(stdout, /translated feedback-example-test/);
@@ -338,4 +360,22 @@ test('capture-to-projects CLI builds spec and projects via command-line argument
   assert.ok(existsSync(join(outDir, 'feedback-example-test.json')));
   assert.ok(existsSync(join(outDir, 'feedback-example-test-raw/server.mjs')));
   assert.ok(existsSync(join(outDir, 'feedback-example-test-raw/spec.json')));
+  assert.equal(JSON.parse(readFileSync(join(outDir, 'feedback-example-test.json'))).family_id, 'feedback-example-test');
+  assert.ok(!existsSync(join(REPO_ROOT, 'feedback-example-test.json')));
+  assert.ok(!existsSync(join(REPO_ROOT, 'feedback-example-test-raw')));
+});
+
+test('capture-to-projects CLI refuses repo output without writing a spec or project', (t) => {
+  const tempDir = mkdtempSync(join(tmpdir(), 'cli-refusal-'));
+  t.after(() => rmSync(tempDir, { recursive: true, force: true }));
+  const capFile = join(tempDir, 'capture.json');
+  const flowFile = join(tempDir, 'flow.json');
+  const rejected = join(REPO_ROOT, 'data/generated-refused');
+  writeFileSync(capFile, JSON.stringify(fixtureCapture()));
+  writeFileSync(flowFile, JSON.stringify(fixtureFlow()));
+  assert.throws(
+    () => execFileSync('node', [join(REPO_ROOT, 'scripts/capture-to-projects.mjs'), '--capture', capFile, '--flow', flowFile, '--out', rejected], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], timeout: 30000 }),
+    (err) => err.status !== 0 && err.stderr.includes(rejected) && /refus|repo tree/i.test(err.stderr),
+  );
+  assert.ok(!existsSync(rejected));
 });

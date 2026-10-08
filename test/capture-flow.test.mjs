@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { execFile } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { promisify } from 'node:util';
@@ -11,6 +11,7 @@ import process from 'node:process';
 import { launchChrome } from '../src/corpus/cdp.mjs';
 import { recordFlow } from '../src/capture/flow.mjs';
 import { validateFlow } from '../src/capture/schema.mjs';
+import { REPO_ROOT } from '../src/provenance/store.mjs';
 
 const execFileAsync = promisify(execFile);
 
@@ -207,6 +208,13 @@ test('expectText is recorded ONLY where the value was supplied earlier AND is vi
     const problems = validateFlow(flow);
     assert.deepEqual(problems, []);
 
+    for (const index of [0, 1, 2, 5]) {
+      assert.deepEqual(flow.steps[index].unobserved_expectText, {
+        requested: steps[index].expectText,
+        reason: 'value was not supplied by an earlier step',
+      });
+    }
+
     // Step 0: omitted because 'alice' was not supplied earlier
     assert.equal(flow.steps[0].expectText, undefined);
 
@@ -228,6 +236,28 @@ test('expectText is recorded ONLY where the value was supplied earlier AND is vi
     if (chrome) {
       await chrome.close();
     }
+    await fixture.close();
+  }
+});
+
+test('an explicitly requested but invisible carried value is reported, never verified', async () => {
+  const fixture = await startFixtureServer();
+  try {
+    const flow = await recordFlow({
+      url: fixture.url,
+      rightsRef: 'docs/provenance/assets/reproduction-studies.md',
+      steps: [
+        { action: 'fill', target: 'input[name=username]', value: 'invisible-token' },
+        { action: 'goto', target: '/', expectText: 'invisible-token' },
+      ],
+    });
+    assert.equal(flow.steps[1].expectText, undefined);
+    assert.deepEqual(flow.steps[1].unobserved_expectText, {
+      requested: 'invisible-token',
+      reason: 'value was not visible on the page',
+    });
+    assert.deepEqual(validateFlow(flow), []);
+  } finally {
     await fixture.close();
   }
 });
@@ -286,7 +316,9 @@ test('a recording without rights-ref is refused', async () => {
 test('CLI scripts/record-flow.mjs executes successfully and enforces constraints', async () => {
   const fixture = await startFixtureServer();
   const tmpDir = mkdtempSync(join(tmpdir(), 'flow-cli-test-'));
-  const scriptPath = resolve(process.cwd(), 'scripts/record-flow.mjs');
+  const scriptPath = resolve(REPO_ROOT, 'scripts/record-flow.mjs');
+  const rejected = join(REPO_ROOT, 'data/flow-refused.json');
+  const cliOptions = { timeout: 30000, env: { ...process.env, MWG_TRAIN_CAPTURE_TEST_TEMP: tmpDir } };
 
   try {
     const stepsPath = join(tmpDir, 'steps.json');
@@ -304,13 +336,14 @@ test('CLI scripts/record-flow.mjs executes successfully and enforces constraints
     // Case 1: Missing --rights-ref must fail non-zero
     let cliFailed = false;
     try {
-      await execFileAsync('node', [scriptPath, '--url', fixture.url, '--steps', stepsPath]);
+      await execFileAsync('node', [scriptPath, '--url', fixture.url, '--steps', stepsPath], cliOptions);
     } catch (err) {
       cliFailed = true;
       assert.notEqual(err.code, 0);
       assert.ok(/rights-ref/i.test(err.stderr), `stderr should mention rights-ref, got: ${err.stderr}`);
     }
     assert.ok(cliFailed, 'CLI without --rights-ref should have failed');
+    assert.ok(!existsSync(outPath));
 
     // Case 2: Full run with --out saves valid JSON passing validateFlow
     const { stdout } = await execFileAsync('node', [
@@ -323,7 +356,7 @@ test('CLI scripts/record-flow.mjs executes successfully and enforces constraints
       stepsPath,
       '--out',
       outPath,
-    ]);
+    ], cliOptions);
 
     const writtenFlow = JSON.parse(readFileSync(outPath, 'utf8'));
     const problems = validateFlow(writtenFlow);
@@ -331,6 +364,7 @@ test('CLI scripts/record-flow.mjs executes successfully and enforces constraints
     assert.equal(writtenFlow.steps[1].value, 'charlie');
     assert.equal(writtenFlow.steps[2].value, 'platinum');
     assert.equal(writtenFlow.steps[4].expectText, 'charlie');
+    assert.ok(!existsSync(rejected));
 
     // Confirm fixture received the platinum select
     const submission = fixture.getLastSubmission();
@@ -354,7 +388,7 @@ test('CLI scripts/record-flow.mjs executes successfully and enforces constraints
         'docs/provenance/assets/reproduction-studies.md',
         '--steps',
         invalidStepsPath,
-      ]);
+      ], cliOptions);
     } catch (err) {
       validateRefusalFailed = true;
       assert.notEqual(err.code, 0);
@@ -364,7 +398,40 @@ test('CLI scripts/record-flow.mjs executes successfully and enforces constraints
       );
     }
     assert.ok(validateRefusalFailed, 'CLI should exit non-zero when validateFlow refuses result');
+
+    await assert.rejects(
+      execFileAsync('node', [scriptPath, '--url', fixture.url, '--rights-ref', 'docs/ref.md', '--steps', stepsPath, '--out', rejected], cliOptions),
+      (err) => err.code !== 0 && err.stderr.includes(rejected) && /refus|repo tree/i.test(err.stderr),
+    );
+    assert.ok(!existsSync(rejected));
+    assert.ok(existsSync(outPath));
+
+    const unauthorizedTemp = join(tmpDir, 'not-opted-in.json');
+    await assert.rejects(
+      execFileAsync('node', [scriptPath, '--url', fixture.url, '--rights-ref', 'docs/ref.md', '--steps', stepsPath, '--out', unauthorizedTemp], {
+        timeout: 30000,
+        env: { ...process.env, MWG_TRAIN_CAPTURE_TEST_TEMP: '' },
+      }),
+      (err) => err.code !== 0 && err.stderr.includes(unauthorizedTemp) && /explicitly supplied test temp directory/.test(err.stderr),
+    );
+    assert.ok(!existsSync(unauthorizedTemp));
+
+    const unobservedSteps = join(tmpDir, 'unobserved-steps.json');
+    const unobservedOut = join(tmpDir, 'unobserved-flow.json');
+    writeFileSync(unobservedSteps, JSON.stringify([
+      { action: 'fill', target: 'input[name=username]', value: 'not-on-result' },
+      { action: 'goto', target: '/', expectText: 'not-on-result' },
+    ]));
+    const unobservedRun = await execFileAsync('node', [
+      scriptPath, '--url', fixture.url, '--rights-ref', 'docs/ref.md',
+      '--steps', unobservedSteps, '--out', unobservedOut,
+    ], cliOptions);
+    assert.match(unobservedRun.stderr, /Unobserved expectText at step 1:.*not verified/);
+    const unobservedFlow = JSON.parse(readFileSync(unobservedOut, 'utf8'));
+    assert.equal(unobservedFlow.steps[1].expectText, undefined);
+    assert.equal(unobservedFlow.steps[1].unobserved_expectText.reason, 'value was not visible on the page');
   } finally {
+    rmSync(rejected, { force: true });
     rmSync(tmpDir, { recursive: true, force: true });
     await fixture.close();
   }

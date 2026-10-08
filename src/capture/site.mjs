@@ -14,12 +14,12 @@
 
 import { createHash } from 'node:crypto';
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { dirname } from 'node:path';
+import { dirname, isAbsolute, join } from 'node:path';
 import process from 'node:process';
 
 import { launchChrome } from '../corpus/cdp.mjs';
 import { assetStoragePath } from '../provenance/store.mjs';
-import { validateCapture, CAPTURE_VERSION } from './schema.mjs';
+import { validateCapture, CAPTURE_VERSION, resolveCaptureOutputPath } from './schema.mjs';
 
 export function defaultOutDir(url) {
   const parsed = new URL(url);
@@ -32,7 +32,8 @@ export function defaultOutDir(url) {
 
 export function cleanRelativeDir(dir) {
   if (!dir || typeof dir !== 'string') return null;
-  const cleaned = dir.replace(/\\/g, '/').replace(/^\/+|\/+$/g, '').trim();
+  const cleaned = dir.replace(/\\/g, '/').trim();
+  if (cleaned.startsWith('/')) throw new Error(`refusing outDir '${dir}': absolute paths must be inside the quarantine store or an explicit test temp directory`);
   if (!cleaned) throw new Error('outDir must be a non-empty relative directory');
   const segments = cleaned.split('/');
   if (segments.some((s) => s === '' || s === '.' || s === '..')) {
@@ -82,6 +83,7 @@ async function extractPageStructure(page) {
 
     const formElements = Array.from(document.querySelectorAll('form'));
     const forms = [];
+    const dropped_controls = [];
 
     for (const form of formElements) {
       const action = form.getAttribute('action') ?? '';
@@ -105,6 +107,7 @@ async function extractPageStructure(page) {
           if (btnType === 'submit') {
             type = 'submit';
           } else {
+            dropped_controls.push({ name: el.getAttribute('name') || 'unnamed button', type: btnType, reason: 'unsupported control type' });
             continue;
           }
         } else if (tag === 'input') {
@@ -112,6 +115,7 @@ async function extractPageStructure(page) {
           if (CONTROL_TYPES.has(inputType)) {
             type = inputType;
           } else {
+            dropped_controls.push({ name: el.getAttribute('name') || 'unnamed input', type: inputType, reason: 'unsupported control type' });
             continue;
           }
         } else {
@@ -125,6 +129,7 @@ async function extractPageStructure(page) {
         }
 
         if (!NAME_SAFE.test(name)) {
+          dropped_controls.push({ name: name || 'unnamed ' + tag, type, reason: name ? 'name is not NAME_SAFE' : 'missing name' });
           continue;
         }
 
@@ -189,6 +194,7 @@ async function extractPageStructure(page) {
       nav,
       text_excerpt,
       forms,
+      dropped_controls,
       links,
     };
   `);
@@ -224,7 +230,9 @@ export async function captureSite({
 
   const targetUrl = new URL(url).href;
   const baseOrigin = new URL(targetUrl).origin;
-  const cleanOut = outDir ? cleanRelativeDir(outDir) : defaultOutDir(targetUrl);
+  // Refuse an explicit forbidden destination before launching a browser or writing any assets.
+  const absoluteOut = outDir && isAbsolute(outDir) ? resolveCaptureOutputPath(outDir, { env }) : null;
+  const cleanOut = absoluteOut ? defaultOutDir(targetUrl) : (outDir ? cleanRelativeDir(outDir) : defaultOutDir(targetUrl));
 
   const pagesList = Array.isArray(pages)
     ? pages
@@ -407,10 +415,13 @@ export async function captureSite({
     storageOptions.repoRoot = env.MWG_TRAIN_REPO;
   }
 
-  const desktopDiskPath = assetStoragePath('A5_black_box_reproduction', capture.assets.desktop_screenshot.rel_path, storageOptions);
-  const mobileDiskPath = assetStoragePath('A5_black_box_reproduction', capture.assets.mobile_screenshot.rel_path, storageOptions);
-  const domDiskPath = assetStoragePath('A5_black_box_reproduction', capture.assets.dom.rel_path, storageOptions);
-  const captureJsonDiskPath = assetStoragePath('A5_black_box_reproduction', `${cleanOut}/capture.json`, storageOptions);
+  const outputPath = (file) => absoluteOut
+    ? resolveCaptureOutputPath(join(absoluteOut, file), { env })
+    : assetStoragePath('A5_black_box_reproduction', `${cleanOut}/${file}`, storageOptions);
+  const desktopDiskPath = outputPath('desktop.png');
+  const mobileDiskPath = outputPath('mobile.png');
+  const domDiskPath = outputPath('dom.html');
+  const captureJsonDiskPath = outputPath('capture.json');
 
   mkdirSync(dirname(desktopDiskPath), { recursive: true });
   writeFileSync(desktopDiskPath, desktopBuffer);
@@ -419,6 +430,9 @@ export async function captureSite({
   writeFileSync(captureJsonDiskPath, JSON.stringify(capture, null, 2) + '\n');
 
   for (const page of capture.pages) {
+    for (const dropped of page.dropped_controls) {
+      console.warn(`Dropped control at ${page.path}: name '${dropped.name}', type '${dropped.type}': ${dropped.reason}`);
+    }
     for (const form of page.forms) {
       if (form.id === '') {
         console.warn(`Captured ${form.method.toUpperCase()} form at ${page.path} (action: ${form.action}, controls: ${form.controls.map((control) => control.name).join(', ')}) has no id and cannot be clean-room translated`);

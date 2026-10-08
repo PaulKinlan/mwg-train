@@ -18,7 +18,7 @@ import { launchChrome } from '../corpus/cdp.mjs';
  * Respects the carry-state rule:
  * Only records an `expectText` when the value is one an EARLIER step supplied
  * AND it is actually visible on the page now. If not visible or not supplied,
- * omits the assertion.
+ * omits the assertion and records why it was not observed.
  */
 export async function recordFlow({ url, rightsRef, steps, page }) {
   if (!url || typeof url !== 'string' || !/^https?:\/\//.test(url) || url.includes(' ')) {
@@ -29,14 +29,11 @@ export async function recordFlow({ url, rightsRef, steps, page }) {
   }
 
   let chrome = null;
-  let ownedPage = false;
-  if (!page) {
-    chrome = await launchChrome();
-    page = await chrome.newPage();
-    ownedPage = true;
-  }
-
   try {
+    if (!page) {
+      chrome = await launchChrome();
+      page = await chrome.newPage();
+    }
     // Navigate to initial URL and establish starting path
     await page.goto(url);
     const initialUrl = new URL(await page.url());
@@ -153,6 +150,7 @@ export async function recordFlow({ url, rightsRef, steps, page }) {
       // only record expectText when value was supplied by an EARLIER step AND is visible now.
       if (expectText) {
         let candidate = null;
+        let reason = 'value was not supplied by an earlier step';
         if (typeof expectText === 'string') {
           if (earlierSupplied.has(expectText)) {
             candidate = expectText;
@@ -169,6 +167,9 @@ export async function recordFlow({ url, rightsRef, steps, page }) {
 
         if (candidate && (await isTextVisible(page, candidate))) {
           stepRecord.expectText = candidate;
+        } else {
+          if (candidate || (expectText === true && earlierSupplied.size > 0)) reason = 'value was not visible on the page';
+          stepRecord.unobserved_expectText = { requested: expectText, reason };
         }
       }
 
@@ -193,10 +194,8 @@ export async function recordFlow({ url, rightsRef, steps, page }) {
 
     return flow;
   } finally {
-    if (ownedPage) {
-      if (chrome) {
-        await chrome.close().catch(() => {});
-      }
+    if (chrome) {
+      await chrome.close().catch(() => {});
     }
   }
 }
