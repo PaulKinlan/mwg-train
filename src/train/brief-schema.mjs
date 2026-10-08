@@ -115,6 +115,12 @@ export function validateBriefSchema(row) {
       if (!isString(field[key])) at(`${where}.${key}`, 'must be a non-empty string');
     }
     if (!isBool(field.required)) at(`${where}.required`, 'must be true or false, stated rather than implied by absence');
+    // `optional` is a second way to say the same thing, and the server reads it
+    // (`fields.filter(f => !f.optional)`), so a field that says required:true and optional:true
+    // would put the form and the server's validation in direct disagreement.
+    if (field.optional !== undefined && field.optional !== (field.required === false)) {
+      at(`${where}.optional`, `contradicts required:${field.required}; state one of them`);
+    }
     if (isString(field.type) && !BRIEF_FIELD_TYPES.has(field.type)) {
       at(`${where}.type`, `'${field.type}' has no renderer; use one of ${[...BRIEF_FIELD_TYPES].join(', ')}`);
     }

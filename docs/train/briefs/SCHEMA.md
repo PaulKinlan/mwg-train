@@ -2,7 +2,7 @@
 
 The training briefs (`docs/train/briefs/manifest.jsonl`) specify the synthetic project requirements used to train student models.
 
-**What the briefs do and do not drive.** The scaffolded corpus projects are generated from each brief's `archetype`, `topic` and `routes` - NOT from its `fields`, `journeys` or `assertions`. A generated project is therefore an archetype template relabelled to the brief's topic, not a brief-faithful implementation: the form fields and the journey come from the archetype. See `docs/train/corpus/README.md` for the worked example.
+**What the briefs do and do not drive.** Each corpus project's form and journey come from its own brief's `fields` and `journey`, authored from that brief's `topic`, `prompt`, `journeys` and `assertions`. All 30 families declare theirs (`npm run check:brief-schema -- --expect-all`), and every project records `schema_source: "brief"`. The `archetype` still supplies the server shape - how a record is stored and read back - so the archetype decides the plumbing, not the form. See `docs/train/corpus/README.md` for what that does and does not establish.
 
 > **Deliberately NOT the sealed evaluation schema:**
 > This schema is deliberately distinct from the held-out evaluation schema in `docs/eval/briefs/SCHEMA.md`.
@@ -41,7 +41,7 @@ One JSON object per line in JSONL format.
 ### `fields` and `journey`
 
 A family that declares `fields` and `journey` gets a project built from ITS brief, rather than
-wearing the archetype's form under a different title. Without them a generated project is an
+wearing an archetype's form under a different title. Without them a generated project is an
 archetype template: the fields and journey belong to the archetype (`booking`, `web-shop`, ...), so
 a coffee-subscription brief would render whatever form that archetype happens to have.
 

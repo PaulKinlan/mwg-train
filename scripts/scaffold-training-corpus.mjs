@@ -9,7 +9,9 @@
  * The briefs manifest (`docs/train/briefs/manifest.jsonl`) is the source of truth for the tr-* corpus.
  * Each family maps to a training archetype by its `archetype` field (looked up in
  * pilot/training-archetypes.mjs, NOT the pilot table), and the family's own `topic`/`routes` relabel the
- * concrete archetype's title, story, and routes; the fields and journey stay the archetype's. Every family
+ * concrete archetype's title, story, and routes. The family's `fields` and `journey` - authored in the
+ * brief - are what the form renders and what the harness drives, so the archetype supplies the server
+ * shape around the form rather than the form itself. Every family
  * is then built across the seven rendering frameworks in pilot/frameworks.mjs via the same
  * `buildProjectFor` the pilot uses.
  *
@@ -248,7 +250,14 @@ function familyArchetype(family, base) {
   // project renders what the brief describes rather than the archetype's form under a
   // different title. Without one, the family keeps the archetype's fields and journey.
   if (family.fields && family.journey) {
-    overrides.fields = family.fields;
+    // The server decides its required set as
+    // `fields.filter(f => f.type !== 'select' && !f.optional)` (pilot/frameworks.mjs), while a
+    // brief states requiredness as `required`. Without this translation every non-select field is
+    // server-required no matter what the brief says, so a brief that marks a field optional would
+    // render a form that agrees with it and a server that 422s the same POST - the form and the
+    // server would disagree about the same field. tr-27 was rejected `original-not-runnable` for
+    // exactly this: the journey filled its fields, but the server still demanded `phone`.
+    overrides.fields = family.fields.map((field) => ({ ...field, optional: field.required === false }));
     overrides.journey = family.journey;
     overrides.echo = { ...base.echo, field: echoFieldFor(family.fields) };
   }
