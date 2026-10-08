@@ -22,6 +22,8 @@
 import { readFileSync, readdirSync, statSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 
+import { compileSvelteServer } from './svelte.mjs';
+
 const DIALECT_ATTRS = {
   html: { autocomplete: 'autocomplete', required: 'required', ariaErrorMessage: 'aria-errormessage', ariaDescribedBy: 'aria-describedby', ariaInvalid: 'aria-invalid', fetchpriority: 'fetchpriority' },
   jsx: { autocomplete: 'autoComplete', required: 'required', ariaErrorMessage: 'aria-errormessage', ariaDescribedBy: 'aria-describedby', ariaInvalid: 'aria-invalid', fetchpriority: 'fetchPriority' },
@@ -306,11 +308,29 @@ export function upliftProject(root, spec, outDir) {
       failed.push({ rule: transform.rule, reason: error.message });
     }
   }
+  // An arm that declares a compile boundary (the Svelte template) has to be rebuilt after the edits:
+  // the compiled module is what the server imports, so without this the tool's edits would never reach
+  // the page and the arm's uplift would silently measure the original. Same function the scaffolder
+  // uses, so the two build outputs cannot drift.
+  //
+  // The rebuild is a build step, not a rule edit, so it is reported on its own axis. Counting it in
+  // `applied`/`edits` would make a project the tool changed by no rule look edited, and the control
+  // "a clean project gets no edits at all" would stop meaning anything.
+  const compiled = [];
+  if (spec.framework?.compiledFile) {
+    try {
+      files.write(spec.framework.compiledFile, compileSvelteServer(files.get(spec.framework.markupFile), spec.framework.markupFile));
+      compiled.push(spec.framework.compiledFile);
+    } catch (error) {
+      failed.push({ rule: 'compile/svelte-template', reason: error.message });
+    }
+  }
   if (outDir) files.writeAll(outDir);
   return {
     applied,
     skipped,
     failed,
+    compiled,
     edits: files.edits,
     rule_ids: applied,
     changed_files: [...new Set(files.edits.map((edit) => edit.file))],

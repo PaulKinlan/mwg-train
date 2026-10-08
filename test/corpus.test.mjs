@@ -679,7 +679,7 @@ test('the generator is deterministic, so the measured tree is the verified tree'
         a.projects[index].projectId + ': two generations of the same plan differ',
       );
     }
-    assert.equal(a.projects.length, 25);
+    assert.equal(a.projects.length, ARCHETYPE_IDS.length * Object.keys(FRAMEWORKS).length, 'the corpus is the whole archetype x framework matrix');
   } finally {
     rmSync(first, { recursive: true, force: true });
     rmSync(second, { recursive: true, force: true });

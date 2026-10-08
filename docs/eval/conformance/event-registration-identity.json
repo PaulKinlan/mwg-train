@@ -2,7 +2,7 @@
   "family": "event-registration",
   "target_signature": "data/A6_evaluation/targets/event-registration/signature.json",
   "target_sha256": "dec91020e53544fd97331f8c964409f02248201c7bd9a0dbdb8cfca0143c8ce1",
-  "generated_at": "2026-10-08T12:22:24.920Z",
+  "generated_at": "2026-10-08T12:42:33.831Z",
   "variants": [
     {
       "framework": "raw",
@@ -103,6 +103,46 @@
           "overall": 0.5877
         }
       }
+    },
+    {
+      "framework": "webcomponents",
+      "raw": 0.5858,
+      "target": 0.5898,
+      "delta": 0.004,
+      "axes": {
+        "raw": {
+          "structural": 0.4595,
+          "geometry": 0.4342,
+          "controls": 1,
+          "overall": 0.5858
+        },
+        "arm": {
+          "structural": 0.4695,
+          "geometry": 0.4342,
+          "controls": 1,
+          "overall": 0.5898
+        }
+      }
+    },
+    {
+      "framework": "svelte",
+      "raw": 0.5879,
+      "target": 0.5919,
+      "delta": 0.004,
+      "axes": {
+        "raw": {
+          "structural": 0.4649,
+          "geometry": 0.4342,
+          "controls": 1,
+          "overall": 0.5879
+        },
+        "arm": {
+          "structural": 0.4748,
+          "geometry": 0.4342,
+          "controls": 1,
+          "overall": 0.5919
+        }
+      }
     }
   ],
   "identity": {
@@ -141,6 +181,20 @@
         "geometry": 0.4373,
         "controls": 1,
         "overall": 0.5849
+      },
+      {
+        "framework": "webcomponents",
+        "structural": 0.4595,
+        "geometry": 0.4342,
+        "controls": 1,
+        "overall": 0.5858
+      },
+      {
+        "framework": "svelte",
+        "structural": 0.4649,
+        "geometry": 0.4342,
+        "controls": 1,
+        "overall": 0.5879
       }
     ],
     "pairwise": [
@@ -177,6 +231,22 @@
         "overall": 0.8849
       },
       {
+        "a": "raw",
+        "b": "webcomponents",
+        "structural": 0.95,
+        "geometry": 1,
+        "controls": 1,
+        "overall": 0.98
+      },
+      {
+        "a": "raw",
+        "b": "svelte",
+        "structural": 1,
+        "geometry": 1,
+        "controls": 1,
+        "overall": 1
+      },
+      {
         "a": "react",
         "b": "preact",
         "structural": 0.738,
@@ -201,6 +271,22 @@
         "overall": 0.9865
       },
       {
+        "a": "react",
+        "b": "webcomponents",
+        "structural": 0.7269,
+        "geometry": 0.9862,
+        "controls": 1,
+        "overall": 0.8859
+      },
+      {
+        "a": "react",
+        "b": "svelte",
+        "structural": 0.738,
+        "geometry": 0.9862,
+        "controls": 1,
+        "overall": 0.8904
+      },
+      {
         "a": "preact",
         "b": "vue",
         "structural": 0.9474,
@@ -217,42 +303,98 @@
         "overall": 0.8849
       },
       {
+        "a": "preact",
+        "b": "webcomponents",
+        "structural": 0.95,
+        "geometry": 1,
+        "controls": 1,
+        "overall": 0.98
+      },
+      {
+        "a": "preact",
+        "b": "svelte",
+        "structural": 1,
+        "geometry": 1,
+        "controls": 1,
+        "overall": 1
+      },
+      {
         "a": "vue",
         "b": "hono",
         "structural": 0.75,
         "geometry": 0.9613,
         "controls": 1,
         "overall": 0.8865
+      },
+      {
+        "a": "vue",
+        "b": "webcomponents",
+        "structural": 0.9,
+        "geometry": 0.9862,
+        "controls": 1,
+        "overall": 0.9552
+      },
+      {
+        "a": "vue",
+        "b": "svelte",
+        "structural": 0.9474,
+        "geometry": 0.9862,
+        "controls": 1,
+        "overall": 0.9741
+      },
+      {
+        "a": "hono",
+        "b": "webcomponents",
+        "structural": 0.7269,
+        "geometry": 0.9707,
+        "controls": 1,
+        "overall": 0.8805
+      },
+      {
+        "a": "hono",
+        "b": "svelte",
+        "structural": 0.738,
+        "geometry": 0.9707,
+        "controls": 1,
+        "overall": 0.8849
+      },
+      {
+        "a": "webcomponents",
+        "b": "svelte",
+        "structural": 0.95,
+        "geometry": 1,
+        "controls": 1,
+        "overall": 0.98
       }
     ],
     "identity": {
-      "structural": 0.8347,
-      "geometry": 0.9809,
+      "structural": 0.8559,
+      "geometry": 0.9855,
       "controls": 1,
-      "overall": 0.9272
+      "overall": 0.9373
     },
     "variance": {
-      "structural": 0.0132,
+      "structural": 0.0131,
       "geometry": 0.0002,
       "controls": 0,
-      "overall": 0.0022
+      "overall": 0.0023
     },
     "weakest_pair": {
-      "a": "raw",
-      "b": "hono",
-      "structural": 0.738,
+      "a": "hono",
+      "b": "webcomponents",
+      "structural": 0.7269,
       "geometry": 0.9707,
       "controls": 1,
-      "overall": 0.8849
+      "overall": 0.8805
     },
     "weakest_by_axis": {
       "structural": {
-        "a": "raw",
-        "b": "react",
-        "structural": 0.738,
+        "a": "react",
+        "b": "webcomponents",
+        "structural": 0.7269,
         "geometry": 0.9862,
         "controls": 1,
-        "overall": 0.8904
+        "overall": 0.8859
       },
       "geometry": {
         "a": "react",
@@ -271,12 +413,12 @@
         "overall": 0.8904
       },
       "overall": {
-        "a": "raw",
-        "b": "hono",
-        "structural": 0.738,
+        "a": "hono",
+        "b": "webcomponents",
+        "structural": 0.7269,
         "geometry": 0.9707,
         "controls": 1,
-        "overall": 0.8849
+        "overall": 0.8805
       }
     },
     "degenerate": false

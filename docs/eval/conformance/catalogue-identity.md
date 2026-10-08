@@ -11,16 +11,18 @@ Shared target: `data/A6_evaluation/targets/catalogue/signature.json` (sha256 `bc
 | preact | 0.488 | 0.487 | -0.001 |
 | vue | 0.487 | 0.487 | +0.000 |
 | hono | 0.483 | 0.487 | +0.004 |
+| webcomponents | 0.485 | 0.485 | +0.000 |
+| svelte | 0.487 | 0.487 | +0.000 |
 
 ## Cross-variant identity (raw variants, pairwise)
 
 | axis | agreement | variance | budget |
 | --- | --- | --- | --- |
-| structural | 0.891 | 0.0079 | >= 0.75 |
-| geometry | 0.989 | 0.0002 | >= 0.9 |
+| structural | 0.902 | 0.0078 | >= 0.75 |
+| geometry | 0.992 | 0.0002 | >= 0.9 |
 | controls | 1.000 | 0.0000 | >= 0.95 |
-| overall | 0.953 | 0.0012 | >= 0.8 |
+| overall | 0.958 | 0.0012 | >= 0.8 |
 
-Weakest pair: react/preact at 0.918.
+Weakest pair: react/webcomponents at 0.913.
 
 **All axes within budget.**
