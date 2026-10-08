@@ -2,11 +2,13 @@
 
 ## What these projects are (and are not)
 
-The `tr-*` corpus is **brief-authored projects**: each project's form fields and journey are declared in its own brief, and its targets are independent of the evaluation set. All 30 families declare their schema and all 210 projects are built from it (`schema_source: "brief"`). Concretely:
+The `tr-*` corpus is **brief-authored projects**: each project's form controls are declared in its own brief, and its targets are independent of the evaluation set. All 30 families declare their schema and all 210 projects are built from it (`schema_source: "brief"`). What that does and does not establish:
 
-- **Fields and journey come from the brief.** Each family declares its own `fields` and `journey` in `docs/train/briefs/manifest.jsonl`, authored from that brief's `topic`, `prompt`, `journeys` and `assertions`. The `tr-26` brief describes a coffee-subscription renewal and its project has subscription fields (`subscriber`, `beans`, `grind`, `frequency`, `bags`) with a journey that fills them.
-- **The archetype still supplies the server shape.** `pilot/training-archetypes.mjs` decides how a record is stored and read back, and the routes' kinds - the plumbing around the form. The form and the journey it is driven through are the brief's.
-- **What was verified, and what was not.** 40 of the 210 projects were driven in a real browser through their harness journeys and passed (see `YIELD.md`). That verifies those journeys against those trees; the remaining 170 carry `scaffolded / unverified journey`, and none has been shown to build or serve beyond the sampled 40. A project rendering its brief's fields is a field-level claim, held true for all 30 families by `npm run check:brief-schema -- --expect-all`, not a claim that every brief's flow was exercised.
+- **The form is the brief's.** Each family declares its own `fields` and `journey` in `docs/train/briefs/manifest.jsonl`. The rendered project carries those controls - names and types, labels, requiredness and select options (the spec record holds slug/name/type/autocomplete; the rest is in the rendered source). The `tr-26` brief describes a coffee-subscription renewal and its project has subscription controls (`subscriber`, `beans`, `grind`, `frequency`, `bags`).
+- **The journey is one generic submit-and-read-back, not the brief's full flow.** The harness fills the brief's inputs, submits once, and waits for the echoed value on the read page. It does not exercise `select` controls at all, so `tr-26` never changes grind or frequency even though its brief says to; it does not span more than one page, so `tr-05`'s brief flow (register, log out, log back in) is not driven; and where a brief describes search, filtering, or updating an existing record, the journey still creates a new one. The 40/40 acceptance below is those generic journeys passing on those trees - it is **not** brief-flow conformance.
+- **Routes: 25 of 30 families emit every route their brief lists** (comparing placeholder-insensitively, so `/bookings/:id` matches `/bookings/:ref`). Five do not: `tr-05` is missing `/login` and `/volunteer/profile` - a whole capability its assertions require - and `tr-09`, `tr-12`, `tr-13`, `tr-16` each lack a listing's detail route (`/courses/:id`, `/jobs/:id`, `/docs/:slug`, `/cultivars/:id`). The per-project `route_conformed` field is narrower than it sounds: it compares only the **write** route, so it reads `true` for `tr-05`.
+- **The archetype still supplies the server shape** (`pilot/training-archetypes.mjs`): how a record is stored and read back, and the routes' kinds. The form and the journey it is driven through are the brief's.
+- **What was verified, and what was not.** 40 of the 210 projects were driven in a real browser through those journeys and passed (see `YIELD.md`). The other 170 carry `scaffolded / unverified journey`, and none has been shown to build or serve beyond the sampled 40. `npm run check:brief-schema -- --expect-all` holds the field-level claim true for all 30 families - that every family declares a buildable schema and its journey fills every field its own brief marks required - but no check establishes that a project implements its brief's whole flow.
 - The token figures below are **derived from characters** (`characters / 4`), not tokenizer-measured.
 
 ## Overview
@@ -30,21 +32,23 @@ Recorded in `pilot/TRAINING_CORPUS.json`, spanning 30 synthetic families (`tr-01
 
 | Scope | Original (chars) | Uplifted (chars) | Total (chars) | Derived Tokens | Band (±25%) | Role in Sizing |
 |---|---:|---:|---:|---:|---|---|
-| **`app_sources`** | **3,029,071** | **3,197,281** | **6,226,352** | **1,556,588** | **[1,167,441, 1,945,735]** | **PRIMARY headline figure** |
+| **`app_sources`** | **3,026,754** | **3,174,700** | **6,201,454** | **1,550,364** | **[1,162,773, 1,937,954]** | **PRIMARY headline figure** |
 | `project_manifest` | 26,190 | 26,190 | 52,380 | 13,095 | [9,821, 16,369] | `package.json` dependencies & scripts |
-| `harness_metadata` | 814,218 | 814,218 | 1,628,436 | 407,109 | [305,332, 508,886] | `spec.json` harness metadata (EXCLUDED) |
+| `harness_metadata` | 791,797 | 791,797 | 1,583,594 | 395,899 | [296,924, 494,873] | `spec.json` harness metadata (EXCLUDED) |
 | `prompt` | 0 | 0 | 0 | 0 | [0, 0] | Measured zero (documented gap; see below) |
-| *full_tree (all)* | *3,869,479* | *4,037,689* | *7,907,168* | *1,976,792* | *[1,482,594, 2,470,990]* | *Total on-disk tree for comparison* |
+| *full_tree (all)* | *3,830,272* | *4,001,156* | *7,837,428* | *1,959,357* | *[1,469,518, 2,449,196]* | *Total on-disk tree for comparison* |
 
-- **Headline Characters (`app_sources`):** **6,226,352 characters** (3,029,071 original + 3,197,281 uplifted)
-- **Headline Derived Tokens:** **1,556,588 tokens**
-- **Uncertainty Band:** **[1,167,441, 1,945,735] tokens** (±25% margin)
-- **Epoch Scaling:** 1 epoch = **1,556,588 tokens**; $N$ epochs = $N \times 1,556,588$ tokens.
+- **Headline Characters (`app_sources`):** **6,201,454 characters** (3,026,754 original + 3,174,700 uplifted)
+- **Headline Derived Tokens:** **1,550,364 tokens**
+- **Uncertainty Band:** **[1,162,773, 1,937,954] tokens** (±25% margin)
+- **Epoch Scaling:** 1 epoch = **1,550,364 tokens**; $N$ epochs = $N \times 1,550,364$ tokens.
 
-> **These figures moved on 2026-10-08** when all 30 families were re-authored to declare their own
-> form fields and journeys (`mwg-train-p3e`). The headline went from 1,477,348 to 1,556,588 derived
-> tokens, so any cost projection computed from the earlier figure understates the corpus by about
-> 5.4%. They are still **derived from characters**, not tokenizer-measured.
+> **These figures moved twice on 2026-10-08** while all 30 families were re-authored to declare their
+> own form controls (`mwg-train-p3e`). The headline went 1,477,348 → 1,556,588 → **1,550,364**. The
+> middle figure was measured before a fix changed every generated server's required-field list, so it
+> described a corpus that no longer existed; the figure above is the one that reproduces from the
+> committed trees. Any cost projection built from an earlier number is off by up to 5.4% at the
+> headline - still derived from characters, so the ±25% band dominates it.
 
 ---
 

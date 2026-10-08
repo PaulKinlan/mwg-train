@@ -55,15 +55,22 @@ Passes cleanly, verifying that 60 training rows share no family_id and no target
 
 These briefs are authored specification items (prompts, expected routes, journeys, assertions, and rule requirements).
 - **No model-generated implementations exist yet.** Template implementations of the family archetypes DO exist: `scripts/scaffold-training-corpus.mjs` builds 210 projects (30 families x 7 frameworks) whose tree hashes are recorded in `pilot/TRAINING_CORPUS.json`. Those are authored templates, not model output.
-- **Each project's form and journey come from its brief.** The 30 families declare their own
-  `fields` and `journey` (`schema_source: "brief"` on all 210 projects), so a brief's specific flow is
-  what the project implements: the `tr-26` coffee-subscription brief is scaffolded with subscription
-  fields (`subscriber`, `beans`, `grind`, `frequency`, `bags`) and a journey that fills them. The
-  **archetype** still supplies the server shape - how a record is stored and read back - so the
-  archetype decides the plumbing around the form, not the form itself.
-- **What that does and does not establish.** A project rendering its brief's fields is not proof its
-  flow is correct end to end. Of the 210 projects, 40 were driven in a browser through their harness
-  journeys; 170 remain `scaffolded / unverified journey`, and `npm run check:brief-schema` is what
-  holds the field-level claim true for all 30 families.
+- **Each project's form controls come from its brief.** The 30 families declare their own `fields` and
+  `journey` (`schema_source: "brief"` on all 210 projects), so the controls a user fills are the ones the
+  brief describes: the `tr-26` coffee-subscription brief is scaffolded with subscription controls
+  (`subscriber`, `beans`, `grind`, `frequency`, `bags`). The **archetype** still supplies the server
+  shape - how a record is stored and read back - so the archetype decides the plumbing around the form.
+- **The journey is generic, so this is not brief-flow conformance.** The harness fills the brief's
+  inputs, submits once and waits for the echoed value. It never drives a `select`, never spans two
+  pages, and never updates an existing record, so `tr-26` does not change grind or frequency, `tr-05`'s
+  register/log-out/log-in flow is not driven, and a brief that describes search or filtering is still
+  exercised only as a create. 25 of 30 families also emit every route their brief lists; `tr-05` is
+  missing `/login` and `/volunteer/profile` entirely, and `tr-09`, `tr-12`, `tr-13`, `tr-16` each lack a
+  listing's detail route. `npm run check:brief-schema -- --expect-all` proves every family declares a
+  buildable schema whose journey fills each field its own brief requires - it does not prove a project
+  implements its brief's flow.
+- **What the browser run establishes.** Of the 210 projects, 40 were driven through their journeys and
+  passed; 170 remain `scaffolded / unverified journey`, and none has been shown to build or serve beyond
+  those 40. See `docs/train/corpus/README.md` for the per-route detail.
 - **What was verified is the harness journey, not brief conformance.** Of the 210 projects, 40 were driven in a real browser through the pilot's harness and passed its journeys (see `docs/train/corpus/YIELD.md`); the remaining 170 carry the status `scaffolded / unverified journey`, and no project has been shown to build or serve beyond those sampled 40.
 - These rows represent the inputs to the training and synthesis pipeline, not model outputs or finished web applications.

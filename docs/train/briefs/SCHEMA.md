@@ -2,7 +2,7 @@
 
 The training briefs (`docs/train/briefs/manifest.jsonl`) specify the synthetic project requirements used to train student models.
 
-**What the briefs do and do not drive.** Each corpus project's form and journey come from its own brief's `fields` and `journey`, authored from that brief's `topic`, `prompt`, `journeys` and `assertions`. All 30 families declare theirs (`npm run check:brief-schema -- --expect-all`), and every project records `schema_source: "brief"`. The `archetype` still supplies the server shape - how a record is stored and read back - so the archetype decides the plumbing, not the form. See `docs/train/corpus/README.md` for what that does and does not establish.
+**What the briefs drive, and what they do not.** Each corpus project's form controls come from its own brief's `fields`, and the journey the harness drives is that brief's `journey` - authored from the brief's `topic`, `prompt`, `journeys` and `assertions`. All 30 families declare theirs (`npm run check:brief-schema -- --expect-all`), and every project records `schema_source: "brief"`. The `archetype` still supplies the server shape - how a record is stored and read back - so the archetype decides the plumbing, not the form. Declaring a schema is NOT the same as implementing the brief: the journey is a single generic submit-and-read-back, so it never drives a `select`, never spans two pages, and never updates an existing record, and 5 of 30 families do not emit every route their brief lists. See `docs/train/corpus/README.md` for what that does and does not establish.
 
 > **Deliberately NOT the sealed evaluation schema:**
 > This schema is deliberately distinct from the held-out evaluation schema in `docs/eval/briefs/SCHEMA.md`.
