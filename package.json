@@ -1,0 +1,16 @@
+{
+  "name": "mwg-train",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Experiment: does training on Modern Web Guidance-applied sites make a model default to modern web practice? Corpus, uplift pairing, adapter training and a preregistered evaluation.",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test",
+    "lint:provenance": "node scripts/validate-provenance.mjs docs/provenance/manifest.example.jsonl",
+    "check:quotes": "node scripts/check-provenance-quotes.mjs"
+  },
+  "license": "UNLICENSED"
+}

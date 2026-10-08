@@ -1,0 +1,25 @@
+# Example provenance manifest. Illustrative only: these are not real corpus assets, and no training
+# run may select from this file.
+#
+# One JSON object per line. Lines starting with '#' and blank lines are ignored.
+# Validate with: node scripts/validate-provenance.mjs docs/provenance/manifest.example.jsonl
+#
+# Field notes:
+#   id                     immutable slug, unique across the manifest
+#   arm                    A1_self_generated | A2_mwg_uplift_deterministic (trainable, needs approval)
+#                          A3_teacher_generated | A4_clean_room_reproduction |
+#                          A5_black_box_reproduction | A6_evaluation (quarantined)
+#   storage_path           must sit under data/<arm>/
+#   generator.type         human | open-weight | deterministic | hosted-api | none
+#                          hosted-api forces the row into A3_teacher_generated and requires
+#                          provider, model, account_ref and terms_ref
+#   rights_ref             the rights record under docs/provenance/ that covers this asset
+#   excluded_from_training must be stated in a manifest row; makeRecord() fills it from the arm
+#                          default when a record is built in code (true for the quarantined arms).
+#                          Setting it false on a quarantined arm is rejected outright.
+#   approved_for_training  never a default; true requires approved_by and approved_at
+#   parents                asset ids this asset was derived from (used by the quarantined-ancestor check)
+{"id":"example-proj-0001","arm":"A1_self_generated","kind":"original","storage_path":"data/A1_self_generated/projects/example-proj-0001","generator":{"type":"open-weight","provider":"huggingface","model":"Qwen/Qwen2.5-Coder-7B-Instruct@c03e6d358207e414f1eca0bb1891e29f1db0e242"},"rights_ref":"docs/provenance/assets/student-base-models.md","created_at":"2026-10-08","excluded_from_training":false,"approved_for_training":true,"approved_by":"mwg-train-coord","approved_at":"2026-10-08","parents":[]}
+{"id":"example-proj-0001-uplift","arm":"A2_mwg_uplift_deterministic","kind":"uplift","storage_path":"data/A2_mwg_uplift_deterministic/projects/example-proj-0001","generator":{"type":"deterministic","provider":"mwg-train","model":"mwg-uplift@pinned-guidance-snapshot"},"rights_ref":"docs/provenance/assets/mwg-modern-web-guidance.md","created_at":"2026-10-08","excluded_from_training":false,"approved_for_training":true,"approved_by":"mwg-train-coord","approved_at":"2026-10-08","parents":["example-proj-0001"]}
+{"id":"example-proj-0002-teacher","arm":"A3_teacher_generated","kind":"original","storage_path":"data/A3_teacher_generated/projects/example-proj-0002","generator":{"type":"hosted-api","provider":"deepseek","model":"deepseek-flash","account_ref":"docs/provenance/accounts/deepseek-api.md","terms_ref":"docs/provenance/accounts/deepseek-api.md"},"rights_ref":"docs/provenance/accounts/deepseek-api.md","created_at":"2026-10-08","excluded_from_training":true,"approved_for_training":false,"parents":[]}
+{"id":"example-eval-brief-0001","arm":"A6_evaluation","kind":"evaluation","storage_path":"data/A6_evaluation/briefs/example-eval-brief-0001","generator":{"type":"human"},"rights_ref":"docs/provenance/assets/reproduction-studies.md","created_at":"2026-10-08","excluded_from_training":true,"approved_for_training":false,"parents":[]}
