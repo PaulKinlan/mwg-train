@@ -9,10 +9,12 @@
  * so nobody reads our deterministic mechanical floor as an official `web-uplift` result. This is the
  * enforced half of that decision; the pin check verifies the ruleset, this verifies the attribution.
  *
- * The registry below is the list of reports that state a floor. It is declared rather than discovered,
- * because a glob would quietly include a new report the day it is added and quietly exclude one that is
- * renamed - and a check whose scope drifts is a check that stops meaning anything. A file in the
- * registry that is missing is a FAILURE: the report we claim to check is not there to check.
+ * Coverage fails CLOSED. Every tracked .md/.json is classified in DOCUMENTS or matched by
+ * GENERATED_PATTERNS, so a new document has to be decided deliberately - review showed that the earlier
+ * phrase-scan was fail-open: a new file saying "our mechanical floor scored 0.805 overall" matched no
+ * pattern and passed silently. The floor-report kind is the set that must carry the label, and a
+ * document classified as a non-report that states floor evidence is reported as misclassified unless it
+ * carries the label or is excluded by name with a reason.
  *
  * Two reports deliberately are NOT in the registry, and the reason matters more than the exclusion:
  *   docs/train/corpus/SERVED.md  reports which ROUTES a project serves. It is a measurement of the
@@ -47,39 +49,153 @@ import { readFileSync } from 'node:fs';
 import process from 'node:process';
 import { BASELINE_LABEL } from '../src/eval/ruleset.mjs';
 
-const REGISTRY = [
-  'docs/eval/conformance/booking.md',
-  'docs/eval/conformance/account-recovery-identity.md',
-  'docs/eval/conformance/booking-identity.md',
-  'docs/eval/conformance/catalogue-identity.md',
-  'docs/eval/conformance/contact-lead-identity.md',
-  'docs/eval/conformance/event-registration-identity.md',
-  'docs/pilot/YIELD.md',
-  'docs/train/corpus/YIELD.md',
-  // The committed records are floor artifacts too, not just the reports rendered from them: review
-  // found the label reached the per-project decisions but not the summary record that is committed.
-  'docs/train/corpus/records.json',
-  'pilot/CORPUS.json',
-  // The measurement documents the markdown reports are rendered FROM. Review found the label on the
-  // summary but not on the numbers, so the numbers are registered too.
-  'docs/pilot/yield.json',
-  'docs/pilot/records.json',
-  'docs/eval/conformance/booking.json',
-  'docs/eval/conformance/account-recovery-identity.json',
-  'docs/eval/conformance/booking-identity.json',
-  'docs/eval/conformance/catalogue-identity.json',
-  'docs/eval/conformance/contact-lead-identity.json',
-  'docs/eval/conformance/event-registration-identity.json',
-  // Static result summaries that quote the same numbers.
-  'docs/pilot/README.md',
-  'docs/eval/conformance/README.md',
-  // Accounts for corpus size by variant, including the uplifted variant, so it states a floor measurement.
-  'docs/train/corpus/tokens.json',
-  // Two more result summaries that republish floor numbers. Review found these after the previous round
-  // already called the list complete - the fourth extension of it.
-  'docs/train/corpus/README.md',
-  'docs/eval/two-backends.md',
+/**
+ * The kind of every tracked document. This exists because a phrase-based scan is FAIL-OPEN: review showed
+ * that a new document saying "our mechanical floor scored 0.805 overall" would pass, since no pattern
+ * matched that wording. Coverage now fails closed instead - every tracked .md/.json must be classified
+ * here or match a GENERATED_PATTERNS directory, so a new document has to be decided deliberately rather
+ * than silently omitted. The FLOOR_EVIDENCE scan survives as a cross-check on the classification, not as
+ * the guarantee.
+ */
+export const DOCUMENT_KINDS = {
+  'floor-report': 'states or quotes a floor-derived measurement of our own work; MUST carry the label',
+  contract: 'describes how the pipeline, evaluation or attribution works',
+  design: 'a proposal or historical design note',
+  spec: 'defines briefs, schemas, or package metadata',
+  config: 'tool configuration consumed by a checker',
+  input: 'a plan, manifest or rule snapshot consumed by a tool',
+  'provider-data': 'provider pricing or fetched quotes',
+  provenance: 'rights, arms, accounts and asset records',
+  'scaffold-report': 'measures the generated server rather than the floor',
+  generated: 'a generated per-project tree, matched by pattern rather than listed',
+};
+
+/** Generated per-project trees: thousands of files whose content is derived, not reported. */
+export const GENERATED_PATTERNS = [
+  /^pilot\/projects\//,
+  /^pilot\/training-projects\//,
+  /^data\//,
+  /^docs\/eval\/projects\//,
+  /^docs\/eval\/briefs\//,
+  /^docs\/eval\/specs\//,
+  /^docs\/train\/briefs\/manifest/,
+  /^pilot\/TRAINING_CORPUS\.json$/,
+  /(?:^|\/)(?:package|spec|tree|snapshot)\.json$/,
 ];
+
+/** Every tracked prose or JSON document, classified. */
+export const DOCUMENTS = {
+  'README.md': 'floor-report',
+  'docs/PIPELINE.md': 'floor-report',
+  'docs/eval/conformance/README.md': 'floor-report',
+  'docs/eval/conformance/account-recovery-identity.json': 'floor-report',
+  'docs/eval/conformance/account-recovery-identity.md': 'floor-report',
+  'docs/eval/conformance/booking-identity.json': 'floor-report',
+  'docs/eval/conformance/booking-identity.md': 'floor-report',
+  'docs/eval/conformance/booking.json': 'floor-report',
+  'docs/eval/conformance/booking.md': 'floor-report',
+  'docs/eval/conformance/catalogue-identity.json': 'floor-report',
+  'docs/eval/conformance/catalogue-identity.md': 'floor-report',
+  'docs/eval/conformance/contact-lead-identity.json': 'floor-report',
+  'docs/eval/conformance/contact-lead-identity.md': 'floor-report',
+  'docs/eval/conformance/event-registration-identity.json': 'floor-report',
+  'docs/eval/conformance/event-registration-identity.md': 'floor-report',
+  'docs/eval/pricing.md': 'floor-report',
+  'docs/eval/two-backends.md': 'floor-report',
+  'docs/pilot/README.md': 'floor-report',
+  'docs/pilot/YIELD.md': 'floor-report',
+  'docs/pilot/records.json': 'floor-report',
+  'docs/pilot/yield.json': 'floor-report',
+  'docs/train/README.md': 'floor-report',
+  'docs/train/briefs/README.md': 'floor-report',
+  'docs/train/corpus/README.md': 'floor-report',
+  'docs/train/corpus/YIELD.md': 'floor-report',
+  'docs/train/corpus/records.json': 'floor-report',
+  'docs/train/corpus/tokens.json': 'floor-report',
+  'pilot/CORPUS.json': 'floor-report',
+  'docs/design-brief-2026-10-08.md': 'design',
+  'docs/eval/ATTRIBUTION.md': 'contract',
+  'docs/eval/PREREGISTRATION.md': 'contract',
+  'docs/eval/owner-identity.json': 'config',
+  'docs/eval/pricing.sheets.md': 'provider-data',
+  'docs/eval/quotes.raw/fetched.json': 'provider-data',
+  'docs/eval/rules.json': 'input',
+  'docs/provenance/README.md': 'provenance',
+  'docs/provenance/accounts/anthropic-claude-max.md': 'provenance',
+  'docs/provenance/accounts/deepseek-api.md': 'provenance',
+  'docs/provenance/accounts/google-antigravity-consumer.md': 'provenance',
+  'docs/provenance/accounts/openai-codex.md': 'provenance',
+  'docs/provenance/accounts/zai-api.md': 'provenance',
+  'docs/provenance/assets/eval-targets.md': 'provenance',
+  'docs/provenance/assets/mwg-modern-web-guidance.md': 'provenance',
+  'docs/provenance/assets/reproduction-studies.md': 'provenance',
+  'docs/provenance/assets/student-base-models.md': 'provenance',
+  'docs/provenance/assets/training-targets.md': 'provenance',
+  'docs/provenance/original-refs.md': 'provenance',
+  'docs/quarantine.md': 'provenance',
+  'docs/train/briefs/SCHEMA.md': 'spec',
+  'docs/train/corpus/SERVED.md': 'scaffold-report',
+  'docs/train/corpus/served-routes-baseline.json': 'scaffold-report',
+  'package.json': 'spec',
+  'package-lock.json': 'spec',
+  'pilot/README.md': 'contract',
+  'pilot/plan.json': 'input',
+};
+
+/** The documents that must carry the label, derived from the classification. */
+export const REGISTRY = Object.entries(DOCUMENTS)
+  .filter(([, kind]) => kind === 'floor-report')
+  .map(([path]) => path)
+  .sort();
+
+/**
+ * Check that every tracked document is classified, and that the classification matches what it says.
+ *   - UNCLASSIFIED_DOCUMENT  - a new document nobody has decided about (the fail-closed part)
+ *   - MISCLASSIFIED_DOCUMENT - a document classified as a non-report that states floor evidence without
+ *                              carrying the label and without a recorded exclusion
+ */
+export function checkDocumentClassification(paths) {
+  const findings = [];
+  for (const path of paths) {
+    const kind = DOCUMENTS[path] ?? (GENERATED_PATTERNS.some((pattern) => pattern.test(path)) ? 'generated' : null);
+    if (!kind) {
+      findings.push({
+        code: 'UNCLASSIFIED_DOCUMENT',
+        subject: path,
+        message: 'not in DOCUMENTS and not matched by GENERATED_PATTERNS; classify it as a floor report (which must carry the label) or as the kind of document it is',
+      });
+      continue;
+    }
+    if (kind === 'generated') continue;
+    let text;
+    try {
+      text = readFileSync(path, 'utf8');
+    } catch {
+      continue;
+    }
+    if (kind === 'floor-report') {
+      if (!text.includes(BASELINE_LABEL)) {
+        findings.push({
+          code: 'UNLABELLED_FLOOR_REPORT',
+          subject: path,
+          message: `classified as a floor report but does not carry '${BASELINE_LABEL}'`,
+        });
+      }
+      continue;
+    }
+    // Cross-check only. The scan is a heuristic and is known to be incomplete, so it decides nothing on
+    // its own; it asks whether a non-report was classified correctly. A document that states floor
+    // evidence is either a floor report, excluded by name, or carrying the label.
+    if (FLOOR_EVIDENCE.test(text) && !EXCLUSIONS[path] && !text.includes(BASELINE_LABEL)) {
+      findings.push({
+        code: 'MISCLASSIFIED_DOCUMENT',
+        subject: path,
+        message: `classified as '${kind}' but states floor evidence; classify it as 'floor-report' (and label it), or record an exclusion with the reason`,
+      });
+    }
+  }
+  return findings;
+}
 
 /**
  * Shapes that claim web-uplift's authorship of OUR floor. Two review rounds found phrasing this
@@ -285,37 +401,6 @@ export const EXCLUSIONS = {
 export const FLOOR_EVIDENCE =
   /deterministic (?:mw[sg] )?(?:repair|baseline|floor)|uplift(?:ed)?_sha|uplift_edits|accepted pairs|pairs accepted|projects? (?:passed|driven)|journeys? (?:passed|driven)|token estimate|\(\s*\d+\s*(?:of|\/) ?\d+ |\b\d+\/\d+\b/i;
 
-/** Subtrees that are generated project trees or brief corpora rather than reports. */
-const NOT_A_REPORT = /^(pilot\/projects\/|pilot\/training-projects\/|data\/|docs\/eval\/projects\/|docs\/eval\/briefs\/|docs\/eval\/specs\/|docs\/train\/briefs\/manifest|pilot\/TRAINING_CORPUS\.json$|.*\/package\.json$|.*\/spec\.json$|.*\/tree\.json$|.*\/snapshot\.json$)/;
-
-/**
- * Find tracked prose/JSON that states floor evidence without the label.
- *
- * `files` is injected so a test can scan fixtures; the CLI passes `git ls-files`.
- */
-export function discoverUnlabelledFloorEvidence(files) {
-  const findings = [];
-  for (const path of files) {
-    if (NOT_A_REPORT.test(path)) continue;
-    if (EXCLUSIONS[path]) continue;
-    if (REGISTRY.includes(path)) continue;
-    let text;
-    try {
-      text = readFileSync(path, 'utf8');
-    } catch {
-      continue;
-    }
-    if (!FLOOR_EVIDENCE.test(text)) continue;
-    if (text.includes(BASELINE_LABEL)) continue;
-    findings.push({
-      code: 'UNLABELLED_FLOOR_EVIDENCE',
-      subject: path,
-      message: `states floor evidence but carries no label and is not in EXCLUSIONS; label it or record why it is not a floor report`,
-    });
-  }
-  return findings;
-}
-
 const asJson = process.argv.includes('--json');
 
 if (import.meta.url === `file://${process.argv[1]}`) {
@@ -327,14 +412,14 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       .split('\n')
       .filter(Boolean);
     scanned = files.length;
-    findings.push(...discoverUnlabelledFloorEvidence(files));
+    findings.push(...checkDocumentClassification(files));
   } catch (error) {
     findings.push({ code: 'SCAN_FAILED', subject: 'git ls-files', message: `could not list tracked files: ${error?.message ?? error}` });
   }
   if (asJson) {
     // Machine output is JSON and nothing else: a caller that parses it must not have to strip a
     // trailing human line. The failure detail still goes to stderr, which is not parsed.
-    console.log(JSON.stringify({ label: BASELINE_LABEL, checked: REGISTRY.length, scanned, excluded: Object.keys(EXCLUSIONS).length, findings }, null, 2));
+    console.log(JSON.stringify({ label: BASELINE_LABEL, checked: REGISTRY.length, scanned, classified: Object.keys(DOCUMENTS).length, excluded: Object.keys(EXCLUSIONS).length, findings }, null, 2));
   } else {
     for (const finding of findings) console.log(`FINDING ${finding.code} ${finding.subject} ${finding.message}`);
   }
@@ -342,5 +427,5 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     console.error(`check-baseline-label: FAIL - ${findings.length} finding(s); a floor report is unattributed or misattributed`);
     process.exit(1);
   }
-  if (!asJson) console.log(`check-baseline-label: PASS - ${REGISTRY.length} floor report(s) carry '${BASELINE_LABEL}', and no other tracked document states floor evidence without it (${scanned} files scanned, ${Object.keys(EXCLUSIONS).length} excluded by name)`);
+  if (!asJson) console.log(`check-baseline-label: PASS - ${REGISTRY.length} floor report(s) carry '${BASELINE_LABEL}'; all ${scanned} tracked document(s) are classified (${Object.keys(DOCUMENTS).length} by name, the rest by generated pattern), and no document classified as a non-report states floor evidence without the label (${Object.keys(EXCLUSIONS).length} excluded by name)`);
 }

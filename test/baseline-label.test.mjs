@@ -12,7 +12,13 @@ import { execFileSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { checkBaselineLabel, discoverUnlabelledFloorEvidence, EXCLUSIONS, falseProvenance } from '../scripts/check-baseline-label.mjs';
+import {
+  checkBaselineLabel,
+  checkDocumentClassification,
+  EXCLUSIONS,
+  falseProvenance,
+  REGISTRY,
+} from '../scripts/check-baseline-label.mjs';
 import { labelDocuments } from '../scripts/label-baseline.mjs';
 import { BASELINE_LABEL, baselineAttributionLine } from '../src/eval/ruleset.mjs';
 
@@ -21,30 +27,38 @@ const ROOT = resolve(import.meta.dirname, '..');
 // The registry lives in the check script; importing it would run the CLI, so the reports are listed
 // here as well. If a report is added to one list and not the other this test still passes, so the
 // CLI test below covers the registry as a whole.
+// The documents this test believes must carry the label. Asserted EQUAL to the check's own derived
+// registry below, so the two statements have to agree: if the classification gains or loses a floor report
+// and this list is not updated, the test fails rather than quietly covering less.
 const REPORTS = [
-  'docs/eval/conformance/booking.md',
+  'README.md',
+  'docs/PIPELINE.md',
+  'docs/eval/conformance/README.md',
+  'docs/eval/conformance/account-recovery-identity.json',
   'docs/eval/conformance/account-recovery-identity.md',
+  'docs/eval/conformance/booking-identity.json',
   'docs/eval/conformance/booking-identity.md',
+  'docs/eval/conformance/booking.json',
+  'docs/eval/conformance/booking.md',
+  'docs/eval/conformance/catalogue-identity.json',
   'docs/eval/conformance/catalogue-identity.md',
+  'docs/eval/conformance/contact-lead-identity.json',
   'docs/eval/conformance/contact-lead-identity.md',
+  'docs/eval/conformance/event-registration-identity.json',
   'docs/eval/conformance/event-registration-identity.md',
+  'docs/eval/pricing.md',
+  'docs/eval/two-backends.md',
+  'docs/pilot/README.md',
   'docs/pilot/YIELD.md',
+  'docs/pilot/records.json',
+  'docs/pilot/yield.json',
+  'docs/train/README.md',
+  'docs/train/briefs/README.md',
+  'docs/train/corpus/README.md',
   'docs/train/corpus/YIELD.md',
   'docs/train/corpus/records.json',
-  'pilot/CORPUS.json',
-  'docs/pilot/yield.json',
-  'docs/pilot/records.json',
-  'docs/eval/conformance/booking.json',
-  'docs/eval/conformance/account-recovery-identity.json',
-  'docs/eval/conformance/booking-identity.json',
-  'docs/eval/conformance/catalogue-identity.json',
-  'docs/eval/conformance/contact-lead-identity.json',
-  'docs/eval/conformance/event-registration-identity.json',
-  'docs/pilot/README.md',
-  'docs/eval/conformance/README.md',
   'docs/train/corpus/tokens.json',
-  'docs/train/corpus/README.md',
-  'docs/eval/two-backends.md',
+  'pilot/CORPUS.json',
 ];
 
 test('every registered floor report carries the label', () => {
@@ -218,27 +232,29 @@ test('the provenance detector keeps its two-way contract', () => {
   assert.equal(cases.filter(([, flag]) => !flag).length, 22, 'true statements that must pass');
 });
 
-test('the scan finds floor evidence the registry does not list', () => {
-  // This is the structural fix for a finding that returned four times: a list can only cover what its
-  // author thought of, so coverage is now discovered from the tree rather than asserted from memory.
-  const dir = mkdtempSync(join(tmpdir(), 'floor-scan-'));
+test('document coverage fails closed, not open', () => {
+  // Review's counterexample: a NEW document stating a floor result in wording no pattern anticipates.
+  // The earlier phrase-scan was fail-open and passed it. Coverage is now a classification: every tracked
+  // document is either a floor report (which must carry the label) or a named kind, and anything else is a
+  // finding - so a new document has to be decided deliberately rather than silently omitted.
+  const dir = mkdtempSync(join(tmpdir(), 'floor-classify-'));
   try {
     const write = (name, body) => {
       const path = join(dir, name);
       writeFileSync(path, body);
       return path;
     };
-    const unlabelled = write('report.md', '# Report\n\n34 of 35 accepted pairs.\n');
-    const labelled = write('labelled.md', `# Report\n\n${baselineAttributionLine()}\n\n34 of 35 accepted pairs.\n`);
-    const unrelated = write('other.md', '# Notes\n\nNothing measured here.\n');
+    const unclassified = write('new-results.md', '# New results\n\nOur mechanical floor scored 0.805 overall in booking.\n');
+    const found = checkDocumentClassification([unclassified]);
+    assert.deepEqual(found.map((f) => f.code), ['UNCLASSIFIED_DOCUMENT']);
 
-    const found = discoverUnlabelledFloorEvidence([unlabelled, labelled, unrelated]);
-    assert.deepEqual(found.map((f) => f.subject), [unlabelled]);
-    assert.equal(found[0].code, 'UNLABELLED_FLOOR_EVIDENCE');
+    // A document classified as a floor report must carry the label.
+    const mislabelled = write('report.md', '# Report\n\n34 of 35 accepted pairs.\n');
+    assert.deepEqual(checkDocumentClassification([mislabelled]).map((f) => f.code), ['UNCLASSIFIED_DOCUMENT']);
 
-    // Excluded by name, and generated trees, are not reports and must not be scanned.
-    assert.deepEqual(discoverUnlabelledFloorEvidence([Object.keys(EXCLUSIONS)[0]]), []);
-    assert.deepEqual(discoverUnlabelledFloorEvidence(['pilot/projects/tr-01-hono/spec.json']), []);
+    // Generated trees are classified by pattern, not listed.
+    assert.deepEqual(checkDocumentClassification(['pilot/projects/tr-01-hono/spec.json']), []);
+    assert.deepEqual(checkDocumentClassification(['docs/eval/projects/already-modern/cf-06/tree.json']), []);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
@@ -285,6 +301,10 @@ test('the relabel tool refuses anything that is not attribution-only', () => {
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
+});
+
+test('the test\'s own report list and the check\'s derived registry agree', () => {
+  assert.deepEqual([...REPORTS].sort(), REGISTRY, 'the expected floor reports and the classification must agree');
 });
 
 test('the CLI passes on the tree and fails when a report loses its label', () => {

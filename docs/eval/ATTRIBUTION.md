@@ -105,23 +105,22 @@ ten. The lesson worth keeping: a registry is only as good as the review that ext
 projection (`decision` in `records.json`) silently drops whatever it does not explicitly name.
 
 ```bash
-npm run check:baseline-label   # registry + a scan of every tracked document (23 registered, 190 scanned)
+npm run check:baseline-label   # classifies every tracked document; 28 floor reports must carry the label
 npm run label:baseline -- --check   # the same assertion for the measurement JSON, without writing
 npm run label:baseline              # add the label to a document that predates it
 ```
 
-Twenty-three artifacts are registered, and that count is the honest measure of this contract rather
-than a detail: the first pass covered six, and review then extended it three times - two more reports,
-then the measurement JSON and two static summaries, then two further result summaries - while my own
-sweep found one more (`tokens.json`). Every round was a list I had believed complete. The
-documents that predate the label are relabelled by `scripts/label-baseline.mjs`, which is
-**safe by construction** - it strips exactly the keys it added, deep-compares against what it read, and
-refuses to write if anything else moved. `--check` runs that comparison without writing.
+Twenty-eight documents must carry the label, and that count is the honest measure of this contract
+rather than a detail: the first pass covered six, and review then extended it four times - two more
+reports, then the measurement JSON and two static summaries, then two further result summaries, then five
+more documents the scan found - while my own sweeps found `tokens.json` and the root summary. Every round
+was a list I had believed complete.
 
-The check is fail-closed in three ways: a report in its registry that is **missing** fails, a report
-without the label fails, and a report claiming web-uplift's authorship fails even when it is labelled.
-The registry is declared rather than globbed, because a glob silently expands when a report is added
-and silently shrinks when one is renamed.
+The check is fail-closed in three ways: a document classified as a floor report that **cannot be read**
+fails, one without the label fails, and one claiming web-uplift's authorship fails even when it is
+labelled. Documents that predate the label are relabelled by `scripts/label-baseline.mjs`, which strips
+exactly the keys it added, requires the document to round-trip through JSON **byte-for-byte**, and refuses
+to write otherwise - `--check` runs the same comparison without writing.
 
 Deliberately **not** registered, with the reason rather than a silent omission:
 
@@ -138,20 +137,30 @@ round was a list I believed complete, and each was extended by a reviewer readin
 me re-reading my own reasoning. The lesson is in the count, not in the ritual: "every X" is a claim about
 a list, so the list has to be checked against the tree.
 
-### The registry is no longer the only guard
+### Coverage fails closed
 
-A list can only cover what its author thought of, and five rounds is enough evidence that mine cannot.
-So the check now also SCANS: every tracked `.md` and `.json` is read, and any document containing
-floor-evidence phrasing - uplift hashes, accepted-pair counts, projects driven or passed, journey
-counts, token estimates, "N of M" results - must carry the label unless it is named in `EXCLUSIONS`
-with a reason. Nine documents are excluded by name, including the pre-registration (which states the
-registered design rather than a measurement, and is the one document that should not be retro-edited)
-and the provenance README (which defines what the arms are, for rights purposes).
+A phrase-based scan is fail-open, and review proved it with a counterexample: a new document saying "our
+mechanical floor scored 0.805 overall in booking" matched no pattern the scan looked for and would have
+passed silently. No pattern list fixes that, because the next wording is always one nobody pictured.
 
-That inverts the failure mode. Before, a document I forgot was silently uncovered; now a document that
-states a floor result without a label fails the check, and adding a new report means either labelling it
-or writing down why it is not one. The scan currently reads 190 files and finds 28 that state floor
-evidence, all of them labelled.
+So every tracked `.md` and `.json` is now **classified**. A document is either a `floor-report`, which must
+carry the label, or one of nine named kinds - contract, design, spec, config, input, provider-data,
+provenance, scaffold-report - or a generated per-project tree matched by pattern rather than listed.
+Anything unclassified fails the check. That inverts the default: adding a document now requires deciding
+what it is, and the failure mode is a loud finding rather than a silent omission. The current tree is 190
+documents: 55 classified by name, the rest generated trees, with 28 floor reports and 9 named exclusions.
+
+The phrase scan survives as a **cross-check on the classification** rather than as the guarantee: a
+document classified as a non-report that states floor evidence is reported as misclassified unless it
+carries the label or is excluded by name with a reason. That division of labour is the honest one - a
+heuristic can ask whether a human decided correctly, but it cannot be the thing that decides, because it is
+incomplete in a way every heuristic is.
+
+The registry had been wrong four times before this - six artifacts, then ten, twenty-one, twenty-three,
+then five more documents. Each round was a list I believed complete, and each was extended by a reviewer
+reading the tree rather than by me re-reading my own reasoning. The lesson is in the count: "every X" is a
+claim about a list, so the list has to be checked against the tree - and where it cannot be, the default
+has to be refusal.
 
 ### Relabelling a report must not mean re-measuring it
 
