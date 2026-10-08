@@ -24,6 +24,8 @@ pilot/out/
 # Uplifted copies of the pilot projects: regenerated per run, inside the repo so module resolution works.
 .pilot-uplifted/
 .pilot-corpus/
+# Uplifted copies of the training-corpus projects (scripts/train-corpus-run.mjs): regenerated per run.
+.train-uplifted/
 # Conformance runs: the generated corpus and the uplifted copies are rebuilt per run.
 .conformance-corpus/
 .conformance-uplifted/

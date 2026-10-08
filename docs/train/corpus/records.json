@@ -1,0 +1,6038 @@
+{
+  "run_id": "2026-10-08T15-11-39-434Z",
+  "generated_at": "2026-10-08T15:21:05.448Z",
+  "generator": "scripts/train-corpus-run.mjs",
+  "corpus": "pilot/TRAINING_CORPUS.json",
+  "selection": {
+    "rule": "For every archetype pick its canonical GENERATE family (lowest tr-id) plus every REPAIR family (tr-26..tr-30). Build the ordered slot list of [repair x2] then [canonical generate x2, ascending tr-id], and assign a framework to each slot by round-robin over the framework order.",
+    "framework_order": [
+      "hono",
+      "raw",
+      "react",
+      "preact",
+      "vue",
+      "webcomponents",
+      "svelte"
+    ],
+    "sample": [
+      {
+        "project_id": "tr-26-hono",
+        "family_id": "tr-26",
+        "archetype": "web-shop",
+        "framework": "hono",
+        "task": "repair"
+      },
+      {
+        "project_id": "tr-26-raw",
+        "family_id": "tr-26",
+        "archetype": "web-shop",
+        "framework": "raw",
+        "task": "repair"
+      },
+      {
+        "project_id": "tr-27-react",
+        "family_id": "tr-27",
+        "archetype": "booking",
+        "framework": "react",
+        "task": "repair"
+      },
+      {
+        "project_id": "tr-27-preact",
+        "family_id": "tr-27",
+        "archetype": "booking",
+        "framework": "preact",
+        "task": "repair"
+      },
+      {
+        "project_id": "tr-28-vue",
+        "family_id": "tr-28",
+        "archetype": "support-helpdesk",
+        "framework": "vue",
+        "task": "repair"
+      },
+      {
+        "project_id": "tr-28-webcomponents",
+        "family_id": "tr-28",
+        "archetype": "support-helpdesk",
+        "framework": "webcomponents",
+        "task": "repair"
+      },
+      {
+        "project_id": "tr-29-svelte",
+        "family_id": "tr-29",
+        "archetype": "expense-tracker",
+        "framework": "svelte",
+        "task": "repair"
+      },
+      {
+        "project_id": "tr-29-hono",
+        "family_id": "tr-29",
+        "archetype": "expense-tracker",
+        "framework": "hono",
+        "task": "repair"
+      },
+      {
+        "project_id": "tr-30-raw",
+        "family_id": "tr-30",
+        "archetype": "event-registration",
+        "framework": "raw",
+        "task": "repair"
+      },
+      {
+        "project_id": "tr-30-react",
+        "family_id": "tr-30",
+        "archetype": "event-registration",
+        "framework": "react",
+        "task": "repair"
+      },
+      {
+        "project_id": "tr-01-preact",
+        "family_id": "tr-01",
+        "archetype": "booking",
+        "framework": "preact",
+        "task": "generate"
+      },
+      {
+        "project_id": "tr-01-vue",
+        "family_id": "tr-01",
+        "archetype": "booking",
+        "framework": "vue",
+        "task": "generate"
+      },
+      {
+        "project_id": "tr-02-webcomponents",
+        "family_id": "tr-02",
+        "archetype": "web-shop",
+        "framework": "webcomponents",
+        "task": "generate"
+      },
+      {
+        "project_id": "tr-02-svelte",
+        "family_id": "tr-02",
+        "archetype": "web-shop",
+        "framework": "svelte",
+        "task": "generate"
+      },
+      {
+        "project_id": "tr-04-hono",
+        "family_id": "tr-04",
+        "archetype": "dashboard",
+        "framework": "hono",
+        "task": "generate"
+      },
+      {
+        "project_id": "tr-04-raw",
+        "family_id": "tr-04",
+        "archetype": "dashboard",
+        "framework": "raw",
+        "task": "generate"
+      },
+      {
+        "project_id": "tr-05-react",
+        "family_id": "tr-05",
+        "archetype": "onboarding-auth",
+        "framework": "react",
+        "task": "generate"
+      },
+      {
+        "project_id": "tr-05-preact",
+        "family_id": "tr-05",
+        "archetype": "onboarding-auth",
+        "framework": "preact",
+        "task": "generate"
+      },
+      {
+        "project_id": "tr-06-vue",
+        "family_id": "tr-06",
+        "archetype": "directory-listing",
+        "framework": "vue",
+        "task": "generate"
+      },
+      {
+        "project_id": "tr-06-webcomponents",
+        "family_id": "tr-06",
+        "archetype": "directory-listing",
+        "framework": "webcomponents",
+        "task": "generate"
+      },
+      {
+        "project_id": "tr-07-svelte",
+        "family_id": "tr-07",
+        "archetype": "event-registration",
+        "framework": "svelte",
+        "task": "generate"
+      },
+      {
+        "project_id": "tr-07-hono",
+        "family_id": "tr-07",
+        "archetype": "event-registration",
+        "framework": "hono",
+        "task": "generate"
+      },
+      {
+        "project_id": "tr-08-raw",
+        "family_id": "tr-08",
+        "archetype": "support-helpdesk",
+        "framework": "raw",
+        "task": "generate"
+      },
+      {
+        "project_id": "tr-08-react",
+        "family_id": "tr-08",
+        "archetype": "support-helpdesk",
+        "framework": "react",
+        "task": "generate"
+      },
+      {
+        "project_id": "tr-09-preact",
+        "family_id": "tr-09",
+        "archetype": "course-enrolment",
+        "framework": "preact",
+        "task": "generate"
+      },
+      {
+        "project_id": "tr-09-vue",
+        "family_id": "tr-09",
+        "archetype": "course-enrolment",
+        "framework": "vue",
+        "task": "generate"
+      },
+      {
+        "project_id": "tr-10-webcomponents",
+        "family_id": "tr-10",
+        "archetype": "survey-form",
+        "framework": "webcomponents",
+        "task": "generate"
+      },
+      {
+        "project_id": "tr-10-svelte",
+        "family_id": "tr-10",
+        "archetype": "survey-form",
+        "framework": "svelte",
+        "task": "generate"
+      },
+      {
+        "project_id": "tr-11-hono",
+        "family_id": "tr-11",
+        "archetype": "restaurant-ordering",
+        "framework": "hono",
+        "task": "generate"
+      },
+      {
+        "project_id": "tr-11-raw",
+        "family_id": "tr-11",
+        "archetype": "restaurant-ordering",
+        "framework": "raw",
+        "task": "generate"
+      },
+      {
+        "project_id": "tr-12-react",
+        "family_id": "tr-12",
+        "archetype": "job-board",
+        "framework": "react",
+        "task": "generate"
+      },
+      {
+        "project_id": "tr-12-preact",
+        "family_id": "tr-12",
+        "archetype": "job-board",
+        "framework": "preact",
+        "task": "generate"
+      },
+      {
+        "project_id": "tr-13-vue",
+        "family_id": "tr-13",
+        "archetype": "docs-site",
+        "framework": "vue",
+        "task": "generate"
+      },
+      {
+        "project_id": "tr-13-webcomponents",
+        "family_id": "tr-13",
+        "archetype": "docs-site",
+        "framework": "webcomponents",
+        "task": "generate"
+      },
+      {
+        "project_id": "tr-15-svelte",
+        "family_id": "tr-15",
+        "archetype": "expense-tracker",
+        "framework": "svelte",
+        "task": "generate"
+      },
+      {
+        "project_id": "tr-15-hono",
+        "family_id": "tr-15",
+        "archetype": "expense-tracker",
+        "framework": "hono",
+        "task": "generate"
+      },
+      {
+        "project_id": "tr-16-raw",
+        "family_id": "tr-16",
+        "archetype": "library-catalogue",
+        "framework": "raw",
+        "task": "generate"
+      },
+      {
+        "project_id": "tr-16-react",
+        "family_id": "tr-16",
+        "archetype": "library-catalogue",
+        "framework": "react",
+        "task": "generate"
+      },
+      {
+        "project_id": "tr-20-preact",
+        "family_id": "tr-20",
+        "archetype": "community-forum",
+        "framework": "preact",
+        "task": "generate"
+      },
+      {
+        "project_id": "tr-20-vue",
+        "family_id": "tr-20",
+        "archetype": "community-forum",
+        "framework": "vue",
+        "task": "generate"
+      }
+    ]
+  },
+  "coverage": {
+    "scored": 40,
+    "unscored": 170,
+    "total": 210,
+    "reason": "40 projects were selected by the deterministic rule; 40 were driven in the browser. The remaining 170 are scaffolded and hash-recorded in pilot/TRAINING_CORPUS.json but their journeys were NOT run in this pass, so they carry the status \"scaffolded / unverified journey\".",
+    "unscored_projects": [
+      {
+        "project_id": "tr-01-hono",
+        "family_id": "tr-01",
+        "archetype": "booking",
+        "framework": "hono",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:f10cebc8d1585de4fb6f4ed94588da0b65543338933050d3dc3f2f3a0fe87f1a"
+      },
+      {
+        "project_id": "tr-01-raw",
+        "family_id": "tr-01",
+        "archetype": "booking",
+        "framework": "raw",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:c819b32ce64f745b9cb5c19f5052fd031ee6c285aeee66f3fa539ce43519c897"
+      },
+      {
+        "project_id": "tr-01-react",
+        "family_id": "tr-01",
+        "archetype": "booking",
+        "framework": "react",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:968bbd94345f4eb36175bbd15c6b766333ec05ad62ca2b9b99cd9512cc4d53d0"
+      },
+      {
+        "project_id": "tr-01-webcomponents",
+        "family_id": "tr-01",
+        "archetype": "booking",
+        "framework": "webcomponents",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:e3a394cb724e3f148503258ed27503da6b65aebe9d6245e187081477f6ffdb03"
+      },
+      {
+        "project_id": "tr-01-svelte",
+        "family_id": "tr-01",
+        "archetype": "booking",
+        "framework": "svelte",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:d1521b710adc66ae98ea2efb91a170ee881962a32db89689c24561e543b7dcd3"
+      },
+      {
+        "project_id": "tr-02-hono",
+        "family_id": "tr-02",
+        "archetype": "web-shop",
+        "framework": "hono",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:2bc3e0aa7e336f92a3a8e523a2b82f8de2186cb752db1fb6f150f89766fc2506"
+      },
+      {
+        "project_id": "tr-02-raw",
+        "family_id": "tr-02",
+        "archetype": "web-shop",
+        "framework": "raw",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:08100aff20bf97c87d8ba190ded5748f58505444b40c5829629396e163fd5940"
+      },
+      {
+        "project_id": "tr-02-react",
+        "family_id": "tr-02",
+        "archetype": "web-shop",
+        "framework": "react",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:c6d52e1fc5f9c1fa8231b571857d14e044f5ab2a7965794f6c4ac2079054e27b"
+      },
+      {
+        "project_id": "tr-02-preact",
+        "family_id": "tr-02",
+        "archetype": "web-shop",
+        "framework": "preact",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:073f8b2082f3c88a14297ed12f6ac78637a6b4466d0480f9ab67647f6fa29a88"
+      },
+      {
+        "project_id": "tr-02-vue",
+        "family_id": "tr-02",
+        "archetype": "web-shop",
+        "framework": "vue",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:bcaa46ad106a0d0241ce8c6558b728ae2f6777a752c17d738fb531437d613d53"
+      },
+      {
+        "project_id": "tr-03-hono",
+        "family_id": "tr-03",
+        "archetype": "booking",
+        "framework": "hono",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:9ec2e11110ffa5b7ed3f5b3a0df6d217723185f121ca610428839dff838fdc70"
+      },
+      {
+        "project_id": "tr-03-raw",
+        "family_id": "tr-03",
+        "archetype": "booking",
+        "framework": "raw",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:ecdda14d12554dd56f53d130b709d8a982ffd9384f28ee73f63dde7521a02167"
+      },
+      {
+        "project_id": "tr-03-react",
+        "family_id": "tr-03",
+        "archetype": "booking",
+        "framework": "react",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:3a87c5616f568b395cb41c8e8e1c32c5564c2fe08d399a2aaf90ee347613406a"
+      },
+      {
+        "project_id": "tr-03-preact",
+        "family_id": "tr-03",
+        "archetype": "booking",
+        "framework": "preact",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:438a04706d412a4becbbe61f9825155461b2c181637cf053281dd78a8a91d769"
+      },
+      {
+        "project_id": "tr-03-vue",
+        "family_id": "tr-03",
+        "archetype": "booking",
+        "framework": "vue",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:41f47c6e83948780e4136b0e59bb8b3b018dff5fb9dc6d4ff1bef8f1be4508c8"
+      },
+      {
+        "project_id": "tr-03-webcomponents",
+        "family_id": "tr-03",
+        "archetype": "booking",
+        "framework": "webcomponents",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:c932e165ce1979e7d0d9e8d6433bcec87e33942c4b9567eda91c1cd67462a8c2"
+      },
+      {
+        "project_id": "tr-03-svelte",
+        "family_id": "tr-03",
+        "archetype": "booking",
+        "framework": "svelte",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:9fdfc1d3fca89e9744e8057ddede79cb10eb3abafa80cb66ed187f2978cd3140"
+      },
+      {
+        "project_id": "tr-04-react",
+        "family_id": "tr-04",
+        "archetype": "dashboard",
+        "framework": "react",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:e324f48980be38ff252f5d25d0343b10e41c4ffe870e0cca2c2ee412f3e3a234"
+      },
+      {
+        "project_id": "tr-04-preact",
+        "family_id": "tr-04",
+        "archetype": "dashboard",
+        "framework": "preact",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:0e859413ba7766b81f34cb9fc07b962af0a33348108a85d028ad39aae3f7520c"
+      },
+      {
+        "project_id": "tr-04-vue",
+        "family_id": "tr-04",
+        "archetype": "dashboard",
+        "framework": "vue",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:2c6721a571464234da008018303a2a3e2d10368726c0b3c4fbe8d57531c642e7"
+      },
+      {
+        "project_id": "tr-04-webcomponents",
+        "family_id": "tr-04",
+        "archetype": "dashboard",
+        "framework": "webcomponents",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:1ac699e4a19447054ebd717a1e8586d7d00d11614e8bd8e828a1e37d66efbed0"
+      },
+      {
+        "project_id": "tr-04-svelte",
+        "family_id": "tr-04",
+        "archetype": "dashboard",
+        "framework": "svelte",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:59e851707a101d272ead4bd76dfe2fa49f2e0ee484b02cdbe27d5c81b94f4745"
+      },
+      {
+        "project_id": "tr-05-hono",
+        "family_id": "tr-05",
+        "archetype": "onboarding-auth",
+        "framework": "hono",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:a206cce367588d0340e3b8bed3477539a0a94133796982b6000afe3cf2733382"
+      },
+      {
+        "project_id": "tr-05-raw",
+        "family_id": "tr-05",
+        "archetype": "onboarding-auth",
+        "framework": "raw",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:f7a3d66fab76af2559dc10a1d7b80612c9f19057defafa216a8df69af15da222"
+      },
+      {
+        "project_id": "tr-05-vue",
+        "family_id": "tr-05",
+        "archetype": "onboarding-auth",
+        "framework": "vue",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:d3aa2c8dcee76ff8889616ca8cec2acca81a8608f8c2ca4f39b0432c8ee57d24"
+      },
+      {
+        "project_id": "tr-05-webcomponents",
+        "family_id": "tr-05",
+        "archetype": "onboarding-auth",
+        "framework": "webcomponents",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:ddef2d89b105a58c3b806eee1298f35cd26e75d76e1b3c21657b7c98edc319ad"
+      },
+      {
+        "project_id": "tr-05-svelte",
+        "family_id": "tr-05",
+        "archetype": "onboarding-auth",
+        "framework": "svelte",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:29d45db04f8e7f8f39c45e3f9a5df27806bf2bac8f4e550d8c8623088532b4f6"
+      },
+      {
+        "project_id": "tr-06-hono",
+        "family_id": "tr-06",
+        "archetype": "directory-listing",
+        "framework": "hono",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:08ff3b23a14fc2fe429997914558bc4cf18bdf56a348c5e3e4a01a65cf877fc3"
+      },
+      {
+        "project_id": "tr-06-raw",
+        "family_id": "tr-06",
+        "archetype": "directory-listing",
+        "framework": "raw",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:21dc60568e7d6ad35f7864e55e63a88382551ba8ed067a4c38d4fb0e745eabc4"
+      },
+      {
+        "project_id": "tr-06-react",
+        "family_id": "tr-06",
+        "archetype": "directory-listing",
+        "framework": "react",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:627f113046b534a834f1ce33fc732a9505fd84a0cf720c596643a9edcfcc3f71"
+      },
+      {
+        "project_id": "tr-06-preact",
+        "family_id": "tr-06",
+        "archetype": "directory-listing",
+        "framework": "preact",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:ff12b54bbeb5ad62915e5d1f28ba4fba5551adc87c5917e60163421049bf7bf0"
+      },
+      {
+        "project_id": "tr-06-svelte",
+        "family_id": "tr-06",
+        "archetype": "directory-listing",
+        "framework": "svelte",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:fd819a998c3ae0a46317be2c9296cd802bd667998389fcdc4ec690c817df60f7"
+      },
+      {
+        "project_id": "tr-07-raw",
+        "family_id": "tr-07",
+        "archetype": "event-registration",
+        "framework": "raw",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:cc8b839de4badeb6917ccf9f0611a2e42fe4b07b8707eec5885223825342043a"
+      },
+      {
+        "project_id": "tr-07-react",
+        "family_id": "tr-07",
+        "archetype": "event-registration",
+        "framework": "react",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:8d3821e4ef9793958d7a565e60b4e8c0b06bf01d7b922785d9848c75a1f88f06"
+      },
+      {
+        "project_id": "tr-07-preact",
+        "family_id": "tr-07",
+        "archetype": "event-registration",
+        "framework": "preact",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:978f91944bf9074dc088bbc52b0f422d5af5e691526efba820dc90899d06a6b9"
+      },
+      {
+        "project_id": "tr-07-vue",
+        "family_id": "tr-07",
+        "archetype": "event-registration",
+        "framework": "vue",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:6dd1d528b0b9aaa80d2c47d1a4e485236b3401e2b14b0fc23b065f3d6c80e464"
+      },
+      {
+        "project_id": "tr-07-webcomponents",
+        "family_id": "tr-07",
+        "archetype": "event-registration",
+        "framework": "webcomponents",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:2dd0f5725823f60f3b3245aa999e719f485be677f0293f1193cfc7960b8466e3"
+      },
+      {
+        "project_id": "tr-08-hono",
+        "family_id": "tr-08",
+        "archetype": "support-helpdesk",
+        "framework": "hono",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:cfa1be1b543d72727c9d96caf84f4a1767b45ffbe789a27ce1bcbdf354e67480"
+      },
+      {
+        "project_id": "tr-08-preact",
+        "family_id": "tr-08",
+        "archetype": "support-helpdesk",
+        "framework": "preact",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:d0e411113bc9c3507c343abcce34a64987dd35cb43de0683571d8bc634c7c352"
+      },
+      {
+        "project_id": "tr-08-vue",
+        "family_id": "tr-08",
+        "archetype": "support-helpdesk",
+        "framework": "vue",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:3f767378376872d7c30cf777315a30e71f4014aa161d707091323386e7ad15a4"
+      },
+      {
+        "project_id": "tr-08-webcomponents",
+        "family_id": "tr-08",
+        "archetype": "support-helpdesk",
+        "framework": "webcomponents",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:ff86b15d70be8f32f738b81a6de06b3ea5250df4cf52481b7393a8f96b1bf0a4"
+      },
+      {
+        "project_id": "tr-08-svelte",
+        "family_id": "tr-08",
+        "archetype": "support-helpdesk",
+        "framework": "svelte",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:0bb59801474ac93d6da9682008b7430bad93acd80e3a52974112101b36801d38"
+      },
+      {
+        "project_id": "tr-09-hono",
+        "family_id": "tr-09",
+        "archetype": "course-enrolment",
+        "framework": "hono",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:767aa76dbcb3e5b52a89da77990b7e3fbe8f60115c81e2d5fe1e6b85cf1f224c"
+      },
+      {
+        "project_id": "tr-09-raw",
+        "family_id": "tr-09",
+        "archetype": "course-enrolment",
+        "framework": "raw",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:a45455b7104b54a49d8a3cd492a7528da342a6ebcb198c648654e9e3a0c56632"
+      },
+      {
+        "project_id": "tr-09-react",
+        "family_id": "tr-09",
+        "archetype": "course-enrolment",
+        "framework": "react",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:7720a90d994a2781378f732604c609bfef87b328626872d669dcb21d891b972a"
+      },
+      {
+        "project_id": "tr-09-webcomponents",
+        "family_id": "tr-09",
+        "archetype": "course-enrolment",
+        "framework": "webcomponents",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:b563e897f3c665e07dea26a5c60b54ec6b6bc1baea167fb58318655578240aec"
+      },
+      {
+        "project_id": "tr-09-svelte",
+        "family_id": "tr-09",
+        "archetype": "course-enrolment",
+        "framework": "svelte",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:4a5d892d691f8f37e8f983ba58ff4ad5723c4a716bbce1c27f8c61b565949063"
+      },
+      {
+        "project_id": "tr-10-hono",
+        "family_id": "tr-10",
+        "archetype": "survey-form",
+        "framework": "hono",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:f457a63b0ffcfd16d2f18427290eb16acc0ae6f8380a044bfc2fdb7541385ac6"
+      },
+      {
+        "project_id": "tr-10-raw",
+        "family_id": "tr-10",
+        "archetype": "survey-form",
+        "framework": "raw",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:293bc4d57342bff4b5f18001772f2d7e5bf4e4ca7d9edccab61172acb91e0073"
+      },
+      {
+        "project_id": "tr-10-react",
+        "family_id": "tr-10",
+        "archetype": "survey-form",
+        "framework": "react",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:43ac6eb7cbc2b1c146b8d8434d335b9616a759f7d641693724615a5df1259e74"
+      },
+      {
+        "project_id": "tr-10-preact",
+        "family_id": "tr-10",
+        "archetype": "survey-form",
+        "framework": "preact",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:6813612f8201f8aa5aa0c65cb64604f5296561c78a96bb64ebc3bb9be2b2afb8"
+      },
+      {
+        "project_id": "tr-10-vue",
+        "family_id": "tr-10",
+        "archetype": "survey-form",
+        "framework": "vue",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:5c32c2ea294c45d5aee09ebbce7b81616a517b6549210cbf21010b3148f9cda7"
+      },
+      {
+        "project_id": "tr-11-react",
+        "family_id": "tr-11",
+        "archetype": "restaurant-ordering",
+        "framework": "react",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:a234bce8495cea08fb7c2e4b8b09b4d00883dff7f57fdb88ba57813b91b349cc"
+      },
+      {
+        "project_id": "tr-11-preact",
+        "family_id": "tr-11",
+        "archetype": "restaurant-ordering",
+        "framework": "preact",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:6e99414f1d465e1c097a90d59cdb4fa36a317962d4df69fbc4b15984189c518d"
+      },
+      {
+        "project_id": "tr-11-vue",
+        "family_id": "tr-11",
+        "archetype": "restaurant-ordering",
+        "framework": "vue",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:40b151237efa22d4796f963242b19f543e2e86ff99d821bee1984291bfdc79fb"
+      },
+      {
+        "project_id": "tr-11-webcomponents",
+        "family_id": "tr-11",
+        "archetype": "restaurant-ordering",
+        "framework": "webcomponents",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:0c83f08893d4ef9aae4fce297966c75bd095a9c3d550c7bbcfe6dc90d99e24d4"
+      },
+      {
+        "project_id": "tr-11-svelte",
+        "family_id": "tr-11",
+        "archetype": "restaurant-ordering",
+        "framework": "svelte",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:ae928a3dec4a6a90d0648d1d597e906c06e45c38d39a8a3d9c9c20bf3258ccdb"
+      },
+      {
+        "project_id": "tr-12-hono",
+        "family_id": "tr-12",
+        "archetype": "job-board",
+        "framework": "hono",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:0eeb906b09959058188be9e6996e1d7fc022747c1d044f211fce309d4724a42c"
+      },
+      {
+        "project_id": "tr-12-raw",
+        "family_id": "tr-12",
+        "archetype": "job-board",
+        "framework": "raw",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:ab653707f8618bfaaac169b997395587657138ca3d1e9c2fa14fcdcb016cb503"
+      },
+      {
+        "project_id": "tr-12-vue",
+        "family_id": "tr-12",
+        "archetype": "job-board",
+        "framework": "vue",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:5674128e709d6a686a6e34205e2929048a58ea3c7ce176e445e7bfd5e8279ec7"
+      },
+      {
+        "project_id": "tr-12-webcomponents",
+        "family_id": "tr-12",
+        "archetype": "job-board",
+        "framework": "webcomponents",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:33e949ae886bed422868ece60ae2e2020403a0b0d6bc50b50e8d30e1e0afdcd2"
+      },
+      {
+        "project_id": "tr-12-svelte",
+        "family_id": "tr-12",
+        "archetype": "job-board",
+        "framework": "svelte",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:516cf2eafe9ef42e0bdfe5574c0366f0f55fcddce010200778f4c0d67efd52c8"
+      },
+      {
+        "project_id": "tr-13-hono",
+        "family_id": "tr-13",
+        "archetype": "docs-site",
+        "framework": "hono",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:11f6f04d898f430bc5ed22bf229035a7a6c3b06b93cd1f8c4d06fceddc7c41fb"
+      },
+      {
+        "project_id": "tr-13-raw",
+        "family_id": "tr-13",
+        "archetype": "docs-site",
+        "framework": "raw",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:ef35238c4ad9dd87e0392849d3667499abb5dfac51d0df20672874be5dd92bb7"
+      },
+      {
+        "project_id": "tr-13-react",
+        "family_id": "tr-13",
+        "archetype": "docs-site",
+        "framework": "react",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:cbf4630515d3ce64156aa2a523d2727bff9b1eb2855ce38920688c4e66ed7e26"
+      },
+      {
+        "project_id": "tr-13-preact",
+        "family_id": "tr-13",
+        "archetype": "docs-site",
+        "framework": "preact",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:2c7fd0ad58f4d9e42372cb5da27cb762a21f47df24315f41656896290c070a24"
+      },
+      {
+        "project_id": "tr-13-svelte",
+        "family_id": "tr-13",
+        "archetype": "docs-site",
+        "framework": "svelte",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:602a71da1b61b4d90c1245e0101e769960b05e9c6078fd46d072cb71ef581cbf"
+      },
+      {
+        "project_id": "tr-14-hono",
+        "family_id": "tr-14",
+        "archetype": "directory-listing",
+        "framework": "hono",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:cf717be5132b73c71d2284adae6d64aa66de2c42d1f172b857cc1d1e5f3deb57"
+      },
+      {
+        "project_id": "tr-14-raw",
+        "family_id": "tr-14",
+        "archetype": "directory-listing",
+        "framework": "raw",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:fd1d0727aa7c02a4d5814d020260334cdeb76a091f5fed52d8682d1bf4c7a669"
+      },
+      {
+        "project_id": "tr-14-react",
+        "family_id": "tr-14",
+        "archetype": "directory-listing",
+        "framework": "react",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:fbf0740a0a0aef17eac96ef0ba9aa2efaf45d2992334260593ea876be7fdb57d"
+      },
+      {
+        "project_id": "tr-14-preact",
+        "family_id": "tr-14",
+        "archetype": "directory-listing",
+        "framework": "preact",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:300b87da1f4eaab41689c29271bb5d360621a2750009377321cbb68cecae3b7a"
+      },
+      {
+        "project_id": "tr-14-vue",
+        "family_id": "tr-14",
+        "archetype": "directory-listing",
+        "framework": "vue",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:b1243778dd60263a2c0dce1f41c5ddf30613cfe9810ac78f4e1db43b30e1d1d0"
+      },
+      {
+        "project_id": "tr-14-webcomponents",
+        "family_id": "tr-14",
+        "archetype": "directory-listing",
+        "framework": "webcomponents",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:1fe4415cba99dab3ea4543785ea17181bef72229b8c93c7d6087600b6a82fe5c"
+      },
+      {
+        "project_id": "tr-14-svelte",
+        "family_id": "tr-14",
+        "archetype": "directory-listing",
+        "framework": "svelte",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:347655a0efa7a413cd78e90654cc990c29f14ddd6242fa2076dfe2bc1909285a"
+      },
+      {
+        "project_id": "tr-15-raw",
+        "family_id": "tr-15",
+        "archetype": "expense-tracker",
+        "framework": "raw",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:256a1a837e690c413b77ff6a1f53636712505fd07d623ffaf9ab59ab1bdd614f"
+      },
+      {
+        "project_id": "tr-15-react",
+        "family_id": "tr-15",
+        "archetype": "expense-tracker",
+        "framework": "react",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:afa75caea88f9d91fe878fb3ade2265db2eb9493e456c50c08cf12d83c6c8e48"
+      },
+      {
+        "project_id": "tr-15-preact",
+        "family_id": "tr-15",
+        "archetype": "expense-tracker",
+        "framework": "preact",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:6cfd08c11e38c6bf21d7309448e3c50b2cf07d6f6e4d236dbb5e4d931cefad0b"
+      },
+      {
+        "project_id": "tr-15-vue",
+        "family_id": "tr-15",
+        "archetype": "expense-tracker",
+        "framework": "vue",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:004b2701bd0c7421fd7b5a61ed159e513ee3643c34e33768f8e87564a5f868cb"
+      },
+      {
+        "project_id": "tr-15-webcomponents",
+        "family_id": "tr-15",
+        "archetype": "expense-tracker",
+        "framework": "webcomponents",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:0eb0659e020befa5e968f52d3960951d2400f173b37836891c5b204b4814afc2"
+      },
+      {
+        "project_id": "tr-16-hono",
+        "family_id": "tr-16",
+        "archetype": "library-catalogue",
+        "framework": "hono",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:32153fc8c32bedc9d972621957d9e98190e8312218f2be898b2e2c2b6fc4432c"
+      },
+      {
+        "project_id": "tr-16-preact",
+        "family_id": "tr-16",
+        "archetype": "library-catalogue",
+        "framework": "preact",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:0ec217f84293bf41043fd8c27181180d49fbaf2e868c9d8046f5e0b871db1eeb"
+      },
+      {
+        "project_id": "tr-16-vue",
+        "family_id": "tr-16",
+        "archetype": "library-catalogue",
+        "framework": "vue",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:65c7921a855a95a3c5249c4df751fa6cf1cd02da727e6e75ce5572ba3d13a36c"
+      },
+      {
+        "project_id": "tr-16-webcomponents",
+        "family_id": "tr-16",
+        "archetype": "library-catalogue",
+        "framework": "webcomponents",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:d947c6898f7daa73b5c5ebee511fddebb1f58c8150807ce5b5588259d854cc9a"
+      },
+      {
+        "project_id": "tr-16-svelte",
+        "family_id": "tr-16",
+        "archetype": "library-catalogue",
+        "framework": "svelte",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:8ff4675e1661fb3d6d0c7641578e4c88e37f6138c9c3f9bda7c12a763c6ca574"
+      },
+      {
+        "project_id": "tr-17-hono",
+        "family_id": "tr-17",
+        "archetype": "booking",
+        "framework": "hono",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:70c0d57434f4bd211e68d16672b8de33c7bd300ff873240592b140197e80160d"
+      },
+      {
+        "project_id": "tr-17-raw",
+        "family_id": "tr-17",
+        "archetype": "booking",
+        "framework": "raw",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:992eeb193d9752ef7beba1b8a88f88414ff540ff22f4ba0428f3406b267b114c"
+      },
+      {
+        "project_id": "tr-17-react",
+        "family_id": "tr-17",
+        "archetype": "booking",
+        "framework": "react",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:fb7bcdbf45160319caf9d35310c8969de3c170d467d4ef7d98d8152902687b88"
+      },
+      {
+        "project_id": "tr-17-preact",
+        "family_id": "tr-17",
+        "archetype": "booking",
+        "framework": "preact",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:a1a138908e6f7f47518a0386974527ee5d58b7447723a287626b16de03a964ee"
+      },
+      {
+        "project_id": "tr-17-vue",
+        "family_id": "tr-17",
+        "archetype": "booking",
+        "framework": "vue",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:753fdf20124ea39dd71f513bdd4a1d0c6e0342fcb230d9b024734e2134d2796e"
+      },
+      {
+        "project_id": "tr-17-webcomponents",
+        "family_id": "tr-17",
+        "archetype": "booking",
+        "framework": "webcomponents",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:490ff99e613825b3bf3277844a72cb1bb55bf112faf3c93762df46adfb32a5f1"
+      },
+      {
+        "project_id": "tr-17-svelte",
+        "family_id": "tr-17",
+        "archetype": "booking",
+        "framework": "svelte",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:7ce8370a0f628148eddd24a721f30e02ad897a4d58466e848f30934f35b95ab9"
+      },
+      {
+        "project_id": "tr-18-hono",
+        "family_id": "tr-18",
+        "archetype": "web-shop",
+        "framework": "hono",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:58e6d5e509ec66bec01deefc5cf6c1b55630acdcdeb2ef380739fd7344287a2f"
+      },
+      {
+        "project_id": "tr-18-raw",
+        "family_id": "tr-18",
+        "archetype": "web-shop",
+        "framework": "raw",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:082173688d1bd4c1090a2b0c7e8d3b777ee6acb4ce31d9f72123a3e5c9b42d2e"
+      },
+      {
+        "project_id": "tr-18-react",
+        "family_id": "tr-18",
+        "archetype": "web-shop",
+        "framework": "react",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:88c93be0c57fc8b84d39d12b701697281147e421b0283bd72aa579f56a7a6453"
+      },
+      {
+        "project_id": "tr-18-preact",
+        "family_id": "tr-18",
+        "archetype": "web-shop",
+        "framework": "preact",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:a66c7c9a19936f734b91f8743baa88db19b2f5f5a92603cfdba437e100e8dcd9"
+      },
+      {
+        "project_id": "tr-18-vue",
+        "family_id": "tr-18",
+        "archetype": "web-shop",
+        "framework": "vue",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:a7235f8295a6625f4805e3aec5f58ec16e2da0b393eb6385e349c72cd5543489"
+      },
+      {
+        "project_id": "tr-18-webcomponents",
+        "family_id": "tr-18",
+        "archetype": "web-shop",
+        "framework": "webcomponents",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:7042ad24e88269b68a1cf0335487d65957ff3f21353dc5ac687d684a97bfa926"
+      },
+      {
+        "project_id": "tr-18-svelte",
+        "family_id": "tr-18",
+        "archetype": "web-shop",
+        "framework": "svelte",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:9f0594d2df56f8dcab9369e99e9aad860d636429310f6374b6f156d4b680abbb"
+      },
+      {
+        "project_id": "tr-19-hono",
+        "family_id": "tr-19",
+        "archetype": "booking",
+        "framework": "hono",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:3036d0679b63a03772bf850e211af1bd6aecd5f55bdfd02540ea75eaa9a0edfb"
+      },
+      {
+        "project_id": "tr-19-raw",
+        "family_id": "tr-19",
+        "archetype": "booking",
+        "framework": "raw",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:84bbb7d09f9ca596f40d47b72ab9e8876ea2b6022791a0c9730df9e2097515f6"
+      },
+      {
+        "project_id": "tr-19-react",
+        "family_id": "tr-19",
+        "archetype": "booking",
+        "framework": "react",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:d035e4aa3448b46de807f4f244a2f3f8a771cdfdb9e245321eeb82f9c4ff0ade"
+      },
+      {
+        "project_id": "tr-19-preact",
+        "family_id": "tr-19",
+        "archetype": "booking",
+        "framework": "preact",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:2df9af253bff860590bb1462ed27817be77f67d11abde2b2d6bdd5e66eccba4b"
+      },
+      {
+        "project_id": "tr-19-vue",
+        "family_id": "tr-19",
+        "archetype": "booking",
+        "framework": "vue",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:f5ec608d60f6c85593b7225edd4d192b9f819f6f4acd16e470c445e54ba8369e"
+      },
+      {
+        "project_id": "tr-19-webcomponents",
+        "family_id": "tr-19",
+        "archetype": "booking",
+        "framework": "webcomponents",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:f1ccdcaf37fa53d198537eaf9828814e350eb674147f442d195be18f3355bbf9"
+      },
+      {
+        "project_id": "tr-19-svelte",
+        "family_id": "tr-19",
+        "archetype": "booking",
+        "framework": "svelte",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:93404027444d61dc1e33cb9cc6d03d40ad0f6cccf7d32276d50acc33f4e8d968"
+      },
+      {
+        "project_id": "tr-20-hono",
+        "family_id": "tr-20",
+        "archetype": "community-forum",
+        "framework": "hono",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:72b89a28697438a1149a1e254781ec695e7293fd0a199029b40fd29b2fca9a51"
+      },
+      {
+        "project_id": "tr-20-raw",
+        "family_id": "tr-20",
+        "archetype": "community-forum",
+        "framework": "raw",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:7649cf1ca3d441d97c1eed869c44f4058e2ee7c038ff003b156f9fb8e3066c1f"
+      },
+      {
+        "project_id": "tr-20-react",
+        "family_id": "tr-20",
+        "archetype": "community-forum",
+        "framework": "react",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:06745ebb425c4fd04037960aec39678f98110d09ef4c4d48ccb4f511c435d559"
+      },
+      {
+        "project_id": "tr-20-webcomponents",
+        "family_id": "tr-20",
+        "archetype": "community-forum",
+        "framework": "webcomponents",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:24bbdb4bfb6c09a2b8f468a4b41325990a4146b1aa05b8c00f231a8738c9cfd3"
+      },
+      {
+        "project_id": "tr-20-svelte",
+        "family_id": "tr-20",
+        "archetype": "community-forum",
+        "framework": "svelte",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:ecd8ca21c78cd441c0a879395af5473560f50f5663ad9696c8dda34e11a2e51e"
+      },
+      {
+        "project_id": "tr-21-hono",
+        "family_id": "tr-21",
+        "archetype": "booking",
+        "framework": "hono",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:e61dc296b2230f28c78166abde100fe16cb723787274e1887a806ebdcf44fccc"
+      },
+      {
+        "project_id": "tr-21-raw",
+        "family_id": "tr-21",
+        "archetype": "booking",
+        "framework": "raw",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:4b80e32e63c6127d8c01bb8dfe85eaf214b3df5116dd78dd60ea392c68d6ba14"
+      },
+      {
+        "project_id": "tr-21-react",
+        "family_id": "tr-21",
+        "archetype": "booking",
+        "framework": "react",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:237df3f415c39eecab374ab3b7196a1c3839e4aa9525a74e7d1510887c1f7eb8"
+      },
+      {
+        "project_id": "tr-21-preact",
+        "family_id": "tr-21",
+        "archetype": "booking",
+        "framework": "preact",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:fa19c7d09914b0babc70f0ce03391d8ca1b356b454b709162bd9dbc153b52dbe"
+      },
+      {
+        "project_id": "tr-21-vue",
+        "family_id": "tr-21",
+        "archetype": "booking",
+        "framework": "vue",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:94dc544f7a34896abdf12736ceb6f9ad58e24b324ef610fc8c190c92c265d31f"
+      },
+      {
+        "project_id": "tr-21-webcomponents",
+        "family_id": "tr-21",
+        "archetype": "booking",
+        "framework": "webcomponents",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:103bc9f5e4d14b169d71a1a2c4da855673333c60acdc1a89c7cd27b5284c3581"
+      },
+      {
+        "project_id": "tr-21-svelte",
+        "family_id": "tr-21",
+        "archetype": "booking",
+        "framework": "svelte",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:8aaa065d1cc2e5f0fd1a05fcbb01122419df34651068709d40ae794865483b64"
+      },
+      {
+        "project_id": "tr-22-hono",
+        "family_id": "tr-22",
+        "archetype": "dashboard",
+        "framework": "hono",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:40e4843250bcc02ac9211a77dfc4e37794e8ef6d783106abe424c80b203d66fa"
+      },
+      {
+        "project_id": "tr-22-raw",
+        "family_id": "tr-22",
+        "archetype": "dashboard",
+        "framework": "raw",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:9ac37230891635f2f9ff8fcf286a684f999f3d471bd8725f4123fd9b7d2886ad"
+      },
+      {
+        "project_id": "tr-22-react",
+        "family_id": "tr-22",
+        "archetype": "dashboard",
+        "framework": "react",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:6c8e08baaf4d939e0639aecc6884ef8e7acc9291367e94c6b6eebcb4ac0e71ac"
+      },
+      {
+        "project_id": "tr-22-preact",
+        "family_id": "tr-22",
+        "archetype": "dashboard",
+        "framework": "preact",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:669a1b884d2fb91deed1b2bc9f1cc6cdccaec8f3a97d6875381e5acdfebbec4f"
+      },
+      {
+        "project_id": "tr-22-vue",
+        "family_id": "tr-22",
+        "archetype": "dashboard",
+        "framework": "vue",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:eb916d63b9589aca91a94a62061c69bff68bec212de58901a794c077a3f41c5e"
+      },
+      {
+        "project_id": "tr-22-webcomponents",
+        "family_id": "tr-22",
+        "archetype": "dashboard",
+        "framework": "webcomponents",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:7e2212a2035f0125f266dd9dfde836a914ac30cebd08b1258f35cbd84efc1702"
+      },
+      {
+        "project_id": "tr-22-svelte",
+        "family_id": "tr-22",
+        "archetype": "dashboard",
+        "framework": "svelte",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:0f58a74f6b40967227de3e5c5c02b5daea1bb161f18d722a3072ab2e5d41e17c"
+      },
+      {
+        "project_id": "tr-23-hono",
+        "family_id": "tr-23",
+        "archetype": "survey-form",
+        "framework": "hono",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:5ea3bddae9c9539704c46c9e6b4684b53c8009648347b75d15d9aea325b9ce47"
+      },
+      {
+        "project_id": "tr-23-raw",
+        "family_id": "tr-23",
+        "archetype": "survey-form",
+        "framework": "raw",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:7bc61d89fd1b4275fb438428d20fbb08f3c0c456db24a9af71387d6ff5081b8e"
+      },
+      {
+        "project_id": "tr-23-react",
+        "family_id": "tr-23",
+        "archetype": "survey-form",
+        "framework": "react",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:9bb502ffdde0ca6e285e5b52948e5efdfce5740a942a31887d2b849a32075897"
+      },
+      {
+        "project_id": "tr-23-preact",
+        "family_id": "tr-23",
+        "archetype": "survey-form",
+        "framework": "preact",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:1bb58b362b3e4b56cfdd03dc253777683fbf611f2294141abd99b30d625e69fe"
+      },
+      {
+        "project_id": "tr-23-vue",
+        "family_id": "tr-23",
+        "archetype": "survey-form",
+        "framework": "vue",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:8ef096f67c4ce7bfdcd3557d5de7bdaa493a8239b88c5ec456ab668b6275d9d2"
+      },
+      {
+        "project_id": "tr-23-webcomponents",
+        "family_id": "tr-23",
+        "archetype": "survey-form",
+        "framework": "webcomponents",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:faabdec12696c3b0a3002e90e5ba6524121bfc70863c0b7e6f1c026fda2075f9"
+      },
+      {
+        "project_id": "tr-23-svelte",
+        "family_id": "tr-23",
+        "archetype": "survey-form",
+        "framework": "svelte",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:0272a76330cdb43dfff08e4c8796c40a222e43132f0a06af8e8259bc895b81bf"
+      },
+      {
+        "project_id": "tr-24-hono",
+        "family_id": "tr-24",
+        "archetype": "booking",
+        "framework": "hono",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:cea13432a71d1c56105832a81b722f6293351c2820b1a573fce9117cabc4e108"
+      },
+      {
+        "project_id": "tr-24-raw",
+        "family_id": "tr-24",
+        "archetype": "booking",
+        "framework": "raw",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:a06c694c7f9009a3350a06290de39bedeeb2c164f791521c5aab13f0245bd55f"
+      },
+      {
+        "project_id": "tr-24-react",
+        "family_id": "tr-24",
+        "archetype": "booking",
+        "framework": "react",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:d5905255fbcc9c0b5873c996306052b02b1ecee0643c5ee760a71afaa2c4b223"
+      },
+      {
+        "project_id": "tr-24-preact",
+        "family_id": "tr-24",
+        "archetype": "booking",
+        "framework": "preact",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:6d93f8b2a0c0b1f36bd299b329a0162b11ad95de8160dc17be16d80dae5f118c"
+      },
+      {
+        "project_id": "tr-24-vue",
+        "family_id": "tr-24",
+        "archetype": "booking",
+        "framework": "vue",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:bfa803f38bb27c4b8bd1b2f92653602b978a4c5039247750ab726ea08b48ac25"
+      },
+      {
+        "project_id": "tr-24-webcomponents",
+        "family_id": "tr-24",
+        "archetype": "booking",
+        "framework": "webcomponents",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:0756545ea32688c73554a51d91ddaa57218f96d18cbc99725f9b395003bce606"
+      },
+      {
+        "project_id": "tr-24-svelte",
+        "family_id": "tr-24",
+        "archetype": "booking",
+        "framework": "svelte",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:a94b34c00dd9b1899338eedb1be831c912d763dcdb3a868fc26da4c1e5f72d52"
+      },
+      {
+        "project_id": "tr-25-hono",
+        "family_id": "tr-25",
+        "archetype": "docs-site",
+        "framework": "hono",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:63ab5c0a694dcaedcbfc73824eb996b8a76eb53bd43ff0f5be9402047de42f78"
+      },
+      {
+        "project_id": "tr-25-raw",
+        "family_id": "tr-25",
+        "archetype": "docs-site",
+        "framework": "raw",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:507191eb6196d2ffe85c06af925a0887b8c4ea81a445c94c57afb928a5394add"
+      },
+      {
+        "project_id": "tr-25-react",
+        "family_id": "tr-25",
+        "archetype": "docs-site",
+        "framework": "react",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:709fe2f493f6b16ebfca123dd963735f91e8460df74aea386805bacadbc21d8c"
+      },
+      {
+        "project_id": "tr-25-preact",
+        "family_id": "tr-25",
+        "archetype": "docs-site",
+        "framework": "preact",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:c4f45dd51b589915a8d84d3543c7693b93823efc4cb04df35c376ffaa5adbcec"
+      },
+      {
+        "project_id": "tr-25-vue",
+        "family_id": "tr-25",
+        "archetype": "docs-site",
+        "framework": "vue",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:bfeae9e8a22ff491df22d7def64b2c5ccfba5e127bf6c47528e13058dae1e23a"
+      },
+      {
+        "project_id": "tr-25-webcomponents",
+        "family_id": "tr-25",
+        "archetype": "docs-site",
+        "framework": "webcomponents",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:f58b8b4fd8cacacf2a5a1729cab9e1760cb7bd8e513f1d54653bf8971859622e"
+      },
+      {
+        "project_id": "tr-25-svelte",
+        "family_id": "tr-25",
+        "archetype": "docs-site",
+        "framework": "svelte",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:8e52ef953728e61048be6a406cae7f7dcbcad7ef06d207469894625123cc338c"
+      },
+      {
+        "project_id": "tr-26-react",
+        "family_id": "tr-26",
+        "archetype": "web-shop",
+        "framework": "react",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:80863b1edda1564cba23c03f74a77123c4638dd7b12ef1bbb4da8e89eaa6e3e3"
+      },
+      {
+        "project_id": "tr-26-preact",
+        "family_id": "tr-26",
+        "archetype": "web-shop",
+        "framework": "preact",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:a6360fb4e9343e217e7742728979b3f0b72d240573bf9a186c4de9b2584584f5"
+      },
+      {
+        "project_id": "tr-26-vue",
+        "family_id": "tr-26",
+        "archetype": "web-shop",
+        "framework": "vue",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:8d129f8a714e0f271ef5dab8d142aff219757aa441a285cef20695276c7e684b"
+      },
+      {
+        "project_id": "tr-26-webcomponents",
+        "family_id": "tr-26",
+        "archetype": "web-shop",
+        "framework": "webcomponents",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:1a3cb2461ff0eb8fc3f192680e21d709354dec56781b4d7154a0266999ba1858"
+      },
+      {
+        "project_id": "tr-26-svelte",
+        "family_id": "tr-26",
+        "archetype": "web-shop",
+        "framework": "svelte",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:b98852c9de70998f86f57239e2007a4970f1f69b7f80b207d500f38c56217200"
+      },
+      {
+        "project_id": "tr-27-hono",
+        "family_id": "tr-27",
+        "archetype": "booking",
+        "framework": "hono",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:016594b238b04041dce8399a77378437e4cef3f2a5248da9fd3d36156a21b95b"
+      },
+      {
+        "project_id": "tr-27-raw",
+        "family_id": "tr-27",
+        "archetype": "booking",
+        "framework": "raw",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:8ec797d0fe2c95beb17a4ea1c425cbb5c1d7714c7774234ca6722a13a3a5f467"
+      },
+      {
+        "project_id": "tr-27-vue",
+        "family_id": "tr-27",
+        "archetype": "booking",
+        "framework": "vue",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:54a0f2049ae72a39ef2eff61d8341ce0577a013277a4dad7b6907bdd7356cc62"
+      },
+      {
+        "project_id": "tr-27-webcomponents",
+        "family_id": "tr-27",
+        "archetype": "booking",
+        "framework": "webcomponents",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:956c025a751a1f1bb344f2de495cdce1bbac64724ed7c881c0cd76cf87b1f56f"
+      },
+      {
+        "project_id": "tr-27-svelte",
+        "family_id": "tr-27",
+        "archetype": "booking",
+        "framework": "svelte",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:18dc76369acbeb608813fd20a8b89c3795889d633b3ff20605825741e5078eec"
+      },
+      {
+        "project_id": "tr-28-hono",
+        "family_id": "tr-28",
+        "archetype": "support-helpdesk",
+        "framework": "hono",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:a8cb70fce24cb9448c69f5eeb300abc4b32d8e0b9e3841b88b70ef7b239c514a"
+      },
+      {
+        "project_id": "tr-28-raw",
+        "family_id": "tr-28",
+        "archetype": "support-helpdesk",
+        "framework": "raw",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:1ccf94fc9fa8ac6622478b7eb6859381fe1b3cf6fc3db0cade273614eeeeefe3"
+      },
+      {
+        "project_id": "tr-28-react",
+        "family_id": "tr-28",
+        "archetype": "support-helpdesk",
+        "framework": "react",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:c97945d0b8801fa5f1b257902da837d970f7eee48d20b421cc1c3704cbb4f366"
+      },
+      {
+        "project_id": "tr-28-preact",
+        "family_id": "tr-28",
+        "archetype": "support-helpdesk",
+        "framework": "preact",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:ad812a7ee8a88f1e6960618a28817f605103d40e4db25a52950ca9b8d6dc7eac"
+      },
+      {
+        "project_id": "tr-28-svelte",
+        "family_id": "tr-28",
+        "archetype": "support-helpdesk",
+        "framework": "svelte",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:e71a76a6a99277d92fd29ccf7cad3e8218210379d4350a57cb3dbcea2b4fbcf7"
+      },
+      {
+        "project_id": "tr-29-raw",
+        "family_id": "tr-29",
+        "archetype": "expense-tracker",
+        "framework": "raw",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:9ec285f54ad22cad2f62d311f3e34409f2cc74a8f973c949424bee24e5c4bb64"
+      },
+      {
+        "project_id": "tr-29-react",
+        "family_id": "tr-29",
+        "archetype": "expense-tracker",
+        "framework": "react",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:51e1ddd8e797831a49efd84d041d1b2eaa1a76527528c1d235a43711888898ce"
+      },
+      {
+        "project_id": "tr-29-preact",
+        "family_id": "tr-29",
+        "archetype": "expense-tracker",
+        "framework": "preact",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:0f1a04d6bc4e0e8337572555bfa06b9e713da0628b4032d24ccfa647db84e8ab"
+      },
+      {
+        "project_id": "tr-29-vue",
+        "family_id": "tr-29",
+        "archetype": "expense-tracker",
+        "framework": "vue",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:05060ea891ffff7d710cab5344be829bb302f6add35b4ab5e0a1a12a28699306"
+      },
+      {
+        "project_id": "tr-29-webcomponents",
+        "family_id": "tr-29",
+        "archetype": "expense-tracker",
+        "framework": "webcomponents",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:0bcd84ae202ad43338cbdb023ecb89cdf9cacbfc3a4165b96accdbde06721bbd"
+      },
+      {
+        "project_id": "tr-30-hono",
+        "family_id": "tr-30",
+        "archetype": "event-registration",
+        "framework": "hono",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:a4818e7c9e85525e1ee107d9c28eca0a12259748db76c4b3df6c940359e42c54"
+      },
+      {
+        "project_id": "tr-30-preact",
+        "family_id": "tr-30",
+        "archetype": "event-registration",
+        "framework": "preact",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:1625e832102974ae5abaf44640e50ef1a0ef1aa92b6e7d9be75a90a626853c7f"
+      },
+      {
+        "project_id": "tr-30-vue",
+        "family_id": "tr-30",
+        "archetype": "event-registration",
+        "framework": "vue",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:485622b35cb2f9268ac1f367b4978658e01444407d0609165d2aff3cc595ef27"
+      },
+      {
+        "project_id": "tr-30-webcomponents",
+        "family_id": "tr-30",
+        "archetype": "event-registration",
+        "framework": "webcomponents",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:e36fe5c7981fb5be52bcea7846848469fda3e218e61d60f0ff683cfba428d16c"
+      },
+      {
+        "project_id": "tr-30-svelte",
+        "family_id": "tr-30",
+        "archetype": "event-registration",
+        "framework": "svelte",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:c5f3c4a7aa97d99d7b5eec275bd8f1f769c84bf7b3ae91241e998d69d8f7fd9d"
+      }
+    ]
+  },
+  "summary": {
+    "sampled_projects": 40,
+    "scored_projects": 40,
+    "versions_driven": 80,
+    "journeys_run": 240,
+    "journeys_passed": 212,
+    "acceptance": {
+      "attempted": 40,
+      "accepted": 0,
+      "yield": 0
+    },
+    "by_category": {
+      "original-not-runnable": 14,
+      "no-warranted-change": 26
+    },
+    "by_framework": {
+      "hono": {
+        "total": 6,
+        "accepted": 0
+      },
+      "raw": {
+        "total": 6,
+        "accepted": 0
+      },
+      "react": {
+        "total": 6,
+        "accepted": 0
+      },
+      "preact": {
+        "total": 6,
+        "accepted": 0
+      },
+      "vue": {
+        "total": 6,
+        "accepted": 0
+      },
+      "webcomponents": {
+        "total": 5,
+        "accepted": 0
+      },
+      "svelte": {
+        "total": 5,
+        "accepted": 0
+      }
+    },
+    "by_archetype": {
+      "web-shop": {
+        "total": 4,
+        "accepted": 0
+      },
+      "booking": {
+        "total": 4,
+        "accepted": 0
+      },
+      "support-helpdesk": {
+        "total": 4,
+        "accepted": 0
+      },
+      "expense-tracker": {
+        "total": 4,
+        "accepted": 0
+      },
+      "event-registration": {
+        "total": 4,
+        "accepted": 0
+      },
+      "dashboard": {
+        "total": 2,
+        "accepted": 0
+      },
+      "onboarding-auth": {
+        "total": 2,
+        "accepted": 0
+      },
+      "directory-listing": {
+        "total": 2,
+        "accepted": 0
+      },
+      "course-enrolment": {
+        "total": 2,
+        "accepted": 0
+      },
+      "survey-form": {
+        "total": 2,
+        "accepted": 0
+      },
+      "restaurant-ordering": {
+        "total": 2,
+        "accepted": 0
+      },
+      "job-board": {
+        "total": 2,
+        "accepted": 0
+      },
+      "docs-site": {
+        "total": 2,
+        "accepted": 0
+      },
+      "library-catalogue": {
+        "total": 2,
+        "accepted": 0
+      },
+      "community-forum": {
+        "total": 2,
+        "accepted": 0
+      }
+    }
+  },
+  "projects": [
+    {
+      "project_id": "tr-26-hono",
+      "family_id": "tr-26",
+      "brief_id": "tr-26-v1",
+      "archetype": "web-shop",
+      "framework": "hono",
+      "task": "repair",
+      "original_sha": "sha256:eef3d3c8b2e4e0f47f1ef7a69cc40582c250fe8e8c1b52d9b4bd5c9282387ad7",
+      "corpus_tree_sha": "sha256:eef3d3c8b2e4e0f47f1ef7a69cc40582c250fe8e8c1b52d9b4bd5c9282387ad7",
+      "uplifted_sha": "sha256:1a0def8a2d42745f4650f924ec6a617f3b2964c967640dc789f64b741357b1f4",
+      "seeded_defects": [
+        "client-only-state",
+        "no-aria-sync",
+        "enter-submits"
+      ],
+      "original": {
+        "persistence_ok": false,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": false,
+            "detail": {
+              "submit_status": 404,
+              "reload_url": "http://127.0.0.1:4300/subscriptions/27c30722",
+              "echoed": ""
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4300/subscriptions/27c30722"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplifted": {
+        "persistence_ok": false,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": false,
+            "detail": {
+              "submit_status": 404,
+              "reload_url": "http://127.0.0.1:4301/subscriptions/9148a706",
+              "echoed": ""
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4301/subscriptions/9148a706"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplift": {
+        "applied": [
+          "accessibility/accessible-error-announcement"
+        ],
+        "skipped": [
+          {
+            "rule": "forms/required-field-feedback",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/validate-input-after-interaction",
+            "reason": "no eager :invalid styling"
+          },
+          {
+            "rule": "forms/autofill-sign-up-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-address-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "security/sanitize-untrusted-html",
+            "reason": "no innerHTML insertion"
+          }
+        ],
+        "failed": []
+      },
+      "decision": {
+        "accepted": false,
+        "category": "original-not-runnable",
+        "detail": [
+          "the page shown after a reload does not contain \"Priya Nair\", so the record did not persist as served"
+        ],
+        "improved_rules": [],
+        "regressed_rules": [],
+        "new_security_findings": []
+      }
+    },
+    {
+      "project_id": "tr-26-raw",
+      "family_id": "tr-26",
+      "brief_id": "tr-26-v1",
+      "archetype": "web-shop",
+      "framework": "raw",
+      "task": "repair",
+      "original_sha": "sha256:e28998c1393b30ef7b437a50afa895b808af74b9e29c1c74505f8bf3579f9946",
+      "corpus_tree_sha": "sha256:e28998c1393b30ef7b437a50afa895b808af74b9e29c1c74505f8bf3579f9946",
+      "uplifted_sha": "sha256:211ee732187267cc218bd1699a5ab4c3a74923522f4ad02c59176b9ede100f7d",
+      "seeded_defects": [
+        "client-only-state",
+        "no-aria-sync",
+        "enter-submits"
+      ],
+      "original": {
+        "persistence_ok": false,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": false,
+            "detail": {
+              "submit_status": 404,
+              "reload_url": "http://127.0.0.1:4302/subscriptions/589354d6",
+              "echoed": ""
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4302/subscriptions/589354d6"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplifted": {
+        "persistence_ok": false,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": false,
+            "detail": {
+              "submit_status": 404,
+              "reload_url": "http://127.0.0.1:4303/subscriptions/3f4e0e5a",
+              "echoed": ""
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4303/subscriptions/3f4e0e5a"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplift": {
+        "applied": [
+          "accessibility/accessible-error-announcement"
+        ],
+        "skipped": [
+          {
+            "rule": "forms/required-field-feedback",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/validate-input-after-interaction",
+            "reason": "no eager :invalid styling"
+          },
+          {
+            "rule": "forms/autofill-sign-up-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-address-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "security/sanitize-untrusted-html",
+            "reason": "no innerHTML insertion"
+          }
+        ],
+        "failed": []
+      },
+      "decision": {
+        "accepted": false,
+        "category": "original-not-runnable",
+        "detail": [
+          "the page shown after a reload does not contain \"Priya Nair\", so the record did not persist as served"
+        ],
+        "improved_rules": [],
+        "regressed_rules": [],
+        "new_security_findings": []
+      }
+    },
+    {
+      "project_id": "tr-27-react",
+      "family_id": "tr-27",
+      "brief_id": "tr-27-v1",
+      "archetype": "booking",
+      "framework": "react",
+      "task": "repair",
+      "original_sha": "sha256:9ca035ac0eec8db5a8f529fbf09dd3361d64c8f711baa6d40c18a541e96ecae9",
+      "corpus_tree_sha": "sha256:9ca035ac0eec8db5a8f529fbf09dd3361d64c8f711baa6d40c18a541e96ecae9",
+      "uplifted_sha": "sha256:d2803d229b15034373ca0164414590fc2681fd8257466f8a91bb39ddd265fb28",
+      "seeded_defects": [
+        "client-only-state",
+        "no-required"
+      ],
+      "original": {
+        "persistence_ok": false,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": false,
+            "detail": {
+              "submit_status": 404,
+              "reload_url": "http://127.0.0.1:4304/reservations/676059eb",
+              "echoed": ""
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4304/reservations/676059eb"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplifted": {
+        "persistence_ok": false,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": false,
+            "detail": {
+              "submit_status": 404,
+              "reload_url": "http://127.0.0.1:4305/reservations/1efa9bc9",
+              "echoed": ""
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4305/reservations/1efa9bc9"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplift": {
+        "applied": [
+          "forms/required-field-feedback"
+        ],
+        "skipped": [
+          {
+            "rule": "forms/validate-input-after-interaction",
+            "reason": "no eager :invalid styling"
+          },
+          {
+            "rule": "accessibility/accessible-error-announcement",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-sign-up-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-address-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "security/sanitize-untrusted-html",
+            "reason": "no innerHTML insertion"
+          }
+        ],
+        "failed": []
+      },
+      "decision": {
+        "accepted": false,
+        "category": "original-not-runnable",
+        "detail": [
+          "the page shown after a reload does not contain \"Amara Okafor\", so the record did not persist as served"
+        ],
+        "improved_rules": [],
+        "regressed_rules": [],
+        "new_security_findings": []
+      }
+    },
+    {
+      "project_id": "tr-27-preact",
+      "family_id": "tr-27",
+      "brief_id": "tr-27-v1",
+      "archetype": "booking",
+      "framework": "preact",
+      "task": "repair",
+      "original_sha": "sha256:363d338cc152ea34c4e6488841016a00d46dc54d580c358946caa1ef592a4e8c",
+      "corpus_tree_sha": "sha256:363d338cc152ea34c4e6488841016a00d46dc54d580c358946caa1ef592a4e8c",
+      "uplifted_sha": "sha256:8bb2ed02feb2c26fe6bfeab91b4202c6b87e0c13216a75d1a7a2f72d2dfc0555",
+      "seeded_defects": [
+        "client-only-state",
+        "no-required"
+      ],
+      "original": {
+        "persistence_ok": false,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": false,
+            "detail": {
+              "submit_status": 404,
+              "reload_url": "http://127.0.0.1:4306/reservations/1b9e8387",
+              "echoed": ""
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4306/reservations/1b9e8387"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplifted": {
+        "persistence_ok": false,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": false,
+            "detail": {
+              "submit_status": 404,
+              "reload_url": "http://127.0.0.1:4307/reservations/c769d52c",
+              "echoed": ""
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4307/reservations/c769d52c"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplift": {
+        "applied": [
+          "forms/required-field-feedback"
+        ],
+        "skipped": [
+          {
+            "rule": "forms/validate-input-after-interaction",
+            "reason": "no eager :invalid styling"
+          },
+          {
+            "rule": "accessibility/accessible-error-announcement",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-sign-up-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-address-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "security/sanitize-untrusted-html",
+            "reason": "no innerHTML insertion"
+          }
+        ],
+        "failed": []
+      },
+      "decision": {
+        "accepted": false,
+        "category": "original-not-runnable",
+        "detail": [
+          "the page shown after a reload does not contain \"Amara Okafor\", so the record did not persist as served"
+        ],
+        "improved_rules": [],
+        "regressed_rules": [],
+        "new_security_findings": []
+      }
+    },
+    {
+      "project_id": "tr-28-vue",
+      "family_id": "tr-28",
+      "brief_id": "tr-28-v1",
+      "archetype": "support-helpdesk",
+      "framework": "vue",
+      "task": "repair",
+      "original_sha": "sha256:0211447115e4f48ae9b959c32307d572e300cde0bacad5629376aae7043c82f3",
+      "corpus_tree_sha": "sha256:0211447115e4f48ae9b959c32307d572e300cde0bacad5629376aae7043c82f3",
+      "uplifted_sha": "sha256:cb1fee13a21ccda75f11bb0917bd17205f8f4f87f3dfd82fbd9e87c38f5db4e0",
+      "seeded_defects": [
+        "client-only-state",
+        "no-required"
+      ],
+      "original": {
+        "persistence_ok": false,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": false,
+            "detail": {
+              "submit_status": 404,
+              "reload_url": "http://127.0.0.1:4308/tickets/bb711a2b",
+              "echoed": ""
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4308/tickets/bb711a2b"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplifted": {
+        "persistence_ok": false,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": false,
+            "detail": {
+              "submit_status": 404,
+              "reload_url": "http://127.0.0.1:4309/tickets/a0bd99fa",
+              "echoed": ""
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4309/tickets/a0bd99fa"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplift": {
+        "applied": [
+          "forms/required-field-feedback"
+        ],
+        "skipped": [
+          {
+            "rule": "forms/validate-input-after-interaction",
+            "reason": "no eager :invalid styling"
+          },
+          {
+            "rule": "accessibility/accessible-error-announcement",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-sign-up-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-address-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "security/sanitize-untrusted-html",
+            "reason": "no innerHTML insertion"
+          }
+        ],
+        "failed": []
+      },
+      "decision": {
+        "accepted": false,
+        "category": "original-not-runnable",
+        "detail": [
+          "the page shown after a reload does not contain \"Lee Carter\", so the record did not persist as served"
+        ],
+        "improved_rules": [],
+        "regressed_rules": [],
+        "new_security_findings": []
+      }
+    },
+    {
+      "project_id": "tr-28-webcomponents",
+      "family_id": "tr-28",
+      "brief_id": "tr-28-v1",
+      "archetype": "support-helpdesk",
+      "framework": "webcomponents",
+      "task": "repair",
+      "original_sha": "sha256:c1f4cd41fea851136a121ff0202272c627a45e929d5fdd26251623d912f51f6a",
+      "corpus_tree_sha": "sha256:c1f4cd41fea851136a121ff0202272c627a45e929d5fdd26251623d912f51f6a",
+      "uplifted_sha": "sha256:41c293a2f621a797c514427b2c34e28d044af1ce3f293e9c18f6106430dbd8b5",
+      "seeded_defects": [
+        "client-only-state",
+        "no-required"
+      ],
+      "original": {
+        "persistence_ok": false,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": false,
+            "detail": {
+              "submit_status": 404,
+              "reload_url": "http://127.0.0.1:4310/tickets/935d57cc",
+              "echoed": ""
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4310/tickets/935d57cc"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplifted": {
+        "persistence_ok": false,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": false,
+            "detail": {
+              "submit_status": 404,
+              "reload_url": "http://127.0.0.1:4311/tickets/b12f938a",
+              "echoed": ""
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4311/tickets/b12f938a"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplift": {
+        "applied": [
+          "forms/required-field-feedback"
+        ],
+        "skipped": [
+          {
+            "rule": "forms/validate-input-after-interaction",
+            "reason": "no eager :invalid styling"
+          },
+          {
+            "rule": "accessibility/accessible-error-announcement",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-sign-up-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-address-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "security/sanitize-untrusted-html",
+            "reason": "no innerHTML insertion"
+          }
+        ],
+        "failed": []
+      },
+      "decision": {
+        "accepted": false,
+        "category": "original-not-runnable",
+        "detail": [
+          "the page shown after a reload does not contain \"Lee Carter\", so the record did not persist as served"
+        ],
+        "improved_rules": [],
+        "regressed_rules": [],
+        "new_security_findings": []
+      }
+    },
+    {
+      "project_id": "tr-29-svelte",
+      "family_id": "tr-29",
+      "brief_id": "tr-29-v1",
+      "archetype": "expense-tracker",
+      "framework": "svelte",
+      "task": "repair",
+      "original_sha": "sha256:58e24c76145bac7522331292957889d58450c8a3166ab332236995917a66a815",
+      "corpus_tree_sha": "sha256:58e24c76145bac7522331292957889d58450c8a3166ab332236995917a66a815",
+      "uplifted_sha": "sha256:58e24c76145bac7522331292957889d58450c8a3166ab332236995917a66a815",
+      "seeded_defects": [
+        "client-only-state",
+        "accept-invalid-amount",
+        "no-field-labels"
+      ],
+      "original": {
+        "persistence_ok": false,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": false,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4312/",
+              "echoed": ""
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4312/contributions/127.0.0.1:4312"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplifted": {
+        "persistence_ok": false,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": false,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4313/",
+              "echoed": ""
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4313/contributions/127.0.0.1:4313"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplift": {
+        "applied": [],
+        "skipped": [
+          {
+            "rule": "forms/required-field-feedback",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/validate-input-after-interaction",
+            "reason": "no eager :invalid styling"
+          },
+          {
+            "rule": "accessibility/accessible-error-announcement",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-sign-up-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-address-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "security/sanitize-untrusted-html",
+            "reason": "no innerHTML insertion"
+          }
+        ],
+        "failed": []
+      },
+      "decision": {
+        "accepted": false,
+        "category": "original-not-runnable",
+        "detail": [
+          "the page shown after a reload does not contain \"Casey Duval\", so the record did not persist as served"
+        ],
+        "improved_rules": [],
+        "regressed_rules": [],
+        "new_security_findings": []
+      }
+    },
+    {
+      "project_id": "tr-29-hono",
+      "family_id": "tr-29",
+      "brief_id": "tr-29-v1",
+      "archetype": "expense-tracker",
+      "framework": "hono",
+      "task": "repair",
+      "original_sha": "sha256:673639b7257cbd47f2816e5980e57c173ca300d94dcb63301c59c6c4bb44ac7b",
+      "corpus_tree_sha": "sha256:673639b7257cbd47f2816e5980e57c173ca300d94dcb63301c59c6c4bb44ac7b",
+      "uplifted_sha": "sha256:673639b7257cbd47f2816e5980e57c173ca300d94dcb63301c59c6c4bb44ac7b",
+      "seeded_defects": [
+        "client-only-state",
+        "accept-invalid-amount",
+        "no-field-labels"
+      ],
+      "original": {
+        "persistence_ok": false,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": false,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4314/",
+              "echoed": ""
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4314/contributions/127.0.0.1:4314"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplifted": {
+        "persistence_ok": false,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": false,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4315/",
+              "echoed": ""
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4315/contributions/127.0.0.1:4315"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplift": {
+        "applied": [],
+        "skipped": [
+          {
+            "rule": "forms/required-field-feedback",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/validate-input-after-interaction",
+            "reason": "no eager :invalid styling"
+          },
+          {
+            "rule": "accessibility/accessible-error-announcement",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-sign-up-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-address-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "security/sanitize-untrusted-html",
+            "reason": "no innerHTML insertion"
+          }
+        ],
+        "failed": []
+      },
+      "decision": {
+        "accepted": false,
+        "category": "original-not-runnable",
+        "detail": [
+          "the page shown after a reload does not contain \"Casey Duval\", so the record did not persist as served"
+        ],
+        "improved_rules": [],
+        "regressed_rules": [],
+        "new_security_findings": []
+      }
+    },
+    {
+      "project_id": "tr-30-raw",
+      "family_id": "tr-30",
+      "brief_id": "tr-30-v1",
+      "archetype": "event-registration",
+      "framework": "raw",
+      "task": "repair",
+      "original_sha": "sha256:b13527ab4588d4c834d22d64f6ddccbb63fc7de33088372a1525a5fef6af4e2f",
+      "corpus_tree_sha": "sha256:b13527ab4588d4c834d22d64f6ddccbb63fc7de33088372a1525a5fef6af4e2f",
+      "uplifted_sha": "sha256:52d3ca087e8345dcb16a549f3c13ab746c8948894ff3e3cc062bfbb2d96f0f89",
+      "seeded_defects": [
+        "client-only-state",
+        "enter-submits",
+        "no-aria-sync"
+      ],
+      "original": {
+        "persistence_ok": false,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": false,
+            "detail": {
+              "submit_status": 404,
+              "reload_url": "http://127.0.0.1:4316/passes/90fdc187",
+              "echoed": ""
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4316/passes/90fdc187"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplifted": {
+        "persistence_ok": false,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": false,
+            "detail": {
+              "submit_status": 404,
+              "reload_url": "http://127.0.0.1:4317/passes/b39aa73c",
+              "echoed": ""
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4317/passes/b39aa73c"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplift": {
+        "applied": [
+          "accessibility/accessible-error-announcement"
+        ],
+        "skipped": [
+          {
+            "rule": "forms/required-field-feedback",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/validate-input-after-interaction",
+            "reason": "no eager :invalid styling"
+          },
+          {
+            "rule": "forms/autofill-sign-up-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-address-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "security/sanitize-untrusted-html",
+            "reason": "no innerHTML insertion"
+          }
+        ],
+        "failed": []
+      },
+      "decision": {
+        "accepted": false,
+        "category": "original-not-runnable",
+        "detail": [
+          "the page shown after a reload does not contain \"Dana Whitmore\", so the record did not persist as served"
+        ],
+        "improved_rules": [],
+        "regressed_rules": [],
+        "new_security_findings": []
+      }
+    },
+    {
+      "project_id": "tr-30-react",
+      "family_id": "tr-30",
+      "brief_id": "tr-30-v1",
+      "archetype": "event-registration",
+      "framework": "react",
+      "task": "repair",
+      "original_sha": "sha256:3f5358e9f13f91fbc08aaa6f30993df84ba318c6313910f5adf809b10bf22c91",
+      "corpus_tree_sha": "sha256:3f5358e9f13f91fbc08aaa6f30993df84ba318c6313910f5adf809b10bf22c91",
+      "uplifted_sha": "sha256:fcaaef3448af04a6b458c07b0f3062f326f557ac81cfb4792f8422c62eec2f7d",
+      "seeded_defects": [
+        "client-only-state",
+        "enter-submits",
+        "no-aria-sync"
+      ],
+      "original": {
+        "persistence_ok": false,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": false,
+            "detail": {
+              "submit_status": 404,
+              "reload_url": "http://127.0.0.1:4318/passes/9c4d31ac",
+              "echoed": ""
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4318/passes/9c4d31ac"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplifted": {
+        "persistence_ok": false,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": false,
+            "detail": {
+              "submit_status": 404,
+              "reload_url": "http://127.0.0.1:4319/passes/b759a004",
+              "echoed": ""
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4319/passes/b759a004"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplift": {
+        "applied": [
+          "accessibility/accessible-error-announcement"
+        ],
+        "skipped": [
+          {
+            "rule": "forms/required-field-feedback",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/validate-input-after-interaction",
+            "reason": "no eager :invalid styling"
+          },
+          {
+            "rule": "forms/autofill-sign-up-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-address-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "security/sanitize-untrusted-html",
+            "reason": "no innerHTML insertion"
+          }
+        ],
+        "failed": []
+      },
+      "decision": {
+        "accepted": false,
+        "category": "original-not-runnable",
+        "detail": [
+          "the page shown after a reload does not contain \"Dana Whitmore\", so the record did not persist as served"
+        ],
+        "improved_rules": [],
+        "regressed_rules": [],
+        "new_security_findings": []
+      }
+    },
+    {
+      "project_id": "tr-01-preact",
+      "family_id": "tr-01",
+      "brief_id": "tr-01-v1",
+      "archetype": "booking",
+      "framework": "preact",
+      "task": "generate",
+      "original_sha": "sha256:9ae36ad59fcf5bd81589f5fb5d627a8be9b04ddcd67735fbb1341f76c18f5858",
+      "corpus_tree_sha": "sha256:9ae36ad59fcf5bd81589f5fb5d627a8be9b04ddcd67735fbb1341f76c18f5858",
+      "uplifted_sha": "sha256:9ae36ad59fcf5bd81589f5fb5d627a8be9b04ddcd67735fbb1341f76c18f5858",
+      "seeded_defects": [],
+      "original": {
+        "persistence_ok": true,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": true,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4320/bookings/a1ead598",
+              "echoed": "Amara Okafor"
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4320/bookings/a1ead598"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplifted": {
+        "persistence_ok": true,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": true,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4321/bookings/9f3225ca",
+              "echoed": "Amara Okafor"
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4321/bookings/9f3225ca"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplift": {
+        "applied": [],
+        "skipped": [
+          {
+            "rule": "forms/required-field-feedback",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/validate-input-after-interaction",
+            "reason": "no eager :invalid styling"
+          },
+          {
+            "rule": "accessibility/accessible-error-announcement",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-sign-up-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-address-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "security/sanitize-untrusted-html",
+            "reason": "no innerHTML insertion"
+          }
+        ],
+        "failed": []
+      },
+      "decision": {
+        "accepted": false,
+        "category": "no-warranted-change",
+        "detail": [
+          "the original already satisfied every measured property"
+        ],
+        "improved_rules": [],
+        "regressed_rules": [],
+        "new_security_findings": []
+      }
+    },
+    {
+      "project_id": "tr-01-vue",
+      "family_id": "tr-01",
+      "brief_id": "tr-01-v1",
+      "archetype": "booking",
+      "framework": "vue",
+      "task": "generate",
+      "original_sha": "sha256:5eb36c25096ce7b1276178168024fdec9899280e6d86273b6ec52026b08b3435",
+      "corpus_tree_sha": "sha256:5eb36c25096ce7b1276178168024fdec9899280e6d86273b6ec52026b08b3435",
+      "uplifted_sha": "sha256:5eb36c25096ce7b1276178168024fdec9899280e6d86273b6ec52026b08b3435",
+      "seeded_defects": [],
+      "original": {
+        "persistence_ok": true,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": true,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4322/bookings/e0b4e447",
+              "echoed": "Amara Okafor"
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4322/bookings/e0b4e447"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplifted": {
+        "persistence_ok": true,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": true,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4323/bookings/dc3918a8",
+              "echoed": "Amara Okafor"
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4323/bookings/dc3918a8"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplift": {
+        "applied": [],
+        "skipped": [
+          {
+            "rule": "forms/required-field-feedback",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/validate-input-after-interaction",
+            "reason": "no eager :invalid styling"
+          },
+          {
+            "rule": "accessibility/accessible-error-announcement",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-sign-up-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-address-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "security/sanitize-untrusted-html",
+            "reason": "no innerHTML insertion"
+          }
+        ],
+        "failed": []
+      },
+      "decision": {
+        "accepted": false,
+        "category": "no-warranted-change",
+        "detail": [
+          "the original already satisfied every measured property"
+        ],
+        "improved_rules": [],
+        "regressed_rules": [],
+        "new_security_findings": []
+      }
+    },
+    {
+      "project_id": "tr-02-webcomponents",
+      "family_id": "tr-02",
+      "brief_id": "tr-02-v1",
+      "archetype": "web-shop",
+      "framework": "webcomponents",
+      "task": "generate",
+      "original_sha": "sha256:60220a944887ecd20524ad7547a21b7bc93c5bdc7511a020a66f035de9cbd2c8",
+      "corpus_tree_sha": "sha256:60220a944887ecd20524ad7547a21b7bc93c5bdc7511a020a66f035de9cbd2c8",
+      "uplifted_sha": "sha256:60220a944887ecd20524ad7547a21b7bc93c5bdc7511a020a66f035de9cbd2c8",
+      "seeded_defects": [],
+      "original": {
+        "persistence_ok": true,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": true,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4324/orders/c82c9f2f",
+              "echoed": "Priya Nair"
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4324/orders/c82c9f2f"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplifted": {
+        "persistence_ok": true,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": true,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4325/orders/76fec866",
+              "echoed": "Priya Nair"
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4325/orders/76fec866"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplift": {
+        "applied": [],
+        "skipped": [
+          {
+            "rule": "forms/required-field-feedback",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/validate-input-after-interaction",
+            "reason": "no eager :invalid styling"
+          },
+          {
+            "rule": "accessibility/accessible-error-announcement",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-sign-up-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-address-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "security/sanitize-untrusted-html",
+            "reason": "no innerHTML insertion"
+          }
+        ],
+        "failed": []
+      },
+      "decision": {
+        "accepted": false,
+        "category": "no-warranted-change",
+        "detail": [
+          "the original already satisfied every measured property"
+        ],
+        "improved_rules": [],
+        "regressed_rules": [],
+        "new_security_findings": []
+      }
+    },
+    {
+      "project_id": "tr-02-svelte",
+      "family_id": "tr-02",
+      "brief_id": "tr-02-v1",
+      "archetype": "web-shop",
+      "framework": "svelte",
+      "task": "generate",
+      "original_sha": "sha256:3d987d2062e38a739246b42ae3eb6d517a63136f39ecd0db0e3e1e22e288d193",
+      "corpus_tree_sha": "sha256:3d987d2062e38a739246b42ae3eb6d517a63136f39ecd0db0e3e1e22e288d193",
+      "uplifted_sha": "sha256:3d987d2062e38a739246b42ae3eb6d517a63136f39ecd0db0e3e1e22e288d193",
+      "seeded_defects": [],
+      "original": {
+        "persistence_ok": true,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": true,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4326/orders/f48bf393",
+              "echoed": "Priya Nair"
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4326/orders/f48bf393"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplifted": {
+        "persistence_ok": true,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": true,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4327/orders/d607e96e",
+              "echoed": "Priya Nair"
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4327/orders/d607e96e"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplift": {
+        "applied": [],
+        "skipped": [
+          {
+            "rule": "forms/required-field-feedback",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/validate-input-after-interaction",
+            "reason": "no eager :invalid styling"
+          },
+          {
+            "rule": "accessibility/accessible-error-announcement",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-sign-up-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-address-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "security/sanitize-untrusted-html",
+            "reason": "no innerHTML insertion"
+          }
+        ],
+        "failed": []
+      },
+      "decision": {
+        "accepted": false,
+        "category": "no-warranted-change",
+        "detail": [
+          "the original already satisfied every measured property"
+        ],
+        "improved_rules": [],
+        "regressed_rules": [],
+        "new_security_findings": []
+      }
+    },
+    {
+      "project_id": "tr-04-hono",
+      "family_id": "tr-04",
+      "brief_id": "tr-04-v1",
+      "archetype": "dashboard",
+      "framework": "hono",
+      "task": "generate",
+      "original_sha": "sha256:f3be28b55a7e98f09a3ff8739a467a13aba2ec490532078a0bcfd8d020755d1d",
+      "corpus_tree_sha": "sha256:f3be28b55a7e98f09a3ff8739a467a13aba2ec490532078a0bcfd8d020755d1d",
+      "uplifted_sha": "sha256:f3be28b55a7e98f09a3ff8739a467a13aba2ec490532078a0bcfd8d020755d1d",
+      "seeded_defects": [],
+      "original": {
+        "persistence_ok": true,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": true,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4328/credits/a92ae47f",
+              "echoed": "Meter 4021"
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4328/credits/a92ae47f"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplifted": {
+        "persistence_ok": true,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": true,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4329/credits/dad13d34",
+              "echoed": "Meter 4021"
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4329/credits/dad13d34"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplift": {
+        "applied": [],
+        "skipped": [
+          {
+            "rule": "forms/required-field-feedback",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/validate-input-after-interaction",
+            "reason": "no eager :invalid styling"
+          },
+          {
+            "rule": "accessibility/accessible-error-announcement",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-sign-up-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-address-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "security/sanitize-untrusted-html",
+            "reason": "no innerHTML insertion"
+          }
+        ],
+        "failed": []
+      },
+      "decision": {
+        "accepted": false,
+        "category": "no-warranted-change",
+        "detail": [
+          "the original already satisfied every measured property"
+        ],
+        "improved_rules": [],
+        "regressed_rules": [],
+        "new_security_findings": []
+      }
+    },
+    {
+      "project_id": "tr-04-raw",
+      "family_id": "tr-04",
+      "brief_id": "tr-04-v1",
+      "archetype": "dashboard",
+      "framework": "raw",
+      "task": "generate",
+      "original_sha": "sha256:7f20eb53cc5dab0d88bdca4f19a793b6aa6b031211e9e6db881f9160f1739cd3",
+      "corpus_tree_sha": "sha256:7f20eb53cc5dab0d88bdca4f19a793b6aa6b031211e9e6db881f9160f1739cd3",
+      "uplifted_sha": "sha256:7f20eb53cc5dab0d88bdca4f19a793b6aa6b031211e9e6db881f9160f1739cd3",
+      "seeded_defects": [],
+      "original": {
+        "persistence_ok": true,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": true,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4330/credits/bdbc4a67",
+              "echoed": "Meter 4021"
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4330/credits/bdbc4a67"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplifted": {
+        "persistence_ok": true,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": true,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4331/credits/a137684d",
+              "echoed": "Meter 4021"
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4331/credits/a137684d"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplift": {
+        "applied": [],
+        "skipped": [
+          {
+            "rule": "forms/required-field-feedback",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/validate-input-after-interaction",
+            "reason": "no eager :invalid styling"
+          },
+          {
+            "rule": "accessibility/accessible-error-announcement",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-sign-up-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-address-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "security/sanitize-untrusted-html",
+            "reason": "no innerHTML insertion"
+          }
+        ],
+        "failed": []
+      },
+      "decision": {
+        "accepted": false,
+        "category": "no-warranted-change",
+        "detail": [
+          "the original already satisfied every measured property"
+        ],
+        "improved_rules": [],
+        "regressed_rules": [],
+        "new_security_findings": []
+      }
+    },
+    {
+      "project_id": "tr-05-react",
+      "family_id": "tr-05",
+      "brief_id": "tr-05-v1",
+      "archetype": "onboarding-auth",
+      "framework": "react",
+      "task": "generate",
+      "original_sha": "sha256:0798d214ad0a0467aae758d105eee40afae8cd4d87b580043f6ac8e6f4395029",
+      "corpus_tree_sha": "sha256:0798d214ad0a0467aae758d105eee40afae8cd4d87b580043f6ac8e6f4395029",
+      "uplifted_sha": "sha256:0798d214ad0a0467aae758d105eee40afae8cd4d87b580043f6ac8e6f4395029",
+      "seeded_defects": [],
+      "original": {
+        "persistence_ok": true,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": true,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4332/profile",
+              "echoed": "Robin Finch"
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4332/"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplifted": {
+        "persistence_ok": true,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": true,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4333/profile",
+              "echoed": "Robin Finch"
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4333/"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplift": {
+        "applied": [],
+        "skipped": [
+          {
+            "rule": "forms/required-field-feedback",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/validate-input-after-interaction",
+            "reason": "no eager :invalid styling"
+          },
+          {
+            "rule": "accessibility/accessible-error-announcement",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-sign-up-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-address-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "security/sanitize-untrusted-html",
+            "reason": "no innerHTML insertion"
+          }
+        ],
+        "failed": []
+      },
+      "decision": {
+        "accepted": false,
+        "category": "no-warranted-change",
+        "detail": [
+          "the original already satisfied every measured property"
+        ],
+        "improved_rules": [],
+        "regressed_rules": [],
+        "new_security_findings": []
+      }
+    },
+    {
+      "project_id": "tr-05-preact",
+      "family_id": "tr-05",
+      "brief_id": "tr-05-v1",
+      "archetype": "onboarding-auth",
+      "framework": "preact",
+      "task": "generate",
+      "original_sha": "sha256:a89bbbe1790da5d36f11938be7c0092bbdd7568cc0564e876d635451261cfe75",
+      "corpus_tree_sha": "sha256:a89bbbe1790da5d36f11938be7c0092bbdd7568cc0564e876d635451261cfe75",
+      "uplifted_sha": "sha256:a89bbbe1790da5d36f11938be7c0092bbdd7568cc0564e876d635451261cfe75",
+      "seeded_defects": [],
+      "original": {
+        "persistence_ok": true,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": true,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4334/profile",
+              "echoed": "Robin Finch"
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4334/"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplifted": {
+        "persistence_ok": true,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": true,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4335/profile",
+              "echoed": "Robin Finch"
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4335/"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplift": {
+        "applied": [],
+        "skipped": [
+          {
+            "rule": "forms/required-field-feedback",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/validate-input-after-interaction",
+            "reason": "no eager :invalid styling"
+          },
+          {
+            "rule": "accessibility/accessible-error-announcement",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-sign-up-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-address-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "security/sanitize-untrusted-html",
+            "reason": "no innerHTML insertion"
+          }
+        ],
+        "failed": []
+      },
+      "decision": {
+        "accepted": false,
+        "category": "no-warranted-change",
+        "detail": [
+          "the original already satisfied every measured property"
+        ],
+        "improved_rules": [],
+        "regressed_rules": [],
+        "new_security_findings": []
+      }
+    },
+    {
+      "project_id": "tr-06-vue",
+      "family_id": "tr-06",
+      "brief_id": "tr-06-v1",
+      "archetype": "directory-listing",
+      "framework": "vue",
+      "task": "generate",
+      "original_sha": "sha256:ee48812483ee4b46d71be1ba686b4339815edc027f525b6ed23738dfdea7ed45",
+      "corpus_tree_sha": "sha256:ee48812483ee4b46d71be1ba686b4339815edc027f525b6ed23738dfdea7ed45",
+      "uplifted_sha": "sha256:ee48812483ee4b46d71be1ba686b4339815edc027f525b6ed23738dfdea7ed45",
+      "seeded_defects": [],
+      "original": {
+        "persistence_ok": true,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": true,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4336/makers/ec6b7a36",
+              "echoed": "Sam Whitfield"
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4336/makers/ec6b7a36"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplifted": {
+        "persistence_ok": true,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": true,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4337/makers/cf672114",
+              "echoed": "Sam Whitfield"
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4337/makers/cf672114"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplift": {
+        "applied": [],
+        "skipped": [
+          {
+            "rule": "forms/required-field-feedback",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/validate-input-after-interaction",
+            "reason": "no eager :invalid styling"
+          },
+          {
+            "rule": "accessibility/accessible-error-announcement",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-sign-up-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-address-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "security/sanitize-untrusted-html",
+            "reason": "no innerHTML insertion"
+          }
+        ],
+        "failed": []
+      },
+      "decision": {
+        "accepted": false,
+        "category": "no-warranted-change",
+        "detail": [
+          "the original already satisfied every measured property"
+        ],
+        "improved_rules": [],
+        "regressed_rules": [],
+        "new_security_findings": []
+      }
+    },
+    {
+      "project_id": "tr-06-webcomponents",
+      "family_id": "tr-06",
+      "brief_id": "tr-06-v1",
+      "archetype": "directory-listing",
+      "framework": "webcomponents",
+      "task": "generate",
+      "original_sha": "sha256:e819af1879c38e6631569145f3f719f75ff79322fb0422a31783815d12c24c55",
+      "corpus_tree_sha": "sha256:e819af1879c38e6631569145f3f719f75ff79322fb0422a31783815d12c24c55",
+      "uplifted_sha": "sha256:e819af1879c38e6631569145f3f719f75ff79322fb0422a31783815d12c24c55",
+      "seeded_defects": [],
+      "original": {
+        "persistence_ok": true,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": true,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4338/makers/464332f9",
+              "echoed": "Sam Whitfield"
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4338/makers/464332f9"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplifted": {
+        "persistence_ok": true,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": true,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4339/makers/608fd8d6",
+              "echoed": "Sam Whitfield"
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4339/makers/608fd8d6"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplift": {
+        "applied": [],
+        "skipped": [
+          {
+            "rule": "forms/required-field-feedback",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/validate-input-after-interaction",
+            "reason": "no eager :invalid styling"
+          },
+          {
+            "rule": "accessibility/accessible-error-announcement",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-sign-up-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-address-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "security/sanitize-untrusted-html",
+            "reason": "no innerHTML insertion"
+          }
+        ],
+        "failed": []
+      },
+      "decision": {
+        "accepted": false,
+        "category": "no-warranted-change",
+        "detail": [
+          "the original already satisfied every measured property"
+        ],
+        "improved_rules": [],
+        "regressed_rules": [],
+        "new_security_findings": []
+      }
+    },
+    {
+      "project_id": "tr-07-svelte",
+      "family_id": "tr-07",
+      "brief_id": "tr-07-v1",
+      "archetype": "event-registration",
+      "framework": "svelte",
+      "task": "generate",
+      "original_sha": "sha256:53374643cceb082bc4d6a4756967a17c21b1d02ae9d300ed7193c5aa4552e342",
+      "corpus_tree_sha": "sha256:53374643cceb082bc4d6a4756967a17c21b1d02ae9d300ed7193c5aa4552e342",
+      "uplifted_sha": "sha256:53374643cceb082bc4d6a4756967a17c21b1d02ae9d300ed7193c5aa4552e342",
+      "seeded_defects": [],
+      "original": {
+        "persistence_ok": true,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": true,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4340/passes/d5b38c5b",
+              "echoed": "Dana Whitmore"
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4340/passes/d5b38c5b"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplifted": {
+        "persistence_ok": true,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": true,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4341/passes/8bdee104",
+              "echoed": "Dana Whitmore"
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4341/passes/8bdee104"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplift": {
+        "applied": [],
+        "skipped": [
+          {
+            "rule": "forms/required-field-feedback",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/validate-input-after-interaction",
+            "reason": "no eager :invalid styling"
+          },
+          {
+            "rule": "accessibility/accessible-error-announcement",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-sign-up-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-address-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "security/sanitize-untrusted-html",
+            "reason": "no innerHTML insertion"
+          }
+        ],
+        "failed": []
+      },
+      "decision": {
+        "accepted": false,
+        "category": "no-warranted-change",
+        "detail": [
+          "the original already satisfied every measured property"
+        ],
+        "improved_rules": [],
+        "regressed_rules": [],
+        "new_security_findings": []
+      }
+    },
+    {
+      "project_id": "tr-07-hono",
+      "family_id": "tr-07",
+      "brief_id": "tr-07-v1",
+      "archetype": "event-registration",
+      "framework": "hono",
+      "task": "generate",
+      "original_sha": "sha256:184ebb1011c8056fa4248c53cd66a977e246e697d1d0d5997219777946ad0e4d",
+      "corpus_tree_sha": "sha256:184ebb1011c8056fa4248c53cd66a977e246e697d1d0d5997219777946ad0e4d",
+      "uplifted_sha": "sha256:184ebb1011c8056fa4248c53cd66a977e246e697d1d0d5997219777946ad0e4d",
+      "seeded_defects": [],
+      "original": {
+        "persistence_ok": true,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": true,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4342/passes/4b2ed271",
+              "echoed": "Dana Whitmore"
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4342/passes/4b2ed271"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplifted": {
+        "persistence_ok": true,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": true,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4343/passes/dfe8ee0e",
+              "echoed": "Dana Whitmore"
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4343/passes/dfe8ee0e"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplift": {
+        "applied": [],
+        "skipped": [
+          {
+            "rule": "forms/required-field-feedback",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/validate-input-after-interaction",
+            "reason": "no eager :invalid styling"
+          },
+          {
+            "rule": "accessibility/accessible-error-announcement",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-sign-up-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-address-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "security/sanitize-untrusted-html",
+            "reason": "no innerHTML insertion"
+          }
+        ],
+        "failed": []
+      },
+      "decision": {
+        "accepted": false,
+        "category": "no-warranted-change",
+        "detail": [
+          "the original already satisfied every measured property"
+        ],
+        "improved_rules": [],
+        "regressed_rules": [],
+        "new_security_findings": []
+      }
+    },
+    {
+      "project_id": "tr-08-raw",
+      "family_id": "tr-08",
+      "brief_id": "tr-08-v1",
+      "archetype": "support-helpdesk",
+      "framework": "raw",
+      "task": "generate",
+      "original_sha": "sha256:ab10f5819a6ce7b556b17f6e0e2cdcadc712001a8a00832336e19fe1fdb206aa",
+      "corpus_tree_sha": "sha256:ab10f5819a6ce7b556b17f6e0e2cdcadc712001a8a00832336e19fe1fdb206aa",
+      "uplifted_sha": "sha256:ab10f5819a6ce7b556b17f6e0e2cdcadc712001a8a00832336e19fe1fdb206aa",
+      "seeded_defects": [],
+      "original": {
+        "persistence_ok": true,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": true,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4344/tickets/fc7e15d2",
+              "echoed": "Lee Carter"
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4344/tickets/fc7e15d2"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplifted": {
+        "persistence_ok": true,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": true,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4345/tickets/85dad320",
+              "echoed": "Lee Carter"
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4345/tickets/85dad320"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplift": {
+        "applied": [],
+        "skipped": [
+          {
+            "rule": "forms/required-field-feedback",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/validate-input-after-interaction",
+            "reason": "no eager :invalid styling"
+          },
+          {
+            "rule": "accessibility/accessible-error-announcement",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-sign-up-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-address-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "security/sanitize-untrusted-html",
+            "reason": "no innerHTML insertion"
+          }
+        ],
+        "failed": []
+      },
+      "decision": {
+        "accepted": false,
+        "category": "no-warranted-change",
+        "detail": [
+          "the original already satisfied every measured property"
+        ],
+        "improved_rules": [],
+        "regressed_rules": [],
+        "new_security_findings": []
+      }
+    },
+    {
+      "project_id": "tr-08-react",
+      "family_id": "tr-08",
+      "brief_id": "tr-08-v1",
+      "archetype": "support-helpdesk",
+      "framework": "react",
+      "task": "generate",
+      "original_sha": "sha256:cc3297388cf88d455cf8f823b1240b42f5ab3df62bd72a9a08cf3e92d111cd3f",
+      "corpus_tree_sha": "sha256:cc3297388cf88d455cf8f823b1240b42f5ab3df62bd72a9a08cf3e92d111cd3f",
+      "uplifted_sha": "sha256:cc3297388cf88d455cf8f823b1240b42f5ab3df62bd72a9a08cf3e92d111cd3f",
+      "seeded_defects": [],
+      "original": {
+        "persistence_ok": true,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": true,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4346/tickets/a48d57a1",
+              "echoed": "Lee Carter"
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4346/tickets/a48d57a1"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplifted": {
+        "persistence_ok": true,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": true,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4347/tickets/f3a7a8fc",
+              "echoed": "Lee Carter"
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4347/tickets/f3a7a8fc"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplift": {
+        "applied": [],
+        "skipped": [
+          {
+            "rule": "forms/required-field-feedback",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/validate-input-after-interaction",
+            "reason": "no eager :invalid styling"
+          },
+          {
+            "rule": "accessibility/accessible-error-announcement",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-sign-up-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-address-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "security/sanitize-untrusted-html",
+            "reason": "no innerHTML insertion"
+          }
+        ],
+        "failed": []
+      },
+      "decision": {
+        "accepted": false,
+        "category": "no-warranted-change",
+        "detail": [
+          "the original already satisfied every measured property"
+        ],
+        "improved_rules": [],
+        "regressed_rules": [],
+        "new_security_findings": []
+      }
+    },
+    {
+      "project_id": "tr-09-preact",
+      "family_id": "tr-09",
+      "brief_id": "tr-09-v1",
+      "archetype": "course-enrolment",
+      "framework": "preact",
+      "task": "generate",
+      "original_sha": "sha256:afac23e9b55c87138ca1cc47f9c7825883d2d42b6dfd389788ea9c25388e1283",
+      "corpus_tree_sha": "sha256:afac23e9b55c87138ca1cc47f9c7825883d2d42b6dfd389788ea9c25388e1283",
+      "uplifted_sha": "sha256:afac23e9b55c87138ca1cc47f9c7825883d2d42b6dfd389788ea9c25388e1283",
+      "seeded_defects": [],
+      "original": {
+        "persistence_ok": true,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": true,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4348/enrolments/f156343c",
+              "echoed": "Maya Soren"
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4348/enrolments/f156343c"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplifted": {
+        "persistence_ok": true,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": true,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4349/enrolments/ae2da8ba",
+              "echoed": "Maya Soren"
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4349/enrolments/ae2da8ba"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplift": {
+        "applied": [],
+        "skipped": [
+          {
+            "rule": "forms/required-field-feedback",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/validate-input-after-interaction",
+            "reason": "no eager :invalid styling"
+          },
+          {
+            "rule": "accessibility/accessible-error-announcement",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-sign-up-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-address-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "security/sanitize-untrusted-html",
+            "reason": "no innerHTML insertion"
+          }
+        ],
+        "failed": []
+      },
+      "decision": {
+        "accepted": false,
+        "category": "no-warranted-change",
+        "detail": [
+          "the original already satisfied every measured property"
+        ],
+        "improved_rules": [],
+        "regressed_rules": [],
+        "new_security_findings": []
+      }
+    },
+    {
+      "project_id": "tr-09-vue",
+      "family_id": "tr-09",
+      "brief_id": "tr-09-v1",
+      "archetype": "course-enrolment",
+      "framework": "vue",
+      "task": "generate",
+      "original_sha": "sha256:4401d134b93931f2c54c13994a14b0a1415a2c9101323eabb7fbaa8891e72de1",
+      "corpus_tree_sha": "sha256:4401d134b93931f2c54c13994a14b0a1415a2c9101323eabb7fbaa8891e72de1",
+      "uplifted_sha": "sha256:4401d134b93931f2c54c13994a14b0a1415a2c9101323eabb7fbaa8891e72de1",
+      "seeded_defects": [],
+      "original": {
+        "persistence_ok": true,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": true,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4350/enrolments/a404f7eb",
+              "echoed": "Maya Soren"
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4350/enrolments/a404f7eb"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplifted": {
+        "persistence_ok": true,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": true,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4351/enrolments/0abff3d4",
+              "echoed": "Maya Soren"
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4351/enrolments/0abff3d4"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplift": {
+        "applied": [],
+        "skipped": [
+          {
+            "rule": "forms/required-field-feedback",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/validate-input-after-interaction",
+            "reason": "no eager :invalid styling"
+          },
+          {
+            "rule": "accessibility/accessible-error-announcement",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-sign-up-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-address-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "security/sanitize-untrusted-html",
+            "reason": "no innerHTML insertion"
+          }
+        ],
+        "failed": []
+      },
+      "decision": {
+        "accepted": false,
+        "category": "no-warranted-change",
+        "detail": [
+          "the original already satisfied every measured property"
+        ],
+        "improved_rules": [],
+        "regressed_rules": [],
+        "new_security_findings": []
+      }
+    },
+    {
+      "project_id": "tr-10-webcomponents",
+      "family_id": "tr-10",
+      "brief_id": "tr-10-v1",
+      "archetype": "survey-form",
+      "framework": "webcomponents",
+      "task": "generate",
+      "original_sha": "sha256:4cf3dc33c63a087fb6d9000eeb05c2243818ccae97c2334cb90290f21f5b5aa9",
+      "corpus_tree_sha": "sha256:4cf3dc33c63a087fb6d9000eeb05c2243818ccae97c2334cb90290f21f5b5aa9",
+      "uplifted_sha": "sha256:4cf3dc33c63a087fb6d9000eeb05c2243818ccae97c2334cb90290f21f5b5aa9",
+      "seeded_defects": [],
+      "original": {
+        "persistence_ok": true,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": true,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4352/survey/complete/bdf618e3",
+              "echoed": "Jo Delgado"
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4352/survey/complete/bdf618e3"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplifted": {
+        "persistence_ok": true,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": true,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4353/survey/complete/50f9a726",
+              "echoed": "Jo Delgado"
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4353/survey/complete/50f9a726"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplift": {
+        "applied": [],
+        "skipped": [
+          {
+            "rule": "forms/required-field-feedback",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/validate-input-after-interaction",
+            "reason": "no eager :invalid styling"
+          },
+          {
+            "rule": "accessibility/accessible-error-announcement",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-sign-up-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-address-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "security/sanitize-untrusted-html",
+            "reason": "no innerHTML insertion"
+          }
+        ],
+        "failed": []
+      },
+      "decision": {
+        "accepted": false,
+        "category": "no-warranted-change",
+        "detail": [
+          "the original already satisfied every measured property"
+        ],
+        "improved_rules": [],
+        "regressed_rules": [],
+        "new_security_findings": []
+      }
+    },
+    {
+      "project_id": "tr-10-svelte",
+      "family_id": "tr-10",
+      "brief_id": "tr-10-v1",
+      "archetype": "survey-form",
+      "framework": "svelte",
+      "task": "generate",
+      "original_sha": "sha256:4021a534f53994e500d294622c4604c98b5232f3f9c80e4b048ee3c65f8c619a",
+      "corpus_tree_sha": "sha256:4021a534f53994e500d294622c4604c98b5232f3f9c80e4b048ee3c65f8c619a",
+      "uplifted_sha": "sha256:4021a534f53994e500d294622c4604c98b5232f3f9c80e4b048ee3c65f8c619a",
+      "seeded_defects": [],
+      "original": {
+        "persistence_ok": true,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": true,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4354/survey/complete/d849d7d6",
+              "echoed": "Jo Delgado"
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4354/survey/complete/d849d7d6"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplifted": {
+        "persistence_ok": true,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": true,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4355/survey/complete/7706cd4a",
+              "echoed": "Jo Delgado"
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4355/survey/complete/7706cd4a"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplift": {
+        "applied": [],
+        "skipped": [
+          {
+            "rule": "forms/required-field-feedback",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/validate-input-after-interaction",
+            "reason": "no eager :invalid styling"
+          },
+          {
+            "rule": "accessibility/accessible-error-announcement",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-sign-up-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-address-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "security/sanitize-untrusted-html",
+            "reason": "no innerHTML insertion"
+          }
+        ],
+        "failed": []
+      },
+      "decision": {
+        "accepted": false,
+        "category": "no-warranted-change",
+        "detail": [
+          "the original already satisfied every measured property"
+        ],
+        "improved_rules": [],
+        "regressed_rules": [],
+        "new_security_findings": []
+      }
+    },
+    {
+      "project_id": "tr-11-hono",
+      "family_id": "tr-11",
+      "brief_id": "tr-11-v1",
+      "archetype": "restaurant-ordering",
+      "framework": "hono",
+      "task": "generate",
+      "original_sha": "sha256:40faa2afdc50a81d238ec20f0d684d8ae87ab9e774c89e2fa5e01f3b70f9fd08",
+      "corpus_tree_sha": "sha256:40faa2afdc50a81d238ec20f0d684d8ae87ab9e774c89e2fa5e01f3b70f9fd08",
+      "uplifted_sha": "sha256:40faa2afdc50a81d238ec20f0d684d8ae87ab9e774c89e2fa5e01f3b70f9fd08",
+      "seeded_defects": [],
+      "original": {
+        "persistence_ok": true,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": true,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4356/orders/c0976434",
+              "echoed": "Nadia Rossi"
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4356/orders/c0976434"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplifted": {
+        "persistence_ok": true,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": true,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4357/orders/957d5bd4",
+              "echoed": "Nadia Rossi"
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4357/orders/957d5bd4"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplift": {
+        "applied": [],
+        "skipped": [
+          {
+            "rule": "forms/required-field-feedback",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/validate-input-after-interaction",
+            "reason": "no eager :invalid styling"
+          },
+          {
+            "rule": "accessibility/accessible-error-announcement",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-sign-up-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-address-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "security/sanitize-untrusted-html",
+            "reason": "no innerHTML insertion"
+          }
+        ],
+        "failed": []
+      },
+      "decision": {
+        "accepted": false,
+        "category": "no-warranted-change",
+        "detail": [
+          "the original already satisfied every measured property"
+        ],
+        "improved_rules": [],
+        "regressed_rules": [],
+        "new_security_findings": []
+      }
+    },
+    {
+      "project_id": "tr-11-raw",
+      "family_id": "tr-11",
+      "brief_id": "tr-11-v1",
+      "archetype": "restaurant-ordering",
+      "framework": "raw",
+      "task": "generate",
+      "original_sha": "sha256:75b34d3a9e911878f4d2bda1773ef64bbb59f7effe6cad1b8b782f62cd23c3ab",
+      "corpus_tree_sha": "sha256:75b34d3a9e911878f4d2bda1773ef64bbb59f7effe6cad1b8b782f62cd23c3ab",
+      "uplifted_sha": "sha256:75b34d3a9e911878f4d2bda1773ef64bbb59f7effe6cad1b8b782f62cd23c3ab",
+      "seeded_defects": [],
+      "original": {
+        "persistence_ok": true,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": true,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4358/orders/31e8642d",
+              "echoed": "Nadia Rossi"
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4358/orders/31e8642d"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplifted": {
+        "persistence_ok": true,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": true,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4359/orders/73e10fcb",
+              "echoed": "Nadia Rossi"
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4359/orders/73e10fcb"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplift": {
+        "applied": [],
+        "skipped": [
+          {
+            "rule": "forms/required-field-feedback",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/validate-input-after-interaction",
+            "reason": "no eager :invalid styling"
+          },
+          {
+            "rule": "accessibility/accessible-error-announcement",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-sign-up-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-address-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "security/sanitize-untrusted-html",
+            "reason": "no innerHTML insertion"
+          }
+        ],
+        "failed": []
+      },
+      "decision": {
+        "accepted": false,
+        "category": "no-warranted-change",
+        "detail": [
+          "the original already satisfied every measured property"
+        ],
+        "improved_rules": [],
+        "regressed_rules": [],
+        "new_security_findings": []
+      }
+    },
+    {
+      "project_id": "tr-12-react",
+      "family_id": "tr-12",
+      "brief_id": "tr-12-v1",
+      "archetype": "job-board",
+      "framework": "react",
+      "task": "generate",
+      "original_sha": "sha256:2288ffc2d93b177d59f822c3d4abd9e37552b5c1d55d87b55129a1d5e4f08928",
+      "corpus_tree_sha": "sha256:2288ffc2d93b177d59f822c3d4abd9e37552b5c1d55d87b55129a1d5e4f08928",
+      "uplifted_sha": "sha256:2288ffc2d93b177d59f822c3d4abd9e37552b5c1d55d87b55129a1d5e4f08928",
+      "seeded_defects": [],
+      "original": {
+        "persistence_ok": true,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": true,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4360/applications/330c5e8d",
+              "echoed": "Taylor Brooks"
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4360/applications/330c5e8d"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplifted": {
+        "persistence_ok": true,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": true,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4361/applications/87c665db",
+              "echoed": "Taylor Brooks"
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4361/applications/87c665db"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplift": {
+        "applied": [],
+        "skipped": [
+          {
+            "rule": "forms/required-field-feedback",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/validate-input-after-interaction",
+            "reason": "no eager :invalid styling"
+          },
+          {
+            "rule": "accessibility/accessible-error-announcement",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-sign-up-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-address-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "security/sanitize-untrusted-html",
+            "reason": "no innerHTML insertion"
+          }
+        ],
+        "failed": []
+      },
+      "decision": {
+        "accepted": false,
+        "category": "no-warranted-change",
+        "detail": [
+          "the original already satisfied every measured property"
+        ],
+        "improved_rules": [],
+        "regressed_rules": [],
+        "new_security_findings": []
+      }
+    },
+    {
+      "project_id": "tr-12-preact",
+      "family_id": "tr-12",
+      "brief_id": "tr-12-v1",
+      "archetype": "job-board",
+      "framework": "preact",
+      "task": "generate",
+      "original_sha": "sha256:acd173d340a0f3a5cb96e14e75242d83cb235b9372a599c906c8ab87d43afa36",
+      "corpus_tree_sha": "sha256:acd173d340a0f3a5cb96e14e75242d83cb235b9372a599c906c8ab87d43afa36",
+      "uplifted_sha": "sha256:acd173d340a0f3a5cb96e14e75242d83cb235b9372a599c906c8ab87d43afa36",
+      "seeded_defects": [],
+      "original": {
+        "persistence_ok": true,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": true,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4362/applications/cfae5913",
+              "echoed": "Taylor Brooks"
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4362/applications/cfae5913"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplifted": {
+        "persistence_ok": true,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": true,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4363/applications/19dd0edb",
+              "echoed": "Taylor Brooks"
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4363/applications/19dd0edb"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplift": {
+        "applied": [],
+        "skipped": [
+          {
+            "rule": "forms/required-field-feedback",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/validate-input-after-interaction",
+            "reason": "no eager :invalid styling"
+          },
+          {
+            "rule": "accessibility/accessible-error-announcement",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-sign-up-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-address-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "security/sanitize-untrusted-html",
+            "reason": "no innerHTML insertion"
+          }
+        ],
+        "failed": []
+      },
+      "decision": {
+        "accepted": false,
+        "category": "no-warranted-change",
+        "detail": [
+          "the original already satisfied every measured property"
+        ],
+        "improved_rules": [],
+        "regressed_rules": [],
+        "new_security_findings": []
+      }
+    },
+    {
+      "project_id": "tr-13-vue",
+      "family_id": "tr-13",
+      "brief_id": "tr-13-v1",
+      "archetype": "docs-site",
+      "framework": "vue",
+      "task": "generate",
+      "original_sha": "sha256:6c8a5d50685fc2245fed77cd545dbea7205147b39b0ff646e7b86ae8e2806e69",
+      "corpus_tree_sha": "sha256:6c8a5d50685fc2245fed77cd545dbea7205147b39b0ff646e7b86ae8e2806e69",
+      "uplifted_sha": "sha256:6c8a5d50685fc2245fed77cd545dbea7205147b39b0ff646e7b86ae8e2806e69",
+      "seeded_defects": [],
+      "original": {
+        "persistence_ok": false,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": false,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4364/",
+              "echoed": ""
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4364/soil-tests/127.0.0.1:4364"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplifted": {
+        "persistence_ok": false,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": false,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4365/",
+              "echoed": ""
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4365/soil-tests/127.0.0.1:4365"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplift": {
+        "applied": [],
+        "skipped": [
+          {
+            "rule": "forms/required-field-feedback",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/validate-input-after-interaction",
+            "reason": "no eager :invalid styling"
+          },
+          {
+            "rule": "accessibility/accessible-error-announcement",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-sign-up-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-address-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "security/sanitize-untrusted-html",
+            "reason": "no innerHTML insertion"
+          }
+        ],
+        "failed": []
+      },
+      "decision": {
+        "accepted": false,
+        "category": "original-not-runnable",
+        "detail": [
+          "the page shown after a reload does not contain \"Avery Quinn\", so the record did not persist as served"
+        ],
+        "improved_rules": [],
+        "regressed_rules": [],
+        "new_security_findings": []
+      }
+    },
+    {
+      "project_id": "tr-13-webcomponents",
+      "family_id": "tr-13",
+      "brief_id": "tr-13-v1",
+      "archetype": "docs-site",
+      "framework": "webcomponents",
+      "task": "generate",
+      "original_sha": "sha256:caccf112ae41fe244e2def1819852848df4a06181a356249d7019e0c96c39e90",
+      "corpus_tree_sha": "sha256:caccf112ae41fe244e2def1819852848df4a06181a356249d7019e0c96c39e90",
+      "uplifted_sha": "sha256:caccf112ae41fe244e2def1819852848df4a06181a356249d7019e0c96c39e90",
+      "seeded_defects": [],
+      "original": {
+        "persistence_ok": false,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": false,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4366/",
+              "echoed": ""
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4366/soil-tests/127.0.0.1:4366"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplifted": {
+        "persistence_ok": false,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": false,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4367/",
+              "echoed": ""
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4367/soil-tests/127.0.0.1:4367"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplift": {
+        "applied": [],
+        "skipped": [
+          {
+            "rule": "forms/required-field-feedback",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/validate-input-after-interaction",
+            "reason": "no eager :invalid styling"
+          },
+          {
+            "rule": "accessibility/accessible-error-announcement",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-sign-up-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-address-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "security/sanitize-untrusted-html",
+            "reason": "no innerHTML insertion"
+          }
+        ],
+        "failed": []
+      },
+      "decision": {
+        "accepted": false,
+        "category": "original-not-runnable",
+        "detail": [
+          "the page shown after a reload does not contain \"Avery Quinn\", so the record did not persist as served"
+        ],
+        "improved_rules": [],
+        "regressed_rules": [],
+        "new_security_findings": []
+      }
+    },
+    {
+      "project_id": "tr-15-svelte",
+      "family_id": "tr-15",
+      "brief_id": "tr-15-v1",
+      "archetype": "expense-tracker",
+      "framework": "svelte",
+      "task": "generate",
+      "original_sha": "sha256:00e0022a04fc89495cd48c6ee9ab3a57adf209a2741ff750b8f5407ef064292b",
+      "corpus_tree_sha": "sha256:00e0022a04fc89495cd48c6ee9ab3a57adf209a2741ff750b8f5407ef064292b",
+      "uplifted_sha": "sha256:00e0022a04fc89495cd48c6ee9ab3a57adf209a2741ff750b8f5407ef064292b",
+      "seeded_defects": [],
+      "original": {
+        "persistence_ok": false,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": false,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4368/",
+              "echoed": ""
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4368/expenses/127.0.0.1:4368"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplifted": {
+        "persistence_ok": false,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": false,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4369/",
+              "echoed": ""
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4369/expenses/127.0.0.1:4369"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplift": {
+        "applied": [],
+        "skipped": [
+          {
+            "rule": "forms/required-field-feedback",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/validate-input-after-interaction",
+            "reason": "no eager :invalid styling"
+          },
+          {
+            "rule": "accessibility/accessible-error-announcement",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-sign-up-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-address-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "security/sanitize-untrusted-html",
+            "reason": "no innerHTML insertion"
+          }
+        ],
+        "failed": []
+      },
+      "decision": {
+        "accepted": false,
+        "category": "original-not-runnable",
+        "detail": [
+          "the page shown after a reload does not contain \"Casey Duval\", so the record did not persist as served"
+        ],
+        "improved_rules": [],
+        "regressed_rules": [],
+        "new_security_findings": []
+      }
+    },
+    {
+      "project_id": "tr-15-hono",
+      "family_id": "tr-15",
+      "brief_id": "tr-15-v1",
+      "archetype": "expense-tracker",
+      "framework": "hono",
+      "task": "generate",
+      "original_sha": "sha256:c3f6c98accafb4ac42d61e4f775874f50656f874452c58a6ceec7dcfd36f16a9",
+      "corpus_tree_sha": "sha256:c3f6c98accafb4ac42d61e4f775874f50656f874452c58a6ceec7dcfd36f16a9",
+      "uplifted_sha": "sha256:c3f6c98accafb4ac42d61e4f775874f50656f874452c58a6ceec7dcfd36f16a9",
+      "seeded_defects": [],
+      "original": {
+        "persistence_ok": false,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": false,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4370/",
+              "echoed": ""
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4370/expenses/127.0.0.1:4370"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplifted": {
+        "persistence_ok": false,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": false,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4371/",
+              "echoed": ""
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4371/expenses/127.0.0.1:4371"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplift": {
+        "applied": [],
+        "skipped": [
+          {
+            "rule": "forms/required-field-feedback",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/validate-input-after-interaction",
+            "reason": "no eager :invalid styling"
+          },
+          {
+            "rule": "accessibility/accessible-error-announcement",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-sign-up-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-address-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "security/sanitize-untrusted-html",
+            "reason": "no innerHTML insertion"
+          }
+        ],
+        "failed": []
+      },
+      "decision": {
+        "accepted": false,
+        "category": "original-not-runnable",
+        "detail": [
+          "the page shown after a reload does not contain \"Casey Duval\", so the record did not persist as served"
+        ],
+        "improved_rules": [],
+        "regressed_rules": [],
+        "new_security_findings": []
+      }
+    },
+    {
+      "project_id": "tr-16-raw",
+      "family_id": "tr-16",
+      "brief_id": "tr-16-v1",
+      "archetype": "library-catalogue",
+      "framework": "raw",
+      "task": "generate",
+      "original_sha": "sha256:1406058f3a7514eb2b06406d71f9ef62fb250c11ce65acaad4bb13bffccab7ca",
+      "corpus_tree_sha": "sha256:1406058f3a7514eb2b06406d71f9ef62fb250c11ce65acaad4bb13bffccab7ca",
+      "uplifted_sha": "sha256:1406058f3a7514eb2b06406d71f9ef62fb250c11ce65acaad4bb13bffccab7ca",
+      "seeded_defects": [],
+      "original": {
+        "persistence_ok": true,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": true,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4372/requests/ea6a84bc",
+              "echoed": "Imogen Vale"
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4372/requests/ea6a84bc"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplifted": {
+        "persistence_ok": true,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": true,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4373/requests/24d4f012",
+              "echoed": "Imogen Vale"
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4373/requests/24d4f012"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplift": {
+        "applied": [],
+        "skipped": [
+          {
+            "rule": "forms/required-field-feedback",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/validate-input-after-interaction",
+            "reason": "no eager :invalid styling"
+          },
+          {
+            "rule": "accessibility/accessible-error-announcement",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-sign-up-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-address-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "security/sanitize-untrusted-html",
+            "reason": "no innerHTML insertion"
+          }
+        ],
+        "failed": []
+      },
+      "decision": {
+        "accepted": false,
+        "category": "no-warranted-change",
+        "detail": [
+          "the original already satisfied every measured property"
+        ],
+        "improved_rules": [],
+        "regressed_rules": [],
+        "new_security_findings": []
+      }
+    },
+    {
+      "project_id": "tr-16-react",
+      "family_id": "tr-16",
+      "brief_id": "tr-16-v1",
+      "archetype": "library-catalogue",
+      "framework": "react",
+      "task": "generate",
+      "original_sha": "sha256:1bf305c1e503e7d74fa04c65b350ca81c0bc80e9fbb446cf32b002c7f96484fe",
+      "corpus_tree_sha": "sha256:1bf305c1e503e7d74fa04c65b350ca81c0bc80e9fbb446cf32b002c7f96484fe",
+      "uplifted_sha": "sha256:1bf305c1e503e7d74fa04c65b350ca81c0bc80e9fbb446cf32b002c7f96484fe",
+      "seeded_defects": [],
+      "original": {
+        "persistence_ok": true,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": true,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4374/requests/28974538",
+              "echoed": "Imogen Vale"
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4374/requests/28974538"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplifted": {
+        "persistence_ok": true,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": true,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4375/requests/63db9f79",
+              "echoed": "Imogen Vale"
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4375/requests/63db9f79"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplift": {
+        "applied": [],
+        "skipped": [
+          {
+            "rule": "forms/required-field-feedback",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/validate-input-after-interaction",
+            "reason": "no eager :invalid styling"
+          },
+          {
+            "rule": "accessibility/accessible-error-announcement",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-sign-up-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-address-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "security/sanitize-untrusted-html",
+            "reason": "no innerHTML insertion"
+          }
+        ],
+        "failed": []
+      },
+      "decision": {
+        "accepted": false,
+        "category": "no-warranted-change",
+        "detail": [
+          "the original already satisfied every measured property"
+        ],
+        "improved_rules": [],
+        "regressed_rules": [],
+        "new_security_findings": []
+      }
+    },
+    {
+      "project_id": "tr-20-preact",
+      "family_id": "tr-20",
+      "brief_id": "tr-20-v1",
+      "archetype": "community-forum",
+      "framework": "preact",
+      "task": "generate",
+      "original_sha": "sha256:76c78f450f92a24589b9c0568790a2a4ce317be52346ebe408b821b566b4c671",
+      "corpus_tree_sha": "sha256:76c78f450f92a24589b9c0568790a2a4ce317be52346ebe408b821b566b4c671",
+      "uplifted_sha": "sha256:76c78f450f92a24589b9c0568790a2a4ce317be52346ebe408b821b566b4c671",
+      "seeded_defects": [],
+      "original": {
+        "persistence_ok": true,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": true,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4376/tunes/73e6b8ee",
+              "echoed": "Owen Pryce"
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4376/tunes/73e6b8ee"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplifted": {
+        "persistence_ok": true,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": true,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4377/tunes/40f3e851",
+              "echoed": "Owen Pryce"
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4377/tunes/40f3e851"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplift": {
+        "applied": [],
+        "skipped": [
+          {
+            "rule": "forms/required-field-feedback",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/validate-input-after-interaction",
+            "reason": "no eager :invalid styling"
+          },
+          {
+            "rule": "accessibility/accessible-error-announcement",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-sign-up-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-address-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "security/sanitize-untrusted-html",
+            "reason": "no innerHTML insertion"
+          }
+        ],
+        "failed": []
+      },
+      "decision": {
+        "accepted": false,
+        "category": "no-warranted-change",
+        "detail": [
+          "the original already satisfied every measured property"
+        ],
+        "improved_rules": [],
+        "regressed_rules": [],
+        "new_security_findings": []
+      }
+    },
+    {
+      "project_id": "tr-20-vue",
+      "family_id": "tr-20",
+      "brief_id": "tr-20-v1",
+      "archetype": "community-forum",
+      "framework": "vue",
+      "task": "generate",
+      "original_sha": "sha256:ff26e7a02e34895dcc3bab347520ec4d5c75e15c617e1da77cfdf4d1d8aa3feb",
+      "corpus_tree_sha": "sha256:ff26e7a02e34895dcc3bab347520ec4d5c75e15c617e1da77cfdf4d1d8aa3feb",
+      "uplifted_sha": "sha256:ff26e7a02e34895dcc3bab347520ec4d5c75e15c617e1da77cfdf4d1d8aa3feb",
+      "seeded_defects": [],
+      "original": {
+        "persistence_ok": true,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": true,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4378/tunes/84ee628c",
+              "echoed": "Owen Pryce"
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4378/tunes/84ee628c"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplifted": {
+        "persistence_ok": true,
+        "validation_observation": "refused-observed",
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "passed": true,
+            "detail": {
+              "submit_status": 200,
+              "reload_url": "http://127.0.0.1:4379/tunes/8c6c676d",
+              "echoed": "Owen Pryce"
+            }
+          },
+          {
+            "name": "validation-failure",
+            "passed": true,
+            "observation": "refused-observed"
+          },
+          {
+            "name": "content",
+            "passed": true,
+            "url": "http://127.0.0.1:4379/tunes/8c6c676d"
+          }
+        ],
+        "console_errors": 0,
+        "errors": []
+      },
+      "uplift": {
+        "applied": [],
+        "skipped": [
+          {
+            "rule": "forms/required-field-feedback",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/validate-input-after-interaction",
+            "reason": "no eager :invalid styling"
+          },
+          {
+            "rule": "accessibility/accessible-error-announcement",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-sign-up-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "forms/autofill-address-form",
+            "reason": "already present"
+          },
+          {
+            "rule": "security/sanitize-untrusted-html",
+            "reason": "no innerHTML insertion"
+          }
+        ],
+        "failed": []
+      },
+      "decision": {
+        "accepted": false,
+        "category": "no-warranted-change",
+        "detail": [
+          "the original already satisfied every measured property"
+        ],
+        "improved_rules": [],
+        "regressed_rules": [],
+        "new_security_findings": []
+      }
+    }
+  ]
+}
