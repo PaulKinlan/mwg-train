@@ -15,7 +15,7 @@
  *
  * Exit code 0 only if every scanned tree is clean.
  */
-import { existsSync, mkdtempSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -26,6 +26,14 @@ import { scanTree, scanPairRecords, loadScanConfig, buildMatchers } from '../src
 import { hashTree } from '../src/viewer/hashtree.mjs';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+
+function readJson(path) {
+  try {
+    return JSON.parse(readFileSync(path, 'utf8'));
+  } catch {
+    return null;
+  }
+}
 
 const DEFAULT_CONFIG = resolve(process.cwd(), 'docs/eval/owner-identity.json');
 
@@ -59,13 +67,17 @@ function report(label, result) {
  */
 async function regenerateUplifted(project, originalDir, corpusRoot) {
   const expected = project.decision?.uplifted_sha;
-  if (!expected || !project.spec) return null;
+  if (!expected) return null;
   const upliftTool = resolve(corpusRoot, '..', 'src/corpus/uplift.mjs');
   if (!existsSync(upliftTool)) return null;
+  // Manifest-only projects carry a placeholder spec; the spec the recorded uplift was produced
+  // from lives in the materialized original tree (read it only after that tree hash-verified).
+  const spec = project.spec?.routes ? project.spec : readJson(join(originalDir, 'spec.json'));
+  if (!spec) return null;
   const dir = mkdtempSync(join(tmpdir(), 'owner-auth-uplift-'));
   try {
     const { upliftProject } = await import(upliftTool);
-    upliftProject(originalDir, project.spec, dir);
+    upliftProject(originalDir, spec, dir);
     const actual = hashTree(dir);
     if (actual !== expected) {
       console.log(`    regeneration mismatch for ${project.id}: expected ${expected}, got ${actual}`);
