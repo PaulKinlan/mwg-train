@@ -67,7 +67,8 @@ These briefs are authored specification items (prompts, expected routes, journey
   exercised only as a create. 25 of 30 families also emit every route their brief lists; `tr-05` is
   missing `/login` and `/volunteer/profile` entirely, and `tr-09`, `tr-12`, `tr-13`, `tr-16` each lack a
   listing's detail route. `npm run check:brief-schema -- --expect-all` proves every family declares a
-  buildable schema whose journey fills each field its own brief requires - it does not prove a project
+  buildable schema whose journey fills each non-select field its own brief requires (a select always
+  submits a value, so it is exempt - tr-26's three required selects are never driven) - it does not prove a project
   implements its brief's flow.
 - **What the browser run establishes.** Of the 210 projects, 40 were driven through their journeys and
   passed; 170 remain `scaffolded / unverified journey`, and none has been shown to build or serve beyond
