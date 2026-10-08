@@ -29,6 +29,10 @@ npm run lint:provenance     # provenance manifest rules
 npm run scan:owner-auth     # owner-auth gate: no owner-identifying material in any corpus tree
 ```
 
+## The quarantine store
+
+Teacher-generated material and the reproduction studies live in a **private companion repo** (`mwg-quarantine`, a sibling checkout), never in this public tree: tooling writes quarantined arms there by default, and the public tree receives material only via `npm run promote` (explicit, ledgered, publication-only). See [docs/quarantine.md](docs/quarantine.md).
+
 ## Corpus viewer (owner-only)
 
 `npm run viewer -- --corpus pilot` serves the corpus on TWO ports, both fronted by exe.dev auth:

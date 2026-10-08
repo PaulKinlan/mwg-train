@@ -31,7 +31,8 @@
     "check:train-evidence": "node scripts/check-train-evidence.mjs",
     "price:two-backends": "node scripts/price-two-backends.mjs",
     "viewer": "node src/viewer/server.mjs",
-    "scan:owner-auth": "node scripts/scan-owner-auth.mjs --corpus pilot"
+    "scan:owner-auth": "node scripts/scan-owner-auth.mjs --corpus pilot",
+    "promote": "node scripts/promote.mjs"
   },
   "license": "UNLICENSED",
   "dependencies": {
