@@ -140,13 +140,17 @@ test('the sheet prices only from pinned quotes, and refuses a rate it cannot poi
   const known = new Set(quotes.rows.map((row) => row.quote_id));
   for (const quoteId of used) assert.ok(known.has(quoteId), quoteId + ' is not a row in quotes.jsonl');
 
-  // The Fireworks serving line cannot be pinned: serverless per-token serving of your own LoRA is not
-  // available, so serving needs a dedicated deployment and there is no pinned GPU-hour rate for it. The
-  // comparison must therefore refuse to name a winner rather than price the side it can price.
+  // Both sides are priced now that the Fireworks dedicated-deployment GPU rows are pinned, so the sheet
+  // names a winner - at ESTIMATE confidence, because the token count and the serving wall-clock are
+  // estimates even though every rate is pinned. This assertion previously required the fireworks side to
+  // be unpriced and went stale the moment that rate was extracted; the refusal path is covered below by
+  // the case constructed with a missing rate, which is where it belongs.
   const fireworks = sheet.comparison.results.find((result) => result.backend === 'fireworks');
-  assert.equal(fireworks.usd_per_accepted_pair, null);
-  assert.equal(sheet.comparison.cheaper_backend, null);
-  assert.equal(sheet.comparison.verdict, 'INCOMPLETE');
+  assert.equal(typeof fireworks.usd_per_accepted_pair, 'number');
+  assert.equal(sheet.comparison.verdict, 'COMPARABLE');
+  assert.equal(sheet.comparison.confidence, 'ESTIMATE');
+  assert.equal(sheet.comparison.cheaper_backend, 'cluster');
+  assert.equal(fireworks.status, 'ESTIMATE', 'pinned rates over an estimated token count and wall-clock');
 
   assert.equal(sheet.yield.accepted_pairs, 24, 'the denominator is the measured pilot yield');
   assert.equal(sheet.yield.attempted_pairs, 25);
