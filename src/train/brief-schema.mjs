@@ -79,7 +79,12 @@ export function selectorFieldName(selector) {
   return match ? match[1] : null;
 }
 
-const COMPLETE_SELECTOR = /^(input|textarea|select)\[name=["']?([A-Za-z0-9_-]+)["']?\]$/;
+// A complete selector is `<tag>[name=<value>]` and nothing else. The unquoted form is deliberately
+// narrow (the charset CSS accepts unquoted), and a name outside it is addressable by quoting it, which
+// is how a legitimate name like `contact.email` is reached. Quoted values may hold anything except the
+// quote character, so this accepts every name a selector can express and rejects everything ambiguous
+// - a compound, comma-joined or descendant selector is refused rather than read as one of its parts.
+const COMPLETE_SELECTOR = /^(input|textarea|select)\[name=(?:["']([^"']+)["']|([A-Za-z0-9_-]+))\]$/;
 
 /**
  * The field a selector addresses, but only when it is a complete single-form selector.
@@ -93,7 +98,7 @@ const COMPLETE_SELECTOR = /^(input|textarea|select)\[name=["']?([A-Za-z0-9_-]+)[
  */
 export function completeSelectorFieldName(selector) {
   const match = COMPLETE_SELECTOR.exec(String(selector ?? ''));
-  return match ? match[2] : null;
+  return match ? match[2] ?? match[3] : null;
 }
 
 /**

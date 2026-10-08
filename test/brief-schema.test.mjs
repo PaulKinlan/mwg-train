@@ -371,3 +371,23 @@ test('complete selectors still pass, in every quote style', () => {
   assert.equal(completeSelectorFieldName('input[name=a][type=text]'), null);
   assert.equal(completeSelectorFieldName('form input[name=a]'), null);
 });
+
+// A name outside the unquoted charset is legitimate HTML and `field.name` accepts any non-empty
+// string, so the selector rule must be able to reach it rather than rejecting the brief. Quoting is
+// how: `input[name="contact.email"]` addresses that field exactly, with nothing ambiguous about it.
+test('a name outside the unquoted charset is reachable by quoting it', () => {
+  assert.equal(completeSelectorFieldName('input[name="contact.email"]'), 'contact.email');
+  assert.equal(completeSelectorFieldName("input[name='a b']"), 'a b');
+  const row = brief({
+    fields: [
+      { slug: 'contact-email', name: 'contact.email', type: 'text', label: 'Email', required: true, echoed: true },
+    ],
+    journey: {
+      startPath: '/',
+      formSelector: 'form#f',
+      fill: { 'input[name="contact.email"]': 'ada@example.test' },
+      expectText: 'ada@example.test',
+    },
+  });
+  assert.deepEqual(validateBriefSchema(row), []);
+});
