@@ -29,6 +29,15 @@
  * A floor value that reaches a new artifact without being listed here is still a gap this check cannot
  * see, so the registry is reviewed whenever a report is added - that has now happened three times, which
  * is the honest reason this comment is long.
+ *
+ * LIMIT OF THE PROVENANCE DETECTOR, stated rather than implied: falseProvenance() recognises attribution
+ * through a vocabulary of floor nouns and a closed-class list of phrase boundaries. The second list can be
+ * completed - prepositions, pronouns, conjunctions and auxiliaries are closed classes - but the first is a
+ * list of NOUNS, and nouns are open: five rounds of review each added one ("measurements", "metrics", the
+ * plural "baselines"). So this detector is a secondary guard, not the guarantee. The guarantee is the
+ * label: every registered document must carry it, and every tracked document that states floor evidence
+ * must be registered or excluded by name. A wording this detector does not recognise is therefore still
+ * covered by the label check, which is why the two exist together.
  *   docs/train/briefs/manifest.jsonl  is the briefs corpus, not a floor result.
  * A floor value that reaches a new artifact without being listed here is a gap this check cannot see,
  * so the registry is reviewed whenever a report is added.
@@ -83,19 +92,30 @@ const REGISTRY = [
  * true statement about their artefact and must not be flagged, while 'web-uplift built this floor' is a
  * false claim about ours. So the verb list is broad but the object check keeps it honest.
  */
-const AUTHORED_BY = [/\b(?:by|from)\s+`?web-uplift\b/i, /\bweb-uplift(?:'s|\u2019s)\s+\w+/i, /\bofficial\s+`?web-uplift\b/i];
+const BY_FROM = /\b(?:by|from)\s+`?web-uplift\b/i;
+const POSSESSIVE = /\bweb-uplift(?:'s|\u2019s)\s+\w+/i;
+const OFFICIAL = /\bofficial\s+`?web-uplift\b/i;
 const AUTHORING_VERB = /\bweb-uplift\s+(?:generated|produced|output|released|created|authored|wrote|written|built|made|constructed|scored|computed)\b/i;
 /** 'a web-uplift product', 'a web-uplift deliverable' - authorship by noun rather than by verb. */
 const AUTHORING_NOUN = /\bweb-uplift\s+(?:product|work|deliverable|artefact|artifact|result|output|baseline|floor|report)\b/i;
-const FLOOR_OBJECT = /\b(?:floor|baseline|report|reports|numbers?|deltas?|results?|scores?|yield|conformance|percentages?)\b/i;
+// Plurals throughout, and the measurement nouns a report actually uses. Review found "web-uplift's
+// baselines for our corpus" missed because only the singular was listed, and "their baseline
+// measurements" missed because 'measurement' was not a floor noun at all - the same failure as the
+// registry, in a smaller vocabulary: a list covers what its author pictured.
+const FLOOR_OBJECT =
+  /\b(?:floors?|baselines?|reports?|numbers?|deltas?|results?|scores?|yields?|conformance|percentages?|measurements?|metrics?|figures?|values?|outputs?|tables?|counts?|statistics|sums?|totals?|rates?|ratios?|timings?|latenc(?:y|ies)|tokens?|hours?|costs?|prices?|gpu-hours?|datasets?|samples?)\b/i;
 /**
  * Tokens that END a noun phrase, so what follows the possessive can be read as the phrase they possess.
  * "their rules for floor scores" possesses 'rules' (the preposition starts a new phrase); "their
  * rules-aligned independently verified mechanical baseline" possesses 'baseline'. Deciding this by nearby
  * words, which I tried twice, produced false positives on the first and missed the second.
  */
+// Closed-class words only: every English preposition, the pronouns and determiners, the conjunctions,
+// and the auxiliaries. That makes this list completable in a way a list of nouns is not - which is the
+// distinction I had been missing while adding words one at a time. Review found 'alongside' absent, and
+// it is a preposition, so it belongs to a set I can finish rather than guess at.
 const NOUN_PHRASE_STOP =
-  /^(?:for|of|in|on|at|by|from|with|without|against|to|into|onto|about|across|per|over|under|than|is|are|was|were|be|been|being|has|have|had|do|does|did|uses?|used|using|follows?|drives?|comes?|provides?|and|but|or|which|that|while|whereas|so|then|also|plus|it|its|they|their|them|we|our|us|you|your|he|she|his|her)$/i;
+  /^(?:aboard|about|above|across|after|against|along|alongside|amid|amidst|among|amongst|anti|around|as|at|before|behind|below|beneath|beside|besides|between|beyond|but|by|concerning|considering|despite|down|during|except|excepting|excluding|following|for|from|in|inside|into|like|minus|near|of|off|on|onto|opposite|outside|over|past|per|plus|regarding|round|save|since|than|through|throughout|till|to|toward|towards|under|underneath|unlike|until|unto|up|upon|versus|via|within|without|all|another|any|anybody|anyone|anything|both|each|either|else|enough|everybody|everyone|everything|few|he|her|hers|herself|him|himself|his|i|it|its|itself|many|me|mine|more|most|much|my|myself|neither|no|nobody|none|nothing|one|ones|other|others|our|ours|ourselves|several|she|some|somebody|someone|something|that|their|theirs|them|themselves|these|they|this|those|us|we|what|whatever|which|whichever|who|whoever|whom|whose|you|your|yours|yourself|yourselves|and|nor|or|so|yet|although|though|while|whereas|because|unless|until|whether|if|then|am|is|are|was|were|be|been|being|do|does|did|done|have|has|had|having|can|could|may|might|must|shall|should|will|would|not)$/i;
 
 /**
  * The head noun of the phrase a possessive possesses: the last token before the phrase ends.
@@ -153,12 +173,18 @@ function clauseAround(text, index) {
  * clause entirely.
  */
 export function falseProvenance(text) {
+  // `kind` matters: the three attribution shapes decide differently, and conflating them caused a bug -
+  // the by/from rule looks at the noun on either side of the entity, which for a possessive is part of the
+  // phrase the head rule already reads. "web-uplift's per-guide scores" was skipped by the by/from rule
+  // seeing the artefact word 'guide'.
   const candidates = [
-    ...AUTHORED_BY.map((pattern) => ({ pattern, needsFloorObject: false, byPreposition: true })),
-    { pattern: AUTHORING_VERB, needsFloorObject: true, byPreposition: false },
-    { pattern: AUTHORING_NOUN, needsFloorObject: false, byPreposition: false },
+    { pattern: BY_FROM, kind: 'byfrom', needsFloorObject: false },
+    { pattern: OFFICIAL, kind: 'byfrom', needsFloorObject: false },
+    { pattern: POSSESSIVE, kind: 'possessive', needsFloorObject: false },
+    { pattern: AUTHORING_VERB, kind: 'verb', needsFloorObject: true },
+    { pattern: AUTHORING_NOUN, kind: 'noun', needsFloorObject: false },
   ];
-  for (const { pattern, needsFloorObject, byPreposition } of candidates) {
+  for (const { pattern, kind, needsFloorObject } of candidates) {
     for (const match of text.matchAll(new RegExp(pattern.source, `${pattern.flags}g`))) {
       const { clause, offset } = clauseAround(text, match.index);
       const aboutFloor = FLOOR_OBJECT.test(clause);
@@ -166,7 +192,7 @@ export function falseProvenance(text) {
       // from web-uplift" says where the RULES came from - true, and not a claim about our floor - while
       // "numbers from web-uplift" says the numbers are theirs. Review found the first case flagged as a
       // false positive, which is the failure mode that gets a check switched off.
-      if (byPreposition) {
+      if (kind === 'byfrom') {
         const before = clause.slice(0, offset).trim().split(/\s+/).slice(-4).join(' ');
         // "rules from web-uplift" and "from web-uplift rules" are the same true statement; the artefact noun
         // can be on either side of the entity, so both are checked.
@@ -177,8 +203,8 @@ export function falseProvenance(text) {
       // "web-uplift's official baseline" is a claim about ours. Review found the first flagged because
       // 'baseline' appeared elsewhere in the same clause. The noun is usually INSIDE the match, since the
       // possessive pattern captures it, so it is read from there.
-      const possessiveNoun = /(?:'s|\u2019s)\s+([\w-]+)/i.exec(match[0]);
-      if (byPreposition && possessiveNoun) {
+      if (kind === 'possessive') {
+        const possessiveNoun = /(?:'s|\u2019s)\s+([\w-]+)/i.exec(match[0]);
         // What decides this is WHAT IS POSSESSED: the head noun of the phrase that follows the possessive.
         // "their rules" possesses their artefact and is true; "their rules-based baseline", "their rules
         // based baseline" and "their rules-aligned independently verified mechanical baseline" all possess

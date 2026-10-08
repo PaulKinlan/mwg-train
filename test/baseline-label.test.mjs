@@ -150,11 +150,11 @@ test('a registered report that is missing fails rather than passing quietly', ()
 });
 
 test('the provenance detector keeps its two-way contract', () => {
-  // Table-driven because this is the fourth round in which a wording slipped through: a hyphenation, a
-  // modifier chain, a passive, and a prepositional phrase were each missed or wrongly flagged by the
-  // previous rule. The obligation runs both ways - a missed attribution is unattributed provenance, and a
-  // flagged true statement is a check someone turns off - so both columns are asserted, and the counts
-  // are asserted too, because a comment saying "30 cases" was wrong the last time I wrote one by hand.
+  // Table-driven because five rounds of review each found a wording the previous rule got wrong: a
+  // hyphenation, a modifier chain, a passive, a prepositional phrase, a plural, and a preposition that was
+  // not in the stop list. The obligation runs both ways - a missed attribution is unattributed provenance,
+  // and a flagged true statement is a check someone turns off - so both columns are asserted, and the
+  // counts are asserted too, because a comment saying "30 cases" was wrong the last time I counted by hand.
   const cases = [
     // --- Attributions to web-uplift of OUR floor or its numbers: must be caught.
     ["Our floor is web-uplift's rules-based baseline", true],
@@ -163,6 +163,13 @@ test('the provenance detector keeps its two-way contract', () => {
     ["web-uplift's rules-aligned independently verified mechanical baseline", true],
     ["web-uplift's official baseline", true],
     ["web-uplift's floor for us", true],
+    ["web-uplift's baselines for our corpus", true],
+    ["web-uplift's baseline measurements for our corpus", true],
+    ["web-uplift's measured baselines", true],
+    ["web-uplift's per-guide scores", true],
+    ["web-uplift's metrics", true],
+    ["web-uplift's tables for our corpus", true],
+    ["Our metrics come from web-uplift's runs", true],
     ["Our baseline is actually web-uplift's ruleset", true],
     ["Our baseline remains web-uplift's ruleset", true],
     ['This floor is a web-uplift product', true],
@@ -173,8 +180,6 @@ test('the provenance detector keeps its two-way contract', () => {
     ['This report was assembled by web-uplift', true],
     ['The baseline was assembled by web-uplift', true],
     ['numbers from web-uplift', true],
-    ['Our scores came from web-uplift.', true],
-    ['the conformance deltas come from web-uplift', true],
     // --- True statements about our own work, or about THEIR artefact: must pass.
     ["Our baseline uses web-uplift's rules.", false],
     ["Our baseline follows web-uplift's guidance.", false],
@@ -184,9 +189,15 @@ test('the provenance detector keeps its two-way contract', () => {
     ["Our floor uses web-uplift's rules for floor scores", false],
     ["Our floor follows web-uplift's published rules", false],
     ["Our baseline follows web-uplift's rules-based approach", false],
+    ["Our report presents web-uplift's rules alongside independently computed floor scores", false],
+    ["Their report shows web-uplift's rules alongside our own measurements", false],
+    ["Our report cites web-uplift's catalogue and our own floor scores", false],
+    ["We compare our baselines with web-uplift's guides", false],
     ['Our baseline uses rules from web-uplift.', false],
     ['Our baseline is built from web-uplift rules', false],
     ['Our rules came from web-uplift.', false],
+    ['Our scores came from web-uplift.', true],
+    ['the conformance deltas come from web-uplift', true],
     ['The canonical catalog published by web-uplift changed.', false],
     ['The catalogue was published by web-uplift', false],
     ["The catalogue is web-uplift's", false],
@@ -201,8 +212,10 @@ test('the provenance detector keeps its two-way contract', () => {
     if ((got !== null) !== shouldFlag) wrong.push(`${shouldFlag ? 'missed' : 'false positive'}: ${text} -> ${JSON.stringify(got)}`);
   }
   assert.deepEqual(wrong, []);
-  assert.equal(cases.filter(([, flag]) => flag).length, 18, 'attributions that must be caught');
-  assert.equal(cases.filter(([, flag]) => !flag).length, 18, 'true statements that must pass');
+  // These two numbers are the counts at this revision, asserted so they cannot drift the way the
+  // hand-written "30 cases" did. My own first attempt at them here was wrong by one, which is the point.
+  assert.equal(cases.filter(([, flag]) => flag).length, 25, 'attributions that must be caught');
+  assert.equal(cases.filter(([, flag]) => !flag).length, 22, 'true statements that must pass');
 });
 
 test('the scan finds floor evidence the registry does not list', () => {
