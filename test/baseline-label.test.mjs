@@ -1,0 +1,98 @@
+/**
+ * The floor attribution label and the check that enforces it.
+ *
+ * Coord's decision (2026-10-08, bead mwg-train-6ek): we consume web-uplift's published ruleset, and
+ * every floor artifact and report we generate must say 'mwg-train deterministic baseline', so nobody
+ * reads our deterministic mechanical floor as an official `web-uplift` result. The pin check verifies
+ * the ruleset; this verifies the attribution.
+ */
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
+import { checkBaselineLabel, falseProvenance } from '../scripts/check-baseline-label.mjs';
+import { BASELINE_LABEL, baselineAttributionLine } from '../src/eval/ruleset.mjs';
+
+const ROOT = resolve(import.meta.dirname, '..');
+
+// The registry lives in the check script; importing it would run the CLI, so the reports are listed
+// here as well. If a report is added to one list and not the other this test still passes, so the
+// CLI test below covers the registry as a whole.
+const REPORTS = [
+  'docs/eval/conformance/account-recovery-identity.md',
+  'docs/eval/conformance/booking-identity.md',
+  'docs/eval/conformance/catalogue-identity.md',
+  'docs/eval/conformance/contact-lead-identity.md',
+  'docs/eval/conformance/event-registration-identity.md',
+  'docs/train/corpus/YIELD.md',
+];
+
+test('every registered floor report carries the label', () => {
+  for (const path of REPORTS) {
+    const text = readFileSync(join(ROOT, path), 'utf8');
+    assert.ok(text.includes(BASELINE_LABEL), `${path} must carry '${BASELINE_LABEL}'`);
+  }
+  assert.deepEqual(checkBaselineLabel(REPORTS), []);
+});
+
+test('the label is one string shared by every writer', () => {
+  assert.equal(BASELINE_LABEL, 'mwg-train deterministic baseline');
+  assert.ok(baselineAttributionLine().includes(BASELINE_LABEL));
+  // The disclaimer has to name the product it is disclaiming, otherwise it does not disclaim anything.
+  assert.match(baselineAttributionLine(), /web-uplift/);
+  assert.match(baselineAttributionLine(), /not an official/);
+});
+
+test('a report without the label fails the check', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'baseline-label-'));
+  try {
+    const path = join(dir, 'report.md');
+    writeFileSync(path, '# A floor report\n\nstructural 0.805, target 0.75\n');
+    const found = checkBaselineLabel([path]);
+    assert.deepEqual(found.map((f) => f.code), ['LABEL_MISSING']);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('a report that claims web-uplift authorship fails even when labelled', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'baseline-label-'));
+  try {
+    const path = join(dir, 'report.md');
+    writeFileSync(path, `# Report\n\n${baselineAttributionLine()}\n\nThis is an official web-uplift result.\n`);
+    assert.deepEqual(checkBaselineLabel([path]).map((f) => f.code), ['FALSE_PROVENANCE']);
+
+    writeFileSync(path, `# Report\n\n${baselineAttributionLine()}\n\nThe report web-uplift generated.\n`);
+    assert.deepEqual(checkBaselineLabel([path]).map((f) => f.code), ['FALSE_PROVENANCE']);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('our own disclaimer is not mistaken for a claim', () => {
+  // The label line negates the phrase it contains. A check that flagged it would fail on every report
+  // it is supposed to accept, which is the fastest way to get a check deleted.
+  assert.equal(falseProvenance(baselineAttributionLine()), null);
+  assert.equal(falseProvenance('This is not an official web-uplift result.'), null);
+  assert.equal(falseProvenance('structural 0.805'), null);
+  assert.equal(falseProvenance('This is an official web-uplift result.'), 'official web-uplift result');
+});
+
+test('a registered report that is missing fails rather than passing quietly', () => {
+  // The registry is a claim that these reports exist and were checked. If one is gone, the claim is
+  // false, and a check that skips missing files reports success having checked nothing.
+  const found = checkBaselineLabel(['docs/eval/conformance/does-not-exist.md']);
+  assert.deepEqual(found.map((f) => f.code), ['REPORT_MISSING']);
+});
+
+test('the CLI passes on the tree and fails when a report loses its label', () => {
+  const pass = execFileSync(process.execPath, [join(ROOT, 'scripts/check-baseline-label.mjs')], { encoding: 'utf8' });
+  assert.match(pass, /PASS/);
+  assert.match(pass, new RegExp(BASELINE_LABEL));
+
+  const json = JSON.parse(execFileSync(process.execPath, [join(ROOT, 'scripts/check-baseline-label.mjs'), '--json'], { encoding: 'utf8' }));
+  assert.equal(json.findings.length, 0);
+  assert.equal(json.checked, REPORTS.length, 'the CLI registry and this test list must agree');
+});

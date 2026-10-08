@@ -1,5 +1,7 @@
 # Variant identity: account-recovery
 
+> **mwg-train deterministic baseline** - deterministic output of this repository's own tooling, not an official `web-uplift` result.
+
 Shared target: `data/A6_evaluation/targets/account-recovery/signature.json` (sha256 `56be640e0b4ea36550647af277d15c8234d33d3aecd8b3dbacad884564078058`)
 
 ## Delta from raw baseline to the shared target

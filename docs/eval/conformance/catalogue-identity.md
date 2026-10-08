@@ -1,5 +1,7 @@
 # Variant identity: catalogue
 
+> **mwg-train deterministic baseline** - deterministic output of this repository's own tooling, not an official `web-uplift` result.
+
 Shared target: `data/A6_evaluation/targets/catalogue/signature.json` (sha256 `bc1fc64b8ebb11081e403193edbc7c0f00fea16bf3e7392ed2117034df3fb6c6`)
 
 ## Delta from raw baseline to the shared target

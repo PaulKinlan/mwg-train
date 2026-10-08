@@ -1,5 +1,7 @@
 # Variant identity: contact-lead
 
+> **mwg-train deterministic baseline** - deterministic output of this repository's own tooling, not an official `web-uplift` result.
+
 Shared target: `data/A6_evaluation/targets/contact-lead/signature.json` (sha256 `68f30482a12afd26bd8a5fd0936c270ae210dbc2c69644f05b582d5da52e5f8f`)
 
 ## Delta from raw baseline to the shared target

@@ -15,10 +15,10 @@
  * against: a brief that references a rule outside the pinned snapshot fails, rather than silently
  * naming a rule that does not exist.
  */
-import { createHash } from 'node:crypto';
-import { readdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
+import { readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import process from 'node:process';
+import { extractVocabulary, ruleSetHash } from '../src/eval/ruleset.mjs';
 
 function parseArgs(argv) {
   const args = { skillDir: null, out: null };
@@ -41,18 +41,9 @@ if (args.help || !args.skillDir || !args.out) {
 }
 
 const skillDir = realpathSync(resolve(args.skillDir));
-const guidesDir = join(skillDir, 'guides');
-const categories = {};
-for (const category of readdirSync(guidesDir, { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name).sort()) {
-  const guides = readdirSync(join(guidesDir, category))
-    .filter((name) => name.endsWith('.md'))
-    .map((name) => name.replace(/\.md$/, ''))
-    .sort();
-  categories[category] = guides;
-}
+const categories = extractVocabulary(skillDir);
 
-const ruleIds = Object.entries(categories).flatMap(([category, guides]) => guides.map((guide) => `${category}/${guide}`)).sort();
-const ruleSetHash = `sha256:${createHash('sha256').update(ruleIds.join('\n')).digest('hex')}`;
+const ruleSetHashValue = ruleSetHash(categories);
 
 let skillVersion = '';
 try {
@@ -69,11 +60,11 @@ const out = {
   generated_at: new Date().toISOString().replace(/\.\d+Z$/, 'Z'),
   generator: 'scripts/extract-mwg-rules.mjs',
   note: 'Ids only: no guide text is reproduced. Guide text is CC-BY-4.0; see docs/provenance/assets/mwg-modern-web-guidance.md.',
-  counts: { categories: Object.keys(categories).length, guides: ruleIds.length },
-  rule_set_hash: ruleSetHash,
+  counts: { categories: Object.keys(categories).length, guides: Object.values(categories).flat().length },
+  rule_set_hash: ruleSetHashValue,
   categories,
 };
 
 writeFileSync(resolve(args.out), `${JSON.stringify(out, null, 2)}\n`);
-console.log(`extract-mwg-rules: ${out.counts.categories} categories, ${out.counts.guides} guides, ${ruleSetHash} -> ${args.out}`);
+console.log(`extract-mwg-rules: ${out.counts.categories} categories, ${out.counts.guides} guides, ${ruleSetHashValue} -> ${args.out}`);
 if (!skillVersion) console.error('extract-mwg-rules: warning: no --skill-version found in SKILL.md');

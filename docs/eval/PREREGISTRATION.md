@@ -45,7 +45,10 @@ teacher's ability the student reached, and its outputs are excluded from trainin
 
 Guidance in C2 is retrieved per brief from the pinned snapshot (`docs/eval/rules.json`,
 `rule_set_hash`), using the same applicability map the oracle uses, so C2 is not handicapped by a
-bad retriever. This is deliberately generous to the control: the comparison is "does training beat
+bad retriever. The snapshot is pinned to more than itself: `npm run check:rules-pin` verifies its 178
+guide ids against web-uplift's published set-identity hash, and the deterministic floor every
+comparison is measured against is labelled our own rather than anyone's official output - see
+[ATTRIBUTION.md](ATTRIBUTION.md). This is deliberately generous to the control: the comparison is "does training beat
 the guidance", not "is our retrieval better than our training".
 
 ## 3. The primary endpoint

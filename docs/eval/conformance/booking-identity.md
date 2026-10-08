@@ -1,5 +1,7 @@
 # Variant identity: booking
 
+> **mwg-train deterministic baseline** - deterministic output of this repository's own tooling, not an official `web-uplift` result.
+
 Shared target: `data/A6_evaluation/targets/booking/signature.json` (sha256 `c70494945de969b360a1a6ec57278d0aa5e1124e78ee6f3e8f9d060193255759`)
 
 ## Delta from raw baseline to the shared target

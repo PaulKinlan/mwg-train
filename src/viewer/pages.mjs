@@ -9,6 +9,7 @@
 
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { BASELINE_LABEL } from '../eval/ruleset.mjs';
 
 export function escapeHtml(value) {
   return String(value ?? '')
@@ -286,7 +287,7 @@ export function renderIndex({ views, allViews, filters, runId, runs, yieldReport
 ${indexBanner({ runEvidence, projectCount: allViews.length, archetypeCount: archetypes.length, armCount: frameworks.length })}
 ${PIPELINE_STRIP}
 ${scanNotice}
-<p class="muted">Roles: <strong>BASELINE</strong> = raw model output, kept to measure improvement FROM · <strong>TARGET</strong> = the deterministic MWG repair floor to build TOWARDS · <strong>ACCEPTED PAIR</strong> = passed eval acceptance (training data comes only from accepted pairs of the DISJOINT training corpus — the eval set is never trained on) · <strong>REJECTED ATTEMPT</strong> = kept as negative example &amp; repair material.</p>
+<p class="muted">Roles: <strong>BASELINE</strong> = raw model output, kept to measure improvement FROM · <strong>TARGET</strong> = the <strong>${BASELINE_LABEL}</strong> to build TOWARDS · <strong>ACCEPTED PAIR</strong> = passed eval acceptance (training data comes only from accepted pairs of the DISJOINT training corpus — the eval set is never trained on) · <strong>REJECTED ATTEMPT</strong> = kept as negative example &amp; repair material.</p>
 <p>${counts.accepted} accepted pair(s) · ${counts.rejected} rejected attempt(s) · ${counts.noRun} not yet run — of ${allViews.length} project(s).</p>
 ${yieldLine}
 <form class="filters" method="get" action="/">
@@ -390,7 +391,7 @@ export function renderProject({ view, runId, runs, liveOrigin }) {
   <p class="muted">seeded defects: ${decision.seededDefects.length > 0 ? escapeHtml(decision.seededDefects.join(', ')) : 'none (already-clean control)'}</p>
   ${
     decision.upliftEdits
-      ? `<details><summary>Deterministic MWG Repair — Baseline Floor / Repair Reference (NOT training data): ${decision.upliftApplied.length} applied, ${decision.upliftSkipped.length} skipped, ${decision.upliftFailed.length} failed</summary><p class="muted">This is the mechanical linting floor: deterministic repair of the baseline using the Modern Web Guidance rules. For generate families it is a control &amp; measurement, not the training target; for repair families it is the reference fix for the seeded defects. It covers mechanical rules only (labels, landmarks, contrast, autofill, sanitised HTML) — it cannot repair a broken data model or missing server persistence.</p><pre>${escapeHtml(JSON.stringify(decision.upliftEdits, null, 2))}</pre></details>`
+      ? `<details><summary>Deterministic MWG Repair — <strong>${BASELINE_LABEL}</strong> / Repair Reference (NOT training data): ${decision.upliftApplied.length} applied, ${decision.upliftSkipped.length} skipped, ${decision.upliftFailed.length} failed</summary><p class="muted">This is the mechanical linting floor: deterministic repair of the baseline using the Modern Web Guidance rules, produced by this repository's own tooling and not an official <code>web-uplift</code> result. For generate families it is a control &amp; measurement, not the training target; for repair families it is the reference fix for the seeded defects. It covers mechanical rules only (labels, landmarks, contrast, autofill, sanitised HTML) — it cannot repair a broken data model or missing server persistence.</p><pre>${escapeHtml(JSON.stringify(decision.upliftEdits, null, 2))}</pre></details>`
       : ''
   }
 </div>`;
@@ -431,7 +432,7 @@ ${scanBlock}
   </div>
   <div class="panel">
     <h3>TARGET — browser journeys</h3>
-    <p class="muted">the deterministic MWG repair floor — mechanical linting, not the training target for generate families</p>
+    <p class="muted">the <strong>${BASELINE_LABEL}</strong> — mechanical linting by our own rule specifications, not an official <code>web-uplift</code> result, and not the training target for generate families</p>
     ${renderJourney(view.uplifted, 'target')}
     <h4>security checks</h4>
     ${renderSecurity(view.uplifted)}

@@ -30,6 +30,7 @@ import { launchChrome } from '../src/corpus/cdp.mjs';
 import { upliftProject } from '../src/corpus/uplift.mjs';
 import { runProjectVersion, hashTree } from '../src/corpus/harness.mjs';
 import { decidePair, summarizeYield, validationObservation } from '../src/corpus/accept.mjs';
+import { baselineAttributionLine } from '../src/eval/ruleset.mjs';
 
 const REPO_ROOT = resolve(dirname(new URL(import.meta.url).pathname), '..');
 const CORPUS_PATH = 'pilot/TRAINING_CORPUS.json';
@@ -55,6 +56,7 @@ function parseArgs(argv) {
     else if (argv[i] === '--only') args.only = argv[++i];
     else if (argv[i] === '--framework') args.framework = argv[++i];
     else if (argv[i] === '--port') args.port = Number(argv[++i]);
+    else if (argv[i] === '--report-only') args.reportOnly = true;
     else if (argv[i] === '--help' || argv[i] === '-h') {
       console.error(
         'usage: node scripts/train-corpus-run.mjs [--out <dir>] [--records <file>] [--limit N] [--only <id>] [--framework <name>] [--port N]',
@@ -220,10 +222,36 @@ function versionRecord(record, spec) {
   };
 }
 
+/**
+ * Rewrite YIELD.md from a committed records.json. No browser, no measurement.
+ *
+ * The report is a view of the record, so it can be regenerated without re-driving anything: the sample
+ * took 332 seconds of browser time and produced numbers that must not shift because a report gained a
+ * line. Re-rendering from the record keeps the measurement and the presentation separable.
+ */
+function reportFromRecords(recordsPath) {
+  const output = JSON.parse(readFileSync(recordsPath, 'utf8'));
+  const yieldPath = join(dirname(recordsPath), 'YIELD.md');
+  writeFileSync(
+    yieldPath,
+    renderYieldMd({
+      runId: output.run_id,
+      generatedAt: output.generated_at,
+      selection: output.selection,
+      records: output.projects ?? [],
+      summary: output.summary,
+      coverage: output.coverage,
+    }),
+  );
+  console.log(`train-corpus-run: re-rendered ${yieldPath} from ${recordsPath} (no measurement)`);
+}
+
 function renderYieldMd({ runId, generatedAt, selection, records, summary, coverage }) {
   const percent = (value) => `${((value ?? 0) * 100).toFixed(1)}%`;
   const lines = [];
   lines.push(`# Training-corpus acceptance yield (${runId})`);
+  lines.push('');
+  lines.push(baselineAttributionLine());
   lines.push('');
   lines.push(`Generated ${generatedAt} by \`scripts/train-corpus-run.mjs\`. ${summary.sampled_projects} sampled pairs, ${summary.journeys_run} journeys driven, ${summary.journeys_passed} passed.`);
   lines.push('');
@@ -310,6 +338,10 @@ function renderYieldMd({ runId, generatedAt, selection, records, summary, covera
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
+  if (args.reportOnly) {
+    reportFromRecords(resolve(process.cwd(), args.records));
+    return;
+  }
   const runId = new Date().toISOString().replace(/[:.]/g, '-');
   const runDir = resolve(process.cwd(), args.out, runId);
   const recordsPath = resolve(process.cwd(), args.records);
@@ -489,9 +521,13 @@ async function main() {
     })),
   };
 
+  // One timestamp for the record and the report it generates. Two `new Date()` calls 2ms apart made the
+  // committed YIELD.md disagree with the records.json it was generated from, which is exactly the kind
+  // of silent drift that makes a regenerated report untrustworthy.
+  const generatedAt = new Date().toISOString();
   const output = {
     run_id: runId,
-    generated_at: new Date().toISOString(),
+    generated_at: generatedAt,
     generator: 'scripts/train-corpus-run.mjs',
     corpus: CORPUS_PATH,
     selection,
@@ -504,7 +540,7 @@ async function main() {
   const yieldPath = join(dirname(recordsPath), 'YIELD.md');
   writeFileSync(
     yieldPath,
-    renderYieldMd({ runId, generatedAt: new Date().toISOString(), selection, records, summary, coverage }),
+    renderYieldMd({ runId, generatedAt, selection, records, summary, coverage }),
   );
 
   console.log(`train-corpus-run: sampled ${selected.length}, scored ${records.length}, journeys ${journeysRun} run / ${journeysPassed} passed`);

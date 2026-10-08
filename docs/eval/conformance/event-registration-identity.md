@@ -1,5 +1,7 @@
 # Variant identity: event-registration
 
+> **mwg-train deterministic baseline** - deterministic output of this repository's own tooling, not an official `web-uplift` result.
+
 Shared target: `data/A6_evaluation/targets/event-registration/signature.json` (sha256 `dec91020e53544fd97331f8c964409f02248201c7bd9a0dbdb8cfca0143c8ce1`)
 
 ## Delta from raw baseline to the shared target

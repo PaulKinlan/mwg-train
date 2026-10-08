@@ -17,6 +17,8 @@
 const isPass = (entry) => entry?.status === 'PASS';
 const isFail = (entry) => entry?.status === 'FAIL';
 
+import { BASELINE_LABEL } from '../eval/ruleset.mjs';
+
 /** Did the journey work at all: record found after a reload, validation refused, no server error. */
 export function journeyWorks(record) {
   const persistence = record.journeys?.find((journey) => journey.name === 'server-persistence');
@@ -61,6 +63,13 @@ export function decidePair({ original, uplifted, spec, uplift }) {
     archetype: spec.archetype,
     framework: spec.framework.name,
     framework_family: spec.framework.family,
+    // Every floor decision carries the attribution. This is the mechanical baseline we computed from
+    // our own rule specifications, not an official `web-uplift` result - coord's decision of
+    // 2026-10-08 (bead mwg-train-6ek). The label lives on the artifact and on the reports generated
+    // from it, so a downstream reader cannot mistake the floor for someone else's output.
+    baseline_label: BASELINE_LABEL,
+    baseline_definition: 'deterministic repair of the project by our own Modern Web Guidance rule specifications; no model and no teacher in the loop',
+    baseline_tool: 'src/corpus/uplift.mjs',
     seeded_defects: spec.seeded_defects,
     uplift_applied: uplift.applied,
     uplift_skipped: uplift.skipped,
