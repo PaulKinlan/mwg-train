@@ -184,6 +184,41 @@ function lambda(text) {
   return rows;
 }
 
+/**
+ * Fireworks' dedicated-deployment GPU rates.
+ *
+ * These are the rates serving a trained LoRA actually incurs: the provider states that trained LoRA
+ * models can only be deployed to on-demand (dedicated) deployments, and that serverless per-token serving
+ * of your own trained LoRA is not available. Without this row the platform comparison could not price the
+ * managed side's serving at all, so it reported INCOMPLETE rather than naming the side it could price.
+ */
+function fireworksGpu(text) {
+  const rows = [];
+  const seen = new Set();
+  const pattern = /(H100|H200|B200|B300) (\d+) GB GPU\s+\$([0-9.]+)\s+\$([0-9.]+)/g;
+  for (const match of text.matchAll(pattern)) {
+    const [, gpu, vram, perMinute, perHour] = match;
+    rows.push({
+      quote_id: `fireworks-${gpu.toLowerCase()}-${perHour.replace('.', '-')}-gpu-hour`,
+      provider: 'Fireworks',
+      product: 'dedicated deployment (GPU hour)',
+      gpu: `${gpu} ${vram} GB`,
+      vram_gb: Number(vram),
+      mode: 'on-demand',
+      unit: 'usd_per_gpu_hour',
+      value: money(perHour),
+      billing_unit: 'per GPU per hour',
+      verbatim: match[0].slice(0, 200),
+      // Two GPUs (B300) carry more than one rate on the page, and the fetched text has no column label
+      // for the second, so the row is recorded as an unlabelled alternative rather than presented as if
+      // the page said which is which.
+      notes: `billed per GPU-second while a dedicated deployment is up; the page also lists $${perMinute} per minute${seen.has(gpu) ? '; the page lists more than one rate for this GPU and the fetched text carries no column label for the alternatives, so treat the column as unverified' : ''}`,
+    });
+    seen.add(gpu);
+  }
+  return rows;
+}
+
 function main() {
   const argv = process.argv.slice(2);
   let rawDir = 'docs/eval/quotes.raw';
@@ -203,7 +238,7 @@ function main() {
 
   const extractors = {
     runpod: [runpod],
-    fireworks: [fireworksBands, fireworksPerModel],
+    fireworks: [fireworksBands, fireworksPerModel, fireworksGpu],
     lambda: [lambda],
     // Together publishes two fine-tuning tables (LoRA and full-parameter) that differ by about 11%,
     // and the static HTML contains both copies without a machine-readable label for either - the

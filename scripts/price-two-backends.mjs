@@ -66,6 +66,9 @@ export async function buildSheet({ checkpoint = 'qwen3-8b', servingGpuHours = 2,
   const quotes = loadQuotes();
   const managed = quotes.require('fireworks-lora-sft-up-to-16b');
   const clusterGpu = quotes.require('lambda-nvidia-a100-sxm-1-99');
+  // The managed side's serving rate: trained LoRA models need an on-demand dedicated deployment, so the
+  // managed comparison is not complete without a GPU-hour rate for it.
+  const managedGpu = quotes.require('fireworks-h100-8-00-gpu-hour');
 
   const model = FIREWORKS_TRAINABLE.find((candidate) => candidate.id === checkpoint);
   if (!model) throw new TrainingSeamError('UNREACHABLE_BASE', `"${checkpoint}" is not a trainable checkpoint (${FIREWORKS_TRAINABLE.map((m) => m.id).join(', ')})`);
@@ -124,7 +127,7 @@ export async function buildSheet({ checkpoint = 'qwen3-8b', servingGpuHours = 2,
       {
         name: 'fireworks',
         manifest: manifests.fireworks,
-        rates: { usd_per_million_training_tokens: managed.value, currency: managed.currency, quote_ids: [managed.quote_id] },
+        rates: { usd_per_million_training_tokens: managed.value, usd_per_gpu_hour: managedGpu.value, currency: managed.currency, quote_ids: [managed.quote_id, managedGpu.quote_id] },
         serving: { gpuHours: servingGpuHours, measured: false, unit: 'gpu_hours' },
       },
       {
@@ -138,7 +141,7 @@ export async function buildSheet({ checkpoint = 'qwen3-8b', servingGpuHours = 2,
     ],
   });
 
-  return { comparison, corpus, estimate, yield: yieldNow, quotes: { managed, clusterGpu }, planned, job };
+  return { comparison, corpus, estimate, yield: yieldNow, quotes: { managed, clusterGpu, managedGpu }, planned, job };
 }
 
 function render(sheet) {
@@ -158,7 +161,7 @@ function render(sheet) {
   lines.push('');
   lines.push('| Quote id | Provider | Product | Rate | Retrieved | sha256 |');
   lines.push('| --- | --- | --- | --- | --- | --- |');
-  for (const row of [quotes.managed, quotes.clusterGpu]) {
+  for (const row of [quotes.managed, quotes.managedGpu, quotes.clusterGpu]) {
     lines.push(`| \`${row.quote_id}\` | ${row.provider} | ${row.product} | ${row.value} ${row.currency} ${row.billing_unit} | ${row.retrieved_at} | \`${String(row.sha256).slice(0, 18)}…\` |`);
   }
   lines.push('');
