@@ -146,6 +146,8 @@ export const DOCUMENTS = {
   'docs/eval/specs/event-registration.json': 'spec',
   'pilot/TRAINING_CORPUS.json': 'composition',
   'docs/train/briefs/SCHEMA.md': 'spec',
+  'docs/train/briefs/EXPANSION-PLAN.md': 'design',
+  'docs/train/briefs/expansion-matrix.json': 'spec',
   'docs/train/corpus/SERVED.md': 'scaffold-report',
   'docs/train/corpus/served-routes-baseline.json': 'scaffold-report',
   'package.json': 'spec',
@@ -405,6 +407,7 @@ export const EXCLUSIONS = {
   'pilot/plan.json': 'an input - the pilot plan - not a measurement',
   'data/A6_evaluation/targets/manifest.jsonl': 'an input - the eval target set - not a measurement of our floor',
   'docs/design-brief-2026-10-08.md': 'the original design brief; its accepted-pair figures are targets in a proposal, not measured results',
+  'docs/train/briefs/EXPANSION-PLAN.md': 'future authoring plan mentions accepted pairs as a downstream gate, but states no measured floor result',
   'docs/eval/PREREGISTRATION.md': 'states the registered design and its comparison arms, not a measured result - and a pre-registration is the one document that should not be retro-edited to carry a later label',
   'docs/provenance/README.md': 'defines what the provenance arms ARE (including the deterministic uplift arm) for rights purposes; it reports no measurement of its own',
 };
