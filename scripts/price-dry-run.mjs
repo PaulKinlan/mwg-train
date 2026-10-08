@@ -13,7 +13,7 @@
  * The output is generated, not hand-written, so a price in the documentation cannot drift from the
  * price in the file: test/pricing.test.mjs re-runs this and fails if the checked-in sheets differ.
  */
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import process from 'node:process';
 
 import { verifyQuote } from './verify-quotes.mjs';
@@ -80,13 +80,24 @@ function money(value) {
  * A priced sheet must not contain a row the verifier would reject. Structural checks always run; the
  * body checks run when the raw pages are present (they are gitignored, so a CI checkout that only
  * regenerates the markdown cannot run them).
+ *
+ * `hasRawBodies` is what makes the second half of that sentence true: `fetched.json` is committed
+ * while the pages themselves are gitignored, so the directory exists even in a checkout that has
+ * never fetched one. Testing the directory is not testing for bodies, and treating the two as the
+ * same made `price-dry-run` refuse in every fresh checkout.
  */
+function hasRawBodies(rawDir) {
+  return existsSync(rawDir) && readdirSync(rawDir).some((name) => name !== 'fetched.json' && !name.startsWith('.'));
+}
+
 function assertVerified(quotes, rawDir) {
   const failures = [];
   for (const row of quotes) {
     const { problems } = verifyQuote(row, { rawDir });
     for (const problem of problems) {
-      if (problem.code === 'NO_RAW_BODY' && !existsSync(rawDir)) continue;
+      // A missing body is expected when this checkout has not fetched any pages. It is a real failure
+      // when the checkout HAS bodies and this one row's is missing.
+      if (problem.code === 'NO_RAW_BODY' && !hasRawBodies(rawDir)) continue;
       failures.push(`${row.quote_id}: ${problem.code} ${problem.message}`);
     }
   }

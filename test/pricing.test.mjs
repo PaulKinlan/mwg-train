@@ -10,7 +10,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -22,6 +22,9 @@ const QUOTES = resolve(ROOT, 'docs/eval/quotes.jsonl');
 const UNVERIFIED = resolve(ROOT, 'docs/eval/quotes.unverified.jsonl');
 const RAW_DIR = resolve(ROOT, 'docs/eval/quotes.raw');
 const SHEETS = resolve(ROOT, 'docs/eval/pricing.sheets.md');
+// `fetched.json` is committed, so RAW_DIR exists in every checkout; the fetched bodies are what may be
+// absent, and a test that keys off the directory alone runs and then fails with ENOENT.
+const hasRawBodies = existsSync(RAW_DIR) && readdirSync(RAW_DIR).some((name) => name !== 'fetched.json' && !name.startsWith('.'));
 
 const quotes = parseJsonl(readFileSync(QUOTES, 'utf8'));
 const unverified = parseJsonl(readFileSync(UNVERIFIED, 'utf8'));
@@ -99,7 +102,7 @@ test('the committed sheets match the generator', () => {
   }
 });
 
-test('raw bodies, when present, re-derive the priced rows exactly', { skip: !existsSync(RAW_DIR) ? 'raw pages not fetched in this checkout' : false }, () => {
+test('raw bodies, when present, re-derive the priced rows exactly', { skip: hasRawBodies ? false : 'raw pages not fetched in this checkout' }, () => {
   const dir = mkdtempSync(join(tmpdir(), 'mwg-quotes-'));
   try {
     const extracted = join(dir, 'quotes.jsonl');
