@@ -21,6 +21,7 @@ npm run check:briefs        # validate + seal the brief manifest
 npm run quotes:verify       # every priced row must re-derive from the page it came from
 npm run quotes:fetch        # re-fetch those pages and report whether they still hash the same
 npm run price:sheets        # regenerate docs/eval/pricing.sheets.md
+npm run check:train-evidence # reachability records complete, each row backed by its quote
 npm run lint:provenance     # provenance manifest rules
 ```
 

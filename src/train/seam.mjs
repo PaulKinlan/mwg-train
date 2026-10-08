@@ -38,9 +38,32 @@ const isPositiveInteger = (value) => Number.isInteger(value) && value > 0;
 const isFiniteNumber = (value) => typeof value === 'number' && Number.isFinite(value);
 
 /**
+ * A rate that is a real price. Zero and negative are not prices: a rate we do not know must be an
+ * UNVERIFIED line, and `0 > 0` is false so `0` and `-1` fall through to the same refusal path as a
+ * missing rate instead of quietly multiplying a quantity by nothing.
+ */
+const isPositiveRate = (value) => typeof value === 'number' && Number.isFinite(value) && value > 0;
+
+/** A billed quantity that may legitimately be zero (an empty window), but never negative or NaN. */
+const isNonNegativeQuantity = (value) => typeof value === 'number' && Number.isFinite(value) && value >= 0;
+
+/** The hyperparameters that make a training recipe; two runs differing in any of these are not the same run. */
+const RECIPE_KEYS = ['method', 'epochs', 'rank', 'learning_rate', 'max_seq_len'];
+
+/**
  * Check a job description. Reports findings; never throws, so a malformed job cannot take down a sweep.
  */
 export function validateJob(job) {
+  // A getter or a Proxy trap can throw while a field is being read, and a validator whose contract is
+  // "reports findings; never throws" has to survive that. Nothing below escapes this wrapper.
+  try {
+    return inspectJob(job);
+  } catch (error) {
+    return [{ field: 'job', message: `the job could not be read (${error?.message ?? error}), so it is refused rather than crashed on` }];
+  }
+}
+
+function inspectJob(job) {
   const findings = [];
   if (!isPlainObject(job)) return [{ field: 'job', message: 'the job is not an object' }];
 
@@ -114,11 +137,24 @@ export function validateJob(job) {
  * default: `tokens.measured` of null is recorded as UNVERIFIED by `costLines` and never as zero.
  */
 export function validateArtifact(manifest) {
+  try {
+    return inspectArtifact(manifest);
+  } catch (error) {
+    return [{ field: 'manifest', message: `the manifest could not be read (${error?.message ?? error}), so it is refused rather than crashed on` }];
+  }
+}
+
+function inspectArtifact(manifest) {
   const findings = [];
   if (!isPlainObject(manifest)) return [{ field: 'manifest', message: 'the manifest is not an object' }];
 
   if (!BACKENDS.includes(manifest.backend)) {
     findings.push({ field: 'backend', message: `backend must be one of ${BACKENDS.join(', ')}` });
+  }
+  if (typeof manifest.base_model_id !== 'string' || manifest.base_model_id === '') {
+    // A commit hash alone does not name the repository the weights came from; a manifest that records
+    // only the revision cannot show it trained the same weights as another backend's manifest.
+    findings.push({ field: 'base_model_id', message: 'the manifest must name the base model it trained, not only the commit' });
   }
   if (typeof manifest.resolved_base_revision !== 'string' || !COMMIT.test(manifest.resolved_base_revision)) {
     findings.push({ field: 'resolved_base_revision', message: 'the manifest must record the resolved base commit' });
@@ -146,8 +182,12 @@ export function validateArtifact(manifest) {
     findings.push({ field: 'tokens', message: 'the manifest records no token counts, so no training cost can be derived from it' });
   } else if (!isPlainObject(manifest.tokens)) {
     findings.push({ field: 'tokens', message: 'token counts must be an object' });
-  } else if (manifest.tokens.measured !== null && !isFiniteNumber(manifest.tokens.measured)) {
-    findings.push({ field: 'tokens.measured', message: 'measured tokens must be a number or null (null is recorded as UNVERIFIED, never as zero)' });
+  } else if (manifest.tokens.measured !== null && !isPositiveRate(manifest.tokens.measured)) {
+    // Zero tokens is not a small run, it is a run that did not happen: pricing it as $0.00 PINNED is a
+    // missing fact reading as a measurement.
+    findings.push({ field: 'tokens.measured', message: 'measured tokens must be a positive number or null; a zero-token run did not train, and null is recorded as UNVERIFIED, never as zero' });
+  } else if (manifest.tokens.estimate !== undefined && manifest.tokens.estimate !== null && !isPositiveRate(manifest.tokens.estimate)) {
+    findings.push({ field: 'tokens.estimate', message: 'an estimated token count must be a positive number when it is given' });
   }
   if (typeof manifest.training_log !== 'string' || manifest.training_log === '') {
     findings.push({ field: 'training_log', message: 'the manifest must point at the training log' });
@@ -171,17 +211,25 @@ export function costLines({ manifest, rates, serving = null }) {
   // number presented as a measurement, or an unknown presented as zero.
   const estimated = measured === null ? (manifest?.tokens?.estimate ?? null) : null;
   const tokens = measured ?? estimated;
-  if (tokens === null) {
-    lines.push({ item: 'training', quantity: null, unit: 'training_tokens', rate: null, currency: rates.currency ?? 'USD', cost: null, status: 'UNVERIFIED', reason: 'the manifest records no token count, measured or estimated' });
-  } else if (!isFiniteNumber(rates.usd_per_million_training_tokens)) {
-    lines.push({ item: 'training', quantity: measured, unit: 'training_tokens', rate: null, currency: rates.currency ?? 'USD', cost: null, status: 'UNVERIFIED', reason: 'no pinned per-token rate was supplied' });
+  const trainingRate = rates.usd_per_million_training_tokens;
+  if (!isPositiveRate(tokens)) {
+    lines.push({
+      item: 'training', quantity: null, unit: 'training_tokens', rate: null, currency: rates.currency ?? 'USD', cost: null, status: 'UNVERIFIED',
+      reason: tokens === null
+        ? 'the manifest records no token count, measured or estimated'
+        : `the token count is ${tokens}, which is not a positive number of tokens to price`,
+    });
+  } else if (!isPositiveRate(trainingRate)) {
+    // A missing, negative or zero rate is the same missing fact: we do not know the rate, so the line
+    // is not priced. Treating a zero rate as real would print a $0.00 PINNED line.
+    lines.push({ item: 'training', quantity: tokens, unit: 'training_tokens', rate: null, currency: rates.currency ?? 'USD', cost: null, status: 'UNVERIFIED', reason: `no pinned positive per-token rate was supplied (got ${trainingRate === undefined ? 'nothing' : trainingRate})` });
   } else {
-    const cost = (tokens / 1_000_000) * rates.usd_per_million_training_tokens;
+    const cost = (tokens / 1_000_000) * trainingRate;
     lines.push({
       item: 'training',
       quantity: tokens,
       unit: 'training_tokens',
-      rate: rates.usd_per_million_training_tokens,
+      rate: trainingRate,
       currency: rates.currency ?? 'USD',
       cost,
       status: measured === null ? 'ESTIMATE' : 'PINNED',
@@ -190,17 +238,22 @@ export function costLines({ manifest, rates, serving = null }) {
     });
   }
 
-  if (serving === null) {
-    lines.push({ item: 'serving', quantity: null, unit: 'gpu_hours', rate: null, currency: rates.currency ?? 'USD', cost: null, status: 'UNVERIFIED', reason: 'no serving time was supplied; idle is priced on both backends or it is not priced' });
-  } else if (!isFiniteNumber(rates.usd_per_gpu_hour)) {
-    lines.push({ item: 'serving', quantity: serving.gpuHours, unit: 'gpu_hours', rate: null, currency: rates.currency ?? 'USD', cost: null, status: 'UNVERIFIED', reason: 'no pinned GPU-hour rate was supplied' });
+  // The serving quantity is validated before it is multiplied. It used to be read straight off the
+  // argument, so a missing or NaN gpuHours produced a NaN cost, and because `NaN !== null` the total
+  // then reported `complete: true` and `PINNED` over an arithmetic hole.
+  const gpuHours = isPlainObject(serving) ? serving.gpuHours : undefined;
+  const gpuRate = rates.usd_per_gpu_hour;
+  if (!isNonNegativeQuantity(gpuHours)) {
+    lines.push({ item: 'serving', quantity: null, unit: 'gpu_hours', rate: null, currency: rates.currency ?? 'USD', cost: null, status: 'UNVERIFIED', reason: 'no usable serving time was supplied; a missing, negative or non-numeric GPU-hour quantity is not zero' });
+  } else if (!isPositiveRate(gpuRate)) {
+    lines.push({ item: 'serving', quantity: gpuHours, unit: 'gpu_hours', rate: null, currency: rates.currency ?? 'USD', cost: null, status: 'UNVERIFIED', reason: `no pinned positive GPU-hour rate was supplied (got ${gpuRate === undefined ? 'nothing' : gpuRate})` });
   } else {
-    const cost = serving.gpuHours * rates.usd_per_gpu_hour;
+    const cost = gpuHours * gpuRate;
     lines.push({
       item: 'serving',
-      quantity: serving.gpuHours,
+      quantity: gpuHours,
       unit: 'gpu_hours',
-      rate: rates.usd_per_gpu_hour,
+      rate: gpuRate,
       currency: rates.currency ?? 'USD',
       cost,
       // The rate is pinned; the wall-clock it is multiplied by is an estimate, and saying so is the
@@ -215,9 +268,12 @@ export function costLines({ manifest, rates, serving = null }) {
 
 /** Total a set of cost lines, refusing to add an unpriced line into a total that looks complete. */
 export function totalCost(lines) {
-  const unverified = lines.filter((line) => line.cost === null);
+  // Belt and braces: a line whose cost is NaN or Infinity is not a priced line, whatever its status
+  // field says. `NaN !== null` was how a NaN slipped into a total marked complete and PINNED.
+  const priced = (line) => typeof line.cost === 'number' && Number.isFinite(line.cost);
+  const unverified = lines.filter((line) => !priced(line));
   const estimated = lines.filter((line) => line.status === 'ESTIMATE');
-  const total = lines.filter((line) => line.cost !== null).reduce((sum, line) => sum + line.cost, 0);
+  const total = lines.filter(priced).reduce((sum, line) => sum + line.cost, 0);
   return {
     total,
     currency: lines[0]?.currency ?? 'USD',
@@ -241,12 +297,34 @@ export function assertComparable(left, right) {
   if (left.resolved_base_revision !== right.resolved_base_revision) {
     problems.push(`base revisions differ (${left.resolved_base_revision} vs ${right.resolved_base_revision}), so a difference between them is not a backend difference`);
   }
+  const baseModelOf = (manifest) => (typeof manifest.base_model_id === 'string' && manifest.base_model_id !== '' ? manifest.base_model_id : null);
+  const leftBase = baseModelOf(left);
+  const rightBase = baseModelOf(right);
+  if (leftBase === null || rightBase === null) {
+    problems.push('a manifest does not name the base model it trained, so the two runs cannot be shown to be the same weights');
+  } else if (leftBase !== rightBase) {
+    problems.push(`base models differ (${leftBase} vs ${rightBase}), so a difference between them is not a backend difference`);
+  }
   if (left.corpus_sha256 !== right.corpus_sha256) {
     problems.push('the training corpora differ, so a difference between them is not a backend difference');
   }
   const tokenizerOf = (manifest) => manifest.tokenizer ?? manifest.base_tokenizer ?? null;
-  if (tokenizerOf(left) !== tokenizerOf(right)) {
+  const leftTokenizer = tokenizerOf(left);
+  const rightTokenizer = tokenizerOf(right);
+  // Two manifests that both omit the tokenizer are not equal, they are both silent: `null === null`
+  // used to declare such a pair comparable, which is a missing fact treated as a matching one.
+  if (leftTokenizer === null || rightTokenizer === null) {
+    problems.push('a manifest records no tokenizer, so the same corpus cannot be shown to be the same tokens');
+  } else if (leftTokenizer !== rightTokenizer) {
     problems.push('the tokenizers differ, so the same corpus is not the same tokens');
+  }
+  const leftRecipe = isPlainObject(left.hyperparameters) ? left.hyperparameters : {};
+  const rightRecipe = isPlainObject(right.hyperparameters) ? right.hyperparameters : {};
+  const recipeDifferences = RECIPE_KEYS.filter((key) => leftRecipe[key] !== rightRecipe[key]);
+  if (recipeDifferences.length > 0) {
+    // A 1-epoch rank-8 LoRA-SFT run and a 10-epoch rank-64 LoRA-DPO run differ in cost because of the
+    // recipe, not the platform, and calling that a backend comparison would be wrong twice over.
+    problems.push(`the training recipes differ (${recipeDifferences.map((key) => `${key}: ${leftRecipe[key] ?? 'unset'} vs ${rightRecipe[key] ?? 'unset'}`).join(', ')}), so a cost difference is the recipe and not the platform`);
   }
   return { comparable: problems.length === 0, problems };
 }
@@ -290,6 +368,12 @@ export async function runTraining({ backend, job, adapters, context = {} }) {
   const artifactFindings = validateArtifact(manifest);
   if (artifactFindings.length > 0) {
     throw new TrainingSeamError('INVALID_ARTIFACT', `the "${backend}" adapter produced an unusable manifest: ${artifactFindings.map((finding) => `${finding.field}: ${finding.message}`).join('; ')}`);
+  }
+  // The manifest must name the base the JOB declared. An adapter that records a different model than it
+  // was asked to train is exactly the silent substitution the seam exists to catch.
+  const declaredBase = job.base.model_id ?? job.base.repo;
+  if (manifest.base_model_id !== declaredBase) {
+    throw new TrainingSeamError('INVALID_ARTIFACT', `the "${backend}" adapter recorded base_model_id "${manifest.base_model_id}", not the declared "${declaredBase}"`);
   }
   return { planned, artifact: result.artifact, manifest };
 }

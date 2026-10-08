@@ -11,7 +11,7 @@
  * parts that depend on a machine nobody has rented; that is recorded, not smoothed over.
  */
 import { readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
 import process from 'node:process';
 
 import { estimateTokensFromCharacters } from '../src/eval/cost.mjs';
@@ -59,7 +59,7 @@ export function pilotYield(path = join(repoRoot, 'docs/pilot/yield.json')) {
   const attempted = decisions.length;
   const accepted = decisions.filter((decision) => decision.category === 'accepted').length;
   if (attempted === 0) throw new TrainingSeamError('NO_PILOT', 'the pilot report has no decisions; cost per accepted pair needs a measured yield');
-  return { attempted_pairs: attempted, accepted_pairs: accepted, source: path };
+  return { attempted_pairs: attempted, accepted_pairs: accepted, source: relative(repoRoot, path) };
 }
 
 export async function buildSheet({ checkpoint = 'qwen3-8b', servingGpuHours = 2, tokens = null } = {}) {
@@ -101,6 +101,9 @@ export async function buildSheet({ checkpoint = 'qwen3-8b', servingGpuHours = 2,
   const manifests = {
     fireworks: {
       backend: 'fireworks',
+      // Canonical base identity: both backends' manifests carry it, so assertComparable can hold the
+      // model constant while the providers spell the same weights differently in their own plans.
+      base_model_id: checkpoint,
       resolved_base_revision: job.base.revision,
       corpus_sha256: job.corpus.sha256,
       tokenizer: 'qwen3',
@@ -111,6 +114,7 @@ export async function buildSheet({ checkpoint = 'qwen3-8b', servingGpuHours = 2,
     },
     cluster: {
       backend: 'cluster',
+      base_model_id: checkpoint,
       resolved_base_revision: job.base.revision,
       corpus_sha256: job.corpus.sha256,
       tokenizer: 'qwen3',

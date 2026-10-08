@@ -27,8 +27,16 @@ export function backendCostPerAccepted({ name, manifest, rates, serving, measure
   if (!isFiniteNumber(measured.attempted_pairs) || !isFiniteNumber(measured.accepted_pairs)) {
     throw new TrainingSeamError('NO_YIELD', `"${name}": attempted_pairs and accepted_pairs are needed; cost per accepted pair is a ratio of two measurements`);
   }
+  if (measured.attempted_pairs <= 0) {
+    throw new TrainingSeamError('NO_YIELD', `"${name}": attempted_pairs must be positive; a ratio with a zero denominator is not a yield`);
+  }
   if (measured.accepted_pairs <= 0) {
     throw new TrainingSeamError('NO_ACCEPTED', `"${name}": no pair was accepted, so there is no denominator and no per-accepted cost to report`);
+  }
+  if (measured.accepted_pairs > measured.attempted_pairs) {
+    // More accepted than attempted is an acceptance rate above 1, which is a counter error rather than
+    // an especially good run. It used to be divided happily and printed as 2.0.
+    throw new TrainingSeamError('IMPOSSIBLE_YIELD', `"${name}": ${measured.accepted_pairs} accepted of ${measured.attempted_pairs} attempted is not a yield; an acceptance rate above 1 means the counters are wrong`);
   }
 
   const lines = costLines({ manifest, rates, serving });
@@ -73,6 +81,7 @@ export function compareBackends({ yield: measured, backends, variantsPerFamily =
 
   let verdict = 'COMPARABLE';
   let cheaper = null;
+  let tie = false;
   if (!comparable.comparable) {
     verdict = 'NOT_COMPARABLE';
   } else if (results.some((result) => result.status === 'UNVERIFIED')) {
@@ -80,7 +89,12 @@ export function compareBackends({ yield: measured, backends, variantsPerFamily =
     // is a statement about which costs we happened to find, not about the backends.
     verdict = 'INCOMPLETE';
   } else {
-    cheaper = priced.slice().sort((left, right) => left.usd_per_accepted_pair - right.usd_per_accepted_pair)[0].backend;
+    const [best, next] = priced.slice().sort((left, right) => left.usd_per_accepted_pair - right.usd_per_accepted_pair);
+    // Two backends that price the same are a tie, not a win for whichever happened to be first in the
+    // array. The old code took `[0]` of a stable sort and crowned it.
+    const sameToTheCent = next !== undefined && Math.abs(best.usd_per_accepted_pair - next.usd_per_accepted_pair) <= 1e-9 * Math.max(1, Math.abs(best.usd_per_accepted_pair), Math.abs(next.usd_per_accepted_pair));
+    if (sameToTheCent) tie = true;
+    else cheaper = best.backend;
   }
 
   const estimated = results.some((result) => result.status === 'ESTIMATE');
@@ -90,6 +104,7 @@ export function compareBackends({ yield: measured, backends, variantsPerFamily =
     // hypothesis with a number attached, not a finding.
     confidence: verdict === 'COMPARABLE' ? (estimated ? 'ESTIMATE' : 'PINNED') : verdict,
     cheaper_backend: cheaper,
+    tie,
     problems: comparable.problems,
     acceptance_rate: results[0]?.acceptance_rate ?? null,
     attempted_pairs: measured?.attempted_pairs ?? null,
@@ -97,7 +112,9 @@ export function compareBackends({ yield: measured, backends, variantsPerFamily =
     results,
     note:
       verdict === 'COMPARABLE'
-        ? 'Same checkpoint, same corpus, same tokenizer: the difference is the backend.'
+        ? tie
+          ? 'Same checkpoint, same corpus, same tokenizer, and the two backends price within a rounding error of each other: a tie, so no cheaper backend is named.'
+          : 'Same checkpoint, same corpus, same tokenizer: the difference is the backend.'
         : verdict === 'NOT_COMPARABLE'
           ? `The two sides differ in more than their backend: ${comparable.problems.join('; ')}.`
           : 'At least one side has an unpriced line, so no cheaper backend is named.',
@@ -113,8 +130,9 @@ export function renderComparison(comparison) {
       .join('; ');
     return `| \`${result.backend}\` | ${cost} | ${result.acceptance_rate} | ${lines} |`;
   });
+  const heading = comparison.tie ? '| Backend | USD per accepted pair (tied) | Acceptance rate | Lines |' : '| Backend | USD per accepted pair | Acceptance rate | Lines |';
   return [
-    '| Backend | USD per accepted pair | Acceptance rate | Lines |',
+    heading,
     '| --- | --- | --- | --- |',
     ...rows,
   ].join('\n');

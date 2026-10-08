@@ -9,6 +9,7 @@ const ADAPTER = `sha256:${'b'.repeat(64)}`;
 
 const manifest = (overrides = {}) => ({
   backend: 'fireworks',
+  base_model_id: 'qwen3-8b',
   resolved_base_revision: COMMIT,
   corpus_sha256: CORPUS,
   tokenizer: 'qwen3',
@@ -122,11 +123,38 @@ test('zero accepted pairs has no denominator, so it is refused rather than divid
   );
 });
 
+test('two backends that price the same are a tie, not a win for whichever is listed first', () => {
+  const [fireworks, cluster] = pair();
+  const comparison = compareBackends({
+    yield: { attempted_pairs: 25, accepted_pairs: 24 },
+    // 0.5 training + 4 GPU-hours at $4.00 = $16.50, exactly the managed total, over the same yield.
+    backends: [fireworks, { ...cluster, rates: { ...cluster.rates, usd_per_gpu_hour: 4.0 } }],
+  });
+  assert.equal(comparison.verdict, 'COMPARABLE');
+  assert.equal(comparison.tie, true);
+  assert.equal(comparison.cheaper_backend, null, 'a tie names no cheaper backend');
+  assert.match(comparison.note, /tie/i);
+  assert.match(renderComparison(comparison), /tied/);
+});
+
+test('a yield that cannot be a yield is refused rather than divided', () => {
+  const base = { name: 'fireworks', manifest: manifest(), rates: RATES.fireworks, serving: { gpuHours: 1 } };
+  assert.throws(
+    () => backendCostPerAccepted({ ...base, measured: { attempted_pairs: 0, accepted_pairs: 0 } }),
+    (error) => error.code === 'NO_YIELD',
+  );
+  // An acceptance rate above 1 means the counters are wrong, not that the run was excellent.
+  assert.throws(
+    () => backendCostPerAccepted({ ...base, measured: { attempted_pairs: 25, accepted_pairs: 26 } }),
+    (error) => error.code === 'IMPOSSIBLE_YIELD',
+  );
+});
+
 test('the rendered table shows UNVERIFIED where a line could not be priced', () => {
   const comparison = compareBackends({ yield: { attempted_pairs: 25, accepted_pairs: 24 }, backends: [pair()[0], { ...pair()[1], rates: {} }] });
   const table = renderComparison(comparison);
   assert.match(table, /UNVERIFIED/);
-  assert.match(table, /no pinned GPU-hour rate was supplied/);
+  assert.match(table, /no pinned positive GPU-hour rate was supplied/);
   assert.match(table, /\| Backend \| USD per accepted pair \|/);
 });
 

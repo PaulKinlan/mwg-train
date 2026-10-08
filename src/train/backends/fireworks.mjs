@@ -30,7 +30,9 @@ export function plan(job) {
     rate: {
       usd_per_million_training_tokens: rate,
       band: band.max_params === null ? 'above 300B' : `up to ${band.max_params / 1e9}B`,
-      quote_ids: ['fireworks.training-pricing', 'fireworks.cost-estimator'],
+      // The rate row in docs/eval/quotes.jsonl (verified by verify-quotes.mjs). The reachability
+      // document the band and the per-model flags come from is cited separately in `evidence`.
+      quote_ids: [band.quote_id],
     },
     payload: {
       base_model: model.id,
@@ -40,7 +42,7 @@ export function plan(job) {
       lora_rank: job.hyperparameters.rank ?? null,
       learning_rate: job.hyperparameters.learning_rate ?? null,
     },
-    evidence: [EVIDENCE['fireworks.training-pricing'], EVIDENCE['fireworks.cost-estimator']],
+    evidence: [EVIDENCE['fireworks.cost-estimator']],
   };
 }
 
@@ -64,6 +66,10 @@ export async function run(job, context = {}) {
   return {
     artifact: { uri: outputModel, format: 'lora-fireworks' },
     manifest: {
+      backend: 'fireworks',
+      // The canonical base identity the job declared, not the provider's own name for it: this is the
+      // field a cross-backend comparison reads, and the two providers spell the same weights differently.
+      base_model_id: job.base.model_id ?? job.base.repo,
       resolved_base_revision: job.base.revision,
       corpus_sha256: job.corpus.sha256,
       hyperparameters: job.hyperparameters,

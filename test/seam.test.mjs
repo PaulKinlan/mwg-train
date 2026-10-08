@@ -29,8 +29,10 @@ const job = (overrides = {}) => ({
 
 const manifest = (overrides = {}) => ({
   backend: 'fireworks',
+  base_model_id: 'qwen3-8b',
   resolved_base_revision: COMMIT,
   corpus_sha256: CORPUS,
+  tokenizer: 'qwen3',
   hyperparameters: job().hyperparameters,
   tokens: { measured: 1_000_000, source: 'provider report' },
   training_log: 'runs/dry-run-1/train.log',
@@ -94,7 +96,7 @@ test('a manifest must record what was trained on', () => {
 });
 
 test('an unknown token count is UNVERIFIED, never zero', () => {
-  const rates = { usd_per_million_training_tokens: 0.5, quote_ids: ['fireworks.training-pricing'] };
+  const rates = { usd_per_million_training_tokens: 0.5, quote_ids: ['fireworks-lora-sft-up-to-16b'] };
   const known = costLines({ manifest: manifest(), rates, serving: { gpuHours: 0 } });
   const unpriced = costLines({ manifest: manifest({ tokens: { measured: null, source: 'not reported' } }), rates, serving: { gpuHours: 0 } });
   // Both lines priced, so the only thing left that is not a measurement is the token count.
@@ -200,6 +202,86 @@ test('both adapters plan the same job to the same declared facts', () => {
   assert.equal(cluster.env.CORPUS_SHA256, CORPUS, 'the command carries the corpus hash it was planned for');
 });
 
+test('a serving quantity that is missing, NaN or negative is UNVERIFIED, and the total is never NaN and PINNED', () => {
+  const rates = { usd_per_million_training_tokens: 0.5, usd_per_gpu_hour: 8, quote_ids: ['fireworks-lora-sft-up-to-16b'] };
+  for (const serving of [null, {}, { gpuHours: undefined }, { gpuHours: Number.NaN }, { gpuHours: -1 }, { gpuHours: '2' }]) {
+    const lines = costLines({ manifest: manifest(), rates, serving });
+    const servingLine = lines.find((line) => line.item === 'serving');
+    assert.equal(servingLine.cost, null, `serving ${JSON.stringify(serving)} must not be priced`);
+    assert.equal(servingLine.status, 'UNVERIFIED');
+    const total = totalCost(lines);
+    assert.equal(total.complete, false, 'a total over an unknown serving quantity must not claim to be complete');
+    assert.equal(total.status, 'UNVERIFIED');
+    assert.ok(Number.isFinite(total.total), 'the total is a finite number, not NaN');
+  }
+});
+
+test('a zero or negative rate is a missing rate, not a free one', () => {
+  for (const rate of [0, -0.5, Number.NaN, undefined, '0.5']) {
+    const lines = costLines({ manifest: manifest(), rates: { usd_per_million_training_tokens: rate, usd_per_gpu_hour: 8 }, serving: { gpuHours: 1 } });
+    const training = lines.find((line) => line.item === 'training');
+    assert.equal(training.status, 'UNVERIFIED', `rate ${String(rate)} must not price a line`);
+    assert.equal(training.cost, null);
+  }
+});
+
+test('a zero or negative token count is refused, and never priced as $0.00 PINNED', () => {
+  for (const measured of [0, -5]) {
+    assert.ok(validateArtifact(manifest({ tokens: { measured } })).some((finding) => finding.field === 'tokens.measured'), `${measured} tokens must be refused by the manifest`);
+    const training = costLines({ manifest: manifest({ tokens: { measured } }), rates: { usd_per_million_training_tokens: 0.5 }, serving: { gpuHours: 1 } }).find((line) => line.item === 'training');
+    assert.equal(training.status, 'UNVERIFIED');
+    assert.equal(training.cost, null);
+  }
+});
+
+test('validators survive a getter or a Proxy trap that throws while a field is read', () => {
+  const throwingGetter = {};
+  Object.defineProperty(throwingGetter, 'corpus', { get() { throw new Error('getter exploded'); }, enumerable: true });
+  const throwingProxy = new Proxy({}, { get() { throw new Error('proxy trap exploded'); } });
+  for (const value of [throwingGetter, throwingProxy]) {
+    assert.doesNotThrow(() => validateJob(value));
+    assert.doesNotThrow(() => validateArtifact(value));
+    assert.ok(validateJob(value).length > 0, 'a job that cannot be read is refused');
+    assert.ok(validateArtifact(value).length > 0, 'a manifest that cannot be read is refused');
+  }
+});
+
+test('a comparison over different recipes, bases or a missing tokenizer is refused', () => {
+  const left = manifest({ backend: 'fireworks' });
+  const right = manifest({ backend: 'cluster' });
+  const recipe = assertComparable(left, manifest({ backend: 'cluster', hyperparameters: { ...job().hyperparameters, method: 'lora-dpo', epochs: 10, rank: 64 } }));
+  assert.equal(recipe.comparable, false);
+  assert.match(recipe.problems.join(' '), /training recipes differ/);
+  const base = assertComparable(left, manifest({ backend: 'cluster', base_model_id: 'qwen3-14b' }));
+  assert.equal(base.comparable, false);
+  assert.match(base.problems.join(' '), /base models differ/);
+  const noBase = assertComparable(left, manifest({ backend: 'cluster', base_model_id: undefined }));
+  assert.equal(noBase.comparable, false);
+  assert.match(noBase.problems.join(' '), /does not name the base model/);
+  const noTokenizer = assertComparable({ ...left, tokenizer: undefined }, { ...right, tokenizer: undefined });
+  assert.equal(noTokenizer.comparable, false);
+  assert.match(noTokenizer.problems.join(' '), /records no tokenizer/);
+});
+
+test('an adapter that records a different base than the job declared is refused', async () => {
+  const adapters = { fireworks: { plan: () => ({}), run: async () => ({ artifact: { uri: 'x' }, manifest: manifest({ base_model_id: 'qwen3-14b' }) }) } };
+  await assert.rejects(
+    () => runTraining({ backend: 'fireworks', job: job(), adapters }),
+    (error) => error.code === 'INVALID_ARTIFACT' && /base_model_id/.test(error.message),
+  );
+});
+
+test('the cluster plan carries every declared hyperparameter, not only the ones with obvious flags', () => {
+  const planned = clusterPlan(job());
+  const command = planned.command.join(' ');
+  assert.match(command, /--method lora-sft/);
+  assert.match(command, /--lora_rank 16/);
+  assert.match(command, /--learning_rate 0.0002/);
+  assert.match(command, /--num_epochs 2/);
+  assert.equal(planned.hyperparameters.rank, 16);
+  assert.equal(planned.base.canonical_model_id, 'qwen3-8b');
+});
+
 test('a checkpoint the backend cannot train is refused with the reason', () => {
   assert.throws(
     () => fireworksPlan(job({ base: { repo: 'Qwen/Qwen2.5-Coder-7B-Instruct', revision: COMMIT, licence: 'apache-2.0' } })),
@@ -211,7 +293,7 @@ test('the reachability map says which checkpoints a comparison may use', () => {
   const shared = reachability('qwen3-8b');
   assert.equal(shared.fireworks, true);
   assert.equal(shared.cluster, false, 'the cluster list names owner/repo ids, so a bare fireworks id is not a cluster id');
-  assert.equal(reachability('qwen3-14b').params, 14_770_000_000);
+  assert.equal(reachability('qwen3-14b').params, 14_768_307_200);
   assert.equal(bandFor(8_190_000_000).lora_sft, 0.5);
   assert.equal(bandFor(26_000_000_000).lora_sft, 3.0);
   assert.equal(bandFor(552_000_000_000).lora_sft, 10.0, 'the probed teacher-class model is twenty times the price per token');

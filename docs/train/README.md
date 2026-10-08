@@ -11,8 +11,9 @@ A **job** declares: the corpus (path, sha256, row count), the base checkpoint (r
 40-character commit**, licence), the hyperparameters (`lora-sft`/`lora-dpo`, rank, epochs, max sequence
 length, learning rate) and a relative output reference.
 
-An **artifact manifest** records: backend, resolved base revision, corpus hash, hyperparameters, token
-counts, the adapter's location/digest/format, the training log, and the backend's own job id.
+An **artifact manifest** records: backend, the **base model id** it trained (the canonical identity, not the
+provider's own spelling), resolved base revision, corpus hash, hyperparameters, token counts, the
+adapter's location/digest/format, the training log, and the backend's own job id.
 
 Validation is fail-closed and never throws:
 
@@ -23,6 +24,7 @@ Validation is fail-closed and never throws:
 | An output reference that is absolute or contains `..` | The two backends would resolve it differently, and it can escape the run. |
 | A manifest with no token count | No training cost can be derived from it, and a missing count is not a zero. |
 | An adapter result that is not an object with a manifest | The seam must refuse, not crash: it did crash with a `TypeError` until a test for exactly that shape was written. |
+| A manifest that does not name its base model, or names a different one than the job declared | A commit hash alone does not name the repository the weights came from, and an adapter that trained something else is exactly the silent substitution the seam exists to catch. |
 
 ## Costing never guesses
 
@@ -41,7 +43,11 @@ Charging idle to one side only is how a comparison comes out flattering.
 both sides are priced and `assertComparable()` holds. That check is the one that makes the comparison mean
 what it says: two adapters trained on different base checkpoints differ in their **model** as well as
 their backend, so a cheaper one would be cheaper for two reasons at once. It compares resolved base
-revision, corpus hash and tokenizer.
+revision, base model id, corpus hash, tokenizer, and the training recipe (`method`, `rank`, `epochs`,
+`max_seq_len`, `learning_rate`). A missing tokenizer or base model id is a refusal, not a match - two
+manifests that both omit it are both silent, not equal - and two runs with different recipes differ in
+cost because of the recipe, not the platform. When both sides price identically the comparison reports a
+**tie** rather than crowning whichever was listed first.
 
     cost_per_accepted_pair = (training + serving) / accepted_pairs
 
@@ -55,7 +61,8 @@ the pilot is the input to this comparison rather than a separate experiment.
 ## Reachability
 
 Which backend can train which checkpoint is a table, not a paragraph (`src/train/reachability.mjs`), and
-each row cites the fetched document it came from. The distinction that matters was expensive to learn:
+each row cites the fetched document and quote it came from. The distinction that matters was expensive to
+learn:
 the serverless **inference** catalogue (`/inference/v1/models`, 20 models, no `HF_BASE_MODEL` field)
 answers *what can be served*, while the fine-tuning **cost estimator** (`paramCount`, `managedSft`,
 `managedDpo`, LoRA shapes) answers *what can be trained*. Reading the wrong one took the reachable
@@ -73,6 +80,14 @@ The headline comparison uses a checkpoint available on **both** backends, so the
 two columns is the platform and not the model. The preregistered student (`Qwen2.5-Coder-7B-Instruct`) is
 **not trainable on Fireworks** — it is absent from the 44-model fine-tuning catalogue — so the
 preregistration is amended to a shared checkpoint rather than quietly substituted.
+
+Every record carries a **full 64-character sha256**, a byte count, a retrieval time and a verbatim quote,
+and every table row is checked against the quote printed next to it; a licence is cited from the model it
+names rather than assumed, because the cost-estimator states no licences. `npm run check:train-evidence`
+re-reads the records without a network, and `node scripts/check-train-evidence.mjs --fetch` re-fetches
+each one and reports a genuinely changed page as CHANGED with both digests. This is not decoration: the
+file previously held a cost-estimator digest whose first 16 hex characters were real and whose other 48
+were invented, and a serving-fees digest truncated to 16 characters.
 
 ## What is not built
 
