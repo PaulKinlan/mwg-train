@@ -13,6 +13,12 @@
  * of them.
  */
 
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+
+import { assertDisjointTrainingCorpus } from './disjoint.mjs';
+
 export const BACKENDS = ['fireworks', 'cluster'];
 
 /** Licences we will train on. A checkpoint whose licence is unknown is not a checkpoint. */
@@ -125,6 +131,70 @@ function inspectJob(job) {
     // An output that can name an absolute path or walk upwards is an output that can overwrite something
     // nobody intended to overwrite, and the two backends would resolve it differently.
     findings.push({ field: 'output_ref', message: 'output_ref must be a relative path inside the run, without ".."' });
+  }
+
+  return findings;
+}
+
+/**
+ * Prove a job's corpus is what it declares and is disjoint from the sealed evaluation, before any
+ * backend plans or launches it. Unlike `validateJob`, this is the I/O layer: it reads the corpus
+ * file and fails closed when the file is missing or unreadable, its bytes do not hash to the declared
+ * digest, its row count is wrong, or it shares a family or target design with the held-out evaluation.
+ *
+ * Reports findings shaped like `validateJob` (`{ field, message }`); never throws.
+ */
+export function validateCorpusGates(job, { cwd = process.cwd() } = {}) {
+  try {
+    return checkCorpusGates(job, cwd);
+  } catch (error) {
+    return [{ field: 'corpus', message: `the corpus could not be checked (${error?.message ?? error}), so it is refused rather than launched` }];
+  }
+}
+
+function checkCorpusGates(job, cwd) {
+  if (!isPlainObject(job?.corpus)) {
+    return [{ field: 'corpus', message: 'no corpus was declared' }];
+  }
+
+  const declaredPath = job.corpus.path;
+  const resolvedPath = typeof declaredPath === 'string' && declaredPath !== '' ? resolve(cwd, declaredPath) : null;
+  if (resolvedPath === null) {
+    return [{ field: 'corpus.path', message: 'the corpus has no path' }];
+  }
+
+  // Fail closed: a corpus that cannot be read is not a corpus, and there is nothing to hash, count
+  // or check disjointness on.
+  let bytes;
+  try {
+    bytes = readFileSync(resolvedPath);
+  } catch (error) {
+    return [{ field: 'corpus.path', message: `the corpus cannot be read at ${resolvedPath}: ${error.message}` }];
+  }
+
+  const findings = [];
+
+  const actualDigest = `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
+  if (actualDigest !== job.corpus.sha256) {
+    findings.push({
+      field: 'corpus.sha256',
+      message: `the corpus bytes hash to ${actualDigest}, not the declared ${job.corpus.sha256}`,
+    });
+  }
+
+  const actualRows = bytes.toString('utf8').split('\n').map((line) => line.trim()).filter((line) => line !== '').length;
+  if (actualRows !== job.corpus.rows) {
+    findings.push({
+      field: 'corpus.rows',
+      message: `the corpus has ${actualRows} rows, not the declared ${job.corpus.rows}`,
+    });
+  }
+
+  // The disjointness assertion never throws and names the eval side it checked against (the sealed
+  // held-out briefs and the A6 target designs); every finding it returns becomes a corpus finding,
+  // with the code preserved as the message prefix so a refusal can name what was violated.
+  for (const finding of assertDisjointTrainingCorpus({ trainManifestPath: resolvedPath }).findings) {
+    findings.push({ field: 'corpus', message: `${finding.code}: ${finding.message}` });
   }
 
   return findings;
@@ -354,6 +424,19 @@ export async function runTraining({ backend, job, adapters, context = {} }) {
   const findings = validateJob(job);
   if (findings.length > 0) {
     throw new TrainingSeamError('INVALID_JOB', `the job is not runnable: ${findings.map((finding) => `${finding.field}: ${finding.message}`).join('; ')}`);
+  }
+
+  // A job whose corpus is not proven disjoint - or whose corpus bytes do not match the declared hash
+  // and row count - never reaches a backend. This is the I/O gate `validateJob` deliberately stays
+  // pure of, so a corpus nobody actually checked cannot be planned and launched on a declared hash.
+  const corpusFindings = validateCorpusGates(job);
+  if (corpusFindings.length > 0) {
+    const integrityFindings = corpusFindings.filter((finding) => finding.field !== 'corpus');
+    const disjointFindings = corpusFindings.filter((finding) => finding.field === 'corpus');
+    if (integrityFindings.length > 0) {
+      throw new TrainingSeamError('INVALID_JOB', `the job is not runnable: ${integrityFindings.map((finding) => `${finding.field}: ${finding.message}`).join('; ')}`);
+    }
+    throw new TrainingSeamError('CORPUS_NOT_DISJOINT', `the training corpus is not proven disjoint from the sealed evaluation: ${disjointFindings.map((finding) => finding.message).join('; ')}`);
   }
 
   const planned = await adapter.plan(job, context);
