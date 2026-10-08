@@ -77,13 +77,13 @@ test('journey steps are emitted in the shape the replay driver reads, never the 
 
   // The three things the driver actually needs in order to perform the recorded flow.
   const filling = spec.journey.steps.find((s) => s.fill);
-  assert.equal(filling.fill['input[name=name]'], 'Sample field 1', 'the synthesized value must be reachable as step.fill[selector]');
+  assert.equal(filling.fill['input[name=field-1]'], 'Sample field 1', 'the synthesized value must be reachable as step.fill[selector]');
   const submitting = spec.journey.steps.find((s) => s.submit);
-  assert.equal(submitting.submit, 'form#checkout', 'the submission must be reachable as step.submit');
+  assert.equal(submitting.submit, 'form#generated-form-1', 'the submission must be reachable as step.submit');
   const expectation = spec.journey.steps.find((s) => s.expectText === 'Sample field 1');
   assert.ok(expectation, 'the observed value must be reachable as step.expectText');
   assert.equal(expectation.path, '/', 'the submit step lands on the generated read-by-reference page without navigating to /order');
-  assert.equal(expectation.submit, 'form#checkout');
+  assert.equal(expectation.submit, 'form#generated-form-1');
 });
 
 test('a step is only closed by its own submit, so fills and selects stay with the path they happened on', () => {
@@ -96,9 +96,9 @@ test('a step is only closed by its own submit, so fills and selects stay with th
   // performs step.submit on the same step. Asserting a separate fill step would have asserted a shape the driver
   // would then have to reassemble - my first version of this test did exactly that and failed against correct code.
   const submitIndex = spec.journey.steps.findIndex((s) => s.submit);
-  const fillIndex = spec.journey.steps.findIndex((s) => s.fill?.['input[name=name]']);
+  const fillIndex = spec.journey.steps.findIndex((s) => s.fill?.['input[name=field-1]']);
   assert.ok(fillIndex >= 0 && fillIndex <= submitIndex, 'the fill must be at or before the submit that carries it');
   const carried = spec.journey.steps[submitIndex].fill;
-  assert.equal(carried?.['input[name=name]'], 'Sample field 1', 'the submit step must carry the synthetic value itself');
-  assert.equal(carried?.['input[name=email]'], 'sample2@example.test', 'and every other field set on that path');
+  assert.equal(carried?.['input[name=field-1]'], 'Sample field 1', 'the submit step must carry the synthetic value itself');
+  assert.equal(carried?.['input[name=field-2]'], 'sample2@example.test', 'and every other field set on that path');
 });

@@ -89,44 +89,48 @@ test('translates a valid capture and flow into a durable specification validated
   assert.deepEqual(problems, [], `spec should validate with zero problems: ${problems.join('\n')}`);
 
   // Derived attributes match strict clean-room mapping
-  assert.equal(spec.family_id, 'feedback-example-test');
+  assert.match(spec.family_id, /^form-flow-[a-f0-9]{16}$/);
   assert.equal(spec.title, 'Generated form flow (4 fields)');
   assert.equal(spec.story, 'Generated form flow (4 fields): a clean-room server-backed flow with 3 routes.');
   assert.equal(spec.state.engine, 'sqlite');
-  assert.equal(spec.persistence.write_route, '/submit-feedback');
-  assert.equal(spec.persistence.read_route, '/feedback-receipt/:ref');
-  assert.match(spec.persistence.reload_assertion, /reloading \/feedback-receipt\/<ref> still shows the stored name value/);
+  assert.equal(spec.persistence.write_route, '/page-2');
+  assert.equal(spec.persistence.read_route, '/page-1/:ref');
+  assert.match(spec.persistence.reload_assertion, /reloading \/page-1\/<ref> still shows the stored field-1 value/);
 
   // Routes: GET page, POST write with redirect, GET read-by-reference
   const pageRoute = spec.routes.find((r) => r.path === '/' && r.kind === 'page');
-  const writeRoute = spec.routes.find((r) => r.path === '/submit-feedback' && r.kind === 'write');
-  const readRoute = spec.routes.find((r) => r.path === '/feedback-receipt/:ref' && r.kind === 'read-by-reference');
+  const writeRoute = spec.routes.find((r) => r.path === '/page-2' && r.kind === 'write');
+  const readRoute = spec.routes.find((r) => r.path === '/page-1/:ref' && r.kind === 'read-by-reference');
   assert.ok(pageRoute, 'must serve page route /');
-  assert.ok(writeRoute, 'must serve write route /submit-feedback');
-  assert.equal(writeRoute.redirect, '/feedback-receipt/:ref');
-  assert.ok(readRoute, 'must serve read-by-reference route /feedback-receipt/:ref');
+  assert.ok(writeRoute, 'must serve generated write route');
+  assert.equal(writeRoute.redirect, '/page-1/:ref');
+  assert.ok(readRoute, 'must serve generated read-by-reference route');
+  assert.equal(spec.journey.steps.find((step) => step.submit).submit, spec.journey.formSelector);
+  assert.equal(spec.persistence.write_route, writeRoute.path);
+  assert.equal(spec.persistence.read_route, writeRoute.redirect);
+  assert.ok(spec.routes.some((route) => route.method === 'GET' && route.path === spec.journey.startPath));
 
   // Fields and required set
-  assert.deepEqual(spec.validation.required_fields, ['name', 'email', 'comments']);
-  const nameField = spec.fields.find((f) => f.name === 'name');
+  assert.deepEqual(spec.validation.required_fields, ['field-1', 'field-2', 'field-4']);
+  const nameField = spec.fields.find((f) => f.name === 'field-1');
   assert.equal(nameField.echoed, true);
   assert.equal(nameField.required, true);
 
-  const categoryField = spec.fields.find((f) => f.name === 'category');
+  const categoryField = spec.fields.find((f) => f.name === 'field-3');
   assert.equal(categoryField.optional, true);
   assert.deepEqual(categoryField.options, ['Option 1 for field 3', 'Option 2 for field 3', 'Option 3 for field 3']);
   assert.equal(nameField.label, 'Field 1 (text)');
 
   // Echo is derived from flow observation
-  assert.equal(spec.echo.field, 'name');
+  assert.equal(spec.echo.field, 'field-1');
 
   // Journey carries synthesized values and the same recorded actions
   assert.equal(spec.journey.startPath, '/');
-  assert.equal(spec.journey.formSelector, 'form#feedback-form');
+  assert.equal(spec.journey.formSelector, 'form#generated-form-1');
   assert.equal(spec.journey.expectText, 'Sample field 1');
-  assert.equal(spec.journey.fill['input[name=name]'], 'Sample field 1');
-  assert.equal(spec.journey.fill['input[name=email]'], 'sample2@example.test');
-  assert.equal(spec.journey.fill['textarea[name=comments]'], 'Sample field 4');
+  assert.equal(spec.journey.fill['input[name=field-1]'], 'Sample field 1');
+  assert.equal(spec.journey.fill['input[name=field-2]'], 'sample2@example.test');
+  assert.equal(spec.journey.fill['textarea[name=field-4]'], 'Sample field 4');
   // The journey's steps are PLACES (path/fill/select/submit/expectText), not the flow's ACTIONS
   // (action/target/value). Six recorded actions merge into the steps the replay driver reads; asserting the
   // flow's count here would assert the shape the driver cannot read.
@@ -141,14 +145,30 @@ test('translates a valid capture and flow into a durable specification validated
 test('recorded words and typed values remain in quarantine, never in the spec or any generated source', (t) => {
   const capture = fixtureCapture();
   const flow = fixtureFlow();
-  const canaries = ['Leak Canary', 'leak-canary@example.test', 'Secret site heading 8462', 'Secret label 7391', 'Secret option 5728'];
+  const canaries = ['Leak Canary', 'leak-canary@example.test', 'Secret site heading 8462', 'Secret label 7391', 'Secret option 5728',
+    '/canary-path-5555', '/canary-action-6666', 'canary-host-7777', 'canary-form-8888', 'canary-field-9999', 'canary-slug-4321', 'canary-autocomplete-7654'];
+  capture.source.url = 'https://canary-host-7777.example.test/canary-path-5555';
+  capture.source.final_url = capture.source.url;
+  flow.source.url = capture.source.url;
+  capture.pages[0].path = '/canary-path-5555';
+  capture.pages[0].forms[0].action = '/canary-action-6666';
+  capture.pages[0].forms[0].id = 'canary-form-8888';
+  capture.pages[0].forms[0].controls[0].name = 'canary-field-9999';
+  capture.pages[0].forms[0].controls[0].slug = 'canary-slug-4321';
+  capture.pages[0].forms[0].controls[0].autocomplete = 'canary-autocomplete-7654';
+  flow.start_path = '/canary-path-5555';
+  for (const step of flow.steps) {
+    if (step.path === '/') step.path = '/canary-path-5555';
+    if (step.target === 'input[name=name]') step.target = 'input[name=canary-field-9999]';
+    if (step.target === 'form#feedback-form') step.target = 'form#canary-form-8888';
+  }
   capture.pages[0].title = 'Secret site heading 8462';
   capture.pages[0].headings = ['Secret site heading 8462'];
   capture.pages[0].forms[0].controls[0].label = 'Secret label 7391';
   capture.pages[0].forms[0].controls[2].options[1] = 'Secret option 5728';
   flow.steps[1].value = 'Leak Canary';
   flow.steps[2].value = 'leak-canary@example.test';
-  flow.steps.splice(4, 0, { index: 4, path: '/', action: 'select', target: 'select[name=category]', value: 'Secret option 5728' });
+  flow.steps.splice(4, 0, { index: 4, path: '/canary-path-5555', action: 'select', target: 'select[name=category]', value: 'Secret option 5728' });
   flow.steps[5].index = 5;
   flow.steps[6].index = 6;
   flow.steps[6].expectText = 'Leak Canary';
@@ -162,17 +182,27 @@ test('recorded words and typed values remain in quarantine, never in the spec or
   const spec = translateCapture({ capture, flow });
   const { specPath, projects } = buildCapturedProjects({ spec, outDir: temp, testTempDir: temp });
   const generatedFiles = [specPath];
+  const generatedNames = [specPath, ...Object.values(projects)];
   function collect(dir) {
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
       const path = join(dir, entry.name);
       if (entry.isDirectory()) collect(path);
       else generatedFiles.push(path);
+      generatedNames.push(path);
     }
   }
-  for (const dir of Object.values(projects)) collect(dir);
+  for (const dir of Object.values(projects)) {
+    collect(dir);
+    const contents = generatedFiles.filter((file) => file.startsWith(dir)).map((file) => readFileSync(file, 'utf8'));
+    assert.ok(contents.some((source) => source.includes(`action="${spec.persistence.write_route}"`)),
+      'rendered form action must match the generated write route');
+    assert.ok(contents.some((source) => source.includes(`id="${spec.journey.formSelector.slice(5)}"`)),
+      'rendered form must match the journey submit selector');
+  }
   for (const word of canaries) {
     assert.ok(!JSON.stringify(spec).includes(word), `spec must not contain ${word}`);
     for (const file of generatedFiles) assert.ok(!readFileSync(file, 'utf8').includes(word), `${file} must not contain ${word}`);
+    for (const path of generatedNames) assert.ok(!path.includes(word), `generated path ${path} must not contain ${word}`);
   }
 });
 
@@ -180,6 +210,52 @@ test('translating identical evidence twice emits byte-identical specs', () => {
   const capture = fixtureCapture();
   const flow = fixtureFlow();
   assert.equal(JSON.stringify(translateCapture({ capture, flow })), JSON.stringify(translateCapture({ capture, flow })));
+});
+
+test('route and identifier mapping depends on structure, not captured spelling or host', () => {
+  const first = translateCapture({ capture: fixtureCapture(), flow: fixtureFlow() });
+  const capture = fixtureCapture();
+  const flow = fixtureFlow();
+  capture.source.url = 'https://another-person.example.test/';
+  capture.source.final_url = capture.source.url;
+  flow.source.url = capture.source.url;
+  capture.pages[0].forms[0].id = 'private-form-id';
+  capture.pages[0].forms[0].controls[0].name = 'private-field-name';
+  flow.steps[1].target = 'input[name=private-field-name]';
+  flow.steps[4].target = 'form#private-form-id';
+  capture.pages[0].forms[0].action = '/secret-write';
+  flow.steps[4].expected_path = '/secret-result';
+  flow.steps[5].path = '/secret-result';
+  const second = translateCapture({ capture, flow });
+  assert.equal(JSON.stringify(first), JSON.stringify(second));
+});
+
+test('generic field identifiers avoid collisions with captured names', () => {
+  const capture = fixtureCapture();
+  const flow = fixtureFlow();
+  capture.pages[0].forms[0].controls[0].name = 'field-1';
+  flow.steps[1].target = 'input[name=field-1]';
+  const spec = translateCapture({ capture, flow });
+  assert.deepEqual(spec.fields.map((field) => field.name), ['field-2', 'field-3', 'field-4', 'field-5']);
+  assert.deepEqual(validateSpec(spec), []);
+});
+
+test('refuses query-bearing form actions and journey pages rather than publishing them', () => {
+  const capture = fixtureCapture();
+  capture.pages[0].forms[0].action = '/submit?token=private';
+  assert.throws(() => translateCapture({ capture, flow: fixtureFlow() }),
+    (err) => err instanceof TranslationError && /cannot synthesize route/.test(err.message));
+  const flow = fixtureFlow();
+  flow.steps[1].path = '/person?token=private';
+  assert.throws(() => translateCapture({ capture: fixtureCapture(), flow }),
+    (err) => err instanceof TranslationError && /cannot synthesize route/.test(err.message));
+});
+
+test('refuses an unserved journey page instead of producing an undrivable replay', () => {
+  const flow = fixtureFlow();
+  flow.steps[1].path = '/missing-page';
+  assert.throws(() => translateCapture({ capture: fixtureCapture(), flow }),
+    (err) => err instanceof TranslationError && /has no captured page route/.test(err.message));
 });
 
 test('generated arms declare exactly their runtime dependencies from the repository package', (t) => {
@@ -281,8 +357,8 @@ test('submit buttons are triggers rather than data fields, and selections reach 
   flow.steps[6].index = 6;
   const spec = translateCapture({ capture, flow });
   assert.equal(spec.fields.some((field) => field.type === 'submit'), false);
-  assert.deepEqual(spec.journey.select, { 'select[name=category]': 'Option 3 for field 3' });
-  assert.deepEqual(spec.journey.steps.find((step) => step.submit).select, { 'select[name=category]': 'Option 3 for field 3' });
+  assert.deepEqual(spec.journey.select, { 'select[name=field-3]': 'Option 3 for field 3' });
+  assert.deepEqual(spec.journey.steps.find((step) => step.submit).select, { 'select[name=field-3]': 'Option 3 for field 3' });
 });
 
 test('refuses a coincidental match between recorded and synthetic values', () => {
@@ -386,13 +462,13 @@ test('builds all seven framework arms and publishes the spec to public A4 by def
     repoRoot: publicRepo,
   });
 
-  assert.equal(specPath, join(publicRepo, 'data/A4_clean_room_reproduction/specs/feedback-example-test.json'));
+  assert.equal(specPath, join(publicRepo, `data/A4_clean_room_reproduction/specs/${spec.family_id}.json`));
   assert.ok(existsSync(specPath));
 
   assert.equal(Object.keys(projects).length, 7);
   for (const framework of Object.keys(FRAMEWORKS)) {
     const dir = projects[framework];
-    assert.equal(dir, join(publicRepo, `data/A4_clean_room_reproduction/projects/feedback-example-test-${framework}`));
+    assert.equal(dir, join(publicRepo, `data/A4_clean_room_reproduction/projects/${spec.family_id}-${framework}`));
     assert.ok(existsSync(join(dir, 'server.mjs')));
     assert.ok(existsSync(join(dir, 'spec.json')));
     assert.ok(existsSync(join(dir, 'package.json')));
@@ -409,7 +485,7 @@ test('explicit output may still target a verified quarantine checkout', (t) => {
   const spec = translateCapture({ capture: fixtureCapture(), flow: fixtureFlow() });
   const { specPath, projects } = buildCapturedProjects({ spec, framework: 'raw', outDir,
     quarantineRoot: store, repoRoot: publicRepo });
-  assert.equal(specPath, join(outDir, 'feedback-example-test.json'));
+  assert.equal(specPath, join(outDir, `${spec.family_id}.json`));
   assert.ok(existsSync(specPath));
   assert.ok(existsSync(join(projects.raw, 'server.mjs')));
   assert.equal(existsSync(join(publicRepo, 'data/A4_clean_room_reproduction')), false);
@@ -448,16 +524,17 @@ test('capture-to-projects CLI builds spec and projects via command-line argument
     { encoding: 'utf8', timeout: 30000, env: { ...process.env, MWG_TRAIN_CAPTURE_TEST_TEMP: tempDir } },
   );
 
-  assert.match(stdout, /translated feedback-example-test/);
+  const familyId = translateCapture({ capture: fixtureCapture(), flow: fixtureFlow() }).family_id;
+  assert.match(stdout, new RegExp(`translated ${familyId}`));
   assert.match(stdout, /spec written to/);
   assert.match(stdout, /built raw ->/);
 
-  assert.ok(existsSync(join(outDir, 'feedback-example-test.json')));
-  assert.ok(existsSync(join(outDir, 'feedback-example-test-raw/server.mjs')));
-  assert.ok(existsSync(join(outDir, 'feedback-example-test-raw/spec.json')));
-  assert.equal(JSON.parse(readFileSync(join(outDir, 'feedback-example-test.json'))).family_id, 'feedback-example-test');
-  assert.ok(!existsSync(join(REPO_ROOT, 'feedback-example-test.json')));
-  assert.ok(!existsSync(join(REPO_ROOT, 'feedback-example-test-raw')));
+  assert.ok(existsSync(join(outDir, `${familyId}.json`)));
+  assert.ok(existsSync(join(outDir, `${familyId}-raw/server.mjs`)));
+  assert.ok(existsSync(join(outDir, `${familyId}-raw/spec.json`)));
+  assert.equal(JSON.parse(readFileSync(join(outDir, `${familyId}.json`))).family_id, familyId);
+  assert.ok(!existsSync(join(REPO_ROOT, `${familyId}.json`)));
+  assert.ok(!existsSync(join(REPO_ROOT, `${familyId}-raw`)));
 });
 
 test('capture-to-projects CLI refuses repo output without writing a spec or project', (t) => {

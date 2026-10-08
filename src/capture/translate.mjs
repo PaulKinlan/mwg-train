@@ -15,6 +15,7 @@
  * markup, styles, or assets. That structural boundary is the whole point of the bead.
  */
 
+import { createHash } from 'node:crypto';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
@@ -164,7 +165,18 @@ export function translateCapture({ capture, flow }) {
   if (!postForm.id || typeof postForm.id !== 'string' || postForm.id.trim() === '') {
     throw new TranslationError(`captured POST form (action: ${postForm.action}, method: ${postForm.method}, controls: ${postForm.controls.map((control) => control.name).join(', ')}) has no id: generator requires form selector in the form form#id`);
   }
-  const formId = postForm.id.trim();
+  // Identifiers are evidence too: an id/name/slug may contain a person's name even when
+  // it is selector-safe. Reserve generic identifiers against the recorded ones.
+  const recordedIdentifiers = new Set(capture.pages.flatMap((page) => page.forms.flatMap((form) =>
+    [form.id, ...form.controls.flatMap((control) => [control.name, control.slug])])));
+  const generatedIdentifiers = new Set();
+  const genericIdentifier = (prefix, position) => {
+    let candidate = `${prefix}-${position}`;
+    while (recordedIdentifiers.has(candidate) || generatedIdentifiers.has(candidate)) candidate = `${prefix}-${++position}`;
+    generatedIdentifiers.add(candidate);
+    return candidate;
+  };
+  const formId = genericIdentifier('generated-form', 1);
 
   // 2. Submit buttons trigger the form action; they are not data fields in the generated form.
   const dataControls = postForm.controls.filter((control) => control.type !== 'submit');
@@ -177,6 +189,9 @@ export function translateCapture({ capture, flow }) {
       if (!Array.isArray(control.options) || control.options.length === 0) {
         throw new TranslationError(`select control '${control.name}' must have a non-empty array of options`);
       }
+    }
+    if (recordedNames.has(control.name)) {
+      throw new TranslationError(`duplicate control name '${control.name}': cannot map selectors unambiguously`);
     }
     recordedNames.add(control.name);
   }
@@ -193,12 +208,51 @@ export function translateCapture({ capture, flow }) {
     }
   }
 
+  const fieldNames = new Map(dataControls.map((control, index) =>
+    [control.name, genericIdentifier('field', index + 1)]));
+  const selectorFor = (target) => target.replace(/\[name=([A-Za-z][A-Za-z0-9_-]*)\]$/, (_, name) =>
+    `[name=${fieldNames.get(name)}]`);
+
+  // Paths are identifiers too. Use one map for pages, actions, and flow locations so
+  // identical captured paths always refer to the same generated route. Never derive a
+  // published slug from the recorded bytes (including a URL query or hostname).
+  const recordedPaths = new Set([
+    ...capture.pages.map((page) => page.path),
+    ...capture.pages.flatMap((page) => page.forms.map((form) => form.action)),
+    flow.start_path,
+    ...flow.steps.flatMap((step) => [step.path, step.expected_path]),
+  ]);
+  const paths = new Map([['/', '/']]);
+  let nextPath = 1;
+  const pathFor = (path) => {
+    if (typeof path !== 'string' || !path.startsWith('/') || path.startsWith('//') ||
+        path.includes('?') || path.includes('#') || path.includes('..')) {
+      throw new TranslationError(`cannot synthesize route for non-path or query-bearing location '${path}'`);
+    }
+    if (!paths.has(path)) {
+      let candidate;
+      do { candidate = `/page-${nextPath++}`; } while (recordedPaths.has(candidate));
+      paths.set(path, candidate);
+    }
+    return paths.get(path);
+  };
+  // Allocate in capture/flow order, not according to the spelling of the paths.
+  for (const page of capture.pages) pathFor(page.path);
+  pathFor(flow.start_path);
+  for (const step of flow.steps) {
+    pathFor(step.path);
+    if (step.expected_path !== undefined) pathFor(step.expected_path);
+  }
+  const writePath = pathFor(postForm.action);
+
   // 4. Replace recorded values before building either the top-level journey or replay steps.
   // The observed text is bound to the first earlier supplying action, as in the carried-state rule.
   const syntheticSteps = [];
   const supplied = new Map();
   for (const step of flow.steps) {
-    const sanitized = { ...step };
+    const sanitized = { ...step, path: pathFor(step.path) };
+    if (step.expected_path !== undefined) sanitized.expected_path = pathFor(step.expected_path);
+    if (step.action === 'submit') sanitized.target = `form#${formId}`;
     if (step.action === 'fill' || step.action === 'select') {
       const name = step.target.match(/\[name=([A-Za-z][A-Za-z0-9_-]*)\]$/)[1];
       const position = dataControls.findIndex((control) => control.name === name);
@@ -213,6 +267,7 @@ export function translateCapture({ capture, flow }) {
       } else {
         sanitized.value = syntheticValue(control, position);
       }
+      sanitized.target = selectorFor(step.target);
       if (!supplied.has(step.value)) supplied.set(step.value, sanitized.value);
     }
     if (step.expectText !== undefined) {
@@ -253,7 +308,7 @@ export function translateCapture({ capture, flow }) {
   }
 
   // 6. Routes: read-by-reference path ends with /:ref, constructed from confirmation path
-  const confirmationPath = expectStep.path;
+  const confirmationPath = pathFor(expectStep.path);
   const readPath = confirmationPath.endsWith('/:ref')
     ? confirmationPath
     : `${confirmationPath.replace(/\/+$/, '')}/:ref`;
@@ -270,10 +325,10 @@ export function translateCapture({ capture, flow }) {
 
   // One 'page' route per captured page path (excluding read-by-reference path)
   for (const page of capture.pages) {
-    if (page.path !== readPath) {
+    if (pathFor(page.path) !== readPath) {
       addRoute({
         method: 'GET',
-        path: page.path,
+        path: pathFor(page.path),
         kind: 'page',
         effect: 'render generated page',
       });
@@ -283,7 +338,7 @@ export function translateCapture({ capture, flow }) {
   // The write route comes from the captured POST form, redirecting to the read-by-reference path
   addRoute({
     method: 'POST',
-    path: postForm.action,
+    path: writePath,
     kind: 'write',
     effect: `process ${formId} submission, persist record, and redirect`,
     redirect: readPath,
@@ -294,13 +349,13 @@ export function translateCapture({ capture, flow }) {
     method: 'GET',
     path: readPath,
     kind: 'read-by-reference',
-    effect: `read stored submission by reference and echo ${echoControl.name}`,
+    effect: `read stored submission by reference and echo ${fieldNames.get(echoControl.name)}`,
   });
 
   // 7. Fields: map captured form controls
   const fields = dataControls.map((control, position) => {
-    const slug = control.slug ?? control.name;
-    const name = control.name;
+    const slug = fieldNames.get(control.name);
+    const name = slug;
     const type = control.type;
     const label = `Field ${position + 1} (${type})`;
     const required = Boolean(control.required);
@@ -317,12 +372,11 @@ export function translateCapture({ capture, flow }) {
     if (type === 'select') {
       field.options = control.options.map((_, index) => syntheticValue(control, position, index));
     }
-    if (name === echoControl.name) {
+    if (control.name === echoControl.name) {
       field.echoed = true;
     }
-    if (control.autocomplete) {
-      field.autocomplete = control.autocomplete;
-    }
+    // Arbitrary captured autocomplete attributes are evidence, not publication material.
+    // The capture producer does not record one; do not infer autofill semantics.
     return field;
   });
 
@@ -337,20 +391,21 @@ export function translateCapture({ capture, flow }) {
     on_success: `insert one row into records and answer 303 with Location: ${readPath.replace(':ref', '<ref>')}`,
   };
 
-  // 9. Family ID: deterministic kebab slug from host and start path
-  let host = 'captured-site';
-  try {
-    const parsed = new URL(capture.source.url);
-    host = parsed.hostname;
-  } catch {
-    // fallback if unparseable
-  }
-  const hostSlug = host.replace(/[^a-z0-9]+/gi, '-').toLowerCase().replace(/^-+|-+$/g, '');
-  const startPathSlug = flow.start_path.replace(/[^a-z0-9]+/gi, '-').toLowerCase().replace(/^-+|-+$/g, '');
-  const family_id = startPathSlug ? `${hostSlug}-${startPathSlug}` : hostSlug;
+  // 9. Stable project/file identity uses only structural form facts, never URL, copy or time.
+  const shape = dataControls.map((control) => [control.type, control.required, control.options?.length ?? 0]);
+  const family_id = `form-flow-${createHash('sha256').update(JSON.stringify(shape)).digest('hex').slice(0, 16)}`;
 
   const title = `Generated form flow (${fields.length} fields)`;
   const story = `${title}: a clean-room server-backed flow with ${routes.length} routes.`;
+
+  const journeySteps = stepsForJourney(syntheticSteps);
+  const servedPages = new Set(routes.filter((route) => route.method === 'GET' && route.kind === 'page')
+    .map((route) => route.path));
+  for (const step of journeySteps) {
+    if (!servedPages.has(step.path)) {
+      throw new TranslationError(`journey page '${step.path}' has no captured page route: cannot build a drivable journey`);
+    }
+  }
 
   // 10. Spec assembly
   const spec = {
@@ -380,24 +435,24 @@ export function translateCapture({ capture, flow }) {
       ],
     },
     persistence: {
-      write_route: postForm.action,
+      write_route: writePath,
       read_route: readPath,
       reference: 'server-issued reference, returned in the Location header of a 303',
-      reload_assertion: `reloading ${readPath.replace(':ref', '<ref>')} still shows the stored ${echoControl.name} value; the value is read from SQLite, not from the form`,
+      reload_assertion: `reloading ${readPath.replace(':ref', '<ref>')} still shows the stored ${fieldNames.get(echoControl.name)} value; the value is read from SQLite, not from the form`,
     },
     routes,
     fields,
     validation,
     journey: {
-      startPath: flow.start_path,
+      startPath: pathFor(flow.start_path),
       formSelector: `form#${formId}`,
       fill: journeyFill,
       ...(Object.keys(journeySelect).length > 0 ? { select: journeySelect } : {}),
       expectText: syntheticSteps[expectStep.index].expectText,
-      steps: stepsForJourney(syntheticSteps),
+      steps: journeySteps,
     },
     echo: {
-      field: echoControl.slug ?? echoControl.name,
+      field: fieldNames.get(echoControl.name),
     },
     capabilities: {
       list_pages: false,
@@ -406,7 +461,7 @@ export function translateCapture({ capture, flow }) {
     },
     session: false,
     acceptance: [
-      `after a successful submit the browser lands on ${readPath.replace(':ref', '<ref>')} and the echoed ${echoControl.name} text is present`,
+      `after a successful submit the browser lands on ${readPath.replace(':ref', '<ref>')} and the echoed ${fieldNames.get(echoControl.name)} text is present`,
       'reloading that URL still shows it, which is only possible if the server stored it',
       'the reference in the URL was issued by this submission, not read from a row that already existed',
     ],
@@ -414,15 +469,20 @@ export function translateCapture({ capture, flow }) {
 
   // A coincidental equality is still a recorded value in public output. Refuse rather than
   // publishing it; never use the recorded words as a salt to generate replacements.
-  const recordedCopy = new Set([
-    ...capture.pages.flatMap((page) => [page.title, ...page.headings,
-      ...page.forms.flatMap((form) => form.controls.flatMap((control) => [control.label, ...(control.options ?? [])]))]),
-    ...flow.steps.flatMap((step) => [step.value, step.expectText]),
-  ].filter((value) => typeof value === 'string' && value.length > 0));
-  const syntheticCopy = [title, story, ...routes.map((route) => route.effect),
+  const recordedCopy = new Set();
+  const collectEvidence = (value) => {
+    if (typeof value === 'string' && value.length > 0) recordedCopy.add(value);
+    else if (Array.isArray(value)) value.forEach(collectEvidence);
+    else if (value && typeof value === 'object') Object.values(value).forEach(collectEvidence);
+  };
+  collectEvidence(capture);
+  collectEvidence(flow);
+  const syntheticCopy = [family_id, title, story, formId, ...fieldNames.values(),
+    ...paths.values(), readPath, ...routes.flatMap((route) => [route.effect, route.redirect]),
     ...fields.flatMap((field) => [field.label, ...(field.options ?? [])]),
-    ...Object.values(journeyFill), ...Object.values(journeySelect), spec.journey.expectText];
-  if (syntheticCopy.some((value) => recordedCopy.has(value))) {
+    ...Object.values(journeyFill), ...Object.values(journeySelect), spec.journey.expectText,
+    spec.persistence.reload_assertion, spec.validation.on_success, ...spec.acceptance];
+  if (syntheticCopy.some((value) => value !== '/' && recordedCopy.has(value))) {
     throw new TranslationError('synthetic text coincides with recorded site text or a typed value: refusing public translation');
   }
 
