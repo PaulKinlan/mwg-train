@@ -114,6 +114,29 @@ export function selectorFieldName(selector) {
  */
 export const UNSAFE_FIELD_NAME = /["&\\\u0000\u000C\n\r]/;
 
+/**
+ * Whether a name contains an unpaired UTF-16 surrogate.
+ *
+ * A lone surrogate is legal in a JS string, so a brief can declare one, but it is not a valid Unicode
+ * scalar and Node writes it out as U+FFFD when the generated HTML is encoded as UTF-8. Measured on the
+ * builder's own path: a name of lone U+D800 and a name of U+FFFD both came back from the written file
+ * as `[65533]`, so two declared fields collapse into one in the document, while the server's required
+ * list is built from the declared names. The selector for the surrogate then matched NOTHING rather
+ * than the wrong field, so this fails loudly rather than silently - but the name that ships is not the
+ * name that was declared, which is reason enough to refuse it. Valid pairs are fine and measured safe:
+ * an emoji, U+10000 and U+FFFD names all round-tripped and matched their own element.
+ *
+ * `for...of` iterates code points, so a valid pair yields one code point above the surrogate range and
+ * only an unpaired unit lands inside it.
+ */
+export function hasUnpairedSurrogate(value) {
+  for (const character of String(value)) {
+    const code = character.codePointAt(0);
+    if (code >= 0xd800 && code <= 0xdfff) return true;
+  }
+  return false;
+}
+
 const COMPLETE_SELECTOR = /^(input|textarea|select)\[\s*name\s*=\s*(?:"([^"\\\n\r]+)"|'([^'\\\n\r]+)'|([A-Za-z_-][A-Za-z0-9_-]*))\s*\]$/i;
 
 /**
@@ -203,10 +226,10 @@ export function validateBriefSchema(row) {
     }
     if (isString(field.name) && seen.has(field.name)) at(`${where}.name`, `'${field.name}' is declared twice`);
     if (isString(field.name)) seen.add(field.name);
-    if (isString(field.name) && field.name !== '' && UNSAFE_FIELD_NAME.test(field.name)) {
+    if (isString(field.name) && field.name !== '' && (UNSAFE_FIELD_NAME.test(field.name) || hasUnpairedSurrogate(field.name))) {
       at(
         `${where}.name`,
-        `'${field.name}' cannot be written into the form and read back unchanged - the builders interpolate the name into the HTML raw, so a name containing " & \\ or a control character (NUL, form feed, newline) resolves to a different field than the journey names, or to none at all, and the server's required list disagrees with the key the browser submits. Measured in Chrome: spaces, apostrophes, <, =, ., $, TAB, DEL and non-ASCII names are all safe and remain allowed`,
+        `'${field.name}' cannot be written into the form and read back unchanged - the builders interpolate the name into the HTML raw, so a name containing " & \\ a control character (NUL, form feed, newline) or an unpaired surrogate resolves to a different field than the journey names, or to none at all, and the server's required list disagrees with the key the browser submits. Measured in Chrome: spaces, apostrophes, <, =, ., $, DEL and valid non-ASCII names (including emoji) are all safe and remain allowed`,
       );
     }
     if (field.type === 'select') {

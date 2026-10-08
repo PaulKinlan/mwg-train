@@ -12,6 +12,7 @@ import {
   BRIEF_FIELD_TYPES,
   builderFields,
   completeSelectorFieldName,
+  hasUnpairedSurrogate,
   UNSAFE_FIELD_NAME,
   echoFieldFor,
   selectorFieldName,
@@ -452,9 +453,13 @@ test('whitespace around the operator is insignificant, and a raw newline is not'
 // literal name matches the OTHER field - measured in Chrome, which is how a required select could be
 // left on its default while validation counted it driven.
 test('a field name the HTML parser would rewrite is refused', () => {
-  const unsafe = ['a&#32;b', 'a&amp;b', 'a&copy', 'a"b', 'a\\b', 'a\nb', 'a\u0000b', 'a\u000Cb'];
+  const unsafe = ['a&#32;b', 'a&amp;b', 'a&copy', 'a"b', 'a\\b', 'a\nb', 'a\u0000b', 'a\u000Cb', '\uD800', 'a\uDC00b'];
   for (const name of unsafe) {
-    assert.ok(UNSAFE_FIELD_NAME.test(name), `expected '${name}' to be refused`);
+    // Two mechanisms refuse a name: the character set, and the unpaired-surrogate check.
+    assert.ok(
+      UNSAFE_FIELD_NAME.test(name) || hasUnpairedSurrogate(name),
+      `expected '${name}' to be refused`,
+    );
     const row = brief({
       fields: [
         { slug: 'bad', name, type: 'text', label: 'Bad', required: true, echoed: true },
@@ -471,9 +476,17 @@ test('a field name the HTML parser would rewrite is refused', () => {
 
 // The rule is deliberately no broader than the measurement: in the same Chrome probe these names all
 // reached the DOM unchanged AND matched a quoted selector, so refusing them would reject usable briefs.
+test('an unpaired surrogate is detected and a valid pair is not', () => {
+  assert.equal(hasUnpairedSurrogate('\uD800'), true, 'a lone high surrogate');
+  assert.equal(hasUnpairedSurrogate('a\uDC00b'), true, 'a lone low surrogate');
+  assert.equal(hasUnpairedSurrogate('\u{1F600}'), false, 'a valid pair is one code point above the range');
+  assert.equal(hasUnpairedSurrogate('a\u{10000}b'), false);
+  assert.equal(hasUnpairedSurrogate('customer'), false);
+});
+
 test('names Chrome round-trips unchanged are allowed', () => {
-  for (const name of ['customer', 'contact.email', "o'brien", 'a b', 'a<b', 'a=b', 'a$b', 'line-item', 'field1', 'a\tb', 'a\u007Fb', '\uFFFD', 'a\u00A0b', 'a\u2028b']) {
-    assert.equal(UNSAFE_FIELD_NAME.test(name), false, `${name} should be allowed`);
+  for (const name of ['customer', 'contact.email', "o'brien", 'a b', 'a<b', 'a=b', 'a$b', 'line-item', 'field1', 'a\tb', 'a\u007Fb', '\uFFFD', 'a\u00A0b', 'a\u2028b', '\u{1F600}', 'a\u{10000}b']) {
+    assert.equal(UNSAFE_FIELD_NAME.test(name) || hasUnpairedSurrogate(name), false, `${name} should be allowed`);
   }
   const row = brief({
     fields: [
