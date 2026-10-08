@@ -4,7 +4,7 @@
 ## Fetched quotes
 
 Every rate below was read from the provider's own page on the retrieval date, and the response body is hashed.
-Rows: **46 verified**, 5 recorded as unverified.
+Rows: **51 verified**, 5 recorded as unverified.
 
 ### Rented GPU, per GPU-hour
 
@@ -46,21 +46,26 @@ Rows: **46 verified**, 5 recorded as unverified.
 | B200 (RunPod) | 180 GB | on-demand | $6.79 | per hour | 2026-10-08 | [^34] | [RunPod](https://www.runpod.io/pricing) |
 | NVIDIA B200 SXM6 (Lambda) | 180 GB | on-demand | $6.89 | per GPU per hour | 2026-10-08 | [^35] | [Lambda](https://lambda.ai/service/gpu-cloud) |
 | NVIDIA B200 SXM6 (Lambda) | 180 GB | on-demand | $6.99 | per GPU per hour | 2026-10-08 | [^36] | [Lambda](https://lambda.ai/service/gpu-cloud) |
+| H100 80 GB (Fireworks) | 80 GB | on-demand | $8.00 | per GPU per hour | 2026-10-08 | [^37] | [Fireworks](https://fireworks.ai/pricing) |
+| H200 141 GB (Fireworks) | 141 GB | on-demand | $8.00 | per GPU per hour | 2026-10-08 | [^38] | [Fireworks](https://fireworks.ai/pricing) |
+| B200 180 GB (Fireworks) | 180 GB | on-demand | $13.00 | per GPU per hour | 2026-10-08 | [^39] | [Fireworks](https://fireworks.ai/pricing) |
+| B300 288 GB (Fireworks) | 288 GB | on-demand | $15.00 | per GPU per hour | 2026-10-08 | [^40] | [Fireworks](https://fireworks.ai/pricing) |
+| B300 288 GB (Fireworks) | 288 GB | on-demand | $20.00 | per GPU per hour | 2026-10-08 | [^41] | [Fireworks](https://fireworks.ai/pricing) |
 
 ### Managed fine-tuning, per million training tokens
 
 | service | size band | USD / 1M training tokens | fetched | notes | source |
 | --- | --- | --- | --- | --- | --- |
-| Fireworks | up to 16B parameters (LoRA SFT) | $0.50 | 2026-10-08 | [^37] | [Fireworks](https://fireworks.ai/pricing) |
-| Fireworks | 16.1B - 80B parameters (LoRA SFT) | $3.00 | 2026-10-08 | [^38] | [Fireworks](https://fireworks.ai/pricing) |
-| Fireworks | Qwen 3.8 27B (128K context, Train / 1M column) | $4.103 | 2026-10-08 | [^39] | [Fireworks](https://fireworks.ai/pricing) |
-| Fireworks | DeepSeek V4 Flash 0731 (262K context, Train / 1M column) | $5.20 | 2026-10-08 | [^40] | [Fireworks](https://fireworks.ai/pricing) |
-| Fireworks | Muse Glimmer 30B (128K context, Train / 1M column) | $5.86 | 2026-10-08 | [^41] | [Fireworks](https://fireworks.ai/pricing) |
-| Fireworks | 80B - 300B (e.g. Qwen3-235B, gpt-oss-120B) parameters (LoRA SFT) | $6.00 | 2026-10-08 | [^42] | [Fireworks](https://fireworks.ai/pricing) |
-| Fireworks | GLM 5.3 Flash (200K context, Train / 1M column) | $8.89 | 2026-10-08 | [^43] | [Fireworks](https://fireworks.ai/pricing) |
-| Fireworks | >300B (e.g. DeepSeek V3, Kimi K2) parameters (LoRA SFT) | $10.00 | 2026-10-08 | [^44] | [Fireworks](https://fireworks.ai/pricing) |
-| Fireworks | GLM 5.3 (262K context, Train / 1M column) | $14.58 | 2026-10-08 | [^45] | [Fireworks](https://fireworks.ai/pricing) |
-| Fireworks | Kimi K3 (192K context, Train / 1M column) | $32.55 | 2026-10-08 | [^46] | [Fireworks](https://fireworks.ai/pricing) |
+| Fireworks | up to 16B parameters (LoRA SFT) | $0.50 | 2026-10-08 | [^42] | [Fireworks](https://fireworks.ai/pricing) |
+| Fireworks | 16.1B - 80B parameters (LoRA SFT) | $3.00 | 2026-10-08 | [^43] | [Fireworks](https://fireworks.ai/pricing) |
+| Fireworks | Qwen 3.8 27B (128K context, Train / 1M column) | $4.103 | 2026-10-08 | [^44] | [Fireworks](https://fireworks.ai/pricing) |
+| Fireworks | DeepSeek V4 Flash 0731 (262K context, Train / 1M column) | $5.20 | 2026-10-08 | [^45] | [Fireworks](https://fireworks.ai/pricing) |
+| Fireworks | Muse Glimmer 30B (128K context, Train / 1M column) | $5.86 | 2026-10-08 | [^46] | [Fireworks](https://fireworks.ai/pricing) |
+| Fireworks | 80B - 300B (e.g. Qwen3-235B, gpt-oss-120B) parameters (LoRA SFT) | $6.00 | 2026-10-08 | [^47] | [Fireworks](https://fireworks.ai/pricing) |
+| Fireworks | GLM 5.3 Flash (200K context, Train / 1M column) | $8.89 | 2026-10-08 | [^48] | [Fireworks](https://fireworks.ai/pricing) |
+| Fireworks | >300B (e.g. DeepSeek V3, Kimi K2) parameters (LoRA SFT) | $10.00 | 2026-10-08 | [^49] | [Fireworks](https://fireworks.ai/pricing) |
+| Fireworks | GLM 5.3 (262K context, Train / 1M column) | $14.58 | 2026-10-08 | [^50] | [Fireworks](https://fireworks.ai/pricing) |
+| Fireworks | Kimi K3 (192K context, Train / 1M column) | $32.55 | 2026-10-08 | [^51] | [Fireworks](https://fireworks.ai/pricing) |
 
 Notes on the rows above (nothing here is truncated):
 
@@ -100,16 +105,21 @@ Notes on the rows above (nothing here is truncated):
 - [^34] runpod-b200-ondemand: listed with 283 GB RAM and 28 vCPUs
 - [^35] lambda-nvidia-b200-sxm6-6-89: plan INFERRED as 2x from 52 vCPUs (26 per GPU); the plan toggle is client-side so the label is not in the fetched HTML - treat the plan as unverified, the price as fetched
 - [^36] lambda-nvidia-b200-sxm6-6-99: plan INFERRED as 1x from 26 vCPUs (26 per GPU); the plan toggle is client-side so the label is not in the fetched HTML - treat the plan as unverified, the price as fetched
-- [^37] fireworks-lora-sft-up-to-16b: same table: LoRA DPO $1.00, full-parameter SFT $1.00, full-parameter DPO $2.00 per 1M tokens
-- [^38] fireworks-lora-sft-16-1b-80b: same table: LoRA DPO $6.00, full-parameter SFT $6.00, full-parameter DPO $12.00 per 1M tokens
-- [^39] fireworks-train-qwen-3-8-27b: same row: prefill $1.86, cached prefill $0.372, sample $5.595 per 1M
-- [^40] fireworks-train-deepseek-v4-flash-0731: same row: prefill $1.74, cached prefill $0.35, sample $4.33 per 1M
-- [^41] fireworks-train-muse-glimmer-30b: same row: prefill $1.96, cached prefill $0.39, sample $4.88 per 1M
-- [^42] fireworks-lora-sft-80b-300b-e-g-qwen3-235b-gpt-oss-120b-: same table: LoRA DPO $12.00, full-parameter SFT $12.00, full-parameter DPO $24.00 per 1M tokens
-- [^43] fireworks-train-glm-5-3-flash: same row: prefill $2.96, cached prefill $0.593, sample $7.41 per 1M
-- [^44] fireworks-lora-sft--300b-e-g-deepseek-v3-kimi-k2-: same table: LoRA DPO $20.00, full-parameter SFT $20.00, full-parameter DPO $40.00 per 1M tokens
-- [^45] fireworks-train-glm-5-3: same row: prefill $4.86, cached prefill $0.972, sample $12.15 per 1M
-- [^46] fireworks-train-kimi-k3: same row: prefill $10.87, cached prefill $2.17, sample $27.11 per 1M
+- [^37] fireworks-h100-8-00-gpu-hour: billed per GPU-second while a dedicated deployment is up; the page also lists $0.134 per minute
+- [^38] fireworks-h200-8-00-gpu-hour: billed per GPU-second while a dedicated deployment is up; the page also lists $0.134 per minute
+- [^39] fireworks-b200-13-00-gpu-hour: billed per GPU-second while a dedicated deployment is up; the page also lists $0.217 per minute
+- [^40] fireworks-b300-15-00-gpu-hour: billed per GPU-second while a dedicated deployment is up; the page also lists $0.250 per minute
+- [^41] fireworks-b300-20-00-gpu-hour: billed per GPU-second while a dedicated deployment is up; the page also lists $0.334 per minute; the page lists more than one rate for this GPU and the fetched text carries no column label for the alternatives, so treat the column as unverified
+- [^42] fireworks-lora-sft-up-to-16b: same table: LoRA DPO $1.00, full-parameter SFT $1.00, full-parameter DPO $2.00 per 1M tokens
+- [^43] fireworks-lora-sft-16-1b-80b: same table: LoRA DPO $6.00, full-parameter SFT $6.00, full-parameter DPO $12.00 per 1M tokens
+- [^44] fireworks-train-qwen-3-8-27b: same row: prefill $1.86, cached prefill $0.372, sample $5.595 per 1M
+- [^45] fireworks-train-deepseek-v4-flash-0731: same row: prefill $1.74, cached prefill $0.35, sample $4.33 per 1M
+- [^46] fireworks-train-muse-glimmer-30b: same row: prefill $1.96, cached prefill $0.39, sample $4.88 per 1M
+- [^47] fireworks-lora-sft-80b-300b-e-g-qwen3-235b-gpt-oss-120b-: same table: LoRA DPO $12.00, full-parameter SFT $12.00, full-parameter DPO $24.00 per 1M tokens
+- [^48] fireworks-train-glm-5-3-flash: same row: prefill $2.96, cached prefill $0.593, sample $7.41 per 1M
+- [^49] fireworks-lora-sft--300b-e-g-deepseek-v3-kimi-k2-: same table: LoRA DPO $20.00, full-parameter SFT $20.00, full-parameter DPO $40.00 per 1M tokens
+- [^50] fireworks-train-glm-5-3: same row: prefill $4.86, cached prefill $0.972, sample $12.15 per 1M
+- [^51] fireworks-train-kimi-k3: same row: prefill $10.87, cached prefill $2.17, sample $27.11 per 1M
 
 ### What every row must carry to be usable
 
