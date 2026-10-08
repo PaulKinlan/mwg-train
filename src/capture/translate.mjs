@@ -100,6 +100,26 @@ export function stepsForJourney(flowSteps) {
   return out;
 }
 
+// Synthetic values depend only on a field's position and type, never on recorded input.
+// Keep each value valid for its HTML control so a replay exercises the same interaction.
+function syntheticValue(control, position, optionIndex = null) {
+  const ordinal = position + 1;
+  switch (control.type) {
+    case 'email': return `sample${ordinal}@example.test`;
+    case 'tel': return '2025550100';
+    case 'url': return `https://example.test/sample-${ordinal}`;
+    case 'number': return String(ordinal);
+    case 'date': return '2020-01-01';
+    case 'time': return '12:00';
+    case 'password': return `SamplePass${ordinal}!`;
+    case 'select': return `Option ${optionIndex + 1} for field ${ordinal}`;
+    case 'text':
+    case 'search':
+    case 'textarea': return `Sample field ${ordinal}`;
+    default: throw new TranslationError(`cannot synthesize value for control '${control.name}' of type '${control.type}'`);
+  }
+}
+
 export function translateCapture({ capture, flow }) {
   // Validate input schemas fail-closed before any extraction
   const captureProblems = validateCapture(capture);
@@ -173,10 +193,37 @@ export function translateCapture({ capture, flow }) {
     }
   }
 
-  // 4. Fill values: collect from flow's fill steps
+  // 4. Replace recorded values before building either the top-level journey or replay steps.
+  // The observed text is bound to the first earlier supplying action, as in the carried-state rule.
+  const syntheticSteps = [];
+  const supplied = new Map();
+  for (const step of flow.steps) {
+    const sanitized = { ...step };
+    if (step.action === 'fill' || step.action === 'select') {
+      const name = step.target.match(/\[name=([A-Za-z][A-Za-z0-9_-]*)\]$/)[1];
+      const position = dataControls.findIndex((control) => control.name === name);
+      const control = dataControls[position];
+      if ((step.action === 'select') !== (control.type === 'select')) {
+        throw new TranslationError(`flow ${step.action} target '${step.target}' does not match control type '${control.type}'`);
+      }
+      if (step.action === 'select') {
+        const optionIndex = control.options.indexOf(step.value);
+        if (optionIndex < 0) throw new TranslationError(`selected value for '${name}' was not recorded among its options: cannot synthesize selection`);
+        sanitized.value = syntheticValue(control, position, optionIndex);
+      } else {
+        sanitized.value = syntheticValue(control, position);
+      }
+      if (!supplied.has(step.value)) supplied.set(step.value, sanitized.value);
+    }
+    if (step.expectText !== undefined) {
+      if (!supplied.has(step.expectText)) throw new TranslationError('observed text was not supplied by an earlier step: cannot synthesize assertion');
+      sanitized.expectText = supplied.get(step.expectText);
+    }
+    syntheticSteps.push(sanitized);
+  }
   const journeyFill = {};
   const journeySelect = {};
-  for (const step of flow.steps) {
+  for (const step of syntheticSteps) {
     if (step.action === 'fill') journeyFill[step.target] = step.value;
     if (step.action === 'select') journeySelect[step.target] = step.value;
   }
@@ -228,7 +275,7 @@ export function translateCapture({ capture, flow }) {
         method: 'GET',
         path: page.path,
         kind: 'page',
-        effect: `render ${page.title ? `${page.title} page` : page.path}`,
+        effect: 'render generated page',
       });
     }
   }
@@ -251,11 +298,11 @@ export function translateCapture({ capture, flow }) {
   });
 
   // 7. Fields: map captured form controls
-  const fields = dataControls.map((control) => {
+  const fields = dataControls.map((control, position) => {
     const slug = control.slug ?? control.name;
     const name = control.name;
     const type = control.type;
-    const label = control.label && control.label.trim().length > 0 ? control.label.trim() : control.name;
+    const label = `Field ${position + 1} (${type})`;
     const required = Boolean(control.required);
     const field = {
       slug,
@@ -268,7 +315,7 @@ export function translateCapture({ capture, flow }) {
       field.optional = true;
     }
     if (type === 'select') {
-      field.options = [...control.options];
+      field.options = control.options.map((_, index) => syntheticValue(control, position, index));
     }
     if (name === echoControl.name) {
       field.echoed = true;
@@ -302,15 +349,8 @@ export function translateCapture({ capture, flow }) {
   const startPathSlug = flow.start_path.replace(/[^a-z0-9]+/gi, '-').toLowerCase().replace(/^-+|-+$/g, '');
   const family_id = startPathSlug ? `${hostSlug}-${startPathSlug}` : hostSlug;
 
-  const startPage = capture.pages.find((p) => p.path === flow.start_path) ?? capture.pages[0];
-  const title = (startPage?.title && startPage.title.trim().length > 0)
-    ? startPage.title.trim()
-    : 'Captured Site Flow';
-
-  const headingText = (startPage?.headings ?? []).filter(Boolean).join('. ');
-  const story = headingText.length > 0
-    ? `${title}: ${headingText}`
-    : `${title}: a clean-room server-backed flow reconstructed from capture.`;
+  const title = `Generated form flow (${fields.length} fields)`;
+  const story = `${title}: a clean-room server-backed flow with ${routes.length} routes.`;
 
   // 10. Spec assembly
   const spec = {
@@ -320,7 +360,7 @@ export function translateCapture({ capture, flow }) {
     story,
     durability: {
       version: 1,
-      authored: new Date().toISOString().slice(0, 10),
+      authored: '1970-01-01',
       basis: 'clean-room reconstruction translated from capture and flow evidence',
       rebuild: `node scripts/capture-to-projects.mjs --capture capture.json --flow flow.json`,
     },
@@ -353,8 +393,8 @@ export function translateCapture({ capture, flow }) {
       formSelector: `form#${formId}`,
       fill: journeyFill,
       ...(Object.keys(journeySelect).length > 0 ? { select: journeySelect } : {}),
-      expectText: expectStep.expectText,
-      steps: stepsForJourney(flow.steps),
+      expectText: syntheticSteps[expectStep.index].expectText,
+      steps: stepsForJourney(syntheticSteps),
     },
     echo: {
       field: echoControl.slug ?? echoControl.name,
@@ -371,6 +411,20 @@ export function translateCapture({ capture, flow }) {
       'the reference in the URL was issued by this submission, not read from a row that already existed',
     ],
   };
+
+  // A coincidental equality is still a recorded value in public output. Refuse rather than
+  // publishing it; never use the recorded words as a salt to generate replacements.
+  const recordedCopy = new Set([
+    ...capture.pages.flatMap((page) => [page.title, ...page.headings,
+      ...page.forms.flatMap((form) => form.controls.flatMap((control) => [control.label, ...(control.options ?? [])]))]),
+    ...flow.steps.flatMap((step) => [step.value, step.expectText]),
+  ].filter((value) => typeof value === 'string' && value.length > 0));
+  const syntheticCopy = [title, story, ...routes.map((route) => route.effect),
+    ...fields.flatMap((field) => [field.label, ...(field.options ?? [])]),
+    ...Object.values(journeyFill), ...Object.values(journeySelect), spec.journey.expectText];
+  if (syntheticCopy.some((value) => recordedCopy.has(value))) {
+    throw new TranslationError('synthetic text coincides with recorded site text or a typed value: refusing public translation');
+  }
 
   const specProblems = validateSpec(spec);
   if (specProblems.length > 0) {

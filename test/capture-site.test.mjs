@@ -256,8 +256,9 @@ test('the real capture producer feeds its unmodified output into translation', a
     });
     const spec = translateCapture({ capture, flow });
     assert.equal(spec.journey.formSelector, 'form#login-form');
-    assert.equal(spec.journey.select['select[name=account_type]'], 'premium');
-    assert.equal(spec.journey.steps.find((step) => step.submit)?.expectText, 'seam@example.test');
+    assert.equal(flow.steps[1].value, 'premium', 'the recording retains the real selected value');
+    assert.equal(spec.journey.select['select[name=account_type]'], 'Option 2 for field 2');
+    assert.equal(spec.journey.steps.find((step) => step.submit)?.expectText, 'sample1@example.test');
     assert.equal(spec.journey.steps.some((step) => step.path === '/confirm'), false);
     assert.equal(spec.persistence.read_route, `${flow.steps[3].path}/:ref`);
     assert.equal(spec.fields.some((field) => field.type === 'submit'), false);

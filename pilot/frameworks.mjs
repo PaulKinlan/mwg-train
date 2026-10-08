@@ -32,7 +32,7 @@
  */
 import { A11Y_SCRIPT } from '../src/corpus/uplift.mjs';
 import { compileSvelteServer } from '../src/corpus/svelte.mjs';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
 const slug = (value) => value.replace(/[^a-z0-9]+/gi, '-').toLowerCase();
@@ -1405,7 +1405,24 @@ export async function renderDocument({ title = '${archetype.title}' } = {}) {
  * initially did not write, which made the plan appear to generate a different tree from the one the
  * pilot measured.
  */
+const armPackages = {
+  hono: ['hono'],
+  raw: [],
+  react: ['htm', 'react', 'react-dom'],
+  preact: ['htm', 'preact', 'preact-render-to-string'],
+  vue: ['vue'],
+  webcomponents: [],
+  svelte: ['svelte'],
+};
+
 export function writeProject(root, { projectId, files, spec }) {
+  const packages = armPackages[spec.framework?.name];
+  if (!packages) throw new Error(`unknown project framework '${spec.framework?.name}'`);
+  const repositoryDependencies = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).dependencies;
+  const dependencies = Object.fromEntries(packages.map((name) => {
+    if (!repositoryDependencies[name]) throw new Error(`missing repository dependency '${name}'`);
+    return [name, repositoryDependencies[name]];
+  }));
   for (const [path, content] of Object.entries(files)) {
     const target = join(root, path);
     mkdirSync(dirname(target), { recursive: true });
@@ -1414,7 +1431,7 @@ export function writeProject(root, { projectId, files, spec }) {
   writeFileSync(join(root, 'spec.json'), `${JSON.stringify(spec, null, 2)}\n`);
   writeFileSync(
     join(root, 'package.json'),
-    `${JSON.stringify({ name: `pilot-${projectId}`, private: true, type: 'module', scripts: { start: 'node server.mjs' } }, null, 2)}\n`,
+    `${JSON.stringify({ name: `pilot-${projectId}`, private: true, type: 'module', scripts: { start: 'node server.mjs' }, dependencies }, null, 2)}\n`,
   );
   return root;
 }

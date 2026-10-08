@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import process from 'node:process';
@@ -90,8 +90,8 @@ test('translates a valid capture and flow into a durable specification validated
 
   // Derived attributes match strict clean-room mapping
   assert.equal(spec.family_id, 'feedback-example-test');
-  assert.equal(spec.title, 'Customer Feedback');
-  assert.equal(spec.story, 'Customer Feedback: Share your thoughts');
+  assert.equal(spec.title, 'Generated form flow (4 fields)');
+  assert.equal(spec.story, 'Generated form flow (4 fields): a clean-room server-backed flow with 3 routes.');
   assert.equal(spec.state.engine, 'sqlite');
   assert.equal(spec.persistence.write_route, '/submit-feedback');
   assert.equal(spec.persistence.read_route, '/feedback-receipt/:ref');
@@ -114,18 +114,19 @@ test('translates a valid capture and flow into a durable specification validated
 
   const categoryField = spec.fields.find((f) => f.name === 'category');
   assert.equal(categoryField.optional, true);
-  assert.deepEqual(categoryField.options, ['General', 'Support', 'Billing']);
+  assert.deepEqual(categoryField.options, ['Option 1 for field 3', 'Option 2 for field 3', 'Option 3 for field 3']);
+  assert.equal(nameField.label, 'Field 1 (text)');
 
   // Echo is derived from flow observation
   assert.equal(spec.echo.field, 'name');
 
-  // Journey carries flow values and steps
+  // Journey carries synthesized values and the same recorded actions
   assert.equal(spec.journey.startPath, '/');
   assert.equal(spec.journey.formSelector, 'form#feedback-form');
-  assert.equal(spec.journey.expectText, 'Alice Smith');
-  assert.equal(spec.journey.fill['input[name=name]'], 'Alice Smith');
-  assert.equal(spec.journey.fill['input[name=email]'], 'alice@example.test');
-  assert.equal(spec.journey.fill['textarea[name=comments]'], 'Great service today');
+  assert.equal(spec.journey.expectText, 'Sample field 1');
+  assert.equal(spec.journey.fill['input[name=name]'], 'Sample field 1');
+  assert.equal(spec.journey.fill['input[name=email]'], 'sample2@example.test');
+  assert.equal(spec.journey.fill['textarea[name=comments]'], 'Sample field 4');
   // The journey's steps are PLACES (path/fill/select/submit/expectText), not the flow's ACTIONS
   // (action/target/value). Six recorded actions merge into the steps the replay driver reads; asserting the
   // flow's count here would assert the shape the driver cannot read.
@@ -135,6 +136,67 @@ test('translates a valid capture and flow into a durable specification validated
 
   // Capabilities infer nothing by default
   assert.deepEqual(spec.capabilities, { list_pages: false, detail_page: false, auth: false });
+});
+
+test('recorded words and typed values remain in quarantine, never in the spec or any generated source', (t) => {
+  const capture = fixtureCapture();
+  const flow = fixtureFlow();
+  const canaries = ['Leak Canary', 'leak-canary@example.test', 'Secret site heading 8462', 'Secret label 7391', 'Secret option 5728'];
+  capture.pages[0].title = 'Secret site heading 8462';
+  capture.pages[0].headings = ['Secret site heading 8462'];
+  capture.pages[0].forms[0].controls[0].label = 'Secret label 7391';
+  capture.pages[0].forms[0].controls[2].options[1] = 'Secret option 5728';
+  flow.steps[1].value = 'Leak Canary';
+  flow.steps[2].value = 'leak-canary@example.test';
+  flow.steps.splice(4, 0, { index: 4, path: '/', action: 'select', target: 'select[name=category]', value: 'Secret option 5728' });
+  flow.steps[5].index = 5;
+  flow.steps[6].index = 6;
+  flow.steps[6].expectText = 'Leak Canary';
+  const temp = mkdtempSync(join(tmpdir(), 'capture-no-leak-'));
+  t.after(() => rmSync(temp, { recursive: true, force: true }));
+  const captureFile = join(temp, 'capture.json');
+  writeFileSync(captureFile, JSON.stringify({ capture, flow }));
+  const quarantined = readFileSync(captureFile, 'utf8');
+  for (const word of canaries) assert.ok(quarantined.includes(word), `quarantined evidence retains ${word}`);
+
+  const spec = translateCapture({ capture, flow });
+  const { specPath, projects } = buildCapturedProjects({ spec, outDir: temp, testTempDir: temp });
+  const generatedFiles = [specPath];
+  function collect(dir) {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const path = join(dir, entry.name);
+      if (entry.isDirectory()) collect(path);
+      else generatedFiles.push(path);
+    }
+  }
+  for (const dir of Object.values(projects)) collect(dir);
+  for (const word of canaries) {
+    assert.ok(!JSON.stringify(spec).includes(word), `spec must not contain ${word}`);
+    for (const file of generatedFiles) assert.ok(!readFileSync(file, 'utf8').includes(word), `${file} must not contain ${word}`);
+  }
+});
+
+test('translating identical evidence twice emits byte-identical specs', () => {
+  const capture = fixtureCapture();
+  const flow = fixtureFlow();
+  assert.equal(JSON.stringify(translateCapture({ capture, flow })), JSON.stringify(translateCapture({ capture, flow })));
+});
+
+test('generated arms declare exactly their runtime dependencies from the repository package', (t) => {
+  const temp = mkdtempSync(join(tmpdir(), 'capture-dependencies-'));
+  t.after(() => rmSync(temp, { recursive: true, force: true }));
+  const versions = JSON.parse(readFileSync(join(REPO_ROOT, 'package.json'), 'utf8')).dependencies;
+  const expected = {
+    hono: ['hono'], raw: [], react: ['htm', 'react', 'react-dom'],
+    preact: ['htm', 'preact', 'preact-render-to-string'], vue: ['vue'],
+    webcomponents: [], svelte: ['svelte'],
+  };
+  const spec = translateCapture({ capture: fixtureCapture(), flow: fixtureFlow() });
+  const { projects } = buildCapturedProjects({ spec, outDir: temp, testTempDir: temp });
+  for (const [arm, packages] of Object.entries(expected)) {
+    const manifest = JSON.parse(readFileSync(join(projects[arm], 'package.json'), 'utf8'));
+    assert.deepEqual(manifest.dependencies, Object.fromEntries(packages.map((name) => [name, versions[name]])), arm);
+  }
 });
 
 test('refuses translation if no POST form is found in capture', () => {
@@ -219,8 +281,25 @@ test('submit buttons are triggers rather than data fields, and selections reach 
   flow.steps[6].index = 6;
   const spec = translateCapture({ capture, flow });
   assert.equal(spec.fields.some((field) => field.type === 'submit'), false);
-  assert.deepEqual(spec.journey.select, { 'select[name=category]': 'Billing' });
-  assert.deepEqual(spec.journey.steps.find((step) => step.submit).select, { 'select[name=category]': 'Billing' });
+  assert.deepEqual(spec.journey.select, { 'select[name=category]': 'Option 3 for field 3' });
+  assert.deepEqual(spec.journey.steps.find((step) => step.submit).select, { 'select[name=category]': 'Option 3 for field 3' });
+});
+
+test('refuses a coincidental match between recorded and synthetic values', () => {
+  const flow = fixtureFlow();
+  flow.steps[1].value = 'Sample field 1';
+  flow.steps[5].expectText = 'Sample field 1';
+  assert.throws(() => translateCapture({ capture: fixtureCapture(), flow }),
+    (err) => err instanceof TranslationError && /coincides with recorded/.test(err.message));
+});
+
+test('refuses a selection absent from captured options instead of publishing its value', () => {
+  const flow = fixtureFlow();
+  flow.steps.splice(4, 0, { index: 4, path: '/', action: 'select', target: 'select[name=category]', value: 'not an option' });
+  flow.steps[5].index = 5;
+  flow.steps[6].index = 6;
+  assert.throws(() => translateCapture({ capture: fixtureCapture(), flow }),
+    (err) => err instanceof TranslationError && /not recorded among its options/.test(err.message));
 });
 
 test('refuses translation if a control type cannot be mapped to generator', () => {
