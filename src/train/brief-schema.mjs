@@ -266,7 +266,7 @@ export function validateBriefSchema(row) {
     return findings;
   }
   for (const key of Object.keys(journey)) {
-    if (!['startPath', 'formSelector', 'fill', 'select', 'steps', 'expectText'].includes(key)) {
+    if (!['startPath', 'formSelector', 'fill', 'select', 'steps', 'expectText', 'search', 'update'].includes(key)) {
       at(`journey.${key}`, 'is not a journey property this format defines');
     }
   }
@@ -286,10 +286,23 @@ export function validateBriefSchema(row) {
           return;
         }
         for (const key of Object.keys(step)) {
-          if (!['path', 'fill', 'select', 'submit'].includes(key)) at(`${where}.${key}`, 'is not a step property this format defines');
+          if (!['path', 'fill', 'select', 'submit', 'expectText'].includes(key)) at(`${where}.${key}`, 'is not a step property this format defines');
+        }
+        if (step.expectText !== undefined && !isString(step.expectText)) {
+          at(`${where}.expectText`, 'must be a non-empty string when present');
         }
         if (!isString(step.path) || !step.path.startsWith('/')) at(`${where}.path`, 'must be an absolute path starting with /');
         if (step.submit !== undefined && !isString(step.submit)) at(`${where}.submit`, 'must be a selector string');
+        // A step that sets a control but never submits carries nothing: the value sits in the DOM of a
+        // page that is navigated away from, so the NEXT step has no state to display and the flow is two
+        // static pages wearing a workflow's clothes. This is not hypothetical - the first live run of
+        // this corpus reported 0 of 80 carries passing for exactly this reason, with every page still
+        // answering 200. Refusing the declaration is the only place the mistake can be prevented rather
+        // than merely detected, so the rule is fail-closed here and the driver's page assertion then has
+        // something real to assert.
+        if ((step.fill || step.select) && !isString(step.submit)) {
+          at(`${where}.submit`, 'is required on a step that fills or selects a control: without it the value is never posted, so the next step has nothing to carry');
+        }
         const names = new Set(fields.filter((f) => isString(f.name)).map((f) => f.name));
         for (const [selector, value] of Object.entries(step.fill ?? {})) {
           const name = completeSelectorFieldName(selector);
@@ -307,6 +320,25 @@ export function validateBriefSchema(row) {
         }
       });
     }
+  }
+  // A multi-step flow is only stateful if a LATER page shows something an EARLIER page chose. Validating
+  // that directly is what stops `steps` from being a way to visit two unrelated pages and call it a
+  // workflow: the expected text must be a value the flow itself supplied earlier, not arbitrary prose
+  // that happens to be in the markup.
+  if (Array.isArray(journey.steps)) {
+    const carried = new Set();
+    journey.steps.forEach((step, index) => {
+      const where = `journey.steps[${index}]`;
+      if (!step || typeof step !== 'object' || Array.isArray(step)) return;
+      if (isString(step.expectText) && !carried.has(step.expectText)) {
+        at(
+          `${where}.expectText`,
+          `asserts '${step.expectText}', which no earlier step typed or chose - a page showing a value the flow supplied is what makes this a carried state rather than a second static page`,
+        );
+      }
+      for (const value of Object.values(step.fill ?? {})) if (isString(String(value))) carried.add(String(value));
+      for (const option of Object.values(step.select ?? {})) if (isString(option)) carried.add(option);
+    });
   }
   if (!isString(journey.startPath) || !journey.startPath.startsWith('/')) {
     at('journey.startPath', 'must be an absolute path starting with /');
@@ -392,6 +424,107 @@ export function validateBriefSchema(row) {
       const driven = Object.keys(chosen ?? {}).some((selector) => completeSelectorFieldName(selector) === field.name);
       if (!driven) {
         at('journey.select', `does not choose '${field.name}', which its own fields mark required - the select would submit its first option`);
+      }
+    }
+  }
+
+  // SEARCH / FILTER. A query the flow runs against the records the flow itself created, with a result
+  // set it must contain and one it must NOT - a search that filters nothing still shows the record that
+  // was written, so only the exclusion separates filtering from a list that ignores its query.
+  const SEARCH_KEYS = ['path', 'queryParam', 'query', 'resultsSelector', 'expectIncludes', 'expectAbsent'];
+  if (journey.search !== undefined) {
+    const search = journey.search;
+    if (!search || typeof search !== 'object' || Array.isArray(search)) {
+      at('journey.search', 'must be an object describing the query, the page it runs on and what the results must show');
+    } else {
+      for (const key of Object.keys(search)) {
+        if (!SEARCH_KEYS.includes(key)) at(`journey.search.${key}`, 'is not a search property this format defines');
+      }
+      if (!isString(search.path) || !search.path.startsWith('/')) {
+        at('journey.search.path', 'must be an absolute path starting with /');
+      }
+      // The parameter name is interpolated into the page as the input's name and read back off the query
+      // string, so it obeys the same rule as a field name - and the builder derives both from this value,
+      // which is what keeps the page and the server reading the same parameter.
+      if (!isString(search.queryParam) || UNSAFE_FIELD_NAME.test(search.queryParam) || hasUnpairedSurrogate(search.queryParam)) {
+        at('journey.search.queryParam', 'must be a non-empty name the builder can write into an input and read back off the query string');
+      }
+      if (!isString(search.query)) at('journey.search.query', 'must be a non-empty query string');
+      if (!isString(search.resultsSelector) || !/^#[A-Za-z][\w-]*$/.test(search.resultsSelector)) {
+        at('journey.search.resultsSelector', 'must be an id selector such as "#search-results"; the harness waits for that element, and a looser selector could match a container that renders before the results');
+      }
+      // The query must actually match the record this brief creates, or the flow asserts a search over
+      // data that could never contain the answer: the create step's own submitted values are what the
+      // record will hold, so the query is required to appear in one of them.
+      if (isString(search.query)) {
+        const submitted = [
+          ...Object.values(fill ?? {}).map((value) => String(value)),
+          ...Object.values(journey.select ?? {}).map((option) => String(option)),
+        ];
+        const needles = String(search.query)
+          .split(/\s+/)
+          .filter((word) => word.length >= 3);
+        const matchesSomething = submitted.some((value) => {
+          const haystack = value.toLowerCase();
+          return needles.length > 0
+            ? needles.some((word) => haystack.includes(word.toLowerCase()))
+            : haystack.includes(String(search.query).toLowerCase());
+        });
+        if (!matchesSomething) {
+          at('journey.search.query', `'${search.query}' does not match any value the create step submits (${JSON.stringify(submitted)}), so the brief's own record could never appear in its own results`);
+        }
+      }
+      const includes = search.expectIncludes;
+      if (!Array.isArray(includes) || includes.length === 0 || includes.some((value) => !isString(value))) {
+        at('journey.search.expectIncludes', 'must be a non-empty array of non-empty strings - at least one record the query must return');
+      }
+      if (search.expectAbsent !== undefined && (!Array.isArray(search.expectAbsent) || search.expectAbsent.some((value) => !isString(value)))) {
+        at('journey.search.expectAbsent', 'must be an array of non-empty strings when present');
+      }
+      if (Array.isArray(includes) && Array.isArray(search.expectAbsent)) {
+        const overlap = includes.filter((value) => search.expectAbsent.includes(value));
+        if (overlap.length > 0) {
+          at('journey.search', `expects ${JSON.stringify(overlap)} both to appear in the results and not to appear - the flow cannot assert both`);
+        }
+      }
+    }
+  }
+
+  // UPDATE-EXISTING. A second mutation to the record the flow already created, changing one declared
+  // field to a value the create step did not use. Without that inequality an update could be satisfied by
+  // re-submitting the same value, which is indistinguishable from a no-op write.
+  const UPDATE_KEYS = ['field', 'newValue'];
+  if (journey.update !== undefined) {
+    const update = journey.update;
+    // An update happens to a record that is read BY REFERENCE. A flow with no parameterised route has no
+    // such page - its read is a session page keyed on a cookie - so the edit form the flow needs is never
+    // rendered, the driver types into nothing, and the failure surfaces as a flow that silently does not
+    // apply. Refused here instead: the declaration is either driveable or it is not a declaration.
+    if (!(row.routes ?? []).some((route) => /^\/.*:[A-Za-z]/.test(String(route)))) {
+      at('journey.update', `needs a parameterised route to update (this brief declares ${JSON.stringify(row.routes ?? [])}); a flow read through a session page has no record page to edit`);
+    }
+    if (!update || typeof update !== 'object' || Array.isArray(update)) {
+      at('journey.update', 'must be an object naming the field the flow changes and the value it changes it to');
+    } else {
+      for (const key of Object.keys(update)) {
+        if (!UPDATE_KEYS.includes(key)) at(`journey.update.${key}`, 'is not an update property this format defines');
+      }
+      const target = isString(update.field) ? fields.find((candidate) => candidate.name === update.field) : undefined;
+      if (!target) {
+        at('journey.update.field', `must name a field this brief declares (${fields.map((f) => f.name).join(', ')})`);
+      } else if (target.type === 'select') {
+        at('journey.update.field', `'${target.name}' is a select, which the editor cannot type a new value into`);
+      }
+      if (!isString(update.newValue)) {
+        at('journey.update.newValue', 'must be a non-empty value to change the field to');
+      } else if (target) {
+        const selectorForField = Object.keys(fill ?? {}).find((selector) => completeSelectorFieldName(selector) === target.name);
+        const createdWith = selectorForField ? String(fill[selectorForField]) : undefined;
+        if (createdWith === undefined) {
+          at('journey.update.field', `'${target.name}' is not filled by the create step, so there is no existing value for the update to replace`);
+        } else if (createdWith === update.newValue) {
+          at('journey.update.newValue', `'${update.newValue}' is the value the create step already submitted, so the update would change nothing - the flow could pass without the server writing`);
+        }
       }
     }
   }

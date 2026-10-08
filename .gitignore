@@ -1,4 +1,4 @@
-node_modules/
+node_modules
 
 # The viewer's runtime state: sandbox bridge sockets and regenerated uplifted trees.
 .viewer-state/
