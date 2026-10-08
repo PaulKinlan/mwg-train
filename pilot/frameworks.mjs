@@ -39,30 +39,33 @@ export const FRAMEWORKS = {
 
 /** Field markup. Attributes come from the archetype, and the defects decide which are left out. */
 function fieldMarkup(field, { defects }) {
-  if (field.type === 'textarea') {
-    const required = defects.includes('no-required') ? '' : ' required';
-    return `      <label for="${field.slug}">${field.label}</label>
-      <textarea id="${field.slug}" name="${field.name}"${required}></textarea>`;
-  }
-  if (field.type === 'select') {
-    const options = (field.options ?? []).map((option) => `        <option value="${option}">${option}</option>`).join('\n');
-    return `      <label for="${field.slug}">${field.label}</label>
-      <select id="${field.slug}" name="${field.name}">
-${options}
-      </select>`;
-  }
-  const attrs = [`type="${field.type}"`, `id="${field.slug}"`, `name="${field.name}"`];
-  if (!defects.includes('no-required') && !field.optional) attrs.push('required');
-  // `no-autofill` is the whole-form defect; the per-purpose tokens are separate so a project can be
-  // missing only the address hints (which is the realistic case: sign-in is usually done first).
+  // A field is required, and linked to its error text, unless the project is seeded with the defect or
+  // the field is one the user may leave empty. Keeping these in one place is what makes a project with
+  // no seeded defects genuinely clean: the first version emitted the error text without the attribute
+  // that points at it, so the "clean" arm was not clean and the uplift scored a fix there.
+  const required = !defects.includes('no-required') && !field.optional;
+  const req = required ? ' required' : '';
+  const aria = required ? ` aria-errormessage="${field.slug}-error"` : '';
   const autofillBlocked =
     defects.includes('no-autofill') ||
     (field.autocomplete === 'street-address' && defects.includes('no-autofill-address')) ||
     (field.autocomplete === 'postal-code' && defects.includes('no-autofill-address'));
-  if (field.autocomplete && !autofillBlocked) attrs.push(`autocomplete="${field.autocomplete}"`);
-  if (field.type === 'search' || field.type === 'number') attrs.push(`inputmode="${field.type === 'number' ? 'numeric' : 'search'}"`);
+  const auto = field.autocomplete && !autofillBlocked ? ` autocomplete="${field.autocomplete}"` : '';
+
+  if (field.type === 'textarea') {
+    return `      <label for="${field.slug}">${field.label}</label>
+      <textarea id="${field.slug}" name="${field.name}"${req}${aria}${auto}></textarea>`;
+  }
+  if (field.type === 'select') {
+    const options = (field.options ?? []).map((option) => `        <option value="${option}">${option}</option>`).join('\n');
+    return `      <label for="${field.slug}">${field.label}</label>
+      <select id="${field.slug}" name="${field.name}"${req}${aria}>
+${options}
+      </select>`;
+  }
+  const extra = field.type === 'search' || field.type === 'number' ? ` inputmode="${field.type === 'number' ? 'numeric' : 'search'}"` : '';
   return `      <label for="${field.slug}">${field.label}</label>
-      <input ${attrs.join(' ')}>`;
+      <input type="${field.type}" id="${field.slug}" name="${field.name}"${req}${aria}${auto}${extra}>`;
 }
 
 /**

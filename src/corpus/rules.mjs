@@ -260,6 +260,9 @@ export const RULES = Object.freeze({
 export const SECURITY_CHECKS = Object.freeze({
   'session-cookie-attributes': {
     title: 'The session cookie is HttpOnly, Secure and SameSite',
+    // Not an MWG guide: this is a local property the pilot measures, and it says so rather than
+    // borrowing a guide id it does not implement.
+    guide: null,
     async check(page) {
       const cookies = (await page.cookies()).filter((cookie) => cookie.session || /session|sid|auth/i.test(cookie.name));
       if (cookies.length === 0) return { check: 'session-cookie-attributes', status: 'ERROR', detail: 'no session cookie was set by the journey' };
@@ -274,6 +277,8 @@ export const SECURITY_CHECKS = Object.freeze({
   },
   'form-token-exposure': {
     title: 'No credential or token appears in the page or its URLs',
+    // Local property, no guide id.
+    guide: null,
     async check(page, ctx) {
       const leak = await page.evaluate(`
         const text = document.documentElement.innerHTML;
