@@ -16,6 +16,8 @@
     "quotes:fetch": "bash scripts/fetch-quotes.sh",
     "price:sheets": "node scripts/price-dry-run.mjs --out docs/eval/pricing.sheets.md",
     "check:briefs": "node scripts/validate-briefs.mjs docs/eval/briefs/manifest.jsonl --expect-seal sha256:89a1f47d638c5eab733074d87bc19d6615401aeb9a77ecbd86cf10b443e272b1",
+    "check:disjoint": "node scripts/check-disjoint.mjs",
+    "train:tokens": "node scripts/train-corpus-tokens.mjs",
     "check:eval-projects": "node scripts/scaffold-eval-projects.mjs --check",
     "render:targets": "node scripts/render-targets.mjs",
     "check:targets": "node scripts/render-targets.mjs --check && node scripts/validate-provenance.mjs data/A6_evaluation/targets/manifest.jsonl",
