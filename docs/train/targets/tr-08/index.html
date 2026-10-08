@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Grain &amp; Silver Darkroom Co-op — Equipment &amp; Chemistry Helpdesk</title>
+  <style>
+    :root {
+      --dr-bg: #09090b;
+      --dr-surface: #18181b;
+      --dr-card: #27272a;
+      --dr-border: #3f3f46;
+      --dr-amber: #f59e0b;
+      --dr-text: #f4f4f5;
+      --dr-muted: #a1a1aa;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--dr-bg); color: var(--dr-text); line-height: 1.5; padding: 1.5rem; }
+    .dr-shell { max-width: 1200px; margin: 0 auto; }
+    header.dr-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--dr-amber); padding-bottom: 1rem; margin-bottom: 1.5rem; }
+    .dr-brand { font-size: 1.35rem; font-weight: 800; color: #fff; letter-spacing: 0.5px; }
+    .dr-brand span { color: var(--dr-amber); }
+    nav.dr-nav a { text-decoration: none; color: var(--dr-muted); font-size: 0.9rem; margin-left: 1.25rem; font-weight: 600; }
+    nav.dr-nav a[aria-current="page"] { color: var(--dr-amber); }
+    .dr-grid { display: grid; grid-template-columns: 1.8fr 1.2fr; gap: 2rem; align-items: start; }
+    .dr-box { background: var(--dr-surface); border: 1px solid var(--dr-border); border-radius: 8px; padding: 1.5rem; }
+    .dr-box h2 { font-size: 1.3rem; color: #fff; margin-bottom: 0.5rem; }
+    .dr-field { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 1rem; }
+    .dr-field label { font-size: 0.85rem; font-weight: 600; color: var(--dr-muted); }
+    .dr-field input, .dr-field select, .dr-field textarea { background: #09090b; border: 1px solid var(--dr-border); color: #fff; padding: 0.6rem; border-radius: 6px; font-size: 0.95rem; }
+    .dr-btn { background: var(--dr-amber); color: #000; border: none; font-size: 1rem; font-weight: 700; padding: 0.75rem 1.25rem; border-radius: 6px; cursor: pointer; width: 100%; }
+    .dr-btn:hover { background: #d97706; }
+    table.dr-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 0.5rem; }
+    table.dr-table th, table.dr-table td { padding: 0.6rem 0.5rem; border-bottom: 1px solid var(--dr-border); text-align: left; }
+    table.dr-table th { color: var(--dr-muted); }
+    .dr-pill-open { background: rgba(245,158,11,0.2); color: var(--dr-amber); padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 700; }
+    .dr-pill-fixed { background: rgba(34,197,94,0.2); color: #4ade80; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 700; }
+    footer.dr-foot { margin-top: 2.5rem; border-top: 1px solid var(--dr-border); padding-top: 1rem; text-align: center; font-size: 0.85rem; color: var(--dr-muted); }
+  </style>
+</head>
+<body>
+  <div class="dr-shell">
+    <header class="dr-head">
+      <div class="dr-brand">GRAIN &amp; SILVER <span>DARKROOM CO-OP</span></div>
+      <nav class="dr-nav" aria-label="Helpdesk Nav">
+        <a href="/">Darkroom Rules</a>
+        <a href="/tickets" aria-current="page">Maintenance Log</a>
+        <a href="/chemicals">Chemical Stocks</a>
+        <a href="/roster">Enlarger Bookings</a>
+      </nav>
+    </header>
+    <main class="dr-grid">
+      <section class="dr-box">
+        <h2>Submit Equipment or Chemistry Ticket</h2>
+        <p style="color:var(--dr-muted);font-size:0.9rem;margin-bottom:1.25rem">Report faulty enlarger bulbs, sticky timers, chemistry replenishment, or clogged wash siphons.</p>
+        <form id="support-ticket-form" method="post" action="/tickets/new">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+            <div class="dr-field">
+              <label for="bay_station">Darkroom Bay / Station</label>
+              <select id="bay_station" name="bay_station" required>
+                <option value="bay-1">Bay 1 — Beseler 23CII (35mm/6x6)</option>
+                <option value="bay-2">Bay 2 — Omega D2 (4x5 Large Format)</option>
+                <option value="bay-3">Bay 3 — De Vere 504 Dichroic</option>
+                <option value="wash-sink">Central Wash Sink &amp; Siphon</option>
+                <option value="print-dryer">Rotary Glazing Dryer</option>
+              </select>
+            </div>
+            <div class="dr-field">
+              <label for="category">Issue Category</label>
+              <select id="category" name="category" required>
+                <option value="optics">Enlarger Lens / Condenser / Bulb</option>
+                <option value="timer">Digital / Mechanical Timer Fault</option>
+                <option value="chemistry" selected>Chemical Stock Depleted (Fixer/Dev)</option>
+                <option value="plumbing">Sink Drain / Water Temp Valve</option>
+              </select>
+            </div>
+          </div>
+          <div class="dr-field">
+            <label for="urgency">Urgency Level</label>
+            <select id="urgency" name="urgency" required>
+              <option value="routine">Routine — Station still usable</option>
+              <option value="priority">Priority — Station out of action</option>
+              <option value="critical">Critical Safety Hazard — Wet floor / electrical</option>
+            </select>
+          </div>
+          <div class="dr-field">
+            <label for="description">Fault Details &amp; Observations</label>
+            <textarea id="description" name="description" rows="3" required placeholder="e.g. Rapid fixer in tank B is exhausted (tested with Hypo-Chek, precipitate formed). New working solution needed."></textarea>
+          </div>
+          <div class="dr-field">
+            <label for="member_code">Reported by (Member Name or Code)</label>
+            <input type="text" id="member_code" name="member_code" required placeholder="Julian K. (#112)">
+          </div>
+          <button type="submit" class="dr-btn">Log Maintenance Ticket</button>
+        </form>
+      </section>
+      <aside class="dr-box">
+        <h2>Active Issue Board</h2>
+        <table class="dr-table">
+          <thead>
+            <tr>
+              <th>Ticket</th>
+              <th>Station</th>
+              <th>Problem</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>#108</td>
+              <td>Bay 2</td>
+              <td>50mm lens click-stop loose</td>
+              <td><span class="dr-pill-open">Investigating</span></td>
+            </tr>
+            <tr>
+              <td>#107</td>
+              <td>Sink</td>
+              <td>Ilford Washaid exhausted</td>
+              <td><span class="dr-pill-fixed">Replenished</span></td>
+            </tr>
+            <tr>
+              <td>#105</td>
+              <td>Dryer</td>
+              <td>Thermostat knob stiff</td>
+              <td><span class="dr-pill-fixed">Repaired</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <div style="margin-top:1.5rem;font-size:0.8rem;color:var(--dr-muted);border:1px dashed var(--dr-border);padding:0.75rem;border-radius:6px">
+          <strong>Chemistry Protocol:</strong> Spent fixer must NEVER be poured down the drain. Pour into the silver recovery drum in the wash bay.
+        </div>
+      </aside>
+    </main>
+    <footer class="dr-foot">
+      <p>Grain &amp; Silver Co-operative Darkroom • 12 Printmakers Court • Members 24hr Keycard Access</p>
+    </footer>
+  </div>
+</body>
+</html>

@@ -1,0 +1,479 @@
+{
+  "title": "Ceilidh & Session Tune Vault — Folk Music Archive & Tempo Notes",
+  "viewport": {
+    "width": 1280,
+    "height": 900
+  },
+  "nodes": [
+    {
+      "tag": "div",
+      "depth": 0,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "header",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "nav",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "main",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "article",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h1",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "span",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "span",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "span",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "em",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "em",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "section",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h2",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "form",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 5,
+      "type": "text",
+      "name": "musician_handle",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "select",
+      "depth": 5,
+      "type": null,
+      "name": "instrument",
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 5,
+      "type": "number",
+      "name": "suggested_bpm",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "textarea",
+      "depth": 5,
+      "type": null,
+      "name": "variation_notes",
+      "role": null
+    },
+    {
+      "tag": "button",
+      "depth": 4,
+      "type": "submit",
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "footer",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    }
+  ],
+  "boxes": [
+    {
+      "tag": "header",
+      "x": 0.0313,
+      "y": 0.0267,
+      "w": 0.9375,
+      "h": 0.0587
+    },
+    {
+      "tag": "nav",
+      "x": 0.5959,
+      "y": 0.0327,
+      "w": 0.3728,
+      "h": 0.0267
+    },
+    {
+      "tag": "main",
+      "x": 0.0313,
+      "y": 0.112,
+      "w": 0.9375,
+      "h": 0.5481
+    },
+    {
+      "tag": "article",
+      "x": 0.0313,
+      "y": 0.112,
+      "w": 0.5475,
+      "h": 0.4607
+    },
+    {
+      "tag": "h1",
+      "x": 0.0539,
+      "y": 0.1442,
+      "w": 0.5022,
+      "h": 0.0373
+    },
+    {
+      "tag": "section",
+      "x": 0.6037,
+      "y": 0.112,
+      "w": 0.365,
+      "h": 0.5481
+    },
+    {
+      "tag": "h2",
+      "x": 0.6264,
+      "y": 0.1442,
+      "w": 0.3197,
+      "h": 0.0373
+    },
+    {
+      "tag": "form",
+      "x": 0.6264,
+      "y": 0.1905,
+      "w": 0.3197,
+      "h": 0.4374
+    },
+    {
+      "tag": "label",
+      "x": 0.6264,
+      "y": 0.1905,
+      "w": 0.3197,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.6264,
+      "y": 0.2193,
+      "w": 0.3197,
+      "h": 0.0407
+    },
+    {
+      "tag": "label",
+      "x": 0.6264,
+      "y": 0.2751,
+      "w": 0.3197,
+      "h": 0.0227
+    },
+    {
+      "tag": "select",
+      "x": 0.6264,
+      "y": 0.304,
+      "w": 0.3197,
+      "h": 0.0429
+    },
+    {
+      "tag": "label",
+      "x": 0.6264,
+      "y": 0.3619,
+      "w": 0.3197,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.6264,
+      "y": 0.3908,
+      "w": 0.3197,
+      "h": 0.0407
+    },
+    {
+      "tag": "label",
+      "x": 0.6264,
+      "y": 0.4466,
+      "w": 0.3197,
+      "h": 0.0227
+    },
+    {
+      "tag": "textarea",
+      "x": 0.6264,
+      "y": 0.4755,
+      "w": 0.3197,
+      "h": 0.0818
+    },
+    {
+      "tag": "button",
+      "x": 0.6264,
+      "y": 0.5812,
+      "w": 0.3197,
+      "h": 0.0467
+    },
+    {
+      "tag": "footer",
+      "x": 0.0313,
+      "y": 0.7045,
+      "w": 0.9375,
+      "h": 0.0415
+    }
+  ],
+  "labels": [
+    {
+      "for": "musician_handle",
+      "text": "Musician Name or Session Role"
+    },
+    {
+      "for": "instrument",
+      "text": "Instrument"
+    },
+    {
+      "for": "suggested_bpm",
+      "text": "Recommended Session BPM"
+    },
+    {
+      "for": "variation_notes",
+      "text": "Chord Substitutions or Regional Variation Notes"
+    }
+  ],
+  "controls": [
+    {
+      "tag": "input",
+      "type": "text",
+      "name": "musician_handle",
+      "label": "Musician Name or Session Role"
+    },
+    {
+      "tag": "select",
+      "type": null,
+      "name": "instrument",
+      "label": "Instrument"
+    },
+    {
+      "tag": "input",
+      "type": "number",
+      "name": "suggested_bpm",
+      "label": "Recommended Session BPM"
+    },
+    {
+      "tag": "textarea",
+      "type": null,
+      "name": "variation_notes",
+      "label": "Chord Substitutions or Regional Variation Notes"
+    }
+  ],
+  "headings": [
+    "The Wind That Shakes the Barley (Reel in D Major)",
+    "Musician Tempo & Chord Notes"
+  ]
+}

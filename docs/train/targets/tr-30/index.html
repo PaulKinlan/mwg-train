@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Shoreline Marine Stewardship — Coastal Beach Cleanup &amp; Kit Pass</title>
+  <style>
+    :root {
+      --sm-ocean: #075985;
+      --sm-teal: #0f766e;
+      --sm-card: #ffffff;
+      --sm-border: #bae6fd;
+      --sm-bg: #f0fdfa;
+      --sm-text: #0f172a;
+      --sm-muted: #64748b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--sm-bg); color: var(--sm-text); line-height: 1.5; padding: 1.5rem; }
+    .sm-wrap { max-width: 1200px; margin: 0 auto; }
+    header.sm-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--sm-ocean); padding-bottom: 1rem; margin-bottom: 1.5rem; }
+    .sm-brand { font-size: 1.35rem; font-weight: 800; color: var(--sm-ocean); }
+    nav.sm-nav a { text-decoration: none; color: var(--sm-muted); font-size: 0.9rem; margin-left: 1.25rem; font-weight: 600; }
+    nav.sm-nav a[aria-current="page"] { color: var(--sm-ocean); border-bottom: 2px solid var(--sm-ocean); padding-bottom: 0.2rem; }
+    .sm-grid { display: grid; grid-template-columns: 1.8fr 1.2fr; gap: 2rem; align-items: start; }
+    .sm-card { background: var(--sm-card); border: 1px solid var(--sm-border); border-radius: 8px; padding: 1.75rem; }
+    .sm-card h1, .sm-card h2 { font-size: 1.4rem; color: var(--sm-ocean); margin-bottom: 0.5rem; }
+    .sm-tide-alert { background: #e0f2fe; border: 1px solid var(--sm-border); border-radius: 6px; padding: 0.85rem; margin-bottom: 1.25rem; font-size: 0.9rem; }
+    .sm-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .sm-field { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 0.85rem; }
+    .sm-field label { font-size: 0.85rem; font-weight: 600; color: var(--sm-text); }
+    .sm-field input, .sm-field select { padding: 0.55rem; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.95rem; }
+    .sm-btn { background: var(--sm-ocean); color: #fff; border: none; font-size: 1rem; font-weight: 700; padding: 0.85rem; border-radius: 6px; cursor: pointer; width: 100%; margin-top: 0.5rem; }
+    .sm-btn:hover { background: #0c4a6e; }
+    footer.sm-foot { margin-top: 2.5rem; border-top: 1px solid var(--sm-border); padding-top: 1rem; text-align: center; font-size: 0.85rem; color: var(--sm-muted); }
+  </style>
+</head>
+<body>
+  <div class="sm-wrap">
+    <header class="sm-head">
+      <div class="sm-brand">🌊 Shoreline Marine Stewardship</div>
+      <nav class="sm-nav" aria-label="Cleanup Nav">
+        <a href="/">Tide Timetable</a>
+        <a href="/cleanups">Coastal Events</a>
+        <a href="/register" aria-current="page">Volunteer Pass</a>
+        <a href="/passes">Pass Verification</a>
+      </nav>
+    </header>
+    <main class="sm-grid">
+      <section class="sm-card">
+        <h1>Low-Tide Coastal Beach Cleanup &amp; Kit Pass</h1>
+        <div class="sm-tide-alert">
+          <strong>Low Tide Window:</strong> Saturday 24 Oct • Extreme Low Water 10:15 (-0.4m chart datum). Access to outer reef tidepools and shingle spit.
+        </div>
+        <form id="beach-cleanup-form" method="post" action="/cleanups/autumn-tide/register">
+          <div class="sm-row-2">
+            <div class="sm-field">
+              <label for="volunteer_name">Volunteer Name</label>
+              <input type="text" id="volunteer_name" name="volunteer_name" required placeholder="Marcus Vance">
+            </div>
+            <div class="sm-field">
+              <label for="volunteer_phone">Contact Mobile</label>
+              <input type="tel" id="volunteer_phone" name="volunteer_phone" required placeholder="07700 900552">
+            </div>
+          </div>
+          <div class="sm-field">
+            <label for="beach_sector">Assigned Coastal Cleanup Sector</label>
+            <select id="beach_sector" name="beach_sector" required>
+              <option value="sector-a">Sector A — North Shingle Spit (Plastic bottles &amp; rope)</option>
+              <option value="sector-b" selected>Sector B — Pier Tidepools (Ghost nets &amp; monofilament)</option>
+              <option value="sector-c">Sector C — Estuary Mudflats (Wellingtons required)</option>
+            </select>
+          </div>
+          <div class="sm-row-2">
+            <div class="sm-field">
+              <label for="briefing_slot">Safety Briefing Time</label>
+              <select id="briefing_slot" name="briefing_slot" required>
+                <option value="slot-0900">09:00 AM (First wave briefing)</option>
+                <option value="slot-0930" selected>09:30 AM (Family &amp; group briefing)</option>
+              </select>
+            </div>
+            <div class="sm-field">
+              <label for="kit_glove_size">Litter Picker &amp; Glove Kit Size</label>
+              <select id="kit_glove_size" name="kit_glove_size" required>
+                <option value="adult-m">Adult Medium Kevlar Gloves + Long Picker</option>
+                <option value="adult-l">Adult Large Gloves + Long Picker</option>
+                <option value="junior">Junior Heavy Gloves + Short Picker</option>
+              </select>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:0.5rem;margin:0.75rem 0">
+            <input type="checkbox" id="safety_briefing_ack" name="safety_briefing_ack" value="yes" required>
+            <label for="safety_briefing_ack" style="font-size:0.85rem">I agree to attend the slipway safety briefing and follow tide warden signals.</label>
+          </div>
+          <button type="submit" class="sm-btn">Register Volunteer Cleanup Pass</button>
+        </form>
+      </section>
+      <aside class="sm-card">
+        <h2>Kit Collection Station</h2>
+        <p style="font-size:0.85rem;color:var(--sm-muted);margin-bottom:0.75rem">Collect your sanitised kit at Harbour Slipway Marquee 15 minutes before your briefing.</p>
+        <ul style="font-size:0.85rem;color:#334155;display:flex;flex-direction:column;gap:0.4rem;padding-left:1.2rem">
+          <li>Puncture-resistant marine safety gloves</li>
+          <li>Ergonomic aluminium litter grabber</li>
+          <li>Colour-coded marine debris sorting bags</li>
+          <li>Sharps box container at marshal station</li>
+        </ul>
+      </aside>
+    </main>
+    <footer class="sm-foot">
+      <p>Shoreline Marine Stewardship Trust • Dedicated to Clean Seas &amp; Marine Habitats • Slipway Quay</p>
+    </footer>
+  </div>
+</body>
+</html>

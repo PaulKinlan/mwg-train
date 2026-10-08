@@ -1,6 +1,8 @@
 # Training Brief Schema and Authoring Protocol
 
-The training briefs (`docs/train/briefs/manifest.jsonl`) specify the synthetic project requirements used to train student models and generate the training corpus.
+The training briefs (`docs/train/briefs/manifest.jsonl`) specify the synthetic project requirements used to train student models.
+
+**What the briefs do and do not drive.** The scaffolded corpus projects are generated from each brief's `archetype`, `topic` and `routes` - NOT from its `fields`, `journeys` or `assertions`. A generated project is therefore an archetype template relabelled to the brief's topic, not a brief-faithful implementation: the form fields and the journey come from the archetype. See `docs/train/corpus/README.md` for the worked example.
 
 > **Deliberately NOT the sealed evaluation schema:**
 > This schema is deliberately distinct from the held-out evaluation schema in `docs/eval/briefs/SCHEMA.md`.

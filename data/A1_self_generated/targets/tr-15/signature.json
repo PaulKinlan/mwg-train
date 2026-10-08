@@ -1,0 +1,713 @@
+{
+  "title": "Oakridge Tenant Co-operative — Maintenance Ledger & Expenses",
+  "viewport": {
+    "width": 1280,
+    "height": 900
+  },
+  "nodes": [
+    {
+      "tag": "div",
+      "depth": 0,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "header",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "nav",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "main",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "section",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h1",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "span",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "strong",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "span",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "strong",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "span",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "strong",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "table",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "thead",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "tr",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "th",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "th",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "th",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "th",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "th",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "tbody",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "tr",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "tr",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "tr",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "aside",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h2",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "form",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 5,
+      "type": "date",
+      "name": "expense_date",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "select",
+      "depth": 5,
+      "type": null,
+      "name": "category",
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 5,
+      "type": "text",
+      "name": "vendor",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 5,
+      "type": "number",
+      "name": "amount",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 5,
+      "type": "text",
+      "name": "resident_flat",
+      "role": null
+    },
+    {
+      "tag": "button",
+      "depth": 4,
+      "type": "submit",
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "footer",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    }
+  ],
+  "boxes": [
+    {
+      "tag": "header",
+      "x": 0.0313,
+      "y": 0.0267,
+      "w": 0.9375,
+      "h": 0.056
+    },
+    {
+      "tag": "nav",
+      "x": 0.537,
+      "y": 0.0313,
+      "w": 0.4317,
+      "h": 0.0267
+    },
+    {
+      "tag": "main",
+      "x": 0.0313,
+      "y": 0.1093,
+      "w": 0.9375,
+      "h": 0.5892
+    },
+    {
+      "tag": "section",
+      "x": 0.0313,
+      "y": 0.1093,
+      "w": 0.5475,
+      "h": 0.383
+    },
+    {
+      "tag": "h1",
+      "x": 0.0508,
+      "y": 0.1371,
+      "w": 0.5084,
+      "h": 0.036
+    },
+    {
+      "tag": "table",
+      "x": 0.0508,
+      "y": 0.2842,
+      "w": 0.5084,
+      "h": 0.1803
+    },
+    {
+      "tag": "aside",
+      "x": 0.6037,
+      "y": 0.1093,
+      "w": 0.365,
+      "h": 0.5892
+    },
+    {
+      "tag": "h2",
+      "x": 0.6233,
+      "y": 0.1371,
+      "w": 0.3259,
+      "h": 0.036
+    },
+    {
+      "tag": "form",
+      "x": 0.6233,
+      "y": 0.1864,
+      "w": 0.3259,
+      "h": 0.4843
+    },
+    {
+      "tag": "label",
+      "x": 0.6233,
+      "y": 0.1864,
+      "w": 0.3259,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.6233,
+      "y": 0.2153,
+      "w": 0.3259,
+      "h": 0.044
+    },
+    {
+      "tag": "label",
+      "x": 0.6233,
+      "y": 0.2744,
+      "w": 0.3259,
+      "h": 0.0227
+    },
+    {
+      "tag": "select",
+      "x": 0.6233,
+      "y": 0.3033,
+      "w": 0.3259,
+      "h": 0.0429
+    },
+    {
+      "tag": "label",
+      "x": 0.6233,
+      "y": 0.3613,
+      "w": 0.3259,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.6233,
+      "y": 0.3901,
+      "w": 0.3259,
+      "h": 0.0407
+    },
+    {
+      "tag": "label",
+      "x": 0.6233,
+      "y": 0.4459,
+      "w": 0.3259,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.6233,
+      "y": 0.4748,
+      "w": 0.3259,
+      "h": 0.0407
+    },
+    {
+      "tag": "label",
+      "x": 0.6233,
+      "y": 0.5305,
+      "w": 0.3259,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.6233,
+      "y": 0.5594,
+      "w": 0.3259,
+      "h": 0.0407
+    },
+    {
+      "tag": "button",
+      "x": 0.6233,
+      "y": 0.624,
+      "w": 0.3259,
+      "h": 0.0467
+    },
+    {
+      "tag": "footer",
+      "x": 0.0313,
+      "y": 0.7429,
+      "w": 0.9375,
+      "h": 0.0415
+    }
+  ],
+  "labels": [
+    {
+      "for": "expense_date",
+      "text": "Date of Purchase"
+    },
+    {
+      "for": "category",
+      "text": "Maintenance Category"
+    },
+    {
+      "for": "vendor",
+      "text": "Merchant / Contractor Name"
+    },
+    {
+      "for": "amount",
+      "text": "Total Amount (£)"
+    },
+    {
+      "for": "resident_flat",
+      "text": "Resident Submitting (Flat Number)"
+    }
+  ],
+  "controls": [
+    {
+      "tag": "input",
+      "type": "date",
+      "name": "expense_date",
+      "label": "Date of Purchase"
+    },
+    {
+      "tag": "select",
+      "type": null,
+      "name": "category",
+      "label": "Maintenance Category"
+    },
+    {
+      "tag": "input",
+      "type": "text",
+      "name": "vendor",
+      "label": "Merchant / Contractor Name"
+    },
+    {
+      "tag": "input",
+      "type": "number",
+      "name": "amount",
+      "label": "Total Amount (£)"
+    },
+    {
+      "tag": "input",
+      "type": "text",
+      "name": "resident_flat",
+      "label": "Resident Submitting (Flat Number)"
+    }
+  ],
+  "headings": [
+    "Communal Maintenance Ledger (Q4 2026)",
+    "Log Communal Expenditure"
+  ]
+}

@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Community Woodland Trust — Memorial Tree Fund &amp; Dedication Ledger</title>
+  <style>
+    :root {
+      --cw-green: #14532d;
+      --cw-brass: #854d0e;
+      --cw-card: #ffffff;
+      --cw-border: #bbf7d0;
+      --cw-bg: #f0fdf4;
+      --cw-text: #14532d;
+      --cw-muted: #4b5563;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: "Georgia", serif; background: var(--cw-bg); color: #1c1917; line-height: 1.5; padding: 1.5rem; }
+    .cw-wrap { max-width: 1200px; margin: 0 auto; }
+    header.cw-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--cw-green); padding-bottom: 1rem; margin-bottom: 1.5rem; }
+    .cw-brand { font-size: 1.4rem; font-weight: 700; color: var(--cw-green); }
+    nav.cw-nav a { font-family: -apple-system, sans-serif; text-decoration: none; color: var(--cw-muted); font-size: 0.9rem; margin-left: 1.25rem; font-weight: 600; }
+    nav.cw-nav a[aria-current="page"] { color: var(--cw-green); text-decoration: underline; }
+    .cw-grid { display: grid; grid-template-columns: 1.8fr 1.2fr; gap: 2rem; align-items: start; }
+    .cw-card { background: var(--cw-card); border: 1px solid var(--cw-border); border-radius: 8px; padding: 1.75rem; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+    .cw-card h1, .cw-card h2 { font-size: 1.45rem; color: var(--cw-green); margin-bottom: 0.5rem; }
+    .cw-progress-box { background: #dcfce7; border: 1px solid var(--cw-border); border-radius: 6px; padding: 1rem; margin-bottom: 1.25rem; font-family: -apple-system, sans-serif; }
+    .cw-bar-outer { height: 12px; background: #bbf7d0; border-radius: 6px; overflow: hidden; margin: 0.5rem 0; }
+    .cw-bar-inner { height: 100%; width: 71%; background: var(--cw-green); border-radius: 6px; }
+    .cw-field { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 0.85rem; font-family: -apple-system, sans-serif; }
+    .cw-field label { font-size: 0.85rem; font-weight: 600; color: #1c1917; }
+    .cw-field input, .cw-field select, .cw-field textarea { padding: 0.55rem; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.95rem; }
+    .cw-btn { font-family: -apple-system, sans-serif; background: var(--cw-green); color: #fff; border: none; font-size: 1rem; font-weight: 700; padding: 0.85rem; border-radius: 6px; cursor: pointer; width: 100%; margin-top: 0.5rem; }
+    .cw-btn:hover { background: #166534; }
+    table.cw-table { width: 100%; border-collapse: collapse; font-family: -apple-system, sans-serif; font-size: 0.85rem; margin-top: 0.5rem; }
+    table.cw-table th, table.cw-table td { padding: 0.6rem 0.5rem; border-bottom: 1px solid #e2e8f0; text-align: left; }
+    table.cw-table th { background: #f0fdf4; color: var(--cw-green); }
+    footer.cw-foot { margin-top: 2.5rem; border-top: 1px solid var(--cw-border); padding-top: 1rem; text-align: center; font-family: -apple-system, sans-serif; font-size: 0.85rem; color: var(--cw-muted); }
+  </style>
+</head>
+<body>
+  <div class="cw-wrap">
+    <header class="cw-head">
+      <div class="cw-brand">Community Woodland Trust</div>
+      <nav class="cw-nav" aria-label="Trust Nav">
+        <a href="/">Woodland Reserve</a>
+        <a href="/funds" aria-current="page">Memorial Tree Fund</a>
+        <a href="/contribute">Pledge Tree</a>
+        <a href="/ledger">Public Ledger</a>
+      </nav>
+    </header>
+    <main class="cw-grid">
+      <section class="cw-card">
+        <h1>Memorial Tree Planting Contribution</h1>
+        <p style="font-family:-apple-system,sans-serif;font-size:0.9rem;color:var(--cw-muted);margin-bottom:1rem">Pledge a native English sapling with a hand-engraved Welsh slate plaque in our community memorial copse.</p>
+        <div class="cw-progress-box">
+          <div style="display:flex;justify-content:space-between;font-size:0.9rem;font-weight:700">
+            <span>£14,250 Raised of £20,000 Target</span>
+            <span>285 of 400 Trees Planted</span>
+          </div>
+          <div class="cw-bar-outer"><div class="cw-bar-inner"></div></div>
+        </div>
+        <form id="tree-pledge-form" method="post" action="/contribute">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+            <div class="cw-field">
+              <label for="donor_name">Donor Full Name</label>
+              <input type="text" id="donor_name" name="donor_name" required placeholder="Eleanor Vance">
+            </div>
+            <div class="cw-field">
+              <label for="honouree">Dedicated In Memory Of</label>
+              <input type="text" id="honouree" name="honouree" required placeholder="Captain Arthur Vance">
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+            <div class="cw-field">
+              <label for="species_choice">Native Tree Species Choice</label>
+              <select id="species_choice" name="species_choice" required>
+                <option value="pedunculate-oak" selected>English Oak (<em>Quercus robur</em>)</option>
+                <option value="copper-beech">Copper Beech (<em>Fagus sylvatica</em>)</option>
+                <option value="wild-cherry">Wild Cherry (<em>Prunus avium</em>)</option>
+                <option value="mountain-ash">Rowan / Mountain Ash</option>
+              </select>
+            </div>
+            <div class="cw-field">
+              <label for="contribution_amount">Contribution Amount (£ min 50)</label>
+              <input type="number" id="contribution_amount" name="contribution_amount" min="50" step="10" value="75" required>
+            </div>
+          </div>
+          <div class="cw-field">
+            <label for="dedication_message">Plaque Inscription Message</label>
+            <textarea id="dedication_message" name="dedication_message" rows="2" placeholder="e.g. For Arthur, who loved walking these valleys. Forever rooted in peace."></textarea>
+          </div>
+          <button type="submit" class="cw-btn">Record Memorial Tree Contribution</button>
+        </form>
+      </section>
+      <aside class="cw-card">
+        <h2>Recent Memorial Ledger</h2>
+        <table class="cw-table">
+          <thead>
+            <tr>
+              <th>Tree</th>
+              <th>Dedicated To</th>
+              <th>Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Oak #284</td>
+              <td>Margaret Bell</td>
+              <td>£150.00</td>
+            </tr>
+            <tr>
+              <td>Beech #283</td>
+              <td>Dr. Julian Reed</td>
+              <td>£75.00</td>
+            </tr>
+            <tr>
+              <td>Cherry #282</td>
+              <td>Alice Davies</td>
+              <td>£50.00</td>
+            </tr>
+          </tbody>
+        </table>
+      </aside>
+    </main>
+    <footer class="cw-foot">
+      <p>Community Woodland Trust • Registered Charity #104921 • Dedicated Ancient Tree Planting Project</p>
+    </footer>
+  </div>
+</body>
+</html>

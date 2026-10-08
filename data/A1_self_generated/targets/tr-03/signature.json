@@ -1,0 +1,751 @@
+{
+  "title": "Terraform Ceramics Co-op — Kiln Firing Shelf Booking",
+  "viewport": {
+    "width": 1280,
+    "height": 900
+  },
+  "nodes": [
+    {
+      "tag": "div",
+      "depth": 0,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "header",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "nav",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "main",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "section",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h2",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "form",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 5,
+      "type": "text",
+      "name": "member_id",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "select",
+      "depth": 6,
+      "type": null,
+      "name": "firing_date",
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "select",
+      "depth": 6,
+      "type": null,
+      "name": "cone_temperature",
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 6,
+      "type": "number",
+      "name": "shelf_count",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 6,
+      "type": "number",
+      "name": "max_height",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "textarea",
+      "depth": 5,
+      "type": null,
+      "name": "clay_body",
+      "role": null
+    },
+    {
+      "tag": "button",
+      "depth": 4,
+      "type": "submit",
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "aside",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h2",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "table",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "thead",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "tr",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "th",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "th",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "th",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "th",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "tbody",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "tr",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "span",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "tr",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "span",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "tr",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "span",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "strong",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "footer",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    }
+  ],
+  "boxes": [
+    {
+      "tag": "header",
+      "x": 0.0313,
+      "y": 0.0267,
+      "w": 0.9375,
+      "h": 0.0573
+    },
+    {
+      "tag": "nav",
+      "x": 0.5938,
+      "y": 0.032,
+      "w": 0.375,
+      "h": 0.0267
+    },
+    {
+      "tag": "main",
+      "x": 0.0313,
+      "y": 0.1107,
+      "w": 0.9375,
+      "h": 0.6068
+    },
+    {
+      "tag": "section",
+      "x": 0.0313,
+      "y": 0.1107,
+      "w": 0.554,
+      "h": 0.6068
+    },
+    {
+      "tag": "h2",
+      "x": 0.0508,
+      "y": 0.1385,
+      "w": 0.515,
+      "h": 0.0347
+    },
+    {
+      "tag": "form",
+      "x": 0.0508,
+      "y": 0.2282,
+      "w": 0.515,
+      "h": 0.4614
+    },
+    {
+      "tag": "label",
+      "x": 0.0508,
+      "y": 0.2282,
+      "w": 0.515,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.0508,
+      "y": 0.2571,
+      "w": 0.515,
+      "h": 0.0424
+    },
+    {
+      "tag": "label",
+      "x": 0.0508,
+      "y": 0.3173,
+      "w": 0.2512,
+      "h": 0.0227
+    },
+    {
+      "tag": "select",
+      "x": 0.0508,
+      "y": 0.3462,
+      "w": 0.2512,
+      "h": 0.0447
+    },
+    {
+      "tag": "label",
+      "x": 0.3145,
+      "y": 0.3173,
+      "w": 0.2512,
+      "h": 0.0227
+    },
+    {
+      "tag": "select",
+      "x": 0.3145,
+      "y": 0.3462,
+      "w": 0.2512,
+      "h": 0.0447
+    },
+    {
+      "tag": "label",
+      "x": 0.0508,
+      "y": 0.4086,
+      "w": 0.2512,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.0508,
+      "y": 0.4375,
+      "w": 0.2512,
+      "h": 0.0424
+    },
+    {
+      "tag": "label",
+      "x": 0.3145,
+      "y": 0.4086,
+      "w": 0.2512,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.3145,
+      "y": 0.4375,
+      "w": 0.2512,
+      "h": 0.0424
+    },
+    {
+      "tag": "label",
+      "x": 0.0508,
+      "y": 0.4977,
+      "w": 0.515,
+      "h": 0.0227
+    },
+    {
+      "tag": "textarea",
+      "x": 0.0508,
+      "y": 0.5266,
+      "w": 0.515,
+      "h": 0.0835
+    },
+    {
+      "tag": "button",
+      "x": 0.0508,
+      "y": 0.6412,
+      "w": 0.515,
+      "h": 0.0484
+    },
+    {
+      "tag": "aside",
+      "x": 0.6103,
+      "y": 0.1107,
+      "w": 0.3585,
+      "h": 0.4456
+    },
+    {
+      "tag": "h2",
+      "x": 0.6298,
+      "y": 0.1385,
+      "w": 0.3194,
+      "h": 0.0347
+    },
+    {
+      "tag": "table",
+      "x": 0.6298,
+      "y": 0.2282,
+      "w": 0.3194,
+      "h": 0.1874
+    },
+    {
+      "tag": "footer",
+      "x": 0.0313,
+      "y": 0.7619,
+      "w": 0.9375,
+      "h": 0.0415
+    }
+  ],
+  "labels": [
+    {
+      "for": "member_id",
+      "text": "Studio Member ID"
+    },
+    {
+      "for": "firing_date",
+      "text": "Firing Run Date"
+    },
+    {
+      "for": "cone_temperature",
+      "text": "Firing Cone Temperature"
+    },
+    {
+      "for": "shelf_count",
+      "text": "Number of Half-Shelves"
+    },
+    {
+      "for": "max_height",
+      "text": "Max Piece Height (Inches)"
+    },
+    {
+      "for": "clay_body",
+      "text": "Clay Body & Glaze Formulation Notes"
+    }
+  ],
+  "controls": [
+    {
+      "tag": "input",
+      "type": "text",
+      "name": "member_id",
+      "label": "Studio Member ID"
+    },
+    {
+      "tag": "select",
+      "type": null,
+      "name": "firing_date",
+      "label": "Firing Run Date"
+    },
+    {
+      "tag": "select",
+      "type": null,
+      "name": "cone_temperature",
+      "label": "Firing Cone Temperature"
+    },
+    {
+      "tag": "input",
+      "type": "number",
+      "name": "shelf_count",
+      "label": "Number of Half-Shelves"
+    },
+    {
+      "tag": "input",
+      "type": "number",
+      "name": "max_height",
+      "label": "Max Piece Height (Inches)"
+    },
+    {
+      "tag": "textarea",
+      "type": null,
+      "name": "clay_body",
+      "label": "Clay Body & Glaze Formulation Notes"
+    }
+  ],
+  "headings": [
+    "Reserve Kiln Shelf Space",
+    "Live Firing Schedule"
+  ]
+}

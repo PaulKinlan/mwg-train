@@ -1,0 +1,859 @@
+{
+  "title": "Meadowbrook Wildlife Hospital — Volunteer Onboarding & Credentials",
+  "viewport": {
+    "width": 1280,
+    "height": 900
+  },
+  "nodes": [
+    {
+      "tag": "div",
+      "depth": 0,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "header",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "nav",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "main",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "section",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h1",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "form",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "fieldset",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "legend",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 7,
+      "type": "text",
+      "name": "volunteer_name",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 7,
+      "type": "email",
+      "name": "volunteer_email",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 7,
+      "type": "tel",
+      "name": "phone",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 7,
+      "type": "tel",
+      "name": "emergency_phone",
+      "role": null
+    },
+    {
+      "tag": "fieldset",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "legend",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "select",
+      "depth": 6,
+      "type": null,
+      "name": "species_focus",
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 6,
+      "type": "date",
+      "name": "tetanus_date",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 6,
+      "type": "checkbox",
+      "name": "rabies_clearance",
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "fieldset",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "legend",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 7,
+      "type": "password",
+      "name": "account_password",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "select",
+      "depth": 7,
+      "type": null,
+      "name": "shift_preference",
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 8,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 8,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 8,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "button",
+      "depth": 4,
+      "type": "submit",
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "aside",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h2",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "span",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h2",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "ul",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "li",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "li",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "li",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "footer",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    }
+  ],
+  "boxes": [
+    {
+      "tag": "header",
+      "x": 0.0703,
+      "y": 0.0267,
+      "w": 0.8594,
+      "h": 0.056
+    },
+    {
+      "tag": "nav",
+      "x": 0.5015,
+      "y": 0.0313,
+      "w": 0.4282,
+      "h": 0.0267
+    },
+    {
+      "tag": "main",
+      "x": 0.0703,
+      "y": 0.1093,
+      "w": 0.8594,
+      "h": 1.0031
+    },
+    {
+      "tag": "section",
+      "x": 0.0703,
+      "y": 0.1093,
+      "w": 0.5563,
+      "h": 1.0031
+    },
+    {
+      "tag": "h1",
+      "x": 0.0961,
+      "y": 0.146,
+      "w": 0.5047,
+      "h": 0.0427
+    },
+    {
+      "tag": "form",
+      "x": 0.0961,
+      "y": 0.2749,
+      "w": 0.5047,
+      "h": 0.8009
+    },
+    {
+      "tag": "fieldset",
+      "x": 0.0961,
+      "y": 0.2749,
+      "w": 0.5047,
+      "h": 0.2402
+    },
+    {
+      "tag": "label",
+      "x": 0.1125,
+      "y": 0.3224,
+      "w": 0.2297,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.1125,
+      "y": 0.3513,
+      "w": 0.2297,
+      "h": 0.0424
+    },
+    {
+      "tag": "label",
+      "x": 0.3547,
+      "y": 0.3224,
+      "w": 0.2297,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.3547,
+      "y": 0.3513,
+      "w": 0.2297,
+      "h": 0.0424
+    },
+    {
+      "tag": "label",
+      "x": 0.1125,
+      "y": 0.407,
+      "w": 0.2297,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.1125,
+      "y": 0.4359,
+      "w": 0.2297,
+      "h": 0.0424
+    },
+    {
+      "tag": "label",
+      "x": 0.3547,
+      "y": 0.407,
+      "w": 0.2297,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.3547,
+      "y": 0.4359,
+      "w": 0.2297,
+      "h": 0.0424
+    },
+    {
+      "tag": "fieldset",
+      "x": 0.0961,
+      "y": 0.5372,
+      "w": 0.5047,
+      "h": 0.2773
+    },
+    {
+      "tag": "label",
+      "x": 0.1125,
+      "y": 0.5848,
+      "w": 0.4719,
+      "h": 0.0227
+    },
+    {
+      "tag": "select",
+      "x": 0.1125,
+      "y": 0.6137,
+      "w": 0.4719,
+      "h": 0.0447
+    },
+    {
+      "tag": "label",
+      "x": 0.1125,
+      "y": 0.6716,
+      "w": 0.4719,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.1125,
+      "y": 0.7005,
+      "w": 0.4719,
+      "h": 0.0458
+    },
+    {
+      "tag": "input",
+      "x": 0.1125,
+      "y": 0.7637,
+      "w": 0.0102,
+      "h": 0.0144
+    },
+    {
+      "tag": "label",
+      "x": 0.1289,
+      "y": 0.7596,
+      "w": 0.4114,
+      "h": 0.0227
+    },
+    {
+      "tag": "fieldset",
+      "x": 0.0961,
+      "y": 0.8367,
+      "w": 0.5047,
+      "h": 0.1577
+    },
+    {
+      "tag": "label",
+      "x": 0.1125,
+      "y": 0.8843,
+      "w": 0.2225,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.1125,
+      "y": 0.9131,
+      "w": 0.2225,
+      "h": 0.0424
+    },
+    {
+      "tag": "label",
+      "x": 0.3475,
+      "y": 0.8843,
+      "w": 0.2369,
+      "h": 0.0227
+    },
+    {
+      "tag": "select",
+      "x": 0.3475,
+      "y": 0.9131,
+      "w": 0.2369,
+      "h": 0.0447
+    },
+    {
+      "tag": "button",
+      "x": 0.0961,
+      "y": 1.0256,
+      "w": 0.5047,
+      "h": 0.0502
+    },
+    {
+      "tag": "aside",
+      "x": 0.6516,
+      "y": 0.1093,
+      "w": 0.2781,
+      "h": 1.0031
+    },
+    {
+      "tag": "h2",
+      "x": 0.668,
+      "y": 0.1327,
+      "w": 0.2453,
+      "h": 0.0307
+    },
+    {
+      "tag": "h2",
+      "x": 0.668,
+      "y": 0.4006,
+      "w": 0.2453,
+      "h": 0.0307
+    },
+    {
+      "tag": "ul",
+      "x": 0.668,
+      "y": 0.4402,
+      "w": 0.2453,
+      "h": 0.0857
+    },
+    {
+      "tag": "li",
+      "x": 0.6805,
+      "y": 0.4402,
+      "w": 0.2328,
+      "h": 0.0227
+    },
+    {
+      "tag": "li",
+      "x": 0.6805,
+      "y": 0.4717,
+      "w": 0.2328,
+      "h": 0.0227
+    },
+    {
+      "tag": "li",
+      "x": 0.6805,
+      "y": 0.5033,
+      "w": 0.2328,
+      "h": 0.0227
+    },
+    {
+      "tag": "footer",
+      "x": 0.0703,
+      "y": 1.1569,
+      "w": 0.8594,
+      "h": 0.0415
+    }
+  ],
+  "labels": [
+    {
+      "for": "volunteer_name",
+      "text": "Full Name"
+    },
+    {
+      "for": "volunteer_email",
+      "text": "Email Address"
+    },
+    {
+      "for": "phone",
+      "text": "Phone Number"
+    },
+    {
+      "for": "emergency_phone",
+      "text": "Emergency Contact Phone"
+    },
+    {
+      "for": "species_focus",
+      "text": "Primary Animal Focus"
+    },
+    {
+      "for": "tetanus_date",
+      "text": "Date of Last Tetanus Booster"
+    },
+    {
+      "for": "rabies_clearance",
+      "text": "I confirm I have up-to-date vaccinations and agree to strictly follow safety bit"
+    },
+    {
+      "for": "account_password",
+      "text": "Create Volunteer Password"
+    },
+    {
+      "for": "shift_preference",
+      "text": "Weekly Shift Availability"
+    }
+  ],
+  "controls": [
+    {
+      "tag": "input",
+      "type": "text",
+      "name": "volunteer_name",
+      "label": "Full Name"
+    },
+    {
+      "tag": "input",
+      "type": "email",
+      "name": "volunteer_email",
+      "label": "Email Address"
+    },
+    {
+      "tag": "input",
+      "type": "tel",
+      "name": "phone",
+      "label": "Phone Number"
+    },
+    {
+      "tag": "input",
+      "type": "tel",
+      "name": "emergency_phone",
+      "label": "Emergency Contact Phone"
+    },
+    {
+      "tag": "select",
+      "type": null,
+      "name": "species_focus",
+      "label": "Primary Animal Focus"
+    },
+    {
+      "tag": "input",
+      "type": "date",
+      "name": "tetanus_date",
+      "label": "Date of Last Tetanus Booster"
+    },
+    {
+      "tag": "input",
+      "type": "checkbox",
+      "name": "rabies_clearance",
+      "label": "I confirm I have up-to-date vaccinations and agree to strictly follow safety bit"
+    },
+    {
+      "tag": "input",
+      "type": "password",
+      "name": "account_password",
+      "label": "Create Volunteer Password"
+    },
+    {
+      "tag": "select",
+      "type": null,
+      "name": "shift_preference",
+      "label": "Weekly Shift Availability"
+    }
+  ],
+  "headings": [
+    "Volunteer Intake & Handling Registration",
+    "Application Standards",
+    "Current Urgencies"
+  ]
+}

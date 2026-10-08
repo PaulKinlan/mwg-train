@@ -1,0 +1,733 @@
+{
+  "title": "Estuary Community Rowing Club — Skiff Outing & Tide Safety Manifest",
+  "viewport": {
+    "width": 1280,
+    "height": 900
+  },
+  "nodes": [
+    {
+      "tag": "div",
+      "depth": 0,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "header",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "nav",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "main",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "section",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h1",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "strong",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "strong",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "strong",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "form",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "select",
+      "depth": 6,
+      "type": null,
+      "name": "skiff_id",
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 6,
+      "type": "text",
+      "name": "coxswain_name",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 6,
+      "type": "number",
+      "name": "crew_headcount",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 6,
+      "type": "number",
+      "name": "lifejacket_count",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 6,
+      "type": "time",
+      "name": "launch_time",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 6,
+      "type": "time",
+      "name": "recovery_time",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 5,
+      "type": "checkbox",
+      "name": "vhf_radio",
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "button",
+      "depth": 4,
+      "type": "submit",
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "aside",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h2",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "table",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "thead",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "tr",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "th",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "th",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "th",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "th",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "tbody",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "tr",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "span",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "strong",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "footer",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    }
+  ],
+  "boxes": [
+    {
+      "tag": "header",
+      "x": 0.0313,
+      "y": 0.0267,
+      "w": 0.9375,
+      "h": 0.056
+    },
+    {
+      "tag": "nav",
+      "x": 0.5443,
+      "y": 0.0313,
+      "w": 0.4245,
+      "h": 0.0267
+    },
+    {
+      "tag": "main",
+      "x": 0.0313,
+      "y": 0.1093,
+      "w": 0.9375,
+      "h": 0.5505
+    },
+    {
+      "tag": "section",
+      "x": 0.0313,
+      "y": 0.1093,
+      "w": 0.5475,
+      "h": 0.5505
+    },
+    {
+      "tag": "h1",
+      "x": 0.0508,
+      "y": 0.1371,
+      "w": 0.5084,
+      "h": 0.0373
+    },
+    {
+      "tag": "form",
+      "x": 0.0508,
+      "y": 0.262,
+      "w": 0.5084,
+      "h": 0.3701
+    },
+    {
+      "tag": "label",
+      "x": 0.0508,
+      "y": 0.262,
+      "w": 0.2536,
+      "h": 0.0227
+    },
+    {
+      "tag": "select",
+      "x": 0.0508,
+      "y": 0.2909,
+      "w": 0.2536,
+      "h": 0.0429
+    },
+    {
+      "tag": "label",
+      "x": 0.3169,
+      "y": 0.262,
+      "w": 0.2423,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.3169,
+      "y": 0.2909,
+      "w": 0.2423,
+      "h": 0.0407
+    },
+    {
+      "tag": "label",
+      "x": 0.0508,
+      "y": 0.3489,
+      "w": 0.248,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.0508,
+      "y": 0.3777,
+      "w": 0.248,
+      "h": 0.0407
+    },
+    {
+      "tag": "label",
+      "x": 0.3112,
+      "y": 0.3489,
+      "w": 0.248,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.3112,
+      "y": 0.3777,
+      "w": 0.248,
+      "h": 0.0407
+    },
+    {
+      "tag": "label",
+      "x": 0.0508,
+      "y": 0.4335,
+      "w": 0.248,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.0508,
+      "y": 0.4624,
+      "w": 0.248,
+      "h": 0.0462
+    },
+    {
+      "tag": "label",
+      "x": 0.3112,
+      "y": 0.4335,
+      "w": 0.248,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.3112,
+      "y": 0.4624,
+      "w": 0.248,
+      "h": 0.0462
+    },
+    {
+      "tag": "input",
+      "x": 0.0508,
+      "y": 0.5411,
+      "w": 0.0102,
+      "h": 0.0144
+    },
+    {
+      "tag": "label",
+      "x": 0.0672,
+      "y": 0.537,
+      "w": 0.49,
+      "h": 0.0227
+    },
+    {
+      "tag": "button",
+      "x": 0.0508,
+      "y": 0.5818,
+      "w": 0.5084,
+      "h": 0.0502
+    },
+    {
+      "tag": "aside",
+      "x": 0.6037,
+      "y": 0.1093,
+      "w": 0.365,
+      "h": 0.2902
+    },
+    {
+      "tag": "h2",
+      "x": 0.6233,
+      "y": 0.1371,
+      "w": 0.3259,
+      "h": 0.0373
+    },
+    {
+      "tag": "table",
+      "x": 0.6233,
+      "y": 0.1833,
+      "w": 0.3259,
+      "h": 0.0902
+    },
+    {
+      "tag": "footer",
+      "x": 0.0313,
+      "y": 0.7043,
+      "w": 0.9375,
+      "h": 0.0415
+    }
+  ],
+  "labels": [
+    {
+      "for": "skiff_id",
+      "text": "Select Rowing Skiff"
+    },
+    {
+      "for": "coxswain_name",
+      "text": "Qualified Coxswain Name"
+    },
+    {
+      "for": "crew_headcount",
+      "text": "Total Rower Headcount"
+    },
+    {
+      "for": "lifejacket_count",
+      "text": "Certified 150N Lifejackets on Board"
+    },
+    {
+      "for": "launch_time",
+      "text": "Planned Slipway Launch Time"
+    },
+    {
+      "for": "recovery_time",
+      "text": "Estimated Recovery Time"
+    },
+    {
+      "for": "vhf_radio",
+      "text": "I certify the crew carries Channel 16 handheld marine VHF radio and flares in th"
+    }
+  ],
+  "controls": [
+    {
+      "tag": "select",
+      "type": null,
+      "name": "skiff_id",
+      "label": "Select Rowing Skiff"
+    },
+    {
+      "tag": "input",
+      "type": "text",
+      "name": "coxswain_name",
+      "label": "Qualified Coxswain Name"
+    },
+    {
+      "tag": "input",
+      "type": "number",
+      "name": "crew_headcount",
+      "label": "Total Rower Headcount"
+    },
+    {
+      "tag": "input",
+      "type": "number",
+      "name": "lifejacket_count",
+      "label": "Certified 150N Lifejackets on Board"
+    },
+    {
+      "tag": "input",
+      "type": "time",
+      "name": "launch_time",
+      "label": "Planned Slipway Launch Time"
+    },
+    {
+      "tag": "input",
+      "type": "time",
+      "name": "recovery_time",
+      "label": "Estimated Recovery Time"
+    },
+    {
+      "tag": "input",
+      "type": "checkbox",
+      "name": "vhf_radio",
+      "label": "I certify the crew carries Channel 16 handheld marine VHF radio and flares in th"
+    }
+  ],
+  "headings": [
+    "Skiff Outing Reservation & Safety Manifest",
+    "Active Outings on Estuary"
+  ]
+}

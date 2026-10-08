@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Greenwood Safe Streets — Community Crosswalk &amp; Traffic Survey</title>
+  <style>
+    :root {
+      --ss-navy: #1e3a8a;
+      --ss-amber: #d97706;
+      --ss-card: #ffffff;
+      --ss-bg: #f8fafc;
+      --ss-border: #cbd5e1;
+      --ss-text: #0f172a;
+      --ss-muted: #64748b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--ss-bg); color: var(--ss-text); line-height: 1.5; padding: 1.5rem; }
+    .ss-wrap { max-width: 1100px; margin: 0 auto; }
+    header.ss-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--ss-navy); padding-bottom: 1rem; margin-bottom: 1.5rem; }
+    .ss-title { font-size: 1.4rem; font-weight: 800; color: var(--ss-navy); }
+    nav.ss-nav a { text-decoration: none; color: var(--ss-muted); font-weight: 600; margin-left: 1.25rem; font-size: 0.9rem; }
+    nav.ss-nav a[aria-current="page"] { color: var(--ss-navy); border-bottom: 2px solid var(--ss-amber); padding-bottom: 0.2rem; }
+    .ss-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; }
+    .ss-card { background: var(--ss-card); border: 1px solid var(--ss-border); border-radius: 8px; padding: 1.75rem; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+    .ss-card h1 { font-size: 1.5rem; color: var(--ss-navy); margin-bottom: 0.5rem; }
+    .ss-sub { font-size: 0.95rem; color: var(--ss-muted); margin-bottom: 1.5rem; }
+    .ss-field { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 1rem; }
+    .ss-field label { font-size: 0.85rem; font-weight: 600; color: var(--ss-text); }
+    .ss-field input, .ss-field select, .ss-field textarea { padding: 0.6rem; border: 1px solid var(--ss-border); border-radius: 6px; font-size: 0.95rem; }
+    .ss-checks { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.25rem; }
+    .ss-check-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; }
+    .ss-rating-group { display: flex; gap: 1rem; margin-top: 0.5rem; }
+    .ss-rating-option { display: flex; align-items: center; gap: 0.35rem; font-size: 0.9rem; }
+    .ss-btn { background: var(--ss-navy); color: #fff; border: none; font-size: 1rem; font-weight: 700; padding: 0.85rem; border-radius: 6px; cursor: pointer; width: 100%; margin-top: 0.5rem; }
+    .ss-btn:hover { background: #172554; }
+    footer.ss-foot { margin-top: 2.5rem; border-top: 1px solid var(--ss-border); padding-top: 1rem; text-align: center; font-size: 0.85rem; color: var(--ss-muted); }
+  </style>
+</head>
+<body>
+  <div class="ss-wrap">
+    <header class="ss-header">
+      <div class="ss-title">Greenwood Safe Streets Initiative</div>
+      <nav class="ss-nav" aria-label="Survey Navigation">
+        <a href="/">Project Goals</a>
+        <a href="/survey" aria-current="page">Citizen Questionnaire</a>
+        <a href="/results">Live Response Data</a>
+      </nav>
+    </header>
+    <main class="ss-layout">
+      <section class="ss-card">
+        <h1>Pedestrian Safety &amp; Crosswalk Feedback</h1>
+        <p class="ss-sub">Tell the community council where traffic calming, zebra crossings, and sightline improvements are needed.</p>
+        <form id="street-survey-form" method="post" action="/survey">
+          <div class="ss-field">
+            <label for="street_location">Street Name or Intersection</label>
+            <input type="text" id="street_location" name="street_location" required placeholder="e.g. Elm Grove &amp; Mill Road junction">
+          </div>
+          <div class="ss-field">
+            <label for="neighbourhood_zone">Neighbourhood Sector</label>
+            <select id="neighbourhood_zone" name="neighbourhood_zone" required>
+              <option value="school-zone">North Sector — Elementary School Perimeter</option>
+              <option value="market-cross">Central Commercial — High Street Crossing</option>
+              <option value="station-link">South Sector — Railway Commuter Route</option>
+              <option value="park-loop">West Sector — Community Park Entrance</option>
+            </select>
+          </div>
+          <div class="ss-field">
+            <label>Observed Traffic Hazards (Check all that apply)</label>
+            <div class="ss-checks">
+              <div class="ss-check-item">
+                <input type="checkbox" id="hz_speed" name="hazard_speeding" value="1">
+                <label for="hz_speed">Vehicles exceeding 20mph</label>
+              </div>
+              <div class="ss-check-item">
+                <input type="checkbox" id="hz_crosswalk" name="hazard_crosswalk" value="1">
+                <label for="hz_crosswalk">No safe crossing point</label>
+              </div>
+              <div class="ss-check-item">
+                <input type="checkbox" id="hz_pavement" name="hazard_pavement" value="1">
+                <label for="hz_pavement">Pavement parking obstruction</label>
+              </div>
+              <div class="ss-check-item">
+                <input type="checkbox" id="hz_blind" name="hazard_blind_corner" value="1">
+                <label for="hz_blind">Blind corner or overgrown hedges</label>
+              </div>
+            </div>
+          </div>
+          <div class="ss-field">
+            <label>Overall Pedestrian Safety Rating (1 = Extremely Dangerous, 5 = Very Safe)</label>
+            <div class="ss-rating-group">
+              <label class="ss-rating-option"><input type="radio" name="safety_score" value="1" required> 1</label>
+              <label class="ss-rating-option"><input type="radio" name="safety_score" value="2"> 2</label>
+              <label class="ss-rating-option"><input type="radio" name="safety_score" value="3" checked> 3</label>
+              <label class="ss-rating-option"><input type="radio" name="safety_score" value="4"> 4</label>
+              <label class="ss-rating-option"><input type="radio" name="safety_score" value="5"> 5</label>
+            </div>
+          </div>
+          <div class="ss-field">
+            <label for="proposed_solution">Your Recommended Solution</label>
+            <textarea id="proposed_solution" name="proposed_solution" rows="3" placeholder="e.g. Raised zebra crossing with flashing belisha beacons outside school gate."></textarea>
+          </div>
+          <button type="submit" class="ss-btn">Submit Street Safety Consultation</button>
+        </form>
+      </section>
+      <aside class="ss-card">
+        <h2>Council Action Plan</h2>
+        <p style="font-size:0.85rem;color:var(--ss-muted);margin-bottom:1rem">Results are aggregated and presented to the Parish Transport Committee quarterly.</p>
+        <div style="background:#eff6ff;padding:0.75rem;border-radius:6px;font-size:0.85rem;color:#1e3a8a;margin-bottom:1rem">
+          <strong>248 Responses Collected:</strong> 72% cite speeding near school crossing as primary safety concern.
+        </div>
+        <h3 style="font-size:1rem;color:var(--ss-navy);margin-bottom:0.4rem">Recent Interventions</h3>
+        <ul style="font-size:0.85rem;color:var(--ss-muted);display:flex;flex-direction:column;gap:0.4rem;padding-left:1.2rem">
+          <li>New speed cushion on Oakridge Lane</li>
+          <li>Dropped kerbs installed at Post Office</li>
+          <li>School drop-off clear zone painted</li>
+        </ul>
+      </aside>
+    </main>
+    <footer class="ss-foot">
+      <p>Greenwood Community Safe Streets Forum • In association with Municipal Traffic Board</p>
+    </footer>
+  </div>
+</body>
+</html>

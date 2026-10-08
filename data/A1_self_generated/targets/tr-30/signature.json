@@ -1,0 +1,639 @@
+{
+  "title": "Shoreline Marine Stewardship — Coastal Beach Cleanup & Kit Pass",
+  "viewport": {
+    "width": 1280,
+    "height": 900
+  },
+  "nodes": [
+    {
+      "tag": "div",
+      "depth": 0,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "header",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "nav",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "main",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "section",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h1",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "strong",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "form",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 6,
+      "type": "text",
+      "name": "volunteer_name",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 6,
+      "type": "tel",
+      "name": "volunteer_phone",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "select",
+      "depth": 5,
+      "type": null,
+      "name": "beach_sector",
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "select",
+      "depth": 6,
+      "type": null,
+      "name": "briefing_slot",
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "select",
+      "depth": 6,
+      "type": null,
+      "name": "kit_glove_size",
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 5,
+      "type": "checkbox",
+      "name": "safety_briefing_ack",
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "button",
+      "depth": 4,
+      "type": "submit",
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "aside",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h2",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "ul",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "li",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "li",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "li",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "li",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "footer",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    }
+  ],
+  "boxes": [
+    {
+      "tag": "header",
+      "x": 0.0313,
+      "y": 0.0267,
+      "w": 0.9375,
+      "h": 0.056
+    },
+    {
+      "tag": "nav",
+      "x": 0.5665,
+      "y": 0.0313,
+      "w": 0.4023,
+      "h": 0.0267
+    },
+    {
+      "tag": "main",
+      "x": 0.0313,
+      "y": 0.1093,
+      "w": 0.9375,
+      "h": 0.5801
+    },
+    {
+      "tag": "section",
+      "x": 0.0313,
+      "y": 0.1093,
+      "w": 0.5475,
+      "h": 0.5801
+    },
+    {
+      "tag": "h1",
+      "x": 0.0539,
+      "y": 0.1415,
+      "w": 0.5022,
+      "h": 0.0373
+    },
+    {
+      "tag": "form",
+      "x": 0.0539,
+      "y": 0.2905,
+      "w": 0.5022,
+      "h": 0.3668
+    },
+    {
+      "tag": "label",
+      "x": 0.0539,
+      "y": 0.2905,
+      "w": 0.2448,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.0539,
+      "y": 0.3193,
+      "w": 0.2448,
+      "h": 0.0407
+    },
+    {
+      "tag": "label",
+      "x": 0.3112,
+      "y": 0.2905,
+      "w": 0.2448,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.3112,
+      "y": 0.3193,
+      "w": 0.2448,
+      "h": 0.0407
+    },
+    {
+      "tag": "label",
+      "x": 0.0539,
+      "y": 0.3751,
+      "w": 0.5022,
+      "h": 0.0227
+    },
+    {
+      "tag": "select",
+      "x": 0.0539,
+      "y": 0.404,
+      "w": 0.5022,
+      "h": 0.0429
+    },
+    {
+      "tag": "label",
+      "x": 0.0539,
+      "y": 0.4619,
+      "w": 0.2322,
+      "h": 0.0227
+    },
+    {
+      "tag": "select",
+      "x": 0.0539,
+      "y": 0.4908,
+      "w": 0.2322,
+      "h": 0.0429
+    },
+    {
+      "tag": "label",
+      "x": 0.2986,
+      "y": 0.4619,
+      "w": 0.2575,
+      "h": 0.0227
+    },
+    {
+      "tag": "select",
+      "x": 0.2986,
+      "y": 0.4908,
+      "w": 0.2575,
+      "h": 0.0429
+    },
+    {
+      "tag": "input",
+      "x": 0.0539,
+      "y": 0.5662,
+      "w": 0.0102,
+      "h": 0.0144
+    },
+    {
+      "tag": "label",
+      "x": 0.0703,
+      "y": 0.5621,
+      "w": 0.3495,
+      "h": 0.0227
+    },
+    {
+      "tag": "button",
+      "x": 0.0539,
+      "y": 0.607,
+      "w": 0.5022,
+      "h": 0.0502
+    },
+    {
+      "tag": "aside",
+      "x": 0.6037,
+      "y": 0.1093,
+      "w": 0.365,
+      "h": 0.2813
+    },
+    {
+      "tag": "h2",
+      "x": 0.6264,
+      "y": 0.1415,
+      "w": 0.3197,
+      "h": 0.0373
+    },
+    {
+      "tag": "ul",
+      "x": 0.6264,
+      "y": 0.2464,
+      "w": 0.3197,
+      "h": 0.1119
+    },
+    {
+      "tag": "li",
+      "x": 0.6414,
+      "y": 0.2464,
+      "w": 0.3047,
+      "h": 0.0227
+    },
+    {
+      "tag": "li",
+      "x": 0.6414,
+      "y": 0.2762,
+      "w": 0.3047,
+      "h": 0.0227
+    },
+    {
+      "tag": "li",
+      "x": 0.6414,
+      "y": 0.3059,
+      "w": 0.3047,
+      "h": 0.0227
+    },
+    {
+      "tag": "li",
+      "x": 0.6414,
+      "y": 0.3357,
+      "w": 0.3047,
+      "h": 0.0227
+    },
+    {
+      "tag": "footer",
+      "x": 0.0313,
+      "y": 0.7339,
+      "w": 0.9375,
+      "h": 0.0415
+    }
+  ],
+  "labels": [
+    {
+      "for": "volunteer_name",
+      "text": "Volunteer Name"
+    },
+    {
+      "for": "volunteer_phone",
+      "text": "Contact Mobile"
+    },
+    {
+      "for": "beach_sector",
+      "text": "Assigned Coastal Cleanup Sector"
+    },
+    {
+      "for": "briefing_slot",
+      "text": "Safety Briefing Time"
+    },
+    {
+      "for": "kit_glove_size",
+      "text": "Litter Picker & Glove Kit Size"
+    },
+    {
+      "for": "safety_briefing_ack",
+      "text": "I agree to attend the slipway safety briefing and follow tide warden signals."
+    }
+  ],
+  "controls": [
+    {
+      "tag": "input",
+      "type": "text",
+      "name": "volunteer_name",
+      "label": "Volunteer Name"
+    },
+    {
+      "tag": "input",
+      "type": "tel",
+      "name": "volunteer_phone",
+      "label": "Contact Mobile"
+    },
+    {
+      "tag": "select",
+      "type": null,
+      "name": "beach_sector",
+      "label": "Assigned Coastal Cleanup Sector"
+    },
+    {
+      "tag": "select",
+      "type": null,
+      "name": "briefing_slot",
+      "label": "Safety Briefing Time"
+    },
+    {
+      "tag": "select",
+      "type": null,
+      "name": "kit_glove_size",
+      "label": "Litter Picker & Glove Kit Size"
+    },
+    {
+      "tag": "input",
+      "type": "checkbox",
+      "name": "safety_briefing_ack",
+      "label": "I agree to attend the slipway safety briefing and follow tide warden signals."
+    }
+  ],
+  "headings": [
+    "Low-Tide Coastal Beach Cleanup & Kit Pass",
+    "Kit Collection Station"
+  ]
+}

@@ -1,0 +1,643 @@
+{
+  "title": "Trailhead Youth Gear Locker — Equipment Repair & Maintenance Tickets",
+  "viewport": {
+    "width": 1280,
+    "height": 900
+  },
+  "nodes": [
+    {
+      "tag": "div",
+      "depth": 0,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "header",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "nav",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "main",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "section",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h1",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "form",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 6,
+      "type": "text",
+      "name": "gear_serial",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "select",
+      "depth": 6,
+      "type": null,
+      "name": "gear_category",
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "select",
+      "depth": 5,
+      "type": null,
+      "name": "urgency",
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "textarea",
+      "depth": 5,
+      "type": null,
+      "name": "damage_notes",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 5,
+      "type": "text",
+      "name": "leader_name",
+      "role": null
+    },
+    {
+      "tag": "button",
+      "depth": 4,
+      "type": "submit",
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "aside",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h2",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "table",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "thead",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "tr",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "th",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "th",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "th",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "th",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "tbody",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "tr",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "span",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "tr",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "span",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "footer",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    }
+  ],
+  "boxes": [
+    {
+      "tag": "header",
+      "x": 0.0313,
+      "y": 0.0267,
+      "w": 0.9375,
+      "h": 0.056
+    },
+    {
+      "tag": "nav",
+      "x": 0.5149,
+      "y": 0.0313,
+      "w": 0.4538,
+      "h": 0.0267
+    },
+    {
+      "tag": "main",
+      "x": 0.0313,
+      "y": 0.1093,
+      "w": 0.9375,
+      "h": 0.6139
+    },
+    {
+      "tag": "section",
+      "x": 0.0313,
+      "y": 0.1093,
+      "w": 0.5475,
+      "h": 0.6139
+    },
+    {
+      "tag": "h1",
+      "x": 0.0508,
+      "y": 0.1371,
+      "w": 0.5084,
+      "h": 0.036
+    },
+    {
+      "tag": "form",
+      "x": 0.0508,
+      "y": 0.2522,
+      "w": 0.5084,
+      "h": 0.4432
+    },
+    {
+      "tag": "label",
+      "x": 0.0508,
+      "y": 0.2522,
+      "w": 0.248,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.0508,
+      "y": 0.2811,
+      "w": 0.248,
+      "h": 0.0407
+    },
+    {
+      "tag": "label",
+      "x": 0.3112,
+      "y": 0.2522,
+      "w": 0.248,
+      "h": 0.0227
+    },
+    {
+      "tag": "select",
+      "x": 0.3112,
+      "y": 0.2811,
+      "w": 0.248,
+      "h": 0.0429
+    },
+    {
+      "tag": "label",
+      "x": 0.0508,
+      "y": 0.3391,
+      "w": 0.5084,
+      "h": 0.0227
+    },
+    {
+      "tag": "select",
+      "x": 0.0508,
+      "y": 0.368,
+      "w": 0.5084,
+      "h": 0.0429
+    },
+    {
+      "tag": "label",
+      "x": 0.0508,
+      "y": 0.4259,
+      "w": 0.5084,
+      "h": 0.0227
+    },
+    {
+      "tag": "textarea",
+      "x": 0.0508,
+      "y": 0.4548,
+      "w": 0.5084,
+      "h": 0.0818
+    },
+    {
+      "tag": "label",
+      "x": 0.0508,
+      "y": 0.5517,
+      "w": 0.5084,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.0508,
+      "y": 0.5806,
+      "w": 0.5084,
+      "h": 0.0407
+    },
+    {
+      "tag": "button",
+      "x": 0.0508,
+      "y": 0.6452,
+      "w": 0.5084,
+      "h": 0.0502
+    },
+    {
+      "tag": "aside",
+      "x": 0.6037,
+      "y": 0.1093,
+      "w": 0.365,
+      "h": 0.281
+    },
+    {
+      "tag": "h2",
+      "x": 0.6233,
+      "y": 0.1371,
+      "w": 0.3259,
+      "h": 0.036
+    },
+    {
+      "tag": "table",
+      "x": 0.6233,
+      "y": 0.182,
+      "w": 0.3259,
+      "h": 0.1806
+    },
+    {
+      "tag": "footer",
+      "x": 0.0313,
+      "y": 0.7676,
+      "w": 0.9375,
+      "h": 0.0415
+    }
+  ],
+  "labels": [
+    {
+      "for": "gear_serial",
+      "text": "Equipment Serial / Asset Barcode"
+    },
+    {
+      "for": "gear_category",
+      "text": "Equipment Category"
+    },
+    {
+      "for": "urgency",
+      "text": "Repair Urgency"
+    },
+    {
+      "for": "damage_notes",
+      "text": "Defect Description & Specific Missing Hardware"
+    },
+    {
+      "for": "leader_name",
+      "text": "Expedition Leader Name"
+    }
+  ],
+  "controls": [
+    {
+      "tag": "input",
+      "type": "text",
+      "name": "gear_serial",
+      "label": "Equipment Serial / Asset Barcode"
+    },
+    {
+      "tag": "select",
+      "type": null,
+      "name": "gear_category",
+      "label": "Equipment Category"
+    },
+    {
+      "tag": "select",
+      "type": null,
+      "name": "urgency",
+      "label": "Repair Urgency"
+    },
+    {
+      "tag": "textarea",
+      "type": null,
+      "name": "damage_notes",
+      "label": "Defect Description & Specific Missing Hardware"
+    },
+    {
+      "tag": "input",
+      "type": "text",
+      "name": "leader_name",
+      "label": "Expedition Leader Name"
+    }
+  ],
+  "headings": [
+    "Log Equipment Damage or Missing Part Ticket",
+    "Locker Maintenance Queue"
+  ]
+}

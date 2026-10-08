@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ceilidh &amp; Session Tune Vault — Folk Music Archive &amp; Tempo Notes</title>
+  <style>
+    :root {
+      --fv-brown: #450a0a;
+      --fv-gold: #b45309;
+      --fv-parchment: #fefce8;
+      --fv-card: #ffffff;
+      --fv-border: #fef08a;
+      --fv-text: #292524;
+      --fv-muted: #78716c;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: "Georgia", serif; background: var(--fv-parchment); color: var(--fv-text); line-height: 1.5; padding: 1.5rem; }
+    .fv-shell { max-width: 1200px; margin: 0 auto; }
+    header.fv-head { border-bottom: 2px solid var(--fv-brown); padding-bottom: 1rem; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; }
+    .fv-brand { font-size: 1.45rem; font-weight: 700; color: var(--fv-brown); }
+    nav.fv-nav a { font-family: -apple-system, sans-serif; text-decoration: none; color: var(--fv-muted); font-size: 0.9rem; margin-left: 1.25rem; font-weight: 600; }
+    nav.fv-nav a[aria-current="page"] { color: var(--fv-brown); text-decoration: underline; }
+    .fv-grid { display: grid; grid-template-columns: 1.8fr 1.2fr; gap: 2rem; align-items: start; }
+    .fv-card { background: var(--fv-card); border: 1px solid var(--fv-border); border-radius: 8px; padding: 1.75rem; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+    .fv-card h1, .fv-card h2 { font-size: 1.4rem; color: var(--fv-brown); margin-bottom: 0.5rem; }
+    .fv-tune-meta { font-family: -apple-system, sans-serif; display: flex; gap: 1rem; font-size: 0.85rem; color: var(--fv-gold); font-weight: 700; margin-bottom: 1rem; }
+    .fv-notation-box { background: #fafaf9; border: 1px solid #e7e5e4; border-radius: 6px; padding: 1rem; font-family: "Courier New", monospace; font-size: 0.9rem; line-height: 1.4; color: #1c1917; margin-bottom: 1.25rem; white-space: pre-wrap; }
+    .fv-field { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 0.85rem; font-family: -apple-system, sans-serif; }
+    .fv-field label { font-size: 0.85rem; font-weight: 600; color: var(--fv-text); }
+    .fv-field input, .fv-field select, .fv-field textarea { padding: 0.55rem; border: 1px solid #d6d3d1; border-radius: 6px; font-size: 0.95rem; }
+    .fv-btn { font-family: -apple-system, sans-serif; background: var(--fv-brown); color: #fff; border: none; font-size: 1rem; font-weight: 700; padding: 0.75rem; border-radius: 6px; cursor: pointer; width: 100%; margin-top: 0.5rem; }
+    .fv-btn:hover { background: #7f1d1d; }
+    footer.fv-foot { margin-top: 2.5rem; border-top: 1px solid var(--fv-border); padding-top: 1rem; text-align: center; font-family: -apple-system, sans-serif; font-size: 0.85rem; color: var(--fv-muted); }
+  </style>
+</head>
+<body>
+  <div class="fv-shell">
+    <header class="fv-head">
+      <div class="fv-brand">Ceilidh &amp; Session Tune Vault</div>
+      <nav class="fv-nav" aria-label="Archive Nav">
+        <a href="/">Session Etiquette</a>
+        <a href="/tunes" aria-current="page">Tune Archive</a>
+        <a href="/sets">Standard Sets</a>
+        <a href="/recordings">Field Tapes</a>
+      </nav>
+    </header>
+    <main class="fv-grid">
+      <article class="fv-card">
+        <h1>The Wind That Shakes the Barley (Reel in D Major)</h1>
+        <div class="fv-tune-meta">
+          <span>Key: D Major</span>
+          <span>Rhythm: 4/4 Reel</span>
+          <span>Standard Tempo: 108 - 114 BPM</span>
+        </div>
+        <div class="fv-notation-box">
+T: The Wind That Shakes The Barley
+R: reel
+M: 4/4
+L: 1/8
+K: Dmaj
+|:A2AB AFED|B2BA B2d2|A2AB AFED|gfed B2d2:|
+|:f2fd g2ge|f2fd bc'd'b|f2fd g2ge|afdf e2d2:|
+        </div>
+        <p style="font-size:0.9rem;color:#57534e">Traditional Scottish &amp; Irish reel. Often played as the opening tune in a set leading into <em>The Drowsy Maggie</em> or <em>The Silver Spear</em>.</p>
+      </article>
+      <section class="fv-card">
+        <h2>Musician Tempo &amp; Chord Notes</h2>
+        <form id="tune-notes-form" method="post" action="/tunes/barley/notes">
+          <div class="fv-field">
+            <label for="musician_handle">Musician Name or Session Role</label>
+            <input type="text" id="musician_handle" name="musician_handle" required placeholder="Fiddle Pete (Belfast)">
+          </div>
+          <div class="fv-field">
+            <label for="instrument">Instrument</label>
+            <select id="instrument" name="instrument" required>
+              <option value="fiddle" selected>Fiddle / Violin</option>
+              <option value="flute">Wooden Flute / Tin Whistle</option>
+              <option value="pipes">Uilleann Pipes / Border Pipes</option>
+              <option value="guitar">DADGAD Guitar Accompaniment</option>
+              <option value="accordion">Button Accordion / Melodeon</option>
+            </select>
+          </div>
+          <div class="fv-field">
+            <label for="suggested_bpm">Recommended Session BPM</label>
+            <input type="number" id="suggested_bpm" name="suggested_bpm" min="80" max="140" value="112" required>
+          </div>
+          <div class="fv-field">
+            <label for="variation_notes">Chord Substitutions or Regional Variation Notes</label>
+            <textarea id="variation_notes" name="variation_notes" rows="3" required placeholder="e.g. Try substituting Bm for G in the second bar of the B-part when accompanying with bouzouki."></textarea>
+          </div>
+          <button type="submit" class="fv-btn">Post Musician Note to Archive</button>
+        </form>
+      </section>
+    </main>
+    <footer class="fv-foot">
+      <p>Ceilidh &amp; Session Tune Vault • Open Folk Music Preservation Project • Published under CC0 Traditional Heritage</p>
+    </footer>
+  </div>
+</body>
+</html>

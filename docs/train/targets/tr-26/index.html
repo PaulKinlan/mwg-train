@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Atlas Roasters — Single-Origin Coffee Subscription Manager</title>
+  <style>
+    :root {
+      --ar-roast: #261814;
+      --ar-gold: #b45309;
+      --ar-card: #ffffff;
+      --ar-border: #e7e5e4;
+      --ar-bg: #fafaf9;
+      --ar-text: #292524;
+      --ar-muted: #78716c;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--ar-bg); color: var(--ar-text); line-height: 1.5; padding: 1.5rem; }
+    .ar-wrap { max-width: 1100px; margin: 0 auto; }
+    header.ar-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--ar-gold); padding-bottom: 1rem; margin-bottom: 1.5rem; }
+    .ar-brand { font-size: 1.35rem; font-weight: 800; color: var(--ar-roast); }
+    nav.ar-nav a { text-decoration: none; color: var(--ar-muted); font-size: 0.9rem; margin-left: 1.25rem; font-weight: 600; }
+    nav.ar-nav a[aria-current="page"] { color: var(--ar-gold); border-bottom: 2px solid var(--ar-gold); padding-bottom: 0.2rem; }
+    .ar-grid { display: grid; grid-template-columns: 1.8fr 1.2fr; gap: 2rem; align-items: start; }
+    .ar-card { background: var(--ar-card); border: 1px solid var(--ar-border); border-radius: 8px; padding: 1.75rem; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+    .ar-card h1, .ar-card h2 { font-size: 1.4rem; color: var(--ar-roast); margin-bottom: 0.5rem; }
+    .ar-field { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 1rem; }
+    .ar-field label { font-size: 0.85rem; font-weight: 600; color: var(--ar-text); }
+    .ar-field input, .ar-field select { padding: 0.55rem; border: 1px solid #d6d3d1; border-radius: 6px; font-size: 0.95rem; }
+    .ar-btn { background: var(--ar-roast); color: #fff; border: none; font-size: 1rem; font-weight: 700; padding: 0.85rem; border-radius: 6px; cursor: pointer; width: 100%; margin-top: 0.5rem; }
+    .ar-btn:hover { background: #382013; }
+    .ar-grind-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; margin-top: 0.25rem; }
+    .ar-grind-opt { border: 1px solid var(--ar-border); border-radius: 6px; padding: 0.65rem; display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; }
+    footer.ar-foot { margin-top: 2.5rem; border-top: 1px solid var(--ar-border); padding-top: 1rem; text-align: center; font-size: 0.85rem; color: var(--ar-muted); }
+  </style>
+</head>
+<body>
+  <div class="ar-wrap">
+    <header class="ar-head">
+      <div class="ar-brand">☕ Atlas Roasters Single Origin Club</div>
+      <nav class="ar-nav" aria-label="Subscription Nav">
+        <a href="/">Roastery Profile</a>
+        <a href="/subscriptions" aria-current="page">Subscription Manager</a>
+        <a href="/origins">Harvest Calendar</a>
+      </nav>
+    </header>
+    <main class="ar-grid">
+      <section class="ar-card">
+        <h1>Update Subscription Preferences</h1>
+        <p style="font-size:0.9rem;color:var(--ar-muted);margin-bottom:1.25rem">Adjust your monthly single-origin micro-lot allocation, grind coarseness, and bag dispatch frequency.</p>
+        <form id="coffee-sub-form" method="post" action="/subscriptions/SUB-9941/edit">
+          <div class="ar-field">
+            <label for="subscriber_code">Subscriber ID</label>
+            <input type="text" id="subscriber_code" name="subscriber_code" value="SUB-9941" required readonly style="background:#f5f5f4">
+          </div>
+          <div class="ar-field">
+            <label for="bean_origin">Active Single-Origin Micro-Lot</label>
+            <select id="bean_origin" name="bean_origin" required>
+              <option value="ethiopia" selected>Ethiopia Guji Highland — Natural Process (Bergamot &amp; Peach)</option>
+              <option value="colombia">Colombia Huila Finca El Paraiso — Washed (Caramel &amp; Plum)</option>
+              <option value="kenya">Kenya Nyeri Peaberry — Washed (Blackcurrant &amp; Lime)</option>
+              <option value="sumatra">Sumatra Kerinci Mountain — Wet Hulled (Cedar &amp; Cacao)</option>
+            </select>
+          </div>
+          <div class="ar-field">
+            <label>Brewing Grind Setting</label>
+            <div class="ar-grind-grid">
+              <label class="ar-grind-opt"><input type="radio" name="grind" value="whole-bean" checked> Whole Bean (Aroma Lock)</label>
+              <label class="ar-grind-opt"><input type="radio" name="grind" value="espresso"> Fine (Espresso / Moka)</label>
+              <label class="ar-grind-opt"><input type="radio" name="grind" value="filter"> Medium (V60 / Chemex)</label>
+              <label class="ar-grind-opt"><input type="radio" name="grind" value="french-press"> Coarse (Cafetière / Cold Brew)</label>
+            </div>
+          </div>
+          <div class="ar-field">
+            <label for="delivery_frequency">Delivery Frequency</label>
+            <select id="delivery_frequency" name="delivery_frequency" required>
+              <option value="weekly">Weekly Dispatch (250g bag fresh roast)</option>
+              <option value="fortnightly" selected>Fortnightly Dispatch (Every 2 weeks)</option>
+              <option value="monthly">Monthly Double Pack (2x 250g bags)</option>
+            </select>
+          </div>
+          <button type="submit" class="ar-btn">Save Updated Subscription Settings</button>
+        </form>
+      </section>
+      <aside class="ar-card">
+        <h2>Next Roast Dispatch</h2>
+        <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:6px;padding:0.75rem;margin-bottom:1rem;font-size:0.85rem">
+          <strong>Roasting Batch:</strong> Tuesday 20 October on our 15kg Giesen roaster. Shipped carbon-neutral within 24 hours of cooling.
+        </div>
+        <h3 style="font-size:1rem;color:var(--ar-roast);margin-bottom:0.4rem">Farm Gate Provenance</h3>
+        <p style="font-size:0.85rem;color:var(--ar-muted)">We pay an average of 145% above Fairtrade minimum price directly to smallholder farm cooperatives.</p>
+      </aside>
+    </main>
+    <footer class="ar-foot">
+      <p>Atlas Roasters Specialty Coffee • The Roastery Arches, Bermondsey • B-Corp Certified</p>
+    </footer>
+  </div>
+</body>
+</html>

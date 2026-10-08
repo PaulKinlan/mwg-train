@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>VeloFix Mobile Mechanic — Doorstep Bicycle Tuning &amp; Repair</title>
+  <style>
+    :root {
+      --vf-bg: #0f172a;
+      --vf-surface: #1e293b;
+      --vf-card: #273549;
+      --vf-border: #334155;
+      --vf-accent: #10b981;
+      --vf-accent-hover: #059669;
+      --vf-text: #f8fafc;
+      --vf-text-muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--vf-bg); color: var(--vf-text); line-height: 1.5; padding: 1.5rem; }
+    .vf-container { max-width: 1200px; margin: 0 auto; }
+    header.vf-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 1.25rem; border-bottom: 1px solid var(--vf-border); margin-bottom: 1.5rem; }
+    .vf-brand { display: flex; align-items: center; gap: 0.75rem; }
+    .vf-logo { width: 36px; height: 36px; background: var(--vf-accent); border-radius: 8px; display: grid; place-items: center; font-weight: 800; color: #022c22; }
+    .vf-brand-title { font-size: 1.25rem; font-weight: 700; }
+    nav.vf-nav { display: flex; gap: 1rem; }
+    nav.vf-nav a { color: var(--vf-text-muted); text-decoration: none; font-size: 0.95rem; padding: 0.35rem 0.65rem; border-radius: 6px; }
+    nav.vf-nav a[aria-current="page"] { color: var(--vf-accent); background: rgba(16, 185, 129, 0.1); font-weight: 600; }
+    .vf-hero { display: grid; grid-template-columns: 1.8fr 1fr; gap: 2rem; align-items: start; }
+    .vf-panel { background: var(--vf-surface); border: 1px solid var(--vf-border); border-radius: 12px; padding: 1.75rem; }
+    .vf-panel h1 { font-size: 1.75rem; margin-bottom: 0.5rem; }
+    .vf-subtitle { color: var(--vf-text-muted); margin-bottom: 1.5rem; font-size: 1rem; }
+    .vf-form-grid { display: grid; gap: 1.25rem; }
+    .vf-fieldset { border: 1px solid var(--vf-border); border-radius: 8px; padding: 1rem; background: var(--vf-card); }
+    .vf-legend { font-size: 0.9rem; font-weight: 600; color: var(--vf-accent); padding: 0 0.5rem; }
+    .vf-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.5rem; }
+    .vf-field { display: flex; flex-direction: column; gap: 0.35rem; }
+    label { font-size: 0.875rem; font-weight: 600; color: var(--vf-text); }
+    input, select, textarea { background: #0f172a; border: 1px solid var(--vf-border); color: var(--vf-text); padding: 0.6rem 0.75rem; border-radius: 6px; font-size: 0.95rem; }
+    input:focus, select:focus, textarea:focus { outline: 2px solid var(--vf-accent); border-color: transparent; }
+    .vf-packages { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-top: 0.5rem; }
+    .vf-pkg-card { background: #0f172a; border: 1px solid var(--vf-border); border-radius: 6px; padding: 0.75rem; text-align: center; cursor: pointer; }
+    .vf-pkg-card label { display: block; cursor: pointer; }
+    .vf-pkg-name { font-weight: 700; font-size: 0.95rem; color: #fff; }
+    .vf-pkg-price { color: var(--vf-accent); font-size: 1.1rem; font-weight: 800; margin: 0.25rem 0; }
+    .vf-btn-submit { background: var(--vf-accent); color: #022c22; border: none; font-size: 1rem; font-weight: 700; padding: 0.85rem 1.5rem; border-radius: 8px; cursor: pointer; margin-top: 0.5rem; }
+    .vf-btn-submit:hover { background: var(--vf-accent-hover); }
+    aside.vf-sidebar { display: flex; flex-direction: column; gap: 1.25rem; }
+    .vf-info-card { background: var(--vf-surface); border: 1px solid var(--vf-border); border-radius: 10px; padding: 1.25rem; }
+    .vf-info-card h2 { font-size: 1.15rem; margin-bottom: 0.75rem; color: var(--vf-accent); }
+    .vf-info-card ul { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.9rem; color: var(--vf-text-muted); }
+    .vf-status-badge { display: inline-block; background: rgba(16,185,129,0.2); color: var(--vf-accent); padding: 0.25rem 0.5rem; border-radius: 4px; font-weight: 600; font-size: 0.8rem; }
+    footer.vf-footer { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--vf-border); font-size: 0.85rem; color: var(--vf-text-muted); text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="vf-container">
+    <header class="vf-header">
+      <div class="vf-brand">
+        <div class="vf-logo">VF</div>
+        <div class="vf-brand-title">VeloFix Mobile Mechanic</div>
+      </div>
+      <nav class="vf-nav" aria-label="Main Navigation">
+        <a href="/">Home</a>
+        <a href="/services">Services</a>
+        <a href="/book" aria-current="page">Book a Van Visit</a>
+        <a href="/bookings">My Booking</a>
+      </nav>
+    </header>
+    <main class="vf-hero">
+      <section class="vf-panel">
+        <h1>Schedule Doorstep Bicycle Tune-Up</h1>
+        <p class="vf-subtitle">Our mobile repair van visits your home or workplace with full professional tooling.</p>
+        <form id="velofix-booking" class="vf-form-grid" method="post" action="/book">
+          <fieldset class="vf-fieldset">
+            <legend class="vf-legend">1. Select Service Package</legend>
+            <div class="vf-packages">
+              <div class="vf-pkg-card">
+                <label for="pkg-commuter">
+                  <input type="radio" id="pkg-commuter" name="package" value="commuter" checked>
+                  <div class="vf-pkg-name">Commuter Tune</div>
+                  <div class="vf-pkg-price">£45</div>
+                  <div style="font-size:0.8rem;color:#94a3b8">Brakes &amp; Gears</div>
+                </label>
+              </div>
+              <div class="vf-pkg-card">
+                <label for="pkg-general">
+                  <input type="radio" id="pkg-general" name="package" value="general">
+                  <div class="vf-pkg-name">Full Overhaul</div>
+                  <div class="vf-pkg-price">£85</div>
+                  <div style="font-size:0.8rem;color:#94a3b8">Drivetrain &amp; Bearings</div>
+                </label>
+              </div>
+              <div class="vf-pkg-card">
+                <label for="pkg-pro">
+                  <input type="radio" id="pkg-pro" name="package" value="pro">
+                  <div class="vf-pkg-name">Race Precision</div>
+                  <div class="vf-pkg-price">£135</div>
+                  <div style="font-size:0.8rem;color:#94a3b8">Hydraulics &amp; Wheels</div>
+                </label>
+              </div>
+            </div>
+          </fieldset>
+          <fieldset class="vf-fieldset">
+            <legend class="vf-legend">2. Location &amp; Contact Details</legend>
+            <div class="vf-row-2">
+              <div class="vf-field">
+                <label for="customer_name">Full Name</label>
+                <input type="text" id="customer_name" name="customer_name" required placeholder="Alex Turner">
+              </div>
+              <div class="vf-field">
+                <label for="contact_phone">Phone Number (Required)</label>
+                <input type="tel" id="contact_phone" name="contact_phone" required placeholder="07700 900123">
+              </div>
+            </div>
+            <div class="vf-row-2">
+              <div class="vf-field">
+                <label for="service_address">Street Address</label>
+                <input type="text" id="service_address" name="service_address" required placeholder="14 Riverside Crescent">
+              </div>
+              <div class="vf-field">
+                <label for="service_postcode">Postcode</label>
+                <input type="text" id="service_postcode" name="service_postcode" required placeholder="NW1 4NP">
+              </div>
+            </div>
+          </fieldset>
+          <fieldset class="vf-fieldset">
+            <legend class="vf-legend">3. Appointment Slot</legend>
+            <div class="vf-row-2">
+              <div class="vf-field">
+                <label for="appointment_date">Preferred Date</label>
+                <input type="date" id="appointment_date" name="appointment_date" required value="2026-10-15">
+              </div>
+              <div class="vf-field">
+                <label for="time_slot">Time Window</label>
+                <select id="time_slot" name="time_slot" required>
+                  <option value="morning">Morning (08:30 - 12:00)</option>
+                  <option value="afternoon">Afternoon (12:30 - 16:30)</option>
+                  <option value="evening">Late Slot (17:00 - 19:30)</option>
+                </select>
+              </div>
+            </div>
+            <div class="vf-field" style="margin-top:0.75rem">
+              <label for="bike_notes">Bicycle Make, Model &amp; Known Issues</label>
+              <textarea id="bike_notes" name="bike_notes" rows="2" placeholder="e.g. Ridgeback Voyage touring bike, rear derailleur skipping in 4th gear"></textarea>
+            </div>
+          </fieldset>
+          <button type="submit" class="vf-btn-submit">Confirm Mechanic Dispatch</button>
+        </form>
+      </section>
+      <aside class="vf-sidebar">
+        <div class="vf-info-card">
+          <h2>Van Service Coverage</h2>
+          <span class="vf-status-badge">Van #2 Active Today</span>
+          <ul style="margin-top:0.75rem">
+            <li><strong>Service Area:</strong> Within 12 miles of central depot</li>
+            <li><strong>Doorstep Setup:</strong> Fully self-powered workshop</li>
+            <li><strong>Payment:</strong> Invoiced securely on completion</li>
+            <li><strong>Parts guarantee:</strong> 6-month warranty on installed cabling and pads</li>
+          </ul>
+        </div>
+        <div class="vf-info-card">
+          <h2>What happens next?</h2>
+          <ul>
+            <li>1. Instant confirmed booking reference generated</li>
+            <li>2. Mechanic calls 20 minutes before arrival</li>
+            <li>3. Complete safety test ride performed on-site</li>
+          </ul>
+        </div>
+      </aside>
+    </main>
+    <footer class="vf-footer">
+      <p>VeloFix Mobile Mechanic Ltd • Registered Mobile Workshop • All repairs guaranteed</p>
+    </footer>
+  </div>
+</body>
+</html>

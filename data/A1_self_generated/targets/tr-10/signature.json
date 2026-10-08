@@ -1,0 +1,869 @@
+{
+  "title": "Greenwood Safe Streets — Community Crosswalk & Traffic Survey",
+  "viewport": {
+    "width": 1280,
+    "height": 900
+  },
+  "nodes": [
+    {
+      "tag": "div",
+      "depth": 0,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "header",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "nav",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "main",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "section",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h1",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "form",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 5,
+      "type": "text",
+      "name": "street_location",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "select",
+      "depth": 5,
+      "type": null,
+      "name": "neighbourhood_zone",
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 7,
+      "type": "checkbox",
+      "name": "hazard_speeding",
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 7,
+      "type": "checkbox",
+      "name": "hazard_crosswalk",
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 7,
+      "type": "checkbox",
+      "name": "hazard_pavement",
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 7,
+      "type": "checkbox",
+      "name": "hazard_blind_corner",
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 7,
+      "type": "radio",
+      "name": "safety_score",
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 7,
+      "type": "radio",
+      "name": "safety_score",
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 7,
+      "type": "radio",
+      "name": "safety_score",
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 7,
+      "type": "radio",
+      "name": "safety_score",
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 7,
+      "type": "radio",
+      "name": "safety_score",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "textarea",
+      "depth": 5,
+      "type": null,
+      "name": "proposed_solution",
+      "role": null
+    },
+    {
+      "tag": "button",
+      "depth": 4,
+      "type": "submit",
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "aside",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h2",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "strong",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h3",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "ul",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "li",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "li",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "li",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "footer",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    }
+  ],
+  "boxes": [
+    {
+      "tag": "header",
+      "x": 0.0703,
+      "y": 0.0267,
+      "w": 0.8594,
+      "h": 0.0573
+    },
+    {
+      "tag": "nav",
+      "x": 0.5809,
+      "y": 0.032,
+      "w": 0.3487,
+      "h": 0.0267
+    },
+    {
+      "tag": "main",
+      "x": 0.0703,
+      "y": 0.1107,
+      "w": 0.8594,
+      "h": 0.7438
+    },
+    {
+      "tag": "section",
+      "x": 0.0703,
+      "y": 0.1107,
+      "w": 0.5563,
+      "h": 0.7438
+    },
+    {
+      "tag": "h1",
+      "x": 0.093,
+      "y": 0.1429,
+      "w": 0.5109,
+      "h": 0.04
+    },
+    {
+      "tag": "form",
+      "x": 0.093,
+      "y": 0.2691,
+      "w": 0.5109,
+      "h": 0.5532
+    },
+    {
+      "tag": "label",
+      "x": 0.093,
+      "y": 0.2691,
+      "w": 0.5109,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.093,
+      "y": 0.298,
+      "w": 0.5109,
+      "h": 0.0424
+    },
+    {
+      "tag": "label",
+      "x": 0.093,
+      "y": 0.3582,
+      "w": 0.5109,
+      "h": 0.0227
+    },
+    {
+      "tag": "select",
+      "x": 0.093,
+      "y": 0.3871,
+      "w": 0.5109,
+      "h": 0.0447
+    },
+    {
+      "tag": "label",
+      "x": 0.093,
+      "y": 0.4495,
+      "w": 0.5109,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.093,
+      "y": 0.4869,
+      "w": 0.0102,
+      "h": 0.0144
+    },
+    {
+      "tag": "label",
+      "x": 0.1094,
+      "y": 0.4828,
+      "w": 0.1346,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.3516,
+      "y": 0.4869,
+      "w": 0.0102,
+      "h": 0.0144
+    },
+    {
+      "tag": "label",
+      "x": 0.368,
+      "y": 0.4828,
+      "w": 0.1145,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.093,
+      "y": 0.5185,
+      "w": 0.0102,
+      "h": 0.0144
+    },
+    {
+      "tag": "label",
+      "x": 0.1094,
+      "y": 0.5144,
+      "w": 0.1528,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.3516,
+      "y": 0.5185,
+      "w": 0.0102,
+      "h": 0.0144
+    },
+    {
+      "tag": "label",
+      "x": 0.368,
+      "y": 0.5144,
+      "w": 0.1735,
+      "h": 0.0227
+    },
+    {
+      "tag": "label",
+      "x": 0.093,
+      "y": 0.5548,
+      "w": 0.5109,
+      "h": 0.0227
+    },
+    {
+      "tag": "label",
+      "x": 0.093,
+      "y": 0.5926,
+      "w": 0.0204,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.093,
+      "y": 0.5966,
+      "w": 0.0102,
+      "h": 0.0144
+    },
+    {
+      "tag": "label",
+      "x": 0.1259,
+      "y": 0.5926,
+      "w": 0.0204,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.1259,
+      "y": 0.5966,
+      "w": 0.0102,
+      "h": 0.0144
+    },
+    {
+      "tag": "label",
+      "x": 0.1588,
+      "y": 0.5926,
+      "w": 0.0204,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.1588,
+      "y": 0.5966,
+      "w": 0.0102,
+      "h": 0.0144
+    },
+    {
+      "tag": "label",
+      "x": 0.1918,
+      "y": 0.5926,
+      "w": 0.0204,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.1918,
+      "y": 0.5966,
+      "w": 0.0102,
+      "h": 0.0144
+    },
+    {
+      "tag": "label",
+      "x": 0.2247,
+      "y": 0.5926,
+      "w": 0.0204,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.2247,
+      "y": 0.5966,
+      "w": 0.0102,
+      "h": 0.0144
+    },
+    {
+      "tag": "label",
+      "x": 0.093,
+      "y": 0.633,
+      "w": 0.5109,
+      "h": 0.0227
+    },
+    {
+      "tag": "textarea",
+      "x": 0.093,
+      "y": 0.6619,
+      "w": 0.5109,
+      "h": 0.0835
+    },
+    {
+      "tag": "button",
+      "x": 0.093,
+      "y": 0.7721,
+      "w": 0.5109,
+      "h": 0.0502
+    },
+    {
+      "tag": "aside",
+      "x": 0.6516,
+      "y": 0.1107,
+      "w": 0.2781,
+      "h": 0.7438
+    },
+    {
+      "tag": "h2",
+      "x": 0.6742,
+      "y": 0.1429,
+      "w": 0.2328,
+      "h": 0.04
+    },
+    {
+      "tag": "h3",
+      "x": 0.6742,
+      "y": 0.3584,
+      "w": 0.2328,
+      "h": 0.0267
+    },
+    {
+      "tag": "ul",
+      "x": 0.6742,
+      "y": 0.3922,
+      "w": 0.2328,
+      "h": 0.0822
+    },
+    {
+      "tag": "li",
+      "x": 0.6892,
+      "y": 0.3922,
+      "w": 0.2178,
+      "h": 0.0227
+    },
+    {
+      "tag": "li",
+      "x": 0.6892,
+      "y": 0.4219,
+      "w": 0.2178,
+      "h": 0.0227
+    },
+    {
+      "tag": "li",
+      "x": 0.6892,
+      "y": 0.4517,
+      "w": 0.2178,
+      "h": 0.0227
+    },
+    {
+      "tag": "footer",
+      "x": 0.0703,
+      "y": 0.8989,
+      "w": 0.8594,
+      "h": 0.0415
+    }
+  ],
+  "labels": [
+    {
+      "for": "street_location",
+      "text": "Street Name or Intersection"
+    },
+    {
+      "for": "neighbourhood_zone",
+      "text": "Neighbourhood Sector"
+    },
+    {
+      "for": "hz_speed",
+      "text": "Vehicles exceeding 20mph"
+    },
+    {
+      "for": "hz_crosswalk",
+      "text": "No safe crossing point"
+    },
+    {
+      "for": "hz_pavement",
+      "text": "Pavement parking obstruction"
+    },
+    {
+      "for": "hz_blind",
+      "text": "Blind corner or overgrown hedges"
+    },
+    {
+      "for": "proposed_solution",
+      "text": "Your Recommended Solution"
+    }
+  ],
+  "controls": [
+    {
+      "tag": "input",
+      "type": "text",
+      "name": "street_location",
+      "label": "Street Name or Intersection"
+    },
+    {
+      "tag": "select",
+      "type": null,
+      "name": "neighbourhood_zone",
+      "label": "Neighbourhood Sector"
+    },
+    {
+      "tag": "input",
+      "type": "checkbox",
+      "name": "hazard_speeding",
+      "label": "Vehicles exceeding 20mph"
+    },
+    {
+      "tag": "input",
+      "type": "checkbox",
+      "name": "hazard_crosswalk",
+      "label": "No safe crossing point"
+    },
+    {
+      "tag": "input",
+      "type": "checkbox",
+      "name": "hazard_pavement",
+      "label": "Pavement parking obstruction"
+    },
+    {
+      "tag": "input",
+      "type": "checkbox",
+      "name": "hazard_blind_corner",
+      "label": "Blind corner or overgrown hedges"
+    },
+    {
+      "tag": "input",
+      "type": "radio",
+      "name": "safety_score",
+      "label": null
+    },
+    {
+      "tag": "input",
+      "type": "radio",
+      "name": "safety_score",
+      "label": null
+    },
+    {
+      "tag": "input",
+      "type": "radio",
+      "name": "safety_score",
+      "label": null
+    },
+    {
+      "tag": "input",
+      "type": "radio",
+      "name": "safety_score",
+      "label": null
+    },
+    {
+      "tag": "input",
+      "type": "radio",
+      "name": "safety_score",
+      "label": null
+    },
+    {
+      "tag": "textarea",
+      "type": null,
+      "name": "proposed_solution",
+      "label": "Your Recommended Solution"
+    }
+  ],
+  "headings": [
+    "Pedestrian Safety & Crosswalk Feedback",
+    "Council Action Plan",
+    "Recent Interventions"
+  ]
+}

@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Forage &amp; Fern Botanical School — Wild Edibles Field Course Booking</title>
+  <style>
+    :root {
+      --ff-moss: #14532d;
+      --ff-leaf: #16a34a;
+      --ff-bark: #78350f;
+      --ff-paper: #f0fdf4;
+      --ff-card: #ffffff;
+      --ff-border: #bbf7d0;
+      --ff-text: #14532d;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: "Georgia", serif; background: var(--ff-paper); color: #1f2937; line-height: 1.5; padding: 1.5rem; }
+    .ff-container { max-width: 1150px; margin: 0 auto; }
+    header.ff-header { border-bottom: 2px solid var(--ff-moss); padding-bottom: 1rem; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; }
+    .ff-brand { font-size: 1.4rem; font-weight: 700; color: var(--ff-moss); }
+    nav.ff-nav a { font-family: -apple-system, sans-serif; text-decoration: none; color: #374151; font-weight: 600; margin-left: 1.25rem; font-size: 0.9rem; }
+    nav.ff-nav a[aria-current="page"] { color: var(--ff-moss); text-decoration: underline; }
+    .ff-grid { display: grid; grid-template-columns: 1.8fr 1.2fr; gap: 2rem; align-items: start; }
+    .ff-card { background: var(--ff-card); border: 1px solid var(--ff-border); border-radius: 10px; padding: 1.75rem; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+    .ff-card h1, .ff-card h2 { color: var(--ff-moss); margin-bottom: 0.5rem; font-size: 1.45rem; }
+    .ff-form-group { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 1rem; font-family: -apple-system, sans-serif; }
+    .ff-form-group label { font-size: 0.85rem; font-weight: 600; color: #1f2937; }
+    .ff-form-group input, .ff-form-group select, .ff-form-group textarea { padding: 0.6rem; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.95rem; }
+    .ff-btn { font-family: -apple-system, sans-serif; background: var(--ff-moss); color: #fff; border: none; font-size: 1rem; font-weight: 700; padding: 0.85rem; border-radius: 6px; cursor: pointer; width: 100%; margin-top: 0.5rem; }
+    .ff-btn:hover { background: #166534; }
+    .ff-curriculum-item { border-left: 3px solid var(--ff-leaf); padding-left: 0.75rem; margin-bottom: 1rem; }
+    .ff-curriculum-item h4 { font-size: 1rem; color: var(--ff-moss); margin-bottom: 0.2rem; }
+    .ff-curriculum-item p { font-size: 0.85rem; color: #4b5563; font-family: -apple-system, sans-serif; }
+    footer.ff-footer { margin-top: 2.5rem; border-top: 1px solid var(--ff-border); padding-top: 1rem; text-align: center; font-family: -apple-system, sans-serif; font-size: 0.85rem; color: #6b7280; }
+  </style>
+</head>
+<body>
+  <div class="ff-container">
+    <header class="ff-header">
+      <div class="ff-brand">Forage &amp; Fern Botanical School</div>
+      <nav class="ff-nav" aria-label="Course Navigation">
+        <a href="/">Curriculum</a>
+        <a href="/courses">All Masterclasses</a>
+        <a href="/enrol" aria-current="page">Course Enrolment</a>
+        <a href="/enrolments">My Student Roster</a>
+      </nav>
+    </header>
+    <main class="ff-grid">
+      <section class="ff-card">
+        <h1>Enrol in Autumn Woodland Foraging Walk</h1>
+        <p style="font-family:-apple-system,sans-serif;font-size:0.95rem;color:#4b5563;margin-bottom:1.5rem">A full-day hands-on field identification masterclass exploring ancient deciduous woodland in the Blackdown Hills.</p>
+        <form id="course-enrolment-form" method="post" action="/enrol">
+          <div class="ff-form-group">
+            <label for="course_date">Available Course Session</label>
+            <select id="course_date" name="course_date" required>
+              <option value="2026-10-17">Saturday 17 October (09:30 - 16:30) — Fungi &amp; Hedgerow Berries</option>
+              <option value="2026-10-24">Saturday 24 October (09:30 - 16:30) — Edible Roots &amp; Acorn Processing</option>
+              <option value="2026-11-07">Saturday 07 November (09:30 - 16:30) — Winter Bark &amp; Lichen Identification</option>
+            </select>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+            <div class="ff-form-group">
+              <label for="student_name">Participant Full Name</label>
+              <input type="text" id="student_name" name="student_name" required placeholder="Robin Fletcher">
+            </div>
+            <div class="ff-form-group">
+              <label for="student_email">Email Address</label>
+              <input type="email" id="student_email" name="student_email" required placeholder="robin@example.test">
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+            <div class="ff-form-group">
+              <label for="emergency_contact">Emergency Contact Phone (Required)</label>
+              <input type="tel" id="emergency_contact" name="emergency_contact" required placeholder="07700 900334">
+            </div>
+            <div class="ff-form-group">
+              <label for="experience_level">Prior Botanical Experience</label>
+              <select id="experience_level" name="experience_level" required>
+                <option value="beginner">Complete Beginner (No prior botany)</option>
+                <option value="intermediate">Intermediate (Knows common families)</option>
+                <option value="advanced">Advanced (Uses dichotomous keys)</option>
+              </select>
+            </div>
+          </div>
+          <div class="ff-form-group">
+            <label for="dietary_notes">Dietary Restrictions or Known Plant Allergies</label>
+            <textarea id="dietary_notes" name="dietary_notes" rows="2" placeholder="e.g. Nut allergy, vegetarian (lunch is wild mushroom risotto provided by school)"></textarea>
+          </div>
+          <button type="submit" class="ff-btn">Confirm Course Enrolment</button>
+        </form>
+      </section>
+      <aside class="ff-card">
+        <h2>Field Session Syllabus</h2>
+        <div class="ff-curriculum-item">
+          <h4>09:30 — Spore Prints &amp; Cap Taxonomy</h4>
+          <p>Microscopic gill inspection and distinguishing poisonous Amanita from edible field agarics.</p>
+        </div>
+        <div class="ff-curriculum-item">
+          <h4>12:30 — Woodland Campfire Lunch</h4>
+          <p>Cooking wild chanterelles, sweet chestnuts, and nettle infusion over beech charcoal.</p>
+        </div>
+        <div class="ff-curriculum-item">
+          <h4>14:00 — Ethical Harvest &amp; Basketry</h4>
+          <p>UK Wildlife &amp; Countryside Act legalities, sustainable one-third harvesting rule.</p>
+        </div>
+      </aside>
+    </main>
+    <footer class="ff-footer">
+      <p>Forage &amp; Fern Botanical School • Woodland Education Centre • Highwood Meadow, Somerset</p>
+    </footer>
+  </div>
+</body>
+</html>

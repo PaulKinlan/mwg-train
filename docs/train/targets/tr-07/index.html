@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Starlight Ridge Dark Sky Observatory — Public Viewing Pass</title>
+  <style>
+    :root {
+      --ds-bg: #030712;
+      --ds-surface: #0b1120;
+      --ds-card: #111c33;
+      --ds-border: #1e2e4f;
+      --ds-cyan: #38bdf8;
+      --ds-indigo: #6366f1;
+      --ds-text: #f1f5f9;
+      --ds-muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--ds-bg); color: var(--ds-text); line-height: 1.5; padding: 1.5rem; }
+    .ds-wrap { max-width: 1200px; margin: 0 auto; }
+    header.ds-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--ds-border); padding-bottom: 1rem; margin-bottom: 1.5rem; }
+    .ds-brand { font-size: 1.35rem; font-weight: 800; color: var(--ds-cyan); display: flex; align-items: center; gap: 0.5rem; }
+    nav.ds-nav a { text-decoration: none; color: var(--ds-muted); font-size: 0.9rem; margin-left: 1.25rem; }
+    nav.ds-nav a[aria-current="page"] { color: #fff; font-weight: 700; border-bottom: 2px solid var(--ds-cyan); padding-bottom: 0.2rem; }
+    .ds-grid { display: grid; grid-template-columns: 1.8fr 1.2fr; gap: 2rem; align-items: start; }
+    .ds-panel { background: var(--ds-surface); border: 1px solid var(--ds-border); border-radius: 12px; padding: 1.75rem; }
+    .ds-panel h1 { font-size: 1.65rem; color: #fff; margin-bottom: 0.5rem; }
+    .ds-lead { font-size: 0.95rem; color: var(--ds-muted); margin-bottom: 1.5rem; }
+    .ds-field { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 1rem; }
+    .ds-field label { font-size: 0.85rem; font-weight: 600; color: var(--ds-cyan); }
+    .ds-field input, .ds-field select, .ds-field textarea { background: #030712; border: 1px solid var(--ds-border); color: #fff; padding: 0.6rem; border-radius: 6px; font-size: 0.95rem; }
+    .ds-field input:focus, .ds-field select:focus { outline: 2px solid var(--ds-cyan); }
+    .ds-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .ds-btn-reg { background: var(--ds-indigo); color: #fff; border: none; font-size: 1rem; font-weight: 700; padding: 0.85rem; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 0.5rem; }
+    .ds-btn-reg:hover { background: #4f46e5; }
+    .ds-info-block { background: var(--ds-card); border: 1px solid var(--ds-border); border-radius: 8px; padding: 1.25rem; margin-bottom: 1.25rem; }
+    .ds-info-block h3 { font-size: 1.1rem; color: var(--ds-cyan); margin-bottom: 0.5rem; }
+    .ds-cap-tag { display: inline-block; background: rgba(56,189,248,0.15); color: var(--ds-cyan); padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: 700; font-size: 0.8rem; }
+    footer.ds-foot { margin-top: 2.5rem; border-top: 1px solid var(--ds-border); padding-top: 1rem; text-align: center; font-size: 0.85rem; color: var(--ds-muted); }
+  </style>
+</head>
+<body>
+  <div class="ds-wrap">
+    <header class="ds-head">
+      <div class="ds-brand">✦ Starlight Ridge Dark Sky Observatory</div>
+      <nav class="ds-nav" aria-label="Observatory Navigation">
+        <a href="/">Sky Clear Index</a>
+        <a href="/events">Public Schedule</a>
+        <a href="/register" aria-current="page">Book Night Pass</a>
+        <a href="/passes">Gate Pass Receipt</a>
+      </nav>
+    </header>
+    <main class="ds-grid">
+      <section class="ds-panel">
+        <h1>Public Telescope Viewing Pass Registration</h1>
+        <p class="ds-lead">Join resident astronomers on the summit ridge for deep-sky observation through our 24-inch Planewave reflector.</p>
+        <form id="observatory-booking" method="post" action="/register">
+          <div class="ds-field">
+            <label for="event_session">Select Viewing Night &amp; Target Celestial Object</label>
+            <select id="event_session" name="event_session" required>
+              <option value="oct-24">Sat 24 Oct (19:30 - 22:30) — Orion Nebula &amp; Pleiades (New Moon)</option>
+              <option value="oct-31">Sat 31 Oct (19:30 - 22:30) — Andromeda Galaxy &amp; Double Cluster</option>
+              <option value="nov-07">Sat 07 Nov (19:00 - 22:00) — Jupiter Cloud Bands &amp; Galilean Moons</option>
+            </select>
+          </div>
+          <div class="ds-row">
+            <div class="ds-field">
+              <label for="lead_attendee">Lead Attendee Name</label>
+              <input type="text" id="lead_attendee" name="lead_attendee" required placeholder="Dr. Sarah Lin">
+            </div>
+            <div class="ds-field">
+              <label for="attendee_email">Email for Digital Pass</label>
+              <input type="email" id="attendee_email" name="attendee_email" required placeholder="sarah.lin@example.test">
+            </div>
+          </div>
+          <div class="ds-row">
+            <div class="ds-field">
+              <label for="adult_tickets">Adult Visitors (16+)</label>
+              <input type="number" id="adult_tickets" name="adult_tickets" min="1" max="5" value="2" required>
+            </div>
+            <div class="ds-field">
+              <label for="child_tickets">Child Visitors (8 - 15)</label>
+              <input type="number" id="child_tickets" name="child_tickets" min="0" max="4" value="1">
+            </div>
+          </div>
+          <div class="ds-field">
+            <label for="accessibility_notes">Mobility &amp; Accessibility Requirements</label>
+            <textarea id="accessibility_notes" name="accessibility_notes" rows="2" placeholder="e.g. Step-free wheelchair lift access required for main telescope platform."></textarea>
+          </div>
+          <button type="submit" class="ds-btn-reg">Generate Observatory Gate Pass</button>
+        </form>
+      </section>
+      <aside>
+        <div class="ds-info-block">
+          <h3>Capacity &amp; Dark Sky Protocol</h3>
+          <div style="margin-bottom:0.75rem"><span class="ds-cap-tag">Strict 25 Visitors / Night</span></div>
+          <p style="font-size:0.85rem;color:var(--ds-muted);margin-bottom:0.75rem">Red-filtered headlamps only. White flashlights and phone screens are strictly prohibited on the viewing terrace.</p>
+          <ul style="font-size:0.85rem;color:var(--ds-muted);display:flex;flex-direction:column;gap:0.4rem;padding-left:1.2rem">
+            <li>Summit elevation: 1,840ft (Dress warmly)</li>
+            <li>Hot tea provided at the warming hut</li>
+            <li>Event proceeds in cloudy weather with digital planetarium show</li>
+          </ul>
+        </div>
+      </aside>
+    </main>
+    <footer class="ds-foot">
+      <p>Starlight Ridge Dark Sky Observatory • International Dark Sky Sanctuary • Summit Road, Peak District</p>
+    </footer>
+  </div>
+</body>
+</html>

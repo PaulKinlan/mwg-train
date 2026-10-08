@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Oakridge Tenant Co-operative — Maintenance Ledger &amp; Expenses</title>
+  <style>
+    :root {
+      --ot-slate: #1e293b;
+      --ot-brick: #b91c1c;
+      --ot-card: #ffffff;
+      --ot-border: #cbd5e1;
+      --ot-bg: #f8fafc;
+      --ot-text: #0f172a;
+      --ot-muted: #64748b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--ot-bg); color: var(--ot-text); line-height: 1.5; padding: 1.5rem; }
+    .ot-wrap { max-width: 1200px; margin: 0 auto; }
+    header.ot-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--ot-slate); padding-bottom: 1rem; margin-bottom: 1.5rem; }
+    .ot-brand { font-size: 1.35rem; font-weight: 800; color: var(--ot-slate); }
+    nav.ot-nav a { text-decoration: none; color: var(--ot-muted); font-size: 0.9rem; margin-left: 1.25rem; font-weight: 600; }
+    nav.ot-nav a[aria-current="page"] { color: var(--ot-slate); border-bottom: 2px solid var(--ot-brick); padding-bottom: 0.2rem; }
+    .ot-grid { display: grid; grid-template-columns: 1.8fr 1.2fr; gap: 2rem; align-items: start; }
+    .ot-box { background: var(--ot-card); border: 1px solid var(--ot-border); border-radius: 8px; padding: 1.5rem; }
+    .ot-box h1, .ot-box h2 { font-size: 1.35rem; color: var(--ot-slate); margin-bottom: 0.75rem; }
+    table.ot-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 0.5rem; }
+    table.ot-table th, table.ot-table td { padding: 0.6rem 0.5rem; border-bottom: 1px solid var(--ot-border); text-align: left; }
+    table.ot-table th { background: #f1f5f9; color: var(--ot-slate); }
+    .ot-field { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 0.85rem; }
+    .ot-field label { font-size: 0.85rem; font-weight: 600; color: var(--ot-text); }
+    .ot-field input, .ot-field select { padding: 0.55rem; border: 1px solid var(--ot-border); border-radius: 6px; font-size: 0.95rem; }
+    .ot-btn { background: var(--ot-slate); color: #fff; border: none; font-size: 1rem; font-weight: 700; padding: 0.75rem; border-radius: 6px; cursor: pointer; width: 100%; margin-top: 0.5rem; }
+    .ot-btn:hover { background: #0f172a; }
+    footer.ot-foot { margin-top: 2.5rem; border-top: 1px solid var(--ot-border); padding-top: 1rem; text-align: center; font-size: 0.85rem; color: var(--ot-muted); }
+  </style>
+</head>
+<body>
+  <div class="ot-wrap">
+    <header class="ot-head">
+      <div class="ot-brand">Oakridge Tenant Co-operative (12 Flats)</div>
+      <nav class="ot-nav" aria-label="Ledger Nav">
+        <a href="/">Building Charter</a>
+        <a href="/expenses" aria-current="page">Maintenance Ledger</a>
+        <a href="/expenses/new">Log Expense</a>
+        <a href="/audit">Annual Accounts</a>
+      </nav>
+    </header>
+    <main class="ot-grid">
+      <section class="ot-box">
+        <h1>Communal Maintenance Ledger (Q4 2026)</h1>
+        <div style="background:#f1f5f9;padding:0.75rem;border-radius:6px;margin-bottom:1rem;display:flex;justify-content:space-between">
+          <span><strong>Quarterly Budget:</strong> £2,400.00</span>
+          <span><strong>Total Logged Spend:</strong> £1,142.80</span>
+          <span><strong>Remaining Reserve:</strong> £1,257.20</span>
+        </div>
+        <table class="ot-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Category</th>
+              <th>Vendor / Description</th>
+              <th>Amount</th>
+              <th>Flat</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>02 Oct</td>
+              <td>Plumbing</td>
+              <td>Draindoc Ltd — Gully clearing</td>
+              <td>£185.00</td>
+              <td>Flat 3</td>
+            </tr>
+            <tr>
+              <td>06 Oct</td>
+              <td>Lighting</td>
+              <td>Rexel Electrical — 6x LED tubes</td>
+              <td>£48.60</td>
+              <td>Flat 7</td>
+            </tr>
+            <tr>
+              <td>11 Oct</td>
+              <td>Grounds</td>
+              <td>Greenleaf — Winter shrub pruning</td>
+              <td>£220.00</td>
+              <td>Flat 1</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+      <aside class="ot-box">
+        <h2>Log Communal Expenditure</h2>
+        <form id="expense-log-form" method="post" action="/expenses/new">
+          <div class="ot-field">
+            <label for="expense_date">Date of Purchase</label>
+            <input type="date" id="expense_date" name="expense_date" value="2026-10-14" required>
+          </div>
+          <div class="ot-field">
+            <label for="category">Maintenance Category</label>
+            <select id="category" name="category" required>
+              <option value="plumbing">Plumbing &amp; Water Services</option>
+              <option value="electrical">Lighting &amp; Security Intercom</option>
+              <option value="grounds">Garden &amp; Refuse Area Upkeep</option>
+              <option value="winter-salt">Winter De-Icing &amp; Gritting</option>
+              <option value="locks">Door Closer &amp; Lock Servicing</option>
+            </select>
+          </div>
+          <div class="ot-field">
+            <label for="vendor">Merchant / Contractor Name</label>
+            <input type="text" id="vendor" name="vendor" required placeholder="Screwfix / Local Hardware">
+          </div>
+          <div class="ot-field">
+            <label for="amount">Total Amount (£)</label>
+            <input type="number" id="amount" name="amount" step="0.01" min="0.01" required placeholder="34.50">
+          </div>
+          <div class="ot-field">
+            <label for="resident_flat">Resident Submitting (Flat Number)</label>
+            <input type="text" id="resident_flat" name="resident_flat" required placeholder="Flat 4">
+          </div>
+          <button type="submit" class="ot-btn">Add Expense to Co-op Ledger</button>
+        </form>
+      </aside>
+    </main>
+    <footer class="ot-foot">
+      <p>Oakridge Tenant Co-operative Society • Self-Managed Tenancy • Registered Mutual #29401</p>
+    </footer>
+  </div>
+</body>
+</html>

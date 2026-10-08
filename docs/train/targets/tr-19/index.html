@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Estuary Community Rowing Club — Skiff Outing &amp; Tide Safety Manifest</title>
+  <style>
+    :root {
+      --rc-blue: #0369a1;
+      --rc-ocean: #0c4a6e;
+      --rc-orange: #ea580c;
+      --rc-card: #ffffff;
+      --rc-border: #bae6fd;
+      --rc-bg: #f0fdfa;
+      --rc-text: #0f172a;
+      --rc-muted: #64748b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--rc-bg); color: var(--rc-text); line-height: 1.5; padding: 1.5rem; }
+    .rc-shell { max-width: 1200px; margin: 0 auto; }
+    header.rc-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--rc-blue); padding-bottom: 1rem; margin-bottom: 1.5rem; }
+    .rc-brand { font-size: 1.35rem; font-weight: 800; color: var(--rc-ocean); }
+    nav.rc-nav a { text-decoration: none; color: var(--rc-muted); font-size: 0.9rem; margin-left: 1.25rem; font-weight: 600; }
+    nav.rc-nav a[aria-current="page"] { color: var(--rc-blue); border-bottom: 2px solid var(--rc-blue); padding-bottom: 0.2rem; }
+    .rc-grid { display: grid; grid-template-columns: 1.8fr 1.2fr; gap: 2rem; align-items: start; }
+    .rc-card { background: var(--rc-card); border: 1px solid var(--rc-border); border-radius: 8px; padding: 1.5rem; }
+    .rc-card h1, .rc-card h2 { font-size: 1.4rem; color: var(--rc-ocean); margin-bottom: 0.5rem; }
+    .rc-tide-box { background: #e0f2fe; border: 1px solid var(--rc-border); border-radius: 6px; padding: 0.85rem; margin-bottom: 1.25rem; display: flex; justify-content: space-around; font-size: 0.9rem; }
+    .rc-field { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 0.85rem; }
+    .rc-field label { font-size: 0.85rem; font-weight: 600; color: var(--rc-text); }
+    .rc-field input, .rc-field select { padding: 0.55rem; border: 1px solid var(--rc-border); border-radius: 6px; font-size: 0.95rem; }
+    .rc-btn { background: var(--rc-blue); color: #fff; border: none; font-size: 1rem; font-weight: 700; padding: 0.85rem; border-radius: 6px; cursor: pointer; width: 100%; margin-top: 0.5rem; }
+    .rc-btn:hover { background: var(--rc-ocean); }
+    table.rc-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 0.5rem; }
+    table.rc-table th, table.rc-table td { padding: 0.6rem 0.5rem; border-bottom: 1px solid #e0f2fe; text-align: left; }
+    table.rc-table th { background: #f0f9ff; color: var(--rc-ocean); }
+    footer.rc-foot { margin-top: 2.5rem; border-top: 1px solid var(--rc-border); padding-top: 1rem; text-align: center; font-size: 0.85rem; color: var(--rc-muted); }
+  </style>
+</head>
+<body>
+  <div class="rc-shell">
+    <header class="rc-head">
+      <div class="rc-brand">⚓ Estuary Community Rowing Club</div>
+      <nav class="rc-nav" aria-label="Boathouse Nav">
+        <a href="/">Tide &amp; Weather</a>
+        <a href="/skiffs">Club Fleet</a>
+        <a href="/book-outing" aria-current="page">Log Launch Manifest</a>
+        <a href="/safety-log">Water Safety Board</a>
+      </nav>
+    </header>
+    <main class="rc-grid">
+      <section class="rc-card">
+        <h1>Skiff Outing Reservation &amp; Safety Manifest</h1>
+        <div class="rc-tide-box">
+          <div><strong>High Tide:</strong> 14:22 (4.8m Spring)</div>
+          <div><strong>Low Tide:</strong> 20:45 (0.9m)</div>
+          <div><strong>Estuary Flow:</strong> 3.4 knots seaward</div>
+        </div>
+        <form id="skiff-safety-form" method="post" action="/book-outing">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+            <div class="rc-field">
+              <label for="skiff_id">Select Rowing Skiff</label>
+              <select id="skiff_id" name="skiff_id" required>
+                <option value="skiff-1">Skiff 1 — St. Piran (4-oar + Cox, Larch)</option>
+                <option value="skiff-2" selected>Skiff 2 — Wave Queen (4-oar + Cox, Oak)</option>
+                <option value="skiff-3">Skiff 3 — Cormorant (Pair + Coxswain)</option>
+              </select>
+            </div>
+            <div class="rc-field">
+              <label for="coxswain_name">Qualified Coxswain Name</label>
+              <input type="text" id="coxswain_name" name="coxswain_name" required placeholder="Captain Mark Ross">
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+            <div class="rc-field">
+              <label for="crew_headcount">Total Rower Headcount</label>
+              <input type="number" id="crew_headcount" name="crew_headcount" min="2" max="6" value="5" required>
+            </div>
+            <div class="rc-field">
+              <label for="lifejacket_count">Certified 150N Lifejackets on Board</label>
+              <input type="number" id="lifejacket_count" name="lifejacket_count" min="2" max="8" value="5" required>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+            <div class="rc-field">
+              <label for="launch_time">Planned Slipway Launch Time</label>
+              <input type="time" id="launch_time" name="launch_time" value="13:30" required>
+            </div>
+            <div class="rc-field">
+              <label for="recovery_time">Estimated Recovery Time</label>
+              <input type="time" id="recovery_time" name="recovery_time" value="15:30" required>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:0.5rem;margin:0.75rem 0">
+            <input type="checkbox" id="vhf_radio" name="vhf_radio" value="yes" required>
+            <label for="vhf_radio" style="font-size:0.85rem">I certify the crew carries Channel 16 handheld marine VHF radio and flares in the watertight stern locker.</label>
+          </div>
+          <button type="submit" class="rc-btn">File Boathouse Safety Manifest</button>
+        </form>
+      </section>
+      <aside class="rc-card">
+        <h2>Active Outings on Estuary</h2>
+        <table class="rc-table">
+          <thead>
+            <tr>
+              <th>Skiff</th>
+              <th>Cox</th>
+              <th>Launch</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>St. Piran</td>
+              <td>J. Tregarthen</td>
+              <td>11:00</td>
+              <td><span style="color:#15803d;font-weight:700">On Water</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <div style="margin-top:1.5rem;font-size:0.8rem;color:var(--rc-muted);background:#fef2f2;border:1px solid #fecaca;padding:0.75rem;border-radius:6px">
+          <strong>Safety Rule:</strong> No club skiff may proceed seaward past Black Rock Beacon after low water slack without committee permission.
+        </div>
+      </aside>
+    </main>
+    <footer class="rc-foot">
+      <p>Estuary Community Rowing Club • Affiliated with Scottish Coastal Rowing Association • Custom House Quay</p>
+    </footer>
+  </div>
+</body>
+</html>

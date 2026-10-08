@@ -73,20 +73,30 @@ function fieldMarkup(field, { defects }) {
     (field.autocomplete === 'postal-code' && defects.includes('no-autofill-address'));
   const auto = field.autocomplete && !autofillBlocked ? ` autocomplete="${field.autocomplete}"` : '';
 
+  // A number field with a declared lower bound carries `min`, unless the project is seeded with the
+  // accept-invalid-amount defect (negative/non-numeric amounts are then accepted). The control's label
+  // is emitted unless the project is seeded with the no-field-labels defect. Both are training-only
+  // tokens the pilot never passes, so its output is byte-identical either way.
+  const label = defects.includes('no-field-labels') && field.type !== 'select' ? '' : `      <label for="${field.slug}">${field.label}</label>\n`;
+  const min = field.min !== undefined && !defects.includes('accept-invalid-amount') ? ` min="${field.min}"` : '';
+  // A number field that declares a `step` carries it, so a decimal requirement (a measured value or a
+  // currency amount) is accepted by the browser instead of tripping the implicit step=1 constraint.
+  // Gated on the declaration exactly like `min`: the pilot declares neither, so its output is unchanged.
+  // Unlike `min`, step is not part of accept-invalid-amount (that defect only concerns the lower bound),
+  // so a repair family that accepts invalid amounts still accepts a valid decimal step.
+  const step = field.step !== undefined ? ` step="${field.step}"` : '';
+
   if (field.type === 'textarea') {
-    return `      <label for="${field.slug}">${field.label}</label>
-      <textarea id="${field.slug}" name="${field.name}"${req}${aria}${auto}></textarea>`;
+    return `${label}      <textarea id="${field.slug}" name="${field.name}"${req}${aria}${auto}></textarea>`;
   }
   if (field.type === 'select') {
     const options = (field.options ?? []).map((option) => `        <option value="${option}">${option}</option>`).join('\n');
-    return `      <label for="${field.slug}">${field.label}</label>
-      <select id="${field.slug}" name="${field.name}"${req}${aria}>
+    return `${label}      <select id="${field.slug}" name="${field.name}"${req}${aria}>
 ${options}
       </select>`;
   }
   const extra = field.type === 'search' || field.type === 'number' ? ` inputmode="${field.type === 'number' ? 'numeric' : 'search'}"` : '';
-  return `      <label for="${field.slug}">${field.label}</label>
-      <input type="${field.type}" id="${field.slug}" name="${field.name}"${req}${aria}${auto}${extra}>`;
+  return `${label}      <input type="${field.type}" id="${field.slug}" name="${field.name}"${req}${aria}${auto}${extra}${min}${step}>`;
 }
 
 /**
@@ -363,6 +373,24 @@ function enhanceSource(archetype, { defects, framework }) {
     ? '// DEFECT: no aria-invalid synchronisation, so the error state exists only visually.'
     : A11Y_SCRIPT;
 
+  // Training-only: a premature-submit defect. `form.submit()` bypasses the browser's own validation,
+  // so an Enter press sends the form before the required choices are made. The pilot never passes this
+  // token, so its enhance script is unchanged.
+  const enterSubmit = defects.includes('enter-submits')
+    ? `
+// DEFECT (enter-submits): Enter in any field submits the form immediately, before required choices
+// are made. form.submit() skips the browser's own validation, so an incomplete form is sent early.
+for (const field of document.querySelectorAll('form input, form textarea, form select')) {
+  field.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      field.form?.submit();
+    }
+  });
+}
+`
+    : '';
+
   const insertion = (indent) => {
     const pad = ' '.repeat(indent);
     const marker = `${pad}// The insertion ran with this value: the marker is what distinguishes "sanitised the payload\n${pad}// away" from "never touched the container", which the check must not confuse.\n${pad}container.dataset.echoInserted = String(value.length);`;
@@ -407,7 +435,7 @@ ${insertion(4)}
 }`;
   return `// Progressive enhancement for the ${archetype.id} flow: one plain script for every arm.
 ${a11y}
-
+${enterSubmit}
 ${body}
 ${framework?.name === 'webcomponents' ? WC_SCRIPT : ''}`;
 }
@@ -427,12 +455,22 @@ const sessionTables = (archetype) =>
       ].join('\n')
     : '';
 
-function serverSource(archetype, framework) {
+function serverSource(archetype, framework, defects = []) {
   const writeRoute = archetype.routes.find((route) => route.method === 'POST' && route.kind.startsWith('write'));
   const insecureCookie = archetype.session && !framework.cookieFlags;
   const cookieFlags = archetype.session
     ? `HttpOnly; SameSite=Lax; Path=/; Max-Age=3600${framework.secureCookie ? '; Secure' : ''}`
     : null;
+  // The write route may be parameterised (e.g. /concerts/:id/reserve). The generic server matches it
+  // with the same :param-to-capture rewrite it uses for the read route, so a literal write path (every
+  // pilot route) is an exact match and a parameterised one captures each segment. The rewrite runs at
+  // generation time, so the generated server carries a ready-to-compile pattern rather than the path.
+  const parameterisedWrite = /:[A-Za-z0-9_]+/.test(writeRoute.path);
+  const writeMatchSource = `^${writeRoute.path.replace(/:[A-Za-z0-9_]+/g, '([^/]+)')}$`;
+  // A field that declares a lower bound is validated server-side too, unless the project is seeded with
+  // accept-invalid-amount (training-only). The pilot declares no bounds, so this emits nothing for it.
+  const minBounds = archetype.fields.filter((field) => field.min !== undefined).map((field) => ({ name: field.name, min: Number(field.min) }));
+  const enforceMin = minBounds.length > 0 && !defects.includes('accept-invalid-amount');
   return `/**
  * ${archetype.id} server, ${framework.name} arm. Server-rendered pages, an ephemeral SQLite store, and
  * a JSON endpoint the enhancement script reads. Written to be readable rather than clever: the pilot
@@ -490,7 +528,7 @@ const json = (response, value, status = 200, headers = {}) => {
 
 const REQUIRED = ${JSON.stringify(archetype.fields.filter((field) => field.type !== 'select' && !field.optional).map((field) => field.name))};
 
-// The cart form has its own fields. Validating it against the search form's required list refused every
+${enforceMin ? `const MIN_BOUNDS = ${JSON.stringify(minBounds)};\n` : ''}// The cart form has its own fields. Validating it against the search form's required list refused every
 // cart POST with 422, which the write journey caught: a second form on one page needs a second rule.
 const EXTRA_ACTION = ${JSON.stringify(archetype.extraForm?.action ?? '')};
 const EXTRA_REQUIRED = ${JSON.stringify([
@@ -535,7 +573,8 @@ const server = createServer(async (request, response) => {
 
   if (path === '/' && request.method === 'GET') return html(response, await renderDocument({ title: ${JSON.stringify(archetype.title)} }));
 
-  if (path === '${writeRoute.path}' && request.method === 'POST') {
+  ${parameterisedWrite ? `const writeMatch = path.match(new RegExp(${JSON.stringify(writeMatchSource)}));
+  if (writeMatch && request.method === 'POST') {` : `if (path === '${writeRoute.path}' && request.method === 'POST') {`}
     const body = await parseBody(request);
     const missing = requiredFor(path).filter((field) => !String(body[field] ?? '').trim());
     if (missing.length > 0) {
@@ -545,8 +584,19 @@ const server = createServer(async (request, response) => {
       const document = await renderDocument({ title: 'Please correct the form', data: { errorSummary: \`Missing: \${missing.join(', ')}\` } });
       return html(response, document.replace('<h1>', \`<p role="alert">Missing: \${missing.join(', ')}</p><h1>\`), 422);
     }
-    const ref = randomUUID().slice(0, 8);
-    insert.run(ref, new Date().toISOString(), JSON.stringify(body));
+    ${enforceMin ? `const underMinimum = MIN_BOUNDS.filter(({ name, min }) => {
+      const raw = String(body[name] ?? '').trim();
+      const value = Number(raw);
+      return raw !== '' && (Number.isNaN(value) || value < min);
+    }).map(({ name }) => name);
+    if (underMinimum.length > 0) {
+      const document = await renderDocument({ title: 'Please correct the form', data: { errorSummary: \`Below minimum: \${underMinimum.join(', ')}\` } });
+      return html(response, document.replace('<h1>', \`<p role="alert">Below minimum: \${underMinimum.join(', ')}</p><h1>\`), 422);
+    }
+    ` : ''}const ref = randomUUID().slice(0, 8);
+    ${defects.includes('client-only-state')
+      ? '// DEFECT (client-only-state): the submission is kept only in component state, so nothing is written to the store and a reload of the confirmation route finds no record.'
+      : 'insert.run(ref, new Date().toISOString(), JSON.stringify(body));'}
 ${archetype.session ? `    // The session is what makes the follow-up page show the right record, so it is stored, not guessed.
     const sid = randomUUID();
     insertSession.run(sid, ref, new Date().toISOString());
@@ -619,9 +669,13 @@ server.listen(port, '127.0.0.1', () => {
 
 
 /** The Hono arm's server: Hono owns routing and responses, node:http only carries them. */
-function honoServerSource(archetype, framework) {
+function honoServerSource(archetype, framework, defects = []) {
   const writeRoute = archetype.routes.find((route) => route.method === 'POST' && route.kind.startsWith('write'));
   const cookieFlags = archetype.session ? 'HttpOnly; SameSite=Lax; Path=/; Max-Age=3600' : null;
+  // Hono routes :param segments natively, so a parameterised write path needs no rewrite here. Only the
+  // training-only bounds validation and client-only-state tokens differ; the pilot passes neither.
+  const minBounds = archetype.fields.filter((field) => field.min !== undefined).map((field) => ({ name: field.name, min: Number(field.min) }));
+  const enforceMin = minBounds.length > 0 && !defects.includes('accept-invalid-amount');
   return `/**
  * ${archetype.id} server, hono arm: routing in Hono, pages as hono/html templates, records in SQLite.
  *
@@ -655,7 +709,7 @@ const list = db.prepare('SELECT ref, payload FROM records ORDER BY created_at DE
 
 const REQUIRED = ${JSON.stringify(archetype.fields.filter((field) => field.type !== 'select' && !field.optional).map((field) => field.name))};
 
-// The cart form has its own fields. Validating it against the search form's required list refused every
+${enforceMin ? `const MIN_BOUNDS = ${JSON.stringify(minBounds)};\n` : ''}// The cart form has its own fields. Validating it against the search form's required list refused every
 // cart POST with 422, which the write journey caught: a second form on one page needs a second rule.
 const EXTRA_ACTION = ${JSON.stringify(archetype.extraForm?.action ?? '')};
 const EXTRA_REQUIRED = ${JSON.stringify([
@@ -697,8 +751,19 @@ app.post('${writeRoute.path}', async (c) => {
     // The rejected submission returns a usable page with the form, plus the reason.
     return c.html(document.replace('<h1>', \`<p role="alert">Missing: \${missing.join(', ')}</p><h1>\`), 422);
   }
-  const ref = randomUUID().slice(0, 8);
-  insert.run(ref, new Date().toISOString(), JSON.stringify(body));
+  ${enforceMin ? `const underMinimum = MIN_BOUNDS.filter(({ name, min }) => {
+    const raw = String(body[name] ?? '').trim();
+    const value = Number(raw);
+    return raw !== '' && (Number.isNaN(value) || value < min);
+  }).map(({ name }) => name);
+  if (underMinimum.length > 0) {
+    const document = await renderDocument({ title: 'Please correct the form' });
+    return c.html(document.replace('<h1>', \`<p role="alert">Below minimum: \${underMinimum.join(', ')}</p><h1>\`), 422);
+  }
+  ` : ''}const ref = randomUUID().slice(0, 8);
+  ${defects.includes('client-only-state')
+    ? '// DEFECT (client-only-state): the submission is kept only in component state, so nothing is written to the store and a reload of the confirmation route finds no record.'
+    : 'insert.run(ref, new Date().toISOString(), JSON.stringify(body));'}
 ${archetype.session ? `  const sid = randomUUID();
   insertSession.run(sid, ref, new Date().toISOString());
   c.header('set-cookie', \`sid=\${sid}; ${cookieFlags}\`);` : ''}
@@ -843,7 +908,7 @@ export function buildProjectFor(archetype, { frameworkName, defects = [], flags 
   const projectId = `${archetype.id}-${frameworkName}${flags.variant ? `-${flags.variant}` : ''}`;
 
   const files = {
-    'server.mjs': framework.name === 'hono' ? honoServerSource(archetype, framework) : serverSource(archetype, framework),
+    'server.mjs': framework.name === 'hono' ? honoServerSource(archetype, framework, defects) : serverSource(archetype, framework, defects),
     [framework.markupFile]: pageSource(archetype, { defects, framework }),
     [framework.stylesFile]: stylesSource({ defects, framework }),
     [framework.enhanceFile]: enhanceSource(archetype, { defects, framework }),

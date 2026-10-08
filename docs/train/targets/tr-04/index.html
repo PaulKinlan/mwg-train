@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SunHarbor Community Solar — Array Telemetry &amp; Member Credits</title>
+  <style>
+    :root {
+      --sh-sky: #0284c7;
+      --sh-dark: #0f172a;
+      --sh-panel: #1e293b;
+      --sh-yellow: #facc15;
+      --sh-text: #f8fafc;
+      --sh-muted: #94a3b8;
+      --sh-border: #334155;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: var(--sh-dark); color: var(--sh-text); line-height: 1.5; padding: 1.5rem; }
+    .sh-container { max-width: 1200px; margin: 0 auto; }
+    header.sh-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--sh-border); padding-bottom: 1rem; margin-bottom: 1.5rem; }
+    .sh-logo { font-size: 1.3rem; font-weight: 800; color: var(--sh-yellow); display: flex; align-items: center; gap: 0.5rem; }
+    nav.sh-nav a { color: var(--sh-muted); text-decoration: none; margin-left: 1rem; font-size: 0.9rem; }
+    nav.sh-nav a[aria-current="page"] { color: #fff; font-weight: 700; border-bottom: 2px solid var(--sh-yellow); padding-bottom: 0.2rem; }
+    .sh-stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; margin-bottom: 1.5rem; }
+    .sh-stat-card { background: var(--sh-panel); border: 1px solid var(--sh-border); border-radius: 8px; padding: 1.25rem; }
+    .sh-stat-title { font-size: 0.85rem; color: var(--sh-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .sh-stat-val { font-size: 2rem; font-weight: 800; color: #fff; margin: 0.25rem 0; }
+    .sh-stat-sub { font-size: 0.8rem; color: #4ade80; }
+    .sh-main-grid { display: grid; grid-template-columns: 1.8fr 1.2fr; gap: 1.5rem; align-items: start; }
+    .sh-card { background: var(--sh-panel); border: 1px solid var(--sh-border); border-radius: 8px; padding: 1.5rem; }
+    .sh-card h2 { font-size: 1.25rem; margin-bottom: 1rem; color: #fff; }
+    table.sh-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    table.sh-table th, table.sh-table td { padding: 0.6rem 0.5rem; border-bottom: 1px solid var(--sh-border); text-align: left; }
+    table.sh-table th { color: var(--sh-muted); font-weight: 600; }
+    .sh-form-field { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 1rem; }
+    .sh-form-field label { font-size: 0.85rem; font-weight: 600; color: var(--sh-muted); }
+    .sh-form-field input, .sh-form-field select { background: #0f172a; border: 1px solid var(--sh-border); color: #fff; padding: 0.6rem; border-radius: 6px; font-size: 0.95rem; }
+    .sh-btn { background: var(--sh-sky); color: #fff; border: none; font-weight: 700; padding: 0.75rem 1.25rem; border-radius: 6px; cursor: pointer; width: 100%; }
+    .sh-btn:hover { background: #0369a1; }
+    .sh-credit-result { margin-top: 1.25rem; padding: 1rem; background: rgba(2, 132, 199, 0.1); border: 1px solid var(--sh-sky); border-radius: 6px; }
+    footer.sh-foot { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--sh-border); text-align: center; font-size: 0.85rem; color: var(--sh-muted); }
+  </style>
+</head>
+<body>
+  <div class="sh-container">
+    <header class="sh-head">
+      <div class="sh-logo">☀ SunHarbor Solar Co-op</div>
+      <nav class="sh-nav" aria-label="Portal Navigation">
+        <a href="/">Overview</a>
+        <a href="/generation" aria-current="page">Telemetry</a>
+        <a href="/credits">Member Portal</a>
+        <a href="/reports">Annual Report</a>
+      </nav>
+    </header>
+    <div class="sh-stats-row">
+      <div class="sh-stat-card">
+        <div class="sh-stat-title">Current Generation Output</div>
+        <div class="sh-stat-val">42.8 kW</div>
+        <div class="sh-stat-sub">↑ 85.6% of peak rated 50kW array</div>
+      </div>
+      <div class="sh-stat-card">
+        <div class="sh-stat-title">Cumulative This Month</div>
+        <div class="sh-stat-val">5,840 kWh</div>
+        <div class="sh-stat-sub">Equivalent to 4.2 tonnes CO₂ offset</div>
+      </div>
+      <div class="sh-stat-card">
+        <div class="sh-stat-title">Participating Households</div>
+        <div class="sh-stat-val">64 Homes</div>
+        <div class="sh-stat-sub">100% active credit allocation</div>
+      </div>
+    </div>
+    <main class="sh-main-grid">
+      <section class="sh-card">
+        <h2>Today's Hourly Inverter Readings (Array 1 &amp; 2)</h2>
+        <table class="sh-table">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Irradiance</th>
+              <th>Array kW</th>
+              <th>Grid Export (kWh)</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>08:00</td><td>320 W/m²</td><td>14.2 kW</td><td>12.8 kWh</td><td>Optimal</td></tr>
+            <tr><td>09:00</td><td>510 W/m²</td><td>24.6 kW</td><td>22.4 kWh</td><td>Optimal</td></tr>
+            <tr><td>10:00</td><td>680 W/m²</td><td>34.1 kW</td><td>32.8 kWh</td><td>Optimal</td></tr>
+            <tr><td>11:00</td><td>820 W/m²</td><td>41.5 kW</td><td>39.7 kWh</td><td>Peak</td></tr>
+            <tr><td>12:00</td><td>890 W/m²</td><td>43.2 kW</td><td>42.0 kWh</td><td>Peak</td></tr>
+            <tr><td>13:00</td><td>870 W/m²</td><td>42.8 kW</td><td>41.2 kWh</td><td>Optimal</td></tr>
+          </tbody>
+        </table>
+      </section>
+      <section class="sh-card">
+        <h2>Member Credit Balance Query</h2>
+        <form id="credit-query-form" method="get" action="/credits">
+          <div class="sh-form-field">
+            <label for="account_number">Member Account or Meter Number</label>
+            <input type="text" id="account_number" name="account_number" value="SH-8821" required>
+          </div>
+          <div class="sh-form-field">
+            <label for="statement_period">Billing Period</label>
+            <select id="statement_period" name="statement_period" required>
+              <option value="2026-10">October 2026 (In Progress)</option>
+              <option value="2026-09">September 2026 (Finalized)</option>
+              <option value="2026-08">August 2026 (Finalized)</option>
+            </select>
+          </div>
+          <button type="submit" class="sh-btn">Calculate Accrued Solar Credits</button>
+        </form>
+        <div class="sh-credit-result">
+          <div style="font-size:0.8rem;color:var(--sh-muted)">Account SH-8821 • Meter #44091</div>
+          <div style="font-size:1.4rem;font-weight:700;color:#fff;margin:0.25rem 0">92.4 kWh Accrued Credit</div>
+          <div style="font-size:0.8rem;color:#38bdf8">Estimated utility offset: £24.95 credit applied on next council bill</div>
+        </div>
+      </section>
+    </main>
+    <footer class="sh-foot">
+      <p>SunHarbor Community Solar Co-operative • Civic Rooftop Installation • Open Telemetry Standard</p>
+    </footer>
+  </div>
+</body>
+</html>

@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Good Neighbour Community Transit — Volunteer Hospital Lift Booking</title>
+  <style>
+    :root {
+      --gn-teal: #0f766e;
+      --gn-blue: #0284c7;
+      --gn-card: #ffffff;
+      --gn-border: #cbd5e1;
+      --gn-bg: #f8fafc;
+      --gn-text: #0f172a;
+      --gn-muted: #64748b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--gn-bg); color: var(--gn-text); line-height: 1.5; padding: 1.5rem; }
+    .gn-wrap { max-width: 1200px; margin: 0 auto; }
+    header.gn-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--gn-teal); padding-bottom: 1rem; margin-bottom: 1.5rem; }
+    .gn-brand { font-size: 1.35rem; font-weight: 800; color: var(--gn-teal); }
+    nav.gn-nav a { text-decoration: none; color: var(--gn-muted); font-size: 0.9rem; margin-left: 1.25rem; font-weight: 600; }
+    nav.gn-nav a[aria-current="page"] { color: var(--gn-teal); border-bottom: 2px solid var(--gn-teal); padding-bottom: 0.2rem; }
+    .gn-grid { display: grid; grid-template-columns: 1.8fr 1.2fr; gap: 2rem; align-items: start; }
+    .gn-card { background: var(--gn-card); border: 1px solid var(--gn-border); border-radius: 8px; padding: 1.75rem; }
+    .gn-card h1, .gn-card h2 { font-size: 1.4rem; color: var(--gn-teal); margin-bottom: 0.5rem; }
+    .gn-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .gn-field { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 0.85rem; }
+    .gn-field label { font-size: 0.85rem; font-weight: 600; color: var(--gn-text); }
+    .gn-field input, .gn-field select, .gn-field textarea { padding: 0.55rem; border: 1px solid var(--gn-border); border-radius: 6px; font-size: 0.95rem; }
+    .gn-btn { background: var(--gn-teal); color: #fff; border: none; font-size: 1rem; font-weight: 700; padding: 0.85rem; border-radius: 6px; cursor: pointer; width: 100%; margin-top: 0.5rem; }
+    .gn-btn:hover { background: #115e59; }
+    table.gn-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 0.5rem; }
+    table.gn-table th, table.gn-table td { padding: 0.6rem 0.5rem; border-bottom: 1px solid #e2e8f0; text-align: left; }
+    table.gn-table th { background: #f1f5f9; color: var(--gn-teal); }
+    footer.gn-foot { margin-top: 2.5rem; border-top: 1px solid var(--gn-border); padding-top: 1rem; text-align: center; font-size: 0.85rem; color: var(--gn-muted); }
+  </style>
+</head>
+<body>
+  <div class="gn-wrap">
+    <header class="gn-head">
+      <div class="gn-brand">Good Neighbour Community Care Transit</div>
+      <nav class="gn-nav" aria-label="Transit Nav">
+        <a href="/">Service Info</a>
+        <a href="/rides">Pending Journeys</a>
+        <a href="/book-ride" aria-current="page">Request Patient Lift</a>
+        <a href="/dispatch">Driver Dispatch Board</a>
+      </nav>
+    </header>
+    <main class="gn-grid">
+      <section class="gn-card">
+        <h1>Book Outpatient Hospital Transport Lift</h1>
+        <p style="font-size:0.9rem;color:var(--gn-muted);margin-bottom:1.25rem">Free volunteer door-to-door lift service connecting elderly and isolated rural neighbours with outpatient clinic appointments.</p>
+        <form id="lift-booking-form" method="post" action="/book-ride">
+          <div class="gn-row-2">
+            <div class="gn-field">
+              <label for="passenger_name">Passenger Full Name</label>
+              <input type="text" id="passenger_name" name="passenger_name" required placeholder="Mrs. Vera Jenkins">
+            </div>
+            <div class="gn-field">
+              <label for="contact_phone">Contact Telephone</label>
+              <input type="tel" id="contact_phone" name="contact_phone" required placeholder="07700 900441">
+            </div>
+          </div>
+          <div class="gn-field">
+            <label for="pickup_address">Home Pickup Address &amp; Postcode</label>
+            <input type="text" id="pickup_address" name="pickup_address" required placeholder="8 Rose Cottage Lane, Little Brampton, EX20 4QR">
+          </div>
+          <div class="gn-row-2">
+            <div class="gn-field">
+              <label for="hospital_destination">Hospital Clinic / Treatment Centre</label>
+              <select id="hospital_destination" name="hospital_destination" required>
+                <option value="royal-devon">Royal Devon &amp; Exeter Hospital (Wonford)</option>
+                <option value="torbay-eye">Torbay Hospital (Eye Clinic)</option>
+                <option value="community-hosp">Okehampton Community Health Centre</option>
+              </select>
+            </div>
+            <div class="gn-field">
+              <label for="appointment_time">Required Clinic Arrival Time</label>
+              <input type="time" id="appointment_time" name="appointment_time" value="10:15" required>
+            </div>
+          </div>
+          <div class="gn-row-2">
+            <div class="gn-field">
+              <label for="appointment_date">Appointment Date</label>
+              <input type="date" id="appointment_date" name="appointment_date" value="2026-10-20" required>
+            </div>
+            <div class="gn-field">
+              <label for="mobility_aid">Mobility &amp; Vehicle Requirements</label>
+              <select id="mobility_aid" name="mobility_aid" required>
+                <option value="independent">Ambulant (No folding equipment)</option>
+                <option value="walker" selected>Folding Rollator / Walking Frame in Boot</option>
+                <option value="wheelchair">Folding Transfer Wheelchair</option>
+                <option value="carer">Carer / Companion Accompanying</option>
+              </select>
+            </div>
+          </div>
+          <button type="submit" class="gn-btn">Register Hospital Transport Request</button>
+        </form>
+      </section>
+      <aside class="gn-card">
+        <h2>Volunteer Driver Dispatch</h2>
+        <p style="font-size:0.85rem;color:var(--gn-muted);margin-bottom:0.75rem">Volunteer drivers accept trips based on parish proximity and boot capacity.</p>
+        <table class="gn-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Destination</th>
+              <th>Arrival</th>
+              <th>Driver</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>19 Oct</td>
+              <td>Wonford Eye Clinic</td>
+              <td>09:30</td>
+              <td><span style="color:#15803d;font-weight:700">Assigned: Dave M.</span></td>
+            </tr>
+            <tr>
+              <td>20 Oct</td>
+              <td>Okehampton Health</td>
+              <td>14:00</td>
+              <td><span style="color:#b45309;font-weight:700">Awaiting Driver</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </aside>
+    </main>
+    <footer class="gn-foot">
+      <p>Good Neighbour Community Transit Charity • Registered Charity #10492 • DBS-Checked Volunteer Drivers</p>
+    </footer>
+  </div>
+</body>
+</html>

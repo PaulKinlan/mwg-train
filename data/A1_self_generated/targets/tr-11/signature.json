@@ -1,0 +1,706 @@
+{
+  "title": "Crust & Crumb Micro-Bakery — Friday Bake Loaf Pre-Orders",
+  "viewport": {
+    "width": 1280,
+    "height": 900
+  },
+  "nodes": [
+    {
+      "tag": "div",
+      "depth": 0,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "header",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "nav",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "main",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "section",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h1",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "form",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 6,
+      "type": "number",
+      "name": "loaf_country",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 6,
+      "type": "number",
+      "name": "loaf_spelt",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 6,
+      "type": "number",
+      "name": "loaf_olive",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 6,
+      "type": "number",
+      "name": "cardamom_box",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h3",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 6,
+      "type": "text",
+      "name": "customer_name",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 6,
+      "type": "tel",
+      "name": "customer_phone",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "select",
+      "depth": 6,
+      "type": null,
+      "name": "pickup_window",
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "button",
+      "depth": 5,
+      "type": "submit",
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "aside",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h2",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "strong",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "footer",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    }
+  ],
+  "boxes": [
+    {
+      "tag": "header",
+      "x": 0.0313,
+      "y": 0.0267,
+      "w": 0.9375,
+      "h": 0.06
+    },
+    {
+      "tag": "nav",
+      "x": 0.5278,
+      "y": 0.0333,
+      "w": 0.4409,
+      "h": 0.0267
+    },
+    {
+      "tag": "main",
+      "x": 0.0313,
+      "y": 0.1133,
+      "w": 0.9375,
+      "h": 0.9823
+    },
+    {
+      "tag": "section",
+      "x": 0.0313,
+      "y": 0.1133,
+      "w": 0.5887,
+      "h": 0.9823
+    },
+    {
+      "tag": "h1",
+      "x": 0.0539,
+      "y": 0.1456,
+      "w": 0.5434,
+      "h": 0.0427
+    },
+    {
+      "tag": "form",
+      "x": 0.0539,
+      "y": 0.2655,
+      "w": 0.5434,
+      "h": 0.7978
+    },
+    {
+      "tag": "label",
+      "x": 0.5048,
+      "y": 0.2997,
+      "w": 0.0394,
+      "h": 0.024
+    },
+    {
+      "tag": "input",
+      "x": 0.5504,
+      "y": 0.2935,
+      "w": 0.0469,
+      "h": 0.0364
+    },
+    {
+      "tag": "label",
+      "x": 0.5048,
+      "y": 0.3933,
+      "w": 0.0394,
+      "h": 0.024
+    },
+    {
+      "tag": "input",
+      "x": 0.5504,
+      "y": 0.3871,
+      "w": 0.0469,
+      "h": 0.0364
+    },
+    {
+      "tag": "label",
+      "x": 0.5048,
+      "y": 0.4868,
+      "w": 0.0394,
+      "h": 0.024
+    },
+    {
+      "tag": "input",
+      "x": 0.5504,
+      "y": 0.4806,
+      "w": 0.0469,
+      "h": 0.0364
+    },
+    {
+      "tag": "label",
+      "x": 0.5098,
+      "y": 0.5804,
+      "w": 0.0344,
+      "h": 0.024
+    },
+    {
+      "tag": "input",
+      "x": 0.5504,
+      "y": 0.5742,
+      "w": 0.0469,
+      "h": 0.0364
+    },
+    {
+      "tag": "h3",
+      "x": 0.0695,
+      "y": 0.6886,
+      "w": 0.5121,
+      "h": 0.0293
+    },
+    {
+      "tag": "label",
+      "x": 0.0695,
+      "y": 0.7312,
+      "w": 0.5121,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.0695,
+      "y": 0.7601,
+      "w": 0.5121,
+      "h": 0.0407
+    },
+    {
+      "tag": "label",
+      "x": 0.0695,
+      "y": 0.8141,
+      "w": 0.5121,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.0695,
+      "y": 0.843,
+      "w": 0.5121,
+      "h": 0.0407
+    },
+    {
+      "tag": "label",
+      "x": 0.0695,
+      "y": 0.897,
+      "w": 0.5121,
+      "h": 0.0227
+    },
+    {
+      "tag": "select",
+      "x": 0.0695,
+      "y": 0.9259,
+      "w": 0.5121,
+      "h": 0.0429
+    },
+    {
+      "tag": "button",
+      "x": 0.0695,
+      "y": 0.991,
+      "w": 0.5121,
+      "h": 0.0502
+    },
+    {
+      "tag": "aside",
+      "x": 0.645,
+      "y": 0.1133,
+      "w": 0.3238,
+      "h": 0.2697
+    },
+    {
+      "tag": "h2",
+      "x": 0.6676,
+      "y": 0.1456,
+      "w": 0.2785,
+      "h": 0.032
+    },
+    {
+      "tag": "footer",
+      "x": 0.0313,
+      "y": 1.1401,
+      "w": 0.9375,
+      "h": 0.0415
+    }
+  ],
+  "labels": [
+    {
+      "for": "loaf_country",
+      "text": "Loaves:"
+    },
+    {
+      "for": "loaf_spelt",
+      "text": "Loaves:"
+    },
+    {
+      "for": "loaf_olive",
+      "text": "Loaves:"
+    },
+    {
+      "for": "cardamom_box",
+      "text": "Boxes:"
+    },
+    {
+      "for": "customer_name",
+      "text": "Customer Name"
+    },
+    {
+      "for": "customer_phone",
+      "text": "Mobile Number for SMS Collection Alert"
+    },
+    {
+      "for": "pickup_window",
+      "text": "Friday Collection Slot"
+    }
+  ],
+  "controls": [
+    {
+      "tag": "input",
+      "type": "number",
+      "name": "loaf_country",
+      "label": "Loaves:"
+    },
+    {
+      "tag": "input",
+      "type": "number",
+      "name": "loaf_spelt",
+      "label": "Loaves:"
+    },
+    {
+      "tag": "input",
+      "type": "number",
+      "name": "loaf_olive",
+      "label": "Loaves:"
+    },
+    {
+      "tag": "input",
+      "type": "number",
+      "name": "cardamom_box",
+      "label": "Boxes:"
+    },
+    {
+      "tag": "input",
+      "type": "text",
+      "name": "customer_name",
+      "label": "Customer Name"
+    },
+    {
+      "tag": "input",
+      "type": "tel",
+      "name": "customer_phone",
+      "label": "Mobile Number for SMS Collection Alert"
+    },
+    {
+      "tag": "select",
+      "type": null,
+      "name": "pickup_window",
+      "label": "Friday Collection Slot"
+    }
+  ],
+  "headings": [
+    "Friday Bake Menu & Loaf Reservation",
+    "Collection Details",
+    "Bakehouse Notes"
+  ]
+}

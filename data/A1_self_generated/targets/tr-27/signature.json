@@ -1,0 +1,538 @@
+{
+  "title": "St. Jude’s Chamber Music — Acoustic Concert Pew Reservation",
+  "viewport": {
+    "width": 1280,
+    "height": 900
+  },
+  "nodes": [
+    {
+      "tag": "div",
+      "depth": 0,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "header",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "nav",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "main",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "section",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h1",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "strong",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "form",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "select",
+      "depth": 5,
+      "type": null,
+      "name": "pew_section",
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 6,
+      "type": "text",
+      "name": "attendee_name",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 6,
+      "type": "email",
+      "name": "contact_email",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 5,
+      "type": "number",
+      "name": "seat_quantity",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 5,
+      "type": "checkbox",
+      "name": "wheelchair_space",
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "button",
+      "depth": 4,
+      "type": "submit",
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "aside",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h2",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "ul",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "li",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "li",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "li",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "footer",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    }
+  ],
+  "boxes": [
+    {
+      "tag": "header",
+      "x": 0.0313,
+      "y": 0.0267,
+      "w": 0.9375,
+      "h": 0.0587
+    },
+    {
+      "tag": "nav",
+      "x": 0.5255,
+      "y": 0.0327,
+      "w": 0.4432,
+      "h": 0.0267
+    },
+    {
+      "tag": "main",
+      "x": 0.0313,
+      "y": 0.112,
+      "w": 0.9375,
+      "h": 0.6343
+    },
+    {
+      "tag": "section",
+      "x": 0.0313,
+      "y": 0.112,
+      "w": 0.5475,
+      "h": 0.6343
+    },
+    {
+      "tag": "h1",
+      "x": 0.0539,
+      "y": 0.1442,
+      "w": 0.5022,
+      "h": 0.0387
+    },
+    {
+      "tag": "form",
+      "x": 0.0539,
+      "y": 0.3673,
+      "w": 0.5022,
+      "h": 0.3468
+    },
+    {
+      "tag": "label",
+      "x": 0.0539,
+      "y": 0.3673,
+      "w": 0.5022,
+      "h": 0.0227
+    },
+    {
+      "tag": "select",
+      "x": 0.0539,
+      "y": 0.3962,
+      "w": 0.5022,
+      "h": 0.0429
+    },
+    {
+      "tag": "label",
+      "x": 0.0539,
+      "y": 0.4542,
+      "w": 0.2448,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.0539,
+      "y": 0.4831,
+      "w": 0.2448,
+      "h": 0.0407
+    },
+    {
+      "tag": "label",
+      "x": 0.3112,
+      "y": 0.4542,
+      "w": 0.2448,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.3112,
+      "y": 0.4831,
+      "w": 0.2448,
+      "h": 0.0407
+    },
+    {
+      "tag": "label",
+      "x": 0.0539,
+      "y": 0.5388,
+      "w": 0.5022,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.0539,
+      "y": 0.5677,
+      "w": 0.5022,
+      "h": 0.0407
+    },
+    {
+      "tag": "input",
+      "x": 0.0539,
+      "y": 0.6276,
+      "w": 0.0102,
+      "h": 0.0144
+    },
+    {
+      "tag": "label",
+      "x": 0.0703,
+      "y": 0.6235,
+      "w": 0.2999,
+      "h": 0.0227
+    },
+    {
+      "tag": "button",
+      "x": 0.0539,
+      "y": 0.6639,
+      "w": 0.5022,
+      "h": 0.0502
+    },
+    {
+      "tag": "aside",
+      "x": 0.6037,
+      "y": 0.112,
+      "w": 0.365,
+      "h": 0.2431
+    },
+    {
+      "tag": "h2",
+      "x": 0.6264,
+      "y": 0.1442,
+      "w": 0.3197,
+      "h": 0.0387
+    },
+    {
+      "tag": "ul",
+      "x": 0.6264,
+      "y": 0.1918,
+      "w": 0.3197,
+      "h": 0.1311
+    },
+    {
+      "tag": "li",
+      "x": 0.6414,
+      "y": 0.1918,
+      "w": 0.3047,
+      "h": 0.0227
+    },
+    {
+      "tag": "li",
+      "x": 0.6414,
+      "y": 0.2233,
+      "w": 0.3047,
+      "h": 0.0453
+    },
+    {
+      "tag": "li",
+      "x": 0.6414,
+      "y": 0.2775,
+      "w": 0.3047,
+      "h": 0.0453
+    },
+    {
+      "tag": "footer",
+      "x": 0.0313,
+      "y": 0.7908,
+      "w": 0.9375,
+      "h": 0.0415
+    }
+  ],
+  "labels": [
+    {
+      "for": "pew_section",
+      "text": "Select Pew Section"
+    },
+    {
+      "for": "attendee_name",
+      "text": "Lead Booking Name"
+    },
+    {
+      "for": "contact_email",
+      "text": "Email for Confirmation Voucher"
+    },
+    {
+      "for": "seat_quantity",
+      "text": "Number of Seats in Pew"
+    },
+    {
+      "for": "wheelchair_space",
+      "text": "Requires step-free pew end position for wheelchair / companion"
+    }
+  ],
+  "controls": [
+    {
+      "tag": "select",
+      "type": null,
+      "name": "pew_section",
+      "label": "Select Pew Section"
+    },
+    {
+      "tag": "input",
+      "type": "text",
+      "name": "attendee_name",
+      "label": "Lead Booking Name"
+    },
+    {
+      "tag": "input",
+      "type": "email",
+      "name": "contact_email",
+      "label": "Email for Confirmation Voucher"
+    },
+    {
+      "tag": "input",
+      "type": "number",
+      "name": "seat_quantity",
+      "label": "Number of Seats in Pew"
+    },
+    {
+      "tag": "input",
+      "type": "checkbox",
+      "name": "wheelchair_space",
+      "label": "Requires step-free pew end position for wheelchair / companion"
+    }
+  ],
+  "headings": [
+    "Acoustic Chamber Evening: Purcell & Dowland",
+    "Concert Logistics"
+  ]
+}

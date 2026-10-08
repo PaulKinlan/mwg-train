@@ -1,0 +1,729 @@
+{
+  "title": "Weigh & Refill Zero Waste Pantry — Click & Collect Bulk Staples",
+  "viewport": {
+    "width": 1280,
+    "height": 900
+  },
+  "nodes": [
+    {
+      "tag": "div",
+      "depth": 0,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "header",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "nav",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "main",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "section",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h1",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "form",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 6,
+      "type": "number",
+      "name": "weight_oats",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 6,
+      "type": "number",
+      "name": "weight_lentils",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 6,
+      "type": "number",
+      "name": "weight_almonds",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 6,
+      "type": "number",
+      "name": "weight_rice",
+      "role": null
+    },
+    {
+      "tag": "aside",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h2",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 4,
+      "type": "text",
+      "name": "customer_name",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 4,
+      "type": "email",
+      "name": "customer_email",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "select",
+      "depth": 4,
+      "type": null,
+      "name": "refill_option",
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "select",
+      "depth": 4,
+      "type": null,
+      "name": "pickup_slot",
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "button",
+      "depth": 3,
+      "type": "submit",
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "footer",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    }
+  ],
+  "boxes": [
+    {
+      "tag": "header",
+      "x": 0.0313,
+      "y": 0.0267,
+      "w": 0.9375,
+      "h": 0.056
+    },
+    {
+      "tag": "nav",
+      "x": 0.5616,
+      "y": 0.0313,
+      "w": 0.4072,
+      "h": 0.0267
+    },
+    {
+      "tag": "main",
+      "x": 0.0313,
+      "y": 0.1093,
+      "w": 0.9375,
+      "h": 0.5039
+    },
+    {
+      "tag": "section",
+      "x": 0.0313,
+      "y": 0.1093,
+      "w": 0.5613,
+      "h": 0.4706
+    },
+    {
+      "tag": "h1",
+      "x": 0.0508,
+      "y": 0.1371,
+      "w": 0.5222,
+      "h": 0.0373
+    },
+    {
+      "tag": "form",
+      "x": 0.0508,
+      "y": 0.2491,
+      "w": 0.5222,
+      "h": 0.3031
+    },
+    {
+      "tag": "label",
+      "x": 0.4576,
+      "y": 0.2751,
+      "w": 0.0517,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.5144,
+      "y": 0.2699,
+      "w": 0.0586,
+      "h": 0.0331
+    },
+    {
+      "tag": "label",
+      "x": 0.4576,
+      "y": 0.3509,
+      "w": 0.0517,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.5144,
+      "y": 0.3457,
+      "w": 0.0586,
+      "h": 0.0331
+    },
+    {
+      "tag": "label",
+      "x": 0.4576,
+      "y": 0.4266,
+      "w": 0.0517,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.5144,
+      "y": 0.4214,
+      "w": 0.0586,
+      "h": 0.0331
+    },
+    {
+      "tag": "label",
+      "x": 0.4576,
+      "y": 0.5024,
+      "w": 0.0517,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.5144,
+      "y": 0.4972,
+      "w": 0.0586,
+      "h": 0.0331
+    },
+    {
+      "tag": "aside",
+      "x": 0.6175,
+      "y": 0.1093,
+      "w": 0.3512,
+      "h": 0.5039
+    },
+    {
+      "tag": "h2",
+      "x": 0.637,
+      "y": 0.1371,
+      "w": 0.3122,
+      "h": 0.0373
+    },
+    {
+      "tag": "label",
+      "x": 0.637,
+      "y": 0.1833,
+      "w": 0.3122,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.637,
+      "y": 0.2122,
+      "w": 0.3122,
+      "h": 0.0407
+    },
+    {
+      "tag": "label",
+      "x": 0.637,
+      "y": 0.268,
+      "w": 0.3122,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.637,
+      "y": 0.2968,
+      "w": 0.3122,
+      "h": 0.0407
+    },
+    {
+      "tag": "label",
+      "x": 0.637,
+      "y": 0.3526,
+      "w": 0.3122,
+      "h": 0.0227
+    },
+    {
+      "tag": "select",
+      "x": 0.637,
+      "y": 0.3815,
+      "w": 0.3122,
+      "h": 0.0429
+    },
+    {
+      "tag": "label",
+      "x": 0.637,
+      "y": 0.4395,
+      "w": 0.3122,
+      "h": 0.0227
+    },
+    {
+      "tag": "select",
+      "x": 0.637,
+      "y": 0.4683,
+      "w": 0.3122,
+      "h": 0.0429
+    },
+    {
+      "tag": "button",
+      "x": 0.637,
+      "y": 0.5352,
+      "w": 0.3122,
+      "h": 0.0502
+    },
+    {
+      "tag": "footer",
+      "x": 0.0313,
+      "y": 0.6576,
+      "w": 0.9375,
+      "h": 0.0415
+    }
+  ],
+  "labels": [
+    {
+      "for": "weight_oats",
+      "text": "Weight (g):"
+    },
+    {
+      "for": "weight_lentils",
+      "text": "Weight (g):"
+    },
+    {
+      "for": "weight_almonds",
+      "text": "Weight (g):"
+    },
+    {
+      "for": "weight_rice",
+      "text": "Weight (g):"
+    },
+    {
+      "for": "customer_name",
+      "text": "Customer Name"
+    },
+    {
+      "for": "customer_email",
+      "text": "Email Address"
+    },
+    {
+      "for": "refill_option",
+      "text": "Container Arrangement"
+    },
+    {
+      "for": "pickup_slot",
+      "text": "Collection Window"
+    }
+  ],
+  "controls": [
+    {
+      "tag": "input",
+      "type": "number",
+      "name": "weight_oats",
+      "label": "Weight (g):"
+    },
+    {
+      "tag": "input",
+      "type": "number",
+      "name": "weight_lentils",
+      "label": "Weight (g):"
+    },
+    {
+      "tag": "input",
+      "type": "number",
+      "name": "weight_almonds",
+      "label": "Weight (g):"
+    },
+    {
+      "tag": "input",
+      "type": "number",
+      "name": "weight_rice",
+      "label": "Weight (g):"
+    },
+    {
+      "tag": "input",
+      "type": "text",
+      "name": "customer_name",
+      "label": "Customer Name"
+    },
+    {
+      "tag": "input",
+      "type": "email",
+      "name": "customer_email",
+      "label": "Email Address"
+    },
+    {
+      "tag": "select",
+      "type": null,
+      "name": "refill_option",
+      "label": "Container Arrangement"
+    },
+    {
+      "tag": "select",
+      "type": null,
+      "name": "pickup_slot",
+      "label": "Collection Window"
+    }
+  ],
+  "headings": [
+    "Pre-Pack Bulk Refill Order",
+    "Jar Drop-off & Collection"
+  ]
+}

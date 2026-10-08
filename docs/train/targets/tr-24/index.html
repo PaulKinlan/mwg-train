@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Market Cross Farmers Market — Stallholder Pitch &amp; Power Booking</title>
+  <style>
+    :root {
+      --fm-red: #991b1b;
+      --fm-straw: #fefce8;
+      --fm-green: #166534;
+      --fm-card: #ffffff;
+      --fm-border: #fecaca;
+      --fm-text: #1c1917;
+      --fm-muted: #78716c;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #fafaf9; color: var(--fm-text); line-height: 1.5; padding: 1.5rem; }
+    .fm-wrap { max-width: 1200px; margin: 0 auto; }
+    header.fm-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--fm-red); padding-bottom: 1rem; margin-bottom: 1.5rem; }
+    .fm-brand { font-size: 1.35rem; font-weight: 800; color: var(--fm-red); }
+    nav.fm-nav a { text-decoration: none; color: var(--fm-muted); font-size: 0.9rem; margin-left: 1.25rem; font-weight: 600; }
+    nav.fm-nav a[aria-current="page"] { color: var(--fm-red); border-bottom: 2px solid var(--fm-red); padding-bottom: 0.2rem; }
+    .fm-grid { display: grid; grid-template-columns: 1.8fr 1.2fr; gap: 2rem; align-items: start; }
+    .fm-card { background: var(--fm-card); border: 1px solid #e7e5e4; border-radius: 8px; padding: 1.5rem; }
+    .fm-card h1, .fm-card h2 { font-size: 1.35rem; color: var(--fm-red); margin-bottom: 0.5rem; }
+    .fm-field { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 0.85rem; }
+    .fm-field label { font-size: 0.85rem; font-weight: 600; color: var(--fm-text); }
+    .fm-field input, .fm-field select { padding: 0.55rem; border: 1px solid #d6d3d1; border-radius: 6px; font-size: 0.95rem; }
+    .fm-btn { background: var(--fm-red); color: #fff; border: none; font-size: 1rem; font-weight: 700; padding: 0.85rem; border-radius: 6px; cursor: pointer; width: 100%; margin-top: 0.5rem; }
+    .fm-btn:hover { background: #7f1d1d; }
+    .fm-stall-map { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; margin-top: 1rem; }
+    .fm-stall-box { border: 1px solid #d6d3d1; border-radius: 4px; padding: 0.75rem 0.5rem; text-align: center; font-size: 0.8rem; background: #f5f5f4; }
+    .fm-stall-box.taken { background: #fee2e2; border-color: #fca5a5; color: #991b1b; }
+    .fm-stall-box.available { background: #dcfce7; border-color: #86efac; color: #166534; font-weight: 700; }
+    footer.fm-foot { margin-top: 2.5rem; border-top: 1px solid #e7e5e4; padding-top: 1rem; text-align: center; font-size: 0.85rem; color: var(--fm-muted); }
+  </style>
+</head>
+<body>
+  <div class="fm-wrap">
+    <header class="fm-head">
+      <div class="fm-brand">Market Cross Farmers Market (Bi-Weekly)</div>
+      <nav class="fm-nav" aria-label="Market Nav">
+        <a href="/">Trader Charter</a>
+        <a href="/pitches" aria-current="page">Pitch Allocation</a>
+        <a href="/market-layout">Square Map</a>
+        <a href="/bookings">Vendor Passes</a>
+      </nav>
+    </header>
+    <main class="fm-grid">
+      <section class="fm-card">
+        <h1>Stallholder Pitch Reservation &amp; Power Hookup</h1>
+        <p style="font-size:0.9rem;color:var(--fm-muted);margin-bottom:1.25rem">Reserve trading pitches for upcoming Saturday farmers market on the historic Market Cross cobbles.</p>
+        <form id="pitch-booking-form" method="post" action="/pitches/book">
+          <div class="fm-field">
+            <label for="trading_name">Vendor / Farm Trading Name</label>
+            <input type="text" id="trading_name" name="trading_name" required placeholder="Blackmore Vale Cheese Co.">
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+            <div class="fm-field">
+              <label for="produce_category">Primary Produce Category</label>
+              <select id="produce_category" name="produce_category" required>
+                <option value="dairy" selected>Artisan Cheese &amp; Raw Milk</option>
+                <option value="meat">Grass-fed Beef, Lamb &amp; Game</option>
+                <option value="bakery">Heritage Bread &amp; Pastries</option>
+                <option value="veg">Organic Seasonal Vegetables</option>
+                <option value="hot-food">Hot Street Food (Gas / Elec)</option>
+              </select>
+            </div>
+            <div class="fm-field">
+              <label for="market_saturday">Market Date</label>
+              <select id="market_saturday" name="market_saturday" required>
+                <option value="2026-10-17">Saturday 17 Oct (08:30 - 14:00)</option>
+                <option value="2026-10-31">Saturday 31 Oct (Halloween Market)</option>
+                <option value="2026-11-14">Saturday 14 Nov (Winter Produce)</option>
+              </select>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+            <div class="fm-field">
+              <label for="pitch_id">Preferred Pitch Slot</label>
+              <select id="pitch_id" name="pitch_id" required>
+                <option value="pitch-04">Pitch 04 — North Covered Arcade (3m x 3m)</option>
+                <option value="pitch-07" selected>Pitch 07 — Central Cross Cobbles (3m x 3m)</option>
+                <option value="pitch-11">Pitch 11 — South Perimeter Van Space</option>
+              </select>
+            </div>
+            <div class="fm-field">
+              <label for="power_supply">Electrical Hookup Required</label>
+              <select id="power_supply" name="power_supply" required>
+                <option value="none">No Power Needed (Ambient Goods)</option>
+                <option value="13a-single" selected>13A Single Socket (Refrigeration Display)</option>
+                <option value="16a-commando">16A Blue Commando (Heavy Hot Plate)</option>
+              </select>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:0.5rem;margin:0.75rem 0">
+            <input type="checkbox" id="hygiene_rating" name="hygiene_rating" value="yes" required>
+            <label for="hygiene_rating" style="font-size:0.85rem">I certify our business holds Local Authority Food Hygiene Rating 4 or 5 and £5m Public Liability Insurance.</label>
+          </div>
+          <button type="submit" class="fm-btn">Reserve Market Trading Pitch</button>
+        </form>
+      </section>
+      <aside class="fm-card">
+        <h2>Market Square Pitch Status</h2>
+        <div class="fm-stall-map">
+          <div class="fm-stall-box taken">P01<br>Bakery</div>
+          <div class="fm-stall-box taken">P02<br>Butcher</div>
+          <div class="fm-stall-box taken">P03<br>Greens</div>
+          <div class="fm-stall-box available">P04<br>Open</div>
+          <div class="fm-stall-box taken">P05<br>Cider</div>
+          <div class="fm-stall-box taken">P06<br>Fish</div>
+          <div class="fm-stall-box available">P07<br>Open</div>
+          <div class="fm-stall-box taken">P08<br>Pies</div>
+        </div>
+      </aside>
+    </main>
+    <footer class="fm-foot">
+      <p>Market Cross Farmers Market Committee • Ancient Market Rights Royal Charter 1324 • Parish Square</p>
+    </footer>
+  </div>
+</body>
+</html>

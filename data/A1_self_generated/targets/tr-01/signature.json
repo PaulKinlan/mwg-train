@@ -1,0 +1,1044 @@
+{
+  "title": "VeloFix Mobile Mechanic — Doorstep Bicycle Tuning & Repair",
+  "viewport": {
+    "width": 1280,
+    "height": 900
+  },
+  "nodes": [
+    {
+      "tag": "div",
+      "depth": 0,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "header",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "nav",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "main",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "section",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h1",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "form",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "fieldset",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "legend",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 8,
+      "type": "radio",
+      "name": "package",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 8,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 8,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 8,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 8,
+      "type": "radio",
+      "name": "package",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 8,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 8,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 8,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 8,
+      "type": "radio",
+      "name": "package",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 8,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 8,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 8,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "fieldset",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "legend",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 7,
+      "type": "text",
+      "name": "customer_name",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 7,
+      "type": "tel",
+      "name": "contact_phone",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 7,
+      "type": "text",
+      "name": "service_address",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 7,
+      "type": "text",
+      "name": "service_postcode",
+      "role": null
+    },
+    {
+      "tag": "fieldset",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "legend",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 7,
+      "type": "date",
+      "name": "appointment_date",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "select",
+      "depth": 7,
+      "type": null,
+      "name": "time_slot",
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 8,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 8,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 8,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "textarea",
+      "depth": 6,
+      "type": null,
+      "name": "bike_notes",
+      "role": null
+    },
+    {
+      "tag": "button",
+      "depth": 4,
+      "type": "submit",
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "aside",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h2",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "span",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "ul",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "li",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "strong",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "li",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "strong",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "li",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "strong",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "li",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "strong",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h2",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "ul",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "li",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "li",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "li",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "footer",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    }
+  ],
+  "boxes": [
+    {
+      "tag": "header",
+      "x": 0.0313,
+      "y": 0.0267,
+      "w": 0.9375,
+      "h": 0.0633
+    },
+    {
+      "tag": "nav",
+      "x": 0.635,
+      "y": 0.0278,
+      "w": 0.3337,
+      "h": 0.0378
+    },
+    {
+      "tag": "main",
+      "x": 0.0313,
+      "y": 0.1167,
+      "w": 0.9375,
+      "h": 0.9795
+    },
+    {
+      "tag": "section",
+      "x": 0.0313,
+      "y": 0.1167,
+      "w": 0.5866,
+      "h": 0.9795
+    },
+    {
+      "tag": "h1",
+      "x": 0.0539,
+      "y": 0.1489,
+      "w": 0.5413,
+      "h": 0.0467
+    },
+    {
+      "tag": "form",
+      "x": 0.0539,
+      "y": 0.2578,
+      "w": 0.5413,
+      "h": 0.8061
+    },
+    {
+      "tag": "fieldset",
+      "x": 0.0539,
+      "y": 0.2578,
+      "w": 0.5413,
+      "h": 0.2066
+    },
+    {
+      "tag": "label",
+      "x": 0.0773,
+      "y": 0.3229,
+      "w": 0.145,
+      "h": 0.1082
+    },
+    {
+      "tag": "input",
+      "x": 0.1448,
+      "y": 0.3251,
+      "w": 0.0102,
+      "h": 0.0144
+    },
+    {
+      "tag": "label",
+      "x": 0.252,
+      "y": 0.3229,
+      "w": 0.145,
+      "h": 0.1082
+    },
+    {
+      "tag": "input",
+      "x": 0.3195,
+      "y": 0.3251,
+      "w": 0.0102,
+      "h": 0.0144
+    },
+    {
+      "tag": "label",
+      "x": 0.4267,
+      "y": 0.3229,
+      "w": 0.145,
+      "h": 0.1082
+    },
+    {
+      "tag": "input",
+      "x": 0.4942,
+      "y": 0.3251,
+      "w": 0.0102,
+      "h": 0.0144
+    },
+    {
+      "tag": "fieldset",
+      "x": 0.0539,
+      "y": 0.4866,
+      "w": 0.5413,
+      "h": 0.2224
+    },
+    {
+      "tag": "label",
+      "x": 0.0672,
+      "y": 0.5373,
+      "w": 0.2511,
+      "h": 0.0233
+    },
+    {
+      "tag": "input",
+      "x": 0.0672,
+      "y": 0.5669,
+      "w": 0.2511,
+      "h": 0.0424
+    },
+    {
+      "tag": "label",
+      "x": 0.3308,
+      "y": 0.5373,
+      "w": 0.2511,
+      "h": 0.0233
+    },
+    {
+      "tag": "input",
+      "x": 0.3308,
+      "y": 0.5669,
+      "w": 0.2511,
+      "h": 0.0424
+    },
+    {
+      "tag": "label",
+      "x": 0.0672,
+      "y": 0.6182,
+      "w": 0.2511,
+      "h": 0.0233
+    },
+    {
+      "tag": "input",
+      "x": 0.0672,
+      "y": 0.6477,
+      "w": 0.2511,
+      "h": 0.0424
+    },
+    {
+      "tag": "label",
+      "x": 0.3308,
+      "y": 0.6182,
+      "w": 0.2511,
+      "h": 0.0233
+    },
+    {
+      "tag": "input",
+      "x": 0.3308,
+      "y": 0.6477,
+      "w": 0.2511,
+      "h": 0.0424
+    },
+    {
+      "tag": "fieldset",
+      "x": 0.0539,
+      "y": 0.7313,
+      "w": 0.5413,
+      "h": 0.2513
+    },
+    {
+      "tag": "label",
+      "x": 0.0672,
+      "y": 0.782,
+      "w": 0.2511,
+      "h": 0.0233
+    },
+    {
+      "tag": "input",
+      "x": 0.0672,
+      "y": 0.8115,
+      "w": 0.2511,
+      "h": 0.0458
+    },
+    {
+      "tag": "label",
+      "x": 0.3308,
+      "y": 0.782,
+      "w": 0.2511,
+      "h": 0.0233
+    },
+    {
+      "tag": "select",
+      "x": 0.3308,
+      "y": 0.8115,
+      "w": 0.2511,
+      "h": 0.0447
+    },
+    {
+      "tag": "label",
+      "x": 0.0672,
+      "y": 0.8706,
+      "w": 0.5147,
+      "h": 0.0233
+    },
+    {
+      "tag": "textarea",
+      "x": 0.0672,
+      "y": 0.9002,
+      "w": 0.5147,
+      "h": 0.0635
+    },
+    {
+      "tag": "button",
+      "x": 0.0539,
+      "y": 1.0137,
+      "w": 0.5413,
+      "h": 0.0502
+    },
+    {
+      "tag": "aside",
+      "x": 0.6428,
+      "y": 0.1167,
+      "w": 0.3259,
+      "h": 0.4836
+    },
+    {
+      "tag": "h2",
+      "x": 0.6593,
+      "y": 0.14,
+      "w": 0.2931,
+      "h": 0.0307
+    },
+    {
+      "tag": "ul",
+      "x": 0.6593,
+      "y": 0.2276,
+      "w": 0.2931,
+      "h": 0.1467
+    },
+    {
+      "tag": "li",
+      "x": 0.6593,
+      "y": 0.2276,
+      "w": 0.2931,
+      "h": 0.024
+    },
+    {
+      "tag": "li",
+      "x": 0.6593,
+      "y": 0.2605,
+      "w": 0.2931,
+      "h": 0.024
+    },
+    {
+      "tag": "li",
+      "x": 0.6593,
+      "y": 0.2934,
+      "w": 0.2931,
+      "h": 0.024
+    },
+    {
+      "tag": "li",
+      "x": 0.6593,
+      "y": 0.3262,
+      "w": 0.2931,
+      "h": 0.048
+    },
+    {
+      "tag": "h2",
+      "x": 0.6593,
+      "y": 0.4432,
+      "w": 0.2931,
+      "h": 0.0307
+    },
+    {
+      "tag": "ul",
+      "x": 0.6593,
+      "y": 0.4872,
+      "w": 0.2931,
+      "h": 0.0898
+    },
+    {
+      "tag": "li",
+      "x": 0.6593,
+      "y": 0.4872,
+      "w": 0.2931,
+      "h": 0.024
+    },
+    {
+      "tag": "li",
+      "x": 0.6593,
+      "y": 0.5201,
+      "w": 0.2931,
+      "h": 0.024
+    },
+    {
+      "tag": "li",
+      "x": 0.6593,
+      "y": 0.553,
+      "w": 0.2931,
+      "h": 0.024
+    },
+    {
+      "tag": "footer",
+      "x": 0.0313,
+      "y": 1.1317,
+      "w": 0.9375,
+      "h": 0.0415
+    }
+  ],
+  "labels": [
+    {
+      "for": "pkg-commuter",
+      "text": "Commuter Tune\n                  £45\n                  Brakes & Gears"
+    },
+    {
+      "for": "pkg-general",
+      "text": "Full Overhaul\n                  £85\n                  Drivetrain & Bearings"
+    },
+    {
+      "for": "pkg-pro",
+      "text": "Race Precision\n                  £135\n                  Hydraulics & Wheels"
+    },
+    {
+      "for": "customer_name",
+      "text": "Full Name"
+    },
+    {
+      "for": "contact_phone",
+      "text": "Phone Number (Required)"
+    },
+    {
+      "for": "service_address",
+      "text": "Street Address"
+    },
+    {
+      "for": "service_postcode",
+      "text": "Postcode"
+    },
+    {
+      "for": "appointment_date",
+      "text": "Preferred Date"
+    },
+    {
+      "for": "time_slot",
+      "text": "Time Window"
+    },
+    {
+      "for": "bike_notes",
+      "text": "Bicycle Make, Model & Known Issues"
+    }
+  ],
+  "controls": [
+    {
+      "tag": "input",
+      "type": "radio",
+      "name": "package",
+      "label": "Commuter Tune\n                  £45\n                  Brakes & Gears"
+    },
+    {
+      "tag": "input",
+      "type": "radio",
+      "name": "package",
+      "label": "Full Overhaul\n                  £85\n                  Drivetrain & Bearings"
+    },
+    {
+      "tag": "input",
+      "type": "radio",
+      "name": "package",
+      "label": "Race Precision\n                  £135\n                  Hydraulics & Wheels"
+    },
+    {
+      "tag": "input",
+      "type": "text",
+      "name": "customer_name",
+      "label": "Full Name"
+    },
+    {
+      "tag": "input",
+      "type": "tel",
+      "name": "contact_phone",
+      "label": "Phone Number (Required)"
+    },
+    {
+      "tag": "input",
+      "type": "text",
+      "name": "service_address",
+      "label": "Street Address"
+    },
+    {
+      "tag": "input",
+      "type": "text",
+      "name": "service_postcode",
+      "label": "Postcode"
+    },
+    {
+      "tag": "input",
+      "type": "date",
+      "name": "appointment_date",
+      "label": "Preferred Date"
+    },
+    {
+      "tag": "select",
+      "type": null,
+      "name": "time_slot",
+      "label": "Time Window"
+    },
+    {
+      "tag": "textarea",
+      "type": null,
+      "name": "bike_notes",
+      "label": "Bicycle Make, Model & Known Issues"
+    }
+  ],
+  "headings": [
+    "Schedule Doorstep Bicycle Tune-Up",
+    "Van Service Coverage",
+    "What happens next?"
+  ]
+}

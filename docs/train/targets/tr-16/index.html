@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Heirloom Perennial Repository — Cuttings &amp; Seed Strain Index</title>
+  <style>
+    :root {
+      --hp-sage: #15803d;
+      --hp-purple: #7c3aed;
+      --hp-card: #ffffff;
+      --hp-border: #e2e8f0;
+      --hp-bg: #f8fafc;
+      --hp-text: #1e293b;
+      --hp-muted: #64748b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: "Georgia", serif; background: var(--hp-bg); color: var(--hp-text); line-height: 1.5; padding: 1.5rem; }
+    .hp-shell { max-width: 1200px; margin: 0 auto; }
+    header.hp-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--hp-sage); padding-bottom: 1rem; margin-bottom: 1.5rem; }
+    .hp-brand { font-size: 1.4rem; font-weight: 700; color: var(--hp-sage); }
+    nav.hp-nav a { font-family: -apple-system, sans-serif; text-decoration: none; color: var(--hp-muted); font-size: 0.9rem; margin-left: 1.25rem; font-weight: 600; }
+    nav.hp-nav a[aria-current="page"] { color: var(--hp-sage); text-decoration: underline; }
+    .hp-grid { display: grid; grid-template-columns: 1.8fr 1.2fr; gap: 2rem; align-items: start; }
+    .hp-card { background: var(--hp-card); border: 1px solid var(--hp-border); border-radius: 8px; padding: 1.5rem; }
+    .hp-card h1, .hp-card h2 { font-size: 1.35rem; color: var(--hp-sage); margin-bottom: 0.75rem; }
+    .hp-filter-bar { display: flex; gap: 1rem; margin-bottom: 1.25rem; font-family: -apple-system, sans-serif; }
+    .hp-field { display: flex; flex-direction: column; gap: 0.35rem; flex: 1; }
+    .hp-field label { font-size: 0.85rem; font-weight: 600; color: var(--hp-text); }
+    .hp-field input, .hp-field select { padding: 0.55rem; border: 1px solid var(--hp-border); border-radius: 6px; font-size: 0.95rem; }
+    table.hp-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; font-family: -apple-system, sans-serif; }
+    table.hp-table th, table.hp-table td { padding: 0.6rem 0.5rem; border-bottom: 1px solid var(--hp-border); text-align: left; }
+    table.hp-table th { background: #f1f5f9; color: var(--hp-text); font-weight: 700; }
+    .hp-btn { font-family: -apple-system, sans-serif; background: var(--hp-sage); color: #fff; border: none; font-size: 1rem; font-weight: 700; padding: 0.75rem; border-radius: 6px; cursor: pointer; width: 100%; margin-top: 0.5rem; }
+    .hp-btn:hover { background: #166534; }
+    footer.hp-foot { margin-top: 2.5rem; border-top: 1px solid var(--hp-border); padding-top: 1rem; text-align: center; font-family: -apple-system, sans-serif; font-size: 0.85rem; color: var(--hp-muted); }
+  </style>
+</head>
+<body>
+  <div class="hp-shell">
+    <header class="hp-head">
+      <div class="hp-brand">Heirloom Perennial Repository</div>
+      <nav class="hp-nav" aria-label="Repository Nav">
+        <a href="/">About the Seed Bank</a>
+        <a href="/cultivars" aria-current="page">Living Cultivars</a>
+        <a href="/request">Request Cuttings</a>
+        <a href="/requests">Collection Slips</a>
+      </nav>
+    </header>
+    <main class="hp-grid">
+      <section class="hp-card">
+        <h1>Rare Perennial Cultivars &amp; Propagation Bank</h1>
+        <div class="hp-filter-bar">
+          <div class="hp-field">
+            <label for="sun_exposure">Sun Exposure</label>
+            <select id="sun_exposure" name="sun_exposure">
+              <option value="full-sun" selected>Full Sun (6+ hrs daily)</option>
+              <option value="part-shade">Partial Shade</option>
+              <option value="damp-shade">Damp Woodland Shade</option>
+            </select>
+          </div>
+          <div class="hp-field">
+            <label for="season">Flowering Season</label>
+            <select id="season" name="season">
+              <option value="summer">Late Summer</option>
+              <option value="autumn" selected>Autumn (Sept - Nov)</option>
+              <option value="spring">Early Spring</option>
+            </select>
+          </div>
+        </div>
+        <table class="hp-table">
+          <thead>
+            <tr>
+              <th>Botanical Name</th>
+              <th>Common Name</th>
+              <th>Soil</th>
+              <th>Cuttings Available</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><em>Salvia confertiflora</em></td>
+              <td>Red Velvet Sage</td>
+              <td>Well-drained</td>
+              <td><strong>6 bundles</strong></td>
+            </tr>
+            <tr>
+              <td><em>Echinacea pallida</em> 'Hula Dancer'</td>
+              <td>Pale Purple Coneflower</td>
+              <td>Chalky loam</td>
+              <td><strong>12 bundles</strong></td>
+            </tr>
+            <tr>
+              <td><em>Actaea matsumurae</em></td>
+              <td>White Pearl Bugbane</td>
+              <td>Moist humus</td>
+              <td><strong>4 bundles</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+      <aside class="hp-card">
+        <h2>Reserve Propagation Cuttings</h2>
+        <form id="cutting-request-form" method="post" action="/request">
+          <div class="hp-field" style="margin-bottom:0.85rem">
+            <label for="member_id">Botanical Society Member ID</label>
+            <input type="text" id="member_id" name="member_id" required placeholder="HPR-302">
+          </div>
+          <div class="hp-field" style="margin-bottom:0.85rem">
+            <label for="specimen_name">Specimen Variety Requested</label>
+            <input type="text" id="specimen_name" name="specimen_name" required value="Salvia confertiflora">
+          </div>
+          <div class="hp-field" style="margin-bottom:0.85rem">
+            <label for="quantity">Number of Stem Cuttings</label>
+            <input type="number" id="quantity" name="quantity" min="1" max="5" value="2" required>
+          </div>
+          <div class="hp-field" style="margin-bottom:0.85rem">
+            <label for="pickup_date">Collection Date from Glasshouse</label>
+            <input type="date" id="pickup_date" name="pickup_date" value="2026-10-22" required>
+          </div>
+          <button type="submit" class="hp-btn">Submit Cutting Reservation</button>
+        </form>
+      </aside>
+    </main>
+    <footer class="hp-foot">
+      <p>Heirloom Perennial Repository • Conservation Glasshouses, Devon • Dedicated to Plant Genetic Biodiversity</p>
+    </footer>
+  </div>
+</body>
+</html>

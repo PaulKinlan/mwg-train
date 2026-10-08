@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Weigh &amp; Refill Zero Waste Pantry — Click &amp; Collect Bulk Staples</title>
+  <style>
+    :root {
+      --wr-kraft: #78350f;
+      --wr-green: #15803d;
+      --wr-card: #ffffff;
+      --wr-border: #e7e5e4;
+      --wr-bg: #fafaf9;
+      --wr-text: #292524;
+      --wr-muted: #78716c;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--wr-bg); color: var(--wr-text); line-height: 1.5; padding: 1.5rem; }
+    .wr-shell { max-width: 1200px; margin: 0 auto; }
+    header.wr-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--wr-green); padding-bottom: 1rem; margin-bottom: 1.5rem; }
+    .wr-brand { font-size: 1.35rem; font-weight: 800; color: var(--wr-green); }
+    nav.wr-nav a { text-decoration: none; color: var(--wr-muted); font-size: 0.9rem; margin-left: 1.25rem; font-weight: 600; }
+    nav.wr-nav a[aria-current="page"] { color: var(--wr-green); border-bottom: 2px solid var(--wr-green); padding-bottom: 0.2rem; }
+    .wr-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; align-items: start; }
+    .wr-card { background: var(--wr-card); border: 1px solid var(--wr-border); border-radius: 8px; padding: 1.5rem; }
+    .wr-card h1, .wr-card h2 { font-size: 1.4rem; color: var(--wr-kraft); margin-bottom: 0.5rem; }
+    .wr-item { display: grid; grid-template-columns: 1fr auto; gap: 1rem; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid #f5f5f4; }
+    .wr-item-title { font-weight: 700; font-size: 1rem; color: var(--wr-text); }
+    .wr-item-desc { font-size: 0.8rem; color: var(--wr-muted); }
+    .wr-field { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 0.85rem; }
+    .wr-field label { font-size: 0.85rem; font-weight: 600; color: var(--wr-text); }
+    .wr-field input, .wr-field select { padding: 0.55rem; border: 1px solid var(--wr-border); border-radius: 6px; font-size: 0.95rem; }
+    .wr-btn { background: var(--wr-green); color: #fff; border: none; font-size: 1rem; font-weight: 700; padding: 0.85rem; border-radius: 6px; cursor: pointer; width: 100%; margin-top: 0.5rem; }
+    .wr-btn:hover { background: #166534; }
+    footer.wr-foot { margin-top: 2.5rem; border-top: 1px solid var(--wr-border); padding-top: 1rem; text-align: center; font-size: 0.85rem; color: var(--wr-muted); }
+  </style>
+</head>
+<body>
+  <div class="wr-shell">
+    <header class="wr-head">
+      <div class="wr-brand">♻ Weigh &amp; Refill Zero Waste Pantry</div>
+      <nav class="wr-nav" aria-label="Pantry Nav">
+        <a href="/">Refill Guide</a>
+        <a href="/products" aria-current="page">Pantry Bulk Goods</a>
+        <a href="/basket">My Refill Basket</a>
+        <a href="/orders">Collection Slips</a>
+      </nav>
+    </header>
+    <main class="wr-grid">
+      <section class="wr-card">
+        <h1>Pre-Pack Bulk Refill Order</h1>
+        <p style="font-size:0.9rem;color:var(--wr-muted);margin-bottom:1rem">Select organic staples by weight in grams. Bring your clean dry jars or borrow sterilized pantry deposit jars on collection.</p>
+        <form id="bulk-refill-form" method="post" action="/checkout">
+          <div class="wr-item">
+            <div>
+              <div class="wr-item-title">Organic Rolled Jumbo Porridge Oats</div>
+              <div class="wr-item-desc">British grown gluten-free certified oats • £0.35 per 100g</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:0.4rem">
+              <label for="weight_oats" style="font-size:0.85rem">Weight (g):</label>
+              <input type="number" id="weight_oats" name="weight_oats" min="0" max="5000" step="50" value="750" style="width:75px;padding:0.4rem;border:1px solid #d6d3d1;border-radius:4px;text-align:center">
+            </div>
+          </div>
+          <div class="wr-item">
+            <div>
+              <div class="wr-item-title">Organic Green French Puy Lentils</div>
+              <div class="wr-item-desc">Puy variety whole lentils • £0.55 per 100g</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:0.4rem">
+              <label for="weight_lentils" style="font-size:0.85rem">Weight (g):</label>
+              <input type="number" id="weight_lentils" name="weight_lentils" min="0" max="3000" step="50" value="500" style="width:75px;padding:0.4rem;border:1px solid #d6d3d1;border-radius:4px;text-align:center">
+            </div>
+          </div>
+          <div class="wr-item">
+            <div>
+              <div class="wr-item-title">Raw California Organic Almonds</div>
+              <div class="wr-item-desc">Unsalted, whole skin-on almonds • £1.20 per 100g</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:0.4rem">
+              <label for="weight_almonds" style="font-size:0.85rem">Weight (g):</label>
+              <input type="number" id="weight_almonds" name="weight_almonds" min="0" max="2000" step="50" value="300" style="width:75px;padding:0.4rem;border:1px solid #d6d3d1;border-radius:4px;text-align:center">
+            </div>
+          </div>
+          <div class="wr-item">
+            <div>
+              <div class="wr-item-title">Organic Brown Basmati Rice</div>
+              <div class="wr-item-desc">Fairtrade long grain whole grain rice • £0.42 per 100g</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:0.4rem">
+              <label for="weight_rice" style="font-size:0.85rem">Weight (g):</label>
+              <input type="number" id="weight_rice" name="weight_rice" min="0" max="5000" step="50" value="1000" style="width:75px;padding:0.4rem;border:1px solid #d6d3d1;border-radius:4px;text-align:center">
+            </div>
+          </div>
+      </section>
+      <aside class="wr-card">
+        <h2>Jar Drop-off &amp; Collection</h2>
+        <div class="wr-field">
+          <label for="customer_name">Customer Name</label>
+          <input type="text" id="customer_name" name="customer_name" required placeholder="Fiona Gallagher">
+        </div>
+        <div class="wr-field">
+          <label for="customer_email">Email Address</label>
+          <input type="email" id="customer_email" name="customer_email" required placeholder="fiona@example.test">
+        </div>
+        <div class="wr-field">
+          <label for="refill_option">Container Arrangement</label>
+          <select id="refill_option" name="refill_option" required>
+            <option value="drop-off">I will drop off my labelled clean jars morning of pickup</option>
+            <option value="deposit-jars">Borrow returnable deposit glass jars (£1/jar)</option>
+            <option value="brown-bags">Pack into 100% recycled unbleached paper sacks</option>
+          </select>
+        </div>
+        <div class="wr-field">
+          <label for="pickup_slot">Collection Window</label>
+          <select id="pickup_slot" name="pickup_slot" required>
+            <option value="thu-pm">Thursday 15 Oct (14:00 - 18:00)</option>
+            <option value="fri-pm">Friday 16 Oct (14:00 - 18:00)</option>
+            <option value="sat-am">Saturday 17 Oct (10:00 - 14:00)</option>
+          </select>
+        </div>
+        <button type="submit" class="wr-btn">Submit Pre-Pack Order</button>
+        </form>
+      </aside>
+    </main>
+    <footer class="wr-foot">
+      <p>Weigh &amp; Refill Zero Waste Pantry • 19 Greenmarket Row • Plastic-Free Community Retail</p>
+    </footer>
+  </div>
+</body>
+</html>

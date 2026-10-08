@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CleanTech Trades Network — Heat Pump &amp; Solar Apprenticeships</title>
+  <style>
+    :root {
+      --ct-slate: #0f172a;
+      --ct-surface: #1e293b;
+      --ct-teal: #0d9488;
+      --ct-amber: #f59e0b;
+      --ct-border: #334155;
+      --ct-text: #f8fafc;
+      --ct-muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--ct-slate); color: var(--ct-text); line-height: 1.5; padding: 1.5rem; }
+    .ct-shell { max-width: 1200px; margin: 0 auto; }
+    header.ct-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--ct-teal); padding-bottom: 1rem; margin-bottom: 1.5rem; }
+    .ct-brand { font-size: 1.35rem; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 0.5rem; }
+    nav.ct-nav a { text-decoration: none; color: var(--ct-muted); font-size: 0.9rem; margin-left: 1.25rem; font-weight: 600; }
+    nav.ct-nav a[aria-current="page"] { color: var(--ct-teal); border-bottom: 2px solid var(--ct-teal); padding-bottom: 0.2rem; }
+    .ct-grid { display: grid; grid-template-columns: 1.8fr 1.2fr; gap: 2rem; align-items: start; }
+    .ct-card { background: var(--ct-surface); border: 1px solid var(--ct-border); border-radius: 8px; padding: 1.5rem; }
+    .ct-card h1, .ct-card h2 { font-size: 1.4rem; color: #fff; margin-bottom: 0.75rem; }
+    .ct-job-item { background: #0f172a; border: 1px solid var(--ct-border); border-radius: 6px; padding: 1rem; margin-bottom: 1rem; }
+    .ct-job-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.25rem; }
+    .ct-job-title { font-size: 1.1rem; font-weight: 700; color: var(--ct-teal); }
+    .ct-wage-badge { background: rgba(245,158,11,0.15); color: var(--ct-amber); font-size: 0.8rem; font-weight: 700; padding: 0.2rem 0.5rem; border-radius: 4px; }
+    .ct-job-meta { font-size: 0.85rem; color: var(--ct-muted); margin-bottom: 0.5rem; }
+    .ct-field { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 0.85rem; }
+    .ct-field label { font-size: 0.85rem; font-weight: 600; color: var(--ct-muted); }
+    .ct-field input, .ct-field select, .ct-field textarea { background: #0f172a; border: 1px solid var(--ct-border); color: #fff; padding: 0.6rem; border-radius: 6px; font-size: 0.95rem; }
+    .ct-btn { background: var(--ct-teal); color: #fff; border: none; font-size: 1rem; font-weight: 700; padding: 0.85rem; border-radius: 6px; cursor: pointer; width: 100%; margin-top: 0.5rem; }
+    .ct-btn:hover { background: #0f766e; }
+    footer.ct-foot { margin-top: 2.5rem; border-top: 1px solid var(--ct-border); padding-top: 1rem; text-align: center; font-size: 0.85rem; color: var(--ct-muted); }
+  </style>
+</head>
+<body>
+  <div class="ct-shell">
+    <header class="ct-head">
+      <div class="ct-brand">⚡ CleanTech Trades Network</div>
+      <nav class="ct-nav" aria-label="Job Board Nav">
+        <a href="/">Trade Overview</a>
+        <a href="/jobs" aria-current="page">Apprenticeship Vacancies</a>
+        <a href="/employers">Contractor Network</a>
+        <a href="/applications">Candidate Status</a>
+      </nav>
+    </header>
+    <main class="ct-grid">
+      <section class="ct-card">
+        <h1>Renewable Energy Apprenticeship Opportunities</h1>
+        <div style="display:flex;gap:0.5rem;margin-bottom:1.25rem">
+          <input type="search" id="trade-search" placeholder="Search vacancies by location or skill..." style="flex:1;background:#0f172a;border:1px solid var(--ct-border);color:#fff;padding:0.5rem;border-radius:4px">
+        </div>
+        <div class="ct-job-item">
+          <div class="ct-job-header">
+            <div class="ct-job-title">Level 3 Heat Pump Installation Technician Apprentice</div>
+            <span class="ct-wage-badge">£18,500 - £22,000 / yr</span>
+          </div>
+          <div class="ct-job-meta">Apex Geothermal &amp; Air Solutions • Exeter &amp; East Devon</div>
+          <p style="font-size:0.9rem;color:var(--ct-muted)">4-day work placement + 1-day block release college study. Learn hydronic balancing, refrigerant loop testing, and MCS compliance.</p>
+        </div>
+        <div class="ct-job-item">
+          <div class="ct-job-header">
+            <div class="ct-job-title">Commercial Solar PV &amp; Battery Storage Trainee</div>
+            <span class="ct-wage-badge">£19,000 / yr</span>
+          </div>
+          <div class="ct-job-meta">Solaria Commercial Systems • Taunton Depot</div>
+          <p style="font-size:0.9rem;color:var(--ct-muted)">Rooftop mounting systems, DC string wiring, inverter commissioning, and grid tie isolation procedures.</p>
+        </div>
+      </section>
+      <aside class="ct-card">
+        <h2>Submit Candidate Application</h2>
+        <form id="apprentice-application" method="post" action="/jobs/apply">
+          <div class="ct-field">
+            <label for="applicant_name">Candidate Full Name</label>
+            <input type="text" id="applicant_name" name="applicant_name" required placeholder="Liam Brooks">
+          </div>
+          <div class="ct-field">
+            <label for="applicant_email">Email Address</label>
+            <input type="email" id="applicant_email" name="applicant_email" required placeholder="liam@example.test">
+          </div>
+          <div class="ct-field">
+            <label for="target_trade">Target Discipline</label>
+            <select id="target_trade" name="target_trade" required>
+              <option value="heat-pumps" selected>Air Source / Ground Source Heat Pumps</option>
+              <option value="solar-pv">Solar Photovoltaic &amp; Battery Systems</option>
+              <option value="ev-charging">Commercial EV Charging Infrastructure</option>
+            </select>
+          </div>
+          <div class="ct-field">
+            <label for="qualifications_summary">GCSE / Technical Qualifications</label>
+            <textarea id="qualifications_summary" name="qualifications_summary" rows="3" placeholder="e.g. GCSE Maths &amp; English Grade 5+, City &amp; Guilds Level 2 Plumbing or Electrical diploma." required></textarea>
+          </div>
+          <div style="display:flex;align-items:center;gap:0.5rem;margin:0.5rem 0">
+            <input type="checkbox" id="driver_license" name="driver_license" value="yes">
+            <label for="driver_license" style="font-size:0.85rem">Holds Full UK Manual Driving Licence</label>
+          </div>
+          <button type="submit" class="ct-btn">Submit Trainee Application</button>
+        </form>
+      </aside>
+    </main>
+    <footer class="ct-foot">
+      <p>CleanTech Trades Network • In partnership with Green Skills Training Accord • Supported by Dept for Net Zero</p>
+    </footer>
+  </div>
+</body>
+</html>

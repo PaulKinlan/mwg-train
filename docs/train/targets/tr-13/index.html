@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Urban Soil Collaborative — Composting Handbook &amp; Soil Test Registry</title>
+  <style>
+    :root {
+      --us-earth: #3b251a;
+      --us-leaf: #15803d;
+      --us-straw: #fef08a;
+      --us-card: #ffffff;
+      --us-border: #e7e5e4;
+      --us-text: #292524;
+      --us-muted: #78716c;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #fafaf9; color: var(--us-text); line-height: 1.5; padding: 1.5rem; }
+    .us-wrap { max-width: 1200px; margin: 0 auto; }
+    header.us-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--us-leaf); padding-bottom: 1rem; margin-bottom: 1.5rem; }
+    .us-brand { font-size: 1.4rem; font-weight: 800; color: var(--us-earth); }
+    nav.us-nav a { text-decoration: none; color: var(--us-muted); font-size: 0.9rem; margin-left: 1.25rem; font-weight: 600; }
+    nav.us-nav a[aria-current="page"] { color: var(--us-leaf); border-bottom: 2px solid var(--us-leaf); padding-bottom: 0.2rem; }
+    .us-layout { display: grid; grid-template-columns: 260px 1fr 340px; gap: 1.75rem; align-items: start; }
+    .us-sidebar { background: var(--us-card); border: 1px solid var(--us-border); border-radius: 8px; padding: 1.25rem; }
+    .us-sidebar h3 { font-size: 0.95rem; text-transform: uppercase; color: var(--us-muted); margin-bottom: 0.75rem; letter-spacing: 0.5px; }
+    .us-nav-list { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.9rem; }
+    .us-nav-list a { text-decoration: none; color: var(--us-text); }
+    .us-nav-list a.active { color: var(--us-leaf); font-weight: 700; }
+    .us-content { background: var(--us-card); border: 1px solid var(--us-border); border-radius: 8px; padding: 1.75rem; }
+    .us-content h1 { font-size: 1.6rem; color: var(--us-earth); margin-bottom: 0.75rem; }
+    .us-reg-form { background: var(--us-card); border: 1px solid var(--us-border); border-radius: 8px; padding: 1.5rem; }
+    .us-reg-form h2 { font-size: 1.25rem; color: var(--us-leaf); margin-bottom: 0.5rem; }
+    .us-field { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 0.85rem; }
+    .us-field label { font-size: 0.85rem; font-weight: 600; color: var(--us-text); }
+    .us-field input, .us-field select { padding: 0.55rem; border: 1px solid var(--us-border); border-radius: 6px; font-size: 0.95rem; }
+    .us-btn { background: var(--us-leaf); color: #fff; border: none; font-size: 1rem; font-weight: 700; padding: 0.75rem; border-radius: 6px; cursor: pointer; width: 100%; }
+    .us-btn:hover { background: #166534; }
+    footer.us-foot { margin-top: 2.5rem; border-top: 1px solid var(--us-border); padding-top: 1rem; text-align: center; font-size: 0.85rem; color: var(--us-muted); }
+  </style>
+</head>
+<body>
+  <div class="us-wrap">
+    <header class="us-head">
+      <div class="us-brand">🌱 Urban Soil Collaborative</div>
+      <nav class="us-nav" aria-label="Docs Nav">
+        <a href="/docs" aria-current="page">Handbook Chapters</a>
+        <a href="/soil-tests">Community Soil Registry</a>
+        <a href="/workshops">Compost Bins</a>
+      </nav>
+    </header>
+    <main class="us-layout">
+      <aside class="us-sidebar">
+        <h3>Handbook Sections</h3>
+        <ul class="us-nav-list">
+          <li><a href="#carbon-nitrogen" class="active">1. The 30:1 C:N Ratio</a></li>
+          <li><a href="#moisture">2. Moisture &amp; The Squeeze Test</a></li>
+          <li><a href="#turning">3. Hot Piles vs Cold Turning</a></li>
+          <li><a href="#troubleshooting">4. Odour &amp; Fly Troubleshooting</a></li>
+          <li><a href="#testing">5. Testing Finished Humus</a></li>
+        </ul>
+      </aside>
+      <article class="us-content">
+        <h1>Compost Balancing: Carbon Greens &amp; Nitrogen Browns</h1>
+        <p style="color:#57534e;margin-bottom:1rem">Achieving rapid aerobic breakdown without foul anaerobic odours requires a carbon-to-nitrogen ratio of approximately 30 parts carbon to 1 part nitrogen by dry weight.</p>
+        <h2 style="font-size:1.2rem;color:var(--us-earth);margin-top:1.25rem;margin-bottom:0.5rem">High-Carbon Browns (Energy Source)</h2>
+        <ul style="padding-left:1.2rem;font-size:0.9rem;color:#44403c;margin-bottom:1rem">
+          <li>Dried autumn deciduous leaves (60:1 ratio)</li>
+          <li>Untreated sawdust and wood shavings (400:1 ratio)</li>
+          <li>Shredded unbleached corrugated cardboard (350:1 ratio)</li>
+        </ul>
+        <h2 style="font-size:1.2rem;color:var(--us-earth);margin-top:1.25rem;margin-bottom:0.5rem">High-Nitrogen Greens (Microbial Food)</h2>
+        <ul style="padding-left:1.2rem;font-size:0.9rem;color:#44403c">
+          <li>Fresh grass clippings and green garden trimmings (20:1 ratio)</li>
+          <li>Raw vegetable kitchen scraps and coffee grounds (20:1 ratio)</li>
+          <li>Well-rotted poultry or horse manure (15:1 ratio)</li>
+        </ul>
+      </article>
+      <section class="us-reg-form">
+        <h2>Submit Plot Soil Test</h2>
+        <p style="font-size:0.85rem;color:var(--us-muted);margin-bottom:1rem">Contribute measurements from your community garden raised beds or allotment.</p>
+        <form id="soil-test-entry" method="post" action="/soil-tests/new">
+          <div class="us-field">
+            <label for="plot_sector">Allotment / Garden Plot Identifier</label>
+            <input type="text" id="plot_sector" name="plot_sector" required placeholder="Plot 14-B (South Allotments)">
+          </div>
+          <div class="us-field">
+            <label for="soil_ph">Measured Soil pH</label>
+            <input type="number" id="soil_ph" name="soil_ph" step="0.1" min="4.0" max="9.0" value="6.8" required>
+          </div>
+          <div class="us-field">
+            <label for="organic_matter">Organic Matter Percentage (%)</label>
+            <input type="number" id="organic_matter" name="organic_matter" step="0.5" min="1" max="30" value="8.5" required>
+          </div>
+          <div class="us-field">
+            <label for="sample_date">Sampling Date</label>
+            <input type="date" id="sample_date" name="sample_date" value="2026-10-12" required>
+          </div>
+          <button type="submit" class="us-btn">Record Soil Measurement</button>
+        </form>
+      </section>
+    </main>
+    <footer class="us-foot">
+      <p>Urban Soil Collaborative • Community Composting &amp; Soil Regeneration Network • Open Research Licence</p>
+    </footer>
+  </div>
+</body>
+</html>
