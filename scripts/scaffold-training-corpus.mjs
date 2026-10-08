@@ -46,48 +46,42 @@ const titleCase = (value) =>
 /**
  * The prose defects a repair brief seeds, mapped to the concrete tokens the builder injects.
  *
- * The builder reacts to the pilot's fixed vocabulary (`no-required`, `eager-invalid`, `no-aria-sync`,
- * `no-autofill`, `no-autofill-address`, `xss-innerhtml`) plus four training-only tokens
- * (`client-only-state`, `enter-submits`, `accept-invalid-amount`, `no-field-labels`). Order matches the
- * brief's `seeded_defects`, one entry per prose defect; `token: null` marks a defect that is not
- * injected and is reported as `unrepresentable` rather than silently dropped.
+ * Each repair family's `seeded_defects` in docs/train/briefs/manifest.jsonl describes exactly the
+ * observable defects that family's generated project has, matching the builder's injected defect tokens
+ * 1-to-1 in order. Every repair family includes at least one uplift-addressable defect token
+ * (`no-required`, `no-aria-sync`, etc.).
  *
- * The repair briefs' PRIMARY defect ("… stored only in component state and disappear on reload") is
- * NOT injected: its token `client-only-state` deletes the server INSERT, which (a) the uplift tool's
- * contract does not rewrite, so it is unfixable, and (b) makes the original non-runnable, so a pair
- * carrying it can never be accepted. The remaining (secondary) defects carry the repair task, and a
- * repair family that would otherwise have no uplift-addressable defect gets one added (see
- * REPAIR_EXTRA_DEFECTS) so its pair can also be accepted.
+ * The scaffolder asserts that the brief's prose defects match this mapping in cardinality and semantic
+ * keywords so the brief prose and the injected tokens cannot silently drift apart.
  */
-const CLIENT_ONLY_STATE_DROPPED =
-  'the brief\'s primary "client-only-state" defect is not injected: it deletes the server INSERT, which the uplift tool does not rewrite (unfixable) and which makes the original non-runnable';
-
 const REPAIR_DEFECT_TOKENS = {
   'tr-26': [
-    { token: null, reason: CLIENT_ONLY_STATE_DROPPED },
     { token: 'no-aria-sync' },
     { token: 'enter-submits' },
   ],
   'tr-27': [
-    { token: null, reason: CLIENT_ONLY_STATE_DROPPED },
-    { token: null, reason: 'the brief describes pew seat selectors as plain divs without tabindex/keyboard activation, but the generated booking form has no seat picker - it renders a native select with a programmatic label' },
     { token: 'no-required' },
   ],
   'tr-28': [
-    { token: null, reason: CLIENT_ONLY_STATE_DROPPED },
-    { token: null, reason: 'the brief describes a custom div-based urgency dropdown, but the generated helpdesk form renders a native select with a programmatic label' },
     { token: 'no-required' },
   ],
   'tr-29': [
-    { token: null, reason: CLIENT_ONLY_STATE_DROPPED },
     { token: 'accept-invalid-amount' },
-    { token: 'no-field-labels', note: 'the brief names a dedication input the archetype does not model; no-field-labels drops the label on the non-select fields (member, vendor, amount), so the amount input is the covered case' },
+    { token: 'no-field-labels', note: 'drops the label on the non-select fields (member, vendor, amount)' },
+    { token: 'no-required' },
   ],
   'tr-30': [
-    { token: null, reason: CLIENT_ONLY_STATE_DROPPED },
     { token: 'enter-submits' },
     { token: 'no-aria-sync' },
   ],
+};
+
+const DEFECT_PROSE_PATTERNS = {
+  'no-aria-sync': /aria|screen reader|announcement|alert/i,
+  'enter-submits': /enter.*submi/i,
+  'no-required': /required|fails silently|empty|corrupted/i,
+  'accept-invalid-amount': /invalid.*amount|negative.*amount/i,
+  'no-field-labels': /label/i,
 };
 
 /**
@@ -118,15 +112,6 @@ const DEFECT_ADDRESSABILITY = {
 const GENERATE_DEFECT_TOKEN = 'no-required';
 
 /**
- * Repair families whose remaining (secondary) defects leave the original with no uplift-addressable
- * defect. Each gets one added so a repair pair can also be accepted, on top of the defects that carry
- * the repair task.
- */
-const REPAIR_EXTRA_DEFECTS = {
-  'tr-29': 'no-required',
-};
-
-/**
  * Resolve a family's prose `seeded_defects` into the tokens the builder injects, plus the prose that
  * could not be represented and any per-defect caveats. Generate families have no prose defects, so they
  * receive one uniformly addressable injected defect (GENERATE_DEFECT_TOKEN).
@@ -136,25 +121,30 @@ function defectsForFamily(family) {
   const unrepresentable = [];
   const notes = [];
   if (family.task === 'repair') {
-    const mapping = REPAIR_DEFECT_TOKENS[family.family_id] ?? [];
+    const mapping = REPAIR_DEFECT_TOKENS[family.family_id];
+    if (!mapping) {
+      throw new Error(`scaffold-training-corpus: repair family '${family.family_id}' has no REPAIR_DEFECT_TOKENS entry`);
+    }
+    if (family.seeded_defects.length !== mapping.length) {
+      throw new Error(
+        `scaffold-training-corpus: repair family '${family.family_id}' brief seeded_defects length (${family.seeded_defects.length}) does not match mapping length (${mapping.length})`
+      );
+    }
     family.seeded_defects.forEach((defect, index) => {
       const entry = mapping[index];
-      if (!entry) {
-        unrepresentable.push({ defect, reason: 'no token mapping recorded for this defect' });
+      if (!entry || !entry.token) {
+        unrepresentable.push({ defect, reason: entry?.reason ?? 'no token mapping recorded for this defect' });
         return;
       }
-      if (entry.token) {
-        injected.push(entry.token);
-        if (entry.note) notes.push(entry.note);
-      } else {
-        unrepresentable.push({ defect, reason: entry.reason });
+      const pattern = DEFECT_PROSE_PATTERNS[entry.token];
+      if (pattern && !pattern.test(defect)) {
+        throw new Error(
+          `scaffold-training-corpus: repair family '${family.family_id}' defect prose at index ${index} ("${defect}") does not match expected pattern for token '${entry.token}'`
+        );
       }
+      injected.push(entry.token);
+      if (entry.note) notes.push(entry.note);
     });
-    const extra = REPAIR_EXTRA_DEFECTS[family.family_id];
-    if (extra) {
-      injected.push(extra);
-      notes.push(`${family.family_id}: added addressable defect '${extra}' so the repair pair has a change the uplift tool can make (the brief's secondary defects are outside the uplift contract)`);
-    }
   } else {
     // Generate families carry no prose defect, so seed one uniformly addressable defect: without it the
     // original is clean and the uplift makes zero edits (no warranted change to accept).
