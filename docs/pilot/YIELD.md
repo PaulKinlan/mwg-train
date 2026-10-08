@@ -1,6 +1,8 @@
 # Pilot acceptance yield (2026-10-08T12-33-43-622Z)
 
-Generated 2026-10-08T12:40:17.614Z by `scripts/pilot.mjs`. 35 pairs attempted, 34 accepted: **97.1%**.
+> **mwg-train deterministic baseline** - deterministic output of this repository's own tooling, not an official `web-uplift` result.
+
+Generated 2026-10-08T12:40:17.613Z by `scripts/pilot.mjs`. 35 pairs attempted, 34 accepted: **97.1%**.
 
 Every number here comes from a record produced by driving the project in a real browser; the
 per-project records and their screenshots and traces are next to this file.

@@ -115,6 +115,10 @@ function record(runDir) {
           generated_at: run.generated_at,
           generator: 'scripts/scaffold-pilot.mjs',
           uplift_tool: 'src/corpus/uplift.mjs',
+          // The floor this record measures is ours, not an official uplift product's. Added after review
+          // found the label reached the individual decisions but not the committed record (bead mwg-train-6ek).
+          baseline_label: 'mwg-train deterministic baseline',
+          baseline_definition: 'deterministic repair of the project by our own Modern Web Guidance rule specifications; no model and no teacher in the loop',
           summary: run.summary,
           projects,
         },

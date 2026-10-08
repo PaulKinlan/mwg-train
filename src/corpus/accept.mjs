@@ -17,7 +17,7 @@
 const isPass = (entry) => entry?.status === 'PASS';
 const isFail = (entry) => entry?.status === 'FAIL';
 
-import { BASELINE_LABEL } from '../eval/ruleset.mjs';
+import { BASELINE_LABEL, baselineAttributionLine } from '../eval/ruleset.mjs';
 
 /** Did the journey work at all: record found after a reload, validation refused, no server error. */
 export function journeyWorks(record) {
@@ -248,6 +248,8 @@ export function renderYieldReport({ summary, decisions, runId, generatedAt, note
   const percent = (value) => `${(value * 100).toFixed(1)}%`;
   const lines = [];
   lines.push(`# Pilot acceptance yield (${runId})`);
+  lines.push('');
+  lines.push(baselineAttributionLine());
   lines.push('');
   lines.push(`Generated ${generatedAt} by \`scripts/pilot.mjs\`. ${summary.attempted} pairs attempted, ${summary.accepted} accepted: **${percent(summary.yield ?? 0)}**.`);
   lines.push('');

@@ -10,14 +10,24 @@
  *                   This is web-uplift's recipe for its canonical catalog, so it is the one hash that
  *                   lets us say whether our vocabulary is the published one.
  *
- * The bare-id recipe was identified, not assumed. Coord pinned
- * guideIdsSha256 bc041692e3d9631a997427252ce2e54d8a5a0dd7e28387b4dcae6a4b9d3d5ab2 for web-uplift's
- * catalog (178 guides). Recomputing thirteen plausible constructions over the 178 ids in
- * docs/eval/rules.json - bare vs `category/guide`, sorted vs as-found, joined by newline, comma,
- * space or nothing, raw or JSON - produced exactly one match, `sorted bare ids joined by newline`.
- * A 256-bit agreement is not a coincidence, so that identifies the recipe AND means our committed
- * vocabulary is byte-for-byte the canonical guide id set. The check below therefore verifies the pin
- * with no copy of the catalog present, which is the situation on this VM.
+ * The bare-id recipe was identified by measurement, and the strength of that claim is worth stating
+ * precisely rather than loosely. Coord pinned guideIdsSha256
+ * bc041692e3d9631a997427252ce2e54d8a5a0dd7e28387b4dcae6a4b9d3d5ab2 for web-uplift's catalog (178
+ * guides). Recomputing thirteen plausible constructions over the 178 ids in docs/eval/rules.json -
+ * bare vs `category/guide`, sorted vs as-found, joined by newline, comma, space or nothing, raw or
+ * JSON - produced exactly one match: sorted bare ids joined by newline.
+ *
+ * What a single match does and does not establish. Because sha256 is preimage-resistant, a match means
+ * the byte string hashed here IS the string web-uplift hashed, so the construction is exact for THIS
+ * input - an untested algorithm cannot produce the same bytes unless it consumes the same input, in
+ * which case it is the same construction on this input. That gives a strong conditional conclusion, not
+ * an unconditional one, and the conditions are worth naming: (a) the canonical ids are slugs with no
+ * newline in them, so the newline-joined string decomposes into exactly 178 ids in only one way; and
+ * (b) our guide count equals the canonical count the pin states. Given those, the input string
+ * decomposes into our ids. What is NOT established is how web-uplift canonicalises a DIFFERENT input -
+ * we cannot predict the hash of a 200-guide catalog, and this file does not claim to. If the catalog
+ * ever appears on this machine the check recomputes both the file hash and the id hash directly, and
+ * that measurement would supersede the inference.
  *
  * The catalog itself is not vendored here, so we verify its FILE hash and nothing else. We do not
  * parse guide ids out of it: its shape has never been seen on this VM, and guessing a shape would be
@@ -118,6 +128,36 @@ export function checkRulesetPin(rules, options = {}) {
 
   const guideIds = sortedGuideIds(categories);
   const categoryNames = Object.keys(categories);
+
+  // Validate the SHAPE before hashing anything. Hashing coerces: `String([id])` is `id` and
+  // `${category}/${[id]}` is the same as `${category}/${id}`, so a category holding a one-element
+  // array in place of a guide id produced the same count and both of the same hashes, and the pin
+  // passed with a vocabulary that is not a list of id strings. Found by review on bead mwg-train-6ek.
+  // Returning here rather than carrying on is deliberate: a hash over a malformed vocabulary is not
+  // evidence about anything.
+  const shape = [];
+  for (const [category, guides] of Object.entries(categories)) {
+    if (!Array.isArray(guides)) {
+      shape.push(`category '${category}' must be an array of guide ids, not ${guides === null ? 'null' : typeof guides}`);
+      continue;
+    }
+    for (const guide of guides) {
+      if (typeof guide !== 'string') {
+        shape.push(`category '${category}' contains a non-string guide id: ${JSON.stringify(guide)}`);
+      } else if (guide === '') {
+        shape.push(`category '${category}' contains an empty guide id`);
+      } else if (guide.includes('/')) {
+        // A slash would make `category/guide` ambiguous, and the two recipes disagree about what the id
+        // is, which is exactly the confusion the two-hash design exists to prevent.
+        shape.push(`guide id '${guide}' in category '${category}' contains '/'; ids are unprefixed slugs`);
+      }
+    }
+  }
+  if (shape.length) {
+    push('BAD_VOCABULARY_SHAPE', shape.join('; '));
+    return findings;
+  }
+
   if (guideIds.length === 0) {
     // Fail closed. An empty vocabulary would otherwise hash to sha256('') and "agree" with nothing,
     // and a check that passes on an empty input is the failure this whole file exists to prevent.

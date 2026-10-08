@@ -29,7 +29,7 @@ import { decidePair, renderYieldReport, summarizeYield } from '../src/corpus/acc
 
 function parseArgs(argv) {
   // null means "generate the corpus from the plan"; a value means "measure exactly this directory".
-  const args = { projects: null, out: 'pilot/out', limit: null, only: null, framework: null, keep: false, port: 4300 };
+  const args = { projects: null, out: 'pilot/out', limit: null, only: null, framework: null, keep: false, port: 4300, reportOnly: false, yield: null, docs: null };
   for (let i = 0; i < argv.length; i += 1) {
     if (argv[i] === '--projects') args.projects = argv[++i];
     else if (argv[i] === '--out') args.out = argv[++i];
@@ -37,6 +37,9 @@ function parseArgs(argv) {
     else if (argv[i] === '--only') args.only = argv[++i];
     else if (argv[i] === '--framework') args.framework = argv[++i];
     else if (argv[i] === '--keep') args.keep = true;
+    else if (argv[i] === '--report-only') args.reportOnly = true;
+    else if (argv[i] === '--yield') args.yield = argv[++i];
+    else if (argv[i] === '--docs') args.docs = argv[++i];
     else if (argv[i] === '--port') args.port = Number(argv[++i]);
     else if (argv[i] === '--help' || argv[i] === '-h') {
       console.error('usage: node scripts/pilot.mjs [--projects <dir>] [--out <dir>] [--limit N] [--only <id>] [--framework <name>] [--port N]');
@@ -49,8 +52,32 @@ function parseArgs(argv) {
   return args;
 }
 
+/**
+ * Rewrite the pilot YIELD report from a committed yield.json. No browser, no measurement.
+ *
+ * The report is a view of the decisions the run recorded, so relabelling it must not require
+ * re-measuring 35 pilot projects in a browser - which would also risk moving committed numbers while
+ * claiming only to add a line. The renderer is the same function the run uses, so the two cannot drift.
+ */
+function reportFromYield(yieldPath, docsPath) {
+  if (!yieldPath || !docsPath) {
+    console.error('pilot: --report-only needs --yield <yield.json> --docs <YIELD.md>');
+    process.exit(2);
+  }
+  const record = JSON.parse(readFileSync(resolve(yieldPath), 'utf8'));
+  writeFileSync(
+    resolve(docsPath),
+    renderYieldReport({ summary: record.summary, decisions: record.decisions, runId: record.run_id, generatedAt: record.generated_at, notes: [] }),
+  );
+  console.log(`pilot: re-rendered ${docsPath} from ${yieldPath} (no measurement)`);
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
+  if (args.reportOnly) {
+    reportFromYield(args.yield, args.docs);
+    return;
+  }
   const runId = new Date().toISOString().replace(/[:.]/g, '-');
   const runDir = resolve(args.out, runId);
   mkdirSync(runDir, { recursive: true });
@@ -130,10 +157,14 @@ async function main() {
     }
 
     const summary = summarizeYield(decisions);
-    writeFileSync(join(runDir, 'yield.json'), `${JSON.stringify({ run_id: runId, generated_at: new Date().toISOString(), summary, decisions }, null, 2)}\n`);
+    // One timestamp for the record and the report generated from it. Two `new Date()` calls 1ms apart
+    // made the committed docs/pilot/YIELD.md disagree with the committed docs/pilot/yield.json it was
+    // generated from, so a re-render looked like it had changed the evidence.
+    const generatedAt = new Date().toISOString();
+    writeFileSync(join(runDir, 'yield.json'), `${JSON.stringify({ run_id: runId, generated_at: generatedAt, summary, decisions }, null, 2)}\n`);
     writeFileSync(
       join(runDir, 'YIELD.md'),
-      renderYieldReport({ summary, decisions, runId, generatedAt: new Date().toISOString(), notes }),
+      renderYieldReport({ summary, decisions, runId, generatedAt, notes }),
     );
     console.log(`pilot: yield ${summary.accepted}/${summary.attempted} (${((summary.yield ?? 0) * 100).toFixed(1)}%)`);
     console.log(`pilot: report ${join(runDir, 'YIELD.md')}`);

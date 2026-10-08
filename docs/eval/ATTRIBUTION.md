@@ -23,13 +23,29 @@ that external reference.
 
 Two hashes are in play and they must not be confused. Ours covers the sorted `category/guide` ids;
 web-uplift's set-identity hash covers the sorted **bare** guide ids. The construction that reproduces
-`bc041692…` was **identified by measurement, not assumed**: recomputing thirteen plausible
+`bc041692…` was **found by measurement rather than assumed**: recomputing thirteen plausible
 constructions over the 178 ids in `docs/eval/rules.json` - bare versus `category/guide`, sorted versus
 as-found, joined by newline, comma, space or nothing, raw or JSON - produced exactly one match,
-`sorted bare ids joined by newline`. A 256-bit agreement is not a coincidence, so that identifies the
-recipe *and* establishes that our committed vocabulary is byte-for-byte the canonical guide id set.
-web-uplift's own description in the journal - "recursive key sort + compact JSON, UTF-8, and a SEPARATE
-set-identity hash over the sorted id list" - agrees with the result independently.
+`sorted bare ids joined by newline`. web-uplift's own description in the journal - "recursive key sort
++ compact JSON, UTF-8, and a SEPARATE set-identity hash over the sorted id list" - agrees with it
+independently.
+
+**What that does and does not prove.** A single match is strong conditional evidence, and it is worth
+being exact about the conditions:
+
+- Because sha256 is preimage-resistant, a match means the byte string hashed here *is* the string
+  web-uplift hashed - so the construction is exact for **this** input. An algorithm we did not try
+  cannot produce these bytes unless it consumes the same input, in which case it is the same
+  construction on this input.
+- That the input decomposes into *our* ids follows from two conditions, both of which hold: canonical
+  ids are slugs containing no newline, so a newline-joined string of 178 ids decomposes in only one
+  way; and our count (178) is the canonical count the pin states.
+- What is **not** established is how web-uplift canonicalises a *different* input. We cannot predict
+  the hash of a 200-guide catalog, and this document does not claim to. A reviewer was right to press
+  on this, and the honest form is "exact for the input we can see, with the conditions named", not "we
+  know the algorithm".
+- If the catalog ever appears on this machine the check recomputes both hashes from the file directly,
+  and that measurement supersedes the inference.
 
 The catalog file itself is not vendored in this repository or present on the build VM, so the check
 verifies its file hash **when the file is there** and otherwise says out loud that it did not. It does
@@ -67,9 +83,18 @@ schema, the markdown reports and the viewer cannot drift apart:
 | where | what carries it |
 | --- | --- |
 | floor decisions (`decision.json`) | `baseline_label`, `baseline_definition`, `baseline_tool`, added in `decidePair` so both writers get it |
+| `docs/eval/conformance/<family>.md` | the attribution line under the title |
 | `docs/eval/conformance/<family>-identity.md` | the attribution line under the title |
-| `docs/train/corpus/YIELD.md` | the attribution line under the title |
+| `docs/pilot/YIELD.md`, `docs/train/corpus/YIELD.md` | the attribution line under the title |
+| `docs/train/corpus/records.json`, `pilot/CORPUS.json` | a top-level `baseline_label` / `baseline_tool` |
 | the corpus viewer | the floor panel and the roles line |
+
+The first pass of this work registered six reports. Review then found two more that state a floor -
+`docs/eval/conformance/booking.md` (visual conformance deltas) and `docs/pilot/YIELD.md` (pilot
+acceptance yield) - and, separately, that the label reached the per-project decisions but not the
+committed summary records. Both are now labelled and registered, taking the check from six artifacts to
+ten. The lesson worth keeping: a registry is only as good as the review that extends it, and a
+projection (`decision` in `records.json`) silently drops whatever it does not explicitly name.
 
 ```bash
 npm run check:baseline-label   # every registered floor report must carry the label
@@ -88,8 +113,24 @@ generator first.
 ### Relabelling a report must not mean re-measuring it
 
 The floor reports are generated from committed JSON, and re-rendering them from that record is a
-supported mode: `score-variant-identity.mjs --rerender` and `train-corpus-run.mjs --report-only`. This
+supported mode: `score-variant-identity.mjs --rerender`, `score-conformance.mjs --rerender`,
+`pilot.mjs --report-only --yield <yield.json> --docs <YIELD.md>` and `train-corpus-run.mjs
+--report-only`. This
 matters for more than convenience. Regenerating the identity reports by re-scoring them would have
 re-run a browser measurement and could have shifted committed evaluation numbers while claiming to
 only add a line; re-rendering from the record cannot. The renderer used during a measurement run and
 the one used to relabel are the same function, so the two cannot disagree.
+
+Together the four re-renders added exactly the attribution to ten committed artifacts and no other
+change: each `*-identity.md` and `<family>.md` diff is two added lines with its sibling JSON
+byte-identical, and each YIELD report differs by the label plus one corrected timestamp (both pilot and
+training runs called `new Date()` twice, so their committed reports disagreed with the records they
+were generated from - by 2ms and 1ms). Those timestamp discrepancies were pre-existing and are fixed at
+the cause: one timestamp now feeds both the record and its report.
+
+The two committed records predate the label, so they were relabelled by an explicit mode rather than by
+hand - `train-corpus-run.mjs --relabel-record` - which adds the label from the constant and copies every
+measured field through untouched. That is verifiable rather than asserted: stripping the added keys from
+the result reproduces the previous file exactly, and `npm run check:pilot-corpus` still re-derives all
+35 pilot projects from their plan. A relabel that changed a number would have been falsification, so the
+strip-and-compare is the evidence, not the commit message.

@@ -93,6 +93,39 @@ test('an empty vocabulary fails closed instead of passing', () => {
   assert.ok(found.length >= 1);
 });
 
+test('a malformed vocabulary is rejected before it is hashed', () => {
+  // Review finding on bead mwg-train-6ek: `categories.css[0] = [categories.css[0]]` passed the whole
+  // check. `.flat()` yields the original bare id and template interpolation coerces the array to the
+  // same string, so the count and BOTH hashes were unchanged while the vocabulary no longer held id
+  // strings. Validation now runs before any hash is computed, so this class cannot pass.
+  const malformed = [
+    (c) => { c.categories.css[0] = [c.categories.css[0]]; },
+    (c) => { c.categories.css[0] = [c.categories.css[0], 'extra']; },
+    (c) => { c.categories.css[0] = 42; },
+    (c) => { c.categories.css[0] = null; },
+    (c) => { c.categories.css[0] = ''; },
+    (c) => { c.categories.css[0] = 'has/slash'; },
+    (c) => { c.categories.css = {}; },
+    (c) => { c.categories.css = 'accessibility'; },
+  ];
+  for (const mutate of malformed) {
+    const found = codes(checkRulesetPin(withVocabulary(mutate)));
+    assert.ok(found.includes('BAD_VOCABULARY_SHAPE'), `expected a shape finding for ${mutate.toString()}`);
+    // And it must not be only the non-fatal catalog note.
+    assert.ok(checkRulesetPin(withVocabulary(mutate)).some((f) => f.fatal !== false));
+  }
+});
+
+test('--json output is one parseable JSON document', () => {
+  // Review finding: the JSON branch printed the report and then an unconditional PASS line, so a caller
+  // parsing stdout as a single document failed on a SUCCESSFUL check - the case that must never fail.
+  const out = execFileSync(process.execPath, [join(ROOT, 'scripts/check-rules-pin.mjs'), '--json'], { encoding: 'utf8' });
+  const parsed = JSON.parse(out);
+  assert.equal(parsed.findings, 0);
+  assert.equal(parsed.guides, MWG_CANONICAL.guides);
+  assert.equal(parsed.canonical_guide_ids_sha256, MWG_CANONICAL.guideIdsSha256);
+});
+
 test('a missing categories object is a finding, not a throw', () => {
   for (const bad of [null, {}, { categories: [] }, { categories: 'css' }, { rule_set_hash: 'sha256:x' }]) {
     const found = checkRulesetPin(bad);

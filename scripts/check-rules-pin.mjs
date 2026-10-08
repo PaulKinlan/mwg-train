@@ -105,6 +105,8 @@ const report = {
 };
 
 if (args.json) {
+  // Machine output is JSON and nothing else: a caller parsing stdout must not have to strip a trailing
+  // human line. Failure detail still goes to stderr, which is not parsed.
   console.log(JSON.stringify({ ...report, findings_detail: findings, notes_detail: notes }, null, 2));
 } else {
   for (const finding of findings) console.log(`FINDING ${finding.code} ${finding.message}`);
@@ -115,8 +117,10 @@ if (findings.length) {
   console.error(`check-rules-pin: FAIL - ${findings.length} finding(s); our vocabulary is not the pinned canonical ruleset`);
   process.exit(1);
 }
-console.log(
-  `check-rules-pin: PASS - ${report.guides} guide ids match ${MWG_CANONICAL.source} ${MWG_CANONICAL.file} (guideIdsSha256 ${MWG_CANONICAL.guideIdsSha256.slice(0, 16)}...)${
-    catalog ? ` and the catalog file matches ${MWG_CANONICAL.sha256.slice(0, 16)}...` : '; catalog file not present, so its own sha256 was NOT verified'
-  }`,
-);
+if (!args.json) {
+  console.log(
+    `check-rules-pin: PASS - ${report.guides} guide ids match ${MWG_CANONICAL.source} ${MWG_CANONICAL.file} (guideIdsSha256 ${MWG_CANONICAL.guideIdsSha256.slice(0, 16)}...)${
+      catalog ? ` and the catalog file matches ${MWG_CANONICAL.sha256.slice(0, 16)}...` : '; catalog file not present, so its own sha256 was NOT verified'
+    }`,
+  );
+}

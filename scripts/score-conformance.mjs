@@ -16,7 +16,7 @@
  * the delta does not.
  */
 import { createHash } from 'node:crypto';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import process from 'node:process';
@@ -24,6 +24,7 @@ import process from 'node:process';
 import { launchChrome } from '../src/corpus/cdp.mjs';
 import { upliftProject } from '../src/corpus/uplift.mjs';
 import { scoreArm } from '../src/eval/conformance.mjs';
+import { baselineAttributionLine } from '../src/eval/ruleset.mjs';
 import { captureSignature } from '../src/eval/render.mjs';
 import { TARGETS_STORAGE } from '../src/eval/targets.mjs';
 import { generateCorpus, readPlan } from '../pilot/generate.mjs';
@@ -31,12 +32,13 @@ import { generateCorpus, readPlan } from '../pilot/generate.mjs';
 const ROOT = resolve(process.cwd());
 
 function parseArgs(argv) {
-  const args = { family: 'booking', framework: null, out: 'docs/eval/conformance', port: 4711 };
+  const args = { family: 'booking', framework: null, out: 'docs/eval/conformance', port: 4711, rerender: false };
   for (let i = 0; i < argv.length; i += 1) {
     if (argv[i] === '--family') args.family = argv[++i];
     else if (argv[i] === '--framework') args.framework = argv[++i];
     else if (argv[i] === '--out') args.out = argv[++i];
     else if (argv[i] === '--port') args.port = Number(argv[++i]);
+    else if (argv[i] === '--rerender') args.rerender = true;
   }
   return args;
 }
@@ -49,6 +51,10 @@ function resolveTarget(family) {
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
+  if (args.rerender) {
+    rerender(args.out);
+    return;
+  }
   const runId = new Date().toISOString().replace(/[:.]/g, '-');
   const target = resolveTarget(args.family);
   const runDir = mkdtempSync(join(tmpdir(), `conformance-${args.family}-`));
@@ -92,11 +98,26 @@ async function main() {
   };
   const jsonPath = join(outDir, `${args.family}.json`);
   writeFileSync(jsonPath, `${JSON.stringify(report, null, 2)}\n`);
+  writeFileSync(join(outDir, `${args.family}.md`), renderConformanceMarkdown(report));
+  console.log(`score-conformance: wrote ${jsonPath} (mean delta ${report.mean_delta})`);
+}
 
-  const lines = [
-    `# Visual conformance: ${args.family}`,
+/**
+ * The conformance report as markdown, from the record alone.
+ *
+ * Pure so the same function renders it during a measurement run and re-renders it in `--rerender` mode
+ * from the committed JSON. A generated report is a view of a measurement, and relabelling a view must
+ * not be an occasion to re-measure it - re-scoring these families would re-run browser measurements and
+ * could shift committed evaluation numbers while claiming only to add a line.
+ */
+export function renderConformanceMarkdown(report) {
+  const results = report.arms;
+  return [
+    `# Visual conformance: ${report.family}`,
     '',
-    `Target: \`${target.relativePath}\` (sha256 \`${report.target_sha256}\`)`,
+    baselineAttributionLine(),
+    '',
+    `Target: \`${report.target_signature}\` (sha256 \`${report.target_sha256}\`)`,
     '',
     '| framework | raw baseline | target conformance | delta | structural | geometry | controls |',
     '| --- | --- | --- | --- | --- | --- | --- |',
@@ -108,9 +129,21 @@ async function main() {
     '',
     `Mean delta across ${results.length} framework(s): ${report.mean_delta >= 0 ? '+' : ''}${report.mean_delta.toFixed(3)}`,
     '',
-  ];
-  writeFileSync(join(outDir, `${args.family}.md`), lines.join('\n'));
-  console.log(`score-conformance: wrote ${jsonPath} (mean delta ${report.mean_delta})`);
+  ].join('\n');
+}
+
+/** Rewrite each committed `<family>.md` from its `<family>.json`. No browser, no measurement. */
+function rerender(outDir) {
+  const records = readdirSync(outDir).filter((name) => name.endsWith('.json') && !name.endsWith('-identity.json'));
+  if (records.length === 0) {
+    console.error(`score-conformance: no <family>.json under ${outDir}; nothing to re-render`);
+    process.exit(1);
+  }
+  for (const name of records.sort()) {
+    const report = JSON.parse(readFileSync(join(outDir, name), 'utf8'));
+    writeFileSync(join(outDir, name.replace(/\.json$/, '.md')), renderConformanceMarkdown(report));
+    console.log(`score-conformance: re-rendered ${name.replace(/\.json$/, '.md')} from ${name} (no measurement)`);
+  }
 }
 
 await main();
