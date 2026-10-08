@@ -21,7 +21,8 @@ import { dirname, join } from 'node:path';
 
 import { ARCHETYPES, ARCHETYPE_IDS } from '../pilot/archetypes.mjs';
 import { generateCorpus } from '../pilot/generate.mjs';
-import { buildProject, FRAMEWORKS, writeProject } from '../pilot/frameworks.mjs';
+import { buildProject } from '../pilot/projects.mjs';
+import { FRAMEWORKS, writeProject } from '../pilot/frameworks.mjs';
 import { TRANSFORMS, upliftProject } from '../src/corpus/uplift.mjs';
 import { decidePair, journeyWorks, renderYieldReport, summarizeYield, validationObservation } from '../src/corpus/accept.mjs';
 import { hashTree } from '../src/corpus/harness.mjs';

@@ -11,7 +11,8 @@
 import { readFileSync, rmSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
-import { buildProject, writeProject } from './frameworks.mjs';
+import { writeProject } from './frameworks.mjs';
+import { buildProject } from './projects.mjs';
 
 /** Read the plan. Kept separate so callers can validate it before anything is written. */
 export function readPlan(planPath = 'pilot/plan.json') {

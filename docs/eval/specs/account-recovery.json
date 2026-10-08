@@ -1,0 +1,185 @@
+{
+  "spec_version": 1,
+  "family_id": "account-recovery",
+  "title": "Account sign-in and recovery",
+  "story": "Sign-up, sign-in with a server session, and a password-reset request.",
+  "durability": {
+    "version": 1,
+    "authored": "2026-10-08",
+    "basis": "transcribed from the pilot archetype and hand-reviewed; test/spec.test.mjs keeps the two in step",
+    "rebuild": "node scripts/rebuild-from-spec.mjs --family account-recovery"
+  },
+  "state": {
+    "engine": "sqlite",
+    "lifetime": "per process, in a file named on the command line - not a durable store",
+    "tables": [
+      {
+        "name": "records",
+        "purpose": "the value a write stores, read back by the reference the server issued",
+        "columns": [
+          {
+            "name": "ref",
+            "type": "TEXT",
+            "constraints": "PRIMARY KEY"
+          },
+          {
+            "name": "created_at",
+            "type": "TEXT",
+            "constraints": "NOT NULL"
+          },
+          {
+            "name": "payload",
+            "type": "TEXT",
+            "constraints": "NOT NULL"
+          }
+        ]
+      },
+      {
+        "name": "sessions",
+        "purpose": "who the server decided the requester is, for this session only",
+        "columns": [
+          {
+            "name": "sid",
+            "type": "TEXT",
+            "constraints": "PRIMARY KEY"
+          },
+          {
+            "name": "ref",
+            "type": "TEXT",
+            "constraints": "NOT NULL"
+          },
+          {
+            "name": "created_at",
+            "type": "TEXT",
+            "constraints": "NOT NULL"
+          }
+        ]
+      },
+      {
+        "name": "accounts",
+        "purpose": "the account a sign-up creates and sign-in reads",
+        "columns": [
+          {
+            "name": "email",
+            "type": "TEXT",
+            "constraints": "PRIMARY KEY"
+          },
+          {
+            "name": "password",
+            "type": "TEXT",
+            "constraints": "NOT NULL"
+          },
+          {
+            "name": "display_name",
+            "type": "TEXT",
+            "constraints": ""
+          }
+        ]
+      }
+    ]
+  },
+  "persistence": {
+    "write_route": "/signup",
+    "read_route": "/account",
+    "reference": "session id issued by the server as a cookie",
+    "reload_assertion": "reloading /account still shows the display name the sign-up stored, because the session cookie identifies the account"
+  },
+  "routes": [
+    {
+      "method": "GET",
+      "path": "/",
+      "kind": "page",
+      "effect": "render the sign-up form"
+    },
+    {
+      "method": "POST",
+      "path": "/signup",
+      "kind": "write-account",
+      "effect": "create the account, start a session, and redirect to the account page",
+      "redirect": "/account"
+    },
+    {
+      "method": "GET",
+      "path": "/account",
+      "kind": "read-session",
+      "effect": "read the session and show the display name it identifies"
+    },
+    {
+      "method": "POST",
+      "path": "/reset",
+      "kind": "write-reset",
+      "effect": "start a password reset and redirect to a reference-addressed page",
+      "redirect": "/reset/:ref"
+    },
+    {
+      "method": "GET",
+      "path": "/reset/:ref",
+      "kind": "read-by-reference",
+      "effect": "read the reset by reference and render it"
+    }
+  ],
+  "fields": [
+    {
+      "slug": "email",
+      "name": "email",
+      "type": "email",
+      "label": "Email",
+      "autocomplete": "username",
+      "required": true
+    },
+    {
+      "slug": "password",
+      "name": "password",
+      "type": "password",
+      "label": "Password",
+      "autocomplete": "new-password",
+      "required": true
+    },
+    {
+      "slug": "displayName",
+      "name": "displayName",
+      "type": "text",
+      "label": "Display name",
+      "echoed": true,
+      "required": true
+    }
+  ],
+  "validation": {
+    "required_fields": [
+      "email",
+      "password",
+      "displayName"
+    ],
+    "on_missing": "the server refuses the submission and re-renders the form; no account is created",
+    "on_success": "create the account, issue a session, and answer 303 with Location: /account"
+  },
+  "journey": {
+    "startPath": "/",
+    "formSelector": "form#signup-form",
+    "fill": {
+      "input[name=email]": "alan@example.test",
+      "input[name=password]": "correct horse battery",
+      "input[name=displayName]": "Alan T"
+    },
+    "expectText": "Alan T"
+  },
+  "form": null,
+  "extra_form": null,
+  "write_journey": null,
+  "security_journey": {
+    "path": "/",
+    "formSelector": "form#signup-form",
+    "fill": {}
+  },
+  "echo": {
+    "field": "displayName",
+    "source": "session"
+  },
+  "password_field": null,
+  "session": true,
+  "acceptance": [
+    "the echoed display name is held by the session the server issued, so it survives a reload only if the session does",
+    "the session cookie carries HttpOnly, SameSite=Lax and Path=/ (and Secure when the arm sets it)",
+    "an empty submit is observed to be refused"
+  ]
+}

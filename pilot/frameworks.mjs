@@ -23,13 +23,17 @@
  *
  * The generator takes a defect list, so an original with a known MWG gap is produced from the same
  * code that produces a clean one - and the uplift tool is measured against the gap it was given.
+ *
+ * This module deliberately does **not** import the archetype table. It holds the rendering templates
+ * and knows how to build a project from an archetype *object* (`buildProjectFor`); the id-to-archetype
+ * lookup lives in `pilot/projects.mjs`, which is the join between the two. That split is what lets a
+ * durable specification rebuild a project where the archetype table is gone: the templates and the
+ * builder are still here, and the specification supplies the archetype.
  */
 import { A11Y_SCRIPT } from '../src/corpus/uplift.mjs';
 import { compileSvelteServer } from '../src/corpus/svelte.mjs';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-
-import { ARCHETYPES } from './archetypes.mjs';
 
 const slug = (value) => value.replace(/[^a-z0-9]+/gi, '-').toLowerCase();
 
@@ -832,12 +836,11 @@ export function writeProject(root, { projectId, files, spec }) {
   return root;
 }
 
-export function buildProject({ archetypeId, frameworkName, defects = [], flags = {} }) {
-  const archetype = ARCHETYPES[archetypeId];
-  if (!archetype) throw new Error(`unknown archetype ${archetypeId}`);
+export function buildProjectFor(archetype, { frameworkName, defects = [], flags = {} }) {
+  if (!archetype?.id) throw new Error('buildProjectFor: an archetype with an id is required');
   const framework = { ...FRAMEWORKS[frameworkName], ...flags };
   if (!framework.name) throw new Error(`unknown framework ${frameworkName}`);
-  const projectId = `${archetypeId}-${frameworkName}${flags.variant ? `-${flags.variant}` : ''}`;
+  const projectId = `${archetype.id}-${frameworkName}${flags.variant ? `-${flags.variant}` : ''}`;
 
   const files = {
     'server.mjs': framework.name === 'hono' ? honoServerSource(archetype, framework) : serverSource(archetype, framework),

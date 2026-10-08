@@ -1,0 +1,155 @@
+{
+  "spec_version": 1,
+  "family_id": "booking",
+  "title": "Evening class booking",
+  "story": "A training centre takes bookings for evening classes and shows the booking back to the student.",
+  "durability": {
+    "version": 1,
+    "authored": "2026-10-08",
+    "basis": "transcribed from the pilot archetype and hand-reviewed; test/spec.test.mjs keeps the two in step",
+    "rebuild": "node scripts/rebuild-from-spec.mjs --family booking"
+  },
+  "state": {
+    "engine": "sqlite",
+    "lifetime": "per process, in a file named on the command line - not a durable store",
+    "tables": [
+      {
+        "name": "records",
+        "purpose": "the value a write stores, read back by the reference the server issued",
+        "columns": [
+          {
+            "name": "ref",
+            "type": "TEXT",
+            "constraints": "PRIMARY KEY"
+          },
+          {
+            "name": "created_at",
+            "type": "TEXT",
+            "constraints": "NOT NULL"
+          },
+          {
+            "name": "payload",
+            "type": "TEXT",
+            "constraints": "NOT NULL"
+          }
+        ]
+      }
+    ]
+  },
+  "persistence": {
+    "write_route": "/book",
+    "read_route": "/booking/:ref",
+    "reference": "server-issued reference, returned in the Location header of a 303",
+    "reload_assertion": "reloading /booking/<ref> still shows the stored notes value; the value is read from SQLite, not from the form"
+  },
+  "routes": [
+    {
+      "method": "GET",
+      "path": "/",
+      "kind": "page",
+      "effect": "render the booking form"
+    },
+    {
+      "method": "POST",
+      "path": "/book",
+      "kind": "write",
+      "effect": "refuse the submission if a required field is missing; otherwise store the booking and redirect",
+      "redirect": "/booking/:ref"
+    },
+    {
+      "method": "GET",
+      "path": "/booking/:ref",
+      "kind": "read-by-reference",
+      "effect": "read the booking by reference and show the notes back to the student"
+    },
+    {
+      "method": "GET",
+      "path": "/roster",
+      "kind": "list",
+      "effect": "list the stored bookings"
+    }
+  ],
+  "fields": [
+    {
+      "slug": "name",
+      "name": "name",
+      "type": "text",
+      "label": "Full name",
+      "autocomplete": "name",
+      "required": true
+    },
+    {
+      "slug": "email",
+      "name": "email",
+      "type": "email",
+      "label": "Email",
+      "autocomplete": "username",
+      "required": true
+    },
+    {
+      "slug": "address",
+      "name": "address",
+      "type": "text",
+      "label": "Delivery address",
+      "pattern": "<input[^>]*name=\"address\"[^>]*>",
+      "autocomplete": "street-address",
+      "required": true
+    },
+    {
+      "slug": "postcode",
+      "name": "postcode",
+      "type": "text",
+      "label": "Postcode",
+      "autocomplete": "postal-code",
+      "required": true
+    },
+    {
+      "slug": "notes",
+      "name": "notes",
+      "type": "textarea",
+      "label": "Anything we should know?",
+      "echoed": true,
+      "required": true
+    }
+  ],
+  "validation": {
+    "required_fields": [
+      "name",
+      "email",
+      "address",
+      "postcode",
+      "notes"
+    ],
+    "on_missing": "the server refuses the submission and re-renders the form; nothing is stored",
+    "on_success": "insert one row into records and answer 303 with Location: /booking/<ref>"
+  },
+  "journey": {
+    "startPath": "/",
+    "formSelector": "form#booking-form",
+    "fill": {
+      "input[name=name]": "Ada Lovelace",
+      "input[name=email]": "ada@example.test",
+      "input[name=address]": "12 Bridge Row",
+      "input[name=postcode]": "AB1 2CD",
+      "textarea[name=notes]": "Window seat please"
+    },
+    "expectText": "Ada Lovelace"
+  },
+  "form": null,
+  "extra_form": null,
+  "write_journey": null,
+  "security_journey": null,
+  "echo": {
+    "field": "notes",
+    "container": "#booking-notes",
+    "route": "read-by-reference"
+  },
+  "password_field": null,
+  "session": false,
+  "acceptance": [
+    "after a successful submit the browser lands on /booking/<ref> and the echoed notes text is present",
+    "reloading that URL still shows it, which is only possible if the server stored it",
+    "an empty submit is observed to be refused by the server rather than silently accepted",
+    "the reference in the URL was issued by this submission, not read from a row that already existed"
+  ]
+}

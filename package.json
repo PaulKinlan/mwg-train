@@ -21,6 +21,8 @@
     "check:targets": "node scripts/render-targets.mjs --check && node scripts/validate-provenance.mjs data/A6_evaluation/targets/manifest.jsonl",
     "score:conformance": "node scripts/score-conformance.mjs",
     "score:identity": "node scripts/score-variant-identity.mjs",
+    "check:specs": "node scripts/rebuild-from-spec.mjs --all",
+    "rebuild:spec": "node scripts/rebuild-from-spec.mjs",
     "check:originals": "node scripts/verify-originals.mjs docs/provenance/manifest.example.jsonl",
     "pilot:scaffold": "node scripts/scaffold-pilot.mjs",
     "pilot:run": "node scripts/pilot.mjs",
