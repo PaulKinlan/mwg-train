@@ -14,6 +14,10 @@ test('design language is linked, classified and covers every taxonomy group', ()
   for (const group of new Set(matrix.archetypes.map(({ group }) => group))) {
     assert.ok(guide.includes(`\`${group}\``), `${group}: map taxonomy group to a layout grammar`);
   }
+  for (const section of ['Type and headings', 'Layout grid and responsive rules', 'Light and dark modes', 'Component anatomy', 'Layout grammars']) {
+    assert.ok(guide.includes(section), `design guide missing ${section}`);
+  }
+  assert.match(guide, /billing period updates amount, cadence/i);
   assert.match(guide, /no generator wired/i);
   assert.match(guide, /excluded from training/i);
 });
