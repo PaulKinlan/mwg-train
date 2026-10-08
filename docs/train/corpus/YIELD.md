@@ -2,8 +2,10 @@
 
 Generated 2026-10-08T15:46:09.549Z by `scripts/train-corpus-run.mjs`. 40 sampled pairs, 240 journeys driven, 240 passed.
 
-Every number here comes from a record produced by driving the project in a real browser; the
-per-project records, screenshots and traces are under the run output directory.
+The SAMPLED projects' numbers come from records produced by driving the project in a real
+browser; the per-project records, screenshots and traces are under the run output directory.
+The unscored and total counts are scaffold records, not browser records - they say what was
+built, not that it was driven. No project has been shown to build or serve beyond the sample.
 
 ## Selection rule
 

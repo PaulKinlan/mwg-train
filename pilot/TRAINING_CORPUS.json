@@ -1,6 +1,6 @@
 {
   "$comment": "The training corpus generated from the tr-* briefs: one project per family x framework, each with its tree hash. `node scripts/scaffold-training-corpus.mjs` re-derives every tree; a hash here must never collide with a hash in pilot/CORPUS.json (original or uplift), which is the disjointness the corpus exists to guarantee.",
-  "generated_at": "2026-10-08T16:17:31.702Z",
+  "generated_at": "2026-10-08T16:22:11.000Z",
   "generator": "scripts/scaffold-training-corpus.mjs",
   "summary": {
     "families": 30,
@@ -4725,8 +4725,8 @@
         "no-aria-sync"
       ],
       "seeded_defects": [
-        "error notifications only change text color to red without accessible aria-live or role alerts for screen readers",
-        "pressing Enter inside any text input triggers form submission before required grind selections are made"
+        "in-page validation errors only change the field border to red; the message is not announced to assistive technology, so a screen reader user gets no indication (the server's own incomplete-form page does carry role=\"alert\", but the in-page indication does not)",
+        "pressing Enter inside any text input submits the form immediately, before the remaining required fields have been completed"
       ],
       "route_conformed": true,
       "brief_write_route": "/subscriptions/:id/edit",
@@ -4755,8 +4755,8 @@
         "no-aria-sync"
       ],
       "seeded_defects": [
-        "error notifications only change text color to red without accessible aria-live or role alerts for screen readers",
-        "pressing Enter inside any text input triggers form submission before required grind selections are made"
+        "in-page validation errors only change the field border to red; the message is not announced to assistive technology, so a screen reader user gets no indication (the server's own incomplete-form page does carry role=\"alert\", but the in-page indication does not)",
+        "pressing Enter inside any text input submits the form immediately, before the remaining required fields have been completed"
       ],
       "route_conformed": true,
       "brief_write_route": "/subscriptions/:id/edit",
@@ -4785,8 +4785,8 @@
         "no-aria-sync"
       ],
       "seeded_defects": [
-        "error notifications only change text color to red without accessible aria-live or role alerts for screen readers",
-        "pressing Enter inside any text input triggers form submission before required grind selections are made"
+        "in-page validation errors only change the field border to red; the message is not announced to assistive technology, so a screen reader user gets no indication (the server's own incomplete-form page does carry role=\"alert\", but the in-page indication does not)",
+        "pressing Enter inside any text input submits the form immediately, before the remaining required fields have been completed"
       ],
       "route_conformed": true,
       "brief_write_route": "/subscriptions/:id/edit",
@@ -4815,8 +4815,8 @@
         "no-aria-sync"
       ],
       "seeded_defects": [
-        "error notifications only change text color to red without accessible aria-live or role alerts for screen readers",
-        "pressing Enter inside any text input triggers form submission before required grind selections are made"
+        "in-page validation errors only change the field border to red; the message is not announced to assistive technology, so a screen reader user gets no indication (the server's own incomplete-form page does carry role=\"alert\", but the in-page indication does not)",
+        "pressing Enter inside any text input submits the form immediately, before the remaining required fields have been completed"
       ],
       "route_conformed": true,
       "brief_write_route": "/subscriptions/:id/edit",
@@ -4845,8 +4845,8 @@
         "no-aria-sync"
       ],
       "seeded_defects": [
-        "error notifications only change text color to red without accessible aria-live or role alerts for screen readers",
-        "pressing Enter inside any text input triggers form submission before required grind selections are made"
+        "in-page validation errors only change the field border to red; the message is not announced to assistive technology, so a screen reader user gets no indication (the server's own incomplete-form page does carry role=\"alert\", but the in-page indication does not)",
+        "pressing Enter inside any text input submits the form immediately, before the remaining required fields have been completed"
       ],
       "route_conformed": true,
       "brief_write_route": "/subscriptions/:id/edit",
@@ -4875,8 +4875,8 @@
         "no-aria-sync"
       ],
       "seeded_defects": [
-        "error notifications only change text color to red without accessible aria-live or role alerts for screen readers",
-        "pressing Enter inside any text input triggers form submission before required grind selections are made"
+        "in-page validation errors only change the field border to red; the message is not announced to assistive technology, so a screen reader user gets no indication (the server's own incomplete-form page does carry role=\"alert\", but the in-page indication does not)",
+        "pressing Enter inside any text input submits the form immediately, before the remaining required fields have been completed"
       ],
       "route_conformed": true,
       "brief_write_route": "/subscriptions/:id/edit",
@@ -4905,8 +4905,8 @@
         "no-aria-sync"
       ],
       "seeded_defects": [
-        "error notifications only change text color to red without accessible aria-live or role alerts for screen readers",
-        "pressing Enter inside any text input triggers form submission before required grind selections are made"
+        "in-page validation errors only change the field border to red; the message is not announced to assistive technology, so a screen reader user gets no indication (the server's own incomplete-form page does carry role=\"alert\", but the in-page indication does not)",
+        "pressing Enter inside any text input submits the form immediately, before the remaining required fields have been completed"
       ],
       "route_conformed": true,
       "brief_write_route": "/subscriptions/:id/edit",
@@ -5335,7 +5335,7 @@
         "no-required"
       ],
       "seeded_defects": [
-        "negative and non-numeric contribution amounts are accepted without error and stored as-is, with no minimum or numeric bound enforced",
+        "a direct POST with a negative or non-numeric amount is accepted and stored as-is, with no server-side numeric bound (the rendered form uses type=\"number\", so this is reachable only by posting to the endpoint directly)",
         "the contribution form lacks associated label elements for the contributor and amount inputs",
         "the client form omits the required attribute and per-field error messages, so a user is not told up front which fields are required; the server still rejects an empty submission with a 422 error page listing the missing fields"
       ],
@@ -5371,7 +5371,7 @@
         "no-required"
       ],
       "seeded_defects": [
-        "negative and non-numeric contribution amounts are accepted without error and stored as-is, with no minimum or numeric bound enforced",
+        "a direct POST with a negative or non-numeric amount is accepted and stored as-is, with no server-side numeric bound (the rendered form uses type=\"number\", so this is reachable only by posting to the endpoint directly)",
         "the contribution form lacks associated label elements for the contributor and amount inputs",
         "the client form omits the required attribute and per-field error messages, so a user is not told up front which fields are required; the server still rejects an empty submission with a 422 error page listing the missing fields"
       ],
@@ -5407,7 +5407,7 @@
         "no-required"
       ],
       "seeded_defects": [
-        "negative and non-numeric contribution amounts are accepted without error and stored as-is, with no minimum or numeric bound enforced",
+        "a direct POST with a negative or non-numeric amount is accepted and stored as-is, with no server-side numeric bound (the rendered form uses type=\"number\", so this is reachable only by posting to the endpoint directly)",
         "the contribution form lacks associated label elements for the contributor and amount inputs",
         "the client form omits the required attribute and per-field error messages, so a user is not told up front which fields are required; the server still rejects an empty submission with a 422 error page listing the missing fields"
       ],
@@ -5443,7 +5443,7 @@
         "no-required"
       ],
       "seeded_defects": [
-        "negative and non-numeric contribution amounts are accepted without error and stored as-is, with no minimum or numeric bound enforced",
+        "a direct POST with a negative or non-numeric amount is accepted and stored as-is, with no server-side numeric bound (the rendered form uses type=\"number\", so this is reachable only by posting to the endpoint directly)",
         "the contribution form lacks associated label elements for the contributor and amount inputs",
         "the client form omits the required attribute and per-field error messages, so a user is not told up front which fields are required; the server still rejects an empty submission with a 422 error page listing the missing fields"
       ],
@@ -5479,7 +5479,7 @@
         "no-required"
       ],
       "seeded_defects": [
-        "negative and non-numeric contribution amounts are accepted without error and stored as-is, with no minimum or numeric bound enforced",
+        "a direct POST with a negative or non-numeric amount is accepted and stored as-is, with no server-side numeric bound (the rendered form uses type=\"number\", so this is reachable only by posting to the endpoint directly)",
         "the contribution form lacks associated label elements for the contributor and amount inputs",
         "the client form omits the required attribute and per-field error messages, so a user is not told up front which fields are required; the server still rejects an empty submission with a 422 error page listing the missing fields"
       ],
@@ -5515,7 +5515,7 @@
         "no-required"
       ],
       "seeded_defects": [
-        "negative and non-numeric contribution amounts are accepted without error and stored as-is, with no minimum or numeric bound enforced",
+        "a direct POST with a negative or non-numeric amount is accepted and stored as-is, with no server-side numeric bound (the rendered form uses type=\"number\", so this is reachable only by posting to the endpoint directly)",
         "the contribution form lacks associated label elements for the contributor and amount inputs",
         "the client form omits the required attribute and per-field error messages, so a user is not told up front which fields are required; the server still rejects an empty submission with a 422 error page listing the missing fields"
       ],
@@ -5551,7 +5551,7 @@
         "no-required"
       ],
       "seeded_defects": [
-        "negative and non-numeric contribution amounts are accepted without error and stored as-is, with no minimum or numeric bound enforced",
+        "a direct POST with a negative or non-numeric amount is accepted and stored as-is, with no server-side numeric bound (the rendered form uses type=\"number\", so this is reachable only by posting to the endpoint directly)",
         "the contribution form lacks associated label elements for the contributor and amount inputs",
         "the client form omits the required attribute and per-field error messages, so a user is not told up front which fields are required; the server still rejects an empty submission with a 422 error page listing the missing fields"
       ],
@@ -5586,8 +5586,8 @@
         "no-aria-sync"
       ],
       "seeded_defects": [
-        "pressing Enter inside the volunteer name input submits the form before a cleanup zone is chosen",
-        "missing required input errors are indicated solely by border styling without accessible text announcements"
+        "pressing Enter inside the volunteer name input submits the form immediately, before the remaining fields have been completed",
+        "the in-page required-field error is not announced to assistive technology; the page does display required-field text and the server's rejection page carries role=\"alert\", but the client-side indication adds no announcement of its own"
       ],
       "route_conformed": true,
       "brief_write_route": "/cleanups/:id/register",
@@ -5616,8 +5616,8 @@
         "no-aria-sync"
       ],
       "seeded_defects": [
-        "pressing Enter inside the volunteer name input submits the form before a cleanup zone is chosen",
-        "missing required input errors are indicated solely by border styling without accessible text announcements"
+        "pressing Enter inside the volunteer name input submits the form immediately, before the remaining fields have been completed",
+        "the in-page required-field error is not announced to assistive technology; the page does display required-field text and the server's rejection page carries role=\"alert\", but the client-side indication adds no announcement of its own"
       ],
       "route_conformed": true,
       "brief_write_route": "/cleanups/:id/register",
@@ -5646,8 +5646,8 @@
         "no-aria-sync"
       ],
       "seeded_defects": [
-        "pressing Enter inside the volunteer name input submits the form before a cleanup zone is chosen",
-        "missing required input errors are indicated solely by border styling without accessible text announcements"
+        "pressing Enter inside the volunteer name input submits the form immediately, before the remaining fields have been completed",
+        "the in-page required-field error is not announced to assistive technology; the page does display required-field text and the server's rejection page carries role=\"alert\", but the client-side indication adds no announcement of its own"
       ],
       "route_conformed": true,
       "brief_write_route": "/cleanups/:id/register",
@@ -5676,8 +5676,8 @@
         "no-aria-sync"
       ],
       "seeded_defects": [
-        "pressing Enter inside the volunteer name input submits the form before a cleanup zone is chosen",
-        "missing required input errors are indicated solely by border styling without accessible text announcements"
+        "pressing Enter inside the volunteer name input submits the form immediately, before the remaining fields have been completed",
+        "the in-page required-field error is not announced to assistive technology; the page does display required-field text and the server's rejection page carries role=\"alert\", but the client-side indication adds no announcement of its own"
       ],
       "route_conformed": true,
       "brief_write_route": "/cleanups/:id/register",
@@ -5706,8 +5706,8 @@
         "no-aria-sync"
       ],
       "seeded_defects": [
-        "pressing Enter inside the volunteer name input submits the form before a cleanup zone is chosen",
-        "missing required input errors are indicated solely by border styling without accessible text announcements"
+        "pressing Enter inside the volunteer name input submits the form immediately, before the remaining fields have been completed",
+        "the in-page required-field error is not announced to assistive technology; the page does display required-field text and the server's rejection page carries role=\"alert\", but the client-side indication adds no announcement of its own"
       ],
       "route_conformed": true,
       "brief_write_route": "/cleanups/:id/register",
@@ -5736,8 +5736,8 @@
         "no-aria-sync"
       ],
       "seeded_defects": [
-        "pressing Enter inside the volunteer name input submits the form before a cleanup zone is chosen",
-        "missing required input errors are indicated solely by border styling without accessible text announcements"
+        "pressing Enter inside the volunteer name input submits the form immediately, before the remaining fields have been completed",
+        "the in-page required-field error is not announced to assistive technology; the page does display required-field text and the server's rejection page carries role=\"alert\", but the client-side indication adds no announcement of its own"
       ],
       "route_conformed": true,
       "brief_write_route": "/cleanups/:id/register",
@@ -5766,8 +5766,8 @@
         "no-aria-sync"
       ],
       "seeded_defects": [
-        "pressing Enter inside the volunteer name input submits the form before a cleanup zone is chosen",
-        "missing required input errors are indicated solely by border styling without accessible text announcements"
+        "pressing Enter inside the volunteer name input submits the form immediately, before the remaining fields have been completed",
+        "the in-page required-field error is not announced to assistive technology; the page does display required-field text and the server's rejection page carries role=\"alert\", but the client-side indication adds no announcement of its own"
       ],
       "route_conformed": true,
       "brief_write_route": "/cleanups/:id/register",

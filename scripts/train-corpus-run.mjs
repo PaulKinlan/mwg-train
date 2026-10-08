@@ -215,8 +215,10 @@ function renderYieldMd({ runId, generatedAt, selection, records, summary, covera
   lines.push('');
   lines.push(`Generated ${generatedAt} by \`scripts/train-corpus-run.mjs\`. ${summary.sampled_projects} sampled pairs, ${summary.journeys_run} journeys driven, ${summary.journeys_passed} passed.`);
   lines.push('');
-  lines.push('Every number here comes from a record produced by driving the project in a real browser; the');
-  lines.push('per-project records, screenshots and traces are under the run output directory.');
+  lines.push('The SAMPLED projects\' numbers come from records produced by driving the project in a real');
+  lines.push('browser; the per-project records, screenshots and traces are under the run output directory.');
+  lines.push('The unscored and total counts are scaffold records, not browser records - they say what was');
+  lines.push('built, not that it was driven. No project has been shown to build or serve beyond the sample.');
   lines.push('');
   lines.push('## Selection rule');
   lines.push('');
