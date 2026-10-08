@@ -172,6 +172,18 @@ function journeyResults(record, spec) {
   journeys.push({
     name: 'server-persistence',
     passed: persistenceOk(record, spec),
+    // What the journey actually DID, not only that it passed. Without this the committed record
+    // cannot show that a select was moved off its default (`SELECT_NOT_APPLIED` would have failed
+    // the run, but a reader should not have to take that on trust), and the evidence would live only
+    // in the run's output directory.
+    steps: (persistence?.steps ?? [])
+      .filter((step) => ['fill', 'select', 'submit', 'reload', 'step', 'step-fill', 'step-select', 'step-submit'].includes(step.step))
+      .map((step) => ({
+        step: step.step,
+        ...(step.options ? { options: step.options } : {}),
+        ...(step.fields ? { fields: step.fields } : {}),
+        ...(step.status !== undefined ? { status: step.status } : {}),
+      })),
     detail: persistence
       ? {
           submit_status: persistence.steps?.find((step) => step.step === 'submit')?.status ?? null,
