@@ -29,22 +29,41 @@ mwg-public-repo-license|https://raw.githubusercontent.com/GoogleChrome/modern-we
 mwg-src-contributing|https://raw.githubusercontent.com/GoogleChrome/modern-web-guidance-src/main/CONTRIBUTING.md
 mwg-src-license|https://raw.githubusercontent.com/GoogleChrome/modern-web-guidance-src/main/LICENSE
 mwg-src-readme|https://raw.githubusercontent.com/GoogleChrome/modern-web-guidance-src/main/README.md
-web-features-license|https://raw.githubusercontent.com/web-platform-dx/web-features/main/LICENSE
+web-features-license|https://raw.githubusercontent.com/web-platform-dx/web-features/main/LICENSE.txt
+mdn-attrib-license|https://developer.mozilla.org/en-US/docs/MDN/Writing_guidelines/Attrib_copyright_license
+cc-by-4.0-legalcode|https://creativecommons.org/licenses/by/4.0/legalcode.txt
 bcd-license|https://raw.githubusercontent.com/mdn/browser-compat-data/main/LICENSE
+us-copyright-faq|https://www.copyright.gov/help/faq/faq-protect.html
+rfc9309-robots|https://www.rfc-editor.org/rfc/rfc9309.txt
 gemma-terms|https://ai.google.dev/gemma/terms
+deepseek-terms-of-use|https://cdn.deepseek.com/policies/en-US/deepseek-terms-of-use.html
 deepseek-platform-tos|https://cdn.deepseek.com/policies/en-US/deepseek-open-platform-terms-of-service.html
 anthropic-consumer-terms|https://www.anthropic.com/legal/consumer-terms
 anthropic-commercial-terms|https://www.anthropic.com/legal/commercial-terms
 anthropic-usage-policy|https://www.anthropic.com/legal/aup
 openai-terms-of-use|https://openai.com/policies/terms-of-use/
 openai-business-terms|https://openai.com/policies/business-terms/
+openai-terms-of-use-rjina|https://r.jina.ai/https://openai.com/policies/terms-of-use/
+openai-business-terms-rjina|https://r.jina.ai/https://openai.com/policies/business-terms/
+openai-service-terms-rjina|https://r.jina.ai/https://openai.com/policies/service-terms/
+openai-data-use-rjina|https://r.jina.ai/https://openai.com/policies/how-your-data-is-used-to-improve-model-performance/
 google-terms|https://policies.google.com/terms
 google-genai-terms|https://policies.google.com/terms/generative-ai
 gemini-api-terms|https://ai.google.dev/gemini-api/terms
 google-cloud-service-terms|https://cloud.google.com/terms/service-terms
 zai-terms|https://docs.z.ai/legal/terms-of-service
 zai-public-terms|https://z.ai/terms
+zai-terms-of-use|https://docs.z.ai/legal-agreement/terms-of-use.md
+zai-privacy-policy|https://docs.z.ai/legal-agreement/privacy-policy.md
 hf-qwen25-coder-7b|https://huggingface.co/Qwen/Qwen2.5-Coder-7B-Instruct/raw/main/README.md
+hf-license-qwen25-coder-7b|https://huggingface.co/Qwen/Qwen2.5-Coder-7B-Instruct/raw/main/LICENSE
+hf-api-qwen25-coder-7b|https://huggingface.co/api/models/Qwen/Qwen2.5-Coder-7B-Instruct
+hf-api-qwen25-coder-32b|https://huggingface.co/api/models/Qwen/Qwen2.5-Coder-32B-Instruct
+hf-api-qwen3-8b|https://huggingface.co/api/models/Qwen/Qwen3-8B
+hf-api-gemma-3-12b-it|https://huggingface.co/api/models/google/gemma-3-12b-it
+hf-api-deepseek-v4-flash|https://huggingface.co/api/models/deepseek-ai/DeepSeek-V4-Flash
+hf-api-glm-5.3-flash|https://huggingface.co/api/models/zai-org/GLM-5.3-Flash
+gemma-prohibited-use|https://ai.google.dev/gemma/prohibited_use_policy
 hf-qwen3-8b|https://huggingface.co/Qwen/Qwen3-8B/raw/main/README.md
 hf-gemma-3-12b-it|https://huggingface.co/google/gemma-3-12b-it/raw/main/README.md
 hf-glm-4.5|https://huggingface.co/zai-org/GLM-4.5/raw/main/README.md
@@ -109,7 +128,12 @@ while IFS='|' read -r slug url; do
     '{slug:$slug,url:$url,final_url:$final_url,http_status:($code|tonumber? // 0),
       content_type:$ctype,bytes:$bytes,sha256:$sha256,fetched_at:$fetched_at,
       last_modified:$last_modified,verdict:$verdict,raw_path:$raw_path,text_path:$text_path}' \
-    >> "$EV/manifest.jsonl"
+    > "$EV/manifest.row"
+  # Exactly one row per slug, sorted: re-running a single slug replaces its row.
+  { [ -f "$EV/manifest.jsonl" ] && jq -c --arg slug "$slug" 'select(.slug != $slug)' "$EV/manifest.jsonl"; cat "$EV/manifest.row"; } \
+    | jq -cs 'sort_by(.slug)' | jq -c '.[]' > "$EV/manifest.jsonl.new" \
+    && mv "$EV/manifest.jsonl.new" "$EV/manifest.jsonl"
+  rm -f "$EV/manifest.row"
   printf '%-30s %-4s %8s  %s\n' "$slug" "$code" "$bytes" "$verdict"
 done <<< "$SOURCES"
 

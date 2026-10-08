@@ -9,7 +9,8 @@
   },
   "scripts": {
     "test": "node --test",
-    "lint:provenance": "node scripts/validate-provenance.mjs"
+    "lint:provenance": "node scripts/validate-provenance.mjs docs/provenance/manifest.example.jsonl",
+    "check:quotes": "node scripts/check-provenance-quotes.mjs"
   },
   "license": "UNLICENSED"
 }
