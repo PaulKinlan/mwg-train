@@ -168,6 +168,31 @@ export function scanRecordFiles(files, matchers, options = {}) {
   return { status: findings.length === 0 ? 'PASS' : 'FAIL', findings };
 }
 
+/**
+ * The mandatory record scan for one run's project directory. Once a run covers a project, its
+ * three records are MANDATORY: a missing record is a FAIL (missing is not clean), and any
+ * owner-identifying material in a record fails the pair. Evidence JSON files are included when
+ * present. Returns { status, findings }; 'NO-RUN' when the project has no run directory at all.
+ */
+export function scanPairRecords(project, matchers, options = {}) {
+  if (!project.runDir) return { status: 'NO-RUN', findings: [] };
+  const mandatory = ['decision.json', 'original.json', 'uplifted.json'].map((f) => join(project.runDir, f));
+  const missing = mandatory.filter((f) => !existsSync(f));
+  if (missing.length > 0) {
+    return {
+      status: 'FAIL',
+      findings: missing.map((f) => ({ file: f, line: null, patternId: 'record-missing', kind: 'scan-error' })),
+    };
+  }
+  const evidenceJsons =
+    project.evidenceDir && existsSync(project.evidenceDir)
+      ? readdirSync(project.evidenceDir)
+          .filter((f) => f.endsWith('.json'))
+          .map((f) => join(project.evidenceDir, f))
+      : [];
+  return scanRecordFiles([...mandatory, ...evidenceJsons], matchers, options);
+}
+
 function lineNumberAt(text, index, lines) {
   // Count newlines before index; lines is passed in to avoid splitting twice for large files.
   let line = 1;

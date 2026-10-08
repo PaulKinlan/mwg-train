@@ -15,13 +15,13 @@
  *
  * Exit code 0 only if every scanned tree is clean.
  */
-import { existsSync, mkdtempSync, readdirSync } from 'node:fs';
+import { existsSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import process from 'node:process';
 
 import { listRuns, loadCorpus } from '../src/viewer/corpus.mjs';
-import { scanTree, scanRecordFiles, loadScanConfig, buildMatchers } from '../src/viewer/owner-auth.mjs';
+import { scanTree, scanPairRecords, loadScanConfig, buildMatchers } from '../src/viewer/owner-auth.mjs';
 import { hashTree } from '../src/viewer/hashtree.mjs';
 
 const DEFAULT_CONFIG = resolve(process.cwd(), 'docs/eval/owner-identity.json');
@@ -119,20 +119,10 @@ async function main() {
         continue;
       }
       scanOne(`${project.id} (original)`, project.originalTreeDir);
-      // The rule covers the corpus RECORD as well as the site source: decision.json, the two run
-      // records and the evidence JSON are scanned too, and findings fail the pair.
-      const recordFiles = [
-        join(project.runDir, 'decision.json'),
-        join(project.runDir, 'original.json'),
-        join(project.runDir, 'uplifted.json'),
-        ...(project.evidenceDir
-          ? readdirSync(project.evidenceDir)
-              .filter((file) => file.endsWith('.json'))
-              .map((file) => join(project.evidenceDir, file))
-          : []),
-      ];
+      // The rule covers the corpus RECORD as well as the site source, and the three records are
+      // mandatory once a run covers the project: a missing record fails the pair.
       scanned += 1;
-      const recordResult = scanRecordFiles(recordFiles, matchers, scanOptions);
+      const recordResult = scanPairRecords(project, matchers, scanOptions);
       if (recordResult.status !== 'PASS') failed += 1;
       report(`${project.id} (corpus records)`, recordResult);
       if (project.upliftedTreeDir) {

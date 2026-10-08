@@ -66,10 +66,11 @@ export class Sandbox {
    * @param {string} args.siteDir       the tree to serve; mounted read-only at /site
    * @param {string} [args.entry]       entry point relative to /site, default server.mjs
    */
-  constructor({ id, siteDir, entry = 'server.mjs' }) {
+  constructor({ id, siteDir, entry = 'server.mjs', nodeModulesDir = null }) {
     this.id = id;
     this.siteDir = siteDir;
     this.entry = entry;
+    this.nodeModulesDir = nodeModulesDir;
     this.child = null;
     this.log = '';
     this.startedAt = null;
@@ -78,6 +79,7 @@ export class Sandbox {
     this.pending = new Map();
     this.recvBuffer = Buffer.alloc(0);
     this.ready = false;
+    this.logBytes = 0;
   }
 
   async start() {
@@ -95,6 +97,9 @@ export class Sandbox {
       '--ro-bind', nodeRuntimeDir(), '/node',
       ...systemBinds(),
       '--ro-bind', this.siteDir, '/site',
+      // The corpus sites resolve their framework imports (hono, react, vue, ...) from the repo's
+      // node_modules; inside the sandbox /site's parent is /, so it is mounted there, read-only.
+      ...(this.nodeModulesDir && existsSync(this.nodeModulesDir) ? ['--ro-bind', this.nodeModulesDir, '/node_modules'] : []),
       '--ro-bind', WRAPPER_PATH, '/viewer/bridge-wrapper.mjs',
       '--tmpfs', '/tmp',
       '--tmpfs', '/data',
@@ -105,11 +110,11 @@ export class Sandbox {
     ];
     this.child = spawn('bwrap', args, { stdio: ['pipe', 'pipe', 'pipe'] });
     this.child.stderr.on('data', (chunk) => {
-      this.log += chunk.toString();
+      this.#appendLog(chunk.toString());
     });
     this.child.stdout.on('data', (chunk) => this.#onData(chunk));
     this.child.on('exit', (code, signal) => {
-      this.log += `\n[exited code=${code} signal=${signal}]\n`;
+      this.#appendLog(`\n[exited code=${code} signal=${signal}]\n`);
       this.child = null;
       for (const { reject } of this.pending.values()) reject(new Error('sandbox exited'));
       this.pending.clear();
@@ -120,6 +125,14 @@ export class Sandbox {
     this.startedAt = new Date();
     this.lastUsedAt = this.startedAt;
     await this.#waitReady();
+  }
+
+  #appendLog(text) {
+    // Untrusted site output accumulates here; cap it (a chatty site must not grow the viewer's
+    // memory) and keep the tail, which is where the actionable diagnostics live.
+    this.log += text;
+    if (this.log.length > 256 * 1024) this.log = `…[earlier output discarded, capped at 256KB]
+${this.log.slice(-192 * 1024)}`;
   }
 
   #onData(chunk) {
@@ -136,9 +149,9 @@ export class Sandbox {
         this.ready = true;
         if (this.readyResolve) this.readyResolve();
       } else if (type === T_LOG) {
-        this.log += `${payload.toString('utf8')}\n`;
+        this.#appendLog(`${payload.toString('utf8')}\n`);
       } else if (type === T_GONE) {
-        this.log += `[site gone: ${payload.toString('utf8')}]\n`;
+        this.#appendLog(`[site gone: ${payload.toString('utf8')}]\n`);
         this.child?.kill('SIGKILL');
       } else if (type === T_RESPONSE) {
         const entry = this.pending.get(id);
@@ -248,10 +261,11 @@ export class Sandbox {
  * servers left running are exactly what the fleet reaper exists to kill.
  */
 export class SandboxPool {
-  constructor({ stateDir, idleMs = 10 * 60 * 1000, maxInstances = 8 } = {}) {
+  constructor({ stateDir, idleMs = 10 * 60 * 1000, maxInstances = 8, nodeModulesDir = null } = {}) {
     this.stateDir = stateDir;
     this.idleLimitMs = idleMs;
     this.maxInstances = maxInstances;
+    this.nodeModulesDir = nodeModulesDir;
     this.instances = new Map();
     this.sweeper = setInterval(() => this.sweep(), 30_000);
     this.sweeper.unref();
@@ -277,7 +291,7 @@ export class SandboxPool {
     }
     if (existing) this.stop(existing);
     if (this.instances.size >= this.maxInstances) this.evictOldest();
-    const sandbox = new Sandbox({ id: key, siteDir });
+    const sandbox = new Sandbox({ id: key, siteDir, nodeModulesDir: this.nodeModulesDir });
     sandbox.runId = runId;
     await sandbox.start();
     this.instances.set(key, sandbox);

@@ -25,14 +25,14 @@
  */
 import { createServer } from 'node:http';
 import { createHash } from 'node:crypto';
-import { existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, realpathSync, statSync } from 'node:fs';
+import { existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, realpathSync, statSync, writeFileSync } from 'node:fs';
 import { mkdir, readFile, rm } from 'node:fs/promises';
 import { dirname, extname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { filterProjects, loadCorpus, projectView } from './corpus.mjs';
 import { hashTree } from './hashtree.mjs';
-import { scanTree, scanRecordFiles, loadScanConfig, buildMatchers } from './owner-auth.mjs';
+import { scanTree, scanPairRecords, loadScanConfig, buildMatchers } from './owner-auth.mjs';
 import { renderIndex, renderProject, escapeHtml, page } from './pages.mjs';
 import { proxyRequest } from './proxy.mjs';
 import { SandboxPool } from './sandbox.mjs';
@@ -70,7 +70,7 @@ export function liveOriginFor(request, livePort) {
 
 export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(REPO_ROOT, 'docs/eval/owner-identity.json'), repoRoot = REPO_ROOT, livePort = 7701 }) {
   mkdirSync(stateDir, { recursive: true });
-  const pool = new SandboxPool({ stateDir });
+  const pool = new SandboxPool({ stateDir, nodeModulesDir: join(repoRoot, 'node_modules') });
   const scanCache = new Map();
 
   const load = (runId) => loadCorpus(corpusRoot, runId);
@@ -122,37 +122,36 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
   }
 
   /**
-   * The corpus RECORD scan for one project. Records are mandatory once a run exists: a run dir
-   * without its decision/run records fails (missing is not clean), and any owner-identifying
-   * material in a record fails the pair - the corpus record is in scope of the rule exactly as
-   * the site source is.
+   * The corpus RECORD scan for one project, cached by the CONTENT of the records (name + size +
+   * bytes), never by path alone: a record edited after a clean scan must not inherit the PASS.
    */
   const recordsCache = new Map();
   function recordsScan(project) {
     if (!project.runDir) return { status: 'NO-RUN', findings: [] };
-    if (recordsCache.has(project.runDir)) return recordsCache.get(project.runDir);
-    let result;
-    if (!matchers) {
-      result = { status: 'ERROR', reason: matchersError, findings: [] };
-    } else {
-      const mandatory = ['decision.json', 'original.json', 'uplifted.json'].map((f) => join(project.runDir, f));
-      const missing = mandatory.filter((f) => !existsSync(f));
-      if (missing.length > 0) {
-        result = {
-          status: 'FAIL',
-          findings: missing.map((f) => ({ file: f, line: null, patternId: 'record-missing', kind: 'scan-error' })),
-        };
+    if (!matchers) return { status: 'ERROR', reason: matchersError, findings: [] };
+    const hash = createHash('sha256');
+    const files = ['decision.json', 'original.json', 'uplifted.json'].map((f) => join(project.runDir, f));
+    if (project.evidenceDir && existsSync(project.evidenceDir)) {
+      files.push(
+        ...readdirSync(project.evidenceDir)
+          .filter((f) => f.endsWith('.json'))
+          .sort()
+          .map((f) => join(project.evidenceDir, f)),
+      );
+    }
+    for (const file of files) {
+      hash.update(file);
+      if (existsSync(file)) {
+        const stat = statSync(file);
+        hash.update(`:${stat.size}:`);
+        hash.update(readFileSync(file));
       } else {
-        const evidenceJsons = project.evidenceDir
-          ? readdirSync(project.evidenceDir)
-              .filter((f) => f.endsWith('.json'))
-              .map((f) => join(project.evidenceDir, f))
-          : [];
-        result = scanRecordFiles([...mandatory, ...evidenceJsons], matchers, scanOptions);
+        hash.update(':ABSENT:');
       }
     }
-    recordsCache.set(project.runDir, result);
-    return result;
+    const key = hash.digest('hex');
+    if (!recordsCache.has(key)) recordsCache.set(key, scanPairRecords(project, matchers, scanOptions));
+    return recordsCache.get(key);
   }
 
   /**
@@ -173,9 +172,57 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
   }
 
   /**
+   * The MEASURED original tree. The committed pilot/projects/ trees can drift from the recorded
+   * corpus (the plan generator and the checked-in trees are separate artifacts; on 2026-10-08 the
+   * committed trees carried a post-run instrumentation change the record does not hash). The
+   * corpus is regenerable by design (pilot/generate.mjs + plan.json), so the viewer materializes
+   * the measured trees from the plan and verifies each against the recorded original_sha. A tree
+   * that matches the record on disk is used directly; one that cannot be reproduced is refused.
+   */
+  let materializedPromise = null;
+  function materializeMeasuredOriginals() {
+    materializedPromise ??= (async () => {
+      const generatePath = join(repoRoot, 'pilot', 'generate.mjs');
+      if (!existsSync(generatePath)) return null;
+      const outDir = join(stateDir, 'measured-originals');
+      const marker = join(outDir, '.complete');
+      if (!existsSync(marker)) {
+        const { generateCorpus } = await import(generatePath);
+        generateCorpus({ outDir, planPath: join(repoRoot, 'pilot', 'plan.json') });
+        writeFileSync(marker, 'ok\n');
+      }
+      return outDir;
+    })();
+    return materializedPromise;
+  }
+
+  /**
+   * The tree to serve as the original: the committed tree when it hashes to the recorded
+   * original_sha; otherwise the plan-materialized measured tree, verified the same way.
+   * Returns { dir, source } or { dir: null, reason }.
+   */
+  async function measuredOriginalTree(project) {
+    const expected = project.decision?.original_sha ?? null;
+    if (!expected) return { dir: project.originalTreeDir, source: 'working-tree' };
+    if (hashTree(project.originalTreeDir) === expected) return { dir: project.originalTreeDir, source: 'working-tree-verified' };
+    const materialized = await materializeMeasuredOriginals();
+    if (!materialized) {
+      return { dir: null, reason: 'the committed tree no longer matches the recorded original sha, and pilot/generate.mjs is not present to reproduce the measured tree' };
+    }
+    const candidate = join(materialized, project.id);
+    if (!existsSync(candidate)) return { dir: null, reason: `the plan does not generate ${project.id}` };
+    const actual = hashTree(candidate);
+    if (actual !== expected) {
+      return { dir: null, reason: `neither the committed tree nor the plan-generated tree matches the recorded original sha (${expected}); the measured original cannot be reproduced` };
+    }
+    return { dir: candidate, source: 'plan-materialized-verified' };
+  }
+
+  /**
    * Where the uplifted tree comes from: the run's kept tree, or a deterministic regeneration with
-   * the repo's uplift tool that MUST reproduce the recorded uplifted sha. Fail-closed: a
-   * regeneration that does not hash to the recorded value is not served at all, and a cached
+   * the repo's uplift tool that MUST reproduce the recorded uplifted sha. Regeneration starts from
+   * the MEASURED original (see above), not whatever the committed tree currently is. Fail-closed:
+   * a regeneration that does not hash to the recorded value is not served at all, and a cached
    * regeneration is re-hashed before every reuse (independent review, 2026-10-08).
    */
   async function ensureUpliftedTree(project) {
@@ -209,7 +256,9 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
     }
     mkdirSync(dirname(cacheDir), { recursive: true });
     const { upliftProject } = await import(upliftPath);
-    upliftProject(project.originalTreeDir, project.spec, cacheDir);
+    const original = await measuredOriginalTree(project);
+    if (!original.dir) return { dir: null, source: 'no-original', reason: original.reason };
+    upliftProject(original.dir, project.spec, cacheDir);
     const actual = hashTree(cacheDir);
     if (actual !== expected) {
       await rm(cacheDir, { recursive: true, force: true });
@@ -348,7 +397,7 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
       if (!VERSIONS.has(version)) return textResponse(response, 'bad version', 400);
       const requestedRun = runSegment ?? null;
       const corpus = load(requestedRun);
-      if (requestedRun && corpus.runId !== requestedRun) return textResponse(response, 'no such run', 404);
+      if (requestedRun && !corpus.runs.includes(requestedRun)) return textResponse(response, 'no such run', 404);
       const project = findProject(corpus, id);
       if (!project) return textResponse(response, 'no such project', 404);
 
@@ -370,18 +419,21 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
       // uplifted snapshot is scanned after regeneration and hash verification, before it is
       // reachable.
       let siteDir;
+      let treeSource = 'working-tree';
       if (version === 'original') {
-        // The recorded original sha is the measured artifact; a drifted tree is refused rather
-        // than served under the pair's evidence. No decision recorded -> nothing to violate.
-        const expectedOriginal = project.decision?.original_sha ?? null;
-        if (expectedOriginal && hashTree(project.originalTreeDir) !== expectedOriginal) {
+        // The measured original is what the pair's evidence describes: serve the committed tree
+        // only while it still hashes to the recorded original sha; otherwise reproduce the
+        // measured tree from the plan. Refuse when neither reproduces the record.
+        const resolved = await measuredOriginalTree(project);
+        if (!resolved.dir) {
           return htmlResponse(
             response,
-            page('refused', `<h1>live serving refused</h1><p class="danger">The original tree on disk no longer matches the sha recorded at run time (${escapeHtml(expectedOriginal)}). Serving the drifted tree as the measured original would be false evidence.</p>`),
+            page('refused', `<h1>live serving refused</h1><p class="danger">${escapeHtml(resolved.reason ?? 'the measured original cannot be reproduced')}</p>`),
             409,
           );
         }
-        siteDir = project.originalTreeDir;
+        siteDir = resolved.dir;
+        treeSource = resolved.source;
       } else {
         const resolved = await ensureUpliftedTree(project);
         if (!resolved.dir) {
@@ -392,6 +444,7 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
           );
         }
         siteDir = resolved.dir;
+        treeSource = resolved.source;
       }
 
       const treeScan = scanTreeCached(siteDir);
@@ -403,10 +456,19 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
         );
       }
 
-      // The paired tree, when resolvable, must also scan clean before either version serves.
+      // The paired tree of a RECORDED pair must resolve, hash-verify and scan clean before either
+      // version serves: a run that measured a pair does not get to serve half of it. A project
+      // with no decision yet is unpaired; its original serves on its own clean scan alone.
       if (version === 'original' && project.decision) {
         const paired = await ensureUpliftedTree(project);
-        if (paired.dir && scanTreeCached(paired.dir).status !== 'PASS') {
+        if (!paired.dir) {
+          return htmlResponse(
+            response,
+            page('refused', `<h1>live serving refused</h1><p class="danger">This pair's uplifted tree cannot be resolved and verified (${escapeHtml(paired.reason ?? 'unknown')}), so the pair is not servable. The pair is served together or not at all.</p>`),
+            403,
+          );
+        }
+        if (scanTreeCached(paired.dir).status !== 'PASS') {
           return htmlResponse(
             response,
             page('refused', `<h1>live serving refused</h1><p class="danger">The paired uplifted tree fails the owner-auth scan; the pair is served together or not at all.</p>`),

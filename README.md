@@ -44,7 +44,9 @@ npm run scan:owner-auth     # owner-auth gate: no owner-identifying material in 
 Live instances run the real site server sandboxed with bubblewrap: its own network namespace with
 no route off it (the host's loopback proxies and the outside network are unreachable), an
 allowlisted environment, a read-only site tree, and no host filesystem beyond the runtime. The
-viewer reaches the site through a pinned unix-socket bridge; the proxy forwards request headers
+viewer reaches the site over a framed stdio bridge (`src/viewer/bridge-wrapper.mjs` runs inside
+the sandbox; there is no shared filesystem rendezvous a site could substitute); the proxy forwards
+request headers
 from an allowlist and re-scans the outbound set before every request, so owner auth material can
 never reach a site. Uplifted snapshots come from the run's kept tree or a deterministic
 regeneration that must reproduce the recorded SHA - a mismatch is refused, not served.
