@@ -91,7 +91,6 @@
       "name": "address",
       "type": "text",
       "label": "Delivery address",
-      "pattern": "<input[^>]*name=\"address\"[^>]*>",
       "autocomplete": "street-address",
       "required": true
     },

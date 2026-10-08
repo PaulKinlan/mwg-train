@@ -47,6 +47,22 @@ const isString = (value) => typeof value === 'string' && value !== '';
 const isBoolean = (value) => typeof value === 'boolean';
 
 /**
+ * The properties a field may carry.
+ *
+ * Deliberately a closed set. The archetype table carries a `pattern` on some fields that nothing reads
+ * - the generator computes its element patterns from the field's type and name - and transcribing that
+ * into a specification made the specification describe machinery that does not exist. A closed set
+ * means an inert key cannot come back, and a typo (`requireds`) is refused rather than ignored.
+ */
+const FIELD_KEYS = new Set(['slug', 'name', 'type', 'label', 'autocomplete', 'required', 'optional', 'echoed', 'options']);
+export { FIELD_KEYS };
+
+/** The field names a selector types into, from `[name=x]` / `[name="x"]` / `[name='x']`. */
+function selectorFieldNames(selector) {
+  return [...String(selector).matchAll(/\[name=["']?([^\]"']+)["']?\]/g)].map((match) => match[1]);
+}
+
+/**
  * Check a specification against the schema, returning every problem rather than the first.
  *
  * Fail closed: an unreadable specification must not be able to rebuild a project that looks plausible.
@@ -108,6 +124,7 @@ export function validateSpec(spec) {
     const names = new Set();
     for (const [index, field] of spec.fields.entries()) {
       const where = `fields[${index}]`;
+      for (const key of Object.keys(field ?? {})) if (!FIELD_KEYS.has(key)) at(`${where}.${key}`, 'is not a field property this format defines');
       for (const key of ['slug', 'name', 'type', 'label']) if (!isString(field?.[key])) at(`${where}.${key}`, 'must be a non-empty string');
       if (!isBoolean(field?.required)) at(`${where}.required`, 'must be true or false, stated rather than implied by absence');
       if (field?.required === false && field?.optional === undefined) {
@@ -124,7 +141,49 @@ export function validateSpec(spec) {
   if (!isObject(spec.validation)) at('validation', 'must state what a missing field does');
   else {
     if (!Array.isArray(spec.validation.required_fields)) at('validation.required_fields', 'must list the fields the server requires');
+    else {
+      // The required set is derived from `fields[].required` by the generator, so a second copy that
+      // disagrees is a specification saying two things. It is checked rather than trusted because the
+      // prose is the part a reader believes, and the fields are the part that runs.
+      const implemented = (spec.fields ?? []).filter((field) => field?.required && field?.type !== 'select').map((field) => field.name);
+      const stated = spec.validation.required_fields;
+      const omitted = implemented.filter((name) => !stated.includes(name));
+      const extra = stated.filter((name) => !implemented.includes(name));
+      if (omitted.length > 0) at('validation.required_fields', `omits ${omitted.join(', ')}, which the fields mark required`);
+      if (extra.length > 0) at('validation.required_fields', `claims ${extra.join(', ')}, which the fields do not mark required`);
+    }
     for (const key of ['on_missing', 'on_success']) if (!isString(spec.validation[key])) at(`validation.${key}`, 'must be stated');
+  }
+
+  // A journey that types into a field the family does not declare is a journey the generator cannot
+  // build a form for: the run would fail in the browser rather than here, which is the expensive place
+  // to find out. Every driven form is checked against the declared fields.
+  if (Array.isArray(spec.fields) && spec.fields.length > 0) {
+    const declared = new Set(spec.fields.map((field) => field?.name));
+    const journeys = [
+      ['journey', spec.journey],
+      ['extra_form', spec.extra_form],
+      ['write_journey', spec.write_journey],
+      ['security_journey', spec.security_journey],
+    ];
+    for (const [name, journey] of journeys) {
+      for (const selector of Object.keys(journey?.fill ?? {})) {
+        const targets = selectorFieldNames(selector);
+        if (targets.length === 0) at(`${name}.fill("${selector}")`, 'must name the field it types into, as [name=<field>]');
+        for (const target of targets) if (!declared.has(target)) at(`${name}.fill("${selector}")`, `types into ${target}, which the fields do not declare`);
+      }
+    }
+  }
+
+  // If persistence says the read route takes a reference the server issued, the write route has to
+  // actually issue one: a redirect template without `:ref` silently builds a static redirect, and the
+  // reference the specification promises would never exist.
+  if (/reference/i.test(spec.persistence?.reference ?? '')) {
+    for (const route of spec.routes ?? []) {
+      if (route?.kind?.startsWith('write') && isString(route.redirect) && !route.redirect.includes(':ref')) {
+        at(`routes(${route.method} ${route.path}).redirect`, 'persistence promises a server-issued reference, but this write redirects without one');
+      }
+    }
   }
 
   if (!isObject(spec.echo)) at('echo', 'every archetype shows a value back to the user');

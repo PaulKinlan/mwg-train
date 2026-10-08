@@ -20,7 +20,7 @@ import { buildProject } from '../pilot/projects.mjs';
 import { ARCHETYPES, ARCHETYPE_IDS } from '../pilot/archetypes.mjs';
 import { FRAMEWORKS, writeProject } from '../pilot/frameworks.mjs';
 import { hashTree } from '../src/corpus/harness.mjs';
-import { archetypeFromSpec, buildProjectFromSpec, requiredFieldNames, specForFamily, SPECS_DIR, validateSpec } from '../src/eval/spec.mjs';
+import { archetypeFromSpec, buildProjectFromSpec, FIELD_KEYS, requiredFieldNames, specForFamily, SPECS_DIR, validateSpec } from '../src/eval/spec.mjs';
 
 const ROOT = resolve(import.meta.dirname, '..');
 const read = (familyId) => specForFamily(familyId, ROOT);
@@ -119,7 +119,33 @@ test('the specification states the functional facts the generator implements', (
       reduced.routes.map((route) => `${route.method} ${route.path} (${route.kind})`),
       archetype.routes.map((route) => `${route.method} ${route.path} (${route.kind})`),
     );
-    assert.deepEqual(reduced.fields, archetype.fields, `${familyId}: the fields the rebuild consumes differ`);
+    // Compared on the properties the format defines rather than on the archetype's whole shape, because
+    // the archetype table carries keys nothing reads (see below) and a specification must not.
+    const defined = (field) => Object.fromEntries(Object.entries(field).filter(([key]) => FIELD_KEYS.has(key)));
+    assert.deepEqual(reduced.fields.map(defined), archetype.fields.map(defined), `${familyId}: the fields the rebuild consumes differ`);
+    // The specification states required-ness explicitly; the generator's field shape spells it as
+    // `optional`. Comparing the optional marker rather than a `required` key, because the rebuild must
+    // hand the templates the shape they expect - a stray `required` there would be a second, unused copy.
+    assert.deepEqual(
+      reduced.fields.map((field) => field.optional === true),
+      archetype.fields.map((field) => field.optional === true),
+      `${familyId}: required-ness drifted`,
+    );
+    assert.ok(reduced.fields.every((field) => !('required' in field)), `${familyId}: the reduced field still carries the specification's spelling`);
+
+    // The archetype table carries `pattern` on some fields and nothing reads it: the generator computes
+    // its element patterns from the field's type and name, and `pattern` never reaches the built project.
+    // The byte-for-byte test above is what proves it is inert; this is what stops it being transcribed
+    // back into a specification, which is how it got in the first time.
+    const INERT_FIELD_KEYS = ['pattern'];
+    for (const field of archetype.fields) {
+      for (const key of Object.keys(field)) {
+        assert.ok(FIELD_KEYS.has(key) || INERT_FIELD_KEYS.includes(key), `${familyId}: field key ${key} is neither in the format nor known to be inert`);
+      }
+    }
+    for (const field of reduced.fields) {
+      for (const key of INERT_FIELD_KEYS) assert.ok(!(key in field), `${familyId}: the specification carries the inert ${key} property`);
+    }
     assert.deepEqual(reduced.echo, archetype.echo);
     assert.deepEqual(reduced.journey, archetype.journey);
     assert.deepEqual(reduced.writeJourney ?? null, archetype.writeJourney ?? null);
@@ -137,14 +163,21 @@ test('the rebuild path does not reach the archetype table', () => {
   // table is gone. That is only true if nothing the rebuild path imports reads it, so it is asserted on
   // the module sources rather than asserted in prose: a future import would fail here, not silently
   // make `scripts/rebuild-from-spec.mjs` depend on the very file the specification is meant to outlive.
-  for (const file of ['src/eval/spec.mjs', 'pilot/frameworks.mjs']) {
+  //
+  // The pattern matches a static import in any quote style, a re-export, a dynamic `import()` and a
+  // `require()`, so it cannot be slipped past by writing the import differently. It is still a source
+  // check rather than a graph walk, so `pilot/projects.mjs` - which legitimately imports the table and
+  // is the file a rebuild must not reach - is checked by absence from the list instead.
+  const reachesArchetypes = /(?:import|export)[\s\S]{0,200}?from\s*['"`][^'"`]*archetypes\.mjs['"`]|(?:import|require)\s*\(\s*['"`][^'"`]*archetypes\.mjs['"`]/;
+  for (const file of ['src/eval/spec.mjs', 'pilot/frameworks.mjs', 'scripts/rebuild-from-spec.mjs']) {
     const source = readFileSync(join(ROOT, file), 'utf8');
-    assert.doesNotMatch(source, /from '[^']*archetypes\.mjs'/, `${file} imports the archetype table`);
+    assert.doesNotMatch(source, reachesArchetypes, `${file} reaches the archetype table`);
   }
   // ...and the rebuild must go through `buildProjectFor`, the archetype-object seam, not the id lookup.
   const specSource = readFileSync(join(ROOT, 'src/eval/spec.mjs'), 'utf8');
   assert.match(specSource, /buildProjectFor/);
   assert.doesNotMatch(specSource, /buildProject\b(?!For)/);
+  assert.doesNotMatch(readFileSync(join(ROOT, 'scripts/rebuild-from-spec.mjs'), 'utf8'), /projects\.mjs/, 'the rebuild must not reach the id lookup either');
 });
 
 test('a specification that is missing a functional fact is refused, not rebuilt', () => {
@@ -179,6 +212,53 @@ test('a specification that is missing a functional fact is refused, not rebuilt'
   assert.ok(
     validateSpec(impliedRequired).some((problem) => problem.includes('optional')),
     'a field is required or it is not; the specification may not leave it implied',
+  );
+
+  // Cross-field contradictions: a specification whose prose and whose fields say different things is
+  // worse than one that is missing a key, because it looks complete while asserting two behaviours.
+  const wrongRequired = clone();
+  wrongRequired.validation.required_fields = wrongRequired.validation.required_fields.filter((name) => name !== 'notes');
+  assert.ok(
+    validateSpec(wrongRequired).some((problem) => problem.includes('omits notes')),
+    'the stated required set must agree with the fields',
+  );
+
+  const undeclared = clone();
+  undeclared.journey.fill['input[name=nickname]'] = 'Ada';
+  assert.ok(
+    validateSpec(undeclared).some((problem) => problem.includes('nickname')),
+    'the journey may not type into a field the family does not declare',
+  );
+
+  const undirected = clone();
+  Object.keys(undirected.journey.fill).forEach((selector) => {
+    undirected.journey.fill[`#${selector.split('[')[0]}`] = undirected.journey.fill[selector];
+    delete undirected.journey.fill[selector];
+  });
+  assert.ok(
+    validateSpec(undirected).some((problem) => problem.includes('must name the field')),
+    'a journey selector has to name the field it types into',
+  );
+
+  const noRef = clone();
+  noRef.routes.find((route) => route.kind === 'write').redirect = '/thanks';
+  assert.ok(
+    validateSpec(noRef).some((problem) => problem.includes('server-issued reference')),
+    'a write route must issue the reference the persistence promises',
+  );
+
+  const unknownKey = clone();
+  unknownKey.fields[0].requireds = true;
+  assert.ok(
+    validateSpec(unknownKey).some((problem) => problem.includes('requireds')),
+    'an undefined field property is refused rather than ignored',
+  );
+
+  const inertKey = clone();
+  inertKey.fields[0].pattern = '<input[^>]*name="name"[^>]*>';
+  assert.ok(
+    validateSpec(inertKey).some((problem) => problem.includes('pattern')),
+    'the inert generator leftover must not be transcribable into a specification',
   );
 
   // A specification that does not validate must not reach the builder.
