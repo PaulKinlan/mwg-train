@@ -8,6 +8,7 @@ Experiment: does training on Modern Web Guidance-applied sites make a model defa
 
 | what | where |
 | --- | --- |
+| Visual language and rough layout directions for future synthetic sites | [`docs/design.md`](docs/design.md) — typography, spacing, component anatomy, responsive grammars and generated concept boards (not targets or training data) |
 | What will be claimed, and how it will be decided | [`docs/eval/PREREGISTRATION.md`](docs/eval/PREREGISTRATION.md) — arms, primary endpoint, decision rules, splits, seal |
 | The held-out briefs | [`docs/eval/briefs/manifest.jsonl`](docs/eval/briefs/manifest.jsonl) + [`SCHEMA.md`](docs/eval/briefs/SCHEMA.md) |
 | Rules the briefs are validated against | [`docs/eval/rules.json`](docs/eval/rules.json), extracted from a pinned Modern Web Guidance snapshot and verified against web-uplift's published catalog - see [ATTRIBUTION.md](docs/eval/ATTRIBUTION.md) |
