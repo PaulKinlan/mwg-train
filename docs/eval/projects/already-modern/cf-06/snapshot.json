@@ -1,0 +1,22 @@
+{
+  "pages": {
+    "/": {
+      "status": 200,
+      "main": "e42a82bd2a7521b1f5ccd2baf9d7129a3ea89e1e0f8e1f1867049f00fc2a1c2c",
+      "nav": "e9d231129f1ba567f55245804304fb1332ff0ebbf0421f6107027d9ead7b9c3f",
+      "main_text": "exhibits bronze helmet iron age, room 2 wool comb roman, room 3"
+    },
+    "/exhibits/bronze-helmet": {
+      "status": 200,
+      "main": "925bb38a9408f4b963be961c251410c3d849ad808460e56d511520674f5b09da",
+      "nav": "e9d231129f1ba567f55245804304fb1332ff0ebbf0421f6107027d9ead7b9c3f",
+      "main_text": "bronze helmet iron age, room 2 a decorated bronze helmet found in a local field. save to shortlist"
+    },
+    "/shortlist": {
+      "status": 200,
+      "main": "21f78822edf52b5ec260eb65978ab34f6be77c2dc8a4314198b83ef279fac7fa",
+      "nav": "e9d231129f1ba567f55245804304fb1332ff0ebbf0421f6107027d9ead7b9c3f",
+      "main_text": "shortlist nothing saved yet."
+    }
+  }
+}

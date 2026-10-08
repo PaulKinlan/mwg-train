@@ -1,0 +1,78 @@
+{
+  "project_id": "cf-15",
+  "title": "Community cinema",
+  "nav": [
+    {
+      "href": "/",
+      "label": "Films"
+    },
+    {
+      "href": "/reserve",
+      "label": "Reserve"
+    }
+  ],
+  "seed": {
+    "films": [
+      {
+        "id": "the-lighthouse",
+        "title": "The Lighthouse",
+        "meta": "12A · Sunday 2pm",
+        "body": "Two keepers, one island, and a very long night."
+      },
+      {
+        "id": "salt-and-stone",
+        "title": "Salt and Stone",
+        "meta": "PG · Wednesday 7:30pm",
+        "body": "A documentary about the harbour wall."
+      }
+    ],
+    "reservations": []
+  },
+  "pages": [
+    {
+      "path": "/",
+      "kind": "list",
+      "heading": "Films this month",
+      "collection": "films",
+      "item": "/films/:id"
+    },
+    {
+      "path": "/films/:id",
+      "kind": "detail",
+      "collection": "films"
+    },
+    {
+      "path": "/reserve",
+      "kind": "form",
+      "heading": "Reserve seats",
+      "action": "/reserve",
+      "collection": "reservations",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Your name",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "email",
+          "label": "Email",
+          "type": "email",
+          "required": true
+        },
+        {
+          "name": "film",
+          "label": "Film",
+          "type": "select",
+          "options": [
+            "The Lighthouse",
+            "Salt and Stone"
+          ],
+          "required": true
+        }
+      ],
+      "success": "/reserve"
+    }
+  ],
+  "defects": []
+}

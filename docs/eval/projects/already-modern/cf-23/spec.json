@@ -1,0 +1,83 @@
+{
+  "project_id": "cf-23",
+  "title": "Neighbourhood watch",
+  "nav": [
+    {
+      "href": "/",
+      "label": "Home"
+    },
+    {
+      "href": "/coordinators",
+      "label": "Coordinators"
+    },
+    {
+      "href": "/report",
+      "label": "Report"
+    }
+  ],
+  "seed": {
+    "coordinators": [
+      {
+        "id": "willow-close",
+        "title": "Willow Close",
+        "meta": "01234 567890"
+      },
+      {
+        "id": "oak-road",
+        "title": "Oak Road",
+        "meta": "01234 567892"
+      },
+      {
+        "id": "mill-lane",
+        "title": "Mill Lane",
+        "meta": "01234 567894"
+      }
+    ],
+    "reports": []
+  },
+  "pages": [
+    {
+      "path": "/",
+      "kind": "static",
+      "heading": "Neighbourhood watch",
+      "sections": [
+        "A non-urgent reporting scheme run by residents."
+      ]
+    },
+    {
+      "path": "/coordinators",
+      "kind": "list",
+      "heading": "Street coordinators",
+      "collection": "coordinators"
+    },
+    {
+      "path": "/report",
+      "kind": "form",
+      "heading": "Report something",
+      "action": "/report",
+      "collection": "reports",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Your name",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "street",
+          "label": "Street",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "details",
+          "label": "Details",
+          "type": "textarea",
+          "required": true
+        }
+      ],
+      "success": "/"
+    }
+  ],
+  "defects": []
+}

@@ -1,0 +1,28 @@
+{
+  "pages": {
+    "/": {
+      "status": 200,
+      "main": "51019a2450da8d4e74c44c8b58beb83357d8491d9a9f3d41b057573a9c31a7be",
+      "nav": "33ce459e2a014be4d01e48b2c19773160b6c193db57166e8f28c0a2487ad1b2d",
+      "main_text": "pets looking for a home tabby cat · 3 years rex dog · 5 years"
+    },
+    "/pets/tabby": {
+      "status": 200,
+      "main": "4d70d24c3feb8e75cbb1527487e1e8129de305eaca94328fdfc64aedf9e64cbb",
+      "nav": "33ce459e2a014be4d01e48b2c19773160b6c193db57166e8f28c0a2487ad1b2d",
+      "main_text": "tabby cat · 3 years a calm indoor cat who likes a quiet corner."
+    },
+    "/apply": {
+      "status": 200,
+      "main": "8bcd6b52f9b4569115930e4d9054f0f524ce975c145c8707dd5886378555bb6f",
+      "nav": "33ce459e2a014be4d01e48b2c19773160b6c193db57166e8f28c0a2487ad1b2d",
+      "main_text": "adoption application your name email phone number submit"
+    },
+    "/applications/1": {
+      "status": 404,
+      "main": "907ba78b4545338d3539683e63ecb51cf51c10adc9dabd86e92bd52339f298b9",
+      "nav": "33ce459e2a014be4d01e48b2c19773160b6c193db57166e8f28c0a2487ad1b2d",
+      "main_text": "not found"
+    }
+  }
+}

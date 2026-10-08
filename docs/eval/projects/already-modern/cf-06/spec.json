@@ -1,0 +1,65 @@
+{
+  "project_id": "cf-06",
+  "title": "Museum audio guide",
+  "nav": [
+    {
+      "href": "/",
+      "label": "Exhibits"
+    },
+    {
+      "href": "/shortlist",
+      "label": "Shortlist"
+    }
+  ],
+  "seed": {
+    "exhibits": [
+      {
+        "id": "bronze-helmet",
+        "title": "Bronze helmet",
+        "meta": "Iron Age, room 2",
+        "body": "A decorated bronze helmet found in a local field.",
+        "audio": "/media/bronze-helmet.mp3"
+      },
+      {
+        "id": "wool-comb",
+        "title": "Wool comb",
+        "meta": "Roman, room 3",
+        "body": "A bone comb used in textile work.",
+        "audio": "/media/wool-comb.mp3"
+      }
+    ],
+    "shortlist": []
+  },
+  "pages": [
+    {
+      "path": "/",
+      "kind": "list",
+      "heading": "Exhibits",
+      "collection": "exhibits",
+      "item": "/exhibits/:id"
+    },
+    {
+      "path": "/exhibits/:id",
+      "kind": "detail",
+      "collection": "exhibits",
+      "saveAction": "/shortlist",
+      "saveLabel": "Save to shortlist"
+    },
+    {
+      "path": "/shortlist",
+      "kind": "list",
+      "heading": "Shortlist",
+      "collection": "shortlist",
+      "empty": "Nothing saved yet."
+    }
+  ],
+  "saves": [
+    {
+      "path": "/shortlist",
+      "collection": "exhibits",
+      "into": "shortlist",
+      "success": "/shortlist"
+    }
+  ],
+  "defects": []
+}

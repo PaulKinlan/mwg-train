@@ -1,0 +1,22 @@
+{
+  "pages": {
+    "/": {
+      "status": 200,
+      "main": "a5f9fb2d2b546be65c9088f495b3fafcf40262f9c1aafa6e220200bac43dd57c",
+      "nav": "25b02dee4311a719c11cf4163308555c9165bae802fe8b3893e8c2d4472f78c2",
+      "main_text": "films this month the lighthouse 12a · sunday 2pm salt and stone pg · wednesday 7:30pm"
+    },
+    "/films/the-lighthouse": {
+      "status": 200,
+      "main": "278d49efbd69ae6d5a91d9751a02b44ad5294c31288855fabe3d44dbec93f1c5",
+      "nav": "25b02dee4311a719c11cf4163308555c9165bae802fe8b3893e8c2d4472f78c2",
+      "main_text": "the lighthouse 12a · sunday 2pm two keepers, one island, and a very long night."
+    },
+    "/reserve": {
+      "status": 200,
+      "main": "1fb71e6adad42d22667c670f44a4804947d76f3d5f460ab37e8aa3ef61d637aa",
+      "nav": "25b02dee4311a719c11cf4163308555c9165bae802fe8b3893e8c2d4472f78c2",
+      "main_text": "reserve seats your name email film the lighthouse salt and stone submit"
+    }
+  }
+}

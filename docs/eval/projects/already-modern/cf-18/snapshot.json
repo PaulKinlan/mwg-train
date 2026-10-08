@@ -1,0 +1,16 @@
+{
+  "pages": {
+    "/": {
+      "status": 200,
+      "main": "1b0b5001901e3339d5d344ed6ac21d387c647b63d2719107c59a7ab941b45b79",
+      "nav": "3eefa42d52064c480030a45d5813c250a9d15aeb1e6296eae68ca401e6bb1e6f",
+      "main_text": "on the shelf the catcher in the rye j. d. salinger small things like these claire keegan"
+    },
+    "/books/the-catcher": {
+      "status": 200,
+      "main": "cf7658f380924d6d4e42563f9a3ecf824cd5c6f903d1f0b44429556ac0bd68a1",
+      "nav": "3eefa42d52064c480030a45d5813c250a9d15aeb1e6296eae68ca401e6bb1e6f",
+      "main_text": "the catcher in the rye j. d. salinger a hardback with a loose spine. your name reserve"
+    }
+  }
+}

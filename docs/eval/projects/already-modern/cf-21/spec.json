@@ -1,0 +1,83 @@
+{
+  "project_id": "cf-21",
+  "title": "Orchard harvest map",
+  "nav": [
+    {
+      "href": "/",
+      "label": "Orchard"
+    },
+    {
+      "href": "/map",
+      "label": "Map"
+    },
+    {
+      "href": "/report",
+      "label": "Report fruit"
+    }
+  ],
+  "seed": {
+    "trees": [
+      {
+        "id": "apple-1",
+        "title": "Apple tree",
+        "meta": "Discovery",
+        "body": "Near the north gate, planted in 2001."
+      },
+      {
+        "id": "pear-2",
+        "title": "Pear tree",
+        "meta": "Conference",
+        "body": "Beside the bench, a heavy cropper."
+      }
+    ],
+    "reports": []
+  },
+  "pages": [
+    {
+      "path": "/",
+      "kind": "list",
+      "heading": "The orchard",
+      "collection": "trees",
+      "item": "/trees/:id"
+    },
+    {
+      "path": "/map",
+      "kind": "static",
+      "heading": "Map",
+      "sections": [
+        "The orchard map is drawn on the noticeboard by the gate."
+      ]
+    },
+    {
+      "path": "/trees/:id",
+      "kind": "detail",
+      "collection": "trees"
+    },
+    {
+      "path": "/report",
+      "kind": "form",
+      "heading": "Report ripe fruit",
+      "action": "/report",
+      "collection": "reports",
+      "fields": [
+        {
+          "name": "tree",
+          "label": "Tree",
+          "type": "select",
+          "options": [
+            "Apple tree",
+            "Pear tree"
+          ],
+          "required": true
+        },
+        {
+          "name": "notes",
+          "label": "Notes",
+          "type": "textarea"
+        }
+      ],
+      "success": "/"
+    }
+  ],
+  "defects": []
+}

@@ -38,6 +38,7 @@ One JSON object per line. Unknown fields are rejected, so a typo fails loudly.
 | `required_rules` | string[] | subset of `applicable_rules` that must be demonstrably applied |
 | `non_goals` | string[] | what the brief explicitly does not ask for |
 | `seeded_defects` | string[] | repair rows only: the defects planted in the given site |
+| `existing_site` | string \| null | repository-relative path to the project a run is handed first: the existing site for an already-modern brief, or the defective starter for a sealed repair family. Required on those rows, absent everywhere else |
 
 ## The invariants the validator enforces
 
@@ -46,7 +47,7 @@ One JSON object per line. Unknown fields are rejected, so a typo fails loudly.
 2. **Property-set invariance within a family.** These fields must be *identical* across all variants
    of a family: `archetype`, `topic` (the business setting), `locale`, `framework`, `task`,
    `routes`, `journeys`, `server_persistence`, `assertions`, `applicable_rules`, `required_rules`,
-   `non_goals`, and `seeded_defects`. Only `prompt`, `brief_id` and `variant_of` may differ.
+   `non_goals`, `seeded_defects`, and `existing_site`. Only `prompt`, `brief_id` and `variant_of` may differ.
    This is the definition of "the same output": a paraphrase may legitimately change copy, layout
    and aesthetics, and it may **not** change the archetype, the routes, the journeys, the
    server-side behaviour, the applicable rule set or which rules are required.
@@ -60,6 +61,11 @@ One JSON object per line. Unknown fields are rejected, so a typo fails loudly.
    share a prompt either; near-duplicate prompts inside a family are only acceptable if they are
    *rephrasings of the same request*, which is the point of the variant.
 7. **Repair rows** must carry at least one `seeded_defect`; generation rows must not carry any.
+8. **A brief that hands over a project names it.** An already-modern row (one whose `non_goals`
+   carry `already-modern: no uplift required`) and a sealed (`test`) repair row must set
+   `existing_site` to the repository-relative path of the baseline/starter project. Other rows must
+   not set it. The path is resolved by `test/baseline.test.mjs`, which fails if it does not exist or
+   is not one of the projects declared in `docs/eval/projects/index.json`.
 
 ## Archetype vocabulary
 
@@ -96,6 +102,9 @@ archetype of the site they repair.
 - Do not copy text, copy, branding or assets from any real site.
 - `C_out_of_family` rows must include at least five *already-modern* briefs labelled in `non_goals`
   with `already-modern: no uplift required`.
+- An already-modern row and a sealed repair row must point at a control project with
+  `existing_site`; the project's tree hash is committed in `docs/eval/projects/index.json` and
+  `scripts/scaffold-eval-projects.mjs --check` fails if a fixture has changed.
 
 ## Example row
 

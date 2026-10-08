@@ -1,0 +1,92 @@
+{
+  "project_id": "fam-r03",
+  "title": "Treasurer's expense ledger",
+  "defects": [
+    "browser-only-totals",
+    "no-keyboard-widget",
+    "accept-negative"
+  ],
+  "nav": [
+    {
+      "href": "/",
+      "label": "Home"
+    },
+    {
+      "href": "/ledger",
+      "label": "Ledger"
+    },
+    {
+      "href": "/expenses/new",
+      "label": "New expense"
+    }
+  ],
+  "seed": {
+    "expenses": []
+  },
+  "pages": [
+    {
+      "path": "/",
+      "kind": "static",
+      "heading": "Expense ledger",
+      "sections": [
+        "For the treasurer of a small group."
+      ]
+    },
+    {
+      "path": "/ledger",
+      "kind": "list",
+      "heading": "Ledger",
+      "collection": "expenses",
+      "item": "/expenses/:id",
+      "total": {
+        "field": "amount"
+      },
+      "empty": "No expenses recorded."
+    },
+    {
+      "path": "/expenses/new",
+      "kind": "form",
+      "heading": "New expense",
+      "action": "/expenses/new",
+      "collection": "expenses",
+      "fields": [
+        {
+          "name": "description",
+          "label": "Description",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "spent_on",
+          "label": "Date",
+          "type": "date",
+          "required": true
+        },
+        {
+          "name": "amount",
+          "label": "Amount",
+          "type": "number",
+          "min": 0,
+          "widget": "custom",
+          "options": [
+            "0",
+            "10",
+            "20"
+          ]
+        }
+      ],
+      "success": "/expenses/:id"
+    },
+    {
+      "path": "/expenses/:id",
+      "kind": "record",
+      "heading": "Expense recorded",
+      "collection": "expenses",
+      "show": [
+        "description",
+        "spent_on",
+        "amount"
+      ]
+    }
+  ]
+}

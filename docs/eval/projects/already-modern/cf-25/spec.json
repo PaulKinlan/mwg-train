@@ -1,0 +1,71 @@
+{
+  "project_id": "cf-25",
+  "title": "Community radio schedule",
+  "nav": [
+    {
+      "href": "/",
+      "label": "Home"
+    },
+    {
+      "href": "/schedule",
+      "label": "Schedule"
+    }
+  ],
+  "seed": {
+    "programmes": [
+      {
+        "id": "mon-morning",
+        "title": "The Morning Show",
+        "meta": "Monday 09:00",
+        "body": "Music, weather and the village diary."
+      },
+      {
+        "id": "wed-evening",
+        "title": "Folk and Roots",
+        "meta": "Wednesday 19:00",
+        "body": "Two hours of local folk."
+      }
+    ],
+    "presenters": [
+      {
+        "id": "jo-bloggs",
+        "title": "Jo Bloggs",
+        "meta": "The Morning Show"
+      },
+      {
+        "id": "sam-price",
+        "title": "Sam Price",
+        "meta": "Folk and Roots"
+      }
+    ],
+    "alerts": []
+  },
+  "pages": [
+    {
+      "path": "/",
+      "kind": "form",
+      "heading": "Community radio",
+      "sections": [
+        "Programme alerts by email."
+      ],
+      "action": "/alerts",
+      "collection": "alerts",
+      "fields": [
+        {
+          "name": "email",
+          "label": "Email",
+          "type": "email",
+          "required": true
+        }
+      ],
+      "success": "/"
+    },
+    {
+      "path": "/schedule",
+      "kind": "list",
+      "heading": "Schedule",
+      "collection": "programmes"
+    }
+  ],
+  "defects": []
+}

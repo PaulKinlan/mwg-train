@@ -1,0 +1,84 @@
+{
+  "fixtures": {
+    "cf-06": {
+      "group": "already-modern",
+      "brief_id": "cf-06",
+      "family_id": null,
+      "path": "docs/eval/projects/already-modern/cf-06",
+      "tree": "1f67f59dc6797da7b4bf52dfd7e0745a4c95dec68535f4f5527ba8e704120055",
+      "files": 3
+    },
+    "cf-09": {
+      "group": "already-modern",
+      "brief_id": "cf-09",
+      "family_id": null,
+      "path": "docs/eval/projects/already-modern/cf-09",
+      "tree": "66d758f028ed62d381c35f2bb25d8e1d394108cd8f97ebd1fb7e79fa3851e549",
+      "files": 3
+    },
+    "cf-12": {
+      "group": "already-modern",
+      "brief_id": "cf-12",
+      "family_id": null,
+      "path": "docs/eval/projects/already-modern/cf-12",
+      "tree": "5c6a5a494fe5dc228a88b7a3e65d8b0c755b20b5f333cf290359ce8654632c7e",
+      "files": 3
+    },
+    "cf-15": {
+      "group": "already-modern",
+      "brief_id": "cf-15",
+      "family_id": null,
+      "path": "docs/eval/projects/already-modern/cf-15",
+      "tree": "55106e686337e6fac8a3f133d3ff350006876617d5242d954e5531b600c88c99",
+      "files": 3
+    },
+    "cf-18": {
+      "group": "already-modern",
+      "brief_id": "cf-18",
+      "family_id": null,
+      "path": "docs/eval/projects/already-modern/cf-18",
+      "tree": "b9ad041c8c9d8d25e934f465ef6e4ddd70adc3be426a240633c27161bf7a95d6",
+      "files": 3
+    },
+    "cf-21": {
+      "group": "already-modern",
+      "brief_id": "cf-21",
+      "family_id": null,
+      "path": "docs/eval/projects/already-modern/cf-21",
+      "tree": "c0d6ccc32dc76217375606ccef1d3d271a15247abdc3e78fd3ed6093f4c55ac4",
+      "files": 3
+    },
+    "cf-23": {
+      "group": "already-modern",
+      "brief_id": "cf-23",
+      "family_id": null,
+      "path": "docs/eval/projects/already-modern/cf-23",
+      "tree": "a552b88cc8c4e1658edc780b6581fd2ca886554d114b11012c5c67b6040c673f",
+      "files": 3
+    },
+    "cf-25": {
+      "group": "already-modern",
+      "brief_id": "cf-25",
+      "family_id": null,
+      "path": "docs/eval/projects/already-modern/cf-25",
+      "tree": "4f71df2ecae5e08675f0a0eb361da257c802ed5eef4fdc39a7d681829fc7e3fe",
+      "files": 3
+    },
+    "fam-r02": {
+      "group": "repair",
+      "brief_id": null,
+      "family_id": "fam-r02",
+      "path": "docs/eval/projects/repair/fam-r02",
+      "tree": "3f38fd5afbabe5ec521101c858a414d8cae89bc472b63ed33ef9fa36181025b9",
+      "files": 3
+    },
+    "fam-r03": {
+      "group": "repair",
+      "brief_id": null,
+      "family_id": "fam-r03",
+      "path": "docs/eval/projects/repair/fam-r03",
+      "tree": "196f681dfedfccba72d70a67131d26b2e37f9d12727cbb60c61373d32973bb88",
+      "files": 3
+    }
+  }
+}

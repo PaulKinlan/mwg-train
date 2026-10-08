@@ -1,0 +1,16 @@
+{
+  "pages": {
+    "/": {
+      "status": 200,
+      "main": "9535c15e9e322c3d311172641577a80e405250bae19a37ed74c854594f68b43e",
+      "nav": "24b92c194d920ea0ebf40567e37308a9b92a119ffdea9e6997634e618f52a9a0",
+      "main_text": "community radio programme alerts by email. email submit"
+    },
+    "/schedule": {
+      "status": 200,
+      "main": "b3f6737c95ca2df5b60926457cb14f725095bbdcc98ab5edd70882407fd8a281",
+      "nav": "24b92c194d920ea0ebf40567e37308a9b92a119ffdea9e6997634e618f52a9a0",
+      "main_text": "schedule the morning show monday 09:00 folk and roots wednesday 19:00"
+    }
+  }
+}

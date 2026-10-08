@@ -235,7 +235,7 @@ a rater disagree, both are reported.
 ```
 brief manifest: docs/eval/briefs/manifest.jsonl
 rule set:       docs/eval/rules.json  (sha256:f6301c020f138ed70287b663107033c757e11120fa87d947248ce5e4b4cdca19)
-seal hash:      sha256:91d75f29afe10fa419b53fc412abdfaf970068d7725fe40c69894e64c36ed59e
+seal hash:      sha256:89a1f47d638c5eab733074d87bc19d6615401aeb9a77ecbd86cf10b443e272b1
 seal form:      v2 (sorted keys, NFC, sorted rows, sha256 of newline-joined rows)
 sealed at:      computed 2026-10-08; the freeze is taken at the start of the first run
 composition:    79 briefs / 44 families (dev 12 families, test 32 families)
@@ -256,6 +256,7 @@ with object keys sorted at every depth and strings normalised to NFC, join with 
 | date | deviation | reason | recorded by |
 | --- | --- | --- | --- |
 | 2026-10-08 | **the student is a checkpoint both backends can train**, not `Qwen/Qwen2.5-Coder-7B-Instruct` as first proposed | the decided training route is Fireworks managed training, and that checkpoint is **not trainable there**: it is absent from the provider's 44-model fine-tuning catalogue (`docs.fireworks.ai/fine-tuning/models.md`, fetched and hash-pinned in `src/train/reachability.mjs`). The headline platform comparison also needs a checkpoint available on *both* backends, or the comparison measures the model and the platform together. Candidates in the same parameter band, all Apache-2.0: `qwen3-8b`, `qwen3p5-9b`, `qwen3-14b`. No run has happened and no outcome has been seen; this is recorded before the dry run, not after | author mwg-train-prov, from the Fireworks reconciliation |
+| 2026-10-08 | the seal moved from `sha256:91d75f29…` to `sha256:89a1f47d…`, before any training run and before any outcome was seen | `existing_site` was added to the 8 already-modern rows and the 4 sealed repair rows, naming the baseline or starter project each is written against (`docs/eval/projects/`, tree and page-content hashes committed in `docs/eval/projects/index.json`). This closes the two §15 limitations below. No prompt, route, journey, assertion, rule, split or stratum changed; the only edit to a row is the new field | author mwg-train-rff, from the `mwg-train-011` follow-up |
 | 2026-10-08 | the seal moved from `sha256:8791ebcc…` to `sha256:91d75f29…`, before any training run and before any outcome was seen | two changes, both required by adversarial review: (1) the canonical form now sorts object keys and normalises Unicode, because the first form let a re-serialised manifest hash differently (`SEAL_FORM` v2); (2) `fam-09-v2` asked for an address that its siblings and the shared oracle never mention, so the paraphrase added a deliverable — the phrase was removed | rev: gpt-6-sol + gemini-3.8-flash (adversarial passes), author mwg-train-prov |
 
 ## 15. Limitations
@@ -265,19 +266,20 @@ advisory; the corpus's acceptance yield is unmeasured until the pilot runs; the 
 descriptive and quarantined; and this preregistration cannot make the training data's provenance
 clean — that is a separate gate, in `docs/provenance/`.
 
-Two further limitations found by adversarial review on 2026-10-08, recorded rather than papered over:
+Both limitations found by adversarial review on 2026-10-08 have since been closed by `mwg-train-011`, which shipped the control projects and the oracles they need:
 
-- **The already-modern items are not yet measurable.** Eight out-of-family briefs are marked
-  `already-modern: no uplift required`, and the schema gives a brief no way to carry the existing
-  site it is about, so nothing currently lets a run demonstrate "leave everything else exactly as it
-  is" or count the pages it changed. The rows are written against an existing site's copy, but the
-  baseline projects and their before/after oracle are not authored yet. Until they are, over-application
-  is measured by the rule bundle alone, which is weaker, and the secondary endpoint is reported as
-  unmeasured rather than as a pass.
-- **The repair endpoint is not yet executable.** The two sealed repair families name seeded defects
-  and share them across their variants, but no defective starter project ships with them, so a
-  repair run has nothing to run against. The `R_repair` stratum is excluded from the primary
-  endpoint (§7) and stays reported as not-run until the starters exist.
+- **The already-modern items are now measurable.** Every one of the eight already-modern briefs names
+  its baseline project in `existing_site`, and the projects live under `docs/eval/projects/already-modern/`.
+  `src/eval/baseline.mjs` snapshots a project as per-file content hashes and as per-route `<main>`
+  content (the navigation is kept separate, because adding a page legitimately changes the nav on every
+  route), and `diffPages` reports the routes whose content actually changed. The residual caveat: the
+  per-brief allowlist in `assessDiff` is advisory and has to be supplied by the harness that renders a
+  candidate's routes; without it the oracle reports changes rather than judging them.
+- **The repair endpoint is executable.** The two sealed repair families point at defective starters
+  under `docs/eval/projects/repair/`, and `src/eval/defects.mjs` drives each starter and proves that the
+  audited defect set equals the family's `seeded_defects` exactly - present and no others. The residual
+  caveat: `fam-r01` is a `dev` family and intentionally ships no starter, so the audit covers the two
+  sealed families only, and the defect vocabulary is the fixed catalog in `defects.mjs`.
 
-Both are tracked as follow-up work on `mwg-train-kf0`; neither changes the primary endpoint, and
-neither is a reason to report a number we cannot produce.
+Neither changes the primary endpoint; the secondary endpoints are no longer reported as unmeasured for
+lack of a control, only for lack of a run.

@@ -1,0 +1,74 @@
+{
+  "project_id": "cf-09",
+  "title": "Village hall hire",
+  "nav": [
+    {
+      "href": "/",
+      "label": "Home"
+    },
+    {
+      "href": "/facilities",
+      "label": "Facilities"
+    },
+    {
+      "href": "/contact",
+      "label": "Contact"
+    }
+  ],
+  "seed": {
+    "enquiries": []
+  },
+  "pages": [
+    {
+      "path": "/",
+      "kind": "static",
+      "heading": "Village hall hire",
+      "sections": [
+        "A tidy hall in the centre of the village, available for parties, meetings and classes."
+      ]
+    },
+    {
+      "path": "/facilities",
+      "kind": "static",
+      "heading": "Facilities",
+      "sections": [
+        "Main hall seating 80 people.",
+        "Kitchen with serving hatch.",
+        "Accessible toilet and step-free entrance."
+      ]
+    },
+    {
+      "path": "/contact",
+      "kind": "form",
+      "heading": "Contact",
+      "sections": [
+        "Opening hours: 9am to 5pm",
+        "Phone: 01234 567800"
+      ],
+      "action": "/contact",
+      "collection": "enquiries",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Your name",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "email",
+          "label": "Email",
+          "type": "email",
+          "required": true
+        },
+        {
+          "name": "message",
+          "label": "Message",
+          "type": "textarea",
+          "required": true
+        }
+      ],
+      "success": "/contact"
+    }
+  ],
+  "defects": []
+}
