@@ -59,8 +59,8 @@ A fan site may combine Field notes with an Object ledger-style media collection;
 These three original AI-generated **concept boards** show composition directions only. They are not pages, accuracy evidence, accessibility audits, approved prices, target designs or training inputs. Text within the images is model-generated placeholder text and may be misspelled, invented or internally inconsistent; **never copy it as factual content or as assertions**. Source, hashes, rights status and exclusion are recorded in [`design-layouts.md`](provenance/assets/design-layouts.md). The board images must not be promoted to A1/A6 target manifests or supplied as model training examples without separate approval.
 
 - [Object ledger / storefront](design/layout-storefront.jpg) — asymmetrical products, detail choices and basket summary. Useful for comparing hierarchy, not product copy or price arithmetic.
-- [Decision workbench / SaaS](design/layout-saas.jpg) — aligned plan differences next to workspace signup. Its example prices and validation text are **fictional/unverified**, and must be replaced by coherent family-authored fixtures.
-- [Field notes / wiki + explainer](design/layout-explainer.jpg) — TOC, reading column, before/after stage and slider. Body prose/citations in the board are **not sources**; author actual sourced or clearly synthetic content.
+- [Decision workbench / SaaS](design/layout-saas.jpg) — plan differences next to workspace signup; placeholder feature bars and error treatment are **illustrative/unverified**, and must be replaced by coherent family-authored fixtures.
+- [Field notes / wiki + explainer](design/layout-explainer.jpg) — TOC, reading column, before/after stage and slider. The sketch's diagram and labels are **not scientific evidence or sources**; author actual sourced or clearly synthetic content.
 
 ## Prompt handoff for future families
 
