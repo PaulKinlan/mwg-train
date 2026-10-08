@@ -61,7 +61,7 @@ export function loadCorpus(corpusRoot, runId = null) {
   for (const id of projectIds) {
     const projectDir = join(projectsRoot, id);
     const spec = readJson(join(projectDir, 'spec.json'));
-    const projectRunDir = runDir ? join(runDir, id) : null;
+    const projectRunDir = runDir && existsSync(join(runDir, id)) ? join(runDir, id) : null;
     const decision = projectRunDir ? readJson(join(projectRunDir, 'decision.json')) : null;
     const original = projectRunDir ? readJson(join(projectRunDir, 'original.json')) : null;
     const uplifted = projectRunDir ? readJson(join(projectRunDir, 'uplifted.json')) : null;

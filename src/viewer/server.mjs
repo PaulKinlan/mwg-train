@@ -24,14 +24,15 @@
  *   ANY  /live/<id>/<version>/...       the site itself, proxied from its sandbox
  */
 import { createServer } from 'node:http';
-import { existsSync, lstatSync, mkdirSync, realpathSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, realpathSync, statSync } from 'node:fs';
 import { mkdir, readFile, rm } from 'node:fs/promises';
 import { dirname, extname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { filterProjects, loadCorpus, projectView } from './corpus.mjs';
 import { hashTree } from './hashtree.mjs';
-import { scanTree, loadScanConfig, buildMatchers } from './owner-auth.mjs';
+import { scanTree, scanRecordFiles, loadScanConfig, buildMatchers } from './owner-auth.mjs';
 import { renderIndex, renderProject, escapeHtml, page } from './pages.mjs';
 import { proxyRequest } from './proxy.mjs';
 import { SandboxPool } from './sandbox.mjs';
@@ -52,10 +53,17 @@ const textResponse = (response, body, status = 200) => {
   response.end(body);
 };
 
-/** The live origin for links from viewer pages: same host name as the request, the live port. */
+/**
+ * The live origin for links from viewer pages: the request's host name (STRICTLY validated -
+ * the Host header is attacker-influenced, and a bad parse must never produce an attacker
+ * authority) with the live port substituted. An unrecognised host falls back to loopback.
+ */
 export function liveOriginFor(request, livePort) {
-  const host = String(request.headers.host ?? '127.0.0.1');
-  const hostname = host.replace(/:\d+$/, '');
+  const host = String(request.headers.host ?? '');
+  if (!/^[a-z0-9.-]+(:\d+)?$/i.test(host)) return `http://127.0.0.1:${livePort}`;
+  const hostname = host.replace(/:\d+$/, '').toLowerCase();
+  const trusted = hostname === '127.0.0.1' || hostname === 'localhost' || /(^|\.)exe\.xyz$/.test(hostname);
+  if (!trusted) return `http://127.0.0.1:${livePort}`;
   const scheme = hostname.endsWith('.exe.xyz') ? 'https' : 'http';
   return `${scheme}://${hostname}:${livePort}`;
 }
@@ -79,28 +87,89 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
     matchersError = error.message;
   }
 
-  /** Scan one tree, cached by its content hash. Result: { status: 'PASS'|'FAIL'|'ERROR', ... } */
+  /**
+   * Cache key for a scanned tree, computed with the SCANNER's semantics (not hashtree's, which
+   * excludes .github and friends that the scanner reads). Any change to any file the scanner
+   * walks - name, size or content - changes the key. Over-invalidation is safe; staleness is not.
+   */
+  function scanCacheKey(dir) {
+    const skipDirs = scanOptions.skip_dirs ?? ['node_modules', '.git'];
+    const hash = createHash('sha256');
+    const walk = (current, prefix = '') => {
+      for (const entry of readdirSync(current, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+        if (entry.isDirectory()) {
+          if (!skipDirs.includes(entry.name)) walk(join(current, entry.name), `${prefix}${entry.name}/`);
+          continue;
+        }
+        const path = join(current, entry.name);
+        const stat = statSync(path);
+        if (!stat.isFile()) continue;
+        hash.update(`${prefix}${entry.name}:${stat.size}:`);
+        hash.update(readFileSync(path));
+      }
+    };
+    walk(dir);
+    return hash.digest('hex');
+  }
+
+  /** Scan one tree, cached by scanner-semantics content key. */
   function scanTreeCached(dir) {
     if (!dir || !existsSync(dir)) return { status: 'MISSING', findings: [] };
     if (!matchers) return { status: 'ERROR', reason: matchersError, findings: [] };
-    const sha = hashTree(dir);
-    if (!scanCache.has(sha)) scanCache.set(sha, scanTree(dir, matchers, scanOptions));
-    return scanCache.get(sha);
+    const key = scanCacheKey(dir);
+    if (!scanCache.has(key)) scanCache.set(key, scanTree(dir, matchers, scanOptions));
+    return scanCache.get(key);
   }
 
   /**
-   * Pair-level owner-auth status. PASS requires both trees present and clean; PARTIAL means the
-   * original is clean but the uplifted snapshot was not kept (it is regenerated, hash-verified and
-   * scanned at serve time); FAIL/ERROR fail closed.
+   * The corpus RECORD scan for one project. Records are mandatory once a run exists: a run dir
+   * without its decision/run records fails (missing is not clean), and any owner-identifying
+   * material in a record fails the pair - the corpus record is in scope of the rule exactly as
+   * the site source is.
+   */
+  const recordsCache = new Map();
+  function recordsScan(project) {
+    if (!project.runDir) return { status: 'NO-RUN', findings: [] };
+    if (recordsCache.has(project.runDir)) return recordsCache.get(project.runDir);
+    let result;
+    if (!matchers) {
+      result = { status: 'ERROR', reason: matchersError, findings: [] };
+    } else {
+      const mandatory = ['decision.json', 'original.json', 'uplifted.json'].map((f) => join(project.runDir, f));
+      const missing = mandatory.filter((f) => !existsSync(f));
+      if (missing.length > 0) {
+        result = {
+          status: 'FAIL',
+          findings: missing.map((f) => ({ file: f, line: null, patternId: 'record-missing', kind: 'scan-error' })),
+        };
+      } else {
+        const evidenceJsons = project.evidenceDir
+          ? readdirSync(project.evidenceDir)
+              .filter((f) => f.endsWith('.json'))
+              .map((f) => join(project.evidenceDir, f))
+          : [];
+        result = scanRecordFiles([...mandatory, ...evidenceJsons], matchers, scanOptions);
+      }
+    }
+    recordsCache.set(project.runDir, result);
+    return result;
+  }
+
+  /**
+   * Pair-level owner-auth status. PASS requires both trees present and clean and the corpus
+   * records clean; PARTIAL means the uplifted snapshot is not on disk (it is regenerated,
+   * hash-verified and scanned at serve time) or no run exists yet; FAIL/ERROR fail closed.
    */
   function scanFor(project) {
     const original = scanTreeCached(project.originalTreeDir);
     const upliftedDir = project.upliftedTreeDir ?? null;
     const uplifted = upliftedDir ? scanTreeCached(upliftedDir) : { status: 'MISSING', findings: [] };
-    if (original.status === 'ERROR' || uplifted.status === 'ERROR') return { status: 'ERROR', reason: matchersError, original, uplifted };
-    if (original.status === 'FAIL' || uplifted.status === 'FAIL') return { status: 'FAIL', original, uplifted };
-    if (uplifted.status === 'MISSING') return { status: 'PARTIAL', original, uplifted };
-    return { status: 'PASS', original, uplifted };
+    const records = recordsScan(project);
+    const all = [original, uplifted, records];
+    if (all.some((r) => r.status === 'ERROR')) return { status: 'ERROR', reason: matchersError, original, uplifted, records };
+    if (all.some((r) => r.status === 'FAIL')) return { status: 'FAIL', original, uplifted, records };
+    if (uplifted.status === 'MISSING' || records.status === 'NO-RUN') return { status: 'PARTIAL', original, uplifted, records };
+    return { status: 'PASS', original, uplifted, records };
   }
 
   /**
@@ -110,14 +179,25 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
    * regeneration is re-hashed before every reuse (independent review, 2026-10-08).
    */
   async function ensureUpliftedTree(project) {
+    const expected = project.decision?.uplifted_sha ?? null;
+    // A kept snapshot is authoritative ONLY if it still hashes to the recorded sha; a drifted kept
+    // tree is not served as the measured pair member - fall through to verified regeneration.
     if (project.upliftedTreeDir && existsSync(project.upliftedTreeDir)) {
-      return { dir: project.upliftedTreeDir, source: 'run-snapshot' };
+      if (!expected || hashTree(project.upliftedTreeDir) === expected) {
+        return { dir: project.upliftedTreeDir, source: 'run-snapshot' };
+      }
     }
     const upliftPath = join(repoRoot, 'src/corpus/uplift.mjs');
     if (!existsSync(upliftPath)) {
-      return { dir: null, source: 'unavailable', reason: 'the uplift tool (src/corpus/uplift.mjs) is not present in this checkout' };
+      const kept = project.upliftedTreeDir && existsSync(project.upliftedTreeDir);
+      return {
+        dir: null,
+        source: 'unavailable',
+        reason: kept
+          ? 'the kept uplifted tree no longer matches its recorded sha, and the uplift tool (src/corpus/uplift.mjs) is not present in this checkout to regenerate it'
+          : 'the uplift tool (src/corpus/uplift.mjs) is not present in this checkout',
+      };
     }
-    const expected = project.decision?.uplifted_sha ?? null;
     if (!expected) {
       return { dir: null, source: 'unrecorded', reason: 'no uplifted sha is recorded for this pair, so a regenerated tree could not be verified' };
     }
@@ -250,7 +330,10 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
 
       if (path === '/healthz') return textResponse(response, 'ok');
 
-      const liveMatch = path.match(/^\/live\/([a-z0-9-]+)\/(original|uplifted)(\/.*)?$/i);
+      // The run is part of the live URL so every in-site link (rewritten under the prefix) keeps
+      // browsing the run the owner started: /live/<id>/<version>/run/<runId>/... A URL without a
+      // run segment addresses the latest run.
+      const liveMatch = path.match(/^\/live\/([a-z0-9-]+)\/(original|uplifted)(?:\/run\/([A-Za-z0-9._-]+))?(\/.*)?$/i);
       if (!liveMatch) {
         if (path === '/' && request.method === 'GET') {
           return htmlResponse(
@@ -261,17 +344,24 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
         return textResponse(response, 'not found', 404);
       }
 
-      const [, id, version, rest] = liveMatch;
+      const [, id, version, runSegment, rest] = liveMatch;
       if (!VERSIONS.has(version)) return textResponse(response, 'bad version', 400);
-      const corpus = load(null);
+      const requestedRun = runSegment ?? null;
+      const corpus = load(requestedRun);
+      if (requestedRun && corpus.runId !== requestedRun) return textResponse(response, 'no such run', 404);
       const project = findProject(corpus, id);
       if (!project) return textResponse(response, 'no such project', 404);
 
+      // The serving gate is pair-level: neither version is served unless everything the pair
+      // consists of - both trees (the uplifted one regenerated and hash-verified when not kept)
+      // and the run's corpus records - scans clean. A clean tree paired with an owner-bearing
+      // record is not served, because serving it would display the pair as inspectable when the
+      // record itself fails the rule.
       const scan = scanFor(project);
-      if (scan.status === 'ERROR') {
+      if (scan.status === 'ERROR' || scan.status === 'FAIL') {
         return htmlResponse(
           response,
-          page('refused', `<h1>live serving refused</h1><p class="danger">The owner-auth scan cannot run (${escapeHtml(scan.reason ?? 'unknown')}), and the rule is fail-closed: a tree that cannot be shown clean of owner-identifying material is not served.</p>`),
+          page('refused', `<h1>live serving refused</h1><p class="danger">The owner-auth scan of this pair is ${escapeHtml(scan.status)}${scan.reason ? ` (${escapeHtml(scan.reason)})` : ''}, and the rule is fail-closed: a pair that cannot be shown clean of owner-identifying material - in its trees AND its records - is not served.</p>`),
           403,
         );
       }
@@ -281,6 +371,16 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
       // reachable.
       let siteDir;
       if (version === 'original') {
+        // The recorded original sha is the measured artifact; a drifted tree is refused rather
+        // than served under the pair's evidence. No decision recorded -> nothing to violate.
+        const expectedOriginal = project.decision?.original_sha ?? null;
+        if (expectedOriginal && hashTree(project.originalTreeDir) !== expectedOriginal) {
+          return htmlResponse(
+            response,
+            page('refused', `<h1>live serving refused</h1><p class="danger">The original tree on disk no longer matches the sha recorded at run time (${escapeHtml(expectedOriginal)}). Serving the drifted tree as the measured original would be false evidence.</p>`),
+            409,
+          );
+        }
         siteDir = project.originalTreeDir;
       } else {
         const resolved = await ensureUpliftedTree(project);
@@ -303,10 +403,26 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
         );
       }
 
+      // The paired tree, when resolvable, must also scan clean before either version serves.
+      if (version === 'original' && project.decision) {
+        const paired = await ensureUpliftedTree(project);
+        if (paired.dir && scanTreeCached(paired.dir).status !== 'PASS') {
+          return htmlResponse(
+            response,
+            page('refused', `<h1>live serving refused</h1><p class="danger">The paired uplifted tree fails the owner-auth scan; the pair is served together or not at all.</p>`),
+            403,
+          );
+        }
+      }
+
       let sandbox = pool.get(id, version);
+      if (sandbox?.alive && sandbox.runId !== corpus.runId) {
+        pool.stop(sandbox);
+        sandbox = null;
+      }
       if (!sandbox?.alive) {
         try {
-          sandbox = await pool.start({ projectId: id, version, siteDir });
+          sandbox = await pool.start({ runId: corpus.runId, projectId: id, version, siteDir });
         } catch (error) {
           return htmlResponse(response, page('sandbox failed', `<h1>the sandboxed site did not start</h1><pre>${escapeHtml(error.message)}</pre>`), 502);
         }
@@ -314,18 +430,19 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
       sandbox.touch();
 
       if (request.method === 'POST' && rest === '/start') {
-        response.writeHead(303, { location: `/live/${id}/${version}/` });
+        const runPath = corpus.runId ? `/run/${corpus.runId}` : '';
+        response.writeHead(303, { location: `/live/${id}/${version}${runPath}/` });
         return response.end();
       }
 
-      const prefix = `/live/${id}/${version}`;
+      const runPrefix = runSegment ? `/run/${runSegment}` : '';
+      const prefix = `/live/${id}/${version}${runPrefix}`;
       const sitePath = `${rest ?? '/'}${url.search}`;
       const cookieNamespace = `__vw_${id.replace(/[^a-z0-9]/gi, '')}_${version}_`;
       return proxyRequest({
         request,
         response,
-        socketPath: sandbox.socketPath,
-        socketIdentity: sandbox.socketIdentity,
+        sandbox,
         prefix,
         sitePath,
         cookieNamespace,

@@ -1,61 +1,28 @@
 /**
  * Proxy tests: the header boundary is the security property, so it is tested end to end through a
- * real unix-socket relay against the probe fixture: owner-identifying headers go in, and the site
- * must observe that none of them arrived.
+ * REAL sandbox (the stdio bridge) running the probe fixture: owner-identifying headers go in, and
+ * the site must observe that none of them arrived.
+ *
+ * Requires bwrap (present on the fleet VMs); skipped elsewhere.
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { spawn } from 'node:child_process';
-import { existsSync, mkdtempSync, rmSync } from 'node:fs';
-import http from 'node:http';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { execFileSync } from 'node:child_process';
 import { Readable, PassThrough } from 'node:stream';
 
 import { outboundHeaders, assertNoAuthHeaders, proxyRequest, ForbiddenHeaderError } from '../src/viewer/proxy.mjs';
+import { Sandbox } from '../src/viewer/sandbox.mjs';
 
 const FIXTURE = new URL('../test-fixtures/sites/echo', import.meta.url).pathname;
 
-/** Start the probe directly plus a socat relay, matching the sandbox's bridge topology. */
-async function startRelayedFixture(t) {
-  const port = 18300 + Math.floor(Math.random() * 500);
-  const dir = mkdtempSync(join(tmpdir(), 'viewer-proxy-test-'));
-  const socketPath = join(dir, 'sock');
-  const site = spawn(process.execPath, [join(FIXTURE, 'server.mjs'), '--port', String(port), '--db', join(dir, 'p.sqlite')], {
-    stdio: ['ignore', 'pipe', 'pipe'],
-  });
-  const relay = spawn('socat', [`UNIX-LISTEN:${socketPath},fork,reuseaddr`, `TCP:127.0.0.1:${port}`], { stdio: 'ignore' });
-  t.after(() => {
-    site.kill('SIGKILL');
-    relay.kill('SIGKILL');
-    rmSync(dir, { recursive: true, force: true });
-  });
-  const started = Date.now();
-  while (Date.now() - started < 10_000) {
-    if (existsSync(socketPath)) {
-      try {
-        await socketHealth(socketPath);
-        return { socketPath, port };
-      } catch {
-        /* wait */
-      }
-    }
-    await new Promise((resolve) => setTimeout(resolve, 100));
+const hasTools = (() => {
+  try {
+    execFileSync('which', ['bwrap'], { stdio: 'ignore' });
+    return true;
+  } catch {
+    return false;
   }
-  throw new Error('fixture did not come up');
-}
-
-function socketHealth(socketPath) {
-  return new Promise((resolve, reject) => {
-    const request = http.request({ socketPath, path: '/__health', timeout: 1000 }, (response) => {
-      response.resume();
-      response.on('end', resolve);
-    });
-    request.on('error', reject);
-    request.on('timeout', () => request.destroy(new Error('timeout')));
-    request.end();
-  });
-}
+})();
 
 /** A minimal IncomingMessage stand-in: a Readable carrying .headers and .method. */
 function fakeRequest({ method = 'GET', headers = {}, body = '' }) {
@@ -66,8 +33,8 @@ function fakeRequest({ method = 'GET', headers = {}, body = '' }) {
 }
 
 /**
- * A minimal ServerResponse stand-in: a real stream (the proxy pipes binary bodies into it)
- * carrying captured status/headers. `done` resolves with { statusCode, headers, body }.
+ * A minimal ServerResponse stand-in: a real stream (the proxy writes into it) carrying captured
+ * status/headers. `done` resolves with { statusCode, headers, body }.
  */
 function fakeResponse() {
   const stream = new PassThrough();
@@ -88,6 +55,13 @@ function fakeResponse() {
 const PREFIX = '/live/probe/original';
 const NS = '__vw_probe_original_';
 
+async function withSandbox(t, fn) {
+  const sandbox = new Sandbox({ id: 'test:proxy', siteDir: FIXTURE });
+  t.after(() => sandbox.stop());
+  await sandbox.start();
+  return fn(sandbox);
+}
+
 test('outboundHeaders forwards an allowlist and drops everything owner-identifying', () => {
   const headers = outboundHeaders(
     {
@@ -99,7 +73,7 @@ test('outboundHeaders forwards an allowlist and drops everything owner-identifyi
       'x-forwarded-for': '1.2.3.4',
       'sec-fetch-site': 'none',
     },
-    { cookieNamespace: NS, host: '127.0.0.1' },
+    { cookieNamespace: NS },
   );
   assert.equal(headers.accept, 'text/html');
   assert.equal(headers.cookie, 'theme=dark');
@@ -107,6 +81,7 @@ test('outboundHeaders forwards an allowlist and drops everything owner-identifyi
   assert.equal(headers['x-auth-request-user'], undefined);
   assert.equal(headers['x-forwarded-for'], undefined);
   assert.equal(headers['sec-fetch-site'], undefined);
+  assert.equal(headers.host, undefined);
   assertNoAuthHeaders(headers);
 });
 
@@ -116,84 +91,89 @@ test('assertNoAuthHeaders throws on a surviving forbidden header (fail-closed)',
   assertNoAuthHeaders({ accept: 'text/html', cookie: 'theme=dark' });
 });
 
-test('the site observes no auth headers, and only its own namespaced cookies', async (t) => {
-  const { socketPath } = await startRelayedFixture(t);
-  const response = fakeResponse();
-  await proxyRequest({
-    request: fakeRequest({
-      headers: {
-        accept: 'application/json',
-        cookie: `exe_session=OWNER-SESSION; ${NS}session=fake-demo`,
-        authorization: 'Bearer OWNER-TOKEN',
-        'x-auth-request-user': 'paulkinlan',
-        'x-auth-request-access-token': 'secret',
-        'x-forwarded-email': 'owner@example.com',
-      },
-    }),
-    response,
-    socketPath,
-    prefix: PREFIX,
-    sitePath: '/headers',
-    cookieNamespace: NS,
+test(
+  'the site observes no auth headers, and only its own namespaced cookies',
+  { skip: !hasTools, timeout: 60_000 },
+  async (t) => {
+    await withSandbox(t, async (sandbox) => {
+      const response = fakeResponse();
+      await proxyRequest({
+        request: fakeRequest({
+          headers: {
+            accept: 'application/json',
+            cookie: `exe_session=OWNER-SESSION; ${NS}session=fake-demo`,
+            authorization: 'Bearer OWNER-TOKEN',
+            'x-auth-request-user': 'paulkinlan',
+            'x-auth-request-access-token': 'secret',
+            'x-forwarded-email': 'owner@example.com',
+          },
+        }),
+        response,
+        sandbox,
+        prefix: PREFIX,
+        sitePath: '/headers',
+        cookieNamespace: NS,
+      });
+      const result = await response.done;
+      assert.equal(result.statusCode, 200);
+      const observed = JSON.parse(result.body).headers;
+      const names = Object.keys(observed);
+      assert.ok(!names.includes('authorization'), `authorization leaked: ${JSON.stringify(observed)}`);
+      assert.ok(!names.includes('x-auth-request-user'), 'x-auth-request-user leaked');
+      assert.ok(!names.includes('x-auth-request-access-token'), 'x-auth-request-access-token leaked');
+      assert.ok(!names.includes('x-forwarded-email'), 'x-forwarded-email leaked');
+      assert.equal(observed.cookie, 'session=fake-demo');
+      assert.ok(!JSON.stringify(observed).includes('OWNER-SESSION'));
+    });
+  },
+);
+
+test('html, js and css bodies are rewritten under the prefix; Location is rewritten', { skip: !hasTools, timeout: 60_000 }, async (t) => {
+  await withSandbox(t, async (sandbox) => {
+    const page = fakeResponse();
+    await proxyRequest({ request: fakeRequest({ headers: {} }), response: page, sandbox, prefix: PREFIX, sitePath: '/', cookieNamespace: NS });
+    const pageResult = await page.done;
+    assert.equal(pageResult.statusCode, 200);
+    assert.match(pageResult.body, /action="\/live\/probe\/original\/submit"/);
+    assert.match(pageResult.body, /href="\/live\/probe\/original\/app\/styles\.css"/);
+    assert.match(pageResult.body, /src="\/live\/probe\/original\/app\/script\.js"/);
+
+    const js = fakeResponse();
+    await proxyRequest({ request: fakeRequest({ headers: {} }), response: js, sandbox, prefix: PREFIX, sitePath: '/app/script.js', cookieNamespace: NS });
+    assert.match((await js.done).body, /fetch\('\/live\/probe\/original\/api\/data'\)/);
+
+    const css = fakeResponse();
+    await proxyRequest({ request: fakeRequest({ headers: {} }), response: css, sandbox, prefix: PREFIX, sitePath: '/app/styles.css', cookieNamespace: NS });
+    assert.match((await css.done).body, /url\(\/live\/probe\/original\/img\/bg\.png\)/);
+
+    const redirect = fakeResponse();
+    await proxyRequest({ request: fakeRequest({ headers: {} }), response: redirect, sandbox, prefix: PREFIX, sitePath: '/redirect', cookieNamespace: NS });
+    const redirectResult = await redirect.done;
+    assert.equal(redirectResult.statusCode, 303);
+    assert.equal(redirectResult.headers.location, '/live/probe/original/next');
   });
-  const headersResult = await response.done;
-  assert.equal(headersResult.statusCode, 200);
-  const observed = JSON.parse(headersResult.body).headers;
-  const names = Object.keys(observed);
-  assert.ok(!names.includes('authorization'), `authorization leaked: ${JSON.stringify(observed)}`);
-  assert.ok(!names.includes('x-auth-request-user'), 'x-auth-request-user leaked');
-  assert.ok(!names.includes('x-auth-request-access-token'), 'x-auth-request-access-token leaked');
-  assert.ok(!names.includes('x-forwarded-email'), 'x-forwarded-email leaked');
-  // The site's own demo cookie arrives with the namespace stripped; the owner's does not arrive.
-  assert.equal(observed.cookie, 'session=fake-demo');
-  assert.ok(!JSON.stringify(observed).includes('OWNER-SESSION'));
 });
 
-test('html, js and css bodies are rewritten under the prefix; Location is rewritten', async (t) => {
-  const { socketPath } = await startRelayedFixture(t);
+test('set-cookie is namespaced on the way out and restored on the way in', { skip: !hasTools, timeout: 60_000 }, async (t) => {
+  await withSandbox(t, async (sandbox) => {
+    const first = fakeResponse();
+    await proxyRequest({ request: fakeRequest({ headers: {} }), response: first, sandbox, prefix: PREFIX, sitePath: '/cookie', cookieNamespace: NS });
+    const firstResult = await first.done;
+    const cookies = Array.isArray(firstResult.headers['set-cookie']) ? firstResult.headers['set-cookie'] : [firstResult.headers['set-cookie']];
+    assert.ok(cookies.some((header) => header.startsWith('__vw_probe_original_session=fake-demo-session')));
+    assert.ok(cookies.every((header) => header.includes('Path=/live/probe/original/')));
 
-  const page = fakeResponse();
-  await proxyRequest({ request: fakeRequest({ headers: {} }), response: page, socketPath, prefix: PREFIX, sitePath: '/', cookieNamespace: NS });
-  const pageResult = await page.done;
-  assert.equal(pageResult.statusCode, 200);
-  assert.match(pageResult.body, /action="\/live\/probe\/original\/submit"/);
-  assert.match(pageResult.body, /href="\/live\/probe\/original\/app\/styles\.css"/);
-  assert.match(pageResult.body, /src="\/live\/probe\/original\/app\/script\.js"/);
-
-  const js = fakeResponse();
-  await proxyRequest({ request: fakeRequest({ headers: {} }), response: js, socketPath, prefix: PREFIX, sitePath: '/app/script.js', cookieNamespace: NS });
-  assert.match((await js.done).body, /fetch\('\/live\/probe\/original\/api\/data'\)/);
-
-  const css = fakeResponse();
-  await proxyRequest({ request: fakeRequest({ headers: {} }), response: css, socketPath, prefix: PREFIX, sitePath: '/app/styles.css', cookieNamespace: NS });
-  assert.match((await css.done).body, /url\(\/live\/probe\/original\/img\/bg\.png\)/);
-
-  const redirect = fakeResponse();
-  await proxyRequest({ request: fakeRequest({ headers: {} }), response: redirect, socketPath, prefix: PREFIX, sitePath: '/redirect', cookieNamespace: NS });
-  const redirectResult = await redirect.done;
-  assert.equal(redirectResult.statusCode, 303);
-  assert.equal(redirectResult.headers.location, '/live/probe/original/next');
-});
-
-test('set-cookie is namespaced on the way out and restored on the way in', async (t) => {
-  const { socketPath } = await startRelayedFixture(t);
-  const first = fakeResponse();
-  await proxyRequest({ request: fakeRequest({ headers: {} }), response: first, socketPath, prefix: PREFIX, sitePath: '/cookie', cookieNamespace: NS });
-  const firstResult = await first.done;
-  const cookies = Array.isArray(firstResult.headers['set-cookie']) ? firstResult.headers['set-cookie'] : [firstResult.headers['set-cookie']];
-  assert.ok(cookies.some((header) => header.startsWith('__vw_probe_original_session=fake-demo-session')));
-  assert.ok(cookies.every((header) => header.includes('Path=/live/probe/original/')));
-
-  // Round-trip: the browser sends back the namespaced cookie plus an owner cookie; the site must
-  // see only its own, under its original name.
-  const echo = fakeResponse();
-  await proxyRequest({
-    request: fakeRequest({ headers: { cookie: `${NS}session=fake-demo-session; exe_session=OWNER` } }),
-    response: echo,
-    socketPath,
-    prefix: PREFIX,
-    sitePath: '/headers',
-    cookieNamespace: NS,
+    // Round-trip: the browser sends back the namespaced cookie plus an owner cookie; the site must
+    // see only its own, under its original name.
+    const echo = fakeResponse();
+    await proxyRequest({
+      request: fakeRequest({ headers: { cookie: `${NS}session=fake-demo-session; exe_session=OWNER` } }),
+      response: echo,
+      sandbox,
+      prefix: PREFIX,
+      sitePath: '/headers',
+      cookieNamespace: NS,
+    });
+    assert.equal(JSON.parse((await echo.done).body).headers.cookie, 'session=fake-demo-session');
   });
-  assert.equal(JSON.parse((await echo.done).body).headers.cookie, 'session=fake-demo-session');
 });

@@ -15,27 +15,33 @@
  *   - the filesystem is assembled from scratch: the node runtime and system libraries read-only,
  *     the site tree read-only at /site, an empty writable tmpfs at /data for the ephemeral SQLite
  *     database, /tmp a tmpfs. Nothing else on the host exists for the process - no repo, no beads
- *     DB, no ~/.config, no SSH keys.
+ *     DB, no ~/.config, no SSH keys. There is NO shared writable directory at all.
  *   - the environment is rebuilt from an allowlist (PATH, HOME, NODE_ENV, TZ, PILOT_PORT). No
  *     token, proxy URL or credential name survives --clearenv.
- *   - the only channel in or out is a unix socket in a bind-mounted bridge directory: socat inside
- *     the namespace relays it to the site's own 127.0.0.1 port. The viewer connects to the socket.
+ *   - the ONLY channel in or out is the process's own stdio pipes: bridge-wrapper.mjs runs inside
+ *     the sandbox, health-checks the site over the namespace loopback, and bridges framed HTTP
+ *     requests between the pipes and the site. A unix-socket bridge in a shared directory was
+ *     considered and rejected in review: a socket's authority is its path, and a site that can
+ *     write the directory can substitute the endpoint. A pipe pair has no path and cannot be
+ *     substituted.
  *   - --die-with-parent ties the site's lifetime to the viewer's, and the fleet reaper can
  *     attribute the whole tree through FLEET_LANE.
- *
- * The wrapper inside the namespace is /bin/sh: socat in the background, then exec node. If socat
- * fails to start the health check times out and the instance is reported dead, not half-served.
  */
 import { spawn } from 'node:child_process';
-import { createHash } from 'node:crypto';
-import { existsSync, lstatSync, mkdirSync, rmSync } from 'node:fs';
-import http from 'node:http';
-import { dirname, join } from 'node:path';
+import { existsSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
+const WRAPPER_PATH = resolve(here, 'bridge-wrapper.mjs');
 const SANDBOX_PORT = 18080;
-const HEALTH_TIMEOUT_MS = 20_000;
+const READY_TIMEOUT_MS = 25_000;
+
+const T_READY = 1;
+const T_REQUEST = 2;
+const T_RESPONSE = 3;
+const T_LOG = 4;
+const T_GONE = 5;
 
 function nodeRuntimeDir() {
   // The viewer runs under node; the site gets the same runtime, bind-mounted read-only at /node.
@@ -58,31 +64,24 @@ export class Sandbox {
    * @param {object} args
    * @param {string} args.id            instance id (project id + version)
    * @param {string} args.siteDir       the tree to serve; mounted read-only at /site
-   * @param {string} args.bridgeDir     host directory for the relay socket; mounted at /bridge
    * @param {string} [args.entry]       entry point relative to /site, default server.mjs
-   * @param {string[]} [args.extraArgs] extra arguments after --port/--db
    */
-  constructor({ id, siteDir, bridgeDir, entry = 'server.mjs', extraArgs = [] }) {
+  constructor({ id, siteDir, entry = 'server.mjs' }) {
     this.id = id;
     this.siteDir = siteDir;
-    this.bridgeDir = bridgeDir;
     this.entry = entry;
-    this.extraArgs = extraArgs;
-    this.socketPath = join(bridgeDir, 'sock');
     this.child = null;
     this.log = '';
     this.startedAt = null;
     this.lastUsedAt = null;
-    // The bridge directory is writable by the site (the in-namespace socat creates the socket
-    // there), so a hostile site could replace it. The proxy pins and re-checks this identity on
-    // every connection; a replaced or symlinked socket is refused.
-    this.socketIdentity = null;
+    this.nextStreamId = 1;
+    this.pending = new Map();
+    this.recvBuffer = Buffer.alloc(0);
+    this.ready = false;
   }
 
   async start() {
     if (this.child) return;
-    mkdirSync(this.bridgeDir, { recursive: true });
-    const inner = `socat UNIX-LISTEN:/bridge/sock,fork,reuseaddr TCP:127.0.0.1:${SANDBOX_PORT} & sleep 0.3; exec /node/bin/node /site/${this.entry} --port ${SANDBOX_PORT} --db /data/site.sqlite${this.extraArgs.length > 0 ? ` ${this.extraArgs.join(' ')}` : ''}`;
     const args = [
       '--unshare-all',
       '--die-with-parent',
@@ -96,50 +95,118 @@ export class Sandbox {
       '--ro-bind', nodeRuntimeDir(), '/node',
       ...systemBinds(),
       '--ro-bind', this.siteDir, '/site',
-      '--bind', this.bridgeDir, '/bridge',
+      '--ro-bind', WRAPPER_PATH, '/viewer/bridge-wrapper.mjs',
       '--tmpfs', '/tmp',
       '--tmpfs', '/data',
       '--dev', '/dev',
       '--proc', '/proc',
       '--',
-      '/bin/sh', '-c', inner,
+      '/node/bin/node', '/viewer/bridge-wrapper.mjs', '--entry', `/site/${this.entry}`, '--port', String(SANDBOX_PORT),
     ];
-    this.child = spawn('bwrap', args, { stdio: ['ignore', 'pipe', 'pipe'] });
-    this.child.stdout.on('data', (chunk) => {
-      this.log += chunk.toString();
-    });
+    this.child = spawn('bwrap', args, { stdio: ['pipe', 'pipe', 'pipe'] });
     this.child.stderr.on('data', (chunk) => {
       this.log += chunk.toString();
     });
+    this.child.stdout.on('data', (chunk) => this.#onData(chunk));
     this.child.on('exit', (code, signal) => {
       this.log += `\n[exited code=${code} signal=${signal}]\n`;
+      this.child = null;
+      for (const { reject } of this.pending.values()) reject(new Error('sandbox exited'));
+      this.pending.clear();
+    });
+    this.child.on('error', () => {
       this.child = null;
     });
     this.startedAt = new Date();
     this.lastUsedAt = this.startedAt;
-    await this.waitHealthy();
-    const stat = lstatSync(this.socketPath);
-    if (!stat.isSocket()) throw new Error(`sandbox '${this.id}' bridge is not a socket`);
-    this.socketIdentity = { dev: stat.dev, ino: stat.ino };
+    await this.#waitReady();
   }
 
-  /** Poll the relay socket until the site's /__health answers or the timeout bites. */
-  async waitHealthy() {
-    const started = Date.now();
-    while (Date.now() - started < HEALTH_TIMEOUT_MS) {
-      if (!this.child) throw new Error(`sandbox '${this.id}' exited before becoming healthy:\n${this.log}`);
-      if (existsSync(this.socketPath)) {
-        try {
-          const status = await socketRequest(this.socketPath, 'GET', '/__health');
-          if (status >= 200 && status < 500) return;
-        } catch {
-          /* not up yet */
+  #onData(chunk) {
+    this.recvBuffer = Buffer.concat([this.recvBuffer, chunk]);
+    for (;;) {
+      if (this.recvBuffer.length < 9) return;
+      const length = this.recvBuffer.readUInt32BE(0);
+      if (this.recvBuffer.length < 9 + length) return;
+      const type = this.recvBuffer.readUInt8(4);
+      const id = this.recvBuffer.readUInt32BE(5);
+      const payload = this.recvBuffer.subarray(9, 9 + length);
+      this.recvBuffer = this.recvBuffer.subarray(9 + length);
+      if (type === T_READY) {
+        this.ready = true;
+        if (this.readyResolve) this.readyResolve();
+      } else if (type === T_LOG) {
+        this.log += `${payload.toString('utf8')}\n`;
+      } else if (type === T_GONE) {
+        this.log += `[site gone: ${payload.toString('utf8')}]\n`;
+        this.child?.kill('SIGKILL');
+      } else if (type === T_RESPONSE) {
+        const entry = this.pending.get(id);
+        if (entry) {
+          this.pending.delete(id);
+          try {
+            entry.resolve(JSON.parse(payload.toString('utf8')));
+          } catch (error) {
+            entry.reject(error);
+          }
         }
       }
-      await new Promise((resolve) => setTimeout(resolve, 150));
     }
-    this.stop();
-    throw new Error(`sandbox '${this.id}' did not become healthy in ${HEALTH_TIMEOUT_MS}ms:\n${this.log}`);
+  }
+
+  #waitReady() {
+    return new Promise((resolvePromise, rejectPromise) => {
+      const timeout = setTimeout(() => {
+        this.stop();
+        rejectPromise(new Error(`sandbox '${this.id}' did not become ready in ${READY_TIMEOUT_MS}ms:\n${this.log}`));
+      }, READY_TIMEOUT_MS);
+      this.readyResolve = () => {
+        clearTimeout(timeout);
+        resolvePromise();
+      };
+      const exitCheck = setInterval(() => {
+        if (!this.child) {
+          clearInterval(exitCheck);
+          clearTimeout(timeout);
+          rejectPromise(new Error(`sandbox '${this.id}' exited before becoming ready:\n${this.log}`));
+        }
+        if (this.ready) {
+          clearInterval(exitCheck);
+        }
+      }, 100);
+    });
+  }
+
+  /** Send one request to the site through the bridge. Resolves {status, headers, bodyBase64}. */
+  request({ method, path, headers, body }) {
+    if (!this.child || !this.ready) return Promise.reject(new Error('sandbox not running'));
+    const id = this.nextStreamId;
+    this.nextStreamId += 1;
+    const payload = Buffer.from(
+      JSON.stringify({ method, path, headers, bodyBase64: body ? Buffer.from(body).toString('base64') : undefined }),
+      'utf8',
+    );
+    const frame = Buffer.alloc(9);
+    frame.writeUInt32BE(payload.length, 0);
+    frame.writeUInt8(T_REQUEST, 4);
+    frame.writeUInt32BE(id, 5);
+    return new Promise((resolvePromise, rejectPromise) => {
+      const timeout = setTimeout(() => {
+        this.pending.delete(id);
+        rejectPromise(new Error('bridge request timed out'));
+      }, 30_000);
+      this.pending.set(id, {
+        resolve: (value) => {
+          clearTimeout(timeout);
+          resolvePromise(value);
+        },
+        reject: (error) => {
+          clearTimeout(timeout);
+          rejectPromise(error);
+        },
+      });
+      this.child.stdin.write(Buffer.concat([frame, payload]));
+    });
   }
 
   touch() {
@@ -156,8 +223,13 @@ export class Sandbox {
 
   stop() {
     if (this.child) {
-      this.child.kill('SIGTERM');
       const child = this.child;
+      try {
+        child.stdin.end();
+      } catch {
+        /* closed */
+      }
+      child.kill('SIGTERM');
       setTimeout(() => {
         try {
           child.kill('SIGKILL');
@@ -167,27 +239,13 @@ export class Sandbox {
       }, 1500).unref();
       this.child = null;
     }
-    rmSync(this.bridgeDir, { recursive: true, force: true });
   }
 }
 
-/** A single HTTP request over a unix socket; used for the health check. */
-function socketRequest(socketPath, method, path) {
-  return new Promise((resolve, reject) => {
-    const request = http.request({ socketPath, method, path, timeout: 1500 }, (response) => {
-      response.resume();
-      response.on('end', () => resolve(response.statusCode));
-    });
-    request.on('timeout', () => request.destroy(new Error('timeout')));
-    request.on('error', reject);
-    request.end();
-  });
-}
-
 /**
- * The registry of live instances. One sandbox per (project, version); idle instances are reaped
- * (default after 10 minutes) and the pool is bounded (LRU eviction), because browsers and servers
- * left running are exactly what the fleet reaper exists to kill.
+ * The registry of live instances. One sandbox per (run, project, version); idle instances are
+ * reaped (default after 10 minutes) and the pool is bounded (LRU eviction), because browsers and
+ * servers left running are exactly what the fleet reaper exists to kill.
  */
 export class SandboxPool {
   constructor({ stateDir, idleMs = 10 * 60 * 1000, maxInstances = 8 } = {}) {
@@ -207,16 +265,20 @@ export class SandboxPool {
     return this.instances.get(this.key(projectId, version)) ?? null;
   }
 
-  async start({ projectId, version, siteDir }) {
+  async start({ runId, projectId, version, siteDir }) {
     const key = this.key(projectId, version);
     const existing = this.instances.get(key);
-    if (existing?.alive) {
+    // A running instance keeps serving the run it was started from: the run matters at START time
+    // (which tree, which recorded sha), and in-site navigation does not carry the run parameter.
+    // A start request naming a different run replaces the instance.
+    if (existing?.alive && existing.runId === runId) {
       existing.touch();
       return existing;
     }
+    if (existing) this.stop(existing);
     if (this.instances.size >= this.maxInstances) this.evictOldest();
-    const bridgeDir = join(this.stateDir, 'bridges', createHash('sha256').update(key).digest('hex').slice(0, 16));
-    const sandbox = new Sandbox({ id: key, siteDir, bridgeDir });
+    const sandbox = new Sandbox({ id: key, siteDir });
+    sandbox.runId = runId;
     await sandbox.start();
     this.instances.set(key, sandbox);
     return sandbox;

@@ -175,7 +175,7 @@ test('live links point at the live origin, not the viewer origin', (t) => {
   const cleanScan = { status: 'PASS', original: { status: 'PASS' }, uplifted: { status: 'PASS' } };
   const views = corpus.projects.map((project) => projectView(project, { scan: cleanScan }));
   const html = renderIndex({ views, allViews: views, filters: {}, runId: corpus.runId, runs: corpus.runs, yieldReport: null, scanAvailable: true, liveOrigin: 'http://127.0.0.1:7701' });
-  assert.match(html, /action="http:\/\/127\.0\.0\.1:7701\/live\/booking-raw\/original\/start"/);
+  assert.match(html, /action="http:\/\/127\.0\.0\.1:7701\/live\/booking-raw\/original\/run\/2026-10-08T00-00-00-000Z\/start"/);
   assert.ok(!html.includes('action="/live/'), 'live forms must not target the viewer origin');
 });
 

@@ -96,14 +96,21 @@ function verificationBadge(verification, version) {
 
 const shortSha = (sha) => (sha ? sha.replace(/^sha256:/, '').slice(0, 12) : '—');
 
-function liveLinks(view, liveOrigin) {
+/** Record-derived numbers are untrusted data too: coerce, never interpolate raw. */
+const num = (value) => {
+  const n = Number(value);
+  return Number.isFinite(n) ? String(n) : '0';
+};
+
+function liveLinks(view, liveOrigin, runId) {
   const scan = view.scan;
   const originalOk = scan?.original?.status === 'PASS';
   const upliftedOk = scan?.uplifted?.status === 'PASS' || scan?.uplifted?.status === 'MISSING';
   const scanBroken = !scan || scan.status === 'ERROR';
+  const runPath = runId ? `/run/${encodeURIComponent(runId)}` : '';
   const button = (version, ok) =>
     ok
-      ? `<form method="post" action="${escapeHtml(liveOrigin)}/live/${escapeHtml(view.id)}/${version}/start" style="display:inline"><button type="submit">serve ${version} live</button></form>`
+      ? `<form method="post" action="${escapeHtml(liveOrigin)}/live/${escapeHtml(view.id)}/${version}${escapeHtml(runPath)}/start" style="display:inline"><button type="submit">serve ${version} live</button></form>`
       : `<button type="button" disabled title="${scanBroken ? 'owner-auth scan cannot run (fail-closed)' : `owner-auth scan: ${escapeHtml(scan?.[version]?.status ?? 'ERROR')}`}">serve ${version} live</button>`;
   return `${button('original', !scanBroken && originalOk)} ${button('uplifted', !scanBroken && upliftedOk)}`;
 }
@@ -136,13 +143,13 @@ export function renderIndex({ views, allViews, filters, runId, runs, yieldReport
   <td>${scanBadge(view.scan)}</td>
   <td>${view.improvedRules.length > 0 ? `<span class="chips">${view.improvedRules.map((rule) => `<span class="chip">${escapeHtml(rule)}</span>`).join('')}</span>` : '<span class="muted">—</span>'}</td>
   <td class="sha" title="original ${escapeHtml(view.originalSha ?? 'unrecorded')}">o:${escapeHtml(shortSha(view.originalSha))}<br>u:${escapeHtml(shortSha(view.upliftedSha))}</td>
-  <td>${liveLinks(view, liveOrigin)}</td>
+  <td>${liveLinks(view, liveOrigin, runId)}</td>
 </tr>`;
     })
     .join('\n');
 
   const yieldLine = yieldReport?.summary
-    ? `<p class="muted">run <code>${escapeHtml(runId)}</code>: ${yieldReport.summary.attempted} attempted, ${yieldReport.summary.accepted} accepted (${((yieldReport.summary.yield ?? 0) * 100).toFixed(1)}% yield). Rejects are shown below with their category - acceptance bias is only inspectable if they stay visible.</p>`
+    ? `<p class="muted">run <code>${escapeHtml(runId)}</code>: ${num(yieldReport.summary.attempted)} attempted, ${num(yieldReport.summary.accepted)} accepted (${((Number(yieldReport.summary.yield) || 0) * 100).toFixed(1)}% yield). Rejects are shown below with their category - acceptance bias is only inspectable if they stay visible.</p>`
     : '';
 
   const scanNotice = scanAvailable
@@ -270,7 +277,7 @@ export function renderProject({ view, runId, runs, liveOrigin }) {
 <p class="muted">${escapeHtml(view.archetype)}${view.archetypeTitle ? ` — ${escapeHtml(view.archetypeTitle)}` : ''} · ${escapeHtml(view.framework)}${view.frameworkVersion ? ` ${escapeHtml(view.frameworkVersion)}` : ''}${view.frameworkFamily ? ` (${escapeHtml(view.frameworkFamily)})` : ''}</p>
 ${runSelector}
 <h2>live instances ${verificationBadge(view.verification, 'original')} ${verificationBadge(view.verification, 'uplifted')}</h2>
-<p>${liveLinks(view, liveOrigin)}</p>
+<p>${liveLinks(view, liveOrigin, runId)}</p>
 <p class="muted">Live instances are the real servers, sandboxed (no network, no host filesystem, no environment beyond an allowlist), proxied with all owner auth material stripped. Tree SHAs: original <span class="sha">${escapeHtml(view.originalSha ?? 'unrecorded')}</span> · uplifted <span class="sha">${escapeHtml(view.upliftedSha ?? 'unrecorded')}</span></p>
 <h2>pair decision</h2>
 ${decisionBlock}
@@ -285,7 +292,7 @@ ${scanBlock}
     <h4>security checks</h4>
     ${renderSecurity(view.original)}
     <h4>console</h4>
-    <p class="muted">${view.original ? `${view.original.console_errors ?? 0} error(s) of ${(view.original.console ?? []).length} message(s)` : 'not recorded'}</p>
+    <p class="muted">${view.original ? `${num(view.original.console_errors ?? 0)} error(s) of ${num((view.original.console ?? []).length)} message(s)` : 'not recorded'}</p>
     <h4>screenshots</h4>
     ${renderShots(view, 'original', runId)}
     ${view.original?.errors?.length ? `<p class="danger">errors: ${escapeHtml(view.original.errors.join('; '))}</p>` : ''}
@@ -296,7 +303,7 @@ ${scanBlock}
     <h4>security checks</h4>
     ${renderSecurity(view.uplifted)}
     <h4>console</h4>
-    <p class="muted">${view.uplifted ? `${view.uplifted.console_errors ?? 0} error(s) of ${(view.uplifted.console ?? []).length} message(s)` : 'not recorded'}</p>
+    <p class="muted">${view.uplifted ? `${num(view.uplifted.console_errors ?? 0)} error(s) of ${num((view.uplifted.console ?? []).length)} message(s)` : 'not recorded'}</p>
     <h4>screenshots</h4>
     ${renderShots(view, 'uplifted', runId)}
     ${view.uplifted?.errors?.length ? `<p class="danger">errors: ${escapeHtml(view.uplifted.errors.join('; '))}</p>` : ''}
