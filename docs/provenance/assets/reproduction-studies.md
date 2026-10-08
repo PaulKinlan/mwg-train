@@ -1,9 +1,9 @@
 # Assets: third-party site reproduction (clean-room and black-box study classes)
 
-- **Status: QUARANTINED, both classes.** `A4_clean_room_reproduction` and
-  `A5_black_box_reproduction` are `excluded_from_training: true` and no row in either arm may be
-  approved until this record is reviewed and countersigned. An unreviewed reproduction is not
-  evidence of anything about rights in the target site.
+- **Status: public A4 output; quarantined A5 raw captures; neither trainable.**
+  `A4_clean_room_reproduction` and `A5_black_box_reproduction` are
+  `excluded_from_training: true` and no row in either arm may be approved for training.
+  Publication of A4 does not establish training rights in the target site.
 - **Why a record exists at all:** the design brief (section 6, item 19) asks whether existing sites
   can be reused. The answer recorded here is a risk position, not a legal conclusion.
 - **Captured:** 2026-10-08 (`../evidence/manifest.jsonl`).
@@ -39,23 +39,19 @@ different question from copyright and contract.
 
 ## Position recorded for the experiment
 
-1. **Default: excluded from training.** Both arms are quarantined in `src/provenance/arms.mjs`, and
-   the quarantine cannot be switched off by a per-row flag (`QUARANTINE_NOT_ENFORCED`).
+1. **Default: excluded from training.** Both arms prohibit training in `src/provenance/arms.mjs`;
+   A4 publishes publicly while A5 stays in the private store. Training exclusion cannot be
+   switched off by a per-row flag (`QUARANTINE_NOT_ENFORCED`).
 2. **Prefer synthetic.** Abstract functional requirements written from general knowledge of a
    pattern ("a booking flow with a date range and a price summary") are safer than requirements
    derived from one specific live site, and they are indistinguishable as training signal.
 3. **Never bypass access controls**, scrape authenticated or private material, or collect personal
    data. That is a bright line independent of the arms above.
 4. **No cross-arm movement.** An `A4`/`A5` artefact cannot be relabelled into `A1`/`A2`, and a
-   trainable asset cannot have an `A4`/`A5` parent: `validateManifest` reports
-   `QUARANTINED_ANCESTOR`.
+   training-approved asset cannot have an `A4`/`A5` parent: `validateManifest` reports
+   `QUARANTINED_ANCESTOR`. That check gates training, not A4 publication.
 5. **Record rejects, not just winners.** Each attempt gets a row even when it is rejected, so the
    acceptance rate and the selection pressure are visible.
 
-## Open questions for a human reviewer
-
-- Which target sites, if any, have terms that permit reproduction for model training? (This requires
-  reading each site's terms; the arm stays closed until at least one is approved by name.)
-- Does the jurisdiction of the study (and of the target site) change the clean-room conclusion?
-- What does "abstract enough" mean operationally — is there a reviewable test, or is it a per-case
-  human judgement?
+This rights record is provenance evidence, not a site-size or site-terms publication hold.
+A4 publication is not conditional on per-site review.

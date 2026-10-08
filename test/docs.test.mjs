@@ -74,4 +74,6 @@ test('the README arms table lists every arm the code enforces', () => {
   for (const id of quarantined) {
     assert.ok(ARMS[id].description.length > 0, `${id} needs a description`);
   }
+  assert.match(readme, /Clean-room reproduction study.*public output, prohibited from training/);
+  assert.match(readFileSync(resolve(ROOT, 'docs/quarantine.md'), 'utf8'), /Only A3 and A5 route here/);
 });

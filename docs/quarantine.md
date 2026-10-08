@@ -1,11 +1,11 @@
 # The quarantine store
 
 **What:** the private companion repository `PaulKinlan/mwg-quarantine` — the mwg-train analogue of
-`journal/journal-data`. Teacher-generated material (arm A3), clean-room reproduction studies (A4)
-and black-box reproduction studies (A5) live here, behind their `excluded_from_training` flags.
-Held-out evaluation material (A6) is never trainable by arm policy; A6's publication placement is
-**public** (the sealed briefs are public by design) — training exclusion and publication placement
-are separate axes (`publication` in src/provenance/arms.mjs). Only A3, A4 and A5 route here.
+`journal/journal-data`. Teacher-generated material (arm A3) and raw black-box captures (A5)
+live here. Clean-room reproductions (A4) and held-out evaluation material (A6) are **public**
+but never trainable: training exclusion and publication placement are separate axes
+(`publication` in src/provenance/arms.mjs). Only A3 and A5 route here by default;
+an explicit generated-output destination may still use a verified store.
 
 **Why a separate repo:** a private branch in a public repo is not private (every branch is
 fetchable), and `.gitignore` is a promise, not a boundary — it stops a commit, it cannot retract
@@ -14,9 +14,10 @@ one. Only a separate private repository is a boundary.
 ## The rules (Paul, 2026-10-08)
 
 1. **Allow-list enforcement, not vigilance.** Corpus tooling writes quarantined-arm material to
-   the quarantine tree **by default** (`src/provenance/store.mjs` routes by arm rights class). The
-   public tree receives material only through the explicit promote step (`scripts/promote.mjs`),
-   which appends to `docs/provenance/promotions.jsonl`.
+   the quarantine tree **by default** (`src/provenance/store.mjs` routes by arm publication class).
+   A4 and A6 route directly to the public tree; publishing quarantined A3/A5 material requires
+   the explicit promote step (`scripts/promote.mjs`), which appends to
+   `docs/provenance/promotions.jsonl`.
 2. **The submodule is a pointer, never a working location.** The public repo pins the store's
    commit at `quarantine/` as a provenance record ("this public commit corresponds to that store
    state"). The pin is inert: this repo has no CI, no build, and no recursive-fetch path, and a

@@ -14,9 +14,9 @@ policy this repository enforces in code.
 | Deterministic, rights-cleared MWG uplift of such an original (`A2_mwg_uplift_deterministic`) | **Yes** | same per-row approval, plus no quarantined ancestor |
 | Modern Web Guidance guide text itself | **Yes** for use, storage and training | guides are CC-BY-4.0 and code is Apache-2.0 — attribution and notice conditions apply to anything we *redistribute*: `assets/mwg-modern-web-guidance.md` |
 | Anything authored or uplifted by a hosted teacher model (`A3_teacher_generated`) | **No** | quarantined. Comes back only with prior authorization for the specific account — see per-provider records below |
-| Clean-room reproduction study (`A4_clean_room_reproduction`) | **No** | quarantined — `assets/reproduction-studies.md` |
+| Clean-room reproduction study (`A4_clean_room_reproduction`) | **No** | public output, prohibited from training — `assets/reproduction-studies.md` |
 | Black-box reproduction study (`A5_black_box_reproduction`) | **No** | quarantined — `assets/reproduction-studies.md` |
-| Held-out evaluation material (`A6_evaluation`) | **Never** | training on the test set destroys the primary endpoint |
+| Held-out evaluation material (`A6_evaluation`) | **Never** | public output; training on the test set destroys the primary endpoint |
 | A model trained on Gemma outputs or Gemma weights | allowed, but **viral** | the result is a Gemma "Model Derivative" and must carry Gemma's use restrictions — `assets/student-base-models.md` |
 
 The student base itself is cleared: the recommended initial base is
@@ -76,8 +76,8 @@ document (`src/provenance/record.mjs`):
 3. `approved_for_training` is `true` with named `approved_by` and `approved_at`
    (`INCOMPLETE_APPROVAL` otherwise);
 4. its `storage_path` sits inside its own arm root (`CROSS_ARM_PATH` otherwise);
-5. no ancestor in its `parents` chain is quarantined (`QUARANTINED_ANCESTOR` — this is the check that
-   stops a teacher-written original from being "cleaned" by a later approved uplift);
+5. no ancestor in its `parents` chain is excluded from training (`QUARANTINED_ANCESTOR` —
+   this gates training-corpus inclusion, not publication of A4 projects derived from A5 captures);
 6. `generator.type === "hosted-api"` forces the row into `A3_teacher_generated`
    (`HOSTED_GENERATOR_OUTSIDE_QUARANTINE`), so a teacher-authored row cannot be relabelled.
 
