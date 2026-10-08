@@ -334,7 +334,7 @@ export function renderProject({ view, runId, runs, liveOrigin }) {
   <p class="muted">seeded defects: ${decision.seededDefects.length > 0 ? escapeHtml(decision.seededDefects.join(', ')) : 'none (already-clean control)'}</p>
   ${
     decision.upliftEdits
-      ? `<details><summary>repair edits — what turns the BASELINE into the TARGET (${decision.upliftApplied.length} applied, ${decision.upliftSkipped.length} skipped, ${decision.upliftFailed.length} failed)</summary><pre>${escapeHtml(JSON.stringify(decision.upliftEdits, null, 2))}</pre></details>`
+      ? `<details><summary>Deterministic MWG Repair — Baseline Floor / Repair Reference (NOT training data): ${decision.upliftApplied.length} applied, ${decision.upliftSkipped.length} skipped, ${decision.upliftFailed.length} failed</summary><p class="muted">This is the mechanical linting floor: deterministic repair of the baseline using the Modern Web Guidance rules. For generate families it is a control &amp; measurement, not the training target; for repair families it is the reference fix for the seeded defects. It covers mechanical rules only (labels, landmarks, contrast, autofill, sanitised HTML) — it cannot repair a broken data model or missing server persistence.</p><pre>${escapeHtml(JSON.stringify(decision.upliftEdits, null, 2))}</pre></details>`
       : ''
   }
 </div>`;
@@ -374,6 +374,7 @@ ${scanBlock}
   </div>
   <div class="panel">
     <h3>TARGET — browser journeys</h3>
+    <p class="muted">the deterministic MWG repair floor — mechanical linting, not the training target for generate families</p>
     ${renderJourney(view.uplifted, 'target')}
     <h4>security checks</h4>
     ${renderSecurity(view.uplifted)}
