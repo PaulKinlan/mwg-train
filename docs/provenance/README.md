@@ -145,7 +145,7 @@ longer exist.
   visible instead of silent.
 - `test/` covers the enforcement rules end to end (`node --test`).
 
-## 6. Open items
+## 7. Open items
 
 Ordered by what unblocks the most work:
 
@@ -165,8 +165,8 @@ Ordered by what unblocks the most work:
 6. **No corpus exists yet, so no real original is retained.** The retention tooling and gate are in
    place and are exercised against a real repository in `test/originals.test.mjs`, but the first
    generated site must be retained before any uplift is taken from it - design brief clause 5.
-6. **The bundled MiniLM weights** in the MWG npm package carry no licence statement and no notice
+7. **The bundled MiniLM weights** in the MWG npm package carry no licence statement and no notice
    entry anywhere in the package.
-7. **CC-BY-4.0 and trained weights**: nothing in the licence restricts them, but whether weights are
+8. **CC-BY-4.0 and trained weights**: nothing in the licence restricts them, but whether weights are
    "Adapted Material" is a question for a lawyer, and the answer changes what attribution a released
    model needs.

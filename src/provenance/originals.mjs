@@ -102,13 +102,16 @@ export function validateOriginalFields(record) {
     // A validator must never throw on invalid input: a bad id is already reported as BAD_ID, so the
     // canonical-name comparison is simply skipped for it rather than letting retainedRef throw.
     if (PROJECT_ID_PATTERN.test(String(record.id ?? '')) && isRetainedRef(record.original_ref)) {
-      const expected = retainedRef(record.id);
-      if (record.original_ref !== expected && !record.original_ref.startsWith(ALT_RETAINED_REF_PREFIX)) {
+      // The name must be the row's own id in EITHER namespace. Accepting any ref under the
+      // alternative prefix was a real bypass: a row for one project could point at another
+      // project's ref, which is exactly the pairing the corpus-wide check depends on.
+      const expected = [retainedRef(record.id), `${ALT_RETAINED_REF_PREFIX}${record.id}`];
+      if (!expected.includes(record.original_ref)) {
         findings.push(
           finding(
             'REF_NOT_CANONICAL',
             'original_ref',
-            `expected '${expected}' for asset '${record.id}'; a different name in the retained namespace makes the corpus-wide check unable to pair refs with projects`,
+            `expected '${expected[0]}' (or '${expected[1]}') for asset '${record.id}'; a different name in the retained namespace makes the corpus-wide check unable to pair refs with projects`,
             id,
           ),
         );
@@ -183,9 +186,9 @@ export function checkOriginal(record, probe) {
 }
 
 /** Build the fields a record needs for a project's original, given a resolved commit and tree. */
-export function originalFields(projectId, commitSha, treeSha, retention) {
+export function originalFields(projectId, commitSha, treeSha, retention, namespace = 'tag') {
   const fields = {
-    original_ref: retainedRef(projectId),
+    original_ref: namespace === 'alt' ? `${ALT_RETAINED_REF_PREFIX}${projectId}` : retainedRef(projectId),
     original_sha: commitSha,
   };
   if (treeSha) fields.original_tree = treeSha;

@@ -72,7 +72,9 @@ node scripts/retain-original.mjs --repo /srv/mwg-train-originals --project examp
 
 It creates `refs/tags/original/example-proj-0001` at the given commit (default `HEAD`), pushes that
 one ref, and prints the JSON fields for the manifest row. Rerunning it for the same commit is a
-no-op. If the tag already exists at a **different** commit the command fails: a retained ref is
+no-op. `--ref-namespace alt` rotates it in `refs/mwg-train/originals/` instead, for a host that does
+not want tags; that namespace is a plain ref rather than an annotated tag, because annotations only
+exist under `refs/tags/`. If a tag already exists at a **different** commit the command fails: a retained ref is
 immutable, because repointing it silently changes what every earlier measurement was a transform
 of. If the original itself was wrong, fix the corpus, record the correction in the provenance
 record, and give the corrected original a new asset id - do not move the tag.
@@ -104,7 +106,8 @@ was never pushed dies with the machine that made it.
 
 ## Operational requirements (not verifiable from a clone)
 
-The checker can prove a ref exists and is identical locally and on the remote. Two things it cannot
+The checker can prove a ref exists and is identical locally and on the remote, in either namespace
+(tags and the alternative namespace are both looked up). Two things it cannot
 see, and which therefore have to be settings on the originals repository itself:
 
 1. `refs/tags/original/**` is excluded from any automated ref pruning, and tag deletion is denied

@@ -71,6 +71,12 @@ test('a branch is not a retained ref, and a short sha is not a commit sha', () =
 
   const altNamespace = validateOriginalFields({ ...record, original_ref: `${ALT_RETAINED_REF_PREFIX}proj-0001` });
   assert.deepEqual(altNamespace, [], 'the documented alternative namespace is accepted');
+
+  // Regression (independent review, P0): the alternative namespace was exempt from the canonical
+  // check, so a row for one project could point at another project's ref and still validate.
+  for (const ref of [`${ALT_RETAINED_REF_PREFIX}something-else`, `${ALT_RETAINED_REF_PREFIX}proj-0001-extra`, 'refs/mwg-train/originals/']) {
+    assert.ok(codes(validateOriginalFields({ ...record, original_ref: ref })).includes('REF_NOT_CANONICAL'), ref);
+  }
 });
 
 test('validateRecord includes the retention findings', () => {
@@ -198,6 +204,40 @@ test('retain-original + verify-originals: the whole retention loop on a real rep
       ...fields,
     };
     writeFileSync(manifest, `${JSON.stringify(row)}\n`);
+
+    // the alternative namespace, created by the CLI and verified over the wire: --tags on
+    // ls-remote used to hide it, so a pushed ref was reported as REF_NOT_ON_REMOTE (review P1)
+    const altRetained = runCli(RETAIN, ['--repo', repo, '--project', 'proj-0002', '--ref-namespace', 'alt', '--push']);
+    assert.equal(altRetained.code, 0, altRetained.stderr);
+    const altFields = JSON.parse(altRetained.stdout);
+    assert.equal(altFields.original_ref, `${ALT_RETAINED_REF_PREFIX}proj-0002`);
+    assert.equal(altFields.original_sha, sha);
+
+    const altRow = {
+      ...row,
+      id: 'proj-0002',
+      storage_path: 'data/A1_self_generated/projects/proj-0002',
+      ...altFields,
+    };
+    const altManifest = join(root, 'alt.jsonl');
+    writeFileSync(altManifest, `${JSON.stringify(altRow)}\n`);
+    const altPushed = runCli(VERIFY, ['--manifest', altManifest, '--repo', repo, '--remote', 'origin']);
+    assert.equal(altPushed.code, 0, `${altPushed.stdout}${altPushed.stderr}`);
+    assert.match(altPushed.stdout, /1\/1 retained refs/);
+
+    // ...and a local-only alt ref still fails over the wire
+    git(repo, ['push', 'origin', `:${ALT_RETAINED_REF_PREFIX}proj-0002`]);
+    const altUnpushed = runCli(VERIFY, ['--manifest', altManifest, '--repo', repo, '--remote', 'origin']);
+    assert.equal(altUnpushed.code, 1);
+    assert.match(altUnpushed.stdout, /REF_NOT_ON_REMOTE/);
+
+    // a ref for a different project is rejected even when it exists
+    const crossRow = { ...altRow, id: 'proj-0003' };
+    const crossManifest = join(root, 'cross.jsonl');
+    writeFileSync(crossManifest, `${JSON.stringify(crossRow)}\n`);
+    const cross = runCli(VERIFY, ['--manifest', crossManifest, '--repo', repo]);
+    assert.equal(cross.code, 1);
+    assert.match(cross.stdout, /REF_NOT_CANONICAL/);
 
     // the gate passes, including the pushed ref
     const pass = runCli(VERIFY, ['--manifest', manifest, '--repo', repo, '--remote', 'origin']);

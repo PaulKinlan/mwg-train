@@ -76,7 +76,11 @@ function makeProbe(repo, remote) {
       // emits the peeled `<sha> <ref>^{}` line when the pattern is a glob - so ask with a trailing
       // `*` and then filter to the exact ref. Project ids cannot contain glob metacharacters, so
       // the extra matches the glob may return are ignored by the exact-name comparison below.
-      const out = git(repo, ['ls-remote', '--tags', remote, `${ref}*`], { check: true });
+      // No --tags here: it would restrict ls-remote to refs/tags/* and silently return nothing for
+      // the alternative refs/mwg-train/originals/* namespace, which reported a pushed ref as
+      // REF_NOT_ON_REMOTE. With a glob pattern and no --tags, git still emits the peeled
+      // `<sha> <ref>^{}` line for an annotated tag, which is what the comparison below wants.
+      const out = git(repo, ['ls-remote', remote, `${ref}*`], { check: true });
       if (!out) return null;
       const lines = out.split('\n').map((line) => line.trim().split(/\s+/));
       const peeled = lines.find(([, name]) => name === `${ref}^{}`);

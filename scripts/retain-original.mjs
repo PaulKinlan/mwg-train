@@ -17,10 +17,10 @@ import { execFileSync } from 'node:child_process';
 import { realpathSync } from 'node:fs';
 import process from 'node:process';
 
-import { OriginalRefError, originalFields, retainedRef } from '../src/provenance/originals.mjs';
+import { ALT_RETAINED_REF_PREFIX, OriginalRefError, RETAINED_REF_PREFIX, originalFields, retainedRef } from '../src/provenance/originals.mjs';
 
 function parseArgs(argv) {
-  const args = { repo: process.cwd(), commit: 'HEAD', remote: 'origin', push: false, message: '' };
+  const args = { repo: process.cwd(), commit: 'HEAD', remote: 'origin', push: false, message: '', namespace: 'tag' };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
     const next = () => {
@@ -37,6 +37,7 @@ function parseArgs(argv) {
     else if (arg === '--commit' || arg === '--rev') args.commit = next();
     else if (arg === '--remote') args.remote = next();
     else if (arg === '--message') args.message = next();
+    else if (arg === '--ref-namespace') args.namespace = next();
     else if (arg === '--push') args.push = true;
     else if (arg === '--help' || arg === '-h') args.help = true;
     else {
@@ -48,19 +49,33 @@ function parseArgs(argv) {
 }
 
 function git(repo, argv) {
-  return execFileSync('git', ['-C', repo, ...argv], { encoding: 'utf8', timeout: 60_000 }).trim();
+  return execFileSync('git', ['-C', repo, ...argv], {
+    encoding: 'utf8',
+    timeout: 60_000,
+    // A lane tool must never block on a credential prompt: GIT_TERMINAL_PROMPT=0 makes git fail
+    // instead of asking, and stdin is not a terminal here. stdout is captured (it carries the shas),
+    // stderr is inherited so git's own diagnostics stay visible.
+    stdio: ['ignore', 'pipe', 'inherit'],
+    env: { ...process.env, GIT_TERMINAL_PROMPT: '0' },
+  }).trim();
 }
 
 function main() {
   const args = parseArgs(process.argv.slice(2));
   if (args.help || !args.project) {
-    console.error('usage: node scripts/retain-original.mjs --repo <dir> --project <project-id> [--commit <rev>] [--push] [--remote origin]');
+    console.error(
+      'usage: node scripts/retain-original.mjs --repo <dir> --project <project-id> [--commit <rev>] [--push] [--remote origin] [--ref-namespace tag|alt]',
+    );
     process.exit(args.help ? 0 : 2);
+  }
+  if (!['tag', 'alt'].includes(args.namespace)) {
+    console.error(`retain-original: --ref-namespace must be 'tag' or 'alt', got '${args.namespace}'`);
+    process.exit(2);
   }
 
   let ref;
   try {
-    ref = retainedRef(args.project);
+    ref = args.namespace === 'alt' ? `${ALT_RETAINED_REF_PREFIX}${args.project}` : retainedRef(args.project);
   } catch (error) {
     console.error(`retain-original: ${error.message}`);
     process.exit(2);
@@ -88,18 +103,24 @@ function main() {
   }
 
   if (existing === null) {
-    const message =
-      args.message ||
-      [
-        `MWG-train original: ${args.project}`,
-        '',
-        `commit ${sha}`,
-        `tree   ${tree}`,
-        '',
-        'Retained ref for the corpus original. Do not delete, move or rewrite: it is the control',
-        'that later transforms are compared against (see docs/provenance/original-refs.md).',
-      ].join('\n');
-    git(repo, ['tag', '-a', ref.replace(/^refs\/tags\//, ''), '-m', message, sha]);
+    if (args.namespace === 'alt') {
+      // The alternative namespace is a plain ref, not a tag: annotations only exist under
+      // refs/tags/. The ref is still immutable in the sense that matters - this tool never moves it.
+      git(repo, ['update-ref', ref, sha]);
+    } else {
+      const message =
+        args.message ||
+        [
+          `MWG-train original: ${args.project}`,
+          '',
+          `commit ${sha}`,
+          `tree   ${tree}`,
+          '',
+          'Retained ref for the corpus original. Do not delete, move or rewrite: it is the control',
+          'that later transforms are compared against (see docs/provenance/original-refs.md).',
+        ].join('\n');
+      git(repo, ['tag', '-a', ref.replace(/^refs\/tags\//, ''), '-m', message, sha]);
+    }
     console.error(`retain-original: created ${ref} at ${sha}`);
   } else {
     console.error(`retain-original: ${ref} already at ${sha}; nothing to do`);
@@ -118,15 +139,21 @@ function main() {
     console.error(`retain-original: pushed ${ref} to ${args.remote}`);
   }
 
-  const fields = originalFields(args.project, sha, tree, {
-    repo,
-    url,
-    protections: [
-      'annotated tag refs/tags/original/* - not a branch, so a branch prune cannot reach it',
-      'server-side tag protection / receive.denyDeletes on refs/tags/original/* (operator setting)',
-      'history of the originals repository is never rewritten',
-    ],
-  });
+  const fields = originalFields(
+    args.project,
+    sha,
+    tree,
+    {
+      repo,
+      url,
+      protections: [
+        `retained ref ${ref} - not a branch, so a branch prune cannot reach it`,
+        `server-side ref protection and receive.denyDeletes on ${args.namespace === 'alt' ? ALT_RETAINED_REF_PREFIX : RETAINED_REF_PREFIX}* (operator setting)`,
+        'history of the originals repository is never rewritten',
+      ],
+    },
+    args.namespace,
+  );
   process.stdout.write(`${JSON.stringify(fields, null, 2)}\n`);
 }
 
