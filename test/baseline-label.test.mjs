@@ -183,6 +183,7 @@ test('the provenance detector keeps its two-way contract', () => {
     ["web-uplift's per-guide scores", true],
     ["web-uplift's metrics", true],
     ["web-uplift's tables for our corpus", true],
+    ["web-uplift's predicted versus observed scores for our corpus", true],
     ["Our metrics come from web-uplift's runs", true],
     ["Our baseline is actually web-uplift's ruleset", true],
     ["Our baseline remains web-uplift's ruleset", true],
@@ -205,6 +206,7 @@ test('the provenance detector keeps its two-way contract', () => {
     ["Our baseline follows web-uplift's rules-based approach", false],
     ["Our report presents web-uplift's rules alongside independently computed floor scores", false],
     ["Their report shows web-uplift's rules alongside our own measurements", false],
+    ["Our report cites web-uplift's report alongside its guide", false],
     ["Our report cites web-uplift's catalogue and our own floor scores", false],
     ["We compare our baselines with web-uplift's guides", false],
     ['Our baseline uses rules from web-uplift.', false],
@@ -228,8 +230,8 @@ test('the provenance detector keeps its two-way contract', () => {
   assert.deepEqual(wrong, []);
   // These two numbers are the counts at this revision, asserted so they cannot drift the way the
   // hand-written "30 cases" did. My own first attempt at them here was wrong by one, which is the point.
-  assert.equal(cases.filter(([, flag]) => flag).length, 25, 'attributions that must be caught');
-  assert.equal(cases.filter(([, flag]) => !flag).length, 22, 'true statements that must pass');
+  assert.equal(cases.filter(([, flag]) => flag).length, 26, 'attributions that must be caught');
+  assert.equal(cases.filter(([, flag]) => !flag).length, 23, 'true statements that must pass');
 });
 
 test('document coverage fails closed, not open', () => {

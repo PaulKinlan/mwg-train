@@ -220,6 +220,13 @@ const AUTHORING_NOUN = /\bweb-uplift\s+(?:product|work|deliverable|artefact|arti
 // registry, in a smaller vocabulary: a list covers what its author pictured.
 const FLOOR_OBJECT =
   /\b(?:floors?|baselines?|reports?|numbers?|deltas?|results?|scores?|yields?|conformance|percentages?|measurements?|metrics?|figures?|values?|outputs?|tables?|counts?|statistics|sums?|totals?|rates?|ratios?|timings?|latenc(?:y|ies)|tokens?|hours?|costs?|prices?|gpu-hours?|datasets?|samples?)\b/i;
+
+// The head test reads the noun WEB-UPLIFT possesses, where 'report' is normally theirs - "cites
+// web-uplift's report alongside its guide" is a true statement review caught being flagged. The general
+// FLOOR_OBJECT still applies to by/from and verb attributions, where "this report was assembled by
+// web-uplift" must flag.
+const POSSESSED_FLOOR_OBJECT =
+  /\b(?:floors?|baselines?|numbers?|deltas?|results?|scores?|yields?|conformance|percentages?|measurements?|metrics?|figures?|values?|outputs?|tables?|counts?|statistics|sums?|totals?|rates?|ratios?|timings?|latenc(?:y|ies)|tokens?|hours?|costs?|prices?|gpu-hours?|datasets?|samples?)\b/i;
 /**
  * Tokens that END a noun phrase, so what follows the possessive can be read as the phrase they possess.
  * "their rules for floor scores" possesses 'rules' (the preposition starts a new phrase); "their
@@ -231,7 +238,7 @@ const FLOOR_OBJECT =
 // distinction I had been missing while adding words one at a time. Review found 'alongside' absent, and
 // it is a preposition, so it belongs to a set I can finish rather than guess at.
 const NOUN_PHRASE_STOP =
-  /^(?:aboard|about|above|across|after|against|along|alongside|amid|amidst|among|amongst|anti|around|as|at|before|behind|below|beneath|beside|besides|between|beyond|but|by|concerning|considering|despite|down|during|except|excepting|excluding|following|for|from|in|inside|into|like|minus|near|of|off|on|onto|opposite|outside|over|past|per|plus|regarding|round|save|since|than|through|throughout|till|to|toward|towards|under|underneath|unlike|until|unto|up|upon|versus|via|within|without|all|another|any|anybody|anyone|anything|both|each|either|else|enough|everybody|everyone|everything|few|he|her|hers|herself|him|himself|his|i|it|its|itself|many|me|mine|more|most|much|my|myself|neither|no|nobody|none|nothing|one|ones|other|others|our|ours|ourselves|several|she|some|somebody|someone|something|that|their|theirs|them|themselves|these|they|this|those|us|we|what|whatever|which|whichever|who|whoever|whom|whose|you|your|yours|yourself|yourselves|and|nor|or|so|yet|although|though|while|whereas|because|unless|until|whether|if|then|am|is|are|was|were|be|been|being|do|does|did|done|have|has|had|having|can|could|may|might|must|shall|should|will|would|not)$/i;
+  /^(?:aboard|about|above|across|after|against|along|alongside|amid|amidst|among|amongst|anti|around|as|at|before|behind|below|beneath|beside|besides|between|beyond|but|by|concerning|considering|despite|down|during|except|excepting|excluding|following|for|from|in|inside|into|like|minus|near|of|off|on|onto|opposite|outside|over|past|per|plus|regarding|round|save|since|than|through|throughout|till|to|toward|towards|under|underneath|unlike|until|unto|up|upon|via|within|without|all|another|any|anybody|anyone|anything|both|each|either|else|enough|everybody|everyone|everything|few|he|her|hers|herself|him|himself|his|i|it|its|itself|many|me|mine|more|most|much|my|myself|neither|no|nobody|none|nothing|one|ones|other|others|our|ours|ourselves|several|she|some|somebody|someone|something|that|their|theirs|them|themselves|these|they|this|those|us|we|what|whatever|which|whichever|who|whoever|whom|whose|you|your|yours|yourself|yourselves|and|nor|or|so|yet|although|though|while|whereas|because|unless|until|whether|if|then|am|is|are|was|were|be|been|being|do|does|did|done|have|has|had|having|can|could|may|might|must|shall|should|will|would|not)$/i;
 
 /**
  * The head noun of the phrase a possessive possesses: the last token before the phrase ends.
@@ -333,7 +340,7 @@ export function falseProvenance(text) {
         // the noun is theirs - the copula makes it a predicate complement.
         const prefix = clause.slice(0, offset);
         const claimsIdentity = FLOOR_OBJECT.test(prefix) && IDENTITY_TAIL.test(prefix);
-        if (!FLOOR_OBJECT.test(head) && !claimsIdentity) continue;
+        if (!POSSESSED_FLOOR_OBJECT.test(head) && !claimsIdentity) continue;
       }
       // A clause that names only their artefact is a true statement about their work - "the canonical
       // catalog published by web-uplift" - and flagging it would make the check wrong about the thing it
