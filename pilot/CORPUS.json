@@ -1,7 +1,7 @@
 {
   "$comment": "The corpus the pilot measured: generated projects, their tree hashes, and the hash of the uplift the tool produced from each. `node scripts/pilot-corpus.mjs --verify` re-derives all of it; a mismatch means the measured artefact can no longer be reproduced.",
-  "run_id": "2026-10-08T11-12-38-413Z",
-  "generated_at": "2026-10-08T11:15:10.763Z",
+  "run_id": "2026-10-08T11-15-54-431Z",
+  "generated_at": "2026-10-08T11:18:24.618Z",
   "generator": "scripts/scaffold-pilot.mjs",
   "uplift_tool": "src/corpus/uplift.mjs",
   "summary": {

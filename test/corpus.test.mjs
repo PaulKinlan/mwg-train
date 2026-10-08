@@ -694,6 +694,10 @@ test('the write journey is witnessed by the server that stored the row', () => {
   assert.match(source, /fetch\('\/__requests'\)/, 'the harness asks the server what it received');
   assert.match(source, /entry\.method === 'POST' && entry\.path === action/, 'the POST is matched to the form action');
   assert.match(source, /posted: postEntry !== null/, 'an unobserved POST is not a pass');
+  // Only a POST the server recorded after the journey started counts, so an archetype that also writes
+  // on its persistence path cannot have that earlier POST read as this journey's.
+  assert.match(source, /entry\.index >= before\.length/, 'the check is scoped to requests made after the baseline');
+  assert.match(source, /const before = await readServerLog\(page\)/, 'a baseline is taken before the submit');
   for (const frameworkName of Object.keys(FRAMEWORKS)) {
     const { files, spec: built } = buildProject({ archetypeId: 'catalogue', frameworkName, defects: [] });
     const server = files[built.framework.serverFile];

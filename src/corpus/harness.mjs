@@ -106,6 +106,21 @@ async function driveJourney(page, base, journey) {
   return { steps, afterSubmit, persistedText: persisted.text, echoedText: persisted.echoed };
 }
 
+/** Ask the server what it has answered so far. */
+async function readServerLog(page) {
+  const observed = await page.evaluate(`
+    const response = await fetch('/__requests');
+    return { status: response.status, body: (await response.text()).slice(0, 4000) };
+  `);
+  if (observed.status !== 200) return null;
+  try {
+    const parsed = JSON.parse(observed.body);
+    return Array.isArray(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * The write journey: a POST that makes the server store something, and a read that proves it is there.
  *
@@ -121,6 +136,11 @@ async function driveWriteJourney(page, base, writeJourney) {
   const fill = { ...(writeJourney.fill ?? {}) };
   if (writeJourney.itemField) fill[writeJourney.itemField] = unique;
   for (const [selector, value] of Object.entries(fill)) await page.type(selector, value);
+  // How many requests the server had already answered. Without this, a POST made by an earlier journey
+  // for an archetype that writes on its persistence path would satisfy this check, and the write would
+  // be "observed" by a request this journey never made.
+  const before = await readServerLog(page);
+  if (before === null) throw new Error('the server did not expose its request log before the write journey');
   const submit = await page.submit(writeJourney.formSelector);
   const landed = await page.url();
   const landedEntry = page.network.filter((entry) => entry.url === landed).at(-1) ?? null;
@@ -133,17 +153,12 @@ async function driveWriteJourney(page, base, writeJourney) {
     const form = document.querySelector(${JSON.stringify(writeJourney.formSelector)});
     return form ? form.getAttribute('action') : null;
   `);
-  const observed = await page.evaluate(`
-    const response = await fetch('/__requests');
-    return { status: response.status, body: (await response.text()).slice(0, 4000) };
-  `);
-  let serverRequests = [];
-  try {
-    serverRequests = JSON.parse(observed.body);
-  } catch {
-    serverRequests = [];
-  }
-  const postEntry = serverRequests.find((entry) => entry.method === 'POST' && entry.path === action) ?? null;
+  const serverRequests = await readServerLog(page);
+  if (serverRequests === null) throw new Error('the server did not expose its request log after the write journey');
+  // Only entries the server recorded after the baseline count: this journey's own POST, or nothing.
+  const postEntry = serverRequests
+    .map((entry, index) => ({ ...entry, index }))
+    .find((entry) => entry.index >= before.length && entry.method === 'POST' && entry.path === action) ?? null;
   const status = postEntry?.status ?? null;
   // Read it back from the server rather than from the page: the question is whether the value was
   // stored, and the page could be showing it from anywhere.
@@ -151,7 +166,6 @@ async function driveWriteJourney(page, base, writeJourney) {
     const response = await fetch(${JSON.stringify(writeJourney.readPath)});
     return { status: response.status, body: (await response.text()).slice(0, 2000) };
   `);
-  const networkLog = page.network.map((entry) => `${entry.method} ${entry.status} ${entry.url}`);
   const browserRequests = page.network
     .filter((entry) => entry.method === 'POST' || entry.url.includes('cart') || entry.url.includes('/api/records'))
     .map((entry) => ({ method: entry.method, status: entry.status, url: entry.url }));
