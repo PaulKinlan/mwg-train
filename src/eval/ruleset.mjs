@@ -17,17 +17,22 @@
  * bare vs `category/guide`, sorted vs as-found, joined by newline, comma, space or nothing, raw or
  * JSON - produced exactly one match: sorted bare ids joined by newline.
  *
- * What a single match does and does not establish. Because sha256 is preimage-resistant, a match means
- * the byte string hashed here IS the string web-uplift hashed, so the construction is exact for THIS
- * input - an untested algorithm cannot produce the same bytes unless it consumes the same input, in
+ * What a single match does and does not establish. SHA-256 is second-preimage resistant - finding a
+ * DIFFERENT input with the same digest is infeasible - so a match is strong evidence that the byte
+ * string hashed here is the string web-uplift hashed, making the construction exact for THIS input.
+ * The argument rests on collision and second-preimage resistance rather than preimage resistance, which
+ * is about inverting a digest, not about two inputs agreeing. An algorithm we did not try cannot
+ * produce these bytes unless it consumes the same input, in
  * which case it is the same construction on this input. That gives a strong conditional conclusion, not
  * an unconditional one, and the conditions are worth naming: (a) the canonical ids are slugs with no
  * newline in them, so the newline-joined string decomposes into exactly 178 ids in only one way; and
  * (b) our guide count equals the canonical count the pin states. Given those, the input string
  * decomposes into our ids. What is NOT established is how web-uplift canonicalises a DIFFERENT input -
  * we cannot predict the hash of a 200-guide catalog, and this file does not claim to. If the catalog
- * ever appears on this machine the check recomputes both the file hash and the id hash directly, and
- * that measurement would supersede the inference.
+ * ever appears on this machine the check verifies its FILE sha256 directly, which supersedes the
+ * inference about the file. It still does not parse ids out of the catalog, so the id comparison stays
+ * ours against the pinned constant: the file hash and the id-set hash come from different sources, and
+ * it is worth knowing which is which.
  *
  * The catalog itself is not vendored here, so we verify its FILE hash and nothing else. We do not
  * parse guide ids out of it: its shape has never been seen on this VM, and guessing a shape would be
@@ -92,6 +97,42 @@ export function baselineAttributionLine() {
   return `> **${BASELINE_LABEL}** - deterministic output of this repository's own tooling, not an official \`web-uplift\` result.`;
 }
 
+/**
+ * The attribution fields every floor document carries.
+ * Value is a constant, so adding them to an existing measurement record cannot change a measurement -
+ * and `labelFloorDocument` proves that rather than assuming it by stripping them back off and comparing.
+ */
+export const BASELINE_FIELDS = Object.freeze({
+  baseline_label: BASELINE_LABEL,
+  baseline_definition:
+    'deterministic repair of the project by our own Modern Web Guidance rule specifications; no model and no teacher in the loop',
+  baseline_tool: 'src/corpus/uplift.mjs',
+});
+
+/**
+ * Return the document with the attribution added, plus whether anything changed.
+ *
+ * Used with the strip-and-compare guard in scripts/label-baseline.mjs: relabelling a committed record is
+ * only legitimate if it is provably attribution-only, so the guard compares the result minus these exact
+ * keys against the input and refuses to write if anything else moved.
+ */
+export function labelFloorDocument(document) {
+  const missing = Object.entries(BASELINE_FIELDS).filter(([key, value]) => document?.[key] !== value);
+  if (missing.length === 0) return { document, changed: false, fields: [] };
+  const labelled = { ...document };
+  for (const [key, value] of missing) labelled[key] = value;
+  // Only the keys actually added, so a caller can strip exactly those and compare. A document that
+  // already carried some attribution fields is the reason this is not simply the whole field set.
+  return { document: labelled, changed: true, fields: missing.map(([key]) => key) };
+}
+
+/** Remove the attribution fields, for comparisons that must ignore attribution. */
+export function stripBaselineLabel(document) {
+  const stripped = { ...document };
+  for (const key of Object.keys(BASELINE_FIELDS)) delete stripped[key];
+  return stripped;
+}
+
 /** sha256 (hex, no prefix) over the sorted bare guide ids, newline-joined - web-uplift's recipe. */
 export function guideIdsHash(categories) {
   return createHash('sha256').update(sortedGuideIds(categories).join('\n')).digest('hex');
@@ -106,7 +147,21 @@ export function ruleSetHash(categories) {
 }
 
 function sortedGuideIds(categories) {
+  // Only ever called after the shape has been validated, because `String(value)` on an object without a
+  // usable `toString` THROWS (measured: `{"toString":null}` gave "Cannot convert object to primitive
+  // value"). That was the second review finding in this area: the shape check ran after this call, so a
+  // malformed JSON value crashed the check instead of being reported. A check that throws on bad input
+  // has not checked anything, so the ordering here is load-bearing rather than incidental.
   return Object.values(categories ?? {}).flat().map((id) => String(id)).sort();
+}
+
+/** A description of an arbitrary parsed JSON value that cannot itself throw. */
+function describe(value) {
+  try {
+    return JSON.stringify(value) ?? String(value);
+  } catch {
+    return `<unprintable ${typeof value}>`;
+  }
 }
 
 /**
@@ -126,7 +181,6 @@ export function checkRulesetPin(rules, options = {}) {
     return findings;
   }
 
-  const guideIds = sortedGuideIds(categories);
   const categoryNames = Object.keys(categories);
 
   // Validate the SHAPE before hashing anything. Hashing coerces: `String([id])` is `id` and
@@ -137,13 +191,18 @@ export function checkRulesetPin(rules, options = {}) {
   // evidence about anything.
   const shape = [];
   for (const [category, guides] of Object.entries(categories)) {
+    // Category names are part of the vocabulary: `category/guide` is one of the two hashed strings, so a
+    // name containing the separator, whitespace or a colon would make that string ambiguous.
+    if (category.trim() === '' || /[\s/:]/.test(category)) {
+      shape.push(`category name ${describe(category)} must be non-empty and free of whitespace, '/' and ':'`);
+    }
     if (!Array.isArray(guides)) {
       shape.push(`category '${category}' must be an array of guide ids, not ${guides === null ? 'null' : typeof guides}`);
       continue;
     }
     for (const guide of guides) {
       if (typeof guide !== 'string') {
-        shape.push(`category '${category}' contains a non-string guide id: ${JSON.stringify(guide)}`);
+        shape.push(`category '${category}' contains a non-string guide id: ${describe(guide)}`);
       } else if (guide === '') {
         shape.push(`category '${category}' contains an empty guide id`);
       } else if (guide.includes('/')) {
@@ -157,6 +216,9 @@ export function checkRulesetPin(rules, options = {}) {
     push('BAD_VOCABULARY_SHAPE', shape.join('; '));
     return findings;
   }
+
+  // Safe only now: `String(value)` throws on an object without a usable `toString`.
+  const guideIds = sortedGuideIds(categories);
 
   if (guideIds.length === 0) {
     // Fail closed. An empty vocabulary would otherwise hash to sha256('') and "agree" with nothing,

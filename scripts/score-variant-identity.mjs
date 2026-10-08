@@ -26,7 +26,7 @@ import process from 'node:process';
 import { launchChrome } from '../src/corpus/cdp.mjs';
 import { upliftProject } from '../src/corpus/uplift.mjs';
 import { identityFindings, scoreArm, variantIdentity } from '../src/eval/conformance.mjs';
-import { baselineAttributionLine } from '../src/eval/ruleset.mjs';
+import { BASELINE_FIELDS, baselineAttributionLine } from '../src/eval/ruleset.mjs';
 import { captureSignature } from '../src/eval/render.mjs';
 import { IDENTITY_BUDGET, TARGETS_STORAGE, TARGET_FAMILIES } from '../src/eval/targets.mjs';
 import { generateCorpus, readPlan } from '../pilot/generate.mjs';
@@ -72,6 +72,7 @@ async function scoreFamily({ family, chrome, runDir, outDir, ports }) {
   const identity = variantIdentity(target.signature, variants.map((variant) => ({ framework: variant.framework, signature: variant.raw_signature })));
   const findings = identityFindings(identity, IDENTITY_BUDGET);
   const report = {
+    ...BASELINE_FIELDS,
     family: family.family_id,
     target_signature: target.relativePath,
     target_sha256: target.sha256,

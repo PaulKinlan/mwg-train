@@ -24,7 +24,7 @@ import process from 'node:process';
 import { launchChrome } from '../src/corpus/cdp.mjs';
 import { upliftProject } from '../src/corpus/uplift.mjs';
 import { scoreArm } from '../src/eval/conformance.mjs';
-import { baselineAttributionLine } from '../src/eval/ruleset.mjs';
+import { BASELINE_FIELDS, baselineAttributionLine } from '../src/eval/ruleset.mjs';
 import { captureSignature } from '../src/eval/render.mjs';
 import { TARGETS_STORAGE } from '../src/eval/targets.mjs';
 import { generateCorpus, readPlan } from '../pilot/generate.mjs';
@@ -89,6 +89,7 @@ async function main() {
 
   const meanDelta = results.reduce((sum, row) => sum + row.delta, 0) / results.length;
   const report = {
+    ...BASELINE_FIELDS,
     family: args.family,
     target_signature: target.relativePath,
     target_sha256: createHash('sha256').update(readFileSync(target.absolutePath)).digest('hex'),

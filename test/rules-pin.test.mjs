@@ -116,6 +116,24 @@ test('a malformed vocabulary is rejected before it is hashed', () => {
   }
 });
 
+test('a malformed value is reported, never thrown', () => {
+  // Second review finding here: `sortedGuideIds` ran BEFORE shape validation, so a parsed value without a
+  // usable toString (`{"toString":null}`) threw "Cannot convert object to primitive value" instead of
+  // being reported. A check that throws on bad input has not checked anything, and this file advertises
+  // findings rather than exceptions.
+  const values = ['{"toString":null}', '{"toString":{}}', '[{"toString":null}]', '{"valueOf":null}', '{"toString":"x"}', '{}', '[]'];
+  for (const json of values) {
+    const parsed = JSON.parse(json);
+    const found = checkRulesetPin(withVocabulary((c) => { c.categories.css[0] = parsed; }));
+    assert.ok(found.some((f) => f.code === 'BAD_VOCABULARY_SHAPE'), `expected a finding for ${json}`);
+  }
+  // And a category name that would make `category/guide` ambiguous is refused too.
+  for (const name of ['bad name', 'a/b', 'a:b', '']) {
+    const found = checkRulesetPin(withVocabulary((c) => { c.categories[name] = c.categories.css; delete c.categories.css; }));
+    assert.ok(found.some((f) => f.code === 'BAD_VOCABULARY_SHAPE'), `expected a finding for category name ${JSON.stringify(name)}`);
+  }
+});
+
 test('--json output is one parseable JSON document', () => {
   // Review finding: the JSON branch printed the report and then an unconditional PASS line, so a caller
   // parsing stdout as a single document failed on a SUCCESSFUL check - the case that must never fail.

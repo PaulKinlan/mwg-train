@@ -13,6 +13,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { checkBaselineLabel, falseProvenance } from '../scripts/check-baseline-label.mjs';
+import { labelDocuments } from '../scripts/label-baseline.mjs';
 import { BASELINE_LABEL, baselineAttributionLine } from '../src/eval/ruleset.mjs';
 
 const ROOT = resolve(import.meta.dirname, '..');
@@ -31,6 +32,16 @@ const REPORTS = [
   'docs/train/corpus/YIELD.md',
   'docs/train/corpus/records.json',
   'pilot/CORPUS.json',
+  'docs/pilot/yield.json',
+  'docs/pilot/records.json',
+  'docs/eval/conformance/booking.json',
+  'docs/eval/conformance/account-recovery-identity.json',
+  'docs/eval/conformance/booking-identity.json',
+  'docs/eval/conformance/catalogue-identity.json',
+  'docs/eval/conformance/contact-lead-identity.json',
+  'docs/eval/conformance/event-registration-identity.json',
+  'docs/pilot/README.md',
+  'docs/eval/conformance/README.md',
 ];
 
 test('every registered floor report carries the label', () => {
@@ -79,6 +90,15 @@ test('a report that claims web-uplift authorship fails even when labelled', () =
     assert.deepEqual(checkBaselineLabel([path]).map((f) => f.code), ['FALSE_PROVENANCE']);
     writeFileSync(path, `# Report\n\n${baselineAttributionLine()}\n\nnumbers from web-uplift\n`);
     assert.deepEqual(checkBaselineLabel([path]).map((f) => f.code), ['FALSE_PROVENANCE']);
+
+    // Second-round evasions: an authoring verb, and a negation in a DIFFERENT clause that the old
+    // 24-character lookback treated as disclaiming the claim.
+    writeFileSync(path, `# Report\n\n${baselineAttributionLine()}\n\nweb-uplift built this floor\n`);
+    assert.deepEqual(checkBaselineLabel([path]).map((f) => f.code), ['FALSE_PROVENANCE']);
+    writeFileSync(path, `# Report\n\n${baselineAttributionLine()}\n\nNot a mock; built by web-uplift\n`);
+    assert.deepEqual(checkBaselineLabel([path]).map((f) => f.code), ['FALSE_PROVENANCE']);
+    writeFileSync(path, `# Report\n\n${baselineAttributionLine()}\n\nweb-uplift produced these numbers\n`);
+    assert.deepEqual(checkBaselineLabel([path]).map((f) => f.code), ['FALSE_PROVENANCE']);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
@@ -91,8 +111,13 @@ test('our own disclaimer is not mistaken for a claim', () => {
   assert.equal(falseProvenance('This is not an official web-uplift result.'), null);
   assert.equal(falseProvenance('structural 0.805'), null);
   assert.equal(falseProvenance('This is an official web-uplift result.'), 'official web-uplift');
-  // A mention is not a claim: naming the product as something we compare against is legitimate.
+  // A mention is not a claim: naming the product as something we compare against is legitimate, and so
+  // is a true statement about THEIR artefact. Flagging those would make the check wrong about the thing
+  // it is right about, which is how a check gets disabled.
   assert.equal(falseProvenance('we compare our floor against the web-uplift catalogue'), null);
+  assert.equal(falseProvenance('The canonical catalog published by web-uplift changed.'), null);
+  assert.equal(falseProvenance('The ruleset published by web-uplift has 178 guides.'), null);
+  assert.equal(falseProvenance('We did not use web-uplift for our floor.'), null);
 });
 
 test('a registered report that is missing fails rather than passing quietly', () => {
@@ -100,6 +125,31 @@ test('a registered report that is missing fails rather than passing quietly', ()
   // false, and a check that skips missing files reports success having checked nothing.
   const found = checkBaselineLabel(['docs/eval/conformance/does-not-exist.md']);
   assert.deepEqual(found.map((f) => f.code), ['REPORT_MISSING']);
+});
+
+test('the relabel tool refuses anything that is not attribution-only', () => {
+  // The guard is the point of the tool: a relabel that changed a measurement would be falsification.
+  // Simulate it by pointing the tool at a document whose label fields already exist in a different form,
+  // which makes the stripped comparison differ.
+  const dir = mkdtempSync(join(tmpdir(), 'label-baseline-'));
+  try {
+    const path = join(dir, 'record.json');
+    writeFileSync(path, JSON.stringify({ measured: 0.805, baseline_label: 'something else' }));
+    const result = labelDocuments([path])[0];
+    assert.equal(result.code, 'REFUSED_NOT_ATTRIBUTION_ONLY');
+    assert.equal(JSON.parse(readFileSync(path, 'utf8')).baseline_label, 'something else', 'a refused write must not modify the file');
+
+    // A clean document is labelled, and --check reports it without writing.
+    const clean = join(dir, 'clean.json');
+    writeFileSync(clean, JSON.stringify({ measured: 0.805 }));
+    assert.equal(labelDocuments([clean], { check: true })[0].code, 'WOULD_LABEL');
+    assert.equal(JSON.parse(readFileSync(clean, 'utf8')).baseline_label, undefined, '--check must not write');
+    assert.equal(labelDocuments([clean])[0].code, 'LABELLED');
+    assert.equal(JSON.parse(readFileSync(clean, 'utf8')).baseline_label, BASELINE_LABEL);
+    assert.equal(labelDocuments([clean])[0].code, 'ALREADY_LABELLED', 'relabelling is idempotent');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 test('the CLI passes on the tree and fails when a report loses its label', () => {

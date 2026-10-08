@@ -3152,5 +3152,8 @@
       "original_sha": "sha256:54db02b8339fec4142295f079f59050983901a07326768756173a28878a0b7f1",
       "uplifted_sha": "sha256:68a4205169b4da3c9a010bc76f49e6421020dae16932f5843c1c226434b21767"
     }
-  ]
+  ],
+  "baseline_label": "mwg-train deterministic baseline",
+  "baseline_definition": "deterministic repair of the project by our own Modern Web Guidance rule specifications; no model and no teacher in the loop",
+  "baseline_tool": "src/corpus/uplift.mjs"
 }

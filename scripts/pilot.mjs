@@ -26,6 +26,7 @@ import { upliftProject } from '../src/corpus/uplift.mjs';
 import { runProjectVersion, hashTree } from '../src/corpus/harness.mjs';
 import { generateCorpus } from '../pilot/generate.mjs';
 import { decidePair, renderYieldReport, summarizeYield } from '../src/corpus/accept.mjs';
+import { BASELINE_FIELDS } from '../src/eval/ruleset.mjs';
 
 function parseArgs(argv) {
   // null means "generate the corpus from the plan"; a value means "measure exactly this directory".
@@ -161,7 +162,7 @@ async function main() {
     // made the committed docs/pilot/YIELD.md disagree with the committed docs/pilot/yield.json it was
     // generated from, so a re-render looked like it had changed the evidence.
     const generatedAt = new Date().toISOString();
-    writeFileSync(join(runDir, 'yield.json'), `${JSON.stringify({ run_id: runId, generated_at: generatedAt, summary, decisions }, null, 2)}\n`);
+    writeFileSync(join(runDir, 'yield.json'), `${JSON.stringify({ ...BASELINE_FIELDS, run_id: runId, generated_at: generatedAt, summary, decisions }, null, 2)}\n`);
     writeFileSync(
       join(runDir, 'YIELD.md'),
       renderYieldReport({ summary, decisions, runId, generatedAt, notes }),

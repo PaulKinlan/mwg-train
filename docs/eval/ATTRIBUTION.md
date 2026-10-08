@@ -33,9 +33,11 @@ independently.
 **What that does and does not prove.** A single match is strong conditional evidence, and it is worth
 being exact about the conditions:
 
-- Because sha256 is preimage-resistant, a match means the byte string hashed here *is* the string
-  web-uplift hashed - so the construction is exact for **this** input. An algorithm we did not try
-  cannot produce these bytes unless it consumes the same input, in which case it is the same
+- A match is strong evidence that the byte string hashed here *is* the string web-uplift hashed, which
+  makes the construction exact for **this** input. The argument rests on collision and second-preimage
+  resistance - finding a *different* input with the same digest is infeasible - not on preimage
+  resistance, which concerns inverting a digest rather than two inputs agreeing. An algorithm we did not
+  try cannot produce these bytes unless it consumes the same input, in which case it is the same
   construction on this input.
 - That the input decomposes into *our* ids follows from two conditions, both of which hold: canonical
   ids are slugs containing no newline, so a newline-joined string of 178 ids decomposes in only one
@@ -44,8 +46,10 @@ being exact about the conditions:
   the hash of a 200-guide catalog, and this document does not claim to. A reviewer was right to press
   on this, and the honest form is "exact for the input we can see, with the conditions named", not "we
   know the algorithm".
-- If the catalog ever appears on this machine the check recomputes both hashes from the file directly,
-  and that measurement supersedes the inference.
+- If the catalog ever appears on this machine the check verifies its **file** sha256 directly, which
+  supersedes the inference about the file. It does not parse ids out of the catalog, so the id comparison
+  remains ours against the pinned constant: the two hashes are checked from different sources, and it is
+  worth knowing which is which.
 
 The catalog file itself is not vendored in this repository or present on the build VM, so the check
 verifies its file hash **when the file is there** and otherwise says out loud that it did not. It does
@@ -87,6 +91,9 @@ schema, the markdown reports and the viewer cannot drift apart:
 | `docs/eval/conformance/<family>-identity.md` | the attribution line under the title |
 | `docs/pilot/YIELD.md`, `docs/train/corpus/YIELD.md` | the attribution line under the title |
 | `docs/train/corpus/records.json`, `pilot/CORPUS.json` | a top-level `baseline_label` / `baseline_tool` |
+| `docs/pilot/yield.json`, `docs/pilot/records.json` | the same fields on the measurement record |
+| `docs/eval/conformance/<family>.json` and `<family>-identity.json` | the same fields, so the numbers attribute themselves and not only the summary rendered from them |
+| `docs/pilot/README.md`, `docs/eval/conformance/README.md` | the attribution line above the result summaries |
 | the corpus viewer | the floor panel and the roles line |
 
 The first pass of this work registered six reports. Review then found two more that state a floor -
@@ -97,8 +104,17 @@ ten. The lesson worth keeping: a registry is only as good as the review that ext
 projection (`decision` in `records.json`) silently drops whatever it does not explicitly name.
 
 ```bash
-npm run check:baseline-label   # every registered floor report must carry the label
+npm run check:baseline-label   # every registered floor artifact must carry the label (20 of them)
+npm run label:baseline -- --check   # the same assertion for the measurement JSON, without writing
+npm run label:baseline              # add the label to a document that predates it
 ```
+
+Twenty artifacts are registered, and that count is the honest measure of this contract rather than a
+detail: the first pass covered six, review found two more reports and then four measurement JSON
+documents plus two static summaries, and each round was a list I had believed was complete. The
+documents that predate the label are relabelled by `scripts/label-baseline.mjs`, which is
+**safe by construction** - it strips exactly the keys it added, deep-compares against what it read, and
+refuses to write if anything else moved. `--check` runs that comparison without writing.
 
 The check is fail-closed in three ways: a report in its registry that is **missing** fails, a report
 without the label fails, and a report claiming web-uplift's authorship fails even when it is labelled.
