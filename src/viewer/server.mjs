@@ -43,6 +43,19 @@ const REPO_ROOT = resolve(here, '..', '..');
 const EVIDENCE_EXTENSIONS = new Set(['.png', '.json', '.webp', '.jpg', '.jpeg']);
 const VERSIONS = new Set(['original', 'uplifted']);
 
+/**
+ * The pair-level combination rule: PASS only when BOTH trees are present and clean AND the
+ * records are clean. A MISSING tree (not materialized on disk) or absent records (no local run)
+ * makes the pair PARTIAL - never PASS, so nothing unscanned is ever presented as clean.
+ */
+export function combineScanStatus({ original, uplifted, records }) {
+  const all = [original, uplifted, records];
+  if (all.some((r) => r?.status === 'ERROR')) return 'ERROR';
+  if (all.some((r) => r?.status === 'FAIL')) return 'FAIL';
+  if (original?.status === 'MISSING' || uplifted?.status === 'MISSING' || records?.status === 'NO-RUN') return 'PARTIAL';
+  return 'PASS';
+}
+
 function readJson(path) {
   try {
     return JSON.parse(readFileSync(path, 'utf8'));
@@ -185,11 +198,7 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
     const upliftedDir = project.upliftedTreeDir ?? null;
     const uplifted = upliftedDir ? scanTreeCached(upliftedDir) : { status: 'MISSING', findings: [] };
     const records = recordsScan(project);
-    const all = [original, uplifted, records];
-    if (all.some((r) => r.status === 'ERROR')) return { status: 'ERROR', reason: matchersError, original, uplifted, records };
-    if (all.some((r) => r.status === 'FAIL')) return { status: 'FAIL', original, uplifted, records };
-    if (uplifted.status === 'MISSING' || records.status === 'NO-RUN') return { status: 'PARTIAL', original, uplifted, records };
-    return { status: 'PASS', original, uplifted, records };
+    return { status: combineScanStatus({ original, uplifted, records }), reason: matchersError, original, uplifted, records };
   }
 
   /**

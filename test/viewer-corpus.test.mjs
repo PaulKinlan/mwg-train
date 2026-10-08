@@ -7,6 +7,7 @@ import { join } from 'node:path';
 
 import { filterProjects, loadCorpus, projectView } from '../src/viewer/corpus.mjs';
 import { renderIndex, renderProject } from '../src/viewer/pages.mjs';
+import { combineScanStatus } from '../src/viewer/server.mjs';
 
 function buildFixtureCorpus() {
   const root = mkdtempSync(join(tmpdir(), 'viewer-corpus-test-'));
@@ -154,6 +155,18 @@ test('record content is escaped: evidence text cannot inject markup into the vie
   assert.ok(!html.includes('<script>alert(1)</script>'));
   assert.ok(!html.includes('<img src=x onerror=alert(1)>'));
   assert.match(html, /&lt;script&gt;/);
+});
+
+test('the pair scan combiner: a MISSING original is PARTIAL, never PASS (mixed-state regression)', () => {
+  const P = { status: 'PASS', findings: [] };
+  const M = { status: 'MISSING', findings: [] };
+  assert.equal(combineScanStatus({ original: P, uplifted: P, records: P }), 'PASS');
+  assert.equal(combineScanStatus({ original: M, uplifted: P, records: P }), 'PARTIAL');
+  assert.equal(combineScanStatus({ original: P, uplifted: M, records: P }), 'PARTIAL');
+  assert.equal(combineScanStatus({ original: M, uplifted: M, records: P }), 'PARTIAL');
+  assert.equal(combineScanStatus({ original: P, uplifted: P, records: { status: 'NO-RUN', findings: [] } }), 'PARTIAL');
+  assert.equal(combineScanStatus({ original: P, uplifted: P, records: { status: 'FAIL', findings: [{}] } }), 'FAIL');
+  assert.equal(combineScanStatus({ original: P, uplifted: { status: 'ERROR', findings: [] }, records: P }), 'ERROR');
 });
 
 test('a manifest-only project (tree not on disk) offers live actions with honest pending labels', (t) => {
