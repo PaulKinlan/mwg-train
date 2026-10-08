@@ -72,6 +72,10 @@ test('HARD REQUIREMENT: committed tr-01 projects match TRAINING_CORPUS.json tree
 
 test('clean opt-in: projects WITHOUT declarations contain none of the new tokens', () => {
   const archetype = makeTr01Archetype();
+  // The corpus now declares these flows for every family (stage 4 of bead 4cy), so this test makes its own
+  // archetype WITHOUT them: what it checks is the generator's output when a brief declares nothing, which is
+  // the property that keeps the eval and pilot corpora byte-identical.
+  for (const key of ['search', 'update', 'steps']) delete archetype.journey[key];
   assert.equal(archetype.journey.search, undefined);
   assert.equal(archetype.journey.update, undefined);
   assert.equal(archetype.journey.steps, undefined);

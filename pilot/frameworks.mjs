@@ -1033,7 +1033,7 @@ ${archetype.session ? `  const sid = randomUUID();
 });
 
 const readPath = ${JSON.stringify(archetype.routes.find((route) => route.kind === 'read-by-reference')?.path ?? '/record/:ref')};
-app.get(readPath, async (c) => {
+app.get(readPath, ${archetype.journey?.update ? 'async ' : ''}(c) => {
   const row = select.get(c.req.param('ref'));
   if (!row) return c.text('We could not find that record.', 404);
   ${archetype.journey?.update ? `const payload = JSON.parse(row.payload);

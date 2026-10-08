@@ -1,6 +1,6 @@
 {
   "$comment": "The training corpus generated from the tr-* briefs: one project per family x framework, each with its tree hash. `node scripts/scaffold-training-corpus.mjs` re-derives every tree; a hash here must never collide with a hash in pilot/CORPUS.json (original or uplift), which is the disjointness the corpus exists to guarantee.",
-  "generated_at": "2026-10-08T20:14:16.308Z",
+  "generated_at": "2026-10-08T20:33:04.193Z",
   "generator": "scripts/scaffold-training-corpus.mjs",
   "summary": {
     "families": 30,
