@@ -1,0 +1,174 @@
+{
+  "spec_version": 1,
+  "family_id": "catalogue",
+  "title": "Searchable reference catalogue",
+  "story": "A parts catalogue with server-side search, paging and a session cart.",
+  "durability": {
+    "version": 1,
+    "authored": "2026-10-08",
+    "basis": "transcribed from the pilot archetype and hand-reviewed; test/spec.test.mjs keeps the two in step",
+    "rebuild": "node scripts/rebuild-from-spec.mjs --family catalogue"
+  },
+  "state": {
+    "engine": "sqlite",
+    "lifetime": "per process, in a file named on the command line - not a durable store",
+    "tables": [
+      {
+        "name": "records",
+        "purpose": "the value a write stores, read back by the reference the server issued",
+        "columns": [
+          {
+            "name": "ref",
+            "type": "TEXT",
+            "constraints": "PRIMARY KEY"
+          },
+          {
+            "name": "created_at",
+            "type": "TEXT",
+            "constraints": "NOT NULL"
+          },
+          {
+            "name": "payload",
+            "type": "TEXT",
+            "constraints": "NOT NULL"
+          }
+        ]
+      },
+      {
+        "name": "sessions",
+        "purpose": "who the server decided the requester is, for this session only",
+        "columns": [
+          {
+            "name": "sid",
+            "type": "TEXT",
+            "constraints": "PRIMARY KEY"
+          },
+          {
+            "name": "ref",
+            "type": "TEXT",
+            "constraints": "NOT NULL"
+          },
+          {
+            "name": "created_at",
+            "type": "TEXT",
+            "constraints": "NOT NULL"
+          }
+        ]
+      }
+    ]
+  },
+  "persistence": {
+    "write_route": "/cart",
+    "read_route": "/cart",
+    "reference": "session id issued by the server as a cookie",
+    "reload_assertion": "reloading /cart still shows the cart the session stored; the query echo is a reflected URL parameter, not stored state"
+  },
+  "routes": [
+    {
+      "method": "GET",
+      "path": "/",
+      "kind": "page",
+      "effect": "render the catalogue page with the search form and the cart form"
+    },
+    {
+      "method": "GET",
+      "path": "/search",
+      "kind": "search",
+      "effect": "read q from the query string, search the records, and render the results with q reflected in the page"
+    },
+    {
+      "method": "POST",
+      "path": "/cart",
+      "kind": "write-session",
+      "effect": "store the part number against the session and redirect back to the cart",
+      "redirect": "/cart"
+    },
+    {
+      "method": "GET",
+      "path": "/cart",
+      "kind": "read-session",
+      "effect": "read the session and render what it stores"
+    }
+  ],
+  "fields": [
+    {
+      "slug": "query",
+      "name": "q",
+      "type": "search",
+      "label": "Search parts",
+      "echoed": true,
+      "required": true
+    },
+    {
+      "slug": "quantity",
+      "name": "quantity",
+      "type": "number",
+      "label": "Quantity",
+      "required": false,
+      "optional": true
+    },
+    {
+      "slug": "item",
+      "name": "item",
+      "type": "text",
+      "label": "Part number",
+      "required": true
+    }
+  ],
+  "validation": {
+    "required_fields": [
+      "q",
+      "item"
+    ],
+    "on_missing": "a search with no query renders an empty result set rather than refusing",
+    "on_success": "a cart post stores the part number against the session and redirects to /cart"
+  },
+  "journey": {
+    "kind": "get-query-reload",
+    "startPath": "/",
+    "formSelector": "form#search-form",
+    "fill": {
+      "input[name=q]": "bearing"
+    },
+    "expectText": "bearing"
+  },
+  "form": {
+    "method": "get",
+    "action": "/search",
+    "fields": [
+      "query"
+    ]
+  },
+  "extra_form": {
+    "id": "cart-form",
+    "method": "post",
+    "action": "/cart",
+    "fields": [
+      "item",
+      "quantity"
+    ],
+    "submit": "Add to cart"
+  },
+  "write_journey": {
+    "startPath": "/",
+    "formSelector": "form#cart-form",
+    "itemField": "input[name=item]",
+    "fill": {
+      "input[name=quantity]": "2"
+    },
+    "readPath": "/api/records"
+  },
+  "security_journey": null,
+  "echo": {
+    "field": "query",
+    "source": "query",
+    "param": "q"
+  },
+  "password_field": null,
+  "session": true,
+  "acceptance": [
+    "the echoed query is the value this attempt typed, reflected by the server after a GET reload",
+    "the cart write is read back from the session, and the part number posted is unique to this attempt so an older row cannot satisfy it",
+    "an optional field is not made required by the uplift: the project never asked the user for it"
+  ]
+}

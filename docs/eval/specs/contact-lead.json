@@ -1,0 +1,133 @@
+{
+  "spec_version": 1,
+  "family_id": "contact-lead",
+  "title": "Public-service enquiry form",
+  "story": "A council service takes enquiries, validates them, and shows the enquirer their reference.",
+  "durability": {
+    "version": 1,
+    "authored": "2026-10-08",
+    "basis": "transcribed from the pilot archetype and hand-reviewed; test/spec.test.mjs keeps the two in step",
+    "rebuild": "node scripts/rebuild-from-spec.mjs --family contact-lead"
+  },
+  "state": {
+    "engine": "sqlite",
+    "lifetime": "per process, in a file named on the command line - not a durable store",
+    "tables": [
+      {
+        "name": "records",
+        "purpose": "the value a write stores, read back by the reference the server issued",
+        "columns": [
+          {
+            "name": "ref",
+            "type": "TEXT",
+            "constraints": "PRIMARY KEY"
+          },
+          {
+            "name": "created_at",
+            "type": "TEXT",
+            "constraints": "NOT NULL"
+          },
+          {
+            "name": "payload",
+            "type": "TEXT",
+            "constraints": "NOT NULL"
+          }
+        ]
+      }
+    ]
+  },
+  "persistence": {
+    "write_route": "/enquiry",
+    "read_route": "/enquiry/:ref",
+    "reference": "server-issued reference, returned in the Location header of a 303",
+    "reload_assertion": "reloading /enquiry/<ref> still shows the stored message text"
+  },
+  "routes": [
+    {
+      "method": "GET",
+      "path": "/",
+      "kind": "page",
+      "effect": "render the enquiry form"
+    },
+    {
+      "method": "POST",
+      "path": "/enquiry",
+      "kind": "write",
+      "effect": "refuse the submission if a required field is missing; otherwise store the enquiry and redirect",
+      "redirect": "/enquiry/:ref"
+    },
+    {
+      "method": "GET",
+      "path": "/enquiry/:ref",
+      "kind": "read-by-reference",
+      "effect": "read the enquiry by reference and show the message back to the enquirer"
+    },
+    {
+      "method": "GET",
+      "path": "/inbox",
+      "kind": "list",
+      "effect": "list the stored enquiries"
+    }
+  ],
+  "fields": [
+    {
+      "slug": "name",
+      "name": "name",
+      "type": "text",
+      "label": "Your name",
+      "autocomplete": "name",
+      "required": true
+    },
+    {
+      "slug": "email",
+      "name": "email",
+      "type": "email",
+      "label": "Email",
+      "autocomplete": "email",
+      "required": true
+    },
+    {
+      "slug": "message",
+      "name": "message",
+      "type": "textarea",
+      "label": "How can we help?",
+      "echoed": true,
+      "required": true
+    }
+  ],
+  "validation": {
+    "required_fields": [
+      "name",
+      "email",
+      "message"
+    ],
+    "on_missing": "the server refuses the submission and re-renders the form; nothing is stored",
+    "on_success": "insert one row into records and answer 303 with Location: /enquiry/<ref>"
+  },
+  "journey": {
+    "startPath": "/",
+    "formSelector": "form#enquiry-form",
+    "fill": {
+      "input[name=name]": "Grace Hopper",
+      "input[name=email]": "grace@example.test",
+      "textarea[name=message]": "Please repair the street light"
+    },
+    "expectText": "Grace Hopper"
+  },
+  "form": null,
+  "extra_form": null,
+  "write_journey": null,
+  "security_journey": null,
+  "echo": {
+    "field": "message",
+    "container": "#enquiry-message",
+    "route": "read-by-reference"
+  },
+  "password_field": null,
+  "session": false,
+  "acceptance": [
+    "after a successful submit the browser lands on /enquiry/<ref> and the echoed message is present",
+    "reloading that URL still shows it",
+    "an empty submit is observed to be refused"
+  ]
+}

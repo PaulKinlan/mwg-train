@@ -17,7 +17,7 @@
  *   await chrome.close();
  */
 import { spawn } from 'node:child_process';
-import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import process from 'node:process';
@@ -157,7 +157,13 @@ export async function launchChrome({ proxy = null, args = [] } = {}) {
       ...args,
       'about:blank',
     ],
-    { stdio: ['ignore', 'pipe', 'pipe'] },
+    {
+      stdio: ['ignore', 'pipe', 'pipe'],
+      // Its own process group, so the whole tree - zygotes, gpu, network, and anything the browser spawns
+      // that does not carry the profile directory on its command line - can be killed together. Killing
+      // only the parent left pieces behind.
+      detached: true,
+    },
   );
 
   const endpoint = await new Promise((resolve, reject) => {
@@ -208,7 +214,31 @@ export async function launchChrome({ proxy = null, args = [] } = {}) {
       } catch {
         /* already gone */
       }
+      // Kill the whole process group, not just the browser. Chrome spawns a crashpad handler whose command
+      // line carries `--database=`, not the profile directory, so `child.kill` misses it and so did a
+      // kill-by-profile-dir sweep: one from a launch of ours ran 46 minutes after the browser was gone. The
+      // `--disable-breakpad` and `--disable-crash-reporter` flags were tried and do not stop it on Chrome
+      // 155, so the group is the only reliable handle on the pieces.
       child.kill('SIGKILL');
+      try {
+        process.kill(-child.pid, 'SIGKILL');
+      } catch {
+        /* already reaped, or never got its own group */
+      }
+      // Wait briefly for the browser to release the profile, then remove it. The directory is created per
+      // launch and was never cleaned up, so a day of runs left dozens of them (and a few hundred MB) in
+      // /tmp; nothing reads it once the browser is gone, and it is ours. Retried, because a single attempt
+      // lost the race against a browser that was still exiting and left the directory behind.
+      await new Promise((resolve) => {
+        const done = () => resolve();
+        child.once('exit', done);
+        setTimeout(done, 500);
+      });
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        rmSync(userDataDir, { recursive: true, force: true });
+        if (!existsSync(userDataDir)) break;
+        await new Promise((resolve) => setTimeout(resolve, 300));
+      }
     },
   };
 }
