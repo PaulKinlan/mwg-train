@@ -320,6 +320,19 @@ test('acceptance requires an improvement, and classifies every refusal', () => {
   });
   assert.equal(broken.category, 'uplift-broke-the-flow');
 
+  // A step the tool reported it could not complete means the uplifted tree is not the tool's output.
+  // For the Svelte arm that step is the template rebuild, and scoring the pair would measure the
+  // pre-edit page while the decision still listed the rule edits.
+  const incomplete = decidePair({
+    ...base,
+    original: unchanged,
+    uplifted: improved,
+    uplift: { applied: ['forms/required-field-feedback'], skipped: [], failed: [{ rule: 'compile/svelte-template', reason: 'template did not parse' }] },
+  });
+  assert.equal(incomplete.category, 'uplift-incomplete');
+  assert.equal(incomplete.accepted, false);
+  assert.match(incomplete.detail.join(' '), /compile\/svelte-template/);
+
   const unrunnable = decidePair({
     ...base,
     original: workbook({ journeys: [] }),
@@ -654,6 +667,32 @@ test('a project with no seeded defects gets no edits at all', () => {
         rmSync(outDir, { recursive: true, force: true });
       }
     }
+  }
+});
+
+test('the Svelte arm crosses its compile boundary in the scaffolder and again in the uplift tool', () => {
+  // The arm's whole claim is that the template stays the editable source while the served page is the
+  // compiled one. That only holds if the uplift rebuilds after editing, so this pins both halves: the
+  // scaffolder writes a build output plus the stable importer, and the tool's edits change the rebuilt
+  // module. Without the rebuild the arm's uplift would silently measure the pre-edit page.
+  const { files, spec: built } = buildProject({ archetypeId: 'booking', frameworkName: 'svelte', defects: ['no-required'] });
+  assert.ok(files['app/page.compiled.mjs']?.includes('svelte'), 'the scaffolder writes a compiled server module');
+  assert.ok(files['app/page.mjs']?.includes("from './page.compiled.mjs'"), 'and a stable page module that imports it');
+  const root = mkdtempSync(join(tmpdir(), 'svelte-'));
+  const out = mkdtempSync(join(tmpdir(), 'svelte-up-'));
+  try {
+    writeProject(root, { projectId: 'booking-svelte', files, spec: built });
+    const result = upliftProject(root, built, out);
+    assert.deepEqual(result.compiled, ['app/page.compiled.mjs'], 'the rebuild is reported as a build step');
+    assert.ok(result.applied.includes('forms/required-field-feedback'), 'the rule edits are still reported as edits');
+    assert.notEqual(
+      readFileSync(join(out, 'app/page.compiled.mjs'), 'utf8'),
+      files['app/page.compiled.mjs'],
+      'the served module is rebuilt from the edited template',
+    );
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+    rmSync(out, { recursive: true, force: true });
   }
 });
 

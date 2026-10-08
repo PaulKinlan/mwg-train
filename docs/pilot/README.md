@@ -116,6 +116,7 @@ different facts about the pipeline and only one of them is a bug:
 | `no-warranted-change` | The original already satisfied everything measured (a valid control, not a positive pair) |
 | `no-mwg-improvement` | Defects were seeded but the tool changed none of the measured properties (coverage gap) |
 | `uplift-broke-the-flow` | The journey no longer completes — **tool or rule bug** |
+| `uplift-incomplete` | A step the tool reported it could not complete, so the uplifted tree is not the tool's output — **tool bug** |
 | `rule-regression` | A property that passed now fails — **rule bug** |
 | `security-regression` | The uplift introduced a security finding — **rule bug** |
 | `original-not-runnable` | The original did not complete its own journey; nothing could be measured |
@@ -199,7 +200,7 @@ each catalogue project drove a write journey that posted a value and read that v
 | --- | --- |
 | `accepted` | 34 |
 | `no-warranted-change` | 1 |
-| `no-mwg-improvement`, `uplift-broke-the-flow`, `rule-regression`, `security-regression`, `rule-not-measured`, `original-not-runnable` | 0 |
+| `no-mwg-improvement`, `uplift-broke-the-flow`, `uplift-incomplete`, `rule-regression`, `security-regression`, `rule-not-measured`, `original-not-runnable` | 0 |
 
 The single refusal is `catalogue-vue`, the project with no seeded defects: the tool made **zero edits**
 to it, which is the result the control exists to produce. No pair was refused because the uplift broke
