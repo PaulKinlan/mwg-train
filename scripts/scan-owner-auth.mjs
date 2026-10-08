@@ -136,7 +136,10 @@ async function main() {
   };
 
   if (args.corpus) {
-    const runId = args.run ?? listRuns(args.corpus)[0] ?? null;
+    // Default to the MANIFEST's recorded run, not the newest local run dir: a fresh local run
+    // with no decisions yet must not leave the gate scanning zero accepted pairs and passing.
+    const manifestRun = readJson(join(args.corpus, 'CORPUS.json'))?.run_id ?? null;
+    const runId = args.run ?? manifestRun ?? listRuns(args.corpus)[0] ?? null;
     const corpus = loadCorpus(args.corpus, runId);
     if (corpus.projects.length === 0) {
       console.error('ERROR (fail-closed): no projects found - nothing to accept');
@@ -171,15 +174,20 @@ async function main() {
         }
       }
       scanOne(`${project.id} (original)`, originalDir);
-      // The rule covers the corpus RECORD as well as the site source. A local run dir: the three
-      // mandatory records plus evidence JSON (missing = FAIL). A manifest-backed decision: the
-      // committed CORPUS.json is the record and its content is scanned.
+      // The rule covers the corpus RECORD as well as the site source, and BOTH records are in
+      // scope: the committed manifest whenever it exists, plus the local run records (mandatory
+      // once a run covers the project). Owner material in either fails the pair.
       scanned += 1;
-      const recordResult = project.runDir
-        ? scanPairRecords(project, matchers, scanOptions)
-        : project.decision?.record_source === 'manifest'
-          ? scanTree(join(args.corpus, 'CORPUS.json'), matchers, scanOptions)
-          : { status: 'FAIL', findings: [{ file: 'record', line: null, patternId: 'record-missing', kind: 'scan-error' }] };
+      const recordResult = (() => {
+        const manifestPath = join(args.corpus, 'CORPUS.json');
+        const manifestResult = existsSync(manifestPath) ? scanTree(manifestPath, matchers, scanOptions) : null;
+        const runResult = project.runDir ? scanPairRecords(project, matchers, scanOptions) : null;
+        if (!manifestResult && !runResult) {
+          return { status: 'FAIL', findings: [{ file: manifestPath, line: null, patternId: 'record-missing', kind: 'scan-error' }] };
+        }
+        const findings = [...(manifestResult?.findings ?? []), ...(runResult?.findings ?? [])];
+        return { status: findings.length === 0 ? 'PASS' : 'FAIL', findings };
+      })();
       if (recordResult.status !== 'PASS') failed += 1;
       report(`${project.id} (corpus records)`, recordResult);
       const expectedUplift = project.decision?.uplifted_sha ?? null;
@@ -221,6 +229,11 @@ async function main() {
   }
 
   console.log(`owner-auth scan: ${scanned} tree(s), ${failed} failed`);
+  // Fail-closed on vacuity: a gate that scanned nothing approved nothing, and must not exit 0.
+  if (scanned === 0) {
+    console.error('ERROR (fail-closed): zero trees scanned - nothing was verified, so nothing passes');
+    process.exit(3);
+  }
   process.exit(failed === 0 ? 0 : 1);
 }
 

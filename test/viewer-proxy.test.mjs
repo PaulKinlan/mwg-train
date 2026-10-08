@@ -160,7 +160,11 @@ test('set-cookie is namespaced on the way out and restored on the way in', { ski
     await proxyRequest({ request: fakeRequest({ headers: {} }), response: first, sandbox, prefix: PREFIX, sitePath: '/cookie', cookieNamespace: NS });
     const firstResult = await first.done;
     const cookies = Array.isArray(firstResult.headers['set-cookie']) ? firstResult.headers['set-cookie'] : [firstResult.headers['set-cookie']];
+    // The fixture sets TWO cookies; the bridge must preserve each individually (a comma-folded
+    // set-cookie header is not parseable back into cookies).
+    assert.equal(cookies.length, 2, `expected both cookies, got ${JSON.stringify(cookies)}`);
     assert.ok(cookies.some((header) => header.startsWith('__vw_probe_original_session=fake-demo-session')));
+    assert.ok(cookies.some((header) => header.startsWith('__vw_probe_original_theme=dark')));
     assert.ok(cookies.every((header) => header.includes('Path=/live/probe/original/')));
 
     // Round-trip: the browser sends back the namespaced cookie plus an owner cookie; the site must

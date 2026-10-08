@@ -151,20 +151,26 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
   const recordsCache = new Map();
   function recordsScan(project) {
     const manifestPath = join(corpusRoot, 'CORPUS.json');
+    const hasManifest = existsSync(manifestPath);
     const manifestBacked = !project.runDir && project.decision?.record_source === 'manifest';
-    if (!project.runDir && !manifestBacked) return { status: 'NO-RUN', findings: [] };
+    if (!project.runDir && !manifestBacked && !hasManifest) return { status: 'NO-RUN', findings: [] };
     if (!matchers) return { status: 'ERROR', reason: matchersError, findings: [] };
+    // The committed manifest is ALWAYS in scope when it exists (it is the corpus record of
+    // record), alongside the local run records when a run dir covers the project. Owner material
+    // in either fails the pair.
     const hash = createHash('sha256');
-    const files = manifestBacked
-      ? [manifestPath]
-      : ['decision.json', 'original.json', 'uplifted.json'].map((f) => join(project.runDir, f));
-    if (!manifestBacked && project.evidenceDir && existsSync(project.evidenceDir)) {
-      files.push(
-        ...readdirSync(project.evidenceDir)
-          .filter((f) => f.endsWith('.json'))
-          .sort()
-          .map((f) => join(project.evidenceDir, f)),
-      );
+    const files = [];
+    if (hasManifest) files.push(manifestPath);
+    if (project.runDir) {
+      files.push(...['decision.json', 'original.json', 'uplifted.json'].map((f) => join(project.runDir, f)));
+      if (project.evidenceDir && existsSync(project.evidenceDir)) {
+        files.push(
+          ...readdirSync(project.evidenceDir)
+            .filter((f) => f.endsWith('.json'))
+            .sort()
+            .map((f) => join(project.evidenceDir, f)),
+        );
+      }
     }
     for (const file of files) {
       hash.update(file);
@@ -178,12 +184,14 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
     }
     const key = hash.digest('hex');
     if (!recordsCache.has(key)) {
-      recordsCache.set(
-        key,
-        manifestBacked
-          ? (existsSync(manifestPath) ? scanTree(manifestPath, matchers, scanOptions) : { status: 'FAIL', findings: [{ file: manifestPath, line: null, patternId: 'record-missing', kind: 'scan-error' }] })
-          : scanPairRecords(project, matchers, scanOptions),
-      );
+      const parts = [];
+      if (project.runDir) parts.push(scanPairRecords(project, matchers, scanOptions));
+      if (hasManifest) parts.push(scanTree(manifestPath, matchers, scanOptions));
+      if (manifestBacked && !hasManifest) {
+        parts.push({ status: 'FAIL', findings: [{ file: manifestPath, line: null, patternId: 'record-missing', kind: 'scan-error' }] });
+      }
+      const findings = parts.flatMap((part) => part.findings);
+      recordsCache.set(key, { status: findings.length === 0 ? 'PASS' : 'FAIL', findings });
     }
     return recordsCache.get(key);
   }

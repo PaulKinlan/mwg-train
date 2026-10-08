@@ -116,10 +116,15 @@ async function main() {
       if (responseBody.length > CAP_BYTES) return send(id, 502, { 'content-type': 'text/plain' }, 'response too large');
       const responseHeaders = {};
       response.headers.forEach((value, name) => {
+        // set-cookie is handled via getSetCookie below: Headers.forEach would fold multiple
+        // cookies into one comma-joined value, which is not parseable back into cookies.
+        if (name === 'set-cookie') return;
         if (responseHeaders[name] === undefined) responseHeaders[name] = value;
         else if (Array.isArray(responseHeaders[name])) responseHeaders[name].push(value);
         else responseHeaders[name] = [responseHeaders[name], value];
       });
+      const setCookies = typeof response.headers.getSetCookie === 'function' ? response.headers.getSetCookie() : [];
+      if (setCookies.length > 0) responseHeaders['set-cookie'] = setCookies;
       send(id, response.status, responseHeaders, responseBody);
     } catch (error) {
       send(id, 502, { 'content-type': 'text/plain' }, `site unreachable: ${error.message}`);
