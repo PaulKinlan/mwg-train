@@ -57,6 +57,12 @@ const json = (response, value, status = 200, headers = {}) => {
 
 const REQUIRED = ["email","password","displayName"];
 
+// The cart form has its own fields. Validating it against the search form's required list refused every
+// cart POST with 422, which the write journey caught: a second form on one page needs a second rule.
+const EXTRA_ACTION = "";
+const EXTRA_REQUIRED = [];
+const requiredFor = (path) => (EXTRA_ACTION !== '' && path === EXTRA_ACTION ? EXTRA_REQUIRED : REQUIRED);
+
 const server = createServer(async (request, response) => {
   const url = new URL(request.url, `http://${request.headers.host ?? '127.0.0.1'}`);
   const path = url.pathname;
@@ -80,7 +86,7 @@ const server = createServer(async (request, response) => {
 
   if (path === '/signup' && request.method === 'POST') {
     const body = await parseBody(request);
-    const missing = REQUIRED.filter((field) => !String(body[field] ?? '').trim());
+    const missing = requiredFor(path).filter((field) => !String(body[field] ?? '').trim());
     if (missing.length > 0) {
       // The server validates as well as the client: a browser without JS must not be able to post an
       // empty record, and the response has to be a usable page again - an apology with no form strands

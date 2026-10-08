@@ -324,7 +324,9 @@ export class Page {
 
   async evaluate(expression) {
     const { result, exceptionDetails } = await this.send('Runtime.evaluate', {
-      expression: `(() => { ${expression} })()`,
+      // An async wrapper, resolved by awaitPromise below: a check that needs to fetch from the page
+      // (the write journey does) cannot use await inside a plain arrow function.
+      expression: `(async () => { ${expression} })()`,
       returnByValue: true,
       awaitPromise: true,
     });

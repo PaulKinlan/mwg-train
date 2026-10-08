@@ -37,20 +37,11 @@ export function journeyWorks(record) {
     const submit = persistence.steps?.find((step) => step.step === 'submit');
     if (submit?.status && submit.status >= 500) problems.push(`the write route answered ${submit.status}`);
   }
+  // The empty-submission journey is an OBSERVATION, not a precondition. Whether an empty form is refused
+  // is the property the rules measure on both versions, per arm; requiring it here instead turned the
+  // seeded defect this pilot exists to test into 'the original is not runnable', which discarded exactly
+  // the pairs with the most to fix and biased the yield upward. It is recorded and reported, not gated.
   if (!validation) problems.push('no validation journey was recorded');
-  else {
-    // Evidence that the empty submission was refused, from either the browser or the server. The first
-    // version of this clause required three values to be false at once, one of which (a substring test
-    // for the start path) is true for every HTTP URL - so the clause never fired and a form that
-    // accepted an empty submission was reported as a measured validation path.
-    const refusedByBrowser = validation.invalidCount > 0;
-    const refusedVisibly = validation.visibleErrors > 0;
-    const refusedByServer = validation.serverRefused === true;
-    const stayedWithNoWrite = validation.urlUnchanged === true && validation.stillOnForm === true;
-    if (!refusedByBrowser && !refusedVisibly && !refusedByServer && !stayedWithNoWrite) {
-      problems.push('submitting an empty form was neither refused by the browser nor by the server');
-    }
-  }
   // A declared write journey must have been driven and must have been shown to persist. The catalogue
   // archetype's reflected-query journey is not a write, so it is checked by this clause instead.
   const write = record.journeys?.find((journey) => journey.name === 'write-journey');
@@ -80,6 +71,10 @@ export function decidePair({ original, uplifted, spec, uplift }) {
     detail: [],
   };
 
+  // Recorded on the decision itself: the report looked for the original under a key the decision does
+  // not have, so every observation defaulted to 'not-driven' and the section printed
+  // '0 of 25 ... 0 accepted it' - an authoritative-looking statement that measured nothing.
+  result.validation_observation = validationObservation(original);
   const originalRunnable = journeyWorks({ ...original, echo_expect: spec.echo_expect, expected_write_journey: Boolean(spec.write_journey) });
   const upliftedRunnable = journeyWorks({ ...uplifted, echo_expect: spec.echo_expect, expected_write_journey: Boolean(spec.write_journey) });
 
@@ -186,6 +181,14 @@ export function decidePair({ original, uplifted, spec, uplift }) {
   return result;
 }
 
+/** What happened when an empty form was submitted: refused, or accepted. Reported, never gating. */
+export function validationObservation(record) {
+  const validation = record.journeys?.find((journey) => journey.name === 'validation-failure');
+  if (!validation) return 'not-driven';
+  const refused = validation.invalidCount > 0 || validation.visibleErrors > 0 || validation.serverRefused === true
+    || (validation.urlUnchanged === true && validation.stillOnForm === true);
+  return refused ? 'refused' : 'accepted-empty';
+}
 export function summarizeYield(decisions) {
   const byCategory = {};
   for (const decision of decisions) byCategory[decision.category] = (byCategory[decision.category] ?? 0) + 1;
@@ -226,6 +229,27 @@ export function renderYieldReport({ summary, decisions, runId, generatedAt, note
   lines.push('');
   lines.push('Every number here comes from a record produced by driving the project in a real browser; the');
   lines.push('per-project records and their screenshots and traces are next to this file.');
+  lines.push('');
+  // Reported, not gated: an empty submission being accepted is a finding about the original (usually the
+  // seeded defect), and hiding it would make the corpus look cleaner than it is.
+  const observations = decisions.map((decision) => decision.validation_observation ?? 'absent');
+  const refusedCount = observations.filter((value) => value === 'refused').length;
+  const acceptedCount = observations.filter((value) => value === 'accepted-empty').length;
+  const missingCount = observations.filter((value) => value !== 'refused' && value !== 'accepted-empty').length;
+  lines.push('## Empty-submission observation (not a gate)');
+  lines.push('');
+  lines.push(`${refusedCount} of ${observations.length} originals refused an empty submission; ${acceptedCount} accepted it.`);
+  if (missingCount > 0) {
+    // Named, not folded into a zero: a count of zero over 25 decisions used to read as a clean result.
+    lines.push('');
+    lines.push(`${missingCount} decision(s) carry no observation, which means the journey was not recorded for them.`);
+  }
+  if (acceptedCount > 0) {
+    lines.push('');
+    lines.push('The originals that accepted it are the ones seeded without client-side requirements. That is the');
+    lines.push('defect two rules measure on both versions, so it is reported here and judged there, never used');
+    lines.push('to exclude the pair.');
+  }
   lines.push('');
   lines.push('## Why pairs were rejected');
   lines.push('');

@@ -22,7 +22,7 @@ import { dirname, join } from 'node:path';
 import { ARCHETYPES, ARCHETYPE_IDS } from '../pilot/archetypes.mjs';
 import { buildProject, FRAMEWORKS } from '../pilot/frameworks.mjs';
 import { TRANSFORMS, upliftProject } from '../src/corpus/uplift.mjs';
-import { decidePair, journeyWorks, renderYieldReport, summarizeYield } from '../src/corpus/accept.mjs';
+import { decidePair, journeyWorks, renderYieldReport, summarizeYield, validationObservation } from '../src/corpus/accept.mjs';
 import { hashTree } from '../src/corpus/harness.mjs';
 import { MWG_RULE_IDS, MWG_SNAPSHOT, RULES, SECURITY_CHECK_IDS, SECURITY_CHECKS } from '../src/corpus/rules.mjs';
 
@@ -63,6 +63,9 @@ const workbook = (overrides = {}) => {
 };
 
 const spec = (overrides = {}) => ({
+  // Declared explicitly: the gate refuses to assess a pair whose spec requires nothing, so that a
+  // project cannot pass by not asking to be measured.
+  required_rules: ['forms/required-field-feedback'],
   project_id: 'booking-raw',
   archetype: 'booking',
   framework: { name: 'raw', family: 'raw-web-platform' },
@@ -287,6 +290,7 @@ test('acceptance requires an improvement, and classifies every refusal', () => {
 
   const regressed = decidePair({
     ...base,
+    spec: spec({ required_rules: ['forms/autofill-address-form'] }),
     original: workbook({ rules: [{ rule: 'forms/autofill-address-form', status: 'PASS' }] }),
     uplifted: workbook({
       rules: [
@@ -393,7 +397,8 @@ test('the corpus record refuses a partial run', () => {
       timeout: 60_000,
     });
     assert.equal(result.status, 1, 'recording a partial run must fail');
-    assert.match(result.stderr, /refusing to record a partial corpus/);
+    assert.match(result.stderr, /refusing to record/);
+    assert.match(result.stderr, /partial corpus is not the corpus/);
   } finally {
     rmSync(run, { recursive: true, force: true });
   }
@@ -434,7 +439,7 @@ test('every check compiles its browser expression', async () => {
       async evaluate(expression) {
         assert.equal(typeof expression, 'string', `${id}: evaluate was not given a string`);
         // Compile exactly what the driver wraps it in (src/corpus/cdp.mjs evaluate).
-        new Function('(() => { ' + expression + ' })()');
+        new Function('(async () => { ' + expression + ' })()');
         compiled.push(expression);
         return {};
       },
@@ -472,6 +477,129 @@ test('every check compiles its browser expression', async () => {
     }
   }
 });
+test('the yield report counts the observations its decisions carry', () => {
+  // The report looked for the original record under a key decisions do not have, defaulted every
+  // observation to 'not-driven', and printed '0 of 25 ... 0 accepted it' - a section that looked
+  // authoritative and measured nothing. A missing observation must now be visible as missing.
+  const decision = decidePair({
+    spec: spec({}),
+    original: workbook({
+      validation: { path: '/search', invalidCount: 0, visibleErrors: 0, stillOnForm: false, urlUnchanged: false, serverRefused: false },
+      journeys: [
+        ...workbook().journeys.filter((journey) => journey.name !== 'validation-failure'),
+        { name: 'validation-failure', path: '/search', invalidCount: 0, visibleErrors: 0, stillOnForm: false, urlUnchanged: false, serverRefused: false },
+      ],
+    }),
+    uplifted: workbook({ rules: [{ rule: 'forms/required-field-feedback', status: 'PASS' }] }),
+    uplift: { applied: ['forms/required-field-feedback'], skipped: [], failed: [] },
+  });
+  assert.equal(decision.validation_observation, 'accepted-empty');
+
+  const summary = summarizeYield([decision]);
+  const report = renderYieldReport({ summary, decisions: [decision], runId: 'test', generatedAt: 'now' });
+  assert.match(report, /0 of 1 originals refused an empty submission; 1 accepted it\./);
+
+  const stripped = renderYieldReport({
+    summary,
+    decisions: [{ ...decision, validation_observation: undefined }],
+    runId: 'test',
+    generatedAt: 'now',
+  });
+  assert.match(stripped, /1 decision\(s\) carry no observation/);
+});
+test('an original that accepts an empty form is still assessable', () => {
+  // The gate used to require the original to refuse an empty submission. The originals seeded without a
+  // client-side requirement cannot, so the gate labelled exactly the most defective pairs 'not runnable'
+  // and dropped them from the yield - survivorship bias in the flattering direction.
+  const accepting = workbook({
+    validation: { path: '/search', invalidCount: 0, visibleErrors: 0, stillOnForm: false, urlUnchanged: false, serverRefused: false },
+  });
+  const original = { ...accepting, echo_expect: 'Window seat please' };
+  const verdict = journeyWorks(original);
+  assert.equal(verdict.ok, true, 'a seeded validation defect must not make the original unassessable');
+  assert.equal(validationObservation(original), 'accepted-empty');
+
+  const refused = workbook({
+    validation: { path: '/', invalidCount: 1, visibleErrors: 0, stillOnForm: true, urlUnchanged: true, serverRefused: false },
+  });
+  assert.equal(validationObservation({ ...refused, echo_expect: 'Window seat please' }), 'refused');
+  assert.equal(validationObservation({ journeys: [] }), 'not-driven');
+});
+test('a declared write journey must be driven and shown to persist', () => {
+  const write = { name: 'write-journey', persisted: true };
+  const uplift = { applied: ['forms/required-field-feedback'], skipped: [], failed: [] };
+  const passing = { rules: [{ rule: 'forms/required-field-feedback', status: 'PASS' }] };
+  const specWithWrite = { write_journey: { itemValue: 'bearing' } };
+
+  const missing = decidePair({
+    spec: spec(specWithWrite),
+    original: workbook(),
+    uplifted: workbook(passing),
+    uplift,
+  });
+  assert.equal(missing.category, 'original-not-runnable');
+  assert.ok(missing.detail.some((line) => /declared write journey was not driven/.test(line)));
+
+  const notPersisted = decidePair({
+    spec: spec(specWithWrite),
+    original: workbook({ journeys: [...workbook().journeys, { ...write, persisted: false }] }),
+    uplifted: workbook({ ...passing, journeys: [...workbook().journeys, write] }),
+    uplift,
+  });
+  assert.equal(notPersisted.category, 'original-not-runnable');
+  assert.ok(notPersisted.detail.some((line) => /did not show the posted value stored/.test(line)));
+
+  const good = decidePair({
+    spec: spec(specWithWrite),
+    original: workbook({ journeys: [...workbook().journeys, write] }),
+    uplifted: workbook({ ...passing, journeys: [...workbook().journeys, write] }),
+    uplift,
+  });
+  assert.equal(good.accepted, true);
+});
+
+test('the clean baseline satisfies every rule it is not seeded to fail, in every arm', () => {
+  // The first version of this test generated only the raw arm, so a dialect-specific gap in the clean
+  // baseline would have gone unnoticed in four arms out of five.
+  for (const frameworkName of Object.keys(FRAMEWORKS)) {
+    for (const archetypeId of ARCHETYPE_IDS) {
+      const { files, spec: built } = buildProject({ archetypeId, frameworkName, defects: [] });
+      const markup = files[built.framework.markupFile];
+      const styles = files[built.framework.stylesFile];
+      const script = files[built.framework.enhanceFile];
+      const where = archetypeId + '/' + frameworkName;
+      assert.ok(markup.includes(' required'), where + ': nothing is marked required');
+      assert.ok(markup.includes('aria-errormessage='), where + ': no field points at its error text');
+      assert.ok(styles.includes(':user-invalid'), where + ': no :user-invalid styling');
+      assert.ok(markup.includes('role="alert"'), where + ': no live region');
+      assert.ok(script.includes('function announce('), where + ': nothing fills the live region');
+      assert.ok(script.includes('dataset.echoInserted'), where + ': the insertion is not marked');
+      assert.ok(!script.includes('innerHTML'), where + ': the baseline inserts untrusted text as HTML');
+      // A project must not be required to measure a property it cannot express, and must not be able to
+      // drop one it can: the four always-on rules are required everywhere.
+      for (const rule of [
+        'forms/required-field-feedback',
+        'forms/validate-input-after-interaction',
+        'accessibility/accessible-error-announcement',
+        'security/sanitize-untrusted-html',
+      ]) {
+        assert.ok(built.required_rules.includes(rule), where + ': ' + rule + ' is not required');
+      }
+    }
+  }
+});
+
+test('the recorded corpus reproduces, through the gate the suite runs', () => {
+  // A reproducibility gate nobody runs is a promise, not a check.
+  const result = spawnSync(process.execPath, ['scripts/pilot-corpus.mjs', '--verify'], {
+    cwd: repoRoot,
+    encoding: 'utf8',
+    timeout: 240_000,
+  });
+  assert.equal(result.status, 0, 'check:pilot-corpus failed:\n' + result.stdout + result.stderr);
+  assert.match(result.stdout, /PASS/);
+});
+
 test('hashTree is stable for the same content and differs for different content', () => {
   const files = { 'a.txt': 'one', 'nested/b.txt': 'two' };
   const first = materialise('hash-a', files);

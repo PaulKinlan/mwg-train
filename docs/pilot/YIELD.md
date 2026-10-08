@@ -1,9 +1,17 @@
-# Pilot acceptance yield (2026-10-08T10-25-34-975Z)
+# Pilot acceptance yield (2026-10-08T10-46-08-473Z)
 
-Generated 2026-10-08T10:28:02.840Z by `scripts/pilot.mjs`. 25 pairs attempted, 24 accepted: **96.0%**.
+Generated 2026-10-08T10:48:42.508Z by `scripts/pilot.mjs`. 25 pairs attempted, 24 accepted: **96.0%**.
 
 Every number here comes from a record produced by driving the project in a real browser; the
 per-project records and their screenshots and traces are next to this file.
+
+## Empty-submission observation (not a gate)
+
+23 of 25 originals refused an empty submission; 2 accepted it.
+
+The originals that accepted it are the ones seeded without client-side requirements. That is the
+defect two rules measure on both versions, so it is reported here and judged there, never used
+to exclude the pair.
 
 ## Why pairs were rejected
 
@@ -36,12 +44,12 @@ per-project records and their screenshots and traces are next to this file.
 
 | rule | pairs improved |
 | --- | --- |
-| `forms/required-field-feedback` | 21 |
 | `accessibility/accessible-error-announcement` | 19 |
 | `security/sanitize-untrusted-html` | 16 |
+| `forms/required-field-feedback` | 15 |
 | `forms/validate-input-after-interaction` | 15 |
+| `forms/autofill-sign-up-form` | 5 |
 | `forms/autofill-address-form` | 5 |
-| `forms/autofill-sign-up-form` | 4 |
 
 ## Every pair
 
@@ -53,21 +61,21 @@ per-project records and their screenshots and traces are next to this file.
 | `account-recovery-react` | account-recovery | react | 2 | 2 | **accepted** |
 | `account-recovery-vue` | account-recovery | vue | 2 | 3 | **accepted** |
 | `booking-hono` | booking | hono | 5 | 5 | **accepted** |
-| `booking-preact` | booking | preact | 3 | 4 | **accepted** |
+| `booking-preact` | booking | preact | 3 | 3 | **accepted** |
 | `booking-raw` | booking | raw | 5 | 5 | **accepted** |
 | `booking-react` | booking | react | 5 | 5 | **accepted** |
 | `booking-vue` | booking | vue | 2 | 3 | **accepted** |
 | `catalogue-hono` | catalogue | hono | 2 | 3 | **accepted** |
-| `catalogue-preact` | catalogue | preact | 1 | 2 | **accepted** |
+| `catalogue-preact` | catalogue | preact | 1 | 1 | **accepted** |
 | `catalogue-raw` | catalogue | raw | 1 | 1 | **accepted** |
 | `catalogue-react` | catalogue | react | 2 | 3 | **accepted** |
 | `catalogue-vue` | catalogue | vue | 0 | 0 | `no-warranted-change` |
 | `contact-lead-hono` | contact-lead | hono | 3 | 4 | **accepted** |
 | `contact-lead-preact` | contact-lead | preact | 2 | 2 | **accepted** |
 | `contact-lead-raw` | contact-lead | raw | 4 | 4 | **accepted** |
-| `contact-lead-react` | contact-lead | react | 2 | 3 | **accepted** |
-| `contact-lead-vue` | contact-lead | vue | 3 | 4 | **accepted** |
-| `event-registration-hono` | event-registration | hono | 3 | 3 | **accepted** |
+| `contact-lead-react` | contact-lead | react | 2 | 2 | **accepted** |
+| `contact-lead-vue` | contact-lead | vue | 3 | 3 | **accepted** |
+| `event-registration-hono` | event-registration | hono | 3 | 2 | **accepted** |
 | `event-registration-preact` | event-registration | preact | 2 | 3 | **accepted** |
 | `event-registration-raw` | event-registration | raw | 3 | 4 | **accepted** |
 | `event-registration-react` | event-registration | react | 2 | 2 | **accepted** |

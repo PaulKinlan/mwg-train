@@ -423,6 +423,17 @@ const json = (response, value, status = 200, headers = {}) => {
 
 const REQUIRED = ${JSON.stringify(archetype.fields.filter((field) => field.type !== 'select' && !field.optional).map((field) => field.name))};
 
+// The cart form has its own fields. Validating it against the search form's required list refused every
+// cart POST with 422, which the write journey caught: a second form on one page needs a second rule.
+const EXTRA_ACTION = ${JSON.stringify(archetype.extraForm?.action ?? '')};
+const EXTRA_REQUIRED = ${JSON.stringify([
+  ...Object.keys(archetype.extraForm?.hidden ?? {}),
+  ...archetype.fields
+    .filter((field) => (archetype.extraForm?.fields ?? []).includes(field.slug) && field.type !== 'select' && !field.optional)
+    .map((field) => field.name),
+])};
+const requiredFor = (path) => (EXTRA_ACTION !== '' && path === EXTRA_ACTION ? EXTRA_REQUIRED : REQUIRED);
+
 const server = createServer(async (request, response) => {
   const url = new URL(request.url, \`http://\${request.headers.host ?? '127.0.0.1'}\`);
   const path = url.pathname;
@@ -446,7 +457,7 @@ const server = createServer(async (request, response) => {
 
   if (path === '${writeRoute.path}' && request.method === 'POST') {
     const body = await parseBody(request);
-    const missing = REQUIRED.filter((field) => !String(body[field] ?? '').trim());
+    const missing = requiredFor(path).filter((field) => !String(body[field] ?? '').trim());
     if (missing.length > 0) {
       // The server validates as well as the client: a browser without JS must not be able to post an
       // empty record, and the response has to be a usable page again - an apology with no form strands
@@ -563,6 +574,17 @@ const select = db.prepare('SELECT ref, created_at, payload FROM records WHERE re
 const list = db.prepare('SELECT ref, payload FROM records ORDER BY created_at DESC LIMIT 50');
 
 const REQUIRED = ${JSON.stringify(archetype.fields.filter((field) => field.type !== 'select' && !field.optional).map((field) => field.name))};
+
+// The cart form has its own fields. Validating it against the search form's required list refused every
+// cart POST with 422, which the write journey caught: a second form on one page needs a second rule.
+const EXTRA_ACTION = ${JSON.stringify(archetype.extraForm?.action ?? '')};
+const EXTRA_REQUIRED = ${JSON.stringify([
+  ...Object.keys(archetype.extraForm?.hidden ?? {}),
+  ...archetype.fields
+    .filter((field) => (archetype.extraForm?.fields ?? []).includes(field.slug) && field.type !== 'select' && !field.optional)
+    .map((field) => field.name),
+])};
+const requiredFor = (path) => (EXTRA_ACTION !== '' && path === EXTRA_ACTION ? EXTRA_REQUIRED : REQUIRED);
 ${sessionTables(archetype)}
 const app = new Hono();
 
@@ -583,7 +605,7 @@ app.get('/', (c) => c.html(renderDocument({ title: ${JSON.stringify(archetype.ti
 
 app.post('${writeRoute.path}', async (c) => {
   const body = await c.req.parseBody();
-  const missing = REQUIRED.filter((field) => !String(body[field] ?? '').trim());
+  const missing = requiredFor(c.req.path).filter((field) => !String(body[field] ?? '').trim());
   if (missing.length > 0) {
     const document = await renderDocument({ title: 'Please correct the form' });
     // The rejected submission returns a usable page with the form, plus the reason.

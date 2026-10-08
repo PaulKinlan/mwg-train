@@ -30,6 +30,12 @@ const select = db.prepare('SELECT ref, created_at, payload FROM records WHERE re
 const list = db.prepare('SELECT ref, payload FROM records ORDER BY created_at DESC LIMIT 50');
 
 const REQUIRED = ["q"];
+
+// The cart form has its own fields. Validating it against the search form's required list refused every
+// cart POST with 422, which the write journey caught: a second form on one page needs a second rule.
+const EXTRA_ACTION = "/cart";
+const EXTRA_REQUIRED = ["item"];
+const requiredFor = (path) => (EXTRA_ACTION !== '' && path === EXTRA_ACTION ? EXTRA_REQUIRED : REQUIRED);
 db.exec('CREATE TABLE IF NOT EXISTS sessions (sid TEXT PRIMARY KEY, ref TEXT NOT NULL, created_at TEXT NOT NULL)');
 const insertSession = db.prepare('INSERT INTO sessions (sid, ref, created_at) VALUES (?, ?, ?)');
 const selectSession = db.prepare('SELECT ref FROM sessions WHERE sid = ?');
@@ -52,7 +58,7 @@ app.get('/', (c) => c.html(renderDocument({ title: "Searchable reference catalog
 
 app.post('/cart', async (c) => {
   const body = await c.req.parseBody();
-  const missing = REQUIRED.filter((field) => !String(body[field] ?? '').trim());
+  const missing = requiredFor(c.req.path).filter((field) => !String(body[field] ?? '').trim());
   if (missing.length > 0) {
     const document = await renderDocument({ title: 'Please correct the form' });
     // The rejected submission returns a usable page with the form, plus the reason.

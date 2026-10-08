@@ -91,11 +91,24 @@ export const RULES = Object.freeze({
       // not user-invalid, nothing about its error presentation was observed, and a PASS would be a claim
       // about an interaction that never happened.
       if (!after.userInvalid) {
+        // Two different facts. A field that is not required never becomes invalid, and that *is* the
+        // defect this rule is about - reporting it as unmeasured would excuse the defect. A field that
+        // is required and still does not become user-invalid after a trusted interaction is a
+        // measurement failure.
+        if (facts.field.required) {
+          return {
+            rule: 'forms/required-field-feedback',
+            status: 'ERROR',
+            detail: 'the field is required but did not become :user-invalid after a trusted interaction, so its error presentation was not measured',
+            observed: { required: facts.field.required, userInvalid: after.userInvalid, describedVisible: after.describedVisible },
+          };
+        }
+        findings.push('the field is not required, so it never reports an invalid state');
         return {
           rule: 'forms/required-field-feedback',
-          status: 'ERROR',
-          detail: 'the field did not become :user-invalid after a trusted interaction, so its error presentation was not measured',
-          observed: { required: facts.field.required, userInvalid: after.userInvalid, describedVisible: after.describedVisible },
+          status: 'FAIL',
+          detail: findings.join('; '),
+          observed: { required: facts.field.required, userInvalid: after.userInvalid },
         };
       }
       if (!after.describedVisible) findings.push('after a failed interaction the error text is still not visible');
@@ -140,10 +153,18 @@ export const RULES = Object.freeze({
         };
       `);
       if (!after.userInvalid) {
+        if (state.field.required) {
+          return {
+            rule: 'accessibility/accessible-error-announcement',
+            status: 'ERROR',
+            detail: 'the field is required but did not become :user-invalid after a trusted interaction, so the announcement was not measured',
+            observed: { userInvalid: after.userInvalid, ariaInvalid: after.ariaInvalid },
+          };
+        }
         return {
           rule: 'accessibility/accessible-error-announcement',
-          status: 'ERROR',
-          detail: 'the field did not become :user-invalid after a trusted interaction, so the announcement was not measured',
+          status: 'FAIL',
+          detail: 'the field has no invalid state to announce, because it is not required',
           observed: { userInvalid: after.userInvalid, ariaInvalid: after.ariaInvalid },
         };
       }
@@ -282,7 +303,7 @@ export const RULES = Object.freeze({
           // The page writes this marker from the length of the value its insertion path received, so the
           // marker can be tied to the payload. A bare marker proved only that some code ran.
           insertionRan: Boolean(container && container.dataset.echoInserted !== undefined),
-          insertedLengthMatchesPayload: container?.dataset.echoInserted === String(payload.length),
+          insertedLengthMatchesPayload: container?.dataset.echoInserted === ${JSON.stringify(String(payload.length))},
           liveHandlerAttributes: container
             ? [...container.querySelectorAll('*')].flatMap((node) => [...node.attributes].map((attribute) => attribute.name))
                 .filter((name) => name.startsWith('on')).length

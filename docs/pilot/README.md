@@ -12,14 +12,17 @@ to disk. The records are the evidence; this file explains what they mean.
 ## What the corpus is
 
 Twenty-five projects: **five server-backed archetypes × five rendering arms**. No static pages, and no
-arm that renders only in the browser — every project is server-rendered, persists to SQLite, and
-serves the record back on re-request.
+arm that renders only in the browser — every project is server-rendered, has a driven journey that makes
+the server **write** to SQLite, and a read that proves the value is there. The catalogue is the one
+archetype whose own journey is a reflected query rather than a form POST, so it carries a second form and
+a second, separately driven write journey; the gate refuses a pair whose declared write journey was not
+driven or did not persist, which is what keeps that sentence true of all twenty-five.
 
 | Archetype | Server journey | Echo source | What it exercises |
 | --- | --- | --- | --- |
 | `booking` | POST `/book` → 303 → `/booking/:ref`, reload | record reference | The classic form: required fields, an address block, free text |
 | `contact-lead` | POST `/enquiry` → 303 → `/enquiry/:ref`, reload | record reference | A public-service enquiry: validation and a free-text echo |
-| `catalogue` | GET `/search?q=…`, reload | reflected query | Server-side search, a reflected query, an **optional** field |
+| `catalogue` | GET `/search?q=…`, reload **and** POST `/cart` → `/cart`, reload | reflected query | Server-side search, a reflected query, an **optional** field, and a second form whose POST the write journey drives |
 | `account-recovery` | POST `/signup` → 303 → `/account`, reload | session cookie | A session journey: the server decides who you are |
 | `event-registration` | POST `/register` → 303 → `/registration/:ref` | record reference | A select control and a capacity rule |
 
@@ -105,9 +108,19 @@ different facts about the pipeline and only one of them is a bug:
 | `security-regression` | The uplift introduced a security finding — **rule bug** |
 | `original-not-runnable` | The original did not complete its own journey; nothing could be measured |
 
-Two clauses fail closed. If the harness has no expected echoed value, the pair is refused rather than
-passing with the persistence check skipped. If the corpus manifest is empty, it is invalid rather than
-vacuously valid. A gate a blank file can pass is not a gate.
+Four clauses fail closed, because each of them is a way a verdict could otherwise be reached without
+measuring anything:
+
+- **No expected echoed value** → the pair is refused rather than passing with the persistence check skipped.
+- **A declared rule that is missing, errors, or is reported not-applicable without the project declaring
+  it** → `rule-not-measured`. Every rule the spec requires must appear in *both* records with a real
+  verdict; a property that can no longer be measured after the uplift is a regression, not a preserved one.
+- **A declared write journey that was not driven, or that did not show the posted value stored** → the
+  pair is refused.
+- **A corpus manifest with no rows** → invalid rather than vacuously valid.
+
+A gate a blank file can pass is not a gate. This is the single most repeated bug in this project, which is
+why each of these has a test that fails without it.
 
 ## Evidence
 
@@ -142,7 +155,7 @@ partial corpus is not the corpus.
 
 ## Results
 
-**24 of 25 pairs accepted (96.0%)**, measured on 2026-10-08 in 148s, one Chrome, one project at a
+**24 of 25 pairs accepted (96.0%)**, measured on 2026-10-08 in 154s, one Chrome, one project at a
 time. The full report is [YIELD.md](YIELD.md); the per-project hashes, applied rules and verdicts are
 in `pilot/CORPUS.json`, which `npm run check:pilot-corpus` re-derives from `pilot/plan.json` and the
 uplift tool.
@@ -159,7 +172,7 @@ a journey, regressed a rule, introduced a security finding, or left a rule unmea
 
 | Arm | Accepted | Attempted | Which properties improved, in how many pairs |
 | --- | --- | --- | --- |
-| `raw` | 5 | 5 | `forms/required-field-feedback` 21, `accessibility/accessible-error-announcement` 19, `security/sanitize-untrusted-html` 16, `forms/validate-input-after-interaction` 15, `forms/autofill-address-form` 5, `forms/autofill-sign-up-form` 4 (across all arms) |
+| `raw` | 5 | 5 | `accessibility/accessible-error-announcement` 19, `security/sanitize-untrusted-html` 16, `forms/required-field-feedback` 15, `forms/validate-input-after-interaction` 15, `forms/autofill-sign-up-form` 5, `forms/autofill-address-form` 5 (counts are across all arms, not the `raw` arm alone) |
 | `react` | 5 | 5 | |
 | `preact` | 5 | 5 | |
 | `hono` | 5 | 5 | |
@@ -170,10 +183,11 @@ finding: the same generator writes all five, so the arms differ mainly in dialec
 handles all five dialects — including Hono's `hono/html` templates and Vue's runtime-compiled ones —
 without a rule failing on any of them.
 
-### Three corrections the pilot made to itself, and why they are in the record
+### Five corrections the pilot made to itself, and why they are in the record
 
-The first full run measured 1/20 and the second 25/25; neither number survived scrutiny. The failures
-and the corrections are more useful than the final figure, so they are kept:
+The first full run measured 1/20 and the second 25/25; neither number survived scrutiny, and the three
+runs of 24/25 or 22/25 that followed each hid a different defect in the measurement rather than in the
+tool. The failures and the corrections are more useful than the final figure, so they are kept:
 
 1. **1/20 was measurement, not the tool.** Form ids no journey could find, uplifted copies staged where
    Node could not resolve framework modules, a generated enhancement script with a top-level `return`,
@@ -191,8 +205,30 @@ and the corrections are more useful than the final figure, so they are kept:
    final precondition asks the page whether its insertion path ran, which distinguishes `sanitised away`
    from `never delivered`.
 
-The number worth trusting is therefore not 96% on its own: it is 96% with one control, zero unmeasured
-rules, and a reproducibility gate that can regenerate both the originals and the uplifts.
+4. **The cross-family review found five more claims that could pass without measuring**, and they were
+   real: a validation clause that could never fire (it tested the start path as a substring of the URL,
+   which is true of every HTTP URL, and required three conditions to be false at once); a fail-closed gate
+   that only recognised `PASS → FAIL` as a regression; two interaction checks that credited a stylesheet
+   *string* (satisfiable by a comment) and *any* visible live region rather than the tested field's error;
+   a sanitisation check that accepted the presence of a marker without tying it to the payload; and a
+   claim about the twenty-five projects that the twenty-fifth did not satisfy. All five are fixed, with a
+   test each.
+
+5. **24/25 was survivorship, and the report measured nothing.** Two more of the same class, both found
+   while folding the review's fixes in. The gate required the *original* to refuse an empty submission,
+   but the arms seeded without a client-side requirement legitimately cannot - so it labelled exactly
+   the most defective pairs `original-not-runnable` and dropped them from the yield, biasing the number
+   upward. A precondition may require that a measurement happened, never what it found. And the section
+   added to report those observations looked for the original record under a key decisions do not carry,
+   defaulted all 25 to `not-driven`, and printed `0 of 25 ... 0 accepted it` - a confident-looking zero
+   measuring nothing. The observation is now recorded where the data is, and a missing one is printed as
+   missing instead of being folded into a zero. The final run reports 23 of 25 originals refusing an
+   empty submission and the 2 that accept it, which are the two `no-required` arms.
+
+The number worth trusting is therefore not the percentage on its own: it is the percentage with one
+control, zero unmeasured rules, and a reproducibility gate that can regenerate both the originals and the
+uplifts — a figure that has been wrong three times in the direction of flattering the tool, and was
+corrected each time by asking what would have to be true for the check to pass while measuring nothing.
 
 ## Limits, and what would make this more credible
 
