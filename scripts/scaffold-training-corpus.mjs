@@ -25,6 +25,7 @@ import process from 'node:process';
 
 import { buildProjectFor, FRAMEWORKS } from '../pilot/frameworks.mjs';
 import { TRAINING_ARCHETYPES } from '../pilot/training-archetypes.mjs';
+import { echoFieldFor, validateBriefSchema } from '../src/train/brief-schema.mjs';
 import { hashTree } from '../src/corpus/harness.mjs';
 
 const FRAMEWORK_NAMES = Object.keys(FRAMEWORKS);
@@ -243,6 +244,14 @@ function familyArchetype(family, base) {
     story: `${capitalize(family.topic)}: a server-backed flow that stores each submission and shows it back on reload.`,
   };
   if (!base.session) overrides.routes = deriveRoutes(family, base);
+  // A brief that carries its own schema supplies the form and the journey, so the
+  // project renders what the brief describes rather than the archetype's form under a
+  // different title. Without one, the family keeps the archetype's fields and journey.
+  if (family.fields && family.journey) {
+    overrides.fields = family.fields;
+    overrides.journey = family.journey;
+    overrides.echo = { ...base.echo, field: echoFieldFor(family.fields) };
+  }
   return { ...base, ...overrides };
 }
 
@@ -302,6 +311,18 @@ function main() {
       process.exit(2);
     }
     if (!/^tr-\d{2}$/.test(family.family_id)) badFamilies.push(family.family_id);
+    // A brief carrying its own schema must have one that builds: authoring a form whose
+    // journey types into fields the brief does not declare would produce a project that
+    // looks brief-faithful while exercising the wrong form, so it is refused here.
+    if (family.fields || family.journey) {
+      const schemaFindings = validateBriefSchema(family);
+      if (schemaFindings.length > 0) {
+        for (const finding of schemaFindings) {
+          console.error(`scaffold-training-corpus: ${finding.brief_id} ${finding.at}: ${finding.problem}`);
+        }
+        process.exit(2);
+      }
+    }
     const archetype = familyArchetype(family, base);
     const { injected, unrepresentable, notes } = defectsForFamily(family);
     const emittedWriteRoute = archetype.routes.find((route) => route.method === 'POST' && route.kind.startsWith('write'))?.path ?? null;
@@ -331,6 +352,8 @@ function main() {
         route_conformed: routeConformed,
         brief_write_route: briefWriteRoute,
         emitted_write_route: emittedWriteRoute,
+        schema_source: family.fields ? 'brief' : 'archetype',
+        fields: archetype.fields,
         topic: family.topic,
         routes: family.routes,
         tree_sha: treeSha,
