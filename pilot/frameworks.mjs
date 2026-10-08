@@ -37,6 +37,12 @@ import { dirname, join } from 'node:path';
 
 const slug = (value) => value.replace(/[^a-z0-9]+/gi, '-').toLowerCase();
 
+// The reference of the record an edit-flow form edits. A parameterised write route
+// (/subscriptions/:id/edit) is an UPDATE of an existing record, so the server seeds one under this
+// reference and the form's action substitutes it for the route's :param - the literal ':id' must
+// never reach a browser (mwg-train-q7v). Literal write paths (every pilot route) emit neither.
+const EDIT_SEED_REF = 'current';
+
 /** The form's id comes from the journey's selector, so the markup and the journey cannot drift apart. */
 const formIdOf = (archetype) => archetype.journey.formSelector.replace(/^form#/, '');
 
@@ -135,7 +141,12 @@ ${fields}
     </form>`;
 }
 function formMarkup(archetype, { defects }) {
-  const form = archetype.form ?? { method: 'post', action: archetype.routes.find((route) => route.method === 'POST' && route.kind.startsWith('write')).path };
+  const writePath = archetype.routes.find((route) => route.method === 'POST' && route.kind.startsWith('write')).path;
+  const form = archetype.form ?? { method: 'post', action: writePath };
+  // A parameterised write route is an edit flow: the form posts to the seeded record, with the
+  // seed's reference standing in for each :param. Literal write paths keep their action verbatim.
+  // A local, not a mutation: an archetype object must be reusable across builds unchanged.
+  const action = /:[A-Za-z0-9_]+/.test(writePath) ? form.action.replace(/:[A-Za-z0-9_]+/g, EDIT_SEED_REF) : form.action;
   const chosen = form.fields ? archetype.fields.filter((field) => form.fields.includes(field.slug)) : archetype.fields;
   const fields = chosen
     .map((field) => fieldWithError(field, { defects }))
@@ -145,7 +156,7 @@ function formMarkup(archetype, { defects }) {
     ? '\n' + extraFormMarkup(archetype, { defects })
     : '';
   const live = defects.includes('no-aria-sync') ? '' : '      <div role="alert" aria-live="assertive" class="form-status" data-form-status></div>\n';
-  return `    <form id="${formIdOf(archetype)}" method="${form.method}" action="${form.action}">
+  return `    <form id="${formIdOf(archetype)}" method="${form.method}" action="${action}">
 ${live}      <div class="field">
 ${fields}
       </div>
@@ -635,7 +646,11 @@ ${sessionTables(archetype)}
 ${caps.auth ? `${authTables(archetype)}\n` : ''}const count = db.prepare('SELECT COUNT(*) AS n FROM records');
 const list = db.prepare('SELECT ref, payload FROM records ORDER BY created_at DESC LIMIT 50');
 
+${parameterisedWrite ? `// An edit flow edits something: the seeded record is what the form's action points at.
+db.prepare('INSERT OR IGNORE INTO records (ref, created_at, payload) VALUES (?, ?, ?)').run('${EDIT_SEED_REF}', new Date().toISOString(), '{}');
+const upsert = db.prepare('INSERT OR REPLACE INTO records (ref, created_at, payload) VALUES (?, ?, ?)');
 
+` : ''}
 const parseBody = (request) =>
   new Promise((resolve) => {
     let body = '';
@@ -721,10 +736,12 @@ const server = createServer(async (request, response) => {
       const document = await renderDocument({ title: 'Please correct the form', data: { errorSummary: \`Below minimum: \${underMinimum.join(', ')}\` } });
       return html(response, document.replace('<h1>', \`<p role="alert">Below minimum: \${underMinimum.join(', ')}</p><h1>\`), 422);
     }
-    ` : ''}const ref = randomUUID().slice(0, 8);
+    ` : ''}${parameterisedWrite ? `// The edit target's own reference is the record key: posting an edit route updates THAT
+    // record, so the ref is the captured segment and the write is an upsert, never a new row.
+    const ref = writeMatch[1];` : 'const ref = randomUUID().slice(0, 8);'}
     ${defects.includes('client-only-state')
       ? '// DEFECT (client-only-state): the submission is kept only in component state, so nothing is written to the store and a reload of the confirmation route finds no record.'
-      : 'insert.run(ref, new Date().toISOString(), JSON.stringify(body));'}
+      : `${parameterisedWrite ? 'upsert' : 'insert'}.run(ref, new Date().toISOString(), JSON.stringify(body));`}
 ${archetype.session ? `    // The session is what makes the follow-up page show the right record, so it is stored, not guessed.
     const sid = randomUUID();
     insertSession.run(sid, ref, new Date().toISOString());
@@ -807,6 +824,9 @@ server.listen(port, '127.0.0.1', () => {
 function honoServerSource(archetype, framework, defects = []) {
   const caps = capabilitiesOf(archetype);
   const writeRoute = archetype.routes.find((route) => route.method === 'POST' && route.kind.startsWith('write'));
+  // Hono routes :param segments natively; the FIRST parameter of an edit route is the record key.
+  const parameterisedWrite = /:[A-Za-z0-9_]+/.test(writeRoute.path);
+  const writeParam = writeRoute.path.match(/:([A-Za-z0-9_]+)/)?.[1] ?? 'id';
   const cookieFlags = archetype.session ? 'HttpOnly; SameSite=Lax; Path=/; Max-Age=3600' : null;
   // Hono routes :param segments natively, so a parameterised write path needs no rewrite here. Only the
   // training-only bounds validation and client-only-state tokens differ; the pilot passes neither.
@@ -843,7 +863,11 @@ const insert = db.prepare('INSERT INTO records (ref, created_at, payload) VALUES
 const select = db.prepare('SELECT ref, created_at, payload FROM records WHERE ref = ?');
 const list = db.prepare('SELECT ref, payload FROM records ORDER BY created_at DESC LIMIT 50');
 
-const REQUIRED = ${JSON.stringify(archetype.fields.filter((field) => field.type !== 'select' && !field.optional).map((field) => field.name))};
+${parameterisedWrite ? `// An edit flow edits something: the seeded record is what the form's action points at.
+db.prepare('INSERT OR IGNORE INTO records (ref, created_at, payload) VALUES (?, ?, ?)').run('${EDIT_SEED_REF}', new Date().toISOString(), '{}');
+const upsert = db.prepare('INSERT OR REPLACE INTO records (ref, created_at, payload) VALUES (?, ?, ?)');
+
+` : ''}const REQUIRED = ${JSON.stringify(archetype.fields.filter((field) => field.type !== 'select' && !field.optional).map((field) => field.name))};
 
 ${enforceMin ? `const MIN_BOUNDS = ${JSON.stringify(minBounds)};\n` : ''}// The cart form has its own fields. Validating it against the search form's required list refused every
 // cart POST with 422, which the write journey caught: a second form on one page needs a second rule.
@@ -899,10 +923,12 @@ app.post('${writeRoute.path}', async (c) => {
     const document = await renderDocument({ title: 'Please correct the form' });
     return c.html(document.replace('<h1>', \`<p role="alert">Below minimum: \${underMinimum.join(', ')}</p><h1>\`), 422);
   }
-  ` : ''}const ref = randomUUID().slice(0, 8);
+  ` : ''}${parameterisedWrite ? `// The edit target's own reference is the record key: posting an edit route updates THAT
+  // record, so the ref is the captured parameter and the write is an upsert, never a new row.
+  const ref = c.req.param('${writeParam}');` : 'const ref = randomUUID().slice(0, 8);'}
   ${defects.includes('client-only-state')
     ? '// DEFECT (client-only-state): the submission is kept only in component state, so nothing is written to the store and a reload of the confirmation route finds no record.'
-    : 'insert.run(ref, new Date().toISOString(), JSON.stringify(body));'}
+    : `${parameterisedWrite ? 'upsert' : 'insert'}.run(ref, new Date().toISOString(), JSON.stringify(body));`}
 ${archetype.session ? `  const sid = randomUUID();
   insertSession.run(sid, ref, new Date().toISOString());
   c.header('set-cookie', \`sid=\${sid}; ${cookieFlags}\`);` : ''}
