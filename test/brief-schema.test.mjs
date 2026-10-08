@@ -524,3 +524,17 @@ test('an unquoted name must be a valid CSS identifier', () => {
   });
   assert.deepEqual(validateBriefSchema(row), [], 'a legitimate -1 field is addressable when quoted');
 });
+
+// JavaScript's `\s` is a wider set than CSS whitespace: it also matches NBSP, vertical tab and the
+// Unicode spaces. Measured in Chrome, `input[<NBSP>name=x]` (and NBSP in three other positions here)
+// PARSES but matches nothing, and a vertical tab makes the browser throw - so the validator accepted a
+// selector that resolves to no element at all, which is the same silent failure as the compound and
+// escape cases. The class is now exactly what CSS accepts around the operator.
+test('only CSS whitespace is allowed around the operator', () => {
+  for (const bad of ['input[\u00A0name=x]', 'input[name\u00A0=x]', 'input[name=\u00A0x]', 'input[name=x\u00A0]', 'input[\u000Bname=x]', 'input[name=\u000Bx]', 'input[name=\u2028x]', 'input[\u3000name=x]', 'input[\uFEFFname=x]']) {
+    assert.equal(completeSelectorFieldName(bad), null, `${JSON.stringify(bad)} is not CSS whitespace`);
+  }
+  // The characters CSS does treat as whitespace, in every position, must keep working.
+  assert.equal(completeSelectorFieldName('input[\tname\r=\n\u000Cx\t]'), 'x');
+  assert.equal(completeSelectorFieldName('input[ name = x ]'), 'x');
+});

@@ -137,8 +137,24 @@ export function hasUnpairedSurrogate(value) {
   return false;
 }
 
+// A complete selector is `<tag>[name=<value>]` and nothing else. The name is read as CSS reads it, so
+// escapes are refused outright: the validator reports the literal characters it sees, while
+// `querySelector` resolves `\67 rind` to `grind`, and a selector is only usable here when those two
+// readings cannot differ. A quoted value may hold the opposite quote (a field named `o'brien` is
+// reachable as "o'brien") and anything else except a backslash or a raw newline, and an unquoted value
+// must be a valid CSS identifier. A name that is not a valid unquoted ident is still reached by quoting
+// it, which is how a legitimate name like `contact.email` or `-1` is addressed. Compound, comma-joined
+// and descendant selectors still match nothing.
+//
+// The whitespace class is CSS's, not JavaScript's. `\s` also matches NBSP, vertical tab and the
+// Unicode spaces, which CSS does not treat as whitespace: measured, `input[<NBSP>name=x]` and the same
+// in three other positions were accepted here while matching NOTHING, and a vertical tab made the
+// browser throw. The characters below are exactly what CSS accepts around the operator.
+//
+// Escapes, control characters, lone surrogates, unparsable identifiers and this whitespace class have
+// each been wrong here at least once, always because the string was reasoned about instead of measured.
 const COMPLETE_SELECTOR =
-  /^(input|textarea|select)\[\s*name\s*=\s*(?:"([^"\\\n\r]+)"|'([^'\\\n\r]+)'|((?:[A-Za-z_]|-[A-Za-z_-])[A-Za-z0-9_-]*))\s*\]$/i;
+  /^(input|textarea|select)\[[\t\n\f\r ]*name[\t\n\f\r ]*=[\t\n\f\r ]*(?:"([^"\\\n\r]+)"|'([^'\\\n\r]+)'|((?:[A-Za-z_]|-[A-Za-z_-])[A-Za-z0-9_-]*))[\t\n\f\r ]*\]$/i;
 
 /**
  * The field a selector addresses, but only when it is a complete single-form selector.
