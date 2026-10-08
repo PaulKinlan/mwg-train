@@ -145,10 +145,18 @@ passed silently. No pattern list fixes that, because the next wording is always 
 
 So every tracked `.md` and `.json` is now **classified**. A document is either a `floor-report`, which must
 carry the label, or one of nine named kinds - contract, design, spec, config, input, provider-data,
-provenance, scaffold-report - or a generated per-project tree matched by pattern rather than listed.
-Anything unclassified fails the check. That inverts the default: adding a document now requires deciding
+provenance, composition, scaffold-report - or a generated artefact matched by an exact path **shape**
+rather than by directory. Anything unclassified fails the check. That inverts the default: adding a document now requires deciding
 what it is, and the failure mode is a loud finding rather than a silent omission. The current tree is 190
-documents: 55 classified by name, the rest generated trees, with 28 floor reports and 9 named exclusions.
+documents: 64 classified by name, the rest generated artefacts, with 28 floor reports and 9 named
+exclusions.
+
+The generated patterns pin the basename, not the directory, and that distinction was a second review
+finding: `^docs/eval/briefs/` would have exempted a new `docs/eval/briefs/new-results.md` stating a floor
+result, because generated paths were skipped before their contents were read - the same fail-open hole as
+the phrase scan, moved into the classification. Each pattern now names the artefact itself
+(`pilot/projects/<id>/spec.json`, `data/<round>/targets/<id>/signature.json`, and so on), so a new document
+inside one of those trees matches nothing and has to be classified.
 
 The phrase scan survives as a **cross-check on the classification** rather than as the guarantee: a
 document classified as a non-report that states floor evidence is reported as misclassified unless it

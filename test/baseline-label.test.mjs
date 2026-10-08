@@ -254,9 +254,34 @@ test('document coverage fails closed, not open', () => {
     const mislabelled = write('report.md', '# Report\n\n34 of 35 accepted pairs.\n');
     assert.deepEqual(checkDocumentClassification([mislabelled]).map((f) => f.code), ['UNCLASSIFIED_DOCUMENT']);
 
-    // Generated trees are classified by pattern, not listed.
-    assert.deepEqual(checkDocumentClassification(['pilot/projects/tr-01-hono/spec.json']), []);
-    assert.deepEqual(checkDocumentClassification(['docs/eval/projects/already-modern/cf-06/tree.json']), []);
+    // Generated trees are classified by pattern, not listed - but the pattern pins the artefact SHAPE, so a
+    // new document inside one of those trees is still unclassified. Review found the earlier directory-wide
+    // patterns would have exempted docs/eval/briefs/new-results.md, which is the same fail-open hole the
+    // classification was introduced to close.
+    const generated = [
+      'docs/eval/projects/index.json',
+      'docs/eval/projects/already-modern/cf-06/tree.json',
+      'pilot/projects/account-recovery-hono/spec.json',
+      'data/A1_self_generated/targets/tr-01/signature.json',
+    ];
+    for (const path of generated) {
+      assert.deepEqual(checkDocumentClassification([path]), [], `${path} should be a generated artefact`);
+    }
+    const newInsideGenerated = [
+      'docs/eval/briefs/new-results.md',
+      'docs/eval/specs/new-results.json',
+      'data/A6_evaluation/targets/new-results.json',
+      'docs/eval/projects/already-modern/cf-06/new-results.md',
+      'pilot/projects/account-recovery-hono/notes.md',
+      'pilot/training-projects/tr-01/notes.md',
+    ];
+    for (const path of newInsideGenerated) {
+      assert.deepEqual(
+        checkDocumentClassification([path]).map((f) => f.code),
+        ['UNCLASSIFIED_DOCUMENT'],
+        `${path} must not be exempted by a directory pattern`,
+      );
+    }
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

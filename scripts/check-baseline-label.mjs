@@ -70,17 +70,20 @@ export const DOCUMENT_KINDS = {
   generated: 'a generated per-project tree, matched by pattern rather than listed',
 };
 
-/** Generated per-project trees: thousands of files whose content is derived, not reported. */
+/**
+ * Generated per-project artefacts, matched by their exact shape.
+ *
+ * These are deliberately NOT directory-wide exemptions. Review showed that `^docs/eval/briefs/` would have
+ * silently exempted a new docs/eval/briefs/new-results.md stating a floor result, because generated paths
+ * were skipped before their contents were read - the same fail-open hole as the phrase scan, moved into the
+ * classification. Each pattern therefore pins the basename, so a new document inside one of these trees
+ * matches nothing and has to be classified.
+ */
 export const GENERATED_PATTERNS = [
-  /^pilot\/projects\//,
-  /^pilot\/training-projects\//,
-  /^data\//,
-  /^docs\/eval\/projects\//,
-  /^docs\/eval\/briefs\//,
-  /^docs\/eval\/specs\//,
-  /^docs\/train\/briefs\/manifest/,
-  /^pilot\/TRAINING_CORPUS\.json$/,
-  /(?:^|\/)(?:package|spec|tree|snapshot)\.json$/,
+  /^pilot\/projects\/[^/]+\/(?:package|spec)\.json$/,
+  /^data\/[^/]+\/targets\/[^/]+\/signature\.json$/,
+  /^docs\/eval\/projects\/[^/]+\/[^/]+\/(?:package|spec|tree|snapshot)\.json$/,
+  /^docs\/eval\/projects\/index\.json$/,
 ];
 
 /** Every tracked prose or JSON document, classified. */
@@ -133,6 +136,15 @@ export const DOCUMENTS = {
   'docs/provenance/assets/training-targets.md': 'provenance',
   'docs/provenance/original-refs.md': 'provenance',
   'docs/quarantine.md': 'provenance',
+  'docs/eval/briefs/SCHEMA.md': 'spec',
+  'docs/eval/projects/README.md': 'spec',
+  'docs/eval/specs/README.md': 'spec',
+  'docs/eval/specs/account-recovery.json': 'spec',
+  'docs/eval/specs/booking.json': 'spec',
+  'docs/eval/specs/catalogue.json': 'spec',
+  'docs/eval/specs/contact-lead.json': 'spec',
+  'docs/eval/specs/event-registration.json': 'spec',
+  'pilot/TRAINING_CORPUS.json': 'composition',
   'docs/train/briefs/SCHEMA.md': 'spec',
   'docs/train/corpus/SERVED.md': 'scaffold-report',
   'docs/train/corpus/served-routes-baseline.json': 'scaffold-report',
