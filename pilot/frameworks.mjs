@@ -736,12 +736,12 @@ ${archetype.session ? `    // The session is what makes the follow-up page show 
   const readRoute = ${JSON.stringify(archetype.routes.find((route) => route.kind === 'read-by-reference')?.path ?? '/record/:ref')};
   const readMatch = path.match(new RegExp('^' + readRoute.replace(':ref', '([^/]+)').replace(/\\//g, '\\\\/') + '$'));
   if (readMatch && request.method === 'GET') {
-    const row = select.get(readMatch[1]);
+${caps.detail_page && caps.auth ? `${RAW_AUTH_GUARD}\n` : ''}    const row = select.get(readMatch[1]);
     if (!row) {
       response.writeHead(404, { 'content-type': 'text/html; charset=utf-8' });
       return response.end('<!doctype html><title>Not found</title><p>We could not find that record.</p>');
     }
-${caps.detail_page ? `${caps.auth ? `${RAW_AUTH_GUARD}\n` : ''}    return html(response, detailPage(row));
+${caps.detail_page ? `    return html(response, detailPage(row));
 ` : `    return html(response, await renderDocument({ title: 'Your submission', data: { ref: row.ref } }));
 `}  }
 
@@ -911,9 +911,9 @@ ${archetype.session ? `  const sid = randomUUID();
 
 const readPath = ${JSON.stringify(archetype.routes.find((route) => route.kind === 'read-by-reference')?.path ?? '/record/:ref')};
 app.get(readPath, (c) => {
-  const row = select.get(c.req.param('ref'));
+${caps.detail_page && caps.auth ? "  if (!authSessionEmail(c.req.header('cookie'))) return c.redirect('/login', 303);\n" : ''}  const row = select.get(c.req.param('ref'));
   if (!row) return c.text('We could not find that record.', 404);
-${caps.detail_page ? `${caps.auth ? "  if (!authSessionEmail(c.req.header('cookie'))) return c.redirect('/login', 303);\n" : ''}  return c.html(detailPage(row));` : "  return c.html(renderDocument({ title: 'Your submission' }));"}
+${caps.detail_page ? `  return c.html(detailPage(row));` : "  return c.html(renderDocument({ title: 'Your submission' }));"}
 });
 
 ${caps.auth ? `app.get('/api/records', (c) => {

@@ -89,6 +89,13 @@ test('functional: login, protection, list, detail and logout work in both arms',
         assert.equal(listAnon.status, 303, 'unauthenticated list redirects');
         assert.equal(listAnon.headers.get('location'), '/login');
 
+        // The detail page answers BEFORE the lookup: an unknown reference must get the same
+        // redirect as a real one, or the difference reveals which references exist.
+        const detailRoute = spec.routes.find((route) => route.kind === 'read-by-reference').path;
+        const detailAnon = await fetch(`${base}${detailRoute.replace(':ref', 'no-such-ref')}`, { redirect: 'manual' });
+        assert.equal(detailAnon.status, 303, 'unauthenticated detail redirects before any lookup');
+        assert.equal(detailAnon.headers.get('location'), '/login');
+
         // The JSON record APIs are guarded too: a page redirect means nothing if the data is open.
         const recordsAnon = await fetch(`${base}/api/records`, { redirect: 'manual' });
         assert.equal(recordsAnon.status, 401, 'unauthenticated /api/records is refused');
