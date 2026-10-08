@@ -1,12 +1,12 @@
 {
-  "run_id": "2026-10-08T11-15-54-431Z",
-  "generated_at": "2026-10-08T11:18:24.618Z",
+  "run_id": "2026-10-08T12-33-43-622Z",
+  "generated_at": "2026-10-08T12:40:17.613Z",
   "summary": {
-    "attempted": 25,
-    "accepted": 24,
-    "yield": 0.96,
+    "attempted": 35,
+    "accepted": 34,
+    "yield": 0.9714285714285714,
     "by_category": {
-      "accepted": 24,
+      "accepted": 34,
       "no-warranted-change": 1
     },
     "by_framework": {
@@ -26,40 +26,48 @@
         "total": 5,
         "accepted": 5
       },
+      "svelte": {
+        "total": 5,
+        "accepted": 5
+      },
       "vue": {
         "total": 5,
         "accepted": 4
+      },
+      "webcomponents": {
+        "total": 5,
+        "accepted": 5
       }
     },
     "by_archetype": {
       "account-recovery": {
-        "total": 5,
-        "accepted": 5
+        "total": 7,
+        "accepted": 7
       },
       "booking": {
-        "total": 5,
-        "accepted": 5
+        "total": 7,
+        "accepted": 7
       },
       "catalogue": {
-        "total": 5,
-        "accepted": 4
+        "total": 7,
+        "accepted": 6
       },
       "contact-lead": {
-        "total": 5,
-        "accepted": 5
+        "total": 7,
+        "accepted": 7
       },
       "event-registration": {
-        "total": 5,
-        "accepted": 5
+        "total": 7,
+        "accepted": 7
       }
     },
     "rules_improved": {
-      "accessibility/accessible-error-announcement": 19,
-      "security/sanitize-untrusted-html": 16,
-      "forms/required-field-feedback": 15,
-      "forms/validate-input-after-interaction": 15,
-      "forms/autofill-address-form": 5,
-      "forms/autofill-sign-up-form": 4
+      "accessibility/accessible-error-announcement": 27,
+      "security/sanitize-untrusted-html": 24,
+      "forms/required-field-feedback": 23,
+      "forms/validate-input-after-interaction": 23,
+      "forms/autofill-address-form": 7,
+      "forms/autofill-sign-up-form": 6
     }
   },
   "note": "Compact per-project evidence for docs/pilot/YIELD.md: journeys and observations, every rule and security status, and the measured tree hashes. Produced by scripts/pilot-records.mjs from a run directory.",
@@ -401,14 +409,14 @@
       "uplifted_sha": "sha256:2bb01b712483ead275c28567db33f543d8696fb88dbc4c121b991468e2e3a209"
     },
     {
-      "project_id": "account-recovery-vue",
+      "project_id": "account-recovery-svelte",
       "original": {
         "rules": {
-          "forms/required-field-feedback": "PASS",
-          "accessibility/accessible-error-announcement": "PASS",
+          "forms/required-field-feedback": "FAIL",
+          "accessibility/accessible-error-announcement": "FAIL",
           "forms/validate-input-after-interaction": "FAIL",
-          "forms/autofill-sign-up-form": "PASS",
-          "security/sanitize-untrusted-html": "FAIL"
+          "forms/autofill-sign-up-form": "FAIL",
+          "security/sanitize-untrusted-html": "PASS"
         },
         "security": {
           "session-cookie-attributes": "FAIL",
@@ -420,18 +428,18 @@
             "afterSubmit": "http://127.0.0.1:4308/account",
             "echoed": "Alan T",
             "echoedText": "Alan T",
-            "textLength": 246,
+            "textLength": 158,
             "persistedText": "Alan T"
           },
           {
             "name": "validation-failure",
-            "url": "http://127.0.0.1:4308/",
-            "stillOnForm": true,
-            "urlUnchanged": true,
-            "serverRefused": false,
-            "invalidCount": 3,
-            "visibleErrors": 4,
-            "path": "/"
+            "url": "http://127.0.0.1:4308/signup",
+            "stillOnForm": false,
+            "urlUnchanged": false,
+            "serverRefused": true,
+            "invalidCount": 0,
+            "visibleErrors": 1,
+            "path": "/signup"
           },
           {
             "name": "content",
@@ -481,8 +489,176 @@
       "category": "accepted",
       "accepted": true,
       "validation_observation": "refused-observed",
+      "original_sha": "sha256:148ffb40c7839237903c880412d8a44720ed1e63ebd0298e15ec8099936491d1",
+      "uplifted_sha": "sha256:2a2edc4859a5d925c488f6a3dbe02851c48be8efea86cb9f48e292b43fa93dde"
+    },
+    {
+      "project_id": "account-recovery-vue",
+      "original": {
+        "rules": {
+          "forms/required-field-feedback": "PASS",
+          "accessibility/accessible-error-announcement": "PASS",
+          "forms/validate-input-after-interaction": "FAIL",
+          "forms/autofill-sign-up-form": "PASS",
+          "security/sanitize-untrusted-html": "FAIL"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4310/account",
+            "echoed": "Alan T",
+            "echoedText": "Alan T",
+            "textLength": 246,
+            "persistedText": "Alan T"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4310/",
+            "stillOnForm": true,
+            "urlUnchanged": true,
+            "serverRefused": false,
+            "invalidCount": 3,
+            "visibleErrors": 4,
+            "path": "/"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4310/reset/account"
+          }
+        ],
+        "errors": []
+      },
+      "uplifted": {
+        "rules": {
+          "forms/required-field-feedback": "PASS",
+          "accessibility/accessible-error-announcement": "PASS",
+          "forms/validate-input-after-interaction": "PASS",
+          "forms/autofill-sign-up-form": "PASS",
+          "security/sanitize-untrusted-html": "PASS"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4311/account",
+            "echoed": "Alan T",
+            "echoedText": "Alan T",
+            "textLength": 158,
+            "persistedText": "Alan T"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4311/",
+            "stillOnForm": true,
+            "urlUnchanged": true,
+            "serverRefused": false,
+            "invalidCount": 3,
+            "visibleErrors": 4,
+            "path": "/"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4311/reset/account"
+          }
+        ],
+        "errors": []
+      },
+      "category": "accepted",
+      "accepted": true,
+      "validation_observation": "refused-observed",
       "original_sha": "sha256:71c2d78dd2c166f3970461281d82fe646160f382ed613b41dea93287b4d431aa",
       "uplifted_sha": "sha256:60c45c055969f95e7a846851b574dcbafd515c00934b734f40a33cc065442c34"
+    },
+    {
+      "project_id": "account-recovery-webcomponents",
+      "original": {
+        "rules": {
+          "forms/required-field-feedback": "FAIL",
+          "accessibility/accessible-error-announcement": "FAIL",
+          "forms/validate-input-after-interaction": "FAIL",
+          "forms/autofill-sign-up-form": "FAIL",
+          "security/sanitize-untrusted-html": "PASS"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4312/account",
+            "echoed": "Alan T",
+            "echoedText": "Alan T",
+            "textLength": 158,
+            "persistedText": "Alan T"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4312/signup",
+            "stillOnForm": false,
+            "urlUnchanged": false,
+            "serverRefused": true,
+            "invalidCount": 0,
+            "visibleErrors": 1,
+            "path": "/signup"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4312/reset/account"
+          }
+        ],
+        "errors": []
+      },
+      "uplifted": {
+        "rules": {
+          "forms/required-field-feedback": "PASS",
+          "accessibility/accessible-error-announcement": "PASS",
+          "forms/validate-input-after-interaction": "PASS",
+          "forms/autofill-sign-up-form": "PASS",
+          "security/sanitize-untrusted-html": "PASS"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4313/account",
+            "echoed": "Alan T",
+            "echoedText": "Alan T",
+            "textLength": 158,
+            "persistedText": "Alan T"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4313/",
+            "stillOnForm": true,
+            "urlUnchanged": true,
+            "serverRefused": false,
+            "invalidCount": 3,
+            "visibleErrors": 4,
+            "path": "/"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4313/reset/account"
+          }
+        ],
+        "errors": []
+      },
+      "category": "accepted",
+      "accepted": true,
+      "validation_observation": "refused-observed",
+      "original_sha": "sha256:10d4d1db10f739b2306a544d70a2afceaf9e1ac8d17728e18a237fdc5ec22ce2",
+      "uplifted_sha": "sha256:139122fdfd1be51a85a4b8c3d423cae478514fe31a7624625ce2c4fbef1bd2b8"
     },
     {
       "project_id": "booking-hono",
@@ -502,7 +678,7 @@
         "journeys": [
           {
             "name": "server-persistence",
-            "afterSubmit": "http://127.0.0.1:4310/booking/e95e5a1c",
+            "afterSubmit": "http://127.0.0.1:4314/booking/ae6d7068",
             "echoed": "Window seat please",
             "echoedText": "Window seat please",
             "textLength": 228,
@@ -510,7 +686,7 @@
           },
           {
             "name": "validation-failure",
-            "url": "http://127.0.0.1:4310/book",
+            "url": "http://127.0.0.1:4314/book",
             "stillOnForm": false,
             "urlUnchanged": false,
             "serverRefused": true,
@@ -520,7 +696,7 @@
           },
           {
             "name": "content",
-            "url": "http://127.0.0.1:4310/booking/e95e5a1c"
+            "url": "http://127.0.0.1:4314/booking/ae6d7068"
           }
         ],
         "errors": []
@@ -541,7 +717,7 @@
         "journeys": [
           {
             "name": "server-persistence",
-            "afterSubmit": "http://127.0.0.1:4311/booking/da4ec4ec",
+            "afterSubmit": "http://127.0.0.1:4315/booking/4e18917f",
             "echoed": "Window seat please",
             "echoedText": "Window seat please",
             "textLength": 228,
@@ -549,7 +725,7 @@
           },
           {
             "name": "validation-failure",
-            "url": "http://127.0.0.1:4311/",
+            "url": "http://127.0.0.1:4315/",
             "stillOnForm": true,
             "urlUnchanged": true,
             "serverRefused": false,
@@ -559,7 +735,7 @@
           },
           {
             "name": "content",
-            "url": "http://127.0.0.1:4311/booking/da4ec4ec"
+            "url": "http://127.0.0.1:4315/booking/4e18917f"
           }
         ],
         "errors": []
@@ -588,7 +764,7 @@
         "journeys": [
           {
             "name": "server-persistence",
-            "afterSubmit": "http://127.0.0.1:4312/booking/feafda69",
+            "afterSubmit": "http://127.0.0.1:4316/booking/107d322d",
             "echoed": "Window seat please",
             "echoedText": "Window seat please",
             "textLength": 395,
@@ -596,7 +772,7 @@
           },
           {
             "name": "validation-failure",
-            "url": "http://127.0.0.1:4312/",
+            "url": "http://127.0.0.1:4316/",
             "stillOnForm": true,
             "urlUnchanged": true,
             "serverRefused": false,
@@ -606,7 +782,7 @@
           },
           {
             "name": "content",
-            "url": "http://127.0.0.1:4312/booking/feafda69"
+            "url": "http://127.0.0.1:4316/booking/107d322d"
           }
         ],
         "errors": []
@@ -627,7 +803,7 @@
         "journeys": [
           {
             "name": "server-persistence",
-            "afterSubmit": "http://127.0.0.1:4313/booking/3aa3f68b",
+            "afterSubmit": "http://127.0.0.1:4317/booking/50ed326c",
             "echoed": "Window seat please",
             "echoedText": "Window seat please",
             "textLength": 228,
@@ -635,7 +811,7 @@
           },
           {
             "name": "validation-failure",
-            "url": "http://127.0.0.1:4313/",
+            "url": "http://127.0.0.1:4317/",
             "stillOnForm": true,
             "urlUnchanged": true,
             "serverRefused": false,
@@ -645,7 +821,7 @@
           },
           {
             "name": "content",
-            "url": "http://127.0.0.1:4313/booking/3aa3f68b"
+            "url": "http://127.0.0.1:4317/booking/50ed326c"
           }
         ],
         "errors": []
@@ -674,7 +850,7 @@
         "journeys": [
           {
             "name": "server-persistence",
-            "afterSubmit": "http://127.0.0.1:4314/booking/54ab0902",
+            "afterSubmit": "http://127.0.0.1:4318/booking/404b221e",
             "echoed": "Window seat please",
             "echoedText": "Window seat please",
             "textLength": 228,
@@ -682,7 +858,7 @@
           },
           {
             "name": "validation-failure",
-            "url": "http://127.0.0.1:4314/book",
+            "url": "http://127.0.0.1:4318/book",
             "stillOnForm": false,
             "urlUnchanged": false,
             "serverRefused": true,
@@ -692,7 +868,7 @@
           },
           {
             "name": "content",
-            "url": "http://127.0.0.1:4314/booking/54ab0902"
+            "url": "http://127.0.0.1:4318/booking/404b221e"
           }
         ],
         "errors": []
@@ -713,7 +889,7 @@
         "journeys": [
           {
             "name": "server-persistence",
-            "afterSubmit": "http://127.0.0.1:4315/booking/a4f88dcd",
+            "afterSubmit": "http://127.0.0.1:4319/booking/df33c1a8",
             "echoed": "Window seat please",
             "echoedText": "Window seat please",
             "textLength": 228,
@@ -721,7 +897,7 @@
           },
           {
             "name": "validation-failure",
-            "url": "http://127.0.0.1:4315/",
+            "url": "http://127.0.0.1:4319/",
             "stillOnForm": true,
             "urlUnchanged": true,
             "serverRefused": false,
@@ -731,7 +907,7 @@
           },
           {
             "name": "content",
-            "url": "http://127.0.0.1:4315/booking/a4f88dcd"
+            "url": "http://127.0.0.1:4319/booking/df33c1a8"
           }
         ],
         "errors": []
@@ -760,7 +936,7 @@
         "journeys": [
           {
             "name": "server-persistence",
-            "afterSubmit": "http://127.0.0.1:4316/booking/eda23496",
+            "afterSubmit": "http://127.0.0.1:4320/booking/74f185cd",
             "echoed": "Window seat please",
             "echoedText": "Window seat please",
             "textLength": 228,
@@ -768,7 +944,7 @@
           },
           {
             "name": "validation-failure",
-            "url": "http://127.0.0.1:4316/book",
+            "url": "http://127.0.0.1:4320/book",
             "stillOnForm": false,
             "urlUnchanged": false,
             "serverRefused": true,
@@ -778,7 +954,7 @@
           },
           {
             "name": "content",
-            "url": "http://127.0.0.1:4316/booking/eda23496"
+            "url": "http://127.0.0.1:4320/booking/74f185cd"
           }
         ],
         "errors": []
@@ -799,7 +975,7 @@
         "journeys": [
           {
             "name": "server-persistence",
-            "afterSubmit": "http://127.0.0.1:4317/booking/34fddf16",
+            "afterSubmit": "http://127.0.0.1:4321/booking/327f02e4",
             "echoed": "Window seat please",
             "echoedText": "Window seat please",
             "textLength": 228,
@@ -807,7 +983,7 @@
           },
           {
             "name": "validation-failure",
-            "url": "http://127.0.0.1:4317/",
+            "url": "http://127.0.0.1:4321/",
             "stillOnForm": true,
             "urlUnchanged": true,
             "serverRefused": false,
@@ -817,7 +993,7 @@
           },
           {
             "name": "content",
-            "url": "http://127.0.0.1:4317/booking/34fddf16"
+            "url": "http://127.0.0.1:4321/booking/327f02e4"
           }
         ],
         "errors": []
@@ -827,6 +1003,92 @@
       "validation_observation": "refused-observed",
       "original_sha": "sha256:ea86ce5e7b30c3828bffe16f91b197c5ce1a899af77e2ac101552148a2a46b27",
       "uplifted_sha": "sha256:6b60d9ce25e2e04bf2b25561a1f700eb3a6f890b85553fcb9001caf93d4cf0f1"
+    },
+    {
+      "project_id": "booking-svelte",
+      "original": {
+        "rules": {
+          "forms/required-field-feedback": "FAIL",
+          "accessibility/accessible-error-announcement": "FAIL",
+          "forms/validate-input-after-interaction": "FAIL",
+          "forms/autofill-sign-up-form": "PASS",
+          "forms/autofill-address-form": "FAIL",
+          "security/sanitize-untrusted-html": "FAIL"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4322/booking/00528678",
+            "echoed": "Window seat please",
+            "echoedText": "Window seat please",
+            "textLength": 228,
+            "persistedText": "Window seat please"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4322/book",
+            "stillOnForm": false,
+            "urlUnchanged": false,
+            "serverRefused": true,
+            "invalidCount": 0,
+            "visibleErrors": 1,
+            "path": "/book"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4322/booking/00528678"
+          }
+        ],
+        "errors": []
+      },
+      "uplifted": {
+        "rules": {
+          "forms/required-field-feedback": "PASS",
+          "accessibility/accessible-error-announcement": "PASS",
+          "forms/validate-input-after-interaction": "PASS",
+          "forms/autofill-sign-up-form": "PASS",
+          "forms/autofill-address-form": "PASS",
+          "security/sanitize-untrusted-html": "PASS"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4323/booking/7496a682",
+            "echoed": "Window seat please",
+            "echoedText": "Window seat please",
+            "textLength": 228,
+            "persistedText": "Window seat please"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4323/",
+            "stillOnForm": true,
+            "urlUnchanged": true,
+            "serverRefused": false,
+            "invalidCount": 4,
+            "visibleErrors": 5,
+            "path": "/"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4323/booking/7496a682"
+          }
+        ],
+        "errors": []
+      },
+      "category": "accepted",
+      "accepted": true,
+      "validation_observation": "refused-observed",
+      "original_sha": "sha256:33e690acd8d7f5375fe91422e08af1bcf88bd8776d699ef7511708f3cd39792b",
+      "uplifted_sha": "sha256:b7b92d54af14980f1b438bf1f4ec0d6860340136a7001c12150933f060fa06ce"
     },
     {
       "project_id": "booking-vue",
@@ -846,7 +1108,7 @@
         "journeys": [
           {
             "name": "server-persistence",
-            "afterSubmit": "http://127.0.0.1:4318/booking/8b5e8eb9",
+            "afterSubmit": "http://127.0.0.1:4324/booking/f2249143",
             "echoed": "Window seat please",
             "echoedText": "Window seat please",
             "textLength": 228,
@@ -854,7 +1116,7 @@
           },
           {
             "name": "validation-failure",
-            "url": "http://127.0.0.1:4318/book",
+            "url": "http://127.0.0.1:4324/book",
             "stillOnForm": false,
             "urlUnchanged": false,
             "serverRefused": true,
@@ -864,7 +1126,7 @@
           },
           {
             "name": "content",
-            "url": "http://127.0.0.1:4318/booking/8b5e8eb9"
+            "url": "http://127.0.0.1:4324/booking/f2249143"
           }
         ],
         "errors": []
@@ -885,7 +1147,7 @@
         "journeys": [
           {
             "name": "server-persistence",
-            "afterSubmit": "http://127.0.0.1:4319/booking/eeb2f2df",
+            "afterSubmit": "http://127.0.0.1:4325/booking/27cc911e",
             "echoed": "Window seat please",
             "echoedText": "Window seat please",
             "textLength": 228,
@@ -893,7 +1155,7 @@
           },
           {
             "name": "validation-failure",
-            "url": "http://127.0.0.1:4319/",
+            "url": "http://127.0.0.1:4325/",
             "stillOnForm": true,
             "urlUnchanged": true,
             "serverRefused": false,
@@ -903,7 +1165,7 @@
           },
           {
             "name": "content",
-            "url": "http://127.0.0.1:4319/booking/eeb2f2df"
+            "url": "http://127.0.0.1:4325/booking/27cc911e"
           }
         ],
         "errors": []
@@ -913,6 +1175,92 @@
       "validation_observation": "refused-observed",
       "original_sha": "sha256:34b80364cc810c6752f5970df84c279ebba31496b8bcfe3f42498c3b492f4e21",
       "uplifted_sha": "sha256:385234f4b844c545b9e4d813c30870b4f06e4fe9533d26ad294bd89ce1cc68af"
+    },
+    {
+      "project_id": "booking-webcomponents",
+      "original": {
+        "rules": {
+          "forms/required-field-feedback": "FAIL",
+          "accessibility/accessible-error-announcement": "FAIL",
+          "forms/validate-input-after-interaction": "FAIL",
+          "forms/autofill-sign-up-form": "PASS",
+          "forms/autofill-address-form": "FAIL",
+          "security/sanitize-untrusted-html": "FAIL"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4326/booking/74a7e5db",
+            "echoed": "Window seat please",
+            "echoedText": "Window seat please",
+            "textLength": 228,
+            "persistedText": "Window seat please"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4326/book",
+            "stillOnForm": false,
+            "urlUnchanged": false,
+            "serverRefused": true,
+            "invalidCount": 0,
+            "visibleErrors": 1,
+            "path": "/book"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4326/booking/74a7e5db"
+          }
+        ],
+        "errors": []
+      },
+      "uplifted": {
+        "rules": {
+          "forms/required-field-feedback": "PASS",
+          "accessibility/accessible-error-announcement": "PASS",
+          "forms/validate-input-after-interaction": "PASS",
+          "forms/autofill-sign-up-form": "PASS",
+          "forms/autofill-address-form": "PASS",
+          "security/sanitize-untrusted-html": "PASS"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4327/booking/1ae63be4",
+            "echoed": "Window seat please",
+            "echoedText": "Window seat please",
+            "textLength": 228,
+            "persistedText": "Window seat please"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4327/",
+            "stillOnForm": true,
+            "urlUnchanged": true,
+            "serverRefused": false,
+            "invalidCount": 4,
+            "visibleErrors": 5,
+            "path": "/"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4327/booking/1ae63be4"
+          }
+        ],
+        "errors": []
+      },
+      "category": "accepted",
+      "accepted": true,
+      "validation_observation": "refused-observed",
+      "original_sha": "sha256:2f09593f336c32e7f1e4253d3393a3f051fe662f15ad201a07c5e006d35d3162",
+      "uplifted_sha": "sha256:cc3b5a997ef700bf76050b86e95f75281f08e1f4fddea994f8ae73f0c9d1c305"
     },
     {
       "project_id": "catalogue-hono",
@@ -930,445 +1278,21 @@
         "journeys": [
           {
             "name": "server-persistence",
-            "afterSubmit": "http://127.0.0.1:4320/search?q=bearing",
-            "echoed": "bearing",
-            "echoedText": "bearing",
-            "textLength": 181,
-            "persistedText": "bearing"
-          },
-          {
-            "name": "validation-failure",
-            "url": "http://127.0.0.1:4320/search?q=",
-            "stillOnForm": false,
-            "urlUnchanged": false,
-            "serverRefused": false,
-            "invalidCount": 0,
-            "visibleErrors": 0,
-            "path": "/search"
-          },
-          {
-            "name": "write-journey",
-            "status": 303,
-            "landedStatus": 200,
-            "posted": true,
-            "postedMethod": "POST",
-            "postedUrl": "/cart",
-            "persisted": true,
-            "submittedValue": "part-muzfyv23-6picci",
-            "readStatus": 200,
-            "observedLength": 65
-          },
-          {
-            "name": "content",
-            "url": "http://127.0.0.1:4320/search"
-          }
-        ],
-        "errors": []
-      },
-      "uplifted": {
-        "rules": {
-          "forms/required-field-feedback": "PASS",
-          "accessibility/accessible-error-announcement": "PASS",
-          "forms/validate-input-after-interaction": "PASS",
-          "security/sanitize-untrusted-html": "PASS"
-        },
-        "security": {
-          "session-cookie-attributes": "FAIL",
-          "form-token-exposure": "PASS"
-        },
-        "journeys": [
-          {
-            "name": "server-persistence",
-            "afterSubmit": "http://127.0.0.1:4321/search?q=bearing",
-            "echoed": "bearing",
-            "echoedText": "bearing",
-            "textLength": 181,
-            "persistedText": "bearing"
-          },
-          {
-            "name": "validation-failure",
-            "url": "http://127.0.0.1:4321/",
-            "stillOnForm": true,
-            "urlUnchanged": true,
-            "serverRefused": false,
-            "invalidCount": 1,
-            "visibleErrors": 2,
-            "path": "/"
-          },
-          {
-            "name": "write-journey",
-            "status": 303,
-            "landedStatus": 200,
-            "posted": true,
-            "postedMethod": "POST",
-            "postedUrl": "/cart",
-            "persisted": true,
-            "submittedValue": "part-muzfyxfb-5end63",
-            "readStatus": 200,
-            "observedLength": 65
-          },
-          {
-            "name": "content",
-            "url": "http://127.0.0.1:4321/search"
-          }
-        ],
-        "errors": []
-      },
-      "category": "accepted",
-      "accepted": true,
-      "validation_observation": "accepted-empty",
-      "original_sha": "sha256:68063d4aa66c1e20cb116d667c8e7f9993745070c4824d1067fefc40f4d0781b",
-      "uplifted_sha": "sha256:f8840cafa28e216fceb02aacb25e83e3e866fd8af98dcbce133e0bd329dac7da"
-    },
-    {
-      "project_id": "catalogue-preact",
-      "original": {
-        "rules": {
-          "forms/required-field-feedback": "PASS",
-          "accessibility/accessible-error-announcement": "PASS",
-          "forms/validate-input-after-interaction": "FAIL",
-          "security/sanitize-untrusted-html": "PASS"
-        },
-        "security": {
-          "session-cookie-attributes": "FAIL",
-          "form-token-exposure": "PASS"
-        },
-        "journeys": [
-          {
-            "name": "server-persistence",
-            "afterSubmit": "http://127.0.0.1:4322/search?q=bearing",
-            "echoed": "bearing",
-            "echoedText": "bearing",
-            "textLength": 243,
-            "persistedText": "bearing"
-          },
-          {
-            "name": "validation-failure",
-            "url": "http://127.0.0.1:4322/",
-            "stillOnForm": true,
-            "urlUnchanged": true,
-            "serverRefused": false,
-            "invalidCount": 1,
-            "visibleErrors": 3,
-            "path": "/"
-          },
-          {
-            "name": "write-journey",
-            "status": 303,
-            "landedStatus": 200,
-            "posted": true,
-            "postedMethod": "POST",
-            "postedUrl": "/cart",
-            "persisted": true,
-            "submittedValue": "part-muzfyzpp-7bynaf",
-            "readStatus": 200,
-            "observedLength": 65
-          },
-          {
-            "name": "content",
-            "url": "http://127.0.0.1:4322/search"
-          }
-        ],
-        "errors": []
-      },
-      "uplifted": {
-        "rules": {
-          "forms/required-field-feedback": "PASS",
-          "accessibility/accessible-error-announcement": "PASS",
-          "forms/validate-input-after-interaction": "PASS",
-          "security/sanitize-untrusted-html": "PASS"
-        },
-        "security": {
-          "session-cookie-attributes": "FAIL",
-          "form-token-exposure": "PASS"
-        },
-        "journeys": [
-          {
-            "name": "server-persistence",
-            "afterSubmit": "http://127.0.0.1:4323/search?q=bearing",
-            "echoed": "bearing",
-            "echoedText": "bearing",
-            "textLength": 177,
-            "persistedText": "bearing"
-          },
-          {
-            "name": "validation-failure",
-            "url": "http://127.0.0.1:4323/",
-            "stillOnForm": true,
-            "urlUnchanged": true,
-            "serverRefused": false,
-            "invalidCount": 1,
-            "visibleErrors": 2,
-            "path": "/"
-          },
-          {
-            "name": "write-journey",
-            "status": 303,
-            "landedStatus": 200,
-            "posted": true,
-            "postedMethod": "POST",
-            "postedUrl": "/cart",
-            "persisted": true,
-            "submittedValue": "part-muzfz1zg-h6msr7",
-            "readStatus": 200,
-            "observedLength": 65
-          },
-          {
-            "name": "content",
-            "url": "http://127.0.0.1:4323/search"
-          }
-        ],
-        "errors": []
-      },
-      "category": "accepted",
-      "accepted": true,
-      "validation_observation": "refused-observed",
-      "original_sha": "sha256:19dc600f53996f5680cbd0a0ee8185ed3be0d7f7b28d2025b9d044ded0192c52",
-      "uplifted_sha": "sha256:619cb56a9ab86e5ef56ef971f02c48cfcb0f2a3bbc4b416e32dfcbf88312b405"
-    },
-    {
-      "project_id": "catalogue-raw",
-      "original": {
-        "rules": {
-          "forms/required-field-feedback": "PASS",
-          "accessibility/accessible-error-announcement": "PASS",
-          "forms/validate-input-after-interaction": "PASS",
-          "security/sanitize-untrusted-html": "FAIL"
-        },
-        "security": {
-          "session-cookie-attributes": "FAIL",
-          "form-token-exposure": "PASS"
-        },
-        "journeys": [
-          {
-            "name": "server-persistence",
-            "afterSubmit": "http://127.0.0.1:4324/search?q=bearing",
-            "echoed": "bearing",
-            "echoedText": "bearing",
-            "textLength": 181,
-            "persistedText": "bearing"
-          },
-          {
-            "name": "validation-failure",
-            "url": "http://127.0.0.1:4324/",
-            "stillOnForm": true,
-            "urlUnchanged": true,
-            "serverRefused": false,
-            "invalidCount": 1,
-            "visibleErrors": 2,
-            "path": "/"
-          },
-          {
-            "name": "write-journey",
-            "status": 303,
-            "landedStatus": 200,
-            "posted": true,
-            "postedMethod": "POST",
-            "postedUrl": "/cart",
-            "persisted": true,
-            "submittedValue": "part-muzfz3z5-olcqq0",
-            "readStatus": 200,
-            "observedLength": 65
-          },
-          {
-            "name": "content",
-            "url": "http://127.0.0.1:4324/search"
-          }
-        ],
-        "errors": []
-      },
-      "uplifted": {
-        "rules": {
-          "forms/required-field-feedback": "PASS",
-          "accessibility/accessible-error-announcement": "PASS",
-          "forms/validate-input-after-interaction": "PASS",
-          "security/sanitize-untrusted-html": "PASS"
-        },
-        "security": {
-          "session-cookie-attributes": "FAIL",
-          "form-token-exposure": "PASS"
-        },
-        "journeys": [
-          {
-            "name": "server-persistence",
-            "afterSubmit": "http://127.0.0.1:4325/search?q=bearing",
-            "echoed": "bearing",
-            "echoedText": "bearing",
-            "textLength": 181,
-            "persistedText": "bearing"
-          },
-          {
-            "name": "validation-failure",
-            "url": "http://127.0.0.1:4325/",
-            "stillOnForm": true,
-            "urlUnchanged": true,
-            "serverRefused": false,
-            "invalidCount": 1,
-            "visibleErrors": 2,
-            "path": "/"
-          },
-          {
-            "name": "write-journey",
-            "status": 303,
-            "landedStatus": 200,
-            "posted": true,
-            "postedMethod": "POST",
-            "postedUrl": "/cart",
-            "persisted": true,
-            "submittedValue": "part-muzfz62b-8vagwf",
-            "readStatus": 200,
-            "observedLength": 65
-          },
-          {
-            "name": "content",
-            "url": "http://127.0.0.1:4325/search"
-          }
-        ],
-        "errors": []
-      },
-      "category": "accepted",
-      "accepted": true,
-      "validation_observation": "refused-observed",
-      "original_sha": "sha256:1351a56d59009d230162f1b917dbd59d3a43fd1b71f5b3e5bfbea1483be975db",
-      "uplifted_sha": "sha256:9ac86212c22cfcdf80d583d5ab61f97a743c5a183d2e0d2ffc3b776012a561e8"
-    },
-    {
-      "project_id": "catalogue-react",
-      "original": {
-        "rules": {
-          "forms/required-field-feedback": "FAIL",
-          "accessibility/accessible-error-announcement": "FAIL",
-          "forms/validate-input-after-interaction": "PASS",
-          "security/sanitize-untrusted-html": "FAIL"
-        },
-        "security": {
-          "session-cookie-attributes": "FAIL",
-          "form-token-exposure": "PASS"
-        },
-        "journeys": [
-          {
-            "name": "server-persistence",
-            "afterSubmit": "http://127.0.0.1:4326/search?q=bearing",
-            "echoed": "bearing",
-            "echoedText": "bearing",
-            "textLength": 177,
-            "persistedText": "bearing"
-          },
-          {
-            "name": "validation-failure",
-            "url": "http://127.0.0.1:4326/search?q=",
-            "stillOnForm": false,
-            "urlUnchanged": false,
-            "serverRefused": false,
-            "invalidCount": 0,
-            "visibleErrors": 0,
-            "path": "/search"
-          },
-          {
-            "name": "write-journey",
-            "status": 303,
-            "landedStatus": 200,
-            "posted": true,
-            "postedMethod": "POST",
-            "postedUrl": "/cart",
-            "persisted": true,
-            "submittedValue": "part-muzfz8bj-ajj1qm",
-            "readStatus": 200,
-            "observedLength": 65
-          },
-          {
-            "name": "content",
-            "url": "http://127.0.0.1:4326/search"
-          }
-        ],
-        "errors": []
-      },
-      "uplifted": {
-        "rules": {
-          "forms/required-field-feedback": "PASS",
-          "accessibility/accessible-error-announcement": "PASS",
-          "forms/validate-input-after-interaction": "PASS",
-          "security/sanitize-untrusted-html": "PASS"
-        },
-        "security": {
-          "session-cookie-attributes": "FAIL",
-          "form-token-exposure": "PASS"
-        },
-        "journeys": [
-          {
-            "name": "server-persistence",
-            "afterSubmit": "http://127.0.0.1:4327/search?q=bearing",
-            "echoed": "bearing",
-            "echoedText": "bearing",
-            "textLength": 177,
-            "persistedText": "bearing"
-          },
-          {
-            "name": "validation-failure",
-            "url": "http://127.0.0.1:4327/",
-            "stillOnForm": true,
-            "urlUnchanged": true,
-            "serverRefused": false,
-            "invalidCount": 1,
-            "visibleErrors": 2,
-            "path": "/"
-          },
-          {
-            "name": "write-journey",
-            "status": 303,
-            "landedStatus": 200,
-            "posted": true,
-            "postedMethod": "POST",
-            "postedUrl": "/cart",
-            "persisted": true,
-            "submittedValue": "part-muzfzakj-01scwl",
-            "readStatus": 200,
-            "observedLength": 65
-          },
-          {
-            "name": "content",
-            "url": "http://127.0.0.1:4327/search"
-          }
-        ],
-        "errors": []
-      },
-      "category": "accepted",
-      "accepted": true,
-      "validation_observation": "accepted-empty",
-      "original_sha": "sha256:3f8b64b1e37d9c67ccbe1d23085f44c993b17c9b3ca6eb01c51054033c8e44f1",
-      "uplifted_sha": "sha256:a413a302dc457d91764d5b4a404bc845071583dee57a3456dad49e0fe295ef69"
-    },
-    {
-      "project_id": "catalogue-vue",
-      "original": {
-        "rules": {
-          "forms/required-field-feedback": "PASS",
-          "accessibility/accessible-error-announcement": "PASS",
-          "forms/validate-input-after-interaction": "PASS",
-          "security/sanitize-untrusted-html": "PASS"
-        },
-        "security": {
-          "session-cookie-attributes": "FAIL",
-          "form-token-exposure": "PASS"
-        },
-        "journeys": [
-          {
-            "name": "server-persistence",
             "afterSubmit": "http://127.0.0.1:4328/search?q=bearing",
             "echoed": "bearing",
             "echoedText": "bearing",
-            "textLength": 177,
+            "textLength": 181,
             "persistedText": "bearing"
           },
           {
             "name": "validation-failure",
-            "url": "http://127.0.0.1:4328/",
-            "stillOnForm": true,
-            "urlUnchanged": true,
+            "url": "http://127.0.0.1:4328/search?q=",
+            "stillOnForm": false,
+            "urlUnchanged": false,
             "serverRefused": false,
-            "invalidCount": 1,
-            "visibleErrors": 2,
-            "path": "/"
+            "invalidCount": 0,
+            "visibleErrors": 0,
+            "path": "/search"
           },
           {
             "name": "write-journey",
@@ -1378,7 +1302,7 @@
             "postedMethod": "POST",
             "postedUrl": "/cart",
             "persisted": true,
-            "submittedValue": "part-muzfzd20-s6jxi5",
+            "submittedValue": "part-muziszq5-drsuw9",
             "readStatus": 200,
             "observedLength": 65
           },
@@ -1406,7 +1330,7 @@
             "afterSubmit": "http://127.0.0.1:4329/search?q=bearing",
             "echoed": "bearing",
             "echoedText": "bearing",
-            "textLength": 177,
+            "textLength": 181,
             "persistedText": "bearing"
           },
           {
@@ -1427,7 +1351,7 @@
             "postedMethod": "POST",
             "postedUrl": "/cart",
             "persisted": true,
-            "submittedValue": "part-muzfzff4-a8u48m",
+            "submittedValue": "part-muzit3tg-fhtprq",
             "readStatus": 200,
             "observedLength": 65
           },
@@ -1438,20 +1362,20 @@
         ],
         "errors": []
       },
-      "category": "no-warranted-change",
-      "accepted": false,
-      "validation_observation": "refused-observed",
-      "original_sha": "sha256:795ede886332aef3716d103dbf4fec63523e3ebbdc408583ce0d2931b73c28a3",
-      "uplifted_sha": "sha256:795ede886332aef3716d103dbf4fec63523e3ebbdc408583ce0d2931b73c28a3"
+      "category": "accepted",
+      "accepted": true,
+      "validation_observation": "accepted-empty",
+      "original_sha": "sha256:68063d4aa66c1e20cb116d667c8e7f9993745070c4824d1067fefc40f4d0781b",
+      "uplifted_sha": "sha256:f8840cafa28e216fceb02aacb25e83e3e866fd8af98dcbce133e0bd329dac7da"
     },
     {
-      "project_id": "contact-lead-hono",
+      "project_id": "catalogue-preact",
       "original": {
         "rules": {
-          "forms/required-field-feedback": "FAIL",
-          "accessibility/accessible-error-announcement": "FAIL",
+          "forms/required-field-feedback": "PASS",
+          "accessibility/accessible-error-announcement": "PASS",
           "forms/validate-input-after-interaction": "FAIL",
-          "security/sanitize-untrusted-html": "FAIL"
+          "security/sanitize-untrusted-html": "PASS"
         },
         "security": {
           "session-cookie-attributes": "FAIL",
@@ -1460,25 +1384,37 @@
         "journeys": [
           {
             "name": "server-persistence",
-            "afterSubmit": "http://127.0.0.1:4330/enquiry/7a50cc1a",
-            "echoed": "Please repair the street light",
-            "echoedText": "Please repair the street light",
-            "textLength": 207,
-            "persistedText": "Please repair the street light"
+            "afterSubmit": "http://127.0.0.1:4330/search?q=bearing",
+            "echoed": "bearing",
+            "echoedText": "bearing",
+            "textLength": 243,
+            "persistedText": "bearing"
           },
           {
             "name": "validation-failure",
-            "url": "http://127.0.0.1:4330/enquiry",
-            "stillOnForm": false,
-            "urlUnchanged": false,
-            "serverRefused": true,
-            "invalidCount": 0,
-            "visibleErrors": 1,
-            "path": "/enquiry"
+            "url": "http://127.0.0.1:4330/",
+            "stillOnForm": true,
+            "urlUnchanged": true,
+            "serverRefused": false,
+            "invalidCount": 1,
+            "visibleErrors": 3,
+            "path": "/"
+          },
+          {
+            "name": "write-journey",
+            "status": 303,
+            "landedStatus": 200,
+            "posted": true,
+            "postedMethod": "POST",
+            "postedUrl": "/cart",
+            "persisted": true,
+            "submittedValue": "part-muzit7ae-uians1",
+            "readStatus": 200,
+            "observedLength": 65
           },
           {
             "name": "content",
-            "url": "http://127.0.0.1:4330/enquiry/7a50cc1a"
+            "url": "http://127.0.0.1:4330/search"
           }
         ],
         "errors": []
@@ -1497,7 +1433,594 @@
         "journeys": [
           {
             "name": "server-persistence",
-            "afterSubmit": "http://127.0.0.1:4331/enquiry/3fdfd227",
+            "afterSubmit": "http://127.0.0.1:4331/search?q=bearing",
+            "echoed": "bearing",
+            "echoedText": "bearing",
+            "textLength": 177,
+            "persistedText": "bearing"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4331/",
+            "stillOnForm": true,
+            "urlUnchanged": true,
+            "serverRefused": false,
+            "invalidCount": 1,
+            "visibleErrors": 2,
+            "path": "/"
+          },
+          {
+            "name": "write-journey",
+            "status": 303,
+            "landedStatus": 200,
+            "posted": true,
+            "postedMethod": "POST",
+            "postedUrl": "/cart",
+            "persisted": true,
+            "submittedValue": "part-muzitccb-lfzhvc",
+            "readStatus": 200,
+            "observedLength": 65
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4331/search"
+          }
+        ],
+        "errors": []
+      },
+      "category": "accepted",
+      "accepted": true,
+      "validation_observation": "refused-observed",
+      "original_sha": "sha256:19dc600f53996f5680cbd0a0ee8185ed3be0d7f7b28d2025b9d044ded0192c52",
+      "uplifted_sha": "sha256:619cb56a9ab86e5ef56ef971f02c48cfcb0f2a3bbc4b416e32dfcbf88312b405"
+    },
+    {
+      "project_id": "catalogue-raw",
+      "original": {
+        "rules": {
+          "forms/required-field-feedback": "PASS",
+          "accessibility/accessible-error-announcement": "PASS",
+          "forms/validate-input-after-interaction": "PASS",
+          "security/sanitize-untrusted-html": "FAIL"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4332/search?q=bearing",
+            "echoed": "bearing",
+            "echoedText": "bearing",
+            "textLength": 181,
+            "persistedText": "bearing"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4332/",
+            "stillOnForm": true,
+            "urlUnchanged": true,
+            "serverRefused": false,
+            "invalidCount": 1,
+            "visibleErrors": 2,
+            "path": "/"
+          },
+          {
+            "name": "write-journey",
+            "status": 303,
+            "landedStatus": 200,
+            "posted": true,
+            "postedMethod": "POST",
+            "postedUrl": "/cart",
+            "persisted": true,
+            "submittedValue": "part-muzitfko-47sbxz",
+            "readStatus": 200,
+            "observedLength": 65
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4332/search"
+          }
+        ],
+        "errors": []
+      },
+      "uplifted": {
+        "rules": {
+          "forms/required-field-feedback": "PASS",
+          "accessibility/accessible-error-announcement": "PASS",
+          "forms/validate-input-after-interaction": "PASS",
+          "security/sanitize-untrusted-html": "PASS"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4333/search?q=bearing",
+            "echoed": "bearing",
+            "echoedText": "bearing",
+            "textLength": 181,
+            "persistedText": "bearing"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4333/",
+            "stillOnForm": true,
+            "urlUnchanged": true,
+            "serverRefused": false,
+            "invalidCount": 1,
+            "visibleErrors": 2,
+            "path": "/"
+          },
+          {
+            "name": "write-journey",
+            "status": 303,
+            "landedStatus": 200,
+            "posted": true,
+            "postedMethod": "POST",
+            "postedUrl": "/cart",
+            "persisted": true,
+            "submittedValue": "part-muzitj93-1klh8n",
+            "readStatus": 200,
+            "observedLength": 65
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4333/search"
+          }
+        ],
+        "errors": []
+      },
+      "category": "accepted",
+      "accepted": true,
+      "validation_observation": "refused-observed",
+      "original_sha": "sha256:1351a56d59009d230162f1b917dbd59d3a43fd1b71f5b3e5bfbea1483be975db",
+      "uplifted_sha": "sha256:9ac86212c22cfcdf80d583d5ab61f97a743c5a183d2e0d2ffc3b776012a561e8"
+    },
+    {
+      "project_id": "catalogue-react",
+      "original": {
+        "rules": {
+          "forms/required-field-feedback": "FAIL",
+          "accessibility/accessible-error-announcement": "FAIL",
+          "forms/validate-input-after-interaction": "PASS",
+          "security/sanitize-untrusted-html": "FAIL"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4334/search?q=bearing",
+            "echoed": "bearing",
+            "echoedText": "bearing",
+            "textLength": 177,
+            "persistedText": "bearing"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4334/search?q=",
+            "stillOnForm": false,
+            "urlUnchanged": false,
+            "serverRefused": false,
+            "invalidCount": 0,
+            "visibleErrors": 0,
+            "path": "/search"
+          },
+          {
+            "name": "write-journey",
+            "status": 303,
+            "landedStatus": 200,
+            "posted": true,
+            "postedMethod": "POST",
+            "postedUrl": "/cart",
+            "persisted": true,
+            "submittedValue": "part-muzitqwv-4selg8",
+            "readStatus": 200,
+            "observedLength": 65
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4334/search"
+          }
+        ],
+        "errors": []
+      },
+      "uplifted": {
+        "rules": {
+          "forms/required-field-feedback": "PASS",
+          "accessibility/accessible-error-announcement": "PASS",
+          "forms/validate-input-after-interaction": "PASS",
+          "security/sanitize-untrusted-html": "PASS"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4335/search?q=bearing",
+            "echoed": "bearing",
+            "echoedText": "bearing",
+            "textLength": 177,
+            "persistedText": "bearing"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4335/",
+            "stillOnForm": true,
+            "urlUnchanged": true,
+            "serverRefused": false,
+            "invalidCount": 1,
+            "visibleErrors": 2,
+            "path": "/"
+          },
+          {
+            "name": "write-journey",
+            "status": 303,
+            "landedStatus": 200,
+            "posted": true,
+            "postedMethod": "POST",
+            "postedUrl": "/cart",
+            "persisted": true,
+            "submittedValue": "part-muzitwlg-9rspx1",
+            "readStatus": 200,
+            "observedLength": 65
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4335/search"
+          }
+        ],
+        "errors": []
+      },
+      "category": "accepted",
+      "accepted": true,
+      "validation_observation": "accepted-empty",
+      "original_sha": "sha256:3f8b64b1e37d9c67ccbe1d23085f44c993b17c9b3ca6eb01c51054033c8e44f1",
+      "uplifted_sha": "sha256:a413a302dc457d91764d5b4a404bc845071583dee57a3456dad49e0fe295ef69"
+    },
+    {
+      "project_id": "catalogue-svelte",
+      "original": {
+        "rules": {
+          "forms/required-field-feedback": "PASS",
+          "accessibility/accessible-error-announcement": "PASS",
+          "forms/validate-input-after-interaction": "PASS",
+          "security/sanitize-untrusted-html": "FAIL"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4336/search?q=bearing",
+            "echoed": "bearing",
+            "echoedText": "bearing",
+            "textLength": 181,
+            "persistedText": "bearing"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4336/",
+            "stillOnForm": true,
+            "urlUnchanged": true,
+            "serverRefused": false,
+            "invalidCount": 1,
+            "visibleErrors": 2,
+            "path": "/"
+          },
+          {
+            "name": "write-journey",
+            "status": 303,
+            "landedStatus": 200,
+            "posted": true,
+            "postedMethod": "POST",
+            "postedUrl": "/cart",
+            "persisted": true,
+            "submittedValue": "part-muziu18x-v8tb48",
+            "readStatus": 200,
+            "observedLength": 65
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4336/search"
+          }
+        ],
+        "errors": []
+      },
+      "uplifted": {
+        "rules": {
+          "forms/required-field-feedback": "PASS",
+          "accessibility/accessible-error-announcement": "PASS",
+          "forms/validate-input-after-interaction": "PASS",
+          "security/sanitize-untrusted-html": "PASS"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4337/search?q=bearing",
+            "echoed": "bearing",
+            "echoedText": "bearing",
+            "textLength": 181,
+            "persistedText": "bearing"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4337/",
+            "stillOnForm": true,
+            "urlUnchanged": true,
+            "serverRefused": false,
+            "invalidCount": 1,
+            "visibleErrors": 2,
+            "path": "/"
+          },
+          {
+            "name": "write-journey",
+            "status": 303,
+            "landedStatus": 200,
+            "posted": true,
+            "postedMethod": "POST",
+            "postedUrl": "/cart",
+            "persisted": true,
+            "submittedValue": "part-muziu58o-dnb8cy",
+            "readStatus": 200,
+            "observedLength": 65
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4337/search"
+          }
+        ],
+        "errors": []
+      },
+      "category": "accepted",
+      "accepted": true,
+      "validation_observation": "refused-observed",
+      "original_sha": "sha256:8c71d0de347b16a71876379b99d0575ab86d13773751e8161c763c4c75c0a0d5",
+      "uplifted_sha": "sha256:1af66717cc8d08ff188890ff011e5b69cc539965538352ba0345fa9ab2276fa7"
+    },
+    {
+      "project_id": "catalogue-vue",
+      "original": {
+        "rules": {
+          "forms/required-field-feedback": "PASS",
+          "accessibility/accessible-error-announcement": "PASS",
+          "forms/validate-input-after-interaction": "PASS",
+          "security/sanitize-untrusted-html": "PASS"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4338/search?q=bearing",
+            "echoed": "bearing",
+            "echoedText": "bearing",
+            "textLength": 177,
+            "persistedText": "bearing"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4338/",
+            "stillOnForm": true,
+            "urlUnchanged": true,
+            "serverRefused": false,
+            "invalidCount": 1,
+            "visibleErrors": 2,
+            "path": "/"
+          },
+          {
+            "name": "write-journey",
+            "status": 303,
+            "landedStatus": 200,
+            "posted": true,
+            "postedMethod": "POST",
+            "postedUrl": "/cart",
+            "persisted": true,
+            "submittedValue": "part-muziu8z1-r5sid4",
+            "readStatus": 200,
+            "observedLength": 65
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4338/search"
+          }
+        ],
+        "errors": []
+      },
+      "uplifted": {
+        "rules": {
+          "forms/required-field-feedback": "PASS",
+          "accessibility/accessible-error-announcement": "PASS",
+          "forms/validate-input-after-interaction": "PASS",
+          "security/sanitize-untrusted-html": "PASS"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4339/search?q=bearing",
+            "echoed": "bearing",
+            "echoedText": "bearing",
+            "textLength": 177,
+            "persistedText": "bearing"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4339/",
+            "stillOnForm": true,
+            "urlUnchanged": true,
+            "serverRefused": false,
+            "invalidCount": 1,
+            "visibleErrors": 2,
+            "path": "/"
+          },
+          {
+            "name": "write-journey",
+            "status": 303,
+            "landedStatus": 200,
+            "posted": true,
+            "postedMethod": "POST",
+            "postedUrl": "/cart",
+            "persisted": true,
+            "submittedValue": "part-muziueck-m7fl02",
+            "readStatus": 200,
+            "observedLength": 65
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4339/search"
+          }
+        ],
+        "errors": []
+      },
+      "category": "no-warranted-change",
+      "accepted": false,
+      "validation_observation": "refused-observed",
+      "original_sha": "sha256:795ede886332aef3716d103dbf4fec63523e3ebbdc408583ce0d2931b73c28a3",
+      "uplifted_sha": "sha256:795ede886332aef3716d103dbf4fec63523e3ebbdc408583ce0d2931b73c28a3"
+    },
+    {
+      "project_id": "catalogue-webcomponents",
+      "original": {
+        "rules": {
+          "forms/required-field-feedback": "PASS",
+          "accessibility/accessible-error-announcement": "PASS",
+          "forms/validate-input-after-interaction": "PASS",
+          "security/sanitize-untrusted-html": "FAIL"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4340/search?q=bearing",
+            "echoed": "bearing",
+            "echoedText": "bearing",
+            "textLength": 181,
+            "persistedText": "bearing"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4340/",
+            "stillOnForm": true,
+            "urlUnchanged": true,
+            "serverRefused": false,
+            "invalidCount": 1,
+            "visibleErrors": 2,
+            "path": "/"
+          },
+          {
+            "name": "write-journey",
+            "status": 303,
+            "landedStatus": 200,
+            "posted": true,
+            "postedMethod": "POST",
+            "postedUrl": "/cart",
+            "persisted": true,
+            "submittedValue": "part-muziuir2-vty5tc",
+            "readStatus": 200,
+            "observedLength": 65
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4340/search"
+          }
+        ],
+        "errors": []
+      },
+      "uplifted": {
+        "rules": {
+          "forms/required-field-feedback": "PASS",
+          "accessibility/accessible-error-announcement": "PASS",
+          "forms/validate-input-after-interaction": "PASS",
+          "security/sanitize-untrusted-html": "PASS"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4341/search?q=bearing",
+            "echoed": "bearing",
+            "echoedText": "bearing",
+            "textLength": 181,
+            "persistedText": "bearing"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4341/",
+            "stillOnForm": true,
+            "urlUnchanged": true,
+            "serverRefused": false,
+            "invalidCount": 1,
+            "visibleErrors": 2,
+            "path": "/"
+          },
+          {
+            "name": "write-journey",
+            "status": 303,
+            "landedStatus": 200,
+            "posted": true,
+            "postedMethod": "POST",
+            "postedUrl": "/cart",
+            "persisted": true,
+            "submittedValue": "part-muziumuc-bd0031",
+            "readStatus": 200,
+            "observedLength": 65
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4341/search"
+          }
+        ],
+        "errors": []
+      },
+      "category": "accepted",
+      "accepted": true,
+      "validation_observation": "refused-observed",
+      "original_sha": "sha256:06f330663f3d23fd2e6b3846b8ba05901219d8460b22d63be7b7494b3cd6a13a",
+      "uplifted_sha": "sha256:f0a50eb4a595c1e33e93f5d50c6e4c5fd1898de171f1459d8c9be37200d82689"
+    },
+    {
+      "project_id": "contact-lead-hono",
+      "original": {
+        "rules": {
+          "forms/required-field-feedback": "FAIL",
+          "accessibility/accessible-error-announcement": "FAIL",
+          "forms/validate-input-after-interaction": "FAIL",
+          "security/sanitize-untrusted-html": "FAIL"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4342/enquiry/d0fb60c7",
             "echoed": "Please repair the street light",
             "echoedText": "Please repair the street light",
             "textLength": 207,
@@ -1505,7 +2028,44 @@
           },
           {
             "name": "validation-failure",
-            "url": "http://127.0.0.1:4331/",
+            "url": "http://127.0.0.1:4342/enquiry",
+            "stillOnForm": false,
+            "urlUnchanged": false,
+            "serverRefused": true,
+            "invalidCount": 0,
+            "visibleErrors": 1,
+            "path": "/enquiry"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4342/enquiry/d0fb60c7"
+          }
+        ],
+        "errors": []
+      },
+      "uplifted": {
+        "rules": {
+          "forms/required-field-feedback": "PASS",
+          "accessibility/accessible-error-announcement": "PASS",
+          "forms/validate-input-after-interaction": "PASS",
+          "security/sanitize-untrusted-html": "PASS"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4343/enquiry/89fca86c",
+            "echoed": "Please repair the street light",
+            "echoedText": "Please repair the street light",
+            "textLength": 207,
+            "persistedText": "Please repair the street light"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4343/",
             "stillOnForm": true,
             "urlUnchanged": true,
             "serverRefused": false,
@@ -1515,7 +2075,7 @@
           },
           {
             "name": "content",
-            "url": "http://127.0.0.1:4331/enquiry/3fdfd227"
+            "url": "http://127.0.0.1:4343/enquiry/89fca86c"
           }
         ],
         "errors": []
@@ -1542,7 +2102,7 @@
         "journeys": [
           {
             "name": "server-persistence",
-            "afterSubmit": "http://127.0.0.1:4332/enquiry/a1c3f390",
+            "afterSubmit": "http://127.0.0.1:4344/enquiry/ac234da8",
             "echoed": "Please repair the street light",
             "echoedText": "Please repair the street light",
             "textLength": 207,
@@ -1550,7 +2110,7 @@
           },
           {
             "name": "validation-failure",
-            "url": "http://127.0.0.1:4332/enquiry",
+            "url": "http://127.0.0.1:4344/enquiry",
             "stillOnForm": false,
             "urlUnchanged": false,
             "serverRefused": true,
@@ -1560,7 +2120,7 @@
           },
           {
             "name": "content",
-            "url": "http://127.0.0.1:4332/enquiry/a1c3f390"
+            "url": "http://127.0.0.1:4344/enquiry/ac234da8"
           }
         ],
         "errors": []
@@ -1579,7 +2139,7 @@
         "journeys": [
           {
             "name": "server-persistence",
-            "afterSubmit": "http://127.0.0.1:4333/enquiry/c1ec1692",
+            "afterSubmit": "http://127.0.0.1:4345/enquiry/112a4765",
             "echoed": "Please repair the street light",
             "echoedText": "Please repair the street light",
             "textLength": 207,
@@ -1587,7 +2147,7 @@
           },
           {
             "name": "validation-failure",
-            "url": "http://127.0.0.1:4333/",
+            "url": "http://127.0.0.1:4345/",
             "stillOnForm": true,
             "urlUnchanged": true,
             "serverRefused": false,
@@ -1597,7 +2157,7 @@
           },
           {
             "name": "content",
-            "url": "http://127.0.0.1:4333/enquiry/c1ec1692"
+            "url": "http://127.0.0.1:4345/enquiry/112a4765"
           }
         ],
         "errors": []
@@ -1624,7 +2184,7 @@
         "journeys": [
           {
             "name": "server-persistence",
-            "afterSubmit": "http://127.0.0.1:4334/enquiry/295751fb",
+            "afterSubmit": "http://127.0.0.1:4346/enquiry/ae52116a",
             "echoed": "Please repair the street light",
             "echoedText": "Please repair the street light",
             "textLength": 207,
@@ -1632,7 +2192,7 @@
           },
           {
             "name": "validation-failure",
-            "url": "http://127.0.0.1:4334/enquiry",
+            "url": "http://127.0.0.1:4346/enquiry",
             "stillOnForm": false,
             "urlUnchanged": false,
             "serverRefused": true,
@@ -1642,7 +2202,7 @@
           },
           {
             "name": "content",
-            "url": "http://127.0.0.1:4334/enquiry/295751fb"
+            "url": "http://127.0.0.1:4346/enquiry/ae52116a"
           }
         ],
         "errors": []
@@ -1661,7 +2221,7 @@
         "journeys": [
           {
             "name": "server-persistence",
-            "afterSubmit": "http://127.0.0.1:4335/enquiry/e992a61c",
+            "afterSubmit": "http://127.0.0.1:4347/enquiry/e488ad23",
             "echoed": "Please repair the street light",
             "echoedText": "Please repair the street light",
             "textLength": 207,
@@ -1669,7 +2229,7 @@
           },
           {
             "name": "validation-failure",
-            "url": "http://127.0.0.1:4335/",
+            "url": "http://127.0.0.1:4347/",
             "stillOnForm": true,
             "urlUnchanged": true,
             "serverRefused": false,
@@ -1679,7 +2239,7 @@
           },
           {
             "name": "content",
-            "url": "http://127.0.0.1:4335/enquiry/e992a61c"
+            "url": "http://127.0.0.1:4347/enquiry/e488ad23"
           }
         ],
         "errors": []
@@ -1706,7 +2266,7 @@
         "journeys": [
           {
             "name": "server-persistence",
-            "afterSubmit": "http://127.0.0.1:4336/enquiry/b1c27aa6",
+            "afterSubmit": "http://127.0.0.1:4348/enquiry/cd965fc9",
             "echoed": "Please repair the street light",
             "echoedText": "Please repair the street light",
             "textLength": 300,
@@ -1714,7 +2274,7 @@
           },
           {
             "name": "validation-failure",
-            "url": "http://127.0.0.1:4336/",
+            "url": "http://127.0.0.1:4348/",
             "stillOnForm": true,
             "urlUnchanged": true,
             "serverRefused": false,
@@ -1724,7 +2284,7 @@
           },
           {
             "name": "content",
-            "url": "http://127.0.0.1:4336/enquiry/b1c27aa6"
+            "url": "http://127.0.0.1:4348/enquiry/cd965fc9"
           }
         ],
         "errors": []
@@ -1743,7 +2303,7 @@
         "journeys": [
           {
             "name": "server-persistence",
-            "afterSubmit": "http://127.0.0.1:4337/enquiry/a5a804d5",
+            "afterSubmit": "http://127.0.0.1:4349/enquiry/0a2d7420",
             "echoed": "Please repair the street light",
             "echoedText": "Please repair the street light",
             "textLength": 207,
@@ -1751,7 +2311,7 @@
           },
           {
             "name": "validation-failure",
-            "url": "http://127.0.0.1:4337/",
+            "url": "http://127.0.0.1:4349/",
             "stillOnForm": true,
             "urlUnchanged": true,
             "serverRefused": false,
@@ -1761,7 +2321,7 @@
           },
           {
             "name": "content",
-            "url": "http://127.0.0.1:4337/enquiry/a5a804d5"
+            "url": "http://127.0.0.1:4349/enquiry/0a2d7420"
           }
         ],
         "errors": []
@@ -1771,6 +2331,88 @@
       "validation_observation": "refused-observed",
       "original_sha": "sha256:944e4f8c965c13dbfbd1b0b3358e4214fff44cc081a6c5cb4d045ee3d732ff80",
       "uplifted_sha": "sha256:18c83249f4ae389bc3e1fe8a86ccbe266d6e8044ba90586256e21a7d8f5669e9"
+    },
+    {
+      "project_id": "contact-lead-svelte",
+      "original": {
+        "rules": {
+          "forms/required-field-feedback": "FAIL",
+          "accessibility/accessible-error-announcement": "FAIL",
+          "forms/validate-input-after-interaction": "FAIL",
+          "security/sanitize-untrusted-html": "FAIL"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4350/enquiry/f793027f",
+            "echoed": "Please repair the street light",
+            "echoedText": "Please repair the street light",
+            "textLength": 207,
+            "persistedText": "Please repair the street light"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4350/enquiry",
+            "stillOnForm": false,
+            "urlUnchanged": false,
+            "serverRefused": true,
+            "invalidCount": 0,
+            "visibleErrors": 1,
+            "path": "/enquiry"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4350/enquiry/f793027f"
+          }
+        ],
+        "errors": []
+      },
+      "uplifted": {
+        "rules": {
+          "forms/required-field-feedback": "PASS",
+          "accessibility/accessible-error-announcement": "PASS",
+          "forms/validate-input-after-interaction": "PASS",
+          "security/sanitize-untrusted-html": "PASS"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4351/enquiry/7aa28805",
+            "echoed": "Please repair the street light",
+            "echoedText": "Please repair the street light",
+            "textLength": 207,
+            "persistedText": "Please repair the street light"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4351/",
+            "stillOnForm": true,
+            "urlUnchanged": true,
+            "serverRefused": false,
+            "invalidCount": 2,
+            "visibleErrors": 3,
+            "path": "/"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4351/enquiry/7aa28805"
+          }
+        ],
+        "errors": []
+      },
+      "category": "accepted",
+      "accepted": true,
+      "validation_observation": "refused-observed",
+      "original_sha": "sha256:e69aec29fad6eb78c6a617f029e82c39ac2546c17070fb8ed1241af15f41eeb7",
+      "uplifted_sha": "sha256:8d28fe684f21f17b6e53b061d94d98bb12db63881cf1e09ada22e1501e17b134"
     },
     {
       "project_id": "contact-lead-vue",
@@ -1788,7 +2430,7 @@
         "journeys": [
           {
             "name": "server-persistence",
-            "afterSubmit": "http://127.0.0.1:4338/enquiry/e60ea428",
+            "afterSubmit": "http://127.0.0.1:4352/enquiry/ef5692bc",
             "echoed": "Please repair the street light",
             "echoedText": "Please repair the street light",
             "textLength": 300,
@@ -1796,7 +2438,7 @@
           },
           {
             "name": "validation-failure",
-            "url": "http://127.0.0.1:4338/",
+            "url": "http://127.0.0.1:4352/",
             "stillOnForm": true,
             "urlUnchanged": true,
             "serverRefused": false,
@@ -1806,7 +2448,7 @@
           },
           {
             "name": "content",
-            "url": "http://127.0.0.1:4338/enquiry/e60ea428"
+            "url": "http://127.0.0.1:4352/enquiry/ef5692bc"
           }
         ],
         "errors": []
@@ -1825,7 +2467,7 @@
         "journeys": [
           {
             "name": "server-persistence",
-            "afterSubmit": "http://127.0.0.1:4339/enquiry/9bdd7132",
+            "afterSubmit": "http://127.0.0.1:4353/enquiry/2c74f1bb",
             "echoed": "Please repair the street light",
             "echoedText": "Please repair the street light",
             "textLength": 207,
@@ -1833,7 +2475,7 @@
           },
           {
             "name": "validation-failure",
-            "url": "http://127.0.0.1:4339/",
+            "url": "http://127.0.0.1:4353/",
             "stillOnForm": true,
             "urlUnchanged": true,
             "serverRefused": false,
@@ -1843,7 +2485,7 @@
           },
           {
             "name": "content",
-            "url": "http://127.0.0.1:4339/enquiry/9bdd7132"
+            "url": "http://127.0.0.1:4353/enquiry/2c74f1bb"
           }
         ],
         "errors": []
@@ -1853,6 +2495,88 @@
       "validation_observation": "refused-observed",
       "original_sha": "sha256:4776ae4ac634dbf348b53e3af7d2b3bed69e257f014ebbcd661337b28ba6f802",
       "uplifted_sha": "sha256:01d8ace9e51dfc69357d4332f709e00747031c288ac5844be3aaa70651bd6c16"
+    },
+    {
+      "project_id": "contact-lead-webcomponents",
+      "original": {
+        "rules": {
+          "forms/required-field-feedback": "FAIL",
+          "accessibility/accessible-error-announcement": "FAIL",
+          "forms/validate-input-after-interaction": "FAIL",
+          "security/sanitize-untrusted-html": "FAIL"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4354/enquiry/dd1b2f1a",
+            "echoed": "Please repair the street light",
+            "echoedText": "Please repair the street light",
+            "textLength": 207,
+            "persistedText": "Please repair the street light"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4354/enquiry",
+            "stillOnForm": false,
+            "urlUnchanged": false,
+            "serverRefused": true,
+            "invalidCount": 0,
+            "visibleErrors": 1,
+            "path": "/enquiry"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4354/enquiry/dd1b2f1a"
+          }
+        ],
+        "errors": []
+      },
+      "uplifted": {
+        "rules": {
+          "forms/required-field-feedback": "PASS",
+          "accessibility/accessible-error-announcement": "PASS",
+          "forms/validate-input-after-interaction": "PASS",
+          "security/sanitize-untrusted-html": "PASS"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4355/enquiry/b5a987c0",
+            "echoed": "Please repair the street light",
+            "echoedText": "Please repair the street light",
+            "textLength": 207,
+            "persistedText": "Please repair the street light"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4355/",
+            "stillOnForm": true,
+            "urlUnchanged": true,
+            "serverRefused": false,
+            "invalidCount": 2,
+            "visibleErrors": 3,
+            "path": "/"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4355/enquiry/b5a987c0"
+          }
+        ],
+        "errors": []
+      },
+      "category": "accepted",
+      "accepted": true,
+      "validation_observation": "refused-observed",
+      "original_sha": "sha256:4b816efc25a74033509cb734be0aa05547d2fe22c14ec2bf89fa7386c62a549c",
+      "uplifted_sha": "sha256:e269b2d160705ee7af1e78b01f59f764a3e1d865627a7c19dbe7e930d9cebfcc"
     },
     {
       "project_id": "event-registration-hono",
@@ -1870,7 +2594,7 @@
         "journeys": [
           {
             "name": "server-persistence",
-            "afterSubmit": "http://127.0.0.1:4340/registration/d0bbb74d",
+            "afterSubmit": "http://127.0.0.1:4356/registration/61483c64",
             "echoed": "Katherine Johnson",
             "echoedText": "Katherine Johnson",
             "textLength": 293,
@@ -1878,7 +2602,7 @@
           },
           {
             "name": "validation-failure",
-            "url": "http://127.0.0.1:4340/",
+            "url": "http://127.0.0.1:4356/",
             "stillOnForm": true,
             "urlUnchanged": true,
             "serverRefused": false,
@@ -1888,7 +2612,7 @@
           },
           {
             "name": "content",
-            "url": "http://127.0.0.1:4340/registration/d0bbb74d"
+            "url": "http://127.0.0.1:4356/registration/61483c64"
           }
         ],
         "errors": []
@@ -1907,7 +2631,7 @@
         "journeys": [
           {
             "name": "server-persistence",
-            "afterSubmit": "http://127.0.0.1:4341/registration/2cce61a8",
+            "afterSubmit": "http://127.0.0.1:4357/registration/c77a0467",
             "echoed": "Katherine Johnson",
             "echoedText": "Katherine Johnson",
             "textLength": 206,
@@ -1915,7 +2639,7 @@
           },
           {
             "name": "validation-failure",
-            "url": "http://127.0.0.1:4341/",
+            "url": "http://127.0.0.1:4357/",
             "stillOnForm": true,
             "urlUnchanged": true,
             "serverRefused": false,
@@ -1925,7 +2649,7 @@
           },
           {
             "name": "content",
-            "url": "http://127.0.0.1:4341/registration/2cce61a8"
+            "url": "http://127.0.0.1:4357/registration/c77a0467"
           }
         ],
         "errors": []
@@ -1952,7 +2676,7 @@
         "journeys": [
           {
             "name": "server-persistence",
-            "afterSubmit": "http://127.0.0.1:4342/registration/1ecb9c9c",
+            "afterSubmit": "http://127.0.0.1:4358/registration/6fb90c8b",
             "echoed": "Katherine Johnson",
             "echoedText": "Katherine Johnson",
             "textLength": 206,
@@ -1960,7 +2684,7 @@
           },
           {
             "name": "validation-failure",
-            "url": "http://127.0.0.1:4342/register",
+            "url": "http://127.0.0.1:4358/register",
             "stillOnForm": false,
             "urlUnchanged": false,
             "serverRefused": true,
@@ -1970,7 +2694,7 @@
           },
           {
             "name": "content",
-            "url": "http://127.0.0.1:4342/registration/1ecb9c9c"
+            "url": "http://127.0.0.1:4358/registration/6fb90c8b"
           }
         ],
         "errors": []
@@ -1989,7 +2713,7 @@
         "journeys": [
           {
             "name": "server-persistence",
-            "afterSubmit": "http://127.0.0.1:4343/registration/e8f4a39d",
+            "afterSubmit": "http://127.0.0.1:4359/registration/37262f63",
             "echoed": "Katherine Johnson",
             "echoedText": "Katherine Johnson",
             "textLength": 206,
@@ -1997,7 +2721,7 @@
           },
           {
             "name": "validation-failure",
-            "url": "http://127.0.0.1:4343/",
+            "url": "http://127.0.0.1:4359/",
             "stillOnForm": true,
             "urlUnchanged": true,
             "serverRefused": false,
@@ -2007,7 +2731,7 @@
           },
           {
             "name": "content",
-            "url": "http://127.0.0.1:4343/registration/e8f4a39d"
+            "url": "http://127.0.0.1:4359/registration/37262f63"
           }
         ],
         "errors": []
@@ -2034,7 +2758,7 @@
         "journeys": [
           {
             "name": "server-persistence",
-            "afterSubmit": "http://127.0.0.1:4344/registration/a15497da",
+            "afterSubmit": "http://127.0.0.1:4360/registration/2a730423",
             "echoed": "Katherine Johnson",
             "echoedText": "Katherine Johnson",
             "textLength": 206,
@@ -2042,7 +2766,7 @@
           },
           {
             "name": "validation-failure",
-            "url": "http://127.0.0.1:4344/register",
+            "url": "http://127.0.0.1:4360/register",
             "stillOnForm": false,
             "urlUnchanged": false,
             "serverRefused": true,
@@ -2052,7 +2776,7 @@
           },
           {
             "name": "content",
-            "url": "http://127.0.0.1:4344/registration/a15497da"
+            "url": "http://127.0.0.1:4360/registration/2a730423"
           }
         ],
         "errors": []
@@ -2071,7 +2795,7 @@
         "journeys": [
           {
             "name": "server-persistence",
-            "afterSubmit": "http://127.0.0.1:4345/registration/cad03ae0",
+            "afterSubmit": "http://127.0.0.1:4361/registration/960ba797",
             "echoed": "Katherine Johnson",
             "echoedText": "Katherine Johnson",
             "textLength": 206,
@@ -2079,7 +2803,7 @@
           },
           {
             "name": "validation-failure",
-            "url": "http://127.0.0.1:4345/",
+            "url": "http://127.0.0.1:4361/",
             "stillOnForm": true,
             "urlUnchanged": true,
             "serverRefused": false,
@@ -2089,7 +2813,7 @@
           },
           {
             "name": "content",
-            "url": "http://127.0.0.1:4345/registration/cad03ae0"
+            "url": "http://127.0.0.1:4361/registration/960ba797"
           }
         ],
         "errors": []
@@ -2116,7 +2840,7 @@
         "journeys": [
           {
             "name": "server-persistence",
-            "afterSubmit": "http://127.0.0.1:4346/registration/76e4a43a",
+            "afterSubmit": "http://127.0.0.1:4362/registration/23049865",
             "echoed": "Katherine Johnson",
             "echoedText": "Katherine Johnson",
             "textLength": 206,
@@ -2124,7 +2848,7 @@
           },
           {
             "name": "validation-failure",
-            "url": "http://127.0.0.1:4346/",
+            "url": "http://127.0.0.1:4362/",
             "stillOnForm": true,
             "urlUnchanged": true,
             "serverRefused": false,
@@ -2134,7 +2858,7 @@
           },
           {
             "name": "content",
-            "url": "http://127.0.0.1:4346/registration/76e4a43a"
+            "url": "http://127.0.0.1:4362/registration/23049865"
           }
         ],
         "errors": []
@@ -2153,7 +2877,7 @@
         "journeys": [
           {
             "name": "server-persistence",
-            "afterSubmit": "http://127.0.0.1:4347/registration/52ccb3a9",
+            "afterSubmit": "http://127.0.0.1:4363/registration/502d4570",
             "echoed": "Katherine Johnson",
             "echoedText": "Katherine Johnson",
             "textLength": 206,
@@ -2161,7 +2885,7 @@
           },
           {
             "name": "validation-failure",
-            "url": "http://127.0.0.1:4347/",
+            "url": "http://127.0.0.1:4363/",
             "stillOnForm": true,
             "urlUnchanged": true,
             "serverRefused": false,
@@ -2171,7 +2895,7 @@
           },
           {
             "name": "content",
-            "url": "http://127.0.0.1:4347/registration/52ccb3a9"
+            "url": "http://127.0.0.1:4363/registration/502d4570"
           }
         ],
         "errors": []
@@ -2181,6 +2905,88 @@
       "validation_observation": "refused-observed",
       "original_sha": "sha256:af464a7b2da891564b1fec16a4bb7625fd07b68b218fcc87c5997625d24454df",
       "uplifted_sha": "sha256:d533434a7c0a8f4806ea0b1d532ec65f7d6c8cbbd971d65b950fb0680952363c"
+    },
+    {
+      "project_id": "event-registration-svelte",
+      "original": {
+        "rules": {
+          "forms/required-field-feedback": "FAIL",
+          "accessibility/accessible-error-announcement": "FAIL",
+          "forms/validate-input-after-interaction": "FAIL",
+          "security/sanitize-untrusted-html": "FAIL"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4364/registration/606ae411",
+            "echoed": "Katherine Johnson",
+            "echoedText": "Katherine Johnson",
+            "textLength": 206,
+            "persistedText": "Katherine Johnson"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4364/register",
+            "stillOnForm": false,
+            "urlUnchanged": false,
+            "serverRefused": true,
+            "invalidCount": 0,
+            "visibleErrors": 1,
+            "path": "/register"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4364/registration/606ae411"
+          }
+        ],
+        "errors": []
+      },
+      "uplifted": {
+        "rules": {
+          "forms/required-field-feedback": "PASS",
+          "accessibility/accessible-error-announcement": "PASS",
+          "forms/validate-input-after-interaction": "PASS",
+          "security/sanitize-untrusted-html": "PASS"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4365/registration/dad601d5",
+            "echoed": "Katherine Johnson",
+            "echoedText": "Katherine Johnson",
+            "textLength": 206,
+            "persistedText": "Katherine Johnson"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4365/",
+            "stillOnForm": true,
+            "urlUnchanged": true,
+            "serverRefused": false,
+            "invalidCount": 2,
+            "visibleErrors": 3,
+            "path": "/"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4365/registration/dad601d5"
+          }
+        ],
+        "errors": []
+      },
+      "category": "accepted",
+      "accepted": true,
+      "validation_observation": "refused-observed",
+      "original_sha": "sha256:c6d03ed0a29b6cb79ab71863a098b4c1423a3f56e8500d56e50e905a155c6eb8",
+      "uplifted_sha": "sha256:9e5fa17499094c23c6f68d6ec29b76d98594aa7f06085571fea7aec1bcab9098"
     },
     {
       "project_id": "event-registration-vue",
@@ -2198,7 +3004,7 @@
         "journeys": [
           {
             "name": "server-persistence",
-            "afterSubmit": "http://127.0.0.1:4348/registration/853b308f",
+            "afterSubmit": "http://127.0.0.1:4366/registration/98f34441",
             "echoed": "Katherine Johnson",
             "echoedText": "Katherine Johnson",
             "textLength": 206,
@@ -2206,7 +3012,7 @@
           },
           {
             "name": "validation-failure",
-            "url": "http://127.0.0.1:4348/register",
+            "url": "http://127.0.0.1:4366/register",
             "stillOnForm": false,
             "urlUnchanged": false,
             "serverRefused": true,
@@ -2216,7 +3022,7 @@
           },
           {
             "name": "content",
-            "url": "http://127.0.0.1:4348/registration/853b308f"
+            "url": "http://127.0.0.1:4366/registration/98f34441"
           }
         ],
         "errors": []
@@ -2235,7 +3041,7 @@
         "journeys": [
           {
             "name": "server-persistence",
-            "afterSubmit": "http://127.0.0.1:4349/registration/1e341f51",
+            "afterSubmit": "http://127.0.0.1:4367/registration/78ebb811",
             "echoed": "Katherine Johnson",
             "echoedText": "Katherine Johnson",
             "textLength": 206,
@@ -2243,7 +3049,7 @@
           },
           {
             "name": "validation-failure",
-            "url": "http://127.0.0.1:4349/",
+            "url": "http://127.0.0.1:4367/",
             "stillOnForm": true,
             "urlUnchanged": true,
             "serverRefused": false,
@@ -2253,7 +3059,7 @@
           },
           {
             "name": "content",
-            "url": "http://127.0.0.1:4349/registration/1e341f51"
+            "url": "http://127.0.0.1:4367/registration/78ebb811"
           }
         ],
         "errors": []
@@ -2263,6 +3069,88 @@
       "validation_observation": "refused-observed",
       "original_sha": "sha256:d584d1df5d5e2d7f15ff338a023acd169c5d03bb6e76a824cf05c3f4e4997ffc",
       "uplifted_sha": "sha256:29141c1effa08c27fbf88a08e69dc0a5be3702b4bbad67b82d2e8463280e3fc2"
+    },
+    {
+      "project_id": "event-registration-webcomponents",
+      "original": {
+        "rules": {
+          "forms/required-field-feedback": "FAIL",
+          "accessibility/accessible-error-announcement": "FAIL",
+          "forms/validate-input-after-interaction": "FAIL",
+          "security/sanitize-untrusted-html": "FAIL"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4368/registration/dd89d029",
+            "echoed": "Katherine Johnson",
+            "echoedText": "Katherine Johnson",
+            "textLength": 206,
+            "persistedText": "Katherine Johnson"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4368/register",
+            "stillOnForm": false,
+            "urlUnchanged": false,
+            "serverRefused": true,
+            "invalidCount": 0,
+            "visibleErrors": 1,
+            "path": "/register"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4368/registration/dd89d029"
+          }
+        ],
+        "errors": []
+      },
+      "uplifted": {
+        "rules": {
+          "forms/required-field-feedback": "PASS",
+          "accessibility/accessible-error-announcement": "PASS",
+          "forms/validate-input-after-interaction": "PASS",
+          "security/sanitize-untrusted-html": "PASS"
+        },
+        "security": {
+          "session-cookie-attributes": "FAIL",
+          "form-token-exposure": "PASS"
+        },
+        "journeys": [
+          {
+            "name": "server-persistence",
+            "afterSubmit": "http://127.0.0.1:4369/registration/fa49c4fb",
+            "echoed": "Katherine Johnson",
+            "echoedText": "Katherine Johnson",
+            "textLength": 206,
+            "persistedText": "Katherine Johnson"
+          },
+          {
+            "name": "validation-failure",
+            "url": "http://127.0.0.1:4369/",
+            "stillOnForm": true,
+            "urlUnchanged": true,
+            "serverRefused": false,
+            "invalidCount": 2,
+            "visibleErrors": 3,
+            "path": "/"
+          },
+          {
+            "name": "content",
+            "url": "http://127.0.0.1:4369/registration/fa49c4fb"
+          }
+        ],
+        "errors": []
+      },
+      "category": "accepted",
+      "accepted": true,
+      "validation_observation": "refused-observed",
+      "original_sha": "sha256:54db02b8339fec4142295f079f59050983901a07326768756173a28878a0b7f1",
+      "uplifted_sha": "sha256:68a4205169b4da3c9a010bc76f49e6421020dae16932f5843c1c226434b21767"
     }
   ]
 }

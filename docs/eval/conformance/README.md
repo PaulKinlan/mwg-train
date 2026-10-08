@@ -110,8 +110,8 @@ measured — rather than by having no build step at all.
 The reading is the point of the axis. **Geometry 0.98-0.99** and **controls 1.000**: the frameworks
 build the same set of controls in the same places, so framework choice is not moving the layout or the
 form. The only real divergence is **structural** (0.83-0.90) - each framework's own wrapper and template
-scaffolding. With the R3 arms in place that is visible rather than argued away: the weakest pair in four
-of the five families is `webcomponents`, and it is weakest precisely because its custom element *is* one
+scaffolding. With the R3 arms in place that is visible rather than argued away: the weakest pair in
+all five families is `webcomponents`, and it is weakest precisely because its custom element *is* one
 extra element in the tree, while `svelte` scores structurally identical to `raw` (0.535 against the
 booking target, the same as raw) because its SSR emits the same markup. That is the distinction R2
 needed, and R3 tests it: a variant may differ in markup, and the budget says how much of that difference

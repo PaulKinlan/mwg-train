@@ -752,8 +752,8 @@ test('the committed records support every claim the report makes', () => {
   // test is what keeps the report's claims tied to it.
   const records = JSON.parse(readFileSync(join(repoRoot, 'docs', 'pilot', 'records.json'), 'utf8'));
   const report = JSON.parse(readFileSync(join(repoRoot, 'docs', 'pilot', 'yield.json'), 'utf8'));
-  assert.equal(records.projects.length, 25, 'every project is recorded');
-  assert.equal(report.decisions.length, 25, 'every project has a decision');
+  assert.equal(records.projects.length, ARCHETYPE_IDS.length * Object.keys(FRAMEWORKS).length, 'every project is recorded');
+  assert.equal(report.decisions.length, ARCHETYPE_IDS.length * Object.keys(FRAMEWORKS).length, 'every project has a decision');
 
   for (const project of records.projects) {
     const where = project.project_id;
@@ -815,10 +815,10 @@ test('the committed records support every claim the report makes', () => {
   }
 
   const observations = records.projects.map((project) => project.validation_observation);
-  assert.equal(observations.filter((value) => value === 'refused-observed').length, 23);
+  assert.equal(observations.filter((value) => value === 'refused-observed').length, 33);
   assert.equal(observations.filter((value) => value === 'accepted-empty').length, 2);
   assert.equal(observations.filter((value) => value === 'blocked-without-evidence').length, 0);
-  assert.match(readFileSync(join(repoRoot, 'docs', 'pilot', 'YIELD.md'), 'utf8'), /23 of 25 originals/);
+  assert.match(readFileSync(join(repoRoot, 'docs', 'pilot', 'YIELD.md'), 'utf8'), /33 of 35 originals/);
 
   // The README's table of which properties improved, and in how many pairs, against the decisions it
   // summarises. Those counts were typed by hand, and one of them was wrong for four reviews.

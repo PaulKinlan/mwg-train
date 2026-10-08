@@ -210,7 +210,7 @@ checkable rather than asserted.
 
 | Arm | Accepted | Attempted | Which properties improved, in how many pairs |
 | --- | --- | --- | --- |
-| `raw` | 5 | 5 | `accessibility/accessible-error-announcement` 19, `security/sanitize-untrusted-html` 16, `forms/required-field-feedback` 15, `forms/validate-input-after-interaction` 15, `forms/autofill-sign-up-form` 4, `forms/autofill-address-form` 5 (counts are across all arms, not the `raw` arm alone) |
+| `raw` | 5 | 5 | `accessibility/accessible-error-announcement` 27, `security/sanitize-untrusted-html` 24, `forms/required-field-feedback` 23, `forms/validate-input-after-interaction` 23, `forms/autofill-address-form` 7, `forms/autofill-sign-up-form` 6 (counts are across all arms, not the `raw` arm alone) |
 | `react` | 5 | 5 | |
 | `preact` | 5 | 5 | |
 | `hono` | 5 | 5 | |
