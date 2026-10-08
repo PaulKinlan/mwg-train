@@ -1,5 +1,15 @@
 # Training Corpus Token Size and Derivation
 
+## What these projects are (and are not)
+
+The `tr-*` corpus is **archetype-template projects with independent targets and verified harness journeys** — not brief-faithful implementations. Concretely:
+
+- **Fields and journey come from the archetype, not the brief.** Each project is scaffolded from its family's **archetype** template (looked up in `pilot/training-archetypes.mjs`); the form fields and the journey are that archetype's, not the brief's. Only the title, story, and routes are relabelled to the brief's topic.
+- **A project does not implement its brief's specific flow.** For example, the `tr-26` brief describes a coffee-subscription renewal, but its generated project is the archetype's generic `web-shop` form with `items`/`collection` fields, and its journey fills those archetype values rather than the brief's subscription fields.
+- **What was verified is the harness journey, not brief conformance.** 40 of the 210 projects were driven in a real browser through the pilot's harness and passed its journeys (see `YIELD.md`); that verifies the harness journeys, not conformance to the briefs.
+- The remaining 170 projects carry the status `scaffolded / unverified journey`; no project has been shown to build or serve beyond those sampled 40.
+- The token figures below are **derived from characters** (`characters / 4`), not tokenizer-measured.
+
 ## Overview
 This directory records empirical character measurements and derived training token sizing for the code corpora in this repository, produced by `scripts/train-corpus-tokens.mjs`:
 1. **The `tr-*` Training Corpus:** 210 project pairs across 30 synthetic families and 7 frameworks, recorded in `pilot/TRAINING_CORPUS.json`.
@@ -23,9 +33,9 @@ Recorded in `pilot/TRAINING_CORPUS.json`, spanning 30 synthetic families (`tr-01
 |---|---:|---:|---:|---:|---|---|
 | **`app_sources`** | **2,886,579** | **3,022,814** | **5,909,393** | **1,477,348** | **[1,108,011, 1,846,685]** | **PRIMARY headline figure** |
 | `project_manifest` | 26,190 | 26,190 | 52,380 | 13,095 | [9,821, 16,369] | `package.json` dependencies & scripts |
-| `harness_metadata` | 704,773 | 704,773 | 1,409,546 | 352,387 | [264,290, 440,483] | `spec.json` harness metadata (EXCLUDED) |
+| `harness_metadata` | 707,706 | 707,706 | 1,415,412 | 353,853 | [265,390, 442,316] | `spec.json` harness metadata (EXCLUDED) |
 | `prompt` | 0 | 0 | 0 | 0 | [0, 0] | Measured zero (documented gap; see below) |
-| *full_tree (all)* | *3,750,227* | *3,777,544* | *7,527,771* | *1,881,943* | *[1,411,457, 2,352,428]* | *Total on-disk tree for comparison* |
+| *full_tree (all)* | *3,620,475* | *3,756,710* | *7,377,185* | *1,844,296* | *[1,383,222, 2,305,370]* | *Total on-disk tree for comparison* |
 
 - **Headline Characters (`app_sources`):** **5,909,393 characters** (2,886,579 original + 3,022,814 uplifted)
 - **Headline Derived Tokens:** **1,477,348 tokens**
@@ -75,7 +85,7 @@ Token counts are derived using the repository's single canonical derivation func
 > As explicitly stated in `src/eval/cost.mjs`:
 > *"ESTIMATE from characters/4. Replace with an exact count from the training tokenizer before quoting a per-token price."*
 >
-> The spend boundary and preregistration discipline require that any price sheet presented to the owner state its derivation and uncertainty band plainly. An estimate cannot be cited as a measured fact. While these character-derived figures reliably anchor the order of magnitude (~1.52M tokens for `tr-*`, ~237k tokens for pilot), they must be replaced by a token count from the training tokenizer for the pinned base model (e.g. Qwen BPE tokenizer for `Qwen/Qwen2.5-Coder-7B-Instruct` or `Qwen/Qwen3.8-27B`) before treating any per-token price as a committed quote.
+> The spend boundary and preregistration discipline require that any price sheet presented to the owner state its derivation and uncertainty band plainly. An estimate cannot be cited as a measured fact. While these character-derived figures reliably anchor the order of magnitude (~1.48M tokens for `tr-*`, ~237k tokens for pilot), they must be replaced by a token count from the training tokenizer for the pinned base model (e.g. Qwen BPE tokenizer for `Qwen/Qwen2.5-Coder-7B-Instruct` or `Qwen/Qwen3.8-27B`) before treating any per-token price as a committed quote.
 
 ---
 

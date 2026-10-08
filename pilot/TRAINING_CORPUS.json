@@ -1,6 +1,6 @@
 {
   "$comment": "The training corpus generated from the tr-* briefs: one project per family x framework, each with its tree hash. `node scripts/scaffold-training-corpus.mjs` re-derives every tree; a hash here must never collide with a hash in pilot/CORPUS.json (original or uplift), which is the disjointness the corpus exists to guarantee.",
-  "generated_at": "2026-10-08T15:38:59.685Z",
+  "generated_at": "2026-10-08T16:17:31.702Z",
   "generator": "scripts/scaffold-training-corpus.mjs",
   "summary": {
     "families": 30,
@@ -4725,15 +4725,8 @@
         "no-aria-sync"
       ],
       "seeded_defects": [
-        "the subscription preferences are only stored in component state and disappear when the page is reloaded",
         "error notifications only change text color to red without accessible aria-live or role alerts for screen readers",
         "pressing Enter inside any text input triggers form submission before required grind selections are made"
-      ],
-      "unrepresentable": [
-        {
-          "defect": "the subscription preferences are only stored in component state and disappear when the page is reloaded",
-          "reason": "the brief's primary \"client-only-state\" defect is not injected: it deletes the server INSERT, which the uplift tool does not rewrite (unfixable) and which makes the original non-runnable"
-        }
       ],
       "route_conformed": true,
       "brief_write_route": "/subscriptions/:id/edit",
@@ -4762,15 +4755,8 @@
         "no-aria-sync"
       ],
       "seeded_defects": [
-        "the subscription preferences are only stored in component state and disappear when the page is reloaded",
         "error notifications only change text color to red without accessible aria-live or role alerts for screen readers",
         "pressing Enter inside any text input triggers form submission before required grind selections are made"
-      ],
-      "unrepresentable": [
-        {
-          "defect": "the subscription preferences are only stored in component state and disappear when the page is reloaded",
-          "reason": "the brief's primary \"client-only-state\" defect is not injected: it deletes the server INSERT, which the uplift tool does not rewrite (unfixable) and which makes the original non-runnable"
-        }
       ],
       "route_conformed": true,
       "brief_write_route": "/subscriptions/:id/edit",
@@ -4799,15 +4785,8 @@
         "no-aria-sync"
       ],
       "seeded_defects": [
-        "the subscription preferences are only stored in component state and disappear when the page is reloaded",
         "error notifications only change text color to red without accessible aria-live or role alerts for screen readers",
         "pressing Enter inside any text input triggers form submission before required grind selections are made"
-      ],
-      "unrepresentable": [
-        {
-          "defect": "the subscription preferences are only stored in component state and disappear when the page is reloaded",
-          "reason": "the brief's primary \"client-only-state\" defect is not injected: it deletes the server INSERT, which the uplift tool does not rewrite (unfixable) and which makes the original non-runnable"
-        }
       ],
       "route_conformed": true,
       "brief_write_route": "/subscriptions/:id/edit",
@@ -4836,15 +4815,8 @@
         "no-aria-sync"
       ],
       "seeded_defects": [
-        "the subscription preferences are only stored in component state and disappear when the page is reloaded",
         "error notifications only change text color to red without accessible aria-live or role alerts for screen readers",
         "pressing Enter inside any text input triggers form submission before required grind selections are made"
-      ],
-      "unrepresentable": [
-        {
-          "defect": "the subscription preferences are only stored in component state and disappear when the page is reloaded",
-          "reason": "the brief's primary \"client-only-state\" defect is not injected: it deletes the server INSERT, which the uplift tool does not rewrite (unfixable) and which makes the original non-runnable"
-        }
       ],
       "route_conformed": true,
       "brief_write_route": "/subscriptions/:id/edit",
@@ -4873,15 +4845,8 @@
         "no-aria-sync"
       ],
       "seeded_defects": [
-        "the subscription preferences are only stored in component state and disappear when the page is reloaded",
         "error notifications only change text color to red without accessible aria-live or role alerts for screen readers",
         "pressing Enter inside any text input triggers form submission before required grind selections are made"
-      ],
-      "unrepresentable": [
-        {
-          "defect": "the subscription preferences are only stored in component state and disappear when the page is reloaded",
-          "reason": "the brief's primary \"client-only-state\" defect is not injected: it deletes the server INSERT, which the uplift tool does not rewrite (unfixable) and which makes the original non-runnable"
-        }
       ],
       "route_conformed": true,
       "brief_write_route": "/subscriptions/:id/edit",
@@ -4910,15 +4875,8 @@
         "no-aria-sync"
       ],
       "seeded_defects": [
-        "the subscription preferences are only stored in component state and disappear when the page is reloaded",
         "error notifications only change text color to red without accessible aria-live or role alerts for screen readers",
         "pressing Enter inside any text input triggers form submission before required grind selections are made"
-      ],
-      "unrepresentable": [
-        {
-          "defect": "the subscription preferences are only stored in component state and disappear when the page is reloaded",
-          "reason": "the brief's primary \"client-only-state\" defect is not injected: it deletes the server INSERT, which the uplift tool does not rewrite (unfixable) and which makes the original non-runnable"
-        }
       ],
       "route_conformed": true,
       "brief_write_route": "/subscriptions/:id/edit",
@@ -4947,15 +4905,8 @@
         "no-aria-sync"
       ],
       "seeded_defects": [
-        "the subscription preferences are only stored in component state and disappear when the page is reloaded",
         "error notifications only change text color to red without accessible aria-live or role alerts for screen readers",
         "pressing Enter inside any text input triggers form submission before required grind selections are made"
-      ],
-      "unrepresentable": [
-        {
-          "defect": "the subscription preferences are only stored in component state and disappear when the page is reloaded",
-          "reason": "the brief's primary \"client-only-state\" defect is not injected: it deletes the server INSERT, which the uplift tool does not rewrite (unfixable) and which makes the original non-runnable"
-        }
       ],
       "route_conformed": true,
       "brief_write_route": "/subscriptions/:id/edit",
@@ -4983,19 +4934,7 @@
         "no-required"
       ],
       "seeded_defects": [
-        "pew bookings are stored in temporary browser memory and are lost when the confirmation route is refreshed",
-        "pew seat selectors are implemented as plain div elements without tabindex or keyboard activation handlers",
-        "submitting without an attendee name fails silently without indicating which field was required"
-      ],
-      "unrepresentable": [
-        {
-          "defect": "pew bookings are stored in temporary browser memory and are lost when the confirmation route is refreshed",
-          "reason": "the brief's primary \"client-only-state\" defect is not injected: it deletes the server INSERT, which the uplift tool does not rewrite (unfixable) and which makes the original non-runnable"
-        },
-        {
-          "defect": "pew seat selectors are implemented as plain div elements without tabindex or keyboard activation handlers",
-          "reason": "the brief describes pew seat selectors as plain divs without tabindex/keyboard activation, but the generated booking form has no seat picker - it renders a native select with a programmatic label"
-        }
+        "the client form omits the required attribute and per-field error messages, so a user is not told up front which fields are required; the server still rejects an empty submission with a 422 error page listing the missing fields"
       ],
       "route_conformed": true,
       "brief_write_route": "/concerts/:id/reserve",
@@ -5023,19 +4962,7 @@
         "no-required"
       ],
       "seeded_defects": [
-        "pew bookings are stored in temporary browser memory and are lost when the confirmation route is refreshed",
-        "pew seat selectors are implemented as plain div elements without tabindex or keyboard activation handlers",
-        "submitting without an attendee name fails silently without indicating which field was required"
-      ],
-      "unrepresentable": [
-        {
-          "defect": "pew bookings are stored in temporary browser memory and are lost when the confirmation route is refreshed",
-          "reason": "the brief's primary \"client-only-state\" defect is not injected: it deletes the server INSERT, which the uplift tool does not rewrite (unfixable) and which makes the original non-runnable"
-        },
-        {
-          "defect": "pew seat selectors are implemented as plain div elements without tabindex or keyboard activation handlers",
-          "reason": "the brief describes pew seat selectors as plain divs without tabindex/keyboard activation, but the generated booking form has no seat picker - it renders a native select with a programmatic label"
-        }
+        "the client form omits the required attribute and per-field error messages, so a user is not told up front which fields are required; the server still rejects an empty submission with a 422 error page listing the missing fields"
       ],
       "route_conformed": true,
       "brief_write_route": "/concerts/:id/reserve",
@@ -5063,19 +4990,7 @@
         "no-required"
       ],
       "seeded_defects": [
-        "pew bookings are stored in temporary browser memory and are lost when the confirmation route is refreshed",
-        "pew seat selectors are implemented as plain div elements without tabindex or keyboard activation handlers",
-        "submitting without an attendee name fails silently without indicating which field was required"
-      ],
-      "unrepresentable": [
-        {
-          "defect": "pew bookings are stored in temporary browser memory and are lost when the confirmation route is refreshed",
-          "reason": "the brief's primary \"client-only-state\" defect is not injected: it deletes the server INSERT, which the uplift tool does not rewrite (unfixable) and which makes the original non-runnable"
-        },
-        {
-          "defect": "pew seat selectors are implemented as plain div elements without tabindex or keyboard activation handlers",
-          "reason": "the brief describes pew seat selectors as plain divs without tabindex/keyboard activation, but the generated booking form has no seat picker - it renders a native select with a programmatic label"
-        }
+        "the client form omits the required attribute and per-field error messages, so a user is not told up front which fields are required; the server still rejects an empty submission with a 422 error page listing the missing fields"
       ],
       "route_conformed": true,
       "brief_write_route": "/concerts/:id/reserve",
@@ -5103,19 +5018,7 @@
         "no-required"
       ],
       "seeded_defects": [
-        "pew bookings are stored in temporary browser memory and are lost when the confirmation route is refreshed",
-        "pew seat selectors are implemented as plain div elements without tabindex or keyboard activation handlers",
-        "submitting without an attendee name fails silently without indicating which field was required"
-      ],
-      "unrepresentable": [
-        {
-          "defect": "pew bookings are stored in temporary browser memory and are lost when the confirmation route is refreshed",
-          "reason": "the brief's primary \"client-only-state\" defect is not injected: it deletes the server INSERT, which the uplift tool does not rewrite (unfixable) and which makes the original non-runnable"
-        },
-        {
-          "defect": "pew seat selectors are implemented as plain div elements without tabindex or keyboard activation handlers",
-          "reason": "the brief describes pew seat selectors as plain divs without tabindex/keyboard activation, but the generated booking form has no seat picker - it renders a native select with a programmatic label"
-        }
+        "the client form omits the required attribute and per-field error messages, so a user is not told up front which fields are required; the server still rejects an empty submission with a 422 error page listing the missing fields"
       ],
       "route_conformed": true,
       "brief_write_route": "/concerts/:id/reserve",
@@ -5143,19 +5046,7 @@
         "no-required"
       ],
       "seeded_defects": [
-        "pew bookings are stored in temporary browser memory and are lost when the confirmation route is refreshed",
-        "pew seat selectors are implemented as plain div elements without tabindex or keyboard activation handlers",
-        "submitting without an attendee name fails silently without indicating which field was required"
-      ],
-      "unrepresentable": [
-        {
-          "defect": "pew bookings are stored in temporary browser memory and are lost when the confirmation route is refreshed",
-          "reason": "the brief's primary \"client-only-state\" defect is not injected: it deletes the server INSERT, which the uplift tool does not rewrite (unfixable) and which makes the original non-runnable"
-        },
-        {
-          "defect": "pew seat selectors are implemented as plain div elements without tabindex or keyboard activation handlers",
-          "reason": "the brief describes pew seat selectors as plain divs without tabindex/keyboard activation, but the generated booking form has no seat picker - it renders a native select with a programmatic label"
-        }
+        "the client form omits the required attribute and per-field error messages, so a user is not told up front which fields are required; the server still rejects an empty submission with a 422 error page listing the missing fields"
       ],
       "route_conformed": true,
       "brief_write_route": "/concerts/:id/reserve",
@@ -5183,19 +5074,7 @@
         "no-required"
       ],
       "seeded_defects": [
-        "pew bookings are stored in temporary browser memory and are lost when the confirmation route is refreshed",
-        "pew seat selectors are implemented as plain div elements without tabindex or keyboard activation handlers",
-        "submitting without an attendee name fails silently without indicating which field was required"
-      ],
-      "unrepresentable": [
-        {
-          "defect": "pew bookings are stored in temporary browser memory and are lost when the confirmation route is refreshed",
-          "reason": "the brief's primary \"client-only-state\" defect is not injected: it deletes the server INSERT, which the uplift tool does not rewrite (unfixable) and which makes the original non-runnable"
-        },
-        {
-          "defect": "pew seat selectors are implemented as plain div elements without tabindex or keyboard activation handlers",
-          "reason": "the brief describes pew seat selectors as plain divs without tabindex/keyboard activation, but the generated booking form has no seat picker - it renders a native select with a programmatic label"
-        }
+        "the client form omits the required attribute and per-field error messages, so a user is not told up front which fields are required; the server still rejects an empty submission with a 422 error page listing the missing fields"
       ],
       "route_conformed": true,
       "brief_write_route": "/concerts/:id/reserve",
@@ -5223,19 +5102,7 @@
         "no-required"
       ],
       "seeded_defects": [
-        "pew bookings are stored in temporary browser memory and are lost when the confirmation route is refreshed",
-        "pew seat selectors are implemented as plain div elements without tabindex or keyboard activation handlers",
-        "submitting without an attendee name fails silently without indicating which field was required"
-      ],
-      "unrepresentable": [
-        {
-          "defect": "pew bookings are stored in temporary browser memory and are lost when the confirmation route is refreshed",
-          "reason": "the brief's primary \"client-only-state\" defect is not injected: it deletes the server INSERT, which the uplift tool does not rewrite (unfixable) and which makes the original non-runnable"
-        },
-        {
-          "defect": "pew seat selectors are implemented as plain div elements without tabindex or keyboard activation handlers",
-          "reason": "the brief describes pew seat selectors as plain divs without tabindex/keyboard activation, but the generated booking form has no seat picker - it renders a native select with a programmatic label"
-        }
+        "the client form omits the required attribute and per-field error messages, so a user is not told up front which fields are required; the server still rejects an empty submission with a 422 error page listing the missing fields"
       ],
       "route_conformed": true,
       "brief_write_route": "/concerts/:id/reserve",
@@ -5263,19 +5130,7 @@
         "no-required"
       ],
       "seeded_defects": [
-        "logged repair tickets are kept in local component state and disappear when the page is reloaded",
-        "the urgency select dropdown uses custom div elements with no programmatic label or keyboard navigation",
-        "submitting an empty description produces no error message and creates a corrupted ticket record"
-      ],
-      "unrepresentable": [
-        {
-          "defect": "logged repair tickets are kept in local component state and disappear when the page is reloaded",
-          "reason": "the brief's primary \"client-only-state\" defect is not injected: it deletes the server INSERT, which the uplift tool does not rewrite (unfixable) and which makes the original non-runnable"
-        },
-        {
-          "defect": "the urgency select dropdown uses custom div elements with no programmatic label or keyboard navigation",
-          "reason": "the brief describes a custom div-based urgency dropdown, but the generated helpdesk form renders a native select with a programmatic label"
-        }
+        "the client form omits the required attribute and per-field error messages, so a user is not told up front which fields are required; the server still rejects an empty submission with a 422 error page listing the missing fields"
       ],
       "route_conformed": true,
       "brief_write_route": "/tickets/new",
@@ -5304,19 +5159,7 @@
         "no-required"
       ],
       "seeded_defects": [
-        "logged repair tickets are kept in local component state and disappear when the page is reloaded",
-        "the urgency select dropdown uses custom div elements with no programmatic label or keyboard navigation",
-        "submitting an empty description produces no error message and creates a corrupted ticket record"
-      ],
-      "unrepresentable": [
-        {
-          "defect": "logged repair tickets are kept in local component state and disappear when the page is reloaded",
-          "reason": "the brief's primary \"client-only-state\" defect is not injected: it deletes the server INSERT, which the uplift tool does not rewrite (unfixable) and which makes the original non-runnable"
-        },
-        {
-          "defect": "the urgency select dropdown uses custom div elements with no programmatic label or keyboard navigation",
-          "reason": "the brief describes a custom div-based urgency dropdown, but the generated helpdesk form renders a native select with a programmatic label"
-        }
+        "the client form omits the required attribute and per-field error messages, so a user is not told up front which fields are required; the server still rejects an empty submission with a 422 error page listing the missing fields"
       ],
       "route_conformed": true,
       "brief_write_route": "/tickets/new",
@@ -5345,19 +5188,7 @@
         "no-required"
       ],
       "seeded_defects": [
-        "logged repair tickets are kept in local component state and disappear when the page is reloaded",
-        "the urgency select dropdown uses custom div elements with no programmatic label or keyboard navigation",
-        "submitting an empty description produces no error message and creates a corrupted ticket record"
-      ],
-      "unrepresentable": [
-        {
-          "defect": "logged repair tickets are kept in local component state and disappear when the page is reloaded",
-          "reason": "the brief's primary \"client-only-state\" defect is not injected: it deletes the server INSERT, which the uplift tool does not rewrite (unfixable) and which makes the original non-runnable"
-        },
-        {
-          "defect": "the urgency select dropdown uses custom div elements with no programmatic label or keyboard navigation",
-          "reason": "the brief describes a custom div-based urgency dropdown, but the generated helpdesk form renders a native select with a programmatic label"
-        }
+        "the client form omits the required attribute and per-field error messages, so a user is not told up front which fields are required; the server still rejects an empty submission with a 422 error page listing the missing fields"
       ],
       "route_conformed": true,
       "brief_write_route": "/tickets/new",
@@ -5386,19 +5217,7 @@
         "no-required"
       ],
       "seeded_defects": [
-        "logged repair tickets are kept in local component state and disappear when the page is reloaded",
-        "the urgency select dropdown uses custom div elements with no programmatic label or keyboard navigation",
-        "submitting an empty description produces no error message and creates a corrupted ticket record"
-      ],
-      "unrepresentable": [
-        {
-          "defect": "logged repair tickets are kept in local component state and disappear when the page is reloaded",
-          "reason": "the brief's primary \"client-only-state\" defect is not injected: it deletes the server INSERT, which the uplift tool does not rewrite (unfixable) and which makes the original non-runnable"
-        },
-        {
-          "defect": "the urgency select dropdown uses custom div elements with no programmatic label or keyboard navigation",
-          "reason": "the brief describes a custom div-based urgency dropdown, but the generated helpdesk form renders a native select with a programmatic label"
-        }
+        "the client form omits the required attribute and per-field error messages, so a user is not told up front which fields are required; the server still rejects an empty submission with a 422 error page listing the missing fields"
       ],
       "route_conformed": true,
       "brief_write_route": "/tickets/new",
@@ -5427,19 +5246,7 @@
         "no-required"
       ],
       "seeded_defects": [
-        "logged repair tickets are kept in local component state and disappear when the page is reloaded",
-        "the urgency select dropdown uses custom div elements with no programmatic label or keyboard navigation",
-        "submitting an empty description produces no error message and creates a corrupted ticket record"
-      ],
-      "unrepresentable": [
-        {
-          "defect": "logged repair tickets are kept in local component state and disappear when the page is reloaded",
-          "reason": "the brief's primary \"client-only-state\" defect is not injected: it deletes the server INSERT, which the uplift tool does not rewrite (unfixable) and which makes the original non-runnable"
-        },
-        {
-          "defect": "the urgency select dropdown uses custom div elements with no programmatic label or keyboard navigation",
-          "reason": "the brief describes a custom div-based urgency dropdown, but the generated helpdesk form renders a native select with a programmatic label"
-        }
+        "the client form omits the required attribute and per-field error messages, so a user is not told up front which fields are required; the server still rejects an empty submission with a 422 error page listing the missing fields"
       ],
       "route_conformed": true,
       "brief_write_route": "/tickets/new",
@@ -5468,19 +5275,7 @@
         "no-required"
       ],
       "seeded_defects": [
-        "logged repair tickets are kept in local component state and disappear when the page is reloaded",
-        "the urgency select dropdown uses custom div elements with no programmatic label or keyboard navigation",
-        "submitting an empty description produces no error message and creates a corrupted ticket record"
-      ],
-      "unrepresentable": [
-        {
-          "defect": "logged repair tickets are kept in local component state and disappear when the page is reloaded",
-          "reason": "the brief's primary \"client-only-state\" defect is not injected: it deletes the server INSERT, which the uplift tool does not rewrite (unfixable) and which makes the original non-runnable"
-        },
-        {
-          "defect": "the urgency select dropdown uses custom div elements with no programmatic label or keyboard navigation",
-          "reason": "the brief describes a custom div-based urgency dropdown, but the generated helpdesk form renders a native select with a programmatic label"
-        }
+        "the client form omits the required attribute and per-field error messages, so a user is not told up front which fields are required; the server still rejects an empty submission with a 422 error page listing the missing fields"
       ],
       "route_conformed": true,
       "brief_write_route": "/tickets/new",
@@ -5509,19 +5304,7 @@
         "no-required"
       ],
       "seeded_defects": [
-        "logged repair tickets are kept in local component state and disappear when the page is reloaded",
-        "the urgency select dropdown uses custom div elements with no programmatic label or keyboard navigation",
-        "submitting an empty description produces no error message and creates a corrupted ticket record"
-      ],
-      "unrepresentable": [
-        {
-          "defect": "logged repair tickets are kept in local component state and disappear when the page is reloaded",
-          "reason": "the brief's primary \"client-only-state\" defect is not injected: it deletes the server INSERT, which the uplift tool does not rewrite (unfixable) and which makes the original non-runnable"
-        },
-        {
-          "defect": "the urgency select dropdown uses custom div elements with no programmatic label or keyboard navigation",
-          "reason": "the brief describes a custom div-based urgency dropdown, but the generated helpdesk form renders a native select with a programmatic label"
-        }
+        "the client form omits the required attribute and per-field error messages, so a user is not told up front which fields are required; the server still rejects an empty submission with a 422 error page listing the missing fields"
       ],
       "route_conformed": true,
       "brief_write_route": "/tickets/new",
@@ -5552,19 +5335,12 @@
         "no-required"
       ],
       "seeded_defects": [
-        "contributions are stored only in volatile memory and vanish when the ledger route is reloaded",
-        "negative and non-numeric contribution amounts are accepted without error and corrupt the running total",
-        "the contribution form lacks associated label elements for the amount and dedication inputs"
-      ],
-      "unrepresentable": [
-        {
-          "defect": "contributions are stored only in volatile memory and vanish when the ledger route is reloaded",
-          "reason": "the brief's primary \"client-only-state\" defect is not injected: it deletes the server INSERT, which the uplift tool does not rewrite (unfixable) and which makes the original non-runnable"
-        }
+        "negative and non-numeric contribution amounts are accepted without error and stored as-is, with no minimum or numeric bound enforced",
+        "the contribution form lacks associated label elements for the contributor and amount inputs",
+        "the client form omits the required attribute and per-field error messages, so a user is not told up front which fields are required; the server still rejects an empty submission with a 422 error page listing the missing fields"
       ],
       "notes": [
-        "the brief names a dedication input the archetype does not model; no-field-labels drops the label on the non-select fields (member, vendor, amount), so the amount input is the covered case",
-        "tr-29: added addressable defect 'no-required' so the repair pair has a change the uplift tool can make (the brief's secondary defects are outside the uplift contract)"
+        "drops the label on the non-select fields (member, vendor, amount)"
       ],
       "route_conformed": true,
       "brief_write_route": "/contribute",
@@ -5595,19 +5371,12 @@
         "no-required"
       ],
       "seeded_defects": [
-        "contributions are stored only in volatile memory and vanish when the ledger route is reloaded",
-        "negative and non-numeric contribution amounts are accepted without error and corrupt the running total",
-        "the contribution form lacks associated label elements for the amount and dedication inputs"
-      ],
-      "unrepresentable": [
-        {
-          "defect": "contributions are stored only in volatile memory and vanish when the ledger route is reloaded",
-          "reason": "the brief's primary \"client-only-state\" defect is not injected: it deletes the server INSERT, which the uplift tool does not rewrite (unfixable) and which makes the original non-runnable"
-        }
+        "negative and non-numeric contribution amounts are accepted without error and stored as-is, with no minimum or numeric bound enforced",
+        "the contribution form lacks associated label elements for the contributor and amount inputs",
+        "the client form omits the required attribute and per-field error messages, so a user is not told up front which fields are required; the server still rejects an empty submission with a 422 error page listing the missing fields"
       ],
       "notes": [
-        "the brief names a dedication input the archetype does not model; no-field-labels drops the label on the non-select fields (member, vendor, amount), so the amount input is the covered case",
-        "tr-29: added addressable defect 'no-required' so the repair pair has a change the uplift tool can make (the brief's secondary defects are outside the uplift contract)"
+        "drops the label on the non-select fields (member, vendor, amount)"
       ],
       "route_conformed": true,
       "brief_write_route": "/contribute",
@@ -5638,19 +5407,12 @@
         "no-required"
       ],
       "seeded_defects": [
-        "contributions are stored only in volatile memory and vanish when the ledger route is reloaded",
-        "negative and non-numeric contribution amounts are accepted without error and corrupt the running total",
-        "the contribution form lacks associated label elements for the amount and dedication inputs"
-      ],
-      "unrepresentable": [
-        {
-          "defect": "contributions are stored only in volatile memory and vanish when the ledger route is reloaded",
-          "reason": "the brief's primary \"client-only-state\" defect is not injected: it deletes the server INSERT, which the uplift tool does not rewrite (unfixable) and which makes the original non-runnable"
-        }
+        "negative and non-numeric contribution amounts are accepted without error and stored as-is, with no minimum or numeric bound enforced",
+        "the contribution form lacks associated label elements for the contributor and amount inputs",
+        "the client form omits the required attribute and per-field error messages, so a user is not told up front which fields are required; the server still rejects an empty submission with a 422 error page listing the missing fields"
       ],
       "notes": [
-        "the brief names a dedication input the archetype does not model; no-field-labels drops the label on the non-select fields (member, vendor, amount), so the amount input is the covered case",
-        "tr-29: added addressable defect 'no-required' so the repair pair has a change the uplift tool can make (the brief's secondary defects are outside the uplift contract)"
+        "drops the label on the non-select fields (member, vendor, amount)"
       ],
       "route_conformed": true,
       "brief_write_route": "/contribute",
@@ -5681,19 +5443,12 @@
         "no-required"
       ],
       "seeded_defects": [
-        "contributions are stored only in volatile memory and vanish when the ledger route is reloaded",
-        "negative and non-numeric contribution amounts are accepted without error and corrupt the running total",
-        "the contribution form lacks associated label elements for the amount and dedication inputs"
-      ],
-      "unrepresentable": [
-        {
-          "defect": "contributions are stored only in volatile memory and vanish when the ledger route is reloaded",
-          "reason": "the brief's primary \"client-only-state\" defect is not injected: it deletes the server INSERT, which the uplift tool does not rewrite (unfixable) and which makes the original non-runnable"
-        }
+        "negative and non-numeric contribution amounts are accepted without error and stored as-is, with no minimum or numeric bound enforced",
+        "the contribution form lacks associated label elements for the contributor and amount inputs",
+        "the client form omits the required attribute and per-field error messages, so a user is not told up front which fields are required; the server still rejects an empty submission with a 422 error page listing the missing fields"
       ],
       "notes": [
-        "the brief names a dedication input the archetype does not model; no-field-labels drops the label on the non-select fields (member, vendor, amount), so the amount input is the covered case",
-        "tr-29: added addressable defect 'no-required' so the repair pair has a change the uplift tool can make (the brief's secondary defects are outside the uplift contract)"
+        "drops the label on the non-select fields (member, vendor, amount)"
       ],
       "route_conformed": true,
       "brief_write_route": "/contribute",
@@ -5724,19 +5479,12 @@
         "no-required"
       ],
       "seeded_defects": [
-        "contributions are stored only in volatile memory and vanish when the ledger route is reloaded",
-        "negative and non-numeric contribution amounts are accepted without error and corrupt the running total",
-        "the contribution form lacks associated label elements for the amount and dedication inputs"
-      ],
-      "unrepresentable": [
-        {
-          "defect": "contributions are stored only in volatile memory and vanish when the ledger route is reloaded",
-          "reason": "the brief's primary \"client-only-state\" defect is not injected: it deletes the server INSERT, which the uplift tool does not rewrite (unfixable) and which makes the original non-runnable"
-        }
+        "negative and non-numeric contribution amounts are accepted without error and stored as-is, with no minimum or numeric bound enforced",
+        "the contribution form lacks associated label elements for the contributor and amount inputs",
+        "the client form omits the required attribute and per-field error messages, so a user is not told up front which fields are required; the server still rejects an empty submission with a 422 error page listing the missing fields"
       ],
       "notes": [
-        "the brief names a dedication input the archetype does not model; no-field-labels drops the label on the non-select fields (member, vendor, amount), so the amount input is the covered case",
-        "tr-29: added addressable defect 'no-required' so the repair pair has a change the uplift tool can make (the brief's secondary defects are outside the uplift contract)"
+        "drops the label on the non-select fields (member, vendor, amount)"
       ],
       "route_conformed": true,
       "brief_write_route": "/contribute",
@@ -5767,19 +5515,12 @@
         "no-required"
       ],
       "seeded_defects": [
-        "contributions are stored only in volatile memory and vanish when the ledger route is reloaded",
-        "negative and non-numeric contribution amounts are accepted without error and corrupt the running total",
-        "the contribution form lacks associated label elements for the amount and dedication inputs"
-      ],
-      "unrepresentable": [
-        {
-          "defect": "contributions are stored only in volatile memory and vanish when the ledger route is reloaded",
-          "reason": "the brief's primary \"client-only-state\" defect is not injected: it deletes the server INSERT, which the uplift tool does not rewrite (unfixable) and which makes the original non-runnable"
-        }
+        "negative and non-numeric contribution amounts are accepted without error and stored as-is, with no minimum or numeric bound enforced",
+        "the contribution form lacks associated label elements for the contributor and amount inputs",
+        "the client form omits the required attribute and per-field error messages, so a user is not told up front which fields are required; the server still rejects an empty submission with a 422 error page listing the missing fields"
       ],
       "notes": [
-        "the brief names a dedication input the archetype does not model; no-field-labels drops the label on the non-select fields (member, vendor, amount), so the amount input is the covered case",
-        "tr-29: added addressable defect 'no-required' so the repair pair has a change the uplift tool can make (the brief's secondary defects are outside the uplift contract)"
+        "drops the label on the non-select fields (member, vendor, amount)"
       ],
       "route_conformed": true,
       "brief_write_route": "/contribute",
@@ -5810,19 +5551,12 @@
         "no-required"
       ],
       "seeded_defects": [
-        "contributions are stored only in volatile memory and vanish when the ledger route is reloaded",
-        "negative and non-numeric contribution amounts are accepted without error and corrupt the running total",
-        "the contribution form lacks associated label elements for the amount and dedication inputs"
-      ],
-      "unrepresentable": [
-        {
-          "defect": "contributions are stored only in volatile memory and vanish when the ledger route is reloaded",
-          "reason": "the brief's primary \"client-only-state\" defect is not injected: it deletes the server INSERT, which the uplift tool does not rewrite (unfixable) and which makes the original non-runnable"
-        }
+        "negative and non-numeric contribution amounts are accepted without error and stored as-is, with no minimum or numeric bound enforced",
+        "the contribution form lacks associated label elements for the contributor and amount inputs",
+        "the client form omits the required attribute and per-field error messages, so a user is not told up front which fields are required; the server still rejects an empty submission with a 422 error page listing the missing fields"
       ],
       "notes": [
-        "the brief names a dedication input the archetype does not model; no-field-labels drops the label on the non-select fields (member, vendor, amount), so the amount input is the covered case",
-        "tr-29: added addressable defect 'no-required' so the repair pair has a change the uplift tool can make (the brief's secondary defects are outside the uplift contract)"
+        "drops the label on the non-select fields (member, vendor, amount)"
       ],
       "route_conformed": true,
       "brief_write_route": "/contribute",
@@ -5852,15 +5586,8 @@
         "no-aria-sync"
       ],
       "seeded_defects": [
-        "volunteer zone registrations are only held in client component state and disappear upon page reload",
         "pressing Enter inside the volunteer name input submits the form before a cleanup zone is chosen",
         "missing required input errors are indicated solely by border styling without accessible text announcements"
-      ],
-      "unrepresentable": [
-        {
-          "defect": "volunteer zone registrations are only held in client component state and disappear upon page reload",
-          "reason": "the brief's primary \"client-only-state\" defect is not injected: it deletes the server INSERT, which the uplift tool does not rewrite (unfixable) and which makes the original non-runnable"
-        }
       ],
       "route_conformed": true,
       "brief_write_route": "/cleanups/:id/register",
@@ -5889,15 +5616,8 @@
         "no-aria-sync"
       ],
       "seeded_defects": [
-        "volunteer zone registrations are only held in client component state and disappear upon page reload",
         "pressing Enter inside the volunteer name input submits the form before a cleanup zone is chosen",
         "missing required input errors are indicated solely by border styling without accessible text announcements"
-      ],
-      "unrepresentable": [
-        {
-          "defect": "volunteer zone registrations are only held in client component state and disappear upon page reload",
-          "reason": "the brief's primary \"client-only-state\" defect is not injected: it deletes the server INSERT, which the uplift tool does not rewrite (unfixable) and which makes the original non-runnable"
-        }
       ],
       "route_conformed": true,
       "brief_write_route": "/cleanups/:id/register",
@@ -5926,15 +5646,8 @@
         "no-aria-sync"
       ],
       "seeded_defects": [
-        "volunteer zone registrations are only held in client component state and disappear upon page reload",
         "pressing Enter inside the volunteer name input submits the form before a cleanup zone is chosen",
         "missing required input errors are indicated solely by border styling without accessible text announcements"
-      ],
-      "unrepresentable": [
-        {
-          "defect": "volunteer zone registrations are only held in client component state and disappear upon page reload",
-          "reason": "the brief's primary \"client-only-state\" defect is not injected: it deletes the server INSERT, which the uplift tool does not rewrite (unfixable) and which makes the original non-runnable"
-        }
       ],
       "route_conformed": true,
       "brief_write_route": "/cleanups/:id/register",
@@ -5963,15 +5676,8 @@
         "no-aria-sync"
       ],
       "seeded_defects": [
-        "volunteer zone registrations are only held in client component state and disappear upon page reload",
         "pressing Enter inside the volunteer name input submits the form before a cleanup zone is chosen",
         "missing required input errors are indicated solely by border styling without accessible text announcements"
-      ],
-      "unrepresentable": [
-        {
-          "defect": "volunteer zone registrations are only held in client component state and disappear upon page reload",
-          "reason": "the brief's primary \"client-only-state\" defect is not injected: it deletes the server INSERT, which the uplift tool does not rewrite (unfixable) and which makes the original non-runnable"
-        }
       ],
       "route_conformed": true,
       "brief_write_route": "/cleanups/:id/register",
@@ -6000,15 +5706,8 @@
         "no-aria-sync"
       ],
       "seeded_defects": [
-        "volunteer zone registrations are only held in client component state and disappear upon page reload",
         "pressing Enter inside the volunteer name input submits the form before a cleanup zone is chosen",
         "missing required input errors are indicated solely by border styling without accessible text announcements"
-      ],
-      "unrepresentable": [
-        {
-          "defect": "volunteer zone registrations are only held in client component state and disappear upon page reload",
-          "reason": "the brief's primary \"client-only-state\" defect is not injected: it deletes the server INSERT, which the uplift tool does not rewrite (unfixable) and which makes the original non-runnable"
-        }
       ],
       "route_conformed": true,
       "brief_write_route": "/cleanups/:id/register",
@@ -6037,15 +5736,8 @@
         "no-aria-sync"
       ],
       "seeded_defects": [
-        "volunteer zone registrations are only held in client component state and disappear upon page reload",
         "pressing Enter inside the volunteer name input submits the form before a cleanup zone is chosen",
         "missing required input errors are indicated solely by border styling without accessible text announcements"
-      ],
-      "unrepresentable": [
-        {
-          "defect": "volunteer zone registrations are only held in client component state and disappear upon page reload",
-          "reason": "the brief's primary \"client-only-state\" defect is not injected: it deletes the server INSERT, which the uplift tool does not rewrite (unfixable) and which makes the original non-runnable"
-        }
       ],
       "route_conformed": true,
       "brief_write_route": "/cleanups/:id/register",
@@ -6074,15 +5766,8 @@
         "no-aria-sync"
       ],
       "seeded_defects": [
-        "volunteer zone registrations are only held in client component state and disappear upon page reload",
         "pressing Enter inside the volunteer name input submits the form before a cleanup zone is chosen",
         "missing required input errors are indicated solely by border styling without accessible text announcements"
-      ],
-      "unrepresentable": [
-        {
-          "defect": "volunteer zone registrations are only held in client component state and disappear upon page reload",
-          "reason": "the brief's primary \"client-only-state\" defect is not injected: it deletes the server INSERT, which the uplift tool does not rewrite (unfixable) and which makes the original non-runnable"
-        }
       ],
       "route_conformed": true,
       "brief_write_route": "/cleanups/:id/register",

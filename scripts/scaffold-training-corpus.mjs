@@ -8,8 +8,8 @@
  *
  * The briefs manifest (`docs/train/briefs/manifest.jsonl`) is the source of truth for the tr-* corpus.
  * Each family maps to a training archetype by its `archetype` field (looked up in
- * pilot/training-archetypes.mjs, NOT the pilot table), and the family's own `topic`/`routes` shape the
- * concrete archetype so a family is its brief's app, not the archetype's generic example. Every family
+ * pilot/training-archetypes.mjs, NOT the pilot table), and the family's own `topic`/`routes` relabel the
+ * concrete archetype's title, story, and routes; the fields and journey stay the archetype's. Every family
  * is then built across the seven rendering frameworks in pilot/frameworks.mjs via the same
  * `buildProjectFor` the pilot uses.
  *
@@ -231,8 +231,9 @@ function deriveRoutes(family, base) {
 }
 
 /**
- * The concrete archetype for one family: the base archetype's fields/echo/journey, with the family's
- * own title and story (so the app is the brief's app) and - for non-session flows - its own routes.
+ * The concrete archetype for one family: the base archetype's fields/echo/journey are kept as-is, with
+ * only the family's own title and story (and - for non-session flows - its own routes) relabelled, so
+ * the result is an archetype-template project, not a brief-faithful implementation of the brief's flow.
  * Session flows keep their canonical routes because the cookie + read-session redirect is part of the
  * archetype, not the brief.
  */
