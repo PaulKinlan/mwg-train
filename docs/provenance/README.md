@@ -44,11 +44,13 @@ Three findings sit outside the table but matter operationally:
   means" without an API key, and OpenAI's Terms of Use forbid "Automatically or programmatically
   extract[ing] data or Output". Even a corpus harness that is only *automated* — training nothing —
   is in those clauses' target.
-- Three of the five providers have a clause that turns on whether the trained model "competes" with
-  their product; only Anthropic's Usage Policy and Z.ai's API terms prohibit the activity without
-  that qualifier. The experiment's own framing ("does training on MWG sites change model defaults?")
-  should never be the thing that decides this — the terms are read as written, and DeepSeek is the
-  one provider whose terms say yes.
+- The competitor qualifier varies by provider *and by document*, so the same activity is prohibited on
+  one surface and merely unaddressed on another. Unqualified prohibitions: Anthropic's Usage Policy,
+  Google's consumer Terms of Service, Z.ai's API additional terms. Competition-scoped only:
+  Anthropic's and OpenAI's commercial/API terms, the Gemini API terms, Z.ai's general terms. Reading
+  the wrong document gives the wrong answer — a Claude Max subscription looks permitted if you read
+  only Anthropic's commercial terms, and Google's consumer account looks permitted if you read only
+  the Gemini API terms.
 - The teacher SKUs the fleet runs **have released open weights**:
   `deepseek-ai/DeepSeek-V4-Flash` and `zai-org/GLM-5.3-Flash` are both public and MIT-licensed
   (verified through the Hugging Face API on 2026-10-08). Self-hosting one of those checkpoints, so
