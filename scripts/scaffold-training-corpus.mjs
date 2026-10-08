@@ -27,7 +27,7 @@ import process from 'node:process';
 
 import { buildProjectFor, FRAMEWORKS } from '../pilot/frameworks.mjs';
 import { TRAINING_ARCHETYPES } from '../pilot/training-archetypes.mjs';
-import { echoFieldFor, validateBriefSchema } from '../src/train/brief-schema.mjs';
+import { builderFields, echoFieldFor, validateBriefSchema } from '../src/train/brief-schema.mjs';
 import { hashTree } from '../src/corpus/harness.mjs';
 
 const FRAMEWORK_NAMES = Object.keys(FRAMEWORKS);
@@ -257,7 +257,7 @@ function familyArchetype(family, base) {
     // render a form that agrees with it and a server that 422s the same POST - the form and the
     // server would disagree about the same field. tr-27 was rejected `original-not-runnable` for
     // exactly this: the journey filled its fields, but the server still demanded `phone`.
-    overrides.fields = family.fields.map((field) => ({ ...field, optional: field.required === false }));
+    overrides.fields = builderFields(family.fields);
     overrides.journey = family.journey;
     overrides.echo = { ...base.echo, field: echoFieldFor(family.fields) };
   }

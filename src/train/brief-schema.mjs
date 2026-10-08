@@ -80,6 +80,25 @@ export function selectorFieldName(selector) {
 }
 
 /**
+ * The fields as the framework builders need them.
+ *
+ * A brief states requiredness as `required`; the builders' servers decide their required
+ * set as `fields.filter(f => f.type !== 'select' && !f.optional)` (`pilot/frameworks.mjs`),
+ * so they read `optional` instead. Passing a brief's fields through unchanged makes every
+ * non-select field server-required whatever the brief says, and a brief that marks a field
+ * optional then renders a form that agrees with it while the server rejects the same POST
+ * with 422 - tr-27 was measured failing exactly that way.
+ */
+export function builderFields(fields) {
+  return fields.map((field) => ({ ...field, optional: field.required === false }));
+}
+
+/** The field names a server will demand: every non-select field the brief does not mark optional. */
+export function serverRequiredFieldNames(fields) {
+  return fields.filter((field) => field.type !== 'select' && field.required === true).map((field) => field.name);
+}
+
+/**
  * Validate one brief's authored schema. Returns findings rather than throwing, so a
  * caller can report every problem at once; `[]` means the brief is authorable.
  *
@@ -186,6 +205,19 @@ export function validateBriefSchema(row) {
       at('journey.fill', `must type into the echoed field '${echoedName}' (echo.source defaults to the record page)`);
     } else if (!typed.some((value) => String(value) === journey.expectText)) {
       at('journey.expectText', `must be the value typed into the echoed field ('${typed[0]}'), which is what the read page shows`);
+    }
+  }
+
+  // Every field the server will demand must be one the journey fills. This is the check that
+  // would have caught tr-27 before a browser run: the brief marked `phone` optional, the journey
+  // did not fill it, and the server demanded it anyway - the pair was then rejected as
+  // `original-not-runnable` with nothing to say the brief was self-contradictory.
+  if (fill && typeof fill === 'object' && !Array.isArray(fill)) {
+    const filled = new Set(Object.keys(fill).map(selectorFieldName).filter(Boolean));
+    for (const name of serverRequiredFieldNames(fields)) {
+      if (!filled.has(name)) {
+        at('journey.fill', `does not fill '${name}', which its own fields mark required - the server will reject the submission`);
+      }
     }
   }
 

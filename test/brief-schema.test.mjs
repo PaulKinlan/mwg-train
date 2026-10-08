@@ -8,7 +8,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { BRIEF_FIELD_TYPES, echoFieldFor, selectorFieldName, validateBriefSchema } from '../src/train/brief-schema.mjs';
+import { BRIEF_FIELD_TYPES, builderFields, echoFieldFor, selectorFieldName, serverRequiredFieldNames, validateBriefSchema } from '../src/train/brief-schema.mjs';
 
 /** A valid brief schema, with a `journey.fill` that types into its echoed field. */
 function brief(overrides = {}) {
@@ -133,4 +133,60 @@ test('selector field names are read from every selector quote style', () => {
   assert.equal(selectorFieldName('input[name="email"]'), 'email');
   assert.equal(selectorFieldName("textarea[name='notes']"), 'notes');
   assert.equal(selectorFieldName('form#f'), null);
+});
+
+// The builders' servers read `optional`, not `required`, and a brief that is passed through
+// unchanged therefore makes every non-select field server-required. tr-27 was rejected
+// `original-not-runnable` for exactly this: its brief marked `phone` optional, its form agreed,
+// and its server demanded the field anyway.
+test('builderFields states optional from required, so the server agrees with the brief', () => {
+  const fields = [
+    { slug: 'attendee', name: 'attendee', type: 'text', label: 'Name', required: true },
+    { slug: 'phone', name: 'phone', type: 'tel', label: 'Phone', required: false },
+    { slug: 'pew', name: 'pew', type: 'select', label: 'Pew', required: true, options: ['a', 'b'] },
+  ];
+  const built = builderFields(fields);
+  assert.equal(built[0].optional, false, 'a required field must not be optional');
+  assert.equal(built[1].optional, true, 'a non-required field must be optional');
+  // The builders decide requiredness from `optional` alone, so `required` must not be the only
+  // thing set: a server reading the un-derived fields would demand every non-select field.
+  assert.deepEqual(serverRequiredFieldNames(fields), ['attendee']);
+});
+
+test('a select is never server-required: it always submits a value', () => {
+  const fields = [{ slug: 'pew', name: 'pew', type: 'select', label: 'Pew', required: true, options: ['a', 'b'] }];
+  assert.deepEqual(serverRequiredFieldNames(fields), []);
+});
+
+test('a journey that omits a required field is refused before any browser runs', () => {
+  const row = brief({
+    fields: [
+      { slug: 'attendee', name: 'attendee', type: 'text', label: 'Name', required: true, echoed: true },
+      { slug: 'phone', name: 'phone', type: 'tel', label: 'Phone', required: true },
+    ],
+    journey: { startPath: '/', formSelector: 'form#f', fill: { 'input[name=attendee]': 'Ada' }, expectText: 'Ada' },
+  });
+  assert.ok(
+    problems(row).some((p) => /does not fill 'phone', which its own fields mark required/.test(p)),
+    problems(row).join('\n'),
+  );
+});
+
+test('a journey may omit a field the brief marks optional', () => {
+  const row = brief({
+    fields: [
+      { slug: 'attendee', name: 'attendee', type: 'text', label: 'Name', required: true, echoed: true },
+      { slug: 'phone', name: 'phone', type: 'tel', label: 'Phone', required: false },
+    ],
+    journey: { startPath: '/', formSelector: 'form#f', fill: { 'input[name=attendee]': 'Ada' }, expectText: 'Ada' },
+  });
+  assert.deepEqual(validateBriefSchema(row), []);
+});
+
+test('a field that states required and optional contradictorily is refused', () => {
+  const row = brief({
+    fields: [{ slug: 'x', name: 'x', type: 'text', label: 'X', required: true, optional: true, echoed: true }],
+    journey: { startPath: '/', formSelector: 'form#f', fill: { 'input[name=x]': 'v' }, expectText: 'v' },
+  });
+  assert.ok(problems(row).some((p) => /contradicts required:true/.test(p)), problems(row).join('\n'));
 });
