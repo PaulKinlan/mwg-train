@@ -157,6 +157,29 @@ test('record content is escaped: evidence text cannot inject markup into the vie
   assert.match(html, /&lt;script&gt;/);
 });
 
+test('the default run is the manifest run, not a newer decisionless local run (review finding)', (t) => {
+  const root = buildFixtureCorpus();
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  // A manifest recording run R, and a NEWER local run dir with no decisions: the default view
+  // must stay the manifest run so recorded projects do not silently become unpaired.
+  mkdirSync(join(root, 'out', '2999-01-01T00-00-00-000Z'), { recursive: true });
+  writeFileSync(
+    join(root, 'CORPUS.json'),
+    JSON.stringify({
+      run_id: '2026-10-08T00-00-00-000Z',
+      generated_at: '2026-10-08T00:00:00.000Z',
+      generator: 'scripts/scaffold-pilot.mjs',
+      projects: [{ project_id: 'booking-raw', archetype: 'booking', framework: 'raw', accepted: true, category: null, original_sha: 'sha256:aaaa', uplift_sha: 'sha256:bbbb', improved_rules: [], uplift_applied: [] }],
+    }),
+  );
+  const corpus = loadCorpus(root);
+  assert.equal(corpus.runId, '2026-10-08T00-00-00-000Z', 'default view is the manifest run');
+  // An explicit selection of the newer run is honoured (its projects are honestly decisionless).
+  const newer = loadCorpus(root, '2999-01-01T00-00-00-000Z');
+  assert.equal(newer.runId, '2999-01-01T00-00-00-000Z');
+  assert.equal(newer.projects.find((p) => p.id === 'booking-raw').decision, null);
+});
+
 test('the pair scan combiner: a MISSING original is PARTIAL, never PASS (mixed-state regression)', () => {
   const P = { status: 'PASS', findings: [] };
   const M = { status: 'MISSING', findings: [] };

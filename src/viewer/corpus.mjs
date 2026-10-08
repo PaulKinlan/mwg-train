@@ -51,8 +51,12 @@ export function listRuns(corpusRoot) {
 export function loadCorpus(corpusRoot, runId = null) {
   const projectsRoot = join(corpusRoot, 'projects');
   const runs = listRuns(corpusRoot);
-  const selectedRun = runId ?? runs[0] ?? null;
-  const runDir = selectedRun ? join(corpusRoot, 'out', selectedRun) : null;
+  // The manifest's recorded run is the default view, not the newest local run dir: the manifest
+  // is the corpus record of record, and a newer local run without decisions must not silently
+  // turn every recorded project into an unpaired one (which would serve unverified trees).
+  const corpusManifest = readJson(join(corpusRoot, 'CORPUS.json'));
+  const selectedRun = runId ?? corpusManifest?.run_id ?? runs[0] ?? null;
+  const runDir = selectedRun && existsSync(join(corpusRoot, 'out', selectedRun)) ? join(corpusRoot, 'out', selectedRun) : null;
 
   const projectIds = existsSync(projectsRoot)
     ? readdirSync(projectsRoot, { withFileTypes: true })
@@ -92,10 +96,9 @@ export function loadCorpus(corpusRoot, runId = null) {
 
   const yieldReport = runDir ? readJson(join(runDir, 'yield.json')) : null;
 
-  // The committed corpus manifest is the decision source of record when no local run records
-  // exist: it carries the measured SHAs, acceptance and improved rules per project. A local run
-  // dir adds the journey-level detail on top.
-  const corpusManifest = readJson(join(corpusRoot, 'CORPUS.json'));
+  // The committed corpus manifest (read above, before run selection) is the decision source of
+  // record when no local run records exist: it carries the measured SHAs, acceptance and improved
+  // rules per project. A local run dir adds the journey-level detail on top.
   // Fill from the manifest only when the view IS the manifest's recorded run (or there are no
   // local runs at all): attributing one run's measurements to another run's view would be a lie.
   const manifestApplies = corpusManifest?.projects && (selectedRun === null || selectedRun === corpusManifest.run_id);
