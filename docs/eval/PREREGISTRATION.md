@@ -255,6 +255,7 @@ with object keys sorted at every depth and strings normalised to NFC, join with 
 
 | date | deviation | reason | recorded by |
 | --- | --- | --- | --- |
+| 2026-10-08 | **the student is a checkpoint both backends can train**, not `Qwen/Qwen2.5-Coder-7B-Instruct` as first proposed | the decided training route is Fireworks managed training, and that checkpoint is **not trainable there**: it is absent from the provider's 44-model fine-tuning catalogue (`docs.fireworks.ai/fine-tuning/models.md`, fetched and hash-pinned in `src/train/reachability.mjs`). The headline platform comparison also needs a checkpoint available on *both* backends, or the comparison measures the model and the platform together. Candidates in the same parameter band, all Apache-2.0: `qwen3-8b`, `qwen3p5-9b`, `qwen3-14b`. No run has happened and no outcome has been seen; this is recorded before the dry run, not after | author mwg-train-prov, from the Fireworks reconciliation |
 | 2026-10-08 | the seal moved from `sha256:8791ebcc…` to `sha256:91d75f29…`, before any training run and before any outcome was seen | two changes, both required by adversarial review: (1) the canonical form now sorts object keys and normalises Unicode, because the first form let a re-serialised manifest hash differently (`SEAL_FORM` v2); (2) `fam-09-v2` asked for an address that its siblings and the shared oracle never mention, so the paraphrase added a deliverable — the phrase was removed | rev: gpt-6-sol + gemini-3.8-flash (adversarial passes), author mwg-train-prov |
 
 ## 15. Limitations
