@@ -126,6 +126,46 @@ export function loadCorpus(corpusRoot, runId = null) {
       project.decision.original_sha ??= entry.original_sha ?? null;
       project.decision.uplifted_sha ??= entry.uplift_sha ?? null;
     }
+    // Projects the plan generates but this checkout never materialized (e.g. arms added after the
+    // trees were last written to disk) are still corpus members: they are included, and their
+    // measured trees are materialized from the plan at serve time.
+    const known = new Set(projects.map((project) => project.id));
+    for (const entry of corpusManifest.projects) {
+      if (known.has(entry.project_id)) continue;
+      projects.push({
+        id: entry.project_id,
+        spec: {
+          archetype: entry.archetype,
+          framework: { name: entry.framework },
+          seeded_defects: entry.defects ?? [],
+          required_rules: [],
+        },
+        specPath: null,
+        originalTreeDir: join(corpusRoot, 'projects', entry.project_id),
+        upliftedTreeDir: null,
+        decision: {
+          project_id: entry.project_id,
+          archetype: entry.archetype,
+          framework: entry.framework,
+          accepted: entry.accepted ?? false,
+          category: entry.category ?? null,
+          detail: ['from the committed corpus manifest (pilot/CORPUS.json); the tree is materialized from the plan at serve time (not on disk in this checkout)'],
+          improved_rules: entry.improved_rules ?? [],
+          regressed_rules: [],
+          new_security_findings: [],
+          seeded_defects: entry.defects ?? [],
+          original_sha: entry.original_sha ?? null,
+          uplifted_sha: entry.uplift_sha ?? null,
+          uplift_applied: entry.uplift_applied ?? [],
+          record_source: 'manifest',
+        },
+        original: null,
+        uplifted: null,
+        evidenceDir: null,
+        runDir: null,
+      });
+    }
+    projects.sort((a, b) => a.id.localeCompare(b.id));
     // The manifest's run id is a valid selection in every view it applies to - including explicit
     // ?run= requests - or the live URLs the index generates would 404 on their own run.
     if (corpusManifest.run_id && !runs.includes(corpusManifest.run_id)) {

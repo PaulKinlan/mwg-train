@@ -122,12 +122,12 @@ export function renderMarkdown(md) {
  * screenshots) exists only where a pilot run executed locally (pilot/out/ is gitignored); the
  * committed record (CORPUS.json) carries decisions and tree SHAs, and says so.
  */
-export function indexBanner({ runEvidence }) {
+export function indexBanner({ runEvidence, projectCount, archetypeCount, armCount }) {
   const evidenceLine = runEvidence
     ? 'acceptance is backed by browser-run evidence you can click through (journeys, rule measurements, screenshots)'
     : 'this checkout has the committed record (CORPUS.json: decisions, tree SHAs, improved rules) but no local run records - journey-level evidence appears here after a local `npm run pilot:run`';
   return `
-<div class="notice"><strong>What this page is:</strong> the pilot corpus - 25 generated sites (5 archetypes × 5 rendering arms), each measured BASELINE vs deterministic MWG repair (the TARGET floor). This is pipeline stages 3-5 (GENERATE → MEASURE → RECORD): the <a href="/pipeline">pipeline doc</a> shows the whole flow. <strong>Why it matters:</strong> ${evidenceLine}; rejected attempts stay visible because acceptance bias is only inspectable when they do. This is the EVAL instrument - training data comes only from a separate, disjoint corpus.</div>`;
+<div class="notice"><strong>What this page is:</strong> the pilot corpus - ${num(projectCount)} generated sites (${num(archetypeCount)} archetypes × ${num(armCount)} rendering arms), each measured BASELINE vs deterministic MWG repair (the TARGET floor). This is pipeline stages 3-5 (GENERATE → MEASURE → RECORD): the <a href="/pipeline">pipeline doc</a> shows the whole flow. <strong>Why it matters:</strong> ${evidenceLine}; rejected attempts stay visible because acceptance bias is only inspectable when they do. This is the EVAL instrument - training data comes only from a separate, disjoint corpus.</div>`;
 }
 
 export function projectBanner({ runEvidence }) {
@@ -266,7 +266,7 @@ export function renderIndex({ views, allViews, filters, runId, runs, yieldReport
 
   return page('corpus index', `
 <h1>mwg-train corpus</h1>
-${indexBanner({ runEvidence })}
+${indexBanner({ runEvidence, projectCount: allViews.length, archetypeCount: archetypes.length, armCount: frameworks.length })}
 ${PIPELINE_STRIP}
 ${scanNotice}
 <p class="muted">Roles: <strong>BASELINE</strong> = raw model output, kept to measure improvement FROM · <strong>TARGET</strong> = the deterministic MWG repair floor to build TOWARDS · <strong>ACCEPTED PAIR</strong> = passed eval acceptance (training data comes only from accepted pairs of the DISJOINT training corpus — the eval set is never trained on) · <strong>REJECTED ATTEMPT</strong> = kept as negative example &amp; repair material.</p>

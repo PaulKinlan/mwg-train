@@ -43,6 +43,14 @@ const REPO_ROOT = resolve(here, '..', '..');
 const EVIDENCE_EXTENSIONS = new Set(['.png', '.json', '.webp', '.jpg', '.jpeg']);
 const VERSIONS = new Set(['original', 'uplifted']);
 
+function readJson(path) {
+  try {
+    return JSON.parse(readFileSync(path, 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
 const htmlResponse = (response, body, status = 200) => {
   response.writeHead(status, { 'content-type': 'text/html; charset=utf-8' });
   response.end(body);
@@ -218,10 +226,9 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
     // A recorded decision without a recorded original sha is a broken record: nothing may be
     // served as the measured original. Only decision-less (unpaired) projects serve the working
     // tree unchecked.
-    if (!project.decision) return { dir: project.originalTreeDir, source: 'working-tree' };
-    const expected = project.decision?.original_sha ?? null;
+    if (!project.decision) return { dir: project.originalTreeDir, source: 'working-tree' };    const expected = project.decision?.original_sha ?? null;
     if (!expected) return { dir: null, reason: 'the recorded decision carries no original sha, so the measured original cannot be verified' };
-    if (hashTree(project.originalTreeDir) === expected) return { dir: project.originalTreeDir, source: 'working-tree-verified' };
+    if (existsSync(project.originalTreeDir) && hashTree(project.originalTreeDir) === expected) return { dir: project.originalTreeDir, source: 'working-tree-verified' };
     const materialized = await materializeMeasuredOriginals();
     if (!materialized) {
       return { dir: null, reason: 'the committed tree no longer matches the recorded original sha, and pilot/generate.mjs is not present to reproduce the measured tree' };
@@ -279,7 +286,11 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
     const { upliftProject } = await import(upliftPath);
     const original = await measuredOriginalTree(project);
     if (!original.dir) return { dir: null, source: 'no-original', reason: original.reason };
-    upliftProject(original.dir, project.spec, cacheDir);
+    // Manifest-only projects carry no full spec.json on disk; the materialized measured tree
+    // includes the generator's own spec, which is the one the recorded uplift was produced from.
+    const spec = project.spec?.routes ? project.spec : (readJson(join(original.dir, 'spec.json')) ?? project.spec);
+    if (!spec) return { dir: null, source: 'no-spec', reason: 'no spec available to reproduce the uplift with' };
+    upliftProject(original.dir, spec, cacheDir);
     const actual = hashTree(cacheDir);
     if (actual !== expected) {
       await rm(cacheDir, { recursive: true, force: true });
@@ -296,7 +307,11 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
     const result = {};
     const originalExpected = project.decision?.original_sha ?? null;
     if (originalExpected) {
-      result.original = hashTree(project.originalTreeDir) === originalExpected ? { status: 'verified' } : { status: 'drifted' };
+      if (!existsSync(project.originalTreeDir)) {
+        result.original = { status: 'not-on-disk' };
+      } else {
+        result.original = hashTree(project.originalTreeDir) === originalExpected ? { status: 'verified' } : { status: 'drifted' };
+      }
     } else {
       result.original = { status: 'unrecorded' };
     }
