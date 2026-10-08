@@ -13,7 +13,7 @@
  * The output is generated, not hand-written, so a price in the documentation cannot drift from the
  * price in the file: test/pricing.test.mjs re-runs this and fails if the checked-in sheets differ.
  */
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import process from 'node:process';
 
 import { verifyQuote } from './verify-quotes.mjs';
