@@ -16,8 +16,8 @@ import { existsSync, mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
-import { FIXTURES, fixturePath } from '../docs/eval/projects/fixtures.mjs';
-import { diffPages, diffTrees, matchPath, pageModel, snapshotPages, treeSnapshot, assessDiff } from '../src/eval/baseline.mjs';
+import { FIXTURES, fixturePath, snapshotSeed } from '../docs/eval/projects/fixtures.mjs';
+import { diffPages, diffTrees, matchPath, normaliseText, pageModel, snapshotPages, treeSnapshot, assessDiff } from '../src/eval/baseline.mjs';
 import { DEFECT_CLASSES, SEEDED_DEFECT_IDS, auditProject } from '../src/eval/defects.mjs';
 import { ALREADY_MODERN_MARKER, parseBriefs, validateBriefs } from '../src/eval/prereg.mjs';
 import { createRoutes, openStore } from '../src/eval/site-kit.mjs';
@@ -32,7 +32,7 @@ function rows() {
 
 function makeStore(fixture) {
   const dir = mkdtempSync(join(tmpdir(), `eval-fixture-${fixture.project_id}-`));
-  return openStore(join(dir, 'data.json'), fixture.seed ?? {});
+  return openStore(join(dir, 'data.json'), snapshotSeed(fixture));
 }
 
 function concretePath(pageSpec, fixture) {
@@ -70,8 +70,8 @@ test('exactly the already-modern and sealed repair rows carry existing_site', ()
 
 test('the validator requires existing_site where it is meaningful and forbids it elsewhere', () => {
   const base = rows().find((row) => row.brief_id === 'cf-06');
-  const missing = validateBriefs([{ ...base, existing_site: null }], undefined);
-  assert.ok(missing.findings.some((finding) => finding.code === 'MISSING_EXISTING_SITE'));
+  const missing = validateBriefs([{ ...base, existing_site: '' }], undefined);
+  assert.ok(missing.findings.some((finding) => finding.code === 'MISSING_EXISTING_SITE'), 'an empty existing_site must be refused');
 
   const generate = rows().find((row) => row.brief_id === 'fam-01-v1');
   const stray = validateBriefs([{ ...generate, existing_site: 'docs/eval/projects/already-modern/cf-06' }], undefined);
@@ -85,6 +85,7 @@ test('every fixture reproduces its committed tree hash and page snapshot', async
     const routes = createRoutes(fixture, makeStore(fixture));
     const paths = (fixture.pages ?? []).map((pageSpec) => concretePath(pageSpec, fixture));
     const pages = await snapshotPages(routes, paths);
+    for (const [path, page] of Object.entries(pages)) assert.equal(page.status, 200, `${fixture.project_id}: ${path} did not render`);
     const committed = JSON.parse(readFileSync(join(dir, 'snapshot.json'), 'utf8')).pages;
     assert.deepEqual(pages, committed, `${fixture.project_id}: snapshot.json is stale`);
   }
@@ -110,6 +111,18 @@ test('the already-modern baselines carry no seeded defect', async () => {
   for (const fixture of FIXTURES.filter((candidate) => candidate.group === 'already-modern')) {
     const audited = await auditProject(fixture, { storeFile: join(mkdtempSync(join(tmpdir(), `audit-clean-${fixture.project_id}-`)), 'store.json') });
     assert.deepEqual(audited, [], `${fixture.project_id} should already be modern`);
+  }
+});
+
+test('every fixture serves through a real HTTP status', async () => {
+  const { serve } = await import('../src/eval/site-kit.mjs');
+  const fixture = FIXTURES.find((candidate) => candidate.group === 'already-modern' && candidate.pages.some((pageSpec) => pageSpec.kind === 'static'));
+  const { server, port } = await serve(createRoutes(fixture, makeStore(fixture)));
+  try {
+    const response = await fetch(`http://127.0.0.1:${port}${fixture.pages.find((pageSpec) => pageSpec.kind === 'static').path}`);
+    assert.equal(response.status, 200, 'a static page served over HTTP must return 200, not a heading');
+  } finally {
+    server.close();
   }
 });
 
@@ -146,9 +159,16 @@ test('the tree oracle reports added, removed and modified files, and an allowlis
   assert.equal(stray.findings.length, 2);
 });
 
+test('the page model decodes entities rather than turning them into spaces', () => {
+  assert.equal(normaliseText('<main>It&#39;s &amp; more &lt;fine&gt;</main>'), "it's & more <fine>");
+});
+
 test('the allowlist glob matches paths, not substrings', () => {
   assert.ok(matchPath('spec.json', 'spec.json'));
   assert.ok(matchPath('app/**', 'app/page.mjs'));
   assert.ok(!matchPath('app/**', 'server.mjs'));
   assert.ok(!matchPath('spec.json', 'not-spec.json'));
+  assert.ok(matchPath('?est.mjs', 'test.mjs'), '? must match one character, not throw');
+  assert.ok(!matchPath('?est.mjs', 'ttest.mjs'));
+  assert.ok(matchPath('app/**/', 'app/page.mjs'), 'a trailing slash must not disable globbing');
 });

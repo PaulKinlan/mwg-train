@@ -7,7 +7,7 @@
       "main_text": "the orchard apple tree discovery pear tree conference"
     },
     "/map": {
-      "status": "Map",
+      "status": 200,
       "main": "88ee31364f1eed1fb4aa120ba532491bb3e215fb443d886cc89d6dcaccd6981e",
       "nav": "f0ab229ff5d804e42b66fd21a4f27578a71cb902f6819f215fcc3fc45f65c297",
       "main_text": "map the orchard map is drawn on the noticeboard by the gate."

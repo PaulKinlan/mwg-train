@@ -1,16 +1,16 @@
 {
   "pages": {
     "/": {
-      "status": "Expense ledger",
+      "status": 200,
       "main": "144a55cbc8ebbf43d114c4005c6d9e6e000ca8dfe09932ef6ba5fbd43307909b",
       "nav": "879daaada415011cfb3e40491e33702f2df09dc9b0b9a280cf1b7974233d9b5b",
       "main_text": "expense ledger for the treasurer of a small group."
     },
     "/ledger": {
       "status": 200,
-      "main": "7e42bc32d56125321af2e6f2f6aa09ba061fbf7ed55bcedb084b7e9c7ae8bc2d",
+      "main": "643b5e01d3eb1c608cd49bc4918ccc260332a6a459426a67d8d937f64c783ec4",
       "nav": "879daaada415011cfb3e40491e33702f2df09dc9b0b9a280cf1b7974233d9b5b",
-      "main_text": "ledger no expenses recorded."
+      "main_text": "ledger undefined"
     },
     "/expenses/new": {
       "status": 200,
@@ -19,10 +19,10 @@
       "main_text": "new expense description date 0 10 20 submit"
     },
     "/expenses/1": {
-      "status": 404,
-      "main": "907ba78b4545338d3539683e63ecb51cf51c10adc9dabd86e92bd52339f298b9",
+      "status": 200,
+      "main": "3071cc981cef44a51eb0e886a3b723fd90854209c23a92856a5ac80a0e9f5b55",
       "nav": "879daaada415011cfb3e40491e33702f2df09dc9b0b9a280cf1b7974233d9b5b",
-      "main_text": "not found"
+      "main_text": "expense recorded description sample value spent_on sample value amount 0"
     }
   }
 }

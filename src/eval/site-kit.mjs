@@ -186,7 +186,7 @@ export function createRoutes(spec, store) {
   const routes = [];
   for (const pageSpec of spec.pages ?? []) {
     if (pageSpec.kind === 'static') {
-      routes.push({ path: pageSpec.path, handler: (ctx) => ctx.send(pageSpec.heading ?? spec.title, page(pageSpec.heading ?? spec.title, [`<h1>${escapeHtml(pageSpec.heading ?? spec.title)}</h1>`, ...(pageSpec.sections ?? []).map((section) => `<p>${escapeHtml(section)}</p>`)])) });
+      routes.push({ path: pageSpec.path, handler: (ctx) => ctx.send(200, page(pageSpec.heading ?? spec.title, [`<h1>${escapeHtml(pageSpec.heading ?? spec.title)}</h1>`, ...(pageSpec.sections ?? []).map((section) => `<p>${escapeHtml(section)}</p>`)])) });
     } else if (pageSpec.kind === 'list') {
       routes.push({
         path: pageSpec.path,
@@ -236,8 +236,11 @@ export function createRoutes(spec, store) {
         method: 'POST',
         path: pageSpec.action ?? pageSpec.path,
         handler: (ctx) => {
-          const requiredMissing = (pageSpec.fields ?? []).filter((fieldSpec) => fieldSpec.required && !ctx.request.form[fieldSpec.name]);
+          const laxValidation = defects.has('lax-validation');
+          const lax = (fieldSpec) => laxValidation && fieldSpec.lax === true;
+          const requiredMissing = (pageSpec.fields ?? []).filter((fieldSpec) => fieldSpec.required && !ctx.request.form[fieldSpec.name] && !lax(fieldSpec));
           const formatBad = (pageSpec.fields ?? []).filter((fieldSpec) => {
+            if (lax(fieldSpec)) return false;
             const raw = ctx.request.form[fieldSpec.name];
             if (raw === undefined || raw === '') return false;
             if (fieldSpec.type === 'email' && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(raw)) return true;
@@ -245,13 +248,12 @@ export function createRoutes(spec, store) {
             return false;
           });
           // `skip-required` accepts an incomplete form (the early-Enter defect) but still explains a bad
-          // value. `accept-negative` drops only the range check (the ledger's silent-corruption defect),
-          // leaving a blank required field a real error so the two defects stay distinguishable.
+          // value. `lax-validation` drops every check on the fields marked `lax` (the ledger's amount),
+          // leaving the other fields enforced so the two defects stay distinguishable.
           const skipRequired = defects.has('skip-required');
-          const skipRange = defects.has('accept-negative') || defects.has('accept-invalid');
-          const invalid = (!skipRequired && requiredMissing.length > 0) || formatBad.some((fieldSpec) => !(skipRange && fieldSpec.min !== undefined));
+          const invalid = (!skipRequired && requiredMissing.length > 0) || formatBad.length > 0;
           if (invalid) {
-            const names = [...(skipRequired ? [] : requiredMissing), ...formatBad.filter((fieldSpec) => !(skipRange && fieldSpec.min !== undefined))].map((fieldSpec) => fieldSpec.name).join(', ');
+            const names = [...(skipRequired ? [] : requiredMissing), ...formatBad].map((fieldSpec) => fieldSpec.name).join(', ');
             return render(ctx, `Please provide a valid ${names}`);
           }
           const record = { id: `${pageSpec.collection}-${store.list(pageSpec.collection).length + 1}`, ...ctx.request.form };

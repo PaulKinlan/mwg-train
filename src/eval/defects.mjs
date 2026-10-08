@@ -87,7 +87,7 @@ function url(pathName) {
 
 /** A total element that is empty server-side and filled in by a script: the value does not survive a reload. */
 export function pagesHaveClientTotal(html) {
-  return /id="[^"]*-total"><\/p><script>/i.test(html);
+  return /id="[^"]*-total"><\/p>\s*<script>/i.test(html);
 }
 
 function concretePath(pageSpec, spec) {
@@ -154,19 +154,29 @@ export async function auditProject(spec, { storeFile }) {
       if (partialResponse.status >= 300 && partialResponse.status < 400) present.add('early-submit');
     }
 
-    const invalid = { ...valid };
     const numberField = (formSpec.fields ?? []).find((fieldSpec) => fieldSpec.min !== undefined);
     const emailField = (formSpec.fields ?? []).find((fieldSpec) => fieldSpec.type === 'email');
-    if (numberField) invalid[numberField.name] = valueFor(numberField, { invalid: true });
-    else if (emailField) invalid[emailField.name] = 'not-an-email';
-    else if (required.length > 0) delete invalid[required[0].name];
-    const beforeInvalid = collectionSize(storeFile, formSpec.collection);
-    const invalidResponse = await handle(routes, { method: 'POST', path: action, body: encode(Object.entries(invalid)) });
-    const invalidAccepted = invalidResponse.status >= 300 && invalidResponse.status < 400;
-    if (invalidAccepted) present.add('invalid-value-accepted');
-    else if (invalidResponse.status === 200) {
-      const announced = /role="alert"|aria-live=/i.test(invalidResponse.body);
-      if (!announced) present.add('error-not-announced');
+    const invalidAttempts = [];
+    if (numberField) {
+      invalidAttempts.push({ ...valid, [numberField.name]: valueFor(numberField, { invalid: true }) });
+      invalidAttempts.push({ ...valid, [numberField.name]: '' });
+    } else if (emailField) {
+      invalidAttempts.push({ ...valid, [emailField.name]: 'not-an-email' });
+    } else if (required.length > 0) {
+      const missing = { ...valid };
+      delete missing[required[0].name];
+      invalidAttempts.push(missing);
+    }
+    for (const invalid of invalidAttempts) {
+      const beforeInvalid = collectionSize(storeFile, formSpec.collection);
+      const invalidResponse = await handle(routes, { method: 'POST', path: action, body: encode(Object.entries(invalid)) });
+      const invalidAccepted = invalidResponse.status >= 300 && invalidResponse.status < 400;
+      if (invalidAccepted) {
+        present.add('invalid-value-accepted');
+        break;
+      }
+      if (invalidResponse.status < 500 && !/role="alert"|aria-live=/i.test(invalidResponse.body)) present.add('error-not-announced');
+      if (collectionSize(storeFile, formSpec.collection) > beforeInvalid) present.add('invalid-value-accepted');
     }
   }
 

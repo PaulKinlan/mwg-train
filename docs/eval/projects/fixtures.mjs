@@ -207,16 +207,16 @@ export const FIXTURES = [
     project_id: 'fam-r03',
     family_id: 'fam-r03',
     title: "Treasurer's expense ledger",
-    defects: ['browser-only-totals', 'no-keyboard-widget', 'accept-negative'],
+    defects: ['browser-only-totals', 'no-keyboard-widget', 'lax-validation'],
     nav: [{ href: '/', label: 'Home' }, { href: '/ledger', label: 'Ledger' }, { href: '/expenses/new', label: 'New expense' }],
     seed: { expenses: [] },
     pages: [
       { path: '/', kind: 'static', heading: 'Expense ledger', sections: ['For the treasurer of a small group.'] },
       { path: '/ledger', kind: 'list', heading: 'Ledger', collection: 'expenses', item: '/expenses/:id', total: { field: 'amount' }, empty: 'No expenses recorded.' },
-      { path: '/expenses/new', kind: 'form', heading: 'New expense', action: '/expenses/new', collection: 'expenses', fields: [{ name: 'description', label: 'Description', type: 'text', required: true }, { name: 'spent_on', label: 'Date', type: 'date', required: true }, { name: 'amount', label: 'Amount', type: 'number', min: 0, widget: 'custom', options: ['0', '10', '20'] }], success: '/expenses/:id' },
+      { path: '/expenses/new', kind: 'form', heading: 'New expense', action: '/expenses/new', collection: 'expenses', fields: [{ name: 'description', label: 'Description', type: 'text', required: true }, { name: 'spent_on', label: 'Date', type: 'date', required: true }, { name: 'amount', label: 'Amount', type: 'number', min: 0, required: true, lax: true, widget: 'custom', options: ['0', '10', '20'] }], success: '/expenses/:id' },
       { path: '/expenses/:id', kind: 'record', heading: 'Expense recorded', collection: 'expenses', show: ['description', 'spent_on', 'amount'] },
     ],
-    defects_note: 'browser-only-totals: the ledger total is worked out by a script and is gone on reload. no-keyboard-widget: the amount field is an unlabelled div combobox. accept-negative: a negative amount is stored without complaint.',
+    defects_note: 'browser-only-totals: the ledger total is worked out by a script and is gone on reload. no-keyboard-widget: the amount field is an unlabelled div combobox. lax-validation: a blank or negative amount is stored without complaint.',
   },
 ];
 
@@ -224,4 +224,20 @@ export const FIXTURE_IDS = FIXTURES.map((fixture) => fixture.project_id);
 
 export function fixturePath(fixture) {
   return `docs/eval/projects/${fixture.group}/${fixture.project_id}`;
+}
+
+/**
+ * A copy of the fixture's seed with one sample record per form collection, so a `record` page
+ * resolves to a real record in the snapshot instead of a 404. Shared by the scaffold and the test so
+ * both render the same store.
+ */
+export function snapshotSeed(fixture) {
+  const seed = JSON.parse(JSON.stringify(fixture.seed ?? {}));
+  for (const pageSpec of fixture.pages ?? []) {
+    if (pageSpec.kind !== 'form') continue;
+    const record = { id: '1' };
+    for (const fieldSpec of pageSpec.fields ?? []) record[fieldSpec.name] = fieldSpec.type === 'number' ? String(fieldSpec.min ?? 1) : 'Sample value';
+    seed[pageSpec.collection] = [record, ...(seed[pageSpec.collection] ?? [])];
+  }
+  return seed;
 }

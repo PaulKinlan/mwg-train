@@ -1,7 +1,7 @@
 {
   "pages": {
     "/": {
-      "status": "Community fun run",
+      "status": 200,
       "main": "9a99d169a4fdca270b419e4b79aa4e2cee3f4ca68b217732590dfec09cbd5b33",
       "nav": "12904f19be5eb159879bca881cceb72a95def11f5343bdd353e73316d868bbe1",
       "main_text": "community fun run a 5km run through the park, open to all ages."
@@ -13,10 +13,10 @@
       "main_text": "register runner name email ticket standard accessible student submit"
     },
     "/registrations/1": {
-      "status": 404,
-      "main": "907ba78b4545338d3539683e63ecb51cf51c10adc9dabd86e92bd52339f298b9",
+      "status": 200,
+      "main": "0468570f3b249571bc43bc0236cd45d8e6390e15e237c19b8c290cd5e372e5e3",
       "nav": "12904f19be5eb159879bca881cceb72a95def11f5343bdd353e73316d868bbe1",
-      "main_text": "not found"
+      "main_text": "registration confirmed name sample value email sample value ticket sample value"
     }
   }
 }

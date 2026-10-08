@@ -1,13 +1,13 @@
 {
   "pages": {
     "/": {
-      "status": "Village hall hire",
+      "status": 200,
       "main": "6cb1f19f1f6fa47641373211ebdf91da54b469205311e0f8c74f48749a3c1feb",
       "nav": "2506305faf126aa9dbd55a48bee9e68e6887fa0420cc718826f25b89ca683d6c",
       "main_text": "village hall hire a tidy hall in the centre of the village, available for parties, meetings and classes."
     },
     "/facilities": {
-      "status": "Facilities",
+      "status": 200,
       "main": "6e2a4e12c995a389c869fc09bd5575cbd6a99da329c6ee5152c9c148a0361ff3",
       "nav": "2506305faf126aa9dbd55a48bee9e68e6887fa0420cc718826f25b89ca683d6c",
       "main_text": "facilities main hall seating 80 people. kitchen with serving hatch. accessible toilet and step-free entrance."

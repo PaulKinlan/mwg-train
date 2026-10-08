@@ -4,7 +4,7 @@
   "defects": [
     "browser-only-totals",
     "no-keyboard-widget",
-    "accept-negative"
+    "lax-validation"
   ],
   "nav": [
     {
@@ -67,6 +67,8 @@
           "label": "Amount",
           "type": "number",
           "min": 0,
+          "required": true,
+          "lax": true,
           "widget": "custom",
           "options": [
             "0",

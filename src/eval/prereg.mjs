@@ -211,7 +211,7 @@ export function validateBriefs(rows, index) {
     // the only thing that exhibits the seeded defects). Everything else must not carry one.
     const alreadyModernRow = Array.isArray(row.non_goals) && row.non_goals.includes(ALREADY_MODERN_MARKER);
     const needsSite = alreadyModernRow || (row.task === 'repair' && row.split === 'test');
-    if (needsSite && typeof row.existing_site !== 'string') {
+    if (needsSite && (typeof row.existing_site !== 'string' || row.existing_site.trim() === '')) {
       findings.push(finding('MISSING_EXISTING_SITE', 'this brief is about an existing project, so existing_site must name it', id, 'existing_site'));
     }
     if (!needsSite && row.existing_site !== undefined && row.existing_site !== null) {

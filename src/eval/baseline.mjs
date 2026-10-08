@@ -78,14 +78,17 @@ export function diffTrees(before, after) {
   };
 }
 
-/** A tiny glob: `**` crosses directories, `*` does not, and a trailing `/` means "this directory". */
+/** A tiny glob: `**` crosses directories, `*` matches within one, `?` matches one character. */
 export function matchPath(pattern, path) {
-  if (pattern.endsWith('/')) return path.startsWith(pattern);
-  const expression = pattern
+  const directory = pattern.endsWith('/') ? pattern.replace(/\/+$/, '') : null;
+  // A plain directory (no glob metacharacters) is a prefix match; `app/**/` must still be expanded.
+  if (directory !== null && !/[*?]/.test(directory)) return path === directory || path.startsWith(`${directory}/`);
+  const body = directory ?? pattern;
+  const expression = body
     .split('**')
-    .map((part) => part.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '[^/]*'))
+    .map((part) => part.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '[^/]*').replace(/\?/g, '[^/]'))
     .join('.*');
-  return new RegExp(`^${expression}$`).test(path);
+  return new RegExp(directory === null ? `^${expression}$` : `^${expression}(/.*)?$`).test(path);
 }
 
 /**
@@ -111,14 +114,15 @@ export function loadPolicy(path) {
   return JSON.parse(readFileSync(path, 'utf8'));
 }
 
-/** Visible text with markup and scripts removed, lowercased and whitespace-collapsed. */
+/** Visible text with markup and scripts removed, entities decoded, lowercased and whitespace-collapsed. */
 export function normaliseText(html) {
+  const named = { '&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"', '&apos;': "'", '&#39;': "'", '&#x27;': "'" };
   return html
     .replace(/<script[\s\S]*?<\/script>/gi, ' ')
     .replace(/<style[\s\S]*?<\/style>/gi, ' ')
     .replace(/<!--[\s\S]*?-->/g, ' ')
     .replace(/<[^>]+>/g, ' ')
-    .replace(/&[a-z#0-9]+;/gi, ' ')
+    .replace(/&(?:[a-z]+|#x?[0-9a-f]+);/gi, (entity) => named[entity.toLowerCase()] ?? ' ')
     .replace(/\s+/g, ' ')
     .trim()
     .toLowerCase();
