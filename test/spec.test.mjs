@@ -196,6 +196,38 @@ test('the rebuild path does not reach the archetype table', () => {
   assert.doesNotMatch(readFileSync(join(ROOT, 'scripts/rebuild-from-spec.mjs'), 'utf8'), /projects\.mjs/, 'the rebuild must not reach the id lookup either');
 });
 
+test('the declared password selector reaches the context the rules read, and matches the built input', () => {
+  // `password_field` was inert while the templates hardcoded `[name=password]`: the specification could
+  // say anything and nothing changed. It is now declared, forwarded and consumed, so this closes the loop
+  // mechanically - the declared selector is the one the rule context carries, and it names an input the
+  // built page actually renders. `rules.mjs` reads it as a selector, so a value that matched nothing would
+  // silently measure no password field at all.
+  assert.ok(
+    ARCHETYPE_IDS.some((familyId) => read(familyId).password_field),
+    'at least one family must declare a password field, or this test checks nothing',
+  );
+  for (const familyId of ARCHETYPE_IDS) {
+    const spec = read(familyId);
+    const built = buildProjectFromSpec({ spec, frameworkName: 'raw', defects: [] });
+    const projectSpec = built.spec;
+    assert.equal(
+      projectSpec.check_context.passwordField,
+      spec.password_field ?? '[name=password]',
+      `${familyId}: the declared selector did not reach the rule context`,
+    );
+    if (spec.password_field === null || spec.password_field === undefined) {
+      // A family with no password declares none, and the rule context carries the default that matches
+      // nothing. Asserting it matched an input would be wrong - and is why the check below is scoped to
+      // the families that do declare one.
+      assert.equal(projectSpec.check_context.passwordField, '[name=password]', `${familyId}: wrong default`);
+      continue;
+    }
+    const name = spec.password_field.match(/^\[name=([^\]]+)\]$/)?.[1];
+    assert.ok(name, `${familyId}: the password selector must be a [name=...] selector, got ${spec.password_field}`);
+    assert.match(built.files['app/page.mjs'], new RegExp(`name="${name}"`), `${familyId}: the declared selector matches no input in the built page`);
+  }
+});
+
 test('a specification that is missing a functional fact is refused, not rebuilt', () => {
   const good = read('booking');
   const clone = () => structuredClone(good);

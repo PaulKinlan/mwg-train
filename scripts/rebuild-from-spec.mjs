@@ -127,15 +127,21 @@ async function main() {
           failures += 1;
           for (const problem of works.problems) console.log(`    ${problem}`);
         }
-        // The security rules are the part of the acceptance that consumes the password selector, so they
-        // are reported here: a selector that found nothing would leave the checks unable to measure.
-        const security = record.security ?? [];
-        if (security.length > 0) {
-          console.log(`  security rules [${security.map((entry) => `${entry.check}:${entry.status}`).join(', ')}]`);
-          const errored = security.filter((entry) => entry.status === 'ERROR');
+        // Two measurement vectors run against the rebuilt project and both are reported: the rules (which is
+        // where the declared password selector is consumed, by `forms/autofill-sign-up-form`) and the
+        // security checks. A `FAIL` is the expected state for a rebuilt original - the originals carry the
+        // gaps the uplift is measured against - but an `ERROR` means the check could not measure at all,
+        // which is a failure of the rebuild and is counted as one.
+        for (const [label, entries, key] of [
+          ['rules', record.rules ?? [], 'rule'],
+          ['security rules', record.security ?? [], 'check'],
+        ]) {
+          if (entries.length === 0) continue;
+          console.log(`  ${label} [${entries.map((entry) => `${entry[key]}:${entry.status}`).join(', ')}]`);
+          const errored = entries.filter((entry) => entry.status === 'ERROR');
           if (errored.length > 0) {
             failures += 1;
-            for (const entry of errored) console.log(`    ${entry.check}: ${entry.detail}`);
+            for (const entry of errored) console.log(`    ${entry[key]}: ${entry.detail}`);
           }
         }
       }
