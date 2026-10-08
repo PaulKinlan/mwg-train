@@ -443,6 +443,27 @@ export function validateBriefSchema(row) {
       if (!isString(search.resultsSelector) || !/^#[A-Za-z][\w-]*$/.test(search.resultsSelector)) {
         at('journey.search.resultsSelector', 'must be an id selector such as "#search-results"; the harness waits for that element, and a looser selector could match a container that renders before the results');
       }
+      // The query must actually match the record this brief creates, or the flow asserts a search over
+      // data that could never contain the answer: the create step's own submitted values are what the
+      // record will hold, so the query is required to appear in one of them.
+      if (isString(search.query)) {
+        const submitted = [
+          ...Object.values(fill ?? {}).map((value) => String(value)),
+          ...Object.values(journey.select ?? {}).map((option) => String(option)),
+        ];
+        const needles = String(search.query)
+          .split(/\s+/)
+          .filter((word) => word.length >= 3);
+        const matchesSomething = submitted.some((value) => {
+          const haystack = value.toLowerCase();
+          return needles.length > 0
+            ? needles.some((word) => haystack.includes(word.toLowerCase()))
+            : haystack.includes(String(search.query).toLowerCase());
+        });
+        if (!matchesSomething) {
+          at('journey.search.query', `'${search.query}' does not match any value the create step submits (${JSON.stringify(submitted)}), so the brief's own record could never appear in its own results`);
+        }
+      }
       const includes = search.expectIncludes;
       if (!Array.isArray(includes) || includes.length === 0 || includes.some((value) => !isString(value))) {
         at('journey.search.expectIncludes', 'must be a non-empty array of non-empty strings - at least one record the query must return');

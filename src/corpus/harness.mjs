@@ -374,20 +374,25 @@ async function driveWriteJourney(page, base, writeJourney) {
 async function driveSearchJourney(page, base, journey, search, { seedField }) {
   if (!seedField) throw new Error('search journey: the journey has no echoed field to seed through');
   const suffix = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
-  const matchToken = `${search.query}-${suffix}`;
-  const missToken = `zzz-unmatched-${suffix}`;
+  // The matching record is created by the brief's OWN journey, so what the search must find is the record
+  // this brief produces - not a synthetic token the driver invented, which would let a brief declare a
+  // query that could never match its own record and still pass. The decoy carries the token the brief
+  // declares as absent, for the same reason in the other direction: the brief names what must not appear,
+  // and the driver seeds exactly that.
+  const decoyToken = `${(search.expectAbsent ?? ['zzz-decoy'])[0]}-${suffix}`;
+  const matchToken = null;
   const seedRecord = async (token) => {
     await page.goto(`${base}${journey.startPath}`);
     for (const [selector, value] of Object.entries(journey.fill ?? {})) {
-      await page.type(selector, selectorFieldName(selector) === seedField ? token : value);
+      await page.type(selector, token !== null && selectorFieldName(selector) === seedField ? token : value);
     }
     if (journey.select) {
       for (const [selector, option] of Object.entries(journey.select)) await page.selectOption(selector, option);
     }
     await page.submit(journey.formSelector ?? 'form');
   };
-  await seedRecord(matchToken);
-  await seedRecord(missToken);
+  await seedRecord(null);
+  await seedRecord(decoyToken);
 
   // The control is read FIRST and straight from the server: the excluded token must be in the
   // unfiltered listing, or its absence from the filtered results says nothing.
@@ -418,13 +423,13 @@ async function driveSearchJourney(page, base, journey, search, { seedField }) {
     filteredText: filtered.text,
     filteredRefs: filtered.refs,
     unfilteredText: unfiltered.status === 200 ? unfiltered.body : '',
-    includes: [...(search.expectIncludes ?? []), matchToken],
-    excludes: [...(search.expectAbsent ?? []), missToken],
+    includes: search.expectIncludes ?? [],
+    excludes: [...(search.expectAbsent ?? []), decoyToken],
   });
   return {
     name: 'search',
     path: url,
-    seeded: { match: matchToken, miss: missToken },
+    seeded: { match: 'the brief\'s own create journey', decoy: decoyToken },
     unfilteredStatus: unfiltered.status,
     containerFound,
     verdict,
@@ -435,9 +440,12 @@ async function driveSearchJourney(page, base, journey, search, { seedField }) {
  * The update-existing journey (`journey.update`): change one field of the record the create step
  * just wrote, and prove the change landed IN PLACE.
  *
- * The ref comes from the create step's redirect target (or `/api/me` for a session flow). The edit
- * page is the record page plus `/edit`; the field is addressed by name, which the schema has already
- * confined to characters a selector can carry. The verdict (`updateVerdict`) requires all three of:
+ * The ref comes from the create step's redirect target (or `/api/me` for a session flow). The edit form
+ * lives on the record page itself and posts to `/edit/<ref>` - that is what the generator emits, and the
+ * field is addressed by name, which the schema has already confined to characters a selector can carry.
+ * The per-record read is `/api/record/<ref>`: the generator serves the singular form and reserves
+ * `/api/records` for the list, so a driver that guessed the plural would report a real update as a
+ * missing API. The verdict (`updateVerdict`) requires all three of:
  * the new value visible on the reloaded record page, the server's API for the ref showing the new
  * value and not the old one, and an UNCHANGED row count - the last is what catches an "edit" route
  * that silently creates a second row.
@@ -475,9 +483,11 @@ async function driveUpdateJourney(page, base, journey, update, { recordUrl = nul
 
   let pageText = '';
   if (recordPath) {
-    await page.goto(`${base}${recordPath}/edit`);
+    // The record page carries the edit form (id edit-form, action /edit/<ref>); there is no separate
+    // edit page to navigate to, and posting to `<recordPath>/edit` would 404.
+    await page.goto(`${base}${recordPath}`);
     await page.type(`[name=${JSON.stringify(update.field)}]`, update.newValue);
-    await page.submit('form');
+    await page.submit('form#edit-form');
     // Visible after a RELOAD of the record page, not merely on whatever the submit redirected to.
     await page.goto(`${base}${recordPath}`);
     pageText = await page.evaluate('return document.body.innerText');
@@ -487,7 +497,7 @@ async function driveUpdateJourney(page, base, journey, update, { recordUrl = nul
 
   const api = ref
     ? await page.evaluate(`
-        const response = await fetch('/api/records/' + ${JSON.stringify(ref)});
+        const response = await fetch('/api/record/' + ${JSON.stringify(ref)});
         return { status: response.status, body: (await response.text()).slice(0, 8000) };
       `)
     : { status: null, body: '' };
@@ -502,7 +512,7 @@ async function driveUpdateJourney(page, base, journey, update, { recordUrl = nul
     rowsBefore,
     rowsAfter,
   });
-  return { name: 'update-existing', ref, editPath: recordPath ? `${recordPath}/edit` : null, verdict };
+  return { name: 'update-existing', ref, editPath: recordPath ?? null, verdict };
 }
 
 /** The validation-failure path: submitting an empty form must not silently succeed. */
