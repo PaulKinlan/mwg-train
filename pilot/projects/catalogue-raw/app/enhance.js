@@ -31,4 +31,7 @@ if (container) {
   const value = new URLSearchParams(location.search).get(container.dataset.echoParam) ?? '';
   // DEFECT: user-supplied text inserted as live HTML.
   container.innerHTML = value;
+  // The insertion ran with this value: the marker is what distinguishes "sanitised the payload
+  // away" from "never touched the container", which the check must not confuse.
+  container.dataset.echoInserted = String(value.length);
 }

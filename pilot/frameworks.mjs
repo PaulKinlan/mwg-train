@@ -278,9 +278,10 @@ function enhanceSource(archetype, { defects }) {
 
   const insertion = (indent) => {
     const pad = ' '.repeat(indent);
+    const marker = `${pad}// The insertion ran with this value: the marker is what distinguishes "sanitised the payload\n${pad}// away" from "never touched the container", which the check must not confuse.\n${pad}container.dataset.echoInserted = String(value.length);`;
     return unsafe
-      ? `${pad}// DEFECT: user-supplied text inserted as live HTML.\n${pad}container.innerHTML = value;`
-      : `${pad}// MWG security/sanitize-untrusted-html: user-supplied markup is parsed as inert content.\n${pad}// TODO(baseline/element.sethtml): drop the textContent fallback and call setHTML directly.\n${pad}if (typeof container.setHTML === 'function') container.setHTML(value);\n${pad}else container.textContent = value;`;
+      ? `${pad}// DEFECT: user-supplied text inserted as live HTML.\n${pad}container.innerHTML = value;\n${marker}`
+      : `${pad}// MWG security/sanitize-untrusted-html: user-supplied markup is parsed as inert content.\n${pad}// TODO(baseline/element.sethtml): drop the textContent fallback and call setHTML directly.\n${pad}if (typeof container.setHTML === 'function') container.setHTML(value);\n${pad}else container.textContent = value;\n${marker}`;
   };
   // One branch, chosen at generation time. The first version emitted both and guarded the record path
   // with a top-level `return`, which is a syntax error in a module - so no project echoed anything and

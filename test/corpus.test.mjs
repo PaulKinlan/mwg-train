@@ -403,6 +403,13 @@ test('the recorded corpus covers the plan, with a hash for every original and ev
   const recorded = JSON.parse(readFileSync(join(repoRoot, 'pilot/CORPUS.json'), 'utf8'));
   assert.equal(recorded.projects.length, plan.projects.length, 'the record must cover every planned project');
   assert.equal(recorded.projects.length, recorded.summary.attempted, 'and match the run it came from');
+  assert.equal(
+    recorded.summary.accepted + Object.entries(recorded.summary.by_category)
+      .filter(([category]) => category !== 'accepted')
+      .reduce((total, [, count]) => total + count, 0),
+    recorded.projects.length,
+    'every project must be either accepted or counted in exactly one refusal category',
+  );
   for (const project of recorded.projects) {
     // hashTree returns `sha256:<hex>`, and the prefix is part of the recorded contract.
     assert.match(project.original_sha, /^sha256:[a-f0-9]{64}$/, `${project.project_id}: no original tree hash`);

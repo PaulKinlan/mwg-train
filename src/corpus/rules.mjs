@@ -241,18 +241,23 @@ export const RULES = Object.freeze({
           // The payload reached the page, as an element (unsafe insertion) or as text (safe insertion).
           // Without this, a 404 or an empty container reads as "nothing executed" and passes: the check
           // would be reporting the absence of evidence as evidence of safety.
-          payloadReachedDom: Boolean(
+          // The insertion ran: the page records the length of the value it inserted. A sanitiser that
+          // removes the payload is a safe outcome, not an unmeasured one - the first version of this
+          // precondition could not tell those apart and reported ERROR on every uplifted project.
+          insertionRan: Boolean(container && container.dataset.echoInserted !== undefined),
+          payloadVisible: Boolean(
             container && (container.querySelector('img[src="x"]') || (container.textContent ?? '').includes('<img')),
           ),
+          insertedLength: container?.dataset.echoInserted ?? null,
           containerText: (container?.textContent ?? '').slice(0, 120),
           liveElements: document.querySelectorAll('img[onerror], script, iframe').length,
         };
       `);
-      if (!observed.payloadReachedDom) {
+      if (!observed.insertionRan) {
         return {
           rule: 'security/sanitize-untrusted-html',
           status: 'ERROR',
-          detail: 'the submitted markup never reached the container, so nothing about its handling was measured',
+          detail: 'the submitted value never reached the insertion path, so nothing about its handling was measured',
           observed,
         };
       }

@@ -142,9 +142,57 @@ partial corpus is not the corpus.
 
 ## Results
 
-See [YIELD.md](YIELD.md) — the report written by the run, committed alongside this file — and
-`pilot/CORPUS.json` for the per-project hashes, the rules each pair improved, and the category each
-pair was given.
+**24 of 25 pairs accepted (96.0%)**, measured on 2026-10-08 in 148s, one Chrome, one project at a
+time. The full report is [YIELD.md](YIELD.md); the per-project hashes, applied rules and verdicts are
+in `pilot/CORPUS.json`, which `npm run check:pilot-corpus` re-derives from `pilot/plan.json` and the
+uplift tool.
+
+| Category | Count |
+| --- | --- |
+| `accepted` | 24 |
+| `no-warranted-change` | 1 |
+| `no-mwg-improvement`, `uplift-broke-the-flow`, `rule-regression`, `security-regression`, `rule-not-measured`, `original-not-runnable` | 0 |
+
+The single refusal is `catalogue-vue`, the project with no seeded defects: the tool made **zero edits**
+to it, which is the result the control exists to produce. No pair was refused because the uplift broke
+a journey, regressed a rule, introduced a security finding, or left a rule unmeasured.
+
+| Arm | Accepted | Attempted | Which properties improved, in how many pairs |
+| --- | --- | --- | --- |
+| `raw` | 5 | 5 | `forms/required-field-feedback` 21, `accessibility/accessible-error-announcement` 19, `security/sanitize-untrusted-html` 16, `forms/validate-input-after-interaction` 15, `forms/autofill-address-form` 5, `forms/autofill-sign-up-form` 4 (across all arms) |
+| `react` | 5 | 5 | |
+| `preact` | 5 | 5 | |
+| `hono` | 5 | 5 | |
+| `vue` | 4 | 5 | the missing pair is the control |
+
+Every archetype scored 5/5 except `catalogue` (4/5, the control). The evenness across arms is itself a
+finding: the same generator writes all five, so the arms differ mainly in dialect, and the uplift tool
+handles all five dialects — including Hono's `hono/html` templates and Vue's runtime-compiled ones —
+without a rule failing on any of them.
+
+### Three corrections the pilot made to itself, and why they are in the record
+
+The first full run measured 1/20 and the second 25/25; neither number survived scrutiny. The failures
+and the corrections are more useful than the final figure, so they are kept:
+
+1. **1/20 was measurement, not the tool.** Form ids no journey could find, uplifted copies staged where
+   Node could not resolve framework modules, a generated enhancement script with a top-level `return`,
+   an account page that was never routed. Every one was in my harness or corpus.
+2. **25/25 was a stale corpus.** The "clean" control had been scaffolded before a fix that linked error
+   text to its field, so it was itself defective and the tool scored a fix on it. Re-scaffolding and
+   re-measuring produced 24/25 with the control refusing, and exposed a second real gap: projects not
+   seeded with the announcement defect had a live region nothing ever filled, while the tool called that
+   "already present".
+3. **24/25 hid a false pass.** For all five `account-recovery` projects the sanitisation check reported
+   PASS in both versions, because the content journey navigated to the route the record-reference arm
+   uses and landed on a 404: the payload never reached the page, so "nothing executed" was trivially
+   true. Fixing it produced one more correction in the opposite direction — the replacement precondition
+   treated the Sanitizer API *removing* the payload as "never measured" and refused all 25 pairs. The
+   final precondition asks the page whether its insertion path ran, which distinguishes `sanitised away`
+   from `never delivered`.
+
+The number worth trusting is therefore not 96% on its own: it is 96% with one control, zero unmeasured
+rules, and a reproducibility gate that can regenerate both the originals and the uplifts.
 
 ## Limits, and what would make this more credible
 

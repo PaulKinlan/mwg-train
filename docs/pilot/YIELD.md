@@ -1,6 +1,6 @@
-# Pilot acceptance yield (2026-10-08T10-19-08-505Z)
+# Pilot acceptance yield (2026-10-08T10-25-34-975Z)
 
-Generated 2026-10-08T10:21:38.080Z by `scripts/pilot.mjs`. 25 pairs attempted, 24 accepted: **96.0%**.
+Generated 2026-10-08T10:28:02.840Z by `scripts/pilot.mjs`. 25 pairs attempted, 24 accepted: **96.0%**.
 
 Every number here comes from a record produced by driving the project in a real browser; the
 per-project records and their screenshots and traces are next to this file.
@@ -38,8 +38,8 @@ per-project records and their screenshots and traces are next to this file.
 | --- | --- |
 | `forms/required-field-feedback` | 21 |
 | `accessibility/accessible-error-announcement` | 19 |
+| `security/sanitize-untrusted-html` | 16 |
 | `forms/validate-input-after-interaction` | 15 |
-| `security/sanitize-untrusted-html` | 13 |
 | `forms/autofill-address-form` | 5 |
 | `forms/autofill-sign-up-form` | 4 |
 
@@ -47,11 +47,11 @@ per-project records and their screenshots and traces are next to this file.
 
 | project | archetype | framework | defects seeded | rules improved | outcome |
 | --- | --- | --- | --- | --- | --- |
-| `account-recovery-hono` | account-recovery | hono | 4 | 4 | **accepted** |
+| `account-recovery-hono` | account-recovery | hono | 4 | 5 | **accepted** |
 | `account-recovery-preact` | account-recovery | preact | 2 | 3 | **accepted** |
 | `account-recovery-raw` | account-recovery | raw | 4 | 4 | **accepted** |
-| `account-recovery-react` | account-recovery | react | 2 | 1 | **accepted** |
-| `account-recovery-vue` | account-recovery | vue | 2 | 2 | **accepted** |
+| `account-recovery-react` | account-recovery | react | 2 | 2 | **accepted** |
+| `account-recovery-vue` | account-recovery | vue | 2 | 3 | **accepted** |
 | `booking-hono` | booking | hono | 5 | 5 | **accepted** |
 | `booking-preact` | booking | preact | 3 | 4 | **accepted** |
 | `booking-raw` | booking | raw | 5 | 5 | **accepted** |

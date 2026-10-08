@@ -37,5 +37,8 @@ if (container) {
     // TODO(baseline/element.sethtml): drop the textContent fallback and call setHTML directly.
     if (typeof container.setHTML === 'function') container.setHTML(value);
     else container.textContent = value;
+    // The insertion ran with this value: the marker is what distinguishes "sanitised the payload
+    // away" from "never touched the container", which the check must not confuse.
+    container.dataset.echoInserted = String(value.length);
   }
 }
