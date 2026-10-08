@@ -318,13 +318,19 @@ export function assertComparable(left, right) {
   } else if (leftTokenizer !== rightTokenizer) {
     problems.push('the tokenizers differ, so the same corpus is not the same tokens');
   }
-  const leftRecipe = isPlainObject(left.hyperparameters) ? left.hyperparameters : {};
-  const rightRecipe = isPlainObject(right.hyperparameters) ? right.hyperparameters : {};
-  const recipeDifferences = RECIPE_KEYS.filter((key) => leftRecipe[key] !== rightRecipe[key]);
-  if (recipeDifferences.length > 0) {
-    // A 1-epoch rank-8 LoRA-SFT run and a 10-epoch rank-64 LoRA-DPO run differ in cost because of the
-    // recipe, not the platform, and calling that a backend comparison would be wrong twice over.
-    problems.push(`the training recipes differ (${recipeDifferences.map((key) => `${key}: ${leftRecipe[key] ?? 'unset'} vs ${rightRecipe[key] ?? 'unset'}`).join(', ')}), so a cost difference is the recipe and not the platform`);
+  const leftRecipe = isPlainObject(left.hyperparameters) ? left.hyperparameters : null;
+  const rightRecipe = isPlainObject(right.hyperparameters) ? right.hyperparameters : null;
+  if (leftRecipe === null || rightRecipe === null) {
+    // Same rule as the tokenizer: two manifests that both omit the recipe are both silent, not
+    // identical. `{} === {}` over the key list is empty, which used to read as a match.
+    problems.push('a manifest does not record its hyperparameters, so the training recipes cannot be shown to match');
+  } else {
+    const recipeDifferences = RECIPE_KEYS.filter((key) => leftRecipe[key] !== rightRecipe[key]);
+    if (recipeDifferences.length > 0) {
+      // A 1-epoch rank-8 LoRA-SFT run and a 10-epoch rank-64 LoRA-DPO run differ in cost because of the
+      // recipe, not the platform, and calling that a backend comparison would be wrong twice over.
+      problems.push(`the training recipes differ (${recipeDifferences.map((key) => `${key}: ${leftRecipe[key] ?? 'unset'} vs ${rightRecipe[key] ?? 'unset'}`).join(', ')}), so a cost difference is the recipe and not the platform`);
+    }
   }
   return { comparable: problems.length === 0, problems };
 }

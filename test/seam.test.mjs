@@ -261,6 +261,10 @@ test('a comparison over different recipes, bases or a missing tokenizer is refus
   const noTokenizer = assertComparable({ ...left, tokenizer: undefined }, { ...right, tokenizer: undefined });
   assert.equal(noTokenizer.comparable, false);
   assert.match(noTokenizer.problems.join(' '), /records no tokenizer/);
+  // Two manifests that both omit the recipe are silent, not identical - found in review.
+  const noRecipe = assertComparable({ ...left, hyperparameters: undefined }, { ...right, hyperparameters: undefined });
+  assert.equal(noRecipe.comparable, false);
+  assert.match(noRecipe.problems.join(' '), /does not record its hyperparameters/);
 });
 
 test('an adapter that records a different base than the job declared is refused', async () => {
