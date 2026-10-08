@@ -1,4 +1,10 @@
 node_modules/
+
+# The viewer's runtime state: sandbox bridge sockets and regenerated uplifted trees.
+.viewer-state/
+
+# Test fixture databases.
+test-fixtures/**/*.sqlite
 npm-debug.log*
 
 # Raw captured licence/terms bytes and their text extractions are kept locally for review but not
