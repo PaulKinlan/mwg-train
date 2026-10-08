@@ -54,6 +54,47 @@ export const MAPPABLE_CONTROL_TYPES = new Set([
  * Where the records do not establish something, refuses with a specific reason rather than
  * inventing or guessing.
  */
+// A flow records ACTIONS ({action, target, value}). A journey step - and the driver that replays it in
+// src/corpus/harness.mjs, which reads step.fill / step.select / step.submit / step.expectText - describes a PLACE
+// plus the controls set there. Carrying the flow's steps through verbatim produces a journey whose fills and
+// submits the driver never performs: it navigates, asserts nothing, and no gate notices, because validateSpec
+// does not inspect step structure. So convert, and convert faithfully.
+export function stepsForJourney(flowSteps) {
+  const out = [];
+  let current = null;
+  const ensure = (path) => {
+    if (!current || current.path !== path) { current = { path }; out.push(current); }
+    return current;
+  };
+  for (const step of flowSteps) {
+    if (step.action === 'goto') {
+      const at = ensure(step.path);
+      if (step.expectText !== undefined) at.expectText = step.expectText;
+      current = null; // the next action belongs to a step of its own
+      continue;
+    }
+    if (step.action === 'fill' || step.action === 'select') {
+      const at = ensure(step.path);
+      const key = step.action === 'fill' ? 'fill' : 'select';
+      at[key] = { ...(at[key] ?? {}), [step.target]: step.value };
+      if (step.expectText !== undefined) at.expectText = step.expectText;
+      continue;
+    }
+    if (step.action === 'submit') {
+      const at = ensure(step.path);
+      at.submit = step.target;
+      if (step.expectText !== undefined) at.expectText = step.expectText;
+      current = null;
+      continue;
+    }
+    if (step.action === 'click') {
+      const at = ensure(step.path);
+      if (step.expectText !== undefined) at.expectText = step.expectText;
+    }
+  }
+  return out;
+}
+
 export function translateCapture({ capture, flow }) {
   // Validate input schemas fail-closed before any extraction
   const captureProblems = validateCapture(capture);
@@ -305,7 +346,7 @@ export function translateCapture({ capture, flow }) {
       formSelector: `form#${formId}`,
       fill: journeyFill,
       expectText: expectStep.expectText,
-      steps: flow.steps.map((s) => ({ ...s })),
+      steps: stepsForJourney(flow.steps),
     },
     echo: {
       field: echoControl.slug ?? echoControl.name,
