@@ -1,6 +1,6 @@
 {
   "$comment": "The training corpus generated from the tr-* briefs: one project per family x framework, each with its tree hash. `node scripts/scaffold-training-corpus.mjs` re-derives every tree; a hash here must never collide with a hash in pilot/CORPUS.json (original or uplift), which is the disjointness the corpus exists to guarantee.",
-  "generated_at": "2026-10-08T14:32:11.094Z",
+  "generated_at": "2026-10-08T14:58:34.505Z",
   "generator": "scripts/scaffold-training-corpus.mjs",
   "summary": {
     "families": 30,
@@ -42,6 +42,10 @@
       "framework": "hono",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/book",
+      "emitted_write_route": "/book",
       "topic": "mobile bicycle mechanic service booking",
       "routes": [
         "/",
@@ -59,6 +63,10 @@
       "framework": "raw",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/book",
+      "emitted_write_route": "/book",
       "topic": "mobile bicycle mechanic service booking",
       "routes": [
         "/",
@@ -76,6 +84,10 @@
       "framework": "react",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/book",
+      "emitted_write_route": "/book",
       "topic": "mobile bicycle mechanic service booking",
       "routes": [
         "/",
@@ -93,6 +105,10 @@
       "framework": "preact",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/book",
+      "emitted_write_route": "/book",
       "topic": "mobile bicycle mechanic service booking",
       "routes": [
         "/",
@@ -110,6 +126,10 @@
       "framework": "vue",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/book",
+      "emitted_write_route": "/book",
       "topic": "mobile bicycle mechanic service booking",
       "routes": [
         "/",
@@ -127,6 +147,10 @@
       "framework": "webcomponents",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/book",
+      "emitted_write_route": "/book",
       "topic": "mobile bicycle mechanic service booking",
       "routes": [
         "/",
@@ -144,6 +168,10 @@
       "framework": "svelte",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/book",
+      "emitted_write_route": "/book",
       "topic": "mobile bicycle mechanic service booking",
       "routes": [
         "/",
@@ -161,6 +189,10 @@
       "framework": "hono",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/checkout",
+      "emitted_write_route": "/checkout",
       "topic": "seasonal cider pre-orders and local pickup",
       "routes": [
         "/",
@@ -179,6 +211,10 @@
       "framework": "raw",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/checkout",
+      "emitted_write_route": "/checkout",
       "topic": "seasonal cider pre-orders and local pickup",
       "routes": [
         "/",
@@ -197,6 +233,10 @@
       "framework": "react",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/checkout",
+      "emitted_write_route": "/checkout",
       "topic": "seasonal cider pre-orders and local pickup",
       "routes": [
         "/",
@@ -215,6 +255,10 @@
       "framework": "preact",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/checkout",
+      "emitted_write_route": "/checkout",
       "topic": "seasonal cider pre-orders and local pickup",
       "routes": [
         "/",
@@ -233,6 +277,10 @@
       "framework": "vue",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/checkout",
+      "emitted_write_route": "/checkout",
       "topic": "seasonal cider pre-orders and local pickup",
       "routes": [
         "/",
@@ -251,6 +299,10 @@
       "framework": "webcomponents",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/checkout",
+      "emitted_write_route": "/checkout",
       "topic": "seasonal cider pre-orders and local pickup",
       "routes": [
         "/",
@@ -269,6 +321,10 @@
       "framework": "svelte",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/checkout",
+      "emitted_write_route": "/checkout",
       "topic": "seasonal cider pre-orders and local pickup",
       "routes": [
         "/",
@@ -287,6 +343,10 @@
       "framework": "hono",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/reserve",
+      "emitted_write_route": "/reserve",
       "topic": "pottery studio shared kiln firings schedule",
       "routes": [
         "/",
@@ -305,6 +365,10 @@
       "framework": "raw",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/reserve",
+      "emitted_write_route": "/reserve",
       "topic": "pottery studio shared kiln firings schedule",
       "routes": [
         "/",
@@ -323,6 +387,10 @@
       "framework": "react",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/reserve",
+      "emitted_write_route": "/reserve",
       "topic": "pottery studio shared kiln firings schedule",
       "routes": [
         "/",
@@ -341,6 +409,10 @@
       "framework": "preact",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/reserve",
+      "emitted_write_route": "/reserve",
       "topic": "pottery studio shared kiln firings schedule",
       "routes": [
         "/",
@@ -359,6 +431,10 @@
       "framework": "vue",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/reserve",
+      "emitted_write_route": "/reserve",
       "topic": "pottery studio shared kiln firings schedule",
       "routes": [
         "/",
@@ -377,6 +453,10 @@
       "framework": "webcomponents",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/reserve",
+      "emitted_write_route": "/reserve",
       "topic": "pottery studio shared kiln firings schedule",
       "routes": [
         "/",
@@ -395,6 +475,10 @@
       "framework": "svelte",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/reserve",
+      "emitted_write_route": "/reserve",
       "topic": "pottery studio shared kiln firings schedule",
       "routes": [
         "/",
@@ -413,6 +497,10 @@
       "framework": "hono",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": null,
+      "emitted_write_route": "/log",
       "topic": "community solar array daily output and member credits",
       "routes": [
         "/",
@@ -430,6 +518,10 @@
       "framework": "raw",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": null,
+      "emitted_write_route": "/log",
       "topic": "community solar array daily output and member credits",
       "routes": [
         "/",
@@ -447,6 +539,10 @@
       "framework": "react",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": null,
+      "emitted_write_route": "/log",
       "topic": "community solar array daily output and member credits",
       "routes": [
         "/",
@@ -464,6 +560,10 @@
       "framework": "preact",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": null,
+      "emitted_write_route": "/log",
       "topic": "community solar array daily output and member credits",
       "routes": [
         "/",
@@ -481,6 +581,10 @@
       "framework": "vue",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": null,
+      "emitted_write_route": "/log",
       "topic": "community solar array daily output and member credits",
       "routes": [
         "/",
@@ -498,6 +602,10 @@
       "framework": "webcomponents",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": null,
+      "emitted_write_route": "/log",
       "topic": "community solar array daily output and member credits",
       "routes": [
         "/",
@@ -515,6 +623,10 @@
       "framework": "svelte",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": null,
+      "emitted_write_route": "/log",
       "topic": "community solar array daily output and member credits",
       "routes": [
         "/",
@@ -532,6 +644,10 @@
       "framework": "hono",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/register",
+      "emitted_write_route": "/register",
       "topic": "wildlife rehabilitation volunteer intake and credentials",
       "routes": [
         "/",
@@ -549,6 +665,10 @@
       "framework": "raw",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/register",
+      "emitted_write_route": "/register",
       "topic": "wildlife rehabilitation volunteer intake and credentials",
       "routes": [
         "/",
@@ -566,6 +686,10 @@
       "framework": "react",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/register",
+      "emitted_write_route": "/register",
       "topic": "wildlife rehabilitation volunteer intake and credentials",
       "routes": [
         "/",
@@ -583,6 +707,10 @@
       "framework": "preact",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/register",
+      "emitted_write_route": "/register",
       "topic": "wildlife rehabilitation volunteer intake and credentials",
       "routes": [
         "/",
@@ -600,6 +728,10 @@
       "framework": "vue",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/register",
+      "emitted_write_route": "/register",
       "topic": "wildlife rehabilitation volunteer intake and credentials",
       "routes": [
         "/",
@@ -617,6 +749,10 @@
       "framework": "webcomponents",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/register",
+      "emitted_write_route": "/register",
       "topic": "wildlife rehabilitation volunteer intake and credentials",
       "routes": [
         "/",
@@ -634,6 +770,10 @@
       "framework": "svelte",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/register",
+      "emitted_write_route": "/register",
       "topic": "wildlife rehabilitation volunteer intake and credentials",
       "routes": [
         "/",
@@ -651,6 +791,10 @@
       "framework": "hono",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": null,
+      "emitted_write_route": "/note",
       "topic": "craft guild artisan profiles and studio open days",
       "routes": [
         "/",
@@ -668,6 +812,10 @@
       "framework": "raw",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": null,
+      "emitted_write_route": "/note",
       "topic": "craft guild artisan profiles and studio open days",
       "routes": [
         "/",
@@ -685,6 +833,10 @@
       "framework": "react",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": null,
+      "emitted_write_route": "/note",
       "topic": "craft guild artisan profiles and studio open days",
       "routes": [
         "/",
@@ -702,6 +854,10 @@
       "framework": "preact",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": null,
+      "emitted_write_route": "/note",
       "topic": "craft guild artisan profiles and studio open days",
       "routes": [
         "/",
@@ -719,6 +875,10 @@
       "framework": "vue",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": null,
+      "emitted_write_route": "/note",
       "topic": "craft guild artisan profiles and studio open days",
       "routes": [
         "/",
@@ -736,6 +896,10 @@
       "framework": "webcomponents",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": null,
+      "emitted_write_route": "/note",
       "topic": "craft guild artisan profiles and studio open days",
       "routes": [
         "/",
@@ -753,6 +917,10 @@
       "framework": "svelte",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": null,
+      "emitted_write_route": "/note",
       "topic": "craft guild artisan profiles and studio open days",
       "routes": [
         "/",
@@ -770,6 +938,10 @@
       "framework": "hono",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/register/:eventId",
+      "emitted_write_route": "/register/:eventId",
       "topic": "dark sky observatory public viewing night sign-up",
       "routes": [
         "/",
@@ -777,7 +949,7 @@
         "/register/:eventId",
         "/passes/:id"
       ],
-      "tree_sha": "sha256:b0ab39778cfcf92cb959863f70a49c555df0d58635c469ca8adb27ecf06d407a"
+      "tree_sha": "sha256:184ebb1011c8056fa4248c53cd66a977e246e697d1d0d5997219777946ad0e4d"
     },
     {
       "project_id": "tr-07-raw",
@@ -787,6 +959,10 @@
       "framework": "raw",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/register/:eventId",
+      "emitted_write_route": "/register/:eventId",
       "topic": "dark sky observatory public viewing night sign-up",
       "routes": [
         "/",
@@ -794,7 +970,7 @@
         "/register/:eventId",
         "/passes/:id"
       ],
-      "tree_sha": "sha256:87763eb785a866700f9733749d0061d0414637b660af315b0a9ec6b7eb4799ea"
+      "tree_sha": "sha256:cc8b839de4badeb6917ccf9f0611a2e42fe4b07b8707eec5885223825342043a"
     },
     {
       "project_id": "tr-07-react",
@@ -804,6 +980,10 @@
       "framework": "react",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/register/:eventId",
+      "emitted_write_route": "/register/:eventId",
       "topic": "dark sky observatory public viewing night sign-up",
       "routes": [
         "/",
@@ -811,7 +991,7 @@
         "/register/:eventId",
         "/passes/:id"
       ],
-      "tree_sha": "sha256:0517fcd7692d30f241c6bdfd1f5a884d35d1d368b0c12a2281ccd28ae9a8d31f"
+      "tree_sha": "sha256:8d3821e4ef9793958d7a565e60b4e8c0b06bf01d7b922785d9848c75a1f88f06"
     },
     {
       "project_id": "tr-07-preact",
@@ -821,6 +1001,10 @@
       "framework": "preact",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/register/:eventId",
+      "emitted_write_route": "/register/:eventId",
       "topic": "dark sky observatory public viewing night sign-up",
       "routes": [
         "/",
@@ -828,7 +1012,7 @@
         "/register/:eventId",
         "/passes/:id"
       ],
-      "tree_sha": "sha256:eaa6923facb6ea44ac620082c4615caea97747d8c593960a8150a02a1761287f"
+      "tree_sha": "sha256:978f91944bf9074dc088bbc52b0f422d5af5e691526efba820dc90899d06a6b9"
     },
     {
       "project_id": "tr-07-vue",
@@ -838,6 +1022,10 @@
       "framework": "vue",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/register/:eventId",
+      "emitted_write_route": "/register/:eventId",
       "topic": "dark sky observatory public viewing night sign-up",
       "routes": [
         "/",
@@ -845,7 +1033,7 @@
         "/register/:eventId",
         "/passes/:id"
       ],
-      "tree_sha": "sha256:e957b72a49e013169375e79b3c2910706f4afea9e155da1fbfa07b47d1829dd1"
+      "tree_sha": "sha256:6dd1d528b0b9aaa80d2c47d1a4e485236b3401e2b14b0fc23b065f3d6c80e464"
     },
     {
       "project_id": "tr-07-webcomponents",
@@ -855,6 +1043,10 @@
       "framework": "webcomponents",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/register/:eventId",
+      "emitted_write_route": "/register/:eventId",
       "topic": "dark sky observatory public viewing night sign-up",
       "routes": [
         "/",
@@ -862,7 +1054,7 @@
         "/register/:eventId",
         "/passes/:id"
       ],
-      "tree_sha": "sha256:a16bc0d1deefcc3f8ae2f2a559bb05466fdff16dd73f67aa0cbf8ff3c293c155"
+      "tree_sha": "sha256:2dd0f5725823f60f3b3245aa999e719f485be677f0293f1193cfc7960b8466e3"
     },
     {
       "project_id": "tr-07-svelte",
@@ -872,6 +1064,10 @@
       "framework": "svelte",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/register/:eventId",
+      "emitted_write_route": "/register/:eventId",
       "topic": "dark sky observatory public viewing night sign-up",
       "routes": [
         "/",
@@ -879,7 +1075,7 @@
         "/register/:eventId",
         "/passes/:id"
       ],
-      "tree_sha": "sha256:6ad3713f63d7e0e2ab4eec513ae26cfb3787c06b6a534bd964aaf7a98baa5c68"
+      "tree_sha": "sha256:53374643cceb082bc4d6a4756967a17c21b1d02ae9d300ed7193c5aa4552e342"
     },
     {
       "project_id": "tr-08-hono",
@@ -889,6 +1085,10 @@
       "framework": "hono",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/tickets/new",
+      "emitted_write_route": "/tickets/new",
       "topic": "community darkroom maintenance and supply requests",
       "routes": [
         "/",
@@ -906,6 +1106,10 @@
       "framework": "raw",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/tickets/new",
+      "emitted_write_route": "/tickets/new",
       "topic": "community darkroom maintenance and supply requests",
       "routes": [
         "/",
@@ -923,6 +1127,10 @@
       "framework": "react",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/tickets/new",
+      "emitted_write_route": "/tickets/new",
       "topic": "community darkroom maintenance and supply requests",
       "routes": [
         "/",
@@ -940,6 +1148,10 @@
       "framework": "preact",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/tickets/new",
+      "emitted_write_route": "/tickets/new",
       "topic": "community darkroom maintenance and supply requests",
       "routes": [
         "/",
@@ -957,6 +1169,10 @@
       "framework": "vue",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/tickets/new",
+      "emitted_write_route": "/tickets/new",
       "topic": "community darkroom maintenance and supply requests",
       "routes": [
         "/",
@@ -974,6 +1190,10 @@
       "framework": "webcomponents",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/tickets/new",
+      "emitted_write_route": "/tickets/new",
       "topic": "community darkroom maintenance and supply requests",
       "routes": [
         "/",
@@ -991,6 +1211,10 @@
       "framework": "svelte",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/tickets/new",
+      "emitted_write_route": "/tickets/new",
       "topic": "community darkroom maintenance and supply requests",
       "routes": [
         "/",
@@ -1008,6 +1232,10 @@
       "framework": "hono",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/enrol",
+      "emitted_write_route": "/enrol",
       "topic": "wild edibles identification field course booking",
       "routes": [
         "/",
@@ -1026,6 +1254,10 @@
       "framework": "raw",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/enrol",
+      "emitted_write_route": "/enrol",
       "topic": "wild edibles identification field course booking",
       "routes": [
         "/",
@@ -1044,6 +1276,10 @@
       "framework": "react",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/enrol",
+      "emitted_write_route": "/enrol",
       "topic": "wild edibles identification field course booking",
       "routes": [
         "/",
@@ -1062,6 +1298,10 @@
       "framework": "preact",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/enrol",
+      "emitted_write_route": "/enrol",
       "topic": "wild edibles identification field course booking",
       "routes": [
         "/",
@@ -1080,6 +1320,10 @@
       "framework": "vue",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/enrol",
+      "emitted_write_route": "/enrol",
       "topic": "wild edibles identification field course booking",
       "routes": [
         "/",
@@ -1098,6 +1342,10 @@
       "framework": "webcomponents",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/enrol",
+      "emitted_write_route": "/enrol",
       "topic": "wild edibles identification field course booking",
       "routes": [
         "/",
@@ -1116,6 +1364,10 @@
       "framework": "svelte",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/enrol",
+      "emitted_write_route": "/enrol",
       "topic": "wild edibles identification field course booking",
       "routes": [
         "/",
@@ -1134,6 +1386,10 @@
       "framework": "hono",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/survey",
+      "emitted_write_route": "/survey",
       "topic": "residential street safety and crosswalk feedback survey",
       "routes": [
         "/",
@@ -1151,6 +1407,10 @@
       "framework": "raw",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/survey",
+      "emitted_write_route": "/survey",
       "topic": "residential street safety and crosswalk feedback survey",
       "routes": [
         "/",
@@ -1168,6 +1428,10 @@
       "framework": "react",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/survey",
+      "emitted_write_route": "/survey",
       "topic": "residential street safety and crosswalk feedback survey",
       "routes": [
         "/",
@@ -1185,6 +1449,10 @@
       "framework": "preact",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/survey",
+      "emitted_write_route": "/survey",
       "topic": "residential street safety and crosswalk feedback survey",
       "routes": [
         "/",
@@ -1202,6 +1470,10 @@
       "framework": "vue",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/survey",
+      "emitted_write_route": "/survey",
       "topic": "residential street safety and crosswalk feedback survey",
       "routes": [
         "/",
@@ -1219,6 +1491,10 @@
       "framework": "webcomponents",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/survey",
+      "emitted_write_route": "/survey",
       "topic": "residential street safety and crosswalk feedback survey",
       "routes": [
         "/",
@@ -1236,6 +1512,10 @@
       "framework": "svelte",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/survey",
+      "emitted_write_route": "/survey",
       "topic": "residential street safety and crosswalk feedback survey",
       "routes": [
         "/",
@@ -1253,6 +1533,10 @@
       "framework": "hono",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/order",
+      "emitted_write_route": "/order",
       "topic": "sourdough cottage bakery weekly loaf orders",
       "routes": [
         "/",
@@ -1270,6 +1554,10 @@
       "framework": "raw",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/order",
+      "emitted_write_route": "/order",
       "topic": "sourdough cottage bakery weekly loaf orders",
       "routes": [
         "/",
@@ -1287,6 +1575,10 @@
       "framework": "react",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/order",
+      "emitted_write_route": "/order",
       "topic": "sourdough cottage bakery weekly loaf orders",
       "routes": [
         "/",
@@ -1304,6 +1596,10 @@
       "framework": "preact",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/order",
+      "emitted_write_route": "/order",
       "topic": "sourdough cottage bakery weekly loaf orders",
       "routes": [
         "/",
@@ -1321,6 +1617,10 @@
       "framework": "vue",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/order",
+      "emitted_write_route": "/order",
       "topic": "sourdough cottage bakery weekly loaf orders",
       "routes": [
         "/",
@@ -1338,6 +1638,10 @@
       "framework": "webcomponents",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/order",
+      "emitted_write_route": "/order",
       "topic": "sourdough cottage bakery weekly loaf orders",
       "routes": [
         "/",
@@ -1355,6 +1659,10 @@
       "framework": "svelte",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/order",
+      "emitted_write_route": "/order",
       "topic": "sourdough cottage bakery weekly loaf orders",
       "routes": [
         "/",
@@ -1372,6 +1680,10 @@
       "framework": "hono",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/jobs/:id/apply",
+      "emitted_write_route": "/jobs/:id/apply",
       "topic": "local heat pump and solar installer apprenticeships",
       "routes": [
         "/",
@@ -1380,7 +1692,7 @@
         "/jobs/:id/apply",
         "/applications/:id"
       ],
-      "tree_sha": "sha256:7d75895d7c78defd64477dee8ff3579fa5996f452c5d30e4c030ba8b0f7df972"
+      "tree_sha": "sha256:0eeb906b09959058188be9e6996e1d7fc022747c1d044f211fce309d4724a42c"
     },
     {
       "project_id": "tr-12-raw",
@@ -1390,6 +1702,10 @@
       "framework": "raw",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/jobs/:id/apply",
+      "emitted_write_route": "/jobs/:id/apply",
       "topic": "local heat pump and solar installer apprenticeships",
       "routes": [
         "/",
@@ -1398,7 +1714,7 @@
         "/jobs/:id/apply",
         "/applications/:id"
       ],
-      "tree_sha": "sha256:2425b77584d7c58a8071ec8eb1575a0dbba2cb6e27f7eb7544eaee8f8e9781a4"
+      "tree_sha": "sha256:ab653707f8618bfaaac169b997395587657138ca3d1e9c2fa14fcdcb016cb503"
     },
     {
       "project_id": "tr-12-react",
@@ -1408,6 +1724,10 @@
       "framework": "react",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/jobs/:id/apply",
+      "emitted_write_route": "/jobs/:id/apply",
       "topic": "local heat pump and solar installer apprenticeships",
       "routes": [
         "/",
@@ -1416,7 +1736,7 @@
         "/jobs/:id/apply",
         "/applications/:id"
       ],
-      "tree_sha": "sha256:3ae4a25d013f9963890271908b8d29bf03e77deb52d0ebb647a608c59d4b66dc"
+      "tree_sha": "sha256:2288ffc2d93b177d59f822c3d4abd9e37552b5c1d55d87b55129a1d5e4f08928"
     },
     {
       "project_id": "tr-12-preact",
@@ -1426,6 +1746,10 @@
       "framework": "preact",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/jobs/:id/apply",
+      "emitted_write_route": "/jobs/:id/apply",
       "topic": "local heat pump and solar installer apprenticeships",
       "routes": [
         "/",
@@ -1434,7 +1758,7 @@
         "/jobs/:id/apply",
         "/applications/:id"
       ],
-      "tree_sha": "sha256:3e44690ce2e859f14c8b3361f2a97000e5adb870ffb94f49257a101ba846eb88"
+      "tree_sha": "sha256:acd173d340a0f3a5cb96e14e75242d83cb235b9372a599c906c8ab87d43afa36"
     },
     {
       "project_id": "tr-12-vue",
@@ -1444,6 +1768,10 @@
       "framework": "vue",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/jobs/:id/apply",
+      "emitted_write_route": "/jobs/:id/apply",
       "topic": "local heat pump and solar installer apprenticeships",
       "routes": [
         "/",
@@ -1452,7 +1780,7 @@
         "/jobs/:id/apply",
         "/applications/:id"
       ],
-      "tree_sha": "sha256:9c7f5b86e7815f2c2933f4007ab2551097d29909f716cee17ed36b4c7b8b45b4"
+      "tree_sha": "sha256:5674128e709d6a686a6e34205e2929048a58ea3c7ce176e445e7bfd5e8279ec7"
     },
     {
       "project_id": "tr-12-webcomponents",
@@ -1462,6 +1790,10 @@
       "framework": "webcomponents",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/jobs/:id/apply",
+      "emitted_write_route": "/jobs/:id/apply",
       "topic": "local heat pump and solar installer apprenticeships",
       "routes": [
         "/",
@@ -1470,7 +1802,7 @@
         "/jobs/:id/apply",
         "/applications/:id"
       ],
-      "tree_sha": "sha256:80097a190b3fad5cbed7ea125814d376928fa5098dbfd0622fbb6a5b80e3358b"
+      "tree_sha": "sha256:33e949ae886bed422868ece60ae2e2020403a0b0d6bc50b50e8d30e1e0afdcd2"
     },
     {
       "project_id": "tr-12-svelte",
@@ -1480,6 +1812,10 @@
       "framework": "svelte",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/jobs/:id/apply",
+      "emitted_write_route": "/jobs/:id/apply",
       "topic": "local heat pump and solar installer apprenticeships",
       "routes": [
         "/",
@@ -1488,7 +1824,7 @@
         "/jobs/:id/apply",
         "/applications/:id"
       ],
-      "tree_sha": "sha256:c5dc4b7584a738a37c3c7688f70a60c55c294d7fba36b0f26effd3938bd892da"
+      "tree_sha": "sha256:516cf2eafe9ef42e0bdfe5574c0366f0f55fcddce010200778f4c0d67efd52c8"
     },
     {
       "project_id": "tr-13-hono",
@@ -1498,6 +1834,10 @@
       "framework": "hono",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/soil-tests/new",
+      "emitted_write_route": "/soil-tests/new",
       "topic": "backyard composting guidelines and soil test registry",
       "routes": [
         "/",
@@ -1517,6 +1857,10 @@
       "framework": "raw",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/soil-tests/new",
+      "emitted_write_route": "/soil-tests/new",
       "topic": "backyard composting guidelines and soil test registry",
       "routes": [
         "/",
@@ -1536,6 +1880,10 @@
       "framework": "react",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/soil-tests/new",
+      "emitted_write_route": "/soil-tests/new",
       "topic": "backyard composting guidelines and soil test registry",
       "routes": [
         "/",
@@ -1555,6 +1903,10 @@
       "framework": "preact",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/soil-tests/new",
+      "emitted_write_route": "/soil-tests/new",
       "topic": "backyard composting guidelines and soil test registry",
       "routes": [
         "/",
@@ -1574,6 +1926,10 @@
       "framework": "vue",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/soil-tests/new",
+      "emitted_write_route": "/soil-tests/new",
       "topic": "backyard composting guidelines and soil test registry",
       "routes": [
         "/",
@@ -1593,6 +1949,10 @@
       "framework": "webcomponents",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/soil-tests/new",
+      "emitted_write_route": "/soil-tests/new",
       "topic": "backyard composting guidelines and soil test registry",
       "routes": [
         "/",
@@ -1612,6 +1972,10 @@
       "framework": "svelte",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/soil-tests/new",
+      "emitted_write_route": "/soil-tests/new",
       "topic": "backyard composting guidelines and soil test registry",
       "routes": [
         "/",
@@ -1631,6 +1995,10 @@
       "framework": "hono",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/stops/:id/comment",
+      "emitted_write_route": "/stops/:id/comment",
       "topic": "self-guided heritage walking tour stops and transcripts",
       "routes": [
         "/",
@@ -1638,7 +2006,7 @@
         "/stops/:id",
         "/stops/:id/comment"
       ],
-      "tree_sha": "sha256:2bf471114c1825c330825d63422a18cffcc5d03d3b54220e737347124cc47b9d"
+      "tree_sha": "sha256:cf717be5132b73c71d2284adae6d64aa66de2c42d1f172b857cc1d1e5f3deb57"
     },
     {
       "project_id": "tr-14-raw",
@@ -1648,6 +2016,10 @@
       "framework": "raw",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/stops/:id/comment",
+      "emitted_write_route": "/stops/:id/comment",
       "topic": "self-guided heritage walking tour stops and transcripts",
       "routes": [
         "/",
@@ -1655,7 +2027,7 @@
         "/stops/:id",
         "/stops/:id/comment"
       ],
-      "tree_sha": "sha256:2a61e50e2af5a4c63447a9a0e74db779a657ec4703a948551528a0ae73685377"
+      "tree_sha": "sha256:fd1d0727aa7c02a4d5814d020260334cdeb76a091f5fed52d8682d1bf4c7a669"
     },
     {
       "project_id": "tr-14-react",
@@ -1665,6 +2037,10 @@
       "framework": "react",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/stops/:id/comment",
+      "emitted_write_route": "/stops/:id/comment",
       "topic": "self-guided heritage walking tour stops and transcripts",
       "routes": [
         "/",
@@ -1672,7 +2048,7 @@
         "/stops/:id",
         "/stops/:id/comment"
       ],
-      "tree_sha": "sha256:b67df5f77baeede00cf45c41216831ed39327819677f84fdc23e12a278e42daa"
+      "tree_sha": "sha256:fbf0740a0a0aef17eac96ef0ba9aa2efaf45d2992334260593ea876be7fdb57d"
     },
     {
       "project_id": "tr-14-preact",
@@ -1682,6 +2058,10 @@
       "framework": "preact",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/stops/:id/comment",
+      "emitted_write_route": "/stops/:id/comment",
       "topic": "self-guided heritage walking tour stops and transcripts",
       "routes": [
         "/",
@@ -1689,7 +2069,7 @@
         "/stops/:id",
         "/stops/:id/comment"
       ],
-      "tree_sha": "sha256:27a0eb1f2d742bace99f12a12ab8cb0c15196b9ed19480b9960a0f46d4d71ec3"
+      "tree_sha": "sha256:300b87da1f4eaab41689c29271bb5d360621a2750009377321cbb68cecae3b7a"
     },
     {
       "project_id": "tr-14-vue",
@@ -1699,6 +2079,10 @@
       "framework": "vue",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/stops/:id/comment",
+      "emitted_write_route": "/stops/:id/comment",
       "topic": "self-guided heritage walking tour stops and transcripts",
       "routes": [
         "/",
@@ -1706,7 +2090,7 @@
         "/stops/:id",
         "/stops/:id/comment"
       ],
-      "tree_sha": "sha256:48b5a9a31dc9b8ce07f062081972a0d423b73b1b02374173371947a31889f405"
+      "tree_sha": "sha256:b1243778dd60263a2c0dce1f41c5ddf30613cfe9810ac78f4e1db43b30e1d1d0"
     },
     {
       "project_id": "tr-14-webcomponents",
@@ -1716,6 +2100,10 @@
       "framework": "webcomponents",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/stops/:id/comment",
+      "emitted_write_route": "/stops/:id/comment",
       "topic": "self-guided heritage walking tour stops and transcripts",
       "routes": [
         "/",
@@ -1723,7 +2111,7 @@
         "/stops/:id",
         "/stops/:id/comment"
       ],
-      "tree_sha": "sha256:8e19950c666276eaaf8e36ae2aab0b859c3923ea76cd5cf363af5d0cf21fc0a3"
+      "tree_sha": "sha256:1fe4415cba99dab3ea4543785ea17181bef72229b8c93c7d6087600b6a82fe5c"
     },
     {
       "project_id": "tr-14-svelte",
@@ -1733,6 +2121,10 @@
       "framework": "svelte",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/stops/:id/comment",
+      "emitted_write_route": "/stops/:id/comment",
       "topic": "self-guided heritage walking tour stops and transcripts",
       "routes": [
         "/",
@@ -1740,7 +2132,7 @@
         "/stops/:id",
         "/stops/:id/comment"
       ],
-      "tree_sha": "sha256:bef164f2c37c2204ae1a4ffea9daa72d0bb4d3a8d716b9ba04ec5af0b96540d2"
+      "tree_sha": "sha256:347655a0efa7a413cd78e90654cc990c29f14ddd6242fa2076dfe2bc1909285a"
     },
     {
       "project_id": "tr-15-hono",
@@ -1750,6 +2142,10 @@
       "framework": "hono",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/expenses/new",
+      "emitted_write_route": "/expenses/new",
       "topic": "tenant collective maintenance expense logging",
       "routes": [
         "/",
@@ -1757,7 +2153,7 @@
         "/expenses/new",
         "/expenses/:id"
       ],
-      "tree_sha": "sha256:878d7497be850351e4c5d1d9d90a7a4fdcfbfaa70dec01e1ee5801fa39f37ef3"
+      "tree_sha": "sha256:c3f6c98accafb4ac42d61e4f775874f50656f874452c58a6ceec7dcfd36f16a9"
     },
     {
       "project_id": "tr-15-raw",
@@ -1767,6 +2163,10 @@
       "framework": "raw",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/expenses/new",
+      "emitted_write_route": "/expenses/new",
       "topic": "tenant collective maintenance expense logging",
       "routes": [
         "/",
@@ -1774,7 +2174,7 @@
         "/expenses/new",
         "/expenses/:id"
       ],
-      "tree_sha": "sha256:1a67c059471fbd2825d46d1e5b0dc7aac25c7790ddb973e1a89afeac5b6942fe"
+      "tree_sha": "sha256:256a1a837e690c413b77ff6a1f53636712505fd07d623ffaf9ab59ab1bdd614f"
     },
     {
       "project_id": "tr-15-react",
@@ -1784,6 +2184,10 @@
       "framework": "react",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/expenses/new",
+      "emitted_write_route": "/expenses/new",
       "topic": "tenant collective maintenance expense logging",
       "routes": [
         "/",
@@ -1791,7 +2195,7 @@
         "/expenses/new",
         "/expenses/:id"
       ],
-      "tree_sha": "sha256:323529f15a8cc97eeb02fd3fd27b7b5cb69bd09226b9ffc193fe4c41342b7fdc"
+      "tree_sha": "sha256:afa75caea88f9d91fe878fb3ade2265db2eb9493e456c50c08cf12d83c6c8e48"
     },
     {
       "project_id": "tr-15-preact",
@@ -1801,6 +2205,10 @@
       "framework": "preact",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/expenses/new",
+      "emitted_write_route": "/expenses/new",
       "topic": "tenant collective maintenance expense logging",
       "routes": [
         "/",
@@ -1808,7 +2216,7 @@
         "/expenses/new",
         "/expenses/:id"
       ],
-      "tree_sha": "sha256:e89b42a8b2b4dc53b7d6f47236925c9e68c0adbb734a425d8b1c2b77732f35e1"
+      "tree_sha": "sha256:6cfd08c11e38c6bf21d7309448e3c50b2cf07d6f6e4d236dbb5e4d931cefad0b"
     },
     {
       "project_id": "tr-15-vue",
@@ -1818,6 +2226,10 @@
       "framework": "vue",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/expenses/new",
+      "emitted_write_route": "/expenses/new",
       "topic": "tenant collective maintenance expense logging",
       "routes": [
         "/",
@@ -1825,7 +2237,7 @@
         "/expenses/new",
         "/expenses/:id"
       ],
-      "tree_sha": "sha256:57930ca3aa55fcc7b25be6bb1b226ef25e6e7e3879b8c83afc5e17b775bec154"
+      "tree_sha": "sha256:004b2701bd0c7421fd7b5a61ed159e513ee3643c34e33768f8e87564a5f868cb"
     },
     {
       "project_id": "tr-15-webcomponents",
@@ -1835,6 +2247,10 @@
       "framework": "webcomponents",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/expenses/new",
+      "emitted_write_route": "/expenses/new",
       "topic": "tenant collective maintenance expense logging",
       "routes": [
         "/",
@@ -1842,7 +2258,7 @@
         "/expenses/new",
         "/expenses/:id"
       ],
-      "tree_sha": "sha256:b47be4218ce7e1fb07fa31c450b660f5917fc3a5932417a702c9944693318a39"
+      "tree_sha": "sha256:0eb0659e020befa5e968f52d3960951d2400f173b37836891c5b204b4814afc2"
     },
     {
       "project_id": "tr-15-svelte",
@@ -1852,6 +2268,10 @@
       "framework": "svelte",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/expenses/new",
+      "emitted_write_route": "/expenses/new",
       "topic": "tenant collective maintenance expense logging",
       "routes": [
         "/",
@@ -1859,7 +2279,7 @@
         "/expenses/new",
         "/expenses/:id"
       ],
-      "tree_sha": "sha256:ec1787cbcd70cb2f88d981118a3d9579247e2d8a3028f16b5fb20b4eccaf738e"
+      "tree_sha": "sha256:00e0022a04fc89495cd48c6ee9ab3a57adf209a2741ff750b8f5407ef064292b"
     },
     {
       "project_id": "tr-16-hono",
@@ -1869,6 +2289,10 @@
       "framework": "hono",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/request",
+      "emitted_write_route": "/request",
       "topic": "rare perennial cuttings and seed strain index",
       "routes": [
         "/",
@@ -1887,6 +2311,10 @@
       "framework": "raw",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/request",
+      "emitted_write_route": "/request",
       "topic": "rare perennial cuttings and seed strain index",
       "routes": [
         "/",
@@ -1905,6 +2333,10 @@
       "framework": "react",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/request",
+      "emitted_write_route": "/request",
       "topic": "rare perennial cuttings and seed strain index",
       "routes": [
         "/",
@@ -1923,6 +2355,10 @@
       "framework": "preact",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/request",
+      "emitted_write_route": "/request",
       "topic": "rare perennial cuttings and seed strain index",
       "routes": [
         "/",
@@ -1941,6 +2377,10 @@
       "framework": "vue",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/request",
+      "emitted_write_route": "/request",
       "topic": "rare perennial cuttings and seed strain index",
       "routes": [
         "/",
@@ -1959,6 +2399,10 @@
       "framework": "webcomponents",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/request",
+      "emitted_write_route": "/request",
       "topic": "rare perennial cuttings and seed strain index",
       "routes": [
         "/",
@@ -1977,6 +2421,10 @@
       "framework": "svelte",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/request",
+      "emitted_write_route": "/request",
       "topic": "rare perennial cuttings and seed strain index",
       "routes": [
         "/",
@@ -1995,6 +2443,10 @@
       "framework": "hono",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/book-visit",
+      "emitted_write_route": "/book-visit",
       "topic": "rural farm animal vet visit scheduling",
       "routes": [
         "/",
@@ -2012,6 +2464,10 @@
       "framework": "raw",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/book-visit",
+      "emitted_write_route": "/book-visit",
       "topic": "rural farm animal vet visit scheduling",
       "routes": [
         "/",
@@ -2029,6 +2485,10 @@
       "framework": "react",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/book-visit",
+      "emitted_write_route": "/book-visit",
       "topic": "rural farm animal vet visit scheduling",
       "routes": [
         "/",
@@ -2046,6 +2506,10 @@
       "framework": "preact",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/book-visit",
+      "emitted_write_route": "/book-visit",
       "topic": "rural farm animal vet visit scheduling",
       "routes": [
         "/",
@@ -2063,6 +2527,10 @@
       "framework": "vue",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/book-visit",
+      "emitted_write_route": "/book-visit",
       "topic": "rural farm animal vet visit scheduling",
       "routes": [
         "/",
@@ -2080,6 +2548,10 @@
       "framework": "webcomponents",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/book-visit",
+      "emitted_write_route": "/book-visit",
       "topic": "rural farm animal vet visit scheduling",
       "routes": [
         "/",
@@ -2097,6 +2569,10 @@
       "framework": "svelte",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/book-visit",
+      "emitted_write_route": "/book-visit",
       "topic": "rural farm animal vet visit scheduling",
       "routes": [
         "/",
@@ -2114,6 +2590,10 @@
       "framework": "hono",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/checkout",
+      "emitted_write_route": "/checkout",
       "topic": "bring-your-own-container bulk dry goods orders",
       "routes": [
         "/",
@@ -2132,6 +2612,10 @@
       "framework": "raw",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/checkout",
+      "emitted_write_route": "/checkout",
       "topic": "bring-your-own-container bulk dry goods orders",
       "routes": [
         "/",
@@ -2150,6 +2634,10 @@
       "framework": "react",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/checkout",
+      "emitted_write_route": "/checkout",
       "topic": "bring-your-own-container bulk dry goods orders",
       "routes": [
         "/",
@@ -2168,6 +2656,10 @@
       "framework": "preact",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/checkout",
+      "emitted_write_route": "/checkout",
       "topic": "bring-your-own-container bulk dry goods orders",
       "routes": [
         "/",
@@ -2186,6 +2678,10 @@
       "framework": "vue",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/checkout",
+      "emitted_write_route": "/checkout",
       "topic": "bring-your-own-container bulk dry goods orders",
       "routes": [
         "/",
@@ -2204,6 +2700,10 @@
       "framework": "webcomponents",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/checkout",
+      "emitted_write_route": "/checkout",
       "topic": "bring-your-own-container bulk dry goods orders",
       "routes": [
         "/",
@@ -2222,6 +2722,10 @@
       "framework": "svelte",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/checkout",
+      "emitted_write_route": "/checkout",
       "topic": "bring-your-own-container bulk dry goods orders",
       "routes": [
         "/",
@@ -2240,6 +2744,10 @@
       "framework": "hono",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/book-outing",
+      "emitted_write_route": "/book-outing",
       "topic": "tidal river rowing skiff safety and tide tracker",
       "routes": [
         "/",
@@ -2258,6 +2766,10 @@
       "framework": "raw",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/book-outing",
+      "emitted_write_route": "/book-outing",
       "topic": "tidal river rowing skiff safety and tide tracker",
       "routes": [
         "/",
@@ -2276,6 +2788,10 @@
       "framework": "react",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/book-outing",
+      "emitted_write_route": "/book-outing",
       "topic": "tidal river rowing skiff safety and tide tracker",
       "routes": [
         "/",
@@ -2294,6 +2810,10 @@
       "framework": "preact",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/book-outing",
+      "emitted_write_route": "/book-outing",
       "topic": "tidal river rowing skiff safety and tide tracker",
       "routes": [
         "/",
@@ -2312,6 +2832,10 @@
       "framework": "vue",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/book-outing",
+      "emitted_write_route": "/book-outing",
       "topic": "tidal river rowing skiff safety and tide tracker",
       "routes": [
         "/",
@@ -2330,6 +2854,10 @@
       "framework": "webcomponents",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/book-outing",
+      "emitted_write_route": "/book-outing",
       "topic": "tidal river rowing skiff safety and tide tracker",
       "routes": [
         "/",
@@ -2348,6 +2876,10 @@
       "framework": "svelte",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/book-outing",
+      "emitted_write_route": "/book-outing",
       "topic": "tidal river rowing skiff safety and tide tracker",
       "routes": [
         "/",
@@ -2366,6 +2898,10 @@
       "framework": "hono",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/tunes/:id/notes",
+      "emitted_write_route": "/tunes/:id/notes",
       "topic": "traditional tune tune-sheet repository and tempo notes",
       "routes": [
         "/",
@@ -2373,7 +2909,7 @@
         "/tunes/:id",
         "/tunes/:id/notes"
       ],
-      "tree_sha": "sha256:93e430db34375dcc6428b9aafe26f8b046ba416c803906c8567914871214d9fc"
+      "tree_sha": "sha256:72b89a28697438a1149a1e254781ec695e7293fd0a199029b40fd29b2fca9a51"
     },
     {
       "project_id": "tr-20-raw",
@@ -2383,6 +2919,10 @@
       "framework": "raw",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/tunes/:id/notes",
+      "emitted_write_route": "/tunes/:id/notes",
       "topic": "traditional tune tune-sheet repository and tempo notes",
       "routes": [
         "/",
@@ -2390,7 +2930,7 @@
         "/tunes/:id",
         "/tunes/:id/notes"
       ],
-      "tree_sha": "sha256:69ed355ed71afb54a14c9e1c5470eab43c5cc4dfe12c746d3388d491ff86ad28"
+      "tree_sha": "sha256:7649cf1ca3d441d97c1eed869c44f4058e2ee7c038ff003b156f9fb8e3066c1f"
     },
     {
       "project_id": "tr-20-react",
@@ -2400,6 +2940,10 @@
       "framework": "react",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/tunes/:id/notes",
+      "emitted_write_route": "/tunes/:id/notes",
       "topic": "traditional tune tune-sheet repository and tempo notes",
       "routes": [
         "/",
@@ -2407,7 +2951,7 @@
         "/tunes/:id",
         "/tunes/:id/notes"
       ],
-      "tree_sha": "sha256:5a2857524f90a24c832a2378b5d30bd43e16e7f7f8d951104aa126728f17507f"
+      "tree_sha": "sha256:06745ebb425c4fd04037960aec39678f98110d09ef4c4d48ccb4f511c435d559"
     },
     {
       "project_id": "tr-20-preact",
@@ -2417,6 +2961,10 @@
       "framework": "preact",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/tunes/:id/notes",
+      "emitted_write_route": "/tunes/:id/notes",
       "topic": "traditional tune tune-sheet repository and tempo notes",
       "routes": [
         "/",
@@ -2424,7 +2972,7 @@
         "/tunes/:id",
         "/tunes/:id/notes"
       ],
-      "tree_sha": "sha256:f95b1b81493d618891f77d50e84279eae60368a428c19f87071e96f6afb6a985"
+      "tree_sha": "sha256:76c78f450f92a24589b9c0568790a2a4ce317be52346ebe408b821b566b4c671"
     },
     {
       "project_id": "tr-20-vue",
@@ -2434,6 +2982,10 @@
       "framework": "vue",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/tunes/:id/notes",
+      "emitted_write_route": "/tunes/:id/notes",
       "topic": "traditional tune tune-sheet repository and tempo notes",
       "routes": [
         "/",
@@ -2441,7 +2993,7 @@
         "/tunes/:id",
         "/tunes/:id/notes"
       ],
-      "tree_sha": "sha256:3e49654f6f71f7d006e2a7f7900ae113facbe6021b7a28e8dc110a892d09d09b"
+      "tree_sha": "sha256:ff26e7a02e34895dcc3bab347520ec4d5c75e15c617e1da77cfdf4d1d8aa3feb"
     },
     {
       "project_id": "tr-20-webcomponents",
@@ -2451,6 +3003,10 @@
       "framework": "webcomponents",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/tunes/:id/notes",
+      "emitted_write_route": "/tunes/:id/notes",
       "topic": "traditional tune tune-sheet repository and tempo notes",
       "routes": [
         "/",
@@ -2458,7 +3014,7 @@
         "/tunes/:id",
         "/tunes/:id/notes"
       ],
-      "tree_sha": "sha256:41c9550aace19b334a1fa1b56729d8ecbb928295377c3388245df35a35d74e95"
+      "tree_sha": "sha256:24bbdb4bfb6c09a2b8f468a4b41325990a4146b1aa05b8c00f231a8738c9cfd3"
     },
     {
       "project_id": "tr-20-svelte",
@@ -2468,6 +3024,10 @@
       "framework": "svelte",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/tunes/:id/notes",
+      "emitted_write_route": "/tunes/:id/notes",
       "topic": "traditional tune tune-sheet repository and tempo notes",
       "routes": [
         "/",
@@ -2475,7 +3035,7 @@
         "/tunes/:id",
         "/tunes/:id/notes"
       ],
-      "tree_sha": "sha256:e390bdf336684f1268b9de9fe846daea3adc1540ba57e09cc30a729023c3aa82"
+      "tree_sha": "sha256:ecd8ca21c78cd441c0a879395af5473560f50f5663ad9696c8dda34e11a2e51e"
     },
     {
       "project_id": "tr-21-hono",
@@ -2485,6 +3045,10 @@
       "framework": "hono",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/book-ride",
+      "emitted_write_route": "/book-ride",
       "topic": "volunteer driver hospital appointment lift coordination",
       "routes": [
         "/",
@@ -2503,6 +3067,10 @@
       "framework": "raw",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/book-ride",
+      "emitted_write_route": "/book-ride",
       "topic": "volunteer driver hospital appointment lift coordination",
       "routes": [
         "/",
@@ -2521,6 +3089,10 @@
       "framework": "react",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/book-ride",
+      "emitted_write_route": "/book-ride",
       "topic": "volunteer driver hospital appointment lift coordination",
       "routes": [
         "/",
@@ -2539,6 +3111,10 @@
       "framework": "preact",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/book-ride",
+      "emitted_write_route": "/book-ride",
       "topic": "volunteer driver hospital appointment lift coordination",
       "routes": [
         "/",
@@ -2557,6 +3133,10 @@
       "framework": "vue",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/book-ride",
+      "emitted_write_route": "/book-ride",
       "topic": "volunteer driver hospital appointment lift coordination",
       "routes": [
         "/",
@@ -2575,6 +3155,10 @@
       "framework": "webcomponents",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/book-ride",
+      "emitted_write_route": "/book-ride",
       "topic": "volunteer driver hospital appointment lift coordination",
       "routes": [
         "/",
@@ -2593,6 +3177,10 @@
       "framework": "svelte",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/book-ride",
+      "emitted_write_route": "/book-ride",
       "topic": "volunteer driver hospital appointment lift coordination",
       "routes": [
         "/",
@@ -2611,6 +3199,10 @@
       "framework": "hono",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/trees/:id/log",
+      "emitted_write_route": "/trees/:id/log",
       "topic": "urban forestry street tree health reporting",
       "routes": [
         "/",
@@ -2619,7 +3211,7 @@
         "/trees/:id/log",
         "/canopy-summary"
       ],
-      "tree_sha": "sha256:16820898c95c84f5650dd4d83a4c992b770ca8cdd13dfad55b5f748cb8354617"
+      "tree_sha": "sha256:40e4843250bcc02ac9211a77dfc4e37794e8ef6d783106abe424c80b203d66fa"
     },
     {
       "project_id": "tr-22-raw",
@@ -2629,6 +3221,10 @@
       "framework": "raw",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/trees/:id/log",
+      "emitted_write_route": "/trees/:id/log",
       "topic": "urban forestry street tree health reporting",
       "routes": [
         "/",
@@ -2637,7 +3233,7 @@
         "/trees/:id/log",
         "/canopy-summary"
       ],
-      "tree_sha": "sha256:d3b53ed708b5ffe4dd2688c16053ced66390f22613aa2d3338c82a0261c66060"
+      "tree_sha": "sha256:9ac37230891635f2f9ff8fcf286a684f999f3d471bd8725f4123fd9b7d2886ad"
     },
     {
       "project_id": "tr-22-react",
@@ -2647,6 +3243,10 @@
       "framework": "react",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/trees/:id/log",
+      "emitted_write_route": "/trees/:id/log",
       "topic": "urban forestry street tree health reporting",
       "routes": [
         "/",
@@ -2655,7 +3255,7 @@
         "/trees/:id/log",
         "/canopy-summary"
       ],
-      "tree_sha": "sha256:252b365921f0dba5d100765d41553a1a1e12b31d991a294b3d64ccbd2925dbbd"
+      "tree_sha": "sha256:6c8e08baaf4d939e0639aecc6884ef8e7acc9291367e94c6b6eebcb4ac0e71ac"
     },
     {
       "project_id": "tr-22-preact",
@@ -2665,6 +3265,10 @@
       "framework": "preact",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/trees/:id/log",
+      "emitted_write_route": "/trees/:id/log",
       "topic": "urban forestry street tree health reporting",
       "routes": [
         "/",
@@ -2673,7 +3277,7 @@
         "/trees/:id/log",
         "/canopy-summary"
       ],
-      "tree_sha": "sha256:4fa413b591cb02244dc35081808c585cd16bcc02a560fde77aa4567517babb58"
+      "tree_sha": "sha256:669a1b884d2fb91deed1b2bc9f1cc6cdccaec8f3a97d6875381e5acdfebbec4f"
     },
     {
       "project_id": "tr-22-vue",
@@ -2683,6 +3287,10 @@
       "framework": "vue",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/trees/:id/log",
+      "emitted_write_route": "/trees/:id/log",
       "topic": "urban forestry street tree health reporting",
       "routes": [
         "/",
@@ -2691,7 +3299,7 @@
         "/trees/:id/log",
         "/canopy-summary"
       ],
-      "tree_sha": "sha256:1cb55be4f4c308e49e76c3dd93d9d61ad8b57ef3ff8fff5719499da0dde203a7"
+      "tree_sha": "sha256:eb916d63b9589aca91a94a62061c69bff68bec212de58901a794c077a3f41c5e"
     },
     {
       "project_id": "tr-22-webcomponents",
@@ -2701,6 +3309,10 @@
       "framework": "webcomponents",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/trees/:id/log",
+      "emitted_write_route": "/trees/:id/log",
       "topic": "urban forestry street tree health reporting",
       "routes": [
         "/",
@@ -2709,7 +3321,7 @@
         "/trees/:id/log",
         "/canopy-summary"
       ],
-      "tree_sha": "sha256:b9eee7725eb6cc220761980a00af8078926174b5929a8945199a0b605474dc7c"
+      "tree_sha": "sha256:7e2212a2035f0125f266dd9dfde836a914ac30cebd08b1258f35cbd84efc1702"
     },
     {
       "project_id": "tr-22-svelte",
@@ -2719,6 +3331,10 @@
       "framework": "svelte",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/trees/:id/log",
+      "emitted_write_route": "/trees/:id/log",
       "topic": "urban forestry street tree health reporting",
       "routes": [
         "/",
@@ -2727,7 +3343,7 @@
         "/trees/:id/log",
         "/canopy-summary"
       ],
-      "tree_sha": "sha256:d8029d9c7c08bf79330a9e14c18f89a8846e8606aed17db8023f625901f98414"
+      "tree_sha": "sha256:0f58a74f6b40967227de3e5c5c02b5daea1bb161f18d722a3072ab2e5d41e17c"
     },
     {
       "project_id": "tr-23-hono",
@@ -2737,6 +3353,10 @@
       "framework": "hono",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/calculator/submit",
+      "emitted_write_route": "/calculator/submit",
       "topic": "home energy retrofit subsidy eligibility check",
       "routes": [
         "/",
@@ -2754,6 +3374,10 @@
       "framework": "raw",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/calculator/submit",
+      "emitted_write_route": "/calculator/submit",
       "topic": "home energy retrofit subsidy eligibility check",
       "routes": [
         "/",
@@ -2771,6 +3395,10 @@
       "framework": "react",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/calculator/submit",
+      "emitted_write_route": "/calculator/submit",
       "topic": "home energy retrofit subsidy eligibility check",
       "routes": [
         "/",
@@ -2788,6 +3416,10 @@
       "framework": "preact",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/calculator/submit",
+      "emitted_write_route": "/calculator/submit",
       "topic": "home energy retrofit subsidy eligibility check",
       "routes": [
         "/",
@@ -2805,6 +3437,10 @@
       "framework": "vue",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/calculator/submit",
+      "emitted_write_route": "/calculator/submit",
       "topic": "home energy retrofit subsidy eligibility check",
       "routes": [
         "/",
@@ -2822,6 +3458,10 @@
       "framework": "webcomponents",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/calculator/submit",
+      "emitted_write_route": "/calculator/submit",
       "topic": "home energy retrofit subsidy eligibility check",
       "routes": [
         "/",
@@ -2839,6 +3479,10 @@
       "framework": "svelte",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/calculator/submit",
+      "emitted_write_route": "/calculator/submit",
       "topic": "home energy retrofit subsidy eligibility check",
       "routes": [
         "/",
@@ -2856,6 +3500,10 @@
       "framework": "hono",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/pitches/book",
+      "emitted_write_route": "/pitches/book",
       "topic": "weekend farmers market pitch booking and power requirements",
       "routes": [
         "/",
@@ -2874,6 +3522,10 @@
       "framework": "raw",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/pitches/book",
+      "emitted_write_route": "/pitches/book",
       "topic": "weekend farmers market pitch booking and power requirements",
       "routes": [
         "/",
@@ -2892,6 +3544,10 @@
       "framework": "react",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/pitches/book",
+      "emitted_write_route": "/pitches/book",
       "topic": "weekend farmers market pitch booking and power requirements",
       "routes": [
         "/",
@@ -2910,6 +3566,10 @@
       "framework": "preact",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/pitches/book",
+      "emitted_write_route": "/pitches/book",
       "topic": "weekend farmers market pitch booking and power requirements",
       "routes": [
         "/",
@@ -2928,6 +3588,10 @@
       "framework": "vue",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/pitches/book",
+      "emitted_write_route": "/pitches/book",
       "topic": "weekend farmers market pitch booking and power requirements",
       "routes": [
         "/",
@@ -2946,6 +3610,10 @@
       "framework": "webcomponents",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/pitches/book",
+      "emitted_write_route": "/pitches/book",
       "topic": "weekend farmers market pitch booking and power requirements",
       "routes": [
         "/",
@@ -2964,6 +3632,10 @@
       "framework": "svelte",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/pitches/book",
+      "emitted_write_route": "/pitches/book",
       "topic": "weekend farmers market pitch booking and power requirements",
       "routes": [
         "/",
@@ -2982,6 +3654,10 @@
       "framework": "hono",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/interviews/:id/notes",
+      "emitted_write_route": "/interviews/:id/notes",
       "topic": "community elder oral history recordings and transcript index",
       "routes": [
         "/",
@@ -2989,7 +3665,7 @@
         "/interviews/:id",
         "/interviews/:id/notes"
       ],
-      "tree_sha": "sha256:f18602e4b5bd54b2dcb8ecfe678278e6ebea3b92a50e0e6792ce94f6ce8f1826"
+      "tree_sha": "sha256:63ab5c0a694dcaedcbfc73824eb996b8a76eb53bd43ff0f5be9402047de42f78"
     },
     {
       "project_id": "tr-25-raw",
@@ -2999,6 +3675,10 @@
       "framework": "raw",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/interviews/:id/notes",
+      "emitted_write_route": "/interviews/:id/notes",
       "topic": "community elder oral history recordings and transcript index",
       "routes": [
         "/",
@@ -3006,7 +3686,7 @@
         "/interviews/:id",
         "/interviews/:id/notes"
       ],
-      "tree_sha": "sha256:a8c8c22ed01ec8e55b53379662f4a6009a09d696d9f4d560a0b444ff5eaeb15b"
+      "tree_sha": "sha256:507191eb6196d2ffe85c06af925a0887b8c4ea81a445c94c57afb928a5394add"
     },
     {
       "project_id": "tr-25-react",
@@ -3016,6 +3696,10 @@
       "framework": "react",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/interviews/:id/notes",
+      "emitted_write_route": "/interviews/:id/notes",
       "topic": "community elder oral history recordings and transcript index",
       "routes": [
         "/",
@@ -3023,7 +3707,7 @@
         "/interviews/:id",
         "/interviews/:id/notes"
       ],
-      "tree_sha": "sha256:2ba2bc1f4f46f6845935bde348950d03100efd92d178e20c448760135accf008"
+      "tree_sha": "sha256:709fe2f493f6b16ebfca123dd963735f91e8460df74aea386805bacadbc21d8c"
     },
     {
       "project_id": "tr-25-preact",
@@ -3033,6 +3717,10 @@
       "framework": "preact",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/interviews/:id/notes",
+      "emitted_write_route": "/interviews/:id/notes",
       "topic": "community elder oral history recordings and transcript index",
       "routes": [
         "/",
@@ -3040,7 +3728,7 @@
         "/interviews/:id",
         "/interviews/:id/notes"
       ],
-      "tree_sha": "sha256:480abbb661046c620469134993f58b7af5b710c46e563f44cc850f3496e98529"
+      "tree_sha": "sha256:c4f45dd51b589915a8d84d3543c7693b93823efc4cb04df35c376ffaa5adbcec"
     },
     {
       "project_id": "tr-25-vue",
@@ -3050,6 +3738,10 @@
       "framework": "vue",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/interviews/:id/notes",
+      "emitted_write_route": "/interviews/:id/notes",
       "topic": "community elder oral history recordings and transcript index",
       "routes": [
         "/",
@@ -3057,7 +3749,7 @@
         "/interviews/:id",
         "/interviews/:id/notes"
       ],
-      "tree_sha": "sha256:e35f09f5e5b338a3a74ada57a0db7805469b671a78c6bd5525eddefc436ab82e"
+      "tree_sha": "sha256:bfeae9e8a22ff491df22d7def64b2c5ccfba5e127bf6c47528e13058dae1e23a"
     },
     {
       "project_id": "tr-25-webcomponents",
@@ -3067,6 +3759,10 @@
       "framework": "webcomponents",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/interviews/:id/notes",
+      "emitted_write_route": "/interviews/:id/notes",
       "topic": "community elder oral history recordings and transcript index",
       "routes": [
         "/",
@@ -3074,7 +3770,7 @@
         "/interviews/:id",
         "/interviews/:id/notes"
       ],
-      "tree_sha": "sha256:b25884762ff6526a0e20c4b42d87c69c966392adf4547bc0c9803ae3def1c578"
+      "tree_sha": "sha256:f58b8b4fd8cacacf2a5a1729cab9e1760cb7bd8e513f1d54653bf8971859622e"
     },
     {
       "project_id": "tr-25-svelte",
@@ -3084,6 +3780,10 @@
       "framework": "svelte",
       "task": "generate",
       "defects": [],
+      "seeded_defects": [],
+      "route_conformed": true,
+      "brief_write_route": "/interviews/:id/notes",
+      "emitted_write_route": "/interviews/:id/notes",
       "topic": "community elder oral history recordings and transcript index",
       "routes": [
         "/",
@@ -3091,7 +3791,7 @@
         "/interviews/:id",
         "/interviews/:id/notes"
       ],
-      "tree_sha": "sha256:833c8c38a7c2e37c7bda0575465f9cd78fd4bd9af3dfe2be918ccb2ea0825afe"
+      "tree_sha": "sha256:8e52ef953728e61048be6a406cae7f7dcbcad7ef06d207469894625123cc338c"
     },
     {
       "project_id": "tr-26-hono",
@@ -3101,10 +3801,18 @@
       "framework": "hono",
       "task": "repair",
       "defects": [
+        "client-only-state",
+        "no-aria-sync",
+        "enter-submits"
+      ],
+      "seeded_defects": [
         "the subscription preferences are only stored in component state and disappear when the page is reloaded",
         "error notifications only change text color to red without accessible aria-live or role alerts for screen readers",
         "pressing Enter inside any text input triggers form submission before required grind selections are made"
       ],
+      "route_conformed": true,
+      "brief_write_route": "/subscriptions/:id/edit",
+      "emitted_write_route": "/subscriptions/:id/edit",
       "topic": "single-origin coffee subscription renewal and grind preference",
       "routes": [
         "/",
@@ -3112,7 +3820,7 @@
         "/subscriptions/:id",
         "/subscriptions/:id/edit"
       ],
-      "tree_sha": "sha256:77dbd8d43a971dd2f3649ea5da6774835c61294a36bd0e8e778aeb9f2853b46a"
+      "tree_sha": "sha256:eef3d3c8b2e4e0f47f1ef7a69cc40582c250fe8e8c1b52d9b4bd5c9282387ad7"
     },
     {
       "project_id": "tr-26-raw",
@@ -3122,10 +3830,18 @@
       "framework": "raw",
       "task": "repair",
       "defects": [
+        "client-only-state",
+        "no-aria-sync",
+        "enter-submits"
+      ],
+      "seeded_defects": [
         "the subscription preferences are only stored in component state and disappear when the page is reloaded",
         "error notifications only change text color to red without accessible aria-live or role alerts for screen readers",
         "pressing Enter inside any text input triggers form submission before required grind selections are made"
       ],
+      "route_conformed": true,
+      "brief_write_route": "/subscriptions/:id/edit",
+      "emitted_write_route": "/subscriptions/:id/edit",
       "topic": "single-origin coffee subscription renewal and grind preference",
       "routes": [
         "/",
@@ -3133,7 +3849,7 @@
         "/subscriptions/:id",
         "/subscriptions/:id/edit"
       ],
-      "tree_sha": "sha256:54413a677e613bf93f288abf65f71eb68be8c26743f4ce56f3da7b51537c420a"
+      "tree_sha": "sha256:e28998c1393b30ef7b437a50afa895b808af74b9e29c1c74505f8bf3579f9946"
     },
     {
       "project_id": "tr-26-react",
@@ -3143,10 +3859,18 @@
       "framework": "react",
       "task": "repair",
       "defects": [
+        "client-only-state",
+        "no-aria-sync",
+        "enter-submits"
+      ],
+      "seeded_defects": [
         "the subscription preferences are only stored in component state and disappear when the page is reloaded",
         "error notifications only change text color to red without accessible aria-live or role alerts for screen readers",
         "pressing Enter inside any text input triggers form submission before required grind selections are made"
       ],
+      "route_conformed": true,
+      "brief_write_route": "/subscriptions/:id/edit",
+      "emitted_write_route": "/subscriptions/:id/edit",
       "topic": "single-origin coffee subscription renewal and grind preference",
       "routes": [
         "/",
@@ -3154,7 +3878,7 @@
         "/subscriptions/:id",
         "/subscriptions/:id/edit"
       ],
-      "tree_sha": "sha256:baede753059838ac00e3ffc22f68013da1dbe1982ed7803a78b365a7f0c1aafe"
+      "tree_sha": "sha256:80863b1edda1564cba23c03f74a77123c4638dd7b12ef1bbb4da8e89eaa6e3e3"
     },
     {
       "project_id": "tr-26-preact",
@@ -3164,10 +3888,18 @@
       "framework": "preact",
       "task": "repair",
       "defects": [
+        "client-only-state",
+        "no-aria-sync",
+        "enter-submits"
+      ],
+      "seeded_defects": [
         "the subscription preferences are only stored in component state and disappear when the page is reloaded",
         "error notifications only change text color to red without accessible aria-live or role alerts for screen readers",
         "pressing Enter inside any text input triggers form submission before required grind selections are made"
       ],
+      "route_conformed": true,
+      "brief_write_route": "/subscriptions/:id/edit",
+      "emitted_write_route": "/subscriptions/:id/edit",
       "topic": "single-origin coffee subscription renewal and grind preference",
       "routes": [
         "/",
@@ -3175,7 +3907,7 @@
         "/subscriptions/:id",
         "/subscriptions/:id/edit"
       ],
-      "tree_sha": "sha256:dd7645955f2c979b509d1ea6bedce61ad4c4105ee1fd8b3a8e5d94c8b166e761"
+      "tree_sha": "sha256:a6360fb4e9343e217e7742728979b3f0b72d240573bf9a186c4de9b2584584f5"
     },
     {
       "project_id": "tr-26-vue",
@@ -3185,10 +3917,18 @@
       "framework": "vue",
       "task": "repair",
       "defects": [
+        "client-only-state",
+        "no-aria-sync",
+        "enter-submits"
+      ],
+      "seeded_defects": [
         "the subscription preferences are only stored in component state and disappear when the page is reloaded",
         "error notifications only change text color to red without accessible aria-live or role alerts for screen readers",
         "pressing Enter inside any text input triggers form submission before required grind selections are made"
       ],
+      "route_conformed": true,
+      "brief_write_route": "/subscriptions/:id/edit",
+      "emitted_write_route": "/subscriptions/:id/edit",
       "topic": "single-origin coffee subscription renewal and grind preference",
       "routes": [
         "/",
@@ -3196,7 +3936,7 @@
         "/subscriptions/:id",
         "/subscriptions/:id/edit"
       ],
-      "tree_sha": "sha256:c6f7e3b72edb76bf9a1dd64bb11bc753c4f55295c7cc16c1618041c0b6c707d8"
+      "tree_sha": "sha256:8d129f8a714e0f271ef5dab8d142aff219757aa441a285cef20695276c7e684b"
     },
     {
       "project_id": "tr-26-webcomponents",
@@ -3206,10 +3946,18 @@
       "framework": "webcomponents",
       "task": "repair",
       "defects": [
+        "client-only-state",
+        "no-aria-sync",
+        "enter-submits"
+      ],
+      "seeded_defects": [
         "the subscription preferences are only stored in component state and disappear when the page is reloaded",
         "error notifications only change text color to red without accessible aria-live or role alerts for screen readers",
         "pressing Enter inside any text input triggers form submission before required grind selections are made"
       ],
+      "route_conformed": true,
+      "brief_write_route": "/subscriptions/:id/edit",
+      "emitted_write_route": "/subscriptions/:id/edit",
       "topic": "single-origin coffee subscription renewal and grind preference",
       "routes": [
         "/",
@@ -3217,7 +3965,7 @@
         "/subscriptions/:id",
         "/subscriptions/:id/edit"
       ],
-      "tree_sha": "sha256:8cad620eab07ca30a61efc9c49eddaffe11804beb18c5f9c02aa08300c045293"
+      "tree_sha": "sha256:1a3cb2461ff0eb8fc3f192680e21d709354dec56781b4d7154a0266999ba1858"
     },
     {
       "project_id": "tr-26-svelte",
@@ -3227,10 +3975,18 @@
       "framework": "svelte",
       "task": "repair",
       "defects": [
+        "client-only-state",
+        "no-aria-sync",
+        "enter-submits"
+      ],
+      "seeded_defects": [
         "the subscription preferences are only stored in component state and disappear when the page is reloaded",
         "error notifications only change text color to red without accessible aria-live or role alerts for screen readers",
         "pressing Enter inside any text input triggers form submission before required grind selections are made"
       ],
+      "route_conformed": true,
+      "brief_write_route": "/subscriptions/:id/edit",
+      "emitted_write_route": "/subscriptions/:id/edit",
       "topic": "single-origin coffee subscription renewal and grind preference",
       "routes": [
         "/",
@@ -3238,7 +3994,7 @@
         "/subscriptions/:id",
         "/subscriptions/:id/edit"
       ],
-      "tree_sha": "sha256:a6eb9a5099dc6bdef914ba23e30d9832eb728f3e8c9ced6931811ef84819b9bd"
+      "tree_sha": "sha256:b98852c9de70998f86f57239e2007a4970f1f69b7f80b207d500f38c56217200"
     },
     {
       "project_id": "tr-27-hono",
@@ -3248,10 +4004,23 @@
       "framework": "hono",
       "task": "repair",
       "defects": [
+        "client-only-state",
+        "no-required"
+      ],
+      "seeded_defects": [
         "pew bookings are stored in temporary browser memory and are lost when the confirmation route is refreshed",
         "pew seat selectors are implemented as plain div elements without tabindex or keyboard activation handlers",
         "submitting without an attendee name fails silently without indicating which field was required"
       ],
+      "unrepresentable": [
+        {
+          "defect": "pew seat selectors are implemented as plain div elements without tabindex or keyboard activation handlers",
+          "reason": "the brief describes pew seat selectors as plain divs without tabindex/keyboard activation, but the generated booking form has no seat picker - it renders a native select with a programmatic label"
+        }
+      ],
+      "route_conformed": true,
+      "brief_write_route": "/concerts/:id/reserve",
+      "emitted_write_route": "/concerts/:id/reserve",
       "topic": "parish church acoustic concert seat selection",
       "routes": [
         "/",
@@ -3259,7 +4028,7 @@
         "/concerts/:id/reserve",
         "/reservations/:id"
       ],
-      "tree_sha": "sha256:e93a8ed86836865b963ee09fe375fbc864942eb74d56d5f386e75fe8ded5857d"
+      "tree_sha": "sha256:016594b238b04041dce8399a77378437e4cef3f2a5248da9fd3d36156a21b95b"
     },
     {
       "project_id": "tr-27-raw",
@@ -3269,10 +4038,23 @@
       "framework": "raw",
       "task": "repair",
       "defects": [
+        "client-only-state",
+        "no-required"
+      ],
+      "seeded_defects": [
         "pew bookings are stored in temporary browser memory and are lost when the confirmation route is refreshed",
         "pew seat selectors are implemented as plain div elements without tabindex or keyboard activation handlers",
         "submitting without an attendee name fails silently without indicating which field was required"
       ],
+      "unrepresentable": [
+        {
+          "defect": "pew seat selectors are implemented as plain div elements without tabindex or keyboard activation handlers",
+          "reason": "the brief describes pew seat selectors as plain divs without tabindex/keyboard activation, but the generated booking form has no seat picker - it renders a native select with a programmatic label"
+        }
+      ],
+      "route_conformed": true,
+      "brief_write_route": "/concerts/:id/reserve",
+      "emitted_write_route": "/concerts/:id/reserve",
       "topic": "parish church acoustic concert seat selection",
       "routes": [
         "/",
@@ -3280,7 +4062,7 @@
         "/concerts/:id/reserve",
         "/reservations/:id"
       ],
-      "tree_sha": "sha256:6bf28e4323902d795596c66ff6c47d7451df00b08b07f5987a6d79fe2b7dbdff"
+      "tree_sha": "sha256:8ec797d0fe2c95beb17a4ea1c425cbb5c1d7714c7774234ca6722a13a3a5f467"
     },
     {
       "project_id": "tr-27-react",
@@ -3290,10 +4072,23 @@
       "framework": "react",
       "task": "repair",
       "defects": [
+        "client-only-state",
+        "no-required"
+      ],
+      "seeded_defects": [
         "pew bookings are stored in temporary browser memory and are lost when the confirmation route is refreshed",
         "pew seat selectors are implemented as plain div elements without tabindex or keyboard activation handlers",
         "submitting without an attendee name fails silently without indicating which field was required"
       ],
+      "unrepresentable": [
+        {
+          "defect": "pew seat selectors are implemented as plain div elements without tabindex or keyboard activation handlers",
+          "reason": "the brief describes pew seat selectors as plain divs without tabindex/keyboard activation, but the generated booking form has no seat picker - it renders a native select with a programmatic label"
+        }
+      ],
+      "route_conformed": true,
+      "brief_write_route": "/concerts/:id/reserve",
+      "emitted_write_route": "/concerts/:id/reserve",
       "topic": "parish church acoustic concert seat selection",
       "routes": [
         "/",
@@ -3301,7 +4096,7 @@
         "/concerts/:id/reserve",
         "/reservations/:id"
       ],
-      "tree_sha": "sha256:d7bd40f9a4485db6bc747055b7985b8c9c2060405a75dc7feba0fba8033efc16"
+      "tree_sha": "sha256:9ca035ac0eec8db5a8f529fbf09dd3361d64c8f711baa6d40c18a541e96ecae9"
     },
     {
       "project_id": "tr-27-preact",
@@ -3311,10 +4106,23 @@
       "framework": "preact",
       "task": "repair",
       "defects": [
+        "client-only-state",
+        "no-required"
+      ],
+      "seeded_defects": [
         "pew bookings are stored in temporary browser memory and are lost when the confirmation route is refreshed",
         "pew seat selectors are implemented as plain div elements without tabindex or keyboard activation handlers",
         "submitting without an attendee name fails silently without indicating which field was required"
       ],
+      "unrepresentable": [
+        {
+          "defect": "pew seat selectors are implemented as plain div elements without tabindex or keyboard activation handlers",
+          "reason": "the brief describes pew seat selectors as plain divs without tabindex/keyboard activation, but the generated booking form has no seat picker - it renders a native select with a programmatic label"
+        }
+      ],
+      "route_conformed": true,
+      "brief_write_route": "/concerts/:id/reserve",
+      "emitted_write_route": "/concerts/:id/reserve",
       "topic": "parish church acoustic concert seat selection",
       "routes": [
         "/",
@@ -3322,7 +4130,7 @@
         "/concerts/:id/reserve",
         "/reservations/:id"
       ],
-      "tree_sha": "sha256:541faf8876fa6b269d724b91fef9644b41149f7d43116a44953266622c4afd6f"
+      "tree_sha": "sha256:363d338cc152ea34c4e6488841016a00d46dc54d580c358946caa1ef592a4e8c"
     },
     {
       "project_id": "tr-27-vue",
@@ -3332,10 +4140,23 @@
       "framework": "vue",
       "task": "repair",
       "defects": [
+        "client-only-state",
+        "no-required"
+      ],
+      "seeded_defects": [
         "pew bookings are stored in temporary browser memory and are lost when the confirmation route is refreshed",
         "pew seat selectors are implemented as plain div elements without tabindex or keyboard activation handlers",
         "submitting without an attendee name fails silently without indicating which field was required"
       ],
+      "unrepresentable": [
+        {
+          "defect": "pew seat selectors are implemented as plain div elements without tabindex or keyboard activation handlers",
+          "reason": "the brief describes pew seat selectors as plain divs without tabindex/keyboard activation, but the generated booking form has no seat picker - it renders a native select with a programmatic label"
+        }
+      ],
+      "route_conformed": true,
+      "brief_write_route": "/concerts/:id/reserve",
+      "emitted_write_route": "/concerts/:id/reserve",
       "topic": "parish church acoustic concert seat selection",
       "routes": [
         "/",
@@ -3343,7 +4164,7 @@
         "/concerts/:id/reserve",
         "/reservations/:id"
       ],
-      "tree_sha": "sha256:3048dd218a746a7092cc9234f10f5f9a543711f1b3b8e3fc4cb25c90edd994f4"
+      "tree_sha": "sha256:54a0f2049ae72a39ef2eff61d8341ce0577a013277a4dad7b6907bdd7356cc62"
     },
     {
       "project_id": "tr-27-webcomponents",
@@ -3353,10 +4174,23 @@
       "framework": "webcomponents",
       "task": "repair",
       "defects": [
+        "client-only-state",
+        "no-required"
+      ],
+      "seeded_defects": [
         "pew bookings are stored in temporary browser memory and are lost when the confirmation route is refreshed",
         "pew seat selectors are implemented as plain div elements without tabindex or keyboard activation handlers",
         "submitting without an attendee name fails silently without indicating which field was required"
       ],
+      "unrepresentable": [
+        {
+          "defect": "pew seat selectors are implemented as plain div elements without tabindex or keyboard activation handlers",
+          "reason": "the brief describes pew seat selectors as plain divs without tabindex/keyboard activation, but the generated booking form has no seat picker - it renders a native select with a programmatic label"
+        }
+      ],
+      "route_conformed": true,
+      "brief_write_route": "/concerts/:id/reserve",
+      "emitted_write_route": "/concerts/:id/reserve",
       "topic": "parish church acoustic concert seat selection",
       "routes": [
         "/",
@@ -3364,7 +4198,7 @@
         "/concerts/:id/reserve",
         "/reservations/:id"
       ],
-      "tree_sha": "sha256:60868ec499b9aa6faff119de9bfcf1277ba0bea31e9914543f6462e556d2b6b2"
+      "tree_sha": "sha256:956c025a751a1f1bb344f2de495cdce1bbac64724ed7c881c0cd76cf87b1f56f"
     },
     {
       "project_id": "tr-27-svelte",
@@ -3374,10 +4208,23 @@
       "framework": "svelte",
       "task": "repair",
       "defects": [
+        "client-only-state",
+        "no-required"
+      ],
+      "seeded_defects": [
         "pew bookings are stored in temporary browser memory and are lost when the confirmation route is refreshed",
         "pew seat selectors are implemented as plain div elements without tabindex or keyboard activation handlers",
         "submitting without an attendee name fails silently without indicating which field was required"
       ],
+      "unrepresentable": [
+        {
+          "defect": "pew seat selectors are implemented as plain div elements without tabindex or keyboard activation handlers",
+          "reason": "the brief describes pew seat selectors as plain divs without tabindex/keyboard activation, but the generated booking form has no seat picker - it renders a native select with a programmatic label"
+        }
+      ],
+      "route_conformed": true,
+      "brief_write_route": "/concerts/:id/reserve",
+      "emitted_write_route": "/concerts/:id/reserve",
       "topic": "parish church acoustic concert seat selection",
       "routes": [
         "/",
@@ -3385,7 +4232,7 @@
         "/concerts/:id/reserve",
         "/reservations/:id"
       ],
-      "tree_sha": "sha256:1feb9c118ffb09599f056f80ff54f2fafcb6ea48ca38cf89355496455e7a6e0e"
+      "tree_sha": "sha256:18dc76369acbeb608813fd20a8b89c3795889d633b3ff20605825741e5078eec"
     },
     {
       "project_id": "tr-28-hono",
@@ -3395,10 +4242,23 @@
       "framework": "hono",
       "task": "repair",
       "defects": [
+        "client-only-state",
+        "no-required"
+      ],
+      "seeded_defects": [
         "logged repair tickets are kept in local component state and disappear when the page is reloaded",
         "the urgency select dropdown uses custom div elements with no programmatic label or keyboard navigation",
         "submitting an empty description produces no error message and creates a corrupted ticket record"
       ],
+      "unrepresentable": [
+        {
+          "defect": "the urgency select dropdown uses custom div elements with no programmatic label or keyboard navigation",
+          "reason": "the brief describes a custom div-based urgency dropdown, but the generated helpdesk form renders a native select with a programmatic label"
+        }
+      ],
+      "route_conformed": true,
+      "brief_write_route": "/tickets/new",
+      "emitted_write_route": "/tickets/new",
       "topic": "outdoor equipment loan repair and missing part tickets",
       "routes": [
         "/",
@@ -3407,7 +4267,7 @@
         "/tickets/new",
         "/tickets/:id"
       ],
-      "tree_sha": "sha256:e0e6fb905de26671d122f27ff42bbcc3922ab87d62fa7b7b9c10da6ac254e032"
+      "tree_sha": "sha256:a8cb70fce24cb9448c69f5eeb300abc4b32d8e0b9e3841b88b70ef7b239c514a"
     },
     {
       "project_id": "tr-28-raw",
@@ -3417,10 +4277,23 @@
       "framework": "raw",
       "task": "repair",
       "defects": [
+        "client-only-state",
+        "no-required"
+      ],
+      "seeded_defects": [
         "logged repair tickets are kept in local component state and disappear when the page is reloaded",
         "the urgency select dropdown uses custom div elements with no programmatic label or keyboard navigation",
         "submitting an empty description produces no error message and creates a corrupted ticket record"
       ],
+      "unrepresentable": [
+        {
+          "defect": "the urgency select dropdown uses custom div elements with no programmatic label or keyboard navigation",
+          "reason": "the brief describes a custom div-based urgency dropdown, but the generated helpdesk form renders a native select with a programmatic label"
+        }
+      ],
+      "route_conformed": true,
+      "brief_write_route": "/tickets/new",
+      "emitted_write_route": "/tickets/new",
       "topic": "outdoor equipment loan repair and missing part tickets",
       "routes": [
         "/",
@@ -3429,7 +4302,7 @@
         "/tickets/new",
         "/tickets/:id"
       ],
-      "tree_sha": "sha256:b0ff6ab5bcdf5a870de1f617ae6504d1b9ad43a1eb625b308d8c0e99c8c4b26d"
+      "tree_sha": "sha256:1ccf94fc9fa8ac6622478b7eb6859381fe1b3cf6fc3db0cade273614eeeeefe3"
     },
     {
       "project_id": "tr-28-react",
@@ -3439,10 +4312,23 @@
       "framework": "react",
       "task": "repair",
       "defects": [
+        "client-only-state",
+        "no-required"
+      ],
+      "seeded_defects": [
         "logged repair tickets are kept in local component state and disappear when the page is reloaded",
         "the urgency select dropdown uses custom div elements with no programmatic label or keyboard navigation",
         "submitting an empty description produces no error message and creates a corrupted ticket record"
       ],
+      "unrepresentable": [
+        {
+          "defect": "the urgency select dropdown uses custom div elements with no programmatic label or keyboard navigation",
+          "reason": "the brief describes a custom div-based urgency dropdown, but the generated helpdesk form renders a native select with a programmatic label"
+        }
+      ],
+      "route_conformed": true,
+      "brief_write_route": "/tickets/new",
+      "emitted_write_route": "/tickets/new",
       "topic": "outdoor equipment loan repair and missing part tickets",
       "routes": [
         "/",
@@ -3451,7 +4337,7 @@
         "/tickets/new",
         "/tickets/:id"
       ],
-      "tree_sha": "sha256:c646bae18b4f2abe15fd6ea5ca01e052c97c1490453dce954f2a0dd9f6005fc6"
+      "tree_sha": "sha256:c97945d0b8801fa5f1b257902da837d970f7eee48d20b421cc1c3704cbb4f366"
     },
     {
       "project_id": "tr-28-preact",
@@ -3461,10 +4347,23 @@
       "framework": "preact",
       "task": "repair",
       "defects": [
+        "client-only-state",
+        "no-required"
+      ],
+      "seeded_defects": [
         "logged repair tickets are kept in local component state and disappear when the page is reloaded",
         "the urgency select dropdown uses custom div elements with no programmatic label or keyboard navigation",
         "submitting an empty description produces no error message and creates a corrupted ticket record"
       ],
+      "unrepresentable": [
+        {
+          "defect": "the urgency select dropdown uses custom div elements with no programmatic label or keyboard navigation",
+          "reason": "the brief describes a custom div-based urgency dropdown, but the generated helpdesk form renders a native select with a programmatic label"
+        }
+      ],
+      "route_conformed": true,
+      "brief_write_route": "/tickets/new",
+      "emitted_write_route": "/tickets/new",
       "topic": "outdoor equipment loan repair and missing part tickets",
       "routes": [
         "/",
@@ -3473,7 +4372,7 @@
         "/tickets/new",
         "/tickets/:id"
       ],
-      "tree_sha": "sha256:e071259685777dedbb9542fc78199f2cb8fa9713142a97d5ecb41088bbb871dc"
+      "tree_sha": "sha256:ad812a7ee8a88f1e6960618a28817f605103d40e4db25a52950ca9b8d6dc7eac"
     },
     {
       "project_id": "tr-28-vue",
@@ -3483,10 +4382,23 @@
       "framework": "vue",
       "task": "repair",
       "defects": [
+        "client-only-state",
+        "no-required"
+      ],
+      "seeded_defects": [
         "logged repair tickets are kept in local component state and disappear when the page is reloaded",
         "the urgency select dropdown uses custom div elements with no programmatic label or keyboard navigation",
         "submitting an empty description produces no error message and creates a corrupted ticket record"
       ],
+      "unrepresentable": [
+        {
+          "defect": "the urgency select dropdown uses custom div elements with no programmatic label or keyboard navigation",
+          "reason": "the brief describes a custom div-based urgency dropdown, but the generated helpdesk form renders a native select with a programmatic label"
+        }
+      ],
+      "route_conformed": true,
+      "brief_write_route": "/tickets/new",
+      "emitted_write_route": "/tickets/new",
       "topic": "outdoor equipment loan repair and missing part tickets",
       "routes": [
         "/",
@@ -3495,7 +4407,7 @@
         "/tickets/new",
         "/tickets/:id"
       ],
-      "tree_sha": "sha256:f0a17d2c99412060c328827f81fb318cce9eb5cdf457e156a29ed6c48e8ed8ff"
+      "tree_sha": "sha256:0211447115e4f48ae9b959c32307d572e300cde0bacad5629376aae7043c82f3"
     },
     {
       "project_id": "tr-28-webcomponents",
@@ -3505,10 +4417,23 @@
       "framework": "webcomponents",
       "task": "repair",
       "defects": [
+        "client-only-state",
+        "no-required"
+      ],
+      "seeded_defects": [
         "logged repair tickets are kept in local component state and disappear when the page is reloaded",
         "the urgency select dropdown uses custom div elements with no programmatic label or keyboard navigation",
         "submitting an empty description produces no error message and creates a corrupted ticket record"
       ],
+      "unrepresentable": [
+        {
+          "defect": "the urgency select dropdown uses custom div elements with no programmatic label or keyboard navigation",
+          "reason": "the brief describes a custom div-based urgency dropdown, but the generated helpdesk form renders a native select with a programmatic label"
+        }
+      ],
+      "route_conformed": true,
+      "brief_write_route": "/tickets/new",
+      "emitted_write_route": "/tickets/new",
       "topic": "outdoor equipment loan repair and missing part tickets",
       "routes": [
         "/",
@@ -3517,7 +4442,7 @@
         "/tickets/new",
         "/tickets/:id"
       ],
-      "tree_sha": "sha256:e7ce01ebde4bb5bda9de57807cab16d63d139e2cdf1bf19616d81df99408f604"
+      "tree_sha": "sha256:c1f4cd41fea851136a121ff0202272c627a45e929d5fdd26251623d912f51f6a"
     },
     {
       "project_id": "tr-28-svelte",
@@ -3527,10 +4452,23 @@
       "framework": "svelte",
       "task": "repair",
       "defects": [
+        "client-only-state",
+        "no-required"
+      ],
+      "seeded_defects": [
         "logged repair tickets are kept in local component state and disappear when the page is reloaded",
         "the urgency select dropdown uses custom div elements with no programmatic label or keyboard navigation",
         "submitting an empty description produces no error message and creates a corrupted ticket record"
       ],
+      "unrepresentable": [
+        {
+          "defect": "the urgency select dropdown uses custom div elements with no programmatic label or keyboard navigation",
+          "reason": "the brief describes a custom div-based urgency dropdown, but the generated helpdesk form renders a native select with a programmatic label"
+        }
+      ],
+      "route_conformed": true,
+      "brief_write_route": "/tickets/new",
+      "emitted_write_route": "/tickets/new",
       "topic": "outdoor equipment loan repair and missing part tickets",
       "routes": [
         "/",
@@ -3539,7 +4477,7 @@
         "/tickets/new",
         "/tickets/:id"
       ],
-      "tree_sha": "sha256:bac725ec01ce77baa3ae2eb91514ea375f629dd12bbcd6267a7f0e64d39920dd"
+      "tree_sha": "sha256:e71a76a6a99277d92fd29ccf7cad3e8218210379d4350a57cb3dbcea2b4fbcf7"
     },
     {
       "project_id": "tr-29-hono",
@@ -3549,10 +4487,21 @@
       "framework": "hono",
       "task": "repair",
       "defects": [
+        "client-only-state",
+        "accept-invalid-amount",
+        "no-field-labels"
+      ],
+      "seeded_defects": [
         "contributions are stored only in volatile memory and vanish when the ledger route is reloaded",
         "negative and non-numeric contribution amounts are accepted without error and corrupt the running total",
         "the contribution form lacks associated label elements for the amount and dedication inputs"
       ],
+      "notes": [
+        "the brief names a dedication input the archetype does not model; no-field-labels drops the label on the non-select fields (member, vendor, amount), so the amount input is the covered case"
+      ],
+      "route_conformed": true,
+      "brief_write_route": "/contribute",
+      "emitted_write_route": "/contribute",
       "topic": "memorial tree fund contributions and planting site tracker",
       "routes": [
         "/",
@@ -3561,7 +4510,7 @@
         "/contributions/:id",
         "/ledger"
       ],
-      "tree_sha": "sha256:e1efa4ca5cc50df978e34c92889d3a0bf82ee8cb41f508796996145210fef4c3"
+      "tree_sha": "sha256:673639b7257cbd47f2816e5980e57c173ca300d94dcb63301c59c6c4bb44ac7b"
     },
     {
       "project_id": "tr-29-raw",
@@ -3571,10 +4520,21 @@
       "framework": "raw",
       "task": "repair",
       "defects": [
+        "client-only-state",
+        "accept-invalid-amount",
+        "no-field-labels"
+      ],
+      "seeded_defects": [
         "contributions are stored only in volatile memory and vanish when the ledger route is reloaded",
         "negative and non-numeric contribution amounts are accepted without error and corrupt the running total",
         "the contribution form lacks associated label elements for the amount and dedication inputs"
       ],
+      "notes": [
+        "the brief names a dedication input the archetype does not model; no-field-labels drops the label on the non-select fields (member, vendor, amount), so the amount input is the covered case"
+      ],
+      "route_conformed": true,
+      "brief_write_route": "/contribute",
+      "emitted_write_route": "/contribute",
       "topic": "memorial tree fund contributions and planting site tracker",
       "routes": [
         "/",
@@ -3583,7 +4543,7 @@
         "/contributions/:id",
         "/ledger"
       ],
-      "tree_sha": "sha256:cb2ab2695793a1f98f5d9ec028be32374f98861a6a887c6786979f2e0752a5e8"
+      "tree_sha": "sha256:9ec285f54ad22cad2f62d311f3e34409f2cc74a8f973c949424bee24e5c4bb64"
     },
     {
       "project_id": "tr-29-react",
@@ -3593,10 +4553,21 @@
       "framework": "react",
       "task": "repair",
       "defects": [
+        "client-only-state",
+        "accept-invalid-amount",
+        "no-field-labels"
+      ],
+      "seeded_defects": [
         "contributions are stored only in volatile memory and vanish when the ledger route is reloaded",
         "negative and non-numeric contribution amounts are accepted without error and corrupt the running total",
         "the contribution form lacks associated label elements for the amount and dedication inputs"
       ],
+      "notes": [
+        "the brief names a dedication input the archetype does not model; no-field-labels drops the label on the non-select fields (member, vendor, amount), so the amount input is the covered case"
+      ],
+      "route_conformed": true,
+      "brief_write_route": "/contribute",
+      "emitted_write_route": "/contribute",
       "topic": "memorial tree fund contributions and planting site tracker",
       "routes": [
         "/",
@@ -3605,7 +4576,7 @@
         "/contributions/:id",
         "/ledger"
       ],
-      "tree_sha": "sha256:ceb49dad7fd53717eadafccabdf99405439acf77c5ec1fb92ec47117b1219df6"
+      "tree_sha": "sha256:51e1ddd8e797831a49efd84d041d1b2eaa1a76527528c1d235a43711888898ce"
     },
     {
       "project_id": "tr-29-preact",
@@ -3615,10 +4586,21 @@
       "framework": "preact",
       "task": "repair",
       "defects": [
+        "client-only-state",
+        "accept-invalid-amount",
+        "no-field-labels"
+      ],
+      "seeded_defects": [
         "contributions are stored only in volatile memory and vanish when the ledger route is reloaded",
         "negative and non-numeric contribution amounts are accepted without error and corrupt the running total",
         "the contribution form lacks associated label elements for the amount and dedication inputs"
       ],
+      "notes": [
+        "the brief names a dedication input the archetype does not model; no-field-labels drops the label on the non-select fields (member, vendor, amount), so the amount input is the covered case"
+      ],
+      "route_conformed": true,
+      "brief_write_route": "/contribute",
+      "emitted_write_route": "/contribute",
       "topic": "memorial tree fund contributions and planting site tracker",
       "routes": [
         "/",
@@ -3627,7 +4609,7 @@
         "/contributions/:id",
         "/ledger"
       ],
-      "tree_sha": "sha256:c398dfaf639b0ae482c6034a050154f0b84371f699ecac3cf75534ae8e7071ce"
+      "tree_sha": "sha256:0f1a04d6bc4e0e8337572555bfa06b9e713da0628b4032d24ccfa647db84e8ab"
     },
     {
       "project_id": "tr-29-vue",
@@ -3637,10 +4619,21 @@
       "framework": "vue",
       "task": "repair",
       "defects": [
+        "client-only-state",
+        "accept-invalid-amount",
+        "no-field-labels"
+      ],
+      "seeded_defects": [
         "contributions are stored only in volatile memory and vanish when the ledger route is reloaded",
         "negative and non-numeric contribution amounts are accepted without error and corrupt the running total",
         "the contribution form lacks associated label elements for the amount and dedication inputs"
       ],
+      "notes": [
+        "the brief names a dedication input the archetype does not model; no-field-labels drops the label on the non-select fields (member, vendor, amount), so the amount input is the covered case"
+      ],
+      "route_conformed": true,
+      "brief_write_route": "/contribute",
+      "emitted_write_route": "/contribute",
       "topic": "memorial tree fund contributions and planting site tracker",
       "routes": [
         "/",
@@ -3649,7 +4642,7 @@
         "/contributions/:id",
         "/ledger"
       ],
-      "tree_sha": "sha256:82190e798bd8d94b93619a750209b151a705ff6c5a171a35e3836f575a4b9cd9"
+      "tree_sha": "sha256:05060ea891ffff7d710cab5344be829bb302f6add35b4ab5e0a1a12a28699306"
     },
     {
       "project_id": "tr-29-webcomponents",
@@ -3659,10 +4652,21 @@
       "framework": "webcomponents",
       "task": "repair",
       "defects": [
+        "client-only-state",
+        "accept-invalid-amount",
+        "no-field-labels"
+      ],
+      "seeded_defects": [
         "contributions are stored only in volatile memory and vanish when the ledger route is reloaded",
         "negative and non-numeric contribution amounts are accepted without error and corrupt the running total",
         "the contribution form lacks associated label elements for the amount and dedication inputs"
       ],
+      "notes": [
+        "the brief names a dedication input the archetype does not model; no-field-labels drops the label on the non-select fields (member, vendor, amount), so the amount input is the covered case"
+      ],
+      "route_conformed": true,
+      "brief_write_route": "/contribute",
+      "emitted_write_route": "/contribute",
       "topic": "memorial tree fund contributions and planting site tracker",
       "routes": [
         "/",
@@ -3671,7 +4675,7 @@
         "/contributions/:id",
         "/ledger"
       ],
-      "tree_sha": "sha256:90889cf3b2454d6ce1862e49279d29224c97091fd210193297a3ca6bd245e482"
+      "tree_sha": "sha256:0bcd84ae202ad43338cbdb023ecb89cdf9cacbfc3a4165b96accdbde06721bbd"
     },
     {
       "project_id": "tr-29-svelte",
@@ -3681,10 +4685,21 @@
       "framework": "svelte",
       "task": "repair",
       "defects": [
+        "client-only-state",
+        "accept-invalid-amount",
+        "no-field-labels"
+      ],
+      "seeded_defects": [
         "contributions are stored only in volatile memory and vanish when the ledger route is reloaded",
         "negative and non-numeric contribution amounts are accepted without error and corrupt the running total",
         "the contribution form lacks associated label elements for the amount and dedication inputs"
       ],
+      "notes": [
+        "the brief names a dedication input the archetype does not model; no-field-labels drops the label on the non-select fields (member, vendor, amount), so the amount input is the covered case"
+      ],
+      "route_conformed": true,
+      "brief_write_route": "/contribute",
+      "emitted_write_route": "/contribute",
       "topic": "memorial tree fund contributions and planting site tracker",
       "routes": [
         "/",
@@ -3693,7 +4708,7 @@
         "/contributions/:id",
         "/ledger"
       ],
-      "tree_sha": "sha256:6b2b46e21d75dc15207211610e411a09f6b850a61b1276438149421d915c0927"
+      "tree_sha": "sha256:58e24c76145bac7522331292957889d58450c8a3166ab332236995917a66a815"
     },
     {
       "project_id": "tr-30-hono",
@@ -3703,10 +4718,18 @@
       "framework": "hono",
       "task": "repair",
       "defects": [
+        "client-only-state",
+        "enter-submits",
+        "no-aria-sync"
+      ],
+      "seeded_defects": [
         "volunteer zone registrations are only held in client component state and disappear upon page reload",
         "pressing Enter inside the volunteer name input submits the form before a cleanup zone is chosen",
         "missing required input errors are indicated solely by border styling without accessible text announcements"
       ],
+      "route_conformed": true,
+      "brief_write_route": "/cleanups/:id/register",
+      "emitted_write_route": "/cleanups/:id/register",
       "topic": "low-tide beach cleanup zone assignment and kit allocation",
       "routes": [
         "/",
@@ -3714,7 +4737,7 @@
         "/cleanups/:id/register",
         "/passes/:id"
       ],
-      "tree_sha": "sha256:c73452920d3fc881c04db8ae82e09a04b8bc6f0a6c6d371c8594907f8a2e6fae"
+      "tree_sha": "sha256:a4818e7c9e85525e1ee107d9c28eca0a12259748db76c4b3df6c940359e42c54"
     },
     {
       "project_id": "tr-30-raw",
@@ -3724,10 +4747,18 @@
       "framework": "raw",
       "task": "repair",
       "defects": [
+        "client-only-state",
+        "enter-submits",
+        "no-aria-sync"
+      ],
+      "seeded_defects": [
         "volunteer zone registrations are only held in client component state and disappear upon page reload",
         "pressing Enter inside the volunteer name input submits the form before a cleanup zone is chosen",
         "missing required input errors are indicated solely by border styling without accessible text announcements"
       ],
+      "route_conformed": true,
+      "brief_write_route": "/cleanups/:id/register",
+      "emitted_write_route": "/cleanups/:id/register",
       "topic": "low-tide beach cleanup zone assignment and kit allocation",
       "routes": [
         "/",
@@ -3735,7 +4766,7 @@
         "/cleanups/:id/register",
         "/passes/:id"
       ],
-      "tree_sha": "sha256:9bd2c8c478b38529bc80fab80571a9323c6b2788f35da49d30212a9ab4aa0c93"
+      "tree_sha": "sha256:b13527ab4588d4c834d22d64f6ddccbb63fc7de33088372a1525a5fef6af4e2f"
     },
     {
       "project_id": "tr-30-react",
@@ -3745,10 +4776,18 @@
       "framework": "react",
       "task": "repair",
       "defects": [
+        "client-only-state",
+        "enter-submits",
+        "no-aria-sync"
+      ],
+      "seeded_defects": [
         "volunteer zone registrations are only held in client component state and disappear upon page reload",
         "pressing Enter inside the volunteer name input submits the form before a cleanup zone is chosen",
         "missing required input errors are indicated solely by border styling without accessible text announcements"
       ],
+      "route_conformed": true,
+      "brief_write_route": "/cleanups/:id/register",
+      "emitted_write_route": "/cleanups/:id/register",
       "topic": "low-tide beach cleanup zone assignment and kit allocation",
       "routes": [
         "/",
@@ -3756,7 +4795,7 @@
         "/cleanups/:id/register",
         "/passes/:id"
       ],
-      "tree_sha": "sha256:634f0c7ab54f3af591fa678eccb9405e05ddb3d516469bfe23b31bd0eda582fc"
+      "tree_sha": "sha256:3f5358e9f13f91fbc08aaa6f30993df84ba318c6313910f5adf809b10bf22c91"
     },
     {
       "project_id": "tr-30-preact",
@@ -3766,10 +4805,18 @@
       "framework": "preact",
       "task": "repair",
       "defects": [
+        "client-only-state",
+        "enter-submits",
+        "no-aria-sync"
+      ],
+      "seeded_defects": [
         "volunteer zone registrations are only held in client component state and disappear upon page reload",
         "pressing Enter inside the volunteer name input submits the form before a cleanup zone is chosen",
         "missing required input errors are indicated solely by border styling without accessible text announcements"
       ],
+      "route_conformed": true,
+      "brief_write_route": "/cleanups/:id/register",
+      "emitted_write_route": "/cleanups/:id/register",
       "topic": "low-tide beach cleanup zone assignment and kit allocation",
       "routes": [
         "/",
@@ -3777,7 +4824,7 @@
         "/cleanups/:id/register",
         "/passes/:id"
       ],
-      "tree_sha": "sha256:9bff9a376da391357b697c3fd223e7838965bc33bcac17bd4891aee63ef095fa"
+      "tree_sha": "sha256:1625e832102974ae5abaf44640e50ef1a0ef1aa92b6e7d9be75a90a626853c7f"
     },
     {
       "project_id": "tr-30-vue",
@@ -3787,10 +4834,18 @@
       "framework": "vue",
       "task": "repair",
       "defects": [
+        "client-only-state",
+        "enter-submits",
+        "no-aria-sync"
+      ],
+      "seeded_defects": [
         "volunteer zone registrations are only held in client component state and disappear upon page reload",
         "pressing Enter inside the volunteer name input submits the form before a cleanup zone is chosen",
         "missing required input errors are indicated solely by border styling without accessible text announcements"
       ],
+      "route_conformed": true,
+      "brief_write_route": "/cleanups/:id/register",
+      "emitted_write_route": "/cleanups/:id/register",
       "topic": "low-tide beach cleanup zone assignment and kit allocation",
       "routes": [
         "/",
@@ -3798,7 +4853,7 @@
         "/cleanups/:id/register",
         "/passes/:id"
       ],
-      "tree_sha": "sha256:d20cce297df4e23b06c2d1d1e3b88d028bde9b8cbf6b430d7005ed480fa8e6af"
+      "tree_sha": "sha256:485622b35cb2f9268ac1f367b4978658e01444407d0609165d2aff3cc595ef27"
     },
     {
       "project_id": "tr-30-webcomponents",
@@ -3808,10 +4863,18 @@
       "framework": "webcomponents",
       "task": "repair",
       "defects": [
+        "client-only-state",
+        "enter-submits",
+        "no-aria-sync"
+      ],
+      "seeded_defects": [
         "volunteer zone registrations are only held in client component state and disappear upon page reload",
         "pressing Enter inside the volunteer name input submits the form before a cleanup zone is chosen",
         "missing required input errors are indicated solely by border styling without accessible text announcements"
       ],
+      "route_conformed": true,
+      "brief_write_route": "/cleanups/:id/register",
+      "emitted_write_route": "/cleanups/:id/register",
       "topic": "low-tide beach cleanup zone assignment and kit allocation",
       "routes": [
         "/",
@@ -3819,7 +4882,7 @@
         "/cleanups/:id/register",
         "/passes/:id"
       ],
-      "tree_sha": "sha256:26990dd0d6242999ba99d7e647090934f408c2727d18d1a321db93ee343b5923"
+      "tree_sha": "sha256:e36fe5c7981fb5be52bcea7846848469fda3e218e61d60f0ff683cfba428d16c"
     },
     {
       "project_id": "tr-30-svelte",
@@ -3829,10 +4892,18 @@
       "framework": "svelte",
       "task": "repair",
       "defects": [
+        "client-only-state",
+        "enter-submits",
+        "no-aria-sync"
+      ],
+      "seeded_defects": [
         "volunteer zone registrations are only held in client component state and disappear upon page reload",
         "pressing Enter inside the volunteer name input submits the form before a cleanup zone is chosen",
         "missing required input errors are indicated solely by border styling without accessible text announcements"
       ],
+      "route_conformed": true,
+      "brief_write_route": "/cleanups/:id/register",
+      "emitted_write_route": "/cleanups/:id/register",
       "topic": "low-tide beach cleanup zone assignment and kit allocation",
       "routes": [
         "/",
@@ -3840,7 +4911,7 @@
         "/cleanups/:id/register",
         "/passes/:id"
       ],
-      "tree_sha": "sha256:afba38a7c123593daf2ee5caa9228d632d11ce1b98837c6c9780e19834fc2d95"
+      "tree_sha": "sha256:c5f3c4a7aa97d99d7b5eec275bd8f1f769c84bf7b3ae91241e998d69d8f7fd9d"
     }
   ]
 }

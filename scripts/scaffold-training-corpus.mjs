@@ -43,6 +43,69 @@ const titleCase = (value) =>
     .map((word) => capitalize(word))
     .join(' ');
 
+/**
+ * The prose defects a repair brief seeds, mapped to the concrete tokens the builder injects.
+ *
+ * The builder reacts to the pilot's fixed vocabulary (`no-required`, `eager-invalid`, `no-aria-sync`,
+ * `no-autofill`, `no-autofill-address`, `xss-innerhtml`) plus four training-only tokens
+ * (`client-only-state`, `enter-submits`, `accept-invalid-amount`, `no-field-labels`). Order matches the
+ * brief's `seeded_defects`, one entry per prose defect; `token: null` marks a defect that has no
+ * faithful code expression and is reported as `unrepresentable` rather than silently dropped.
+ */
+const REPAIR_DEFECT_TOKENS = {
+  'tr-26': [
+    { token: 'client-only-state' },
+    { token: 'no-aria-sync' },
+    { token: 'enter-submits' },
+  ],
+  'tr-27': [
+    { token: 'client-only-state' },
+    { token: null, reason: 'the brief describes pew seat selectors as plain divs without tabindex/keyboard activation, but the generated booking form has no seat picker - it renders a native select with a programmatic label' },
+    { token: 'no-required' },
+  ],
+  'tr-28': [
+    { token: 'client-only-state' },
+    { token: null, reason: 'the brief describes a custom div-based urgency dropdown, but the generated helpdesk form renders a native select with a programmatic label' },
+    { token: 'no-required' },
+  ],
+  'tr-29': [
+    { token: 'client-only-state' },
+    { token: 'accept-invalid-amount' },
+    { token: 'no-field-labels', note: 'the brief names a dedication input the archetype does not model; no-field-labels drops the label on the non-select fields (member, vendor, amount), so the amount input is the covered case' },
+  ],
+  'tr-30': [
+    { token: 'client-only-state' },
+    { token: 'enter-submits' },
+    { token: 'no-aria-sync' },
+  ],
+};
+
+/**
+ * Resolve a family's prose `seeded_defects` into the tokens the builder injects, plus the prose that
+ * could not be represented and any per-defect caveats. Generate families have no defects.
+ */
+function defectsForFamily(family) {
+  if (family.task !== 'repair') return { injected: [], unrepresentable: [], notes: [] };
+  const mapping = REPAIR_DEFECT_TOKENS[family.family_id] ?? [];
+  const injected = [];
+  const unrepresentable = [];
+  const notes = [];
+  family.seeded_defects.forEach((defect, index) => {
+    const entry = mapping[index];
+    if (!entry) {
+      unrepresentable.push({ defect, reason: 'no token mapping recorded for this defect' });
+      return;
+    }
+    if (entry.token) {
+      injected.push(entry.token);
+      if (entry.note) notes.push(entry.note);
+    } else {
+      unrepresentable.push({ defect, reason: entry.reason });
+    }
+  });
+  return { injected, unrepresentable, notes };
+}
+
 function parseArgs(argv) {
   const args = {
     out: 'pilot/training-projects',
@@ -97,13 +160,13 @@ function deriveRoutes(family, base) {
   const familyRead = readFromAssertion ?? family.routes.find((route) => /:[A-Za-z0-9_]+/.test(route));
   const readPath = (familyRead ?? baseRead?.path ?? '/record/:ref').replace(/:[A-Za-z0-9_]+/g, ':ref');
 
-  // Write path: the family's POST path from its assertions, unless it carries a :param (the generic
-  // server matches the write route literally, so a nested `/x/:id/y` write falls back to the base).
+  // Write path: the family's POST path from its assertions, taken verbatim including any :param (the
+  // server now matches a parameterised write route with the same :param-to-capture rewrite it uses for
+  // the read route, so `/x/:id/y` is served rather than silently falling back to the archetype's path).
   let writePath = baseWrite?.path ?? '/submit';
   const postAssertion = family.assertions.find((assertion) => /^POST\s+\S+/.test(assertion));
   if (postAssertion) {
-    const candidate = postAssertion.match(/^POST\s+(\S+)/)[1];
-    if (!/:[A-Za-z0-9_]+/.test(candidate)) writePath = candidate;
+    writePath = postAssertion.match(/^POST\s+(\S+)/)[1];
   }
 
   const redirectPath = readPath.replace(/:[A-Za-z0-9_]+/g, refPlaceholder);
@@ -192,10 +255,13 @@ function main() {
     }
     if (!/^tr-\d{2}$/.test(family.family_id)) badFamilies.push(family.family_id);
     const archetype = familyArchetype(family, base);
+    const { injected, unrepresentable, notes } = defectsForFamily(family);
+    const emittedWriteRoute = archetype.routes.find((route) => route.method === 'POST' && route.kind.startsWith('write'))?.path ?? null;
+    const briefWriteRoute = family.assertions.map((assertion) => assertion.match(/^POST\s+(\S+)/)?.[1]).find(Boolean) ?? null;
+    const routeConformed = briefWriteRoute === null || briefWriteRoute === emittedWriteRoute;
     for (const frameworkName of FRAMEWORK_NAMES) {
       const projectId = `${family.family_id}-${frameworkName}`;
-      const defects = family.task === 'repair' ? family.seeded_defects : [];
-      const built = buildProjectFor(archetype, { frameworkName, defects, flags: {} });
+      const built = buildProjectFor(archetype, { frameworkName, defects: injected, flags: {} });
       // The builder names a project after the archetype; the corpus record names it after the family,
       // because seven families can share one archetype and their projects must not share a directory.
       built.spec.project_id = projectId;
@@ -209,7 +275,13 @@ function main() {
         archetype: family.archetype,
         framework: frameworkName,
         task: family.task,
-        defects,
+        defects: injected,
+        seeded_defects: family.seeded_defects,
+        ...(unrepresentable.length > 0 ? { unrepresentable } : {}),
+        ...(notes.length > 0 ? { notes } : {}),
+        route_conformed: routeConformed,
+        brief_write_route: briefWriteRoute,
+        emitted_write_route: emittedWriteRoute,
         topic: family.topic,
         routes: family.routes,
         tree_sha: treeSha,

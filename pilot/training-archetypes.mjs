@@ -394,7 +394,7 @@ const expenseTracker = {
     { slug: 'member', name: 'member', type: 'text', label: 'Your name', autocomplete: 'name' },
     { slug: 'vendor', name: 'vendor', type: 'text', label: 'Vendor' },
     { slug: 'category', name: 'category', type: 'select', label: 'Category', options: ['maintenance', 'supplies', 'utilities', 'other'] },
-    { slug: 'amount', name: 'amount', type: 'number', label: 'Amount' },
+    { slug: 'amount', name: 'amount', type: 'number', label: 'Amount', min: '0' },
   ],
   echo: { field: 'member', source: 'record' },
   journey: {
