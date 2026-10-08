@@ -18,7 +18,7 @@ import { appendFileSync, cpSync, existsSync, mkdirSync, realpathSync } from 'nod
 import { dirname, join, resolve, sep } from 'node:path';
 import process from 'node:process';
 
-import { ARMS, QUARANTINED_ARMS } from '../src/provenance/arms.mjs';
+import { ARMS, ARM_IDS, QUARANTINED_ARMS } from '../src/provenance/arms.mjs';
 import { REPO_ROOT, assertQuarantineStore, quarantineRoot } from '../src/provenance/store.mjs';
 
 // Overridable for tests; in normal use this is the repo the script lives in.
@@ -58,19 +58,27 @@ if (realSource !== store && !realSource.startsWith(`${store}${sep}`)) {
   process.exit(1);
 }
 
-// Which arm is being published? Derive it from the RESOLVED source path inside the store (never
-// from the caller's raw string: './data/A3...' and friends must not dodge the check). An explicit
-// --arm must AGREE with the derived arm, or the promotion is refused as contradictory.
+// Which arm(s) is being published? Derive the set from the RESOLVED source path inside the store
+// (never from the caller's raw string). A directory above the arm roots (e.g. 'data') CONTAINS
+// arms; every contained quarantined arm requires the acknowledgement, so promoting a whole
+// subtree cannot launder a quarantined child through an ambiguous source.
 const sourceRel = realSource.slice(store.length + 1).split(sep).join('/');
-const derivedArm = QUARANTINED_ARMS.find((id) => sourceRel === ARMS[id].storageRoot || sourceRel.startsWith(`${ARMS[id].storageRoot}/`)) ?? null;
-if (args.arm && derivedArm && args.arm !== derivedArm) {
-  console.error(`promote: --arm ${args.arm} contradicts the source path, which is in arm ${derivedArm}`);
+const containedArms = ARM_IDS.filter(
+  (id) => sourceRel === ARMS[id].storageRoot || sourceRel.startsWith(`${ARMS[id].storageRoot}/`) || ARMS[id].storageRoot.startsWith(`${sourceRel}/`) || ARMS[id].storageRoot === sourceRel,
+);
+if (args.arm && containedArms.length > 0 && !containedArms.includes(args.arm)) {
+  console.error(`promote: --arm ${args.arm} contradicts the source path, which is in arm(s) ${containedArms.join(', ')}`);
   process.exit(1);
 }
-const arm = derivedArm ?? args.arm;
-if (arm && ARMS[arm].quarantined && !args.acknowledgeBoundary) {
+if (containedArms.length === 0 && !args.arm) {
+  console.error(`promote: cannot determine the arm of '${from}' - pass --arm explicitly (the ledger must name the arm)`);
+  process.exit(1);
+}
+const quarantinedContained = containedArms.filter((id) => ARMS[id].quarantined);
+const arm = args.arm ?? (containedArms.length === 1 ? containedArms[0] : null);
+if ((quarantinedContained.length > 0 || (arm && ARMS[arm].quarantined)) && !args.acknowledgeBoundary) {
   console.error(
-    `promote: '${from}' is in quarantined arm ${arm} (${ARMS[arm].label}).\n` +
+    `promote: '${from}' covers quarantined arm(s) ${(quarantinedContained.length > 0 ? quarantinedContained : [arm]).join(', ')}.\n` +
       'Publication is a PUBLICATION boundary, not a training-permission boundary: the asset keeps\n' +
       'its arm and its excluded_from_training flag. Re-run with --acknowledge-boundary to confirm.',
   );
@@ -104,6 +112,7 @@ cpSync(realSource, target, { recursive: true });
 const record = {
   at: new Date().toISOString(),
   arm,
+  arms: containedArms.length > 0 ? containedArms : undefined,
   from,
   to,
   quarantine_head: head,

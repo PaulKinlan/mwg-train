@@ -52,6 +52,22 @@ function originOf(dir) {
 }
 
 /**
+ * Normalise a git remote URL to `owner/repo`: https://host/owner/repo(.git), ssh://git@host/...,
+ * and git@host:owner/repo(.git) all identify the same repository, so string inequality between
+ * two remotes proves nothing - identity does.
+ */
+export function repoIdentity(url) {
+  if (!url) return null;
+  const match = url.match(/[:/]([^/:]+)\/([^/]+?)(?:\.git)?$/) ?? url.match(/^([^/:]+)\/([^/]+?)(?:\.git)?$/);
+  return match ? `${match[1]}/${match[2]}`.toLowerCase() : null;
+}
+
+/** The companion repo the store must be. Overridable for tests; documented in docs/quarantine.md. */
+export function expectedStoreRepo(env = process.env) {
+  return env.MWG_TRAIN_QUARANTINE_REPO ?? 'PaulKinlan/mwg-quarantine';
+}
+
+/**
  * Assert that `path` (which may not exist yet) cannot resolve outside `root` through symlinks:
  * the nearest existing ancestor is realpath-checked inside the root, and if the full path exists
  * it is realpath-checked too. A symlinked arm directory pointing into the public tree fails here.
@@ -112,8 +128,15 @@ export function assertQuarantineStore(root, { repoRoot = REPO_ROOT } = {}) {
     throw new QuarantineError('STORE_NOT_WORKTREE_ROOT', `STORE_NOT_WORKTREE_ROOT: ${realRoot} is inside another git checkout, not its own worktree root`);
   }
   const publicOrigin = originOf(realRepo);
-  if (publicOrigin && storeOrigin === publicOrigin) {
+  const storeId = repoIdentity(storeOrigin);
+  const publicId = repoIdentity(publicOrigin);
+  if (publicId && storeId === publicId) {
     throw new QuarantineError('STORE_IS_PUBLIC_REPO', `STORE_IS_PUBLIC_REPO: the quarantine store's origin IS the public repo (${publicOrigin}) - that is not a boundary`);
+  }
+  // Not merely different from the public repo: the store must BE the expected private companion.
+  const expected = repoIdentity(expectedStoreRepo());
+  if (expected && storeId !== expected) {
+    throw new QuarantineError('STORE_WRONG_REPO', `STORE_WRONG_REPO: the quarantine store's origin identifies '${storeId}', expected the private companion '${expected}'`);
   }
   return realRoot;
 }
@@ -138,5 +161,13 @@ export function armStorageRoot(armId, { repoRoot = REPO_ROOT, quarantineRoot: qR
 
 /** Absolute storage path for one asset, routed by its arm's rights class. */
 export function assetStoragePath(armId, relativePath, options = {}) {
-  return join(armStorageRoot(armId, options), normaliseRelativePath(relativePath));
+  const root = armStorageRoot(armId, options);
+  const path = join(root, normaliseRelativePath(relativePath));
+  if (ARMS[armId].publication === 'quarantine') {
+    // The arm root is checked; the FULL asset path must be too - a symlink at any intermediate
+    // component (e.g. data/<arm>/sites) must not redirect the write out of the store.
+    const store = options.quarantineRoot ?? quarantineRoot({ repoRoot: options.repoRoot ?? REPO_ROOT });
+    return assertResolvesInside(realpathSync(store), path, `asset ${armId}:${relativePath}`);
+  }
+  return path;
 }

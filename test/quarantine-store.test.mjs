@@ -109,7 +109,7 @@ test('promote: symlinks cannot escape the store or the public repo', (t) => {
   mkdirSync(join(publicRepo, 'docs'), { recursive: true });
   execFileSync('ln', ['-s', outside, join(publicRepo, 'docs', 'escape')]);
   writeFileSync(join(store, 'ok.txt'), 'ok');
-  const leakTarget = run(['ok.txt', 'docs/escape/file.txt', '--acknowledge-boundary']);
+  const leakTarget = run(['ok.txt', 'docs/escape/file.txt', '--arm', 'A1_self_generated', '--acknowledge-boundary']);
   assert.equal(leakTarget.code, 1);
   assert.match(leakTarget.stderr, /resolves outside the public repo/);
   assert.equal(existsSync(join(outside, 'file.txt')), false);
@@ -131,6 +131,53 @@ test('an arm path symlinked into the public tree refuses the write path', (t) =>
   mkdirSync(join(store, 'data'), { recursive: true });
   execFileSync('ln', ['-s', publicData, join(store, 'data', 'A3_teacher_generated')]);
   assert.throws(() => armStorageRoot('A3_teacher_generated', { repoRoot: publicRepo, quarantineRoot: store }), /SYMLINK_ESCAPE/);
+});
+
+test('promote: a subtree spanning quarantined arms still requires acknowledgement', (t) => {
+  const { root, publicRepo, store } = fixture(t);
+  mkdirSync(join(store, 'data/A3_teacher_generated/x'), { recursive: true });
+  writeFileSync(join(store, 'data/A3_teacher_generated/x/f.txt'), 'x');
+  const script = new URL('../scripts/promote.mjs', import.meta.url).pathname;
+  const run = (argv) => {
+    try {
+      execFileSync('node', [script, ...argv], { cwd: publicRepo, encoding: 'utf8', env: { ...process.env, MWG_TRAIN_QUARANTINE: store, MWG_TRAIN_REPO: publicRepo } });
+      return { code: 0 };
+    } catch (error) {
+      return { code: error.status, stderr: error.stderr ?? '' };
+    }
+  };
+  // promoting the whole data/ tree covers A3: refused without acknowledgement
+  const subtree = run(['data', 'docs/data-copy']);
+  assert.equal(subtree.code, 1);
+  assert.match(subtree.stderr, /quarantined arm\(s\) A3_teacher_generated/);
+  // and a path that is in no arm must name one explicitly
+  writeFileSync(join(store, 'loose.txt'), 'loose');
+  const loose = run(['loose.txt', 'docs/loose.txt']);
+  assert.equal(loose.code, 1);
+  assert.match(loose.stderr, /cannot determine the arm/);
+});
+
+test('the store must be the expected companion repo, not merely a different URL string', (t) => {
+  const { root, publicRepo } = fixture(t);
+  // SSH-vs-HTTPS forms of the PUBLIC repo: string-unequal, but the same repository - refused.
+  const sshTwin = gitRepo(join(root, 'ssh-twin'), 'git@github.example:PaulKinlan/mwg-train.git');
+  assert.throws(() => assertQuarantineStore(sshTwin, { repoRoot: publicRepo }), /STORE_IS_PUBLIC_REPO/);
+  // A genuinely different repo that is NOT the companion: refused.
+  const wrong = gitRepo(join(root, 'wrong'), 'https://github.example/PaulKinlan/some-other-repo');
+  assert.throws(() => assertQuarantineStore(wrong, { repoRoot: publicRepo }), /STORE_WRONG_REPO/);
+});
+
+test('asset paths check every intermediate component for symlink escapes', (t) => {
+  const { publicRepo, store } = fixture(t);
+  mkdirSync(join(publicRepo, 'data', 'leaked'), { recursive: true });
+  mkdirSync(join(store, 'data', 'A3_teacher_generated'), { recursive: true });
+  execFileSync('ln', ['-s', join(publicRepo, 'data', 'leaked'), join(store, 'data', 'A3_teacher_generated', 'sites')]);
+  assert.throws(
+    () => assetStoragePath('A3_teacher_generated', 'sites/evil.html', { repoRoot: publicRepo, quarantineRoot: store }),
+    /SYMLINK_ESCAPE/,
+  );
+  // and a clean path works
+  assert.ok(assetStoragePath('A3_teacher_generated', 'real/file.html', { repoRoot: publicRepo, quarantineRoot: store }).startsWith(store));
 });
 
 test('A6 (eval material) is never trainable but publishes publicly', (t) => {
