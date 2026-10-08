@@ -61,6 +61,13 @@ hf-api-qwen25-coder-7b|https://huggingface.co/api/models/Qwen/Qwen2.5-Coder-7B-I
 hf-api-qwen25-coder-32b|https://huggingface.co/api/models/Qwen/Qwen2.5-Coder-32B-Instruct
 hf-api-qwen3-8b|https://huggingface.co/api/models/Qwen/Qwen3-8B
 hf-api-gemma-3-12b-it|https://huggingface.co/api/models/google/gemma-3-12b-it
+gemma-4-license|https://ai.google.dev/gemma/docs/gemma_4_license
+hf-api-gemma-4-31b-it|https://huggingface.co/api/models/google/gemma-4-31B-it
+hf-model-card-gemma-4-31b-it|https://huggingface.co/google/gemma-4-31B-it/raw/main/README.md
+hf-api-qwen3.8-27b|https://huggingface.co/api/models/Qwen/Qwen3.8-27B
+hf-api-qwen3.8-flash-next|https://huggingface.co/api/models/Qwen/Qwen3.8-Flash-Next
+hf-api-deepseek-v4.1-flash|https://huggingface.co/api/models/deepseek-ai/DeepSeek-V4.1-Flash
+hf-api-glm-5|https://huggingface.co/api/models/zai-org/GLM-5
 hf-api-deepseek-v4-flash|https://huggingface.co/api/models/deepseek-ai/DeepSeek-V4-Flash
 hf-api-glm-5.3-flash|https://huggingface.co/api/models/zai-org/GLM-5.3-Flash
 gemma-prohibited-use|https://ai.google.dev/gemma/prohibited_use_policy

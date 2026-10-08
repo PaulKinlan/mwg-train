@@ -21,7 +21,11 @@ policy this repository enforces in code.
 
 The student base itself is cleared: the recommended initial base is
 `Qwen/Qwen2.5-Coder-7B-Instruct` at revision `c03e6d358207e414f1eca0bb1891e29f1db0e242`,
-Apache-2.0, no gating, train/publish/commercial all YES.
+Apache-2.0, no gating, train/publish/commercial all YES. Current-generation alternatives verified on
+2026-10-08: `Qwen/Qwen3.8-27B` (Apache-2.0), `google/gemma-4-12B-it` and `google/gemma-4-31B-it`
+(**Apache-2.0** — Gemma 4 dropped the old Gemma Terms), and the MIT-licensed
+`deepseek-ai/DeepSeek-V4.x` / `zai-org/GLM-5.x` checkpoints. Note `Qwen/Qwen3.8-Flash-Next` declares
+`other` and is off the list until its licence is read. `assets/student-base-models.md`
 
 ## 2. Teacher accounts: the decisive clause per provider
 
@@ -56,6 +60,10 @@ Three findings sit outside the table but matter operationally:
   (verified through the Hugging Face API on 2026-10-08). Self-hosting one of those checkpoints, so
   that the MIT licence governs instead of an API contract, is the cheapest route to a defensible
   teacher arm, and it should be priced in the pilot (`assets/student-base-models.md`).
+- **Gemma 4 is Apache-2.0**, not the conditional Gemma Terms that cover Gemma 3. The Gemma 3
+  "Model Derivative" clause — a model trained on Gemma 3 outputs inherits the Gemma terms — does not
+  apply to Gemma 4. Both facts are in `assets/student-base-models.md`, because the two families sit
+  next to each other on the Hub.
 
 ## 3. What "approved for training" means, mechanically
 
