@@ -150,40 +150,48 @@ test('a registered report that is missing fails rather than passing quietly', ()
 });
 
 test('the provenance detector keeps its two-way contract', () => {
-  // Table-driven because this is the third time a wording slipped through: each round of review found a
-  // hyphenation, a modifier chain or a passive that the previous rule did not cover. The obligation runs
-  // both ways - a missed attribution is unattributed provenance, and a flagged true statement is a check
-  // someone turns off - so both columns are asserted.
+  // Table-driven because this is the fourth round in which a wording slipped through: a hyphenation, a
+  // modifier chain, a passive, and a prepositional phrase were each missed or wrongly flagged by the
+  // previous rule. The obligation runs both ways - a missed attribution is unattributed provenance, and a
+  // flagged true statement is a check someone turns off - so both columns are asserted, and the counts
+  // are asserted too, because a comment saying "30 cases" was wrong the last time I wrote one by hand.
   const cases = [
-    // Attributed to web-uplift: must be caught.
-    ["Our floor is web-uplift's rule set-based baseline", true],
-    ["Our floor is web-uplift's rules based baseline", true],
+    // --- Attributions to web-uplift of OUR floor or its numbers: must be caught.
     ["Our floor is web-uplift's rules-based baseline", true],
-    ["Our baseline is web-uplift's ruleset", true],
-    ['The floor was constructed by web-uplift', true],
-    ['This report was assembled by web-uplift', true],
-    ['The numbers were supplied by web-uplift', true],
-    ['Our scores came from web-uplift.', true],
+    ["Our floor is web-uplift's rules based baseline", true],
+    ["Our floor is web-uplift's rule set-based baseline", true],
+    ["web-uplift's rules-aligned independently verified mechanical baseline", true],
     ["web-uplift's official baseline", true],
     ["web-uplift's floor for us", true],
+    ["Our baseline is actually web-uplift's ruleset", true],
+    ["Our baseline remains web-uplift's ruleset", true],
     ['This floor is a web-uplift product', true],
     ['This floor is a web-uplift result', true],
     ['web-uplift built this floor', true],
     ['Not a mock; built by web-uplift', true],
+    ['The floor was constructed by web-uplift', true],
+    ['This report was assembled by web-uplift', true],
+    ['The baseline was assembled by web-uplift', true],
     ['numbers from web-uplift', true],
+    ['Our scores came from web-uplift.', true],
     ['the conformance deltas come from web-uplift', true],
-    // True statements about our own work and theirs: must pass.
-    ['Our baseline uses rules from web-uplift.', false],
+    // --- True statements about our own work, or about THEIR artefact: must pass.
     ["Our baseline uses web-uplift's rules.", false],
     ["Our baseline follows web-uplift's guidance.", false],
     ["We follow web-uplift's rule set.", false],
     ["Our floor uses web-uplift's rule-set", false],
     ["Our floor uses web-uplift's rules, and our baseline follows them.", false],
+    ["Our floor uses web-uplift's rules for floor scores", false],
+    ["Our floor follows web-uplift's published rules", false],
     ["Our baseline follows web-uplift's rules-based approach", false],
+    ['Our baseline uses rules from web-uplift.', false],
+    ['Our baseline is built from web-uplift rules', false],
+    ['Our rules came from web-uplift.', false],
     ['The canonical catalog published by web-uplift changed.', false],
     ['The catalogue was published by web-uplift', false],
     ["The catalogue is web-uplift's", false],
-    ['Our rules came from web-uplift.', false],
+    ['Guidance published by web-uplift', false],
+    ['web-uplift publishes the guide set we follow', false],
     ['not an official web-uplift result', false],
     ['we compare our floor against the web-uplift catalogue', false],
   ];
@@ -193,6 +201,8 @@ test('the provenance detector keeps its two-way contract', () => {
     if ((got !== null) !== shouldFlag) wrong.push(`${shouldFlag ? 'missed' : 'false positive'}: ${text} -> ${JSON.stringify(got)}`);
   }
   assert.deepEqual(wrong, []);
+  assert.equal(cases.filter(([, flag]) => flag).length, 18, 'attributions that must be caught');
+  assert.equal(cases.filter(([, flag]) => !flag).length, 18, 'true statements that must pass');
 });
 
 test('the scan finds floor evidence the registry does not list', () => {

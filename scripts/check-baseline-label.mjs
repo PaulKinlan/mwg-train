@@ -88,6 +88,38 @@ const AUTHORING_VERB = /\bweb-uplift\s+(?:generated|produced|output|released|cre
 /** 'a web-uplift product', 'a web-uplift deliverable' - authorship by noun rather than by verb. */
 const AUTHORING_NOUN = /\bweb-uplift\s+(?:product|work|deliverable|artefact|artifact|result|output|baseline|floor|report)\b/i;
 const FLOOR_OBJECT = /\b(?:floor|baseline|report|reports|numbers?|deltas?|results?|scores?|yield|conformance|percentages?)\b/i;
+/**
+ * Tokens that END a noun phrase, so what follows the possessive can be read as the phrase they possess.
+ * "their rules for floor scores" possesses 'rules' (the preposition starts a new phrase); "their
+ * rules-aligned independently verified mechanical baseline" possesses 'baseline'. Deciding this by nearby
+ * words, which I tried twice, produced false positives on the first and missed the second.
+ */
+const NOUN_PHRASE_STOP =
+  /^(?:for|of|in|on|at|by|from|with|without|against|to|into|onto|about|across|per|over|under|than|is|are|was|were|be|been|being|has|have|had|do|does|did|uses?|used|using|follows?|drives?|comes?|provides?|and|but|or|which|that|while|whereas|so|then|also|plus|it|its|they|their|them|we|our|us|you|your|he|she|his|her)$/i;
+
+/**
+ * The head noun of the phrase a possessive possesses: the last token before the phrase ends.
+ */
+function possessedHead(possessiveNoun, tail) {
+  const words = tail.match(/[A-Za-z][A-Za-z0-9-]*/g) ?? [];
+  // The possessive noun itself belongs to the phrase: it is the head when nothing follows before the
+  // phrase ends, as in "web-uplift's floor for us".
+  const phrase = [possessiveNoun];
+  for (const word of words) {
+    if (NOUN_PHRASE_STOP.test(word)) break;
+    phrase.push(word);
+  }
+  return phrase[phrase.length - 1];
+}
+
+/**
+ * A clause ending in a copula (optionally with adverbs) makes the possessive a predicate complement, so
+ * "our baseline IS actually web-uplift's ruleset" claims identity. Requiring the tail to be a copula and
+ * nothing else keeps "our baseline is built from web-uplift's rules" as the sourcing statement it is.
+ */
+const IDENTITY_TAIL =
+  /(?:is|are|was|were|be|been|being|remains?|stays?|becomes?|equals?|constitutes?)\s+(?:(?:actually|really|genuinely|still|now|just|simply|merely|always)\s+)*$/i;
+
 /** Nouns for web-uplift's own artefact. A clause about one of these is not a claim about our floor. */
 const THEIR_ARTEFACT = /\b(?:catalog(?:ue)?|guide|guides|guidance|ruleset|rules?|skill|manifest|docs|documentation|package|hash|hashes|data)\b/i;
 
@@ -134,34 +166,32 @@ export function falseProvenance(text) {
       // from web-uplift" says where the RULES came from - true, and not a claim about our floor - while
       // "numbers from web-uplift" says the numbers are theirs. Review found the first case flagged as a
       // false positive, which is the failure mode that gets a check switched off.
-      if (byPreposition && THEIR_ARTEFACT.test(clause.slice(0, offset).trim().split(/\s+/).slice(-4).join(' '))) continue;
+      if (byPreposition) {
+        const before = clause.slice(0, offset).trim().split(/\s+/).slice(-4).join(' ');
+        // "rules from web-uplift" and "from web-uplift rules" are the same true statement; the artefact noun
+        // can be on either side of the entity, so both are checked.
+        const after = (clause.slice(offset + match[0].length).match(/[A-Za-z][A-Za-z0-9-]*/g) ?? []).slice(0, 1).join(' ');
+        if (THEIR_ARTEFACT.test(before) || THEIR_ARTEFACT.test(after)) continue;
+      }
       // A possessive attaches to the noun that follows it. "web-uplift's rules" is theirs and true;
       // "web-uplift's official baseline" is a claim about ours. Review found the first flagged because
       // 'baseline' appeared elsewhere in the same clause. The noun is usually INSIDE the match, since the
       // possessive pattern captures it, so it is read from there.
       const possessiveNoun = /(?:'s|\u2019s)\s+([\w-]+)/i.exec(match[0]);
       if (byPreposition && possessiveNoun) {
-        // What decides this is the HEAD of the possessive phrase, not the first word and not a hyphen.
-        // "web-uplift's rules" is theirs; "web-uplift's rules-based baseline" and "web-uplift's rules based
-        // baseline" both make 'baseline' the head, so both are claims about our floor.
-        //
-        // Two earlier attempts at this were wrong, and each taught the next rule: testing for a hyphen
-        // missed the unhyphenated wording, and testing the word right after the possessive noun missed
-        // "rule set-based baseline". So the head is read as the first floor-object word in the noun phrase
-        // that follows - within the same clause, bounded by punctuation and by a short window so that a
-        // later independent clause ("..., and our baseline follows them") cannot make it look like a claim.
+        // What decides this is WHAT IS POSSESSED: the head noun of the phrase that follows the possessive.
+        // "their rules" possesses their artefact and is true; "their rules-based baseline", "their rules
+        // based baseline" and "their rules-aligned independently verified mechanical baseline" all possess
+        // a baseline, so all three are claims about our floor. A preposition ends the phrase, so "their
+        // rules for floor scores" still possesses 'rules' and is not a claim about our scores.
         const nounEnd = offset + possessiveNoun.index + possessiveNoun[0].length;
         const tail = clause.slice(nounEnd).split(/[,;:.!?]/)[0];
-        const following = tail.match(/[A-Za-z][A-Za-z0-9-]*/g) ?? [];
-        const headsOurFloor = following.slice(0, 3).some((word) => FLOOR_OBJECT.test(word));
-        // 'rule set'/'rule list'/'rules file' are still their artefact, so a naming word may follow.
-        const continuesArtefact = /^[\s-]+(?:set|lists?|files?|hashes|hash|catalog(?:ue)?)\b/i.test(tail);
-        // "Our baseline IS web-uplift's ruleset" claims identity rather than sourcing, so a copula before
-        // the possessive with a floor object earlier in the clause is a claim even though the noun is
-        // theirs. "The catalogue IS web-uplift's" stays fine, because the clause is about their artefact.
-        const before = clause.slice(0, offset).trim();
-        const claimsIdentity = /(?:^|\s)(?:is|are|was|were|be|been)$/i.test(before) && FLOOR_OBJECT.test(before);
-        if ((THEIR_ARTEFACT.test(possessiveNoun[1]) || continuesArtefact) && !headsOurFloor && !claimsIdentity) continue;
+        const head = possessedHead(possessiveNoun[1], tail);
+        // "our baseline IS actually web-uplift's ruleset" claims identity rather than sourcing, even though
+        // the noun is theirs - the copula makes it a predicate complement.
+        const prefix = clause.slice(0, offset);
+        const claimsIdentity = FLOOR_OBJECT.test(prefix) && IDENTITY_TAIL.test(prefix);
+        if (!FLOOR_OBJECT.test(head) && !claimsIdentity) continue;
       }
       // A clause that names only their artefact is a true statement about their work - "the canonical
       // catalog published by web-uplift" - and flagging it would make the check wrong about the thing it
