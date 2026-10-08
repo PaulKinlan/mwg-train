@@ -10,6 +10,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { quarantineRoot, assertQuarantineStore, armStorageRoot, assetStoragePath, QuarantineError } from '../src/provenance/store.mjs';
+import { ARMS, isTrainable } from '../src/provenance/arms.mjs';
+import { makeRecord, validateManifest } from '../src/provenance/record.mjs';
 
 function gitRepo(dir, origin) {
   mkdirSync(dir, { recursive: true });
@@ -194,6 +196,56 @@ test('asset paths check every intermediate component for symlink escapes', (t) =
   );
   // and a clean path works
   assert.ok(assetStoragePath('A3_teacher_generated', 'real/file.html', { repoRoot: publicRepo, quarantineRoot: store }).startsWith(store));
+});
+
+test('A4 output publishes publicly but cannot enter training even with an A5 parent', (t) => {
+  const { publicRepo, store } = fixture(t);
+  assert.equal(ARMS.A4_clean_room_reproduction.publication, 'public');
+  assert.equal(assetStoragePath('A4_clean_room_reproduction', 'projects/example', { repoRoot: publicRepo, quarantineRoot: store }),
+    join(publicRepo, 'data/A4_clean_room_reproduction/projects/example'));
+  assert.equal(assetStoragePath('A5_black_box_reproduction', 'sites/example/dom.html', { repoRoot: publicRepo, quarantineRoot: store }),
+    join(store, 'data/A5_black_box_reproduction/sites/example/dom.html'));
+  const capture = makeRecord({ id: 'capture-example', arm: 'A5_black_box_reproduction', kind: 'asset',
+    storage_path: 'data/A5_black_box_reproduction/sites/example/dom.html', generator: { type: 'none' },
+    rights_ref: 'docs/provenance/assets/reproduction-studies.md' });
+  const output = makeRecord({ id: 'output-example', arm: 'A4_clean_room_reproduction', kind: 'asset',
+    storage_path: 'data/A4_clean_room_reproduction/projects/example', generator: { type: 'human' },
+    rights_ref: 'docs/provenance/assets/reproduction-studies.md', parents: ['capture-example'] });
+  const result = validateManifest([capture, output]);
+  assert.equal(result.ok, true, JSON.stringify(result.findings));
+  assert.equal(result.counts.trainable, 0);
+  assert.equal(isTrainable(output), false);
+  assert.equal(output.excluded_from_training, true);
+  assert.equal(validateManifest([capture, { ...output, approved_for_training: true }]).ok, false);
+});
+
+test('promote uses publication, not training exclusion, to require acknowledgement', (t) => {
+  const { publicRepo, store } = fixture(t);
+  for (const arm of ['A4_clean_room_reproduction', 'A5_black_box_reproduction']) {
+    const path = join(store, 'data', arm, 'example.txt');
+    mkdirSync(join(store, 'data', arm), { recursive: true });
+    writeFileSync(path, arm);
+  }
+  execFileSync('git', ['-C', store, 'add', '.']);
+  execFileSync('git', ['-C', store, '-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '-qm', 'material']);
+  const script = new URL('../scripts/promote.mjs', import.meta.url).pathname;
+  const run = (arm) => {
+    try {
+      execFileSync('node', [script, `data/${arm}/example.txt`, `docs/${arm}.txt`], {
+        cwd: publicRepo, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'],
+        env: { ...process.env, MWG_TRAIN_QUARANTINE: store, MWG_TRAIN_REPO: publicRepo },
+      });
+      return { status: 0 };
+    } catch (error) {
+      return { status: error.status, stderr: error.stderr };
+    }
+  };
+  assert.deepEqual(run('A4_clean_room_reproduction'), { status: 0 });
+  assert.equal(readFileSync(join(publicRepo, 'docs/A4_clean_room_reproduction.txt'), 'utf8'), 'A4_clean_room_reproduction');
+  const raw = run('A5_black_box_reproduction');
+  assert.equal(raw.status, 1);
+  assert.match(raw.stderr, /acknowledge-boundary/);
+  assert.equal(existsSync(join(publicRepo, 'docs/A5_black_box_reproduction.txt')), false);
 });
 
 test('A6 (eval material) is never trainable but publishes publicly', (t) => {

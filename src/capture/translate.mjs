@@ -383,9 +383,10 @@ export function translateCapture({ capture, flow }) {
 /**
  * Build clean-room projects for all seven framework arms from the translated spec.
  *
- * Generated projects belong to quarantined arm A4_clean_room_reproduction and are
- * written into the quarantine store (honouring MWG_TRAIN_QUARANTINE). Writing into
- * the repository tree is strictly prohibited.
+ * Generated projects belong to public, non-trainable arm A4_clean_room_reproduction.
+ * The arm-derived default writes under the public repo's data/A4_clean_room_reproduction.
+ * An explicit --out remains constrained to a verified quarantine store or a test temp root;
+ * it cannot arbitrarily write elsewhere in the repository.
  */
 export function buildCapturedProjects({ spec, outDir = null, framework = null, quarantineRoot = null, repoRoot = null, testTempDir = null } = {}) {
   const problems = validateSpec(spec);

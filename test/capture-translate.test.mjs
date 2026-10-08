@@ -291,7 +291,7 @@ test('clean-room boundary: translating and generating does not open or read raw 
   }
 });
 
-test('builds all seven framework arms and writes spec into quarantine store by default', (t) => {
+test('builds all seven framework arms and publishes the spec to public A4 by default', (t) => {
   const root = mkdtempSync(join(tmpdir(), 'quarantine-build-'));
   t.after(() => rmSync(root, { recursive: true, force: true }));
   const publicRepo = gitRepo(join(root, 'mwg-train'), 'https://github.example/PaulKinlan/mwg-train');
@@ -307,20 +307,36 @@ test('builds all seven framework arms and writes spec into quarantine store by d
     repoRoot: publicRepo,
   });
 
-  assert.equal(specPath, join(store, 'data/A4_clean_room_reproduction/specs/feedback-example-test.json'));
+  assert.equal(specPath, join(publicRepo, 'data/A4_clean_room_reproduction/specs/feedback-example-test.json'));
   assert.ok(existsSync(specPath));
 
   assert.equal(Object.keys(projects).length, 7);
   for (const framework of Object.keys(FRAMEWORKS)) {
     const dir = projects[framework];
-    assert.equal(dir, join(store, `data/A4_clean_room_reproduction/projects/feedback-example-test-${framework}`));
+    assert.equal(dir, join(publicRepo, `data/A4_clean_room_reproduction/projects/feedback-example-test-${framework}`));
     assert.ok(existsSync(join(dir, 'server.mjs')));
     assert.ok(existsSync(join(dir, 'spec.json')));
     assert.ok(existsSync(join(dir, 'package.json')));
   }
+  assert.equal(existsSync(join(store, 'data/A4_clean_room_reproduction')), false);
 });
 
-test('refuses to write generated projects into the repository tree', () => {
+test('explicit output may still target a verified quarantine checkout', (t) => {
+  const root = mkdtempSync(join(tmpdir(), 'capture-explicit-store-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const publicRepo = gitRepo(join(root, 'mwg-train'), 'https://github.example/PaulKinlan/mwg-train');
+  const store = gitRepo(join(root, 'mwg-quarantine'), 'https://github.example/PaulKinlan/mwg-quarantine');
+  const outDir = join(store, 'alternate-output');
+  const spec = translateCapture({ capture: fixtureCapture(), flow: fixtureFlow() });
+  const { specPath, projects } = buildCapturedProjects({ spec, framework: 'raw', outDir,
+    quarantineRoot: store, repoRoot: publicRepo });
+  assert.equal(specPath, join(outDir, 'feedback-example-test.json'));
+  assert.ok(existsSync(specPath));
+  assert.ok(existsSync(join(projects.raw, 'server.mjs')));
+  assert.equal(existsSync(join(publicRepo, 'data/A4_clean_room_reproduction')), false);
+});
+
+test('explicit output remains contained: refuses arbitrary repository paths', () => {
   const capture = fixtureCapture();
   const flow = fixtureFlow();
   const spec = translateCapture({ capture, flow });

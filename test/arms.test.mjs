@@ -27,6 +27,17 @@ test('the six documented arms exist and get their own storage root', () => {
   }
 });
 
+test('training exclusion and publication are independent for A4 and A6', () => {
+  for (const id of ['A4_clean_room_reproduction', 'A6_evaluation']) {
+    assert.equal(ARMS[id].eligibility, 'prohibited');
+    assert.equal(ARMS[id].publication, 'public');
+    assert.equal(ARMS[id].trainable, false);
+  }
+  for (const id of ['A3_teacher_generated', 'A5_black_box_reproduction']) {
+    assert.equal(ARMS[id].publication, 'quarantine');
+  }
+});
+
 test('quarantine defaults follow the arm', () => {
   for (const id of ['A3_teacher_generated', 'A4_clean_room_reproduction', 'A5_black_box_reproduction', 'A6_evaluation']) {
     assert.equal(ARMS[id].quarantined, true, id);

@@ -18,7 +18,7 @@ import { appendFileSync, cpSync, existsSync, mkdirSync, realpathSync } from 'nod
 import { dirname, join, resolve, sep } from 'node:path';
 import process from 'node:process';
 
-import { ARMS, ARM_IDS, QUARANTINED_ARMS } from '../src/provenance/arms.mjs';
+import { ARMS, ARM_IDS } from '../src/provenance/arms.mjs';
 import { REPO_ROOT, assertQuarantineStore, quarantineRoot } from '../src/provenance/store.mjs';
 
 // Overridable for tests; in normal use this is the repo the script lives in.
@@ -80,9 +80,11 @@ if (containedArms.length === 0 && !args.arm) {
   console.error(`promote: cannot determine the arm of '${from}' - pass --arm explicitly (the ledger must name the arm)`);
   process.exit(1);
 }
-const quarantinedContained = containedArms.filter((id) => ARMS[id].quarantined);
+// Acknowledgement gates publication, deliberately not training eligibility: public A4/A6 are
+// excluded from training but cross no publication boundary when promoted from legacy store paths.
+const quarantinedContained = containedArms.filter((id) => ARMS[id].publication === 'quarantine');
 const arm = args.arm ?? (containedArms.length === 1 ? containedArms[0] : null);
-if ((quarantinedContained.length > 0 || (arm && ARMS[arm].quarantined)) && !args.acknowledgeBoundary) {
+if ((quarantinedContained.length > 0 || (arm && ARMS[arm].publication === 'quarantine')) && !args.acknowledgeBoundary) {
   console.error(
     `promote: '${from}' covers quarantined arm(s) ${(quarantinedContained.length > 0 ? quarantinedContained : [arm]).join(', ')}.\n` +
       'Publication is a PUBLICATION boundary, not a training-permission boundary: the asset keeps\n' +

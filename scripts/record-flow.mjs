@@ -30,7 +30,7 @@ async function main() {
 
   const rightsRef = flags['rights-ref'];
   if (!rightsRef || typeof rightsRef !== 'string' || !rightsRef.trim()) {
-    console.error('Error: --rights-ref is required and must name the rights record authorising this recording');
+    console.error('Error: --rights-ref is required as a provenance ledger reference');
     process.exit(1);
   }
 

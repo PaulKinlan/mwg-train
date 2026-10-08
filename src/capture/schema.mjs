@@ -16,7 +16,7 @@ import { assertQuarantineStore, assertResolvesInside, quarantineRoot, Quarantine
 export const CAPTURE_VERSION = 1;
 export const FLOW_VERSION = 1;
 
-/** Explicit output paths must remain in the verified store or an explicitly supplied test temp directory. */
+/** Explicit capture paths remain in the verified store or an explicitly supplied test temp directory. */
 export function resolveCaptureOutputPath(path, { env = process.env, repoRoot = REPO_ROOT } = {}) {
   if (typeof path !== 'string' || !isAbsolute(path)) {
     throw new QuarantineError('OUTPUT_NOT_ABSOLUTE', `refusing output path '${path}': explicit destination must be absolute`);
@@ -48,10 +48,9 @@ export function resolveCaptureOutputPath(path, { env = process.env, repoRoot = R
   throw new QuarantineError('OUTPUT_OUTSIDE_QUARANTINE', `refusing output path '${destination}': outside quarantine store and explicitly supplied test temp directory`);
 }
 
-// Capturing a third-party site and re-implementing it are both quarantined activities. Nothing here may claim a
-// trainable or public arm: A1/A6 belong to this repo's own authored corpora, whose manifests forbid third-party
-// material outright.
-export const CAPTURE_ARMS = ['A5_black_box_reproduction', 'A4_clean_room_reproduction'];
+// A raw capture is black-box evidence, never a clean-room implementation. Only the generator may assign A4
+// to derived output; allowing captured bytes to claim public A4 would bypass the quarantine boundary.
+export const CAPTURE_ARMS = ['A5_black_box_reproduction'];
 
 // Control types a capture may record. This mirrors the field types the seven framework generators can actually
 // render, so a captured control that cannot be expressed is reported as a problem here rather than silently
@@ -91,9 +90,8 @@ export function validateCapture(capture) {
     if (!isHttpUrl(s.url)) fail('capture.source.url', 'must be an http(s) URL without spaces');
     if (!isHttpUrl(s.final_url)) fail('capture.source.final_url', 'must be an http(s) URL without spaces');
     if (!isNonEmpty(s.captured_at)) fail('capture.source.captured_at', 'must be a non-empty timestamp');
-    // Rights is not decoration: reaching a third-party site may breach its terms, and the repo's rights record
-    // for reproduction studies says so. A capture with no rights reference is refused rather than stored.
-    if (!isNonEmpty(s.rights_ref)) fail('capture.source.rights_ref', 'must name the rights record authorising this capture');
+    // Provenance ledger reference required for captured material, not a terms-based publication gate.
+    if (!isNonEmpty(s.rights_ref)) fail('capture.source.rights_ref', 'must name a provenance rights record for this capture');
     if (!CAPTURE_ARMS.includes(s.arm)) fail('capture.source.arm', `must be one of ${CAPTURE_ARMS.join(', ')}`);
   }
 

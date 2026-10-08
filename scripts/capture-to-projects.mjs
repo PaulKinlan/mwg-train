@@ -4,9 +4,9 @@
  *
  *   node scripts/capture-to-projects.mjs --capture <capture.json> --flow <flow.json> [--framework <name>] [--out <dir>]
  *
- * Quarantined output: clean-room reproductions belong to arm A4_clean_room_reproduction
- * and are written to the quarantine store by default. Writing into the public repository
- * tree is strictly prohibited.
+ * Clean-room reproductions belong to public, non-trainable arm A4_clean_room_reproduction
+ * and are written under the public repo's data/A4_clean_room_reproduction by default.
+ * Explicit --out paths remain contained in a verified store or a test temp directory.
  */
 
 import { readFileSync } from 'node:fs';

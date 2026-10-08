@@ -85,9 +85,9 @@ test('a capture without a rights reference is refused, so an unauthorised captur
   refuses((c) => { delete c.source.rights_ref; }, 'rights_ref');
 });
 
-test('a capture may only claim a quarantined arm', () => {
-  // A1/A6 belong to this repo's authored corpora, whose manifests forbid third-party material. A capture that
-  // claimed one would route raw third-party bytes into the trainable tree.
+test('a raw capture may only claim the black-box A5 arm', () => {
+  // A4 is for derived clean-room projects, not raw captured bytes; A1/A6 are also not capture arms.
+  refuses((c) => { c.source.arm = 'A4_clean_room_reproduction'; }, 'arm');
   refuses((c) => { c.source.arm = 'A1_self_generated'; }, 'arm');
   refuses((c) => { c.source.arm = 'A6_evaluation'; }, 'arm');
 });

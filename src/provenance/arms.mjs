@@ -39,8 +39,8 @@ export const DATA_ROOT = 'data';
  * publication (where the bytes LIVE - a separate axis from training eligibility):
  *   'public'     - the material lives in the public repo
  *   'quarantine' - the material lives in the private quarantine store (docs/quarantine.md)
- * A6 is the case that separates the axes: never trainable (eval material), but its sealed briefs
- * are public by design - training exclusion without publication quarantine.
+ * A4 and A6 separate the axes: never trainable, but published publicly by design.
+ * Training exclusion does not imply publication quarantine.
  */
 export const ARMS = Object.freeze(
   Object.fromEntries(
@@ -70,8 +70,9 @@ export const ARMS = Object.freeze(
         id: 'A4_clean_room_reproduction',
         label: 'Clean-room reproduction study',
         description:
-          'Abstract functional requirements recorded by one researcher and implemented by another from public patterns. QUARANTINED: reproducibility does not settle rights in the target site.',
+          'Abstract functional requirements recorded by one researcher and implemented by another from public patterns. Never trainable: reproducibility does not settle rights in the target site.',
         eligibility: 'prohibited',
+        publication: 'public',
       },
       {
         id: 'A5_black_box_reproduction',

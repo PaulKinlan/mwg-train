@@ -7,8 +7,8 @@
 # Field notes:
 #   id                     immutable slug, unique across the manifest
 #   arm                    A1_self_generated | A2_mwg_uplift_deterministic (trainable, needs approval)
-#                          A3_teacher_generated | A4_clean_room_reproduction |
-#                          A5_black_box_reproduction | A6_evaluation (quarantined)
+#                          A3_teacher_generated | A5_black_box_reproduction (private, non-trainable)
+#                          A4_clean_room_reproduction | A6_evaluation (public, non-trainable)
 #   storage_path           must sit under data/<arm>/
 #   generator.type         human | open-weight | deterministic | hosted-api | none
 #                          hosted-api forces the row into A3_teacher_generated and requires

@@ -44,7 +44,7 @@ function parseArgs(argv) {
 const args = parseArgs(process.argv.slice(2));
 
 if (!args.rightsRef || typeof args.rightsRef !== 'string' || args.rightsRef.trim() === '') {
-  console.error('Error: --rights-ref is required and must name the authorising rights record');
+  console.error('Error: --rights-ref is required as a provenance ledger reference');
   process.exit(1);
 }
 
