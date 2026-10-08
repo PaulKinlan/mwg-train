@@ -32,6 +32,11 @@ export const BRIEF_FIELD_TYPES = new Set([
   'select',
   'search',
   'textarea',
+  // A brief whose flow includes a login needs a real password control: the builders
+  // engage their password/session machinery off `type="password"`
+  // (`pilot/frameworks.mjs`), so typing one as `text` would render the credential in
+  // clear and silently skip the login path the brief describes.
+  'password',
 ]);
 
 /** Properties an authored field may carry, mirroring the spec's closed field set. */

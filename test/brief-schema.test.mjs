@@ -123,7 +123,7 @@ test('an unknown journey property is refused rather than silently ignored', () =
 });
 
 test('the field vocabulary matches what the builders can render', () => {
-  for (const type of ['text', 'tel', 'email', 'date', 'time', 'number', 'select', 'search', 'textarea']) {
+  for (const type of ['text', 'tel', 'email', 'date', 'time', 'number', 'select', 'search', 'textarea', 'password']) {
     assert.ok(BRIEF_FIELD_TYPES.has(type), `${type} should be renderable`);
   }
 });
