@@ -197,11 +197,15 @@ checkable rather than asserted.
 
 | Arm | Accepted | Attempted | Which properties improved, in how many pairs |
 | --- | --- | --- | --- |
-| `raw` | 5 | 5 | `accessibility/accessible-error-announcement` 19, `security/sanitize-untrusted-html` 16, `forms/required-field-feedback` 15, `forms/validate-input-after-interaction` 15, `forms/autofill-sign-up-form` 5, `forms/autofill-address-form` 5 (counts are across all arms, not the `raw` arm alone) |
+| `raw` | 5 | 5 | `accessibility/accessible-error-announcement` 19, `security/sanitize-untrusted-html` 16, `forms/required-field-feedback` 15, `forms/validate-input-after-interaction` 15, `forms/autofill-sign-up-form` 4, `forms/autofill-address-form` 5 (counts are across all arms, not the `raw` arm alone) |
 | `react` | 5 | 5 | |
 | `preact` | 5 | 5 | |
 | `hono` | 5 | 5 | |
 | `vue` | 4 | 5 | the missing pair is the control |
+
+Those counts, and the `FAIL`-then-`PASS` behind each one, are asserted against `records.json` by the test
+below rather than typed once and trusted: a wrong "5" for the autofill family sat in this table through
+four reviews before a reviewer compared it with the committed summaries.
 
 Every archetype scored 5/5 except `catalogue` (4/5, the control). The evenness across arms is itself a
 finding: the same generator writes all five, so the arms differ mainly in dialect, and the uplift tool

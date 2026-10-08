@@ -758,6 +758,13 @@ test('the committed records support every claim the report makes', () => {
         applied.includes(rule) || project.uplifted.security[rule] === 'PASS',
         project.project_id + ': the report claims ' + rule + ' improved but the records do not show it passing after the uplift',
       );
+      // "Improved" means it changed. A rule that was already passing did not improve, and a report that
+      // counts it did not document this uplift.
+      assert.equal(
+        project.original.rules[rule],
+        'FAIL',
+        project.project_id + ': ' + rule + ' is counted as improved but did not start FAIL',
+      );
     }
   }
 
@@ -773,6 +780,27 @@ test('the committed records support every claim the report makes', () => {
   assert.equal(observations.filter((value) => value === 'accepted-empty').length, 2);
   assert.equal(observations.filter((value) => value === 'blocked-without-evidence').length, 0);
   assert.match(readFileSync(join(repoRoot, 'docs', 'pilot', 'YIELD.md'), 'utf8'), /23 of 25 originals/);
+
+  // The README's table of which properties improved, and in how many pairs, against the decisions it
+  // summarises. Those counts were typed by hand, and one of them was wrong for four reviews.
+  const counts = new Map();
+  for (const decision of report.decisions) {
+    for (const rule of decision.improved_rules) counts.set(rule, (counts.get(rule) ?? 0) + 1);
+  }
+  const readme = readFileSync(join(repoRoot, 'docs', 'pilot', 'README.md'), 'utf8');
+  const row = readme.split('\n').find((line) => line.startsWith('| `raw` | 5 | 5 |'));
+  assert.ok(row, 'the README still carries the per-rule table');
+  const claimed = [...row.matchAll(/`([a-z-]+\/[a-z0-9-]+)` (\d+)/g)].map((match) => [match[1], Number(match[2])]);
+  assert.ok(claimed.length >= 4, 'the per-rule table lists its rules with counts');
+  for (const [rule, claimedCount] of claimed) {
+    assert.ok(counts.has(rule), rule + ' is claimed in the README but no decision improved it');
+    assert.equal(claimedCount, counts.get(rule), rule + ': the README says ' + claimedCount + ' pairs, the decisions say ' + counts.get(rule));
+  }
+  assert.deepEqual(
+    claimed.map(([rule]) => rule).sort(),
+    [...counts.keys()].sort(),
+    'the README table and the decisions should name the same rules',
+  );
 });
 
 test('the clean baseline satisfies every rule it is not seeded to fail, in every arm', () => {
