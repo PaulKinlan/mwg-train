@@ -1,0 +1,35 @@
+{
+  "$comment": "The pilot's composition, as data. Twenty projects: five archetypes x four rendering arms. `defects` is what the original is seeded with; the pilot measures whether the deterministic uplift tool removes them. Rules map to real ids in the pinned MWG snapshot (docs/eval/rules.json).",
+  "targets": {
+    "archetypes": 5,
+    "frameworks": 4,
+    "projects": 20,
+    "with_server_journeys": 20
+  },
+  "projects": [
+    { "archetype": "booking", "framework": "raw", "defects": ["no-required", "eager-invalid", "no-aria-sync", "no-autofill-address", "xss-innerhtml"] },
+    { "archetype": "booking", "framework": "react", "defects": ["no-required", "eager-invalid", "no-aria-sync", "no-autofill-address", "xss-innerhtml"] },
+    { "archetype": "booking", "framework": "preact", "defects": ["eager-invalid", "no-aria-sync", "no-autofill-address"] },
+    { "archetype": "booking", "framework": "vue", "defects": ["no-required", "no-autofill-address"] },
+
+    { "archetype": "contact-lead", "framework": "raw", "defects": ["no-required", "eager-invalid", "no-aria-sync", "xss-innerhtml"] },
+    { "archetype": "contact-lead", "framework": "react", "defects": ["eager-invalid", "xss-innerhtml"] },
+    { "archetype": "contact-lead", "framework": "preact", "defects": ["no-required", "no-aria-sync"] },
+    { "archetype": "contact-lead", "framework": "vue", "defects": ["eager-invalid", "no-aria-sync", "xss-innerhtml"] },
+
+    { "archetype": "catalogue", "framework": "raw", "defects": ["xss-innerhtml"] },
+    { "archetype": "catalogue", "framework": "react", "defects": ["no-required", "xss-innerhtml"] },
+    { "archetype": "catalogue", "framework": "preact", "defects": ["eager-invalid"] },
+    { "archetype": "catalogue", "framework": "vue", "defects": [] },
+
+    { "archetype": "account-recovery", "framework": "raw", "defects": ["no-required", "eager-invalid", "no-aria-sync", "no-autofill"] },
+    { "archetype": "account-recovery", "framework": "react", "defects": ["no-autofill", "xss-innerhtml"] },
+    { "archetype": "account-recovery", "framework": "preact", "defects": ["no-required", "no-autofill"] },
+    { "archetype": "account-recovery", "framework": "vue", "defects": ["eager-invalid", "xss-innerhtml"] },
+
+    { "archetype": "event-registration", "framework": "raw", "defects": ["no-required", "eager-invalid", "xss-innerhtml"] },
+    { "archetype": "event-registration", "framework": "react", "defects": ["no-aria-sync", "xss-innerhtml"] },
+    { "archetype": "event-registration", "framework": "preact", "defects": ["no-required", "xss-innerhtml"] },
+    { "archetype": "event-registration", "framework": "vue", "defects": ["no-required", "eager-invalid", "no-aria-sync"] }
+  ]
+}

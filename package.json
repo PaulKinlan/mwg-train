@@ -18,5 +18,13 @@
     "check:briefs": "node scripts/validate-briefs.mjs docs/eval/briefs/manifest.jsonl --expect-seal sha256:91d75f29afe10fa419b53fc412abdfaf970068d7725fe40c69894e64c36ed59e",
     "check:originals": "node scripts/verify-originals.mjs docs/provenance/manifest.example.jsonl"
   },
-  "license": "UNLICENSED"
+  "license": "UNLICENSED",
+  "dependencies": {
+    "htm": "^3.1.1",
+    "preact": "^10.27.2",
+    "preact-render-to-string": "^6.6.3",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "vue": "^3.5.22"
+  }
 }

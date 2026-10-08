@@ -1,0 +1,103 @@
+{
+  "project_id": "catalogue-raw",
+  "archetype": "catalogue",
+  "archetype_title": "Searchable reference catalogue",
+  "framework": {
+    "name": "raw",
+    "version": "platform (no framework)",
+    "dialect": "html",
+    "family": "raw-web-platform",
+    "markupFile": "app/page.mjs",
+    "stylesFile": "app/styles.css",
+    "enhanceFile": "app/enhance.js"
+  },
+  "routes": [
+    {
+      "method": "GET",
+      "path": "/",
+      "kind": "page"
+    },
+    {
+      "method": "GET",
+      "path": "/search",
+      "kind": "search"
+    },
+    {
+      "method": "POST",
+      "path": "/cart",
+      "kind": "write-session"
+    },
+    {
+      "method": "GET",
+      "path": "/cart",
+      "kind": "read-session"
+    }
+  ],
+  "fields": [
+    {
+      "slug": "query",
+      "name": "q",
+      "type": "search",
+      "autocomplete": null
+    },
+    {
+      "slug": "quantity",
+      "name": "quantity",
+      "type": "number",
+      "autocomplete": null
+    }
+  ],
+  "seeded_defects": [
+    "xss-innerhtml"
+  ],
+  "journey": {
+    "startPath": "/",
+    "formSelector": "form#search-form",
+    "fill": {
+      "input[name=q]": "bearing"
+    },
+    "expectText": "bearing"
+  },
+  "content_journey": {
+    "path": "/",
+    "inputSelector": "[name=query]",
+    "formSelector": "form#catalogue-form",
+    "echoField": "query"
+  },
+  "security_journey": null,
+  "session": true,
+  "check_context": {
+    "formSelector": "form#catalogue-form",
+    "primaryField": "[name=q]",
+    "usernameField": "[name=email]",
+    "passwordField": "[name=password]",
+    "addressField": "[name=address]",
+    "postcodeField": "[name=postcode]"
+  },
+  "primaryFields": [
+    {
+      "slug": "query",
+      "name": "q",
+      "elementPattern": "<input[^>]*name=\"q\"[^>]*>",
+      "elementPatternFirst": "<input[^>]*name=\"q\"[^>]*>"
+    },
+    {
+      "slug": "quantity",
+      "name": "quantity",
+      "elementPattern": "<input[^>]*name=\"quantity\"[^>]*>",
+      "elementPatternFirst": "<input[^>]*name=\"quantity\"[^>]*>"
+    }
+  ],
+  "autofill": {
+    "usernamePattern": "(<input[^>]*type=\"email\"[^>]*>)",
+    "passwordPattern": "(<input[^>]*type=\"password\"[^>]*>)",
+    "streetPattern": "(<input[^>]*name=\"address\"[^>]*>)",
+    "postcodePattern": "(<input[^>]*name=\"postcode\"[^>]*>)"
+  },
+  "required_rules": [
+    "forms/required-field-feedback",
+    "forms/validate-input-after-interaction",
+    "accessibility/accessible-error-announcement",
+    "security/sanitize-untrusted-html"
+  ]
+}
