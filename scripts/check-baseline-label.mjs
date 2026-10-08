@@ -141,18 +141,27 @@ export function falseProvenance(text) {
       // possessive pattern captures it, so it is read from there.
       const possessiveNoun = /(?:'s|\u2019s)\s+([\w-]+)/i.exec(match[0]);
       if (byPreposition && possessiveNoun) {
-        // The exception applies only when the possessive really does END at their artefact noun. Review
-        // found that "web-uplift's rules-based baseline" slipped through because the captured noun was
-        // 'rules' and the artefact test matched it - but the hyphen makes 'rules' a modifier, so the head
-        // noun is 'baseline' and this IS a claim about our floor. A hyphen directly after the noun means
-        // it is modifying something else.
-        // The CLAUSE, not the match: the hyphen in "rules-based" falls outside the match, because the
-        // possessive pattern stops at the word boundary. Slicing the match made this check a no-op.
-        const afterNoun = clause.slice(offset + possessiveNoun.index + possessiveNoun[0].length);
-        const modifiesSomethingElse = afterNoun.startsWith('-');
-        // 'rule set'/'rule list' are still their artefact, so a naming word may follow.
-        const continuesArtefact = /^\s+(?:set|list|file|files|hash|hashes|catalog(?:ue)?)\b/i.test(afterNoun);
-        if (!modifiesSomethingElse && (THEIR_ARTEFACT.test(possessiveNoun[1]) || continuesArtefact)) continue;
+        // What decides this is the HEAD of the possessive phrase, not the first word and not a hyphen.
+        // "web-uplift's rules" is theirs; "web-uplift's rules-based baseline" and "web-uplift's rules based
+        // baseline" both make 'baseline' the head, so both are claims about our floor.
+        //
+        // Two earlier attempts at this were wrong, and each taught the next rule: testing for a hyphen
+        // missed the unhyphenated wording, and testing the word right after the possessive noun missed
+        // "rule set-based baseline". So the head is read as the first floor-object word in the noun phrase
+        // that follows - within the same clause, bounded by punctuation and by a short window so that a
+        // later independent clause ("..., and our baseline follows them") cannot make it look like a claim.
+        const nounEnd = offset + possessiveNoun.index + possessiveNoun[0].length;
+        const tail = clause.slice(nounEnd).split(/[,;:.!?]/)[0];
+        const following = tail.match(/[A-Za-z][A-Za-z0-9-]*/g) ?? [];
+        const headsOurFloor = following.slice(0, 3).some((word) => FLOOR_OBJECT.test(word));
+        // 'rule set'/'rule list'/'rules file' are still their artefact, so a naming word may follow.
+        const continuesArtefact = /^[\s-]+(?:set|lists?|files?|hashes|hash|catalog(?:ue)?)\b/i.test(tail);
+        // "Our baseline IS web-uplift's ruleset" claims identity rather than sourcing, so a copula before
+        // the possessive with a floor object earlier in the clause is a claim even though the noun is
+        // theirs. "The catalogue IS web-uplift's" stays fine, because the clause is about their artefact.
+        const before = clause.slice(0, offset).trim();
+        const claimsIdentity = /(?:^|\s)(?:is|are|was|were|be|been)$/i.test(before) && FLOOR_OBJECT.test(before);
+        if ((THEIR_ARTEFACT.test(possessiveNoun[1]) || continuesArtefact) && !headsOurFloor && !claimsIdentity) continue;
       }
       // A clause that names only their artefact is a true statement about their work - "the canonical
       // catalog published by web-uplift" - and flagging it would make the check wrong about the thing it
