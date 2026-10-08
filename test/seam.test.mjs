@@ -97,6 +97,8 @@ test('an unknown token count is UNVERIFIED, never zero', () => {
   const rates = { usd_per_million_training_tokens: 0.5, quote_ids: ['fireworks.training-pricing'] };
   const known = costLines({ manifest: manifest(), rates, serving: { gpuHours: 0 } });
   const unpriced = costLines({ manifest: manifest({ tokens: { measured: null, source: 'not reported' } }), rates, serving: { gpuHours: 0 } });
+  // Both lines priced, so the only thing left that is not a measurement is the token count.
+  const estimated = costLines({ manifest: manifest({ tokens: { measured: null, estimate: 1_000_000 } }), rates: { ...rates, usd_per_gpu_hour: 8 }, serving: { gpuHours: 0 } });
 
   const knownTraining = known.find((line) => line.item === 'training');
   assert.equal(knownTraining.status, 'PINNED');
@@ -106,6 +108,13 @@ test('an unknown token count is UNVERIFIED, never zero', () => {
   assert.equal(unpricedTraining.status, 'UNVERIFIED');
   assert.equal(unpricedTraining.cost, null, 'an unknown product must not be priced as zero');
   assert.equal(unpricedTraining.quantity, null);
+
+  // An estimate may carry a number, but never as a measurement.
+  const estimatedTraining = estimated.find((line) => line.item === 'training');
+  assert.equal(estimatedTraining.cost, 0.5, 'an estimated token count is still multipled by the pinned rate');
+  assert.equal(estimatedTraining.status, 'ESTIMATE');
+  assert.match(estimatedTraining.reason, /not counted by the training tokenizer/);
+  assert.equal(totalCost(estimated).status, 'ESTIMATE', 'a total containing an estimate is an estimate');
 });
 
 test('a rate that cannot be pinned is UNVERIFIED, and the total says so', () => {

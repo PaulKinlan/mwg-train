@@ -167,13 +167,27 @@ export function costLines({ manifest, rates, serving = null }) {
   if (!isPlainObject(rates)) throw new TrainingSeamError('NO_RATES', 'cost lines need rates');
 
   const measured = manifest?.tokens?.measured ?? null;
-  if (measured === null) {
-    lines.push({ item: 'training', quantity: null, unit: 'training_tokens', rate: null, currency: rates.currency ?? 'USD', cost: null, status: 'UNVERIFIED', reason: 'the manifest records no measured token count' });
+  // An estimate is allowed to carry a number as long as it is labelled one. What is not allowed is a
+  // number presented as a measurement, or an unknown presented as zero.
+  const estimated = measured === null ? (manifest?.tokens?.estimate ?? null) : null;
+  const tokens = measured ?? estimated;
+  if (tokens === null) {
+    lines.push({ item: 'training', quantity: null, unit: 'training_tokens', rate: null, currency: rates.currency ?? 'USD', cost: null, status: 'UNVERIFIED', reason: 'the manifest records no token count, measured or estimated' });
   } else if (!isFiniteNumber(rates.usd_per_million_training_tokens)) {
     lines.push({ item: 'training', quantity: measured, unit: 'training_tokens', rate: null, currency: rates.currency ?? 'USD', cost: null, status: 'UNVERIFIED', reason: 'no pinned per-token rate was supplied' });
   } else {
-    const cost = (measured / 1_000_000) * rates.usd_per_million_training_tokens;
-    lines.push({ item: 'training', quantity: measured, unit: 'training_tokens', rate: rates.usd_per_million_training_tokens, currency: rates.currency ?? 'USD', cost, status: 'PINNED', quote_ids: rates.quote_ids ?? [] });
+    const cost = (tokens / 1_000_000) * rates.usd_per_million_training_tokens;
+    lines.push({
+      item: 'training',
+      quantity: tokens,
+      unit: 'training_tokens',
+      rate: rates.usd_per_million_training_tokens,
+      currency: rates.currency ?? 'USD',
+      cost,
+      status: measured === null ? 'ESTIMATE' : 'PINNED',
+      reason: measured === null ? 'estimated from characters, not counted by the training tokenizer' : undefined,
+      quote_ids: rates.quote_ids ?? [],
+    });
   }
 
   if (serving === null) {
@@ -202,8 +216,18 @@ export function costLines({ manifest, rates, serving = null }) {
 /** Total a set of cost lines, refusing to add an unpriced line into a total that looks complete. */
 export function totalCost(lines) {
   const unverified = lines.filter((line) => line.cost === null);
+  const estimated = lines.filter((line) => line.status === 'ESTIMATE');
   const total = lines.filter((line) => line.cost !== null).reduce((sum, line) => sum + line.cost, 0);
-  return { total, currency: lines[0]?.currency ?? 'USD', unverified_items: unverified.map((line) => line.item), complete: unverified.length === 0 };
+  return {
+    total,
+    currency: lines[0]?.currency ?? 'USD',
+    unverified_items: unverified.map((line) => line.item),
+    // The total is only as good as its weakest line, and a total that hides an estimate behind a
+    // measurement is the number someone will quote.
+    estimated_items: estimated.map((line) => line.item),
+    status: unverified.length > 0 ? 'UNVERIFIED' : estimated.length > 0 ? 'ESTIMATE' : 'PINNED',
+    complete: unverified.length === 0,
+  };
 }
 
 /**
