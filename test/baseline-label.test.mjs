@@ -43,6 +43,8 @@ const REPORTS = [
   'docs/pilot/README.md',
   'docs/eval/conformance/README.md',
   'docs/train/corpus/tokens.json',
+  'docs/train/corpus/README.md',
+  'docs/eval/two-backends.md',
 ];
 
 test('every registered floor report carries the label', () => {
@@ -100,6 +102,10 @@ test('a report that claims web-uplift authorship fails even when labelled', () =
     assert.deepEqual(checkBaselineLabel([path]).map((f) => f.code), ['FALSE_PROVENANCE']);
     writeFileSync(path, `# Report\n\n${baselineAttributionLine()}\n\nweb-uplift produced these numbers\n`);
     assert.deepEqual(checkBaselineLabel([path]).map((f) => f.code), ['FALSE_PROVENANCE']);
+
+    // Authorship by noun rather than by verb, which no pattern covered.
+    writeFileSync(path, `# Report\n\n${baselineAttributionLine()}\n\nThis floor is a web-uplift product\n`);
+    assert.deepEqual(checkBaselineLabel([path]).map((f) => f.code), ['FALSE_PROVENANCE']);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
@@ -119,6 +125,9 @@ test('our own disclaimer is not mistaken for a claim', () => {
   assert.equal(falseProvenance('The canonical catalog published by web-uplift changed.'), null);
   assert.equal(falseProvenance('The ruleset published by web-uplift has 178 guides.'), null);
   assert.equal(falseProvenance('We did not use web-uplift for our floor.'), null);
+  // Review found this flagged as a false positive: the preposition attaches to 'rules', which are theirs,
+  // so this is a true statement about where our rules came from, not a claim about our floor.
+  assert.equal(falseProvenance('Our baseline uses rules from web-uplift.'), null);
 });
 
 test('a registered report that is missing fails rather than passing quietly', () => {
@@ -135,19 +144,29 @@ test('the relabel tool refuses anything that is not attribution-only', () => {
   const dir = mkdtempSync(join(tmpdir(), 'label-baseline-'));
   try {
     const path = join(dir, 'record.json');
-    writeFileSync(path, JSON.stringify({ measured: 0.805, baseline_label: 'something else' }));
+    // Canonically formatted, because the byte-safety guard deliberately refuses a document it cannot
+    // reproduce exactly - which is why this fixture uses the tool's own formatting.
+    writeFileSync(path, `${JSON.stringify({ measured: 0.805, baseline_label: 'something else' }, null, 2)}\n`);
     const result = labelDocuments([path])[0];
     assert.equal(result.code, 'REFUSED_NOT_ATTRIBUTION_ONLY');
     assert.equal(JSON.parse(readFileSync(path, 'utf8')).baseline_label, 'something else', 'a refused write must not modify the file');
 
     // A clean document is labelled, and --check reports it without writing.
     const clean = join(dir, 'clean.json');
-    writeFileSync(clean, JSON.stringify({ measured: 0.805 }));
+    writeFileSync(clean, `${JSON.stringify({ measured: 0.805 }, null, 2)}\n`);
     assert.equal(labelDocuments([clean], { check: true })[0].code, 'WOULD_LABEL');
     assert.equal(JSON.parse(readFileSync(clean, 'utf8')).baseline_label, undefined, '--check must not write');
     assert.equal(labelDocuments([clean])[0].code, 'LABELLED');
     assert.equal(JSON.parse(readFileSync(clean, 'utf8')).baseline_label, BASELINE_LABEL);
     assert.equal(labelDocuments([clean])[0].code, 'ALREADY_LABELLED', 'relabelling is idempotent');
+
+    // Review's byte-safety counterexample: JSON.parse rounds 9007199254740993 to ...992, so a guard that
+    // only compares parsed documents would rewrite a measurement and report success. Refused instead.
+    const big = join(dir, 'big.json');
+    const original = '{"measured":9007199254740993}';
+    writeFileSync(big, original);
+    assert.equal(labelDocuments([big])[0].code, 'REFUSED_NOT_BYTE_SAFE');
+    assert.equal(readFileSync(big, 'utf8'), original, 'a refused document must not be touched');
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

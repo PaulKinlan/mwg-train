@@ -10,11 +10,15 @@
  * `-identity.json` files). The label is a fact about the numbers, so it belongs on the record, not only
  * on the summary rendered from it.
  *
- * SAFE BY CONSTRUCTION. The label is added from a constant, and every write is guarded: the script
- * strips the attribution keys back off the result, deep-compares it with the document it read, and
- * refuses to write if anything else moved. A relabel that changed a measurement would be falsification,
- * so the guard is the point of this script rather than a nicety - and `--check` runs the same comparison
- * without writing, which is what a gate wants.
+ * SAFE BY CONSTRUCTION, in the strong sense now. The label is added from a constant, and every write is
+ * guarded TWICE: the document must round-trip through JSON byte-for-byte, and the result must equal the
+ * input once the added keys are stripped back off.
+ *
+ * The round-trip check is not theoretical. Review found that comparing only parsed-and-reserialised
+ * documents is not byte-safe: for `{"measured":9007199254740993}` JavaScript rounds the integer on
+ * parse, so the tool wrote 9007199254740992, the stripped comparison still matched, and it reported
+ * success - a silent edit to a measurement, which is the one thing this tool must never do. A document
+ * whose bytes the tool cannot reproduce exactly is now refused instead of rewritten.
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 import process from 'node:process';
@@ -40,13 +44,26 @@ function describe(document) {
 }
 
 export function labelDocuments(paths, { check = false } = {}) {
-  const results = [];
-  for (const path of paths) {
+  const results = [];  for (const path of paths) {
+    let raw;
     let original;
     try {
-      original = JSON.parse(readFileSync(path, 'utf8'));
+      raw = readFileSync(path, 'utf8');
+      original = JSON.parse(raw);
     } catch (error) {
       results.push({ path, code: 'UNREADABLE', message: `${error?.message ?? error}` });
+      continue;
+    }
+    // GUARD 1, byte preservation. If re-serialising what we parsed does not reproduce the file exactly,
+    // then this tool cannot rewrite it without risking a silent edit - a rounded large integer, say - so
+    // it refuses. Fail closed rather than trust that no such number is present.
+    const canonical = `${JSON.stringify(original, null, 2)}\n`;
+    if (canonical !== raw) {
+      results.push({
+        path,
+        code: 'REFUSED_NOT_BYTE_SAFE',
+        message: 're-serialising this document does not reproduce its bytes (formatting, or a number that does not survive JSON round-tripping); refusing to rewrite it',
+      });
       continue;
     }
     const { document: labelled, changed, fields } = labelFloorDocument(original);
@@ -73,7 +90,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const asJson = process.argv.includes('--json');
   const check = process.argv.includes('--check');
   const results = labelDocuments(FLOOR_DOCUMENTS, { check });
-  const failed = results.filter((result) => result.code === 'UNREADABLE' || result.code === 'REFUSED_NOT_ATTRIBUTION_ONLY');
+  const failed = results.filter((result) =>
+    ['UNREADABLE', 'REFUSED_NOT_ATTRIBUTION_ONLY', 'REFUSED_NOT_BYTE_SAFE'].includes(result.code),
+  );
   if (asJson) {
     console.log(JSON.stringify({ check, results }, null, 2));
   } else {

@@ -105,14 +105,15 @@ ten. The lesson worth keeping: a registry is only as good as the review that ext
 projection (`decision` in `records.json`) silently drops whatever it does not explicitly name.
 
 ```bash
-npm run check:baseline-label   # every registered floor artifact must carry the label (20 of them)
+npm run check:baseline-label   # every registered floor artifact must carry the label (23 of them)
 npm run label:baseline -- --check   # the same assertion for the measurement JSON, without writing
 npm run label:baseline              # add the label to a document that predates it
 ```
 
-Twenty artifacts are registered, and that count is the honest measure of this contract rather than a
-detail: the first pass covered six, review found two more reports and then four measurement JSON
-documents plus two static summaries, and each round was a list I had believed was complete. The
+Twenty-three artifacts are registered, and that count is the honest measure of this contract rather
+than a detail: the first pass covered six, and review then extended it three times - two more reports,
+then the measurement JSON and two static summaries, then two further result summaries - while my own
+sweep found one more (`tokens.json`). Every round was a list I had believed complete. The
 documents that predate the label are relabelled by `scripts/label-baseline.mjs`, which is
 **safe by construction** - it strips exactly the keys it added, deep-compares against what it read, and
 refuses to write if anything else moved. `--check` runs that comparison without writing.
@@ -131,7 +132,8 @@ Deliberately **not** registered, with the reason rather than a silent omission:
 | `pilot/TRAINING_CORPUS.json` | records corpus composition and tree hashes and states no floor result; its only mention of uplift is a round-trip comment about disjointness |
 | `pilot/plan.json`, `data/A6_evaluation/targets/manifest.jsonl` | inputs (a plan, and the eval target set), not measurements of our floor |
 
-That table exists because the registry was wrong three times: six artifacts, then ten, then twenty-one.
+That table exists because the registry was wrong four times: six artifacts, then ten, then twenty-one,
+then twenty-three.
 Each round was a list I believed complete, and each was extended by a reviewer reading the tree rather
 than by me re-reading my own reasoning. The lesson is in the count, not in the ritual: "every X" is a
 claim about a list, so the list has to be checked against the tree.

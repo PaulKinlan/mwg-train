@@ -233,11 +233,14 @@ export function checkRulesetPin(rules, options = {}) {
   }
 
   const counts = rules?.counts ?? {};
+  // describe(), not raw interpolation: `${counts.guides}` on a parsed object without a usable toString
+  // THREW - measured with {"toString":null} - which turned a reportable mismatch into a crashed check.
+  // Every value interpolated into a message from the parsed file goes through it.
   if (counts.guides !== guideIds.length) {
-    push('COUNT_MISMATCH', `rules.json says counts.guides=${counts.guides} but lists ${guideIds.length} guide ids`);
+    push('COUNT_MISMATCH', `rules.json says counts.guides=${describe(counts.guides)} but lists ${guideIds.length} guide ids`);
   }
   if (counts.categories !== categoryNames.length) {
-    push('COUNT_MISMATCH', `rules.json says counts.categories=${counts.categories} but lists ${categoryNames.length} categories`);
+    push('COUNT_MISMATCH', `rules.json says counts.categories=${describe(counts.categories)} but lists ${categoryNames.length} categories`);
   }
 
   // THE PIN. Our bare-id hash must equal the published catalog's.
@@ -256,7 +259,7 @@ export function checkRulesetPin(rules, options = {}) {
   // read, because a file can advertise a pinned rule_set_hash while holding a different vocabulary.
   const computed = ruleSetHash(categories);
   if (rules?.rule_set_hash !== computed) {
-    push('RULE_SET_HASH_MISMATCH', `rules.json advertises rule_set_hash ${rules?.rule_set_hash ?? '(absent)'} but its vocabulary hashes to ${computed}`);
+    push('RULE_SET_HASH_MISMATCH', `rules.json advertises rule_set_hash ${describe(rules?.rule_set_hash ?? '(absent)')} but its vocabulary hashes to ${computed}`);
   }
   if (computed !== MWG_SNAPSHOT_RULE_SET_HASH) {
     push('SNAPSHOT_SEAL_MISMATCH', `the snapshot hashes to ${computed}, not the pinned ${MWG_SNAPSHOT_RULE_SET_HASH} quoted in the pre-registration`);

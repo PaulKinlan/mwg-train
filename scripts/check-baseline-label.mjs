@@ -65,6 +65,10 @@ const REGISTRY = [
   'docs/eval/conformance/README.md',
   // Accounts for corpus size by variant, including the uplifted variant, so it states a floor measurement.
   'docs/train/corpus/tokens.json',
+  // Two more result summaries that republish floor numbers. Review found these after the previous round
+  // already called the list complete - the fourth extension of it.
+  'docs/train/corpus/README.md',
+  'docs/eval/two-backends.md',
 ];
 
 /**
@@ -80,9 +84,11 @@ const REGISTRY = [
  */
 const AUTHORED_BY = [/\b(?:by|from)\s+`?web-uplift\b/i, /\bweb-uplift(?:'s|\u2019s)\s+\w+/i, /\bofficial\s+`?web-uplift\b/i];
 const AUTHORING_VERB = /\bweb-uplift\s+(?:generated|produced|output|released|created|authored|wrote|written|built|made|constructed|scored|computed)\b/i;
+/** 'a web-uplift product', 'a web-uplift deliverable' - authorship by noun rather than by verb. */
+const AUTHORING_NOUN = /\bweb-uplift\s+(?:product|work|deliverable|artefact|artifact)\b/i;
 const FLOOR_OBJECT = /\b(?:floor|baseline|report|reports|numbers?|deltas?|results?|scores?|yield|conformance|percentages?)\b/i;
 /** Nouns for web-uplift's own artefact. A clause about one of these is not a claim about our floor. */
-const THEIR_ARTEFACT = /\b(?:catalog(?:ue)?|guide|guides|ruleset|skill|manifest|docs|documentation|package|hash|hashes)\b/i;
+const THEIR_ARTEFACT = /\b(?:catalog(?:ue)?|guide|guides|ruleset|rules?|skill|manifest|docs|documentation|package|hash|hashes|data)\b/i;
 
 /** The sentence or clause a match sits in, so a negation elsewhere cannot excuse a claim. */
 function clauseAround(text, index) {
@@ -114,11 +120,20 @@ function clauseAround(text, index) {
  * clause entirely.
  */
 export function falseProvenance(text) {
-  const candidates = [...AUTHORED_BY.map((pattern) => ({ pattern, needsFloorObject: false })), { pattern: AUTHORING_VERB, needsFloorObject: true }];
-  for (const { pattern, needsFloorObject } of candidates) {
+  const candidates = [
+    ...AUTHORED_BY.map((pattern) => ({ pattern, needsFloorObject: false, byPreposition: true })),
+    { pattern: AUTHORING_VERB, needsFloorObject: true, byPreposition: false },
+    { pattern: AUTHORING_NOUN, needsFloorObject: false, byPreposition: false },
+  ];
+  for (const { pattern, needsFloorObject, byPreposition } of candidates) {
     for (const match of text.matchAll(new RegExp(pattern.source, `${pattern.flags}g`))) {
       const { clause, offset } = clauseAround(text, match.index);
       const aboutFloor = FLOOR_OBJECT.test(clause);
+      // What the preposition attaches to decides whether this is a floor claim. "Our baseline uses rules
+      // from web-uplift" says where the RULES came from - true, and not a claim about our floor - while
+      // "numbers from web-uplift" says the numbers are theirs. Review found the first case flagged as a
+      // false positive, which is the failure mode that gets a check switched off.
+      if (byPreposition && THEIR_ARTEFACT.test(clause.slice(0, offset).trim().split(/\s+/).slice(-4).join(' '))) continue;
       // A clause that names only their artefact is a true statement about their work - "the canonical
       // catalog published by web-uplift" - and flagging it would make the check wrong about the thing it
       // is right about. Only a clause about our floor (or one that names neither, and so implicitly

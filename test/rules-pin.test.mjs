@@ -127,6 +127,16 @@ test('a malformed value is reported, never thrown', () => {
     const found = checkRulesetPin(withVocabulary((c) => { c.categories.css[0] = parsed; }));
     assert.ok(found.some((f) => f.code === 'BAD_VOCABULARY_SHAPE'), `expected a finding for ${json}`);
   }
+  // Metadata that is interpolated into finding messages must not throw either: `${counts.guides}` on a
+  // parsed object without a usable toString threw, turning a reportable mismatch into a crashed check.
+  const weird = JSON.parse('{"toString":null}');
+  for (const field of ['guides', 'categories']) {
+    const found = checkRulesetPin(withVocabulary((c) => { c.counts[field] = weird; }));
+    assert.ok(found.some((f) => f.code === 'COUNT_MISMATCH'), `expected COUNT_MISMATCH for counts.${field}`);
+  }
+  const hashCase = checkRulesetPin(withVocabulary((c) => { c.rule_set_hash = weird; }));
+  assert.ok(hashCase.some((f) => f.code === 'RULE_SET_HASH_MISMATCH'));
+
   // And a category name that would make `category/guide` ambiguous is refused too.
   for (const name of ['bad name', 'a/b', 'a:b', '']) {
     const found = checkRulesetPin(withVocabulary((c) => { c.categories[name] = c.categories.css; delete c.categories.css; }));
