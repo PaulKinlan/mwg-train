@@ -168,7 +168,7 @@ export function createRoutes(spec, store) {
   const nav = spec.nav ?? [];
   const page = (title, body) => document({ title, nav, body });
 
-  const itemLink = (item, href) => `<li>${href ? `<a href="${escapeHtml(href.replace(':id', item.id))}">${escapeHtml(item.title)}</a>` : escapeHtml(item.title)}${item.meta ? ` <span class="meta">${escapeHtml(item.meta)}</span>` : ''}</li>`;
+  const itemLink = (item, href) => `<li>${href ? `<a href="${escapeHtml(href.replace(':id', item.id))}">${escapeHtml(item.title ?? item.description ?? item.name ?? item.id)}</a>` : escapeHtml(item.title ?? item.description ?? item.name ?? item.id)}${item.meta ? ` <span class="meta">${escapeHtml(item.meta)}</span>` : ''}</li>`;
 
   const renderField = (fieldSpec, { withLabel = true } = {}) => {
     if (fieldSpec.widget === 'custom' && defects.has('no-keyboard-widget')) {

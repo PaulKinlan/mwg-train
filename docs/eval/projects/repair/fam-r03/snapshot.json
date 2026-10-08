@@ -8,9 +8,9 @@
     },
     "/ledger": {
       "status": 200,
-      "main": "643b5e01d3eb1c608cd49bc4918ccc260332a6a459426a67d8d937f64c783ec4",
+      "main": "ef3df9a37349b9f793f471f2b51deeea1f6fa6c2c9238ec581c60c3bc01bb471",
       "nav": "879daaada415011cfb3e40491e33702f2df09dc9b0b9a280cf1b7974233d9b5b",
-      "main_text": "ledger undefined"
+      "main_text": "ledger sample value"
     },
     "/expenses/new": {
       "status": 200,
