@@ -1,0 +1,564 @@
+{
+  "title": "Voices of the Mill Valley — Elder Oral History Archive & Transcript Index",
+  "viewport": {
+    "width": 1280,
+    "height": 900
+  },
+  "nodes": [
+    {
+      "tag": "div",
+      "depth": 0,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "header",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "nav",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "main",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "aside",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h2",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "select",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "ul",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "li",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "li",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "li",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "article",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h1",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "span",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "span",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "section",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h2",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "form",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 5,
+      "type": "text",
+      "name": "researcher_name",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 5,
+      "type": "text",
+      "name": "timecode_ref",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "textarea",
+      "depth": 5,
+      "type": null,
+      "name": "annotation_note",
+      "role": null
+    },
+    {
+      "tag": "button",
+      "depth": 4,
+      "type": "submit",
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "footer",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    }
+  ],
+  "boxes": [
+    {
+      "tag": "header",
+      "x": 0.0313,
+      "y": 0.0267,
+      "w": 0.9375,
+      "h": 0.0587
+    },
+    {
+      "tag": "nav",
+      "x": 0.5628,
+      "y": 0.0327,
+      "w": 0.4059,
+      "h": 0.0267
+    },
+    {
+      "tag": "main",
+      "x": 0.0313,
+      "y": 0.112,
+      "w": 0.9375,
+      "h": 0.5041
+    },
+    {
+      "tag": "aside",
+      "x": 0.0313,
+      "y": 0.112,
+      "w": 0.2188,
+      "h": 0.3756
+    },
+    {
+      "tag": "h2",
+      "x": 0.0508,
+      "y": 0.1398,
+      "w": 0.1797,
+      "h": 0.036
+    },
+    {
+      "tag": "label",
+      "x": 0.0508,
+      "y": 0.1902,
+      "w": 0.1256,
+      "h": 0.0167
+    },
+    {
+      "tag": "select",
+      "x": 0.0508,
+      "y": 0.2113,
+      "w": 0.1797,
+      "h": 0.0389
+    },
+    {
+      "tag": "ul",
+      "x": 0.0508,
+      "y": 0.2635,
+      "w": 0.1797,
+      "h": 0.1963
+    },
+    {
+      "tag": "li",
+      "x": 0.0508,
+      "y": 0.2635,
+      "w": 0.1797,
+      "h": 0.0595
+    },
+    {
+      "tag": "li",
+      "x": 0.0508,
+      "y": 0.3319,
+      "w": 0.1797,
+      "h": 0.0595
+    },
+    {
+      "tag": "li",
+      "x": 0.0508,
+      "y": 0.4003,
+      "w": 0.1797,
+      "h": 0.0595
+    },
+    {
+      "tag": "article",
+      "x": 0.2719,
+      "y": 0.112,
+      "w": 0.425,
+      "h": 0.3776
+    },
+    {
+      "tag": "h1",
+      "x": 0.2914,
+      "y": 0.1398,
+      "w": 0.3859,
+      "h": 0.072
+    },
+    {
+      "tag": "section",
+      "x": 0.7188,
+      "y": 0.112,
+      "w": 0.25,
+      "h": 0.5041
+    },
+    {
+      "tag": "h2",
+      "x": 0.7383,
+      "y": 0.1398,
+      "w": 0.2109,
+      "h": 0.036
+    },
+    {
+      "tag": "form",
+      "x": 0.7383,
+      "y": 0.2477,
+      "w": 0.2109,
+      "h": 0.3406
+    },
+    {
+      "tag": "label",
+      "x": 0.7383,
+      "y": 0.2477,
+      "w": 0.2109,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.7383,
+      "y": 0.2766,
+      "w": 0.2109,
+      "h": 0.0407
+    },
+    {
+      "tag": "label",
+      "x": 0.7383,
+      "y": 0.3324,
+      "w": 0.2109,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.7383,
+      "y": 0.3613,
+      "w": 0.2109,
+      "h": 0.0407
+    },
+    {
+      "tag": "label",
+      "x": 0.7383,
+      "y": 0.417,
+      "w": 0.2109,
+      "h": 0.0227
+    },
+    {
+      "tag": "textarea",
+      "x": 0.7383,
+      "y": 0.4459,
+      "w": 0.2109,
+      "h": 0.0818
+    },
+    {
+      "tag": "button",
+      "x": 0.7383,
+      "y": 0.5428,
+      "w": 0.2109,
+      "h": 0.0456
+    },
+    {
+      "tag": "footer",
+      "x": 0.0313,
+      "y": 0.6605,
+      "w": 0.9375,
+      "h": 0.0415
+    }
+  ],
+  "labels": [
+    {
+      "for": "decade_filter",
+      "text": "Filter by Historical Decade"
+    },
+    {
+      "for": "researcher_name",
+      "text": "Researcher / Relative Name"
+    },
+    {
+      "for": "timecode_ref",
+      "text": "Referenced Timecode"
+    },
+    {
+      "for": "annotation_note",
+      "text": "Historical Footnote / Mill Vocabulary"
+    }
+  ],
+  "controls": [
+    {
+      "tag": "select",
+      "type": null,
+      "name": null,
+      "label": "Filter by Historical Decade"
+    },
+    {
+      "tag": "input",
+      "type": "text",
+      "name": "researcher_name",
+      "label": "Researcher / Relative Name"
+    },
+    {
+      "tag": "input",
+      "type": "text",
+      "name": "timecode_ref",
+      "label": "Referenced Timecode"
+    },
+    {
+      "tag": "textarea",
+      "type": null,
+      "name": "annotation_note",
+      "label": "Historical Footnote / Mill Vocabulary"
+    }
+  ],
+  "headings": [
+    "Oral Memoirs",
+    "Interview Transcript: George Hedley (Recorded 1984)",
+    "Annotate Historical Footnote"
+  ]
+}

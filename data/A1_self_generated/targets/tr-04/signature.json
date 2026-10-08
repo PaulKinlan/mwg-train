@@ -1,0 +1,760 @@
+{
+  "title": "SunHarbor Community Solar — Array Telemetry & Member Credits",
+  "viewport": {
+    "width": 1280,
+    "height": 900
+  },
+  "nodes": [
+    {
+      "tag": "div",
+      "depth": 0,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "header",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "nav",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "main",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "section",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h2",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "table",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "thead",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "tr",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "th",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "th",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "th",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "th",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "th",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "tbody",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "tr",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "tr",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "tr",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "tr",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "tr",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "tr",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "section",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h2",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "form",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 5,
+      "type": "text",
+      "name": "account_number",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "select",
+      "depth": 5,
+      "type": null,
+      "name": "statement_period",
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "button",
+      "depth": 4,
+      "type": "submit",
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "footer",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    }
+  ],
+  "boxes": [
+    {
+      "tag": "header",
+      "x": 0.0313,
+      "y": 0.0267,
+      "w": 0.9375,
+      "h": 0.0535
+    },
+    {
+      "tag": "nav",
+      "x": 0.6289,
+      "y": 0.0307,
+      "w": 0.3398,
+      "h": 0.0267
+    },
+    {
+      "tag": "main",
+      "x": 0.0313,
+      "y": 0.2864,
+      "w": 0.9375,
+      "h": 0.5006
+    },
+    {
+      "tag": "section",
+      "x": 0.0313,
+      "y": 0.2864,
+      "w": 0.5512,
+      "h": 0.4223
+    },
+    {
+      "tag": "h2",
+      "x": 0.0508,
+      "y": 0.3142,
+      "w": 0.5122,
+      "h": 0.0333
+    },
+    {
+      "tag": "table",
+      "x": 0.0508,
+      "y": 0.3653,
+      "w": 0.5122,
+      "h": 0.3156
+    },
+    {
+      "tag": "section",
+      "x": 0.6012,
+      "y": 0.2864,
+      "w": 0.3675,
+      "h": 0.5006
+    },
+    {
+      "tag": "h2",
+      "x": 0.6208,
+      "y": 0.3142,
+      "w": 0.3284,
+      "h": 0.0333
+    },
+    {
+      "tag": "form",
+      "x": 0.6208,
+      "y": 0.3653,
+      "w": 0.3284,
+      "h": 0.2237
+    },
+    {
+      "tag": "label",
+      "x": 0.6208,
+      "y": 0.3653,
+      "w": 0.3284,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.6208,
+      "y": 0.3942,
+      "w": 0.3284,
+      "h": 0.0424
+    },
+    {
+      "tag": "label",
+      "x": 0.6208,
+      "y": 0.4544,
+      "w": 0.3284,
+      "h": 0.0227
+    },
+    {
+      "tag": "select",
+      "x": 0.6208,
+      "y": 0.4832,
+      "w": 0.3284,
+      "h": 0.0447
+    },
+    {
+      "tag": "button",
+      "x": 0.6208,
+      "y": 0.5457,
+      "w": 0.3284,
+      "h": 0.0433
+    },
+    {
+      "tag": "footer",
+      "x": 0.0313,
+      "y": 0.8314,
+      "w": 0.9375,
+      "h": 0.0415
+    }
+  ],
+  "labels": [
+    {
+      "for": "account_number",
+      "text": "Member Account or Meter Number"
+    },
+    {
+      "for": "statement_period",
+      "text": "Billing Period"
+    }
+  ],
+  "controls": [
+    {
+      "tag": "input",
+      "type": "text",
+      "name": "account_number",
+      "label": "Member Account or Meter Number"
+    },
+    {
+      "tag": "select",
+      "type": null,
+      "name": "statement_period",
+      "label": "Billing Period"
+    }
+  ],
+  "headings": [
+    "Today's Hourly Inverter Readings (Array 1 & 2)",
+    "Member Credit Balance Query"
+  ]
+}

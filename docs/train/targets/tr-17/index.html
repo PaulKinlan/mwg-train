@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Valley &amp; Moor Livestock Veterinary — Ambulatory Farm Visit Booking</title>
+  <style>
+    :root {
+      --vm-green: #14532d;
+      --vm-rust: #991b1b;
+      --vm-straw: #fef9c3;
+      --vm-card: #ffffff;
+      --vm-border: #cbd5e1;
+      --vm-bg: #f8fafc;
+      --vm-text: #0f172a;
+      --vm-muted: #64748b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--vm-bg); color: var(--vm-text); line-height: 1.5; padding: 1.5rem; }
+    .vm-wrap { max-width: 1200px; margin: 0 auto; }
+    header.vm-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--vm-green); padding-bottom: 1rem; margin-bottom: 1.5rem; }
+    .vm-brand { font-size: 1.35rem; font-weight: 800; color: var(--vm-green); }
+    nav.vm-nav a { text-decoration: none; color: var(--vm-muted); font-size: 0.9rem; margin-left: 1.25rem; font-weight: 600; }
+    nav.vm-nav a[aria-current="page"] { color: var(--vm-green); border-bottom: 2px solid var(--vm-green); padding-bottom: 0.2rem; }
+    .vm-grid { display: grid; grid-template-columns: 1.8fr 1.2fr; gap: 2rem; align-items: start; }
+    .vm-card { background: var(--vm-card); border: 1px solid var(--vm-border); border-radius: 8px; padding: 1.75rem; }
+    .vm-card h1 { font-size: 1.5rem; color: var(--vm-green); margin-bottom: 0.5rem; }
+    .vm-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .vm-field { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 0.85rem; }
+    .vm-field label { font-size: 0.85rem; font-weight: 600; color: var(--vm-text); }
+    .vm-field input, .vm-field select, .vm-field textarea { padding: 0.6rem; border: 1px solid var(--vm-border); border-radius: 6px; font-size: 0.95rem; }
+    .vm-btn { background: var(--vm-green); color: #fff; border: none; font-size: 1rem; font-weight: 700; padding: 0.85rem; border-radius: 6px; cursor: pointer; width: 100%; margin-top: 0.5rem; }
+    .vm-btn:hover { background: #166534; }
+    .vm-urgent-banner { background: #fee2e2; border-left: 4px solid var(--vm-rust); padding: 0.75rem; border-radius: 4px; margin-bottom: 1.25rem; font-size: 0.85rem; color: #991b1b; }
+    footer.vm-foot { margin-top: 2.5rem; border-top: 1px solid var(--vm-border); padding-top: 1rem; text-align: center; font-size: 0.85rem; color: var(--vm-muted); }
+  </style>
+</head>
+<body>
+  <div class="vm-wrap">
+    <header class="vm-head">
+      <div class="vm-brand">Valley &amp; Moor Livestock Veterinary</div>
+      <nav class="vm-nav" aria-label="Practice Nav">
+        <a href="/">Practice Team</a>
+        <a href="/services">Clinical Services</a>
+        <a href="/book-visit" aria-current="page">Book Farm Call</a>
+        <a href="/visits">Dispatch Board</a>
+      </nav>
+    </header>
+    <main class="vm-grid">
+      <section class="vm-card">
+        <h1>Schedule On-Site Veterinary Farm Visit</h1>
+        <div class="vm-urgent-banner">
+          <strong>Emergency Cases:</strong> For prolapse, severe bloat, or acute downer cows, call the 24hr duty vet immediately on 07700 900888 rather than booking online.
+        </div>
+        <form id="farm-visit-form" method="post" action="/book-visit">
+          <div class="vm-row-2">
+            <div class="vm-field">
+              <label for="cph_number">County Parish Holding (CPH) Number</label>
+              <input type="text" id="cph_number" name="cph_number" required placeholder="36/142/0081">
+            </div>
+            <div class="vm-field">
+              <label for="farm_name">Farm Holding Name &amp; Contact</label>
+              <input type="text" id="farm_name" name="farm_name" required placeholder="Highland Lea Farm (Mr. Evans)">
+            </div>
+          </div>
+          <div class="vm-row-2">
+            <div class="vm-field">
+              <label for="species">Primary Species Requiring Examination</label>
+              <select id="species" name="species" required>
+                <option value="dairy-cattle">Dairy Herd (Mastitis, Fertility, Lameness)</option>
+                <option value="beef-cattle">Beef Suckler Herd</option>
+                <option value="sheep" selected>Sheep Flock (Pregnancy scan, Foot rot)</option>
+                <option value="equine">Equine / Horse Checkup</option>
+                <option value="swine">Swine / Commercial Pigs</option>
+              </select>
+            </div>
+            <div class="vm-field">
+              <label for="headcount">Estimated Number of Animals</label>
+              <input type="number" id="headcount" name="headcount" min="1" max="250" value="8" required>
+            </div>
+          </div>
+          <div class="vm-row-2">
+            <div class="vm-field">
+              <label for="visit_date">Requested Date</label>
+              <input type="date" id="visit_date" name="visit_date" value="2026-10-16" required>
+            </div>
+            <div class="vm-field">
+              <label for="dispatch_slot">Visit Window</label>
+              <select id="dispatch_slot" name="dispatch_slot" required>
+                <option value="morning">Morning Routine (08:30 - 12:00)</option>
+                <option value="afternoon">Afternoon (13:00 - 16:30)</option>
+              </select>
+            </div>
+          </div>
+          <div class="vm-field">
+            <label for="emergency_phone">On-Farm Contact Phone (Required)</label>
+            <input type="tel" id="emergency_phone" name="emergency_phone" required placeholder="07700 900665">
+          </div>
+          <div class="vm-field">
+            <label for="symptoms_summary">Symptoms, Herd History &amp; Access Notes</label>
+            <textarea id="symptoms_summary" name="symptoms_summary" rows="3" required placeholder="e.g. 8 ewes showing signs of contagious ovine digital dermatitis in lower pasture. Crush available in home barn. Gate code 4491."></textarea>
+          </div>
+          <button type="submit" class="vm-btn">Confirm Veterinary Dispatch Request</button>
+        </form>
+      </section>
+      <aside class="vm-card">
+        <h2 style="font-size:1.2rem;color:var(--vm-green);margin-bottom:0.75rem">Biosecurity Protocol</h2>
+        <p style="font-size:0.85rem;color:var(--vm-muted);margin-bottom:1rem">Our clinical team enforces strict Defra vehicle disinfection protocols between farm visits.</p>
+        <ul style="font-size:0.85rem;color:#475569;display:flex;flex-direction:column;gap:0.4rem;padding-left:1.2rem">
+          <li>Fresh protective overalls donned at every holding gate</li>
+          <li>Virkon S boot dip bath performed on arrival and departure</li>
+          <li>Full electronic veterinary medicine administration record provided</li>
+        </ul>
+      </aside>
+    </main>
+    <footer class="vm-foot">
+      <p>Valley &amp; Moor Livestock Veterinary Practice • RCVS Accredited Farm Practice • Dartmoor Road, Okehampton</p>
+    </footer>
+  </div>
+</body>
+</html>

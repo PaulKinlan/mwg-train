@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Highland Guild of Craftsmen — Artisan Directory &amp; Open Studios</title>
+  <style>
+    :root {
+      --cg-bark: #451a03;
+      --cg-copper: #b45309;
+      --cg-parchment: #fdfbf7;
+      --cg-stone: #f5f5f4;
+      --cg-border: #e7e5e4;
+      --cg-text: #292524;
+      --cg-muted: #78716c;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: "Palatino", "Georgia", serif; background: var(--cg-parchment); color: var(--cg-text); line-height: 1.5; padding: 1.5rem; }
+    .cg-wrap { max-width: 1200px; margin: 0 auto; }
+    header.cg-head { border-bottom: 2px solid var(--cg-copper); padding-bottom: 1rem; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; }
+    .cg-brand { font-size: 1.5rem; font-weight: 700; color: var(--cg-bark); letter-spacing: 0.5px; }
+    nav.cg-nav a { font-family: -apple-system, sans-serif; text-decoration: none; color: var(--cg-muted); font-weight: 600; margin-left: 1.25rem; font-size: 0.9rem; }
+    nav.cg-nav a[aria-current="page"] { color: var(--cg-copper); font-weight: 700; }
+    .cg-search-bar { background: #fff; border: 1px solid var(--cg-border); border-radius: 8px; padding: 1rem 1.25rem; margin-bottom: 1.75rem; display: flex; gap: 1rem; align-items: flex-end; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+    .cg-field { display: flex; flex-direction: column; gap: 0.35rem; flex: 1; font-family: -apple-system, sans-serif; }
+    .cg-field label { font-size: 0.85rem; font-weight: 600; color: var(--cg-bark); }
+    .cg-field input, .cg-field select { padding: 0.55rem; border: 1px solid var(--cg-border); border-radius: 6px; font-size: 0.95rem; }
+    .cg-btn-search { font-family: -apple-system, sans-serif; background: var(--cg-copper); color: #fff; border: none; padding: 0.65rem 1.5rem; border-radius: 6px; font-weight: 700; cursor: pointer; }
+    .cg-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-bottom: 2rem; }
+    article.cg-maker-card { background: #fff; border: 1px solid var(--cg-border); border-radius: 8px; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+    .cg-maker-badge { font-family: -apple-system, sans-serif; display: inline-block; background: #fef3c7; color: #92400e; font-size: 0.75rem; font-weight: 700; padding: 0.2rem 0.5rem; border-radius: 4px; align-self: flex-start; margin-bottom: 0.5rem; }
+    .cg-maker-card h3 { font-size: 1.2rem; color: var(--cg-bark); margin-bottom: 0.25rem; }
+    .cg-maker-town { font-family: -apple-system, sans-serif; font-size: 0.85rem; color: var(--cg-muted); margin-bottom: 0.75rem; }
+    .cg-maker-bio { font-size: 0.95rem; color: #44403c; margin-bottom: 1rem; }
+    .cg-maker-open { font-family: -apple-system, sans-serif; font-size: 0.85rem; background: var(--cg-stone); padding: 0.5rem 0.75rem; border-radius: 6px; color: var(--cg-bark); }
+    footer.cg-foot { border-top: 1px solid var(--cg-border); padding-top: 1rem; text-align: center; font-family: -apple-system, sans-serif; font-size: 0.85rem; color: var(--cg-muted); }
+  </style>
+</head>
+<body>
+  <div class="cg-wrap">
+    <header class="cg-head">
+      <div class="cg-brand">Highland Guild of Craftsmen</div>
+      <nav class="cg-nav" aria-label="Directory Navigation">
+        <a href="/">Guild History</a>
+        <a href="/makers" aria-current="page">Artisan Directory</a>
+        <a href="/disciplines">Craft Disciplines</a>
+        <a href="/opendays">Open Studio Calendar</a>
+      </nav>
+    </header>
+    <main>
+      <form id="maker-filter" class="cg-search-bar" method="get" action="/makers">
+        <div class="cg-field" style="flex:1.5">
+          <label for="q">Search Makers or Craft Keywords</label>
+          <input type="search" id="q" name="q" placeholder="e.g. Ash bowl, Windsor chair, tapestry...">
+        </div>
+        <div class="cg-field">
+          <label for="craft">Craft Discipline</label>
+          <select id="craft" name="craft">
+            <option value="">All Disciplines</option>
+            <option value="woodworking" selected>Woodworking &amp; Cabinetry</option>
+            <option value="ceramics">Stoneware Ceramics</option>
+            <option value="textiles">Hand Weaving &amp; Tweed</option>
+            <option value="metalwork">Blacksmithing &amp; Ironwork</option>
+          </select>
+        </div>
+        <div class="cg-field">
+          <label for="county">Parish / District</label>
+          <select id="county" name="county">
+            <option value="">All Regions</option>
+            <option value="inverness">Strathspey &amp; Inverness</option>
+            <option value="deeside">Royal Deeside</option>
+            <option value="lochaber">Lochaber &amp; Coast</option>
+          </select>
+        </div>
+        <button type="submit" class="cg-btn-search">Filter Directory</button>
+      </form>
+      <div class="cg-grid">
+        <article class="cg-maker-card">
+          <div>
+            <span class="cg-maker-badge">Woodturning &amp; Green Wood</span>
+            <h3>Callum Fraser</h3>
+            <div class="cg-maker-town">Glenfiddich Workshop, Dufftown</div>
+            <p class="cg-maker-bio">Turning heirloom bowls, quaichs, and porridge spurtles from windblown Scottish oak and sycamore.</p>
+          </div>
+          <div class="cg-maker-open">
+            <strong>Next Open Studio:</strong> Sat 24 Oct • 10:00 - 16:00
+          </div>
+        </article>
+        <article class="cg-maker-card">
+          <div>
+            <span class="cg-maker-badge">Fine Cabinetmaking</span>
+            <h3>Moira MacLeod</h3>
+            <div class="cg-maker-town">Riverside Mill, Aviemore</div>
+            <p class="cg-maker-bio">Contemporary hardwood dining tables and dovetailed blanket chests using locally felled Scottish larch.</p>
+          </div>
+          <div class="cg-maker-open">
+            <strong>Next Open Studio:</strong> Sun 25 Oct • 11:00 - 15:00
+          </div>
+        </article>
+        <article class="cg-maker-card">
+          <div>
+            <span class="cg-maker-badge">Traditional Coopering</span>
+            <h3>Duncan Campbell</h3>
+            <div class="cg-maker-town">The Old Cooperage, Craigellachie</div>
+            <p class="cg-maker-bio">Crafting whisky casks, wooden planters, and traditional oak butter churns with hand adze and hoop driver.</p>
+          </div>
+          <div class="cg-maker-open">
+            <strong>Next Open Studio:</strong> Fri 30 Oct • 13:00 - 17:00
+          </div>
+        </article>
+      </div>
+    </main>
+    <footer class="cg-foot">
+      <p>Highland Guild of Craftsmen • Preserving Heritage Handcrafts since 1894 • Supported by Regional Arts Fund</p>
+    </footer>
+  </div>
+</body>
+</html>

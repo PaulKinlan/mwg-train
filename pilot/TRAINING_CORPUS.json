@@ -1,0 +1,3846 @@
+{
+  "$comment": "The training corpus generated from the tr-* briefs: one project per family x framework, each with its tree hash. `node scripts/scaffold-training-corpus.mjs` re-derives every tree; a hash here must never collide with a hash in pilot/CORPUS.json (original or uplift), which is the disjointness the corpus exists to guarantee.",
+  "generated_at": "2026-10-08T14:32:11.094Z",
+  "generator": "scripts/scaffold-training-corpus.mjs",
+  "summary": {
+    "families": 30,
+    "frameworks": 7,
+    "projects": 210,
+    "by_archetype": {
+      "booking": 49,
+      "web-shop": 21,
+      "dashboard": 14,
+      "onboarding-auth": 7,
+      "directory-listing": 14,
+      "event-registration": 14,
+      "support-helpdesk": 14,
+      "course-enrolment": 7,
+      "survey-form": 14,
+      "restaurant-ordering": 7,
+      "job-board": 7,
+      "docs-site": 14,
+      "expense-tracker": 14,
+      "library-catalogue": 7,
+      "community-forum": 7
+    },
+    "by_framework": {
+      "hono": 30,
+      "raw": 30,
+      "react": 30,
+      "preact": 30,
+      "vue": 30,
+      "webcomponents": 30,
+      "svelte": 30
+    }
+  },
+  "projects": [
+    {
+      "project_id": "tr-01-hono",
+      "family_id": "tr-01",
+      "brief_id": "tr-01-v1",
+      "archetype": "booking",
+      "framework": "hono",
+      "task": "generate",
+      "defects": [],
+      "topic": "mobile bicycle mechanic service booking",
+      "routes": [
+        "/",
+        "/services",
+        "/book",
+        "/bookings/:id"
+      ],
+      "tree_sha": "sha256:f10cebc8d1585de4fb6f4ed94588da0b65543338933050d3dc3f2f3a0fe87f1a"
+    },
+    {
+      "project_id": "tr-01-raw",
+      "family_id": "tr-01",
+      "brief_id": "tr-01-v1",
+      "archetype": "booking",
+      "framework": "raw",
+      "task": "generate",
+      "defects": [],
+      "topic": "mobile bicycle mechanic service booking",
+      "routes": [
+        "/",
+        "/services",
+        "/book",
+        "/bookings/:id"
+      ],
+      "tree_sha": "sha256:c819b32ce64f745b9cb5c19f5052fd031ee6c285aeee66f3fa539ce43519c897"
+    },
+    {
+      "project_id": "tr-01-react",
+      "family_id": "tr-01",
+      "brief_id": "tr-01-v1",
+      "archetype": "booking",
+      "framework": "react",
+      "task": "generate",
+      "defects": [],
+      "topic": "mobile bicycle mechanic service booking",
+      "routes": [
+        "/",
+        "/services",
+        "/book",
+        "/bookings/:id"
+      ],
+      "tree_sha": "sha256:968bbd94345f4eb36175bbd15c6b766333ec05ad62ca2b9b99cd9512cc4d53d0"
+    },
+    {
+      "project_id": "tr-01-preact",
+      "family_id": "tr-01",
+      "brief_id": "tr-01-v1",
+      "archetype": "booking",
+      "framework": "preact",
+      "task": "generate",
+      "defects": [],
+      "topic": "mobile bicycle mechanic service booking",
+      "routes": [
+        "/",
+        "/services",
+        "/book",
+        "/bookings/:id"
+      ],
+      "tree_sha": "sha256:9ae36ad59fcf5bd81589f5fb5d627a8be9b04ddcd67735fbb1341f76c18f5858"
+    },
+    {
+      "project_id": "tr-01-vue",
+      "family_id": "tr-01",
+      "brief_id": "tr-01-v1",
+      "archetype": "booking",
+      "framework": "vue",
+      "task": "generate",
+      "defects": [],
+      "topic": "mobile bicycle mechanic service booking",
+      "routes": [
+        "/",
+        "/services",
+        "/book",
+        "/bookings/:id"
+      ],
+      "tree_sha": "sha256:5eb36c25096ce7b1276178168024fdec9899280e6d86273b6ec52026b08b3435"
+    },
+    {
+      "project_id": "tr-01-webcomponents",
+      "family_id": "tr-01",
+      "brief_id": "tr-01-v1",
+      "archetype": "booking",
+      "framework": "webcomponents",
+      "task": "generate",
+      "defects": [],
+      "topic": "mobile bicycle mechanic service booking",
+      "routes": [
+        "/",
+        "/services",
+        "/book",
+        "/bookings/:id"
+      ],
+      "tree_sha": "sha256:e3a394cb724e3f148503258ed27503da6b65aebe9d6245e187081477f6ffdb03"
+    },
+    {
+      "project_id": "tr-01-svelte",
+      "family_id": "tr-01",
+      "brief_id": "tr-01-v1",
+      "archetype": "booking",
+      "framework": "svelte",
+      "task": "generate",
+      "defects": [],
+      "topic": "mobile bicycle mechanic service booking",
+      "routes": [
+        "/",
+        "/services",
+        "/book",
+        "/bookings/:id"
+      ],
+      "tree_sha": "sha256:d1521b710adc66ae98ea2efb91a170ee881962a32db89689c24561e543b7dcd3"
+    },
+    {
+      "project_id": "tr-02-hono",
+      "family_id": "tr-02",
+      "brief_id": "tr-02-v1",
+      "archetype": "web-shop",
+      "framework": "hono",
+      "task": "generate",
+      "defects": [],
+      "topic": "seasonal cider pre-orders and local pickup",
+      "routes": [
+        "/",
+        "/ciders",
+        "/cart",
+        "/checkout",
+        "/orders/:id"
+      ],
+      "tree_sha": "sha256:2bc3e0aa7e336f92a3a8e523a2b82f8de2186cb752db1fb6f150f89766fc2506"
+    },
+    {
+      "project_id": "tr-02-raw",
+      "family_id": "tr-02",
+      "brief_id": "tr-02-v1",
+      "archetype": "web-shop",
+      "framework": "raw",
+      "task": "generate",
+      "defects": [],
+      "topic": "seasonal cider pre-orders and local pickup",
+      "routes": [
+        "/",
+        "/ciders",
+        "/cart",
+        "/checkout",
+        "/orders/:id"
+      ],
+      "tree_sha": "sha256:08100aff20bf97c87d8ba190ded5748f58505444b40c5829629396e163fd5940"
+    },
+    {
+      "project_id": "tr-02-react",
+      "family_id": "tr-02",
+      "brief_id": "tr-02-v1",
+      "archetype": "web-shop",
+      "framework": "react",
+      "task": "generate",
+      "defects": [],
+      "topic": "seasonal cider pre-orders and local pickup",
+      "routes": [
+        "/",
+        "/ciders",
+        "/cart",
+        "/checkout",
+        "/orders/:id"
+      ],
+      "tree_sha": "sha256:c6d52e1fc5f9c1fa8231b571857d14e044f5ab2a7965794f6c4ac2079054e27b"
+    },
+    {
+      "project_id": "tr-02-preact",
+      "family_id": "tr-02",
+      "brief_id": "tr-02-v1",
+      "archetype": "web-shop",
+      "framework": "preact",
+      "task": "generate",
+      "defects": [],
+      "topic": "seasonal cider pre-orders and local pickup",
+      "routes": [
+        "/",
+        "/ciders",
+        "/cart",
+        "/checkout",
+        "/orders/:id"
+      ],
+      "tree_sha": "sha256:073f8b2082f3c88a14297ed12f6ac78637a6b4466d0480f9ab67647f6fa29a88"
+    },
+    {
+      "project_id": "tr-02-vue",
+      "family_id": "tr-02",
+      "brief_id": "tr-02-v1",
+      "archetype": "web-shop",
+      "framework": "vue",
+      "task": "generate",
+      "defects": [],
+      "topic": "seasonal cider pre-orders and local pickup",
+      "routes": [
+        "/",
+        "/ciders",
+        "/cart",
+        "/checkout",
+        "/orders/:id"
+      ],
+      "tree_sha": "sha256:bcaa46ad106a0d0241ce8c6558b728ae2f6777a752c17d738fb531437d613d53"
+    },
+    {
+      "project_id": "tr-02-webcomponents",
+      "family_id": "tr-02",
+      "brief_id": "tr-02-v1",
+      "archetype": "web-shop",
+      "framework": "webcomponents",
+      "task": "generate",
+      "defects": [],
+      "topic": "seasonal cider pre-orders and local pickup",
+      "routes": [
+        "/",
+        "/ciders",
+        "/cart",
+        "/checkout",
+        "/orders/:id"
+      ],
+      "tree_sha": "sha256:60220a944887ecd20524ad7547a21b7bc93c5bdc7511a020a66f035de9cbd2c8"
+    },
+    {
+      "project_id": "tr-02-svelte",
+      "family_id": "tr-02",
+      "brief_id": "tr-02-v1",
+      "archetype": "web-shop",
+      "framework": "svelte",
+      "task": "generate",
+      "defects": [],
+      "topic": "seasonal cider pre-orders and local pickup",
+      "routes": [
+        "/",
+        "/ciders",
+        "/cart",
+        "/checkout",
+        "/orders/:id"
+      ],
+      "tree_sha": "sha256:3d987d2062e38a739246b42ae3eb6d517a63136f39ecd0db0e3e1e22e288d193"
+    },
+    {
+      "project_id": "tr-03-hono",
+      "family_id": "tr-03",
+      "brief_id": "tr-03-v1",
+      "archetype": "booking",
+      "framework": "hono",
+      "task": "generate",
+      "defects": [],
+      "topic": "pottery studio shared kiln firings schedule",
+      "routes": [
+        "/",
+        "/kilns",
+        "/reserve",
+        "/reservations/:id",
+        "/schedule"
+      ],
+      "tree_sha": "sha256:9ec2e11110ffa5b7ed3f5b3a0df6d217723185f121ca610428839dff838fdc70"
+    },
+    {
+      "project_id": "tr-03-raw",
+      "family_id": "tr-03",
+      "brief_id": "tr-03-v1",
+      "archetype": "booking",
+      "framework": "raw",
+      "task": "generate",
+      "defects": [],
+      "topic": "pottery studio shared kiln firings schedule",
+      "routes": [
+        "/",
+        "/kilns",
+        "/reserve",
+        "/reservations/:id",
+        "/schedule"
+      ],
+      "tree_sha": "sha256:ecdda14d12554dd56f53d130b709d8a982ffd9384f28ee73f63dde7521a02167"
+    },
+    {
+      "project_id": "tr-03-react",
+      "family_id": "tr-03",
+      "brief_id": "tr-03-v1",
+      "archetype": "booking",
+      "framework": "react",
+      "task": "generate",
+      "defects": [],
+      "topic": "pottery studio shared kiln firings schedule",
+      "routes": [
+        "/",
+        "/kilns",
+        "/reserve",
+        "/reservations/:id",
+        "/schedule"
+      ],
+      "tree_sha": "sha256:3a87c5616f568b395cb41c8e8e1c32c5564c2fe08d399a2aaf90ee347613406a"
+    },
+    {
+      "project_id": "tr-03-preact",
+      "family_id": "tr-03",
+      "brief_id": "tr-03-v1",
+      "archetype": "booking",
+      "framework": "preact",
+      "task": "generate",
+      "defects": [],
+      "topic": "pottery studio shared kiln firings schedule",
+      "routes": [
+        "/",
+        "/kilns",
+        "/reserve",
+        "/reservations/:id",
+        "/schedule"
+      ],
+      "tree_sha": "sha256:438a04706d412a4becbbe61f9825155461b2c181637cf053281dd78a8a91d769"
+    },
+    {
+      "project_id": "tr-03-vue",
+      "family_id": "tr-03",
+      "brief_id": "tr-03-v1",
+      "archetype": "booking",
+      "framework": "vue",
+      "task": "generate",
+      "defects": [],
+      "topic": "pottery studio shared kiln firings schedule",
+      "routes": [
+        "/",
+        "/kilns",
+        "/reserve",
+        "/reservations/:id",
+        "/schedule"
+      ],
+      "tree_sha": "sha256:41f47c6e83948780e4136b0e59bb8b3b018dff5fb9dc6d4ff1bef8f1be4508c8"
+    },
+    {
+      "project_id": "tr-03-webcomponents",
+      "family_id": "tr-03",
+      "brief_id": "tr-03-v1",
+      "archetype": "booking",
+      "framework": "webcomponents",
+      "task": "generate",
+      "defects": [],
+      "topic": "pottery studio shared kiln firings schedule",
+      "routes": [
+        "/",
+        "/kilns",
+        "/reserve",
+        "/reservations/:id",
+        "/schedule"
+      ],
+      "tree_sha": "sha256:c932e165ce1979e7d0d9e8d6433bcec87e33942c4b9567eda91c1cd67462a8c2"
+    },
+    {
+      "project_id": "tr-03-svelte",
+      "family_id": "tr-03",
+      "brief_id": "tr-03-v1",
+      "archetype": "booking",
+      "framework": "svelte",
+      "task": "generate",
+      "defects": [],
+      "topic": "pottery studio shared kiln firings schedule",
+      "routes": [
+        "/",
+        "/kilns",
+        "/reserve",
+        "/reservations/:id",
+        "/schedule"
+      ],
+      "tree_sha": "sha256:9fdfc1d3fca89e9744e8057ddede79cb10eb3abafa80cb66ed187f2978cd3140"
+    },
+    {
+      "project_id": "tr-04-hono",
+      "family_id": "tr-04",
+      "brief_id": "tr-04-v1",
+      "archetype": "dashboard",
+      "framework": "hono",
+      "task": "generate",
+      "defects": [],
+      "topic": "community solar array daily output and member credits",
+      "routes": [
+        "/",
+        "/generation",
+        "/credits",
+        "/credits/:account"
+      ],
+      "tree_sha": "sha256:f3be28b55a7e98f09a3ff8739a467a13aba2ec490532078a0bcfd8d020755d1d"
+    },
+    {
+      "project_id": "tr-04-raw",
+      "family_id": "tr-04",
+      "brief_id": "tr-04-v1",
+      "archetype": "dashboard",
+      "framework": "raw",
+      "task": "generate",
+      "defects": [],
+      "topic": "community solar array daily output and member credits",
+      "routes": [
+        "/",
+        "/generation",
+        "/credits",
+        "/credits/:account"
+      ],
+      "tree_sha": "sha256:7f20eb53cc5dab0d88bdca4f19a793b6aa6b031211e9e6db881f9160f1739cd3"
+    },
+    {
+      "project_id": "tr-04-react",
+      "family_id": "tr-04",
+      "brief_id": "tr-04-v1",
+      "archetype": "dashboard",
+      "framework": "react",
+      "task": "generate",
+      "defects": [],
+      "topic": "community solar array daily output and member credits",
+      "routes": [
+        "/",
+        "/generation",
+        "/credits",
+        "/credits/:account"
+      ],
+      "tree_sha": "sha256:e324f48980be38ff252f5d25d0343b10e41c4ffe870e0cca2c2ee412f3e3a234"
+    },
+    {
+      "project_id": "tr-04-preact",
+      "family_id": "tr-04",
+      "brief_id": "tr-04-v1",
+      "archetype": "dashboard",
+      "framework": "preact",
+      "task": "generate",
+      "defects": [],
+      "topic": "community solar array daily output and member credits",
+      "routes": [
+        "/",
+        "/generation",
+        "/credits",
+        "/credits/:account"
+      ],
+      "tree_sha": "sha256:0e859413ba7766b81f34cb9fc07b962af0a33348108a85d028ad39aae3f7520c"
+    },
+    {
+      "project_id": "tr-04-vue",
+      "family_id": "tr-04",
+      "brief_id": "tr-04-v1",
+      "archetype": "dashboard",
+      "framework": "vue",
+      "task": "generate",
+      "defects": [],
+      "topic": "community solar array daily output and member credits",
+      "routes": [
+        "/",
+        "/generation",
+        "/credits",
+        "/credits/:account"
+      ],
+      "tree_sha": "sha256:2c6721a571464234da008018303a2a3e2d10368726c0b3c4fbe8d57531c642e7"
+    },
+    {
+      "project_id": "tr-04-webcomponents",
+      "family_id": "tr-04",
+      "brief_id": "tr-04-v1",
+      "archetype": "dashboard",
+      "framework": "webcomponents",
+      "task": "generate",
+      "defects": [],
+      "topic": "community solar array daily output and member credits",
+      "routes": [
+        "/",
+        "/generation",
+        "/credits",
+        "/credits/:account"
+      ],
+      "tree_sha": "sha256:1ac699e4a19447054ebd717a1e8586d7d00d11614e8bd8e828a1e37d66efbed0"
+    },
+    {
+      "project_id": "tr-04-svelte",
+      "family_id": "tr-04",
+      "brief_id": "tr-04-v1",
+      "archetype": "dashboard",
+      "framework": "svelte",
+      "task": "generate",
+      "defects": [],
+      "topic": "community solar array daily output and member credits",
+      "routes": [
+        "/",
+        "/generation",
+        "/credits",
+        "/credits/:account"
+      ],
+      "tree_sha": "sha256:59e851707a101d272ead4bd76dfe2fa49f2e0ee484b02cdbe27d5c81b94f4745"
+    },
+    {
+      "project_id": "tr-05-hono",
+      "family_id": "tr-05",
+      "brief_id": "tr-05-v1",
+      "archetype": "onboarding-auth",
+      "framework": "hono",
+      "task": "generate",
+      "defects": [],
+      "topic": "wildlife rehabilitation volunteer intake and credentials",
+      "routes": [
+        "/",
+        "/register",
+        "/login",
+        "/volunteer/profile"
+      ],
+      "tree_sha": "sha256:a206cce367588d0340e3b8bed3477539a0a94133796982b6000afe3cf2733382"
+    },
+    {
+      "project_id": "tr-05-raw",
+      "family_id": "tr-05",
+      "brief_id": "tr-05-v1",
+      "archetype": "onboarding-auth",
+      "framework": "raw",
+      "task": "generate",
+      "defects": [],
+      "topic": "wildlife rehabilitation volunteer intake and credentials",
+      "routes": [
+        "/",
+        "/register",
+        "/login",
+        "/volunteer/profile"
+      ],
+      "tree_sha": "sha256:f7a3d66fab76af2559dc10a1d7b80612c9f19057defafa216a8df69af15da222"
+    },
+    {
+      "project_id": "tr-05-react",
+      "family_id": "tr-05",
+      "brief_id": "tr-05-v1",
+      "archetype": "onboarding-auth",
+      "framework": "react",
+      "task": "generate",
+      "defects": [],
+      "topic": "wildlife rehabilitation volunteer intake and credentials",
+      "routes": [
+        "/",
+        "/register",
+        "/login",
+        "/volunteer/profile"
+      ],
+      "tree_sha": "sha256:0798d214ad0a0467aae758d105eee40afae8cd4d87b580043f6ac8e6f4395029"
+    },
+    {
+      "project_id": "tr-05-preact",
+      "family_id": "tr-05",
+      "brief_id": "tr-05-v1",
+      "archetype": "onboarding-auth",
+      "framework": "preact",
+      "task": "generate",
+      "defects": [],
+      "topic": "wildlife rehabilitation volunteer intake and credentials",
+      "routes": [
+        "/",
+        "/register",
+        "/login",
+        "/volunteer/profile"
+      ],
+      "tree_sha": "sha256:a89bbbe1790da5d36f11938be7c0092bbdd7568cc0564e876d635451261cfe75"
+    },
+    {
+      "project_id": "tr-05-vue",
+      "family_id": "tr-05",
+      "brief_id": "tr-05-v1",
+      "archetype": "onboarding-auth",
+      "framework": "vue",
+      "task": "generate",
+      "defects": [],
+      "topic": "wildlife rehabilitation volunteer intake and credentials",
+      "routes": [
+        "/",
+        "/register",
+        "/login",
+        "/volunteer/profile"
+      ],
+      "tree_sha": "sha256:d3aa2c8dcee76ff8889616ca8cec2acca81a8608f8c2ca4f39b0432c8ee57d24"
+    },
+    {
+      "project_id": "tr-05-webcomponents",
+      "family_id": "tr-05",
+      "brief_id": "tr-05-v1",
+      "archetype": "onboarding-auth",
+      "framework": "webcomponents",
+      "task": "generate",
+      "defects": [],
+      "topic": "wildlife rehabilitation volunteer intake and credentials",
+      "routes": [
+        "/",
+        "/register",
+        "/login",
+        "/volunteer/profile"
+      ],
+      "tree_sha": "sha256:ddef2d89b105a58c3b806eee1298f35cd26e75d76e1b3c21657b7c98edc319ad"
+    },
+    {
+      "project_id": "tr-05-svelte",
+      "family_id": "tr-05",
+      "brief_id": "tr-05-v1",
+      "archetype": "onboarding-auth",
+      "framework": "svelte",
+      "task": "generate",
+      "defects": [],
+      "topic": "wildlife rehabilitation volunteer intake and credentials",
+      "routes": [
+        "/",
+        "/register",
+        "/login",
+        "/volunteer/profile"
+      ],
+      "tree_sha": "sha256:29d45db04f8e7f8f39c45e3f9a5df27806bf2bac8f4e550d8c8623088532b4f6"
+    },
+    {
+      "project_id": "tr-06-hono",
+      "family_id": "tr-06",
+      "brief_id": "tr-06-v1",
+      "archetype": "directory-listing",
+      "framework": "hono",
+      "task": "generate",
+      "defects": [],
+      "topic": "craft guild artisan profiles and studio open days",
+      "routes": [
+        "/",
+        "/makers",
+        "/makers/:id",
+        "/disciplines"
+      ],
+      "tree_sha": "sha256:08ff3b23a14fc2fe429997914558bc4cf18bdf56a348c5e3e4a01a65cf877fc3"
+    },
+    {
+      "project_id": "tr-06-raw",
+      "family_id": "tr-06",
+      "brief_id": "tr-06-v1",
+      "archetype": "directory-listing",
+      "framework": "raw",
+      "task": "generate",
+      "defects": [],
+      "topic": "craft guild artisan profiles and studio open days",
+      "routes": [
+        "/",
+        "/makers",
+        "/makers/:id",
+        "/disciplines"
+      ],
+      "tree_sha": "sha256:21dc60568e7d6ad35f7864e55e63a88382551ba8ed067a4c38d4fb0e745eabc4"
+    },
+    {
+      "project_id": "tr-06-react",
+      "family_id": "tr-06",
+      "brief_id": "tr-06-v1",
+      "archetype": "directory-listing",
+      "framework": "react",
+      "task": "generate",
+      "defects": [],
+      "topic": "craft guild artisan profiles and studio open days",
+      "routes": [
+        "/",
+        "/makers",
+        "/makers/:id",
+        "/disciplines"
+      ],
+      "tree_sha": "sha256:627f113046b534a834f1ce33fc732a9505fd84a0cf720c596643a9edcfcc3f71"
+    },
+    {
+      "project_id": "tr-06-preact",
+      "family_id": "tr-06",
+      "brief_id": "tr-06-v1",
+      "archetype": "directory-listing",
+      "framework": "preact",
+      "task": "generate",
+      "defects": [],
+      "topic": "craft guild artisan profiles and studio open days",
+      "routes": [
+        "/",
+        "/makers",
+        "/makers/:id",
+        "/disciplines"
+      ],
+      "tree_sha": "sha256:ff12b54bbeb5ad62915e5d1f28ba4fba5551adc87c5917e60163421049bf7bf0"
+    },
+    {
+      "project_id": "tr-06-vue",
+      "family_id": "tr-06",
+      "brief_id": "tr-06-v1",
+      "archetype": "directory-listing",
+      "framework": "vue",
+      "task": "generate",
+      "defects": [],
+      "topic": "craft guild artisan profiles and studio open days",
+      "routes": [
+        "/",
+        "/makers",
+        "/makers/:id",
+        "/disciplines"
+      ],
+      "tree_sha": "sha256:ee48812483ee4b46d71be1ba686b4339815edc027f525b6ed23738dfdea7ed45"
+    },
+    {
+      "project_id": "tr-06-webcomponents",
+      "family_id": "tr-06",
+      "brief_id": "tr-06-v1",
+      "archetype": "directory-listing",
+      "framework": "webcomponents",
+      "task": "generate",
+      "defects": [],
+      "topic": "craft guild artisan profiles and studio open days",
+      "routes": [
+        "/",
+        "/makers",
+        "/makers/:id",
+        "/disciplines"
+      ],
+      "tree_sha": "sha256:e819af1879c38e6631569145f3f719f75ff79322fb0422a31783815d12c24c55"
+    },
+    {
+      "project_id": "tr-06-svelte",
+      "family_id": "tr-06",
+      "brief_id": "tr-06-v1",
+      "archetype": "directory-listing",
+      "framework": "svelte",
+      "task": "generate",
+      "defects": [],
+      "topic": "craft guild artisan profiles and studio open days",
+      "routes": [
+        "/",
+        "/makers",
+        "/makers/:id",
+        "/disciplines"
+      ],
+      "tree_sha": "sha256:fd819a998c3ae0a46317be2c9296cd802bd667998389fcdc4ec690c817df60f7"
+    },
+    {
+      "project_id": "tr-07-hono",
+      "family_id": "tr-07",
+      "brief_id": "tr-07-v1",
+      "archetype": "event-registration",
+      "framework": "hono",
+      "task": "generate",
+      "defects": [],
+      "topic": "dark sky observatory public viewing night sign-up",
+      "routes": [
+        "/",
+        "/events",
+        "/register/:eventId",
+        "/passes/:id"
+      ],
+      "tree_sha": "sha256:b0ab39778cfcf92cb959863f70a49c555df0d58635c469ca8adb27ecf06d407a"
+    },
+    {
+      "project_id": "tr-07-raw",
+      "family_id": "tr-07",
+      "brief_id": "tr-07-v1",
+      "archetype": "event-registration",
+      "framework": "raw",
+      "task": "generate",
+      "defects": [],
+      "topic": "dark sky observatory public viewing night sign-up",
+      "routes": [
+        "/",
+        "/events",
+        "/register/:eventId",
+        "/passes/:id"
+      ],
+      "tree_sha": "sha256:87763eb785a866700f9733749d0061d0414637b660af315b0a9ec6b7eb4799ea"
+    },
+    {
+      "project_id": "tr-07-react",
+      "family_id": "tr-07",
+      "brief_id": "tr-07-v1",
+      "archetype": "event-registration",
+      "framework": "react",
+      "task": "generate",
+      "defects": [],
+      "topic": "dark sky observatory public viewing night sign-up",
+      "routes": [
+        "/",
+        "/events",
+        "/register/:eventId",
+        "/passes/:id"
+      ],
+      "tree_sha": "sha256:0517fcd7692d30f241c6bdfd1f5a884d35d1d368b0c12a2281ccd28ae9a8d31f"
+    },
+    {
+      "project_id": "tr-07-preact",
+      "family_id": "tr-07",
+      "brief_id": "tr-07-v1",
+      "archetype": "event-registration",
+      "framework": "preact",
+      "task": "generate",
+      "defects": [],
+      "topic": "dark sky observatory public viewing night sign-up",
+      "routes": [
+        "/",
+        "/events",
+        "/register/:eventId",
+        "/passes/:id"
+      ],
+      "tree_sha": "sha256:eaa6923facb6ea44ac620082c4615caea97747d8c593960a8150a02a1761287f"
+    },
+    {
+      "project_id": "tr-07-vue",
+      "family_id": "tr-07",
+      "brief_id": "tr-07-v1",
+      "archetype": "event-registration",
+      "framework": "vue",
+      "task": "generate",
+      "defects": [],
+      "topic": "dark sky observatory public viewing night sign-up",
+      "routes": [
+        "/",
+        "/events",
+        "/register/:eventId",
+        "/passes/:id"
+      ],
+      "tree_sha": "sha256:e957b72a49e013169375e79b3c2910706f4afea9e155da1fbfa07b47d1829dd1"
+    },
+    {
+      "project_id": "tr-07-webcomponents",
+      "family_id": "tr-07",
+      "brief_id": "tr-07-v1",
+      "archetype": "event-registration",
+      "framework": "webcomponents",
+      "task": "generate",
+      "defects": [],
+      "topic": "dark sky observatory public viewing night sign-up",
+      "routes": [
+        "/",
+        "/events",
+        "/register/:eventId",
+        "/passes/:id"
+      ],
+      "tree_sha": "sha256:a16bc0d1deefcc3f8ae2f2a559bb05466fdff16dd73f67aa0cbf8ff3c293c155"
+    },
+    {
+      "project_id": "tr-07-svelte",
+      "family_id": "tr-07",
+      "brief_id": "tr-07-v1",
+      "archetype": "event-registration",
+      "framework": "svelte",
+      "task": "generate",
+      "defects": [],
+      "topic": "dark sky observatory public viewing night sign-up",
+      "routes": [
+        "/",
+        "/events",
+        "/register/:eventId",
+        "/passes/:id"
+      ],
+      "tree_sha": "sha256:6ad3713f63d7e0e2ab4eec513ae26cfb3787c06b6a534bd964aaf7a98baa5c68"
+    },
+    {
+      "project_id": "tr-08-hono",
+      "family_id": "tr-08",
+      "brief_id": "tr-08-v1",
+      "archetype": "support-helpdesk",
+      "framework": "hono",
+      "task": "generate",
+      "defects": [],
+      "topic": "community darkroom maintenance and supply requests",
+      "routes": [
+        "/",
+        "/tickets",
+        "/tickets/new",
+        "/tickets/:id"
+      ],
+      "tree_sha": "sha256:cfa1be1b543d72727c9d96caf84f4a1767b45ffbe789a27ce1bcbdf354e67480"
+    },
+    {
+      "project_id": "tr-08-raw",
+      "family_id": "tr-08",
+      "brief_id": "tr-08-v1",
+      "archetype": "support-helpdesk",
+      "framework": "raw",
+      "task": "generate",
+      "defects": [],
+      "topic": "community darkroom maintenance and supply requests",
+      "routes": [
+        "/",
+        "/tickets",
+        "/tickets/new",
+        "/tickets/:id"
+      ],
+      "tree_sha": "sha256:ab10f5819a6ce7b556b17f6e0e2cdcadc712001a8a00832336e19fe1fdb206aa"
+    },
+    {
+      "project_id": "tr-08-react",
+      "family_id": "tr-08",
+      "brief_id": "tr-08-v1",
+      "archetype": "support-helpdesk",
+      "framework": "react",
+      "task": "generate",
+      "defects": [],
+      "topic": "community darkroom maintenance and supply requests",
+      "routes": [
+        "/",
+        "/tickets",
+        "/tickets/new",
+        "/tickets/:id"
+      ],
+      "tree_sha": "sha256:cc3297388cf88d455cf8f823b1240b42f5ab3df62bd72a9a08cf3e92d111cd3f"
+    },
+    {
+      "project_id": "tr-08-preact",
+      "family_id": "tr-08",
+      "brief_id": "tr-08-v1",
+      "archetype": "support-helpdesk",
+      "framework": "preact",
+      "task": "generate",
+      "defects": [],
+      "topic": "community darkroom maintenance and supply requests",
+      "routes": [
+        "/",
+        "/tickets",
+        "/tickets/new",
+        "/tickets/:id"
+      ],
+      "tree_sha": "sha256:d0e411113bc9c3507c343abcce34a64987dd35cb43de0683571d8bc634c7c352"
+    },
+    {
+      "project_id": "tr-08-vue",
+      "family_id": "tr-08",
+      "brief_id": "tr-08-v1",
+      "archetype": "support-helpdesk",
+      "framework": "vue",
+      "task": "generate",
+      "defects": [],
+      "topic": "community darkroom maintenance and supply requests",
+      "routes": [
+        "/",
+        "/tickets",
+        "/tickets/new",
+        "/tickets/:id"
+      ],
+      "tree_sha": "sha256:3f767378376872d7c30cf777315a30e71f4014aa161d707091323386e7ad15a4"
+    },
+    {
+      "project_id": "tr-08-webcomponents",
+      "family_id": "tr-08",
+      "brief_id": "tr-08-v1",
+      "archetype": "support-helpdesk",
+      "framework": "webcomponents",
+      "task": "generate",
+      "defects": [],
+      "topic": "community darkroom maintenance and supply requests",
+      "routes": [
+        "/",
+        "/tickets",
+        "/tickets/new",
+        "/tickets/:id"
+      ],
+      "tree_sha": "sha256:ff86b15d70be8f32f738b81a6de06b3ea5250df4cf52481b7393a8f96b1bf0a4"
+    },
+    {
+      "project_id": "tr-08-svelte",
+      "family_id": "tr-08",
+      "brief_id": "tr-08-v1",
+      "archetype": "support-helpdesk",
+      "framework": "svelte",
+      "task": "generate",
+      "defects": [],
+      "topic": "community darkroom maintenance and supply requests",
+      "routes": [
+        "/",
+        "/tickets",
+        "/tickets/new",
+        "/tickets/:id"
+      ],
+      "tree_sha": "sha256:0bb59801474ac93d6da9682008b7430bad93acd80e3a52974112101b36801d38"
+    },
+    {
+      "project_id": "tr-09-hono",
+      "family_id": "tr-09",
+      "brief_id": "tr-09-v1",
+      "archetype": "course-enrolment",
+      "framework": "hono",
+      "task": "generate",
+      "defects": [],
+      "topic": "wild edibles identification field course booking",
+      "routes": [
+        "/",
+        "/courses",
+        "/courses/:id",
+        "/enrol",
+        "/enrolments/:id"
+      ],
+      "tree_sha": "sha256:767aa76dbcb3e5b52a89da77990b7e3fbe8f60115c81e2d5fe1e6b85cf1f224c"
+    },
+    {
+      "project_id": "tr-09-raw",
+      "family_id": "tr-09",
+      "brief_id": "tr-09-v1",
+      "archetype": "course-enrolment",
+      "framework": "raw",
+      "task": "generate",
+      "defects": [],
+      "topic": "wild edibles identification field course booking",
+      "routes": [
+        "/",
+        "/courses",
+        "/courses/:id",
+        "/enrol",
+        "/enrolments/:id"
+      ],
+      "tree_sha": "sha256:a45455b7104b54a49d8a3cd492a7528da342a6ebcb198c648654e9e3a0c56632"
+    },
+    {
+      "project_id": "tr-09-react",
+      "family_id": "tr-09",
+      "brief_id": "tr-09-v1",
+      "archetype": "course-enrolment",
+      "framework": "react",
+      "task": "generate",
+      "defects": [],
+      "topic": "wild edibles identification field course booking",
+      "routes": [
+        "/",
+        "/courses",
+        "/courses/:id",
+        "/enrol",
+        "/enrolments/:id"
+      ],
+      "tree_sha": "sha256:7720a90d994a2781378f732604c609bfef87b328626872d669dcb21d891b972a"
+    },
+    {
+      "project_id": "tr-09-preact",
+      "family_id": "tr-09",
+      "brief_id": "tr-09-v1",
+      "archetype": "course-enrolment",
+      "framework": "preact",
+      "task": "generate",
+      "defects": [],
+      "topic": "wild edibles identification field course booking",
+      "routes": [
+        "/",
+        "/courses",
+        "/courses/:id",
+        "/enrol",
+        "/enrolments/:id"
+      ],
+      "tree_sha": "sha256:afac23e9b55c87138ca1cc47f9c7825883d2d42b6dfd389788ea9c25388e1283"
+    },
+    {
+      "project_id": "tr-09-vue",
+      "family_id": "tr-09",
+      "brief_id": "tr-09-v1",
+      "archetype": "course-enrolment",
+      "framework": "vue",
+      "task": "generate",
+      "defects": [],
+      "topic": "wild edibles identification field course booking",
+      "routes": [
+        "/",
+        "/courses",
+        "/courses/:id",
+        "/enrol",
+        "/enrolments/:id"
+      ],
+      "tree_sha": "sha256:4401d134b93931f2c54c13994a14b0a1415a2c9101323eabb7fbaa8891e72de1"
+    },
+    {
+      "project_id": "tr-09-webcomponents",
+      "family_id": "tr-09",
+      "brief_id": "tr-09-v1",
+      "archetype": "course-enrolment",
+      "framework": "webcomponents",
+      "task": "generate",
+      "defects": [],
+      "topic": "wild edibles identification field course booking",
+      "routes": [
+        "/",
+        "/courses",
+        "/courses/:id",
+        "/enrol",
+        "/enrolments/:id"
+      ],
+      "tree_sha": "sha256:b563e897f3c665e07dea26a5c60b54ec6b6bc1baea167fb58318655578240aec"
+    },
+    {
+      "project_id": "tr-09-svelte",
+      "family_id": "tr-09",
+      "brief_id": "tr-09-v1",
+      "archetype": "course-enrolment",
+      "framework": "svelte",
+      "task": "generate",
+      "defects": [],
+      "topic": "wild edibles identification field course booking",
+      "routes": [
+        "/",
+        "/courses",
+        "/courses/:id",
+        "/enrol",
+        "/enrolments/:id"
+      ],
+      "tree_sha": "sha256:4a5d892d691f8f37e8f983ba58ff4ad5723c4a716bbce1c27f8c61b565949063"
+    },
+    {
+      "project_id": "tr-10-hono",
+      "family_id": "tr-10",
+      "brief_id": "tr-10-v1",
+      "archetype": "survey-form",
+      "framework": "hono",
+      "task": "generate",
+      "defects": [],
+      "topic": "residential street safety and crosswalk feedback survey",
+      "routes": [
+        "/",
+        "/survey",
+        "/survey/complete/:id",
+        "/results"
+      ],
+      "tree_sha": "sha256:f457a63b0ffcfd16d2f18427290eb16acc0ae6f8380a044bfc2fdb7541385ac6"
+    },
+    {
+      "project_id": "tr-10-raw",
+      "family_id": "tr-10",
+      "brief_id": "tr-10-v1",
+      "archetype": "survey-form",
+      "framework": "raw",
+      "task": "generate",
+      "defects": [],
+      "topic": "residential street safety and crosswalk feedback survey",
+      "routes": [
+        "/",
+        "/survey",
+        "/survey/complete/:id",
+        "/results"
+      ],
+      "tree_sha": "sha256:293bc4d57342bff4b5f18001772f2d7e5bf4e4ca7d9edccab61172acb91e0073"
+    },
+    {
+      "project_id": "tr-10-react",
+      "family_id": "tr-10",
+      "brief_id": "tr-10-v1",
+      "archetype": "survey-form",
+      "framework": "react",
+      "task": "generate",
+      "defects": [],
+      "topic": "residential street safety and crosswalk feedback survey",
+      "routes": [
+        "/",
+        "/survey",
+        "/survey/complete/:id",
+        "/results"
+      ],
+      "tree_sha": "sha256:43ac6eb7cbc2b1c146b8d8434d335b9616a759f7d641693724615a5df1259e74"
+    },
+    {
+      "project_id": "tr-10-preact",
+      "family_id": "tr-10",
+      "brief_id": "tr-10-v1",
+      "archetype": "survey-form",
+      "framework": "preact",
+      "task": "generate",
+      "defects": [],
+      "topic": "residential street safety and crosswalk feedback survey",
+      "routes": [
+        "/",
+        "/survey",
+        "/survey/complete/:id",
+        "/results"
+      ],
+      "tree_sha": "sha256:6813612f8201f8aa5aa0c65cb64604f5296561c78a96bb64ebc3bb9be2b2afb8"
+    },
+    {
+      "project_id": "tr-10-vue",
+      "family_id": "tr-10",
+      "brief_id": "tr-10-v1",
+      "archetype": "survey-form",
+      "framework": "vue",
+      "task": "generate",
+      "defects": [],
+      "topic": "residential street safety and crosswalk feedback survey",
+      "routes": [
+        "/",
+        "/survey",
+        "/survey/complete/:id",
+        "/results"
+      ],
+      "tree_sha": "sha256:5c32c2ea294c45d5aee09ebbce7b81616a517b6549210cbf21010b3148f9cda7"
+    },
+    {
+      "project_id": "tr-10-webcomponents",
+      "family_id": "tr-10",
+      "brief_id": "tr-10-v1",
+      "archetype": "survey-form",
+      "framework": "webcomponents",
+      "task": "generate",
+      "defects": [],
+      "topic": "residential street safety and crosswalk feedback survey",
+      "routes": [
+        "/",
+        "/survey",
+        "/survey/complete/:id",
+        "/results"
+      ],
+      "tree_sha": "sha256:4cf3dc33c63a087fb6d9000eeb05c2243818ccae97c2334cb90290f21f5b5aa9"
+    },
+    {
+      "project_id": "tr-10-svelte",
+      "family_id": "tr-10",
+      "brief_id": "tr-10-v1",
+      "archetype": "survey-form",
+      "framework": "svelte",
+      "task": "generate",
+      "defects": [],
+      "topic": "residential street safety and crosswalk feedback survey",
+      "routes": [
+        "/",
+        "/survey",
+        "/survey/complete/:id",
+        "/results"
+      ],
+      "tree_sha": "sha256:4021a534f53994e500d294622c4604c98b5232f3f9c80e4b048ee3c65f8c619a"
+    },
+    {
+      "project_id": "tr-11-hono",
+      "family_id": "tr-11",
+      "brief_id": "tr-11-v1",
+      "archetype": "restaurant-ordering",
+      "framework": "hono",
+      "task": "generate",
+      "defects": [],
+      "topic": "sourdough cottage bakery weekly loaf orders",
+      "routes": [
+        "/",
+        "/menu",
+        "/order",
+        "/orders/:id"
+      ],
+      "tree_sha": "sha256:40faa2afdc50a81d238ec20f0d684d8ae87ab9e774c89e2fa5e01f3b70f9fd08"
+    },
+    {
+      "project_id": "tr-11-raw",
+      "family_id": "tr-11",
+      "brief_id": "tr-11-v1",
+      "archetype": "restaurant-ordering",
+      "framework": "raw",
+      "task": "generate",
+      "defects": [],
+      "topic": "sourdough cottage bakery weekly loaf orders",
+      "routes": [
+        "/",
+        "/menu",
+        "/order",
+        "/orders/:id"
+      ],
+      "tree_sha": "sha256:75b34d3a9e911878f4d2bda1773ef64bbb59f7effe6cad1b8b782f62cd23c3ab"
+    },
+    {
+      "project_id": "tr-11-react",
+      "family_id": "tr-11",
+      "brief_id": "tr-11-v1",
+      "archetype": "restaurant-ordering",
+      "framework": "react",
+      "task": "generate",
+      "defects": [],
+      "topic": "sourdough cottage bakery weekly loaf orders",
+      "routes": [
+        "/",
+        "/menu",
+        "/order",
+        "/orders/:id"
+      ],
+      "tree_sha": "sha256:a234bce8495cea08fb7c2e4b8b09b4d00883dff7f57fdb88ba57813b91b349cc"
+    },
+    {
+      "project_id": "tr-11-preact",
+      "family_id": "tr-11",
+      "brief_id": "tr-11-v1",
+      "archetype": "restaurant-ordering",
+      "framework": "preact",
+      "task": "generate",
+      "defects": [],
+      "topic": "sourdough cottage bakery weekly loaf orders",
+      "routes": [
+        "/",
+        "/menu",
+        "/order",
+        "/orders/:id"
+      ],
+      "tree_sha": "sha256:6e99414f1d465e1c097a90d59cdb4fa36a317962d4df69fbc4b15984189c518d"
+    },
+    {
+      "project_id": "tr-11-vue",
+      "family_id": "tr-11",
+      "brief_id": "tr-11-v1",
+      "archetype": "restaurant-ordering",
+      "framework": "vue",
+      "task": "generate",
+      "defects": [],
+      "topic": "sourdough cottage bakery weekly loaf orders",
+      "routes": [
+        "/",
+        "/menu",
+        "/order",
+        "/orders/:id"
+      ],
+      "tree_sha": "sha256:40b151237efa22d4796f963242b19f543e2e86ff99d821bee1984291bfdc79fb"
+    },
+    {
+      "project_id": "tr-11-webcomponents",
+      "family_id": "tr-11",
+      "brief_id": "tr-11-v1",
+      "archetype": "restaurant-ordering",
+      "framework": "webcomponents",
+      "task": "generate",
+      "defects": [],
+      "topic": "sourdough cottage bakery weekly loaf orders",
+      "routes": [
+        "/",
+        "/menu",
+        "/order",
+        "/orders/:id"
+      ],
+      "tree_sha": "sha256:0c83f08893d4ef9aae4fce297966c75bd095a9c3d550c7bbcfe6dc90d99e24d4"
+    },
+    {
+      "project_id": "tr-11-svelte",
+      "family_id": "tr-11",
+      "brief_id": "tr-11-v1",
+      "archetype": "restaurant-ordering",
+      "framework": "svelte",
+      "task": "generate",
+      "defects": [],
+      "topic": "sourdough cottage bakery weekly loaf orders",
+      "routes": [
+        "/",
+        "/menu",
+        "/order",
+        "/orders/:id"
+      ],
+      "tree_sha": "sha256:ae928a3dec4a6a90d0648d1d597e906c06e45c38d39a8a3d9c9c20bf3258ccdb"
+    },
+    {
+      "project_id": "tr-12-hono",
+      "family_id": "tr-12",
+      "brief_id": "tr-12-v1",
+      "archetype": "job-board",
+      "framework": "hono",
+      "task": "generate",
+      "defects": [],
+      "topic": "local heat pump and solar installer apprenticeships",
+      "routes": [
+        "/",
+        "/jobs",
+        "/jobs/:id",
+        "/jobs/:id/apply",
+        "/applications/:id"
+      ],
+      "tree_sha": "sha256:7d75895d7c78defd64477dee8ff3579fa5996f452c5d30e4c030ba8b0f7df972"
+    },
+    {
+      "project_id": "tr-12-raw",
+      "family_id": "tr-12",
+      "brief_id": "tr-12-v1",
+      "archetype": "job-board",
+      "framework": "raw",
+      "task": "generate",
+      "defects": [],
+      "topic": "local heat pump and solar installer apprenticeships",
+      "routes": [
+        "/",
+        "/jobs",
+        "/jobs/:id",
+        "/jobs/:id/apply",
+        "/applications/:id"
+      ],
+      "tree_sha": "sha256:2425b77584d7c58a8071ec8eb1575a0dbba2cb6e27f7eb7544eaee8f8e9781a4"
+    },
+    {
+      "project_id": "tr-12-react",
+      "family_id": "tr-12",
+      "brief_id": "tr-12-v1",
+      "archetype": "job-board",
+      "framework": "react",
+      "task": "generate",
+      "defects": [],
+      "topic": "local heat pump and solar installer apprenticeships",
+      "routes": [
+        "/",
+        "/jobs",
+        "/jobs/:id",
+        "/jobs/:id/apply",
+        "/applications/:id"
+      ],
+      "tree_sha": "sha256:3ae4a25d013f9963890271908b8d29bf03e77deb52d0ebb647a608c59d4b66dc"
+    },
+    {
+      "project_id": "tr-12-preact",
+      "family_id": "tr-12",
+      "brief_id": "tr-12-v1",
+      "archetype": "job-board",
+      "framework": "preact",
+      "task": "generate",
+      "defects": [],
+      "topic": "local heat pump and solar installer apprenticeships",
+      "routes": [
+        "/",
+        "/jobs",
+        "/jobs/:id",
+        "/jobs/:id/apply",
+        "/applications/:id"
+      ],
+      "tree_sha": "sha256:3e44690ce2e859f14c8b3361f2a97000e5adb870ffb94f49257a101ba846eb88"
+    },
+    {
+      "project_id": "tr-12-vue",
+      "family_id": "tr-12",
+      "brief_id": "tr-12-v1",
+      "archetype": "job-board",
+      "framework": "vue",
+      "task": "generate",
+      "defects": [],
+      "topic": "local heat pump and solar installer apprenticeships",
+      "routes": [
+        "/",
+        "/jobs",
+        "/jobs/:id",
+        "/jobs/:id/apply",
+        "/applications/:id"
+      ],
+      "tree_sha": "sha256:9c7f5b86e7815f2c2933f4007ab2551097d29909f716cee17ed36b4c7b8b45b4"
+    },
+    {
+      "project_id": "tr-12-webcomponents",
+      "family_id": "tr-12",
+      "brief_id": "tr-12-v1",
+      "archetype": "job-board",
+      "framework": "webcomponents",
+      "task": "generate",
+      "defects": [],
+      "topic": "local heat pump and solar installer apprenticeships",
+      "routes": [
+        "/",
+        "/jobs",
+        "/jobs/:id",
+        "/jobs/:id/apply",
+        "/applications/:id"
+      ],
+      "tree_sha": "sha256:80097a190b3fad5cbed7ea125814d376928fa5098dbfd0622fbb6a5b80e3358b"
+    },
+    {
+      "project_id": "tr-12-svelte",
+      "family_id": "tr-12",
+      "brief_id": "tr-12-v1",
+      "archetype": "job-board",
+      "framework": "svelte",
+      "task": "generate",
+      "defects": [],
+      "topic": "local heat pump and solar installer apprenticeships",
+      "routes": [
+        "/",
+        "/jobs",
+        "/jobs/:id",
+        "/jobs/:id/apply",
+        "/applications/:id"
+      ],
+      "tree_sha": "sha256:c5dc4b7584a738a37c3c7688f70a60c55c294d7fba36b0f26effd3938bd892da"
+    },
+    {
+      "project_id": "tr-13-hono",
+      "family_id": "tr-13",
+      "brief_id": "tr-13-v1",
+      "archetype": "docs-site",
+      "framework": "hono",
+      "task": "generate",
+      "defects": [],
+      "topic": "backyard composting guidelines and soil test registry",
+      "routes": [
+        "/",
+        "/docs",
+        "/docs/:slug",
+        "/soil-tests",
+        "/soil-tests/new",
+        "/soil-tests/:id"
+      ],
+      "tree_sha": "sha256:11f6f04d898f430bc5ed22bf229035a7a6c3b06b93cd1f8c4d06fceddc7c41fb"
+    },
+    {
+      "project_id": "tr-13-raw",
+      "family_id": "tr-13",
+      "brief_id": "tr-13-v1",
+      "archetype": "docs-site",
+      "framework": "raw",
+      "task": "generate",
+      "defects": [],
+      "topic": "backyard composting guidelines and soil test registry",
+      "routes": [
+        "/",
+        "/docs",
+        "/docs/:slug",
+        "/soil-tests",
+        "/soil-tests/new",
+        "/soil-tests/:id"
+      ],
+      "tree_sha": "sha256:ef35238c4ad9dd87e0392849d3667499abb5dfac51d0df20672874be5dd92bb7"
+    },
+    {
+      "project_id": "tr-13-react",
+      "family_id": "tr-13",
+      "brief_id": "tr-13-v1",
+      "archetype": "docs-site",
+      "framework": "react",
+      "task": "generate",
+      "defects": [],
+      "topic": "backyard composting guidelines and soil test registry",
+      "routes": [
+        "/",
+        "/docs",
+        "/docs/:slug",
+        "/soil-tests",
+        "/soil-tests/new",
+        "/soil-tests/:id"
+      ],
+      "tree_sha": "sha256:cbf4630515d3ce64156aa2a523d2727bff9b1eb2855ce38920688c4e66ed7e26"
+    },
+    {
+      "project_id": "tr-13-preact",
+      "family_id": "tr-13",
+      "brief_id": "tr-13-v1",
+      "archetype": "docs-site",
+      "framework": "preact",
+      "task": "generate",
+      "defects": [],
+      "topic": "backyard composting guidelines and soil test registry",
+      "routes": [
+        "/",
+        "/docs",
+        "/docs/:slug",
+        "/soil-tests",
+        "/soil-tests/new",
+        "/soil-tests/:id"
+      ],
+      "tree_sha": "sha256:2c7fd0ad58f4d9e42372cb5da27cb762a21f47df24315f41656896290c070a24"
+    },
+    {
+      "project_id": "tr-13-vue",
+      "family_id": "tr-13",
+      "brief_id": "tr-13-v1",
+      "archetype": "docs-site",
+      "framework": "vue",
+      "task": "generate",
+      "defects": [],
+      "topic": "backyard composting guidelines and soil test registry",
+      "routes": [
+        "/",
+        "/docs",
+        "/docs/:slug",
+        "/soil-tests",
+        "/soil-tests/new",
+        "/soil-tests/:id"
+      ],
+      "tree_sha": "sha256:6c8a5d50685fc2245fed77cd545dbea7205147b39b0ff646e7b86ae8e2806e69"
+    },
+    {
+      "project_id": "tr-13-webcomponents",
+      "family_id": "tr-13",
+      "brief_id": "tr-13-v1",
+      "archetype": "docs-site",
+      "framework": "webcomponents",
+      "task": "generate",
+      "defects": [],
+      "topic": "backyard composting guidelines and soil test registry",
+      "routes": [
+        "/",
+        "/docs",
+        "/docs/:slug",
+        "/soil-tests",
+        "/soil-tests/new",
+        "/soil-tests/:id"
+      ],
+      "tree_sha": "sha256:caccf112ae41fe244e2def1819852848df4a06181a356249d7019e0c96c39e90"
+    },
+    {
+      "project_id": "tr-13-svelte",
+      "family_id": "tr-13",
+      "brief_id": "tr-13-v1",
+      "archetype": "docs-site",
+      "framework": "svelte",
+      "task": "generate",
+      "defects": [],
+      "topic": "backyard composting guidelines and soil test registry",
+      "routes": [
+        "/",
+        "/docs",
+        "/docs/:slug",
+        "/soil-tests",
+        "/soil-tests/new",
+        "/soil-tests/:id"
+      ],
+      "tree_sha": "sha256:602a71da1b61b4d90c1245e0101e769960b05e9c6078fd46d072cb71ef581cbf"
+    },
+    {
+      "project_id": "tr-14-hono",
+      "family_id": "tr-14",
+      "brief_id": "tr-14-v1",
+      "archetype": "directory-listing",
+      "framework": "hono",
+      "task": "generate",
+      "defects": [],
+      "topic": "self-guided heritage walking tour stops and transcripts",
+      "routes": [
+        "/",
+        "/stops",
+        "/stops/:id",
+        "/stops/:id/comment"
+      ],
+      "tree_sha": "sha256:2bf471114c1825c330825d63422a18cffcc5d03d3b54220e737347124cc47b9d"
+    },
+    {
+      "project_id": "tr-14-raw",
+      "family_id": "tr-14",
+      "brief_id": "tr-14-v1",
+      "archetype": "directory-listing",
+      "framework": "raw",
+      "task": "generate",
+      "defects": [],
+      "topic": "self-guided heritage walking tour stops and transcripts",
+      "routes": [
+        "/",
+        "/stops",
+        "/stops/:id",
+        "/stops/:id/comment"
+      ],
+      "tree_sha": "sha256:2a61e50e2af5a4c63447a9a0e74db779a657ec4703a948551528a0ae73685377"
+    },
+    {
+      "project_id": "tr-14-react",
+      "family_id": "tr-14",
+      "brief_id": "tr-14-v1",
+      "archetype": "directory-listing",
+      "framework": "react",
+      "task": "generate",
+      "defects": [],
+      "topic": "self-guided heritage walking tour stops and transcripts",
+      "routes": [
+        "/",
+        "/stops",
+        "/stops/:id",
+        "/stops/:id/comment"
+      ],
+      "tree_sha": "sha256:b67df5f77baeede00cf45c41216831ed39327819677f84fdc23e12a278e42daa"
+    },
+    {
+      "project_id": "tr-14-preact",
+      "family_id": "tr-14",
+      "brief_id": "tr-14-v1",
+      "archetype": "directory-listing",
+      "framework": "preact",
+      "task": "generate",
+      "defects": [],
+      "topic": "self-guided heritage walking tour stops and transcripts",
+      "routes": [
+        "/",
+        "/stops",
+        "/stops/:id",
+        "/stops/:id/comment"
+      ],
+      "tree_sha": "sha256:27a0eb1f2d742bace99f12a12ab8cb0c15196b9ed19480b9960a0f46d4d71ec3"
+    },
+    {
+      "project_id": "tr-14-vue",
+      "family_id": "tr-14",
+      "brief_id": "tr-14-v1",
+      "archetype": "directory-listing",
+      "framework": "vue",
+      "task": "generate",
+      "defects": [],
+      "topic": "self-guided heritage walking tour stops and transcripts",
+      "routes": [
+        "/",
+        "/stops",
+        "/stops/:id",
+        "/stops/:id/comment"
+      ],
+      "tree_sha": "sha256:48b5a9a31dc9b8ce07f062081972a0d423b73b1b02374173371947a31889f405"
+    },
+    {
+      "project_id": "tr-14-webcomponents",
+      "family_id": "tr-14",
+      "brief_id": "tr-14-v1",
+      "archetype": "directory-listing",
+      "framework": "webcomponents",
+      "task": "generate",
+      "defects": [],
+      "topic": "self-guided heritage walking tour stops and transcripts",
+      "routes": [
+        "/",
+        "/stops",
+        "/stops/:id",
+        "/stops/:id/comment"
+      ],
+      "tree_sha": "sha256:8e19950c666276eaaf8e36ae2aab0b859c3923ea76cd5cf363af5d0cf21fc0a3"
+    },
+    {
+      "project_id": "tr-14-svelte",
+      "family_id": "tr-14",
+      "brief_id": "tr-14-v1",
+      "archetype": "directory-listing",
+      "framework": "svelte",
+      "task": "generate",
+      "defects": [],
+      "topic": "self-guided heritage walking tour stops and transcripts",
+      "routes": [
+        "/",
+        "/stops",
+        "/stops/:id",
+        "/stops/:id/comment"
+      ],
+      "tree_sha": "sha256:bef164f2c37c2204ae1a4ffea9daa72d0bb4d3a8d716b9ba04ec5af0b96540d2"
+    },
+    {
+      "project_id": "tr-15-hono",
+      "family_id": "tr-15",
+      "brief_id": "tr-15-v1",
+      "archetype": "expense-tracker",
+      "framework": "hono",
+      "task": "generate",
+      "defects": [],
+      "topic": "tenant collective maintenance expense logging",
+      "routes": [
+        "/",
+        "/expenses",
+        "/expenses/new",
+        "/expenses/:id"
+      ],
+      "tree_sha": "sha256:878d7497be850351e4c5d1d9d90a7a4fdcfbfaa70dec01e1ee5801fa39f37ef3"
+    },
+    {
+      "project_id": "tr-15-raw",
+      "family_id": "tr-15",
+      "brief_id": "tr-15-v1",
+      "archetype": "expense-tracker",
+      "framework": "raw",
+      "task": "generate",
+      "defects": [],
+      "topic": "tenant collective maintenance expense logging",
+      "routes": [
+        "/",
+        "/expenses",
+        "/expenses/new",
+        "/expenses/:id"
+      ],
+      "tree_sha": "sha256:1a67c059471fbd2825d46d1e5b0dc7aac25c7790ddb973e1a89afeac5b6942fe"
+    },
+    {
+      "project_id": "tr-15-react",
+      "family_id": "tr-15",
+      "brief_id": "tr-15-v1",
+      "archetype": "expense-tracker",
+      "framework": "react",
+      "task": "generate",
+      "defects": [],
+      "topic": "tenant collective maintenance expense logging",
+      "routes": [
+        "/",
+        "/expenses",
+        "/expenses/new",
+        "/expenses/:id"
+      ],
+      "tree_sha": "sha256:323529f15a8cc97eeb02fd3fd27b7b5cb69bd09226b9ffc193fe4c41342b7fdc"
+    },
+    {
+      "project_id": "tr-15-preact",
+      "family_id": "tr-15",
+      "brief_id": "tr-15-v1",
+      "archetype": "expense-tracker",
+      "framework": "preact",
+      "task": "generate",
+      "defects": [],
+      "topic": "tenant collective maintenance expense logging",
+      "routes": [
+        "/",
+        "/expenses",
+        "/expenses/new",
+        "/expenses/:id"
+      ],
+      "tree_sha": "sha256:e89b42a8b2b4dc53b7d6f47236925c9e68c0adbb734a425d8b1c2b77732f35e1"
+    },
+    {
+      "project_id": "tr-15-vue",
+      "family_id": "tr-15",
+      "brief_id": "tr-15-v1",
+      "archetype": "expense-tracker",
+      "framework": "vue",
+      "task": "generate",
+      "defects": [],
+      "topic": "tenant collective maintenance expense logging",
+      "routes": [
+        "/",
+        "/expenses",
+        "/expenses/new",
+        "/expenses/:id"
+      ],
+      "tree_sha": "sha256:57930ca3aa55fcc7b25be6bb1b226ef25e6e7e3879b8c83afc5e17b775bec154"
+    },
+    {
+      "project_id": "tr-15-webcomponents",
+      "family_id": "tr-15",
+      "brief_id": "tr-15-v1",
+      "archetype": "expense-tracker",
+      "framework": "webcomponents",
+      "task": "generate",
+      "defects": [],
+      "topic": "tenant collective maintenance expense logging",
+      "routes": [
+        "/",
+        "/expenses",
+        "/expenses/new",
+        "/expenses/:id"
+      ],
+      "tree_sha": "sha256:b47be4218ce7e1fb07fa31c450b660f5917fc3a5932417a702c9944693318a39"
+    },
+    {
+      "project_id": "tr-15-svelte",
+      "family_id": "tr-15",
+      "brief_id": "tr-15-v1",
+      "archetype": "expense-tracker",
+      "framework": "svelte",
+      "task": "generate",
+      "defects": [],
+      "topic": "tenant collective maintenance expense logging",
+      "routes": [
+        "/",
+        "/expenses",
+        "/expenses/new",
+        "/expenses/:id"
+      ],
+      "tree_sha": "sha256:ec1787cbcd70cb2f88d981118a3d9579247e2d8a3028f16b5fb20b4eccaf738e"
+    },
+    {
+      "project_id": "tr-16-hono",
+      "family_id": "tr-16",
+      "brief_id": "tr-16-v1",
+      "archetype": "library-catalogue",
+      "framework": "hono",
+      "task": "generate",
+      "defects": [],
+      "topic": "rare perennial cuttings and seed strain index",
+      "routes": [
+        "/",
+        "/cultivars",
+        "/cultivars/:id",
+        "/request",
+        "/requests/:id"
+      ],
+      "tree_sha": "sha256:32153fc8c32bedc9d972621957d9e98190e8312218f2be898b2e2c2b6fc4432c"
+    },
+    {
+      "project_id": "tr-16-raw",
+      "family_id": "tr-16",
+      "brief_id": "tr-16-v1",
+      "archetype": "library-catalogue",
+      "framework": "raw",
+      "task": "generate",
+      "defects": [],
+      "topic": "rare perennial cuttings and seed strain index",
+      "routes": [
+        "/",
+        "/cultivars",
+        "/cultivars/:id",
+        "/request",
+        "/requests/:id"
+      ],
+      "tree_sha": "sha256:1406058f3a7514eb2b06406d71f9ef62fb250c11ce65acaad4bb13bffccab7ca"
+    },
+    {
+      "project_id": "tr-16-react",
+      "family_id": "tr-16",
+      "brief_id": "tr-16-v1",
+      "archetype": "library-catalogue",
+      "framework": "react",
+      "task": "generate",
+      "defects": [],
+      "topic": "rare perennial cuttings and seed strain index",
+      "routes": [
+        "/",
+        "/cultivars",
+        "/cultivars/:id",
+        "/request",
+        "/requests/:id"
+      ],
+      "tree_sha": "sha256:1bf305c1e503e7d74fa04c65b350ca81c0bc80e9fbb446cf32b002c7f96484fe"
+    },
+    {
+      "project_id": "tr-16-preact",
+      "family_id": "tr-16",
+      "brief_id": "tr-16-v1",
+      "archetype": "library-catalogue",
+      "framework": "preact",
+      "task": "generate",
+      "defects": [],
+      "topic": "rare perennial cuttings and seed strain index",
+      "routes": [
+        "/",
+        "/cultivars",
+        "/cultivars/:id",
+        "/request",
+        "/requests/:id"
+      ],
+      "tree_sha": "sha256:0ec217f84293bf41043fd8c27181180d49fbaf2e868c9d8046f5e0b871db1eeb"
+    },
+    {
+      "project_id": "tr-16-vue",
+      "family_id": "tr-16",
+      "brief_id": "tr-16-v1",
+      "archetype": "library-catalogue",
+      "framework": "vue",
+      "task": "generate",
+      "defects": [],
+      "topic": "rare perennial cuttings and seed strain index",
+      "routes": [
+        "/",
+        "/cultivars",
+        "/cultivars/:id",
+        "/request",
+        "/requests/:id"
+      ],
+      "tree_sha": "sha256:65c7921a855a95a3c5249c4df751fa6cf1cd02da727e6e75ce5572ba3d13a36c"
+    },
+    {
+      "project_id": "tr-16-webcomponents",
+      "family_id": "tr-16",
+      "brief_id": "tr-16-v1",
+      "archetype": "library-catalogue",
+      "framework": "webcomponents",
+      "task": "generate",
+      "defects": [],
+      "topic": "rare perennial cuttings and seed strain index",
+      "routes": [
+        "/",
+        "/cultivars",
+        "/cultivars/:id",
+        "/request",
+        "/requests/:id"
+      ],
+      "tree_sha": "sha256:d947c6898f7daa73b5c5ebee511fddebb1f58c8150807ce5b5588259d854cc9a"
+    },
+    {
+      "project_id": "tr-16-svelte",
+      "family_id": "tr-16",
+      "brief_id": "tr-16-v1",
+      "archetype": "library-catalogue",
+      "framework": "svelte",
+      "task": "generate",
+      "defects": [],
+      "topic": "rare perennial cuttings and seed strain index",
+      "routes": [
+        "/",
+        "/cultivars",
+        "/cultivars/:id",
+        "/request",
+        "/requests/:id"
+      ],
+      "tree_sha": "sha256:8ff4675e1661fb3d6d0c7641578e4c88e37f6138c9c3f9bda7c12a763c6ca574"
+    },
+    {
+      "project_id": "tr-17-hono",
+      "family_id": "tr-17",
+      "brief_id": "tr-17-v1",
+      "archetype": "booking",
+      "framework": "hono",
+      "task": "generate",
+      "defects": [],
+      "topic": "rural farm animal vet visit scheduling",
+      "routes": [
+        "/",
+        "/services",
+        "/book-visit",
+        "/visits/:id"
+      ],
+      "tree_sha": "sha256:70c0d57434f4bd211e68d16672b8de33c7bd300ff873240592b140197e80160d"
+    },
+    {
+      "project_id": "tr-17-raw",
+      "family_id": "tr-17",
+      "brief_id": "tr-17-v1",
+      "archetype": "booking",
+      "framework": "raw",
+      "task": "generate",
+      "defects": [],
+      "topic": "rural farm animal vet visit scheduling",
+      "routes": [
+        "/",
+        "/services",
+        "/book-visit",
+        "/visits/:id"
+      ],
+      "tree_sha": "sha256:992eeb193d9752ef7beba1b8a88f88414ff540ff22f4ba0428f3406b267b114c"
+    },
+    {
+      "project_id": "tr-17-react",
+      "family_id": "tr-17",
+      "brief_id": "tr-17-v1",
+      "archetype": "booking",
+      "framework": "react",
+      "task": "generate",
+      "defects": [],
+      "topic": "rural farm animal vet visit scheduling",
+      "routes": [
+        "/",
+        "/services",
+        "/book-visit",
+        "/visits/:id"
+      ],
+      "tree_sha": "sha256:fb7bcdbf45160319caf9d35310c8969de3c170d467d4ef7d98d8152902687b88"
+    },
+    {
+      "project_id": "tr-17-preact",
+      "family_id": "tr-17",
+      "brief_id": "tr-17-v1",
+      "archetype": "booking",
+      "framework": "preact",
+      "task": "generate",
+      "defects": [],
+      "topic": "rural farm animal vet visit scheduling",
+      "routes": [
+        "/",
+        "/services",
+        "/book-visit",
+        "/visits/:id"
+      ],
+      "tree_sha": "sha256:a1a138908e6f7f47518a0386974527ee5d58b7447723a287626b16de03a964ee"
+    },
+    {
+      "project_id": "tr-17-vue",
+      "family_id": "tr-17",
+      "brief_id": "tr-17-v1",
+      "archetype": "booking",
+      "framework": "vue",
+      "task": "generate",
+      "defects": [],
+      "topic": "rural farm animal vet visit scheduling",
+      "routes": [
+        "/",
+        "/services",
+        "/book-visit",
+        "/visits/:id"
+      ],
+      "tree_sha": "sha256:753fdf20124ea39dd71f513bdd4a1d0c6e0342fcb230d9b024734e2134d2796e"
+    },
+    {
+      "project_id": "tr-17-webcomponents",
+      "family_id": "tr-17",
+      "brief_id": "tr-17-v1",
+      "archetype": "booking",
+      "framework": "webcomponents",
+      "task": "generate",
+      "defects": [],
+      "topic": "rural farm animal vet visit scheduling",
+      "routes": [
+        "/",
+        "/services",
+        "/book-visit",
+        "/visits/:id"
+      ],
+      "tree_sha": "sha256:490ff99e613825b3bf3277844a72cb1bb55bf112faf3c93762df46adfb32a5f1"
+    },
+    {
+      "project_id": "tr-17-svelte",
+      "family_id": "tr-17",
+      "brief_id": "tr-17-v1",
+      "archetype": "booking",
+      "framework": "svelte",
+      "task": "generate",
+      "defects": [],
+      "topic": "rural farm animal vet visit scheduling",
+      "routes": [
+        "/",
+        "/services",
+        "/book-visit",
+        "/visits/:id"
+      ],
+      "tree_sha": "sha256:7ce8370a0f628148eddd24a721f30e02ad897a4d58466e848f30934f35b95ab9"
+    },
+    {
+      "project_id": "tr-18-hono",
+      "family_id": "tr-18",
+      "brief_id": "tr-18-v1",
+      "archetype": "web-shop",
+      "framework": "hono",
+      "task": "generate",
+      "defects": [],
+      "topic": "bring-your-own-container bulk dry goods orders",
+      "routes": [
+        "/",
+        "/products",
+        "/basket",
+        "/checkout",
+        "/orders/:id"
+      ],
+      "tree_sha": "sha256:58e6d5e509ec66bec01deefc5cf6c1b55630acdcdeb2ef380739fd7344287a2f"
+    },
+    {
+      "project_id": "tr-18-raw",
+      "family_id": "tr-18",
+      "brief_id": "tr-18-v1",
+      "archetype": "web-shop",
+      "framework": "raw",
+      "task": "generate",
+      "defects": [],
+      "topic": "bring-your-own-container bulk dry goods orders",
+      "routes": [
+        "/",
+        "/products",
+        "/basket",
+        "/checkout",
+        "/orders/:id"
+      ],
+      "tree_sha": "sha256:082173688d1bd4c1090a2b0c7e8d3b777ee6acb4ce31d9f72123a3e5c9b42d2e"
+    },
+    {
+      "project_id": "tr-18-react",
+      "family_id": "tr-18",
+      "brief_id": "tr-18-v1",
+      "archetype": "web-shop",
+      "framework": "react",
+      "task": "generate",
+      "defects": [],
+      "topic": "bring-your-own-container bulk dry goods orders",
+      "routes": [
+        "/",
+        "/products",
+        "/basket",
+        "/checkout",
+        "/orders/:id"
+      ],
+      "tree_sha": "sha256:88c93be0c57fc8b84d39d12b701697281147e421b0283bd72aa579f56a7a6453"
+    },
+    {
+      "project_id": "tr-18-preact",
+      "family_id": "tr-18",
+      "brief_id": "tr-18-v1",
+      "archetype": "web-shop",
+      "framework": "preact",
+      "task": "generate",
+      "defects": [],
+      "topic": "bring-your-own-container bulk dry goods orders",
+      "routes": [
+        "/",
+        "/products",
+        "/basket",
+        "/checkout",
+        "/orders/:id"
+      ],
+      "tree_sha": "sha256:a66c7c9a19936f734b91f8743baa88db19b2f5f5a92603cfdba437e100e8dcd9"
+    },
+    {
+      "project_id": "tr-18-vue",
+      "family_id": "tr-18",
+      "brief_id": "tr-18-v1",
+      "archetype": "web-shop",
+      "framework": "vue",
+      "task": "generate",
+      "defects": [],
+      "topic": "bring-your-own-container bulk dry goods orders",
+      "routes": [
+        "/",
+        "/products",
+        "/basket",
+        "/checkout",
+        "/orders/:id"
+      ],
+      "tree_sha": "sha256:a7235f8295a6625f4805e3aec5f58ec16e2da0b393eb6385e349c72cd5543489"
+    },
+    {
+      "project_id": "tr-18-webcomponents",
+      "family_id": "tr-18",
+      "brief_id": "tr-18-v1",
+      "archetype": "web-shop",
+      "framework": "webcomponents",
+      "task": "generate",
+      "defects": [],
+      "topic": "bring-your-own-container bulk dry goods orders",
+      "routes": [
+        "/",
+        "/products",
+        "/basket",
+        "/checkout",
+        "/orders/:id"
+      ],
+      "tree_sha": "sha256:7042ad24e88269b68a1cf0335487d65957ff3f21353dc5ac687d684a97bfa926"
+    },
+    {
+      "project_id": "tr-18-svelte",
+      "family_id": "tr-18",
+      "brief_id": "tr-18-v1",
+      "archetype": "web-shop",
+      "framework": "svelte",
+      "task": "generate",
+      "defects": [],
+      "topic": "bring-your-own-container bulk dry goods orders",
+      "routes": [
+        "/",
+        "/products",
+        "/basket",
+        "/checkout",
+        "/orders/:id"
+      ],
+      "tree_sha": "sha256:9f0594d2df56f8dcab9369e99e9aad860d636429310f6374b6f156d4b680abbb"
+    },
+    {
+      "project_id": "tr-19-hono",
+      "family_id": "tr-19",
+      "brief_id": "tr-19-v1",
+      "archetype": "booking",
+      "framework": "hono",
+      "task": "generate",
+      "defects": [],
+      "topic": "tidal river rowing skiff safety and tide tracker",
+      "routes": [
+        "/",
+        "/skiffs",
+        "/book-outing",
+        "/outings/:id",
+        "/safety-log"
+      ],
+      "tree_sha": "sha256:3036d0679b63a03772bf850e211af1bd6aecd5f55bdfd02540ea75eaa9a0edfb"
+    },
+    {
+      "project_id": "tr-19-raw",
+      "family_id": "tr-19",
+      "brief_id": "tr-19-v1",
+      "archetype": "booking",
+      "framework": "raw",
+      "task": "generate",
+      "defects": [],
+      "topic": "tidal river rowing skiff safety and tide tracker",
+      "routes": [
+        "/",
+        "/skiffs",
+        "/book-outing",
+        "/outings/:id",
+        "/safety-log"
+      ],
+      "tree_sha": "sha256:84bbb7d09f9ca596f40d47b72ab9e8876ea2b6022791a0c9730df9e2097515f6"
+    },
+    {
+      "project_id": "tr-19-react",
+      "family_id": "tr-19",
+      "brief_id": "tr-19-v1",
+      "archetype": "booking",
+      "framework": "react",
+      "task": "generate",
+      "defects": [],
+      "topic": "tidal river rowing skiff safety and tide tracker",
+      "routes": [
+        "/",
+        "/skiffs",
+        "/book-outing",
+        "/outings/:id",
+        "/safety-log"
+      ],
+      "tree_sha": "sha256:d035e4aa3448b46de807f4f244a2f3f8a771cdfdb9e245321eeb82f9c4ff0ade"
+    },
+    {
+      "project_id": "tr-19-preact",
+      "family_id": "tr-19",
+      "brief_id": "tr-19-v1",
+      "archetype": "booking",
+      "framework": "preact",
+      "task": "generate",
+      "defects": [],
+      "topic": "tidal river rowing skiff safety and tide tracker",
+      "routes": [
+        "/",
+        "/skiffs",
+        "/book-outing",
+        "/outings/:id",
+        "/safety-log"
+      ],
+      "tree_sha": "sha256:2df9af253bff860590bb1462ed27817be77f67d11abde2b2d6bdd5e66eccba4b"
+    },
+    {
+      "project_id": "tr-19-vue",
+      "family_id": "tr-19",
+      "brief_id": "tr-19-v1",
+      "archetype": "booking",
+      "framework": "vue",
+      "task": "generate",
+      "defects": [],
+      "topic": "tidal river rowing skiff safety and tide tracker",
+      "routes": [
+        "/",
+        "/skiffs",
+        "/book-outing",
+        "/outings/:id",
+        "/safety-log"
+      ],
+      "tree_sha": "sha256:f5ec608d60f6c85593b7225edd4d192b9f819f6f4acd16e470c445e54ba8369e"
+    },
+    {
+      "project_id": "tr-19-webcomponents",
+      "family_id": "tr-19",
+      "brief_id": "tr-19-v1",
+      "archetype": "booking",
+      "framework": "webcomponents",
+      "task": "generate",
+      "defects": [],
+      "topic": "tidal river rowing skiff safety and tide tracker",
+      "routes": [
+        "/",
+        "/skiffs",
+        "/book-outing",
+        "/outings/:id",
+        "/safety-log"
+      ],
+      "tree_sha": "sha256:f1ccdcaf37fa53d198537eaf9828814e350eb674147f442d195be18f3355bbf9"
+    },
+    {
+      "project_id": "tr-19-svelte",
+      "family_id": "tr-19",
+      "brief_id": "tr-19-v1",
+      "archetype": "booking",
+      "framework": "svelte",
+      "task": "generate",
+      "defects": [],
+      "topic": "tidal river rowing skiff safety and tide tracker",
+      "routes": [
+        "/",
+        "/skiffs",
+        "/book-outing",
+        "/outings/:id",
+        "/safety-log"
+      ],
+      "tree_sha": "sha256:93404027444d61dc1e33cb9cc6d03d40ad0f6cccf7d32276d50acc33f4e8d968"
+    },
+    {
+      "project_id": "tr-20-hono",
+      "family_id": "tr-20",
+      "brief_id": "tr-20-v1",
+      "archetype": "community-forum",
+      "framework": "hono",
+      "task": "generate",
+      "defects": [],
+      "topic": "traditional tune tune-sheet repository and tempo notes",
+      "routes": [
+        "/",
+        "/tunes",
+        "/tunes/:id",
+        "/tunes/:id/notes"
+      ],
+      "tree_sha": "sha256:93e430db34375dcc6428b9aafe26f8b046ba416c803906c8567914871214d9fc"
+    },
+    {
+      "project_id": "tr-20-raw",
+      "family_id": "tr-20",
+      "brief_id": "tr-20-v1",
+      "archetype": "community-forum",
+      "framework": "raw",
+      "task": "generate",
+      "defects": [],
+      "topic": "traditional tune tune-sheet repository and tempo notes",
+      "routes": [
+        "/",
+        "/tunes",
+        "/tunes/:id",
+        "/tunes/:id/notes"
+      ],
+      "tree_sha": "sha256:69ed355ed71afb54a14c9e1c5470eab43c5cc4dfe12c746d3388d491ff86ad28"
+    },
+    {
+      "project_id": "tr-20-react",
+      "family_id": "tr-20",
+      "brief_id": "tr-20-v1",
+      "archetype": "community-forum",
+      "framework": "react",
+      "task": "generate",
+      "defects": [],
+      "topic": "traditional tune tune-sheet repository and tempo notes",
+      "routes": [
+        "/",
+        "/tunes",
+        "/tunes/:id",
+        "/tunes/:id/notes"
+      ],
+      "tree_sha": "sha256:5a2857524f90a24c832a2378b5d30bd43e16e7f7f8d951104aa126728f17507f"
+    },
+    {
+      "project_id": "tr-20-preact",
+      "family_id": "tr-20",
+      "brief_id": "tr-20-v1",
+      "archetype": "community-forum",
+      "framework": "preact",
+      "task": "generate",
+      "defects": [],
+      "topic": "traditional tune tune-sheet repository and tempo notes",
+      "routes": [
+        "/",
+        "/tunes",
+        "/tunes/:id",
+        "/tunes/:id/notes"
+      ],
+      "tree_sha": "sha256:f95b1b81493d618891f77d50e84279eae60368a428c19f87071e96f6afb6a985"
+    },
+    {
+      "project_id": "tr-20-vue",
+      "family_id": "tr-20",
+      "brief_id": "tr-20-v1",
+      "archetype": "community-forum",
+      "framework": "vue",
+      "task": "generate",
+      "defects": [],
+      "topic": "traditional tune tune-sheet repository and tempo notes",
+      "routes": [
+        "/",
+        "/tunes",
+        "/tunes/:id",
+        "/tunes/:id/notes"
+      ],
+      "tree_sha": "sha256:3e49654f6f71f7d006e2a7f7900ae113facbe6021b7a28e8dc110a892d09d09b"
+    },
+    {
+      "project_id": "tr-20-webcomponents",
+      "family_id": "tr-20",
+      "brief_id": "tr-20-v1",
+      "archetype": "community-forum",
+      "framework": "webcomponents",
+      "task": "generate",
+      "defects": [],
+      "topic": "traditional tune tune-sheet repository and tempo notes",
+      "routes": [
+        "/",
+        "/tunes",
+        "/tunes/:id",
+        "/tunes/:id/notes"
+      ],
+      "tree_sha": "sha256:41c9550aace19b334a1fa1b56729d8ecbb928295377c3388245df35a35d74e95"
+    },
+    {
+      "project_id": "tr-20-svelte",
+      "family_id": "tr-20",
+      "brief_id": "tr-20-v1",
+      "archetype": "community-forum",
+      "framework": "svelte",
+      "task": "generate",
+      "defects": [],
+      "topic": "traditional tune tune-sheet repository and tempo notes",
+      "routes": [
+        "/",
+        "/tunes",
+        "/tunes/:id",
+        "/tunes/:id/notes"
+      ],
+      "tree_sha": "sha256:e390bdf336684f1268b9de9fe846daea3adc1540ba57e09cc30a729023c3aa82"
+    },
+    {
+      "project_id": "tr-21-hono",
+      "family_id": "tr-21",
+      "brief_id": "tr-21-v1",
+      "archetype": "booking",
+      "framework": "hono",
+      "task": "generate",
+      "defects": [],
+      "topic": "volunteer driver hospital appointment lift coordination",
+      "routes": [
+        "/",
+        "/rides",
+        "/book-ride",
+        "/rides/:id",
+        "/dispatch"
+      ],
+      "tree_sha": "sha256:e61dc296b2230f28c78166abde100fe16cb723787274e1887a806ebdcf44fccc"
+    },
+    {
+      "project_id": "tr-21-raw",
+      "family_id": "tr-21",
+      "brief_id": "tr-21-v1",
+      "archetype": "booking",
+      "framework": "raw",
+      "task": "generate",
+      "defects": [],
+      "topic": "volunteer driver hospital appointment lift coordination",
+      "routes": [
+        "/",
+        "/rides",
+        "/book-ride",
+        "/rides/:id",
+        "/dispatch"
+      ],
+      "tree_sha": "sha256:4b80e32e63c6127d8c01bb8dfe85eaf214b3df5116dd78dd60ea392c68d6ba14"
+    },
+    {
+      "project_id": "tr-21-react",
+      "family_id": "tr-21",
+      "brief_id": "tr-21-v1",
+      "archetype": "booking",
+      "framework": "react",
+      "task": "generate",
+      "defects": [],
+      "topic": "volunteer driver hospital appointment lift coordination",
+      "routes": [
+        "/",
+        "/rides",
+        "/book-ride",
+        "/rides/:id",
+        "/dispatch"
+      ],
+      "tree_sha": "sha256:237df3f415c39eecab374ab3b7196a1c3839e4aa9525a74e7d1510887c1f7eb8"
+    },
+    {
+      "project_id": "tr-21-preact",
+      "family_id": "tr-21",
+      "brief_id": "tr-21-v1",
+      "archetype": "booking",
+      "framework": "preact",
+      "task": "generate",
+      "defects": [],
+      "topic": "volunteer driver hospital appointment lift coordination",
+      "routes": [
+        "/",
+        "/rides",
+        "/book-ride",
+        "/rides/:id",
+        "/dispatch"
+      ],
+      "tree_sha": "sha256:fa19c7d09914b0babc70f0ce03391d8ca1b356b454b709162bd9dbc153b52dbe"
+    },
+    {
+      "project_id": "tr-21-vue",
+      "family_id": "tr-21",
+      "brief_id": "tr-21-v1",
+      "archetype": "booking",
+      "framework": "vue",
+      "task": "generate",
+      "defects": [],
+      "topic": "volunteer driver hospital appointment lift coordination",
+      "routes": [
+        "/",
+        "/rides",
+        "/book-ride",
+        "/rides/:id",
+        "/dispatch"
+      ],
+      "tree_sha": "sha256:94dc544f7a34896abdf12736ceb6f9ad58e24b324ef610fc8c190c92c265d31f"
+    },
+    {
+      "project_id": "tr-21-webcomponents",
+      "family_id": "tr-21",
+      "brief_id": "tr-21-v1",
+      "archetype": "booking",
+      "framework": "webcomponents",
+      "task": "generate",
+      "defects": [],
+      "topic": "volunteer driver hospital appointment lift coordination",
+      "routes": [
+        "/",
+        "/rides",
+        "/book-ride",
+        "/rides/:id",
+        "/dispatch"
+      ],
+      "tree_sha": "sha256:103bc9f5e4d14b169d71a1a2c4da855673333c60acdc1a89c7cd27b5284c3581"
+    },
+    {
+      "project_id": "tr-21-svelte",
+      "family_id": "tr-21",
+      "brief_id": "tr-21-v1",
+      "archetype": "booking",
+      "framework": "svelte",
+      "task": "generate",
+      "defects": [],
+      "topic": "volunteer driver hospital appointment lift coordination",
+      "routes": [
+        "/",
+        "/rides",
+        "/book-ride",
+        "/rides/:id",
+        "/dispatch"
+      ],
+      "tree_sha": "sha256:8aaa065d1cc2e5f0fd1a05fcbb01122419df34651068709d40ae794865483b64"
+    },
+    {
+      "project_id": "tr-22-hono",
+      "family_id": "tr-22",
+      "brief_id": "tr-22-v1",
+      "archetype": "dashboard",
+      "framework": "hono",
+      "task": "generate",
+      "defects": [],
+      "topic": "urban forestry street tree health reporting",
+      "routes": [
+        "/",
+        "/trees",
+        "/trees/:id",
+        "/trees/:id/log",
+        "/canopy-summary"
+      ],
+      "tree_sha": "sha256:16820898c95c84f5650dd4d83a4c992b770ca8cdd13dfad55b5f748cb8354617"
+    },
+    {
+      "project_id": "tr-22-raw",
+      "family_id": "tr-22",
+      "brief_id": "tr-22-v1",
+      "archetype": "dashboard",
+      "framework": "raw",
+      "task": "generate",
+      "defects": [],
+      "topic": "urban forestry street tree health reporting",
+      "routes": [
+        "/",
+        "/trees",
+        "/trees/:id",
+        "/trees/:id/log",
+        "/canopy-summary"
+      ],
+      "tree_sha": "sha256:d3b53ed708b5ffe4dd2688c16053ced66390f22613aa2d3338c82a0261c66060"
+    },
+    {
+      "project_id": "tr-22-react",
+      "family_id": "tr-22",
+      "brief_id": "tr-22-v1",
+      "archetype": "dashboard",
+      "framework": "react",
+      "task": "generate",
+      "defects": [],
+      "topic": "urban forestry street tree health reporting",
+      "routes": [
+        "/",
+        "/trees",
+        "/trees/:id",
+        "/trees/:id/log",
+        "/canopy-summary"
+      ],
+      "tree_sha": "sha256:252b365921f0dba5d100765d41553a1a1e12b31d991a294b3d64ccbd2925dbbd"
+    },
+    {
+      "project_id": "tr-22-preact",
+      "family_id": "tr-22",
+      "brief_id": "tr-22-v1",
+      "archetype": "dashboard",
+      "framework": "preact",
+      "task": "generate",
+      "defects": [],
+      "topic": "urban forestry street tree health reporting",
+      "routes": [
+        "/",
+        "/trees",
+        "/trees/:id",
+        "/trees/:id/log",
+        "/canopy-summary"
+      ],
+      "tree_sha": "sha256:4fa413b591cb02244dc35081808c585cd16bcc02a560fde77aa4567517babb58"
+    },
+    {
+      "project_id": "tr-22-vue",
+      "family_id": "tr-22",
+      "brief_id": "tr-22-v1",
+      "archetype": "dashboard",
+      "framework": "vue",
+      "task": "generate",
+      "defects": [],
+      "topic": "urban forestry street tree health reporting",
+      "routes": [
+        "/",
+        "/trees",
+        "/trees/:id",
+        "/trees/:id/log",
+        "/canopy-summary"
+      ],
+      "tree_sha": "sha256:1cb55be4f4c308e49e76c3dd93d9d61ad8b57ef3ff8fff5719499da0dde203a7"
+    },
+    {
+      "project_id": "tr-22-webcomponents",
+      "family_id": "tr-22",
+      "brief_id": "tr-22-v1",
+      "archetype": "dashboard",
+      "framework": "webcomponents",
+      "task": "generate",
+      "defects": [],
+      "topic": "urban forestry street tree health reporting",
+      "routes": [
+        "/",
+        "/trees",
+        "/trees/:id",
+        "/trees/:id/log",
+        "/canopy-summary"
+      ],
+      "tree_sha": "sha256:b9eee7725eb6cc220761980a00af8078926174b5929a8945199a0b605474dc7c"
+    },
+    {
+      "project_id": "tr-22-svelte",
+      "family_id": "tr-22",
+      "brief_id": "tr-22-v1",
+      "archetype": "dashboard",
+      "framework": "svelte",
+      "task": "generate",
+      "defects": [],
+      "topic": "urban forestry street tree health reporting",
+      "routes": [
+        "/",
+        "/trees",
+        "/trees/:id",
+        "/trees/:id/log",
+        "/canopy-summary"
+      ],
+      "tree_sha": "sha256:d8029d9c7c08bf79330a9e14c18f89a8846e8606aed17db8023f625901f98414"
+    },
+    {
+      "project_id": "tr-23-hono",
+      "family_id": "tr-23",
+      "brief_id": "tr-23-v1",
+      "archetype": "survey-form",
+      "framework": "hono",
+      "task": "generate",
+      "defects": [],
+      "topic": "home energy retrofit subsidy eligibility check",
+      "routes": [
+        "/",
+        "/calculator",
+        "/calculator/submit",
+        "/reports/:id"
+      ],
+      "tree_sha": "sha256:5ea3bddae9c9539704c46c9e6b4684b53c8009648347b75d15d9aea325b9ce47"
+    },
+    {
+      "project_id": "tr-23-raw",
+      "family_id": "tr-23",
+      "brief_id": "tr-23-v1",
+      "archetype": "survey-form",
+      "framework": "raw",
+      "task": "generate",
+      "defects": [],
+      "topic": "home energy retrofit subsidy eligibility check",
+      "routes": [
+        "/",
+        "/calculator",
+        "/calculator/submit",
+        "/reports/:id"
+      ],
+      "tree_sha": "sha256:7bc61d89fd1b4275fb438428d20fbb08f3c0c456db24a9af71387d6ff5081b8e"
+    },
+    {
+      "project_id": "tr-23-react",
+      "family_id": "tr-23",
+      "brief_id": "tr-23-v1",
+      "archetype": "survey-form",
+      "framework": "react",
+      "task": "generate",
+      "defects": [],
+      "topic": "home energy retrofit subsidy eligibility check",
+      "routes": [
+        "/",
+        "/calculator",
+        "/calculator/submit",
+        "/reports/:id"
+      ],
+      "tree_sha": "sha256:9bb502ffdde0ca6e285e5b52948e5efdfce5740a942a31887d2b849a32075897"
+    },
+    {
+      "project_id": "tr-23-preact",
+      "family_id": "tr-23",
+      "brief_id": "tr-23-v1",
+      "archetype": "survey-form",
+      "framework": "preact",
+      "task": "generate",
+      "defects": [],
+      "topic": "home energy retrofit subsidy eligibility check",
+      "routes": [
+        "/",
+        "/calculator",
+        "/calculator/submit",
+        "/reports/:id"
+      ],
+      "tree_sha": "sha256:1bb58b362b3e4b56cfdd03dc253777683fbf611f2294141abd99b30d625e69fe"
+    },
+    {
+      "project_id": "tr-23-vue",
+      "family_id": "tr-23",
+      "brief_id": "tr-23-v1",
+      "archetype": "survey-form",
+      "framework": "vue",
+      "task": "generate",
+      "defects": [],
+      "topic": "home energy retrofit subsidy eligibility check",
+      "routes": [
+        "/",
+        "/calculator",
+        "/calculator/submit",
+        "/reports/:id"
+      ],
+      "tree_sha": "sha256:8ef096f67c4ce7bfdcd3557d5de7bdaa493a8239b88c5ec456ab668b6275d9d2"
+    },
+    {
+      "project_id": "tr-23-webcomponents",
+      "family_id": "tr-23",
+      "brief_id": "tr-23-v1",
+      "archetype": "survey-form",
+      "framework": "webcomponents",
+      "task": "generate",
+      "defects": [],
+      "topic": "home energy retrofit subsidy eligibility check",
+      "routes": [
+        "/",
+        "/calculator",
+        "/calculator/submit",
+        "/reports/:id"
+      ],
+      "tree_sha": "sha256:faabdec12696c3b0a3002e90e5ba6524121bfc70863c0b7e6f1c026fda2075f9"
+    },
+    {
+      "project_id": "tr-23-svelte",
+      "family_id": "tr-23",
+      "brief_id": "tr-23-v1",
+      "archetype": "survey-form",
+      "framework": "svelte",
+      "task": "generate",
+      "defects": [],
+      "topic": "home energy retrofit subsidy eligibility check",
+      "routes": [
+        "/",
+        "/calculator",
+        "/calculator/submit",
+        "/reports/:id"
+      ],
+      "tree_sha": "sha256:0272a76330cdb43dfff08e4c8796c40a222e43132f0a06af8e8259bc895b81bf"
+    },
+    {
+      "project_id": "tr-24-hono",
+      "family_id": "tr-24",
+      "brief_id": "tr-24-v1",
+      "archetype": "booking",
+      "framework": "hono",
+      "task": "generate",
+      "defects": [],
+      "topic": "weekend farmers market pitch booking and power requirements",
+      "routes": [
+        "/",
+        "/pitches",
+        "/pitches/book",
+        "/bookings/:id",
+        "/market-layout"
+      ],
+      "tree_sha": "sha256:cea13432a71d1c56105832a81b722f6293351c2820b1a573fce9117cabc4e108"
+    },
+    {
+      "project_id": "tr-24-raw",
+      "family_id": "tr-24",
+      "brief_id": "tr-24-v1",
+      "archetype": "booking",
+      "framework": "raw",
+      "task": "generate",
+      "defects": [],
+      "topic": "weekend farmers market pitch booking and power requirements",
+      "routes": [
+        "/",
+        "/pitches",
+        "/pitches/book",
+        "/bookings/:id",
+        "/market-layout"
+      ],
+      "tree_sha": "sha256:a06c694c7f9009a3350a06290de39bedeeb2c164f791521c5aab13f0245bd55f"
+    },
+    {
+      "project_id": "tr-24-react",
+      "family_id": "tr-24",
+      "brief_id": "tr-24-v1",
+      "archetype": "booking",
+      "framework": "react",
+      "task": "generate",
+      "defects": [],
+      "topic": "weekend farmers market pitch booking and power requirements",
+      "routes": [
+        "/",
+        "/pitches",
+        "/pitches/book",
+        "/bookings/:id",
+        "/market-layout"
+      ],
+      "tree_sha": "sha256:d5905255fbcc9c0b5873c996306052b02b1ecee0643c5ee760a71afaa2c4b223"
+    },
+    {
+      "project_id": "tr-24-preact",
+      "family_id": "tr-24",
+      "brief_id": "tr-24-v1",
+      "archetype": "booking",
+      "framework": "preact",
+      "task": "generate",
+      "defects": [],
+      "topic": "weekend farmers market pitch booking and power requirements",
+      "routes": [
+        "/",
+        "/pitches",
+        "/pitches/book",
+        "/bookings/:id",
+        "/market-layout"
+      ],
+      "tree_sha": "sha256:6d93f8b2a0c0b1f36bd299b329a0162b11ad95de8160dc17be16d80dae5f118c"
+    },
+    {
+      "project_id": "tr-24-vue",
+      "family_id": "tr-24",
+      "brief_id": "tr-24-v1",
+      "archetype": "booking",
+      "framework": "vue",
+      "task": "generate",
+      "defects": [],
+      "topic": "weekend farmers market pitch booking and power requirements",
+      "routes": [
+        "/",
+        "/pitches",
+        "/pitches/book",
+        "/bookings/:id",
+        "/market-layout"
+      ],
+      "tree_sha": "sha256:bfa803f38bb27c4b8bd1b2f92653602b978a4c5039247750ab726ea08b48ac25"
+    },
+    {
+      "project_id": "tr-24-webcomponents",
+      "family_id": "tr-24",
+      "brief_id": "tr-24-v1",
+      "archetype": "booking",
+      "framework": "webcomponents",
+      "task": "generate",
+      "defects": [],
+      "topic": "weekend farmers market pitch booking and power requirements",
+      "routes": [
+        "/",
+        "/pitches",
+        "/pitches/book",
+        "/bookings/:id",
+        "/market-layout"
+      ],
+      "tree_sha": "sha256:0756545ea32688c73554a51d91ddaa57218f96d18cbc99725f9b395003bce606"
+    },
+    {
+      "project_id": "tr-24-svelte",
+      "family_id": "tr-24",
+      "brief_id": "tr-24-v1",
+      "archetype": "booking",
+      "framework": "svelte",
+      "task": "generate",
+      "defects": [],
+      "topic": "weekend farmers market pitch booking and power requirements",
+      "routes": [
+        "/",
+        "/pitches",
+        "/pitches/book",
+        "/bookings/:id",
+        "/market-layout"
+      ],
+      "tree_sha": "sha256:a94b34c00dd9b1899338eedb1be831c912d763dcdb3a868fc26da4c1e5f72d52"
+    },
+    {
+      "project_id": "tr-25-hono",
+      "family_id": "tr-25",
+      "brief_id": "tr-25-v1",
+      "archetype": "docs-site",
+      "framework": "hono",
+      "task": "generate",
+      "defects": [],
+      "topic": "community elder oral history recordings and transcript index",
+      "routes": [
+        "/",
+        "/interviews",
+        "/interviews/:id",
+        "/interviews/:id/notes"
+      ],
+      "tree_sha": "sha256:f18602e4b5bd54b2dcb8ecfe678278e6ebea3b92a50e0e6792ce94f6ce8f1826"
+    },
+    {
+      "project_id": "tr-25-raw",
+      "family_id": "tr-25",
+      "brief_id": "tr-25-v1",
+      "archetype": "docs-site",
+      "framework": "raw",
+      "task": "generate",
+      "defects": [],
+      "topic": "community elder oral history recordings and transcript index",
+      "routes": [
+        "/",
+        "/interviews",
+        "/interviews/:id",
+        "/interviews/:id/notes"
+      ],
+      "tree_sha": "sha256:a8c8c22ed01ec8e55b53379662f4a6009a09d696d9f4d560a0b444ff5eaeb15b"
+    },
+    {
+      "project_id": "tr-25-react",
+      "family_id": "tr-25",
+      "brief_id": "tr-25-v1",
+      "archetype": "docs-site",
+      "framework": "react",
+      "task": "generate",
+      "defects": [],
+      "topic": "community elder oral history recordings and transcript index",
+      "routes": [
+        "/",
+        "/interviews",
+        "/interviews/:id",
+        "/interviews/:id/notes"
+      ],
+      "tree_sha": "sha256:2ba2bc1f4f46f6845935bde348950d03100efd92d178e20c448760135accf008"
+    },
+    {
+      "project_id": "tr-25-preact",
+      "family_id": "tr-25",
+      "brief_id": "tr-25-v1",
+      "archetype": "docs-site",
+      "framework": "preact",
+      "task": "generate",
+      "defects": [],
+      "topic": "community elder oral history recordings and transcript index",
+      "routes": [
+        "/",
+        "/interviews",
+        "/interviews/:id",
+        "/interviews/:id/notes"
+      ],
+      "tree_sha": "sha256:480abbb661046c620469134993f58b7af5b710c46e563f44cc850f3496e98529"
+    },
+    {
+      "project_id": "tr-25-vue",
+      "family_id": "tr-25",
+      "brief_id": "tr-25-v1",
+      "archetype": "docs-site",
+      "framework": "vue",
+      "task": "generate",
+      "defects": [],
+      "topic": "community elder oral history recordings and transcript index",
+      "routes": [
+        "/",
+        "/interviews",
+        "/interviews/:id",
+        "/interviews/:id/notes"
+      ],
+      "tree_sha": "sha256:e35f09f5e5b338a3a74ada57a0db7805469b671a78c6bd5525eddefc436ab82e"
+    },
+    {
+      "project_id": "tr-25-webcomponents",
+      "family_id": "tr-25",
+      "brief_id": "tr-25-v1",
+      "archetype": "docs-site",
+      "framework": "webcomponents",
+      "task": "generate",
+      "defects": [],
+      "topic": "community elder oral history recordings and transcript index",
+      "routes": [
+        "/",
+        "/interviews",
+        "/interviews/:id",
+        "/interviews/:id/notes"
+      ],
+      "tree_sha": "sha256:b25884762ff6526a0e20c4b42d87c69c966392adf4547bc0c9803ae3def1c578"
+    },
+    {
+      "project_id": "tr-25-svelte",
+      "family_id": "tr-25",
+      "brief_id": "tr-25-v1",
+      "archetype": "docs-site",
+      "framework": "svelte",
+      "task": "generate",
+      "defects": [],
+      "topic": "community elder oral history recordings and transcript index",
+      "routes": [
+        "/",
+        "/interviews",
+        "/interviews/:id",
+        "/interviews/:id/notes"
+      ],
+      "tree_sha": "sha256:833c8c38a7c2e37c7bda0575465f9cd78fd4bd9af3dfe2be918ccb2ea0825afe"
+    },
+    {
+      "project_id": "tr-26-hono",
+      "family_id": "tr-26",
+      "brief_id": "tr-26-v1",
+      "archetype": "web-shop",
+      "framework": "hono",
+      "task": "repair",
+      "defects": [
+        "the subscription preferences are only stored in component state and disappear when the page is reloaded",
+        "error notifications only change text color to red without accessible aria-live or role alerts for screen readers",
+        "pressing Enter inside any text input triggers form submission before required grind selections are made"
+      ],
+      "topic": "single-origin coffee subscription renewal and grind preference",
+      "routes": [
+        "/",
+        "/subscriptions",
+        "/subscriptions/:id",
+        "/subscriptions/:id/edit"
+      ],
+      "tree_sha": "sha256:77dbd8d43a971dd2f3649ea5da6774835c61294a36bd0e8e778aeb9f2853b46a"
+    },
+    {
+      "project_id": "tr-26-raw",
+      "family_id": "tr-26",
+      "brief_id": "tr-26-v1",
+      "archetype": "web-shop",
+      "framework": "raw",
+      "task": "repair",
+      "defects": [
+        "the subscription preferences are only stored in component state and disappear when the page is reloaded",
+        "error notifications only change text color to red without accessible aria-live or role alerts for screen readers",
+        "pressing Enter inside any text input triggers form submission before required grind selections are made"
+      ],
+      "topic": "single-origin coffee subscription renewal and grind preference",
+      "routes": [
+        "/",
+        "/subscriptions",
+        "/subscriptions/:id",
+        "/subscriptions/:id/edit"
+      ],
+      "tree_sha": "sha256:54413a677e613bf93f288abf65f71eb68be8c26743f4ce56f3da7b51537c420a"
+    },
+    {
+      "project_id": "tr-26-react",
+      "family_id": "tr-26",
+      "brief_id": "tr-26-v1",
+      "archetype": "web-shop",
+      "framework": "react",
+      "task": "repair",
+      "defects": [
+        "the subscription preferences are only stored in component state and disappear when the page is reloaded",
+        "error notifications only change text color to red without accessible aria-live or role alerts for screen readers",
+        "pressing Enter inside any text input triggers form submission before required grind selections are made"
+      ],
+      "topic": "single-origin coffee subscription renewal and grind preference",
+      "routes": [
+        "/",
+        "/subscriptions",
+        "/subscriptions/:id",
+        "/subscriptions/:id/edit"
+      ],
+      "tree_sha": "sha256:baede753059838ac00e3ffc22f68013da1dbe1982ed7803a78b365a7f0c1aafe"
+    },
+    {
+      "project_id": "tr-26-preact",
+      "family_id": "tr-26",
+      "brief_id": "tr-26-v1",
+      "archetype": "web-shop",
+      "framework": "preact",
+      "task": "repair",
+      "defects": [
+        "the subscription preferences are only stored in component state and disappear when the page is reloaded",
+        "error notifications only change text color to red without accessible aria-live or role alerts for screen readers",
+        "pressing Enter inside any text input triggers form submission before required grind selections are made"
+      ],
+      "topic": "single-origin coffee subscription renewal and grind preference",
+      "routes": [
+        "/",
+        "/subscriptions",
+        "/subscriptions/:id",
+        "/subscriptions/:id/edit"
+      ],
+      "tree_sha": "sha256:dd7645955f2c979b509d1ea6bedce61ad4c4105ee1fd8b3a8e5d94c8b166e761"
+    },
+    {
+      "project_id": "tr-26-vue",
+      "family_id": "tr-26",
+      "brief_id": "tr-26-v1",
+      "archetype": "web-shop",
+      "framework": "vue",
+      "task": "repair",
+      "defects": [
+        "the subscription preferences are only stored in component state and disappear when the page is reloaded",
+        "error notifications only change text color to red without accessible aria-live or role alerts for screen readers",
+        "pressing Enter inside any text input triggers form submission before required grind selections are made"
+      ],
+      "topic": "single-origin coffee subscription renewal and grind preference",
+      "routes": [
+        "/",
+        "/subscriptions",
+        "/subscriptions/:id",
+        "/subscriptions/:id/edit"
+      ],
+      "tree_sha": "sha256:c6f7e3b72edb76bf9a1dd64bb11bc753c4f55295c7cc16c1618041c0b6c707d8"
+    },
+    {
+      "project_id": "tr-26-webcomponents",
+      "family_id": "tr-26",
+      "brief_id": "tr-26-v1",
+      "archetype": "web-shop",
+      "framework": "webcomponents",
+      "task": "repair",
+      "defects": [
+        "the subscription preferences are only stored in component state and disappear when the page is reloaded",
+        "error notifications only change text color to red without accessible aria-live or role alerts for screen readers",
+        "pressing Enter inside any text input triggers form submission before required grind selections are made"
+      ],
+      "topic": "single-origin coffee subscription renewal and grind preference",
+      "routes": [
+        "/",
+        "/subscriptions",
+        "/subscriptions/:id",
+        "/subscriptions/:id/edit"
+      ],
+      "tree_sha": "sha256:8cad620eab07ca30a61efc9c49eddaffe11804beb18c5f9c02aa08300c045293"
+    },
+    {
+      "project_id": "tr-26-svelte",
+      "family_id": "tr-26",
+      "brief_id": "tr-26-v1",
+      "archetype": "web-shop",
+      "framework": "svelte",
+      "task": "repair",
+      "defects": [
+        "the subscription preferences are only stored in component state and disappear when the page is reloaded",
+        "error notifications only change text color to red without accessible aria-live or role alerts for screen readers",
+        "pressing Enter inside any text input triggers form submission before required grind selections are made"
+      ],
+      "topic": "single-origin coffee subscription renewal and grind preference",
+      "routes": [
+        "/",
+        "/subscriptions",
+        "/subscriptions/:id",
+        "/subscriptions/:id/edit"
+      ],
+      "tree_sha": "sha256:a6eb9a5099dc6bdef914ba23e30d9832eb728f3e8c9ced6931811ef84819b9bd"
+    },
+    {
+      "project_id": "tr-27-hono",
+      "family_id": "tr-27",
+      "brief_id": "tr-27-v1",
+      "archetype": "booking",
+      "framework": "hono",
+      "task": "repair",
+      "defects": [
+        "pew bookings are stored in temporary browser memory and are lost when the confirmation route is refreshed",
+        "pew seat selectors are implemented as plain div elements without tabindex or keyboard activation handlers",
+        "submitting without an attendee name fails silently without indicating which field was required"
+      ],
+      "topic": "parish church acoustic concert seat selection",
+      "routes": [
+        "/",
+        "/concerts",
+        "/concerts/:id/reserve",
+        "/reservations/:id"
+      ],
+      "tree_sha": "sha256:e93a8ed86836865b963ee09fe375fbc864942eb74d56d5f386e75fe8ded5857d"
+    },
+    {
+      "project_id": "tr-27-raw",
+      "family_id": "tr-27",
+      "brief_id": "tr-27-v1",
+      "archetype": "booking",
+      "framework": "raw",
+      "task": "repair",
+      "defects": [
+        "pew bookings are stored in temporary browser memory and are lost when the confirmation route is refreshed",
+        "pew seat selectors are implemented as plain div elements without tabindex or keyboard activation handlers",
+        "submitting without an attendee name fails silently without indicating which field was required"
+      ],
+      "topic": "parish church acoustic concert seat selection",
+      "routes": [
+        "/",
+        "/concerts",
+        "/concerts/:id/reserve",
+        "/reservations/:id"
+      ],
+      "tree_sha": "sha256:6bf28e4323902d795596c66ff6c47d7451df00b08b07f5987a6d79fe2b7dbdff"
+    },
+    {
+      "project_id": "tr-27-react",
+      "family_id": "tr-27",
+      "brief_id": "tr-27-v1",
+      "archetype": "booking",
+      "framework": "react",
+      "task": "repair",
+      "defects": [
+        "pew bookings are stored in temporary browser memory and are lost when the confirmation route is refreshed",
+        "pew seat selectors are implemented as plain div elements without tabindex or keyboard activation handlers",
+        "submitting without an attendee name fails silently without indicating which field was required"
+      ],
+      "topic": "parish church acoustic concert seat selection",
+      "routes": [
+        "/",
+        "/concerts",
+        "/concerts/:id/reserve",
+        "/reservations/:id"
+      ],
+      "tree_sha": "sha256:d7bd40f9a4485db6bc747055b7985b8c9c2060405a75dc7feba0fba8033efc16"
+    },
+    {
+      "project_id": "tr-27-preact",
+      "family_id": "tr-27",
+      "brief_id": "tr-27-v1",
+      "archetype": "booking",
+      "framework": "preact",
+      "task": "repair",
+      "defects": [
+        "pew bookings are stored in temporary browser memory and are lost when the confirmation route is refreshed",
+        "pew seat selectors are implemented as plain div elements without tabindex or keyboard activation handlers",
+        "submitting without an attendee name fails silently without indicating which field was required"
+      ],
+      "topic": "parish church acoustic concert seat selection",
+      "routes": [
+        "/",
+        "/concerts",
+        "/concerts/:id/reserve",
+        "/reservations/:id"
+      ],
+      "tree_sha": "sha256:541faf8876fa6b269d724b91fef9644b41149f7d43116a44953266622c4afd6f"
+    },
+    {
+      "project_id": "tr-27-vue",
+      "family_id": "tr-27",
+      "brief_id": "tr-27-v1",
+      "archetype": "booking",
+      "framework": "vue",
+      "task": "repair",
+      "defects": [
+        "pew bookings are stored in temporary browser memory and are lost when the confirmation route is refreshed",
+        "pew seat selectors are implemented as plain div elements without tabindex or keyboard activation handlers",
+        "submitting without an attendee name fails silently without indicating which field was required"
+      ],
+      "topic": "parish church acoustic concert seat selection",
+      "routes": [
+        "/",
+        "/concerts",
+        "/concerts/:id/reserve",
+        "/reservations/:id"
+      ],
+      "tree_sha": "sha256:3048dd218a746a7092cc9234f10f5f9a543711f1b3b8e3fc4cb25c90edd994f4"
+    },
+    {
+      "project_id": "tr-27-webcomponents",
+      "family_id": "tr-27",
+      "brief_id": "tr-27-v1",
+      "archetype": "booking",
+      "framework": "webcomponents",
+      "task": "repair",
+      "defects": [
+        "pew bookings are stored in temporary browser memory and are lost when the confirmation route is refreshed",
+        "pew seat selectors are implemented as plain div elements without tabindex or keyboard activation handlers",
+        "submitting without an attendee name fails silently without indicating which field was required"
+      ],
+      "topic": "parish church acoustic concert seat selection",
+      "routes": [
+        "/",
+        "/concerts",
+        "/concerts/:id/reserve",
+        "/reservations/:id"
+      ],
+      "tree_sha": "sha256:60868ec499b9aa6faff119de9bfcf1277ba0bea31e9914543f6462e556d2b6b2"
+    },
+    {
+      "project_id": "tr-27-svelte",
+      "family_id": "tr-27",
+      "brief_id": "tr-27-v1",
+      "archetype": "booking",
+      "framework": "svelte",
+      "task": "repair",
+      "defects": [
+        "pew bookings are stored in temporary browser memory and are lost when the confirmation route is refreshed",
+        "pew seat selectors are implemented as plain div elements without tabindex or keyboard activation handlers",
+        "submitting without an attendee name fails silently without indicating which field was required"
+      ],
+      "topic": "parish church acoustic concert seat selection",
+      "routes": [
+        "/",
+        "/concerts",
+        "/concerts/:id/reserve",
+        "/reservations/:id"
+      ],
+      "tree_sha": "sha256:1feb9c118ffb09599f056f80ff54f2fafcb6ea48ca38cf89355496455e7a6e0e"
+    },
+    {
+      "project_id": "tr-28-hono",
+      "family_id": "tr-28",
+      "brief_id": "tr-28-v1",
+      "archetype": "support-helpdesk",
+      "framework": "hono",
+      "task": "repair",
+      "defects": [
+        "logged repair tickets are kept in local component state and disappear when the page is reloaded",
+        "the urgency select dropdown uses custom div elements with no programmatic label or keyboard navigation",
+        "submitting an empty description produces no error message and creates a corrupted ticket record"
+      ],
+      "topic": "outdoor equipment loan repair and missing part tickets",
+      "routes": [
+        "/",
+        "/gear",
+        "/tickets",
+        "/tickets/new",
+        "/tickets/:id"
+      ],
+      "tree_sha": "sha256:e0e6fb905de26671d122f27ff42bbcc3922ab87d62fa7b7b9c10da6ac254e032"
+    },
+    {
+      "project_id": "tr-28-raw",
+      "family_id": "tr-28",
+      "brief_id": "tr-28-v1",
+      "archetype": "support-helpdesk",
+      "framework": "raw",
+      "task": "repair",
+      "defects": [
+        "logged repair tickets are kept in local component state and disappear when the page is reloaded",
+        "the urgency select dropdown uses custom div elements with no programmatic label or keyboard navigation",
+        "submitting an empty description produces no error message and creates a corrupted ticket record"
+      ],
+      "topic": "outdoor equipment loan repair and missing part tickets",
+      "routes": [
+        "/",
+        "/gear",
+        "/tickets",
+        "/tickets/new",
+        "/tickets/:id"
+      ],
+      "tree_sha": "sha256:b0ff6ab5bcdf5a870de1f617ae6504d1b9ad43a1eb625b308d8c0e99c8c4b26d"
+    },
+    {
+      "project_id": "tr-28-react",
+      "family_id": "tr-28",
+      "brief_id": "tr-28-v1",
+      "archetype": "support-helpdesk",
+      "framework": "react",
+      "task": "repair",
+      "defects": [
+        "logged repair tickets are kept in local component state and disappear when the page is reloaded",
+        "the urgency select dropdown uses custom div elements with no programmatic label or keyboard navigation",
+        "submitting an empty description produces no error message and creates a corrupted ticket record"
+      ],
+      "topic": "outdoor equipment loan repair and missing part tickets",
+      "routes": [
+        "/",
+        "/gear",
+        "/tickets",
+        "/tickets/new",
+        "/tickets/:id"
+      ],
+      "tree_sha": "sha256:c646bae18b4f2abe15fd6ea5ca01e052c97c1490453dce954f2a0dd9f6005fc6"
+    },
+    {
+      "project_id": "tr-28-preact",
+      "family_id": "tr-28",
+      "brief_id": "tr-28-v1",
+      "archetype": "support-helpdesk",
+      "framework": "preact",
+      "task": "repair",
+      "defects": [
+        "logged repair tickets are kept in local component state and disappear when the page is reloaded",
+        "the urgency select dropdown uses custom div elements with no programmatic label or keyboard navigation",
+        "submitting an empty description produces no error message and creates a corrupted ticket record"
+      ],
+      "topic": "outdoor equipment loan repair and missing part tickets",
+      "routes": [
+        "/",
+        "/gear",
+        "/tickets",
+        "/tickets/new",
+        "/tickets/:id"
+      ],
+      "tree_sha": "sha256:e071259685777dedbb9542fc78199f2cb8fa9713142a97d5ecb41088bbb871dc"
+    },
+    {
+      "project_id": "tr-28-vue",
+      "family_id": "tr-28",
+      "brief_id": "tr-28-v1",
+      "archetype": "support-helpdesk",
+      "framework": "vue",
+      "task": "repair",
+      "defects": [
+        "logged repair tickets are kept in local component state and disappear when the page is reloaded",
+        "the urgency select dropdown uses custom div elements with no programmatic label or keyboard navigation",
+        "submitting an empty description produces no error message and creates a corrupted ticket record"
+      ],
+      "topic": "outdoor equipment loan repair and missing part tickets",
+      "routes": [
+        "/",
+        "/gear",
+        "/tickets",
+        "/tickets/new",
+        "/tickets/:id"
+      ],
+      "tree_sha": "sha256:f0a17d2c99412060c328827f81fb318cce9eb5cdf457e156a29ed6c48e8ed8ff"
+    },
+    {
+      "project_id": "tr-28-webcomponents",
+      "family_id": "tr-28",
+      "brief_id": "tr-28-v1",
+      "archetype": "support-helpdesk",
+      "framework": "webcomponents",
+      "task": "repair",
+      "defects": [
+        "logged repair tickets are kept in local component state and disappear when the page is reloaded",
+        "the urgency select dropdown uses custom div elements with no programmatic label or keyboard navigation",
+        "submitting an empty description produces no error message and creates a corrupted ticket record"
+      ],
+      "topic": "outdoor equipment loan repair and missing part tickets",
+      "routes": [
+        "/",
+        "/gear",
+        "/tickets",
+        "/tickets/new",
+        "/tickets/:id"
+      ],
+      "tree_sha": "sha256:e7ce01ebde4bb5bda9de57807cab16d63d139e2cdf1bf19616d81df99408f604"
+    },
+    {
+      "project_id": "tr-28-svelte",
+      "family_id": "tr-28",
+      "brief_id": "tr-28-v1",
+      "archetype": "support-helpdesk",
+      "framework": "svelte",
+      "task": "repair",
+      "defects": [
+        "logged repair tickets are kept in local component state and disappear when the page is reloaded",
+        "the urgency select dropdown uses custom div elements with no programmatic label or keyboard navigation",
+        "submitting an empty description produces no error message and creates a corrupted ticket record"
+      ],
+      "topic": "outdoor equipment loan repair and missing part tickets",
+      "routes": [
+        "/",
+        "/gear",
+        "/tickets",
+        "/tickets/new",
+        "/tickets/:id"
+      ],
+      "tree_sha": "sha256:bac725ec01ce77baa3ae2eb91514ea375f629dd12bbcd6267a7f0e64d39920dd"
+    },
+    {
+      "project_id": "tr-29-hono",
+      "family_id": "tr-29",
+      "brief_id": "tr-29-v1",
+      "archetype": "expense-tracker",
+      "framework": "hono",
+      "task": "repair",
+      "defects": [
+        "contributions are stored only in volatile memory and vanish when the ledger route is reloaded",
+        "negative and non-numeric contribution amounts are accepted without error and corrupt the running total",
+        "the contribution form lacks associated label elements for the amount and dedication inputs"
+      ],
+      "topic": "memorial tree fund contributions and planting site tracker",
+      "routes": [
+        "/",
+        "/funds",
+        "/contribute",
+        "/contributions/:id",
+        "/ledger"
+      ],
+      "tree_sha": "sha256:e1efa4ca5cc50df978e34c92889d3a0bf82ee8cb41f508796996145210fef4c3"
+    },
+    {
+      "project_id": "tr-29-raw",
+      "family_id": "tr-29",
+      "brief_id": "tr-29-v1",
+      "archetype": "expense-tracker",
+      "framework": "raw",
+      "task": "repair",
+      "defects": [
+        "contributions are stored only in volatile memory and vanish when the ledger route is reloaded",
+        "negative and non-numeric contribution amounts are accepted without error and corrupt the running total",
+        "the contribution form lacks associated label elements for the amount and dedication inputs"
+      ],
+      "topic": "memorial tree fund contributions and planting site tracker",
+      "routes": [
+        "/",
+        "/funds",
+        "/contribute",
+        "/contributions/:id",
+        "/ledger"
+      ],
+      "tree_sha": "sha256:cb2ab2695793a1f98f5d9ec028be32374f98861a6a887c6786979f2e0752a5e8"
+    },
+    {
+      "project_id": "tr-29-react",
+      "family_id": "tr-29",
+      "brief_id": "tr-29-v1",
+      "archetype": "expense-tracker",
+      "framework": "react",
+      "task": "repair",
+      "defects": [
+        "contributions are stored only in volatile memory and vanish when the ledger route is reloaded",
+        "negative and non-numeric contribution amounts are accepted without error and corrupt the running total",
+        "the contribution form lacks associated label elements for the amount and dedication inputs"
+      ],
+      "topic": "memorial tree fund contributions and planting site tracker",
+      "routes": [
+        "/",
+        "/funds",
+        "/contribute",
+        "/contributions/:id",
+        "/ledger"
+      ],
+      "tree_sha": "sha256:ceb49dad7fd53717eadafccabdf99405439acf77c5ec1fb92ec47117b1219df6"
+    },
+    {
+      "project_id": "tr-29-preact",
+      "family_id": "tr-29",
+      "brief_id": "tr-29-v1",
+      "archetype": "expense-tracker",
+      "framework": "preact",
+      "task": "repair",
+      "defects": [
+        "contributions are stored only in volatile memory and vanish when the ledger route is reloaded",
+        "negative and non-numeric contribution amounts are accepted without error and corrupt the running total",
+        "the contribution form lacks associated label elements for the amount and dedication inputs"
+      ],
+      "topic": "memorial tree fund contributions and planting site tracker",
+      "routes": [
+        "/",
+        "/funds",
+        "/contribute",
+        "/contributions/:id",
+        "/ledger"
+      ],
+      "tree_sha": "sha256:c398dfaf639b0ae482c6034a050154f0b84371f699ecac3cf75534ae8e7071ce"
+    },
+    {
+      "project_id": "tr-29-vue",
+      "family_id": "tr-29",
+      "brief_id": "tr-29-v1",
+      "archetype": "expense-tracker",
+      "framework": "vue",
+      "task": "repair",
+      "defects": [
+        "contributions are stored only in volatile memory and vanish when the ledger route is reloaded",
+        "negative and non-numeric contribution amounts are accepted without error and corrupt the running total",
+        "the contribution form lacks associated label elements for the amount and dedication inputs"
+      ],
+      "topic": "memorial tree fund contributions and planting site tracker",
+      "routes": [
+        "/",
+        "/funds",
+        "/contribute",
+        "/contributions/:id",
+        "/ledger"
+      ],
+      "tree_sha": "sha256:82190e798bd8d94b93619a750209b151a705ff6c5a171a35e3836f575a4b9cd9"
+    },
+    {
+      "project_id": "tr-29-webcomponents",
+      "family_id": "tr-29",
+      "brief_id": "tr-29-v1",
+      "archetype": "expense-tracker",
+      "framework": "webcomponents",
+      "task": "repair",
+      "defects": [
+        "contributions are stored only in volatile memory and vanish when the ledger route is reloaded",
+        "negative and non-numeric contribution amounts are accepted without error and corrupt the running total",
+        "the contribution form lacks associated label elements for the amount and dedication inputs"
+      ],
+      "topic": "memorial tree fund contributions and planting site tracker",
+      "routes": [
+        "/",
+        "/funds",
+        "/contribute",
+        "/contributions/:id",
+        "/ledger"
+      ],
+      "tree_sha": "sha256:90889cf3b2454d6ce1862e49279d29224c97091fd210193297a3ca6bd245e482"
+    },
+    {
+      "project_id": "tr-29-svelte",
+      "family_id": "tr-29",
+      "brief_id": "tr-29-v1",
+      "archetype": "expense-tracker",
+      "framework": "svelte",
+      "task": "repair",
+      "defects": [
+        "contributions are stored only in volatile memory and vanish when the ledger route is reloaded",
+        "negative and non-numeric contribution amounts are accepted without error and corrupt the running total",
+        "the contribution form lacks associated label elements for the amount and dedication inputs"
+      ],
+      "topic": "memorial tree fund contributions and planting site tracker",
+      "routes": [
+        "/",
+        "/funds",
+        "/contribute",
+        "/contributions/:id",
+        "/ledger"
+      ],
+      "tree_sha": "sha256:6b2b46e21d75dc15207211610e411a09f6b850a61b1276438149421d915c0927"
+    },
+    {
+      "project_id": "tr-30-hono",
+      "family_id": "tr-30",
+      "brief_id": "tr-30-v1",
+      "archetype": "event-registration",
+      "framework": "hono",
+      "task": "repair",
+      "defects": [
+        "volunteer zone registrations are only held in client component state and disappear upon page reload",
+        "pressing Enter inside the volunteer name input submits the form before a cleanup zone is chosen",
+        "missing required input errors are indicated solely by border styling without accessible text announcements"
+      ],
+      "topic": "low-tide beach cleanup zone assignment and kit allocation",
+      "routes": [
+        "/",
+        "/cleanups",
+        "/cleanups/:id/register",
+        "/passes/:id"
+      ],
+      "tree_sha": "sha256:c73452920d3fc881c04db8ae82e09a04b8bc6f0a6c6d371c8594907f8a2e6fae"
+    },
+    {
+      "project_id": "tr-30-raw",
+      "family_id": "tr-30",
+      "brief_id": "tr-30-v1",
+      "archetype": "event-registration",
+      "framework": "raw",
+      "task": "repair",
+      "defects": [
+        "volunteer zone registrations are only held in client component state and disappear upon page reload",
+        "pressing Enter inside the volunteer name input submits the form before a cleanup zone is chosen",
+        "missing required input errors are indicated solely by border styling without accessible text announcements"
+      ],
+      "topic": "low-tide beach cleanup zone assignment and kit allocation",
+      "routes": [
+        "/",
+        "/cleanups",
+        "/cleanups/:id/register",
+        "/passes/:id"
+      ],
+      "tree_sha": "sha256:9bd2c8c478b38529bc80fab80571a9323c6b2788f35da49d30212a9ab4aa0c93"
+    },
+    {
+      "project_id": "tr-30-react",
+      "family_id": "tr-30",
+      "brief_id": "tr-30-v1",
+      "archetype": "event-registration",
+      "framework": "react",
+      "task": "repair",
+      "defects": [
+        "volunteer zone registrations are only held in client component state and disappear upon page reload",
+        "pressing Enter inside the volunteer name input submits the form before a cleanup zone is chosen",
+        "missing required input errors are indicated solely by border styling without accessible text announcements"
+      ],
+      "topic": "low-tide beach cleanup zone assignment and kit allocation",
+      "routes": [
+        "/",
+        "/cleanups",
+        "/cleanups/:id/register",
+        "/passes/:id"
+      ],
+      "tree_sha": "sha256:634f0c7ab54f3af591fa678eccb9405e05ddb3d516469bfe23b31bd0eda582fc"
+    },
+    {
+      "project_id": "tr-30-preact",
+      "family_id": "tr-30",
+      "brief_id": "tr-30-v1",
+      "archetype": "event-registration",
+      "framework": "preact",
+      "task": "repair",
+      "defects": [
+        "volunteer zone registrations are only held in client component state and disappear upon page reload",
+        "pressing Enter inside the volunteer name input submits the form before a cleanup zone is chosen",
+        "missing required input errors are indicated solely by border styling without accessible text announcements"
+      ],
+      "topic": "low-tide beach cleanup zone assignment and kit allocation",
+      "routes": [
+        "/",
+        "/cleanups",
+        "/cleanups/:id/register",
+        "/passes/:id"
+      ],
+      "tree_sha": "sha256:9bff9a376da391357b697c3fd223e7838965bc33bcac17bd4891aee63ef095fa"
+    },
+    {
+      "project_id": "tr-30-vue",
+      "family_id": "tr-30",
+      "brief_id": "tr-30-v1",
+      "archetype": "event-registration",
+      "framework": "vue",
+      "task": "repair",
+      "defects": [
+        "volunteer zone registrations are only held in client component state and disappear upon page reload",
+        "pressing Enter inside the volunteer name input submits the form before a cleanup zone is chosen",
+        "missing required input errors are indicated solely by border styling without accessible text announcements"
+      ],
+      "topic": "low-tide beach cleanup zone assignment and kit allocation",
+      "routes": [
+        "/",
+        "/cleanups",
+        "/cleanups/:id/register",
+        "/passes/:id"
+      ],
+      "tree_sha": "sha256:d20cce297df4e23b06c2d1d1e3b88d028bde9b8cbf6b430d7005ed480fa8e6af"
+    },
+    {
+      "project_id": "tr-30-webcomponents",
+      "family_id": "tr-30",
+      "brief_id": "tr-30-v1",
+      "archetype": "event-registration",
+      "framework": "webcomponents",
+      "task": "repair",
+      "defects": [
+        "volunteer zone registrations are only held in client component state and disappear upon page reload",
+        "pressing Enter inside the volunteer name input submits the form before a cleanup zone is chosen",
+        "missing required input errors are indicated solely by border styling without accessible text announcements"
+      ],
+      "topic": "low-tide beach cleanup zone assignment and kit allocation",
+      "routes": [
+        "/",
+        "/cleanups",
+        "/cleanups/:id/register",
+        "/passes/:id"
+      ],
+      "tree_sha": "sha256:26990dd0d6242999ba99d7e647090934f408c2727d18d1a321db93ee343b5923"
+    },
+    {
+      "project_id": "tr-30-svelte",
+      "family_id": "tr-30",
+      "brief_id": "tr-30-v1",
+      "archetype": "event-registration",
+      "framework": "svelte",
+      "task": "repair",
+      "defects": [
+        "volunteer zone registrations are only held in client component state and disappear upon page reload",
+        "pressing Enter inside the volunteer name input submits the form before a cleanup zone is chosen",
+        "missing required input errors are indicated solely by border styling without accessible text announcements"
+      ],
+      "topic": "low-tide beach cleanup zone assignment and kit allocation",
+      "routes": [
+        "/",
+        "/cleanups",
+        "/cleanups/:id/register",
+        "/passes/:id"
+      ],
+      "tree_sha": "sha256:afba38a7c123593daf2ee5caa9228d632d11ce1b98837c6c9780e19834fc2d95"
+    }
+  ]
+}

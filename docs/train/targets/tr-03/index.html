@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Terraform Ceramics Co-op — Kiln Firing Shelf Booking</title>
+  <style>
+    :root {
+      --tc-clay: #c2410c;
+      --tc-sand: #fef3c7;
+      --tc-earth: #78350f;
+      --tc-slate: #292524;
+      --tc-bg: #fafaf9;
+      --tc-border: #e7e5e4;
+      --tc-surface: #ffffff;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: "Trebuchet MS", "Lucida Sans", Arial, sans-serif; background: var(--tc-bg); color: var(--tc-slate); line-height: 1.5; padding: 1.5rem; }
+    .tc-wrap { max-width: 1200px; margin: 0 auto; }
+    header.tc-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--tc-clay); padding-bottom: 1rem; margin-bottom: 1.5rem; }
+    .tc-brand { font-size: 1.4rem; font-weight: 800; color: var(--tc-earth); letter-spacing: 0.5px; }
+    nav.tc-nav a { margin-left: 1.25rem; text-decoration: none; color: var(--tc-slate); font-weight: 600; font-size: 0.95rem; }
+    nav.tc-nav a[aria-current="page"] { color: var(--tc-clay); border-bottom: 2px solid var(--tc-clay); padding-bottom: 0.2rem; }
+    .tc-grid { display: grid; grid-template-columns: 1.7fr 1.1fr; gap: 2rem; align-items: start; }
+    .tc-card { background: var(--tc-surface); border: 1px solid var(--tc-border); border-radius: 8px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+    .tc-card h2 { color: var(--tc-earth); font-size: 1.3rem; margin-bottom: 0.5rem; }
+    .tc-card p.tc-sub { color: #78716c; font-size: 0.9rem; margin-bottom: 1.25rem; }
+    .tc-form-row { margin-bottom: 1rem; display: flex; flex-direction: column; gap: 0.35rem; }
+    .tc-form-row label { font-size: 0.85rem; font-weight: 700; color: var(--tc-slate); }
+    .tc-form-row input, .tc-form-row select, .tc-form-row textarea { padding: 0.6rem; border: 1px solid var(--tc-border); border-radius: 6px; font-size: 0.95rem; }
+    .tc-schedule-table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.85rem; }
+    .tc-schedule-table th, .tc-schedule-table td { padding: 0.65rem 0.5rem; border-bottom: 1px solid var(--tc-border); text-align: left; }
+    .tc-schedule-table th { background: var(--tc-sand); color: var(--tc-earth); font-weight: 700; }
+    .tc-badge-open { background: #dcfce7; color: #15803d; padding: 0.2rem 0.45rem; border-radius: 4px; font-weight: 700; font-size: 0.75rem; }
+    .tc-badge-full { background: #fee2e2; color: #b91c1c; padding: 0.2rem 0.45rem; border-radius: 4px; font-weight: 700; font-size: 0.75rem; }
+    .tc-btn-book { background: var(--tc-clay); color: #fff; border: none; font-size: 1rem; font-weight: 700; padding: 0.8rem 1.5rem; border-radius: 6px; cursor: pointer; width: 100%; margin-top: 0.75rem; }
+    .tc-btn-book:hover { background: #9a3412; }
+    footer.tc-foot { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--tc-border); text-align: center; font-size: 0.85rem; color: #78716c; }
+  </style>
+</head>
+<body>
+  <div class="tc-wrap">
+    <header class="tc-head">
+      <div class="tc-brand">TERRAFORM CERAMICS CO-OP</div>
+      <nav class="tc-nav" aria-label="Studio Nav">
+        <a href="/">Studio Home</a>
+        <a href="/kilns">Kiln Specs</a>
+        <a href="/reserve" aria-current="page">Reserve Shelf</a>
+        <a href="/schedule">Public Calendar</a>
+      </nav>
+    </header>
+    <main class="tc-grid">
+      <section class="tc-card">
+        <h2>Reserve Kiln Shelf Space</h2>
+        <p class="tc-sub">Book space in our Skutt 1227 electric kilns. Bisque firing Cone 06; Glaze firing Cone 6.</p>
+        <form id="kiln-reserve-form" method="post" action="/reserve">
+          <div class="tc-form-row">
+            <label for="member_id">Studio Member ID</label>
+            <input type="text" id="member_id" name="member_id" required placeholder="TC-408">
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+            <div class="tc-form-row">
+              <label for="firing_date">Firing Run Date</label>
+              <select id="firing_date" name="firing_date" required>
+                <option value="2026-10-18">Sun 18 Oct — Bisque (Cone 06)</option>
+                <option value="2026-10-21">Wed 21 Oct — Glaze (Cone 6)</option>
+                <option value="2026-10-25">Sun 25 Oct — Glaze (Cone 6)</option>
+              </select>
+            </div>
+            <div class="tc-form-row">
+              <label for="cone_temperature">Firing Cone Temperature</label>
+              <select id="cone_temperature" name="cone_temperature" required>
+                <option value="cone-06">Cone 06 (Bisque ~1000°C)</option>
+                <option value="cone-6" selected>Cone 6 (Mid-fire Stoneware ~1220°C)</option>
+                <option value="cone-10">Cone 10 (Specialty Lustre)</option>
+              </select>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+            <div class="tc-form-row">
+              <label for="shelf_count">Number of Half-Shelves</label>
+              <input type="number" id="shelf_count" name="shelf_count" min="1" max="6" value="2" required>
+            </div>
+            <div class="tc-form-row">
+              <label for="max_height">Max Piece Height (Inches)</label>
+              <input type="number" id="max_height" name="max_height" min="1" max="16" value="7" required>
+            </div>
+          </div>
+          <div class="tc-form-row">
+            <label for="clay_body">Clay Body &amp; Glaze Formulation Notes</label>
+            <textarea id="clay_body" name="clay_body" rows="3" placeholder="e.g. B-Mix with grog, commercial Amaco Potter's Choice glaze on exterior only, no runny glaze on base." required></textarea>
+          </div>
+          <button type="submit" class="tc-btn-book">Confirm Kiln Space Reservation</button>
+        </form>
+      </section>
+      <aside class="tc-card">
+        <h2>Live Firing Schedule</h2>
+        <p class="tc-sub">Kiln 1 (Big Bertha) &amp; Kiln 2 (The Pioneer)</p>
+        <table class="tc-schedule-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Cone</th>
+              <th>Space</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>18 Oct</td>
+              <td>Bisque</td>
+              <td>06</td>
+              <td><span class="tc-badge-open">2 shelves left</span></td>
+            </tr>
+            <tr>
+              <td>21 Oct</td>
+              <td>Glaze</td>
+              <td>6</td>
+              <td><span class="tc-badge-open">4 shelves left</span></td>
+            </tr>
+            <tr>
+              <td>25 Oct</td>
+              <td>Glaze</td>
+              <td>6</td>
+              <td><span class="tc-badge-full">Full</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <div style="margin-top:1.25rem;font-size:0.8rem;color:#78716c;background:var(--tc-sand);padding:0.75rem;border-radius:6px">
+          <strong>Firing Rule:</strong> Wax resist must be applied 1/4 inch up from the base of all glaze ware. Kiln shelf damage penalty applies if glaze runs onto kiln wash.
+        </div>
+      </aside>
+    </main>
+    <footer class="tc-foot">
+      <p>Terraform Ceramics Community Co-op • 48 Pottery Yard • Studio Hours: 08:00 - 22:00 Daily</p>
+    </footer>
+  </div>
+</body>
+</html>

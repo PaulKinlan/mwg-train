@@ -314,3 +314,137 @@ function check({ trainManifestPath, evalManifestPath, targetsManifestPath, expec
 
   return { ok: findings.length === 0, findings, evalSeal, trainRows: trainRows.length };
 }
+
+/**
+ * Assert that training targets are strictly disjoint from the held-out evaluation targets:
+ * - No training target reuses an A6 evaluation target's family_id
+ * - No training target image_sha256 matches any A6 evaluation target's image_sha256
+ *
+ * Never throws.
+ *
+ * @param {object} [paths]
+ * @param {string} [paths.trainTargetsManifestPath] training targets manifest (default data/A1_self_generated/targets/manifest.jsonl)
+ * @param {string} [paths.evalTargetsManifestPath] eval targets manifest (default EVAL_TARGETS_MANIFEST)
+ * @param {string} [paths.expectedEvalSeal] the pinned seal of eval targets manifest bytes (default EVAL_TARGETS_SEAL)
+ * @returns {{ ok: boolean, findings: Array<object>, evalTargetHashes: string[], evalFamilyIds: string[], trainTargetCount: number }}
+ */
+export function assertDisjointTrainingTargets({
+  trainTargetsManifestPath = 'data/A1_self_generated/targets/manifest.jsonl',
+  evalTargetsManifestPath = EVAL_TARGETS_MANIFEST,
+  expectedEvalSeal = EVAL_TARGETS_SEAL,
+} = {}) {
+  try {
+    const findings = [];
+    const targetsSeal = sealOfFileBytes(evalTargetsManifestPath);
+    if (targetsSeal !== expectedEvalSeal) {
+      findings.push({
+        code: 'EVAL_TARGETS_SEAL_MISMATCH',
+        message: `eval targets manifest ${evalTargetsManifestPath} hashes to ${targetsSeal ?? 'null'}, expected ${expectedEvalSeal}`,
+        path: evalTargetsManifestPath,
+        expected: expectedEvalSeal,
+        actual: targetsSeal,
+      });
+    }
+
+    const evalRead = readManifest(evalTargetsManifestPath);
+    const evalTargetHashes = [];
+    const evalFamilyIds = new Set();
+    const evalHashMap = new Map();
+    if (evalRead.error) {
+      findings.push({
+        code: 'EVAL_TARGETS_MANIFEST_EMPTY_OR_UNREADABLE',
+        message: `eval targets manifest: ${evalRead.error}`,
+        path: evalTargetsManifestPath,
+      });
+    } else {
+      for (const row of evalRead.rows.filter(isPlainObject)) {
+        if (typeof row.family_id === 'string' && row.family_id !== '') evalFamilyIds.add(row.family_id);
+        if (typeof row.image_sha256 === 'string' && row.image_sha256 !== '') {
+          evalTargetHashes.push(row.image_sha256);
+          evalHashMap.set(row.image_sha256, row);
+        }
+      }
+    }
+
+    const trainRead = readTextFile(trainTargetsManifestPath);
+    let trainRows = [];
+    if (trainRead.error) {
+      findings.push({
+        code: 'TRAIN_TARGETS_MANIFEST_EMPTY_OR_UNREADABLE',
+        message: `training targets manifest: ${trainRead.error}`,
+        path: trainTargetsManifestPath,
+      });
+    } else {
+      const parsed = parseTrainingManifest(trainRead.text);
+      trainRows = parsed.rows;
+      for (const malformed of parsed.malformed) {
+        findings.push({ code: malformed.code, message: malformed.message, path: trainTargetsManifestPath, line: malformed.line });
+      }
+      if (trainRows.length === 0) {
+        findings.push({
+          code: 'TRAIN_TARGETS_MANIFEST_EMPTY_OR_UNREADABLE',
+          message: `training targets manifest ${trainTargetsManifestPath} has no usable rows`,
+          path: trainTargetsManifestPath,
+        });
+      }
+    }
+
+    const seenTrainHashes = new Map();
+    for (const [index, row] of trainRows.entries()) {
+      const family = typeof row.family_id === 'string' ? row.family_id : `row-${index + 1}`;
+      const hash = typeof row.image_sha256 === 'string' ? row.image_sha256 : null;
+
+      // 1. Check family_id collision with eval target families
+      if (evalFamilyIds.has(family)) {
+        findings.push({
+          code: 'TRAIN_TARGET_REUSES_EVAL_FAMILY',
+          message: `training target '${row.id ?? family}' reuses evaluation target family_id '${family}'`,
+          family_id: family,
+        });
+      }
+
+      // 2. Check image_sha256 collision with eval target hashes
+      if (hash && evalHashMap.has(hash)) {
+        const evalMatch = evalHashMap.get(hash);
+        findings.push({
+          code: 'TRAIN_TARGET_COLLIDES_EVAL_HASH',
+          message: `training target '${row.id ?? family}' image_sha256 '${hash}' matches evaluation target '${evalMatch.id ?? evalMatch.family_id}'`,
+          family_id: family,
+          image_sha256: hash,
+          colliding_eval_target: evalMatch.id ?? evalMatch.family_id,
+        });
+      }
+
+      // 3. Check internal hash uniqueness
+      if (hash) {
+        if (seenTrainHashes.has(hash)) {
+          findings.push({
+            code: 'TRAIN_TARGET_DUPLICATE_HASH',
+            message: `training targets '${family}' and '${seenTrainHashes.get(hash)}' share the same image_sha256 '${hash}'`,
+            family_id: family,
+            image_sha256: hash,
+          });
+        } else {
+          seenTrainHashes.set(hash, family);
+        }
+      }
+    }
+
+    return {
+      ok: findings.length === 0,
+      findings,
+      evalTargetHashes,
+      evalFamilyIds: [...evalFamilyIds],
+      trainTargetCount: trainRows.length,
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      findings: [{ code: 'DISJOINTNESS_CHECK_ERROR', message: `zero-overlap check failed: ${error.message}` }],
+      evalTargetHashes: [],
+      evalFamilyIds: [],
+      trainTargetCount: 0,
+    };
+  }
+}
+

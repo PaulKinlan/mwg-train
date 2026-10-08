@@ -1,0 +1,604 @@
+{
+  "title": "Starlight Ridge Dark Sky Observatory — Public Viewing Pass",
+  "viewport": {
+    "width": 1280,
+    "height": 900
+  },
+  "nodes": [
+    {
+      "tag": "div",
+      "depth": 0,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "header",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "nav",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "main",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "section",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h1",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "form",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "select",
+      "depth": 5,
+      "type": null,
+      "name": "event_session",
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 6,
+      "type": "text",
+      "name": "lead_attendee",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 6,
+      "type": "email",
+      "name": "attendee_email",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 6,
+      "type": "number",
+      "name": "adult_tickets",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 6,
+      "type": "number",
+      "name": "child_tickets",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "textarea",
+      "depth": 5,
+      "type": null,
+      "name": "accessibility_notes",
+      "role": null
+    },
+    {
+      "tag": "button",
+      "depth": 4,
+      "type": "submit",
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "aside",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h3",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "span",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "ul",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "li",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "li",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "li",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "footer",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    }
+  ],
+  "boxes": [
+    {
+      "tag": "header",
+      "x": 0.0313,
+      "y": 0.0267,
+      "w": 0.9375,
+      "h": 0.0549
+    },
+    {
+      "tag": "nav",
+      "x": 0.5527,
+      "y": 0.0313,
+      "w": 0.416,
+      "h": 0.0267
+    },
+    {
+      "tag": "main",
+      "x": 0.0313,
+      "y": 0.1082,
+      "w": 0.9375,
+      "h": 0.6334
+    },
+    {
+      "tag": "section",
+      "x": 0.0313,
+      "y": 0.1082,
+      "w": 0.5475,
+      "h": 0.6334
+    },
+    {
+      "tag": "h1",
+      "x": 0.0539,
+      "y": 0.1404,
+      "w": 0.5022,
+      "h": 0.044
+    },
+    {
+      "tag": "form",
+      "x": 0.0539,
+      "y": 0.2707,
+      "w": 0.5022,
+      "h": 0.4387
+    },
+    {
+      "tag": "label",
+      "x": 0.0539,
+      "y": 0.2707,
+      "w": 0.5022,
+      "h": 0.0227
+    },
+    {
+      "tag": "select",
+      "x": 0.0539,
+      "y": 0.2995,
+      "w": 0.5022,
+      "h": 0.0447
+    },
+    {
+      "tag": "label",
+      "x": 0.0539,
+      "y": 0.362,
+      "w": 0.2448,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.0539,
+      "y": 0.3908,
+      "w": 0.2448,
+      "h": 0.0424
+    },
+    {
+      "tag": "label",
+      "x": 0.3112,
+      "y": 0.362,
+      "w": 0.2448,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.3112,
+      "y": 0.3908,
+      "w": 0.2448,
+      "h": 0.0424
+    },
+    {
+      "tag": "label",
+      "x": 0.0539,
+      "y": 0.451,
+      "w": 0.2448,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.0539,
+      "y": 0.4799,
+      "w": 0.2448,
+      "h": 0.0424
+    },
+    {
+      "tag": "label",
+      "x": 0.3112,
+      "y": 0.451,
+      "w": 0.2448,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.3112,
+      "y": 0.4799,
+      "w": 0.2448,
+      "h": 0.0424
+    },
+    {
+      "tag": "label",
+      "x": 0.0539,
+      "y": 0.5401,
+      "w": 0.5022,
+      "h": 0.0227
+    },
+    {
+      "tag": "textarea",
+      "x": 0.0539,
+      "y": 0.569,
+      "w": 0.5022,
+      "h": 0.0635
+    },
+    {
+      "tag": "button",
+      "x": 0.0539,
+      "y": 0.6592,
+      "w": 0.5022,
+      "h": 0.0502
+    },
+    {
+      "tag": "aside",
+      "x": 0.6037,
+      "y": 0.1082,
+      "w": 0.365,
+      "h": 0.2897
+    },
+    {
+      "tag": "h3",
+      "x": 0.6202,
+      "y": 0.1315,
+      "w": 0.3322,
+      "h": 0.0293
+    },
+    {
+      "tag": "ul",
+      "x": 0.6202,
+      "y": 0.2701,
+      "w": 0.3322,
+      "h": 0.0822
+    },
+    {
+      "tag": "li",
+      "x": 0.6351,
+      "y": 0.2701,
+      "w": 0.3172,
+      "h": 0.0227
+    },
+    {
+      "tag": "li",
+      "x": 0.6351,
+      "y": 0.2999,
+      "w": 0.3172,
+      "h": 0.0227
+    },
+    {
+      "tag": "li",
+      "x": 0.6351,
+      "y": 0.3297,
+      "w": 0.3172,
+      "h": 0.0227
+    },
+    {
+      "tag": "footer",
+      "x": 0.0313,
+      "y": 0.7861,
+      "w": 0.9375,
+      "h": 0.0415
+    }
+  ],
+  "labels": [
+    {
+      "for": "event_session",
+      "text": "Select Viewing Night & Target Celestial Object"
+    },
+    {
+      "for": "lead_attendee",
+      "text": "Lead Attendee Name"
+    },
+    {
+      "for": "attendee_email",
+      "text": "Email for Digital Pass"
+    },
+    {
+      "for": "adult_tickets",
+      "text": "Adult Visitors (16+)"
+    },
+    {
+      "for": "child_tickets",
+      "text": "Child Visitors (8 - 15)"
+    },
+    {
+      "for": "accessibility_notes",
+      "text": "Mobility & Accessibility Requirements"
+    }
+  ],
+  "controls": [
+    {
+      "tag": "select",
+      "type": null,
+      "name": "event_session",
+      "label": "Select Viewing Night & Target Celestial Object"
+    },
+    {
+      "tag": "input",
+      "type": "text",
+      "name": "lead_attendee",
+      "label": "Lead Attendee Name"
+    },
+    {
+      "tag": "input",
+      "type": "email",
+      "name": "attendee_email",
+      "label": "Email for Digital Pass"
+    },
+    {
+      "tag": "input",
+      "type": "number",
+      "name": "adult_tickets",
+      "label": "Adult Visitors (16+)"
+    },
+    {
+      "tag": "input",
+      "type": "number",
+      "name": "child_tickets",
+      "label": "Child Visitors (8 - 15)"
+    },
+    {
+      "tag": "textarea",
+      "type": null,
+      "name": "accessibility_notes",
+      "label": "Mobility & Accessibility Requirements"
+    }
+  ],
+  "headings": [
+    "Public Telescope Viewing Pass Registration",
+    "Capacity & Dark Sky Protocol"
+  ]
+}

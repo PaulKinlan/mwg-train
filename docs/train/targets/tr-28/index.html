@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Trailhead Youth Gear Locker — Equipment Repair &amp; Maintenance Tickets</title>
+  <style>
+    :root {
+      --th-forest: #064e3b;
+      --th-yellow: #eab308;
+      --th-slate: #1f2937;
+      --th-card: #ffffff;
+      --th-border: #d1d5db;
+      --th-bg: #f9fafb;
+      --th-text: #111827;
+      --th-muted: #6b7280;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--th-bg); color: var(--th-text); line-height: 1.5; padding: 1.5rem; }
+    .th-wrap { max-width: 1200px; margin: 0 auto; }
+    header.th-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--th-forest); padding-bottom: 1rem; margin-bottom: 1.5rem; }
+    .th-brand { font-size: 1.35rem; font-weight: 800; color: var(--th-forest); }
+    nav.th-nav a { text-decoration: none; color: var(--th-muted); font-size: 0.9rem; margin-left: 1.25rem; font-weight: 600; }
+    nav.th-nav a[aria-current="page"] { color: var(--th-forest); border-bottom: 2px solid var(--th-forest); padding-bottom: 0.2rem; }
+    .th-grid { display: grid; grid-template-columns: 1.8fr 1.2fr; gap: 2rem; align-items: start; }
+    .th-card { background: var(--th-card); border: 1px solid var(--th-border); border-radius: 8px; padding: 1.5rem; }
+    .th-card h1, .th-card h2 { font-size: 1.35rem; color: var(--th-forest); margin-bottom: 0.5rem; }
+    .th-field { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 0.85rem; }
+    .th-field label { font-size: 0.85rem; font-weight: 600; color: var(--th-text); }
+    .th-field input, .th-field select, .th-field textarea { padding: 0.55rem; border: 1px solid var(--th-border); border-radius: 6px; font-size: 0.95rem; }
+    .th-btn { background: var(--th-forest); color: #fff; border: none; font-size: 1rem; font-weight: 700; padding: 0.85rem; border-radius: 6px; cursor: pointer; width: 100%; margin-top: 0.5rem; }
+    .th-btn:hover { background: #065f46; }
+    table.th-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 0.5rem; }
+    table.th-table th, table.th-table td { padding: 0.6rem 0.5rem; border-bottom: 1px solid var(--th-border); text-align: left; }
+    table.th-table th { background: #f3f4f6; color: var(--th-forest); }
+    footer.th-foot { margin-top: 2.5rem; border-top: 1px solid var(--th-border); padding-top: 1rem; text-align: center; font-size: 0.85rem; color: var(--th-muted); }
+  </style>
+</head>
+<body>
+  <div class="th-wrap">
+    <header class="th-head">
+      <div class="th-brand">⛺ Trailhead Youth Gear Locker</div>
+      <nav class="th-nav" aria-label="Gear Nav">
+        <a href="/">Equipment Loans</a>
+        <a href="/gear">Locker Inventory</a>
+        <a href="/tickets" aria-current="page">Log Damaged Gear</a>
+        <a href="/repairs">Repair Workshop</a>
+      </nav>
+    </header>
+    <main class="th-grid">
+      <section class="th-card">
+        <h1>Log Equipment Damage or Missing Part Ticket</h1>
+        <p style="font-size:0.9rem;color:var(--th-muted);margin-bottom:1.25rem">Report torn tent flysheets, bent alloy poles, clogged multifuel stoves, or missing backpack buckles after group expeditions.</p>
+        <form id="gear-damage-form" method="post" action="/tickets/new">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+            <div class="th-field">
+              <label for="gear_serial">Equipment Serial / Asset Barcode</label>
+              <input type="text" id="gear_serial" name="gear_serial" required placeholder="TNT-V2-044">
+            </div>
+            <div class="th-field">
+              <label for="gear_category">Equipment Category</label>
+              <select id="gear_category" name="gear_category" required>
+                <option value="tent" selected>3-Season Expedition Tent (Geodesic)</option>
+                <option value="pack">65L Expedition Rucksack</option>
+                <option value="stove">MSR Whisperlite Multifuel Camp Stove</option>
+                <option value="mat">Inflatable Sleeping Pad (Puncture)</option>
+              </select>
+            </div>
+          </div>
+          <div class="th-field">
+            <label for="urgency">Repair Urgency</label>
+            <select id="urgency" name="urgency" required>
+              <option value="routine">Routine — Needed within 3 weeks</option>
+              <option value="urgent">Urgent — Reserved for Duke of Edinburgh expedition next Friday</option>
+              <option value="scrap">Severe Damage — Assess for component harvesting</option>
+            </select>
+          </div>
+          <div class="th-field">
+            <label for="damage_notes">Defect Description &amp; Specific Missing Hardware</label>
+            <textarea id="damage_notes" name="damage_notes" rows="3" required placeholder="e.g. Middle gold Easton pole section is bent at 45 degrees near ferrule. Rainfly zip tooth missing on vestibule."></textarea>
+          </div>
+          <div class="th-field">
+            <label for="leader_name">Expedition Leader Name</label>
+            <input type="text" id="leader_name" name="leader_name" required placeholder="Sarah Jenkins (1st Valley Scouts)">
+          </div>
+          <button type="submit" class="th-btn">Submit Damage Ticket to Workshop</button>
+        </form>
+      </section>
+      <aside class="th-card">
+        <h2>Locker Maintenance Queue</h2>
+        <table class="th-table">
+          <thead>
+            <tr>
+              <th>Tag</th>
+              <th>Item</th>
+              <th>Issue</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>TNT-018</td>
+              <td>Terra Nova 3P</td>
+              <td>Seam tape peeling</td>
+              <td><span style="color:#b45309;font-weight:700">In Workshop</span></td>
+            </tr>
+            <tr>
+              <td>STV-005</td>
+              <td>Trangia 27</td>
+              <td>Strap buckle snapped</td>
+              <td><span style="color:#15803d;font-weight:700">Parts Ordered</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </aside>
+    </main>
+    <footer class="th-foot">
+      <p>Trailhead Youth Gear Locker • Community Outdoor Gear Loan Trust • Registered Charity #10294</p>
+    </footer>
+  </div>
+</body>
+</html>

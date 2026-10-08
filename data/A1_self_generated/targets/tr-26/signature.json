@@ -1,0 +1,592 @@
+{
+  "title": "Atlas Roasters — Single-Origin Coffee Subscription Manager",
+  "viewport": {
+    "width": 1280,
+    "height": 900
+  },
+  "nodes": [
+    {
+      "tag": "div",
+      "depth": 0,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "header",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "nav",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "main",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "section",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h1",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "form",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 5,
+      "type": "text",
+      "name": "subscriber_code",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "select",
+      "depth": 5,
+      "type": null,
+      "name": "bean_origin",
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 7,
+      "type": "radio",
+      "name": "grind",
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 7,
+      "type": "radio",
+      "name": "grind",
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 7,
+      "type": "radio",
+      "name": "grind",
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 7,
+      "type": "radio",
+      "name": "grind",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "select",
+      "depth": 5,
+      "type": null,
+      "name": "delivery_frequency",
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "button",
+      "depth": 4,
+      "type": "submit",
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "aside",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h2",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "strong",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h3",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "footer",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    }
+  ],
+  "boxes": [
+    {
+      "tag": "header",
+      "x": 0.0703,
+      "y": 0.0267,
+      "w": 0.8594,
+      "h": 0.056
+    },
+    {
+      "tag": "nav",
+      "x": 0.5791,
+      "y": 0.0313,
+      "w": 0.3506,
+      "h": 0.0267
+    },
+    {
+      "tag": "main",
+      "x": 0.0703,
+      "y": 0.1093,
+      "w": 0.8594,
+      "h": 0.6668
+    },
+    {
+      "tag": "section",
+      "x": 0.0703,
+      "y": 0.1093,
+      "w": 0.5006,
+      "h": 0.6668
+    },
+    {
+      "tag": "h1",
+      "x": 0.093,
+      "y": 0.1415,
+      "w": 0.4553,
+      "h": 0.0373
+    },
+    {
+      "tag": "form",
+      "x": 0.093,
+      "y": 0.258,
+      "w": 0.4553,
+      "h": 0.4858
+    },
+    {
+      "tag": "label",
+      "x": 0.093,
+      "y": 0.258,
+      "w": 0.4553,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.093,
+      "y": 0.2869,
+      "w": 0.4553,
+      "h": 0.0407
+    },
+    {
+      "tag": "label",
+      "x": 0.093,
+      "y": 0.3453,
+      "w": 0.4553,
+      "h": 0.0227
+    },
+    {
+      "tag": "select",
+      "x": 0.093,
+      "y": 0.3742,
+      "w": 0.4553,
+      "h": 0.0429
+    },
+    {
+      "tag": "label",
+      "x": 0.093,
+      "y": 0.4349,
+      "w": 0.4553,
+      "h": 0.0227
+    },
+    {
+      "tag": "label",
+      "x": 0.093,
+      "y": 0.4682,
+      "w": 0.223,
+      "h": 0.048
+    },
+    {
+      "tag": "input",
+      "x": 0.1019,
+      "y": 0.4849,
+      "w": 0.0102,
+      "h": 0.0144
+    },
+    {
+      "tag": "label",
+      "x": 0.3253,
+      "y": 0.4682,
+      "w": 0.223,
+      "h": 0.048
+    },
+    {
+      "tag": "input",
+      "x": 0.3342,
+      "y": 0.4849,
+      "w": 0.0102,
+      "h": 0.0144
+    },
+    {
+      "tag": "label",
+      "x": 0.093,
+      "y": 0.5295,
+      "w": 0.223,
+      "h": 0.048
+    },
+    {
+      "tag": "input",
+      "x": 0.1019,
+      "y": 0.5462,
+      "w": 0.0102,
+      "h": 0.0144
+    },
+    {
+      "tag": "label",
+      "x": 0.3253,
+      "y": 0.5295,
+      "w": 0.223,
+      "h": 0.048
+    },
+    {
+      "tag": "input",
+      "x": 0.3342,
+      "y": 0.5462,
+      "w": 0.0102,
+      "h": 0.0144
+    },
+    {
+      "tag": "label",
+      "x": 0.093,
+      "y": 0.5952,
+      "w": 0.4553,
+      "h": 0.0227
+    },
+    {
+      "tag": "select",
+      "x": 0.093,
+      "y": 0.6241,
+      "w": 0.4553,
+      "h": 0.0429
+    },
+    {
+      "tag": "button",
+      "x": 0.093,
+      "y": 0.6936,
+      "w": 0.4553,
+      "h": 0.0502
+    },
+    {
+      "tag": "aside",
+      "x": 0.5959,
+      "y": 0.1093,
+      "w": 0.3338,
+      "h": 0.3044
+    },
+    {
+      "tag": "h2",
+      "x": 0.6186,
+      "y": 0.1415,
+      "w": 0.2884,
+      "h": 0.0373
+    },
+    {
+      "tag": "h3",
+      "x": 0.6186,
+      "y": 0.3024,
+      "w": 0.2884,
+      "h": 0.0267
+    },
+    {
+      "tag": "footer",
+      "x": 0.0703,
+      "y": 0.8205,
+      "w": 0.8594,
+      "h": 0.0415
+    }
+  ],
+  "labels": [
+    {
+      "for": "subscriber_code",
+      "text": "Subscriber ID"
+    },
+    {
+      "for": "bean_origin",
+      "text": "Active Single-Origin Micro-Lot"
+    },
+    {
+      "for": "delivery_frequency",
+      "text": "Delivery Frequency"
+    }
+  ],
+  "controls": [
+    {
+      "tag": "input",
+      "type": "text",
+      "name": "subscriber_code",
+      "label": "Subscriber ID"
+    },
+    {
+      "tag": "select",
+      "type": null,
+      "name": "bean_origin",
+      "label": "Active Single-Origin Micro-Lot"
+    },
+    {
+      "tag": "input",
+      "type": "radio",
+      "name": "grind",
+      "label": null
+    },
+    {
+      "tag": "input",
+      "type": "radio",
+      "name": "grind",
+      "label": null
+    },
+    {
+      "tag": "input",
+      "type": "radio",
+      "name": "grind",
+      "label": null
+    },
+    {
+      "tag": "input",
+      "type": "radio",
+      "name": "grind",
+      "label": null
+    },
+    {
+      "tag": "select",
+      "type": null,
+      "name": "delivery_frequency",
+      "label": "Delivery Frequency"
+    }
+  ],
+  "headings": [
+    "Update Subscription Preferences",
+    "Next Roast Dispatch",
+    "Farm Gate Provenance"
+  ]
+}

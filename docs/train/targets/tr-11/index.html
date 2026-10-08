@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Crust &amp; Crumb Micro-Bakery — Friday Bake Loaf Pre-Orders</title>
+  <style>
+    :root {
+      --cb-crust: #78350f;
+      --cb-warm: #fef3c7;
+      --cb-bread: #451a03;
+      --cb-bg: #fffbeb;
+      --cb-border: #fde68a;
+      --cb-card: #ffffff;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: "Georgia", serif; background: var(--cb-bg); color: #292524; line-height: 1.5; padding: 1.5rem; }
+    .cb-container { max-width: 1200px; margin: 0 auto; }
+    header.cb-head { border-bottom: 2px solid var(--cb-crust); padding-bottom: 1rem; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; }
+    .cb-brand { font-size: 1.5rem; font-weight: 700; color: var(--cb-bread); }
+    nav.cb-nav a { font-family: -apple-system, sans-serif; text-decoration: none; color: #78350f; font-weight: 600; margin-left: 1.25rem; font-size: 0.9rem; }
+    nav.cb-nav a[aria-current="page"] { border-bottom: 2px solid var(--cb-crust); padding-bottom: 0.2rem; }
+    .cb-grid { display: grid; grid-template-columns: 2fr 1.1fr; gap: 2rem; align-items: start; }
+    .cb-card { background: var(--cb-card); border: 1px solid var(--cb-border); border-radius: 8px; padding: 1.75rem; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+    .cb-card h1 { font-size: 1.6rem; color: var(--cb-bread); margin-bottom: 0.5rem; }
+    .cb-menu-item { display: grid; grid-template-columns: 1fr auto; gap: 1rem; align-items: center; padding: 1rem 0; border-bottom: 1px solid #fef3c7; }
+    .cb-item-title { font-size: 1.15rem; font-weight: 700; color: var(--cb-bread); }
+    .cb-item-desc { font-family: -apple-system, sans-serif; font-size: 0.85rem; color: #78716c; margin-top: 0.2rem; }
+    .cb-qty-field { font-family: -apple-system, sans-serif; display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; }
+    .cb-qty-field input { width: 60px; padding: 0.4rem; border: 1px solid #d6d3d1; border-radius: 4px; text-align: center; font-size: 1rem; }
+    .cb-order-form { font-family: -apple-system, sans-serif; margin-top: 1.5rem; background: var(--cb-warm); padding: 1.25rem; border-radius: 8px; }
+    .cb-field { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 0.75rem; }
+    .cb-field label { font-size: 0.85rem; font-weight: 700; color: var(--cb-bread); }
+    .cb-field input, .cb-field select { padding: 0.55rem; border: 1px solid #d6d3d1; border-radius: 6px; font-size: 0.95rem; background: #fff; }
+    .cb-btn { width: 100%; background: var(--cb-crust); color: #fff; border: none; font-size: 1rem; font-weight: 700; padding: 0.85rem; border-radius: 6px; cursor: pointer; margin-top: 0.5rem; }
+    .cb-btn:hover { background: #92400e; }
+    footer.cb-foot { margin-top: 2.5rem; border-top: 1px solid var(--cb-border); padding-top: 1rem; text-align: center; font-family: -apple-system, sans-serif; font-size: 0.85rem; color: #a8a29e; }
+  </style>
+</head>
+<body>
+  <div class="cb-container">
+    <header class="cb-head">
+      <div class="cb-brand">Crust &amp; Crumb Micro-Bakery</div>
+      <nav class="cb-nav" aria-label="Bakery Nav">
+        <a href="/">Our Sourdough Starter</a>
+        <a href="/menu" aria-current="page">Weekly Bake Menu</a>
+        <a href="/order">Reserve Bread</a>
+        <a href="/orders">Pickup Slips</a>
+      </nav>
+    </header>
+    <main class="cb-grid">
+      <section class="cb-card">
+        <h1>Friday Bake Menu &amp; Loaf Reservation</h1>
+        <p style="font-family:-apple-system,sans-serif;font-size:0.95rem;color:#78716c;margin-bottom:1rem">All bread is fermented for 28 hours using organic stoneground flour and baked in small batches on our stone deck hearth.</p>
+        <form id="bakery-order-form" method="post" action="/order">
+          <div class="cb-menu-item">
+            <div>
+              <div class="cb-item-title">Country White Boule (850g) — £4.60</div>
+              <div class="cb-item-desc">75% hydration wheat loaf with crunchy caramelised blistered crust and open crumb.</div>
+            </div>
+            <div class="cb-qty-field">
+              <label for="loaf_country">Loaves:</label>
+              <input type="number" id="loaf_country" name="loaf_country" min="0" max="6" value="1">
+            </div>
+          </div>
+          <div class="cb-menu-item">
+            <div>
+              <div class="cb-item-title">Seeded Spelt &amp; Rye Batard (750g) — £5.10</div>
+              <div class="cb-item-desc">Whole spelt with dark rye levain, toasted sunflower, pumpkin, and brown flaxseed.</div>
+            </div>
+            <div class="cb-qty-field">
+              <label for="loaf_spelt">Loaves:</label>
+              <input type="number" id="loaf_spelt" name="loaf_spelt" min="0" max="6" value="1">
+            </div>
+          </div>
+          <div class="cb-menu-item">
+            <div>
+              <div class="cb-item-title">Kalamata Olive &amp; Fresh Rosemary (800g) — £5.40</div>
+              <div class="cb-item-desc">Packed with whole pitted Greek olives, garden rosemary, and organic extra virgin olive oil.</div>
+            </div>
+            <div class="cb-qty-field">
+              <label for="loaf_olive">Loaves:</label>
+              <input type="number" id="loaf_olive" name="loaf_olive" min="0" max="4" value="0">
+            </div>
+          </div>
+          <div class="cb-menu-item">
+            <div>
+              <div class="cb-item-title">Cardamom Morning Buns (Box of 4) — £7.00</div>
+              <div class="cb-item-desc">Swedish style sourdough laminated buns spiced with freshly crushed green cardamom.</div>
+            </div>
+            <div class="cb-qty-field">
+              <label for="cardamom_box">Boxes:</label>
+              <input type="number" id="cardamom_box" name="cardamom_box" min="0" max="4" value="0">
+            </div>
+          </div>
+          <div class="cb-order-form">
+            <h3 style="font-size:1.1rem;color:var(--cb-bread);margin-bottom:0.75rem">Collection Details</h3>
+            <div class="cb-field">
+              <label for="customer_name">Customer Name</label>
+              <input type="text" id="customer_name" name="customer_name" required placeholder="Clara Oswald">
+            </div>
+            <div class="cb-field">
+              <label for="customer_phone">Mobile Number for SMS Collection Alert</label>
+              <input type="tel" id="customer_phone" name="customer_phone" required placeholder="07700 900221">
+            </div>
+            <div class="cb-field">
+              <label for="pickup_window">Friday Collection Slot</label>
+              <select id="pickup_window" name="pickup_window" required>
+                <option value="window-1">Early Afternoon: 14:00 - 16:00</option>
+                <option value="window-2" selected>Late Afternoon: 16:00 - 18:30</option>
+                <option value="window-3">Evening Porch Box: 18:30 - 20:00</option>
+              </select>
+            </div>
+            <button type="submit" class="cb-btn">Place Weekly Bread Order</button>
+          </div>
+        </form>
+      </section>
+      <aside class="cb-card">
+        <h2 style="font-size:1.2rem;color:var(--cb-bread);margin-bottom:0.75rem">Bakehouse Notes</h2>
+        <p style="font-family:-apple-system,sans-serif;font-size:0.85rem;color:#78716c;margin-bottom:1rem">Orders lock Wednesday at 20:00 to allow 28-hour slow levain feeding and fermentation.</p>
+        <div style="font-family:-apple-system,sans-serif;background:#fffbeb;border:1px solid #fef3c7;padding:0.75rem;border-radius:6px;font-size:0.85rem">
+          <strong>Porch Collection:</strong> Pick up directly from our bakery hatch at 22 Baker's Lane. Bring your own bread bag or tea towel to keep loaves crisp.
+        </div>
+      </aside>
+    </main>
+    <footer class="cb-foot">
+      <p>Crust &amp; Crumb Micro-Bakery • Artisan Sourdough • Smallholder Flour Mill Partner</p>
+    </footer>
+  </div>
+</body>
+</html>

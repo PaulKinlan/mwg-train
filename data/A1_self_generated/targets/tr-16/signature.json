@@ -1,0 +1,737 @@
+{
+  "title": "Heirloom Perennial Repository — Cuttings & Seed Strain Index",
+  "viewport": {
+    "width": 1280,
+    "height": 900
+  },
+  "nodes": [
+    {
+      "tag": "div",
+      "depth": 0,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "header",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "nav",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "main",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "section",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h1",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "select",
+      "depth": 5,
+      "type": null,
+      "name": "sun_exposure",
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "select",
+      "depth": 5,
+      "type": null,
+      "name": "season",
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "table",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "thead",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "tr",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "th",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "th",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "th",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "th",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "tbody",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "tr",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "em",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "strong",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "tr",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "em",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "strong",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "tr",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "em",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "strong",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "aside",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h2",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "form",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 5,
+      "type": "text",
+      "name": "member_id",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 5,
+      "type": "text",
+      "name": "specimen_name",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 5,
+      "type": "number",
+      "name": "quantity",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 5,
+      "type": "date",
+      "name": "pickup_date",
+      "role": null
+    },
+    {
+      "tag": "button",
+      "depth": 4,
+      "type": "submit",
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "footer",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    }
+  ],
+  "boxes": [
+    {
+      "tag": "header",
+      "x": 0.0313,
+      "y": 0.0267,
+      "w": 0.9375,
+      "h": 0.0573
+    },
+    {
+      "tag": "nav",
+      "x": 0.5221,
+      "y": 0.032,
+      "w": 0.4467,
+      "h": 0.0267
+    },
+    {
+      "tag": "main",
+      "x": 0.0313,
+      "y": 0.1107,
+      "w": 0.9375,
+      "h": 0.5023
+    },
+    {
+      "tag": "section",
+      "x": 0.0313,
+      "y": 0.1107,
+      "w": 0.5475,
+      "h": 0.3792
+    },
+    {
+      "tag": "h1",
+      "x": 0.0508,
+      "y": 0.1385,
+      "w": 0.5084,
+      "h": 0.036
+    },
+    {
+      "tag": "label",
+      "x": 0.0508,
+      "y": 0.1878,
+      "w": 0.248,
+      "h": 0.0227
+    },
+    {
+      "tag": "select",
+      "x": 0.0508,
+      "y": 0.2166,
+      "w": 0.248,
+      "h": 0.0429
+    },
+    {
+      "tag": "label",
+      "x": 0.3112,
+      "y": 0.1878,
+      "w": 0.248,
+      "h": 0.0227
+    },
+    {
+      "tag": "select",
+      "x": 0.3112,
+      "y": 0.2166,
+      "w": 0.248,
+      "h": 0.0429
+    },
+    {
+      "tag": "table",
+      "x": 0.0508,
+      "y": 0.2818,
+      "w": 0.5084,
+      "h": 0.1803
+    },
+    {
+      "tag": "aside",
+      "x": 0.6037,
+      "y": 0.1107,
+      "w": 0.365,
+      "h": 0.5023
+    },
+    {
+      "tag": "h2",
+      "x": 0.6233,
+      "y": 0.1385,
+      "w": 0.3259,
+      "h": 0.036
+    },
+    {
+      "tag": "form",
+      "x": 0.6233,
+      "y": 0.1878,
+      "w": 0.3259,
+      "h": 0.3974
+    },
+    {
+      "tag": "label",
+      "x": 0.6233,
+      "y": 0.1878,
+      "w": 0.3259,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.6233,
+      "y": 0.2166,
+      "w": 0.3259,
+      "h": 0.0407
+    },
+    {
+      "tag": "label",
+      "x": 0.6233,
+      "y": 0.2724,
+      "w": 0.3259,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.6233,
+      "y": 0.3013,
+      "w": 0.3259,
+      "h": 0.0407
+    },
+    {
+      "tag": "label",
+      "x": 0.6233,
+      "y": 0.357,
+      "w": 0.3259,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.6233,
+      "y": 0.3859,
+      "w": 0.3259,
+      "h": 0.0407
+    },
+    {
+      "tag": "label",
+      "x": 0.6233,
+      "y": 0.4417,
+      "w": 0.3259,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.6233,
+      "y": 0.4706,
+      "w": 0.3259,
+      "h": 0.044
+    },
+    {
+      "tag": "button",
+      "x": 0.6233,
+      "y": 0.5385,
+      "w": 0.3259,
+      "h": 0.0467
+    },
+    {
+      "tag": "footer",
+      "x": 0.0313,
+      "y": 0.6574,
+      "w": 0.9375,
+      "h": 0.0415
+    }
+  ],
+  "labels": [
+    {
+      "for": "sun_exposure",
+      "text": "Sun Exposure"
+    },
+    {
+      "for": "season",
+      "text": "Flowering Season"
+    },
+    {
+      "for": "member_id",
+      "text": "Botanical Society Member ID"
+    },
+    {
+      "for": "specimen_name",
+      "text": "Specimen Variety Requested"
+    },
+    {
+      "for": "quantity",
+      "text": "Number of Stem Cuttings"
+    },
+    {
+      "for": "pickup_date",
+      "text": "Collection Date from Glasshouse"
+    }
+  ],
+  "controls": [
+    {
+      "tag": "select",
+      "type": null,
+      "name": "sun_exposure",
+      "label": "Sun Exposure"
+    },
+    {
+      "tag": "select",
+      "type": null,
+      "name": "season",
+      "label": "Flowering Season"
+    },
+    {
+      "tag": "input",
+      "type": "text",
+      "name": "member_id",
+      "label": "Botanical Society Member ID"
+    },
+    {
+      "tag": "input",
+      "type": "text",
+      "name": "specimen_name",
+      "label": "Specimen Variety Requested"
+    },
+    {
+      "tag": "input",
+      "type": "number",
+      "name": "quantity",
+      "label": "Number of Stem Cuttings"
+    },
+    {
+      "tag": "input",
+      "type": "date",
+      "name": "pickup_date",
+      "label": "Collection Date from Glasshouse"
+    }
+  ],
+  "headings": [
+    "Rare Perennial Cultivars & Propagation Bank",
+    "Reserve Propagation Cuttings"
+  ]
+}

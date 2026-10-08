@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Civic Warm Homes Partnership — Home Retrofit Grant &amp; Heat Pump Subsidy Calculator</title>
+  <style>
+    :root {
+      --wh-orange: #c2410c;
+      --wh-blue: #0369a1;
+      --wh-card: #ffffff;
+      --wh-border: #fed7aa;
+      --wh-bg: #fffbeb;
+      --wh-text: #1c1917;
+      --wh-muted: #78716c;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--wh-bg); color: var(--wh-text); line-height: 1.5; padding: 1.5rem; }
+    .wh-wrap { max-width: 1100px; margin: 0 auto; }
+    header.wh-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--wh-orange); padding-bottom: 1rem; margin-bottom: 1.5rem; }
+    .wh-brand { font-size: 1.35rem; font-weight: 800; color: var(--wh-orange); }
+    nav.wh-nav a { text-decoration: none; color: var(--wh-muted); font-size: 0.9rem; margin-left: 1.25rem; font-weight: 600; }
+    nav.wh-nav a[aria-current="page"] { color: var(--wh-orange); border-bottom: 2px solid var(--wh-orange); padding-bottom: 0.2rem; }
+    .wh-grid { display: grid; grid-template-columns: 1.8fr 1.2fr; gap: 2rem; align-items: start; }
+    .wh-card { background: var(--wh-card); border: 1px solid var(--wh-border); border-radius: 8px; padding: 1.75rem; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+    .wh-card h1, .wh-card h2 { font-size: 1.45rem; color: var(--wh-orange); margin-bottom: 0.5rem; }
+    .wh-field { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 0.85rem; }
+    .wh-field label { font-size: 0.85rem; font-weight: 600; color: var(--wh-text); }
+    .wh-field input, .wh-field select { padding: 0.55rem; border: 1px solid #d6d3d1; border-radius: 6px; font-size: 0.95rem; }
+    .wh-btn { background: var(--wh-orange); color: #fff; border: none; font-size: 1rem; font-weight: 700; padding: 0.85rem; border-radius: 6px; cursor: pointer; width: 100%; margin-top: 0.5rem; }
+    .wh-btn:hover { background: #9a3412; }
+    .wh-grant-pill { background: #ffedd5; border: 1px solid var(--wh-border); border-radius: 6px; padding: 0.75rem; margin-bottom: 0.75rem; }
+    .wh-grant-val { font-size: 1.25rem; font-weight: 800; color: var(--wh-orange); }
+    footer.wh-foot { margin-top: 2.5rem; border-top: 1px solid #e7e5e4; padding-top: 1rem; text-align: center; font-size: 0.85rem; color: var(--wh-muted); }
+  </style>
+</head>
+<body>
+  <div class="wh-wrap">
+    <header class="wh-head">
+      <div class="wh-brand">Civic Warm Homes Partnership</div>
+      <nav class="wh-nav" aria-label="Calculator Nav">
+        <a href="/">Grant Schemes</a>
+        <a href="/calculator" aria-current="page">Self-Assessment Tool</a>
+        <a href="/reports">Saved Assessments</a>
+      </nav>
+    </header>
+    <main class="wh-grid">
+      <section class="wh-card">
+        <h1>Home Energy Retrofit Subsidy Eligibility</h1>
+        <p style="font-size:0.9rem;color:var(--wh-muted);margin-bottom:1.25rem">Check qualification for the £7,500 Boiler Upgrade Scheme and Local Authority Energy Advice grants.</p>
+        <form id="subsidy-calc-form" method="post" action="/calculator/submit">
+          <div class="wh-field">
+            <label for="postcode">Property Postcode</label>
+            <input type="text" id="postcode" name="postcode" required placeholder="TR19 7AA">
+          </div>
+          <div class="wh-field">
+            <label for="build_era">Property Age &amp; Construction Era</label>
+            <select id="build_era" name="build_era" required>
+              <option value="pre-1919">Pre-1919 (Solid Granite / Sandstone Wall)</option>
+              <option value="1919-1944" selected>1919 - 1944 (Interwar Cavity / Uninsulated)</option>
+              <option value="1945-1980">1945 - 1980 (Cavity Brick, Partial Loft)</option>
+              <option value="modern">Post-1980 (Modern insulated construction)</option>
+            </select>
+          </div>
+          <div class="wh-field">
+            <label for="current_heating">Existing Primary Heating Fuel</label>
+            <select id="current_heating" name="current_heating" required>
+              <option value="oil-boiler">Heating Oil Tank Boiler (Non-condensing)</option>
+              <option value="gas-boiler">Mains Gas Boiler (Older than 10 years)</option>
+              <option value="lpg">LPG Bottled Gas</option>
+              <option value="electric-storage">Old Electric Night Storage Heaters</option>
+            </select>
+          </div>
+          <div class="wh-field">
+            <label for="loft_insulation">Current Loft Insulation Depth</label>
+            <select id="loft_insulation" name="loft_insulation" required>
+              <option value="none">Zero / Under 50mm</option>
+              <option value="partial">100mm - 150mm (Needs top-up to 270mm standard)</option>
+              <option value="full">270mm+ Mineral wool (Fully insulated)</option>
+            </select>
+          </div>
+          <div class="wh-field">
+            <label for="income_bracket">Household Annual Income Band</label>
+            <select id="income_bracket" name="income_bracket" required>
+              <option value="under-31k">Under £31,000 / Means-tested benefit entitlement</option>
+              <option value="over-31k">Above £31,000</option>
+            </select>
+          </div>
+          <button type="submit" class="wh-btn">Calculate Qualifying Subsidies</button>
+        </form>
+      </section>
+      <aside class="wh-card">
+        <h2>Available Grant Schemes</h2>
+        <div class="wh-grant-pill">
+          <div class="wh-grant-val">£7,500 BUS Grant</div>
+          <div style="font-weight:700;font-size:0.9rem">Boiler Upgrade Scheme</div>
+          <div style="font-size:0.8rem;color:var(--wh-muted)">Direct voucher discount off air source or ground source heat pump installation.</div>
+        </div>
+        <div class="wh-grant-pill">
+          <div class="wh-grant-val">100% Fully Funded</div>
+          <div style="font-weight:700;font-size:0.9rem">ECO4 / HUG2 Scheme</div>
+          <div style="font-size:0.8rem;color:var(--wh-muted)">Free solid wall insulation and solar panels for off-gas properties with EPC D, E, F or G.</div>
+        </div>
+      </aside>
+    </main>
+    <footer class="wh-foot">
+      <p>Civic Warm Homes Partnership • Energy Saving Trust Accredited Assessment Framework • Council Climate Emergency Plan</p>
+    </footer>
+  </div>
+</body>
+</html>

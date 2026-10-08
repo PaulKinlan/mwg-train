@@ -1,0 +1,604 @@
+{
+  "title": "Forage & Fern Botanical School — Wild Edibles Field Course Booking",
+  "viewport": {
+    "width": 1280,
+    "height": 900
+  },
+  "nodes": [
+    {
+      "tag": "div",
+      "depth": 0,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "header",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "nav",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "main",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "section",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h1",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "form",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "select",
+      "depth": 5,
+      "type": null,
+      "name": "course_date",
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 6,
+      "type": "text",
+      "name": "student_name",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 6,
+      "type": "email",
+      "name": "student_email",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 6,
+      "type": "tel",
+      "name": "emergency_contact",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "select",
+      "depth": 6,
+      "type": null,
+      "name": "experience_level",
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "textarea",
+      "depth": 5,
+      "type": null,
+      "name": "dietary_notes",
+      "role": null
+    },
+    {
+      "tag": "button",
+      "depth": 4,
+      "type": "submit",
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "aside",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h2",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h4",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h4",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h4",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "footer",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    }
+  ],
+  "boxes": [
+    {
+      "tag": "header",
+      "x": 0.0508,
+      "y": 0.0267,
+      "w": 0.8984,
+      "h": 0.0573
+    },
+    {
+      "tag": "nav",
+      "x": 0.5262,
+      "y": 0.032,
+      "w": 0.423,
+      "h": 0.0267
+    },
+    {
+      "tag": "main",
+      "x": 0.0508,
+      "y": 0.1107,
+      "w": 0.8984,
+      "h": 0.6303
+    },
+    {
+      "tag": "section",
+      "x": 0.0508,
+      "y": 0.1107,
+      "w": 0.5241,
+      "h": 0.6303
+    },
+    {
+      "tag": "h1",
+      "x": 0.0734,
+      "y": 0.1429,
+      "w": 0.4787,
+      "h": 0.0387
+    },
+    {
+      "tag": "form",
+      "x": 0.0734,
+      "y": 0.2678,
+      "w": 0.4787,
+      "h": 0.441
+    },
+    {
+      "tag": "label",
+      "x": 0.0734,
+      "y": 0.2678,
+      "w": 0.4787,
+      "h": 0.0227
+    },
+    {
+      "tag": "select",
+      "x": 0.0734,
+      "y": 0.2966,
+      "w": 0.4787,
+      "h": 0.0447
+    },
+    {
+      "tag": "label",
+      "x": 0.0734,
+      "y": 0.3591,
+      "w": 0.2331,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.0734,
+      "y": 0.388,
+      "w": 0.2331,
+      "h": 0.0424
+    },
+    {
+      "tag": "label",
+      "x": 0.3191,
+      "y": 0.3591,
+      "w": 0.2331,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.3191,
+      "y": 0.388,
+      "w": 0.2331,
+      "h": 0.0424
+    },
+    {
+      "tag": "label",
+      "x": 0.0734,
+      "y": 0.4482,
+      "w": 0.2286,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.0734,
+      "y": 0.477,
+      "w": 0.2286,
+      "h": 0.0424
+    },
+    {
+      "tag": "label",
+      "x": 0.3145,
+      "y": 0.4482,
+      "w": 0.2376,
+      "h": 0.0227
+    },
+    {
+      "tag": "select",
+      "x": 0.3145,
+      "y": 0.477,
+      "w": 0.2376,
+      "h": 0.0447
+    },
+    {
+      "tag": "label",
+      "x": 0.0734,
+      "y": 0.5395,
+      "w": 0.4787,
+      "h": 0.0227
+    },
+    {
+      "tag": "textarea",
+      "x": 0.0734,
+      "y": 0.5683,
+      "w": 0.4787,
+      "h": 0.0635
+    },
+    {
+      "tag": "button",
+      "x": 0.0734,
+      "y": 0.6585,
+      "w": 0.4787,
+      "h": 0.0502
+    },
+    {
+      "tag": "aside",
+      "x": 0.5998,
+      "y": 0.1107,
+      "w": 0.3494,
+      "h": 0.3919
+    },
+    {
+      "tag": "h2",
+      "x": 0.6225,
+      "y": 0.1429,
+      "w": 0.3041,
+      "h": 0.0387
+    },
+    {
+      "tag": "footer",
+      "x": 0.0508,
+      "y": 0.7854,
+      "w": 0.8984,
+      "h": 0.0415
+    }
+  ],
+  "labels": [
+    {
+      "for": "course_date",
+      "text": "Available Course Session"
+    },
+    {
+      "for": "student_name",
+      "text": "Participant Full Name"
+    },
+    {
+      "for": "student_email",
+      "text": "Email Address"
+    },
+    {
+      "for": "emergency_contact",
+      "text": "Emergency Contact Phone (Required)"
+    },
+    {
+      "for": "experience_level",
+      "text": "Prior Botanical Experience"
+    },
+    {
+      "for": "dietary_notes",
+      "text": "Dietary Restrictions or Known Plant Allergies"
+    }
+  ],
+  "controls": [
+    {
+      "tag": "select",
+      "type": null,
+      "name": "course_date",
+      "label": "Available Course Session"
+    },
+    {
+      "tag": "input",
+      "type": "text",
+      "name": "student_name",
+      "label": "Participant Full Name"
+    },
+    {
+      "tag": "input",
+      "type": "email",
+      "name": "student_email",
+      "label": "Email Address"
+    },
+    {
+      "tag": "input",
+      "type": "tel",
+      "name": "emergency_contact",
+      "label": "Emergency Contact Phone (Required)"
+    },
+    {
+      "tag": "select",
+      "type": null,
+      "name": "experience_level",
+      "label": "Prior Botanical Experience"
+    },
+    {
+      "tag": "textarea",
+      "type": null,
+      "name": "dietary_notes",
+      "label": "Dietary Restrictions or Known Plant Allergies"
+    }
+  ],
+  "headings": [
+    "Enrol in Autumn Woodland Foraging Walk",
+    "Field Session Syllabus"
+  ]
+}

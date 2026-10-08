@@ -1,0 +1,565 @@
+{
+  "title": "CleanTech Trades Network — Heat Pump & Solar Apprenticeships",
+  "viewport": {
+    "width": 1280,
+    "height": 900
+  },
+  "nodes": [
+    {
+      "tag": "div",
+      "depth": 0,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "header",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "nav",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "main",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "section",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h1",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 4,
+      "type": "search",
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "span",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "span",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "aside",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h2",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "form",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 5,
+      "type": "text",
+      "name": "applicant_name",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 5,
+      "type": "email",
+      "name": "applicant_email",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "select",
+      "depth": 5,
+      "type": null,
+      "name": "target_trade",
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "textarea",
+      "depth": 5,
+      "type": null,
+      "name": "qualifications_summary",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 5,
+      "type": "checkbox",
+      "name": "driver_license",
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "button",
+      "depth": 4,
+      "type": "submit",
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "footer",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    }
+  ],
+  "boxes": [
+    {
+      "tag": "header",
+      "x": 0.0313,
+      "y": 0.0267,
+      "w": 0.9375,
+      "h": 0.056
+    },
+    {
+      "tag": "nav",
+      "x": 0.4766,
+      "y": 0.0313,
+      "w": 0.4922,
+      "h": 0.0267
+    },
+    {
+      "tag": "main",
+      "x": 0.0313,
+      "y": 0.1093,
+      "w": 0.9375,
+      "h": 0.5858
+    },
+    {
+      "tag": "section",
+      "x": 0.0313,
+      "y": 0.1093,
+      "w": 0.5475,
+      "h": 0.5029
+    },
+    {
+      "tag": "h1",
+      "x": 0.0508,
+      "y": 0.1371,
+      "w": 0.5084,
+      "h": 0.0373
+    },
+    {
+      "tag": "input",
+      "x": 0.0508,
+      "y": 0.1878,
+      "w": 0.5084,
+      "h": 0.0367
+    },
+    {
+      "tag": "aside",
+      "x": 0.6037,
+      "y": 0.1093,
+      "w": 0.365,
+      "h": 0.5858
+    },
+    {
+      "tag": "h2",
+      "x": 0.6233,
+      "y": 0.1371,
+      "w": 0.3259,
+      "h": 0.0373
+    },
+    {
+      "tag": "form",
+      "x": 0.6233,
+      "y": 0.1878,
+      "w": 0.3259,
+      "h": 0.4796
+    },
+    {
+      "tag": "label",
+      "x": 0.6233,
+      "y": 0.1878,
+      "w": 0.3259,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.6233,
+      "y": 0.2166,
+      "w": 0.3259,
+      "h": 0.0424
+    },
+    {
+      "tag": "label",
+      "x": 0.6233,
+      "y": 0.2742,
+      "w": 0.3259,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.6233,
+      "y": 0.3031,
+      "w": 0.3259,
+      "h": 0.0424
+    },
+    {
+      "tag": "label",
+      "x": 0.6233,
+      "y": 0.3606,
+      "w": 0.3259,
+      "h": 0.0227
+    },
+    {
+      "tag": "select",
+      "x": 0.6233,
+      "y": 0.3895,
+      "w": 0.3259,
+      "h": 0.0447
+    },
+    {
+      "tag": "label",
+      "x": 0.6233,
+      "y": 0.4492,
+      "w": 0.3259,
+      "h": 0.0227
+    },
+    {
+      "tag": "textarea",
+      "x": 0.6233,
+      "y": 0.4781,
+      "w": 0.3259,
+      "h": 0.0835
+    },
+    {
+      "tag": "input",
+      "x": 0.6233,
+      "y": 0.5808,
+      "w": 0.0102,
+      "h": 0.0144
+    },
+    {
+      "tag": "label",
+      "x": 0.6397,
+      "y": 0.5767,
+      "w": 0.1783,
+      "h": 0.0227
+    },
+    {
+      "tag": "button",
+      "x": 0.6233,
+      "y": 0.6172,
+      "w": 0.3259,
+      "h": 0.0502
+    },
+    {
+      "tag": "footer",
+      "x": 0.0313,
+      "y": 0.7396,
+      "w": 0.9375,
+      "h": 0.0415
+    }
+  ],
+  "labels": [
+    {
+      "for": "applicant_name",
+      "text": "Candidate Full Name"
+    },
+    {
+      "for": "applicant_email",
+      "text": "Email Address"
+    },
+    {
+      "for": "target_trade",
+      "text": "Target Discipline"
+    },
+    {
+      "for": "qualifications_summary",
+      "text": "GCSE / Technical Qualifications"
+    },
+    {
+      "for": "driver_license",
+      "text": "Holds Full UK Manual Driving Licence"
+    }
+  ],
+  "controls": [
+    {
+      "tag": "input",
+      "type": "search",
+      "name": null,
+      "label": null
+    },
+    {
+      "tag": "input",
+      "type": "text",
+      "name": "applicant_name",
+      "label": "Candidate Full Name"
+    },
+    {
+      "tag": "input",
+      "type": "email",
+      "name": "applicant_email",
+      "label": "Email Address"
+    },
+    {
+      "tag": "select",
+      "type": null,
+      "name": "target_trade",
+      "label": "Target Discipline"
+    },
+    {
+      "tag": "textarea",
+      "type": null,
+      "name": "qualifications_summary",
+      "label": "GCSE / Technical Qualifications"
+    },
+    {
+      "tag": "input",
+      "type": "checkbox",
+      "name": "driver_license",
+      "label": "Holds Full UK Manual Driving Licence"
+    }
+  ],
+  "headings": [
+    "Renewable Energy Apprenticeship Opportunities",
+    "Submit Candidate Application"
+  ]
+}

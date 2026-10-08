@@ -1,0 +1,715 @@
+{
+  "title": "Valley & Moor Livestock Veterinary — Ambulatory Farm Visit Booking",
+  "viewport": {
+    "width": 1280,
+    "height": 900
+  },
+  "nodes": [
+    {
+      "tag": "div",
+      "depth": 0,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "header",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "nav",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "main",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "section",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h1",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "strong",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "form",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 6,
+      "type": "text",
+      "name": "cph_number",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 6,
+      "type": "text",
+      "name": "farm_name",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "select",
+      "depth": 6,
+      "type": null,
+      "name": "species",
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 6,
+      "type": "number",
+      "name": "headcount",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 6,
+      "type": "date",
+      "name": "visit_date",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "select",
+      "depth": 6,
+      "type": null,
+      "name": "dispatch_slot",
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 5,
+      "type": "tel",
+      "name": "emergency_phone",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "textarea",
+      "depth": 5,
+      "type": null,
+      "name": "symptoms_summary",
+      "role": null
+    },
+    {
+      "tag": "button",
+      "depth": 4,
+      "type": "submit",
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "aside",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h2",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "ul",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "li",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "li",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "li",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "footer",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    }
+  ],
+  "boxes": [
+    {
+      "tag": "header",
+      "x": 0.0313,
+      "y": 0.0267,
+      "w": 0.9375,
+      "h": 0.056
+    },
+    {
+      "tag": "nav",
+      "x": 0.5655,
+      "y": 0.0313,
+      "w": 0.4033,
+      "h": 0.0267
+    },
+    {
+      "tag": "main",
+      "x": 0.0313,
+      "y": 0.1093,
+      "w": 0.9375,
+      "h": 0.7453
+    },
+    {
+      "tag": "section",
+      "x": 0.0313,
+      "y": 0.1093,
+      "w": 0.5475,
+      "h": 0.7453
+    },
+    {
+      "tag": "h1",
+      "x": 0.0539,
+      "y": 0.1415,
+      "w": 0.5022,
+      "h": 0.04
+    },
+    {
+      "tag": "form",
+      "x": 0.0539,
+      "y": 0.2846,
+      "w": 0.5022,
+      "h": 0.5378
+    },
+    {
+      "tag": "label",
+      "x": 0.0539,
+      "y": 0.2846,
+      "w": 0.2448,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.0539,
+      "y": 0.3135,
+      "w": 0.2448,
+      "h": 0.0424
+    },
+    {
+      "tag": "label",
+      "x": 0.3112,
+      "y": 0.2846,
+      "w": 0.2448,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.3112,
+      "y": 0.3135,
+      "w": 0.2448,
+      "h": 0.0424
+    },
+    {
+      "tag": "label",
+      "x": 0.0539,
+      "y": 0.371,
+      "w": 0.2462,
+      "h": 0.0227
+    },
+    {
+      "tag": "select",
+      "x": 0.0539,
+      "y": 0.3999,
+      "w": 0.2462,
+      "h": 0.0447
+    },
+    {
+      "tag": "label",
+      "x": 0.3126,
+      "y": 0.371,
+      "w": 0.2434,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.3126,
+      "y": 0.3999,
+      "w": 0.2434,
+      "h": 0.0424
+    },
+    {
+      "tag": "label",
+      "x": 0.0539,
+      "y": 0.4597,
+      "w": 0.2448,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.0539,
+      "y": 0.4885,
+      "w": 0.2448,
+      "h": 0.0458
+    },
+    {
+      "tag": "label",
+      "x": 0.3112,
+      "y": 0.4597,
+      "w": 0.2448,
+      "h": 0.0227
+    },
+    {
+      "tag": "select",
+      "x": 0.3112,
+      "y": 0.4885,
+      "w": 0.2448,
+      "h": 0.0447
+    },
+    {
+      "tag": "label",
+      "x": 0.0539,
+      "y": 0.5494,
+      "w": 0.5022,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.0539,
+      "y": 0.5783,
+      "w": 0.5022,
+      "h": 0.0424
+    },
+    {
+      "tag": "label",
+      "x": 0.0539,
+      "y": 0.6358,
+      "w": 0.5022,
+      "h": 0.0227
+    },
+    {
+      "tag": "textarea",
+      "x": 0.0539,
+      "y": 0.6647,
+      "w": 0.5022,
+      "h": 0.0835
+    },
+    {
+      "tag": "button",
+      "x": 0.0539,
+      "y": 0.7722,
+      "w": 0.5022,
+      "h": 0.0502
+    },
+    {
+      "tag": "aside",
+      "x": 0.6037,
+      "y": 0.1093,
+      "w": 0.365,
+      "h": 0.2777
+    },
+    {
+      "tag": "h2",
+      "x": 0.6264,
+      "y": 0.1415,
+      "w": 0.3197,
+      "h": 0.032
+    },
+    {
+      "tag": "ul",
+      "x": 0.6264,
+      "y": 0.25,
+      "w": 0.3197,
+      "h": 0.1048
+    },
+    {
+      "tag": "li",
+      "x": 0.6414,
+      "y": 0.25,
+      "w": 0.3047,
+      "h": 0.0227
+    },
+    {
+      "tag": "li",
+      "x": 0.6414,
+      "y": 0.2797,
+      "w": 0.3047,
+      "h": 0.0227
+    },
+    {
+      "tag": "li",
+      "x": 0.6414,
+      "y": 0.3095,
+      "w": 0.3047,
+      "h": 0.0453
+    },
+    {
+      "tag": "footer",
+      "x": 0.0313,
+      "y": 0.8991,
+      "w": 0.9375,
+      "h": 0.0415
+    }
+  ],
+  "labels": [
+    {
+      "for": "cph_number",
+      "text": "County Parish Holding (CPH) Number"
+    },
+    {
+      "for": "farm_name",
+      "text": "Farm Holding Name & Contact"
+    },
+    {
+      "for": "species",
+      "text": "Primary Species Requiring Examination"
+    },
+    {
+      "for": "headcount",
+      "text": "Estimated Number of Animals"
+    },
+    {
+      "for": "visit_date",
+      "text": "Requested Date"
+    },
+    {
+      "for": "dispatch_slot",
+      "text": "Visit Window"
+    },
+    {
+      "for": "emergency_phone",
+      "text": "On-Farm Contact Phone (Required)"
+    },
+    {
+      "for": "symptoms_summary",
+      "text": "Symptoms, Herd History & Access Notes"
+    }
+  ],
+  "controls": [
+    {
+      "tag": "input",
+      "type": "text",
+      "name": "cph_number",
+      "label": "County Parish Holding (CPH) Number"
+    },
+    {
+      "tag": "input",
+      "type": "text",
+      "name": "farm_name",
+      "label": "Farm Holding Name & Contact"
+    },
+    {
+      "tag": "select",
+      "type": null,
+      "name": "species",
+      "label": "Primary Species Requiring Examination"
+    },
+    {
+      "tag": "input",
+      "type": "number",
+      "name": "headcount",
+      "label": "Estimated Number of Animals"
+    },
+    {
+      "tag": "input",
+      "type": "date",
+      "name": "visit_date",
+      "label": "Requested Date"
+    },
+    {
+      "tag": "select",
+      "type": null,
+      "name": "dispatch_slot",
+      "label": "Visit Window"
+    },
+    {
+      "tag": "input",
+      "type": "tel",
+      "name": "emergency_phone",
+      "label": "On-Farm Contact Phone (Required)"
+    },
+    {
+      "tag": "textarea",
+      "type": null,
+      "name": "symptoms_summary",
+      "label": "Symptoms, Herd History & Access Notes"
+    }
+  ],
+  "headings": [
+    "Schedule On-Site Veterinary Farm Visit",
+    "Biosecurity Protocol"
+  ]
+}

@@ -1,0 +1,580 @@
+{
+  "title": "Civic Warm Homes Partnership — Home Retrofit Grant & Heat Pump Subsidy Calculator",
+  "viewport": {
+    "width": 1280,
+    "height": 900
+  },
+  "nodes": [
+    {
+      "tag": "div",
+      "depth": 0,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "header",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "nav",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "main",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "section",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h1",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "form",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 5,
+      "type": "text",
+      "name": "postcode",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "select",
+      "depth": 5,
+      "type": null,
+      "name": "build_era",
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "select",
+      "depth": 5,
+      "type": null,
+      "name": "current_heating",
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "select",
+      "depth": 5,
+      "type": null,
+      "name": "loft_insulation",
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "select",
+      "depth": 5,
+      "type": null,
+      "name": "income_bracket",
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "button",
+      "depth": 4,
+      "type": "submit",
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "aside",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h2",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "footer",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    }
+  ],
+  "boxes": [
+    {
+      "tag": "header",
+      "x": 0.0703,
+      "y": 0.0267,
+      "w": 0.8594,
+      "h": 0.056
+    },
+    {
+      "tag": "nav",
+      "x": 0.5684,
+      "y": 0.0313,
+      "w": 0.3613,
+      "h": 0.0267
+    },
+    {
+      "tag": "main",
+      "x": 0.0703,
+      "y": 0.1093,
+      "w": 0.8594,
+      "h": 0.6734
+    },
+    {
+      "tag": "section",
+      "x": 0.0703,
+      "y": 0.1093,
+      "w": 0.5006,
+      "h": 0.6734
+    },
+    {
+      "tag": "h1",
+      "x": 0.093,
+      "y": 0.1415,
+      "w": 0.4553,
+      "h": 0.0387
+    },
+    {
+      "tag": "form",
+      "x": 0.093,
+      "y": 0.2593,
+      "w": 0.4553,
+      "h": 0.4912
+    },
+    {
+      "tag": "label",
+      "x": 0.093,
+      "y": 0.2593,
+      "w": 0.4553,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.093,
+      "y": 0.2882,
+      "w": 0.4553,
+      "h": 0.0407
+    },
+    {
+      "tag": "label",
+      "x": 0.093,
+      "y": 0.344,
+      "w": 0.4553,
+      "h": 0.0227
+    },
+    {
+      "tag": "select",
+      "x": 0.093,
+      "y": 0.3728,
+      "w": 0.4553,
+      "h": 0.0429
+    },
+    {
+      "tag": "label",
+      "x": 0.093,
+      "y": 0.4308,
+      "w": 0.4553,
+      "h": 0.0227
+    },
+    {
+      "tag": "select",
+      "x": 0.093,
+      "y": 0.4597,
+      "w": 0.4553,
+      "h": 0.0429
+    },
+    {
+      "tag": "label",
+      "x": 0.093,
+      "y": 0.5177,
+      "w": 0.4553,
+      "h": 0.0227
+    },
+    {
+      "tag": "select",
+      "x": 0.093,
+      "y": 0.5466,
+      "w": 0.4553,
+      "h": 0.0429
+    },
+    {
+      "tag": "label",
+      "x": 0.093,
+      "y": 0.6045,
+      "w": 0.4553,
+      "h": 0.0227
+    },
+    {
+      "tag": "select",
+      "x": 0.093,
+      "y": 0.6334,
+      "w": 0.4553,
+      "h": 0.0429
+    },
+    {
+      "tag": "button",
+      "x": 0.093,
+      "y": 0.7003,
+      "w": 0.4553,
+      "h": 0.0502
+    },
+    {
+      "tag": "aside",
+      "x": 0.5959,
+      "y": 0.1093,
+      "w": 0.3338,
+      "h": 0.3964
+    },
+    {
+      "tag": "h2",
+      "x": 0.6186,
+      "y": 0.1415,
+      "w": 0.2884,
+      "h": 0.0387
+    },
+    {
+      "tag": "footer",
+      "x": 0.0703,
+      "y": 0.8272,
+      "w": 0.8594,
+      "h": 0.0415
+    }
+  ],
+  "labels": [
+    {
+      "for": "postcode",
+      "text": "Property Postcode"
+    },
+    {
+      "for": "build_era",
+      "text": "Property Age & Construction Era"
+    },
+    {
+      "for": "current_heating",
+      "text": "Existing Primary Heating Fuel"
+    },
+    {
+      "for": "loft_insulation",
+      "text": "Current Loft Insulation Depth"
+    },
+    {
+      "for": "income_bracket",
+      "text": "Household Annual Income Band"
+    }
+  ],
+  "controls": [
+    {
+      "tag": "input",
+      "type": "text",
+      "name": "postcode",
+      "label": "Property Postcode"
+    },
+    {
+      "tag": "select",
+      "type": null,
+      "name": "build_era",
+      "label": "Property Age & Construction Era"
+    },
+    {
+      "tag": "select",
+      "type": null,
+      "name": "current_heating",
+      "label": "Existing Primary Heating Fuel"
+    },
+    {
+      "tag": "select",
+      "type": null,
+      "name": "loft_insulation",
+      "label": "Current Loft Insulation Depth"
+    },
+    {
+      "tag": "select",
+      "type": null,
+      "name": "income_bracket",
+      "label": "Household Annual Income Band"
+    }
+  ],
+  "headings": [
+    "Home Energy Retrofit Subsidy Eligibility",
+    "Available Grant Schemes"
+  ]
+}

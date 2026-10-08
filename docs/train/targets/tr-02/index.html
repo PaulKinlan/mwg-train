@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Foxhill Orchard &amp; Press — Seasonal Cider Pre-Orders</title>
+  <style>
+    :root {
+      --fo-bg: #fdfbf7;
+      --fo-bark: #382013;
+      --fo-amber: #b45309;
+      --fo-gold: #f59e0b;
+      --fo-cream: #fef3c7;
+      --fo-border: #e2d9cc;
+      --fo-text: #261a12;
+      --fo-muted: #786657;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: "Georgia", serif; background: var(--fo-bg); color: var(--fo-text); line-height: 1.5; padding: 1.5rem; }
+    .fo-shell { max-width: 1200px; margin: 0 auto; }
+    header.fo-header { border-bottom: 2px solid var(--fo-amber); padding-bottom: 1.25rem; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: flex-end; }
+    .fo-title-area h1 { font-size: 2rem; color: var(--fo-bark); letter-spacing: -0.5px; }
+    .fo-tagline { font-style: italic; color: var(--fo-muted); font-size: 0.95rem; }
+    nav.fo-nav { display: flex; gap: 1.25rem; font-family: -apple-system, sans-serif; font-size: 0.9rem; }
+    nav.fo-nav a { text-decoration: none; color: var(--fo-bark); font-weight: 600; }
+    nav.fo-nav a[aria-current="page"] { color: var(--fo-amber); text-decoration: underline; }
+    .fo-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; }
+    .fo-catalog { display: grid; gap: 1.5rem; }
+    .fo-cider-card { background: #fff; border: 1px solid var(--fo-border); border-radius: 8px; padding: 1.25rem; display: grid; grid-template-columns: 1fr auto; gap: 1rem; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+    .fo-cider-card h3 { font-size: 1.2rem; color: var(--fo-bark); margin-bottom: 0.25rem; }
+    .fo-cider-desc { font-family: -apple-system, sans-serif; font-size: 0.85rem; color: var(--fo-muted); margin-bottom: 0.5rem; }
+    .fo-price-tag { font-family: -apple-system, sans-serif; font-weight: 700; color: var(--fo-amber); font-size: 1.1rem; }
+    .fo-qty-box { display: flex; align-items: center; gap: 0.5rem; font-family: -apple-system, sans-serif; }
+    .fo-qty-box input { width: 64px; padding: 0.4rem; border: 1px solid var(--fo-border); border-radius: 4px; text-align: center; font-size: 1rem; }
+    .fo-checkout-card { background: #fff; border: 1px solid var(--fo-border); border-radius: 8px; padding: 1.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.03); }
+    .fo-checkout-card h2 { font-size: 1.35rem; color: var(--fo-bark); margin-bottom: 1rem; border-bottom: 1px solid var(--fo-border); padding-bottom: 0.5rem; }
+    .fo-form-group { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 1rem; font-family: -apple-system, sans-serif; }
+    .fo-form-group label { font-size: 0.85rem; font-weight: 600; color: var(--fo-bark); }
+    .fo-form-group input, .fo-form-group select { padding: 0.55rem; border: 1px solid var(--fo-border); border-radius: 4px; font-size: 0.95rem; }
+    .fo-btn-order { width: 100%; background: var(--fo-amber); color: #fff; border: none; padding: 0.85rem; border-radius: 6px; font-weight: 700; font-family: -apple-system, sans-serif; font-size: 1rem; cursor: pointer; }
+    .fo-btn-order:hover { background: #92400e; }
+    .fo-pickup-notice { margin-top: 1rem; padding: 0.75rem; background: var(--fo-cream); border-radius: 6px; font-family: -apple-system, sans-serif; font-size: 0.8rem; color: #78350f; }
+    footer.fo-footer { margin-top: 2.5rem; padding-top: 1.25rem; border-top: 1px solid var(--fo-border); text-align: center; font-size: 0.85rem; color: var(--fo-muted); font-family: -apple-system, sans-serif; }
+  </style>
+</head>
+<body>
+  <div class="fo-shell">
+    <header class="fo-header">
+      <div class="fo-title-area">
+        <h1>Foxhill Orchard &amp; Cider Press</h1>
+        <p class="fo-tagline">Heritage single-orchard pressings • Autumn 2026 Batch Pre-Orders</p>
+      </div>
+      <nav class="fo-nav" aria-label="Store Navigation">
+        <a href="/">The Orchard</a>
+        <a href="/ciders" aria-current="page">Pre-Order Bottles</a>
+        <a href="/cart">Cask Cart</a>
+        <a href="/orders">Pickup Slips</a>
+      </nav>
+    </header>
+    <main class="fo-layout">
+      <section>
+        <h2 style="font-size:1.4rem;color:#382013;margin-bottom:1rem">Harvest Pressings Available for Weekend Pickup</h2>
+        <form id="order-form" method="post" action="/checkout">
+          <div class="fo-catalog">
+            <article class="fo-cider-card">
+              <div>
+                <h3>Kingston Black Single Variety (750ml)</h3>
+                <p class="fo-cider-desc">Dry, structured bittersharp cider fermented in neutral oak casks. 6.8% ABV.</p>
+                <div class="fo-price-tag">£7.50 / bottle</div>
+              </div>
+              <div class="fo-qty-box">
+                <label for="qty_kingston">Bottles:</label>
+                <input type="number" id="qty_kingston" name="qty_kingston" min="0" max="24" value="2">
+              </div>
+            </article>
+            <article class="fo-cider-card">
+              <div>
+                <h3>Orchard Scrumpy Unfiltered (1 Litre Flagon)</h3>
+                <p class="fo-cider-desc">Cloudy farmhouse blend of Dabinett and Yarlington Mill. Naturally sparkling. 6.2% ABV.</p>
+                <div class="fo-price-tag">£8.20 / flagon</div>
+              </div>
+              <div class="fo-qty-box">
+                <label for="qty_scrumpy">Flagons:</label>
+                <input type="number" id="qty_scrumpy" name="qty_scrumpy" min="0" max="12" value="1">
+              </div>
+            </article>
+            <article class="fo-cider-card">
+              <div>
+                <h3>Foxhill Autumn Perry (750ml)</h3>
+                <p class="fo-cider-desc">Pressed from heritage Blakeney Red and Hendre Huffcap perry pears. Delicate floral notes. 5.5% ABV.</p>
+                <div class="fo-price-tag">£8.90 / bottle</div>
+              </div>
+              <div class="fo-qty-box">
+                <label for="qty_perry">Bottles:</label>
+                <input type="number" id="qty_perry" name="qty_perry" min="0" max="18" value="0">
+              </div>
+            </article>
+          </div>
+          <div class="fo-checkout-card" style="margin-top: 1.5rem;">
+            <h2>Farm Gate Collection Details</h2>
+            <div class="fo-form-group">
+              <label for="customer_name">Full Name</label>
+              <input type="text" id="customer_name" name="customer_name" required placeholder="Eleanor Vance">
+            </div>
+            <div class="fo-form-group">
+              <label for="customer_email">Email Address</label>
+              <input type="email" id="customer_email" name="customer_email" required placeholder="eleanor@example.test">
+            </div>
+            <div class="fo-form-group">
+              <label for="pickup_date">Pickup Weekend Slot</label>
+              <select id="pickup_date" name="pickup_date" required>
+                <option value="sat-morning">Saturday 17 Oct (10:00 - 13:00)</option>
+                <option value="sat-afternoon">Saturday 17 Oct (13:30 - 17:00)</option>
+                <option value="sun-morning">Sunday 18 Oct (11:00 - 15:00)</option>
+              </select>
+            </div>
+            <button type="submit" class="fo-btn-order">Submit Cider Pre-Order</button>
+            <div class="fo-pickup-notice">
+              Collection address: Foxhill Barn, Ciderhouse Lane, HR4 7PJ. Re-usable bottle return scheme: £0.50 rebate per returned clean flagon.
+            </div>
+          </div>
+        </form>
+      </section>
+      <aside>
+        <div class="fo-checkout-card">
+          <h2>Orchard Notes</h2>
+          <p style="font-size:0.9rem;color:#786657;margin-bottom:1rem">All our fruit is unsprayed and hand-harvested from standard trees planted in 1968. Wild yeast ferment only.</p>
+          <h3 style="font-size:1.05rem;color:#382013;margin-bottom:0.5rem">Collection Protocol</h3>
+          <ul style="font-size:0.85rem;color:#786657;display:flex;flex-direction:column;gap:0.4rem;padding-left:1.2rem">
+            <li>Drive directly up the orchard lane to the press building</li>
+            <li>State your order confirmation reference code</li>
+            <li>Payment taken at collection via contactless card or cash</li>
+          </ul>
+        </div>
+      </aside>
+    </main>
+    <footer class="fo-footer">
+      <p>Foxhill Orchard &amp; Press • Traditional Farmhouse Cider Producers • Licensed Premises</p>
+    </footer>
+  </div>
+</body>
+</html>

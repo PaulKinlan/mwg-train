@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Canopy Guardian — Urban Street Tree Health &amp; Watering Monitor</title>
+  <style>
+    :root {
+      --cg-green: #047857;
+      --cg-lime: #84cc16;
+      --cg-slate: #0f172a;
+      --cg-card: #1e293b;
+      --cg-border: #334155;
+      --cg-text: #f8fafc;
+      --cg-muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: var(--cg-slate); color: var(--cg-text); line-height: 1.5; padding: 1.5rem; }
+    .cg-wrap { max-width: 1200px; margin: 0 auto; }
+    header.cg-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--cg-green); padding-bottom: 1rem; margin-bottom: 1.5rem; }
+    .cg-brand { font-size: 1.35rem; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 0.5rem; }
+    nav.cg-nav a { text-decoration: none; color: var(--cg-muted); font-size: 0.9rem; margin-left: 1.25rem; font-weight: 600; }
+    nav.cg-nav a[aria-current="page"] { color: var(--cg-lime); border-bottom: 2px solid var(--cg-lime); padding-bottom: 0.2rem; }
+    .cg-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; margin-bottom: 1.5rem; }
+    .cg-metric-card { background: var(--cg-card); border: 1px solid var(--cg-border); border-radius: 8px; padding: 1.25rem; }
+    .cg-metric-title { font-size: 0.8rem; text-transform: uppercase; color: var(--cg-muted); }
+    .cg-metric-val { font-size: 1.8rem; font-weight: 800; color: #fff; margin: 0.2rem 0; }
+    .cg-grid { display: grid; grid-template-columns: 1.8fr 1.2fr; gap: 2rem; align-items: start; }
+    .cg-card { background: var(--cg-card); border: 1px solid var(--cg-border); border-radius: 8px; padding: 1.5rem; }
+    .cg-card h2 { font-size: 1.3rem; margin-bottom: 0.75rem; color: #fff; }
+    table.cg-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    table.cg-table th, table.cg-table td { padding: 0.6rem 0.5rem; border-bottom: 1px solid var(--cg-border); text-align: left; }
+    table.cg-table th { color: var(--cg-muted); }
+    .cg-risk-high { background: rgba(239,68,68,0.2); color: #f87171; padding: 0.15rem 0.45rem; border-radius: 4px; font-weight: 700; font-size: 0.75rem; }
+    .cg-risk-ok { background: rgba(34,197,94,0.2); color: #4ade80; padding: 0.15rem 0.45rem; border-radius: 4px; font-weight: 700; font-size: 0.75rem; }
+    .cg-field { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 0.85rem; }
+    .cg-field label { font-size: 0.85rem; font-weight: 600; color: var(--cg-muted); }
+    .cg-field input, .cg-field select { background: #0f172a; border: 1px solid var(--cg-border); color: #fff; padding: 0.55rem; border-radius: 6px; font-size: 0.95rem; }
+    .cg-btn { background: var(--cg-green); color: #fff; border: none; font-size: 1rem; font-weight: 700; padding: 0.75rem; border-radius: 6px; cursor: pointer; width: 100%; margin-top: 0.5rem; }
+    .cg-btn:hover { background: #065f46; }
+    footer.cg-foot { margin-top: 2.5rem; border-top: 1px solid var(--cg-border); padding-top: 1rem; text-align: center; font-size: 0.85rem; color: var(--cg-muted); }
+  </style>
+</head>
+<body>
+  <div class="cg-wrap">
+    <header class="cg-head">
+      <div class="cg-brand">🌳 Canopy Guardian — Urban Forestry</div>
+      <nav class="cg-nav" aria-label="Canopy Nav">
+        <a href="/">Canopy Summary</a>
+        <a href="/trees" aria-current="page">Street Inventory</a>
+        <a href="/log">Log Watering</a>
+        <a href="/volunteer">Tree Stewards</a>
+      </nav>
+    </header>
+    <div class="cg-metrics">
+      <div class="cg-metric-card">
+        <div class="cg-metric-title">Young Trees Monitored</div>
+        <div class="cg-metric-val">142 Saplings</div>
+        <div style="font-size:0.8rem;color:var(--cg-lime)">Planted 2024 - 2026</div>
+      </div>
+      <div class="cg-metric-card">
+        <div class="cg-metric-title">Watered This Week</div>
+        <div class="cg-metric-val">98 Trees</div>
+        <div style="font-size:0.8rem;color:#38bdf8">69% of drought quota</div>
+      </div>
+      <div class="cg-metric-card">
+        <div class="cg-metric-title">Critical Drought Alert</div>
+        <div class="cg-metric-val">12 Trees</div>
+        <div style="font-size:0.8rem;color:#f87171">No water logged in 10+ days</div>
+      </div>
+    </div>
+    <main class="cg-grid">
+      <section class="cg-card">
+        <h2>Civic Street Tree Inventory &amp; Status</h2>
+        <table class="cg-table">
+          <thead>
+            <tr>
+              <th>Tree ID</th>
+              <th>Species</th>
+              <th>Location</th>
+              <th>Last Watered</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>TR-088</td>
+              <td>Field Maple (<em>Acer campestre</em>)</td>
+              <td>Elm Grove #14</td>
+              <td>Yesterday</td>
+              <td><span class="cg-risk-ok">Hydrated</span></td>
+            </tr>
+            <tr>
+              <td>TR-092</td>
+              <td>Small-leaved Lime (<em>Tilia cordata</em>)</td>
+              <td>High St #42</td>
+              <td>9 days ago</td>
+              <td><span class="cg-risk-high">Water Needed</span></td>
+            </tr>
+            <tr>
+              <td>TR-104</td>
+              <td>Rowan (<em>Sorbus aucuparia</em>)</td>
+              <td>Station Approach</td>
+              <td>3 days ago</td>
+              <td><span class="cg-risk-ok">Optimal</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+      <aside class="cg-card">
+        <h2>Log Volunteer Watering Event</h2>
+        <form id="tree-water-form" method="post" action="/trees/log">
+          <div class="cg-field">
+            <label for="tree_tag">Street Tree Tag ID</label>
+            <input type="text" id="tree_tag" name="tree_tag" required placeholder="TR-092">
+          </div>
+          <div class="cg-field">
+            <label for="gallons">Litres / Gallons Applied</label>
+            <select id="gallons" name="gallons" required>
+              <option value="20-litres">Full 20L Slow-Release Treegator Bag</option>
+              <option value="40-litres">2x Buckets (40 Litres)</option>
+              <option value="hose-5min">Council Tanker Fill (60+ Litres)</option>
+            </select>
+          </div>
+          <div class="cg-field">
+            <label for="mulch_condition">Mulch Ring Condition</label>
+            <select id="mulch_condition" name="mulch_condition" required>
+              <option value="good">Good depth (3 inches, weed-free)</option>
+              <option value="scattered">Scattered / Weeds encroaching</option>
+              <option value="bare">Bare soil (Mulch replenishment needed)</option>
+            </select>
+          </div>
+          <div class="cg-field">
+            <label for="steward_initials">Volunteer Steward Initials</label>
+            <input type="text" id="steward_initials" name="steward_initials" required placeholder="MK">
+          </div>
+          <button type="submit" class="cg-btn">Record Watering Event</button>
+        </form>
+      </aside>
+    </main>
+    <footer class="cg-foot">
+      <p>Canopy Guardian Urban Tree Stewardship • Supported by Municipal Environment Committee • Open Sensor Registry</p>
+    </footer>
+  </div>
+</body>
+</html>

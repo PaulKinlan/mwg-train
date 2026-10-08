@@ -1,0 +1,759 @@
+{
+  "title": "Canopy Guardian — Urban Street Tree Health & Watering Monitor",
+  "viewport": {
+    "width": 1280,
+    "height": 900
+  },
+  "nodes": [
+    {
+      "tag": "div",
+      "depth": 0,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "header",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "nav",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "main",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "section",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h2",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "table",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "thead",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "tr",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "th",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "th",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "th",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "th",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "th",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "tbody",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "tr",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "em",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "span",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "tr",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "em",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "span",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "tr",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "em",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "td",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "span",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "aside",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h2",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "form",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 5,
+      "type": "text",
+      "name": "tree_tag",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "select",
+      "depth": 5,
+      "type": null,
+      "name": "gallons",
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "select",
+      "depth": 5,
+      "type": null,
+      "name": "mulch_condition",
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 5,
+      "type": "text",
+      "name": "steward_initials",
+      "role": null
+    },
+    {
+      "tag": "button",
+      "depth": 4,
+      "type": "submit",
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "footer",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    }
+  ],
+  "boxes": [
+    {
+      "tag": "header",
+      "x": 0.0313,
+      "y": 0.0267,
+      "w": 0.9375,
+      "h": 0.056
+    },
+    {
+      "tag": "nav",
+      "x": 0.5034,
+      "y": 0.0313,
+      "w": 0.4654,
+      "h": 0.0267
+    },
+    {
+      "tag": "main",
+      "x": 0.0313,
+      "y": 0.2804,
+      "w": 0.9375,
+      "h": 0.5021
+    },
+    {
+      "tag": "section",
+      "x": 0.0313,
+      "y": 0.2804,
+      "w": 0.5475,
+      "h": 0.3519
+    },
+    {
+      "tag": "h2",
+      "x": 0.0508,
+      "y": 0.3081,
+      "w": 0.5084,
+      "h": 0.0347
+    },
+    {
+      "tag": "table",
+      "x": 0.0508,
+      "y": 0.3561,
+      "w": 0.5084,
+      "h": 0.2483
+    },
+    {
+      "tag": "aside",
+      "x": 0.6037,
+      "y": 0.2804,
+      "w": 0.365,
+      "h": 0.5021
+    },
+    {
+      "tag": "h2",
+      "x": 0.6233,
+      "y": 0.3081,
+      "w": 0.3259,
+      "h": 0.0347
+    },
+    {
+      "tag": "form",
+      "x": 0.6233,
+      "y": 0.3561,
+      "w": 0.3259,
+      "h": 0.3985
+    },
+    {
+      "tag": "label",
+      "x": 0.6233,
+      "y": 0.3561,
+      "w": 0.3259,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.6233,
+      "y": 0.385,
+      "w": 0.3259,
+      "h": 0.0407
+    },
+    {
+      "tag": "label",
+      "x": 0.6233,
+      "y": 0.4408,
+      "w": 0.3259,
+      "h": 0.0227
+    },
+    {
+      "tag": "select",
+      "x": 0.6233,
+      "y": 0.4696,
+      "w": 0.3259,
+      "h": 0.0429
+    },
+    {
+      "tag": "label",
+      "x": 0.6233,
+      "y": 0.5276,
+      "w": 0.3259,
+      "h": 0.0227
+    },
+    {
+      "tag": "select",
+      "x": 0.6233,
+      "y": 0.5565,
+      "w": 0.3259,
+      "h": 0.0429
+    },
+    {
+      "tag": "label",
+      "x": 0.6233,
+      "y": 0.6145,
+      "w": 0.3259,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.6233,
+      "y": 0.6434,
+      "w": 0.3259,
+      "h": 0.0407
+    },
+    {
+      "tag": "button",
+      "x": 0.6233,
+      "y": 0.708,
+      "w": 0.3259,
+      "h": 0.0467
+    },
+    {
+      "tag": "footer",
+      "x": 0.0313,
+      "y": 0.8269,
+      "w": 0.9375,
+      "h": 0.0415
+    }
+  ],
+  "labels": [
+    {
+      "for": "tree_tag",
+      "text": "Street Tree Tag ID"
+    },
+    {
+      "for": "gallons",
+      "text": "Litres / Gallons Applied"
+    },
+    {
+      "for": "mulch_condition",
+      "text": "Mulch Ring Condition"
+    },
+    {
+      "for": "steward_initials",
+      "text": "Volunteer Steward Initials"
+    }
+  ],
+  "controls": [
+    {
+      "tag": "input",
+      "type": "text",
+      "name": "tree_tag",
+      "label": "Street Tree Tag ID"
+    },
+    {
+      "tag": "select",
+      "type": null,
+      "name": "gallons",
+      "label": "Litres / Gallons Applied"
+    },
+    {
+      "tag": "select",
+      "type": null,
+      "name": "mulch_condition",
+      "label": "Mulch Ring Condition"
+    },
+    {
+      "tag": "input",
+      "type": "text",
+      "name": "steward_initials",
+      "label": "Volunteer Steward Initials"
+    }
+  ],
+  "headings": [
+    "Civic Street Tree Inventory & Status",
+    "Log Volunteer Watering Event"
+  ]
+}

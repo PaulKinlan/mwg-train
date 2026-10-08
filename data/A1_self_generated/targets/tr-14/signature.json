@@ -1,0 +1,439 @@
+{
+  "title": "Stonegate Heritage Trail — Historical Stops & Audio Transcripts",
+  "viewport": {
+    "width": 1280,
+    "height": 900
+  },
+  "nodes": [
+    {
+      "tag": "div",
+      "depth": 0,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "header",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "nav",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "main",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "aside",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h3",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "article",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h1",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "section",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h2",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "form",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 5,
+      "type": "text",
+      "name": "visitor_name",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "textarea",
+      "depth": 5,
+      "type": null,
+      "name": "visitor_note",
+      "role": null
+    },
+    {
+      "tag": "button",
+      "depth": 4,
+      "type": "submit",
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "footer",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    }
+  ],
+  "boxes": [
+    {
+      "tag": "header",
+      "x": 0.0313,
+      "y": 0.0267,
+      "w": 0.9375,
+      "h": 0.0587
+    },
+    {
+      "tag": "nav",
+      "x": 0.5818,
+      "y": 0.0327,
+      "w": 0.3869,
+      "h": 0.0267
+    },
+    {
+      "tag": "main",
+      "x": 0.0313,
+      "y": 0.112,
+      "w": 0.9375,
+      "h": 0.4271
+    },
+    {
+      "tag": "aside",
+      "x": 0.0313,
+      "y": 0.112,
+      "w": 0.25,
+      "h": 0.4102
+    },
+    {
+      "tag": "h3",
+      "x": 0.0477,
+      "y": 0.1353,
+      "w": 0.2172,
+      "h": 0.0267
+    },
+    {
+      "tag": "article",
+      "x": 0.3031,
+      "y": 0.112,
+      "w": 0.3781,
+      "h": 0.4271
+    },
+    {
+      "tag": "h1",
+      "x": 0.3258,
+      "y": 0.1442,
+      "w": 0.3328,
+      "h": 0.04
+    },
+    {
+      "tag": "section",
+      "x": 0.7031,
+      "y": 0.112,
+      "w": 0.2656,
+      "h": 0.4179
+    },
+    {
+      "tag": "h2",
+      "x": 0.7227,
+      "y": 0.1398,
+      "w": 0.2266,
+      "h": 0.0333
+    },
+    {
+      "tag": "form",
+      "x": 0.7227,
+      "y": 0.2451,
+      "w": 0.2266,
+      "h": 0.257
+    },
+    {
+      "tag": "label",
+      "x": 0.7227,
+      "y": 0.2451,
+      "w": 0.2266,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.7227,
+      "y": 0.274,
+      "w": 0.2266,
+      "h": 0.0407
+    },
+    {
+      "tag": "label",
+      "x": 0.7227,
+      "y": 0.3297,
+      "w": 0.2266,
+      "h": 0.0227
+    },
+    {
+      "tag": "textarea",
+      "x": 0.7227,
+      "y": 0.3586,
+      "w": 0.2266,
+      "h": 0.0818
+    },
+    {
+      "tag": "button",
+      "x": 0.7227,
+      "y": 0.4555,
+      "w": 0.2266,
+      "h": 0.0467
+    },
+    {
+      "tag": "footer",
+      "x": 0.0313,
+      "y": 0.5835,
+      "w": 0.9375,
+      "h": 0.0415
+    }
+  ],
+  "labels": [
+    {
+      "for": "visitor_name",
+      "text": "Your Name"
+    },
+    {
+      "for": "visitor_note",
+      "text": "Historical Memory or Architectural Note"
+    }
+  ],
+  "controls": [
+    {
+      "tag": "input",
+      "type": "text",
+      "name": "visitor_name",
+      "label": "Your Name"
+    },
+    {
+      "tag": "textarea",
+      "type": null,
+      "name": "visitor_note",
+      "label": "Historical Memory or Architectural Note"
+    }
+  ],
+  "headings": [
+    "Tour Stops (1.8 Miles Total)",
+    "Stop 1: The Old Guildhall (Built 1642)",
+    "Visitor Reflection"
+  ]
+}

@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Voices of the Mill Valley — Elder Oral History Archive &amp; Transcript Index</title>
+  <style>
+    :root {
+      --oh-indigo: #1e1b4b;
+      --oh-gold: #b45309;
+      --oh-card: #ffffff;
+      --oh-border: #e2e8f0;
+      --oh-bg: #f8fafc;
+      --oh-text: #1e293b;
+      --oh-muted: #64748b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: "Georgia", serif; background: var(--oh-bg); color: var(--oh-text); line-height: 1.5; padding: 1.5rem; }
+    .oh-shell { max-width: 1200px; margin: 0 auto; }
+    header.oh-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--oh-indigo); padding-bottom: 1rem; margin-bottom: 1.5rem; }
+    .oh-brand { font-size: 1.45rem; font-weight: 700; color: var(--oh-indigo); }
+    nav.oh-nav a { font-family: -apple-system, sans-serif; text-decoration: none; color: var(--oh-muted); font-size: 0.9rem; margin-left: 1.25rem; font-weight: 600; }
+    nav.oh-nav a[aria-current="page"] { color: var(--oh-indigo); text-decoration: underline; }
+    .oh-grid { display: grid; grid-template-columns: 280px 1fr 320px; gap: 1.75rem; align-items: start; }
+    .oh-card { background: var(--oh-card); border: 1px solid var(--oh-border); border-radius: 8px; padding: 1.5rem; }
+    .oh-card h1, .oh-card h2 { font-size: 1.35rem; color: var(--oh-indigo); margin-bottom: 0.5rem; }
+    .oh-filter-select { font-family: -apple-system, sans-serif; width: 100%; padding: 0.5rem; border: 1px solid var(--oh-border); border-radius: 6px; margin-bottom: 0.75rem; }
+    .oh-list { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; font-family: -apple-system, sans-serif; font-size: 0.85rem; }
+    .oh-list a { text-decoration: none; color: var(--oh-text); padding: 0.4rem; border-radius: 4px; display: block; }
+    .oh-list a.active { background: #ede9fe; color: var(--oh-indigo); font-weight: 700; }
+    .oh-transcript { font-size: 0.95rem; color: #334155; line-height: 1.6; }
+    .oh-timecode { font-family: monospace; font-size: 0.8rem; color: var(--oh-gold); font-weight: 700; }
+    .oh-field { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 0.85rem; font-family: -apple-system, sans-serif; }
+    .oh-field label { font-size: 0.85rem; font-weight: 600; color: var(--oh-text); }
+    .oh-field input, .oh-field textarea { padding: 0.55rem; border: 1px solid var(--oh-border); border-radius: 6px; font-size: 0.95rem; }
+    .oh-btn { font-family: -apple-system, sans-serif; background: var(--oh-indigo); color: #fff; border: none; font-size: 0.95rem; font-weight: 700; padding: 0.75rem; border-radius: 6px; cursor: pointer; width: 100%; }
+    .oh-btn:hover { background: #312e81; }
+    footer.oh-foot { margin-top: 2.5rem; border-top: 1px solid var(--oh-border); padding-top: 1rem; text-align: center; font-family: -apple-system, sans-serif; font-size: 0.85rem; color: var(--oh-muted); }
+  </style>
+</head>
+<body>
+  <div class="oh-shell">
+    <header class="oh-head">
+      <div class="oh-brand">Voices of the Mill Valley</div>
+      <nav class="oh-nav" aria-label="Archive Nav">
+        <a href="/">About the Project</a>
+        <a href="/interviews" aria-current="page">Interview Index</a>
+        <a href="/decades">Decade Timeline</a>
+        <a href="/curators">Curator Desk</a>
+      </nav>
+    </header>
+    <main class="oh-grid">
+      <aside class="oh-card">
+        <h2>Oral Memoirs</h2>
+        <label for="decade_filter" style="font-family:-apple-system,sans-serif;font-size:0.8rem;font-weight:600">Filter by Historical Decade</label>
+        <select id="decade_filter" class="oh-filter-select">
+          <option value="1930s">1930s — Great Depression &amp; Rural Labour</option>
+          <option value="1940s">1940s — Wartime Agriculture &amp; Land Army</option>
+          <option value="1950s" selected>1950s — Postwar Textile Mechanisation</option>
+          <option value="1960s">1960s — Mill Closures &amp; Transition</option>
+        </select>
+        <ul class="oh-list">
+          <li><a href="#int-01" class="active">George Hedley — Loom Tender (Weaving Shed #4)</a></li>
+          <li><a href="#int-02">Winifred Cross — Carding Room Supervisor</a></li>
+          <li><a href="#int-03">Albert Ward — Millrace Engineer &amp; Stoker</a></li>
+        </ul>
+      </aside>
+      <article class="oh-card">
+        <h1>Interview Transcript: George Hedley (Recorded 1984)</h1>
+        <p style="font-style:italic;color:var(--oh-muted);margin-bottom:1rem;font-size:0.9rem">Recorded at Albion Weaving Sheds • Interviewer: Dr. Rachel Vance • Audio Tape Box #14</p>
+        <div class="oh-transcript">
+          <p><span class="oh-timecode">[04:12]</span> "I started as a bobbin lad in October 1952. Sixty shuttle looms running simultaneously in one room—you could feel the floor vibrating right up through the soles of your clogs before you even opened the fire door."</p>
+          <p style="margin-top:0.75rem"><span class="oh-timecode">[07:45]</span> "We had no ear defenders in those days. You learned to read each other's lips from forty feet away. If a warp thread broke, the weaver caught it with a hand-knot in two seconds flat without shutting the loom down."</p>
+        </div>
+      </article>
+      <section class="oh-card">
+        <h2>Annotate Historical Footnote</h2>
+        <p style="font-family:-apple-system,sans-serif;font-size:0.85rem;color:var(--oh-muted);margin-bottom:1rem">Contribute corroborating local names, dates, or mill machinery terminology.</p>
+        <form id="footnote-form" method="post" action="/interviews/hedley/notes">
+          <div class="oh-field">
+            <label for="researcher_name">Researcher / Relative Name</label>
+            <input type="text" id="researcher_name" name="researcher_name" required placeholder="Dr. Alan Hedley">
+          </div>
+          <div class="oh-field">
+            <label for="timecode_ref">Referenced Timecode</label>
+            <input type="text" id="timecode_ref" name="timecode_ref" value="[04:12]" required>
+          </div>
+          <div class="oh-field">
+            <label for="annotation_note">Historical Footnote / Mill Vocabulary</label>
+            <textarea id="annotation_note" name="annotation_note" rows="3" required placeholder="e.g. Albion Mill installed automatic Northrop looms in late 1953, replacing the Lancashire shuttle looms referenced here."></textarea>
+          </div>
+          <button type="submit" class="oh-btn">Submit Archival Footnote</button>
+        </form>
+      </section>
+    </main>
+    <footer class="oh-foot">
+      <p>Voices of the Mill Valley • County Historical Archive • Digitised with Heritage Lottery Support</p>
+    </footer>
+  </div>
+</body>
+</html>

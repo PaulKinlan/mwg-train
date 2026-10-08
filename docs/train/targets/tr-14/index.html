@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stonegate Heritage Trail — Historical Stops &amp; Audio Transcripts</title>
+  <style>
+    :root {
+      --st-plum: #581c87;
+      --st-gold: #b45309;
+      --st-sand: #f5f5f4;
+      --st-card: #ffffff;
+      --st-border: #e7e5e4;
+      --st-text: #292524;
+      --st-muted: #78716c;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: "Georgia", serif; background: #fafaf9; color: var(--st-text); line-height: 1.5; padding: 1.5rem; }
+    .st-shell { max-width: 1200px; margin: 0 auto; }
+    header.st-head { border-bottom: 2px solid var(--st-plum); padding-bottom: 1rem; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; }
+    .st-brand { font-size: 1.45rem; font-weight: 700; color: var(--st-plum); }
+    nav.st-nav a { font-family: -apple-system, sans-serif; text-decoration: none; color: var(--st-muted); font-size: 0.9rem; margin-left: 1.25rem; font-weight: 600; }
+    nav.st-nav a[aria-current="page"] { color: var(--st-plum); text-decoration: underline; }
+    .st-grid { display: grid; grid-template-columns: 320px 1fr 340px; gap: 1.75rem; align-items: start; }
+    .st-stops-list { background: var(--st-card); border: 1px solid var(--st-border); border-radius: 8px; padding: 1.25rem; }
+    .st-stops-list h3 { font-size: 1rem; color: var(--st-plum); margin-bottom: 0.75rem; }
+    .st-stop-item { padding: 0.75rem; border-radius: 6px; margin-bottom: 0.5rem; background: var(--st-sand); }
+    .st-stop-item.active { border-left: 4px solid var(--st-plum); background: #f3e8ff; }
+    .st-stop-num { font-size: 0.75rem; font-weight: 700; color: var(--st-plum); font-family: -apple-system, sans-serif; }
+    .st-stop-title { font-weight: 700; font-size: 0.95rem; }
+    .st-transcript-card { background: var(--st-card); border: 1px solid var(--st-border); border-radius: 8px; padding: 1.75rem; }
+    .st-transcript-card h1 { font-size: 1.5rem; color: var(--st-plum); margin-bottom: 0.5rem; }
+    .st-comment-card { background: var(--st-card); border: 1px solid var(--st-border); border-radius: 8px; padding: 1.5rem; }
+    .st-field { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 0.85rem; font-family: -apple-system, sans-serif; }
+    .st-field label { font-size: 0.85rem; font-weight: 600; color: var(--st-text); }
+    .st-field input, .st-field textarea { padding: 0.55rem; border: 1px solid var(--st-border); border-radius: 6px; font-size: 0.95rem; }
+    .st-btn { font-family: -apple-system, sans-serif; background: var(--st-plum); color: #fff; border: none; font-size: 1rem; font-weight: 700; padding: 0.75rem; border-radius: 6px; cursor: pointer; width: 100%; }
+    .st-btn:hover { background: #6b21a8; }
+    footer.st-foot { margin-top: 2.5rem; border-top: 1px solid var(--st-border); padding-top: 1rem; text-align: center; font-family: -apple-system, sans-serif; font-size: 0.85rem; color: var(--st-muted); }
+  </style>
+</head>
+<body>
+  <div class="st-shell">
+    <header class="st-head">
+      <div class="st-brand">Stonegate Heritage Trail</div>
+      <nav class="st-nav" aria-label="Trail Nav">
+        <a href="/">Trail Map</a>
+        <a href="/stops" aria-current="page">Waypoint Transcripts</a>
+        <a href="/guide">Audio Downloads</a>
+        <a href="/trust">Civic Trust</a>
+      </nav>
+    </header>
+    <main class="st-grid">
+      <aside class="st-stops-list">
+        <h3>Tour Stops (1.8 Miles Total)</h3>
+        <div class="st-stop-item active">
+          <div class="st-stop-num">STOP 01 • 0.0 MILES</div>
+          <div class="st-stop-title">The Old Guildhall (1642)</div>
+        </div>
+        <div class="st-stop-item">
+          <div class="st-stop-num">STOP 02 • 0.3 MILES</div>
+          <div class="st-stop-title">Millrace Weir &amp; Waterwheel</div>
+        </div>
+        <div class="st-stop-item">
+          <div class="st-stop-num">STOP 03 • 0.7 MILES</div>
+          <div class="st-stop-title">Tanner’s Row &amp; Vats</div>
+        </div>
+        <div class="st-stop-item">
+          <div class="st-stop-num">STOP 04 • 1.2 MILES</div>
+          <div class="st-stop-title">St. Martin’s Almshouses</div>
+        </div>
+      </aside>
+      <article class="st-transcript-card">
+        <h1>Stop 1: The Old Guildhall (Built 1642)</h1>
+        <p style="font-style:italic;color:var(--st-muted);margin-bottom:1.25rem">Transcript of narration by Civic Historian Margaret Bell (Recorded Sept 2026)</p>
+        <p style="font-size:0.95rem;color:#44403c;margin-bottom:1rem">"Standing before the twin jettied gables of the Guildhall, one is looking directly at English oak timber framing that survived the Great Fire of 1684. The upper chamber served as the wool merchants' woolstaple weighing room."</p>
+        <p style="font-size:0.95rem;color:#44403c;margin-bottom:1rem">"Notice the leaded casement windows: the small diamond panes were salvaged from the earlier 14th-century guild chapel. Beneath the carriage arch, the original iron-shod oak gates still hang from hand-forged strap hinges."</p>
+      </article>
+      <section class="st-comment-card">
+        <h2 style="font-size:1.25rem;color:var(--st-plum);margin-bottom:0.5rem">Visitor Reflection</h2>
+        <p style="font-family:-apple-system,sans-serif;font-size:0.85rem;color:var(--st-muted);margin-bottom:1rem">Contribute a family memory or architectural observation for this heritage stop.</p>
+        <form id="trail-comment-form" method="post" action="/stops/1/comment">
+          <div class="st-field">
+            <label for="visitor_name">Your Name</label>
+            <input type="text" id="visitor_name" name="visitor_name" required placeholder="Arthur Pendelton">
+          </div>
+          <div class="st-field">
+            <label for="visitor_note">Historical Memory or Architectural Note</label>
+            <textarea id="visitor_note" name="visitor_note" rows="3" required placeholder="e.g. My great-grandfather worked the wool scale on the ground floor in 1912..."></textarea>
+          </div>
+          <button type="submit" class="st-btn">Record Visitor Memory</button>
+        </form>
+      </section>
+    </main>
+    <footer class="st-foot">
+      <p>Stonegate Heritage Civic Trust • Registered Charity #11094 • Self-Guided Trail Supported by National Lottery</p>
+    </footer>
+  </div>
+</body>
+</html>

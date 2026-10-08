@@ -1,0 +1,792 @@
+{
+  "title": "Foxhill Orchard & Press — Seasonal Cider Pre-Orders",
+  "viewport": {
+    "width": 1280,
+    "height": 900
+  },
+  "nodes": [
+    {
+      "tag": "div",
+      "depth": 0,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "header",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h1",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "nav",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "main",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "section",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h2",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "form",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "article",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h3",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 7,
+      "type": "number",
+      "name": "qty_kingston",
+      "role": null
+    },
+    {
+      "tag": "article",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h3",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 7,
+      "type": "number",
+      "name": "qty_scrumpy",
+      "role": null
+    },
+    {
+      "tag": "article",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h3",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 7,
+      "type": "number",
+      "name": "qty_perry",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h2",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 6,
+      "type": "text",
+      "name": "customer_name",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 6,
+      "type": "email",
+      "name": "customer_email",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 6,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "select",
+      "depth": 6,
+      "type": null,
+      "name": "pickup_date",
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 7,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "button",
+      "depth": 5,
+      "type": "submit",
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "aside",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h2",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h3",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "ul",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "li",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "li",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "li",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "footer",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    }
+  ],
+  "boxes": [
+    {
+      "tag": "header",
+      "x": 0.0313,
+      "y": 0.0267,
+      "w": 0.9375,
+      "h": 0.1031
+    },
+    {
+      "tag": "h1",
+      "x": 0.0313,
+      "y": 0.0267,
+      "w": 0.3231,
+      "h": 0.0533
+    },
+    {
+      "tag": "nav",
+      "x": 0.6419,
+      "y": 0.0813,
+      "w": 0.3268,
+      "h": 0.024
+    },
+    {
+      "tag": "main",
+      "x": 0.0313,
+      "y": 0.1564,
+      "w": 0.9375,
+      "h": 1.1105
+    },
+    {
+      "tag": "section",
+      "x": 0.0313,
+      "y": 0.1564,
+      "w": 0.6083,
+      "h": 1.1105
+    },
+    {
+      "tag": "h2",
+      "x": 0.0313,
+      "y": 0.1564,
+      "w": 0.6083,
+      "h": 0.0373
+    },
+    {
+      "tag": "form",
+      "x": 0.0313,
+      "y": 0.2116,
+      "w": 0.6083,
+      "h": 1.0553
+    },
+    {
+      "tag": "article",
+      "x": 0.0313,
+      "y": 0.2116,
+      "w": 0.6083,
+      "h": 0.144
+    },
+    {
+      "tag": "h3",
+      "x": 0.0477,
+      "y": 0.2349,
+      "w": 0.4651,
+      "h": 0.032
+    },
+    {
+      "tag": "label",
+      "x": 0.5252,
+      "y": 0.2702,
+      "w": 0.0417,
+      "h": 0.0267
+    },
+    {
+      "tag": "input",
+      "x": 0.5732,
+      "y": 0.2653,
+      "w": 0.05,
+      "h": 0.0364
+    },
+    {
+      "tag": "article",
+      "x": 0.0313,
+      "y": 0.3822,
+      "w": 0.6083,
+      "h": 0.144
+    },
+    {
+      "tag": "h3",
+      "x": 0.0477,
+      "y": 0.4055,
+      "w": 0.4588,
+      "h": 0.032
+    },
+    {
+      "tag": "label",
+      "x": 0.519,
+      "y": 0.4409,
+      "w": 0.0479,
+      "h": 0.0267
+    },
+    {
+      "tag": "input",
+      "x": 0.5732,
+      "y": 0.436,
+      "w": 0.05,
+      "h": 0.0364
+    },
+    {
+      "tag": "article",
+      "x": 0.0313,
+      "y": 0.5528,
+      "w": 0.6083,
+      "h": 0.1666
+    },
+    {
+      "tag": "h3",
+      "x": 0.0477,
+      "y": 0.5762,
+      "w": 0.4651,
+      "h": 0.032
+    },
+    {
+      "tag": "label",
+      "x": 0.5252,
+      "y": 0.6228,
+      "w": 0.0417,
+      "h": 0.0267
+    },
+    {
+      "tag": "input",
+      "x": 0.5732,
+      "y": 0.618,
+      "w": 0.05,
+      "h": 0.0364
+    },
+    {
+      "tag": "h2",
+      "x": 0.0508,
+      "y": 0.7739,
+      "w": 0.5693,
+      "h": 0.046
+    },
+    {
+      "tag": "label",
+      "x": 0.0508,
+      "y": 0.8377,
+      "w": 0.5693,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.0508,
+      "y": 0.8666,
+      "w": 0.5693,
+      "h": 0.0407
+    },
+    {
+      "tag": "label",
+      "x": 0.0508,
+      "y": 0.925,
+      "w": 0.5693,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.0508,
+      "y": 0.9539,
+      "w": 0.5693,
+      "h": 0.0407
+    },
+    {
+      "tag": "label",
+      "x": 0.0508,
+      "y": 1.0123,
+      "w": 0.5693,
+      "h": 0.0227
+    },
+    {
+      "tag": "select",
+      "x": 0.0508,
+      "y": 1.0412,
+      "w": 0.5693,
+      "h": 0.0429
+    },
+    {
+      "tag": "button",
+      "x": 0.0508,
+      "y": 1.1018,
+      "w": 0.5693,
+      "h": 0.0502
+    },
+    {
+      "tag": "aside",
+      "x": 0.6646,
+      "y": 0.1564,
+      "w": 0.3042,
+      "h": 1.1105
+    },
+    {
+      "tag": "h2",
+      "x": 0.6841,
+      "y": 0.1842,
+      "w": 0.2651,
+      "h": 0.046
+    },
+    {
+      "tag": "h3",
+      "x": 0.6841,
+      "y": 0.3138,
+      "w": 0.2651,
+      "h": 0.028
+    },
+    {
+      "tag": "ul",
+      "x": 0.6841,
+      "y": 0.3507,
+      "w": 0.2651,
+      "h": 0.0822
+    },
+    {
+      "tag": "li",
+      "x": 0.6991,
+      "y": 0.3507,
+      "w": 0.2501,
+      "h": 0.0227
+    },
+    {
+      "tag": "li",
+      "x": 0.6991,
+      "y": 0.3804,
+      "w": 0.2501,
+      "h": 0.0227
+    },
+    {
+      "tag": "li",
+      "x": 0.6991,
+      "y": 0.4102,
+      "w": 0.2501,
+      "h": 0.0227
+    },
+    {
+      "tag": "footer",
+      "x": 0.0313,
+      "y": 1.3114,
+      "w": 0.9375,
+      "h": 0.046
+    }
+  ],
+  "labels": [
+    {
+      "for": "qty_kingston",
+      "text": "Bottles:"
+    },
+    {
+      "for": "qty_scrumpy",
+      "text": "Flagons:"
+    },
+    {
+      "for": "qty_perry",
+      "text": "Bottles:"
+    },
+    {
+      "for": "customer_name",
+      "text": "Full Name"
+    },
+    {
+      "for": "customer_email",
+      "text": "Email Address"
+    },
+    {
+      "for": "pickup_date",
+      "text": "Pickup Weekend Slot"
+    }
+  ],
+  "controls": [
+    {
+      "tag": "input",
+      "type": "number",
+      "name": "qty_kingston",
+      "label": "Bottles:"
+    },
+    {
+      "tag": "input",
+      "type": "number",
+      "name": "qty_scrumpy",
+      "label": "Flagons:"
+    },
+    {
+      "tag": "input",
+      "type": "number",
+      "name": "qty_perry",
+      "label": "Bottles:"
+    },
+    {
+      "tag": "input",
+      "type": "text",
+      "name": "customer_name",
+      "label": "Full Name"
+    },
+    {
+      "tag": "input",
+      "type": "email",
+      "name": "customer_email",
+      "label": "Email Address"
+    },
+    {
+      "tag": "select",
+      "type": null,
+      "name": "pickup_date",
+      "label": "Pickup Weekend Slot"
+    }
+  ],
+  "headings": [
+    "Foxhill Orchard & Cider Press",
+    "Harvest Pressings Available for Weekend Pickup",
+    "Kingston Black Single Variety (750ml)",
+    "Orchard Scrumpy Unfiltered (1 Litre Flagon)",
+    "Foxhill Autumn Perry (750ml)",
+    "Farm Gate Collection Details",
+    "Orchard Notes",
+    "Collection Protocol"
+  ]
+}

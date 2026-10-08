@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Meadowbrook Wildlife Hospital — Volunteer Onboarding &amp; Credentials</title>
+  <style>
+    :root {
+      --wb-green: #14532d;
+      --wb-leaf: #22c55e;
+      --wb-light: #f0fdf4;
+      --wb-border: #cbd5e1;
+      --wb-dark: #0f172a;
+      --wb-card: #ffffff;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f8fafc; color: var(--wb-dark); line-height: 1.5; padding: 1.5rem; }
+    .wb-shell { max-width: 1100px; margin: 0 auto; }
+    header.wb-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--wb-green); padding-bottom: 1rem; margin-bottom: 1.5rem; }
+    .wb-brand-title { font-size: 1.35rem; font-weight: 800; color: var(--wb-green); }
+    nav.wb-nav a { text-decoration: none; color: #475569; font-weight: 600; margin-left: 1.25rem; font-size: 0.9rem; }
+    nav.wb-nav a[aria-current="page"] { color: var(--wb-green); border-bottom: 2px solid var(--wb-leaf); padding-bottom: 0.2rem; }
+    .wb-hero { display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; }
+    .wb-form-card { background: var(--wb-card); border: 1px solid var(--wb-border); border-radius: 10px; padding: 2rem; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+    .wb-form-card h1 { font-size: 1.6rem; color: var(--wb-green); margin-bottom: 0.5rem; }
+    .wb-intro { color: #64748b; font-size: 0.95rem; margin-bottom: 1.5rem; }
+    fieldset.wb-section { border: 1px solid var(--wb-border); border-radius: 8px; padding: 1.25rem; margin-bottom: 1.25rem; }
+    legend.wb-legend { font-weight: 700; color: var(--wb-green); padding: 0 0.5rem; font-size: 0.95rem; }
+    .wb-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .wb-input-group { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 0.75rem; }
+    .wb-input-group label { font-size: 0.85rem; font-weight: 600; color: #334155; }
+    .wb-input-group input, .wb-input-group select { padding: 0.6rem; border: 1px solid var(--wb-border); border-radius: 6px; font-size: 0.95rem; }
+    .wb-btn-submit { background: var(--wb-green); color: #fff; border: none; font-size: 1rem; font-weight: 700; padding: 0.85rem 1.5rem; border-radius: 6px; cursor: pointer; width: 100%; margin-top: 0.5rem; }
+    .wb-btn-submit:hover { background: #166534; }
+    aside.wb-sidebar { display: flex; flex-direction: column; gap: 1.25rem; }
+    .wb-side-card { background: var(--wb-card); border: 1px solid var(--wb-border); border-radius: 8px; padding: 1.25rem; }
+    .wb-side-card h2 { font-size: 1.15rem; color: var(--wb-green); margin-bottom: 0.5rem; }
+    .wb-badge-req { background: #fee2e2; color: #991b1b; padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.75rem; font-weight: 700; }
+    footer.wb-footer { margin-top: 2.5rem; border-top: 1px solid var(--wb-border); padding-top: 1rem; text-align: center; font-size: 0.85rem; color: #64748b; }
+  </style>
+</head>
+<body>
+  <div class="wb-shell">
+    <header class="wb-header">
+      <div class="wb-brand-title">Meadowbrook Wildlife Hospital</div>
+      <nav class="wb-nav" aria-label="Volunteer Navigation">
+        <a href="/">Hospital Home</a>
+        <a href="/register" aria-current="page">Volunteer Application</a>
+        <a href="/login">Volunteer Sign In</a>
+        <a href="/volunteer/profile">Status Board</a>
+      </nav>
+    </header>
+    <main class="wb-hero">
+      <section class="wb-form-card">
+        <h1>Volunteer Intake &amp; Handling Registration</h1>
+        <p class="wb-intro">Join our dedicated team of wildlife rehabilitators caring for injured birds, hedgehogs, and small mammals.</p>
+        <form id="volunteer-reg" method="post" action="/register">
+          <fieldset class="wb-section">
+            <legend class="wb-legend">1. Personal &amp; Emergency Contact</legend>
+            <div class="wb-row-2">
+              <div class="wb-input-group">
+                <label for="volunteer_name">Full Name</label>
+                <input type="text" id="volunteer_name" name="volunteer_name" required placeholder="Hannah Davies">
+              </div>
+              <div class="wb-input-group">
+                <label for="volunteer_email">Email Address</label>
+                <input type="email" id="volunteer_email" name="volunteer_email" required placeholder="hannah@example.test">
+              </div>
+            </div>
+            <div class="wb-row-2">
+              <div class="wb-input-group">
+                <label for="phone">Phone Number</label>
+                <input type="tel" id="phone" name="phone" required placeholder="07700 900543">
+              </div>
+              <div class="wb-input-group">
+                <label for="emergency_phone">Emergency Contact Phone</label>
+                <input type="tel" id="emergency_phone" name="emergency_phone" required placeholder="07700 900876">
+              </div>
+            </div>
+          </fieldset>
+          <fieldset class="wb-section">
+            <legend class="wb-legend">2. Vaccination &amp; Handling Experience</legend>
+            <div class="wb-input-group">
+              <label for="species_focus">Primary Animal Focus</label>
+              <select id="species_focus" name="species_focus" required>
+                <option value="songbirds">Avian / Songbirds &amp; Waterfowl</option>
+                <option value="raptors">Birds of Prey (Requires min 1 yr exp)</option>
+                <option value="mammals" selected>Small Mammals (Hedgehogs, Badgers, Squirrels)</option>
+                <option value="reptiles">Reptiles &amp; Amphibians</option>
+              </select>
+            </div>
+            <div class="wb-input-group">
+              <label for="tetanus_date">Date of Last Tetanus Booster</label>
+              <input type="date" id="tetanus_date" name="tetanus_date" required value="2025-04-12">
+            </div>
+            <div style="display:flex;align-items:center;gap:0.5rem;margin:0.5rem 0">
+              <input type="checkbox" id="rabies_clearance" name="rabies_clearance" value="yes" required>
+              <label for="rabies_clearance" style="font-size:0.85rem">I confirm I have up-to-date vaccinations and agree to strictly follow safety bite protocols.</label>
+            </div>
+          </fieldset>
+          <fieldset class="wb-section">
+            <legend class="wb-legend">3. Portal Security Credentials</legend>
+            <div class="wb-row-2">
+              <div class="wb-input-group">
+                <label for="account_password">Create Volunteer Password</label>
+                <input type="password" id="account_password" name="account_password" required minlength="8" placeholder="••••••••••••">
+              </div>
+              <div class="wb-input-group">
+                <label for="shift_preference">Weekly Shift Availability</label>
+                <select id="shift_preference" name="shift_preference" required>
+                  <option value="sat-morning">Saturday Mornings (08:00 - 12:30)</option>
+                  <option value="sun-afternoon">Sunday Afternoons (13:00 - 17:30)</option>
+                  <option value="tue-evening">Tuesday Evening Clinic (17:00 - 20:30)</option>
+                </select>
+              </div>
+            </div>
+          </fieldset>
+          <button type="submit" class="wb-btn-submit">Submit Volunteer Intake Application</button>
+        </form>
+      </section>
+      <aside class="wb-sidebar">
+        <div class="wb-side-card">
+          <h2>Application Standards</h2>
+          <p style="font-size:0.85rem;color:#475569;margin-bottom:0.75rem">Volunteers must be 18+ and complete a 2-hour clinical hygiene orientation before unsupervised shifts.</p>
+          <span class="wb-badge-req">Mandatory</span>
+          <div style="font-size:0.8rem;color:#64748b;margin-top:0.5rem">Tetanus booster within 10 years is required for all animal care handlers.</div>
+        </div>
+        <div class="wb-side-card">
+          <h2>Current Urgencies</h2>
+          <ul style="font-size:0.85rem;color:#475569;display:flex;flex-direction:column;gap:0.5rem;padding-left:1rem">
+            <li>Autumn hedgehog underweight triage</li>
+            <li>Owl flight pen maintenance</li>
+            <li>Emergency transport drivers</li>
+          </ul>
+        </div>
+      </aside>
+    </main>
+    <footer class="wb-footer">
+      <p>Meadowbrook Wildlife Hospital • Registered Wildlife Charity #40291 • Valley Road, Little Combe</p>
+    </footer>
+  </div>
+</body>
+</html>

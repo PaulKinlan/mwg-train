@@ -1,0 +1,685 @@
+{
+  "title": "Urban Soil Collaborative — Composting Handbook & Soil Test Registry",
+  "viewport": {
+    "width": 1280,
+    "height": 900
+  },
+  "nodes": [
+    {
+      "tag": "div",
+      "depth": 0,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "header",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "nav",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "main",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "aside",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h3",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "ul",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "li",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "li",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "li",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "li",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "li",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "article",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h1",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h2",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "ul",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "li",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "li",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "li",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h2",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "ul",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "li",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "li",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "li",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "section",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h2",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "form",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 5,
+      "type": "text",
+      "name": "plot_sector",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 5,
+      "type": "number",
+      "name": "soil_ph",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 5,
+      "type": "number",
+      "name": "organic_matter",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 5,
+      "type": "date",
+      "name": "sample_date",
+      "role": null
+    },
+    {
+      "tag": "button",
+      "depth": 4,
+      "type": "submit",
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "footer",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    }
+  ],
+  "boxes": [
+    {
+      "tag": "header",
+      "x": 0.0313,
+      "y": 0.0267,
+      "w": 0.9375,
+      "h": 0.0573
+    },
+    {
+      "tag": "nav",
+      "x": 0.5982,
+      "y": 0.032,
+      "w": 0.3706,
+      "h": 0.0267
+    },
+    {
+      "tag": "main",
+      "x": 0.0313,
+      "y": 0.1107,
+      "w": 0.9375,
+      "h": 0.5494
+    },
+    {
+      "tag": "aside",
+      "x": 0.0313,
+      "y": 0.1107,
+      "w": 0.2031,
+      "h": 0.2409
+    },
+    {
+      "tag": "h3",
+      "x": 0.0477,
+      "y": 0.134,
+      "w": 0.1703,
+      "h": 0.0253
+    },
+    {
+      "tag": "ul",
+      "x": 0.0477,
+      "y": 0.1727,
+      "w": 0.1703,
+      "h": 0.1556
+    },
+    {
+      "tag": "li",
+      "x": 0.0477,
+      "y": 0.1727,
+      "w": 0.1703,
+      "h": 0.024
+    },
+    {
+      "tag": "li",
+      "x": 0.0477,
+      "y": 0.2056,
+      "w": 0.1703,
+      "h": 0.024
+    },
+    {
+      "tag": "li",
+      "x": 0.0477,
+      "y": 0.2385,
+      "w": 0.1703,
+      "h": 0.024
+    },
+    {
+      "tag": "li",
+      "x": 0.0477,
+      "y": 0.2714,
+      "w": 0.1703,
+      "h": 0.024
+    },
+    {
+      "tag": "li",
+      "x": 0.0477,
+      "y": 0.3043,
+      "w": 0.1703,
+      "h": 0.024
+    },
+    {
+      "tag": "article",
+      "x": 0.2562,
+      "y": 0.1107,
+      "w": 0.425,
+      "h": 0.5134
+    },
+    {
+      "tag": "h1",
+      "x": 0.2789,
+      "y": 0.1429,
+      "w": 0.3797,
+      "h": 0.0853
+    },
+    {
+      "tag": "h2",
+      "x": 0.2789,
+      "y": 0.3438,
+      "w": 0.3797,
+      "h": 0.032
+    },
+    {
+      "tag": "ul",
+      "x": 0.2789,
+      "y": 0.3847,
+      "w": 0.3797,
+      "h": 0.072
+    },
+    {
+      "tag": "li",
+      "x": 0.2939,
+      "y": 0.3847,
+      "w": 0.3647,
+      "h": 0.024
+    },
+    {
+      "tag": "li",
+      "x": 0.2939,
+      "y": 0.4087,
+      "w": 0.3647,
+      "h": 0.024
+    },
+    {
+      "tag": "li",
+      "x": 0.2939,
+      "y": 0.4327,
+      "w": 0.3647,
+      "h": 0.024
+    },
+    {
+      "tag": "h2",
+      "x": 0.2789,
+      "y": 0.4789,
+      "w": 0.3797,
+      "h": 0.032
+    },
+    {
+      "tag": "ul",
+      "x": 0.2789,
+      "y": 0.5198,
+      "w": 0.3797,
+      "h": 0.072
+    },
+    {
+      "tag": "li",
+      "x": 0.2939,
+      "y": 0.5198,
+      "w": 0.3647,
+      "h": 0.024
+    },
+    {
+      "tag": "li",
+      "x": 0.2939,
+      "y": 0.5438,
+      "w": 0.3647,
+      "h": 0.024
+    },
+    {
+      "tag": "li",
+      "x": 0.2939,
+      "y": 0.5678,
+      "w": 0.3647,
+      "h": 0.024
+    },
+    {
+      "tag": "section",
+      "x": 0.7031,
+      "y": 0.1107,
+      "w": 0.2656,
+      "h": 0.5494
+    },
+    {
+      "tag": "h2",
+      "x": 0.7227,
+      "y": 0.1385,
+      "w": 0.2266,
+      "h": 0.0333
+    },
+    {
+      "tag": "form",
+      "x": 0.7227,
+      "y": 0.2438,
+      "w": 0.2266,
+      "h": 0.3885
+    },
+    {
+      "tag": "label",
+      "x": 0.7227,
+      "y": 0.2438,
+      "w": 0.2266,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.7227,
+      "y": 0.2726,
+      "w": 0.2266,
+      "h": 0.0407
+    },
+    {
+      "tag": "label",
+      "x": 0.7227,
+      "y": 0.3284,
+      "w": 0.2266,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.7227,
+      "y": 0.3573,
+      "w": 0.2266,
+      "h": 0.0407
+    },
+    {
+      "tag": "label",
+      "x": 0.7227,
+      "y": 0.413,
+      "w": 0.2266,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.7227,
+      "y": 0.4419,
+      "w": 0.2266,
+      "h": 0.0407
+    },
+    {
+      "tag": "label",
+      "x": 0.7227,
+      "y": 0.4977,
+      "w": 0.2266,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.7227,
+      "y": 0.5265,
+      "w": 0.2266,
+      "h": 0.044
+    },
+    {
+      "tag": "button",
+      "x": 0.7227,
+      "y": 0.5856,
+      "w": 0.2266,
+      "h": 0.0467
+    },
+    {
+      "tag": "footer",
+      "x": 0.0313,
+      "y": 0.7045,
+      "w": 0.9375,
+      "h": 0.0415
+    }
+  ],
+  "labels": [
+    {
+      "for": "plot_sector",
+      "text": "Allotment / Garden Plot Identifier"
+    },
+    {
+      "for": "soil_ph",
+      "text": "Measured Soil pH"
+    },
+    {
+      "for": "organic_matter",
+      "text": "Organic Matter Percentage (%)"
+    },
+    {
+      "for": "sample_date",
+      "text": "Sampling Date"
+    }
+  ],
+  "controls": [
+    {
+      "tag": "input",
+      "type": "text",
+      "name": "plot_sector",
+      "label": "Allotment / Garden Plot Identifier"
+    },
+    {
+      "tag": "input",
+      "type": "number",
+      "name": "soil_ph",
+      "label": "Measured Soil pH"
+    },
+    {
+      "tag": "input",
+      "type": "number",
+      "name": "organic_matter",
+      "label": "Organic Matter Percentage (%)"
+    },
+    {
+      "tag": "input",
+      "type": "date",
+      "name": "sample_date",
+      "label": "Sampling Date"
+    }
+  ],
+  "headings": [
+    "Handbook Sections",
+    "Compost Balancing: Carbon Greens & Nitrogen Browns",
+    "High-Carbon Browns (Energy Source)",
+    "High-Nitrogen Greens (Microbial Food)",
+    "Submit Plot Soil Test"
+  ]
+}

@@ -1,0 +1,568 @@
+{
+  "title": "Highland Guild of Craftsmen — Artisan Directory & Open Studios",
+  "viewport": {
+    "width": 1280,
+    "height": 900
+  },
+  "nodes": [
+    {
+      "tag": "div",
+      "depth": 0,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "header",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "nav",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "main",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "form",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 4,
+      "type": "search",
+      "name": "q",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "select",
+      "depth": 4,
+      "type": null,
+      "name": "craft",
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "select",
+      "depth": 4,
+      "type": null,
+      "name": "county",
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "option",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "button",
+      "depth": 3,
+      "type": "submit",
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "article",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "span",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h3",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "strong",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "article",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "span",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h3",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "strong",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "article",
+      "depth": 3,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "span",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h3",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "strong",
+      "depth": 5,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "footer",
+      "depth": 1,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 2,
+      "type": null,
+      "name": null,
+      "role": null
+    }
+  ],
+  "boxes": [
+    {
+      "tag": "header",
+      "x": 0.0313,
+      "y": 0.0267,
+      "w": 0.9375,
+      "h": 0.06
+    },
+    {
+      "tag": "nav",
+      "x": 0.5283,
+      "y": 0.0333,
+      "w": 0.4405,
+      "h": 0.0267
+    },
+    {
+      "tag": "main",
+      "x": 0.0313,
+      "y": 0.1133,
+      "w": 0.9375,
+      "h": 0.4055
+    },
+    {
+      "tag": "form",
+      "x": 0.0313,
+      "y": 0.1133,
+      "w": 0.9375,
+      "h": 0.1095
+    },
+    {
+      "tag": "label",
+      "x": 0.0477,
+      "y": 0.1344,
+      "w": 0.3238,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.0477,
+      "y": 0.1633,
+      "w": 0.3238,
+      "h": 0.0407
+    },
+    {
+      "tag": "label",
+      "x": 0.384,
+      "y": 0.1322,
+      "w": 0.2159,
+      "h": 0.0227
+    },
+    {
+      "tag": "select",
+      "x": 0.384,
+      "y": 0.1611,
+      "w": 0.2159,
+      "h": 0.0429
+    },
+    {
+      "tag": "label",
+      "x": 0.6124,
+      "y": 0.1322,
+      "w": 0.2159,
+      "h": 0.0227
+    },
+    {
+      "tag": "select",
+      "x": 0.6124,
+      "y": 0.1611,
+      "w": 0.2159,
+      "h": 0.0429
+    },
+    {
+      "tag": "button",
+      "x": 0.8408,
+      "y": 0.1642,
+      "w": 0.1116,
+      "h": 0.0398
+    },
+    {
+      "tag": "article",
+      "x": 0.0313,
+      "y": 0.254,
+      "w": 0.3,
+      "h": 0.2648
+    },
+    {
+      "tag": "h3",
+      "x": 0.0477,
+      "y": 0.3142,
+      "w": 0.2672,
+      "h": 0.032
+    },
+    {
+      "tag": "article",
+      "x": 0.35,
+      "y": 0.254,
+      "w": 0.3,
+      "h": 0.2648
+    },
+    {
+      "tag": "h3",
+      "x": 0.3664,
+      "y": 0.3142,
+      "w": 0.2672,
+      "h": 0.032
+    },
+    {
+      "tag": "article",
+      "x": 0.6687,
+      "y": 0.254,
+      "w": 0.3,
+      "h": 0.2648
+    },
+    {
+      "tag": "h3",
+      "x": 0.6852,
+      "y": 0.3142,
+      "w": 0.2672,
+      "h": 0.032
+    },
+    {
+      "tag": "footer",
+      "x": 0.0313,
+      "y": 0.5544,
+      "w": 0.9375,
+      "h": 0.0415
+    }
+  ],
+  "labels": [
+    {
+      "for": "q",
+      "text": "Search Makers or Craft Keywords"
+    },
+    {
+      "for": "craft",
+      "text": "Craft Discipline"
+    },
+    {
+      "for": "county",
+      "text": "Parish / District"
+    }
+  ],
+  "controls": [
+    {
+      "tag": "input",
+      "type": "search",
+      "name": "q",
+      "label": "Search Makers or Craft Keywords"
+    },
+    {
+      "tag": "select",
+      "type": null,
+      "name": "craft",
+      "label": "Craft Discipline"
+    },
+    {
+      "tag": "select",
+      "type": null,
+      "name": "county",
+      "label": "Parish / District"
+    }
+  ],
+  "headings": [
+    "Callum Fraser",
+    "Moira MacLeod",
+    "Duncan Campbell"
+  ]
+}
