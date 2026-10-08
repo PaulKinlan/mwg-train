@@ -486,7 +486,11 @@ async function driveUpdateJourney(page, base, journey, update, { recordUrl = nul
     // The record page carries the edit form (id edit-form, action /edit/<ref>); there is no separate
     // edit page to navigate to, and posting to `<recordPath>/edit` would 404.
     await page.goto(`${base}${recordPath}`);
-    await page.type(`[name=${JSON.stringify(update.field)}]`, update.newValue);
+    // Scoped to the EDIT FORM, not the page: a read page can carry more than one control with this
+    // name (the generator's own client render puts the original form on the page too), and typing into
+    // the first match re-submits the value that is already stored - an update that changed nothing,
+    // reported as a failure by the row-count and old-value assertions rather than as a pass.
+    await page.type(`form#edit-form [name=${JSON.stringify(update.field)}]`, update.newValue);
     await page.submit('form#edit-form');
     // Visible after a RELOAD of the record page, not merely on whatever the submit redirected to.
     await page.goto(`${base}${recordPath}`);

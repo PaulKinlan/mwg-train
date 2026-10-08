@@ -977,27 +977,27 @@ app.get('/app/:file', (c) => {
   }
 });
 
-${archetype.journey?.steps ? `app.get('/', (c) => {
+${archetype.journey?.steps ? `app.get('/', async (c) => {
   const sidCookie = (c.req.header('cookie') ?? '')
     .split(';')
     .map((part) => part.trim())
     .find((part) => part.startsWith('sid='))
     ?.slice('sid='.length);
   const draftRows = sidCookie ? selectDrafts.all(sidCookie) : [];
-  let doc = renderDocument({ title: ${JSON.stringify(archetype.title)} });
+  let doc = await renderDocument({ title: ${JSON.stringify(archetype.title)} });
   if (draftRows.length > 0) {
     const carriedHtml = \`<div class="draft-carried">\${draftRows.map((d) => \`<p class="carried-value">\${d.value}</p>\`).join('\\n')}</div>\`;
     doc = doc.replace('</main>', \`\${carriedHtml}</main>\`);
   }
   return c.html(doc);
-});${archetype.journey.startPath !== '/' ? `\n\napp.get(${JSON.stringify(archetype.journey.startPath)}, (c) => {
+});${archetype.journey.startPath !== '/' ? `\n\napp.get(${JSON.stringify(archetype.journey.startPath)}, async (c) => {
   const sidCookie = (c.req.header('cookie') ?? '')
     .split(';')
     .map((part) => part.trim())
     .find((part) => part.startsWith('sid='))
     ?.slice('sid='.length);
   const draftRows = sidCookie ? selectDrafts.all(sidCookie) : [];
-  let doc = renderDocument({ title: ${JSON.stringify(archetype.title)} });
+  let doc = await renderDocument({ title: ${JSON.stringify(archetype.title)} });
   if (draftRows.length > 0) {
     const carriedHtml = \`<div class="draft-carried">\${draftRows.map((d) => \`<p class="carried-value">\${d.value}</p>\`).join('\\n')}</div>\`;
     doc = doc.replace('</main>', \`\${carriedHtml}</main>\`);
@@ -1033,7 +1033,7 @@ ${archetype.session ? `  const sid = randomUUID();
 });
 
 const readPath = ${JSON.stringify(archetype.routes.find((route) => route.kind === 'read-by-reference')?.path ?? '/record/:ref')};
-app.get(readPath, (c) => {
+app.get(readPath, async (c) => {
   const row = select.get(c.req.param('ref'));
   if (!row) return c.text('We could not find that record.', 404);
   ${archetype.journey?.update ? `const payload = JSON.parse(row.payload);
@@ -1043,7 +1043,7 @@ app.get(readPath, (c) => {
     <input id="edit-${archetype.journey.update.field}" name="${archetype.journey.update.field}" value="\${targetVal}">
     <button type="submit">Update</button>
   </form>\`;
-  let doc = renderDocument({ title: 'Your submission' });
+  let doc = await renderDocument({ title: 'Your submission' });
   return c.html(doc.replace('</main>', \`\${editForm}</main>\`));` : `return c.html(renderDocument({ title: 'Your submission' }));`}
 });${archetype.journey?.update ? `\n\napp.post('/edit/:ref', async (c) => {
   const editRef = c.req.param('ref');

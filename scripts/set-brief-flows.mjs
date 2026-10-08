@@ -21,7 +21,11 @@
  *                       is observable rather than assumed.
  *   update.newValue     the echoed value with a suffix, which the schema requires to differ from what the
  *                       create step submitted - otherwise the update could pass without writing.
- *   steps[0]            a control the brief already declares, chosen on the first page of the flow.
+ *   steps[0]            a control the brief already declares, chosen on the first page of the flow, and
+ *                       SUBMITTED - a step that only sets a control in the DOM carries nothing, and the
+ *                       next page has no state to show. Without the submit the flow looks like a step and
+ *                       proves nothing, which is exactly how this was found: the live run reported 0 of 80
+ *                       carries passing while the first page answered 200.
  *   steps[1].expectText the value steps[0] chose, which must be visible on the NEXT page: the schema
  *                       refuses an expectation no earlier step supplied, because two static pages are not
  *                       a carried state.
@@ -87,32 +91,45 @@ for (const row of rows) {
     : undefined;
   const chosenOption = selectSelector ? row.journey.select[selectSelector] : undefined;
 
+  // An update needs a record page to edit. Families whose read is a session page (no parameterised
+  // route) cannot have one: the generator injects the edit form on the read-by-reference route, so the
+  // declaration would be driveable nowhere - the schema refuses it too, and this is the reasoned skip
+  // rather than letting that refusal fail the whole patch.
+  const hasRecordPage = (row.routes ?? []).some((route) => /^\/.*:[A-Za-z]/.test(String(route)));
+  if (!hasRecordPage) {
+    skipped.push(
+      `${row.family_id}: read is a session page, not a record read by reference (${JSON.stringify(row.routes ?? [])}), so the update flow has no page to edit`,
+    );
+  }
+
   const steps = selectSelector && chosenOption
     ? [
-        { path: '/intake', select: { [selectSelector]: chosenOption } },
+        { path: '/intake', select: { [selectSelector]: chosenOption }, submit: 'form' },
         { path: '/intake/confirm', expectText: chosenOption },
       ]
     : [
-        { path: '/intake', fill: { [echoed.selector]: row.journey.expectText } },
+        { path: '/intake', fill: { [echoed.selector]: row.journey.expectText }, submit: 'form' },
         { path: '/intake/confirm', expectText: row.journey.expectText },
       ];
 
-  patch[row.family_id] = {
-    fields: row.fields,
-    journey: {
-      ...row.journey,
-      search: {
-        path: '/search',
-        queryParam: 'q',
-        query: queryFor(row.journey.expectText),
-        resultsSelector: '#search-results',
-        expectIncludes: [row.journey.expectText],
-        expectAbsent: ['zzz-decoy'],
-      },
-      update: { field: echoed.field.name, newValue: `${row.journey.expectText} (updated)` },
-      steps,
+  // Built explicitly rather than spread-then-overlaid: a family that cannot carry an update may still have
+  // one left in the manifest from an earlier pass, and a spread would faithfully re-emit it.
+  const journey = {
+    ...row.journey,
+    search: {
+      path: '/search',
+      queryParam: 'q',
+      query: queryFor(row.journey.expectText),
+      resultsSelector: '#search-results',
+      expectIncludes: [row.journey.expectText],
+      expectAbsent: ['zzz-decoy'],
     },
+    steps,
   };
+  if (hasRecordPage) journey.update = { field: echoed.field.name, newValue: `${row.journey.expectText} (updated)` };
+  else delete journey.update;
+
+  patch[row.family_id] = { fields: row.fields, journey };
 }
 
 writeFileSync(outPath, `${JSON.stringify(patch, null, 2)}\n`);

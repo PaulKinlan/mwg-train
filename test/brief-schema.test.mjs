@@ -28,6 +28,9 @@ function brief(overrides = {}) {
   ];
   return {
     brief_id: 'tr-99-v1',
+    // A record read by reference, which is the page an update flow edits. Declared by default so every
+    // fixture describes a driveable brief; the test below removes it to prove the rule is fail-closed.
+    routes: overrides.routes ?? ['/', '/bookings/:id'],
     fields,
     journey: overrides.journey ?? {
       startPath: '/',
@@ -586,6 +589,7 @@ test('an update flow must change a declared field to a value the create step did
   const row = () => ({
     brief_id: 'tr-01-v1',
     family_id: 'tr-01',
+    routes: ['/', '/bookings/:id'],
     fields: [
       { slug: 'customer', name: 'customer', type: 'text', label: 'Full name', required: true, echoed: true },
       { slug: 'phone', name: 'phone', type: 'tel', label: 'Phone', required: true },
@@ -618,6 +622,28 @@ test('an update flow must change a declared field to a value the create step did
   assert.ok(withUpdate({ field: 'customer', newValue: 'X', extra: 1 }).some((f) => f.at === 'journey.update.extra'));
 });
 
+test('an update flow needs a record page to edit, and a session read is not one', () => {
+  const withUpdate = (routes) =>
+    brief({
+      routes,
+      fields: [{ slug: 'customer', name: 'customer', type: 'text', label: 'Full name', required: true, echoed: true }],
+      journey: {
+        startPath: '/',
+        formSelector: 'form#booking-form',
+        fill: { 'input[name=customer]': 'Ada Lovelace' },
+        expectText: 'Ada Lovelace',
+        update: { field: 'customer', newValue: 'Grace Hopper' },
+      },
+    });
+
+  assert.deepEqual(validateBriefSchema(withUpdate(['/', '/bookings/:id'])), [], 'a record read by reference is editable');
+  const refused = validateBriefSchema(withUpdate(['/', '/register', '/profile']));
+  assert.ok(
+    refused.some((f) => f.at === 'journey.update' && /session page/.test(f.problem)),
+    `a session read has no record page to edit: ${JSON.stringify(refused)}`,
+  );
+});
+
 test('a multi-step flow only counts as stateful when a later page shows an earlier choice', () => {
   const row = (steps) => ({
     brief_id: 'tr-01-v1',
@@ -636,15 +662,37 @@ test('a multi-step flow only counts as stateful when a later page shows an earli
     },
   });
 
-  // Carried: step 0 chooses 'Afternoon' and step 1 asserts the next page shows it.
+  // Carried: step 0 chooses 'Afternoon' and SUBMITS it, and step 1 asserts the next page shows it.
   assert.deepEqual(
+    validateBriefSchema(
+      row([
+        { path: '/step-one', select: { 'select[name=slot]': 'Afternoon' }, submit: 'form' },
+        { path: '/step-two', expectText: 'Afternoon' },
+      ]),
+    ),
+    [],
+  );
+
+  // Not carried, third way: the choice is set but never posted, so the next page has no state to show.
+  // This is the shape the corpus itself shipped first, and 0 of 80 live carries passed with every page
+  // still answering 200 - so the declaration is refused rather than merely reported.
+  assert.ok(
     validateBriefSchema(
       row([
         { path: '/step-one', select: { 'select[name=slot]': 'Afternoon' } },
         { path: '/step-two', expectText: 'Afternoon' },
       ]),
+    ).some((f) => f.at === 'journey.steps[0].submit' && /never posted/.test(f.problem)),
+  );
+  assert.deepEqual(
+    validateBriefSchema(
+      row([
+        { path: '/step-one', select: { 'select[name=slot]': 'Afternoon' }, submit: 'form' },
+        { path: '/step-two' },
+      ]),
     ),
     [],
+    'a step with no control of its own needs no submit: it is a page in the flow, not a carrier',
   );
 
   // Not carried: the expected text is prose no step supplied, so this is two static pages, not a workflow.

@@ -293,6 +293,16 @@ export function validateBriefSchema(row) {
         }
         if (!isString(step.path) || !step.path.startsWith('/')) at(`${where}.path`, 'must be an absolute path starting with /');
         if (step.submit !== undefined && !isString(step.submit)) at(`${where}.submit`, 'must be a selector string');
+        // A step that sets a control but never submits carries nothing: the value sits in the DOM of a
+        // page that is navigated away from, so the NEXT step has no state to display and the flow is two
+        // static pages wearing a workflow's clothes. This is not hypothetical - the first live run of
+        // this corpus reported 0 of 80 carries passing for exactly this reason, with every page still
+        // answering 200. Refusing the declaration is the only place the mistake can be prevented rather
+        // than merely detected, so the rule is fail-closed here and the driver's page assertion then has
+        // something real to assert.
+        if ((step.fill || step.select) && !isString(step.submit)) {
+          at(`${where}.submit`, 'is required on a step that fills or selects a control: without it the value is never posted, so the next step has nothing to carry');
+        }
         const names = new Set(fields.filter((f) => isString(f.name)).map((f) => f.name));
         for (const [selector, value] of Object.entries(step.fill ?? {})) {
           const name = completeSelectorFieldName(selector);
@@ -486,6 +496,13 @@ export function validateBriefSchema(row) {
   const UPDATE_KEYS = ['field', 'newValue'];
   if (journey.update !== undefined) {
     const update = journey.update;
+    // An update happens to a record that is read BY REFERENCE. A flow with no parameterised route has no
+    // such page - its read is a session page keyed on a cookie - so the edit form the flow needs is never
+    // rendered, the driver types into nothing, and the failure surfaces as a flow that silently does not
+    // apply. Refused here instead: the declaration is either driveable or it is not a declaration.
+    if (!(row.routes ?? []).some((route) => /^\/.*:[A-Za-z]/.test(String(route)))) {
+      at('journey.update', `needs a parameterised route to update (this brief declares ${JSON.stringify(row.routes ?? [])}); a flow read through a session page has no record page to edit`);
+    }
     if (!update || typeof update !== 'object' || Array.isArray(update)) {
       at('journey.update', 'must be an object naming the field the flow changes and the value it changes it to');
     } else {
