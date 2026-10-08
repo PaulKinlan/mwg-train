@@ -2,7 +2,7 @@
 
 > **mwg-train deterministic baseline** - deterministic output of this repository's own tooling, not an official `web-uplift` result.
 
-`docs/train/briefs/manifest.jsonl` contains the authored synthetic training briefs for the Modern Web Guidance (MWG) student training pipeline. Full schema specification is documented in [SCHEMA.md](SCHEMA.md).
+`docs/train/briefs/manifest.jsonl` contains the authored synthetic training briefs for the Modern Web Guidance (MWG) student training pipeline. Full schema specification is documented in [SCHEMA.md](SCHEMA.md). A proposed, **not yet generated** broad web-app taxonomy and role-aware prompt matrix live in [EXPANSION-PLAN.md](EXPANSION-PLAN.md) and [expansion-matrix.json](expansion-matrix.json); `test/expansion-matrix.test.mjs` checks the plan's counts and role/journey contract.
 
 ## Overview
 

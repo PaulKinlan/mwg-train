@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "status": "proposed-not-generated",
+  "purpose": "Planning dimensions for independent future training-side prompt families; no sealed-evaluation changes",
+  "family_targets": { "initial_per_archetype": 1, "expanded_per_archetype": 2, "variants_per_family": 2, "initial_families": 21, "expanded_families": 42 },
+  "axes": {
+    "request_mode": ["generate", "repair-with-verified-original"],
+    "state": ["transient", "persistent-public", "persistent-owner-scoped"],
+    "surface": ["card", "pricing", "checkout", "search", "editor"],
+    "scenario": ["fictional-topic", "audience", "locale", "content-length", "device-needs", "framework", "server-client-architecture"],
+    "wording_roles": ["commissioning-owner", "day-to-day-user-or-operator"]
+  },
+  "invariants": [
+    "Assign only applicable actor roles; primary and secondary roles must differ in goal or permission, not merely name.",
+    "Both wording variants of a family share exactly the same structured contract and split.",
+    "Every family has observable interactions, failure or recovery behavior, concrete browser assertions and applicable pinned rule IDs.",
+    "Repair families require a runnable original and verified defect and are not interchangeable with generation families.",
+    "Do not reuse sealed evaluation families, topics, design targets or near-duplicate scaffold and prompt clusters.",
+    "Static rendering does not satisfy an archetype's declared interaction. No real payments, secrets or unlicensed assets."
+  ],
+  "archetypes": [
+    { "id": "browser-game", "group": "play-learning", "primary_role": "player", "secondary_role": "returning-player", "state": "transient", "journey": "start > keyboard/touch action changes play state > terminal state > restart", "observable": "state, result and restart differ visibly" },
+    { "id": "interactive-explainer", "group": "play-learning", "primary_role": "learner", "secondary_role": "educator", "state": "transient", "journey": "change input > diagram and explanation update > reset", "observable": "outputs respond to changed inputs, not a static illustration" },
+    { "id": "interactive-demo", "group": "play-learning", "primary_role": "visitor", "secondary_role": "developer", "state": "transient", "journey": "configure example > run in sandbox > inspect result/error", "observable": "different inputs produce different results and invalid inputs show recovery" },
+    { "id": "course-quiz", "group": "play-learning", "primary_role": "learner", "secondary_role": "instructor", "state": "persistent-owner-scoped", "journey": "read lesson > answer > receive feedback > resume", "observable": "progress and feedback survive reload for the learner" },
+    { "id": "editorial-blog", "group": "reading-reference", "primary_role": "reader", "secondary_role": "editor", "state": "persistent-public", "journey": "filter index > read deep link > publish revision", "observable": "public article reflects authorized revision after reload" },
+    { "id": "wiki-knowledge-base", "group": "reading-reference", "primary_role": "researcher", "secondary_role": "contributor", "state": "persistent-public", "journey": "search > follow cross-link > inspect citation/history", "observable": "search and link resolve specific content; revisions are distinguishable" },
+    { "id": "fan-community-site", "group": "reading-reference", "primary_role": "fan", "secondary_role": "moderator", "state": "persistent-owner-scoped", "journey": "browse collection > submit or bookmark > moderation", "observable": "contribution status and moderated visibility change appropriately" },
+    { "id": "documentation-portal", "group": "reading-reference", "primary_role": "developer", "secondary_role": "maintainer", "state": "persistent-public", "journey": "search > switch version > open example", "observable": "versioned result and runnable/copyable example are correct" },
+    { "id": "storefront-catalogue", "group": "commerce", "primary_role": "shopper", "secondary_role": "merchant", "state": "persistent-public", "journey": "filter products > choose variant > add to cart", "observable": "correct variant, stock and price appear in cart" },
+    { "id": "cart-checkout", "group": "commerce", "primary_role": "buyer", "secondary_role": "fulfilment-staff", "state": "persistent-owner-scoped", "journey": "change quantity > review totals/shipping > simulated payment > receipt", "observable": "server receipt survives reload; totals match and staff sees order" },
+    { "id": "product-card-comparison", "group": "commerce", "primary_role": "prospect", "secondary_role": "catalogue-manager", "state": "transient", "journey": "inspect cards > compare details > choose option", "observable": "comparison reflects selected items and selection advances to a next step" },
+    { "id": "subscription-pricing-tiers", "group": "commerce", "primary_role": "prospect", "secondary_role": "account-owner", "state": "persistent-owner-scoped", "journey": "toggle billing period > compare limits > select tier > enroll", "observable": "price/limits update and selected tier persists through signup" },
+    { "id": "b2b-saas-signup", "group": "business-identity", "primary_role": "company-buyer", "secondary_role": "workspace-admin", "state": "persistent-owner-scoped", "journey": "compare use cases > select plan > create workspace > onboard", "observable": "workspace and plan survive reload with admin ownership" },
+    { "id": "sign-in-recovery", "group": "business-identity", "primary_role": "member", "secondary_role": "account-admin", "state": "persistent-owner-scoped", "journey": "sign up > sign out/in > reset credential > revisit protected route", "observable": "server sessions and recovery work without exposing another account" },
+    { "id": "saas-workspace", "group": "business-identity", "primary_role": "member", "secondary_role": "workspace-admin", "state": "persistent-owner-scoped", "journey": "create item > invite or assign > check member access", "observable": "authorized member sees update; outsider cannot access item" },
+    { "id": "analytics-dashboard", "group": "business-identity", "primary_role": "operator", "secondary_role": "analyst", "state": "persistent-owner-scoped", "journey": "filter time range > inspect chart/table > save setting", "observable": "chart and table agree and saved setting survives reload" },
+    { "id": "booking-service", "group": "services-participation", "primary_role": "customer", "secondary_role": "staff", "state": "persistent-owner-scoped", "journey": "check availability > reserve > reload > cancel", "observable": "slot and staff roster reflect reservation and cancellation" },
+    { "id": "directory-listing", "group": "services-participation", "primary_role": "searcher", "secondary_role": "listing-owner", "state": "persistent-public", "journey": "search/filter > open detail > submit or update listing", "observable": "stored listing appears in filter and detail after reload" },
+    { "id": "event-community", "group": "services-participation", "primary_role": "attendee", "secondary_role": "organizer", "state": "persistent-owner-scoped", "journey": "discover event > register > manage attendance", "observable": "registration and organizer capacity reflect saved state" },
+    { "id": "support-helpdesk", "group": "services-participation", "primary_role": "requester", "secondary_role": "agent", "state": "persistent-owner-scoped", "journey": "open ticket > agent replies > requester checks status", "observable": "history persists with role-appropriate access" },
+    { "id": "survey-eligibility", "group": "services-participation", "primary_role": "respondent", "secondary_role": "reviewer", "state": "persistent-owner-scoped", "journey": "answer branching questions > review > submit > inspect result", "observable": "branch changes next question and submitted result matches answers" }
+  ]
+}
