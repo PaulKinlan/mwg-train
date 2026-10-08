@@ -70,7 +70,6 @@ const mismatches = [];
 const waived = [];
 const staleWaivers = [];
 const checked = new Set();
-const missingByFamily = new Map();
 
 for (const project of corpus.projects) {
   if (checked.has(project.project_id)) continue;
@@ -83,21 +82,25 @@ for (const project of corpus.projects) {
   const spec = readJson(join(projectsRoot, project.project_id, 'spec.json'));
   const declared = new Set((spec.routes ?? []).map((route) => norm(route.path)));
   const missing = (brief.routes ?? []).filter((route) => !declared.has(norm(route)));
-  if (missing.length === 0) continue;
-  missingByFamily.set(project.family_id, missing);
   const waiver = KNOWN_BLOCKED.get(project.family_id);
+
+  // A waiver is stale for a project that no longer misses the route it excuses, and this must be
+  // checked BEFORE skipping projects that miss nothing: the project that made the waiver stale is
+  // precisely the one with an empty missing-set, so checking it afterwards never ran. It is also
+  // checked per PROJECT rather than per family, because a family-level aggregate let one framework
+  // declare both waived routes while another still missed them and the waiver passed unremarked.
+  if (waiver) {
+    const nowDeclared = waiver.routes.filter((route) => !missing.includes(route));
+    if (nowDeclared.length > 0) {
+      staleWaivers.push({ project_id: project.project_id, family_id: project.family_id, now_declared: nowDeclared });
+    }
+  }
+
+  if (missing.length === 0) continue;
   const excused = waiver ? missing.filter((route) => waiver.routes.includes(route)) : [];
   const unexplained = waiver ? missing.filter((route) => !waiver.routes.includes(route)) : missing;
   if (excused.length > 0) waived.push({ project_id: project.project_id, family_id: project.family_id, missing: excused, reason: waiver.reason });
   if (unexplained.length > 0) mismatches.push({ project_id: project.project_id, family_id: project.family_id, missing: unexplained });
-}
-
-// A waiver for routes the family now declares is stale, and must be removed rather than left to
-// quietly excuse something that no longer needs excusing.
-for (const [family, waiver] of KNOWN_BLOCKED) {
-  const missing = missingByFamily.get(family) ?? [];
-  const nowDeclared = waiver.routes.filter((route) => !missing.includes(route));
-  if (nowDeclared.length > 0) staleWaivers.push({ family_id: family, now_declared: nowDeclared });
 }
 
 const families = [...new Set(corpus.projects.map((project) => project.family_id))];
@@ -111,7 +114,7 @@ if (asJson) {
     console.log(`FINDING ${entry.project_id}${entry.unknown_family ? ' has no brief' : ` does not declare: ${entry.missing.join(', ')}`}`);
   }
   for (const entry of staleWaivers) {
-    console.log(`FINDING ${entry.family_id} now declares ${entry.now_declared.join(', ')} - remove its waiver from KNOWN_BLOCKED`);
+    console.log(`FINDING ${entry.project_id} now declares ${entry.now_declared.join(', ')} - remove its waiver from KNOWN_BLOCKED`);
   }
   const waivedFamilies = [...new Set(waived.map((entry) => entry.family_id))];
   if (waivedFamilies.length > 0) {

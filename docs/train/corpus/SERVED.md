@@ -39,10 +39,14 @@ measured.
 | `read-session` | 1 | 1 |
 | `list-detail` | 0 | 4 |
 
-**91 of 135 declared routes are served (67.4%).**
+**91 of 135 declared routes in this sample are served (67.4%).**
 
-Everything that carries a record works: every page answers, every write route answers, and every
-read-by-reference route returns the record that was just created. The gap is entirely in listings.
+Within the measured 30 projects, every page, every write route, and every read-by-reference route
+answers, and the gap is entirely in listings. That is a statement about these declared routes in these
+30 projects, not about the corpus as a whole: the per-framework picture, and the 170 projects whose
+journeys were never driven, are outside this measurement. `tr-05`'s missing login and profile flow is
+a separate gap again - it is a route the brief lists and the project cannot declare, so it does not
+appear as a 404 above.
 
 ## What the gap is, precisely
 
@@ -97,8 +101,8 @@ list `/cleanups` (x1)
 ```
 
 That is the shared builder's gap, and it is the scope of the builder bead (functional `list` and
-`list-detail` routes, plus tr-05's login and logout). It is narrow: pages, writes and record read-back all
-work today, so only 2 of the 7 route kinds in use are affected.
+`list-detail` routes, plus tr-05's login and logout). Within the measured sample only 2 of the 7 route
+kinds in use are affected, and pages, writes and record read-back all work.
 
 ## History
 

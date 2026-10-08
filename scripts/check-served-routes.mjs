@@ -488,6 +488,11 @@ async function main() {
     }
   }
 
+  // A project that never yielded a route result was not measured at all - its spec was missing, or
+  // its server never answered - so it must not pass --expect-all by contributing no 404s. Counting
+  // only per-route errors let a project that produced nothing at all look like a clean run.
+  const unmeasuredProjects = projectReports.filter((proj) => proj.error || (proj.errors ?? 0) > 0).map((proj) => proj.project_id);
+
   // End-of-run cleanup verification
   const lingeringPorts = [];
   for (const p of allUsedPorts) {
@@ -585,8 +590,10 @@ async function main() {
     }
     console.log('');
 
-    if (expectAll && totalNotServed > 0) {
-      console.error(`check-served-routes: FAIL - ${totalNotServed} declared route(s) not served across ${selectedProjects.length} project(s) (--expect-all requested)`);
+    if (expectAll && (totalNotServed > 0 || totalErrors > 0 || unmeasuredProjects.length > 0)) {
+      console.error(
+        `check-served-routes: FAIL - ${totalNotServed} declared route(s) not served, ${totalErrors} probe error(s), ${unmeasuredProjects.length} project(s) not measured across ${selectedProjects.length} project(s) (--expect-all requested)`,
+      );
       process.exit(1);
     }
 
@@ -595,7 +602,9 @@ async function main() {
     );
   }
 
-  if (expectAll && totalNotServed > 0) {
+  // A probe error is not a pass: it means the route was never measured, so a server that failed to
+  // start would otherwise satisfy --expect-all by producing no 404s at all.
+  if (expectAll && (totalNotServed > 0 || totalErrors > 0 || unmeasuredProjects.length > 0)) {
     process.exit(1);
   }
 }

@@ -8,7 +8,15 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { BRIEF_FIELD_TYPES, builderFields, echoFieldFor, selectorFieldName, serverRequiredFieldNames, validateBriefSchema } from '../src/train/brief-schema.mjs';
+import {
+  BRIEF_FIELD_TYPES,
+  builderFields,
+  completeSelectorFieldName,
+  echoFieldFor,
+  selectorFieldName,
+  serverRequiredFieldNames,
+  validateBriefSchema,
+} from '../src/train/brief-schema.mjs';
 
 /** A valid brief schema, with a `journey.fill` that types into its echoed field. */
 function brief(overrides = {}) {
@@ -313,4 +321,53 @@ test('a step select must choose an option the field offers', () => {
 test('steps must be an array, not a single object', () => {
   const row = withSteps({ path: '/search' });
   assert.ok(problems(row).some((p) => /journey\.steps must be an array of steps/.test(p)), problems(row).join('\n'));
+});
+
+// The reviewer's counterexample: validation read the field name out of the FIRST `[name=...]` in the
+// selector, while the browser resolves the whole string with `querySelector`. A compound selector can
+// therefore name one field to this check and drive another, which would let a required select be left
+// on its default while the schema reported it as driven.
+test('a compound selector cannot stand in for a required select', () => {
+  const row = brief({
+    fields: [
+      { slug: 'grind', name: 'grind', type: 'select', label: 'Grind', required: true, options: ['A', 'B'] },
+      { slug: 'other', name: 'other', type: 'select', label: 'Other', required: false, options: ['A', 'B'] },
+      { slug: 'c', name: 'c', type: 'text', label: 'C', required: true, echoed: true },
+    ],
+    journey: {
+      startPath: '/',
+      formSelector: 'form#f',
+      fill: { 'input[name=c]': 'x' },
+      select: { 'select[name=grind]:not(*), select[name=other]': 'B' },
+      expectText: 'x',
+    },
+  });
+  const found = problems(row);
+  assert.ok(found.some((p) => /does not address a select this brief declares/.test(p)), found.join('\n'));
+  assert.ok(found.some((p) => /does not choose 'grind'/.test(p)), found.join('\n'));
+  assert.equal(completeSelectorFieldName('select[name=grind]:not(*), select[name=other]'), null);
+});
+
+test('a compound fill selector is refused for the same reason', () => {
+  const row = brief({
+    fields: [
+      { slug: 'a', name: 'a', type: 'text', label: 'A', required: true, echoed: true },
+      { slug: 'b', name: 'b', type: 'text', label: 'B', required: true },
+    ],
+    journey: {
+      startPath: '/',
+      formSelector: 'form#f',
+      fill: { 'input[name=a], input[name=b]': 'x' },
+      expectText: 'x',
+    },
+  });
+  assert.ok(problems(row).some((p) => /must be one complete selector/.test(p)), problems(row).join('\n'));
+});
+
+test('complete selectors still pass, in every quote style', () => {
+  assert.equal(completeSelectorFieldName('input[name=customer]'), 'customer');
+  assert.equal(completeSelectorFieldName('select[name="grind"]'), 'grind');
+  assert.equal(completeSelectorFieldName("textarea[name='notes']"), 'notes');
+  assert.equal(completeSelectorFieldName('input[name=a][type=text]'), null);
+  assert.equal(completeSelectorFieldName('form input[name=a]'), null);
 });

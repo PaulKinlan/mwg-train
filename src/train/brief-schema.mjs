@@ -79,6 +79,23 @@ export function selectorFieldName(selector) {
   return match ? match[1] : null;
 }
 
+const COMPLETE_SELECTOR = /^(input|textarea|select)\[name=["']?([A-Za-z0-9_-]+)["']?\]$/;
+
+/**
+ * The field a selector addresses, but only when it is a complete single-form selector.
+ *
+ * `selectorFieldName` reads the first `[name=...]` out of whatever it is given, while the browser
+ * resolves the WHOLE string with `querySelector`. Those disagree on a compound or comma-joined
+ * selector: `select[name=grind]:not(*), select[name=other]` reads as `grind` here (`:not(*)` matches
+ * nothing) and drives `other` in the browser, so validation would count a required select as driven
+ * while the page left it on its first option. This returns the name only when reading and driving
+ * cannot differ, and the validators reject anything else rather than guessing which one is meant.
+ */
+export function completeSelectorFieldName(selector) {
+  const match = COMPLETE_SELECTOR.exec(String(selector ?? ''));
+  return match ? match[2] : null;
+}
+
 /**
  * The fields as the framework builders need them.
  *
@@ -188,15 +205,15 @@ export function validateBriefSchema(row) {
         if (step.submit !== undefined && !isString(step.submit)) at(`${where}.submit`, 'must be a selector string');
         const names = new Set(fields.filter((f) => isString(f.name)).map((f) => f.name));
         for (const [selector, value] of Object.entries(step.fill ?? {})) {
-          const name = selectorFieldName(selector);
-          if (!name) at(`${where}.fill['${selector}']`, "must address a field by name, e.g. 'input[name=q]'");
+          const name = completeSelectorFieldName(selector);
+          if (!name) at(`${where}.fill['${selector}']`, "must be one complete selector of the form 'input[name=q]'");
           else if (!names.has(name)) at(`${where}.fill['${selector}']`, `types into '${name}', which this brief does not declare`);
           if (!isString(String(value))) at(`${where}.fill['${selector}']`, 'must be a non-empty value');
         }
         for (const [selector, option] of Object.entries(step.select ?? {})) {
-          const name = selectorFieldName(selector);
+          const name = completeSelectorFieldName(selector);
           const field = name ? fields.find((candidate) => candidate.name === name && candidate.type === 'select') : undefined;
-          if (!field) at(`${where}.select['${selector}']`, 'does not address a select this brief declares');
+          if (!field) at(`${where}.select['${selector}']`, "does not address a select this brief declares with one complete selector");
           else if (!(field.options ?? []).includes(option)) {
             at(`${where}.select['${selector}']`, `option '${option}' is not one of ${JSON.stringify(field.options)}`);
           }
@@ -219,9 +236,12 @@ export function validateBriefSchema(row) {
   } else {
     const names = new Set(fields.filter((f) => isString(f.name)).map((f) => f.name));
     for (const [selector, value] of Object.entries(fill)) {
-      const name = selectorFieldName(selector);
+      const name = completeSelectorFieldName(selector);
       if (!name) {
-        at(`journey.fill['${selector}']`, "selector must address a field by name, e.g. 'input[name=email]'");
+        at(
+          `journey.fill['${selector}']`,
+          "must be one complete selector of the form 'input[name=email]' - the browser resolves the whole string, so a compound selector could name one field to this check and drive another",
+        );
       } else if (!names.has(name)) {
         at(`journey.fill['${selector}']`, `types into '${name}', which this brief does not declare - the journey is not this brief's`);
       }
@@ -237,7 +257,7 @@ export function validateBriefSchema(row) {
     // the journey types into the echoed field is what it will look for.
     const echoedName = fields.find((f) => f.slug === echoed)?.name;
     const typed = Object.entries(fill ?? {})
-      .filter(([selector]) => selectorFieldName(selector) === echoedName)
+      .filter(([selector]) => completeSelectorFieldName(selector) === echoedName)
       .map(([, value]) => value);
     if (typed.length === 0) {
       at('journey.fill', `must type into the echoed field '${echoedName}' (echo.source defaults to the record page)`);
@@ -251,7 +271,7 @@ export function validateBriefSchema(row) {
   // did not fill it, and the server demanded it anyway - the pair was then rejected as
   // `original-not-runnable` with nothing to say the brief was self-contradictory.
   if (fill && typeof fill === 'object' && !Array.isArray(fill)) {
-    const filled = new Set(Object.keys(fill).map(selectorFieldName).filter(Boolean));
+    const filled = new Set(Object.keys(fill).map(completeSelectorFieldName).filter(Boolean));
     for (const name of serverRequiredFieldNames(fields)) {
       if (!filled.has(name)) {
         at('journey.fill', `does not fill '${name}', which its own fields mark required - the server will reject the submission`);
@@ -269,7 +289,7 @@ export function validateBriefSchema(row) {
     at('journey.select', 'must be a map of selector -> option');
   } else {
     for (const [selector, option] of Object.entries(chosen ?? {})) {
-      const name = selectorFieldName(selector);
+      const name = completeSelectorFieldName(selector);
       const field = name ? selects.find((candidate) => candidate.name === name) : undefined;
       if (!field) {
         at(`journey.select['${selector}']`, `does not address a select this brief declares (${selects.map((s) => s.name).join(', ') || 'none'})`);
@@ -282,7 +302,7 @@ export function validateBriefSchema(row) {
       }
     }
     for (const field of selects.filter((candidate) => candidate.required === true)) {
-      const driven = Object.keys(chosen ?? {}).some((selector) => selectorFieldName(selector) === field.name);
+      const driven = Object.keys(chosen ?? {}).some((selector) => completeSelectorFieldName(selector) === field.name);
       if (!driven) {
         at('journey.select', `does not choose '${field.name}', which its own fields mark required - the select would submit its first option`);
       }
