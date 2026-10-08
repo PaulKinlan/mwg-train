@@ -156,6 +156,21 @@ test('record content is escaped: evidence text cannot inject markup into the vie
   assert.match(html, /&lt;script&gt;/);
 });
 
+test('a manifest-only project (tree not on disk) offers live actions with honest pending labels', (t) => {
+  const root = buildFixtureCorpus();
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const corpus = loadCorpus(root);
+  const views = corpus.projects.map((project) =>
+    projectView(project, {
+      // The scan state of a manifest-only project: both trees absent, records clean.
+      scan: { status: 'PARTIAL', original: { status: 'MISSING', findings: [] }, uplifted: { status: 'MISSING', findings: [] }, records: { status: 'PASS', findings: [] } },
+    }),
+  );
+  const html = renderIndex({ views, allViews: views, filters: {}, runId: corpus.runId, runs: corpus.runs, yieldReport: null, scanAvailable: true, liveOrigin: 'http://127.0.0.1:7701' });
+  assert.match(html, /pending \(verified\+scanned at serve\)/, 'absent trees are labelled pending, not clean');
+  assert.match(html, /\/live\/booking-raw\/original\//, 'the live action is offered (the serve-time gate enforces)');
+});
+
 test('a record-level owner-auth failure disables BOTH live buttons (the pair is refused)', (t) => {
   const root = buildFixtureCorpus();
   t.after(() => rmSync(root, { recursive: true, force: true }));

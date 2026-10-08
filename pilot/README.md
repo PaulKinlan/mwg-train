@@ -21,7 +21,7 @@ verifying them against `CORPUS.json`, and refuses anything that doesn't reproduc
 ## Composition: 5 archetypes × 7 rendering arms
 
 Each archetype is one realistic site shape with its own journeys and seeded defects; each is
-rendered through five arms so the measurement separates *what the model must learn* from *how a
+rendered through seven arms so the measurement separates *what the model must learn* from *how a
 framework expresses it*:
 
 | Archetype | What it is |

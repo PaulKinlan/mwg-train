@@ -149,7 +149,13 @@ export function stateBadge(view) {
     // presented as gate-clean only when the scan is a full PASS on both trees and the records.
     const gate = view.scan?.status;
     if (gate === 'PASS') return '<span class="badge accepted" title="recorded acceptance, and the owner-auth gate PASSes both trees and the records">ACCEPTED PAIR — gate-clean</span>';
-    if (gate === 'PARTIAL') return '<span class="badge accepted" title="recorded acceptance; baseline and records clean, the target is hash-verified and scanned at serve time">ACCEPTED PAIR — recorded; target scanned at serve</span>';
+    if (gate === 'PARTIAL') {
+      const baselinePending = view.scan?.original?.status === 'MISSING';
+      const title = baselinePending
+        ? 'recorded acceptance; the trees are not on disk in this checkout - materialized from the plan, hash-verified and scanned at serve time'
+        : 'recorded acceptance; baseline and records clean, the target is hash-verified and scanned at serve time';
+      return `<span class="badge accepted" title="${title}">ACCEPTED PAIR — recorded; ${baselinePending ? 'trees verified+scanned at serve' : 'target scanned at serve'}</span>`;
+    }
     return `<span class="badge warn">recorded acceptance — owner-auth gate ${escapeHtml(gate ?? 'not run')}: NOT gate-approved</span>`;
   }
   return `<span class="badge rejected" title="${escapeHtml(view.category)}">REJECTED ATTEMPT · ${escapeHtml(view.category)}</span>`;
@@ -158,7 +164,15 @@ export function stateBadge(view) {
 export function scanBadge(scan) {
   if (!scan) return '<span class="badge no-run">scan: not run</span>';
   if (scan.status === 'PASS') return '<span class="badge scan-pass">owner-auth scan: PASS</span>';
-  if (scan.status === 'PARTIAL') return '<span class="badge warn" title="original tree clean; uplifted snapshot not kept, regenerated and scanned at serve time">owner-auth scan: PASS (original; uplifted scanned at serve)</span>';
+  if (scan.status === 'PARTIAL') {
+    const originalPending = scan.original?.status === 'MISSING';
+    const targetPending = scan.uplifted?.status === 'MISSING';
+    const pending = [originalPending && 'BASELINE', targetPending && 'TARGET'].filter(Boolean).join(' + ');
+    const title = pending
+      ? `${pending} not on disk in this checkout - materialized from the plan, hash-verified and scanned at serve time; nothing is claimed clean until then`
+      : 'baseline tree clean; target snapshot not kept, regenerated and scanned at serve time';
+    return `<span class="badge warn" title="${title}">owner-auth scan: ${pending ? `${pending} pending (verified+scanned at serve)` : 'PASS (baseline; target scanned at serve)'}</span>`;
+  }
   if (scan.status === 'ERROR') return `<span class="badge scan-error">owner-auth scan: ERROR (fail-closed)</span>`;
   return '<span class="badge scan-fail">owner-auth scan: FAIL</span>';
 }
@@ -205,10 +219,13 @@ function attributionBlock(view) {
 function liveLinks(view, liveOrigin, runId) {
   const scan = view.scan;
   // The buttons mirror the serving gate: a pair-level FAIL (a dirty tree OR a dirty record)
-  // means the request would be refused, so the button is disabled rather than offered.
+  // means the request would be refused, so the button is disabled rather than offered. A MISSING
+  // tree (not materialized on disk) is servable: the live route materializes it from the plan,
+  // hash-verifies it against the record, and scans it before it is reachable.
   const pairOk = scan && (scan.status === 'PASS' || scan.status === 'PARTIAL');
-  const originalOk = pairOk && scan?.original?.status === 'PASS';
-  const upliftedOk = pairOk && (scan?.uplifted?.status === 'PASS' || scan?.uplifted?.status === 'MISSING');
+  const treeOk = (result) => result?.status === 'PASS' || result?.status === 'MISSING';
+  const originalOk = pairOk && treeOk(scan?.original);
+  const upliftedOk = pairOk && treeOk(scan?.uplifted);
   const why = !scan
     ? 'owner-auth scan cannot run (fail-closed)'
     : !pairOk
