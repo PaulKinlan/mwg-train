@@ -15,7 +15,7 @@
  */
 
 import { execFileSync } from 'node:child_process';
-import { existsSync, realpathSync } from 'node:fs';
+import { existsSync, lstatSync, realpathSync } from 'node:fs';
 import { dirname, isAbsolute, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -74,22 +74,31 @@ export function expectedStoreRepo(env = process.env) {
  */
 export function assertResolvesInside(root, path, what = 'path') {
   const realRoot = realpathSync(root);
-  let current = path;
-  while (!existsSync(current)) {
-    const parent = resolve(current, '..');
-    if (parent === current) break;
-    current = parent;
-  }
-  if (existsSync(current)) {
-    const realAncestor = realpathSync(current);
-    if (realAncestor !== realRoot && !realAncestor.startsWith(`${realRoot}${sep}`)) {
-      throw new QuarantineError('SYMLINK_ESCAPE', `SYMLINK_ESCAPE: ${what} resolves outside its root via an existing component: ${path}`);
+  const relative = resolve(path).slice(realRoot.length).split(sep).filter(Boolean);
+  // Walk every component with lstat: existsSync follows links, so a DANGLING symlink looks absent
+  // and would let a later write create the linked-to file outside the root.
+  let current = realRoot;
+  for (const component of relative) {
+    current = join(current, component);
+    let stat = null;
+    try {
+      stat = lstatSync(current);
+    } catch {
+      continue; // not existing yet: a fresh component is created inside the (verified) parent
     }
-  }
-  if (existsSync(path)) {
-    const real = realpathSync(path);
-    if (real !== realRoot && !real.startsWith(`${realRoot}${sep}`)) {
-      throw new QuarantineError('SYMLINK_ESCAPE', `SYMLINK_ESCAPE: ${what} resolves outside its root: ${path} -> ${real}`);
+    if (stat.isSymbolicLink()) {
+      if (!existsSync(current)) {
+        throw new QuarantineError('DANGLING_SYMLINK', `DANGLING_SYMLINK: ${what} contains a dangling symlink: ${current}`);
+      }
+      const real = realpathSync(current);
+      if (real !== realRoot && !real.startsWith(`${realRoot}${sep}`)) {
+        throw new QuarantineError('SYMLINK_ESCAPE', `SYMLINK_ESCAPE: ${what} resolves outside its root: ${current} -> ${real}`);
+      }
+    } else if (stat.isDirectory() || stat.isFile()) {
+      const real = realpathSync(current);
+      if (real !== realRoot && !real.startsWith(`${realRoot}${sep}`)) {
+        throw new QuarantineError('SYMLINK_ESCAPE', `SYMLINK_ESCAPE: ${what} resolves outside its root: ${current} -> ${real}`);
+      }
     }
   }
   return path;

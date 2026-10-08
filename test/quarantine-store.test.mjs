@@ -171,6 +171,18 @@ test('the store must be the expected companion repo, not merely a different URL 
   assert.throws(() => assertQuarantineStore(wrong, { repoRoot: publicRepo }), /STORE_WRONG_REPO/);
 });
 
+test('a dangling symlink as the asset file is refused (existsSync follows links)', (t) => {
+  const { root, publicRepo, store } = fixture(t);
+  mkdirSync(join(store, 'data', 'A3_teacher_generated'), { recursive: true });
+  // A symlink whose target does NOT exist yet: existsSync says 'absent', but writeFileSync would
+  // follow it and create the file OUTSIDE the store.
+  execFileSync('ln', ['-s', join(root, 'outside-target.txt'), join(store, 'data', 'A3_teacher_generated', 'evil.txt')]);
+  assert.throws(
+    () => assetStoragePath('A3_teacher_generated', 'evil.txt', { repoRoot: publicRepo, quarantineRoot: store }),
+    /DANGLING_SYMLINK/,
+  );
+});
+
 test('asset paths check every intermediate component for symlink escapes', (t) => {
   const { publicRepo, store } = fixture(t);
   mkdirSync(join(publicRepo, 'data', 'leaked'), { recursive: true });
