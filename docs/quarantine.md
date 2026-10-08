@@ -3,8 +3,9 @@
 **What:** the private companion repository `PaulKinlan/mwg-quarantine` — the mwg-train analogue of
 `journal/journal-data`. Teacher-generated material (arm A3), clean-room reproduction studies (A4)
 and black-box reproduction studies (A5) live here, behind their `excluded_from_training` flags.
-Held-out evaluation material (A6) is never trainable by arm policy; its sealed *briefs* stay
-public by design, but any A6 material that must not be public goes here too.
+Held-out evaluation material (A6) is never trainable by arm policy; A6's publication placement is
+**public** (the sealed briefs are public by design) — training exclusion and publication placement
+are separate axes (`publication` in src/provenance/arms.mjs). Only A3, A4 and A5 route here.
 
 **Why a separate repo:** a private branch in a public repo is not private (every branch is
 fetchable), and `.gitignore` is a promise, not a boundary — it stops a commit, it cannot retract

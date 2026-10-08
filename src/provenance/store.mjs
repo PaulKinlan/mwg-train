@@ -52,6 +52,43 @@ function originOf(dir) {
 }
 
 /**
+ * Assert that `path` (which may not exist yet) cannot resolve outside `root` through symlinks:
+ * the nearest existing ancestor is realpath-checked inside the root, and if the full path exists
+ * it is realpath-checked too. A symlinked arm directory pointing into the public tree fails here.
+ */
+export function assertResolvesInside(root, path, what = 'path') {
+  const realRoot = realpathSync(root);
+  let current = path;
+  while (!existsSync(current)) {
+    const parent = resolve(current, '..');
+    if (parent === current) break;
+    current = parent;
+  }
+  if (existsSync(current)) {
+    const realAncestor = realpathSync(current);
+    if (realAncestor !== realRoot && !realAncestor.startsWith(`${realRoot}${sep}`)) {
+      throw new QuarantineError('SYMLINK_ESCAPE', `SYMLINK_ESCAPE: ${what} resolves outside its root via an existing component: ${path}`);
+    }
+  }
+  if (existsSync(path)) {
+    const real = realpathSync(path);
+    if (real !== realRoot && !real.startsWith(`${realRoot}${sep}`)) {
+      throw new QuarantineError('SYMLINK_ESCAPE', `SYMLINK_ESCAPE: ${what} resolves outside its root: ${path} -> ${real}`);
+    }
+  }
+  return path;
+}
+
+/** The directory's own git worktree root, or null (git searches parents, so ask explicitly). */
+function worktreeRoot(dir) {
+  try {
+    return realpathSync(execFileSync('git', ['-C', dir, 'rev-parse', '--show-toplevel'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim());
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Verify a quarantine checkout is real and is NOT the public repo: it must exist, be a git
  * checkout, and have an origin that differs from the public repo's. A store that is the public
  * repo (or a subdir of it) is not a store.
@@ -69,6 +106,11 @@ export function assertQuarantineStore(root, { repoRoot = REPO_ROOT } = {}) {
   if (!storeOrigin) {
     throw new QuarantineError('STORE_NOT_GIT', `STORE_NOT_GIT: ${realRoot} is not a git checkout with an origin - the store must be the private companion repo so material is backed up off this machine`);
   }
+  // `git -C <dir>` searches PARENTS, so an ordinary directory inside someone else's checkout would
+  // pass the origin check. The store directory must be its own worktree root.
+  if (worktreeRoot(realRoot) !== realRoot) {
+    throw new QuarantineError('STORE_NOT_WORKTREE_ROOT', `STORE_NOT_WORKTREE_ROOT: ${realRoot} is inside another git checkout, not its own worktree root`);
+  }
   const publicOrigin = originOf(realRepo);
   if (publicOrigin && storeOrigin === publicOrigin) {
     throw new QuarantineError('STORE_IS_PUBLIC_REPO', `STORE_IS_PUBLIC_REPO: the quarantine store's origin IS the public repo (${publicOrigin}) - that is not a boundary`);
@@ -83,9 +125,13 @@ export function assertQuarantineStore(root, { repoRoot = REPO_ROOT } = {}) {
  */
 export function armStorageRoot(armId, { repoRoot = REPO_ROOT, quarantineRoot: qRoot = null } = {}) {
   assertKnownArm(armId);
-  if (ARMS[armId].quarantined) {
+  if (ARMS[armId].publication === 'quarantine') {
     const root = qRoot ?? quarantineRoot({ repoRoot });
-    return join(assertQuarantineStore(root, { repoRoot }), ARMS[armId].storageRoot);
+    const store = assertQuarantineStore(root, { repoRoot });
+    const armPath = join(store, ARMS[armId].storageRoot);
+    // The store root is verified; the arm path inside it must not be a symlink back out (e.g.
+    // into the public tree), or a verified store would still write publicly.
+    return assertResolvesInside(store, armPath, `arm ${armId} storage path`);
   }
   return join(repoRoot, ARMS[armId].storageRoot);
 }

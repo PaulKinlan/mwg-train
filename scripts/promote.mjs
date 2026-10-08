@@ -46,20 +46,28 @@ if (args.positional.length !== 2) {
 const [from, to] = args.positional;
 
 const store = assertQuarantineStore(quarantineRoot({ repoRoot: PUBLIC_REPO }), { repoRoot: PUBLIC_REPO });
+// Containment is checked on the RESOLVED path: a symlinked source must not read outside the store.
 const source = resolve(store, from);
-if (!source.startsWith(`${store}${sep}`) && source !== store) {
-  console.error(`promote: '${from}' escapes the quarantine store`);
-  process.exit(1);
-}
 if (!existsSync(source)) {
   console.error(`promote: '${from}' does not exist in the quarantine store`);
   process.exit(1);
 }
+const realSource = realpathSync(source);
+if (realSource !== store && !realSource.startsWith(`${store}${sep}`)) {
+  console.error(`promote: '${from}' resolves outside the quarantine store (${realSource})`);
+  process.exit(1);
+}
 
-// Which arm is being published? The arm root prefix in the store path tells us; --arm may say it
-// explicitly. A quarantined arm requires the explicit acknowledgement: publication is not
-// sign-off, and the person promoting must say they know that.
-const arm = args.arm ?? QUARANTINED_ARMS.find((id) => from === ARMS[id].storageRoot || from.startsWith(`${ARMS[id].storageRoot}/`)) ?? null;
+// Which arm is being published? Derive it from the RESOLVED source path inside the store (never
+// from the caller's raw string: './data/A3...' and friends must not dodge the check). An explicit
+// --arm must AGREE with the derived arm, or the promotion is refused as contradictory.
+const sourceRel = realSource.slice(store.length + 1).split(sep).join('/');
+const derivedArm = QUARANTINED_ARMS.find((id) => sourceRel === ARMS[id].storageRoot || sourceRel.startsWith(`${ARMS[id].storageRoot}/`)) ?? null;
+if (args.arm && derivedArm && args.arm !== derivedArm) {
+  console.error(`promote: --arm ${args.arm} contradicts the source path, which is in arm ${derivedArm}`);
+  process.exit(1);
+}
+const arm = derivedArm ?? args.arm;
 if (arm && ARMS[arm].quarantined && !args.acknowledgeBoundary) {
   console.error(
     `promote: '${from}' is in quarantined arm ${arm} (${ARMS[arm].label}).\n` +
@@ -70,19 +78,28 @@ if (arm && ARMS[arm].quarantined && !args.acknowledgeBoundary) {
 }
 
 const target = resolve(PUBLIC_REPO, to);
-if (!target.startsWith(`${PUBLIC_REPO}${sep}`)) {
-  console.error(`promote: target '${to}' escapes the public repo`);
-  process.exit(1);
-}
+// The target must stay inside the public repo on RESOLVED paths too: a symlinked parent must not
+// write outside it. The target itself must not exist (promotions are additive).
 if (existsSync(target)) {
   console.error(`promote: target '${to}' already exists - promotions are additive; rename or remove the target first`);
+  process.exit(1);
+}
+let existingAncestor = target;
+while (!existsSync(existingAncestor)) {
+  const parent = dirname(existingAncestor);
+  if (parent === existingAncestor) break;
+  existingAncestor = parent;
+}
+const realAncestor = realpathSync(existingAncestor);
+if (realAncestor !== realpathSync(PUBLIC_REPO) && !realAncestor.startsWith(`${realpathSync(PUBLIC_REPO)}${sep}`)) {
+  console.error(`promote: target '${to}' resolves outside the public repo via ${existingAncestor}`);
   process.exit(1);
 }
 
 const head = execFileSync('git', ['-C', store, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
 mkdirSync(dirname(target), { recursive: true });
 mkdirSync(dirname(LEDGER), { recursive: true });
-cpSync(realpathSync(source), target, { recursive: true });
+cpSync(realSource, target, { recursive: true });
 
 const record = {
   at: new Date().toISOString(),

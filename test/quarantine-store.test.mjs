@@ -61,6 +61,83 @@ test('default-write routing: quarantined arms go to the store, cleared arms to t
   assert.throws(() => assetStoragePath('A1_self_generated', '../escape', { repoRoot: publicRepo, quarantineRoot: store }), /must not contain empty/);
 });
 
+test('promote: --arm cannot launder a quarantined source, and ./ prefixes do not dodge the check', (t) => {
+  const { publicRepo, store } = fixture(t);
+  const material = join(store, 'data/A3_teacher_generated/sites/example');
+  mkdirSync(material, { recursive: true });
+  writeFileSync(join(material, 'index.html'), 'x');
+  const run = (argv) => {
+    const script = new URL('../scripts/promote.mjs', import.meta.url).pathname;
+    try {
+      execFileSync('node', [script, ...argv], { cwd: publicRepo, encoding: 'utf8', env: { ...process.env, MWG_TRAIN_QUARANTINE: store, MWG_TRAIN_REPO: publicRepo } });
+      return { code: 0 };
+    } catch (error) {
+      return { code: error.status, stderr: error.stderr ?? '' };
+    }
+  };
+  // claiming the source is a cleared arm: refused as contradictory
+  const laundering = run(['data/A3_teacher_generated/sites/example', 'docs/laundered', '--arm', 'A1_self_generated']);
+  assert.equal(laundering.code, 1);
+  assert.match(laundering.stderr, /contradicts/);
+  assert.equal(existsSync(join(publicRepo, 'docs/laundered')), false);
+  // a ./-prefixed path is still derived as A3: refused without the acknowledgement
+  const dodged = run(['./data/A3_teacher_generated/sites/example', 'docs/dodged']);
+  assert.equal(dodged.code, 1);
+  assert.match(dodged.stderr, /PUBLICATION boundary/);
+});
+
+test('promote: symlinks cannot escape the store or the public repo', (t) => {
+  const { root, publicRepo, store } = fixture(t);
+  const outside = join(root, 'secret');
+  mkdirSync(outside);
+  writeFileSync(join(outside, 's.txt'), 'secret');
+  // symlink inside the store pointing outside it
+  execFileSync('ln', ['-s', outside, join(store, 'leak')]);
+  const script = new URL('../scripts/promote.mjs', import.meta.url).pathname;
+  const run = (argv) => {
+    try {
+      execFileSync('node', [script, ...argv], { cwd: publicRepo, encoding: 'utf8', env: { ...process.env, MWG_TRAIN_QUARANTINE: store, MWG_TRAIN_REPO: publicRepo } });
+      return { code: 0 };
+    } catch (error) {
+      return { code: error.status, stderr: error.stderr ?? '' };
+    }
+  };
+  const leakSource = run(['leak', 'docs/leak', '--acknowledge-boundary']);
+  assert.equal(leakSource.code, 1);
+  assert.match(leakSource.stderr, /resolves outside the quarantine store/);
+  // symlinked target parent pointing outside the public repo
+  mkdirSync(join(publicRepo, 'docs'), { recursive: true });
+  execFileSync('ln', ['-s', outside, join(publicRepo, 'docs', 'escape')]);
+  writeFileSync(join(store, 'ok.txt'), 'ok');
+  const leakTarget = run(['ok.txt', 'docs/escape/file.txt', '--acknowledge-boundary']);
+  assert.equal(leakTarget.code, 1);
+  assert.match(leakTarget.stderr, /resolves outside the public repo/);
+  assert.equal(existsSync(join(outside, 'file.txt')), false);
+});
+
+test('store verification: a child directory of an unrelated checkout is not a store', (t) => {
+  const { root, publicRepo } = fixture(t);
+  const unrelated = join(root, 'someone-elses-repo');
+  mkdirSync(join(unrelated, 'sub', 'dir'), { recursive: true });
+  execFileSync('git', ['init', '-q', unrelated]);
+  execFileSync('git', ['-C', unrelated, 'remote', 'add', 'origin', 'https://github.example/other/repo']);
+  assert.throws(() => assertQuarantineStore(join(unrelated, 'sub', 'dir'), { repoRoot: publicRepo }), /STORE_NOT_WORKTREE_ROOT/);
+});
+
+test('an arm path symlinked into the public tree refuses the write path', (t) => {
+  const { publicRepo, store } = fixture(t);
+  const publicData = join(publicRepo, 'data', 'A3_teacher_generated');
+  mkdirSync(publicData, { recursive: true });
+  mkdirSync(join(store, 'data'), { recursive: true });
+  execFileSync('ln', ['-s', publicData, join(store, 'data', 'A3_teacher_generated')]);
+  assert.throws(() => armStorageRoot('A3_teacher_generated', { repoRoot: publicRepo, quarantineRoot: store }), /SYMLINK_ESCAPE/);
+});
+
+test('A6 (eval material) is never trainable but publishes publicly', (t) => {
+  const { publicRepo, store } = fixture(t);
+  assert.equal(armStorageRoot('A6_evaluation', { repoRoot: publicRepo, quarantineRoot: store }), join(publicRepo, 'data/A6_evaluation'));
+});
+
 test('promote: explicit, ledgered, and refuses quarantined arms without acknowledgement', (t) => {
   const { root, publicRepo, store } = fixture(t);
   const material = join(store, 'data/A3_teacher_generated/sites/example');
