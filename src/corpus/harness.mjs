@@ -216,6 +216,21 @@ export async function runProjectVersion({ chrome, projectDir, spec, label, port,
       journey: {
         submitContent: async (payload) => {
           if (!spec.content_journey) return false;
+          if (spec.content_journey.source === 'session') {
+            // The session page *is* where a successful submission lands, and its own script reads the
+            // session back. Navigating anywhere else - the route the record-reference arm uses - put the
+            // journey on a 404, where the payload never reached the DOM and the sanitisation check then
+            // reported PASS for both versions of five projects.
+            await page.goto(`${base}${spec.journey.startPath}`);
+            for (const [selector, value] of Object.entries(spec.journey.fill ?? {})) {
+              if (selector === spec.content_journey.inputSelector) continue;
+              await page.type(selector, value);
+            }
+            await page.type(spec.content_journey.inputSelector, payload);
+            await page.submit(spec.content_journey.formSelector ?? 'form');
+            await page.waitFor(spec.echo_container ?? '#record-echo', { timeout: 5000 });
+            return true;
+          }
           if (spec.content_journey.source === 'query') {
             // A reflected-query project: the untrusted value is in the URL the server rendered, so the
             // journey is a plain navigation, and the page's own script is what inserts it.

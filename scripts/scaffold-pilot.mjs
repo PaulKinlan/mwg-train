@@ -9,11 +9,11 @@
  * is generated from the same builder, which is what makes the measured difference attributable to the
  * uplift rule and not to project-to-project drift.
  */
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { readFileSync, rmSync } from 'node:fs';
+import { resolve } from 'node:path';
 import process from 'node:process';
 
-import { buildProject } from '../pilot/frameworks.mjs';
+import { buildProject, writeProject } from '../pilot/frameworks.mjs';
 
 function main() {
   const argv = process.argv.slice(2);
@@ -32,21 +32,14 @@ function main() {
   const plan = JSON.parse(readFileSync(resolve(planPath), 'utf8'));
   const written = [];
   for (const entry of plan.projects) {
-    const { projectId, files, spec } = buildProject({
+    const built = buildProject({
       archetypeId: entry.archetype,
       frameworkName: entry.framework,
       defects: entry.defects ?? [],
       flags: entry.flags ?? {},
     });
-    const root = resolve(out, projectId);
-    for (const [path, content] of Object.entries(files)) {
-      const target = join(root, path);
-      mkdirSync(dirname(target), { recursive: true });
-      writeFileSync(target, content);
-    }
-    writeFileSync(join(root, 'spec.json'), `${JSON.stringify(spec, null, 2)}\n`);
-    writeFileSync(join(root, 'package.json'), `${JSON.stringify({ name: `pilot-${projectId}`, private: true, type: 'module', scripts: { start: 'node server.mjs' } }, null, 2)}\n`);
-    written.push({ projectId, archetype: entry.archetype, framework: entry.framework, defects: entry.defects ?? [] });
+    writeProject(resolve(out, built.projectId), built);
+    written.push({ projectId: built.projectId, archetype: entry.archetype, framework: entry.framework, defects: entry.defects ?? [] });
   }
   console.log(`scaffold-pilot: wrote ${written.length} projects to ${out}`);
   const byFramework = {};

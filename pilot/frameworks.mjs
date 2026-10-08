@@ -19,6 +19,9 @@
  * code that produces a clean one - and the uplift tool is measured against the gap it was given.
  */
 import { A11Y_SCRIPT } from '../src/corpus/uplift.mjs';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+
 import { ARCHETYPES } from './archetypes.mjs';
 
 const slug = (value) => value.replace(/[^a-z0-9]+/gi, '-').toLowerCase();
@@ -636,6 +639,28 @@ server.listen(port, '127.0.0.1', () => {
   console.log(\`listening on \${port} with \${dbPath}\`);
 });
 `;
+}
+
+/**
+ * Write one generated project to disk.
+ *
+ * The scaffolder and the corpus recorder must agree byte for byte, so there is exactly one
+ * implementation of "a project on disk" - including the per-project package.json that the recorder
+ * initially did not write, which made the plan appear to generate a different tree from the one the
+ * pilot measured.
+ */
+export function writeProject(root, { projectId, files, spec }) {
+  for (const [path, content] of Object.entries(files)) {
+    const target = join(root, path);
+    mkdirSync(dirname(target), { recursive: true });
+    writeFileSync(target, content);
+  }
+  writeFileSync(join(root, 'spec.json'), `${JSON.stringify(spec, null, 2)}\n`);
+  writeFileSync(
+    join(root, 'package.json'),
+    `${JSON.stringify({ name: `pilot-${projectId}`, private: true, type: 'module', scripts: { start: 'node server.mjs' } }, null, 2)}\n`,
+  );
+  return root;
 }
 
 export function buildProject({ archetypeId, frameworkName, defects = [], flags = {} }) {

@@ -13,12 +13,12 @@
  * A run that did not attempt every project in the plan cannot be recorded: a partial corpus is not the
  * corpus, and recording it would let a half-finished run stand in as the measured artefact.
  */
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import process from 'node:process';
 
-import { buildProject } from '../pilot/frameworks.mjs';
+import { buildProject, writeProject } from '../pilot/frameworks.mjs';
 import { upliftProject } from '../src/corpus/uplift.mjs';
 import { hashTree } from '../src/corpus/harness.mjs';
 
@@ -46,20 +46,15 @@ function generate(plan, outDir) {
   rmSync(outDir, { recursive: true, force: true });
   const projects = {};
   for (const entry of plan.projects) {
-    const { projectId, files, spec } = buildProject({
+    const built = buildProject({
       archetypeId: entry.archetype,
       frameworkName: entry.framework,
       defects: entry.defects ?? [],
       flags: entry.flags ?? {},
     });
-    const root = join(outDir, projectId);
-    for (const [path, content] of Object.entries(files)) {
-      const target = join(root, path);
-      mkdirSync(dirname(target), { recursive: true });
-      writeFileSync(target, content);
-    }
-    writeFileSync(join(root, 'spec.json'), `${JSON.stringify(spec, null, 2)}\n`);
-    projects[projectId] = { dir: root, spec };
+    // The same writer the scaffolder uses: two implementations of "a project on disk" disagreed about
+    // package.json, and the recorder then reported the plan as generating a tree nobody had measured.
+    projects[built.projectId] = { dir: writeProject(join(outDir, built.projectId), built), spec: built.spec };
   }
   return projects;
 }

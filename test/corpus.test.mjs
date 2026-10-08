@@ -15,6 +15,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 
@@ -322,6 +323,28 @@ test('acceptance requires an improvement, and classifies every refusal', () => {
   assert.equal(unrunnable.category, 'original-not-runnable');
 });
 
+test('a rule that could not be measured blocks acceptance', () => {
+  // The account-recovery arm's sanitisation check once reported PASS for both versions because the
+  // payload never reached the DOM. "Not measured" must never be reported, or counted, as a pass.
+  const decision = decidePair({
+    spec: spec({ required_rules: ['security/sanitize-untrusted-html'] }),
+    original: workbook({ rules: [{ rule: 'security/sanitize-untrusted-html', status: 'ERROR', detail: 'payload never reached the container' }] }),
+    uplifted: workbook({ rules: [{ rule: 'security/sanitize-untrusted-html', status: 'PASS' }] }),
+    uplift: { applied: ['security/sanitize-untrusted-html'], skipped: [], failed: [] },
+  });
+  assert.equal(decision.accepted, false);
+  assert.equal(decision.category, 'rule-not-measured');
+  assert.ok(decision.detail.some((line) => /could not be measured/.test(line)));
+
+  const missing = decidePair({
+    spec: spec({ required_rules: ['security/sanitize-untrusted-html'] }),
+    original: workbook({ rules: [] }),
+    uplifted: workbook({ rules: [{ rule: 'security/sanitize-untrusted-html', status: 'PASS' }] }),
+    uplift: { applied: [], skipped: [], failed: [] },
+  });
+  assert.equal(missing.category, 'rule-not-measured');
+});
+
 test('the yield counts what was attempted, and names where the refusals came from', () => {
   const decisions = [
     { accepted: true, category: 'accepted', framework: 'raw', archetype: 'booking', improved_rules: ['forms/required-field-feedback'], seeded_defects: ['no-required'] },
@@ -353,6 +376,43 @@ test('the report states the yield and the meaning of every refusal', () => {
   assert.ok(report.includes('0.0%'), 'the report must state the yield');
   assert.ok(report.includes('`uplift-broke-the-flow`'), 'and the category of each refusal');
   assert.ok(report.includes('**tool or rule bug**'), 'and what that category means for the tool');
+});
+
+test('the corpus record refuses a partial run', () => {
+  // A partial corpus is not the corpus: recording one would let a half-finished run stand in as the
+  // measured artefact, and every number derived from it would describe a different experiment.
+  const run = mkdtempSync(join(tmpdir(), 'partial-run-'));
+  try {
+    writeFileSync(
+      join(run, 'yield.json'),
+      JSON.stringify({ run_id: 'partial', generated_at: '2026-10-08T00:00:00.000Z', summary: {}, decisions: [{ project_id: 'booking-raw' }] }),
+    );
+    const result = spawnSync(process.execPath, ['scripts/pilot-corpus.mjs', '--record', run], {
+      cwd: repoRoot,
+      encoding: 'utf8',
+      timeout: 60_000,
+    });
+    assert.equal(result.status, 1, 'recording a partial run must fail');
+    assert.match(result.stderr, /refusing to record a partial corpus/);
+  } finally {
+    rmSync(run, { recursive: true, force: true });
+  }
+});
+
+test('the recorded corpus covers the plan, with a hash for every original and every uplift', () => {
+  const recorded = JSON.parse(readFileSync(join(repoRoot, 'pilot/CORPUS.json'), 'utf8'));
+  assert.equal(recorded.projects.length, plan.projects.length, 'the record must cover every planned project');
+  assert.equal(recorded.projects.length, recorded.summary.attempted, 'and match the run it came from');
+  for (const project of recorded.projects) {
+    // hashTree returns `sha256:<hex>`, and the prefix is part of the recorded contract.
+    assert.match(project.original_sha, /^sha256:[a-f0-9]{64}$/, `${project.project_id}: no original tree hash`);
+    assert.match(project.uplift_sha, /^sha256:[a-f0-9]{64}$/, `${project.project_id}: no uplift tree hash`);
+  }
+  const ids = new Set(recorded.projects.map((project) => project.project_id));
+  for (const entry of plan.projects) {
+    const id = `${entry.archetype}-${entry.framework}`;
+    assert.ok(ids.has(id), `${id} is planned but not recorded`);
+  }
 });
 
 test('hashTree is stable for the same content and differs for different content', () => {

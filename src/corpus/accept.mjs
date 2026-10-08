@@ -79,6 +79,25 @@ export function decidePair({ original, uplifted, spec, uplift }) {
     return result;
   }
 
+  // A property that could not be measured is not a property that passed. If any rule the project
+  // declares refuses to produce a verdict (ERROR), the pair cannot be accepted on the strength of the
+  // others: the yield would then be counting pairs where part of the vector did not run.
+  const unmeasured = [];
+  const recorded = new Set((original.rules ?? []).map((entry) => entry.rule));
+  for (const rule of spec.required_rules ?? []) {
+    for (const [label, record] of [['original', original], ['uplifted', uplifted]]) {
+      const entry = (record.rules ?? []).find((candidate) => candidate.rule === rule);
+      if (!entry) unmeasured.push(`${label}: ${rule} was not recorded`);
+      else if (entry.status === 'ERROR') unmeasured.push(`${label}: ${rule} could not be measured (${entry.detail})`);
+    }
+  }
+  if (unmeasured.length > 0) {
+    result.category = 'rule-not-measured';
+    result.detail = unmeasured;
+    return result;
+  }
+  void recorded;
+
   const byRule = (record) => new Map((record.rules ?? []).map((entry) => [entry.rule, entry]));
   const originalRules = byRule(original);
   const upliftedRules = byRule(uplifted);
@@ -178,6 +197,7 @@ export function renderYieldReport({ summary, decisions, runId, generatedAt, note
     'security-regression': 'the uplift introduced a security finding → **rule bug**',
     'no-mwg-improvement': 'defects were seeded but the tool changed none of the measured properties → coverage gap',
     'no-warranted-change': 'the original was already clean, so there was nothing to fix (a valid control, not a positive pair)',
+    'rule-not-measured': 'a rule the project declares could not produce a verdict, so the pair cannot be accepted on the others',
   };
   for (const [category, count] of Object.entries(summary.by_category)) {
     lines.push(`| \`${category}\` | ${count} | ${meanings[category] ?? ''} |`);

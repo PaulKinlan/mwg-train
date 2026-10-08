@@ -235,12 +235,27 @@ export const RULES = Object.freeze({
       if (!submitted) return { rule: 'security/sanitize-untrusted-html', status: 'ERROR', detail: 'the content journey could not be driven' };
       await sleep(200);
       const observed = await page.evaluate(`
+        const container = document.getElementById('record-echo');
         return {
           executed: window.__mwg_xss === true,
+          // The payload reached the page, as an element (unsafe insertion) or as text (safe insertion).
+          // Without this, a 404 or an empty container reads as "nothing executed" and passes: the check
+          // would be reporting the absence of evidence as evidence of safety.
+          payloadReachedDom: Boolean(
+            container && (container.querySelector('img[src="x"]') || (container.textContent ?? '').includes('<img')),
+          ),
+          containerText: (container?.textContent ?? '').slice(0, 120),
           liveElements: document.querySelectorAll('img[onerror], script, iframe').length,
-          bodyHasPayloadText: document.body.innerText.includes('<img'),
         };
       `);
+      if (!observed.payloadReachedDom) {
+        return {
+          rule: 'security/sanitize-untrusted-html',
+          status: 'ERROR',
+          detail: 'the submitted markup never reached the container, so nothing about its handling was measured',
+          observed,
+        };
+      }
       const findings = [];
       if (observed.executed) findings.push('the submitted markup executed: an inline event handler ran');
       return {

@@ -1,0 +1,653 @@
+{
+  "$comment": "The corpus the pilot measured: generated projects, their tree hashes, and the hash of the uplift the tool produced from each. `node scripts/pilot-corpus.mjs --verify` re-derives all of it; a mismatch means the measured artefact can no longer be reproduced.",
+  "run_id": "2026-10-08T10-19-08-505Z",
+  "generated_at": "2026-10-08T10:21:38.079Z",
+  "generator": "scripts/scaffold-pilot.mjs",
+  "uplift_tool": "src/corpus/uplift.mjs",
+  "summary": {
+    "attempted": 25,
+    "accepted": 24,
+    "yield": 0.96,
+    "by_category": {
+      "accepted": 24,
+      "no-warranted-change": 1
+    },
+    "by_framework": {
+      "hono": {
+        "total": 5,
+        "accepted": 5
+      },
+      "preact": {
+        "total": 5,
+        "accepted": 5
+      },
+      "raw": {
+        "total": 5,
+        "accepted": 5
+      },
+      "react": {
+        "total": 5,
+        "accepted": 5
+      },
+      "vue": {
+        "total": 5,
+        "accepted": 4
+      }
+    },
+    "by_archetype": {
+      "account-recovery": {
+        "total": 5,
+        "accepted": 5
+      },
+      "booking": {
+        "total": 5,
+        "accepted": 5
+      },
+      "catalogue": {
+        "total": 5,
+        "accepted": 4
+      },
+      "contact-lead": {
+        "total": 5,
+        "accepted": 5
+      },
+      "event-registration": {
+        "total": 5,
+        "accepted": 5
+      }
+    },
+    "rules_improved": {
+      "forms/required-field-feedback": 21,
+      "accessibility/accessible-error-announcement": 19,
+      "forms/validate-input-after-interaction": 15,
+      "security/sanitize-untrusted-html": 13,
+      "forms/autofill-address-form": 5,
+      "forms/autofill-sign-up-form": 4
+    }
+  },
+  "projects": [
+    {
+      "project_id": "account-recovery-hono",
+      "archetype": "account-recovery",
+      "framework": "hono",
+      "defects": [
+        "no-required",
+        "eager-invalid",
+        "no-autofill",
+        "xss-innerhtml"
+      ],
+      "original_sha": "sha256:796cdad81eb4b87a85d83e4e8cd289cb30497b70d0c36b401b13860ded913175",
+      "uplift_sha": "sha256:297a289a9d9ef8b89d1c494a606b1785dd3ee5a496caaa8ed9d59a2df67856b6",
+      "uplift_applied": [
+        "forms/required-field-feedback",
+        "forms/validate-input-after-interaction",
+        "forms/autofill-sign-up-form",
+        "security/sanitize-untrusted-html"
+      ],
+      "improved_rules": [
+        "forms/required-field-feedback",
+        "accessibility/accessible-error-announcement",
+        "forms/validate-input-after-interaction",
+        "forms/autofill-sign-up-form"
+      ],
+      "accepted": true,
+      "category": "accepted"
+    },
+    {
+      "project_id": "account-recovery-preact",
+      "archetype": "account-recovery",
+      "framework": "preact",
+      "defects": [
+        "no-required",
+        "no-autofill"
+      ],
+      "original_sha": "sha256:b926f8de4653b60f920bfbbe05bd1c8782ab60463394cbaf7a6c8546b98c1b73",
+      "uplift_sha": "sha256:84243d1672970c2b8e63f7da77aa7371e61fbbddf8f76fa9981a02bfc5474d0a",
+      "uplift_applied": [
+        "forms/required-field-feedback",
+        "forms/autofill-sign-up-form"
+      ],
+      "improved_rules": [
+        "forms/required-field-feedback",
+        "accessibility/accessible-error-announcement",
+        "forms/autofill-sign-up-form"
+      ],
+      "accepted": true,
+      "category": "accepted"
+    },
+    {
+      "project_id": "account-recovery-raw",
+      "archetype": "account-recovery",
+      "framework": "raw",
+      "defects": [
+        "no-required",
+        "eager-invalid",
+        "no-aria-sync",
+        "no-autofill"
+      ],
+      "original_sha": "sha256:8fa121bf4c49b6c2a4e2fd45faf422f50da326234bfafa7c2b4a4e97013c7569",
+      "uplift_sha": "sha256:4e407ba7007faa6cad44e8997b12d29a5e60b93757ce12d3ce8ebfd60e205f6e",
+      "uplift_applied": [
+        "forms/required-field-feedback",
+        "forms/validate-input-after-interaction",
+        "accessibility/accessible-error-announcement",
+        "forms/autofill-sign-up-form"
+      ],
+      "improved_rules": [
+        "forms/required-field-feedback",
+        "accessibility/accessible-error-announcement",
+        "forms/validate-input-after-interaction",
+        "forms/autofill-sign-up-form"
+      ],
+      "accepted": true,
+      "category": "accepted"
+    },
+    {
+      "project_id": "account-recovery-react",
+      "archetype": "account-recovery",
+      "framework": "react",
+      "defects": [
+        "no-autofill",
+        "xss-innerhtml"
+      ],
+      "original_sha": "sha256:9789f6afde2f61d99025b451433a36c14485cd750c5e00491812c6232fccfc5c",
+      "uplift_sha": "sha256:7c1a1387a434637fe76044eab2f29e908bf21e410b236d68be30e6ee43b58659",
+      "uplift_applied": [
+        "forms/autofill-sign-up-form",
+        "security/sanitize-untrusted-html"
+      ],
+      "improved_rules": [
+        "forms/autofill-sign-up-form"
+      ],
+      "accepted": true,
+      "category": "accepted"
+    },
+    {
+      "project_id": "account-recovery-vue",
+      "archetype": "account-recovery",
+      "framework": "vue",
+      "defects": [
+        "eager-invalid",
+        "xss-innerhtml"
+      ],
+      "original_sha": "sha256:510e28ba613e0c47d690278a21bcb7e69b51bb8af45b7bd8a6c7a59fff26c411",
+      "uplift_sha": "sha256:91faf9d221e87d4203984cf46cbda1d8bc008f478679eb2efd16095e177b291e",
+      "uplift_applied": [
+        "forms/validate-input-after-interaction",
+        "forms/autofill-sign-up-form",
+        "security/sanitize-untrusted-html"
+      ],
+      "improved_rules": [
+        "forms/required-field-feedback",
+        "forms/validate-input-after-interaction"
+      ],
+      "accepted": true,
+      "category": "accepted"
+    },
+    {
+      "project_id": "booking-hono",
+      "archetype": "booking",
+      "framework": "hono",
+      "defects": [
+        "no-required",
+        "eager-invalid",
+        "no-aria-sync",
+        "no-autofill-address",
+        "xss-innerhtml"
+      ],
+      "original_sha": "sha256:bfff39f497e6470a64b834a83a4c646bbb09ff58ecb4582be5c6c79b5cbc7c95",
+      "uplift_sha": "sha256:52efb18d42eb5d3c03c45473316a83cea8b3e81d8eb152bfa782f40191b837d0",
+      "uplift_applied": [
+        "forms/required-field-feedback",
+        "forms/validate-input-after-interaction",
+        "accessibility/accessible-error-announcement",
+        "forms/autofill-address-form",
+        "security/sanitize-untrusted-html"
+      ],
+      "improved_rules": [
+        "forms/required-field-feedback",
+        "accessibility/accessible-error-announcement",
+        "forms/validate-input-after-interaction",
+        "forms/autofill-address-form",
+        "security/sanitize-untrusted-html"
+      ],
+      "accepted": true,
+      "category": "accepted"
+    },
+    {
+      "project_id": "booking-preact",
+      "archetype": "booking",
+      "framework": "preact",
+      "defects": [
+        "eager-invalid",
+        "no-aria-sync",
+        "no-autofill-address"
+      ],
+      "original_sha": "sha256:3107e72b5d99c081ca13f0d0a1e472fc9ce1a48e0746a277cd504b36d6e03044",
+      "uplift_sha": "sha256:097bb8e2e37df249818e8e5c74ac499075b10cac2730404cd6e9df6e55dcf411",
+      "uplift_applied": [
+        "forms/validate-input-after-interaction",
+        "accessibility/accessible-error-announcement",
+        "forms/autofill-address-form"
+      ],
+      "improved_rules": [
+        "forms/required-field-feedback",
+        "accessibility/accessible-error-announcement",
+        "forms/validate-input-after-interaction",
+        "forms/autofill-address-form"
+      ],
+      "accepted": true,
+      "category": "accepted"
+    },
+    {
+      "project_id": "booking-raw",
+      "archetype": "booking",
+      "framework": "raw",
+      "defects": [
+        "no-required",
+        "eager-invalid",
+        "no-aria-sync",
+        "no-autofill-address",
+        "xss-innerhtml"
+      ],
+      "original_sha": "sha256:17fe7ee3ec797b1667c7cc0c9a8658104133fd6d704a74fe80c4e7f22f4c31af",
+      "uplift_sha": "sha256:3a369da91ebf875ea2b0151b47038c406004942eb242e8c26d8e80aa8de40d50",
+      "uplift_applied": [
+        "forms/required-field-feedback",
+        "forms/validate-input-after-interaction",
+        "accessibility/accessible-error-announcement",
+        "forms/autofill-address-form",
+        "security/sanitize-untrusted-html"
+      ],
+      "improved_rules": [
+        "forms/required-field-feedback",
+        "accessibility/accessible-error-announcement",
+        "forms/validate-input-after-interaction",
+        "forms/autofill-address-form",
+        "security/sanitize-untrusted-html"
+      ],
+      "accepted": true,
+      "category": "accepted"
+    },
+    {
+      "project_id": "booking-react",
+      "archetype": "booking",
+      "framework": "react",
+      "defects": [
+        "no-required",
+        "eager-invalid",
+        "no-aria-sync",
+        "no-autofill-address",
+        "xss-innerhtml"
+      ],
+      "original_sha": "sha256:26344d5e2c41e1df2d93f668ee48930b933d5509c15679c93b96c09653e45081",
+      "uplift_sha": "sha256:4e21c44742208691176a4c95880d1898edeb5757943c43c97a28ca6fc818748b",
+      "uplift_applied": [
+        "forms/required-field-feedback",
+        "forms/validate-input-after-interaction",
+        "accessibility/accessible-error-announcement",
+        "forms/autofill-address-form",
+        "security/sanitize-untrusted-html"
+      ],
+      "improved_rules": [
+        "forms/required-field-feedback",
+        "accessibility/accessible-error-announcement",
+        "forms/validate-input-after-interaction",
+        "forms/autofill-address-form",
+        "security/sanitize-untrusted-html"
+      ],
+      "accepted": true,
+      "category": "accepted"
+    },
+    {
+      "project_id": "booking-vue",
+      "archetype": "booking",
+      "framework": "vue",
+      "defects": [
+        "no-required",
+        "no-autofill-address"
+      ],
+      "original_sha": "sha256:4f9ad8b7ee95d832028909868786649606b101bef45f4337c280fbf436abddf3",
+      "uplift_sha": "sha256:824bf05b4cdac6d15970aff92661382758faa783236b2e0b7f6a06e7bb70794b",
+      "uplift_applied": [
+        "forms/required-field-feedback",
+        "forms/autofill-address-form"
+      ],
+      "improved_rules": [
+        "forms/required-field-feedback",
+        "accessibility/accessible-error-announcement",
+        "forms/autofill-address-form"
+      ],
+      "accepted": true,
+      "category": "accepted"
+    },
+    {
+      "project_id": "catalogue-hono",
+      "archetype": "catalogue",
+      "framework": "hono",
+      "defects": [
+        "no-required",
+        "xss-innerhtml"
+      ],
+      "original_sha": "sha256:138bb5ee4034c5d1f52bea5f8649b2f70cb9c959e8b6125d60421fe19cda839c",
+      "uplift_sha": "sha256:04fc9e80bfb3be49e259f2d072e57d18d75adfc20ec85fd8893e822a6534b40c",
+      "uplift_applied": [
+        "forms/required-field-feedback",
+        "security/sanitize-untrusted-html"
+      ],
+      "improved_rules": [
+        "forms/required-field-feedback",
+        "accessibility/accessible-error-announcement",
+        "security/sanitize-untrusted-html"
+      ],
+      "accepted": true,
+      "category": "accepted"
+    },
+    {
+      "project_id": "catalogue-preact",
+      "archetype": "catalogue",
+      "framework": "preact",
+      "defects": [
+        "eager-invalid"
+      ],
+      "original_sha": "sha256:84e3e05506542803d05acf9ade113c9f8d0214db3545355cd8296244102da130",
+      "uplift_sha": "sha256:d6a7aa5751f0631f387e6ad3a6d87c8041c2942c0c4a53bb8bb6b2c15e25dd58",
+      "uplift_applied": [
+        "forms/validate-input-after-interaction"
+      ],
+      "improved_rules": [
+        "forms/required-field-feedback",
+        "forms/validate-input-after-interaction"
+      ],
+      "accepted": true,
+      "category": "accepted"
+    },
+    {
+      "project_id": "catalogue-raw",
+      "archetype": "catalogue",
+      "framework": "raw",
+      "defects": [
+        "xss-innerhtml"
+      ],
+      "original_sha": "sha256:9e9ca5bc4be23035cad9d37b6d61f3bb7e3fbc7f1df0785d84207d5796244352",
+      "uplift_sha": "sha256:7224121f3ed0f6fa8c6ab12b00c96fda0cc39a8eb33cb2b96a3b34f75daa026d",
+      "uplift_applied": [
+        "security/sanitize-untrusted-html"
+      ],
+      "improved_rules": [
+        "security/sanitize-untrusted-html"
+      ],
+      "accepted": true,
+      "category": "accepted"
+    },
+    {
+      "project_id": "catalogue-react",
+      "archetype": "catalogue",
+      "framework": "react",
+      "defects": [
+        "no-required",
+        "xss-innerhtml"
+      ],
+      "original_sha": "sha256:4c9fe578c9b095d1b3c72de35bf4641a89141231b6cdc3de91a58724ee0df70c",
+      "uplift_sha": "sha256:6116aca6cb3aa57eb49247980926dc386e7f9c783da5f4037438075cb7325c48",
+      "uplift_applied": [
+        "forms/required-field-feedback",
+        "security/sanitize-untrusted-html"
+      ],
+      "improved_rules": [
+        "forms/required-field-feedback",
+        "accessibility/accessible-error-announcement",
+        "security/sanitize-untrusted-html"
+      ],
+      "accepted": true,
+      "category": "accepted"
+    },
+    {
+      "project_id": "catalogue-vue",
+      "archetype": "catalogue",
+      "framework": "vue",
+      "defects": [],
+      "original_sha": "sha256:ddafb4470d34c9c834b0949e973b745daa4ef237604687f2b788ca39021046b4",
+      "uplift_sha": "sha256:ddafb4470d34c9c834b0949e973b745daa4ef237604687f2b788ca39021046b4",
+      "uplift_applied": [],
+      "improved_rules": [],
+      "accepted": false,
+      "category": "no-warranted-change"
+    },
+    {
+      "project_id": "contact-lead-hono",
+      "archetype": "contact-lead",
+      "framework": "hono",
+      "defects": [
+        "no-required",
+        "eager-invalid",
+        "xss-innerhtml"
+      ],
+      "original_sha": "sha256:a0232391418dbad5fe52096465deca51c0c6d29a38f6a462b96ce3a689abe867",
+      "uplift_sha": "sha256:011ce36c033571653d5cefad8cefded5011b1906845831e7f35095da35071716",
+      "uplift_applied": [
+        "forms/required-field-feedback",
+        "forms/validate-input-after-interaction",
+        "security/sanitize-untrusted-html"
+      ],
+      "improved_rules": [
+        "forms/required-field-feedback",
+        "accessibility/accessible-error-announcement",
+        "forms/validate-input-after-interaction",
+        "security/sanitize-untrusted-html"
+      ],
+      "accepted": true,
+      "category": "accepted"
+    },
+    {
+      "project_id": "contact-lead-preact",
+      "archetype": "contact-lead",
+      "framework": "preact",
+      "defects": [
+        "no-required",
+        "no-aria-sync"
+      ],
+      "original_sha": "sha256:336aa24a99e593b7585e60ec7b1911e77e907afaa97d94a54479be839d33f2e9",
+      "uplift_sha": "sha256:787b68eef08174bd686efa2c071612a97750b0a08bc2c8dd08e0bdd56a19997e",
+      "uplift_applied": [
+        "forms/required-field-feedback",
+        "accessibility/accessible-error-announcement"
+      ],
+      "improved_rules": [
+        "forms/required-field-feedback",
+        "accessibility/accessible-error-announcement"
+      ],
+      "accepted": true,
+      "category": "accepted"
+    },
+    {
+      "project_id": "contact-lead-raw",
+      "archetype": "contact-lead",
+      "framework": "raw",
+      "defects": [
+        "no-required",
+        "eager-invalid",
+        "no-aria-sync",
+        "xss-innerhtml"
+      ],
+      "original_sha": "sha256:68b16fbc59aeebc97be513836389064f2ec29963d75906af103b158ef45861a9",
+      "uplift_sha": "sha256:673c8803e43646f41ce79cc05020ee533fb1d540005cb286bcbe04a1c7da6802",
+      "uplift_applied": [
+        "forms/required-field-feedback",
+        "forms/validate-input-after-interaction",
+        "accessibility/accessible-error-announcement",
+        "security/sanitize-untrusted-html"
+      ],
+      "improved_rules": [
+        "forms/required-field-feedback",
+        "accessibility/accessible-error-announcement",
+        "forms/validate-input-after-interaction",
+        "security/sanitize-untrusted-html"
+      ],
+      "accepted": true,
+      "category": "accepted"
+    },
+    {
+      "project_id": "contact-lead-react",
+      "archetype": "contact-lead",
+      "framework": "react",
+      "defects": [
+        "eager-invalid",
+        "xss-innerhtml"
+      ],
+      "original_sha": "sha256:21a834d1d00cc32a067568d8c12d9be3831b62f80a02e9ab81c443f5e236de46",
+      "uplift_sha": "sha256:064570007e15237918f407e41b933553a25260aa535a88a546be1753acf2747a",
+      "uplift_applied": [
+        "forms/validate-input-after-interaction",
+        "security/sanitize-untrusted-html"
+      ],
+      "improved_rules": [
+        "forms/required-field-feedback",
+        "forms/validate-input-after-interaction",
+        "security/sanitize-untrusted-html"
+      ],
+      "accepted": true,
+      "category": "accepted"
+    },
+    {
+      "project_id": "contact-lead-vue",
+      "archetype": "contact-lead",
+      "framework": "vue",
+      "defects": [
+        "eager-invalid",
+        "no-aria-sync",
+        "xss-innerhtml"
+      ],
+      "original_sha": "sha256:d5469b2169f7762dc1d67a845a7ce1b3805fab7f69a0a303bbcd802e5ed9e276",
+      "uplift_sha": "sha256:7f9d0f4091698d0a374c770194eddd0d272cd3945916ad383bfdb4520e723154",
+      "uplift_applied": [
+        "forms/validate-input-after-interaction",
+        "accessibility/accessible-error-announcement",
+        "security/sanitize-untrusted-html"
+      ],
+      "improved_rules": [
+        "forms/required-field-feedback",
+        "accessibility/accessible-error-announcement",
+        "forms/validate-input-after-interaction",
+        "security/sanitize-untrusted-html"
+      ],
+      "accepted": true,
+      "category": "accepted"
+    },
+    {
+      "project_id": "event-registration-hono",
+      "archetype": "event-registration",
+      "framework": "hono",
+      "defects": [
+        "eager-invalid",
+        "no-aria-sync",
+        "no-autofill-address"
+      ],
+      "original_sha": "sha256:6eb99238557a9a6bff6eff352d2c80cff0c8bfd4e56e1c005a392437ba3ffa38",
+      "uplift_sha": "sha256:18a0c3401bbe968727e264467039891b686557641a3adb395dd6bbc01566631a",
+      "uplift_applied": [
+        "forms/validate-input-after-interaction",
+        "accessibility/accessible-error-announcement"
+      ],
+      "improved_rules": [
+        "forms/required-field-feedback",
+        "accessibility/accessible-error-announcement",
+        "forms/validate-input-after-interaction"
+      ],
+      "accepted": true,
+      "category": "accepted"
+    },
+    {
+      "project_id": "event-registration-preact",
+      "archetype": "event-registration",
+      "framework": "preact",
+      "defects": [
+        "no-required",
+        "xss-innerhtml"
+      ],
+      "original_sha": "sha256:bb493ed14615e5486bcc05041749603103b3c98bc323583518638e259c7d223b",
+      "uplift_sha": "sha256:905ba521f2b7847eb0cf97089e1c5ffe4e222dd04347228773148f314b3e9caa",
+      "uplift_applied": [
+        "forms/required-field-feedback",
+        "security/sanitize-untrusted-html"
+      ],
+      "improved_rules": [
+        "forms/required-field-feedback",
+        "accessibility/accessible-error-announcement",
+        "security/sanitize-untrusted-html"
+      ],
+      "accepted": true,
+      "category": "accepted"
+    },
+    {
+      "project_id": "event-registration-raw",
+      "archetype": "event-registration",
+      "framework": "raw",
+      "defects": [
+        "no-required",
+        "eager-invalid",
+        "xss-innerhtml"
+      ],
+      "original_sha": "sha256:7d06cca65e24846453052a7c5923bd4aaf4cd412211c95c83cb1b20c3563b04e",
+      "uplift_sha": "sha256:a7480f83b9e2d45f9b59f1cfd4cfe2e03cc573f0e7a1ba5a0e6bf283a137c63d",
+      "uplift_applied": [
+        "forms/required-field-feedback",
+        "forms/validate-input-after-interaction",
+        "security/sanitize-untrusted-html"
+      ],
+      "improved_rules": [
+        "forms/required-field-feedback",
+        "accessibility/accessible-error-announcement",
+        "forms/validate-input-after-interaction",
+        "security/sanitize-untrusted-html"
+      ],
+      "accepted": true,
+      "category": "accepted"
+    },
+    {
+      "project_id": "event-registration-react",
+      "archetype": "event-registration",
+      "framework": "react",
+      "defects": [
+        "no-aria-sync",
+        "xss-innerhtml"
+      ],
+      "original_sha": "sha256:5f106292b7061fd81c3e44c7e1556f65853b4be272a1bd750b5a42d2aabdf32e",
+      "uplift_sha": "sha256:84510579c1f37b702534993f7a0c1afd6227a4fae9c1649f2de7f2b90cd5a6b4",
+      "uplift_applied": [
+        "accessibility/accessible-error-announcement",
+        "security/sanitize-untrusted-html"
+      ],
+      "improved_rules": [
+        "accessibility/accessible-error-announcement",
+        "security/sanitize-untrusted-html"
+      ],
+      "accepted": true,
+      "category": "accepted"
+    },
+    {
+      "project_id": "event-registration-vue",
+      "archetype": "event-registration",
+      "framework": "vue",
+      "defects": [
+        "no-required",
+        "eager-invalid",
+        "no-aria-sync"
+      ],
+      "original_sha": "sha256:99ecac3b320e72d49b70ef477f2876b375754989959d25a1dc897c699e9811b4",
+      "uplift_sha": "sha256:486364769b64cf097073bfea7a004b929ef678fb8798f3bb7e0a2dabf2d8f245",
+      "uplift_applied": [
+        "forms/required-field-feedback",
+        "forms/validate-input-after-interaction",
+        "accessibility/accessible-error-announcement"
+      ],
+      "improved_rules": [
+        "forms/required-field-feedback",
+        "accessibility/accessible-error-announcement",
+        "forms/validate-input-after-interaction"
+      ],
+      "accepted": true,
+      "category": "accepted"
+    }
+  ]
+}
