@@ -178,6 +178,14 @@ endpoint on its own: the primary endpoint needs the functional journey to pass a
 
 Execution happens in sandboxed, network-limited containers with no real secrets.
 
+**One entry point produces a verdict.** `analyseSealed()` in `src/eval/endpoint.mjs` checks the
+sealed universe (every brief in the `test` split, task `generate`, and the set hashing to the seal
+in §13) and a complete design before it computes anything, and returns the problems instead of a
+number when either fails. `pairedDifference()` and `decide()` are primitives that compute over
+whatever brief list they are given — useful for exploration, and not the preregistered analysis.
+Calling them directly over the dev split produces a decision that looks reportable and is not, which
+is why the checked path exists and `test/endpoint.test.mjs` proves it refuses that case.
+
 ## 9. Instrumentation: human
 
 A **blinded two-rater** assessment on a stratified sample of the sealed test briefs (at least 20%,

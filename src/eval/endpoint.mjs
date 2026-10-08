@@ -112,6 +112,24 @@ export function checkDesign(results, briefs, arms = ARMS) {
   return problems;
 }
 
+/**
+ * The sanctioned entry point for a *reportable* verdict.
+ *
+ * `pairedDifference` and `decide` are primitives: they compute over whatever brief list they are
+ * handed, which is what exploratory work needs and exactly what a preregistered result must not do.
+ * This is the function that refuses - it enforces the sealed universe (split, task, and the seal of
+ * the set) and a complete design before any number is produced, and returns the problems instead of
+ * a verdict when either fails. A consequence worth stating plainly: if you call the primitives
+ * directly you are not running the preregistered analysis, whatever the output looks like.
+ */
+export function analyseSealed(results, briefs, { seal = null, arms = ARMS, iterations = 5000, seed = 20261008 } = {}) {
+  const problems = [...checkUniverse(briefs, { requireSeal: seal }), ...checkDesign(results, briefs, arms)];
+  if (problems.length > 0) return { ok: false, problems, decision: null, primary: null, controls: [] };
+  const primary = pairedDifference(results, briefs, 'T_trained_adapter', 'C1_bare_base', { iterations, seed });
+  const controls = ['C2_base_mwg_prompt', 'C3_base_uplift_tool'].map((arm) => pairedDifference(results, briefs, 'T_trained_adapter', arm, { iterations, seed }));
+  return { ok: true, problems: [], decision: decide(primary, controls), primary, controls };
+}
+
 /** Deterministic PRNG (mulberry32) so a bootstrap interval is reproducible from the recorded seed. */
 export function rng(seed) {
   let a = seed >>> 0;
@@ -150,6 +168,7 @@ export function passRate(results, briefs, arm) {
  * cluster bootstrap that resamples FAMILIES (PREREGISTRATION §3): variants of one family are not
  * independent observations, so resampling briefs would understate the interval.
  */
+// PRIMITIVE: computes over whatever brief list it is given. See `analyseSealed` for the checked path.
 export function pairedDifference(results, briefs, armA, armB, { iterations = 5000, seed = 20261008 } = {}) {
   const a = passByBrief(results, briefs, armA);
   const b = passByBrief(results, briefs, armB);
@@ -197,6 +216,9 @@ export function pairedDifference(results, briefs, armA, armB, { iterations = 500
 /**
  * Apply the preregistered decision rules (PREREGISTRATION §4). Returns the hypothesis outcomes and a
  * null/negative classification; nothing here is left to interpretation after the fact.
+ *
+ * PRIMITIVE: this does not check which briefs it is describing. For a reportable verdict use
+ * `analyseSealed`, which enforces the sealed universe and a complete design first.
  */
 export function decide(primary, controls) {
   const inPoints = (x) => x * 100;

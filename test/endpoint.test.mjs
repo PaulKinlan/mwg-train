@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { ARMS, EndpointError, briefPasses, checkDesign, checkUniverse, decide, failureTaxonomy, pairedDifference, passRate, perFamily, perRule, rng } from '../src/eval/endpoint.mjs';
+import { ARMS, EndpointError, analyseSealed, briefPasses, checkDesign, checkUniverse, decide, failureTaxonomy, pairedDifference, passRate, perFamily, perRule, rng } from '../src/eval/endpoint.mjs';
 
 const RULE = 'accessibility/accessibility';
 
@@ -269,4 +269,33 @@ test('the universe the verdict is computed over is checked, not assumed', () => 
   const result = { brief_id: 'dev-01', arm: 'T_trained_adapter', runnable: true, functional: true, blocker_accessibility: 0, blocker_security: 0 };
   assert.equal(typeof passRate([result], [devBrief], 'T_trained_adapter'), 'number');
   assert.ok(checkUniverse([devBrief]).some((p) => p.code === 'OUTSIDE_SEALED_SPLIT'), 'the same brief must be refused by checkUniverse');
+});
+
+test('a reportable verdict goes through the checked entry point', () => {
+  // The primitives are unconstrained by design; analyseSealed is the door that shuts. Without this
+  // test, checkUniverse was a helper nobody had to call, and a dev-split run could produce a
+  // decision that looked preregistered.
+  const devBriefs = [
+    { brief_id: 'd1', family_id: 'd1', split: 'dev', task: 'generate', required_rules: [] },
+    { brief_id: 'd2', family_id: 'd2', split: 'dev', task: 'generate', required_rules: [] },
+  ];
+  const devResults = ['T_trained_adapter', 'C1_bare_base', 'C2_base_mwg_prompt', 'C3_base_uplift_tool'].flatMap((arm) =>
+    devBriefs.map((brief) => ({ brief_id: brief.brief_id, arm, runnable: true, functional: arm === 'T_trained_adapter', rule_results: {}, blocker_accessibility: 0, blocker_security: 0 })),
+  );
+  const refused = analyseSealed(devResults, devBriefs, { seal: 'sha256:91d75f29afe10fa419b53fc412abdfaf970068d7725fe40c69894e64c36ed59e' });
+  assert.equal(refused.ok, false, 'a dev split must not produce a verdict');
+  assert.ok(refused.problems.some((p) => p.code === 'OUTSIDE_SEALED_SPLIT'));
+  assert.equal(refused.decision, null);
+
+  const testBriefs = devBriefs.map((brief, index) => ({ ...brief, brief_id: `t${index + 1}`, family_id: `t${index + 1}`, split: 'test' }));
+  const testResults = ['T_trained_adapter', 'C1_bare_base', 'C2_base_mwg_prompt', 'C3_base_uplift_tool'].flatMap((arm) =>
+    testBriefs.map((brief) => ({ brief_id: brief.brief_id, arm, runnable: true, functional: true, rule_results: {}, blocker_accessibility: 0, blocker_security: 0 })),
+  );
+  // the right split but the wrong seal is still refused
+  assert.equal(analyseSealed(testResults, testBriefs, { seal: 'sha256:deadbeef' }).ok, false);
+  // complete design + sealed set produces the verdict, and it knows it lacks the strong controls
+  const decided = analyseSealed(testResults, testBriefs, { iterations: 200 });
+  assert.equal(decided.ok, true);
+  assert.ok(decided.decision);
+  assert.equal(decided.controls.length, 2);
 });

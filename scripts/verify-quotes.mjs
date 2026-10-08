@@ -22,7 +22,7 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import process from 'node:process';
 
-import { labelAppearsInVerbatim, normaliseText, parseJsonl, valueNearVerbatim } from '../src/eval/quotes.mjs';
+import { labelAppearsInVerbatim, normaliseText, parseJsonl, valueAtColumn, valueNearVerbatim } from '../src/eval/quotes.mjs';
 
 const UNITS = new Set(['usd_per_gpu_hour', 'usd_per_million_training_tokens', 'usd_per_gb_month', 'usd_per_gb']);
 
@@ -107,6 +107,21 @@ export function verifyQuote(row, { rawDir } = {}) {
           ? 'the verbatim snippet does not occur in the raw body'
           : `the value ${row.value} does not occur within 240 characters of the verbatim snippet`, // eslint-disable-line
     });
+  }
+  // The row must price the column it says it does. Without this, a Fireworks per-model row could
+  // claim the prefill rate as its training rate: all four columns sit in the same snippet.
+  if (Number.isInteger(row.verbatim_column)) {
+    const column = valueAtColumn(row.verbatim, row.value, row.verbatim_column);
+    if (!column.found) {
+      problems.push({
+        quote_id: row.quote_id,
+        code: column.reason,
+        message:
+          column.reason === 'COLUMN_MISSING'
+            ? `the snippet states only ${column.values.length} price(s), so column ${row.verbatim_column} does not exist`
+            : `column ${row.verbatim_column} of the snippet is $${column.column_value}, not $${row.value}; the row is pricing a different column`,
+      });
+    }
   }
   // ...and the snippet must occur in the body it claims to come from, which is what stops a real
   // price being paired with a snippet invented for a different page.

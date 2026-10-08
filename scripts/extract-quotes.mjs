@@ -20,7 +20,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
-import { decodeHtml } from '../src/eval/quotes.mjs';
+import { decodeHtml, dollarValues } from '../src/eval/quotes.mjs';
 import process from 'node:process';
 
 const money = (value) => Number(value);
@@ -229,8 +229,14 @@ function main() {
     const extracted = [extractors[provider] ?? []].flat().flatMap((fn) => fn(text));
     coverage.push({ file, provider, extracted: extracted.length, sha });
     for (const row of extracted) {
+      // The 1-based position of this row's rate among the snippet's `$` numbers. Recorded so the
+      // verifier can check the row prices the column it says it does: a Fireworks per-model row lists
+      // prefill, cached prefill, sample and train, and only the last is a training rate.
+      const prices = dollarValues(row.verbatim);
+      const column = prices.findIndex((price) => Number(price) === Number(row.value)) + 1;
       rows.push({
         ...row,
+        verbatim_column: column > 0 ? column : null,
         currency: 'USD',
         region: '',
         retrieved_at: meta.fetched_at,

@@ -52,13 +52,21 @@ export function parseJsonl(text) {
 }
 
 /**
+ * The `$`-prefixed numbers in a snippet, in order, as strings - i.e. the prices it actually states.
+ * A bare number in a pricing table is just as likely to be VRAM, RAM or a storage size.
+ */
+export function dollarValues(text) {
+  return [...normaliseText(text).matchAll(/\$([0-9]+(?:\.[0-9]+)?)(?![0-9])/g)].map((match) => match[1]);
+}
+
+/**
  * Is the number actually present in the page next to the snippet it is claimed to come from?
  *
- * Two failure modes are guarded here. Searching the whole page is not enough, because a page lists
+ * Three failure modes are guarded here. Searching the whole page is not enough, because a page lists
  * many prices and a wrong row could match some other card's number - so the value must occur within
- * `window` characters of the verbatim snippet. And the match must be a whole numeric token, not a
- * prefix: `$0.2` occurs inside `$0.27`, so a substring test would accept a price that is not on the
- * page at all.
+ * `window` characters of the verbatim snippet. The match must be a whole numeric token, not a
+ * prefix: `$0.2` occurs inside `$0.27`. And it must be a *price*: matching a bare number accepts
+ * VRAM, RAM and storage sizes (a `1.3` in "1.3 TiB SSD" is not a rate).
  */
 export function valueNearVerbatim(haystack, verbatim, value, window = 240) {
   const text = normaliseText(haystack);
@@ -68,8 +76,23 @@ export function valueNearVerbatim(haystack, verbatim, value, window = 240) {
   const from = Math.max(0, at - window);
   const nearby = text.slice(from, at + needle.length + window);
   const forms = [...new Set([String(value), Number(value).toFixed(2), Number(value).toFixed(3), Number(value).toFixed(4)])];
-  const matched = forms.find((form) => new RegExp(`(?:^|[^0-9.])${form.replace('.', '\\.')}(?![0-9])`).test(nearby));
+  const matched = forms.find((form) => new RegExp(`\\$${form.replace('.', '\\.')}(?![0-9])`).test(nearby));
   return matched ? { found: true, matched } : { found: false, reason: 'VALUE_NOT_NEAR_VERBATIM' };
+}
+
+/**
+ * Which of the snippet's prices is this row claiming? `verbatim_column` records the 1-based position
+ * of the rate among the snippet's `$` numbers, which is what stops a row silently pricing a
+ * neighbouring column: the Fireworks per-model row lists prefill, cached prefill, sample and train
+ * rates, and only the fourth is a training rate.
+ */
+export function valueAtColumn(verbatim, value, column) {
+  const values = dollarValues(verbatim);
+  const at = values[column - 1];
+  if (at === undefined) return { found: false, reason: 'COLUMN_MISSING', values };
+  return Number(at) === Number(value)
+    ? { found: true, column_value: at, values }
+    : { found: false, reason: 'COLUMN_MISMATCH', column_value: at, values };
 }
 
 /**

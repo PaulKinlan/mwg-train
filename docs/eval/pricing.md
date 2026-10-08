@@ -84,8 +84,12 @@ a comment:
   node scripts/verify-quotes.mjs       # every row must re-derive from its body, or exit non-zero
   ```
 
-  Verification requires the number to appear **next to the snippet it was read from** (within 240
-  characters), not merely somewhere on a page that lists many prices — the first version of this
+  Verification requires the number to be a *price* **next to the snippet it was read from** (within
+  240 characters) and to be the **column** the row names (`verbatim_column`), not merely a number
+  somewhere on a page that lists many prices. All three qualifiers were added after an adversarial
+  pass got past weaker versions: a bare-number match accepted `1.3` from "1.3 TiB SSD", and a
+  proximity-only match accepted the Fireworks *prefill* rate as the training rate, because all four
+  columns sit in the same snippet — the first version of this
   check searched the whole document, which would have passed a row whose price came from a different
   card. The raw bodies are gitignored because they are other people's pages; `quotes.raw/fetched.json`
   (URL, date, bytes, sha256 per page) is committed, and `scripts/fetch-quotes.sh` re-fetches every

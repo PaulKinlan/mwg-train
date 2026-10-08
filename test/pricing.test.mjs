@@ -15,7 +15,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { decodeHtml, labelAppearsInVerbatim, normaliseText, parseJsonl, valueNearVerbatim } from '../src/eval/quotes.mjs';
+import { decodeHtml, dollarValues, labelAppearsInVerbatim, normaliseText, parseJsonl, valueAtColumn, valueNearVerbatim } from '../src/eval/quotes.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const QUOTES = resolve(ROOT, 'docs/eval/quotes.jsonl');
@@ -221,4 +221,18 @@ test('the generator refuses to price a row that does not verify', () => {
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
+});
+
+test('a row must price the column it names, not a neighbouring one', () => {
+  // The Fireworks per-model snippet lists prefill, cached prefill, sample and train; only the fourth
+  // is a training rate. Claiming the first used to verify, because all four are in the same snippet.
+  const row = quotes.find((quote) => Number.isInteger(quote.verbatim_column) && quote.verbatim_column > 1);
+  assert.ok(row, 'expected at least one multi-column row to be priced');
+  assert.equal(valueAtColumn(row.verbatim, row.value, row.verbatim_column).found, true);
+  const other = dollarValues(row.verbatim).find((price) => Number(price) !== Number(row.value));
+  assert.ok(other, 'expected another price in the snippet');
+  assert.equal(valueAtColumn(row.verbatim, other, row.verbatim_column).found, false, 'a different column must not satisfy the row');
+  // ...and a size is not a price: 1.3 appears in "1.3 TiB SSD".
+  assert.equal(valueNearVerbatim('NVIDIA A10 24 GB 30 226 GiB 1.3 TiB SSD $1.29', 'NVIDIA A10 24 GB 30 226 GiB 1.3 TiB SSD $1.29', 1.3).found, false);
+  assert.equal(valueNearVerbatim('NVIDIA A10 24 GB 30 226 GiB 1.3 TiB SSD $1.29', 'NVIDIA A10 24 GB 30 226 GiB 1.3 TiB SSD $1.29', 1.29).found, true);
 });
