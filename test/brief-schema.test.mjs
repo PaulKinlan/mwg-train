@@ -452,7 +452,7 @@ test('whitespace around the operator is insignificant, and a raw newline is not'
 // literal name matches the OTHER field - measured in Chrome, which is how a required select could be
 // left on its default while validation counted it driven.
 test('a field name the HTML parser would rewrite is refused', () => {
-  const unsafe = ['a&#32;b', 'a&amp;b', 'a&copy', 'a"b', 'a\\b', 'a\nb'];
+  const unsafe = ['a&#32;b', 'a&amp;b', 'a&copy', 'a"b', 'a\\b', 'a\nb', 'a\u0000b', 'a\u000Cb'];
   for (const name of unsafe) {
     assert.ok(UNSAFE_FIELD_NAME.test(name), `expected '${name}' to be refused`);
     const row = brief({
@@ -472,7 +472,7 @@ test('a field name the HTML parser would rewrite is refused', () => {
 // The rule is deliberately no broader than the measurement: in the same Chrome probe these names all
 // reached the DOM unchanged AND matched a quoted selector, so refusing them would reject usable briefs.
 test('names Chrome round-trips unchanged are allowed', () => {
-  for (const name of ['customer', 'contact.email', "o'brien", 'a b', 'a<b', 'a=b', 'a$b', 'line-item', 'field1']) {
+  for (const name of ['customer', 'contact.email', "o'brien", 'a b', 'a<b', 'a=b', 'a$b', 'line-item', 'field1', 'a\tb', 'a\u007Fb', '\uFFFD', 'a\u00A0b', 'a\u2028b']) {
     assert.equal(UNSAFE_FIELD_NAME.test(name), false, `${name} should be allowed`);
   }
   const row = brief({

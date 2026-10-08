@@ -98,15 +98,21 @@ export function selectorFieldName(selector) {
  * the submitted key is the DOM's.
  *
  * The characters refused here are the ones MEASURED to be unsafe, and nothing else, because a rule
- * broader than the problem rejects legitimate briefs: in the same probe, `a b`, `o'brien`, `a<b`,
- * `a=b`, `a.b` and `a$b` all reached the DOM unchanged and matched a quoted selector, so they are
- * allowed. `"` ends the attribute early (the DOM name becomes `a` and the selector raises a syntax
- * error); `&` can form an entity reference, including without a semicolon (`&copy`), so no name
- * containing one can be read back reliably; `\` is a CSS escape, and escapes are refused in
- * selectors, so such a field could not be addressed; a raw newline is outside what a CSS value may
- * contain. All 121 names across the 30 families already satisfy this.
+ * broader than the problem rejects legitimate briefs: in the same probes, `a b`, `o'brien`, `a<b`,
+ * `a=b`, `a.b`, `a$b`, TAB, VT, DEL, NBSP, U+2028 and U+0085 all reached the DOM unchanged and
+ * matched a quoted selector naming that same element, so they are allowed. Each refusal is one
+ * measured case: `"` ends the attribute early (the DOM name becomes `a` and the selector raises a
+ * syntax error); `&` can form an entity reference, including without a semicolon (`&copy`), so no
+ * name containing one is read back reliably; `\` is a CSS escape, and escapes are refused in
+ * selectors, so such a field could not be addressed at all; a raw newline is outside what a CSS value
+ * may contain; NUL is replaced by U+FFFD by the HTML parser, so a NUL-named field and a U+FFFD-named
+ * field become the SAME DOM name and a selector for the required one drives the other (measured: it
+ * matched the optional field); and form feed is a CSS newline, so a selector containing one is a
+ * SyntaxError in the browser while this validator would have accepted it.
+ *
+ * All 121 names across the 30 families already satisfy this.
  */
-export const UNSAFE_FIELD_NAME = /["&\\\n\r]/;
+export const UNSAFE_FIELD_NAME = /["&\\\u0000\u000C\n\r]/;
 
 const COMPLETE_SELECTOR = /^(input|textarea|select)\[\s*name\s*=\s*(?:"([^"\\\n\r]+)"|'([^'\\\n\r]+)'|([A-Za-z_-][A-Za-z0-9_-]*))\s*\]$/i;
 
@@ -200,7 +206,7 @@ export function validateBriefSchema(row) {
     if (isString(field.name) && field.name !== '' && UNSAFE_FIELD_NAME.test(field.name)) {
       at(
         `${where}.name`,
-        `'${field.name}' cannot be written into the form and read back unchanged - the builders interpolate the name into the HTML raw, so a name containing " or & (or a backslash, or a raw newline) resolves to a different field than the journey names, or to none at all, and the server's required list disagrees with the key the browser submits. Measured in Chrome: spaces, apostrophes, <, =, . and $ are all safe and remain allowed`,
+        `'${field.name}' cannot be written into the form and read back unchanged - the builders interpolate the name into the HTML raw, so a name containing " & \\ or a control character (NUL, form feed, newline) resolves to a different field than the journey names, or to none at all, and the server's required list disagrees with the key the browser submits. Measured in Chrome: spaces, apostrophes, <, =, ., $, TAB, DEL and non-ASCII names are all safe and remain allowed`,
       );
     }
     if (field.type === 'select') {
