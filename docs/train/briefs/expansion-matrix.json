@@ -5,23 +5,30 @@
   "family_targets": { "initial_per_archetype": 1, "expanded_per_archetype": 2, "variants_per_family": 2, "initial_families": 21, "expanded_families": 42 },
   "axes": {
     "request_mode": ["generate", "repair-with-verified-original"],
-    "state": ["transient", "persistent-public", "persistent-owner-scoped"],
+    "state": ["stateless-interaction", "transient", "persistent-public", "persistent-owner-scoped"],
+    "actor": ["public-visitor", "returning-user", "purchaser", "contributor-editor", "workspace-owner-admin", "staff-operator"],
+    "guidance": { "rule_catalog": "docs/eval/rules.json", "applicable_rule_ids": "selected per authored family", "required_rule_ids": "selected per authored family; subset of applicable" },
+    "split_cluster": { "unit": "family", "fingerprint": ["topic", "prompt-template", "scaffold", "target-design", "generator-seed"], "rule": "all variants and near-duplicate clusters remain in one split; never overlap sealed evaluation" },
     "surface": ["card", "pricing", "checkout", "search", "editor"],
     "scenario": ["fictional-topic", "audience", "locale", "content-length", "device-needs", "framework", "server-client-architecture"],
     "wording_roles": ["commissioning-owner", "day-to-day-user-or-operator"]
   },
+  "family_contract": {
+    "required_fields": ["family_id", "archetype_id", "primary_role_goal", "secondary_role_goal", "primary_role_journey", "secondary_role_journey", "failure_recovery", "browser_assertions", "applicable_rules", "required_rules", "split_cluster_id", "split"],
+    "rule": "Both role journeys must assert distinct user goals or permission outcomes; rule IDs must belong to the pinned catalog and required_rules must be a subset of applicable_rules. Archetype rows are planning examples; these fields are supplied by each future family."
+  },
   "invariants": [
     "Assign only applicable actor roles; primary and secondary roles must differ in goal or permission, not merely name.",
     "Both wording variants of a family share exactly the same structured contract and split.",
-    "Every family has observable interactions, failure or recovery behavior, concrete browser assertions and applicable pinned rule IDs.",
+    "At family authoring time, specify distinct goals and role-specific journeys, failure or recovery behavior, concrete browser assertions and applicable pinned rule IDs; archetype rows below are examples, not complete briefs.",
     "Repair families require a runnable original and verified defect and are not interchangeable with generation families.",
     "Do not reuse sealed evaluation families, topics, design targets or near-duplicate scaffold and prompt clusters.",
-    "Static rendering does not satisfy an archetype's declared interaction. No real payments, secrets or unlicensed assets."
+    "Static rendering does not satisfy an archetype's declared interaction. A commerce surface is only a parent archetype when packaged with its downstream workflow. No real payments, secrets or unlicensed assets."
   ],
   "archetypes": [
-    { "id": "browser-game", "group": "play-learning", "primary_role": "player", "secondary_role": "returning-player", "state": "transient", "journey": "start > keyboard/touch action changes play state > terminal state > restart", "observable": "state, result and restart differ visibly" },
-    { "id": "interactive-explainer", "group": "play-learning", "primary_role": "learner", "secondary_role": "educator", "state": "transient", "journey": "change input > diagram and explanation update > reset", "observable": "outputs respond to changed inputs, not a static illustration" },
-    { "id": "interactive-demo", "group": "play-learning", "primary_role": "visitor", "secondary_role": "developer", "state": "transient", "journey": "configure example > run in sandbox > inspect result/error", "observable": "different inputs produce different results and invalid inputs show recovery" },
+    { "id": "browser-game", "group": "play-learning", "primary_role": "player", "secondary_role": "first-time-player", "state": "transient", "journey": "start > keyboard/touch action changes play state > terminal state > restart", "observable": "first-time player uses instructions; practiced player skips tutorial; play state, result and restart differ visibly" },
+    { "id": "interactive-explainer", "group": "play-learning", "primary_role": "learner", "secondary_role": "educator", "state": "transient", "journey": "change input > diagram and explanation update > reset", "observable": "learner experiments; educator demonstrates a preset and resets; outputs respond to changed inputs" },
+    { "id": "interactive-demo", "group": "play-learning", "primary_role": "visitor", "secondary_role": "developer", "state": "transient", "journey": "configure example > run in sandbox > inspect result/error", "observable": "visitor runs a sample; developer changes parameters and recovers from invalid input" },
     { "id": "course-quiz", "group": "play-learning", "primary_role": "learner", "secondary_role": "instructor", "state": "persistent-owner-scoped", "journey": "read lesson > answer > receive feedback > resume", "observable": "progress and feedback survive reload for the learner" },
     { "id": "editorial-blog", "group": "reading-reference", "primary_role": "reader", "secondary_role": "editor", "state": "persistent-public", "journey": "filter index > read deep link > publish revision", "observable": "public article reflects authorized revision after reload" },
     { "id": "wiki-knowledge-base", "group": "reading-reference", "primary_role": "researcher", "secondary_role": "contributor", "state": "persistent-public", "journey": "search > follow cross-link > inspect citation/history", "observable": "search and link resolve specific content; revisions are distinguishable" },
@@ -29,7 +36,7 @@
     { "id": "documentation-portal", "group": "reading-reference", "primary_role": "developer", "secondary_role": "maintainer", "state": "persistent-public", "journey": "search > switch version > open example", "observable": "versioned result and runnable/copyable example are correct" },
     { "id": "storefront-catalogue", "group": "commerce", "primary_role": "shopper", "secondary_role": "merchant", "state": "persistent-public", "journey": "filter products > choose variant > add to cart", "observable": "correct variant, stock and price appear in cart" },
     { "id": "cart-checkout", "group": "commerce", "primary_role": "buyer", "secondary_role": "fulfilment-staff", "state": "persistent-owner-scoped", "journey": "change quantity > review totals/shipping > simulated payment > receipt", "observable": "server receipt survives reload; totals match and staff sees order" },
-    { "id": "product-card-comparison", "group": "commerce", "primary_role": "prospect", "secondary_role": "catalogue-manager", "state": "transient", "journey": "inspect cards > compare details > choose option", "observable": "comparison reflects selected items and selection advances to a next step" },
+    { "id": "product-card-comparison", "group": "commerce", "primary_role": "prospect", "secondary_role": "comparison-shopper", "state": "transient", "journey": "inspect cards > compare details > choose option", "observable": "quick buyer selects from a card; comparison shopper compares features before selection advances" },
     { "id": "subscription-pricing-tiers", "group": "commerce", "primary_role": "prospect", "secondary_role": "account-owner", "state": "persistent-owner-scoped", "journey": "toggle billing period > compare limits > select tier > enroll", "observable": "price/limits update and selected tier persists through signup" },
     { "id": "b2b-saas-signup", "group": "business-identity", "primary_role": "company-buyer", "secondary_role": "workspace-admin", "state": "persistent-owner-scoped", "journey": "compare use cases > select plan > create workspace > onboard", "observable": "workspace and plan survive reload with admin ownership" },
     { "id": "sign-in-recovery", "group": "business-identity", "primary_role": "member", "secondary_role": "account-admin", "state": "persistent-owner-scoped", "journey": "sign up > sign out/in > reset credential > revisit protected route", "observable": "server sessions and recovery work without exposing another account" },
