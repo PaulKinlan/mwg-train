@@ -33,7 +33,7 @@ import { fileURLToPath } from 'node:url';
 import { filterProjects, loadCorpus, projectView } from './corpus.mjs';
 import { hashTree } from './hashtree.mjs';
 import { scanTree, scanPairRecords, loadScanConfig, buildMatchers } from './owner-auth.mjs';
-import { renderIndex, renderProject, escapeHtml, page } from './pages.mjs';
+import { renderIndex, renderProject, renderMarkdown, escapeHtml, page } from './pages.mjs';
 import { proxyRequest } from './proxy.mjs';
 import { SandboxPool } from './sandbox.mjs';
 
@@ -323,6 +323,13 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
 
       if (path === '/healthz') return textResponse(response, 'ok');
 
+      if (path === '/pipeline' && request.method === 'GET') {
+        // The pipeline doc is the source of truth; the viewer renders it so the two cannot drift.
+        const docPath = join(repoRoot, 'docs', 'PIPELINE.md');
+        if (!existsSync(docPath)) return textResponse(response, 'docs/PIPELINE.md not present in this checkout', 404);
+        return htmlResponse(response, page('pipeline', renderMarkdown(readFileSync(docPath, 'utf8'))));
+      }
+
       if (path === '/' && request.method === 'GET') {
         const runId = url.searchParams.get('run') || null;
         const corpus = load(runId);
@@ -480,19 +487,21 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
       // The paired tree of a RECORDED pair must resolve, hash-verify and scan clean before either
       // version serves: a run that measured a pair does not get to serve half of it. A project
       // with no decision yet is unpaired; its original serves on its own clean scan alone.
-      if (version === 'original' && project.decision) {
-        const paired = await ensureUpliftedTree(project);
+      if (project.decision) {
+        const paired =
+          version === 'original' ? await ensureUpliftedTree(project) : await measuredOriginalTree(project);
+        const pairedLabel = version === 'original' ? 'uplifted' : 'original';
         if (!paired.dir) {
           return htmlResponse(
             response,
-            page('refused', `<h1>live serving refused</h1><p class="danger">This pair's uplifted tree cannot be resolved and verified (${escapeHtml(paired.reason ?? 'unknown')}), so the pair is not servable. The pair is served together or not at all.</p>`),
+            page('refused', `<h1>live serving refused</h1><p class="danger">This pair's ${pairedLabel} tree cannot be resolved and verified (${escapeHtml(paired.reason ?? 'unknown')}), so the pair is not servable. The pair is served together or not at all.</p>`),
             403,
           );
         }
         if (scanTreeCached(paired.dir).status !== 'PASS') {
           return htmlResponse(
             response,
-            page('refused', `<h1>live serving refused</h1><p class="danger">The paired uplifted tree fails the owner-auth scan; the pair is served together or not at all.</p>`),
+            page('refused', `<h1>live serving refused</h1><p class="danger">The paired ${pairedLabel} tree fails the owner-auth scan; the pair is served together or not at all.</p>`),
             403,
           );
         }

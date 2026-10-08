@@ -64,11 +64,62 @@ export function page(title, body) {
 <style>${PAGE_CSS}</style>
 </head>
 <body>
-<nav><a href="/">corpus index</a></nav>
+<nav><a href="/">corpus index</a> · <a href="/pipeline">pipeline</a></nav>
 ${body}
 </body>
 </html>`;
 }
+
+/**
+ * Minimal markdown renderer for docs/PIPELINE.md (the doc stays the source of truth; the viewer
+ * renders it, so the pipeline page cannot drift from the doc). Handles headings, pipe tables,
+ * lists, paragraphs, and inline bold/code formatting. Everything is escaped before formatting.
+ */
+export function renderMarkdown(md) {
+  const inline = (text) =>
+    escapeHtml(text)
+      .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+      .replace(/`([^`]+)`/g, '<code>$1</code>');
+  const out = [];
+  let list = null;
+  let table = null;
+  const closeBlocks = () => {
+    if (list) { out.push('</ul>'); list = null; }
+    if (table) { out.push('</tbody></table>'); table = null; }
+  };
+  for (const line of md.split('\n')) {
+    if (line.startsWith('## ')) { closeBlocks(); out.push(`<h2>${inline(line.slice(3))}</h2>`); continue; }
+    if (line.startsWith('# ')) { closeBlocks(); out.push(`<h1>${inline(line.slice(2))}</h1>`); continue; }
+    if (line.startsWith('|')) {
+      const cells = line.split('|').slice(1, -1).map((cell) => cell.trim());
+      if (cells.every((cell) => /^:?-+:?$/.test(cell))) continue; // separator row
+      if (!table) {
+        out.push('<table><tbody>');
+        out.push(`<tr>${cells.map((cell) => `<th>${inline(cell)}</th>`).join('')}</tr>`);
+        table = true;
+      } else {
+        out.push(`<tr>${cells.map((cell) => `<td>${inline(cell)}</td>`).join('')}</tr>`);
+      }
+      continue;
+    }
+    if (line.startsWith('- ')) {
+      if (table) { out.push('</tbody></table>'); table = null; }
+      if (!list) { out.push('<ul>'); list = true; }
+      out.push(`<li>${inline(line.slice(2))}</li>`);
+      continue;
+    }
+    closeBlocks();
+    if (line.trim()) out.push(`<p>${inline(line.trim())}</p>`);
+  }
+  closeBlocks();
+  return out.join('\n');
+}
+
+/** The strip the index shows above the table: the whole pipeline at a glance, with its position. */
+export const PIPELINE_STRIP = `
+<p class="muted"><strong>Pipeline</strong> (<a href="/pipeline">full doc</a>):
+1 BRIEFS → 2 RULES → 3 GENERATE → 4 MEASURE → 5 RECORD/VERIFY → 6 PRICE → <strong>7 TRAIN — queued behind disjoint training-set generation (mwg-train-0ov); the sealed eval set is never trained on</strong>.
+Stages 1–6 are built, measured, and active. Roles: <strong>EVAL INSTRUMENT</strong> measures and is never trained on · <strong>BASELINE</strong> is what we improve FROM · <strong>TRAINING SOURCE</strong> is the disjoint corpus accepted pairs come from · <strong>COST INPUT</strong> prices each accepted pair.</p>`;
 
 export function stateBadge(view) {
   if (!view.hasRun) return '<span class="badge no-run">NOT YET RUN</span>';
@@ -179,6 +230,7 @@ export function renderIndex({ views, allViews, filters, runId, runs, yieldReport
 
   return page('corpus index', `
 <h1>mwg-train corpus</h1>
+${PIPELINE_STRIP}
 ${scanNotice}
 <p class="muted">Roles: <strong>BASELINE</strong> = raw model output, kept to measure improvement FROM · <strong>TARGET</strong> = the ideal site to build TOWARDS · <strong>ACCEPTED PAIR</strong> = a brief and an output that passed acceptance (these alone may become training data) · <strong>REJECTED ATTEMPT</strong> = kept as negative example &amp; repair material.</p>
 <p>${counts.accepted} accepted pair(s) · ${counts.rejected} rejected attempt(s) · ${counts.noRun} not yet run — of ${allViews.length} project(s).</p>

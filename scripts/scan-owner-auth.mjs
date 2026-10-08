@@ -170,8 +170,26 @@ async function main() {
           : { status: 'FAIL', findings: [{ file: 'record', line: null, patternId: 'record-missing', kind: 'scan-error' }] };
       if (recordResult.status !== 'PASS') failed += 1;
       report(`${project.id} (corpus records)`, recordResult);
-      if (project.upliftedTreeDir) {
-        scanOne(`${project.id} (uplifted)`, project.upliftedTreeDir);
+      const expectedUplift = project.decision?.uplifted_sha ?? null;
+      if (!expectedUplift) {
+        failed += 1;
+        console.log(`FAIL ${project.id} - the accepted decision records no uplift sha`);
+        continue;
+      }
+      if (project.upliftedTreeDir && existsSync(project.upliftedTreeDir)) {
+        // A kept TARGET is scanned only when it still IS the recorded tree.
+        if (hashTree(project.upliftedTreeDir) === expectedUplift) {
+          scanOne(`${project.id} (uplifted)`, project.upliftedTreeDir);
+        } else {
+          const regenerated = await regenerateUplifted(project, originalDir, args.corpus);
+          if (regenerated) scanOne(`${project.id} (uplifted, regenerated+verified)`, regenerated);
+          else {
+            failed += 1;
+            console.log(
+              `FAIL ${project.id} - kept uplifted tree drifted from the recorded sha and regeneration could not reproduce it`,
+            );
+          }
+        }
       } else {
         const regenerated = await regenerateUplifted(project, originalDir, args.corpus);
         if (regenerated) scanOne(`${project.id} (uplifted, regenerated+verified)`, regenerated);
