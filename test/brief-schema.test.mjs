@@ -12,6 +12,7 @@ import {
   BRIEF_FIELD_TYPES,
   builderFields,
   completeSelectorFieldName,
+  UNSAFE_FIELD_NAME,
   echoFieldFor,
   selectorFieldName,
   serverRequiredFieldNames,
@@ -445,3 +446,47 @@ test('whitespace around the operator is insignificant, and a raw newline is not'
   assert.equal(completeSelectorFieldName('input[name="a\nb"]'), null);
   assert.equal(completeSelectorFieldName('input[name=1x]'), null, 'an unquoted value must be a valid CSS identifier');
 });
+
+// The builders interpolate `name="${field.name}"` into the form RAW, so the HTML parser reinterprets
+// anything entity-like: a field named `a&#32;b` reaches the DOM as `a b`, and a selector quoting either
+// literal name matches the OTHER field - measured in Chrome, which is how a required select could be
+// left on its default while validation counted it driven.
+test('a field name the HTML parser would rewrite is refused', () => {
+  const unsafe = ['a&#32;b', 'a&amp;b', 'a&copy', 'a"b', 'a\\b', 'a\nb'];
+  for (const name of unsafe) {
+    assert.ok(UNSAFE_FIELD_NAME.test(name), `expected '${name}' to be refused`);
+    const row = brief({
+      fields: [
+        { slug: 'bad', name, type: 'text', label: 'Bad', required: true, echoed: true },
+        { slug: 'ok', name: 'ok', type: 'text', label: 'Ok', required: true },
+      ],
+      journey: { startPath: '/', formSelector: 'form#f', fill: { 'input[name=ok]': 'x' }, expectText: 'x' },
+    });
+    assert.ok(
+      problems(row).some((p) => /cannot be written into the form and read back unchanged/.test(p)),
+      `expected '${name}' to be refused by the validator`,
+    );
+  }
+});
+
+// The rule is deliberately no broader than the measurement: in the same Chrome probe these names all
+// reached the DOM unchanged AND matched a quoted selector, so refusing them would reject usable briefs.
+test('names Chrome round-trips unchanged are allowed', () => {
+  for (const name of ['customer', 'contact.email', "o'brien", 'a b', 'a<b', 'a=b', 'a$b', 'line-item', 'field1']) {
+    assert.equal(UNSAFE_FIELD_NAME.test(name), false, `${name} should be allowed`);
+  }
+  const row = brief({
+    fields: [
+      { slug: 'who', name: "o'brien", type: 'text', label: 'Who', required: true, echoed: true },
+      { slug: 'note', name: 'a b', type: 'text', label: 'Note', required: true },
+    ],
+    journey: {
+      startPath: '/',
+      formSelector: 'form#f',
+      fill: { 'input[name="o\'brien"]': 'ada', 'input[name="a b"]': 'x' },
+      expectText: 'ada',
+    },
+  });
+  assert.deepEqual(validateBriefSchema(row), []);
+});
+

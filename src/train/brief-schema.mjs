@@ -87,6 +87,27 @@ export function selectorFieldName(selector) {
 // must be a valid CSS identifier - so a name outside the unquoted charset is reached by quoting it,
 // which is how a legitimate name like `contact.email` is addressed. Compound, comma-joined and
 // descendant selectors still match nothing.
+
+/**
+ * The builders emit `name="${field.name}"` with the name interpolated RAW (`pilot/frameworks.mjs`),
+ * so the HTML parser gets to reinterpret it: a field named `a&#32;b` reaches the DOM as `a b`, and
+ * `a&amp;b` reaches it as `a&b`. A selector quoting either literal name then misses that element -
+ * measured in Chrome, `select[name="a&#32;b"]` matches the element named `a&#32;b` and not the one
+ * named `a b` - so a journey can leave a required select on its default while the schema reports it
+ * driven. The same decode breaks the server, whose required-field list is built from these names while
+ * the submitted key is the DOM's.
+ *
+ * The characters refused here are the ones MEASURED to be unsafe, and nothing else, because a rule
+ * broader than the problem rejects legitimate briefs: in the same probe, `a b`, `o'brien`, `a<b`,
+ * `a=b`, `a.b` and `a$b` all reached the DOM unchanged and matched a quoted selector, so they are
+ * allowed. `"` ends the attribute early (the DOM name becomes `a` and the selector raises a syntax
+ * error); `&` can form an entity reference, including without a semicolon (`&copy`), so no name
+ * containing one can be read back reliably; `\` is a CSS escape, and escapes are refused in
+ * selectors, so such a field could not be addressed; a raw newline is outside what a CSS value may
+ * contain. All 121 names across the 30 families already satisfy this.
+ */
+export const UNSAFE_FIELD_NAME = /["&\\\n\r]/;
+
 const COMPLETE_SELECTOR = /^(input|textarea|select)\[\s*name\s*=\s*(?:"([^"\\\n\r]+)"|'([^'\\\n\r]+)'|([A-Za-z_-][A-Za-z0-9_-]*))\s*\]$/i;
 
 /**
@@ -176,6 +197,12 @@ export function validateBriefSchema(row) {
     }
     if (isString(field.name) && seen.has(field.name)) at(`${where}.name`, `'${field.name}' is declared twice`);
     if (isString(field.name)) seen.add(field.name);
+    if (isString(field.name) && field.name !== '' && UNSAFE_FIELD_NAME.test(field.name)) {
+      at(
+        `${where}.name`,
+        `'${field.name}' cannot be written into the form and read back unchanged - the builders interpolate the name into the HTML raw, so a name containing " or & (or a backslash, or a raw newline) resolves to a different field than the journey names, or to none at all, and the server's required list disagrees with the key the browser submits. Measured in Chrome: spaces, apostrophes, <, =, . and $ are all safe and remain allowed`,
+      );
+    }
     if (field.type === 'select') {
       if (!Array.isArray(field.options) || field.options.length < 2) {
         at(`${where}.options`, 'a select must offer at least two options');
