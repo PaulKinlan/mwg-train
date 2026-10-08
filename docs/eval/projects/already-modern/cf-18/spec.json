@@ -1,0 +1,60 @@
+{
+  "project_id": "cf-18",
+  "title": "Book swap shelf",
+  "nav": [
+    {
+      "href": "/",
+      "label": "Shelf"
+    }
+  ],
+  "seed": {
+    "books": [
+      {
+        "id": "the-catcher",
+        "title": "The Catcher in the Rye",
+        "meta": "J. D. Salinger",
+        "body": "A hardback with a loose spine."
+      },
+      {
+        "id": "small-things",
+        "title": "Small Things Like These",
+        "meta": "Claire Keegan",
+        "body": "A short novel, still in its dust jacket."
+      }
+    ],
+    "reservations": []
+  },
+  "pages": [
+    {
+      "path": "/",
+      "kind": "list",
+      "heading": "On the shelf",
+      "collection": "books",
+      "item": "/books/:id"
+    },
+    {
+      "path": "/books/:id",
+      "kind": "detail",
+      "collection": "books",
+      "saveAction": "/books/:id/reserve",
+      "saveLabel": "Reserve",
+      "saveFields": [
+        {
+          "name": "name",
+          "label": "Your name",
+          "type": "text",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "saves": [
+    {
+      "path": "/books/:id/reserve",
+      "collection": "books",
+      "into": "reservations",
+      "success": "/"
+    }
+  ],
+  "defects": []
+}

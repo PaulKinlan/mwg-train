@@ -1,0 +1,28 @@
+{
+  "pages": {
+    "/": {
+      "status": 200,
+      "main": "144a55cbc8ebbf43d114c4005c6d9e6e000ca8dfe09932ef6ba5fbd43307909b",
+      "nav": "879daaada415011cfb3e40491e33702f2df09dc9b0b9a280cf1b7974233d9b5b",
+      "main_text": "expense ledger for the treasurer of a small group."
+    },
+    "/ledger": {
+      "status": 200,
+      "main": "ef3df9a37349b9f793f471f2b51deeea1f6fa6c2c9238ec581c60c3bc01bb471",
+      "nav": "879daaada415011cfb3e40491e33702f2df09dc9b0b9a280cf1b7974233d9b5b",
+      "main_text": "ledger sample value"
+    },
+    "/expenses/new": {
+      "status": 200,
+      "main": "87388f93fdecb6413bd167705c0ddd601f74cdafdc2346624402e1686185062a",
+      "nav": "879daaada415011cfb3e40491e33702f2df09dc9b0b9a280cf1b7974233d9b5b",
+      "main_text": "new expense description date 0 10 20 submit"
+    },
+    "/expenses/1": {
+      "status": 200,
+      "main": "3071cc981cef44a51eb0e886a3b723fd90854209c23a92856a5ac80a0e9f5b55",
+      "nav": "879daaada415011cfb3e40491e33702f2df09dc9b0b9a280cf1b7974233d9b5b",
+      "main_text": "expense recorded description sample value spent_on sample value amount 0"
+    }
+  }
+}

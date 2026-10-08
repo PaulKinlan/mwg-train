@@ -56,6 +56,7 @@ export const INVARIANT_FIELDS = Object.freeze([
   'required_rules',
   'non_goals',
   'seeded_defects',
+  'existing_site',
 ]);
 
 /** Strata whose families may legitimately contain a single brief. */
@@ -81,6 +82,10 @@ const FIELD_SPEC = {
   required_rules: { kind: 'string-array', minItems: 2, maxItems: 4 },
   non_goals: { kind: 'string-array', minItems: 0 },
   seeded_defects: { kind: 'string-array', minItems: 0 },
+  // The project a run is handed before it does anything: the existing site for an already-modern
+  // brief, or the defective starter for a repair brief. Optional in the schema, but required by the
+  // rule below wherever a brief is meaningless without one.
+  existing_site: { kind: 'string-or-null', optional: true },
 };
 
 export const BRIEF_FIELDS = Object.freeze(Object.keys(FIELD_SPEC));
@@ -193,10 +198,24 @@ export function validateBriefs(rows, index) {
     }
     for (const [field, spec] of Object.entries(FIELD_SPEC)) {
       if (!(field in row)) {
+        if (spec.optional) continue;
         findings.push(finding('MISSING_FIELD', `missing required field '${field}'`, id, field));
         continue;
       }
       checkField(row, field, spec, findings);
+    }
+    // A brief that hands the model an existing site has to say which project that is, or the run has
+    // nothing to start from and the "leave everything else as it is" half of the brief cannot be
+    // measured. Two kinds of brief are meaningless without a project: an already-modern challenge
+    // (its baseline is the only way to count changed pages) and a sealed repair brief (its starter is
+    // the only thing that exhibits the seeded defects). Everything else must not carry one.
+    const alreadyModernRow = Array.isArray(row.non_goals) && row.non_goals.includes(ALREADY_MODERN_MARKER);
+    const needsSite = alreadyModernRow || (row.task === 'repair' && row.split === 'test');
+    if (needsSite && (typeof row.existing_site !== 'string' || row.existing_site.trim() === '')) {
+      findings.push(finding('MISSING_EXISTING_SITE', 'this brief is about an existing project, so existing_site must name it', id, 'existing_site'));
+    }
+    if (!needsSite && row.existing_site !== undefined && row.existing_site !== null) {
+      findings.push(finding('UNEXPECTED_EXISTING_SITE', 'existing_site is only for already-modern and sealed repair briefs', id, 'existing_site'));
     }
     if (typeof row.brief_id === 'string') {
       if (byBriefId.has(row.brief_id)) findings.push(finding('DUPLICATE_BRIEF_ID', `brief_id '${row.brief_id}' appears more than once`, id, 'brief_id'));

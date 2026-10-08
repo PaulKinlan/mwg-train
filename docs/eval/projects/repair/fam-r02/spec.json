@@ -1,0 +1,76 @@
+{
+  "project_id": "fam-r02",
+  "title": "Community fun run registration",
+  "defects": [
+    "skip-required",
+    "border-only-error",
+    "no-persistence"
+  ],
+  "nav": [
+    {
+      "href": "/",
+      "label": "Home"
+    },
+    {
+      "href": "/register",
+      "label": "Register"
+    }
+  ],
+  "seed": {
+    "registrations": []
+  },
+  "pages": [
+    {
+      "path": "/",
+      "kind": "static",
+      "heading": "Community fun run",
+      "sections": [
+        "A 5km run through the park, open to all ages."
+      ]
+    },
+    {
+      "path": "/register",
+      "kind": "form",
+      "heading": "Register",
+      "action": "/register",
+      "collection": "registrations",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Runner name",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "email",
+          "label": "Email",
+          "type": "email",
+          "required": true
+        },
+        {
+          "name": "ticket",
+          "label": "Ticket",
+          "type": "select",
+          "options": [
+            "standard",
+            "accessible",
+            "student"
+          ],
+          "required": true
+        }
+      ],
+      "success": "/registrations/:id"
+    },
+    {
+      "path": "/registrations/:id",
+      "kind": "record",
+      "heading": "Registration confirmed",
+      "collection": "registrations",
+      "show": [
+        "name",
+        "email",
+        "ticket"
+      ]
+    }
+  ]
+}
