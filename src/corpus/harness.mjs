@@ -131,11 +131,32 @@ export function searchVerdict({ containerFound, filteredText, filteredRefs = [],
  * exactly the failure mode (tr-26) the count exists to catch. An API answer that is not 200 makes
  * "old value gone" vacuous, so it cannot pass the verdict.
  */
-export function updateVerdict({ ref, oldValue, newValue, pageText, apiStatus, apiText, rowsBefore, rowsAfter }) {
+export function updateVerdict({ ref, oldValue, newValue, field = null, pageText, apiStatus, apiText, rowsBefore, rowsAfter }) {
   const apiAnswered = apiStatus === 200;
   const visibleAfterReload = typeof pageText === 'string' && pageText.includes(newValue);
-  const newValueStored = apiAnswered && typeof apiText === 'string' && apiText.includes(newValue);
-  const oldValueGone = apiAnswered && typeof apiText === 'string' && oldValue != null && !apiText.includes(oldValue);
+  // Compared as a FIELD when the API answers with JSON, not as a substring of the whole payload. The
+  // substring form passed an update that changed nothing AND failed an update that changed the field
+  // correctly, because 'Ada Lovelace (updated)' contains 'Ada Lovelace': the old value looked present in
+  // exactly the case where the new one had replaced it. A verdict about one field compares that field.
+  let storedField = null;
+  let comparedAsField = false;
+  if (apiAnswered && typeof apiText === 'string' && field) {
+    try {
+      const parsed = JSON.parse(apiText);
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed) && field in parsed) {
+        storedField = parsed[field] == null ? '' : String(parsed[field]);
+        comparedAsField = true;
+      }
+    } catch {
+      /* not JSON: fall back to the textual comparison and say so in the detail */
+    }
+  }
+  const newValueStored = comparedAsField
+    ? storedField === newValue
+    : apiAnswered && typeof apiText === 'string' && apiText.includes(newValue);
+  const oldValueGone = comparedAsField
+    ? oldValue == null || storedField !== oldValue
+    : apiAnswered && typeof apiText === 'string' && oldValue != null && !apiText.includes(oldValue);
   const rowCountUnchanged = Number.isInteger(rowsBefore) && rowsBefore === rowsAfter;
   const passed = Boolean(ref) && visibleAfterReload && newValueStored && oldValueGone && rowCountUnchanged;
   return {
@@ -146,6 +167,9 @@ export function updateVerdict({ ref, oldValue, newValue, pageText, apiStatus, ap
       newValue,
       visibleAfterReload,
       apiStatus: apiStatus ?? null,
+      field: field ?? null,
+      comparedAsField,
+      storedField,
       newValueStored,
       oldValueGone,
       rowsBefore,
@@ -380,19 +404,64 @@ async function driveSearchJourney(page, base, journey, search, { seedField }) {
   // declares as absent, for the same reason in the other direction: the brief names what must not appear,
   // and the driver seeds exactly that.
   const decoyToken = `${(search.expectAbsent ?? ['zzz-decoy'])[0]}-${suffix}`;
-  const matchToken = null;
-  const seedRecord = async (token) => {
-    await page.goto(`${base}${journey.startPath}`);
-    for (const [selector, value] of Object.entries(journey.fill ?? {})) {
-      await page.type(selector, token !== null && selectorFieldName(selector) === seedField ? token : value);
+  // Replacing ONE field is not enough to build a record the query cannot match: the brief's own values are
+  // internally consistent, so its email can carry the same word as the name the query is taken from -
+  // 'cassiopeia@example.test' matches a search for 'Cassiopeia' in a record whose name field was replaced.
+  // The first version of this seeded exactly that and reported the leak as a filter failure, when the
+  // filter had worked and the decoy was a false decoy. Every field is replaced now, in a shape its type
+  // accepts, and the guard below refuses to run at all if some value still contains a query word.
+  // The shape has to come from the INPUT'S TYPE, not from the value's spelling. Guessing from the string put
+  // '+44 7700 900001' into a `type=date` control, the browser refused the form, the decoy record was never
+  // created, and twenty projects reported "the decoy is missing from the unfiltered listing" - a control that
+  // had failed to be established, reported as a filter failure. The element is asked instead, and the
+  // fallback is indexed rather than the field name, because a field named `plot` put the query word into the
+  // decoy and made the guard fire on the corpus's own vocabulary.
+  const controlTypes = await page.evaluate(`return Object.fromEntries(${JSON.stringify(Object.keys(journey.fill ?? {}))}.map((selector) => {
+    const el = document.querySelector(selector);
+    return [selector, el ? (el.type || el.tagName.toLowerCase()) : 'text'];
+  }))`);
+  const byType = (type, index) => {
+    switch (String(type).toLowerCase()) {
+      case 'date': return '2027-01-02';
+      case 'datetime-local': return '2027-01-02T03:04';
+      case 'time': return '09:30';
+      case 'month': return '2027-01';
+      case 'week': return '2027-W01';
+      case 'number': case 'range': return '1';
+      case 'email': return `zzz-decoy-${suffix}@example.test`;
+      case 'tel': return '+44 7700 900001';
+      case 'url': return `https://zzz-decoy.example.test/${suffix}`;
+      default: return `${decoyToken}-${index}`;
     }
+  };
+  const decoyValues = Object.fromEntries(
+    Object.entries(journey.fill ?? {}).map(([selector], index) => [selector, byType(controlTypes?.[selector] ?? 'text', index)]),
+  );
+  const words = String(search.query ?? '')
+    .split(/\s+/)
+    .filter((word) => word.length >= 3);
+  const leakedWord = words.find((word) => Object.values(decoyValues).some((value) => value.toLowerCase().includes(word.toLowerCase())));
+  if (leakedWord) {
+    // Not a throw: an unbuildable control fails THIS journey with its reason attached, rather than marking
+    // the whole project unrunnable and hiding every other journey behind one family's vocabulary.
+    return {
+      name: 'search',
+      passed: false,
+      detail: { controlImpossible: `the decoy cannot be built free of the query: '${leakedWord}' survives in ${JSON.stringify(decoyValues)}` },
+    };
+  }
+  const valuesFor = (useDecoy) => Object.fromEntries(Object.entries(journey.fill ?? {}).map(([selector, value]) => [selector, useDecoy ? decoyValues[selector] : value]));
+  const seedRecord = async (useDecoy) => {
+    await page.goto(`${base}${journey.startPath}`);
+    const values = valuesFor(useDecoy);
+    for (const [selector] of Object.entries(journey.fill ?? {})) await page.type(selector, values[selector]);
     if (journey.select) {
       for (const [selector, option] of Object.entries(journey.select)) await page.selectOption(selector, option);
     }
     await page.submit(journey.formSelector ?? 'form');
   };
-  await seedRecord(null);
-  await seedRecord(decoyToken);
+  await seedRecord(false);
+  await seedRecord(true);
 
   // The control is read FIRST and straight from the server: the excluded token must be in the
   // unfiltered listing, or its absence from the filtered results says nothing.
@@ -508,6 +577,7 @@ async function driveUpdateJourney(page, base, journey, update, { recordUrl = nul
 
   const verdict = updateVerdict({
     ref,
+    field: update.field,
     oldValue,
     newValue: update.newValue,
     pageText,

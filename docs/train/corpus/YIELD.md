@@ -1,8 +1,8 @@
-# Training-corpus acceptance yield (2026-10-08T18-48-36-067Z)
+# Training-corpus acceptance yield (2026-10-08T20-22-15-623Z)
 
 > **mwg-train deterministic baseline** - deterministic output of this repository's own tooling, not an official `web-uplift` result.
 
-Generated 2026-10-08T18:54:07.052Z by `scripts/train-corpus-run.mjs`. 40 sampled pairs, 240 journeys driven, 240 passed.
+Generated 2026-10-08T20:29:22.795Z by `scripts/train-corpus-run.mjs`. 40 sampled pairs, 384 journeys driven, 340 passed.
 
 The SAMPLED projects' numbers come from records produced by driving the project in a real
 browser; the per-project records, screenshots and traces are under the run output directory.
@@ -31,17 +31,21 @@ Reason: 40 projects were selected by the deterministic rule; 40 were driven in t
 
 | attempted | accepted | yield |
 | --- | --- | --- |
-| 40 | 40 | 100.0% |
+| 40 | 38 | 95.0% |
 
 ## Why pairs were rejected
 
 | category | count |
 | --- | --- |
-| `accepted` | 40 |
+| `accepted` | 38 |
+| `original-not-runnable` | 2 |
 
 ## Failures and their reasons
 
-_No failures._
+| project | archetype | framework | task | category | reason |
+| --- | --- | --- | --- | --- | --- |
+| `tr-13-vue` | docs-site | vue | generate | `original-not-runnable` | search journey: the decoy cannot be built free of the query - 'Plot' survives in {"input[name=gardener]":"zzz-decoy-muzznncq-b8b0mw-gardener","input[name=plot]":"zzz-decoy-muzznncq-b8b0mw-plot","input[name=ph]":"1","input[name=organic]":"+44 7700 900001","textarea[name=notes]":"zzz-decoy-muzznncq-b8b0mw-notes"} |
+| `tr-13-webcomponents` | docs-site | webcomponents | generate | `original-not-runnable` | search journey: the decoy cannot be built free of the query - 'Plot' survives in {"input[name=gardener]":"zzz-decoy-muzznqm7-nyidf7-gardener","input[name=plot]":"zzz-decoy-muzznqm7-nyidf7-plot","input[name=ph]":"1","input[name=organic]":"+44 7700 900001","textarea[name=notes]":"zzz-decoy-muzznqm7-nyidf7-notes"} |
 
 ## Yield by framework
 
@@ -51,8 +55,8 @@ _No failures._
 | raw | 6 | 6 |
 | react | 6 | 6 |
 | preact | 6 | 6 |
-| vue | 6 | 6 |
-| webcomponents | 5 | 5 |
+| vue | 5 | 6 |
+| webcomponents | 4 | 5 |
 | svelte | 5 | 5 |
 
 ## Yield by archetype
@@ -71,7 +75,7 @@ _No failures._
 | survey-form | 2 | 2 |
 | restaurant-ordering | 2 | 2 |
 | job-board | 2 | 2 |
-| docs-site | 2 | 2 |
+| docs-site | 0 | 2 |
 | library-catalogue | 2 | 2 |
 | community-forum | 2 | 2 |
 
@@ -111,8 +115,8 @@ _No failures._
 | `tr-11-raw` | tr-11 | restaurant-ordering | raw | generate | true/true | refused-observed/refused-observed | **accepted** |
 | `tr-12-react` | tr-12 | job-board | react | generate | true/true | refused-observed/refused-observed | **accepted** |
 | `tr-12-preact` | tr-12 | job-board | preact | generate | true/true | refused-observed/refused-observed | **accepted** |
-| `tr-13-vue` | tr-13 | docs-site | vue | generate | true/true | refused-observed/refused-observed | **accepted** |
-| `tr-13-webcomponents` | tr-13 | docs-site | webcomponents | generate | true/true | refused-observed/refused-observed | **accepted** |
+| `tr-13-vue` | tr-13 | docs-site | vue | generate | true/true | refused-observed/refused-observed | `original-not-runnable` |
+| `tr-13-webcomponents` | tr-13 | docs-site | webcomponents | generate | true/true | refused-observed/refused-observed | `original-not-runnable` |
 | `tr-15-svelte` | tr-15 | expense-tracker | svelte | generate | true/true | refused-observed/refused-observed | **accepted** |
 | `tr-15-hono` | tr-15 | expense-tracker | hono | generate | true/true | refused-observed/refused-observed | **accepted** |
 | `tr-16-raw` | tr-16 | library-catalogue | raw | generate | true/true | refused-observed/refused-observed | **accepted** |

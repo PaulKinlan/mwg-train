@@ -136,6 +136,60 @@ test('updateVerdict passes when the new value is visible and stored, the old one
   assert.equal(verdict.detail.visibleAfterReload, true);
 });
 
+test('updateVerdict compares the FIELD, so a new value containing the old one still counts as replaced', () => {
+  // 'Ada Lovelace (updated)' contains 'Ada Lovelace'. A substring test over the whole payload reports the
+  // old value as still present in exactly the case where it was replaced - which failed every one of 76
+  // live updates while the updates themselves had worked.
+  const verdict = updateVerdict({
+    ref: 'r1',
+    field: 'customer',
+    oldValue: 'Ada Lovelace',
+    newValue: 'Ada Lovelace (updated)',
+    pageText: 'Ada Lovelace (updated)',
+    apiStatus: 200,
+    apiText: JSON.stringify({ ref: 'r1', customer: 'Ada Lovelace (updated)' }),
+    rowsBefore: 3,
+    rowsAfter: 3,
+  });
+  assert.equal(verdict.passed, true, JSON.stringify(verdict.detail));
+  assert.equal(verdict.detail.comparedAsField, true);
+  assert.equal(verdict.detail.newValueStored, true);
+  assert.equal(verdict.detail.oldValueGone, true);
+});
+
+test('updateVerdict still fails when the field genuinely kept the old value', () => {
+  const verdict = updateVerdict({
+    ref: 'r1',
+    field: 'customer',
+    oldValue: 'Ada Lovelace',
+    newValue: 'Ada Lovelace (updated)',
+    pageText: 'Ada Lovelace (updated)',
+    apiStatus: 200,
+    apiText: JSON.stringify({ ref: 'r1', customer: 'Ada Lovelace' }),
+    rowsBefore: 3,
+    rowsAfter: 3,
+  });
+  assert.equal(verdict.passed, false);
+  assert.equal(verdict.detail.oldValueGone, false);
+  assert.equal(verdict.detail.newValueStored, false);
+});
+
+test('updateVerdict falls back to the textual comparison, and says so, when the API is not JSON', () => {
+  const verdict = updateVerdict({
+    ref: 'r1',
+    field: 'customer',
+    oldValue: 'Ada Lovelace',
+    newValue: 'Grace Hopper',
+    pageText: 'Grace Hopper',
+    apiStatus: 200,
+    apiText: '<p>Grace Hopper</p>',
+    rowsBefore: 1,
+    rowsAfter: 1,
+  });
+  assert.equal(verdict.passed, true);
+  assert.equal(verdict.detail.comparedAsField, false);
+});
+
 test('updateVerdict fails when the row count increased: a second row with the new value passes the other checks (tr-26 failure mode)', () => {
   const verdict = updateVerdict({
     ref: 'abc123',
