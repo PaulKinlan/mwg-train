@@ -31,7 +31,7 @@ Usage Policy, "Do Not Abuse our Platform" list, extracted line 124:
 > Utilization of inputs and outputs to train an AI model (e.g., "model scraping" or "model
 > distillation") without prior authorization from Anthropic
 
-The Consumer Terms incorporate that policy by reference, extracted lines 27-28:
+The Consumer Terms incorporate that policy by reference, extracted lines 26-27:
 
 > You may access and use our Services only in compliance with our Terms, including our Acceptable
 > Use Policy, [...]

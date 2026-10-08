@@ -125,13 +125,23 @@ while IFS='|' read -r slug url; do
     verdict="failed"
   fi
 
+  # Record where the bytes actually are: successful captures are raw/<slug> with a text extraction,
+  # failed ones are raw/<slug>.failed with no extraction (the body is kept for diagnosis only).
+  if [ "$verdict" = "ok" ]; then
+    raw_path="docs/provenance/evidence/raw/$slug"
+    text_path="docs/provenance/evidence/text/$slug.txt"
+  else
+    raw_path="docs/provenance/evidence/raw/$slug.failed"
+    text_path=""
+  fi
+
   jq -cn \
     --arg slug "$slug" --arg url "$url" --arg final_url "$final_url" \
     --arg code "$code" --arg ctype "$ctype" --argjson bytes "$bytes" \
     --arg sha256 "$sha" --arg fetched_at "$fetched_at" \
     --arg last_modified "$last_modified" --arg verdict "$verdict" \
-    --arg raw_path "docs/provenance/evidence/raw/$slug" \
-    --arg text_path "docs/provenance/evidence/text/$slug.txt" \
+    --arg raw_path "$raw_path" \
+    --arg text_path "$text_path" \
     '{slug:$slug,url:$url,final_url:$final_url,http_status:($code|tonumber? // 0),
       content_type:$ctype,bytes:$bytes,sha256:$sha256,fetched_at:$fetched_at,
       last_modified:$last_modified,verdict:$verdict,raw_path:$raw_path,text_path:$text_path}' \
@@ -141,6 +151,13 @@ while IFS='|' read -r slug url; do
     | jq -cs 'sort_by(.slug)' | jq -c '.[]' > "$EV/manifest.jsonl.new" \
     && mv "$EV/manifest.jsonl.new" "$EV/manifest.jsonl"
   rm -f "$EV/manifest.row"
+  # One row per slug is the invariant the docs and the quote checker rely on. Fail loudly rather
+  # than let a duplicate in.
+  dups=$(jq -r '.slug' "$EV/manifest.jsonl" | sort | uniq -d | tr '\n' ' ')
+  if [ -n "$dups" ]; then
+    echo "capture-rights-evidence: duplicate slug(s) in manifest: $dups" >&2
+    fail=$((fail + 1))
+  fi
   printf '%-30s %-4s %8s  %s\n' "$slug" "$code" "$bytes" "$verdict"
 done <<< "$SOURCES"
 

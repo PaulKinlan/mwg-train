@@ -28,7 +28,7 @@ and layout* are expression. It does not follow that a clean-room reproduction is
 lawful — branding, logos, distinctive trade dress and any copied text or assets remain outside the
 safe part of the sentence.
 
-RFC 9309 (Robots Exclusion Protocol), `rfc9309-robots`, extracted lines 78-79:
+RFC 9309 (Robots Exclusion Protocol), `rfc9309-robots`, extracted line 79:
 
 > These rules are not a form of access authorization.
 

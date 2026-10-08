@@ -14,7 +14,9 @@
 #                          hosted-api forces the row into A3_teacher_generated and requires
 #                          provider, model, account_ref and terms_ref
 #   rights_ref             the rights record under docs/provenance/ that covers this asset
-#   excluded_from_training defaults to true for quarantined arms and cannot be set false there
+#   excluded_from_training must be stated in a manifest row; makeRecord() fills it from the arm
+#                          default when a record is built in code (true for the quarantined arms).
+#                          Setting it false on a quarantined arm is rejected outright.
 #   approved_for_training  never a default; true requires approved_by and approved_at
 #   parents                asset ids this asset was derived from (used by the quarantined-ancestor check)
 {"id":"example-proj-0001","arm":"A1_self_generated","kind":"original","storage_path":"data/A1_self_generated/projects/example-proj-0001","generator":{"type":"open-weight","provider":"huggingface","model":"Qwen/Qwen2.5-Coder-7B-Instruct@c03e6d358207e414f1eca0bb1891e29f1db0e242"},"rights_ref":"docs/provenance/assets/student-base-models.md","created_at":"2026-10-08","excluded_from_training":false,"approved_for_training":true,"approved_by":"mwg-train-coord","approved_at":"2026-10-08","parents":[]}

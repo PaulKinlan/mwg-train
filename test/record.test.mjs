@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { ProvenanceError } from '../src/provenance/arms.mjs';
-import { makeRecord, parseManifest, validateManifest, validateRecord } from '../src/provenance/record.mjs';
+import { makeRecord, parseManifest, sourceLineOf, validateManifest, validateRecord } from '../src/provenance/record.mjs';
 
 const approvedSelfGenerated = {
   id: 'proj-0001',
@@ -171,6 +171,37 @@ test('a trainable asset may not descend from quarantined material', () => {
   assert.equal(clean.ok, true, JSON.stringify(clean.findings));
   assert.equal(clean.counts.trainable, 2);
   assert.equal(clean.counts.quarantined, 0);
+});
+
+test('findings carry the manifest line number, not the array index', () => {
+  const text = [
+    '# a comment header',
+    '# another comment',
+    '',
+    JSON.stringify(approvedSelfGenerated),
+    '',
+    JSON.stringify({ ...approvedSelfGenerated, id: 'proj-0002', kind: 'screenshot' }),
+  ].join('\n');
+  const { ok, findings } = validateManifest(parseManifest(text));
+  assert.equal(ok, false);
+  const badKind = findings.find((finding) => finding.code === 'BAD_KIND');
+  assert.equal(badKind.id, 'proj-0002');
+  assert.equal(badKind.line, 6, 'the bad record is on source line 6');
+  assert.equal(badKind.index, 1, 'the array index is still reported for API consumers');
+  assert.equal(sourceLineOf(parseManifest(text)[0]), 4, 'parseManifest remembers the source line');
+});
+
+test('created_at accepts ISO-8601 timestamps with a numeric offset', () => {
+  for (const created_at of ['2026-10-08', '2026-10-08T12:00:00Z', '2026-10-08T12:00:00+00:00', '2026-10-08T12:00:00.500-07:00']) {
+    assert.deepEqual(
+      validateRecord({ ...approvedSelfGenerated, created_at }).filter((finding) => finding.code === 'BAD_CREATED_AT'),
+      [],
+      created_at,
+    );
+  }
+  assert.ok(
+    codes(validateRecord({ ...approvedSelfGenerated, created_at: '8 October 2026' })).includes('BAD_CREATED_AT'),
+  );
 });
 
 test('a manifest with no trainable rows is valid but counts zero', () => {

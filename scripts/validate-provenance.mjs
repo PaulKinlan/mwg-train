@@ -40,7 +40,8 @@ console.log(
 );
 
 for (const finding of findings) {
-  const where = finding.index === undefined ? finding.id : `line ${finding.index + 1} (${finding.id})`;
+  const at = finding.line ?? (finding.index === undefined ? undefined : finding.index + 1);
+  const where = at === undefined ? finding.id : `line ${at} (${finding.id})`;
   console.log(`${finding.severity.toUpperCase()} ${finding.code} ${where} ${finding.field ? `[${finding.field}] ` : ''}${finding.message}`);
 }
 

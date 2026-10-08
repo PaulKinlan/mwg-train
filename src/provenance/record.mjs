@@ -28,7 +28,18 @@ export const GENERATOR_TYPES = Object.freeze(['human', 'open-weight', 'hosted-ap
 export const ID_PATTERN = /^[a-z0-9][a-z0-9._-]{0,127}$/;
 export const ASSET_RECORD_DIR = 'docs/provenance/assets';
 
-const ISO_DATE = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2})?(\.\d+)?Z?)?$/;
+/** `YYYY-MM-DD`, optionally with a time and either `Z` or a numeric UTC offset. */
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2})?(\.\d+)?(Z|[+-]\d{2}:?\d{2})?)?$/;
+
+/**
+ * Source line number of a parsed manifest row, when it came from parseManifest.
+ * Non-enumerable so it never leaks into JSON, artefact files or spreads.
+ */
+const SOURCE_LINE = Symbol('mwg-train.sourceLine');
+
+export function sourceLineOf(row) {
+  return typeof row === 'object' && row !== null ? row[SOURCE_LINE] : undefined;
+}
 
 /** Fill in the defaults a record is allowed to omit. Everything else must be stated explicitly. */
 export function makeRecord(input) {
@@ -165,11 +176,18 @@ export function parseManifest(text) {
   text.split('\n').forEach((line, index) => {
     const trimmed = line.trim();
     if (trimmed === '' || trimmed.startsWith('#')) return;
+    let parsed;
     try {
-      rows.push(JSON.parse(trimmed));
+      parsed = JSON.parse(trimmed);
     } catch (error) {
       throw new ProvenanceError('BAD_MANIFEST_LINE', `manifest line ${index + 1} is not valid JSON: ${error.message}`);
     }
+    // Remember where the row came from: comments and blank lines mean the array index is not the
+    // file line, and a finding the operator cannot locate in the file is a finding they will ignore.
+    if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
+      Object.defineProperty(parsed, SOURCE_LINE, { value: index + 1, enumerable: false });
+    }
+    rows.push(parsed);
   });
   return rows;
 }
@@ -185,7 +203,8 @@ export function validateManifest(rows) {
   const byId = new Map();
 
   rows.forEach((row, index) => {
-    const recordFindings = validateRecord(row).map((finding) => ({ ...finding, index }));
+    const line = sourceLineOf(row) ?? index + 1;
+    const recordFindings = validateRecord(row).map((finding) => ({ ...finding, index, line }));
     findings.push(...recordFindings);
     if (isPlainObject(row) && nonEmptyString(row.id)) {
       if (byId.has(row.id)) {
@@ -194,16 +213,17 @@ export function validateManifest(rows) {
           severity: 'error',
           id: row.id,
           index,
+          line,
           field: 'id',
           message: `id '${row.id}' appears more than once; asset ids are immutable and unique`,
         });
       } else {
-        byId.set(row.id, { row, index });
+        byId.set(row.id, { row, index, line });
       }
     }
   });
 
-  for (const [id, { row, index }] of byId) {
+  for (const [id, { row, index, line }] of byId) {
     for (const parent of Array.isArray(row.parents) ? row.parents : []) {
       if (!byId.has(parent)) {
         findings.push({
@@ -211,6 +231,7 @@ export function validateManifest(rows) {
           severity: 'error',
           id,
           index,
+          line,
           field: 'parents',
           message: `parent '${parent}' is not in the manifest`,
         });
@@ -218,7 +239,7 @@ export function validateManifest(rows) {
     }
   }
 
-  for (const [id, { row, index }] of byId) {
+  for (const [id, { row, index, line }] of byId) {
     if (row.approved_for_training !== true) continue;
     const quarantinedAncestor = findQuarantinedAncestor(id, byId);
     if (quarantinedAncestor) {
@@ -227,6 +248,7 @@ export function validateManifest(rows) {
         severity: 'error',
         id,
         index,
+        line,
         field: 'parents',
         message: `asset '${id}' is approved for training but descends from quarantined asset '${quarantinedAncestor.id}' (arm ${quarantinedAncestor.arm})`,
       });

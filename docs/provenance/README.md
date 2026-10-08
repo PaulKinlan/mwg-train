@@ -117,6 +117,13 @@ data/A6_evaluation/
   has changed since the review, the review is stale and the record says so by date.
 - Every quotation in `accounts/` and `assets/` is followed by the extracted-text line number, so
   `sed -n '<line>p' evidence/text/<slug>.txt` prints it.
+- A capture that returned a non-200 status has **no text extraction**: its body is kept locally as
+  `evidence/raw/<slug>.failed` for diagnosis and its manifest row records `verdict: "failed"`, an
+  empty `text_path` and the URL that failed. Those rows are deliberate: they document the OpenAI
+  origin returning 403 to curl and the two commonly-cited Z.ai URLs returning 404.
+- `node scripts/check-provenance-quotes.mjs` re-derives every blockquote in this directory from the
+  local captures and checks the cited line numbers, so a quote or citation that drifts is caught
+  rather than trusted. It currently reports 29/29 quotes and 29/29 citations.
 - `test/` covers the enforcement rules end to end (`node --test`).
 
 ## 6. Open items

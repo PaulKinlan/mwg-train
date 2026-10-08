@@ -16,7 +16,7 @@
 | DeepSeek Open Platform Terms of Service | Effective April 29, 2026 | `2b433c53cbac7549` |
 
 The Open Platform ToS requires API users to comply with the Terms of Use as well: extracted
-lines 75-77 of `deepseek-platform-tos.txt` —
+lines 73-75 of `deepseek-platform-tos.txt` —
 
 > As a user of this Open Platform Service, you should procure that both of you and your end users
 > comply with the requirements of the "DeepSeek Terms of Use" (especially regarding user conduct
@@ -27,7 +27,7 @@ prohibition in the other.
 
 ## The permissive clauses
 
-Terms of Use, section 4.2, extracted lines 244-249:
+Terms of Use, section 4.2, extracted lines 240-249:
 
 > (2) We assign any rights, title, and interests—if any—in the Outputs of the Services to you; (3)
 > You may apply the Inputs and Outputs of the Services to a wide range of use cases, including
@@ -48,7 +48,7 @@ is the provider to prefer if the experiment wants an approved teacher arm early.
 Open Platform ToS, section 3.1 (extracted lines 78-83): the compliance duty described above, plus no
 infringement of others' rights and no disruption of platform order.
 
-Terms of Use, prohibited uses (extracted lines 218-225), include:
+Terms of Use, prohibited uses (extracted lines 222-227), include:
 
 > (3) Engaging in activities that infringe on intellectual property rights, trade secrets, and other
 > violations of business ethics, or using algorithms, data, platforms, etc., to implement
