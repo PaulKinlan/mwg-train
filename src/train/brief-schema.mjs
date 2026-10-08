@@ -137,7 +137,8 @@ export function hasUnpairedSurrogate(value) {
   return false;
 }
 
-const COMPLETE_SELECTOR = /^(input|textarea|select)\[\s*name\s*=\s*(?:"([^"\\\n\r]+)"|'([^'\\\n\r]+)'|([A-Za-z_-][A-Za-z0-9_-]*))\s*\]$/i;
+const COMPLETE_SELECTOR =
+  /^(input|textarea|select)\[\s*name\s*=\s*(?:"([^"\\\n\r]+)"|'([^'\\\n\r]+)'|((?:[A-Za-z_]|-[A-Za-z_-])[A-Za-z0-9_-]*))\s*\]$/i;
 
 /**
  * The field a selector addresses, but only when it is a complete single-form selector.

@@ -503,3 +503,24 @@ test('names Chrome round-trips unchanged are allowed', () => {
   assert.deepEqual(validateBriefSchema(row), []);
 });
 
+
+// An unquoted attribute value must be a valid CSS identifier. Measured in Chrome: `[name=-foo]` and
+// `[name=--foo]` parse, while `[name=-1]` and `[name=-]` throw a SyntaxError, because a hyphen
+// followed by a digit or by nothing does not start an identifier. The rule accepted both before, so a
+// brief could write a selector the browser cannot parse - the same class of bug as the CSS escape,
+// caught one shape later. Quoting reaches every one of these names, so nothing became unaddressable.
+test('an unquoted name must be a valid CSS identifier', () => {
+  assert.equal(completeSelectorFieldName('input[name=-1]'), null, 'a hyphen then a digit is not an identifier');
+  assert.equal(completeSelectorFieldName('input[name=-]'), null, 'a lone hyphen is not an identifier');
+  assert.equal(completeSelectorFieldName('input[name=1x]'), null);
+  for (const ident of ['-foo', '--foo', '-a-', 'x-', 'a--b', '_x', 'x1', 'customer']) {
+    assert.equal(completeSelectorFieldName(`input[name=${ident}]`), ident, `${ident} is a valid identifier`);
+  }
+  // The quoted form still reaches a name the unquoted form cannot express.
+  assert.equal(completeSelectorFieldName('input[name="-1"]'), '-1');
+  const row = brief({
+    fields: [{ slug: 'minus', name: '-1', type: 'text', label: 'Minus', required: true, echoed: true }],
+    journey: { startPath: '/', formSelector: 'form#f', fill: { 'input[name="-1"]': 'x' }, expectText: 'x' },
+  });
+  assert.deepEqual(validateBriefSchema(row), [], 'a legitimate -1 field is addressable when quoted');
+});
