@@ -455,7 +455,135 @@ const sessionTables = (archetype) =>
       ].join('\n')
     : '';
 
+/*
+ * The functional-route capabilities (mwg-train-37a): list pages, a detail page, and account
+ * login/logout. Every block below is emitted ONLY when the archetype's spec opts in
+ * (`capabilities` / `seed_accounts`); a spec that declares none of them regenerates byte-identically,
+ * which is the hard gate on the 35 frozen pilot trees. The fragments are built from quoted strings,
+ * like sessionTables, so the generated code needs no escaping of its own.
+ */
+
+const capabilitiesOf = (archetype) => ({ list_pages: false, detail_page: false, auth: false, ...(archetype.capabilities ?? {}) });
+
+/** The small page renderers the capability handlers share, emitted only when a capability needs them. */
+const capabilityPages = () =>
+  [
+    "const esc = (value) => String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;');",
+    "const capabilityPage = (title, body) => '<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><title>' + esc(title) + '</title><link rel=\"stylesheet\" href=\"/app/styles.css\"></head><body><main>' + body + '</main></body></html>';",
+    "const loginPage = (error) => capabilityPage('Sign in', '<h1>Sign in</h1>' + (error ? '<p role=\"alert\">' + esc(error) + '</p>' : '') + '<form method=\"post\" action=\"/login\"><label for=\"email\">Email</label><input type=\"email\" id=\"email\" name=\"email\" required autocomplete=\"username\"><label for=\"password\">Password</label><input type=\"password\" id=\"password\" name=\"password\" required autocomplete=\"current-password\"><button type=\"submit\">Sign in</button></form>');",
+    "const listPage = (title, detailPrefix, rows) => capabilityPage(title, '<h1>' + esc(title) + '</h1><ul>' + rows.map((row) => '<li><a href=\"' + detailPrefix + esc(row.ref) + '\">' + esc(row.ref) + '</a> ' + esc(JSON.stringify(row.payload)) + '</li>').join('') + '</ul>');",
+    "const detailPage = (row) => capabilityPage('Record ' + row.ref, '<h1>Record ' + esc(row.ref) + '</h1><dl>' + Object.entries(JSON.parse(row.payload)).map(([key, value]) => '<dt>' + esc(key) + '</dt><dd>' + esc(value) + '</dd>').join('') + '</dl>');",
+  ].join('\n');
+
+/** The auth capability's tables, statements and seed accounts (the accounts table itself is per-arm). */
+const authTables = (archetype) =>
+  [
+    "db.exec('CREATE TABLE IF NOT EXISTS auth_sessions (sid TEXT PRIMARY KEY, email TEXT NOT NULL, created_at TEXT NOT NULL)');",
+    "const insertAuthSession = db.prepare('INSERT INTO auth_sessions (sid, email, created_at) VALUES (?, ?, ?)');",
+    "const selectAuthSession = db.prepare('SELECT email FROM auth_sessions WHERE sid = ?');",
+    "const deleteAuthSession = db.prepare('DELETE FROM auth_sessions WHERE sid = ?');",
+    "const selectAccount = db.prepare('SELECT email, display_name FROM accounts WHERE email = ? AND password = ?');",
+    ...(archetype.seedAccounts ?? []).map(
+      (account) =>
+        `db.prepare('INSERT OR IGNORE INTO accounts (email, password, display_name) VALUES (?, ?, ?)').run(${JSON.stringify(account.email)}, ${JSON.stringify(account.password)}, ${JSON.stringify(account.display_name ?? null)});`,
+    ),
+    'const sessionSid = (cookieHeader) =>',
+    "  (cookieHeader ?? '')",
+    "    .split(';')",
+    '    .map((part) => part.trim())',
+    "    .find((part) => part.startsWith('sid='))",
+    "    ?.slice('sid='.length);",
+    'const authSessionEmail = (cookieHeader) => {',
+    '  const sid = sessionSid(cookieHeader);',
+    '  return sid ? selectAuthSession.get(sid)?.email : undefined;',
+    '};',
+  ].join('\n');
+
+/** The login/logout handlers, raw arm. */
+const rawAuthRoutes = () =>
+  [
+    "  if (path === '/login' && request.method === 'GET') return html(response, loginPage());",
+    "  if (path === '/login' && request.method === 'POST') {",
+    '    const body = await parseBody(request);',
+    "    const account = selectAccount.get(String(body.email ?? ''), String(body.password ?? ''));",
+    "    if (!account) return html(response, loginPage('Those credentials did not match an account.'), 401);",
+    '    const sid = randomUUID();',
+    '    insertAuthSession.run(sid, account.email, new Date().toISOString());',
+    "    response.writeHead(303, { location: '/', 'set-cookie': 'sid=' + sid + '; HttpOnly; SameSite=Lax; Path=/; Max-Age=3600' });",
+    '    return response.end();',
+    '  }',
+    "  if (path === '/logout' && request.method === 'POST') {",
+    '    const sid = sessionSid(request.headers.cookie);',
+    '    if (sid) deleteAuthSession.run(sid);',
+    "    response.writeHead(303, { location: '/', 'set-cookie': 'sid=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0' });",
+    '    return response.end();',
+    '  }',
+  ].join('\n');
+
+/** The login/logout handlers, hono arm. */
+const honoAuthRoutes = () =>
+  [
+    "app.get('/login', (c) => c.html(loginPage()));",
+    "app.post('/login', async (c) => {",
+    '  const body = await c.req.parseBody();',
+    "  const account = selectAccount.get(String(body.email ?? ''), String(body.password ?? ''));",
+    "  if (!account) return c.html(loginPage('Those credentials did not match an account.'), 401);",
+    '  const sid = randomUUID();',
+    '  insertAuthSession.run(sid, account.email, new Date().toISOString());',
+    "  c.header('set-cookie', 'sid=' + sid + '; HttpOnly; SameSite=Lax; Path=/; Max-Age=3600');",
+    "  return c.redirect('/', 303);",
+    '});',
+    "app.post('/logout', (c) => {",
+    "  const sid = sessionSid(c.req.header('cookie'));",
+    '  if (sid) deleteAuthSession.run(sid);',
+    "  c.header('set-cookie', 'sid=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0');",
+    "  return c.redirect('/', 303);",
+    '});',
+  ].join('\n');
+
+/** The auth guard a protected page runs first (raw arm). */
+const RAW_AUTH_GUARD = [
+  '    if (!authSessionEmail(request.headers.cookie)) {',
+    "      response.writeHead(303, { location: '/login' });",
+    '      return response.end();',
+    '    }',
+].join('\n');
+
+/** The functional list-page handlers, raw arm: one per declared list route. */
+const rawListRoutes = (archetype, auth) => {
+  const detailPrefix = archetype.routes.find((route) => route.kind === 'read-by-reference')?.path.replace(/:ref.*$/, '') ?? '/record/';
+  return archetype.routes
+    .filter((route) => route.kind === 'list')
+    .map((route) =>
+      [
+        `  if (path === '${route.path}' && request.method === 'GET') {`,
+        ...(auth ? [RAW_AUTH_GUARD] : []),
+        '    const rows = list.all();',
+        `    return html(response, listPage(${JSON.stringify(route.path)}, ${JSON.stringify(detailPrefix)}, rows));`,
+        '  }',
+      ].join('\n'),
+    )
+    .join('\n\n');
+};
+
+/** The functional list-page handlers, hono arm. */
+const honoListRoutes = (archetype, auth) => {
+  const detailPrefix = archetype.routes.find((route) => route.kind === 'read-by-reference')?.path.replace(/:ref.*$/, '') ?? '/record/';
+  return archetype.routes
+    .filter((route) => route.kind === 'list')
+    .map((route) =>
+      [
+        `app.get('${route.path}', (c) => {`,
+        ...(auth ? ["  if (!authSessionEmail(c.req.header('cookie'))) return c.redirect('/login', 303);"] : []),
+        `  return c.html(listPage(${JSON.stringify(route.path)}, ${JSON.stringify(detailPrefix)}, list.all()));`,
+        '});',
+      ].join('\n'),
+    )
+    .join('\n');
+};
+
 function serverSource(archetype, framework, defects = []) {
+  const caps = capabilitiesOf(archetype);
   const writeRoute = archetype.routes.find((route) => route.method === 'POST' && route.kind.startsWith('write'));
   const insecureCookie = archetype.session && !framework.cookieFlags;
   const cookieFlags = archetype.session
@@ -504,7 +632,7 @@ db.exec(\`CREATE TABLE IF NOT EXISTS accounts (email TEXT PRIMARY KEY, password 
 const insert = db.prepare('INSERT INTO records (ref, created_at, payload) VALUES (?, ?, ?)');
 const select = db.prepare('SELECT ref, created_at, payload FROM records WHERE ref = ?');
 ${sessionTables(archetype)}
-const count = db.prepare('SELECT COUNT(*) AS n FROM records');
+${caps.auth ? `${authTables(archetype)}\n` : ''}const count = db.prepare('SELECT COUNT(*) AS n FROM records');
 const list = db.prepare('SELECT ref, payload FROM records ORDER BY created_at DESC LIMIT 50');
 
 
@@ -526,7 +654,7 @@ const json = (response, value, status = 200, headers = {}) => {
   response.end(JSON.stringify(value));
 };
 
-const REQUIRED = ${JSON.stringify(archetype.fields.filter((field) => field.type !== 'select' && !field.optional).map((field) => field.name))};
+${caps.list_pages || caps.detail_page || caps.auth ? `${capabilityPages()}\n` : ''}const REQUIRED = ${JSON.stringify(archetype.fields.filter((field) => field.type !== 'select' && !field.optional).map((field) => field.name))};
 
 ${enforceMin ? `const MIN_BOUNDS = ${JSON.stringify(minBounds)};\n` : ''}// The cart form has its own fields. Validating it against the search form's required list refused every
 // cart POST with 422, which the write journey caught: a second form on one page needs a second rule.
@@ -613,11 +741,16 @@ ${archetype.session ? `    // The session is what makes the follow-up page show 
       response.writeHead(404, { 'content-type': 'text/html; charset=utf-8' });
       return response.end('<!doctype html><title>Not found</title><p>We could not find that record.</p>');
     }
-    return html(response, await renderDocument({ title: 'Your submission', data: { ref: row.ref } }));
-  }
+${caps.detail_page ? `${caps.auth ? `${RAW_AUTH_GUARD}\n` : ''}    return html(response, detailPage(row));
+` : `    return html(response, await renderDocument({ title: 'Your submission', data: { ref: row.ref } }));
+`}  }
 
   if (path === '/api/me' && request.method === 'GET') {
-    // The session echo: who the server thinks you are, from the cookie it issued.
+${caps.auth ? `    // The account session echo: which account the login cookie belongs to.
+    const email = authSessionEmail(request.headers.cookie);
+    if (!email) return json(response, { error: 'no session' }, 401);
+    return json(response, { email });
+` : `    // The session echo: who the server thinks you are, from the cookie it issued.
     const sid = (request.headers.cookie ?? '')
       .split(';')
       .map((part) => part.trim())
@@ -627,7 +760,7 @@ ${archetype.session ? `    // The session is what makes the follow-up page show 
     const record = session ? select.get(session.ref) : undefined;
     if (!record) return json(response, { error: 'no session' }, 401);
     return json(response, { ref: record.ref, ...JSON.parse(record.payload) });
-  }
+`}  }
 
   if (path === '/api/records' && request.method === 'GET') {
     // The write journey's read side: what the server actually stored, listed back to the caller.
@@ -643,13 +776,13 @@ ${archetype.session ? `    // The session is what makes the follow-up page show 
   // A route the archetype declares is a route the server must serve: /account was declared as the
   // account flow's page and never implemented, so the journey landed on a 404.
   if (${JSON.stringify(archetype.routes.filter((route) => route.kind === 'read-session').map((route) => route.path))}.includes(path) && request.method === 'GET') {
-    return html(response, await renderDocument({ title: 'Your account' }));
+${caps.auth ? `${RAW_AUTH_GUARD}\n` : ''}    return html(response, await renderDocument({ title: 'Your account' }));
   }
 
-  if (path === '/roster' || path === '/inbox' || path === '/attendees' || path === '/cart') {
+${caps.auth ? `${rawAuthRoutes()}\n\n` : ''}${caps.list_pages ? rawListRoutes(archetype, caps.auth) : `  if (path === '/roster' || path === '/inbox' || path === '/attendees' || path === '/cart') {
     const rows = list.all().map((row) => ({ ref: row.ref, ...JSON.parse(row.payload) }));
     return html(response, await renderDocument({ title: 'Records', data: { rows } }));
-  }
+  }`}
 
   if (path === '/search' && request.method === 'GET') {
     const query = url.searchParams.get('q') ?? '';
@@ -670,6 +803,7 @@ server.listen(port, '127.0.0.1', () => {
 
 /** The Hono arm's server: Hono owns routing and responses, node:http only carries them. */
 function honoServerSource(archetype, framework, defects = []) {
+  const caps = capabilitiesOf(archetype);
   const writeRoute = archetype.routes.find((route) => route.method === 'POST' && route.kind.startsWith('write'));
   const cookieFlags = archetype.session ? 'HttpOnly; SameSite=Lax; Path=/; Max-Age=3600' : null;
   // Hono routes :param segments natively, so a parameterised write path needs no rewrite here. Only the
@@ -720,7 +854,10 @@ const EXTRA_REQUIRED = ${JSON.stringify([
 ])};
 const requiredFor = (path) => (EXTRA_ACTION !== '' && path === EXTRA_ACTION ? EXTRA_REQUIRED : REQUIRED);
 ${sessionTables(archetype)}
-const requestLog = [];
+${caps.auth ? `db.exec('CREATE TABLE IF NOT EXISTS accounts (email TEXT PRIMARY KEY, password TEXT NOT NULL, display_name TEXT)');
+${authTables(archetype)}
+` : ''}${caps.list_pages || caps.detail_page || caps.auth ? `${capabilityPages()}
+` : ''}const requestLog = [];
 const app = new Hono();
 app.use('*', async (c, next) => {
   await next();
@@ -774,12 +911,16 @@ const readPath = ${JSON.stringify(archetype.routes.find((route) => route.kind ==
 app.get(readPath, (c) => {
   const row = select.get(c.req.param('ref'));
   if (!row) return c.text('We could not find that record.', 404);
-  return c.html(renderDocument({ title: 'Your submission' }));
+${caps.detail_page ? `${caps.auth ? "  if (!authSessionEmail(c.req.header('cookie'))) return c.redirect('/login', 303);\n" : ''}  return c.html(detailPage(row));` : "  return c.html(renderDocument({ title: 'Your submission' }));"}
 });
 
 app.get('/api/records', (c) => c.json(list.all().map((row) => ({ ref: row.ref, ...JSON.parse(row.payload) }))));
 
-app.get('/api/me', (c) => {
+${caps.auth ? `app.get('/api/me', (c) => {
+  const email = authSessionEmail(c.req.header('cookie'));
+  if (!email) return c.json({ error: 'no session' }, 401);
+  return c.json({ email });
+});` : `app.get('/api/me', (c) => {
   const sid = (c.req.header('cookie') ?? '')
     .split(';')
     .map((part) => part.trim())
@@ -789,7 +930,7 @@ app.get('/api/me', (c) => {
   const record = session ? select.get(session.ref) : undefined;
   if (!record) return c.json({ error: 'no session' }, 401);
   return c.json({ ref: record.ref, ...JSON.parse(record.payload) });
-});
+});`}
 
 app.get('/api/record/:ref', (c) => {
   const row = select.get(c.req.param('ref'));
@@ -798,12 +939,17 @@ app.get('/api/record/:ref', (c) => {
 });
 
 for (const sessionPage of ${JSON.stringify(archetype.routes.filter((route) => route.kind === 'read-session').map((route) => route.path))}) {
-  app.get(sessionPage, (c) => c.html(renderDocument({ title: 'Your account' })));
+${caps.auth ? `  app.get(sessionPage, (c) => {
+    if (!authSessionEmail(c.req.header('cookie'))) return c.redirect('/login', 303);
+    return c.html(renderDocument({ title: 'Your account' }));
+  });` : "  app.get(sessionPage, (c) => c.html(renderDocument({ title: 'Your account' })));"}
 }
 
-for (const listing of ['/roster', '/inbox', '/attendees', '/cart']) {
+${caps.auth ? `${honoAuthRoutes()}
+
+` : ''}${caps.list_pages ? `${honoListRoutes(archetype, caps.auth)}` : `for (const listing of ['/roster', '/inbox', '/attendees', '/cart']) {
   app.get(listing, (c) => c.html(renderDocument({ title: 'Records' })));
-}
+}`}
 
 app.get('/search', (c) => c.html(renderDocument({ title: \`Search: \${c.req.query('q') ?? ''}\` })));
 
