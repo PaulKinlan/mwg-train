@@ -178,6 +178,31 @@ endpoint on its own: the primary endpoint needs the functional journey to pass a
 
 Execution happens in sandboxed, network-limited containers with no real secrets.
 
+### 8a. Owner-auth contamination gate (corpus acceptance)
+
+Added 2026-10-08, before the freeze, at the owner's direction: *"we just need to make sure when
+training owner Auth is not included to bias the results."* Read precisely: the brief deliberately
+requires some archetypes to contain **synthetic** authenticated demo sessions with fake users as a
+feature (design brief clause 2), so the rule is not "no auth anywhere". The rule is **no owner
+auth**: the owner's identity, tokens, session secrets, and the corpus viewer's own gate mechanism
+must never appear in a site's source or in a corpus record. A model trained on owner-auth
+scaffolding could learn the gate's idiom rather than the MWG property, and nothing else in the
+acceptance criteria would reveal that contamination.
+
+The gate, enforced by code (`scripts/scan-owner-auth.mjs`, driven by `docs/eval/owner-identity.json`):
+
+1. **Every accepted pair is scanned** - both the original and the uplifted tree - for
+   owner-identifying material: the owner's handle, name and domains; credential environment-variable
+   names and token formats; the fronting proxy's header names and endpoints. Findings are reported
+   by pattern id, file and line, never by matched text.
+2. **Every site runs with no auth headers present.** The serving path forwards request headers from
+   an allowlist, namespaces cookies it issues itself, and re-scans the outbound header set before
+   every request; a forbidden header that survives is a serving refusal, not a leak.
+3. **Fail-closed.** If the identity configuration is missing, unreadable or invalid, the scan
+   reports ERROR and the pair is not accepted; a tree that cannot be scanned is not served.
+4. The forbidden-pattern list (`docs/eval/owner-identity.json`) is versioned with the corpus;
+   changing it after the freeze is a deviation recorded in §14.
+
 **One entry point produces a verdict.** `analyseSealed()` in `src/eval/endpoint.mjs` checks the
 sealed universe (every brief in the `test` split, task `generate`, and the set hashing to the seal
 in §13) and a complete design before it computes anything, and returns the problems instead of a
@@ -227,6 +252,8 @@ a rater disagree, both are reported.
 - [ ] the applicability map and the check implementation tagged with the same commit as the seal
 - [ ] the corpus manifest validated, with `--corpus` confirming no family crosses into the held-out
       set
+- [ ] the owner-auth gate (§8a) has passed over every accepted pair, with the identity
+      configuration hash recorded in the run record
 - [ ] arms C1–C3 and T run on the same evaluator build, in a random order per brief, with the
       evaluator blind to the arm label
 

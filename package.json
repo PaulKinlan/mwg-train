@@ -29,7 +29,9 @@
     "pilot:corpus": "node scripts/pilot-corpus.mjs --record",
     "check:pilot-corpus": "node scripts/pilot-corpus.mjs --verify",
     "check:train-evidence": "node scripts/check-train-evidence.mjs",
-    "price:two-backends": "node scripts/price-two-backends.mjs"
+    "price:two-backends": "node scripts/price-two-backends.mjs",
+    "viewer": "node src/viewer/server.mjs",
+    "scan:owner-auth": "node scripts/scan-owner-auth.mjs --corpus pilot"
   },
   "license": "UNLICENSED",
   "dependencies": {

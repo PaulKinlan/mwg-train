@@ -1,0 +1,62 @@
+{
+  "$comment": "Owner-identity scan configuration. This is the corpus rule Paul set on 2026-10-08: NO OWNER AUTH anywhere in a generated site or its corpus record - synthetic demo login with fake users is a wanted FEATURE of some archetypes, but the owner's identity, tokens, session secrets and the viewer/gate mechanism itself must never appear in a site's source. This file lists exactly what the scan forbids. It is deliberately explicit and reviewable: a pattern that is not listed here is not scanned for, so extend it whenever a new owner-identifying surface appears. FAIL-CLOSED: if this file is missing, unreadable or invalid, the scan reports ERROR and the pair is not accepted. Owner: review the identifiers list - it contains only identifiers that are already public (GitHub handle, name, blog domain); add private identifiers (e.g. email addresses) only in a private overlay config, never committed values you would not want public.",
+  "version": 1,
+  "owner_identifiers": [
+    "paulkinlan",
+    "paul kinlan",
+    "paul.kinlan",
+    "paul-kinlan",
+    "kinlan.me"
+  ],
+  "credential_env_names": [
+    "GITHUB_TOKEN",
+    "GH_TOKEN",
+    "GITHUB_PAT",
+    "ANTHROPIC_API_KEY",
+    "OPENAI_API_KEY",
+    "GEMINI_API_KEY",
+    "GOOGLE_API_KEY",
+    "DEEPSEEK_API_KEY",
+    "ZAI_API_KEY",
+    "KIMI_API_KEY",
+    "QWEN_API_KEY",
+    "DASHSCOPE_API_KEY",
+    "HF_TOKEN",
+    "HUGGING_FACE_HUB_TOKEN",
+    "AWS_SECRET_ACCESS_KEY",
+    "AWS_SESSION_TOKEN"
+  ],
+  "proxy_header_names": [
+    "x-auth-request-user",
+    "x-auth-request-email",
+    "x-auth-request-access-token",
+    "x-forwarded-user",
+    "x-forwarded-email",
+    "x-exe-user",
+    "x-exe-auth",
+    "x-viewer-auth"
+  ],
+  "proxy_endpoints": [
+    "127.0.0.1:9999",
+    "localhost:9999",
+    "mwg-train.exe.xyz",
+    ".exe.xyz:"
+  ],
+  "token_patterns": [
+    { "id": "github-pat", "regex": "github_pat_[A-Za-z0-9_]{20,}" },
+    { "id": "github-oauth", "regex": "gho_[A-Za-z0-9]{20,}" },
+    { "id": "github-user-to-server", "regex": "ghu_[A-Za-z0-9]{20,}" },
+    { "id": "github-server-to-server", "regex": "ghs_[A-Za-z0-9]{20,}" },
+    { "id": "github-refresh", "regex": "ghr_[A-Za-z0-9]{20,}" },
+    { "id": "openai-key", "regex": "sk-[A-Za-z0-9_-]{20,}" },
+    { "id": "anthropic-key", "regex": "sk-ant-[A-Za-z0-9_-]{20,}" },
+    { "id": "google-api-key", "regex": "AIza[0-9A-Za-z_-]{35}" },
+    { "id": "aws-access-key", "regex": "AKIA[0-9A-Z]{16}" },
+    { "id": "generic-bearer-assignment", "regex": "(authorization|access_token|api[_-]?key|secret)['\"\\s:=]+[A-Za-z0-9_./+-]{24,}" }
+  ],
+  "scan": {
+    "skip_dirs": ["node_modules", ".git"],
+    "skip_extensions": [".png", ".jpg", ".jpeg", ".gif", ".webp", ".ico", ".woff", ".woff2", ".ttf", ".otf", ".sqlite", ".db", ".zip", ".gz", ".br"],
+    "max_file_bytes": 1048576
+  }
+}
