@@ -61,7 +61,14 @@ function killChildren() {
       try {
         const stat = readFileSync(`/proc/${entry}/stat`, 'utf8');
         const afterName = stat.slice(stat.lastIndexOf(')') + 2).split(' ');
-        if (Number(afterName[1]) === process.pid) process.kill(Number(entry), 'SIGKILL');
+        if (Number(afterName[1]) !== process.pid) continue;
+        // The child's own process group first, so its whole tree goes: a browser spawned detached leaves
+        // children that do not carry the profile directory, and they outlive a kill aimed at the parent.
+        try {
+          process.kill(-Number(entry), 'SIGKILL');
+        } catch {
+          process.kill(Number(entry), 'SIGKILL');
+        }
       } catch {
         /* exited between listing and reading */
       }
