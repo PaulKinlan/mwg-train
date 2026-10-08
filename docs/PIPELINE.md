@@ -1,5 +1,7 @@
 # The mwg-train pipeline
 
+> **mwg-train deterministic baseline** - deterministic output of this repository's own tooling, not an official `web-uplift` result.
+
 Seven stages, each with a nameable input and output. Nothing downstream of a stage may use
 anything except that stage's recorded output — that is what makes the eval honest and the training
 data attributable.

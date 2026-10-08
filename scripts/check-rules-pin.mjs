@@ -19,7 +19,7 @@
  */
 import { readFileSync } from 'node:fs';
 import process from 'node:process';
-import { checkRulesetPin, extractVocabulary, guideIdsHash, MWG_CANONICAL, readCatalog, ruleSetHash } from '../src/eval/ruleset.mjs';
+import { checkRulesetPin, describe, extractVocabulary, guideIdsHash, MWG_CANONICAL, readCatalog, ruleSetHash } from '../src/eval/ruleset.mjs';
 
 function parseArgs(argv) {
   const args = { rules: 'docs/eval/rules.json', catalog: MWG_CANONICAL.file, requireCatalog: false, skillDir: null, json: false };
@@ -78,7 +78,10 @@ if (rules && args.skillDir) {
     if (installedHash !== rules.rule_set_hash) {
       findings.push({
         code: 'SKILL_DIR_MISMATCH',
-        message: `the vocabulary installed at ${args.skillDir} hashes to ${installedHash}, but ${args.rules} pins ${rules.rule_set_hash ?? '(absent)'}; the snapshot is not the installed skill`,
+        // describe(), not raw interpolation: a parsed rule_set_hash without a usable toString threw here
+        // and the surrounding catch reported it as SKILL_DIR_UNREADABLE, blaming the skill directory for a
+        // malformed rules file.
+        message: `the vocabulary installed at ${args.skillDir} hashes to ${installedHash}, but ${args.rules} pins ${describe(rules.rule_set_hash ?? '(absent)')}; the snapshot is not the installed skill`,
       });
     }
     if (guideIdsHash(categories) !== MWG_CANONICAL.guideIdsSha256) {

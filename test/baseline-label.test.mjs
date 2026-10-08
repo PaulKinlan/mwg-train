@@ -12,7 +12,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { checkBaselineLabel, falseProvenance } from '../scripts/check-baseline-label.mjs';
+import { checkBaselineLabel, discoverUnlabelledFloorEvidence, EXCLUSIONS, falseProvenance } from '../scripts/check-baseline-label.mjs';
 import { labelDocuments } from '../scripts/label-baseline.mjs';
 import { BASELINE_LABEL, baselineAttributionLine } from '../src/eval/ruleset.mjs';
 
@@ -106,6 +106,8 @@ test('a report that claims web-uplift authorship fails even when labelled', () =
     // Authorship by noun rather than by verb, which no pattern covered.
     writeFileSync(path, `# Report\n\n${baselineAttributionLine()}\n\nThis floor is a web-uplift product\n`);
     assert.deepEqual(checkBaselineLabel([path]).map((f) => f.code), ['FALSE_PROVENANCE']);
+    writeFileSync(path, `# Report\n\n${baselineAttributionLine()}\n\nThis floor is a web-uplift result\n`);
+    assert.deepEqual(checkBaselineLabel([path]).map((f) => f.code), ['FALSE_PROVENANCE']);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
@@ -128,6 +130,9 @@ test('our own disclaimer is not mistaken for a claim', () => {
   // Review found this flagged as a false positive: the preposition attaches to 'rules', which are theirs,
   // so this is a true statement about where our rules came from, not a claim about our floor.
   assert.equal(falseProvenance('Our baseline uses rules from web-uplift.'), null);
+  // The possessive attaches to the noun after it, so this is about their rules and not our floor.
+  assert.equal(falseProvenance("Our baseline uses web-uplift's rules."), null);
+  assert.equal(falseProvenance("We follow web-uplift's guides."), null);
 });
 
 test('a registered report that is missing fails rather than passing quietly', () => {
@@ -135,6 +140,32 @@ test('a registered report that is missing fails rather than passing quietly', ()
   // false, and a check that skips missing files reports success having checked nothing.
   const found = checkBaselineLabel(['docs/eval/conformance/does-not-exist.md']);
   assert.deepEqual(found.map((f) => f.code), ['REPORT_MISSING']);
+});
+
+test('the scan finds floor evidence the registry does not list', () => {
+  // This is the structural fix for a finding that returned four times: a list can only cover what its
+  // author thought of, so coverage is now discovered from the tree rather than asserted from memory.
+  const dir = mkdtempSync(join(tmpdir(), 'floor-scan-'));
+  try {
+    const write = (name, body) => {
+      const path = join(dir, name);
+      writeFileSync(path, body);
+      return path;
+    };
+    const unlabelled = write('report.md', '# Report\n\n34 of 35 accepted pairs.\n');
+    const labelled = write('labelled.md', `# Report\n\n${baselineAttributionLine()}\n\n34 of 35 accepted pairs.\n`);
+    const unrelated = write('other.md', '# Notes\n\nNothing measured here.\n');
+
+    const found = discoverUnlabelledFloorEvidence([unlabelled, labelled, unrelated]);
+    assert.deepEqual(found.map((f) => f.subject), [unlabelled]);
+    assert.equal(found[0].code, 'UNLABELLED_FLOOR_EVIDENCE');
+
+    // Excluded by name, and generated trees, are not reports and must not be scanned.
+    assert.deepEqual(discoverUnlabelledFloorEvidence([Object.keys(EXCLUSIONS)[0]]), []);
+    assert.deepEqual(discoverUnlabelledFloorEvidence(['pilot/projects/tr-01-hono/spec.json']), []);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 test('the relabel tool refuses anything that is not attribution-only', () => {
@@ -167,6 +198,14 @@ test('the relabel tool refuses anything that is not attribution-only', () => {
     writeFileSync(big, original);
     assert.equal(labelDocuments([big])[0].code, 'REFUSED_NOT_BYTE_SAFE');
     assert.equal(readFileSync(big, 'utf8'), original, 'a refused document must not be touched');
+
+    // Byte-safety, not string-safety: an invalid UTF-8 byte inside a string decodes to U+FFFD, so a
+    // string comparison passes while writing re-encodes it as EF BF BD and changes the file.
+    const badUtf8 = join(dir, 'bad-utf8.json');
+    const bytes = Buffer.concat([Buffer.from('{"a":"'), Buffer.from([0xff]), Buffer.from('"}')]);
+    writeFileSync(badUtf8, bytes);
+    assert.equal(labelDocuments([badUtf8])[0].code, 'REFUSED_NOT_BYTE_SAFE');
+    assert.ok(readFileSync(badUtf8).equals(bytes), 'a refused document must keep its exact bytes');
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

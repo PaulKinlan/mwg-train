@@ -155,8 +155,8 @@ function sortedGuideIds(categories) {
   return Object.values(categories ?? {}).flat().map((id) => String(id)).sort();
 }
 
-/** A description of an arbitrary parsed JSON value that cannot itself throw. */
-function describe(value) {
+/** A description of an arbitrary parsed JSON value that cannot itself throw. Exported for the CLI. */
+export function describe(value) {
   try {
     return JSON.stringify(value) ?? String(value);
   } catch {

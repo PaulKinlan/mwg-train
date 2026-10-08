@@ -1,5 +1,7 @@
 # The training seam: one interface, two backends
 
+> **mwg-train deterministic baseline** - deterministic output of this repository's own tooling, not an official `web-uplift` result.
+
 The project trains a student on accepted pairs. It may do that on Fireworks' managed training (per
 training token, priced by parameter band) or on a rented GPU cluster (per GPU-second), and the two differ
 in almost everything operational. Nothing downstream is allowed to care which one ran, so both sit behind

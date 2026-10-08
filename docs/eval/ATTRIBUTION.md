@@ -105,7 +105,7 @@ ten. The lesson worth keeping: a registry is only as good as the review that ext
 projection (`decision` in `records.json`) silently drops whatever it does not explicitly name.
 
 ```bash
-npm run check:baseline-label   # every registered floor artifact must carry the label (23 of them)
+npm run check:baseline-label   # registry + a scan of every tracked document (23 registered, 190 scanned)
 npm run label:baseline -- --check   # the same assertion for the measurement JSON, without writing
 npm run label:baseline              # add the label to a document that predates it
 ```
@@ -133,10 +133,25 @@ Deliberately **not** registered, with the reason rather than a silent omission:
 | `pilot/plan.json`, `data/A6_evaluation/targets/manifest.jsonl` | inputs (a plan, and the eval target set), not measurements of our floor |
 
 That table exists because the registry was wrong four times: six artifacts, then ten, then twenty-one,
-then twenty-three.
-Each round was a list I believed complete, and each was extended by a reviewer reading the tree rather
-than by me re-reading my own reasoning. The lesson is in the count, not in the ritual: "every X" is a
-claim about a list, so the list has to be checked against the tree.
+then twenty-three, and a fifth round found five more documents plus the two root-level summaries. Each
+round was a list I believed complete, and each was extended by a reviewer reading the tree rather than by
+me re-reading my own reasoning. The lesson is in the count, not in the ritual: "every X" is a claim about
+a list, so the list has to be checked against the tree.
+
+### The registry is no longer the only guard
+
+A list can only cover what its author thought of, and five rounds is enough evidence that mine cannot.
+So the check now also SCANS: every tracked `.md` and `.json` is read, and any document containing
+floor-evidence phrasing - uplift hashes, accepted-pair counts, projects driven or passed, journey
+counts, token estimates, "N of M" results - must carry the label unless it is named in `EXCLUSIONS`
+with a reason. Nine documents are excluded by name, including the pre-registration (which states the
+registered design rather than a measurement, and is the one document that should not be retro-edited)
+and the provenance README (which defines what the arms are, for rights purposes).
+
+That inverts the failure mode. Before, a document I forgot was silently uncovered; now a document that
+states a floor result without a label fails the check, and adding a new report means either labelling it
+or writing down why it is not one. The scan currently reads 190 files and finds 28 that state floor
+evidence, all of them labelled.
 
 ### Relabelling a report must not mean re-measuring it
 

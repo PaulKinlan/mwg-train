@@ -45,10 +45,16 @@ function describe(document) {
 
 export function labelDocuments(paths, { check = false } = {}) {
   const results = [];  for (const path of paths) {
+    let rawBytes;
     let raw;
     let original;
     try {
-      raw = readFileSync(path, 'utf8');
+      // BYTES, not a decoded string. Review found that reading as utf8 replaces an invalid byte inside a
+      // string with U+FFFD, after which serialising the parsed value reproduces the DECODED text and the
+      // guard passes - while writing re-encodes U+FFFD as EF BF BD and silently changes the original
+      // byte. Comparing strings cannot see that; comparing bytes can.
+      rawBytes = readFileSync(path);
+      raw = rawBytes.toString('utf8');
       original = JSON.parse(raw);
     } catch (error) {
       results.push({ path, code: 'UNREADABLE', message: `${error?.message ?? error}` });
@@ -58,7 +64,7 @@ export function labelDocuments(paths, { check = false } = {}) {
     // then this tool cannot rewrite it without risking a silent edit - a rounded large integer, say - so
     // it refuses. Fail closed rather than trust that no such number is present.
     const canonical = `${JSON.stringify(original, null, 2)}\n`;
-    if (canonical !== raw) {
+    if (!rawBytes.equals(Buffer.from(canonical, 'utf8'))) {
       results.push({
         path,
         code: 'REFUSED_NOT_BYTE_SAFE',
@@ -80,7 +86,7 @@ export function labelDocuments(paths, { check = false } = {}) {
       results.push({ path, code: 'REFUSED_NOT_ATTRIBUTION_ONLY', message: 'stripping the label did not reproduce the input; refusing to write' });
       continue;
     }
-    if (!check) writeFileSync(path, `${JSON.stringify(labelled, null, 2)}\n`);
+    if (!check) writeFileSync(path, Buffer.from(`${JSON.stringify(labelled, null, 2)}\n`, 'utf8'));
     results.push({ path, code: check ? 'WOULD_LABEL' : 'LABELLED' });
   }
   return results;

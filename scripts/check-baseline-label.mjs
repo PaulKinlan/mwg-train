@@ -33,6 +33,7 @@
  * A floor value that reaches a new artifact without being listed here is a gap this check cannot see,
  * so the registry is reviewed whenever a report is added.
  */
+import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import process from 'node:process';
 import { BASELINE_LABEL } from '../src/eval/ruleset.mjs';
@@ -85,7 +86,7 @@ const REGISTRY = [
 const AUTHORED_BY = [/\b(?:by|from)\s+`?web-uplift\b/i, /\bweb-uplift(?:'s|\u2019s)\s+\w+/i, /\bofficial\s+`?web-uplift\b/i];
 const AUTHORING_VERB = /\bweb-uplift\s+(?:generated|produced|output|released|created|authored|wrote|written|built|made|constructed|scored|computed)\b/i;
 /** 'a web-uplift product', 'a web-uplift deliverable' - authorship by noun rather than by verb. */
-const AUTHORING_NOUN = /\bweb-uplift\s+(?:product|work|deliverable|artefact|artifact)\b/i;
+const AUTHORING_NOUN = /\bweb-uplift\s+(?:product|work|deliverable|artefact|artifact|result|output|baseline|floor|report)\b/i;
 const FLOOR_OBJECT = /\b(?:floor|baseline|report|reports|numbers?|deltas?|results?|scores?|yield|conformance|percentages?)\b/i;
 /** Nouns for web-uplift's own artefact. A clause about one of these is not a claim about our floor. */
 const THEIR_ARTEFACT = /\b(?:catalog(?:ue)?|guide|guides|ruleset|rules?|skill|manifest|docs|documentation|package|hash|hashes|data)\b/i;
@@ -134,6 +135,12 @@ export function falseProvenance(text) {
       // "numbers from web-uplift" says the numbers are theirs. Review found the first case flagged as a
       // false positive, which is the failure mode that gets a check switched off.
       if (byPreposition && THEIR_ARTEFACT.test(clause.slice(0, offset).trim().split(/\s+/).slice(-4).join(' '))) continue;
+      // A possessive attaches to the noun that follows it. "web-uplift's rules" is theirs and true;
+      // "web-uplift's official baseline" is a claim about ours. Review found the first flagged because
+      // 'baseline' appeared elsewhere in the same clause. The noun is usually INSIDE the match, since the
+      // possessive pattern captures it, so it is read from there.
+      const possessiveNoun = /(?:'s|\u2019s)\s+([\w-]+)/i.exec(match[0]);
+      if (byPreposition && possessiveNoun && THEIR_ARTEFACT.test(possessiveNoun[1])) continue;
       // A clause that names only their artefact is a true statement about their work - "the canonical
       // catalog published by web-uplift" - and flagging it would make the check wrong about the thing it
       // is right about. Only a clause about our floor (or one that names neither, and so implicitly
@@ -173,14 +180,83 @@ export function checkBaselineLabel(paths) {
   return findings;
 }
 
+/**
+ * Files that mention floor evidence but are not floor reports, with the reason. Data, not prose, so the
+ * check can skip them and the reason is reviewable in one place.
+ */
+export const EXCLUSIONS = {
+  'docs/train/corpus/SERVED.md': 'reports which routes the generated server serves - a property of the scaffold, not a floor value; no committed generator',
+  'docs/train/corpus/served-routes-baseline.json': 'the machine-readable form of SERVED.md, same reason',
+  'docs/eval/quotes.jsonl': 'a provider pricing table, not a measurement of any corpus',
+  'pilot/TRAINING_CORPUS.json': 'corpus composition and tree hashes; states no floor result',
+  'pilot/plan.json': 'an input - the pilot plan - not a measurement',
+  'data/A6_evaluation/targets/manifest.jsonl': 'an input - the eval target set - not a measurement of our floor',
+  'docs/design-brief-2026-10-08.md': 'the original design brief; its accepted-pair figures are targets in a proposal, not measured results',
+  'docs/eval/PREREGISTRATION.md': 'states the registered design and its comparison arms, not a measured result - and a pre-registration is the one document that should not be retro-edited to carry a later label',
+  'docs/provenance/README.md': 'defines what the provenance arms ARE (including the deterministic uplift arm) for rights purposes; it reports no measurement of its own',
+};
+
+/**
+ * The phrasing that means a document states or quotes a floor-derived measurement.
+ *
+ * This exists because the registry was wrong four times. A list can only cover what its author thought
+ * of; a scan covers what is in the tree. Every time a reviewer found a file I had missed, the miss was a
+ * doc quoting a number in wording I had not pictured, so the pattern is deliberately broad and the
+ * exclusions are the explicit part.
+ */
+export const FLOOR_EVIDENCE =
+  /deterministic (?:mw[sg] )?(?:repair|baseline|floor)|uplift(?:ed)?_sha|uplift_edits|accepted pairs|pairs accepted|projects? (?:passed|driven)|journeys? (?:passed|driven)|token estimate|\(\s*\d+\s*(?:of|\/) ?\d+ |\b\d+\/\d+\b/i;
+
+/** Subtrees that are generated project trees or brief corpora rather than reports. */
+const NOT_A_REPORT = /^(pilot\/projects\/|pilot\/training-projects\/|data\/|docs\/eval\/projects\/|docs\/eval\/briefs\/|docs\/eval\/specs\/|docs\/train\/briefs\/manifest|pilot\/TRAINING_CORPUS\.json$|.*\/package\.json$|.*\/spec\.json$|.*\/tree\.json$|.*\/snapshot\.json$)/;
+
+/**
+ * Find tracked prose/JSON that states floor evidence without the label.
+ *
+ * `files` is injected so a test can scan fixtures; the CLI passes `git ls-files`.
+ */
+export function discoverUnlabelledFloorEvidence(files) {
+  const findings = [];
+  for (const path of files) {
+    if (NOT_A_REPORT.test(path)) continue;
+    if (EXCLUSIONS[path]) continue;
+    if (REGISTRY.includes(path)) continue;
+    let text;
+    try {
+      text = readFileSync(path, 'utf8');
+    } catch {
+      continue;
+    }
+    if (!FLOOR_EVIDENCE.test(text)) continue;
+    if (text.includes(BASELINE_LABEL)) continue;
+    findings.push({
+      code: 'UNLABELLED_FLOOR_EVIDENCE',
+      subject: path,
+      message: `states floor evidence but carries no label and is not in EXCLUSIONS; label it or record why it is not a floor report`,
+    });
+  }
+  return findings;
+}
+
 const asJson = process.argv.includes('--json');
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  const findings = checkBaselineLabel(REGISTRY);
+  const findings = [...checkBaselineLabel(REGISTRY)];
+  let scanned = 0;
+  try {
+    const files = execFileSync('git', ['ls-files', '*.md', '*.json'], { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 })
+      .trim()
+      .split('\n')
+      .filter(Boolean);
+    scanned = files.length;
+    findings.push(...discoverUnlabelledFloorEvidence(files));
+  } catch (error) {
+    findings.push({ code: 'SCAN_FAILED', subject: 'git ls-files', message: `could not list tracked files: ${error?.message ?? error}` });
+  }
   if (asJson) {
     // Machine output is JSON and nothing else: a caller that parses it must not have to strip a
     // trailing human line. The failure detail still goes to stderr, which is not parsed.
-    console.log(JSON.stringify({ label: BASELINE_LABEL, checked: REGISTRY.length, findings }, null, 2));
+    console.log(JSON.stringify({ label: BASELINE_LABEL, checked: REGISTRY.length, scanned, excluded: Object.keys(EXCLUSIONS).length, findings }, null, 2));
   } else {
     for (const finding of findings) console.log(`FINDING ${finding.code} ${finding.subject} ${finding.message}`);
   }
@@ -188,5 +264,5 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     console.error(`check-baseline-label: FAIL - ${findings.length} finding(s); a floor report is unattributed or misattributed`);
     process.exit(1);
   }
-  if (!asJson) console.log(`check-baseline-label: PASS - ${REGISTRY.length} floor report(s) carry '${BASELINE_LABEL}'`);
+  if (!asJson) console.log(`check-baseline-label: PASS - ${REGISTRY.length} floor report(s) carry '${BASELINE_LABEL}', and no other tracked document states floor evidence without it (${scanned} files scanned, ${Object.keys(EXCLUSIONS).length} excluded by name)`);
 }
