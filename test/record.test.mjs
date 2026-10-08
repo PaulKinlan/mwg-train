@@ -4,6 +4,13 @@ import assert from 'node:assert/strict';
 import { ProvenanceError } from '../src/provenance/arms.mjs';
 import { makeRecord, parseManifest, sourceLineOf, validateManifest, validateRecord } from '../src/provenance/record.mjs';
 
+/** Retention fields for an asset: the ref is named for the asset id, which is what makes it canonical. */
+const retained = (id) => ({
+  original_ref: `refs/tags/original/${id}`,
+  original_sha: 'a'.repeat(40),
+  original_tree: 'b'.repeat(40),
+});
+
 const approvedSelfGenerated = {
   id: 'proj-0001',
   arm: 'A1_self_generated',
@@ -17,6 +24,7 @@ const approvedSelfGenerated = {
   approved_by: 'mwg-train-coord',
   approved_at: '2026-10-08',
   parents: [],
+  ...retained('proj-0001'),
 };
 
 const codes = (findings) => findings.map((finding) => finding.code);
@@ -70,6 +78,7 @@ test('material from a hosted teacher model can only sit in the quarantined arm',
   const quarantined = {
     ...approvedSelfGenerated,
     id: 'proj-0002',
+    ...retained('proj-0002'),
     arm: 'A3_teacher_generated',
     storage_path: 'data/A3_teacher_generated/projects/proj-0002',
     generator: hostedGenerator,
@@ -88,6 +97,7 @@ test('quarantine cannot be switched off by hand', () => {
   const teacher = {
     ...approvedSelfGenerated,
     id: 'proj-0002',
+    ...retained('proj-0002'),
     arm: 'A3_teacher_generated',
     storage_path: 'data/A3_teacher_generated/projects/proj-0002',
     excluded_from_training: false,
@@ -134,6 +144,7 @@ test('a trainable asset may not descend from quarantined material', () => {
   const teacherOriginal = {
     ...approvedSelfGenerated,
     id: 'proj-teacher',
+    ...retained('proj-teacher'),
     arm: 'A3_teacher_generated',
     storage_path: 'data/A3_teacher_generated/projects/proj-teacher',
     generator: {
@@ -153,6 +164,7 @@ test('a trainable asset may not descend from quarantined material', () => {
   const launderAttempt = {
     ...approvedSelfGenerated,
     id: 'proj-uplift',
+    ...retained('proj-uplift'),
     arm: 'A2_mwg_uplift_deterministic',
     kind: 'uplift',
     storage_path: 'data/A2_mwg_uplift_deterministic/projects/proj-uplift',
@@ -204,6 +216,27 @@ test('created_at accepts ISO-8601 timestamps with a numeric offset', () => {
   );
 });
 
+test('the validator reports findings instead of throwing, whatever it is handed', () => {
+  const hostile = [
+    null,
+    undefined,
+    42,
+    'x',
+    [],
+    {},
+    { id: 'Not A Slug', kind: 'original', original_ref: 'refs/tags/original/x', original_sha: 'a'.repeat(40) },
+    { id: 'x', kind: 'original', original_ref: 123, original_sha: {} },
+    { id: 'x', kind: 'original', original_ref: 'refs/tags/original/x', original_sha: 'a'.repeat(40), original_tree: {} },
+    { id: 'x', kind: 'original', original_ref: 'refs/tags/original/x', original_sha: 'a'.repeat(40), retention: 'nope' },
+    { id: 'x', kind: 'original', original_ref: 'refs/tags/original/x', original_sha: 'a'.repeat(40), retention: { repo: 7, protections: 'no' } },
+  ];
+  for (const record of hostile) {
+    const findings = validateRecord(record);
+    assert.ok(Array.isArray(findings), `validateRecord(${JSON.stringify(record)}) must return findings`);
+    assert.ok(findings.every((f) => typeof f.code === 'string' && typeof f.message === 'string'));
+  }
+});
+
 test('a manifest with no trainable rows is valid but counts zero', () => {
   const result = validateManifest([
     makeRecord({
@@ -213,6 +246,7 @@ test('a manifest with no trainable rows is valid but counts zero', () => {
       generator: { type: 'human' },
       rights_ref: 'docs/provenance/assets/b.md',
       storage_path: 'data/A6_evaluation/b',
+      ...retained('b'),
     }),
   ]);
   assert.equal(result.ok, true, JSON.stringify(result.findings));
