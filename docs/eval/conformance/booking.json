@@ -1,0 +1,109 @@
+{
+  "family": "booking",
+  "target_signature": "data/A6_evaluation/targets/booking/signature.json",
+  "target_sha256": "8aec80bbdf3c1dfc4f87d4b689e3763f1eead7d39d70ca39924e76bccaf4cfd4",
+  "generated_at": "2026-10-08T12:07:49.420Z",
+  "arms": [
+    {
+      "framework": "raw",
+      "raw": 0.3217,
+      "target": 0.3195,
+      "delta": -0.0022,
+      "axes": {
+        "raw": {
+          "structural": 0.1335,
+          "geometry": 0.0522,
+          "controls": 1,
+          "overall": 0.3217
+        },
+        "arm": {
+          "structural": 0.1266,
+          "geometry": 0.0538,
+          "controls": 1,
+          "overall": 0.3195
+        }
+      }
+    },
+    {
+      "framework": "react",
+      "raw": 0.3217,
+      "target": 0.3195,
+      "delta": -0.0022,
+      "axes": {
+        "raw": {
+          "structural": 0.1335,
+          "geometry": 0.0522,
+          "controls": 1,
+          "overall": 0.3217
+        },
+        "arm": {
+          "structural": 0.1266,
+          "geometry": 0.0538,
+          "controls": 1,
+          "overall": 0.3195
+        }
+      }
+    },
+    {
+      "framework": "preact",
+      "raw": 0.3506,
+      "target": 0.319,
+      "delta": -0.0316,
+      "axes": {
+        "raw": {
+          "structural": 0.126,
+          "geometry": 0.1433,
+          "controls": 1,
+          "overall": 0.3506
+        },
+        "arm": {
+          "structural": 0.1254,
+          "geometry": 0.0538,
+          "controls": 1,
+          "overall": 0.319
+        }
+      }
+    },
+    {
+      "framework": "vue",
+      "raw": 0.3219,
+      "target": 0.3195,
+      "delta": -0.0024,
+      "axes": {
+        "raw": {
+          "structural": 0.1326,
+          "geometry": 0.0538,
+          "controls": 1,
+          "overall": 0.3219
+        },
+        "arm": {
+          "structural": 0.1266,
+          "geometry": 0.0538,
+          "controls": 1,
+          "overall": 0.3195
+        }
+      }
+    },
+    {
+      "framework": "hono",
+      "raw": 0.3217,
+      "target": 0.3195,
+      "delta": -0.0022,
+      "axes": {
+        "raw": {
+          "structural": 0.1335,
+          "geometry": 0.0522,
+          "controls": 1,
+          "overall": 0.3217
+        },
+        "arm": {
+          "structural": 0.1266,
+          "geometry": 0.0538,
+          "controls": 1,
+          "overall": 0.3195
+        }
+      }
+    }
+  ],
+  "mean_delta": -0.0081
+}
