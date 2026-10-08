@@ -188,6 +188,18 @@ export async function launchChrome({ proxy = null, args = [] } = {}) {
   for (const signal of SIGNALS) process.on(signal, onSignal);
   process.on('exit', killTree);
 
+  // A watchdog, because the signal handlers above cannot catch SIGKILL: a harness killed outright still
+  // leaves the browser behind, and that is what the reaper kept finding - a review subagent's verification
+  // run, gone, with a 12-process browser still holding a gigabyte. The watchdog polls this process and, the
+  // moment it is gone, kills the browser's group and removes the profile. It is killed in `close()` so it
+  // does not linger for a process that launches browsers one after another.
+  const watchdog = spawn(
+    '/bin/sh',
+    ['-c', `while kill -0 ${process.pid} 2>/dev/null; do sleep 5; done; kill -9 -${child.pid} 2>/dev/null; rm -rf "${userDataDir}" 2>/dev/null`],
+    { detached: true, stdio: 'ignore' },
+  );
+  watchdog.unref();
+
   const endpoint = await new Promise((resolve, reject) => {
     let buffer = '';
     const timer = setTimeout(() => reject(new CdpError('CHROME_TIMEOUT', 'Chrome did not report a debugger endpoint')), 20_000);
@@ -242,6 +254,7 @@ export async function launchChrome({ proxy = null, args = [] } = {}) {
       // `--disable-breakpad` and `--disable-crash-reporter` flags were tried and do not stop it on Chrome
       // 155, so the group is the only reliable handle on the pieces.
       killTree();
+      watchdog.kill('SIGKILL');
       for (const signal of SIGNALS) process.off(signal, onSignal);
       process.off('exit', killTree);
       // Wait briefly for the browser to release the profile, then remove it. The directory is created per
