@@ -17,7 +17,7 @@
  *   await chrome.close();
  */
 import { spawn } from 'node:child_process';
-import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import process from 'node:process';
@@ -209,6 +209,15 @@ export async function launchChrome({ proxy = null, args = [] } = {}) {
         /* already gone */
       }
       child.kill('SIGKILL');
+      // Wait briefly for the browser to release the profile, then remove it. The directory is created per
+      // launch and was never cleaned up, so a day of runs left dozens of them (and a few hundred MB) in
+      // /tmp; nothing reads it once the browser is gone, and it is ours.
+      await new Promise((resolve) => {
+        const done = () => resolve();
+        child.once('exit', done);
+        setTimeout(done, 500);
+      });
+      rmSync(userDataDir, { recursive: true, force: true });
     },
   };
 }

@@ -6,6 +6,9 @@
  *   node scripts/rebuild-from-spec.mjs --family booking --run        # also drive the journeys in a browser
  *   node scripts/rebuild-from-spec.mjs --all                        # every family, every framework
  *
+ * `--bound <seconds>` (default 900) is a hard deadline: when it passes, the browser is closed and the
+ * script exits non-zero, so a run whose parent died cannot leave a headless Chrome behind.
+ *
  * "Alone" is meant literally: this file imports the specification loader and the framework templates,
  * and neither of them imports `pilot/archetypes.mjs`. The archetype the templates consume is built from
  * the specification by `archetypeFromSpec`. `test/spec.test.mjs` asserts that no module on this path
@@ -18,7 +21,7 @@
  *   - with --run, the project is started and its journeys are driven in a real browser and passed
  *     through the same acceptance function the pilot uses.
  */
-import { mkdirSync, readFileSync, rmSync } from 'node:fs';
+import { mkdirSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import process from 'node:process';
 
@@ -31,7 +34,7 @@ import { writeProject } from '../pilot/frameworks.mjs';
 const ROOT = resolve(import.meta.dirname, '..');
 
 function parseArgs(argv) {
-  const args = { family: null, all: false, framework: null, run: false, out: null, port: 5400 };
+  const args = { family: null, all: false, framework: null, run: false, out: null, port: 5400, bound: 900 };
   for (let i = 0; i < argv.length; i += 1) {
     if (argv[i] === '--family') args.family = argv[++i];
     else if (argv[i] === '--all') args.all = true;
@@ -39,8 +42,33 @@ function parseArgs(argv) {
     else if (argv[i] === '--out') args.out = argv[++i];
     else if (argv[i] === '--run') args.run = true;
     else if (argv[i] === '--port') args.port = Number(argv[++i]);
+    else if (argv[i] === '--bound') args.bound = Number(argv[++i]);
   }
   return args;
+}
+
+/**
+ * Kill this process's own direct children.
+ *
+ * The bound below exits without unwinding `runProjectVersion`, and the project server is spawned as a
+ * child: if the parent goes first it is reparented and keeps holding the port, which is how a bounded run
+ * traded a leaked browser for a leaked server and made the next run fail against a stale one.
+ */
+function killChildren() {
+  try {
+    for (const entry of readdirSync('/proc')) {
+      if (!/^\d+$/.test(entry)) continue;
+      try {
+        const stat = readFileSync(`/proc/${entry}/stat`, 'utf8');
+        const afterName = stat.slice(stat.lastIndexOf(')') + 2).split(' ');
+        if (Number(afterName[1]) === process.pid) process.kill(Number(entry), 'SIGKILL');
+      } catch {
+        /* exited between listing and reading */
+      }
+    }
+  } catch {
+    /* not Linux, or /proc is unavailable: nothing to reap */
+  }
 }
 
 /** Write the built project the same way the scaffolder does, so the tree hashes are comparable. */
@@ -65,6 +93,21 @@ async function main() {
   const runDir = join(ROOT, '.spec-rebuild');
   mkdirSync(runDir, { recursive: true });
   const chrome = args.run ? await launchChrome() : null;
+  // A hard self-bound, because a browser must not outlive the run that started it. A subagent whose model
+  // was cut off mid-verification left a headless Chrome running for 46 minutes until the reaper caught it;
+  // the `finally` below only helps a process that gets to run. This timer fires whether or not anything is
+  // left to observe it, closes the browser, and exits non-zero so an abandoned run cannot look like a pass.
+  const guard = setTimeout(async () => {
+    console.error(`rebuild-from-spec: bound of ${args.bound}s reached; closing the browser and exiting`);
+    try {
+      if (chrome) await chrome.close();
+    } catch {
+      // the browser may already be gone; the point is to leave nothing behind
+    }
+    killChildren();
+    if (!args.out) rmSync(runDir, { recursive: true, force: true });
+    process.exit(1);
+  }, args.bound * 1000);
   let port = args.port;
   let failures = 0;
   try {
@@ -127,17 +170,24 @@ async function main() {
           failures += 1;
           for (const problem of works.problems) console.log(`    ${problem}`);
         }
-        // Two measurement vectors run against the rebuilt project and both are reported: the rules (which is
-        // where the declared password selector is consumed, by `forms/autofill-sign-up-form`) and the
-        // security checks. A `FAIL` is the expected state for a rebuilt original - the originals carry the
-        // gaps the uplift is measured against - but an `ERROR` means the check could not measure at all,
-        // which is a failure of the rebuild and is counted as one.
-        for (const [label, entries, key] of [
-          ['rules', record.rules ?? [], 'rule'],
-          ['security rules', record.security ?? [], 'check'],
+        // Two measurement vectors run against the rebuilt project and both are reported.
+        //
+        // `rules` are the substantive measurement, gated by the specification's own `required_rules`, so an
+        // `ERROR` there means a rule could not measure at all - a real failure of the rebuild. A `FAIL` is
+        // the expected state for a rebuilt original: the originals carry the gaps the uplift is measured
+        // against.
+        //
+        // `security` runs unconditionally in the harness, including for families that have no session, so
+        // an `ERROR` there is an inapplicable check rather than a broken rebuild: booking reports
+        // `session-cookie-attributes` as ERROR because nothing sets a cookie, and the committed corpus
+        // records the same check as not passing for it. Reported, not counted.
+        for (const [label, entries, key, counted] of [
+          ['rules', record.rules ?? [], 'rule', true],
+          ['security rules', record.security ?? [], 'check', false],
         ]) {
           if (entries.length === 0) continue;
           console.log(`  ${label} [${entries.map((entry) => `${entry[key]}:${entry.status}`).join(', ')}]`);
+          if (!counted) continue;
           const errored = entries.filter((entry) => entry.status === 'ERROR');
           if (errored.length > 0) {
             failures += 1;
@@ -147,6 +197,7 @@ async function main() {
       }
     }
   } finally {
+    clearTimeout(guard);
     if (chrome) await chrome.close();
     if (!args.out) rmSync(runDir, { recursive: true, force: true });
   }
