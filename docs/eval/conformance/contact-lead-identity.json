@@ -2,7 +2,7 @@
   "family": "contact-lead",
   "target_signature": "data/A6_evaluation/targets/contact-lead/signature.json",
   "target_sha256": "68f30482a12afd26bd8a5fd0936c270ae210dbc2c69644f05b582d5da52e5f8f",
-  "generated_at": "2026-10-08T12:16:49.257Z",
+  "generated_at": "2026-10-08T12:22:07.004Z",
   "variants": [
     {
       "framework": "raw",
@@ -244,13 +244,48 @@
       "geometry": 0.9477,
       "controls": 1,
       "overall": 0.8544
-    }
+    },
+    "weakest_by_axis": {
+      "structural": {
+        "a": "raw",
+        "b": "react",
+        "structural": 0.6818,
+        "geometry": 0.9477,
+        "controls": 1,
+        "overall": 0.8544
+      },
+      "geometry": {
+        "a": "raw",
+        "b": "react",
+        "structural": 0.6818,
+        "geometry": 0.9477,
+        "controls": 1,
+        "overall": 0.8544
+      },
+      "controls": {
+        "a": "raw",
+        "b": "react",
+        "structural": 0.6818,
+        "geometry": 0.9477,
+        "controls": 1,
+        "overall": 0.8544
+      },
+      "overall": {
+        "a": "raw",
+        "b": "react",
+        "structural": 0.6818,
+        "geometry": 0.9477,
+        "controls": 1,
+        "overall": 0.8544
+      }
+    },
+    "degenerate": false
   },
   "budget": {
-    "structural": 0.6,
-    "geometry": 0.6,
-    "controls": 0.9,
-    "overall": 0.6
+    "structural": 0.75,
+    "geometry": 0.9,
+    "controls": 0.95,
+    "overall": 0.8
   },
   "findings": []
 }

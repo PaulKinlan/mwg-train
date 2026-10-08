@@ -188,9 +188,13 @@ export function controlSimilarity(target, candidate) {
   const candidateControls = candidate?.controls ?? [];
   if (targetControls.length === 0 && candidateControls.length === 0) return 1;
   const match = multisetJaccard(targetControls.map(controlDescriptor), candidateControls.map(controlDescriptor));
-  // A candidate with no controls has none to label: scoring it 1 for "no unlabelled controls" would
-  // let a page that dropped the form score as well as one that kept it labelled.
-  const labelled = candidateControls.length === 0 ? 0 : candidateControls.filter((control) => control.label).length / candidateControls.length;
+  // The label term takes the worse of the two sides. It used to read only the candidate, which made
+  // the function asymmetric - so comparing two peer variants gave a different answer depending on
+  // which was passed first, and `variantIdentity` (which only ever evaluates i<j) could read the
+  // unlabelled raw arm as a perfect 1.000 against every labelled peer. Arm scoring is unchanged: the
+  // target's controls are all labelled, so the minimum is still the candidate's fraction.
+  const labelledFraction = (controls) => (controls.length === 0 ? 0 : controls.filter((control) => control.label).length / controls.length);
+  const labelled = Math.min(labelledFraction(targetControls), labelledFraction(candidateControls));
   return round(0.6 * match + 0.4 * labelled);
 }
 
@@ -245,7 +249,12 @@ export function variantIdentity(target, variants) {
   const pairwise = [];
   for (let i = 0; i < variants.length; i += 1) {
     for (let j = i + 1; j < variants.length; j += 1) {
-      pairwise.push({ a: variants[i].framework, b: variants[j].framework, ...conformanceScore(variants[i].signature, variants[j].signature) });
+      // Both directions, averaged. Every axis is symmetric now, but averaging makes the pairwise shell
+      // robust to a future asymmetric one rather than silently reporting whichever order came first.
+      const forward = conformanceScore(variants[i].signature, variants[j].signature);
+      const backward = conformanceScore(variants[j].signature, variants[i].signature);
+      const axes = Object.fromEntries(IDENTITY_AXES.map((axis) => [axis, round((forward[axis] + backward[axis]) / 2)]));
+      pairwise.push({ a: variants[i].framework, b: variants[j].framework, ...axes });
     }
   }
   const mean = (values) => (values.length === 0 ? 1 : round(values.reduce((sum, value) => sum + value, 0) / values.length));
@@ -257,27 +266,39 @@ export function variantIdentity(target, variants) {
       return [axis, round(pairwise.reduce((sum, pair) => sum + (pair[axis] - average) ** 2, 0) / pairwise.length)];
     }),
   );
-  const weakestPair = pairwise.length === 0 ? null : [...pairwise].sort((a, b) => a.overall - b.overall)[0];
-  return { target_conformance: targets, pairwise, identity, variance, weakest_pair: weakestPair };
+  // The weakest pair per axis, not only by overall: a family can fail the geometry budget because of a
+  // pair that is not the overall-worst, and blaming the overall-worst pair names the wrong frameworks.
+  const weakestByAxis = Object.fromEntries(
+    IDENTITY_AXES.map((axis) => [axis, pairwise.length === 0 ? null : [...pairwise].sort((a, b) => a[axis] - b[axis])[0]]),
+  );
+  // Two variants that measure nothing agree perfectly. Without this, a family of blank pages scores
+  // 1.000 identity and raises no finding, which is the most confidently wrong answer the axis can give.
+  const degenerate = variants.length < 2 || variants.every((variant) => (variant.signature?.boxes?.length ?? 0) === 0);
+  return { target_conformance: targets, pairwise, identity, variance, weakest_pair: weakestByAxis.overall, weakest_by_axis: weakestByAxis, degenerate };
 }
 
 /**
  * Does a family's cross-variant identity meet the preregistered budget? A framework may legitimately
  * change the markup; it may not change the layout, the component hierarchy, the spacing or the visual
- * system, so the budget is per axis and a failure names the axis and the pair.
+ * system, so the budget is per axis and a failure names the axis and the pair responsible for *that*
+ * axis.
  */
 export function identityFindings(identity, budget) {
   const findings = [];
+  if (identity?.degenerate) {
+    findings.push({ code: 'IDENTITY_DEGENERATE', message: 'fewer than two measurable variants: identity is vacuous, not perfect' });
+  }
   for (const [axis, minimum] of Object.entries(budget ?? {})) {
     const actual = identity?.identity?.[axis];
     if (typeof actual === 'number' && actual < minimum) {
+      const pair = identity?.weakest_by_axis?.[axis] ?? identity?.weakest_pair ?? null;
       findings.push({
         code: 'IDENTITY_BELOW_BUDGET',
         axis,
         actual,
         minimum,
         message: `variants agree on ${axis} at ${actual}, below the ${minimum} budget`,
-        pair: identity?.weakest_pair ? `${identity.weakest_pair.a}/${identity.weakest_pair.b}` : null,
+        pair: pair ? `${pair.a}/${pair.b}` : null,
       });
     }
   }

@@ -16,10 +16,10 @@ Shared target: `data/A6_evaluation/targets/booking/signature.json` (sha256 `c704
 
 | axis | agreement | variance | budget |
 | --- | --- | --- | --- |
-| structural | 0.846 | 0.0253 | >= 0.6 |
-| geometry | 0.976 | 0.0005 | >= 0.6 |
-| controls | 1.000 | 0.0000 | >= 0.9 |
-| overall | 0.930 | 0.0051 | >= 0.6 |
+| structural | 0.846 | 0.0253 | >= 0.75 |
+| geometry | 0.976 | 0.0005 | >= 0.9 |
+| controls | 1.000 | 0.0000 | >= 0.95 |
+| overall | 0.930 | 0.0051 | >= 0.8 |
 
 Weakest pair: raw/preact at 0.843.
 

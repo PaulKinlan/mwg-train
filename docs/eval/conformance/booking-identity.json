@@ -2,7 +2,7 @@
   "family": "booking",
   "target_signature": "data/A6_evaluation/targets/booking/signature.json",
   "target_sha256": "c70494945de969b360a1a6ec57278d0aa5e1124e78ee6f3e8f9d060193255759",
-  "generated_at": "2026-10-08T12:16:31.863Z",
+  "generated_at": "2026-10-08T12:21:47.010Z",
   "variants": [
     {
       "framework": "raw",
@@ -244,13 +244,48 @@
       "geometry": 0.9463,
       "controls": 1,
       "overall": 0.8433
-    }
+    },
+    "weakest_by_axis": {
+      "structural": {
+        "a": "preact",
+        "b": "vue",
+        "structural": 0.6464,
+        "geometry": 0.9571,
+        "controls": 1,
+        "overall": 0.8435
+      },
+      "geometry": {
+        "a": "raw",
+        "b": "preact",
+        "structural": 0.6552,
+        "geometry": 0.9463,
+        "controls": 1,
+        "overall": 0.8433
+      },
+      "controls": {
+        "a": "raw",
+        "b": "react",
+        "structural": 1,
+        "geometry": 1,
+        "controls": 1,
+        "overall": 1
+      },
+      "overall": {
+        "a": "raw",
+        "b": "preact",
+        "structural": 0.6552,
+        "geometry": 0.9463,
+        "controls": 1,
+        "overall": 0.8433
+      }
+    },
+    "degenerate": false
   },
   "budget": {
-    "structural": 0.6,
-    "geometry": 0.6,
-    "controls": 0.9,
-    "overall": 0.6
+    "structural": 0.75,
+    "geometry": 0.9,
+    "controls": 0.95,
+    "overall": 0.8
   },
   "findings": []
 }

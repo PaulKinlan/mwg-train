@@ -16,10 +16,10 @@ Shared target: `data/A6_evaluation/targets/catalogue/signature.json` (sha256 `bc
 
 | axis | agreement | variance | budget |
 | --- | --- | --- | --- |
-| structural | 0.891 | 0.0079 | >= 0.6 |
-| geometry | 0.989 | 0.0002 | >= 0.6 |
-| controls | 1.000 | 0.0000 | >= 0.9 |
-| overall | 0.953 | 0.0012 | >= 0.6 |
+| structural | 0.891 | 0.0079 | >= 0.75 |
+| geometry | 0.989 | 0.0002 | >= 0.9 |
+| controls | 1.000 | 0.0000 | >= 0.95 |
+| overall | 0.953 | 0.0012 | >= 0.8 |
 
 Weakest pair: react/preact at 0.918.
 

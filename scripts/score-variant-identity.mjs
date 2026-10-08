@@ -20,7 +20,7 @@
 import { createHash } from 'node:crypto';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { basename, join, resolve } from 'node:path';
 import process from 'node:process';
 
 import { launchChrome } from '../src/corpus/cdp.mjs';
@@ -48,20 +48,21 @@ function loadTarget(family) {
   return { relativePath, signature: JSON.parse(readFileSync(join(ROOT, relativePath), 'utf8')), sha256: createHash('sha256').update(readFileSync(join(ROOT, relativePath))).digest('hex') };
 }
 
-async function scoreFamily({ family, chrome, runDir, outDir, port }) {
+async function scoreFamily({ family, chrome, runDir, outDir, ports }) {
   const target = loadTarget(family.family_id);
   const plan = readPlan();
   const projects = plan.projects.filter((project) => project.archetype === family.family_id);
   if (projects.length === 0) throw new Error(`score-variant-identity: the pilot has no projects for family '${family.family_id}'`);
-  const corpusRoot = resolve('.conformance-corpus', runDir.split('/').pop(), family.family_id);
+  const runId = basename(runDir);
+  const corpusRoot = resolve('.conformance-corpus', runId, family.family_id);
   const { projects: generated } = generateCorpus({ plan: { ...plan, projects }, outDir: corpusRoot });
 
   const variants = [];
   for (const project of generated) {
-    const raw = await captureSignature({ chrome, projectDir: project.dir, port: port++, runDir });
-    const upliftedDir = resolve('.conformance-uplifted', runDir.split('/').pop(), project.projectId);
+    const raw = await captureSignature({ chrome, projectDir: project.dir, port: ports.value++, runDir });
+    const upliftedDir = resolve('.conformance-uplifted', runId, project.projectId);
     upliftProject(project.dir, project.spec, upliftedDir);
-    const arm = await captureSignature({ chrome, projectDir: upliftedDir, port: port++, runDir });
+    const arm = await captureSignature({ chrome, projectDir: upliftedDir, port: ports.value++, runDir });
     const score = scoreArm({ target: target.signature, raw, arm });
     variants.push({ framework: project.framework, ...score, raw_signature: raw });
   }
@@ -114,17 +115,22 @@ async function main() {
   if (families.length === 0) throw new Error('score-variant-identity: pass --family <id> or --all');
   const outDir = resolve(args.out);
   mkdirSync(outDir, { recursive: true });
-  const runDir = mkdtempSync(join(tmpdir(), 'variant-identity-'));
-  const chrome = await launchChrome();
+  const ports = { value: args.port };
   const summary = [];
-  let port = args.port;
+  let runDir = null;
+  let chrome = null;
   try {
-    for (const family of families) summary.push(await scoreFamily({ family, chrome, runDir, outDir, port }));
+    runDir = mkdtempSync(join(tmpdir(), 'variant-identity-'));
+    chrome = await launchChrome();
+    for (const family of families) summary.push(await scoreFamily({ family, chrome, runDir, outDir, ports }));
   } finally {
-    await chrome.close();
-    rmSync(resolve('.conformance-corpus', runDir.split('/').pop()), { recursive: true, force: true });
-    rmSync(resolve('.conformance-uplifted', runDir.split('/').pop()), { recursive: true, force: true });
-    rmSync(runDir, { recursive: true, force: true });
+    if (chrome) await chrome.close();
+    if (runDir) {
+      const runId = basename(runDir);
+      rmSync(resolve('.conformance-corpus', runId), { recursive: true, force: true });
+      rmSync(resolve('.conformance-uplifted', runId), { recursive: true, force: true });
+      rmSync(runDir, { recursive: true, force: true });
+    }
   }
   const belowBudget = summary.reduce((sum, entry) => sum + entry.findings, 0);
   console.log(`score-variant-identity: ${summary.length} family(ies), ${belowBudget} axis/family below budget`);

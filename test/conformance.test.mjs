@@ -110,11 +110,33 @@ test('variantIdentity is 1 when the variants agree and names the outlier when th
   assert.ok(report.variance.overall > 0, 'variance must be non-zero when variants diverge');
 });
 
-test('identityFindings names the axis below budget and the pair responsible', () => {
-  const findings = identityFindings({ identity: { structural: 0.4, geometry: 0.8, controls: 0.95, overall: 0.7 }, weakest_pair: { a: 'raw', b: 'vue' } }, { structural: 0.6, controls: 0.9 });
+test('identityFindings names the axis below budget and the pair responsible for that axis', () => {
+  const identity = {
+    identity: { structural: 0.5, geometry: 0.4, controls: 0.95, overall: 0.7 },
+    weakest_pair: { a: 'vue', b: 'hono' },
+    weakest_by_axis: { structural: { a: 'raw', b: 'react' }, geometry: { a: 'vue', b: 'hono' }, controls: null, overall: { a: 'vue', b: 'hono' } },
+  };
+  const findings = identityFindings(identity, { structural: 0.6 });
   assert.equal(findings.length, 1);
   assert.equal(findings[0].axis, 'structural');
-  assert.equal(findings[0].pair, 'raw/vue');
+  assert.equal(findings[0].pair, 'raw/react', 'the structural finding must blame the pair weak on structure, not the overall-worst pair');
+});
+
+test('identityFindings reports vacuous identity rather than a perfect score', () => {
+  const blank = signature({});
+  const report = variantIdentity(blank, [{ framework: 'raw', signature: blank }, { framework: 'react', signature: blank }]);
+  assert.equal(report.degenerate, true);
+  assert.ok(identityFindings(report, { overall: 0.9 }).some((finding) => finding.code === 'IDENTITY_DEGENERATE'));
+});
+
+test('peer identity does not depend on the order of the variants', () => {
+  const unlabelled = signature({ tags: ['main', 'form', 'input'], boxes: [box('form', 0, 0, 1, 0.5)], controls: [{ tag: 'input', type: 'text', name: 'name', label: null }] });
+  const labelled = structuredClone(unlabelled);
+  labelled.controls = [{ tag: 'input', type: 'text', name: 'name', label: 'Name' }];
+  const forward = variantIdentity(unlabelled, [{ framework: 'a', signature: unlabelled }, { framework: 'b', signature: labelled }]);
+  const backward = variantIdentity(unlabelled, [{ framework: 'b', signature: labelled }, { framework: 'a', signature: unlabelled }]);
+  assert.equal(forward.identity.controls, backward.identity.controls, 'identity must not depend on which variant is passed first');
+  assert.ok(forward.identity.controls < 1, 'an unlabelled peer must lower controls identity');
 });
 
 test('every family has exactly one shared target, not one per framework', () => {
@@ -134,9 +156,21 @@ test('the committed variant-identity reports are inside the declared budget', ()
     assert.ok(existsSync(path), `${family.family_id}-identity.json is missing; run scripts/score-variant-identity.mjs --all`);
     const report = JSON.parse(readFileSync(path, 'utf8'));
     assert.deepEqual(report.findings, [], `${family.family_id} is below budget: ${JSON.stringify(report.findings)}`);
+    assert.equal(report.identity.degenerate, false, `${family.family_id} identity is vacuous`);
     for (const [axis, minimum] of Object.entries(report.budget)) {
       assert.ok(report.identity.identity[axis] >= minimum, `${family.family_id}: ${axis} ${report.identity.identity[axis]} < budget ${minimum}`);
     }
+    // Self-consistency: a hand-edited report with arbitrary numbers must not pass, so the reported
+    // identity has to be the mean of the pairwise scores it ships, and the named weakest pair has to
+    // be the pair with the lowest overall. (A live render is not run here - it is heavy and
+    // non-deterministic - so the guard is that the report cannot contradict its own evidence.)
+    for (const axis of ['structural', 'geometry', 'controls', 'overall']) {
+      const expected = Math.round((report.identity.pairwise.reduce((sum, pair) => sum + pair[axis], 0) / report.identity.pairwise.length) * 10000) / 10000;
+      assert.equal(report.identity.identity[axis], expected, `${family.family_id}: ${axis} identity must equal the mean of its pairwise scores`);
+    }
+    const worst = [...report.identity.pairwise].sort((a, b) => a.overall - b.overall)[0];
+    assert.equal(report.identity.weakest_pair.a, worst.a, `${family.family_id}: weakest_pair must be the lowest-overall pair`);
+    assert.equal(report.identity.weakest_pair.b, worst.b);
     for (const variant of report.variants) {
       assert.equal(typeof variant.raw, 'number');
       assert.equal(typeof variant.target, 'number');

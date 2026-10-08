@@ -68,10 +68,16 @@ writes `docs/eval/conformance/<family>-identity.{json,md}` with both halves of t
 - the **cross-variant identity**: pairwise agreement between the raw variants, per axis, with the
   weakest pair named and the per-axis variance reported rather than averaged away.
 
-`IDENTITY_BUDGET` in `src/eval/targets.mjs` is the declared tolerance per axis. `controls` is tight
-because a form is a form in every framework; `structural` and `geometry` allow for the wrapper and
-scaffolding a framework adds. A variant that leaves the budget is a finding, not a number to
-round away, and the budget is calibrated against the measured variants rather than chosen first.
+`IDENTITY_BUDGET` in `src/eval/targets.mjs` is the declared tolerance per axis: the measured minimum
+across the five families less a deliberate margin (`structural` 0.805 -> 0.75, `geometry` 0.972 ->
+0.90, `controls` 1.000 -> 0.95, `overall` 0.912 -> 0.80). `controls` is tightest because a form is a
+form in every framework; `structural` allows the most, because that is where a framework's own
+wrapper and template scaffolding live. The floors are deliberately close to the measurement - a
+budget far below it (0.6 everywhere) leaves a third of the range free and would rubber-stamp a real
+regression. A variant that leaves the budget is a finding, and the finding names the pair that is
+weakest *on that axis*, not the overall-worst pair. `variantIdentity` also marks a family whose
+variants measure nothing as `degenerate` and raises a finding, because two blank pages otherwise
+agree perfectly.
 
 The identity axis is a statement about *how different the frameworks are allowed to be*, not an
 assertion that they are identical: distinct frameworks legitimately emit different markup, and the
@@ -96,12 +102,18 @@ uplift tool can edit it. Widening the matrix to those two arms is tracked separa
 | account-recovery | 0.918 | 0.815 | 0.979 | 1.000 | raw/vue 0.853 |
 | contact-lead | 0.912 | 0.805 | 0.972 | 1.000 | raw/react 0.854 |
 
-The reading is the point of the axis. **Controls 1.000 everywhere** and **geometry 0.97-0.99**: the
-frameworks build the same set of controls in the same places, so framework choice is not moving the
-layout or the form. The only real divergence is **structural** (0.80-0.89) - React, Vue and Preact
-scaffold the same tree with their own wrapper elements, which is exactly a framework convention and
-not an aesthetic decision. That is the distinction R2 needed: a variant may differ in markup, and the
-budget reports how much of that difference is still the same design.
+The reading is the point of the axis. **Geometry 0.97-0.99** and **controls 1.000**: the frameworks
+build the same set of controls in the same places, so framework choice is not moving the layout or the
+form. The only real divergence is **structural** (0.80-0.89) - React, Vue and Preact scaffold the same
+tree with their own wrapper elements, which is exactly a framework convention and not an aesthetic
+decision. That is the distinction R2 needed: a variant may differ in markup, and the budget reports
+how much of that difference is still the same design.
+
+Controls identity is 1.000 *by construction of the pilot*: `pilot/frameworks.mjs` injects the same
+`formMarkup(...)` string into every framework template, so no framework can move the form. Read it as
+a sanity check that the shared-spec premise holds - it is not evidence that the frameworks are
+independently good, and a variant that dropped its labels would show up here only because
+`controlSimilarity` takes the worse of the two sides.
 
 Per-variant deltas from the raw baseline to the shared target are in each
 `<family>-identity.md`; in all five families the mean delta is within +/-0.005, i.e. the deterministic

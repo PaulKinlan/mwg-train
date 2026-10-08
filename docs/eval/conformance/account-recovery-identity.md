@@ -16,10 +16,10 @@ Shared target: `data/A6_evaluation/targets/account-recovery/signature.json` (sha
 
 | axis | agreement | variance | budget |
 | --- | --- | --- | --- |
-| structural | 0.815 | 0.0165 | >= 0.6 |
-| geometry | 0.979 | 0.0004 | >= 0.6 |
-| controls | 1.000 | 0.0000 | >= 0.9 |
-| overall | 0.918 | 0.0028 | >= 0.6 |
+| structural | 0.815 | 0.0165 | >= 0.75 |
+| geometry | 0.979 | 0.0004 | >= 0.9 |
+| controls | 1.000 | 0.0000 | >= 0.95 |
+| overall | 0.918 | 0.0028 | >= 0.8 |
 
 Weakest pair: raw/vue at 0.853.
 

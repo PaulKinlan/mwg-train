@@ -2,7 +2,7 @@
   "family": "account-recovery",
   "target_signature": "data/A6_evaluation/targets/account-recovery/signature.json",
   "target_sha256": "56be640e0b4ea36550647af277d15c8234d33d3aecd8b3dbacad884564078058",
-  "generated_at": "2026-10-08T12:16:58.200Z",
+  "generated_at": "2026-10-08T12:22:16.005Z",
   "variants": [
     {
       "framework": "raw",
@@ -244,13 +244,48 @@
       "geometry": 0.9437,
       "controls": 1,
       "overall": 0.853
-    }
+    },
+    "weakest_by_axis": {
+      "structural": {
+        "a": "raw",
+        "b": "react",
+        "structural": 0.6818,
+        "geometry": 0.9862,
+        "controls": 1,
+        "overall": 0.8679
+      },
+      "geometry": {
+        "a": "raw",
+        "b": "vue",
+        "structural": 0.6818,
+        "geometry": 0.9437,
+        "controls": 1,
+        "overall": 0.853
+      },
+      "controls": {
+        "a": "raw",
+        "b": "react",
+        "structural": 0.6818,
+        "geometry": 0.9862,
+        "controls": 1,
+        "overall": 0.8679
+      },
+      "overall": {
+        "a": "raw",
+        "b": "vue",
+        "structural": 0.6818,
+        "geometry": 0.9437,
+        "controls": 1,
+        "overall": 0.853
+      }
+    },
+    "degenerate": false
   },
   "budget": {
-    "structural": 0.6,
-    "geometry": 0.6,
-    "controls": 0.9,
-    "overall": 0.6
+    "structural": 0.75,
+    "geometry": 0.9,
+    "controls": 0.95,
+    "overall": 0.8
   },
   "findings": []
 }

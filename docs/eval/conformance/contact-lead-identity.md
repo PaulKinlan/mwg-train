@@ -16,10 +16,10 @@ Shared target: `data/A6_evaluation/targets/contact-lead/signature.json` (sha256 
 
 | axis | agreement | variance | budget |
 | --- | --- | --- | --- |
-| structural | 0.805 | 0.0159 | >= 0.6 |
-| geometry | 0.972 | 0.0003 | >= 0.6 |
-| controls | 1.000 | 0.0000 | >= 0.9 |
-| overall | 0.912 | 0.0031 | >= 0.6 |
+| structural | 0.805 | 0.0159 | >= 0.75 |
+| geometry | 0.972 | 0.0003 | >= 0.9 |
+| controls | 1.000 | 0.0000 | >= 0.95 |
+| overall | 0.912 | 0.0031 | >= 0.8 |
 
 Weakest pair: raw/react at 0.854.
 

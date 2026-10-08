@@ -16,10 +16,10 @@ Shared target: `data/A6_evaluation/targets/event-registration/signature.json` (s
 
 | axis | agreement | variance | budget |
 | --- | --- | --- | --- |
-| structural | 0.835 | 0.0132 | >= 0.6 |
-| geometry | 0.981 | 0.0002 | >= 0.6 |
-| controls | 1.000 | 0.0000 | >= 0.9 |
-| overall | 0.927 | 0.0022 | >= 0.6 |
+| structural | 0.835 | 0.0132 | >= 0.75 |
+| geometry | 0.981 | 0.0002 | >= 0.9 |
+| controls | 1.000 | 0.0000 | >= 0.95 |
+| overall | 0.927 | 0.0022 | >= 0.8 |
 
 Weakest pair: raw/hono at 0.885.
 

@@ -35,9 +35,11 @@ export const TARGET_VIEWPORT = Object.freeze({ width: 1280, height: 900 });
  * The R2 identity budget: how much two framework variants that share a target may differ before the
  * difference is a finding rather than a framework's markup convention.
  *
- * `controls` is tight because a form is a form in every framework; `structural` and `geometry` allow
- * for the wrapper and template scaffolding a framework adds. Calibrated against the measured raw
- * variants (docs/eval/conformance/*-identity.md) rather than chosen first: the budget states the
- * divergence we accept, and the report says whether the pilot is inside it.
+ * The floors are the measured per-axis minimum across the five pilot families, less a deliberate
+ * margin - structural measured 0.805 (budget 0.75), geometry 0.972 (0.90), controls 1.000 (0.95),
+ * overall 0.912 (0.80). A budget that simply admits the measurement would never fire; one set far
+ * below it (0.6 everywhere) leaves a third of the range free and would rubber-stamp a real
+ * regression. `controls` is tightest because a form is a form in every framework; `structural`
+ * allows the most, because that is where a framework's own wrapper and template scaffolding live.
  */
-export const IDENTITY_BUDGET = Object.freeze({ structural: 0.6, geometry: 0.6, controls: 0.9, overall: 0.6 });
+export const IDENTITY_BUDGET = Object.freeze({ structural: 0.75, geometry: 0.9, controls: 0.95, overall: 0.8 });
