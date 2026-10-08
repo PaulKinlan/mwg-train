@@ -36,9 +36,9 @@ Recorded in `pilot/TRAINING_CORPUS.json`, spanning 30 synthetic families (`tr-01
 |---|---:|---:|---:|---:|---|---|
 | **`app_sources`** | **3,026,754** | **3,174,700** | **6,201,454** | **1,550,364** | **[1,162,773, 1,937,954]** | **PRIMARY headline figure** |
 | `project_manifest` | 26,190 | 26,190 | 52,380 | 13,095 | [9,821, 16,369] | `package.json` dependencies & scripts |
-| `harness_metadata` | 791,797 | 791,797 | 1,583,594 | 395,899 | [296,924, 494,873] | `spec.json` harness metadata (EXCLUDED) |
+| `harness_metadata` | 817,144 | 817,144 | 1,634,288 | 408,572 | [306,429, 510,715] | `spec.json` harness metadata (EXCLUDED) |
 | `prompt` | 0 | 0 | 0 | 0 | [0, 0] | Measured zero (documented gap; see below) |
-| *full_tree (all)* | *3,844,741* | *3,992,687* | *7,837,428* | *1,959,357* | *[1,469,518, 2,449,196]* | *Total on-disk tree for comparison* |
+| *full_tree (all)* | *3,870,088* | *4,018,034* | *7,888,122* | *1,972,031* | *[1,479,023, 2,465,038]* | *Total on-disk tree for comparison* |
 
 - **Headline Characters (`app_sources`):** **6,201,454 characters** (3,026,754 original + 3,174,700 uplifted)
 - **Headline Derived Tokens:** **1,550,364 tokens**
@@ -51,6 +51,11 @@ Recorded in `pilot/TRAINING_CORPUS.json`, spanning 30 synthetic families (`tr-01
 > described a corpus that no longer existed; the figure above is the one that reproduces from the
 > committed trees. Any cost projection built from an earlier number is off by up to 5.4% at the
 > headline - still derived from characters, so the ±25% band dominates it.
+>
+> The `full_tree` and `harness_metadata` scopes moved again on `mwg-train-7d6` (`harness_metadata`
+> 395,899 → **408,572**, `full_tree` 1,959,357 → **1,972,031**) because the scaffold now declares each
+> brief's listing-detail route rather than dropping it. The **headline is unchanged**: `app_sources`
+> excludes `spec.json`, which is the only thing that grew.
 
 ---
 
