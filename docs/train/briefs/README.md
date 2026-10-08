@@ -54,5 +54,5 @@ Passes cleanly, verifying that 60 training rows share no family_id and no target
 ## What Has NOT Been Done
 
 These briefs are authored specification items (prompts, expected routes, journeys, assertions, and rule requirements).
-- **No model-generated code or project implementations have been created yet.**
+- **No model-generated implementations exist yet.** Template implementations of the family archetypes DO exist: `scripts/scaffold-training-corpus.mjs` builds 210 projects (30 families x 7 frameworks) whose tree hashes are recorded in `pilot/TRAINING_CORPUS.json`. Those are authored templates, not model output, and they are not browser-verified.
 - These rows represent the inputs to the training and synthesis pipeline, not model outputs or finished web applications.

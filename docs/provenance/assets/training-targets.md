@@ -24,10 +24,17 @@ at viewport 1280x900 by headless Chrome through the repository's CDP harness
 (`scripts/render-training-targets.mjs`).
 
 Each design is tailored to its specific archetype, topic, and route structure. No third-party
-page was opened, captured, or reproduced at any point. Furthermore, these designs are
-strictly distinct and independent from the five held-out evaluation target designs in
-`docs/eval/targets/` (A6 arm): they use independent markup, layouts, color schemes, and
-typography, verified by hash and family disjointness checks.
+page was opened, captured, or reproduced at any point. These designs are also distinct from the
+five held-out evaluation target designs in `docs/eval/targets/` (A6 arm).
+
+What is mechanically verified is non-identity: zero shared image hashes, zero shared family ids,
+and every committed PNG re-hashing to its manifest row. That is byte and family disjointness, not
+design independence. Design independence is supported by a MEASUREMENT rather than a check - the
+highest conformance of any training target to any A6 target is 0.5055 overall (tr-27 against A6
+`booking`: structural 0.5961, geometry 0.4773, controls 0.4000), with min 0.3328 and median 0.4132
+across the 30 designs, measured by `src/eval/conformance.mjs`. Those numbers are evidence that no
+training design is a lightly restyled evaluation page; they are not proof that no markup or layout
+pattern is shared, and several designs do reuse conventional card and column patterns.
 
 ## What they deliberately do not contain
 

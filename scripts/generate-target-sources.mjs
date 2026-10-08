@@ -3,9 +3,11 @@
  * Author 30 independent, domain-authentic target designs for the tr-* families (tr-01..tr-30).
  *
  * Each design is a standalone static HTML5 page with custom scoped CSS, realistic layout,
- * accessible form controls, and domain-appropriate styling. They are strictly independent
- * from the held-out evaluation targets in docs/eval/targets/ (A6 arm) and share zero markup,
- * class names, color palettes, or layout structures.
+ * accessible form controls, and domain-appropriate styling. They are distinct from the held-out
+ * evaluation targets in docs/eval/targets/ (A6 arm): the highest conformance of any design here to
+ * any A6 target is 0.5055 overall (median 0.4132), measured by src/eval/conformance.mjs. They do
+ * reuse ordinary web idioms that any page shares - plain forms, cards, columns - so "zero shared
+ * markup" would be an overclaim; what is true is that no design reproduces an A6 page.
  *
  * Viewport: 1280x900.
  */

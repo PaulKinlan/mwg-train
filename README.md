@@ -14,7 +14,7 @@ Experiment: does training on Modern Web Guidance-applied sites make a model defa
 | The durable functional specification of each pilot family | [`docs/eval/specs/`](docs/eval/specs/) — state, persistence, journeys and acceptance; a project rebuilds from it without the archetype table |
 | The target designs and the conformance axis | [`docs/eval/conformance/`](docs/eval/conformance/) — target provenance, the axis, per-family identity |
 | The training-side briefs, disjoint from the sealed set | [`docs/train/briefs/`](docs/train/briefs/) — synthetic families in their own `tr-` namespace, never validated against the sealed eval schema |
-| How large the training corpus is, and what it therefore costs | [`docs/train/corpus/`](docs/train/corpus/) — measured characters per scope and the derived token figure, with its band |
+| How large the PILOT corpus is, and what it therefore costs | [`docs/train/corpus/`](docs/train/corpus/) — measured characters per scope and the derived token figure, with its band. **This measures the 34 pilot pairs only; the 210 `tr-*` training trees are NOT yet measured.** |
 | Provenance, rights and retention for every asset | [`docs/provenance/`](docs/provenance/) — manifest, arms, retained refs |
 
 ## Checks
@@ -28,7 +28,7 @@ npm run price:sheets        # regenerate docs/eval/pricing.sheets.md
 npm run check:train-evidence # reachability records complete, each row backed by its quote
 npm run check:specs          # rebuild every family from its specification and compare tree hashes
 npm run check:disjoint       # refuse a training corpus that shares a family or a target design with the sealed eval
-npm run train:tokens         # measure the training corpus and derive the token figure the price sheet rests on
+npm run train:tokens         # measure the PILOT corpus and derive its token figure (the tr-* corpus is not yet measured)
 npm run lint:provenance     # provenance manifest rules
 npm run scan:owner-auth     # owner-auth gate: no owner-identifying material in any corpus tree
 ```

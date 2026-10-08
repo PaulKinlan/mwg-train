@@ -13,7 +13,7 @@ That sum is a **serialized pair-volume estimate, not a measurement of generated 
 `spec.json` is generator and harness metadata written by the pilot so runs can be recorded and re-scored; because a model is never asked to generate harness metadata, it is not a training target and is strictly excluded from headline training token sizing.
 
 ## Measurement by Scope
-Across the 34 accepted project pairs from `pilot/plan.json` (filtered against `pilot/CORPUS.json`, omitting `catalogue-vue` which required no warranted changes):
+**This measures the pilot corpus, not the `tr-*` training corpus.** Everything below is the 34 accepted project pairs from `pilot/plan.json` (filtered against `pilot/CORPUS.json`, omitting `catalogue-vue` which required no warranted changes). The 210 `tr-*` training trees recorded in `pilot/TRAINING_CORPUS.json` are NOT measured here; their token count is currently **unmeasured**, and the figure below must not be presented as the training corpus size. A reader wanting that number needs `scripts/train-corpus-tokens.mjs` extended to read the training record first.
 
 | Scope | Original (chars) | Uplifted (chars) | Total (chars) | Derived Tokens | Band (±25%) | Role in Sizing |
 |---|---:|---:|---:|---:|---|---|
