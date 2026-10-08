@@ -133,6 +133,13 @@ test('our own disclaimer is not mistaken for a claim', () => {
   // The possessive attaches to the noun after it, so this is about their rules and not our floor.
   assert.equal(falseProvenance("Our baseline uses web-uplift's rules."), null);
   assert.equal(falseProvenance("We follow web-uplift's guides."), null);
+  assert.equal(falseProvenance("We follow web-uplift's rule set."), null);
+  // 'guidance' was missing from the artefact nouns, so a true statement was flagged.
+  assert.equal(falseProvenance("Our baseline follows web-uplift's guidance."), null);
+  // The exception applies only when the possessive ENDS at their artefact noun. Here the hyphen makes
+  // 'rules' a modifier of 'baseline', so the head noun is 'baseline' - a claim about our floor that an
+  // earlier version skipped because the captured word was 'rules'.
+  assert.equal(falseProvenance("Our floor is web-uplift's rules-based baseline"), "web-uplift's rules");
 });
 
 test('a registered report that is missing fails rather than passing quietly', () => {

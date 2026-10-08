@@ -89,7 +89,7 @@ const AUTHORING_VERB = /\bweb-uplift\s+(?:generated|produced|output|released|cre
 const AUTHORING_NOUN = /\bweb-uplift\s+(?:product|work|deliverable|artefact|artifact|result|output|baseline|floor|report)\b/i;
 const FLOOR_OBJECT = /\b(?:floor|baseline|report|reports|numbers?|deltas?|results?|scores?|yield|conformance|percentages?)\b/i;
 /** Nouns for web-uplift's own artefact. A clause about one of these is not a claim about our floor. */
-const THEIR_ARTEFACT = /\b(?:catalog(?:ue)?|guide|guides|ruleset|rules?|skill|manifest|docs|documentation|package|hash|hashes|data)\b/i;
+const THEIR_ARTEFACT = /\b(?:catalog(?:ue)?|guide|guides|guidance|ruleset|rules?|skill|manifest|docs|documentation|package|hash|hashes|data)\b/i;
 
 /** The sentence or clause a match sits in, so a negation elsewhere cannot excuse a claim. */
 function clauseAround(text, index) {
@@ -140,7 +140,20 @@ export function falseProvenance(text) {
       // 'baseline' appeared elsewhere in the same clause. The noun is usually INSIDE the match, since the
       // possessive pattern captures it, so it is read from there.
       const possessiveNoun = /(?:'s|\u2019s)\s+([\w-]+)/i.exec(match[0]);
-      if (byPreposition && possessiveNoun && THEIR_ARTEFACT.test(possessiveNoun[1])) continue;
+      if (byPreposition && possessiveNoun) {
+        // The exception applies only when the possessive really does END at their artefact noun. Review
+        // found that "web-uplift's rules-based baseline" slipped through because the captured noun was
+        // 'rules' and the artefact test matched it - but the hyphen makes 'rules' a modifier, so the head
+        // noun is 'baseline' and this IS a claim about our floor. A hyphen directly after the noun means
+        // it is modifying something else.
+        // The CLAUSE, not the match: the hyphen in "rules-based" falls outside the match, because the
+        // possessive pattern stops at the word boundary. Slicing the match made this check a no-op.
+        const afterNoun = clause.slice(offset + possessiveNoun.index + possessiveNoun[0].length);
+        const modifiesSomethingElse = afterNoun.startsWith('-');
+        // 'rule set'/'rule list' are still their artefact, so a naming word may follow.
+        const continuesArtefact = /^\s+(?:set|list|file|files|hash|hashes|catalog(?:ue)?)\b/i.test(afterNoun);
+        if (!modifiesSomethingElse && (THEIR_ARTEFACT.test(possessiveNoun[1]) || continuesArtefact)) continue;
+      }
       // A clause that names only their artefact is a true statement about their work - "the canonical
       // catalog published by web-uplift" - and flagging it would make the check wrong about the thing it
       // is right about. Only a clause about our floor (or one that names neither, and so implicitly
