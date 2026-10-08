@@ -547,7 +547,7 @@ export function buildCapturedProjects({ spec, outDir = null, framework = null, q
       ? resolveCaptureOutputPath(join(outputDir, built.projectId), outputOptions)
       : assetStoragePath('A4_clean_room_reproduction', projectRelPath, options);
 
-    writeProject(projectDir, built);
+    writeProject(projectDir, { ...built, includeDependencies: true });
     projects[fw] = projectDir;
     builtProjects[fw] = built;
   }

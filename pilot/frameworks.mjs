@@ -1415,14 +1415,19 @@ const armPackages = {
   svelte: ['svelte'],
 };
 
-export function writeProject(root, { projectId, files, spec }) {
-  const packages = armPackages[spec.framework?.name];
-  if (!packages) throw new Error(`unknown project framework '${spec.framework?.name}'`);
-  const repositoryDependencies = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).dependencies;
-  const dependencies = Object.fromEntries(packages.map((name) => {
-    if (!repositoryDependencies[name]) throw new Error(`missing repository dependency '${name}'`);
-    return [name, repositoryDependencies[name]];
-  }));
+export function writeProject(root, { projectId, files, spec, includeDependencies = false }) {
+  // Only published capture projects opt in. Pilot and training manifests predate per-arm
+  // dependencies and must remain byte-identical to their recorded trees.
+  const manifest = { name: `pilot-${projectId}`, private: true, type: 'module', scripts: { start: 'node server.mjs' } };
+  if (includeDependencies) {
+    const packages = armPackages[spec.framework?.name];
+    if (!packages) throw new Error(`unknown project framework '${spec.framework?.name}'`);
+    const repositoryDependencies = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).dependencies;
+    manifest.dependencies = Object.fromEntries(packages.map((name) => {
+      if (!repositoryDependencies[name]) throw new Error(`missing repository dependency '${name}'`);
+      return [name, repositoryDependencies[name]];
+    }));
+  }
   for (const [path, content] of Object.entries(files)) {
     const target = join(root, path);
     mkdirSync(dirname(target), { recursive: true });
@@ -1431,7 +1436,7 @@ export function writeProject(root, { projectId, files, spec }) {
   writeFileSync(join(root, 'spec.json'), `${JSON.stringify(spec, null, 2)}\n`);
   writeFileSync(
     join(root, 'package.json'),
-    `${JSON.stringify({ name: `pilot-${projectId}`, private: true, type: 'module', scripts: { start: 'node server.mjs' }, dependencies }, null, 2)}\n`,
+    `${JSON.stringify(manifest, null, 2)}\n`,
   );
   return root;
 }

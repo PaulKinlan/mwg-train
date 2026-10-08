@@ -76,6 +76,18 @@ const spec = (overrides = {}) => ({
   ...overrides,
 });
 
+test('pilot project manifests retain the original dependency-free bytes for every arm', (t) => {
+  const root = mkdtempSync(join(tmpdir(), 'pilot-package-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  for (const frameworkName of Object.keys(FRAMEWORKS)) {
+    const built = buildProject({ archetypeId: plan.projects[0].archetype, frameworkName });
+    const dir = join(root, frameworkName);
+    writeProject(dir, built);
+    const expected = `${JSON.stringify({ name: `pilot-${built.projectId}`, private: true, type: 'module', scripts: { start: 'node server.mjs' } }, null, 2)}\n`;
+    assert.equal(readFileSync(join(dir, 'package.json'), 'utf8'), expected, frameworkName);
+  }
+});
+
 test('every measured rule resolves to a guide in the pinned snapshot', () => {
   // rules.json stores guides as `categories[category][slug]`, not as `category/slug` strings. Comparing
   // against the file as text reported all six rules as missing guides when all six are real ones.
