@@ -107,7 +107,23 @@ data/A6_evaluation/
 - The actor is reminded of the rule at the moment of the mistake, not in a policy document nobody
   reads.
 
-## 5. Evidence, and how to check it
+## 5. Originals are retained, not just recorded
+
+An original that is named only in a manifest is not retained: `git gc` can collect it, and this
+fleet prunes branches. Every original therefore lives on a ref that no prune touches,
+`refs/tags/original/<asset-id>`, and the manifest records the **ref** as well as the commit and tree
+so reachability is provable from the record alone rather than inferred from a branch that may no
+longer exist.
+
+- `scripts/retain-original.mjs` creates and pushes that ref and prints the fields for the record. A
+  retained ref is immutable: the command refuses to repoint it at a different commit.
+- `scripts/verify-originals.mjs` is the gate. It resolves the recorded ref, checks the object exists
+  and that the ref still points at the recorded sha, and with `--remote` checks the ref was actually
+  pushed. It **fails closed**: a corpus whose originals cannot be re-derived does not pass.
+- See `docs/provenance/original-refs.md` for the scheme, the two server-side settings a clone cannot
+  verify, and what to do if an original turns out to be wrong.
+
+## 6. Evidence, and how to check it
 
 - `scripts/capture-rights-evidence.sh` fetches every source, records URL, final URL, HTTP status,
   content type, byte count, sha256 and fetch time into `evidence/manifest.jsonl`, and writes text
@@ -123,7 +139,10 @@ data/A6_evaluation/
   origin returning 403 to curl and the two commonly-cited Z.ai URLs returning 404.
 - `node scripts/check-provenance-quotes.mjs` re-derives every blockquote in this directory from the
   local captures and checks the cited line numbers, so a quote or citation that drifts is caught
-  rather than trusted. It currently reports 29/29 quotes and 29/29 citations.
+  rather than trusted. It currently reports 29/29 quotes and 29/29 citations. A blockquote whose
+  source is not a captured page - the owner, or a bead - is marked on the line above it with
+  `<!-- quote-source: ... -->` and listed as an exemption with its reason, so the escape hatch is
+  visible instead of silent.
 - `test/` covers the enforcement rules end to end (`node --test`).
 
 ## 6. Open items
@@ -143,6 +162,9 @@ Ordered by what unblocks the most work:
 5. **The Gemma share-alike question for guide text**: the MWG README says portions of the
    documentation derive from MDN (CC-BY-SA 2.5+). Which portions, and does share-alike attach?
    `assets/mwg-modern-web-guidance.md`.
+6. **No corpus exists yet, so no real original is retained.** The retention tooling and gate are in
+   place and are exercised against a real repository in `test/originals.test.mjs`, but the first
+   generated site must be retained before any uplift is taken from it - design brief clause 5.
 6. **The bundled MiniLM weights** in the MWG npm package carry no licence statement and no notice
    entry anywhere in the package.
 7. **CC-BY-4.0 and trained weights**: nothing in the licence restricts them, but whether weights are

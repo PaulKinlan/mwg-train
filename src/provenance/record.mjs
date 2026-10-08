@@ -19,6 +19,7 @@ import {
   defaultExcludedFromTraining,
   isTrainable,
 } from './arms.mjs';
+import { validateOriginalFields } from './originals.mjs';
 
 export const KINDS = Object.freeze(['brief', 'original', 'uplift', 'reproduction', 'evaluation', 'asset']);
 
@@ -164,6 +165,26 @@ export function validateRecord(record) {
       add('BAD_PARENTS', 'parents', 'parents must be an array of asset ids');
     } else if (record.parents.includes(record.id)) {
       add('SELF_PARENT', 'parents', 'an asset cannot be its own parent');
+    }
+  }
+
+  // Retention: an original that is only named in this manifest is not retained. See originals.mjs.
+  findings.push(...validateOriginalFields(record));
+
+  if (record.retention !== undefined) {
+    if (!isPlainObject(record.retention)) {
+      add('BAD_RETENTION', 'retention', 'retention must be an object describing where the original ref lives');
+    } else {
+      if (!nonEmptyString(record.retention.repo)) {
+        add('BAD_RETENTION', 'retention.repo', 'retention.repo must name the repository holding the original');
+      }
+      if (
+        !Array.isArray(record.retention.protections) ||
+        record.retention.protections.length === 0 ||
+        record.retention.protections.some((p) => !nonEmptyString(p))
+      ) {
+        add('BAD_RETENTION', 'retention.protections', 'retention.protections must list at least one setting that keeps the ref alive');
+      }
     }
   }
 

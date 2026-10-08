@@ -53,9 +53,14 @@ function markdownFiles(dir) {
 }
 
 const CITATION = /(?:extracted\s+)?lines?\s+(\d+)(?:\s*[-–]\s*(\d+))?/gi;
+// A blockquote whose source is not a captured third-party page (typically the owner or a bead) is
+// marked with the comment `<!-- quote-source: <where it came from> -->` on the line above it, and is
+// exempt from capture verification. The reason is printed, so an exemption is visible, not silent.
+const EXEMPT_MARKER = /<!--\s*quote-source:\s*([^>]*?)\s*-->/;
 
 let checked = 0;
 let citations = 0;
+const exempt = [];
 const unreproducible = [];
 const badCitation = [];
 
@@ -63,12 +68,19 @@ for (const file of markdownFiles(PROVENANCE)) {
   const lines = readFileSync(file, 'utf8').split('\n');
   let block = [];
   let citedFrom = null;
+  let exemptReason = null;
   const flush = () => {
-    const quote = normalise(block.map((line) => line.replace(/^>\s?/, '')).join(' '));
+    const reason = exemptReason;
     const citedLine = citedFrom;
+    const quote = normalise(block.map((line) => line.replace(/^>\s?/, '')).join(' '));
     block = [];
     citedFrom = null;
+    exemptReason = null;
     if (quote.length < MIN_PROBE) return;
+    if (reason !== null) {
+      exempt.push({ file: file.slice(PROVENANCE.length + 1), reason, probe: quote.slice(0, 60) });
+      return;
+    }
     const probe = quote.slice(0, 60);
     checked += 1;
     const hit = corpus.find(([, text]) => text.includes(probe));
@@ -106,6 +118,11 @@ for (const file of markdownFiles(PROVENANCE)) {
       continue;
     }
     if (block.length > 0) flush();
+    const marker = line.match(EXEMPT_MARKER);
+    if (marker) {
+      exemptReason = marker[1];
+      continue;
+    }
     const citation = [...line.matchAll(CITATION)].pop();
     if (citation) citedFrom = Number(citation[1]);
   }
@@ -115,6 +132,9 @@ for (const file of markdownFiles(PROVENANCE)) {
 console.log(`check-provenance-quotes: ${checked - unreproducible.length}/${checked} quoted passages reproduced from the local captures`);
 for (const { file, probe } of unreproducible) {
   console.log(`UNREPRODUCIBLE  ${file}  ::  ${probe}...`);
+}
+for (const { file, reason } of exempt) {
+  console.log(`EXEMPT  ${file}  ::  quote-source: ${reason}`);
 }
 console.log(`check-provenance-quotes: ${citations - badCitation.length}/${citations} line citations point at the line they claim`);
 for (const { file, claimed, actual, probe } of badCitation) {
