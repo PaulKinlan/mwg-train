@@ -35,6 +35,12 @@ export const DATA_ROOT = 'data';
  * eligibility:
  *   'requires-approval' - policy allows training, but only on rows carrying explicit approval
  *   'prohibited'        - held out of training pending named sign-off (the quarantined arms)
+ *
+ * publication (where the bytes LIVE - a separate axis from training eligibility):
+ *   'public'     - the material lives in the public repo
+ *   'quarantine' - the material lives in the private quarantine store (docs/quarantine.md)
+ * A6 is the case that separates the axes: never trainable (eval material), but its sealed briefs
+ * are public by design - training exclusion without publication quarantine.
  */
 export const ARMS = Object.freeze(
   Object.fromEntries(
@@ -80,8 +86,9 @@ export const ARMS = Object.freeze(
         description:
           'Evaluation briefs, their sites and their results. Never trainable: training on the test set destroys the primary endpoint.',
         eligibility: 'prohibited',
+        publication: 'public',
       },
-    ].map((arm) => [arm.id, Object.freeze({ ...arm, trainable: arm.eligibility === 'requires-approval', quarantined: arm.eligibility === 'prohibited', storageRoot: `${DATA_ROOT}/${arm.id}` })]),
+    ].map((arm) => [arm.id, Object.freeze({ ...arm, publication: arm.publication ?? (arm.eligibility === 'prohibited' ? 'quarantine' : 'public'), trainable: arm.eligibility === 'requires-approval', quarantined: arm.eligibility === 'prohibited', storageRoot: `${DATA_ROOT}/${arm.id}` })]),
   ),
 );
 
