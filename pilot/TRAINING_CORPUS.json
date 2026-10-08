@@ -1,6 +1,6 @@
 {
   "$comment": "The training corpus generated from the tr-* briefs: one project per family x framework, each with its tree hash. `node scripts/scaffold-training-corpus.mjs` re-derives every tree; a hash here must never collide with a hash in pilot/CORPUS.json (original or uplift), which is the disjointness the corpus exists to guarantee.",
-  "generated_at": "2026-10-08T16:22:11.000Z",
+  "generated_at": "2026-10-08T16:26:07.134Z",
   "generator": "scripts/scaffold-training-corpus.mjs",
   "summary": {
     "families": 30,
@@ -4725,7 +4725,7 @@
         "no-aria-sync"
       ],
       "seeded_defects": [
-        "in-page validation errors only change the field border to red; the message is not announced to assistive technology, so a screen reader user gets no indication (the server's own incomplete-form page does carry role=\"alert\", but the in-page indication does not)",
+        "in-page validation messages do appear as visible text and change the field styling, but the fields' aria-invalid is never synchronised and no live region announces them, so the error state is conveyed visually only (the server's own incomplete-form response does carry role=\"alert\")",
         "pressing Enter inside any text input submits the form immediately, before the remaining required fields have been completed"
       ],
       "route_conformed": true,
@@ -4755,7 +4755,7 @@
         "no-aria-sync"
       ],
       "seeded_defects": [
-        "in-page validation errors only change the field border to red; the message is not announced to assistive technology, so a screen reader user gets no indication (the server's own incomplete-form page does carry role=\"alert\", but the in-page indication does not)",
+        "in-page validation messages do appear as visible text and change the field styling, but the fields' aria-invalid is never synchronised and no live region announces them, so the error state is conveyed visually only (the server's own incomplete-form response does carry role=\"alert\")",
         "pressing Enter inside any text input submits the form immediately, before the remaining required fields have been completed"
       ],
       "route_conformed": true,
@@ -4785,7 +4785,7 @@
         "no-aria-sync"
       ],
       "seeded_defects": [
-        "in-page validation errors only change the field border to red; the message is not announced to assistive technology, so a screen reader user gets no indication (the server's own incomplete-form page does carry role=\"alert\", but the in-page indication does not)",
+        "in-page validation messages do appear as visible text and change the field styling, but the fields' aria-invalid is never synchronised and no live region announces them, so the error state is conveyed visually only (the server's own incomplete-form response does carry role=\"alert\")",
         "pressing Enter inside any text input submits the form immediately, before the remaining required fields have been completed"
       ],
       "route_conformed": true,
@@ -4815,7 +4815,7 @@
         "no-aria-sync"
       ],
       "seeded_defects": [
-        "in-page validation errors only change the field border to red; the message is not announced to assistive technology, so a screen reader user gets no indication (the server's own incomplete-form page does carry role=\"alert\", but the in-page indication does not)",
+        "in-page validation messages do appear as visible text and change the field styling, but the fields' aria-invalid is never synchronised and no live region announces them, so the error state is conveyed visually only (the server's own incomplete-form response does carry role=\"alert\")",
         "pressing Enter inside any text input submits the form immediately, before the remaining required fields have been completed"
       ],
       "route_conformed": true,
@@ -4845,7 +4845,7 @@
         "no-aria-sync"
       ],
       "seeded_defects": [
-        "in-page validation errors only change the field border to red; the message is not announced to assistive technology, so a screen reader user gets no indication (the server's own incomplete-form page does carry role=\"alert\", but the in-page indication does not)",
+        "in-page validation messages do appear as visible text and change the field styling, but the fields' aria-invalid is never synchronised and no live region announces them, so the error state is conveyed visually only (the server's own incomplete-form response does carry role=\"alert\")",
         "pressing Enter inside any text input submits the form immediately, before the remaining required fields have been completed"
       ],
       "route_conformed": true,
@@ -4875,7 +4875,7 @@
         "no-aria-sync"
       ],
       "seeded_defects": [
-        "in-page validation errors only change the field border to red; the message is not announced to assistive technology, so a screen reader user gets no indication (the server's own incomplete-form page does carry role=\"alert\", but the in-page indication does not)",
+        "in-page validation messages do appear as visible text and change the field styling, but the fields' aria-invalid is never synchronised and no live region announces them, so the error state is conveyed visually only (the server's own incomplete-form response does carry role=\"alert\")",
         "pressing Enter inside any text input submits the form immediately, before the remaining required fields have been completed"
       ],
       "route_conformed": true,
@@ -4905,7 +4905,7 @@
         "no-aria-sync"
       ],
       "seeded_defects": [
-        "in-page validation errors only change the field border to red; the message is not announced to assistive technology, so a screen reader user gets no indication (the server's own incomplete-form page does carry role=\"alert\", but the in-page indication does not)",
+        "in-page validation messages do appear as visible text and change the field styling, but the fields' aria-invalid is never synchronised and no live region announces them, so the error state is conveyed visually only (the server's own incomplete-form response does carry role=\"alert\")",
         "pressing Enter inside any text input submits the form immediately, before the remaining required fields have been completed"
       ],
       "route_conformed": true,
