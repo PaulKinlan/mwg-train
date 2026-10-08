@@ -166,6 +166,28 @@ export async function launchChrome({ proxy = null, args = [] } = {}) {
     },
   );
 
+  /** Kill the browser and everything it spawned. */
+  const killTree = () => {
+    child.kill('SIGKILL');
+    try {
+      process.kill(-child.pid, 'SIGKILL');
+    } catch {
+      /* already reaped, or never got its own group */
+    }
+  };
+  // The other half of the detached-group bargain. Giving Chrome its own group is what lets `close()` reap
+  // the crashpad handler and the rest of the tree, but it also means a signal aimed at *this* process no
+  // longer reaches the browser: a harness that is terminated (a `timeout`, a reaper sweep, a stopped agent)
+  // used to leave the browser running, and that is how several were orphaned. These handlers make the
+  // browser go down with us. SIGKILL cannot be caught - the reaper's own browser sweep is the backstop.
+  const SIGNALS = ['SIGTERM', 'SIGINT', 'SIGHUP'];
+  const onSignal = () => {
+    killTree();
+    process.exit(1);
+  };
+  for (const signal of SIGNALS) process.on(signal, onSignal);
+  process.on('exit', killTree);
+
   const endpoint = await new Promise((resolve, reject) => {
     let buffer = '';
     const timer = setTimeout(() => reject(new CdpError('CHROME_TIMEOUT', 'Chrome did not report a debugger endpoint')), 20_000);
@@ -219,12 +241,9 @@ export async function launchChrome({ proxy = null, args = [] } = {}) {
       // kill-by-profile-dir sweep: one from a launch of ours ran 46 minutes after the browser was gone. The
       // `--disable-breakpad` and `--disable-crash-reporter` flags were tried and do not stop it on Chrome
       // 155, so the group is the only reliable handle on the pieces.
-      child.kill('SIGKILL');
-      try {
-        process.kill(-child.pid, 'SIGKILL');
-      } catch {
-        /* already reaped, or never got its own group */
-      }
+      killTree();
+      for (const signal of SIGNALS) process.off(signal, onSignal);
+      process.off('exit', killTree);
       // Wait briefly for the browser to release the profile, then remove it. The directory is created per
       // launch and was never cleaned up, so a day of runs left dozens of them (and a few hundred MB) in
       // /tmp; nothing reads it once the browser is gone, and it is ours. Retried, because a single attempt
