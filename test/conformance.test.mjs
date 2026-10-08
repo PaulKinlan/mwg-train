@@ -12,7 +12,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
-import { controlSimilarity, conformanceScore, geometrySimilarity, scoreArm, structuralSimilarity, WEIGHTS } from '../src/eval/conformance.mjs';
+import { controlSimilarity, conformanceScore, geometrySimilarity, identityFindings, scoreArm, structuralSimilarity, variantIdentity, WEIGHTS } from '../src/eval/conformance.mjs';
 import { validateManifest } from '../src/provenance/record.mjs';
 import { parseManifest } from '../src/provenance/record.mjs';
 import { TARGETS_MANIFEST, TARGETS_STORAGE, TARGET_FAMILIES } from '../src/eval/targets.mjs';
@@ -97,6 +97,52 @@ test('a target with no controls scores control similarity as a pass by vacuity, 
   // This is the reason the renderer refuses a page with no controls: the metric itself cannot tell an
   // empty target from a perfectly matched one.
   assert.equal(controlSimilarity(signature({}), signature({})), 1);
+});
+
+test('variantIdentity is 1 when the variants agree and names the outlier when they do not', () => {
+  const a = signature({ tags: ['main', 'form', 'input'], boxes: [box('form', 0, 0, 1, 0.6)], controls: [{ tag: 'input', type: 'text', name: 'name', label: 'Name' }] });
+  const b = structuredClone(a);
+  assert.equal(variantIdentity(a, [{ framework: 'raw', signature: a }, { framework: 'react', signature: b }]).identity.overall, 1);
+  const odd = signature({ tags: ['div', 'form'], boxes: [box('form', 0.6, 0.6, 0.2, 0.2)], controls: [{ tag: 'input', type: 'text', name: 'name', label: null }] });
+  const report = variantIdentity(a, [{ framework: 'raw', signature: a }, { framework: 'react', signature: b }, { framework: 'odd', signature: odd }]);
+  assert.ok(report.identity.overall < 1, 'a divergent variant must lower the family identity');
+  assert.ok(report.weakest_pair.a === 'odd' || report.weakest_pair.b === 'odd', 'the outlier must be named');
+  assert.ok(report.variance.overall > 0, 'variance must be non-zero when variants diverge');
+});
+
+test('identityFindings names the axis below budget and the pair responsible', () => {
+  const findings = identityFindings({ identity: { structural: 0.4, geometry: 0.8, controls: 0.95, overall: 0.7 }, weakest_pair: { a: 'raw', b: 'vue' } }, { structural: 0.6, controls: 0.9 });
+  assert.equal(findings.length, 1);
+  assert.equal(findings[0].axis, 'structural');
+  assert.equal(findings[0].pair, 'raw/vue');
+});
+
+test('every family has exactly one shared target, not one per framework', () => {
+  const rows = parseManifest(readFileSync(join(ROOT, TARGETS_MANIFEST), 'utf8'));
+  const frameworkNames = ['raw', 'react', 'preact', 'vue', 'hono'];
+  for (const family of TARGET_FAMILIES) {
+    const targets = rows.filter((row) => row.family_id === family.family_id);
+    assert.equal(targets.length, 1, `${family.family_id} must have exactly one shared target`);
+    assert.ok(!frameworkNames.some((name) => targets[0].id === `target-${name}`), 'a target must be family-level, not framework-level');
+    assert.ok(!('framework' in targets[0]), 'a target must not name a framework');
+  }
+});
+
+test('the committed variant-identity reports are inside the declared budget', () => {
+  for (const family of TARGET_FAMILIES) {
+    const path = join(ROOT, 'docs/eval/conformance', `${family.family_id}-identity.json`);
+    assert.ok(existsSync(path), `${family.family_id}-identity.json is missing; run scripts/score-variant-identity.mjs --all`);
+    const report = JSON.parse(readFileSync(path, 'utf8'));
+    assert.deepEqual(report.findings, [], `${family.family_id} is below budget: ${JSON.stringify(report.findings)}`);
+    for (const [axis, minimum] of Object.entries(report.budget)) {
+      assert.ok(report.identity.identity[axis] >= minimum, `${family.family_id}: ${axis} ${report.identity.identity[axis]} < budget ${minimum}`);
+    }
+    for (const variant of report.variants) {
+      assert.equal(typeof variant.raw, 'number');
+      assert.equal(typeof variant.target, 'number');
+      assert.equal(variant.delta, Math.round((variant.target - variant.raw) * 10000) / 10000);
+    }
+  }
 });
 
 test('every target in the manifest is hash-pinned, rights-cleared and never trainable', () => {

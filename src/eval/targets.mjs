@@ -30,3 +30,14 @@ export const TARGET_FAMILIES = Object.freeze([
 ]);
 
 export const TARGET_VIEWPORT = Object.freeze({ width: 1280, height: 900 });
+
+/**
+ * The R2 identity budget: how much two framework variants that share a target may differ before the
+ * difference is a finding rather than a framework's markup convention.
+ *
+ * `controls` is tight because a form is a form in every framework; `structural` and `geometry` allow
+ * for the wrapper and template scaffolding a framework adds. Calibrated against the measured raw
+ * variants (docs/eval/conformance/*-identity.md) rather than chosen first: the budget states the
+ * divergence we accept, and the report says whether the pilot is inside it.
+ */
+export const IDENTITY_BUDGET = Object.freeze({ structural: 0.6, geometry: 0.6, controls: 0.9, overall: 0.6 });

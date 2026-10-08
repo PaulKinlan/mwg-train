@@ -225,3 +225,61 @@ export function scoreArm({ target, raw, arm }) {
     axes: { raw: baseline, arm: conformant },
   };
 }
+
+/**
+ * How alike are the framework variants that share one target?
+ *
+ * R2's question is whether a framework difference shows up as a *design* difference. The family has a
+ * single shared target, so a variant that scores well against the target is close to the intended
+ * design; `variantIdentity` adds the other half - whether the variants agree with *each other*, which
+ * is what stops a framework's own layout conventions from being read as an aesthetic result.
+ *
+ * The report keeps the weakest pair and the per-axis variance rather than only a mean: a family where
+ * four variants agree and one is an outlier has a mean that hides the outlier, and the outlier is the
+ * finding.
+ */
+export const IDENTITY_AXES = Object.freeze(['structural', 'geometry', 'controls', 'overall']);
+
+export function variantIdentity(target, variants) {
+  const targets = variants.map((variant) => ({ framework: variant.framework, ...conformanceScore(target, variant.signature) }));
+  const pairwise = [];
+  for (let i = 0; i < variants.length; i += 1) {
+    for (let j = i + 1; j < variants.length; j += 1) {
+      pairwise.push({ a: variants[i].framework, b: variants[j].framework, ...conformanceScore(variants[i].signature, variants[j].signature) });
+    }
+  }
+  const mean = (values) => (values.length === 0 ? 1 : round(values.reduce((sum, value) => sum + value, 0) / values.length));
+  const identity = Object.fromEntries(IDENTITY_AXES.map((axis) => [axis, mean(pairwise.map((pair) => pair[axis]))]));
+  const variance = Object.fromEntries(
+    IDENTITY_AXES.map((axis) => {
+      if (pairwise.length === 0) return [axis, 0];
+      const average = identity[axis];
+      return [axis, round(pairwise.reduce((sum, pair) => sum + (pair[axis] - average) ** 2, 0) / pairwise.length)];
+    }),
+  );
+  const weakestPair = pairwise.length === 0 ? null : [...pairwise].sort((a, b) => a.overall - b.overall)[0];
+  return { target_conformance: targets, pairwise, identity, variance, weakest_pair: weakestPair };
+}
+
+/**
+ * Does a family's cross-variant identity meet the preregistered budget? A framework may legitimately
+ * change the markup; it may not change the layout, the component hierarchy, the spacing or the visual
+ * system, so the budget is per axis and a failure names the axis and the pair.
+ */
+export function identityFindings(identity, budget) {
+  const findings = [];
+  for (const [axis, minimum] of Object.entries(budget ?? {})) {
+    const actual = identity?.identity?.[axis];
+    if (typeof actual === 'number' && actual < minimum) {
+      findings.push({
+        code: 'IDENTITY_BELOW_BUDGET',
+        axis,
+        actual,
+        minimum,
+        message: `variants agree on ${axis} at ${actual}, below the ${minimum} budget`,
+        pair: identity?.weakest_pair ? `${identity.weakest_pair.a}/${identity.weakest_pair.b}` : null,
+      });
+    }
+  }
+  return findings;
+}

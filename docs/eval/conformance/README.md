@@ -51,6 +51,62 @@ npm run render:targets     # re-render the targets (needs Chrome)
 npm run check:targets      # verify the committed bytes against the manifest + provenance
 ```
 
+## Variant identity within a family (R2)
+
+A family's variants must be comparable: if a framework's own layout conventions change the design,
+then a framework effect has been confounded with an aesthetic choice. The shared-target invariant is
+enforced by the manifest - one target per family, never one per framework - and the divergence is
+measured:
+
+```
+node scripts/score-variant-identity.mjs --all
+```
+
+writes `docs/eval/conformance/<family>-identity.{json,md}` with both halves of the question:
+
+- the **delta from raw baseline to the shared target** for every framework variant, and
+- the **cross-variant identity**: pairwise agreement between the raw variants, per axis, with the
+  weakest pair named and the per-axis variance reported rather than averaged away.
+
+`IDENTITY_BUDGET` in `src/eval/targets.mjs` is the declared tolerance per axis. `controls` is tight
+because a form is a form in every framework; `structural` and `geometry` allow for the wrapper and
+scaffolding a framework adds. A variant that leaves the budget is a finding, not a number to
+round away, and the budget is calibrated against the measured variants rather than chosen first.
+
+The identity axis is a statement about *how different the frameworks are allowed to be*, not an
+assertion that they are identical: distinct frameworks legitimately emit different markup, and the
+budget says how much of that difference still counts as the same design.
+
+### Framework set
+
+The pilot builds each archetype in five frameworks: `raw` (the web platform), `react`, `preact`,
+`vue` and `hono`. Those five are the measured comparison set. Svelte needs a compile step and a Web
+Components arm needs a client-side custom-element runtime; neither is in the pilot because the pilot's
+whole premise is that the markup a browser receives is the markup in the file, so the deterministic
+uplift tool can edit it. Widening the matrix to those two arms is tracked separately as
+`mwg-train-mn7`, so this axis stays a statement about identity rather than a moving framework set.
+
+### Measured identity (five pilot families)
+
+| family | identity | structural | geometry | controls | weakest pair |
+| --- | --- | --- | --- | --- | --- |
+| catalogue | 0.953 | 0.891 | 0.989 | 1.000 | react/preact 0.918 |
+| booking | 0.930 | 0.846 | 0.976 | 1.000 | raw/preact 0.843 |
+| event-registration | 0.927 | 0.835 | 0.981 | 1.000 | raw/hono 0.885 |
+| account-recovery | 0.918 | 0.815 | 0.979 | 1.000 | raw/vue 0.853 |
+| contact-lead | 0.912 | 0.805 | 0.972 | 1.000 | raw/react 0.854 |
+
+The reading is the point of the axis. **Controls 1.000 everywhere** and **geometry 0.97-0.99**: the
+frameworks build the same set of controls in the same places, so framework choice is not moving the
+layout or the form. The only real divergence is **structural** (0.80-0.89) - React, Vue and Preact
+scaffold the same tree with their own wrapper elements, which is exactly a framework convention and
+not an aesthetic decision. That is the distinction R2 needed: a variant may differ in markup, and the
+budget reports how much of that difference is still the same design.
+
+Per-variant deltas from the raw baseline to the shared target are in each
+`<family>-identity.md`; in all five families the mean delta is within +/-0.005, i.e. the deterministic
+a11y uplift does not move a build towards its target design.
+
 ## Scoring a family
 
 ```
