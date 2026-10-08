@@ -556,7 +556,7 @@ const rawListRoutes = (archetype, auth) => {
     .filter((route) => route.kind === 'list')
     .map((route) =>
       [
-        `  if (path === '${route.path}' && request.method === 'GET') {`,
+        `  if (path === ${JSON.stringify(route.path)} && request.method === 'GET') {`,
         ...(auth ? [RAW_AUTH_GUARD] : []),
         '    const rows = list.all();',
         `    return html(response, listPage(${JSON.stringify(route.path)}, ${JSON.stringify(detailPrefix)}, rows));`,
@@ -573,7 +573,7 @@ const honoListRoutes = (archetype, auth) => {
     .filter((route) => route.kind === 'list')
     .map((route) =>
       [
-        `app.get('${route.path}', (c) => {`,
+        `app.get(${JSON.stringify(route.path)}, (c) => {`,
         ...(auth ? ["  if (!authSessionEmail(c.req.header('cookie'))) return c.redirect('/login', 303);"] : []),
         `  return c.html(listPage(${JSON.stringify(route.path)}, ${JSON.stringify(detailPrefix)}, list.all()));`,
         '});',
@@ -764,11 +764,13 @@ ${caps.auth ? `    // The account session echo: which account the login cookie b
 
   if (path === '/api/records' && request.method === 'GET') {
     // The write journey's read side: what the server actually stored, listed back to the caller.
-    return json(response, list.all().map((row) => ({ ref: row.ref, ...JSON.parse(row.payload) })));
+${caps.auth ? `    if (!authSessionEmail(request.headers.cookie)) return json(response, { error: 'no session' }, 401);
+` : ''}    return json(response, list.all().map((row) => ({ ref: row.ref, ...JSON.parse(row.payload) })));
   }
 
   if (path.startsWith('/api/record/') && request.method === 'GET') {
-    const row = select.get(path.split('/').pop());
+${caps.auth ? `    if (!authSessionEmail(request.headers.cookie)) return json(response, { error: 'no session' }, 401);
+` : ''}    const row = select.get(path.split('/').pop());
     if (!row) return json(response, { error: 'not found' }, 404);
     return json(response, { ref: row.ref, ...JSON.parse(row.payload) });
   }
@@ -914,7 +916,10 @@ app.get(readPath, (c) => {
 ${caps.detail_page ? `${caps.auth ? "  if (!authSessionEmail(c.req.header('cookie'))) return c.redirect('/login', 303);\n" : ''}  return c.html(detailPage(row));` : "  return c.html(renderDocument({ title: 'Your submission' }));"}
 });
 
-app.get('/api/records', (c) => c.json(list.all().map((row) => ({ ref: row.ref, ...JSON.parse(row.payload) }))));
+${caps.auth ? `app.get('/api/records', (c) => {
+  if (!authSessionEmail(c.req.header('cookie'))) return c.json({ error: 'no session' }, 401);
+  return c.json(list.all().map((row) => ({ ref: row.ref, ...JSON.parse(row.payload) })));
+});` : "app.get('/api/records', (c) => c.json(list.all().map((row) => ({ ref: row.ref, ...JSON.parse(row.payload) }))));"}
 
 ${caps.auth ? `app.get('/api/me', (c) => {
   const email = authSessionEmail(c.req.header('cookie'));
@@ -933,7 +938,7 @@ ${caps.auth ? `app.get('/api/me', (c) => {
 });`}
 
 app.get('/api/record/:ref', (c) => {
-  const row = select.get(c.req.param('ref'));
+${caps.auth ? "  if (!authSessionEmail(c.req.header('cookie'))) return c.json({ error: 'no session' }, 401);\n" : ''}  const row = select.get(c.req.param('ref'));
   if (!row) return c.json({ error: 'not found' }, 404);
   return c.json({ ref: row.ref, ...JSON.parse(row.payload) });
 });

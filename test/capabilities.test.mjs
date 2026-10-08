@@ -70,18 +70,30 @@ test('functional: login, protection, list, detail and logout work in both arms',
     await t.test(arm, async () => {
       const dir = mkdtempSync(join(tmpdir(), `caps-${arm}-`));
       const port = arm === 'raw' ? 5520 : 5521;
+      const { projectId, files, spec: projectSpec } = buildProjectFromSpec({ spec, frameworkName: arm });
+      writeProject(dir, { projectId, files, spec: projectSpec });
+      symlinkSync(NODE_MODULES, join(dir, 'node_modules'), 'dir');
       const child = spawn('node', ['server.mjs', '--port', String(port), '--db', join(dir, 'test.sqlite')], { cwd: dir, stdio: ['ignore', 'ignore', 'pipe'] });
       try {
-        const { projectId, files, spec: projectSpec } = buildProjectFromSpec({ spec, frameworkName: arm });
-        writeProject(dir, { projectId, files, spec: projectSpec });
-        symlinkSync(NODE_MODULES, join(dir, 'node_modules'), 'dir');
         const base = `http://127.0.0.1:${port}`;
-        await new Promise((resolve) => setTimeout(resolve, 1500));
+        // Readiness, not a fixed delay: poll the health endpoint until the server answers.
+        let up = false;
+        for (let attempt = 0; attempt < 40 && !up; attempt += 1) {
+          await new Promise((resolve) => setTimeout(resolve, 250));
+          up = await fetch(`${base}/__health`).then((r) => r.ok, () => false);
+        }
+        assert.ok(up, `${arm} server did not come up`);
 
         const listPath = spec.routes.find((route) => route.kind === 'list').path;
         const listAnon = await fetch(`${base}${listPath}`, { redirect: 'manual' });
         assert.equal(listAnon.status, 303, 'unauthenticated list redirects');
         assert.equal(listAnon.headers.get('location'), '/login');
+
+        // The JSON record APIs are guarded too: a page redirect means nothing if the data is open.
+        const recordsAnon = await fetch(`${base}/api/records`, { redirect: 'manual' });
+        assert.equal(recordsAnon.status, 401, 'unauthenticated /api/records is refused');
+        const recordAnon = await fetch(`${base}/api/record/anything`, { redirect: 'manual' });
+        assert.equal(recordAnon.status, 401, 'unauthenticated /api/record/:ref is refused');
 
         const wrong = await fetch(`${base}/login`, {
           method: 'POST',
@@ -115,7 +127,7 @@ test('functional: login, protection, list, detail and logout work in both arms',
         const list = await fetch(`${base}${listPath}`, { headers: { cookie } });
         assert.ok((await list.text()).includes(firstFill), 'the list page shows the stored record');
 
-        const [record] = await (await fetch(`${base}/api/records`)).json();
+        const [record] = await (await fetch(`${base}/api/records`, { headers: { cookie } })).json();
         const detailPath = spec.routes.find((route) => route.kind === 'read-by-reference').path.replace(':ref', record.ref);
         const detail = await fetch(`${base}${detailPath}`, { headers: { cookie } });
         const detailHtml = await detail.text();
