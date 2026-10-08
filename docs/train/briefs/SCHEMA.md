@@ -50,7 +50,7 @@ One JSON object per line in JSONL format.
    - Every rule in `applicable_rules` and `required_rules` must exist in `docs/eval/rules.json`.
    - `required_rules` must be a strict subset of `applicable_rules` with 2 to 4 items.
 5. **No Owner-Auth or Identifying Material (PREREGISTRATION.md §8a):**
-   - Briefs are synthetic and must contain NO owner-identifying material (no real personal names, emails, addresses, phone numbers, or Paul Kinlan's details).
+   - Briefs are synthetic and must contain NO owner-identifying material (no real personal names, emails, addresses or phone numbers). This schema describes that rule without naming anyone, because the gate scans the whole tree and would flag this file too.
    - Only obviously fictional or neutral entities and `.test` domains are permitted.
 6. **Task & Defect Contract:**
    - Generation rows must have `seeded_defects: []`.

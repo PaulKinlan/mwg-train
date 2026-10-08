@@ -5,8 +5,10 @@ This directory records the empirical character measurements and derived training
 
 Fine-tuning on paired code examples (such as modern web uplift tasks) is dominated by the project source files. Measuring only brief prompts severely undercounts corpus volume (by roughly 35×), while measuring the entire written filesystem tree inflates the figure by including harness/generator metadata that models are never trained to produce. This measurement establishes an anchored, reproducible character baseline categorized explicitly by scope.
 
-## Headline Scope: Application Sources Only
-The headline training token sizing covers **application sources only** (`app_sources`: server logic, client runtime, markup, styles, and enhance code).
+## Headline Scope: Application Sources, Both Sides of the Pair
+The headline training token sizing covers **application sources only** (`app_sources`: server logic, client runtime, markup, styles, and enhance code), and it covers **both sides of every accepted pair** - the input side (the original, pre-uplift tree) plus the output side (the uplifted tree).
+
+That sum is a **serialized pair-volume estimate, not a measurement of generated output**. It is the right figure to price only if a recipe supplies both sides of each pair once, as the pairing corpus does. A recipe that trains on the uplifted side alone, or that trains on one example per pair rather than two, would be priced at roughly half of it. The input and output characters are therefore reported separately in `tokens.json` (`characters.original`, `characters.uplifted`) so either framing can be derived from the measurement rather than guessed at.
 
 `spec.json` is generator and harness metadata written by the pilot so runs can be recorded and re-scored; because a model is never asked to generate harness metadata, it is not a training target and is strictly excluded from headline training token sizing.
 

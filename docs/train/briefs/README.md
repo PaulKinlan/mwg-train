@@ -12,7 +12,7 @@
   - 5 repair families (`tr-26` through `tr-30`, 10 briefs) with `task: "repair"` and realistic, specific `seeded_defects`.
 - **Property-Set Invariance:** Within each family, variants differ ONLY in `prompt`, `brief_id`, and `variant_of` (`null` for `-v1`, pointing to canonical `${family_id}-v1` for `-v2`). All other 14 invariant fields (`archetype`, `topic`, `locale`, `framework`, `task`, `stratum`, `routes`, `journeys`, `server_persistence`, `assertions`, `applicable_rules`, `required_rules`, `non_goals`, `seeded_defects`) are identical.
 - **Rules Vocabulary:** Every entry in `required_rules` and `applicable_rules` is drawn from the pinned rules catalog in `docs/eval/rules.json` (`sha256:f6301c020f138ed70287b663107033c757e11120fa87d947248ce5e4b4cdca19`), and `required_rules` is strictly a subset of `applicable_rules` with 2 to 4 rules per brief.
-- **Owner-Auth Contamination Gate (PREREGISTRATION.md §8a):** Contains NO owner-identifying material — no personal names, emails, addresses, phone numbers, or Paul Kinlan's details. Uses neutral, fictional small-business and community scenarios only.
+- **Owner-Auth Contamination Gate (PREREGISTRATION.md §8a):** Contains NO owner-identifying material — no personal names, emails, addresses or phone numbers. Uses neutral, fictional small-business and community scenarios only. (This file describes that rule without naming anyone: the gate scans trees, so a document inside a corpus directory is scanned too.)
 
 ## Split Unit and Strict Disjointness
 
