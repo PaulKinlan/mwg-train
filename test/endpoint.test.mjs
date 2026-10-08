@@ -1,0 +1,301 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+
+import { ARMS, EndpointError, analyseSealed, briefPasses, checkDesign, checkUniverse, decide, failureTaxonomy, pairedDifference, passRate, perFamily, perRule, rng } from '../src/eval/endpoint.mjs';
+
+const RULE = 'accessibility/accessibility';
+
+function brief(family, variant, overrides = {}) {
+  return {
+    brief_id: `${family}-v${variant}`,
+    family_id: family,
+    stratum: 'A_familiar',
+    archetype: 'booking',
+    required_rules: [RULE],
+    ...overrides,
+  };
+}
+
+function result(briefId, arm, overrides = {}) {
+  return {
+    brief_id: briefId,
+    arm,
+    runnable: true,
+    functional: true,
+    rule_results: { [RULE]: true },
+    blocker_accessibility: 0,
+    blocker_security: 0,
+    failures: [],
+    ...overrides,
+  };
+}
+
+test('the primary endpoint needs all five criteria', () => {
+  assert.equal(briefPasses(result('b', 'T'), [RULE]), true);
+
+  assert.equal(briefPasses(result('b', 'T', { runnable: false }), [RULE]), false, 'not runnable');
+  assert.equal(briefPasses(result('b', 'T', { functional: false }), [RULE]), false, 'functional task fails');
+  assert.equal(briefPasses(result('b', 'T', { rule_results: {} }), [RULE]), false, 'required rule not applied');
+  assert.equal(briefPasses(result('b', 'T', { blocker_accessibility: 1 }), [RULE]), false, 'blocker a11y finding');
+  assert.equal(briefPasses(result('b', 'T', { blocker_security: 2 }), [RULE]), false, 'blocker security finding');
+
+  // the rule bundle comes from the brief, so an extra rule the model did apply cannot rescue a miss
+  assert.equal(briefPasses(result('b', 'T', { rule_results: { [RULE]: true, 'forms/x': true } }), [RULE, 'forms/x']), true);
+  assert.throws(() => briefPasses(null, [RULE]), { code: 'NOT_AN_OBJECT' });
+  assert.throws(() => briefPasses(result('b', 'T'), undefined), { code: 'NO_REQUIRED_RULES' });
+});
+
+test('an incomplete design is an error, not a smaller denominator', () => {
+  const briefs = [brief('f1', 1), brief('f2', 1)];
+  const complete = [];
+  for (const b of briefs) for (const arm of ARMS) complete.push(result(b.brief_id, arm));
+  assert.deepEqual(checkDesign(complete, briefs), []);
+
+  const missing = complete.filter((r) => !(r.brief_id === 'f2-v1' && r.arm === 'T_trained_adapter'));
+  const problems = checkDesign(missing, briefs);
+  assert.equal(problems.length, 1);
+  assert.deepEqual(
+    { code: problems[0].code, brief_id: problems[0].brief_id, arm: problems[0].arm },
+    { code: 'MISSING_CELL', brief_id: 'f2-v1', arm: 'T_trained_adapter' },
+  );
+
+  const duplicated = [...complete, result('f2-v1', 'T_trained_adapter')];
+  assert.ok(checkDesign(duplicated, briefs).some((p) => p.code === 'DUPLICATE_RESULT'));
+  assert.ok(checkDesign([result('ghost', 'T_trained_adapter')], briefs).some((p) => p.code === 'UNKNOWN_BRIEF'));
+});
+
+test('the bootstrap resamples families, so a split family cannot buy confidence', () => {
+  // Two families. Under the model, T passes all of f1 and none of f2; C1 passes none. The cluster
+  // bootstrap can only produce 1.0, 0.5 or 0.0 - the interval must reach 0, because with two
+  // clusters there is no way to rule out "this family was the whole effect".
+  const briefs = [brief('f1', 1), brief('f1', 2), brief('f2', 1), brief('f2', 2)];
+  const results = [
+    result('f1-v1', 'T_trained_adapter'),
+    result('f1-v2', 'T_trained_adapter'),
+    result('f2-v1', 'T_trained_adapter', { functional: false }),
+    result('f2-v2', 'T_trained_adapter', { functional: false }),
+    result('f1-v1', 'C1_bare_base', { functional: false }),
+    result('f1-v2', 'C1_bare_base', { functional: false }),
+    result('f2-v1', 'C1_bare_base', { functional: false }),
+    result('f2-v2', 'C1_bare_base', { functional: false }),
+  ];
+  assert.equal(passRate(results, briefs, 'T_trained_adapter'), 0.5);
+  assert.equal(passRate(results, briefs, 'C1_bare_base'), 0);
+
+  const delta = pairedDifference(results, briefs, 'T_trained_adapter', 'C1_bare_base', { iterations: 2000, seed: 7 });
+  assert.equal(delta.point, 0.5);
+  assert.equal(delta.families, 2);
+  assert.equal(delta.ci95[0], 0, 'the interval must include zero with only two clusters');
+  assert.equal(delta.ci95[1], 1);
+
+  const decision = decide(delta, []);
+  assert.equal(decision.h1_supported, false);
+  assert.equal(decision.null_result, true);
+  assert.match(decision.reading, /null/);
+});
+
+test('a consistent effect across many families is decided as a positive', () => {
+  const briefs = [];
+  const results = [];
+  for (let f = 1; f <= 12; f += 1) {
+    const family = `fam-${String(f).padStart(2, '0')}`;
+    for (const v of [1, 2]) {
+      const b = brief(family, v);
+      briefs.push(b);
+      const trainedPasses = f <= 8; // 8 of 12 families improve, 4 stay at zero => 16/24 = 66.7% vs 4/24
+      const controlPasses = f <= 2;
+      results.push(result(b.brief_id, 'T_trained_adapter', { functional: trainedPasses }));
+      results.push(result(b.brief_id, 'C1_bare_base', { functional: controlPasses }));
+      results.push(result(b.brief_id, 'C2_base_mwg_prompt', { functional: controlPasses }));
+      results.push(result(b.brief_id, 'C3_base_uplift_tool', { functional: false }));
+    }
+  }
+  const primary = pairedDifference(results, briefs, 'T_trained_adapter', 'C1_bare_base', { iterations: 3000, seed: 20261008 });
+  const control2 = pairedDifference(results, briefs, 'T_trained_adapter', 'C2_base_mwg_prompt', { iterations: 3000, seed: 20261008 });
+  const control3 = pairedDifference(results, briefs, 'T_trained_adapter', 'C3_base_uplift_tool', { iterations: 3000, seed: 20261008 });
+
+  assert.equal(primary.point, 0.5, '(16 - 4) / 24: eight improved families against two control families');
+  assert.ok(primary.ci95[0] > 0, `interval should exclude zero: ${JSON.stringify(primary.ci95)}`);
+
+  const decision = decide(primary, [
+    { ...control2, arm_b: 'C2_base_mwg_prompt' },
+    { ...control3, arm_b: 'C3_base_uplift_tool' },
+  ]);
+  assert.equal(decision.h1_supported, true);
+  assert.equal(decision.null_result, false);
+  assert.equal(decision.negative, false);
+  assert.match(decision.reading, /usable positive/);
+
+  // reproducibility: the same seed gives the same interval
+  const again = pairedDifference(results, briefs, 'T_trained_adapter', 'C1_bare_base', { iterations: 3000, seed: 20261008 });
+  assert.deepEqual(again.ci95, primary.ci95);
+  assert.deepEqual(pairedDifference(results, briefs, 'T_trained_adapter', 'C1_bare_base', { iterations: 3000, seed: 99 }).ci95.length, 2);
+});
+
+test('beating the base but losing to the guidance control is called out as such', () => {
+  const briefs = [];
+  const results = [];
+  for (let f = 1; f <= 12; f += 1) {
+    const family = `fam-${String(f).padStart(2, '0')}`;
+    for (const v of [1, 2]) {
+      const b = brief(family, v);
+      briefs.push(b);
+      const trained = f <= 8;
+      const guided = f <= 11; // C2 is better than T
+      results.push(result(b.brief_id, 'T_trained_adapter', { functional: trained }));
+      results.push(result(b.brief_id, 'C1_bare_base', { functional: f <= 2 }));
+      results.push(result(b.brief_id, 'C2_base_mwg_prompt', { functional: guided }));
+    }
+  }
+  const primary = pairedDifference(results, briefs, 'T_trained_adapter', 'C1_bare_base', { iterations: 3000, seed: 5 });
+  const vsC2 = pairedDifference(results, briefs, 'T_trained_adapter', 'C2_base_mwg_prompt', { iterations: 3000, seed: 5 });
+  const decision = decide(primary, [{ ...vsC2, arm_b: 'C2_base_mwg_prompt' }]);
+  assert.equal(decision.h1_supported, true);
+  assert.equal(decision.h2_non_inferior_to_strong_controls, false);
+  assert.match(decision.reading, /retrieval, not training/);
+});
+
+test('a regression is a negative even when the pass rate looks fine', () => {
+  const primary = {
+    arm_a: 'T_trained_adapter',
+    point: 0.2,
+    ci95: [0.05, 0.35],
+    over_application_worse: true,
+    cost_per_pass_worse: true,
+  };
+  const control = {
+    arm_a: 'T_trained_adapter',
+    arm_b: 'C1_bare_base',
+    point: 0.2,
+    ci95: [0.05, 0.35],
+    blocker_rates: { blocker_accessibility: { T_trained_adapter: 0.3, C1_bare_base: 0.05 } },
+    blocker_cis: { blocker_accessibility: [0.1, 0.4] },
+  };
+  const decision = decide(primary, [control]);
+  assert.equal(decision.negative, true);
+  assert.equal(decision.negative_reasons.length, 3);
+  assert.ok(decision.negative_reasons.some((r) => /already-modern/.test(r)));
+  assert.ok(decision.negative_reasons.some((r) => /accessibility/.test(r)));
+  assert.ok(decision.negative_reasons.some((r) => /cost per pass/.test(r)));
+});
+
+test('per-family, per-rule and taxonomy reporting', () => {
+  const briefs = [brief('f1', 1), brief('f1', 2), brief('f2', 1)];
+  const results = [
+    result('f1-v1', 'T_trained_adapter'),
+    result('f1-v2', 'T_trained_adapter'),
+    result('f2-v1', 'T_trained_adapter', { functional: false, failures: ['journey_failure'] }),
+    result('f1-v1', 'C3_base_uplift_tool', { rule_results: {} }),
+    result('f1-v2', 'C3_base_uplift_tool', { rule_results: {} }),
+    result('f2-v1', 'C3_base_uplift_tool', { rule_results: {} }),
+  ];
+
+  const families = perFamily(results, briefs, ['T_trained_adapter', 'C3_base_uplift_tool']);
+  assert.deepEqual(
+    families.map((row) => [row.family_id, row.arms.T_trained_adapter.pass_rate, row.arms.C3_base_uplift_tool.pass_rate]),
+    [
+      ['f1', 100, 0],
+      ['f2', 0, 0],
+    ],
+  );
+
+  const rules = perRule(results, briefs, ['T_trained_adapter', 'C3_base_uplift_tool']);
+  assert.equal(rules.length, 1);
+  // f2-v1 failed its functional task but did apply the rule, so the rule rate is 3/3 while its
+  // endpoint pass is a fail: the two are reported separately on purpose (PREREGISTRATION §7).
+  assert.deepEqual(rules[0].arms.T_trained_adapter, { applied: 3, applicable: 3, rate: 100 });
+  assert.deepEqual(rules[0].arms.C3_base_uplift_tool, { applied: 0, applicable: 3, rate: 0 });
+
+  const taxonomy = failureTaxonomy(results, briefs, ['T_trained_adapter', 'C3_base_uplift_tool']);
+  assert.equal(taxonomy.T_trained_adapter.rule_missing, 0);
+  assert.equal(taxonomy.T_trained_adapter.journey_failure, 1, 'the explicit failure list must not be counted twice');
+  assert.equal(taxonomy.T_trained_adapter.build_failure, 0);
+  assert.equal(taxonomy.C3_base_uplift_tool.rule_missing, 3);
+  assert.equal(taxonomy.C3_base_uplift_tool.journey_failure, 0);
+});
+
+test('the seeded rng is deterministic and bounded', () => {
+  const a = rng(1);
+  const b = rng(1);
+  const first = [a(), a(), a()];
+  assert.deepEqual(first, [b(), b(), b()]);
+  assert.ok(first.every((x) => x >= 0 && x < 1));
+  assert.notDeepEqual(first, [rng(2)(), rng(2)(), rng(2)()]);
+  assert.throws(() => briefPasses({ brief_id: 'x' }, 'nope'), EndpointError);
+});
+
+test('H2 is not evaluable without a comparison against every strong control', () => {
+  // H2 says the adapter is no worse than BOTH the guidance prompt and the uplift tool. If only one
+  // comparison is supplied, the honest answer is "not evaluable" - the earlier form would return true
+  // on the strength of whichever control happened to be passed.
+  const complete = decide({ point: 0.2, ci95: [0.1, 0.3] }, [
+    { arm_b: 'C2_base_mwg_prompt', point: 0, ci95: [0, 0.1] },
+    { arm_b: 'C3_base_uplift_tool', point: 0, ci95: [0, 0.1] },
+  ]);
+  assert.equal(complete.h2_non_inferior_to_strong_controls, true);
+
+  const missingC3 = decide({ point: 0.2, ci95: [0.1, 0.3] }, [{ arm_b: 'C2_base_mwg_prompt', point: 0, ci95: [0, 0.1] }]);
+  assert.equal(missingC3.h2_non_inferior_to_strong_controls, false, 'a missing strong control must not support H2');
+  assert.ok(missingC3.h2_detail.some((row) => row.non_inferior === null && /not evaluable/.test(row.note ?? '')));
+});
+
+test('a result without explicit blocker counts does not pass the endpoint', () => {
+  // Fail closed: a missing accessibility or security count is not evidence of zero findings.
+  const noBlockers = { runnable: true, functional: true, rule_results: { 'accessibility/accessibility': true } };
+  assert.equal(briefPasses(noBlockers, ['accessibility/accessibility']), false, 'missing blocker counts must fail');
+  assert.equal(
+    briefPasses({ ...noBlockers, blocker_accessibility: 0, blocker_security: 0 }, ['accessibility/accessibility']),
+    true,
+    'explicit zero counts pass',
+  );
+  assert.equal(briefPasses({ ...noBlockers, blocker_accessibility: 1, blocker_security: 0 }, ['accessibility/accessibility']), false);
+});
+
+test('the universe the verdict is computed over is checked, not assumed', () => {
+  const briefs = [
+    { brief_id: 'dev-01', family_id: 'dev-01', split: 'dev', task: 'generate' },
+    { brief_id: 'test-01', family_id: 'test-01', split: 'test', task: 'generate' },
+    { brief_id: 'test-02', family_id: 'test-02', split: 'test', task: 'repair' },
+  ];
+  assert.deepEqual(checkUniverse([briefs[1]]), []);
+  const problems = checkUniverse(briefs);
+  assert.ok(problems.some((p) => p.code === 'OUTSIDE_SEALED_SPLIT' && p.brief_id === 'dev-01'), 'dev briefs must be rejected');
+  assert.ok(problems.some((p) => p.code === 'OUTSIDE_PRIMARY_TASK' && p.brief_id === 'test-02'), 'repair briefs must be rejected');
+  const sealProblems = checkUniverse([briefs[1]], { requireSeal: 'sha256:deadbeef' });
+  assert.ok(sealProblems.some((p) => p.code === 'UNSEALED_BRIEFS'), 'a set that does not match the seal must be rejected');
+  // ...and a dev brief must not be able to produce a pass rate at all: the arithmetic is paired, so a
+  // caller that skips checkUniverse gets a number, which is why the check exists.
+  const devBrief = { ...briefs[0], required_rules: [] };
+  const result = { brief_id: 'dev-01', arm: 'T_trained_adapter', runnable: true, functional: true, blocker_accessibility: 0, blocker_security: 0 };
+  assert.equal(typeof passRate([result], [devBrief], 'T_trained_adapter'), 'number');
+  assert.ok(checkUniverse([devBrief]).some((p) => p.code === 'OUTSIDE_SEALED_SPLIT'), 'the same brief must be refused by checkUniverse');
+});
+
+test('a reportable verdict goes through the checked entry point', () => {
+  // The primitives are unconstrained by design; analyseSealed is the door that shuts. Without this
+  // test, checkUniverse was a helper nobody had to call, and a dev-split run could produce a
+  // decision that looked preregistered.
+  const devBriefs = [
+    { brief_id: 'd1', family_id: 'd1', split: 'dev', task: 'generate', required_rules: [] },
+    { brief_id: 'd2', family_id: 'd2', split: 'dev', task: 'generate', required_rules: [] },
+  ];
+  const devResults = ['T_trained_adapter', 'C1_bare_base', 'C2_base_mwg_prompt', 'C3_base_uplift_tool'].flatMap((arm) =>
+    devBriefs.map((brief) => ({ brief_id: brief.brief_id, arm, runnable: true, functional: arm === 'T_trained_adapter', rule_results: {}, blocker_accessibility: 0, blocker_security: 0 })),
+  );
+  const refused = analyseSealed(devResults, devBriefs, { seal: 'sha256:91d75f29afe10fa419b53fc412abdfaf970068d7725fe40c69894e64c36ed59e' });
+  assert.equal(refused.ok, false, 'a dev split must not produce a verdict');
+  assert.ok(refused.problems.some((p) => p.code === 'OUTSIDE_SEALED_SPLIT'));
+  assert.equal(refused.decision, null);
+
+  const testBriefs = devBriefs.map((brief, index) => ({ ...brief, brief_id: `t${index + 1}`, family_id: `t${index + 1}`, split: 'test' }));
+  const testResults = ['T_trained_adapter', 'C1_bare_base', 'C2_base_mwg_prompt', 'C3_base_uplift_tool'].flatMap((arm) =>
+    testBriefs.map((brief) => ({ brief_id: brief.brief_id, arm, runnable: true, functional: true, rule_results: {}, blocker_accessibility: 0, blocker_security: 0 })),
+  );
+  // the right split but the wrong seal is still refused
+  assert.equal(analyseSealed(testResults, testBriefs, { seal: 'sha256:deadbeef' }).ok, false);
+  // complete design + sealed set produces the verdict, and it knows it lacks the strong controls
+  const decided = analyseSealed(testResults, testBriefs, { iterations: 200 });
+  assert.equal(decided.ok, true);
+  assert.ok(decided.decision);
+  assert.equal(decided.controls.length, 2);
+});

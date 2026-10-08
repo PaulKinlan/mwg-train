@@ -1,0 +1,37 @@
+{
+  "runpod.pricing.html": {
+    "url": "https://www.runpod.io/pricing",
+    "fetched_at": "2026-10-08T09:18:41Z",
+    "http_status": 200,
+    "bytes": 321404,
+    "sha256": "b4215b281281ba3b26e096a2459af11bf89baf118de3e61d6195ced4e0b101b6"
+  },
+  "fireworks.pricing.html": {
+    "url": "https://fireworks.ai/pricing",
+    "fetched_at": "2026-10-08T09:23:11Z",
+    "http_status": 200,
+    "bytes": 234954,
+    "sha256": "de0cd851f44fd8ce1fb871ecfff59b5dba5ab8e6ad7fec9ca032ec9b658e57c6"
+  },
+  "lambda.pricing.html": {
+    "url": "https://lambda.ai/service/gpu-cloud",
+    "fetched_at": "2026-10-08T09:18:42Z",
+    "http_status": 200,
+    "bytes": 97825,
+    "sha256": "7b0772a9d773f30152b127e3ca46c0772158d1f3846d23763e04d8a406e20506"
+  },
+  "together.pricing.html": {
+    "url": "https://www.together.ai/pricing",
+    "fetched_at": "2026-10-08T09:19:35Z",
+    "http_status": 200,
+    "bytes": 594049,
+    "sha256": "f535a19de9b1d55c4914b1a9ef3eedac5441fa35394f265c211679c40c84d483"
+  },
+  "vast.pricing.html": {
+    "url": "https://vast.ai/pricing",
+    "fetched_at": "2026-10-08T09:19:35Z",
+    "http_status": 200,
+    "bytes": 52044,
+    "sha256": "5691c3ab232a726108fe05daf872e7ad8f7a1f7991a6528c6242fa6b8f0dcf81"
+  }
+}

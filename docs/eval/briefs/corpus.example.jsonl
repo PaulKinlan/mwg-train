@@ -1,0 +1,9 @@
+# Illustrative TRAINING corpus manifest. Not real data: the corpus does not exist yet (bead
+# mwg-train-sk1 owns producing it). This file exists so the leakage check has a concrete example of
+# the other side of the split, and so `scripts/validate-briefs.mjs --corpus` can be exercised.
+#
+# The rule it demonstrates: family_id is the split unit on BOTH sides, and a family_id may never
+# appear in both the training corpus and the held-out briefs.
+{"brief_id":"corpus-0001-v1","family_id":"corpus-0001","split":"train","stratum":"corpus","task":"generate","archetype":"booking","note":"illustrative only"}
+{"brief_id":"corpus-0001-v2","family_id":"corpus-0001","split":"train","stratum":"corpus","task":"generate","archetype":"booking","note":"illustrative only"}
+{"brief_id":"corpus-0002-v1","family_id":"corpus-0002","split":"train","stratum":"corpus","task":"repair","archetype":"dashboard","note":"illustrative only"}

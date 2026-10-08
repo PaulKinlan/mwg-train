@@ -7,3 +7,8 @@ npm-debug.log*
 # reviewer can re-fetch the same source and verify the quoted clauses against the same bytes.
 docs/provenance/evidence/raw/
 docs/provenance/evidence/text/
+
+# Provider pages are fetched to derive the priced sheet; we do not redistribute them.
+# fetched.json (URLs, dates, byte counts, sha256) IS committed so anyone can re-fetch and check.
+docs/eval/quotes.raw/*
+!docs/eval/quotes.raw/fetched.json
