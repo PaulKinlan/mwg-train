@@ -57,6 +57,12 @@ if (realSource !== store && !realSource.startsWith(`${store}${sep}`)) {
   console.error(`promote: '${from}' resolves outside the quarantine store (${realSource})`);
   process.exit(1);
 }
+// The store root itself is never a promotion source: it contains every arm, including the
+// quarantined ones, and promotion is a per-artefact decision.
+if (realSource === store) {
+  console.error('promote: refusing to promote the store root - promote a specific artefact path, not the whole store');
+  process.exit(1);
+}
 
 // Which arm(s) is being published? Derive the set from the RESOLVED source path inside the store
 // (never from the caller's raw string). A directory above the arm roots (e.g. 'data') CONTAINS

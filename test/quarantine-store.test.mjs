@@ -155,6 +155,10 @@ test('promote: a subtree spanning quarantined arms still requires acknowledgemen
   const loose = run(['loose.txt', 'docs/loose.txt']);
   assert.equal(loose.code, 1);
   assert.match(loose.stderr, /cannot determine the arm/);
+  // the store ROOT is never a promotion source (it contains every quarantined arm)
+  const rootPromotion = run(['.', 'docs/everything', '--arm', 'A1_self_generated', '--acknowledge-boundary']);
+  assert.equal(rootPromotion.code, 1);
+  assert.match(rootPromotion.stderr, /store root/);
 });
 
 test('the store must be the expected companion repo, not merely a different URL string', (t) => {
