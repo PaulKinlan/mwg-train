@@ -40,7 +40,10 @@
     "promote": "node scripts/promote.mjs",
     "check:brief-schema": "node scripts/check-brief-schema.mjs",
     "check:route-conformance": "node scripts/check-route-conformance.mjs",
-    "check:served-routes": "node scripts/check-served-routes.mjs"
+    "check:served-routes": "node scripts/check-served-routes.mjs",
+    "check:rules-pin": "node scripts/check-rules-pin.mjs",
+    "check:baseline-label": "node scripts/check-baseline-label.mjs",
+    "label:baseline": "node scripts/label-baseline.mjs"
   },
   "license": "UNLICENSED",
   "dependencies": {

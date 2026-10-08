@@ -1929,7 +1929,10 @@
           "accessibility/accessible-error-announcement"
         ],
         "regressed_rules": [],
-        "new_security_findings": []
+        "new_security_findings": [],
+        "baseline_label": "mwg-train deterministic baseline",
+        "baseline_definition": "deterministic repair of the project by our own Modern Web Guidance rule specifications; no model and no teacher in the loop",
+        "baseline_tool": "src/corpus/uplift.mjs"
       }
     },
     {
@@ -2088,7 +2091,10 @@
           "accessibility/accessible-error-announcement"
         ],
         "regressed_rules": [],
-        "new_security_findings": []
+        "new_security_findings": [],
+        "baseline_label": "mwg-train deterministic baseline",
+        "baseline_definition": "deterministic repair of the project by our own Modern Web Guidance rule specifications; no model and no teacher in the loop",
+        "baseline_tool": "src/corpus/uplift.mjs"
       }
     },
     {
@@ -2243,7 +2249,10 @@
           "accessibility/accessible-error-announcement"
         ],
         "regressed_rules": [],
-        "new_security_findings": []
+        "new_security_findings": [],
+        "baseline_label": "mwg-train deterministic baseline",
+        "baseline_definition": "deterministic repair of the project by our own Modern Web Guidance rule specifications; no model and no teacher in the loop",
+        "baseline_tool": "src/corpus/uplift.mjs"
       }
     },
     {
@@ -2398,7 +2407,10 @@
           "accessibility/accessible-error-announcement"
         ],
         "regressed_rules": [],
-        "new_security_findings": []
+        "new_security_findings": [],
+        "baseline_label": "mwg-train deterministic baseline",
+        "baseline_definition": "deterministic repair of the project by our own Modern Web Guidance rule specifications; no model and no teacher in the loop",
+        "baseline_tool": "src/corpus/uplift.mjs"
       }
     },
     {
@@ -2555,7 +2567,10 @@
           "accessibility/accessible-error-announcement"
         ],
         "regressed_rules": [],
-        "new_security_findings": []
+        "new_security_findings": [],
+        "baseline_label": "mwg-train deterministic baseline",
+        "baseline_definition": "deterministic repair of the project by our own Modern Web Guidance rule specifications; no model and no teacher in the loop",
+        "baseline_tool": "src/corpus/uplift.mjs"
       }
     },
     {
@@ -2712,7 +2727,10 @@
           "accessibility/accessible-error-announcement"
         ],
         "regressed_rules": [],
-        "new_security_findings": []
+        "new_security_findings": [],
+        "baseline_label": "mwg-train deterministic baseline",
+        "baseline_definition": "deterministic repair of the project by our own Modern Web Guidance rule specifications; no model and no teacher in the loop",
+        "baseline_tool": "src/corpus/uplift.mjs"
       }
     },
     {
@@ -2869,7 +2887,10 @@
           "accessibility/accessible-error-announcement"
         ],
         "regressed_rules": [],
-        "new_security_findings": []
+        "new_security_findings": [],
+        "baseline_label": "mwg-train deterministic baseline",
+        "baseline_definition": "deterministic repair of the project by our own Modern Web Guidance rule specifications; no model and no teacher in the loop",
+        "baseline_tool": "src/corpus/uplift.mjs"
       }
     },
     {
@@ -3026,7 +3047,10 @@
           "accessibility/accessible-error-announcement"
         ],
         "regressed_rules": [],
-        "new_security_findings": []
+        "new_security_findings": [],
+        "baseline_label": "mwg-train deterministic baseline",
+        "baseline_definition": "deterministic repair of the project by our own Modern Web Guidance rule specifications; no model and no teacher in the loop",
+        "baseline_tool": "src/corpus/uplift.mjs"
       }
     },
     {
@@ -3179,7 +3203,10 @@
           "accessibility/accessible-error-announcement"
         ],
         "regressed_rules": [],
-        "new_security_findings": []
+        "new_security_findings": [],
+        "baseline_label": "mwg-train deterministic baseline",
+        "baseline_definition": "deterministic repair of the project by our own Modern Web Guidance rule specifications; no model and no teacher in the loop",
+        "baseline_tool": "src/corpus/uplift.mjs"
       }
     },
     {
@@ -3332,7 +3359,10 @@
           "accessibility/accessible-error-announcement"
         ],
         "regressed_rules": [],
-        "new_security_findings": []
+        "new_security_findings": [],
+        "baseline_label": "mwg-train deterministic baseline",
+        "baseline_definition": "deterministic repair of the project by our own Modern Web Guidance rule specifications; no model and no teacher in the loop",
+        "baseline_tool": "src/corpus/uplift.mjs"
       }
     },
     {
@@ -3491,7 +3521,10 @@
           "accessibility/accessible-error-announcement"
         ],
         "regressed_rules": [],
-        "new_security_findings": []
+        "new_security_findings": [],
+        "baseline_label": "mwg-train deterministic baseline",
+        "baseline_definition": "deterministic repair of the project by our own Modern Web Guidance rule specifications; no model and no teacher in the loop",
+        "baseline_tool": "src/corpus/uplift.mjs"
       }
     },
     {
@@ -3650,7 +3683,10 @@
           "accessibility/accessible-error-announcement"
         ],
         "regressed_rules": [],
-        "new_security_findings": []
+        "new_security_findings": [],
+        "baseline_label": "mwg-train deterministic baseline",
+        "baseline_definition": "deterministic repair of the project by our own Modern Web Guidance rule specifications; no model and no teacher in the loop",
+        "baseline_tool": "src/corpus/uplift.mjs"
       }
     },
     {
@@ -3811,7 +3847,10 @@
           "accessibility/accessible-error-announcement"
         ],
         "regressed_rules": [],
-        "new_security_findings": []
+        "new_security_findings": [],
+        "baseline_label": "mwg-train deterministic baseline",
+        "baseline_definition": "deterministic repair of the project by our own Modern Web Guidance rule specifications; no model and no teacher in the loop",
+        "baseline_tool": "src/corpus/uplift.mjs"
       }
     },
     {
@@ -3972,7 +4011,10 @@
           "accessibility/accessible-error-announcement"
         ],
         "regressed_rules": [],
-        "new_security_findings": []
+        "new_security_findings": [],
+        "baseline_label": "mwg-train deterministic baseline",
+        "baseline_definition": "deterministic repair of the project by our own Modern Web Guidance rule specifications; no model and no teacher in the loop",
+        "baseline_tool": "src/corpus/uplift.mjs"
       }
     },
     {
@@ -4129,7 +4171,10 @@
           "accessibility/accessible-error-announcement"
         ],
         "regressed_rules": [],
-        "new_security_findings": []
+        "new_security_findings": [],
+        "baseline_label": "mwg-train deterministic baseline",
+        "baseline_definition": "deterministic repair of the project by our own Modern Web Guidance rule specifications; no model and no teacher in the loop",
+        "baseline_tool": "src/corpus/uplift.mjs"
       }
     },
     {
@@ -4286,7 +4331,10 @@
           "accessibility/accessible-error-announcement"
         ],
         "regressed_rules": [],
-        "new_security_findings": []
+        "new_security_findings": [],
+        "baseline_label": "mwg-train deterministic baseline",
+        "baseline_definition": "deterministic repair of the project by our own Modern Web Guidance rule specifications; no model and no teacher in the loop",
+        "baseline_tool": "src/corpus/uplift.mjs"
       }
     },
     {
@@ -4449,7 +4497,10 @@
           "accessibility/accessible-error-announcement"
         ],
         "regressed_rules": [],
-        "new_security_findings": []
+        "new_security_findings": [],
+        "baseline_label": "mwg-train deterministic baseline",
+        "baseline_definition": "deterministic repair of the project by our own Modern Web Guidance rule specifications; no model and no teacher in the loop",
+        "baseline_tool": "src/corpus/uplift.mjs"
       }
     },
     {
@@ -4612,7 +4663,10 @@
           "accessibility/accessible-error-announcement"
         ],
         "regressed_rules": [],
-        "new_security_findings": []
+        "new_security_findings": [],
+        "baseline_label": "mwg-train deterministic baseline",
+        "baseline_definition": "deterministic repair of the project by our own Modern Web Guidance rule specifications; no model and no teacher in the loop",
+        "baseline_tool": "src/corpus/uplift.mjs"
       }
     },
     {
@@ -4771,7 +4825,10 @@
           "accessibility/accessible-error-announcement"
         ],
         "regressed_rules": [],
-        "new_security_findings": []
+        "new_security_findings": [],
+        "baseline_label": "mwg-train deterministic baseline",
+        "baseline_definition": "deterministic repair of the project by our own Modern Web Guidance rule specifications; no model and no teacher in the loop",
+        "baseline_tool": "src/corpus/uplift.mjs"
       }
     },
     {
@@ -4930,7 +4987,10 @@
           "accessibility/accessible-error-announcement"
         ],
         "regressed_rules": [],
-        "new_security_findings": []
+        "new_security_findings": [],
+        "baseline_label": "mwg-train deterministic baseline",
+        "baseline_definition": "deterministic repair of the project by our own Modern Web Guidance rule specifications; no model and no teacher in the loop",
+        "baseline_tool": "src/corpus/uplift.mjs"
       }
     },
     {
@@ -5095,7 +5155,10 @@
           "accessibility/accessible-error-announcement"
         ],
         "regressed_rules": [],
-        "new_security_findings": []
+        "new_security_findings": [],
+        "baseline_label": "mwg-train deterministic baseline",
+        "baseline_definition": "deterministic repair of the project by our own Modern Web Guidance rule specifications; no model and no teacher in the loop",
+        "baseline_tool": "src/corpus/uplift.mjs"
       }
     },
     {
@@ -5260,7 +5323,10 @@
           "accessibility/accessible-error-announcement"
         ],
         "regressed_rules": [],
-        "new_security_findings": []
+        "new_security_findings": [],
+        "baseline_label": "mwg-train deterministic baseline",
+        "baseline_definition": "deterministic repair of the project by our own Modern Web Guidance rule specifications; no model and no teacher in the loop",
+        "baseline_tool": "src/corpus/uplift.mjs"
       }
     },
     {
@@ -5417,7 +5483,10 @@
           "accessibility/accessible-error-announcement"
         ],
         "regressed_rules": [],
-        "new_security_findings": []
+        "new_security_findings": [],
+        "baseline_label": "mwg-train deterministic baseline",
+        "baseline_definition": "deterministic repair of the project by our own Modern Web Guidance rule specifications; no model and no teacher in the loop",
+        "baseline_tool": "src/corpus/uplift.mjs"
       }
     },
     {
@@ -5574,7 +5643,10 @@
           "accessibility/accessible-error-announcement"
         ],
         "regressed_rules": [],
-        "new_security_findings": []
+        "new_security_findings": [],
+        "baseline_label": "mwg-train deterministic baseline",
+        "baseline_definition": "deterministic repair of the project by our own Modern Web Guidance rule specifications; no model and no teacher in the loop",
+        "baseline_tool": "src/corpus/uplift.mjs"
       }
     },
     {
@@ -5731,7 +5803,10 @@
           "accessibility/accessible-error-announcement"
         ],
         "regressed_rules": [],
-        "new_security_findings": []
+        "new_security_findings": [],
+        "baseline_label": "mwg-train deterministic baseline",
+        "baseline_definition": "deterministic repair of the project by our own Modern Web Guidance rule specifications; no model and no teacher in the loop",
+        "baseline_tool": "src/corpus/uplift.mjs"
       }
     },
     {
@@ -5888,7 +5963,10 @@
           "accessibility/accessible-error-announcement"
         ],
         "regressed_rules": [],
-        "new_security_findings": []
+        "new_security_findings": [],
+        "baseline_label": "mwg-train deterministic baseline",
+        "baseline_definition": "deterministic repair of the project by our own Modern Web Guidance rule specifications; no model and no teacher in the loop",
+        "baseline_tool": "src/corpus/uplift.mjs"
       }
     },
     {
@@ -6045,7 +6123,10 @@
           "accessibility/accessible-error-announcement"
         ],
         "regressed_rules": [],
-        "new_security_findings": []
+        "new_security_findings": [],
+        "baseline_label": "mwg-train deterministic baseline",
+        "baseline_definition": "deterministic repair of the project by our own Modern Web Guidance rule specifications; no model and no teacher in the loop",
+        "baseline_tool": "src/corpus/uplift.mjs"
       }
     },
     {
@@ -6202,7 +6283,10 @@
           "accessibility/accessible-error-announcement"
         ],
         "regressed_rules": [],
-        "new_security_findings": []
+        "new_security_findings": [],
+        "baseline_label": "mwg-train deterministic baseline",
+        "baseline_definition": "deterministic repair of the project by our own Modern Web Guidance rule specifications; no model and no teacher in the loop",
+        "baseline_tool": "src/corpus/uplift.mjs"
       }
     },
     {
@@ -6361,7 +6445,10 @@
           "accessibility/accessible-error-announcement"
         ],
         "regressed_rules": [],
-        "new_security_findings": []
+        "new_security_findings": [],
+        "baseline_label": "mwg-train deterministic baseline",
+        "baseline_definition": "deterministic repair of the project by our own Modern Web Guidance rule specifications; no model and no teacher in the loop",
+        "baseline_tool": "src/corpus/uplift.mjs"
       }
     },
     {
@@ -6520,7 +6607,10 @@
           "accessibility/accessible-error-announcement"
         ],
         "regressed_rules": [],
-        "new_security_findings": []
+        "new_security_findings": [],
+        "baseline_label": "mwg-train deterministic baseline",
+        "baseline_definition": "deterministic repair of the project by our own Modern Web Guidance rule specifications; no model and no teacher in the loop",
+        "baseline_tool": "src/corpus/uplift.mjs"
       }
     },
     {
@@ -6679,7 +6769,10 @@
           "accessibility/accessible-error-announcement"
         ],
         "regressed_rules": [],
-        "new_security_findings": []
+        "new_security_findings": [],
+        "baseline_label": "mwg-train deterministic baseline",
+        "baseline_definition": "deterministic repair of the project by our own Modern Web Guidance rule specifications; no model and no teacher in the loop",
+        "baseline_tool": "src/corpus/uplift.mjs"
       }
     },
     {
@@ -6838,7 +6931,10 @@
           "accessibility/accessible-error-announcement"
         ],
         "regressed_rules": [],
-        "new_security_findings": []
+        "new_security_findings": [],
+        "baseline_label": "mwg-train deterministic baseline",
+        "baseline_definition": "deterministic repair of the project by our own Modern Web Guidance rule specifications; no model and no teacher in the loop",
+        "baseline_tool": "src/corpus/uplift.mjs"
       }
     },
     {
@@ -6985,7 +7081,10 @@
           "accessibility/accessible-error-announcement"
         ],
         "regressed_rules": [],
-        "new_security_findings": []
+        "new_security_findings": [],
+        "baseline_label": "mwg-train deterministic baseline",
+        "baseline_definition": "deterministic repair of the project by our own Modern Web Guidance rule specifications; no model and no teacher in the loop",
+        "baseline_tool": "src/corpus/uplift.mjs"
       }
     },
     {
@@ -7132,7 +7231,10 @@
           "accessibility/accessible-error-announcement"
         ],
         "regressed_rules": [],
-        "new_security_findings": []
+        "new_security_findings": [],
+        "baseline_label": "mwg-train deterministic baseline",
+        "baseline_definition": "deterministic repair of the project by our own Modern Web Guidance rule specifications; no model and no teacher in the loop",
+        "baseline_tool": "src/corpus/uplift.mjs"
       }
     },
     {
@@ -7291,7 +7393,10 @@
           "accessibility/accessible-error-announcement"
         ],
         "regressed_rules": [],
-        "new_security_findings": []
+        "new_security_findings": [],
+        "baseline_label": "mwg-train deterministic baseline",
+        "baseline_definition": "deterministic repair of the project by our own Modern Web Guidance rule specifications; no model and no teacher in the loop",
+        "baseline_tool": "src/corpus/uplift.mjs"
       }
     },
     {
@@ -7450,7 +7555,10 @@
           "accessibility/accessible-error-announcement"
         ],
         "regressed_rules": [],
-        "new_security_findings": []
+        "new_security_findings": [],
+        "baseline_label": "mwg-train deterministic baseline",
+        "baseline_definition": "deterministic repair of the project by our own Modern Web Guidance rule specifications; no model and no teacher in the loop",
+        "baseline_tool": "src/corpus/uplift.mjs"
       }
     },
     {
@@ -7609,7 +7717,10 @@
           "accessibility/accessible-error-announcement"
         ],
         "regressed_rules": [],
-        "new_security_findings": []
+        "new_security_findings": [],
+        "baseline_label": "mwg-train deterministic baseline",
+        "baseline_definition": "deterministic repair of the project by our own Modern Web Guidance rule specifications; no model and no teacher in the loop",
+        "baseline_tool": "src/corpus/uplift.mjs"
       }
     },
     {
@@ -7768,7 +7879,10 @@
           "accessibility/accessible-error-announcement"
         ],
         "regressed_rules": [],
-        "new_security_findings": []
+        "new_security_findings": [],
+        "baseline_label": "mwg-train deterministic baseline",
+        "baseline_definition": "deterministic repair of the project by our own Modern Web Guidance rule specifications; no model and no teacher in the loop",
+        "baseline_tool": "src/corpus/uplift.mjs"
       }
     },
     {
@@ -7925,7 +8039,10 @@
           "accessibility/accessible-error-announcement"
         ],
         "regressed_rules": [],
-        "new_security_findings": []
+        "new_security_findings": [],
+        "baseline_label": "mwg-train deterministic baseline",
+        "baseline_definition": "deterministic repair of the project by our own Modern Web Guidance rule specifications; no model and no teacher in the loop",
+        "baseline_tool": "src/corpus/uplift.mjs"
       }
     },
     {
@@ -8082,8 +8199,14 @@
           "accessibility/accessible-error-announcement"
         ],
         "regressed_rules": [],
-        "new_security_findings": []
+        "new_security_findings": [],
+        "baseline_label": "mwg-train deterministic baseline",
+        "baseline_definition": "deterministic repair of the project by our own Modern Web Guidance rule specifications; no model and no teacher in the loop",
+        "baseline_tool": "src/corpus/uplift.mjs"
       }
     }
-  ]
+  ],
+  "baseline_label": "mwg-train deterministic baseline",
+  "baseline_tool": "src/corpus/uplift.mjs",
+  "baseline_definition": "deterministic repair of the project by our own Modern Web Guidance rule specifications; no model and no teacher in the loop"
 }

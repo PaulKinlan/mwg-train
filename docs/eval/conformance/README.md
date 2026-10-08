@@ -136,6 +136,8 @@ node scripts/score-conformance.mjs --family booking
 generates the family's pilot projects, renders each twice (raw and MWG-uplifted), scores both against
 the target, and writes `docs/eval/conformance/<family>.{json,md}`.
 
+> **mwg-train deterministic baseline** - deterministic output of this repository's own tooling, not an official `web-uplift` result.
+
 ## Result
 
 `docs/eval/conformance/booking.md` is the first family scored. The booking family means: raw 0.652,

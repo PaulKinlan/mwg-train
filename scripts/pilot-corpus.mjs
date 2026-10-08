@@ -21,6 +21,7 @@ import process from 'node:process';
 import { generateCorpus } from '../pilot/generate.mjs';
 import { upliftProject } from '../src/corpus/uplift.mjs';
 import { hashTree } from '../src/corpus/harness.mjs';
+import { BASELINE_FIELDS } from '../src/eval/ruleset.mjs';
 
 const repoRoot = resolve(dirname(new URL(import.meta.url).pathname), '..');
 const corpusPath = join(repoRoot, 'pilot/CORPUS.json');
@@ -115,6 +116,9 @@ function record(runDir) {
           generated_at: run.generated_at,
           generator: 'scripts/scaffold-pilot.mjs',
           uplift_tool: 'src/corpus/uplift.mjs',
+          // The floor this record measures is ours, not an official uplift product's. Added after review
+          // found the label reached the individual decisions but not the committed record (bead mwg-train-6ek).
+          ...BASELINE_FIELDS,
           summary: run.summary,
           projects,
         },

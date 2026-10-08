@@ -18,7 +18,7 @@
  * other is the one where "framework" and "aesthetic choice" are confounded.
  */
 import { createHash } from 'node:crypto';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, join, resolve } from 'node:path';
 import process from 'node:process';
@@ -26,6 +26,7 @@ import process from 'node:process';
 import { launchChrome } from '../src/corpus/cdp.mjs';
 import { upliftProject } from '../src/corpus/uplift.mjs';
 import { identityFindings, scoreArm, variantIdentity } from '../src/eval/conformance.mjs';
+import { BASELINE_FIELDS, baselineAttributionLine } from '../src/eval/ruleset.mjs';
 import { captureSignature } from '../src/eval/render.mjs';
 import { IDENTITY_BUDGET, TARGETS_STORAGE, TARGET_FAMILIES } from '../src/eval/targets.mjs';
 import { generateCorpus, readPlan } from '../pilot/generate.mjs';
@@ -33,12 +34,13 @@ import { generateCorpus, readPlan } from '../pilot/generate.mjs';
 const ROOT = resolve(process.cwd());
 
 function parseArgs(argv) {
-  const args = { family: null, all: false, out: 'docs/eval/conformance', port: 4900 };
+  const args = { family: null, all: false, out: 'docs/eval/conformance', port: 4900, rerender: false };
   for (let i = 0; i < argv.length; i += 1) {
     if (argv[i] === '--family') args.family = argv[++i];
     else if (argv[i] === '--all') args.all = true;
     else if (argv[i] === '--out') args.out = argv[++i];
     else if (argv[i] === '--port') args.port = Number(argv[++i]);
+    else if (argv[i] === '--rerender') args.rerender = true;
   }
   return args;
 }
@@ -70,6 +72,7 @@ async function scoreFamily({ family, chrome, runDir, outDir, ports }) {
   const identity = variantIdentity(target.signature, variants.map((variant) => ({ framework: variant.framework, signature: variant.raw_signature })));
   const findings = identityFindings(identity, IDENTITY_BUDGET);
   const report = {
+    ...BASELINE_FIELDS,
     family: family.family_id,
     target_signature: target.relativePath,
     target_sha256: target.sha256,
@@ -80,37 +83,73 @@ async function scoreFamily({ family, chrome, runDir, outDir, ports }) {
     findings,
   };
   writeFileSync(join(outDir, `${family.family_id}-identity.json`), `${JSON.stringify(report, null, 2)}\n`);
-
-  const lines = [
-    `# Variant identity: ${family.family_id}`,
-    '',
-    `Shared target: \`${target.relativePath}\` (sha256 \`${target.sha256}\`)`,
-    '',
-    '## Delta from raw baseline to the shared target',
-    '',
-    '| framework | raw baseline | target conformance | delta |',
-    '| --- | --- | --- | --- |',
-    ...variants.map((variant) => `| ${variant.framework} | ${variant.raw.toFixed(3)} | ${variant.target.toFixed(3)} | ${variant.delta >= 0 ? '+' : ''}${variant.delta.toFixed(3)} |`),
-    '',
-    '## Cross-variant identity (raw variants, pairwise)',
-    '',
-    '| axis | agreement | variance | budget |',
-    '| --- | --- | --- | --- |',
-    ...Object.entries(IDENTITY_BUDGET).map(([axis, minimum]) => `| ${axis} | ${identity.identity[axis].toFixed(3)} | ${identity.variance[axis].toFixed(4)} | >= ${minimum} |`),
-    '',
-    identity.weakest_pair ? `Weakest pair: ${identity.weakest_pair.a}/${identity.weakest_pair.b} at ${identity.weakest_pair.overall.toFixed(3)}.` : 'Only one variant; nothing to compare.',
-    '',
-    findings.length ? `**Below budget:** ${findings.map((finding) => `${finding.axis} (${finding.actual})`).join(', ')}` : '**All axes within budget.**',
-    '',
-  ];
-  writeFileSync(join(outDir, `${family.family_id}-identity.md`), lines.join('\n'));
+  writeFileSync(join(outDir, `${family.family_id}-identity.md`), renderIdentityMarkdown(report));
   console.log(`score-variant-identity: ${family.family_id} identity ${identity.identity.overall.toFixed(3)} (weakest ${identity.weakest_pair ? `${identity.weakest_pair.a}/${identity.weakest_pair.b} ${identity.weakest_pair.overall.toFixed(3)}` : 'n/a'}), ${findings.length} below budget`);
   for (const variant of variants) console.log(`  ${variant.framework.padEnd(7)} raw ${variant.raw.toFixed(3)} -> target ${variant.target.toFixed(3)} (delta ${variant.delta >= 0 ? '+' : ''}${variant.delta.toFixed(3)})`);
   return { family: family.family_id, identity: identity.identity.overall, findings: findings.length };
 }
 
+/**
+ * The identity report as markdown, from the record alone.
+ *
+ * Pure on purpose: the same function renders the report during a measurement run and re-renders it in
+ * `--rerender` mode from the committed JSON, so re-rendering cannot silently disagree with a fresh
+ * run, and relabelling a committed report never requires re-measuring it. Rewriting measured evidence
+ * to change its presentation would make the numbers themselves suspect.
+ */
+export function renderIdentityMarkdown(report) {
+  const budget = report.budget ?? IDENTITY_BUDGET;
+  const identity = report.identity;
+  const findings = report.findings ?? [];
+  return [
+    `# Variant identity: ${report.family}`,
+    '',
+    baselineAttributionLine(),
+    '',
+    `Shared target: \`${report.target_signature}\` (sha256 \`${report.target_sha256}\`)`,
+    '',
+    '## Delta from raw baseline to the shared target',
+    '',
+    '| framework | raw baseline | target conformance | delta |',
+    '| --- | --- | --- | --- |',
+    ...report.variants.map((variant) => `| ${variant.framework} | ${variant.raw.toFixed(3)} | ${variant.target.toFixed(3)} | ${variant.delta >= 0 ? '+' : ''}${variant.delta.toFixed(3)} |`),
+    '',
+    '## Cross-variant identity (raw variants, pairwise)',
+    '',
+    '| axis | agreement | variance | budget |',
+    '| --- | --- | --- | --- |',
+    ...Object.entries(budget).map(([axis, minimum]) => `| ${axis} | ${identity.identity[axis].toFixed(3)} | ${identity.variance[axis].toFixed(4)} | >= ${minimum} |`),
+    '',
+    identity.weakest_pair ? `Weakest pair: ${identity.weakest_pair.a}/${identity.weakest_pair.b} at ${identity.weakest_pair.overall.toFixed(3)}.` : 'Only one variant; nothing to compare.',
+    '',
+    findings.length ? `**Below budget:** ${findings.map((finding) => `${finding.axis} (${finding.actual})`).join(', ')}` : '**All axes within budget.**',
+    '',
+  ].join('\n');
+}
+
+/**
+ * Rewrite each committed `-identity.md` from its `-identity.json`. No browser, no measurement.
+ */
+function rerender(outDir) {
+  const records = readdirSync(outDir).filter((name) => name.endsWith('-identity.json'));
+  if (records.length === 0) {
+    console.error(`score-variant-identity: no *-identity.json under ${outDir}; nothing to re-render`);
+    process.exit(1);
+  }
+  for (const name of records.sort()) {
+    const report = JSON.parse(readFileSync(join(outDir, name), 'utf8'));
+    const md = `${renderIdentityMarkdown(report)}`;
+    writeFileSync(join(outDir, name.replace(/\.json$/, '.md')), md);
+    console.log(`score-variant-identity: re-rendered ${name.replace(/\.json$/, '.md')} from ${name} (no measurement)`);
+  }
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
+  if (args.rerender) {
+    rerender(args.out);
+    return;
+  }
   const families = args.all ? TARGET_FAMILIES : TARGET_FAMILIES.filter((family) => family.family_id === args.family);
   if (families.length === 0) throw new Error('score-variant-identity: pass --family <id> or --all');
   const outDir = resolve(args.out);

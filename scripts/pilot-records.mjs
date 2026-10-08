@@ -10,6 +10,7 @@
  *   node scripts/pilot-records.mjs --run /tmp/pilot-v11/<run-id> --out docs/pilot/records.json
  */
 import { readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
+import { BASELINE_FIELDS } from '../src/eval/ruleset.mjs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -126,6 +127,7 @@ for (const project of projects) {
 }
 
 const document = {
+  ...BASELINE_FIELDS,
   run_id: run.run_id,
   generated_at: run.generated_at,
   summary: run.summary,

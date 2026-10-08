@@ -1,5 +1,7 @@
 # Training Brief Manifest
 
+> **mwg-train deterministic baseline** - deterministic output of this repository's own tooling, not an official `web-uplift` result.
+
 `docs/train/briefs/manifest.jsonl` contains the authored synthetic training briefs for the Modern Web Guidance (MWG) student training pipeline. Full schema specification is documented in [SCHEMA.md](SCHEMA.md).
 
 ## Overview

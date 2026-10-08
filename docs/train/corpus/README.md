@@ -1,5 +1,7 @@
 # Training Corpus Token Size and Derivation
 
+> **mwg-train deterministic baseline** - deterministic output of this repository's own tooling, not an official `web-uplift` result.
+
 ## What these projects are (and are not)
 
 The `tr-*` corpus is **brief-authored projects**: each project's form controls are declared in its own brief, and its targets are independent of the evaluation set. All 30 families declare their schema and all 210 projects are built from it (`schema_source: "brief"`). What that does and does not establish:

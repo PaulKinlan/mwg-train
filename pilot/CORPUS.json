@@ -4,6 +4,8 @@
   "generated_at": "2026-10-08T12:40:17.613Z",
   "generator": "scripts/scaffold-pilot.mjs",
   "uplift_tool": "src/corpus/uplift.mjs",
+  "baseline_label": "mwg-train deterministic baseline",
+  "baseline_definition": "deterministic repair of the project by our own Modern Web Guidance rule specifications; no model and no teacher in the loop",
   "summary": {
     "attempted": 35,
     "accepted": 34,
@@ -907,5 +909,6 @@
       "accepted": true,
       "category": "accepted"
     }
-  ]
+  ],
+  "baseline_tool": "src/corpus/uplift.mjs"
 }

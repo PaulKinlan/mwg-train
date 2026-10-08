@@ -174,6 +174,8 @@ then compares tree hashes with the record. A mismatch means the measured artefac
 reproduced, which makes the yield numbers stale by definition. Recording a partial run is refused: a
 partial corpus is not the corpus.
 
+> **mwg-train deterministic baseline** - deterministic output of this repository's own tooling, not an official `web-uplift` result.
+
 ## Results
 
 **24 of 25 pairs accepted (96.0%)**, measured on 2026-10-08 in 154s, one Chrome, one project at a

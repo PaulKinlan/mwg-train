@@ -11,6 +11,7 @@
  */
 
 import { createHash } from 'node:crypto';
+import { ruleSetHash } from './ruleset.mjs';
 
 export const BRIEF_ID_PATTERN = /^[a-z0-9][a-z0-9-]{2,63}$/;
 export const SPLITS = Object.freeze(['dev', 'test']);
@@ -124,9 +125,10 @@ export function ruleIndex(rules) {
     skillVersion: rules.skill_version ?? '',
     // Recompute the vocabulary hash instead of trusting the field beside it. Without this, a rules
     // file could advertise the pinned hash while containing a vocabulary the pinned snapshot never
-    // had, and the validator would bless any brief that used the invented rule. The recipe is the
-    // one scripts/extract-mwg-rules.mjs uses: sha256 over the sorted `category/guide` ids.
-    computedHash: `sha256:${createHash('sha256').update([...ids].sort().join('\n')).digest('hex')}`,
+    // had, and the validator would bless any brief that used the invented rule. The recipe lives in
+    // src/eval/ruleset.mjs and is shared with the generator and the pin check, so the three cannot
+    // drift: this used to be a fourth inline copy of the same hash.
+    computedHash: ruleSetHash(rules.categories),
   };
 }
 

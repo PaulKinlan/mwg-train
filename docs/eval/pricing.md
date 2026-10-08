@@ -1,5 +1,7 @@
 # The compute dry run: what it costs, and what is still unmeasured
 
+> **mwg-train deterministic baseline** - deterministic output of this repository's own tooling, not an official `web-uplift` result.
+
 Design brief, section 7: *"procurement sheet, not invented prices."* This document is the sheet. It
 contains no price that was not read from a provider's own page on a stated date.
 
