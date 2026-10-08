@@ -1,2 +1,9 @@
 node_modules/
 npm-debug.log*
+
+# Raw captured licence/terms bytes and their text extractions are kept locally for review but not
+# redistributed from this repository. The committed manifest at
+# docs/provenance/evidence/manifest.jsonl carries url + fetched_at + sha256 for every capture, so a
+# reviewer can re-fetch the same source and verify the quoted clauses against the same bytes.
+docs/provenance/evidence/raw/
+docs/provenance/evidence/text/
