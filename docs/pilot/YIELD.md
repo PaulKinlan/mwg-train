@@ -1,6 +1,6 @@
-# Pilot acceptance yield (2026-10-08T10-54-49-381Z)
+# Pilot acceptance yield (2026-10-08T11-05-05-334Z)
 
-Generated 2026-10-08T10:57:17.546Z by `scripts/pilot.mjs`. 25 pairs attempted, 24 accepted: **96.0%**.
+Generated 2026-10-08T11:07:39.427Z by `scripts/pilot.mjs`. 25 pairs attempted, 24 accepted: **96.0%**.
 
 Every number here comes from a record produced by driving the project in a real browser; the
 per-project records and their screenshots and traces are next to this file.
@@ -48,8 +48,8 @@ to exclude the pair.
 | `security/sanitize-untrusted-html` | 16 |
 | `forms/required-field-feedback` | 15 |
 | `forms/validate-input-after-interaction` | 15 |
-| `forms/autofill-sign-up-form` | 5 |
 | `forms/autofill-address-form` | 5 |
+| `forms/autofill-sign-up-form` | 4 |
 
 ## Every pair
 
@@ -59,7 +59,7 @@ to exclude the pair.
 | `account-recovery-preact` | account-recovery | preact | 2 | 3 | **accepted** |
 | `account-recovery-raw` | account-recovery | raw | 4 | 4 | **accepted** |
 | `account-recovery-react` | account-recovery | react | 2 | 2 | **accepted** |
-| `account-recovery-vue` | account-recovery | vue | 2 | 3 | **accepted** |
+| `account-recovery-vue` | account-recovery | vue | 2 | 2 | **accepted** |
 | `booking-hono` | booking | hono | 5 | 5 | **accepted** |
 | `booking-preact` | booking | preact | 3 | 3 | **accepted** |
 | `booking-raw` | booking | raw | 5 | 5 | **accepted** |

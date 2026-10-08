@@ -142,11 +142,19 @@ The corpus is generated, so the guarantee that matters is not "we kept a copy" b
 be produced again, and so can the uplifts":
 
 ```bash
-node scripts/scaffold-pilot.mjs --clean          # the 25 originals, from pilot/plan.json
-node scripts/pilot.mjs --out pilot/out           # measure them (needs Chrome)
+node scripts/pilot.mjs --out pilot/out           # generate the 25 projects and measure them (needs Chrome)
 node scripts/pilot-corpus.mjs --record <runDir>  # pin the measured corpus to pilot/CORPUS.json
 npm run check:pilot-corpus                       # re-derive every original and every uplift, compare
+node scripts/scaffold-pilot.mjs --clean          # optional: write the same corpus to pilot/projects
 ```
+
+The run **generates its own corpus** from `pilot/plan.json`, so what is measured is what the generator
+produces now. It used not to: the pilot read whatever was in `pilot/projects`, while the recorder
+regenerated the plan, and the two only agreed if someone remembered to scaffold first. A directory left
+over from an earlier revision was measured and then reported as a corpus that could not be reproduced.
+`--projects <dir>` still measures an existing tree, for debugging, and says so when it does. One
+implementation of "the corpus on disk" (`pilot/generate.mjs`) is used by the run, the recorder and the
+scaffolder, and a test generates the plan twice and requires identical tree hashes.
 
 `check:pilot-corpus` regenerates all 25 projects from the plan and re-runs the uplift tool on each,
 then compares tree hashes with the record. A mismatch means the measured artefact can no longer be
@@ -189,7 +197,7 @@ finding: the same generator writes all five, so the arms differ mainly in dialec
 handles all five dialects — including Hono's `hono/html` templates and Vue's runtime-compiled ones —
 without a rule failing on any of them.
 
-### Six corrections the pilot made to itself, and why they are in the record
+### Seven corrections the pilot made to itself, and why they are in the record
 
 The first full run measured 1/20 and the second 25/25; neither number survived scrutiny, and the three
 runs of 24/25 or 22/25 that followed each hid a different defect in the measurement rather than in the
@@ -239,6 +247,13 @@ tool. The failures and the corrections are more useful than the final figure, so
    measuring nothing. The observation is now recorded where the data is, and a missing one is printed as
    missing instead of being folded into a zero. The final run reports 23 of 25 originals refusing an
    empty submission and the 2 that accept it, which are the two `no-required` arms.
+
+7. **The corpus was measured from a directory, and verified by regeneration.** Three scripts each had
+   their own answer to "the corpus on disk": the scaffolder wrote it, the recorder wrote it again with
+   a copy of the loop, and the pilot read whatever was already there. The measured tree and the
+   reconstructed tree therefore agreed only by convention, and a stale directory was measured, reported
+   and then refused by the recorder as unreproducible. That refusal is the strict recorder from round 2
+   doing its job: the fix is one generator, used by all three, with the run generating its own corpus.
 
 The number worth trusting is therefore not the percentage on its own: it is the percentage with one
 control, zero unmeasured rules, and a reproducibility gate that can regenerate both the originals and the

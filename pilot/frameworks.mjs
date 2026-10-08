@@ -83,6 +83,14 @@ ${options}
 const errorText = (field, { defects }) =>
   defects.includes('no-required') || field.optional ? '' : `      <p id="${field.slug}-error" class="error-msg" hidden><span aria-hidden="true">✕</span> Please fill in ${field.label.toLowerCase()}.</p>`;
 
+/**
+ * A field and the error text it points at, as one unit. The two forms drifted apart once already:
+ * the second form emitted aria-errormessage without the element it names, which made a project with no
+ * seeded defects fail a rule and gave the uplift an edit to make on the clean control. Rendering the
+ * pair in one place is what keeps that from being possible again.
+ */
+const fieldWithError = (field, { defects }) => `${fieldMarkup(field, { defects })}\n${errorText(field, { defects })}`;
+
 /** A second form for an archetype with a second action (the catalogue's cart). */
 function extraFormMarkup(archetype, { defects }) {
   const spec = archetype.extraForm;
@@ -91,7 +99,7 @@ function extraFormMarkup(archetype, { defects }) {
     .join('\n');
   const fields = archetype.fields
     .filter((field) => spec.fields.includes(field.slug))
-    .map((field) => fieldMarkup(field, { defects }))
+    .map((field) => fieldWithError(field, { defects }))
     .join('\n');
   return `    <form id="${spec.id}" method="${spec.method}" action="${spec.action}">
 ${hidden}
@@ -103,7 +111,7 @@ function formMarkup(archetype, { defects }) {
   const form = archetype.form ?? { method: 'post', action: archetype.routes.find((route) => route.method === 'POST' && route.kind.startsWith('write')).path };
   const chosen = form.fields ? archetype.fields.filter((field) => form.fields.includes(field.slug)) : archetype.fields;
   const fields = chosen
-    .map((field) => `${fieldMarkup(field, { defects })}\n${errorText(field, { defects })}`)
+    .map((field) => fieldWithError(field, { defects }))
     .join('\n')
     .replace(/\n{2,}/g, '\n');
   const extra = archetype.extraForm

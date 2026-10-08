@@ -123,7 +123,11 @@ async function driveWriteJourney(page, base, writeJourney) {
   for (const [selector, value] of Object.entries(fill)) await page.type(selector, value);
   const submit = await page.submit(writeJourney.formSelector);
   const landed = await page.url();
-  const status = page.network.filter((entry) => entry.url === landed).at(-1)?.status ?? null;
+  // The POST's own status, not the status of whatever page it redirected to: looking up the landed URL
+  // answered a different question, and accepting null meant "we did not see it" read as "it worked".
+  const posted = page.network.filter((entry) => entry.method === 'POST').at(-1) ?? null;
+  const landedEntry = page.network.filter((entry) => entry.url === landed).at(-1) ?? null;
+  const status = posted?.status ?? landedEntry?.status ?? null;
   // Read it back from the server rather than from the page: the question is whether the value was
   // stored, and the page could be showing it from anywhere.
   const stored = await page.evaluate(`
@@ -138,7 +142,9 @@ async function driveWriteJourney(page, base, writeJourney) {
     readStatus: stored.status,
     // A refused POST cannot have written anything, so its status is part of the evidence too.
     landedStatus: status,
-    posted: status === null || (status >= 200 && status < 400),
+    postedMethod: posted?.method ?? null,
+    postedUrl: posted?.url ?? null,
+    posted: status !== null && status >= 200 && status < 400,
     submittedValue: unique,
     persisted: stored.status === 200 && stored.body.includes(unique),
     observedLength: stored.body.length,

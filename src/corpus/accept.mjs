@@ -46,8 +46,8 @@ export function journeyWorks(record) {
   // archetype's reflected-query journey is not a write, so it is checked by this clause instead.
   const write = record.journeys?.find((journey) => journey.name === 'write-journey');
   if (record.expected_write_journey && !write) problems.push('the declared write journey was not driven');
-  else if (write && write.posted === false) {
-    problems.push(`the write journey posted to a route that refused it (status ${write.landedStatus})`);
+  else if (write && write.posted !== true) {
+    problems.push(`the write journey's POST was not observed to succeed (status ${write.landedStatus})`);
   } else if (write && write.persisted !== true) {
     problems.push('the write journey did not show the posted value stored by the server');
   }

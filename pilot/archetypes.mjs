@@ -153,7 +153,9 @@ export const ARCHETYPES = {
     ],
     fields: [
       { slug: 'email', name: 'email', type: 'email', label: 'Email', autocomplete: 'username' },
-      { slug: 'password', name: 'password', type: 'password', label: 'Password' },
+      // A recovery form sets a new password, so its token is new-password. Without it a project with no
+      // seeded defects still failed the sign-up autofill rule, which meant the clean arm was not clean.
+      { slug: 'password', name: 'password', type: 'password', label: 'Password', autocomplete: 'new-password' },
       { slug: 'displayName', name: 'displayName', type: 'text', label: 'Display name', echoed: true },
     ],
     // This archetype's answer is held by the session the server issued, not by a record reference.

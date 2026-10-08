@@ -18,7 +18,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import process from 'node:process';
 
-import { buildProject, writeProject } from '../pilot/frameworks.mjs';
+import { generateCorpus } from '../pilot/generate.mjs';
 import { upliftProject } from '../src/corpus/uplift.mjs';
 import { hashTree } from '../src/corpus/harness.mjs';
 
@@ -43,20 +43,8 @@ function parseArgs(argv) {
 
 /** Generate the plan into a scratch directory and return project id -> {dir, spec}. */
 function generate(plan, outDir) {
-  rmSync(outDir, { recursive: true, force: true });
-  const projects = {};
-  for (const entry of plan.projects) {
-    const built = buildProject({
-      archetypeId: entry.archetype,
-      frameworkName: entry.framework,
-      defects: entry.defects ?? [],
-      flags: entry.flags ?? {},
-    });
-    // The same writer the scaffolder uses: two implementations of "a project on disk" disagreed about
-    // package.json, and the recorder then reported the plan as generating a tree nobody had measured.
-    projects[built.projectId] = { dir: writeProject(join(outDir, built.projectId), built), spec: built.spec };
-  }
-  return projects;
+  const { projects } = generateCorpus({ plan, outDir });
+  return Object.fromEntries(projects.map((project) => [project.projectId, { dir: project.dir, spec: project.spec }]));
 }
 
 function record(runDir) {

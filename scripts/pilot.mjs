@@ -2,7 +2,10 @@
 /**
  * Run the pilot: every project as an original and as an uplift, measured in a real browser.
  *
- *   node scripts/pilot.mjs [--projects pilot/projects] [--out pilot/out] [--limit N] [--only <id>] [--keep]
+ *   node scripts/pilot.mjs [--out pilot/out] [--limit N] [--only <id>] [--framework <name>] [--port N]
+ *
+ * By default the corpus is generated fresh from pilot/plan.json for the run, so what is measured is what
+ * the generator produces now. --projects <dir> measures an existing tree instead, for debugging only.
  *
  * For each project:
  *   1. run the original and record what the browser observed,
@@ -21,10 +24,12 @@ import process from 'node:process';
 import { launchChrome } from '../src/corpus/cdp.mjs';
 import { upliftProject } from '../src/corpus/uplift.mjs';
 import { runProjectVersion, hashTree } from '../src/corpus/harness.mjs';
+import { generateCorpus } from '../pilot/generate.mjs';
 import { decidePair, renderYieldReport, summarizeYield } from '../src/corpus/accept.mjs';
 
 function parseArgs(argv) {
-  const args = { projects: 'pilot/projects', out: 'pilot/out', limit: null, only: null, framework: null, keep: false, port: 4300 };
+  // null means "generate the corpus from the plan"; a value means "measure exactly this directory".
+  const args = { projects: null, out: 'pilot/out', limit: null, only: null, framework: null, keep: false, port: 4300 };
   for (let i = 0; i < argv.length; i += 1) {
     if (argv[i] === '--projects') args.projects = argv[++i];
     else if (argv[i] === '--out') args.out = argv[++i];
@@ -46,10 +51,22 @@ function parseArgs(argv) {
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
-  const projectsRoot = resolve(args.projects);
   const runId = new Date().toISOString().replace(/[:.]/g, '-');
   const runDir = resolve(args.out, runId);
   mkdirSync(runDir, { recursive: true });
+
+  // The corpus is generated for this run unless a directory was named explicitly. Reading a directory
+  // that was scaffolded at some earlier point is how a stale corpus gets measured and then reported as
+  // a corpus that cannot be reproduced: the measured tree and the verified tree have to be the same tree.
+  let projectsRoot;
+  if (args.projects) {
+    projectsRoot = resolve(args.projects);
+    console.log(`pilot: measuring the existing corpus at ${projectsRoot}`);
+  } else {
+    projectsRoot = resolve('.pilot-corpus', runId);
+    const { projects } = generateCorpus({ outDir: projectsRoot });
+    console.log(`pilot: generated ${projects.length} projects into ${projectsRoot}`);
+  }
 
   const projectIds = readdirSync(projectsRoot, { withFileTypes: true })
     .filter((entry) => entry.isDirectory())

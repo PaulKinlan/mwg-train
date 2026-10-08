@@ -29,9 +29,10 @@ function parseArgs(argv) {
 /** The evidence a journey carried, without the raw page text. */
 function journeySummary(journey) {
   const wanted = [
-    'name', 'url', 'afterSubmit', 'status', 'landedStatus', 'posted', 'persisted', 'submittedValue',
-    'readStatus', 'observedLength', 'echoed', 'textLength', 'stillOnForm', 'urlUnchanged',
-    'serverRefused', 'invalidCount', 'visibleErrors', 'path',
+    'name', 'url', 'afterSubmit', 'status', 'landedStatus', 'posted', 'postedMethod', 'postedUrl',
+    'persisted', 'submittedValue', 'readStatus', 'observedLength', 'echoed', 'echoedText', 'textLength',
+    'stillOnForm', 'urlUnchanged', 'serverRefused', 'invalidCount', 'visibleErrors', 'path',
+    'precondition', 'persistedText',
   ];
   const summary = {};
   for (const key of wanted) if (journey[key] !== undefined) summary[key] = journey[key];
@@ -79,11 +80,26 @@ for (const projectId of projectDirs) {
   for (const version of ['original', 'uplifted']) {
     const file = join(runDir, projectId, `${version}.json`);
     try {
-      versions[version] = summarizeVersion(JSON.parse(readFileSync(file, 'utf8')));
-    } catch {
-      // A missing version is recorded as missing rather than silently left out: a summary that
-      // quietly omits what it could not read is how a zero comes to look like a clean result.
-      versions[version] = null;
+      const record = JSON.parse(readFileSync(file, 'utf8'));
+      for (const journey of record.journeys ?? []) {
+        // The reload assertion is made of the step's text length, the echoed value and its text; keep
+        // them at a size that belongs in git, or the summary cannot show what the gate actually read.
+        const steps = journey.steps ?? [];
+        if (steps.length > 0) {
+          // The last step is the reload, and it carries the assertion: the value that came back and how
+          // much page text there was to find it in. Without these the persisted evidence is unreadable.
+          journey.textLength = steps.at(-1).textLength ?? journey.textLength;
+          journey.echoed = steps.at(-1).echoed ?? journey.echoed;
+          journey.echoedText = steps.at(-1).echoedText ?? journey.echoedText;
+          journey.persistedText = String(steps.at(-1).echoedText ?? steps.at(-1).echoed ?? '').slice(0, 160);
+        }
+      }
+      versions[version] = summarizeVersion(record);
+    } catch (error) {
+      // Fail the export rather than writing null: an artefact that reports the full project count while
+      // a version is missing looks complete, and a reader cannot tell which claims it covers.
+      console.error(`pilot-records: cannot read ${file}: ${error.message}`);
+      process.exit(1);
     }
   }
   projects.push({ project_id: projectId, ...versions });

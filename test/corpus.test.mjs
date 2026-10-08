@@ -20,7 +20,8 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 
 import { ARCHETYPES, ARCHETYPE_IDS } from '../pilot/archetypes.mjs';
-import { buildProject, FRAMEWORKS } from '../pilot/frameworks.mjs';
+import { generateCorpus } from '../pilot/generate.mjs';
+import { buildProject, FRAMEWORKS, writeProject } from '../pilot/frameworks.mjs';
 import { TRANSFORMS, upliftProject } from '../src/corpus/uplift.mjs';
 import { decidePair, journeyWorks, renderYieldReport, summarizeYield, validationObservation } from '../src/corpus/accept.mjs';
 import { hashTree } from '../src/corpus/harness.mjs';
@@ -483,9 +484,11 @@ test('every check compiles every browser expression it can reach', async () => {
     }
     if (source.includes('page.evaluate')) {
       assert.ok(compiled.length > 0, id + ': builds a browser expression but none was compiled');
+      // Distinct, not just total: two visits to one site could otherwise compensate for a site that
+      // never ran, which is exactly the hole this assertion is meant to close.
       assert.ok(
-        compiled.length >= siteCount,
-        id + ': ' + compiled.length + ' expression(s) compiled but ' + siteCount
+        new Set(compiled).size >= siteCount,
+        id + ': ' + new Set(compiled).size + ' distinct expression(s) compiled, ' + siteCount
           + ' call site(s) exist, so an unreached branch holds an uncompiled expression',
       );
     }
@@ -541,7 +544,9 @@ test('an original that accepts an empty form is still assessable', () => {
   assert.equal(validationObservation({ journeys: [] }), 'not-driven');
 });
 test('a declared write journey must be driven and shown to persist', () => {
-  const write = { name: 'write-journey', persisted: true };
+  // A write journey is only evidence of a write if its POST was observed to succeed and the value it
+  // posted was read back.
+  const write = { name: 'write-journey', posted: true, landedStatus: 200, persisted: true, submittedValue: 'part-x' };
   const uplift = { applied: ['forms/required-field-feedback'], skipped: [], failed: [] };
   const passing = { rules: [{ rule: 'forms/required-field-feedback', status: 'PASS' }] };
   const specWithWrite = { write_journey: { itemValue: 'bearing' } };
@@ -571,7 +576,7 @@ test('a declared write journey must be driven and shown to persist', () => {
     uplift,
   });
   assert.equal(refusedPost.category, 'original-not-runnable');
-  assert.ok(refusedPost.detail.some((line) => /refused it \(status 422\)/.test(line)));
+  assert.ok(refusedPost.detail.some((line) => /POST was not observed to succeed \(status 422\)/.test(line)));
 
   const good = decidePair({
     spec: spec(specWithWrite),
@@ -597,6 +602,82 @@ test('the write journey posts a value that cannot already be stored', () => {
   assert.match(source, /const unique = /, 'the harness generates the posted value');
   assert.match(source, /body\.includes\(unique\)/, 'the read-back is checked against the generated value');
   assert.match(source, /posted:/, 'the POST status is recorded');
+});
+
+test('every error reference in a generated project has a target, in every arm', () => {
+  // The two form renderers drifted apart: the second emitted aria-errormessage without the element it
+  // names, which made a project with no seeded defects fail a rule and handed the uplift an edit to make
+  // on the clean control. A substring check for the attribute passed the whole time.
+  for (const frameworkName of Object.keys(FRAMEWORKS)) {
+    for (const archetypeId of ARCHETYPE_IDS) {
+      for (const defects of [[], ['no-required'], ['xss-innerhtml'], ['no-aria-sync', 'no-autofill']]) {
+        const { files, spec: built } = buildProject({ archetypeId, frameworkName, defects });
+        const markup = files[built.framework.markupFile];
+        const ids = new Set([...markup.matchAll(/id="([^"]+)"/g)].map((match) => match[1]));
+        for (const reference of [...markup.matchAll(/aria-errormessage="([^"]+)"/g)].map((m) => m[1])) {
+          assert.ok(
+            ids.has(reference),
+            `${archetypeId}/${frameworkName}/${defects.join('+') || 'clean'}: aria-errormessage="${reference}" has no element with that id`,
+          );
+        }
+      }
+    }
+  }
+});
+
+test('a project with no seeded defects gets no edits at all', () => {
+  // The control is what proves the tool is not simply always finding something. Its guarantee is zero
+  // edits, so it is asserted as zero edits, not as "few rules improved".
+  for (const frameworkName of Object.keys(FRAMEWORKS)) {
+    for (const archetypeId of ARCHETYPE_IDS) {
+      const { files, spec: built } = buildProject({ archetypeId, frameworkName, defects: [] });
+      const root = mkdtempSync(join(tmpdir(), 'clean-'));
+      const outDir = mkdtempSync(join(tmpdir(), 'clean-uplifted-'));
+      try {
+        writeProject(root, { projectId: `${archetypeId}-${frameworkName}`, files, spec: built });
+        const result = upliftProject(root, built, outDir);
+        assert.deepEqual(
+          result.applied,
+          [],
+          `${archetypeId}/${frameworkName}: a clean project should need nothing, but the tool applied ${result.applied.join(', ')}`,
+        );
+        assert.deepEqual(result.edits, [], `${archetypeId}/${frameworkName}: a clean project should be edited not at all`);
+        assert.deepEqual(result.failed, [], `${archetypeId}/${frameworkName}: nothing should fail on a clean project`);
+      } finally {
+        rmSync(root, { recursive: true, force: true });
+        rmSync(outDir, { recursive: true, force: true });
+      }
+    }
+  }
+});
+
+test('the generator is deterministic, so the measured tree is the verified tree', () => {
+  // The pilot used to measure whatever was in pilot/projects while the recorder regenerated the plan,
+  // so a stale directory was measured silently and then reported as unreproducible. Both now come from
+  // generateCorpus, and this is what makes that safe: two generations of the same plan are identical.
+  const first = mkdtempSync(join(tmpdir(), 'gen-a-'));
+  const second = mkdtempSync(join(tmpdir(), 'gen-b-'));
+  try {
+    const a = generateCorpus({ outDir: first });
+    const b = generateCorpus({ outDir: second });
+    assert.equal(a.projects.length, plan.projects.length, 'every planned project is generated');
+    assert.deepEqual(
+      a.projects.map((project) => project.projectId),
+      b.projects.map((project) => project.projectId),
+      'generation order is stable',
+    );
+    for (let index = 0; index < a.projects.length; index += 1) {
+      assert.equal(
+        hashTree(a.projects[index].dir),
+        hashTree(b.projects[index].dir),
+        a.projects[index].projectId + ': two generations of the same plan differ',
+      );
+    }
+    assert.equal(a.projects.length, 25);
+  } finally {
+    rmSync(first, { recursive: true, force: true });
+    rmSync(second, { recursive: true, force: true });
+  }
 });
 
 test('the committed records support every claim the report makes', () => {
@@ -633,6 +714,25 @@ test('the committed records support every claim the report makes', () => {
   }
 
   // The report's observation counts must be the counts in the records, not a second opinion.
+  // Per-project verdicts, not just totals: a report that swapped two projects' outcomes would keep the
+  // same counts and still be wrong.
+  const byProject = new Map(report.decisions.map((decision) => [decision.project_id, decision]));
+  for (const project of records.projects) {
+    const decision = byProject.get(project.project_id);
+    assert.ok(decision, project.project_id + ': the report has no decision');
+    assert.equal(project.category, decision.category, project.project_id + ': verdict differs from the report');
+    assert.equal(project.accepted, decision.accepted, project.project_id + ': acceptance differs from the report');
+    assert.equal(project.original_sha, decision.original_sha, project.project_id + ': original hash differs');
+    assert.equal(project.uplifted_sha, decision.uplifted_sha, project.project_id + ': uplift hash differs');
+  }
+
+  // The reload assertion the persistence gate used must be visible in the committed records.
+  for (const project of records.projects) {
+    const persistence = project.original.journeys.find((journey) => journey.name === 'server-persistence');
+    assert.ok(persistence?.echoed, project.project_id + ': no echoed value in the persistence journey');
+    assert.ok(persistence?.textLength > 0, project.project_id + ': no reload text length recorded');
+  }
+
   const observations = records.projects.map((project) => project.validation_observation);
   assert.equal(observations.filter((value) => value === 'refused-observed').length, 23);
   assert.equal(observations.filter((value) => value === 'accepted-empty').length, 2);

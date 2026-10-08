@@ -9,11 +9,11 @@
  * is generated from the same builder, which is what makes the measured difference attributable to the
  * uplift rule and not to project-to-project drift.
  */
-import { readFileSync, rmSync } from 'node:fs';
+import { rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import process from 'node:process';
 
-import { buildProject, writeProject } from '../pilot/frameworks.mjs';
+import { generateCorpus } from '../pilot/generate.mjs';
 
 function main() {
   const argv = process.argv.slice(2);
@@ -29,21 +29,8 @@ function main() {
     }
   }
 
-  const plan = JSON.parse(readFileSync(resolve(planPath), 'utf8'));
-  const written = [];
-  for (const entry of plan.projects) {
-    const built = buildProject({
-      archetypeId: entry.archetype,
-      frameworkName: entry.framework,
-      defects: entry.defects ?? [],
-      flags: entry.flags ?? {},
-    });
-    writeProject(resolve(out, built.projectId), built);
-    written.push({ projectId: built.projectId, archetype: entry.archetype, framework: entry.framework, defects: entry.defects ?? [] });
-  }
-  console.log(`scaffold-pilot: wrote ${written.length} projects to ${out}`);
-  const byFramework = {};
-  for (const entry of written) byFramework[entry.framework] = (byFramework[entry.framework] ?? 0) + 1;
+  const { projects, byFramework } = generateCorpus({ planPath, outDir: out });
+  console.log(`scaffold-pilot: wrote ${projects.length} projects to ${out}`);
   console.log(`scaffold-pilot: frameworks ${JSON.stringify(byFramework)}`);
 }
 

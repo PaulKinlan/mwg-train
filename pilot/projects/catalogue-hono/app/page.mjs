@@ -18,8 +18,10 @@ const body = html`
 
       <label for="quantity">Quantity</label>
       <input type="number" id="quantity" name="quantity" inputmode="numeric">
+
       <label for="item">Part number</label>
       <input type="text" id="item" name="item">
+
       <button type="submit">Add to cart</button>
     </form>
       <section class="record" aria-labelledby="record-heading">
