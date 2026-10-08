@@ -63,6 +63,34 @@ async function driveJourney(page, base, journey) {
   const kind = journey.kind ?? 'post-redirect-reload';
   const steps = [];
   const record = (name, detail) => steps.push({ step: name, ...detail });
+  // Pages the flow visits before the form page. A flow that spans more than one page needs somewhere
+  // to say so, and putting them here rather than folding them into `startPath` keeps two things true
+  // that the rest of the harness depends on: `startPath` stays the FORM page (the validation-failure
+  // journey and the rule/security re-navigations all begin there), and exactly one step is named
+  // `submit`, so the acceptance decision's `steps.find(s => s.step === 'submit')` still resolves to the
+  // form's POST rather than to an earlier page that also submitted.
+  for (const [index, step] of (journey.steps ?? []).entries()) {
+    await page.goto(`${base}${step.path}`);
+    const url = await page.url();
+    record('step', { index, url, status: page.network.find((entry) => entry.url === url)?.status ?? null });
+    if (step.fill) {
+      for (const [selector, value] of Object.entries(step.fill)) await page.type(selector, value);
+      record('step-fill', { index, fields: Object.keys(step.fill) });
+    }
+    if (step.select) {
+      for (const [selector, option] of Object.entries(step.select)) await page.selectOption(selector, option);
+      record('step-select', { index, options: step.select });
+    }
+    if (step.submit) {
+      await page.submit(step.submit);
+      const landed = await page.url();
+      record('step-submit', {
+        index,
+        url: landed,
+        status: page.network.filter((entry) => entry.url === landed).at(-1)?.status ?? null,
+      });
+    }
+  }
   await page.goto(`${base}${journey.startPath}`);
   const opened = await page.url();
   // The status of the document itself, not of whatever request finished last (a missing favicon is

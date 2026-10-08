@@ -38,7 +38,9 @@
     "viewer": "node src/viewer/server.mjs",
     "scan:owner-auth": "node scripts/scan-owner-auth.mjs --corpus pilot && node scripts/scan-owner-auth.mjs docs/train/briefs docs/train/corpus",
     "promote": "node scripts/promote.mjs",
-    "check:brief-schema": "node scripts/check-brief-schema.mjs"
+    "check:brief-schema": "node scripts/check-brief-schema.mjs",
+    "check:route-conformance": "node scripts/check-route-conformance.mjs",
+    "check:served-routes": "node scripts/check-served-routes.mjs"
   },
   "license": "UNLICENSED",
   "dependencies": {

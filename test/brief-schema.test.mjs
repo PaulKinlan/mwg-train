@@ -266,3 +266,51 @@ test('an optional select may be left alone', () => {
   const row = withSelect({ startPath: '/', formSelector: 'form#f', fill: { 'input[name=customer]': 'Ada' }, expectText: 'Ada' }, { required: false });
   assert.deepEqual(validateBriefSchema(row), []);
 });
+
+// A flow that spans more than one page visits earlier pages before the form page. These steps are
+// validated like the main page, so a step cannot quietly exercise a control the brief never declared.
+const withSteps = (steps) => ({
+  brief_id: 'tr-98-v1',
+  fields: [
+    { slug: 'ground', name: 'ground', type: 'text', label: 'Ground', required: true, echoed: true },
+    { slug: 'roast', name: 'roast', type: 'select', label: 'Roast', required: true, options: ['Light', 'Medium'] },
+  ],
+  journey: {
+    startPath: '/results',
+    formSelector: 'form#pick',
+    fill: { 'input[name=ground]': 'filter' },
+    select: { 'select[name=roast]': 'Medium' },
+    expectText: 'filter',
+    steps,
+  },
+});
+
+test('a journey may visit an earlier page before the form page', () => {
+  const row = withSteps([{ path: '/search', fill: { 'input[name=ground]': 'kaffe' }, submit: 'form#s' }]);
+  assert.deepEqual(validateBriefSchema(row), []);
+});
+
+test('a step that types into a field the brief does not declare is refused', () => {
+  const row = withSteps([{ path: '/search', fill: { 'input[name=budget]': '10' } }]);
+  assert.ok(problems(row).some((p) => /types into 'budget', which this brief does not declare/.test(p)), problems(row).join('\n'));
+});
+
+test('a step must name an absolute path', () => {
+  const row = withSteps([{ path: 'search' }]);
+  assert.ok(problems(row).some((p) => /must be an absolute path starting with \//.test(p)), problems(row).join('\n'));
+});
+
+test('a step may not carry a property the format does not define', () => {
+  const row = withSteps([{ path: '/search', click: 'form#s' }]);
+  assert.ok(problems(row).some((p) => /journey\.steps\[0\]\.click is not a step property this format defines/.test(p)), problems(row).join('\n'));
+});
+
+test('a step select must choose an option the field offers', () => {
+  const row = withSteps([{ path: '/search', select: { 'select[name=roast]': 'Burnt' } }]);
+  assert.ok(problems(row).some((p) => /option 'Burnt' is not one of \["Light","Medium"\]/.test(p)), problems(row).join('\n'));
+});
+
+test('steps must be an array, not a single object', () => {
+  const row = withSteps({ path: '/search' });
+  assert.ok(problems(row).some((p) => /journey\.steps must be an array of steps/.test(p)), problems(row).join('\n'));
+});

@@ -63,9 +63,11 @@ These briefs are authored specification items (prompts, expected routes, journey
 - **The journey is single-page, so this is not brief-flow conformance.** The harness fills the brief's
   inputs, chooses its selects, submits once and waits for the echoed value. It never spans two pages and
   never updates an existing record, so `tr-05`'s register/log-out/log-in flow is not driven, and a brief
-  that describes search or filtering is still exercised only as a create. 25 of 30 families also emit
-  every route their brief lists; `tr-05` is missing `/login` and `/volunteer/profile` entirely, and
-  `tr-09`, `tr-12`, `tr-13`, `tr-16` each lack a listing's detail route. `npm run check:brief-schema --
+  that describes search or filtering is still exercised only as a create. 29 of 30 families declare
+  every route their brief lists (`npm run check:route-conformance`); `tr-05` is excused by an explicit
+  waiver because the shared builder has no `/login` page to declare, and that builder work is another
+  bead. Declaring is not serving: the generated server answers only some of the declared routes, which
+  `npm run check:served-routes` measures. `npm run check:brief-schema --
   --expect-all` proves every family declares a buildable schema whose journey fills each non-select field
   its own brief requires and chooses each of its required selects - it does not prove a project
   implements its brief's flow.

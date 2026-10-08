@@ -1,6 +1,6 @@
 {
   "$comment": "The training corpus generated from the tr-* briefs: one project per family x framework, each with its tree hash. `node scripts/scaffold-training-corpus.mjs` re-derives every tree; a hash here must never collide with a hash in pilot/CORPUS.json (original or uplift), which is the disjointness the corpus exists to guarantee.",
-  "generated_at": "2026-10-08T17:15:34.388Z",
+  "generated_at": "2026-10-08T17:20:02.392Z",
   "generator": "scripts/scaffold-training-corpus.mjs",
   "summary": {
     "families": 30,
@@ -5526,7 +5526,7 @@
         "/enrol",
         "/enrolments/:id"
       ],
-      "tree_sha": "sha256:cafe753a8dbfa44e9fce6b99e81c815da46c5889d4fe155cc6a8a195ebe65c09"
+      "tree_sha": "sha256:2a63e89e8e87a655414561038e621c68e8e60266ba8b4943d5ef9e8364589566"
     },
     {
       "project_id": "tr-09-raw",
@@ -5609,7 +5609,7 @@
         "/enrol",
         "/enrolments/:id"
       ],
-      "tree_sha": "sha256:38b4439b509dc0cd4fb5d3799a805995aba4b4f58c8f075a7f9c00b27abb741e"
+      "tree_sha": "sha256:253ceed70d71d1f16886c62e63c56d5a4def38c96ec2802ea046e2f63357fee8"
     },
     {
       "project_id": "tr-09-react",
@@ -5692,7 +5692,7 @@
         "/enrol",
         "/enrolments/:id"
       ],
-      "tree_sha": "sha256:5c852b6008e246894532d37a3e96a9871d5c237416ad9f77886505682d167ad0"
+      "tree_sha": "sha256:67d55b7ec7297b8f9b19878456639831882fef1855acc267b41b612cb9b701c5"
     },
     {
       "project_id": "tr-09-preact",
@@ -5775,7 +5775,7 @@
         "/enrol",
         "/enrolments/:id"
       ],
-      "tree_sha": "sha256:dab932bf5705ab07f1072366c3c60a06aceede8a4334655fbc1d4760a7171697"
+      "tree_sha": "sha256:590e0a245c6c56a3c23df096f800179a25dda8adeb15bfdbcea0ffa6f39daa21"
     },
     {
       "project_id": "tr-09-vue",
@@ -5858,7 +5858,7 @@
         "/enrol",
         "/enrolments/:id"
       ],
-      "tree_sha": "sha256:30dc9203d1a34ea5e4991dea23651c5c507d985cb5ffb4fbc23b5819752d0316"
+      "tree_sha": "sha256:c3fd3a63f845ce6b147c58af03bba83cc031f23e929e2d81c0898ec7264d67af"
     },
     {
       "project_id": "tr-09-webcomponents",
@@ -5941,7 +5941,7 @@
         "/enrol",
         "/enrolments/:id"
       ],
-      "tree_sha": "sha256:c1f7bbae31d3c918c0d6378283e938e0e3c5092a6f82a9fcd62f2fc0e3686a82"
+      "tree_sha": "sha256:fa47253840959e4d043dcfa7b60f6f673b7eb4885547fc3a1e50e599ba35da20"
     },
     {
       "project_id": "tr-09-svelte",
@@ -6024,7 +6024,7 @@
         "/enrol",
         "/enrolments/:id"
       ],
-      "tree_sha": "sha256:19ba78ffbaa6d5abee7525729b5647976787d54fb57a7cd88114ae742124eeaf"
+      "tree_sha": "sha256:56c334306eee36c304b6df3c0ce976e6947fca0f20c6cf752350aa903b5962b4"
     },
     {
       "project_id": "tr-10-hono",
@@ -7334,7 +7334,7 @@
         "/jobs/:id/apply",
         "/applications/:id"
       ],
-      "tree_sha": "sha256:99346a3145c0f7bfeec50aef208f02b031cc7d408f6028b8095bbd4f56a5fa00"
+      "tree_sha": "sha256:7c0ede4c3950406e3690423c9474df0fe8a55d0ae73c989867fe88bb2a48a3a8"
     },
     {
       "project_id": "tr-12-raw",
@@ -7426,7 +7426,7 @@
         "/jobs/:id/apply",
         "/applications/:id"
       ],
-      "tree_sha": "sha256:77612a4627489effe91314a12883e5d12a7075c8f01015f6e6d4cf3fd8ffeb85"
+      "tree_sha": "sha256:296b9d1b36aee967b821983c451bfc921b7f041672a0772a3eefbbe9d6ee0072"
     },
     {
       "project_id": "tr-12-react",
@@ -7518,7 +7518,7 @@
         "/jobs/:id/apply",
         "/applications/:id"
       ],
-      "tree_sha": "sha256:c00f02154b0ffd30aa51a606218cb161a21006ecc5264b1ae6cab967efc7cb28"
+      "tree_sha": "sha256:f133f9714b3a2ba0dafc59e7e2984c4c0fc2f11a285f8d8e19f6ab13a0018c50"
     },
     {
       "project_id": "tr-12-preact",
@@ -7610,7 +7610,7 @@
         "/jobs/:id/apply",
         "/applications/:id"
       ],
-      "tree_sha": "sha256:4a5fdb2c9d7adf72c06a507b40110d36bd043ff909c9341619ea2ed62d60b95c"
+      "tree_sha": "sha256:f9c5140f9dc13c95b533da06827bfb6dc74e4f7e5bd6f546d7d4e1182a6e5391"
     },
     {
       "project_id": "tr-12-vue",
@@ -7702,7 +7702,7 @@
         "/jobs/:id/apply",
         "/applications/:id"
       ],
-      "tree_sha": "sha256:815d7c1b6ec2cae64e30e6e1496e9f7a850c560b5609dbeb9024814494fd177e"
+      "tree_sha": "sha256:2e85526338ed71c379db31269adc52c67cd7c6552f560be7d875edf52d150be6"
     },
     {
       "project_id": "tr-12-webcomponents",
@@ -7794,7 +7794,7 @@
         "/jobs/:id/apply",
         "/applications/:id"
       ],
-      "tree_sha": "sha256:46846648990f9234a83e777d7a58d717e168543504ea43a56a4460d21a9a919f"
+      "tree_sha": "sha256:1442892793e589b534f8a63f80623b0db087a36bd36d264900ad33ce36c3ccf8"
     },
     {
       "project_id": "tr-12-svelte",
@@ -7886,7 +7886,7 @@
         "/jobs/:id/apply",
         "/applications/:id"
       ],
-      "tree_sha": "sha256:3201c4a637ea8c0593fbc19334aa558971fbc360ceebcad19d1d5d500191f583"
+      "tree_sha": "sha256:1acd6f8f1531f360657ce20d2cf2a6e9c1dcc9d07616767369ad36b59234d8c3"
     },
     {
       "project_id": "tr-13-hono",
@@ -7959,7 +7959,7 @@
         "/soil-tests/new",
         "/soil-tests/:id"
       ],
-      "tree_sha": "sha256:56128b5225f9cdca9b526a28cea8448b7604bb54df6619eb3137a9b21bd9f9f0"
+      "tree_sha": "sha256:5243d0f10a9f497684314bc792ff28af4b5a105f4a6476ffea80c4cdd75f802a"
     },
     {
       "project_id": "tr-13-raw",
@@ -8032,7 +8032,7 @@
         "/soil-tests/new",
         "/soil-tests/:id"
       ],
-      "tree_sha": "sha256:71c57ba6f4f80c6001e74b69f3392484f62b9e7007cbb2dfe2270fb60344a53b"
+      "tree_sha": "sha256:d14604a4fdd406d101c12e921683bc6eb5651a4b80a7e81a8fae43a1a0f86989"
     },
     {
       "project_id": "tr-13-react",
@@ -8105,7 +8105,7 @@
         "/soil-tests/new",
         "/soil-tests/:id"
       ],
-      "tree_sha": "sha256:05ba12e2aaf166c66e262fe8994cd1f11312b5951629e5ad8d7841d11a807923"
+      "tree_sha": "sha256:3d21e855a166726f91af7f03cafac20393b27af800da53c4d96d8749b0d37f69"
     },
     {
       "project_id": "tr-13-preact",
@@ -8178,7 +8178,7 @@
         "/soil-tests/new",
         "/soil-tests/:id"
       ],
-      "tree_sha": "sha256:e2d63afe9ae1343ae4f3ff116b05b9e319ab2fd55e9994016774b5b7bb44ebcf"
+      "tree_sha": "sha256:2f71bcc560a5a1597f768d122c5234f6f8db6b1941fae445892e25af7bb4d10e"
     },
     {
       "project_id": "tr-13-vue",
@@ -8251,7 +8251,7 @@
         "/soil-tests/new",
         "/soil-tests/:id"
       ],
-      "tree_sha": "sha256:ed59f6d4dd0f530df8359f9c90df7cb7270c3240645c706e4595e06aa334ba54"
+      "tree_sha": "sha256:833e2b9201ff96f6088e966e39f5cc57e15fa4e6200827792db41364f5391e4b"
     },
     {
       "project_id": "tr-13-webcomponents",
@@ -8324,7 +8324,7 @@
         "/soil-tests/new",
         "/soil-tests/:id"
       ],
-      "tree_sha": "sha256:bbd56879a8d3c7995ffb1462b6522439e1efa156a0385e1473ac0bb467db08be"
+      "tree_sha": "sha256:4d5a1f6758ef89910b3d1b3ad70919ef80e96455748203294312b4ab5f1204f4"
     },
     {
       "project_id": "tr-13-svelte",
@@ -8397,7 +8397,7 @@
         "/soil-tests/new",
         "/soil-tests/:id"
       ],
-      "tree_sha": "sha256:3752fdd4faad33e70720a4de8c5f7b814fe1e42f3cbc906891f93c7f92e3ed9c"
+      "tree_sha": "sha256:3cd7c7a9a0c5eb80fc98dc41598e1710595f5acdc42077cf859c381fe0c5bf2f"
     },
     {
       "project_id": "tr-14-hono",
@@ -9603,7 +9603,7 @@
         "/request",
         "/requests/:id"
       ],
-      "tree_sha": "sha256:4718b0742c38c5a24ab07b0b24ea7ebe19bb768cae384204f8626a04eefd112a"
+      "tree_sha": "sha256:7ef03d20d39659ba1886364af1c44c3e9302f3671a968236abe6ddb4401eddb7"
     },
     {
       "project_id": "tr-16-raw",
@@ -9689,7 +9689,7 @@
         "/request",
         "/requests/:id"
       ],
-      "tree_sha": "sha256:02e6a9b215f5ef9d9451b93778f3d5043e43db5f90ef6247efd12f5288760ffc"
+      "tree_sha": "sha256:709c7dafc654360f97f89b4ad63a713dcabeebd7a8a9a47f8773bd2f04db1c13"
     },
     {
       "project_id": "tr-16-react",
@@ -9775,7 +9775,7 @@
         "/request",
         "/requests/:id"
       ],
-      "tree_sha": "sha256:4c9ba36b49706556a5930323a8c67ccc62d20333ca62dcaf4ef4ad021b517458"
+      "tree_sha": "sha256:231557a6f4e39e8b9d55cdf5b265404fd2feb9772e6b411ab8ac316a97e458d3"
     },
     {
       "project_id": "tr-16-preact",
@@ -9861,7 +9861,7 @@
         "/request",
         "/requests/:id"
       ],
-      "tree_sha": "sha256:e34e0616f125045fb1f2a990b91cafe5207e1ba866aaa07c46c31116ad26aa2b"
+      "tree_sha": "sha256:9f1b4f62f2fea1bd7ce437cc1822eeaee88eb3ae5120cef0136b2816e38505be"
     },
     {
       "project_id": "tr-16-vue",
@@ -9947,7 +9947,7 @@
         "/request",
         "/requests/:id"
       ],
-      "tree_sha": "sha256:00468dca37f6013b3c059bec96177798f1778b6c2cf1f6958bc85d66d14d176a"
+      "tree_sha": "sha256:c1872903bd7c5a4c2fc38ef50b156bc776bceb8342c24e8e11c96d3ce95bf25b"
     },
     {
       "project_id": "tr-16-webcomponents",
@@ -10033,7 +10033,7 @@
         "/request",
         "/requests/:id"
       ],
-      "tree_sha": "sha256:2e43fde72950a5ece540017c368b30dcb1ab0d603997e4046123613e292da304"
+      "tree_sha": "sha256:a3a42a1f33d5519282b6751a773d1a7c865d6cadcd51348ab9c9c7e1f6cb4e2e"
     },
     {
       "project_id": "tr-16-svelte",
@@ -10119,7 +10119,7 @@
         "/request",
         "/requests/:id"
       ],
-      "tree_sha": "sha256:b20ea14a4db5993515490f71f5b340ae538fe8c49e7d25ca2979c5b6a39cec4a"
+      "tree_sha": "sha256:b5c4a07a93161df631e31d7c56bd4fbd2ed54aab7c29020786d398bde1c48618"
     },
     {
       "project_id": "tr-17-hono",

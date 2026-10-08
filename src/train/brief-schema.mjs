@@ -162,8 +162,46 @@ export function validateBriefSchema(row) {
     return findings;
   }
   for (const key of Object.keys(journey)) {
-    if (!['startPath', 'formSelector', 'fill', 'select', 'expectText'].includes(key)) {
+    if (!['startPath', 'formSelector', 'fill', 'select', 'steps', 'expectText'].includes(key)) {
       at(`journey.${key}`, 'is not a journey property this format defines');
+    }
+  }
+
+  // Pages visited before the form page, for a flow that spans more than one page. Validated with the
+  // same rules as the main page: a step that types into or chooses a control the brief does not
+  // declare is the same defect as the main journey doing it, and would produce a flow that looks
+  // like the brief's while exercising another page's form.
+  if (journey.steps !== undefined) {
+    if (!Array.isArray(journey.steps)) {
+      at('journey.steps', 'must be an array of steps');
+    } else {
+      journey.steps.forEach((step, index) => {
+        const where = `journey.steps[${index}]`;
+        if (!step || typeof step !== 'object' || Array.isArray(step)) {
+          at(where, 'must be an object');
+          return;
+        }
+        for (const key of Object.keys(step)) {
+          if (!['path', 'fill', 'select', 'submit'].includes(key)) at(`${where}.${key}`, 'is not a step property this format defines');
+        }
+        if (!isString(step.path) || !step.path.startsWith('/')) at(`${where}.path`, 'must be an absolute path starting with /');
+        if (step.submit !== undefined && !isString(step.submit)) at(`${where}.submit`, 'must be a selector string');
+        const names = new Set(fields.filter((f) => isString(f.name)).map((f) => f.name));
+        for (const [selector, value] of Object.entries(step.fill ?? {})) {
+          const name = selectorFieldName(selector);
+          if (!name) at(`${where}.fill['${selector}']`, "must address a field by name, e.g. 'input[name=q]'");
+          else if (!names.has(name)) at(`${where}.fill['${selector}']`, `types into '${name}', which this brief does not declare`);
+          if (!isString(String(value))) at(`${where}.fill['${selector}']`, 'must be a non-empty value');
+        }
+        for (const [selector, option] of Object.entries(step.select ?? {})) {
+          const name = selectorFieldName(selector);
+          const field = name ? fields.find((candidate) => candidate.name === name && candidate.type === 'select') : undefined;
+          if (!field) at(`${where}.select['${selector}']`, 'does not address a select this brief declares');
+          else if (!(field.options ?? []).includes(option)) {
+            at(`${where}.select['${selector}']`, `option '${option}' is not one of ${JSON.stringify(field.options)}`);
+          }
+        }
+      });
     }
   }
   if (!isString(journey.startPath) || !journey.startPath.startsWith('/')) {

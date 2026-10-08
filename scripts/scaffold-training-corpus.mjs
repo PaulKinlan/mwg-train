@@ -225,9 +225,24 @@ function deriveRoutes(family, base) {
     { method: 'POST', path: writePath, kind: baseWrite?.kind ?? 'write', redirect: () => redirectPath },
     { method: 'GET', path: readPath, kind: 'read-by-reference' },
   ];
+  // Compare placeholder-insensitively: a brief that writes `/enrolments/:id` and a read path of
+  // `/enrolments/:ref` are the same route, and matching them literally emitted a duplicate of the
+  // read route under the other spelling.
+  const norm = (path) => path.replace(/:[A-Za-z0-9_]+/g, ':x');
+  const taken = new Set([norm('/'), norm(writePath), norm(readPath)]);
   for (const path of family.routes) {
-    if (path === '/' || path === writePath || path === readPath) continue;
-    if (/:[A-Za-z0-9_]+/.test(path)) continue;
+    if (taken.has(norm(path))) continue;
+    // A parameterised route that is not the read path used to be dropped here, which is how tr-09,
+    // tr-12, tr-13 and tr-16 came to be missing a listing's detail route (`/courses/:id`, `/jobs/:id`,
+    // `/docs/:slug`, `/cultivars/:id`) - it was never emitted anywhere. It is emitted now as its own
+    // kind rather than as `list`, because it is one item of a listing rather than the listing, and
+    // rather than as `read-by-reference`, which reads a record a POST created rather than a listed
+    // item. Serving it is the builder's job and lives in its own bead; emitting it is this one's, so
+    // the corpus can no longer claim a route set it does not declare.
+    if (/:[A-Za-z0-9_]+/.test(path)) {
+      routes.push({ method: 'GET', path, kind: 'list-detail' });
+      continue;
+    }
     routes.push({ method: 'GET', path, kind: 'list' });
   }
   return routes;
