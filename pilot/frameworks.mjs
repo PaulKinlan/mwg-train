@@ -145,7 +145,8 @@ function formMarkup(archetype, { defects }) {
   const form = archetype.form ?? { method: 'post', action: writePath };
   // A parameterised write route is an edit flow: the form posts to the seeded record, with the
   // seed's reference standing in for each :param. Literal write paths keep their action verbatim.
-  if (/:[A-Za-z0-9_]+/.test(writePath)) form.action = form.action.replace(/:[A-Za-z0-9_]+/g, EDIT_SEED_REF);
+  // A local, not a mutation: an archetype object must be reusable across builds unchanged.
+  const action = /:[A-Za-z0-9_]+/.test(writePath) ? form.action.replace(/:[A-Za-z0-9_]+/g, EDIT_SEED_REF) : form.action;
   const chosen = form.fields ? archetype.fields.filter((field) => form.fields.includes(field.slug)) : archetype.fields;
   const fields = chosen
     .map((field) => fieldWithError(field, { defects }))
@@ -155,7 +156,7 @@ function formMarkup(archetype, { defects }) {
     ? '\n' + extraFormMarkup(archetype, { defects })
     : '';
   const live = defects.includes('no-aria-sync') ? '' : '      <div role="alert" aria-live="assertive" class="form-status" data-form-status></div>\n';
-  return `    <form id="${formIdOf(archetype)}" method="${form.method}" action="${form.action}">
+  return `    <form id="${formIdOf(archetype)}" method="${form.method}" action="${action}">
 ${live}      <div class="field">
 ${fields}
       </div>
