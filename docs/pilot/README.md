@@ -166,7 +166,18 @@ partial corpus is not the corpus.
 **24 of 25 pairs accepted (96.0%)**, measured on 2026-10-08 in 154s, one Chrome, one project at a
 time. The full report is [YIELD.md](YIELD.md); the per-project hashes, applied rules and verdicts are
 in `pilot/CORPUS.json`, which `npm run check:pilot-corpus` re-derives from `pilot/plan.json` and the
-uplift tool. The run's own decisions — every verdict, the rules each pair improved, the tree hashes and
+uplift tool. ### Who witnesses a write
+
+The write journey's evidence comes from the **server**, not the browser. A form POST is invisible in the
+browser's own network log — the trace for a catalogue write contains `GET /cart` and `GET /api/records`
+and no POST at all — so the POST's status was originally read off the page it redirected to. That is how
+"the POST succeeded" came to be claimed with no POST ever observed: `posted: true, status: 200` while no
+POST request existed in the log. Both generated servers now record every request they answer and expose
+it at `GET /__requests`, the harness requires a POST to the form's own `action` with a 2xx/3xx status
+before it will call a write successful, and an unobserved POST fails closed rather than inheriting the
+redirect's status. The claim is then checkable: `POST /cart → 303`, then `GET /cart → 200`.
+
+The run's own decisions — every verdict, the rules each pair improved, the tree hashes and
 each original's empty-submission observation — are committed as [yield.json](yield.json), and the
 journeys, rule statuses and tree hashes behind them as [records.json](records.json). A test asserts that
 every claim below is supported by those files: no property in any version carries an `ERROR` status, and
@@ -197,7 +208,7 @@ finding: the same generator writes all five, so the arms differ mainly in dialec
 handles all five dialects — including Hono's `hono/html` templates and Vue's runtime-compiled ones —
 without a rule failing on any of them.
 
-### Seven corrections the pilot made to itself, and why they are in the record
+### Eight corrections the pilot made to itself, and why they are in the record
 
 The first full run measured 1/20 and the second 25/25; neither number survived scrutiny, and the three
 runs of 24/25 or 22/25 that followed each hid a different defect in the measurement rather than in the
@@ -254,6 +265,15 @@ tool. The failures and the corrections are more useful than the final figure, so
    reconstructed tree therefore agreed only by convention, and a stale directory was measured, reported
    and then refused by the recorder as unreproducible. That refusal is the strict recorder from round 2
    doing its job: the fix is one generator, used by all three, with the run generating its own corpus.
+
+8. **"The POST succeeded" was never observed.** The write journey read the POST's status off the page it
+   redirected to, so a project could claim a successful write with no POST in the log; the committed
+   records showed `posted: true, status: 200` next to a null method and URL, which is what gave it away.
+   Adding a request log to both generated servers produced the missing half immediately: the server saw
+   `POST /cart → 303` while the browser's trace showed only `GET /cart`. The witness for a write is the
+   process that stored it. Checking that change also exposed a fifth instance of the same class:
+   `spec.framework` was a hand-copied list of fields and silently dropped the new `serverFile` key, which
+   is now a spread of the table entry.
 
 The number worth trusting is therefore not the percentage on its own: it is the percentage with one
 control, zero unmeasured rules, and a reproducibility gate that can regenerate both the originals and the

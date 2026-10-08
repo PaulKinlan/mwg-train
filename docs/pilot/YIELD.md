@@ -1,6 +1,6 @@
-# Pilot acceptance yield (2026-10-08T11-05-05-334Z)
+# Pilot acceptance yield (2026-10-08T11-12-38-413Z)
 
-Generated 2026-10-08T11:07:39.427Z by `scripts/pilot.mjs`. 25 pairs attempted, 24 accepted: **96.0%**.
+Generated 2026-10-08T11:15:10.764Z by `scripts/pilot.mjs`. 25 pairs attempted, 24 accepted: **96.0%**.
 
 Every number here comes from a record produced by driving the project in a real browser; the
 per-project records and their screenshots and traces are next to this file.

@@ -123,28 +123,53 @@ async function driveWriteJourney(page, base, writeJourney) {
   for (const [selector, value] of Object.entries(fill)) await page.type(selector, value);
   const submit = await page.submit(writeJourney.formSelector);
   const landed = await page.url();
-  // The POST's own status, not the status of whatever page it redirected to: looking up the landed URL
-  // answered a different question, and accepting null meant "we did not see it" read as "it worked".
-  const posted = page.network.filter((entry) => entry.method === 'POST').at(-1) ?? null;
   const landedEntry = page.network.filter((entry) => entry.url === landed).at(-1) ?? null;
-  const status = posted?.status ?? landedEntry?.status ?? null;
+  const landedStatus = landedEntry?.status ?? null;
+  // The POST is observed by the SERVER, not by the browser. The browser's network log did not report
+  // the form POST at all, so the status was being read off the page the POST redirected to: the claim
+  // "the POST succeeded" was made without a POST ever being seen. The server that stored the row is the
+  // witness for the write, and if its log has no matching POST then this is not a write we can claim.
+  const action = await page.evaluate(`
+    const form = document.querySelector(${JSON.stringify(writeJourney.formSelector)});
+    return form ? form.getAttribute('action') : null;
+  `);
+  const observed = await page.evaluate(`
+    const response = await fetch('/__requests');
+    return { status: response.status, body: (await response.text()).slice(0, 4000) };
+  `);
+  let serverRequests = [];
+  try {
+    serverRequests = JSON.parse(observed.body);
+  } catch {
+    serverRequests = [];
+  }
+  const postEntry = serverRequests.find((entry) => entry.method === 'POST' && entry.path === action) ?? null;
+  const status = postEntry?.status ?? null;
   // Read it back from the server rather than from the page: the question is whether the value was
   // stored, and the page could be showing it from anywhere.
   const stored = await page.evaluate(`
     const response = await fetch(${JSON.stringify(writeJourney.readPath)});
     return { status: response.status, body: (await response.text()).slice(0, 2000) };
   `);
+  const networkLog = page.network.map((entry) => `${entry.method} ${entry.status} ${entry.url}`);
+  const browserRequests = page.network
+    .filter((entry) => entry.method === 'POST' || entry.url.includes('cart') || entry.url.includes('/api/records'))
+    .map((entry) => ({ method: entry.method, status: entry.status, url: entry.url }));
   return {
     name: 'write-journey',
+    action,
+    serverRequests: serverRequests.slice(-8),
+    browserRequests,
     landed,
     status,
     valid: submit?.valid ?? null,
     readStatus: stored.status,
-    // A refused POST cannot have written anything, so its status is part of the evidence too.
-    landedStatus: status,
-    postedMethod: posted?.method ?? null,
-    postedUrl: posted?.url ?? null,
-    posted: status !== null && status >= 200 && status < 400,
+    landedStatus,
+    // Observed by the server, and only then a pass: no matching entry means the write was not seen.
+    postedMethod: postEntry?.method ?? null,
+    postedUrl: action,
+    postStatus: postEntry?.status ?? null,
+    posted: postEntry !== null && postEntry.status >= 200 && postEntry.status < 400,
     submittedValue: unique,
     persisted: stored.status === 200 && stored.body.includes(unique),
     observedLength: stored.body.length,

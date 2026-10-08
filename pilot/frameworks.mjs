@@ -34,11 +34,11 @@ export const FRAMEWORKS = {
   // tagged template literals that produce HTML strings. That matters for this pilot - there is no
   // compile step and no virtual DOM, so the markup a browser receives is the markup in the file, and
   // the deterministic uplift tool can edit it exactly as it edits the raw arm.
-  hono: { name: 'hono', version: '4.9.12', dialect: 'html', markupFile: 'app/page.mjs', stylesFile: 'app/styles.css', enhanceFile: 'app/enhance.js', family: 'hono' },
-  raw: { name: 'raw', version: 'platform (no framework)', dialect: 'html', markupFile: 'app/page.mjs', stylesFile: 'app/styles.css', enhanceFile: 'app/enhance.js', family: 'raw-web-platform' },
-  react: { name: 'react', version: '19.2.0', dialect: 'react', markupFile: 'app/page.mjs', stylesFile: 'app/styles.css', enhanceFile: 'app/enhance.js', family: 'react' },
-  preact: { name: 'preact', version: '10.27.2', dialect: 'preact', markupFile: 'app/page.mjs', stylesFile: 'app/styles.css', enhanceFile: 'app/enhance.js', family: 'react-family' },
-  vue: { name: 'vue', version: '3.5.22', dialect: 'vue', markupFile: 'app/page.mjs', stylesFile: 'app/styles.css', enhanceFile: 'app/enhance.js', family: 'vue' },
+  hono: { name: 'hono', version: '4.9.12', dialect: 'html', markupFile: 'app/page.mjs', stylesFile: 'app/styles.css', enhanceFile: 'app/enhance.js', serverFile: 'server.mjs', family: 'hono' },
+  raw: { name: 'raw', version: 'platform (no framework)', dialect: 'html', markupFile: 'app/page.mjs', stylesFile: 'app/styles.css', enhanceFile: 'app/enhance.js', serverFile: 'server.mjs', family: 'raw-web-platform' },
+  react: { name: 'react', version: '19.2.0', dialect: 'react', markupFile: 'app/page.mjs', stylesFile: 'app/styles.css', enhanceFile: 'app/enhance.js', serverFile: 'server.mjs', family: 'react' },
+  preact: { name: 'preact', version: '10.27.2', dialect: 'preact', markupFile: 'app/page.mjs', stylesFile: 'app/styles.css', enhanceFile: 'app/enhance.js', serverFile: 'server.mjs', family: 'react-family' },
+  vue: { name: 'vue', version: '3.5.22', dialect: 'vue', markupFile: 'app/page.mjs', stylesFile: 'app/styles.css', enhanceFile: 'app/enhance.js', serverFile: 'server.mjs', family: 'vue' },
 };
 
 /** Field markup. Attributes come from the archetype, and the defects decide which are left out. */
@@ -442,11 +442,24 @@ const EXTRA_REQUIRED = ${JSON.stringify([
 ])};
 const requiredFor = (path) => (EXTRA_ACTION !== '' && path === EXTRA_ACTION ? EXTRA_REQUIRED : REQUIRED);
 
+// Every request this server answered, in order. The browser's own network log never reported the form
+// POST, so the POST's status was being taken from the page it redirected to - which is how 'the POST
+// succeeded' came to be claimed with no POST observed. The server is the witness for its own writes.
+const requestLog = [];
+
 const server = createServer(async (request, response) => {
   const url = new URL(request.url, \`http://\${request.headers.host ?? '127.0.0.1'}\`);
   const path = url.pathname;
+  if (path !== '/__requests') {
+    const writeHead = response.writeHead.bind(response);
+    response.writeHead = (status, headers) => {
+      requestLog.push({ method: request.method, path, status });
+      return writeHead(status, headers);
+    };
+  }
 
   if (path === '/__health') return json(response, { ok: true });
+  if (path === '/__requests' && request.method === 'GET') return json(response, requestLog);
 
   if (path.startsWith('/app/')) {
     const file = join(here, path);
@@ -594,7 +607,13 @@ const EXTRA_REQUIRED = ${JSON.stringify([
 ])};
 const requiredFor = (path) => (EXTRA_ACTION !== '' && path === EXTRA_ACTION ? EXTRA_REQUIRED : REQUIRED);
 ${sessionTables(archetype)}
+const requestLog = [];
 const app = new Hono();
+app.use('*', async (c, next) => {
+  await next();
+  if (c.req.path !== '/__requests') requestLog.push({ method: c.req.method, path: c.req.path, status: c.res.status });
+});
+app.get('/__requests', (c) => c.json(requestLog));
 
 app.get('/__health', (c) => c.json({ ok: true }));
 
@@ -739,7 +758,9 @@ export function buildProject({ archetypeId, frameworkName, defects = [], flags =
     project_id: projectId,
     archetype: archetype.id,
     archetype_title: archetype.title,
-    framework: { name: framework.name, version: framework.version, dialect: framework.dialect, family: framework.family, markupFile: framework.markupFile, stylesFile: framework.stylesFile, enhanceFile: framework.enhanceFile },
+    // Spread, not a hand-copied list: naming the fields one by one silently dropped a new one
+    // (serverFile) the moment it was added to the table above.
+    framework: { ...framework },
     routes: archetype.routes,
     fields: archetype.fields.map((field) => ({ slug: field.slug, name: field.name, type: field.type, autocomplete: field.autocomplete ?? null })),
     seeded_defects: defects,

@@ -642,6 +642,12 @@ test('a project with no seeded defects gets no edits at all', () => {
           `${archetypeId}/${frameworkName}: a clean project should need nothing, but the tool applied ${result.applied.join(', ')}`,
         );
         assert.deepEqual(result.edits, [], `${archetypeId}/${frameworkName}: a clean project should be edited not at all`);
+        // The returned arrays are the tool's own account of what it did; the tree is the fact.
+        assert.equal(
+          hashTree(outDir),
+          hashTree(root),
+          `${archetypeId}/${frameworkName}: the uplift changed a tree it reported as unchanged`,
+        );
         assert.deepEqual(result.failed, [], `${archetypeId}/${frameworkName}: nothing should fail on a clean project`);
       } finally {
         rmSync(root, { recursive: true, force: true });
@@ -677,6 +683,23 @@ test('the generator is deterministic, so the measured tree is the verified tree'
   } finally {
     rmSync(first, { recursive: true, force: true });
     rmSync(second, { recursive: true, force: true });
+  }
+});
+
+test('the write journey is witnessed by the server that stored the row', () => {
+  // The browser's own network log did not report the form POST at all, so the POST status was being read
+  // off the page it redirected to: the claim "the POST succeeded" was made with no POST observed. The
+  // witness is now the server's log of what it answered.
+  const source = readFileSync(join(repoRoot, 'src', 'corpus', 'harness.mjs'), 'utf8');
+  assert.match(source, /fetch\('\/__requests'\)/, 'the harness asks the server what it received');
+  assert.match(source, /entry\.method === 'POST' && entry\.path === action/, 'the POST is matched to the form action');
+  assert.match(source, /posted: postEntry !== null/, 'an unobserved POST is not a pass');
+  for (const frameworkName of Object.keys(FRAMEWORKS)) {
+    const { files, spec: built } = buildProject({ archetypeId: 'catalogue', frameworkName, defects: [] });
+    const server = files[built.framework.serverFile];
+    assert.ok(server, frameworkName + ': no server file in the built project');
+    assert.ok(server.includes('/__requests'), frameworkName + ': the server does not expose its request log');
+    assert.ok(/requestLog\.push\(/.test(server), frameworkName + ': the server does not record its answers');
   }
 });
 
@@ -724,6 +747,14 @@ test('the committed records support every claim the report makes', () => {
     assert.equal(project.accepted, decision.accepted, project.project_id + ': acceptance differs from the report');
     assert.equal(project.original_sha, decision.original_sha, project.project_id + ': original hash differs');
     assert.equal(project.uplifted_sha, decision.uplifted_sha, project.project_id + ': uplift hash differs');
+    assert.deepEqual(project.validation_observation, decision.validation_observation, project.project_id + ': observation differs');
+    const applied = project.uplifted ? Object.entries(project.uplifted.rules).filter(([, status]) => status === 'PASS').map(([rule]) => rule) : [];
+    for (const rule of decision.improved_rules) {
+      assert.ok(
+        applied.includes(rule) || project.uplifted.security[rule] === 'PASS',
+        project.project_id + ': the report claims ' + rule + ' improved but the records do not show it passing after the uplift',
+      );
+    }
   }
 
   // The reload assertion the persistence gate used must be visible in the committed records.

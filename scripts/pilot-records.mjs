@@ -74,6 +74,16 @@ const projectDirs = readdirSync(runDir)
   .filter((name) => statSync(join(runDir, name)).isDirectory())
   .sort();
 
+// What is on disk must be what the run decided. A deleted project directory would otherwise be omitted
+// silently, and the artefact would carry a full-run summary over a smaller set of projects.
+const decided = run.decisions.map((decision) => decision.project_id).sort();
+const missing = decided.filter((id) => !projectDirs.includes(id));
+const extra = projectDirs.filter((id) => !decided.includes(id));
+if (missing.length > 0 || extra.length > 0) {
+  console.error(`pilot-records: refusing to write - decisions and directories disagree (missing ${missing.join(', ') || 'none'}; unexpected ${extra.join(', ') || 'none'})`);
+  process.exit(1);
+}
+
 const projects = [];
 for (const projectId of projectDirs) {
   const versions = {};
