@@ -14,7 +14,7 @@ Experiment: does training on Modern Web Guidance-applied sites make a model defa
 | The durable functional specification of each pilot family | [`docs/eval/specs/`](docs/eval/specs/) — state, persistence, journeys and acceptance; a project rebuilds from it without the archetype table |
 | The target designs and the conformance axis | [`docs/eval/conformance/`](docs/eval/conformance/) — target provenance, the axis, per-family identity |
 | The training-side briefs, disjoint from the sealed set | [`docs/train/briefs/`](docs/train/briefs/) — synthetic families in their own `tr-` namespace, never validated against the sealed eval schema |
-| How large the training and pilot corpora are, and what they cost | [`docs/train/corpus/`](docs/train/corpus/) — measured characters per scope and derived token figures: the `tr-*` training corpus (1,516,461 derived tokens, band [1,137,346, 1,895,577] across 210 pairs) and the 34 pilot pairs (~237k tokens). Derived from app sources (not tokenizer-measured); text-only (does not establish that projects work; browser journeys recorded separately). |
+| How large the training and pilot corpora are, and what they cost | [`docs/train/corpus/`](docs/train/corpus/) — measured characters per scope and derived token figures: the `tr-*` training corpus (1,477,348 derived tokens, band [1,108,011, 1,846,685] across 210 pairs) and the 34 pilot pairs (~237k tokens). Derived from app sources (not tokenizer-measured); text-only (does not establish that projects work; browser journeys recorded separately). |
 | Provenance, rights and retention for every asset | [`docs/provenance/`](docs/provenance/) — manifest, arms, retained refs |
 
 ## Checks
@@ -28,7 +28,7 @@ npm run price:sheets        # regenerate docs/eval/pricing.sheets.md
 npm run check:train-evidence # reachability records complete, each row backed by its quote
 npm run check:specs          # rebuild every family from its specification and compare tree hashes
 npm run check:disjoint       # refuse a training corpus that shares a family or a target design with the sealed eval
-npm run train:tokens         # measure corpus tokens: pilot (~237k derived) and tr-* (1,516,461 derived [1,137,346, 1,895,577]; text-only)
+npm run train:tokens         # measure corpus tokens: pilot (~237k derived) and tr-* (1,477,348 derived [1,108,011, 1,846,685]; text-only)
 npm run lint:provenance     # provenance manifest rules
 npm run scan:owner-auth     # owner-auth gate: no owner-identifying material in any corpus tree
 ```

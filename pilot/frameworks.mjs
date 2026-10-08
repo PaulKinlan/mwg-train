@@ -79,6 +79,12 @@ function fieldMarkup(field, { defects }) {
   // tokens the pilot never passes, so its output is byte-identical either way.
   const label = defects.includes('no-field-labels') && field.type !== 'select' ? '' : `      <label for="${field.slug}">${field.label}</label>\n`;
   const min = field.min !== undefined && !defects.includes('accept-invalid-amount') ? ` min="${field.min}"` : '';
+  // A number field that declares a `step` carries it, so a decimal requirement (a measured value or a
+  // currency amount) is accepted by the browser instead of tripping the implicit step=1 constraint.
+  // Gated on the declaration exactly like `min`: the pilot declares neither, so its output is unchanged.
+  // Unlike `min`, step is not part of accept-invalid-amount (that defect only concerns the lower bound),
+  // so a repair family that accepts invalid amounts still accepts a valid decimal step.
+  const step = field.step !== undefined ? ` step="${field.step}"` : '';
 
   if (field.type === 'textarea') {
     return `${label}      <textarea id="${field.slug}" name="${field.name}"${req}${aria}${auto}></textarea>`;
@@ -90,7 +96,7 @@ ${options}
       </select>`;
   }
   const extra = field.type === 'search' || field.type === 'number' ? ` inputmode="${field.type === 'number' ? 'numeric' : 'search'}"` : '';
-  return `${label}      <input type="${field.type}" id="${field.slug}" name="${field.name}"${req}${aria}${auto}${extra}${min}>`;
+  return `${label}      <input type="${field.type}" id="${field.slug}" name="${field.name}"${req}${aria}${auto}${extra}${min}${step}>`;
 }
 
 /**

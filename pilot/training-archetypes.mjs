@@ -364,7 +364,7 @@ const docsSite = {
   fields: [
     { slug: 'author', name: 'author', type: 'text', label: 'Your name', autocomplete: 'name' },
     { slug: 'plot', name: 'plot', type: 'text', label: 'Plot or reference' },
-    { slug: 'measurement', name: 'measurement', type: 'number', label: 'Measured value' },
+    { slug: 'measurement', name: 'measurement', type: 'number', label: 'Measured value', step: '0.1' },
   ],
   echo: { field: 'author', source: 'record' },
   journey: {
@@ -394,7 +394,7 @@ const expenseTracker = {
     { slug: 'member', name: 'member', type: 'text', label: 'Your name', autocomplete: 'name' },
     { slug: 'vendor', name: 'vendor', type: 'text', label: 'Vendor' },
     { slug: 'category', name: 'category', type: 'select', label: 'Category', options: ['maintenance', 'supplies', 'utilities', 'other'] },
-    { slug: 'amount', name: 'amount', type: 'number', label: 'Amount', min: '0' },
+    { slug: 'amount', name: 'amount', type: 'number', label: 'Amount', min: '0', step: '0.01' },
   ],
   echo: { field: 'member', source: 'record' },
   journey: {

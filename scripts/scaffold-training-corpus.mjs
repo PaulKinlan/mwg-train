@@ -49,60 +49,117 @@ const titleCase = (value) =>
  * The builder reacts to the pilot's fixed vocabulary (`no-required`, `eager-invalid`, `no-aria-sync`,
  * `no-autofill`, `no-autofill-address`, `xss-innerhtml`) plus four training-only tokens
  * (`client-only-state`, `enter-submits`, `accept-invalid-amount`, `no-field-labels`). Order matches the
- * brief's `seeded_defects`, one entry per prose defect; `token: null` marks a defect that has no
- * faithful code expression and is reported as `unrepresentable` rather than silently dropped.
+ * brief's `seeded_defects`, one entry per prose defect; `token: null` marks a defect that is not
+ * injected and is reported as `unrepresentable` rather than silently dropped.
+ *
+ * The repair briefs' PRIMARY defect ("… stored only in component state and disappear on reload") is
+ * NOT injected: its token `client-only-state` deletes the server INSERT, which (a) the uplift tool's
+ * contract does not rewrite, so it is unfixable, and (b) makes the original non-runnable, so a pair
+ * carrying it can never be accepted. The remaining (secondary) defects carry the repair task, and a
+ * repair family that would otherwise have no uplift-addressable defect gets one added (see
+ * REPAIR_EXTRA_DEFECTS) so its pair can also be accepted.
  */
+const CLIENT_ONLY_STATE_DROPPED =
+  'the brief\'s primary "client-only-state" defect is not injected: it deletes the server INSERT, which the uplift tool does not rewrite (unfixable) and which makes the original non-runnable';
+
 const REPAIR_DEFECT_TOKENS = {
   'tr-26': [
-    { token: 'client-only-state' },
+    { token: null, reason: CLIENT_ONLY_STATE_DROPPED },
     { token: 'no-aria-sync' },
     { token: 'enter-submits' },
   ],
   'tr-27': [
-    { token: 'client-only-state' },
+    { token: null, reason: CLIENT_ONLY_STATE_DROPPED },
     { token: null, reason: 'the brief describes pew seat selectors as plain divs without tabindex/keyboard activation, but the generated booking form has no seat picker - it renders a native select with a programmatic label' },
     { token: 'no-required' },
   ],
   'tr-28': [
-    { token: 'client-only-state' },
+    { token: null, reason: CLIENT_ONLY_STATE_DROPPED },
     { token: null, reason: 'the brief describes a custom div-based urgency dropdown, but the generated helpdesk form renders a native select with a programmatic label' },
     { token: 'no-required' },
   ],
   'tr-29': [
-    { token: 'client-only-state' },
+    { token: null, reason: CLIENT_ONLY_STATE_DROPPED },
     { token: 'accept-invalid-amount' },
     { token: 'no-field-labels', note: 'the brief names a dedication input the archetype does not model; no-field-labels drops the label on the non-select fields (member, vendor, amount), so the amount input is the covered case' },
   ],
   'tr-30': [
-    { token: 'client-only-state' },
+    { token: null, reason: CLIENT_ONLY_STATE_DROPPED },
     { token: 'enter-submits' },
     { token: 'no-aria-sync' },
   ],
 };
 
 /**
+ * The defect tokens the uplift tool's TRANSFORMS (src/corpus/uplift.mjs) can actually fix, keyed to the
+ * rule id its transform implements. This is the checkable linkage between a seeded token and the
+ * measured property the uplift can improve - read from the transform code, never inferred from the
+ * token name. Tokens absent from this map (or with `addressable: false`) have no transform.
+ */
+const DEFECT_ADDRESSABILITY = {
+  'no-required': { addressable: true, rule: 'forms/required-field-feedback' },
+  'eager-invalid': { addressable: true, rule: 'forms/validate-input-after-interaction' },
+  'no-aria-sync': { addressable: true, rule: 'accessibility/accessible-error-announcement' },
+  'no-autofill': { addressable: true, rule: 'forms/autofill-sign-up-form (and forms/autofill-address-form where the archetype declares those fields)' },
+  'no-autofill-address': { addressable: true, rule: 'forms/autofill-address-form' },
+  'xss-innerhtml': { addressable: true, rule: 'security/sanitize-untrusted-html' },
+  'client-only-state': { addressable: false, reason: 'deletes the server INSERT; outside the uplift contract and makes the original non-runnable' },
+  'enter-submits': { addressable: false, reason: 'no uplift transform measures or rewrites premature Enter submission' },
+  'accept-invalid-amount': { addressable: false, reason: 'no uplift transform for the min attribute or server-side bound' },
+  'no-field-labels': { addressable: false, reason: 'no uplift transform for field labels' },
+};
+
+/**
+ * Generate families' briefs carry no seeded defect (they are build-new tasks), so their originals were
+ * clean and the uplift made zero edits - exactly the "no-warranted-change" that accepted 0 generate
+ * pairs. Seed one uniformly addressable defect (no-required → forms/required-field-feedback) so every
+ * generate original has a warranted change the uplift can make.
+ */
+const GENERATE_DEFECT_TOKEN = 'no-required';
+
+/**
+ * Repair families whose remaining (secondary) defects leave the original with no uplift-addressable
+ * defect. Each gets one added so a repair pair can also be accepted, on top of the defects that carry
+ * the repair task.
+ */
+const REPAIR_EXTRA_DEFECTS = {
+  'tr-29': 'no-required',
+};
+
+/**
  * Resolve a family's prose `seeded_defects` into the tokens the builder injects, plus the prose that
- * could not be represented and any per-defect caveats. Generate families have no defects.
+ * could not be represented and any per-defect caveats. Generate families have no prose defects, so they
+ * receive one uniformly addressable injected defect (GENERATE_DEFECT_TOKEN).
  */
 function defectsForFamily(family) {
-  if (family.task !== 'repair') return { injected: [], unrepresentable: [], notes: [] };
-  const mapping = REPAIR_DEFECT_TOKENS[family.family_id] ?? [];
   const injected = [];
   const unrepresentable = [];
   const notes = [];
-  family.seeded_defects.forEach((defect, index) => {
-    const entry = mapping[index];
-    if (!entry) {
-      unrepresentable.push({ defect, reason: 'no token mapping recorded for this defect' });
-      return;
+  if (family.task === 'repair') {
+    const mapping = REPAIR_DEFECT_TOKENS[family.family_id] ?? [];
+    family.seeded_defects.forEach((defect, index) => {
+      const entry = mapping[index];
+      if (!entry) {
+        unrepresentable.push({ defect, reason: 'no token mapping recorded for this defect' });
+        return;
+      }
+      if (entry.token) {
+        injected.push(entry.token);
+        if (entry.note) notes.push(entry.note);
+      } else {
+        unrepresentable.push({ defect, reason: entry.reason });
+      }
+    });
+    const extra = REPAIR_EXTRA_DEFECTS[family.family_id];
+    if (extra) {
+      injected.push(extra);
+      notes.push(`${family.family_id}: added addressable defect '${extra}' so the repair pair has a change the uplift tool can make (the brief's secondary defects are outside the uplift contract)`);
     }
-    if (entry.token) {
-      injected.push(entry.token);
-      if (entry.note) notes.push(entry.note);
-    } else {
-      unrepresentable.push({ defect, reason: entry.reason });
-    }
-  });
+  } else {
+    // Generate families carry no prose defect, so seed one uniformly addressable defect: without it the
+    // original is clean and the uplift makes zero edits (no warranted change to accept).
+    injected.push(GENERATE_DEFECT_TOKEN);
+  }
   return { injected, unrepresentable, notes };
 }
 
@@ -276,6 +333,7 @@ function main() {
         framework: frameworkName,
         task: family.task,
         defects: injected,
+        addressable_defects: injected.filter((token) => DEFECT_ADDRESSABILITY[token]?.addressable),
         seeded_defects: family.seeded_defects,
         ...(unrepresentable.length > 0 ? { unrepresentable } : {}),
         ...(notes.length > 0 ? { notes } : {}),
@@ -303,6 +361,7 @@ function main() {
       by_archetype: byArchetype,
       by_framework: byFramework,
     },
+    defect_addressability: DEFECT_ADDRESSABILITY,
     projects,
   };
   writeFileSync(recordPath, `${JSON.stringify(record, null, 2)}\n`);
