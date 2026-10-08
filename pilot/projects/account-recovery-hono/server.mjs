@@ -73,6 +73,8 @@ app.get(readPath, (c) => {
   return c.html(renderDocument({ title: 'Your submission' }));
 });
 
+app.get('/api/records', (c) => c.json(list.all().map((row) => ({ ref: row.ref, ...JSON.parse(row.payload) }))));
+
 app.get('/api/me', (c) => {
   const sid = (c.req.header('cookie') ?? '')
     .split(';')

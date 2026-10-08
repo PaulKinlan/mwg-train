@@ -83,19 +83,39 @@ ${options}
 const errorText = (field, { defects }) =>
   defects.includes('no-required') || field.optional ? '' : `      <p id="${field.slug}-error" class="error-msg" hidden><span aria-hidden="true">✕</span> Please fill in ${field.label.toLowerCase()}.</p>`;
 
+/** A second form for an archetype with a second action (the catalogue's cart). */
+function extraFormMarkup(archetype, { defects }) {
+  const spec = archetype.extraForm;
+  const hidden = Object.entries(spec.hidden ?? {})
+    .map(([name, value]) => `      <input type="hidden" name="${name}" value="${value}">`)
+    .join('\n');
+  const fields = archetype.fields
+    .filter((field) => spec.fields.includes(field.slug))
+    .map((field) => fieldMarkup(field, { defects }))
+    .join('\n');
+  return `    <form id="${spec.id}" method="${spec.method}" action="${spec.action}">
+${hidden}
+${fields}
+      <button type="submit">${spec.submit}</button>
+    </form>`;
+}
 function formMarkup(archetype, { defects }) {
   const form = archetype.form ?? { method: 'post', action: archetype.routes.find((route) => route.method === 'POST' && route.kind.startsWith('write')).path };
-  const fields = archetype.fields
+  const chosen = form.fields ? archetype.fields.filter((field) => form.fields.includes(field.slug)) : archetype.fields;
+  const fields = chosen
     .map((field) => `${fieldMarkup(field, { defects })}\n${errorText(field, { defects })}`)
     .join('\n')
     .replace(/\n{2,}/g, '\n');
+  const extra = archetype.extraForm
+    ? '\n' + extraFormMarkup(archetype, { defects })
+    : '';
   const live = defects.includes('no-aria-sync') ? '' : '      <div role="alert" aria-live="assertive" class="form-status" data-form-status></div>\n';
   return `    <form id="${formIdOf(archetype)}" method="${form.method}" action="${form.action}">
 ${live}      <div class="field">
 ${fields}
       </div>
       <button type="submit">Submit</button>
-    </form>`;
+    </form>${extra}`;
 }
 
 function echoMarkup(archetype) {
@@ -468,6 +488,11 @@ ${archetype.session ? `    // The session is what makes the follow-up page show 
     return json(response, { ref: record.ref, ...JSON.parse(record.payload) });
   }
 
+  if (path === '/api/records' && request.method === 'GET') {
+    // The write journey's read side: what the server actually stored, listed back to the caller.
+    return json(response, list.all().map((row) => ({ ref: row.ref, ...JSON.parse(row.payload) })));
+  }
+
   if (path.startsWith('/api/record/') && request.method === 'GET') {
     const row = select.get(path.split('/').pop());
     if (!row) return json(response, { error: 'not found' }, 404);
@@ -578,6 +603,8 @@ app.get(readPath, (c) => {
   if (!row) return c.text('We could not find that record.', 404);
   return c.html(renderDocument({ title: 'Your submission' }));
 });
+
+app.get('/api/records', (c) => c.json(list.all().map((row) => ({ ref: row.ref, ...JSON.parse(row.payload) }))));
 
 app.get('/api/me', (c) => {
   const sid = (c.req.header('cookie') ?? '')
@@ -709,6 +736,7 @@ export function buildProject({ archetypeId, frameworkName, defects = [], flags =
         }
       : null,
     echo_source: archetype.echo?.source ?? 'record',
+    write_journey: archetype.writeJourney ?? null,
     session_routes: archetype.routes.filter((route) => route.kind === 'read-session').map((route) => route.path),
     echo_container: '#record-echo',
     security_journey: archetype.securityJourney ?? null,
@@ -740,7 +768,7 @@ export function buildProject({ archetypeId, frameworkName, defects = [], flags =
       streetPattern: '(<input[^>]*name="address"[^>]*>)',
       postcodePattern: '(<input[^>]*name="postcode"[^>]*>)',
     },
-    required_rules: requiredRulesFor(defects),
+    required_rules: requiredRulesFor(archetype, defects),
   };
   return { projectId, files, spec };
 }
@@ -749,11 +777,23 @@ export function buildProject({ archetypeId, frameworkName, defects = [], flags =
  * Which rules the measurement vector should run for this project: the ones its defects touch, plus
  * the always-on security/sanitisation checks when the archetype echoes user text back.
  */
-function requiredRulesFor(defects) {
-  const rules = new Set(['forms/required-field-feedback', 'forms/validate-input-after-interaction', 'accessibility/accessible-error-announcement']);
-  if (defects.includes('no-autofill-signup') || defects.includes('no-autofill')) rules.add('forms/autofill-sign-up-form');
-  if (defects.includes('no-autofill-address') || defects.includes('no-autofill')) rules.add('forms/autofill-address-form');
-  rules.add('security/sanitize-untrusted-html');
+function requiredRulesFor(archetype, defects) {
+  // The four properties every project can express are always required. The autofill rules are required
+  // only where the archetype has the fields the guide is about: requiring an address rule of a project
+  // with no address block forced the check to answer NOT_APPLICABLE, and an applicability the project
+  // had not declared was a hole through which an unmeasured rule could pass.
+  const rules = new Set([
+    'forms/required-field-feedback',
+    'forms/validate-input-after-interaction',
+    'accessibility/accessible-error-announcement',
+    'security/sanitize-untrusted-html',
+  ]);
+  const autocompletes = archetype.fields.map((field) => field.autocomplete).filter(Boolean);
+  if (autocompletes.includes('street-address') || autocompletes.includes('postal-code')) rules.add('forms/autofill-address-form');
+  if (archetype.fields.some((field) => field.type === 'password') || archetype.fields.some((field) => field.autocomplete === 'username')) {
+    rules.add('forms/autofill-sign-up-form');
+  }
+  void defects;
   return [...rules];
 }
 

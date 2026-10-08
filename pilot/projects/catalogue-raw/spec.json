@@ -69,6 +69,15 @@
     "echoField": "query"
   },
   "echo_source": "query",
+  "write_journey": {
+    "startPath": "/",
+    "formSelector": "form#cart-form",
+    "fill": {
+      "input[name=quantity]": "2"
+    },
+    "itemValue": "bearing",
+    "readPath": "/api/records"
+  },
   "session_routes": [
     "/cart"
   ],

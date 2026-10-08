@@ -92,6 +92,7 @@
     "echoField": "notes"
   },
   "echo_source": "record",
+  "write_journey": null,
   "session_routes": [],
   "echo_container": "#record-echo",
   "security_journey": null,
@@ -146,7 +147,8 @@
     "forms/required-field-feedback",
     "forms/validate-input-after-interaction",
     "accessibility/accessible-error-announcement",
+    "security/sanitize-untrusted-html",
     "forms/autofill-address-form",
-    "security/sanitize-untrusted-html"
+    "forms/autofill-sign-up-form"
   ]
 }

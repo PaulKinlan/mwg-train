@@ -112,7 +112,18 @@ export const ARCHETYPES = {
     // search page. Its journey is therefore a GET that reloads, not a POST that redirects: the pilot
     // covers both server-journey shapes rather than assuming every archetype is a form submission.
     echo: { field: 'query', source: 'query', param: 'q' },
-    form: { method: 'get', action: '/search' },
+    // Two forms, because this archetype genuinely has two actions: a search (a GET that renders results)
+    // and adding to a cart (a POST that writes). The pilot drives both, so this project has a real
+    // server write journey like the other twenty-four, and the reflected-query journey on top of it.
+    form: { method: 'get', action: '/search', fields: ['query'] },
+    extraForm: { id: 'cart-form', method: 'post', action: '/cart', fields: ['quantity'], hidden: { item: 'bearing' }, submit: 'Add to cart' },
+    writeJourney: {
+      startPath: '/',
+      formSelector: 'form#cart-form',
+      fill: { 'input[name=quantity]': '2' },
+      itemValue: 'bearing',
+      readPath: '/api/records',
+    },
     journey: {
       kind: 'get-query-reload',
       startPath: '/',

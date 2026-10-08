@@ -117,6 +117,11 @@ const server = createServer(async (request, response) => {
     return json(response, { ref: record.ref, ...JSON.parse(record.payload) });
   }
 
+  if (path === '/api/records' && request.method === 'GET') {
+    // The write journey's read side: what the server actually stored, listed back to the caller.
+    return json(response, list.all().map((row) => ({ ref: row.ref, ...JSON.parse(row.payload) })));
+  }
+
   if (path.startsWith('/api/record/') && request.method === 'GET') {
     const row = select.get(path.split('/').pop());
     if (!row) return json(response, { error: 'not found' }, 404);

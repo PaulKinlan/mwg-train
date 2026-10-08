@@ -106,9 +106,40 @@ async function driveJourney(page, base, journey) {
   return { steps, afterSubmit, persistedText: persisted.text, echoedText: persisted.echoed };
 }
 
+/**
+ * The write journey: a POST that makes the server store something, and a read that proves it is there.
+ *
+ * The catalogue archetype's own journey is a reflected query, which is a real server journey but not a
+ * write; without this, the pilot's claim that every project persists to the database would have been
+ * true of twenty-four of them, and the one exception would have gone unstated.
+ */
+async function driveWriteJourney(page, base, writeJourney) {
+  await page.goto(`${base}${writeJourney.startPath}`);
+  for (const [selector, value] of Object.entries(writeJourney.fill ?? {})) await page.type(selector, value);
+  const submit = await page.submit(writeJourney.formSelector);
+  const landed = await page.url();
+  const status = page.network.filter((entry) => entry.url === landed).at(-1)?.status ?? null;
+  // Read it back from the server rather than from the page: the question is whether the value was
+  // stored, and the page could be showing it from anywhere.
+  const stored = await page.evaluate(`
+    const response = await fetch(${JSON.stringify(writeJourney.readPath)});
+    return { status: response.status, body: (await response.text()).slice(0, 2000) };
+  `);
+  return {
+    name: 'write-journey',
+    landed,
+    status,
+    valid: submit?.valid ?? null,
+    readStatus: stored.status,
+    persisted: stored.status === 200 && stored.body.includes(writeJourney.itemValue),
+    observedLength: stored.body.length,
+  };
+}
+
 /** The validation-failure path: submitting an empty form must not silently succeed. */
 async function driveValidationFailure(page, base, journey) {
   await page.goto(`${base}${journey.startPath}`);
+  const beforeUrl = await page.url();
   const before = page.network.length;
   // Leave the field the way a user does before submitting an incomplete form, so the browser's own
   // validation is what is being observed rather than a synthetic submit.
@@ -127,13 +158,26 @@ async function driveValidationFailure(page, base, journey) {
     const form = document.querySelector(${JSON.stringify(journey.formSelector ?? 'form')});
     const invalid = [...(form?.elements ?? [])].filter((el) => el.willValidate && !el.checkValidity());
     return {
-      stillOnForm: location.href.includes(${JSON.stringify(journey.startPath)}),
+      // Parsed, not a substring: a substring test for the start path is true for every HTTP URL, so the
+      // first version of this clause could never report a failure - it was a gate that always passed.
+      path: location.pathname,
       invalidCount: invalid.length,
       messages: invalid.map((el) => el.validationMessage).filter(Boolean).slice(0, 3),
       visibleErrors: [...document.querySelectorAll('.error-msg,[role=alert]')].filter((n) => n.offsetParent !== null && n.textContent.trim() !== '').length,
     };
   `);
-  return { ...validation, url, networkEvents: page.network.length - before };
+  const documentResponse = [...page.network].reverse().find((entry) => entry.url === url);
+  return {
+    ...validation,
+    url,
+    // Three independent kinds of evidence that an empty form was refused: the browser kept the user on
+    // the form with controls that fail validation, the DOM shows a failure, or the server answered the
+    // write with an error status.
+    stillOnForm: validation.path === journey.startPath,
+    urlUnchanged: url === beforeUrl,
+    serverRefused: (documentResponse?.status ?? 0) >= 400,
+    networkEvents: page.network.length - before,
+  };
 }
 
 async function captureEvidence(page, dir, label, protocol) {
@@ -189,6 +233,9 @@ export async function runProjectVersion({ chrome, projectDir, spec, label, port,
       const journey = await driveJourney(page, base, spec.journey);
       record.journeys.push({ name: 'server-persistence', ...journey });
       record.journeys.push({ name: 'validation-failure', ...(await driveValidationFailure(page, base, spec.journey)) });
+      if (spec.write_journey) {
+        record.journeys.push(await driveWriteJourney(page, base, spec.write_journey));
+      }
       if (spec.content_journey) {
         // The content journey needs the reference the server just issued; without substituting it the
         // route 404s and the sanitisation rule reports "could not be driven".

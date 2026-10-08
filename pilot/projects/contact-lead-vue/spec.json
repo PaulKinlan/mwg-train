@@ -78,6 +78,7 @@
     "echoField": "message"
   },
   "echo_source": "record",
+  "write_journey": null,
   "session_routes": [],
   "echo_container": "#record-echo",
   "security_journey": null,

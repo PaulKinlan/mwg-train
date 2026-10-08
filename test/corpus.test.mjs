@@ -422,6 +422,56 @@ test('the recorded corpus covers the plan, with a hash for every original and ev
   }
 });
 
+test('every check compiles its browser expression', async () => {
+  // The checks build JavaScript as a string and send it to the browser. A stray backtick or an
+  // unescaped quote inside that string is a syntax error at runtime and nothing else here would catch
+  // it - this has cost two debugging rounds, so the expressions are compiled here instead.
+  const checks = [...Object.entries(RULES), ...Object.entries(SECURITY_CHECKS)];
+  assert.ok(checks.length >= 8, 'the vector should have at least eight checks');
+  for (const [id, check] of checks) {
+    const compiled = [];
+    const stub = {
+      async evaluate(expression) {
+        assert.equal(typeof expression, 'string', `${id}: evaluate was not given a string`);
+        // Compile exactly what the driver wraps it in (src/corpus/cdp.mjs evaluate).
+        new Function('(() => { ' + expression + ' })()');
+        compiled.push(expression);
+        return {};
+      },
+      async touchEmpty() {},
+      async goto() {},
+      async waitFor() {},
+      async realType() {},
+      async realKey() {},
+      async url() { return ''; },
+      async cookies() { return []; },
+    };
+    const ctx = {
+      primaryField: '[name=name]',
+      formSelector: 'form',
+      usernameField: '[name=email]',
+      passwordField: '[name=password]',
+      addressField: '[name=address]',
+      postcodeField: '[name=postcode]',
+      base: 'http://127.0.0.1',
+      startPath: '/',
+      journey: { submitContent: async () => true },
+    };
+    try {
+      await check.check(stub, ctx);
+    } catch (error) {
+      assert.ok(
+        !/SyntaxError/.test(String(error && error.message)),
+        `${id}: its browser expression is not valid JavaScript - ${error && error.message}`,
+      );
+    }
+    // A check that reads cookies through CDP builds no expression at all; one that does must have
+    // compiled something, or the loop above proved nothing about it.
+    if (check.check.toString().includes('page.evaluate')) {
+      assert.ok(compiled.length > 0, `${id}: builds a browser expression but none was compiled`);
+    }
+  }
+});
 test('hashTree is stable for the same content and differs for different content', () => {
   const files = { 'a.txt': 'one', 'nested/b.txt': 'two' };
   const first = materialise('hash-a', files);

@@ -62,11 +62,32 @@ function generate(plan, outDir) {
 function record(runDir) {
   const plan = JSON.parse(readFileSync(join(repoRoot, 'pilot/plan.json'), 'utf8'));
   const run = JSON.parse(readFileSync(join(runDir, 'yield.json'), 'utf8'));
-  if (run.decisions.length !== plan.projects.length) {
-    console.error(
-      `pilot-corpus: refusing to record a partial corpus - the run measured ${run.decisions.length} of ${plan.projects.length} projects`,
-    );
+  const plannedIds = new Set(plan.projects.map((entry) => `${entry.archetype}-${entry.framework}`));
+  const decisionIds = new Set(run.decisions.map((decision) => decision.project_id));
+  const refuse = (reason) => {
+    console.error(`pilot-corpus: refusing to record - ${reason}`);
     process.exit(1);
+  };
+  if (run.decisions.length !== plan.projects.length) {
+    refuse(`the run measured ${run.decisions.length} of ${plan.projects.length} projects, and a partial corpus is not the corpus`);
+  }
+  if (decisionIds.size !== run.decisions.length) refuse('the run contains duplicate project ids');
+  // Count equality is not identity: twenty-five decisions for twenty-five different wrong projects would
+  // satisfy a count. The recorded ids must be exactly the planned ones.
+  for (const id of decisionIds) if (!plannedIds.has(id)) refuse(`${id} is not a project the plan generates`);
+  for (const id of plannedIds) if (!decisionIds.has(id)) refuse(`${id} is planned but the run recorded no decision for it`);
+  const HASH = /^sha256:[a-f0-9]{64}$/;
+  for (const decision of run.decisions) {
+    // Without the run's own hashes there is no evidence of which trees were measured, and recording the
+    // hashes this script regenerates would attest to a different tree than the one that ran.
+    if (!HASH.test(decision.original_sha ?? '')) refuse(`${decision.project_id} recorded no original tree hash`);
+    if (!HASH.test(decision.uplifted_sha ?? '')) refuse(`${decision.project_id} recorded no uplift tree hash`);
+    const staged = join(repoRoot, '.pilot-uplifted', run.run_id, decision.project_id);
+    if (!existsSync(staged)) refuse(`${decision.project_id} has no staged uplifted copy, so its recorded hash cannot be checked`);
+    const derived = hashTree(staged);
+    if (derived !== decision.uplifted_sha) {
+      refuse(`${decision.project_id} staged uplift hashes to ${derived} but the run recorded ${decision.uplifted_sha}`);
+    }
   }
   const scratch = mkdtempSync(join(tmpdir(), 'pilot-record-'));
   try {

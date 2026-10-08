@@ -38,10 +38,25 @@ export function journeyWorks(record) {
     if (submit?.status && submit.status >= 500) problems.push(`the write route answered ${submit.status}`);
   }
   if (!validation) problems.push('no validation journey was recorded');
-  else if (validation.invalidCount === 0 && validation.visibleErrors === 0 && !validation.stillOnForm) {
-    // A form that accepts an empty submission is not necessarily broken, but the pilot cannot call the
-    // validation path verified either - so it is reported rather than assumed.
-    problems.push('submitting an empty form neither stayed on the form nor showed an error');
+  else {
+    // Evidence that the empty submission was refused, from either the browser or the server. The first
+    // version of this clause required three values to be false at once, one of which (a substring test
+    // for the start path) is true for every HTTP URL - so the clause never fired and a form that
+    // accepted an empty submission was reported as a measured validation path.
+    const refusedByBrowser = validation.invalidCount > 0;
+    const refusedVisibly = validation.visibleErrors > 0;
+    const refusedByServer = validation.serverRefused === true;
+    const stayedWithNoWrite = validation.urlUnchanged === true && validation.stillOnForm === true;
+    if (!refusedByBrowser && !refusedVisibly && !refusedByServer && !stayedWithNoWrite) {
+      problems.push('submitting an empty form was neither refused by the browser nor by the server');
+    }
+  }
+  // A declared write journey must have been driven and must have been shown to persist. The catalogue
+  // archetype's reflected-query journey is not a write, so it is checked by this clause instead.
+  const write = record.journeys?.find((journey) => journey.name === 'write-journey');
+  if (record.expected_write_journey && !write) problems.push('the declared write journey was not driven');
+  else if (write && write.persisted !== true) {
+    problems.push('the write journey did not show the posted value stored by the server');
   }
   if (record.errors?.length > 0) problems.push(...record.errors);
   return { ok: problems.length === 0, problems };
@@ -65,8 +80,8 @@ export function decidePair({ original, uplifted, spec, uplift }) {
     detail: [],
   };
 
-  const originalRunnable = journeyWorks({ ...original, echo_expect: spec.echo_expect });
-  const upliftedRunnable = journeyWorks({ ...uplifted, echo_expect: spec.echo_expect });
+  const originalRunnable = journeyWorks({ ...original, echo_expect: spec.echo_expect, expected_write_journey: Boolean(spec.write_journey) });
+  const upliftedRunnable = journeyWorks({ ...uplifted, echo_expect: spec.echo_expect, expected_write_journey: Boolean(spec.write_journey) });
 
   if (!originalRunnable.ok) {
     result.category = 'original-not-runnable';
@@ -79,24 +94,36 @@ export function decidePair({ original, uplifted, spec, uplift }) {
     return result;
   }
 
-  // A property that could not be measured is not a property that passed. If any rule the project
-  // declares refuses to produce a verdict (ERROR), the pair cannot be accepted on the strength of the
-  // others: the yield would then be counting pairs where part of the vector did not run.
+  // A property that could not be measured is not a property that passed. Every rule the spec declares
+  // must be present in *both* records with a real verdict: a missing entry, an ERROR, or an
+  // applicability the project has not declared all block acceptance, because the yield would otherwise
+  // count pairs where part of the vector silently did not run.
   const unmeasured = [];
-  const recorded = new Set((original.rules ?? []).map((entry) => entry.rule));
-  for (const rule of spec.required_rules ?? []) {
+  const declared = spec.required_rules;
+  const declaredNotApplicable = new Set(spec.not_applicable_rules ?? []);
+  if (!Array.isArray(declared) || declared.length === 0) {
+    result.category = 'rule-not-measured';
+    result.detail = ['the spec declares no required rules, so nothing was required to be measured'];
+    return result;
+  }
+  for (const rule of declared) {
     for (const [label, record] of [['original', original], ['uplifted', uplifted]]) {
       const entry = (record.rules ?? []).find((candidate) => candidate.rule === rule);
       if (!entry) unmeasured.push(`${label}: ${rule} was not recorded`);
       else if (entry.status === 'ERROR') unmeasured.push(`${label}: ${rule} could not be measured (${entry.detail})`);
+      else if (entry.status === 'NOT_APPLICABLE' && !declaredNotApplicable.has(rule)) {
+        unmeasured.push(`${label}: ${rule} was reported not applicable, which ${label === 'original' ? 'project' : 'project'} has not declared`);
+      }
     }
+  }
+  for (const rule of declaredNotApplicable) {
+    if (!declared.includes(rule)) unmeasured.push(`${rule} is declared not applicable but is not a required rule`);
   }
   if (unmeasured.length > 0) {
     result.category = 'rule-not-measured';
     result.detail = unmeasured;
     return result;
   }
-  void recorded;
 
   const byRule = (record) => new Map((record.rules ?? []).map((entry) => [entry.rule, entry]));
   const originalRules = byRule(original);
@@ -105,7 +132,14 @@ export function decidePair({ original, uplifted, spec, uplift }) {
     const before = originalRules.get(rule);
     if (!before) continue;
     if (isFail(before) && isPass(after)) result.improved_rules.push(rule);
-    if (isPass(before) && isFail(after)) result.regressed_rules.push(rule);
+    // A property that passed and now cannot be measured has been lost, not preserved: recognising only
+    // PASS -> FAIL let PASS -> ERROR through as if nothing had changed.
+    if (isPass(before) && (isFail(after) || after.status === 'ERROR')) result.regressed_rules.push(rule);
+  }
+  for (const [rule, before] of originalRules) {
+    if (before.status === 'PASS' && !upliftedRules.has(rule)) {
+      result.regressed_rules.push(`${rule} (measured before, absent after)`);
+    }
   }
 
   const byCheck = (record) => new Map((record.security ?? []).map((entry) => [entry.check, entry]));
@@ -114,6 +148,14 @@ export function decidePair({ original, uplifted, spec, uplift }) {
     const before = originalSecurity.get(check);
     if (!before) continue;
     if (isPass(before) && isFail(after)) result.new_security_findings.push(`${check}: ${after.detail}`);
+    if (isPass(before) && after.status === 'ERROR') {
+      result.new_security_findings.push(`${check}: could not be measured after the uplift (${after.detail})`);
+    }
+  }
+  for (const [check, before] of originalSecurity) {
+    if (before.status === 'PASS' && !byCheck(uplifted).has(check)) {
+      result.new_security_findings.push(`${check}: measured before the uplift, absent after`);
+    }
   }
 
   if (result.regressed_rules.length > 0) {

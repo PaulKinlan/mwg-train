@@ -10,11 +10,14 @@ const template = `
       <label for="query">Search parts</label>
       <input type="search" id="query" name="q" required aria-errormessage="query-error" inputmode="search">
       <p id="query-error" class="error-msg" hidden><span aria-hidden="true">✕</span> Please fill in search parts.</p>
-      <label for="quantity">Quantity</label>
-      <input type="number" id="quantity" name="quantity" inputmode="numeric">
-
       </div>
       <button type="submit">Submit</button>
+    </form>
+    <form id="cart-form" method="post" action="/cart">
+      <input type="hidden" name="item" value="bearing">
+      <label for="quantity">Quantity</label>
+      <input type="number" id="quantity" name="quantity" inputmode="numeric">
+      <button type="submit">Add to cart</button>
     </form>
       <section class="record" aria-labelledby="record-heading">
         <h2 id="record-heading">Your submission</h2>

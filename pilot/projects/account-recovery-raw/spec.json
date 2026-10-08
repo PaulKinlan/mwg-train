@@ -84,6 +84,7 @@
     "echoField": "displayName"
   },
   "echo_source": "session",
+  "write_journey": null,
   "session_routes": [
     "/account"
   ],
@@ -132,8 +133,7 @@
     "forms/required-field-feedback",
     "forms/validate-input-after-interaction",
     "accessibility/accessible-error-announcement",
-    "forms/autofill-sign-up-form",
-    "forms/autofill-address-form",
-    "security/sanitize-untrusted-html"
+    "security/sanitize-untrusted-html",
+    "forms/autofill-sign-up-form"
   ]
 }

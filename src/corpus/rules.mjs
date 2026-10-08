@@ -63,7 +63,8 @@ export const RULES = Object.freeze({
       if (!facts.field) return { rule: 'forms/required-field-feedback', status: 'ERROR', detail: 'no primary field found' };
       if (!facts.field.required) findings.push('the field is not marked required');
       if (!facts.field.ariaErrorMessage && !facts.field.ariaDescribedBy) findings.push('no aria-errormessage/aria-describedby linking the field to its error text');
-      if (!/:[a-z-]*user-invalid|:[a-z-]*user-invalid\b/.test(facts.stylesheet)) findings.push('no :user-*invalid* styling, so the error state cannot be shown without JS');
+      // The stylesheet text is not evidence: a rule inside a comment, or one for an unrelated selector,
+      // satisfies it. What matters is the field's own observable state, measured below.
       // The property, not the API: after an interaction that leaves the field empty, the error text
       // must be exposed. On a fresh page it must not be (that is the companion rule below).
       // Trusted input only: see Page.touchEmpty. The interaction is the observation.
@@ -76,19 +77,34 @@ export const RULES = Object.freeze({
             .concat([el.getAttribute('aria-errormessage')].filter(Boolean));
           return ids.map((id) => document.getElementById(id)).filter(Boolean);
         })();
-        const visible = (node) => node && node.offsetParent !== null && node.textContent.trim() !== '';
+        const visible = (node) => node && node.offsetParent !== null;
+        const shown = described.filter(visible);
         return {
           userInvalid: el.matches(':user-invalid'),
-          describedVisible: described.some(visible),
+          describedVisible: shown.length > 0,
+          describedHasText: shown.some((node) => node.textContent.trim() !== ''),
+          describedText: shown.map((node) => node.textContent.trim()).join(' | ').slice(0, 120),
           describedInlineStyle: described.map((node) => getComputedStyle(node).display),
         };
       `);
+      // The interaction is the measurement. If a trusted type/delete/tab-away left a required empty field
+      // not user-invalid, nothing about its error presentation was observed, and a PASS would be a claim
+      // about an interaction that never happened.
+      if (!after.userInvalid) {
+        return {
+          rule: 'forms/required-field-feedback',
+          status: 'ERROR',
+          detail: 'the field did not become :user-invalid after a trusted interaction, so its error presentation was not measured',
+          observed: { required: facts.field.required, userInvalid: after.userInvalid, describedVisible: after.describedVisible },
+        };
+      }
       if (!after.describedVisible) findings.push('after a failed interaction the error text is still not visible');
+      if (!after.describedHasText) findings.push('the failure is presented without text, so it is conveyed by colour alone');
       return {
         rule: 'forms/required-field-feedback',
         status: findings.length === 0 ? 'PASS' : 'FAIL',
         detail: findings.join('; '),
-        observed: { required: facts.field.required, userInvalid: after.userInvalid, describedVisible: after.describedVisible },
+        observed: { required: facts.field.required, userInvalid: after.userInvalid, describedVisible: after.describedVisible, describedText: after.describedText },
       };
     },
   },
@@ -112,18 +128,37 @@ export const RULES = Object.freeze({
         return {
           userInvalid: el.matches(':user-invalid'),
           ariaInvalid: el.getAttribute('aria-invalid'),
+          errorText: (() => {
+            const ids = (el.getAttribute('aria-describedby') ?? '').split(/\\s+/).filter(Boolean)
+              .concat([el.getAttribute('aria-errormessage')].filter(Boolean));
+            return ids.map((id) => document.getElementById(id)).filter(Boolean)
+              .map((node) => node.textContent.trim()).filter(Boolean).join(' ');
+          })(),
           live: [...document.querySelectorAll('[role=alert],[aria-live]')].map((n) => ({
             role: n.getAttribute('role'), live: n.getAttribute('aria-live'), text: n.textContent.trim(), visible: n.offsetParent !== null,
           })),
         };
       `);
-      if (after.userInvalid && after.ariaInvalid !== 'true') findings.push('the field is user-invalid but aria-invalid was not set, so the state exists only visually');
-      if (!after.live.some((region) => region.visible && region.text !== '')) findings.push('no visible live region carries the error text');
+      if (!after.userInvalid) {
+        return {
+          rule: 'accessibility/accessible-error-announcement',
+          status: 'ERROR',
+          detail: 'the field did not become :user-invalid after a trusted interaction, so the announcement was not measured',
+          observed: { userInvalid: after.userInvalid, ariaInvalid: after.ariaInvalid },
+        };
+      }
+      if (after.ariaInvalid !== 'true') findings.push('the field is user-invalid but aria-invalid was not set, so the state exists only visually');
+      // The region must carry *this field's* failure text: any visible alert on the page would satisfy a
+      // weaker predicate, including one announcing something unrelated.
+      if (after.errorText === '') findings.push('the field has no error text to announce');
+      else if (!after.live.some((region) => region.visible && region.text.includes(after.errorText))) {
+        findings.push('no visible live region carries the field error text: ' + after.errorText);
+      }
       return {
         rule: 'accessibility/accessible-error-announcement',
         status: findings.length === 0 ? 'PASS' : 'FAIL',
         detail: findings.join('; '),
-        observed: { userInvalid: after.userInvalid, ariaInvalid: after.ariaInvalid, liveRegions: after.live.length },
+        observed: { userInvalid: after.userInvalid, ariaInvalid: after.ariaInvalid, liveRegions: after.live.length, announced: after.live.some((region) => region.text.includes(after.errorText)) },
       };
     },
   },
@@ -244,7 +279,14 @@ export const RULES = Object.freeze({
           // The insertion ran: the page records the length of the value it inserted. A sanitiser that
           // removes the payload is a safe outcome, not an unmeasured one - the first version of this
           // precondition could not tell those apart and reported ERROR on every uplifted project.
+          // The page writes this marker from the length of the value its insertion path received, so the
+          // marker can be tied to the payload. A bare marker proved only that some code ran.
           insertionRan: Boolean(container && container.dataset.echoInserted !== undefined),
+          insertedLengthMatchesPayload: container?.dataset.echoInserted === String(payload.length),
+          liveHandlerAttributes: container
+            ? [...container.querySelectorAll('*')].flatMap((node) => [...node.attributes].map((attribute) => attribute.name))
+                .filter((name) => name.startsWith('on')).length
+            : -1,
           payloadVisible: Boolean(
             container && (container.querySelector('img[src="x"]') || (container.textContent ?? '').includes('<img')),
           ),
@@ -261,8 +303,19 @@ export const RULES = Object.freeze({
           observed,
         };
       }
+      if (!observed.insertedLengthMatchesPayload) {
+        return {
+          rule: 'security/sanitize-untrusted-html',
+          status: 'ERROR',
+          detail: 'the page did not record inserting the submitted value, so its handling was not measured',
+          observed,
+        };
+      }
       const findings = [];
       if (observed.executed) findings.push('the submitted markup executed: an inline event handler ran');
+      // A live inline handler is unsafe handling even when it did not fire here: it can be made to run
+      // later, and a blocked-onerror image would otherwise read as safely handled.
+      if (observed.liveHandlerAttributes > 0) findings.push('inline event handler attributes survived insertion');
       return {
         rule: 'security/sanitize-untrusted-html',
         status: findings.length === 0 ? 'PASS' : 'FAIL',
