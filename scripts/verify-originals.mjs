@@ -20,7 +20,7 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import process from 'node:process';
 
-import { checkOriginal, isRetainedRef } from '../src/provenance/originals.mjs';
+import { checkOriginal } from '../src/provenance/originals.mjs';
 import { parseManifest } from '../src/provenance/record.mjs';
 
 function parseArgs(argv) {
@@ -39,7 +39,6 @@ function parseArgs(argv) {
     if (arg === '--manifest') args.manifest = next();
     else if (arg === '--repo') args.repo = next();
     else if (arg === '--remote') args.remote = next();
-    else if (arg === '--all') args.all = true;
     else if (arg === '--help' || arg === '-h') args.help = true;
     else {
       console.error(`verify-originals: unknown argument '${arg}'`);
@@ -92,24 +91,29 @@ function makeProbe(repo, remote) {
 function main() {
   const args = parseArgs(process.argv.slice(2));
   if (args.help || !args.manifest) {
-    console.error('usage: node scripts/verify-originals.mjs --manifest <manifest.jsonl> [--repo <dir>] [--remote origin] [--all]');
+    console.error('usage: node scripts/verify-originals.mjs --manifest <manifest.jsonl> [--repo <dir>] [--remote origin]');
     process.exit(args.help ? 0 : 2);
   }
 
   const rows = parseManifest(readFileSync(args.manifest, 'utf8'));
-  const withRefs = rows.filter((row) => isRetainedRef(row?.original_ref) || args.all || row?.kind !== undefined);
   const probe = makeProbe(args.repo, args.remote);
   const findings = [];
-  let checked = 0;
+  let withRef = 0;
+  let reachable = 0;
 
-  for (const row of withRefs) {
+  // Every row is checked, including the ones that should NOT carry a ref: a kind that requires one
+  // and does not have it is a finding (MISSING_ORIGINAL_REF), and a brief that has none is clean.
+  for (const row of rows) {
     const rowFindings = checkOriginal(row, probe);
-    if (rowFindings.length === 0) checked += 1;
+    const hasRef = typeof row?.original_ref === 'string' && row.original_ref !== '';
+    if (hasRef) withRef += 1;
+    if (hasRef && rowFindings.length === 0) reachable += 1;
     findings.push(...rowFindings);
   }
 
-  const ids = new Set(withRefs.map((row) => row?.id));
-  console.log(`verify-originals: ${ids.size} records, ${checked} reachable and identical to their recorded sha, ${findings.length} finding(s) in ${args.manifest}`);
+  console.log(
+    `verify-originals: ${rows.length} records, ${reachable}/${withRef} retained refs resolve to their recorded sha and object, ${findings.length} finding(s) in ${args.manifest}`,
+  );
   for (const f of findings) {
     console.log(`${f.severity.toUpperCase()} ${f.code} ${f.id} [${f.field}] ${f.message}`);
   }
