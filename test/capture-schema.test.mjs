@@ -24,6 +24,7 @@ function goodCapture() {
       nav: ['/'],
       text_excerpt: 'Welcome',
       forms: [{
+        id: 'order',
         action: '/order',
         method: 'post',
         controls: [
@@ -69,6 +70,14 @@ function refuses(mutate, field, build = goodCapture, validate = validateCapture)
 test('a well-formed capture passes, and so does a well-formed flow', () => {
   assert.deepEqual(validateCapture(goodCapture()), []);
   assert.deepEqual(validateFlow(goodFlow()), []);
+});
+
+test('every captured form records its id, including the empty id of an anonymous POST form', () => {
+  refuses((c) => { delete c.pages[0].forms[0].id; }, 'id');
+  refuses((c) => { c.pages[0].forms[0].id = 'unsafe id'; }, 'id');
+  const anonymous = goodCapture();
+  anonymous.pages[0].forms[0].id = '';
+  assert.deepEqual(validateCapture(anonymous), []);
 });
 
 test('a capture without a rights reference is refused, so an unauthorised capture cannot be stored', () => {

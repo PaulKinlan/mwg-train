@@ -174,6 +174,7 @@ async function extractPageStructure(page) {
 
       if (controls.length > 0) {
         forms.push({
+          id: form.getAttribute('id') ?? '',
           action,
           method,
           controls,
@@ -416,6 +417,14 @@ export async function captureSite({
   writeFileSync(mobileDiskPath, mobileBuffer);
   writeFileSync(domDiskPath, domBuffer);
   writeFileSync(captureJsonDiskPath, JSON.stringify(capture, null, 2) + '\n');
+
+  for (const page of capture.pages) {
+    for (const form of page.forms) {
+      if (form.id === '') {
+        console.warn(`Captured ${form.method.toUpperCase()} form at ${page.path} (action: ${form.action}, controls: ${form.controls.map((control) => control.name).join(', ')}) has no id and cannot be clean-room translated`);
+      }
+    }
+  }
 
   Object.defineProperty(capture, 'capturePath', {
     value: captureJsonDiskPath,

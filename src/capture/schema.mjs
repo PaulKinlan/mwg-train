@@ -91,10 +91,11 @@ export function validateCapture(capture) {
         const fat = `${at}.forms[${fi}]`;
         if (!isObject(form)) return fail(fat, 'must be an object');
         if (!isString(form.action)) fail(`${fat}.action`, 'must be a string');
-        // The translator needs the form's id to name a selector the generator's journey can use (`form#id`), and
-        // it refuses to fabricate one. Recording it here makes that dependency part of the contract rather than an
-        // implicit extra key a producer happened to add.
-        if (form.id !== undefined && !NAME_SAFE.test(form.id)) fail(`${fat}.id`, 'must be usable as form#<id> in generated markup when present');
+        // An empty id records an anonymous form as evidence; do not discard the capture. Translation of a POST
+        // form requires a nonempty id for its generated form#id selector and refuses an anonymous form there.
+        if (typeof form.id !== 'string' || (form.id !== '' && !NAME_SAFE.test(form.id))) {
+          fail(`${fat}.id`, 'must be a string (empty for an anonymous form, otherwise usable as form#<id>)');
+        }
         if (form.method !== 'get' && form.method !== 'post') fail(`${fat}.method`, 'must be "get" or "post"');
         if (!Array.isArray(form.controls) || form.controls.length === 0) fail(`${fat}.controls`, 'must be a non-empty array');
         else form.controls.forEach((control, ci) => {

@@ -24,6 +24,8 @@ import process from 'node:process';
 
 import { captureSite } from '../src/capture/site.mjs';
 import { validateCapture } from '../src/capture/schema.mjs';
+import { recordFlow } from '../src/capture/flow.mjs';
+import { translateCapture } from '../src/capture/translate.mjs';
 import { assetStoragePath, REPO_ROOT } from '../src/provenance/store.mjs';
 
 function createFixtureServer() {
@@ -49,7 +51,7 @@ function createFixtureServer() {
   <main role="main">
     <h2>Login Area</h2>
     <p>This is a short fixture excerpt text for black-box reproduction testing.</p>
-    <form action="/login" method="post">
+    <form id="login-form" action="/login" method="post">
       <label for="user_email">Email</label>
       <input type="email" id="user_email" name="user_email" required>
       <label for="account_type">Account Type</label>
@@ -66,6 +68,17 @@ function createFixtureServer() {
   </footer>
 </body>
 </html>`);
+    } else if (req.method === 'POST' && url.pathname === '/login') {
+      let body = '';
+      req.on('data', (chunk) => { body += chunk; });
+      req.on('end', () => {
+        const email = new URLSearchParams(body).get('user_email') ?? '';
+        res.writeHead(303, { Location: `/confirm/${encodeURIComponent(email)}` });
+        res.end();
+      });
+    } else if (url.pathname.startsWith('/confirm/')) {
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end(`<html><body><p>${decodeURIComponent(url.pathname.slice('/confirm/'.length))}</p></body></html>`);
     } else if (url.pathname === '/about') {
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
       res.end(`<!DOCTYPE html>
@@ -152,6 +165,7 @@ test('captureSite captures fixture site, validates schema, and writes raw assets
   // Form and controls
   assert.equal(page0.forms.length, 1);
   const form = page0.forms[0];
+  assert.equal(form.id, 'login-form');
   assert.equal(form.action, '/login');
   assert.equal(form.method, 'post');
   assert.equal(form.controls.length, 3);
@@ -218,6 +232,39 @@ test('captureSite captures fixture site, validates schema, and writes raw assets
   // 4. Assert repo tree was not written into
   const repoQuarantineData = join(REPO_ROOT, 'data/A5_black_box_reproduction');
   assert.ok(!existsSync(repoQuarantineData), 'repo data/A5_black_box_reproduction must not exist');
+});
+
+test('the real capture producer feeds its unmodified output into translation', async () => {
+  const { server, baseUrl } = await createFixtureServer();
+  const quarantineStore = setupTempQuarantineStore();
+  try {
+    // captureSite and recordFlow each own one browser and close it in their finally block.
+    const capture = await captureSite({
+      url: baseUrl,
+      rightsRef: 'docs/provenance/assets/reproduction-studies.md',
+      env: { ...process.env, MWG_TRAIN_QUARANTINE: quarantineStore },
+    });
+    const flow = await recordFlow({
+      url: baseUrl,
+      rightsRef: 'docs/provenance/assets/reproduction-studies.md',
+      steps: [
+        { action: 'fill', target: 'input[name=user_email]', value: 'seam@example.test' },
+        { action: 'select', target: 'select[name=account_type]', value: 'premium' },
+        { action: 'submit', target: 'form#login-form' },
+        { action: 'goto', expectText: 'seam@example.test' },
+      ],
+    });
+    const spec = translateCapture({ capture, flow });
+    assert.equal(spec.journey.formSelector, 'form#login-form');
+    assert.equal(spec.journey.select['select[name=account_type]'], 'premium');
+    assert.equal(spec.journey.steps.find((step) => step.submit)?.expectText, 'seam@example.test');
+    assert.equal(spec.journey.steps.some((step) => step.path === '/confirm'), false);
+    assert.equal(spec.persistence.read_route, `${flow.steps[3].path}/:ref`);
+    assert.equal(spec.fields.some((field) => field.type === 'submit'), false);
+  } finally {
+    await new Promise((done) => server.close(done));
+    rmSync(quarantineStore, { recursive: true, force: true });
+  }
 });
 
 test('captureSite refuses capture when rightsRef is missing or empty', async (t) => {
@@ -338,6 +385,7 @@ test('captureSite handles DOM edge cases (unnamed submit buttons, options in sel
   });
 
   const env = { ...process.env, MWG_TRAIN_QUARANTINE: quarantineStore };
+  const warning = t.mock.method(console, 'warn', () => {});
   const capture = await captureSite({
     url: `http://127.0.0.1:${port}/`,
     rightsRef: 'docs/provenance/assets/reproduction-studies.md',
@@ -350,6 +398,8 @@ test('captureSite handles DOM edge cases (unnamed submit buttons, options in sel
   assert.equal(capture.pages.length, 1); // duplicate '/' deduplicated
 
   const form = capture.pages[0].forms[0];
+  assert.equal(form.id, '');
+  assert.match(warning.mock.calls[0]?.arguments[0] ?? '', /POST form at \/.*action: \/complex.*controls: submit, query, category.*has no id and cannot be clean-room translated/);
   assert.equal(form.controls.length, 3);
   // Unnamed submit button became 'submit'
   assert.equal(form.controls[0].name, 'submit');

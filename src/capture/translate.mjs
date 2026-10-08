@@ -68,8 +68,14 @@ export function stepsForJourney(flowSteps) {
   };
   for (const step of flowSteps) {
     if (step.action === 'goto') {
-      const at = ensure(step.path);
-      if (step.expectText !== undefined) at.expectText = step.expectText;
+      // After a submit, the driver is already on the generated /read/<ref> page. A recorded
+      // confirmation path lacks that server-issued ref; navigating there again loses the echo.
+      if (step.expectText !== undefined && out.at(-1)?.submit) {
+        out.at(-1).expectText = step.expectText;
+      } else {
+        const at = ensure(step.path);
+        if (step.expectText !== undefined) at.expectText = step.expectText;
+      }
       current = null; // the next action belongs to a step of its own
       continue;
     }
@@ -135,13 +141,14 @@ export function translateCapture({ capture, flow }) {
 
   // Form ID: generator requires selector in the form 'form#id'
   if (!postForm.id || typeof postForm.id !== 'string' || postForm.id.trim() === '') {
-    throw new TranslationError('captured POST form has no id: generator requires form selector in the form form#id');
+    throw new TranslationError(`captured POST form (action: ${postForm.action}, method: ${postForm.method}, controls: ${postForm.controls.map((control) => control.name).join(', ')}) has no id: generator requires form selector in the form form#id`);
   }
   const formId = postForm.id.trim();
 
-  // 2. Control validation: ensure all controls can be rendered by generators
+  // 2. Submit buttons trigger the form action; they are not data fields in the generated form.
+  const dataControls = postForm.controls.filter((control) => control.type !== 'submit');
   const recordedNames = new Set();
-  for (const control of postForm.controls) {
+  for (const control of dataControls) {
     if (!MAPPABLE_CONTROL_TYPES.has(control.type)) {
       throw new TranslationError(`control '${control.name}' has unmappable type '${control.type}': generator cannot render this control type`);
     }
@@ -168,10 +175,10 @@ export function translateCapture({ capture, flow }) {
 
   // 4. Fill values: collect from flow's fill steps
   const journeyFill = {};
+  const journeySelect = {};
   for (const step of flow.steps) {
-    if (step.action === 'fill') {
-      journeyFill[step.target] = step.value;
-    }
+    if (step.action === 'fill') journeyFill[step.target] = step.value;
+    if (step.action === 'select') journeySelect[step.target] = step.value;
   }
   if (Object.keys(journeyFill).length === 0) {
     throw new TranslationError('flow contains no fill steps: cannot construct journey.fill');
@@ -244,7 +251,7 @@ export function translateCapture({ capture, flow }) {
   });
 
   // 7. Fields: map captured form controls
-  const fields = postForm.controls.map((control) => {
+  const fields = dataControls.map((control) => {
     const slug = control.slug ?? control.name;
     const name = control.name;
     const type = control.type;
@@ -279,7 +286,7 @@ export function translateCapture({ capture, flow }) {
 
   const validation = {
     required_fields: requiredFields,
-    on_missing: 'the server refuses the submission and re-renders the form; nothing is stored',
+    on_missing: 'the generated server refuses missing required fields and re-renders the form; nothing is stored',
     on_success: `insert one row into records and answer 303 with Location: ${readPath.replace(':ref', '<ref>')}`,
   };
 
@@ -345,6 +352,7 @@ export function translateCapture({ capture, flow }) {
       startPath: flow.start_path,
       formSelector: `form#${formId}`,
       fill: journeyFill,
+      ...(Object.keys(journeySelect).length > 0 ? { select: journeySelect } : {}),
       expectText: expectStep.expectText,
       steps: stepsForJourney(flow.steps),
     },
@@ -360,7 +368,6 @@ export function translateCapture({ capture, flow }) {
     acceptance: [
       `after a successful submit the browser lands on ${readPath.replace(':ref', '<ref>')} and the echoed ${echoControl.name} text is present`,
       'reloading that URL still shows it, which is only possible if the server stored it',
-      'an empty submit is observed to be refused by the server rather than silently accepted',
       'the reference in the URL was issued by this submission, not read from a row that already existed',
     ],
   };

@@ -177,15 +177,28 @@ test('refuses translation if flow touches a control never recorded in capture', 
 
 test('refuses translation if captured POST form has no id for formSelector', () => {
   const capture = fixtureCapture();
-  delete capture.pages[0].forms[0].id;
+  capture.pages[0].forms[0].id = '';
   assert.throws(
     () => translateCapture({ capture, flow: fixtureFlow() }),
     (err) => {
       assert.ok(err instanceof TranslationError);
-      assert.match(err.message, /captured POST form has no id: generator requires form selector in the form form#id/);
+      assert.match(err.message, /captured POST form \(action: \/submit-feedback, method: post, controls: name, email, category, comments\) has no id: generator requires form selector in the form form#id/);
       return true;
     },
   );
+});
+
+test('submit buttons are triggers rather than data fields, and selections reach the top-level journey', () => {
+  const capture = fixtureCapture();
+  capture.pages[0].forms[0].controls.push({ name: 'send', type: 'submit', label: 'Send', required: false });
+  const flow = fixtureFlow();
+  flow.steps.splice(4, 0, { index: 4, path: '/', action: 'select', target: 'select[name=category]', value: 'Billing' });
+  flow.steps[5].index = 5;
+  flow.steps[6].index = 6;
+  const spec = translateCapture({ capture, flow });
+  assert.equal(spec.fields.some((field) => field.type === 'submit'), false);
+  assert.deepEqual(spec.journey.select, { 'select[name=category]': 'Billing' });
+  assert.deepEqual(spec.journey.steps.find((step) => step.submit).select, { 'select[name=category]': 'Billing' });
 });
 
 test('refuses translation if a control type cannot be mapped to generator', () => {

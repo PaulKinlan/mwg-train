@@ -82,7 +82,8 @@ test('journey steps are emitted in the shape the replay driver reads, never the 
   assert.equal(submitting.submit, 'form#checkout', 'the submission must be reachable as step.submit');
   const expectation = spec.journey.steps.find((s) => s.expectText === 'Ada Lovelace');
   assert.ok(expectation, 'the observed value must be reachable as step.expectText');
-  assert.equal(expectation.path, '/order', 'and it must be attached to the step that lands on the observing page');
+  assert.equal(expectation.path, '/', 'the submit step lands on the generated read-by-reference page without navigating to /order');
+  assert.equal(expectation.submit, 'form#checkout');
 });
 
 test('a step is only closed by its own submit, so fills and selects stay with the path they happened on', () => {
