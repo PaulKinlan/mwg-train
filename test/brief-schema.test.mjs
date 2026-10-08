@@ -391,3 +391,57 @@ test('a name outside the unquoted charset is reachable by quoting it', () => {
   });
   assert.deepEqual(validateBriefSchema(row), []);
 });
+
+// CSS escapes make the validator and the browser disagree about which field a selector names: this
+// rule reports the literal characters it sees, while `querySelector` resolves `\67 rind` to `grind`.
+// A required select could therefore count as driven while the page left it on its first option, which
+// is exactly the hole the complete-selector rule exists to close - so escapes are refused outright.
+test('a CSS escape cannot stand in for a required select', () => {
+  assert.equal(completeSelectorFieldName('select[name="\\67 rind"]'), null);
+  assert.equal(completeSelectorFieldName('input[name=\\67rind]'), null);
+  const row = brief({
+    fields: [
+      { slug: 'esc', name: '\\67 rind', type: 'select', label: 'Esc', required: true, options: ['A', 'B'] },
+      { slug: 'grind', name: 'grind', type: 'select', label: 'Grind', required: false, options: ['A', 'B'] },
+      { slug: 'c', name: 'c', type: 'text', label: 'C', required: true, echoed: true },
+    ],
+    journey: {
+      startPath: '/',
+      formSelector: 'form#f',
+      fill: { 'input[name=c]': 'x' },
+      select: { 'select[name="\\67 rind"]': 'B' },
+      expectText: 'x',
+    },
+  });
+  assert.ok(problems(row).some((p) => /does not address a select this brief declares/.test(p)), problems(row).join('\n'));
+  assert.ok(problems(row).some((p) => /does not choose '\\67 rind'/.test(p)), problems(row).join('\n'));
+});
+
+// A field may legitimately be named with an apostrophe, and its selector is then double-quoted; the
+// rule must allow the opposite quote inside a quoted value rather than refusing a usable selector.
+test('a name containing the opposite quote is reachable', () => {
+  assert.equal(completeSelectorFieldName('input[name="o\'brien"]'), 'o\'brien');
+  assert.equal(completeSelectorFieldName('input[name=\'a "b\']'), 'a "b');
+  const row = brief({
+    fields: [{ slug: 'who', name: "o'brien", type: 'text', label: 'Who', required: true, echoed: true }],
+    journey: {
+      startPath: '/',
+      formSelector: 'form#f',
+      fill: { 'input[name="o\'brien"]': 'ada' },
+      expectText: 'ada',
+    },
+  });
+  assert.deepEqual(validateBriefSchema(row), []);
+});
+
+test('whitespace around the operator is insignificant, and a raw newline is not', () => {
+  assert.equal(completeSelectorFieldName('input[name = customer]'), 'customer');
+  assert.equal(completeSelectorFieldName('input[ name = customer ]'), 'customer');
+  // Measured in Chrome: all three of those forms match, and an upper-case tag name matches too,
+  // because HTML tag names are case-insensitive. The name a selector resolves to is unchanged by
+  // either, so accepting them cannot make reading and driving disagree.
+  assert.equal(completeSelectorFieldName('INPUT[name=customer]'), 'customer');
+  assert.equal(completeSelectorFieldName('Select[name=grind]'), 'grind');
+  assert.equal(completeSelectorFieldName('input[name="a\nb"]'), null);
+  assert.equal(completeSelectorFieldName('input[name=1x]'), null, 'an unquoted value must be a valid CSS identifier');
+});

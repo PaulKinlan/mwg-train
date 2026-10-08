@@ -79,12 +79,15 @@ export function selectorFieldName(selector) {
   return match ? match[1] : null;
 }
 
-// A complete selector is `<tag>[name=<value>]` and nothing else. The unquoted form is deliberately
-// narrow (the charset CSS accepts unquoted), and a name outside it is addressable by quoting it, which
-// is how a legitimate name like `contact.email` is reached. Quoted values may hold anything except the
-// quote character, so this accepts every name a selector can express and rejects everything ambiguous
-// - a compound, comma-joined or descendant selector is refused rather than read as one of its parts.
-const COMPLETE_SELECTOR = /^(input|textarea|select)\[name=(?:["']([^"']+)["']|([A-Za-z0-9_-]+))\]$/;
+// A complete selector is `<tag>[name=<value>]` and nothing else. The name is read as CSS reads it, so
+// escapes are refused outright: the validator reports the literal characters it sees, while
+// `querySelector` resolves `\67 rind` to `grind`, and a selector is only usable here when those two
+// readings cannot differ. A quoted value may hold the opposite quote (a field named `o'brien` is
+// reachable as "o'brien") and anything else except a backslash or a raw newline, and an unquoted value
+// must be a valid CSS identifier - so a name outside the unquoted charset is reached by quoting it,
+// which is how a legitimate name like `contact.email` is addressed. Compound, comma-joined and
+// descendant selectors still match nothing.
+const COMPLETE_SELECTOR = /^(input|textarea|select)\[\s*name\s*=\s*(?:"([^"\\\n\r]+)"|'([^'\\\n\r]+)'|([A-Za-z_-][A-Za-z0-9_-]*))\s*\]$/i;
 
 /**
  * The field a selector addresses, but only when it is a complete single-form selector.
@@ -95,10 +98,16 @@ const COMPLETE_SELECTOR = /^(input|textarea|select)\[name=(?:["']([^"']+)["']|([
  * nothing) and drives `other` in the browser, so validation would count a required select as driven
  * while the page left it on its first option. This returns the name only when reading and driving
  * cannot differ, and the validators reject anything else rather than guessing which one is meant.
+ *
+ * Which forms are accepted here was measured in Chrome, not reasoned about: `[name=x]`,
+ * `[name = x]` and `[ name = x ]` all match; `INPUT[name=x]` matches, because HTML tag names are
+ * case-insensitive; a quoted value may hold the opposite quote; `[name=x][type=text]` matches
+ * nothing when the element has no such attribute; and `select[name="\\67 rind"]` matches the
+ * element named `grind`, which is why escapes are refused here rather than decoded.
  */
 export function completeSelectorFieldName(selector) {
   const match = COMPLETE_SELECTOR.exec(String(selector ?? ''));
-  return match ? match[2] ?? match[3] : null;
+  return match ? match[2] ?? match[3] ?? match[4] : null;
 }
 
 /**
