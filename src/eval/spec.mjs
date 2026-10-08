@@ -182,6 +182,15 @@ export function validateSpec(spec) {
   // have demanded a reference from every write route of a family that mentioned the word.
   const stripRef = (path) => String(path).replace(/\/:ref$/, '');
   const reads = (spec.routes ?? []).filter((route) => route?.method === 'GET');
+  // A route read by reference has to take the reference in its path, or the write that issues one
+  // redirects to a path the server does not serve. The structural check below strips `:ref` from both
+  // sides to match them, so it would match a reference-less read route against a reference-carrying
+  // redirect and pass while the built project 404s.
+  for (const route of reads) {
+    if (route.kind === 'read-by-reference' && !String(route.path).endsWith('/:ref')) {
+      at(`routes(GET ${route.path}).path`, 'is read by reference but does not take the reference in its path');
+    }
+  }
   const served = new Set(reads.map((route) => stripRef(route.path)));
   const readByReference = new Set(reads.filter((route) => route?.kind === 'read-by-reference').map((route) => stripRef(route.path)));
   for (const route of spec.routes ?? []) {

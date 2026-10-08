@@ -25,7 +25,7 @@ So each family has a file here. It is the durable copy.
 | `journey` | the driven journey: where it starts, the form, the values typed, the text a reload must show |
 | `form`, `extra_form`, `write_journey`, `security_journey` | the second form and the other driven journeys, where the family has them |
 | `echo` | the value shown back to the user, and where it comes from (a record reference, a query, a session) |
-| `session`, `capacity`, `password_field` | the session-backed and capacity-bounded behaviours |
+| `session`, `capacity`, `password_field` | the session-backed and capacity-bounded behaviours, and the selector the security rules use to find the password input |
 | `acceptance` | the properties that make a pair count, stated as behaviour rather than as a test id |
 
 The `effect` of a route and the `acceptance` list are the point of the whole exercise: they are the

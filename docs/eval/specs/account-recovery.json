@@ -175,7 +175,7 @@
     "field": "displayName",
     "source": "session"
   },
-  "password_field": null,
+  "password_field": "[name=password]",
   "session": true,
   "acceptance": [
     "the echoed display name is held by the session the server issued, so it survives a reload only if the session does",

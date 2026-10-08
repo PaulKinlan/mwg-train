@@ -898,7 +898,7 @@ export function buildProjectFor(archetype, { frameworkName, defects = [], flags 
       formSelector: archetype.journey.formSelector,
       primaryField: `[name=${archetype.fields[0].name}]`,
       usernameField: `[name=email]`,
-      passwordField: `[name=password]`,
+      passwordField: archetype.passwordField ?? `[name=password]`,
       addressField: '[name=address]',
       postcodeField: '[name=postcode]',
     },

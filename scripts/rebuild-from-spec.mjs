@@ -127,6 +127,17 @@ async function main() {
           failures += 1;
           for (const problem of works.problems) console.log(`    ${problem}`);
         }
+        // The security rules are the part of the acceptance that consumes the password selector, so they
+        // are reported here: a selector that found nothing would leave the checks unable to measure.
+        const security = record.security ?? [];
+        if (security.length > 0) {
+          console.log(`  security rules [${security.map((entry) => `${entry.check}:${entry.status}`).join(', ')}]`);
+          const errored = security.filter((entry) => entry.status === 'ERROR');
+          if (errored.length > 0) {
+            failures += 1;
+            for (const entry of errored) console.log(`    ${entry.check}: ${entry.detail}`);
+          }
+        }
       }
     }
   } finally {

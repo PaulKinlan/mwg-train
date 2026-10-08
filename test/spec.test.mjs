@@ -155,6 +155,14 @@ test('the specification states the functional facts the generator implements', (
       for (const key of INERT_FIELD_KEYS) assert.ok(!(key in field), `${familyId}: the specification carries the inert ${key} property`);
     }
     assert.deepEqual(reduced.echo, archetype.echo);
+    // The password selector: inert while it was a hardcoded literal in the templates, so the check is on
+    // the effective selector either side produces rather than on the property, which the archetypes leave
+    // null. It fails if an archetype starts naming a different password input than the specification does.
+    assert.equal(
+      reduced.passwordField ?? '[name=password]',
+      archetype.passwordField ?? '[name=password]',
+      `${familyId}: the password selector drifted`,
+    );
     assert.deepEqual(reduced.journey, archetype.journey);
     assert.deepEqual(reduced.writeJourney ?? null, archetype.writeJourney ?? null);
     if (archetype.writeJourney) {
@@ -281,6 +289,16 @@ test('a specification that is missing a functional fact is refused, not rebuilt'
   assert.ok(
     validateSpec(sessionRef).some((problem) => problem.includes('not a reference-addressed read route')),
     'a reference issued for a route that is not read by reference is refused',
+  );
+
+  // The read side of the same rule: a route read by reference has to take the reference in its path. The
+  // structural check strips `:ref` from both sides to match them, so without this it would match a
+  // reference-less read route and pass while the write redirects to a path nothing serves.
+  const reflessRead = structuredClone(read('booking'));
+  reflessRead.routes.find((route) => route.kind === 'read-by-reference').path = '/booking';
+  assert.ok(
+    validateSpec(reflessRead).some((problem) => problem.includes('does not take the reference in its path')),
+    'a route read by reference must take the reference in its path',
   );
 
   const unknownKey = clone();
