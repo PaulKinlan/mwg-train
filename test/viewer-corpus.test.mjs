@@ -143,6 +143,25 @@ test('the index shows accepted and rejected with equal prominence, and escaping 
   assert.match(html, /catalogue-react/);
 });
 
+test('index distinguishes absent run data, empty corpus and filters excluding recorded projects', (t) => {
+  const root = buildFixtureCorpus();
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const corpus = loadCorpus(root);
+  const allViews = corpus.projects.map((project) => projectView(project));
+  const render = (views, source = allViews, filters = {}) => renderIndex({ views, allViews: source, filters,
+    runId: corpus.runId, runs: corpus.runs, yieldReport: null, scanAvailable: true, liveOrigin: 'http://127.0.0.1:7701' });
+  assert.match(render([], allViews, { archetype: 'booking' }), /No projects match these filters/);
+  assert.match(render([], allViews, { archetype: 'booking' }), /Clear filters/);
+  assert.match(render([], []), /No corpus projects are present/);
+  const unrun = allViews.filter((view) => !view.hasRun);
+  const noRuns = render([], unrun, { state: 'accepted' });
+  assert.match(noRuns, /No pilot run data is present/);
+  assert.match(noRuns, /filters also exclude the unrun projects/);
+  assert.doesNotMatch(noRuns, /No projects match these filters/);
+  assert.match(render(allViews), /role="region" aria-label="Corpus projects"/);
+  assert.match(render([], allViews, { state: 'bogus-value' }), /<option value="bogus-value" selected>Unknown state filter: bogus-value<\/option>/);
+});
+
 test('record content is escaped: evidence text cannot inject markup into the viewer', (t) => {
   const root = buildFixtureCorpus();
   t.after(() => rmSync(root, { recursive: true, force: true }));
@@ -251,6 +270,8 @@ test('the project page renders per-rule before/after with the deciding detail', 
   const view = projectView(corpus.projects.find((p) => p.id === 'booking-raw'));
   const html = renderProject({ view, runId: corpus.runId, runs: corpus.runs, liveOrigin: 'http://127.0.0.1:7701' });
   assert.match(html, /forms\/required-field-feedback/);
+  assert.match(html, /role="region" aria-label="Rule measurements" aria-describedby="rule-table-hint"/);
+  assert.match(html, /<caption class="sr-only">Baseline and target rule measurements<\/caption>/);
   assert.match(html, /FAIL/);
   assert.match(html, /PASS/);
   assert.match(html, /↑ improved/);

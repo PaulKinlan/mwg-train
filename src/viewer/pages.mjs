@@ -21,38 +21,75 @@ export function escapeHtml(value) {
 }
 
 export const PAGE_CSS = `
-  :root { color-scheme: light dark; }
-  body { font-family: system-ui, sans-serif; margin: 0; padding: 1.5rem; max-width: 1400px; }
-  table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
-  th, td { border: 1px solid #9995; padding: 0.35rem 0.6rem; text-align: left; vertical-align: top; }
-  th { background: #8882; }
-  .badge { display: inline-block; padding: 0.1rem 0.5rem; border-radius: 0.8rem; font-size: 0.78rem; font-weight: 600; }
-  .badge.accepted { background: #2a7d3233; color: #2e7d32; border: 1px solid #2e7d3255; }
-  .badge.rejected { background: #c6282833; color: #c62828; border: 1px solid #c6282855; }
-  .badge.no-run { background: #8882; color: inherit; }
-  .badge.scan-pass { background: #2a7d3233; color: #2e7d32; border: 1px solid #2e7d3255; }
-  .badge.scan-fail, .badge.scan-error { background: #c6282833; color: #c62828; border: 1px solid #c6282855; }
-  .badge.warn { background: #f9a82533; color: #b28704; border: 1px solid #f9a82555; }
-  .status-PASS { color: #2e7d32; font-weight: 600; }
-  .status-FAIL { color: #c62828; font-weight: 600; }
-  .status-ERROR { color: #b28704; font-weight: 600; }
-  .sha { font-family: ui-monospace, monospace; font-size: 0.78rem; word-break: break-all; }
-  .chips { display: flex; flex-wrap: wrap; gap: 0.25rem; }
-  .chip { font-size: 0.75rem; background: #8882; border-radius: 0.6rem; padding: 0.05rem 0.45rem; }
-  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-  .panel { border: 1px solid #9995; border-radius: 0.5rem; padding: 1rem; }
-  .panel h3 { margin-top: 0; }
-  .shots img { max-width: 100%; border: 1px solid #9995; border-radius: 0.3rem; margin-bottom: 0.5rem; }
-  details { margin: 0.3rem 0; }
-  summary { cursor: pointer; }
-  pre { background: #8881; padding: 0.6rem; border-radius: 0.4rem; overflow-x: auto; font-size: 0.8rem; }
-  form.filters { display: flex; gap: 0.8rem; flex-wrap: wrap; align-items: end; margin: 1rem 0; padding: 0.8rem; border: 1px solid #9995; border-radius: 0.5rem; }
-  form.filters label { display: flex; flex-direction: column; font-size: 0.8rem; gap: 0.2rem; }
-  .muted { opacity: 0.75; }
-  .notice { border: 1px solid #f9a825; background: #f9a82522; padding: 0.7rem; border-radius: 0.5rem; }
-  .danger { border: 1px solid #c62828; background: #c6282822; padding: 0.7rem; border-radius: 0.5rem; }
-  .journey-steps { font-size: 0.82rem; }
-  nav { margin-bottom: 1rem; font-size: 0.9rem; }
+  :root { color-scheme: light dark; --ground: #f5f7f8; --surface: #fff; --ink: #172b38; --muted: #4a606d; --line: #c8d5dc; --control-line: #687985; --action: #14577a; --focus: #087cbe; --success: #146238; --success-bg: #e3f4e9; --error: #9a2830; --error-bg: #fcebed; --warning: #795300; --warning-bg: #fff2d5; }
+  @media (prefers-color-scheme: dark) { :root { --ground: #101b24; --surface: #192b36; --ink: #ecf4f7; --muted: #bbcad2; --line: #49606d; --control-line: #8aa4b2; --action: #9ed5fa; --focus: #8fd1ff; --success: #a8e9be; --success-bg: #173d2d; --error: #ffb9bc; --error-bg: #49252c; --warning: #f8d888; --warning-bg: #42361d; } }
+  * { box-sizing: border-box; }
+  html { background: var(--ground); }
+  body { max-width: 88rem; margin: 0 auto; padding: clamp(1rem, 3vw, 2rem); color: var(--ink); background: var(--ground); font: 1rem/1.55 system-ui, sans-serif; }
+  h1 { margin: 1.2rem 0 0.7rem; font-size: clamp(1.75rem, 1.35rem + 1.4vw, 2.4rem); line-height: 1.15; letter-spacing: -0.025em; overflow-wrap: anywhere; }
+  h2 { margin: 2.3rem 0 0.8rem; font-size: 1.35rem; }
+  h3 { font-size: 1.08rem; }
+  p { max-width: 75ch; }
+  a { color: var(--action); text-underline-offset: 0.2em; }
+  a:hover { text-decoration-thickness: 0.13em; }
+  :focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+  ::selection { background: var(--action); color: var(--ground); }
+  nav { display: flex; flex-wrap: wrap; align-items: center; gap: 0.55rem; padding-block: 0.55rem 1rem; border-bottom: 1px solid var(--line); }
+  nav a { display: inline-flex; align-items: center; min-height: 2.75rem; padding-inline: 0.45rem; font-weight: 650; }
+  .muted { color: var(--muted); }
+  .notice, .danger { max-width: none; padding: 0.9rem 1rem; border-radius: 0.65rem; }
+  .notice { background: var(--warning-bg); color: var(--ink); }
+  .danger { background: var(--error-bg); color: var(--ink); }
+  .badge { display: inline-block; max-width: 100%; padding: 0.14rem 0.55rem; border-radius: 0.45rem; font-size: 0.78rem; line-height: 1.45; font-weight: 700; vertical-align: middle; overflow-wrap: anywhere; }
+  .badge.accepted, .badge.scan-pass { background: var(--success-bg); color: var(--success); }
+  .badge.rejected, .badge.scan-fail, .badge.scan-error { background: var(--error-bg); color: var(--error); }
+  .badge.warn { background: var(--warning-bg); color: var(--warning); }
+  .badge.no-run { background: var(--surface); color: var(--muted); border: 1px solid var(--line); }
+  .status-PASS { color: var(--success); font-weight: 700; }
+  .status-FAIL { color: var(--error); font-weight: 700; }
+  .status-ERROR { color: var(--warning); font-weight: 700; }
+  .sha, code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; overflow-wrap: anywhere; }
+  .sha { font-size: 0.82rem; }
+  .chips { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+  .chip { padding: 0.12rem 0.45rem; border-radius: 0.35rem; background: var(--ground); font-size: 0.8rem; }
+  .pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+  .panel { min-width: 0; padding: clamp(0.9rem, 2vw, 1.3rem); border: 1px solid var(--line); border-radius: 0.75rem; background: var(--surface); overflow-wrap: anywhere; }
+  .panel h2, .panel h3 { margin-top: 0; }
+  dl { display: grid; grid-template-columns: minmax(8rem, 12rem) minmax(0, 1fr); gap: 0.5rem 1rem; margin: 0; }
+  dt { font-weight: 650; color: var(--muted); }
+  dd { min-width: 0; margin: 0; overflow-wrap: anywhere; }
+  .shots img { display: block; max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 0.4rem; margin: 0.5rem 0 1rem; }
+  details { margin: 0.45rem 0; }
+  summary { cursor: pointer; min-height: 2.75rem; padding: 0.5rem 0; }
+  pre { max-width: 100%; padding: 0.8rem; border-radius: 0.45rem; background: var(--ground); overflow-x: auto; font-size: 0.85rem; }
+  button, select { min-height: 2.75rem; padding: 0.45rem 0.75rem; border: 1px solid var(--control-line); border-radius: 0.45rem; background: var(--surface); color: var(--ink); font: inherit; }
+  button { cursor: pointer; border-color: var(--action); background: var(--action); color: var(--ground); font-weight: 700; }
+  button:disabled { cursor: not-allowed; border-color: var(--line); background: var(--ground); color: var(--muted); }
+  form.filters { display: flex; gap: 0.8rem; flex-wrap: wrap; align-items: end; margin: 1.3rem 0; padding: 1rem; border: 1px solid var(--line); border-radius: 0.75rem; background: var(--surface); }
+  form.filters label { display: flex; flex: 1 1 9rem; flex-direction: column; gap: 0.25rem; min-width: 0; font-size: 0.88rem; font-weight: 650; }
+  form.filters select { width: 100%; font-weight: 400; }
+  .table-scroll { max-width: 100%; overflow-x: auto; overscroll-behavior-inline: contain; border: 1px solid var(--line); border-radius: 0.65rem; background: var(--surface); }
+  .table-hint { margin: 0.2rem 0 0.45rem; color: var(--muted); font-size: 0.9rem; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+  table { width: 100%; min-width: 45rem; border-collapse: separate; border-spacing: 0; font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+  .corpus-table { min-width: 76rem; }
+  th, td { padding: 0.75rem; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
+  th { position: sticky; top: 0; z-index: 1; background: var(--ground); font-weight: 700; white-space: nowrap; }
+  tbody tr:last-child > * { border-bottom: 0; }
+  tbody tr:hover { background: var(--ground); }
+  .corpus-table tbody tr:not(.empty-row) td:first-child, .corpus-table thead th:first-child { position: sticky; left: 0; z-index: 2; min-width: 10.5rem; background: var(--surface); border-right: 1px solid var(--line); }
+  .corpus-table thead th:first-child { z-index: 3; background: var(--ground); }
+  td form { display: inline-block; margin: 0 0.25rem 0.4rem 0; }
+  .journey-steps { padding-inline-start: 1.4rem; font-size: 0.9rem; overflow-wrap: anywhere; }
+  .pipeline-context { margin-block: 0.8rem 1rem; }
+  .pipeline-context summary { font-weight: 650; color: var(--action); }
+  @media (max-width: 48rem) {
+    .pair { grid-template-columns: minmax(0, 1fr); }
+    dl { grid-template-columns: minmax(0, 1fr); gap: 0.1rem; }
+    dd { margin-bottom: 0.5rem; }
+    form.filters > button { flex: 1 1 100%; }
+    .table-hint { display: block; }
+  }
 `;
 
 export function page(title, body) {
@@ -66,7 +103,7 @@ export function page(title, body) {
 </head>
 <body>
 <nav><a href="/">corpus index</a> · <a href="/pipeline">pipeline</a></nav>
-${body}
+<main id="content">${body}</main>
 </body>
 </html>`;
 }
@@ -87,7 +124,7 @@ export function renderMarkdown(md) {
   let table = null;
   const closeBlocks = () => {
     if (list) { out.push('</ul>'); list = null; }
-    if (table) { out.push('</tbody></table>'); table = null; }
+    if (table) { out.push('</tbody></table></div>'); table = null; }
   };
   for (const line of md.split('\n')) {
     if (line.startsWith('## ')) { closeBlocks(); out.push(`<h2>${inline(line.slice(3))}</h2>`); continue; }
@@ -96,7 +133,7 @@ export function renderMarkdown(md) {
       const cells = line.split('|').slice(1, -1).map((cell) => cell.trim());
       if (cells.every((cell) => /^:?-+:?$/.test(cell))) continue; // separator row
       if (!table) {
-        out.push('<table><tbody>');
+        out.push('<div class="table-scroll" role="region" aria-label="Pipeline table" tabindex="0"><table><tbody>');
         out.push(`<tr>${cells.map((cell) => `<th>${inline(cell)}</th>`).join('')}</tr>`);
         table = true;
       } else {
@@ -105,7 +142,7 @@ export function renderMarkdown(md) {
       continue;
     }
     if (line.startsWith('- ')) {
-      if (table) { out.push('</tbody></table>'); table = null; }
+      if (table) { out.push('</tbody></table></div>'); table = null; }
       if (!list) { out.push('<ul>'); list = true; }
       out.push(`<li>${inline(line.slice(2))}</li>`);
       continue;
@@ -128,7 +165,8 @@ export function indexBanner({ runEvidence, projectCount, archetypeCount, armCoun
     ? 'acceptance is backed by browser-run evidence you can click through (journeys, rule measurements, screenshots)'
     : 'this checkout has the committed record (CORPUS.json: decisions, tree SHAs, improved rules) but no local run records - journey-level evidence appears here after a local `npm run pilot:run`';
   return `
-<div class="notice"><strong>What this page is:</strong> the pilot corpus - ${num(projectCount)} generated sites (${num(archetypeCount)} archetypes × ${num(armCount)} rendering arms), each measured BASELINE vs deterministic MWG repair (the TARGET floor). This is pipeline stages 3-5 (GENERATE → MEASURE → RECORD): the <a href="/pipeline">pipeline doc</a> shows the whole flow. <strong>Why it matters:</strong> ${evidenceLine}; rejected attempts stay visible because acceptance bias is only inspectable when they do. This is the EVAL instrument - training data comes only from a separate, disjoint corpus.</div>`;
+<div class="notice"><strong>${num(projectCount)} generated sites</strong> · ${num(archetypeCount)} archetypes × ${num(armCount)} rendering arms. Compare each BASELINE with deterministic MWG repair (the TARGET floor). Accepted and rejected attempts remain visible together.
+<details><summary>What evidence is available, and why it matters</summary><p>This viewer covers pipeline stages 3–5 (GENERATE → MEASURE → RECORD). In this checkout, ${evidenceLine}. Rejected attempts stay visible because acceptance bias is only inspectable when they do. This is the EVAL instrument; training data comes only from a separate, disjoint corpus. <a href="/pipeline">Read the full pipeline</a>.</p></details></div>`;
 }
 
 export function projectBanner({ runEvidence }) {
@@ -136,7 +174,8 @@ export function projectBanner({ runEvidence }) {
     ? 'the measured BASELINE vs TARGET evidence (journeys, rule tables, screenshots)'
     : 'the committed decision and SHAs (journey-level evidence exists after a local `npm run pilot:run`)';
   return `
-<div class="notice"><strong>What this page is:</strong> one corpus project's record - attribution, acceptance, ${evidenceLine}, the owner-auth gate, and live sandboxed instances of both trees. <strong>How to read it:</strong> the TARGET is the deterministic mechanical-repair floor, not a model's work; the gap above it is what training exists to close. The served TREES are hash-verified against the recorded corpus; anything that cannot be reproduced to its recorded SHA is refused, not served.</div>`;
+<div class="notice"><strong>One project's evidence:</strong> attribution, acceptance, ${evidenceLine}, owner-auth status and live sandboxed trees.
+<details><summary>How to read the BASELINE and TARGET</summary><p>The TARGET is the deterministic mechanical-repair floor, not a model's work; the gap above it is what training exists to close. The served trees are hash-verified against the recorded corpus. Anything that cannot be reproduced to its recorded SHA is refused, not served.</p></details></div>`;
 }
 export const PIPELINE_STRIP = `
 <p class="muted"><strong>Pipeline</strong> (<a href="/pipeline">full doc</a>):
@@ -248,6 +287,10 @@ export function renderIndex({ views, allViews, filters, runId, runs, yieldReport
   const rules = [...new Set(allViews.flatMap((view) => view.requiredRules))].sort();
 
   const option = (value, label, selected) => `<option value="${escapeHtml(value)}"${selected === value ? ' selected' : ''}>${escapeHtml(label)}</option>`;
+  const knownStates = new Set(['accepted', 'rejected', 'no-run', ...categories]);
+  const unknownState = filters.state && !knownStates.has(filters.state)
+    ? option(filters.state, `Unknown state filter: ${filters.state}`, filters.state)
+    : '';
   const runSelector =
     runs.length > 0
       ? `<label>run <select name="run">${runs.map((run) => option(run, run, runId ?? runs[0])).join('')}</select></label>`
@@ -282,12 +325,20 @@ export function renderIndex({ views, allViews, filters, runId, runs, yieldReport
     ? ''
     : '<p class="danger">The owner-auth scan configuration is missing or invalid, so no pair can be treated as accepted and live serving is refused (fail-closed).</p>';
 
+  const hasRunData = allViews.some((view) => view.hasRun);
+  const activeFilters = ['archetype', 'framework', 'state', 'rule'].some((key) => filters[key]);
+  const emptyMessage = allViews.length === 0
+    ? 'No corpus projects are present in this checkout. Point the viewer at a populated corpus.'
+    : !hasRunData
+      ? `No pilot run data is present for this selection. ${activeFilters ? 'The current filters also exclude the unrun projects. ' : ''}Run the pilot locally to record decisions, or <a href="/">show all projects</a>.`
+      : `No projects match these filters. <a href="/">Clear filters</a> to see the full corpus.`;
+
   return page('corpus index', `
 <h1>mwg-train corpus</h1>
 ${indexBanner({ runEvidence, projectCount: allViews.length, archetypeCount: archetypes.length, armCount: frameworks.length })}
-${PIPELINE_STRIP}
+<details class="pipeline-context"><summary>Pipeline: stages 1–6 measured · training queued</summary>${PIPELINE_STRIP}</details>
 ${scanNotice}
-<p class="muted">Roles: <strong>BASELINE</strong> = raw model output, kept to measure improvement FROM · <strong>TARGET</strong> = the <strong>${BASELINE_LABEL}</strong> to build TOWARDS · <strong>ACCEPTED PAIR</strong> = passed eval acceptance (training data comes only from accepted pairs of the DISJOINT training corpus — the eval set is never trained on) · <strong>REJECTED ATTEMPT</strong> = kept as negative example &amp; repair material.</p>
+<details class="pipeline-context"><summary>Corpus terminology: BASELINE, TARGET and acceptance</summary><p class="muted">Roles: <strong>BASELINE</strong> = raw model output, kept to measure improvement FROM · <strong>TARGET</strong> = the <strong>${BASELINE_LABEL}</strong> to build TOWARDS · <strong>ACCEPTED PAIR</strong> = passed eval acceptance (training data comes only from accepted pairs of the DISJOINT training corpus — the eval set is never trained on) · <strong>REJECTED ATTEMPT</strong> = kept as negative example &amp; repair material.</p></details>
 <p>${counts.accepted} accepted pair(s) · ${counts.rejected} rejected attempt(s) · ${counts.noRun} not yet run — of ${allViews.length} project(s).</p>
 ${yieldLine}
 <form class="filters" method="get" action="/">
@@ -296,6 +347,7 @@ ${yieldLine}
   <label>framework <select name="framework"><option value="">(all)</option>${frameworks.map((f) => option(f, f, filters.framework)).join('')}</select></label>
   <label>state <select name="state">
     ${option('', '(all)', filters.state)}
+    ${unknownState}
     ${option('accepted', 'ACCEPTED PAIR', filters.state)}
     ${option('rejected', 'REJECTED ATTEMPT (any category)', filters.state)}
     ${categories.map((c) => option(c, `REJECTED ATTEMPT · ${c}`, filters.state)).join('')}
@@ -304,12 +356,16 @@ ${yieldLine}
   <label>rule <select name="rule"><option value="">(all)</option>${rules.map((r) => option(r, r, filters.rule)).join('')}</select></label>
   <button type="submit">filter</button>
 </form>
-<table>
-<thead><tr><th>project</th><th>archetype</th><th>framework</th><th>state</th><th>owner-auth</th><th>rules improved</th><th>tree sha</th><th>live</th></tr></thead>
+<p class="table-hint" id="corpus-table-hint">Corpus records · On small screens, scroll this table sideways; the project column stays visible.</p>
+<div class="table-scroll" role="region" aria-label="Corpus projects" aria-describedby="corpus-table-hint" tabindex="0">
+<table class="corpus-table">
+<caption class="sr-only">Project decisions and run evidence</caption>
+<thead><tr><th scope="col">project</th><th scope="col">archetype</th><th scope="col">framework</th><th scope="col">state</th><th scope="col">owner-auth</th><th scope="col">rules improved</th><th scope="col">tree sha</th><th scope="col">live</th></tr></thead>
 <tbody>
-${rows || '<tr><td colspan="8" class="muted">no projects match these filters</td></tr>'}
+${rows || `<tr class="empty-row"><td colspan="8">${emptyMessage}</td></tr>`}
 </tbody>
-</table>`);
+</table>
+</div>`);
 }
 
 function renderRuleRows(view) {
@@ -332,7 +388,7 @@ function renderRuleRows(view) {
 </tr>`;
     })
     .join('\n');
-  return `<table><thead><tr><th>rule</th><th>BASELINE</th><th>TARGET</th><th>deciding detail</th></tr></thead><tbody>${rows}</tbody></table>`;
+  return `<p class="table-hint" id="rule-table-hint">Scroll sideways to compare every rule at narrow widths.</p><div class="table-scroll" role="region" aria-label="Rule measurements" aria-describedby="rule-table-hint" tabindex="0"><table><caption class="sr-only">Baseline and target rule measurements</caption><thead><tr><th scope="col">rule</th><th scope="col">BASELINE</th><th scope="col">TARGET</th><th scope="col">deciding detail</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 
 function renderJourney(record, title) {
