@@ -21,8 +21,8 @@ export function escapeHtml(value) {
 }
 
 export const PAGE_CSS = `
-  :root { color-scheme: light dark; --ground: #f5f7f8; --surface: #fff; --ink: #172b38; --muted: #4a606d; --line: #c8d5dc; --action: #14577a; --focus: #087cbe; --success: #146238; --success-bg: #e3f4e9; --error: #9a2830; --error-bg: #fcebed; --warning: #795300; --warning-bg: #fff2d5; }
-  @media (prefers-color-scheme: dark) { :root { --ground: #101b24; --surface: #192b36; --ink: #ecf4f7; --muted: #bbcad2; --line: #49606d; --action: #9ed5fa; --focus: #8fd1ff; --success: #a8e9be; --success-bg: #173d2d; --error: #ffb9bc; --error-bg: #49252c; --warning: #f8d888; --warning-bg: #42361d; } }
+  :root { color-scheme: light dark; --ground: #f5f7f8; --surface: #fff; --ink: #172b38; --muted: #4a606d; --line: #c8d5dc; --control-line: #687985; --action: #14577a; --focus: #087cbe; --success: #146238; --success-bg: #e3f4e9; --error: #9a2830; --error-bg: #fcebed; --warning: #795300; --warning-bg: #fff2d5; }
+  @media (prefers-color-scheme: dark) { :root { --ground: #101b24; --surface: #192b36; --ink: #ecf4f7; --muted: #bbcad2; --line: #49606d; --control-line: #8aa4b2; --action: #9ed5fa; --focus: #8fd1ff; --success: #a8e9be; --success-bg: #173d2d; --error: #ffb9bc; --error-bg: #49252c; --warning: #f8d888; --warning-bg: #42361d; } }
   * { box-sizing: border-box; }
   html { background: var(--ground); }
   body { max-width: 88rem; margin: 0 auto; padding: clamp(1rem, 3vw, 2rem); color: var(--ink); background: var(--ground); font: 1rem/1.55 system-ui, sans-serif; }
@@ -62,7 +62,7 @@ export const PAGE_CSS = `
   details { margin: 0.45rem 0; }
   summary { cursor: pointer; min-height: 2.75rem; padding: 0.5rem 0; }
   pre { max-width: 100%; padding: 0.8rem; border-radius: 0.45rem; background: var(--ground); overflow-x: auto; font-size: 0.85rem; }
-  button, select { min-height: 2.75rem; padding: 0.45rem 0.75rem; border: 1px solid var(--line); border-radius: 0.45rem; background: var(--surface); color: var(--ink); font: inherit; }
+  button, select { min-height: 2.75rem; padding: 0.45rem 0.75rem; border: 1px solid var(--control-line); border-radius: 0.45rem; background: var(--surface); color: var(--ink); font: inherit; }
   button { cursor: pointer; border-color: var(--action); background: var(--action); color: var(--ground); font-weight: 700; }
   button:disabled { cursor: not-allowed; border-color: var(--line); background: var(--ground); color: var(--muted); }
   form.filters { display: flex; gap: 0.8rem; flex-wrap: wrap; align-items: end; margin: 1.3rem 0; padding: 1rem; border: 1px solid var(--line); border-radius: 0.75rem; background: var(--surface); }
@@ -287,6 +287,10 @@ export function renderIndex({ views, allViews, filters, runId, runs, yieldReport
   const rules = [...new Set(allViews.flatMap((view) => view.requiredRules))].sort();
 
   const option = (value, label, selected) => `<option value="${escapeHtml(value)}"${selected === value ? ' selected' : ''}>${escapeHtml(label)}</option>`;
+  const knownStates = new Set(['accepted', 'rejected', 'no-run', ...categories]);
+  const unknownState = filters.state && !knownStates.has(filters.state)
+    ? option(filters.state, `Unknown state filter: ${filters.state}`, filters.state)
+    : '';
   const runSelector =
     runs.length > 0
       ? `<label>run <select name="run">${runs.map((run) => option(run, run, runId ?? runs[0])).join('')}</select></label>`
@@ -343,6 +347,7 @@ ${yieldLine}
   <label>framework <select name="framework"><option value="">(all)</option>${frameworks.map((f) => option(f, f, filters.framework)).join('')}</select></label>
   <label>state <select name="state">
     ${option('', '(all)', filters.state)}
+    ${unknownState}
     ${option('accepted', 'ACCEPTED PAIR', filters.state)}
     ${option('rejected', 'REJECTED ATTEMPT (any category)', filters.state)}
     ${categories.map((c) => option(c, `REJECTED ATTEMPT · ${c}`, filters.state)).join('')}
