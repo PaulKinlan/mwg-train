@@ -522,9 +522,18 @@ test('a budget with a non-finite axis is refused, because the two layers disagre
   // And the same budget must not reach the parity layer, where it would fabricate a finding.
   const arms = [arm('raw'), arm('hono'), arm('react')];
   for (const budget of [{ ...BUDGET, geometry: NaN }, { ...BUDGET, geometry: Infinity }]) {
+    // The ERROR TYPE alone is not the check. Reverting the message to a bare JSON.stringify - which renders
+    // NaN and Infinity as `null`, the exact defect the replacer was added for - passes a TypeError-only
+    // assertion. So assert what the message SAYS: the offending axis, and the value as written rather than
+    // null. This is the same shape as the ReferenceError that nearly satisfied assert.throws earlier.
     assert.throws(
       () => crossArmFindings({ arms, budget }),
-      TypeError,
+      (error) => {
+        assert.match(error.message, /geometry/, 'the refusal must name the offending axis');
+        assert.match(error.message, /"NaN"|"Infinity"/, 'and must render the non-finite value as written');
+        assert.doesNotMatch(error.message, /"geometry":null/, 'never as null, which reads as an empty floor');
+        return true;
+      },
       'a non-finite axis must be refused at the parity entry point too, not turned into a finding',
     );
   }
