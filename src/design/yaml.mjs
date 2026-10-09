@@ -11,7 +11,9 @@
  * Supported, and nothing else:
  *   - a block mapping: `key: value`, nested by two spaces per level;
  *   - a block sequence: `- value`, nested under its key by two spaces;
- *   - scalars: bare strings, single- or double-quoted strings, integers, decimals, true, false, null;
+ *   - scalars: bare strings, single- or double-quoted strings, true, false, null. Numbers are NOT
+ *     interpreted: a token value is compared against the stylesheet as text, so reading "010" as 10 or "1.50"
+ *     as 1.5 would check a claim the document had not made;
  *   - a hex colour written bare, which is the one place a leading `#` is data rather than a comment. A `#`
  *     beginning a hex-coloured word is data wherever it appears, so `1px solid #8a8f98` is one value and is
  *     not mistaken for a trailing comment;
@@ -25,10 +27,10 @@
  */
 
 const KEY = /^([A-Za-z0-9_.-]+):(?: (.*))?$/;
+// Keys that would land on an object's prototype rather than on the object.
+const PROTOTYPE_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
 const LIST_ITEM = /^- (.*)$/;
 const HEX_COLOUR = /^#[0-9a-fA-F]{3,8}$/;
-const INTEGER = /^-?\d+$/;
-const DECIMAL = /^-?\d+\.\d+$/;
 // Shapes that belong to full YAML and that this subset deliberately does not implement. The structural check runs
 // before the scalar-form checks below, because a value like '{a: 1}' is more usefully diagnosed as an unimplemented
 // feature than as a bare value containing ': '.
@@ -43,13 +45,20 @@ function parseScalar(raw, problems, lineNo) {
       problems.push(`line ${lineNo}: unterminated ${quote === '"' ? 'double' : 'single'}-quoted string`);
       return null;
     }
-    return text.slice(1, -1);
+    const inner = text.slice(1, -1);
+    if (quote === '"' && inner.includes('\\')) {
+      problems.push(`line ${lineNo}: backslash escapes are not implemented; this value would be read literally`);
+      return null;
+    }
+    if (quote === "'" && inner.includes("''")) {
+      problems.push(`line ${lineNo}: a doubled single quote is not implemented; this value would be read literally`);
+      return null;
+    }
+    return inner;
   }
   if (text === 'true') return true;
   if (text === 'false') return false;
   if (text === 'null') return null;
-  if (INTEGER.test(text)) return Number(text);
-  if (DECIMAL.test(text)) return Number(text);
   if (HEX_COLOUR.test(text)) return text;
   const bad = UNSUPPORTED.exec(text);
   if (bad) {
@@ -76,7 +85,7 @@ function parseBlock(lines, cursor, indent, problems) {
   if (cursor.index >= lines.length || lines[cursor.index].indent < indent) return null;
   const first = lines[cursor.index];
   const sequence = first.content === '-' || LIST_ITEM.test(first.content);
-  const value = sequence ? [] : {};
+  const value = sequence ? [] : Object.create(null);
 
   while (cursor.index < lines.length) {
     const line = lines[cursor.index];
@@ -113,6 +122,11 @@ function parseBlock(lines, cursor, indent, problems) {
     }
     const key = match[1];
     const rest = (match[2] ?? '').trim();
+    if (PROTOTYPE_KEYS.has(key)) {
+      problems.push(`line ${line.lineNo}: '${key}' is not a usable key`);
+      cursor.index++;
+      continue;
+    }
     if (Object.hasOwn(value, key)) problems.push(`line ${line.lineNo}: duplicate key '${key}'`);
     cursor.index++;
     if (rest === '') {

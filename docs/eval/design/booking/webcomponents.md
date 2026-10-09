@@ -43,7 +43,7 @@ single narrow column, one accent, and an error treatment that names the field it
 
 Grammar: **Decision workbench / Operate** ([`docs/design.md`](../../../design.md)), booking is named in that
 row. This contract describes the project the generator writes for archetype `booking`, framework arm `webcomponents`:
-a custom element that attaches an OPEN shadow root and appends the stylesheet plus a slot; the server-rendered children are projected into the slot. All seven arms are server-rendered with NO client hydration; the only client code is the `/app/enhance.js` module.
+a custom element that attaches an OPEN shadow root and appends a `<style>` element plus a slot; the server-rendered children are projected into the slot. All seven arms are server-rendered with NO client hydration; the only client code is the `/app/enhance.js` module.
 
 This arm has a real structural difference from the others: the `record-echo` custom element attaches an OPEN shadow root. The `:host { display: block }` rule and the shadow boundary are why the page stylesheet still applies to the host but not into the shadow tree, while the server-rendered children are projected into a slot.
 

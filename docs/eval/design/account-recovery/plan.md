@@ -57,7 +57,7 @@ No route edits or deletes an account.
 
 ## Implementation status
 
-What exists in every arm is exactly what the spec declares. Where we cannot check an implementation detail, we treat it as declared rather than done.
+Not everything declared exists. The generated server dispatches `/` and `/signup` only: `GET /account` and `POST /reset` are declared by the spec and named in the table above, and are not served. Everything else in this document is what generation shows; where an implementation detail cannot be checked, it is treated as declared rather than done.
 
 ## Provenance
 

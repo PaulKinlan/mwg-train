@@ -118,7 +118,7 @@ Top to bottom, from the demo's own `app/page.mjs` (rendered via `createSSRApp`):
 
 ## Rationale
 
-Constraints rather than preferences: one page, no build step and no virtual DOM (arm definition), the
+Constraints rather than preferences: one page and no build step (arm definition), the
 `:user-invalid` selector and the live region (an error must be named, not coloured), and the single column,
 which follows from the task (one form, one decision) rather than from style.
 

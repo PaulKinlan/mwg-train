@@ -56,7 +56,7 @@ view an enquiry is written once and read afterwards.
 
 ## Implementation status
 
-What exists in every arm is exactly what the spec declares. Where we cannot check an implementation detail, we treat it as declared rather than done.
+Every route this archetype's spec declares is dispatched by the generated server, in every arm. Where we cannot check an implementation detail, we treat it as declared rather than done. The generated project also serves the harness's own `/api/*` and health surface, which is not the archetype's and is not claimed here.
 
 ## Provenance
 

@@ -26,10 +26,12 @@ A parts catalogue with server-side search, paging and a session cart. The user s
 | `POST /cart` | write-session | store the part number against the session and redirect back to the cart |
 | `GET /cart` | read-session | read the session and render what it stores |
 
-What the spec does not define, the family does not serve. There is no edit and no delete, and search is the
-only route that narrows the list: it reads `q` from the query string and renders the matching records rather
-than storing anything. The cart is session state, written and read by `POST /cart` and `GET /cart`, so it is
-not a stored row and is not part of what the spec's persistence describes.
+There is no edit and no delete, and search is the only route that narrows the list: it reads `q` from the
+query string and renders the matching records rather than storing anything. The cart is written and read by
+`POST /cart` and `GET /cart`, and the spec's persistence names `/cart` as both its write route and its read
+route - so the cart is stored like everything else the family persists. Every route this table names is one the
+spec declares and the generated server dispatches; the generated project additionally serves the harness's own
+`/api/*` surface, which is not the archetype's.
 
 ## Data and state
 
@@ -57,7 +59,7 @@ not a stored row and is not part of what the spec's persistence describes.
 
 ## Implementation status
 
-What exists in every arm is exactly what the spec declares. Where we cannot check an implementation detail, we treat it as declared rather than done.
+Every route this archetype's spec declares is dispatched by the generated server, in every arm. Where we cannot check an implementation detail, we treat it as declared rather than done. The generated project also serves the harness's own `/api/*` and health surface, which is not the archetype's and is not claimed here.
 
 ## Provenance
 

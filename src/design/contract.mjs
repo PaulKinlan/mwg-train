@@ -208,8 +208,8 @@ export function checkDesignDocument({ name, text, demo, resolveLink = null }) {
       const text = String(value);
       // A bare number is too common to be evidence of restatement on its own.
       if (text.length < 3 || /^-?[\d.]+$/.test(text)) continue;
-      if (body.includes(text)) {
-        at('Token usage', `restates the frontmatter value '${text}' for '${token}'; cite the token, not its value`);
+      if (body.toLowerCase().includes(text.toLowerCase())) {
+        at('Token usage', `restates the frontmatter value '${text}' for '${token}'; cite the token, not its value, and note this comparison ignores case`);
       }
     }
   }
@@ -279,9 +279,15 @@ export function checkPlanDocument({ name, text, spec, specPath, resolveLink = nu
       at('Routes and effects', `does not state the spec's effect for '${key}': "${route.effect}"`);
     }
   }
+  // A route the spec does not define is a finding WHEREVER it is claimed, not only in this section: a claim
+  // is a claim in a prose paragraph too, and a section-scoped scan let one through. The requirement that each
+  // spec route be named with its effect stays scoped to this section, because that is where it belongs.
   const defined = new Set(spec.routes.map((route) => `${route.method} ${route.path}`));
-  for (const route of claimed) {
-    if (!defined.has(route)) at('Routes and effects', `claims '${route}' which ${specPath} does not define`);
+  for (const route of new Set([...body.matchAll(/`(GET|POST|PUT|PATCH|DELETE) (\/[^\s`]*)`/g)]
+    .map((match) => `${match[1]} ${match[2]}`))) {
+    if (!defined.has(route)) {
+      at('routes', `claims '${route}' which ${specPath} does not define`);
+    }
   }
 
   // Data and state: the storage engine and both routes that touch it.

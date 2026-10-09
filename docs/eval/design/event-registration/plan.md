@@ -56,7 +56,7 @@ is recorded by appending rather than by amending a ledger.
 
 ## Implementation status
 
-What exists in every arm is exactly what the spec declares. Where we cannot check an implementation detail, we treat it as declared rather than done.
+Every route this archetype's spec declares is dispatched by the generated server, but not every rule is enforced: the capacity rule is declared and nothing is waitlisted, and the `COUNT(*)` the server prepares is never used. Where an implementation detail cannot be checked, it is treated as declared rather than done.
 
 ## Provenance
 

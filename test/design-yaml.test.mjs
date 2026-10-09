@@ -3,6 +3,10 @@ import { test } from 'node:test';
 
 import { parseFrontmatter, parseYamlSubset } from '../src/design/yaml.mjs';
 
+// Mappings are built with Object.create(null) so that a key can never land on a prototype, which means an
+// assertion about their contents has to compare plain copies rather than the parsed objects themselves.
+const plain = (value) => JSON.parse(JSON.stringify(value));
+
 // A checker that has only ever been shown to pass is not a checker, so most of these are negative: each one is a
 // shape the subset must refuse rather than half-read. A wrongly-accepted block would let a design document claim
 // tokens the checker never actually compared against the stylesheet.
@@ -38,12 +42,12 @@ test('parses the documented subset: nested mappings, sequences, scalars and a ba
   assert.equal(value.tokens.color.paper, '#ffffff');
   assert.equal(value.tokens.color.accent, '#b3261e');
   assert.equal(value.tokens.typography.family, 'Inter, system-ui, sans-serif');
-  assert.equal(value.tokens.typography.scale, 1.25);
-  assert.equal(value.tokens.spacing.unit, 0.5);
-  assert.equal(value.tokens.radius.none, 0);
+  assert.equal(value.tokens.typography.scale, '1.25', 'numbers are read as text, not normalised');
+  assert.equal(value.tokens.spacing.unit, '0.5');
+  assert.equal(value.tokens.radius.none, '0');
   assert.equal(value.elevated, true);
   assert.equal(value.shadow, null);
-  assert.deepEqual(value.antiPatterns, ['pure black backgrounds', 'centred body text']);
+  assert.deepEqual(plain(value.antiPatterns), ['pure black backgrounds', 'centred body text']);
 });
 
 for (const [name, source, expected] of [
@@ -98,7 +102,7 @@ test('splits a document into frontmatter and body', () => {
     ['---', 'archetype: booking', 'framework: raw', '---', '', '## Visual thesis', '', 'Prose here.', ''].join('\n'),
   );
   assert.deepEqual(problems, []);
-  assert.deepEqual(frontmatter, { archetype: 'booking', framework: 'raw' });
+  assert.deepEqual(plain(frontmatter), { archetype: 'booking', framework: 'raw' });
   assert.match(body, /## Visual thesis/);
   assert.doesNotMatch(body, /archetype: booking/);
 });
@@ -135,4 +139,51 @@ test('accepts a hex colour as one part of a multi-part value', () => {
 test('still refuses a genuine trailing comment', () => {
   const { problems } = parseYamlSubset('control-border: 1px solid # this is prose, not a colour');
   assert.match(problems.join(' '), /inline comments are not supported/);
+});
+
+// A key that lands on the prototype rather than the object is a claim that is recorded and never read. The key
+// regex admits `__proto__`, Object.hasOwn is never true for it, and assignment then writes the prototype - so a
+// frontmatter literal could state a value the checker would never look at. Two defences: prototype keys are
+// refused outright, and mappings do not inherit Object.prototype at all.
+test('refuses a prototype key rather than letting it vanish into the prototype', () => {
+  for (const key of ['__proto__', 'constructor', 'prototype']) {
+    const mapping = parseYamlSubset(`tokens:\n  ${key}:\n    evil: 1`);
+    assert.ok(
+      mapping.problems.some((problem) => problem.includes(`'${key}' is not a usable key`)),
+      `${key} nested: ${JSON.stringify(mapping.problems)}`,
+    );
+    const scalar = parseYamlSubset(`tokens:\n  ${key}: 999px bogus`);
+    assert.ok(
+      scalar.problems.some((problem) => problem.includes(`'${key}' is not a usable key`)),
+      `${key} scalar: ${JSON.stringify(scalar.problems)}`,
+    );
+  }
+});
+
+test('a parsed mapping does not pollute Object.prototype, and its keys stay own properties', () => {
+  const { value, problems } = parseYamlSubset('tokens:\n  --fg: "#16181d"');
+  assert.deepEqual(problems, []);
+  assert.equal({}.evil, undefined, 'the global Object prototype must be untouched');
+  assert.ok(Object.hasOwn(value.tokens, '--fg'), 'the key is an own property');
+  assert.equal(Object.getPrototypeOf(value.tokens), null, 'mappings have no prototype to inherit from');
+});
+
+// This subset does not implement YAML escapes, so a quoted string containing one must be refused rather than
+// silently read with the escape left in it - an accepted shape that is misread is the failure mode that matters.
+test('refuses quoted strings whose escapes it would silently misread', () => {
+  const escaped = parseYamlSubset('a: "x \\" y"');
+  assert.match(escaped.problems.join(' '), /backslash escapes are not implemented/);
+  const doubled = parseYamlSubset("a: 'it''s'");
+  assert.match(doubled.problems.join(' '), /doubled single quote is not implemented/);
+});
+
+// A token value is compared against the stylesheet as text, so interpreting numbers would check a claim the
+// document did not make: "010" is not 10, and "1.50" is not 1.5, in a stylesheet that says what it says.
+test('reads numbers as text rather than normalising them', () => {
+  const { value, problems } = parseYamlSubset('a: 010\nb: 1.50\nc: -3\nd: 0.5rem');
+  assert.deepEqual(problems, []);
+  assert.equal(value.a, '010');
+  assert.equal(value.b, '1.50');
+  assert.equal(value.c, '-3');
+  assert.equal(value.d, '0.5rem');
 });

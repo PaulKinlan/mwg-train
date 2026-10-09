@@ -42,11 +42,17 @@ antiPatterns:
 
 - `tokens` maps a custom property to its value. Each entry must be a declaration the demo's stylesheet makes,
   with that exact value. **The body must not repeat a token value**: it is the second copy that lets a document
-  and its stylesheet drift apart.
+  and its stylesheet drift apart. The comparison ignores case, because `#16181D` and `#16181d` are one value.
 - `literals` records the values the stylesheet uses that are *not* custom properties, so they cannot be themed
   per demo. Each value must appear in the stylesheet. Radius is a literal here: the generated demos emit no
   radius custom property, so claiming a `--radius` token would be a claim about a stylesheet that does not exist.
 - `antiPatterns` is a non-empty list, and it is the one place the document states what the design must not do.
+
+The subset is deliberately small and refuses what it does not implement rather than guessing: quoted strings
+containing backslash escapes or a doubled single quote, the prototype keys `__proto__`, `constructor` and
+`prototype`, and flow collections, anchors, tags and block scalars all produce a finding naming the line.
+Numbers are read as text, not interpreted - a token value is compared against the stylesheet as text, so
+reading `010` as `10` would check a claim the document had not made.
 
 Required sections, in this order:
 
@@ -72,7 +78,9 @@ spec: docs/eval/specs/booking.json
 Required sections, in this order:
 
 1. `## Use case` - names every field the spec defines
-2. `## Routes and effects` - every route the spec defines, with its effect stated, and no route it does not
+2. `## Routes and effects` - every route the spec defines, named here with its effect stated. A route the spec
+   does not define is a finding **wherever it is claimed**, not only in this section: a claim is a claim in a
+   prose paragraph too, and scoping this to one section let one through
 3. `## Data and state` - the storage engine and the routes that read and write it
 4. `## Journey` - the driven flow: start path, form selector, the fields that are filled, the text asserted on
 5. `## Validation and states` - required fields, and what happens on each outcome
@@ -85,7 +93,7 @@ Required sections, in this order:
 Three vocabularies exist in this repository and they are not interchangeable:
 
 1. the **generated demo** (`app/styles.css`) emits `--fg`, `--bg`, `--accent`, plus a set of literals;
-2. the **eval target** (`targets/base.css`) uses its own names - `--ink`, `--muted`, `--line`, `--paper`,
+2. the **eval target** ([`docs/eval/targets/base.css`](../targets/base.css)) uses its own names - `--ink`, `--muted`, `--line`, `--paper`,
    `--wash`, `--accent`, `--accent-ink`, `--radius`, `--gap`;
 3. `docs/design.md` proposes names that no generator consumes.
 

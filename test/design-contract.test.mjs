@@ -205,3 +205,10 @@ test('accepts an in-repo file whose name begins with two dots, which the first c
   assert.equal(resolveLink('../..dot.md'), true, 'a two-dots filename inside the repository is a real file');
   assert.equal(resolveLink('..missing.md'), false, 'a missing file is still refused');
 });
+
+test('the token-value restatement check ignores case, because a value does not change case', () => {
+  assert.match(
+    problems(document({ 'Token usage': 'The ink is `#16181D` in light mode.' })),
+    /restates the frontmatter value/,
+  );
+});

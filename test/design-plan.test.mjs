@@ -166,3 +166,26 @@ test('a route is not evidenced by the prefix of a longer route', () => {
     /does not name the spec's write_route '\/book'/,
   );
 });
+
+// A route claim is a claim wherever it is written. The check used to read only the Routes and effects section,
+// so a paragraph elsewhere could name a route the spec does not define and pass - which the rule's own comment
+// claimed could not happen.
+test('a route the spec does not define is a finding wherever it is claimed', () => {
+  const findings = checkPlanDocument({
+    name: 'booking/plan.md',
+    text: doc({ Journey: SECTIONS.Journey + '\n\nThe admin posts to `POST /admin/purge` to clear the table.' }),
+    spec: SPEC,
+    specPath: 'docs/eval/specs/booking.json',
+  });
+  assert.match(findings.map((f) => f.problem).join(' | '), /claims 'POST \/admin\/purge' which/);
+});
+
+test('a spec route mentioned outside the table is not a finding, because it is defined', () => {
+  const findings = checkPlanDocument({
+    name: 'booking/plan.md',
+    text: doc({ 'Data and state': SECTIONS['Data and state'] + ' The write goes to `POST /book`.' }),
+    spec: SPEC,
+    specPath: 'docs/eval/specs/booking.json',
+  });
+  assert.deepEqual(findings, []);
+});
