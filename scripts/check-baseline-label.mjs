@@ -128,6 +128,7 @@ export const DOCUMENTS = {
   'docs/pilot/records.json': 'floor-report',
   'docs/pilot/yield.json': 'floor-report',
   'docs/train/README.md': 'floor-report',
+  'docs/train/READINESS-EPIC.md': 'floor-report',
   'docs/train/briefs/README.md': 'floor-report',
   'docs/train/corpus/README.md': 'floor-report',
   'docs/train/corpus/YIELD.md': 'floor-report',

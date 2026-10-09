@@ -53,6 +53,7 @@ const REPORTS = [
   'docs/pilot/records.json',
   'docs/pilot/yield.json',
   'docs/train/README.md',
+  'docs/train/READINESS-EPIC.md',
   'docs/train/briefs/README.md',
   'docs/train/corpus/README.md',
   'docs/train/corpus/YIELD.md',
