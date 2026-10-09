@@ -1,0 +1,1201 @@
+{
+  "baseline_label": "mwg-train deterministic baseline",
+  "baseline_definition": "deterministic repair of the project by our own Modern Web Guidance rule specifications; no model and no teacher in the loop",
+  "baseline_tool": "src/corpus/uplift.mjs",
+  "archetype": "booking",
+  "generated_at": "2026-10-09T19:28:14.475Z",
+  "viewports": [
+    {
+      "viewport": {
+        "key": "390x844",
+        "width": 390,
+        "height": 844
+      },
+      "measured": [
+        "hono",
+        "preact",
+        "raw",
+        "react",
+        "svelte",
+        "vue",
+        "webcomponents"
+      ],
+      "missing": [],
+      "identity": {
+        "structural": 0.9908,
+        "geometry": 1,
+        "controls": 1,
+        "overall": 0.9963
+      },
+      "pairwise": [
+        {
+          "a": "hono",
+          "b": "raw",
+          "structural": 1,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 1
+        },
+        {
+          "a": "hono",
+          "b": "react",
+          "structural": 1,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 1
+        },
+        {
+          "a": "hono",
+          "b": "preact",
+          "structural": 1,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 1
+        },
+        {
+          "a": "hono",
+          "b": "vue",
+          "structural": 1,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 1
+        },
+        {
+          "a": "hono",
+          "b": "webcomponents",
+          "structural": 0.9677,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 0.9871
+        },
+        {
+          "a": "hono",
+          "b": "svelte",
+          "structural": 1,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 1
+        },
+        {
+          "a": "raw",
+          "b": "react",
+          "structural": 1,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 1
+        },
+        {
+          "a": "raw",
+          "b": "preact",
+          "structural": 1,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 1
+        },
+        {
+          "a": "raw",
+          "b": "vue",
+          "structural": 1,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 1
+        },
+        {
+          "a": "raw",
+          "b": "webcomponents",
+          "structural": 0.9677,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 0.9871
+        },
+        {
+          "a": "raw",
+          "b": "svelte",
+          "structural": 1,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 1
+        },
+        {
+          "a": "react",
+          "b": "preact",
+          "structural": 1,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 1
+        },
+        {
+          "a": "react",
+          "b": "vue",
+          "structural": 1,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 1
+        },
+        {
+          "a": "react",
+          "b": "webcomponents",
+          "structural": 0.9677,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 0.9871
+        },
+        {
+          "a": "react",
+          "b": "svelte",
+          "structural": 1,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 1
+        },
+        {
+          "a": "preact",
+          "b": "vue",
+          "structural": 1,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 1
+        },
+        {
+          "a": "preact",
+          "b": "webcomponents",
+          "structural": 0.9677,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 0.9871
+        },
+        {
+          "a": "preact",
+          "b": "svelte",
+          "structural": 1,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 1
+        },
+        {
+          "a": "vue",
+          "b": "webcomponents",
+          "structural": 0.9677,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 0.9871
+        },
+        {
+          "a": "vue",
+          "b": "svelte",
+          "structural": 1,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 1
+        },
+        {
+          "a": "webcomponents",
+          "b": "svelte",
+          "structural": 0.9677,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 0.9871
+        }
+      ],
+      "weakest_pair": {
+        "a": "hono",
+        "b": "webcomponents",
+        "structural": 0.9677,
+        "geometry": 1,
+        "controls": 1,
+        "overall": 0.9871
+      },
+      "findings": []
+    },
+    {
+      "viewport": {
+        "key": "768x900",
+        "width": 768,
+        "height": 900
+      },
+      "measured": [
+        "hono",
+        "preact",
+        "raw",
+        "react",
+        "svelte",
+        "vue",
+        "webcomponents"
+      ],
+      "missing": [],
+      "identity": {
+        "structural": 0.9908,
+        "geometry": 1,
+        "controls": 1,
+        "overall": 0.9963
+      },
+      "pairwise": [
+        {
+          "a": "hono",
+          "b": "raw",
+          "structural": 1,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 1
+        },
+        {
+          "a": "hono",
+          "b": "react",
+          "structural": 1,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 1
+        },
+        {
+          "a": "hono",
+          "b": "preact",
+          "structural": 1,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 1
+        },
+        {
+          "a": "hono",
+          "b": "vue",
+          "structural": 1,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 1
+        },
+        {
+          "a": "hono",
+          "b": "webcomponents",
+          "structural": 0.9677,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 0.9871
+        },
+        {
+          "a": "hono",
+          "b": "svelte",
+          "structural": 1,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 1
+        },
+        {
+          "a": "raw",
+          "b": "react",
+          "structural": 1,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 1
+        },
+        {
+          "a": "raw",
+          "b": "preact",
+          "structural": 1,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 1
+        },
+        {
+          "a": "raw",
+          "b": "vue",
+          "structural": 1,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 1
+        },
+        {
+          "a": "raw",
+          "b": "webcomponents",
+          "structural": 0.9677,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 0.9871
+        },
+        {
+          "a": "raw",
+          "b": "svelte",
+          "structural": 1,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 1
+        },
+        {
+          "a": "react",
+          "b": "preact",
+          "structural": 1,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 1
+        },
+        {
+          "a": "react",
+          "b": "vue",
+          "structural": 1,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 1
+        },
+        {
+          "a": "react",
+          "b": "webcomponents",
+          "structural": 0.9677,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 0.9871
+        },
+        {
+          "a": "react",
+          "b": "svelte",
+          "structural": 1,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 1
+        },
+        {
+          "a": "preact",
+          "b": "vue",
+          "structural": 1,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 1
+        },
+        {
+          "a": "preact",
+          "b": "webcomponents",
+          "structural": 0.9677,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 0.9871
+        },
+        {
+          "a": "preact",
+          "b": "svelte",
+          "structural": 1,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 1
+        },
+        {
+          "a": "vue",
+          "b": "webcomponents",
+          "structural": 0.9677,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 0.9871
+        },
+        {
+          "a": "vue",
+          "b": "svelte",
+          "structural": 1,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 1
+        },
+        {
+          "a": "webcomponents",
+          "b": "svelte",
+          "structural": 0.9677,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 0.9871
+        }
+      ],
+      "weakest_pair": {
+        "a": "hono",
+        "b": "webcomponents",
+        "structural": 0.9677,
+        "geometry": 1,
+        "controls": 1,
+        "overall": 0.9871
+      },
+      "findings": []
+    },
+    {
+      "viewport": {
+        "key": "1280x900",
+        "width": 1280,
+        "height": 900
+      },
+      "measured": [
+        "hono",
+        "preact",
+        "raw",
+        "react",
+        "svelte",
+        "vue",
+        "webcomponents"
+      ],
+      "missing": [],
+      "identity": {
+        "structural": 0.9908,
+        "geometry": 1,
+        "controls": 1,
+        "overall": 0.9963
+      },
+      "pairwise": [
+        {
+          "a": "hono",
+          "b": "raw",
+          "structural": 1,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 1
+        },
+        {
+          "a": "hono",
+          "b": "react",
+          "structural": 1,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 1
+        },
+        {
+          "a": "hono",
+          "b": "preact",
+          "structural": 1,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 1
+        },
+        {
+          "a": "hono",
+          "b": "vue",
+          "structural": 1,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 1
+        },
+        {
+          "a": "hono",
+          "b": "webcomponents",
+          "structural": 0.9677,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 0.9871
+        },
+        {
+          "a": "hono",
+          "b": "svelte",
+          "structural": 1,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 1
+        },
+        {
+          "a": "raw",
+          "b": "react",
+          "structural": 1,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 1
+        },
+        {
+          "a": "raw",
+          "b": "preact",
+          "structural": 1,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 1
+        },
+        {
+          "a": "raw",
+          "b": "vue",
+          "structural": 1,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 1
+        },
+        {
+          "a": "raw",
+          "b": "webcomponents",
+          "structural": 0.9677,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 0.9871
+        },
+        {
+          "a": "raw",
+          "b": "svelte",
+          "structural": 1,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 1
+        },
+        {
+          "a": "react",
+          "b": "preact",
+          "structural": 1,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 1
+        },
+        {
+          "a": "react",
+          "b": "vue",
+          "structural": 1,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 1
+        },
+        {
+          "a": "react",
+          "b": "webcomponents",
+          "structural": 0.9677,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 0.9871
+        },
+        {
+          "a": "react",
+          "b": "svelte",
+          "structural": 1,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 1
+        },
+        {
+          "a": "preact",
+          "b": "vue",
+          "structural": 1,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 1
+        },
+        {
+          "a": "preact",
+          "b": "webcomponents",
+          "structural": 0.9677,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 0.9871
+        },
+        {
+          "a": "preact",
+          "b": "svelte",
+          "structural": 1,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 1
+        },
+        {
+          "a": "vue",
+          "b": "webcomponents",
+          "structural": 0.9677,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 0.9871
+        },
+        {
+          "a": "vue",
+          "b": "svelte",
+          "structural": 1,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 1
+        },
+        {
+          "a": "webcomponents",
+          "b": "svelte",
+          "structural": 0.9677,
+          "geometry": 1,
+          "controls": 1,
+          "overall": 0.9871
+        }
+      ],
+      "weakest_pair": {
+        "a": "hono",
+        "b": "webcomponents",
+        "structural": 0.9677,
+        "geometry": 1,
+        "controls": 1,
+        "overall": 0.9871
+      },
+      "findings": []
+    }
+  ],
+  "arms_measured": [
+    "hono",
+    "preact",
+    "raw",
+    "react",
+    "svelte",
+    "vue",
+    "webcomponents"
+  ],
+  "budget": {
+    "structural": 0.75,
+    "geometry": 0.9,
+    "controls": 0.95,
+    "overall": 0.8
+  },
+  "reference_palette": {
+    "--bg": "#0f172a",
+    "--surface": "#1e293b",
+    "--accent": "#10b981",
+    "--muted": "#94a3b8"
+  },
+  "palette_findings": [
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "hono",
+      "token": "--bg",
+      "expected": "#0f172a",
+      "actual": "#ffffff",
+      "message": "hono uses #ffffff for --bg where the reference boards declare #0f172a"
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "hono",
+      "token": "--surface",
+      "expected": "#1e293b",
+      "actual": null,
+      "message": "hono declares no --surface, so it cannot satisfy the #1e293b the reference boards declare"
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "hono",
+      "token": "--accent",
+      "expected": "#10b981",
+      "actual": "#1b4fd8",
+      "message": "hono uses #1b4fd8 for --accent where the reference boards declare #10b981"
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "hono",
+      "token": "--muted",
+      "expected": "#94a3b8",
+      "actual": null,
+      "message": "hono declares no --muted, so it cannot satisfy the #94a3b8 the reference boards declare"
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "raw",
+      "token": "--bg",
+      "expected": "#0f172a",
+      "actual": "#ffffff",
+      "message": "raw uses #ffffff for --bg where the reference boards declare #0f172a"
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "raw",
+      "token": "--surface",
+      "expected": "#1e293b",
+      "actual": null,
+      "message": "raw declares no --surface, so it cannot satisfy the #1e293b the reference boards declare"
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "raw",
+      "token": "--accent",
+      "expected": "#10b981",
+      "actual": "#1b4fd8",
+      "message": "raw uses #1b4fd8 for --accent where the reference boards declare #10b981"
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "raw",
+      "token": "--muted",
+      "expected": "#94a3b8",
+      "actual": null,
+      "message": "raw declares no --muted, so it cannot satisfy the #94a3b8 the reference boards declare"
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "react",
+      "token": "--bg",
+      "expected": "#0f172a",
+      "actual": "#ffffff",
+      "message": "react uses #ffffff for --bg where the reference boards declare #0f172a"
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "react",
+      "token": "--surface",
+      "expected": "#1e293b",
+      "actual": null,
+      "message": "react declares no --surface, so it cannot satisfy the #1e293b the reference boards declare"
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "react",
+      "token": "--accent",
+      "expected": "#10b981",
+      "actual": "#1b4fd8",
+      "message": "react uses #1b4fd8 for --accent where the reference boards declare #10b981"
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "react",
+      "token": "--muted",
+      "expected": "#94a3b8",
+      "actual": null,
+      "message": "react declares no --muted, so it cannot satisfy the #94a3b8 the reference boards declare"
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "preact",
+      "token": "--bg",
+      "expected": "#0f172a",
+      "actual": "#ffffff",
+      "message": "preact uses #ffffff for --bg where the reference boards declare #0f172a"
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "preact",
+      "token": "--surface",
+      "expected": "#1e293b",
+      "actual": null,
+      "message": "preact declares no --surface, so it cannot satisfy the #1e293b the reference boards declare"
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "preact",
+      "token": "--accent",
+      "expected": "#10b981",
+      "actual": "#1b4fd8",
+      "message": "preact uses #1b4fd8 for --accent where the reference boards declare #10b981"
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "preact",
+      "token": "--muted",
+      "expected": "#94a3b8",
+      "actual": null,
+      "message": "preact declares no --muted, so it cannot satisfy the #94a3b8 the reference boards declare"
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "vue",
+      "token": "--bg",
+      "expected": "#0f172a",
+      "actual": "#ffffff",
+      "message": "vue uses #ffffff for --bg where the reference boards declare #0f172a"
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "vue",
+      "token": "--surface",
+      "expected": "#1e293b",
+      "actual": null,
+      "message": "vue declares no --surface, so it cannot satisfy the #1e293b the reference boards declare"
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "vue",
+      "token": "--accent",
+      "expected": "#10b981",
+      "actual": "#1b4fd8",
+      "message": "vue uses #1b4fd8 for --accent where the reference boards declare #10b981"
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "vue",
+      "token": "--muted",
+      "expected": "#94a3b8",
+      "actual": null,
+      "message": "vue declares no --muted, so it cannot satisfy the #94a3b8 the reference boards declare"
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "webcomponents",
+      "token": "--bg",
+      "expected": "#0f172a",
+      "actual": "#ffffff",
+      "message": "webcomponents uses #ffffff for --bg where the reference boards declare #0f172a"
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "webcomponents",
+      "token": "--surface",
+      "expected": "#1e293b",
+      "actual": null,
+      "message": "webcomponents declares no --surface, so it cannot satisfy the #1e293b the reference boards declare"
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "webcomponents",
+      "token": "--accent",
+      "expected": "#10b981",
+      "actual": "#1b4fd8",
+      "message": "webcomponents uses #1b4fd8 for --accent where the reference boards declare #10b981"
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "webcomponents",
+      "token": "--muted",
+      "expected": "#94a3b8",
+      "actual": null,
+      "message": "webcomponents declares no --muted, so it cannot satisfy the #94a3b8 the reference boards declare"
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "svelte",
+      "token": "--bg",
+      "expected": "#0f172a",
+      "actual": "#ffffff",
+      "message": "svelte uses #ffffff for --bg where the reference boards declare #0f172a"
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "svelte",
+      "token": "--surface",
+      "expected": "#1e293b",
+      "actual": null,
+      "message": "svelte declares no --surface, so it cannot satisfy the #1e293b the reference boards declare"
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "svelte",
+      "token": "--accent",
+      "expected": "#10b981",
+      "actual": "#1b4fd8",
+      "message": "svelte uses #1b4fd8 for --accent where the reference boards declare #10b981"
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "svelte",
+      "token": "--muted",
+      "expected": "#94a3b8",
+      "actual": null,
+      "message": "svelte declares no --muted, so it cannot satisfy the #94a3b8 the reference boards declare"
+    }
+  ],
+  "findings": [
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "hono",
+      "token": "--bg",
+      "expected": "#0f172a",
+      "actual": "#ffffff",
+      "message": "hono uses #ffffff for --bg where the reference boards declare #0f172a"
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "hono",
+      "token": "--surface",
+      "expected": "#1e293b",
+      "actual": null,
+      "message": "hono declares no --surface, so it cannot satisfy the #1e293b the reference boards declare"
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "hono",
+      "token": "--accent",
+      "expected": "#10b981",
+      "actual": "#1b4fd8",
+      "message": "hono uses #1b4fd8 for --accent where the reference boards declare #10b981"
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "hono",
+      "token": "--muted",
+      "expected": "#94a3b8",
+      "actual": null,
+      "message": "hono declares no --muted, so it cannot satisfy the #94a3b8 the reference boards declare"
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "raw",
+      "token": "--bg",
+      "expected": "#0f172a",
+      "actual": "#ffffff",
+      "message": "raw uses #ffffff for --bg where the reference boards declare #0f172a"
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "raw",
+      "token": "--surface",
+      "expected": "#1e293b",
+      "actual": null,
+      "message": "raw declares no --surface, so it cannot satisfy the #1e293b the reference boards declare"
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "raw",
+      "token": "--accent",
+      "expected": "#10b981",
+      "actual": "#1b4fd8",
+      "message": "raw uses #1b4fd8 for --accent where the reference boards declare #10b981"
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "raw",
+      "token": "--muted",
+      "expected": "#94a3b8",
+      "actual": null,
+      "message": "raw declares no --muted, so it cannot satisfy the #94a3b8 the reference boards declare"
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "react",
+      "token": "--bg",
+      "expected": "#0f172a",
+      "actual": "#ffffff",
+      "message": "react uses #ffffff for --bg where the reference boards declare #0f172a"
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "react",
+      "token": "--surface",
+      "expected": "#1e293b",
+      "actual": null,
+      "message": "react declares no --surface, so it cannot satisfy the #1e293b the reference boards declare"
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "react",
+      "token": "--accent",
+      "expected": "#10b981",
+      "actual": "#1b4fd8",
+      "message": "react uses #1b4fd8 for --accent where the reference boards declare #10b981"
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "react",
+      "token": "--muted",
+      "expected": "#94a3b8",
+      "actual": null,
+      "message": "react declares no --muted, so it cannot satisfy the #94a3b8 the reference boards declare"
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "preact",
+      "token": "--bg",
+      "expected": "#0f172a",
+      "actual": "#ffffff",
+      "message": "preact uses #ffffff for --bg where the reference boards declare #0f172a"
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "preact",
+      "token": "--surface",
+      "expected": "#1e293b",
+      "actual": null,
+      "message": "preact declares no --surface, so it cannot satisfy the #1e293b the reference boards declare"
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "preact",
+      "token": "--accent",
+      "expected": "#10b981",
+      "actual": "#1b4fd8",
+      "message": "preact uses #1b4fd8 for --accent where the reference boards declare #10b981"
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "preact",
+      "token": "--muted",
+      "expected": "#94a3b8",
+      "actual": null,
+      "message": "preact declares no --muted, so it cannot satisfy the #94a3b8 the reference boards declare"
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "vue",
+      "token": "--bg",
+      "expected": "#0f172a",
+      "actual": "#ffffff",
+      "message": "vue uses #ffffff for --bg where the reference boards declare #0f172a"
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "vue",
+      "token": "--surface",
+      "expected": "#1e293b",
+      "actual": null,
+      "message": "vue declares no --surface, so it cannot satisfy the #1e293b the reference boards declare"
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "vue",
+      "token": "--accent",
+      "expected": "#10b981",
+      "actual": "#1b4fd8",
+      "message": "vue uses #1b4fd8 for --accent where the reference boards declare #10b981"
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "vue",
+      "token": "--muted",
+      "expected": "#94a3b8",
+      "actual": null,
+      "message": "vue declares no --muted, so it cannot satisfy the #94a3b8 the reference boards declare"
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "webcomponents",
+      "token": "--bg",
+      "expected": "#0f172a",
+      "actual": "#ffffff",
+      "message": "webcomponents uses #ffffff for --bg where the reference boards declare #0f172a"
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "webcomponents",
+      "token": "--surface",
+      "expected": "#1e293b",
+      "actual": null,
+      "message": "webcomponents declares no --surface, so it cannot satisfy the #1e293b the reference boards declare"
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "webcomponents",
+      "token": "--accent",
+      "expected": "#10b981",
+      "actual": "#1b4fd8",
+      "message": "webcomponents uses #1b4fd8 for --accent where the reference boards declare #10b981"
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "webcomponents",
+      "token": "--muted",
+      "expected": "#94a3b8",
+      "actual": null,
+      "message": "webcomponents declares no --muted, so it cannot satisfy the #94a3b8 the reference boards declare"
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "svelte",
+      "token": "--bg",
+      "expected": "#0f172a",
+      "actual": "#ffffff",
+      "message": "svelte uses #ffffff for --bg where the reference boards declare #0f172a"
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "svelte",
+      "token": "--surface",
+      "expected": "#1e293b",
+      "actual": null,
+      "message": "svelte declares no --surface, so it cannot satisfy the #1e293b the reference boards declare"
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "svelte",
+      "token": "--accent",
+      "expected": "#10b981",
+      "actual": "#1b4fd8",
+      "message": "svelte uses #1b4fd8 for --accent where the reference boards declare #10b981"
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "svelte",
+      "token": "--muted",
+      "expected": "#94a3b8",
+      "actual": null,
+      "message": "svelte declares no --muted, so it cannot satisfy the #94a3b8 the reference boards declare"
+    }
+  ],
+  "screenshots": [
+    {
+      "arm": "hono",
+      "viewport": "390x844",
+      "path": ".conformance-corpus/cross-arm-1791574072546/screenshots/booking-hono-390x844.png"
+    },
+    {
+      "arm": "raw",
+      "viewport": "390x844",
+      "path": ".conformance-corpus/cross-arm-1791574072546/screenshots/booking-raw-390x844.png"
+    },
+    {
+      "arm": "react",
+      "viewport": "390x844",
+      "path": ".conformance-corpus/cross-arm-1791574072546/screenshots/booking-react-390x844.png"
+    },
+    {
+      "arm": "preact",
+      "viewport": "390x844",
+      "path": ".conformance-corpus/cross-arm-1791574072546/screenshots/booking-preact-390x844.png"
+    },
+    {
+      "arm": "vue",
+      "viewport": "390x844",
+      "path": ".conformance-corpus/cross-arm-1791574072546/screenshots/booking-vue-390x844.png"
+    },
+    {
+      "arm": "webcomponents",
+      "viewport": "390x844",
+      "path": ".conformance-corpus/cross-arm-1791574072546/screenshots/booking-webcomponents-390x844.png"
+    },
+    {
+      "arm": "svelte",
+      "viewport": "390x844",
+      "path": ".conformance-corpus/cross-arm-1791574072546/screenshots/booking-svelte-390x844.png"
+    },
+    {
+      "arm": "hono",
+      "viewport": "768x900",
+      "path": ".conformance-corpus/cross-arm-1791574072546/screenshots/booking-hono-768x900.png"
+    },
+    {
+      "arm": "raw",
+      "viewport": "768x900",
+      "path": ".conformance-corpus/cross-arm-1791574072546/screenshots/booking-raw-768x900.png"
+    },
+    {
+      "arm": "react",
+      "viewport": "768x900",
+      "path": ".conformance-corpus/cross-arm-1791574072546/screenshots/booking-react-768x900.png"
+    },
+    {
+      "arm": "preact",
+      "viewport": "768x900",
+      "path": ".conformance-corpus/cross-arm-1791574072546/screenshots/booking-preact-768x900.png"
+    },
+    {
+      "arm": "vue",
+      "viewport": "768x900",
+      "path": ".conformance-corpus/cross-arm-1791574072546/screenshots/booking-vue-768x900.png"
+    },
+    {
+      "arm": "webcomponents",
+      "viewport": "768x900",
+      "path": ".conformance-corpus/cross-arm-1791574072546/screenshots/booking-webcomponents-768x900.png"
+    },
+    {
+      "arm": "svelte",
+      "viewport": "768x900",
+      "path": ".conformance-corpus/cross-arm-1791574072546/screenshots/booking-svelte-768x900.png"
+    },
+    {
+      "arm": "hono",
+      "viewport": "1280x900",
+      "path": ".conformance-corpus/cross-arm-1791574072546/screenshots/booking-hono-1280x900.png"
+    },
+    {
+      "arm": "raw",
+      "viewport": "1280x900",
+      "path": ".conformance-corpus/cross-arm-1791574072546/screenshots/booking-raw-1280x900.png"
+    },
+    {
+      "arm": "react",
+      "viewport": "1280x900",
+      "path": ".conformance-corpus/cross-arm-1791574072546/screenshots/booking-react-1280x900.png"
+    },
+    {
+      "arm": "preact",
+      "viewport": "1280x900",
+      "path": ".conformance-corpus/cross-arm-1791574072546/screenshots/booking-preact-1280x900.png"
+    },
+    {
+      "arm": "vue",
+      "viewport": "1280x900",
+      "path": ".conformance-corpus/cross-arm-1791574072546/screenshots/booking-vue-1280x900.png"
+    },
+    {
+      "arm": "webcomponents",
+      "viewport": "1280x900",
+      "path": ".conformance-corpus/cross-arm-1791574072546/screenshots/booking-webcomponents-1280x900.png"
+    },
+    {
+      "arm": "svelte",
+      "viewport": "1280x900",
+      "path": ".conformance-corpus/cross-arm-1791574072546/screenshots/booking-svelte-1280x900.png"
+    }
+  ],
+  "limits": {
+    "compares": "layout and component structure (structural, geometry, controls axes)",
+    "blind_to": "text content, and viewport shape (geometry is normalised per viewport)",
+    "screenshots": "saved for inspection, not diffed - no image decoder exists in this repository by design",
+    "reference_boards": "compared by declared palette, not by pixels - the boards are images"
+  }
+}

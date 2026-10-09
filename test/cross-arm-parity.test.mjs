@@ -7,10 +7,13 @@
  * report.
  */
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import test from 'node:test';
 
+import { REFERENCE_PALETTE } from '../scripts/check-cross-arm-parity.mjs';
 import {
   PARITY_CODES,
+  collapsePaletteFindings,
   crossArmFindings,
   normaliseColour,
   paletteFindings,
@@ -220,4 +223,33 @@ test('the summary reports arm names as sets, so a duplicated arm cannot pass for
   assert.notDeepEqual(duplicated.viewports[0].measured, summary.viewports[0].measured);
   // The lengths are EQUAL, which is the point: a count would have called these two sets the same.
   assert.equal(duplicated.viewports[0].measured.length, summary.viewports[0].measured.length);
+});
+
+test('the declared palette is still the one the reference boards state', () => {
+  // The instrument hard-codes the boards' palette as a literal, because which hex is a background rather
+  // than a surface is a semantic mapping a regex should not be guessing at. This is the guard that keeps
+  // the literal honest: if the boards' own README stops stating these values, the comparison is against
+  // a palette nobody declared and every arm would be reported against a stale bar.
+  const readme = readFileSync('docs/design/archetypes/booking/README.md', 'utf8').toLowerCase();
+  for (const [token, hex] of Object.entries(REFERENCE_PALETTE)) {
+    assert.ok(readme.includes(hex.toLowerCase()), `reference palette ${token} ${hex} is no longer stated in the boards' README`);
+  }
+  // Control: the guard must be capable of failing, so a colour nobody declared is not found.
+  assert.equal(readme.includes('#123456'), false, 'the guard would not notice a colour that is absent');
+});
+
+test('palette findings are collapsed across widths, but not across real differences', () => {
+  const same = [
+    { arm: 'raw', token: '--bg', expected: '#0f172a', actual: '#ffffff' },
+    { arm: 'raw', token: '--bg', expected: '#0f172a', actual: '#ffffff' },
+    { arm: 'raw', token: '--bg', expected: '#0f172a', actual: '#ffffff' },
+  ];
+  assert.equal(collapsePaletteFindings(same).length, 1, 'the same fact at three widths is one fact');
+
+  // Control: a token that differs BY WIDTH is not the same fact and must survive the collapse.
+  const differs = [
+    { arm: 'raw', token: '--bg', expected: '#0f172a', actual: '#ffffff' },
+    { arm: 'raw', token: '--bg', expected: '#0f172a', actual: '#000000' },
+  ];
+  assert.equal(collapsePaletteFindings(differs).length, 2, 'a token that differs between widths is two facts');
 });

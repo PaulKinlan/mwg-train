@@ -35,7 +35,7 @@ import { ARCHETYPES } from '../pilot/archetypes.mjs';
 import { FRAMEWORKS, buildProjectFor, writeProject } from '../pilot/frameworks.mjs';
 import { launchChrome } from '../src/corpus/cdp.mjs';
 import { captureSignature } from '../src/eval/render.mjs';
-import { TOKEN_NAMES, paletteFindings, paritySummary } from '../src/eval/parity.mjs';
+import { TOKEN_NAMES, collapsePaletteFindings, paletteFindings, paritySummary } from '../src/eval/parity.mjs';
 import { BASELINE_FIELDS, baselineAttributionLine } from '../src/eval/ruleset.mjs';
 import { IDENTITY_BUDGET } from '../src/eval/targets.mjs';
 
@@ -283,7 +283,10 @@ async function main() {
     budget: IDENTITY_BUDGET,
   });
   const allArms = options.viewports.flatMap((viewport) => armsByViewport[viewport.key] ?? []);
-  const palette = paletteFindings({ arms: allArms, declared: REFERENCE_PALETTE });
+  // The same token is read at three widths, so one arm using the wrong accent colour would otherwise
+  // produce the same finding three times; the collapse is what turns 84 rows back into 28 facts, and it
+  // deliberately keeps a token that really does differ between widths.
+  const palette = collapsePaletteFindings(paletteFindings({ arms: allArms, declared: REFERENCE_PALETTE }));
 
   const report = {
     ...BASELINE_FIELDS,
@@ -317,12 +320,16 @@ async function main() {
   return options.strict && report.findings.length > 0 ? 1 : 0;
 }
 
-// dirname is imported for the report paths; keeping the import list explicit rather than using `node:path` wholesale.
-main()
-  .then((code) => {
-    process.exitCode = code;
-  })
-  .catch((error) => {
-    console.error(`check-cross-arm-parity: ERROR ${error?.stack ?? error}`);
-    process.exitCode = 2;
-  });
+// Import-safe: a test asserts this script's declared palette still matches the reference boards' own
+// README, so importing it must not start rendering arms. Same guard the other scripts use.
+const invokedDirectly = process.argv[1] && import.meta.url === `file://${resolve(process.argv[1])}`;
+if (invokedDirectly) {
+  main()
+    .then((code) => {
+      process.exitCode = code;
+    })
+    .catch((error) => {
+      console.error(`check-cross-arm-parity: ERROR ${error?.stack ?? error}`);
+      process.exitCode = 2;
+    });
+}

@@ -156,6 +156,8 @@ export const DOCUMENTS = {
   'docs/eval/conformance/booking-identity.json': 'floor-report',
   'docs/eval/conformance/booking-identity.md': 'floor-report',
   'docs/eval/conformance/booking.json': 'floor-report',
+  'docs/eval/conformance/booking-cross-arm.json': 'floor-report',
+  'docs/eval/conformance/booking-cross-arm.md': 'floor-report',
   'docs/eval/conformance/booking.md': 'floor-report',
   'docs/eval/conformance/catalogue-identity.json': 'floor-report',
   'docs/eval/conformance/catalogue-identity.md': 'floor-report',

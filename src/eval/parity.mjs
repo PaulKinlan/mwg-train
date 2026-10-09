@@ -211,6 +211,23 @@ export function paletteFindings({ arms, declared }) {
 }
 
 /**
+ * Collapse palette findings that say the same thing at different widths.
+ *
+ * The tokens are read once per viewport, so one arm using the wrong accent colour yields the same
+ * finding three times. Collapsed on the WHOLE finding rather than on arm-and-token alone: a token that
+ * genuinely differs between widths still reports once per width, because that difference is real and is
+ * exactly the kind of thing a width the design was never checked at would produce.
+ */
+export function collapsePaletteFindings(findings) {
+  const seen = new Map();
+  for (const finding of findings) {
+    const key = `${finding.arm}|${finding.token}|${finding.expected}|${finding.actual}`;
+    if (!seen.has(key)) seen.set(key, finding);
+  }
+  return [...seen.values()];
+}
+
+/**
  * A comparison the reader can audit: which arms were measured, at which widths, what the numbers were,
  * and what remains unmeasurable. `measured` and `missing` are sorted name LISTS rather than counts,
  * because a count cannot tell a duplicated arm from a complete set.
