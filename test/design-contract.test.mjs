@@ -5,6 +5,8 @@ import { basename, join } from 'node:path';
 import { test } from 'node:test';
 
 import { DESIGN_SECTIONS, checkDesignDocument, repositoryLinkResolver } from '../src/design/contract.mjs';
+import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 
 // A checker that has only ever been shown to pass is not a checker, so nearly every rule below is exercised by
 // a document that must be rejected. The document builder produces a VALID contract; each test breaks exactly
@@ -211,4 +213,17 @@ test('the token-value restatement check ignores case, because a value does not c
     problems(document({ 'Token usage': 'The ink is `#16181D` in light mode.' })),
     /restates the frontmatter value/,
   );
+});
+
+// Permanent guard: a new design document that nobody classified is exactly what the merger's full gate caught
+// on this branch, and it passed every check I had run. This asserts the class cannot recur.
+const root = new URL('../', import.meta.url);
+
+test('every tracked design document is classified for the baseline-label check', () => {
+  const tracked = execFileSync('git', ['ls-files', 'docs/eval/design'], { cwd: root, encoding: 'utf8' })
+    .split('\n').filter((p) => p.endsWith('.md'));
+  assert.ok(tracked.length >= 35, `expected the design documents, saw ${tracked.length}`);
+  const classification = readFileSync(new URL('scripts/check-baseline-label.mjs', root), 'utf8');
+  const unclassified = tracked.filter((p) => !classification.includes(`'${p}'`));
+  assert.deepEqual(unclassified, [], 'classify these in DOCUMENTS or the full gate will fail');
 });
