@@ -68,8 +68,22 @@ export function normaliseColour(value) {
  * every parity number afterwards is real but about the wrong window. The signature records the
  * `innerWidth`/`innerHeight` the page actually had, so this is checked rather than assumed.
  */
-export function viewportFindings({ arms, requested }) {
+export function viewportFindings({ arms, requested, expectedArms = null }) {
   const findings = [];
+  // An arm that was never measured at all - a build failure, a framework dropped from the list - has no
+  // row to inspect, so it cannot be found by looking at rows. A cross-family review caught that: the
+  // promised "absence is never silence" only covered arms that produced a row with no signature. The
+  // expected set is supplied by the caller because only the caller knows which arms it meant to measure.
+  const seen = new Set(arms.map((arm) => arm?.framework));
+  for (const framework of expectedArms ?? []) {
+    if (seen.has(framework)) continue;
+    findings.push({
+      code: PARITY_CODES.ARM_UNMEASURED,
+      arm: framework,
+      viewport: requested.key,
+      message: `${framework} was never measured at ${requested.key}: it produced no row at all, so nothing about it can be compared`,
+    });
+  }
   for (const arm of arms) {
     const actual = arm?.signature?.viewport;
     if (!actual) {
@@ -261,18 +275,23 @@ export function collapsePaletteFindings(findings) {
  * and what remains unmeasurable. `measured` and `missing` are sorted name LISTS rather than counts,
  * because a count cannot tell a duplicated arm from a complete set.
  */
-export function paritySummary({ archetype, viewports, armsByViewport, budget }) {
+export function paritySummary({ archetype, viewports, armsByViewport, budget, expectedArms = null }) {
   const viewportReports = viewports.map((requested) => {
     const arms = armsByViewport[requested.key] ?? [];
     const crossArm = crossArmFindings({ arms, budget });
+    const missing = arms.filter((arm) => !arm.signature).map((arm) => arm.framework);
+    // An expected arm with no row at all is missing too, and is reported as such rather than being absent
+    // from both lists.
+    const seen = new Set(arms.map((arm) => arm?.framework));
+    for (const framework of expectedArms ?? []) if (!seen.has(framework)) missing.push(framework);
     return {
       viewport: requested,
       measured: arms.filter((arm) => arm.signature).map((arm) => arm.framework).sort(),
-      missing: arms.filter((arm) => !arm.signature).map((arm) => arm.framework).sort(),
+      missing: missing.sort(),
       identity: crossArm.identity,
       pairwise: crossArm.pairwise ?? null,
       weakest_pair: crossArm.weakest_pair ?? null,
-      findings: [...viewportFindings({ arms, requested }), ...crossArm.findings],
+      findings: [...viewportFindings({ arms, requested, expectedArms }), ...crossArm.findings],
     };
   });
   return {
