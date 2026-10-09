@@ -122,7 +122,11 @@ export function renderIdentityMarkdown(report) {
     '',
     identity.weakest_pair ? `Weakest pair: ${identity.weakest_pair.a}/${identity.weakest_pair.b} at ${identity.weakest_pair.overall.toFixed(3)}.` : 'Only one variant; nothing to compare.',
     '',
-    findings.length ? `**Below budget:** ${findings.map((finding) => `${finding.axis} (${finding.actual})`).join(', ')}` : '**All axes within budget.**',
+    findings.length
+      ? `**Below budget:** ${findings
+          .map((finding) => `${finding.axis} (${finding.actual}${finding.pair ? `, ${finding.pair}` : ''})`)
+          .join(', ')}`
+      : '**All axes within budget.**',
     '',
   ].join('\n');
 }

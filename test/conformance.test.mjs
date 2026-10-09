@@ -15,7 +15,7 @@ import { join, resolve } from 'node:path';
 import { controlSimilarity, conformanceScore, geometrySimilarity, identityFindings, scoreArm, structuralSimilarity, variantIdentity, WEIGHTS } from '../src/eval/conformance.mjs';
 import { validateManifest } from '../src/provenance/record.mjs';
 import { parseManifest } from '../src/provenance/record.mjs';
-import { TARGETS_MANIFEST, TARGETS_STORAGE, TARGET_FAMILIES } from '../src/eval/targets.mjs';
+import { IDENTITY_BUDGET, TARGETS_MANIFEST, TARGETS_STORAGE, TARGET_FAMILIES } from '../src/eval/targets.mjs';
 
 const ROOT = resolve(import.meta.dirname, '..');
 
@@ -214,4 +214,33 @@ test('every target in the manifest is hash-pinned, rights-cleared and never trai
     assert.ok(signatureData.controls.length > 0, `${family.family_id}: the target renders with no controls`);
     assert.ok(signatureData.nodes.length > 0, `${family.family_id}: the target renders with no elements`);
   }
+});
+
+test('one diverged variant is reported even when the family MEAN is inside the budget', () => {
+  // Reproduces mwg-train-bmu with the values this fixture actually produces, measured: shift 0.25 gives a
+  // mean geometry of 0.9643, comfortably inside the 0.9 budget, while the weakest pair sits at 0.875 - BELOW
+  // it. The mean hides the outlier, so a function that judges only the mean reports a family containing a
+  // badly diverged arm as being in agreement. variantIdentity's own docstring says "the outlier is the
+  // finding"; this test is that sentence with an assertion attached.
+  const box = (tag, x, y, w, h) => ({ tag, x, y, w, h });
+  const page = (shift) => ({
+    nodes: ['header', 'form', 'button'].map((tag) => ({ tag })),
+    boxes: [box('form', 0.1 + shift, 0.2, 0.8, 0.5), box('button', 0.4 + shift, 0.75, 0.2, 0.1)],
+    controls: [{ tag: 'input', type: 'text', name: 'name', label: 'Name' }],
+  });
+  const variants = ['a', 'b', 'c', 'd', 'e', 'f'].map((framework) => ({ framework, signature: page(0) }));
+  variants.push({ framework: 'outlier', signature: page(0.25) });
+  const identity = variantIdentity(page(0), variants);
+
+  assert.ok(identity.identity.geometry > IDENTITY_BUDGET.geometry, 'the fixture must have a mean INSIDE the budget, or it proves nothing');
+  assert.ok(identity.weakest_by_axis.geometry.geometry < IDENTITY_BUDGET.geometry, 'and a weakest pair BELOW it');
+  assert.equal(identity.weakest_by_axis.geometry.a, 'a');
+
+  const findings = identityFindings(identity, IDENTITY_BUDGET);
+  assert.equal(findings.length, 1, 'the diverged pair must be reported even though the mean passes');
+  assert.equal(findings[0].code, 'IDENTITY_PAIR_BELOW_BUDGET');
+  assert.equal(findings[0].axis, 'geometry');
+  assert.equal(findings[0].actual, identity.weakest_by_axis.geometry.geometry);
+  assert.equal(findings[0].pair, 'a/outlier', 'the finding must NAME the pair responsible');
+  assert.match(findings[0].message, /mean/, 'and must say the mean hid it');
 });
