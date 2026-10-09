@@ -66,7 +66,7 @@ Top to bottom, from the demo's own `app/page.mjs`:
 - `html` → `head` (charset, viewport, title, stylesheet link) → `body` → `main`.
 - `main`: `h1` "Public-service enquiry form"; `p` description; `form#enquiry-form[method=post][action=/enquiry]`; `section.record[aria-labelledby=record-heading]` containing `h2#record-heading` and `div#record-echo[data-echo-field=message][data-echo-source=record][data-echo-param=""]`.
 - Inside the form: a live status region `div[role=alert][aria-live=assertive][data-form-status]`, then a single `div.field` containing three label/control pairs, then `button[type=submit]`.
-- Each pair: `label[for]` → `input`/`textarea` with `required`, `autocomplete`, and `aria-errormessage="<field>-error"` → a hidden `p.error-msg[id=<field>-error]` carrying the field's message.
+- Each pair: `label[for]` → `input`/`textarea` with `required` and `aria-errormessage="<field>-error"`, with `autocomplete` on `name` and `email` but not on the `message` textarea → a hidden `p.error-msg[id=<field>-error]` carrying the field's message.
 - `body` also loads `/app/enhance.js` as a module, which is the only client code. It fills the record container from an internal JSON endpoint keyed by the reference in the URL, and keeps `aria-invalid` and the live region in step.
 
 ## Anti-patterns

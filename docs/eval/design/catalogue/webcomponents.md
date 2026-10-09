@@ -46,7 +46,7 @@ This arm has a real structural difference from the others: the `record-echo` cus
 - Order: page heading, one-line description, the search form, the cart form, then the record section that reflects the search query from the URL. Nothing is hidden behind a step.
 - Mobile is the same single column with smaller page padding and a reduced `h1`; there is no separate
   mobile composition, so no content order changes between viewports.
-- The only internal element the client augments is the record echo in **Component hierarchy** below. The
+- The client code augments the record echo in **Component hierarchy** below, and keeps `aria-invalid` and the live region in step. The
   routes themselves are specified in [`plan.md`](plan.md), where they are checked against the archetype's spec.
 
 ## Typography

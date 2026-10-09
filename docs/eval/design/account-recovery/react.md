@@ -77,10 +77,10 @@ Top to bottom, from the demo's own `app/page.mjs`:
 
 ## Rationale
 
-Constraints rather than preferences: one page and no build step (arm definition), the
+Constraints rather than preferences: one page and no build step (arm definition), the `:user-invalid` selector and the live region (an error must be named, not coloured), and the single column, which follows from the task rather than from style.
 
 Preference: the narrow layout and the control radius. Both are one-line changes and neither affects the route contract, so a future arm may vary them without touching behaviour.
 
 ## Provenance
 
-Subject, copy and data are synthetic and authored in `pilot/archetypes.mjs` and the generator; there are no third-party assets, fonts, logos or credentials. This contract describes `pilot/frameworks.mjs` (`pageSource`, `stylesSource`, `serverSource`, `enhanceSource`) as it generates the `raw` arm, and it is verified against a freshly generated project by `npm run check:design-schema`. Conformance imagery is governed by [`training-targets.md`](../../../provenance/assets/training-targets.md) and [`eval-targets.md`](../../../provenance/assets/eval-targets.md). The uplifts used for scoring are derived artifacts of this demo, not separate designs.
+Subject, copy and data are synthetic and authored in `pilot/archetypes.mjs` and the generator; there are no third-party assets, fonts, logos or credentials. This contract describes `pilot/frameworks.mjs` (`pageSource`, `stylesSource`, `serverSource`, `enhanceSource`) as it generates the `react` arm, and it is verified against a freshly generated project by `npm run check:design-schema`. Conformance imagery is governed by [`training-targets.md`](../../../provenance/assets/training-targets.md) and [`eval-targets.md`](../../../provenance/assets/eval-targets.md). The uplifts used for scoring are derived artifacts of this demo, not separate designs.

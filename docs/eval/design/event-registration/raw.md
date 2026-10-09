@@ -66,7 +66,7 @@ Top to bottom, from the demo's own `app/page.mjs`:
 - `html` → `head` (charset, viewport, title, stylesheet link) → `body` → `main`.
 - `main`: `h1` "Event registration with capacity"; `p` description ("Registration for a limited-capacity event, with a server-enforced waitlist."); `form#registration-form[method=post][action=/register]`; `section.record[aria-labelledby=record-heading]` containing `h2#record-heading` and `div#record-echo[data-echo-field=name][data-echo-source=record][data-echo-param=""]`.
 - Inside the form: a live status region `div[role=alert][aria-live=assertive][data-form-status]`, then a single `div.field` containing three label and control combinations, then `button[type=submit]`.
-- Each pair inside `.field`: `label[for]` → control (`input` for `name` and `email` with `autocomplete="email"`, and a `select` for `ticket` offering standard, accessible, and student options) with `required` and `aria-errormessage="<field>-error"` → a hidden `p.error-msg[id=<field>-error]` carrying the field's message.
+- Each pair inside `.field`: `label[for]` → control (`input` for `name` with no `autocomplete`, an `input` for `email` with `autocomplete="email"`, and a `select` for `ticket` offering standard, accessible, and student options) with `required` and `aria-errormessage="<field>-error"` → a hidden `p.error-msg[id=<field>-error]` carrying the field's message.
 - `body` also loads `/app/enhance.js` as a module, which is the only client code. It fills the record container and keeps the live region in step.
 
 ## Anti-patterns

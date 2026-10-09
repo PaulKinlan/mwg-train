@@ -66,7 +66,7 @@ Top to bottom, from the demo's own `app/page.mjs`:
 - `html` → `head` (charset, viewport, title, stylesheet link) → `body` → `main`.
 - `main`: `h1` "Public-service enquiry form"; `p` description; `form#enquiry-form[method=post][action=/enquiry]`; `section.record[aria-labelledby=record-heading]` containing `h2#record-heading` and `div#record-echo[data-echo-field=message][data-echo-source=record][data-echo-param=""]`.
 - Inside the form: a live status region `div[role=alert][aria-live=assertive][data-form-status]`, then a single `div.field` containing three label/control pairs, then `button[type=submit]`.
-- Each pair: `label[for]` → `input`/`textarea` with `required`, `autocomplete`, and `aria-errormessage="<field>-error"` → a hidden `p.error-msg[id=<field>-error]` carrying the field's message.
+- Each pair: `label[for]` → `input`/`textarea` with `required` and `aria-errormessage="<field>-error"`, with `autocomplete` on `name` and `email` but not on the `message` textarea → a hidden `p.error-msg[id=<field>-error]` carrying the field's message.
 - `body` also loads `/app/enhance.js` as a module, which is the only client code. It fills the record container from an internal JSON endpoint keyed by the reference in the URL, and keeps `aria-invalid` and the live region in step.
 
 ## Anti-patterns
@@ -77,10 +77,10 @@ Top to bottom, from the demo's own `app/page.mjs`:
 
 ## Rationale
 
-Constraints rather than preferences: one page and no build step (arm definition), the
+Constraints rather than preferences: one page and no build step (arm definition), the `:user-invalid` selector and the live region (an error must be named, not coloured), and the single column, which follows from the task (one form, one decision) rather than from style.
 
 Preference: the narrow `42rem` frame and the `0.4rem` control radius. Both are one-line changes and neither affects the route contract, so a future arm may vary them without touching behaviour.
 
 ## Provenance
 
-Subject, copy and data are synthetic and authored in `pilot/archetypes.mjs` and the generator; there are no third-party assets, fonts, logos or credentials. This contract describes `pilot/frameworks.mjs` (`pageSource`, `stylesSource`, `serverSource`, `enhanceSource`) as it generates the `raw` arm, and it is verified against a freshly generated project by `npm run check:design-schema`. Conformance imagery is governed by [`training-targets.md`](../../../provenance/assets/training-targets.md) and [`eval-targets.md`](../../../provenance/assets/eval-targets.md). The uplifts used for scoring are derived artifacts of this demo, not separate designs.
+Subject, copy and data are synthetic and authored in `pilot/archetypes.mjs` and the generator; there are no third-party assets, fonts, logos or credentials. This contract describes `pilot/frameworks.mjs` (`pageSource`, `stylesSource`, `serverSource`, `enhanceSource`) as it generates the `vue` arm, and it is verified against a freshly generated project by `npm run check:design-schema`. Conformance imagery is governed by [`training-targets.md`](../../../provenance/assets/training-targets.md) and [`eval-targets.md`](../../../provenance/assets/eval-targets.md). The uplifts used for scoring are derived artifacts of this demo, not separate designs.
