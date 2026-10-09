@@ -20,19 +20,21 @@ async function serve(t, repoRoot) {
 test('gallery presents all three excluded boards, honest booking slot, and authored eval target', async (t) => {
   const gallery = listConcepts(ROOT);
   assert.deepEqual(gallery.boards.map((board) => board.id), ['layout-storefront', 'layout-saas', 'layout-explainer']);
-  assert.deepEqual(gallery.archetypes, [{ id: 'booking', reference: false, target: true }]);
+  assert.deepEqual(gallery.archetypes, [{ id: 'booking', reference: true, target: true, referencePath: '/concepts/images/booking/step1-browse.jpg' }]);
   assert.deepEqual(gallery.bookingSteps.map(({ id, available }) => [id, available]), [
-    ['step1-browse', false], ['step2-form', false], ['step3-confirmation', false],
-    ['step4-error', false], ['step5-empty', false],
+    ['step1-browse', true], ['step2-form', true], ['step3-confirmation', true],
+    ['step4-error', true], ['step5-empty', true],
   ]);
   const html = renderConcepts(gallery);
   assert.match(html, /href="\/concepts">concepts<\/a>/);
   assert.match(html, /layout-storefront\.jpg" alt=/);
   assert.match(html, /fetchpriority="high"/);
   assert.match(html, /layout-saas\.jpg" alt=.*loading="lazy"/);
-  assert.match(html, /Reference image not yet available/);
+  assert.match(html, /Side-by-side visual reference only/);
   assert.match(html, /Booking journey · five visual steps/);
-  assert.equal((html.match(/Image pending:/g) ?? []).length, 5);
+  assert.match(html, /unverified placeholders/);
+  assert.equal((html.match(/\/concepts\/images\/booking\/step[1-5]-[a-z-]+\.jpg/g) ?? []).length, 12);
+  assert.doesNotMatch(html, /Image pending:/);
   assert.match(html, /Authored target render/);
   assert.match(html, /not screenshots of generated websites/);
   assert.doesNotMatch(html, /<iframe/);
@@ -52,7 +54,10 @@ test('gallery presents all three excluded boards, honest booking slot, and autho
   assert.match(target.headers.get('content-type'), /image\/png/);
   assert.equal((await target.arrayBuffer()).byteLength > 1000, true);
   assert.equal((await fetch(`${base}/concepts/images/booking.jpg`)).status, 404);
-  assert.equal((await fetch(`${base}/concepts/images/booking/step1-browse.jpg`)).status, 404);
+  const step = await fetch(`${base}/concepts/images/booking/step1-browse.jpg`);
+  assert.equal(step.status, 200);
+  assert.equal(step.headers.get('content-type'), 'image/jpeg');
+  assert.equal((await step.arrayBuffer()).byteLength > 1000, true);
   assert.equal((await fetch(`${base}/concepts`, { method: 'POST' })).status, 404);
   assert.equal((await fetch(`${base}/live/example/original/`)).status, 404);
 });
