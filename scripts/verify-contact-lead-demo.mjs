@@ -100,9 +100,10 @@ try {
   // ---- 4. an empty submit is REFUSED, driven through the real control ----
   await page.goto(`${base}/index.html`);
   await sleep(800);
-  await page.evaluate(`{
+  const clickResult = await page.evaluate(`{
     const button = document.querySelector('form#enquiry-form button[type="submit"]');
-    if (button) button.click();
+    if (!button) return 'no-submit-control';
+    button.click();
     return 'clicked';
   }`);
   await sleep(900);
@@ -110,8 +111,10 @@ try {
   const emptyState = JSON.parse(afterEmpty);
   check(
     'submitting an empty form is refused and does not navigate',
-    /index\.html$/.test(emptyState.path) && emptyState.valid === false,
-    `still on ${emptyState.path}, form valid: ${emptyState.valid}`,
+    // The control must be PRESENT before its refusal means anything: without this, a demo with no submit
+    // button would satisfy the assertion by never attempting a submit at all.
+    clickResult === 'clicked' && /index\.html$/.test(emptyState.path) && emptyState.valid === false,
+    `submit control: ${clickResult}, still on ${emptyState.path}, form valid: ${emptyState.valid}`,
   );
 
   // ---- 5-8. a real submission reaches the success view and echoes what was typed ----
@@ -168,7 +171,13 @@ try {
   await sleep(900);
   const overflow = await mobile.evaluate('return document.documentElement.scrollWidth - window.innerWidth');
   const mobileStyle = JSON.parse(await mobile.evaluate(STYLE_STATE));
-  check('mobile 390x844 renders styled', mobileStyle.rules > 0, `${mobileStyle.rules} rule(s), background ${mobileStyle.bg}`);
+  check(
+    'mobile 390x844 renders styled',
+    // The same standard as desktop. `rules > 0` alone passed on a control with the :root block swallowed
+    // and a transparent body, which is the exact defect this check exists for.
+    mobileStyle.rules > 0 && mobileStyle.bg === SLATE,
+    `${mobileStyle.rules} rule(s), background ${mobileStyle.bg}`,
+  );
   check('mobile has no horizontal overflow', overflow <= 1, `${overflow}px of overflow`);
   await mobile.screenshot(join(SHOTS, 'index-mobile-390x844.png'));
 
@@ -188,8 +197,12 @@ try {
   check('compare.html embeds the live demo', compareState.frames >= 2, `${compareState.frames} iframe(s)`);
   await compare.screenshot(join(SHOTS, 'compare-desktop-1280x900.png'), { fullPage: true });
 
-  const exceptions = page.console.filter((entry) => entry.type === 'exception');
-  check('no uncaught exceptions on any page probed', exceptions.length === 0, JSON.stringify(exceptions.slice(0, 2)));
+  const exceptions = [...page.console, ...mobile.console, ...compare.console].filter((entry) => entry.type === 'exception');
+  check(
+    'no uncaught exceptions on any page probed (desktop, mobile and comparison)',
+    exceptions.length === 0,
+    JSON.stringify(exceptions.slice(0, 2)),
+  );
 } catch (error) {
   failures.push(String(error?.stack ?? error));
   console.error('VERIFY ERROR', error);

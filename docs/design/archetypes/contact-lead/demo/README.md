@@ -39,7 +39,7 @@ network requests**. It opens from the filesystem or from any static server.
    icon, a four-step "our consultation process" list with one icon per step, and a response-time pill
    reading "under 24 hrs"; the right column is a raised card headed "Request a consultation" with Full
    Name, Work Email, a Project Scope dropdown (Residential Renovation, Commercial Build, Interior
-   Architecture), a Budget control, a Message box with a `0/500` character counter, and a full-width
+   Architecture), a Budget control, a Message box with a live character counter capped at 500 characters, and a full-width
    emerald "Send Consultation Request" button. The page sits on a faint drafting grid. The demo runs
    the same two columns from `56rem` and one column below it.
 2. **Board 2 — the acknowledgement card (`step2-success.jpg`).**
@@ -232,7 +232,16 @@ What was checked while writing, and what was not:
 - Contrast was measured for 21 foreground/background pairs; 20 pass their threshold and the 21st is the
   boards' white-on-emerald combination that was deliberately not copied. One decorative tinted border
   is below 3:1 and is stated as decoration rather than claimed as a control boundary.
-- **Not done here:** no browser was started, so nothing in this directory is evidence that the pages
-  render or behave in one. No screen reader, no second engine, no 200% zoom or reflow check, and no
-  functional acceptance run against the live spec journey. The last of those is what a
-  browser-driven harness for this demo would supply.
+- **Not done here:** no screen reader, no second engine, no 200% zoom or reflow check, and no functional
+  acceptance run against the live spec journey. Those all remain open.
+- **In a real browser:** `scripts/verify-contact-lead-demo.mjs` drives all three pages headlessly and
+  asserts 18 behaviours — that the stylesheet actually APPLIED (rule count above zero and the computed
+  body background equal to the boards' slate `#0f172a`, asserted first because every other check here
+  passes trivially on an unstyled page), the contract's three fields with their types and `required`, the
+  board's scope options, the character counter changing while typing, an empty submit being refused
+  without navigating, a filled submit landing on the success view, both echoes carrying what was actually
+  typed, the reference token, markup in a user-supplied name being rendered as text rather than parsed,
+  mobile at 390x844 with no overflow, both boards loading same-origin, and no uncaught exceptions.
+- **Prove the harness can fail:** point `K8W_ARCHETYPE_DIR` at a broken copy and it exits non-zero. It is
+  recorded that way on purpose — a suite that only ever passes proves nothing, and the probes return
+  sentinels rather than throwing so one broken behaviour cannot hide every check after it.
