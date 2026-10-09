@@ -45,7 +45,9 @@ test('the provenance table agrees with the README and with the files', () => {
   const readme = text(`${DIR}README.md`);
   const record = text('docs/provenance/assets/design-reference-booking.md');
   const rows = [...record.matchAll(/\|\s*\[`(step\d-[\w-]+\.jpg)`\][^|]*\|([^|]*)\|\s*`([0-9a-f]{64})`\s*\|\s*(\d+)\s*\|/g)];
-  assert.equal(rows.length, STEPS.length, 'every board must have a provenance row');
+  // A count is not a set: a duplicated valid row plus a missing board keeps rows.length correct while leaving a
+  // board unchecked, which an independent review found here. Compare the names, so both duplication and omission fail.
+  assert.deepEqual(rows.map(([, name]) => name).sort(), [...STEPS].sort(), 'the provenance table must name every board exactly once');
   for (const [, name, , tableDigest, rowBytes] of rows) {
     const buffer = bytes(`${DIR}${name}`);
     const actual = createHash('sha256').update(buffer).digest('hex');
