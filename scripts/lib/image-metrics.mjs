@@ -19,7 +19,7 @@ const CODES = Object.freeze({
   STRUCTURE_NOT_COMPARABLE: 'BOARD_STRUCTURE_NOT_COMPARABLE',
 });
 
-function round4(value) {
+export function round4(value) {
   if (typeof value !== 'number' || Number.isNaN(value)) return 0;
   return Number(value.toFixed(4));
 }
@@ -433,6 +433,18 @@ export function summariseComparison(baseline, candidate) {
 }
 
 /**
+ * The mean and the spread (standard deviation) of a band profile. Exported because the distance in
+ * scripts/check-cross-arm-parity.mjs is built from these same two numbers, and a metric that computes its
+ * own inputs differently from the axis that reports on them is two metrics wearing one name.
+ */
+export function profileStats(values) {
+  if (!Array.isArray(values) || values.length === 0) return { mean: 0, spread: 0 };
+  const mean = values.reduce((sum, value) => sum + value, 0) / values.length;
+  const variance = values.reduce((sum, value) => sum + (value - mean) ** 2, 0) / values.length;
+  return { mean: round4(mean), spread: round4(Math.sqrt(variance)) };
+}
+
+/**
  * How different are two band profiles in SHAPE, independent of how bright either one is?
  *
  * Pearson correlation, so scaling or shifting a profile does not change the answer. This replaces two
@@ -446,14 +458,19 @@ export function summariseComparison(baseline, candidate) {
  *   image. That is worse than a wrong number; it is a confidently wrong answer, which is the one thing
  *   this instrument exists to avoid.
  *
- * A flat profile has no shape to compare, so this returns `comparable: false` and a distance of 1 - "no
- * similarity can be demonstrated" - rather than 0. Failing closed matters here because a zero reads as a
- * perfect match.
+ * A flat profile has no shape to compare, which is TWO different cases and they must not be conflated:
+ *
+ * - BOTH flat: they have the same shape - a flat line - so the distance is 0, and it is left to the
+ *   brightness and contrast terms to say how different the two images actually are.
+ * - ONE flat: nothing can be demonstrated about similarity, so the distance is 1. Failing closed matters
+ *   because a zero reads as a perfect match.
+ *
+ * A reviewer caught an earlier version returning 1 for both-flat, which made a blank image non-zero from
+ * ITSELF. "Cannot be compared" and "is dissimilar" are different claims and the code now keeps them apart.
  */
 export function profileShapeDistance(first, second) {
-  if (!Array.isArray(first) || !Array.isArray(second) || first.length === 0 || second.length === 0) {
-    return { distance: 1, comparable: false, correlation: null };
-  }
+  const empty = { distance: 1, comparable: false, correlation: null, flat: true };
+  if (!Array.isArray(first) || !Array.isArray(second) || first.length === 0 || second.length === 0) return empty;
   const length = Math.min(first.length, second.length);
   const a = first.slice(0, length);
   const b = second.slice(0, length);
@@ -471,9 +488,8 @@ export function profileShapeDistance(first, second) {
   }
   const spreadA = Math.sqrt(varianceA / length);
   const spreadB = Math.sqrt(varianceB / length);
-  // A profile with no variation cannot be correlated with anything, including another flat profile - two
-  // uniform images are not "identical in shape", they are two images with no shape to compare.
-  if (spreadA < 1e-6 || spreadB < 1e-6) return { distance: 1, comparable: false, correlation: null };
+  if (spreadA < 1e-6 && spreadB < 1e-6) return { distance: 0, comparable: true, correlation: null, flat: true };
+  if (spreadA < 1e-6 || spreadB < 1e-6) return empty;
   const correlation = covariance / (spreadA * spreadB * length);
   // (1 - correlation) / 2, NOT 1 - |correlation|. The absolute value scores a perfectly INVERTED profile - a
   // layout turned upside down, or bright where the other is dark - as a perfect shape match, which is the
@@ -481,7 +497,7 @@ export function profileShapeDistance(first, second) {
   // the same layout correlates at +1 and is the same shape, while an inverted one correlates at -1 and is
   // maximally different. The halving keeps the result in 0..1 for a distance that gets averaged.
   const distance = Math.min(1, Math.max(0, (1 - correlation) / 2));
-  return { distance: round4(distance), comparable: true, correlation: round4(correlation) };
+  return { distance: round4(distance), comparable: true, correlation: round4(correlation), flat: false };
 }
 
 /**

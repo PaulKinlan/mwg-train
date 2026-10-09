@@ -303,3 +303,100 @@ export function paritySummary({ archetype, viewports, armsByViewport, budget, ex
 }
 
 export { IDENTITY_AXES };
+
+/**
+ * Arm-against-arm PIXEL comparison.
+ *
+ * The mandate is to diff the arms against the reference boards AND against each other. The board half lives
+ * in scripts/check-cross-arm-parity.mjs because it needs the measured screenshots; the decision half lives
+ * here so it is a pure function a test can drive.
+ *
+ * Why this is worth having on top of the numeric signature comparison: the signature comparison normalises
+ * geometry, so two arms can agree structurally and still render visibly different pixels. This compares what
+ * a person would actually see.
+ */
+export const ARM_PIXEL_CODES = Object.freeze({
+  ARM_PIXEL_PAIR_DIVERGES: 'CROSS_ARM_PIXEL_PAIR_DIVERGES',
+  ARM_PIXEL_PAIR_UNMEASURED: 'CROSS_ARM_PIXEL_PAIR_UNMEASURED',
+});
+
+/**
+ * Every unordered pair of arms within one viewport, so each pair is compared once and never against itself.
+ * Pairs where either arm has no measurement are returned with `error` rather than dropped: an arm that
+ * produced no screenshot must not vanish from a comparison about arms being absent from each other.
+ */
+export function armPixelPairs({ viewport, arms }) {
+  const pairs = [];
+  const usable = (arms ?? []).filter(Boolean);
+  for (let first = 0; first < usable.length; first += 1) {
+    for (let second = first + 1; second < usable.length; second += 1) {
+      const a = usable[first];
+      const b = usable[second];
+      pairs.push({
+        viewport,
+        a: a.framework,
+        b: b.framework,
+        a_shot: a.screenshot ?? null,
+        b_shot: b.screenshot ?? null,
+        // The measurements travel with the pair so the caller can compute a distance without a second map to
+        // keep in step; the decision function stays free of any knowledge of how the distance is measured.
+        aMetrics: a.metrics ?? null,
+        bMetrics: b.metrics ?? null,
+        error: !a.metrics || !b.metrics ? 'one of the two arms has no measured screenshot' : null,
+      });
+    }
+  }
+  return pairs;
+}
+
+/**
+ * Turn arm-against-arm distances into findings. Both screenshots are named on every finding, so a person can
+ * open the two images and look - the mandate asks for drift "with a screenshot", and drift between two arms
+ * needs both of them.
+ *
+ * `budget` is compared, never adjusted. The observed minimum is reported alongside it: the arms are the same
+ * specification rendered from the same stylesheet, so the closest pair is an empirical floor for how much
+ * distance is rendering noise rather than a difference in design. A budget a reader cannot calibrate is a
+ * dial, and this one is stated next to the floor that justifies it.
+ */
+export function armPixelFindings({ pairs, budget }) {
+  const findings = [];
+  const measured = [];
+  for (const pair of pairs ?? []) {
+    if (pair.error) {
+      findings.push({
+        code: ARM_PIXEL_CODES.ARM_PIXEL_PAIR_UNMEASURED,
+        axis: 'pixels',
+        viewport: pair.viewport,
+        pair: [pair.a, pair.b],
+        message: `${pair.a} and ${pair.b} at ${pair.viewport} were not compared in pixels: ${pair.error}`,
+      });
+      continue;
+    }
+    measured.push(pair);
+  }
+  measured.sort((first, second) => second.distance - first.distance || `${first.a}/${first.b}`.localeCompare(`${second.a}/${second.b}`));
+  const worst = measured[0] ?? null;
+  for (const pair of measured) {
+    if (pair.distance <= budget) continue;
+    findings.push({
+      code: ARM_PIXEL_CODES.ARM_PIXEL_PAIR_DIVERGES,
+      axis: 'pixels',
+      viewport: pair.viewport,
+      pair: [pair.a, pair.b],
+      distance: pair.distance,
+      budget,
+      a_shot: pair.a_shot,
+      b_shot: pair.b_shot,
+      message: `${pair.a} and ${pair.b} diverge in pixels by ${pair.distance} at ${pair.viewport} (budget ${budget}); the two screenshots are ${pair.a_shot} and ${pair.b_shot}`,
+    });
+  }
+  return {
+    findings,
+    /** Nearest pair per viewport, so the empirical noise floor is visible rather than asserted. */
+    nearest: measured[measured.length - 1] ?? null,
+    worst,
+    measured: measured.length,
+    pairs: measured,
+  };
+}

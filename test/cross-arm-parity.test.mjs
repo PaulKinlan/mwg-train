@@ -12,7 +12,10 @@ import test from 'node:test';
 
 import { REFERENCE_PALETTE } from '../scripts/check-cross-arm-parity.mjs';
 import {
+  ARM_PIXEL_CODES,
   PARITY_CODES,
+  armPixelFindings,
+  armPixelPairs,
   collapsePaletteFindings,
   crossArmFindings,
   normaliseColour,
@@ -336,4 +339,39 @@ test('palette findings are collapsed across widths, but not across real differen
     { arm: 'raw', token: '--bg', expected: '#0f172a', actual: '#000000' },
   ];
   assert.equal(collapsePaletteFindings(differs).length, 2, 'a token that differs between widths is two facts');
+});
+
+test('arm pixel pairs cover every arm once and never pair an arm with itself', () => {
+  const arms = ['a', 'b', 'c', 'd', 'e', 'f', 'g'].map((framework) => ({ framework, screenshot: `${framework}.png`, metrics: {} }));
+  const pairs = armPixelPairs({ viewport: '1280x900', arms });
+  assert.equal(pairs.length, 21, 'seven arms make twenty-one unordered pairs');
+  assert.equal(new Set(pairs.map((pair) => `${pair.a}/${pair.b}`)).size, 21, 'no pair may be repeated in the other order');
+  assert.ok(pairs.every((pair) => pair.a !== pair.b), 'an arm must never be compared against itself');
+});
+
+test('an arm that produced no screenshot is a reported pair, not a missing one', () => {
+  const arms = [
+    { framework: 'a', screenshot: 'a.png', metrics: {} },
+    { framework: 'b', screenshot: null, metrics: null },
+  ];
+  const pairs = armPixelPairs({ viewport: '1280x900', arms });
+  assert.equal(pairs.length, 1, 'the pair must still exist');
+  assert.ok(pairs[0].error, 'and it must say why it cannot be compared');
+  const { findings } = armPixelFindings({ pairs: pairs.map((pair) => ({ ...pair, distance: null })), budget: 0.05 });
+  assert.equal(findings.length, 1, 'an arm with no screenshot must produce a finding');
+  assert.equal(findings[0].code, ARM_PIXEL_CODES.ARM_PIXEL_PAIR_UNMEASURED);
+});
+
+test('arm pixel drift is reported with BOTH screenshots named, and clean pairs are silent', () => {
+  const clean = { viewport: '1280x900', a: 'a', b: 'b', a_shot: 'a.png', b_shot: 'b.png', distance: 0.01, error: null };
+  const drifted = { viewport: '1280x900', a: 'a', b: 'c', a_shot: 'a.png', b_shot: 'c.png', distance: 0.5, error: null };
+  const { findings, nearest, worst, measured } = armPixelFindings({ pairs: [clean, drifted], budget: 0.05 });
+  assert.equal(measured, 2);
+  assert.equal(findings.length, 1, 'only the pair over budget may be reported');
+  assert.equal(findings[0].pair.join('/'), 'a/c');
+  assert.ok(findings[0].message.includes('a.png') && findings[0].message.includes('c.png'), 'both screenshots must be named');
+  // The nearest pair is reported even when nothing is over budget, because it is the run's own empirical
+  // floor - the evidence that the budget is calibrated rather than chosen.
+  assert.equal(nearest.distance, 0.01, 'the nearest pair must be exposed as the floor');
+  assert.equal(worst.distance, 0.5, 'and the worst pair must be named');
 });

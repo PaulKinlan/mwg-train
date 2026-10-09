@@ -26,7 +26,8 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 
 import { dirname, join, resolve } from 'node:path';
 import process from 'node:process';
 
-import { ANALYSIS_METRIC_NOTES, ANALYSIS_PAGE_HTML, profileShapeDistance, summariseComparison } from './lib/image-metrics.mjs';
+import { ANALYSIS_METRIC_NOTES, ANALYSIS_PAGE_HTML, profileShapeDistance, profileStats, round4, summariseComparison } from './lib/image-metrics.mjs';
+import { armPixelFindings, armPixelPairs } from '../src/eval/parity.mjs';
 import { startStaticServer } from './lib/static-server.mjs';
 import { ARCHETYPES } from '../pilot/archetypes.mjs';
 import { FRAMEWORKS, buildProjectFor, writeProject } from '../pilot/frameworks.mjs';
@@ -294,6 +295,35 @@ function renderMarkdown(report) {
     );
   }
   lines.push('');
+  if (report.arm_pixels) {
+    const pixels = report.arm_pixels;
+    lines.push('## Between the arms, in pixels');
+    lines.push('');
+    lines.push(
+      `${pixels.measured} of ${pixels.expected} arm pairs were compared in pixels at each width, using the same distance as the board comparison. ` +
+        `The budget is ${pixels.budget}: the arms are one specification rendered by seven frameworks from one stylesheet, so they should be near-identical, and the CLOSEST pair measured in this run is reported here as the empirical floor for rendering noise rather than asserted.`,
+    );
+    lines.push('');
+    if (pixels.nearest) {
+      lines.push(`- Closest pair (the floor): \`${pixels.nearest.pair.join('\` vs \`')}\` at ${pixels.nearest.viewport}, distance ${pixels.nearest.distance}`);
+    }
+    if (pixels.worst) {
+      lines.push(`- Furthest pair: \`${pixels.worst.pair.join('\` vs \`')}\` at ${pixels.worst.viewport}, distance ${pixels.worst.distance}`);
+    }
+    lines.push('');
+    if (pixels.findings.length === 0) {
+      lines.push(`No pair of arms diverged in pixels by more than ${pixels.budget}.`);
+    } else {
+      lines.push(`${pixels.findings.length} pair(s) diverged in pixels:`);
+      lines.push('');
+      for (const finding of pixels.findings) {
+        lines.push(`- \`${finding.pair.join('\` vs \`')}\` at ${finding.viewport}: distance ${finding.distance} (budget ${finding.budget})`);
+        lines.push(`  - ${finding.a_shot}`);
+        lines.push(`  - ${finding.b_shot}`);
+      }
+    }
+    lines.push('');
+  }
   lines.push('## Screenshots');  lines.push('');
   lines.push('Saved for inspection (untracked run directory, full-page, one per arm and width):');
   lines.push('');
@@ -307,32 +337,61 @@ function renderMarkdown(report) {
  * without a human looking at 105 pairs of images.
  *
  * The metric is stated rather than implied: for the 32 row bands and the 32 column bands of MEAN LUMINANCE,
- * the average of two things - how differently the two profiles are SHAPED (1 minus the absolute
- * correlation, and 1 when either profile is uniform) and how different their average brightnesses are. Two
- * earlier versions of this were blocked by review: brightness-only saturates on a dark mockup, and
- * shape-only calls a uniform board a perfect match for every image. A reader can recompute the number from
- * the band values in the report.
+ * three differences are averaged - how differently the profiles are SHAPED (1 minus their correlation,
+ * halved), how different their average brightnesses are, and how different their CONTRAST is (twice the
+ * difference in spread). Each term is needed: shape alone cannot see contrast, brightness alone saturates on
+ * a dark mockup, and leaving contrast out scored a half-dark/half-light image as identical to a flat one of
+ * the same mean. A reader can recompute the number from the band values in the report.
  */
+/**
+ * The line above which two arms are reported as having rendered different pixels.
+ *
+ * Basis, so this is a budget and not a dial: the arms are ONE specification built by seven frameworks from ONE
+ * shared stylesheet, so they should render near-identically and the closest measured pair is the run's own
+ * empirical floor for rendering noise. The run reports that floor next to the budget, so a reader can see
+ * whether the budget is generous or tight rather than taking it on trust. It is compared and never adjusted -
+ * a threshold moved until a report reads green is not a threshold.
+ */
+export const ARM_PIXEL_BUDGET = 0.05;
+
 export function metricDistance(a, b) {
-  const mean = (values) => (values.length === 0 ? 0 : values.reduce((sum, value) => sum + value, 0) / values.length);
-  // TWO TERMS, because a reviewer showed that either one alone gives a confidently wrong answer:
+  // THREE TERMS, because a reviewer found the third one missing and was right. Each is in 0..1 and they are
+  // averaged, and the average is stated in the report so a reader can recompute it from the band values.
   //
-  // - Shape alone (what this used to be, after subtracting each profile's own mean) makes a uniform board a
-  //   zero vector, and then the distance to it is just the candidate's own signal - so every sparse arm
-  //   "matched" the empty board, and a pure white image against a pure black one scored exactly 0.
-  // - Brightness alone is what the original ink-coverage metric did, and it saturates: measured on the
-  //   reference boards, all five are 98.6-99.5% ink, so the ranking was decided by rounding.
-  //
-  // Averaged, and stated here so a reader can recompute it from the band values in the report. Shape is
-  // 1 when either profile is uniform (`profileShapeDistance` fails closed), which is what stops a uniform
-  // board attracting everything.
-  const pair = (first, second) => {
+  // - SHAPE: 1 minus the correlation, halved. Catches a different or inverted layout.
+  // - BRIGHTNESS: the difference in mean luminance. Catches a light image against a dark one.
+  // - CONTRAST: twice the difference in the profile's spread. WITHOUT THIS, two profiles with the same shape
+  //   and the same mean are identical to the metric however different they look: a half-dark/half-light
+  //   image and an almost uniformly grey one with the same mean correlate at +1 and scored 0, which is the
+  //   same confident-but-meaningless zero that the blank attractor produced one round earlier.
+  // Listed per pair, newest first, and every pair's THREE TERMS are kept. The distance is an average of
+  // shape, brightness and contrast; the average alone compresses a wide range into a narrow band, so a
+  // reader who wants to know WHY two images are 0.16 apart gets the three numbers rather than an assertion
+  // about a weighting. A reviewer called the weighting uncalibrated, which was fair - this disclosure is the
+  // honest answer to that, rather than tuning the weights until a preferred pair ranks first.
+  const termsFor = (first, second) => {
+    const left = profileStats(first ?? []);
+    const right = profileStats(second ?? []);
     const shape = profileShapeDistance(first ?? [], second ?? []);
-    return (shape.distance + Math.abs(mean(first ?? []) - mean(second ?? []))) / 2;
+    return {
+      shape: round4(shape.distance),
+      brightness: round4(Math.abs(left.mean - right.mean)),
+      contrast: round4(Math.min(1, 2 * Math.abs(left.spread - right.spread))),
+      comparable: shape.comparable,
+    };
+  };
+  const pair = (first, second) => {
+    const { shape, brightness, contrast } = termsFor(first, second);
+    return (shape + brightness + contrast) / 3;
   };
   const rows = pair(a?.rowLuminance, b?.rowLuminance);
   const bands = pair(a?.bandLuminance, b?.bandLuminance);
   return Number(((rows + bands) / 2).toFixed(4));
+}
+
+/** The three stated terms behind a distance, so a number in the report can be explained as well as checked. */
+export function metricTerms(a, b) {
+  return { rows: termsFor(a?.rowLuminance, b?.rowLuminance), bands: termsFor(a?.bandLuminance, b?.bandLuminance) };
 }
 
 /**
@@ -435,6 +494,9 @@ async function compareAgainstBoards({ chrome, armRoot, screenshots, arms }) {
     unreadable_boards: failedBoards.map((board) => ({ file: board.file, error: board.metrics?.error ?? 'no result' })),
     per_arm: perArm,
     metric_notes: ANALYSIS_METRIC_NOTES,
+    // Handed back so the arm-against-arm comparison can use the SAME measurements rather than analysing every
+    // screenshot a second time, which would double the browser cost of the run and could disagree with itself.
+    analyzed,
     findings: [...findings, ...perArm.flatMap((entry) => entry.closest_findings ?? [])],
   };
 }
@@ -530,6 +592,48 @@ async function main() {
     expectedArms,
   });
   const allArms = options.viewports.flatMap((viewport) => armsByViewport[viewport.key] ?? []);
+
+  // ARM AGAINST ARM, IN PIXELS. The numeric signature comparison normalises geometry, so two arms can agree
+  // structurally and still render visibly different pixels; this is the half of the mandate that compares
+  // what a person would actually see. Every unordered pair within a viewport, compared once and never against
+  // itself. `budget` is compared and never adjusted - the observed nearest pair is reported beside it, since
+  // the arms are one specification rendered from one stylesheet, which makes the closest pair an empirical
+  // floor for rendering noise rather than a difference in design.
+  const analyzed = boardComparison.analyzed ?? {};
+  const pixelPairs = [];
+  for (const viewport of options.viewports) {
+    const armsHere = allArms
+      .filter((arm) => arm.viewport === viewport.key)
+      .map((arm) => {
+        const path = screenshots.find((shot) => shot.viewport === viewport.key && shot.arm === arm.framework)?.path ?? null;
+        return {
+          framework: arm.framework,
+          screenshot: path,
+          metrics: path ? analyzed[`/shot/${path.split('/').pop()}`] : null,
+        };
+      });
+    for (const pair of armPixelPairs({ viewport: viewport.key, arms: armsHere })) {
+      pixelPairs.push({
+        ...pair,
+        distance: pair.error ? null : metricDistance(pair.aMetrics, pair.bMetrics),
+      });
+    }
+  }
+  const pixelComparison = armPixelFindings({ pairs: pixelPairs, budget: ARM_PIXEL_BUDGET });
+  // The per-pair measurements are dropped here: the report already carries every arm's full metrics, so
+  // repeating 32-band arrays once per pair would bloat the artifact with a second copy of the same numbers.
+  const pixelReport = {
+    budget: ARM_PIXEL_BUDGET,
+    measured: pixelComparison.measured,
+    expected: pixelPairs.length,
+    nearest: pixelComparison.nearest
+      ? { pair: [pixelComparison.nearest.a, pixelComparison.nearest.b], viewport: pixelComparison.nearest.viewport, distance: pixelComparison.nearest.distance }
+      : null,
+    worst: pixelComparison.worst
+      ? { pair: [pixelComparison.worst.a, pixelComparison.worst.b], viewport: pixelComparison.worst.viewport, distance: pixelComparison.worst.distance }
+      : null,
+    findings: pixelComparison.findings,
+  };
   // The same token is read at three widths, so one arm using the wrong accent colour would otherwise
   // produce the same finding three times; the collapse is what turns 84 rows back into 28 facts, and it
   // deliberately keeps a token that really does differ between widths.
@@ -541,18 +645,30 @@ async function main() {
     generated_at: new Date().toISOString(),
     viewports: summary.viewports,
     arms_measured: [...new Set(allArms.filter((arm) => arm.signature).map((arm) => arm.framework))].sort(),
-    arms_observed: allArms.map((arm) => ({ framework: arm.framework, viewport: arm.viewport, color_scheme: arm.colorScheme ?? '' })),
+    // SPREAD, not a three-field projection. This listed framework/viewport/color_scheme by hand and dropped
+    // the signature and the token map - the very inputs the cross-arm and palette verdicts are computed
+    // from - so the committed report contained those verdicts and none of the evidence for them. Third time
+    // on this branch that a hand-written projection dropped what a consumer needed; the fix is the same
+    // every time and is now a habit rather than an incident: carry the measured object whole.
+    arms_observed: allArms.map((arm) => ({ ...arm })),
     budget: IDENTITY_BUDGET,
     reference_palette: REFERENCE_PALETTE,
     palette_findings: palette,
-    board_comparison: boardComparison,
+    // `analyzed` is deliberately NOT stored. It is handed back from compareAgainstBoards so the arm-pixel
+    // comparison can reuse the same measurements instead of opening a second browser pass, but every one of
+    // those measurements is already in `boards` and `per_arm` below. Storing the map as well made the
+    // artifact 948K of duplicated band arrays, and a report nobody can read is a report nobody checks.
+    board_comparison: (({ analyzed: _unused, ...rest }) => rest)(boardComparison),
+    // Arm-against-arm pixels, kept beside the board comparison and summarised rather than duplicated.
+    arm_pixels: pixelReport,
     // Board findings are part of `findings`, so they print, they are visible to a JSON consumer, and
     // `--strict` can act on them. A cross-family review caught them living only in board_comparison,
-    // where 105 measured disagreements were invisible to every one of those three.
-    findings: [...summary.findings, ...palette, ...(boardComparison?.findings ?? [])],
+    // where 105 measured disagreements were invisible to every one of those three. The arm-pixel findings
+    // are included for the same reason on the first attempt rather than after a review.
+    findings: [...summary.findings, ...palette, ...(boardComparison?.findings ?? []), ...pixelComparison.findings],
     screenshots,
     limits: {
-      compares: 'layout and component structure between arms (structural, geometry, controls axes), and real pixels against the reference boards',
+      compares: 'layout and component structure between arms (structural, geometry, controls axes), real pixels between arms at each width, and real pixels against the reference boards',
       blind_to: 'text content, and viewport shape between arms (geometry is normalised per viewport)',
       screenshots: 'compared in pixels against the reference boards AND retained for inspection; the comparison uses colour distribution, luminance, ink coverage and coarse band structure, not a per-pixel image diff',
       reference_boards: 'compared in pixels, measured in the browser: the board JPEGs and the arm screenshots are drawn to a canvas and read with getImageData, which is the only image decoder this repository has',

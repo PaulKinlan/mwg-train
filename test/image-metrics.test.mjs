@@ -9,7 +9,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { ANALYSIS_METRIC_NOTES, summariseComparison, profileShapeDistance } from '../scripts/lib/image-metrics.mjs';
+import { ANALYSIS_METRIC_NOTES, summariseComparison, profileShapeDistance, profileStats } from '../scripts/lib/image-metrics.mjs';
 import { metricDistance } from '../scripts/check-cross-arm-parity.mjs';
 
 const FLAT = (value) => new Array(32).fill(value);
@@ -53,7 +53,16 @@ test('a uniform image is not a perfect match for everything', () => {
   // a pure white image and a pure black one scored EXACTLY 0.
   const white = { rowLuminance: FLAT(1), bandLuminance: FLAT(1) };
   const black = { rowLuminance: FLAT(0), bandLuminance: FLAT(0) };
-  assert.ok(metricDistance(white, black) > 0.9, 'a white image and a black image must not be zero apart');
+  // 1/3, not 1: two FLAT images have the same shape (a flat line) and the same contrast (none), so their
+  // only difference is brightness, and the distance is the average of three terms. This is the maximum a
+  // pure-brightness difference can reach, which is why the scale is stated rather than assumed to be 0..1.
+  assert.ok(metricDistance(white, black) > 0.3, 'a white image and a black image must not be zero apart');
+  assert.equal(metricDistance(white, black), 0.3333, 'and the value must be the stated average of its three terms');
+
+  // The scale's reachable maximum, pinned: a flat image against an inverted-contrast banded one differs in
+  // shape (1), in brightness (1) and in contrast (1), so the average reaches 1.
+  const inverted = { rowLuminance: FLAT(0).map((v, i) => (i % 2 ? 0 : 1)), bandLuminance: FLAT(0).map((v, i) => (i % 2 ? 1 : 0)) };
+  assert.ok(metricDistance(inverted, white) > 0.6, 'the far end of the scale must be reachable');
 
   // And the consequence: a uniform board must not be the closest board to a sparse image.
   const uniform = metrics({ mean: 0.98, ink: 0.02, structure: FLAT(0.98) });
@@ -127,7 +136,7 @@ test('everything a report needs survives JSON serialisation', () => {
   assert.ok(Array.isArray(roundTripped.baseline.colours), 'the colours must survive as data, not as methods');
 });
 
-test('the distance is the average of the two terms it says it uses, and both terms count', () => {
+test('the distance is the average of the three terms it says it uses', () => {
   const dark = metrics({ mean: 0.15, ink: 0.95, structure: BANDED(0.05, 0.25) });
   const light = metrics({ mean: 0.88, ink: 0.05, structure: BANDED(0.78, 0.98) });
   // Same shape, different brightness: NOT zero. Brightness is part of how an image looks.
@@ -140,15 +149,16 @@ test('the distance is the average of the two terms it says it uses, and both ter
   );
   assert.ok(shape > 0.1, 'a reversed layout is not the same shape');
 
-  // RECOMPUTABLE: the metric is the average of the shape term and the brightness term, so a reader with the
-  // band values in the report gets the number in the report. This replaces an assertion I had written that
-  // brightness should count for LESS than shape - a preference I held, not a property of the metric, and one
-  // the metric does not implement. The weighting is the average, stated in the code; testing a preference
-  // would have hidden that.
+  // RECOMPUTABLE: the metric is the average of the SHAPE, BRIGHTNESS and CONTRAST terms, so a reader with the
+  // band values in the report gets the number in the report. The contrast term is the one a reviewer found
+  // missing: without it a half-dark/half-light image and an almost uniformly grey one with the same mean
+  // scored 0 - the same confidently meaningless zero the blank attractor had produced one round earlier.
   const rowShape = profileShapeDistance(FLAT(0.05).map((v, i) => (i < 8 ? 0.05 : 0.25)), FLAT(0.05).map((v, i) => (i < 8 ? 0.78 : 0.98)));
-  // Both profiles here are shifted copies of one another, so the brightness term is |0.15 - 0.88| to 4dp.
-  const brightnessTerm = Math.abs(0.15 - 0.88);
-  const recomputed = Math.round(((rowShape.distance + brightnessTerm) / 2) * 10000) / 10000;
+  const left = profileStats(FLAT(0.05).map((v, i) => (i < 8 ? 0.05 : 0.25)));
+  const right = profileStats(FLAT(0.05).map((v, i) => (i < 8 ? 0.78 : 0.98)));
+  const recomputed = Math.round((
+    (rowShape.distance + Math.abs(left.mean - right.mean) + Math.min(1, 2 * Math.abs(left.spread - right.spread))) / 3
+  ) * 10000) / 10000;
   assert.ok(Math.abs(recomputed - polarity) < 0.0002, `the report's number must be the average of its stated terms (recomputed ${recomputed}, metric ${polarity}, shape distance ${rowShape.distance})`);
 });
 
