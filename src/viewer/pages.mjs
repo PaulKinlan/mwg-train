@@ -92,6 +92,8 @@ export const PAGE_CSS = `
   .tuning-grid .panel h2 { margin: 0 0 0.5rem; }
   .tuning-grid .panel p { margin-block: 0.5rem 1rem; }
   .tuning-target { display: block; width: 100%; height: auto; border: 1px solid var(--line); border-radius: 0.4rem; }
+  .tuning-source { padding-block: 0.6rem; border-top: 1px solid var(--line); }
+  .tuning-source h3 { margin-block: 0.3rem; }
   .tuning-editor label { display: block; font-weight: 700; margin-block: 1rem 0.25rem; }
   .tuning-editor textarea, .tuning-editor input { width: 100%; min-height: 3rem; padding: 0.65rem 0.75rem; border: 1px solid var(--control-line); border-radius: 0.45rem; background: var(--surface); color: var(--ink); font: inherit; }
   .tuning-editor textarea { min-height: 8rem; resize: vertical; font-family: inherit; }

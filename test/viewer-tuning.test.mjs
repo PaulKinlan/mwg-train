@@ -16,6 +16,8 @@ test('workbench reads authored training variants and recorded templates without 
   assert.equal(data.projects.length, 210);
   const html = renderTuning({ data, repoRoot: ROOT, familyId: 'tr-26', variant: 'v2', framework: 'hono' });
   assert.match(html, /tr-26-v2/);
+  assert.match(html, /Compare the original authored prompts \(2 voices\)/);
+  assert.match(html, /tr-26-v1/);
   assert.match(html, /tr-26-hono/);
   assert.match(html, /\/tuning\/target\/tr-26\.png/);
   assert.match(html, /not a model-generated site/);

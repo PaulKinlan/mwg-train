@@ -55,6 +55,15 @@ Teacher-generated material and the reproduction studies live in a **private comp
   port-scoped, which is exactly why the proxy namespaces every cookie a site sets and forwards
   only those back.)
 
+The viewer's `/tuning` workbench reads the authored `tr-*` training briefs, their A1 target-design
+images, deterministic scaffold records and any measured training sample. Select a family, prompt
+variant and framework; compare the original authored prompts and brief contract with the target
+image and recorded template facts. Prompt wording, system guidance, temperature, max tokens and
+seed can be edited as a **browser-local, unapproved draft**, then copied or exported as JSON. It
+makes no model calls, runs no training, does not regenerate a site, and never writes back to the
+training or sealed evaluation manifests. The target image is an authored reference, **not** a
+rendered model output; no rendered template snapshot is retained in this checkout.
+
 Live instances run the real site server sandboxed with bubblewrap: its own network namespace with
 no route off it (the host's loopback proxies and the outside network are unreachable), an
 allowlisted environment, a read-only site tree, and no host filesystem beyond the runtime. The

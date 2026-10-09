@@ -49,6 +49,7 @@ export function renderTuning({ data, familyId, variant = 'v1', framework = 'raw'
     <h2 id="contract-heading">Authored brief contract</h2>
     <p><strong>${text(selectedVariant.brief_id)}</strong> · ${text(selectedVariant.archetype)} · ${text(selectedVariant.task)} · ${text(selectedVariant.locale)}</p>
     <p class="muted">The two variants of this family share these requirements; the prompt wording is the only editable part in this workbench. A draft does not revise this contract.</p>
+    <details><summary>Compare the original authored prompts (${variants.length} voices)</summary>${variants.map((row) => `<div class="tuning-source"><h3>${text(row.brief_id)}</h3><p>${text(row.prompt)}</p></div>`).join('')}</details>
     <details><summary>Routes (${selectedVariant.routes.length})</summary>${list(selectedVariant.routes)}</details>
     <details><summary>Journeys (${selectedVariant.journeys.length})</summary>${list(selectedVariant.journeys)}</details>
     <details><summary>Assertions (${selectedVariant.assertions.length})</summary>${list(selectedVariant.assertions)}</details>
