@@ -45,6 +45,10 @@ try {
     await page.click('[data-tier="workshop"][data-step="1"]');
     const both = JSON.parse(await page.evaluate(`return JSON.stringify({ workshop: document.querySelector('#workshop').value, estimate: document.querySelector('#estimate').textContent })`));
     check(`Workshop + calculates combined illustrative amount at ${width}`, both.workshop === '1' && /£340 for 2 tickets/.test(both.estimate), JSON.stringify(both));
+    for (let n = 1; n < 10; n += 1) await page.click('[data-tier="workshop"][data-step="1"]');
+    const upper = JSON.parse(await page.evaluate(`return JSON.stringify({ workshop: document.querySelector('#workshop').value, plusDisabled: document.querySelector('[data-tier="workshop"][data-step="1"]').disabled, estimate: document.querySelector('#estimate').textContent })`));
+    check(`Workshop + stops at demo-local upper bound at ${width}`, upper.workshop === '10' && upper.plusDisabled && /£2320 for 11 tickets/.test(upper.estimate), JSON.stringify(upper));
+    for (let n = 1; n < 10; n += 1) await page.click('[data-tier="workshop"][data-step="-1"]');
     await page.click('[data-tier="general"][data-step="-1"]');
     const single = JSON.parse(await page.evaluate(`return JSON.stringify({ general: document.querySelector('#general').value, minusDisabled: document.querySelector('[data-tier="general"][data-step="-1"]').disabled, estimate: document.querySelector('#estimate').textContent })`));
     check(`General − clamps at zero and updates amount at ${width}`, single.general === '0' && single.minusDisabled && /£220 for 1 ticket/.test(single.estimate), JSON.stringify(single));
