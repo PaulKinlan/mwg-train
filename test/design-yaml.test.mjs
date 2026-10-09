@@ -119,3 +119,20 @@ test('carries a malformed frontmatter block through as problems rather than thro
   const { problems } = parseFrontmatter('---\n\tink: #fff\n---\n\n## Visual thesis\n');
   assert.match(problems.join(' '), /tab character/);
 });
+
+// A hex colour is data wherever it appears, including after other value parts. Reading '1px solid #8a8f98'
+// as a value with a trailing comment would refuse a perfectly ordinary CSS border and would have done so in
+// the first document written against this parser.
+test('accepts a hex colour as one part of a multi-part value', () => {
+  const { value, problems } = parseYamlSubset(
+    ['control-border: 1px solid #8a8f98', 'focus: 3px solid #1b4fd8', 'rule: 1px solid #d5d8dd'].join('\n'),
+  );
+  assert.deepEqual(problems, []);
+  assert.equal(value['control-border'], '1px solid #8a8f98');
+  assert.equal(value.focus, '3px solid #1b4fd8');
+});
+
+test('still refuses a genuine trailing comment', () => {
+  const { problems } = parseYamlSubset('control-border: 1px solid # this is prose, not a colour');
+  assert.match(problems.join(' '), /inline comments are not supported/);
+});

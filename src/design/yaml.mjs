@@ -12,7 +12,9 @@
  *   - a block mapping: `key: value`, nested by two spaces per level;
  *   - a block sequence: `- value`, nested under its key by two spaces;
  *   - scalars: bare strings, single- or double-quoted strings, integers, decimals, true, false, null;
- *   - a hex colour written bare, which is the one place a leading `#` is data rather than a comment;
+ *   - a hex colour written bare, which is the one place a leading `#` is data rather than a comment. A `#`
+ *     beginning a hex-coloured word is data wherever it appears, so `1px solid #8a8f98` is one value and is
+ *     not mistaken for a trailing comment;
  *   - full-line comments beginning with `#`.
  *
  * Rejected, each with the line number: tabs, odd indentation, duplicates keys, flow collections, anchors, aliases,
@@ -54,7 +56,7 @@ function parseScalar(raw, problems, lineNo) {
     problems.push(`line ${lineNo}: '${bad[0]}' starts a YAML feature this subset does not implement`);
     return null;
   }
-  const hash = text.search(/\s#/);
+  const hash = text.search(/\s#(?![0-9a-fA-F]{3,8}(?:\s|$))/);
   if (hash !== -1) {
     problems.push(`line ${lineNo}: inline comments are not supported; put the comment on its own line`);
     return null;
