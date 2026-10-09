@@ -182,6 +182,7 @@ export const DOCUMENTS = {
   'docs/design-brief-2026-10-08.md': 'design',
   'docs/design.md': 'design',
   'docs/design/archetypes/account-recovery/README.md': 'provenance',
+  'docs/design/archetypes/account-recovery/demo/README.md': 'design',
   'docs/design/archetypes/booking/README.md': 'design',
   'docs/design/archetypes/booking/demo/README.md': 'design',
   'docs/design/archetypes/catalogue/README.md': 'provenance',

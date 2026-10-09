@@ -14,6 +14,8 @@ import { startStaticServer } from '../scripts/lib/static-server.mjs';
 async function withServer(run) {
   const dir = mkdtempSync(join(tmpdir(), 'static-server-'));
   writeFileSync(join(dir, 'board.jpg'), Buffer.from([0xff, 0xd8, 0xff, 0xe0]));
+  writeFileSync(join(dir, 'demo.css'), 'body { color: #fff; }');
+  writeFileSync(join(dir, 'demo.js'), 'document.title = "demo";');
   const secret = join(tmpdir(), `static-server-secret-${Date.now()}.txt`);
   writeFileSync(secret, 'not for the browser');
   const server = await startStaticServer({
@@ -33,6 +35,11 @@ test('a mounted file is served with a usable content type, and an inline page ne
     assert.equal(image.status, 200);
     assert.equal(image.headers.get('content-type'), 'image/jpeg', 'the canvas needs a real image content type');
     assert.equal((await image.arrayBuffer()).byteLength, 4);
+
+    const css = await fetch(`${server.origin}/b/demo.css`);
+    const js = await fetch(`${server.origin}/b/demo.js`);
+    assert.match(css.headers.get('content-type'), /^text\/css\b/, 'the browser must parse demo styles');
+    assert.match(js.headers.get('content-type'), /^text\/javascript\b/, 'strict browsers require a script MIME type');
 
     const page = await fetch(`${server.origin}/page.html`);
     assert.equal(page.status, 200);

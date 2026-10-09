@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Account recovery · visual comparison</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="compare-page">
+  <main class="compare-shell">
+    <h1>Account recovery: visual references and live demo</h1>
+    <p class="compare-lead">Two unmodified Wave 2 reference boards beside independently rendered, interactive HTML previews. Open each preview at full size to inspect the behavior or tab into an iframe to try it here.</p>
+    <p class="compare-disclaimer">The boards are illustrative, rights-restricted design references, not generated-site captures or evidence of working email, tokens, expiry, or security controls. The preview sends no email, exposes no server route, and must not enter training or evaluation. See <a href="../README.md">board provenance</a> and <a href="README.md">demo boundaries</a>.</p>
+    <article class="comparison">
+      <h2>Request a reset link</h2>
+      <p>Board 1: centered form, floating email label and emerald action.</p>
+      <div class="compare-grid">
+        <figure>
+          <img src="../step1-request.jpg" width="1376" height="768" alt="Illustrative dark-slate recovery card with a logo, email field, Send Recovery Link button and Back to Sign In link">
+          <figcaption>Unmodified reference · <a href="../step1-request.jpg">open the JPEG</a>.</figcaption>
+        </figure>
+        <figure>
+          <iframe src="index.html" title="Live recovery request form visual demo, no email sent" loading="lazy"></iframe>
+          <figcaption>Live HTML form preview · <a href="index.html">open it full size</a>. Email validation is native and submission only switches the local visual state.</figcaption>
+        </figure>
+      </div>
+    </article>
+    <article class="comparison">
+      <h2>Inbox confirmation preview</h2>
+      <p>Board 2: inbox motif, confirmation layout and illustrative resend countdown. This is a visual state, not a sent message.</p>
+      <div class="compare-grid">
+        <figure>
+          <img src="../step2-sent.jpg" width="1376" height="768" alt="Illustrative dark-slate inbox card with an emerald tray icon, Check Your Inbox heading, countdown, Open Email App button and Return to Sign In link">
+          <figcaption>Unmodified reference · <a href="../step2-sent.jpg">open the JPEG</a>.</figcaption>
+        </figure>
+        <figure>
+          <iframe src="index.html?state=sent" title="Live inbox confirmation visual preview, no email sent" loading="lazy"></iframe>
+          <figcaption>Live HTML state preview · <a href="index.html?state=sent">open it full size</a>. The email address is illustrative, and app launch is deliberately disabled.</figcaption>
+        </figure>
+      </div>
+    </article>
+  </main>
+</body>
+</html>
