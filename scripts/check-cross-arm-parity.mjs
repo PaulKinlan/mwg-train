@@ -18,20 +18,15 @@
  *    geometry and controls, and they are blind to text - two pages with entirely different headings
  *    score 1.000 identity. This instrument does not claim to compare "the design as a whole".
  *
- * 2. Screenshots are SAVED, not diffed. There is no image decoder in this repository by design, and
- *    comparing PNG bytes would punish a framework for anti-aliasing; the repository's own conformance
- *    axes say geometry is the honest version of that question. Screenshots exist so a human can look.
+ * 2. Screenshots are SAVED and COMPARED. The comparison against reference boards is done using coarse structural metrics (luminance profiles and palette) inside headless Chrome, rather than diffing pixels directly.
  *
- * 3. The reference boards are IMAGES. Diffing a rendered page against a mockup JPEG is not a meaningful
- *    comparison, so what is compared against the boards is what the boards DECLARE: their palette, in
- *    hex. That comparison is expected to diverge today - the generated arms use the pilot palette - and
- *    divergence is reported as a finding, not treated as a failure to be hidden or a bar being passed.
+ * 3. The reference boards are IMAGES. The script compares rendered screenshots against the reference boards using structural metrics (luminance profiles and palette extraction) performed inside headless Chrome, finding the closest board for each arm.
  */
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import process from 'node:process';
 
-import { ANALYSIS_METRIC_NOTES, ANALYSIS_PAGE_HTML, summariseComparison } from './lib/image-metrics.mjs';
+import { ANALYSIS_METRIC_NOTES, ANALYSIS_PAGE_HTML, profileShapeDistance, summariseComparison } from './lib/image-metrics.mjs';
 import { startStaticServer } from './lib/static-server.mjs';
 import { ARCHETYPES } from '../pilot/archetypes.mjs';
 import { FRAMEWORKS, buildProjectFor, writeProject } from '../pilot/frameworks.mjs';
@@ -295,7 +290,7 @@ function renderMarkdown(report) {
     }
     lines.push('');
     lines.push(
-      'The distance is the mean absolute difference across the 32 row bands and the 32 column bands, averaged - stated here because a distance nobody can recompute is a number nobody can check. Nearer is closer; the closest board is named per arm, not assumed.',
+      'The distance is the average of two terms, computed for the 32 row bands and the 32 column bands of mean luminance and then averaged: how differently the two profiles are SHAPED (one minus their correlation, halved, and 1 when a profile has no variation) and how different their average brightnesses are. Stated here because a distance nobody can recompute is a number nobody can check, and the band values are in the JSON beside it. Nearer is closer; the closest board is named per arm, not assumed.',
     );
   }
   lines.push('');
@@ -311,34 +306,33 @@ function renderMarkdown(report) {
  * How far apart two images are, as ONE number, so "which board is this arm closest to" is answerable
  * without a human looking at 105 pairs of images.
  *
- * The metric is stated rather than implied: the mean absolute difference between the 32 row and 32 column
- * band profiles of MEAN LUMINANCE after subtracting each image's own mean - that is, the difference in
- * SHAPE, so a dark image and a light image of the same layout are close rather than maximally far apart.
- * It is deliberately built only on the coarse structure profile, because that is the part of the
- * measurement that survives the fact that a board is a mockup and an arm is a live page - they will never
- * share a colour histogram exactly, and pretending otherwise would produce a distance nobody could
- * interpret.
+ * The metric is stated rather than implied: for the 32 row bands and the 32 column bands of MEAN LUMINANCE,
+ * the average of two things - how differently the two profiles are SHAPED (1 minus the absolute
+ * correlation, and 1 when either profile is uniform) and how different their average brightnesses are. Two
+ * earlier versions of this were blocked by review: brightness-only saturates on a dark mockup, and
+ * shape-only calls a uniform board a perfect match for every image. A reader can recompute the number from
+ * the band values in the report.
  */
 export function metricDistance(a, b) {
   const mean = (values) => (values.length === 0 ? 0 : values.reduce((sum, value) => sum + value, 0) / values.length);
-  // The SHAPE of the mean-luminance bands: each band's luminance minus that image's own mean. Raw
-  // luminance would make this a second brightness axis (a uniformly dark image and a uniformly light one
-  // differ by 0.7 of it while having the same shape), and ink coverage saturates on dark images - measured
-  // on the reference boards, ink is 98.6-99.5% for all five, which made the "closest board" a ranking by
-  // rounding. A cross-family review caught that; a test then caught the first fix, which had merely renamed
-  // the brightness axis. The deviation is what "where the content sits" means.
-  const deviations = (values) => {
-    if (!Array.isArray(values) || values.length === 0) return [];
-    const average = values.reduce((sum, value) => sum + value, 0) / values.length;
-    return values.map((value) => value - average);
+  // TWO TERMS, because a reviewer showed that either one alone gives a confidently wrong answer:
+  //
+  // - Shape alone (what this used to be, after subtracting each profile's own mean) makes a uniform board a
+  //   zero vector, and then the distance to it is just the candidate's own signal - so every sparse arm
+  //   "matched" the empty board, and a pure white image against a pure black one scored exactly 0.
+  // - Brightness alone is what the original ink-coverage metric did, and it saturates: measured on the
+  //   reference boards, all five are 98.6-99.5% ink, so the ranking was decided by rounding.
+  //
+  // Averaged, and stated here so a reader can recompute it from the band values in the report. Shape is
+  // 1 when either profile is uniform (`profileShapeDistance` fails closed), which is what stops a uniform
+  // board attracting everything.
+  const pair = (first, second) => {
+    const shape = profileShapeDistance(first ?? [], second ?? []);
+    return (shape.distance + Math.abs(mean(first ?? []) - mean(second ?? []))) / 2;
   };
-  const baseRows = deviations(a.rowLuminance);
-  const candRows = deviations(b.rowLuminance);
-  const baseBands = deviations(a.bandLuminance);
-  const candBands = deviations(b.bandLuminance);
-  const rowDiff = mean(baseRows.map((value, index) => Math.abs(value - (candRows[index] ?? 0))));
-  const bandDiff = mean(baseBands.map((value, index) => Math.abs(value - (candBands[index] ?? 0))));
-  return Number(((rowDiff + bandDiff) / 2).toFixed(4));
+  const rows = pair(a?.rowLuminance, b?.rowLuminance);
+  const bands = pair(a?.bandLuminance, b?.bandLuminance);
+  return Number(((rows + bands) / 2).toFixed(4));
 }
 
 /**
@@ -432,13 +426,11 @@ async function compareAgainstBoards({ chrome, armRoot, screenshots, arms }) {
     boards: boardMetrics.map((board) => ({
       file: board.file,
       size: `${board.metrics.width}x${board.metrics.height}`,
-      luminance: board.metrics.luminance.mean,
-      ink: board.metrics.ink,
-      colours: board.metrics.colours.slice(0, 5),
-      // The band profiles are kept so the distance can be RECOMPUTED from the committed artifact: a
-      // distance nobody can check is a number nobody should trust.
-      rows: board.metrics.rows,
-      bands: board.metrics.bands,
+      // SPREAD the measurement rather than naming fields. This projection used to list
+      // luminance/ink/colours/rows/bands by hand and silently dropped the mean-luminance band profiles the
+      // distance is computed from, so the committed report could not be recomputed from - the same defect as
+      // restating a derived list by hand, one layer down. A measured object belongs in the report whole.
+      ...board.metrics,
     })),
     unreadable_boards: failedBoards.map((board) => ({ file: board.file, error: board.metrics?.error ?? 'no result' })),
     per_arm: perArm,
@@ -469,12 +461,10 @@ function compareOne({ screenshot, boardMetrics }) {
   return {
     ...screenshot,
     metrics: {
-      width: analysed.width,
-      height: analysed.height,
-      luminance: analysed.luminance.mean,
-      ink: analysed.ink,
-      rows: analysed.rows,
-      bands: analysed.bands,
+      // Spread for the same reason as the boards above: a hand-listed projection drops whatever the list
+      // forgets, and what it forgot here was the profile the distance is built on. The full luminance
+      // distribution is carried too, not just its mean, because a reader checking the number needs it.
+      ...analysed,
     },
     closest_board: closest.board,
     closest_distance: closest.distance,

@@ -16,6 +16,7 @@ const CODES = Object.freeze({
   LUMINANCE_DIVERGES: 'BOARD_LUMINANCE_DIVERGES',
   INK_DIVERGES: 'BOARD_INK_DIVERGES',
   STRUCTURE_DIVERGES: 'BOARD_STRUCTURE_DIVERGES',
+  STRUCTURE_NOT_COMPARABLE: 'BOARD_STRUCTURE_NOT_COMPARABLE',
 });
 
 function round4(value) {
@@ -371,92 +372,60 @@ export function summariseComparison(baseline, candidate) {
 
   // 4. Row profile comparison (32 horizontal bands)
   //
-  // Judged on the SHAPE of the mean-luminance profile: each band's luminance minus that image's own mean
-  // luminance. Judging on raw luminance would make "structure" a second brightness axis in disguise - a
-  // uniformly dark image and a uniformly light one differ by 0.7 of it while having exactly the same shape -
-  // and judging on ink coverage saturates on dark images for the same reason. The deviation is what "where
-  // the content sits" means, and it is what this axis exists to see.
-  const rowDeviations = (value) => {
-    if (!Array.isArray(value)) return [];
-    const mean = value.reduce((sum, entry) => sum + entry, 0) / (value.length || 1);
-    return value.map((entry) => entry - mean);
+  // Judged on the SHAPE of the profile, by correlation, so the answer is unchanged by how bright the image
+  // is. Two earlier versions of this were blocked by review: ink coverage saturates on a dark mockup, and
+  // subtracting each profile's own mean made a uniform board a zero vector that every sparse image
+  // "matched" - it scored a pure white image and a pure black one as identical. See
+  // `profileShapeDistance` for both mistakes written up.
+  const profileOf = (luminance, ink) => {
+    if (Array.isArray(luminance)) return { values: luminance, name: 'mean luminance per band' };
+    if (Array.isArray(ink)) return { values: ink, name: 'ink density per band' };
+    return { values: [], name: 'no profile available' };
   };
-  const usedLuminanceProfile = Array.isArray(baseline?.rowLuminance);
-  const baseRows = usedLuminanceProfile ? rowDeviations(baseline.rowLuminance) : Array.isArray(baseline?.rows) ? baseline.rows : [];
-  const candRows = usedLuminanceProfile ? rowDeviations(candidate?.rowLuminance) : Array.isArray(candidate?.rows) ? candidate.rows : [];
-  const rowProfileName = usedLuminanceProfile
-    ? 'mean luminance per horizontal band, minus each image\'s own mean'
-    : 'ink density per horizontal band';
+  const baseRowProfile = profileOf(baseline?.rowLuminance, baseline?.rows);
+  const candRowProfile = profileOf(candidate?.rowLuminance, candidate?.rows);
+  const rowShape = profileShapeDistance(baseRowProfile.values, candRowProfile.values);
 
-  let rowAbsDiffSum = 0;
-  let baseRowSum = 0;
-  let candRowSum = 0;
-  for (let i = 0; i < 32; i++) {
-    const bVal = baseRows[i] ?? 0;
-    const cVal = candRows[i] ?? 0;
-    rowAbsDiffSum += Math.abs(cVal - bVal);
-    baseRowSum += bVal;
-    candRowSum += cVal;
-  }
-  const rowMeanDiff = rowAbsDiffSum / 32;
-  const baseRowMean = baseRowSum / 32;
-  const candRowMean = candRowSum / 32;
-
-  if (rowMeanDiff > 0.10) {
-    let dir;
-    if (candRowMean > baseRowMean) {
-      dir = `candidate horizontal bands are brighter (${round4(candRowMean).toFixed(4)}) than baseline (${round4(baseRowMean).toFixed(4)})`;
-    } else if (candRowMean < baseRowMean) {
-      dir = `candidate horizontal bands are darker (${round4(candRowMean).toFixed(4)}) than baseline (${round4(baseRowMean).toFixed(4)})`;
-    } else {
-      dir = `ink and tone are redistributed across horizontal bands relative to baseline`;
-    }
+  if (!rowShape.comparable) {
+    findings.push({
+      code: CODES.STRUCTURE_NOT_COMPARABLE,
+      axis: 'structure',
+      profile: 'rows',
+      message: `Axis 'structure': one of the two horizontal band profiles has no variation, so their shapes cannot be compared. Reported rather than scored, because scoring it would call a uniform image a perfect structural match for every other image.`,
+    });
+  } else if (rowShape.distance > 0.10) {
     findings.push({
       code: CODES.STRUCTURE_DIVERGES,
       axis: 'structure',
       profile: 'rows',
-      baseline: round4(baseRowMean),
-      candidate: round4(candRowMean),
-      message: `Axis 'structure': row profile shape differs by ${round4(rowMeanDiff).toFixed(4)} mean absolute deviation over the ${rowProfileName} (exceeds threshold 0.1000); baseline shape mean ${round4(baseRowMean).toFixed(4)}, candidate shape mean ${round4(candRowMean).toFixed(4)} (${dir}).`,
+      correlation: rowShape.correlation,
+      baseline: rowShape.correlation,
+      candidate: rowShape.correlation,
+      message: `Axis 'structure': horizontal band ${baseRowProfile.name} correlates at ${rowShape.correlation} between the two images (a correlation below 0.80 counts as a different shape, and a negative one as an inverted one), so where the content sits differs.`,
     });
   }
 
   // 5. Column band comparison (32 vertical bands)
-  const baseBands = usedLuminanceProfile ? rowDeviations(baseline?.bandLuminance) : Array.isArray(baseline?.bands) ? baseline.bands : [];
-  const candBands = usedLuminanceProfile ? rowDeviations(candidate?.bandLuminance) : Array.isArray(candidate?.bands) ? candidate.bands : [];
-  const colProfileName = usedLuminanceProfile
-    ? 'mean luminance per vertical band, minus each image\'s own mean'
-    : 'ink density per vertical band';
+  const baseColProfile = profileOf(baseline?.bandLuminance, baseline?.bands);
+  const candColProfile = profileOf(candidate?.bandLuminance, candidate?.bands);
+  const colShape = profileShapeDistance(baseColProfile.values, candColProfile.values);
 
-  let colAbsDiffSum = 0;
-  let baseColSum = 0;
-  let candColSum = 0;
-  for (let i = 0; i < 32; i++) {
-    const bVal = baseBands[i] ?? 0;
-    const cVal = candBands[i] ?? 0;
-    colAbsDiffSum += Math.abs(cVal - bVal);
-    baseColSum += bVal;
-    candColSum += cVal;
-  }
-  const colMeanDiff = colAbsDiffSum / 32;
-  const baseColMean = baseColSum / 32;
-  const candColMean = candColSum / 32;
-
-  if (colMeanDiff > 0.10) {
-    let dir;
-    if (candColMean > baseColMean) {
-      dir = `candidate vertical bands are brighter (${round4(candColMean).toFixed(4)}) than baseline (${round4(baseColMean).toFixed(4)})`;
-    } else if (candColMean < baseColMean) {
-      dir = `candidate vertical bands are darker (${round4(candColMean).toFixed(4)}) than baseline (${round4(baseColMean).toFixed(4)})`;
-    } else {
-      dir = `ink and tone are redistributed across vertical bands relative to baseline`;
-    }
+  if (!colShape.comparable) {
+    findings.push({
+      code: CODES.STRUCTURE_NOT_COMPARABLE,
+      axis: 'structure',
+      profile: 'columns',
+      message: `Axis 'structure': one of the two vertical band profiles has no variation, so their shapes cannot be compared. Reported rather than scored, because scoring it would call a uniform image a perfect structural match for every other image.`,
+    });
+  } else if (colShape.distance > 0.10) {
     findings.push({
       code: CODES.STRUCTURE_DIVERGES,
       axis: 'structure',
-      baseline: round4(baseColMean),
-      candidate: round4(candColMean),
-      message: `Axis 'structure': column profile shape differs by ${round4(colMeanDiff).toFixed(4)} mean absolute deviation over the ${colProfileName} (exceeds threshold 0.1000); baseline shape mean ${round4(baseColMean).toFixed(4)}, candidate shape mean ${round4(candColMean).toFixed(4)} (${dir}).`,
+      profile: 'columns',
+      correlation: colShape.correlation,
+      baseline: colShape.correlation,
+      candidate: colShape.correlation,
+      message: `Axis 'structure': vertical band ${baseColProfile.name} correlates at ${colShape.correlation} between the two images (a correlation below 0.80 counts as a different shape, and a negative one as an inverted one), so where the content sits differs.`,
     });
   }
 
@@ -464,10 +433,63 @@ export function summariseComparison(baseline, candidate) {
 }
 
 /**
+ * How different are two band profiles in SHAPE, independent of how bright either one is?
+ *
+ * Pearson correlation, so scaling or shifting a profile does not change the answer. This replaces two
+ * earlier attempts, and a reviewer was right to block both:
+ *
+ * - Ink coverage thresholds at 0.85, so on a dark mockup every band saturates near 1.0 and the answer is
+ *   decided by rounding.
+ * - Subtracting each profile's own mean makes every UNIFORM image a zero vector, and then the distance to
+ *   it is just the candidate's own signal. Measured: a uniform board attracted every sparse arm, and
+ *   `metricDistance` returned 0 for a pure white image against a pure black one - it called them the same
+ *   image. That is worse than a wrong number; it is a confidently wrong answer, which is the one thing
+ *   this instrument exists to avoid.
+ *
+ * A flat profile has no shape to compare, so this returns `comparable: false` and a distance of 1 - "no
+ * similarity can be demonstrated" - rather than 0. Failing closed matters here because a zero reads as a
+ * perfect match.
+ */
+export function profileShapeDistance(first, second) {
+  if (!Array.isArray(first) || !Array.isArray(second) || first.length === 0 || second.length === 0) {
+    return { distance: 1, comparable: false, correlation: null };
+  }
+  const length = Math.min(first.length, second.length);
+  const a = first.slice(0, length);
+  const b = second.slice(0, length);
+  const meanA = a.reduce((sum, value) => sum + value, 0) / length;
+  const meanB = b.reduce((sum, value) => sum + value, 0) / length;
+  let covariance = 0;
+  let varianceA = 0;
+  let varianceB = 0;
+  for (let index = 0; index < length; index += 1) {
+    const deviationA = a[index] - meanA;
+    const deviationB = b[index] - meanB;
+    covariance += deviationA * deviationB;
+    varianceA += deviationA * deviationA;
+    varianceB += deviationB * deviationB;
+  }
+  const spreadA = Math.sqrt(varianceA / length);
+  const spreadB = Math.sqrt(varianceB / length);
+  // A profile with no variation cannot be correlated with anything, including another flat profile - two
+  // uniform images are not "identical in shape", they are two images with no shape to compare.
+  if (spreadA < 1e-6 || spreadB < 1e-6) return { distance: 1, comparable: false, correlation: null };
+  const correlation = covariance / (spreadA * spreadB * length);
+  // (1 - correlation) / 2, NOT 1 - |correlation|. The absolute value scores a perfectly INVERTED profile - a
+  // layout turned upside down, or bright where the other is dark - as a perfect shape match, which is the
+  // opposite of true. Correlation itself gets the two cases right that matter: a faded or darkened copy of
+  // the same layout correlates at +1 and is the same shape, while an inverted one correlates at -1 and is
+  // maximally different. The halving keeps the result in 0..1 for a distance that gets averaged.
+  const distance = Math.min(1, Math.max(0, (1 - correlation) / 2));
+  return { distance: round4(distance), comparable: true, correlation: round4(correlation) };
+}
+
+/**
  * Explanatory notes suitable for inclusion in cross-arm parity reports.
  */
 export const ANALYSIS_METRIC_NOTES =
-  'These visual metrics compare quantised colour distribution, mean luminance, ink coverage, and a continuous 32-band mean-luminance profile horizontally and vertically across rendered images. ' +
-  'Structure is judged on the SHAPE of the mean-luminance profile - each band measured against the mean luminance of the whole image - and not on raw luminance and not on ink coverage: raw luminance would make it a second brightness axis, and ink coverage thresholds at 0.85 so a dark slate mockup is almost entirely "ink" and its bands saturate. ' +
+  'These visual metrics compare quantised colour distribution, mean luminance, ink coverage, and the SHAPE of the 32-band mean-luminance profile horizontally and vertically across rendered images. ' +
+  'Shape is judged by correlation between the two profiles, so it does not depend on how bright either image is, and a profile with no variation is reported as not comparable rather than scored - scoring it would call a uniform image a perfect structural match for every other image. ' +
+  'The distance between two images averages that shape difference with the difference in their mean luminance, because shape alone lets a uniform board attract everything and brightness alone saturates: measured on the reference boards, ink coverage is 98.6-99.5% for all five. ' +
   'They do not establish that a layout, component hierarchy, or specific design element is correct, nor do they verify semantic markup or typography. ' +
-  'Two completely different designs can share global luminance, ink density and colour histograms while looking visually distinct to a human, and ink coverage and luminance are polarity-sensitive: a dark mockup compared against a light implementation will diverge on both largely because one is dark and the other is light.';
+  'Two completely different designs can share global luminance, ink density and colour histograms while looking visually distinct to a human.';
