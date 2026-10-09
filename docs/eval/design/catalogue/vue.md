@@ -34,8 +34,8 @@ A parts catalogue with server-side search, paging and a session cart. The design
 single narrow column, one accent, and an error treatment that names the field it belongs to.
 
 Composition: `docs/design.md` sets out this repository's composition grammars, and no row there names
-`catalogue`; this contract describes the page the generator writes for archetype `catalogue`, framework arm `vue`
-Vue 3 SSR using `createSSRApp` and `vue/server-renderer`, with the template compiler run in process, no build step. All seven arms are server-rendered with NO client hydration; the only client code is the `/app/enhance.js` module.
+`catalogue`; this contract describes the page the generator writes for archetype `catalogue`, framework arm `vue` Vue 3 SSR using `createSSRApp` and `vue/server-renderer`, with the template compiler run in process, no build step. All seven arms are server-rendered with NO client hydration; the only client code is the `/app/enhance.js` module.
+
 
 ## Grammar and layout
 

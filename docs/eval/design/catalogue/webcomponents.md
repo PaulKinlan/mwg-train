@@ -34,8 +34,8 @@ A parts catalogue with server-side search, paging and a session cart. The design
 single narrow column, one accent, and an error treatment that names the field it belongs to.
 
 Composition: `docs/design.md` sets out this repository's composition grammars, and no row there names
-`catalogue`; this contract describes the page the generator writes for archetype `catalogue`, framework arm `webcomponents`
-a custom element that attaches an OPEN shadow root and appends a `<style>` element plus a slot; the server-rendered children are projected into the slot. All seven arms are server-rendered with NO client hydration; the only client code is the `/app/enhance.js` module.
+`catalogue`; this contract describes the page the generator writes for archetype `catalogue`, framework arm `webcomponents` a custom element that attaches an OPEN shadow root and appends a `<style>` element plus a slot; the server-rendered children are projected into the slot. All seven arms are server-rendered with NO client hydration; the only client code is the `/app/enhance.js` module.
+
 
 This arm has a real structural difference from the others: the `record-echo` custom element attaches an OPEN shadow root. The `:host { display: block }` rule and the shadow boundary are why the page stylesheet still applies to the host but not into the shadow tree, while the server-rendered children are projected into a slot.
 
