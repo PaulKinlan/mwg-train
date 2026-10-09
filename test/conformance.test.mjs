@@ -215,3 +215,34 @@ test('every target in the manifest is hash-pinned, rights-cleared and never trai
     assert.ok(signatureData.nodes.length > 0, `${family.family_id}: the target renders with no elements`);
   }
 });
+
+test('identityFindings refuses the axes object instead of reporting agreement', () => {
+  // The plausible mistake, and the reason this test exists: `identityFindings` reads
+  // `identity.identity[axis]` - the whole `variantIdentity` RESULT - but the axes are what a caller usually
+  // has in hand, so handing them over is easy to do. It used to return an empty finding list, and an empty
+  // list is indistinguishable from a family that agrees. Fail-open in a verdict function is the shape this
+  // repository refuses elsewhere, so a wrong call must be loud.
+  const axes = { structural: 0.1, geometry: 0.1, controls: 0.1, overall: 0.1 };
+  assert.throws(
+    () => identityFindings(axes, { structural: 0.75 }),
+    /variantIdentity RESULT/,
+    'the bare axes object must be refused, not read as universal agreement',
+  );
+  assert.throws(
+    () => identityFindings(null, { structural: 0.75 }),
+    /variantIdentity RESULT/,
+    'a null argument must be refused rather than silently agreeing',
+  );
+  assert.throws(
+    () => identityFindings({ identity: null }, { structural: 0.75 }),
+    /variantIdentity RESULT/,
+    'a result without its axes must be refused',
+  );
+  // The real shape must still be judged, so the guard cannot pass by rejecting everything.
+  const real = { identity: axes, weakest_by_axis: {}, degenerate: false };
+  assert.deepEqual(
+    identityFindings(real, { structural: 0.75 }).map((finding) => finding.code),
+    ['IDENTITY_BELOW_BUDGET'],
+    'the genuine variantIdentity result must still be scored',
+  );
+});
