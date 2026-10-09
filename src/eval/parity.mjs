@@ -351,14 +351,17 @@ export function paritySummary({ archetype, viewports, armsByViewport, budget, ex
   const viewportReports = viewports.map((requested) => {
     const arms = armsByViewport[requested.key] ?? [];
     const crossArm = crossArmFindings({ arms, budget });
-    const missing = arms.filter((arm) => !arm.signature).map((arm) => arm.framework);
+    // `isMeasurable`, not truthiness, in BOTH lists: a blank page yields a truthy signature, so it was
+    // reported as ARM_UNMEASURED by crossArmFindings while being counted as MEASURED here - the report
+    // contradicting itself inside one viewport (mwg-train-z92 review).
+    const missing = arms.filter((arm) => !isMeasurable(arm.signature)).map((arm) => arm.framework);
     // An expected arm with no row at all is missing too, and is reported as such rather than being absent
     // from both lists.
     const seen = new Set(arms.map((arm) => arm?.framework));
     for (const framework of expectedArms ?? []) if (!seen.has(framework)) missing.push(framework);
     return {
       viewport: requested,
-      measured: arms.filter((arm) => arm.signature).map((arm) => arm.framework).sort(),
+      measured: arms.filter((arm) => isMeasurable(arm.signature)).map((arm) => arm.framework).sort(),
       missing: missing.sort(),
       identity: crossArm.identity,
       pairwise: crossArm.pairwise ?? null,

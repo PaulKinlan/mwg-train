@@ -570,3 +570,26 @@ test('a viewport where every arm rendered blank is degenerate, not a crash', () 
   assert.equal(result.identity, null);
   assert.deepEqual(result.findings.map((finding) => finding.code), ['ARM_UNMEASURED', 'ARM_UNMEASURED', 'ARM_UNMEASURED', 'CROSS_ARM_DEGENERATE']);
 });
+
+test('a blank-rendered arm is not listed as measured in the viewport summary', () => {
+  // The summary and the findings contradicted each other: crossArmFindings correctly reported a blank arm as
+  // ARM_UNMEASURED, while paritySummary listed the same arm under `measured`, because both `measured` and
+  // `missing` filtered on truthiness and a blank page still yields a truthy signature. A report that says an
+  // arm was measured and that it measured nothing, in the same viewport, is worse than either alone.
+  const requested = { key: 'desktop', width: 1280, height: 900 };
+  const blank = { viewport: requested, nodes: [], boxes: [], controls: [] };
+  const arms = [arm('raw'), arm('hono'), arm('react'), { framework: 'blank-render', signature: blank }];
+  const summary = paritySummary({
+    archetype: 'booking',
+    viewports: [requested],
+    armsByViewport: { desktop: arms },
+    budget: BUDGET,
+  });
+  const viewport = summary.viewports[0];
+  assert.deepEqual(viewport.missing, ['blank-render'], 'the blank arm belongs in missing, not measured');
+  assert.deepEqual(viewport.measured, ['hono', 'raw', 'react'], 'and must not be counted as measured');
+  assert.ok(
+    viewport.findings.some((finding) => finding.code === 'ARM_UNMEASURED' && finding.arm === 'blank-render'),
+    'while still being named as unmeasured in the findings',
+  );
+});
