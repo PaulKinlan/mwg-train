@@ -7,6 +7,7 @@ import { test } from 'node:test';
 import { DESIGN_SECTIONS, checkDesignDocument, repositoryLinkResolver } from '../src/design/contract.mjs';
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
+import { DOCUMENTS } from '../scripts/check-baseline-label.mjs';
 
 // A checker that has only ever been shown to pass is not a checker, so nearly every rule below is exercised by
 // a document that must be rejected. The document builder produces a VALID contract; each test breaks exactly
@@ -215,15 +216,35 @@ test('the token-value restatement check ignores case, because a value does not c
   );
 });
 
-// Permanent guard: a new design document that nobody classified is exactly what the merger's full gate caught
-// on this branch, and it passed every check I had run. This asserts the class cannot recur.
 const root = new URL('../', import.meta.url);
 
+// Permanent guard: a new design document that nobody classified is exactly what the merger's full gate caught on
+// this branch, and it passed every check I had run. This asserts the class cannot recur.
+//
+// The first version of this guard was itself wrong in three ways, found by an independent cross-family review and
+// reproduced before being fixed: it searched the checker's SOURCE TEXT for a quoted path, so an entry moved into
+// a comment left the guard green while the full gate failed; it scanned only .md in one directory, while the
+// checker scans tracked .md AND .json; and its floor of 35 permitted six of the 41 tracked design documents to
+// disappear unnoticed. It now enumerates the checker's own surface with NUL separation, so git path quoting
+// cannot hide a file, and asserts against the exported DOCUMENTS map itself rather than a string that looks like
+// it. The control that proves it bites: comment out one entry and this test fails where it previously passed.
 test('every tracked design document is classified for the baseline-label check', () => {
-  const tracked = execFileSync('git', ['ls-files', 'docs/eval/design'], { cwd: root, encoding: 'utf8' })
-    .split('\n').filter((p) => p.endsWith('.md'));
-  assert.ok(tracked.length >= 35, `expected the design documents, saw ${tracked.length}`);
-  const classification = readFileSync(new URL('scripts/check-baseline-label.mjs', root), 'utf8');
-  const unclassified = tracked.filter((p) => !classification.includes(`'${p}'`));
-  assert.deepEqual(unclassified, [], 'classify these in DOCUMENTS or the full gate will fail');
+  const tracked = execFileSync('git', ['ls-files', '-z', '--', 'docs/eval/design'], { cwd: root, encoding: 'utf8' })
+    .split('\0')
+    .filter((p) => /[.](md|json)$/.test(p));
+  // A floor, not a target: the point is that a shrinking list cannot make this test pass vacuously. It is the
+  // count of tracked design documents at the time of writing, so removing design documents is a deliberate edit.
+  assert.ok(tracked.length >= 41, `expected at least the 41 tracked design documents, saw ${tracked.length}`);
+  const unclassified = tracked.filter((p) => !Object.hasOwn(DOCUMENTS, p));
+  assert.deepEqual(unclassified, [], 'classify these in the DOCUMENTS map or the full gate will fail');
+});
+
+test('the guard would notice an entry that was only commented out', () => {
+  // The specific false negative the reviewer found, pinned as a test so the guard cannot regress into it.
+  const source = readFileSync(new URL('scripts/check-baseline-label.mjs', root), 'utf8');
+  const sample = 'docs/eval/design/booking/raw.md';
+  assert.ok(Object.hasOwn(DOCUMENTS, sample), 'the sample must be a real classified document');
+  assert.ok(source.includes(`'${sample}'`), 'the map should render as source too, which is why the old check looked like it worked');
+  const commented = source.replace(`  '${sample}': 'design',`, `  // '${sample}': 'design',`);
+  assert.ok(commented.includes(`'${sample}'`), 'a comment still contains the text, which is exactly the trap');
 });
