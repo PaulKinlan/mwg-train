@@ -141,12 +141,14 @@ independently good, and a variant that dropped its labels would show up here onl
 `controlSimilarity` takes the worse of the two sides.
 
 Per-variant deltas from the raw baseline to the shared target are in each
-`<family>-identity.md`. In four of the five families the mean delta is within +/-0.005; account-recovery is
-not - its mean delta is **+0.0102** across its six non-raw arms (+0.0151, +0.0151, +0.0185, +0.0151,
--0.0024, 0.0000), so the deterministic a11y uplift moves that build *towards* its target design rather
-than leaving it where it was. The claim here used to be that all five were within +/-0.005, which was
-false for account-recovery and true for the other four (booking +0.001, catalogue -0.0015, contact-lead
-+0.0015, event-registration -0.0026).
+`<family>-identity.md`. In four of the five families the mean UPLIFT delta is within +/-0.005 - booking
++0.0046, event-registration +0.0047, contact-lead +0.0016, catalogue +0.0011 - and account-recovery is
+not: its mean is **+0.0060** across its seven arms (+0.0151, 0.0000, 0.0000, -0.0034, 0.0000, +0.0152,
++0.0151). So for account-recovery the deterministic a11y uplift does move the build measurably towards
+its target design, and for the other four it is close to neutral. An earlier correction of this paragraph
+replaced the uplift figure with +0.0102, which is a different measurement - that is `target_conformance`
+differences BETWEEN frameworks' raw builds, not the effect of the uplift on one build - and the two were
+wrongly described as the same quantity.
 
 ## Scoring a family
 
@@ -161,10 +163,12 @@ the target, and writes `docs/eval/conformance/<family>.{json,md}`.
 
 ## Result
 
-`docs/eval/conformance/booking.md` is the first family scored. Its table's two score columns are the
-variant and the shared target, not two variants: the **raw** variant scores 0.652 against the shared
-target's 0.659. The mean delta is **+0.005** across the seven arms (preact -0.001, the rest +0.001 to
-+0.007). Read
+`docs/eval/conformance/booking.md` is the first family scored. Its first two score columns are the SAME
+build before and after the uplift, both measured against the shared target - the header is
+`| framework | raw baseline | target conformance | delta |`, so the raw arm's `raw baseline` of 0.652 and
+its `target conformance` of 0.659 are one build scored twice, and 0.659 is not the target's own score.
+The delta is +0.006 for the raw arm. The mean delta is **+0.005** across the seven arms (preact -0.001,
+the rest +0.001 to +0.007). Read
 that as a finding,
 not a sales figure: the deterministic accessibility uplift is roughly neutral for *visual*
 conformance, within noise. That is exactly what the axis is for - it makes visible that a11y uplift
