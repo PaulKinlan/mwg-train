@@ -4,93 +4,128 @@ import { tmpdir } from 'node:os';
 import { basename, join } from 'node:path';
 import { test } from 'node:test';
 
-import { REQUIRED_SECTIONS, checkDesignDocument, repositoryLinkResolver } from '../src/design/contract.mjs';
+import { DESIGN_SECTIONS, checkDesignDocument, repositoryLinkResolver } from '../src/design/contract.mjs';
 
-// A checker that only ever passes is not a checker, so every rule gets a document that must be rejected.
-const body = (overrides = {}) => {
-  const sections = {
-    'Visual thesis': 'A scene, so the page is the task.',
-    'Grammar and layout': 'Grammar: Decision workbench. Routes: `GET /` and `POST /book`.',
-    Typography: '`16px/1.5 system-ui, sans-serif`, `h1` `1.6rem`.',
-    'Token vocabulary': '| `--fg` | `#16181d` |',
-    'Spacing rhythm': '`1rem` between fields.',
-    'Component hierarchy': '`main` \u2192 `form#booking-form`. Files: `app/page.mjs`, `spec.json`.',
-    States: 'Invalid implemented; loading declared only.',
-    'Implementation status': 'Lists what exists and what is declared only.',
-    Rationale: 'Constraints rather than preferences.',
-    Provenance: 'Synthetic copy; see `docs/eval/design/README.md`.',
-    ...overrides,
-  };
-  return `# Evening class booking \u2014 \`raw\` demo design contract\n\n`
-    + REQUIRED_SECTIONS.map((heading) => `## ${heading}\n\n${sections[heading]}\n`).join('\n');
+// A checker that has only ever been shown to pass is not a checker, so nearly every rule below is exercised by
+// a document that must be rejected. The document builder produces a VALID contract; each test breaks exactly
+// one thing and asserts that the break is the finding it should be.
+
+const FRONTMATTER = [
+  '---',
+  'archetype: booking',
+  'framework: raw',
+  'tokens:',
+  '  --fg: "#16181d"',
+  '  --bg: "#ffffff"',
+  'literals:',
+  '  control-border: 1px solid #8a8f98',
+  'antiPatterns:',
+  '  - a second accent colour',
+  '---',
+  '',
+].join('\n');
+
+const SECTIONS = {
+  'Visual thesis': 'A scene, so the page is the task.',
+  'Grammar and layout': 'One narrow column, sixty-ish characters of measure.',
+  Typography: '`16px/1.5 system-ui, sans-serif`, `h1` `1.6rem`.',
+  'Token usage': 'The `--fg` token carries all ink and is redefined for dark mode.',
+  'Spacing rhythm': '`1rem` between fields.',
+  'Component hierarchy': '`main` then `form#booking-form`; files `app/page.mjs`, `spec.json`.',
+  'Anti-patterns': 'A second accent colour.',
+  Rationale: 'Constraints rather than preferences.',
+  Provenance: 'Synthetic copy; see `docs/eval/design/README.md`.',
 };
+
+function document(overrides = {}, frontmatter = FRONTMATTER) {
+  const title = overrides.__title ?? '# Evening class booking \u2014 `raw` demo design contract\n\n';
+  delete overrides.__title;
+  const sections = { ...SECTIONS, ...overrides };
+  const headings = overrides.__sections ?? DESIGN_SECTIONS;
+  delete overrides.__sections;
+  return frontmatter + title + headings.map((heading) => `## ${heading}\n\n${sections[heading] ?? 'Body.'}\n`).join('\n');
+}
 
 const demo = {
   archetype: 'booking',
   framework: 'raw',
   files: ['app/enhance.js', 'app/page.mjs', 'app/styles.css', 'package.json', 'server.mjs', 'spec.json'],
-  stylesheet: ':root { --fg: #16181d; --bg: #fff; }\n',
-  routes: [{ method: 'GET', path: '/' }, { method: 'POST', path: '/book' }],
+  stylesheet: ':root { --fg: #16181d; --bg: #ffffff; }\ninput { border: 1px solid #8a8f98; }\n',
 };
 const check = (text, over = {}) => checkDesignDocument({ name: 'booking/raw.md', text, demo: { ...demo, ...over } });
+const problems = (text, over) => check(text, over).map((finding) => `${finding.at}: ${finding.problem}`).join(' | ');
 
 test('a contract that matches the generated demo produces no findings', () => {
-  assert.deepEqual(check(body()), []);
+  assert.deepEqual(check(document()), []);
 });
 
-test('every required section is required, and a stray section is refused', () => {
-  for (const heading of REQUIRED_SECTIONS) {
-    const text = body().replace(new RegExp(`## ${heading}\\n\\n[^\\n]*\\n`), '');
-    const findings = check(text);
-    assert.ok(findings.some((f) => f.problem.includes(heading)), `${heading}: removal must be a finding`);
+test('the framework is named in the title, and it must be the demo that was generated', () => {
+  assert.match(problems(document({ __title: '# Booking design contract\n\n' })), /must name the documented framework/);
+  assert.match(problems(document({ __title: '# Booking \u2014 `vue` contract\n\n' })), /documents framework 'vue'/);
+});
+
+test('every required section is required, a stray is refused, and the order is fixed', () => {
+  for (const heading of DESIGN_SECTIONS) {
+    const text = document().replace(new RegExp(`## ${heading}\\n\\n[^\\n]*\\n`), '');
+    assert.match(problems(text), new RegExp(`missing required section '## ${heading.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}'`));
   }
-  const stray = check(body().replace('## Rationale', '## Colours\n\nRed.\n\n## Rationale'));
-  assert.ok(stray.some((f) => f.problem.includes('outside the contract')), 'stray sections must be refused');
+  assert.match(problems(document().replace('## Rationale', '## Implementation status')), /sections outside the contract/);
+  const reversed = [...DESIGN_SECTIONS].reverse();
+  assert.match(problems(document({ __sections: reversed })), /sections must appear in contract order/);
 });
 
-test('a token the demo does not emit is a finding, because the doc must not describe fiction', () => {
-  const findings = check(body({ 'Token vocabulary': '| `--ink` | `#1b1b1f` |' }));
-  assert.equal(findings.length, 1);
-  assert.match(findings[0].problem, /'--ink' is not emitted/);
+test('an empty section is a finding, because a heading with nothing under it claims nothing', () => {
+  assert.match(problems(document({ Typography: '' })), /section '## Typography' is empty/);
 });
 
-test('a route the demo does not serve, and a file it does not generate, are findings', () => {
-  assert.match(check(body({ 'Grammar and layout': 'Routes: `GET /checkout`.' }))[0].problem, /does not serve/);
-  assert.match(check(body({ 'Component hierarchy': '`app/theme.css`' }))[0].problem, /does not generate/);
-});
-
-test('the title must name the framework of its own demo, and the path must match it', () => {
-  const wrongFramework = check(body().replace('`raw`', '`vue`'));
-  assert.match(wrongFramework[0].problem, /but the demo generates 'raw'/);
-  const wrongPath = checkDesignDocument({ name: 'booking/vue.md', text: body(), demo });
-  assert.ok(wrongPath.some((f) => f.at === 'path'), 'path must match the demo');
-});
-
-test('the vocabulary must name at least one token, or it documents nothing checkable', () => {
-  assert.match(check(body({ 'Token vocabulary': 'No tokens named here.' }))[0].problem, /at least one custom property/);
-});
-
-test('a relative link that resolves nowhere is a finding, because documents rot', () => {
-  const doc = body({ Provenance: 'See [targets](../../../provenance/assets/training-targets.md).' });
-  const resolveLink = (target) => target === '../../../provenance/assets/training-targets.md';
-  assert.deepEqual(checkDesignDocument({ name: 'booking/raw.md', text: doc, demo, resolveLink }), []);
-  const broken = checkDesignDocument({
-    name: 'booking/raw.md',
-    text: doc,
-    demo,
-    resolveLink: () => false,
+for (const [name, frontmatter, expected] of [
+  ['no frontmatter at all', '', /does not begin with a --- frontmatter fence/],
+  ['frontmatter with the wrong archetype', FRONTMATTER.replace('archetype: booking', 'archetype: catalogue'), /archetype is 'catalogue'/],
+  ['frontmatter with the wrong framework', FRONTMATTER.replace('framework: raw', 'framework: vue'), /framework is 'vue'/],
+  ['no tokens mapping', FRONTMATTER.replace(/tokens:\n(  --.*\n)+/, ''), /frontmatter needs a `tokens` mapping/],
+  ['no antiPatterns', FRONTMATTER.replace(/antiPatterns:\n  - .*\n/, ''), /`antiPatterns` must be a non-empty list/],
+].map(([name, frontmatter, expected]) => [name, frontmatter, expected])) {
+  test(`refuses ${name}`, () => {
+    assert.match(problems(document({}, frontmatter)), expected);
   });
-  assert.equal(broken.length, 1);
-  assert.match(broken[0].problem, /does not resolve from this document/);
-  // Absolute URLs and in-page anchors are not the checker's business.
-  assert.deepEqual(checkDesignDocument({
-    name: 'booking/raw.md',
-    text: body({ Provenance: 'See [a](https://example.test/x) and [b](#section).' }),
-    demo,
-    resolveLink: () => false,
-  }), []);
+}
+
+test('a token the stylesheet does not emit is a finding, and so is a value it does not have', () => {
+  assert.match(
+    problems(document({}, FRONTMATTER.replace('  --bg: "#ffffff"', '  --muted: "#ffffff"'))),
+    /'--muted: #ffffff' is not a declaration this demo's stylesheet makes/,
+  );
+  assert.match(
+    problems(document({}, FRONTMATTER.replace('--fg: "#16181d"', '--fg: "#000000"'))),
+    /'--fg: #000000' is not a declaration this demo's stylesheet makes/,
+  );
 });
 
+test('a literal the stylesheet does not contain is a finding', () => {
+  assert.match(
+    problems(document({}, FRONTMATTER.replace('control-border: 1px solid #8a8f98', 'control-border: 2px solid #ff00ff'))),
+    /names '#ff00ff', which this stylesheet does not contain/,
+  );
+});
+
+test('the frontmatter is the single source of truth, so a token value in the body is a finding', () => {
+  assert.match(problems(document({ 'Token usage': 'The ink is `#16181d` in light mode.' })), /restates the frontmatter value '#16181d'/);
+  // Naming the token without its value is expected, and must stay clean.
+  assert.deepEqual(check(document({ 'Token usage': 'The `--fg` token carries all ink.' })), []);
+});
+
+test('a route claim belongs in plan.md, where it can be checked against the spec', () => {
+  assert.match(problems(document({ 'Grammar and layout': 'Serves `GET /` and `POST /book`.' })), /routes belong in plan.md/);
+});
+
+test('a file the demo does not generate is a finding', () => {
+  assert.match(problems(document({ 'Component hierarchy': '`app/missing.mjs` holds it.' })), /names 'app\/missing.mjs'/);
+});
+
+test('the path is the archetype and framework of the demo it describes', () => {
+  const findings = checkDesignDocument({ name: 'booking/vue.md', text: document(), demo });
+  assert.match(findings.map((f) => f.problem).join(' | '), /must live at booking\/raw.md/);
+});
 // The resolver is the one part of the contract that reads the filesystem, so it is tested against real
 // files and real symlinks rather than reasoned about. A path can be inside the repository as a string
 // and still be a symlink whose bytes live outside it.

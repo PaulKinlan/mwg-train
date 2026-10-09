@@ -75,7 +75,16 @@ export const PLAN_SECTIONS = [
 ];
 
 const squash = (text) => text.replace(/\s+/g, ' ').trim();
-const contains = (body, needle) => squash(body).includes(squash(String(needle)));
+const contains = (body, needle) => {
+  const text = squash(String(needle));
+  const haystack = squash(body);
+  if (!text.startsWith('/')) return haystack.includes(text);
+  // A path must not be satisfied by being the prefix of a longer path: the spec's write route "/book" is not
+  // evidenced by the read route "/booking/:ref", and substring matching cannot tell the two apart. A short path
+  // such as "/" needs the same treatment, or every document would satisfy it incidentally.
+  const pattern = new RegExp(`${text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\w:/-])`);
+  return pattern.test(haystack);
+};
 
 function sectionBody(text, heading) {
   const start = text.indexOf(`## ${heading}`);
