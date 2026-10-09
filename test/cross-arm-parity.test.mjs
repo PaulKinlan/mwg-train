@@ -394,3 +394,19 @@ test('arm pixel drift is reported with BOTH screenshots named, and clean pairs a
   assert.equal(nearest.distance, 0.01, 'the nearest pair must be exposed as the floor');
   assert.equal(worst.distance, 0.5, 'and the worst pair must be named');
 });
+
+test('a missing budget is refused rather than reported as clean arms', () => {
+  // Same hole as the identity judge, reached through the parity entry point (mwg-train-zey): its own
+  // outlier loop reads budget?.[axis] and skips silently when that is not a number, and it delegates to
+  // the identity judge. With no budget at all, arms that disagree are reported as agreeing.
+  const arms = [arm('raw'), arm('hono'), arm('react')];
+  const real = crossArmFindings({ arms, budget: BUDGET });
+  assert.deepEqual(real.findings, [], 'premise: these arms are within budget when a budget is supplied');
+  for (const budget of [undefined, null, {}]) {
+    assert.throws(
+      () => crossArmFindings({ arms, budget }),
+      TypeError,
+      `budget ${JSON.stringify(budget)} must be refused rather than produce a clean reading`,
+    );
+  }
+});

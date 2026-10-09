@@ -283,6 +283,37 @@ export function variantIdentity(target, variants) {
  * system, so the budget is per axis and a failure names the axis and the pair responsible for *that*
  * axis.
  */
+/**
+ * Refuse a budget that cannot judge anything.
+ *
+ * An axis with no budget is not an axis that passed - it is an axis nobody measured against, so the
+ * reading is "no findings", which is indistinguishable from "everything agreed". A missing, empty or
+ * non-object budget therefore silently reports universal agreement for a family that may have fallen
+ * below its floor on every axis. That is a malformed CALLER CONTRACT rather than malformed data, so it
+ * throws, which is the same rule the identity argument's guard follows - that one is mwg-train-w46, which is why the identity guard is a
+ * line or two further down in this same function (mwg-train-zey).
+ *
+ * This lives here and is exported because `crossArmFindings` in parity.mjs delegates to the judge below
+ * AND has its own budget-reading outlier loop: one rule, one place, so the two cannot drift apart.
+ */
+export function requireBudget(budget, caller = 'identityFindings') {
+  // `Number.isFinite`, not `typeof value === 'number'`: `typeof NaN === 'number'`, and `actual < NaN` is
+  // false for every axis, so a NaN floor silently judges nothing - the same forbidden direction as a
+  // missing budget, through a narrower door. Infinity and -Infinity are the same class in opposite
+  // directions. Arrays are refused for the same reason: Object.entries([0.75]) is [['0', 0.75]], so an
+  // array would "judge" an axis literally named "0".
+  const numeric = budget && typeof budget === 'object' && !Array.isArray(budget)
+    ? Object.entries(budget).filter(([, value]) => Number.isFinite(value))
+    : [];
+  if (numeric.length === 0) {
+    throw new TypeError(
+      `${caller} needs a budget with at least one numeric axis, got ${JSON.stringify(budget) ?? String(budget)}: `
+      + 'an unbudgeted axis is unjudged, and unjudged must not read as agreement',
+    );
+  }
+  return budget;
+}
+
 export function identityFindings(identity, budget) {
   const findings = [];
   // FAIL CLOSED on a malformed argument. An empty finding list means "this family agrees" and nothing else,
@@ -305,7 +336,7 @@ export function identityFindings(identity, budget) {
   if (identity?.degenerate) {
     findings.push({ code: 'IDENTITY_DEGENERATE', message: 'fewer than two measurable variants: identity is vacuous, not perfect' });
   }
-  for (const [axis, minimum] of Object.entries(budget ?? {})) {
+  for (const [axis, minimum] of Object.entries(requireBudget(budget))) {
     const actual = identity?.identity?.[axis];
     const weakest = identity?.weakest_by_axis?.[axis] ?? null;
     if (typeof actual === 'number' && actual < minimum) {

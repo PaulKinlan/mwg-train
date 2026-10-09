@@ -284,3 +284,43 @@ test('one diverged variant is reported even when the family MEAN is inside the b
   assert.equal(findings[0].pair, 'a/outlier', 'the finding must NAME the pair responsible');
   assert.match(findings[0].message, /mean/, 'and must say the mean hid it');
 });
+
+test('a missing or empty budget is a caller-contract error, not universal agreement', () => {
+  // The fail-open this exists for (mwg-train-zey): the judge iterates Object.entries(budget ?? {}), so
+  // passing no budget, an empty object or null silently reports NO findings. A family that has genuinely
+  // fallen below its floor on a pair then reads as total agreement, which is the one direction a parity
+  // instrument must never fail in. Malformed caller contract throws here, the same rule the identity
+  // argument's guard follows: what arrives is not data to judge, it is a caller mistake to refuse.
+  const identity = { identity: { structural: 0.5 }, weakest_by_axis: {}, weakest_pair: null, degenerate: false };
+  // The positive first: a real budget must still produce the finding, or the refusals below prove nothing.
+  assert.equal(
+    identityFindings(identity, { structural: 0.9 }).length,
+    1,
+    'a real budget must report the axis that is below it',
+  );
+  for (const budget of [undefined, null, {}, 'nope', 5]) {
+    assert.throws(
+      () => identityFindings(identity, budget),
+      TypeError,
+      `budget ${JSON.stringify(budget)} must be refused rather than read as agreement`,
+    );
+  }
+});
+
+test('a budget whose axes are not real numbers is refused too, not just a missing one', () => {
+  // `requireBudget` originally filtered on typeof value === 'number', and `typeof NaN === 'number'`. So
+  // { structural: NaN } passed the guard and then judged nothing, because `actual < NaN` is false for every
+  // axis - the same forbidden direction as a missing budget, through a narrower door: a family below its
+  // floor reports agreement. Infinity and -Infinity are the same class, in opposite directions, and
+  // Object.entries([0.75]) is [['0', 0.75]], so an array would "judge" an axis literally named "0".
+  const identity = { identity: { structural: 0.5 }, weakest_by_axis: {}, weakest_pair: null, degenerate: false };
+  for (const budget of [{ structural: NaN }, { structural: Infinity }, { structural: -Infinity }, [0.75], { structural: '0.75' }]) {
+    assert.throws(
+      () => identityFindings(identity, budget),
+      TypeError,
+      `budget ${JSON.stringify(budget)} cannot judge an axis and must be refused rather than read as agreement`,
+    );
+  }
+  // The positive still holds: a finite floor judges, and this identity is below it.
+  assert.equal(identityFindings(identity, { structural: 0.9 }).length, 1, 'a finite floor must still report');
+});
