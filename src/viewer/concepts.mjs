@@ -9,6 +9,13 @@ const BOARDS = [
   { id: 'layout-explainer', title: 'Wiki and explainer', grammar: 'Field notes · Read', note: 'A reading column, table of contents and an interactive diagram layout.', alt: 'Concept sketch of a wiki reading layout alongside a diagram and controls.' },
 ];
 const EVAL_TARGETS = new Set(['account-recovery', 'booking', 'catalogue', 'contact-lead', 'event-registration']);
+const BOOKING_STEPS = [
+  { id: 'step1-browse', title: 'Browse options' },
+  { id: 'step2-form', title: 'Enter booking details' },
+  { id: 'step3-confirmation', title: 'Review confirmation' },
+  { id: 'step4-error', title: 'Recover from an error' },
+  { id: 'step5-empty', title: 'Empty state' },
+];
 const IMAGE_NAME = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 function confinedFile(root, dir, filename) {
@@ -39,6 +46,14 @@ export function conceptImage(repoRoot, name) {
   return file ? { bytes: readFileSync(file), type: 'image/jpeg' } : null;
 }
 
+/** A fixed five-step visual journey: never treat an arbitrary nested file as a public image. */
+export function conceptBookingStep(repoRoot, id) {
+  if (!BOOKING_STEPS.some((step) => step.id === id)) return null;
+  const root = join(repoRoot, 'docs/design');
+  const file = confinedFile(root, join(root, 'archetypes/booking'), `${id}.jpg`);
+  return file ? { bytes: readFileSync(file), type: 'image/jpeg' } : null;
+}
+
 /** These are authored A6 targets, not captures of the generated demo. */
 export function conceptTarget(repoRoot, id) {
   if (!EVAL_TARGETS.has(id)) return null;
@@ -58,6 +73,7 @@ export function listConcepts(repoRoot) {
   return {
     boards: BOARDS.filter((board) => !!conceptImage(repoRoot, board.id)),
     archetypes: archetypes.map((id) => ({ id, reference: names.includes(id), target: !!conceptTarget(repoRoot, id) })),
+    bookingSteps: BOOKING_STEPS.map((step) => ({ ...step, available: !!conceptBookingStep(repoRoot, step.id) })),
   };
 }
 
@@ -69,7 +85,7 @@ const boardFigure = (board, featured = false) => `<figure class="concept-board${
   <figcaption><strong>${escapeHtml(board.title)}</strong><span>${escapeHtml(board.grammar)}</span><p>${escapeHtml(board.note)}</p></figcaption>
 </figure>`;
 
-export function renderConcepts({ boards, archetypes }) {
+export function renderConcepts({ boards, archetypes, bookingSteps = [] }) {
   const [featured, ...otherBoards] = boards;
   const boardSection = featured ? `${boardFigure(featured, true)}<div class="concept-board-grid">${otherBoards.map((board) => boardFigure(board)).join('')}</div>`
     : '<p class="notice">No layout concept boards are available in this checkout.</p>';
@@ -86,6 +102,13 @@ export function renderConcepts({ boards, archetypes }) {
     <p class="muted">${reference && target ? 'Side-by-side visual reference only; this is not a generated-site conformance result.' : 'A pair is not claimed until both images exist. No live demo capture is retained here.'}</p>
   </article>`).join('') : '<p class="notice">No archetype reference images are available yet.</p>';
 
+  const bookingSection = bookingSteps.length ? `<ol class="concept-steps">${bookingSteps.map(({ id, title, available }) => `<li><figure>
+      <div class="concept-image-frame">${available
+        ? `<a href="/concepts/images/booking/${escapeHtml(id)}.jpg" aria-label="Open booking ${escapeHtml(title)} reference"><img src="/concepts/images/booking/${escapeHtml(id)}.jpg" alt="Booking journey visual reference: ${escapeHtml(title)}" loading="lazy"></a>`
+        : `<p class="muted">Image pending: ${code(`docs/design/archetypes/booking/${id}.jpg`)}</p>`}</div>
+      <figcaption><strong>${escapeHtml(title)}</strong> · ${available ? 'visual reference' : 'reference pending'}</figcaption>
+    </figure></li>`).join('')}</ol>` : '<p class="notice">No booking step references are available in this checkout.</p>';
+
   return page('concepts', `
     <h1>Visual concepts</h1>
     <p class="concept-lede">Explore layout ideas beside authored target renders where they exist. These are references, not screenshots of generated websites or proof a demo works.</p>
@@ -96,5 +119,9 @@ export function renderConcepts({ boards, archetypes }) {
     <section aria-labelledby="archetypes-heading"><h2 id="archetypes-heading">Archetype references and targets</h2>
       <p class="muted">References belong under ${code('docs/design/archetypes/')}. Target renders below are authored, sealed A6 evaluation assets, never training data. Provenance: ${code('docs/provenance/assets/eval-targets.md')}.</p>
       ${archetypeSection}
+    </section>
+    <section aria-labelledby="booking-steps-heading"><h2 id="booking-steps-heading">Booking journey · five visual steps</h2>
+      <p class="muted">Browse, form, confirmation, error and empty states are separate illustrative references. Missing files remain visible as pending slots; no image is training or evaluation evidence. Record each new image's source and rights before reuse.</p>
+      ${bookingSection}
     </section>`);
 }
