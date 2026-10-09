@@ -313,7 +313,10 @@ export function paletteFindings({ arms, declared }) {
 export function collapsePaletteFindings(findings) {
   const seen = new Map();
   for (const finding of findings) {
-    const key = `${finding.arm}|${finding.token}|${finding.expected}|${finding.actual}`;
+    // `code` is part of the key. Without it two findings identical on the other four fields collapsed and the
+    // second was republished under the FIRST one's code and message - a copy-through structure assuming one
+    // specific case, the same shape as mwg-train-7yp (mwg-train-oon).
+    const key = `${finding.code}|${finding.arm}|${finding.token}|${finding.expected}|${finding.actual}`;
     const existing = seen.get(key);
     if (!existing) {
       seen.set(key, { ...finding, viewports: finding.viewport ? [finding.viewport] : [] });

@@ -538,3 +538,28 @@ test('a budget with a non-finite axis is refused, because the two layers disagre
     );
   }
 });
+
+test('two palette findings that differ only by code both survive the collapse', () => {
+  // mwg-train-oon. The dedup key was arm|token|expected|actual with no `code`, so two findings identical on
+  // those four fields collapsed into one and the SECOND was republished under the FIRST one's code and
+  // message. That is the same shape as mwg-train-7yp - a copy-through structure that assumes one specific
+  // case - which is why it is worth fixing rather than only noting. Latent today: paletteFindings emits only
+  // PALETTE_DIVERGES, so the second code below is synthetic, but a second code is one commit away.
+  const base = { arm: 'react', token: 'accent', expected: '#10b981', actual: '#0ea472', viewport: { key: 'desktop' } };
+  const collapsed = collapsePaletteFindings([
+    { ...base, code: 'PALETTE_DIVERGES', message: 'the accent diverges' },
+    { ...base, code: 'PALETTE_FUTURE_CODE', message: 'a different reason entirely' },
+  ]);
+  assert.equal(collapsed.length, 2, 'findings with different codes are different findings');
+  assert.deepEqual(collapsed.map((finding) => finding.code).sort(), ['PALETTE_DIVERGES', 'PALETTE_FUTURE_CODE'].sort());
+  assert.deepEqual(collapsed.map((finding) => finding.message).sort(), ['a different reason entirely', 'the accent diverges'].sort());
+
+  // and the collapse still does what it is FOR: the same code at three widths is one finding that collects
+  // the widths, rather than three findings.
+  const threeWidths = ['desktop', 'mobile', 'tablet'].map((key) => ({ ...base, viewport: { key }, code: 'PALETTE_DIVERGES', message: 'the accent diverges' }));
+  const collected = collapsePaletteFindings(threeWidths);
+  assert.equal(collected.length, 1, 'the same finding at three widths is still one finding');
+  // `viewports` holds the viewport OBJECTS, not their keys - my first version expected strings, so it failed
+  // on the shape of the value rather than on the behaviour. The code was right; the expectation was wrong.
+  assert.deepEqual(collected[0].viewports.map((viewport) => viewport.key).sort(), ['desktop', 'mobile', 'tablet']);
+});
