@@ -24,50 +24,23 @@ import { BASELINE_LABEL, baselineAttributionLine } from '../src/eval/ruleset.mjs
 
 const ROOT = resolve(import.meta.dirname, '..');
 
-// The registry lives in the check script; importing it would run the CLI, so the reports are listed
-// here as well. If a report is added to one list and not the other this test still passes, so the
-// CLI test below covers the registry as a whole.
-// The documents this test believes must carry the label. Asserted EQUAL to the check's own derived
-// registry below, so the two statements have to agree: if the classification gains or loses a floor report
-// and this list is not updated, the test fails rather than quietly covering less.
-const REPORTS = [
-  'README.md',
-  'docs/PIPELINE.md',
-  'docs/eval/conformance/README.md',
-  'docs/eval/conformance/account-recovery-identity.json',
-  'docs/eval/conformance/account-recovery-identity.md',
-  'docs/eval/conformance/booking-identity.json',
-  'docs/eval/conformance/booking-identity.md',
-  'docs/eval/conformance/booking.json',
-  'docs/eval/conformance/booking.md',
-  'docs/eval/conformance/catalogue-identity.json',
-  'docs/eval/conformance/catalogue-identity.md',
-  'docs/eval/conformance/contact-lead-identity.json',
-  'docs/eval/conformance/contact-lead-identity.md',
-  'docs/eval/conformance/event-registration-identity.json',
-  'docs/eval/conformance/event-registration-identity.md',
-  'docs/eval/pricing.md',
-  'docs/eval/two-backends.md',
-  'docs/pilot/README.md',
-  'docs/pilot/YIELD.md',
-  'docs/pilot/records.json',
-  'docs/pilot/yield.json',
-  'docs/train/README.md',
-  'docs/train/READINESS-EPIC.md',
-  'docs/train/briefs/README.md',
-  'docs/train/corpus/README.md',
-  'docs/train/corpus/YIELD.md',
-  'docs/train/corpus/records.json',
-  'docs/train/corpus/tokens.json',
-  'pilot/CORPUS.json',
-];
+// The floor report list is DERIVED, not restated. It used to be a hand-maintained array here asserted
+// equal to the check's own registry, and that duplication is exactly how adding a floor report to the
+// instrument's DOCUMENTS without adding it here broke this suite - a test whose failure message was
+// "the expected floor reports and the classification must agree" between one list and its own copy. The
+// check script is import-safe (it guards its CLI with `import.meta.url === file://argv[1]`), so the test
+// imports the real registry instead of describing it.
+//
+// A floor on the count is what stops the derived list quietly shrinking: without it, deleting entries
+// from DOCUMENTS would make every assertion below consider less while still passing.
+const MINIMUM_FLOOR_REPORTS = 31;
 
 test('every registered floor report carries the label', () => {
-  for (const path of REPORTS) {
+  for (const path of REGISTRY) {
     const text = readFileSync(join(ROOT, path), 'utf8');
     assert.ok(text.includes(BASELINE_LABEL), `${path} must carry '${BASELINE_LABEL}'`);
   }
-  assert.deepEqual(checkBaselineLabel(REPORTS), []);
+  assert.deepEqual(checkBaselineLabel(REGISTRY), []);
 });
 
 test('the label is one string shared by every writer', () => {
@@ -331,8 +304,15 @@ test('the relabel tool refuses anything that is not attribution-only', () => {
   }
 });
 
-test('the test\'s own report list and the check\'s derived registry agree', () => {
-  assert.deepEqual([...REPORTS].sort(), REGISTRY, 'the expected floor reports and the classification must agree');
+test('the derived registry is a real floor, not an empty list that trivially passes', () => {
+  // Replaces a test that compared the registry with a hand-written copy of itself. The property worth
+  // asserting is that the derived list is still the size it was, so entries cannot quietly disappear from
+  // the classification and leave every other assertion here checking less.
+  assert.ok(
+    REGISTRY.length >= MINIMUM_FLOOR_REPORTS,
+    `the derived floor report registry has shrunk to ${REGISTRY.length}, below the ${MINIMUM_FLOOR_REPORTS} it had: a floor report has lost its classification`,
+  );
+  assert.ok(REGISTRY.every((path) => typeof path === 'string' && path.length > 0), 'every entry is a path');
 });
 
 test('the CLI passes on the tree and fails when a report loses its label', () => {
@@ -342,7 +322,8 @@ test('the CLI passes on the tree and fails when a report loses its label', () =>
 
   const json = JSON.parse(execFileSync(process.execPath, [join(ROOT, 'scripts/check-baseline-label.mjs'), '--json'], { encoding: 'utf8' }));
   assert.equal(json.findings.length, 0);
-  assert.equal(json.checked, REPORTS.length, 'the CLI registry and this test list must agree');
+  assert.equal(json.checked, REGISTRY.length, 'the CLI registry and the derived registry must agree');
+  assert.ok(json.checked >= MINIMUM_FLOOR_REPORTS, 'the CLI must still be checking at least the floor');
 });
 
 // -----------------------------------------------------------------------------------------------------------

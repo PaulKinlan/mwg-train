@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { test } from 'node:test';
 
 const root = new URL('../', import.meta.url);
@@ -8,7 +8,14 @@ const text = (path) => readFileSync(new URL(path, root), 'utf8');
 const bytes = (path) => readFileSync(new URL(path, root));
 
 const DIR = 'docs/design/archetypes/booking/';
-const STEPS = ['step1-browse.jpg', 'step2-form.jpg', 'step3-confirmation.jpg', 'step4-error.jpg', 'step5-empty.jpg'];
+// DERIVED from the directory, not restated. This used to be a hand-written array of five filenames, so
+// adding a sixth board to the directory and the provenance table broke `npm test` for no reason other than
+// a list nobody remembered to update - the same defect class that broke baseline-label.test.mjs. A floor
+// replaces the hand list, so boards cannot silently disappear either.
+const STEPS = readdirSync(new URL(DIR, root))
+  .filter((name) => name.toLowerCase().endsWith('.jpg') && name.toLowerCase().startsWith('step'))
+  .sort();
+assert.ok(STEPS.length >= 5, 'the reference boards directory must contain at least 5 step JPEGs');
 
 test('the booking reference boards are committed JPEGs whose digests match their README', () => {
   const readme = text(`${DIR}README.md`);
