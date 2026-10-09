@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
 import { test } from 'node:test';
 
 import { REQUIRED_SECTIONS, checkDesignDocument, repositoryLinkResolver } from '../src/design/contract.mjs';
@@ -127,17 +127,28 @@ test('canonicalises the repository root, so a root reached through a symlink sti
   // that begins with '..' relative to the uncanonical root and is wrongly refused.
   const realRoot = mkdtempSync(join(tmpdir(), 'link-realroot-'));
   const aliasRoot = `${realRoot}-alias`;
+  const outside = mkdtempSync(join(tmpdir(), 'link-alias-outside-'));
   t.after(() => {
     rmSync(realRoot, { recursive: true, force: true });
     rmSync(aliasRoot, { recursive: true, force: true });
+    rmSync(outside, { recursive: true, force: true });
   });
+  writeFileSync(join(outside, 'secret.md'), 'outside\n');
   mkdirSync(join(realRoot, 'docs'), { recursive: true });
   writeFileSync(join(realRoot, 'inside.md'), 'inside\n');
   symlinkSync(realRoot, aliasRoot);
 
   const resolveLink = repositoryLinkResolver({ root: aliasRoot, documentDir: join(realRoot, 'docs') });
   assert.equal(resolveLink('../inside.md'), true, 'a file inside the real root is inside when the root is a symlink');
-  assert.equal(resolveLink('../../outside.md'), false, 'and escaping the real root is still refused');
+  // A REAL file outside the root, reached without any symlink, so the refusal can only come from the
+  // containment test: realpathSync succeeds and the file exists. The first version of this assertion named
+  // containment while testing non-existence - the target was never created - so it passed for a reason it did
+  // not state. The mutation check below is what makes that concrete.
+  assert.equal(
+    resolveLink(`../../${basename(outside)}/secret.md`),
+    false,
+    'a real file outside the root is refused by containment, not by being missing',
+  );
 });
 
 test('accepts an in-repo file whose name begins with two dots, which the first containment test refused', (t) => {
