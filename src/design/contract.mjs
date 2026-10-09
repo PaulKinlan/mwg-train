@@ -283,7 +283,7 @@ export function checkPlanDocument({ name, text, spec, specPath, resolveLink = nu
   // is a claim in a prose paragraph too, and a section-scoped scan let one through. The requirement that each
   // spec route be named with its effect stays scoped to this section, because that is where it belongs.
   const defined = new Set(spec.routes.map((route) => `${route.method} ${route.path}`));
-  for (const route of new Set([...body.matchAll(/\b(GET|POST|PUT|PATCH|DELETE)\s+(\/[^\s\`"'.,;<>()]+)/g)]
+  for (const route of new Set([...body.matchAll(/(?<![a-zA-Z])(GET|POST|PUT|PATCH|DELETE)\s+(\/(?:[a-zA-Z0-9_/:.-]*[a-zA-Z0-9/])?)/g)]
     .map((match) => `${match[1]} ${match[2]}`))) {
     if (!defined.has(route)) {
       at('routes', `claims '${route}' which ${specPath} does not define`);

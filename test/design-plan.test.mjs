@@ -213,3 +213,27 @@ test('does not flag a defined route written as plain prose, which is the control
   });
   assert.deepEqual(findings, []);
 });
+
+// Every spelling a claim can take, in one place, so the next spelling does not have to be found by hand. Two
+// were found by review: italic text hid a claim from `\b`, and bold text had its trailing `**` captured into
+// the path, which flagged a route that IS defined. The controls matter as much as the findings here.
+test('finds a route claim in every spelling, and never captures emphasis marks into the path', () => {
+  const spec = { family_id: 'booking', routes: [{ method: 'GET', path: '/', effect: 'render' }, { method: 'POST', path: '/book', effect: 'store' }], state: {}, persistence: {}, journey: {}, validation: {}, acceptance: [], fields: [] };
+  const forClaim = (claim) => checkPlanDocument({ name: 'booking/plan.md', text: doc({ Journey: SECTIONS.Journey + `\n\n${claim}` }), spec, specPath: 'docs/eval/specs/booking.json' });
+  const undefinedRoute = 'POST /admin/purge';
+  const spellings = [
+    `The admin posts to ${undefinedRoute} now.`,
+    `The admin posts to \`${undefinedRoute}\` now.`,
+    `The admin posts to _${undefinedRoute}_ now.`,
+    `The admin posts to **${undefinedRoute}** now.`,
+    `The admin posts to ***${undefinedRoute}*** now.`,
+    `The admin posts to "${undefinedRoute}" now.`,
+  ];
+  for (const claim of spellings) {
+    assert.equal(forClaim(claim).length, 1, `should be one finding: ${claim}`);
+  }
+  const defined = ['The form posts to POST /book now.', 'The form posts to `POST /book`.', 'The form posts to _POST /book_ now.', 'The form posts to **POST /book** now.', 'The form posts to POST /book.'];
+  for (const claim of defined) {
+    assert.deepEqual(forClaim(claim), [], `should be no finding: ${claim}`);
+  }
+});

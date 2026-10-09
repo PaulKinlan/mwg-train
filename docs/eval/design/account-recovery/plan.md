@@ -57,7 +57,7 @@ No route edits or deletes an account.
 
 ## Implementation status
 
-Not everything declared is served. Every declared GET route is answered, `/account` among them, by the generated fallback for declared routes that have no handler of their own. `POST /reset` is different: it is declared by the spec and named in the table above, no handler answers it, and it therefore has no endpoint - the reset flow can be read but not started. Everything else in this document is what generation shows; where an implementation detail cannot be checked, it is treated as declared rather than done.
+Not everything declared is served. Every declared GET route is answered: `/account` by the generated fallback for declared routes that have no handler of their own, and the rest by handlers. `POST /reset` is different: it is declared by the spec and named in the table above, no handler answers it, and it therefore has no endpoint - the reset flow can be read but not started. Everything else in this document is what generation shows; where an implementation detail cannot be checked, it is treated as declared rather than done.
 
 ## Provenance
 

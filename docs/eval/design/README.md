@@ -80,7 +80,9 @@ Required sections, in this order:
 1. `## Use case` - names every field the spec defines
 2. `## Routes and effects` - every route the spec defines, named here with its effect stated. A route the spec
    does not define is a finding **wherever it is claimed**, not only in this section: a claim is a claim in a
-   prose paragraph too, and scoping this to one section let one through
+   prose paragraph too, and scoping this to one section let one through. The rule finds a claim plain, in a code
+   span, in italics or in bold, and takes the path to end at the first character that cannot be part of one, so
+   trailing punctuation and emphasis marks are never captured as part of the route
 3. `## Data and state` - the storage engine and the routes that read and write it
 4. `## Journey` - the driven flow: start path, form selector, the fields that are filled, the text asserted on
 5. `## Validation and states` - required fields, and what happens on each outcome
