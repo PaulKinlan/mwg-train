@@ -18,6 +18,7 @@ import { parseManifest } from '../src/provenance/record.mjs';
 import { IDENTITY_BUDGET, TARGETS_MANIFEST, TARGETS_STORAGE, TARGET_FAMILIES } from '../src/eval/targets.mjs';
 
 const ROOT = resolve(import.meta.dirname, '..');
+const { renderIdentityMarkdown } = await import('../scripts/score-variant-identity.mjs');
 
 const signature = ({ tags = [], boxes = [], controls = [] } = {}) => ({
   nodes: tags.map((tag) => ({ tag })),
@@ -397,4 +398,24 @@ test('a family that measured nothing reports that, rather than 1.000 identity', 
   assert.equal(identity.degenerate, true, 'an all-blank family is degenerate');
   assert.notEqual(identity.identity.overall, 1, 'an all-blank family must not report perfect identity');
   assert.deepEqual(identity.pairwise, [], 'there is no pairwise measurement to report');
+});
+
+test('a degenerate report renders as markdown instead of crashing the renderer', () => {
+  // The degenerate result reports null axes deliberately - that is the point of the fix in this bead. But
+  // `renderIdentityMarkdown` read `identity.identity[axis].toFixed(3)` and `scoreFamily` logged
+  // `identity.identity.overall.toFixed(3)`, so a degenerate report crashed BOTH: the .json was written, then
+  // the .md render threw, and a later --rerender crashed again on the stored file, killing the rerender loop
+  // mid-run. Reachable today via a family with fewer than two variants, which is degenerate by count even
+  // when it rendered.
+  const blank = (framework) => ({ framework, signature: {} });
+  const identity = variantIdentity({ nodes: [{ tag: 'div' }], boxes: [], controls: [] }, [blank('a'), blank('b')]);
+  assert.equal(identity.degenerate, true, 'premise: this must be the degenerate result');
+  const report = {
+    family: 'degenerate', generated_at: '1970-01-01T00:00:00.000Z', budget: IDENTITY_BUDGET,
+    variants: [], identity,
+  };
+  const markdown = renderIdentityMarkdown(report);
+  assert.equal(typeof markdown, 'string');
+  assert.ok(markdown.includes('n/a'), `null axes must render as n/a, got: ${markdown.slice(0, 200)}`);
+  assert.ok(!markdown.includes('null'), 'and never as a literal null');
 });

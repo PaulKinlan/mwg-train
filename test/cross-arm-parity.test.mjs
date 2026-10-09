@@ -538,3 +538,35 @@ test('a budget with a non-finite axis is refused, because the two layers disagre
     );
   }
 });
+
+test('an arm that rendered a blank page is reported, not allowed to abort the whole report', () => {
+  // captureSignature returns a TRUTHY signature for a blank page - it carries the viewport, and nodes,
+  // boxes and controls are empty. So the blank arm passed crossArmFindings' `arm.signature` filter and
+  // reached conformanceScore, which refuses an unmeasurable signature: the TypeError propagated out of
+  // crossArmFindings and took every viewport, palette and pixel finding with it. One blank arm cost the
+  // entire report. parity.mjs's own contract is that an absence is a finding with a code, never a missing
+  // row, and ARM_UNMEASURED already exists for the arm-with-no-signature case.
+  const blankViewport = { key: 'desktop', width: 1280, height: 900 };
+  const blank = { viewport: blankViewport, nodes: [], boxes: [], controls: [] };
+  const arms = [arm('raw'), arm('hono'), arm('react')];
+  // one DRIFTED arm, so there is a real finding that must survive the blank one
+  arms.push(arm('drifted', { boxHeight: 0.5, controls: 1 }));
+  arms.push({ framework: 'blank-render', signature: blank });
+
+  const result = crossArmFindings({ arms, budget: BUDGET });
+  const unmeasured = result.findings.filter((finding) => finding.code === 'ARM_UNMEASURED');
+  assert.deepEqual(unmeasured.map((finding) => finding.arm), ['blank-render'], 'the blank arm must be named as unmeasured');
+  assert.ok(
+    result.findings.some((finding) => finding.code !== 'ARM_UNMEASURED'),
+    'and the findings for the arms that DID render must survive it',
+  );
+});
+
+test('a viewport where every arm rendered blank is degenerate, not a crash', () => {
+  const blankViewport = { key: 'mobile', width: 390, height: 844 };
+  const blank = { viewport: blankViewport, nodes: [], boxes: [], controls: [] };
+  const arms = ['a', 'b', 'c'].map((framework) => ({ framework, signature: blank }));
+  const result = crossArmFindings({ arms, budget: BUDGET });
+  assert.equal(result.identity, null);
+  assert.deepEqual(result.findings.map((finding) => finding.code), ['ARM_UNMEASURED', 'ARM_UNMEASURED', 'ARM_UNMEASURED', 'CROSS_ARM_DEGENERATE']);
+});

@@ -18,7 +18,7 @@
  *   a token the page never set: each is a finding with a code, never a missing row in a report that
  *   still reads as clean. Absence of evidence is not evidence of parity.
  */
-import { IDENTITY_AXES, identityFindings, requireBudget, variantIdentity } from './conformance.mjs';
+import { IDENTITY_AXES, identityFindings, isMeasurable, requireBudget, variantIdentity } from './conformance.mjs';
 
 /**
  * Findings carry the same shape the repository's other instruments emit, so a reader who has seen one
@@ -153,11 +153,24 @@ export function crossArmFindings({ arms, budget }) {
   // The outlier loop further down reads budget[axis] directly, and this call is what makes that safe:
   // without it a missing budget would skip every axis silently, which reads as "no arms drifted".
   requireBudget(budget, 'crossArmFindings');
-  const measured = arms.filter((arm) => arm.signature);
+  // `isMeasurable`, not truthiness: captureSignature returns a TRUTHY signature for a blank page, because it
+  // carries the viewport even when nothing rendered. Such an arm used to reach conformanceScore, which
+  // refuses it - and the TypeError propagated out of here, aborting the whole report and taking every
+  // viewport, palette and pixel finding with it. One blank arm must not cost the report: it is an absence,
+  // and this module's contract is that an absence is a finding with a code (mwg-train-z92 review).
+  const measured = arms.filter((arm) => isMeasurable(arm.signature));
+  const unrendered = arms.filter((arm) => !isMeasurable(arm.signature));
+  const blankFindings = unrendered.map((arm) => ({
+    code: PARITY_CODES.ARM_UNMEASURED,
+    arm: arm.framework ?? 'unknown',
+    viewport: arm.signature?.viewport ?? arms[0]?.viewport ?? null,
+    message: `${arm.framework ?? 'unknown'} rendered nothing measurable - no nodes, boxes or controls, only a viewport - so there is nothing about it to compare`,
+  }));
   if (measured.length < 2) {
     return {
       identity: null,
       findings: [
+        ...blankFindings,
         {
           code: PARITY_CODES.CROSS_ARM_DEGENERATE,
           viewport: arms[0]?.viewport ?? null,
@@ -181,6 +194,9 @@ export function crossArmFindings({ arms, budget }) {
   // but not which arm moved it, while MILD drift named the arm. Exactly backwards, and precisely the
   // thing this bead exists to stop. The mean reading is kept (it is what the budget is written against)
   // and the weakest pair, with its own score, is folded into it.
+  // NOTE: this map TRANSLATES every finding it is handed, which is only valid for identity findings. Folding
+  // the blank-arm findings into its input turned ARM_UNMEASURED into CROSS_ARM_UNMAPPED_IDENTITY_CODE - a
+  // translation applied to a code that was never an identity code. They are appended AFTER it instead.
   const findings = identityFindings(identity, budget).map((finding) => {
     const weakest = finding.axis ? identity.weakest_by_axis?.[finding.axis] : null;
     const pair = weakest && weakest.a ? `${weakest.a}/${weakest.b}` : null;
@@ -245,7 +261,7 @@ export function crossArmFindings({ arms, budget }) {
   // The axes are handed back under `identity` so a reader gets the numbers, not a wrapper named
   // `identity.identity.overall`; the pairwise detail is kept alongside because a finding names a pair that
   // a reader must be able to look up.
-  return { identity: identity.identity, pairwise: identity.pairwise, weakest_pair: identity.weakest_pair, findings };
+  return { identity: identity.identity, pairwise: identity.pairwise, weakest_pair: identity.weakest_pair, findings: [...findings, ...blankFindings] };
 }
 
 /**
