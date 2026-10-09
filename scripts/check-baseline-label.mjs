@@ -137,6 +137,7 @@ export const DOCUMENTS = {
   'pilot/CORPUS.json': 'floor-report',
   'docs/design-brief-2026-10-08.md': 'design',
   'docs/design.md': 'design',
+  'docs/design/archetypes/booking/README.md': 'provenance',
   'docs/eval/ATTRIBUTION.md': 'contract',
   'docs/eval/PREREGISTRATION.md': 'contract',
   'docs/eval/owner-identity.json': 'config',
