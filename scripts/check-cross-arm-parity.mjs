@@ -27,10 +27,12 @@
  *    hex. That comparison is expected to diverge today - the generated arms use the pilot palette - and
  *    divergence is reported as a finding, not treated as a failure to be hidden or a bar being passed.
  */
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import process from 'node:process';
 
+import { ANALYSIS_METRIC_NOTES, ANALYSIS_PAGE_HTML, summariseComparison } from './lib/image-metrics.mjs';
+import { startStaticServer } from './lib/static-server.mjs';
 import { ARCHETYPES } from '../pilot/archetypes.mjs';
 import { FRAMEWORKS, buildProjectFor, writeProject } from '../pilot/frameworks.mjs';
 import { launchChrome } from '../src/corpus/cdp.mjs';
@@ -141,14 +143,13 @@ function buildArms({ archetype, runRoot, reuse = false }) {
 }
 
 /** Render each arm at each viewport, saving one screenshot per arm and width. */
-async function measure({ arms, viewports, runRoot, port }) {
+async function measure({ chrome, arms, viewports, runRoot, port }) {
   const screenshotDir = join(runRoot, 'screenshots');
   mkdirSync(screenshotDir, { recursive: true });
-  const chrome = await launchChrome({});
   const armsByViewport = {};
   const screenshots = [];
   let nextPort = port;
-  try {
+  {
     for (const requested of viewports) {
       armsByViewport[requested.key] = [];
       for (const arm of arms) {
@@ -199,8 +200,6 @@ async function measure({ arms, viewports, runRoot, port }) {
         }
       }
     }
-  } finally {
-    await chrome.close().catch(() => {});
   }
   return { armsByViewport, screenshots };
 }
@@ -269,13 +268,147 @@ function renderMarkdown(report) {
     }
   }
   lines.push('');
-  lines.push('## Screenshots');
+  lines.push('## Against the reference boards, in pixels');
   lines.push('');
+  lines.push(report.board_comparison?.metric_notes ?? '');
+  lines.push('');
+  const board = report.board_comparison;
+  if (!board || board.per_arm?.length === 0) {
+    lines.push('**No board comparison was produced.** This is reported rather than omitted: an absent comparison is not a passing one.');
+  } else {
+    lines.push(`Boards analysed: ${board.boards.map((entry) => `\`${entry.file.split('/').pop()}\``).join(', ')}.`);
+    lines.push('');
+    lines.push('| arm | viewport | closest board | distance | finding codes | screenshot |');
+    lines.push('| --- | --- | --- | --- | --- | --- |');
+    for (const entry of board.per_arm) {
+      if (entry.error) {
+        lines.push(`| ${entry.arm} | ${entry.viewport} | - | - | **not analysed: ${entry.error}** | ${entry.path} |`);
+        continue;
+      }
+      const codes = [...new Set((entry.closest_findings ?? []).map((finding) => finding.code))];
+      lines.push(
+        `| ${entry.arm} | ${entry.viewport} | \`${entry.closest_board.split('/').pop()}\` | ${entry.closest_distance} | ${codes.length === 0 ? 'none' : codes.join(', ')} | \`${entry.path.split('/').pop()}\` |`,
+      );
+    }
+    lines.push('');
+    lines.push(
+      'The distance is the mean absolute difference across the 32 row bands and the 32 column bands, averaged - stated here because a distance nobody can recompute is a number nobody can check. Nearer is closer; the closest board is named per arm, not assumed.',
+    );
+  }
+  lines.push('');
+  lines.push('## Screenshots');  lines.push('');
   lines.push('Saved for inspection (untracked run directory, full-page, one per arm and width):');
   lines.push('');
   for (const shot of report.screenshots) lines.push(`- \`${shot.path}\``);
   lines.push('');
   return `${lines.join('\n')}\n`;
+}
+
+/**
+ * How far apart two images are, as ONE number, so "which board is this arm closest to" is answerable
+ * without a human looking at 105 pairs of images.
+ *
+ * The metric is stated rather than implied: the mean absolute difference across the 32 row bands and the
+ * 32 column bands, averaged. It is deliberately built only on the coarse structure profile, because that
+ * is the part of the measurement that survives the fact that a board is a mockup and an arm is a live
+ * page - they will never share a colour histogram exactly, and pretending otherwise would produce a
+ * distance nobody could interpret.
+ */
+export function metricDistance(a, b) {
+  const mean = (values) => (values.length === 0 ? 0 : values.reduce((sum, value) => sum + value, 0) / values.length);
+  const rowDiff = mean((a.rows ?? []).map((value, index) => Math.abs(value - (b.rows?.[index] ?? 0))));
+  const bandDiff = mean((a.bands ?? []).map((value, index) => Math.abs(value - (b.bands?.[index] ?? 0))));
+  return Number(((rowDiff + bandDiff) / 2).toFixed(4));
+}
+
+/**
+ * Compare every arm screenshot against every reference board, in the browser, and report the closest.
+ *
+ * This is Paul's mandate taken literally: diff the arms against `docs/design/archetypes/booking/step*.jpg`
+ * as well as against each other, and report drift as a finding with a screenshot rather than as a
+ * pass/fail. An earlier version of this instrument replaced this with a declared-palette comparison and a
+ * reason; the reason was fine and the substitution was still wrong.
+ *
+ * Each finding names BOTH images, so a reader can open the board and the arm and judge the finding for
+ * themselves - which is the whole point of reporting a diff rather than a verdict.
+ */
+async function compareAgainstBoards({ chrome, armRoot, screenshots }) {
+  const boardDir = resolve(ROOT, 'docs/design/archetypes/booking');
+  const boards = readdirSync(boardDir)
+    .filter((name) => /^step\d+.*\.jpg$/i.test(name))
+    .sort();
+  if (boards.length === 0) {
+    return { boards: [], per_arm: [], metric_notes: ANALYSIS_METRIC_NOTES, findings: [], error: 'no step*.jpg reference boards were found' };
+  }
+
+  const server = await startStaticServer({
+    mounts: { '/board/': boardDir, '/shot/': join(armRoot, 'screenshots') },
+    documents: { '/analyse.html': ANALYSIS_PAGE_HTML },
+  });
+  const page = await chrome.newPage({});
+  const analyzed = {};
+  try {
+    await page.goto(`${server.origin}/analyse.html`);
+    // One call per image. A failure is RECORDED, never silently zero: an unreadable board would otherwise
+    // make every arm look equally far from it, which reads as agreement.
+    for (const url of [...boards.map((name) => `/board/${name}`), ...screenshots.map((shot) => `/shot/${shot.path.split('/').pop()}`)]) {
+      try {
+        analyzed[url] = await page.evaluate(`return await window.analyseImage(${JSON.stringify(url)});`);
+      } catch (error) {
+        analyzed[url] = { error: error?.message ?? String(error) };
+      }
+    }
+  } finally {
+    await page.close().catch(() => {});
+    await server.close();
+  }
+
+  const boardMetrics = boards
+    .filter((name) => analyzed[`/board/${name}`] && !analyzed[`/board/${name}`].error)
+    .map((name) => ({ file: `docs/design/archetypes/booking/${name}`, metrics: analyzed[`/board/${name}`] }));
+
+  const perArm = [];
+  for (const shot of screenshots) {
+    const metrics = analyzed[`/shot/${shot.path.split('/').pop()}`];
+    if (!metrics || metrics.error) {
+      perArm.push({ ...shot, error: metrics?.error ?? 'the screenshot could not be analysed' });
+      continue;
+    }
+    const comparisons = boardMetrics.map((board) => ({
+      board: board.file,
+      distance: metricDistance(board.metrics, metrics),
+      findings: summariseComparison(board.metrics, metrics),
+    }));
+    comparisons.sort((a, b) => a.distance - b.distance || b.findings.length - a.findings.length);
+    const closest = comparisons[0];
+    perArm.push({
+      ...shot,
+      metrics: { width: metrics.width, height: metrics.height, luminance: metrics.luminance.mean, ink: metrics.ink },
+      closest_board: closest.board,
+      closest_distance: closest.distance,
+      closest_findings: closest.findings.map((finding) => ({
+        ...finding,
+        // Both images named on every finding: this is what makes a drift report inspectable by a person
+        // rather than something they have to take on trust.
+        board: closest.board,
+        screenshot: shot.path,
+      })),
+      all_boards: comparisons.map((comparison) => ({ board: comparison.board, distance: comparison.distance, findings: comparison.findings.length })),
+    });
+  }
+
+  return {
+    boards: boardMetrics.map((board) => ({
+      file: board.file,
+      size: `${board.metrics.width}x${board.metrics.height}`,
+      luminance: board.metrics.luminance.mean,
+      ink: board.metrics.ink,
+      colours: board.metrics.colours.slice(0, 5),
+    })),
+    per_arm: perArm,
+    metric_notes: ANALYSIS_METRIC_NOTES,
+    findings: perArm.flatMap((entry) => entry.closest_findings ?? []),
+  };
 }
 
 async function main() {
@@ -299,12 +432,25 @@ async function main() {
   console.log(`check-cross-arm-parity: building ${Object.keys(FRAMEWORKS).length} arms for ${options.archetype}`);
   const arms = buildArms({ archetype: options.archetype, runRoot: armRoot, reuse: options.reuseArms });
   console.log(`check-cross-arm-parity: rendering ${arms.length} arms at ${options.viewports.map((v) => v.key).join(', ')}`);
-  const { armsByViewport, screenshots } = await measure({
-    arms,
-    viewports: options.viewports,
-    runRoot: armRoot,
-    port: options.port,
-  });
+  // One browser for the whole run, owned here rather than inside a measurement step, because the board
+  // comparison needs the same browser afterwards: the browser is the only image decoder available.
+  const chrome = await launchChrome({});
+  let measured;
+  let boardComparison;
+  try {
+    measured = await measure({
+      chrome,
+      arms,
+      viewports: options.viewports,
+      runRoot: armRoot,
+      port: options.port,
+    });
+    console.log('check-cross-arm-parity: comparing every arm screenshot against the reference boards');
+    boardComparison = await compareAgainstBoards({ chrome, armRoot, screenshots: measured.screenshots });
+  } finally {
+    await chrome.close().catch(() => {});
+  }
+  const { armsByViewport, screenshots } = measured;
 
   const summary = paritySummary({
     archetype: options.archetype,
@@ -327,6 +473,7 @@ async function main() {
     budget: IDENTITY_BUDGET,
     reference_palette: REFERENCE_PALETTE,
     palette_findings: palette,
+    board_comparison: boardComparison,
     findings: [...summary.findings, ...palette],
     screenshots,
     limits: {
@@ -342,7 +489,7 @@ async function main() {
   writeFileSync(markdownPath, renderMarkdown(report));
 
   console.log(
-    `check-cross-arm-parity: ${report.arms_measured.length} arms measured, ${summary.findings.length} parity finding(s), ${palette.length} palette finding(s)`,
+    `check-cross-arm-parity: ${report.arms_measured.length} arms measured, ${summary.findings.length} parity finding(s), ${palette.length} palette finding(s), ${report.board_comparison?.findings?.length ?? 0} board finding(s)`,
   );
   for (const finding of report.findings) console.log(`  FINDING ${finding.code} ${finding.message}`);
   console.log(`check-cross-arm-parity: wrote ${jsonPath.replace(`${ROOT}/`, '')} and ${markdownPath.replace(`${ROOT}/`, '')}`);

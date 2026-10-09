@@ -78,29 +78,61 @@ The boards are images, so what is compared is what they DECLARE - their palette 
 | svelte | --muted | #94a3b8 | not declared | 390x844, 768x900, 1280x900 |
 | svelte | body-background | #0f172a | #ffffff | 390x844, 768x900, 1280x900 |
 
+## Against the reference boards, in pixels
+
+These visual metrics compare quantised colour distribution, mean luminance, ink coverage, and coarse 32-band horizontal and vertical structure across rendered images. They do not establish that a layout, component hierarchy, or specific design element is correct, nor do they verify semantic markup or typography. Two completely different designs can share identical global luminance, ink density, and colour histograms while looking visually distinct to a human.
+
+Boards analysed: `step1-browse.jpg`, `step2-form.jpg`, `step3-confirmation.jpg`, `step4-error.jpg`, `step5-empty.jpg`.
+
+| arm | viewport | closest board | distance | finding codes | screenshot |
+| --- | --- | --- | --- | --- | --- |
+| hono | 390x844 | `step3-confirmation.jpg` | 0.925 | BOARD_PALETTE_NOT_SHARED, BOARD_LUMINANCE_DIVERGES, BOARD_INK_DIVERGES, BOARD_STRUCTURE_DIVERGES | `booking-hono-390x844.png` |
+| raw | 390x844 | `step3-confirmation.jpg` | 0.925 | BOARD_PALETTE_NOT_SHARED, BOARD_LUMINANCE_DIVERGES, BOARD_INK_DIVERGES, BOARD_STRUCTURE_DIVERGES | `booking-raw-390x844.png` |
+| react | 390x844 | `step3-confirmation.jpg` | 0.925 | BOARD_PALETTE_NOT_SHARED, BOARD_LUMINANCE_DIVERGES, BOARD_INK_DIVERGES, BOARD_STRUCTURE_DIVERGES | `booking-react-390x844.png` |
+| preact | 390x844 | `step3-confirmation.jpg` | 0.925 | BOARD_PALETTE_NOT_SHARED, BOARD_LUMINANCE_DIVERGES, BOARD_INK_DIVERGES, BOARD_STRUCTURE_DIVERGES | `booking-preact-390x844.png` |
+| vue | 390x844 | `step3-confirmation.jpg` | 0.925 | BOARD_PALETTE_NOT_SHARED, BOARD_LUMINANCE_DIVERGES, BOARD_INK_DIVERGES, BOARD_STRUCTURE_DIVERGES | `booking-vue-390x844.png` |
+| webcomponents | 390x844 | `step3-confirmation.jpg` | 0.925 | BOARD_PALETTE_NOT_SHARED, BOARD_LUMINANCE_DIVERGES, BOARD_INK_DIVERGES, BOARD_STRUCTURE_DIVERGES | `booking-webcomponents-390x844.png` |
+| svelte | 390x844 | `step3-confirmation.jpg` | 0.925 | BOARD_PALETTE_NOT_SHARED, BOARD_LUMINANCE_DIVERGES, BOARD_INK_DIVERGES, BOARD_STRUCTURE_DIVERGES | `booking-svelte-390x844.png` |
+| hono | 768x900 | `step3-confirmation.jpg` | 0.9512 | BOARD_PALETTE_NOT_SHARED, BOARD_LUMINANCE_DIVERGES, BOARD_INK_DIVERGES, BOARD_STRUCTURE_DIVERGES | `booking-hono-768x900.png` |
+| raw | 768x900 | `step3-confirmation.jpg` | 0.9512 | BOARD_PALETTE_NOT_SHARED, BOARD_LUMINANCE_DIVERGES, BOARD_INK_DIVERGES, BOARD_STRUCTURE_DIVERGES | `booking-raw-768x900.png` |
+| react | 768x900 | `step3-confirmation.jpg` | 0.9512 | BOARD_PALETTE_NOT_SHARED, BOARD_LUMINANCE_DIVERGES, BOARD_INK_DIVERGES, BOARD_STRUCTURE_DIVERGES | `booking-react-768x900.png` |
+| preact | 768x900 | `step3-confirmation.jpg` | 0.9512 | BOARD_PALETTE_NOT_SHARED, BOARD_LUMINANCE_DIVERGES, BOARD_INK_DIVERGES, BOARD_STRUCTURE_DIVERGES | `booking-preact-768x900.png` |
+| vue | 768x900 | `step3-confirmation.jpg` | 0.9512 | BOARD_PALETTE_NOT_SHARED, BOARD_LUMINANCE_DIVERGES, BOARD_INK_DIVERGES, BOARD_STRUCTURE_DIVERGES | `booking-vue-768x900.png` |
+| webcomponents | 768x900 | `step3-confirmation.jpg` | 0.9512 | BOARD_PALETTE_NOT_SHARED, BOARD_LUMINANCE_DIVERGES, BOARD_INK_DIVERGES, BOARD_STRUCTURE_DIVERGES | `booking-webcomponents-768x900.png` |
+| svelte | 768x900 | `step3-confirmation.jpg` | 0.9512 | BOARD_PALETTE_NOT_SHARED, BOARD_LUMINANCE_DIVERGES, BOARD_INK_DIVERGES, BOARD_STRUCTURE_DIVERGES | `booking-svelte-768x900.png` |
+| hono | 1280x900 | `step3-confirmation.jpg` | 0.9652 | BOARD_PALETTE_NOT_SHARED, BOARD_LUMINANCE_DIVERGES, BOARD_INK_DIVERGES, BOARD_STRUCTURE_DIVERGES | `booking-hono-1280x900.png` |
+| raw | 1280x900 | `step3-confirmation.jpg` | 0.9652 | BOARD_PALETTE_NOT_SHARED, BOARD_LUMINANCE_DIVERGES, BOARD_INK_DIVERGES, BOARD_STRUCTURE_DIVERGES | `booking-raw-1280x900.png` |
+| react | 1280x900 | `step3-confirmation.jpg` | 0.9652 | BOARD_PALETTE_NOT_SHARED, BOARD_LUMINANCE_DIVERGES, BOARD_INK_DIVERGES, BOARD_STRUCTURE_DIVERGES | `booking-react-1280x900.png` |
+| preact | 1280x900 | `step3-confirmation.jpg` | 0.9652 | BOARD_PALETTE_NOT_SHARED, BOARD_LUMINANCE_DIVERGES, BOARD_INK_DIVERGES, BOARD_STRUCTURE_DIVERGES | `booking-preact-1280x900.png` |
+| vue | 1280x900 | `step3-confirmation.jpg` | 0.9652 | BOARD_PALETTE_NOT_SHARED, BOARD_LUMINANCE_DIVERGES, BOARD_INK_DIVERGES, BOARD_STRUCTURE_DIVERGES | `booking-vue-1280x900.png` |
+| webcomponents | 1280x900 | `step3-confirmation.jpg` | 0.9652 | BOARD_PALETTE_NOT_SHARED, BOARD_LUMINANCE_DIVERGES, BOARD_INK_DIVERGES, BOARD_STRUCTURE_DIVERGES | `booking-webcomponents-1280x900.png` |
+| svelte | 1280x900 | `step3-confirmation.jpg` | 0.9652 | BOARD_PALETTE_NOT_SHARED, BOARD_LUMINANCE_DIVERGES, BOARD_INK_DIVERGES, BOARD_STRUCTURE_DIVERGES | `booking-svelte-1280x900.png` |
+
+The distance is the mean absolute difference across the 32 row bands and the 32 column bands, averaged - stated here because a distance nobody can recompute is a number nobody can check. Nearer is closer; the closest board is named per arm, not assumed.
+
 ## Screenshots
 
 Saved for inspection (untracked run directory, full-page, one per arm and width):
 
-- `.conformance-corpus/cross-arm-1791574495042/screenshots/booking-hono-390x844.png`
-- `.conformance-corpus/cross-arm-1791574495042/screenshots/booking-raw-390x844.png`
-- `.conformance-corpus/cross-arm-1791574495042/screenshots/booking-react-390x844.png`
-- `.conformance-corpus/cross-arm-1791574495042/screenshots/booking-preact-390x844.png`
-- `.conformance-corpus/cross-arm-1791574495042/screenshots/booking-vue-390x844.png`
-- `.conformance-corpus/cross-arm-1791574495042/screenshots/booking-webcomponents-390x844.png`
-- `.conformance-corpus/cross-arm-1791574495042/screenshots/booking-svelte-390x844.png`
-- `.conformance-corpus/cross-arm-1791574495042/screenshots/booking-hono-768x900.png`
-- `.conformance-corpus/cross-arm-1791574495042/screenshots/booking-raw-768x900.png`
-- `.conformance-corpus/cross-arm-1791574495042/screenshots/booking-react-768x900.png`
-- `.conformance-corpus/cross-arm-1791574495042/screenshots/booking-preact-768x900.png`
-- `.conformance-corpus/cross-arm-1791574495042/screenshots/booking-vue-768x900.png`
-- `.conformance-corpus/cross-arm-1791574495042/screenshots/booking-webcomponents-768x900.png`
-- `.conformance-corpus/cross-arm-1791574495042/screenshots/booking-svelte-768x900.png`
-- `.conformance-corpus/cross-arm-1791574495042/screenshots/booking-hono-1280x900.png`
-- `.conformance-corpus/cross-arm-1791574495042/screenshots/booking-raw-1280x900.png`
-- `.conformance-corpus/cross-arm-1791574495042/screenshots/booking-react-1280x900.png`
-- `.conformance-corpus/cross-arm-1791574495042/screenshots/booking-preact-1280x900.png`
-- `.conformance-corpus/cross-arm-1791574495042/screenshots/booking-vue-1280x900.png`
-- `.conformance-corpus/cross-arm-1791574495042/screenshots/booking-webcomponents-1280x900.png`
-- `.conformance-corpus/cross-arm-1791574495042/screenshots/booking-svelte-1280x900.png`
+- `.conformance-corpus/cross-arm-1791574570198/screenshots/booking-hono-390x844.png`
+- `.conformance-corpus/cross-arm-1791574570198/screenshots/booking-raw-390x844.png`
+- `.conformance-corpus/cross-arm-1791574570198/screenshots/booking-react-390x844.png`
+- `.conformance-corpus/cross-arm-1791574570198/screenshots/booking-preact-390x844.png`
+- `.conformance-corpus/cross-arm-1791574570198/screenshots/booking-vue-390x844.png`
+- `.conformance-corpus/cross-arm-1791574570198/screenshots/booking-webcomponents-390x844.png`
+- `.conformance-corpus/cross-arm-1791574570198/screenshots/booking-svelte-390x844.png`
+- `.conformance-corpus/cross-arm-1791574570198/screenshots/booking-hono-768x900.png`
+- `.conformance-corpus/cross-arm-1791574570198/screenshots/booking-raw-768x900.png`
+- `.conformance-corpus/cross-arm-1791574570198/screenshots/booking-react-768x900.png`
+- `.conformance-corpus/cross-arm-1791574570198/screenshots/booking-preact-768x900.png`
+- `.conformance-corpus/cross-arm-1791574570198/screenshots/booking-vue-768x900.png`
+- `.conformance-corpus/cross-arm-1791574570198/screenshots/booking-webcomponents-768x900.png`
+- `.conformance-corpus/cross-arm-1791574570198/screenshots/booking-svelte-768x900.png`
+- `.conformance-corpus/cross-arm-1791574570198/screenshots/booking-hono-1280x900.png`
+- `.conformance-corpus/cross-arm-1791574570198/screenshots/booking-raw-1280x900.png`
+- `.conformance-corpus/cross-arm-1791574570198/screenshots/booking-react-1280x900.png`
+- `.conformance-corpus/cross-arm-1791574570198/screenshots/booking-preact-1280x900.png`
+- `.conformance-corpus/cross-arm-1791574570198/screenshots/booking-vue-1280x900.png`
+- `.conformance-corpus/cross-arm-1791574570198/screenshots/booking-webcomponents-1280x900.png`
+- `.conformance-corpus/cross-arm-1791574570198/screenshots/booking-svelte-1280x900.png`
 
