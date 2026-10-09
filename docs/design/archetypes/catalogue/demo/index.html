@@ -1,0 +1,1037 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <title>Kiln &amp; Copper — Ceramics &amp; Kiln Parts Catalogue</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <!--
+      Product illustrations. One sprite, drawn with plain SVG shapes so the demo needs no image
+      files and no network request. Colours come from the --art-* custom properties that the
+      [data-tone] rules in styles.css set on the card.
+    -->
+    <svg class="visually-hidden" aria-hidden="true" focusable="false" width="0" height="0">
+      <symbol id="art-vase" viewBox="0 0 120 90">
+        <ellipse cx="60" cy="83" rx="26" ry="3.5" fill="#000" opacity=".35"/>
+        <path d="M53 12h14v7l7 12c3 6 5 12 5 17 0 13-9 22-19 22s-19-9-19-22c0-5 2-11 5-17l7-12z" style="fill:var(--art-clay)"/>
+        <path d="M53 12h14v7l-7 2-7-2z" style="fill:var(--art-clay-dark)"/>
+        <ellipse cx="60" cy="48" rx="18" ry="4" opacity=".35" style="fill:var(--art-clay-light)"/>
+        <path d="M44 56c1 12 7 19 16 22-11-2-18-10-18-21 0-1 1-1 2-1z" opacity=".35" style="fill:var(--art-clay-light)"/>
+      </symbol>
+      <symbol id="art-jug" viewBox="0 0 120 90">
+        <ellipse cx="56" cy="83" rx="25" ry="3.5" fill="#000" opacity=".35"/>
+        <path d="M74 34c11 1 17 8 17 17s-6 15-17 16" fill="none" stroke-width="5.5" stroke-linecap="round" style="stroke:var(--art-clay-dark)"/>
+        <path d="M45 12h22l-3 10c6 5 9 13 9 22 0 14-7 23-17 23s-17-9-17-23c0-9 3-17 9-22z" style="fill:var(--art-clay)"/>
+        <path d="M45 12h22l-1.5 5c-5 3-14 3-19 0z" style="fill:var(--art-clay-dark)"/>
+        <ellipse cx="56" cy="50" rx="14" ry="3" opacity=".35" style="fill:var(--art-clay-light)"/>
+      </symbol>
+      <symbol id="art-tableware" viewBox="0 0 120 90">
+        <ellipse cx="60" cy="80" rx="34" ry="3.5" fill="#000" opacity=".35"/>
+        <ellipse cx="60" cy="70" rx="36" ry="10" style="fill:var(--art-clay-dark)"/>
+        <ellipse cx="60" cy="67" rx="30" ry="7.5" style="fill:var(--art-clay-light)"/>
+        <path d="M30 44h60c0 12-13 19-30 19s-30-7-30-19z" style="fill:var(--art-clay)"/>
+        <ellipse cx="60" cy="44" rx="30" ry="7" style="fill:var(--art-clay-light)"/>
+        <circle cx="60" cy="44" r="4.5" opacity=".6" style="fill:var(--art-glaze)"/>
+      </symbol>
+      <symbol id="art-plate" viewBox="0 0 120 90">
+        <ellipse cx="60" cy="80" rx="30" ry="4" fill="#000" opacity=".35"/>
+        <circle cx="60" cy="44" r="34" style="fill:var(--art-clay-dark)"/>
+        <circle cx="60" cy="44" r="27" style="fill:var(--art-clay)"/>
+        <circle cx="60" cy="44" r="19" style="fill:var(--art-clay-light)"/>
+        <circle cx="60" cy="44" r="7" opacity=".5" style="fill:var(--art-glaze)"/>
+        <g opacity=".45" style="fill:var(--art-glaze)">
+          <circle cx="60" cy="25" r="3"/>
+          <circle cx="79" cy="44" r="3"/>
+          <circle cx="60" cy="63" r="3"/>
+          <circle cx="41" cy="44" r="3"/>
+        </g>
+      </symbol>
+      <symbol id="art-mug" viewBox="0 0 120 90">
+        <ellipse cx="57" cy="81" rx="28" ry="3.5" fill="#000" opacity=".35"/>
+        <path d="M74 36c11 2 15 8 15 15s-5 12-15 13" fill="none" stroke-width="5.5" stroke-linecap="round" style="stroke:var(--art-clay-dark)"/>
+        <path d="M40 26h34v40c0 6-6 10-17 10s-17-4-17-10z" style="fill:var(--art-clay)"/>
+        <ellipse cx="57" cy="26" rx="17" ry="5.5" style="fill:var(--art-clay-light)"/>
+        <ellipse cx="57" cy="68" rx="20" ry="5" opacity=".45" style="fill:var(--art-clay-dark)"/>
+      </symbol>
+      <symbol id="art-planter" viewBox="0 0 120 90">
+        <ellipse cx="60" cy="82" rx="25" ry="3.5" fill="#000" opacity=".35"/>
+        <g opacity=".8" style="fill:var(--art-glaze)">
+          <path d="M60 41c-8-4-12-12-10-20 8 2 12 10 10 20z"/>
+          <path d="M60 41c8-4 12-12 10-20-8 2-12 10-10 20z"/>
+          <path d="M60 41c-2-9 0-16 4-20 2 8-1 15-4 20z"/>
+        </g>
+        <path d="M38 41h44l-6 35c-.5 4-4 6-16 6s-15.5-2-16-6z" style="fill:var(--art-clay)"/>
+        <path d="M38 41h44l-1.5 8H39.5z" style="fill:var(--art-clay-dark)"/>
+      </symbol>
+      <symbol id="art-trough" viewBox="0 0 120 90">
+        <ellipse cx="60" cy="82" rx="36" ry="3.5" fill="#000" opacity=".35"/>
+        <g opacity=".75" style="fill:var(--art-glaze)">
+          <path d="M40 44c-7-5-10-13-8-20 7 3 10 11 8 20z"/>
+          <path d="M60 42c-3-9-1-17 3-22 3 8 1 16-3 22z"/>
+          <path d="M80 44c7-5 10-13 8-20-7 3-10 11-8 20z"/>
+        </g>
+        <path d="M24 43h72l-6 33c-.6 4-6 6-30 6s-29.4-2-30-6z" style="fill:var(--art-clay)"/>
+        <path d="M24 43h72l-1.4 8H25.4z" style="fill:var(--art-clay-dark)"/>
+      </symbol>
+      <symbol id="art-pot" viewBox="0 0 120 90">
+        <ellipse cx="60" cy="82" rx="22" ry="3.5" fill="#000" opacity=".35"/>
+        <g opacity=".8" style="fill:var(--art-glaze)">
+          <path d="M60 45c-9-3-14-11-13-19 9 3 14 11 13 19z"/>
+          <path d="M60 45c9-3 14-11 13-19-9 3-14 11-13 19z"/>
+        </g>
+        <path d="M42 45h36l-5 31c-.4 3.5-5 5-13 5s-12.6-1.5-13-5z" style="fill:var(--art-clay)"/>
+        <path d="M42 45h36l-1.2 8H43.2z" style="fill:var(--art-clay-dark)"/>
+      </symbol>
+      <symbol id="art-pendant" viewBox="0 0 120 90">
+        <line x1="60" y1="4" x2="60" y2="30" stroke-width="3" style="stroke:var(--art-clay-dark)"/>
+        <path d="M32 58c0-16 12-28 28-28s28 12 28 28z" style="fill:var(--art-clay)"/>
+        <path d="M60 30c-11 6-18 16-18 28h18z" opacity=".35" style="fill:var(--art-clay-light)"/>
+        <rect x="30" y="58" width="60" height="6" rx="3" style="fill:var(--art-clay-dark)"/>
+        <ellipse cx="60" cy="70" rx="10" ry="3" opacity=".8" style="fill:var(--art-glaze)"/>
+      </symbol>
+      <symbol id="art-dome" viewBox="0 0 120 90">
+        <line x1="60" y1="4" x2="60" y2="26" stroke-width="3" style="stroke:var(--art-clay-dark)"/>
+        <path d="M44 62c0-14 7-26 16-26s16 12 16 26z" style="fill:var(--art-clay-light)"/>
+        <path d="M60 36c-6 7-9 16-9 26h9z" opacity=".45" style="fill:var(--art-clay)"/>
+        <rect x="42" y="62" width="36" height="5" rx="2.5" style="fill:var(--art-clay-dark)"/>
+        <ellipse cx="60" cy="73" rx="9" ry="3" opacity=".85" style="fill:var(--art-glaze)"/>
+      </symbol>
+      <symbol id="art-bearing" viewBox="0 0 120 90">
+        <ellipse cx="60" cy="80" rx="34" ry="4" fill="#000" opacity=".35"/>
+        <circle cx="60" cy="46" r="34" style="fill:var(--art-clay-dark)"/>
+        <circle cx="60" cy="46" r="26" style="fill:var(--surface-inset)"/>
+        <circle cx="60" cy="46" r="13" style="fill:var(--art-clay)"/>
+        <circle cx="60" cy="46" r="6" style="fill:var(--surface-inset)"/>
+        <g style="fill:var(--art-glaze)">
+          <circle cx="60" cy="26" r="4.5"/>
+          <circle cx="80" cy="46" r="4.5"/>
+          <circle cx="60" cy="66" r="4.5"/>
+          <circle cx="40" cy="46" r="4.5"/>
+          <circle cx="74" cy="32" r="4.5"/>
+          <circle cx="74" cy="60" r="4.5"/>
+          <circle cx="46" cy="60" r="4.5"/>
+          <circle cx="46" cy="32" r="4.5"/>
+        </g>
+      </symbol>
+      <symbol id="art-part" viewBox="0 0 120 90">
+        <ellipse cx="60" cy="80" rx="26" ry="4" fill="#000" opacity=".35"/>
+        <path d="M42 20h36l10 10v44H42z" style="fill:var(--art-clay-dark)"/>
+        <path d="M50 20h28l10 10v44H50z" style="fill:var(--art-clay)"/>
+        <g stroke-width="2.5" stroke-linecap="round" style="stroke:var(--surface-inset)">
+          <line x1="58" y1="42" x2="80" y2="42"/>
+          <line x1="58" y1="52" x2="80" y2="52"/>
+          <line x1="58" y1="62" x2="72" y2="62"/>
+        </g>
+      </symbol>
+      <symbol id="art-shelf" viewBox="0 0 120 90">
+        <rect x="16" y="58" width="88" height="7" rx="3.5" style="fill:var(--art-clay-dark)"/>
+        <rect x="24" y="65" width="7" height="14" rx="3" style="fill:var(--art-clay-dark)"/>
+        <rect x="89" y="65" width="7" height="14" rx="3" style="fill:var(--art-clay-dark)"/>
+        <path d="M38 34h44c0 12-10 19-22 19s-22-7-22-19z" style="fill:var(--art-clay)"/>
+        <ellipse cx="60" cy="34" rx="22" ry="6" style="fill:var(--art-clay-light)"/>
+        <path d="M44 38c5 3 10 3 16 0s11-3 16 0" fill="none" stroke-width="2" opacity=".9" style="stroke:var(--art-glaze)"/>
+      </symbol>
+    </svg>
+
+    <header class="top-bar">
+      <a href="index.html" class="brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" focusable="false">
+            <path d="M4 10h16M6 10l1.5 9h9L18 10M9 6c0-1.5 1-2 3-2s3 .5 3 2"/>
+          </svg>
+        </span>
+        <span>Kiln &amp; Copper</span>
+      </a>
+      <nav class="top-nav" aria-label="Main navigation">
+        <a href="index.html" aria-current="page">Catalogue</a>
+        <a href="cart.html">Cart</a>
+        <a href="empty.html">Empty state</a>
+        <a href="compare.html">Visual spec</a>
+      </nav>
+      <button type="button" class="cart-button" id="cart-open" aria-expanded="false" aria-controls="cart-drawer">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+          <circle cx="9" cy="20" r="1.4"/>
+          <circle cx="18" cy="20" r="1.4"/>
+          <path d="M3 4h2l2.4 11h11.2L21 7H6"/>
+        </svg>
+        <span>Cart</span>
+        <span class="cart-badge" id="cart-badge" aria-hidden="true">0</span>
+      </button>
+      <span class="visually-hidden" role="status" id="cart-live"></span>
+    </header>
+
+    <div class="state-switcher" role="region" aria-label="Demo state switcher">
+      <span class="state-switcher-label">Design states:</span>
+      <span class="state-pill" aria-current="page">1. Grid and search (live)</span>
+      <button type="button" class="state-pill" id="demo-filter-bearing">Search "bearing"</button>
+      <button type="button" class="state-pill" id="demo-filter-teapot">3. Empty search "porcelain teapot"</button>
+      <a href="cart.html" class="state-pill">2. Cart drawer →</a>
+      <a href="empty.html" class="state-pill">Static empty state →</a>
+      <a href="compare.html" class="state-pill">Boards comparison →</a>
+    </div>
+
+    <main class="container">
+      <div class="page-header">
+        <h1 class="display-title">Ceramics &amp; kiln supplies</h1>
+        <p class="subtitle">
+          Twelve pieces of hand-thrown stoneware, lighting and kiln furniture. Search by name,
+          category or part number and the grid narrows as you type.
+        </p>
+      </div>
+
+      <section class="catalogue-controls" aria-label="Catalogue search and filters">
+        <!-- Contract form: form#search-form, method get, action /search, field input[name=q] -->
+        <form id="search-form" class="search-form" method="get" action="/search" role="search" aria-label="Search the catalogue">
+          <label for="q">Search parts</label>
+          <div class="search-row">
+            <input
+              type="search"
+              id="q"
+              name="q"
+              required
+              autocomplete="off"
+              placeholder='Try "bearing", "vase" or "glaze"'
+              aria-describedby="q-hint"
+            >
+            <button type="submit" class="btn btn--action">Search</button>
+          </div>
+          <p class="field-hint" id="q-hint">
+            Name, category or part number. Filtering happens in this page — nothing is sent to a server.
+          </p>
+        </form>
+
+        <div class="control-row">
+          <div class="chip-row" role="group" aria-label="Filter by category">
+            <button type="button" class="chip" data-category="all" aria-pressed="true"><span class="chip-label">All</span></button>
+            <button type="button" class="chip" data-category="vases" aria-pressed="false"><span aria-hidden="true">🏺</span> <span class="chip-label">Vases</span></button>
+            <button type="button" class="chip" data-category="tableware" aria-pressed="false"><span aria-hidden="true">🍽️</span> <span class="chip-label">Tableware</span></button>
+            <button type="button" class="chip" data-category="planters" aria-pressed="false"><span aria-hidden="true">🪴</span> <span class="chip-label">Planters</span></button>
+            <button type="button" class="chip" data-category="lighting" aria-pressed="false"><span aria-hidden="true">💡</span> <span class="chip-label">Lighting</span></button>
+            <button type="button" class="chip" data-category="kiln-parts" aria-pressed="false"><span aria-hidden="true">⚙️</span> <span class="chip-label">Kiln parts</span></button>
+          </div>
+          <div class="sort-control">
+            <label for="sort">Sort by</label>
+            <select id="sort">
+              <option value="popularity">Popularity</option>
+              <option value="price-asc">Low to high</option>
+              <option value="price-desc">High to low</option>
+              <option value="newest">Newest arrivals</option>
+            </select>
+          </div>
+        </div>
+
+        <p class="results-status" id="results-status" role="status">Showing all 12 pieces.</p>
+      </section>
+
+      <noscript>
+        <p class="noscript-note">
+          This design target filters in the browser. With JavaScript disabled the search form still
+          submits to <code>/search</code>, which no static server here serves.
+        </p>
+      </noscript>
+
+      <section class="empty-state" id="empty-state" aria-labelledby="empty-title" hidden>
+        <svg class="empty-state-art" viewBox="0 0 120 90" aria-hidden="true" focusable="false" data-tone="cream">
+          <use href="#art-shelf"></use>
+        </svg>
+        <h2 class="empty-state-title" id="empty-title"><span id="empty-title-text">No ceramics match your search</span></h2>
+        <p class="empty-state-copy">
+          Try searching for bowls, vases, or browse our latest pottery collection. Every product name,
+          category and part number in the grid is searchable.
+        </p>
+        <div class="empty-state-actions">
+          <button type="button" class="btn btn--action" id="reset-search">Reset search</button>
+          <a class="link-quiet" href="empty.html">See the static empty-state variant →</a>
+        </div>
+      </section>
+
+      <section class="catalogue-results" aria-labelledby="grid-heading">
+        <h2 class="visually-hidden" id="grid-heading">Catalogue products</h2>
+        <ul class="product-grid" id="product-grid" role="list">
+          <li class="product-card" data-part="VASE-001" data-category="vases" data-price="23.90" data-tone="ash" data-popularity="1" data-added="6">
+            <div class="product-art">
+              <svg viewBox="0 0 120 90" aria-hidden="true" focusable="false" data-art="art-vase"><use href="#art-vase"></use></svg>
+            </div>
+            <div class="product-body">
+              <h3 class="product-name">Rustic Vase</h3>
+              <p class="product-variant">Stoneware · matte ash glaze</p>
+              <div class="product-foot">
+                <p class="product-price">£23.90</p>
+                <span class="stock-pill stock-pill--in" id="stock-VASE-001"><span class="stock-dot" aria-hidden="true"></span>In stock</span>
+              </div>
+              <button type="button" class="btn btn--add" data-add-to-cart="VASE-001">Add to cart</button>
+            </div>
+          </li>
+
+          <li class="product-card" data-part="TBLW-010" data-category="tableware" data-price="19.99" data-tone="cream" data-popularity="2" data-added="3">
+            <div class="product-art">
+              <svg viewBox="0 0 120 90" aria-hidden="true" focusable="false" data-art="art-tableware"><use href="#art-tableware"></use></svg>
+            </div>
+            <div class="product-body">
+              <h3 class="product-name">Artisanal Ceramic Tableware</h3>
+              <p class="product-variant">Dinner service · hand-thrown</p>
+              <div class="product-foot">
+                <p class="product-price">£19.99</p>
+                <span class="stock-pill stock-pill--in" id="stock-TBLW-010"><span class="stock-dot" aria-hidden="true"></span>In stock</span>
+              </div>
+              <button type="button" class="btn btn--add" data-add-to-cart="TBLW-010">Add to cart</button>
+            </div>
+          </li>
+
+          <li class="product-card" data-part="PLNT-020" data-category="planters" data-price="15.00" data-tone="celadon" data-popularity="3" data-added="8">
+            <div class="product-art">
+              <svg viewBox="0 0 120 90" aria-hidden="true" focusable="false" data-art="art-planter"><use href="#art-planter"></use></svg>
+            </div>
+            <div class="product-body">
+              <h3 class="product-name">Unique Planter</h3>
+              <p class="product-variant">Stoneware · speckled celadon</p>
+              <div class="product-foot">
+                <p class="product-price">£15.00</p>
+                <span class="stock-pill stock-pill--in" id="stock-PLNT-020"><span class="stock-dot" aria-hidden="true"></span>In stock</span>
+              </div>
+              <button type="button" class="btn btn--add" data-add-to-cart="PLNT-020">Add to cart</button>
+            </div>
+          </li>
+
+          <li class="product-card" data-part="TBLW-011" data-category="tableware" data-price="19.99" data-tone="terracotta" data-popularity="4" data-added="9">
+            <div class="product-art">
+              <svg viewBox="0 0 120 90" aria-hidden="true" focusable="false" data-art="art-plate"><use href="#art-plate"></use></svg>
+            </div>
+            <div class="product-body">
+              <h3 class="product-name">Rustic Dinner Plate</h3>
+              <p class="product-variant">Stoneware · 27 cm</p>
+              <div class="product-foot">
+                <p class="product-price">£19.99</p>
+                <span class="stock-pill stock-pill--low" id="stock-TBLW-011"><span class="stock-dot" aria-hidden="true"></span>Low stock — 3 left</span>
+              </div>
+              <button type="button" class="btn btn--add" data-add-to-cart="TBLW-011">Add to cart</button>
+            </div>
+          </li>
+
+          <li class="product-card" data-part="LGHT-030" data-category="lighting" data-price="14.90" data-tone="cream" data-popularity="5" data-added="4">
+            <div class="product-art">
+              <svg viewBox="0 0 120 90" aria-hidden="true" focusable="false" data-art="art-pendant"><use href="#art-pendant"></use></svg>
+            </div>
+            <div class="product-body">
+              <h3 class="product-name">Stylised Ceramic Pendant</h3>
+              <p class="product-variant">Hand-glazed shade · 1.5 m cord</p>
+              <div class="product-foot">
+                <p class="product-price">£14.90</p>
+                <span class="stock-pill stock-pill--in" id="stock-LGHT-030"><span class="stock-dot" aria-hidden="true"></span>In stock</span>
+              </div>
+              <button type="button" class="btn btn--add" data-add-to-cart="LGHT-030">Add to cart</button>
+            </div>
+          </li>
+
+          <li class="product-card" data-part="PLNT-021" data-category="planters" data-price="15.00" data-tone="terracotta" data-popularity="6" data-added="7">
+            <div class="product-art">
+              <svg viewBox="0 0 120 90" aria-hidden="true" focusable="false" data-art="art-trough"><use href="#art-trough"></use></svg>
+            </div>
+            <div class="product-body">
+              <h3 class="product-name">Ceramic Trough Planter</h3>
+              <p class="product-variant">Long trough · 42 cm</p>
+              <div class="product-foot">
+                <p class="product-price">£15.00</p>
+                <span class="stock-pill stock-pill--in" id="stock-PLNT-021"><span class="stock-dot" aria-hidden="true"></span>In stock</span>
+              </div>
+              <button type="button" class="btn btn--add" data-add-to-cart="PLNT-021">Add to cart</button>
+            </div>
+          </li>
+
+          <li class="product-card" data-part="TBLW-012" data-category="tableware" data-price="32.00" data-tone="ash" data-popularity="7" data-added="2">
+            <div class="product-art">
+              <svg viewBox="0 0 120 90" aria-hidden="true" focusable="false" data-art="art-mug"><use href="#art-mug"></use></svg>
+            </div>
+            <div class="product-body">
+              <h3 class="product-name">Speckled Stoneware Mugs</h3>
+              <p class="product-variant">Set of four · 350 ml</p>
+              <div class="product-foot">
+                <p class="product-price">£32.00</p>
+                <span class="stock-pill stock-pill--in" id="stock-TBLW-012"><span class="stock-dot" aria-hidden="true"></span>In stock</span>
+              </div>
+              <button type="button" class="btn btn--add" data-add-to-cart="TBLW-012">Add to cart</button>
+            </div>
+          </li>
+
+          <li class="product-card" data-part="VASE-002" data-category="vases" data-price="27.50" data-tone="cream" data-popularity="8" data-added="10">
+            <div class="product-art">
+              <svg viewBox="0 0 120 90" aria-hidden="true" focusable="false" data-art="art-jug"><use href="#art-jug"></use></svg>
+            </div>
+            <div class="product-body">
+              <h3 class="product-name">Salt-Glazed Jug</h3>
+              <p class="product-variant">Stoneware · salt glaze · 1.2 l</p>
+              <div class="product-foot">
+                <p class="product-price">£27.50</p>
+                <span class="stock-pill stock-pill--in" id="stock-VASE-002"><span class="stock-dot" aria-hidden="true"></span>In stock</span>
+              </div>
+              <button type="button" class="btn btn--add" data-add-to-cart="VASE-002">Add to cart</button>
+            </div>
+          </li>
+
+          <li class="product-card" data-part="LGHT-031" data-category="lighting" data-price="10.00" data-tone="graphite" data-popularity="9" data-added="5">
+            <div class="product-art">
+              <svg viewBox="0 0 120 90" aria-hidden="true" focusable="false" data-art="art-dome"><use href="#art-dome"></use></svg>
+            </div>
+            <div class="product-body">
+              <h3 class="product-name">Glazed Dome Pendant</h3>
+              <p class="product-variant">Matte dome shade · 1.5 m cord</p>
+              <div class="product-foot">
+                <p class="product-price">£10.00</p>
+                <span class="stock-pill stock-pill--in" id="stock-LGHT-031"><span class="stock-dot" aria-hidden="true"></span>In stock</span>
+              </div>
+              <button type="button" class="btn btn--add" data-add-to-cart="LGHT-031">Add to cart</button>
+            </div>
+          </li>
+
+          <li class="product-card" data-part="PART-041" data-category="kiln-parts" data-price="18.40" data-tone="celadon" data-popularity="10" data-added="1">
+            <div class="product-art">
+              <svg viewBox="0 0 120 90" aria-hidden="true" focusable="false" data-art="art-bearing"><use href="#art-bearing"></use></svg>
+            </div>
+            <div class="product-body">
+              <h3 class="product-name">Silicon Nitride Kiln Bearing Set</h3>
+              <p class="product-variant">Kiln furniture · four bearing rollers</p>
+              <div class="product-foot">
+                <p class="product-price">£18.40</p>
+                <span class="stock-pill stock-pill--in" id="stock-PART-041"><span class="stock-dot" aria-hidden="true"></span>In stock</span>
+              </div>
+              <button type="button" class="btn btn--add" data-add-to-cart="PART-041">Add to cart</button>
+            </div>
+          </li>
+
+          <li class="product-card" data-part="PART-042" data-category="kiln-parts" data-price="9.75" data-tone="ash" data-popularity="11" data-added="12">
+            <div class="product-art">
+              <svg viewBox="0 0 120 90" aria-hidden="true" focusable="false" data-art="art-part"><use href="#art-part"></use></svg>
+            </div>
+            <div class="product-body">
+              <h3 class="product-name">Alumina Bearing Roller, 45 mm</h3>
+              <p class="product-variant">Kiln furniture · single bearing roller</p>
+              <div class="product-foot">
+                <p class="product-price">£9.75</p>
+                <span class="stock-pill stock-pill--in" id="stock-PART-042"><span class="stock-dot" aria-hidden="true"></span>In stock</span>
+              </div>
+              <button type="button" class="btn btn--add" data-add-to-cart="PART-042">Add to cart</button>
+            </div>
+          </li>
+
+          <li class="product-card" data-part="PLNT-022" data-category="planters" data-price="12.50" data-tone="cream" data-popularity="12" data-added="11">
+            <div class="product-art">
+              <svg viewBox="0 0 120 90" aria-hidden="true" focusable="false" data-art="art-pot"><use href="#art-pot"></use></svg>
+            </div>
+            <div class="product-body">
+              <h3 class="product-name">Ripple Herb Pot</h3>
+              <p class="product-variant">Small pot · 14 cm</p>
+              <div class="product-foot">
+                <p class="product-price">£12.50</p>
+                <span class="stock-pill stock-pill--out" id="stock-PLNT-022"><span class="stock-dot" aria-hidden="true"></span>Out of stock</span>
+              </div>
+              <button type="button" class="btn btn--add" data-add-to-cart="PLNT-022" disabled aria-describedby="stock-PLNT-022">Add to cart</button>
+            </div>
+          </li>
+        </ul>
+      </section>
+    </main>
+
+    <div class="drawer-backdrop" id="cart-backdrop"></div>
+
+    <!-- Slide-over cart drawer (board 2). role="dialog" + focus containment while open. -->
+    <aside class="cart-drawer" id="cart-drawer" role="dialog" aria-modal="true" aria-labelledby="cart-drawer-title">
+      <header class="drawer-head">
+        <h2 id="cart-drawer-title">Your cart <span class="drawer-count" id="cart-count-inline">(0 items)</span></h2>
+        <button type="button" class="drawer-close" id="cart-close" aria-label="Close cart">
+          <span aria-hidden="true">✕</span>
+        </button>
+      </header>
+
+      <div class="drawer-body">
+        <p class="cart-empty-note" id="cart-empty-note">
+          Your cart is empty. Add a piece from the grid above, or type a part number below.
+        </p>
+
+        <ul class="cart-items" id="cart-items" role="list" aria-label="Items in your cart"></ul>
+
+        <section class="cart-add" aria-labelledby="cart-add-title">
+          <h3 id="cart-add-title">Add by part number</h3>
+          <!-- Contract form: form#cart-form, method post, action /cart, fields input[name=item] and input[name=quantity] -->
+          <form id="cart-form" method="post" action="/cart">
+            <div class="cart-add-grid">
+              <div class="field">
+                <label for="item">Part number</label>
+                <input type="text" id="item" name="item" required autocomplete="off" placeholder="e.g. VASE-001" aria-describedby="item-hint">
+                <p class="field-hint" id="item-hint">Try VASE-001, TBLW-010 or PART-041. Not in the catalogue? It is still recorded as a custom line.</p>
+              </div>
+              <div class="field">
+                <label for="quantity">Quantity <span class="optional-marker">(optional)</span></label>
+                <input type="number" id="quantity" name="quantity" min="1" max="99" step="1" inputmode="numeric" placeholder="1">
+              </div>
+            </div>
+            <button type="submit" class="btn btn--add">Add to cart</button>
+            <p class="form-status" id="cart-form-status" role="status"></p>
+          </form>
+        </section>
+      </div>
+
+      <footer class="drawer-foot">
+        <dl class="cart-summary">
+          <div class="summary-row">
+            <dt>Items</dt>
+            <dd id="cart-items-count">0</dd>
+          </div>
+          <div class="summary-row">
+            <dt>Subtotal</dt>
+            <dd id="cart-subtotal">£0.00</dd>
+          </div>
+          <div class="summary-row">
+            <dt>Shipping</dt>
+            <dd id="cart-shipping">—</dd>
+          </div>
+          <div class="summary-row summary-row--total">
+            <dt>Estimated total</dt>
+            <dd id="cart-total">£0.00</dd>
+          </div>
+        </dl>
+        <p class="cart-note cart-shipping" id="cart-shipping-note">Free shipping on orders over £40.</p>
+        <button type="button" class="btn btn--checkout" id="checkout-button">Proceed to checkout</button>
+        <p class="cart-note" id="checkout-note" role="status"></p>
+        <p class="cart-note">Cart kept in this browser only (localStorage). This design target has no server session and no order route.</p>
+      </footer>
+    </aside>
+
+    <footer class="site-foot">
+      <p>
+        Static design target. The search, cart and checkout here run in the browser — no server route,
+        no SQLite file and no session cookie. <a href="compare.html">Compare with the reference boards</a>.
+      </p>
+    </footer>
+
+    <template id="cart-item-template">
+      <li class="cart-item">
+        <div class="cart-item-art" aria-hidden="true">
+          <svg viewBox="0 0 120 90" focusable="false"><use href="#art-part"></use></svg>
+        </div>
+        <div class="cart-item-main">
+          <p class="cart-item-name" data-field="name"></p>
+          <p class="cart-item-part" data-field="part"></p>
+          <p class="cart-item-flag" data-field="flag" hidden></p>
+          <p class="cart-item-price" data-field="price"></p>
+          <div class="cart-item-tools">
+            <div class="qty-stepper" role="group" data-field="stepper">
+              <button type="button" class="qty-btn" data-qty="dec">−</button>
+              <span class="qty-value" data-field="qty">1</span>
+              <button type="button" class="qty-btn" data-qty="inc">+</button>
+            </div>
+            <p class="cart-item-total" data-field="total"></p>
+          </div>
+          <div>
+            <button type="button" class="cart-remove" data-remove>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false">
+                <path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/>
+              </svg>
+              <span>Remove</span>
+            </button>
+          </div>
+        </div>
+      </li>
+    </template>
+
+    <script>
+      (function () {
+        'use strict';
+
+        var CART_KEY = 'kiln-copper-cart-v1';
+        var FREE_SHIPPING_THRESHOLD = 40;
+        var SHIPPING_FEE = 4.95;
+        var MAX_QUANTITY = 99;
+
+        var grid = document.getElementById('product-grid');
+        var cards = Array.prototype.slice.call(grid.querySelectorAll('.product-card'));
+        var searchForm = document.getElementById('search-form');
+        var searchInput = document.getElementById('q');
+        var chips = Array.prototype.slice.call(document.querySelectorAll('.chip[data-category]'));
+        var sortSelect = document.getElementById('sort');
+        var resultsStatus = document.getElementById('results-status');
+        var emptyState = document.getElementById('empty-state');
+        var emptyTitleText = document.getElementById('empty-title-text');
+        var resetSearch = document.getElementById('reset-search');
+
+        var drawer = document.getElementById('cart-drawer');
+        var backdrop = document.getElementById('cart-backdrop');
+        var openButton = document.getElementById('cart-open');
+        var closeButton = document.getElementById('cart-close');
+        var itemsList = document.getElementById('cart-items');
+        var emptyNote = document.getElementById('cart-empty-note');
+        var itemTemplate = document.getElementById('cart-item-template');
+        var badge = document.getElementById('cart-badge');
+        var liveRegion = document.getElementById('cart-live');
+        var countInline = document.getElementById('cart-count-inline');
+        var cartForm = document.getElementById('cart-form');
+        var itemField = document.getElementById('item');
+        var quantityField = document.getElementById('quantity');
+        var cartFormStatus = document.getElementById('cart-form-status');
+        var itemsCount = document.getElementById('cart-items-count');
+        var subtotalOut = document.getElementById('cart-subtotal');
+        var shippingOut = document.getElementById('cart-shipping');
+        var shippingNote = document.getElementById('cart-shipping-note');
+        var totalOut = document.getElementById('cart-total');
+        var checkoutButton = document.getElementById('checkout-button');
+        var checkoutNote = document.getElementById('checkout-note');
+
+        var pageRegions = Array.prototype.slice.call(
+          document.querySelectorAll('.top-bar, .state-switcher, main, .site-foot')
+        );
+
+        var activeCategory = 'all';
+        var cart = [];
+        var lastFocus = null;
+
+        /* ---------------------------------------------------------------- cart model */
+
+        function findCard(part) {
+          for (var i = 0; i < cards.length; i++) {
+            if (cards[i].dataset.part === part) return cards[i];
+          }
+          return null;
+        }
+
+        function lineFromCard(part) {
+          var card = findCard(part);
+          if (!card) return null;
+          var art = card.querySelector('.product-art svg');
+          return {
+            part: part,
+            name: card.querySelector('.product-name').textContent.trim(),
+            price: Number(card.dataset.price),
+            art: art ? art.getAttribute('data-art') : 'art-part',
+            tone: card.dataset.tone || 'cream',
+            custom: false
+          };
+        }
+
+        function lineFromText(text) {
+          return { part: text, name: text, price: null, art: 'art-part', tone: 'graphite', custom: true };
+        }
+
+        function loadCart() {
+          var raw = null;
+          try {
+            raw = window.localStorage.getItem(CART_KEY);
+          } catch (error) {
+            return [];
+          }
+          if (!raw) return [];
+          var parsed = null;
+          try {
+            parsed = JSON.parse(raw);
+          } catch (error) {
+            return [];
+          }
+          if (!Array.isArray(parsed)) return [];
+          return parsed.map(function (line) {
+            if (!line || typeof line.part !== 'string' || line.part === '') return null;
+            var qty = Number(line.qty);
+            if (!isFinite(qty) || qty < 1) return null;
+            return {
+              part: line.part,
+              name: typeof line.name === 'string' && line.name ? line.name : line.part,
+              price: typeof line.price === 'number' && isFinite(line.price) ? line.price : null,
+              art: typeof line.art === 'string' && line.art ? line.art : 'art-part',
+              tone: typeof line.tone === 'string' && line.tone ? line.tone : 'graphite',
+              custom: line.custom === true,
+              qty: Math.min(MAX_QUANTITY, Math.round(qty))
+            };
+          }).filter(Boolean);
+        }
+
+        function saveCart() {
+          try {
+            window.localStorage.setItem(CART_KEY, JSON.stringify(cart));
+          } catch (error) {
+            /* Storage can be unavailable (blocked, or file:// in some browsers); the cart then lives for this page only. */
+          }
+        }
+
+        function totalQuantity() {
+          return cart.reduce(function (sum, line) { return sum + line.qty; }, 0);
+        }
+
+        function pricedSubtotal() {
+          return cart.reduce(function (sum, line) {
+            return line.price === null ? sum : sum + line.price * line.qty;
+          }, 0);
+        }
+
+        function formatMoney(value) {
+          return '£' + value.toFixed(2);
+        }
+
+        function announce(message) {
+          liveRegion.textContent = message;
+        }
+
+        function refreshUrl(raw) {
+          if (!window.history || !window.history.replaceState) return;
+          var next = raw === '' ? window.location.pathname : window.location.pathname + '?q=' + encodeURIComponent(raw);
+          try {
+            window.history.replaceState(null, '', next);
+          } catch (error) {
+            /* Some browsers refuse history writes on file:// URLs. Nothing here depends on the URL. */
+          }
+        }
+
+        /* ------------------------------------------------------------ cart rendering */
+
+        function findRow(part) {
+          var rows = itemsList.children;
+          for (var i = 0; i < rows.length; i++) {
+            if (rows[i].dataset.part === part) return rows[i];
+          }
+          return null;
+        }
+
+        function renderCart() {
+          itemsList.textContent = '';
+          cart.forEach(function (line) {
+            var row = itemTemplate.content.firstElementChild.cloneNode(true);
+            row.dataset.part = line.part;
+            row.querySelector('[data-field="name"]').textContent = line.name;
+            row.querySelector('[data-field="part"]').textContent = line.part;
+            row.querySelector('[data-field="price"]').textContent =
+              line.price === null ? 'Not priced' : formatMoney(line.price) + ' each';
+            row.querySelector('[data-field="total"]').textContent =
+              line.price === null ? '—' : formatMoney(line.price * line.qty);
+            row.querySelector('[data-field="qty"]').textContent = String(line.qty);
+
+            var flag = row.querySelector('[data-field="flag"]');
+            if (line.custom) {
+              flag.hidden = false;
+              flag.textContent = 'Custom part number — not in this catalogue, so it has no price.';
+            }
+
+            row.querySelector('[data-field="stepper"]').setAttribute('aria-label', 'Quantity for ' + line.name);
+            var dec = row.querySelector('[data-qty="dec"]');
+            var inc = row.querySelector('[data-qty="inc"]');
+            dec.setAttribute('aria-label', 'Decrease quantity of ' + line.name);
+            inc.setAttribute('aria-label', 'Increase quantity of ' + line.name);
+            dec.disabled = line.qty <= 1;
+            row.querySelector('[data-remove]').setAttribute('aria-label', 'Remove ' + line.name + ' from cart');
+
+            var art = row.querySelector('.cart-item-art');
+            art.dataset.tone = line.tone;
+            row.querySelector('use').setAttribute('href', '#' + line.art);
+
+            itemsList.appendChild(row);
+          });
+
+          var count = totalQuantity();
+          var subtotal = pricedSubtotal();
+          var hasCustom = cart.some(function (line) { return line.custom; });
+          var shipping = count === 0 || subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
+          var customNote = hasCustom ? ' Custom lines are listed without a price and do not change the subtotal.' : '';
+
+          emptyNote.hidden = cart.length > 0;
+          itemsCount.textContent = String(count);
+          badge.textContent = String(count);
+          countInline.textContent = '(' + count + (count === 1 ? ' item' : ' items') + ')';
+          subtotalOut.textContent = formatMoney(subtotal);
+          shippingOut.textContent = count === 0 ? '—' : shipping === 0 ? 'Free' : formatMoney(shipping);
+          totalOut.textContent = formatMoney(subtotal + shipping);
+
+          if (count === 0) {
+            shippingNote.textContent = 'Free shipping on orders over £40.' + customNote;
+          } else if (shipping === 0) {
+            shippingNote.textContent = 'Free shipping over £40 applied.' + customNote;
+          } else {
+            shippingNote.textContent =
+              'Add ' + formatMoney(FREE_SHIPPING_THRESHOLD - subtotal) + ' more for free shipping.' + customNote;
+          }
+        }
+
+        /** Re-render, then put focus back on the control the pointer or key press came from. */
+        function renderCartKeepingFocus(part, selector) {
+          renderCart();
+          var row = findRow(part);
+          var target = row && row.querySelector(selector);
+          if (target && !target.disabled) target.focus();
+        }
+
+        function addLine(line, qty) {
+          var amount = Math.max(1, Math.min(MAX_QUANTITY, Math.round(qty)));
+          var existing = null;
+          for (var i = 0; i < cart.length; i++) {
+            if (cart[i].part === line.part) existing = cart[i];
+          }
+          if (existing) {
+            existing.qty = Math.min(MAX_QUANTITY, existing.qty + amount);
+          } else {
+            line.qty = amount;
+            cart.push(line);
+          }
+          saveCart();
+          renderCart();
+        }
+
+        function changeQuantity(part, delta) {
+          for (var i = 0; i < cart.length; i++) {
+            if (cart[i].part === part) {
+              cart[i].qty = Math.min(MAX_QUANTITY, cart[i].qty + delta);
+              saveCart();
+              renderCartKeepingFocus(part, delta > 0 ? '[data-qty="inc"]' : '[data-qty="dec"]');
+              announce(cart[i].name + ' quantity ' + cart[i].qty + '. Cart: ' + totalQuantity() + ' items.');
+              return;
+            }
+          }
+        }
+
+        function removeLine(part) {
+          var removed = null;
+          cart = cart.filter(function (line) {
+            if (line.part === part) { removed = line; return false; }
+            return true;
+          });
+          saveCart();
+          renderCart();
+          if (removed) announce(removed.name + ' removed. Cart: ' + totalQuantity() + ' items.');
+          closeButton.focus();
+        }
+
+        /* ----------------------------------------------------------------- drawer */
+
+        function openDrawer(trigger) {
+          lastFocus = trigger || document.activeElement;
+          drawer.classList.add('is-open');
+          backdrop.classList.add('is-open');
+          document.body.classList.add('drawer-open');
+          pageRegions.forEach(function (region) { if (region) region.inert = true; });
+          openButton.setAttribute('aria-expanded', 'true');
+          closeButton.focus();
+        }
+
+        function closeDrawer() {
+          if (!drawer.classList.contains('is-open')) return;
+          drawer.classList.remove('is-open');
+          backdrop.classList.remove('is-open');
+          document.body.classList.remove('drawer-open');
+          pageRegions.forEach(function (region) { if (region) region.inert = false; });
+          openButton.setAttribute('aria-expanded', 'false');
+          if (lastFocus && typeof lastFocus.focus === 'function') lastFocus.focus();
+        }
+
+        /* ---------------------------------------------------------- search, filters */
+
+        function categoryLabel(slug) {
+          for (var i = 0; i < chips.length; i++) {
+            if (chips[i].dataset.category === slug) {
+              var label = chips[i].querySelector('.chip-label');
+              return (label ? label.textContent : chips[i].textContent).trim();
+            }
+          }
+          return slug;
+        }
+
+        function haystack(card) {
+          return [
+            card.dataset.part,
+            card.dataset.category,
+            card.querySelector('.product-name').textContent,
+            card.querySelector('.product-variant').textContent
+          ].join(' ').toLowerCase();
+        }
+
+        function applyFilters() {
+          var raw = searchInput.value.trim();
+          var needle = raw.toLowerCase();
+          var visible = 0;
+
+          cards.forEach(function (card) {
+            var categoryOk = activeCategory === 'all' || card.dataset.category === activeCategory;
+            var searchOk = needle === '' || haystack(card).indexOf(needle) !== -1;
+            var show = categoryOk && searchOk;
+            card.hidden = !show;
+            if (show) visible += 1;
+          });
+
+          grid.hidden = visible === 0;
+          emptyState.hidden = visible > 0;
+          emptyTitleText.textContent = raw === ''
+            ? 'No pieces match this filter'
+            : 'No ceramics match "' + raw + '"';
+
+          if (visible === 0) {
+            resultsStatus.textContent = raw === ''
+              ? 'No pieces match the "' + categoryLabel(activeCategory) + '" filter.'
+              : 'No pieces match "' + raw + '".';
+          } else if (needle === '' && activeCategory === 'all') {
+            resultsStatus.textContent = 'Showing all ' + visible + ' pieces.';
+          } else {
+            var because = [];
+            if (needle !== '') because.push('"' + raw + '"');
+            if (activeCategory !== 'all') because.push(categoryLabel(activeCategory));
+            resultsStatus.textContent = 'Showing ' + visible + ' of ' + cards.length +
+              ' pieces for ' + because.join(' in ') + '.';
+          }
+
+          refreshUrl(raw);
+        }
+
+        function setCategory(slug) {
+          activeCategory = slug;
+          chips.forEach(function (chip) {
+            chip.setAttribute('aria-pressed', String(chip.dataset.category === slug));
+          });
+        }
+
+        function sortCards() {
+          var mode = sortSelect.value;
+          var sorted = cards.slice();
+          var byNumber = function (key, direction) {
+            return function (a, b) {
+              return direction * (Number(a.dataset[key]) - Number(b.dataset[key]));
+            };
+          };
+          if (mode === 'price-asc') sorted.sort(byNumber('price', 1));
+          else if (mode === 'price-desc') sorted.sort(byNumber('price', -1));
+          else if (mode === 'newest') sorted.sort(byNumber('added', -1));
+          else sorted.sort(byNumber('popularity', 1));
+          sorted.forEach(function (card) { grid.appendChild(card); });
+        }
+
+        /* -------------------------------------------------------------- interaction */
+
+        searchForm.addEventListener('submit', function (event) {
+          /* The contract action is /search, which this static demo does not serve; filter in place instead. */
+          event.preventDefault();
+          applyFilters();
+        });
+
+        searchInput.addEventListener('input', applyFilters);
+
+        chips.forEach(function (chip) {
+          chip.addEventListener('click', function () {
+            setCategory(chip.dataset.category);
+            applyFilters();
+          });
+        });
+
+        sortSelect.addEventListener('change', function () {
+          sortCards();
+          applyFilters();
+        });
+
+        resetSearch.addEventListener('click', function () {
+          searchInput.value = '';
+          setCategory('all');
+          applyFilters();
+          searchInput.focus();
+        });
+
+        document.getElementById('demo-filter-bearing').addEventListener('click', function () {
+          searchInput.value = 'bearing';
+          setCategory('all');
+          applyFilters();
+        });
+
+        document.getElementById('demo-filter-teapot').addEventListener('click', function () {
+          searchInput.value = 'porcelain teapot';
+          setCategory('all');
+          applyFilters();
+        });
+
+        openButton.addEventListener('click', function () { openDrawer(openButton); });
+        closeButton.addEventListener('click', closeDrawer);
+        backdrop.addEventListener('click', closeDrawer);
+
+        document.addEventListener('keydown', function (event) {
+          if (event.key === 'Escape') closeDrawer();
+        });
+
+        drawer.addEventListener('keydown', function (event) {
+          if (event.key !== 'Tab') return;
+          var focusable = Array.prototype.filter.call(
+            drawer.querySelectorAll('button, a[href], input, select, textarea'),
+            function (element) { return !element.disabled; }
+          );
+          if (focusable.length === 0) return;
+          var first = focusable[0];
+          var last = focusable[focusable.length - 1];
+          if (event.shiftKey && document.activeElement === first) {
+            event.preventDefault();
+            last.focus();
+          } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault();
+            first.focus();
+          }
+        });
+
+        grid.addEventListener('click', function (event) {
+          var button = event.target.closest('[data-add-to-cart]');
+          if (!button || button.disabled) return;
+          var line = lineFromCard(button.dataset.addToCart);
+          if (!line) return;
+          addLine(line, 1);
+          announce(line.name + ' added. Cart: ' + totalQuantity() + ' items.');
+          openDrawer(button);
+        });
+
+        itemsList.addEventListener('click', function (event) {
+          var row = event.target.closest('.cart-item');
+          if (!row) return;
+          var part = row.dataset.part;
+          if (event.target.closest('[data-qty="inc"]')) changeQuantity(part, 1);
+          else if (event.target.closest('[data-qty="dec"]')) changeQuantity(part, -1);
+          else if (event.target.closest('[data-remove]')) removeLine(part);
+        });
+
+        cartForm.addEventListener('submit', function (event) {
+          /* The contract action is POST /cart, which this static demo does not serve; store locally instead. */
+          event.preventDefault();
+          var raw = itemField.value.trim();
+          if (raw === '') {
+            cartFormStatus.textContent = 'Type a part number first.';
+            cartFormStatus.classList.add('is-error');
+            itemField.focus();
+            return;
+          }
+          var parsed = parseInt(quantityField.value, 10);
+          var qty = isNaN(parsed) || parsed < 1 ? 1 : parsed;
+          var known = lineFromCard(raw.toUpperCase()) || lineFromCard(raw);
+          cartFormStatus.classList.remove('is-error');
+
+          if (known) {
+            addLine(known, qty);
+            cartFormStatus.textContent = 'Added ' + qty + ' × ' + known.part + ' (' + known.name + ') to the cart.';
+            announce(known.name + ' added. Cart: ' + totalQuantity() + ' items.');
+          } else {
+            addLine(lineFromText(raw), qty);
+            cartFormStatus.textContent = 'Added "' + raw + '" as a custom line — this demo prices only the twelve catalogue parts.';
+            announce('Custom part ' + raw + ' added. Cart: ' + totalQuantity() + ' items.');
+          }
+          itemField.value = '';
+          quantityField.value = '';
+          itemField.focus();
+        });
+
+        checkoutButton.addEventListener('click', function () {
+          checkoutNote.textContent =
+            'No checkout, payment or order route exists in this design target — the button is reproduced from the board for layout only.';
+        });
+
+        /* ------------------------------------------------------------------- init */
+
+        var initialQuery = '';
+        try {
+          initialQuery = new URLSearchParams(window.location.search).get('q') || '';
+        } catch (error) {
+          initialQuery = '';
+        }
+        if (initialQuery !== '') searchInput.value = initialQuery;
+
+        cart = loadCart();
+        renderCart();
+        sortCards();
+        applyFilters();
+      })();
+    </script>
+  </body>
+</html>
