@@ -290,14 +290,20 @@ export function variantIdentity(target, variants) {
  * reading is "no findings", which is indistinguishable from "everything agreed". A missing, empty or
  * non-object budget therefore silently reports universal agreement for a family that may have fallen
  * below its floor on every axis. That is a malformed CALLER CONTRACT rather than malformed data, so it
- * throws, which is the same rule the identity argument's guard follows (mwg-train-zey).
+ * throws, which is the same rule the identity argument's guard follows - that one is mwg-train-w46, which is why the identity guard is a
+ * line or two further down in this same function (mwg-train-zey).
  *
  * This lives here and is exported because `crossArmFindings` in parity.mjs delegates to the judge below
  * AND has its own budget-reading outlier loop: one rule, one place, so the two cannot drift apart.
  */
 export function requireBudget(budget, caller = 'identityFindings') {
-  const numeric = budget && typeof budget === 'object'
-    ? Object.entries(budget).filter(([, value]) => typeof value === 'number')
+  // `Number.isFinite`, not `typeof value === 'number'`: `typeof NaN === 'number'`, and `actual < NaN` is
+  // false for every axis, so a NaN floor silently judges nothing - the same forbidden direction as a
+  // missing budget, through a narrower door. Infinity and -Infinity are the same class in opposite
+  // directions. Arrays are refused for the same reason: Object.entries([0.75]) is [['0', 0.75]], so an
+  // array would "judge" an axis literally named "0".
+  const numeric = budget && typeof budget === 'object' && !Array.isArray(budget)
+    ? Object.entries(budget).filter(([, value]) => Number.isFinite(value))
     : [];
   if (numeric.length === 0) {
     throw new TypeError(

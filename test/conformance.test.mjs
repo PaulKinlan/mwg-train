@@ -306,3 +306,21 @@ test('a missing or empty budget is a caller-contract error, not universal agreem
     );
   }
 });
+
+test('a budget whose axes are not real numbers is refused too, not just a missing one', () => {
+  // `requireBudget` originally filtered on typeof value === 'number', and `typeof NaN === 'number'`. So
+  // { structural: NaN } passed the guard and then judged nothing, because `actual < NaN` is false for every
+  // axis - the same forbidden direction as a missing budget, through a narrower door: a family below its
+  // floor reports agreement. Infinity and -Infinity are the same class, in opposite directions, and
+  // Object.entries([0.75]) is [['0', 0.75]], so an array would "judge" an axis literally named "0".
+  const identity = { identity: { structural: 0.5 }, weakest_by_axis: {}, weakest_pair: null, degenerate: false };
+  for (const budget of [{ structural: NaN }, { structural: Infinity }, { structural: -Infinity }, [0.75], { structural: '0.75' }]) {
+    assert.throws(
+      () => identityFindings(identity, budget),
+      TypeError,
+      `budget ${JSON.stringify(budget)} cannot judge an axis and must be refused rather than read as agreement`,
+    );
+  }
+  // The positive still holds: a finite floor judges, and this identity is below it.
+  assert.equal(identityFindings(identity, { structural: 0.9 }).length, 1, 'a finite floor must still report');
+});
