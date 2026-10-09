@@ -130,6 +130,13 @@ test('a recording may not assert text no earlier step supplied', () => {
   refuses((f) => { f.steps[3].expectText = 'Order confirmed'; }, 'expectText', goodFlow, validateFlow);
 });
 
+test('a step may not assert the value it supplies itself, because only earlier steps are carried', () => {
+  // The recorder snapshots what earlier steps supplied before reading each step, and the translator
+  // searches the steps before the observing one, so a same-step assertion is a flow the schema admits
+  // and the translator then refuses. This is the case that made a validating flow untranslatable.
+  refuses((f) => { f.steps[1].expectText = f.steps[1].value; }, 'expectText', goodFlow, validateFlow);
+});
+
 test('a step target must name exactly one complete element', () => {
   refuses((f) => { f.steps[1].target = '[name=email]'; }, 'target', goodFlow, validateFlow);
   refuses((f) => { f.steps[1].target = 'input'; }, 'target', goodFlow, validateFlow);

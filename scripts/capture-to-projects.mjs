@@ -22,6 +22,7 @@ function parseArgs(argv) {
     else if (argv[i] === '--flow') args.flow = argv[++i];
     else if (argv[i] === '--framework') args.framework = argv[++i];
     else if (argv[i] === '--out') args.out = argv[++i];
+    else if (argv[i] === '--overwrite') args.overwrite = true;
     else if (argv[i] === '--help' || argv[i] === '-h') args.help = true;
     else {
       console.error(`capture-to-projects: unknown argument '${argv[i]}'`);
@@ -32,7 +33,7 @@ function parseArgs(argv) {
 }
 
 function printUsage() {
-  console.log('Usage: node scripts/capture-to-projects.mjs --capture <capture.json> --flow <flow.json> [--framework <name>] [--out <dir>]');
+  console.log('Usage: node scripts/capture-to-projects.mjs --capture <capture.json> --flow <flow.json> [--framework <name>] [--out <dir>] [--overwrite]');
 }
 
 function main() {
@@ -70,6 +71,7 @@ function main() {
     spec,
     outDir: args.out,
     framework: args.framework,
+    overwrite: args.overwrite === true,
   });
 
   console.log(`capture-to-projects: spec written to ${specPath}`);

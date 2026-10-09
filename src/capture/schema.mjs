@@ -224,7 +224,6 @@ export function validateFlow(flow) {
     if (step.action === 'fill' || step.action === 'select') {
       if (!SELECTOR.test(step.target ?? '')) fail(`${at}.target`, 'must name exactly one complete element, e.g. input[name=email] or form#checkout');
       if (!isNonEmpty(step.value)) fail(`${at}.value`, 'must be a non-empty string for fill/select');
-      else carried.add(step.value);
     }
     if (step.action === 'click' || step.action === 'submit') {
       if (!SELECTOR.test(step.target ?? '')) fail(`${at}.target`, 'must name exactly one complete element, e.g. button#pay or form#checkout');
@@ -243,6 +242,11 @@ export function validateFlow(flow) {
     if (step.expected_path !== undefined && !isAbsolutePath(step.expected_path)) {
       fail(`${at}.expected_path`, 'must be an absolute path with no .. segment when present');
     }
+    // A step's own value becomes visible only to LATER steps. The recorder snapshots what earlier steps
+    // supplied before it reads each step, and the translator searches the steps before the observing one.
+    // Adding it any earlier let this schema accept a same-step assertion the translator then refused, so a
+    // flow that validated could not be translated.
+    if ((step.action === 'fill' || step.action === 'select') && isNonEmpty(step.value)) carried.add(step.value);
   });
 
   return problems;
