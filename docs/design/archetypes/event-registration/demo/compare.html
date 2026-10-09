@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Event registration · visual comparison</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="compare-shell">
+    <h1>Event registration: visual references and live demo</h1>
+    <p>The two original Wave 2 boards, unmodified, sit beside independently rendered interactive HTML views. Try the quantity steppers or form in the first iframe and the Edit details control in the second.</p>
+    <p class="compare-disclaimer">Illustrative event, venue, capacity, tiers, prices and pass only. The boards are not generated-site captures or evidence of a purchase. Nothing here reserves a seat, charges money, issues a valid QR/ticket, saves a Wallet pass or enters the training or sealed evaluation corpora. Read <a href="../README.md">board provenance</a> and <a href="README.md">demo boundaries</a>.</p>
+    <article class="comparison">
+      <h2>Event and ticket selection</h2>
+      <p>Board 1 depicts the event banner, two priced tiers, four attendee fields and a payment CTA; the live view is a design preview only.</p>
+      <div class="compare-grid">
+        <figure><img src="../step1-event.jpg" width="1376" height="768" alt="Illustrative dark event-registration screen: Future Web 2026 hero, 142 of 200 seats label, General Admission and Workshop Pass quantity controls, attendee fields and Continue to Payment button"><figcaption>Unmodified reference · <a href="../step1-event.jpg">open board 1</a>.</figcaption></figure>
+        <figure><iframe src="index.html" title="Interactive event registration design preview, no payment" loading="lazy"></iframe><figcaption>Live registration form · <a href="index.html">open full size</a>. Native validation and local ticket estimates, no POST.</figcaption></figure>
+      </div>
+    </article>
+    <article class="comparison">
+      <h2>Digital pass illustration</h2>
+      <p>Board 2 depicts a confirmed registration and QR graphic. The live variant is explicitly invalid for entry and emits no token.</p>
+      <div class="compare-grid">
+        <figure><img src="../step2-pass.jpg" width="1376" height="768" alt="Illustrative event ticket pass with decorative QR graphic, Sarah Jenkins name, Workshop Pass details, registration confirmed badge and Wallet/PDF actions"><figcaption>Unmodified reference · <a href="../step2-pass.jpg">open board 2</a>. Do not scan the depicted QR.</figcaption></figure>
+        <figure><iframe src="index.html?view=pass" title="Illustrative pass HTML view, not valid for entry" loading="lazy"></iframe><figcaption>Live pass preview · <a href="index.html?view=pass">open full size</a>. Example identity is fictional; Wallet/PDF controls are disabled.</figcaption></figure>
+      </div>
+    </article>
+  </main>
+</body>
+</html>
