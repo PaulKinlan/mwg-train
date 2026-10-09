@@ -38,6 +38,25 @@ test('the reference boards declare and enforce exclusion from training', () => {
   for (const name of STEPS) assert.ok(record.includes(name), `${name}: missing from the provenance table`);
 });
 
+test('the provenance table agrees with the README and with the files', () => {
+  // The reviewer's P2: the first test compared the files against the README's declared digests and only checked
+  // that each board NAME appeared in the provenance table, so a digest that drifted inside that table - the copy
+  // a reader actually trusts - would pass. This closes the three-way loop: README == table == file.
+  const readme = text(`${DIR}README.md`);
+  const record = text('docs/provenance/assets/design-reference-booking.md');
+  const rows = [...record.matchAll(/\|\s*\[`(step\d-[\w-]+\.jpg)`\][^|]*\|([^|]*)\|\s*`([0-9a-f]{64})`\s*\|\s*(\d+)\s*\|/g)];
+  assert.equal(rows.length, STEPS.length, 'every board must have a provenance row');
+  for (const [, name, , tableDigest, bytes] of rows) {
+    const buffer = bytes(`${DIR}${name}`);
+    const actual = createHash('sha256').update(buffer).digest('hex');
+    const declared = readme.match(new RegExp(`\`${name}\` \\(SHA-256: \`([0-9a-f]{64})\`\\)`));
+    assert.ok(declared, `${name}: README must declare its SHA-256`);
+    assert.equal(tableDigest, actual, `${name}: the provenance table digest must match the file`);
+    assert.equal(tableDigest, declared[1], `${name}: the provenance table and the README must agree`);
+    assert.equal(Number(bytes), buffer.length, `${name}: the provenance byte count must match the file`);
+  }
+});
+
 test('the reference boards are not the sealed evaluation target', () => {
   const record = text('docs/provenance/assets/design-reference-booking.md');
   assert.match(record, /not approved as training data, not a conformance\s+target/);
