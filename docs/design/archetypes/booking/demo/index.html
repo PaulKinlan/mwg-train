@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Evening Class Booking — Learning Hub</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <!-- Top Brand Bar -->
+    <header class="top-bar">
+      <a href="index.html" class="brand">
+        <span class="brand-icon" aria-hidden="true">🎓</span>
+        <span>Learning Hub</span>
+      </a>
+      <nav class="top-nav" aria-label="Main Navigation">
+        <a href="index.html" aria-current="page">Classes</a>
+        <a href="empty.html">Schedule</a>
+        <a href="confirmation.html">Receipts</a>
+        <a href="compare.html">Visual Spec</a>
+      </nav>
+    </header>
+
+    <!-- State Switcher Toolbar (Interactive Design Target Controls) -->
+    <div class="state-switcher" role="region" aria-label="Demo State Switcher">
+      <span class="state-switcher-label">Design States:</span>
+      <button type="button" class="state-pill active" id="btn-state-default">1. Default Form (Step 2)</button>
+      <button type="button" class="state-pill" id="btn-state-error">2. Validation Error (Step 4)</button>
+      <button type="button" class="state-pill" id="btn-state-fill">3. Fill Contract Journey</button>
+      <a href="confirmation.html" class="state-pill">4. Confirmation Pass (Step 3) →</a>
+      <a href="empty.html" class="state-pill">5. Honest Empty State (Step 5) →</a>
+      <a href="compare.html" class="state-pill">Boards Comparison →</a>
+    </div>
+
+    <main class="container">
+      <!-- Step 2 Title & Navigation -->
+      <div class="page-header">
+        <h1 class="display-title">Find Your Next Evening Class</h1>
+        <p class="subtitle">Step 2: Details &amp; Registration</p>
+      </div>
+
+      <!-- Multi-Step Progress Tracker (Board 2 Visual Language & MWG multi-page forms) -->
+      <nav class="stepper-nav" aria-label="Booking Progress">
+        <ol class="stepper">
+          <li class="step-item completed">
+            <span class="step-circle" aria-hidden="true">✓</span>
+            <span class="label-text">1. Select Class</span>
+          </li>
+          <li class="step-connector completed" aria-hidden="true"></li>
+          <li class="step-item active" aria-current="step">
+            <span class="step-circle" aria-hidden="true">2</span>
+            <span class="label-text">2. Details &amp; Registration</span>
+          </li>
+          <li class="step-connector" aria-hidden="true"></li>
+          <li class="step-item">
+            <span class="step-circle" aria-hidden="true">3</span>
+            <span class="label-text">3. Confirmation</span>
+          </li>
+        </ol>
+      </nav>
+
+      <!-- Decision Workbench: Side-by-side Layout with Container Queries -->
+      <div class="workbench-shell">
+        <div class="workbench">
+          <!-- Left Column: Evening Class Summary Card -->
+          <aside class="card summary-card" aria-label="Evening Class Summary">
+            <h2 class="card-title">Evening Class Summary</h2>
+            <hr class="card-divider">
+
+            <h3 class="summary-course-title">Introduction to Python</h3>
+            <ul class="summary-meta-list">
+              <li class="summary-meta-item">
+                <span class="icon" aria-hidden="true">🕒</span>
+                <span>Mon 6:30 PM &ndash; 8:30 PM</span>
+              </li>
+              <li class="summary-meta-item">
+                <span class="icon" aria-hidden="true">📅</span>
+                <span>Starts: Oct 21st, 2024</span>
+              </li>
+              <li class="summary-meta-item">
+                <span class="icon" aria-hidden="true">📍</span>
+                <span>Room 2B, Downtown Campus</span>
+              </li>
+              <li class="summary-meta-item">
+                <span class="icon" aria-hidden="true">👤</span>
+                <span>Instructor: Alice C.</span>
+              </li>
+            </ul>
+
+            <div>
+              <span class="badge-pill">
+                <span aria-hidden="true">●</span> 5 seats left
+              </span>
+            </div>
+
+            <div class="price-box">
+              <span class="price-label">Total Price:</span>
+              <span class="price-value">&pound;45</span>
+            </div>
+          </aside>
+
+          <!-- Right Column: Registration Form Card (Archetype Contract: form#booking-form) -->
+          <section class="card form-card" aria-labelledby="form-heading">
+            <h2 id="form-heading" class="card-title">Your Personal Details</h2>
+            <p class="card-subtitle">Complete your student registration below to secure your place.</p>
+
+            <!-- Accessible Error Banner (MWG accessible-error-announcement & Board 4) -->
+            <div id="form-error-banner" class="error-banner" role="alert" aria-live="assertive" hidden>
+              <span class="error-banner-icon" aria-hidden="true">⚠️</span>
+              <div>
+                <div class="error-banner-title">Please fix the errors below to continue.</div>
+                <div id="error-summary-count">One or more required fields are missing or invalid.</div>
+              </div>
+            </div>
+
+            <!-- Archetype booking contract form -->
+            <form id="booking-form" method="post" action="/book">
+              <div class="form-grid">
+                <!-- Field 1: Full name -->
+                <div class="field">
+                  <div class="label-row">
+                    <label for="name">Full name <span class="req-marker" aria-hidden="true">*</span></label>
+                  </div>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    autocomplete="name"
+                    required
+                    aria-errormessage="name-error"
+                    enterkeyhint="next"
+                    placeholder="e.g. Ada Lovelace"
+                  >
+                  <p id="name-error" class="error-msg" hidden>
+                    <span class="error-msg-icon" aria-hidden="true">✕</span> Please fill in full name.
+                  </p>
+                </div>
+
+                <!-- Field 2: Email -->
+                <div class="field">
+                  <div class="label-row">
+                    <label for="email">Email <span class="req-marker" aria-hidden="true">*</span></label>
+                  </div>
+                  <!-- Format hint above input per MWG validate-input-after-interaction -->
+                  <span id="email-hint" class="field-hint">Format: you@example.com</span>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    autocomplete="username"
+                    required
+                    aria-describedby="email-hint"
+                    aria-errormessage="email-error"
+                    enterkeyhint="next"
+                    placeholder="ada@example.test"
+                  >
+                  <p id="email-error" class="error-msg" hidden>
+                    <span class="error-msg-icon" aria-hidden="true">✕</span> Please enter a valid email address.
+                  </p>
+                </div>
+
+                <!-- Field 3: Delivery address -->
+                <div class="field">
+                  <div class="label-row">
+                    <label for="address">Delivery address <span class="req-marker" aria-hidden="true">*</span></label>
+                  </div>
+                  <input
+                    type="text"
+                    id="address"
+                    name="address"
+                    autocomplete="street-address"
+                    required
+                    aria-errormessage="address-error"
+                    enterkeyhint="next"
+                    placeholder="12 Bridge Row"
+                  >
+                  <p id="address-error" class="error-msg" hidden>
+                    <span class="error-msg-icon" aria-hidden="true">✕</span> Please fill in delivery address.
+                  </p>
+                </div>
+
+                <!-- Field 4: Postcode -->
+                <div class="field">
+                  <div class="label-row">
+                    <label for="postcode">Postcode <span class="req-marker" aria-hidden="true">*</span></label>
+                  </div>
+                  <input
+                    type="text"
+                    id="postcode"
+                    name="postcode"
+                    autocomplete="postal-code"
+                    maxlength="20"
+                    required
+                    aria-errormessage="postcode-error"
+                    enterkeyhint="next"
+                    placeholder="AB1 2CD"
+                  >
+                  <p id="postcode-error" class="error-msg" hidden>
+                    <span class="error-msg-icon" aria-hidden="true">✕</span> Please fill in postcode.
+                  </p>
+                </div>
+
+                <!-- Field 5: Anything we should know? (Notes, echoed back) -->
+                <div class="field">
+                  <div class="label-row">
+                    <label for="notes">Anything we should know? <span class="req-marker" aria-hidden="true">*</span></label>
+                  </div>
+                  <textarea
+                    id="notes"
+                    name="notes"
+                    rows="3"
+                    required
+                    aria-errormessage="notes-error"
+                    enterkeyhint="done"
+                    placeholder="Special requests, accessibility or seating preferences (e.g. Window seat please)..."
+                  ></textarea>
+                  <p id="notes-error" class="error-msg" hidden>
+                    <span class="error-msg-icon" aria-hidden="true">✕</span> Please fill in notes.
+                  </p>
+                </div>
+              </div>
+
+              <!-- Form Actions Row (Board 2 Visual Language: quiet secondary link, prominent primary CTA) -->
+              <div class="form-actions">
+                <a href="empty.html" class="link-secondary">&larr; Go Back</a>
+                <button type="submit" class="btn-primary" enterkeyhint="next">
+                  <span>Continue to Confirmation</span>
+                  <span aria-hidden="true">&rarr;</span>
+                </button>
+              </div>
+            </form>
+
+            <!-- Submission Echo Section (Contract: #booking-notes container) -->
+            <section class="record-echo-box" id="booking-notes" aria-labelledby="echo-heading" hidden>
+              <h3 id="echo-heading">Stored Booking Note Echo</h3>
+              <div class="record-echo-content" id="echo-value">Ada Lovelace: Window seat please</div>
+            </section>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <!--
+      Modern Web Guidance JavaScript Bridge:
+      1. accessible-error-announcement & required-field-feedback:
+         Synchronizes aria-invalid with CSS :user-invalid state dynamically on blur, input, and submit.
+      2. validate-input-after-interaction:
+         Ensures errors are only surfaced after user interaction.
+      3. Accessible error banner management on submit attempt.
+    -->
+    <script>
+      (function() {
+        const form = document.getElementById('booking-form');
+        const errorBanner = document.getElementById('form-error-banner');
+        const echoSection = document.getElementById('booking-notes');
+        const echoValue = document.getElementById('echo-value');
+
+        // State synchronizer function
+        const syncAriaInvalid = (control) => {
+          if (!control || !control.checkValidity) return;
+          const isUserInvalid = control.matches(':user-invalid');
+          const isValid = control.checkValidity();
+
+          if (isUserInvalid || (!isValid && form.dataset.submitted === 'true')) {
+            control.setAttribute('aria-invalid', 'true');
+            const errEl = document.getElementById(control.id + '-error');
+            if (errEl) errEl.removeAttribute('hidden');
+          } else if (isValid) {
+            control.removeAttribute('aria-invalid');
+            const errEl = document.getElementById(control.id + '-error');
+            if (errEl) errEl.setAttribute('hidden', '');
+          }
+        };
+
+        // Sync on blur (when user finishes interaction)
+        form.addEventListener('blur', (e) => {
+          if (e.target.matches('input, textarea, select')) {
+            syncAriaInvalid(e.target);
+          }
+        }, true);
+
+        // Clear error immediately upon valid input
+        form.addEventListener('input', (e) => {
+          if (e.target.matches('input, textarea, select')) {
+            if (e.target.hasAttribute('aria-invalid') || e.target.checkValidity()) {
+              syncAriaInvalid(e.target);
+            }
+          }
+        });
+
+        // Submit handler: validates and announces to AT if invalid
+        form.addEventListener('submit', (e) => {
+          form.dataset.submitted = 'true';
+          const controls = Array.from(form.querySelectorAll('input, textarea, select'));
+          let firstInvalid = null;
+          let invalidCount = 0;
+
+          controls.forEach((control) => {
+            syncAriaInvalid(control);
+            if (!control.checkValidity()) {
+              invalidCount++;
+              if (!firstInvalid) firstInvalid = control;
+            }
+          });
+
+          if (invalidCount > 0) {
+            e.preventDefault();
+            errorBanner.removeAttribute('hidden');
+            const countEl = document.getElementById('error-summary-count');
+            if (countEl) countEl.textContent = `${invalidCount} field(s) require your attention before continuing.`;
+            if (firstInvalid) firstInvalid.focus();
+          } else {
+            // Simulated submission display for standalone demo
+            e.preventDefault();
+            errorBanner.setAttribute('hidden', '');
+            const nameVal = document.getElementById('name').value;
+            const notesVal = document.getElementById('notes').value;
+            echoValue.textContent = `${nameVal}: ${notesVal}`;
+            echoSection.removeAttribute('hidden');
+            echoSection.scrollIntoView({ behavior: 'smooth' });
+          }
+        });
+
+        // Interactive State Switcher Controls for demo inspection
+        const btnDefault = document.getElementById('btn-state-default');
+        const btnError = document.getElementById('btn-state-error');
+        const btnFill = document.getElementById('btn-state-fill');
+
+        function setActiveButton(btn) {
+          [btnDefault, btnError, btnFill].forEach(b => b?.classList.remove('active'));
+          btn?.classList.add('active');
+        }
+
+        btnDefault?.addEventListener('click', () => {
+          setActiveButton(btnDefault);
+          form.reset();
+          delete form.dataset.submitted;
+          errorBanner.setAttribute('hidden', '');
+          echoSection.setAttribute('hidden', '');
+          form.querySelectorAll('input, textarea').forEach(c => {
+            c.removeAttribute('aria-invalid');
+            const errEl = document.getElementById(c.id + '-error');
+            if (errEl) errEl.setAttribute('hidden', '');
+          });
+        });
+
+        btnError?.addEventListener('click', () => {
+          setActiveButton(btnError);
+          form.dataset.submitted = 'true';
+          document.getElementById('name').value = 'Ada Lovelace';
+          document.getElementById('email').value = 'invalid-email-format';
+          document.getElementById('address').value = '12 Bridge Row';
+          document.getElementById('postcode').value = 'AB1 2CD';
+          document.getElementById('notes').value = '';
+
+          const emailInput = document.getElementById('email');
+          const notesInput = document.getElementById('notes');
+          emailInput.setAttribute('aria-invalid', 'true');
+          notesInput.setAttribute('aria-invalid', 'true');
+          document.getElementById('email-error').removeAttribute('hidden');
+          document.getElementById('notes-error').removeAttribute('hidden');
+
+          errorBanner.removeAttribute('hidden');
+          const countEl = document.getElementById('error-summary-count');
+          if (countEl) countEl.textContent = 'Please enter a valid email address and notes.';
+          emailInput.focus();
+        });
+
+        btnFill?.addEventListener('click', () => {
+          setActiveButton(btnFill);
+          delete form.dataset.submitted;
+          errorBanner.setAttribute('hidden', '');
+          document.getElementById('name').value = 'Ada Lovelace';
+          document.getElementById('email').value = 'ada@example.test';
+          document.getElementById('address').value = '12 Bridge Row';
+          document.getElementById('postcode').value = 'AB1 2CD';
+          document.getElementById('notes').value = 'Window seat please';
+
+          form.querySelectorAll('input, textarea').forEach(c => {
+            c.removeAttribute('aria-invalid');
+            const errEl = document.getElementById(c.id + '-error');
+            if (errEl) errEl.setAttribute('hidden', '');
+          });
+          document.getElementById('notes').focus();
+        });
+      })();
+    </script>
+  </body>
+</html>

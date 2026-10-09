@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Booking Confirmation &amp; Receipt — Learning Hub</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <!-- Top Brand Bar -->
+    <header class="top-bar">
+      <a href="index.html" class="brand">
+        <span class="brand-icon" aria-hidden="true">🎓</span>
+        <span>Learning Hub</span>
+      </a>
+      <nav class="top-nav" aria-label="Main Navigation">
+        <a href="index.html">Classes</a>
+        <a href="empty.html">Schedule</a>
+        <a href="confirmation.html" aria-current="page">Receipts</a>
+        <a href="compare.html">Visual Spec</a>
+      </nav>
+    </header>
+
+    <!-- State Switcher Toolbar -->
+    <div class="state-switcher" role="region" aria-label="Demo State Switcher">
+      <span class="state-switcher-label">Design States:</span>
+      <a href="index.html" class="state-pill">&larr; Back to Step 2 Form</a>
+      <a href="confirmation.html" class="state-pill active">Step 3: Confirmation (Active)</a>
+      <a href="empty.html" class="state-pill">Step 5: Empty State &rarr;</a>
+      <a href="compare.html" class="state-pill">Boards Comparison &rarr;</a>
+    </div>
+
+    <main class="container">
+      <!-- Step 3 Title & Navigation -->
+      <div class="page-header">
+        <h1 class="display-title">Booking Confirmation &amp; Receipt</h1>
+        <p class="subtitle">Step 3: Verified Pass &amp; Class Schedule</p>
+      </div>
+
+      <!-- Multi-Step Progress Tracker (Step 3 Active per Board 3) -->
+      <nav class="stepper-nav" aria-label="Booking Progress">
+        <ol class="stepper">
+          <li class="step-item completed">
+            <span class="step-circle" aria-hidden="true">✓</span>
+            <span class="label-text">1. Select Class</span>
+          </li>
+          <li class="step-connector completed" aria-hidden="true"></li>
+          <li class="step-item completed">
+            <span class="step-circle" aria-hidden="true">✓</span>
+            <span class="label-text">2. Details &amp; Registration</span>
+          </li>
+          <li class="step-connector completed" aria-hidden="true"></li>
+          <li class="step-item active" aria-current="step">
+            <span class="step-circle" aria-hidden="true">✓</span>
+            <span class="label-text">3. Confirmation</span>
+          </li>
+        </ol>
+      </nav>
+
+      <!-- Digital Pass Ticket Card (Visual Language from step3-confirmation.jpg) -->
+      <section class="ticket-card" aria-labelledby="ticket-title">
+        <div class="ticket-main">
+          <div class="ticket-header">
+            <div>
+              <span class="ticket-ref-badge">Ref: #BK-84920</span>
+            </div>
+            <div style="font-size: 0.8125rem; color: var(--text-muted);">
+              Booked on Oct 26, 2024
+            </div>
+          </div>
+
+          <h2 id="ticket-title" style="margin: 0 0 1rem; font-size: 1.5rem; color: var(--text-primary);">
+            Your Evening Class Pass
+          </h2>
+
+          <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem;">
+            <span style="color: var(--accent); font-size: 1.25rem;" aria-hidden="true">✓</span>
+            <span style="font-size: 1.125rem; font-weight: 600; color: var(--text-primary);">Introduction to Python</span>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+            <div>
+              <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">Day &amp; Time</div>
+              <div style="font-size: 0.9375rem; font-weight: 500; color: var(--text-primary);">Mon, 6:30 PM &ndash; 8:30 PM</div>
+            </div>
+            <div>
+              <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">Start Date</div>
+              <div style="font-size: 0.9375rem; font-weight: 500; color: var(--text-primary);">Nov 6, 2024</div>
+            </div>
+            <div>
+              <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">Location</div>
+              <div style="font-size: 0.9375rem; font-weight: 500; color: var(--text-primary);">Learning Hub, Room 2B</div>
+            </div>
+          </div>
+
+          <div style="padding-top: 1rem; border-top: 1px solid var(--border-subtle);">
+            <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600; margin-bottom: 0.25rem;">Attendee</div>
+            <div style="font-size: 1rem; font-weight: 600; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;">
+              <span aria-hidden="true">👤</span>
+              <span>Ada Lovelace</span>
+            </div>
+            <div style="font-size: 0.8125rem; color: var(--text-muted); margin-top: 0.25rem;">
+              Special request: &ldquo;Window seat please&rdquo;
+            </div>
+          </div>
+        </div>
+
+        <div class="ticket-side">
+          <div class="qr-placeholder" aria-label="QR Code Booking Pass">
+            <!-- Accessible SVG QR Code Representation -->
+            <svg width="114" height="114" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <rect width="100" height="100" fill="white"/>
+              <!-- Finder patterns -->
+              <rect x="10" y="10" width="25" height="25" fill="#0f172a"/>
+              <rect x="15" y="15" width="15" height="15" fill="white"/>
+              <rect x="18" y="18" width="9" height="9" fill="#10b981"/>
+
+              <rect x="65" y="10" width="25" height="25" fill="#0f172a"/>
+              <rect x="70" y="15" width="15" height="15" fill="white"/>
+              <rect x="73" y="18" width="9" height="9" fill="#10b981"/>
+
+              <rect x="10" y="65" width="25" height="25" fill="#0f172a"/>
+              <rect x="15" y="70" width="15" height="15" fill="white"/>
+              <rect x="18" y="73" width="9" height="9" fill="#10b981"/>
+
+              <!-- Data dots -->
+              <rect x="42" y="12" width="6" height="6" fill="#0f172a"/>
+              <rect x="52" y="18" width="6" height="6" fill="#0f172a"/>
+              <rect x="42" y="30" width="6" height="6" fill="#0f172a"/>
+              <rect x="52" y="42" width="6" height="6" fill="#0f172a"/>
+              <rect x="20" y="45" width="6" height="6" fill="#0f172a"/>
+              <rect x="72" y="48" width="6" height="6" fill="#0f172a"/>
+              <rect x="82" y="55" width="6" height="6" fill="#0f172a"/>
+              <rect x="45" y="65" width="6" height="6" fill="#0f172a"/>
+              <rect x="65" y="72" width="6" height="6" fill="#0f172a"/>
+              <rect x="55" y="80" width="6" height="6" fill="#0f172a"/>
+              <circle cx="50" cy="50" r="8" fill="#10b981"/>
+            </svg>
+          </div>
+
+          <span class="paid-chip">✓ Paid</span>
+          <div style="font-size: 0.8125rem; color: var(--text-muted); margin-top: 0.5rem;">
+            &pound;45.00 via Card
+          </div>
+        </div>
+      </section>
+
+      <!-- Action buttons -->
+      <div style="display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; margin-top: 2rem;">
+        <button type="button" class="btn-secondary" onclick="alert('Added to your calendar.')">
+          <span aria-hidden="true">📅</span> Add to Calendar
+        </button>
+        <button type="button" class="btn-primary" onclick="alert('Downloading digital receipt PDF...')">
+          <span aria-hidden="true">📥</span> Download PDF Receipt
+        </button>
+      </div>
+    </main>
+  </body>
+</html>

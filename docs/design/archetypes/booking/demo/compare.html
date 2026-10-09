@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Visual Design Comparison — Booking Archetype</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+      .comparison-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 2.5rem;
+        margin-top: 2rem;
+      }
+      .comparison-card {
+        background-color: var(--surface-card);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-lg);
+        padding: 1.5rem;
+      }
+      .comparison-header {
+        margin-bottom: 1.25rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid var(--border-subtle);
+      }
+      .comparison-views {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+      }
+      @media (min-width: 860px) {
+        .comparison-views {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      .view-box {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+      .view-title {
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-muted);
+      }
+      .view-image-wrap {
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-md);
+        overflow: hidden;
+        background-color: var(--bg-page);
+        aspect-ratio: 16 / 9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .view-image-wrap img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .view-frame-wrap {
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-md);
+        overflow: hidden;
+        background-color: var(--bg-page);
+        height: 400px;
+      }
+      .view-frame-wrap iframe {
+        width: 100%;
+        height: 100%;
+        border: 0;
+      }
+      .rationale-list {
+        margin: 1rem 0 0;
+        padding-left: 1.25rem;
+        font-size: 0.875rem;
+        color: var(--text-muted);
+        line-height: 1.6;
+      }
+      .rationale-list li strong {
+        color: var(--text-primary);
+      }
+    </style>
+  </head>
+  <body>
+    <header class="top-bar">
+      <a href="index.html" class="brand">
+        <span class="brand-icon" aria-hidden="true">🎓</span>
+        <span>Learning Hub</span>
+      </a>
+      <nav class="top-nav" aria-label="Main Navigation">
+        <a href="index.html">Classes</a>
+        <a href="empty.html">Schedule</a>
+        <a href="confirmation.html">Receipts</a>
+        <a href="compare.html" aria-current="page">Visual Spec</a>
+      </nav>
+    </header>
+
+    <main class="container">
+      <div class="page-header">
+        <h1 class="display-title">Visual Design Reference Comparison</h1>
+        <p class="subtitle">
+          Side-by-side audit mapping the Nano Banana visual reference boards to the implemented booking design target.
+        </p>
+      </div>
+
+      <div class="comparison-grid">
+        <!-- Board 1 Comparison -->
+        <article class="comparison-card">
+          <div class="comparison-header">
+            <h2 class="card-title">1. Schedule Browse &amp; Theme Foundations</h2>
+            <p class="card-subtitle">Source: <code>step1-browse.jpg</code> &bull; SHA-256: <code>28a0a800a9...</code></p>
+          </div>
+          <div class="comparison-views">
+            <div class="view-box">
+              <div class="view-title">Reference Board (Nano Banana)</div>
+              <div class="view-image-wrap">
+                <img src="../step1-browse.jpg" alt="Step 1 Reference Board: Weekly schedule browse">
+              </div>
+            </div>
+            <div class="view-box">
+              <div class="view-title">Implemented Design System Tokens</div>
+              <div class="view-image-wrap" style="padding: 1.5rem; display: block; overflow-y: auto;">
+                <h4 style="margin: 0 0 0.5rem; color: var(--text-primary);">Theme Foundations Adopted:</h4>
+                <ul class="rationale-list" style="margin: 0;">
+                  <li><strong>Canvas Background:</strong> <code>#0f172a</code> (deep slate-900).</li>
+                  <li><strong>Card Surfaces:</strong> <code>#1e293b</code> with subtle 1px border <code>#334155</code>.</li>
+                  <li><strong>Action Accent:</strong> Emerald <code>#10b981</code> with glow rings.</li>
+                  <li><strong>Pill Badges:</strong> Rounded pill chips for status tags (e.g. <em>&ldquo;5 seats left&rdquo;</em>).</li>
+                  <li><strong>Typography:</strong> Bold display title with muted slate subtitle <code>#94a3b8</code>.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Board 2 Comparison -->
+        <article class="comparison-card">
+          <div class="comparison-header">
+            <h2 class="card-title">2. Step 2 Details &amp; Decision Workbench Layout</h2>
+            <p class="card-subtitle">Source: <code>step2-form.jpg</code> &bull; SHA-256: <code>8b287a45bc...</code></p>
+          </div>
+          <div class="comparison-views">
+            <div class="view-box">
+              <div class="view-title">Reference Board (Nano Banana)</div>
+              <div class="view-image-wrap">
+                <img src="../step2-form.jpg" alt="Step 2 Reference Board: Form details and seat selection">
+              </div>
+            </div>
+            <div class="view-box">
+              <div class="view-title">Implemented Interactive Form (Step 2)</div>
+              <div class="view-frame-wrap">
+                <iframe src="index.html" title="Interactive Step 2 Booking Form"></iframe>
+              </div>
+            </div>
+          </div>
+          <ul class="rationale-list">
+            <li><strong>Decision Workbench Layout:</strong> Two-column grid using CSS Container Queries (<code>@container (min-width: 720px)</code>) adapting into a single column on mobile.</li>
+            <li><strong>Summary Card:</strong> Left-side <code>.summary-card</code> with course title (<em>Introduction to Python</em>), meta list (schedule, start date, location, instructor), seat availability pill, and prominent price block (<em>&ldquo;Total Price: &pound;45&rdquo;</em>).</li>
+            <li><strong>Stepper Component:</strong> Numbered progress tracker with completed step checkmarks, connector bars, active emerald outer ring, and clean labels.</li>
+            <li><strong>Form Controls:</strong> Dark input surfaces (<code>#0f172a</code>), 1px border (<code>#334155</code>), emerald focus ring (<code>#10b981</code>), and 8px corner radius.</li>
+            <li><strong>Actions Row:</strong> Quiet text link secondary (<em>&ldquo;&larr; Go Back&rdquo;</em>) paired with prominent emerald primary CTA (<em>&ldquo;Continue to Confirmation &rarr;&rdquo;</em>).</li>
+          </ul>
+        </article>
+
+        <!-- Board 3 Comparison -->
+        <article class="comparison-card">
+          <div class="comparison-header">
+            <h2 class="card-title">3. Confirmation Pass &amp; Digital Receipt</h2>
+            <p class="card-subtitle">Source: <code>step3-confirmation.jpg</code> &bull; SHA-256: <code>7af6ced012...</code></p>
+          </div>
+          <div class="comparison-views">
+            <div class="view-box">
+              <div class="view-title">Reference Board (Nano Banana)</div>
+              <div class="view-image-wrap">
+                <img src="../step3-confirmation.jpg" alt="Step 3 Reference Board: Verified digital receipt pass">
+              </div>
+            </div>
+            <div class="view-box">
+              <div class="view-title">Implemented Static Variant (confirmation.html)</div>
+              <div class="view-frame-wrap">
+                <iframe src="confirmation.html" title="Confirmation Pass View"></iframe>
+              </div>
+            </div>
+          </div>
+          <ul class="rationale-list">
+            <li><strong>Ticket Pass Card:</strong> Split layout with dashed tear notch divider, reference badge <code>#BK-84920</code>, and complete class schedule details.</li>
+            <li><strong>QR Code Pass:</strong> Clean high-contrast QR pass graphic with emerald center seal.</li>
+            <li><strong>Status &amp; Actions:</strong> Emerald <em>&ldquo;&check; Paid&rdquo;</em> badge, alongside <em>&ldquo;Add to Calendar&rdquo;</em> and <em>&ldquo;Download PDF Receipt&rdquo;</em> actions.</li>
+          </ul>
+        </article>
+
+        <!-- Board 4 Comparison -->
+        <article class="comparison-card">
+          <div class="comparison-header">
+            <h2 class="card-title">4. Accessible Validation &amp; Error State</h2>
+            <p class="card-subtitle">Source: <code>step4-error.jpg</code> &bull; SHA-256: <code>a87a624916...</code></p>
+          </div>
+          <div class="comparison-views">
+            <div class="view-box">
+              <div class="view-title">Reference Board (Nano Banana)</div>
+              <div class="view-image-wrap">
+                <img src="../step4-error.jpg" alt="Step 4 Reference Board: Validation and error state">
+              </div>
+            </div>
+            <div class="view-box">
+              <div class="view-title">Implemented Validation Treatment</div>
+              <div class="view-image-wrap" style="padding: 1.5rem; display: block; overflow-y: auto;">
+                <div class="error-banner" style="margin-bottom: 1rem;">
+                  <span class="error-banner-icon">⚠️</span>
+                  <div>
+                    <div class="error-banner-title">Please fix the errors below to continue.</div>
+                    <div style="font-size: 0.8125rem;">One or more required fields are missing or invalid.</div>
+                  </div>
+                </div>
+                <div class="field" style="margin-bottom: 0.75rem;">
+                  <label>Email <span class="req-marker">*</span></label>
+                  <input type="email" value="bad-email" style="border-color: var(--error); background-color: var(--error-bg);" readonly>
+                  <p class="error-msg" style="display: flex;">
+                    <span class="error-msg-icon">✕</span> Please enter a valid email address.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <ul class="rationale-list">
+            <li><strong>Accessible Banner:</strong> High-visibility red alert container (<code>#ef4444</code> / <code>rgba(239, 68, 68, 0.15)</code>) with <code>role="alert"</code> and <code>aria-live="assertive"</code>.</li>
+            <li><strong>Deferred Validation:</strong> Built using <code>:user-invalid</code> so errors only surface after user interaction (blur or submit attempt), avoiding premature annoyance.</li>
+            <li><strong>Non-Color Indicators:</strong> Error messages feature an explicit <code>✕</code> icon paired with descriptive text and <code>aria-errormessage</code> links.</li>
+            <li><strong>Programmatic ARIA Sync:</strong> JavaScript bridge syncs <code>aria-invalid="true"</code> dynamically on blur, input, and submit.</li>
+          </ul>
+        </article>
+
+        <!-- Board 5 Comparison -->
+        <article class="comparison-card">
+          <div class="comparison-header">
+            <h2 class="card-title">5. Honest Empty State</h2>
+            <p class="card-subtitle">Source: <code>step5-empty.jpg</code> &bull; SHA-256: <code>adbaa0f41b...</code></p>
+          </div>
+          <div class="comparison-views">
+            <div class="view-box">
+              <div class="view-title">Reference Board (Nano Banana)</div>
+              <div class="view-image-wrap">
+                <img src="../step5-empty.jpg" alt="Step 5 Reference Board: Honest empty schedule state">
+              </div>
+            </div>
+            <div class="view-box">
+              <div class="view-title">Implemented Static Variant (empty.html)</div>
+              <div class="view-frame-wrap">
+                <iframe src="empty.html" title="Empty State View"></iframe>
+              </div>
+            </div>
+          </div>
+          <ul class="rationale-list">
+            <li><strong>Clear Iconography:</strong> Calendar and ticket illustration in a dashed circular container.</li>
+            <li><strong>Transparent Copy:</strong> <em>&ldquo;No Evening Classes Available This Week&rdquo;</em> with helpful explanation.</li>
+            <li><strong>Recovery CTAs:</strong> Emerald primary CTA <em>&ldquo;Clear Filters&rdquo;</em> paired with <em>&ldquo;View All Upcoming Semesters &rarr;&rdquo;</em> text link.</li>
+          </ul>
+        </article>
+      </div>
+    </main>
+  </body>
+</html>
