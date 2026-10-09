@@ -68,18 +68,27 @@ writes `docs/eval/conformance/<family>-identity.{json,md}` with both halves of t
 - the **cross-variant identity**: pairwise agreement between the raw variants, per axis, with the
   weakest pair named and the per-axis variance reported rather than averaged away.
 
-`IDENTITY_BUDGET` in `src/eval/targets.mjs` is the declared tolerance per axis: the measured minimum
-across the families less a deliberate margin (`structural` measured 0.830 -> floor 0.75, `geometry`
+`IDENTITY_BUDGET` in `src/eval/targets.mjs` is the declared tolerance per axis: the measured family MEAN
+across the families less a deliberate margin (`structural` mean 0.830 -> floor 0.75, `geometry`
 0.977 -> 0.90, `controls` 1.000 -> 0.95, `overall` 0.925 -> 0.80). `controls` is tightest because a
 form is a form in every framework; `structural` allows the most, because that is where a framework's own
 wrapper and template scaffolding live. The floors are deliberately close to the measurement - a
 budget far below it (0.6 everywhere) leaves a third of the range free and would rubber-stamp a real
-regression. The floors were first set from the five-arm matrix (structural minimum 0.805) and still
-hold unchanged when the two R3 arms are added (0.830), which is the check that matters: the budget was
-not moved to admit the new arms. A variant that leaves the budget is a finding, and the verdict is judged
-TWICE on each axis: on the family MEAN over its pairs, and on the weakest PAIR - because a family where six
-variants agree and one has diverged has a mean that hides it, which is what `variantIdentity` computes
-`weakest_by_axis` for and what mwg-train-bmu showed was not being acted on. The finding names the pair that
+regression. The floors were first set from the five-arm matrix (structural mean minimum 0.805) and the
+MEANS still hold unchanged when the two R3 arms are added (0.830), which is the check that matters for
+whether the budget was moved to admit the new arms: it was not.
+
+The budget is judged TWICE on each axis, and the two judgements did NOT come out the same way. Every
+family means still sits above every floor. **Four of the five families record a structural PAIR below
+the 0.75 floor while their mean sits above it** - booking `preact/vue` 0.6464, contact-lead and
+account-recovery `react/webcomponents` 0.67, event-registration `react/webcomponents` 0.7269 - and
+`catalogue` is the only family with no such pair (its weakest is `react/webcomponents` at 0.7826). The
+lowest recorded structural mean is 0.8301; the lowest recorded structural pair is 0.6464. That gap is
+the whole reason the verdict is taken twice: a family where six variants agree and one has diverged has
+a mean that hides it, which is what `variantIdentity` computes `weakest_by_axis` for and what
+mwg-train-bmu showed was not being acted on. These four findings are `IDENTITY_PAIR_BELOW_BUDGET`, and
+they say the pair is below the floor - they do not say the budget is wrong, and the budget has not been
+moved to silence them. The finding names the pair that
 is weakest *on that axis*, not the overall-worst pair. `variantIdentity` also marks a
 family whose variants measure nothing as `degenerate` and raises a finding, because two blank pages
 otherwise agree perfectly.
@@ -102,13 +111,18 @@ measured — rather than by having no build step at all.
 
 ### Measured identity (seven pilot families' arms)
 
-| family | identity | structural | geometry | controls | weakest pair |
-| --- | --- | --- | --- | --- | --- |
-| catalogue | 0.958 | 0.902 | 0.992 | 1.000 | react/webcomponents 0.913 |
-| booking | 0.945 | 0.878 | 0.982 | 1.000 | preact/webcomponents 0.840 |
-| event-registration | 0.937 | 0.856 | 0.986 | 1.000 | hono/webcomponents 0.880 |
-| account-recovery | 0.925 | 0.830 | 0.981 | 1.000 | vue/webcomponents 0.848 |
-| contact-lead | 0.925 | 0.833 | 0.977 | 1.000 | react/webcomponents 0.850 |
+The `identity`, `structural`, `geometry` and `controls` columns are family MEANS over the pairs. The two
+pair columns are the weakest single pair, and they are on different axes: `weakest pair (overall)` is the
+weakest overall score, while `weakest structural pair` is the pair the structural budget is judged on and
+is the one four families now fall below.
+
+| family | identity | structural | geometry | controls | weakest pair (overall) | weakest structural pair |
+| --- | --- | --- | --- | --- | --- | --- |
+| catalogue | 0.958 | 0.902 | 0.992 | 1.000 | react/webcomponents 0.913 | react/webcomponents 0.7826 |
+| booking | 0.945 | 0.878 | 0.982 | 1.000 | preact/webcomponents 0.840 | preact/vue 0.6464 |
+| event-registration | 0.937 | 0.856 | 0.986 | 1.000 | hono/webcomponents 0.880 | react/webcomponents 0.7269 |
+| account-recovery | 0.925 | 0.830 | 0.981 | 1.000 | vue/webcomponents 0.848 | react/webcomponents 0.67 |
+| contact-lead | 0.925 | 0.833 | 0.977 | 1.000 | react/webcomponents 0.850 | react/webcomponents 0.67 |
 
 The reading is the point of the axis. **Geometry 0.98-0.99** and **controls 1.000**: the frameworks
 build the same set of controls in the same places, so framework choice is not moving the layout or the
