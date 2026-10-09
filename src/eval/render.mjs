@@ -14,13 +14,19 @@ import { TARGET_VIEWPORT } from './targets.mjs';
 /**
  * Render one project at `/` and return its signature. The server is stopped even if the page failed
  * to open; a rejected `newPage` must not leave a project listening on the port.
+ *
+ * `viewport` defaults to the frozen `TARGET_VIEWPORT` so every existing caller is byte-identical to
+ * before this parameter existed. It is a parameter rather than a second function because rendering a
+ * project at a width is the same job however wide the window is; the cross-arm parity instrument needs
+ * the same signature at three widths, and a copy of this function would be a second place for "the
+ * server is always stopped" to stop being true.
  */
-export async function captureSignature({ chrome, projectDir, port, runDir }) {
+export async function captureSignature({ chrome, projectDir, port, runDir, viewport = TARGET_VIEWPORT }) {
   let server = null;
   let page = null;
   try {
     server = await startServer(projectDir, { port, dbPath: `${runDir}/${port}.sqlite` });
-    page = await chrome.newPage({ viewport: TARGET_VIEWPORT });
+    page = await chrome.newPage({ viewport });
     await page.goto(`http://127.0.0.1:${port}/`);
     await page.waitForSettled();
     return await page.evaluate(SIGNATURE_SCRIPT);
