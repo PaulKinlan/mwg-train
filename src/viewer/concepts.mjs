@@ -9,13 +9,33 @@ const BOARDS = [
   { id: 'layout-explainer', title: 'Wiki and explainer', grammar: 'Field notes · Read', note: 'A reading column, table of contents and an interactive diagram layout.', alt: 'Concept sketch of a wiki reading layout alongside a diagram and controls.' },
 ];
 const EVAL_TARGETS = new Set(['account-recovery', 'booking', 'catalogue', 'contact-lead', 'event-registration']);
-const BOOKING_STEPS = [
-  { id: 'step1-browse', title: 'Browse options' },
-  { id: 'step2-form', title: 'Enter booking details' },
-  { id: 'step3-confirmation', title: 'Review confirmation' },
-  { id: 'step4-error', title: 'Recover from an error' },
-  { id: 'step5-empty', title: 'Empty state' },
-];
+// Only these reviewed files may be served; the pictured journey need not match the functional spec.
+const JOURNEYS = {
+  booking: [
+    { id: 'step1-browse', title: 'Browse options' },
+    { id: 'step2-form', title: 'Enter booking details' },
+    { id: 'step3-confirmation', title: 'Review confirmation' },
+    { id: 'step4-error', title: 'Recover from an error' },
+    { id: 'step5-empty', title: 'Empty state' },
+  ],
+  catalogue: [
+    { id: 'step1-grid', title: 'Browse products' },
+    { id: 'step2-cart', title: 'Review cart' },
+    { id: 'step3-empty', title: 'Empty search state' },
+  ],
+  'contact-lead': [
+    { id: 'step1-form', title: 'Consultation form' },
+    { id: 'step2-success', title: 'Depicted acknowledgement' },
+  ],
+  'account-recovery': [
+    { id: 'step1-request', title: 'Request reset link' },
+    { id: 'step2-sent', title: 'Depicted inbox notice' },
+  ],
+  'event-registration': [
+    { id: 'step1-event', title: 'Select event ticket' },
+    { id: 'step2-pass', title: 'Depicted ticket pass' },
+  ],
+};
 const IMAGE_NAME = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 function confinedFile(root, dir, filename) {
@@ -46,12 +66,17 @@ export function conceptImage(repoRoot, name) {
   return file ? { bytes: readFileSync(file), type: 'image/jpeg' } : null;
 }
 
-/** A fixed five-step visual journey: never treat an arbitrary nested file as a public image. */
-export function conceptBookingStep(repoRoot, id) {
-  if (!BOOKING_STEPS.some((step) => step.id === id)) return null;
+/** Only fixed archetype/step pairs are public; neither path segment comes from a filesystem listing. */
+export function conceptJourneyStep(repoRoot, archetype, id) {
+  if (!Object.hasOwn(JOURNEYS, archetype) || !JOURNEYS[archetype].some((step) => step.id === id)) return null;
   const root = join(repoRoot, 'docs/design');
-  const file = confinedFile(root, join(root, 'archetypes/booking'), `${id}.jpg`);
+  const file = confinedFile(root, join(root, 'archetypes', archetype), `${id}.jpg`);
   return file ? { bytes: readFileSync(file), type: 'image/jpeg' } : null;
+}
+
+/** Preserve the booking accessor for existing callers and tests. */
+export function conceptBookingStep(repoRoot, id) {
+  return conceptJourneyStep(repoRoot, 'booking', id);
 }
 
 /** These are authored A6 targets, not captures of the generated demo. */
@@ -68,16 +93,25 @@ export function listConcepts(repoRoot) {
     ? readdirSync(referenceDir).filter((name) => name.endsWith('.jpg')).map((name) => name.slice(0, -4))
       .filter((name) => IMAGE_NAME.test(name) && !!conceptImage(repoRoot, name))
     : [];
-  // Booking is the promised first comparison. Until its reference arrives, show an honest empty slot.
-  const archetypes = [...new Set(['booking', ...names])].sort((a, b) => a === 'booking' ? -1 : b === 'booking' ? 1 : a.localeCompare(b));
+  const journeys = Object.entries(JOURNEYS).map(([id, steps]) => ({
+    id, title: id.replaceAll('-', ' '),
+    steps: steps.map((step) => ({ ...step, available: !!conceptJourneyStep(repoRoot, id, step.id) })),
+  }));
+  // Booking remains first, including when its first image is absent. Never claim a reference pairing
+  // for a family until an allowlisted image is actually available in the checkout.
+  const available = journeys.filter((journey) => journey.steps[0].available).map((journey) => journey.id);
+  const archetypes = [...new Set(['booking', ...available, ...names])]
+    .sort((a, b) => a === 'booking' ? -1 : b === 'booking' ? 1 : a.localeCompare(b));
   return {
     boards: BOARDS.filter((board) => !!conceptImage(repoRoot, board.id)),
     archetypes: archetypes.map((id) => {
-      const bookingStep = id === 'booking' && !names.includes(id) && !!conceptBookingStep(repoRoot, 'step1-browse');
-      return { id, reference: names.includes(id) || bookingStep, target: !!conceptTarget(repoRoot, id),
-        ...(bookingStep ? { referencePath: '/concepts/images/booking/step1-browse.jpg' } : {}) };
+      const first = journeys.find((journey) => journey.id === id)?.steps[0];
+      const stepReference = !names.includes(id) && first?.available;
+      return { id, reference: names.includes(id) || !!stepReference, target: !!conceptTarget(repoRoot, id),
+        ...(stepReference ? { referencePath: `/concepts/images/${id}/${first.id}.jpg` } : {}) };
     }),
-    bookingSteps: BOOKING_STEPS.map((step) => ({ ...step, available: !!conceptBookingStep(repoRoot, step.id) })),
+    journeys,
+    bookingSteps: journeys[0].steps,
   };
 }
 
@@ -89,7 +123,7 @@ const boardFigure = (board, featured = false) => `<figure class="concept-board${
   <figcaption><strong>${escapeHtml(board.title)}</strong><span>${escapeHtml(board.grammar)}</span><p>${escapeHtml(board.note)}</p></figcaption>
 </figure>`;
 
-export function renderConcepts({ boards, archetypes, bookingSteps = [] }) {
+export function renderConcepts({ boards, archetypes, bookingSteps = [], journeys = [] }) {
   const [featured, ...otherBoards] = boards;
   const boardSection = featured ? `${boardFigure(featured, true)}<div class="concept-board-grid">${otherBoards.map((board) => boardFigure(board)).join('')}</div>`
     : '<p class="notice">No layout concept boards are available in this checkout.</p>';
@@ -106,12 +140,19 @@ export function renderConcepts({ boards, archetypes, bookingSteps = [] }) {
     <p class="muted">${reference && target ? 'Side-by-side visual reference only; this is not a generated-site conformance result.' : 'A pair is not claimed until both images exist. No live demo capture is retained here.'}</p>
   </article>`).join('') : '<p class="notice">No archetype reference images are available yet.</p>';
 
-  const bookingSection = bookingSteps.length ? `<ol class="concept-steps">${bookingSteps.map(({ id, title, available }) => `<li><figure>
+  const orderedJourneys = journeys.length ? journeys : bookingSteps.length ? [{ id: 'booking', title: 'booking', steps: bookingSteps }] : [];
+  const journeySections = orderedJourneys.map(({ id, title, steps }) => `<section aria-labelledby="${escapeHtml(id)}-steps-heading">
+    <h2 id="${escapeHtml(id)}-steps-heading">${escapeHtml(title[0].toUpperCase() + title.slice(1))} journey · ${escapeHtml(({ 2: 'two', 3: 'three', 5: 'five' })[steps.length] ?? String(steps.length))} visual steps</h2>
+    <p class="muted">${id === 'booking'
+      ? 'Browse, form, confirmation, error and empty states are illustrative raster references, not interactive demos or training/evaluation evidence. Dates, contacts, prices, receipts and QR codes are unverified placeholders; do not scan the depicted codes. Source and rights are still unverified:'
+      : 'Only these pictured states are available; missing error or empty states are not implied. All products, names, addresses, prices, seat counts, email claims, tokens and QR codes are unverified illustrative placeholders, not interactive demos or training/evaluation evidence. Do not scan depicted codes. Model ID is reported, not attested; source and rights boundary:'} ${code(`docs/design/archetypes/${id}/README.md`)}.</p>
+    <ol class="concept-steps">${steps.map(({ id: stepId, title: stepTitle, available }) => `<li><figure>
       <div class="concept-image-frame">${available
-        ? `<a href="/concepts/images/booking/${escapeHtml(id)}.jpg" aria-label="Open booking ${escapeHtml(title)} reference"><img src="/concepts/images/booking/${escapeHtml(id)}.jpg" alt="Booking journey visual reference: ${escapeHtml(title)}" width="1376" height="768" loading="lazy"></a>`
-        : `<p class="muted">Image pending: ${code(`docs/design/archetypes/booking/${id}.jpg`)}</p>`}</div>
-      <figcaption><strong>${escapeHtml(title)}</strong> · ${available ? 'visual reference' : 'reference pending'}</figcaption>
-    </figure></li>`).join('')}</ol>` : '<p class="notice">No booking step references are available in this checkout.</p>';
+        ? `<a href="/concepts/images/${escapeHtml(id)}/${escapeHtml(stepId)}.jpg" aria-label="Open ${escapeHtml(id)} ${escapeHtml(stepTitle)} reference"><img src="/concepts/images/${escapeHtml(id)}/${escapeHtml(stepId)}.jpg" alt="${escapeHtml(id)} journey visual reference: ${escapeHtml(stepTitle)}" width="1376" height="768" loading="lazy"></a>`
+        : `<p class="muted">Image pending: ${code(`docs/design/archetypes/${id}/${stepId}.jpg`)}</p>`}</div>
+      <figcaption><strong>${escapeHtml(stepTitle)}</strong> · ${available ? 'visual reference' : 'reference pending'}</figcaption>
+    </figure></li>`).join('')}</ol>
+  </section>`).join('');
 
   return page('concepts', `
     <h1>Visual concepts</h1>
@@ -124,8 +165,5 @@ export function renderConcepts({ boards, archetypes, bookingSteps = [] }) {
       <p class="muted">References belong under ${code('docs/design/archetypes/')}. Target renders below are authored, sealed A6 evaluation assets, never training data. Provenance: ${code('docs/provenance/assets/eval-targets.md')}.</p>
       ${archetypeSection}
     </section>
-    <section aria-labelledby="booking-steps-heading"><h2 id="booking-steps-heading">Booking journey · five visual steps</h2>
-      <p class="muted">Browse, form, confirmation, error and empty states are illustrative raster references, not interactive demos or training/evaluation evidence. Dates, contacts, prices, receipts and QR codes are unverified placeholders; do not scan the depicted codes. Source and rights are still unverified: ${code('docs/design/archetypes/booking/README.md')}.</p>
-      ${bookingSection}
-    </section>`);
+    ${journeySections || '<p class="notice">No step references are available in this checkout.</p>'}`);
 }

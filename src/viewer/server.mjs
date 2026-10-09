@@ -37,7 +37,7 @@ import { mkdir, readFile, rm } from 'node:fs/promises';
 import { dirname, extname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { conceptBookingStep, conceptImage, conceptTarget, listConcepts, renderConcepts } from './concepts.mjs';
+import { conceptImage, conceptJourneyStep, conceptTarget, listConcepts, renderConcepts } from './concepts.mjs';
 import { filterProjects, loadCorpus, projectView } from './corpus.mjs';
 import { hashTree } from './hashtree.mjs';
 import { scanTree, scanPairRecords, loadScanConfig, buildMatchers } from './owner-auth.mjs';
@@ -367,10 +367,10 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
       if (path === '/concepts' && request.method === 'GET') {
         return htmlResponse(response, renderConcepts(listConcepts(repoRoot)));
       }
-      const bookingImageMatch = path.match(/^\/concepts\/images\/booking\/(step[1-5]-[a-z-]+)\.jpg$/);
-      if (bookingImageMatch && request.method === 'GET') {
-        const image = conceptBookingStep(repoRoot, bookingImageMatch[1]);
-        if (!image) return textResponse(response, 'booking reference unavailable', 404);
+      const journeyImageMatch = path.match(/^\/concepts\/images\/([a-z0-9-]+)\/(step[1-9][0-9]*-[a-z0-9-]+)\.jpg$/);
+      if (journeyImageMatch && request.method === 'GET') {
+        const image = conceptJourneyStep(repoRoot, journeyImageMatch[1], journeyImageMatch[2]);
+        if (!image) return textResponse(response, 'archetype reference unavailable', 404);
         response.writeHead(200, { 'content-type': image.type, 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' });
         return response.end(image.bytes);
       }
