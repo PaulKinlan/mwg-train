@@ -26,11 +26,11 @@ import { IDENTITY_AXES, identityFindings, requireBudget, variantIdentity } from 
  * two things rather than one.
  */
 /** Identity-layer finding codes, translated to the parity codes the report publishes. */
-const IDENTITY_TO_PARITY = Object.freeze({
+const IDENTITY_TO_PARITY = Object.freeze(Object.assign(Object.create(null), {
   IDENTITY_DEGENERATE: 'CROSS_ARM_DEGENERATE',
   IDENTITY_BELOW_BUDGET: 'CROSS_ARM_BELOW_BUDGET',
   IDENTITY_PAIR_BELOW_BUDGET: 'CROSS_ARM_PAIR_BELOW_BUDGET',
-});
+}));
 
 /**
  * Translate one identity-layer code.
@@ -43,7 +43,13 @@ const IDENTITY_TO_PARITY = Object.freeze({
  * carries the original code through so it is not lost (mwg-train-7yp).
  */
 export function translateIdentityCode(code) {
-  return IDENTITY_TO_PARITY[code] ?? PARITY_CODES.CROSS_ARM_UNMAPPED_IDENTITY_CODE;
+  // `Object.hasOwn`, not a bare lookup: a normal object inherits `constructor`, `toString` and friends, so
+  // `IDENTITY_TO_PARITY['constructor']` used to resolve to the inherited function and be handed back as a
+  // translation. The map has a null prototype AND this checks ownership, because the fallback below claims
+  // to cover "anything unmapped" and a lookup that consults a prototype chain does not.
+  return Object.hasOwn(IDENTITY_TO_PARITY, code)
+    ? IDENTITY_TO_PARITY[code]
+    : PARITY_CODES.CROSS_ARM_UNMAPPED_IDENTITY_CODE;
 }
 
 export const PARITY_CODES = Object.freeze({
@@ -187,7 +193,9 @@ export function crossArmFindings({ arms, budget }) {
       // gate caught this on sml's cross-arm test; the test was right and this mapping was wrong.
       code: translateIdentityCode(finding.code),
       // Present only when the code above could not translate, so nothing an upstream layer emitted is lost.
-      identity_code: IDENTITY_TO_PARITY[finding.code] ? undefined : finding.code,
+      // SPREAD conditionally rather than set to undefined: `{ identity_code: undefined }` still creates the
+      // property, which satisfies a value check while breaking the "only when unmapped" contract.
+      ...(Object.hasOwn(IDENTITY_TO_PARITY, finding.code) ? {} : { identity_code: finding.code }),
       viewport: measured[0].viewport,
       pair,
       pair_actual: pair ? weakest[finding.axis] : null,

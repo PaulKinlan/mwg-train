@@ -25,6 +25,7 @@ import {
   translateIdentityCode,
   viewportFindings,
 } from '../src/eval/parity.mjs';
+import { IDENTITY_CODES } from '../src/eval/conformance.mjs';
 
 const ROOT = resolve(import.meta.dirname, '..');
 
@@ -440,17 +441,59 @@ test('an identity code the parity layer does not know is named, not read as a me
   );
 });
 
-test('every code the identity layer can emit has an explicit translation', () => {
-  // The class guard. The ternary above was wrong because the map and the codes it maps live in different
-  // files, so they can drift silently. This reads the codes out of the SOURCE and requires each to be
-  // mapped, as sorted lists rather than a count.
-  const source = readFileSync(join(ROOT, 'src/eval/conformance.mjs'), 'utf8');
-  const emitted = [...source.matchAll(/code: '(IDENTITY_[A-Z_]+)'/g)].map((match) => match[1]);
-  const unique = [...new Set(emitted)].sort();
-  assert.ok(unique.length >= 3, `expected the identity layer to emit several codes, found ${unique.join(', ')}`);
+// NOTE: the guard that used to sit here scanned the SOURCE for the literal shape `code: 'IDENTITY_...'`.
+// A review found that a fourth code written as a constant reference would slip past it, so it is replaced
+// by the set-based guard below, which reads the published IDENTITY_CODES list and requires the emissions
+// to come from it. It is worth recording that the old guard did fail loudly when the emission syntax
+// changed - but only because it was scanning for that exact syntax, which is the weakness, not the virtue.
+test('the unmapped fallback is literal: inherited object keys are not translations', () => {
+  // IDENTITY_TO_PARITY is a normal object, so `IDENTITY_TO_PARITY['constructor']` finds the INHERITED
+  // constructor and translateIdentityCode hands back a function instead of the unmapped code. Today no
+  // emission is named after a prototype member, so nothing is broken - but the fallback claims to cover
+  // "anything unmapped", and it does not cover anything that happens to be inherited.
+  for (const inherited of ['constructor', 'toString', 'hasOwnProperty', '__proto__', 'valueOf']) {
+    assert.equal(
+      translateIdentityCode(inherited),
+      PARITY_CODES.CROSS_ARM_UNMAPPED_IDENTITY_CODE,
+      `"${inherited}" is not a translation and must resolve to the unmapped code`,
+    );
+  }
+});
+
+test('identity_code is ABSENT on a translated finding, not merely undefined', () => {
+  // The contract is "present only when translation failed". `{ identity_code: undefined }` satisfies a
+  // value check while still creating an own property, so the assertion has to be about the property.
+  // A DRIFTED arm, so there is a finding to inspect. Three agreeing arms produce none, and a loop over an
+  // empty list passes without checking anything - which is how this assertion was vacuous on the first run.
+  const translated = crossArmFindings({
+    arms: [arm('raw'), arm('hono'), arm('react', { boxHeight: 0.5, controls: 1 })],
+    budget: BUDGET,
+  });
+  assert.ok(translated.findings.length > 0, 'premise: the drifted arm must produce a finding to inspect');
+  for (const finding of translated.findings) {
+    assert.equal(
+      Object.hasOwn(finding, 'identity_code'),
+      false,
+      `a translated finding must not carry an identity_code property at all: ${finding.code}`,
+    );
+  }
+});
+
+test('the identity layer publishes its code list, so the map is checked against a set and not a syntax', () => {
+  // The class guard scanned for the literal shape `code: 'IDENTITY_...'`, which a fourth emission written
+  // as a constant reference would slip past. The codes are now a shared frozen list that identityFindings
+  // itself emits from, and that list is what the map is checked against.
+  assert.ok(Array.isArray(IDENTITY_CODES) || typeof IDENTITY_CODES === 'object', 'IDENTITY_CODES must be exported');
+  const codes = Object.values(IDENTITY_CODES).sort();
+  assert.ok(codes.length >= 3, `expected several identity codes, found ${codes.join(', ')}`);
   assert.deepEqual(
-    unique.filter((code) => translateIdentityCode(code) === PARITY_CODES.CROSS_ARM_UNMAPPED_IDENTITY_CODE),
+    codes.filter((code) => translateIdentityCode(code) === PARITY_CODES.CROSS_ARM_UNMAPPED_IDENTITY_CODE),
     [],
-    `every emitted identity code must be translated; unmapped: ${unique.join(', ')}`,
+    `every published identity code must be translated; unmapped: ${codes.join(', ')}`,
   );
+  // And the source must emit from that list rather than from free-floating literals, or the list is
+  // decoration that a new code can bypass.
+  const source = readFileSync(join(ROOT, 'src/eval/conformance.mjs'), 'utf8');
+  const literals = [...new Set([...source.matchAll(/code: '(IDENTITY_[A-Z_]+)'/g)].map((match) => match[1]))].sort();
+  assert.deepEqual(literals, [], `identity codes must come from IDENTITY_CODES, found literals: ${literals.join(', ')}`);
 });
