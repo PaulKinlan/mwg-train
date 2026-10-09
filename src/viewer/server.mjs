@@ -17,6 +17,9 @@
  *   GET  /                              index: every project, filters, accept/reject, live links
  *   GET  /project/<id>[?run=]           pair evidence: rules, journeys, security, screenshots
  *   GET  /evidence/<id>/<file>[?run=]   screenshots and traces, path- and symlink-confined
+ *   GET  /concepts                       illustrative boards and archetype/target visual pairs
+ *   GET  /concepts/images/<name>.jpg      confined concept JPEG
+ *   GET  /concepts/targets/<id>.png       confined A6 authored target render
  *   GET  /tuning                         training-only prompt draft workbench (no generation)
  *   GET  /tuning/client.js               browser-local draft/export helper
  *   GET  /tuning/target/<tr-NN>.png       authored A1 target image, path- and symlink-confined
@@ -33,6 +36,7 @@ import { mkdir, readFile, rm } from 'node:fs/promises';
 import { dirname, extname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { conceptImage, conceptTarget, listConcepts, renderConcepts } from './concepts.mjs';
 import { filterProjects, loadCorpus, projectView } from './corpus.mjs';
 import { hashTree } from './hashtree.mjs';
 import { scanTree, scanPairRecords, loadScanConfig, buildMatchers } from './owner-auth.mjs';
@@ -358,6 +362,24 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
       const liveOrigin = liveOriginFor(request, livePort);
 
       if (path === '/healthz') return textResponse(response, 'ok');
+
+      if (path === '/concepts' && request.method === 'GET') {
+        return htmlResponse(response, renderConcepts(listConcepts(repoRoot)));
+      }
+      const conceptImageMatch = path.match(/^\/concepts\/images\/([a-z0-9-]+)\.jpg$/);
+      if (conceptImageMatch && request.method === 'GET') {
+        const image = conceptImage(repoRoot, conceptImageMatch[1]);
+        if (!image) return textResponse(response, 'concept image unavailable', 404);
+        response.writeHead(200, { 'content-type': image.type, 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' });
+        return response.end(image.bytes);
+      }
+      const conceptTargetMatch = path.match(/^\/concepts\/targets\/([a-z0-9-]+)\.png$/);
+      if (conceptTargetMatch && request.method === 'GET') {
+        const image = conceptTarget(repoRoot, conceptTargetMatch[1]);
+        if (!image) return textResponse(response, 'authored target unavailable', 404);
+        response.writeHead(200, { 'content-type': image.type, 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' });
+        return response.end(image.bytes);
+      }
 
       if (path === '/tuning' && request.method === 'GET') {
         const data = loadTuningData(repoRoot);
