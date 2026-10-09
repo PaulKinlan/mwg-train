@@ -5,10 +5,16 @@
  *
  * The generated project goes to a temporary directory: nothing here writes into the repository, and
  * nothing touches the byte-frozen corpus.
+ *
+ * A link is resolved the way a reader resolves it - from the document's own directory - and must land
+ * inside the repository. An out-of-repo target that happens to exist on the machine running the check
+ * is not a link a reader can follow, so it is a finding rather than a pass. Note the link extraction
+ * only reads inline `](target)` destinations: a title attribute or an angle-bracketed destination is
+ * not matched, and no document here uses those forms. If that changes, this needs to learn them.
  */
 import { mkdtempSync, readdirSync, readFileSync, rmSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { isAbsolute, join, relative, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import { DESIGN_DIR, REQUIRED_SECTIONS, checkDesignDocument } from '../src/design/contract.mjs';
@@ -68,8 +74,14 @@ for (const { archetype, framework, file } of designFiles()) {
     name: where,
     text,
     demo,
-    // A document is read from its own directory, so that is where its relative links must resolve.
-    resolveLink: (target) => existsSync(join(documentDir, target.split('#')[0])),
+    // A document is read from its own directory, so that is where its relative links must resolve, and
+    // the target must stay inside the repository. `relative` is used rather than a string prefix test,
+    // because a sibling directory whose name starts with the same characters is not containment.
+    resolveLink: (target) => {
+      const resolved = resolve(documentDir, target.split('#')[0]);
+      const inside = relative(rootPath, resolved);
+      return inside !== '' && !inside.startsWith('..') && !isAbsolute(inside) && existsSync(resolved);
+    },
   })) {
     findings.push({ at: `${where} ${finding.at}`, problem: finding.problem });
   }
