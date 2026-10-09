@@ -114,6 +114,18 @@ It is a static design target. Stated plainly:
 - **It does not search or page server-side data.** The catalogue is twelve cards in the markup and the
   filtering is `indexOf` over their text. There is no paging, no ranking and no server query.
 - **It does not take payment or place orders.** The "Proceed to checkout" button says so when clicked;
+  there is no order route, no basket hand-off and no receipt.
+- **It does not survive a storage block.** `localStorage` can be unavailable, and some browsers refuse
+  it for `file://` URLs. Every access is wrapped in `try`/`catch`, so the cart still works in memory for
+  the page view and is simply not remembered.
+- **It does not prove its own quality.** No accessibility audit and no browser-driven acceptance run
+  happened while the markup was written, and no screenshot of this demo is committed; `compare.html` shows
+  the result so a reader can judge it directly. That is a statement about how these files were AUTHORED, not
+  about the tree: the behaviours above are driven in a real browser by `scripts/verify-catalogue-demo.mjs`.
+
+What it does instead: it filters the twelve catalogue cards in the browser, keeps a `localStorage` cart
+that survives a reload in the same browser, mirrors the query into an `?q=` parameter that survives one
+too, and shows static variants for the two states a template can present without a writable store.
 
 ### Where the backend work belongs
 
@@ -124,17 +136,6 @@ started and scored against the spec. This directory is a design reference: it sh
 reader, a reviewer or a future implementation can see what the generated markup is aiming at. Reading it as
 an unimplemented backend would be a category error, which is why the limits above are stated per contract
 rather than left to inference.
-  there is no order route, no basket hand-off and no receipt.
-- **It does not survive a storage block.** `localStorage` can be unavailable, and some browsers refuse
-  it for `file://` URLs. Every access is wrapped in `try`/`catch`, so the cart still works in memory for
-  the page view and is simply not remembered.
-- **It does not prove anything about its own quality.** No automated accessibility audit and no
-  browser-driven acceptance run were performed as part of writing it; `compare.html` shows the result
-  so a reader can judge it directly. No screenshot of this demo is committed.
-
-What it does instead: it filters the twelve catalogue cards in the browser, keeps a `localStorage` cart
-that survives a reload in the same browser, mirrors the query into an `?q=` parameter that survives one
-too, and shows static variants for the two states a template can present without a writable store.
 
 ## Guidance and standards
 

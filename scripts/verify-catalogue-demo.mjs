@@ -9,11 +9,19 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
 const WORKTREE = join(import.meta.dirname, '..');
+const CAT_DEFAULT = join(WORKTREE, 'docs/design/archetypes/catalogue');
 // Overridable so the harness can be pointed at a deliberately BROKEN copy of the demo. A suite of checks
 // that only ever passes proves nothing, so the control run is part of the evidence: XVD_ARCHETYPE_DIR=...
+// A RELATIVE value is resolved against the current working directory; an unset or empty one uses the in-repo
+// default, which is absolute and therefore safe from any cwd.
 const CAT = process.env.XVD_ARCHETYPE_DIR ? resolve(process.env.XVD_ARCHETYPE_DIR)
-  : join(WORKTREE, 'docs/design/archetypes/catalogue');
-const SHOTS = '/tmp/xvd-shots';
+  : CAT_DEFAULT;
+// A control run must not overwrite the real run's evidence - a cross-family review caught exactly that: both
+// wrote /tmp/xvd-shots and /tmp/xvd-verify.json, so running the control last destroyed the screenshots of the
+// passing demo. Separate destinations, chosen by whether a control directory was given.
+const CONTROL = Boolean(process.env.XVD_ARCHETYPE_DIR);
+const SHOTS = CONTROL ? '/tmp/xvd-shots-control' : '/tmp/xvd-shots';
+const RESULT_PATH = CONTROL ? '/tmp/xvd-verify-control.json' : '/tmp/xvd-verify.json';
 
 const { launchChrome } = await import(join(WORKTREE, 'src/corpus/cdp.mjs'));
 const { startStaticServer } = await import(join(WORKTREE, 'scripts/lib/static-server.mjs'));
@@ -153,7 +161,7 @@ try {
     const steppers = [...document.querySelectorAll('#cart-items button')].filter((b) => /increase|decrease|quantity/i.test(label(b)));
     const enabled = steppers.filter((b) => !b.disabled);
     const target = enabled.find((b) => /increase|plus|\\+/i.test(label(b))) || enabled[0];
-    if (!target) throw new Error('no ENABLED stepper; found: ' + steppers.map(label).join(', '));
+    if (!target) return JSON.stringify({ label: null, missing: true, disabled: steppers.length, before: null });
     const before = localStorage.getItem('kiln-copper-cart-v1');
     target.click();
     return JSON.stringify({ label: label(target).slice(0, 40), disabled: steppers.length - enabled.length, before });
@@ -163,8 +171,10 @@ try {
   const stepInfo = JSON.parse(step);
   check(
     'a quantity stepper changes the persisted cart',
-    afterStep.cart !== stepInfo.before,
-    `clicked "${stepInfo.label}" (${stepInfo.disabled} disabled), cart changed: ${afterStep.cart !== stepInfo.before}`,
+    !stepInfo.missing && afterStep.cart !== stepInfo.before,
+    stepInfo.missing
+      ? `no enabled stepper found (${stepInfo.disabled} disabled)`
+      : `clicked "${stepInfo.label}" (${stepInfo.disabled} disabled), cart changed: ${afterStep.cart !== stepInfo.before}`,
   );
 
   // ---- mobile at a real viewport ----
@@ -211,7 +221,7 @@ try {
 }
 
 const failed = checks.filter((entry) => !entry.ok);
-writeFileSync('/tmp/xvd-verify.json', JSON.stringify({ checks, failures, failedCount: failed.length }, null, 2));
+writeFileSync(RESULT_PATH, JSON.stringify({ checks, failures, failedCount: failed.length }, null, 2));
 console.log(`\n${checks.length - failed.length}/${checks.length} checks passed`);
 for (const entry of failed) console.log(`FAILED: ${entry.name} - ${entry.detail}`);
 for (const failure of failures) console.log(`ERROR: ${failure}`);
