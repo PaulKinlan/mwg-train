@@ -321,6 +321,15 @@ export const ARM_PIXEL_CODES = Object.freeze({
 });
 
 /**
+ * Whether a metrics object is a MEASUREMENT. An object carrying `error` is not one: treating it as one let a
+ * failed analysis be read as an all-zero profile, which produced a fabricated distance and a false
+ * divergence finding between two screenshots of which only one had actually been measured.
+ */
+function isMeasured(metrics) {
+  return Boolean(metrics) && typeof metrics === 'object' && !metrics.error;
+}
+
+/**
  * Every unordered pair of arms within one viewport, so each pair is compared once and never against itself.
  * Pairs where either arm has no measurement are returned with `error` rather than dropped: an arm that
  * produced no screenshot must not vanish from a comparison about arms being absent from each other.
@@ -342,7 +351,11 @@ export function armPixelPairs({ viewport, arms }) {
         // keep in step; the decision function stays free of any knowledge of how the distance is measured.
         aMetrics: a.metrics ?? null,
         bMetrics: b.metrics ?? null,
-        error: !a.metrics || !b.metrics ? 'one of the two arms has no measured screenshot' : null,
+        // A metrics object with an `error` key is a FAILED measurement, not a measurement. Guarding only
+        // against null here let a failed analysis reach the distance function as an all-zero profile and
+        // produce a confident divergence from a screenshot that was never measured. Defended in both places
+        // deliberately: the caller normalises, and this guard makes the pure function safe for any caller.
+        error: !isMeasured(a.metrics) || !isMeasured(b.metrics) ? 'one of the two arms has no measured screenshot' : null,
       });
     }
   }
@@ -388,12 +401,15 @@ export function armPixelFindings({ pairs, budget }) {
       budget,
       a_shot: pair.a_shot,
       b_shot: pair.b_shot,
+      // The three terms behind the distance, carried onto the finding itself: a number in a report that a
+      // reader cannot break down is one they have to take on trust.
+      terms: pair.terms ?? null,
       message: `${pair.a} and ${pair.b} diverge in pixels by ${pair.distance} at ${pair.viewport} (budget ${budget}); the two screenshots are ${pair.a_shot} and ${pair.b_shot}`,
     });
   }
   return {
     findings,
-    /** Nearest pair per viewport, so the empirical noise floor is visible rather than asserted. */
+    /** The nearest pair across ALL viewports, so the empirical noise floor is visible rather than asserted. */
     nearest: measured[measured.length - 1] ?? null,
     worst,
     measured: measured.length,

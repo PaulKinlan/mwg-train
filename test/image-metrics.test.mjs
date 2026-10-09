@@ -59,10 +59,14 @@ test('a uniform image is not a perfect match for everything', () => {
   assert.ok(metricDistance(white, black) > 0.3, 'a white image and a black image must not be zero apart');
   assert.equal(metricDistance(white, black), 0.3333, 'and the value must be the stated average of its three terms');
 
-  // The scale's reachable maximum, pinned: a flat image against an inverted-contrast banded one differs in
-  // shape (1), in brightness (1) and in contrast (1), so the average reaches 1.
+  // The furthest a brightness-only difference can go, and the furthest the average can go at all. A reviewer
+  // measured the real maximum as 0.8333 - not 1 - because a maximal brightness difference requires both
+  // profiles to be FLAT, which zeroes the shape and contrast terms. The suite previously claimed the fixture
+  // "reaches 1" while measuring 0.8333 and only asserting > 0.6, which is a comment disagreeing with its own
+  // assertion. The number is pinned exactly now.
   const inverted = { rowLuminance: FLAT(0).map((v, i) => (i % 2 ? 0 : 1)), bandLuminance: FLAT(0).map((v, i) => (i % 2 ? 1 : 0)) };
-  assert.ok(metricDistance(inverted, white) > 0.6, 'the far end of the scale must be reachable');
+  assert.equal(metricDistance(inverted, white), 0.8333, 'the reachable maximum of the average is 5/6, not 1');
+  assert.ok(metricDistance(inverted, white) > 0.6, 'the far end of the scale must still be far');
 
   // And the consequence: a uniform board must not be the closest board to a sparse image.
   const uniform = metrics({ mean: 0.98, ink: 0.02, structure: FLAT(0.98) });
@@ -163,6 +167,7 @@ test('the distance is the average of the three terms it says it uses', () => {
 });
 
 test('the published notes name the limits, including the uniform-profile caveat', () => {
-  assert.match(ANALYSIS_METRIC_NOTES, /not comparable/i, 'the notes must say a uniform profile is not scored');
+  assert.match(ANALYSIS_METRIC_NOTES, /cannot be compared/i, 'the notes must say a flat profile cannot be compared');
+  assert.match(ANALYSIS_METRIC_NOTES, /THREE terms/i, 'the notes must state how many terms the distance averages');
   assert.match(ANALYSIS_METRIC_NOTES, /do not establish/i, 'the notes must say what the metrics do not establish');
 });

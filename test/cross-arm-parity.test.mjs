@@ -349,6 +349,25 @@ test('arm pixel pairs cover every arm once and never pair an arm with itself', (
   assert.ok(pairs.every((pair) => pair.a !== pair.b), 'an arm must never be compared against itself');
 });
 
+test('a screenshot whose analysis FAILED is unmeasured, not a zero profile', () => {
+  // Reproduces a review finding exactly, in the file that owns these helpers. `analyseImage` failing stores
+  // `{ error }`, which is TRUTHY, so a guard testing only for null let a failed analysis be read as an
+  // all-zero profile: the arm scored a fabricated 0.6333 against a healthy one and produced a DIVERGES
+  // finding naming two screenshots of which only one had been measured. Only `metrics: null` was covered.
+  const healthy = { rowLuminance: Array(32).fill(0).map((v, i) => (i < 8 ? 0.1 : 0.9)), bandLuminance: Array(32).fill(0).map((v, i) => (i < 8 ? 0.1 : 0.9)) };
+  const arms = [
+    { framework: 'good', screenshot: 'good.png', metrics: healthy },
+    { framework: 'failed', screenshot: 'failed.png', metrics: { error: 'timeout waiting for analyseImage' } },
+  ];
+  const pairs = armPixelPairs({ viewport: '1280x900', arms });
+  assert.equal(pairs.length, 1);
+  assert.ok(pairs[0].error, 'a failed analysis must count as unmeasured, not as a zero profile');
+  const { findings, measured } = armPixelFindings({ pairs: pairs.map((pair) => ({ ...pair, distance: pair.error ? null : 0.6333 })), budget: 0.05 });
+  assert.equal(measured, 0, 'a failed measurement must not be counted as compared');
+  assert.equal(findings.length, 1);
+  assert.equal(findings[0].code, ARM_PIXEL_CODES.ARM_PIXEL_PAIR_UNMEASURED, 'the truth is UNMEASURED, not DIVERGES');
+});
+
 test('an arm that produced no screenshot is a reported pair, not a missing one', () => {
   const arms = [
     { framework: 'a', screenshot: 'a.png', metrics: {} },

@@ -16,7 +16,7 @@ Compares the 7 framework arms for `booking` with each other at 3 widths, and com
 - identity: structural 0.9908, geometry 1, controls 1, overall 0.9963
 - weakest pair: hono/webcomponents overall 0.9871
 
-No drift below budget at this width.
+No drift above budget at this width.
 
 ## 768x900
 
@@ -24,7 +24,7 @@ No drift below budget at this width.
 - identity: structural 0.9908, geometry 1, controls 1, overall 0.9963
 - weakest pair: hono/webcomponents overall 0.9871
 
-No drift below budget at this width.
+No drift above budget at this width.
 
 ## 1280x900
 
@@ -32,7 +32,7 @@ No drift below budget at this width.
 - identity: structural 0.9908, geometry 1, controls 1, overall 0.9963
 - weakest pair: hono/webcomponents overall 0.9871
 
-No drift below budget at this width.
+No drift above budget at this width.
 
 ## Reference boards
 
@@ -80,42 +80,63 @@ The boards are images, so what is compared is what they DECLARE - their palette 
 
 ## Against the reference boards, in pixels
 
-These visual metrics compare quantised colour distribution, mean luminance, ink coverage, and the SHAPE of the 32-band mean-luminance profile horizontally and vertically across rendered images. Shape is judged by correlation between the two profiles, so it does not depend on how bright either image is, and a profile with no variation is reported as not comparable rather than scored - scoring it would call a uniform image a perfect structural match for every other image. The distance between two images averages that shape difference with the difference in their mean luminance, because shape alone lets a uniform board attract everything and brightness alone saturates: measured on the reference boards, ink coverage is 98.6-99.5% for all five. They do not establish that a layout, component hierarchy, or specific design element is correct, nor do they verify semantic markup or typography. Two completely different designs can share global luminance, ink density and colour histograms while looking visually distinct to a human.
+These visual metrics compare quantised colour distribution, mean luminance, ink coverage, and the SHAPE of the 32-band mean-luminance profile horizontally and vertically across rendered images. Shape is judged by correlation between the two profiles, so it does not depend on how bright either image is. Two profiles with NO variation have the same shape - a flat line - and score 0 on the shape term; one flat against one varied cannot be compared and fails closed at 1 FOR THAT TERM, rather than being scored as identical. The distance between two images averages THREE terms - that shape difference, the difference in their mean luminance, and the difference in their contrast (twice the difference in spread) - because shape alone cannot see contrast, brightness alone saturates, and shape plus brightness together scored a half-dark/half-light image as identical to a flat one of the same mean. Measured on the reference boards, ink coverage is 98.6-99.5% for all five, which is why ink is not a term. They do not establish that a layout, component hierarchy, or specific design element is correct, nor do they verify semantic markup or typography. Two completely different designs can share global luminance, ink density and colour histograms while looking visually distinct to a human.
 
 Boards analysed: `step1-browse.jpg`, `step2-form.jpg`, `step3-confirmation.jpg`, `step4-error.jpg`, `step5-empty.jpg`.
 
 | arm | viewport | closest board | distance | finding codes | screenshot |
 | --- | --- | --- | --- | --- | --- |
 | hono | 390x844 | `step2-form.jpg` | 0.3949 | BOARD_PALETTE_NOT_SHARED, BOARD_LUMINANCE_DIVERGES, BOARD_INK_DIVERGES, BOARD_STRUCTURE_DIVERGES | `booking-hono-390x844.png` |
+| | | _terms_ | shape 0.4365 / brightness 0.777 / contrast 0.0194 (rows) | shape 0.338 / brightness 0.7769 / contrast 0.0218 (columns) | |
 | raw | 390x844 | `step2-form.jpg` | 0.3949 | BOARD_PALETTE_NOT_SHARED, BOARD_LUMINANCE_DIVERGES, BOARD_INK_DIVERGES, BOARD_STRUCTURE_DIVERGES | `booking-raw-390x844.png` |
+| | | _terms_ | shape 0.4365 / brightness 0.777 / contrast 0.0194 (rows) | shape 0.338 / brightness 0.7769 / contrast 0.0218 (columns) | |
 | react | 390x844 | `step2-form.jpg` | 0.3949 | BOARD_PALETTE_NOT_SHARED, BOARD_LUMINANCE_DIVERGES, BOARD_INK_DIVERGES, BOARD_STRUCTURE_DIVERGES | `booking-react-390x844.png` |
+| | | _terms_ | shape 0.4365 / brightness 0.777 / contrast 0.0194 (rows) | shape 0.338 / brightness 0.7769 / contrast 0.0218 (columns) | |
 | preact | 390x844 | `step2-form.jpg` | 0.3949 | BOARD_PALETTE_NOT_SHARED, BOARD_LUMINANCE_DIVERGES, BOARD_INK_DIVERGES, BOARD_STRUCTURE_DIVERGES | `booking-preact-390x844.png` |
+| | | _terms_ | shape 0.4365 / brightness 0.777 / contrast 0.0194 (rows) | shape 0.338 / brightness 0.7769 / contrast 0.0218 (columns) | |
 | vue | 390x844 | `step2-form.jpg` | 0.3949 | BOARD_PALETTE_NOT_SHARED, BOARD_LUMINANCE_DIVERGES, BOARD_INK_DIVERGES, BOARD_STRUCTURE_DIVERGES | `booking-vue-390x844.png` |
+| | | _terms_ | shape 0.4365 / brightness 0.777 / contrast 0.0194 (rows) | shape 0.338 / brightness 0.7769 / contrast 0.0218 (columns) | |
 | webcomponents | 390x844 | `step2-form.jpg` | 0.3949 | BOARD_PALETTE_NOT_SHARED, BOARD_LUMINANCE_DIVERGES, BOARD_INK_DIVERGES, BOARD_STRUCTURE_DIVERGES | `booking-webcomponents-390x844.png` |
+| | | _terms_ | shape 0.4365 / brightness 0.777 / contrast 0.0194 (rows) | shape 0.338 / brightness 0.7769 / contrast 0.0218 (columns) | |
 | svelte | 390x844 | `step2-form.jpg` | 0.3949 | BOARD_PALETTE_NOT_SHARED, BOARD_LUMINANCE_DIVERGES, BOARD_INK_DIVERGES, BOARD_STRUCTURE_DIVERGES | `booking-svelte-390x844.png` |
+| | | _terms_ | shape 0.4365 / brightness 0.777 / contrast 0.0194 (rows) | shape 0.338 / brightness 0.7769 / contrast 0.0218 (columns) | |
 | hono | 768x900 | `step5-empty.jpg` | 0.4174 | BOARD_PALETTE_NOT_SHARED, BOARD_LUMINANCE_DIVERGES, BOARD_INK_DIVERGES, BOARD_STRUCTURE_DIVERGES | `booking-hono-768x900.png` |
+| | | _terms_ | shape 0.4411 / brightness 0.8299 / contrast 0.0018 (rows) | shape 0.385 / brightness 0.8299 / contrast 0.0168 (columns) | |
 | raw | 768x900 | `step5-empty.jpg` | 0.4174 | BOARD_PALETTE_NOT_SHARED, BOARD_LUMINANCE_DIVERGES, BOARD_INK_DIVERGES, BOARD_STRUCTURE_DIVERGES | `booking-raw-768x900.png` |
+| | | _terms_ | shape 0.4411 / brightness 0.8299 / contrast 0.0018 (rows) | shape 0.385 / brightness 0.8299 / contrast 0.0168 (columns) | |
 | react | 768x900 | `step5-empty.jpg` | 0.4174 | BOARD_PALETTE_NOT_SHARED, BOARD_LUMINANCE_DIVERGES, BOARD_INK_DIVERGES, BOARD_STRUCTURE_DIVERGES | `booking-react-768x900.png` |
+| | | _terms_ | shape 0.4411 / brightness 0.8299 / contrast 0.0018 (rows) | shape 0.385 / brightness 0.8299 / contrast 0.0168 (columns) | |
 | preact | 768x900 | `step5-empty.jpg` | 0.4174 | BOARD_PALETTE_NOT_SHARED, BOARD_LUMINANCE_DIVERGES, BOARD_INK_DIVERGES, BOARD_STRUCTURE_DIVERGES | `booking-preact-768x900.png` |
+| | | _terms_ | shape 0.4411 / brightness 0.8299 / contrast 0.0018 (rows) | shape 0.385 / brightness 0.8299 / contrast 0.0168 (columns) | |
 | vue | 768x900 | `step5-empty.jpg` | 0.4174 | BOARD_PALETTE_NOT_SHARED, BOARD_LUMINANCE_DIVERGES, BOARD_INK_DIVERGES, BOARD_STRUCTURE_DIVERGES | `booking-vue-768x900.png` |
+| | | _terms_ | shape 0.4411 / brightness 0.8299 / contrast 0.0018 (rows) | shape 0.385 / brightness 0.8299 / contrast 0.0168 (columns) | |
 | webcomponents | 768x900 | `step5-empty.jpg` | 0.4174 | BOARD_PALETTE_NOT_SHARED, BOARD_LUMINANCE_DIVERGES, BOARD_INK_DIVERGES, BOARD_STRUCTURE_DIVERGES | `booking-webcomponents-768x900.png` |
+| | | _terms_ | shape 0.4411 / brightness 0.8299 / contrast 0.0018 (rows) | shape 0.385 / brightness 0.8299 / contrast 0.0168 (columns) | |
 | svelte | 768x900 | `step5-empty.jpg` | 0.4174 | BOARD_PALETTE_NOT_SHARED, BOARD_LUMINANCE_DIVERGES, BOARD_INK_DIVERGES, BOARD_STRUCTURE_DIVERGES | `booking-svelte-768x900.png` |
+| | | _terms_ | shape 0.4411 / brightness 0.8299 / contrast 0.0018 (rows) | shape 0.385 / brightness 0.8299 / contrast 0.0168 (columns) | |
 | hono | 1280x900 | `step2-form.jpg` | 0.4371 | BOARD_PALETTE_NOT_SHARED, BOARD_LUMINANCE_DIVERGES, BOARD_INK_DIVERGES, BOARD_STRUCTURE_DIVERGES | `booking-hono-1280x900.png` |
+| | | _terms_ | shape 0.5327 / brightness 0.8031 / contrast 0.088 (rows) | shape 0.3547 / brightness 0.8031 / contrast 0.0412 (columns) | |
 | raw | 1280x900 | `step2-form.jpg` | 0.4371 | BOARD_PALETTE_NOT_SHARED, BOARD_LUMINANCE_DIVERGES, BOARD_INK_DIVERGES, BOARD_STRUCTURE_DIVERGES | `booking-raw-1280x900.png` |
+| | | _terms_ | shape 0.5327 / brightness 0.8031 / contrast 0.088 (rows) | shape 0.3547 / brightness 0.8031 / contrast 0.0412 (columns) | |
 | react | 1280x900 | `step2-form.jpg` | 0.4371 | BOARD_PALETTE_NOT_SHARED, BOARD_LUMINANCE_DIVERGES, BOARD_INK_DIVERGES, BOARD_STRUCTURE_DIVERGES | `booking-react-1280x900.png` |
+| | | _terms_ | shape 0.5327 / brightness 0.8031 / contrast 0.088 (rows) | shape 0.3547 / brightness 0.8031 / contrast 0.0412 (columns) | |
 | preact | 1280x900 | `step2-form.jpg` | 0.4371 | BOARD_PALETTE_NOT_SHARED, BOARD_LUMINANCE_DIVERGES, BOARD_INK_DIVERGES, BOARD_STRUCTURE_DIVERGES | `booking-preact-1280x900.png` |
+| | | _terms_ | shape 0.5327 / brightness 0.8031 / contrast 0.088 (rows) | shape 0.3547 / brightness 0.8031 / contrast 0.0412 (columns) | |
 | vue | 1280x900 | `step2-form.jpg` | 0.4371 | BOARD_PALETTE_NOT_SHARED, BOARD_LUMINANCE_DIVERGES, BOARD_INK_DIVERGES, BOARD_STRUCTURE_DIVERGES | `booking-vue-1280x900.png` |
+| | | _terms_ | shape 0.5327 / brightness 0.8031 / contrast 0.088 (rows) | shape 0.3547 / brightness 0.8031 / contrast 0.0412 (columns) | |
 | webcomponents | 1280x900 | `step2-form.jpg` | 0.4371 | BOARD_PALETTE_NOT_SHARED, BOARD_LUMINANCE_DIVERGES, BOARD_INK_DIVERGES, BOARD_STRUCTURE_DIVERGES | `booking-webcomponents-1280x900.png` |
+| | | _terms_ | shape 0.5327 / brightness 0.8031 / contrast 0.088 (rows) | shape 0.3547 / brightness 0.8031 / contrast 0.0412 (columns) | |
 | svelte | 1280x900 | `step2-form.jpg` | 0.4371 | BOARD_PALETTE_NOT_SHARED, BOARD_LUMINANCE_DIVERGES, BOARD_INK_DIVERGES, BOARD_STRUCTURE_DIVERGES | `booking-svelte-1280x900.png` |
+| | | _terms_ | shape 0.5327 / brightness 0.8031 / contrast 0.088 (rows) | shape 0.3547 / brightness 0.8031 / contrast 0.0412 (columns) | |
 
-The distance is the average of two terms, computed for the 32 row bands and the 32 column bands of mean luminance and then averaged: how differently the two profiles are SHAPED (one minus their correlation, halved, and 1 when a profile has no variation) and how different their average brightnesses are. Stated here because a distance nobody can recompute is a number nobody can check, and the band values are in the JSON beside it. Nearer is closer; the closest board is named per arm, not assumed.
+The distance is the average of THREE terms, computed for the 32 row bands and the 32 column bands of mean luminance and then averaged across those two: how differently the two profiles are SHAPED (one minus their correlation, halved, and 1 when one profile has no variation), how different their average brightnesses are, and how different their CONTRAST is (twice the difference in spread). Stated here because a distance nobody can recompute is a number nobody can check, and the band values and the per-pair terms are in the JSON beside it. Reachable range: the average tops out near 0.833, since a maximal brightness difference forces both profiles flat and zeroes the other two terms - a pure brightness difference cannot exceed 0.333. Nearer is closer; the closest board is named per arm, not assumed.
 
 ## Between the arms, in pixels
 
-63 of 63 arm pairs were compared in pixels at each width, using the same distance as the board comparison. The budget is 0.05: the arms are one specification rendered by seven frameworks from one stylesheet, so they should be near-identical, and the CLOSEST pair measured in this run is reported here as the empirical floor for rendering noise rather than asserted.
+63 arm pairs were compared in pixels across 3 widths (21 per width). The budget is 0.05: the arms are one specification rendered by seven frameworks from one stylesheet, so they should be near-identical, and the CLOSEST pair measured in this run is reported here as the empirical floor for rendering noise rather than asserted.
 
-- Closest pair (the floor): `webcomponents` vs `svelte` at 1280x900, distance 0
-- Furthest pair: `hono` vs `preact` at 390x844, distance 0
+- Closest pair (the floor): `webcomponents` vs `svelte` at 1280x900, distance 0 - terms: rows shape 0 / brightness 0 / contrast 0; columns shape 0 / brightness 0 / contrast 0
+- Furthest pair: `hono` vs `preact` at 390x844, distance 0 - terms: rows shape 0 / brightness 0 / contrast 0; columns shape 0 / brightness 0 / contrast 0
 
 No pair of arms diverged in pixels by more than 0.05.
 
@@ -123,25 +144,25 @@ No pair of arms diverged in pixels by more than 0.05.
 
 Saved for inspection (untracked run directory, full-page, one per arm and width):
 
-- `.conformance-corpus/cross-arm-1791578389535/screenshots/booking-hono-390x844.png`
-- `.conformance-corpus/cross-arm-1791578389535/screenshots/booking-raw-390x844.png`
-- `.conformance-corpus/cross-arm-1791578389535/screenshots/booking-react-390x844.png`
-- `.conformance-corpus/cross-arm-1791578389535/screenshots/booking-preact-390x844.png`
-- `.conformance-corpus/cross-arm-1791578389535/screenshots/booking-vue-390x844.png`
-- `.conformance-corpus/cross-arm-1791578389535/screenshots/booking-webcomponents-390x844.png`
-- `.conformance-corpus/cross-arm-1791578389535/screenshots/booking-svelte-390x844.png`
-- `.conformance-corpus/cross-arm-1791578389535/screenshots/booking-hono-768x900.png`
-- `.conformance-corpus/cross-arm-1791578389535/screenshots/booking-raw-768x900.png`
-- `.conformance-corpus/cross-arm-1791578389535/screenshots/booking-react-768x900.png`
-- `.conformance-corpus/cross-arm-1791578389535/screenshots/booking-preact-768x900.png`
-- `.conformance-corpus/cross-arm-1791578389535/screenshots/booking-vue-768x900.png`
-- `.conformance-corpus/cross-arm-1791578389535/screenshots/booking-webcomponents-768x900.png`
-- `.conformance-corpus/cross-arm-1791578389535/screenshots/booking-svelte-768x900.png`
-- `.conformance-corpus/cross-arm-1791578389535/screenshots/booking-hono-1280x900.png`
-- `.conformance-corpus/cross-arm-1791578389535/screenshots/booking-raw-1280x900.png`
-- `.conformance-corpus/cross-arm-1791578389535/screenshots/booking-react-1280x900.png`
-- `.conformance-corpus/cross-arm-1791578389535/screenshots/booking-preact-1280x900.png`
-- `.conformance-corpus/cross-arm-1791578389535/screenshots/booking-vue-1280x900.png`
-- `.conformance-corpus/cross-arm-1791578389535/screenshots/booking-webcomponents-1280x900.png`
-- `.conformance-corpus/cross-arm-1791578389535/screenshots/booking-svelte-1280x900.png`
+- `.conformance-corpus/cross-arm-1791579783693/screenshots/booking-hono-390x844.png`
+- `.conformance-corpus/cross-arm-1791579783693/screenshots/booking-raw-390x844.png`
+- `.conformance-corpus/cross-arm-1791579783693/screenshots/booking-react-390x844.png`
+- `.conformance-corpus/cross-arm-1791579783693/screenshots/booking-preact-390x844.png`
+- `.conformance-corpus/cross-arm-1791579783693/screenshots/booking-vue-390x844.png`
+- `.conformance-corpus/cross-arm-1791579783693/screenshots/booking-webcomponents-390x844.png`
+- `.conformance-corpus/cross-arm-1791579783693/screenshots/booking-svelte-390x844.png`
+- `.conformance-corpus/cross-arm-1791579783693/screenshots/booking-hono-768x900.png`
+- `.conformance-corpus/cross-arm-1791579783693/screenshots/booking-raw-768x900.png`
+- `.conformance-corpus/cross-arm-1791579783693/screenshots/booking-react-768x900.png`
+- `.conformance-corpus/cross-arm-1791579783693/screenshots/booking-preact-768x900.png`
+- `.conformance-corpus/cross-arm-1791579783693/screenshots/booking-vue-768x900.png`
+- `.conformance-corpus/cross-arm-1791579783693/screenshots/booking-webcomponents-768x900.png`
+- `.conformance-corpus/cross-arm-1791579783693/screenshots/booking-svelte-768x900.png`
+- `.conformance-corpus/cross-arm-1791579783693/screenshots/booking-hono-1280x900.png`
+- `.conformance-corpus/cross-arm-1791579783693/screenshots/booking-raw-1280x900.png`
+- `.conformance-corpus/cross-arm-1791579783693/screenshots/booking-react-1280x900.png`
+- `.conformance-corpus/cross-arm-1791579783693/screenshots/booking-preact-1280x900.png`
+- `.conformance-corpus/cross-arm-1791579783693/screenshots/booking-vue-1280x900.png`
+- `.conformance-corpus/cross-arm-1791579783693/screenshots/booking-webcomponents-1280x900.png`
+- `.conformance-corpus/cross-arm-1791579783693/screenshots/booking-svelte-1280x900.png`
 

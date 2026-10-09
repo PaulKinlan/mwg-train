@@ -238,7 +238,7 @@ function renderMarkdown(report) {
     }
     lines.push('');
     if (viewport.findings.length === 0) {
-      lines.push('No drift below budget at this width.');
+      lines.push('No drift above budget at this width.');
     } else {
       for (const finding of viewport.findings) lines.push(`- \`${finding.code}\` ${finding.message}`);
     }
@@ -288,10 +288,14 @@ function renderMarkdown(report) {
       lines.push(
         `| ${entry.arm} | ${entry.viewport} | \`${entry.closest_board.split('/').pop()}\` | ${entry.closest_distance} | ${codes.length === 0 ? 'none' : codes.join(', ')} | \`${entry.path.split('/').pop()}\` |`,
       );
+      // The terms behind the closest-board number, printed so the distance can be read rather than only
+      // believed. A commit on this branch claimed this disclosure existed before it did; it exists now.
+      const terms = entry.all_boards?.find((candidate) => candidate.board === entry.closest_board)?.terms;
+      if (terms) lines.push(`| | | _terms_ | shape ${terms.rows?.shape} / brightness ${terms.rows?.brightness} / contrast ${terms.rows?.contrast} (rows) | shape ${terms.bands?.shape} / brightness ${terms.bands?.brightness} / contrast ${terms.bands?.contrast} (columns) | |`);
     }
     lines.push('');
     lines.push(
-      'The distance is the average of two terms, computed for the 32 row bands and the 32 column bands of mean luminance and then averaged: how differently the two profiles are SHAPED (one minus their correlation, halved, and 1 when a profile has no variation) and how different their average brightnesses are. Stated here because a distance nobody can recompute is a number nobody can check, and the band values are in the JSON beside it. Nearer is closer; the closest board is named per arm, not assumed.',
+      'The distance is the average of THREE terms, computed for the 32 row bands and the 32 column bands of mean luminance and then averaged across those two: how differently the two profiles are SHAPED (one minus their correlation, halved, and 1 when one profile has no variation), how different their average brightnesses are, and how different their CONTRAST is (twice the difference in spread). Stated here because a distance nobody can recompute is a number nobody can check, and the band values and the per-pair terms are in the JSON beside it. Reachable range: the average tops out near 0.833, since a maximal brightness difference forces both profiles flat and zeroes the other two terms - a pure brightness difference cannot exceed 0.333. Nearer is closer; the closest board is named per arm, not assumed.',
     );
   }
   lines.push('');
@@ -300,15 +304,15 @@ function renderMarkdown(report) {
     lines.push('## Between the arms, in pixels');
     lines.push('');
     lines.push(
-      `${pixels.measured} of ${pixels.expected} arm pairs were compared in pixels at each width, using the same distance as the board comparison. ` +
+      `${pixels.measured} arm pairs were compared in pixels across ${report.viewports.length} widths (${pixels.measured / report.viewports.length} per width). ` +
         `The budget is ${pixels.budget}: the arms are one specification rendered by seven frameworks from one stylesheet, so they should be near-identical, and the CLOSEST pair measured in this run is reported here as the empirical floor for rendering noise rather than asserted.`,
     );
     lines.push('');
     if (pixels.nearest) {
-      lines.push(`- Closest pair (the floor): \`${pixels.nearest.pair.join('\` vs \`')}\` at ${pixels.nearest.viewport}, distance ${pixels.nearest.distance}`);
+      lines.push(`- Closest pair (the floor): \`${pixels.nearest.pair.join('\` vs \`')}\` at ${pixels.nearest.viewport}, distance ${pixels.nearest.distance}${termsLine(pixels.nearest.terms)}`);
     }
     if (pixels.worst) {
-      lines.push(`- Furthest pair: \`${pixels.worst.pair.join('\` vs \`')}\` at ${pixels.worst.viewport}, distance ${pixels.worst.distance}`);
+      lines.push(`- Furthest pair: \`${pixels.worst.pair.join('\` vs \`')}\` at ${pixels.worst.viewport}, distance ${pixels.worst.distance}${termsLine(pixels.worst.terms)}`);
     }
     lines.push('');
     if (pixels.findings.length === 0) {
@@ -317,7 +321,7 @@ function renderMarkdown(report) {
       lines.push(`${pixels.findings.length} pair(s) diverged in pixels:`);
       lines.push('');
       for (const finding of pixels.findings) {
-        lines.push(`- \`${finding.pair.join('\` vs \`')}\` at ${finding.viewport}: distance ${finding.distance} (budget ${finding.budget})`);
+        lines.push(`- \`${finding.pair.join('\` vs \`')}\` at ${finding.viewport}: distance ${finding.distance} (budget ${finding.budget})${termsLine(finding.terms)}`);
         lines.push(`  - ${finding.a_shot}`);
         lines.push(`  - ${finding.b_shot}`);
       }
@@ -335,13 +339,28 @@ function renderMarkdown(report) {
 /**
  * The line above which two arms are reported as having rendered different pixels.
  *
- * Basis, so this is a budget and not a dial: the arms are ONE specification built by seven frameworks from ONE
- * shared stylesheet, so they should render near-identically and the closest measured pair is the run's own
- * empirical floor for rendering noise. The run reports that floor next to the budget, so a reader can see
- * whether the budget is generous or tight rather than taking it on trust. It is compared and never adjusted -
- * a threshold moved until a report reads green is not a threshold.
+ * Basis, so this is a budget and not a dial. The arms are ONE specification built by seven frameworks from ONE
+ * shared stylesheet, so they should render near-identically. BOTH ends of the range are measured, because a
+ * floor alone calibrates only the bottom:
+ *
+ * - FLOOR: on the unaltered tree the closest measured pair is 0.00 at every width, so rendering noise on this
+ *   stack is zero and there is no headroom to absorb.
+ * - UPPER: a deliberately subtle single-arm change - one arm's `--bg` from #ffffff to #f0f0f0, about a 6%
+ *   darkening of its dominant surface - scores 0.0391 and therefore PASSES SILENTLY below this budget. A
+ *   global surface-colour change (one arm's background to #b3005a) scores 0.5009 and is caught by 10x.
+ *
+ * So 0.05 means: a change to one arm's dominant surface colour of roughly 8% or more is reported, and anything
+ * subtler is not. That limit is stated rather than discovered by a reader wondering why a small drift went
+ * unmentioned. A review found this headroom uncalibrated and it was right to; the number is unchanged because
+ * a floor measured on one tree does not justify tightening it against rendering noise on another machine.
  */
 export const ARM_PIXEL_BUDGET = 0.05;
+
+function termsLine(terms) {
+  if (!terms) return '';
+  const part = (label, entry) => (entry ? `${label} shape ${entry.shape} / brightness ${entry.brightness} / contrast ${entry.contrast}` : `${label} -`);
+  return ` - terms: ${part('rows', terms.rows)}; ${part('columns', terms.bands)}`;
+}
 
 /**
  * How far apart two images are, as ONE number, so "which board is this arm closest to" is answerable
@@ -357,6 +376,24 @@ export const ARM_PIXEL_BUDGET = 0.05;
  * The doc block previously sat above ARM_PIXEL_BUDGET, describing a budget it has nothing to do with - the
  * same mis-attributed-prose class that has produced a defect in every round of this review.
  */
+/**
+ * The three terms behind a distance, in 0..1 each, so the number can be broken down rather than believed.
+ * Module scope so the distance and its disclosure compute the terms the SAME way - they were separate
+ * before, and `metricTerms` referenced a helper scoped inside the distance function, which threw the moment
+ * it was finally called. It had sat uncalled (a review finding) so nothing noticed the latent breakage.
+ */
+function pairTerms(first, second) {
+  const left = profileStats(first ?? []);
+  const right = profileStats(second ?? []);
+  const shape = profileShapeDistance(first ?? [], second ?? []);
+  return {
+    shape: round4(shape.distance),
+    brightness: round4(Math.abs(left.mean - right.mean)),
+    contrast: round4(Math.min(1, 2 * Math.abs(left.spread - right.spread))),
+    comparable: shape.comparable,
+  };
+}
+
 export function metricDistance(a, b) {
   // THREE TERMS, because a reviewer found the third one missing and was right. Each is in 0..1 and they are
   // averaged, and the average is stated in the report so a reader can recompute it from the band values.
@@ -367,24 +404,8 @@ export function metricDistance(a, b) {
   //   and the same mean are identical to the metric however different they look: a half-dark/half-light
   //   image and an almost uniformly grey one with the same mean correlate at +1 and scored 0, which is the
   //   same confident-but-meaningless zero that the blank attractor produced one round earlier.
-  // Listed per pair, newest first, and every pair's THREE TERMS are kept. The distance is an average of
-  // shape, brightness and contrast; the average alone compresses a wide range into a narrow band, so a
-  // reader who wants to know WHY two images are 0.16 apart gets the three numbers rather than an assertion
-  // about a weighting. A reviewer called the weighting uncalibrated, which was fair - this disclosure is the
-  // honest answer to that, rather than tuning the weights until a preferred pair ranks first.
-  const termsFor = (first, second) => {
-    const left = profileStats(first ?? []);
-    const right = profileStats(second ?? []);
-    const shape = profileShapeDistance(first ?? [], second ?? []);
-    return {
-      shape: round4(shape.distance),
-      brightness: round4(Math.abs(left.mean - right.mean)),
-      contrast: round4(Math.min(1, 2 * Math.abs(left.spread - right.spread))),
-      comparable: shape.comparable,
-    };
-  };
   const pair = (first, second) => {
-    const { shape, brightness, contrast } = termsFor(first, second);
+    const { shape, brightness, contrast } = pairTerms(first, second);
     return (shape + brightness + contrast) / 3;
   };
   const rows = pair(a?.rowLuminance, b?.rowLuminance);
@@ -394,7 +415,7 @@ export function metricDistance(a, b) {
 
 /** The three stated terms behind a distance, so a number in the report can be explained as well as checked. */
 export function metricTerms(a, b) {
-  return { rows: termsFor(a?.rowLuminance, b?.rowLuminance), bands: termsFor(a?.bandLuminance, b?.bandLuminance) };
+  return { rows: pairTerms(a?.rowLuminance, b?.rowLuminance), bands: pairTerms(a?.bandLuminance, b?.bandLuminance) };
 }
 
 /**
@@ -516,6 +537,11 @@ function compareOne({ screenshot, boardMetrics }) {
   const comparisons = boardMetrics.map((board) => ({
     board: board.file,
     distance: metricDistance(board.metrics, analysed),
+    // The three terms behind that distance. A commit on this branch claimed they were disclosed per pair and
+    // they were not - `metricTerms` was dead code - so the claim is made TRUE here rather than withdrawn. It
+    // matters because the distance is an average of three terms with equal weight, which is a choice: a reader
+    // who wants to know why two images are 0.395 apart gets the three numbers instead of an assertion.
+    terms: metricTerms(board.metrics, analysed),
     findings: summariseComparison(board.metrics, analysed),
   }));
   // Nearest first; then the board that diverges on fewer axes; then by name, so a tie is still
@@ -540,7 +566,7 @@ function compareOne({ screenshot, boardMetrics }) {
       board: closest.board,
       screenshot: screenshot.path,
     })),
-    all_boards: comparisons.map((comparison) => ({ board: comparison.board, distance: comparison.distance, findings: comparison.findings.length })),
+    all_boards: comparisons.map((comparison) => ({ board: comparison.board, distance: comparison.distance, terms: comparison.terms, findings: comparison.findings.length })),
   };
 }
 
@@ -612,13 +638,22 @@ async function main() {
         return {
           framework: arm.framework,
           screenshot: path,
-          metrics: path ? analyzed[`/shot/${path.split('/').pop()}`] : null,
+          // A metrics object carrying `error` is NOT a measurement. `analyseImage` failing stores `{ error }`,
+          // which is truthy, so an unmeasured-screenshot guard testing only for null let a FAILED analysis be
+          // read as an all-zero profile: the arm then scored a fabricated 0.6333 against a healthy one and
+          // produced a CROSS_ARM_PIXEL_PAIR_DIVERGES finding naming two screenshots, one of which had not been
+          // measured at all. Reported by a cross-family review; it is the same "confident number that does not
+          // mean what the report says" class the distance metric itself was redesigned three times to avoid.
+          metrics: path && !analyzed[`/shot/${path.split('/').pop()}`]?.error ? analyzed[`/shot/${path.split('/').pop()}`] : null,
         };
       });
     for (const pair of armPixelPairs({ viewport: viewport.key, arms: armsHere })) {
       pixelPairs.push({
         ...pair,
         distance: pair.error ? null : metricDistance(pair.aMetrics, pair.bMetrics),
+        // Same disclosure for arm-against-arm: the terms behind the number, so drift can be read as well as
+        // measured.
+        terms: pair.error ? null : metricTerms(pair.aMetrics, pair.bMetrics),
       });
     }
   }
@@ -630,10 +665,10 @@ async function main() {
     measured: pixelComparison.measured,
     expected: pixelPairs.length,
     nearest: pixelComparison.nearest
-      ? { pair: [pixelComparison.nearest.a, pixelComparison.nearest.b], viewport: pixelComparison.nearest.viewport, distance: pixelComparison.nearest.distance }
+      ? { pair: [pixelComparison.nearest.a, pixelComparison.nearest.b], viewport: pixelComparison.nearest.viewport, distance: pixelComparison.nearest.distance, terms: pixelComparison.nearest.terms ?? null }
       : null,
     worst: pixelComparison.worst
-      ? { pair: [pixelComparison.worst.a, pixelComparison.worst.b], viewport: pixelComparison.worst.viewport, distance: pixelComparison.worst.distance }
+      ? { pair: [pixelComparison.worst.a, pixelComparison.worst.b], viewport: pixelComparison.worst.viewport, distance: pixelComparison.worst.distance, terms: pixelComparison.worst.terms ?? null }
       : null,
     findings: pixelComparison.findings,
   };
@@ -687,7 +722,7 @@ async function main() {
   );
   for (const finding of report.findings) console.log(`  FINDING ${finding.code} ${finding.message}`);
   console.log(`check-cross-arm-parity: wrote ${jsonPath.replace(`${ROOT}/`, '')} and ${markdownPath.replace(`${ROOT}/`, '')}`);
-  if (report.findings.length === 0) console.log('check-cross-arm-parity: PASS - no drift below budget');
+  if (report.findings.length === 0) console.log('check-cross-arm-parity: PASS - no drift above budget');
   return options.strict && report.findings.length > 0 ? 1 : 0;
 }
 
