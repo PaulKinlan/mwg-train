@@ -92,6 +92,12 @@ export const DOCUMENTS = {
   // generated demo by check:design-schema, and deliberately outside the byte-frozen generated trees.
   'docs/eval/design/README.md': 'design',
   'docs/eval/design/booking/raw.md': 'design',
+  'docs/eval/design/booking/react.md': 'design',
+  'docs/eval/design/booking/preact.md': 'design',
+  'docs/eval/design/booking/vue.md': 'design',
+  'docs/eval/design/booking/hono.md': 'design',
+  'docs/eval/design/booking/webcomponents.md': 'design',
+  'docs/eval/design/booking/svelte.md': 'design',
   'README.md': 'floor-report',
   'docs/PIPELINE.md': 'floor-report',
   'docs/eval/conformance/README.md': 'floor-report',
