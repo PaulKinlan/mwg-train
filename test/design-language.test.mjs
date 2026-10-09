@@ -22,6 +22,23 @@ test('design language is linked, classified and covers every taxonomy group', ()
   assert.match(guide, /excluded from training/i);
 });
 
+test('booking journey references have pinned JPEG bytes and remain excluded from training', () => {
+  const reference = text('docs/design/archetypes/booking/README.md');
+  assert.match(reference, /excluded_from_training: true/);
+  assert.match(reference, /approved_for_training: false/);
+  assert.match(reference, /rights were not supplied/);
+  assert.match(text('scripts/check-baseline-label.mjs'), /'docs\/design\/archetypes\/booking\/README\.md': 'design'/);
+  const hashes = [...reference.matchAll(/File: `(step[1-5]-[a-z-]+\.jpg)` \(SHA-256: `([a-f0-9]{64})`\)/g)];
+  assert.deepEqual(hashes.map(([, name]) => name), [
+    'step1-browse.jpg', 'step2-form.jpg', 'step3-confirmation.jpg', 'step4-error.jpg', 'step5-empty.jpg',
+  ]);
+  for (const [, name, hash] of hashes) {
+    const bytes = readFileSync(new URL(`docs/design/archetypes/booking/${name}`, root));
+    assert.equal(bytes.subarray(0, 3).toString('hex'), 'ffd8ff', `${name}: JPEG magic`);
+    assert.equal(createHash('sha256').update(bytes).digest('hex'), hash, `${name}: source hash`);
+  }
+});
+
 test('rough boards are committed JPEGs with pinned hashes and explicit training exclusion', () => {
   const provenance = text('docs/provenance/assets/design-layouts.md');
   assert.match(provenance, /excluded_from_training: true/);

@@ -120,6 +120,11 @@ export const PAGE_CSS = `
   .concept-image-frame img { display: block; max-width: 100%; width: 100%; height: auto; }
   .concept-image-frame p { padding: 1.5rem; overflow-wrap: anywhere; }
   .concept-comparison figcaption { margin-top: 0.45rem; overflow-wrap: anywhere; }
+  .concept-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr)); gap: 1.5rem; padding-inline-start: 1.6rem; }
+  .concept-steps li { min-width: 0; padding-inline-start: 0.2rem; }
+  .concept-steps figure { min-width: 0; margin: 0; }
+  .concept-steps figcaption { padding-block: 0.45rem; color: var(--muted); overflow-wrap: anywhere; }
+  .concept-steps figcaption strong { color: var(--ink); }
   @media (max-width: 55rem) { .tuning-grid { grid-template-columns: minmax(0, 1fr); } .tuning-selector { grid-template-columns: repeat(2, minmax(0, 1fr)); } .tuning-selector label, .tuning-selector select, .tuning-selector button { grid-column: auto; grid-row: auto; } .tuning-selector button { grid-column: 1 / -1; } }
   @media (max-width: 35rem) { .tuning-selector, .tuning-settings { grid-template-columns: minmax(0, 1fr); } .tuning-selector button { grid-column: auto; } }
   @media (max-width: 48rem) {
