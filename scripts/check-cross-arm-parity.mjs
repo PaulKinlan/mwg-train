@@ -1,0 +1,328 @@
+#!/usr/bin/env node
+/**
+ * Do the framework arms for one archetype render as the same design?
+ *
+ *   node scripts/check-cross-arm-parity.mjs                      # booking, all arms, three widths
+ *   node scripts/check-cross-arm-parity.mjs --archetype booking
+ *   node scripts/check-cross-arm-parity.mjs --strict             # exit non-zero when findings exist
+ *   node scripts/check-cross-arm-parity.mjs --rerender           # rebuild the markdown from the JSON
+ *
+ * For each framework the pilot can build, this renders the arm at 390, 768 and 1280 wide, saves a
+ * screenshot, reads the computed design tokens, and compares the arms with EACH OTHER. It reports what
+ * it finds as structured findings rather than a pass/fail, because a parity instrument that cannot say
+ * WHERE two arms disagree is not worth running.
+ *
+ * THREE DELIBERATE LIMITS, STATED RATHER THAN IMPLIED:
+ *
+ * 1. It compares layout and component structure, not content. The underlying axes are structural,
+ *    geometry and controls, and they are blind to text - two pages with entirely different headings
+ *    score 1.000 identity. This instrument does not claim to compare "the design as a whole".
+ *
+ * 2. Screenshots are SAVED, not diffed. There is no image decoder in this repository by design, and
+ *    comparing PNG bytes would punish a framework for anti-aliasing; the repository's own conformance
+ *    axes say geometry is the honest version of that question. Screenshots exist so a human can look.
+ *
+ * 3. The reference boards are IMAGES. Diffing a rendered page against a mockup JPEG is not a meaningful
+ *    comparison, so what is compared against the boards is what the boards DECLARE: their palette, in
+ *    hex. That comparison is expected to diverge today - the generated arms use the pilot palette - and
+ *    divergence is reported as a finding, not treated as a failure to be hidden or a bar being passed.
+ */
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
+import process from 'node:process';
+
+import { ARCHETYPES } from '../pilot/archetypes.mjs';
+import { FRAMEWORKS, buildProjectFor, writeProject } from '../pilot/frameworks.mjs';
+import { launchChrome } from '../src/corpus/cdp.mjs';
+import { captureSignature } from '../src/eval/render.mjs';
+import { TOKEN_NAMES, paletteFindings, paritySummary } from '../src/eval/parity.mjs';
+import { BASELINE_FIELDS, baselineAttributionLine } from '../src/eval/ruleset.mjs';
+import { IDENTITY_BUDGET } from '../src/eval/targets.mjs';
+
+const ROOT = resolve(process.cwd());
+
+/**
+ * The palette the five reference boards declare, as stated in their README.
+ *
+ * Kept here as a literal rather than parsed out of the README's prose, because a semantic mapping
+ * (which hex is the background rather than a surface) is not something a regex should be guessing at.
+ * test/cross-arm-parity.test.mjs asserts these values still appear in that README, so the literal
+ * cannot drift away from the source it claims to quote without a test failing.
+ */
+export const REFERENCE_PALETTE = Object.freeze({
+  '--bg': '#0f172a',
+  '--surface': '#1e293b',
+  '--accent': '#10b981',
+  '--muted': '#94a3b8',
+});
+
+const DEFAULT_VIEWPORTS = Object.freeze([
+  { key: '390x844', width: 390, height: 844 },
+  { key: '768x900', width: 768, height: 900 },
+  { key: '1280x900', width: 1280, height: 900 },
+]);
+
+/**
+ * The one extra measurement taken from the already-loaded page: the computed design tokens, read from
+ * the document root. `evaluate` wraps this in a function body and discards a bare trailing expression,
+ * so the `return` is not decoration - without it this collects `undefined` and every arm reads as
+ * having no tokens at all, which would look like a palette finding rather than a broken probe.
+ */
+const TOKEN_SCRIPT = `return (() => {
+  const root = getComputedStyle(document.documentElement);
+  const body = getComputedStyle(document.body);
+  const tokens = {};
+  for (const name of ${JSON.stringify(TOKEN_NAMES)}) tokens[name] = root.getPropertyValue(name).trim();
+  return {
+    tokens,
+    colorScheme: root.colorScheme || '',
+    bodyColor: body.color,
+    bodyBackground: body.backgroundColor,
+  };
+})();`;
+
+function parseArgs(argv) {
+  const options = {
+    archetype: 'booking',
+    out: 'docs/eval/conformance',
+    viewports: DEFAULT_VIEWPORTS,
+    runRoot: null,
+    port: 9600,
+    strict: false,
+    rerender: false,
+    reuseArms: false,
+  };
+  for (let index = 0; index < argv.length; index += 1) {
+    const flag = argv[index];
+    if (flag === '--archetype') options.archetype = argv[++index];
+    else if (flag === '--out') options.out = argv[++index];
+    else if (flag === '--run-root') options.runRoot = argv[++index];
+    else if (flag === '--port') options.port = Number(argv[++index]);
+    else if (flag === '--strict') options.strict = true;
+    else if (flag === '--rerender') options.rerender = true;
+    else if (flag === '--reuse-arms') options.reuseArms = true;
+    else if (flag === '--viewports') {
+      options.viewports = argv[++index].split(',').map((entry) => {
+        const [width, height] = entry.split('x').map(Number);
+        return { key: `${width}x${height}`, width, height };
+      });
+    }
+  }
+  return options;
+}
+
+/**
+ * Build every arm for the archetype into a run directory inside the repository.
+ *
+ * Inside the repository, not /tmp: five of the seven arms import their framework from node_modules, and
+ * `writeProject` deliberately installs nothing. Node resolves node_modules by walking up from the
+ * project directory, so an arm generated under the repository resolves and an arm generated in /tmp does
+ * not. This is the one place where "generate somewhere harmless" would have silently produced five of
+ * seven arms as connection-refused.
+ */
+function buildArms({ archetype, runRoot, reuse = false }) {
+  const definition = ARCHETYPES[archetype];
+  if (!definition) throw new Error(`unknown archetype ${archetype}; known: ${Object.keys(ARCHETYPES).join(', ')}`);
+  const arms = [];
+  for (const frameworkName of Object.keys(FRAMEWORKS)) {
+    const built = buildProjectFor(definition, { frameworkName });
+    const dir = resolve(runRoot, built.projectId);
+    // `--reuse-arms` exists so a measurement can be repeated against a tree that was deliberately
+    // changed between runs. Without it, every run regenerates the arms and there is no way to run the
+    // control that matters most: perturb one arm and check the instrument reports it.
+    if (!(reuse && existsSync(join(dir, 'server.mjs')))) writeProject(dir, built);
+    arms.push({ framework: frameworkName, projectId: built.projectId, dir });
+  }
+  return arms;
+}
+
+/** Render each arm at each viewport, saving one screenshot per arm and width. */
+async function measure({ arms, viewports, runRoot, port }) {
+  const screenshotDir = join(runRoot, 'screenshots');
+  mkdirSync(screenshotDir, { recursive: true });
+  const chrome = await launchChrome({});
+  const armsByViewport = {};
+  const screenshots = [];
+  let nextPort = port;
+  try {
+    for (const requested of viewports) {
+      armsByViewport[requested.key] = [];
+      for (const arm of arms) {
+        const screenshotPath = join(screenshotDir, `${arm.projectId}-${requested.key}.png`);
+        const started = Date.now();
+        const signature = await captureSignature({
+          chrome,
+          projectDir: arm.dir,
+          port: nextPort++,
+          runDir: runRoot,
+          viewport: { width: requested.width, height: requested.height },
+          screenshotPath,
+          collect: TOKEN_SCRIPT,
+        });
+        const collected = signature.collected ?? null;
+        const clean = { ...signature };
+        delete clean.collected;
+        armsByViewport[requested.key].push({
+          framework: arm.framework,
+          viewport: requested.key,
+          signature: clean,
+          tokens: collected?.tokens ?? {},
+          colorScheme: collected?.colorScheme ?? '',
+          milliseconds: Date.now() - started,
+        });
+        screenshots.push({ arm: arm.framework, viewport: requested.key, path: screenshotPath.replace(`${ROOT}/`, '') });
+        console.log(
+          `  ${arm.framework.padEnd(14)} ${requested.key.padEnd(9)} ${signature.viewport.width}x${signature.viewport.height} ${Math.round((Date.now() - started) / 100) / 10}s`,
+        );
+      }
+    }
+  } finally {
+    await chrome.close().catch(() => {});
+  }
+  return { armsByViewport, screenshots };
+}
+
+function renderMarkdown(report) {
+  const lines = [];
+  lines.push(`# Cross-arm parity: ${report.archetype}`);
+  lines.push('');
+  lines.push(baselineAttributionLine());
+  lines.push('');
+  lines.push(
+    `Compares the ${report.arms_measured.length} framework arms for \`${report.archetype}\` with each other at ${report.viewports.length} widths. Finds drift; does not gate it.`,
+  );
+  lines.push('');
+  lines.push(
+    `**What this measures:** layout and component structure. The underlying axes are structural, geometry and controls, and they are blind to text - two pages with different headings score 1.000. **What it does not do:** diff screenshots (no image decoder exists in this repository by design) or compare pixels against the reference boards, which are images.`,
+  );
+  lines.push('');
+  lines.push(`**Arms:** ${report.arms_measured.join(', ')}`);
+  lines.push('');
+  for (const viewport of report.viewports) {
+    lines.push(`## ${viewport.viewport.key}`);
+    lines.push('');
+    lines.push(`- measured: ${viewport.measured.join(', ') || 'none'}`);
+    if (viewport.missing.length > 0) lines.push(`- **missing: ${viewport.missing.join(', ')}**`);
+    if (viewport.identity) {
+      lines.push(
+        `- identity: structural ${viewport.identity.structural}, geometry ${viewport.identity.geometry}, controls ${viewport.identity.controls}, overall ${viewport.identity.overall}`,
+      );
+      if (viewport.weakest_pair) {
+        lines.push(
+          `- weakest pair: ${viewport.weakest_pair.a}/${viewport.weakest_pair.b} overall ${viewport.weakest_pair.overall}`,
+        );
+      }
+    } else {
+      lines.push('- identity: **not measurable**');
+    }
+    lines.push('');
+    if (viewport.findings.length === 0) {
+      lines.push('No drift below budget at this width.');
+    } else {
+      for (const finding of viewport.findings) lines.push(`- \`${finding.code}\` ${finding.message}`);
+    }
+    lines.push('');
+  }
+  lines.push('## Against the reference boards');
+  lines.push('');
+  lines.push(
+    `The boards are images, so what is compared is what they DECLARE - their palette - against each arm's computed tokens. Divergence here is expected on this repository: the generated arms use the pilot palette and have not adopted the boards' design.`,
+  );
+  lines.push('');
+  if (report.palette_findings.length === 0) {
+    lines.push('Every measured arm uses the declared palette.');
+  } else {
+    lines.push(`| arm | token | declared | actual |`);
+    lines.push(`| --- | --- | --- | --- |`);
+    for (const finding of report.palette_findings) {
+      lines.push(`| ${finding.arm} | ${finding.token} | ${finding.expected} | ${finding.actual ?? 'not declared'} |`);
+    }
+  }
+  lines.push('');
+  lines.push('## Screenshots');
+  lines.push('');
+  lines.push('Saved for inspection (untracked run directory, full-page, one per arm and width):');
+  lines.push('');
+  for (const shot of report.screenshots) lines.push(`- \`${shot.path}\``);
+  lines.push('');
+  return `${lines.join('\n')}\n`;
+}
+
+async function main() {
+  const options = parseArgs(process.argv.slice(2));
+  const jsonPath = resolve(ROOT, options.out, `${options.archetype}-cross-arm.json`);
+  const markdownPath = resolve(ROOT, options.out, `${options.archetype}-cross-arm.md`);
+
+  if (options.rerender) {
+    const report = JSON.parse(readFileSync(jsonPath, 'utf8'));
+    writeFileSync(markdownPath, renderMarkdown(report));
+    console.log(`check-cross-arm-parity: re-rendered ${markdownPath.replace(`${ROOT}/`, '')} from the committed JSON`);
+    return 0;
+  }
+
+  // Arms must resolve node_modules, so the run directory is always inside the repository: an arm
+  // generated under it resolves its framework, and one generated anywhere else does not. See buildArms.
+  const armRoot = options.runRoot
+    ? resolve(ROOT, options.runRoot)
+    : resolve(ROOT, '.conformance-corpus', `cross-arm-${Date.now()}`);
+  mkdirSync(armRoot, { recursive: true });
+  console.log(`check-cross-arm-parity: building ${Object.keys(FRAMEWORKS).length} arms for ${options.archetype}`);
+  const arms = buildArms({ archetype: options.archetype, runRoot: armRoot, reuse: options.reuseArms });
+  console.log(`check-cross-arm-parity: rendering ${arms.length} arms at ${options.viewports.map((v) => v.key).join(', ')}`);
+  const { armsByViewport, screenshots } = await measure({
+    arms,
+    viewports: options.viewports,
+    runRoot: armRoot,
+    port: options.port,
+  });
+
+  const summary = paritySummary({
+    archetype: options.archetype,
+    viewports: options.viewports,
+    armsByViewport,
+    budget: IDENTITY_BUDGET,
+  });
+  const allArms = options.viewports.flatMap((viewport) => armsByViewport[viewport.key] ?? []);
+  const palette = paletteFindings({ arms: allArms, declared: REFERENCE_PALETTE });
+
+  const report = {
+    ...BASELINE_FIELDS,
+    archetype: options.archetype,
+    generated_at: new Date().toISOString(),
+    viewports: summary.viewports,
+    arms_measured: [...new Set(allArms.filter((arm) => arm.signature).map((arm) => arm.framework))].sort(),
+    budget: IDENTITY_BUDGET,
+    reference_palette: REFERENCE_PALETTE,
+    palette_findings: palette,
+    findings: [...summary.findings, ...palette],
+    screenshots,
+    limits: {
+      compares: 'layout and component structure (structural, geometry, controls axes)',
+      blind_to: 'text content, and viewport shape (geometry is normalised per viewport)',
+      screenshots: 'saved for inspection, not diffed - no image decoder exists in this repository by design',
+      reference_boards: 'compared by declared palette, not by pixels - the boards are images',
+    },
+  };
+
+  mkdirSync(dirname(jsonPath), { recursive: true });
+  writeFileSync(jsonPath, `${JSON.stringify(report, null, 2)}\n`);
+  writeFileSync(markdownPath, renderMarkdown(report));
+
+  console.log(
+    `check-cross-arm-parity: ${report.arms_measured.length} arms measured, ${summary.findings.length} parity finding(s), ${palette.length} palette finding(s)`,
+  );
+  for (const finding of report.findings) console.log(`  FINDING ${finding.code} ${finding.message}`);
+  console.log(`check-cross-arm-parity: wrote ${jsonPath.replace(`${ROOT}/`, '')} and ${markdownPath.replace(`${ROOT}/`, '')}`);
+  if (report.findings.length === 0) console.log('check-cross-arm-parity: PASS - no drift below budget');
+  return options.strict && report.findings.length > 0 ? 1 : 0;
+}
+
+// dirname is imported for the report paths; keeping the import list explicit rather than using `node:path` wholesale.
+main()
+  .then((code) => {
+    process.exitCode = code;
+  })
+  .catch((error) => {
+    console.error(`check-cross-arm-parity: ERROR ${error?.stack ?? error}`);
+    process.exitCode = 2;
+  });

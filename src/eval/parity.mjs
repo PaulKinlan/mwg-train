@@ -30,6 +30,7 @@ export const PARITY_CODES = Object.freeze({
   VIEWPORT_NOT_APPLIED: 'VIEWPORT_NOT_APPLIED',
   CROSS_ARM_DEGENERATE: 'CROSS_ARM_DEGENERATE',
   CROSS_ARM_BELOW_BUDGET: 'CROSS_ARM_BELOW_BUDGET',
+  CROSS_ARM_PAIR_BELOW_BUDGET: 'CROSS_ARM_PAIR_BELOW_BUDGET',
   PALETTE_DIVERGES: 'PALETTE_DIVERGES',
   PALETTE_UNDECLARED: 'PALETTE_UNDECLARED',
 });
@@ -128,6 +129,32 @@ export function crossArmFindings({ arms, budget }) {
     code: finding.code === 'IDENTITY_DEGENERATE' ? PARITY_CODES.CROSS_ARM_DEGENERATE : PARITY_CODES.CROSS_ARM_BELOW_BUDGET,
     viewport: measured[0].viewport,
   }));
+  // AND THE OUTLIER, WHICH THE MEAN HIDES.
+  //
+  // `identityFindings` judges the MEAN across pairs. With seven arms there are twenty-one pairs, so one
+  // arm that has badly diverged may be averaged away: measured here, an arm whose geometry disagreed
+  // with six others at 0.66 left the mean at 0.903, just above the 0.9 budget, and the instrument
+  // reported NOTHING - an outlier arm passing as agreement, which is the one answer this instrument
+  // exists to prevent. The module's own documentation already calls the outlier the finding, so the
+  // weakest pair per axis is judged too, by name, and reported even when the mean is healthy.
+  for (const axis of IDENTITY_AXES) {
+    const minimum = budget?.[axis];
+    const weakest = identity.weakest_by_axis?.[axis];
+    if (typeof minimum !== 'number' || !weakest || typeof weakest[axis] !== 'number') continue;
+    if (weakest[axis] >= minimum) continue;
+    // Only reported when the mean did NOT already report this axis, so one bad arm produces one finding
+    // per axis rather than one from the mean and one from the pair saying the same thing twice.
+    if (findings.some((finding) => finding.axis === axis)) continue;
+    findings.push({
+      code: PARITY_CODES.CROSS_ARM_PAIR_BELOW_BUDGET,
+      axis,
+      actual: weakest[axis],
+      minimum,
+      pair: `${weakest.a}/${weakest.b}`,
+      viewport: measured[0].viewport,
+      message: `the mean for ${axis} is ${identity.identity[axis]}, within the ${minimum} budget, but ${weakest.a}/${weakest.b} agree at only ${weakest[axis]} - the mean is hiding that pair`,
+    });
+  }
   // The axes are handed back under `identity` so a reader gets the numbers, not a wrapper named
   // `identity.identity.overall`; the pairwise detail is kept alongside because a finding names a pair that
   // a reader must be able to look up.

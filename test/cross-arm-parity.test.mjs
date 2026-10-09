@@ -103,6 +103,42 @@ test('arms that agree produce no budget findings, and measured drift does', () =
   );
 });
 
+test('an outlier arm is reported even when the mean is within budget', () => {
+  // The case that made this instrument wrong before it was right: with seven arms there are twenty-one
+  // pairs, so ONE diverged arm is averaged away. Measured on the real arms, a pair disagreeing at 0.66
+  // left the mean at 0.903 - above the 0.9 budget - and the instrument reported nothing, which is an
+  // outlier arm passing as agreement. The drift below is chosen from measurement, not taste: at
+  // boxHeight 0.13 the mean geometry is 0.9649, comfortably within budget, while the weakest pair is
+  // below it. Any larger drift and the mean would fail too, which would test the old path instead.
+  const seven = ['raw', 'hono', 'react', 'preact', 'vue', 'webcomponents', 'svelte'];
+  const arms = seven.map((framework) => (framework === 'preact' ? arm(framework, { boxHeight: 0.13 }) : arm(framework)));
+  const { identity, findings } = crossArmFindings({ arms, budget: BUDGET });
+
+  // The premise of the test: the MEAN is healthy, so the old mean-only check could not have fired.
+  assert.ok(identity.geometry >= BUDGET.geometry, `premise: the mean geometry ${identity.geometry} is within budget`);
+  assert.equal(identity.overall >= BUDGET.overall, true, 'premise: the mean overall is within budget');
+  assert.ok(
+    findings.every((finding) => finding.code !== PARITY_CODES.CROSS_ARM_BELOW_BUDGET),
+    'premise: no mean-based finding fires, so only the outlier path can report this',
+  );
+
+  // The assertion: the diverged arm is named, with the pair and the number.
+  const outliers = findings.filter((finding) => finding.code === PARITY_CODES.CROSS_ARM_PAIR_BELOW_BUDGET);
+  assert.ok(outliers.length > 0, 'the outlier must be reported even though the mean is within budget');
+  assert.ok(
+    outliers.every((finding) => typeof finding.pair === 'string' && finding.pair.split('/').includes('preact')),
+    'every outlier finding must name the diverged arm in the pair',
+  );
+  assert.ok(
+    outliers.some((finding) => finding.axis === 'geometry' && finding.actual < BUDGET.geometry),
+    'the geometry outlier must be reported with its actual reading',
+  );
+
+  // Control: with no outlier there is still nothing to report, so the check is not simply always on.
+  const clean = crossArmFindings({ arms: seven.map((framework) => arm(framework)), budget: BUDGET });
+  assert.deepEqual(clean.findings, [], 'seven agreeing arms must still report nothing');
+});
+
 test('comparing nothing is reported as vacuous rather than perfect', () => {
   const one = crossArmFindings({ arms: [arm('raw')], budget: BUDGET });
   assert.equal(one.identity, null);

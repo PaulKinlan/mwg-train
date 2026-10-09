@@ -20,8 +20,14 @@ import { TARGET_VIEWPORT } from './targets.mjs';
  * project at a width is the same job however wide the window is; the cross-arm parity instrument needs
  * the same signature at three widths, and a copy of this function would be a second place for "the
  * server is always stopped" to stop being true.
+ *
+ * `screenshotPath` and `collect` are the same argument applied to the other two things an instrument
+ * wants from a loaded page: an image, and one extra expression's worth of measurements (the cross-arm
+ * instrument reads computed design tokens this way). They are taken HERE, on the page that is already
+ * open and measured, rather than in a second visit - a second visit would measure a different page load
+ * and could disagree with the signature.
  */
-export async function captureSignature({ chrome, projectDir, port, runDir, viewport = TARGET_VIEWPORT }) {
+export async function captureSignature({ chrome, projectDir, port, runDir, viewport = TARGET_VIEWPORT, screenshotPath = null, collect = null }) {
   let server = null;
   let page = null;
   try {
@@ -29,7 +35,10 @@ export async function captureSignature({ chrome, projectDir, port, runDir, viewp
     page = await chrome.newPage({ viewport });
     await page.goto(`http://127.0.0.1:${port}/`);
     await page.waitForSettled();
-    return await page.evaluate(SIGNATURE_SCRIPT);
+    const signature = await page.evaluate(SIGNATURE_SCRIPT);
+    const collected = collect ? await page.evaluate(collect) : null;
+    if (screenshotPath) await page.screenshot(screenshotPath);
+    return collected === null ? signature : { ...signature, collected };
   } finally {
     if (page) await page.close().catch(() => {});
     if (server) await stopServer(server);
