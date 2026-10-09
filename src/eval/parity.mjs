@@ -25,12 +25,43 @@ import { IDENTITY_AXES, identityFindings, requireBudget, variantIdentity } from 
  * report has seen them all: code, axis, actual, minimum, message, and the pair when the finding names
  * two things rather than one.
  */
+/** Identity-layer finding codes, translated to the parity codes the report publishes. */
+const IDENTITY_TO_PARITY = Object.freeze(Object.assign(Object.create(null), {
+  IDENTITY_DEGENERATE: 'CROSS_ARM_DEGENERATE',
+  IDENTITY_BELOW_BUDGET: 'CROSS_ARM_BELOW_BUDGET',
+  IDENTITY_PAIR_BELOW_BUDGET: 'CROSS_ARM_PAIR_BELOW_BUDGET',
+}));
+
+/**
+ * Translate one identity-layer code.
+ *
+ * Every code the identity layer emits is mapped EXPLICITLY, including the mean-failure case that the
+ * ternary this replaces reached only by falling through. A fallback of CROSS_ARM_BELOW_BUDGET happens to
+ * be right for that one code and is silently wrong for every other: a code added to `identityFindings`
+ * later would be published as a family MEAN that left its budget, which is precisely the mislabel
+ * mwg-train-bmu fixed one level in. An unknown code is therefore named as unknown, and the call site
+ * carries the original code through so it is not lost (mwg-train-7yp).
+ */
+export function translateIdentityCode(code) {
+  // `Object.hasOwn`, not a bare lookup: a normal object inherits `constructor`, `toString` and friends, so
+  // `IDENTITY_TO_PARITY['constructor']` used to resolve to the inherited function and be handed back as a
+  // translation. The map has a null prototype AND this checks ownership, because the fallback below claims
+  // to cover "anything unmapped" and a lookup that consults a prototype chain does not.
+  return Object.hasOwn(IDENTITY_TO_PARITY, code)
+    ? IDENTITY_TO_PARITY[code]
+    : PARITY_CODES.CROSS_ARM_UNMAPPED_IDENTITY_CODE;
+}
+
 export const PARITY_CODES = Object.freeze({
   ARM_UNMEASURED: 'ARM_UNMEASURED',
   VIEWPORT_NOT_APPLIED: 'VIEWPORT_NOT_APPLIED',
   CROSS_ARM_DEGENERATE: 'CROSS_ARM_DEGENERATE',
   CROSS_ARM_BELOW_BUDGET: 'CROSS_ARM_BELOW_BUDGET',
   CROSS_ARM_PAIR_BELOW_BUDGET: 'CROSS_ARM_PAIR_BELOW_BUDGET',
+  // The identity layer emitted a code this layer has no translation for. Named rather than folded into a
+  // mean failure, which is what the old fallback did and would have published as "the family mean left its
+  // budget" - the mislabel mwg-train-bmu's seam bug produced one level in (mwg-train-7yp).
+  CROSS_ARM_UNMAPPED_IDENTITY_CODE: 'CROSS_ARM_UNMAPPED_IDENTITY_CODE',
   PALETTE_DIVERGES: 'PALETTE_DIVERGES',
   PALETTE_UNDECLARED: 'PALETTE_UNDECLARED',
 });
@@ -160,11 +191,11 @@ export function crossArmFindings({ arms, budget }) {
       // CROSS_ARM_BELOW_BUDGET made the second read as the first - a mean that never failed reported as one
       // that did, and parity's own outlier loop below then skipped the axis as already reported. The merger's
       // gate caught this on sml's cross-arm test; the test was right and this mapping was wrong.
-      code: finding.code === 'IDENTITY_DEGENERATE'
-        ? PARITY_CODES.CROSS_ARM_DEGENERATE
-        : finding.code === 'IDENTITY_PAIR_BELOW_BUDGET'
-          ? PARITY_CODES.CROSS_ARM_PAIR_BELOW_BUDGET
-          : PARITY_CODES.CROSS_ARM_BELOW_BUDGET,
+      code: translateIdentityCode(finding.code),
+      // Present only when the code above could not translate, so nothing an upstream layer emitted is lost.
+      // SPREAD conditionally rather than set to undefined: `{ identity_code: undefined }` still creates the
+      // property, which satisfies a value check while breaking the "only when unmapped" contract.
+      ...(Object.hasOwn(IDENTITY_TO_PARITY, finding.code) ? {} : { identity_code: finding.code }),
       viewport: measured[0].viewport,
       pair,
       pair_actual: pair ? weakest[finding.axis] : null,

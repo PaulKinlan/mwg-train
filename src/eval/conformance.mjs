@@ -290,6 +290,20 @@ export function variantIdentity(target, variants) {
  * This lives here and is exported because `crossArmFindings` in parity.mjs delegates to the judge below
  * AND has its own budget-reading outlier loop: one rule, one place, so the two cannot drift apart.
  */
+/**
+ * Every code `identityFindings` can emit, as a published set.
+ *
+ * These exist as a list rather than as literals at each emission because the parity layer has to translate
+ * them, and the two files can drift. A guard that pattern-matched the literal shape `code: 'IDENTITY_...'`
+ * in the source would miss a fourth code written as a constant reference, so the map is checked against
+ * THIS list and the emissions come from it (mwg-train-7yp).
+ */
+export const IDENTITY_CODES = Object.freeze({
+  DEGENERATE: 'IDENTITY_DEGENERATE',
+  BELOW_BUDGET: 'IDENTITY_BELOW_BUDGET',
+  PAIR_BELOW_BUDGET: 'IDENTITY_PAIR_BELOW_BUDGET',
+});
+
 export function requireBudget(budget, caller = 'identityFindings') {
   // `Number.isFinite`, not `typeof value === 'number'`: `typeof NaN === 'number'`, and `actual < NaN` is
   // false for every axis, so a NaN floor silently judges nothing - the same forbidden direction as a
@@ -334,7 +348,7 @@ export function identityFindings(identity, budget) {
     throw new TypeError(`identityFindings: expected the variantIdentity RESULT and got ${received} - pass variantIdentity(target, variants), not its .identity`);
   }
   if (identity?.degenerate) {
-    findings.push({ code: 'IDENTITY_DEGENERATE', message: 'fewer than two measurable variants: identity is vacuous, not perfect' });
+    findings.push({ code: IDENTITY_CODES.DEGENERATE, message: 'fewer than two measurable variants: identity is vacuous, not perfect' });
   }
   for (const [axis, minimum] of Object.entries(requireBudget(budget))) {
     const actual = identity?.identity?.[axis];
@@ -342,7 +356,7 @@ export function identityFindings(identity, budget) {
     if (typeof actual === 'number' && actual < minimum) {
       const pair = weakest ?? identity?.weakest_pair ?? null;
       findings.push({
-        code: 'IDENTITY_BELOW_BUDGET',
+        code: IDENTITY_CODES.BELOW_BUDGET,
         axis,
         actual,
         minimum,
@@ -360,7 +374,7 @@ export function identityFindings(identity, budget) {
     const pairScore = weakest?.[axis];
     if (typeof pairScore === 'number' && pairScore < minimum && !(typeof actual === 'number' && actual < minimum)) {
       findings.push({
-        code: 'IDENTITY_PAIR_BELOW_BUDGET',
+        code: IDENTITY_CODES.PAIR_BELOW_BUDGET,
         axis,
         actual: pairScore,
         minimum,

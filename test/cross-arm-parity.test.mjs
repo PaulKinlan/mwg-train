@@ -8,6 +8,7 @@
  */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 import test from 'node:test';
 
 import { REFERENCE_PALETTE } from '../scripts/check-cross-arm-parity.mjs';
@@ -21,8 +22,12 @@ import {
   normaliseColour,
   paletteFindings,
   paritySummary,
+  translateIdentityCode,
   viewportFindings,
 } from '../src/eval/parity.mjs';
+import { IDENTITY_CODES } from '../src/eval/conformance.mjs';
+
+const ROOT = resolve(import.meta.dirname, '..');
 
 /** A signature with the fields the conformance comparators read, parameterised so drift can be injected. */
 function signature({ width = 1280, height = 900, title = 'Booking', boxHeight = 0.1, controls = 5 } = {}) {
@@ -409,4 +414,86 @@ test('a missing budget is refused rather than reported as clean arms', () => {
       `budget ${JSON.stringify(budget)} must be refused rather than produce a clean reading`,
     );
   }
+});
+
+test('an identity code the parity layer does not know is named, not read as a mean failure', () => {
+  // The translation used to be a two-branch ternary with a fallback of CROSS_ARM_BELOW_BUDGET, which
+  // happens to be right for IDENTITY_BELOW_BUDGET and silently wrong for anything else - a future code
+  // from the identity layer would be published as "the family mean left its budget", which is exactly the
+  // mislabel that mwg-train-bmu's seam bug produced one level in. An unknown code must be visible as
+  // unknown, and must carry the code it came from.
+  assert.equal(translateIdentityCode('IDENTITY_BELOW_BUDGET'), PARITY_CODES.CROSS_ARM_BELOW_BUDGET);
+  assert.equal(translateIdentityCode('IDENTITY_PAIR_BELOW_BUDGET'), PARITY_CODES.CROSS_ARM_PAIR_BELOW_BUDGET);
+  assert.equal(translateIdentityCode('IDENTITY_DEGENERATE'), PARITY_CODES.CROSS_ARM_DEGENERATE);
+  const unknown = translateIdentityCode('IDENTITY_SOMETHING_NEW');
+  assert.notEqual(
+    unknown,
+    PARITY_CODES.CROSS_ARM_BELOW_BUDGET,
+    'an unmapped code must not be published as a mean that left its budget',
+  );
+  assert.equal(unknown, PARITY_CODES.CROSS_ARM_UNMAPPED_IDENTITY_CODE);
+  // And the code we could not translate must still be readable somewhere, or a future reader sees
+  // "unmapped" with no way to find out what was unmapped.
+  const carried = crossArmFindings({ arms: [arm('raw'), arm('hono'), arm('react')], budget: BUDGET });
+  assert.ok(
+    carried.findings.every((finding) => finding.identity_code === undefined),
+    'a translated finding must not carry a redundant identity_code',
+  );
+});
+
+// NOTE: the guard that used to sit here scanned the SOURCE for the literal shape `code: 'IDENTITY_...'`.
+// A review found that a fourth code written as a constant reference would slip past it, so it is replaced
+// by the set-based guard below, which reads the published IDENTITY_CODES list and requires the emissions
+// to come from it. It is worth recording that the old guard did fail loudly when the emission syntax
+// changed - but only because it was scanning for that exact syntax, which is the weakness, not the virtue.
+test('the unmapped fallback is literal: inherited object keys are not translations', () => {
+  // IDENTITY_TO_PARITY is a normal object, so `IDENTITY_TO_PARITY['constructor']` finds the INHERITED
+  // constructor and translateIdentityCode hands back a function instead of the unmapped code. Today no
+  // emission is named after a prototype member, so nothing is broken - but the fallback claims to cover
+  // "anything unmapped", and it does not cover anything that happens to be inherited.
+  for (const inherited of ['constructor', 'toString', 'hasOwnProperty', '__proto__', 'valueOf']) {
+    assert.equal(
+      translateIdentityCode(inherited),
+      PARITY_CODES.CROSS_ARM_UNMAPPED_IDENTITY_CODE,
+      `"${inherited}" is not a translation and must resolve to the unmapped code`,
+    );
+  }
+});
+
+test('identity_code is ABSENT on a translated finding, not merely undefined', () => {
+  // The contract is "present only when translation failed". `{ identity_code: undefined }` satisfies a
+  // value check while still creating an own property, so the assertion has to be about the property.
+  // A DRIFTED arm, so there is a finding to inspect. Three agreeing arms produce none, and a loop over an
+  // empty list passes without checking anything - which is how this assertion was vacuous on the first run.
+  const translated = crossArmFindings({
+    arms: [arm('raw'), arm('hono'), arm('react', { boxHeight: 0.5, controls: 1 })],
+    budget: BUDGET,
+  });
+  assert.ok(translated.findings.length > 0, 'premise: the drifted arm must produce a finding to inspect');
+  for (const finding of translated.findings) {
+    assert.equal(
+      Object.hasOwn(finding, 'identity_code'),
+      false,
+      `a translated finding must not carry an identity_code property at all: ${finding.code}`,
+    );
+  }
+});
+
+test('the identity layer publishes its code list, so the map is checked against a set and not a syntax', () => {
+  // The class guard scanned for the literal shape `code: 'IDENTITY_...'`, which a fourth emission written
+  // as a constant reference would slip past. The codes are now a shared frozen list that identityFindings
+  // itself emits from, and that list is what the map is checked against.
+  assert.ok(Array.isArray(IDENTITY_CODES) || typeof IDENTITY_CODES === 'object', 'IDENTITY_CODES must be exported');
+  const codes = Object.values(IDENTITY_CODES).sort();
+  assert.ok(codes.length >= 3, `expected several identity codes, found ${codes.join(', ')}`);
+  assert.deepEqual(
+    codes.filter((code) => translateIdentityCode(code) === PARITY_CODES.CROSS_ARM_UNMAPPED_IDENTITY_CODE),
+    [],
+    `every published identity code must be translated; unmapped: ${codes.join(', ')}`,
+  );
+  // And the source must emit from that list rather than from free-floating literals, or the list is
+  // decoration that a new code can bypass.
+  const source = readFileSync(join(ROOT, 'src/eval/conformance.mjs'), 'utf8');
+  const literals = [...new Set([...source.matchAll(/code: '(IDENTITY_[A-Z_]+)'/g)].map((match) => match[1]))].sort();
+  assert.deepEqual(literals, [], `identity codes must come from IDENTITY_CODES, found literals: ${literals.join(', ')}`);
 });
