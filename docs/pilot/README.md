@@ -11,9 +11,11 @@ to disk. The records are the evidence; this file explains what they mean.
 
 ## What the corpus is
 
-Twenty-five projects: **five server-backed archetypes × five rendering arms**. No static pages, and no
-arm that renders only in the browser — every project is server-rendered, has a driven journey that makes
-the server **write** to SQLite, and a read that proves the value is there. The catalogue is the one
+Thirty-five planned projects: **five server-backed archetypes × seven rendering arms**. Not every tree is
+checked into `pilot/projects/`; the plan reproduces each missing tree against its recorded hash.
+No static pages, and no arm that renders only in the browser — every project is server-rendered,
+has a driven journey that makes the server **write** to SQLite, and a read that proves the value is
+there. The catalogue is the one
 archetype whose own journey is a reflected query rather than a form POST, so it carries a second form and
 a second, separately driven write journey; the gate refuses a pair whose declared write journey was not
 driven or did not persist, which is what keeps that sentence true of all thirty-five.
