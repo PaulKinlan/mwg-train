@@ -54,6 +54,10 @@ export const REFERENCE_PALETTE = Object.freeze({
   '--surface': '#1e293b',
   '--accent': '#10b981',
   '--muted': '#94a3b8',
+  // Not a custom property but the same question asked of the real page: the boards declare a deep slate
+  // background, and `body-background` is what the browser COMPUTED for the rendered arm. A token a
+  // stylesheet sets is a claim; a computed background is what the user sees.
+  'body-background': '#0f172a',
 });
 
 const DEFAULT_VIEWPORTS = Object.freeze([
@@ -150,30 +154,49 @@ async function measure({ arms, viewports, runRoot, port }) {
       for (const arm of arms) {
         const screenshotPath = join(screenshotDir, `${arm.projectId}-${requested.key}.png`);
         const started = Date.now();
-        const signature = await captureSignature({
-          chrome,
-          projectDir: arm.dir,
-          port: nextPort++,
-          runDir: runRoot,
-          viewport: { width: requested.width, height: requested.height },
-          screenshotPath,
-          collect: TOKEN_SCRIPT,
-        });
-        const collected = signature.collected ?? null;
-        const clean = { ...signature };
-        delete clean.collected;
-        armsByViewport[requested.key].push({
-          framework: arm.framework,
-          viewport: requested.key,
-          signature: clean,
-          tokens: collected?.tokens ?? {},
-          colorScheme: collected?.colorScheme ?? '',
-          milliseconds: Date.now() - started,
-        });
-        screenshots.push({ arm: arm.framework, viewport: requested.key, path: screenshotPath.replace(`${ROOT}/`, '') });
-        console.log(
-          `  ${arm.framework.padEnd(14)} ${requested.key.padEnd(9)} ${signature.viewport.width}x${signature.viewport.height} ${Math.round((Date.now() - started) / 100) / 10}s`,
-        );
+        // An arm that cannot be rendered is a FINDING, not a crash. `parity.mjs` documents that absence
+        // is never silence and has an `ARM_UNMEASURED` code for it, but a cross-family review caught that
+        // the code was unreachable in the live instrument: anything `captureSignature` threw propagated
+        // out of `main()` and exited 2 with no report, so a broken arm produced nothing at all. The tool
+        // is strongest when it is measuring something unexpected, which is exactly when it must not die.
+        try {
+          const signature = await captureSignature({
+            chrome,
+            projectDir: arm.dir,
+            port: nextPort++,
+            runDir: runRoot,
+            viewport: { width: requested.width, height: requested.height },
+            screenshotPath,
+            collect: TOKEN_SCRIPT,
+          });
+          const collected = signature.collected ?? null;
+          const clean = { ...signature };
+          delete clean.collected;
+          armsByViewport[requested.key].push({
+            framework: arm.framework,
+            viewport: requested.key,
+            signature: clean,
+            // The body's computed colours are kept, not discarded: they are the browser's own measurement
+            // of what the page looks like, which is the strongest evidence available for a palette
+            // comparison. Dead data in a probe is a measurement somebody wrote and then stopped reading.
+            tokens: { ...(collected?.tokens ?? {}), 'body-background': collected?.bodyBackground ?? '' },
+            colorScheme: collected?.colorScheme ?? '',
+            milliseconds: Date.now() - started,
+          });
+          screenshots.push({ arm: arm.framework, viewport: requested.key, path: screenshotPath.replace(`${ROOT}/`, '') });
+          console.log(
+            `  ${arm.framework.padEnd(14)} ${requested.key.padEnd(9)} ${signature.viewport.width}x${signature.viewport.height} ${Math.round((Date.now() - started) / 100) / 10}s`,
+          );
+        } catch (error) {
+          armsByViewport[requested.key].push({
+            framework: arm.framework,
+            viewport: requested.key,
+            signature: null,
+            error: error?.message ?? String(error),
+            milliseconds: Date.now() - started,
+          });
+          console.log(`  ${arm.framework.padEnd(14)} ${requested.key.padEnd(9)} FAILED: ${error?.message ?? error}`);
+        }
       }
     }
   } finally {
@@ -238,10 +261,11 @@ function renderMarkdown(report) {
   if (report.palette_findings.length === 0) {
     lines.push('Every measured arm uses the declared palette.');
   } else {
-    lines.push(`| arm | token | declared | actual |`);
-    lines.push(`| --- | --- | --- | --- |`);
+    lines.push(`| arm | token | declared | actual | viewports |`);
+    lines.push(`| --- | --- | --- | --- | --- |`);
     for (const finding of report.palette_findings) {
-      lines.push(`| ${finding.arm} | ${finding.token} | ${finding.expected} | ${finding.actual ?? 'not declared'} |`);
+      const widths = (finding.viewports ?? (finding.viewport ? [finding.viewport] : [])).join(', ') || 'not recorded';
+      lines.push(`| ${finding.arm} | ${finding.token} | ${finding.expected} | ${finding.actual ?? 'not declared'} | ${widths} |`);
     }
   }
   lines.push('');

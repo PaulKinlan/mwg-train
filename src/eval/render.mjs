@@ -36,9 +36,17 @@ export async function captureSignature({ chrome, projectDir, port, runDir, viewp
     await page.goto(`http://127.0.0.1:${port}/`);
     await page.waitForSettled();
     const signature = await page.evaluate(SIGNATURE_SCRIPT);
-    const collected = collect ? await page.evaluate(collect) : null;
+    // `collect` is discriminated by whether it was PROVIDED, not by what it returned: a caller whose
+    // script legitimately evaluates to null must still receive `collected: null` rather than a signature
+    // that looks as though no probe was asked for at all. A cross-family review caught the sentinel
+    // conflating those two cases.
+    if (typeof collect !== 'string') {
+      if (screenshotPath) await page.screenshot(screenshotPath);
+      return signature;
+    }
+    const collected = await page.evaluate(collect);
     if (screenshotPath) await page.screenshot(screenshotPath);
-    return collected === null ? signature : { ...signature, collected };
+    return { ...signature, collected };
   } finally {
     if (page) await page.close().catch(() => {});
     if (server) await stopServer(server);

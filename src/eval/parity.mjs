@@ -124,11 +124,27 @@ export function crossArmFindings({ arms, budget }) {
   // result itself. Passing the axes here does not throw and does not warn - every axis reads as
   // `undefined`, `typeof undefined === 'number'` is false, and the function returns an empty findings
   // list, which looks exactly like agreement. That is a trap worth stating where the call is made.
-  const findings = identityFindings(identity, budget).map((finding) => ({
-    ...finding,
-    code: finding.code === 'IDENTITY_DEGENERATE' ? PARITY_CODES.CROSS_ARM_DEGENERATE : PARITY_CODES.CROSS_ARM_BELOW_BUDGET,
-    viewport: measured[0].viewport,
-  }));
+  //
+  // AND EVERY MEAN FINDING NAMES THE PAIR RESPONSIBLE. A cross-family review caught the inversion this
+  // replaces: the pair finding was suppressed whenever a mean finding existed for the same axis, and
+  // `identityFindings`' mean message contains no arm names - so SEVERE drift reported which axis moved
+  // but not which arm moved it, while MILD drift named the arm. Exactly backwards, and precisely the
+  // thing this bead exists to stop. The mean reading is kept (it is what the budget is written against)
+  // and the weakest pair, with its own score, is folded into it.
+  const findings = identityFindings(identity, budget).map((finding) => {
+    const weakest = finding.axis ? identity.weakest_by_axis?.[finding.axis] : null;
+    const pair = weakest && weakest.a ? `${weakest.a}/${weakest.b}` : null;
+    return {
+      ...finding,
+      code: finding.code === 'IDENTITY_DEGENERATE' ? PARITY_CODES.CROSS_ARM_DEGENERATE : PARITY_CODES.CROSS_ARM_BELOW_BUDGET,
+      viewport: measured[0].viewport,
+      pair,
+      pair_actual: pair ? weakest[finding.axis] : null,
+      message: pair
+        ? `${finding.message}; the weakest pair is ${pair} at ${weakest[finding.axis]}`
+        : finding.message,
+    };
+  });
   // AND THE OUTLIER, WHICH THE MEAN HIDES.
   //
   // `identityFindings` judges the MEAN across pairs. With seven arms there are twenty-one pairs, so one
@@ -136,14 +152,14 @@ export function crossArmFindings({ arms, budget }) {
   // with six others at 0.66 left the mean at 0.903, just above the 0.9 budget, and the instrument
   // reported NOTHING - an outlier arm passing as agreement, which is the one answer this instrument
   // exists to prevent. The module's own documentation already calls the outlier the finding, so the
-  // weakest pair per axis is judged too, by name, and reported even when the mean is healthy.
+  // weakest pair per axis is judged too and reported when the mean alone would not have reported it.
   for (const axis of IDENTITY_AXES) {
     const minimum = budget?.[axis];
     const weakest = identity.weakest_by_axis?.[axis];
     if (typeof minimum !== 'number' || !weakest || typeof weakest[axis] !== 'number') continue;
     if (weakest[axis] >= minimum) continue;
-    // Only reported when the mean did NOT already report this axis, so one bad arm produces one finding
-    // per axis rather than one from the mean and one from the pair saying the same thing twice.
+    // Only when the mean did NOT already report this axis: the mean finding above now names this same
+    // pair, so a second finding would be the same fact twice. The pair is never omitted either way.
     if (findings.some((finding) => finding.axis === axis)) continue;
     findings.push({
       code: PARITY_CODES.CROSS_ARM_PAIR_BELOW_BUDGET,
@@ -151,6 +167,7 @@ export function crossArmFindings({ arms, budget }) {
       actual: weakest[axis],
       minimum,
       pair: `${weakest.a}/${weakest.b}`,
+      pair_actual: weakest[axis],
       viewport: measured[0].viewport,
       message: `the mean for ${axis} is ${identity.identity[axis]}, within the ${minimum} budget, but ${weakest.a}/${weakest.b} agree at only ${weakest[axis]} - the mean is hiding that pair`,
     });
@@ -188,6 +205,10 @@ export function paletteFindings({ arms, declared }) {
         findings.push({
           code: PARITY_CODES.PALETTE_DIVERGES,
           arm: arm.framework,
+          // The width is carried on the finding: the same token read at three widths can differ between
+          // them, and without this a reader cannot tell which width produced which value - a finding
+          // they cannot check is a finding they have to take on trust.
+          viewport: arm.viewport ?? null,
           token: name,
           expected: normaliseColour(expected),
           actual: null,
@@ -199,6 +220,7 @@ export function paletteFindings({ arms, declared }) {
         findings.push({
           code: PARITY_CODES.PALETTE_DIVERGES,
           arm: arm.framework,
+          viewport: arm.viewport ?? null,
           token: name,
           expected: normaliseColour(expected),
           actual,
@@ -222,7 +244,14 @@ export function collapsePaletteFindings(findings) {
   const seen = new Map();
   for (const finding of findings) {
     const key = `${finding.arm}|${finding.token}|${finding.expected}|${finding.actual}`;
-    if (!seen.has(key)) seen.set(key, finding);
+    const existing = seen.get(key);
+    if (!existing) {
+      seen.set(key, { ...finding, viewports: finding.viewport ? [finding.viewport] : [] });
+    } else if (finding.viewport && !existing.viewports.includes(finding.viewport)) {
+      // The widths a finding holds at are COLLECTED rather than collapsed away, so the surviving finding
+      // says "at these widths" instead of naming one arbitrary width out of three.
+      existing.viewports.push(finding.viewport);
+    }
   }
   return [...seen.values()];
 }

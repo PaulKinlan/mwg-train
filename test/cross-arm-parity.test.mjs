@@ -225,17 +225,101 @@ test('the summary reports arm names as sets, so a duplicated arm cannot pass for
   assert.equal(duplicated.viewports[0].measured.length, summary.viewports[0].measured.length);
 });
 
-test('the declared palette is still the one the reference boards state', () => {
+/**
+ * The clause of the boards' Theme Palette line that states a colour, so the guard can check the ROLE and
+ * not merely that the hex appears somewhere in the file. A substring check passes when the palette swaps
+ * roles, or when the old value survives in a changelog beside the new one.
+ */
+export function paletteClauseFor(paletteLine, hex) {
+  return paletteLine.split(',').find((clause) => clause.toLowerCase().includes(hex.toLowerCase())) ?? '';
+}
+
+/** Which word the boards' README uses for each role, so the token-to-role mapping is stated once. */
+export const PALETTE_ROLES = Object.freeze({
+  '--bg': 'background',
+  'body-background': 'background',
+  '--surface': 'surfaces',
+  '--accent': 'accents',
+  '--muted': 'text',
+});
+
+test('the declared palette is still the one the reference boards state, BY ROLE', () => {
   // The instrument hard-codes the boards' palette as a literal, because which hex is a background rather
   // than a surface is a semantic mapping a regex should not be guessing at. This is the guard that keeps
-  // the literal honest: if the boards' own README stops stating these values, the comparison is against
-  // a palette nobody declared and every arm would be reported against a stale bar.
-  const readme = readFileSync('docs/design/archetypes/booking/README.md', 'utf8').toLowerCase();
+  // the literal honest. A cross-family review caught the first version of this test asserting only that
+  // each hex appears SOMEWHERE in the README, which passes if the roles are swapped. So the role word is
+  // checked in the same clause as the value.
+  const readme = readFileSync(new URL('../docs/design/archetypes/booking/README.md', import.meta.url), 'utf8');
+  const paletteLine = readme.split('\n').find((line) => /theme palette/i.test(line));
+  assert.ok(paletteLine, "the boards' README no longer states a Theme Palette, so there is nothing to guard");
+
   for (const [token, hex] of Object.entries(REFERENCE_PALETTE)) {
-    assert.ok(readme.includes(hex.toLowerCase()), `reference palette ${token} ${hex} is no longer stated in the boards' README`);
+    const clause = paletteClauseFor(paletteLine, hex);
+    assert.notEqual(clause, '', `reference palette ${token} ${hex} is no longer stated in the boards' README`);
+    const role = PALETTE_ROLES[token];
+    assert.ok(
+      clause.toLowerCase().includes(role),
+      `${hex} is stated in the README but not as the ${role} the palette claims it is: "${clause.trim()}"`,
+    );
   }
-  // Control: the guard must be capable of failing, so a colour nobody declared is not found.
-  assert.equal(readme.includes('#123456'), false, 'the guard would not notice a colour that is absent');
+
+  // Control: the guard must be able to fail. A clause pairing the right hex with the WRONG role is
+  // rejected, which is the exact swap the substring version of this test allowed through.
+  const swapped = '- **Theme Palette:** Deep slate surfaces (`#0f172a`), card background (`#1e293b`).';
+  assert.equal(paletteClauseFor(swapped, '#0f172a').toLowerCase().includes('background'), false);
+  assert.equal(paletteClauseFor(swapped, '#1e293b').toLowerCase().includes('surfaces'), false);
+});
+
+test('a diverged arm is named whether the mean hides it or not', () => {
+  // The inversion a cross-family review caught in the first version of the outlier logic: `identityFindings`
+  // messages contain no arm names, and the pair finding was suppressed whenever the mean also failed - so
+  // SEVERE drift reported which axis moved but not which arm, while MILD drift named it. Both cases are
+  // asserted here, because the severe one is the one that matters and the one that used to be silent.
+  const seven = ['raw', 'hono', 'react', 'preact', 'vue', 'webcomponents', 'svelte'];
+
+  const severe = crossArmFindings({
+    arms: seven.map((framework) => (framework === 'preact' ? arm(framework, { boxHeight: 0.5 }) : arm(framework))),
+    budget: BUDGET,
+  });
+  assert.ok(severe.identity.geometry < BUDGET.geometry, 'premise: the mean fails at this drift');
+  const severeNamed = severe.findings.filter((finding) => finding.pair && finding.pair.split('/').includes('preact'));
+  assert.ok(severeNamed.length > 0, 'severe drift must still name the arm responsible, not only the axis');
+  assert.ok(
+    severeNamed.every((finding) => typeof finding.message === 'string' && finding.message.includes('preact')),
+    'the arm must be named in the message a reader actually sees',
+  );
+
+  const mild = crossArmFindings({
+    arms: seven.map((framework) => (framework === 'preact' ? arm(framework, { boxHeight: 0.13 }) : arm(framework))),
+    budget: BUDGET,
+  });
+  assert.ok(mild.identity.geometry >= BUDGET.geometry, 'premise: the mean passes at this drift');
+  const mildNamed = mild.findings.filter((finding) => finding.pair && finding.pair.split('/').includes('preact'));
+  assert.ok(mildNamed.length > 0, 'mild drift hidden by the mean must also name the arm');
+});
+
+test('an arm that produced no signature is reported, not dropped', () => {
+  // `parity.mjs` promises that absence is never silence. A cross-family review caught that promise being
+  // unreachable: the live instrument threw instead of recording the arm, and a missing arm could not
+  // appear in `missing` because it was never added in the first place.
+  const viewports = [{ key: '390x844', width: 390, height: 844 }];
+  const summary = paritySummary({
+    archetype: 'booking',
+    viewports,
+    armsByViewport: {
+      '390x844': [
+        arm('raw', { width: 390, height: 844 }),
+        { framework: 'vue', viewport: '390x844', signature: null, error: 'server did not become healthy' },
+      ],
+    },
+    budget: BUDGET,
+  });
+  assert.deepEqual(summary.viewports[0].measured, ['raw']);
+  assert.deepEqual(summary.viewports[0].missing, ['vue'], 'an unmeasured arm must be listed as missing, not absent');
+  assert.ok(
+    summary.findings.some((finding) => finding.code === PARITY_CODES.ARM_UNMEASURED),
+    'an unmeasured arm must produce ARM_UNMEASURED',
+  );
 });
 
 test('palette findings are collapsed across widths, but not across real differences', () => {

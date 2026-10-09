@@ -3,7 +3,7 @@
   "baseline_definition": "deterministic repair of the project by our own Modern Web Guidance rule specifications; no model and no teacher in the loop",
   "baseline_tool": "src/corpus/uplift.mjs",
   "archetype": "booking",
-  "generated_at": "2026-10-09T19:28:14.475Z",
+  "generated_at": "2026-10-09T19:35:12.797Z",
   "viewports": [
     {
       "viewport": {
@@ -631,565 +631,1098 @@
     "--bg": "#0f172a",
     "--surface": "#1e293b",
     "--accent": "#10b981",
-    "--muted": "#94a3b8"
+    "--muted": "#94a3b8",
+    "body-background": "#0f172a"
   },
   "palette_findings": [
     {
       "code": "PALETTE_DIVERGES",
       "arm": "hono",
+      "viewport": "390x844",
       "token": "--bg",
       "expected": "#0f172a",
       "actual": "#ffffff",
-      "message": "hono uses #ffffff for --bg where the reference boards declare #0f172a"
+      "message": "hono uses #ffffff for --bg where the reference boards declare #0f172a",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
     },
     {
       "code": "PALETTE_DIVERGES",
       "arm": "hono",
+      "viewport": "390x844",
       "token": "--surface",
       "expected": "#1e293b",
       "actual": null,
-      "message": "hono declares no --surface, so it cannot satisfy the #1e293b the reference boards declare"
+      "message": "hono declares no --surface, so it cannot satisfy the #1e293b the reference boards declare",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
     },
     {
       "code": "PALETTE_DIVERGES",
       "arm": "hono",
+      "viewport": "390x844",
       "token": "--accent",
       "expected": "#10b981",
       "actual": "#1b4fd8",
-      "message": "hono uses #1b4fd8 for --accent where the reference boards declare #10b981"
+      "message": "hono uses #1b4fd8 for --accent where the reference boards declare #10b981",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
     },
     {
       "code": "PALETTE_DIVERGES",
       "arm": "hono",
+      "viewport": "390x844",
       "token": "--muted",
       "expected": "#94a3b8",
       "actual": null,
-      "message": "hono declares no --muted, so it cannot satisfy the #94a3b8 the reference boards declare"
+      "message": "hono declares no --muted, so it cannot satisfy the #94a3b8 the reference boards declare",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "hono",
+      "viewport": "390x844",
+      "token": "body-background",
+      "expected": "#0f172a",
+      "actual": "#ffffff",
+      "message": "hono uses #ffffff for body-background where the reference boards declare #0f172a",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
     },
     {
       "code": "PALETTE_DIVERGES",
       "arm": "raw",
+      "viewport": "390x844",
       "token": "--bg",
       "expected": "#0f172a",
       "actual": "#ffffff",
-      "message": "raw uses #ffffff for --bg where the reference boards declare #0f172a"
+      "message": "raw uses #ffffff for --bg where the reference boards declare #0f172a",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
     },
     {
       "code": "PALETTE_DIVERGES",
       "arm": "raw",
+      "viewport": "390x844",
       "token": "--surface",
       "expected": "#1e293b",
       "actual": null,
-      "message": "raw declares no --surface, so it cannot satisfy the #1e293b the reference boards declare"
+      "message": "raw declares no --surface, so it cannot satisfy the #1e293b the reference boards declare",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
     },
     {
       "code": "PALETTE_DIVERGES",
       "arm": "raw",
+      "viewport": "390x844",
       "token": "--accent",
       "expected": "#10b981",
       "actual": "#1b4fd8",
-      "message": "raw uses #1b4fd8 for --accent where the reference boards declare #10b981"
+      "message": "raw uses #1b4fd8 for --accent where the reference boards declare #10b981",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
     },
     {
       "code": "PALETTE_DIVERGES",
       "arm": "raw",
+      "viewport": "390x844",
       "token": "--muted",
       "expected": "#94a3b8",
       "actual": null,
-      "message": "raw declares no --muted, so it cannot satisfy the #94a3b8 the reference boards declare"
+      "message": "raw declares no --muted, so it cannot satisfy the #94a3b8 the reference boards declare",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "raw",
+      "viewport": "390x844",
+      "token": "body-background",
+      "expected": "#0f172a",
+      "actual": "#ffffff",
+      "message": "raw uses #ffffff for body-background where the reference boards declare #0f172a",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
     },
     {
       "code": "PALETTE_DIVERGES",
       "arm": "react",
+      "viewport": "390x844",
       "token": "--bg",
       "expected": "#0f172a",
       "actual": "#ffffff",
-      "message": "react uses #ffffff for --bg where the reference boards declare #0f172a"
+      "message": "react uses #ffffff for --bg where the reference boards declare #0f172a",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
     },
     {
       "code": "PALETTE_DIVERGES",
       "arm": "react",
+      "viewport": "390x844",
       "token": "--surface",
       "expected": "#1e293b",
       "actual": null,
-      "message": "react declares no --surface, so it cannot satisfy the #1e293b the reference boards declare"
+      "message": "react declares no --surface, so it cannot satisfy the #1e293b the reference boards declare",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
     },
     {
       "code": "PALETTE_DIVERGES",
       "arm": "react",
+      "viewport": "390x844",
       "token": "--accent",
       "expected": "#10b981",
       "actual": "#1b4fd8",
-      "message": "react uses #1b4fd8 for --accent where the reference boards declare #10b981"
+      "message": "react uses #1b4fd8 for --accent where the reference boards declare #10b981",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
     },
     {
       "code": "PALETTE_DIVERGES",
       "arm": "react",
+      "viewport": "390x844",
       "token": "--muted",
       "expected": "#94a3b8",
       "actual": null,
-      "message": "react declares no --muted, so it cannot satisfy the #94a3b8 the reference boards declare"
+      "message": "react declares no --muted, so it cannot satisfy the #94a3b8 the reference boards declare",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "react",
+      "viewport": "390x844",
+      "token": "body-background",
+      "expected": "#0f172a",
+      "actual": "#ffffff",
+      "message": "react uses #ffffff for body-background where the reference boards declare #0f172a",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
     },
     {
       "code": "PALETTE_DIVERGES",
       "arm": "preact",
+      "viewport": "390x844",
       "token": "--bg",
       "expected": "#0f172a",
       "actual": "#ffffff",
-      "message": "preact uses #ffffff for --bg where the reference boards declare #0f172a"
+      "message": "preact uses #ffffff for --bg where the reference boards declare #0f172a",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
     },
     {
       "code": "PALETTE_DIVERGES",
       "arm": "preact",
+      "viewport": "390x844",
       "token": "--surface",
       "expected": "#1e293b",
       "actual": null,
-      "message": "preact declares no --surface, so it cannot satisfy the #1e293b the reference boards declare"
+      "message": "preact declares no --surface, so it cannot satisfy the #1e293b the reference boards declare",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
     },
     {
       "code": "PALETTE_DIVERGES",
       "arm": "preact",
+      "viewport": "390x844",
       "token": "--accent",
       "expected": "#10b981",
       "actual": "#1b4fd8",
-      "message": "preact uses #1b4fd8 for --accent where the reference boards declare #10b981"
+      "message": "preact uses #1b4fd8 for --accent where the reference boards declare #10b981",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
     },
     {
       "code": "PALETTE_DIVERGES",
       "arm": "preact",
+      "viewport": "390x844",
       "token": "--muted",
       "expected": "#94a3b8",
       "actual": null,
-      "message": "preact declares no --muted, so it cannot satisfy the #94a3b8 the reference boards declare"
+      "message": "preact declares no --muted, so it cannot satisfy the #94a3b8 the reference boards declare",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "preact",
+      "viewport": "390x844",
+      "token": "body-background",
+      "expected": "#0f172a",
+      "actual": "#ffffff",
+      "message": "preact uses #ffffff for body-background where the reference boards declare #0f172a",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
     },
     {
       "code": "PALETTE_DIVERGES",
       "arm": "vue",
+      "viewport": "390x844",
       "token": "--bg",
       "expected": "#0f172a",
       "actual": "#ffffff",
-      "message": "vue uses #ffffff for --bg where the reference boards declare #0f172a"
+      "message": "vue uses #ffffff for --bg where the reference boards declare #0f172a",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
     },
     {
       "code": "PALETTE_DIVERGES",
       "arm": "vue",
+      "viewport": "390x844",
       "token": "--surface",
       "expected": "#1e293b",
       "actual": null,
-      "message": "vue declares no --surface, so it cannot satisfy the #1e293b the reference boards declare"
+      "message": "vue declares no --surface, so it cannot satisfy the #1e293b the reference boards declare",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
     },
     {
       "code": "PALETTE_DIVERGES",
       "arm": "vue",
+      "viewport": "390x844",
       "token": "--accent",
       "expected": "#10b981",
       "actual": "#1b4fd8",
-      "message": "vue uses #1b4fd8 for --accent where the reference boards declare #10b981"
+      "message": "vue uses #1b4fd8 for --accent where the reference boards declare #10b981",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
     },
     {
       "code": "PALETTE_DIVERGES",
       "arm": "vue",
+      "viewport": "390x844",
       "token": "--muted",
       "expected": "#94a3b8",
       "actual": null,
-      "message": "vue declares no --muted, so it cannot satisfy the #94a3b8 the reference boards declare"
+      "message": "vue declares no --muted, so it cannot satisfy the #94a3b8 the reference boards declare",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "vue",
+      "viewport": "390x844",
+      "token": "body-background",
+      "expected": "#0f172a",
+      "actual": "#ffffff",
+      "message": "vue uses #ffffff for body-background where the reference boards declare #0f172a",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
     },
     {
       "code": "PALETTE_DIVERGES",
       "arm": "webcomponents",
+      "viewport": "390x844",
       "token": "--bg",
       "expected": "#0f172a",
       "actual": "#ffffff",
-      "message": "webcomponents uses #ffffff for --bg where the reference boards declare #0f172a"
+      "message": "webcomponents uses #ffffff for --bg where the reference boards declare #0f172a",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
     },
     {
       "code": "PALETTE_DIVERGES",
       "arm": "webcomponents",
+      "viewport": "390x844",
       "token": "--surface",
       "expected": "#1e293b",
       "actual": null,
-      "message": "webcomponents declares no --surface, so it cannot satisfy the #1e293b the reference boards declare"
+      "message": "webcomponents declares no --surface, so it cannot satisfy the #1e293b the reference boards declare",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
     },
     {
       "code": "PALETTE_DIVERGES",
       "arm": "webcomponents",
+      "viewport": "390x844",
       "token": "--accent",
       "expected": "#10b981",
       "actual": "#1b4fd8",
-      "message": "webcomponents uses #1b4fd8 for --accent where the reference boards declare #10b981"
+      "message": "webcomponents uses #1b4fd8 for --accent where the reference boards declare #10b981",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
     },
     {
       "code": "PALETTE_DIVERGES",
       "arm": "webcomponents",
+      "viewport": "390x844",
       "token": "--muted",
       "expected": "#94a3b8",
       "actual": null,
-      "message": "webcomponents declares no --muted, so it cannot satisfy the #94a3b8 the reference boards declare"
+      "message": "webcomponents declares no --muted, so it cannot satisfy the #94a3b8 the reference boards declare",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "webcomponents",
+      "viewport": "390x844",
+      "token": "body-background",
+      "expected": "#0f172a",
+      "actual": "#ffffff",
+      "message": "webcomponents uses #ffffff for body-background where the reference boards declare #0f172a",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
     },
     {
       "code": "PALETTE_DIVERGES",
       "arm": "svelte",
+      "viewport": "390x844",
       "token": "--bg",
       "expected": "#0f172a",
       "actual": "#ffffff",
-      "message": "svelte uses #ffffff for --bg where the reference boards declare #0f172a"
+      "message": "svelte uses #ffffff for --bg where the reference boards declare #0f172a",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
     },
     {
       "code": "PALETTE_DIVERGES",
       "arm": "svelte",
+      "viewport": "390x844",
       "token": "--surface",
       "expected": "#1e293b",
       "actual": null,
-      "message": "svelte declares no --surface, so it cannot satisfy the #1e293b the reference boards declare"
+      "message": "svelte declares no --surface, so it cannot satisfy the #1e293b the reference boards declare",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
     },
     {
       "code": "PALETTE_DIVERGES",
       "arm": "svelte",
+      "viewport": "390x844",
       "token": "--accent",
       "expected": "#10b981",
       "actual": "#1b4fd8",
-      "message": "svelte uses #1b4fd8 for --accent where the reference boards declare #10b981"
+      "message": "svelte uses #1b4fd8 for --accent where the reference boards declare #10b981",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
     },
     {
       "code": "PALETTE_DIVERGES",
       "arm": "svelte",
+      "viewport": "390x844",
       "token": "--muted",
       "expected": "#94a3b8",
       "actual": null,
-      "message": "svelte declares no --muted, so it cannot satisfy the #94a3b8 the reference boards declare"
+      "message": "svelte declares no --muted, so it cannot satisfy the #94a3b8 the reference boards declare",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "svelte",
+      "viewport": "390x844",
+      "token": "body-background",
+      "expected": "#0f172a",
+      "actual": "#ffffff",
+      "message": "svelte uses #ffffff for body-background where the reference boards declare #0f172a",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
     }
   ],
   "findings": [
     {
       "code": "PALETTE_DIVERGES",
       "arm": "hono",
+      "viewport": "390x844",
       "token": "--bg",
       "expected": "#0f172a",
       "actual": "#ffffff",
-      "message": "hono uses #ffffff for --bg where the reference boards declare #0f172a"
+      "message": "hono uses #ffffff for --bg where the reference boards declare #0f172a",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
     },
     {
       "code": "PALETTE_DIVERGES",
       "arm": "hono",
+      "viewport": "390x844",
       "token": "--surface",
       "expected": "#1e293b",
       "actual": null,
-      "message": "hono declares no --surface, so it cannot satisfy the #1e293b the reference boards declare"
+      "message": "hono declares no --surface, so it cannot satisfy the #1e293b the reference boards declare",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
     },
     {
       "code": "PALETTE_DIVERGES",
       "arm": "hono",
+      "viewport": "390x844",
       "token": "--accent",
       "expected": "#10b981",
       "actual": "#1b4fd8",
-      "message": "hono uses #1b4fd8 for --accent where the reference boards declare #10b981"
+      "message": "hono uses #1b4fd8 for --accent where the reference boards declare #10b981",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
     },
     {
       "code": "PALETTE_DIVERGES",
       "arm": "hono",
+      "viewport": "390x844",
       "token": "--muted",
       "expected": "#94a3b8",
       "actual": null,
-      "message": "hono declares no --muted, so it cannot satisfy the #94a3b8 the reference boards declare"
+      "message": "hono declares no --muted, so it cannot satisfy the #94a3b8 the reference boards declare",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "hono",
+      "viewport": "390x844",
+      "token": "body-background",
+      "expected": "#0f172a",
+      "actual": "#ffffff",
+      "message": "hono uses #ffffff for body-background where the reference boards declare #0f172a",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
     },
     {
       "code": "PALETTE_DIVERGES",
       "arm": "raw",
+      "viewport": "390x844",
       "token": "--bg",
       "expected": "#0f172a",
       "actual": "#ffffff",
-      "message": "raw uses #ffffff for --bg where the reference boards declare #0f172a"
+      "message": "raw uses #ffffff for --bg where the reference boards declare #0f172a",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
     },
     {
       "code": "PALETTE_DIVERGES",
       "arm": "raw",
+      "viewport": "390x844",
       "token": "--surface",
       "expected": "#1e293b",
       "actual": null,
-      "message": "raw declares no --surface, so it cannot satisfy the #1e293b the reference boards declare"
+      "message": "raw declares no --surface, so it cannot satisfy the #1e293b the reference boards declare",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
     },
     {
       "code": "PALETTE_DIVERGES",
       "arm": "raw",
+      "viewport": "390x844",
       "token": "--accent",
       "expected": "#10b981",
       "actual": "#1b4fd8",
-      "message": "raw uses #1b4fd8 for --accent where the reference boards declare #10b981"
+      "message": "raw uses #1b4fd8 for --accent where the reference boards declare #10b981",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
     },
     {
       "code": "PALETTE_DIVERGES",
       "arm": "raw",
+      "viewport": "390x844",
       "token": "--muted",
       "expected": "#94a3b8",
       "actual": null,
-      "message": "raw declares no --muted, so it cannot satisfy the #94a3b8 the reference boards declare"
+      "message": "raw declares no --muted, so it cannot satisfy the #94a3b8 the reference boards declare",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "raw",
+      "viewport": "390x844",
+      "token": "body-background",
+      "expected": "#0f172a",
+      "actual": "#ffffff",
+      "message": "raw uses #ffffff for body-background where the reference boards declare #0f172a",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
     },
     {
       "code": "PALETTE_DIVERGES",
       "arm": "react",
+      "viewport": "390x844",
       "token": "--bg",
       "expected": "#0f172a",
       "actual": "#ffffff",
-      "message": "react uses #ffffff for --bg where the reference boards declare #0f172a"
+      "message": "react uses #ffffff for --bg where the reference boards declare #0f172a",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
     },
     {
       "code": "PALETTE_DIVERGES",
       "arm": "react",
+      "viewport": "390x844",
       "token": "--surface",
       "expected": "#1e293b",
       "actual": null,
-      "message": "react declares no --surface, so it cannot satisfy the #1e293b the reference boards declare"
+      "message": "react declares no --surface, so it cannot satisfy the #1e293b the reference boards declare",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
     },
     {
       "code": "PALETTE_DIVERGES",
       "arm": "react",
+      "viewport": "390x844",
       "token": "--accent",
       "expected": "#10b981",
       "actual": "#1b4fd8",
-      "message": "react uses #1b4fd8 for --accent where the reference boards declare #10b981"
+      "message": "react uses #1b4fd8 for --accent where the reference boards declare #10b981",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
     },
     {
       "code": "PALETTE_DIVERGES",
       "arm": "react",
+      "viewport": "390x844",
       "token": "--muted",
       "expected": "#94a3b8",
       "actual": null,
-      "message": "react declares no --muted, so it cannot satisfy the #94a3b8 the reference boards declare"
+      "message": "react declares no --muted, so it cannot satisfy the #94a3b8 the reference boards declare",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "react",
+      "viewport": "390x844",
+      "token": "body-background",
+      "expected": "#0f172a",
+      "actual": "#ffffff",
+      "message": "react uses #ffffff for body-background where the reference boards declare #0f172a",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
     },
     {
       "code": "PALETTE_DIVERGES",
       "arm": "preact",
+      "viewport": "390x844",
       "token": "--bg",
       "expected": "#0f172a",
       "actual": "#ffffff",
-      "message": "preact uses #ffffff for --bg where the reference boards declare #0f172a"
+      "message": "preact uses #ffffff for --bg where the reference boards declare #0f172a",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
     },
     {
       "code": "PALETTE_DIVERGES",
       "arm": "preact",
+      "viewport": "390x844",
       "token": "--surface",
       "expected": "#1e293b",
       "actual": null,
-      "message": "preact declares no --surface, so it cannot satisfy the #1e293b the reference boards declare"
+      "message": "preact declares no --surface, so it cannot satisfy the #1e293b the reference boards declare",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
     },
     {
       "code": "PALETTE_DIVERGES",
       "arm": "preact",
+      "viewport": "390x844",
       "token": "--accent",
       "expected": "#10b981",
       "actual": "#1b4fd8",
-      "message": "preact uses #1b4fd8 for --accent where the reference boards declare #10b981"
+      "message": "preact uses #1b4fd8 for --accent where the reference boards declare #10b981",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
     },
     {
       "code": "PALETTE_DIVERGES",
       "arm": "preact",
+      "viewport": "390x844",
       "token": "--muted",
       "expected": "#94a3b8",
       "actual": null,
-      "message": "preact declares no --muted, so it cannot satisfy the #94a3b8 the reference boards declare"
+      "message": "preact declares no --muted, so it cannot satisfy the #94a3b8 the reference boards declare",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "preact",
+      "viewport": "390x844",
+      "token": "body-background",
+      "expected": "#0f172a",
+      "actual": "#ffffff",
+      "message": "preact uses #ffffff for body-background where the reference boards declare #0f172a",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
     },
     {
       "code": "PALETTE_DIVERGES",
       "arm": "vue",
+      "viewport": "390x844",
       "token": "--bg",
       "expected": "#0f172a",
       "actual": "#ffffff",
-      "message": "vue uses #ffffff for --bg where the reference boards declare #0f172a"
+      "message": "vue uses #ffffff for --bg where the reference boards declare #0f172a",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
     },
     {
       "code": "PALETTE_DIVERGES",
       "arm": "vue",
+      "viewport": "390x844",
       "token": "--surface",
       "expected": "#1e293b",
       "actual": null,
-      "message": "vue declares no --surface, so it cannot satisfy the #1e293b the reference boards declare"
+      "message": "vue declares no --surface, so it cannot satisfy the #1e293b the reference boards declare",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
     },
     {
       "code": "PALETTE_DIVERGES",
       "arm": "vue",
+      "viewport": "390x844",
       "token": "--accent",
       "expected": "#10b981",
       "actual": "#1b4fd8",
-      "message": "vue uses #1b4fd8 for --accent where the reference boards declare #10b981"
+      "message": "vue uses #1b4fd8 for --accent where the reference boards declare #10b981",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
     },
     {
       "code": "PALETTE_DIVERGES",
       "arm": "vue",
+      "viewport": "390x844",
       "token": "--muted",
       "expected": "#94a3b8",
       "actual": null,
-      "message": "vue declares no --muted, so it cannot satisfy the #94a3b8 the reference boards declare"
+      "message": "vue declares no --muted, so it cannot satisfy the #94a3b8 the reference boards declare",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "vue",
+      "viewport": "390x844",
+      "token": "body-background",
+      "expected": "#0f172a",
+      "actual": "#ffffff",
+      "message": "vue uses #ffffff for body-background where the reference boards declare #0f172a",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
     },
     {
       "code": "PALETTE_DIVERGES",
       "arm": "webcomponents",
+      "viewport": "390x844",
       "token": "--bg",
       "expected": "#0f172a",
       "actual": "#ffffff",
-      "message": "webcomponents uses #ffffff for --bg where the reference boards declare #0f172a"
+      "message": "webcomponents uses #ffffff for --bg where the reference boards declare #0f172a",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
     },
     {
       "code": "PALETTE_DIVERGES",
       "arm": "webcomponents",
+      "viewport": "390x844",
       "token": "--surface",
       "expected": "#1e293b",
       "actual": null,
-      "message": "webcomponents declares no --surface, so it cannot satisfy the #1e293b the reference boards declare"
+      "message": "webcomponents declares no --surface, so it cannot satisfy the #1e293b the reference boards declare",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
     },
     {
       "code": "PALETTE_DIVERGES",
       "arm": "webcomponents",
+      "viewport": "390x844",
       "token": "--accent",
       "expected": "#10b981",
       "actual": "#1b4fd8",
-      "message": "webcomponents uses #1b4fd8 for --accent where the reference boards declare #10b981"
+      "message": "webcomponents uses #1b4fd8 for --accent where the reference boards declare #10b981",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
     },
     {
       "code": "PALETTE_DIVERGES",
       "arm": "webcomponents",
+      "viewport": "390x844",
       "token": "--muted",
       "expected": "#94a3b8",
       "actual": null,
-      "message": "webcomponents declares no --muted, so it cannot satisfy the #94a3b8 the reference boards declare"
+      "message": "webcomponents declares no --muted, so it cannot satisfy the #94a3b8 the reference boards declare",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "webcomponents",
+      "viewport": "390x844",
+      "token": "body-background",
+      "expected": "#0f172a",
+      "actual": "#ffffff",
+      "message": "webcomponents uses #ffffff for body-background where the reference boards declare #0f172a",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
     },
     {
       "code": "PALETTE_DIVERGES",
       "arm": "svelte",
+      "viewport": "390x844",
       "token": "--bg",
       "expected": "#0f172a",
       "actual": "#ffffff",
-      "message": "svelte uses #ffffff for --bg where the reference boards declare #0f172a"
+      "message": "svelte uses #ffffff for --bg where the reference boards declare #0f172a",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
     },
     {
       "code": "PALETTE_DIVERGES",
       "arm": "svelte",
+      "viewport": "390x844",
       "token": "--surface",
       "expected": "#1e293b",
       "actual": null,
-      "message": "svelte declares no --surface, so it cannot satisfy the #1e293b the reference boards declare"
+      "message": "svelte declares no --surface, so it cannot satisfy the #1e293b the reference boards declare",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
     },
     {
       "code": "PALETTE_DIVERGES",
       "arm": "svelte",
+      "viewport": "390x844",
       "token": "--accent",
       "expected": "#10b981",
       "actual": "#1b4fd8",
-      "message": "svelte uses #1b4fd8 for --accent where the reference boards declare #10b981"
+      "message": "svelte uses #1b4fd8 for --accent where the reference boards declare #10b981",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
     },
     {
       "code": "PALETTE_DIVERGES",
       "arm": "svelte",
+      "viewport": "390x844",
       "token": "--muted",
       "expected": "#94a3b8",
       "actual": null,
-      "message": "svelte declares no --muted, so it cannot satisfy the #94a3b8 the reference boards declare"
+      "message": "svelte declares no --muted, so it cannot satisfy the #94a3b8 the reference boards declare",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
+    },
+    {
+      "code": "PALETTE_DIVERGES",
+      "arm": "svelte",
+      "viewport": "390x844",
+      "token": "body-background",
+      "expected": "#0f172a",
+      "actual": "#ffffff",
+      "message": "svelte uses #ffffff for body-background where the reference boards declare #0f172a",
+      "viewports": [
+        "390x844",
+        "768x900",
+        "1280x900"
+      ]
     }
   ],
   "screenshots": [
     {
       "arm": "hono",
       "viewport": "390x844",
-      "path": ".conformance-corpus/cross-arm-1791574072546/screenshots/booking-hono-390x844.png"
+      "path": ".conformance-corpus/cross-arm-1791574495042/screenshots/booking-hono-390x844.png"
     },
     {
       "arm": "raw",
       "viewport": "390x844",
-      "path": ".conformance-corpus/cross-arm-1791574072546/screenshots/booking-raw-390x844.png"
+      "path": ".conformance-corpus/cross-arm-1791574495042/screenshots/booking-raw-390x844.png"
     },
     {
       "arm": "react",
       "viewport": "390x844",
-      "path": ".conformance-corpus/cross-arm-1791574072546/screenshots/booking-react-390x844.png"
+      "path": ".conformance-corpus/cross-arm-1791574495042/screenshots/booking-react-390x844.png"
     },
     {
       "arm": "preact",
       "viewport": "390x844",
-      "path": ".conformance-corpus/cross-arm-1791574072546/screenshots/booking-preact-390x844.png"
+      "path": ".conformance-corpus/cross-arm-1791574495042/screenshots/booking-preact-390x844.png"
     },
     {
       "arm": "vue",
       "viewport": "390x844",
-      "path": ".conformance-corpus/cross-arm-1791574072546/screenshots/booking-vue-390x844.png"
+      "path": ".conformance-corpus/cross-arm-1791574495042/screenshots/booking-vue-390x844.png"
     },
     {
       "arm": "webcomponents",
       "viewport": "390x844",
-      "path": ".conformance-corpus/cross-arm-1791574072546/screenshots/booking-webcomponents-390x844.png"
+      "path": ".conformance-corpus/cross-arm-1791574495042/screenshots/booking-webcomponents-390x844.png"
     },
     {
       "arm": "svelte",
       "viewport": "390x844",
-      "path": ".conformance-corpus/cross-arm-1791574072546/screenshots/booking-svelte-390x844.png"
+      "path": ".conformance-corpus/cross-arm-1791574495042/screenshots/booking-svelte-390x844.png"
     },
     {
       "arm": "hono",
       "viewport": "768x900",
-      "path": ".conformance-corpus/cross-arm-1791574072546/screenshots/booking-hono-768x900.png"
+      "path": ".conformance-corpus/cross-arm-1791574495042/screenshots/booking-hono-768x900.png"
     },
     {
       "arm": "raw",
       "viewport": "768x900",
-      "path": ".conformance-corpus/cross-arm-1791574072546/screenshots/booking-raw-768x900.png"
+      "path": ".conformance-corpus/cross-arm-1791574495042/screenshots/booking-raw-768x900.png"
     },
     {
       "arm": "react",
       "viewport": "768x900",
-      "path": ".conformance-corpus/cross-arm-1791574072546/screenshots/booking-react-768x900.png"
+      "path": ".conformance-corpus/cross-arm-1791574495042/screenshots/booking-react-768x900.png"
     },
     {
       "arm": "preact",
       "viewport": "768x900",
-      "path": ".conformance-corpus/cross-arm-1791574072546/screenshots/booking-preact-768x900.png"
+      "path": ".conformance-corpus/cross-arm-1791574495042/screenshots/booking-preact-768x900.png"
     },
     {
       "arm": "vue",
       "viewport": "768x900",
-      "path": ".conformance-corpus/cross-arm-1791574072546/screenshots/booking-vue-768x900.png"
+      "path": ".conformance-corpus/cross-arm-1791574495042/screenshots/booking-vue-768x900.png"
     },
     {
       "arm": "webcomponents",
       "viewport": "768x900",
-      "path": ".conformance-corpus/cross-arm-1791574072546/screenshots/booking-webcomponents-768x900.png"
+      "path": ".conformance-corpus/cross-arm-1791574495042/screenshots/booking-webcomponents-768x900.png"
     },
     {
       "arm": "svelte",
       "viewport": "768x900",
-      "path": ".conformance-corpus/cross-arm-1791574072546/screenshots/booking-svelte-768x900.png"
+      "path": ".conformance-corpus/cross-arm-1791574495042/screenshots/booking-svelte-768x900.png"
     },
     {
       "arm": "hono",
       "viewport": "1280x900",
-      "path": ".conformance-corpus/cross-arm-1791574072546/screenshots/booking-hono-1280x900.png"
+      "path": ".conformance-corpus/cross-arm-1791574495042/screenshots/booking-hono-1280x900.png"
     },
     {
       "arm": "raw",
       "viewport": "1280x900",
-      "path": ".conformance-corpus/cross-arm-1791574072546/screenshots/booking-raw-1280x900.png"
+      "path": ".conformance-corpus/cross-arm-1791574495042/screenshots/booking-raw-1280x900.png"
     },
     {
       "arm": "react",
       "viewport": "1280x900",
-      "path": ".conformance-corpus/cross-arm-1791574072546/screenshots/booking-react-1280x900.png"
+      "path": ".conformance-corpus/cross-arm-1791574495042/screenshots/booking-react-1280x900.png"
     },
     {
       "arm": "preact",
       "viewport": "1280x900",
-      "path": ".conformance-corpus/cross-arm-1791574072546/screenshots/booking-preact-1280x900.png"
+      "path": ".conformance-corpus/cross-arm-1791574495042/screenshots/booking-preact-1280x900.png"
     },
     {
       "arm": "vue",
       "viewport": "1280x900",
-      "path": ".conformance-corpus/cross-arm-1791574072546/screenshots/booking-vue-1280x900.png"
+      "path": ".conformance-corpus/cross-arm-1791574495042/screenshots/booking-vue-1280x900.png"
     },
     {
       "arm": "webcomponents",
       "viewport": "1280x900",
-      "path": ".conformance-corpus/cross-arm-1791574072546/screenshots/booking-webcomponents-1280x900.png"
+      "path": ".conformance-corpus/cross-arm-1791574495042/screenshots/booking-webcomponents-1280x900.png"
     },
     {
       "arm": "svelte",
       "viewport": "1280x900",
-      "path": ".conformance-corpus/cross-arm-1791574072546/screenshots/booking-svelte-1280x900.png"
+      "path": ".conformance-corpus/cross-arm-1791574495042/screenshots/booking-svelte-1280x900.png"
     }
   ],
   "limits": {
