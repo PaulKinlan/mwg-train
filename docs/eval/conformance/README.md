@@ -76,8 +76,11 @@ wrapper and template scaffolding live. The floors are deliberately close to the 
 budget far below it (0.6 everywhere) leaves a third of the range free and would rubber-stamp a real
 regression. The floors were first set from the five-arm matrix (structural minimum 0.805) and still
 hold unchanged when the two R3 arms are added (0.830), which is the check that matters: the budget was
-not moved to admit the new arms. A variant that leaves the budget is a finding, and the finding names
-the pair that is weakest *on that axis*, not the overall-worst pair. `variantIdentity` also marks a
+not moved to admit the new arms. A variant that leaves the budget is a finding, and the verdict is judged
+TWICE on each axis: on the family MEAN over its pairs, and on the weakest PAIR - because a family where six
+variants agree and one has diverged has a mean that hides it, which is what `variantIdentity` computes
+`weakest_by_axis` for and what mwg-train-bmu showed was not being acted on. The finding names the pair that
+is weakest *on that axis*, not the overall-worst pair. `variantIdentity` also marks a
 family whose variants measure nothing as `degenerate` and raises a finding, because two blank pages
 otherwise agree perfectly.
 

@@ -150,12 +150,21 @@ test('every family has exactly one shared target, not one per framework', () => 
   }
 });
 
-test('the committed variant-identity reports are inside the declared budget', () => {
+test('the committed variant-identity reports carry the verdict the code computes', () => {
   for (const family of TARGET_FAMILIES) {
     const path = join(ROOT, 'docs/eval/conformance', `${family.family_id}-identity.json`);
     assert.ok(existsSync(path), `${family.family_id}-identity.json is missing; run scripts/score-variant-identity.mjs --all`);
     const report = JSON.parse(readFileSync(path, 'utf8'));
-    assert.deepEqual(report.findings, [], `${family.family_id} is below budget: ${JSON.stringify(report.findings)}`);
+    // The stored verdict must BE the verdict the code computes from the stored measurements. This used to
+    // assert `findings === []`, which pinned the old rule and went stale the moment identityFindings learned
+    // to judge the weakest pair as well as the mean - leaving four committed reports claiming compliance
+    // beside a pair below budget. A stored verdict with nothing that recomputes it is a verdict that can
+    // only be believed, and these are published artifacts.
+    assert.deepEqual(
+      report.findings,
+      identityFindings(report.identity, report.budget),
+      `${family.family_id}: the stored findings must be the findings the code computes from the stored identity (run scripts/score-variant-identity.mjs --rerender)`,
+    );
     assert.equal(report.identity.degenerate, false, `${family.family_id} identity is vacuous`);
     for (const [axis, minimum] of Object.entries(report.budget)) {
       assert.ok(report.identity.identity[axis] >= minimum, `${family.family_id}: ${axis} ${report.identity.identity[axis]} < budget ${minimum}`);

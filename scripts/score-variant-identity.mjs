@@ -132,7 +132,13 @@ export function renderIdentityMarkdown(report) {
 }
 
 /**
- * Rewrite each committed `-identity.md` from its `-identity.json`. No browser, no measurement.
+ * Rewrite each committed `-identity.json` and `-identity.md` from the measurements already inside it.
+ *
+ * No browser and no measurement - but the VERDICT is recomputed rather than carried through. It used to be
+ * passed through untouched, so when `identityFindings` learned to judge the weakest PAIR as well as the mean
+ * (mwg-train-bmu), four committed reports kept a `findings: []` that the code no longer produced, sitting
+ * beside a weakest structural pair of 0.6464 against a 0.75 budget. A verdict nothing recomputes is a verdict
+ * that can only be believed, and these are published artifacts.
  */
 function rerender(outDir) {
   const records = readdirSync(outDir).filter((name) => name.endsWith('-identity.json'));
@@ -140,12 +146,21 @@ function rerender(outDir) {
     console.error(`score-variant-identity: no *-identity.json under ${outDir}; nothing to re-render`);
     process.exit(1);
   }
+  let stale = 0;
   for (const name of records.sort()) {
     const report = JSON.parse(readFileSync(join(outDir, name), 'utf8'));
-    const md = `${renderIdentityMarkdown(report)}`;
-    writeFileSync(join(outDir, name.replace(/\.json$/, '.md')), md);
+    const previous = JSON.stringify(report.findings);
+    report.findings = identityFindings(report.identity, report.budget);
+    const changed = JSON.stringify(report.findings) !== previous;
+    if (changed) {
+      stale += 1;
+      console.log(`score-variant-identity: ${name} stored a verdict the code no longer produces; rewrote it (${report.findings.length} finding(s))`);
+    }
+    writeFileSync(join(outDir, name), `${JSON.stringify(report, null, 2)}\n`);
+    writeFileSync(join(outDir, name.replace(/\.json$/, '.md')), renderIdentityMarkdown(report));
     console.log(`score-variant-identity: re-rendered ${name.replace(/\.json$/, '.md')} from ${name} (no measurement)`);
   }
+  if (stale === 0) console.log('score-variant-identity: every stored verdict already matched the code');
 }
 
 async function main() {

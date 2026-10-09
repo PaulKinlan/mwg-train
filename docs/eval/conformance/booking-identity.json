@@ -429,7 +429,16 @@
     "controls": 0.95,
     "overall": 0.8
   },
-  "findings": [],
+  "findings": [
+    {
+      "code": "IDENTITY_PAIR_BELOW_BUDGET",
+      "axis": "structural",
+      "actual": 0.6464,
+      "minimum": 0.75,
+      "pair": "preact/vue",
+      "message": "variants preact and vue agree on structural at 0.6464, below the 0.75 budget, while the family mean is 0.8784 - the mean hides this pair"
+    }
+  ],
   "baseline_label": "mwg-train deterministic baseline",
   "baseline_definition": "deterministic repair of the project by our own Modern Web Guidance rule specifications; no model and no teacher in the loop",
   "baseline_tool": "src/corpus/uplift.mjs"

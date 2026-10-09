@@ -27,4 +27,4 @@ Shared target: `data/A6_evaluation/targets/account-recovery/signature.json` (sha
 
 Weakest pair: vue/webcomponents at 0.848.
 
-**All axes within budget.**
+**Below budget:** structural (0.67, react/webcomponents)

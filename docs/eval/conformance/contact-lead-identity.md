@@ -27,4 +27,4 @@ Shared target: `data/A6_evaluation/targets/contact-lead/signature.json` (sha256 
 
 Weakest pair: react/webcomponents at 0.850.
 
-**All axes within budget.**
+**Below budget:** structural (0.67, react/webcomponents)
