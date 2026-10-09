@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Future Web 2026 · event registration visual demo</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="demo-shell">
+    <div id="registration-view">
+      <header class="event-hero">
+        <svg class="hero-art" viewBox="0 0 320 190" aria-hidden="true" focusable="false" preserveAspectRatio="xMidYMid slice"><path d="M58 212C89 68 190 235 366 -28"/><path d="M110 216C129 88 244 214 368 -14"/><path d="M160 213C166 124 289 180 368 3"/></svg>
+        <h1>Future Web 2026</h1>
+        <p>24–25 October · Barbican Centre, London</p>
+        <p class="capacity-note"><span aria-hidden="true" class="capacity-dot"></span>Reference board depicts 142 of 200 seats filled — illustrative only, no live inventory.</p>
+      </header>
+
+      <form id="registration-form" action="/register" method="post" aria-labelledby="form-heading">
+        <h2 id="form-heading">Event details &amp; ticket selection</h2>
+        <p class="form-lead">Choose illustrated ticket tiers and preview an attendee pass. No registration or payment takes place.</p>
+        <fieldset class="ticket-fieldset" aria-describedby="ticket-hint tier-error">
+          <legend>Ticket tiers</legend>
+          <p class="hint" id="ticket-hint">Illustrative board prices only; choose at least one. No seats are reserved.</p>
+          <div class="ticket-grid">
+            <div class="ticket-row">
+              <label for="general">General Admission <span>£120 illustrated</span></label>
+              <div class="stepper">
+                <button type="button" data-tier="general" data-step="-1" aria-label="Remove one General Admission ticket" disabled>−</button>
+                <input id="general" name="generalTickets" type="number" min="0" max="10" step="1" value="1" inputmode="numeric" aria-label="General Admission quantity" disabled>
+                <button type="button" data-tier="general" data-step="1" aria-label="Add one General Admission ticket" disabled>+</button>
+              </div>
+            </div>
+            <div class="ticket-row">
+              <label for="workshop">Workshop Pass <span>£220 illustrated</span></label>
+              <div class="stepper">
+                <button type="button" data-tier="workshop" data-step="-1" aria-label="Remove one Workshop Pass" disabled>−</button>
+                <input id="workshop" name="workshopTickets" type="number" min="0" max="10" step="1" value="0" inputmode="numeric" aria-label="Workshop Pass quantity" disabled>
+                <button type="button" data-tier="workshop" data-step="1" aria-label="Add one Workshop Pass" disabled>+</button>
+              </div>
+            </div>
+          </div>
+          <p class="error-message" id="tier-error" hidden role="alert">Select at least one illustrated ticket to preview the pass.</p>
+        </fieldset>
+        <p class="estimate" id="estimate" role="status">Illustrated total: £120 for 1 ticket · not a charge</p>
+        <div class="fields">
+          <div class="field"><label for="attendee">Attendee name <span aria-hidden="true">*</span></label><input id="attendee" name="name" type="text" autocomplete="name" pattern=".*\S.*" title="Enter a name, not just spaces" required disabled></div>
+          <div class="field"><label for="organization">Organization <span class="optional">optional</span></label><input id="organization" name="organization" type="text" autocomplete="organization" disabled></div>
+          <div class="field"><label for="email">Work email <span aria-hidden="true">*</span></label><input id="email" name="email" type="email" autocomplete="email" autocapitalize="off" autocorrect="off" spellcheck="false" required disabled></div>
+          <div class="field"><label for="dietary">Dietary preferences <span class="optional">optional</span></label><textarea id="dietary" name="dietary" rows="2" disabled></textarea></div>
+        </div>
+        <button type="submit" class="primary-action" id="continue" disabled>Continue to Payment</button>
+        <p class="hint after-action">This button opens a local ticket <em>preview</em>. No payment, registration, badge, seat reservation or QR check-in is available.</p>
+        <noscript><p class="hint">JavaScript is required to preview this demo. The form stays disabled and submits nothing.</p></noscript>
+      </form>
+    </div>
+
+    <section id="pass-view" aria-labelledby="pass-heading" hidden>
+      <header class="pass-header"><p>Future Web 2026 · illustrated event</p><button id="edit-details" class="quiet-action" type="button">Edit details</button></header>
+      <h1 id="pass-heading" tabindex="-1">Digital ticket pass preview</h1>
+      <p class="preview-warning" role="status">Not a confirmed registration. No payment or reservation occurred. This pass and its QR-style badge are not valid for entry.</p>
+      <article class="event-pass" aria-label="Illustrative attendee ticket design">
+        <div class="qr-badge" role="img" aria-label="Decorative QR-style badge, not scannable">
+          <svg viewBox="0 0 140 140" width="140" height="140" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="5"><rect x="12" y="12" width="28" height="28"/><rect x="100" y="12" width="28" height="28"/><rect x="12" y="100" width="28" height="28"/></g><path d="M57 23h25M58 35h15M69 100h34M75 114h21" stroke="currentColor" stroke-width="6"/><rect x="44" y="51" width="67" height="35" rx="4" fill="#0f172a"/><text x="77" y="74" text-anchor="middle" fill="white" font-family="system-ui,sans-serif" font-size="13" font-weight="700">DEMO</text></svg>
+        </div>
+        <p class="qr-warning">Illustrative badge · do not scan</p>
+        <dl class="pass-details"><div><dt>Attendee</dt><dd id="attendee-name">Sarah Jenkins</dd></div><div><dt>Ticket selections</dt><dd id="pass-tickets">Workshop Pass × 1 · £220 illustrated</dd></div><div><dt>Illustrated total</dt><dd id="pass-total">£220 · not charged</dd></div><div><dt>Event</dt><dd>Future Web 2026 · 24–25 October · Barbican Centre, London</dd></div></dl>
+        <p class="pass-status">Design preview · not valid for entry</p>
+      </article>
+      <div class="pass-actions"><button disabled type="button">Save to Apple Wallet</button><button disabled type="button">Download PDF Badge</button></div>
+      <p class="hint pass-help">No ticket file, wallet pass or receipt was created. <button type="button" class="text-action" id="start-over">Start over</button></p>
+    </section>
+  </main>
+  <script>
+    (() => {
+      const form = document.querySelector('#registration-form');
+      const registration = document.querySelector('#registration-view');
+      const pass = document.querySelector('#pass-view');
+      const general = document.querySelector('#general');
+      const workshop = document.querySelector('#workshop');
+      const tierError = document.querySelector('#tier-error');
+      const estimate = document.querySelector('#estimate');
+      const quantities = [general, workshop];
+      const count = (input) => Number(input.value);
+      const validCount = (input) => Number.isInteger(count(input)) && count(input) >= 0 && count(input) <= 10 && input.value !== '';
+      const total = () => count(general) * 120 + count(workshop) * 220;
+      function updateTickets() {
+        for (const input of quantities) {
+          const tier = input.id;
+          const minus = document.querySelector(`[data-tier="${tier}"][data-step="-1"]`);
+          const plus = document.querySelector(`[data-tier="${tier}"][data-step="1"]`);
+          minus.disabled = !validCount(input) || count(input) === 0;
+          plus.disabled = !validCount(input) || count(input) === 10;
+        }
+        const okay = quantities.every(validCount);
+        const n = count(general) + count(workshop);
+        estimate.textContent = okay ? `Illustrated total: £${total()} for ${n} ticket${n === 1 ? '' : 's'} · not a charge` : 'Enter whole ticket quantities between 0 and 10.';
+        if (okay && n > 0) tierError.hidden = true;
+      }
+      form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        if (!quantities.every(validCount)) return;
+        if (count(general) + count(workshop) === 0) { tierError.hidden = false; general.focus(); return; }
+        tierError.hidden = true;
+        if (!form.reportValidity()) return;
+        const selections = [];
+        if (count(general)) selections.push(`General Admission × ${count(general)} · £120 each`);
+        if (count(workshop)) selections.push(`Workshop Pass × ${count(workshop)} · £220 each`);
+        document.querySelector('#attendee-name').textContent = document.querySelector('#attendee').value.trim();
+        document.querySelector('#pass-tickets').textContent = selections.join('; ');
+        document.querySelector('#pass-total').textContent = `£${total()} · not charged`;
+        showPass();
+      });
+      form.addEventListener('click', (event) => {
+        const button = event.target.closest('[data-tier][data-step]');
+        if (!button || button.disabled) return;
+        const input = document.querySelector(`#${button.dataset.tier}`);
+        input.value = String(Math.max(0, Math.min(10, count(input) + Number(button.dataset.step))));
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+      for (const input of quantities) input.addEventListener('input', updateTickets);
+      for (const field of form.querySelectorAll('input[required]')) {
+        const sync = () => requestAnimationFrame(() => {
+          if (field.matches(':user-invalid')) field.setAttribute('aria-invalid', 'true');
+          else field.removeAttribute('aria-invalid');
+        });
+        field.addEventListener('invalid', sync);
+        field.addEventListener('blur', sync);
+        field.addEventListener('input', sync);
+      }
+      function showPass() { registration.hidden = true; pass.hidden = false; document.querySelector('#pass-heading').focus(); }
+      const edit = () => { pass.hidden = true; registration.hidden = false; document.querySelector('#attendee').focus(); };
+      document.querySelector('#edit-details').addEventListener('click', edit);
+      document.querySelector('#start-over').addEventListener('click', () => { form.reset(); updateTickets(); edit(); });
+      // The form cannot submit to its unserved /register route before this listener is installed.
+      for (const element of form.querySelectorAll('[disabled]')) element.disabled = false;
+      updateTickets();
+      if (new URLSearchParams(location.search).get('view') === 'pass') showPass();
+    })();
+  </script>
+</body>
+</html>
