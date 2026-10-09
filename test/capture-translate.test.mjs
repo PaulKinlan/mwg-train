@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import process from 'node:process';
 
 import { translateCapture, buildCapturedProjects, TranslationError, MAPPABLE_CONTROL_TYPES } from '../src/capture/translate.mjs';
@@ -626,6 +626,62 @@ test('the CLI refuses differing existing output, and replaces it only with --ove
   const replaced = cli(['--overwrite']);
   assert.match(replaced, /built react ->/);
   assert.notEqual(readFileSync(stale, 'utf8'), '// built by an older generator\n');
+});
+
+test('a repeated build writes nothing at all, so an identical published tree is never touched', (t) => {
+  const temp = mkdtempSync(join(tmpdir(), 'capture-noop-'));
+  t.after(() => rmSync(temp, { recursive: true, force: true }));
+  const spec = translateCapture({ capture: fixtureCapture(), flow: fixtureFlow() });
+  const first = buildCapturedProjects({ spec, outDir: temp, testTempDir: temp });
+  const stamp = (dir) => readdirSync(dir, { recursive: true, withFileTypes: true })
+    .filter((entry) => entry.isFile())
+    .map((entry) => `${entry.parentPath}/${entry.name}:${statSync(join(entry.parentPath, entry.name)).mtimeMs}`)
+    .sort();
+  const before = [...stamp(dirname(first.specPath)), ...Object.values(first.projects).flatMap(stamp)];
+
+  const again = buildCapturedProjects({ spec, outDir: temp, testTempDir: temp });
+  const after = [...stamp(dirname(again.specPath)), ...Object.values(again.projects).flatMap(stamp)];
+  assert.deepEqual(after, before, 'an identical re-run must not rewrite any file');
+});
+
+test('refuses a destination holding a symlink instead of writing through it', (t) => {
+  const temp = mkdtempSync(join(tmpdir(), 'capture-symlink-'));
+  t.after(() => rmSync(temp, { recursive: true, force: true }));
+  const spec = translateCapture({ capture: fixtureCapture(), flow: fixtureFlow() });
+  const { projects } = buildCapturedProjects({ spec, outDir: temp, testTempDir: temp });
+
+  // A symlink in the destination is not a "regular destination file": following it would write outside the store.
+  // The target holds IDENTICAL bytes, so only the entry's kind can distinguish this from a normal re-run - with
+  // a differing target the comparison would refuse on content alone and prove nothing about following symlinks.
+  const victim = join(projects.raw, 'server.mjs');
+  const outside = join(temp, 'outside.txt');
+  const original = readFileSync(victim);
+  writeFileSync(outside, original);
+  rmSync(victim);
+  symlinkSync(outside, victim);
+  const outsideBefore = statSync(outside).mtimeMs;
+
+  assert.throws(() => buildCapturedProjects({ spec, outDir: temp, testTempDir: temp }),
+    (err) => err instanceof TranslationError && /already holds different output/.test(err.message));
+  assert.ok(readFileSync(outside).equals(original), 'the target must keep its bytes');
+  assert.equal(statSync(outside).mtimeMs, outsideBefore, 'a refusal must not write through a symlink');
+  assert.ok(lstatSync(victim).isSymbolicLink(), 'the symlink itself must survive the refusal');
+});
+
+test('refuses a destination it cannot compare, instead of crashing on it', (t) => {
+  const temp = mkdtempSync(join(tmpdir(), 'capture-unreadable-'));
+  t.after(() => rmSync(temp, { recursive: true, force: true }));
+  const spec = translateCapture({ capture: fixtureCapture(), flow: fixtureFlow() });
+  const { specPath } = buildCapturedProjects({ spec, outDir: temp, testTempDir: temp });
+
+  // A directory where the spec file belongs: the comparison must refuse with a reason, not throw EISDIR.
+  rmSync(specPath);
+  mkdirSync(specPath);
+  assert.throws(() => buildCapturedProjects({ spec, outDir: temp, testTempDir: temp }),
+    (err) => err instanceof TranslationError
+      && /already holds different output/.test(err.message)
+      && err.message.includes(specPath)
+      && err.code === undefined);
 });
 
 test('refuses to overwrite existing output that differs, and replaces it only when asked', (t) => {

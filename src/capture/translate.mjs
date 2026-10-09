@@ -16,7 +16,7 @@
  */
 
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 
@@ -519,13 +519,32 @@ export function translateCapture({ capture, flow }) {
 // Output names derive from the capture's published structure, so two captures with the same form shape
 // resolve to the same family_id and therefore the same spec and project paths. Writing over that silently
 // destroys the earlier output. The default is to refuse; overwrite must be asked for explicitly.
+// Content-only comparison: empty directories and file modes are deliberately not compared. A non-regular
+// entry (symlink, socket, fifo) anywhere in the existing tree is recorded as a difference and is NEVER
+// followed - writing through a symlink would reach a file outside the output store, which is the boundary
+// this path exists to hold. A destination that cannot be read is a difference for the same reason: it is
+// refused rather than mistaken for something safe to overwrite.
 function readTree(dir) {
   const files = new Map();
   const walk = (rel) => {
-    for (const entry of readdirSync(join(dir, rel), { withFileTypes: true })) {
+    let entries;
+    try {
+      entries = readdirSync(join(dir, rel), { withFileTypes: true });
+    } catch {
+      files.set(rel === '' ? '.' : rel, null);
+      return;
+    }
+    for (const entry of entries) {
       const child = rel ? `${rel}/${entry.name}` : entry.name;
       if (entry.isDirectory()) walk(child);
-      else files.set(child, readFileSync(join(dir, child)));
+      else if (!entry.isFile()) files.set(child, null);
+      else {
+        try {
+          files.set(child, readFileSync(join(dir, child)));
+        } catch {
+          files.set(child, null);
+        }
+      }
     }
   };
   walk('');
@@ -536,9 +555,20 @@ function treesDiffer(existing, expected) {
   if (existing.size !== expected.size) return true;
   for (const [name, content] of existing) {
     const other = expected.get(name);
-    if (other === undefined || !other.equals(content)) return true;
+    if (!Buffer.isBuffer(content) || !Buffer.isBuffer(other) || !content.equals(other)) return true;
   }
   return false;
+}
+
+// Reading a directory, a dangling symlink or an unreadable file must produce a refusal with a reason, not a
+// raw EISDIR or ENOENT from the comparison itself.
+function readIfRegularFile(path) {
+  try {
+    if (!lstatSync(path).isFile()) return null;
+    return readFileSync(path, 'utf8');
+  } catch {
+    return null;
+  }
 }
 
 function refuseCollision(target, context) {
@@ -548,10 +578,12 @@ function refuseCollision(target, context) {
 }
 
 // Compare against what we are about to write rather than against a recorded corpus: re-running the same
-// capture is then a no-op, and any real difference is refused. The comparison renders the project with the
+// capture is then left alone, and any real difference is refused. The comparison renders the project with the
 // real generator into a scratch directory, so no manifest or file-layout rule is duplicated here.
-function assertProjectDestinationFree(dir, built, frameworkName, overwrite) {
-  if (overwrite || !existsSync(dir)) return;
+// Returns 'absent', 'identical' or 'replace'; it refuses anything else.
+function projectDestinationState(dir, built, frameworkName, overwrite) {
+  if (!existsSync(dir)) return 'absent';
+  if (overwrite) return 'replace';
   const scratch = mkdtempSync(join(tmpdir(), 'capture-project-check-'));
   try {
     writeProject(scratch, { ...built, includeDependencies: true });
@@ -561,6 +593,7 @@ function assertProjectDestinationFree(dir, built, frameworkName, overwrite) {
   } finally {
     rmSync(scratch, { recursive: true, force: true });
   }
+  return 'identical';
 }
 
 export function buildCapturedProjects({ spec, outDir = null, framework = null, quarantineRoot = null, repoRoot = null, testTempDir = null, overwrite = false } = {}) {
@@ -592,13 +625,16 @@ export function buildCapturedProjects({ spec, outDir = null, framework = null, q
 
   // Decide on EVERY destination before writing anything, so a refusal cannot leave a half-written spec or a
   // mixture of old and new projects behind.
-  if (!overwrite && existsSync(specPath) && readFileSync(specPath, 'utf8') !== specContents) {
+  const specExists = existsSync(specPath);
+  const specIdentical = specExists && !overwrite && readIfRegularFile(specPath) === specContents;
+  if (!overwrite && specExists && !specIdentical) {
     refuseCollision(specPath, ` (family ${spec.family_id})`);
   }
 
   const frameworksToBuild = framework ? [framework] : Object.keys(FRAMEWORKS);
   const projects = {};
   const builtProjects = {};
+  const states = {};
 
   for (const fw of frameworksToBuild) {
     if (!FRAMEWORKS[fw]) {
@@ -610,18 +646,24 @@ export function buildCapturedProjects({ spec, outDir = null, framework = null, q
       ? resolveCaptureOutputPath(join(outputDir, built.projectId), outputOptions)
       : assetStoragePath('A4_clean_room_reproduction', projectRelPath, options);
 
-    assertProjectDestinationFree(projectDir, built, fw, overwrite);
+    const state = projectDestinationState(projectDir, built, fw, overwrite);
+    states[fw] = state;
     projects[fw] = projectDir;
     builtProjects[fw] = built;
   }
 
-  mkdirSync(dirname(specPath), { recursive: true });
-  writeFileSync(specPath, specContents);
+  // An identical destination is left untouched rather than rewritten: the content is the same, so rewriting it
+  // only churns the tree (and would follow any symlink the comparison already refused).
+  if (!specIdentical) {
+    mkdirSync(dirname(specPath), { recursive: true });
+    writeFileSync(specPath, specContents);
+  }
 
   for (const [fw, projectDir] of Object.entries(projects)) {
+    if (states[fw] === 'identical') continue;
     // A replacement has to start clean: leaving the previous project's files in place would produce a
     // mixture of two captures rather than the output of one.
-    if (overwrite && existsSync(projectDir)) rmSync(projectDir, { recursive: true, force: true });
+    if (states[fw] === 'replace') rmSync(projectDir, { recursive: true, force: true });
     writeProject(projectDir, { ...builtProjects[fw], includeDependencies: true });
   }
 
