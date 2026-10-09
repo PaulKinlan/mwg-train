@@ -189,3 +189,27 @@ test('a spec route mentioned outside the table is not a finding, because it is d
   });
   assert.deepEqual(findings, []);
 });
+
+// The rule matched only backticked routes, so a claim written as plain prose - which is how prose is normally
+// written - passed it. A claim is a claim whether or not it is in code spans.
+test('catches a route the spec does not define even when it is written as plain prose', () => {
+  for (const claim of ['The admin posts to POST /admin/purge to clear it.', 'The admin posts to "POST /admin/purge".', 'The admin posts to `POST /admin/purge`.']) {
+    const findings = checkPlanDocument({
+      name: 'booking/plan.md',
+      text: doc({ Journey: SECTIONS.Journey + `\n\n${claim}` }),
+      spec: SPEC,
+      specPath: 'docs/eval/specs/booking.json',
+    });
+    assert.match(findings.map((f) => f.problem).join(' | '), /claims 'POST \/admin\/purge'/, claim);
+  }
+});
+
+test('does not flag a defined route written as plain prose, which is the control', () => {
+  const findings = checkPlanDocument({
+    name: 'booking/plan.md',
+    text: doc({ 'Data and state': SECTIONS['Data and state'] + '\n\nThe form posts to POST /book when it is submitted.' }),
+    spec: SPEC,
+    specPath: 'docs/eval/specs/booking.json',
+  });
+  assert.deepEqual(findings, []);
+});

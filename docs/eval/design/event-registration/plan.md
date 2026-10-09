@@ -56,7 +56,7 @@ is recorded by appending rather than by amending a ledger.
 
 ## Implementation status
 
-Every route this archetype's spec declares is dispatched by the generated server, but not every rule is enforced: the capacity rule is declared and nothing is waitlisted, and the `COUNT(*)` the server prepares is never used. Where an implementation detail cannot be checked, it is treated as declared rather than done.
+Every route this archetype's spec declares is answered by the generated server, by a handler or by the generated fallback for declared routes that have no handler of their own. But not every rule is enforced: the capacity rule is declared and nothing is waitlisted, and the `COUNT(*)` the server prepares is never used. Where an implementation detail cannot be checked, it is treated as declared rather than done.
 
 ## Provenance
 
