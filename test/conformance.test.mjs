@@ -12,7 +12,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
-import { controlSimilarity, conformanceScore, geometrySimilarity, identityFindings, scoreArm, structuralSimilarity, variantIdentity, WEIGHTS } from '../src/eval/conformance.mjs';
+import { controlSimilarity, conformanceScore, geometrySimilarity, IDENTITY_AXES, identityFindings, scoreArm, structuralSimilarity, variantIdentity, WEIGHTS } from '../src/eval/conformance.mjs';
 import { validateManifest } from '../src/provenance/record.mjs';
 import { parseManifest } from '../src/provenance/record.mjs';
 import { IDENTITY_BUDGET, TARGETS_MANIFEST, TARGETS_STORAGE, TARGET_FAMILIES } from '../src/eval/targets.mjs';
@@ -323,4 +323,23 @@ test('a budget whose axes are not real numbers is refused too, not just a missin
   }
   // The positive still holds: a finite floor judges, and this identity is below it.
   assert.equal(identityFindings(identity, { structural: 0.9 }).length, 1, 'a finite floor must still report');
+});
+
+test('every axis the identity layer measures has a budget, or it is judged nowhere', () => {
+  // mwg-train-om6. identityFindings judges against the axes the BUDGET names, not the axes that were measured,
+  // so an axis present in IDENTITY_AXES but absent from IDENTITY_BUDGET is silently unjudged - the forbidden
+  // direction. The lists are equal today, so this test passes as written; its value is that it FAILS the
+  // moment an axis is added on one side only, which is how the hole would open.
+  //
+  // Proven by mutation rather than by this green run: remove one axis from IDENTITY_BUDGET and the test names
+  // it as unjudged.
+  const measured = [...IDENTITY_AXES].sort();
+  const budgeted = Object.keys(IDENTITY_BUDGET).sort();
+  // The OFFENDERS, not the whole lists. The first version of this joined `measured`, so removing one floor
+  // made the failure message name all four axes as unjudged - a diagnostic that misreports what it
+  // diagnosed, which is the same class of defect as the code it guards.
+  const unjudged = measured.filter((axis) => !budgeted.includes(axis));
+  const decorative = budgeted.filter((axis) => !measured.includes(axis));
+  assert.deepEqual(unjudged, [], `these axes are measured but have no floor, so nothing judges them: ${unjudged.join(', ')}`);
+  assert.deepEqual(decorative, [], `these axes have a floor but are never measured, so the floor is decorative: ${decorative.join(', ')}`);
 });

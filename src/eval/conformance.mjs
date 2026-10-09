@@ -320,8 +320,12 @@ export function requireBudget(budget, caller = 'identityFindings') {
     const problem = entries.length === 0
       ? 'needs a budget with at least one numeric axis'
       : `cannot judge the axis/axes ${nonFinite.join(', ')}`;
+    // JSON.stringify renders NaN and Infinity as `null`, so the message meant to name the offending axis
+    // would show `"geometry":null` and invite the reader to think the budget held a null. The replacer keeps
+    // the non-finite values visible (mwg-train-dwo, folded in here because this is the throw it belongs to).
+    const shown = JSON.stringify(budget, (_key, value) => (typeof value === 'number' && !Number.isFinite(value) ? String(value) : value));
     throw new TypeError(
-      `${caller} ${problem}, got ${JSON.stringify(budget) ?? String(budget)}: `
+      `${caller} ${problem}, got ${shown ?? String(budget)}: `
       + 'an axis without a finite floor is unjudged, and unjudged must not read as agreement',
     );
   }
