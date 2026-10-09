@@ -12,15 +12,17 @@
  * only reads inline `](target)` destinations: a title attribute or an angle-bracketed destination is
  * not matched, and no document here uses those forms. If that changes, this needs to learn them.
  */
-import { mkdtempSync, readdirSync, readFileSync, rmSync, existsSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { isAbsolute, join, relative, resolve } from 'node:path';
+import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import { DESIGN_DIR, REQUIRED_SECTIONS, checkDesignDocument } from '../src/design/contract.mjs';
+import { DESIGN_DIR, REQUIRED_SECTIONS, checkDesignDocument, repositoryLinkResolver } from '../src/design/contract.mjs';
 
 const ROOT = new URL('../', import.meta.url);
-const rootPath = new URL(ROOT).pathname;
+// Canonical, because a checkout reached through a symlink would otherwise make containment a lexical
+// question about a path string rather than a question about where the bytes actually are.
+const rootPath = realpathSync(new URL(ROOT).pathname);
 
 const { ARCHETYPES } = await import(pathToFileURL(join(rootPath, 'pilot/archetypes.mjs')));
 const { FRAMEWORKS, buildProjectFor, writeProject } = await import(pathToFileURL(join(rootPath, 'pilot/frameworks.mjs')));
@@ -75,13 +77,9 @@ for (const { archetype, framework, file } of designFiles()) {
     text,
     demo,
     // A document is read from its own directory, so that is where its relative links must resolve, and
-    // the target must stay inside the repository. `relative` is used rather than a string prefix test,
-    // because a sibling directory whose name starts with the same characters is not containment.
-    resolveLink: (target) => {
-      const resolved = resolve(documentDir, target.split('#')[0]);
-      const inside = relative(rootPath, resolved);
-      return inside !== '' && !inside.startsWith('..') && !isAbsolute(inside) && existsSync(resolved);
-    },
+    // the target must land inside the repository. The resolver canonicalises both sides, so a link that
+    // is inside only as a string - a symlink whose bytes are elsewhere - is refused too.
+    resolveLink: repositoryLinkResolver({ root: rootPath, documentDir }),
   })) {
     findings.push({ at: `${where} ${finding.at}`, problem: finding.problem });
   }

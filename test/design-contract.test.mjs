@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict';
+import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { test } from 'node:test';
 
-import { REQUIRED_SECTIONS, checkDesignDocument } from '../src/design/contract.mjs';
+import { REQUIRED_SECTIONS, checkDesignDocument, repositoryLinkResolver } from '../src/design/contract.mjs';
 
 // A checker that only ever passes is not a checker, so every rule gets a document that must be rejected.
 const body = (overrides = {}) => {
@@ -86,4 +89,34 @@ test('a relative link that resolves nowhere is a finding, because documents rot'
     demo,
     resolveLink: () => false,
   }), []);
+});
+
+// The resolver is the one part of the contract that reads the filesystem, so it is tested against real
+// files and real symlinks rather than reasoned about. A path can be inside the repository as a string
+// and still be a symlink whose bytes live outside it.
+test('the link resolver refuses anything outside the repository, including through symlinks', (t) => {
+  const root = mkdtempSync(join(tmpdir(), 'link-root-'));
+  const outside = mkdtempSync(join(tmpdir(), 'link-outside-'));
+  t.after(() => {
+    rmSync(root, { recursive: true, force: true });
+    rmSync(outside, { recursive: true, force: true });
+  });
+  const documentDir = join(root, 'docs');
+  mkdirSync(documentDir, { recursive: true });
+  writeFileSync(join(root, 'inside.md'), 'inside\n');
+  writeFileSync(join(outside, 'secret.md'), 'outside\n');
+  symlinkSync(join(outside, 'secret.md'), join(root, 'leak.md'));
+  symlinkSync(outside, join(root, 'dirlink'));
+  symlinkSync(join(outside, 'gone.md'), join(root, 'dangling.md'));
+
+  const resolveLink = repositoryLinkResolver({ root, documentDir });
+  assert.equal(resolveLink('../inside.md'), true, 'a real in-repo file resolves');
+  assert.equal(resolveLink('../inside.md#section'), true, 'a fragment is not part of the path');
+  assert.equal(resolveLink('../leak.md'), false, 'a symlinked file whose bytes are outside is refused');
+  assert.equal(resolveLink('../dirlink/secret.md'), false, 'a symlinked directory component is refused');
+  assert.equal(resolveLink('../dangling.md'), false, 'a dangling symlink is refused');
+  assert.equal(resolveLink('../missing.md'), false, 'a missing file is refused');
+  assert.equal(resolveLink('../../outside.md'), false, 'escaping the root is refused');
+  assert.equal(resolveLink('..'), false, 'the repository root itself is not a file inside it');
+  assert.equal(resolveLink('../../../..'), false, 'a path well above the root is refused');
 });

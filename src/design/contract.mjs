@@ -4,10 +4,40 @@
  *
  * The verdict lives in a pure function so it can be tested without generating a project. The caller
  * supplies what the generator actually produced - the file set, the stylesheet text and the demo's own
- * routes - and gets findings back. Nothing here reads the filesystem.
+ * routes - and gets findings back. Nothing here reads the filesystem, except in the link resolver below,
+ * which is why that one is exported separately and tested against real symlinks.
  */
 
+import { realpathSync } from 'node:fs';
+import { isAbsolute, relative, resolve } from 'node:path';
+
 export const DESIGN_DIR = 'docs/eval/design';
+
+/**
+ * Builds the resolver a design document's relative links are checked against: the target is resolved from
+ * the document's own directory and must land inside the repository.
+ *
+ * Both sides are canonicalised. A path can be inside the repository as a string and still be a symlink
+ * whose bytes live outside it, and git commits symlinks, so a lexical check alone would report success
+ * for a link no reader can follow without leaving the repository. Canonicalising the root matters for the
+ * same reason: a checkout reached through a symlink would otherwise make containment a fact about a path
+ * string rather than about where the bytes are. realpathSync also rejects a missing file and a dangling
+ * symlink, and `relative` is used rather than a string prefix test, because a sibling directory whose
+ * name shares a prefix with the root is not containment.
+ */
+export function repositoryLinkResolver({ root, documentDir }) {
+  const realRoot = realpathSync(root);
+  return (target) => {
+    let real;
+    try {
+      real = realpathSync(resolve(documentDir, target.split('#')[0]));
+    } catch {
+      return false;
+    }
+    const inside = relative(realRoot, real);
+    return inside !== '' && inside !== '..' && !inside.startsWith('../') && !isAbsolute(inside);
+  };
+}
 
 // Closed section list, in order. A contract that omits "Implementation status" is exactly the document
 // that claims states it does not implement, so the section is required rather than encouraged.
