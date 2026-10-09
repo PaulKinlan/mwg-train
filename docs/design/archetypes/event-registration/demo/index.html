@@ -45,7 +45,7 @@
         </fieldset>
         <p class="estimate" id="estimate" role="status">Illustrated total: £120 for 1 ticket · not a charge</p>
         <div class="fields">
-          <div class="field"><label for="attendee">Attendee name <span aria-hidden="true">*</span></label><input id="attendee" name="name" type="text" autocomplete="name" required disabled></div>
+          <div class="field"><label for="attendee">Attendee name <span aria-hidden="true">*</span></label><input id="attendee" name="name" type="text" autocomplete="name" pattern=".*\S.*" title="Enter a name, not just spaces" required disabled></div>
           <div class="field"><label for="organization">Organization <span class="optional">optional</span></label><input id="organization" name="organization" type="text" autocomplete="organization" disabled></div>
           <div class="field"><label for="email">Work email <span aria-hidden="true">*</span></label><input id="email" name="email" type="email" autocomplete="email" autocapitalize="off" autocorrect="off" spellcheck="false" required disabled></div>
           <div class="field"><label for="dietary">Dietary preferences <span class="optional">optional</span></label><textarea id="dietary" name="dietary" rows="2" disabled></textarea></div>

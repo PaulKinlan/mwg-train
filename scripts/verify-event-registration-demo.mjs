@@ -56,6 +56,12 @@ try {
     await sleep(65);
     const missing = JSON.parse(await page.evaluate(`return JSON.stringify({ pass: document.querySelector('#pass-view').hidden, nameInvalid: document.querySelector('#attendee').matches(':user-invalid'), aria: document.querySelector('#attendee').getAttribute('aria-invalid'), focus: document.activeElement.id })`));
     check(`missing required attendee is refused with focus at ${width}`, missing.pass && missing.nameInvalid && missing.aria === 'true' && missing.focus === 'attendee', JSON.stringify(missing));
+    await page.realType('#attendee', '   ');
+    await page.evaluate(`document.querySelector('#registration-form').requestSubmit(); return true;`);
+    await sleep(65);
+    const spaces = JSON.parse(await page.evaluate(`return JSON.stringify({ pass: document.querySelector('#pass-view').hidden, mismatch: document.querySelector('#attendee').validity.patternMismatch, aria: document.querySelector('#attendee').getAttribute('aria-invalid'), focus: document.activeElement.id })`));
+    check(`whitespace-only attendee name is refused at ${width}`, spaces.pass && spaces.mismatch && spaces.aria === 'true' && spaces.focus === 'attendee', JSON.stringify(spaces));
+    await page.evaluate(`document.querySelector('#attendee').select(); return true;`);
     await page.realType('#attendee', 'Katherine Johnson');
     await page.realType('#email', 'wrong-email');
     await page.evaluate(`document.querySelector('#registration-form').requestSubmit(); return true;`);
