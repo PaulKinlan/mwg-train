@@ -429,7 +429,16 @@
     "controls": 0.95,
     "overall": 0.8
   },
-  "findings": [],
+  "findings": [
+    {
+      "code": "IDENTITY_PAIR_BELOW_BUDGET",
+      "axis": "structural",
+      "actual": 0.7269,
+      "minimum": 0.75,
+      "pair": "react/webcomponents",
+      "message": "variants react and webcomponents agree on structural at 0.7269, below the 0.75 budget, while the family mean is 0.8559 - the mean hides this pair"
+    }
+  ],
   "baseline_label": "mwg-train deterministic baseline",
   "baseline_definition": "deterministic repair of the project by our own Modern Web Guidance rule specifications; no model and no teacher in the loop",
   "baseline_tool": "src/corpus/uplift.mjs"

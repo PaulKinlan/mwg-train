@@ -27,4 +27,4 @@ Shared target: `data/A6_evaluation/targets/event-registration/signature.json` (s
 
 Weakest pair: hono/webcomponents at 0.880.
 
-**All axes within budget.**
+**Below budget:** structural (0.7269, react/webcomponents)

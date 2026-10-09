@@ -68,16 +68,28 @@ writes `docs/eval/conformance/<family>-identity.{json,md}` with both halves of t
 - the **cross-variant identity**: pairwise agreement between the raw variants, per axis, with the
   weakest pair named and the per-axis variance reported rather than averaged away.
 
-`IDENTITY_BUDGET` in `src/eval/targets.mjs` is the declared tolerance per axis: the measured minimum
-across the families less a deliberate margin (`structural` measured 0.830 -> floor 0.75, `geometry`
+`IDENTITY_BUDGET` in `src/eval/targets.mjs` is the declared tolerance per axis: the measured family MEAN
+across the families less a deliberate margin (`structural` mean 0.830 -> floor 0.75, `geometry`
 0.977 -> 0.90, `controls` 1.000 -> 0.95, `overall` 0.925 -> 0.80). `controls` is tightest because a
 form is a form in every framework; `structural` allows the most, because that is where a framework's own
 wrapper and template scaffolding live. The floors are deliberately close to the measurement - a
 budget far below it (0.6 everywhere) leaves a third of the range free and would rubber-stamp a real
-regression. The floors were first set from the five-arm matrix (structural minimum 0.805) and still
-hold unchanged when the two R3 arms are added (0.830), which is the check that matters: the budget was
-not moved to admit the new arms. A variant that leaves the budget is a finding, and the finding names
-the pair that is weakest *on that axis*, not the overall-worst pair. `variantIdentity` also marks a
+regression. The floors were first set from the five-arm matrix (structural mean minimum 0.805) and the
+MEANS still hold unchanged when the two R3 arms are added (0.830), which is the check that matters for
+whether the budget was moved to admit the new arms: it was not.
+
+The budget is judged TWICE on each axis, and the two judgements did NOT come out the same way. Every
+family means still sits above every floor. **Four of the five families record a structural PAIR below
+the 0.75 floor while their mean sits above it** - booking `preact/vue` 0.6464, contact-lead and
+account-recovery `react/webcomponents` 0.67, event-registration `react/webcomponents` 0.7269 - and
+`catalogue` is the only family with no such pair (its weakest is `react/webcomponents` at 0.7826). The
+lowest recorded structural mean is 0.8301; the lowest recorded structural pair is 0.6464. That gap is
+the whole reason the verdict is taken twice: a family where six variants agree and one has diverged has
+a mean that hides it, which is what `variantIdentity` computes `weakest_by_axis` for and what
+mwg-train-bmu showed was not being acted on. These four findings are `IDENTITY_PAIR_BELOW_BUDGET`, and
+they say the pair is below the floor - they do not say the budget is wrong, and the budget has not been
+moved to silence them. The finding names the pair that
+is weakest *on that axis*, not the overall-worst pair. `variantIdentity` also marks a
 family whose variants measure nothing as `degenerate` and raises a finding, because two blank pages
 otherwise agree perfectly.
 
@@ -99,13 +111,18 @@ measured — rather than by having no build step at all.
 
 ### Measured identity (seven pilot families' arms)
 
-| family | identity | structural | geometry | controls | weakest pair |
-| --- | --- | --- | --- | --- | --- |
-| catalogue | 0.958 | 0.902 | 0.992 | 1.000 | react/webcomponents 0.913 |
-| booking | 0.945 | 0.878 | 0.982 | 1.000 | preact/webcomponents 0.840 |
-| event-registration | 0.937 | 0.856 | 0.986 | 1.000 | hono/webcomponents 0.880 |
-| account-recovery | 0.925 | 0.830 | 0.981 | 1.000 | vue/webcomponents 0.848 |
-| contact-lead | 0.925 | 0.833 | 0.977 | 1.000 | react/webcomponents 0.850 |
+The `identity`, `structural`, `geometry` and `controls` columns are family MEANS over the pairs. The two
+pair columns are the weakest single pair, and they are on different axes: `weakest pair (overall)` is the
+weakest overall score, while `weakest structural pair` is the pair the structural budget is judged on and
+is the one four families now fall below.
+
+| family | identity | structural | geometry | controls | weakest pair (overall) | weakest structural pair |
+| --- | --- | --- | --- | --- | --- | --- |
+| catalogue | 0.958 | 0.902 | 0.992 | 1.000 | react/webcomponents 0.913 | react/webcomponents 0.7826 |
+| booking | 0.945 | 0.878 | 0.982 | 1.000 | preact/webcomponents 0.840 | preact/vue 0.6464 |
+| event-registration | 0.937 | 0.856 | 0.986 | 1.000 | hono/webcomponents 0.880 | react/webcomponents 0.7269 |
+| account-recovery | 0.925 | 0.830 | 0.981 | 1.000 | vue/webcomponents 0.848 | react/webcomponents 0.67 |
+| contact-lead | 0.925 | 0.833 | 0.977 | 1.000 | react/webcomponents 0.850 | react/webcomponents 0.67 |
 
 The reading is the point of the axis. **Geometry 0.98-0.99** and **controls 1.000**: the frameworks
 build the same set of controls in the same places, so framework choice is not moving the layout or the
@@ -123,9 +140,15 @@ a sanity check that the shared-spec premise holds - it is not evidence that the 
 independently good, and a variant that dropped its labels would show up here only because
 `controlSimilarity` takes the worse of the two sides.
 
-Per-variant deltas from the raw baseline to the shared target are in each
-`<family>-identity.md`; in all five families the mean delta is within +/-0.005, i.e. the deterministic
-a11y uplift does not move a build towards its target design.
+Per-variant uplift deltas, with BOTH builds scored against the shared target, are in each
+`<family>-identity.md`. In four of the five families the mean UPLIFT delta is within +/-0.005 - booking
++0.0046, event-registration +0.0047, contact-lead +0.0016, catalogue +0.0011 - and account-recovery is
+not: its mean is **+0.0060** across its seven arms (+0.0151, 0.0000, 0.0000, -0.0034, 0.0000, +0.0152,
++0.0151). So for account-recovery the deterministic a11y uplift does move the build measurably towards
+its target design, and for the other four it is close to neutral. An earlier correction of this paragraph
+replaced the uplift figure with +0.0102, which is a different measurement - that is `target_conformance`
+differences BETWEEN frameworks' raw builds, not the effect of the uplift on one build - and the two were
+wrongly described as the same quantity.
 
 ## Scoring a family
 
@@ -140,8 +163,12 @@ the target, and writes `docs/eval/conformance/<family>.{json,md}`.
 
 ## Result
 
-`docs/eval/conformance/booking.md` is the first family scored. The booking family means: raw 0.652,
-arm 0.659, mean delta **+0.005** across the seven arms (preact -0.001, the rest +0.001 to +0.007). Read
+`docs/eval/conformance/booking.md` is the first family scored. Its first two score columns are the SAME
+build before and after the uplift, both measured against the shared target - the header is
+`| framework | raw baseline | target conformance | delta |`, so the raw arm's `raw baseline` of 0.652 and
+its `target conformance` of 0.659 are one build scored twice, and 0.659 is not the target's own score.
+The delta is +0.006 for the raw arm. The mean delta is **+0.005** across the seven arms (preact -0.001,
+the rest +0.001 to +0.007). Read
 that as a finding,
 not a sales figure: the deterministic accessibility uplift is roughly neutral for *visual*
 conformance, within noise. That is exactly what the axis is for - it makes visible that a11y uplift

@@ -307,8 +307,9 @@ export function identityFindings(identity, budget) {
   }
   for (const [axis, minimum] of Object.entries(budget ?? {})) {
     const actual = identity?.identity?.[axis];
+    const weakest = identity?.weakest_by_axis?.[axis] ?? null;
     if (typeof actual === 'number' && actual < minimum) {
-      const pair = identity?.weakest_by_axis?.[axis] ?? identity?.weakest_pair ?? null;
+      const pair = weakest ?? identity?.weakest_pair ?? null;
       findings.push({
         code: 'IDENTITY_BELOW_BUDGET',
         axis,
@@ -316,6 +317,24 @@ export function identityFindings(identity, budget) {
         minimum,
         message: `variants agree on ${axis} at ${actual}, below the ${minimum} budget`,
         pair: pair ? `${pair.a}/${pair.b}` : null,
+      });
+    }
+    // The weakest PAIR on this axis is judged in its own right, and only when the mean passed - otherwise the
+    // mean finding above already names the pair and this would report the same fact twice.
+    //
+    // Judging the mean alone lets one diverged variant hide behind six agreeing ones. Measured on the test
+    // fixture: a mean geometry of 0.9643, comfortably inside the 0.9 budget, with a weakest pair at 0.875,
+    // below it, and ZERO findings - a family containing a badly diverged arm reported as being in agreement.
+    // The docstring above `variantIdentity` says "the outlier is the finding"; this is what makes that true.
+    const pairScore = weakest?.[axis];
+    if (typeof pairScore === 'number' && pairScore < minimum && !(typeof actual === 'number' && actual < minimum)) {
+      findings.push({
+        code: 'IDENTITY_PAIR_BELOW_BUDGET',
+        axis,
+        actual: pairScore,
+        minimum,
+        pair: `${weakest.a}/${weakest.b}`,
+        message: `variants ${weakest.a} and ${weakest.b} agree on ${axis} at ${pairScore}, below the ${minimum} budget, while the family mean is ${actual ?? 'unknown'} - the mean hides this pair`,
       });
     }
   }

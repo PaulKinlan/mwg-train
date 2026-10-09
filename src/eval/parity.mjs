@@ -150,7 +150,16 @@ export function crossArmFindings({ arms, budget }) {
     const pair = weakest && weakest.a ? `${weakest.a}/${weakest.b}` : null;
     return {
       ...finding,
-      code: finding.code === 'IDENTITY_DEGENERATE' ? PARITY_CODES.CROSS_ARM_DEGENERATE : PARITY_CODES.CROSS_ARM_BELOW_BUDGET,
+      // The code is TRANSLATED, not collapsed: `identityFindings` distinguishes a family MEAN that left the
+      // budget from a weakest PAIR that did while the mean held, and flattening both into
+      // CROSS_ARM_BELOW_BUDGET made the second read as the first - a mean that never failed reported as one
+      // that did, and parity's own outlier loop below then skipped the axis as already reported. The merger's
+      // gate caught this on sml's cross-arm test; the test was right and this mapping was wrong.
+      code: finding.code === 'IDENTITY_DEGENERATE'
+        ? PARITY_CODES.CROSS_ARM_DEGENERATE
+        : finding.code === 'IDENTITY_PAIR_BELOW_BUDGET'
+          ? PARITY_CODES.CROSS_ARM_PAIR_BELOW_BUDGET
+          : PARITY_CODES.CROSS_ARM_BELOW_BUDGET,
       viewport: measured[0].viewport,
       pair,
       pair_actual: pair ? weakest[finding.axis] : null,
@@ -159,21 +168,30 @@ export function crossArmFindings({ arms, budget }) {
         : finding.message,
     };
   });
-  // AND THE OUTLIER, WHICH THE MEAN HIDES.
+  // AND THE OUTLIER, WHICH THE MEAN HIDES - NOW A FALLBACK RATHER THAN THE ONLY GUARD.
   //
-  // `identityFindings` judges the MEAN across pairs. With seven arms there are twenty-one pairs, so one
-  // arm that has badly diverged may be averaged away: measured here, an arm whose geometry disagreed
-  // with six others at 0.66 left the mean at 0.903, just above the 0.9 budget, and the instrument
-  // reported NOTHING - an outlier arm passing as agreement, which is the one answer this instrument
-  // exists to prevent. The module's own documentation already calls the outlier the finding, so the
+  // `identityFindings` judges the MEAN across pairs AND the weakest pair on each axis, and its pair finding
+  // names the pair, its score and the mean. So for a valid input this loop no longer fires: every axis it
+  // would report has already been reported above, and the dedup below skips it. It is kept deliberately,
+  // because it is the same defence-in-depth as measuring a failed image at both ends - if the pair finding
+  // is ever removed or its wiring breaks, this still reports the outlier instead of silently reverting to a
+  // mean that hides it. A dead fallback that looks like a check is worth naming as one.
+  //
+  // The measurement that made the pair judgement necessary in the first place: with seven arms there are
+  // twenty-one pairs, so one arm that has badly diverged may be averaged away. Measured here, an arm whose
+  // geometry disagreed with six others at 0.66 left the mean at 0.903, just above the 0.9 budget, and the
+  // instrument reported NOTHING - an outlier arm passing as agreement, which is the one answer this
+  // instrument exists to prevent. The module's own documentation already calls the outlier the finding, so the
   // weakest pair per axis is judged too and reported when the mean alone would not have reported it.
   for (const axis of IDENTITY_AXES) {
     const minimum = budget?.[axis];
     const weakest = identity.weakest_by_axis?.[axis];
     if (typeof minimum !== 'number' || !weakest || typeof weakest[axis] !== 'number') continue;
     if (weakest[axis] >= minimum) continue;
-    // Only when the mean did NOT already report this axis: the mean finding above now names this same
-    // pair, so a second finding would be the same fact twice. The pair is never omitted either way.
+    // Only when this axis was NOT already reported above. Since the mapping above translates the mean and
+    // pair findings separately, an axis can arrive here already reported EITHER as a mean failure or as a
+    // hidden pair, and in both cases a second finding would be the same fact twice. The pair is never
+    // omitted either way: the mean finding also names the weakest pair for its axis.
     if (findings.some((finding) => finding.axis === axis)) continue;
     findings.push({
       code: PARITY_CODES.CROSS_ARM_PAIR_BELOW_BUDGET,

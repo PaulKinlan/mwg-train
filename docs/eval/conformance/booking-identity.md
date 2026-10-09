@@ -27,4 +27,4 @@ Shared target: `data/A6_evaluation/targets/booking/signature.json` (sha256 `c704
 
 Weakest pair: preact/webcomponents at 0.840.
 
-**All axes within budget.**
+**Below budget:** structural (0.6464, preact/vue)
