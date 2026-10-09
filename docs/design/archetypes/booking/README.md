@@ -5,6 +5,7 @@
 - **Composition Grammar:** Decision workbench / Operate
 - **Theme Palette:** Deep slate background (`#0f172a`), card surfaces (`#1e293b`) with 1px border (`#334155`), emerald green action accents (`#10b981`), muted text (`#94a3b8`).
 - **Exclusion from training:** `excluded_from_training: true`, `approved_for_training: false` (Visual Reference Design only).
+- **Rights boundary:** Training and output reuse rights were not supplied; excluded from training.
 - **Handoff and Provenance:** Generated on 2026-10-09 using `gemini-3-pro-image` via Google Antigravity OAuth image generation tool. Original prompts authored to produce high-fidelity desktop browser application mockups matching `layout-storefront.jpg` density and typography.
 - **Illustrative content warning:** Names, contact details, domains, dates, class prices, seat availability, paid receipts and QR codes in the raster mockups are unverified placeholders. Do not treat them as real bookings or payment proof; do not scan the depicted QR code as an application action. These JPEGs are visual references, not functioning interfaces.
 
