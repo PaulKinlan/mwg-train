@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
 import { test } from 'node:test';
 
 import { REQUIRED_SECTIONS, checkDesignDocument, repositoryLinkResolver } from '../src/design/contract.mjs';
@@ -119,4 +119,47 @@ test('the link resolver refuses anything outside the repository, including throu
   assert.equal(resolveLink('../../outside.md'), false, 'escaping the root is refused');
   assert.equal(resolveLink('..'), false, 'the repository root itself is not a file inside it');
   assert.equal(resolveLink('../../../..'), false, 'a path well above the root is refused');
+});
+
+test('canonicalises the repository root, so a root reached through a symlink still contains its files', (t) => {
+  // The resolver canonicalises the root as well as the target. Without that, a checkout reached through a
+  // symlink makes containment a fact about a path string, and an ordinary in-repo file resolves to a path
+  // that begins with '..' relative to the uncanonical root and is wrongly refused.
+  const realRoot = mkdtempSync(join(tmpdir(), 'link-realroot-'));
+  const aliasRoot = `${realRoot}-alias`;
+  const outside = mkdtempSync(join(tmpdir(), 'link-alias-outside-'));
+  t.after(() => {
+    rmSync(realRoot, { recursive: true, force: true });
+    rmSync(aliasRoot, { recursive: true, force: true });
+    rmSync(outside, { recursive: true, force: true });
+  });
+  writeFileSync(join(outside, 'secret.md'), 'outside\n');
+  mkdirSync(join(realRoot, 'docs'), { recursive: true });
+  writeFileSync(join(realRoot, 'inside.md'), 'inside\n');
+  symlinkSync(realRoot, aliasRoot);
+
+  const resolveLink = repositoryLinkResolver({ root: aliasRoot, documentDir: join(realRoot, 'docs') });
+  assert.equal(resolveLink('../inside.md'), true, 'a file inside the real root is inside when the root is a symlink');
+  // A REAL file outside the root, reached without any symlink, so the refusal can only come from the
+  // containment test: realpathSync succeeds and the file exists. The first version of this assertion named
+  // containment while testing non-existence - the target was never created - so it passed for a reason it did
+  // not state. The mutation check below is what makes that concrete.
+  assert.equal(
+    resolveLink(`../../${basename(outside)}/secret.md`),
+    false,
+    'a real file outside the root is refused by containment, not by being missing',
+  );
+});
+
+test('accepts an in-repo file whose name begins with two dots, which the first containment test refused', (t) => {
+  // The previous test rejected anything whose relative path started with '..', which also rejected a real
+  // file named ..dot.md. The contract fix accepts it, and this pins that so it cannot be undone silently.
+  const root = mkdtempSync(join(tmpdir(), 'link-dots-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  mkdirSync(join(root, 'docs'), { recursive: true });
+  writeFileSync(join(root, '..dot.md'), 'two dots\n');
+
+  const resolveLink = repositoryLinkResolver({ root, documentDir: join(root, 'docs') });
+  assert.equal(resolveLink('../..dot.md'), true, 'a two-dots filename inside the repository is a real file');
+  assert.equal(resolveLink('..missing.md'), false, 'a missing file is still refused');
 });
