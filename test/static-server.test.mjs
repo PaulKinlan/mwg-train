@@ -62,3 +62,33 @@ test('a URL cannot walk out of the directory it is mounted to', async () => {
     assert.match(secret, /static-server-secret/);
   });
 });
+
+test('a stylesheet is served as text/css, because a browser refuses to apply it otherwise', () => {
+  // The defect this exists for (mwg-train-ea9): the CONTENT_TYPES map had no `.css` entry, so a stylesheet
+  // was served as `application/octet-stream`. Chrome loaded the file - `link.sheet` was truthy - and then
+  // applied ZERO of its rules, because a stylesheet with a non-CSS MIME type is refused under strict MIME
+  // checking. The demo therefore rendered with no CSS while every functional check passed, and through this
+  // server a broken stylesheet could not be told apart from a working one.
+  //
+  // Asserting the exact type rather than the absence of octet-stream: a wrong-but-plausible type would be
+  // just as invisible, and this is one of the few places where the exact string IS the behaviour.
+  return withServer(async ({ server, dir }) => {
+    writeFileSync(join(dir, 'sheet.css'), ':root { --bg: #0f172a; }\n');
+    writeFileSync(join(dir, 'page.html'), '<!doctype html><title>t</title>\n');
+    writeFileSync(join(dir, 'app.js'), 'export const x = 1;\n');
+    const expected = [
+      ['sheet.css', 'text/css; charset=utf-8'],
+      ['page.html', 'text/html; charset=utf-8'],
+      ['app.js', 'text/javascript; charset=utf-8'],
+    ];
+    for (const [name, type] of expected) {
+      const response = await fetch(`${server.origin}/b/${name}`);
+      assert.equal(response.status, 200, `${name} must be served`);
+      assert.equal(
+        response.headers.get('content-type'),
+        type,
+        `${name} must be served as ${type}; a stylesheet served as application/octet-stream is silently not applied`,
+      );
+    }
+  });
+});

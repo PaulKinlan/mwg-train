@@ -14,7 +14,7 @@
  * #34d399 rather than #10b981. Control borders use #64748b so a field or chip outline clears 3:1
  * against both the page and the inset field surface.
  *
- * Responsive convention follows the pilot stylesheets (pilot/projects/*/app/styles.css): a range
+ * Responsive convention follows the pilot stylesheets (pilot/projects/<framework>/app/styles.css): a range
  * syntax mobile tier at (width <= 30rem), then two columns from (width >= 34rem) and the
  * three-column product grid from (width >= 60rem).
  *
