@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Schedule Availability — Learning Hub</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <!-- Top Brand Bar -->
+    <header class="top-bar">
+      <a href="index.html" class="brand">
+        <span class="brand-icon" aria-hidden="true">🎓</span>
+        <span>Learning Hub</span>
+      </a>
+      <nav class="top-nav" aria-label="Main Navigation">
+        <a href="index.html">Classes</a>
+        <a href="empty.html" aria-current="page">Schedule</a>
+        <a href="confirmation.html">Receipts</a>
+        <a href="compare.html">Visual Spec</a>
+      </nav>
+    </header>
+
+    <!-- State Switcher Toolbar -->
+    <div class="state-switcher" role="region" aria-label="Demo State Switcher">
+      <span class="state-switcher-label">Design States:</span>
+      <a href="index.html" class="state-pill">&larr; Back to Step 2 Form</a>
+      <a href="confirmation.html" class="state-pill">Step 3: Confirmation</a>
+      <a href="empty.html" class="state-pill active">Step 5: Honest Empty State (Active)</a>
+      <a href="compare.html" class="state-pill">Boards Comparison &rarr;</a>
+    </div>
+
+    <main class="container">
+      <div class="page-header" style="text-align: center;">
+        <h1 class="display-title">Find Your Next Evening Class</h1>
+        <p class="subtitle">Weekly Class Schedule &amp; Availability</p>
+      </div>
+
+      <!-- Filter Controls (Visual context from Board 1 & Board 5) -->
+      <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center; margin-block: 1rem 2rem;">
+        <span class="badge-pill" style="cursor: pointer;">Category: Technology ✕</span>
+        <span class="badge-pill" style="cursor: pointer; background-color: var(--surface-pill); color: var(--text-muted);">Time: Evening (6 PM - 9 PM)</span>
+        <span class="badge-pill" style="cursor: pointer; background-color: var(--surface-pill); color: var(--text-muted);">Campus: Downtown</span>
+      </div>
+
+      <!-- Honest Empty State Card (Visual Language from step5-empty.jpg) -->
+      <section class="empty-state-card" aria-labelledby="empty-title">
+        <div class="empty-state-icon-box" aria-hidden="true">
+          <!-- Calendar / Ticket Slash SVG Icon -->
+          <svg width="44" height="44" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+            <rect x="6" y="8" width="36" height="34" rx="4" stroke="var(--text-muted)"/>
+            <line x1="6" y1="18" x2="42" y2="18" stroke="var(--text-muted)"/>
+            <line x1="16" y1="4" x2="16" y2="12" stroke="var(--accent)"/>
+            <line x1="32" y1="4" x2="32" y2="12" stroke="var(--accent)"/>
+            <circle cx="24" cy="30" r="5" stroke="var(--accent)"/>
+            <line x1="12" y1="40" x2="36" y2="16" stroke="var(--error)" stroke-width="2.5"/>
+          </svg>
+        </div>
+
+        <h2 id="empty-title" style="margin: 0 0 0.75rem; font-size: 1.5rem; color: var(--text-primary);">
+          No Evening Classes Available This Week
+        </h2>
+        <p style="margin: 0 auto; max-width: 26rem; font-size: 0.9375rem; color: var(--text-muted); line-height: 1.6;">
+          Try adjusting your category filters, or sign up for notifications when new sessions are published for the upcoming semester.
+        </p>
+
+        <div class="empty-state-actions">
+          <a href="index.html" class="btn-primary">
+            <span>Clear Filters</span>
+          </a>
+          <a href="index.html" class="link-secondary">
+            View All Upcoming Semesters &rarr;
+          </a>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

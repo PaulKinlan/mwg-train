@@ -1,0 +1,796 @@
+/*
+ * Booking Archetype - Modern Design Target Stylesheet
+ *
+ * Implements the visual language established by the five Nano Banana reference boards:
+ *   - Page background: #0f172a (deep slate)
+ *   - Card surfaces: #1e293b (slate card)
+ *   - Accent & primary actions: #10b981 (emerald green)
+ *   - Muted text & secondary metadata: #94a3b8
+ *   - Clean typography with clamp() scaling
+ *   - Multi-step progress indicator with connectors and active ring
+ *   - Accessible error banner and :user-valid / :user-invalid interaction states
+ *
+ * Built according to Modern Web Guidance (MWG):
+ *   - dark-mode & color: color-scheme: light dark, light-dark() tokens, forced-colors support
+ *   - validate-input-after-interaction & required-field-feedback: :user-invalid deferral, non-color indicators
+ *   - accessible-error-announcement: aria-errormessage, aria-invalid programmatic synchronization
+ *   - responsive-design & size-aware-styling: @container inline-size queries for decision workbench
+ */
+
+:root {
+  /*
+   * MWG: dark-mode & component-specific-light-dark-theme
+   * Defaults to dark scheme matching the Nano Banana reference boards (#0f172a / #1e293b),
+   * while utilizing light-dark() so light mode is fully supported when toggled.
+   */
+  color-scheme: dark;
+
+  /* Theme Tokens */
+  --bg-page: light-dark(#f1f5f9, #0f172a);
+  --surface-card: light-dark(#ffffff, #1e293b);
+  --surface-card-subtle: light-dark(#f8fafc, #162032);
+  --surface-card-elevated: light-dark(#ffffff, #243248);
+  --surface-input: light-dark(#ffffff, #0f172a);
+  --surface-pill: light-dark(#e2e8f0, #1e293b);
+
+  --border-subtle: light-dark(#cbd5e1, #334155);
+  --border-highlight: light-dark(#94a3b8, #475569);
+  --border-focus: #10b981;
+
+  --text-primary: light-dark(#0f172a, #f8fafc);
+  --text-muted: light-dark(#64748b, #94a3b8);
+  --text-inverse: #ffffff;
+
+  /* Accent - Emerald */
+  --accent: #10b981;
+  --accent-hover: #059669;
+  --accent-active: #047857;
+  --accent-subtle: light-dark(rgba(16, 185, 129, 0.12), rgba(16, 185, 129, 0.18));
+  --accent-glow: rgba(16, 185, 129, 0.25);
+
+  /* Validation & Error - Red */
+  --error: #ef4444;
+  --error-surface: light-dark(#fef2f2, #3b1114);
+  --error-bg: light-dark(#fee2e2, rgba(239, 68, 68, 0.15));
+  --error-border: light-dark(#f87171, rgba(239, 68, 68, 0.5));
+  --error-text: light-dark(#991b1b, #fca5a5);
+
+  /* Success - Emerald */
+  --success: #10b981;
+  --success-bg: light-dark(#ecfdf5, rgba(16, 185, 129, 0.15));
+  --success-border: #10b981;
+
+  /* Geometry & Radii */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-pill: 9999px;
+
+  /* Typography */
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  accent-color: var(--accent);
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+/* Base resets & typography */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--text-primary);
+  background-color: var(--bg-page);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Top brand / demo bar */
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-inline: 1.5rem;
+  padding-block: 0.85rem;
+  background-color: var(--surface-card);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-weight: 700;
+  font-size: 1.125rem;
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.brand-icon {
+  display: grid;
+  place-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-sm);
+  background-color: var(--accent);
+  color: white;
+  font-size: 1.1rem;
+}
+
+.top-nav {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  font-size: 0.875rem;
+}
+
+.top-nav a {
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.top-nav a:hover {
+  color: var(--text-primary);
+}
+
+/* Quick demo state selector */
+.state-switcher {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1.5rem;
+  background-color: var(--surface-card-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 0.8125rem;
+}
+
+.state-switcher-label {
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-right: 0.25rem;
+}
+
+.state-pill {
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-pill);
+  background-color: var(--surface-pill);
+  color: var(--text-muted);
+  border: 1px solid var(--border-subtle);
+  text-decoration: none;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.state-pill:hover, .state-pill.active {
+  background-color: var(--accent-subtle);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Layout container */
+.container {
+  max-width: 68rem;
+  margin: 0 auto;
+  padding-inline: 1.5rem;
+  padding-block: 2rem 3rem;
+}
+
+/* Page Header & Step Title */
+.page-header {
+  margin-bottom: 1.75rem;
+}
+
+.display-title {
+  font-size: clamp(1.5rem, 1.25rem + 1.25vw, 2.25rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0 0 0.25rem;
+  color: var(--text-primary);
+}
+
+.subtitle {
+  font-size: 1rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* Stepper Component */
+.stepper-nav {
+  margin-block: 1.5rem 2rem;
+}
+
+.stepper {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: 44rem;
+}
+
+.step-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.step-circle {
+  display: grid;
+  place-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  border: 2px solid var(--border-subtle);
+  background-color: var(--surface-card);
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.step-connector {
+  flex: 1;
+  height: 2px;
+  min-width: 1.5rem;
+  background-color: var(--border-subtle);
+  border-radius: 1px;
+}
+
+/* Completed Step */
+.step-item.completed {
+  color: var(--text-primary);
+}
+
+.step-item.completed .step-circle {
+  background-color: var(--accent);
+  border-color: var(--accent);
+  color: var(--text-inverse);
+}
+
+.step-connector.completed {
+  background-color: var(--accent);
+}
+
+/* Active Step */
+.step-item.active {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.step-item.active .step-circle {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-subtle);
+  color: var(--accent);
+}
+
+/* Decision Workbench Layout (Responsive via Container Queries) */
+.workbench-shell {
+  container-type: inline-size;
+}
+
+.workbench {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.75rem;
+  align-items: start;
+}
+
+@container (min-width: 720px) {
+  .workbench {
+    grid-template-columns: minmax(18rem, 21rem) 1fr;
+  }
+}
+
+/* Cards */
+.card {
+  background-color: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 1.75rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+}
+
+.card-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+.card-subtitle {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin: 0 0 1.25rem;
+}
+
+.card-divider {
+  height: 1px;
+  background-color: var(--border-subtle);
+  margin-block: 1.25rem;
+  border: 0;
+}
+
+/* Summary Card Details (Board 2 Visual Language) */
+.summary-course-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0 0 0.75rem;
+  color: var(--text-primary);
+}
+
+.summary-meta-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.25rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.summary-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.summary-meta-item .icon {
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  background-color: var(--accent-subtle);
+  color: var(--accent);
+}
+
+.price-box {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.price-label {
+  font-size: 0.9375rem;
+  color: var(--text-muted);
+}
+
+.price-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* Error Banner (Accessible Announcement & Visual State per Board 4) */
+.error-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  border-radius: var(--radius-md);
+  background-color: var(--error-surface);
+  border: 1px solid var(--error-border);
+  color: var(--error-text);
+  margin-bottom: 1.5rem;
+  font-size: 0.875rem;
+}
+
+.error-banner-icon {
+  font-size: 1.1rem;
+  line-height: 1;
+  color: var(--error);
+}
+
+.error-banner-title {
+  font-weight: 600;
+  margin-bottom: 0.15rem;
+}
+
+.error-banner[hidden] {
+  display: none;
+}
+
+/* Form Styles */
+.form-grid {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+}
+
+.label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 0.35rem;
+}
+
+label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.req-marker {
+  color: var(--accent);
+  margin-inline-start: 0.2rem;
+}
+
+/* Format Hint (MWG: Place above input so autocomplete popovers don't obscure it) */
+.field-hint {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  margin-bottom: 0.35rem;
+}
+
+/* Dark Form Controls */
+input, textarea, select {
+  font-family: inherit;
+  font-size: 0.9375rem;
+  color: var(--text-primary);
+  background-color: var(--surface-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 0.7rem 0.85rem;
+  width: 100%;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+/* Focus States */
+input:focus-visible, textarea:focus-visible, select:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+  border-color: var(--border-focus);
+}
+
+/*
+ * Modern Web Guidance: Validation After Interaction (:user-invalid / :user-valid)
+ * Defer error reporting until the user has blurred or attempted to submit.
+ * aria-invalid is synchronized dynamically for AT and ensures robust state matching.
+ */
+input:user-invalid, textarea:user-invalid, select:user-invalid,
+input[aria-invalid="true"], textarea[aria-invalid="true"], select[aria-invalid="true"] {
+  border-color: var(--error);
+  background-color: var(--error-bg);
+}
+
+input:user-invalid:focus-visible, textarea:user-invalid:focus-visible,
+input[aria-invalid="true"]:focus-visible, textarea[aria-invalid="true"]:focus-visible {
+  outline: 2px solid var(--error);
+  outline-offset: 2px;
+  border-color: var(--error);
+}
+
+input:user-valid, textarea:user-valid, select:user-valid {
+  border-color: var(--success);
+}
+
+/* Error message styling */
+.error-msg {
+  display: none;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8125rem;
+  color: var(--error-text);
+  margin-top: 0.35rem;
+}
+
+.error-msg-icon {
+  color: var(--error);
+  font-size: 0.875rem;
+}
+
+/* Sibling combinator to reveal error message on :user-invalid or aria-invalid */
+input:user-invalid ~ .error-msg,
+textarea:user-invalid ~ .error-msg,
+select:user-invalid ~ .error-msg,
+input[aria-invalid="true"] ~ .error-msg,
+textarea[aria-invalid="true"] ~ .error-msg,
+select[aria-invalid="true"] ~ .error-msg {
+  display: flex;
+}
+
+/* Fallback class for forced error preview */
+.force-invalid input, .force-invalid textarea {
+  border-color: var(--error);
+  background-color: var(--error-bg);
+}
+.force-invalid .error-msg {
+  display: flex;
+}
+
+/* Form Actions Row */
+.form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1.75rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: var(--accent);
+  color: var(--text-inverse);
+  border: 0;
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 1.6rem;
+  font-family: inherit;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+  min-height: 44px;
+}
+
+.btn-primary:hover {
+  background-color: var(--accent-hover);
+}
+
+.btn-primary:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background-color: var(--surface-pill);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 1.25rem;
+  font-family: inherit;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  min-height: 44px;
+}
+
+.btn-secondary:hover {
+  background-color: var(--surface-card-elevated);
+  border-color: var(--border-highlight);
+}
+
+.link-secondary {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: color 0.15s ease;
+}
+
+.link-secondary:hover {
+  color: var(--text-primary);
+  text-decoration: underline;
+}
+
+/* Echo / Submission record block */
+.record-echo-box {
+  margin-top: 2rem;
+  padding: 1.25rem;
+  border-radius: var(--radius-md);
+  background-color: var(--surface-card-subtle);
+  border: 1px solid var(--border-subtle);
+}
+
+.record-echo-box h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+
+.record-echo-content {
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  color: var(--accent);
+  background-color: var(--surface-input);
+  padding: 0.75rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+}
+
+/*
+ * Digital Ticket / Receipt Styles (Board 3: step3-confirmation.jpg)
+ */
+.ticket-card {
+  background-color: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 680px) {
+  .ticket-card {
+    grid-template-columns: 1fr 240px;
+  }
+}
+
+.ticket-main {
+  padding: 2rem;
+}
+
+.ticket-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.ticket-ref-badge {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--accent);
+  background-color: var(--accent-subtle);
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-pill);
+}
+
+.ticket-side {
+  background-color: var(--surface-card-subtle);
+  border-top: 1px dashed var(--border-subtle);
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+@media (min-width: 680px) {
+  .ticket-side {
+    border-top: 0;
+    border-left: 1px dashed var(--border-subtle);
+  }
+}
+
+.qr-placeholder {
+  width: 130px;
+  height: 130px;
+  background-color: white;
+  border-radius: var(--radius-sm);
+  padding: 8px;
+  display: grid;
+  place-content: center;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.paid-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: var(--radius-pill);
+  background-color: var(--accent);
+  color: white;
+  font-weight: 700;
+  font-size: 0.875rem;
+}
+
+/*
+ * Honest Empty State Styles (Board 5: step5-empty.jpg)
+ */
+.empty-state-card {
+  max-width: 38rem;
+  margin: 2rem auto;
+  text-align: center;
+  padding: 3rem 2rem;
+  background-color: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+}
+
+.empty-state-icon-box {
+  width: 5rem;
+  height: 5rem;
+  margin: 0 auto 1.5rem;
+  border-radius: 50%;
+  background-color: var(--surface-card-subtle);
+  border: 2px dashed var(--border-subtle);
+  display: grid;
+  place-content: center;
+  font-size: 2.25rem;
+  color: var(--text-muted);
+}
+
+.empty-state-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+/* High Contrast / Forced Colors Mode (MWG: color) */
+@media (forced-colors: active) {
+  input, textarea, select, button, .step-circle, .card, .badge-pill {
+    forced-color-adjust: none;
+    border: 1px solid CanvasText;
+  }
+  .btn-primary {
+    background-color: Highlight;
+    color: HighlightText;
+  }
+  .step-item.active .step-circle {
+    outline: 2px solid Highlight;
+  }
+  .error-banner {
+    border: 2px solid LinkText;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .container {
+    padding-inline: 1rem;
+    padding-block: 1.25rem 2rem;
+  }
+  .top-bar {
+    padding-inline: 1rem;
+  }
+  .card {
+    padding: 1.25rem;
+  }
+  .stepper {
+    gap: 0.25rem;
+  }
+  .step-item span.label-text {
+    display: none;
+  }
+  .form-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+  .btn-primary {
+    width: 100%;
+  }
+}
