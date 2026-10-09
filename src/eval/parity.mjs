@@ -150,7 +150,16 @@ export function crossArmFindings({ arms, budget }) {
     const pair = weakest && weakest.a ? `${weakest.a}/${weakest.b}` : null;
     return {
       ...finding,
-      code: finding.code === 'IDENTITY_DEGENERATE' ? PARITY_CODES.CROSS_ARM_DEGENERATE : PARITY_CODES.CROSS_ARM_BELOW_BUDGET,
+      // The code is TRANSLATED, not collapsed: `identityFindings` distinguishes a family MEAN that left the
+      // budget from a weakest PAIR that did while the mean held, and flattening both into
+      // CROSS_ARM_BELOW_BUDGET made the second read as the first - a mean that never failed reported as one
+      // that did, and parity's own outlier loop below then skipped the axis as already reported. The merger's
+      // gate caught this on sml's cross-arm test; the test was right and this mapping was wrong.
+      code: finding.code === 'IDENTITY_DEGENERATE'
+        ? PARITY_CODES.CROSS_ARM_DEGENERATE
+        : finding.code === 'IDENTITY_PAIR_BELOW_BUDGET'
+          ? PARITY_CODES.CROSS_ARM_PAIR_BELOW_BUDGET
+          : PARITY_CODES.CROSS_ARM_BELOW_BUDGET,
       viewport: measured[0].viewport,
       pair,
       pair_actual: pair ? weakest[finding.axis] : null,
@@ -172,8 +181,10 @@ export function crossArmFindings({ arms, budget }) {
     const weakest = identity.weakest_by_axis?.[axis];
     if (typeof minimum !== 'number' || !weakest || typeof weakest[axis] !== 'number') continue;
     if (weakest[axis] >= minimum) continue;
-    // Only when the mean did NOT already report this axis: the mean finding above now names this same
-    // pair, so a second finding would be the same fact twice. The pair is never omitted either way.
+    // Only when this axis was NOT already reported above. Since the mapping above translates the mean and
+    // pair findings separately, an axis can arrive here already reported EITHER as a mean failure or as a
+    // hidden pair, and in both cases a second finding would be the same fact twice. The pair is never
+    // omitted either way: the mean finding also names the weakest pair for its axis.
     if (findings.some((finding) => finding.axis === axis)) continue;
     findings.push({
       code: PARITY_CODES.CROSS_ARM_PAIR_BELOW_BUDGET,
