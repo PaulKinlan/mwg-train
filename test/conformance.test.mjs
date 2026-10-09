@@ -343,3 +343,58 @@ test('every axis the identity layer measures has a budget, or it is judged nowhe
   assert.deepEqual(unjudged, [], `these axes are measured but have no floor, so nothing judges them: ${unjudged.join(', ')}`);
   assert.deepEqual(decorative, [], `these axes have a floor but are never measured, so the floor is decorative: ${decorative.join(', ')}`);
 });
+
+test('an unmeasurable signature is refused, not scored a perfect 1.000', () => {
+  // mwg-train-z92. structuralSimilarity literally begins `if (a.length === 0 && b.length === 0) return 1`
+  // (conformance.mjs:119), geometrySimilarity ends `denominator === 0 ? 1` (:180) and controlSimilarity has
+  // the same both-empty branch (:189). So a signature with NO nodes and NO boxes - an arm that failed to
+  // render - scores a perfect 1.000 on every axis, and two such arms read as perfect agreement. That is the
+  // "unmeasured must not read as agreement" direction this module tries to fail closed on elsewhere.
+  //
+  // variantIdentity KNOWS this: its own comment says two variants that measure nothing agree perfectly and
+  // calls it "the most confidently wrong answer the axis can give". But its `degenerate` flag is computed
+  // AFTER the scores are produced, so target_conformance still PUBLISHES 1.000 for an arm that measured
+  // nothing, and a PARTIALLY blank family (one arm blank, the rest rendered) is not flagging at all.
+  // The premise this test was written against - that conformanceScore({}, {}) returned
+  // { structural: 1, geometry: 1, controls: 1, overall: 1 } - is now the behaviour being removed, so it is
+  // recorded here rather than asserted: it was measured before the fix, and asserting it would make the test
+  // require the bug.
+  for (const [label, a, b] of [
+    ['both empty', {}, {}],
+    ['nullish', null, undefined],
+    ['one side empty', { nodes: [{ tag: 'div' }] }, {}],
+    ['boxes only on one side', { boxes: [{ tag: 'div' }] }, {}],
+  ]) {
+    assert.throws(
+      () => conformanceScore(a, b),
+      (error) => {
+        assert.match(error.message, /conformanceScore/, 'the refusal must name the function');
+        assert.match(error.message, /measur/i, 'and say that nothing was measured');
+        return true;
+      },
+      `an unmeasurable signature must be refused rather than scored: ${label}`,
+    );
+  }
+  // The positive, in the REAL signature shape: nodes are an array of {tag}, boxes carry x/y/w/h. My first
+  // version of this fixture used width/height, which made boxScore return NaN - and the assertion was
+  // `typeof overall === 'number'`, which NaN satisfies. So the test passed while measuring nothing. Assert
+  // FINITE, not merely numeric: that is the same weaker-property mistake this bead is about.
+  const rendered = { nodes: [{ tag: 'div' }, { tag: 'p' }], boxes: [{ tag: 'div', x: 0, y: 0, w: 10, h: 10 }], controls: [] };
+  const scored = conformanceScore(rendered, rendered);
+  assert.equal(scored.structural, 1, 'a rendered signature compared with itself is still perfect');
+  for (const axis of ['structural', 'geometry', 'controls', 'overall']) {
+    assert.ok(Number.isFinite(scored[axis]), `${axis} must be a real number, got ${scored[axis]}`);
+  }
+});
+
+test('a family that measured nothing reports that, rather than 1.000 identity', () => {
+  // The all-blank family must stay a RECORDED fact rather than a crash, because it is exactly what the
+  // degenerate finding is for. But the numbers must stop claiming perfect agreement.
+  const blank = (framework) => ({ framework, signature: {} });
+  const identity = variantIdentity({ nodes: ['div'], boxes: [], controls: [] }, [
+    blank('a'), blank('b'), blank('c'),
+  ]);
+  assert.equal(identity.degenerate, true, 'an all-blank family is degenerate');
+  assert.notEqual(identity.identity.overall, 1, 'an all-blank family must not report perfect identity');
+  assert.deepEqual(identity.pairwise, [], 'there is no pairwise measurement to report');
+});
