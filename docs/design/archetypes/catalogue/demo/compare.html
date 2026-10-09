@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <title>Visual Design Comparison — Catalogue Archetype</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header class="top-bar">
+      <a href="index.html" class="brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" focusable="false">
+            <path d="M4 10h16M6 10l1.5 9h9L18 10M9 6c0-1.5 1-2 3-2s3 .5 3 2"/>
+          </svg>
+        </span>
+        <span>Kiln &amp; Copper</span>
+      </a>
+      <nav class="top-nav" aria-label="Main navigation">
+        <a href="index.html">Catalogue</a>
+        <a href="cart.html">Cart</a>
+        <a href="empty.html">Empty state</a>
+        <a href="compare.html" aria-current="page">Visual spec</a>
+      </nav>
+    </header>
+
+    <div class="state-switcher" role="region" aria-label="Demo state switcher">
+      <span class="state-switcher-label">Design states:</span>
+      <a href="index.html" class="state-pill">← Live catalogue (board 1)</a>
+      <a href="cart.html" class="state-pill">2. Cart drawer (board 2)</a>
+      <a href="empty.html" class="state-pill">3. Empty search (board 3)</a>
+    </div>
+
+    <main class="container">
+      <div class="page-header">
+        <h1 class="display-title">Visual design reference comparison</h1>
+        <p class="subtitle">
+          Each reference board from <code>../</code> beside the live page it informed, rendered in an
+          iframe at a 1280 × 900 desktop viewport and a 390 × 844 mobile viewport.
+        </p>
+      </div>
+
+      <div class="legend">
+        <p>
+          The boards are the three JPEGs committed alongside this demo. Per
+          <code>../README.md</code> they are "visual planning references, neither generated-site captures
+          nor sealed evaluation targets", and their products, prices, stock counts, totals and checkout
+          buttons are "illustrative, unverified placeholders" that "do not prove a functional search,
+          cart, checkout, responsive implementation or accessible controls".
+        </p>
+        <p>
+          Nothing on this page is a screenshot: the right-hand frames are the live files in this
+          directory, loaded in an iframe, so no capture is committed and none can drift from the
+          implementation. The left-hand images are the boards themselves, unmodified.
+        </p>
+      </div>
+
+      <div class="comparison-grid">
+        <!-- Board 1: product grid, search and filtering -->
+        <article class="comparison-card">
+          <div class="comparison-head">
+            <h2>1. Product grid, search and filtering</h2>
+            <p class="comparison-source">
+              Board <code>../step1-grid.jpg</code> (1376 × 768, SHA-256 <code>456797ff0d…</code>)
+              &middot; live page <code>index.html</code>
+            </p>
+          </div>
+
+          <div class="comparison-views">
+            <div class="view-box">
+              <p class="view-title">Reference board</p>
+              <div class="view-image">
+                <img
+                  src="../step1-grid.jpg"
+                  alt="Reference board 1: a dark catalogue page with a search bar, sticky cart count, category chips, a sort dropdown and a grid of ceramic products with prices, in-stock badges and add-to-cart buttons."
+                  width="1376"
+                  height="768"
+                >
+              </div>
+              <p class="view-caption">
+                A 1376-wide board image; it is a planning reference, not a capture of a working page.
+              </p>
+            </div>
+
+            <div class="view-box">
+              <p class="view-title">Live demo — 1280 × 900</p>
+              <div class="view-frame">
+                <iframe
+                  src="index.html"
+                  title="Live catalogue page at a 1280 by 900 viewport"
+                  width="1280"
+                  height="900"
+                  loading="lazy"
+                ></iframe>
+              </div>
+              <p class="view-caption">
+                Iframe viewport 1280 × 900, scaled to fit the column. <a href="index.html">Open it full size</a>.
+              </p>
+            </div>
+
+            <div class="view-box">
+              <p class="view-title">Live demo — 390 × 844</p>
+              <div class="view-frame view-frame--mobile">
+                <iframe
+                  src="index.html"
+                  title="Live catalogue page at a 390 by 844 viewport"
+                  width="390"
+                  height="844"
+                  loading="lazy"
+                ></iframe>
+              </div>
+              <p class="view-caption">Iframe viewport 390 × 844, one column, chips wrapped.</p>
+            </div>
+          </div>
+
+          <ul class="rationale-list">
+            <li><strong>Palette:</strong> page <code>#0f172a</code>, cards <code>#1e293b</code>, inset surfaces <code>#162032</code>, action emerald <code>#10b981</code>, muted text <code>#94a3b8</code> — the values the board's generation prompt names.</li>
+            <li><strong>Grid:</strong> one column below 34rem, two to 34rem, three from 60rem. The board renders five columns at its own width; the demo keeps its card anatomy (art → name → variant → price → stock → action) and lets the count follow the viewport instead of pinning five across.</li>
+            <li><strong>Search:</strong> <code>form#search-form</code> with <code>input[name=q]</code> of type <code>search</code> labels itself "Search parts" and filters the twelve cards in place as you type; the query is echoed in the results line and in the empty state.</li>
+            <li><strong>Chips:</strong> the board's category chips are drawn as <code>aria-pressed</code> toggle buttons; one category is active at a time and the grid narrows. A "Kiln parts" chip is added so the spec's <code>bearing</code> query has a real catalogue hit — the board's four chips have no such category.</li>
+            <li><strong>Sort:</strong> the dropdown re-orders the same cards client-side by the board's four options (featured order, price each way, newest).</li>
+            <li><strong>Stock states:</strong> "In stock", "Low stock — 3 left" and "Out of stock" are all rendered; the out-of-stock card's action is a disabled button described by its own pill, so the reason is never colour alone.</li>
+            <li><strong>Art:</strong> twelve hand-drawn SVG shapes from one in-document sprite, toned by <code>[data-tone]</code> tokens. No image request, no web font, no CDN.</li>
+          </ul>
+        </article>
+
+        <!-- Board 2: slide-over cart drawer -->
+        <article class="comparison-card">
+          <div class="comparison-head">
+            <h2>2. Slide-over cart drawer and order review</h2>
+            <p class="comparison-source">
+              Board <code>../step2-cart.jpg</code> (1376 × 768, SHA-256 <code>4ae6bd190c…</code>)
+              &middot; live page <code>cart.html</code>
+            </p>
+          </div>
+
+          <div class="comparison-views">
+            <div class="view-box">
+              <p class="view-title">Reference board</p>
+              <div class="view-image">
+                <img
+                  src="../step2-cart.jpg"
+                  alt="Reference board 2: a cart drawer over a dimmed product grid, with two item lines, quantity steppers, per-line subtotals, an order subtotal, a free-shipping notice and a proceed-to-checkout button."
+                  width="1376"
+                  height="768"
+                >
+              </div>
+              <p class="view-caption">
+                Two lines, subtotal £43.89: Artisanal Ceramic Tableware £19.99 and Rustic Vase £23.90.
+              </p>
+            </div>
+
+            <div class="view-box">
+              <p class="view-title">Live variant — 1280 × 900</p>
+              <div class="view-frame">
+                <iframe
+                  src="cart.html"
+                  title="Static cart drawer variant at a 1280 by 900 viewport"
+                  width="1280"
+                  height="900"
+                  loading="lazy"
+                ></iframe>
+              </div>
+              <p class="view-caption">
+                Iframe viewport 1280 × 900, scaled to fit. <a href="cart.html">Open it full size</a>.
+              </p>
+            </div>
+
+            <div class="view-box">
+              <p class="view-title">Live variant — 390 × 844</p>
+              <div class="view-frame view-frame--mobile">
+                <iframe
+                  src="cart.html"
+                  title="Static cart drawer variant at a 390 by 844 viewport"
+                  width="390"
+                  height="844"
+                  loading="lazy"
+                ></iframe>
+              </div>
+              <p class="view-caption">Iframe viewport 390 × 844: the drawer takes the full width.</p>
+            </div>
+          </div>
+
+          <ul class="rationale-list">
+            <li><strong>Drawer:</strong> a right-hand slide-over, <code>28rem</code> wide and full width under 36rem, over a dimmed and blurred grid — the composition the board shows.</li>
+            <li><strong>Line anatomy:</strong> thumbnail in its clay tone, name, part number, unit price, a <code>+ −</code> stepper with the quantity between the buttons, the line total, and a trash-glyph remove button with an accessible name per product.</li>
+            <li><strong>Order summary:</strong> Items, Subtotal, Shipping and Estimated total, with the free-shipping threshold stated as copy rather than colour, exactly as the board's footer does.</li>
+            <li><strong>Extra line:</strong> the board shows two lines; the static variant keeps both and adds Silicon Nitride Kiln Bearing Set £18.40 so this page carries the spec's expected text <em>bearing</em>. Its subtotal and total therefore read £62.29 instead of the board's £43.89.</li>
+            <li><strong>Static honesty:</strong> on <code>cart.html</code> the steppers, remove and checkout are disabled buttons — they are drawn to match the board and must not pretend to work. <code>index.html</code> is where the same drawer is live, persisted in <code>localStorage</code>, keyboard-operable, with focus returning to the control you used.</li>
+            <li><strong>Contrast deviation:</strong> the board draws white labels on emerald buttons; the demo uses dark ink on the same emerald because white measures 2.6:1 there. The emerald itself is unchanged.</li>
+            <li><strong>Not on the board:</strong> the drawer also carries the contract's "Add by part number" form (<code>form#cart-form</code>, fields <code>item</code> and an optional <code>quantity</code>), which board 2 does not depict.</li>
+          </ul>
+        </article>
+
+        <!-- Board 3: empty search state -->
+        <article class="comparison-card">
+          <div class="comparison-head">
+            <h2>3. Empty search state</h2>
+            <p class="comparison-source">
+              Board <code>../step3-empty.jpg</code> (1376 × 768, SHA-256 <code>22444d6ba7…</code>)
+              &middot; live page <code>empty.html</code> and the empty state in <code>index.html</code>
+            </p>
+          </div>
+
+          <div class="comparison-views">
+            <div class="view-box">
+              <p class="view-title">Reference board</p>
+              <div class="view-image">
+                <img
+                  src="../step3-empty.jpg"
+                  alt="Reference board 3: a dark catalogue page with a search field holding the query porcelain teapot, a category row, and a centred card with a bowl on a shelf, the heading no ceramics match porcelain teapot, a suggestion line and a reset search button."
+                  width="1376"
+                  height="768"
+                >
+              </div>
+              <p class="view-caption">
+                The board's own copy is model-generated placeholder text; only the empty-state pattern is
+                adopted.
+              </p>
+            </div>
+
+            <div class="view-box">
+              <p class="view-title">Live variant — 1280 × 900</p>
+              <div class="view-frame">
+                <iframe
+                  src="empty.html"
+                  title="Static empty search state at a 1280 by 900 viewport"
+                  width="1280"
+                  height="900"
+                  loading="lazy"
+                ></iframe>
+              </div>
+              <p class="view-caption">
+                Iframe viewport 1280 × 900, scaled to fit. <a href="empty.html">Open it full size</a>.
+              </p>
+            </div>
+
+            <div class="view-box">
+              <p class="view-title">Live variant — 390 × 844</p>
+              <div class="view-frame view-frame--mobile">
+                <iframe
+                  src="empty.html"
+                  title="Static empty search state at a 390 by 844 viewport"
+                  width="390"
+                  height="844"
+                  loading="lazy"
+                ></iframe>
+              </div>
+              <p class="view-caption">Iframe viewport 390 × 844.</p>
+            </div>
+          </div>
+
+          <ul class="rationale-list">
+            <li><strong>Copy:</strong> the heading <em>No ceramics match "porcelain teapot"</em>, the suggestion line and the "Reset search" action follow the board's wording; the query stays in the search field so the state is readable on its own.</li>
+            <li><strong>Where it comes from:</strong> <code>index.html</code> reaches the same state by filtering — type or submit <code>porcelain teapot</code> and the twelve-card grid empties, the card appears and the results line reads <em>No pieces match "porcelain teapot".</em> <code>empty.html</code> is that state as static markup for comparison.</li>
+            <li><strong>Static honesty:</strong> the chips on <code>empty.html</code> are disabled buttons; that page has no script, and the search form there submits to <code>index.html?q=…</code>, which really does filter the live grid.</li>
+            <li><strong>Illustration:</strong> the shelf and bowl are drawn as SVG against the board's own picture, which is a generated raster.</li>
+          </ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-foot">
+      <p>
+        Comparison page only. It asserts no match with the boards and no conformance result; the
+        contract's server routes are not implemented by this demo. Read
+        <code>README.md</code> for what it does and does not do.
+      </p>
+    </footer>
+  </body>
+</html>

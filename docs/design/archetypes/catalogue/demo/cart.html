@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <title>Your Cart — Kiln &amp; Copper (static variant)</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body class="drawer-open">
+    <!--
+      Product illustrations. This page uses only the symbols the variant renders; the full set lives
+      in index.html. Same shapes, same --art-* tokens, no image files and no network request.
+    -->
+    <svg class="visually-hidden" aria-hidden="true" focusable="false" width="0" height="0">
+      <symbol id="art-vase" viewBox="0 0 120 90">
+        <ellipse cx="60" cy="83" rx="26" ry="3.5" fill="#000" opacity=".35"/>
+        <path d="M53 12h14v7l7 12c3 6 5 12 5 17 0 13-9 22-19 22s-19-9-19-22c0-5 2-11 5-17l7-12z" style="fill:var(--art-clay)"/>
+        <path d="M53 12h14v7l-7 2-7-2z" style="fill:var(--art-clay-dark)"/>
+        <ellipse cx="60" cy="48" rx="18" ry="4" opacity=".35" style="fill:var(--art-clay-light)"/>
+        <path d="M44 56c1 12 7 19 16 22-11-2-18-10-18-21 0-1 1-1 2-1z" opacity=".35" style="fill:var(--art-clay-light)"/>
+      </symbol>
+      <symbol id="art-tableware" viewBox="0 0 120 90">
+        <ellipse cx="60" cy="80" rx="34" ry="3.5" fill="#000" opacity=".35"/>
+        <ellipse cx="60" cy="70" rx="36" ry="10" style="fill:var(--art-clay-dark)"/>
+        <ellipse cx="60" cy="67" rx="30" ry="7.5" style="fill:var(--art-clay-light)"/>
+        <path d="M30 44h60c0 12-13 19-30 19s-30-7-30-19z" style="fill:var(--art-clay)"/>
+        <ellipse cx="60" cy="44" rx="30" ry="7" style="fill:var(--art-clay-light)"/>
+        <circle cx="60" cy="44" r="4.5" opacity=".6" style="fill:var(--art-glaze)"/>
+      </symbol>
+      <symbol id="art-plate" viewBox="0 0 120 90">
+        <ellipse cx="60" cy="80" rx="30" ry="4" fill="#000" opacity=".35"/>
+        <circle cx="60" cy="44" r="34" style="fill:var(--art-clay-dark)"/>
+        <circle cx="60" cy="44" r="27" style="fill:var(--art-clay)"/>
+        <circle cx="60" cy="44" r="19" style="fill:var(--art-clay-light)"/>
+        <circle cx="60" cy="44" r="7" opacity=".5" style="fill:var(--art-glaze)"/>
+      </symbol>
+      <symbol id="art-mug" viewBox="0 0 120 90">
+        <ellipse cx="57" cy="81" rx="28" ry="3.5" fill="#000" opacity=".35"/>
+        <path d="M74 36c11 2 15 8 15 15s-5 12-15 13" fill="none" stroke-width="5.5" stroke-linecap="round" style="stroke:var(--art-clay-dark)"/>
+        <path d="M40 26h34v40c0 6-6 10-17 10s-17-4-17-10z" style="fill:var(--art-clay)"/>
+        <ellipse cx="57" cy="26" rx="17" ry="5.5" style="fill:var(--art-clay-light)"/>
+      </symbol>
+      <symbol id="art-planter" viewBox="0 0 120 90">
+        <ellipse cx="60" cy="82" rx="25" ry="3.5" fill="#000" opacity=".35"/>
+        <g opacity=".8" style="fill:var(--art-glaze)">
+          <path d="M60 41c-8-4-12-12-10-20 8 2 12 10 10 20z"/>
+          <path d="M60 41c8-4 12-12 10-20-8 2-12 10-10 20z"/>
+          <path d="M60 41c-2-9 0-16 4-20 2 8-1 15-4 20z"/>
+        </g>
+        <path d="M38 41h44l-6 35c-.5 4-4 6-16 6s-15.5-2-16-6z" style="fill:var(--art-clay)"/>
+        <path d="M38 41h44l-1.5 8H39.5z" style="fill:var(--art-clay-dark)"/>
+      </symbol>
+      <symbol id="art-pendant" viewBox="0 0 120 90">
+        <line x1="60" y1="4" x2="60" y2="30" stroke-width="3" style="stroke:var(--art-clay-dark)"/>
+        <path d="M32 58c0-16 12-28 28-28s28 12 28 28z" style="fill:var(--art-clay)"/>
+        <path d="M60 30c-11 6-18 16-18 28h18z" opacity=".35" style="fill:var(--art-clay-light)"/>
+        <rect x="30" y="58" width="60" height="6" rx="3" style="fill:var(--art-clay-dark)"/>
+        <ellipse cx="60" cy="70" rx="10" ry="3" opacity=".8" style="fill:var(--art-glaze)"/>
+      </symbol>
+      <symbol id="art-bearing" viewBox="0 0 120 90">
+        <ellipse cx="60" cy="80" rx="34" ry="4" fill="#000" opacity=".35"/>
+        <circle cx="60" cy="46" r="34" style="fill:var(--art-clay-dark)"/>
+        <circle cx="60" cy="46" r="26" style="fill:var(--surface-inset)"/>
+        <circle cx="60" cy="46" r="13" style="fill:var(--art-clay)"/>
+        <circle cx="60" cy="46" r="6" style="fill:var(--surface-inset)"/>
+        <g style="fill:var(--art-glaze)">
+          <circle cx="60" cy="26" r="4.5"/>
+          <circle cx="80" cy="46" r="4.5"/>
+          <circle cx="60" cy="66" r="4.5"/>
+          <circle cx="40" cy="46" r="4.5"/>
+          <circle cx="74" cy="32" r="4.5"/>
+          <circle cx="74" cy="60" r="4.5"/>
+          <circle cx="46" cy="60" r="4.5"/>
+          <circle cx="46" cy="32" r="4.5"/>
+        </g>
+      </symbol>
+    </svg>
+
+    <header class="top-bar" inert>
+      <a href="index.html" class="brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" focusable="false">
+            <path d="M4 10h16M6 10l1.5 9h9L18 10M9 6c0-1.5 1-2 3-2s3 .5 3 2"/>
+          </svg>
+        </span>
+        <span>Kiln &amp; Copper</span>
+      </a>
+      <nav class="top-nav" aria-label="Main navigation">
+        <a href="index.html">Catalogue</a>
+        <a href="cart.html" aria-current="page">Cart</a>
+        <a href="empty.html">Empty state</a>
+        <a href="compare.html">Visual spec</a>
+      </nav>
+      <a href="cart.html" class="cart-button" aria-current="page">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+          <circle cx="9" cy="20" r="1.4"/>
+          <circle cx="18" cy="20" r="1.4"/>
+          <path d="M3 4h2l2.4 11h11.2L21 7H6"/>
+        </svg>
+        <span>Cart</span>
+        <span class="cart-badge" aria-hidden="true">3</span>
+      </a>
+    </header>
+
+    <!--
+      The drawer is pinned open here, so the page behind it is inert: nothing under the dimmed grid or
+      the header is reachable by keyboard or exposed to assistive technology. The state switcher below
+      is demo chrome, not part of the design, so it stays live above the backdrop (see .chrome-above).
+    -->
+    <div class="state-switcher chrome-above" role="region" aria-label="Demo state switcher">
+      <span class="state-switcher-label">Design states:</span>
+      <a href="index.html" class="state-pill">← Live catalogue (board 1)</a>
+      <a href="cart.html" class="state-pill" aria-current="page">2. Cart drawer (board 2)</a>
+      <a href="empty.html" class="state-pill">3. Empty search (board 3) →</a>
+      <a href="compare.html" class="state-pill">Boards comparison →</a>
+    </div>
+
+    <main class="container" inert>
+      <div class="page-header">
+        <h1 class="display-title">Slide-over cart drawer</h1>
+        <p class="subtitle">
+          Static variant of board 2: the drawer over the dimmed catalogue. Every line, price and total
+          below is hand-written markup, not your saved cart.
+        </p>
+      </div>
+
+      <section class="cart-page-backdrop" aria-hidden="true">
+        <ul class="product-grid" role="list">
+          <li class="product-card" data-tone="ash">
+            <div class="product-art">
+              <svg viewBox="0 0 120 90" focusable="false"><use href="#art-vase"></use></svg>
+            </div>
+            <div class="product-body">
+              <h2 class="product-name">Rustic Vase</h2>
+              <p class="product-price">£23.90</p>
+            </div>
+          </li>
+          <li class="product-card" data-tone="cream">
+            <div class="product-art">
+              <svg viewBox="0 0 120 90" focusable="false"><use href="#art-tableware"></use></svg>
+            </div>
+            <div class="product-body">
+              <h2 class="product-name">Artisanal Ceramic Tableware</h2>
+              <p class="product-price">£19.99</p>
+            </div>
+          </li>
+          <li class="product-card" data-tone="terracotta">
+            <div class="product-art">
+              <svg viewBox="0 0 120 90" focusable="false"><use href="#art-plate"></use></svg>
+            </div>
+            <div class="product-body">
+              <h2 class="product-name">Rustic Dinner Plate</h2>
+              <p class="product-price">£19.99</p>
+            </div>
+          </li>
+          <li class="product-card" data-tone="celadon">
+            <div class="product-art">
+              <svg viewBox="0 0 120 90" focusable="false"><use href="#art-planter"></use></svg>
+            </div>
+            <div class="product-body">
+              <h2 class="product-name">Unique Planter</h2>
+              <p class="product-price">£15.00</p>
+            </div>
+          </li>
+          <li class="product-card" data-tone="ash">
+            <div class="product-art">
+              <svg viewBox="0 0 120 90" focusable="false"><use href="#art-mug"></use></svg>
+            </div>
+            <div class="product-body">
+              <h2 class="product-name">Speckled Stoneware Mugs</h2>
+              <p class="product-price">£32.00</p>
+            </div>
+          </li>
+          <li class="product-card" data-tone="cream">
+            <div class="product-art">
+              <svg viewBox="0 0 120 90" focusable="false"><use href="#art-pendant"></use></svg>
+            </div>
+            <div class="product-body">
+              <h2 class="product-name">Stylised Ceramic Pendant</h2>
+              <p class="product-price">£14.90</p>
+            </div>
+          </li>
+        </ul>
+      </section>
+    </main>
+
+    <div class="drawer-backdrop is-static" aria-hidden="true"></div>
+
+    <aside class="cart-drawer is-static" aria-labelledby="cart-drawer-title">
+      <header class="drawer-head">
+        <h2 id="cart-drawer-title">Your cart <span class="drawer-count">(3 items)</span></h2>
+        <a class="drawer-close" href="index.html" aria-label="Close the cart and return to the catalogue">
+          <span aria-hidden="true">✕</span>
+        </a>
+      </header>
+
+      <div class="drawer-body">
+        <ul class="cart-items" role="list" aria-label="Items in the cart">
+          <li class="cart-item">
+            <div class="cart-item-art" aria-hidden="true" data-tone="cream">
+              <svg viewBox="0 0 120 90" focusable="false"><use href="#art-tableware"></use></svg>
+            </div>
+            <div class="cart-item-main">
+              <p class="cart-item-name">Artisanal Ceramic Tableware</p>
+              <p class="cart-item-part">TBLW-010</p>
+              <p class="cart-item-price">£19.99 each</p>
+              <div class="cart-item-tools">
+                <div class="qty-stepper" role="group" aria-label="Quantity for Artisanal Ceramic Tableware">
+                  <button type="button" class="qty-btn" disabled aria-label="Decrease quantity of Artisanal Ceramic Tableware">−</button>
+                  <span class="qty-value">1</span>
+                  <button type="button" class="qty-btn" disabled aria-label="Increase quantity of Artisanal Ceramic Tableware">+</button>
+                </div>
+                <p class="cart-item-total">£19.99</p>
+              </div>
+              <div>
+                <button type="button" class="cart-remove" disabled aria-label="Remove Artisanal Ceramic Tableware from the cart">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false">
+                    <path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/>
+                  </svg>
+                  <span>Remove</span>
+                </button>
+              </div>
+            </div>
+          </li>
+
+          <li class="cart-item">
+            <div class="cart-item-art" aria-hidden="true" data-tone="ash">
+              <svg viewBox="0 0 120 90" focusable="false"><use href="#art-vase"></use></svg>
+            </div>
+            <div class="cart-item-main">
+              <p class="cart-item-name">Rustic Vase</p>
+              <p class="cart-item-part">VASE-001</p>
+              <p class="cart-item-price">£23.90 each</p>
+              <div class="cart-item-tools">
+                <div class="qty-stepper" role="group" aria-label="Quantity for Rustic Vase">
+                  <button type="button" class="qty-btn" disabled aria-label="Decrease quantity of Rustic Vase">−</button>
+                  <span class="qty-value">1</span>
+                  <button type="button" class="qty-btn" disabled aria-label="Increase quantity of Rustic Vase">+</button>
+                </div>
+                <p class="cart-item-total">£23.90</p>
+              </div>
+              <div>
+                <button type="button" class="cart-remove" disabled aria-label="Remove Rustic Vase from the cart">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false">
+                    <path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/>
+                  </svg>
+                  <span>Remove</span>
+                </button>
+              </div>
+            </div>
+          </li>
+
+          <li class="cart-item">
+            <div class="cart-item-art" aria-hidden="true" data-tone="celadon">
+              <svg viewBox="0 0 120 90" focusable="false"><use href="#art-bearing"></use></svg>
+            </div>
+            <div class="cart-item-main">
+              <p class="cart-item-name">Silicon Nitride Kiln Bearing Set</p>
+              <p class="cart-item-part">PART-041</p>
+              <p class="cart-item-price">£18.40 each</p>
+              <div class="cart-item-tools">
+                <div class="qty-stepper" role="group" aria-label="Quantity for Silicon Nitride Kiln Bearing Set">
+                  <button type="button" class="qty-btn" disabled aria-label="Decrease quantity of Silicon Nitride Kiln Bearing Set">−</button>
+                  <span class="qty-value">1</span>
+                  <button type="button" class="qty-btn" disabled aria-label="Increase quantity of Silicon Nitride Kiln Bearing Set">+</button>
+                </div>
+                <p class="cart-item-total">£18.40</p>
+              </div>
+              <div>
+                <button type="button" class="cart-remove" disabled aria-label="Remove Silicon Nitride Kiln Bearing Set from the cart">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false">
+                    <path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/>
+                  </svg>
+                  <span>Remove</span>
+                </button>
+              </div>
+            </div>
+          </li>
+        </ul>
+
+        <p class="cart-note">
+          Static variant. The quantity steppers, remove and checkout controls are rendered disabled
+          because nothing on this page is wired up — the working versions are in
+          <a href="index.html">the live catalogue</a>, where the same drawer is opened from the cart
+          button or any "Add to cart".
+        </p>
+      </div>
+
+      <footer class="drawer-foot">
+        <dl class="cart-summary">
+          <div class="summary-row">
+            <dt>Items</dt>
+            <dd>3</dd>
+          </div>
+          <div class="summary-row">
+            <dt>Subtotal</dt>
+            <dd>£62.29</dd>
+          </div>
+          <div class="summary-row">
+            <dt>Shipping</dt>
+            <dd>Free</dd>
+          </div>
+          <div class="summary-row summary-row--total">
+            <dt>Estimated total</dt>
+            <dd>£62.29</dd>
+          </div>
+        </dl>
+        <p class="cart-note cart-shipping">Free shipping over £40 applied.</p>
+        <button type="button" class="btn btn--checkout" disabled>Proceed to checkout</button>
+        <p class="cart-note">No checkout, payment or order route exists in this design target.</p>
+      </footer>
+    </aside>
+
+    <footer class="site-foot" inert>
+      <p>
+        Board 2's drawer shows two lines (subtotal £43.89); this variant adds the kiln bearing line the
+        spec's journey searches for, so the totals read £62.29. <a href="compare.html">Compare with the reference boards</a>.
+      </p>
+    </footer>
+  </body>
+</html>
