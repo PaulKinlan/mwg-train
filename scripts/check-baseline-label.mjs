@@ -88,6 +88,10 @@ export const GENERATED_PATTERNS = [
 
 /** Every tracked prose or JSON document, classified. */
 export const DOCUMENTS = {
+  // Per-demo design contracts (mwg-train-tus). Authoring documents, verified against a freshly
+  // generated demo by check:design-schema, and deliberately outside the byte-frozen generated trees.
+  'docs/eval/design/README.md': 'design',
+  'docs/eval/design/booking/raw.md': 'design',
   'README.md': 'floor-report',
   'docs/PIPELINE.md': 'floor-report',
   'docs/eval/conformance/README.md': 'floor-report',
