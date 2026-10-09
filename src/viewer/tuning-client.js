@@ -13,6 +13,7 @@ if (form) {
       status: 'local-unapproved-draft',
       brief_id: form.dataset.briefId,
       framework: form.dataset.framework,
+      source_prompt: initial.prompt,
       prompt: draft.prompt,
       system_guidance: draft.system_guidance,
       settings: {
@@ -32,7 +33,9 @@ if (form) {
         const control = form.elements.namedItem(name);
         if (control && Object.hasOwn(saved, name) && typeof saved[name] === 'string') control.value = saved[name];
       }
-      setStatus('Restored the browser-local draft. The authored brief has not changed.');
+      setStatus(saved.source_prompt === initial.prompt
+        ? 'Restored a browser-local draft based on this authored prompt.'
+        : 'Restored a draft from an earlier or unknown brief revision. Compare the authored prompt before export.');
     }
   } catch {
     setStatus('Browser storage is unavailable; you can still edit and export this draft.');
@@ -40,7 +43,7 @@ if (form) {
   refresh();
   form.addEventListener('input', () => {
     refresh();
-    try { localStorage.setItem(key, JSON.stringify(values())); }
+    try { localStorage.setItem(key, JSON.stringify({ ...values(), source_prompt: initial.prompt })); }
     catch { setStatus('Browser storage is unavailable; export the draft to keep it.'); }
   });
   form.addEventListener('submit', (event) => {

@@ -17,6 +17,9 @@
  *   GET  /                              index: every project, filters, accept/reject, live links
  *   GET  /project/<id>[?run=]           pair evidence: rules, journeys, security, screenshots
  *   GET  /evidence/<id>/<file>[?run=]   screenshots and traces, path- and symlink-confined
+ *   GET  /tuning                         training-only prompt draft workbench (no generation)
+ *   GET  /tuning/client.js               browser-local draft/export helper
+ *   GET  /tuning/target/<tr-NN>.png       authored A1 target image, path- and symlink-confined
  *   GET  /healthz
  *
  * Live routes (live origin only):
@@ -371,7 +374,7 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
         const dir = join(repoRoot, 'data/A1_self_generated/targets', tuningTarget[1]);
         const image = join(dir, 'target.png');
         if (!existsSync(image) || lstatSync(dir).isSymbolicLink() || !lstatSync(dir).isDirectory() ||
-            lstatSync(image).isSymbolicLink() || realpathSync(dir) !== join(realpathSync(join(repoRoot, 'data/A1_self_generated/targets')), tuningTarget[1]) ||
+            lstatSync(image).isSymbolicLink() || !lstatSync(image).isFile() || realpathSync(dir) !== join(realpathSync(join(repoRoot, 'data/A1_self_generated/targets')), tuningTarget[1]) ||
             realpathSync(image) !== join(realpathSync(dir), 'target.png')) {
           return textResponse(response, 'target unavailable', 404);
         }

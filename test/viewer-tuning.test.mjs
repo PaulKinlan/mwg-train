@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
@@ -19,6 +19,8 @@ test('workbench reads authored training variants and recorded templates without 
   assert.match(html, /Compare the original authored prompts \(2 voices\)/);
   assert.match(html, /tr-26-v1/);
   assert.match(html, /tr-26-hono/);
+  assert.match(html, /scaffolded from tr-26-v1/);
+  assert.match(html, /mwg-train deterministic baseline/);
   assert.match(html, /\/tuning\/target\/tr-26\.png/);
   assert.match(html, /not a model-generated site/);
   assert.match(html, /Editing the prompt or settings below does not regenerate it/);
@@ -26,6 +28,16 @@ test('workbench reads authored training variants and recorded templates without 
   assert.match(html, /name="max_tokens"/);
   assert.match(html, /name="seed"/);
   assert.doesNotMatch(html, /<script>.*fetch\(/s);
+});
+
+test('full-page targets use their actual dimensions, and absent records show honest empty evidence', (t) => {
+  const data = loadTuningData(ROOT);
+  assert.match(renderTuning({ data, repoRoot: ROOT, familyId: 'tr-02' }), /width="1280" height="1246"/);
+  const empty = mkdtempSync(join(tmpdir(), 'viewer-tuning-missing-'));
+  t.after(() => rmSync(empty, { recursive: true, force: true }));
+  const absent = loadTuningData(empty);
+  assert.equal(absent.missing.length, 3);
+  assert.match(renderTuning({ data: absent, repoRoot: empty }), /Missing committed training input: docs\/train\/briefs\/manifest.jsonl/);
 });
 
 test('untrusted prompt text is escaped and unknown family falls back to an authored training family', () => {
@@ -56,5 +68,24 @@ test('tuning routes serve only fixed training targets, never eval targets or mut
   assert.equal((await fetch(`${base}/tuning`, { method: 'POST', body: 'prompt=secret' })).status, 404);
   const client = await fetch(`${base}/tuning/client.js`);
   assert.equal(client.status, 200);
-  assert.match(await client.text(), /localStorage/);
+  assert.match(await client.text(), /source_prompt/);
+});
+
+test('training target route refuses symlinked and non-file images', async (t) => {
+  const root = mkdtempSync(join(tmpdir(), 'viewer-tuning-boundary-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const dir = join(root, 'data/A1_self_generated/targets/tr-01');
+  mkdirSync(dir, { recursive: true });
+  const outside = join(root, 'outside.png');
+  writeFileSync(outside, Buffer.from([137, 80, 78, 71]));
+  const image = join(dir, 'target.png');
+  symlinkSync(outside, image);
+  const { server, pool } = createViewer({ corpusRoot: join(ROOT, 'pilot'), stateDir: join(root, 'state'), repoRoot: root });
+  t.after(() => { pool.stopAll(); server.close(); });
+  await new Promise((resolveListen) => server.listen(0, '127.0.0.1', resolveListen));
+  const url = `http://127.0.0.1:${server.address().port}/tuning/target/tr-01.png`;
+  assert.equal((await fetch(url)).status, 404);
+  rmSync(image);
+  mkdirSync(image);
+  assert.equal((await fetch(url)).status, 404);
 });
