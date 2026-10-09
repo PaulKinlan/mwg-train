@@ -140,7 +140,7 @@ a sanity check that the shared-spec premise holds - it is not evidence that the 
 independently good, and a variant that dropped its labels would show up here only because
 `controlSimilarity` takes the worse of the two sides.
 
-Per-variant deltas from the raw baseline to the shared target are in each
+Per-variant uplift deltas, with BOTH builds scored against the shared target, are in each
 `<family>-identity.md`. In four of the five families the mean UPLIFT delta is within +/-0.005 - booking
 +0.0046, event-registration +0.0047, contact-lead +0.0016, catalogue +0.0011 - and account-recovery is
 not: its mean is **+0.0060** across its seven arms (+0.0151, 0.0000, 0.0000, -0.0034, 0.0000, +0.0152,
