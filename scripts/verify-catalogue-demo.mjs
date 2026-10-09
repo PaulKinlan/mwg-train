@@ -43,6 +43,13 @@ const COUNTS = `return JSON.stringify({
   q: document.getElementById('q') ? document.getElementById('q').value : null,
   url: location.pathname + location.search
 })`;
+// The check that was missing until mwg-train-ea9, and the defect it would have caught.
+const STYLE_STATE = `return JSON.stringify({
+  sheets: document.styleSheets.length,
+  rules: [...document.styleSheets].reduce((n, s) => n + s.cssRules.length, 0),
+  bg: getComputedStyle(document.body).backgroundColor,
+  cta: (() => { const b = document.querySelector('.product-card button, [data-add] button') || document.querySelector('button'); return b ? getComputedStyle(b).backgroundColor : null })(),
+})`;
 const CART = `return JSON.stringify({
   keys: Object.keys(localStorage),
   cart: localStorage.getItem('kiln-copper-cart-v1'),
@@ -64,6 +71,18 @@ try {
   const page = await chrome.newPage({ viewport: { width: 1280, height: 900 } });
   await page.goto(`${base}/index.html`);
   await sleep(900);
+  // STYLE FIRST. This demo exists to be a VISUAL reference, and every other check in this file measures
+  // FUNCTION: element counts, visibility via offsetParent, filtering, storage. All of those pass trivially on
+  // a page whose stylesheet never applied - which is exactly what happened on the landed catalogue demo
+  // (mwg-train-ea9): a `*/` inside a block comment closed it early and the browser applied ZERO rules, so the
+  // page was a white unstyled 14000px column of black silhouettes while 22 functional checks passed.
+  const style = JSON.parse(await page.evaluate(STYLE_STATE));
+  check(
+    "the stylesheet is APPLIED and the palette is the boards' slate",
+    style.rules > 0 && style.bg === 'rgb(15, 23, 42)',
+    `${style.sheets} sheet(s), ${style.rules} rule(s) applied, body background ${style.bg}, first CTA ${style.cta}`,
+  );
+
   const initial = JSON.parse(await page.evaluate(COUNTS));
   check('desktop grid renders product cards', initial.all >= 3, `${initial.all} cards, ${initial.visible} visible`);
   await page.screenshot(join(SHOTS, 'index-desktop-1280x900.png'));
@@ -99,6 +118,21 @@ try {
   // ---- the spec's own write contract: field `item`, quantity optional ----
   await page.goto(`${base}/index.html`);
   await sleep(800);
+  // OPEN THE DRAWER FIRST. The item field lives inside the slide-over, and with the stylesheet actually
+  // applied that drawer is off-screen until opened - so `realType` could not reach it and the submit had
+  // nothing to send. This assumption was invisible before because the missing CSS left the drawer permanently
+  // open: the harness had been passing against a page that does not exist, which is what applying the
+  // stylesheet (mwg-train-ea9) revealed. A real user opens the drawer, so the harness does too.
+  const opened = await page.evaluate(`{
+    const button = document.getElementById('cart-open');
+    if (!button) return 'no-open-control';
+    button.click();
+    return 'clicked';
+  }`);
+  await sleep(500);
+  const drawerOpen = await page.evaluate(`return Boolean(document.getElementById('cart-items') && document.getElementById('item'))`);
+  check('the cart drawer can be opened', opened === 'clicked' && drawerOpen, `${opened}, item field present: ${drawerOpen}`);
+
   await page.realType('input[name="item"]', 'VASE-001');
   await sleep(250);
   await page.evaluate(`{ document.getElementById('cart-form').requestSubmit(); return 'ok'; }`);
