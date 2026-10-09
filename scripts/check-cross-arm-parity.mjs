@@ -295,7 +295,7 @@ function renderMarkdown(report) {
     }
     lines.push('');
     lines.push(
-      'The distance is the average of THREE terms, computed for the 32 row bands and the 32 column bands of mean luminance and then averaged across those two: how differently the two profiles are SHAPED (one minus their correlation, halved, and 1 when one profile has no variation), how different their average brightnesses are, and how different their CONTRAST is (twice the difference in spread). Stated here because a distance nobody can recompute is a number nobody can check, and the band values and the per-pair terms are in the JSON beside it. Reachable range: the average tops out near 0.833, since a maximal brightness difference forces both profiles flat and zeroes the other two terms - a pure brightness difference cannot exceed 0.333. Nearer is closer; the closest board is named per arm, not assumed.',
+      'The distance is the average of THREE terms, computed for the 32 row bands and the 32 column bands of mean luminance and then averaged across those two: how differently the two profiles are SHAPED (one minus their correlation, halved, and 1 when one profile has no variation), how different their average brightnesses are, and how different their CONTRAST is (twice the difference in spread). Stated here because a distance nobody can recompute is a number nobody can check, and the band values and the per-pair terms are in the JSON beside it. Reachable range: a pure brightness difference cannot exceed 0.333, and the highest the average can go is about 0.873 - a flat profile at one extreme against a maximally banded one, where shape fails closed at 1 and brightness and contrast are both high. It does NOT reach 1: any maximal brightness difference forces both profiles flat, which zeroes the other two terms. Nearer is closer; the closest board is named per arm, not assumed.',
     );
   }
   lines.push('');
@@ -304,7 +304,7 @@ function renderMarkdown(report) {
     lines.push('## Between the arms, in pixels');
     lines.push('');
     lines.push(
-      `${pixels.measured} arm pairs were compared in pixels across ${report.viewports.length} widths (${pixels.measured / report.viewports.length} per width). ` +
+      `${pixels.measured} arm pairs were compared in pixels across ${report.viewports.length} widths (${Number((pixels.measured / report.viewports.length).toFixed(1))} per width on average). ` +
         `The budget is ${pixels.budget}: the arms are one specification rendered by seven frameworks from one stylesheet, so they should be near-identical, and the CLOSEST pair measured in this run is reported here as the empirical floor for rendering noise rather than asserted.`,
     );
     lines.push('');

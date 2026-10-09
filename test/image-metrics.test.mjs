@@ -60,13 +60,19 @@ test('a uniform image is not a perfect match for everything', () => {
   assert.equal(metricDistance(white, black), 0.3333, 'and the value must be the stated average of its three terms');
 
   // The furthest a brightness-only difference can go, and the furthest the average can go at all. A reviewer
-  // measured the real maximum as 0.8333 - not 1 - because a maximal brightness difference requires both
-  // profiles to be FLAT, which zeroes the shape and contrast terms. The suite previously claimed the fixture
-  // "reaches 1" while measuring 0.8333 and only asserting > 0.6, which is a comment disagreeing with its own
-  // assertion. The number is pinned exactly now.
+  // This fixture is the alternating case, whose value is exactly 5/6 = 0.8333. It is NOT the reachable
+  // maximum - a review found that claim wrong, in four places including this one - because the maximum comes
+  // from a flat profile against an ASYMMETRIC banded one, where shape still fails closed at 1 while
+  // brightness and contrast are both high: measured 0.8727 at 23 of 32 bands set, matching the analytic
+  // maximum (1 + (1-p) + 2*sqrt(p(1-p)))/3 at p = (5-sqrt5)/10. Both values are pinned below.
   const inverted = { rowLuminance: FLAT(0).map((v, i) => (i % 2 ? 0 : 1)), bandLuminance: FLAT(0).map((v, i) => (i % 2 ? 1 : 0)) };
-  assert.equal(metricDistance(inverted, white), 0.8333, 'the reachable maximum of the average is 5/6, not 1');
+  assert.equal(metricDistance(inverted, white), 0.8333, "the alternating fixture's value is exactly 5/6");
   assert.ok(metricDistance(inverted, white) > 0.6, 'the far end of the scale must still be far');
+
+  // The actual reachable maximum, so the report's range claim is pinned rather than asserted.
+  const flatZero = { rowLuminance: FLAT(0), bandLuminance: FLAT(0) };
+  const asym = FLAT(0).map((v, i) => (i < 23 ? 1 : 0));
+  assert.equal(metricDistance(flatZero, { rowLuminance: asym, bandLuminance: asym }), 0.8727, 'the reachable maximum of the average is about 0.873, not 1 and not 5/6');
 
   // And the consequence: a uniform board must not be the closest board to a sparse image.
   const uniform = metrics({ mean: 0.98, ink: 0.02, structure: FLAT(0.98) });

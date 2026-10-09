@@ -129,11 +129,11 @@ Boards analysed: `step1-browse.jpg`, `step2-form.jpg`, `step3-confirmation.jpg`,
 | svelte | 1280x900 | `step2-form.jpg` | 0.4371 | BOARD_PALETTE_NOT_SHARED, BOARD_LUMINANCE_DIVERGES, BOARD_INK_DIVERGES, BOARD_STRUCTURE_DIVERGES | `booking-svelte-1280x900.png` |
 | | | _terms_ | shape 0.5327 / brightness 0.8031 / contrast 0.088 (rows) | shape 0.3547 / brightness 0.8031 / contrast 0.0412 (columns) | |
 
-The distance is the average of THREE terms, computed for the 32 row bands and the 32 column bands of mean luminance and then averaged across those two: how differently the two profiles are SHAPED (one minus their correlation, halved, and 1 when one profile has no variation), how different their average brightnesses are, and how different their CONTRAST is (twice the difference in spread). Stated here because a distance nobody can recompute is a number nobody can check, and the band values and the per-pair terms are in the JSON beside it. Reachable range: the average tops out near 0.833, since a maximal brightness difference forces both profiles flat and zeroes the other two terms - a pure brightness difference cannot exceed 0.333. Nearer is closer; the closest board is named per arm, not assumed.
+The distance is the average of THREE terms, computed for the 32 row bands and the 32 column bands of mean luminance and then averaged across those two: how differently the two profiles are SHAPED (one minus their correlation, halved, and 1 when one profile has no variation), how different their average brightnesses are, and how different their CONTRAST is (twice the difference in spread). Stated here because a distance nobody can recompute is a number nobody can check, and the band values and the per-pair terms are in the JSON beside it. Reachable range: a pure brightness difference cannot exceed 0.333, and the highest the average can go is about 0.873 - a flat profile at one extreme against a maximally banded one, where shape fails closed at 1 and brightness and contrast are both high. It does NOT reach 1: any maximal brightness difference forces both profiles flat, which zeroes the other two terms. Nearer is closer; the closest board is named per arm, not assumed.
 
 ## Between the arms, in pixels
 
-63 arm pairs were compared in pixels across 3 widths (21 per width). The budget is 0.05: the arms are one specification rendered by seven frameworks from one stylesheet, so they should be near-identical, and the CLOSEST pair measured in this run is reported here as the empirical floor for rendering noise rather than asserted.
+63 arm pairs were compared in pixels across 3 widths (21 per width on average). The budget is 0.05: the arms are one specification rendered by seven frameworks from one stylesheet, so they should be near-identical, and the CLOSEST pair measured in this run is reported here as the empirical floor for rendering noise rather than asserted.
 
 - Closest pair (the floor): `webcomponents` vs `svelte` at 1280x900, distance 0 - terms: rows shape 0 / brightness 0 / contrast 0; columns shape 0 / brightness 0 / contrast 0
 - Furthest pair: `hono` vs `preact` at 390x844, distance 0 - terms: rows shape 0 / brightness 0 / contrast 0; columns shape 0 / brightness 0 / contrast 0
@@ -144,25 +144,25 @@ No pair of arms diverged in pixels by more than 0.05.
 
 Saved for inspection (untracked run directory, full-page, one per arm and width):
 
-- `.conformance-corpus/cross-arm-1791579783693/screenshots/booking-hono-390x844.png`
-- `.conformance-corpus/cross-arm-1791579783693/screenshots/booking-raw-390x844.png`
-- `.conformance-corpus/cross-arm-1791579783693/screenshots/booking-react-390x844.png`
-- `.conformance-corpus/cross-arm-1791579783693/screenshots/booking-preact-390x844.png`
-- `.conformance-corpus/cross-arm-1791579783693/screenshots/booking-vue-390x844.png`
-- `.conformance-corpus/cross-arm-1791579783693/screenshots/booking-webcomponents-390x844.png`
-- `.conformance-corpus/cross-arm-1791579783693/screenshots/booking-svelte-390x844.png`
-- `.conformance-corpus/cross-arm-1791579783693/screenshots/booking-hono-768x900.png`
-- `.conformance-corpus/cross-arm-1791579783693/screenshots/booking-raw-768x900.png`
-- `.conformance-corpus/cross-arm-1791579783693/screenshots/booking-react-768x900.png`
-- `.conformance-corpus/cross-arm-1791579783693/screenshots/booking-preact-768x900.png`
-- `.conformance-corpus/cross-arm-1791579783693/screenshots/booking-vue-768x900.png`
-- `.conformance-corpus/cross-arm-1791579783693/screenshots/booking-webcomponents-768x900.png`
-- `.conformance-corpus/cross-arm-1791579783693/screenshots/booking-svelte-768x900.png`
-- `.conformance-corpus/cross-arm-1791579783693/screenshots/booking-hono-1280x900.png`
-- `.conformance-corpus/cross-arm-1791579783693/screenshots/booking-raw-1280x900.png`
-- `.conformance-corpus/cross-arm-1791579783693/screenshots/booking-react-1280x900.png`
-- `.conformance-corpus/cross-arm-1791579783693/screenshots/booking-preact-1280x900.png`
-- `.conformance-corpus/cross-arm-1791579783693/screenshots/booking-vue-1280x900.png`
-- `.conformance-corpus/cross-arm-1791579783693/screenshots/booking-webcomponents-1280x900.png`
-- `.conformance-corpus/cross-arm-1791579783693/screenshots/booking-svelte-1280x900.png`
+- `.conformance-corpus/cross-arm-1791580362163/screenshots/booking-hono-390x844.png`
+- `.conformance-corpus/cross-arm-1791580362163/screenshots/booking-raw-390x844.png`
+- `.conformance-corpus/cross-arm-1791580362163/screenshots/booking-react-390x844.png`
+- `.conformance-corpus/cross-arm-1791580362163/screenshots/booking-preact-390x844.png`
+- `.conformance-corpus/cross-arm-1791580362163/screenshots/booking-vue-390x844.png`
+- `.conformance-corpus/cross-arm-1791580362163/screenshots/booking-webcomponents-390x844.png`
+- `.conformance-corpus/cross-arm-1791580362163/screenshots/booking-svelte-390x844.png`
+- `.conformance-corpus/cross-arm-1791580362163/screenshots/booking-hono-768x900.png`
+- `.conformance-corpus/cross-arm-1791580362163/screenshots/booking-raw-768x900.png`
+- `.conformance-corpus/cross-arm-1791580362163/screenshots/booking-react-768x900.png`
+- `.conformance-corpus/cross-arm-1791580362163/screenshots/booking-preact-768x900.png`
+- `.conformance-corpus/cross-arm-1791580362163/screenshots/booking-vue-768x900.png`
+- `.conformance-corpus/cross-arm-1791580362163/screenshots/booking-webcomponents-768x900.png`
+- `.conformance-corpus/cross-arm-1791580362163/screenshots/booking-svelte-768x900.png`
+- `.conformance-corpus/cross-arm-1791580362163/screenshots/booking-hono-1280x900.png`
+- `.conformance-corpus/cross-arm-1791580362163/screenshots/booking-raw-1280x900.png`
+- `.conformance-corpus/cross-arm-1791580362163/screenshots/booking-react-1280x900.png`
+- `.conformance-corpus/cross-arm-1791580362163/screenshots/booking-preact-1280x900.png`
+- `.conformance-corpus/cross-arm-1791580362163/screenshots/booking-vue-1280x900.png`
+- `.conformance-corpus/cross-arm-1791580362163/screenshots/booking-webcomponents-1280x900.png`
+- `.conformance-corpus/cross-arm-1791580362163/screenshots/booking-svelte-1280x900.png`
 
