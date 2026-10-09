@@ -551,3 +551,111 @@ test('capture-to-projects CLI refuses repo output without writing a spec or proj
   );
   assert.ok(!existsSync(rejected));
 });
+
+test('preserves the navigation a recorded click caused, instead of dropping the destination', () => {
+  // The click's own target is synthesized away and the driver cannot re-perform it, so reproducing the
+  // navigation it caused is what keeps the replay on the page the recording reached.
+  const capture = fixtureCapture();
+  capture.pages.push({
+    path: '/feedback-receipt',
+    title: 'Receipt',
+    landmarks: ['main'],
+    headings: ['Thank you'],
+    nav: ['/'],
+    text_excerpt: 'Thank you for your feedback.',
+    forms: [],
+    links: [{ href: '/', text: 'Home' }],
+  });
+  const flow = fixtureFlow();
+  flow.steps = [
+    { index: 0, path: '/', action: 'goto' },
+    { index: 1, path: '/', action: 'click', target: 'a#more', expected_path: '/feedback-receipt' },
+    { index: 2, path: '/', action: 'fill', target: 'input[name=name]', value: 'Alice Smith' },
+    { index: 3, path: '/', action: 'fill', target: 'input[name=email]', value: 'alice@example.test' },
+    { index: 4, path: '/', action: 'fill', target: 'textarea[name=comments]', value: 'Great service today' },
+    { index: 5, path: '/', action: 'submit', target: 'form#feedback-form', expected_path: '/feedback-receipt' },
+    { index: 6, path: '/feedback-receipt', action: 'goto', expectText: 'Alice Smith' },
+  ];
+  const spec = translateCapture({ capture, flow });
+  const receiptPath = spec.routes.find((route) => route.kind === 'page' && route.path !== '/').path;
+  const visited = [spec.journey.startPath, ...spec.journey.steps.map((step) => step.path)];
+  assert.ok(visited.includes(receiptPath),
+    `the page the click navigated to must appear in the journey, got ${JSON.stringify(visited)}`);
+});
+
+test('refuses a click into an uncaptured page rather than dropping the navigation silently', () => {
+  // Before the click was preserved this translated and published, with the journey quietly missing a page.
+  const flow = fixtureFlow();
+  flow.steps.splice(1, 0, { index: 1, path: '/', action: 'click', target: 'a#more', expected_path: '/never-captured' });
+  flow.steps = flow.steps.map((step, index) => ({ ...step, index }));
+  assert.throws(() => translateCapture({ capture: fixtureCapture(), flow }),
+    (err) => err instanceof TranslationError && /has no captured page route/.test(err.message));
+});
+
+test('refuses a start path with no captured page instead of publishing an undrivable replay', () => {
+  // The harness navigates startPath before every step, so an unserved start path is a 404 in every arm,
+  // while validateSpec and the translation both looked fine.
+  const flow = fixtureFlow();
+  flow.start_path = '/never-captured';
+  assert.throws(() => translateCapture({ capture: fixtureCapture(), flow }),
+    (err) => err instanceof TranslationError && /journey start path/.test(err.message) && /has no captured page route/.test(err.message));
+});
+
+test('the CLI refuses differing existing output, and replaces it only with --overwrite', (t) => {
+  const temp = mkdtempSync(join(tmpdir(), 'capture-cli-overwrite-'));
+  t.after(() => rmSync(temp, { recursive: true, force: true }));
+  const captureFile = join(temp, 'capture.json');
+  const flowFile = join(temp, 'flow.json');
+  writeFileSync(captureFile, JSON.stringify(fixtureCapture()));
+  writeFileSync(flowFile, JSON.stringify(fixtureFlow()));
+  const out = join(temp, 'published');
+  const cli = (extra) => execFileSync('node', [
+    join(REPO_ROOT, 'scripts', 'capture-to-projects.mjs'),
+    '--capture', captureFile, '--flow', flowFile, '--framework', 'react', '--out', out, ...extra,
+  ], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], timeout: 60000, env: { ...process.env, MWG_TRAIN_CAPTURE_TEST_TEMP: temp } });
+
+  const firstRun = cli([]);
+  const built = firstRun.match(/built react -> (.+)/)[1].trim();
+  const stale = join(built, 'server.mjs');
+  writeFileSync(stale, '// built by an older generator\n');
+
+  // The published tree is what a guarded store protects, so the CLI must refuse here rather than replace it.
+  assert.throws(() => cli([]), (err) => err.status !== 0 && /already holds different output/.test(err.stderr) && err.stderr.includes(built));
+  assert.equal(readFileSync(stale, 'utf8'), '// built by an older generator\n', 'a refusal must not touch the destination');
+
+  const replaced = cli(['--overwrite']);
+  assert.match(replaced, /built react ->/);
+  assert.notEqual(readFileSync(stale, 'utf8'), '// built by an older generator\n');
+});
+
+test('refuses to overwrite existing output that differs, and replaces it only when asked', (t) => {
+  const temp = mkdtempSync(join(tmpdir(), 'capture-collision-'));
+  t.after(() => rmSync(temp, { recursive: true, force: true }));
+  const spec = translateCapture({ capture: fixtureCapture(), flow: fixtureFlow() });
+  const { specPath, projects } = buildCapturedProjects({ spec, outDir: temp, testTempDir: temp });
+
+  // Re-running the same capture proves identity and stays a no-op rather than being treated as a collision.
+  assert.equal(buildCapturedProjects({ spec, outDir: temp, testTempDir: temp }).specPath, specPath);
+
+  // Output that differs - a tree built by an earlier generator, or an edited one - must not be replaced silently.
+  const stale = join(projects.react, 'server.mjs');
+  writeFileSync(stale, '// built by an older generator\n');
+  assert.throws(() => buildCapturedProjects({ spec, outDir: temp, testTempDir: temp }),
+    (err) => err instanceof TranslationError
+      && /already holds different output/.test(err.message)
+      && err.message.includes(projects.react));
+  assert.equal(readFileSync(stale, 'utf8'), '// built by an older generator\n', 'a refusal must not touch the destination');
+
+  // The spec is guarded the same way, and the refusal names the spec.
+  writeFileSync(specPath, '{}\n');
+  assert.throws(() => buildCapturedProjects({ spec, outDir: temp, testTempDir: temp }),
+    (err) => err instanceof TranslationError
+      && /already holds different output/.test(err.message)
+      && err.message.includes(specPath));
+
+  // An explicit overwrite replaces both, and a replacement starts clean so no stale file survives.
+  const replaced = buildCapturedProjects({ spec, outDir: temp, testTempDir: temp, overwrite: true });
+  assert.equal(replaced.specPath, specPath);
+  assert.notEqual(readFileSync(stale, 'utf8'), '// built by an older generator\n');
+  assert.deepEqual(validateSpec(spec), []);
+});

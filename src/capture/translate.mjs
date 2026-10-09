@@ -16,7 +16,8 @@
  */
 
 import { createHash } from 'node:crypto';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 
 import { validateCapture, validateFlow, resolveCaptureOutputPath } from './schema.mjs';
@@ -96,6 +97,12 @@ export function stepsForJourney(flowSteps) {
     if (step.action === 'click') {
       const at = ensure(step.path);
       if (step.expectText !== undefined) at.expectText = step.expectText;
+      // A click that navigated is part of the journey. Dropping its destination silently produced a replay
+      // that never reached the page the recording reached. The driver cannot re-perform a click (the target
+      // is synthesized away), so the faithful thing is to reproduce the NAVIGATION the click caused: emit
+      // the destination as its own step. ensure() collapses it when the next action already goes there, so
+      // a click that did not move the page adds nothing.
+      if (step.expected_path !== undefined) ensure(step.expected_path);
     }
   }
   return out;
@@ -406,6 +413,12 @@ export function translateCapture({ capture, flow }) {
       throw new TranslationError(`journey page '${step.path}' has no captured page route: cannot build a drivable journey`);
     }
   }
+  // The harness navigates journey.startPath before replaying the steps, so a start path with no served page
+  // is a 404 the moment a generated project runs - a spec validateSpec accepts and no arm can drive.
+  const startPath = pathFor(flow.start_path);
+  if (!servedPages.has(startPath)) {
+    throw new TranslationError(`journey start path '${startPath}' has no captured page route: cannot build a drivable journey`);
+  }
 
   // 10. Spec assembly
   const spec = {
@@ -444,7 +457,7 @@ export function translateCapture({ capture, flow }) {
     fields,
     validation,
     journey: {
-      startPath: pathFor(flow.start_path),
+      startPath,
       formSelector: `form#${formId}`,
       fill: journeyFill,
       ...(Object.keys(journeySelect).length > 0 ? { select: journeySelect } : {}),
@@ -502,7 +515,55 @@ export function translateCapture({ capture, flow }) {
  * An explicit --out remains constrained to a verified quarantine store or a test temp root;
  * it cannot arbitrarily write elsewhere in the repository.
  */
-export function buildCapturedProjects({ spec, outDir = null, framework = null, quarantineRoot = null, repoRoot = null, testTempDir = null } = {}) {
+
+// Output names derive from the capture's published structure, so two captures with the same form shape
+// resolve to the same family_id and therefore the same spec and project paths. Writing over that silently
+// destroys the earlier output. The default is to refuse; overwrite must be asked for explicitly.
+function readTree(dir) {
+  const files = new Map();
+  const walk = (rel) => {
+    for (const entry of readdirSync(join(dir, rel), { withFileTypes: true })) {
+      const child = rel ? `${rel}/${entry.name}` : entry.name;
+      if (entry.isDirectory()) walk(child);
+      else files.set(child, readFileSync(join(dir, child)));
+    }
+  };
+  walk('');
+  return files;
+}
+
+function treesDiffer(existing, expected) {
+  if (existing.size !== expected.size) return true;
+  for (const [name, content] of existing) {
+    const other = expected.get(name);
+    if (other === undefined || !other.equals(content)) return true;
+  }
+  return false;
+}
+
+function refuseCollision(target, context) {
+  throw new TranslationError(
+    `destination already holds different output: ${target}${context} - refusing to overwrite it, pass overwrite to replace it`,
+  );
+}
+
+// Compare against what we are about to write rather than against a recorded corpus: re-running the same
+// capture is then a no-op, and any real difference is refused. The comparison renders the project with the
+// real generator into a scratch directory, so no manifest or file-layout rule is duplicated here.
+function assertProjectDestinationFree(dir, built, frameworkName, overwrite) {
+  if (overwrite || !existsSync(dir)) return;
+  const scratch = mkdtempSync(join(tmpdir(), 'capture-project-check-'));
+  try {
+    writeProject(scratch, { ...built, includeDependencies: true });
+    if (treesDiffer(readTree(dir), readTree(scratch))) {
+      refuseCollision(dir, ` (framework ${frameworkName})`);
+    }
+  } finally {
+    rmSync(scratch, { recursive: true, force: true });
+  }
+}
+
+export function buildCapturedProjects({ spec, outDir = null, framework = null, quarantineRoot = null, repoRoot = null, testTempDir = null, overwrite = false } = {}) {
   const problems = validateSpec(spec);
   if (problems.length > 0) {
     throw new TranslationError(`spec is invalid:\n  ${problems.join('\n  ')}`);
@@ -523,16 +584,18 @@ export function buildCapturedProjects({ spec, outDir = null, framework = null, q
 
   const options = { quarantineRoot, repoRoot: effectiveRepo };
 
-  // Write spec
   const specRelPath = `specs/${spec.family_id}.json`;
   const specPath = outputDir !== null
     ? resolveCaptureOutputPath(join(outputDir, `${spec.family_id}.json`), outputOptions)
     : assetStoragePath('A4_clean_room_reproduction', specRelPath, options);
+  const specContents = `${JSON.stringify(spec, null, 2)}\n`;
 
-  mkdirSync(dirname(specPath), { recursive: true });
-  writeFileSync(specPath, `${JSON.stringify(spec, null, 2)}\n`);
+  // Decide on EVERY destination before writing anything, so a refusal cannot leave a half-written spec or a
+  // mixture of old and new projects behind.
+  if (!overwrite && existsSync(specPath) && readFileSync(specPath, 'utf8') !== specContents) {
+    refuseCollision(specPath, ` (family ${spec.family_id})`);
+  }
 
-  // Build and write projects
   const frameworksToBuild = framework ? [framework] : Object.keys(FRAMEWORKS);
   const projects = {};
   const builtProjects = {};
@@ -547,9 +610,19 @@ export function buildCapturedProjects({ spec, outDir = null, framework = null, q
       ? resolveCaptureOutputPath(join(outputDir, built.projectId), outputOptions)
       : assetStoragePath('A4_clean_room_reproduction', projectRelPath, options);
 
-    writeProject(projectDir, { ...built, includeDependencies: true });
+    assertProjectDestinationFree(projectDir, built, fw, overwrite);
     projects[fw] = projectDir;
     builtProjects[fw] = built;
+  }
+
+  mkdirSync(dirname(specPath), { recursive: true });
+  writeFileSync(specPath, specContents);
+
+  for (const [fw, projectDir] of Object.entries(projects)) {
+    // A replacement has to start clean: leaving the previous project's files in place would produce a
+    // mixture of two captures rather than the output of one.
+    if (overwrite && existsSync(projectDir)) rmSync(projectDir, { recursive: true, force: true });
+    writeProject(projectDir, { ...builtProjects[fw], includeDependencies: true });
   }
 
   return { specPath, projects, builtProjects };
