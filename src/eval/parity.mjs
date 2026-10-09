@@ -138,9 +138,11 @@ export function crossArmFindings({ arms, budget }) {
   const variants = measured.map((arm) => ({ framework: arm.framework, signature: arm.signature }));
   const identity = variantIdentity(measured[0].signature, variants);
   // `identityFindings` reads the axes off the RESULT (`identity.identity[axis]`), so it is handed the
-  // result itself. Passing the axes here does not throw and does not warn - every axis reads as
-  // `undefined`, `typeof undefined === 'number'` is false, and the function returns an empty findings
-  // list, which looks exactly like agreement. That is a trap worth stating where the call is made.
+  // result itself. Passing the axes here USED to be silent - every axis read as `undefined`, the numeric
+  // guard declined, and the function returned an empty findings list that looked exactly like agreement.
+  // That is no longer true: the guard at the top of `identityFindings` throws a TypeError naming the
+  // mistake, so the call below is checked rather than trusted. (mwg-train-w46 added it, and corrected the
+  // identically stale version of this sentence in conformance.mjs; this copy was left behind.)
   //
   // AND EVERY MEAN FINDING NAMES THE PAIR RESPONSIBLE. A cross-family review caught the inversion this
   // replaces: the pair finding was suppressed whenever a mean finding existed for the same axis, and
