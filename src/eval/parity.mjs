@@ -18,7 +18,7 @@
  *   a token the page never set: each is a finding with a code, never a missing row in a report that
  *   still reads as clean. Absence of evidence is not evidence of parity.
  */
-import { IDENTITY_AXES, identityFindings, variantIdentity } from './conformance.mjs';
+import { IDENTITY_AXES, identityFindings, requireBudget, variantIdentity } from './conformance.mjs';
 
 /**
  * Findings carry the same shape the repository's other instruments emit, so a reader who has seen one
@@ -119,6 +119,9 @@ export function viewportFindings({ arms, requested, expectedArms = null }) {
  * which arm was named first.
  */
 export function crossArmFindings({ arms, budget }) {
+  // The outlier loop further down reads budget[axis] directly, and this call is what makes that safe:
+  // without it a missing budget would skip every axis silently, which reads as "no arms drifted".
+  requireBudget(budget, 'crossArmFindings');
   const measured = arms.filter((arm) => arm.signature);
   if (measured.length < 2) {
     return {
