@@ -18,6 +18,7 @@
  * other is the one where "framework" and "aesthetic choice" are confounded.
  */
 import { createHash } from 'node:crypto';
+import { fileURLToPath } from 'node:url';
 import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, join, resolve } from 'node:path';
@@ -84,7 +85,7 @@ async function scoreFamily({ family, chrome, runDir, outDir, ports }) {
   };
   writeFileSync(join(outDir, `${family.family_id}-identity.json`), `${JSON.stringify(report, null, 2)}\n`);
   writeFileSync(join(outDir, `${family.family_id}-identity.md`), renderIdentityMarkdown(report));
-  console.log(`score-variant-identity: ${family.family_id} identity ${identity.identity.overall.toFixed(3)} (weakest ${identity.weakest_pair ? `${identity.weakest_pair.a}/${identity.weakest_pair.b} ${identity.weakest_pair.overall.toFixed(3)}` : 'n/a'}), ${findings.length} below budget`);
+  console.log(`score-variant-identity: ${family.family_id} identity ${fmt(identity.identity.overall)} (weakest ${identity.weakest_pair ? `${identity.weakest_pair.a}/${identity.weakest_pair.b} ${fmt(identity.weakest_pair.overall)}` : 'n/a'}), ${findings.length} below budget`);
   for (const variant of variants) console.log(`  ${variant.framework.padEnd(7)} raw ${variant.raw.toFixed(3)} -> target ${variant.target.toFixed(3)} (delta ${variant.delta >= 0 ? '+' : ''}${variant.delta.toFixed(3)})`);
   return { family: family.family_id, identity: identity.identity.overall, findings: findings.length };
 }
@@ -97,6 +98,8 @@ async function scoreFamily({ family, chrome, runDir, outDir, ports }) {
  * run, and relabelling a committed report never requires re-measuring it. Rewriting measured evidence
  * to change its presentation would make the numbers themselves suspect.
  */
+export const fmt = (value, digits = 3) => (Number.isFinite(value) ? value.toFixed(digits) : 'n/a');
+
 export function renderIdentityMarkdown(report) {
   const budget = report.budget ?? IDENTITY_BUDGET;
   const identity = report.identity;
@@ -118,7 +121,7 @@ export function renderIdentityMarkdown(report) {
     '',
     '| axis | agreement | variance | budget |',
     '| --- | --- | --- | --- |',
-    ...Object.entries(budget).map(([axis, minimum]) => `| ${axis} | ${identity.identity[axis].toFixed(3)} | ${identity.variance[axis].toFixed(4)} | >= ${minimum} |`),
+    ...Object.entries(budget).map(([axis, minimum]) => `| ${axis} | ${fmt(identity.identity[axis])} | ${fmt(identity.variance[axis], 4)} | >= ${minimum} |`),
     '',
     identity.weakest_pair ? `Weakest pair: ${identity.weakest_pair.a}/${identity.weakest_pair.b} at ${identity.weakest_pair.overall.toFixed(3)}.` : 'Only one variant; nothing to compare.',
     '',
@@ -194,4 +197,6 @@ async function main() {
   console.log(`score-variant-identity: ${summary.length} family(ies), ${belowBudget} axis/family below budget`);
 }
 
-await main();
+// Only when RUN, not when imported. The renderer has a regression test for the degenerate shape this bead
+// introduced (null axes), and importing the module to reach it must not execute the whole CLI.
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) await main();

@@ -198,8 +198,30 @@ export function controlSimilarity(target, candidate) {
   return round(0.6 * match + 0.4 * labelled);
 }
 
+/** Whether a signature carries anything that can actually be compared. */
+export function isMeasurable(signature) {
+  return (signature?.nodes?.length ?? 0) > 0 || (signature?.boxes?.length ?? 0) > 0 || (signature?.controls?.length ?? 0) > 0;
+}
+
 /** The three axes and their weighted mean, as one object so a report never has to recompute them. */
 export function conformanceScore(target, candidate) {
+  // REFUSED, not scored (mwg-train-z92). structuralSimilarity begins `if (a.length === 0 && b.length === 0)
+  // return 1`, geometrySimilarity ends `denominator === 0 ? 1`, controlSimilarity has the same both-empty
+  // branch - so a signature with nothing in it scored a PERFECT 1.000 on every axis and two such arms read
+  // as perfect agreement. An arm that failed to render is unmeasured, and unmeasured must not read as
+  // agreement. The primitives keep their set semantics (two empty token lists ARE equal); it is this
+  // composite that must not turn that into a passing score.
+  const unmeasured = [
+    ['target', target],
+    ['candidate', candidate],
+  ].filter(([, signature]) => !isMeasurable(signature)).map(([role]) => role);
+  if (unmeasured.length > 0) {
+    throw new TypeError(
+      `conformanceScore: the ${unmeasured.join(' and ')} signature measured nothing - no nodes, boxes or `
+      + 'controls - so there is no conformance to score. An unmeasured arm must not be reported as agreeing '
+      + 'perfectly.',
+    );
+  }
   const structural = structuralSimilarity(target, candidate);
   const geometry = geometrySimilarity(target, candidate);
   const controls = controlSimilarity(target, candidate);
@@ -245,6 +267,23 @@ export function scoreArm({ target, raw, arm }) {
 export const IDENTITY_AXES = Object.freeze(['structural', 'geometry', 'controls', 'overall']);
 
 export function variantIdentity(target, variants) {
+  // Computed FIRST, because conformanceScore now refuses an unmeasurable signature and this is the case that
+  // must stay a recorded fact rather than a crash - it is exactly what the degenerate finding is for. The
+  // numbers must also stop claiming perfect agreement: an empty pairwise list scored mean 1, which is how a
+  // family of blank pages reported 1.000 identity (mwg-train-z92).
+  const degenerate = variants.length < 2 || variants.every((variant) => !isMeasurable(variant.signature));
+  if (degenerate) {
+    const unmeasured = Object.fromEntries(IDENTITY_AXES.map((axis) => [axis, null]));
+    return {
+      target_conformance: [],
+      pairwise: [],
+      identity: unmeasured,
+      variance: Object.fromEntries(IDENTITY_AXES.map((axis) => [axis, null])),
+      weakest_pair: null,
+      weakest_by_axis: unmeasured,
+      degenerate: true,
+    };
+  }
   const targets = variants.map((variant) => ({ framework: variant.framework, ...conformanceScore(target, variant.signature) }));
   const pairwise = [];
   for (let i = 0; i < variants.length; i += 1) {
@@ -271,9 +310,6 @@ export function variantIdentity(target, variants) {
   const weakestByAxis = Object.fromEntries(
     IDENTITY_AXES.map((axis) => [axis, pairwise.length === 0 ? null : [...pairwise].sort((a, b) => a[axis] - b[axis])[0]]),
   );
-  // Two variants that measure nothing agree perfectly. Without this, a family of blank pages scores
-  // 1.000 identity and raises no finding, which is the most confidently wrong answer the axis can give.
-  const degenerate = variants.length < 2 || variants.every((variant) => (variant.signature?.boxes?.length ?? 0) === 0);
   return { target_conformance: targets, pairwise, identity, variance, weakest_pair: weakestByAxis.overall, weakest_by_axis: weakestByAxis, degenerate };
 }
 

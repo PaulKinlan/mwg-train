@@ -224,7 +224,9 @@ function renderMarkdown(report) {
     lines.push('');
     lines.push(`- measured: ${viewport.measured.join(', ') || 'none'}`);
     if (viewport.missing.length > 0) lines.push(`- **missing: ${viewport.missing.join(', ')}**`);
-    if (viewport.identity) {
+    // The all-blank case now returns a truthy object whose axes are null, so a truthiness test would bypass
+    // the `not measurable` branch below and print "structural null" (mwg-train-z92 review, P3).
+    if (viewport.identity && Number.isFinite(viewport.identity.overall)) {
       lines.push(
         `- identity: structural ${viewport.identity.structural}, geometry ${viewport.identity.geometry}, controls ${viewport.identity.controls}, overall ${viewport.identity.overall}`,
       );
