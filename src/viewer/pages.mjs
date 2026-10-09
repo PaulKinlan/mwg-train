@@ -102,9 +102,28 @@ export const PAGE_CSS = `
   .tuning-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-block: 1.2rem; }
   .tuning-actions button:not([type=submit]) { background: var(--surface); color: var(--action); }
   #draft-status { color: var(--muted); font-weight: 650; }
+  .concept-lede { font-size: 1.08rem; }
+  .concept-board-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(0.9rem, 2vw, 1.5rem); }
+  .concept-board, .concept-comparison figure { min-width: 0; margin: 0; }
+  .concept-board { margin-block: 1rem 1.5rem; }
+  .concept-board-featured { max-width: 68rem; }
+  .concept-board img { display: block; width: 100%; height: auto; border-radius: 0.4rem; }
+  .concept-board a, .concept-image-frame a { display: block; background: var(--surface); }
+  .concept-board figcaption { padding-block: 0.45rem 0.7rem; }
+  .concept-board figcaption strong { display: block; font-size: 1.12rem; }
+  .concept-board figcaption span, .concept-comparison figcaption { color: var(--muted); font-size: 0.88rem; }
+  .concept-board figcaption p { margin: 0.25rem 0; }
+  .concept-comparison { padding-block: 0.6rem 1.5rem; border-top: 1px solid var(--line); }
+  .concept-comparison h3 { margin: 0.3rem 0 0.8rem; text-transform: capitalize; }
+  .concept-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(0.9rem, 2vw, 1.5rem); }
+  .concept-image-frame { display: grid; place-items: center; min-height: 11rem; background: var(--surface); }
+  .concept-image-frame img { display: block; max-width: 100%; width: 100%; height: auto; }
+  .concept-image-frame p { padding: 1.5rem; overflow-wrap: anywhere; }
+  .concept-comparison figcaption { margin-top: 0.45rem; overflow-wrap: anywhere; }
   @media (max-width: 55rem) { .tuning-grid { grid-template-columns: minmax(0, 1fr); } .tuning-selector { grid-template-columns: repeat(2, minmax(0, 1fr)); } .tuning-selector label, .tuning-selector select, .tuning-selector button { grid-column: auto; grid-row: auto; } .tuning-selector button { grid-column: 1 / -1; } }
   @media (max-width: 35rem) { .tuning-selector, .tuning-settings { grid-template-columns: minmax(0, 1fr); } .tuning-selector button { grid-column: auto; } }
   @media (max-width: 48rem) {
+    .concept-pair, .concept-board-grid { grid-template-columns: minmax(0, 1fr); }
     .pair { grid-template-columns: minmax(0, 1fr); }
     dl { grid-template-columns: minmax(0, 1fr); gap: 0.1rem; }
     dd { margin-bottom: 0.5rem; }
@@ -123,7 +142,7 @@ export function page(title, body) {
 <style>${PAGE_CSS}</style>
 </head>
 <body>
-<nav><a href="/">corpus index</a> · <a href="/tuning">prompt workbench</a> · <a href="/pipeline">pipeline</a></nav>
+<nav><a href="/">corpus index</a> · <a href="/concepts">concepts</a> · <a href="/tuning">prompt workbench</a> · <a href="/pipeline">pipeline</a></nav>
 <main id="content">${body}</main>
 </body>
 </html>`;
