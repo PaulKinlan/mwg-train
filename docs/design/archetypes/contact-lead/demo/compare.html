@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <title>Visual design comparison — Contact-lead archetype</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header class="top-bar">
+      <a href="index.html" class="brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 48 48" focusable="false">
+            <path d="M24 5 45 43H32.6L24 23.6Z" fill="currentColor"/>
+            <path d="M24 5 3 43h12.4L24 23.6Z" fill="currentColor" opacity=".55"/>
+            <path d="M16.6 32.4h14.8v4.6H16.6z" fill="currentColor"/>
+          </svg>
+        </span>
+        <span>ARKHITECTS Studio</span>
+      </a>
+      <nav class="top-nav" aria-label="Demo navigation">
+        <a href="index.html">Consultation form</a>
+        <a href="success.html">Success view</a>
+        <a href="compare.html" aria-current="page">Visual spec</a>
+      </nav>
+    </header>
+
+    <div class="state-switcher" role="region" aria-label="Demo state switcher">
+      <span class="state-switcher-label">Design states:</span>
+      <a href="index.html" class="state-pill">← 1. Consultation form</a>
+      <a href="success.html" class="state-pill">2. Success view →</a>
+      <span class="state-pill" aria-current="page">Boards comparison</span>
+    </div>
+
+    <main class="container">
+      <div class="page-header">
+        <h1 class="display-title">Visual design reference comparison</h1>
+        <p class="subtitle">
+          Each reference board from <code>../</code> beside the live page it informed, rendered in an
+          iframe at a true 1280 × 900 desktop viewport and a 390 × 844 mobile viewport.
+        </p>
+      </div>
+
+      <div class="legend">
+        <p>
+          The boards are the two JPEGs committed alongside this demo. Per <code>../README.md</code> they
+          are "visual planning references only: not a working consultation form, a real submitted lead, a
+          generated-site screenshot, a sealed evaluation target, or training/conformance evidence", and
+          "the London address, identity, named attendee, email address, response-time promise, reference
+          token and PDF button are unverified illustrated placeholders".
+        </p>
+        <p>
+          Nothing on this page is a screenshot: the right-hand frames are the live files in this
+          directory, loaded in an iframe, so no capture is committed and none can drift from the
+          implementation. The left-hand images are the boards themselves, unmodified.
+        </p>
+      </div>
+
+      <div class="comparison-grid">
+        <!-- Board 1: studio identity and the consultation form -->
+        <article class="comparison-card">
+          <div class="comparison-head">
+            <h2>1. Studio identity and the consultation form</h2>
+            <p class="comparison-source">
+              Board <code>../step1-form.jpg</code> (1376 × 768, SHA-256 <code>da3e24a25265…</code>)
+              &middot; live page <code>index.html</code>
+            </p>
+          </div>
+
+          <div class="comparison-views">
+            <div class="view-box">
+              <p class="view-title">Reference board</p>
+              <div class="view-image">
+                <img
+                  src="../step1-form.jpg"
+                  alt="Reference board 1: a dark two-column studio page. On the left, the ARKHITECTS Studio name and mark, an address block with a location pin, four numbered consultation process steps with icons, and a response-time pill reading under 24 hrs. On the right, a raised card headed Request a consultation with Full Name, Work Email, an open Project Scope dropdown listing Residential Renovation, Commercial Build and Interior Architecture, a Message box with a 0/500 character counter, and a full-width emerald Send Consultation Request button."
+                  width="1376"
+                  height="768"
+                >
+              </div>
+              <p class="view-caption">
+                The board renders its own form with the browser chrome of the tool that captured it; it
+                is a planning reference, not a capture of a working page.
+              </p>
+            </div>
+
+            <div class="view-box">
+              <p class="view-title">Live page — 1280 × 900</p>
+              <div class="view-frame">
+                <iframe
+                  src="index.html"
+                  title="Live consultation form at a 1280 by 900 viewport"
+                  width="1280"
+                  height="900"
+                  loading="lazy"
+                ></iframe>
+              </div>
+              <p class="view-caption">
+                Iframe viewport 1280 × 900, scaled to fit the column.
+                <a href="index.html">Open it full size</a>.
+              </p>
+            </div>
+
+            <div class="view-box">
+              <p class="view-title">Live page — 390 × 844</p>
+              <div class="view-frame view-frame--mobile">
+                <iframe
+                  src="index.html"
+                  title="Live consultation form at a 390 by 844 viewport"
+                  width="390"
+                  height="844"
+                  loading="lazy"
+                ></iframe>
+              </div>
+              <p class="view-caption">
+                Iframe viewport 390 × 844: the board's two columns become one, identity first.
+              </p>
+            </div>
+          </div>
+
+          <ul class="rationale-list">
+            <li><strong>Palette:</strong> page <code>#0f172a</code> with the board's faint drafting grid drawn as two CSS gradients, card surface <code>#1e293b</code>, action emerald <code>#10b981</code>, muted text <code>#94a3b8</code> — the values the board's generation prompt names.</li>
+            <li><strong>Layout:</strong> inside a 68rem frame the page is one column below 56rem and two from 56rem — identity on the left, form card on the right, as the board draws it.</li>
+            <li><strong>Left column:</strong> the geometric studio mark, the identity line, the address block with its emerald pin icon, the four numbered process steps as an ordered list with one icon each, and the response-time pill. The board's step titles are uppercased by the stylesheet; their text is unchanged in the DOM.</li>
+            <li><strong>Form card:</strong> the board's heading and its field order — Full Name, Work Email, Project Scope, Budget, Message — then the full-width <em>Send Consultation Request</em> action.</li>
+            <li><strong>Character counter:</strong> the board's <code>0/500 characters</code> is drawn from the textarea's own <code>maxlength="500"</code> and updated on every <code>input</code> event, so it counts what was actually typed rather than a number copied from the raster.</li>
+            <li><strong>Budget control:</strong> the board's prompt names a "Budget range selector" but the board itself shows its Project Scope dropdown open across that part of the card, so the ranges are not visible in the raster. It is drawn here as a select of four ranges plus “Not sure yet”, in the same control style as the other fields, and marked optional.</li>
+            <li><strong>Field labels:</strong> written in sentence case and not uppercased in CSS, so the visible label text ("Full Name", "Work Email", "Message") matches the DOM text exactly for anything reading the page.</li>
+            <li><strong>Not on the board:</strong> the demo's own top bar and state switcher, which exist so this page and the success page can be reached from each other, and the note stating that submitting sends nothing anywhere.</li>
+            <li><strong>Contrast deviation:</strong> the board draws a white label on the emerald button; white measures 2.54:1 there, so the demo keeps the board's emerald fill and uses a dark ink on it. The emerald itself is unchanged.</li>
+          </ul>
+        </article>
+
+        <!-- Board 2: the acknowledgement card -->
+        <article class="comparison-card">
+          <div class="comparison-head">
+            <h2>2. Submission acknowledgement</h2>
+            <p class="comparison-source">
+              Board <code>../step2-success.jpg</code> (1376 × 768, SHA-256 <code>2afa857d88c5…</code>)
+              &middot; live page <code>success.html</code>, seeded with the board's own sample values
+            </p>
+          </div>
+
+          <div class="comparison-views">
+            <div class="view-box">
+              <p class="view-title">Reference board</p>
+              <div class="view-image">
+                <img
+                  src="../step2-success.jpg"
+                  alt="Reference board 2: a dark page with a thin top bar, and a centred card under a large glowing emerald circle with a white checkmark. The card is headed Consultation Request Received, followed by the sentence Thank you, Elena. Our lead architect will review your project details and reach out within 24 hours at elena@studio.com. Below it an inset panel lists Project scope as Residential Renovation, Soho and Reference token as #LEAD-7301. Two buttons sit at the foot: an emerald Return to Home and an outlined Download Summary PDF."
+                  width="1376"
+                  height="768"
+                >
+              </div>
+              <p class="view-caption">
+                The board's own copy is model-generated placeholder text; only the acknowledgement
+                pattern is adopted.
+              </p>
+            </div>
+
+            <div class="view-box">
+              <p class="view-title">Live page — 1280 × 900</p>
+              <div class="view-frame">
+                <iframe
+                  src="success.html?name=Elena&amp;email=elena%40studio.com&amp;scope=residential-renovation&amp;message=Interior+refit+of+a+ground-floor+studio+in+Soho+with+a+new+meeting+room."
+                  title="Live acknowledgement page at a 1280 by 900 viewport"
+                  width="1280"
+                  height="900"
+                  loading="lazy"
+                ></iframe>
+              </div>
+              <p class="view-caption">
+                Iframe viewport 1280 × 900, scaled to fit. The frame is seeded with the board's sample
+                name so the two can be compared; every value on it was typed into
+                <code>index.html</code> and read back out of the URL.
+                <a href="success.html?name=Elena&amp;email=elena%40studio.com&amp;scope=residential-renovation&amp;message=Interior+refit+of+a+ground-floor+studio+in+Soho+with+a+new+meeting+room.">Open it full size</a>.
+              </p>
+            </div>
+
+            <div class="view-box">
+              <p class="view-title">Live page — 390 × 844</p>
+              <div class="view-frame view-frame--mobile">
+                <iframe
+                  src="success.html?name=Grace+Hopper&amp;email=grace%40example.test&amp;scope=interior-architecture&amp;message=Please+review+the+street-level+frontage+and+the+entrance+canopy."
+                  title="Live acknowledgement page at a 390 by 844 viewport, carrying a different submitted name and scope"
+                  width="390"
+                  height="844"
+                  loading="lazy"
+                ></iframe>
+              </div>
+              <p class="view-caption">
+                Iframe viewport 390 × 844, carrying a different submitted name and scope — the spec's own
+                journey values — to show that the sentence and the panel follow what was typed rather
+                than the board's raster.
+              </p>
+            </div>
+          </div>
+
+          <ul class="rationale-list">
+            <li><strong>Badge:</strong> the glowing emerald circle with a check sits over the card's top edge and is drawn in CSS plus one inline SVG. It carries the same dark ink as the primary action because white on <code>#10b981</code> measures 2.54:1, below the 3:1 a graphical object needs.</li>
+            <li><strong>Headline:</strong> <em>Consultation Request Received</em>, the board's wording, as the page's only <code>h1</code>.</li>
+            <li><strong>Personalised line:</strong> the board's sentence with the name and email written into it. The live page reads <code>?name=</code> and <code>?email=</code> from its own query string and writes them as text with <code>textContent</code> — never injected as markup — because the enquirer controls both values.</li>
+            <li><strong>Summary panel:</strong> the board's "Project scope" and "Reference token" rows on the raised surface, with the token in tabular figures. The panel is followed by a <em>Your message</em> block — the spec's echo container <code>#enquiry-message</code> has to show the message back, and board 2's panel does not have that row.</li>
+            <li><strong>Scope echo:</strong> the board prints "Residential Renovation, Soho". The live page echoes the option the enquirer chose, without inventing a project location, so with the default selection it reads "Residential Renovation".</li>
+            <li><strong>Reference token:</strong> <code>#LEAD-7301</code> is the sample drawn on the board and is the same on every visit. The spec issues a real reference from the server's <code>records</code> table; nothing here does.</li>
+            <li><strong>Buttons:</strong> <em>Return to Home</em> is a link to <code>index.html</code> styled as the primary action; <em>Download Summary PDF</em> is a real button that says in a live region that nothing is downloaded, because this directory generates no PDF.</li>
+            <li><strong>Not on the board:</strong> the board's marketing chrome — "Step 2 · Successful contact consultation", <em>Log in</em> and <em>Sign up</em> — is replaced by the demo's own navigation, since this page is not a product's second step and has no accounts.</li>
+            <li><strong>Sample state:</strong> opened with no query string at all, the page keeps the board's example values and says on the card that they are the board's illustrative example rather than a submitted enquiry.</li>
+          </ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-foot">
+      <p>
+        Comparison page only. It asserts no match with the boards and no conformance result; the
+        contract's server routes, its <code>records</code> table and its session are not implemented by
+        this demo. Read <code>README.md</code> for what it does and does not do.
+      </p>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,992 @@
+/*
+ * Contact-lead archetype - two-step consultation design target stylesheet.
+ *
+ * Implements the visual language of the two reference boards in ../ :
+ *   - Page background:  #0f172a (deep slate) with a faint blueprint grid (board 1)
+ *   - Card surfaces:    #1e293b (card), #162032 (inset field), #243248 (summary panel)
+ *   - Dividers:         #334155; control borders: #64748b (see the contrast note below)
+ *   - Action accent:    #10b981 emerald, hover #059669, active #047857
+ *   - Text:             #f8fafc primary, #94a3b8 muted, #34d399 small emerald text
+ *
+ * Contrast note (measured; see README "Contrast decisions"): boards 1 and 2 draw a white label on
+ * the emerald button and a white check on the emerald badge. White on #10b981 measures 2.54:1, below
+ * the 4.5:1 needed for text and below the 3:1 needed for a graphical object, so the primary action
+ * and the badge check use a dark ink (--action-ink) on the board's own emerald instead. Control
+ * borders use #64748b so a field outline clears 3:1 against both the page and the inset field
+ * surface.
+ *
+ * Responsive convention follows the pilot stylesheets (pilot/projects/<name>/app/styles.css) and the
+ * catalogue demo: range syntax, a mobile tier at (width <= 30rem), the two-column consultation
+ * layout from (width >= 56rem), and the comparison layout tiers at (width >= 48rem) and
+ * (width >= 60rem). The project path is written with <name> rather than a glob on purpose: a glob
+ * inside a block comment contains the comment's own closing sequence, which ends the comment early and
+ * folds the :root block into a rule whose selector matches nothing, leaving every custom property
+ * undefined.
+ *
+ * No build step, no bundler, no framework, no web fonts, no external requests, no @import.
+ */
+
+/* ---------------------------------------------------------------------------
+ * Tokens
+ * ------------------------------------------------------------------------- */
+:root {
+  /* Both boards depict a single dark scheme; there is no light variant and no theme toggle. */
+  color-scheme: dark;
+
+  --bg-page: #0f172a;
+  --surface-card: #1e293b;
+  --surface-inset: #162032;
+  --surface-raised: #243248;
+  --surface-input: #162032;
+
+  --border-subtle: #334155;
+  --border-control: #64748b;
+  --border-highlight: #94a3b8;
+
+  --text-primary: #f8fafc;
+  --text-muted: #94a3b8;
+  --text-inverse: #0b1220;
+
+  --action: #10b981;
+  --action-hover: #059669;
+  --action-active: #047857;
+  --action-ink: #04231a;
+  --action-text: #34d399;
+  --action-subtle: rgba(16, 185, 129, 0.18);
+  --action-border: rgba(16, 185, 129, 0.38);
+  --action-glow: rgba(16, 185, 129, 0.25);
+
+  --danger: #ef4444;
+  --danger-text: #fca5a5;
+
+  --blueprint: rgba(148, 163, 184, 0.07);
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-pill: 9999px;
+
+  --frame: 68rem;
+
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  accent-color: var(--action);
+}
+
+/* ---------------------------------------------------------------------------
+ * Base
+ * ------------------------------------------------------------------------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.55;
+  color: var(--text-primary);
+  background-color: var(--bg-page);
+  /* The faint drafting grid board 1 draws behind the whole page. Two gradients, no image request. */
+  background-image:
+    linear-gradient(to bottom, var(--blueprint) 1px, transparent 1px),
+    linear-gradient(to right, var(--blueprint) 1px, transparent 1px);
+  background-size: 4rem 4rem;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+img,
+svg {
+  max-width: 100%;
+}
+
+code {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* One focus treatment for every interactive control on both boards. */
+:is(a, button, input, select, textarea, summary):focus-visible {
+  outline: 3px solid var(--action);
+  outline-offset: 2px;
+}
+
+/* ---------------------------------------------------------------------------
+ * Top bar - the demo's own chrome
+ * ------------------------------------------------------------------------- */
+.top-bar {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 20;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  padding-inline: 1.5rem;
+  padding-block: 0.75rem;
+  background-color: var(--surface-card);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-weight: 700;
+  font-size: 1.0625rem;
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.brand-mark {
+  display: grid;
+  place-content: center;
+  inline-size: 2rem;
+  block-size: 2rem;
+  border-radius: var(--radius-sm);
+  background-color: var(--action-subtle);
+  color: var(--action-text);
+  border: 1px solid var(--action-border);
+}
+
+.top-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.25rem;
+  font-size: 0.875rem;
+}
+
+.top-nav a {
+  color: var(--text-muted);
+  text-decoration: none;
+  padding-block: 0.25rem;
+  border-bottom: 2px solid transparent;
+}
+
+.top-nav a:hover {
+  color: var(--text-primary);
+}
+
+.top-nav a[aria-current='page'] {
+  color: var(--text-primary);
+  border-bottom-color: var(--action);
+}
+
+/* ---------------------------------------------------------------------------
+ * State switcher - the demo's navigation between the two boards
+ * ------------------------------------------------------------------------- */
+.state-switcher {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding-inline: 1.5rem;
+  padding-block: 0.6rem;
+  background-color: var(--surface-inset);
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 0.8125rem;
+}
+
+.state-switcher-label {
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.state-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--border-control);
+  border-radius: var(--radius-pill);
+  background-color: var(--surface-card);
+  color: var(--text-primary);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.state-pill:hover {
+  border-color: var(--border-highlight);
+}
+
+.state-pill[aria-current='page'] {
+  background-color: var(--action);
+  border-color: var(--action);
+  color: var(--action-ink);
+}
+
+/* ---------------------------------------------------------------------------
+ * Page frame
+ * ------------------------------------------------------------------------- */
+.container {
+  max-inline-size: var(--frame);
+  margin-inline: auto;
+  padding-inline: 1.5rem;
+  padding-block: 2rem 3rem;
+}
+
+.page-header {
+  margin-block-end: 2rem;
+}
+
+.display-title {
+  margin: 0 0 0.5rem;
+  font-size: clamp(1.75rem, 4vw, 2.4rem);
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--text-muted);
+  max-inline-size: 46rem;
+}
+
+/* ---------------------------------------------------------------------------
+ * Controls: buttons, fields, labels
+ * ------------------------------------------------------------------------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-block-size: 44px;
+  padding: 0.7rem 1.1rem;
+  font-family: inherit;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-decoration: none;
+  text-align: center;
+}
+
+.btn--action {
+  background-color: var(--action);
+  color: var(--action-ink);
+  border: 1px solid var(--action);
+}
+
+.btn--action:hover {
+  background-color: var(--action-hover);
+  border-color: var(--action-hover);
+}
+
+.btn--action:active {
+  background-color: var(--action-active);
+  border-color: var(--action-active);
+}
+
+.btn--secondary {
+  background-color: var(--surface-raised);
+  color: var(--text-primary);
+  border: 1px solid var(--border-control);
+}
+
+.btn--secondary:hover {
+  border-color: var(--border-highlight);
+}
+
+.btn--block {
+  inline-size: 100%;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.optional-marker {
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.field-hint {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+/*
+ * Board 1's controls: an inset dark field with a 1px outline. The scope and budget selectors use the
+ * same rule as the text fields and textarea so the three control types read as one set, and the
+ * native select chevron is kept rather than drawn, so nothing here needs an image or a data URI.
+ */
+input[type='text'],
+input[type='email'],
+select,
+textarea {
+  font-family: inherit;
+  font-size: 0.9375rem;
+  color: var(--text-primary);
+  background-color: var(--surface-input);
+  border: 1px solid var(--border-control);
+  border-radius: var(--radius-sm);
+  padding: 0.65rem 0.8rem;
+  inline-size: 100%;
+  min-block-size: 44px;
+}
+
+textarea {
+  min-block-size: 9.5rem;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+option {
+  background-color: var(--surface-input);
+  color: var(--text-primary);
+}
+
+input:user-invalid,
+textarea:user-invalid,
+select:user-invalid {
+  border-color: var(--danger);
+}
+
+.char-count {
+  margin: 0;
+  text-align: end;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+}
+
+.form-status:empty {
+  display: none;
+}
+
+.form-status {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--action-text);
+}
+
+/*
+ * A note about what this static target really does. Board 1 has no equivalent; the codebase
+ * convention is to state the limit on the page rather than only in the README.
+ */
+.demo-note {
+  margin: 0;
+  padding: 0.7rem 0.85rem;
+  border: 1px dashed var(--border-control);
+  border-radius: var(--radius-sm);
+  background-color: var(--surface-inset);
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+.demo-note code {
+  color: var(--text-primary);
+}
+
+/* ---------------------------------------------------------------------------
+ * Board 1: studio identity (left) and consultation form (right)
+ * ------------------------------------------------------------------------- */
+.consultation {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2.5rem;
+  align-items: start;
+}
+
+.studio-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+}
+
+.studio-mark {
+  inline-size: 3.25rem;
+  block-size: 3.25rem;
+  display: block;
+}
+
+.studio-name {
+  margin: 0;
+  font-size: clamp(1.75rem, 4vw, 2.15rem);
+  letter-spacing: -0.02em;
+}
+
+.studio-name-strong {
+  font-weight: 800;
+}
+
+.studio-name-rest {
+  font-weight: 400;
+}
+
+.studio-section {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.studio-section-title {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+}
+
+.studio-block-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-primary);
+}
+
+.studio-address {
+  display: flex;
+  gap: 0.6rem;
+  margin: 0;
+  font-style: normal;
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+
+.address-icon {
+  flex: none;
+  margin-block-start: 0.1rem;
+  color: var(--action-text);
+}
+
+.process-list {
+  display: grid;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.process-step {
+  display: grid;
+  grid-template-columns: 2.25rem minmax(0, 1fr);
+  gap: 0.85rem;
+  align-items: start;
+}
+
+.process-icon {
+  display: grid;
+  place-content: center;
+  inline-size: 2.25rem;
+  block-size: 2.25rem;
+  border-radius: var(--radius-sm);
+  background-color: var(--action-subtle);
+  border: 1px solid var(--action-border);
+  color: var(--action-text);
+}
+
+.process-title {
+  display: block;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.process-detail {
+  display: block;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.response-pill {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.4rem;
+  align-self: start;
+  margin: 0;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-pill);
+  background-color: var(--surface-inset);
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+.response-pill-label {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+}
+
+.response-pill strong {
+  color: var(--text-primary);
+}
+
+.form-card {
+  padding: 1.75rem;
+  background-color: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 18px 40px rgba(2, 6, 23, 0.45);
+}
+
+.form-title {
+  margin: 0 0 0.4rem;
+  font-size: 1.125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.form-intro {
+  margin: 0 0 1.5rem;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.enquiry-form {
+  display: grid;
+  gap: 1.1rem;
+}
+
+/* ---------------------------------------------------------------------------
+ * Board 2: success card
+ * ------------------------------------------------------------------------- */
+.success-shell {
+  display: grid;
+  justify-items: center;
+  padding-block: 2.75rem 0.5rem;
+}
+
+.success-card {
+  position: relative;
+  inline-size: min(100%, 34rem);
+  padding: 3.9rem 1.75rem 1.75rem;
+  background-color: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 22px 50px rgba(2, 6, 23, 0.5);
+  text-align: center;
+}
+
+/* The glowing badge sits over the card's top edge, as it does on the board. */
+.success-badge {
+  position: absolute;
+  inset-block-start: -2.25rem;
+  inset-inline-start: 50%;
+  transform: translateX(-50%);
+  display: grid;
+  place-content: center;
+  inline-size: 4.5rem;
+  block-size: 4.5rem;
+  border-radius: 50%;
+  background-color: var(--action);
+  color: var(--action-ink);
+  box-shadow:
+    0 0 0 0.7rem var(--action-glow),
+    0 0 2.25rem 0.4rem rgba(16, 185, 129, 0.45);
+}
+
+.success-title {
+  margin: 0 0 0.85rem;
+  font-size: clamp(1.5rem, 3.5vw, 1.9rem);
+}
+
+.success-copy {
+  margin: 0 auto;
+  max-inline-size: 27rem;
+  color: var(--text-muted);
+  /* The name and email come from the query string, so an unbroken long value must not overflow. */
+  overflow-wrap: anywhere;
+}
+
+/* The sample/open-directly note is a note, not a heading: keep it left-aligned in the centred card. */
+.success-card .demo-note {
+  margin-block-end: 1.25rem;
+  text-align: start;
+}
+
+/* The static-target notes sit under the form and under the card, clear of the button. */
+.form-card .demo-note {
+  margin-block-start: 1.25rem;
+}
+
+.summary-panel {
+  display: grid;
+  gap: 0.9rem;
+  margin-block: 1.6rem;
+  padding: 1.25rem;
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  text-align: start;
+}
+
+.summary-list {
+  display: grid;
+  gap: 0.9rem;
+  margin: 0;
+}
+
+.summary-row dt {
+  margin: 0 0 0.15rem;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+.summary-row dd {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.summary-message {
+  padding-block-start: 0.9rem;
+  border-block-start: 1px solid var(--border-subtle);
+}
+
+.summary-message-title {
+  margin: 0 0 0.3rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+/* pre-wrap keeps the line breaks the enquirer typed in the textarea. */
+.summary-message-text {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.success-footnote {
+  margin: 0 0 1rem;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+.success-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.success-actions .btn {
+  flex: 1 1 12rem;
+}
+
+/* ---------------------------------------------------------------------------
+ * Footer
+ * ------------------------------------------------------------------------- */
+.site-foot {
+  max-inline-size: var(--frame);
+  margin-inline: auto;
+  padding: 1.5rem;
+  border-block-start: 1px solid var(--border-subtle);
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+.site-foot p {
+  margin: 0;
+}
+
+.site-foot p + p {
+  margin-block-start: 0.4rem;
+}
+
+.site-foot a {
+  color: var(--action-text);
+}
+
+/* ---------------------------------------------------------------------------
+ * Visual comparison page (compare.html)
+ * ------------------------------------------------------------------------- */
+.legend {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0 0 2rem;
+  padding: 1rem 1.25rem;
+  background-color: var(--surface-inset);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.legend p {
+  margin: 0;
+}
+
+.comparison-grid {
+  display: grid;
+  gap: 2.5rem;
+}
+
+.comparison-card {
+  padding: 1.5rem;
+  background-color: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+}
+
+.comparison-head {
+  padding-block-end: 0.85rem;
+  margin-block-end: 1.25rem;
+  border-block-end: 1px solid var(--border-subtle);
+}
+
+.comparison-head h2 {
+  margin: 0 0 0.35rem;
+  font-size: 1.25rem;
+}
+
+.comparison-source {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+.comparison-views {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.5rem;
+}
+
+.view-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  min-inline-size: 0;
+}
+
+.view-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.view-image {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background-color: var(--bg-page);
+  aspect-ratio: 1376 / 768;
+}
+
+.view-image img {
+  inline-size: 100%;
+  block-size: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+/*
+ * Live frames are rendered at a true 1280x900 and 390x844 viewport, then scaled with a transform so
+ * the whole viewport fits the column. The scale is chosen per tier so the frame never needs to be
+ * clipped: a single column has W-96px to work with, half of the 68rem frame has 484px, and the
+ * smallest phone column has 256px.
+ */
+.view-frame {
+  --frame-w: 1280px;
+  --frame-h: 900px;
+  --frame-scale: 0.28;
+  inline-size: calc(var(--frame-w) * var(--frame-scale));
+  block-size: calc(var(--frame-h) * var(--frame-scale));
+  max-inline-size: 100%;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-page);
+}
+
+.view-frame iframe {
+  inline-size: var(--frame-w);
+  block-size: var(--frame-h);
+  transform: scale(var(--frame-scale));
+  transform-origin: top left;
+  border: 0;
+  display: block;
+}
+
+.view-frame--mobile {
+  --frame-w: 390px;
+  --frame-h: 844px;
+  --frame-scale: 0.68;
+}
+
+.view-caption {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+.rationale-list {
+  margin: 1.25rem 0 0;
+  padding-inline-start: 1.25rem;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.rationale-list li + li {
+  margin-block-start: 0.4rem;
+}
+
+.rationale-list strong {
+  color: var(--text-primary);
+}
+
+/* ---------------------------------------------------------------------------
+ * Forced colours
+ * ------------------------------------------------------------------------- */
+@media (forced-colors: active) {
+  .form-card,
+  .success-card,
+  .summary-panel,
+  .state-pill,
+  input,
+  select,
+  textarea,
+  .view-frame,
+  .view-image {
+    forced-color-adjust: none;
+    border: 1px solid CanvasText;
+  }
+
+  .btn--action,
+  .state-pill[aria-current='page'],
+  .success-badge {
+    forced-color-adjust: none;
+    background-color: Highlight;
+    color: HighlightText;
+    border: 1px solid Highlight;
+  }
+
+  .btn--secondary,
+  .process-icon {
+    forced-color-adjust: none;
+    background-color: Canvas;
+    color: CanvasText;
+    border: 1px solid CanvasText;
+  }
+
+  :is(a, button, input, select, textarea):focus-visible {
+    outline: 3px solid Highlight;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Reduced motion
+ * ------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Responsive tiers
+ * ------------------------------------------------------------------------- */
+@media (width >= 48rem) {
+  .comparison-views {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .view-frame:not(.view-frame--mobile) {
+    --frame-scale: 0.24;
+  }
+}
+
+/* Board 1 is a two-column page: identity on the left, form card on the right. */
+@media (width >= 56rem) {
+  .consultation {
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+    gap: 3.5rem;
+  }
+}
+
+@media (width >= 60rem) {
+  .view-frame:not(.view-frame--mobile) {
+    --frame-scale: 0.37;
+  }
+}
+
+@media (width <= 30rem) {
+  .top-bar,
+  .state-switcher,
+  .container,
+  .site-foot {
+    padding-inline: 1rem;
+  }
+
+  .container {
+    padding-block: 1.5rem 2rem;
+  }
+
+  .form-card {
+    padding: 1.25rem;
+  }
+
+  .success-card {
+    padding: 3.6rem 1.25rem 1.5rem;
+  }
+
+  .comparison-card {
+    padding: 1rem;
+  }
+
+  .view-frame:not(.view-frame--mobile) {
+    --frame-scale: 0.19;
+  }
+
+  .view-frame--mobile {
+    --frame-scale: 0.6;
+  }
+}

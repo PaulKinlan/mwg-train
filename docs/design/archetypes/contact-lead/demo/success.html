@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <title>Consultation Request Received — ARKHITECTS Studio</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <svg class="visually-hidden" aria-hidden="true" focusable="false" width="0" height="0">
+      <symbol id="mark-studio" viewBox="0 0 48 48">
+        <path d="M24 5 45 43H32.6L24 23.6Z" fill="currentColor"/>
+        <path d="M24 5 3 43h12.4L24 23.6Z" fill="currentColor" opacity=".55"/>
+        <path d="M16.6 32.4h14.8v4.6H16.6z" fill="currentColor"/>
+      </symbol>
+      <symbol id="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M5 12.5 9.5 17 19 7"/>
+      </symbol>
+    </svg>
+
+    <header class="top-bar">
+      <a href="index.html" class="brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 48 48" focusable="false"><use href="#mark-studio"></use></svg>
+        </span>
+        <span>ARKHITECTS Studio</span>
+      </a>
+      <nav class="top-nav" aria-label="Demo navigation">
+        <a href="index.html">Consultation form</a>
+        <a href="success.html" aria-current="page">Success view</a>
+        <a href="compare.html">Visual spec</a>
+      </nav>
+    </header>
+
+    <div class="state-switcher" role="region" aria-label="Demo state switcher">
+      <span class="state-switcher-label">Design states:</span>
+      <a href="index.html" class="state-pill">← 1. Consultation form</a>
+      <span class="state-pill" aria-current="page">2. Success view (live)</span>
+      <a href="compare.html" class="state-pill">Boards comparison →</a>
+    </div>
+
+    <main class="container">
+      <div class="success-shell">
+        <!--
+          Board 2: the acknowledgement card.
+
+          The spec's read route is `GET /enquiry/:ref`, which looks the stored enquiry up by a
+          server-issued reference. There is no server and no `records` table here, so this page reads
+          the submitted values out of its own query string instead (contact-lead.json echo.container is
+          #enquiry-message) and the reference token stays the sample drawn on the board.
+
+          Opened directly with no query string it shows the board's own example, labelled as such.
+        -->
+        <section class="success-card" aria-labelledby="success-title">
+          <div class="success-badge" aria-hidden="true">
+            <svg width="34" height="34" viewBox="0 0 24 24" focusable="false"><use href="#icon-check"></use></svg>
+          </div>
+
+          <p class="demo-note" id="sample-note" hidden>
+            Sample view — this page was opened directly rather than submitted, so the details below are
+            the reference board's illustrative example, not an enquiry you sent.
+          </p>
+
+          <noscript>
+            <p class="demo-note">
+              JavaScript is off, so this page cannot read your answers back out of the URL. The details
+              below are the reference board's illustrative example, not necessarily your enquiry.
+            </p>
+          </noscript>
+
+          <h1 class="success-title" id="success-title">Consultation Request Received</h1>
+
+          <p class="success-copy">
+            Thank you, <span id="success-name">Elena</span>. Our lead architect will review your project
+            details and reach out within 24 hours<span id="success-email-line"> at <span id="success-email">elena@studio.com</span></span>.
+          </p>
+
+          <div class="summary-panel">
+            <h2 class="visually-hidden">Your enquiry summary</h2>
+            <dl class="summary-list">
+              <div class="summary-row">
+                <dt>Project scope</dt>
+                <dd id="success-scope">Residential Renovation, Soho</dd>
+              </div>
+              <div class="summary-row">
+                <dt>Reference token</dt>
+                <dd id="success-reference">#LEAD-7301</dd>
+              </div>
+            </dl>
+            <div class="summary-message">
+              <h3 class="summary-message-title">Your message</h3>
+              <p class="summary-message-text" id="enquiry-message">Interior refit of a ground-floor studio in Soho: a new meeting room, a kitchenette and lighting, starting this spring.</p>
+            </div>
+          </div>
+
+          <div class="success-actions">
+            <a class="btn btn--action" href="index.html">Return to Home</a>
+            <button type="button" class="btn btn--secondary" id="download-summary">Download Summary PDF</button>
+          </div>
+
+          <p class="form-status" id="download-status" role="status"></p>
+
+          <p class="success-footnote">
+            #LEAD-7301 is the sample token drawn on the reference board. This static target issues no
+            reference, stores no enquiry and sends nothing to the studio.
+          </p>
+        </section>
+      </div>
+    </main>
+
+    <footer class="site-foot">
+      <p>
+        Static design target for the <code>contact-lead</code> archetype: hand-written HTML, CSS and one
+        small inline script, with no server, no database and no network request. The spec's
+        <code>POST /enquiry</code> and <code>GET /enquiry/:ref</code> routes are not implemented here.
+      </p>
+      <p>
+        The studio name, the London address, the contact address, the response-time promise and the
+        reference token are the reference board's illustrative placeholders, not a real studio's
+        commitments. Nothing on this page records that an enquiry was received.
+      </p>
+    </footer>
+
+    <script>
+      /*
+       * Reads the values the form put in the query string and shows them back. Every value is written
+       * with textContent and never injected as markup: the enquirer controls the name, the email and the
+       * message, so they are treated as text however they are spelled.
+       *
+       * With no values in the URL the markup's sample text (the board's example) stays as it is and the
+       * page says so.
+       */
+      (function () {
+        var SCOPE_LABELS = {
+          'residential-renovation': 'Residential Renovation',
+          'commercial-build': 'Commercial Build',
+          'interior-architecture': 'Interior Architecture'
+        };
+
+        var params = null;
+        try {
+          params = new URLSearchParams(window.location.search);
+        } catch (error) {
+          params = null;
+        }
+
+        function value(key) {
+          if (!params) return '';
+          var raw = params.get(key);
+          return typeof raw === 'string' ? raw.trim() : '';
+        }
+
+        var name = value('name');
+        var email = value('email');
+        var scope = value('scope');
+        var message = value('message');
+
+        var nameOut = document.getElementById('success-name');
+        var emailLine = document.getElementById('success-email-line');
+        var emailOut = document.getElementById('success-email');
+        var scopeOut = document.getElementById('success-scope');
+        var messageOut = document.getElementById('enquiry-message');
+        var sampleNote = document.getElementById('sample-note');
+        var download = document.getElementById('download-summary');
+        var downloadStatus = document.getElementById('download-status');
+
+        if (name === '') {
+          if (sampleNote) sampleNote.hidden = false;
+        } else {
+          if (sampleNote) sampleNote.hidden = true;
+          if (nameOut) nameOut.textContent = name;
+        }
+
+        if (email !== '') {
+          if (emailOut) emailOut.textContent = email;
+          if (emailLine) emailLine.hidden = false;
+        } else if (name !== '' && emailLine) {
+          emailLine.hidden = true;
+        }
+
+        if (scope !== '' && scopeOut) {
+          scopeOut.textContent = SCOPE_LABELS[scope] || scope;
+        } else if (name !== '' && scopeOut) {
+          scopeOut.textContent = 'Not specified in this enquiry';
+        }
+
+        if (message !== '' && messageOut) {
+          messageOut.textContent = message;
+        } else if (name !== '' && messageOut) {
+          messageOut.textContent = 'No message was included in this enquiry.';
+        }
+
+        if (download && downloadStatus) {
+          download.addEventListener('click', function () {
+            downloadStatus.textContent =
+              'Nothing was downloaded: this design target generates no PDF and does not read your ' +
+              'enquiry — the button is reproduced from the reference board.';
+          });
+        }
+      })();
+    </script>
+  </body>
+</html>
