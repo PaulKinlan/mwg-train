@@ -344,3 +344,40 @@ test('the CLI passes on the tree and fails when a report loses its label', () =>
   assert.equal(json.findings.length, 0);
   assert.equal(json.checked, REPORTS.length, 'the CLI registry and this test list must agree');
 });
+
+// -----------------------------------------------------------------------------------------------------------
+// Quoted paths. git C-quotes any tracked path containing a character it considers unusual (core.quotePath
+// defaults to true), so a newline-split enumeration returns "pilot/projects/t\303\253st/package.json" for a file
+// really named pilot/projects/tëst/package.json. That quoted string matches no DOCUMENTS key and no
+// GENERATED_PATTERN, so a correctly classified or generated document was reported UNCLASSIFIED_DOCUMENT.
+// The check now enumerates with `git ls-files -z` and splits on NUL, which never appears in a path.
+test('a path git would quote still classifies, because enumeration is NUL-separated', async () => {
+  const { execFileSync } = await import('node:child_process');
+  const { mkdtempSync, mkdirSync, writeFileSync, rmSync } = await import('node:fs');
+  const { tmpdir } = await import('node:os');
+  const { join } = await import('node:path');
+  const { listTrackedDocuments, checkDocumentClassification, GENERATED_PATTERNS } = await import('../scripts/check-baseline-label.mjs');
+
+  const dir = mkdtempSync(join(tmpdir(), 'dby-'));
+  try {
+    execFileSync('git', ['init', '-q', '.'], { cwd: dir });
+    // The non-ASCII directory name is what makes git quote the path, and package.json is a generated pattern.
+    const relative = join('pilot', 'projects', 'tëst-01', 'package.json');
+    mkdirSync(join(dir, 'pilot', 'projects', 'tëst-01'), { recursive: true });
+    writeFileSync(join(dir, relative), '{"name":"probe"}');
+    execFileSync('git', ['add', '-A'], { cwd: dir });
+
+    // The old enumeration form, so the defect is pinned as a fact rather than described: git hands back a quoted
+    // string, which is why the pattern cannot match it.
+    const quoted = execFileSync('git', ['ls-files', '*.md', '*.json'], { cwd: dir, encoding: 'utf8' }).trim();
+    assert.notEqual(quoted, 'pilot/projects/tëst-01/package.json', 'git still quotes this path');
+    assert.ok(!GENERATED_PATTERNS.some((pattern) => pattern.test(quoted)), 'the quoted form matches no pattern, which was the bug');
+
+    // The fix: enumerate from the repository, and the real path classifies with no findings.
+    const tracked = listTrackedDocuments({ cwd: dir });
+    assert.ok(tracked.includes('pilot/projects/tëst-01/package.json'), `unquoted path expected, saw ${JSON.stringify(tracked)}`);
+    assert.deepEqual(checkDocumentClassification(tracked), [], 'a generated document must not be reported UNCLASSIFIED');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

@@ -86,6 +86,20 @@ export const GENERATED_PATTERNS = [
   /^docs\/eval\/projects\/index\.json$/,
 ];
 
+/**
+ * Decode `git ls-files -z` output. The -z flag matters: without it git quotes any path containing a character it
+ * considers unusual (core.quotePath defaults to true), so a file named with a non-ASCII directory comes back as
+ * "pilot/projects/t\303\253st/package.json" - which matches no DOCUMENTS key and no GENERATED_PATTERN, and produces an
+ * UNCLASSIFIED_DOCUMENT finding for a document that is classified correctly. NUL never appears in a path, so
+ * splitting on it is exact.
+ */
+export const decodeTrackedFiles = (stdout) => stdout.split('\0').filter(Boolean);
+
+/** Every tracked document this check classifies: prose and JSON, enumerated so git cannot quote a path. */
+export function listTrackedDocuments({ cwd, argv = ['ls-files', '-z', '*.md', '*.json'] } = {}) {
+  return decodeTrackedFiles(execFileSync('git', argv, { cwd, encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 }));
+}
+
 /** Every tracked prose or JSON document, classified. */
 export const DOCUMENTS = {
   // Per-demo design contracts (mwg-train-tus). Authoring documents, verified against a freshly
@@ -478,10 +492,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const findings = [...checkBaselineLabel(REGISTRY)];
   let scanned = 0;
   try {
-    const files = execFileSync('git', ['ls-files', '*.md', '*.json'], { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 })
-      .trim()
-      .split('\n')
-      .filter(Boolean);
+    const files = listTrackedDocuments();
     scanned = files.length;
     findings.push(...checkDocumentClassification(files));
   } catch (error) {
