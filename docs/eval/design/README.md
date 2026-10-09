@@ -81,8 +81,11 @@ Required sections, in this order:
 2. `## Routes and effects` - every route the spec defines, named here with its effect stated. A route the spec
    does not define is a finding **wherever it is claimed**, not only in this section: a claim is a claim in a
    prose paragraph too, and scoping this to one section let one through. The rule finds a claim plain, in a code
-   span, in italics or in bold, and takes the path to end at the first character that cannot be part of one, so
-   trailing punctuation and emphasis marks are never captured as part of the route
+   span, in italics or in bold, in any case (`get`, `GET`), and takes the path to end at the first character
+   that cannot be part of one, so trailing punctuation and emphasis marks are never captured as part of the
+   route. Two boundaries are deliberate: a method is only recognised at the start of a word, and a path is
+   taken to contain letters, digits, `_`, `:`, `.`, `-` and `/` only - which is every route any archetype here
+   declares, and is why a path containing `@` or `~` would be truncated rather than claimed
 3. `## Data and state` - the storage engine and the routes that read and write it
 4. `## Journey` - the driven flow: start path, form selector, the fields that are filled, the text asserted on
 5. `## Validation and states` - required fields, and what happens on each outcome

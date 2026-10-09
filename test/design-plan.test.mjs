@@ -237,3 +237,14 @@ test('finds a route claim in every spelling, and never captures emphasis marks i
     assert.deepEqual(forClaim(claim), [], `should be no finding: ${claim}`);
   }
 });
+
+test('finds a claim in any case, and does not invent one from a route that is defined', () => {
+  const spec = { family_id: 'booking', routes: [{ method: 'GET', path: '/', effect: 'render' }, { method: 'POST', path: '/book', effect: 'store' }], state: {}, persistence: {}, journey: {}, validation: {}, acceptance: [], fields: [] };
+  const forClaim = (claim) => checkPlanDocument({ name: 'booking/plan.md', text: doc({ Journey: SECTIONS.Journey + `\n\n${claim}` }), spec, specPath: 'docs/eval/specs/booking.json' });
+  assert.equal(forClaim('The admin posts to get /admin/purge now.').length, 1, 'lowercase undefined route');
+  assert.equal(forClaim('The admin POSTs to Get /admin/purge now.').length, 1, 'mixed case');
+  assert.deepEqual(forClaim('The form posts to get / now.'), [], 'lowercase form of a defined route');
+  assert.deepEqual(forClaim('The form posts to Post /book.'), [], 'mixed-case form of a defined route');
+  // A method is part of a route's identity: `get /book` is not `POST /book`, and must still be a finding.
+  assert.equal(forClaim('The form gets get /book and shows it.').length, 1, 'a defined path under an undefined method');
+});
