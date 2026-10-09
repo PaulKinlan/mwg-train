@@ -42,4 +42,10 @@ export const TARGET_VIEWPORT = Object.freeze({ width: 1280, height: 900 });
  * regression. `controls` is tightest because a form is a form in every framework; `structural`
  * allows the most, because that is where a framework's own wrapper and template scaffolding live.
  */
+/**
+ * A floor per identity axis. The keys must cover EVERY axis `variantIdentity` measures (IDENTITY_AXES), because
+ * `identityFindings` judges against the axes the BUDGET names - an axis measured but absent here is silently
+ * unjudged, which reads as agreement. The two lists are equal today and a test ties them together so that
+ * adding a measured axis without a floor fails loudly rather than going quietly unjudged (mwg-train-om6).
+ */
 export const IDENTITY_BUDGET = Object.freeze({ structural: 0.75, geometry: 0.9, controls: 0.95, overall: 0.8 });
