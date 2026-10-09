@@ -198,6 +198,10 @@ function renderMarkdown(report) {
   lines.push('');
   lines.push(`**Arms:** ${report.arms_measured.join(', ')}`);
   lines.push('');
+  lines.push(
+    `**The budget is not a dial.** These are the repository's preregistered \`IDENTITY_BUDGET\` values from \`src/eval/targets.mjs\` (structural ${report.budget.structural}, geometry ${report.budget.geometry}, controls ${report.budget.controls}, overall ${report.budget.overall}), used unchanged. If the arms disagree, the disagreement is reported - the thresholds are not moved until the report reads green.`,
+  );
+  lines.push('');
   for (const viewport of report.viewports) {
     lines.push(`## ${viewport.viewport.key}`);
     lines.push('');
@@ -223,7 +227,9 @@ function renderMarkdown(report) {
     }
     lines.push('');
   }
-  lines.push('## Against the reference boards');
+  lines.push('## Reference boards');
+  lines.push('');
+  lines.push(`**Reference boards:** ${report.boards ? report.boards.length : 0} analysed.`);
   lines.push('');
   lines.push(
     `The boards are images, so what is compared is what they DECLARE - their palette - against each arm's computed tokens. Divergence here is expected on this repository: the generated arms use the pilot palette and have not adopted the boards' design.`,
