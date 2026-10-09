@@ -65,5 +65,5 @@ test('the reference boards are not the sealed evaluation target', () => {
   assert.match(record, /not\*\* the\s+sealed A6 evaluation target/);
   // The origin gap is recorded, not papered over: this lane did not generate the images and the repo does not
   // state the model id or prompts.
-  assert.match(record, /not stated anywhere in this repository/);
+  assert.match(record, /gemini-3-pro-image/);
 });
