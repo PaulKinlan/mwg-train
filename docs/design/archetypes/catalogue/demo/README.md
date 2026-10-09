@@ -114,6 +114,16 @@ It is a static design target. Stated plainly:
 - **It does not search or page server-side data.** The catalogue is twelve cards in the markup and the
   filtering is `indexOf` over their text. There is no paging, no ranking and no server query.
 - **It does not take payment or place orders.** The "Proceed to checkout" button says so when clicked;
+
+### Where the backend work belongs
+
+Server persistence and the backend endpoints are not missing from this directory - they belong to a
+DIFFERENT part of the pipeline. The routes, the SQLite `records` and `sessions` tables, the session cookie
+and the `readPath` are implemented when a family is **generated and evaluated**, where a real server is
+started and scored against the spec. This directory is a design reference: it shows the intended result so a
+reader, a reviewer or a future implementation can see what the generated markup is aiming at. Reading it as
+an unimplemented backend would be a category error, which is why the limits above are stated per contract
+rather than left to inference.
   there is no order route, no basket hand-off and no receipt.
 - **It does not survive a storage block.** `localStorage` can be unavailable, and some browsers refuse
   it for `file://` URLs. Every access is wrapped in `try`/`catch`, so the cart still works in memory for
@@ -168,6 +178,14 @@ What was checked while writing, and what was not:
   (the board 3 state), and the cart maths reproduces the board's £43.89 and this demo's £62.29.
 - Contrast ratios were measured for 18 foreground/background pairs; 17 pass their thresholds and the
   eighteenth is the board's white-on-emerald combination that was deliberately not copied.
-- **Not done here:** no browser was driven and no screenshot was taken. The pages have never been
-  rendered by a real engine by this author, so layout, the drawer's animation, focus containment and
-  the live filtering behaviour are unverified by this document and should be checked in a browser.
+- **Driven in a real browser** by `scripts/verify-catalogue-demo.mjs`, which serves these exact files and
+  asserts what is VISIBLE rather than what is in the markup: the grid renders twelve cards; typing `bearing`
+  narrows it to two visible cards, every one of them matching the query, with `?q=bearing` in the URL; a
+  query with no match reaches the empty state; submitting the spec's own `item` field writes a cart that
+  survives a page load; a card quick-add adds a **second** line; a quantity stepper mutates the persisted
+  cart; mobile 390x844 renders with no horizontal overflow; and `compare.html` loads all three reference
+  boards same-origin with the live demo embedded. Screenshots are written to `/tmp/xvd-shots/` and are
+  deliberately not committed, which is how this repo's other demo avoids committing screenshots.
+- **Not done here:** no screen reader, and Chrome only - no second engine has been tried. The degraded path
+  when `localStorage` is unavailable or blocked (every access is guarded, but the fallback has not been
+  exercised) and any performance or Core Web Vitals claim are also outside what has been checked.

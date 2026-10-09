@@ -6,10 +6,13 @@
 // refuses), and calling page.reload, which is not part of the CDP wrapper. The probe is verified before the
 // effect. page.console is dumped on failure so a page-side error cannot hide behind a finding.
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 
 const WORKTREE = join(import.meta.dirname, '..');
-const CAT = join(WORKTREE, 'docs/design/archetypes/catalogue');
+// Overridable so the harness can be pointed at a deliberately BROKEN copy of the demo. A suite of checks
+// that only ever passes proves nothing, so the control run is part of the evidence: XVD_ARCHETYPE_DIR=...
+const CAT = process.env.XVD_ARCHETYPE_DIR ? resolve(process.env.XVD_ARCHETYPE_DIR)
+  : join(WORKTREE, 'docs/design/archetypes/catalogue');
 const SHOTS = '/tmp/xvd-shots';
 
 const { launchChrome } = await import(join(WORKTREE, 'src/corpus/cdp.mjs'));
@@ -63,8 +66,18 @@ try {
   const bearing = JSON.parse(await page.evaluate(COUNTS));
   check('typing "bearing" narrows the VISIBLE grid', bearing.visible > 0 && bearing.visible < initial.visible, `${initial.visible} -> ${bearing.visible} visible of ${bearing.all} cards`);
   check('the search is reflected in the URL', /q=bearing/.test(bearing.url), bearing.url);
-  const pageText = await page.evaluate('return document.body.innerText');
-  check('the spec expectText "bearing" is present', /bearing/i.test(pageText), `${pageText.length} chars of page text`);
+  // Scoped to the SEARCH RESULTS, not the page. A cross-family review caught this check passing off static
+  // text: a "Search \"bearing\"" button is always in the DOM, so reading document.body.innerText would
+  // have passed even if the search returned nothing at all. Every VISIBLE card must match, which is the
+  // filter's own contract and a claim a broken search cannot satisfy.
+  const bearingCards = JSON.parse(await page.evaluate(`return JSON.stringify(
+    [...document.querySelectorAll('[data-price]')].filter((el) => el.offsetParent !== null).map((el) => el.innerText)
+  )`));
+  check(
+    'the spec expectText "bearing" appears in the SEARCH RESULTS',
+    bearingCards.length > 0 && bearingCards.every((text) => text.toLowerCase().includes('bearing')),
+    `${bearingCards.length} visible card(s): ${bearingCards.map((text) => text.split('\n')[0]).join(' | ')}`,
+  );
 
   // ---- the empty state ----
   await page.goto(`${base}/index.html`);
@@ -87,15 +100,33 @@ try {
   check('the quantity field is optional (no value was given)', /"qty":1/.test(afterForm.cart ?? ''), afterForm.cart);
 
   // ---- a card-level quick-add, which must also work and must accumulate ----
+  // A SECOND line, and picked so that a second line is genuinely required. A cross-family review caught the
+  // first version clicking the first card's control - which is VASE-001, the item the form already added - so
+  // the demo grouped the two into one line and the check passed on `lines >= 1` without adding anything. The
+  // target is now the first card that is NOT the item already in the cart, and the assertion is strict.
   const quick = await page.evaluate(`{
-    const button = [...document.querySelectorAll('button')].find((b) => /add to cart/i.test(b.getAttribute('aria-label') || b.textContent || '') && !b.closest('#cart-form'));
-    if (!button) throw new Error('no card-level quick-add control');
-    button.click();
-    return (button.getAttribute('aria-label') || button.textContent || '').trim().slice(0, 40);
+    const buttons = [...document.querySelectorAll('button')].filter((b) => /add to cart/i.test(b.getAttribute('aria-label') || b.textContent || '') && !b.closest('#cart-form'));
+    // A sentinel rather than a throw: the control run strips the script entirely, and a thrown error here
+    // aborted the remaining checks, so the persistence check never ran and the control proved less than it
+    // should. Fail the check, do not stop the run.
+    if (!buttons.length) return JSON.stringify({ label: null, missing: true });
+    const target = buttons.find((b) => {
+      const card = b.closest('.product-card') || b.parentElement;
+      return card && !/rustic vase/i.test(card.innerText);
+    }) || buttons[0];
+    const card = target.closest('.product-card') || target.parentElement;
+    target.click();
+    return JSON.stringify({ label: (card ? card.innerText.split('\\n')[0] : '').trim().slice(0, 40) });
   }`);
   await sleep(800);
   const afterQuick = JSON.parse(await page.evaluate(CART));
-  check('a card quick-add control adds a second line', quick !== '' && afterQuick.lines >= 1, `clicked "${quick}", lines=${afterQuick.lines}`);
+  check(
+    'a card quick-add control adds a SECOND line',
+    afterQuick.lines > afterForm.lines,
+    JSON.parse(quick).missing
+      ? 'no card-level quick-add control found'
+      : `clicked card "${JSON.parse(quick).label}", lines ${afterForm.lines} -> ${afterQuick.lines}`,
+  );
   check('the drawer reports totals', Number.parseFloat(String(afterQuick.subtotal).replace(/[^0-9.]/g, '')) > 0, `subtotal=${afterQuick.subtotal} total=${afterQuick.total}`);
   await page.screenshot(join(SHOTS, 'index-cart-open-1280x900.png'));
 
@@ -103,22 +134,38 @@ try {
   await page.goto(`${base}/index.html`);
   await sleep(900);
   const afterReload = JSON.parse(await page.evaluate(CART));
-  check('the cart survives a page load', afterReload.cart === afterQuick.cart && afterReload.lines === afterQuick.lines, `lines ${afterQuick.lines} -> ${afterReload.lines}`);
+  // `lines > 0` comes first deliberately. A cross-family review caught this passing on a BROKEN demo: if
+  // add-to-cart did nothing, the cart is empty before and after the reload, and `cart === cart` is true for
+  // two nulls. Persistence can only be evidenced by something persisted.
+  check(
+    'the cart survives a page load',
+    afterReload.lines > 0 && afterReload.cart === afterQuick.cart && afterReload.lines === afterQuick.lines,
+    `lines ${afterQuick.lines} -> ${afterReload.lines}, cart ${afterReload.cart === afterQuick.cart ? 'identical' : 'CHANGED'}`,
+  );
 
   // ---- the quantity stepper ----
+  // An ENABLED stepper. The first version clicked the first control it found, which once the cart legitimately
+  // held a line at quantity 1 was the DISABLED decrease button - the demo clamps correctly, the click was a
+  // no-op, and the check failed for a reason that had nothing to do with persistence. Prefer increase, and say
+  // how many controls were disabled so the clamp is visible in the evidence rather than the cause of a red run.
   const step = await page.evaluate(`{
-    const inCart = document.querySelector('#cart-items button');
-    const any = [...document.querySelectorAll('button')].filter((b) => /\\+|plus|increase|−|minus|decrease/i.test(b.getAttribute('aria-label') || b.textContent || ''));
-    const target = inCart && /\\+|plus|increase|−|minus|decrease/i.test(inCart.getAttribute('aria-label') || inCart.textContent || '') ? inCart : any[0];
-    if (!target) throw new Error('no stepper found');
+    const label = (b) => (b.getAttribute('aria-label') || b.textContent || '').trim();
+    const steppers = [...document.querySelectorAll('#cart-items button')].filter((b) => /increase|decrease|quantity/i.test(label(b)));
+    const enabled = steppers.filter((b) => !b.disabled);
+    const target = enabled.find((b) => /increase|plus|\\+/i.test(label(b))) || enabled[0];
+    if (!target) throw new Error('no ENABLED stepper; found: ' + steppers.map(label).join(', '));
     const before = localStorage.getItem('kiln-copper-cart-v1');
     target.click();
-    return JSON.stringify({ label: (target.getAttribute('aria-label') || target.textContent || '').trim().slice(0, 30), before });
+    return JSON.stringify({ label: label(target).slice(0, 40), disabled: steppers.length - enabled.length, before });
   }`);
   await sleep(700);
   const afterStep = JSON.parse(await page.evaluate(CART));
   const stepInfo = JSON.parse(step);
-  check('a quantity stepper changes the persisted cart', afterStep.cart !== stepInfo.before, `clicked "${stepInfo.label}"; cart changed: ${afterStep.cart !== stepInfo.before}`);
+  check(
+    'a quantity stepper changes the persisted cart',
+    afterStep.cart !== stepInfo.before,
+    `clicked "${stepInfo.label}" (${stepInfo.disabled} disabled), cart changed: ${afterStep.cart !== stepInfo.before}`,
+  );
 
   // ---- mobile at a real viewport ----
   const mobile = await chrome.newPage({ viewport: { width: 390, height: 844 }, mobile: true });
