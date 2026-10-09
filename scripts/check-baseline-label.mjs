@@ -98,6 +98,14 @@ export const DOCUMENTS = {
   'docs/eval/design/booking/hono.md': 'design',
   'docs/eval/design/booking/webcomponents.md': 'design',
   'docs/eval/design/booking/svelte.md': 'design',
+  // Functional specifications (mwg-train-8lb). One per archetype rather than one per arm, because routes, the
+  // journey and the acceptance criteria are properties of the archetype. Bound to docs/eval/specs/<archetype>.json
+  // and checked against it by check:design-schema, so these are specifications rather than proposals.
+  'docs/eval/design/booking/plan.md': 'spec',
+  'docs/eval/design/catalogue/plan.md': 'spec',
+  'docs/eval/design/contact-lead/plan.md': 'spec',
+  'docs/eval/design/account-recovery/plan.md': 'spec',
+  'docs/eval/design/event-registration/plan.md': 'spec',
   'README.md': 'floor-report',
   'docs/PIPELINE.md': 'floor-report',
   'docs/eval/conformance/README.md': 'floor-report',

@@ -1,68 +1,117 @@
-# Per-demo design contracts
+# Design contracts and plan contracts
 
-One `design.md` per generated demo, at `docs/eval/design/<archetype>/<framework>.md`.
+Every pilot family has two documents, because the aesthetic system and the functional specification have
+different sources of truth and different lifetimes.
 
-Every demo in the pilot and the evaluation corpus is a project this repository generates, and each
-one is supposed to carry its own design: what it looks like, which tokens it uses, how its components
-are arranged, which states it implements and why. [`docs/design.md`](../../design.md) is the
-cross-family grammar; its final section already lists what a family author must supply. This
-directory is that checklist, instantiated once per demo, and
-[`docs/eval/specs/README.md`](../specs/README.md) is the same idea for functional behaviour.
+| Artefact | Scope | States | Checked against |
+| --- | --- | --- | --- |
+| `docs/eval/design/<archetype>/<framework>.md` | one generated demo | the aesthetic system: layout, typography, tokens, spacing, hierarchy, anti-patterns | the stylesheet and file set that the demo actually generates |
+| `docs/eval/design/<archetype>/plan.md` | one archetype | the functional specification: use case, routes and effects, state, journey, validation, acceptance criteria | `docs/eval/specs/<archetype>.json` |
 
-## Why these files sit outside the generated trees
+## Why the split is where it is
 
-`pilot/CORPUS.json` records a tree hash for every generated project, and `npm run check:pilot-corpus`
-regenerates the corpus and compares. `hashTree` hashes **every file name and every byte** in a
-project, so a `design.md` written into a generated project would change that project's recorded hash
-and fail the gate. Re-recording the corpus to accommodate the file would destroy the evidence the gate
-exists to protect, because the recorded hash would then be derived from the generator it is meant to
-constrain. So the contract lives beside the demo, not inside it, exactly as the family target designs
-live in `docs/eval/targets/<family>/` rather than in the projects they describe.
+`design.md` is per **demo** because tokens are read from the stylesheet the generator writes, and the check is
+only meaningful against a specific generated tree. It is worth knowing what that measurement showed: the
+stylesheet *body* is byte-identical across all seven arms - only the first-line comment differs - so the arms
+share every token value, and a dialect section describes **how the markup is produced** (server-rendered string,
+SSR library, shadow DOM, one compile step) rather than differing tokens.
 
-## A design contract is checked, not trusted
+`plan.md` is per **archetype** because routes, the journey and the acceptance criteria are properties of the
+archetype, not of an arm, and because the archetype already has a durable spec that
+`node scripts/rebuild-from-spec.mjs` rebuilds byte-for-byte without reading the generator. Prose that restates
+that spec by hand would drift from it; prose that is checked against it cannot.
 
-`npm run check:design-schema` generates each documented demo into a temporary directory and reads the
-artefacts the generator actually produces - `app/styles.css`, `spec.json` and the project's file set -
-then compares them with what the document claims. A design document that describes tokens, routes or
-files the demo does not have is a **finding**, not a style disagreement. This matters because the
-repository currently carries three different token vocabularies: generated demos emit `--fg`, `--bg`
-and `--accent` with literal values, the evaluation target stylesheet uses `--ink`, `--muted`, `--line`,
-`--paper`, `--wash`, `--accent`, `--accent-ink`, `--radius` and `--gap`, and `docs/design.md` proposes
-a richer vocabulary that **no generator consumes**. A per-demo contract must name the tokens that
-demo emits.
+## `design.md`: frontmatter is the single source of truth for tokens
 
-## Required sections
+```yaml
+---
+archetype: booking
+framework: raw
+tokens:
+  --fg: "#16181d"
+  --bg: "#ffffff"
+  --accent: "#1b4fd8"
+literals:
+  control-border: 1px solid #8a8f98
+  control-radius: 0.4rem
+  focus-outline: 3px
+antiPatterns:
+  - a second accent competing with the primary action
+---
+```
 
-Every per-demo file carries these level-2 headings, in this order.
+- `tokens` maps a custom property to its value. Each entry must be a declaration the demo's stylesheet makes,
+  with that exact value. **The body must not repeat a token value**: it is the second copy that lets a document
+  and its stylesheet drift apart. The comparison ignores case, because `#16181D` and `#16181d` are one value.
+- `literals` records the values the stylesheet uses that are *not* custom properties, so they cannot be themed
+  per demo. Each value must appear in the stylesheet. Radius is a literal here: the generated demos emit no
+  radius custom property, so claiming a `--radius` token would be a claim about a stylesheet that does not exist.
+- `antiPatterns` is a non-empty list, and it is the one place the document states what the design must not do.
 
-| Section | What it must state |
-| --- | --- |
-| `## Visual thesis` | One sentence: subject, audience, scene and task, then what makes this demo recognisable. |
-| `## Grammar and layout` | Which composition grammar from `docs/design.md` applies, the layout structure, the route map, and the desktop/mobile behaviour. |
-| `## Typography` | The type stack and the heading/body scale the demo ships, with the values it actually uses. |
-| `## Token vocabulary` | A table of the custom properties the demo emits, with their values, and a line naming any literal colour, radius or spacing value that is **not** a custom property. |
-| `## Spacing rhythm` | The spacing steps the demo uses and what each step is for. |
-| `## Component hierarchy` | The semantic structure the demo builds, top to bottom, per route. |
-| `## States` | Which states the demo implements, and which are declared only. |
-| `## Implementation status` | The anti-fiction section: what exists, what is declared but not implemented, and what is deliberately absent. |
-| `## Rationale` | Why these choices, and which ones are constraints rather than preferences. |
-| `## Provenance` | Rights boundary and which source files this contract describes. |
+The subset is deliberately small and refuses what it does not implement rather than guessing: quoted strings
+containing backslash escapes or a doubled single quote, the prototype keys `__proto__`, `constructor` and
+`prototype`, and flow collections, anchors, tags and block scalars all produce a finding naming the line.
+Numbers are read as text, not interpreted - a token value is compared against the stylesheet as text, so
+reading `010` as `10` would check a claim the document had not made.
 
-The section list is closed. `check:design-schema` fails when a required section is missing, when a
-token in the vocabulary table is not emitted by the demo's stylesheet, when a route in the layout
-section is not one of the demo's own routes, or when the framework in the title does not match the
-directory it lives in.
+Required sections, in this order:
 
-## Scope
+1. `## Visual thesis`
+2. `## Grammar and layout` - composition and layout only; route claims belong in `plan.md`
+3. `## Typography`
+4. `## Token usage` - what each token is for, never what it holds
+5. `## Spacing rhythm`
+6. `## Component hierarchy`
+7. `## Anti-patterns`
+8. `## Rationale`
+9. `## Provenance`
 
-The pilot has five archetypes and seven framework arms, so the complete set is thirty-five files.
-`booking` is the first family to carry them; the contract and the checker were written and verified
-against it before scaling. A per-demo contract is only useful if it stays true, so adding one is a
-change to the documented surface and belongs with the demo it describes.
+## `plan.md`: bound to the archetype's spec
 
-## Rights boundary
+```yaml
+---
+archetype: booking
+spec: docs/eval/specs/booking.json
+---
+```
 
-These are authoring documents, not evidence. They describe synthetic demos built from invented
-organisations and data; they contain no third-party copy, imagery, fonts or credentials, and they are
-not training inputs. [`training-targets.md`](../../provenance/assets/training-targets.md) and
-[`eval-targets.md`](../../provenance/assets/eval-targets.md) govern conformance imagery.
+Required sections, in this order:
+
+1. `## Use case` - names every field the spec defines
+2. `## Routes and effects` - every route the spec defines, named here with its effect stated. A route the spec
+   does not define is a finding **wherever it is claimed**, not only in this section: a claim is a claim in a
+   prose paragraph too, and scoping this to one section let one through. The rule finds a claim plain, in a code
+   span, in italics or in bold, in any case (`get`, `GET`), and takes the path to end at the first character
+   that cannot be part of one, so trailing punctuation and emphasis marks are never captured as part of the
+   route. Two boundaries are deliberate: a method is only recognised at the start of a word, and a path is
+   taken to contain letters, digits, `_`, `:`, `.`, `-` and `/` only - which is every route any archetype here
+   declares, and is why a path containing `@` or `~` would be truncated rather than claimed
+3. `## Data and state` - the storage engine and the routes that read and write it
+4. `## Journey` - the driven flow: start path, form selector, the fields that are filled, the text asserted on
+5. `## Validation and states` - required fields, and what happens on each outcome
+6. `## Acceptance criteria` - **verbatim** from the spec, because these are the claims the eval asserts
+7. `## Implementation status` - what exists, what is declared only, and what is absent
+8. `## Provenance`
+
+## The token vocabularies, kept apart on purpose
+
+Three vocabularies exist in this repository and they are not interchangeable:
+
+1. the **generated demo** (`app/styles.css`) emits `--fg`, `--bg`, `--accent`, plus a set of literals;
+2. the **eval target** ([`docs/eval/targets/base.css`](../targets/base.css)) uses its own names - `--ink`, `--muted`, `--line`, `--paper`,
+   `--wash`, `--accent`, `--accent-ink`, `--radius`, `--gap`;
+3. `docs/design.md` proposes names that no generator consumes.
+
+A contract here always describes vocabulary 1, for the demo it names, because that is what the checker can read.
+Nothing in this directory is generated or byte-frozen: these documents live outside every generated tree on
+purpose, so a contract can be held to the generator without changing what the generator produces.
+
+## How the two documents are checked
+
+`npm run check:design-schema` generates each documented demo into a temporary directory and compares the
+document against it, then loads each archetype's spec and compares `plan.md` against that. It is deliberately
+fail-closed and mostly negative in its tests: a token the demo does not emit, a literal not in its stylesheet, a
+token value restated in the body, a route claim in a design document, a missing section, a stray section,
+sections out of order, an empty section, a claimed file the demo does not generate, an off-contract path, a
+relative link that resolves nowhere or that leaves the repository, and - for a plan - a route, effect, engine,
+field, journey step or acceptance criterion that disagrees with the spec in either direction.

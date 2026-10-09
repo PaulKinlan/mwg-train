@@ -17,7 +17,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import { DESIGN_DIR, REQUIRED_SECTIONS, checkDesignDocument, repositoryLinkResolver } from '../src/design/contract.mjs';
+import { DESIGN_DIR, DESIGN_SECTIONS, PLAN_SECTIONS, checkDesignDocument, checkPlanDocument, repositoryLinkResolver } from '../src/design/contract.mjs';
 
 const ROOT = new URL('../', import.meta.url);
 // Canonical, because a checkout reached through a symlink would otherwise make containment a lexical
@@ -26,13 +26,17 @@ const rootPath = realpathSync(new URL(ROOT).pathname);
 
 const { ARCHETYPES } = await import(pathToFileURL(join(rootPath, 'pilot/archetypes.mjs')));
 const { FRAMEWORKS, buildProjectFor, writeProject } = await import(pathToFileURL(join(rootPath, 'pilot/frameworks.mjs')));
+const { SPECS_DIR, specForFamily } = await import(pathToFileURL(join(rootPath, 'src/eval/spec.mjs')));
 
+// A design.md documents one demo, so it is named after a framework. A plan.md documents one archetype's
+// behaviour, so it is not - it is found by archetype instead, and a missing one is a finding rather than an
+// absence, because the convention is that every archetype has both artefacts.
 function designFiles() {
   if (!existsSync(join(rootPath, DESIGN_DIR))) return [];
   return readdirSync(join(rootPath, DESIGN_DIR), { withFileTypes: true })
     .filter((entry) => entry.isDirectory())
     .flatMap((archetype) => readdirSync(join(rootPath, DESIGN_DIR, archetype.name))
-      .filter((file) => file.endsWith('.md'))
+      .filter((file) => file.endsWith('.md') && file !== 'plan.md')
       .map((file) => ({ archetype: archetype.name, framework: file.replace(/\.md$/, ''), file })));
 }
 
@@ -86,13 +90,44 @@ for (const { archetype, framework, file } of designFiles()) {
   checked += 1;
 }
 
+// The functional half: one plan.md per archetype, bound to that archetype's durable spec. The spec is loaded the
+// same way the rest of the repo loads it, so a spec that fails its own validation fails here too.
+let plans = 0;
+for (const archetype of Object.keys(ARCHETYPES).sort()) {
+  const where = `${archetype}/plan.md`;
+  const file = join(rootPath, DESIGN_DIR, archetype, 'plan.md');
+  if (!existsSync(file)) {
+    findings.push({ at: where, problem: 'no plan.md: every archetype needs a functional specification' });
+    continue;
+  }
+  const specPath = `${SPECS_DIR}/${archetype}.json`;
+  let spec;
+  try {
+    spec = specForFamily(archetype, rootPath);
+  } catch (error) {
+    findings.push({ at: where, problem: `cannot load ${specPath}: ${error.message}` });
+    continue;
+  }
+  for (const finding of checkPlanDocument({
+    name: where,
+    text: readFileSync(file, 'utf8'),
+    spec,
+    specPath,
+    resolveLink: repositoryLinkResolver({ root: rootPath, documentDir: join(rootPath, DESIGN_DIR, archetype) }),
+  })) {
+    findings.push({ at: `${where} ${finding.at}`, problem: finding.problem });
+  }
+  plans += 1;
+}
+
 for (const finding of findings) console.log(`FINDING ${finding.at}: ${finding.problem}`);
 
 if (findings.length > 0) {
-  console.error(`check-design-schema: FAIL - ${findings.length} finding(s) across ${checked} design contract(s)`);
+  console.error(`check-design-schema: FAIL - ${findings.length} finding(s) across ${checked} design contract(s) and ${plans} plan(s)`);
   process.exit(1);
 }
 console.error(
   `check-design-schema: PASS - ${checked} demo design contract(s) match the generated demo `
-  + `(${REQUIRED_SECTIONS.length} required sections each)`,
+  + `(${DESIGN_SECTIONS.length} required sections each) and ${plans} plan contract(s) match their spec `
+  + `(${PLAN_SECTIONS.length} required sections each)`,
 );

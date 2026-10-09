@@ -1,4 +1,39 @@
+---
+archetype: booking
+framework: vue
+tokens:
+  --fg: "#16181d"
+  --bg: "#ffffff"
+  --accent: "#1b4fd8"
+literals:
+  control-border: 1px solid #8a8f98
+  control-radius: 0.4rem
+  error-text: #b3261e
+  invalid-fill: #fdecea
+  table-rule: #d5d8dd
+  dark-control-fill: #1b1e24
+  dark-foreground: #eef0f4
+  dark-background: #14161a
+  focus-outline: 3px
+  focus-offset: 2px
+  narrow-breakpoint: 30rem
+  content-frame: 42rem
+  spacing-error-gap: 0.15rem
+  spacing-field-gap: 1rem
+  spacing-page-padding: 1.5rem
+  spacing-button-padding: 0.7rem
+antiPatterns:
+  - a second accent colour competing with the primary action
+  - an error shown before the user has interacted with the field
+  - colour alone carrying an error, with no message naming the field
+  - a modal, a step wizard, or any hidden part of the form
+---
+
 # Evening class booking — `vue` demo design contract
+
+The aesthetic system for this demo. Its behaviour is specified separately in [`plan.md`](plan.md); the
+frontmatter above is the single source of truth for the tokens, so this body describes what each one is for
+rather than what it holds.
 
 ## Visual thesis
 
@@ -6,9 +41,9 @@ A small adult-education centre's booking page, read on a phone in the evening, s
 the design's job is to make one decision cluster obvious and its error recovery calm. Recognisable by a
 single narrow column, one accent, and an error treatment that names the field it belongs to.
 
-Grammar: **Decision workbench / Operate** (`docs/design.md`), booking is named in that row.
-This contract describes the project the generator writes for archetype `booking`, framework arm `vue`
-(a framework rendered to a static HTML string, no build step).
+Grammar: **Decision workbench / Operate** ([`docs/design.md`](../../../design.md)), booking is named in that
+row. This contract describes the project the generator writes for archetype `booking`, framework arm `vue`:
+Vue 3 SSR using `createSSRApp` and `vue/server-renderer`, with the template compiler run in process, no build step. All seven arms are server-rendered with NO client hydration; the only client code is the `/app/enhance.js` module.
 
 ## Grammar and layout
 
@@ -16,12 +51,10 @@ This contract describes the project the generator writes for archetype `booking`
   `30rem` (`@media (width <= 30rem)`).
 - Order: page heading, one-line description, the form, then the record section that shows the
   student's own words back. The form is the first viewport; nothing is hidden behind a step.
-- Route map (from the demo's own `spec.json`): `GET /` page, `POST /book` write redirecting to
-  `/booking/:ref`, `GET /booking/:ref` read-by-reference, `GET /roster` list. The enhancement script
-  also reads an internal JSON endpoint for the record it echoes; internal endpoints are described in
-  **Component hierarchy** rather than here, because they are not part of the route contract.
 - Mobile is the same single column with smaller page padding and a reduced `h1`; there is no separate
   mobile composition, so no content order changes between viewports.
+- The only internal endpoint the client calls is the record echo in **Component hierarchy** below. The
+  routes themselves are specified in [`plan.md`](plan.md), where they are checked against the archetype's spec.
 
 ## Typography
 
@@ -31,20 +64,20 @@ This contract describes the project the generator writes for archetype `booking`
 - One heading level above the form (`h1`) and one inside the record section (`h2`), so the outline is
   real rather than a size effect.
 
-## Token vocabulary
+## Token usage
 
-Custom properties the demo's `app/styles.css` defines:
+Three custom properties, and the roles they carry:
 
-| Token | Light | Dark (`prefers-color-scheme: dark`) |
-| --- | --- | --- |
-| `--fg` | `#16181d` | `#eef0f4` |
-| `--bg` | `#ffffff` | `#14161a` |
-| `--accent` | `#1b4fd8` | unchanged (`#1b4fd8`) |
+- `--fg` is all text, and it is the only ink. It is redefined under a dark colour scheme, so a rule that
+  uses it needs no dark variant of its own.
+- `--bg` is the page surface. It is redefined with `--fg` in the same block, which is what keeps the pair
+  legible in both schemes.
+- `--accent` is the single chromatic role: the primary button's fill and the focus ring. It is deliberately
+  not redefined for dark mode, because one accent at both contrast levels is the point.
 
-Values used as literals rather than custom properties, so they cannot be themed per-demo:
-`#8a8f98` control border, `#b3261e` error text and invalid border, `#fdecea` invalid field fill,
-`#d5d8dd` table rule, `#1b1e24` dark-mode control fill, `0.4rem` control radius, `3px` focus outline
-with `2px` offset, and the `30rem` and `42rem` breakpoints.
+Everything else is a literal, listed in the frontmatter, and therefore not themeable per demo. The
+anti-pattern below about a second accent follows from this: with one accent there is one primary action, and
+a second colour would have to mean a second meaning.
 
 ## Spacing rhythm
 
@@ -55,7 +88,7 @@ largest step: related things closer, sections further apart, no arbitrary gaps.
 
 ## Component hierarchy
 
-Per route, top to bottom, from the demo's own `app/page.mjs`:
+Top to bottom, from the demo's own `app/page.mjs` (rendered via `createSSRApp`):
 
 - `html` → `head` (charset, viewport, title, stylesheet link) → `body` → `main`.
 - `main`: `h1` "Evening class booking"; `p` description; `form#booking-form[method=post][action=/book]`;
@@ -65,47 +98,29 @@ Per route, top to bottom, from the demo's own `app/page.mjs`:
   `div.field` containing the five label/control pairs, then `button[type=submit]`.
 - Each pair: `label[for]` → `input`/`textarea` with `required`, `autocomplete`, and
   `aria-errormessage="<field>-error"` → a hidden `p.error-msg[id=<field>-error]` carrying the field's
-  message. Fields: `name` (name), `email` (username), `address` (street-address), `postcode`
-  (postal-code), `notes` (textarea, the echoed field).
-- `body` also loads `/app/enhance.js` as a module, which is the only client code.
+  message.
+- `body` also loads `/app/enhance.js` as a module, which is the only client code. It fills the record
+  container from an internal JSON endpoint keyed by the reference in the URL, and keeps `aria-invalid` and
+  the live region in step.
 
-## States
+## Anti-patterns
 
-- **Invalid**: implemented. `:user-invalid` styling plus a hidden-per-field error paragraph that is
-  shown by CSS, with `aria-invalid` and the live region kept in step by `app/enhance.js` on `blur`,
-  `input`, `change` and `submit`. Errors never appear before interaction, because the selector is
-  `:user-invalid` rather than `:invalid`.
-- **Success / persisted**: implemented as server state. The write redirects to `/booking/:ref` and the
-  read route returns the stored row; the echo container is filled from `GET /api/record/:ref`.
-- **Unavailable**: missing reference is implemented as a `404` plain document, not a styled page.
-- **Loading**: declared only. The form is server-rendered and the echo fetch renders nothing while it
-  is in flight, so there is no loading affordance.
-- **Empty**: declared only. `GET /roster` with no stored rows and the read page are not given a
-  distinct empty treatment.
-- **Permission-denied / unavailable-backend**: deliberately absent; the demo has no accounts and no
-  remote dependency to fail.
-
-## Implementation status
-
-What exists: `server.mjs`, `spec.json`, `package.json`, `app/styles.css`, `app/enhance.js` and `app/page.mjs`. All five fields, the echo round trip, the invariant error
-announcement, light and dark colour schemes, and a visible `:focus-visible` outline.
-
-What is declared but not implemented: a loading state for the echo fetch and an empty state for the
-list route (both listed under **States** above rather than claimed as done).
-
-Known gap worth recording rather than smoothing: the `list` route renders the same page template with
-a different `title`, so `GET /roster` serves the booking form rather than a table of rows, even though
-the stylesheet carries `table`/`th`/`td` rules and `GET /api/records` does return the rows. The design
-contract states what the code does; the table styling is currently unused by this arm.
-
-Not present at all: images, fonts, icons, client state, build step, or any third-party request.
+- **A second accent colour.** One accent means one primary action; a second colour would imply a second
+  meaning the design does not have.
+- **An error before interaction.** The selector is `:user-invalid`, not `:invalid`, so a field the user has
+  not left alone is never marked. Reporting an error the user has not caused is the failure this avoids.
+- **Colour alone carrying an error.** The invalid border and fill are accompanied by a message paragraph
+  naming the field, linked by `aria-errormessage`. A red border with no words is not an error state.
+- **Hiding part of the form.** No modal, no wizard, no disclosure: the whole decision is on the page, which
+  is why the layout can be a single column.
+- **A themed literal.** Colour values written as literals cannot follow the colour scheme, so nothing that
+  must change between light and dark may be a literal.
 
 ## Rationale
 
-Constraints rather than preferences: one page, no build step (arm definition), the
-`:user-invalid` selector and the live region (an error must be named, not coloured), `setHTML` with a
-`textContent` fallback so recorded text is inserted as inert content, and the single column, which
-follows from the task (one form, one decision) rather than from style.
+Constraints rather than preferences: one page and no build step (arm definition), the
+`:user-invalid` selector and the live region (an error must be named, not coloured), and the single column,
+which follows from the task (one form, one decision) rather than from style.
 
 Preference: the narrow `42rem` frame and the `0.4rem` control radius. Both are one-line changes and
 neither affects the route contract, so a future arm may vary them without touching behaviour.
