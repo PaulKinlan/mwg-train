@@ -373,6 +373,13 @@ test('a path git would quote still classifies, because enumeration is NUL-separa
     assert.notEqual(quoted, 'pilot/projects/tëst-01/package.json', 'git still quotes this path');
     assert.ok(!GENERATED_PATTERNS.some((pattern) => pattern.test(quoted)), 'the quoted form matches no pattern, which was the bug');
 
+    // The defect's EFFECT, asserted here rather than only described in a commit message: classified through the
+    // old quoted path, the document comes back as an UNCLASSIFIED finding. An independent review caught that an
+    // earlier message claimed this assertion existed in the test while the test stopped one step short of it.
+    const asReportedBefore = checkDocumentClassification([quoted]);
+    assert.equal(asReportedBefore.length, 1, 'the quoted path is exactly one false finding');
+    assert.equal(asReportedBefore[0].code, 'UNCLASSIFIED_DOCUMENT');
+
     // The fix: enumerate from the repository, and the real path classifies with no findings.
     const tracked = listTrackedDocuments({ cwd: dir });
     assert.ok(tracked.includes('pilot/projects/tëst-01/package.json'), `unquoted path expected, saw ${JSON.stringify(tracked)}`);
