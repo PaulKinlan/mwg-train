@@ -8,6 +8,7 @@
  */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 import test from 'node:test';
 
 import { REFERENCE_PALETTE } from '../scripts/check-cross-arm-parity.mjs';
@@ -21,8 +22,11 @@ import {
   normaliseColour,
   paletteFindings,
   paritySummary,
+  translateIdentityCode,
   viewportFindings,
 } from '../src/eval/parity.mjs';
+
+const ROOT = resolve(import.meta.dirname, '..');
 
 /** A signature with the fields the conformance comparators read, parameterised so drift can be injected. */
 function signature({ width = 1280, height = 900, title = 'Booking', boxHeight = 0.1, controls = 5 } = {}) {
@@ -409,4 +413,44 @@ test('a missing budget is refused rather than reported as clean arms', () => {
       `budget ${JSON.stringify(budget)} must be refused rather than produce a clean reading`,
     );
   }
+});
+
+test('an identity code the parity layer does not know is named, not read as a mean failure', () => {
+  // The translation used to be a two-branch ternary with a fallback of CROSS_ARM_BELOW_BUDGET, which
+  // happens to be right for IDENTITY_BELOW_BUDGET and silently wrong for anything else - a future code
+  // from the identity layer would be published as "the family mean left its budget", which is exactly the
+  // mislabel that mwg-train-bmu's seam bug produced one level in. An unknown code must be visible as
+  // unknown, and must carry the code it came from.
+  assert.equal(translateIdentityCode('IDENTITY_BELOW_BUDGET'), PARITY_CODES.CROSS_ARM_BELOW_BUDGET);
+  assert.equal(translateIdentityCode('IDENTITY_PAIR_BELOW_BUDGET'), PARITY_CODES.CROSS_ARM_PAIR_BELOW_BUDGET);
+  assert.equal(translateIdentityCode('IDENTITY_DEGENERATE'), PARITY_CODES.CROSS_ARM_DEGENERATE);
+  const unknown = translateIdentityCode('IDENTITY_SOMETHING_NEW');
+  assert.notEqual(
+    unknown,
+    PARITY_CODES.CROSS_ARM_BELOW_BUDGET,
+    'an unmapped code must not be published as a mean that left its budget',
+  );
+  assert.equal(unknown, PARITY_CODES.CROSS_ARM_UNMAPPED_IDENTITY_CODE);
+  // And the code we could not translate must still be readable somewhere, or a future reader sees
+  // "unmapped" with no way to find out what was unmapped.
+  const carried = crossArmFindings({ arms: [arm('raw'), arm('hono'), arm('react')], budget: BUDGET });
+  assert.ok(
+    carried.findings.every((finding) => finding.identity_code === undefined),
+    'a translated finding must not carry a redundant identity_code',
+  );
+});
+
+test('every code the identity layer can emit has an explicit translation', () => {
+  // The class guard. The ternary above was wrong because the map and the codes it maps live in different
+  // files, so they can drift silently. This reads the codes out of the SOURCE and requires each to be
+  // mapped, as sorted lists rather than a count.
+  const source = readFileSync(join(ROOT, 'src/eval/conformance.mjs'), 'utf8');
+  const emitted = [...source.matchAll(/code: '(IDENTITY_[A-Z_]+)'/g)].map((match) => match[1]);
+  const unique = [...new Set(emitted)].sort();
+  assert.ok(unique.length >= 3, `expected the identity layer to emit several codes, found ${unique.join(', ')}`);
+  assert.deepEqual(
+    unique.filter((code) => translateIdentityCode(code) === PARITY_CODES.CROSS_ARM_UNMAPPED_IDENTITY_CODE),
+    [],
+    `every emitted identity code must be translated; unmapped: ${unique.join(', ')}`,
+  );
 });
