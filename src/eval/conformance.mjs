@@ -285,6 +285,23 @@ export function variantIdentity(target, variants) {
  */
 export function identityFindings(identity, budget) {
   const findings = [];
+  // FAIL CLOSED on a malformed argument. An empty finding list means "this family agrees" and nothing else,
+  // and nothing in the signature says which shape was expected - this reads `identity.identity[axis]`, the
+  // whole `variantIdentity` RESULT, while the axes are what a caller usually has in hand. Handed the axes,
+  // every axis read as undefined, the `typeof actual === 'number'` guard declined, and the function returned
+  // an empty list: a wrong call indistinguishable from a clean verdict. (Found while building the cross-arm
+  // parity instrument - a control that should have bitten a deliberately drifted arm did not, and this was
+  // why.) mwg-train-w46.
+  if (identity === null || typeof identity !== 'object' || identity.identity === null || typeof identity.identity !== 'object') {
+    const received = identity === null
+      ? 'null'
+      : typeof identity !== 'object'
+        ? `a ${typeof identity}`
+        : identity.identity === undefined
+          ? 'the axes object (the result has an `identity` field holding the per-axis means)'
+          : 'a result whose `identity` field is not an object';
+    throw new TypeError(`identityFindings: expected the variantIdentity RESULT and got ${received} - pass variantIdentity(target, variants), not its .identity`);
+  }
   if (identity?.degenerate) {
     findings.push({ code: 'IDENTITY_DEGENERATE', message: 'fewer than two measurable variants: identity is vacuous, not perfect' });
   }
