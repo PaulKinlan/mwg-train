@@ -8,6 +8,8 @@ Compares the 7 framework arms for `booking` with each other at 3 widths. Finds d
 
 **Arms:** hono, preact, raw, react, svelte, vue, webcomponents
 
+**The budget is not a dial.** These are the repository's preregistered `IDENTITY_BUDGET` values from `src/eval/targets.mjs` (structural 0.75, geometry 0.9, controls 0.95, overall 0.8), used unchanged. If the arms disagree, the disagreement is reported - the thresholds are not moved until the report reads green.
+
 ## 390x844
 
 - measured: hono, preact, raw, react, svelte, vue, webcomponents
@@ -32,7 +34,9 @@ No drift below budget at this width.
 
 No drift below budget at this width.
 
-## Against the reference boards
+## Reference boards
+
+**Reference boards:** 0 analysed.
 
 The boards are images, so what is compared is what they DECLARE - their palette - against each arm's computed tokens. Divergence here is expected on this repository: the generated arms use the pilot palette and have not adopted the boards' design.
 
