@@ -91,6 +91,7 @@
       }
       function showSent(address) {
         echo.textContent = address;
+        document.querySelector('#return-note').hidden = true;
         request.hidden = true;
         sent.hidden = false;
         startCountdown();

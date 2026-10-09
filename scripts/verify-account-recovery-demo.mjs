@@ -84,6 +84,10 @@ try {
     await page.click('#return-link');
     const returned = JSON.parse(await page.evaluate(`return JSON.stringify({ request: !document.querySelector('#request-card').hidden, sent: document.querySelector('#sent-card').hidden, cleared: document.querySelector('#email').value === '', focused: document.activeElement.id })`));
     check(`return restores the request form at ${width}`, returned.request && returned.sent && returned.cleared && returned.focused === 'email', JSON.stringify(returned));
+    await page.realType('#email', 'second@example.test');
+    await page.click('#send-link');
+    const repeated = JSON.parse(await page.evaluate(`return JSON.stringify({ sent: !document.querySelector('#sent-card').hidden, echo: document.querySelector('#email-echo').textContent, noteHidden: document.querySelector('#return-note').hidden })`));
+    check(`repeat request starts a clean local preview at ${width}`, repeated.sent && repeated.echo === 'second@example.test' && repeated.noteHidden && !page.network.some((r) => r.method !== 'GET'), JSON.stringify(repeated));
     check(`no page exceptions at ${width}`, page.console.every((entry) => entry.type !== 'exception'), JSON.stringify(page.console));
     await page.close();
 
