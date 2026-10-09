@@ -116,7 +116,15 @@ test('the link resolver refuses anything outside the repository, including throu
   assert.equal(resolveLink('../dirlink/secret.md'), false, 'a symlinked directory component is refused');
   assert.equal(resolveLink('../dangling.md'), false, 'a dangling symlink is refused');
   assert.equal(resolveLink('../missing.md'), false, 'a missing file is refused');
-  assert.equal(resolveLink('../../outside.md'), false, 'escaping the root is refused');
+  // The same mistake the alias test made, in a second place: this named a temporary path that was never
+  // created, so it proved that a missing file is refused, not that a file outside the root is. It now points
+  // at the real file this fixture already writes outside the root, reached without any symlink, so containment
+  // is the only thing that can refuse it.
+  assert.equal(
+    resolveLink(`../../${basename(outside)}/secret.md`),
+    false,
+    'a real existing file outside the root is refused by containment',
+  );
   assert.equal(resolveLink('..'), false, 'the repository root itself is not a file inside it');
   assert.equal(resolveLink('../../../..'), false, 'a path well above the root is refused');
 });
