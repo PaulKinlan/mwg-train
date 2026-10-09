@@ -82,7 +82,6 @@ const TOKEN_SCRIPT = `return (() => {
   return {
     tokens,
     colorScheme: root.colorScheme || '',
-    bodyColor: body.color,
     bodyBackground: body.backgroundColor,
   };
 })();`;
@@ -211,14 +210,14 @@ function renderMarkdown(report) {
   lines.push(baselineAttributionLine());
   lines.push('');
   lines.push(
-    `Compares the ${report.arms_measured.length} framework arms for \`${report.archetype}\` with each other at ${report.viewports.length} widths. Finds drift; does not gate it.`,
+    `Compares the ${(report.arms_observed ?? []).length ? new Set((report.arms_observed ?? []).map((arm) => arm.framework)).size : 0} framework arms for \`${report.archetype}\` with each other at ${report.viewports.length} widths, and compares every arm screenshot against the reference boards in pixels. Finds drift; does not gate it unless \`--strict\` is passed.`,
   );
   lines.push('');
   lines.push(
-    `**What this measures:** layout and component structure. The underlying axes are structural, geometry and controls, and they are blind to text - two pages with different headings score 1.000. **What it does not do:** diff screenshots (no image decoder exists in this repository by design) or compare pixels against the reference boards, which are images.`,
+    `**What this measures:** layout and component structure between arms (structural, geometry, controls - blind to text), and real pixels against the boards. **What it does not do:** a per-pixel image diff; the board comparison uses colour distribution, luminance, ink coverage and coarse band structure, and two images can share all of those while looking different.`,
   );
   lines.push('');
-  lines.push(`**Arms:** ${report.arms_measured.join(', ')}`);
+  lines.push(`**Arms:** ${[...new Set((report.arms_observed ?? []).map((arm) => arm.framework))].sort().join(', ')}`);
   lines.push('');
   lines.push(
     `**The budget is not a dial.** These are the repository's preregistered \`IDENTITY_BUDGET\` values from \`src/eval/targets.mjs\` (structural ${report.budget.structural}, geometry ${report.budget.geometry}, controls ${report.budget.controls}, overall ${report.budget.overall}), used unchanged. If the arms disagree, the disagreement is reported - the thresholds are not moved until the report reads green.`,
@@ -251,7 +250,11 @@ function renderMarkdown(report) {
   }
   lines.push('## Reference boards');
   lines.push('');
-  lines.push(`**Reference boards:** ${report.boards ? report.boards.length : 0} analysed.`);
+  lines.push(`**Reference boards:** ${report.board_comparison?.boards ? report.board_comparison.boards.length : 0} analysed.`);
+  if (report.board_comparison?.unreadable_boards?.length) {
+    lines.push('');
+    lines.push(`**Unreadable boards (not compared, and not hidden):** ${report.board_comparison.unreadable_boards.map((board) => `${board.file} (${board.error})`).join('; ')}`);
+  }
   lines.push('');
   lines.push(
     `The boards are images, so what is compared is what they DECLARE - their palette - against each arm's computed tokens. Divergence here is expected on this repository: the generated arms use the pilot palette and have not adopted the boards' design.`,
@@ -308,16 +311,33 @@ function renderMarkdown(report) {
  * How far apart two images are, as ONE number, so "which board is this arm closest to" is answerable
  * without a human looking at 105 pairs of images.
  *
- * The metric is stated rather than implied: the mean absolute difference across the 32 row bands and the
- * 32 column bands, averaged. It is deliberately built only on the coarse structure profile, because that
- * is the part of the measurement that survives the fact that a board is a mockup and an arm is a live
- * page - they will never share a colour histogram exactly, and pretending otherwise would produce a
- * distance nobody could interpret.
+ * The metric is stated rather than implied: the mean absolute difference between the 32 row and 32 column
+ * band profiles of MEAN LUMINANCE after subtracting each image's own mean - that is, the difference in
+ * SHAPE, so a dark image and a light image of the same layout are close rather than maximally far apart.
+ * It is deliberately built only on the coarse structure profile, because that is the part of the
+ * measurement that survives the fact that a board is a mockup and an arm is a live page - they will never
+ * share a colour histogram exactly, and pretending otherwise would produce a distance nobody could
+ * interpret.
  */
 export function metricDistance(a, b) {
   const mean = (values) => (values.length === 0 ? 0 : values.reduce((sum, value) => sum + value, 0) / values.length);
-  const rowDiff = mean((a.rows ?? []).map((value, index) => Math.abs(value - (b.rows?.[index] ?? 0))));
-  const bandDiff = mean((a.bands ?? []).map((value, index) => Math.abs(value - (b.bands?.[index] ?? 0))));
+  // The SHAPE of the mean-luminance bands: each band's luminance minus that image's own mean. Raw
+  // luminance would make this a second brightness axis (a uniformly dark image and a uniformly light one
+  // differ by 0.7 of it while having the same shape), and ink coverage saturates on dark images - measured
+  // on the reference boards, ink is 98.6-99.5% for all five, which made the "closest board" a ranking by
+  // rounding. A cross-family review caught that; a test then caught the first fix, which had merely renamed
+  // the brightness axis. The deviation is what "where the content sits" means.
+  const deviations = (values) => {
+    if (!Array.isArray(values) || values.length === 0) return [];
+    const average = values.reduce((sum, value) => sum + value, 0) / values.length;
+    return values.map((value) => value - average);
+  };
+  const baseRows = deviations(a.rowLuminance);
+  const candRows = deviations(b.rowLuminance);
+  const baseBands = deviations(a.bandLuminance);
+  const candBands = deviations(b.bandLuminance);
+  const rowDiff = mean(baseRows.map((value, index) => Math.abs(value - (candRows[index] ?? 0))));
+  const bandDiff = mean(baseBands.map((value, index) => Math.abs(value - (candBands[index] ?? 0))));
   return Number(((rowDiff + bandDiff) / 2).toFixed(4));
 }
 
@@ -332,69 +352,80 @@ export function metricDistance(a, b) {
  * Each finding names BOTH images, so a reader can open the board and the arm and judge the finding for
  * themselves - which is the whole point of reporting a diff rather than a verdict.
  */
-async function compareAgainstBoards({ chrome, armRoot, screenshots }) {
+async function compareAgainstBoards({ chrome, armRoot, screenshots, arms }) {
   const boardDir = resolve(ROOT, 'docs/design/archetypes/booking');
   const boards = readdirSync(boardDir)
     .filter((name) => /^step\d+.*\.jpg$/i.test(name))
     .sort();
+  // No boards at all is a FINDING, not an early return that leaves the caller looking clean: a comparison
+  // that could not be attempted is not a comparison that passed.
   if (boards.length === 0) {
-    return { boards: [], per_arm: [], metric_notes: ANALYSIS_METRIC_NOTES, findings: [], error: 'no step*.jpg reference boards were found' };
+    return {
+      boards: [],
+      per_arm: [],
+      metric_notes: ANALYSIS_METRIC_NOTES,
+      findings: [
+        {
+          code: 'BOARDS_MISSING',
+          axis: 'reference',
+          message: `no step*.jpg reference boards were found in docs/design/archetypes/booking, so nothing was compared against the reference design`,
+        },
+      ],
+    };
   }
 
   const server = await startStaticServer({
     mounts: { '/board/': boardDir, '/shot/': join(armRoot, 'screenshots') },
     documents: { '/analyse.html': ANALYSIS_PAGE_HTML },
   });
-  const page = await chrome.newPage({});
   const analyzed = {};
+  const failures = [];
+  // The page is created INSIDE the try, so a browser that dies between the server starting and the page
+  // opening cannot leak the server: a cross-family review caught `newPage` sitting outside the finally.
+  let page = null;
   try {
+    page = await chrome.newPage({});
     await page.goto(`${server.origin}/analyse.html`);
-    // One call per image. A failure is RECORDED, never silently zero: an unreadable board would otherwise
-    // make every arm look equally far from it, which reads as agreement.
     for (const url of [...boards.map((name) => `/board/${name}`), ...screenshots.map((shot) => `/shot/${shot.path.split('/').pop()}`)]) {
       try {
         analyzed[url] = await page.evaluate(`return await window.analyseImage(${JSON.stringify(url)});`);
       } catch (error) {
         analyzed[url] = { error: error?.message ?? String(error) };
+        failures.push({ url, error: analyzed[url].error });
       }
     }
   } finally {
-    await page.close().catch(() => {});
+    if (page) await page.close().catch(() => {});
     await server.close();
   }
 
-  const boardMetrics = boards
-    .filter((name) => analyzed[`/board/${name}`] && !analyzed[`/board/${name}`].error)
-    .map((name) => ({ file: `docs/design/archetypes/booking/${name}`, metrics: analyzed[`/board/${name}`] }));
+  const loadedBoards = boards.map((name) => ({ file: `docs/design/archetypes/booking/${name}`, name, metrics: analyzed[`/board/${name}`] }));
+  const boardMetrics = loadedBoards.filter((board) => board.metrics && !board.metrics.error);
+  const failedBoards = loadedBoards.filter((board) => !board.metrics || board.metrics.error);
 
-  const perArm = [];
-  for (const shot of screenshots) {
-    const metrics = analyzed[`/shot/${shot.path.split('/').pop()}`];
-    if (!metrics || metrics.error) {
-      perArm.push({ ...shot, error: metrics?.error ?? 'the screenshot could not be analysed' });
-      continue;
-    }
-    const comparisons = boardMetrics.map((board) => ({
-      board: board.file,
-      distance: metricDistance(board.metrics, metrics),
-      findings: summariseComparison(board.metrics, metrics),
-    }));
-    comparisons.sort((a, b) => a.distance - b.distance || b.findings.length - a.findings.length);
-    const closest = comparisons[0];
-    perArm.push({
-      ...shot,
-      metrics: { width: metrics.width, height: metrics.height, luminance: metrics.luminance.mean, ink: metrics.ink },
-      closest_board: closest.board,
-      closest_distance: closest.distance,
-      closest_findings: closest.findings.map((finding) => ({
-        ...finding,
-        // Both images named on every finding: this is what makes a drift report inspectable by a person
-        // rather than something they have to take on trust.
-        board: closest.board,
-        screenshot: shot.path,
-      })),
-      all_boards: comparisons.map((comparison) => ({ board: comparison.board, distance: comparison.distance, findings: comparison.findings.length })),
+  // A board that failed to load is REPORTED and not filtered away. Silently comparing against the
+  // survivors would make a missing reference look like a reference the arms happen to match less badly.
+  const findings = failedBoards.map((board) => ({
+    code: 'BOARD_UNREADABLE',
+    axis: 'reference',
+    board: board.file,
+    message: `${board.file} could not be measured (${board.metrics?.error ?? 'no result'}), so no arm was compared against it`,
+  }));
+  if (boardMetrics.length === 0) {
+    findings.push({
+      code: 'BOARDS_UNREADABLE',
+      axis: 'reference',
+      message: 'no reference board could be measured, so the arms were not compared against the reference design at all',
     });
+  }
+
+  const perArm = screenshots.map((screenshot) =>
+    compareOne({ screenshot: { ...screenshot, analysis: analyzed[`/shot/${screenshot.path.split('/').pop()}`] }, boardMetrics }),
+  );
+  // Arms that produced no screenshot at all are recorded as such rather than being absent from the table.
+  for (const arm of arms) {
+    if (perArm.some((entry) => entry.arm === arm.framework)) continue;
+    perArm.push({ arm: arm.framework, viewport: null, path: null, error: 'not measured: this arm produced no screenshot' });
   }
 
   return {
@@ -404,10 +435,57 @@ async function compareAgainstBoards({ chrome, armRoot, screenshots }) {
       luminance: board.metrics.luminance.mean,
       ink: board.metrics.ink,
       colours: board.metrics.colours.slice(0, 5),
+      // The band profiles are kept so the distance can be RECOMPUTED from the committed artifact: a
+      // distance nobody can check is a number nobody should trust.
+      rows: board.metrics.rows,
+      bands: board.metrics.bands,
     })),
+    unreadable_boards: failedBoards.map((board) => ({ file: board.file, error: board.metrics?.error ?? 'no result' })),
     per_arm: perArm,
     metric_notes: ANALYSIS_METRIC_NOTES,
-    findings: perArm.flatMap((entry) => entry.closest_findings ?? []),
+    findings: [...findings, ...perArm.flatMap((entry) => entry.closest_findings ?? [])],
+  };
+}
+
+/** Compare one screenshot against every board that could be measured, and name the closest. */
+function compareOne({ screenshot, boardMetrics }) {
+  if (boardMetrics.length === 0) {
+    return { ...screenshot, error: 'no reference board could be measured' };
+  }
+  const analysed = screenshot.analysis;
+  if (!analysed || analysed.error) {
+    return { ...screenshot, error: analysed?.error ?? 'the screenshot could not be analysed' };
+  }
+  const comparisons = boardMetrics.map((board) => ({
+    board: board.file,
+    distance: metricDistance(board.metrics, analysed),
+    findings: summariseComparison(board.metrics, analysed),
+  }));
+  // Nearest first; then the board that diverges on fewer axes; then by name, so a tie is still
+  // deterministic rather than depending on directory order. The first version of this sorted the
+  // diverging board first when distances tied, which is the opposite of closest.
+  comparisons.sort((a, b) => a.distance - b.distance || a.findings.length - b.findings.length || a.board.localeCompare(b.board));
+  const closest = comparisons[0];
+  return {
+    ...screenshot,
+    metrics: {
+      width: analysed.width,
+      height: analysed.height,
+      luminance: analysed.luminance.mean,
+      ink: analysed.ink,
+      rows: analysed.rows,
+      bands: analysed.bands,
+    },
+    closest_board: closest.board,
+    closest_distance: closest.distance,
+    closest_findings: closest.findings.map((finding) => ({
+      ...finding,
+      // Both images named on every finding: this is what makes a drift report inspectable by a person
+      // rather than something they have to take on trust.
+      board: closest.board,
+      screenshot: screenshot.path,
+    })),
+    all_boards: comparisons.map((comparison) => ({ board: comparison.board, distance: comparison.distance, findings: comparison.findings.length })),
   };
 }
 
@@ -431,6 +509,7 @@ async function main() {
   mkdirSync(armRoot, { recursive: true });
   console.log(`check-cross-arm-parity: building ${Object.keys(FRAMEWORKS).length} arms for ${options.archetype}`);
   const arms = buildArms({ archetype: options.archetype, runRoot: armRoot, reuse: options.reuseArms });
+  const expectedArms = arms.map((arm) => arm.framework);
   console.log(`check-cross-arm-parity: rendering ${arms.length} arms at ${options.viewports.map((v) => v.key).join(', ')}`);
   // One browser for the whole run, owned here rather than inside a measurement step, because the board
   // comparison needs the same browser afterwards: the browser is the only image decoder available.
@@ -446,7 +525,7 @@ async function main() {
       port: options.port,
     });
     console.log('check-cross-arm-parity: comparing every arm screenshot against the reference boards');
-    boardComparison = await compareAgainstBoards({ chrome, armRoot, screenshots: measured.screenshots });
+    boardComparison = await compareAgainstBoards({ chrome, armRoot, screenshots: measured.screenshots, arms });
   } finally {
     await chrome.close().catch(() => {});
   }
@@ -457,6 +536,8 @@ async function main() {
     viewports: options.viewports,
     armsByViewport,
     budget: IDENTITY_BUDGET,
+    // Which arms were MEANT to be measured, so one that produced no row at all is still reported.
+    expectedArms,
   });
   const allArms = options.viewports.flatMap((viewport) => armsByViewport[viewport.key] ?? []);
   // The same token is read at three widths, so one arm using the wrong accent colour would otherwise
@@ -470,17 +551,21 @@ async function main() {
     generated_at: new Date().toISOString(),
     viewports: summary.viewports,
     arms_measured: [...new Set(allArms.filter((arm) => arm.signature).map((arm) => arm.framework))].sort(),
+    arms_observed: allArms.map((arm) => ({ framework: arm.framework, viewport: arm.viewport, color_scheme: arm.colorScheme ?? '' })),
     budget: IDENTITY_BUDGET,
     reference_palette: REFERENCE_PALETTE,
     palette_findings: palette,
     board_comparison: boardComparison,
-    findings: [...summary.findings, ...palette],
+    // Board findings are part of `findings`, so they print, they are visible to a JSON consumer, and
+    // `--strict` can act on them. A cross-family review caught them living only in board_comparison,
+    // where 105 measured disagreements were invisible to every one of those three.
+    findings: [...summary.findings, ...palette, ...(boardComparison?.findings ?? [])],
     screenshots,
     limits: {
-      compares: 'layout and component structure (structural, geometry, controls axes)',
-      blind_to: 'text content, and viewport shape (geometry is normalised per viewport)',
-      screenshots: 'saved for inspection, not diffed - no image decoder exists in this repository by design',
-      reference_boards: 'compared by declared palette, not by pixels - the boards are images',
+      compares: 'layout and component structure between arms (structural, geometry, controls axes), and real pixels against the reference boards',
+      blind_to: 'text content, and viewport shape between arms (geometry is normalised per viewport)',
+      screenshots: 'compared in pixels against the reference boards AND retained for inspection; the comparison uses colour distribution, luminance, ink coverage and coarse band structure, not a per-pixel image diff',
+      reference_boards: 'compared in pixels, measured in the browser: the board JPEGs and the arm screenshots are drawn to a canvas and read with getImageData, which is the only image decoder this repository has',
     },
   };
 

@@ -184,6 +184,32 @@ window.analyseImage = function(url) {
 
         var colours = uniqueColors.slice(0, 12);
 
+        // A SECOND, CONTINUOUS PROFILE, because the ink profiles above cannot describe a dark image.
+        // They threshold at 0.85, so on a dark slate board almost every pixel counts as ink and every band
+        // saturates near 1.0 - two dark images would look structurally identical whatever their layouts,
+        // and a "closest board" chosen on those numbers would be chosen by rounding. Mean luminance per
+        // band is continuous, so it separates a header from a table from a footer whatever the polarity.
+        var rowLuminance = new Array(32).fill(0);
+        var bandLuminance = new Array(32).fill(0);
+        var rowLumCounts = new Uint32Array(32);
+        var colLumCounts = new Uint32Array(32);
+        for (var ly = 0; ly < height; ly++) {
+          var lumRowBand = Math.min(31, Math.floor((ly / height) * 32));
+          for (var lx = 0; lx < width; lx++) {
+            var lumIndex = (ly * width + lx) * 4;
+            var pixelLum = (0.2126 * data[lumIndex] + 0.7152 * data[lumIndex + 1] + 0.0722 * data[lumIndex + 2]) / 255;
+            var lumColBand = Math.min(31, Math.floor((lx / width) * 32));
+            rowLuminance[lumRowBand] += pixelLum;
+            rowLumCounts[lumRowBand]++;
+            bandLuminance[lumColBand] += pixelLum;
+            colLumCounts[lumColBand]++;
+          }
+        }
+        for (var lumBand = 0; lumBand < 32; lumBand++) {
+          rowLuminance[lumBand] = rowLumCounts[lumBand] > 0 ? rowLuminance[lumBand] / rowLumCounts[lumBand] : 0;
+          bandLuminance[lumBand] = colLumCounts[lumBand] > 0 ? bandLuminance[lumBand] / colLumCounts[lumBand] : 0;
+        }
+
         var rows = new Array(32);
         var bands = new Array(32);
         for (var bIdx = 0; bIdx < 32; bIdx++) {
@@ -203,7 +229,9 @@ window.analyseImage = function(url) {
           ink: ink,
           colours: colours,
           rows: rows,
-          bands: bands
+          bands: bands,
+          rowLuminance: rowLuminance,
+          bandLuminance: bandLuminance
         });
       } catch (err) {
         reject(err);
@@ -295,15 +323,12 @@ export function summariseComparison(baseline, candidate) {
       `Colours in candidate not baseline: [${candList}] (share ${round4(candUnsharedShare).toFixed(4)}). ` +
       `Direction: ${direction}.`;
 
-    const baseReport = baseUnshared.slice();
-    baseReport.colours = baseUnshared;
-    baseReport.unshared = baseUnshared;
-    baseReport.share = round4(baseUnsharedShare);
-
-    const candReport = candUnshared.slice();
-    candReport.colours = candUnshared;
-    candReport.unshared = candUnshared;
-    candReport.share = round4(candUnsharedShare);
+    // Arrays carrying named properties do not survive JSON.stringify - it serialises indexed elements and
+    // silently drops everything else - so a cross-family review found `.share` present in memory and absent
+    // from the committed report. Plain objects, because this report's whole purpose is to be read by
+    // somebody who was not there when it ran.
+    const baseReport = { colours: baseUnshared, share: round4(baseUnsharedShare) };
+    const candReport = { colours: candUnshared, share: round4(candUnsharedShare) };
 
     findings.push({
       code: CODES.PALETTE_NOT_SHARED,
@@ -345,8 +370,23 @@ export function summariseComparison(baseline, candidate) {
   }
 
   // 4. Row profile comparison (32 horizontal bands)
-  const baseRows = Array.isArray(baseline?.rows) ? baseline.rows : [];
-  const candRows = Array.isArray(candidate?.rows) ? candidate.rows : [];
+  //
+  // Judged on the SHAPE of the mean-luminance profile: each band's luminance minus that image's own mean
+  // luminance. Judging on raw luminance would make "structure" a second brightness axis in disguise - a
+  // uniformly dark image and a uniformly light one differ by 0.7 of it while having exactly the same shape -
+  // and judging on ink coverage saturates on dark images for the same reason. The deviation is what "where
+  // the content sits" means, and it is what this axis exists to see.
+  const rowDeviations = (value) => {
+    if (!Array.isArray(value)) return [];
+    const mean = value.reduce((sum, entry) => sum + entry, 0) / (value.length || 1);
+    return value.map((entry) => entry - mean);
+  };
+  const usedLuminanceProfile = Array.isArray(baseline?.rowLuminance);
+  const baseRows = usedLuminanceProfile ? rowDeviations(baseline.rowLuminance) : Array.isArray(baseline?.rows) ? baseline.rows : [];
+  const candRows = usedLuminanceProfile ? rowDeviations(candidate?.rowLuminance) : Array.isArray(candidate?.rows) ? candidate.rows : [];
+  const rowProfileName = usedLuminanceProfile
+    ? 'mean luminance per horizontal band, minus each image\'s own mean'
+    : 'ink density per horizontal band';
 
   let rowAbsDiffSum = 0;
   let baseRowSum = 0;
@@ -365,24 +405,28 @@ export function summariseComparison(baseline, candidate) {
   if (rowMeanDiff > 0.10) {
     let dir;
     if (candRowMean > baseRowMean) {
-      dir = `candidate horizontal bands have higher ink density (${round4(candRowMean).toFixed(4)}) than baseline (${round4(baseRowMean).toFixed(4)})`;
+      dir = `candidate horizontal bands are brighter (${round4(candRowMean).toFixed(4)}) than baseline (${round4(baseRowMean).toFixed(4)})`;
     } else if (candRowMean < baseRowMean) {
-      dir = `candidate horizontal bands have lower ink density (${round4(candRowMean).toFixed(4)}) than baseline (${round4(baseRowMean).toFixed(4)})`;
+      dir = `candidate horizontal bands are darker (${round4(candRowMean).toFixed(4)}) than baseline (${round4(baseRowMean).toFixed(4)})`;
     } else {
-      dir = `candidate ink is redistributed across horizontal bands relative to baseline`;
+      dir = `ink and tone are redistributed across horizontal bands relative to baseline`;
     }
     findings.push({
       code: CODES.STRUCTURE_DIVERGES,
       axis: 'structure',
+      profile: 'rows',
       baseline: round4(baseRowMean),
       candidate: round4(candRowMean),
-      message: `Axis 'structure': row profile mean absolute difference is ${round4(rowMeanDiff).toFixed(4)} (exceeds threshold 0.1000); baseline row ink mean is ${round4(baseRowMean).toFixed(4)}, candidate row ink mean is ${round4(candRowMean).toFixed(4)} (${dir}).`,
+      message: `Axis 'structure': row profile shape differs by ${round4(rowMeanDiff).toFixed(4)} mean absolute deviation over the ${rowProfileName} (exceeds threshold 0.1000); baseline shape mean ${round4(baseRowMean).toFixed(4)}, candidate shape mean ${round4(candRowMean).toFixed(4)} (${dir}).`,
     });
   }
 
   // 5. Column band comparison (32 vertical bands)
-  const baseBands = Array.isArray(baseline?.bands) ? baseline.bands : [];
-  const candBands = Array.isArray(candidate?.bands) ? candidate.bands : [];
+  const baseBands = usedLuminanceProfile ? rowDeviations(baseline?.bandLuminance) : Array.isArray(baseline?.bands) ? baseline.bands : [];
+  const candBands = usedLuminanceProfile ? rowDeviations(candidate?.bandLuminance) : Array.isArray(candidate?.bands) ? candidate.bands : [];
+  const colProfileName = usedLuminanceProfile
+    ? 'mean luminance per vertical band, minus each image\'s own mean'
+    : 'ink density per vertical band';
 
   let colAbsDiffSum = 0;
   let baseColSum = 0;
@@ -401,18 +445,18 @@ export function summariseComparison(baseline, candidate) {
   if (colMeanDiff > 0.10) {
     let dir;
     if (candColMean > baseColMean) {
-      dir = `candidate vertical bands have higher ink density (${round4(candColMean).toFixed(4)}) than baseline (${round4(baseColMean).toFixed(4)})`;
+      dir = `candidate vertical bands are brighter (${round4(candColMean).toFixed(4)}) than baseline (${round4(baseColMean).toFixed(4)})`;
     } else if (candColMean < baseColMean) {
-      dir = `candidate vertical bands have lower ink density (${round4(candColMean).toFixed(4)}) than baseline (${round4(baseColMean).toFixed(4)})`;
+      dir = `candidate vertical bands are darker (${round4(candColMean).toFixed(4)}) than baseline (${round4(baseColMean).toFixed(4)})`;
     } else {
-      dir = `candidate ink is redistributed across vertical bands relative to baseline`;
+      dir = `ink and tone are redistributed across vertical bands relative to baseline`;
     }
     findings.push({
       code: CODES.STRUCTURE_DIVERGES,
       axis: 'structure',
       baseline: round4(baseColMean),
       candidate: round4(candColMean),
-      message: `Axis 'structure': column profile mean absolute difference is ${round4(colMeanDiff).toFixed(4)} (exceeds threshold 0.1000); baseline column ink mean is ${round4(baseColMean).toFixed(4)}, candidate column ink mean is ${round4(candColMean).toFixed(4)} (${dir}).`,
+      message: `Axis 'structure': column profile shape differs by ${round4(colMeanDiff).toFixed(4)} mean absolute deviation over the ${colProfileName} (exceeds threshold 0.1000); baseline shape mean ${round4(baseColMean).toFixed(4)}, candidate shape mean ${round4(candColMean).toFixed(4)} (${dir}).`,
     });
   }
 
@@ -423,6 +467,7 @@ export function summariseComparison(baseline, candidate) {
  * Explanatory notes suitable for inclusion in cross-arm parity reports.
  */
 export const ANALYSIS_METRIC_NOTES =
-  'These visual metrics compare quantised colour distribution, mean luminance, ink coverage, and coarse 32-band horizontal and vertical structure across rendered images. ' +
+  'These visual metrics compare quantised colour distribution, mean luminance, ink coverage, and a continuous 32-band mean-luminance profile horizontally and vertically across rendered images. ' +
+  'Structure is judged on the SHAPE of the mean-luminance profile - each band measured against the mean luminance of the whole image - and not on raw luminance and not on ink coverage: raw luminance would make it a second brightness axis, and ink coverage thresholds at 0.85 so a dark slate mockup is almost entirely "ink" and its bands saturate. ' +
   'They do not establish that a layout, component hierarchy, or specific design element is correct, nor do they verify semantic markup or typography. ' +
-  'Two completely different designs can share identical global luminance, ink density, and colour histograms while looking visually distinct to a human.';
+  'Two completely different designs can share global luminance, ink density and colour histograms while looking visually distinct to a human, and ink coverage and luminance are polarity-sensitive: a dark mockup compared against a light implementation will diverge on both largely because one is dark and the other is light.';
