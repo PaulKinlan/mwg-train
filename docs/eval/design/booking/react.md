@@ -117,6 +117,6 @@ are no third-party assets, fonts, logos or credentials. This contract describes
 `pilot/frameworks.mjs` (`pageSource`, `stylesSource`, `serverSource`, `enhanceSource`) as it generates
 the `react` arm, and it is verified against a freshly generated project by
 `npm run check:design-schema`. Conformance imagery is governed by
-[`training-targets.md`](../../provenance/assets/training-targets.md) and
-[`eval-targets.md`](../../provenance/assets/eval-targets.md). The uplifts used for scoring are derived
+[`training-targets.md`](../../../provenance/assets/training-targets.md) and
+[`eval-targets.md`](../../../provenance/assets/eval-targets.md). The uplifts used for scoring are derived
 artifacts of this demo, not separate designs.

@@ -67,7 +67,10 @@ Per route, top to bottom, from the demo's own `app/page.mjs`:
   `aria-errormessage="<field>-error"` → a hidden `p.error-msg[id=<field>-error]` carrying the field's
   message. Fields: `name` (name), `email` (username), `address` (street-address), `postcode`
   (postal-code), `notes` (textarea, the echoed field).
-- `body` also loads `/app/enhance.js` as a module, which is the only client code.
+- `body` also loads `/app/enhance.js` as a module, which is the only client code. In this arm that
+  script also defines the `record-echo` custom element: on upgrade it attaches an open shadow root
+  holding `:host{display:block}` and a `<slot>`, so the light DOM described above is what the slot
+  projects and the element renders nothing of its own.
 
 ## States
 
@@ -89,6 +92,10 @@ Per route, top to bottom, from the demo's own `app/page.mjs`:
 
 What exists: `server.mjs`, `spec.json`, `package.json`, `app/styles.css`, `app/enhance.js` and `app/page.mjs`. All five fields, the echo round trip, the invariant error
 announcement, light and dark colour schemes, and a visible `:focus-visible` outline.
+
+What exists in this arm beyond the shared generator: the `record-echo` custom element definition, which
+on upgrade attaches an open shadow root containing `:host{display:block}` and a `<slot>`; the slot
+projects the light DOM, so the element adds layout participation rather than content of its own.
 
 What is declared but not implemented: a loading state for the echo fetch and an empty state for the
 list route (both listed under **States** above rather than claimed as done).
@@ -117,6 +124,6 @@ are no third-party assets, fonts, logos or credentials. This contract describes
 `pilot/frameworks.mjs` (`pageSource`, `stylesSource`, `serverSource`, `enhanceSource`) as it generates
 the `webcomponents` arm, and it is verified against a freshly generated project by
 `npm run check:design-schema`. Conformance imagery is governed by
-[`training-targets.md`](../../provenance/assets/training-targets.md) and
-[`eval-targets.md`](../../provenance/assets/eval-targets.md). The uplifts used for scoring are derived
+[`training-targets.md`](../../../provenance/assets/training-targets.md) and
+[`eval-targets.md`](../../../provenance/assets/eval-targets.md). The uplifts used for scoring are derived
 artifacts of this demo, not separate designs.

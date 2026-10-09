@@ -66,3 +66,24 @@ test('the title must name the framework of its own demo, and the path must match
 test('the vocabulary must name at least one token, or it documents nothing checkable', () => {
   assert.match(check(body({ 'Token vocabulary': 'No tokens named here.' }))[0].problem, /at least one custom property/);
 });
+
+test('a relative link that resolves nowhere is a finding, because documents rot', () => {
+  const doc = body({ Provenance: 'See [targets](../../../provenance/assets/training-targets.md).' });
+  const resolveLink = (target) => target === '../../../provenance/assets/training-targets.md';
+  assert.deepEqual(checkDesignDocument({ name: 'booking/raw.md', text: doc, demo, resolveLink }), []);
+  const broken = checkDesignDocument({
+    name: 'booking/raw.md',
+    text: doc,
+    demo,
+    resolveLink: () => false,
+  });
+  assert.equal(broken.length, 1);
+  assert.match(broken[0].problem, /does not resolve from this document/);
+  // Absolute URLs and in-page anchors are not the checker's business.
+  assert.deepEqual(checkDesignDocument({
+    name: 'booking/raw.md',
+    text: body({ Provenance: 'See [a](https://example.test/x) and [b](#section).' }),
+    demo,
+    resolveLink: () => false,
+  }), []);
+});

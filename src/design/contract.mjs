@@ -33,10 +33,10 @@ const sectionBody = (text, heading) => {
 };
 
 /**
- * @param {{ name: string, text: string, demo: { framework: string, archetype: string, files: string[], stylesheet: string, routes: Array<{method: string, path: string}> } }} input
+ * @param {{ name: string, text: string, demo: { framework: string, archetype: string, files: string[], stylesheet: string, routes: Array<{method: string, path: string}> }, resolveLink?: (target: string) => boolean }} input
  * @returns {Array<{ at: string, problem: string }>}
  */
-export function checkDesignDocument({ name, text, demo }) {
+export function checkDesignDocument({ name, text, demo, resolveLink = null }) {
   const findings = [];
   const at = (where, problem) => findings.push({ at: where, problem });
 
@@ -93,6 +93,19 @@ export function checkDesignDocument({ name, text, demo }) {
 
   if (name !== `${demo.archetype}/${demo.framework}.md`) {
     at('path', `must live at ${demo.archetype}/${demo.framework}.md`);
+  }
+
+  // Documents rot: a relative link that resolves nowhere is a finding wherever the caller can resolve
+  // it. This rule exists because every relative link in the first seven contracts pointed one directory
+  // too shallow - correct in the README they were copied from, dead in each per-demo file - and nothing
+  // in the build noticed.
+  if (resolveLink) {
+    const targets = [...new Set([...text.matchAll(/\]\(([^)\s]+)\)/g)]
+      .map((match) => match[1])
+      .filter((target) => !/^(https?:|mailto:|#)/.test(target)))];
+    for (const target of targets) {
+      if (!resolveLink(target)) at('links', `'${target}' does not resolve from this document`);
+    }
   }
 
   return findings;

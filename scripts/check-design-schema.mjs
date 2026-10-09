@@ -63,7 +63,14 @@ for (const { archetype, framework, file } of designFiles()) {
   }
 
   const text = readFileSync(join(rootPath, DESIGN_DIR, archetype, file), 'utf8');
-  for (const finding of checkDesignDocument({ name: where, text, demo })) {
+  const documentDir = join(rootPath, DESIGN_DIR, archetype);
+  for (const finding of checkDesignDocument({
+    name: where,
+    text,
+    demo,
+    // A document is read from its own directory, so that is where its relative links must resolve.
+    resolveLink: (target) => existsSync(join(documentDir, target.split('#')[0])),
+  })) {
     findings.push({ at: `${where} ${finding.at}`, problem: finding.problem });
   }
   checked += 1;
