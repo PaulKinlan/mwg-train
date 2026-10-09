@@ -333,17 +333,6 @@ function renderMarkdown(report) {
 }
 
 /**
- * How far apart two images are, as ONE number, so "which board is this arm closest to" is answerable
- * without a human looking at 105 pairs of images.
- *
- * The metric is stated rather than implied: for the 32 row bands and the 32 column bands of MEAN LUMINANCE,
- * three differences are averaged - how differently the profiles are SHAPED (1 minus their correlation,
- * halved), how different their average brightnesses are, and how different their CONTRAST is (twice the
- * difference in spread). Each term is needed: shape alone cannot see contrast, brightness alone saturates on
- * a dark mockup, and leaving contrast out scored a half-dark/half-light image as identical to a flat one of
- * the same mean. A reader can recompute the number from the band values in the report.
- */
-/**
  * The line above which two arms are reported as having rendered different pixels.
  *
  * Basis, so this is a budget and not a dial: the arms are ONE specification built by seven frameworks from ONE
@@ -354,6 +343,20 @@ function renderMarkdown(report) {
  */
 export const ARM_PIXEL_BUDGET = 0.05;
 
+/**
+ * How far apart two images are, as ONE number, so "which board is this arm closest to" is answerable
+ * without a human looking at 105 pairs of images.
+ *
+ * The metric is stated rather than implied: for the 32 row bands and the 32 column bands of MEAN LUMINANCE,
+ * three differences are averaged - how differently the profiles are SHAPED (1 minus their correlation,
+ * halved), how different their average brightnesses are, and how different their CONTRAST is (twice the
+ * difference in spread). Each term is needed: shape alone cannot see contrast, brightness alone saturates on
+ * a dark mockup, and leaving contrast out scored a half-dark/half-light image as identical to a flat one of
+ * the same mean. A reader can recompute the number from the band values in the report.
+ *
+ * The doc block previously sat above ARM_PIXEL_BUDGET, describing a budget it has nothing to do with - the
+ * same mis-attributed-prose class that has produced a defect in every round of this review.
+ */
 export function metricDistance(a, b) {
   // THREE TERMS, because a reviewer found the third one missing and was right. Each is in 0..1 and they are
   // averaged, and the average is stated in the report so a reader can recompute it from the band values.
