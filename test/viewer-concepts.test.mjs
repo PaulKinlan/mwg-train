@@ -4,7 +4,7 @@ import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
-import { conceptBookingStep, conceptImage, conceptTarget, listConcepts, renderConcepts } from '../src/viewer/concepts.mjs';
+import { conceptBookingStep, conceptImage, conceptJourneyStep, conceptTarget, listConcepts, renderConcepts } from '../src/viewer/concepts.mjs';
 import { createViewer } from '../src/viewer/server.mjs';
 
 const ROOT = resolve(import.meta.dirname, '..');
@@ -20,7 +20,17 @@ async function serve(t, repoRoot) {
 test('gallery presents all three excluded boards, honest booking slot, and authored eval target', async (t) => {
   const gallery = listConcepts(ROOT);
   assert.deepEqual(gallery.boards.map((board) => board.id), ['layout-storefront', 'layout-saas', 'layout-explainer']);
-  assert.deepEqual(gallery.archetypes, [{ id: 'booking', reference: true, target: true, referencePath: '/concepts/images/booking/step1-browse.jpg' }]);
+  assert.deepEqual(gallery.archetypes, [
+    { id: 'booking', reference: true, target: true, referencePath: '/concepts/images/booking/step1-browse.jpg' },
+    { id: 'account-recovery', reference: true, target: true, referencePath: '/concepts/images/account-recovery/step1-request.jpg' },
+    { id: 'catalogue', reference: true, target: true, referencePath: '/concepts/images/catalogue/step1-grid.jpg' },
+    { id: 'contact-lead', reference: true, target: true, referencePath: '/concepts/images/contact-lead/step1-form.jpg' },
+    { id: 'event-registration', reference: true, target: true, referencePath: '/concepts/images/event-registration/step1-event.jpg' },
+  ]);
+  assert.deepEqual(gallery.journeys.map(({ id, steps }) => [id, steps.length]), [
+    ['booking', 5], ['catalogue', 3], ['contact-lead', 2], ['account-recovery', 2], ['event-registration', 2],
+  ]);
+  assert.ok(gallery.journeys.every((journey) => journey.steps.every((step) => step.available)), 'all 14 supplied boards exist');
   assert.deepEqual(gallery.bookingSteps.map(({ id, available }) => [id, available]), [
     ['step1-browse', true], ['step2-form', true], ['step3-confirmation', true],
     ['step4-error', true], ['step5-empty', true],
@@ -32,6 +42,11 @@ test('gallery presents all three excluded boards, honest booking slot, and autho
   assert.match(html, /layout-saas\.jpg" alt=.*loading="lazy"/);
   assert.match(html, /Side-by-side visual reference only/);
   assert.match(html, /Booking journey · five visual steps/);
+  assert.match(html, /Catalogue journey · three visual steps/);
+  for (const family of ['contact-lead', 'account-recovery', 'event-registration']) {
+    assert.match(html, new RegExp(`/concepts/images/${family}/step1-[a-z-]+\\.jpg`));
+    assert.match(html, new RegExp(`docs/design/archetypes/${family}/README\\.md`));
+  }
   assert.match(html, /unverified placeholders/);
   assert.equal((html.match(/\/concepts\/images\/booking\/step[1-5]-[a-z-]+\.jpg/g) ?? []).length, 12);
   assert.doesNotMatch(html, /Image pending:/);
@@ -54,6 +69,15 @@ test('gallery presents all three excluded boards, honest booking slot, and autho
   assert.match(target.headers.get('content-type'), /image\/png/);
   assert.equal((await target.arrayBuffer()).byteLength > 1000, true);
   assert.equal((await fetch(`${base}/concepts/images/booking.jpg`)).status, 404);
+  for (const journey of gallery.journeys) {
+    for (const step of journey.steps) {
+      const response = await fetch(`${base}/concepts/images/${journey.id}/${step.id}.jpg`);
+      assert.equal(response.status, 200, `${journey.id}/${step.id}`);
+      assert.equal(response.headers.get('content-type'), 'image/jpeg');
+      assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
+      assert.equal((await response.arrayBuffer()).byteLength > 1000, true);
+    }
+  }
   const step = await fetch(`${base}/concepts/images/booking/step1-browse.jpg`);
   assert.equal(step.status, 200);
   assert.equal(step.headers.get('content-type'), 'image/jpeg');
@@ -141,4 +165,55 @@ test('five booking step routes are exact and reject nested symlink/file escapes'
   symlinkSync(join(root, 'external'), dir);
   assert.equal(conceptBookingStep(root, 'step1-browse'), null);
   assert.equal((await fetch(`${base}/concepts/images/booking/step1-browse.jpg`)).status, 404);
+});
+
+test('Wave 2 routes allow only named archetype/step pairs and reject symlinked files or ancestors', async (t) => {
+  const root = mkdtempSync(join(tmpdir(), 'viewer-wave2-boundary-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const entries = [
+    ['catalogue', 'step1-grid', 'step2-cart'],
+    ['contact-lead', 'step1-form', 'step2-success'],
+    ['account-recovery', 'step1-request', 'step2-sent'],
+    ['event-registration', 'step1-event', 'step2-pass'],
+  ];
+  const bytes = Buffer.from([0xff, 0xd8, 0xff, 0xd9]);
+  const outside = join(root, 'private.jpg');
+  writeFileSync(outside, 'PRIVATE');
+  for (const [family, valid, symlinked] of entries) {
+    const dir = join(root, 'docs/design/archetypes', family);
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(join(dir, `${valid}.jpg`), bytes);
+    symlinkSync(outside, join(dir, `${symlinked}.jpg`));
+    assert.deepEqual(conceptJourneyStep(root, family, valid)?.bytes, bytes);
+    assert.equal(conceptJourneyStep(root, family, symlinked), null);
+  }
+  const base = await serve(t, root);
+  for (const [family, valid, symlinked] of entries) {
+    const response = await fetch(`${base}/concepts/images/${family}/${valid}.jpg`);
+    assert.equal(response.status, 200, `${family}/${valid}`);
+    assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
+    assert.deepEqual(Buffer.from(await response.arrayBuffer()), bytes);
+    assert.equal((await fetch(`${base}/concepts/images/${family}/${symlinked}.jpg`)).status, 404);
+  }
+  for (const path of [
+    '/concepts/images/unknown/step1-grid.jpg',
+    '/concepts/images/catalogue/step2-success.jpg',
+    '/concepts/images/catalogue/step99-grid.jpg',
+    '/concepts/images/catalogue/%2e%2e%2fprivate.jpg',
+    '/concepts/images/catalogue/step1-grid.png',
+    '/concepts/images/catalogue/step1-grid.jpg/../../private.jpg',
+  ]) assert.equal((await fetch(`${base}${path}`)).status, 404, path);
+  const catalogueDir = join(root, 'docs/design/archetypes/catalogue');
+  rmSync(catalogueDir, { recursive: true });
+  symlinkSync(join(root, 'docs/design/archetypes/contact-lead'), catalogueDir);
+  assert.equal(conceptJourneyStep(root, 'catalogue', 'step1-grid'), null);
+  assert.equal((await fetch(`${base}/concepts/images/catalogue/step1-grid.jpg`)).status, 404);
+  const archetypeDir = join(root, 'docs/design/archetypes');
+  const escaped = join(root, 'escaped');
+  mkdirSync(join(escaped, 'catalogue'), { recursive: true });
+  writeFileSync(join(escaped, 'catalogue/step1-grid.jpg'), bytes);
+  rmSync(archetypeDir, { recursive: true });
+  symlinkSync(escaped, archetypeDir);
+  assert.equal(conceptJourneyStep(root, 'catalogue', 'step1-grid'), null);
+  assert.equal((await fetch(`${base}/concepts/images/catalogue/step1-grid.jpg`)).status, 404);
 });
