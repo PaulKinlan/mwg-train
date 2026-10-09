@@ -109,7 +109,8 @@ export async function proxyRequest({ request, response, sandbox, prefix, sitePat
   const responseHeaders = {};
   for (const [name, value] of Object.entries(upstream.headers)) {
     const lower = name.toLowerCase();
-    if (['connection', 'keep-alive', 'transfer-encoding', 'content-length'].includes(lower)) continue;
+    if (['connection', 'keep-alive', 'transfer-encoding', 'content-length', 'vary', 'cache-control', 'timing-allow-origin'].includes(lower) ||
+        lower.startsWith('access-control-')) continue; // Only the outer live origin sets credentialed CORS/cache policy.
     if (lower === 'location') {
       responseHeaders.location = rewriteLocation(value, prefix);
       continue;

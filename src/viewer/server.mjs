@@ -37,6 +37,7 @@ import { dirname, extname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { conceptImage, conceptTarget, listConcepts, renderConcepts } from './concepts.mjs';
+import { liveCors, viewerOrigins } from './cors.mjs';
 import { filterProjects, loadCorpus, projectView } from './corpus.mjs';
 import { hashTree } from './hashtree.mjs';
 import { scanTree, scanPairRecords, loadScanConfig, buildMatchers } from './owner-auth.mjs';
@@ -97,9 +98,10 @@ export function liveOriginFor(request, livePort) {
   return `${scheme}://${hostname}:${livePort}`;
 }
 
-export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(REPO_ROOT, 'docs/eval/owner-identity.json'), repoRoot = REPO_ROOT, livePort = 7701 }) {
+export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(REPO_ROOT, 'docs/eval/owner-identity.json'), repoRoot = REPO_ROOT, livePort = 7701, viewerPort = 7700, publicViewerOrigin }) {
   mkdirSync(stateDir, { recursive: true });
   const pool = new SandboxPool({ stateDir, nodeModulesDir: join(repoRoot, 'node_modules') });
+  const allowedViewerOrigins = viewerOrigins({ viewerPort, publicViewerOrigin });
   const scanCache = new Map();
 
   const load = (runId) => loadCorpus(corpusRoot, runId);
@@ -502,6 +504,8 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
         return textResponse(response, 'not found', 404);
       }
 
+      if (liveCors(request, response, allowedViewerOrigins)) return;
+
       const [, id, version, runSegment, rest] = liveMatch;
       if (!VERSIONS.has(version)) return textResponse(response, 'bad version', 400);
       const requestedRun = runSegment ?? null;
@@ -638,7 +642,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const livePort = Number(arg('live-port', '7701'));
   const host = arg('host', '0.0.0.0');
   const stateDir = resolve(arg('state', '.viewer-state'));
-  const { server, liveServer, pool } = createViewer({ corpusRoot, stateDir, livePort });
+  const publicViewerOrigin = arg('public-viewer-origin', 'https://mwg-train.exe.xyz:7700');
+  const { server, liveServer, pool } = createViewer({ corpusRoot, stateDir, livePort, viewerPort: port, publicViewerOrigin });
   const shutdown = () => {
     pool.stopAll();
     server.close();
