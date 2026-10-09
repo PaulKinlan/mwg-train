@@ -120,3 +120,35 @@ test('the link resolver refuses anything outside the repository, including throu
   assert.equal(resolveLink('..'), false, 'the repository root itself is not a file inside it');
   assert.equal(resolveLink('../../../..'), false, 'a path well above the root is refused');
 });
+
+test('canonicalises the repository root, so a root reached through a symlink still contains its files', (t) => {
+  // The resolver canonicalises the root as well as the target. Without that, a checkout reached through a
+  // symlink makes containment a fact about a path string, and an ordinary in-repo file resolves to a path
+  // that begins with '..' relative to the uncanonical root and is wrongly refused.
+  const realRoot = mkdtempSync(join(tmpdir(), 'link-realroot-'));
+  const aliasRoot = `${realRoot}-alias`;
+  t.after(() => {
+    rmSync(realRoot, { recursive: true, force: true });
+    rmSync(aliasRoot, { recursive: true, force: true });
+  });
+  mkdirSync(join(realRoot, 'docs'), { recursive: true });
+  writeFileSync(join(realRoot, 'inside.md'), 'inside\n');
+  symlinkSync(realRoot, aliasRoot);
+
+  const resolveLink = repositoryLinkResolver({ root: aliasRoot, documentDir: join(realRoot, 'docs') });
+  assert.equal(resolveLink('../inside.md'), true, 'a file inside the real root is inside when the root is a symlink');
+  assert.equal(resolveLink('../../outside.md'), false, 'and escaping the real root is still refused');
+});
+
+test('accepts an in-repo file whose name begins with two dots, which the first containment test refused', (t) => {
+  // The previous test rejected anything whose relative path started with '..', which also rejected a real
+  // file named ..dot.md. The contract fix accepts it, and this pins that so it cannot be undone silently.
+  const root = mkdtempSync(join(tmpdir(), 'link-dots-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  mkdirSync(join(root, 'docs'), { recursive: true });
+  writeFileSync(join(root, '..dot.md'), 'two dots\n');
+
+  const resolveLink = repositoryLinkResolver({ root, documentDir: join(root, 'docs') });
+  assert.equal(resolveLink('../..dot.md'), true, 'a two-dots filename inside the repository is a real file');
+  assert.equal(resolveLink('..missing.md'), false, 'a missing file is still refused');
+});
