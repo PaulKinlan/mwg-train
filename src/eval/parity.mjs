@@ -168,13 +168,20 @@ export function crossArmFindings({ arms, budget }) {
         : finding.message,
     };
   });
-  // AND THE OUTLIER, WHICH THE MEAN HIDES.
+  // AND THE OUTLIER, WHICH THE MEAN HIDES - NOW A FALLBACK RATHER THAN THE ONLY GUARD.
   //
-  // `identityFindings` judges the MEAN across pairs. With seven arms there are twenty-one pairs, so one
-  // arm that has badly diverged may be averaged away: measured here, an arm whose geometry disagreed
-  // with six others at 0.66 left the mean at 0.903, just above the 0.9 budget, and the instrument
-  // reported NOTHING - an outlier arm passing as agreement, which is the one answer this instrument
-  // exists to prevent. The module's own documentation already calls the outlier the finding, so the
+  // `identityFindings` judges the MEAN across pairs AND the weakest pair on each axis, and its pair finding
+  // names the pair, its score and the mean. So for a valid input this loop no longer fires: every axis it
+  // would report has already been reported above, and the dedup below skips it. It is kept deliberately,
+  // because it is the same defence-in-depth as measuring a failed image at both ends - if the pair finding
+  // is ever removed or its wiring breaks, this still reports the outlier instead of silently reverting to a
+  // mean that hides it. A dead fallback that looks like a check is worth naming as one.
+  //
+  // The measurement that made the pair judgement necessary in the first place: with seven arms there are
+  // twenty-one pairs, so one arm that has badly diverged may be averaged away. Measured here, an arm whose
+  // geometry disagreed with six others at 0.66 left the mean at 0.903, just above the 0.9 budget, and the
+  // instrument reported NOTHING - an outlier arm passing as agreement, which is the one answer this
+  // instrument exists to prevent. The module's own documentation already calls the outlier the finding, so the
   // weakest pair per axis is judged too and reported when the mean alone would not have reported it.
   for (const axis of IDENTITY_AXES) {
     const minimum = budget?.[axis];
