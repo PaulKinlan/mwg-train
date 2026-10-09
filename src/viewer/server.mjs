@@ -34,6 +34,7 @@ import { filterProjects, loadCorpus, projectView } from './corpus.mjs';
 import { hashTree } from './hashtree.mjs';
 import { scanTree, scanPairRecords, loadScanConfig, buildMatchers } from './owner-auth.mjs';
 import { renderIndex, renderProject, renderMarkdown, escapeHtml, page } from './pages.mjs';
+import { loadTuningData, renderTuning } from './tuning.mjs';
 import { proxyRequest } from './proxy.mjs';
 import { SandboxPool } from './sandbox.mjs';
 
@@ -354,6 +355,29 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
       const liveOrigin = liveOriginFor(request, livePort);
 
       if (path === '/healthz') return textResponse(response, 'ok');
+
+      if (path === '/tuning' && request.method === 'GET') {
+        const data = loadTuningData(repoRoot);
+        return htmlResponse(response, renderTuning({ data, repoRoot,
+          familyId: url.searchParams.get('family'), variant: url.searchParams.get('variant'),
+          framework: url.searchParams.get('framework') }));
+      }
+      if (path === '/tuning/client.js' && request.method === 'GET') {
+        response.writeHead(200, { 'content-type': 'text/javascript; charset=utf-8', 'cache-control': 'no-store' });
+        return response.end(readFileSync(join(repoRoot, 'src/viewer/tuning-client.js')));
+      }
+      const tuningTarget = path.match(/^\/tuning\/target\/(tr-\d{2})\.png$/);
+      if (tuningTarget && request.method === 'GET') {
+        const dir = join(repoRoot, 'data/A1_self_generated/targets', tuningTarget[1]);
+        const image = join(dir, 'target.png');
+        if (!existsSync(image) || lstatSync(dir).isSymbolicLink() || !lstatSync(dir).isDirectory() ||
+            lstatSync(image).isSymbolicLink() || realpathSync(dir) !== join(realpathSync(join(repoRoot, 'data/A1_self_generated/targets')), tuningTarget[1]) ||
+            realpathSync(image) !== join(realpathSync(dir), 'target.png')) {
+          return textResponse(response, 'target unavailable', 404);
+        }
+        response.writeHead(200, { 'content-type': 'image/png', 'cache-control': 'no-store' });
+        return response.end(readFileSync(image));
+      }
 
       if (path === '/pipeline' && request.method === 'GET') {
         // The pipeline doc is the source of truth; the viewer renders it so the two cannot drift.
