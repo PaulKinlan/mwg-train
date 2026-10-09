@@ -18,6 +18,8 @@ import { extname, join, normalize, resolve, sep } from 'node:path';
 
 const CONTENT_TYPES = Object.freeze({
   '.html': 'text/html; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.js': 'text/javascript; charset=utf-8',
   '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
   '.png': 'image/png',
