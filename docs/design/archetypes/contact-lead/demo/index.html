@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <title>ARKHITECTS Studio — Request a consultation</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <!--
+      Icon sprite. Drawn with plain SVG shapes in one in-document sprite so the demo needs no image
+      files and makes no network request. Colours come from currentColor, which each referencing
+      element sets from the stylesheet tokens.
+    -->
+    <svg class="visually-hidden" aria-hidden="true" focusable="false" width="0" height="0">
+      <symbol id="mark-studio" viewBox="0 0 48 48">
+        <path d="M24 5 45 43H32.6L24 23.6Z" fill="currentColor"/>
+        <path d="M24 5 3 43h12.4L24 23.6Z" fill="currentColor" opacity=".55"/>
+        <path d="M16.6 32.4h14.8v4.6H16.6z" fill="currentColor"/>
+      </symbol>
+      <symbol id="icon-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 21s6.5-5.6 6.5-10.5a6.5 6.5 0 1 0-13 0C5.5 15.4 12 21 12 21z"/>
+        <circle cx="12" cy="10.5" r="2.4"/>
+      </symbol>
+      <symbol id="icon-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="8" r="3.4"/>
+        <path d="M5.2 20c0-3.6 3-6.5 6.8-6.5s6.8 2.9 6.8 6.5"/>
+      </symbol>
+      <symbol id="icon-doc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M7 3h7l4 4v14H7z"/>
+        <path d="M14 3v4h4"/>
+        <path d="M10 12h5M10 16h5"/>
+      </symbol>
+      <symbol id="icon-team" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="9.5" cy="8" r="3"/>
+        <path d="M3.5 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/>
+        <path d="M16 5.4a3 3 0 0 1 0 5.2M18.2 20c0-2.1-.7-4-2-5.4"/>
+      </symbol>
+      <symbol id="icon-plan" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M7 3h7l4 4v14H7z"/>
+        <path d="M14 3v4h4"/>
+        <path d="M9.6 14.6l1.8 1.8 3.4-3.6"/>
+      </symbol>
+    </svg>
+
+    <header class="top-bar">
+      <a href="index.html" class="brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 48 48" focusable="false"><use href="#mark-studio"></use></svg>
+        </span>
+        <span>ARKHITECTS Studio</span>
+      </a>
+      <nav class="top-nav" aria-label="Demo navigation">
+        <a href="index.html" aria-current="page">Consultation form</a>
+        <a href="success.html">Success view</a>
+        <a href="compare.html">Visual spec</a>
+      </nav>
+    </header>
+
+    <div class="state-switcher" role="region" aria-label="Demo state switcher">
+      <span class="state-switcher-label">Design states:</span>
+      <span class="state-pill" aria-current="page">1. Consultation form (live)</span>
+      <a href="success.html" class="state-pill">2. Success view →</a>
+      <a href="compare.html" class="state-pill">Boards comparison →</a>
+    </div>
+
+    <main class="container">
+      <div class="consultation">
+        <!-- Left column: studio identity, address, process and the response-time promise (board 1). -->
+        <section class="studio-panel" aria-labelledby="studio-heading">
+          <svg class="studio-mark" viewBox="0 0 48 48" aria-hidden="true" focusable="false"><use href="#mark-studio"></use></svg>
+          <h1 class="studio-name" id="studio-heading">
+            <span class="studio-name-strong">ARKHITECTS</span> <span class="studio-name-rest">Studio</span>
+          </h1>
+
+          <div class="studio-section">
+            <h2 class="studio-section-title">Address</h2>
+            <address class="studio-address">
+              <svg class="address-icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#icon-pin"></use></svg>
+              <span>15 Golden Square, Soho<br>London W1F 9JG<br>United Kingdom</span>
+            </address>
+          </div>
+
+          <div class="studio-section">
+            <h2 class="studio-block-title">Our consultation process</h2>
+            <ol class="process-list">
+              <li class="process-step">
+                <span class="process-icon" aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 24 24" focusable="false"><use href="#icon-user"></use></svg>
+                </span>
+                <span>
+                  <strong class="process-title">1. Initial contact</strong>
+                  <span class="process-detail">Complete the consultation form.</span>
+                </span>
+              </li>
+              <li class="process-step">
+                <span class="process-icon" aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 24 24" focusable="false"><use href="#icon-doc"></use></svg>
+                </span>
+                <span>
+                  <strong class="process-title">2. Project review</strong>
+                  <span class="process-detail">Our team analyses your enquiry.</span>
+                </span>
+              </li>
+              <li class="process-step">
+                <span class="process-icon" aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 24 24" focusable="false"><use href="#icon-team"></use></svg>
+                </span>
+                <span>
+                  <strong class="process-title">3. Conceptual meeting</strong>
+                  <span class="process-detail">Schedule a 30-minute consultation.</span>
+                </span>
+              </li>
+              <li class="process-step">
+                <span class="process-icon" aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 24 24" focusable="false"><use href="#icon-plan"></use></svg>
+                </span>
+                <span>
+                  <strong class="process-title">4. Proposal &amp; next steps</strong>
+                  <span class="process-detail">Receive a tailored project plan.</span>
+                </span>
+              </li>
+            </ol>
+          </div>
+
+          <p class="response-pill">
+            <span class="response-pill-label">Typical response time</span>
+            <strong>under 24 hrs</strong>
+          </p>
+        </section>
+
+        <!-- Right column: the consultation form (board 1). -->
+        <section class="form-card" aria-labelledby="form-heading">
+          <h2 class="form-title" id="form-heading">Request a consultation</h2>
+          <p class="form-intro">
+            Full name, work email and message are required. Project scope and budget help us route the
+            enquiry to the right team.
+          </p>
+
+          <!--
+            Contract form — docs/eval/specs/contact-lead.json declares form#enquiry-form with fields
+            name (text), email (email) and message (textarea), all required, and the journey fills
+            exactly those three and expects "Grace Hopper" back.
+
+            The spec's write route is `POST /enquiry` answering 303 with a server-issued reference.
+            This directory has no server, so the form submits by native GET to the static success page
+            and the answers travel in the query string. Nothing is transmitted or stored.
+          -->
+          <form id="enquiry-form" class="enquiry-form" method="get" action="success.html">
+            <div class="field">
+              <label for="name">Full Name</label>
+              <input type="text" id="name" name="name" autocomplete="name" required>
+            </div>
+
+            <div class="field">
+              <label for="email">Work Email</label>
+              <input type="email" id="email" name="email" autocomplete="email" required>
+            </div>
+
+            <div class="field">
+              <label for="scope">Project Scope</label>
+              <select id="scope" name="scope" aria-describedby="scope-hint">
+                <option value="residential-renovation" selected>Residential Renovation</option>
+                <option value="commercial-build">Commercial Build</option>
+                <option value="interior-architecture">Interior Architecture</option>
+              </select>
+              <p class="field-hint" id="scope-hint">
+                Not a required field. It routes your enquiry to the right team, and it opens on the kind
+                of project we are asked about most.
+              </p>
+            </div>
+
+            <div class="field">
+              <label for="budget">Budget <span class="optional-marker">(optional)</span></label>
+              <select id="budget" name="budget" aria-describedby="budget-hint">
+                <option value="" selected>Not sure yet</option>
+                <option value="under-50k">Under £50,000</option>
+                <option value="50k-150k">£50,000 – £150,000</option>
+                <option value="150k-500k">£150,000 – £500,000</option>
+                <option value="over-500k">Over £500,000</option>
+              </select>
+              <p class="field-hint" id="budget-hint">
+                Optional. A starting range helps us scope the first call — leave it as “Not sure yet” if
+                you would rather not say.
+              </p>
+            </div>
+
+            <div class="field">
+              <label for="message">Message</label>
+              <textarea id="message" name="message" rows="6" maxlength="500" required aria-describedby="message-count message-hint"></textarea>
+              <p class="char-count" id="message-count">0/500 characters</p>
+              <p class="field-hint" id="message-hint">
+                What you want to change, the address if it matters, and any deadline you are working to.
+              </p>
+              <p class="form-status" id="message-status" role="status"></p>
+            </div>
+
+            <button type="submit" class="btn btn--action btn--block">Send Consultation Request</button>
+          </form>
+
+          <p class="demo-note">
+            Static design target: submitting navigates to <code>success.html</code> with your answers in
+            the URL. No enquiry is transmitted, stored or emailed, and the reference token on that page
+            is the reference board's sample.
+          </p>
+
+          <noscript>
+            <p class="demo-note">
+              JavaScript is off, so the character count under the message will not update. The form still
+              submits and <code>success.html</code> still loads — that page reads your answers back from
+              the URL with a script, so without one it shows the board's sample values instead.
+            </p>
+          </noscript>
+        </section>
+      </div>
+    </main>
+
+    <footer class="site-foot">
+      <p>
+        Static design target for the <code>contact-lead</code> archetype: hand-written HTML, CSS and one
+        small inline script, with no server, no database and no network request. The spec's
+        <code>POST /enquiry</code> route is not implemented here.
+      </p>
+      <p>
+        The studio name, the London address, the contact address, the response-time promise, the four
+        process steps and the reference token are the reference board's illustrative placeholders, not a
+        real studio's commitments. No enquiry is sent by this page.
+      </p>
+    </footer>
+
+    <script>
+      /*
+       * The only script on this page. Board 1 shows a live "0/500 characters" count under the message
+       * textarea and the spec's contract does not; `maxlength` alone would not show one.
+       *
+       * The form is deliberately NOT intercepted: it navigates to success.html by native GET, so the
+       * submitted journey works with JavaScript disabled.
+       */
+      (function () {
+        var LIMIT = 500;
+        var message = document.getElementById('message');
+        var count = document.getElementById('message-count');
+        var status = document.getElementById('message-status');
+        if (!message || !count) return;
+
+        function updateCount() {
+          var length = message.value.length;
+          count.textContent = length + '/' + LIMIT + ' characters';
+          status.textContent = length >= LIMIT
+            ? 'Character limit reached: the message is at its 500-character maximum.'
+            : '';
+        }
+
+        message.addEventListener('input', updateCount);
+        updateCount();
+      })();
+    </script>
+  </body>
+</html>

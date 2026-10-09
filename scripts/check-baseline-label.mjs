@@ -188,6 +188,7 @@ export const DOCUMENTS = {
   'docs/design/archetypes/catalogue/README.md': 'provenance',
   'docs/design/archetypes/catalogue/demo/README.md': 'design',
   'docs/design/archetypes/contact-lead/README.md': 'provenance',
+  'docs/design/archetypes/contact-lead/demo/README.md': 'design',
   'docs/design/archetypes/event-registration/README.md': 'provenance',
   'docs/design/archetypes/event-registration/demo/README.md': 'design',
   'docs/eval/ATTRIBUTION.md': 'contract',
