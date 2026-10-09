@@ -278,20 +278,14 @@ export function variantIdentity(target, variants) {
 }
 
 /**
- * Does a family's cross-variant identity meet the preregistered budget? A framework may legitimately
- * change the markup; it may not change the layout, the component hierarchy, the spacing or the visual
- * system, so the budget is per axis and a failure names the axis and the pair responsible for *that*
- * axis.
- */
-/**
  * Refuse a budget that cannot judge anything.
  *
  * An axis with no budget is not an axis that passed - it is an axis nobody measured against, so the
  * reading is "no findings", which is indistinguishable from "everything agreed". A missing, empty or
  * non-object budget therefore silently reports universal agreement for a family that may have fallen
  * below its floor on every axis. That is a malformed CALLER CONTRACT rather than malformed data, so it
- * throws, which is the same rule the identity argument's guard follows - that one is mwg-train-w46, which is why the identity guard is a
- * line or two further down in this same function (mwg-train-zey).
+ * throws, which is the same rule the identity-argument guard follows - that one is mwg-train-w46's, and
+ * it sits at the top of `identityFindings`, below.
  *
  * This lives here and is exported because `crossArmFindings` in parity.mjs delegates to the judge below
  * AND has its own budget-reading outlier loop: one rule, one place, so the two cannot drift apart.
@@ -314,6 +308,12 @@ export function requireBudget(budget, caller = 'identityFindings') {
   return budget;
 }
 
+/**
+ * Does a family's cross-variant identity meet the preregistered budget? A framework may legitimately
+ * change the markup; it may not change the layout, the component hierarchy, the spacing or the visual
+ * system, so the budget is per axis and a failure names the axis and the pair responsible for *that*
+ * axis.
+ */
 export function identityFindings(identity, budget) {
   const findings = [];
   // FAIL CLOSED on a malformed argument. An empty finding list means "this family agrees" and nothing else,
