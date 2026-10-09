@@ -25,7 +25,7 @@ import {
   translateIdentityCode,
   viewportFindings,
 } from '../src/eval/parity.mjs';
-import { IDENTITY_CODES } from '../src/eval/conformance.mjs';
+import { IDENTITY_CODES, identityFindings } from '../src/eval/conformance.mjs';
 
 const ROOT = resolve(import.meta.dirname, '..');
 
@@ -496,4 +496,36 @@ test('the identity layer publishes its code list, so the map is checked against 
   const source = readFileSync(join(ROOT, 'src/eval/conformance.mjs'), 'utf8');
   const literals = [...new Set([...source.matchAll(/code: '(IDENTITY_[A-Z_]+)'/g)].map((match) => match[1]))].sort();
   assert.deepEqual(literals, [], `identity codes must come from IDENTITY_CODES, found literals: ${literals.join(', ')}`);
+});
+
+test('a budget with a non-finite axis is refused, because the two layers disagree about it', () => {
+  // Found by the mwg-train-7yp confirm review. A MIXED budget passes requireBudget, which throws only when
+  // zero axes are numeric, and then the two layers do opposite wrong things: identityFindings silently skips
+  // the NaN axis because `actual < NaN` is false, while the parity outlier loop proceeds because
+  // `typeof NaN === 'number'` and `weakest[axis] >= NaN` is always false - so it publishes
+  // CROSS_ARM_PAIR_BELOW_BUDGET with `minimum: NaN` and a message claiming the mean is "within the NaN
+  // budget". Silence in one layer, a fabricated judgement in the other.
+  //
+  // This REVERSES a behaviour the 7yp review recorded as passing - that a mixed budget still judges its
+  // finite axis. That behaviour is what produces the disagreement, so refusing the budget outright is the
+  // fix rather than a regression. IDENTITY_BUDGET and ARM_PIXEL_BUDGET are complete literals, so no
+  // shipped caller sends a partial or non-finite budget.
+  const identity = { identity: { structural: 0.5 }, weakest_by_axis: {}, weakest_pair: null, degenerate: false };
+  assert.equal(identityFindings(identity, { structural: 0.9 }).length, 1, 'a finite budget must still judge');
+  for (const budget of [{ structural: 0.75, geometry: NaN }, { structural: 0.75, geometry: Infinity }]) {
+    assert.throws(
+      () => identityFindings(identity, budget),
+      TypeError,
+      `a budget with a non-finite axis must be refused, got ${JSON.stringify(budget)}`,
+    );
+  }
+  // And the same budget must not reach the parity layer, where it would fabricate a finding.
+  const arms = [arm('raw'), arm('hono'), arm('react')];
+  for (const budget of [{ ...BUDGET, geometry: NaN }, { ...BUDGET, geometry: Infinity }]) {
+    assert.throws(
+      () => crossArmFindings({ arms, budget }),
+      TypeError,
+      'a non-finite axis must be refused at the parity entry point too, not turned into a finding',
+    );
+  }
 });

@@ -310,13 +310,19 @@ export function requireBudget(budget, caller = 'identityFindings') {
   // missing budget, through a narrower door. Infinity and -Infinity are the same class in opposite
   // directions. Arrays are refused for the same reason: Object.entries([0.75]) is [['0', 0.75]], so an
   // array would "judge" an axis literally named "0".
-  const numeric = budget && typeof budget === 'object' && !Array.isArray(budget)
-    ? Object.entries(budget).filter(([, value]) => Number.isFinite(value))
-    : [];
-  if (numeric.length === 0) {
+  const entries = budget && typeof budget === 'object' && !Array.isArray(budget) ? Object.entries(budget) : [];
+  const nonFinite = entries.filter(([, value]) => !Number.isFinite(value)).map(([axis]) => axis);
+  // A NON-FINITE AXIS IS REFUSED, not just an all-non-finite budget (mwg-train-dwo). A mixed budget used to
+  // pass and then split the two layers: the judge silently skipped the NaN axis, while the parity outlier
+  // loop proceeded - typeof NaN === 'number' - and published a below-budget finding with `minimum: NaN`.
+  // Silence in one layer and a fabricated judgement in the other is worse than refusing the input.
+  if (entries.length === 0 || nonFinite.length > 0) {
+    const problem = entries.length === 0
+      ? 'needs a budget with at least one numeric axis'
+      : `cannot judge the axis/axes ${nonFinite.join(', ')}`;
     throw new TypeError(
-      `${caller} needs a budget with at least one numeric axis, got ${JSON.stringify(budget) ?? String(budget)}: `
-      + 'an unbudgeted axis is unjudged, and unjudged must not read as agreement',
+      `${caller} ${problem}, got ${JSON.stringify(budget) ?? String(budget)}: `
+      + 'an axis without a finite floor is unjudged, and unjudged must not read as agreement',
     );
   }
   return budget;

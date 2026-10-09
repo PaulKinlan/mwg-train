@@ -222,7 +222,9 @@ export function crossArmFindings({ arms, budget }) {
   for (const axis of IDENTITY_AXES) {
     const minimum = budget?.[axis];
     const weakest = identity.weakest_by_axis?.[axis];
-    if (typeof minimum !== 'number' || !weakest || typeof weakest[axis] !== 'number') continue;
+    // Number.isFinite, not typeof: `typeof NaN === 'number'`, and `weakest[axis] >= NaN` is always false,
+    // so a NaN floor would publish a below-budget finding against a budget that judged nothing.
+    if (!Number.isFinite(minimum) || !weakest || typeof weakest[axis] !== 'number') continue;
     if (weakest[axis] >= minimum) continue;
     // Only when this axis was NOT already reported above. Since the mapping above translates the mean and
     // pair findings separately, an axis can arrive here already reported EITHER as a mean failure or as a
