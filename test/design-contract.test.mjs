@@ -7,7 +7,7 @@ import { test } from 'node:test';
 import { DESIGN_SECTIONS, checkDesignDocument, repositoryLinkResolver } from '../src/design/contract.mjs';
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
-import { DOCUMENTS } from '../scripts/check-baseline-label.mjs';
+import { checkDocumentClassification } from '../scripts/check-baseline-label.mjs';
 
 // A checker that has only ever been shown to pass is not a checker, so nearly every rule below is exercised by
 // a document that must be rejected. The document builder produces a VALID contract; each test breaks exactly
@@ -227,7 +227,7 @@ const root = new URL('../', import.meta.url);
 // checker scans tracked .md AND .json; and its floor of 35 permitted six of the 41 tracked design documents to
 // disappear unnoticed. It now enumerates the checker's own surface with NUL separation, so git path quoting
 // cannot hide a file, and asserts against the exported DOCUMENTS map itself rather than a string that looks like
-// it. The control that proves it bites: comment out one entry and this test fails where it previously passed.
+// it. The control that proves it bites: remove one entry and this test fails.
 test('every tracked design document is classified for the baseline-label check', () => {
   const tracked = execFileSync('git', ['ls-files', '-z', '--', 'docs/eval/design'], { cwd: root, encoding: 'utf8' })
     .split('\0')
@@ -235,16 +235,10 @@ test('every tracked design document is classified for the baseline-label check',
   // A floor, not a target: the point is that a shrinking list cannot make this test pass vacuously. It is the
   // count of tracked design documents at the time of writing, so removing design documents is a deliberate edit.
   assert.ok(tracked.length >= 41, `expected at least the 41 tracked design documents, saw ${tracked.length}`);
-  const unclassified = tracked.filter((p) => !Object.hasOwn(DOCUMENTS, p));
-  assert.deepEqual(unclassified, [], 'classify these in the DOCUMENTS map or the full gate will fail');
+  // The checker's own predicate, not a re-implementation of it: this rejects an entry whose value is null or
+  // empty, which Object.hasOwn would have accepted, and it honours GENERATED_PATTERNS the same way the gate does.
+  const findings = checkDocumentClassification(tracked);
+  assert.deepEqual(findings.map(({ code, subject }) => `${code} ${subject}`), [],
+    'classify these in DOCUMENTS or the full gate will fail');
 });
 
-test('the guard would notice an entry that was only commented out', () => {
-  // The specific false negative the reviewer found, pinned as a test so the guard cannot regress into it.
-  const source = readFileSync(new URL('scripts/check-baseline-label.mjs', root), 'utf8');
-  const sample = 'docs/eval/design/booking/raw.md';
-  assert.ok(Object.hasOwn(DOCUMENTS, sample), 'the sample must be a real classified document');
-  assert.ok(source.includes(`'${sample}'`), 'the map should render as source too, which is why the old check looked like it worked');
-  const commented = source.replace(`  '${sample}': 'design',`, `  // '${sample}': 'design',`);
-  assert.ok(commented.includes(`'${sample}'`), 'a comment still contains the text, which is exactly the trap');
-});
