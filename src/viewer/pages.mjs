@@ -83,6 +83,27 @@ export const PAGE_CSS = `
   .journey-steps { padding-inline-start: 1.4rem; font-size: 0.9rem; overflow-wrap: anywhere; }
   .pipeline-context { margin-block: 0.8rem 1rem; }
   .pipeline-context summary { font-weight: 650; color: var(--action); }
+  .tuning-selector { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) auto; align-items: end; gap: 0.4rem 0.8rem; margin: 1.3rem 0; padding: 1rem; border: 1px solid var(--line); border-radius: 0.75rem; background: var(--surface); }
+  .tuning-selector label { grid-row: 1; color: var(--muted); font-size: 0.88rem; font-weight: 700; }
+  .tuning-selector select { grid-row: 2; min-width: 0; width: 100%; }
+  .tuning-selector button { grid-column: 4; grid-row: 2; }
+  .tuning-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; align-items: start; }
+  .tuning-grid > div { display: grid; gap: 1rem; min-width: 0; }
+  .tuning-grid .panel h2 { margin: 0 0 0.5rem; }
+  .tuning-grid .panel p { margin-block: 0.5rem 1rem; }
+  .tuning-target { display: block; width: 100%; height: auto; border: 1px solid var(--line); border-radius: 0.4rem; }
+  .tuning-source { padding-block: 0.6rem; border-top: 1px solid var(--line); }
+  .tuning-source h3 { margin-block: 0.3rem; }
+  .tuning-editor label { display: block; font-weight: 700; margin-block: 1rem 0.25rem; }
+  .tuning-editor textarea, .tuning-editor input { width: 100%; min-height: 3rem; padding: 0.65rem 0.75rem; border: 1px solid var(--control-line); border-radius: 0.45rem; background: var(--surface); color: var(--ink); font: inherit; }
+  .tuning-editor textarea { min-height: 8rem; resize: vertical; font-family: inherit; }
+  .tuning-editor textarea[readonly] { background: var(--ground); font-family: ui-monospace, monospace; font-size: 0.85rem; }
+  .tuning-settings { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.8rem; }
+  .tuning-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-block: 1.2rem; }
+  .tuning-actions button:not([type=submit]) { background: var(--surface); color: var(--action); }
+  #draft-status { color: var(--muted); font-weight: 650; }
+  @media (max-width: 55rem) { .tuning-grid { grid-template-columns: minmax(0, 1fr); } .tuning-selector { grid-template-columns: repeat(2, minmax(0, 1fr)); } .tuning-selector label, .tuning-selector select, .tuning-selector button { grid-column: auto; grid-row: auto; } .tuning-selector button { grid-column: 1 / -1; } }
+  @media (max-width: 35rem) { .tuning-selector, .tuning-settings { grid-template-columns: minmax(0, 1fr); } .tuning-selector button { grid-column: auto; } }
   @media (max-width: 48rem) {
     .pair { grid-template-columns: minmax(0, 1fr); }
     dl { grid-template-columns: minmax(0, 1fr); gap: 0.1rem; }
@@ -102,7 +123,7 @@ export function page(title, body) {
 <style>${PAGE_CSS}</style>
 </head>
 <body>
-<nav><a href="/">corpus index</a> · <a href="/pipeline">pipeline</a></nav>
+<nav><a href="/">corpus index</a> · <a href="/tuning">prompt workbench</a> · <a href="/pipeline">pipeline</a></nav>
 <main id="content">${body}</main>
 </body>
 </html>`;
