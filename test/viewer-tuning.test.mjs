@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
@@ -132,7 +132,26 @@ test('workbench renders high-fidelity reference board when present, and degrades
   const htmlWithoutRef = renderTuning({ data, repoRoot: ROOT, familyId: 'tr-03', variant: 'v1', framework: 'raw' });
   assert.doesNotMatch(htmlWithoutRef, /src="\/tuning\/reference\/tr-03\.jpg"/);
   assert.match(htmlWithoutRef, /No reference board yet for this family\./);
-  assert.match(htmlWithoutRef, /reference boards currently exist for <code>tr-01<\/code>, <code>tr-02<\/code>, and <code>tr-04<\/code>\./i);
+  // The empty-state copy names WHICH families have boards, so this must ask the tree rather than restate a list. This
+  // assertion used to be the literal string "tr-01, tr-02, and tr-04", which meant the test held the stale copy in
+  // place: it would have kept passing while the page told an operator that three boards existed and the rest were
+  // pending. That is precisely the failure this bead exists to remove - a copy restating a fact that already has a
+  // source - and a test written against the copy cannot see it. Deriving the expectation here is what makes a
+  // reintroduced hardcoded list fail as soon as the tree changes.
+  const boardDir = join(ROOT, 'docs', 'design', 'training');
+  const boardFamilies = readdirSync(boardDir)
+    .filter((name) => /^tr-\d{2}$/.test(name) && existsSync(join(boardDir, name, 'reference.jpg')))
+    .sort();
+  assert.ok(boardFamilies.length >= 1, 'expected at least one authored board on disk, or this assertion means nothing');
+  for (const family of boardFamilies) {
+    assert.match(htmlWithoutRef, new RegExp(`<code>${family}</code>`), `the empty state must name ${family}, which has a board on disk`);
+  }
+  // And the converse direction, which is the one the stale copy would fail in once a fourth board landed: it must not
+  // name a family that has no board.
+  const allFamilies = readdirSync(boardDir).filter((name) => /^tr-\d{2}$/.test(name));
+  for (const family of allFamilies.filter((name) => !boardFamilies.includes(name))) {
+    assert.doesNotMatch(htmlWithoutRef, new RegExp(`<code>${family}</code>`), `the empty state must not claim ${family} has a board`);
+  }
   assert.match(htmlWithoutRef, /Reference board<\/dt><dd><span class="muted">no reference board yet for this family<\/span><\/dd>/);
 });
 
