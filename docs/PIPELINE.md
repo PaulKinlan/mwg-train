@@ -2,7 +2,83 @@
 
 > **mwg-train deterministic baseline** - deterministic output of this repository's own tooling, not an official `web-uplift` result.
 
-Seven stages, each with a nameable input and output. The pipeline is a web of dependencies rather than a strict linear sequence: brief validation (Stage 1) reads the pinned rules (Stage 2), verification (Stage 5) re-derives the corpus directly from the plan (Stage 3) rather than trusting the run output, and pricing (Stage 6) reads the original briefs (Stage 1) to compute token volumes. At every step, the tooling reads directly from the authoritative source rather than passing data through intermediaries.
+## 0. Owner-Directed Model-to-Model Training Lifecycle (Paul, 2026-10-10)
+
+The overarching training pipeline implements a closed-loop, model-to-model empirical uplift workflow:
+
+```
+[Trainable Vision Model] 
+       │
+       ▼ (Step 2: Generate against training-side plan.md + design.md + visual target)
+[Raw Base Output] ──► (Step 3: Cordon off immutable baseline comparator checkpoint)
+       │
+       ▼ (Step 4: Measure baseline with Modern Web Guidance & web-uplift evaluation)
+[Pre-Uplift MWG Score]
+       │
+       ▼ (Step 5: Apply MWG & Web Uplift until meeting all visual + functional criteria)
+[Uplifted Approved Training Set]
+       │
+       ▼ (Step 6: Re-evaluate to confirm accuracy, contract completeness & rights clearance)
+[Verified Dataset Manifest]
+       │
+       ▼ (Step 7: Train adapter / fine-tune model)
+[Trained Model Checkpoint]
+       │
+       ├─────────────────────────────────────────┐
+       ▼ (Step 8a: Diagnostic Rebuild)           ▼ (Step 8b: Single-Run Preregistered Eval)
+[Rebuild Same Training/Dev Demos]         [Sealed Evaluation: C1, C2, C3, T]
+       │                                         │
+       ▼                                         ▼
+[Measure Training Distribution Delta]     [Measure Generalization & Preregistered Endpoints]
+```
+
+### The 8-Step Closed-Loop Pipeline:
+1. **Select and Qualify a Trainable Model**:
+   - Select a verified trainable base model (open downloadable weights or verified hosted fine-tuning; e.g. Qwen 2.5 VL 7B / Qwen3-VL-8B-Instruct via Fireworks or dedicated GPU; DeepSeek / GLM).
+   - Verify image-conditioning support (vision-language input capable of taking the high-fidelity design screenshot directly).
+   - Run a zero-shot vertical slice (`image + plan.md + design contract → working app`) before generating bulk data. Reject any base that cannot build functional applications.
+2. **Build the Untouched Baseline**:
+   - Use the qualified base model to generate web applications from training-side `plan.md` functional specs and `design.md` visual design contracts.
+   - The generated build must visually match the authored high-fidelity reference image and perform all functional routes, data flows, and state persistence described in `plan.md`.
+3. **Cordon Off Baseline Checkpoint**:
+   - Store the initial raw model outputs and exact model/revision checkpoint, cordoned off and immutable.
+   - This frozen checkpoint serves as the default model / baseline comparator.
+4. **Evaluate Baseline with MWG / Web Uplift**:
+   - Run the Modern Web Guidance (MWG) and `web-uplift` evaluation framework across the baseline builds.
+   - Quantify exactly which MWG rules passed, which failed, and where mechanical vs architectural defects exist.
+5. **Improve Demos into the Training Set**:
+   - Apply Modern Web Guidance and Web Uplift transformations, fixing defects, styling, semantic structure, accessibility, and server resilience until the demo meets all visual and functional criteria.
+   - This improved, verified set becomes **the training set**.
+6. **Re-Evaluate to Confirm Outcomes**:
+   - Evaluate the improved demos again through the full test suite and browser acceptance checks.
+   - Confirm functional correctness, accessibility compliance, visual match, and rights clearance (`excluded_from_training` flags).
+7. **Train the Model**:
+   - Fine-tune the qualified base model on the approved, rights-cleared, disjoint `(prompt + reference image -> uplifted code)` dataset.
+   - Retain the trained adapter weights separately from the cordoned base model.
+8. **Rebuild, Compare, and Measure Uplift**:
+   - **8a. Paired Diagnostic Rebuild (Training/Dev Distribution)**: Rebuild the *same* training-side demos with both the cordoned base model and the newly trained model under matched budgets. Compare the UI, functional execution, and MWG adherence to measure exactly how much the eval + training loop uplifted the model.
+   - **8b. Sealed Evaluation (Generalization)**: Separately, execute the preregistered sealed evaluation (`docs/eval/`) exactly once across the four preregistered arms (**C1** bare base, **C2** base + guidance prompt, **C3** base + deterministic uplift, **T** trained student adapter) to measure true out-of-distribution generalization without data leakage.
+
+---
+
+## 1. Trainable Models & Backend Feasibility Matrix
+
+| Model Family | Local / Rented GPU (Open Weights) | Hosted Fine-Tuning | Vision Modality (Image -> App) | Feasibility Assessment |
+|---|---|---|---|---|
+| **Qwen 2.5 VL (3B / 7B / 32B / 72B)** | Apache-2.0 open weights. 7B runs LoRA on 24GB VRAM GPU. | Supported on Fireworks (SFT V2 vision-language fine-tuning launched 2025-07-29, JSONL base64, up to 64K context). Also Alibaba DashScope / Model Studio. | **Yes** (Native Vision-Language). Directly consumes design screenshot. | **Recommended primary candidate.** Pinned hosted path on Fireworks and self-hostable on rented compute. |
+| **Qwen3-VL-8B-Instruct** | Apache-2.0 open weights. High coding and vision capability. | Open weights deployable to private GPU / Fireworks Dedicated. `Tunable` flag on shared Fireworks endpoint to be confirmed. | **Yes** (Native Vision-Language). | **Target student model.** Optimal balance of parameter size (8B) and modern web reasoning. |
+| **DeepSeek (V3.1, V4-Flash, R1)** | MIT open weights. Massive MoE architectures require cluster infrastructure. | Fireworks supports DeepSeek SFT V2 / LoRA (e.g. DeepSeek V4.1 Flash LoRA with 262K context). DeepSeek's *own* API is inference-only. | Text/Code primary; multimodal variants require verified image ingestion. | Highly capable teacher model; student training feasible via Fireworks LoRA or dedicated rented cluster. |
+| **GLM (GLM-4.5, GLM-5.3-Flash)** | Open weight releases. | Z.ai BigModel training API; Fireworks Dedicated Training API (GLM 5.3 Flash LoRA with vision training added 2026-09-13). | **Yes** (Multimodal vision training available on GLM 5.3 Flash). | Strong candidate; note that Z.ai API outputs remain quarantined under current data provenance rules. |
+| **Llama (Llama 3.2-Vision, Llama 4 MoE)** | Community licensed open weights. | Supported on Fireworks (Llama SFT V2). | Multimodal on 3.2-Vision. | Viable alternative; verify licence compliance for commercial distillation. |
+| **Proprietary APIs (OpenAI, Anthropic, Google)** | Weights cannot be downloaded or self-hosted. | OpenAI (GPT-4o fine-tuning); Google (Gemini tuning); Claude (Bedrock only). No weight export. | Mixed. | Consumer coding subscriptions (ChatGPT, Claude Max, Antigravity) provide **inference only**, not fine-tuning compute. Outputs carry training restrictions (`docs/provenance/accounts/`). |
+
+*Infrastructure Constraint*: The fleet's 2-vCPU / 8GB VM has no training GPU. Local VM execution handles dataset orchestration, evaluation, and gate enforcement; model training requires rented GPU compute (RunPod/Lambda) or hosted training endpoints (Fireworks SFT).
+
+---
+
+## 2. Existing Deterministic Instrumentation and Current Status
+
+The seven stages below describe today's deterministic pilot baseline and evaluation pipeline. They represent the reproducible scaffolding tooling, **not** an executed model-training run.
 
 | # | Stage | Command | Consumes | Produces |
 |---|-------|---------|----------|----------|

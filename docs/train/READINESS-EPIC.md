@@ -17,6 +17,20 @@ Sources: [training briefs](briefs/README.md), [corpus caveats](corpus/README.md)
 
 **Order of work:** first author a per-demo `design.md`/functional contract with its actual task, visual intent, supported routes, roles, states and browser assertions; then prove **one** end-to-end example (contract → runnable demo → independently authored target → browser-verified journey and visual outcome) without fixture-grade shortcuts. Only after that vertical slice is reviewed should breadth follow [the proposed 21-archetype matrix](briefs/EXPANSION-PLAN.md). `docs/design.md` supplies a design language, not an executable project contract or proof that any demo satisfies it. Authored target PNGs and concept boards are references, never evidence that the generated site functions. Do not relabel the existing form scaffold as a game, wiki or SaaS workspace.
 
+## Gate 0 — Trainable model and modality qualification
+
+No base model is selected by default. Before any training data collection, authoring, or spend decision:
+
+1. **Trainable Base Model Matrix & Qualification**:
+   - Establish an exact checkpoint matrix detailing open downloadable weights, licence terms (Apache-2.0, MIT), self-hosted rented-GPU feasibility, provider-specific hosted fine-tuning (e.g. Fireworks SFT V2), exact account entitlement, and adapter export/serving options.
+   - Pinned text-only catalogue entries (e.g., Qwen 2.5 Coder 7B) do not establish vision-language fine-tuning. For vision-language tasks (image -> app), the candidate must natively take high-fidelity design screenshots (e.g. Qwen 2.5 VL 7B / Qwen3-VL-8B-Instruct).
+2. **Zero-Shot Task Qualification**:
+   - Run a single-family zero-shot vertical slice (`design image + plan.md + design contract → working app`) using the un-tuned base model.
+   - Test whether the base model can understand the visual layout and build a substantially functional application.
+   - **NO-GO** if the base model cannot consume the design image or lacks the basic capability to construct functional web apps. No amount of fine-tuning rescues a student model fundamentally incapable of generating code from visual specs.
+3. **Hardware & Backend Realism**:
+   - The fleet's 2-vCPU / 8GB CPU-only VM cannot train models locally. Planning must target rented GPU compute (RunPod, Lambda) or verified hosted training endpoints (Fireworks).
+
 ## Gate 1 — sufficient independent, eligible data
 
 **Proposed full first-run bar for owner review:** at least **200 accepted, full-flow generation pairs** from at least **42 independent generation families**: two distinct topics/role-and-state scenarios for **each of the 21 behavioural archetypes** across the five groups in [`EXPANSION-PLAN.md`](briefs/EXPANSION-PLAN.md). Cover all seven supported framework arms with at least ten accepted pairs each and at least two genuinely working frameworks per qualifying family. These are *minimum coverage floors*, not a full Cartesian product, a promise of yield, or a reason to add a fake framework. The ~200-pair initial scale comes from the experiment's planning target in [`docs/design-brief-2026-10-08.md`](../design-brief-2026-10-08.md), not a power calculation; decide the final target against observed usable-data yield, family diversity, exact tokenizer volume and Paul's budget **before** freezing. If a framework cannot implement a family's journey, record the cell as missing rather than duplicate a generic form. Do not count two voices, seven nearly identical framework shells, or seven screenshots as independent families.
