@@ -31,9 +31,10 @@ const pipelineDoc = readFileSync(join(repoRoot, 'docs/PIPELINE.md'), 'utf8');
  * exactly eight hex digits followed by a Unicode ellipsis, and a review pointed out the hole that leaves:
  * a superseded seal written as a full 64-hex hash, or with three ASCII dots, does not match that pattern,
  * so it would sit in the document unchecked as long as one correctly-shaped seal was also present to
- * satisfy the floor. A gate whose blindness depends on how a value is punctuated is not a gate.
+ * satisfy the floor. A gate whose blindness depends on how a value is punctuated - or cased - is not a
+ * gate, which is why this pattern is case-insensitive as well.
  */
-const SEAL = /sha256:([0-9a-f]+)/g;
+const SEAL = /sha256:([0-9a-f]+)/gi;
 
 test('every brief seal quoted in docs/PIPELINE.md is the active one', () => {
   const quoted = [...pipelineDoc.matchAll(SEAL)].map((match) => match[1]);
@@ -47,11 +48,18 @@ test('every brief seal quoted in docs/PIPELINE.md is the active one', () => {
 
   const active = EVAL_SEAL.replace(/^sha256:/, '');
   for (const hex of quoted) {
-    // The quoted value must be the active seal, truncated however the document chose to truncate it -
-    // so one of the two is a prefix of the other. This accepts 8 hex and an ellipsis, a full 64-hex
-    // seal, and everything between, and refuses any value that differs from the active seal.
+    // The quoted value must be the active seal, truncated however the document chose to truncate it.
+    // This accepts 8 hex and an ellipsis, a full 64-hex seal, and everything between, and refuses any
+    // value that differs from the active seal. The comparison is case-folded because the pattern has to
+    // be case-insensitive to catch an uppercase seal at all, and it would be perverse to match one and
+    // then reject the active value for being rendered in capitals.
+    //
+    // There is deliberately NO symmetric `hex.startsWith(active)` clause. It looks like it covers a
+    // LONGER quoted value, but the active seal is 64 hex digits and no sha256 token can exceed that, so
+    // the clause could only ever be true when the two were equal - which the line below already covers.
+    // A review called it dead logic and was right; it is removed rather than left looking load-bearing.
     assert.ok(
-      active.startsWith(hex) || hex.startsWith(active),
+      active.startsWith(hex.toLowerCase()),
       `docs/PIPELINE.md quotes sha256:${hex} which is not the seal the code enforces (sha256:${active}). A seal written in a different shape must not escape this check.`,
     );
   }
