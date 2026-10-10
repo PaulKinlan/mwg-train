@@ -89,13 +89,61 @@ test('every npm run command in docs/PIPELINE.md exists in package.json', () => {
   }
 });
 
+/**
+ * Repository paths mentioned in docs/PIPELINE.md.
+ *
+ * Paths must start with an authoritative repository directory (`docs/`, `pilot/`, or `src/`)
+ * followed by a slash. Requiring the slash ensures that prose, bead names (`mwg-train-0ov`),
+ * or script names without a path segment (`pilot-scaffold`) are not mistaken for repository files.
+ *
+ * Deliberate exclusion of `.pilot-*`: docs/PIPELINE.md mentions ephemeral runtime directories
+ * such as `.pilot-corpus/<runId>` and `.pilot-uplifted/<runId>/`. These are generated per-run,
+ * gitignored, and do not exist in the repository on a clean checkout. They are deliberately
+ * out of scope for this repository existence check and are excluded from the regex alternation
+ * so this gate does not mistake runtime directories for committed repository files.
+ */
+export const REPO_PATH_REGEX = /`((?:docs|pilot|src)\/[a-zA-Z0-9_/.-]+)`/g;
+
+export function extractRepoPaths(doc) {
+  const matches = [...doc.matchAll(REPO_PATH_REGEX)].map((match) => match[1]);
+  return Array.from(new Set(matches));
+}
+
 test('critical files mentioned in docs/PIPELINE.md exist in the repository', () => {
-  const matches = [...pipelineDoc.matchAll(/`((?:docs|pilot|src|\.pilot-)[a-zA-Z0-9_/.-]+)`/g)].map(m => m[1]);
-  const paths = Array.from(new Set(matches));
+  const paths = extractRepoPaths(pipelineDoc);
   
-  assert.ok(paths.length >= 5, 'Should find several file paths in PIPELINE.md');
+  // Floor on unique repo paths found in docs/PIPELINE.md (currently 9).
+  // A floor stops a broken regex or accidental document truncation from vacuously passing.
+  assert.ok(paths.length >= 8, `Should find several file paths in PIPELINE.md (found ${paths.length})`);
   
   for (const p of paths) {
     assert.ok(existsSync(join(repoRoot, p)), `Path ${p} mentioned in PIPELINE.md does not exist`);
   }
 });
+
+test('pipeline doc path extraction distinguishes repo paths from runtime directories and fragments', () => {
+  // Runtime directories (.pilot-*) must be excluded on purpose rather than matched and checked for repo existence
+  const sampleWithRuntime = 'Runtime output in `.pilot-corpus/abc123/plan.json` and `.pilot-uplifted/abc123`';
+  assert.deepEqual(
+    extractRepoPaths(sampleWithRuntime),
+    [],
+    'Ephemeral .pilot-* runtime directories must be excluded from repo path extraction',
+  );
+
+  // Fragments without a slash (e.g. `pilot-scaffold`, `docs-v2`, `pilot`) must not be matched as paths
+  const sampleWithFragments = 'Tokens: `pilot-scaffold`, `src-backup`, `docs-v2`, `web-uplift`, `pilot`';
+  assert.deepEqual(
+    extractRepoPaths(sampleWithFragments),
+    [],
+    'Fragments without a slash must not be extracted as repository paths',
+  );
+
+  // Valid repository paths under docs/, pilot/, or src/ must be extracted cleanly
+  const sampleWithPaths = 'Look at `docs/train/corpus/SERVED.md`, `src/corpus/cdp.mjs`, and `pilot/generate.mjs`';
+  assert.deepEqual(
+    extractRepoPaths(sampleWithPaths),
+    ['docs/train/corpus/SERVED.md', 'src/corpus/cdp.mjs', 'pilot/generate.mjs'],
+    'Real repository paths under docs/, pilot/, or src/ must be extracted',
+  );
+});
+
