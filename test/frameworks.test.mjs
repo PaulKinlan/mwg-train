@@ -47,7 +47,7 @@ test('buildProjectFor validates defect names', () => {
 // unexercised token such as enter-submits can vanish from the set with check:specs still green.
 test('the canonical defect set is exactly the set the generator tests for', () => {
   const tested = new Set(
-    [...GENERATOR_SOURCE.matchAll(/defects\.includes\('([a-z0-9-]+)'\)/g)].map((m) => m[1])
+    [...GENERATOR_SOURCE.matchAll(/defects\.includes\(\s*['\"`]([A-Za-z0-9_-]+)['\"`]\s*\)/g)].map((m) => m[1])
   );
   assert.ok(
     tested.size >= 10,
