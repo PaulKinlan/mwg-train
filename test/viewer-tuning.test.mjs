@@ -124,8 +124,8 @@ test('workbench renders high-fidelity reference board when present, and degrades
   assert.match(htmlWithRef, /High-fidelity reference board/);
   assert.match(htmlWithRef, /src="\/tuning\/reference\/tr-01\.jpg"/);
   assert.match(htmlWithRef, /href="\/tuning\/reference\/tr-01\.jpg"/);
-  assert.match(htmlWithRef, /width="1024" height="1024"/);
-  assert.match(htmlWithRef, /1024 × 1024 px/);
+  assert.match(htmlWithRef, /width="1376" height="768"/);
+  assert.match(htmlWithRef, /1376 × 768 px/);
   assert.match(htmlWithRef, /docs\/design\/training\/tr-01\/reference\.jpg/);
 
   // tr-03 does not have a reference board
