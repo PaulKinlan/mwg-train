@@ -34,9 +34,9 @@ The overarching training pipeline implements a closed-loop, model-to-model empir
 
 ### The 8-Step Closed-Loop Pipeline:
 1. **Select and Qualify a Trainable Model**:
-   - Select a verified trainable base model (open downloadable weights or verified hosted fine-tuning; e.g. Qwen 2.5 VL 7B / Qwen3-VL-8B-Instruct via Fireworks or dedicated GPU; DeepSeek / GLM).
-   - Verify image-conditioning support (vision-language input capable of taking the high-fidelity design screenshot directly).
-   - Run a zero-shot vertical slice (`image + plan.md + design contract → working app`) before generating bulk data. Reject any base that cannot build functional applications.
+   - Select a verified trainable base model (open downloadable weights or verified hosted fine-tuning; e.g. DeepSeek V4.1 Flash via Fireworks Dedicated LoRA or private GPU).
+   - In accordance with Paul's clarification, the model performs text reasoning over application code. Visual reference boards serve as targets to compare against and aim for, not direct model prompt inputs.
+   - Run a zero-shot vertical slice (`plan.md + design contract specifications → working app`) before generating bulk data. Reject any base that cannot build functional applications.
 2. **Build the Untouched Baseline**:
    - Use the qualified base model to attempt generating web applications from training-side `plan.md` functional specs and `design.md` visual design contracts.
    - The raw base output is intended to target the authored high-fidelity reference image and functional routes/state described in `plan.md`. Imperfections, semantic gaps, accessibility issues, and MWG defects in this raw generation are expected and preserved—they establish the empirical baseline to measure improvement *from*.
@@ -53,7 +53,7 @@ The overarching training pipeline implements a closed-loop, model-to-model empir
    - Evaluate the improved demos again through the full test suite and browser acceptance checks.
    - Confirm functional correctness, accessibility compliance, visual match, and rights clearance (`excluded_from_training` flags).
 7. **Train the Model**:
-   - Fine-tune the qualified base model on the approved, rights-cleared, disjoint `(prompt + reference image -> uplifted code)` dataset.
+   - Fine-tune the qualified base model on the approved, rights-cleared, disjoint `(task specification + design contract -> uplifted code)` dataset.
    - Retain the trained adapter weights separately from the cordoned base model.
 8. **Rebuild, Compare, and Measure Uplift**:
    - **8a. Paired Diagnostic Rebuild (Training/Dev Distribution)**: Rebuild the *same* training-side demos with both the cordoned base model and the newly trained model under matched budgets. Compare the UI, functional execution, and MWG adherence to measure exactly how much the eval + training loop uplifted the model.
@@ -65,8 +65,8 @@ The overarching training pipeline implements a closed-loop, model-to-model empir
 
 | Model Family | Local / Rented GPU (Open Weights) | Hosted Fine-Tuning | Vision Modality (Image -> App) | Feasibility Assessment |
 |---|---|---|---|---|
-| **DeepSeek V4.1 Flash (Paul's Selected Student)** | MIT open weights. Deployable to private GPU clusters. | **Supported on Fireworks** (LoRA on Dedicated Training API launched 2026-09-28 with up to 262K context). | Code/Text primary. If deployed for image-conditioned training, requires verified multimodal ingestion or paired VL front-end stage. | **DEFAULT SELECTED STUDENT MODEL (Paul, 2026-10-10).** Primary code-producing training target. Replaces earlier student recommendations. |
-| **Qwen 2.5 VL (3B / 7B / 32B / 72B)** | Apache-2.0 open weights. 7B runs LoRA on 24GB VRAM GPU. | Supported on Fireworks (SFT V2 vision-language fine-tuning launched 2025-07-29, JSONL base64, up to 64K context). Also Alibaba DashScope / Model Studio. | **Yes** (Native Vision-Language). Directly consumes design screenshot. | **Primary Vision Candidate / VL Ingestion Stage.** Available as end-to-end vision student or front-end image descriptor for V4.1 Flash. |
+| **DeepSeek V4.1 Flash (Paul's Selected Student)** | MIT open weights. Deployable to private GPU clusters. | **Supported on Fireworks** (LoRA on Dedicated Training API launched 2026-09-28 with up to 262K context). | Code/Text reasoning model. Target images serve as evaluation/ground-truth targets rather than direct model inputs. | **DEFAULT SELECTED STUDENT MODEL (Paul, 2026-10-10).** Primary code-producing training target. Replaces earlier student recommendations. |
+| **Qwen 2.5 VL (3B / 7B / 32B / 72B)** | Apache-2.0 open weights. 7B runs LoRA on 24GB VRAM GPU. | Supported on Fireworks (SFT V2 vision-language fine-tuning launched 2025-07-29, JSONL base64, up to 64K context). Also Alibaba DashScope / Model Studio. | **Yes** (Native Vision-Language). Directly consumes design screenshot. | **Primary Vision Evaluation / Comparative Benchmark Model.** Available for visual comparison of rendered app screenshots against targets. |
 | **Qwen3-VL-8B-Instruct** | Apache-2.0 open weights. High coding and vision capability. | Open weights deployable to private GPU / Fireworks Dedicated. `Tunable` flag on shared Fireworks endpoint to be confirmed. | **Yes** (Native Vision-Language). | Alternate multimodal candidate; requires exact-checkpoint qualification under Gate 0. |
 | **GLM (GLM-4.5, GLM-5.3-Flash)** | Open weight releases. | Z.ai BigModel training API; Fireworks Dedicated Training API (GLM 5.3 Flash LoRA with vision training added 2026-09-13). | **Yes** (Multimodal vision training available on GLM 5.3 Flash). | Strong candidate; note that Z.ai API outputs remain quarantined under current data provenance rules. |
 | **Llama (Llama 3.2-Vision, Llama 4 MoE)** | Community licensed open weights. | Supported on Fireworks (Llama SFT V2). | Multimodal on 3.2-Vision. | Viable alternative; verify licence compliance for commercial distillation. |
