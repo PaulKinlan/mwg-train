@@ -612,6 +612,43 @@ export const ADVISORY_CODES = Object.freeze([
 ]);
 
 /**
+ * Every finding the report publishes must also be in the union the gate scores.
+ *
+ * The union `findings` is assembled by hand in main() from four axes, and no unit test can see an axis left
+ * out of that line: the tests supply their own reports, so a mutation dropping one axis from main() passed
+ * 29/29 twice before this guard existed. This makes the wiring check ITSELF at run time instead. Each axis
+ * the report publishes separately must be an array - so deleting an axis outright is an error rather than a
+ * quiet omission - and every finding in each must appear in `findings`. A report that fails is not scored at
+ * all: it throws rather than returning a pass over a union that is missing an axis.
+ *
+ * FINDINGS ARE MATCHED BY VALUE, not by reference, so this also holds for a report read back from JSON.
+ */
+export function assertFindingsConsistent(report) {
+  const findings = report?.findings;
+  if (!Array.isArray(findings)) throw new TypeError('report.findings must be an array');
+  const axes = [
+    ['parity_findings', report?.parity_findings],
+    ['palette_findings', report?.palette_findings],
+    ['board_comparison.findings', report?.board_comparison?.findings],
+    ['arm_pixels.findings', report?.arm_pixels?.findings],
+  ];
+  for (const [name, axis] of axes) {
+    if (!Array.isArray(axis)) {
+      throw new TypeError(`report is missing the ${name} axis, so the gate cannot check the union against it`);
+    }
+  }
+  const union = new Set(findings.map((finding) => JSON.stringify(finding)));
+  for (const [name, axis] of axes) {
+    for (const finding of axis) {
+      if (!union.has(JSON.stringify(finding))) {
+        throw new Error(`a ${name} finding is published but absent from report.findings: the gate would score a union missing an axis`);
+      }
+    }
+  }
+  return axes.map(([name, axis]) => `${name}=${axis.length}`).join(' ');
+}
+
+/**
  * The exit code for a finished report. Pure, so the gate policy is tested without a browser.
  *
  * ARM-AGAINST-ARM PARITY GATES, ON BOTH AXES MEASURED BETWEEN ARMS; BOARD AND PALETTE DRIFT IS ADVISORY.
@@ -632,6 +669,7 @@ export const ADVISORY_CODES = Object.freeze([
 export function exitCodeFor(report, { strict = false } = {}) {
   const findings = report?.findings;
   if (!Array.isArray(findings)) throw new TypeError('exitCodeFor needs a report with a findings array');
+  assertFindingsConsistent(report);
   if (findings.length === 0) return 0;
   if (strict) return 1;
   // Every finding that is not advisory is parity, so an unrecognised code fails the check.
@@ -767,6 +805,11 @@ async function main() {
     board_comparison: (({ analyzed: _unused, ...rest }) => rest)(boardComparison),
     // Arm-against-arm pixels, kept beside the board comparison and summarised rather than duplicated.
     arm_pixels: pixelReport,
+    // The structural parity axis, published beside the others. Without this the union could lose
+    // `...summary.findings` and NOTHING could tell: the parity findings were the one axis carried only in
+    // `findings`, so dropping them left a report whose own parts no longer added up, with no other copy to
+    // compare against. assertFindingsConsistent() below checks every published axis against the union.
+    parity_findings: summary.findings,
     // Board findings are part of `findings`, so they print, they are visible to a JSON consumer, and
     // `--strict` can act on them. A cross-family review caught them living only in board_comparison,
     // where 105 measured disagreements were invisible to every one of those three. The arm-pixel findings
