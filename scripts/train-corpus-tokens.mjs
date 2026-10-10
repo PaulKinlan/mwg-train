@@ -673,6 +673,11 @@ export function writeTokensJson(outPath, mode, result, options = {}) {
         'Empirical character measurements and derived token sizing for the pilot corpus (34 accepted pairs) and the tr-* training corpus (210 pairs across 30 families x 7 frameworks). Figures are derived estimates (characters/4), not tokenizer-measured. Primary headline sizing is app_sources only, summing both sides of each pair (serialized pair-volume estimate).',
       pilot: existing.pilot ?? null,
       training: existing.training ?? null,
+      // The document states a corpus-wide token floor, so it attributes itself. BASELINE_FIELDS was
+      // imported here and never used, so every regeneration wrote the measurement WITHOUT the
+      // attribution and `label:baseline --check` went red again - the committed file carried none of the
+      // three fields (mwg-train-jjl). Placed last to match the order the repair tool appends them in.
+      ...BASELINE_FIELDS,
     };
 
     if (mode === 'pilot') {

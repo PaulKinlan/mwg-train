@@ -30,7 +30,7 @@ import { launchChrome } from '../src/corpus/cdp.mjs';
 import { upliftProject } from '../src/corpus/uplift.mjs';
 import { runProjectVersion, hashTree } from '../src/corpus/harness.mjs';
 import { decidePair, summarizeYield, validationObservation } from '../src/corpus/accept.mjs';
-import { BASELINE_LABEL, baselineAttributionLine } from '../src/eval/ruleset.mjs';
+import { BASELINE_FIELDS, BASELINE_LABEL, baselineAttributionLine } from '../src/eval/ruleset.mjs';
 
 const REPO_ROOT = resolve(dirname(new URL(import.meta.url).pathname), '..');
 const CORPUS_PATH = 'pilot/TRAINING_CORPUS.json';
@@ -267,26 +267,28 @@ function reportFromRecords(recordsPath) {
  * many decisions it touched so the change is auditable rather than silent. A record produced by the
  * current generator already carries these fields and is left alone.
  */
-function relabelRecord(recordsPath) {
+export function relabelRecord(recordsPath) {
   const output = JSON.parse(readFileSync(recordsPath, 'utf8'));
   let touched = 0;
-  if (output.baseline_label !== BASELINE_LABEL) {
-    output.baseline_label = BASELINE_LABEL;
-    touched += 1;
-  }
-  if (output.baseline_tool !== 'src/corpus/uplift.mjs') {
-    output.baseline_tool = 'src/corpus/uplift.mjs';
-    touched += 1;
-  }
+  // EVERY field, from the shared constant. This wrote baseline_label and baseline_tool by hand at the top
+  // level and omitted baseline_definition, so a record repaired by this very command still failed
+  // `label:baseline --check` - which is how docs/train/corpus/records.json sat red on main carrying two
+  // of the three fields (mwg-train-jjl). Adding the fields individually also means a record missing only
+  // the definition is repaired rather than being skipped for having a correct label.
+  const applyBaselineFields = (target) => {
+    let added = 0;
+    for (const [key, value] of Object.entries(BASELINE_FIELDS)) {
+      if (target[key] !== value) {
+        target[key] = value;
+        added += 1;
+      }
+    }
+    return added;
+  };
+  if (applyBaselineFields(output) > 0) touched += 1;
   for (const project of output.projects ?? []) {
     if (!project.decision) continue;
-    if (project.decision.baseline_label !== BASELINE_LABEL) {
-      project.decision.baseline_label = BASELINE_LABEL;
-      project.decision.baseline_definition =
-        'deterministic repair of the project by our own Modern Web Guidance rule specifications; no model and no teacher in the loop';
-      project.decision.baseline_tool = 'src/corpus/uplift.mjs';
-      touched += 1;
-    }
+    if (applyBaselineFields(project.decision) > 0) touched += 1;
   }
   if (touched === 0) {
     console.log(`train-corpus-run: ${recordsPath} already carries the baseline label; nothing to do`);
@@ -602,8 +604,10 @@ async function main() {
     run_id: runId,
     // The record is a floor artifact, so it attributes itself. Added after review found the label
     // reached decision.json but not the summary record that is actually committed (bead mwg-train-6ek).
-    baseline_label: BASELINE_LABEL,
-    baseline_tool: 'src/corpus/uplift.mjs',
+    // ALL THREE fields, from the shared constant: the hand-written pair that used to be here omitted
+    // baseline_definition, so a freshly generated record still failed `label:baseline --check`
+    // (mwg-train-jjl).
+    ...BASELINE_FIELDS,
     generated_at: generatedAt,
     generator: 'scripts/train-corpus-run.mjs',
     corpus: CORPUS_PATH,

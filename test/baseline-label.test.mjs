@@ -21,8 +21,8 @@ import {
   FLOOR_EVIDENCE,
   REGISTRY,
 } from '../scripts/check-baseline-label.mjs';
-import { labelDocuments } from '../scripts/label-baseline.mjs';
-import { BASELINE_LABEL, baselineAttributionLine } from '../src/eval/ruleset.mjs';
+import { FLOOR_DOCUMENTS, labelDocuments } from '../scripts/label-baseline.mjs';
+import { BASELINE_FIELDS, BASELINE_LABEL, baselineAttributionLine } from '../src/eval/ruleset.mjs';
 
 const ROOT = resolve(import.meta.dirname, '..');
 
@@ -417,6 +417,82 @@ test('a character counter is a known intentional trigger, and rewording is the r
     );
   } finally {
     delete DOCUMENTS[path];
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// -----------------------------------------------------------------------------------------------------------
+// The labeler's own --check, which is the half that was NOT covered. check:baseline-label was tested and
+// green while `label:baseline --check` was red on main for two committed documents, because nothing ran
+// the labeler's check against the tree. Two gates guard the same decision and only one was watched.
+//
+// mwg-train-jjl: docs/train/corpus/records.json carried baseline_label and baseline_tool but not
+// baseline_definition, and docs/train/corpus/tokens.json carried none of the three.
+test('the labeler --check is clean on the committed tree, for every declared floor document', () => {
+  const results = labelDocuments(FLOOR_DOCUMENTS, { check: true });
+  const refused = results.filter((r) =>
+    ['UNREADABLE', 'REFUSED_NOT_ATTRIBUTION_ONLY', 'REFUSED_NOT_BYTE_SAFE'].includes(r.code),
+  );
+  assert.deepEqual(refused, [], 'no declared document may be unwritable or unsafe to label');
+  const pending = results.filter((r) => r.code === 'WOULD_LABEL').map((r) => r.path);
+  assert.deepEqual(pending, [], `these documents state a floor without the attribution: ${pending.join(', ')}`);
+  // The check above only proves the label is ABSENT or present as a whole; assert the exact fields, so a
+  // document carrying two of the three cannot pass. That is the precise defect this bead describes.
+  for (const path of FLOOR_DOCUMENTS) {
+    const document = JSON.parse(readFileSync(join(ROOT, path), 'utf8'));
+    for (const [key, value] of Object.entries(BASELINE_FIELDS)) {
+      assert.equal(document[key], value, `${path} must carry ${key}`);
+    }
+  }
+});
+
+test('the tokens generator writes the attribution into the document it produces', async () => {
+  const { writeTokensJson } = await import('../scripts/train-corpus-tokens.mjs');
+  const dir = mkdtempSync(join(tmpdir(), 'mwg-tokens-'));
+  try {
+    const out = join(dir, 'tokens.json');
+    // The tool only adds the canonical fields in its structured branch, which it takes when the output is
+    // the canonical path or an existing file with sections - so seed one, or this would exercise the
+    // standalone /tmp branch instead and prove nothing.
+    writeFileSync(out, JSON.stringify({ $comment: 'seeded', pilot: null, training: null }));
+    writeTokensJson(out, 'training', { total_training_tokens: 1234, families: [] }, {});
+    const written = JSON.parse(readFileSync(out, 'utf8'));
+    for (const [key, value] of Object.entries(BASELINE_FIELDS)) {
+      assert.equal(written[key], value, `the generated tokens document must carry ${key}`);
+    }
+    assert.equal(written.training.total_training_tokens, 1234, 'the measurement must survive the labelling');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('relabelling a record that carries only some fields adds the rest and touches no measurement', async () => {
+  const { relabelRecord } = await import('../scripts/train-corpus-run.mjs');
+  const dir = mkdtempSync(join(tmpdir(), 'mwg-relabel-'));
+  try {
+    const path = join(dir, 'records.json');
+    // The exact shape that was committed: the label and the tool, but no definition - which is why
+    // `label:baseline --check` reported WOULD_LABEL for a document that looked labelled.
+    const record = {
+      run_id: 'run-1',
+      baseline_label: BASELINE_LABEL,
+      baseline_tool: 'src/corpus/uplift.mjs',
+      generated_at: '2026-01-01T00:00:00.000Z',
+      summary: { accepted: 1, attempted: 2 },
+      projects: [
+        { id: 'p1', decision: { accepted: true, baseline_label: BASELINE_LABEL, baseline_tool: 'src/corpus/uplift.mjs' } },
+      ],
+    };
+    writeFileSync(path, `${JSON.stringify(record, null, 2)}\n`);
+    relabelRecord(path);
+    const after = JSON.parse(readFileSync(path, 'utf8'));
+    for (const [key, value] of Object.entries(BASELINE_FIELDS)) {
+      assert.equal(after[key], value, `the record must carry ${key} after relabelling`);
+      assert.equal(after.projects[0].decision[key], value, `the decision must carry ${key} after relabelling`);
+    }
+    assert.deepEqual(after.summary, record.summary, 'no measured field may change');
+    assert.equal(after.projects[0].decision.accepted, true, 'no measured field may change');
+  } finally {
     rmSync(dir, { recursive: true, force: true });
   }
 });
