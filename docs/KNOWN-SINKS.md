@@ -111,6 +111,42 @@ both corpus records and the token figures move with it, in one reviewed change â
 `server.mjs` carries the search route and whose `page.mjs` interpolates unescaped: raw, webcomponents,
 react, preact, vue, svelte.
 
+### Correction: the radius is 30 trees, not six arms, and the exact bill (mwg-train-sia)
+
+Section 2 above originally scoped this to six arms - the six non-Hono `renderDocument` definitions. The emitter set
+is right but the reach is larger, and the difference is in the server, not the page.
+
+`serverSource()` emits the reflecting `/search` handler **unconditionally**. The branch is selected on
+`archetype.journey?.search`, which is falsy for all five pilot archetypes, so the fallback handler is generated into
+every non-Hono project - including archetypes whose spec declares no search at all. Only `catalogue` has a search
+journey; the handler is present everywhere. Six non-Hono frameworks x five archetypes is therefore **30 of the 35
+frozen trees**, not 6, and `honoServerSource()` emits the equivalent route for the seventh.
+
+So any real fix costs one corpus re-record covering these 30, whichever side of the seam it is applied to:
+
+- `account-recovery-{raw,webcomponents,react,preact,vue,svelte}`
+- `booking-{raw,webcomponents,react,preact,vue,svelte}`
+- `catalogue-{raw,webcomponents,react,preact,vue,svelte}`
+- `contact-lead-{raw,webcomponents,react,preact,vue,svelte}`
+- `event-registration-{raw,webcomponents,react,preact,vue,svelte}`
+
+The failure signature is `npm run check:specs` failing 30 of 35: the gate hashes generated files, so an escaping helper
+in the emitted source changes the tree even though a clean title renders identically. Re-recording requires a browser
+run with staged uplifts (`scripts/pilot-corpus.mjs --record`), which cannot be done from a lane.
+
+**The fix is staged, not applied.** `test/reflected-title-helper.test.mjs` holds the exact inline helper text, evaluated
+the way the generated module would, and asserts against the payload this section was raised from. The change in each
+page module is one line: `<title>${title}</title>` becomes `<title>${escapeTitle(title)}</title>`, with the helper
+emitted alongside it - it must be inline, because a generated project is standalone and cannot import from this repo.
+The ampersand is escaped first; escaping it last double-encodes `&lt;` into `&amp;lt;`.
+
+**And the debt is now pinned rather than described.** `test/reflected-title-escape.test.mjs` derives which arms still
+interpolate `title` unescaped and fails if that set differs from the recorded 30 in either direction - an arm that
+regresses is unlisted, and an arm that gets fixed is stale and must come off. Applying the fix therefore turns the list
+red until the re-record happens, which is the point: the bill cannot go out of date quietly. Hono is excluded by name
+rather than by text, because its emitted page contains the identical literal `<title>${title}</title>` while escaping
+at runtime through `hono/html`.
+
 ## 3. Our own tooling â€” checked, and already safe
 
 The viewer reads untrusted query parameters (`src/viewer/server.mjs:395-461`: `family`, `variant`,
