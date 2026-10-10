@@ -16,7 +16,7 @@
 // This gate covers the one document that states what the pipeline ENFORCES.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { EVAL_SEAL } from '../src/train/disjoint.mjs';
@@ -73,4 +73,29 @@ test('the seal the docs are checked against is the one package.json enforces', (
     pkg.scripts['check:briefs'].includes(EVAL_SEAL),
     `check:briefs should enforce ${EVAL_SEAL}, but reads: ${pkg.scripts['check:briefs']}`,
   );
+});
+
+test('every npm run command in docs/PIPELINE.md exists in package.json', () => {
+  const pkg = JSON.parse(readFileSync(join(repoRoot, 'package.json'), 'utf8'));
+  const scripts = Object.keys(pkg.scripts);
+  
+  const npmRunRegex = /`npm run ([a-zA-Z0-9:-]+)`/g;
+  const matches = [...pipelineDoc.matchAll(npmRunRegex)];
+  assert.ok(matches.length >= 5, 'Should find several npm run commands in PIPELINE.md');
+  
+  for (const match of matches) {
+    const scriptName = match[1];
+    assert.ok(scripts.includes(scriptName), `Command 'npm run ${scriptName}' listed in PIPELINE.md does not exist in package.json`);
+  }
+});
+
+test('critical files mentioned in docs/PIPELINE.md exist in the repository', () => {
+  const matches = [...pipelineDoc.matchAll(/`((?:docs|pilot|src|\.pilot-)[a-zA-Z0-9_/.-]+)`/g)].map(m => m[1]);
+  const paths = Array.from(new Set(matches));
+  
+  assert.ok(paths.length >= 5, 'Should find several file paths in PIPELINE.md');
+  
+  for (const p of paths) {
+    assert.ok(existsSync(join(repoRoot, p)), `Path ${p} mentioned in PIPELINE.md does not exist`);
+  }
 });
