@@ -38,8 +38,8 @@ The overarching training pipeline implements a closed-loop, model-to-model empir
    - Verify image-conditioning support (vision-language input capable of taking the high-fidelity design screenshot directly).
    - Run a zero-shot vertical slice (`image + plan.md + design contract → working app`) before generating bulk data. Reject any base that cannot build functional applications.
 2. **Build the Untouched Baseline**:
-   - Use the qualified base model to generate web applications from training-side `plan.md` functional specs and `design.md` visual design contracts.
-   - The generated build must visually match the authored high-fidelity reference image and perform all functional routes, data flows, and state persistence described in `plan.md`.
+   - Use the qualified base model to attempt generating web applications from training-side `plan.md` functional specs and `design.md` visual design contracts.
+   - The raw base output is intended to target the authored high-fidelity reference image and functional routes/state described in `plan.md`. Imperfections, semantic gaps, accessibility issues, and MWG defects in this raw generation are expected and preserved—they establish the empirical baseline to measure improvement *from*.
 3. **Cordon Off Baseline Checkpoint**:
    - Store the initial raw model outputs and exact model/revision checkpoint, cordoned off and immutable.
    - This frozen checkpoint serves as the default model / baseline comparator.
@@ -47,8 +47,8 @@ The overarching training pipeline implements a closed-loop, model-to-model empir
    - Run the Modern Web Guidance (MWG) and `web-uplift` evaluation framework across the baseline builds.
    - Quantify exactly which MWG rules passed, which failed, and where mechanical vs architectural defects exist.
 5. **Improve Demos into the Training Set**:
-   - Apply Modern Web Guidance and Web Uplift transformations, fixing defects, styling, semantic structure, accessibility, and server resilience until the demo meets all visual and functional criteria.
-   - This improved, verified set becomes **the training set**.
+   - Apply Modern Web Guidance and Web Uplift transformations, iteratively fixing defects, styling, semantic structure, accessibility, and server resilience until the demo meets all visual, functional, and MWG criteria.
+   - This improved, verified target set becomes **the training set**.
 6. **Re-Evaluate to Confirm Outcomes**:
    - Evaluate the improved demos again through the full test suite and browser acceptance checks.
    - Confirm functional correctness, accessibility compliance, visual match, and rights clearance (`excluded_from_training` flags).
@@ -66,7 +66,7 @@ The overarching training pipeline implements a closed-loop, model-to-model empir
 | Model Family | Local / Rented GPU (Open Weights) | Hosted Fine-Tuning | Vision Modality (Image -> App) | Feasibility Assessment |
 |---|---|---|---|---|
 | **Qwen 2.5 VL (3B / 7B / 32B / 72B)** | Apache-2.0 open weights. 7B runs LoRA on 24GB VRAM GPU. | Supported on Fireworks (SFT V2 vision-language fine-tuning launched 2025-07-29, JSONL base64, up to 64K context). Also Alibaba DashScope / Model Studio. | **Yes** (Native Vision-Language). Directly consumes design screenshot. | **Recommended primary candidate.** Pinned hosted path on Fireworks and self-hostable on rented compute. |
-| **Qwen3-VL-8B-Instruct** | Apache-2.0 open weights. High coding and vision capability. | Open weights deployable to private GPU / Fireworks Dedicated. `Tunable` flag on shared Fireworks endpoint to be confirmed. | **Yes** (Native Vision-Language). | **Target student model.** Optimal balance of parameter size (8B) and modern web reasoning. |
+| **Qwen3-VL-8B-Instruct** | Apache-2.0 open weights. High coding and vision capability. | Open weights deployable to private GPU / Fireworks Dedicated. `Tunable` flag on shared Fireworks endpoint to be confirmed. | **Yes** (Native Vision-Language). | **Strong student candidate (pending qualification).** Optimal balance of parameter size (8B) and modern web reasoning; requires exact-checkpoint qualification under Gate 0. |
 | **DeepSeek (V3.1, V4-Flash, R1)** | MIT open weights. Massive MoE architectures require cluster infrastructure. | Fireworks supports DeepSeek SFT V2 / LoRA (e.g. DeepSeek V4.1 Flash LoRA with 262K context). DeepSeek's *own* API is inference-only. | Text/Code primary; multimodal variants require verified image ingestion. | Highly capable teacher model; student training feasible via Fireworks LoRA or dedicated rented cluster. |
 | **GLM (GLM-4.5, GLM-5.3-Flash)** | Open weight releases. | Z.ai BigModel training API; Fireworks Dedicated Training API (GLM 5.3 Flash LoRA with vision training added 2026-09-13). | **Yes** (Multimodal vision training available on GLM 5.3 Flash). | Strong candidate; note that Z.ai API outputs remain quarantined under current data provenance rules. |
 | **Llama (Llama 3.2-Vision, Llama 4 MoE)** | Community licensed open weights. | Supported on Fireworks (Llama SFT V2). | Multimodal on 3.2-Vision. | Viable alternative; verify licence compliance for commercial distillation. |
