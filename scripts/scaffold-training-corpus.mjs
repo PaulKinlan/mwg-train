@@ -30,6 +30,7 @@ import { buildProjectFor, FRAMEWORKS } from '../pilot/frameworks.mjs';
 import { TRAINING_ARCHETYPES } from '../pilot/training-archetypes.mjs';
 import { builderFields, echoFieldFor, validateBriefSchema } from '../src/train/brief-schema.mjs';
 import { hashTree } from '../src/corpus/harness.mjs';
+import { DEFECT_ADDRESSABILITY } from '../src/eval/defects.mjs';
 
 const FRAMEWORK_NAMES = Object.keys(FRAMEWORKS);
 const REPO_ROOT = resolve(dirname(new URL(import.meta.url).pathname), '..');
@@ -86,25 +87,6 @@ const DEFECT_PROSE_PATTERNS = {
   'no-required': /required|fails silently|empty|corrupted/i,
   'accept-invalid-amount': /invalid.*amount|negative.*amount/i,
   'no-field-labels': /label/i,
-};
-
-/**
- * The defect tokens the uplift tool's TRANSFORMS (src/corpus/uplift.mjs) can actually fix, keyed to the
- * rule id its transform implements. This is the checkable linkage between a seeded token and the
- * measured property the uplift can improve - read from the transform code, never inferred from the
- * token name. Tokens absent from this map (or with `addressable: false`) have no transform.
- */
-const DEFECT_ADDRESSABILITY = {
-  'no-required': { addressable: true, rule: 'forms/required-field-feedback' },
-  'eager-invalid': { addressable: true, rule: 'forms/validate-input-after-interaction' },
-  'no-aria-sync': { addressable: true, rule: 'accessibility/accessible-error-announcement' },
-  'no-autofill': { addressable: true, rule: 'forms/autofill-sign-up-form (and forms/autofill-address-form where the archetype declares those fields)' },
-  'no-autofill-address': { addressable: true, rule: 'forms/autofill-address-form' },
-  'xss-innerhtml': { addressable: true, rule: 'security/sanitize-untrusted-html' },
-  'client-only-state': { addressable: false, reason: 'deletes the server INSERT; outside the uplift contract and makes the original non-runnable' },
-  'enter-submits': { addressable: false, reason: 'no uplift transform measures or rewrites premature Enter submission' },
-  'accept-invalid-amount': { addressable: false, reason: 'no uplift transform for the min attribute or server-side bound' },
-  'no-field-labels': { addressable: false, reason: 'no uplift transform for field labels' },
 };
 
 /**

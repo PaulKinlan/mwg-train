@@ -39,6 +39,29 @@ export const SEEDED_DEFECT_IDS = Object.freeze({
   'submitting a negative or empty amount is silently accepted and corrupts the running total': 'invalid-value-accepted',
 });
 
+/**
+ * The defect tokens the generator supports and the uplift tool's TRANSFORMS (src/corpus/uplift.mjs)
+ * can actually fix, keyed to the rule id its transform implements. This is the checkable linkage
+ * between a seeded token and the measured property the uplift can improve - read from the transform
+ * code, never inferred from the token name. Tokens with `addressable: false` have no transform.
+ */
+export const DEFECT_ADDRESSABILITY = Object.freeze({
+  'no-required': { addressable: true, rule: 'forms/required-field-feedback' },
+  'eager-invalid': { addressable: true, rule: 'forms/validate-input-after-interaction' },
+  'no-aria-sync': { addressable: true, rule: 'accessibility/accessible-error-announcement' },
+  'no-autofill': { addressable: true, rule: 'forms/autofill-sign-up-form (and forms/autofill-address-form where the archetype declares those fields)' },
+  'no-autofill-address': { addressable: true, rule: 'forms/autofill-address-form' },
+  'xss-innerhtml': { addressable: true, rule: 'security/sanitize-untrusted-html' },
+  'client-only-state': { addressable: false, reason: 'deletes the server INSERT; outside the uplift contract and makes the original non-runnable' },
+  'enter-submits': { addressable: false, reason: 'no uplift transform measures or rewrites premature Enter submission' },
+  'accept-invalid-amount': { addressable: false, reason: 'no uplift transform for the min attribute or server-side bound' },
+  'no-field-labels': { addressable: false, reason: 'no uplift transform for field labels' },
+});
+
+/** Every defect token the generator accepts. */
+export const GENERATOR_DEFECT_TOKENS = Object.freeze(Object.keys(DEFECT_ADDRESSABILITY).sort());
+
+
 function labelsIn(html) {
   return new Set([...html.matchAll(/<label[^>]*\bfor="([^"]+)"/gi)].map((match) => match[1]));
 }
