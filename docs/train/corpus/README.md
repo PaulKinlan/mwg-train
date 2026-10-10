@@ -36,23 +36,32 @@ Recorded in `pilot/TRAINING_CORPUS.json`, spanning 30 synthetic families (`tr-01
 
 | Scope | Original (chars) | Uplifted (chars) | Total (chars) | Derived Tokens | Band (±25%) | Role in Sizing |
 |---|---:|---:|---:|---:|---|---|
-| **`app_sources`** | **3,026,754** | **3,174,700** | **6,201,454** | **1,550,364** | **[1,162,773, 1,937,954]** | **PRIMARY headline figure** |
+| **`app_sources`** | **5,157,520** | **5,305,466** | **10,462,986** | **2,615,747** | **[1,961,810, 3,269,683]** | **PRIMARY headline figure** |
 | `project_manifest` | 26,190 | 26,190 | 52,380 | 13,095 | [9,821, 16,369] | `package.json` dependencies & scripts |
-| `harness_metadata` | 817,144 | 817,144 | 1,634,288 | 408,572 | [306,429, 510,715] | `spec.json` harness metadata (EXCLUDED) |
+| `harness_metadata` | 949,073 | 949,073 | 1,898,146 | 474,537 | [355,902, 593,171] | `spec.json` harness metadata (EXCLUDED) |
 | `prompt` | 0 | 0 | 0 | 0 | [0, 0] | Measured zero (documented gap; see below) |
-| *full_tree (all)* | *3,870,088* | *4,018,034* | *7,888,122* | *1,972,031* | *[1,479,023, 2,465,038]* | *Total on-disk tree for comparison* |
+| *full_tree (all)* | *6,132,783* | *6,280,729* | *12,413,512* | *3,103,378* | *[2,327,534, 3,879,223]* | *Total on-disk tree for comparison* |
 
-- **Headline Characters (`app_sources`):** **6,201,454 characters** (3,026,754 original + 3,174,700 uplifted)
-- **Headline Derived Tokens:** **1,550,364 tokens**
-- **Uncertainty Band:** **[1,162,773, 1,937,954] tokens** (±25% margin)
-- **Epoch Scaling:** 1 epoch = **1,550,364 tokens**; $N$ epochs = $N \times 1,550,364$ tokens.
+- **Headline Characters (`app_sources`):** **10,462,986 characters** (5,157,520 original + 5,305,466 uplifted)
+- **Headline Derived Tokens:** **2,615,747 tokens**
+- **Uncertainty Band:** **[1,961,810, 3,269,683] tokens** (±25% margin)
+- **Epoch Scaling:** 1 epoch = **2,615,747 tokens**; $N$ epochs = $N \times 2,615,747$ tokens.
 
-> **These figures moved twice on 2026-10-08** while all 30 families were re-authored to declare their
-> own form controls (`mwg-train-p3e`). The headline went 1,477,348 → 1,556,588 → **1,550,364**. The
-> middle figure was measured before a fix changed every generated server's required-field list, so it
-> described a corpus that no longer existed; the figure above is the one that reproduces from the
-> committed trees. Any cost projection built from an earlier number is off by up to 5.4% at the
-> headline - still derived from characters, so the ±25% band dominates it.
+> **These figures have now moved three times, and the third move is the one worth reading.** On
+> 2026-10-08 the headline went 1,477,348 → 1,556,588 → 1,550,364 while all 30 families were re-authored
+> to declare their own form controls (`mwg-train-p3e`); the middle figure was measured before a fix
+> changed every generated server's required-field list, so it described a corpus that no longer existed.
+>
+> Then it went **1,550,364 → 2,615,747**, and that is not another generator bug: the measurement was last
+> re-run on 2026-10-08 and the generator changed repeatedly afterwards - draft prefill carried into form
+> fields, an explicit `next` override on the step POST, multi-step journeys, search and update flows -
+> without anyone re-running it. Nothing recomputed it, so it drifted silently. `train:tokens` is defined
+> in `package.json` but was wired into no gate, unlike the corpus tree hash, which a hard-requirement test
+> does guard. A test now re-measures the corpus and fails when the committed record disagrees.
+>
+> A cost projection built from the pre-2026-10-10 figure is off by up to 68.7% at the headline. The
+> figures remain derived from characters rather than tokenizer-measured, so the ±25% band is the residual
+> uncertainty, not a correction for this.
 >
 > The `full_tree` and `harness_metadata` scopes moved again on `mwg-train-7d6` (`harness_metadata`
 > 395,899 → **408,572**, `full_tree` 1,959,357 → **1,972,031**) because the scaffold now declares each
