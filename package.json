@@ -53,7 +53,7 @@
   },
   "license": "UNLICENSED",
   "dependencies": {
-    "hono": "^4.9.12",
+    "hono": "^4.13.7",
     "htm": "^3.1.1",
     "preact": "^10.27.2",
     "preact-render-to-string": "^6.6.3",
