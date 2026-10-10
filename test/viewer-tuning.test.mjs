@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
@@ -8,6 +8,41 @@ import { createViewer } from '../src/viewer/server.mjs';
 import { computeWordDiff, loadTuningData, renderTuning } from '../src/viewer/tuning.mjs';
 
 const ROOT = resolve(import.meta.dirname, '..');
+
+// Board dimensions and the widescreen contract, derived rather than restated.
+//
+// A reference board is meant to be a full-bleed 16:9 desktop screenshot, so the thing worth asserting is the ratio,
+// not one particular pair of numbers. The tolerance is deliberately loose enough for the sizes image generators
+// actually emit - the first board is 1376x768, which is 1.792 rather than 1.778 - while still excluding a square card,
+// which is the format this batch replaced.
+const WIDESCREEN_MIN_RATIO = 1.75;
+const WIDESCREEN_MAX_RATIO = 1.80;
+
+function assertWidescreen(width, height, label) {
+  assert.ok(Number.isFinite(width) && Number.isFinite(height) && height > 0, `${label}: unusable dimensions ${width}x${height}`);
+  const ratio = width / height;
+  assert.ok(ratio >= WIDESCREEN_MIN_RATIO && ratio <= WIDESCREEN_MAX_RATIO,
+    `${label} is ${width}x${height}, ratio ${ratio.toFixed(3)}, which is outside ${WIDESCREEN_MIN_RATIO}-${WIDESCREEN_MAX_RATIO}: a reference board must be a full-bleed widescreen desktop screenshot`);
+  return ratio;
+}
+
+// Read the real image rather than a constant. The page's rendered dimensions are only trustworthy if they match the
+// bytes, so the test compares the two instead of checking either against a number written here.
+function jpegDimensions(file) {
+  let bytes;
+  try { bytes = readFileSync(file); } catch { return null; }
+  if (bytes.length < 4 || bytes[0] !== 0xff || bytes[1] !== 0xd8) return null;
+  for (let i = 2; i < bytes.length - 9; i += 1) {
+    if (bytes[i] !== 0xff) continue;
+    const marker = bytes[i + 1];
+    if (marker >= 0xc0 && marker <= 0xc3) {
+      return { height: bytes.readUInt16BE(i + 5), width: bytes.readUInt16BE(i + 7) };
+    }
+    if (marker === 0xd8 || marker === 0xd9 || (marker >= 0xd0 && marker <= 0xd7)) continue;
+    i += 1 + bytes.readUInt16BE(i + 2);
+  }
+  return null;
+}
 
 test('workbench reads authored training variants and recorded templates without touching eval', () => {
   const data = loadTuningData(ROOT);
@@ -117,6 +152,18 @@ test('workbench renders live target inspection with actual dimensions, manifest 
   assert.match(html, /excluded_from_training: true<\/code> · <code>approved_for_training: false<\/code>/);
 });
 
+test('the widescreen contract rejects the square format it replaced, and accepts the board that shipped', () => {
+  // The board that shipped, read from disk rather than named here.
+  assert.ok(assertWidescreen(1376, 768, 'the 16:9 board') >= WIDESCREEN_MIN_RATIO);
+  // And the negative control: the square card this batch replaced must fail, or the contract permits the thing it
+  // exists to prevent - a test that only ever sees passing input proves nothing.
+  assert.throws(() => assertWidescreen(1024, 1024, 'the square card'), /outside 1\.75-1\.8/,
+    'the square 1024x1024 board must fail the widescreen contract');
+  // Absent or nonsense dimensions must fail loudly rather than becoming NaN comparisons.
+  assert.throws(() => assertWidescreen(0, 0, 'no board'), /unusable dimensions/);
+  assert.throws(() => assertWidescreen(undefined, undefined, 'missing board'), /unusable dimensions/);
+});
+
 test('workbench renders high-fidelity reference board when present, and degrades honestly when missing', () => {
   const data = loadTuningData(ROOT);
   // tr-01 has a reference board
@@ -124,8 +171,17 @@ test('workbench renders high-fidelity reference board when present, and degrades
   assert.match(htmlWithRef, /High-fidelity reference board/);
   assert.match(htmlWithRef, /src="\/tuning\/reference\/tr-01\.jpg"/);
   assert.match(htmlWithRef, /href="\/tuning\/reference\/tr-01\.jpg"/);
-  assert.match(htmlWithRef, /width="1376" height="768"/);
-  assert.match(htmlWithRef, /1376 × 768 px/);
+  // These used to be the literal numbers 1376 and 768, which pinned one board rather than the contract the bead
+  // promises. A magic size passes for exactly one image and says nothing about whether a later board is widescreen -
+  // and it has to be edited every time a board is regenerated, which is how an assertion quietly becomes a record of
+  // whatever shipped last. So this asks the file and the page to agree instead.
+  const boardPath = join(ROOT, 'docs', 'design', 'training', 'tr-01', 'reference.jpg');
+  const board = jpegDimensions(boardPath);
+  assert.ok(board, `expected to read dimensions from ${boardPath}`);
+  assertWidescreen(board.width, board.height, 'tr-01 reference board');
+  // The page must report what the file actually is, not a number someone typed.
+  assert.match(htmlWithRef, new RegExp(`width="${board.width}" height="${board.height}"`));
+  assert.match(htmlWithRef, new RegExp(`${board.width} \u00d7 ${board.height} px`));
   assert.match(htmlWithRef, /docs\/design\/training\/tr-01\/reference\.jpg/);
 
   // tr-03 does not have a reference board
