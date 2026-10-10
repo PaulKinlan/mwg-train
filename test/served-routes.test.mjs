@@ -12,6 +12,7 @@ import test from 'node:test';
 import {
   DEFAULT_BASELINE_JSON,
   DEFAULT_SERVED_MD,
+  GAP_SECTION_HEADING,
   evaluateServedGap,
   extractUnservedRoutes,
 } from '../scripts/check-served-gap.mjs';
@@ -207,7 +208,7 @@ test('check-served-gap: formatting variants of the SERVED.md list yield the SAME
 
   // Variant A: bullets (-), tabs, backticks, trailing periods
   const variantA = `
-# Unserved routes
+${GAP_SECTION_HEADING}
 - list-detail \`/courses/:id\` (tr-09-hono, course-enrolment).
 - list-detail \`/jobs/:id\` (tr-12-hono, job-board).
 - list-detail \`/docs/:slug\` (tr-13-hono, docs-site).
@@ -216,7 +217,7 @@ test('check-served-gap: formatting variants of the SERVED.md list yield the SAME
 
   // Variant B: asterisks (*), leading spaces, bold routes, trailing colons
   const variantB = `
-# Unserved routes
+${GAP_SECTION_HEADING}
   * list-detail **/courses/:id** (tr-09-hono, course-enrolment):
   * list-detail **/jobs/:id** (tr-12-hono, job-board):
   * list-detail **/docs/:slug** (tr-13-hono, docs-site):
@@ -225,7 +226,7 @@ test('check-served-gap: formatting variants of the SERVED.md list yield the SAME
 
   // Variant C: plus (+), italics (* and _), colon after list-detail, multiple spaces
   const variantC = `
-# Unserved routes
+${GAP_SECTION_HEADING}
 + list-detail:   */courses/:id*     (  tr-09-hono  ,  course-enrolment  )
 + list-detail:   _/jobs/:id_       (  tr-12-hono  ,  job-board  )
 + \`list-detail\`   */docs/:slug*     (  tr-13-hono  ,  docs-site  )
@@ -234,7 +235,7 @@ test('check-served-gap: formatting variants of the SERVED.md list yield the SAME
 
   // Variant D: no bullets, plain routes without wrappers, indented
   const variantD = `
-# Unserved routes
+${GAP_SECTION_HEADING}
     list-detail /courses/:id (tr-09-hono, course-enrolment)
     list-detail /jobs/:id (tr-12-hono, job-board)
     list-detail /docs/:slug (tr-13-hono, docs-site)
@@ -280,9 +281,8 @@ test('check-served-gap: an unparseable document produces the parse diagnostic an
   const baselineData = JSON.parse(readFileSync(DEFAULT_BASELINE_JSON, 'utf8'));
 
   const unparseableCases = [
-    ['empty document', ''],
-    ['prose with no list items', '# Title\n\nSome text about the gap with no list.\n'],
-    ['malformed list lines missing route and parens', '- list-detail broken\n- list-detail also broken\n'],
+    ['section present with prose only', `${GAP_SECTION_HEADING}\n\nSome text about the gap with no list.\n`],
+    ['section present with malformed list lines missing route and parens', `${GAP_SECTION_HEADING}\n\n- list-detail broken\n- list-detail also broken\n`],
   ];
 
   for (const [desc, content] of unparseableCases) {
@@ -313,7 +313,7 @@ test('check-served-gap: an unparseable document produces the parse diagnostic an
   const dir = mkdtempSync(join(tmpdir(), '5uo-unparseable-'));
   const tempServed = join(dir, 'SERVED.md');
   try {
-    writeFileSync(tempServed, '# Broken\n\nNo list items at all.\n');
+    writeFileSync(tempServed, `${GAP_SECTION_HEADING}\n\nNo list items at all.\n`);
     let threw = false;
     try {
       execFileSync(
@@ -341,6 +341,7 @@ test('check-served-gap: a genuine route mismatch produces the route-mismatch mes
 
   // Document has 3 valid baseline routes and 1 unexpected route (so 1 is missing, 1 is unexpected)
   const mismatchContent = `
+${GAP_SECTION_HEADING}
 - list-detail \`/courses/:id\` (tr-09-hono, course-enrolment)
 - list-detail \`/jobs/:id\` (tr-12-hono, job-board)
 - list-detail \`/docs/:slug\` (tr-13-hono, docs-site)
@@ -394,6 +395,7 @@ test('check-served-gap: a genuine route mismatch produces the route-mismatch mes
 
 test('check-served-gap: routes in prose sentences are not extracted as list items', () => {
   const proseOnly = `
+${GAP_SECTION_HEADING}
 Every declared list route is now served. The four that remain are list-detail routes, declared as
 \`/courses/:id\`, \`/jobs/:id\`, \`/docs/:slug\` and \`/cultivars/:id\` on the four projects below.
 
@@ -405,4 +407,174 @@ The list routes that used to be listed here - \`/services\`, \`/ciders\`, \`/kil
 `;
   const extracted = extractUnservedRoutes(proseOnly);
   assert.equal(extracted.size, 0, 'prose sentences and tables must not be extracted as list entries');
+});
+
+// mwg-train-bdw: scope route extraction to the gap section, fail closed if it is missing
+test('check-served-gap: extraction is bounded to GAP_SECTION_HEADING body, ignoring lines before, after, in prose, or in code fences', () => {
+  const committedContent = readFileSync(DEFAULT_SERVED_MD, 'utf8');
+
+  // Case 1: committed SERVED.md body yields exactly the 4 routes
+  const committedRoutes = extractUnservedRoutes(committedContent);
+  assert.equal(committedRoutes.size, 4, 'committed file must yield exactly 4 unserved routes');
+  assert.deepEqual(
+    [...committedRoutes].sort(),
+    [
+      'tr-09-hono:/courses/:id',
+      'tr-12-hono:/jobs/:id',
+      'tr-13-hono:/docs/:slug',
+      'tr-16-hono:/cultivars/:id',
+    ],
+  );
+
+  // Case 2: a route-shaped line in a history section AFTER the gap section is NOT extracted
+  const historyContent = `${committedContent}\n\n## History\n\n- list-detail \`/history/:id\` (tr-99-hono, history-item)\n`;
+  const historyExtracted = extractUnservedRoutes(historyContent);
+  assert.equal(historyExtracted.size, 4, 'route in history section must not be extracted');
+  assert.equal(historyExtracted.has('tr-99-hono:/history/:id'), false);
+
+  // Negative control for Case 2: the same route placed INSIDE the section IS extracted
+  const historyInsideContent = committedContent.replace(
+    'list-detail `/courses/:id`   (tr-09-hono, course-enrolment)',
+    'list-detail `/courses/:id`   (tr-09-hono, course-enrolment)\nlist-detail `/history/:id` (tr-99-hono, history-item)',
+  );
+  const historyInsideExtracted = extractUnservedRoutes(historyInsideContent);
+  assert.equal(historyInsideExtracted.size, 5, 'negative control: same line inside section must be extracted');
+  assert.equal(historyInsideExtracted.has('tr-99-hono:/history/:id'), true);
+
+  // Case 3: a route-shaped line inside a fenced code block outside the section is NOT extracted
+  const fencedContent = `${committedContent}\n\n## Diff History\n\n\`\`\`diff\n- list-detail \`/fenced/:id\` (tr-88-hono, fenced-diff)\n\`\`\`\n`;
+  const fencedExtracted = extractUnservedRoutes(fencedContent);
+  assert.equal(fencedExtracted.size, 4, 'route in fenced code block outside section must not be extracted');
+  assert.equal(fencedExtracted.has('tr-88-hono:/fenced/:id'), false);
+
+  // Negative control for Case 3: the same route inside the section IS extracted
+  const fencedInsideContent = committedContent.replace(
+    'list-detail `/courses/:id`   (tr-09-hono, course-enrolment)',
+    'list-detail `/courses/:id`   (tr-09-hono, course-enrolment)\nlist-detail `/fenced/:id` (tr-88-hono, fenced-diff)',
+  );
+  const fencedInsideExtracted = extractUnservedRoutes(fencedInsideContent);
+  assert.equal(fencedInsideExtracted.size, 5, 'negative control: same route inside section must be extracted');
+  assert.equal(fencedInsideExtracted.has('tr-88-hono:/fenced/:id'), true);
+
+  // Case 4: a route-shaped line in prose is NOT extracted
+  const proseContent = committedContent.replace(
+    'Every declared `list` route is now served.',
+    'Every declared `list` route is now served, such as list-detail `/prose/:id` (tr-77-hono, prose-item) in testing.',
+  );
+  const proseExtracted = extractUnservedRoutes(proseContent);
+  assert.equal(proseExtracted.size, 4, 'route-shaped line in prose must not be extracted');
+  assert.equal(proseExtracted.has('tr-77-hono:/prose/:id'), false);
+
+  // Negative control for Case 4: the same route formatted as list item inside section IS extracted
+  const proseInsideContent = committedContent.replace(
+    'list-detail `/courses/:id`   (tr-09-hono, course-enrolment)',
+    'list-detail `/courses/:id`   (tr-09-hono, course-enrolment)\nlist-detail `/prose/:id` (tr-77-hono, prose-item)',
+  );
+  const proseInsideExtracted = extractUnservedRoutes(proseInsideContent);
+  assert.equal(proseInsideExtracted.size, 5, 'negative control: same route as item inside section must be extracted');
+  assert.equal(proseInsideExtracted.has('tr-77-hono:/prose/:id'), true);
+
+  // Case 5: a route-shaped line BEFORE the section is NOT extracted
+  const beforeContent = `# Top Preamble\n\n- list-detail \`/before/:id\` (tr-66-hono, before-item)\n\n${committedContent}`;
+  const beforeExtracted = extractUnservedRoutes(beforeContent);
+  assert.equal(beforeExtracted.size, 4, 'route before section must not be extracted');
+  assert.equal(beforeExtracted.has('tr-66-hono:/before/:id'), false);
+
+  // Negative control for Case 5: the same route placed inside section IS extracted
+  const beforeInsideContent = committedContent.replace(
+    'list-detail `/courses/:id`   (tr-09-hono, course-enrolment)',
+    'list-detail `/courses/:id`   (tr-09-hono, course-enrolment)\nlist-detail `/before/:id` (tr-66-hono, before-item)',
+  );
+  const beforeInsideExtracted = extractUnservedRoutes(beforeInsideContent);
+  assert.equal(beforeInsideExtracted.size, 5, 'negative control: same route inside section must be extracted');
+  assert.equal(beforeInsideExtracted.has('tr-66-hono:/before/:id'), true);
+});
+
+test('check-served-gap: a document whose gap-section heading has been renamed or removed produces the locate diagnostic and NOT a route mismatch', () => {
+  const baselineData = JSON.parse(readFileSync(DEFAULT_BASELINE_JSON, 'utf8'));
+  const committedContent = readFileSync(DEFAULT_SERVED_MD, 'utf8');
+
+  // Case A: Missing heading cases
+  const absentCases = [
+    ['empty document', ''],
+    ['prose document with other headings', '# Project Overview\n\nSome text with no gap section heading.\n'],
+    ['document with arbitrary heading', '## Unserved Routes List\n\nlist-detail `/courses/:id` (tr-09-hono, course-enrolment)\n'],
+  ];
+
+  for (const [desc, content] of absentCases) {
+    const evaluation = evaluateServedGap({
+      servedMdContent: content,
+      baselineData,
+      servedMdPath: 'docs/train/corpus/SERVED.md',
+    });
+
+    assert.equal(evaluation.status, 'SECTION_NOT_FOUND', `${desc} must return status SECTION_NOT_FOUND`);
+    assert.equal(evaluation.exitCode, 1, `${desc} must exit with code 1`);
+    assert.equal(evaluation.errors.length, 1);
+
+    const errorMsg = evaluation.errors[0];
+    assert.match(
+      errorMsg,
+      /check-served-gap: FAIL - Could not locate section '## What the gap is, precisely' in docs\/train\/corpus\/SERVED\.md/,
+      `${desc} must produce the explicit locate diagnostic naming the heading and file`,
+    );
+
+    // CRUCIAL: Must NOT confuse missing section with route mismatch or parse diagnostic
+    assert.doesNotMatch(errorMsg, /is in served-routes-baseline\.json but not in SERVED\.md/);
+    assert.doesNotMatch(errorMsg, /is in SERVED\.md but not in served-routes-baseline\.json/);
+    assert.doesNotMatch(errorMsg, /Could not parse unserved route list/);
+    assert.doesNotMatch(errorMsg, /zero route-shaped entries/);
+    assert.doesNotMatch(errorMsg, /Floor on the list-detail/);
+  }
+
+  // Case B: Heading renamed in otherwise-valid committed SERVED.md
+  const renamedContent = committedContent.replace(
+    GAP_SECTION_HEADING,
+    '## The remaining unserved routes',
+  );
+  const renamedEval = evaluateServedGap({
+    servedMdContent: renamedContent,
+    baselineData,
+    servedMdPath: 'docs/train/corpus/SERVED.md',
+  });
+
+  assert.equal(renamedEval.status, 'SECTION_NOT_FOUND');
+  assert.equal(renamedEval.exitCode, 1);
+  assert.equal(renamedEval.errors.length, 1);
+  const renamedError = renamedEval.errors[0];
+  assert.match(
+    renamedError,
+    /check-served-gap: FAIL - Could not locate section '## What the gap is, precisely' in docs\/train\/corpus\/SERVED\.md/,
+  );
+  // CRUCIAL: Must NOT report route mismatch even though routes were in the document under a renamed heading
+  assert.doesNotMatch(renamedError, /is in served-routes-baseline\.json but not in SERVED\.md/);
+  assert.doesNotMatch(renamedError, /is in SERVED\.md but not in served-routes-baseline\.json/);
+  assert.doesNotMatch(renamedError, /Could not parse unserved route list/);
+  assert.doesNotMatch(renamedError, /zero route-shaped entries/);
+
+  // End-to-end via CLI with renamed heading
+  const dir = mkdtempSync(join(tmpdir(), 'bdw-renamed-'));
+  const tempServed = join(dir, 'SERVED.md');
+  try {
+    writeFileSync(tempServed, renamedContent);
+    let threw = false;
+    try {
+      execFileSync(
+        process.execPath,
+        [GAP_SCRIPT, '--served', tempServed],
+        { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] },
+      );
+    } catch (err) {
+      threw = true;
+      assert.equal(err.status, 1, 'renamed heading must cause CLI to exit 1');
+      const combined = (err.stdout ?? '') + (err.stderr ?? '');
+      assert.match(combined, /check-served-gap: FAIL - Could not locate section '## What the gap is, precisely'/);
+      assert.doesNotMatch(combined, /is in served-routes-baseline\.json but not in SERVED\.md/);
+      assert.doesNotMatch(combined, /Could not parse unserved route list/);
+      assert.doesNotMatch(combined, /zero route-shaped entries/);
+    }
+    assert.ok(threw, 'CLI must exit non-zero for renamed heading');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });

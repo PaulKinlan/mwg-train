@@ -8,6 +8,58 @@ const REPO_ROOT = resolve(import.meta.dirname, '..');
 export const DEFAULT_SERVED_MD = join(REPO_ROOT, 'docs', 'train', 'corpus', 'SERVED.md');
 export const DEFAULT_BASELINE_JSON = join(REPO_ROOT, 'docs', 'train', 'corpus', 'served-routes-baseline.json');
 
+// Exact heading of the unserved routes section in SERVED.md.
+// This is a copy of the document's heading and must move with it if renamed or restructured.
+export const GAP_SECTION_HEADING = '## What the gap is, precisely';
+
+function escapeRegex(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+export function extractGapSectionBody(content, heading = GAP_SECTION_HEADING) {
+  if (typeof content !== 'string') return null;
+
+  const headingLevel = heading.match(/^\s*(#{1,6})\s+/)?.[1]?.length ?? 2;
+  // Match the heading line exactly (permitting optional leading/trailing whitespace on that line)
+  const headingRegex = new RegExp(`^[ \\t]*${escapeRegex(heading.trim())}[ \\t]*(?:\\r?\\n|$)`, 'm');
+  const match = headingRegex.exec(content);
+  if (!match) {
+    return null;
+  }
+
+  const afterHeading = content.slice(match.index + match[0].length);
+  const lines = afterHeading.split(/\r?\n/);
+  const bodyLines = [];
+  let inCodeBlock = false;
+  let codeFenceChar = '';
+  let codeFenceLen = 0;
+
+  const nextHeadingRegex = new RegExp(`^[ \\t]*#{1,${headingLevel}}\\s+`);
+
+  for (const line of lines) {
+    const fenceMatch = line.match(/^[ \\t]*(`{3,}|~{3,})/);
+    if (fenceMatch) {
+      const fence = fenceMatch[1];
+      const char = fence[0];
+      const len = fence.length;
+      if (!inCodeBlock) {
+        inCodeBlock = true;
+        codeFenceChar = char;
+        codeFenceLen = len;
+      } else if (char === codeFenceChar && len >= codeFenceLen) {
+        inCodeBlock = false;
+        codeFenceChar = '';
+        codeFenceLen = 0;
+      }
+    } else if (!inCodeBlock && nextHeadingRegex.test(line)) {
+      break;
+    }
+    bodyLines.push(line);
+  }
+
+  return bodyLines.join('\n');
+}
+
 // Matches list-detail unserved routes however punctuated:
 // - Optional leading indentation
 // - Optional bullet: -, *, or +
@@ -22,7 +74,13 @@ export const ROUTE_LINE_REGEX = /^\s*(?:[-*+]\s+)?(?:[`*_]*list-detail[`*_]*:?)\
 export function extractUnservedRoutes(content) {
   const routes = new Set();
   if (typeof content !== 'string') return routes;
-  for (const match of content.matchAll(ROUTE_LINE_REGEX)) {
+
+  const sectionBody = extractGapSectionBody(content, GAP_SECTION_HEADING);
+  if (sectionBody === null) {
+    return routes;
+  }
+
+  for (const match of sectionBody.matchAll(ROUTE_LINE_REGEX)) {
     const route = match[2];
     const projectId = match[4];
     if (route && route.startsWith('/') && projectId) {
@@ -37,6 +95,18 @@ export function evaluateServedGap({
   baselineData,
   servedMdPath = 'docs/train/corpus/SERVED.md',
 }) {
+  const sectionBody = extractGapSectionBody(servedMdContent, GAP_SECTION_HEADING);
+  if (sectionBody === null) {
+    return {
+      status: 'SECTION_NOT_FOUND',
+      exitCode: 1,
+      errors: [
+        `check-served-gap: FAIL - Could not locate section '${GAP_SECTION_HEADING}' in ${servedMdPath}`,
+      ],
+      routes: new Set(),
+    };
+  }
+
   const proseRoutes = extractUnservedRoutes(servedMdContent);
 
   if (proseRoutes.size === 0) {
