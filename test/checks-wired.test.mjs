@@ -9,6 +9,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
 
 const WIRED = new Set([
+  // The npm script passes only --if-present, so this runs offline against local git objects.
+  // Network is only needed for an acceptance audit that passes --remote explicitly.
+  'check:originals',
   'lint:provenance',
   'check:quotes',
   'check:briefs',
@@ -27,7 +30,6 @@ const WIRED = new Set([
 ]);
 
 const EXCLUDED = new Map([
-  ['check:originals', 'requires network access to remote origin'],
   ['check:served-routes', 'requires a spawned HTTP server'],
   ['check:served-routes:strict', 'requires a spawned HTTP server'],
   ['check:cross-arm-parity', 'requires Chrome'],

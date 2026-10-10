@@ -22,7 +22,7 @@
     "targets:train:check": "node scripts/render-training-targets.mjs --check",
     "scaffold:train-corpus": "node scripts/scaffold-training-corpus.mjs",
     "check:eval-projects": "node scripts/scaffold-eval-projects.mjs --check",
-    "check:all": "npm run lint:provenance && npm run check:quotes && npm run check:briefs && npm run check:disjoint && npm run check:eval-projects && npm run check:targets && npm run check:specs && npm run check:pilot-corpus && npm run check:train-evidence && npm run scan:owner-auth && npm run check:brief-schema && npm run check:route-conformance && npm run check:rules-pin && npm run check:design-schema && npm run check:baseline-label",
+    "check:all": "npm run lint:provenance && npm run check:quotes && npm run check:briefs && npm run check:originals && npm run check:disjoint && npm run check:eval-projects && npm run check:targets && npm run check:specs && npm run check:pilot-corpus && npm run check:train-evidence && npm run scan:owner-auth && npm run check:brief-schema && npm run check:route-conformance && npm run check:rules-pin && npm run check:design-schema && npm run check:baseline-label",
     "render:targets": "node scripts/render-targets.mjs",
     "check:targets": "node scripts/render-targets.mjs --check && node scripts/validate-provenance.mjs data/A6_evaluation/targets/manifest.jsonl",
     "score:conformance": "node scripts/score-conformance.mjs",
