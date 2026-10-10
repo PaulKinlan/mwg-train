@@ -23,12 +23,27 @@
  *   HTTP status >= 500 or connection failure counts as ERROR.
  *   Write routes are probed with POST, and read-by-reference routes with a record the server
  *   itself created - a 404 for a ref that was never written is the correct answer, not a gap.
+ *
+ * Verdict (mwg-train-xku). A run that could not MEASURE is not a run that measured everything and found it
+ * fine. This script used to print "MEASURED - 0/0 declared route(s) served across 7 project(s) (0 not
+ * served)" and exit 0 in a tree where every project failed, so it reported a measurement it had not made
+ * and could never fail. Now:
+ *   - the projects are GENERATED (pilot/training-projects is gitignored), so if they are absent and the
+ *     caller did not name a path, the run is a labelled SKIP naming the command that produces them, and it
+ *     exits 0. A clean checkout legitimately lacks them, and failing there would be red for a reason that is
+ *     not a defect - which is how a gate stops being read.
+ *   - a projects path the caller NAMED that does not exist is fatal, not a skip: a typo must not look clean.
+ *   - a project that could not be measured, or a route probe that errored, fails the run. An unmeasured
+ *     route is not a served one.
+ *   - routes that ARE measured and are NOT served are reported and gate only under --expect-all, because
+ *     that divergence is the documented gap this tool exists to measure.
  */
 import { spawn, execFileSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
-import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, realpathSync, unlinkSync, writeFileSync } from 'node:fs';
 import { createServer as createNetServer } from 'node:net';
 import { dirname, isAbsolute, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import process from 'node:process';
 
 const REPO_ROOT = resolve(import.meta.dirname, '..');
@@ -67,10 +82,12 @@ Options:
   --families <list>       Comma-separated list of families to test (e.g. tr-01,tr-05)
   --out <file>            Write JSON results to file
   --json                  Output JSON results to stdout
-  --expect-all            Exit 1 if any declared route is not served (default: exit 0)
+  --expect-all            Also exit 1 if a declared route is not served. Unmeasurable projects and route
+                          probe errors fail the run with or without this flag.
   --corpus <file>         Path to TRAINING_CORPUS.json (default: pilot/TRAINING_CORPUS.json)
   --manifest <file>       Path to briefs manifest.jsonl (default: docs/train/briefs/manifest.jsonl)
-  --projects <dir>        Path to projects dir (default: pilot/training-projects)
+  --projects <dir>        Path to projects dir (default: pilot/training-projects). Naming a path that does
+                          not exist is a fatal error; the default being absent is a labelled skip.
   -h, --help              Show this help message
 `);
   process.exit(0);
@@ -85,6 +102,8 @@ const expectAll = hasFlag('--expect-all');
 const corpusPath = flag('--corpus', 'pilot/TRAINING_CORPUS.json');
 const manifestPath = flag('--manifest', 'docs/train/briefs/manifest.jsonl');
 const projectsRoot = flag('--projects', 'pilot/training-projects');
+// Whether the caller NAMED the path, which decides whether its absence is an error or a skip.
+const projectsRootNamed = hasFlag('--projects');
 
 const readJson = (path) => JSON.parse(readFileSync(isAbsolute(path) ? path : join(REPO_ROOT, path), 'utf8'));
 const readJsonl = (path) =>
@@ -425,7 +444,52 @@ async function probeProject(project, projectsRoot) {
   };
 }
 
+/**
+ * What a finished run should do. Pure, so the verdict is tested without starting a server.
+ *
+ * The distinction this encodes is the whole of mwg-train-xku: a run that could not measure is not a run that
+ * measured everything and found it fine. See the Verdict note at the top of this file for why the absent
+ * default and the absent named path are deliberately different.
+ */
+export function runVerdict({
+  projectsRootExists = true,
+  projectsRootNamed = false,
+  unmeasuredProjects = [],
+  totalErrors = 0,
+  totalNotServed = 0,
+  expectAll = false,
+} = {}) {
+  if (!projectsRootExists) {
+    return projectsRootNamed ? { status: 'FATAL', code: 2 } : { status: 'SKIPPED', code: 0 };
+  }
+  if (unmeasuredProjects.length > 0 || totalErrors > 0) return { status: 'FAIL', code: 1 };
+  if (expectAll && totalNotServed > 0) return { status: 'FAIL', code: 1 };
+  return { status: 'MEASURED', code: 0 };
+}
+
 async function main() {
+  // The projects are generated, so whether they exist decides what the run can mean BEFORE anything is read.
+  const projectsRootAbs = isAbsolute(projectsRoot) ? projectsRoot : join(REPO_ROOT, projectsRoot);
+  const projectsRootExists = existsSync(projectsRootAbs);
+  const rootVerdict = runVerdict({ projectsRootExists, projectsRootNamed });
+  if (rootVerdict.status === 'FATAL') {
+    console.error(
+      `check-served-routes: FATAL - the projects directory you named does not exist: ${projectsRootAbs}\n` +
+        '  A named path that is not there is an error rather than a skip, so that a typo cannot look like a clean run.',
+    );
+    return rootVerdict.code;
+  }
+  if (rootVerdict.status === 'SKIPPED') {
+    console.log(
+      `check-served-routes: SKIPPED - ${projectsRootAbs} does not exist, so no route was measured.\n` +
+        '  These projects are generated and deliberately not committed, so a clean checkout never has them.\n' +
+        '  This is NOT a served-routes result and says nothing about whether any route is served.\n' +
+        '  Run `npm run pilot:scaffold` to produce the projects, then run this again.\n' +
+        '  (Naming the path with --projects makes its absence a fatal error instead.)',
+    );
+    return rootVerdict.code;
+  }
+
   const corpus = readJson(corpusPath);
   const briefs = readJsonl(manifestPath);
   const briefsByFamily = new Map();
@@ -492,6 +556,14 @@ async function main() {
   // its server never answered - so it must not pass --expect-all by contributing no 404s. Counting
   // only per-route errors let a project that produced nothing at all look like a clean run.
   const unmeasuredProjects = projectReports.filter((proj) => proj.error || (proj.errors ?? 0) > 0).map((proj) => proj.project_id);
+
+  const verdict = runVerdict({ projectsRootExists: true, unmeasuredProjects, totalErrors, totalNotServed, expectAll });
+  // Say WHICH failure it was: "could not measure" and "measured, but not served" are different problems with
+  // different fixes, and the old message could not express the first at all while exiting 0 over it.
+  const failMessage = () =>
+    unmeasuredProjects.length > 0 || totalErrors > 0
+      ? `check-served-routes: FAIL - ${unmeasuredProjects.length} project(s) not measured and ${totalErrors} route probe error(s) across ${selectedProjects.length} project(s): an unmeasured route is not a served one`
+      : `check-served-routes: FAIL - ${totalNotServed} declared route(s) not served across ${selectedProjects.length} project(s) (--expect-all requested)`;
 
   // End-of-run cleanup verification
   const lingeringPorts = [];
@@ -590,27 +662,44 @@ async function main() {
     }
     console.log('');
 
-    if (expectAll && (totalNotServed > 0 || totalErrors > 0 || unmeasuredProjects.length > 0)) {
-      console.error(
-        `check-served-routes: FAIL - ${totalNotServed} declared route(s) not served, ${totalErrors} probe error(s), ${unmeasuredProjects.length} project(s) not measured across ${selectedProjects.length} project(s) (--expect-all requested)`,
+    if (verdict.status === 'FAIL') {
+      console.error(failMessage());
+    } else {
+      console.log(
+        `check-served-routes: MEASURED - ${totalServed}/${totalDeclared} declared route(s) served across ${selectedProjects.length} project(s) (${totalNotServed} not served)`,
       );
-      process.exit(1);
     }
-
-    console.log(
-      `check-served-routes: MEASURED - ${totalServed}/${totalDeclared} declared route(s) served across ${selectedProjects.length} project(s) (${totalNotServed} not served)`,
-    );
   }
 
-  // A probe error is not a pass: it means the route was never measured, so a server that failed to
-  // start would otherwise satisfy --expect-all by producing no 404s at all.
-  if (expectAll && (totalNotServed > 0 || totalErrors > 0 || unmeasuredProjects.length > 0)) {
-    process.exit(1);
-  }
+  // The verdict already covers the JSON path, where no summary is printed but the exit code still decides
+  // whether a caller can tell a real measurement from a run that measured nothing.
+  return verdict.code;
 }
 
-main().catch((err) => {
-  emergencyCleanup();
-  console.error('check-served-routes: FATAL -', err);
-  process.exit(1);
-});
+// Import-safe: runVerdict is a pure exported function that the tests exercise, so importing this module
+// must not start probing servers.
+//
+// Resolved through realpath, unlike the `file://${resolve(argv[1])}` form the other scripts use. Node
+// resolves symlinks when it loads a module, so under that form a symlinked invocation makes import.meta.url
+// the real path and argv[1] the link, the guard concludes "imported", and the CLI exits 0 having done
+// NOTHING. For a check, exiting 0 having done nothing is the exact defect this file was fixed for, so it is
+// not a form worth copying. A test drives the CLI through a symlink to keep it that way.
+const invokedDirectly = (() => {
+  if (!process.argv[1]) return false;
+  try {
+    return realpathSync(process.argv[1]) === fileURLToPath(import.meta.url);
+  } catch {
+    return false;
+  }
+})();
+if (invokedDirectly) {
+  main()
+    .then((code) => {
+      process.exitCode = code;
+    })
+    .catch((err) => {
+      emergencyCleanup();
+      console.error('check-served-routes: FATAL -', err);
+      process.exitCode = 1;
+    });
+}
