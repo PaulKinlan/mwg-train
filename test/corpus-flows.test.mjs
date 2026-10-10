@@ -515,3 +515,92 @@ test('a flow and a capability page compose: the edit form is appended to whichev
     }
   }
 });
+
+test('a carried draft is usable: the form field is prefilled, not only displayed', async () => {
+  // mwg-train-rmp. On the startPath the server injects <div class="draft-carried"> holding the earlier answers,
+  // so they are VISIBLE - but no input or select is given a value, so a submit sends empty fields. The values a
+  // user can see are not the values the form sends. I checked whether the client enhance script closed the gap
+  // and it does not: draft-carried appears only in the server templates, and the script's only .value writes are
+  // for search and edit. So the answer is not usable at any point.
+  const stepsDecl = [
+    { path: '/book/step-1', fill: { 'input[name=phone]': '07700900077' }, submit: '#step-1-next' },
+    { path: '/book/step-2', select: { 'select[name=package]': 'Full service' }, submit: 'button[type=submit]' },
+  ];
+  const archetype = makeTr01Archetype({ startPath: '/book/confirm', steps: stepsDecl });
+
+  let port = 5630;
+  for (const frameworkName of ['raw', 'hono']) {
+    const built = buildProjectFor(archetype, { frameworkName, defects: [] });
+    await withLiveServer(built, port, async (base) => {
+      const posted = await fetch(`${base}/book/step-1`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ phone: '07700900077' }).toString(),
+        redirect: 'manual',
+      });
+      assert.ok(posted.status < 400, `${frameworkName}: the step post must be accepted`);
+      const cookie = posted.headers.get('set-cookie');
+      assert.ok(cookie, `${frameworkName}: premise - the server must set a session cookie`);
+
+      const confirm = await fetch(`${base}/book/confirm`, { headers: { cookie } });
+      const html = await confirm.text();
+
+      // PREMISE: the value is carried and displayed, or there is nothing to prefill and this test is vacuous.
+      assert.ok(html.includes('draft-carried'), `${frameworkName}: premise - the carried container must render`);
+      assert.ok(html.includes('07700900077'), `${frameworkName}: premise - the carried value must be displayed`);
+
+      // THE PROPERTY: it must also be USABLE. Find the declared field and require it to hold the value.
+      const field = (html.match(/<input[^>]*name="phone"[^>]*>/) ?? [])[0];
+      assert.ok(field, `${frameworkName}: premise - the startPath must render the declared phone field`);
+      assert.ok(
+        /value="07700900077"/.test(field),
+        `${frameworkName}: the carried draft must be prefilled into the field, not merely displayed beside it - `
+          + `a user who submits this form sends an empty phone. Field was: ${field}`,
+      );
+    });
+    port += 1;
+  }
+});
+
+test('a carried draft value is escaped, never emitted as markup', async () => {
+  // The prefill fix interpolates a stored draft value into a value attribute and into the carried container, so
+  // a draft holding HTML is an injection point. The prefill change escaped values but shipped with NO test, so
+  // nothing would have caught a regression back to raw interpolation. This one fails if escaping is removed.
+  const stepsDecl = [
+    { path: '/book/step-1', fill: { 'input[name=phone]': '07700900077' }, submit: '#step-1-next' },
+    { path: '/book/step-2', select: { 'select[name=package]': 'Full service' }, submit: 'button[type=submit]' },
+  ];
+  const archetype = makeTr01Archetype({ startPath: '/book/confirm', steps: stepsDecl });
+  const payload = '" onfocus="alert(1)';
+
+  let port = 5640;
+  for (const frameworkName of ['raw', 'hono']) {
+    const built = buildProjectFor(archetype, { frameworkName, defects: [] });
+    await withLiveServer(built, port, async (base) => {
+      const posted = await fetch(`${base}/book/step-1`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ phone: payload }).toString(),
+        redirect: 'manual',
+      });
+      assert.ok(posted.status < 400, `${frameworkName}: the step post must be accepted`);
+      const cookie = posted.headers.get('set-cookie');
+      assert.ok(cookie, `${frameworkName}: premise - a session cookie must be set`);
+
+      const confirm = await fetch(`${base}/book/confirm`, { headers: { cookie } });
+      const html = await confirm.text();
+      // PREMISE: the value must actually be carried, or this test proves nothing about escaping.
+      assert.ok(html.includes('draft-carried'), `${frameworkName}: premise - the carried container must render`);
+      // `"` and `onfocus=` reaching the document unescaped would break out of the attribute and inject a handler.
+      assert.ok(
+        !html.includes('onfocus="alert(1)"'),
+        `${frameworkName}: a draft value must not break out of its attribute - the payload appeared as markup`,
+      );
+      assert.ok(
+        html.includes('&quot;') || html.includes('&#34;'),
+        `${frameworkName}: the quote in a carried draft value must be escaped`,
+      );
+    });
+    port += 1;
+  }
+});
