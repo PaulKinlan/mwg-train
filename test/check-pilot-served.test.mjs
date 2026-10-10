@@ -85,6 +85,67 @@ test('mutations on static check-pilot-served', (t) => {
   // Restore
   writeFileSync(join(proj1, 'server.mjs'), `app.get('/', () => {});`);
 
+  // Quote variations
+  const variations = [
+    { name: "single", quotes: "'", ws: "" },
+    { name: "double", quotes: '"', ws: "" },
+    { name: "backtick", quotes: '`', ws: "" },
+    { name: "single_ws", quotes: "'", ws: "  " },
+    { name: "double_ws", quotes: '"', ws: "  " },
+    { name: "backtick_ws", quotes: '`', ws: "  " }
+  ];
+
+  for (const { name, quotes, ws } of variations) {
+    writeFileSync(join(proj1, 'spec.json'), JSON.stringify({
+      project_id: "test-proj",
+      routes: [ { method: "GET", path: "/test" } ]
+    }));
+    
+    // Test that the route is recognized properly (success)
+    writeFileSync(join(proj1, 'server.mjs'), `app.get(${ws}${quotes}/test${quotes}${ws}, () => {});`);
+    res = runCheck(tmp);
+    if (res.status !== 0) console.log(`Expected variation ${name} to pass:`, res.stdout);
+    assert.strictEqual(res.status, 0, `Variation ${name} should pass`);
+    
+    // Break the recognition (mutation): unparseable route string format
+    // Because we just added the unparsed guard, an unparseable route like `app.get(path, () => {})`
+    // will be caught by the route-like block detector and fail! Let's mutate by making it completely unparseable
+    // by the route extractor but matching the route-like detector.
+    // e.g. `app.get('/test' + suffix)`
+    writeFileSync(join(proj1, 'server.mjs'), `app.get(pathVar, () => {});`);
+    res = runCheck(tmp);
+    if (res.status !== 1) console.log(`Expected variation ${name} unparsed mutation to fail:`, res);
+    assert.strictEqual(res.status, 1, `Mutation ${name} should fail`);
+    assert.match(res.stdout, /\[test-proj\] Unparsed route-like block:/);
+    
+    // Break the recognition by using mismatched quotes or missing quotes
+    // Wait, if we use \`app.get('/test", () => {})\`, the regex doesn't match it because of mismatched quotes.
+    // The route-like block detector WILL match it because it starts with app.get(
+    writeFileSync(join(proj1, 'server.mjs'), `app.get(${quotes}/test${quotes === "'" ? '"' : "'"}, () => {});`);
+    res = runCheck(tmp);
+    assert.strictEqual(res.status, 1, `Broken variation ${name} should fail`);
+    assert.match(res.stdout, /\[test-proj\] Unparsed route-like block:/);
+    
+    // Restore
+    writeFileSync(join(proj1, 'server.mjs'), `app.get('/', () => {});`);
+  }
+
+  // Fixture for the new guard: route-looking text in an unrecognised shape
+  writeFileSync(join(proj1, 'spec.json'), JSON.stringify({
+    project_id: "test-proj",
+    routes: [ { method: "GET", path: "/" } ]
+  }));
+  writeFileSync(join(proj1, 'server.mjs'), `
+    app.get('/', () => {});
+    function dynamicRoute(r) { app.post(r, () => {}); }
+  `);
+  res = runCheck(tmp);
+  assert.strictEqual(res.status, 1, 'Unparsed route-like block should fail');
+  assert.match(res.stdout, /\[test-proj\] Unparsed route-like block: .*app\.post\(r/);
+
+  // Restore
+  writeFileSync(join(proj1, 'server.mjs'), `app.get('/', () => {});`);
+
   // Staleness rule fails when an excused route becomes served.
   // We'll mimic an existing project that has an exception.
   const proj2 = join(pilotDir, 'account-recovery-hono');
