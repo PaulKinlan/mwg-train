@@ -86,8 +86,8 @@ test('a uniform image is not a perfect match for everything', () => {
   // And it is reported, not silently scored: a uniform profile has no shape to compare.
   const findings = summariseComparison(uniform, sparse);
   assert.ok(
-    findings.some((finding) => finding.code === 'BOARD_STRUCTURE_NOT_COMPARABLE'),
-    'a profile with no variation must be reported as not comparable rather than scored',
+    findings.some((finding) => finding.code === 'BOARD_STRUCTURE_UNMEASURED'),
+    'a profile with no variation must be reported as unmeasured rather than scored',
   );
 });
 

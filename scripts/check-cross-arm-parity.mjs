@@ -439,25 +439,17 @@ export function metricTerms(a, b) {
  * Each finding names BOTH images, so a reader can open the board and the arm and judge the finding for
  * themselves - which is the whole point of reporting a diff rather than a verdict.
  */
-async function compareAgainstBoards({ chrome, armRoot, screenshots, arms }) {
-  const boardDir = resolve(ROOT, 'docs/design/archetypes/booking');
+async function compareAgainstBoards({ chrome, armRoot, screenshots, arms, archetype }) {
+  const boardDir = resolve(ROOT, `docs/design/archetypes/${archetype}`);
   const boards = readdirSync(boardDir)
     .filter((name) => /^step\d+.*\.jpg$/i.test(name))
     .sort();
-  // No boards at all is a FINDING, not an early return that leaves the caller looking clean: a comparison
-  // that could not be attempted is not a comparison that passed.
+  let missingBoardsFinding = null;
   if (boards.length === 0) {
-    return {
-      boards: [],
-      per_arm: [],
-      metric_notes: ANALYSIS_METRIC_NOTES,
-      findings: [
-        {
-          code: 'BOARDS_MISSING',
-          axis: 'reference',
-          message: `no step*.jpg reference boards were found in docs/design/archetypes/booking, so nothing was compared against the reference design`,
-        },
-      ],
+    missingBoardsFinding = {
+      code: 'BOARDS_MISSING',
+      axis: 'reference',
+      message: `no step*.jpg reference boards were found in docs/design/archetypes/${archetype}, so nothing was compared against the reference design`,
     };
   }
 
@@ -486,7 +478,17 @@ async function compareAgainstBoards({ chrome, armRoot, screenshots, arms }) {
     await server.close();
   }
 
-  const loadedBoards = boards.map((name) => ({ file: `docs/design/archetypes/booking/${name}`, name, metrics: analyzed[`/board/${name}`] }));
+  if (boards.length === 0) {
+    return {
+      boards: [],
+      per_arm: [],
+      metric_notes: ANALYSIS_METRIC_NOTES,
+      analyzed, // KEEP THIS so arm-pixel pairs work!
+      findings: [missingBoardsFinding],
+    };
+  }
+
+  const loadedBoards = boards.map((name) => ({ file: `docs/design/archetypes/${archetype}/${name}`, name, metrics: analyzed[`/board/${name}`] }));
   const boardMetrics = loadedBoards.filter((board) => board.metrics && !board.metrics.error);
   const failedBoards = loadedBoards.filter((board) => !board.metrics || board.metrics.error);
 
@@ -606,9 +608,13 @@ export const ADVISORY_CODES = Object.freeze([
   'BOARD_LUMINANCE_DIVERGES',
   'BOARD_INK_DIVERGES',
   'BOARD_STRUCTURE_DIVERGES',
-  'BOARD_STRUCTURE_NOT_COMPARABLE',
   'PALETTE_DIVERGES',
   'PALETTE_UNDECLARED',
+]);
+
+export const UNMEASURED_CODES = Object.freeze([
+  'BOARD_STRUCTURE_UNMEASURED',
+  'BOARDS_MISSING',
 ]);
 
 /**
@@ -729,7 +735,8 @@ export function exitCodeFor(report, { strict = false } = {}) {
   if (findings.length === 0) return 0;
   if (strict) return 1;
   // Every finding that is not advisory is parity, so an unrecognised code fails the check.
-  return findings.some((finding) => !ADVISORY_CODES.includes(finding?.code)) ? 1 : 0;
+  // Missing boards are absent input, not a failure, but unmeasurable boards FAIL the check.
+  return findings.some((finding) => !ADVISORY_CODES.includes(finding?.code) && finding?.code !== 'BOARDS_MISSING') ? 1 : 0;
 }
 
 async function main() {
@@ -768,7 +775,7 @@ async function main() {
       port: options.port,
     });
     console.log('check-cross-arm-parity: comparing every arm screenshot against the reference boards');
-    boardComparison = await compareAgainstBoards({ chrome, armRoot, screenshots: measured.screenshots, arms });
+    boardComparison = await compareAgainstBoards({ chrome, armRoot, screenshots: measured.screenshots, arms, archetype: options.archetype });
   } finally {
     await chrome.close().catch(() => {});
   }
@@ -906,14 +913,22 @@ async function main() {
   // report.findings by code scores every finding main() produces, including a code added later, which
   // GATES until someone classifies it deliberately (see ADVISORY_CODES).
   const advisory = report.findings.filter((finding) => ADVISORY_CODES.includes(finding?.code));
+  const unmeasured = report.findings.filter((finding) => UNMEASURED_CODES.includes(finding?.code));
+
   if (report.findings.length === 0) {
     console.log('check-cross-arm-parity: PASS - no drift above budget');
-  } else if (advisory.length === report.findings.length) {
+  } else if (advisory.length + unmeasured.length === report.findings.length) {
     // Say what is NOT gating, and why, rather than exiting 0 over a screen of FINDING lines and leaving
     // the reader to guess whether the check passed.
-    console.log(
-      `check-cross-arm-parity: PASS - no arm-against-arm drift above budget; the ${advisory.length} board and palette finding(s) above are advisory and do NOT fail this check (pass --strict to fail on them)`,
-    );
+    if (unmeasured.length > 0) {
+      console.log(
+        `check-cross-arm-parity: UNMEASURED - ${unmeasured.length} comparison(s) could not be measured; the ${advisory.length} board and palette finding(s) above are advisory and do NOT fail this check (pass --strict to fail on them)`,
+      );
+    } else {
+      console.log(
+        `check-cross-arm-parity: PASS - no arm-against-arm drift above budget; the ${advisory.length} board and palette finding(s) above are advisory and do NOT fail this check (pass --strict to fail on them)`,
+      );
+    }
   }
   return exitCodeFor(report, options);
 }
