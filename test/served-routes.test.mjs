@@ -4,15 +4,22 @@
 // through all three outcomes - none of which starts a server, so the whole file is cheap.
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { copyFileSync, mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import test from 'node:test';
 
+import {
+  DEFAULT_BASELINE_JSON,
+  DEFAULT_SERVED_MD,
+  evaluateServedGap,
+  extractUnservedRoutes,
+} from '../scripts/check-served-gap.mjs';
 import { runVerdict } from '../scripts/check-served-routes.mjs';
 
 const ROOT = resolve(import.meta.dirname, '..');
 const SCRIPT = join(ROOT, 'scripts', 'check-served-routes.mjs');
+const GAP_SCRIPT = join(ROOT, 'scripts', 'check-served-gap.mjs');
 
 // A tree with the script and the corpus but NO generated projects: the state of a clean checkout, where
 // pilot/training-projects (gitignored) has never been scaffolded. The corpus is symlinked so the only thing
@@ -181,4 +188,221 @@ test('end to end: an empty projects directory fails, and never reports MEASURED'
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
+});
+
+// mwg-train-5uo: tolerant SERVED.md parse with an explicit parse diagnostic
+test('check-served-gap: formatting variants of the SERVED.md list yield the SAME route set as the committed file', () => {
+  const committedContent = readFileSync(DEFAULT_SERVED_MD, 'utf8');
+  const committedRoutes = extractUnservedRoutes(committedContent);
+  assert.equal(committedRoutes.size, 4, 'committed file must yield exactly 4 unserved routes');
+  assert.deepEqual(
+    [...committedRoutes].sort(),
+    [
+      'tr-09-hono:/courses/:id',
+      'tr-12-hono:/jobs/:id',
+      'tr-13-hono:/docs/:slug',
+      'tr-16-hono:/cultivars/:id',
+    ],
+  );
+
+  // Variant A: bullets (-), tabs, backticks, trailing periods
+  const variantA = `
+# Unserved routes
+- list-detail \`/courses/:id\` (tr-09-hono, course-enrolment).
+- list-detail \`/jobs/:id\` (tr-12-hono, job-board).
+- list-detail \`/docs/:slug\` (tr-13-hono, docs-site).
+- list-detail \`/cultivars/:id\` (tr-16-hono, library-catalogue).
+`;
+
+  // Variant B: asterisks (*), leading spaces, bold routes, trailing colons
+  const variantB = `
+# Unserved routes
+  * list-detail **/courses/:id** (tr-09-hono, course-enrolment):
+  * list-detail **/jobs/:id** (tr-12-hono, job-board):
+  * list-detail **/docs/:slug** (tr-13-hono, docs-site):
+  * list-detail **/cultivars/:id** (tr-16-hono, library-catalogue):
+`;
+
+  // Variant C: plus (+), italics (* and _), colon after list-detail, multiple spaces
+  const variantC = `
+# Unserved routes
++ list-detail:   */courses/:id*     (  tr-09-hono  ,  course-enrolment  )
++ list-detail:   _/jobs/:id_       (  tr-12-hono  ,  job-board  )
++ \`list-detail\`   */docs/:slug*     (  tr-13-hono  ,  docs-site  )
++ **list-detail** _/cultivars/:id_  (  tr-16-hono  ,  library-catalogue  )
+`;
+
+  // Variant D: no bullets, plain routes without wrappers, indented
+  const variantD = `
+# Unserved routes
+    list-detail /courses/:id (tr-09-hono, course-enrolment)
+    list-detail /jobs/:id (tr-12-hono, job-board)
+    list-detail /docs/:slug (tr-13-hono, docs-site)
+    list-detail /cultivars/:id (tr-16-hono, library-catalogue)
+`;
+
+  for (const [name, variant] of [
+    ['variantA (bullets, backticks, periods)', variantA],
+    ['variantB (asterisks, spaces, bold, colons)', variantB],
+    ['variantC (plus, italics, colons, runs of spaces)', variantC],
+    ['variantD (no bullets, plain routes, indented)', variantD],
+  ]) {
+    const extracted = extractUnservedRoutes(variant);
+    assert.deepEqual(extracted, committedRoutes, `${name} must extract the same route set`);
+
+    const baselineData = JSON.parse(readFileSync(DEFAULT_BASELINE_JSON, 'utf8'));
+    const evaluation = evaluateServedGap({
+      servedMdContent: variant,
+      baselineData,
+      servedMdPath: 'docs/train/corpus/SERVED.md',
+    });
+    assert.equal(evaluation.status, 'PASS', `${name} must pass evaluation against baseline`);
+    assert.equal(evaluation.exitCode, 0);
+  }
+
+  // End-to-end via CLI
+  const dir = mkdtempSync(join(tmpdir(), '5uo-variant-'));
+  const tempServed = join(dir, 'SERVED.md');
+  try {
+    writeFileSync(tempServed, variantB);
+    const stdout = execFileSync(
+      process.execPath,
+      [GAP_SCRIPT, '--served', tempServed],
+      { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] },
+    );
+    assert.match(stdout, /check-served-gap: PASS - 4 unserved routes agree exactly/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('check-served-gap: an unparseable document produces the parse diagnostic and NOT the route-mismatch message', () => {
+  const baselineData = JSON.parse(readFileSync(DEFAULT_BASELINE_JSON, 'utf8'));
+
+  const unparseableCases = [
+    ['empty document', ''],
+    ['prose with no list items', '# Title\n\nSome text about the gap with no list.\n'],
+    ['malformed list lines missing route and parens', '- list-detail broken\n- list-detail also broken\n'],
+  ];
+
+  for (const [desc, content] of unparseableCases) {
+    const evaluation = evaluateServedGap({
+      servedMdContent: content,
+      baselineData,
+      servedMdPath: 'docs/train/corpus/SERVED.md',
+    });
+
+    assert.equal(evaluation.status, 'PARSE_ERROR', `${desc} must report PARSE_ERROR`);
+    assert.equal(evaluation.exitCode, 1, `${desc} must return exit code 1`);
+    assert.equal(evaluation.errors.length, 1);
+
+    const errorMsg = evaluation.errors[0];
+    assert.match(
+      errorMsg,
+      /check-served-gap: FAIL - Could not parse unserved route list from docs\/train\/corpus\/SERVED\.md: expected list items matching 'list-detail <route> \(<project>, ...\)', found zero route-shaped entries/,
+      `${desc} must produce the explicit parse diagnostic naming the file, expected, and found`,
+    );
+
+    // CRUCIAL: Must NOT confuse with route mismatch or floor count
+    assert.doesNotMatch(errorMsg, /is in served-routes-baseline\.json but not in SERVED\.md/);
+    assert.doesNotMatch(errorMsg, /is in SERVED\.md but not in served-routes-baseline\.json/);
+    assert.doesNotMatch(errorMsg, /Floor on the list-detail/);
+  }
+
+  // End-to-end via CLI
+  const dir = mkdtempSync(join(tmpdir(), '5uo-unparseable-'));
+  const tempServed = join(dir, 'SERVED.md');
+  try {
+    writeFileSync(tempServed, '# Broken\n\nNo list items at all.\n');
+    let threw = false;
+    try {
+      execFileSync(
+        process.execPath,
+        [GAP_SCRIPT, '--served', tempServed],
+        { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] },
+      );
+    } catch (err) {
+      threw = true;
+      assert.equal(err.status, 1, 'unparseable file must exit non-zero (1)');
+      const combined = (err.stdout ?? '') + (err.stderr ?? '');
+      assert.match(combined, /check-served-gap: FAIL - Could not parse unserved route list/);
+      assert.match(combined, /found zero route-shaped entries/);
+      assert.doesNotMatch(combined, /is in served-routes-baseline\.json but not in SERVED\.md/);
+      assert.doesNotMatch(combined, /Floor on the list-detail/);
+    }
+    assert.ok(threw, 'CLI must exit non-zero for unparseable document');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('check-served-gap: a genuine route mismatch produces the route-mismatch message and NOT the parse diagnostic', () => {
+  const baselineData = JSON.parse(readFileSync(DEFAULT_BASELINE_JSON, 'utf8'));
+
+  // Document has 3 valid baseline routes and 1 unexpected route (so 1 is missing, 1 is unexpected)
+  const mismatchContent = `
+- list-detail \`/courses/:id\` (tr-09-hono, course-enrolment)
+- list-detail \`/jobs/:id\` (tr-12-hono, job-board)
+- list-detail \`/docs/:slug\` (tr-13-hono, docs-site)
+- list-detail \`/custom/:param\` (tr-99-hono, custom-archetype)
+`;
+
+  const evaluation = evaluateServedGap({
+    servedMdContent: mismatchContent,
+    baselineData,
+    servedMdPath: 'docs/train/corpus/SERVED.md',
+  });
+
+  assert.equal(evaluation.status, 'MISMATCH');
+  assert.equal(evaluation.exitCode, 1);
+  const allErrors = evaluation.errors.join('\n');
+
+  // Both missing and unexpected routes must be diagnosed
+  assert.match(allErrors, /check-served-gap: FAIL - Route tr-99-hono:\/custom\/:param is in SERVED\.md but not in served-routes-baseline\.json/);
+  assert.match(allErrors, /check-served-gap: FAIL - Route tr-16-hono:\/cultivars\/:id is in served-routes-baseline\.json but not in SERVED\.md/);
+
+  // CRUCIAL: Must NOT produce the parse failure diagnostic
+  assert.doesNotMatch(allErrors, /Could not parse unserved route list/);
+  assert.doesNotMatch(allErrors, /zero route-shaped entries/);
+
+  // End-to-end via CLI
+  const dir = mkdtempSync(join(tmpdir(), '5uo-mismatch-'));
+  const tempServed = join(dir, 'SERVED.md');
+  try {
+    writeFileSync(tempServed, mismatchContent);
+    let threw = false;
+    try {
+      execFileSync(
+        process.execPath,
+        [GAP_SCRIPT, '--served', tempServed],
+        { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] },
+      );
+    } catch (err) {
+      threw = true;
+      assert.equal(err.status, 1, 'route mismatch must exit non-zero (1)');
+      const combined = (err.stdout ?? '') + (err.stderr ?? '');
+      assert.match(combined, /check-served-gap: FAIL - Route tr-99-hono:\/custom\/:param is in SERVED\.md but not in served-routes-baseline\.json/);
+      assert.match(combined, /check-served-gap: FAIL - Route tr-16-hono:\/cultivars\/:id is in served-routes-baseline\.json but not in SERVED\.md/);
+      assert.doesNotMatch(combined, /Could not parse unserved route list/);
+      assert.doesNotMatch(combined, /zero route-shaped entries/);
+    }
+    assert.ok(threw, 'CLI must exit non-zero for route mismatch');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('check-served-gap: routes in prose sentences are not extracted as list items', () => {
+  const proseOnly = `
+Every declared list route is now served. The four that remain are list-detail routes, declared as
+\`/courses/:id\`, \`/jobs/:id\`, \`/docs/:slug\` and \`/cultivars/:id\` on the four projects below.
+
+| route kind | served | declared |
+|---|---|---|
+| list-detail | 0 | 4 |
+
+The list routes that used to be listed here - \`/services\`, \`/ciders\`, \`/kilns\` - are all served now.
+`;
+  const extracted = extractUnservedRoutes(proseOnly);
+  assert.equal(extracted.size, 0, 'prose sentences and tables must not be extracted as list entries');
 });
