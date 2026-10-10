@@ -24,6 +24,7 @@
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import process from 'node:process';
+import { fileURLToPath } from 'node:url';
 
 import { buildProjectFor, FRAMEWORKS } from '../pilot/frameworks.mjs';
 import { TRAINING_ARCHETYPES } from '../pilot/training-archetypes.mjs';
@@ -300,6 +301,37 @@ function pilotHashes() {
   return new Set(recorded.projects.flatMap((project) => [project.original_sha, project.uplift_sha]));
 }
 
+/**
+ * A re-scaffold that changes nothing must not change the record's bytes.
+ *
+ * generated_at used to be stamped on every run, so pilot/TRAINING_CORPUS.json was permanently dirty and
+ * `git status` on it could not distinguish "the generator changed and the record is stale" - the condition the
+ * hard-requirement test exists to catch - from "somebody re-ran the scaffolder". Keeping the previous stamp
+ * whenever everything except the stamp is identical restores that signal.
+ */
+export function resolveGeneratedAt(previous, next) {
+  const comparable = (value) =>
+    value && typeof value === 'object' ? JSON.stringify({ ...value, generated_at: null }) : null;
+  const before = comparable(previous);
+  if (before === null || before !== comparable(next)) return next.generated_at;
+  // A previous record carrying every other field but NO stamp would compare equal and then return undefined,
+  // writing a record with no generated_at at all. Reviewer finding on the first version of this function.
+  // Three instances of this class have now been found by enumeration - a missing key, an empty string, and a
+  // whitespace-only string - and each fix was one more special case. Requiring a stamp that actually PARSES as a
+  // date ends the class instead of naming a fourth: it subsumes the empty and whitespace cases and also rejects
+  // a non-empty string that is not a timestamp at all.
+  if (typeof previous.generated_at !== 'string' || Number.isNaN(Date.parse(previous.generated_at))) return next.generated_at;
+  return previous.generated_at;
+}
+
+function readPreviousRecord(recordPath) {
+  try {
+    return JSON.parse(readFileSync(recordPath, 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
 function main() {
   const args = parseArgs(process.argv.slice(2));
   if (args.help) {
@@ -387,7 +419,7 @@ function main() {
     }
   }
 
-  const record = {
+  const pendingRecord = {
     $comment:
       'The training corpus generated from the tr-* briefs: one project per family x framework, each with its tree hash. `node scripts/scaffold-training-corpus.mjs` re-derives every tree; a hash here must never collide with a hash in pilot/CORPUS.json (original or uplift), which is the disjointness the corpus exists to guarantee.',
     generated_at: new Date().toISOString(),
@@ -402,6 +434,8 @@ function main() {
     defect_addressability: DEFECT_ADDRESSABILITY,
     projects,
   };
+
+  const record = { ...pendingRecord, generated_at: resolveGeneratedAt(readPreviousRecord(recordPath), pendingRecord) };
   writeFileSync(recordPath, `${JSON.stringify(record, null, 2)}\n`);
 
   console.log(`scaffold-training-corpus: wrote ${projects.length} projects to ${args.out}`);
@@ -423,4 +457,4 @@ function main() {
   console.log(`scaffold-training-corpus: zero-overlap PASS - 0 of ${projects.length} tree hashes collide with pilot/CORPUS.json (original+uplift)`);
 }
 
-main();
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main();
