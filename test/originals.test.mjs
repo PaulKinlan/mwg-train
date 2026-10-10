@@ -300,3 +300,105 @@ test('retain-original refuses to repoint a retained tag at a different commit', 
     rmSync(root, { recursive: true, force: true });
   }
 });
+
+test('verify-originals: the manifest may be positional or --manifest, and giving both is refused', () => {
+  const root = mkdtempSync(join(tmpdir(), 'mwg-originals-args-'));
+  try {
+    // The two forms must be the SAME command. package.json passed the manifest positionally while the
+    // parser only accepted the flag, so the retention gate exited 2 with "unknown argument" and had
+    // never run (mwg-train-vkw).
+    const manifest = join(root, 'manifest.jsonl');
+    writeFileSync(manifest, `${JSON.stringify(record)}\n`);
+
+    const positional = runCli(VERIFY, [manifest, '--repo', root]);
+    const flagged = runCli(VERIFY, ['--manifest', manifest, '--repo', root]);
+    assert.equal(positional.code, flagged.code, 'the two forms must agree on the exit code');
+    assert.equal(positional.stdout, flagged.stdout, 'and on what they report');
+    // Not 2: the gate must have RUN. Its one ref cannot resolve in an empty repository, which is the
+    // expected finding rather than a usage error.
+    assert.equal(positional.code, 1);
+    assert.match(positional.stdout, /REF_UNRESOLVED/);
+
+    // Ambiguity is refused rather than resolved last-one-wins: silently reading a different file than
+    // the caller named is worse than refusing.
+    const both = runCli(VERIFY, [manifest, '--manifest', manifest]);
+    assert.equal(both.code, 2);
+    assert.match(both.stderr, /given twice/);
+
+    const two = runCli(VERIFY, [manifest, manifest]);
+    assert.equal(two.code, 2);
+    assert.match(two.stderr, /at most one manifest path/);
+
+    const none = runCli(VERIFY, []);
+    assert.equal(none.code, 2);
+    assert.match(none.stderr, /usage:/);
+
+    const bogus = runCli(VERIFY, ['--bogus']);
+    assert.equal(bogus.code, 2);
+    assert.match(bogus.stderr, /unknown argument/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('verify-originals: a manifest that is not there fails closed unless the caller asks to skip', () => {
+  const root = mkdtempSync(join(tmpdir(), 'mwg-originals-missing-'));
+  try {
+    const missing = join(root, 'not-there.jsonl');
+
+    // Default: naming a path that does not exist is a hard error, so a typo cannot look like a clean
+    // result.
+    const hard = runCli(VERIFY, [missing]);
+    assert.equal(hard.code, 2);
+    assert.match(hard.stderr, /cannot read/);
+
+    // Opt-in skip for package.json's check:originals wrapper, mirroring
+    // scripts/check-provenance-quotes.mjs, whose corpus captures are likewise absent from a checkout.
+    const skipped = runCli(VERIFY, [missing, '--if-present']);
+    assert.equal(skipped.code, 0);
+    assert.match(skipped.stdout, /skipped/);
+
+    // THE CONTROL THAT MATTERS: --if-present must NOT skip when the manifest IS there. If it did, the
+    // wrapper would report success forever and never check anything.
+    const present = join(root, 'present.jsonl');
+    writeFileSync(present, `${JSON.stringify(record)}\n`);
+    const ran = runCli(VERIFY, [present, '--if-present', '--repo', root]);
+    assert.equal(ran.code, 1, 'a manifest that exists must be checked, not skipped');
+    assert.match(ran.stdout, /REF_UNRESOLVED/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('verify-originals: a repeated value option is refused, so a named path is never silently ignored', () => {
+  const root = mkdtempSync(join(tmpdir(), 'mwg-originals-dup-'));
+  try {
+    const real = join(root, 'real.jsonl');
+    writeFileSync(real, `${JSON.stringify(record)}\n`);
+    const typo = join(root, 'typo.jsonl');
+
+    // REPRODUCTION of a review P1. Before this was refused, the second --manifest replaced the first,
+    // so --if-present saw a path that does not exist and took the exit-0 skip: the gate reported success
+    // having never read real.jsonl. It refused the positional/--manifest pair but not the repeated flag,
+    // which is the same defect one step along.
+    const repeated = runCli(VERIFY, ['--if-present', '--manifest', real, '--manifest', typo, '--repo', root]);
+    assert.equal(repeated.code, 2, 'a repeated --manifest must be refused, not resolved to the last value');
+    assert.match(repeated.stderr, /--manifest was given more than once/);
+
+    // The class, not the instance: every value-taking option can silently replace an earlier value.
+    const repoTwice = runCli(VERIFY, ['--manifest', real, '--repo', root, '--repo', root]);
+    assert.equal(repoTwice.code, 2);
+    assert.match(repoTwice.stderr, /--repo was given more than once/);
+
+    const remoteTwice = runCli(VERIFY, ['--manifest', real, '--remote', 'a', '--remote', 'b']);
+    assert.equal(remoteTwice.code, 2);
+    assert.match(remoteTwice.stderr, /--remote was given more than once/);
+
+    // A missing value must not swallow the next option and become a path.
+    const swallowed = runCli(VERIFY, ['--manifest', '--repo', root]);
+    assert.equal(swallowed.code, 2);
+    assert.match(swallowed.stderr, /needs a value/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
