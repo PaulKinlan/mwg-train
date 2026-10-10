@@ -255,3 +255,21 @@ test('every extraction form emits the route and method it found, not a shifted c
     assert.deepStrictEqual(actual, expected.slice().sort(), `${label}: wrong route emitted`);
   }
 });
+
+// Tightening rawVarsBetter closed a silent hole and opened a smaller one, which the review caught.
+// The old wildcard matched a path.match route whatever the shape, so a construction like a swapped
+// condition order was at least extracted. The anchored pattern deliberately does not cover it, and
+// because path.match( was not a route-like token, the residual scan did not report it either - so a
+// served route went from mis-extracted to silently ignored, which is worse. The residual scan has to
+// see the shapes the anchored pattern does not cover.
+test('a path.match route the anchored pattern does not cover is reported, not ignored', () => {
+  const code = [
+    'const readRoute = "/j/:ref";',
+    "const readMatch = path.match(new RegExp('^' + readRoute + '$'));",
+    "if (request.method === 'GET' && readMatch) {}",
+  ].join('\n');
+  assert.ok(
+    (extractRoutes(code).unparsed ?? []).length > 0,
+    'an unrecognised path.match route must be reported as an unparsed block'
+  );
+});

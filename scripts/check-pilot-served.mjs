@@ -189,7 +189,7 @@ export function extractRoutes(content) {
   remaining = remaining.replace(rawStarts, 'MATCHED_RAW_STARTS');
 
   const unparsed = [];
-  const routeLikeRegex = /app\.(?:get|post|put|delete|patch)\(|path\s*===\s*(['"`])|\.includes\(path\)|path\.startsWith\(/g;
+  const routeLikeRegex = /app\.(?:get|post|put|delete|patch)\(|path\s*===\s*(['"`])|\.includes\(path\)|path\.startsWith\(|path\.match\(/g;
   let m;
   while ((m = routeLikeRegex.exec(remaining)) !== null) {
     const start = Math.max(0, m.index - 20);
