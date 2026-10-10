@@ -24,11 +24,19 @@ import { EVAL_SEAL } from '../src/train/disjoint.mjs';
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
 const pipelineDoc = readFileSync(join(repoRoot, 'docs/PIPELINE.md'), 'utf8');
 
-/** Short seals, as the doc writes them: eight hex digits and an ellipsis. */
-const SHORT_SEAL = /sha256:([0-9a-f]{8})…/g;
+/**
+ * ANY sha256 token, however it is written.
+ *
+ * This deliberately does not require a particular truncation or an ellipsis. The first version matched
+ * exactly eight hex digits followed by a Unicode ellipsis, and a review pointed out the hole that leaves:
+ * a superseded seal written as a full 64-hex hash, or with three ASCII dots, does not match that pattern,
+ * so it would sit in the document unchecked as long as one correctly-shaped seal was also present to
+ * satisfy the floor. A gate whose blindness depends on how a value is punctuated is not a gate.
+ */
+const SEAL = /sha256:([0-9a-f]+)/g;
 
 test('every brief seal quoted in docs/PIPELINE.md is the active one', () => {
-  const quoted = [...pipelineDoc.matchAll(SHORT_SEAL)].map((match) => match[1]);
+  const quoted = [...pipelineDoc.matchAll(SEAL)].map((match) => match[1]);
 
   // A floor, not an equality: the count may grow if the doc quotes the seal again, and deleting all
   // of them should fail rather than quietly leave this test with nothing to check.
@@ -37,12 +45,14 @@ test('every brief seal quoted in docs/PIPELINE.md is the active one', () => {
     'docs/PIPELINE.md should quote the brief seal on its BRIEFS row, and this gate should not pass by finding nothing to check',
   );
 
-  const active = EVAL_SEAL.replace(/^sha256:/, '').slice(0, 8);
-  for (const prefix of quoted) {
-    assert.equal(
-      prefix,
-      active,
-      `docs/PIPELINE.md quotes sha256:${prefix}… but the seal the code enforces is sha256:${active}…`,
+  const active = EVAL_SEAL.replace(/^sha256:/, '');
+  for (const hex of quoted) {
+    // The quoted value must be the active seal, truncated however the document chose to truncate it -
+    // so one of the two is a prefix of the other. This accepts 8 hex and an ellipsis, a full 64-hex
+    // seal, and everything between, and refuses any value that differs from the active seal.
+    assert.ok(
+      active.startsWith(hex) || hex.startsWith(active),
+      `docs/PIPELINE.md quotes sha256:${hex} which is not the seal the code enforces (sha256:${active}). A seal written in a different shape must not escape this check.`,
     );
   }
 });
