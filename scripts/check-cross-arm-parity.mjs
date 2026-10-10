@@ -654,6 +654,31 @@ export function assembleFindings({ parity, palette, board, armPixels }) {
  *
  * FINDINGS ARE MATCHED BY VALUE, not by reference, so this also holds for a report read back from JSON.
  */
+/**
+ * The single place the four measured axes become the published union.
+ *
+ * This was a hand-written spread inside main() until a cross-family review showed that dropping an axis
+ * from it was invisible: the runtime guard compares CONTENT, so an axis carrying no findings could be
+ * deleted without any test or check noticing (mwg-train-qfg). assembleFindings made a missing axis a
+ * missing KEY; this function is what makes the mapping from the four comparisons to those four keys
+ * something a unit test can call, because main() cannot be called without opening a browser.
+ *
+ * All three `.findings` reads are optional-chained, and that is not a softness: a comparison that was
+ * never run yields undefined, assembleFindings refuses undefined rather than treating it as an empty
+ * axis, and the error it raises NAMES the axis. Writing `summary.findings` instead would throw a bare
+ * "cannot read properties of undefined" that says nothing about which axis is missing - the first
+ * version of this function did exactly that, and the test below caught it. The strictness is unchanged;
+ * only the quality of the failure is.
+ */
+export function unionFromAxes({ summary, palette, boardComparison, pixelComparison }) {
+  return assembleFindings({
+    parity: summary?.findings,
+    palette,
+    board: boardComparison?.findings,
+    armPixels: pixelComparison?.findings,
+  });
+}
+
 export function assertFindingsConsistent(report) {
   const findings = report?.findings;
   if (!Array.isArray(findings)) throw new TypeError('report.findings must be an array');
@@ -848,12 +873,7 @@ async function main() {
     // Assembled by the function above rather than by hand, so that dropping an axis is a missing key
     // instead of a shorter array. `board` is forwarded WITHOUT a `?? []` default on purpose: defaulting a
     // missing axis to an empty array is exactly the failure this function exists to remove.
-    findings: assembleFindings({
-      parity: summary.findings,
-      palette,
-      board: boardComparison?.findings,
-      armPixels: pixelComparison.findings,
-    }),
+    findings: unionFromAxes({ summary, palette, boardComparison, pixelComparison }),
     screenshots,
     limits: {
       compares: 'layout and component structure between arms (structural, geometry, controls axes), real pixels between arms at each width, and real pixels against the reference boards',

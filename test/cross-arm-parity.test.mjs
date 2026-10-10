@@ -16,6 +16,7 @@ import {
   REFERENCE_PALETTE,
   assertFindingsConsistent,
   assembleFindings,
+  unionFromAxes,
   exitCodeFor,
   parseArgs,
 } from '../scripts/check-cross-arm-parity.mjs';
@@ -766,6 +767,37 @@ test('assembleFindings requires all four axes and concatenates them in a fixed o
   for (const bad of [null, 'findings', {}, 0, 7]) {
     assert.throws(() => assembleFindings({ parity: bad, palette: [], board: [], armPixels: [] }), TypeError, `${String(bad)} must be refused`);
   }
+});
+
+test('the four comparisons map onto the four published axes, which main() cannot be tested for', () => {
+  // This is the mapping the a90 regression went wrong in, and until it was extracted it existed only as a
+  // hand-written spread inside main() - code no unit test can reach without opening a browser. The four
+  // fixtures are non-empty on purpose: an empty axis would pass whether or not it was mapped, which is the
+  // exact blindness this bead is about.
+  const summary = { findings: [{ code: 'PARITY' }] };
+  const palette = [{ code: 'PALETTE' }];
+  const boardComparison = { findings: [{ code: 'BOARD' }] };
+  const pixelComparison = { findings: [{ code: 'ARM_PIXEL' }] };
+  assert.deepEqual(
+    unionFromAxes({ summary, palette, boardComparison, pixelComparison }).map((finding) => finding.code),
+    ['PARITY', 'PALETTE', 'BOARD', 'ARM_PIXEL'],
+    'all four axes must appear, in the published order',
+  );
+
+  // A dropped mapping is a missing key naming the axis, not a shorter union.
+  assert.throws(
+    () => unionFromAxes({ summary, palette, boardComparison: undefined, pixelComparison: { findings: [] } }),
+    (error) => error instanceof TypeError && /the board axis must be an array, got no key at all/.test(error.message),
+    'an absent board comparison must be refused rather than treated as an empty axis',
+  );
+  assert.throws(
+    () => unionFromAxes({ palette, boardComparison, pixelComparison }),
+    (error) => error instanceof TypeError && /the parity axis/.test(error.message),
+  );
+  assert.throws(
+    () => unionFromAxes({ summary, palette: null, boardComparison, pixelComparison }),
+    (error) => error instanceof TypeError && /the palette axis/.test(error.message),
+  );
 });
 
 test('the committed report reassembles from its four axes, in published order', () => {
