@@ -26,11 +26,11 @@ const WIRED = new Set([
   'check:route-conformance',
   'check:rules-pin',
   'check:design-schema',
-  'check:baseline-label'
+  'check:baseline-label',
+  'check:pilot-served'
 ]);
 
 const EXCLUDED = new Map([
-  ['check:pilot-served', 'requires a spawned HTTP server'],
   ['check:served-routes', 'requires a spawned HTTP server'],
   ['check:served-routes:strict', 'requires a spawned HTTP server'],
   ['check:cross-arm-parity', 'requires Chrome'],
