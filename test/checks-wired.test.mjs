@@ -27,7 +27,8 @@ const WIRED = new Set([
   'check:rules-pin',
   'check:design-schema',
   'check:baseline-label',
-  'check:pilot-served'
+  'check:pilot-served',
+  'check:served-gap'
 ]);
 
 const EXCLUDED = new Map([
