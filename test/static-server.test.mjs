@@ -4,12 +4,16 @@
  * is tested with the attack rather than with a description of the defence.
  */
 import assert from 'node:assert/strict';
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
 import test from 'node:test';
 
 import { startStaticServer } from '../scripts/lib/static-server.mjs';
+
+// The content the traversal attacks are trying to read. Named once so the fixture and the leak assertion
+// cannot drift apart, which is how the original version of the traversal test became vacuous.
+const SENTINEL = 'not for the browser';
 
 async function withServer(run) {
   const dir = mkdtempSync(join(tmpdir(), 'static-server-'));
@@ -17,7 +21,7 @@ async function withServer(run) {
   writeFileSync(join(dir, 'demo.css'), 'body { color: #fff; }');
   writeFileSync(join(dir, 'demo.js'), 'document.title = "demo";');
   const secret = join(tmpdir(), `static-server-secret-${Date.now()}.txt`);
-  writeFileSync(secret, 'not for the browser');
+  writeFileSync(secret, SENTINEL);
   const server = await startStaticServer({
     mounts: { '/b/': dir },
     documents: { '/page.html': '<!doctype html><title>analyse</title>' },
@@ -52,21 +56,38 @@ test('a mounted file is served with a usable content type, and an inline page ne
 
 test('a URL cannot walk out of the directory it is mounted to', async () => {
   await withServer(async ({ server, secret }) => {
-    // The attack, not a description of the defence: try to read a real file outside the mount, both
-    // with a literal traversal and with one that survives a single decode.
-    for (const attempt of [
-      '/b/../static-server-secret.txt',
-      '/b/%2e%2e/static-server-secret.txt',
-      '/b/..%2fstatic-server-secret.txt',
-    ]) {
+    // THE CONTROL IS A READ, NOT A REGEX ON A PATH. The first version of this test ended with
+    // `assert.match(secret, /static-server-secret/)`, which matches the fixture's path STRING, so it
+    // passes whether or not the file exists. Meanwhile every attack URL asked for
+    // `static-server-secret.txt` while the fixture is `static-server-secret-<timestamp>.txt`: each
+    // request 404'd on a file that was never there, so the containment guard was never reached. Deleting
+    // the guard left this suite green - it could not see the defence disappear (mwg-train-cmk). Reading
+    // the file proves there is something real outside the mount that a traversal could actually leak.
+    assert.equal(readFileSync(secret, 'utf8'), SENTINEL, 'premise: a readable file exists outside the mount');
+
+    const name = basename(secret);
+    assert.notEqual(
+      name,
+      'static-server-secret.txt',
+      'premise: the fixture basename is timestamped, which is exactly why the old attack named a missing file',
+    );
+
+    for (const attempt of [`/b/../${name}`, `/b/%2e%2e/${name}`, `/b/..%2f${name}`]) {
       const response = await fetch(`${server.origin}${attempt}`);
       assert.notEqual(response.status, 200, `${attempt} must not be served`);
-      const body = await response.text();
-      assert.equal(body.includes('not for the browser'), false, `${attempt} must not leak the file`);
+      assert.equal((await response.text()).includes(SENTINEL), false, `${attempt} must not leak the file`);
     }
-    // Control: the file really is readable on disk, so the refusals above are the guard working rather
-    // than a missing fixture.
-    assert.match(secret, /static-server-secret/);
+
+    // Only the `%2f` form reaches the handler with the traversal intact; the other two are refused with
+    // 404 even when the guard is removed, so they never tested it. This one must be refused BY THE GUARD
+    // - 403, not 404 - because the premise above has established the file is really there, so a 404
+    // could only mean the lookup missed rather than the guard held.
+    const decoded = await fetch(`${server.origin}/b/..%2f${name}`);
+    assert.equal(
+      decoded.status,
+      403,
+      'the encoded traversal must be refused by the containment guard (403), not by a lookup miss',
+    );
   });
 });
 
