@@ -15,8 +15,10 @@ import { join, resolve } from 'node:path';
 import {
   checkBaselineLabel,
   checkDocumentClassification,
+  DOCUMENTS,
   EXCLUSIONS,
   falseProvenance,
+  FLOOR_EVIDENCE,
   REGISTRY,
 } from '../scripts/check-baseline-label.mjs';
 import { labelDocuments } from '../scripts/label-baseline.mjs';
@@ -366,6 +368,55 @@ test('a path git would quote still classifies, because enumeration is NUL-separa
     assert.ok(tracked.includes('pilot/projects/tëst-01/package.json'), `unquoted path expected, saw ${JSON.stringify(tracked)}`);
     assert.deepEqual(checkDocumentClassification(tracked), [], 'a generated document must not be reported UNCLASSIFIED');
   } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('a character counter is a known intentional trigger, and rewording is the remedy', () => {
+  // Coord's ruling, 2026-10-08, bead mwg-train-e1c: do NOT loosen FLOOR_EVIDENCE. The bare digit-slash-digit
+  // branch has no context on purpose, so a live counter like `0/500` matches it and a design-labelled
+  // document containing one is reported. That is the accepted cost of failing CLOSED - the other direction,
+  // missing a document that quotes a floor measurement, is the failure that shipped four times.
+  //
+  // Measured, because the obvious remedies do not actually work and it is worth having that written down:
+  // a denominator threshold cannot separate a counter from `91/135` or `36/142`, which are real pair counts.
+
+  // 1. THE TRIGGER IS INTENTIONAL, not an accident to be tidied away.
+  assert.ok(
+    FLOOR_EVIDENCE.test('The message field is capped at 500 characters, showing 0/500 as you type.'),
+    'a bare fraction is a known trigger and must stay one',
+  );
+
+  // 2. THE REMEDY COORD NAMED, measured against the real pattern rather than assumed.
+  for (const remedy of ['0 of 500', '0 / 500 max', 'capped at 500 characters']) {
+    assert.equal(FLOOR_EVIDENCE.test(remedy), false, `${JSON.stringify(remedy)} must pass, or the remedy is not a remedy`);
+  }
+
+  // 3. AND THE BRANCH STILL DOES ITS REAL JOB: any threshold that excluded 0/500 by size would also lose
+  // these, which is why the remedy is rewording rather than narrowing.
+  for (const real of ['7/7', '91/135', '40/40', '29/29', '36/142']) {
+    assert.ok(FLOOR_EVIDENCE.test(real), `${real} is genuine floor evidence and must keep matching`);
+  }
+
+  // 4. END TO END, through the classification check, so this is the behaviour and not just the regex.
+  const dir = mkdtempSync(join(tmpdir(), 'e1c-counter-'));
+  const path = join(dir, 'counter.md');
+  DOCUMENTS[path] = 'design';
+  try {
+    writeFileSync(path, '# Demo\n\nThe message field is capped at 500 characters, showing 0/500 as you type.\n');
+    assert.deepEqual(
+      checkDocumentClassification([path]).map((finding) => finding.code),
+      ['MISCLASSIFIED_DOCUMENT'],
+      'a design document with a live counter is flagged, deliberately',
+    );
+    writeFileSync(path, '# Demo\n\nThe message field is capped at 500 characters, showing 0 of 500 as you type.\n');
+    assert.deepEqual(
+      checkDocumentClassification([path]).map((finding) => finding.code),
+      [],
+      'and the reworded counter passes, which is the documented remedy',
+    );
+  } finally {
+    delete DOCUMENTS[path];
     rmSync(dir, { recursive: true, force: true });
   }
 });

@@ -496,6 +496,18 @@ export const EXCLUSIONS = {
  * of; a scan covers what is in the tree. Every time a reviewer found a file I had missed, the miss was a
  * doc quoting a number in wording I had not pictured, so the pattern is deliberately broad and the
  * exclusions are the explicit part.
+ *
+ * KNOWN AND INTENTIONAL TRIGGER (coord ruling, 2026-10-08, bead mwg-train-e1c): the bare `\d+/\d+`
+ * branch has no context, so a live character counter like `0/500` matches it and a design-labelled
+ * document containing one is reported as MISCLASSIFIED_DOCUMENT. That is deliberate. The remedies that
+ * look obvious do not work: a denominator threshold cannot separate a counter from `91/135` or `36/142`,
+ * which are genuine pair counts, and requiring a nearby word such as "projects" would miss precisely the
+ * documents this branch was added for. LOOSENING IT IS NOT AN OPTION - it would trade a visible annoyance
+ * for an invisible omission, and the omission is the failure that shipped four times.
+ *
+ * The remedy is REWORDING, verified against this pattern: `0 of 500` and `0 / 500 max` and
+ * `capped at 500 characters` all pass, while `7/7`, `91/135` and `(3/5 ` still match. The behaviour is
+ * pinned by a test so it stays a stated property rather than a surprise for whoever meets it next.
  */
 export const FLOOR_EVIDENCE =
   /deterministic (?:mw[sg] )?(?:repair|baseline|floor)|uplift(?:ed)?_sha|uplift_edits|accepted pairs|pairs accepted|projects? (?:passed|driven)|journeys? (?:passed|driven)|token estimate|\(\s*\d+\s*(?:of|\/) ?\d+ |\b\d+\/\d+\b/i;
