@@ -408,7 +408,7 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
             realpathSync(image) !== join(realpathSync(dir), 'target.png')) {
           return textResponse(response, 'target unavailable', 404);
         }
-        response.writeHead(200, { 'content-type': 'image/png', 'cache-control': 'no-store' });
+        response.writeHead(200, { 'content-type': 'image/png', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' });
         return response.end(readFileSync(image));
       }
       const tuningReference = path.match(/^\/tuning\/reference\/(tr-\d{2})\.jpg$/);
@@ -420,8 +420,16 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
             realpathSync(image) !== join(realpathSync(dir), 'reference.jpg')) {
           return textResponse(response, 'reference board unavailable', 404);
         }
-        response.writeHead(200, { 'content-type': 'image/jpeg', 'cache-control': 'no-store' });
-        return response.end(readFileSync(image));
+        // The extension and the content-type are a CLAIM about the bytes, so check the bytes. The workbench already
+        // refuses to render anything whose header is not a JPEG SOI, and this is the same check on the side that
+        // actually hands the file to a browser. A file named reference.jpg that is not a JPEG is not a reference
+        // board, and would otherwise be served with a content type it does not have and sniffing still permitted.
+        const bytes = readFileSync(image);
+        if (bytes.length < 2 || bytes[0] !== 0xff || bytes[1] !== 0xd8) {
+          return textResponse(response, 'reference board unavailable', 404);
+        }
+        response.writeHead(200, { 'content-type': 'image/jpeg', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' });
+        return response.end(bytes);
       }
 
       if (path === '/pipeline' && request.method === 'GET') {
