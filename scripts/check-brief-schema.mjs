@@ -23,7 +23,14 @@ const flagIndex = args.indexOf('--manifest');
 const manifestPath = flagIndex === -1 ? 'docs/train/briefs/manifest.jsonl' : args[flagIndex + 1];
 const expectAll = args.includes('--expect-all');
 
-const rows = readFileSync(manifestPath, 'utf8').trim().split('\n').map((line) => JSON.parse(line));
+const rows = (() => {
+  const text = readFileSync(manifestPath, 'utf8').trim();
+  if (!text) {
+    console.error(`check-brief-schema: FAIL - empty manifest '${manifestPath}'`);
+    process.exit(1);
+  }
+  return text.split('\n').map((line) => JSON.parse(line));
+})();
 const families = [...new Set(rows.map((row) => row.family_id))].sort();
 
 const findings = [];

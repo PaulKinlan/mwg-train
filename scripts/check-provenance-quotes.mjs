@@ -3,7 +3,8 @@
  * Check that every quoted clause in docs/provenance/*.md actually appears in the captured text,
  * and (where the record cites one) at the line number it claims.
  *
- *   node scripts/check-provenance-quotes.mjs
+ *   node scripts/check-provenance-quotes.mjs [<captures-dir>]
+ *   node scripts/check-provenance-quotes.mjs [--captures-dir <dir>]
  *
  * The captures live in docs/provenance/evidence/text/, which is gitignored (this repository does
  * not redistribute other people's terms pages), so this script only does anything in a checkout
@@ -20,14 +21,84 @@ import { dirname, join, resolve } from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
+function parseArgs(argv) {
+  const args = { capturesDir: null, help: false };
+  const positional = [];
+  const givenValueOption = new Set();
+  for (let i = 0; i < argv.length; i += 1) {
+    const arg = argv[i];
+    const next = () => {
+      const value = argv[i + 1];
+      if (value === undefined) {
+        console.error(`check-provenance-quotes: ${arg} needs a value`);
+        process.exit(2);
+      }
+      if (value.startsWith('-') && value !== '-') {
+        console.error(`check-provenance-quotes: ${arg} needs a value, but the next argument is the option '${value}'`);
+        process.exit(2);
+      }
+      i += 1;
+      return value;
+    };
+    if (arg === '--captures-dir' || arg === '--captures') {
+      if (givenValueOption.has(arg)) {
+        console.error(`check-provenance-quotes: ${arg} was given more than once; refusing rather than using the last one`);
+        process.exit(2);
+      }
+      givenValueOption.add(arg);
+      args.capturesDir = next();
+    } else if (arg === '--help' || arg === '-h') {
+      args.help = true;
+    } else if (arg.startsWith('-') && arg !== '-') {
+      console.error(`check-provenance-quotes: unknown argument '${arg}'`);
+      process.exit(2);
+    } else {
+      positional.push(arg);
+    }
+  }
+  if (positional.length > 1) {
+    console.error(`check-provenance-quotes: expected at most one captures directory, got ${positional.length}: ${positional.join(' ')}`);
+    process.exit(2);
+  }
+  if (positional.length === 1) {
+    if (args.capturesDir !== null) {
+      console.error(
+        `check-provenance-quotes: the captures directory was given twice - positionally as '${positional[0]}' and with an option as '${args.capturesDir}'`,
+      );
+      process.exit(2);
+    }
+    args.capturesDir = positional[0];
+  }
+  return args;
+}
+
+const args = parseArgs(process.argv.slice(2));
+if (args.help) {
+  console.error('usage: node scripts/check-provenance-quotes.mjs [<captures-dir>]');
+  console.error('       node scripts/check-provenance-quotes.mjs [--captures-dir <dir>]');
+  process.exit(0);
+}
+
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const PROVENANCE = join(ROOT, 'docs/provenance');
-const TEXT_DIR = join(PROVENANCE, 'evidence/text');
+const TEXT_DIR = args.capturesDir ? resolve(args.capturesDir) : join(PROVENANCE, 'evidence/text');
 const MIN_PROBE = 40;
 
 if (!existsSync(TEXT_DIR)) {
-  console.log('check-provenance-quotes: no local captures (run scripts/capture-rights-evidence.sh); skipped');
+  if (args.capturesDir) {
+    console.error(`check-provenance-quotes: captures directory '${TEXT_DIR}' does not exist`);
+    process.exit(2);
+  }
+  // The load-bearing skip marker below ('; skipped - ...') is checked by package.json runners.
+  // Do not alter it. It differentiates a missing directory (which is allowed here) from an empty one
+  // (which fails the gate below).
+  console.log('check-provenance-quotes: no local captures (run scripts/capture-rights-evidence.sh); skipped - local captures absent');
   process.exit(0);
+}
+
+if (!statSync(TEXT_DIR).isDirectory()) {
+  console.error(`check-provenance-quotes: '${TEXT_DIR}' is not a directory`);
+  process.exit(2);
 }
 
 /** Collapse whitespace, unescape markdown escapes, and unify quote glyphs. */
@@ -43,6 +114,11 @@ function normalise(value) {
 const corpus = readdirSync(TEXT_DIR)
   .filter((name) => name.endsWith('.txt'))
   .map((name) => [name, normalise(readFileSync(join(TEXT_DIR, name), 'utf8')), readFileSync(join(TEXT_DIR, name), 'utf8').split('\n').map(normalise)]);
+
+if (corpus.length === 0) {
+  console.error(`check-provenance-quotes: FAIL - local captures directory '${TEXT_DIR}' exists but contains no .txt files`);
+  process.exit(1);
+}
 
 function markdownFiles(dir) {
   return readdirSync(dir).flatMap((name) => {

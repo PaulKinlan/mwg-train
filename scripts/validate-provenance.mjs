@@ -34,6 +34,10 @@ try {
 }
 
 const { ok, findings, counts } = validateManifest(rows);
+if (counts.total === 0) {
+  console.error(`validate-provenance: FAIL - no records found in ${target}`);
+  process.exit(1);
+}
 console.log(
   `validate-provenance: ${counts.total} records, ${counts.uniqueIds} unique ids, ` +
     `${counts.trainable} trainable, ${counts.quarantined} quarantined in ${target}`,
