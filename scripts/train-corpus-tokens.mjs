@@ -159,7 +159,13 @@ export function ensureTrainingTrees(treesDir, recordPath, root = repoRoot) {
   if (missing) {
     console.log(`Training trees missing in ${relative(root, absTreesDir)}; regenerating via scripts/scaffold-training-corpus.mjs...`);
     const scaffolder = resolve(root, 'scripts/scaffold-training-corpus.mjs');
-    execFileSync(process.execPath, [scaffolder, '--out', relative(root, absTreesDir)], {
+    // `--record` is passed through, and that is a fix rather than tidiness (mwg-train-t0d). The scaffolder
+    // defaults its record to pilot/TRAINING_CORPUS.json, which is a TRACKED file, so regenerating trees
+    // into an isolated directory still rewrote the repository's corpus record: a caller that asked for its
+    // trees somewhere else had a tracked file mutated behind its back, and a measurement pointed at a
+    // scratch directory could rewrite the record its own comparison is measured against. The caller's
+    // record path is now the child's record path.
+    execFileSync(process.execPath, [scaffolder, '--out', relative(root, absTreesDir), '--record', relative(root, absRecordPath)], {
       cwd: root,
       timeout: 120_000,
       stdio: 'inherit',

@@ -17,7 +17,7 @@ Experiment: does training on Modern Web Guidance-applied sites make a model defa
 | The durable functional specification of each pilot family | [`docs/eval/specs/`](docs/eval/specs/) — state, persistence, journeys and acceptance; a project rebuilds from it without the archetype table |
 | The target designs and the conformance axis | [`docs/eval/conformance/`](docs/eval/conformance/) — target provenance, the axis, per-family identity |
 | The training-side briefs, disjoint from the sealed set | [`docs/train/briefs/`](docs/train/briefs/) — synthetic families in their own `tr-` namespace, never validated against the sealed eval schema |
-| How large the training and pilot corpora are, and what they cost | [`docs/train/corpus/`](docs/train/corpus/) — measured characters per scope and derived token figures: the `tr-*` training corpus (1,550,364 derived tokens, band [1,162,773, 1,937,954] across 210 pairs) and the 34 pilot pairs (~237k tokens). Each `tr-*` project's form controls are declared in its own brief (`schema_source: "brief"` on all 210) and its journey fills the inputs and chooses the selects the brief declares, but the journey is single-page: it does not span multi-page flows, and while 29 of 30 families declare every route their brief lists, declaring is not serving - the generated server answers only some of them. Derived from app sources (not tokenizer-measured); of the 210 training projects, 40 were driven in a browser through their journeys and 170 remain `scaffolded / unverified journey`. |
+| How large the training and pilot corpora are, and what they cost | [`docs/train/corpus/`](docs/train/corpus/) — measured characters per scope and derived token figures: the `tr-*` training corpus (2,615,747 derived tokens, band [1,961,810, 3,269,683] across 210 pairs) and the 34 pilot pairs (~237k tokens). Each `tr-*` project's form controls are declared in its own brief (`schema_source: "brief"` on all 210) and its journey fills the inputs and chooses the selects the brief declares, but the journey is single-page: it does not span multi-page flows, and while 29 of 30 families declare every route their brief lists, declaring is not serving - the generated server answers only some of them. Derived from app sources (not tokenizer-measured); of the 210 training projects, 40 were driven in a browser through their journeys and 170 remain `scaffolded / unverified journey`. |
 | Provenance, rights and retention for every asset | [`docs/provenance/`](docs/provenance/) — manifest, arms, retained refs |
 
 ## Checks
@@ -31,7 +31,7 @@ npm run price:sheets        # regenerate docs/eval/pricing.sheets.md
 npm run check:train-evidence # reachability records complete, each row backed by its quote
 npm run check:specs          # rebuild every family from its specification and compare tree hashes
 npm run check:disjoint       # refuse a training corpus that shares a family or a target design with the sealed eval
-npm run train:tokens         # measure corpus tokens: pilot (~237k derived) and tr-* (1,550,364 derived [1,162,773, 1,937,954]; text-only)
+npm run train:tokens         # measure corpus tokens: pilot (~237k derived) and tr-* (2,615,747 derived [1,961,810, 3,269,683]; text-only)
 npm run lint:provenance     # provenance manifest rules
 npm run scan:owner-auth     # owner-auth gate: no owner-identifying material in any corpus tree
 ```
