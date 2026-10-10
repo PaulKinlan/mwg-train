@@ -369,3 +369,36 @@ test('verify-originals: a manifest that is not there fails closed unless the cal
     rmSync(root, { recursive: true, force: true });
   }
 });
+
+test('verify-originals: a repeated value option is refused, so a named path is never silently ignored', () => {
+  const root = mkdtempSync(join(tmpdir(), 'mwg-originals-dup-'));
+  try {
+    const real = join(root, 'real.jsonl');
+    writeFileSync(real, `${JSON.stringify(record)}\n`);
+    const typo = join(root, 'typo.jsonl');
+
+    // REPRODUCTION of a review P1. Before this was refused, the second --manifest replaced the first,
+    // so --if-present saw a path that does not exist and took the exit-0 skip: the gate reported success
+    // having never read real.jsonl. It refused the positional/--manifest pair but not the repeated flag,
+    // which is the same defect one step along.
+    const repeated = runCli(VERIFY, ['--if-present', '--manifest', real, '--manifest', typo, '--repo', root]);
+    assert.equal(repeated.code, 2, 'a repeated --manifest must be refused, not resolved to the last value');
+    assert.match(repeated.stderr, /--manifest was given more than once/);
+
+    // The class, not the instance: every value-taking option can silently replace an earlier value.
+    const repoTwice = runCli(VERIFY, ['--manifest', real, '--repo', root, '--repo', root]);
+    assert.equal(repoTwice.code, 2);
+    assert.match(repoTwice.stderr, /--repo was given more than once/);
+
+    const remoteTwice = runCli(VERIFY, ['--manifest', real, '--remote', 'a', '--remote', 'b']);
+    assert.equal(remoteTwice.code, 2);
+    assert.match(remoteTwice.stderr, /--remote was given more than once/);
+
+    // A missing value must not swallow the next option and become a path.
+    const swallowed = runCli(VERIFY, ['--manifest', '--repo', root]);
+    assert.equal(swallowed.code, 2);
+    assert.match(swallowed.stderr, /needs a value/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});

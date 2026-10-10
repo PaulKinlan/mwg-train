@@ -8,6 +8,12 @@
  * With --if-present a manifest that is not there is a labelled skip and exit 0, for the package.json
  * check wrapper; without it, naming a path that does not exist is a hard error.
  *
+ * NOTE that the package.json wrapper is a checkout convenience, not the acceptance invocation: it
+ * checks whatever manifest is named against the LOCAL refs of the current repository. Accepting a
+ * corpus requires the documented form in docs/provenance/original-refs.md, which names the originals
+ * repository and passes --remote origin so a ref that was only ever created locally fails the gate.
+ * A skip is not evidence that anything is retained.
+ *
  * The manifest may be given positionally or with --manifest. The positional form is the convention
  * scripts/validate-provenance.mjs already uses, and the two must not disagree: package.json's
  * check:originals passed it positionally while this parser only accepted the flag, so the retention
@@ -35,6 +41,13 @@ import { parseManifest } from '../src/provenance/record.mjs';
 function parseArgs(argv) {
   const args = { repo: process.cwd(), remote: null, all: false, manifest: null };
   const positional = [];
+  // EVERY option that takes a value is refused when it is repeated, not just the positional/--manifest
+  // pair. A repeated option silently replaces the earlier value, so the gate can end up reading a
+  // different path than the caller named - and with --if-present it can SKIP a manifest that exists
+  // because a later, misspelled one does not:
+  //   --if-present --manifest real.jsonl --manifest typo.jsonl   used to exit 0 without checking
+  //   real.jsonl at all. The gate must never silently ignore a path the caller named.
+  const givenValueOption = new Set();
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
     const next = () => {
@@ -43,12 +56,25 @@ function parseArgs(argv) {
         console.error(`verify-originals: ${arg} needs a value`);
         process.exit(2);
       }
+      // A missing value must not swallow the next option: `--manifest --repo x` would otherwise record
+      // '--repo' as the manifest path and leave `x` as a stray positional.
+      if (value.startsWith('-') && value !== '-') {
+        console.error(`verify-originals: ${arg} needs a value, but the next argument is the option '${value}'`);
+        process.exit(2);
+      }
       i += 1;
       return value;
     };
-    if (arg === '--manifest') args.manifest = next();
-    else if (arg === '--repo') args.repo = next();
-    else if (arg === '--remote') args.remote = next();
+    if (arg === '--manifest' || arg === '--repo' || arg === '--remote') {
+      if (givenValueOption.has(arg)) {
+        console.error(`verify-originals: ${arg} was given more than once; refusing rather than using the last one`);
+        process.exit(2);
+      }
+      givenValueOption.add(arg);
+      if (arg === '--manifest') args.manifest = next();
+      else if (arg === '--repo') args.repo = next();
+      else args.remote = next();
+    }
     else if (arg === '--if-present') args.ifPresent = true;
     else if (arg === '--help' || arg === '-h') args.help = true;
     else if (arg.startsWith('-') && arg !== '-') {
