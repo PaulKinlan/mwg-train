@@ -49,11 +49,14 @@ test('check:originals negative (empty manifest)', () => {
 });
 
 test('check:quotes negative (empty dir)', () => {
-  // check-provenance-quotes.mjs hardcodes TEXT_DIR as join(ROOT, 'docs/provenance/evidence/text').
-  // It does not accept any arguments to override this directory.
-  // Per the instruction: "if a script cannot be given empty input without editing it, say so explicitly rather than writing a test that proves nothing."
-  // So we explicitly state this and omit the fake mock test that would mutate the repo's files.
-  assert.ok(true, "Cannot mock without mutating the repo, explicitly skipping the test.");
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'empty_captures_'));
+  try {
+    const res = run(['scripts/check-provenance-quotes.mjs', tmpDir]);
+    assert.strictEqual(res.code, 1);
+    assert.ok(res.out.includes(`FAIL - local captures directory '${tmpDir}' exists but contains no .txt files`));
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
 });
 
 test('check:brief-schema healthy', () => {
