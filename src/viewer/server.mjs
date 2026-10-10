@@ -99,6 +99,20 @@ export function liveOriginFor(request, livePort) {
 }
 
 export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(REPO_ROOT, 'docs/eval/owner-identity.json'), repoRoot = REPO_ROOT, livePort = 7701 }) {
+  // Fail closed. This viewer has exactly one job - read a corpus - and it used to come up happily with the corpus path
+  // pointing at a directory that did not exist: it listened on its ports, served 200 on routes that looked healthy, and
+  // recorded the problem only in a log line nobody reads. A viewer with no corpus to read is a misconfiguration, not a
+  // degraded mode, so it refuses to exist rather than reporting success about something it never examined. Resolving
+  // here means every caller gets the same corpus regardless of the process cwd, which is what made the original bug
+  // cwd-dependent.
+  if (typeof corpusRoot !== 'string' || corpusRoot.trim() === '') {
+    throw new Error('createViewer requires a corpusRoot path');
+  }
+  const resolvedCorpusRoot = resolve(corpusRoot);
+  if (!existsSync(resolvedCorpusRoot) || !statSync(resolvedCorpusRoot).isDirectory()) {
+    throw new Error(`corpusRoot is not an existing directory: ${resolvedCorpusRoot}`);
+  }
+  corpusRoot = resolvedCorpusRoot;
   mkdirSync(stateDir, { recursive: true });
   const pool = new SandboxPool({ stateDir, nodeModulesDir: join(repoRoot, 'node_modules') });
   const scanCache = new Map();
@@ -661,12 +675,21 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     const index = process.argv.indexOf(`--${name}`);
     return index === -1 ? fallback : process.argv[index + 1];
   };
-  const corpusRoot = resolve(arg('corpus', 'pilot'));
+  // Relative --corpus resolves against the repository, not the launcher's cwd; an absolute --corpus still wins,
+  // because path.resolve ignores the base when the second argument is absolute.
+  const corpusRoot = resolve(REPO_ROOT, arg('corpus', 'pilot'));
   const port = Number(arg('port', '7700'));
   const livePort = Number(arg('live-port', '7701'));
   const host = arg('host', '0.0.0.0');
   const stateDir = resolve(arg('state', '.viewer-state'));
-  const { server, liveServer, pool } = createViewer({ corpusRoot, stateDir, livePort });
+  let viewer;
+  try {
+    viewer = createViewer({ corpusRoot, stateDir, livePort });
+  } catch (error) {
+    console.error(`viewer startup failed: ${error.message}`);
+    process.exit(1);
+  }
+  const { server, liveServer, pool } = viewer;
   const shutdown = () => {
     pool.stopAll();
     server.close();
