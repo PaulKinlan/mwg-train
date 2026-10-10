@@ -912,6 +912,15 @@ test('the printed summary agrees with the exit status it is printed beside', () 
         !(/do(?:es)? ?NOT fail|do not fail/i.test(summary) && code !== 0),
         `${where}: the summary claims the findings do not fail the check while the exit code is ${code}`
       );
+      // The mirror direction. A claim of failure while exiting zero is the opposite error from the one
+      // that produced this bead - a summary saying the check failed when it did not - and the first
+      // version of these assertions only guarded the false-green direction, because that is the one that
+      // had actually happened. Guarding one direction is the asymmetry this whole bead family keeps
+      // producing, so both directions are asserted explicitly rather than one being assumed.
+      assert.ok(
+        !(/\bFAIL\b/.test(summary) && code === 0),
+        `${where}: the summary claims failure while the exit code is ${code}`
+      );
     }
   }
 });
