@@ -1308,7 +1308,8 @@ ${archetype.journey.steps.map((step, idx, arr) => {
     if (key !== 'next') insertDraft.run(sid, key, String(value));
   }
   c.header('set-cookie', \`sid=\${sid}; Path=/; HttpOnly; SameSite=Lax; Max-Age=3600\`);
-  return c.redirect('${nextPath}', 303);
+  const nextUrl = c.req.query('next') || '${nextPath}';
+  return c.redirect(nextUrl, 303);
 });
 
 app.get('${step.path}', (c) => {

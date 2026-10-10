@@ -515,3 +515,51 @@ test('a flow and a capability page compose: the edit form is appended to whichev
     }
   }
 });
+
+test('an explicit next override on a step POST is honoured by every arm', async () => {
+  // mwg-train-213. The raw arm resolves the redirect target as
+  //   url.searchParams.get('next') || stepNextMap[path] || startPath
+  // while the hono arm hardcodes `c.redirect(nextPath, 303)` and never reads the query. Both arms' generated
+  // FORMS post to /draft?next=..., which both handle, so the pages cannot show the divergence - it takes a
+  // DIRECT post to a step path to see it, which is why nothing caught it until the MULTI-STEP block was
+  // converted to live requests.
+  const stepsDecl = [
+    { path: '/book/step-1', fill: { 'input[name=phone]': '07700900077' }, submit: '#step-1-next' },
+    { path: '/book/step-2', select: { 'select[name=package]': 'Full service' }, submit: 'button[type=submit]' },
+  ];
+  const archetype = makeTr01Archetype({ startPath: '/book/confirm', steps: stepsDecl });
+
+  let port = 5620;
+  for (const frameworkName of ['raw', 'hono']) {
+    const built = buildProjectFor(archetype, { frameworkName, defects: [] });
+    await withLiveServer(built, port, async (base) => {
+      // The override must differ from the declared next step, or the assertion cannot tell a server that honours
+      // it from one that ignores it. My first version used /book/step-2 here - which IS the declared next step -
+      // and passed on BOTH arms while measuring nothing.
+      const target = '/book/confirm';
+      const posted = await fetch(`${base}/book/step-1?next=${encodeURIComponent(target)}`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ phone: '07700900077' }).toString(),
+        redirect: 'manual',
+      });
+      assert.equal(posted.status, 303, `${frameworkName}: a step POST must redirect`);
+      assert.equal(
+        posted.headers.get('location'),
+        target,
+        `${frameworkName}: an explicit next override must be honoured, not replaced by the hardcoded next step`,
+      );
+
+      // With NO override the declared next step is still used, so the fix cannot be "always follow next".
+      const plain = await fetch(`${base}/book/step-1`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ phone: '07700900077' }).toString(),
+        redirect: 'manual',
+      });
+      assert.equal(plain.status, 303, `${frameworkName}: a step POST without an override still redirects`);
+      assert.equal(plain.headers.get('location'), '/book/step-2', `${frameworkName}: with no override the declared next step is used`);
+    });
+    port += 1;
+  }
+});
