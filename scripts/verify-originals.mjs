@@ -153,7 +153,11 @@ function main() {
   // path the caller named that does not exist is still a hard error by default, because a typo must
   // not look like a clean result.
   if (!args.help && args.ifPresent && args.manifest && !existsSync(args.manifest)) {
-    console.log(`verify-originals: no corpus manifest at '${args.manifest}' (the retention gate runs against the deployed corpus); skipped`);
+    console.log(
+      `verify-originals: no corpus manifest at '${args.manifest}'; skipped - this is NOT a retention result. ` +
+        'The gate runs against the deployed corpus; accepting one requires the invocation in ' +
+        'docs/provenance/original-refs.md, which names the originals repository and passes --remote origin.',
+    );
     process.exit(0);
   }
   if (args.help || !args.manifest) {
