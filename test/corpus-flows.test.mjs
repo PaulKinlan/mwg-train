@@ -372,50 +372,64 @@ test('server execution: search query filtering on /api/records', async () => {
 });
 
 test('server execution: drafts table carries state across steps', async () => {
+  // Driven against the REAL generated server. The previous version never started it: it ran insertDraft and
+  // selectDrafts statements of its own, read the row back with its own SELECT, then BUILT the expected
+  // "carried html" as a template literal in the test and asserted that string contained the value it had just
+  // written into it. Every assertion measured the test. Breaking the generated draft routes, or removing the
+  // session cookie handling entirely, would not have failed it.
   const stepsDecl = [
-    {
-      path: '/step-1',
-      fill: { 'input[name=option]': 'Option A' },
-      submit: 'button[type=submit]',
-    },
-    {
-      path: '/step-2',
-      expectText: 'Option A',
-    },
+    { path: '/step-1', fill: { 'input[name=option]': 'Option A' }, submit: 'button[type=submit]' },
+    { path: '/step-2', expectText: 'Option A' },
   ];
-
-  const archetype = makeTr01Archetype({
-    startPath: '/confirm',
-    steps: stepsDecl,
-  });
+  const archetype = makeTr01Archetype({ startPath: '/confirm', steps: stepsDecl });
   const built = buildProjectFor(archetype, { frameworkName: 'raw', defects: [] });
 
-  const dir = join(tmpdir(), 'test-drafts-exec-' + Date.now());
-  for (const [rel, content] of Object.entries(built.files)) {
-    const target = join(dir, rel);
-    mkdirSync(join(target, '..'), { recursive: true });
-    writeFileSync(target, content);
-  }
+  await withLiveServer(built, 5612, async (base) => {
+    // Routes measured from the generated template rather than assumed: GET on the startPath renders the
+    // document, and if the session holds drafts it injects <div class="draft-carried"> before </main>. POST
+    // /step-1 stores the declared field. My first attempt guessed /confirm/step-1 and failed - the step paths
+    // carry no prefix.
+    // Routes MEASURED from the running server, not assumed: /confirm serves the write form, and /step-1
+    // serves the declared step page whose form posts to /draft?next=%2Fstep-2. My first two attempts guessed
+    // /confirm/step-1 and then expected the step field on /confirm, and both were wrong.
+    const step1 = await fetch(`${base}/step-1`);
+    assert.equal(step1.status, 200, 'the generated server must serve the declared step path');
+    const step1Html = await step1.text();
+    assert.ok(step1Html.includes('name="option"'), 'premise: the step page must render the declared field');
+    const stepFormAction = (step1Html.match(/<form[^>]*action="([^"]+)"/) ?? [])[1];
+    assert.ok(stepFormAction, 'premise: the step form must post somewhere');
 
-  const { DatabaseSync } = await import('node:sqlite');
-  const db = new DatabaseSync(join(dir, 'pilot.sqlite'));
-  db.exec('CREATE TABLE IF NOT EXISTS drafts (sid TEXT, name TEXT, value TEXT, PRIMARY KEY (sid, name))');
-  const insertDraft = db.prepare('INSERT OR REPLACE INTO drafts (sid, name, value) VALUES (?, ?, ?)');
-  const selectDrafts = db.prepare('SELECT name, value FROM drafts WHERE sid = ?');
+    const posted = await fetch(new URL(stepFormAction, base), {
+      method: 'POST',
+      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ option: 'Option A' }).toString(),
+      redirect: 'manual',
+    });
+    assert.ok(posted.status < 400, `the draft post must be accepted, got ${posted.status}`);
+    const sessionCookie = posted.headers.get('set-cookie');
+    assert.ok(sessionCookie, 'premise: the server must set a session cookie, or the draft belongs to nobody');
 
-  const sid = 'session-1234';
-  insertDraft.run(sid, 'option', 'Option A');
+    // THE PROPERTY THE TEST NAME PROMISES: the server carries the earlier step's value into the session, and
+    // renders it. The old version built this html in the test and asserted its own string.
+    const carried = await fetch(`${base}/confirm`, { headers: { cookie: sessionCookie } });
+    assert.equal(carried.status, 200);
+    const carriedHtml = await carried.text();
+    assert.ok(carriedHtml.includes('draft-carried'),
+      'the server must render the draft-carried container for a session holding a draft');
+    assert.ok(carriedHtml.includes('Option A'),
+      'and it must carry the value entered at the earlier step - the server does this, not the test');
 
-  const drafts = selectDrafts.all(sid);
-  assert.equal(drafts.length, 1);
-  assert.equal(drafts[0].name, 'option');
-  assert.equal(drafts[0].value, 'Option A');
+    // A session with no draft must not see it, or a hard-coded value would satisfy the assertion above.
+    const fresh = await fetch(`${base}/confirm`);
+    assert.equal(fresh.status, 200);
+    assert.ok(!(await fresh.text()).includes('Option A'),
+      'a session with no draft must not receive another session\'s carried value');
+  });
 
-  // Render carried HTML server-side
-  const carriedHtml = `<div class="draft-carried">${drafts.map((d) => `<p class="carried-value">${d.value}</p>`).join('\n')}</div>`;
-  assert.ok(carriedHtml.includes('Option A'), 'carried html must include stored option value');
-
-  rmSync(dir, { recursive: true, force: true });
+  // The template itself must carry the container the assertion above depends on; without this, renaming it
+  // would look like a server regression rather than a fixture drift.
+  const serverSource = built.files['server.mjs'] ?? '';
+  assert.ok(serverSource.includes('draft-carried'), 'the generated server must contain the carried container');
 });
 
 test('a flow and a capability page compose: the edit form is appended to whichever document the read route renders', () => {
