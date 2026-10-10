@@ -66,6 +66,10 @@ const KNOWN_BLOCKED = new Map([
 ]);
 
 const corpus = readJson(corpusPath);
+if (!corpus.projects || corpus.projects.length === 0) {
+  console.error(`check-route-conformance: FAIL - no projects found in corpus '${corpusPath}'`);
+  process.exit(1);
+}
 const mismatches = [];
 const waived = [];
 const staleWaivers = [];

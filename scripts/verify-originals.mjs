@@ -153,6 +153,9 @@ function main() {
   // path the caller named that does not exist is still a hard error by default, because a typo must
   // not look like a clean result.
   if (!args.help && args.ifPresent && args.manifest && !existsSync(args.manifest)) {
+    // The load-bearing skip marker below ('; skipped - ...') is checked by package.json runners.
+    // Do not alter it. It differentiates a missing file (which is allowed here) from an empty one
+    // (which fails the gate below).
     console.log(
       `verify-originals: no corpus manifest at '${args.manifest}'; skipped - this is NOT a retention result. ` +
         'The gate runs against the deployed corpus; accepting one requires the invocation in ' +
@@ -174,6 +177,10 @@ function main() {
     process.exit(2);
   }
   const rows = parseManifest(source);
+  if (rows.length === 0) {
+    console.error(`verify-originals: FAIL - no records found in '${args.manifest}'`);
+    process.exit(1);
+  }
   const probe = makeProbe(args.repo, args.remote);
   const findings = [];
   let withRef = 0;

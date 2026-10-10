@@ -26,7 +26,10 @@ const TEXT_DIR = join(PROVENANCE, 'evidence/text');
 const MIN_PROBE = 40;
 
 if (!existsSync(TEXT_DIR)) {
-  console.log('check-provenance-quotes: no local captures (run scripts/capture-rights-evidence.sh); skipped');
+  // The load-bearing skip marker below ('; skipped - ...') is checked by package.json runners.
+  // Do not alter it. It differentiates a missing directory (which is allowed here) from an empty one
+  // (which fails the gate below).
+  console.log('check-provenance-quotes: no local captures (run scripts/capture-rights-evidence.sh); skipped - local captures absent');
   process.exit(0);
 }
 
@@ -41,6 +44,16 @@ function normalise(value) {
 }
 
 const corpus = readdirSync(TEXT_DIR)
+  .filter((name) => name.endsWith('.txt'))
+  .map((name) => [name, normalise(readFileSync(join(TEXT_DIR, name), 'utf8')), readFileSync(join(TEXT_DIR, name), 'utf8').split('\n').map(normalise)]);
+
+if (corpus.length === 0) {
+  console.error(`check-provenance-quotes: FAIL - local captures directory '${TEXT_DIR}' exists but contains no .txt files`);
+  process.exit(1);
+}
+
+// Ignore original initialisation
+const __ignored = []
   .filter((name) => name.endsWith('.txt'))
   .map((name) => [name, normalise(readFileSync(join(TEXT_DIR, name), 'utf8')), readFileSync(join(TEXT_DIR, name), 'utf8').split('\n').map(normalise)]);
 
