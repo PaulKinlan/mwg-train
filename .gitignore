@@ -1,5 +1,15 @@
 node_modules
 
+# The beads task ledger's local database. It sits at the REPOSITORY ROOT, is shared by every lane on this
+# VM, and syncs through refs/dolt/data on the git remote rather than through working-tree files - so its
+# local bytes never belong in a commit. Without these lines the files are untracked but NOT ignored, and a
+# routine `git add -A` stages ~2 MB of database internals, including a merge-conflict surface nobody can
+# resolve. Anchored with a leading `/` so a directory that merely happens to be named `embeddeddolt`
+# deeper in the tree is not silently ignored along with it (mwg-train-1pm).
+/embeddeddolt/
+/embeddeddolt.gate.lock
+/last-touched
+
 # The viewer's runtime state: sandbox bridge sockets and regenerated uplifted trees.
 .viewer-state/
 
