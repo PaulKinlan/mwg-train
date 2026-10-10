@@ -271,78 +271,50 @@ test('MULTI-STEP CARRY declaration: serves each step path, stores drafts, and re
 });
 
 test('server execution: update route preserves ref and updates in place (does not insert)', async () => {
-  const updateDecl = {
-    field: 'customer',
-    newValue: 'Jane Mechanic',
-  };
-
+  // Driven against the REAL generated server. The previous version never started it: it seeded a database,
+  // then ran UPDATE and SELECT statements of its own and asserted on those, under comments saying "Simulate
+  // POST /edit/ref-1234". Breaking the generated update route would not have failed it.
+  const updateDecl = { field: 'customer', newValue: 'Jane Mechanic' };
   const archetype = makeTr01Archetype({ update: updateDecl });
   const built = buildProjectFor(archetype, { frameworkName: 'raw', defects: [] });
 
-  const dir = join(tmpdir(), 'test-update-exec-' + Date.now());
-  for (const [rel, content] of Object.entries(built.files)) {
-    const target = join(dir, rel);
-    mkdirSync(join(target, '..'), { recursive: true });
-    writeFileSync(target, content);
-  }
-  writeFileSync(join(dir, 'spec.json'), JSON.stringify(built.spec, null, 2) + '\n');
-  writeFileSync(
-    join(dir, 'package.json'),
-    JSON.stringify({ name: 'test-exec', private: true, type: 'module' }, null, 2) + '\n',
-  );
+  await withLiveServer(built, 5611, async (base) => {
+    const listed = async () => (await (await fetch(`${base}/api/records`)).json());
+    const before = await listed();
+    assert.equal(before.length, 1, 'premise: exactly one seeded record, so "does not insert" means something');
+    const ref = before[0].ref;
+    assert.ok(ref, 'premise: the seeded record must carry a ref to route the update at');
 
-  const { DatabaseSync } = await import('node:sqlite');
-  const db = new DatabaseSync(join(dir, 'pilot.sqlite'));
-  db.exec(`CREATE TABLE IF NOT EXISTS records (
-    ref TEXT PRIMARY KEY,
-    created_at TEXT NOT NULL,
-    payload TEXT NOT NULL
-  )`);
+    // A real POST to the generated update route.
+    const posted = await fetch(`${base}/edit/${encodeURIComponent(ref)}`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ customer: 'Jane Mechanic' }).toString(),
+      redirect: 'manual',
+    });
+    assert.ok(posted.status === 303 || posted.status === 302 || posted.status === 200,
+      `the update route must accept the edit, got ${posted.status}`);
 
-  const insert = db.prepare('INSERT INTO records (ref, created_at, payload) VALUES (?, ?, ?)');
-  const select = db.prepare('SELECT ref, created_at, payload FROM records WHERE ref = ?');
-  const updateRecord = db.prepare('UPDATE records SET payload = ? WHERE ref = ?');
-  const count = db.prepare('SELECT COUNT(*) AS n FROM records');
+    const after = await listed();
+    assert.equal(after.length, 1, `UPDATE, not INSERT: still one record after the edit (got ${after.length})`);
+    assert.equal(after[0].ref, ref, 'and it is the SAME ref - the update replaced in place');
+    assert.equal(after[0].customer, 'Jane Mechanic', 'the edit was stored');
+    assert.equal(after[0].notes, before[0].notes, 'and the fields not in the form survived, so it merged rather than replaced the payload');
 
-  const initialCreatedAt = '2026-10-08T12:00:00.000Z';
-  const initialPayload = JSON.stringify({
-    customer: 'Original Customer',
-    phone: '0123456789',
-    address: '1 High Street',
-    package: 'Basic tune-up',
-    notes: 'Gate code 1234',
+    // Reading the record by ref agrees with the list.
+    const one = await (await fetch(`${base}/api/record/${encodeURIComponent(ref)}`)).json();
+    assert.equal(one.ref, ref);
+    assert.equal(one.customer, 'Jane Mechanic', 'the single-record route shows the edit too');
+  }, async (dbPath) => {
+    const { DatabaseSync } = await import('node:sqlite');
+    const db = new DatabaseSync(dbPath);
+    db.exec('CREATE TABLE IF NOT EXISTS records (ref TEXT PRIMARY KEY, created_at TEXT NOT NULL, payload TEXT NOT NULL)');
+    db.prepare('INSERT OR REPLACE INTO records (ref, created_at, payload) VALUES (?, ?, ?)').run(
+      'ref-1234', '2026-10-08T12:00:00.000Z',
+      JSON.stringify({ customer: 'Original Customer', phone: '0123456789', address: '1 High Street', package: 'Basic tune-up', notes: 'Gate code 1234' }),
+    );
+    db.close();
   });
-  insert.run('ref-1234', initialCreatedAt, initialPayload);
-
-  assert.equal(count.get().n, 1, 'initially 1 record');
-
-  // Verify unknown ref handling
-  const unknown = select.get('non-existent');
-  assert.equal(unknown, undefined, 'unknown ref is undefined');
-
-  // Simulate POST /edit/ref-1234 with new customer value
-  const editRef = 'ref-1234';
-  const row = select.get(editRef);
-  assert.ok(row, 'record must be found');
-
-  const existing = JSON.parse(row.payload);
-  const body = { customer: 'Jane Mechanic' };
-  const updated = { ...existing, ...body };
-
-  updateRecord.run(JSON.stringify(updated), editRef);
-
-  // Assertions:
-  assert.equal(count.get().n, 1, 'count must still be exactly 1: update must NOT insert a row');
-
-  const afterUpdate = select.get(editRef);
-  assert.equal(afterUpdate.ref, 'ref-1234', 'ref must be preserved');
-  assert.equal(afterUpdate.created_at, initialCreatedAt, 'created_at must be preserved');
-
-  const parsed = JSON.parse(afterUpdate.payload);
-  assert.equal(parsed.customer, 'Jane Mechanic', 'payload customer field must be updated');
-  assert.equal(parsed.phone, '0123456789', 'other fields in payload must be preserved');
-
-  rmSync(dir, { recursive: true, force: true });
 });
 
 test('server execution: search query filtering on /api/records', async () => {
