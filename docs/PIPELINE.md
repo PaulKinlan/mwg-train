@@ -7,12 +7,12 @@
 The overarching training pipeline implements a closed-loop, model-to-model empirical uplift workflow:
 
 ```
-[Trainable Vision Model] 
+[Trainable Code Model (e.g. DeepSeek V4.1 Flash)] 
        │
-       ▼ (Step 2: Generate against training-side plan.md + design.md + visual target)
+       ▼ (Step 2: Generate against training-side plan.md + design.md specs)
 [Raw Base Output] ──► (Step 3: Cordon off immutable baseline comparator checkpoint)
        │
-       ▼ (Step 4: Measure baseline with Modern Web Guidance & web-uplift evaluation)
+       ▼ (Step 4: Measure baseline with MWG & rendered screenshot vs target image)
 [Pre-Uplift MWG Score]
        │
        ▼ (Step 5: Apply MWG & Web Uplift until meeting all visual + functional criteria)
