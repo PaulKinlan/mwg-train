@@ -70,7 +70,7 @@ test('a previous record with no stamp is stamped rather than left unstamped', ()
 
 test('an inherited stamp is never undefined or an empty string', () => {
   const next = base('2026-10-10T09:30:00.000Z', 'sha256:aaa');
-  for (const bad of [undefined, null, '', 42, {}]) {
+  for (const bad of [undefined, null, '', '   ', 'not-a-timestamp', 42, {}]) {
     const previous = { ...base('ignored', 'sha256:aaa'), generated_at: bad };
     assert.equal(
       resolveGeneratedAt(previous, next),

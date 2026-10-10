@@ -316,7 +316,11 @@ export function resolveGeneratedAt(previous, next) {
   if (before === null || before !== comparable(next)) return next.generated_at;
   // A previous record carrying every other field but NO stamp would compare equal and then return undefined,
   // writing a record with no generated_at at all. Reviewer finding on the first version of this function.
-  if (typeof previous.generated_at !== 'string' || previous.generated_at === '') return next.generated_at;
+  // Three instances of this class have now been found by enumeration - a missing key, an empty string, and a
+  // whitespace-only string - and each fix was one more special case. Requiring a stamp that actually PARSES as a
+  // date ends the class instead of naming a fourth: it subsumes the empty and whitespace cases and also rejects
+  // a non-empty string that is not a timestamp at all.
+  if (typeof previous.generated_at !== 'string' || Number.isNaN(Date.parse(previous.generated_at))) return next.generated_at;
   return previous.generated_at;
 }
 
