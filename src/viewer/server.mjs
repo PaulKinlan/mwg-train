@@ -411,6 +411,18 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
         response.writeHead(200, { 'content-type': 'image/png', 'cache-control': 'no-store' });
         return response.end(readFileSync(image));
       }
+      const tuningReference = path.match(/^\/tuning\/reference\/(tr-\d{2})\.jpg$/);
+      if (tuningReference && request.method === 'GET') {
+        const dir = join(repoRoot, 'docs/design/training', tuningReference[1]);
+        const image = join(dir, 'reference.jpg');
+        if (!existsSync(image) || lstatSync(dir).isSymbolicLink() || !lstatSync(dir).isDirectory() ||
+            lstatSync(image).isSymbolicLink() || !lstatSync(image).isFile() || realpathSync(dir) !== join(realpathSync(join(repoRoot, 'docs/design/training')), tuningReference[1]) ||
+            realpathSync(image) !== join(realpathSync(dir), 'reference.jpg')) {
+          return textResponse(response, 'reference board unavailable', 404);
+        }
+        response.writeHead(200, { 'content-type': 'image/jpeg', 'cache-control': 'no-store' });
+        return response.end(readFileSync(image));
+      }
 
       if (path === '/pipeline' && request.method === 'GET') {
         // The pipeline doc is the source of truth; the viewer renders it so the two cannot drift.

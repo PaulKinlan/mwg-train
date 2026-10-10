@@ -5,15 +5,115 @@ import { escapeHtml, page } from './pages.mjs';
 import { BASELINE_LABEL } from '../eval/ruleset.mjs';
 
 const FAMILY_RE = /^tr-\d{2}$/;
-const sha = (value) => value ? escapeHtml(String(value)) : 'not recorded';
+const sha = (value) => (value ? escapeHtml(String(value)) : '<span class="muted">absent</span>');
 const text = (value) => escapeHtml(value ?? 'not recorded');
+
+/**
+ * Computes a word-level difference highlighting between two prompts.
+ * Shared words are kept plain; words unique to promptA are wrapped with .diff-v1;
+ * words unique to promptB are wrapped with .diff-v2.
+ */
+export function computeWordDiff(promptA, promptB) {
+  const tokensA = promptA.match(/\S+|\s+/g) || [];
+  const tokensB = promptB.match(/\S+|\s+/g) || [];
+
+  const isWord = (t) => /\S/.test(t);
+  const cleanA = tokensA.filter(isWord).map((w) => w.toLowerCase().replace(/[^a-z0-9]/gi, ''));
+  const cleanB = tokensB.filter(isWord).map((w) => w.toLowerCase().replace(/[^a-z0-9]/gi, ''));
+
+  const n = cleanA.length;
+  const m = cleanB.length;
+  const dp = Array.from({ length: n + 1 }, () => new Uint16Array(m + 1));
+
+  for (let i = 0; i < n; i++) {
+    for (let j = 0; j < m; j++) {
+      dp[i + 1][j + 1] = cleanA[i] === cleanB[j] ? dp[i][j] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+    }
+  }
+
+  const matchedA = new Set();
+  const matchedB = new Set();
+  let i = n;
+  let j = m;
+  while (i > 0 && j > 0) {
+    if (cleanA[i - 1] === cleanB[j - 1]) {
+      matchedA.add(i - 1);
+      matchedB.add(j - 1);
+      i--;
+      j--;
+    } else if (dp[i - 1][j] >= dp[i][j - 1]) {
+      i--;
+    } else {
+      j--;
+    }
+  }
+
+  let wordIdxA = 0;
+  const htmlA = tokensA.map((t) => {
+    if (!isWord(t)) return escapeHtml(t);
+    const matched = matchedA.has(wordIdxA++);
+    const safe = escapeHtml(t);
+    return matched ? safe : `<mark class="diff-chip diff-v1">${safe}</mark>`;
+  }).join('');
+
+  let wordIdxB = 0;
+  const htmlB = tokensB.map((t) => {
+    if (!isWord(t)) return escapeHtml(t);
+    const matched = matchedB.has(wordIdxB++);
+    const safe = escapeHtml(t);
+    return matched ? safe : `<mark class="diff-chip diff-v2">${safe}</mark>`;
+  }).join('');
+
+  const matchedWords = matchedA.size;
+  const overlapPercent = n + m > 0 ? Math.round(((2 * matchedWords) / (n + m)) * 100) : 0;
+
+  return { htmlA, htmlB, stats: { matchedWords, totalA: n, totalB: m, overlapPercent } };
+}
+
+export function readJpegDimensions(buffer) {
+  if (!buffer || buffer.length < 4 || buffer[0] !== 0xff || buffer[1] !== 0xd8) return null;
+  let offset = 2;
+  while (offset < buffer.length) {
+    if (buffer[offset] !== 0xff) break;
+    while (buffer[offset] === 0xff && offset < buffer.length) offset++;
+    if (offset >= buffer.length) break;
+    const marker = buffer[offset];
+    offset++;
+    if (
+      (marker >= 0xc0 && marker <= 0xc3) ||
+      (marker >= 0xc5 && marker <= 0xc7) ||
+      (marker >= 0xc9 && marker <= 0xcb) ||
+      (marker >= 0xcd && marker <= 0xcf)
+    ) {
+      if (offset + 7 > buffer.length) break;
+      const height = buffer.readUInt16BE(offset + 3);
+      const width = buffer.readUInt16BE(offset + 5);
+      return { width, height };
+    }
+    if (offset + 2 > buffer.length) break;
+    const len = buffer.readUInt16BE(offset);
+    offset += len;
+  }
+  return null;
+}
+
+function formatGenerator(gen) {
+  if (!gen) return '<span class="muted">absent</span>';
+  if (typeof gen === 'string') return `<code>${escapeHtml(gen)}</code>`;
+  const parts = [];
+  if (gen.type) parts.push(`type: ${escapeHtml(gen.type)}`);
+  if (gen.tool) parts.push(`tool: ${escapeHtml(gen.tool)}`);
+  if (gen.browser) parts.push(`browser: ${escapeHtml(gen.browser)}`);
+  return parts.length ? `<code>${parts.join(' · ')}</code>` : '<span class="muted">absent</span>';
+}
 
 /** This surface reads only training-side, committed evidence. It never opens the sealed eval set. */
 export function loadTuningData(repoRoot) {
   const missing = [];
   const readCommitted = (path) => {
-    try { return readFileSync(join(repoRoot, path), 'utf8'); }
-    catch (error) {
+    try {
+      return readFileSync(join(repoRoot, path), 'utf8');
+    } catch (error) {
       if (error.code !== 'ENOENT') throw error;
       missing.push(path);
       return null;
@@ -25,13 +125,20 @@ export function loadTuningData(repoRoot) {
   const projects = projectText ? JSON.parse(projectText).projects : [];
   const measuredText = readCommitted('docs/train/corpus/records.json');
   const measured = measuredText ? JSON.parse(measuredText).projects : [];
+  const targetManifestText = readCommitted('data/A1_self_generated/targets/manifest.jsonl');
+  const targetManifest = targetManifestText ? targetManifestText.split('\n').filter((line) => line.trim()).map((line) => JSON.parse(line)) : [];
   const families = new Map();
   for (const row of manifest) {
     if (!FAMILY_RE.test(row.family_id) || !/^tr-\d{2}-v[12]$/.test(row.brief_id)) continue;
     if (!families.has(row.family_id)) families.set(row.family_id, []);
     families.get(row.family_id).push(row);
   }
-  return { families, projects, measured, missing };
+  const targetRecords = new Map();
+  for (const row of targetManifest) {
+    const fam = row.family_id ?? row.family;
+    if (fam) targetRecords.set(fam, row);
+  }
+  return { families, projects, measured, targetRecords, missing };
 }
 
 const list = (items) => `<ul>${(items ?? []).map((item) => `<li>${text(item)}</li>`).join('')}</ul>`;
@@ -47,11 +154,28 @@ export function renderTuning({ data, familyId, variant = 'v1', framework = 'raw'
   const selectedFramework = frameworks.includes(framework) ? framework : frameworks[0];
   const artifact = artifacts.find((project) => project.framework === selectedFramework);
   const record = data.measured.find((project) => project.project_id === artifact?.project_id);
-  const targetPath = selectedFamily && join(repoRoot, 'data/A1_self_generated/targets', selectedFamily, 'target.png');
+  const targetRecord = data.targetRecords?.get(selectedFamily) ?? null;
+
+  const targetRel = selectedFamily ? `data/A1_self_generated/targets/${selectedFamily}/target.png` : null;
+  const targetPath = targetRel ? join(repoRoot, targetRel) : null;
   const targetAvailable = !!targetPath && existsSync(targetPath);
   const image = targetAvailable ? readFileSync(targetPath) : null;
   const png = image?.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
-  const imageSize = png && image.length >= 24 ? ` width="${image.readUInt32BE(16)}" height="${image.readUInt32BE(20)}"` : '';
+  const width = png && image.length >= 24 ? image.readUInt32BE(16) : null;
+  const height = png && image.length >= 24 ? image.readUInt32BE(20) : null;
+  const imageSize = width && height ? ` width="${width}" height="${height}"` : '';
+  const dimensionsText = targetAvailable && width && height ? `${width} × ${height} px` : '<span class="muted">absent</span>';
+
+  const refRel = selectedFamily ? `docs/design/training/${selectedFamily}/reference.jpg` : null;
+  const refPath = refRel ? join(repoRoot, refRel) : null;
+  const refAvailable = !!refPath && existsSync(refPath);
+  const refBuffer = refAvailable ? readFileSync(refPath) : null;
+  const refDims = refBuffer ? readJpegDimensions(refBuffer) : null;
+  const refWidth = refDims?.width ?? null;
+  const refHeight = refDims?.height ?? null;
+  const refImageSize = refWidth && refHeight ? ` width="${refWidth}" height="${refHeight}"` : '';
+  const refDimensionsText = refAvailable && refWidth && refHeight ? `${refWidth} × ${refHeight} px` : '<span class="muted">absent</span>';
+
   if (!selectedVariant) return page('prompt workbench', `<h1>No authored training briefs are available</h1><p>${data.missing?.length ? `Missing committed training input: ${data.missing.map(text).join(', ')}.` : 'There is nothing to tune in this checkout.'}</p>`);
 
   const selector = `<form method="get" action="/tuning" class="tuning-selector" aria-label="Choose training brief">
@@ -61,11 +185,111 @@ export function renderTuning({ data, familyId, variant = 'v1', framework = 'raw'
     <button type="submit">Inspect brief</button>
   </form>`;
 
+  // 1. Side-by-side prompt comparison
+  let diffA = null;
+  let diffB = null;
+  let diffStats = null;
+  if (variants.length === 2) {
+    const res = computeWordDiff(variants[0].prompt, variants[1].prompt);
+    diffA = res.htmlA;
+    diffB = res.htmlB;
+    diffStats = res.stats;
+  }
+
+  const voiceCards = variants.map((v, idx) => {
+    const isSelected = v.brief_id === selectedVariant.brief_id;
+    const wordCount = v.prompt.split(/\s+/).filter(Boolean).length;
+    const charCount = v.prompt.length;
+    const diffHtml = idx === 0 && diffA ? diffA : idx === 1 && diffB ? diffB : escapeHtml(v.prompt);
+
+    return `<div class="prompt-voice-card${isSelected ? ' active' : ''}">
+      <div class="prompt-voice-header">
+        <div>
+          <h3><code>${text(v.brief_id)}</code></h3>
+          <span class="muted">${wordCount} words · ${charCount} chars</span>
+        </div>
+        <div>
+          ${isSelected
+            ? '<span class="badge accepted">Active in editor</span>'
+            : `<a href="/tuning?family=${text(selectedFamily)}&variant=${text(v.brief_id.slice(-2))}&framework=${text(selectedFramework)}" class="button-link small">Switch editor to ${text(v.brief_id.slice(-2))}</a>`}
+        </div>
+      </div>
+      <div class="prompt-voice-body">
+        <p class="prompt-voice-text">${diffHtml}</p>
+      </div>
+    </div>`;
+  }).join('');
+
+  const diffLegend = diffStats ? `
+    <div class="diff-legend" aria-label="Wording difference legend">
+      <span><mark class="diff-chip diff-v1">Highlighted</mark> unique to ${text(variants[0].brief_id)}</span>
+      <span><mark class="diff-chip diff-v2">Highlighted</mark> unique to ${text(variants[1].brief_id)}</span>
+      <span>Plain text: shared vocabulary (${diffStats.matchedWords} words, ${diffStats.overlapPercent}% overlap)</span>
+    </div>` : '';
+
+  const promptComparison = `<section class="panel prompt-comparison-panel" aria-labelledby="comparison-heading">
+    <div class="comparison-panel-header">
+      <h2 id="comparison-heading">Compare the original authored prompts (${variants.length} voices)</h2>
+      <p class="muted">The two variants of ${text(selectedFamily)} share the identical brief contract (routes, journeys, assertions); only the prompt voice differs. Read both voices side by side to compare phrasing hypotheses.</p>
+    </div>
+    <div class="prompt-comparison-grid">${voiceCards}</div>
+    ${diffLegend}
+  </section>`;
+
+  // 2. Draft convergence preview
+  const previewTargetCard = `<div class="convergence-target-col">
+    <div class="convergence-col-header">
+      <h3>Reference target design</h3>
+      <span class="muted">${text(selectedFamily)} · ${targetAvailable ? `Actual dimensions: <strong>${dimensionsText}</strong>` : 'Target image absent'}</span>
+    </div>
+    ${targetAvailable ? `
+      <div class="target-preview-frame">
+        <a href="/tuning/target/${text(selectedFamily)}.png" target="_blank" rel="noopener" title="Open full size reference target">
+          <img class="tuning-target" src="/tuning/target/${text(selectedFamily)}.png" alt="Reference target for ${text(selectedVariant.topic)}" loading="lazy"${imageSize}>
+        </a>
+      </div>
+      <div class="target-actions">
+        <a class="button-link small" href="/tuning/target/${text(selectedFamily)}.png" target="_blank" rel="noopener">Open full size (${dimensionsText})</a>
+      </div>` : `
+      <p class="notice">Target image absent: no target image found at <code>${text(targetRel)}</code>.</p>`}
+  </div>`;
+
+  const draftWordCount = selectedVariant.prompt.split(/\s+/).filter(Boolean).length;
+  const previewDraftCard = `<div class="convergence-draft-col">
+    <div class="convergence-col-header">
+      <h3>Tuned draft prompt</h3>
+      <span class="muted">Derived from <code>${text(selectedVariant.brief_id)}</code></span>
+    </div>
+    <div id="live-draft-text" class="draft-prompt-live">${text(selectedVariant.prompt)}</div>
+    <div class="draft-meta-pills chips">
+      <span class="chip" id="draft-word-count">${draftWordCount} words</span>
+      <span class="chip" id="draft-delta-pill">Identical to authored voice</span>
+      <span class="chip" id="draft-temp-pill">Temp: 0.7</span>
+      <span class="chip" id="draft-tokens-pill">Max tokens: 2048</span>
+      <span class="chip" id="draft-seed-pill">Seed: 42</span>
+    </div>
+    <p class="muted" style="margin-top: 0.5rem; font-size: 0.85rem;">Edit the draft in the form below. As you type, this preview updates live so you can judge convergence against the reference target on the left.</p>
+  </div>`;
+
+  const convergencePreview = `<section class="panel convergence-preview-panel" aria-labelledby="convergence-heading">
+    <div class="preview-panel-header">
+      <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem;">
+        <h2 id="convergence-heading">Draft convergence preview</h2>
+        <span class="badge warn" id="draft-badge">LOCAL DRAFT · UNAPPROVED</span>
+      </div>
+      <p class="muted">Compare the draft prompt you are currently editing directly against the reference target design to judge convergence before exporting.</p>
+      <div class="draft-callout">
+        <strong>Draft is not saved over the brief:</strong> This tuned prompt is an isolated in-browser hypothesis. It does not overwrite the authored brief contract (<code>${text(selectedVariant.brief_id)}</code>), recorded templates, or corpus files.
+      </div>
+    </div>
+    <div class="convergence-grid">${previewTargetCard}${previewDraftCard}</div>
+  </section>`;
+
+  // 3. Authored brief contract
   const detail = `<section class="panel" aria-labelledby="contract-heading">
     <h2 id="contract-heading">Authored brief contract</h2>
     <p><strong>${text(selectedVariant.brief_id)}</strong> · ${text(selectedVariant.archetype)} · ${text(selectedVariant.task)} · ${text(selectedVariant.locale)}</p>
     <p class="muted">The two variants of this family share these requirements; the prompt wording is the only editable part in this workbench. A draft does not revise this contract.</p>
-    <details><summary>Compare the original authored prompts (${variants.length} voices)</summary>${variants.map((row) => `<div class="tuning-source"><h3>${text(row.brief_id)}</h3><p>${text(row.prompt)}</p></div>`).join('')}</details>
     <details><summary>Routes (${selectedVariant.routes.length})</summary>${list(selectedVariant.routes)}</details>
     <details><summary>Journeys (${selectedVariant.journeys.length})</summary>${list(selectedVariant.journeys)}</details>
     <details><summary>Assertions (${selectedVariant.assertions.length})</summary>${list(selectedVariant.assertions)}</details>
@@ -73,12 +297,72 @@ export function renderTuning({ data, familyId, variant = 'v1', framework = 'raw'
     <details><summary>Non-goals (${selectedVariant.non_goals.length})</summary>${list(selectedVariant.non_goals)}</details>
   </section>`;
 
-  const target = `<section class="panel" aria-labelledby="target-heading">
-    <h2 id="target-heading">Authored target design</h2>
-    <p class="muted">Independent visual reference for ${text(selectedFamily)}, not generated by this editor and not a model output. Source: <code>docs/train/targets/${text(selectedFamily)}/index.html</code>.</p>
-    ${targetAvailable ? `<img class="tuning-target" src="/tuning/target/${text(selectedFamily)}.png" alt="Authored target design for ${text(selectedVariant.topic)}" loading="lazy"${imageSize}>` : '<p>No target image is available in this checkout.</p>'}
+  // 4. Live target inspection
+  const generatorHtml = formatGenerator(targetRecord?.generator);
+  const trainingStatus = targetRecord
+    ? `<code>excluded_from_training: ${escapeHtml(String(targetRecord.excluded_from_training ?? 'absent'))}</code> · <code>approved_for_training: ${escapeHtml(String(targetRecord.approved_for_training ?? 'absent'))}</code>`
+    : '<span class="muted">absent</span>';
+
+  const target = `<section class="panel target-inspection-panel" aria-labelledby="target-heading">
+    <h2 id="target-heading">Live target inspection</h2>
+    <p class="muted">Independent visual reference and provenance record for ${text(selectedFamily)}, not generated by this editor and not a model output. Source: <code>${text(targetRecord?.origin ?? `docs/train/targets/${selectedFamily}/index.html`)}</code>.</p>
+    <div class="target-boards-pair">
+      <div class="target-board-card">
+        <div class="convergence-col-header">
+          <h3>Authored target design</h3>
+          <span class="muted">${dimensionsText}</span>
+        </div>
+        ${targetAvailable ? `
+          <div class="target-inspection-frame">
+            <a href="/tuning/target/${text(selectedFamily)}.png" target="_blank" rel="noopener" title="Open full size target design">
+              <img class="tuning-target" src="/tuning/target/${text(selectedFamily)}.png" alt="Authored target design for ${text(selectedVariant.topic)}" loading="lazy"${imageSize}>
+            </a>
+          </div>
+          <div class="target-actions">
+            <a class="button-link small" href="/tuning/target/${text(selectedFamily)}.png" target="_blank" rel="noopener">Open full size (${dimensionsText})</a>
+          </div>` : `
+          <p class="notice">Target image absent: no target image found at <code>${text(targetRel)}</code>.</p>`}
+      </div>
+
+      <div class="target-board-card">
+        <div class="convergence-col-header">
+          <h3>High-fidelity reference board</h3>
+          <span class="muted">${refDimensionsText}</span>
+        </div>
+        ${refAvailable && refDims ? `
+          <div class="target-inspection-frame">
+            <a href="/tuning/reference/${text(selectedFamily)}.jpg" target="_blank" rel="noopener" title="Open full size reference board">
+              <img class="tuning-target" src="/tuning/reference/${text(selectedFamily)}.jpg" alt="Production reference board for ${text(selectedVariant.topic)}" loading="lazy"${refImageSize}>
+            </a>
+          </div>
+          <div class="target-actions">
+            <a class="button-link small" href="/tuning/reference/${text(selectedFamily)}.jpg" target="_blank" rel="noopener">Open full size (${refDimensionsText})</a>
+          </div>` : `
+          <div class="reference-missing-card">
+            <p class="muted">No reference board yet for this family.</p>
+            <p class="muted" style="font-size: 0.85rem;">High-fidelity reference boards currently exist for <code>tr-01</code>, <code>tr-02</code>, and <code>tr-04</code>. Other families are pending visual standard authoring.</p>
+          </div>`}
+      </div>
+    </div>
+
+    <h3 style="margin-top: 1.5rem;">Target manifest metadata</h3>
+    <p class="muted">Committed record from <code>data/A1_self_generated/targets/manifest.jsonl</code>. Fields not in this family's record are reported honestly as absent.</p>
+    <dl class="tuning-target-meta">
+      <dt>Manifest ID</dt><dd><code>${targetRecord?.id ? escapeHtml(targetRecord.id) : '<span class="muted">absent</span>'}</code></dd>
+      <dt>Family</dt><dd><code>${targetRecord?.family_id || targetRecord?.family ? escapeHtml(targetRecord.family_id || targetRecord.family) : (selectedFamily ? escapeHtml(selectedFamily) : '<span class="muted">absent</span>')}</code></dd>
+      <dt>Actual dimensions</dt><dd>${dimensionsText}</dd>
+      <dt>Reference board</dt><dd>${refAvailable && refDims ? `<code>docs/design/training/${escapeHtml(selectedFamily)}/reference.jpg</code> (${refDimensionsText})` : '<span class="muted">no reference board yet for this family</span>'}</dd>
+      <dt>Storage path</dt><dd><code>${targetRecord?.storage_path ? escapeHtml(targetRecord.storage_path) : '<span class="muted">absent</span>'}</code></dd>
+      <dt>Rights reference</dt><dd>${targetRecord?.rights_ref ? `<code>${escapeHtml(targetRecord.rights_ref)}</code>` : '<span class="muted">absent</span>'}</dd>
+      <dt>Generator</dt><dd>${generatorHtml}</dd>
+      <dt>Origin source</dt><dd>${targetRecord?.origin ? `<code>${escapeHtml(targetRecord.origin)}</code>` : '<span class="muted">absent</span>'}</dd>
+      <dt>License</dt><dd>${targetRecord?.license ? escapeHtml(targetRecord.license) : '<span class="muted">absent</span>'}</dd>
+      <dt>Target image SHA-256</dt><dd>${targetRecord?.image_sha256 ? sha(targetRecord.image_sha256) : '<span class="muted">absent</span>'}</dd>
+      <dt>Training status</dt><dd>${trainingStatus}</dd>
+    </dl>
   </section>`;
 
+  // 5. Deterministic template output evidence
   const evidence = `<section class="panel" aria-labelledby="output-heading">
     <h2 id="output-heading">Deterministic template output</h2>
     <p>${artifact ? `<strong>${text(artifact.project_id)}</strong> · scaffolded from ${text(artifact.brief_id)} · tree ${sha(artifact.tree_sha)}` : 'No scaffold record for this framework.'}</p>
@@ -87,6 +371,7 @@ export function renderTuning({ data, familyId, variant = 'v1', framework = 'raw'
     ${record ? `<p>Measured sample from ${text(record.brief_id)} — <strong>${text(BASELINE_LABEL)}</strong> (our deterministic repair, not an official web-uplift result): ${record.decision.accepted ? 'accepted' : 'rejected'} · ${text(record.decision.category)}. Original ${sha(record.original_sha)} · target-floor uplift ${sha(record.uplifted_sha)}.</p><details><summary>Measurement details</summary>${list(record.decision.detail)}</details>` : '<p class="muted">No measured run for this family/framework in the 40-project sample; a missing record is not a failure or a pass.</p>'}
   </section>`;
 
+  // 6. Tune a local draft
   const draft = `<section class="panel tuning-editor" aria-labelledby="draft-heading">
     <h2 id="draft-heading">Tune a local draft</h2>
     <p class="muted">No model is run. These settings are hypotheses for a future generation pipeline; they do not affect the committed template, target or training data. Drafts stay in this browser until exported.</p>
@@ -113,6 +398,8 @@ export function renderTuning({ data, familyId, variant = 'v1', framework = 'raw'
     <p class="muted">Inspect authored training briefs, their design references and recorded template evidence. Work on one local, unapproved draft at a time. No hosted model calls or training jobs run here.</p>
     ${data.missing?.length ? `<p class="notice">Committed training input unavailable in this checkout: ${data.missing.map(text).join(', ')}. Missing evidence is not a pass or failure.</p>` : ''}
     ${selector}
+    ${promptComparison}
+    ${convergencePreview}
     <div class="tuning-grid"><div>${draft}${detail}</div><div>${target}${evidence}</div></div>
     <script src="/tuning/client.js" defer></script>
   `);
