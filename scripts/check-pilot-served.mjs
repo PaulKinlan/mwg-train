@@ -153,8 +153,20 @@ export function extractRoutes(content) {
   for (const match of content.matchAll(rawMatches)) served.add(`${match[4] ? match[4].toUpperCase() : 'GET'} ${match[2]}`);
   remaining = remaining.replace(rawMatches, 'MATCHED_RAW');
   
-  const rawVarsBetter = /const\s+([a-zA-Z0-9_]+)\s*=\s*(['"`])([^'"`]+)\2;[\s\S]{0,200}?request\.method\s*===\s*(['"`])([^'"`]+)\4/g;
-  for (const match of content.matchAll(rawVarsBetter)) served.add(`${match[5].toUpperCase()} ${match[3]}`);
+  // Two deliberate changes here, both about the same failure. The wildcard used to be [\s\S]{0,200}?,
+  // which spans arbitrary intervening statements, so a match could scrub an unparsed route sitting
+  // between the assignment and its method check before the residual scan ever saw it - the check was
+  // silently blind in exactly the direction its fail-closed guard exists to cover. It is now anchored to
+  // the actual emission shape: the route assignment, the path.match(new RegExp(...)) built from it, and
+  // the method check on the match result.
+  //
+  // The groups are named because the old reads were positional (match[5], match[3]). A review attempt to
+  // tighten this pattern inserted one extra capture group, which silently moved the method out of match[5]
+  // - every raw arm then emitted a quote character as its method, and a committed project's genuine route
+  // was reported as a phantom stale exception. Reading by name makes that class of error impossible rather
+  // than merely fixed.
+  const rawVarsBetter = /const\s+(?<pathVar>[a-zA-Z0-9_]+)\s*=\s*(?<pathQuote>['"`])(?<path>[^'"`]+)\k<pathQuote>;\s*const\s+(?<matchVar>[a-zA-Z0-9_]+)\s*=\s*path\.match\(new\s+RegExp\([^;]*?\b\k<pathVar>\b[^;]*?\)\);\s*if\s*\(\s*\k<matchVar>\s*&&\s*request\.method\s*===\s*(?<methodQuote>['"`])(?<method>[^'"`]+)\k<methodQuote>/g;
+  for (const match of content.matchAll(rawVarsBetter)) served.add(`${match.groups.method.toUpperCase()} ${match.groups.path}`);
   remaining = remaining.replace(rawVarsBetter, 'MATCHED_RAW_VAR');
   
   const rawArrays = /\[([^\]]*)\]\.includes\(path\)(?:\s*&&\s*request\.method\s*===\s*(['"`])([^'"`]+)\2)?/g;
