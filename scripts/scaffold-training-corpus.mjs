@@ -267,7 +267,7 @@ function familyArchetype(family, base) {
   // regenerates byte-identically, which is the hard gate on the 35 frozen pilot trees - so the training
   // corpus has to ask for it rather than have it inferred for every archetype. It is derived from the routes
   // this family really carries, not hand-listed beside them, because the flag and the routes are the same
-  // fact stated twice and the flag is the copy that goes stale. Before this, fifteen families declared a
+  // fact stated twice and the flag is the copy that goes stale. Before this, 29 of the 30 families (14 of the 15 archetypes) declared a
   // `list` route and took the fallback branch instead, which served four hardcoded paths (/roster, /inbox,
   // /attendees, /cart) that no brief declares and answered the declared route with a 404.
   const routes = overrides.routes ?? base.routes;
