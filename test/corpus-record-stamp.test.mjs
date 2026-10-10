@@ -17,7 +17,7 @@ const base = (stamp, sha) => ({
 
 test('an unchanged corpus keeps its previous stamp, so the file stays byte-identical', () => {
   const previous = base('2026-10-10T00:00:00.000Z', 'sha256:aaa');
-  const next = base('2026-10-10T09:99:99.000Z'.replace('99', '59'), 'sha256:aaa');
+  const next = base('2026-10-10T09:30:00.000Z', 'sha256:aaa');
   assert.equal(
     resolveGeneratedAt(previous, next),
     previous.generated_at,
@@ -52,4 +52,30 @@ test('the stamp itself is the ONLY field ignored', () => {
   const previous = base('2026-10-10T00:00:00.000Z', 'sha256:aaa');
   const next = { ...base('2026-10-10T12:00:00.000Z', 'sha256:aaa'), generator: 'someone-else.mjs' };
   assert.equal(resolveGeneratedAt(previous, next), next.generated_at, 'a changed generator must be stamped');
+});
+
+test('a previous record with no stamp is stamped rather than left unstamped', () => {
+  // Reviewer finding: such a record compares EQUAL to the next one once the stamp is nulled out on both sides,
+  // so the first version returned previous.generated_at - which is undefined - and wrote a record with no stamp
+  // at all. Compare-equal is not the same as carry-forward being valid.
+  const previous = base('placeholder', 'sha256:aaa');
+  delete previous.generated_at;
+  const next = base('2026-10-10T09:30:00.000Z', 'sha256:aaa');
+  assert.equal(
+    resolveGeneratedAt(previous, next),
+    next.generated_at,
+    'a missing stamp must be written, not inherited as undefined',
+  );
+});
+
+test('an inherited stamp is never undefined or an empty string', () => {
+  const next = base('2026-10-10T09:30:00.000Z', 'sha256:aaa');
+  for (const bad of [undefined, null, '', 42, {}]) {
+    const previous = { ...base('ignored', 'sha256:aaa'), generated_at: bad };
+    assert.equal(
+      resolveGeneratedAt(previous, next),
+      next.generated_at,
+      `a previous stamp of ${JSON.stringify(bad)} must not be carried forward`,
+    );
+  }
 });

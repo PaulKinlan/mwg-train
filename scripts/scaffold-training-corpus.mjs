@@ -314,6 +314,9 @@ export function resolveGeneratedAt(previous, next) {
     value && typeof value === 'object' ? JSON.stringify({ ...value, generated_at: null }) : null;
   const before = comparable(previous);
   if (before === null || before !== comparable(next)) return next.generated_at;
+  // A previous record carrying every other field but NO stamp would compare equal and then return undefined,
+  // writing a record with no generated_at at all. Reviewer finding on the first version of this function.
+  if (typeof previous.generated_at !== 'string' || previous.generated_at === '') return next.generated_at;
   return previous.generated_at;
 }
 
