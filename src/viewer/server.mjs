@@ -39,7 +39,7 @@ import { fileURLToPath } from 'node:url';
 
 import { conceptImage, conceptJourneyStep, conceptTarget, listConcepts, renderConcepts } from './concepts.mjs';
 import { filterProjects, loadCorpus, projectView } from './corpus.mjs';
-import { hashTree } from './hashtree.mjs';
+import { hashTree } from '../corpus/tree-hash.mjs';
 import { scanTree, scanPairRecords, loadScanConfig, buildMatchers } from './owner-auth.mjs';
 import { renderIndex, renderProject, renderMarkdown, escapeHtml, page } from './pages.mjs';
 import { loadTuningData, renderTuning } from './tuning.mjs';

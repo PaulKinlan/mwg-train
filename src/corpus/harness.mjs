@@ -814,17 +814,4 @@ export async function runProjectVersion({ chrome, projectDir, spec, label, port,
 }
 
 /** Hash a project tree without node_modules, so the record can name exactly what ran. */
-export function hashTree(root) {
-  const hash = createHash('sha256');
-  const walk = (dir, prefix = '') => {
-    for (const entry of readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
-      if (entry.name === 'node_modules' || entry.name.startsWith('.git')) continue;
-      const path = join(dir, entry.name);
-      if (entry.isDirectory()) walk(path, `${prefix}${entry.name}/`);
-      else if (statSync(path).isFile()) hash.update(`${prefix}${entry.name}\n`).update(readFileSync(path));
-    }
-  };
-  if (!existsSync(root)) return null;
-  walk(root);
-  return `sha256:${hash.digest('hex')}`;
-}
+export { hashTree } from './tree-hash.mjs';

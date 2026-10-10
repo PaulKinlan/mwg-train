@@ -23,7 +23,7 @@ import process from 'node:process';
 
 import { listRuns, loadCorpus } from '../src/viewer/corpus.mjs';
 import { scanTree, scanPairRecords, loadScanConfig, buildMatchers } from '../src/viewer/owner-auth.mjs';
-import { hashTree } from '../src/viewer/hashtree.mjs';
+import { hashTree } from '../src/corpus/tree-hash.mjs';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
