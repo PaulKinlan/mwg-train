@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, lstatSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { escapeHtml, page } from './pages.mjs';
@@ -176,6 +176,27 @@ export function renderTuning({ data, familyId, variant = 'v1', framework = 'raw'
   const refImageSize = refWidth && refHeight ? ` width="${refWidth}" height="${refHeight}"` : '';
   const refDimensionsText = refAvailable && refWidth && refHeight ? `${refWidth} × ${refHeight} px` : '<span class="muted">absent</span>';
 
+  // Which families actually have a board is a FACT ABOUT THE TREE, not a list to restate. Deriving it here means the
+  // empty-state copy cannot go stale as boards are authored - it was a hardcoded sentence naming three families, which
+  // would have become false the moment a fourth board landed, in the one panel whose job is honesty about what is
+  // missing. Symlinks are refused here for the same reason the /tuning/reference/ route refuses them: a symlinked
+  // directory is not an authored board.
+  const referenceFamilies = (() => {
+    const dir = join(repoRoot, 'docs/design/training');
+    if (!existsSync(dir)) return [];
+    return readdirSync(dir)
+      .filter((name) => /^tr-\d{2}$/.test(name))
+      .filter((name) => {
+        const familyPath = join(dir, name);
+        const boardPath = join(familyPath, 'reference.jpg');
+        try {
+          return lstatSync(familyPath).isDirectory() && !lstatSync(familyPath).isSymbolicLink()
+            && lstatSync(boardPath).isFile() && !lstatSync(boardPath).isSymbolicLink();
+        } catch { return false; }
+      })
+      .sort();
+  })();
+
   if (!selectedVariant) return page('prompt workbench', `<h1>No authored training briefs are available</h1><p>${data.missing?.length ? `Missing committed training input: ${data.missing.map(text).join(', ')}.` : 'There is nothing to tune in this checkout.'}</p>`);
 
   const selector = `<form method="get" action="/tuning" class="tuning-selector" aria-label="Choose training brief">
@@ -340,7 +361,9 @@ export function renderTuning({ data, familyId, variant = 'v1', framework = 'raw'
           </div>` : `
           <div class="reference-missing-card">
             <p class="muted">No reference board yet for this family.</p>
-            <p class="muted" style="font-size: 0.85rem;">High-fidelity reference boards currently exist for <code>tr-01</code>, <code>tr-02</code>, and <code>tr-04</code>. Other families are pending visual standard authoring.</p>
+            <p class="muted" style="font-size: 0.85rem;">${referenceFamilies.length
+              ? `High-fidelity reference boards currently exist for ${referenceFamilies.map((f) => `<code>${escapeHtml(f)}</code>`).join(', ')}.`
+              : 'No high-fidelity reference boards have been authored yet.'} Other families are pending visual standard authoring.</p>
           </div>`}
       </div>
     </div>
