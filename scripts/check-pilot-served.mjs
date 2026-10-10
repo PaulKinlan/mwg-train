@@ -136,7 +136,7 @@ export function extractRoutes(content) {
   for (const match of content.matchAll(honoRegex)) served.add(`${match[1].toUpperCase()} ${match[3]}`);
   remaining = remaining.replace(honoRegex, 'MATCHED_HONO');
   
-  const varPaths = /const\s+([a-zA-Z0-9_]+)\s*=\s*(['"`])([^'"`]+)\2;[\s\S]*?app\.(get|post|put|delete|patch)\(\s*\1/g;
+  const varPaths = /const\s+([a-zA-Z0-9_]+)\s*=\s*(['"`])([^'"`]+)\2;[\r\n\s]*app\.(get|post|put|delete|patch)\(\s*\1/g;
   for (const match of content.matchAll(varPaths)) served.add(`${match[4].toUpperCase()} ${match[3]}`);
   remaining = remaining.replace(varPaths, 'MATCHED_HONO_VAR');
   

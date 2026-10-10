@@ -1,3 +1,4 @@
+import { extractRoutes } from '../scripts/check-pilot-served.mjs';
 import { test } from 'node:test';
 import assert from 'node:assert';
 import { spawnSync } from 'node:child_process';
@@ -186,4 +187,25 @@ test('mutations on static check-pilot-served', (t) => {
   assert.match(res.stdout, /\[account-recovery-hono\] Stale exception: declared_not_served for POST \/reset/);
 
   rmSync(tmp, { recursive: true, force: true });
+});
+
+// A matched span must not swallow the evidence the residual scan exists to find. The var-bound
+// patterns originally used a multi-line lazy wildcard, so anything between the assignment and its use
+// was scrubbed before the residual scan ran - a shape could be matched and an unparsed route erased in
+// the same replacement, leaving the check silently blind (found by review of the mdj branch and
+// reproduced with this exact text). Constraining the span to adjacent whitespace makes a non-adjacent
+// use surface as an unparsed block instead: loud rather than silent.
+test('a matched span does not swallow unparsed routes between an assignment and its use', () => {
+  const code = [
+    "const myRoute = '/hello';",
+    'app.get(dynamicVar, () => {});',
+    'app.post(anotherVar, () => {});',
+    'if (path.startsWith(prefixVar)) {}',
+    'app.get(myRoute, () => {});',
+  ].join('\n');
+  const result = extractRoutes(code);
+  assert.ok(
+    (result.unparsed ?? []).length > 0,
+    'intervening unparsed route-like constructs must be reported, not scrubbed away'
+  );
 });
