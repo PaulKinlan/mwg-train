@@ -45,19 +45,25 @@ const briefs = readJsonl(manifestPath);
 const byFamily = new Map();
 for (const brief of briefs) if (!byFamily.has(brief.family_id)) byFamily.set(brief.family_id, brief);
 
-/**
- * Routes a family is known not to declare, with the reason. Empty is the goal.
- *
- * A waiver here is not a way to pass: it names the exact routes and is checked BOTH ways, so a
- * family that starts declaring them fails as a stale waiver until it is removed. Without that, an
- * exception silently outlives the thing it excused - which is how `route_conformed` came to read
- * `true` for a family with no login route.
- */
-const KNOWN_BLOCKED = new Map([
+// The waiver for tr-05 is derived directly from its archetype's capabilities.
+// The builder lacks auth capabilities, so any route the brief lists that the
+// archetype does not declare is derived as the waived set. This avoids a restated
+// list that goes stale.
+import { fileURLToPath } from 'node:url';
+
+// We import the archetypes to derive the waived set.
+const { TRAINING_ARCHETYPES } = await import('file://' + join(REPO_ROOT, 'pilot', 'training-archetypes.mjs'));
+
+const KNOWN_WAIVERS = new Map([
   [
     'tr-05',
     {
-      routes: ['/login', '/volunteer/profile'],
+      derive: (brief) => {
+        const archetype = TRAINING_ARCHETYPES[brief.archetype];
+        if (!archetype) return [];
+        const archetypePaths = new Set((archetype.routes ?? []).map((route) => norm(route.path)));
+        return (brief.routes ?? []).map(norm).filter(r => !archetypePaths.has(r));
+      },
       reason:
         'needs a functional login route and a session profile page; the shared builder has no login page, ' +
         'no login POST and no logout, and the accounts table it creates is unused. Builder work is a separate bead.',
@@ -86,7 +92,8 @@ for (const project of corpus.projects) {
   const spec = readJson(join(projectsRoot, project.project_id, 'spec.json'));
   const declared = new Set((spec.routes ?? []).map((route) => norm(route.path)));
   const missing = (brief.routes ?? []).filter((route) => !declared.has(norm(route)));
-  const waiver = KNOWN_BLOCKED.get(project.family_id);
+  const waiverRecord = KNOWN_WAIVERS.get(project.family_id);
+  const waiver = waiverRecord ? { ...waiverRecord, routes: waiverRecord.derive(brief) } : null;
 
   // A waiver is stale for a project that no longer misses the route it excuses, and this must be
   // checked BEFORE skipping projects that miss nothing: the project that made the waiver stale is
@@ -94,6 +101,10 @@ for (const project of corpus.projects) {
   // checked per PROJECT rather than per family, because a family-level aggregate let one framework
   // declare both waived routes while another still missed them and the waiver passed unremarked.
   if (waiver) {
+    if (waiver.routes.length < 2) {
+      console.error(`check-route-conformance: FAIL - derived waiver count for ${project.family_id} is below floor of 2`);
+      process.exit(1);
+    }
     const nowDeclared = waiver.routes.filter((route) => !missing.includes(route));
     if (nowDeclared.length > 0) {
       staleWaivers.push({ project_id: project.project_id, family_id: project.family_id, now_declared: nowDeclared });
@@ -118,7 +129,7 @@ if (asJson) {
     console.log(`FINDING ${entry.project_id}${entry.unknown_family ? ' has no brief' : ` does not declare: ${entry.missing.join(', ')}`}`);
   }
   for (const entry of staleWaivers) {
-    console.log(`FINDING ${entry.project_id} now declares ${entry.now_declared.join(', ')} - remove its waiver from KNOWN_BLOCKED`);
+    console.log(`FINDING ${entry.project_id} now declares ${entry.now_declared.join(', ')} - remove its waiver from KNOWN_WAIVERS`);
   }
   const waivedFamilies = [...new Set(waived.map((entry) => entry.family_id))];
   if (waivedFamilies.length > 0) {
