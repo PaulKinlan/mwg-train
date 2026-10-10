@@ -41,30 +41,54 @@ Three things follow, and each was checked rather than assumed:
 still emit none. A future "sanitize the generator" change now fails loudly instead of quietly deleting
 curriculum.
 
-## 2. The reflected query in the page title — a real gap, frozen by invariant
+## 2. The reflected query in the page title — a real gap, in ONE arm, frozen by invariant
 
 Separate from the above, and **not** defect-gated:
 
 ```js
-// pilot/frameworks.mjs:1060, 1065 (raw server) and 1336, 1337 (Hono)
+// pilot/frameworks.mjs:1060 and :1065, inside the RAW server template
 const query = url.searchParams.get('q') ?? '';
 return html(response, await renderDocument({ title: `Search: ${query}`, ... }));
-// renderDocument interpolates it into:  <title>${title}</title>
+// and that arm's renderDocument (pilot/frameworks.mjs:209) is a PLAIN template literal:
+return `<!doctype html> ... <title>${title}</title> ...
 ```
 
-The query is reflected into `<title>` with no escaping, so a search-capable generated site reflects
-attacker-controlled markup. This is a genuine gap and not curriculum, for three reasons:
+The query is reflected into `<title>` with no escaping, so a search-capable site built on the raw arm
+reflects attacker-controlled markup. This is a genuine gap and not curriculum, for three reasons:
 
-1. **It is not gated on the defect flag**, so it is in the *clean* baseline of every search-capable
-   archetype, not only in defect arms.
+1. **It is not gated on the defect flag**, so it is in the *clean* baseline, not only in defect arms.
 2. **The same value is escaped elsewhere in the same file** — `pilot/frameworks.mjs:643` writes it into
    the search input as `query.replace(/"/g, '&quot;')`. An escape present in a sibling sink and missing
    here is an oversight, not a design.
 3. The factory's intentional-defect list covers `:409` and **not** this one.
 
-**It is nevertheless not being fixed here, by explicit ruling.** Correcting it changes what the generator
-emits, which changes the bytes of every affected tree — and "search-capable archetype" is most of the
-corpus. That collides with the frozen-corpus invariant in both directions:
+### Which arms are affected, and which are not — checked, not assumed
+
+The generator emits `renderDocument` five times, and **only some of them interpolate unescaped**. A first
+version of this document said the Hono arm was affected. It is not, and the correction matters because it
+decides which trees anyone would have to re-record:
+
+| emitter | template | title sink |
+|---|---|---|
+| `pilot/frameworks.mjs:209` raw and webcomponents | plain template literal | **YES — the demonstrated gap** |
+| `pilot/frameworks.mjs:239` Hono | **tagged** `html` from `hono/html` (`:229`) | **NO — the tag escapes** |
+| `pilot/frameworks.mjs:273` react and preact | plain template literal | unescaped, but no call site feeds it a request value |
+| `pilot/frameworks.mjs:308` vue | plain template literal | unescaped, but no call site feeds it a request value |
+| `pilot/frameworks.mjs:1440` svelte | plain template literal | unescaped, but no call site feeds it a request value |
+
+The only call sites that pass a **request-derived** title are `:1060` and `:1065` (raw) and `:1336`,
+`:1337` (Hono). So the demonstrated gap is the **raw** arm, and the react, vue and svelte emitters
+interpolate unescaped but nothing currently feeds them a request value — latent, not demonstrated. They
+are listed so the next reader checks them instead of assuming either way.
+
+The Hono arm is exempt because a tagged template escapes its interpolations. That is library behaviour,
+so it is asserted rather than described: `test/known-sinks.test.mjs` renders a hostile value through the
+real `hono/html` tag and requires it to come out escaped, which means an upgrade that stopped escaping
+would fail a test rather than silently reopening this.
+
+**It is nevertheless not being fixed here, by explicit ruling.** Correcting the raw arm changes what the
+generator emits, which changes the bytes of every raw and webcomponents tree that carries a search
+journey. That collides with the frozen-corpus invariant in both directions:
 
 - `pilot/CORPUS.json` plus `npm run check:specs`, which must reproduce the 35 pilot trees exactly;
 - `pilot/TRAINING_CORPUS.json` plus `docs/train/corpus/tokens.json`, whose figures are gated by
@@ -74,6 +98,7 @@ Re-recording the pilot corpus requires a completed browser run with staged uplif
 (`scripts/pilot-corpus.mjs --record`), so the freeze cannot be re-taken from a lane at all. The fix is
 therefore deferred to whoever owns that pipeline, and the sink is recorded here instead. When it is fixed,
 both corpus records and the token figures move with it, in one reviewed change — not as a drive-by.
+**Scope any re-record to the affected arms only: the Hono trees are unaffected and must not move.**
 
 ## 3. Our own tooling — checked, and already safe
 
@@ -95,5 +120,6 @@ Expect these to be flagged, and check them against this file before acting:
 | Flagged | Truth |
 |---|---|
 | `pilot/frameworks.mjs:409` and the committed trees containing it | Intentional defect arm. Do not sanitize. |
-| `pilot/frameworks.mjs` search-arm `<title>` interpolation | Real gap, frozen corpus. Does not belong in a lane. |
+| `pilot/frameworks.mjs` raw-arm search `<title>` interpolation | Real gap, frozen corpus. Does not belong in a lane. |
+| `pilot/frameworks.mjs` Hono search `<title>` interpolation | **Not a sink** — tagged `hono/html` template escapes. Do not re-record these trees. |
 | `src/viewer/**` query parameters | Escaped, and gated by `test/known-sinks.test.mjs`. |
