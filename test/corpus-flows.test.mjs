@@ -81,6 +81,11 @@ function makeTr01Archetype(journeyOverrides = {}) {
     title: 'Mobile Bicycle Mechanic Service Booking',
     story: 'Mobile bicycle mechanic service booking: a server-backed flow that stores each submission and shows it back on reload.',
     routes: tr01Routes,
+    // The scaffolder opts a family in to the derived list-page handlers when the family declares a list
+    // route (mwg-train-ndr), and this fixture has to reproduce the generated project rather than an
+    // equivalent one. So it derives the capability from the same routes, the same way, instead of setting
+    // the flag by hand - which is what let the flag and the routes drift apart in the first place.
+    capabilities: { ...(base.capabilities ?? {}), list_pages: tr01Routes.some((route) => route.kind === 'list') },
     fields: builderFields(tr01.fields),
     journey: { ...tr01.journey, ...journeyOverrides },
     echo: { ...base.echo, field: echoFieldFor(tr01.fields) },
