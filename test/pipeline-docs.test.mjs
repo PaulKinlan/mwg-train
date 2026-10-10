@@ -16,7 +16,7 @@
 // This gate covers the one document that states what the pipeline ENFORCES.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { EVAL_SEAL } from '../src/train/disjoint.mjs';
@@ -89,18 +89,12 @@ test('every npm run command in docs/PIPELINE.md exists in package.json', () => {
   }
 });
 
-import { existsSync } from 'node:fs';
-
 test('critical files mentioned in docs/PIPELINE.md exist in the repository', () => {
-  const paths = [
-    'docs/eval/briefs/manifest.jsonl',
-    'docs/eval/rules.json',
-    'pilot/plan.json',
-    'pilot/CORPUS.json',
-    'docs/eval/quotes.jsonl',
-    'docs/pilot/yield.json',
-    'docs/eval/two-backends.md'
-  ];
+  const matches = [...pipelineDoc.matchAll(/`((?:docs|pilot|src|\.pilot-)[a-zA-Z0-9_/.-]+)`/g)].map(m => m[1]);
+  const paths = Array.from(new Set(matches));
+  
+  assert.ok(paths.length >= 5, 'Should find several file paths in PIPELINE.md');
+  
   for (const p of paths) {
     assert.ok(existsSync(join(repoRoot, p)), `Path ${p} mentioned in PIPELINE.md does not exist`);
   }
