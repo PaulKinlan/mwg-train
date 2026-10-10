@@ -8,7 +8,7 @@ data attributable.
 
 | # | Stage | Command | Consumes | Produces |
 |---|-------|---------|----------|----------|
-| 1 | **BRIEFS** | `npm run check:briefs` | the eval brief manifest, sealed | `docs/eval/briefs/manifest.jsonl` — sealed eval inputs (seal `sha256:91d75f29…`) |
+| 1 | **BRIEFS** | `npm run check:briefs` | the eval brief manifest, sealed | `docs/eval/briefs/manifest.jsonl` — sealed eval inputs (seal `sha256:89a1f47d…`) |
 | 2 | **RULES** | `node scripts/extract-mwg-rules.mjs --skill-dir <installed skill dir> --out docs/eval/rules.json` | the sealed briefs + Modern Web Guidance | `docs/eval/rules.json` — the required MWG rules per brief |
 | 3 | **GENERATE** | `npm run pilot:scaffold` | the plan (`pilot/plan.json`) over archetypes × frameworks × seeded defects | `pilot/projects/` — the on-disk corpus of original (BASELINE) sites |
 | 4 | **MEASURE** | `npm run pilot:run` | the generated corpus + the rules | run records under `pilot/out/<run>/`: browser journeys, rule measurements, accept/reject decisions (drives headless journeys, verifies yield) |
