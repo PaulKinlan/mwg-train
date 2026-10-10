@@ -226,7 +226,7 @@ test('UPDATE declaration: serves edit form on read page, POST /edit/:ref updates
   }
 });
 
-test('MULTI-STEP CARRY declaration: serves each step path, stores drafts, and renders server-side', () => {
+test('MULTI-STEP CARRY declaration: serves each step path, stores drafts, and renders server-side', async () => {
   const stepsDecl = [
     {
       path: '/book/step-1',
@@ -250,23 +250,82 @@ test('MULTI-STEP CARRY declaration: serves each step path, stores drafts, and re
     const built = buildProjectFor(archetype, { frameworkName, defects: [] });
     const serverSource = built.files['server.mjs'];
 
-    // 1. Server creates drafts table
-    assert.ok(serverSource.includes('CREATE TABLE IF NOT EXISTS drafts'), `${frameworkName}: server must create drafts table`);
-    assert.ok(serverSource.includes('INSERT OR REPLACE INTO drafts'), `${frameworkName}: server must prepare insertDraft`);
-    assert.ok(serverSource.includes('SELECT name, value FROM drafts WHERE sid = ?'), `${frameworkName}: server must prepare selectDrafts`);
+    // Generator-level template checks kept: verify that selector ID and styling class exist
+    // in the emitted source so browsers and styles can target them.
+    assert.ok(serverSource.includes('id="step-1-next"'), `${frameworkName}: generator output must include matching submit selector`);
+    assert.ok(serverSource.includes('draft-carried'), `${frameworkName}: server source must include draft-carried markup class`);
 
-    // 2. Server serves step paths
-    assert.ok(serverSource.includes('/book/step-1'), `${frameworkName}: server must serve /book/step-1`);
-    assert.ok(serverSource.includes('/book/step-2'), `${frameworkName}: server must serve /book/step-2`);
-    assert.ok(serverSource.includes('/draft'), `${frameworkName}: server must serve draft endpoint`);
+    await withLiveServer(built, 5613, async (base) => {
+      // 1. Server serves step paths and step 1 renders declared form controls
+      const step1Res = await fetch(`${base}/book/step-1`);
+      assert.equal(step1Res.status, 200, `${frameworkName}: server must serve /book/step-1`);
+      const step1Html = await step1Res.text();
+      assert.ok(step1Html.includes('name="phone"'), `${frameworkName}: premise - step 1 must render declared input field`);
+      assert.ok(step1Html.includes('id="step-1-next"'), `${frameworkName}: step 1 must render declared submit selector`);
+      const formAction = (step1Html.match(/<form[^>]*action="([^"]+)"/) ?? [])[1];
+      assert.equal(formAction, '/draft?next=%2Fbook%2Fstep-2', `${frameworkName}: step 1 must post to draft with next step`);
 
-    // 3. Step 1 renders form posting to draft with next parameter
-    assert.ok(serverSource.includes('action="/draft?next=%2Fbook%2Fstep-2"'), `${frameworkName}: step 1 must post to draft with next step`);
-    assert.ok(serverSource.includes('id="step-1-next"'), `${frameworkName}: step 1 must include matching submit selector`);
+      const step2Res = await fetch(`${base}/book/step-2`);
+      assert.equal(step2Res.status, 200, `${frameworkName}: server must serve /book/step-2`);
+      const step2Html = await step2Res.text();
+      assert.ok(step2Html.includes('name="package"'), `${frameworkName}: premise - step 2 must render declared select field`);
 
-    // 4. Carried text rendered server-side
-    assert.ok(serverSource.includes('draft-carried'), `${frameworkName}: server must render draft-carried container`);
-    assert.ok(serverSource.includes('selectDrafts.all(sidCookie)'), `${frameworkName}: server must read drafts by sid cookie`);
+      // 2. Server accepts draft posts at /draft and step paths, creating drafts table and running insertDraft
+      const postDraft = await fetch(`${base}/draft?next=${encodeURIComponent('/book/step-2')}`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ phone: '07700900077' }).toString(),
+        redirect: 'manual',
+      });
+      assert.equal(postDraft.status, 303, `${frameworkName}: /draft endpoint must accept post and redirect (got ${postDraft.status})`);
+      assert.equal(postDraft.headers.get('location'), '/book/step-2', `${frameworkName}: /draft must redirect to declared next path`);
+      const sessionCookie = postDraft.headers.get('set-cookie');
+      assert.ok(sessionCookie, `${frameworkName}: premise - server must set session cookie on draft post`);
+
+      // POST to declared step path is also accepted as a draft endpoint
+      const postStep1 = await fetch(`${base}/book/step-1`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ phone: '07700900077' }).toString(),
+        redirect: 'manual',
+      });
+      assert.equal(postStep1.status, 303, `${frameworkName}: declared step path /book/step-1 must accept POST and redirect`);
+      assert.equal(postStep1.headers.get('location'), '/book/step-2', `${frameworkName}: POST /book/step-1 must redirect to next step`);
+
+      // 3. Carried text rendered server-side on next step and startPath (proves selectDrafts by sid cookie)
+      const step2CarriedRes = await fetch(`${base}/book/step-2`, { headers: { cookie: sessionCookie } });
+      assert.equal(step2CarriedRes.status, 200, `${frameworkName}: step 2 must return 200 with session cookie`);
+      const step2CarriedHtml = await step2CarriedRes.text();
+      assert.ok(step2CarriedHtml.includes('draft-carried'), `${frameworkName}: step 2 must render draft-carried container`);
+      assert.ok(step2CarriedHtml.includes('07700900077'), `${frameworkName}: step 2 must carry value from step 1 (expectText)`);
+
+      const confirmCarriedRes = await fetch(`${base}/book/confirm`, { headers: { cookie: sessionCookie } });
+      assert.equal(confirmCarriedRes.status, 200, `${frameworkName}: startPath /book/confirm must return 200 with session cookie`);
+      const confirmCarriedHtml = await confirmCarriedRes.text();
+      assert.ok(confirmCarriedHtml.includes('draft-carried'), `${frameworkName}: confirm page must render draft-carried container`);
+      assert.ok(confirmCarriedHtml.includes('07700900077'), `${frameworkName}: confirm page must carry stored draft value`);
+
+      // 4. Session isolation: a fresh session without cookie receives no carried drafts (selectDrafts.all isolation)
+      const freshRes = await fetch(`${base}/book/confirm`);
+      assert.equal(freshRes.status, 200, `${frameworkName}: startPath must return 200 for fresh session`);
+      const freshHtml = await freshRes.text();
+      assert.ok(!freshHtml.includes('07700900077'), `${frameworkName}: session with no draft must not receive another session's carried value`);
+      assert.ok(!freshHtml.includes('draft-carried'), `${frameworkName}: session with no draft must not render draft-carried container`);
+
+      // 5. Subsequent step stores draft and startPath carries all values
+      const postStep2 = await fetch(`${base}/book/step-2`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/x-www-form-urlencoded', cookie: sessionCookie },
+        body: new URLSearchParams({ package: 'Full service' }).toString(),
+        redirect: 'manual',
+      });
+      assert.equal(postStep2.status, 303, `${frameworkName}: step 2 post must redirect to startPath`);
+      assert.equal(postStep2.headers.get('location'), '/book/confirm', `${frameworkName}: step 2 post must redirect to /book/confirm`);
+
+      const allCarriedHtml = await (await fetch(`${base}/book/confirm`, { headers: { cookie: sessionCookie } })).text();
+      assert.ok(allCarriedHtml.includes('07700900077'), `${frameworkName}: confirm page must carry step 1 value`);
+      assert.ok(allCarriedHtml.includes('Full service'), `${frameworkName}: confirm page must carry step 2 value`);
+    });
   }
 });
 
