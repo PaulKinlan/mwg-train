@@ -1,9 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
-import { join } from 'node:path';
+import { readFileSync, mkdirSync, mkdtempSync, writeFileSync, rmSync, symlinkSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
 import { createServer } from 'node:http';
+import { spawn } from 'node:child_process';
 
 import { buildProjectFor } from '../pilot/frameworks.mjs';
 import { TRAINING_ARCHETYPES } from '../pilot/training-archetypes.mjs';
@@ -26,6 +27,53 @@ const tr01Routes = [
   { method: 'GET', path: readPath, kind: 'read-by-reference' },
   { method: 'GET', path: '/services', kind: 'list' },
 ];
+
+
+const ROOT = resolve(import.meta.dirname, '..');
+const NODE_MODULES = join(ROOT, 'node_modules');
+
+/**
+ * Write a generated project somewhere and drive its REAL server over HTTP.
+ *
+ * This exists because five tests in this file read as though they cover server behaviour while measuring
+ * something else: the three named "server execution" re-implemented the server's SQL inline and asserted
+ * against that copy (one even commented "Helper matching /api/records implementation"), and the SEARCH and
+ * UPDATE declaration tests assert that a source string CONTAINS a fetch call. None of them would fail if the
+ * generated server stopped working. test/edit-flow.test.mjs already drives a generated server over HTTP, so
+ * the technique is proven in this suite - it just was not used here (mwg-train-0xk).
+ */
+async function withLiveServer(built, port, fn, seed = null) {
+  const dir = mkdtempSync(join(tmpdir(), 'corpus-flows-live-'));
+  try {
+    for (const [rel, content] of Object.entries(built.files)) {
+      const target = join(dir, rel);
+      mkdirSync(join(dir, rel, '..'), { recursive: true });
+      mkdirSync(target.slice(0, target.lastIndexOf('/')), { recursive: true });
+      writeFileSync(target, content);
+    }
+    symlinkSync(NODE_MODULES, join(dir, 'node_modules'), 'dir');
+    // Seeded before the server starts, so the server reads a database that already holds the fixture. The
+    // schema is created by the server itself on boot; a seed that ran after spawn raced that.
+    if (seed) await seed(join(dir, 'pilot.sqlite'));
+    const child = spawn('node', ['server.mjs', '--port', String(port), '--db', join(dir, 'pilot.sqlite')], {
+      cwd: dir, stdio: ['ignore', 'ignore', 'pipe'],
+    });
+    try {
+      const base = `http://127.0.0.1:${port}`;
+      let up = false;
+      for (let attempt = 0; attempt < 40 && !up; attempt += 1) {
+        await new Promise((done) => setTimeout(done, 250));
+        up = await fetch(`${base}/__health`).then((r) => r.ok, () => false);
+      }
+      assert.ok(up, 'the generated server did not come up, so nothing below measures the real thing');
+      return await fn(base);
+    } finally {
+      child.kill('SIGKILL');
+    }
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
 
 function makeTr01Archetype(journeyOverrides = {}) {
   return {
@@ -298,6 +346,9 @@ test('server execution: update route preserves ref and updates in place (does no
 });
 
 test('server execution: search query filtering on /api/records', async () => {
+  // Driven against the REAL generated server. The previous version never started it: it re-implemented the
+  // /api/records filter in the test and asserted on that copy, under a comment saying "Helper matching
+  // /api/records implementation". Deleting the search query from the generator would not have failed it.
   const searchDecl = {
     path: '/search',
     queryParam: 'q',
@@ -305,56 +356,47 @@ test('server execution: search query filtering on /api/records', async () => {
     resultsSelector: '#results',
     expectIncludes: ['tune-up'],
   };
-
   const archetype = makeTr01Archetype({ search: searchDecl });
   const built = buildProjectFor(archetype, { frameworkName: 'raw', defects: [] });
 
-  const dir = join(tmpdir(), 'test-search-exec-' + Date.now());
-  for (const [rel, content] of Object.entries(built.files)) {
-    const target = join(dir, rel);
-    mkdirSync(join(target, '..'), { recursive: true });
-    writeFileSync(target, content);
-  }
+  await withLiveServer(built, 5610, async (base) => {
+    // The server seeds its own records, so the fixture is whatever it creates - asserted rather than assumed.
+    const all = await (await fetch(`${base}/api/records`)).json();
+    assert.ok(Array.isArray(all), 'the endpoint must return an array');
+    assert.ok(all.length > 0, 'the real server must serve at least one seeded record, or the filters below prove nothing');
 
-  const { DatabaseSync } = await import('node:sqlite');
-  const db = new DatabaseSync(join(dir, 'pilot.sqlite'));
-  db.exec(`CREATE TABLE IF NOT EXISTS records (
-    ref TEXT PRIMARY KEY,
-    created_at TEXT NOT NULL,
-    payload TEXT NOT NULL
-  )`);
-  const insert = db.prepare('INSERT INTO records (ref, created_at, payload) VALUES (?, ?, ?)');
-  const list = db.prepare('SELECT ref, payload FROM records ORDER BY created_at DESC LIMIT 50');
+    const noQuery = await (await fetch(`${base}/api/records?q=`)).json();
+    assert.equal(noQuery.length, all.length, 'an empty query returns everything, like no query');
 
-  insert.run('r1', '2026-10-08T10:00:00Z', JSON.stringify({ customer: 'Alice', notes: 'Basic tune-up needed' }));
-  insert.run('r2', '2026-10-08T11:00:00Z', JSON.stringify({ customer: 'Bob', notes: 'Brake pad replacement' }));
+    // A query is matched case-insensitively against the record payload, and returns a SUBSET.
+    const first = all.find((record) => String(record.customer ?? '').length > 1);
+    assert.ok(first, 'premise: a seeded record must carry a customer to search on');
+    const needle = String(first.customer).slice(0, 4);
+    const matched = await (await fetch(`${base}/api/records?q=${encodeURIComponent(needle)}`)).json();
+    assert.ok(matched.length > 0, `a query for ${JSON.stringify(needle)} must match the record it came from`);
+    assert.ok(matched.length <= all.length, 'and must never return more than the unfiltered list');
+    assert.ok(matched.every((record) => JSON.stringify(record).toLowerCase().includes(needle.toLowerCase())),
+      'every returned record must actually contain the query');
 
-  // Helper matching /api/records implementation
-  function getRecords(query) {
-    let rows = list.all();
-    if (query) rows = rows.filter((row) => row.payload.toLowerCase().includes(query.toLowerCase()));
-    return rows.map((row) => ({ ref: row.ref, ...JSON.parse(row.payload) }));
-  }
+    // Case-insensitivity is the property the old comment claimed and never checked against the server.
+    const upper = await (await fetch(`${base}/api/records?q=${encodeURIComponent(needle.toUpperCase())}`)).json();
+    assert.equal(upper.length, matched.length, 'the match must be case-insensitive');
 
-  // 1. Without query: returns all records
-  assert.equal(getRecords(null).length, 2);
-  assert.equal(getRecords('').length, 2);
-
-  // 2. With query matching r1:
-  const tuneUp = getRecords('tune-up');
-  assert.equal(tuneUp.length, 1);
-  assert.equal(tuneUp[0].ref, 'r1');
-
-  // 3. With query matching r2:
-  const brake = getRecords('BRAKE');
-  assert.equal(brake.length, 1);
-  assert.equal(brake[0].ref, 'r2');
-
-  // 4. With query matching nothing:
-  const none = getRecords('overhaul');
-  assert.equal(none.length, 0);
-
-  rmSync(dir, { recursive: true, force: true });
+    // A query matching nothing returns nothing - the empty case that a stand-in cannot get wrong.
+    const none = await (await fetch(`${base}/api/records?q=zzz-no-such-record-zzz`)).json();
+    assert.equal(none.length, 0, 'a query matching no record returns an empty list');
+  }, async (dbPath) => {
+    // The server creates its own schema on boot, so this runs first and only INSERTS. The two rows are the
+    // ones the old stand-in test used, so the assertions below are the same properties - now measured against
+    // the real endpoint instead of a copy of its filter.
+    const { DatabaseSync } = await import('node:sqlite');
+    const db = new DatabaseSync(dbPath);
+    db.exec('CREATE TABLE IF NOT EXISTS records (ref TEXT PRIMARY KEY, created_at TEXT NOT NULL, payload TEXT NOT NULL)');
+    const insert = db.prepare('INSERT OR REPLACE INTO records (ref, created_at, payload) VALUES (?, ?, ?)');
+    insert.run('r1', '2026-10-08T10:00:00Z', JSON.stringify({ customer: 'Alice', notes: 'Basic tune-up needed' }));
+    insert.run('r2', '2026-10-08T11:00:00Z', JSON.stringify({ customer: 'Bob', notes: 'Brake pad replacement' }));
+    db.close();
+  });
 });
 
 test('server execution: drafts table carries state across steps', async () => {
