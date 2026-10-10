@@ -34,6 +34,7 @@ import { A11Y_SCRIPT } from '../src/corpus/uplift.mjs';
 import { compileSvelteServer } from '../src/corpus/svelte.mjs';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
+import { GENERATOR_DEFECT_TOKENS } from '../src/eval/defects.mjs';
 
 const slug = (value) => value.replace(/[^a-z0-9]+/gi, '-').toLowerCase();
 
@@ -1501,6 +1502,11 @@ export function writeProject(root, { projectId, files, spec, includeDependencies
 }
 
 export function buildProjectFor(archetype, { frameworkName, defects = [], flags = {} }) {
+  const unknownDefects = defects.filter((d) => !GENERATOR_DEFECT_TOKENS.includes(d));
+  if (unknownDefects.length > 0) {
+    throw new Error(`buildProjectFor: unknown defect tokens [${unknownDefects.join(', ')}]. Known tokens: [${GENERATOR_DEFECT_TOKENS.join(', ')}]`);
+  }
+
   if (!archetype?.id) throw new Error('buildProjectFor: an archetype with an id is required');
   const framework = { ...FRAMEWORKS[frameworkName], ...flags };
   if (!framework.name) throw new Error(`unknown framework ${frameworkName}`);
