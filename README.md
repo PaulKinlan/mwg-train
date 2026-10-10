@@ -61,9 +61,28 @@ images, deterministic scaffold records and any measured training sample. Select 
 variant and framework; compare the original authored prompts and brief contract with the target
 image and recorded template facts. Prompt wording, system guidance, temperature, max tokens and
 seed can be edited as a **browser-local, unapproved draft**, then copied or exported as JSON. It
-makes no model calls, runs no training, does not regenerate a site, and never writes back to the
-training or sealed evaluation manifests. The target image is an authored reference, **not** a
-rendered model output; no rendered template snapshot is retained in this checkout.
+runs no training, does not regenerate a site, and never writes back to the training or sealed
+evaluation manifests.
+
+The one model call in the workbench is explicit: **Generate board from draft** (`POST
+/tuning/generate`) sends the draft you are editing to `gemini-nano-banana-2.1` and returns a design
+board to that browser. The compute is external - no model runs on this machine, which is the owner
+constraint in [`docs/eval/pricing.md`](docs/eval/pricing.md) rather than a limitation of this code -
+and the endpoint injects the signed-in account's credentials, so this process holds no key and has
+no header-construction path that could send one. A generation writes nothing: the board is bytes in
+the response, it is offered as a download, and no file is created. Output from a hosted model is
+`hosted-api` material, which the provenance rules place in arm `A3_teacher_generated` with
+`excluded_from_training: true`; keeping a board is a separate promote step that records provider,
+model, account reference, terms and the SHA of the bytes. The authored target image remains an
+authored reference, **not** a model output, and no rendered template snapshot is retained in this
+checkout.
+
+The workbench enforces the bounds that make that safe to expose: one generation in flight at a
+time with a minimum interval between them, a 64 KiB body cap, prompt/settings ranges matching the
+editor, an upstream timeout, and a request that only names a brief and framework that exist in
+this checkout. It also raises `max_tokens` to a floor of 4096 for the request and reports the
+effective value, because below that this model spends the whole budget thinking and returns no image
+(measured, not assumed).
 
 Live instances run the real site server sandboxed with bubblewrap: its own network namespace with
 no route off it (the host's loopback proxies and the outside network are unreachable), an

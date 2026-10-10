@@ -21,9 +21,11 @@
  *   GET  /concepts/images/<name>.jpg      confined concept JPEG
  *   GET  /concepts/images/booking/<step>.jpg  confined booking journey reference
  *   GET  /concepts/targets/<id>.png       confined A6 authored target render
- *   GET  /tuning                         training-only prompt draft workbench (no generation)
- *   GET  /tuning/client.js               browser-local draft/export helper
+ *   GET  /tuning                         training-only prompt draft workbench
+ *   POST /tuning/generate                one hosted image-model call: draft in, board bytes out (nothing written)
+ *   GET  /tuning/client.js               browser-local draft/export helper and the generate button's wiring
  *   GET  /tuning/target/<tr-NN>.png       authored A1 target image, path- and symlink-confined
+ *   GET  /tuning/reference/<tr-NN>.jpg    authored high-fidelity reference board, path- and symlink-confined
  *   GET  /healthz
  *
  * Live routes (live origin only):
@@ -43,6 +45,7 @@ import { hashTree } from '../corpus/tree-hash.mjs';
 import { scanTree, scanPairRecords, loadScanConfig, buildMatchers } from './owner-auth.mjs';
 import { renderIndex, renderProject, renderMarkdown, escapeHtml, page } from './pages.mjs';
 import { loadTuningData, renderTuning } from './tuning.mjs';
+import { allowedTargetsFromTuningData, createBoardGenerator, DEFAULT_IMAGE_ENDPOINT, GenerationError, IMAGE_MODEL } from './generate.mjs';
 import { proxyRequest } from './proxy.mjs';
 import { SandboxPool } from './sandbox.mjs';
 
@@ -83,6 +86,59 @@ const textResponse = (response, body, status = 200) => {
   response.end(body);
 };
 
+const jsonResponse = (response, body, status) => {
+  response.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' });
+  response.end(`${JSON.stringify(body)}\n`);
+};
+
+/** The largest draft the generation route will read. A draft is one prompt and settings; 64 KiB is far above any
+ * legitimate one and far below what a request that means to hurt this process would send. */
+const MAX_DRAFT_BYTES = 64 * 1024;
+
+/**
+ * Read and parse a JSON request body, bounded BEFORE it is buffered. `content-length` is a claim, so the running
+ * total is checked too: a chunked request without a length header gets the same cap as one that declares it.
+ */
+function readBoundedJsonBody(request, maxBytes = MAX_DRAFT_BYTES) {
+  return new Promise((resolvePromise, rejectPromise) => {
+    const declared = Number(request.headers['content-length'] ?? NaN);
+    if (Number.isFinite(declared) && declared > maxBytes) {
+      return rejectPromise(new GenerationError('BODY_TOO_LARGE', `the draft body is ${declared} bytes; the cap is ${maxBytes}`, 413));
+    }
+    const type = String(request.headers['content-type'] ?? '').split(';')[0].trim().toLowerCase();
+    if (type !== 'application/json') {
+      return rejectPromise(new GenerationError('BAD_CONTENT_TYPE', 'the draft must be sent as application/json', 400));
+    }
+    const chunks = [];
+    let total = 0;
+    let settled = false;
+    const fail = (error) => {
+      if (settled) return;
+      settled = true;
+      request.destroy();
+      rejectPromise(error);
+    };
+    request.on('data', (chunk) => {
+      if (settled) return;
+      total += chunk.length;
+      if (total > maxBytes) return fail(new GenerationError('BODY_TOO_LARGE', `the draft body exceeded ${maxBytes} bytes`, 413));
+      chunks.push(chunk);
+    });
+    request.on('error', (error) => fail(new GenerationError('BODY_READ_FAILED', `the draft body could not be read: ${error.message}`, 400)));
+    request.on('end', () => {
+      if (settled) return;
+      settled = true;
+      let parsed;
+      try {
+        parsed = JSON.parse(Buffer.concat(chunks).toString('utf8'));
+      } catch {
+        return rejectPromise(new GenerationError('BAD_JSON', 'the draft body is not valid JSON', 400));
+      }
+      resolvePromise(parsed);
+    });
+  });
+}
+
 /**
  * The live origin for links from viewer pages: the request's host name (STRICTLY validated -
  * the Host header is attacker-influenced, and a bad parse must never produce an attacker
@@ -98,7 +154,7 @@ export function liveOriginFor(request, livePort) {
   return `${scheme}://${hostname}:${livePort}`;
 }
 
-export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(REPO_ROOT, 'docs/eval/owner-identity.json'), repoRoot = REPO_ROOT, livePort = 7701 }) {
+export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(REPO_ROOT, 'docs/eval/owner-identity.json'), repoRoot = REPO_ROOT, livePort = 7701, imageEndpoint = DEFAULT_IMAGE_ENDPOINT, boardGenerator = null }) {
   // Fail closed. This viewer has exactly one job - read a corpus - and it used to come up happily with the corpus path
   // pointing at a directory that did not exist: it listened on its ports, served 200 on routes that looked healthy, and
   // recorded the problem only in a log line nobody reads. A viewer with no corpus to read is a misconfiguration, not a
@@ -118,6 +174,10 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
   const scanCache = new Map();
 
   const load = (runId) => loadCorpus(corpusRoot, runId);
+
+  // The image model lives behind a credential-injecting proxy (see src/viewer/generate.mjs). The generator is built
+  // once here and is injectable, so the route's tests drive a fake and never touch the network.
+  const generator = boardGenerator ?? createBoardGenerator({ endpoint: imageEndpoint });
 
   // The identity config loads once and fail-closed: a broken config makes every tree un-scannable.
   let matchers = null;
@@ -409,6 +469,41 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
           familyId: url.searchParams.get('family'), variant: url.searchParams.get('variant'),
           framework: url.searchParams.get('framework') }));
       }
+      // One hosted image-model call per request: the draft in the body, the board bytes in the response. It writes
+      // nothing - not a file, not a cache, not a manifest - so the corpus, the provenance tables and the authored
+      // reference boards are untouched by a generation no matter how many times it is pressed. Storage is a separate,
+      // recorded promote step; see the header of src/viewer/generate.mjs for why that split is not optional here.
+      if (path === '/tuning/generate' && request.method === 'POST') {
+        let board;
+        try {
+          // Both the body read and the generation sit inside this catch: a bad body is the requester's error (400/413)
+          // and must not fall through to the generic 500, which would report a server fault for a refused draft.
+          const draft = await readBoundedJsonBody(request);
+          board = await generator.generate({ draft, allowed: allowedTargetsFromTuningData(loadTuningData(repoRoot)) });
+        } catch (error) {
+          if (error instanceof GenerationError) return jsonResponse(response, { error: error.code, message: error.message }, error.status);
+          throw error;
+        }
+        // The bytes are handed over under the content type their magic bytes prove they are, and the facts about
+        // them travel in headers so the page can report the model, the size and the token floor without re-fetching.
+        response.writeHead(200, {
+          'content-type': board.mime,
+          'content-length': board.bytes.length,
+          'cache-control': 'no-store',
+          'x-content-type-options': 'nosniff',
+          'x-mwg-model': board.model,
+          'x-mwg-width': String(board.width),
+          'x-mwg-height': String(board.height),
+          'x-mwg-sha256': board.sha256,
+          'x-mwg-prompt-sha256': board.promptSha256,
+          'x-mwg-elapsed-ms': String(board.elapsedMs),
+          'x-mwg-max-output-tokens': String(board.effectiveMaxOutputTokens),
+          'x-mwg-requested-max-output-tokens': String(board.requestedMaxOutputTokens),
+          'x-mwg-finish-reason': String(board.finishReason ?? ''),
+          'x-mwg-notes': encodeURIComponent(board.notes.join(' | ')),
+        });
+        return response.end(board.bytes);
+      }
       if (path === '/tuning/client.js' && request.method === 'GET') {
         response.writeHead(200, { 'content-type': 'text/javascript; charset=utf-8', 'cache-control': 'no-store' });
         return response.end(readFileSync(join(repoRoot, 'src/viewer/tuning-client.js')));
@@ -682,9 +777,12 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const livePort = Number(arg('live-port', '7701'));
   const host = arg('host', '0.0.0.0');
   const stateDir = resolve(arg('state', '.viewer-state'));
+  // Overridable so an operator can repoint the workbench at another gateway without editing code. The default is the
+  // documented proxy; it carries no credential, and this process has no key to send it.
+  const imageEndpoint = arg('image-endpoint', process.env.MWG_TRAIN_IMAGE_ENDPOINT || DEFAULT_IMAGE_ENDPOINT);
   let viewer;
   try {
-    viewer = createViewer({ corpusRoot, stateDir, livePort });
+    viewer = createViewer({ corpusRoot, stateDir, livePort, imageEndpoint });
   } catch (error) {
     console.error(`viewer startup failed: ${error.message}`);
     process.exit(1);
@@ -704,4 +802,5 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   liveServer.listen(livePort, host, () => {
     console.log(`mwg-train live site origin on http://${host}:${livePort}/ (sandboxed sites only)`);
   });
+  console.log(`tuning workbench image model: ${IMAGE_MODEL} via ${imageEndpoint}`);
 }
