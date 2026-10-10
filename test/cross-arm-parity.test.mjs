@@ -16,6 +16,7 @@ import {
   REFERENCE_PALETTE,
   assertFindingsConsistent,
   assembleFindings,
+  unionFromAxes,
   exitCodeFor,
   parseArgs,
 } from '../scripts/check-cross-arm-parity.mjs';
@@ -768,12 +769,51 @@ test('assembleFindings requires all four axes and concatenates them in a fixed o
   }
 });
 
-test('the committed report reassembles from its four axes, which the union line in main() cannot be tested for', () => {
+test('the four comparisons map onto the four published axes, which main() cannot be tested for', () => {
+  // This is the mapping the a90 regression went wrong in, and until it was extracted it existed only as a
+  // hand-written spread inside main() - code no unit test can reach without opening a browser. The four
+  // fixtures are non-empty on purpose: an empty axis would pass whether or not it was mapped, which is the
+  // exact blindness this bead is about.
+  const summary = { findings: [{ code: 'PARITY' }] };
+  const palette = [{ code: 'PALETTE' }];
+  const boardComparison = { findings: [{ code: 'BOARD' }] };
+  const pixelComparison = { findings: [{ code: 'ARM_PIXEL' }] };
+  assert.deepEqual(
+    unionFromAxes({ summary, palette, boardComparison, pixelComparison }).map((finding) => finding.code),
+    ['PARITY', 'PALETTE', 'BOARD', 'ARM_PIXEL'],
+    'all four axes must appear, in the published order',
+  );
+
+  // A dropped mapping is a missing key naming the axis, not a shorter union.
+  assert.throws(
+    () => unionFromAxes({ summary, palette, boardComparison: undefined, pixelComparison: { findings: [] } }),
+    (error) => error instanceof TypeError && /the board axis must be an array, got no key at all/.test(error.message),
+    'an absent board comparison must be refused rather than treated as an empty axis',
+  );
+  assert.throws(
+    () => unionFromAxes({ palette, boardComparison, pixelComparison }),
+    (error) => error instanceof TypeError && /the parity axis/.test(error.message),
+  );
+  assert.throws(
+    () => unionFromAxes({ summary, palette: null, boardComparison, pixelComparison }),
+    (error) => error instanceof TypeError && /the palette axis/.test(error.message),
+  );
+});
+
+test('the committed report reassembles from its four axes, in published order', () => {
   // Real data, not synthetic: the shipped artifact carries 140 published findings across all four axes, and
   // this asserts its `findings` is EXACTLY the four axes concatenated in the published order. Equality
-  // rather than membership, so an axis that is present with the right findings but in the wrong place - or
-  // one dropped from the union while its own copy still holds them - fails here. That is the a90 regression
-  // this bead is about, and it is why the assembly had to stop being a hand-written line inside main().
+  // rather than membership, so an axis present with the right findings but in the WRONG PLACE fails here,
+  // and so does an axis dropped from the union that has findings of its own.
+  //
+  // WHAT THIS TEST DOES NOT CATCH, stated because the first version of this comment claimed it caught the
+  // a90 regression and a review disproved that by mutation: it cannot see a dropped axis that has NO
+  // findings in this artifact. `parity_findings` and `arm_pixels.findings` are both empty in the committed
+  // booking report, and concatenating an empty array changes nothing, so deleting `...armPixels` from the
+  // union leaves this test GREEN. That is the same blindness this bead was filed about, reappearing one
+  // layer up - which is precisely why the guard had to become a missing KEY rather than a shorter array.
+  // The synthetic test above, with non-empty fixtures for all four axes, is what catches that mutation.
+  // This one catches ordering and duplication. Both are worth having, and neither is the other.
   const report = JSON.parse(readFileSync(join(ROOT, 'docs/eval/conformance/booking-cross-arm.json'), 'utf8'));
   assert.deepEqual(
     assembleFindings({
