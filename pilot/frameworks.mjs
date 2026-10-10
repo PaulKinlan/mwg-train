@@ -513,6 +513,56 @@ const sessionTables = (archetype) =>
       ].join('\n')
     : '';
 
+/**
+ * The drafts table, statements, and prefill helper, emitted only when multi-step journey is declared.
+ *
+ * Built from quoted strings rather than a nested template literal, matching sessionTables.
+ */
+const draftTables = (archetype) =>
+  archetype.journey?.steps
+    ? [
+        "db.exec('CREATE TABLE IF NOT EXISTS drafts (sid TEXT, name TEXT, value TEXT, PRIMARY KEY (sid, name))');",
+        "const insertDraft = db.prepare('INSERT OR REPLACE INTO drafts (sid, name, value) VALUES (?, ?, ?)');",
+        "const selectDrafts = db.prepare('SELECT name, value FROM drafts WHERE sid = ?');",
+        "const escDraft = (value) => String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;');",
+        "const escRegex = (str) => String(str).replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&');",
+        "function prefillDrafts(doc, draftRows) {",
+        "  let result = doc;",
+        "  for (const { name, value } of draftRows) {",
+        "    const val = String(value ?? '');",
+        "    const escapedVal = escDraft(val);",
+        "    const inputRegex = new RegExp('(<input\\\\b(?=[^>]*\\\\bname=[\"\\']' + escRegex(name) + '[\"\\'])[^>]*>)', 'gi');",
+        "    result = result.replace(inputRegex, (match) => {",
+        "      if (/\\btype=[\"\\']?(?:hidden|submit|button|reset|image)[\"\\']?/i.test(match)) return match;",
+        "      if (/\\bvalue=/i.test(match)) {",
+        "        return match.replace(/\\bvalue=([\"\\']).*?\\1/i, 'value=\"' + escapedVal + '\"');",
+        "      }",
+        "      return match.replace(/\\s*(\\/?>)$/, ' value=\"' + escapedVal + '\"$1');",
+        "    });",
+        "    const textareaRegex = new RegExp('(<textarea\\\\b(?=[^>]*\\\\bname=[\"\\']' + escRegex(name) + '[\"\\'])[^>]*>)[\\s\\S]*?(<\\/textarea>)', 'gi');",
+        "    result = result.replace(textareaRegex, '$1' + escapedVal + '$2');",
+        "    const selectRegex = new RegExp('(<select\\\\b(?=[^>]*\\\\bname=[\"\\']' + escRegex(name) + '[\"\\'])[^>]*>)([\\s\\S]*?)(<\\/select>)', 'gi');",
+        "    result = result.replace(selectRegex, (match, openTag, optionsHtml, closeTag) => {",
+        "      let cleanOptions = optionsHtml.replace(/\\s+\\bselected\\b(=([\"\\'])selected\\2)?/gi, '');",
+        "      let matched = false;",
+        "      cleanOptions = cleanOptions.replace(/(<option\\b[^>]*>)([\\s\\S]*?)(<\\/option>)/gi, (optMatch, optOpen, optText, optClose) => {",
+        "        if (matched) return optMatch;",
+        "        const valAttrMatch = optOpen.match(/\\bvalue=([\"\\'])(.*?)\\1/i);",
+        "        const optVal = valAttrMatch ? valAttrMatch[2] : optText.trim();",
+        "        if (optVal === val || optVal === escapedVal) {",
+        "          matched = true;",
+        "          return optOpen.replace(/\\s*(\\/?>)$/, ' selected$1') + optText + optClose;",
+        "        }",
+        "        return optMatch;",
+        "      });",
+        "      return openTag + cleanOptions + closeTag;",
+        "    });",
+        "  }",
+        "  return result;",
+        "}",
+      ].join('\n')
+    : '';
+
 function stepPageDocument(step, index, steps, archetype) {
   const nextPath = index < steps.length - 1 ? steps[index + 1].path : archetype.journey.startPath;
   const controls = [];
@@ -775,7 +825,7 @@ db.exec(\`CREATE TABLE IF NOT EXISTS accounts (email TEXT PRIMARY KEY, password 
 
 const insert = db.prepare('INSERT INTO records (ref, created_at, payload) VALUES (?, ?, ?)');
 const select = db.prepare('SELECT ref, created_at, payload FROM records WHERE ref = ?');
-${sessionTables(archetype)}${archetype.journey?.update ? `\nconst updateRecord = db.prepare('UPDATE records SET payload = ? WHERE ref = ?');` : ''}${archetype.journey?.steps ? `\ndb.exec('CREATE TABLE IF NOT EXISTS drafts (sid TEXT, name TEXT, value TEXT, PRIMARY KEY (sid, name))');\nconst insertDraft = db.prepare('INSERT OR REPLACE INTO drafts (sid, name, value) VALUES (?, ?, ?)');\nconst selectDrafts = db.prepare('SELECT name, value FROM drafts WHERE sid = ?');` : ''}
+${sessionTables(archetype)}${archetype.journey?.update ? `\nconst updateRecord = db.prepare('UPDATE records SET payload = ? WHERE ref = ?');` : ''}${draftTables(archetype) ? `\n${draftTables(archetype)}` : ''}
 ${caps.auth ? `${authTables(archetype)}\n` : ''}const count = db.prepare('SELECT COUNT(*) AS n FROM records');
 const list = db.prepare('SELECT ref, payload FROM records ORDER BY created_at DESC LIMIT 50');
 
@@ -856,7 +906,8 @@ const server = createServer(async (request, response) => {
     const draftRows = sidCookie ? selectDrafts.all(sidCookie) : [];
     let doc = await renderDocument({ title: ${JSON.stringify(archetype.title)} });
     if (draftRows.length > 0) {
-      const carriedHtml = \`<div class="draft-carried">\${draftRows.map((d) => \`<p class="carried-value">\${d.value}</p>\`).join('\\n')}</div>\`;
+      doc = prefillDrafts(doc, draftRows);
+      const carriedHtml = \`<div class="draft-carried">\${draftRows.map((d) => \`<p class="carried-value">\${escDraft(d.value)}</p>\`).join('\\n')}</div>\`;
       doc = doc.replace('</main>', \`\${carriedHtml}</main>\`);
     }
     return html(response, doc);
@@ -869,7 +920,8 @@ const server = createServer(async (request, response) => {
     const draftRows = sidCookie ? selectDrafts.all(sidCookie) : [];
     let doc = await renderDocument({ title: ${JSON.stringify(archetype.title)} });
     if (draftRows.length > 0) {
-      const carriedHtml = \`<div class="draft-carried">\${draftRows.map((d) => \`<p class="carried-value">\${d.value}</p>\`).join('\\n')}</div>\`;
+      doc = prefillDrafts(doc, draftRows);
+      const carriedHtml = \`<div class="draft-carried">\${draftRows.map((d) => \`<p class="carried-value">\${escDraft(d.value)}</p>\`).join('\\n')}</div>\`;
       doc = doc.replace('</main>', \`\${carriedHtml}</main>\`);
     }
     return html(response, doc);
@@ -1037,9 +1089,11 @@ ${caps.auth ? `${rawAuthRoutes()}\n\n` : ''}${caps.list_pages ? rawListRoutes(ar
       ?.slice('sid='.length);
     const draftRows = sidCookie ? selectDrafts.all(sidCookie) : [];
     const carriedHtml = draftRows.length > 0
-      ? \`<div class="draft-carried">\${draftRows.map((d) => \`<p class="carried-value">\${d.value}</p>\`).join('\\n')}</div>\`
+      ? \`<div class="draft-carried">\${draftRows.map((d) => \`<p class="carried-value">\${escDraft(d.value)}</p>\`).join('\\n')}</div>\`
       : '';
-    return html(response, \`${stepPageDocument(step, idx, archetype.journey.steps, archetype)}\`);
+    let page = \`${stepPageDocument(step, idx, archetype.journey.steps, archetype)}\`;
+    if (draftRows.length > 0) page = prefillDrafts(page, draftRows);
+    return html(response, page);
   }`).join('\n  ')}` : ''}
 
   response.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });
@@ -1094,7 +1148,7 @@ const db = new DatabaseSync(dbPath);
 db.exec(\`CREATE TABLE IF NOT EXISTS records (ref TEXT PRIMARY KEY, created_at TEXT NOT NULL, payload TEXT NOT NULL)\`);
 const insert = db.prepare('INSERT INTO records (ref, created_at, payload) VALUES (?, ?, ?)');
 const select = db.prepare('SELECT ref, created_at, payload FROM records WHERE ref = ?');
-${archetype.journey?.update ? `const updateRecord = db.prepare('UPDATE records SET payload = ? WHERE ref = ?');\n` : ''}${archetype.journey?.steps ? `db.exec('CREATE TABLE IF NOT EXISTS drafts (sid TEXT, name TEXT, value TEXT, PRIMARY KEY (sid, name))');\nconst insertDraft = db.prepare('INSERT OR REPLACE INTO drafts (sid, name, value) VALUES (?, ?, ?)');\nconst selectDrafts = db.prepare('SELECT name, value FROM drafts WHERE sid = ?');\n` : ''}const list = db.prepare('SELECT ref, payload FROM records ORDER BY created_at DESC LIMIT 50');
+${archetype.journey?.update ? `const updateRecord = db.prepare('UPDATE records SET payload = ? WHERE ref = ?');\n` : ''}${draftTables(archetype) ? `${draftTables(archetype)}\n` : ''}const list = db.prepare('SELECT ref, payload FROM records ORDER BY created_at DESC LIMIT 50');
 
 ${parameterisedWrite ? `// An edit flow edits something: the seeded record is what the form's action points at.
 db.prepare('INSERT OR IGNORE INTO records (ref, created_at, payload) VALUES (?, ?, ?)').run('${EDIT_SEED_REF}', new Date().toISOString(), '{}');
@@ -1146,7 +1200,8 @@ ${archetype.journey?.steps ? `app.get('/', async (c) => {
   const draftRows = sidCookie ? selectDrafts.all(sidCookie) : [];
   let doc = await renderDocument({ title: ${JSON.stringify(archetype.title)} });
   if (draftRows.length > 0) {
-    const carriedHtml = \`<div class="draft-carried">\${draftRows.map((d) => \`<p class="carried-value">\${d.value}</p>\`).join('\\n')}</div>\`;
+    doc = prefillDrafts(doc, draftRows);
+    const carriedHtml = \`<div class="draft-carried">\${draftRows.map((d) => \`<p class="carried-value">\${escDraft(d.value)}</p>\`).join('\\n')}</div>\`;
     doc = doc.replace('</main>', \`\${carriedHtml}</main>\`);
   }
   return c.html(doc);
@@ -1159,7 +1214,8 @@ ${archetype.journey?.steps ? `app.get('/', async (c) => {
   const draftRows = sidCookie ? selectDrafts.all(sidCookie) : [];
   let doc = await renderDocument({ title: ${JSON.stringify(archetype.title)} });
   if (draftRows.length > 0) {
-    const carriedHtml = \`<div class="draft-carried">\${draftRows.map((d) => \`<p class="carried-value">\${d.value}</p>\`).join('\\n')}</div>\`;
+    doc = prefillDrafts(doc, draftRows);
+    const carriedHtml = \`<div class="draft-carried">\${draftRows.map((d) => \`<p class="carried-value">\${escDraft(d.value)}</p>\`).join('\\n')}</div>\`;
     doc = doc.replace('</main>', \`\${carriedHtml}</main>\`);
   }
   return c.html(doc);
@@ -1320,9 +1376,11 @@ app.get('${step.path}', (c) => {
     ?.slice('sid='.length);
   const draftRows = sidCookie ? selectDrafts.all(sidCookie) : [];
   const carriedHtml = draftRows.length > 0
-    ? \`<div class="draft-carried">\${draftRows.map((d) => \`<p class="carried-value">\${d.value}</p>\`).join('\\n')}</div>\`
+    ? \`<div class="draft-carried">\${draftRows.map((d) => \`<p class="carried-value">\${escDraft(d.value)}</p>\`).join('\\n')}</div>\`
     : '';
-  return c.html(\`${stepPageDocument(step, idx, archetype.journey.steps, archetype)}\`);
+  let page = \`${stepPageDocument(step, idx, archetype.journey.steps, archetype)}\`;
+  if (draftRows.length > 0) page = prefillDrafts(page, draftRows);
+  return c.html(page);
 });`;
 }).join('\n\n')}` : ''}
 
