@@ -41,6 +41,7 @@
     "check:brief-schema": "node scripts/check-brief-schema.mjs",
     "check:route-conformance": "node scripts/check-route-conformance.mjs",
     "check:served-routes": "node scripts/check-served-routes.mjs",
+    "check:served-routes:strict": "node scripts/check-served-routes.mjs --expect-all",
     "check:rules-pin": "node scripts/check-rules-pin.mjs",
     "check:cross-arm-parity": "node scripts/check-cross-arm-parity.mjs",
     "check:cross-arm-parity:strict": "node scripts/check-cross-arm-parity.mjs --strict",
