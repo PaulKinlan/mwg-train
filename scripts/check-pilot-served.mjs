@@ -132,25 +132,25 @@ export function extractRoutes(content) {
   
   let remaining = content;
 
-  const honoRegex = /app\.(get|post|put|delete|patch)\(\s*(['"`])([^'"`]+)\2/g;
-  for (const match of content.matchAll(honoRegex)) served.add(`${match[1].toUpperCase()} ${match[3]}`);
+  const honoRegex = /app\.(?<method>get|post|put|delete|patch)\(\s*(?<quote>['"`])(?<path>[^'"`]+)\k<quote>/g;
+  for (const match of content.matchAll(honoRegex)) served.add(`${match.groups.method.toUpperCase()} ${match.groups.path}`);
   remaining = remaining.replace(honoRegex, 'MATCHED_HONO');
   
-  const varPaths = /const\s+([a-zA-Z0-9_]+)\s*=\s*(['"`])([^'"`]+)\2;[\r\n\s]*app\.(get|post|put|delete|patch)\(\s*\1/g;
-  for (const match of content.matchAll(varPaths)) served.add(`${match[4].toUpperCase()} ${match[3]}`);
+  const varPaths = /const\s+(?<pathVar>[a-zA-Z0-9_]+)\s*=\s*(?<quote>['"`])(?<path>[^'"`]+)\k<quote>;[\r\n\s]*app\.(?<method>get|post|put|delete|patch)\(\s*\k<pathVar>/g;
+  for (const match of content.matchAll(varPaths)) served.add(`${match.groups.method.toUpperCase()} ${match.groups.path}`);
   remaining = remaining.replace(varPaths, 'MATCHED_HONO_VAR');
   
-  const loops = /for\s+\([^)]+of\s+\[([^\]]*)\]\)\s*\{\s*app\.(get|post|put|delete|patch)/g;
+  const loops = /for\s+\([^)]+of\s+\[(?<list>[^\]]*)\]\)\s*\{\s*app\.(?<method>get|post|put|delete|patch)/g;
   for (const match of content.matchAll(loops)) {
-    if (!match[1].trim()) continue;
-    const method = match[2].toUpperCase();
-    const strings = match[1].split(',').map(s => s.trim().replace(/^['"`]|['"`]$/g, '')).filter(s => s);
+    if (!match.groups.list.trim()) continue;
+    const method = match.groups.method.toUpperCase();
+    const strings = match.groups.list.split(',').map(s => s.trim().replace(/^['"`]|['"`]$/g, '')).filter(s => s);
     for (const s of strings) served.add(`${method} ${s}`);
   }
   remaining = remaining.replace(loops, 'MATCHED_HONO_LOOP');
 
-  const rawMatches = /path\s*===\s*(['"`])([^'"`]+)\1(?:\s*&&\s*request\.method\s*===\s*(['"`])([^'"`]+)\3)?/g;
-  for (const match of content.matchAll(rawMatches)) served.add(`${match[4] ? match[4].toUpperCase() : 'GET'} ${match[2]}`);
+  const rawMatches = /path\s*===\s*(?<quote>['"`])(?<path>[^'"`]+)\k<quote>(?:\s*&&\s*request\.method\s*===\s*(?<methodQuote>['"`])(?<method>[^'"`]+)\k<methodQuote>)?/g;
+  for (const match of content.matchAll(rawMatches)) served.add(`${match.groups.method ? match.groups.method.toUpperCase() : 'GET'} ${match.groups.path}`);
   remaining = remaining.replace(rawMatches, 'MATCHED_RAW');
   
   // Two deliberate changes here, both about the same failure. The wildcard used to be [\s\S]{0,200}?,
@@ -164,24 +164,28 @@ export function extractRoutes(content) {
   // tighten this pattern inserted one extra capture group, which silently moved the method out of match[5]
   // - every raw arm then emitted a quote character as its method, and a committed project's genuine route
   // was reported as a phantom stale exception. Reading by name makes that class of error impossible rather
+  //
+  // Every other extractor in this file was converted for the same reason (mwg-train-h1a): a positional
+  // read is a copy of a pattern's internal structure, and that copy is what goes stale when the pattern
+  // changes. Nothing here reads a capture group by position any more.
   // than merely fixed.
   const rawVarsBetter = /const\s+(?<pathVar>[a-zA-Z0-9_]+)\s*=\s*(?<pathQuote>['"`])(?<path>[^'"`]+)\k<pathQuote>;\s*const\s+(?<matchVar>[a-zA-Z0-9_]+)\s*=\s*path\.match\(new\s+RegExp\([^;]*?\b\k<pathVar>\b[^;]*?\)\);\s*if\s*\(\s*\k<matchVar>\s*&&\s*request\.method\s*===\s*(?<methodQuote>['"`])(?<method>[^'"`]+)\k<methodQuote>/g;
   for (const match of content.matchAll(rawVarsBetter)) served.add(`${match.groups.method.toUpperCase()} ${match.groups.path}`);
   remaining = remaining.replace(rawVarsBetter, 'MATCHED_RAW_VAR');
   
-  const rawArrays = /\[([^\]]*)\]\.includes\(path\)(?:\s*&&\s*request\.method\s*===\s*(['"`])([^'"`]+)\2)?/g;
+  const rawArrays = /\[(?<list>[^\]]*)\]\.includes\(path\)(?:\s*&&\s*request\.method\s*===\s*(?<methodQuote>['"`])(?<method>[^'"`]+)\k<methodQuote>)?/g;
   for (const match of content.matchAll(rawArrays)) {
-    if (!match[1].trim()) continue;
-    const method = match[3] ? match[3].toUpperCase() : 'GET';
-    const strings = match[1].split(',').map(s => s.trim().replace(/^['"`]|['"`]$/g, '')).filter(s => s);
+    if (!match.groups.list.trim()) continue;
+    const method = match.groups.method ? match.groups.method.toUpperCase() : 'GET';
+    const strings = match.groups.list.split(',').map(s => s.trim().replace(/^['"`]|['"`]$/g, '')).filter(s => s);
     for (const s of strings) served.add(`${method} ${s}`);
   }
   remaining = remaining.replace(rawArrays, 'MATCHED_RAW_ARRAY');
 
-  const rawStarts = /path\.startsWith\(\s*(['"`])([^'"`]+)\1\s*\)(?:\s*&&\s*request\.method\s*===\s*(['"`])([^'"`]+)\3)?/g;
+  const rawStarts = /path\.startsWith\(\s*(?<quote>['"`])(?<path>[^'"`]+)\k<quote>\s*\)(?:\s*&&\s*request\.method\s*===\s*(?<methodQuote>['"`])(?<method>[^'"`]+)\k<methodQuote>)?/g;
   for (const match of content.matchAll(rawStarts)) {
-    const method = match[4] ? match[4].toUpperCase() : 'GET';
-    let r = match[2];
+    const method = match.groups.method ? match.groups.method.toUpperCase() : 'GET';
+    let r = match.groups.path;
     if (r === '/api/record/') r = '/api/record/:ref';
     if (r === '/app/') r = '/app/:file';
     served.add(`${method} ${r}`);
