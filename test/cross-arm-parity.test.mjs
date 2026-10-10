@@ -11,7 +11,13 @@ import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import test from 'node:test';
 
-import { REFERENCE_PALETTE } from '../scripts/check-cross-arm-parity.mjs';
+import {
+  ADVISORY_CODES,
+  REFERENCE_PALETTE,
+  assertFindingsConsistent,
+  exitCodeFor,
+  parseArgs,
+} from '../scripts/check-cross-arm-parity.mjs';
 import {
   ARM_PIXEL_CODES,
   PARITY_CODES,
@@ -626,4 +632,130 @@ test('two palette findings that differ only by code both survive the collapse', 
   // `viewports` holds the viewport OBJECTS, not their keys - my first version expected strings, so it failed
   // on the shape of the value rather than on the behaviour. The code was right; the expectation was wrong.
   assert.deepEqual(collected[0].viewports.map((viewport) => viewport.key).sort(), ['desktop', 'mobile', 'tablet']);
+});
+
+// -----------------------------------------------------------------------------------------------------------
+// The gate policy, and the write separation. Both are pure decisions, so they are tested here rather than
+// by running the browser.
+//
+// mwg-train-a90: `check:cross-arm-parity` rewrote two tracked documents every time it ran (timings change
+// run to run, so the tree was never clean afterwards) and exited 0 while printing 140 FINDING lines.
+// A report in the shape the script actually produces: the union PLUS each axis published beside it, which
+// assertFindingsConsistent() checks the union against. Every synthetic report here must be built this way,
+// because a report that publishes an axis the union omits is refused rather than scored.
+function reportWith({ parity = [], palette = [], board = [], pixels = [] } = {}) {
+  return {
+    parity_findings: parity,
+    palette_findings: palette,
+    board_comparison: { findings: board },
+    arm_pixels: { findings: pixels },
+    findings: [...parity, ...palette, ...board, ...pixels],
+  };
+}
+
+test('the exit code gates arm-against-arm parity but not the advisory board and palette drift', () => {
+  const board = { code: 'BOARD_STRUCTURE_DIVERGES' };
+  const palette = { code: 'PALETTE_DIVERGES' };
+
+  assert.equal(exitCodeFor(reportWith()), 0);
+
+  // The committed report's ACTUAL state: 140 advisory findings and no parity drift. Exiting non-zero here
+  // would make this check red on every clean checkout for a divergence the report itself documents as
+  // expected, which is how a gate stops being read. It must stay visible - the CLI prints it - but not fail.
+  assert.equal(exitCodeFor(reportWith({ board: [board, board], palette: [palette] })), 0);
+  // ...and --strict is what fails on it, which is what --strict always did.
+  assert.equal(exitCodeFor(reportWith({ board: [board] }), { strict: true }), 1);
+
+  // Parity gates, with or without --strict, on BOTH axes measured between arms.
+  assert.equal(exitCodeFor(reportWith({ parity: [{ code: 'CROSS_ARM_BELOW_BUDGET' }] })), 1);
+  assert.equal(exitCodeFor(reportWith({ parity: [{ code: 'CROSS_ARM_BELOW_BUDGET' }] }), { strict: true }), 1);
+  assert.equal(
+    exitCodeFor(reportWith({ pixels: [{ code: 'CROSS_ARM_PIXEL_PAIR_DIVERGES' }], palette: [palette], board: [board] })),
+    1,
+    'arm-against-arm PIXEL divergence is parity, not advisory, and must fail the default check',
+  );
+
+  // A code nobody has classified GATES, so a new measurement cannot become advisory by default...
+  assert.equal(exitCodeFor(reportWith({ parity: [{ code: 'SOMETHING_NOBODY_CLASSIFIED' }] })), 1);
+  // ...and a board that could not be read is an unmeasured comparison, not a passing one.
+  assert.equal(exitCodeFor(reportWith({ board: [{ code: 'BOARDS_MISSING' }] })), 1);
+
+  // A malformed report is an error, not a silent zero.
+  assert.throws(() => exitCodeFor({}), TypeError);
+  assert.throws(() => exitCodeFor(undefined), TypeError);
+});
+
+test('a report publishing a finding the union omits is refused, not scored', () => {
+  // The union is assembled by hand in main() from four axes, which is precisely the wiring a unit test
+  // cannot see. Two mutations that dropped an axis from that line passed the whole suite before this guard,
+  // so the guard has to work on the DATA the gate is handed.
+  const orphan = { code: 'CROSS_ARM_PIXEL_PAIR_DIVERGES' };
+  const report = reportWith({ palette: [{ code: 'PALETTE_DIVERGES' }] });
+  // Published as an axis finding but missing from the union: the gate would be scoring a different set from
+  // the one the report publishes.
+  report.arm_pixels.findings = [orphan];
+  assert.throws(() => exitCodeFor(report), /absent from report\.findings/);
+  assert.throws(() => assertFindingsConsistent(report), /absent from report\.findings/);
+
+  // An axis deleted outright is an error too, even while the union still holds its findings - otherwise an
+  // empty axis could be dropped silently.
+  for (const key of ['parity_findings', 'palette_findings']) {
+    const missing = reportWith();
+    delete missing[key];
+    assert.throws(() => assertFindingsConsistent(missing), /missing the .* axis/, `${key} must be required`);
+  }
+  const noBoard = reportWith();
+  delete noBoard.board_comparison;
+  assert.throws(() => assertFindingsConsistent(noBoard), /missing the .* axis/);
+  const noPixels = reportWith();
+  delete noPixels.arm_pixels;
+  assert.throws(() => assertFindingsConsistent(noPixels), /missing the .* axis/);
+
+  // The shapes the gate really sees are accepted, and the axes are reported back.
+  assert.equal(assertFindingsConsistent(reportWith()), 'parity_findings=0 palette_findings=0 board_comparison.findings=0 arm_pixels.findings=0');
+});
+
+test('the committed report satisfies its own union, so the guard is not vacuous today', () => {
+  // Data-driven rather than synthetic: this is the artifact the repository ships, and it carries 140
+  // published findings. If the union ever stops matching what the report publishes, this fails on real data.
+  const report = JSON.parse(readFileSync(join(ROOT, 'docs/eval/conformance/booking-cross-arm.json'), 'utf8'));
+  const axes = assertFindingsConsistent(report);
+  assert.match(axes, /palette_findings=35/, `the committed report must publish its palette axis, got ${axes}`);
+  assert.match(axes, /board_comparison\.findings=105/, `the committed report must publish its board axis, got ${axes}`);
+  assert.ok(report.findings.length >= 140, `the committed union must still carry every published finding, got ${report.findings.length}`);
+  assert.equal(exitCodeFor(report), 0, 'the committed report has no arm-against-arm drift and must not fail');
+});
+
+test('the check does not write the committed report unless it is asked to', () => {
+  // A check that rewrites the artifact it checks dirties the tree on every run, so a reader cannot tell
+  // the tool's own output from a real edit.
+  assert.equal(parseArgs([]).write, false, 'writing must be off by default');
+  assert.equal(parseArgs(['--write']).write, true);
+  assert.equal(parseArgs(['--archetype', 'booking', '--write']).write, true);
+  // The other flags must not accidentally turn writing on.
+  assert.equal(parseArgs(['--strict']).write, false);
+  assert.equal(parseArgs(['--rerender']).write, false);
+});
+
+test('every finding code the committed report actually carries is classified deliberately', () => {
+  // The committed report is the only place that shows which codes this pipeline really emits, so it is what
+  // stops ADVISORY_CODES losing a real entry: drop one and that code's findings begin to GATE, turning the
+  // check red on a condition the report documents as expected. The convention is the one ADVISORY_CODES
+  // states - BOARD_* measures an arm against the boards, PALETTE_* against the declared tokens - and
+  // anything else is arm-against-arm and gates.
+  const report = JSON.parse(readFileSync(join(ROOT, 'docs/eval/conformance/booking-cross-arm.json'), 'utf8'));
+  const codes = [...new Set(report.findings.map((finding) => finding.code))].sort();
+  assert.ok(codes.length > 0, 'the committed report must carry findings for this guard to mean anything');
+  const advisory = codes.filter((code) => code.startsWith('BOARD_') || code.startsWith('PALETTE_'));
+  assert.ok(
+    advisory.length >= 5,
+    `the committed report must still exercise the advisory codes, saw ${advisory.join(', ')}`,
+  );
+  for (const code of codes) {
+    if (advisory.includes(code)) {
+      assert.ok(ADVISORY_CODES.includes(code), `${code} is in the committed report and must be classified advisory`);
+    } else {
+      assert.ok(!ADVISORY_CODES.includes(code), `${code} is in the committed report and must gate`);
+    }
+  }
 });

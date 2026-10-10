@@ -4,7 +4,9 @@
  *
  *   node scripts/check-cross-arm-parity.mjs                      # booking, all arms, three widths
  *   node scripts/check-cross-arm-parity.mjs --archetype booking
- *   node scripts/check-cross-arm-parity.mjs --strict             # exit non-zero when findings exist
+ *   node scripts/check-cross-arm-parity.mjs --write              # update the committed report; without it
+ *                                                                # this never touches a tracked file
+ *   node scripts/check-cross-arm-parity.mjs --strict             # also fail on ADVISORY drift, not just parity
  *   node scripts/check-cross-arm-parity.mjs --rerender           # rebuild the markdown from the JSON
  *
  * For each framework the pilot can build, this renders the arm at 390, 768 and 1280 wide, saves a
@@ -82,7 +84,7 @@ const TOKEN_SCRIPT = `return (() => {
   };
 })();`;
 
-function parseArgs(argv) {
+export function parseArgs(argv) {
   const options = {
     archetype: 'booking',
     out: 'docs/eval/conformance',
@@ -91,11 +93,17 @@ function parseArgs(argv) {
     port: 9600,
     strict: false,
     rerender: false,
+    // A check that rewrites the committed report it is checking cannot be run on a clean tree: it dirties
+    // the two files every time (timings differ run to run even when nothing else does), and anyone
+    // reading `git status` after a check cannot tell a real edit from the tool's own output. Writing is
+    // now explicit (mwg-train-a90).
+    write: false,
     reuseArms: false,
   };
   for (let index = 0; index < argv.length; index += 1) {
     const flag = argv[index];
-    if (flag === '--archetype') options.archetype = argv[++index];
+    if (flag === '--write') options.write = true;
+    else if (flag === '--archetype') options.archetype = argv[++index];
     else if (flag === '--out') options.out = argv[++index];
     else if (flag === '--run-root') options.runRoot = argv[++index];
     else if (flag === '--port') options.port = Number(argv[++index]);
@@ -206,7 +214,7 @@ function renderMarkdown(report) {
   lines.push(baselineAttributionLine());
   lines.push('');
   lines.push(
-    `Compares the ${(report.arms_observed ?? []).length ? new Set((report.arms_observed ?? []).map((arm) => arm.framework)).size : 0} framework arms for \`${report.archetype}\` with each other at ${report.viewports.length} widths, and compares every arm screenshot against the reference boards in pixels. Finds drift; does not gate it unless \`--strict\` is passed.`,
+    `Compares the ${(report.arms_observed ?? []).length ? new Set((report.arms_observed ?? []).map((arm) => arm.framework)).size : 0} framework arms for \`${report.archetype}\` with each other at ${report.viewports.length} widths, and compares every arm screenshot against the reference boards in pixels. Arm-against-arm drift fails this check; board and palette divergence is advisory and is reported without failing unless \`--strict\` is passed.`,
   );
   lines.push('');
   lines.push(
@@ -572,6 +580,102 @@ function compareOne({ screenshot, boardMetrics }) {
   };
 }
 
+/**
+ * The exit code for a finished run. Pure, so the gate policy can be tested without a browser.
+ *
+ * The finding codes that are REPORTED but do not fail the check. Each is here because it measures an arm
+ * against the reference BOARDS, or against the declared palette, rather than one arm against another:
+ *
+ *   BOARD_*    the arm screenshot against the design boards (scripts/lib/image-metrics.mjs CODES), which
+ *              the committed report documents as expected divergence.
+ *   PALETTE_*  the arm's computed tokens against the palette the boards declare (parity.mjs
+ *              paletteFindings), which is the same question one level down.
+ *
+ * DELIBERATELY NOT HERE: every CROSS_ARM_* code and both ARM_PIXEL_CODES, which compare arms with each
+ * other - the two axes this script exists to measure. Also not here: BOARDS_MISSING, BOARD_UNREADABLE and
+ * BOARDS_UNREADABLE, because a board that could not be read is an unmeasured comparison rather than a
+ * passing one.
+ *
+ * ANYTHING ELSE GATES, including a code that does not exist yet: a new measurement is treated as parity
+ * until someone classifies it deliberately, so the failure direction is a red check rather than a silent
+ * pass. The list is derived from where the codes are DEFINED, not from what today's report happens to
+ * contain.
+ */
+export const ADVISORY_CODES = Object.freeze([
+  'BOARD_PALETTE_NOT_SHARED',
+  'BOARD_LUMINANCE_DIVERGES',
+  'BOARD_INK_DIVERGES',
+  'BOARD_STRUCTURE_DIVERGES',
+  'BOARD_STRUCTURE_NOT_COMPARABLE',
+  'PALETTE_DIVERGES',
+  'PALETTE_UNDECLARED',
+]);
+
+/**
+ * Every finding the report publishes must also be in the union the gate scores.
+ *
+ * The union `findings` is assembled by hand in main() from four axes, and no unit test can see an axis left
+ * out of that line: the tests supply their own reports, so a mutation dropping one axis from main() passed
+ * 29/29 twice before this guard existed. This makes the wiring check ITSELF at run time instead. Each axis
+ * the report publishes separately must be an array - so deleting an axis outright is an error rather than a
+ * quiet omission - and every finding in each must appear in `findings`. A report that fails is not scored at
+ * all: it throws rather than returning a pass over a union that is missing an axis.
+ *
+ * FINDINGS ARE MATCHED BY VALUE, not by reference, so this also holds for a report read back from JSON.
+ */
+export function assertFindingsConsistent(report) {
+  const findings = report?.findings;
+  if (!Array.isArray(findings)) throw new TypeError('report.findings must be an array');
+  const axes = [
+    ['parity_findings', report?.parity_findings],
+    ['palette_findings', report?.palette_findings],
+    ['board_comparison.findings', report?.board_comparison?.findings],
+    ['arm_pixels.findings', report?.arm_pixels?.findings],
+  ];
+  for (const [name, axis] of axes) {
+    if (!Array.isArray(axis)) {
+      throw new TypeError(`report is missing the ${name} axis, so the gate cannot check the union against it`);
+    }
+  }
+  const union = new Set(findings.map((finding) => JSON.stringify(finding)));
+  for (const [name, axis] of axes) {
+    for (const finding of axis) {
+      if (!union.has(JSON.stringify(finding))) {
+        throw new Error(`a ${name} finding is published but absent from report.findings: the gate would score a union missing an axis`);
+      }
+    }
+  }
+  return axes.map(([name, axis]) => `${name}=${axis.length}`).join(' ');
+}
+
+/**
+ * The exit code for a finished report. Pure, so the gate policy is tested without a browser.
+ *
+ * ARM-AGAINST-ARM PARITY GATES, ON BOTH AXES MEASURED BETWEEN ARMS; BOARD AND PALETTE DRIFT IS ADVISORY.
+ * The report's own `limits.compares` draws that line: "layout and component structure between arms", "real
+ * pixels between arms at each width", and "real pixels against the reference boards". The first two are
+ * parity - one arm disagreeing with another - and the third is the design question. Both axes are scored
+ * here, by CODE over the complete findings list, which is why the arm-against-arm PIXEL axis cannot be
+ * silently left out the way it was when only the structural set gated.
+ *
+ * Failing on the advisory set by default would make the check red on every clean checkout for a condition
+ * this repository has already decided is expected - the committed report says board divergence "is
+ * expected on this repository: the generated arms use the pilot palette and have not adopted the boards'
+ * design" - and a check that is always red cannot show a new failure: the defect filed as mwg-train-jjl.
+ * `--strict` still fails on any finding, which is what it has always done.
+ *
+ * A malformed report is an error rather than a silent zero.
+ */
+export function exitCodeFor(report, { strict = false } = {}) {
+  const findings = report?.findings;
+  if (!Array.isArray(findings)) throw new TypeError('exitCodeFor needs a report with a findings array');
+  assertFindingsConsistent(report);
+  if (findings.length === 0) return 0;
+  if (strict) return 1;
+  // Every finding that is not advisory is parity, so an unrecognised code fails the check.
+  return findings.some((finding) => !ADVISORY_CODES.includes(finding?.code)) ? 1 : 0;
+}
+
 async function main() {
   const options = parseArgs(process.argv.slice(2));
   const jsonPath = resolve(ROOT, options.out, `${options.archetype}-cross-arm.json`);
@@ -701,6 +805,11 @@ async function main() {
     board_comparison: (({ analyzed: _unused, ...rest }) => rest)(boardComparison),
     // Arm-against-arm pixels, kept beside the board comparison and summarised rather than duplicated.
     arm_pixels: pixelReport,
+    // The structural parity axis, published beside the others. Without this the union could lose
+    // `...summary.findings` and NOTHING could tell: the parity findings were the one axis carried only in
+    // `findings`, so dropping them left a report whose own parts no longer added up, with no other copy to
+    // compare against. assertFindingsConsistent() below checks every published axis against the union.
+    parity_findings: summary.findings,
     // Board findings are part of `findings`, so they print, they are visible to a JSON consumer, and
     // `--strict` can act on them. A cross-family review caught them living only in board_comparison,
     // where 105 measured disagreements were invisible to every one of those three. The arm-pixel findings
@@ -715,17 +824,39 @@ async function main() {
     },
   };
 
-  mkdirSync(dirname(jsonPath), { recursive: true });
-  writeFileSync(jsonPath, `${JSON.stringify(report, null, 2)}\n`);
-  writeFileSync(markdownPath, renderMarkdown(report));
+  // The report is still assembled and reported above; only SAVING it is opt-in, so a check can run on a
+  // clean tree and leave it clean.
+  if (options.write) {
+    mkdirSync(dirname(jsonPath), { recursive: true });
+    writeFileSync(jsonPath, `${JSON.stringify(report, null, 2)}\n`);
+    writeFileSync(markdownPath, renderMarkdown(report));
+  }
 
   console.log(
     `check-cross-arm-parity: ${report.arms_measured.length} arms measured, ${summary.findings.length} parity finding(s), ${palette.length} palette finding(s), ${report.board_comparison?.findings?.length ?? 0} board finding(s)`,
   );
   for (const finding of report.findings) console.log(`  FINDING ${finding.code} ${finding.message}`);
-  console.log(`check-cross-arm-parity: wrote ${jsonPath.replace(`${ROOT}/`, '')} and ${markdownPath.replace(`${ROOT}/`, '')}`);
-  if (report.findings.length === 0) console.log('check-cross-arm-parity: PASS - no drift above budget');
-  return options.strict && report.findings.length > 0 ? 1 : 0;
+  console.log(
+    options.write
+      ? `check-cross-arm-parity: wrote ${jsonPath.replace(`${ROOT}/`, '')} and ${markdownPath.replace(`${ROOT}/`, '')}`
+      : `check-cross-arm-parity: not writing ${jsonPath.replace(`${ROOT}/`, '')}; pass --write to update the committed report`,
+  );
+  // The gate is decided by CODE over the complete findings list. Passing explicit sub-arrays here would be
+  // untestable - a unit test cannot see main() forgetting one axis, which is exactly how the
+  // arm-against-arm PIXEL axis was left advisory while only the structural one gated. Classifying
+  // report.findings by code scores every finding main() produces, including a code added later, which
+  // GATES until someone classifies it deliberately (see ADVISORY_CODES).
+  const advisory = report.findings.filter((finding) => ADVISORY_CODES.includes(finding?.code));
+  if (report.findings.length === 0) {
+    console.log('check-cross-arm-parity: PASS - no drift above budget');
+  } else if (advisory.length === report.findings.length) {
+    // Say what is NOT gating, and why, rather than exiting 0 over a screen of FINDING lines and leaving
+    // the reader to guess whether the check passed.
+    console.log(
+      `check-cross-arm-parity: PASS - no arm-against-arm drift above budget; the ${advisory.length} board and palette finding(s) above are advisory and do NOT fail this check (pass --strict to fail on them)`,
+    );
+  }
+  return exitCodeFor(report, options);
 }
 
 // Import-safe: a test asserts this script's declared palette still matches the reference boards' own

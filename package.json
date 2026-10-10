@@ -44,6 +44,7 @@
     "check:rules-pin": "node scripts/check-rules-pin.mjs",
     "check:cross-arm-parity": "node scripts/check-cross-arm-parity.mjs",
     "check:cross-arm-parity:strict": "node scripts/check-cross-arm-parity.mjs --strict",
+    "cross-arm-parity:update": "node scripts/check-cross-arm-parity.mjs --write",
     "check:design-schema": "node scripts/check-design-schema.mjs",
     "check:baseline-label": "node scripts/check-baseline-label.mjs",
     "label:baseline": "node scripts/label-baseline.mjs"
