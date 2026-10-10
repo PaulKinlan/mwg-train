@@ -60,7 +60,7 @@ Recorded in `pilot/TRAINING_CORPUS.json`, spanning 30 synthetic families (`tr-01
 > does guard. A test now re-measures the corpus and fails when the committed record disagrees.
 >
 > The fourth move is this one: **2,615,747 → 2,748,147**, and its cause is a fix rather than a drift. The
-> fifteen training families that declare a `list` route now opt in to the derived list-page handlers
+> 29 of the 30 training families that declare a `list` route now opt in to the derived list-page handlers
 > (`mwg-train-ndr`), so each of their generated servers carries a handler and a page renderer it previously
 > did not - the honest cost of serving the route the brief declares instead of four hardcoded paths. The
 > trees grew by about 5% and the measurement moved with them, which is what the gate added in the previous
