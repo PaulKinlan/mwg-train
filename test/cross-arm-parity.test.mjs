@@ -715,6 +715,17 @@ test('a report publishing a finding the union omits is refused, not scored', () 
   assert.equal(assertFindingsConsistent(reportWith()), 'parity_findings=0 palette_findings=0 board_comparison.findings=0 arm_pixels.findings=0');
 });
 
+test('the committed report satisfies its own union, so the guard is not vacuous today', () => {
+  // Data-driven rather than synthetic: this is the artifact the repository ships, and it carries 140
+  // published findings. If the union ever stops matching what the report publishes, this fails on real data.
+  const report = JSON.parse(readFileSync(join(ROOT, 'docs/eval/conformance/booking-cross-arm.json'), 'utf8'));
+  const axes = assertFindingsConsistent(report);
+  assert.match(axes, /palette_findings=35/, `the committed report must publish its palette axis, got ${axes}`);
+  assert.match(axes, /board_comparison\.findings=105/, `the committed report must publish its board axis, got ${axes}`);
+  assert.ok(report.findings.length >= 140, `the committed union must still carry every published finding, got ${report.findings.length}`);
+  assert.equal(exitCodeFor(report), 0, 'the committed report has no arm-against-arm drift and must not fail');
+});
+
 test('the check does not write the committed report unless it is asked to', () => {
   // A check that rewrites the artifact it checks dirties the tree on every run, so a reader cannot tell
   // the tool's own output from a real edit.
