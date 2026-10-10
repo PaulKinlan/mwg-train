@@ -30,6 +30,7 @@ const WIRED = new Set([
 ]);
 
 const EXCLUDED = new Map([
+  ['check:pilot-served', 'requires a spawned HTTP server'],
   ['check:served-routes', 'requires a spawned HTTP server'],
   ['check:served-routes:strict', 'requires a spawned HTTP server'],
   ['check:cross-arm-parity', 'requires Chrome'],
