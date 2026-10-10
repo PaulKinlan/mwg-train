@@ -680,7 +680,9 @@ test('the exit code gates arm-against-arm parity but not the advisory board and 
   // A code nobody has classified GATES, so a new measurement cannot become advisory by default...
   assert.equal(exitCodeFor(reportWith({ parity: [{ code: 'SOMETHING_NOBODY_CLASSIFIED' }] })), 1);
   // ...and a board that could not be read is an unmeasured comparison, not a passing one.
-  assert.equal(exitCodeFor(reportWith({ board: [{ code: 'BOARDS_MISSING' }] })), 1);
+  assert.equal(exitCodeFor(reportWith({ board: [{ code: 'BOARD_UNREADABLE' }] })), 1);
+  // BUT missing boards are absent input, not a failed measurement.
+  assert.equal(exitCodeFor(reportWith({ board: [{ code: 'BOARDS_MISSING' }] })), 0);
 
   // A malformed report is an error, not a silent zero.
   assert.throws(() => exitCodeFor({}), TypeError);

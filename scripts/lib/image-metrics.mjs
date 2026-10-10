@@ -16,7 +16,7 @@ const CODES = Object.freeze({
   LUMINANCE_DIVERGES: 'BOARD_LUMINANCE_DIVERGES',
   INK_DIVERGES: 'BOARD_INK_DIVERGES',
   STRUCTURE_DIVERGES: 'BOARD_STRUCTURE_DIVERGES',
-  STRUCTURE_NOT_COMPARABLE: 'BOARD_STRUCTURE_NOT_COMPARABLE',
+  STRUCTURE_UNMEASURED: 'BOARD_STRUCTURE_UNMEASURED',
 });
 
 export function round4(value) {
@@ -388,7 +388,7 @@ export function summariseComparison(baseline, candidate) {
 
   if (!rowShape.comparable) {
     findings.push({
-      code: CODES.STRUCTURE_NOT_COMPARABLE,
+      code: CODES.STRUCTURE_UNMEASURED,
       axis: 'structure',
       profile: 'rows',
       message: `Axis 'structure': one of the two horizontal band profiles has no variation, so their shapes cannot be compared. Reported rather than scored, because scoring it would call a uniform image a perfect structural match for every other image.`,
@@ -412,7 +412,7 @@ export function summariseComparison(baseline, candidate) {
 
   if (!colShape.comparable) {
     findings.push({
-      code: CODES.STRUCTURE_NOT_COMPARABLE,
+      code: CODES.STRUCTURE_UNMEASURED,
       axis: 'structure',
       profile: 'columns',
       message: `Axis 'structure': one of the two vertical band profiles has no variation, so their shapes cannot be compared. Reported rather than scored, because scoring it would call a uniform image a perfect structural match for every other image.`,
