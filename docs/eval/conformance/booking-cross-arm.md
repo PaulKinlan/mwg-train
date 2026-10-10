@@ -2,7 +2,7 @@
 
 > **mwg-train deterministic baseline** - deterministic output of this repository's own tooling, not an official `web-uplift` result.
 
-Compares the 7 framework arms for `booking` with each other at 3 widths, and compares every arm screenshot against the reference boards in pixels. Finds drift; does not gate it unless `--strict` is passed.
+Compares the 7 framework arms for `booking` with each other at 3 widths, and compares every arm screenshot against the reference boards in pixels. Arm-against-arm drift fails this check; board and palette divergence is advisory and is reported without failing unless `--strict` is passed.
 
 **What this measures:** layout and component structure between arms (structural, geometry, controls - blind to text), and real pixels against the boards. **What it does not do:** a per-pixel image diff; the board comparison uses colour distribution, luminance, ink coverage and coarse band structure, and two images can share all of those while looking different.
 

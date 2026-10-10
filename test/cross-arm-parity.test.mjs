@@ -11,7 +11,7 @@ import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import test from 'node:test';
 
-import { REFERENCE_PALETTE, exitCodeFor, parseArgs } from '../scripts/check-cross-arm-parity.mjs';
+import { ADVISORY_CODES, REFERENCE_PALETTE, exitCodeFor, parseArgs } from '../scripts/check-cross-arm-parity.mjs';
 import {
   ARM_PIXEL_CODES,
   PARITY_CODES,
@@ -638,28 +638,50 @@ test('the exit code gates arm-against-arm parity but not the advisory board and 
   const board = { code: 'BOARD_STRUCTURE_DIVERGES' };
   const palette = { code: 'PALETTE_DIVERGES' };
 
-  // Clean: nothing above budget.
-  assert.equal(exitCodeFor({ parityFindings: [], allFindings: [] }), 0);
+  assert.equal(exitCodeFor({ findings: [] }), 0);
 
-  // The case the committed report is in: 140 advisory findings and no parity drift. Exiting non-zero here
+  // The committed report's ACTUAL state: 140 advisory findings and no parity drift. Exiting non-zero here
   // would make this check red on every clean checkout for a divergence the report itself documents as
-  // expected, which is how a gate stops being read. It must still be VISIBLE - the CLI prints it - but it
-  // must not fail.
-  assert.equal(
-    exitCodeFor({ parityFindings: [], allFindings: [board, palette, board] }),
-    0,
-    'advisory board and palette drift must not fail the default check',
-  );
+  // expected, which is how a gate stops being read. It must stay visible - the CLI prints it - but not fail.
+  assert.equal(exitCodeFor({ findings: [board, palette, board] }), 0);
   // ...and --strict is what fails on it, which is what --strict always did.
-  assert.equal(exitCodeFor({ parityFindings: [], allFindings: [board] }, { strict: true }), 1);
+  assert.equal(exitCodeFor({ findings: [board] }, { strict: true }), 1);
 
-  // Parity drift is this tool's subject: it fails with or without --strict.
-  assert.equal(exitCodeFor({ parityFindings: [board], allFindings: [board] }), 1);
-  assert.equal(exitCodeFor({ parityFindings: [board], allFindings: [board] }, { strict: true }), 1);
+  // Parity gates, with or without --strict, on BOTH axes measured between arms.
+  assert.equal(exitCodeFor({ findings: [{ code: 'CROSS_ARM_BELOW_BUDGET' }] }), 1);
+  assert.equal(exitCodeFor({ findings: [{ code: 'CROSS_ARM_BELOW_BUDGET' }] }, { strict: true }), 1);
+  assert.equal(
+    exitCodeFor({ findings: [{ code: 'CROSS_ARM_PIXEL_PAIR_DIVERGES' }, palette, board] }),
+    1,
+    'arm-against-arm PIXEL divergence is parity, not advisory, and must fail the default check',
+  );
 
-  // A caller that cannot say which findings are parity gets a failure, not a pass.
-  assert.throws(() => exitCodeFor({ parityFindings: undefined, allFindings: [] }), TypeError);
+  // A code nobody has classified GATES, so a new measurement cannot become advisory by default...
+  assert.equal(exitCodeFor({ findings: [{ code: 'SOMETHING_NOBODY_CLASSIFIED' }] }), 1);
+  // ...and a board that could not be read is an unmeasured comparison, not a passing one.
+  assert.equal(exitCodeFor({ findings: [{ code: 'BOARDS_MISSING' }] }), 1);
+
+  // A malformed report is an error, not a silent zero.
   assert.throws(() => exitCodeFor({}), TypeError);
+  assert.throws(() => exitCodeFor(undefined), TypeError);
+});
+
+test('no arm-against-arm code is classified as advisory', () => {
+  // ARM_PIXEL_CODES is the pixel axis measured between arms; the CROSS_ARM_* / ARM_ / VIEWPORT_ families
+  // are the structural one. If any of them ever appears in ADVISORY_CODES, the gate has quietly lost the
+  // exact thing this script exists to detect - which is the hole a review found when only the structural
+  // axis gated and the pixel axis did not.
+  const structural = Object.values(PARITY_CODES).filter(
+    (code) => code.startsWith('CROSS_ARM_') || code.startsWith('ARM_') || code.startsWith('VIEWPORT_'),
+  );
+  assert.ok(structural.length >= 4, `the structural parity codes must be discoverable, got ${structural.join(', ')}`);
+  assert.ok(Object.values(ARM_PIXEL_CODES).length >= 2, 'the arm-pixel codes must be discoverable');
+  for (const code of [...structural, ...Object.values(ARM_PIXEL_CODES)]) {
+    assert.ok(
+      !ADVISORY_CODES.includes(code),
+      `${code} compares arms with each other and must gate, not be advisory`,
+    );
+  }
 });
 
 test('the check does not write the committed report unless it is asked to', () => {
@@ -671,4 +693,27 @@ test('the check does not write the committed report unless it is asked to', () =
   // The other flags must not accidentally turn writing on.
   assert.equal(parseArgs(['--strict']).write, false);
   assert.equal(parseArgs(['--rerender']).write, false);
+});
+
+test('every finding code the committed report actually carries is classified deliberately', () => {
+  // The committed report is the only place that shows which codes this pipeline really emits, so it is what
+  // stops ADVISORY_CODES losing a real entry: drop one and that code's findings begin to GATE, turning the
+  // check red on a condition the report documents as expected. The convention is the one ADVISORY_CODES
+  // states - BOARD_* measures an arm against the boards, PALETTE_* against the declared tokens - and
+  // anything else is arm-against-arm and gates.
+  const report = JSON.parse(readFileSync(join(ROOT, 'docs/eval/conformance/booking-cross-arm.json'), 'utf8'));
+  const codes = [...new Set(report.findings.map((finding) => finding.code))].sort();
+  assert.ok(codes.length > 0, 'the committed report must carry findings for this guard to mean anything');
+  const advisory = codes.filter((code) => code.startsWith('BOARD_') || code.startsWith('PALETTE_'));
+  assert.ok(
+    advisory.length >= 5,
+    `the committed report must still exercise the advisory codes, saw ${advisory.join(', ')}`,
+  );
+  for (const code of codes) {
+    if (advisory.includes(code)) {
+      assert.ok(ADVISORY_CODES.includes(code), `${code} is in the committed report and must be classified advisory`);
+    } else {
+      assert.ok(!ADVISORY_CODES.includes(code), `${code} is in the committed report and must gate`);
+    }
+  }
 });

@@ -583,24 +583,59 @@ function compareOne({ screenshot, boardMetrics }) {
 /**
  * The exit code for a finished run. Pure, so the gate policy can be tested without a browser.
  *
- * ARM-AGAINST-ARM PARITY GATES; BOARD AND PALETTE DRIFT IS ADVISORY. The committed report states the
- * reason in its own words - board divergence "is expected on this repository: the generated arms use the
- * pilot palette and have not adopted the boards' design" - and it carries the same 140 palette and board
- * findings it carried when it was last regenerated. Failing the check on those would make it red on every
- * clean checkout for a condition this repository has already decided is expected, and a check that is
- * always red cannot show a new failure: that is the defect filed as mwg-train-jjl. `--strict` still fails
- * on any finding, which is what it has always done.
+ * The finding codes that are REPORTED but do not fail the check. Each is here because it measures an arm
+ * against the reference BOARDS, or against the declared palette, rather than one arm against another:
  *
- * A caller that cannot say which findings are parity FAILS CLOSED - an unscorable report is a failure,
- * not a pass - and a malformed call is an error rather than a silent zero.
+ *   BOARD_*    the arm screenshot against the design boards (scripts/lib/image-metrics.mjs CODES), which
+ *              the committed report documents as expected divergence.
+ *   PALETTE_*  the arm's computed tokens against the palette the boards declare (parity.mjs
+ *              paletteFindings), which is the same question one level down.
+ *
+ * DELIBERATELY NOT HERE: every CROSS_ARM_* code and both ARM_PIXEL_CODES, which compare arms with each
+ * other - the two axes this script exists to measure. Also not here: BOARDS_MISSING, BOARD_UNREADABLE and
+ * BOARDS_UNREADABLE, because a board that could not be read is an unmeasured comparison rather than a
+ * passing one.
+ *
+ * ANYTHING ELSE GATES, including a code that does not exist yet: a new measurement is treated as parity
+ * until someone classifies it deliberately, so the failure direction is a red check rather than a silent
+ * pass. The list is derived from where the codes are DEFINED, not from what today's report happens to
+ * contain.
  */
-export function exitCodeFor({ parityFindings, allFindings }, { strict = false } = {}) {
-  if (!Array.isArray(parityFindings) || !Array.isArray(allFindings)) {
-    throw new TypeError('exitCodeFor needs parityFindings and allFindings arrays');
-  }
-  if (allFindings.length === 0) return 0;
+export const ADVISORY_CODES = Object.freeze([
+  'BOARD_PALETTE_NOT_SHARED',
+  'BOARD_LUMINANCE_DIVERGES',
+  'BOARD_INK_DIVERGES',
+  'BOARD_STRUCTURE_DIVERGES',
+  'BOARD_STRUCTURE_NOT_COMPARABLE',
+  'PALETTE_DIVERGES',
+  'PALETTE_UNDECLARED',
+]);
+
+/**
+ * The exit code for a finished report. Pure, so the gate policy is tested without a browser.
+ *
+ * ARM-AGAINST-ARM PARITY GATES, ON BOTH AXES MEASURED BETWEEN ARMS; BOARD AND PALETTE DRIFT IS ADVISORY.
+ * The report's own `limits.compares` draws that line: "layout and component structure between arms", "real
+ * pixels between arms at each width", and "real pixels against the reference boards". The first two are
+ * parity - one arm disagreeing with another - and the third is the design question. Both axes are scored
+ * here, by CODE over the complete findings list, which is why the arm-against-arm PIXEL axis cannot be
+ * silently left out the way it was when only the structural set gated.
+ *
+ * Failing on the advisory set by default would make the check red on every clean checkout for a condition
+ * this repository has already decided is expected - the committed report says board divergence "is
+ * expected on this repository: the generated arms use the pilot palette and have not adopted the boards'
+ * design" - and a check that is always red cannot show a new failure: the defect filed as mwg-train-jjl.
+ * `--strict` still fails on any finding, which is what it has always done.
+ *
+ * A malformed report is an error rather than a silent zero.
+ */
+export function exitCodeFor(report, { strict = false } = {}) {
+  const findings = report?.findings;
+  if (!Array.isArray(findings)) throw new TypeError('exitCodeFor needs a report with a findings array');
+  if (findings.length === 0) return 0;
   if (strict) return 1;
-  return parityFindings.length > 0 ? 1 : 0;
+  // Every finding that is not advisory is parity, so an unrecognised code fails the check.
+  return findings.some((finding) => !ADVISORY_CODES.includes(finding?.code)) ? 1 : 0;
 }
 
 async function main() {
@@ -763,18 +798,22 @@ async function main() {
       ? `check-cross-arm-parity: wrote ${jsonPath.replace(`${ROOT}/`, '')} and ${markdownPath.replace(`${ROOT}/`, '')}`
       : `check-cross-arm-parity: not writing ${jsonPath.replace(`${ROOT}/`, '')}; pass --write to update the committed report`,
   );
-  const parity = summary.findings;
-  const advisory = report.findings.length - parity.length;
+  // The gate is decided by CODE over the complete findings list. Passing explicit sub-arrays here would be
+  // untestable - a unit test cannot see main() forgetting one axis, which is exactly how the
+  // arm-against-arm PIXEL axis was left advisory while only the structural one gated. Classifying
+  // report.findings by code scores every finding main() produces, including a code added later, which
+  // GATES until someone classifies it deliberately (see ADVISORY_CODES).
+  const advisory = report.findings.filter((finding) => ADVISORY_CODES.includes(finding?.code));
   if (report.findings.length === 0) {
     console.log('check-cross-arm-parity: PASS - no drift above budget');
-  } else if (parity.length === 0) {
+  } else if (advisory.length === report.findings.length) {
     // Say what is NOT gating, and why, rather than exiting 0 over a screen of FINDING lines and leaving
     // the reader to guess whether the check passed.
     console.log(
-      `check-cross-arm-parity: PASS - no arm-against-arm drift above budget; the ${advisory} board and palette finding(s) above are advisory and do NOT fail this check (pass --strict to fail on them)`,
+      `check-cross-arm-parity: PASS - no arm-against-arm drift above budget; the ${advisory.length} board and palette finding(s) above are advisory and do NOT fail this check (pass --strict to fail on them)`,
     );
   }
-  return exitCodeFor({ parityFindings: parity, allFindings: report.findings }, options);
+  return exitCodeFor(report, options);
 }
 
 // Import-safe: a test asserts this script's declared palette still matches the reference boards' own
