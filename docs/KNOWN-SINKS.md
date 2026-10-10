@@ -41,15 +41,15 @@ Three things follow, and each was checked rather than assumed:
 still emit none. A future "sanitize the generator" change now fails loudly instead of quietly deleting
 curriculum.
 
-## 2. The reflected query in the page title — a real gap, in ONE arm, frozen by invariant
+## 2. The reflected query in the page title — a real gap in every non-Hono arm, frozen by invariant
 
 Separate from the above, and **not** defect-gated:
 
 ```js
-// pilot/frameworks.mjs:1060 and :1065, inside the RAW server template
+// pilot/frameworks.mjs:1060 and :1065, inside serverSource()
 const query = url.searchParams.get('q') ?? '';
 return html(response, await renderDocument({ title: `Search: ${query}`, ... }));
-// and that arm's renderDocument (pilot/frameworks.mjs:209) is a PLAIN template literal:
+// and every NON-HONO arm's renderDocument is a PLAIN template literal:
 return `<!doctype html> ... <title>${title}</title> ...
 ```
 
@@ -64,22 +64,31 @@ reflects attacker-controlled markup. This is a genuine gap and not curriculum, f
 
 ### Which arms are affected, and which are not — checked, not assumed
 
-The generator emits `renderDocument` five times, and **only some of them interpolate unescaped**. A first
-version of this document said the Hono arm was affected. It is not, and the correction matters because it
-decides which trees anyone would have to re-record:
+The generator emits `renderDocument` five times, and **only the Hono one escapes**. This section has been
+corrected twice and both corrections matter, because the reach decides which trees anyone would have to
+re-record. It first named the Hono arm as affected — wrong, the tag escapes. It then said only the raw arm
+was affected — also wrong, for a reason worth stating plainly: the search route at `:1060` and `:1065`
+lives in `serverSource()`, which is not the raw arm, it is the server generator for **every non-Hono
+framework**. `pilot/frameworks.mjs:1510` chooses it as
+`framework.name === 'hono' ? honoServerSource(...) : serverSource(...)`. So every non-Hono arm gets that
+route, and every non-Hono `renderDocument` is a plain template literal:
 
 | emitter | template | title sink |
 |---|---|---|
 | `pilot/frameworks.mjs:209` raw and webcomponents | plain template literal | **YES — the demonstrated gap** |
 | `pilot/frameworks.mjs:239` Hono | **tagged** `html` from `hono/html` (`:229`) | **NO — the tag escapes** |
-| `pilot/frameworks.mjs:273` react and preact | plain template literal | unescaped, but no call site feeds it a request value |
-| `pilot/frameworks.mjs:308` vue | plain template literal | unescaped, but no call site feeds it a request value |
-| `pilot/frameworks.mjs:1440` svelte | plain template literal | unescaped, but no call site feeds it a request value |
+| `pilot/frameworks.mjs:273` react and preact | plain template literal | **YES — `serverSource` gives it the search route** |
+| `pilot/frameworks.mjs:308` vue | plain template literal | **YES — `serverSource` gives it the search route** |
+| `pilot/frameworks.mjs:1440` svelte | plain template literal | **YES — `serverSource` gives it the search route** |
 
-The only call sites that pass a **request-derived** title are `:1060` and `:1065` (raw) and `:1336`,
-`:1337` (Hono). So the demonstrated gap is the **raw** arm, and the react, vue and svelte emitters
-interpolate unescaped but nothing currently feeds them a request value — latent, not demonstrated. They
-are listed so the next reader checks them instead of assuming either way.
+So the affected set is **every non-Hono arm**: raw, webcomponents, react, preact, vue and svelte. The only
+call sites that pass a request-derived title are `:1060`/`:1065` (non-Hono) and `:1336`/`:1337` (Hono, and
+therefore escaped), which means the reflection is live in all six non-Hono arms rather than latent in any
+of them. Demonstrated rather than argued, in committed trees: `catalogue-react`, `catalogue-preact`,
+`catalogue-vue` and `catalogue-webcomponents` all carry the `/search` route in `server.mjs` and a plain
+`<title>${title}</title>` in `app/page.mjs`, and calling that tree's own `renderDocument` with
+`title: 'Search: <script>alert(1)</script>'` returns
+`<title>Search: <script>alert(1)</script></title>` — the payload survives.
 
 The Hono arm is exempt because a tagged template escapes its interpolations. That is library behaviour,
 so it is asserted rather than described: `test/known-sinks.test.mjs` renders a hostile value through the
@@ -98,7 +107,9 @@ Re-recording the pilot corpus requires a completed browser run with staged uplif
 (`scripts/pilot-corpus.mjs --record`), so the freeze cannot be re-taken from a lane at all. The fix is
 therefore deferred to whoever owns that pipeline, and the sink is recorded here instead. When it is fixed,
 both corpus records and the token figures move with it, in one reviewed change — not as a drive-by.
-**Scope any re-record to the affected arms only: the Hono trees are unaffected and must not move.**
+**Re-record every non-Hono search tree and leave only the Hono ones alone.** Concretely, the arms whose
+`server.mjs` carries the search route and whose `page.mjs` interpolates unescaped: raw, webcomponents,
+react, preact, vue, svelte.
 
 ## 3. Our own tooling — checked, and already safe
 
@@ -120,6 +131,6 @@ Expect these to be flagged, and check them against this file before acting:
 | Flagged | Truth |
 |---|---|
 | `pilot/frameworks.mjs:409` and the committed trees containing it | Intentional defect arm. Do not sanitize. |
-| `pilot/frameworks.mjs` raw-arm search `<title>` interpolation | Real gap, frozen corpus. Does not belong in a lane. |
+| `pilot/frameworks.mjs` non-Hono search `<title>` interpolation (all six arms) | Real gap, frozen corpus. Does not belong in a lane. |
 | `pilot/frameworks.mjs` Hono search `<title>` interpolation | **Not a sink** — tagged `hono/html` template escapes. Do not re-record these trees. |
 | `src/viewer/**` query parameters | Escaped, and gated by `test/known-sinks.test.mjs`. |
