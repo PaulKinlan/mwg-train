@@ -209,3 +209,67 @@ test('a matched span does not swallow unparsed routes between an assignment and 
     'intervening unparsed route-like constructs must be reported, not scrubbed away'
   );
 });
+
+// The raw var-bound pattern used to carry a [\s\S]{0,200}? wildcard, so a single replacement could
+// match a legitimate three-statement route AND scrub an unrelated unparsed route sitting between the
+// assignment and its method check. The check then reported served [] and unparsed [] - blind, in exactly
+// the direction its fail-closed guard exists to cover. Anchoring the pattern to the real emission shape
+// means the intervening construct is left in the residue and reported.
+test('the raw var-bound pattern does not scrub an unparsed route between the assignment and its use', () => {
+  const code = [
+    "const readRoute = '/reset/:ref';",
+    'app.get(dynamicVar, () => {});',
+    "if (request.method === 'GET') {}",
+  ].join('\n');
+  const result = extractRoutes(code);
+  const unparsed = result.unparsed ?? [];
+  assert.ok(
+    unparsed.length > 0,
+    'an unparsed route between the assignment and the method check must be reported, not scrubbed away'
+  );
+});
+
+// Every extractor emits from capture groups, and the original attempt to tighten this pattern inserted
+// one extra group - which silently moved the method out of the index the code read, so every raw arm
+// emitted a quote character as its method and a committed project's real route became a phantom stale
+// exception. The groups are now named, and this covers every emission form at once: a pattern whose
+// groups shift, or whose capture order changes, fails here instead of on the corpus at merge time.
+test('every extraction form emits the route and method it found, not a shifted capture group', () => {
+  const forms = [
+    ['hono literal', "app.get('/a', () => {});", ['GET /a']],
+    ['hono var-bound', "const p = '/b';\napp.post(p, () => {});", ['POST /b']],
+    ['hono loop', "for (const p of ['/c', '/d']) {\n  app.get(p, () => {});\n}", ['GET /c', 'GET /d']],
+    ['raw equality', "if (path === '/e') {}", ['GET /e']],
+    ['raw equality with method', "if (path === '/f' && request.method === 'POST') {}", ['POST /f']],
+    [
+      'raw var-bound',
+      ['const r = "/g/:ref";', "const m = path.match(new RegExp('^' + r + '$'));", "if (m && request.method === 'DELETE'"].join('\n'),
+      ['DELETE /g/:ref'],
+    ],
+    ['array includes', "if (['/h'].includes(path) && request.method === 'PUT') {}", ['PUT /h']],
+    ['startsWith', "if (path.startsWith('/i/') && request.method === 'PATCH') {}", ['PATCH /i/']],
+  ];
+  for (const [label, code, expected] of forms) {
+    const served = extractRoutes(code).served;
+    const actual = (Array.isArray(served) ? served : [...served]).sort();
+    assert.deepStrictEqual(actual, expected.slice().sort(), `${label}: wrong route emitted`);
+  }
+});
+
+// Tightening rawVarsBetter closed a silent hole and opened a smaller one, which the review caught.
+// The old wildcard matched a path.match route whatever the shape, so a construction like a swapped
+// condition order was at least extracted. The anchored pattern deliberately does not cover it, and
+// because path.match( was not a route-like token, the residual scan did not report it either - so a
+// served route went from mis-extracted to silently ignored, which is worse. The residual scan has to
+// see the shapes the anchored pattern does not cover.
+test('a path.match route the anchored pattern does not cover is reported, not ignored', () => {
+  const code = [
+    'const readRoute = "/j/:ref";',
+    "const readMatch = path.match(new RegExp('^' + readRoute + '$'));",
+    "if (request.method === 'GET' && readMatch) {}",
+  ].join('\n');
+  assert.ok(
+    (extractRoutes(code).unparsed ?? []).length > 0,
+    'an unrecognised path.match route must be reported as an unparsed block'
+  );
+});
