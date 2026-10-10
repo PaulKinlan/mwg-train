@@ -23,7 +23,8 @@ Experiment: does training on Modern Web Guidance-applied sites make a model defa
 ## Checks
 
 ```bash
-npm test                    # unit tests, including the corpus and pricing invariants
+npm test                    # unit tests (including the corpus invariants and the wired check gate)
+npm run check:all           # run exactly the deterministic, offline checks wired into the test gate
 npm run check:briefs        # validate + seal the brief manifest
 npm run quotes:verify       # every priced row must re-derive from the page it came from
 npm run quotes:fetch        # re-fetch those pages and report whether they still hash the same
