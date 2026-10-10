@@ -428,7 +428,18 @@ test('a character counter is a known intentional trigger, and rewording is the r
 //
 // mwg-train-jjl: docs/train/corpus/records.json carried baseline_label and baseline_tool but not
 // baseline_definition, and docs/train/corpus/tokens.json carried none of the three.
+// A floor on the count, not an equality against the other list. FLOOR_DOCUMENTS is now DERIVED from the
+// label check's registry, so asserting the two are equal would be tautological and would prove nothing.
+// This count is what stops that derivation being replaced by a hand-maintained copy that quietly covers
+// less - the drift that let docs/eval/conformance/booking-cross-arm.json carry two of three attribution
+// fields past BOTH gates.
+const MINIMUM_FLOOR_DOCUMENTS = 12;
+
 test('the labeler --check is clean on the committed tree, for every declared floor document', () => {
+  assert.ok(
+    FLOOR_DOCUMENTS.length >= MINIMUM_FLOOR_DOCUMENTS,
+    `the labelled document set must not shrink below ${MINIMUM_FLOOR_DOCUMENTS}; it covers ${FLOOR_DOCUMENTS.length}`,
+  );
   const results = labelDocuments(FLOOR_DOCUMENTS, { check: true });
   const refused = results.filter((r) =>
     ['UNREADABLE', 'REFUSED_NOT_ATTRIBUTION_ONLY', 'REFUSED_NOT_BYTE_SAFE'].includes(r.code),
@@ -437,7 +448,9 @@ test('the labeler --check is clean on the committed tree, for every declared flo
   const pending = results.filter((r) => r.code === 'WOULD_LABEL').map((r) => r.path);
   assert.deepEqual(pending, [], `these documents state a floor without the attribution: ${pending.join(', ')}`);
   // The check above only proves the label is ABSENT or present as a whole; assert the exact fields, so a
-  // document carrying two of the three cannot pass. That is the precise defect this bead describes.
+  // document carrying two of the three cannot pass. That is the precise defect this bead describes, and
+  // booking-cross-arm.json is the document that used to sit outside this loop entirely - the other gate
+  // searches the text for the label string, so two of three missing fields passed both.
   for (const path of FLOOR_DOCUMENTS) {
     const document = JSON.parse(readFileSync(join(ROOT, path), 'utf8'));
     for (const [key, value] of Object.entries(BASELINE_FIELDS)) {

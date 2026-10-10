@@ -22,22 +22,25 @@
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 import process from 'node:process';
+import { REGISTRY } from './check-baseline-label.mjs';
 import { labelFloorDocument } from '../src/eval/ruleset.mjs';
 
-/** The measurement documents that state a floor. Declared, not globbed, for the same reason the label check is. */
-export const FLOOR_DOCUMENTS = [
-  'docs/pilot/yield.json',
-  'docs/pilot/records.json',
-  'docs/eval/conformance/account-recovery-identity.json',
-  'docs/eval/conformance/booking-identity.json',
-  'docs/eval/conformance/catalogue-identity.json',
-  'docs/eval/conformance/contact-lead-identity.json',
-  'docs/eval/conformance/event-registration-identity.json',
-  'docs/eval/conformance/booking.json',
-  'docs/train/corpus/records.json',
-  'docs/train/corpus/tokens.json',
-  'pilot/CORPUS.json',
-];
+/**
+ * The measurement documents that state a floor, and therefore must carry the attribution.
+ *
+ * DERIVED, NOT RESTATED. This used to be a second hand-maintained list beside the label check's own
+ * registry, and the two drifted exactly as this repository's test file warns a restated list does: review
+ * found `docs/eval/conformance/booking-cross-arm.json` classified as a floor-report by
+ * check-baseline-label.mjs while missing here. So `label-baseline --check` never looked at it, and the
+ * other gate only searches the text for the label string - which meant stripping two of its three
+ * attribution fields passed BOTH gates (mwg-train-jjl review, P1). There is no second list to forget now:
+ * a new floor report is declared once, in check-baseline-label.mjs DOCUMENTS, and reaches this tool.
+ *
+ * JSON ONLY, because this tool labels a document by parsing it, byte-comparing it and writing it back -
+ * a JSON operation. The markdown reports carry the label from their own writers via baselineAttributionLine.
+ */
+export const FLOOR_DOCUMENTS = REGISTRY.filter((path) => path.endsWith('.json'));
+
 
 function describe(document) {
   return JSON.stringify(document);
