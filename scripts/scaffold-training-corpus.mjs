@@ -262,6 +262,16 @@ function familyArchetype(family, base) {
     story: `${capitalize(family.topic)}: a server-backed flow that stores each submission and shows it back on reload.`,
   };
   if (!base.session) overrides.routes = deriveRoutes(family, base);
+  // Opt in to the derived list-page handlers when this family actually declares a list route (mwg-train-ndr).
+  // The capability is OPT-IN by design - `pilot/frameworks.mjs` states that a spec declaring no capability
+  // regenerates byte-identically, which is the hard gate on the 35 frozen pilot trees - so the training
+  // corpus has to ask for it rather than have it inferred for every archetype. It is derived from the routes
+  // this family really carries, not hand-listed beside them, because the flag and the routes are the same
+  // fact stated twice and the flag is the copy that goes stale. Before this, fifteen families declared a
+  // `list` route and took the fallback branch instead, which served four hardcoded paths (/roster, /inbox,
+  // /attendees, /cart) that no brief declares and answered the declared route with a 404.
+  const routes = overrides.routes ?? base.routes;
+  overrides.capabilities = { ...(base.capabilities ?? {}), list_pages: routes.some((route) => route.kind === 'list') };
   // A brief that carries its own schema supplies the form and the journey, so the
   // project renders what the brief describes rather than the archetype's form under a
   // different title. Without one, the family keeps the archetype's fields and journey.

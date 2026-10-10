@@ -1,6 +1,6 @@
 {
   "convention": "served = status < 400, or another 4xx that means the handler ran (422); 404 and 405 = NOT SERVED; >= 500 or network failure = ERROR. Write routes are probed with POST and read-by-reference routes with a record the server created",
-  "timestamp": "2026-10-08T18:38:28.217Z",
+  "timestamp": "2026-10-10T04:20:53.853Z",
   "scope": {
     "limit": 30,
     "families": [
@@ -39,8 +39,8 @@
   },
   "summary": {
     "declared_routes": 135,
-    "served": 91,
-    "not_served": 44,
+    "served": 131,
+    "not_served": 4,
     "errors": 0,
     "by_kind": {
       "page": {
@@ -69,8 +69,8 @@
       },
       "list": {
         "declared": 41,
-        "served": 1,
-        "not_served": 40,
+        "served": 41,
+        "not_served": 0,
         "errors": 0
       },
       "list-detail": {
@@ -95,152 +95,12 @@
   },
   "not_served_routes": [
     {
-      "project_id": "tr-01-hono",
-      "family_id": "tr-01",
-      "archetype": "booking",
-      "kind": "list",
-      "declared_path": "/services",
-      "probed_path": "/services",
-      "declared_method": "GET",
-      "status": 404
-    },
-    {
-      "project_id": "tr-02-hono",
-      "family_id": "tr-02",
-      "archetype": "web-shop",
-      "kind": "list",
-      "declared_path": "/ciders",
-      "probed_path": "/ciders",
-      "declared_method": "GET",
-      "status": 404
-    },
-    {
-      "project_id": "tr-03-hono",
-      "family_id": "tr-03",
-      "archetype": "booking",
-      "kind": "list",
-      "declared_path": "/kilns",
-      "probed_path": "/kilns",
-      "declared_method": "GET",
-      "status": 404
-    },
-    {
-      "project_id": "tr-03-hono",
-      "family_id": "tr-03",
-      "archetype": "booking",
-      "kind": "list",
-      "declared_path": "/schedule",
-      "probed_path": "/schedule",
-      "declared_method": "GET",
-      "status": 404
-    },
-    {
-      "project_id": "tr-04-hono",
-      "family_id": "tr-04",
-      "archetype": "dashboard",
-      "kind": "list",
-      "declared_path": "/generation",
-      "probed_path": "/generation",
-      "declared_method": "GET",
-      "status": 404
-    },
-    {
-      "project_id": "tr-04-hono",
-      "family_id": "tr-04",
-      "archetype": "dashboard",
-      "kind": "list",
-      "declared_path": "/credits",
-      "probed_path": "/credits",
-      "declared_method": "GET",
-      "status": 404
-    },
-    {
-      "project_id": "tr-06-hono",
-      "family_id": "tr-06",
-      "archetype": "directory-listing",
-      "kind": "list",
-      "declared_path": "/makers",
-      "probed_path": "/makers",
-      "declared_method": "GET",
-      "status": 404
-    },
-    {
-      "project_id": "tr-06-hono",
-      "family_id": "tr-06",
-      "archetype": "directory-listing",
-      "kind": "list",
-      "declared_path": "/disciplines",
-      "probed_path": "/disciplines",
-      "declared_method": "GET",
-      "status": 404
-    },
-    {
-      "project_id": "tr-07-hono",
-      "family_id": "tr-07",
-      "archetype": "event-registration",
-      "kind": "list",
-      "declared_path": "/events",
-      "probed_path": "/events",
-      "declared_method": "GET",
-      "status": 404
-    },
-    {
-      "project_id": "tr-08-hono",
-      "family_id": "tr-08",
-      "archetype": "support-helpdesk",
-      "kind": "list",
-      "declared_path": "/tickets",
-      "probed_path": "/tickets",
-      "declared_method": "GET",
-      "status": 404
-    },
-    {
-      "project_id": "tr-09-hono",
-      "family_id": "tr-09",
-      "archetype": "course-enrolment",
-      "kind": "list",
-      "declared_path": "/courses",
-      "probed_path": "/courses",
-      "declared_method": "GET",
-      "status": 404
-    },
-    {
       "project_id": "tr-09-hono",
       "family_id": "tr-09",
       "archetype": "course-enrolment",
       "kind": "list-detail",
       "declared_path": "/courses/:id",
       "probed_path": "/courses/1",
-      "declared_method": "GET",
-      "status": 404
-    },
-    {
-      "project_id": "tr-10-hono",
-      "family_id": "tr-10",
-      "archetype": "survey-form",
-      "kind": "list",
-      "declared_path": "/results",
-      "probed_path": "/results",
-      "declared_method": "GET",
-      "status": 404
-    },
-    {
-      "project_id": "tr-11-hono",
-      "family_id": "tr-11",
-      "archetype": "restaurant-ordering",
-      "kind": "list",
-      "declared_path": "/menu",
-      "probed_path": "/menu",
-      "declared_method": "GET",
-      "status": 404
-    },
-    {
-      "project_id": "tr-12-hono",
-      "family_id": "tr-12",
-      "archetype": "job-board",
-      "kind": "list",
-      "declared_path": "/jobs",
-      "probed_path": "/jobs",
       "declared_method": "GET",
       "status": 404
     },
@@ -258,59 +118,9 @@
       "project_id": "tr-13-hono",
       "family_id": "tr-13",
       "archetype": "docs-site",
-      "kind": "list",
-      "declared_path": "/docs",
-      "probed_path": "/docs",
-      "declared_method": "GET",
-      "status": 404
-    },
-    {
-      "project_id": "tr-13-hono",
-      "family_id": "tr-13",
-      "archetype": "docs-site",
       "kind": "list-detail",
       "declared_path": "/docs/:slug",
       "probed_path": "/docs/sample-item",
-      "declared_method": "GET",
-      "status": 404
-    },
-    {
-      "project_id": "tr-13-hono",
-      "family_id": "tr-13",
-      "archetype": "docs-site",
-      "kind": "list",
-      "declared_path": "/soil-tests",
-      "probed_path": "/soil-tests",
-      "declared_method": "GET",
-      "status": 404
-    },
-    {
-      "project_id": "tr-14-hono",
-      "family_id": "tr-14",
-      "archetype": "directory-listing",
-      "kind": "list",
-      "declared_path": "/stops",
-      "probed_path": "/stops",
-      "declared_method": "GET",
-      "status": 404
-    },
-    {
-      "project_id": "tr-15-hono",
-      "family_id": "tr-15",
-      "archetype": "expense-tracker",
-      "kind": "list",
-      "declared_path": "/expenses",
-      "probed_path": "/expenses",
-      "declared_method": "GET",
-      "status": 404
-    },
-    {
-      "project_id": "tr-16-hono",
-      "family_id": "tr-16",
-      "archetype": "library-catalogue",
-      "kind": "list",
-      "declared_path": "/cultivars",
-      "probed_path": "/cultivars",
       "declared_method": "GET",
       "status": 404
     },
@@ -323,250 +133,40 @@
       "probed_path": "/cultivars/1",
       "declared_method": "GET",
       "status": 404
-    },
-    {
-      "project_id": "tr-17-hono",
-      "family_id": "tr-17",
-      "archetype": "booking",
-      "kind": "list",
-      "declared_path": "/services",
-      "probed_path": "/services",
-      "declared_method": "GET",
-      "status": 404
-    },
-    {
-      "project_id": "tr-18-hono",
-      "family_id": "tr-18",
-      "archetype": "web-shop",
-      "kind": "list",
-      "declared_path": "/products",
-      "probed_path": "/products",
-      "declared_method": "GET",
-      "status": 404
-    },
-    {
-      "project_id": "tr-18-hono",
-      "family_id": "tr-18",
-      "archetype": "web-shop",
-      "kind": "list",
-      "declared_path": "/basket",
-      "probed_path": "/basket",
-      "declared_method": "GET",
-      "status": 404
-    },
-    {
-      "project_id": "tr-19-hono",
-      "family_id": "tr-19",
-      "archetype": "booking",
-      "kind": "list",
-      "declared_path": "/skiffs",
-      "probed_path": "/skiffs",
-      "declared_method": "GET",
-      "status": 404
-    },
-    {
-      "project_id": "tr-19-hono",
-      "family_id": "tr-19",
-      "archetype": "booking",
-      "kind": "list",
-      "declared_path": "/safety-log",
-      "probed_path": "/safety-log",
-      "declared_method": "GET",
-      "status": 404
-    },
-    {
-      "project_id": "tr-20-hono",
-      "family_id": "tr-20",
-      "archetype": "community-forum",
-      "kind": "list",
-      "declared_path": "/tunes",
-      "probed_path": "/tunes",
-      "declared_method": "GET",
-      "status": 404
-    },
-    {
-      "project_id": "tr-21-hono",
-      "family_id": "tr-21",
-      "archetype": "booking",
-      "kind": "list",
-      "declared_path": "/rides",
-      "probed_path": "/rides",
-      "declared_method": "GET",
-      "status": 404
-    },
-    {
-      "project_id": "tr-21-hono",
-      "family_id": "tr-21",
-      "archetype": "booking",
-      "kind": "list",
-      "declared_path": "/dispatch",
-      "probed_path": "/dispatch",
-      "declared_method": "GET",
-      "status": 404
-    },
-    {
-      "project_id": "tr-22-hono",
-      "family_id": "tr-22",
-      "archetype": "dashboard",
-      "kind": "list",
-      "declared_path": "/trees",
-      "probed_path": "/trees",
-      "declared_method": "GET",
-      "status": 404
-    },
-    {
-      "project_id": "tr-22-hono",
-      "family_id": "tr-22",
-      "archetype": "dashboard",
-      "kind": "list",
-      "declared_path": "/canopy-summary",
-      "probed_path": "/canopy-summary",
-      "declared_method": "GET",
-      "status": 404
-    },
-    {
-      "project_id": "tr-23-hono",
-      "family_id": "tr-23",
-      "archetype": "survey-form",
-      "kind": "list",
-      "declared_path": "/calculator",
-      "probed_path": "/calculator",
-      "declared_method": "GET",
-      "status": 404
-    },
-    {
-      "project_id": "tr-24-hono",
-      "family_id": "tr-24",
-      "archetype": "booking",
-      "kind": "list",
-      "declared_path": "/pitches",
-      "probed_path": "/pitches",
-      "declared_method": "GET",
-      "status": 404
-    },
-    {
-      "project_id": "tr-24-hono",
-      "family_id": "tr-24",
-      "archetype": "booking",
-      "kind": "list",
-      "declared_path": "/market-layout",
-      "probed_path": "/market-layout",
-      "declared_method": "GET",
-      "status": 404
-    },
-    {
-      "project_id": "tr-25-hono",
-      "family_id": "tr-25",
-      "archetype": "docs-site",
-      "kind": "list",
-      "declared_path": "/interviews",
-      "probed_path": "/interviews",
-      "declared_method": "GET",
-      "status": 404
-    },
-    {
-      "project_id": "tr-26-hono",
-      "family_id": "tr-26",
-      "archetype": "web-shop",
-      "kind": "list",
-      "declared_path": "/subscriptions",
-      "probed_path": "/subscriptions",
-      "declared_method": "GET",
-      "status": 404
-    },
-    {
-      "project_id": "tr-27-hono",
-      "family_id": "tr-27",
-      "archetype": "booking",
-      "kind": "list",
-      "declared_path": "/concerts",
-      "probed_path": "/concerts",
-      "declared_method": "GET",
-      "status": 404
-    },
-    {
-      "project_id": "tr-28-hono",
-      "family_id": "tr-28",
-      "archetype": "support-helpdesk",
-      "kind": "list",
-      "declared_path": "/gear",
-      "probed_path": "/gear",
-      "declared_method": "GET",
-      "status": 404
-    },
-    {
-      "project_id": "tr-28-hono",
-      "family_id": "tr-28",
-      "archetype": "support-helpdesk",
-      "kind": "list",
-      "declared_path": "/tickets",
-      "probed_path": "/tickets",
-      "declared_method": "GET",
-      "status": 404
-    },
-    {
-      "project_id": "tr-29-hono",
-      "family_id": "tr-29",
-      "archetype": "expense-tracker",
-      "kind": "list",
-      "declared_path": "/funds",
-      "probed_path": "/funds",
-      "declared_method": "GET",
-      "status": 404
-    },
-    {
-      "project_id": "tr-29-hono",
-      "family_id": "tr-29",
-      "archetype": "expense-tracker",
-      "kind": "list",
-      "declared_path": "/ledger",
-      "probed_path": "/ledger",
-      "declared_method": "GET",
-      "status": 404
-    },
-    {
-      "project_id": "tr-30-hono",
-      "family_id": "tr-30",
-      "archetype": "event-registration",
-      "kind": "list",
-      "declared_path": "/cleanups",
-      "probed_path": "/cleanups",
-      "declared_method": "GET",
-      "status": 404
     }
   ],
   "verification": {
     "tested_ports": [
-      43769,
-      35785,
-      36057,
-      46215,
-      44543,
-      39287,
-      45899,
-      40203,
-      46425,
-      43479,
-      45489,
-      40761,
-      34689,
-      34615,
-      34999,
-      39231,
-      41867,
-      41497,
-      43107,
-      38067,
-      46191,
-      46859,
-      41261,
-      44239,
-      38973,
-      33039,
-      34229,
-      46619,
-      40965,
-      42279
+      41647,
+      42689,
+      43203,
+      40371,
+      33301,
+      41501,
+      36939,
+      44671,
+      38599,
+      41435,
+      46039,
+      40499,
+      40511,
+      42021,
+      42851,
+      37905,
+      42849,
+      35223,
+      37959,
+      44367,
+      43241,
+      40951,
+      33029,
+      46665,
+      44677,
+      42723,
+      34433,
+      36541,
+      43553,
+      42121
     ],
     "lingering_listeners": 0,
     "remaining_temp_dbs": 0
@@ -614,14 +214,14 @@
           "probed_path": "/services",
           "declared_method": "GET",
           "kind": "list",
-          "status": 404,
-          "outcome": "not-served",
-          "is_served": false,
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
           "probed_with_created_record": false
         }
       ],
-      "served": 3,
-      "not_served": 1,
+      "served": 4,
+      "not_served": 0,
       "errors": 0
     },
     {
@@ -666,9 +266,9 @@
           "probed_path": "/ciders",
           "declared_method": "GET",
           "kind": "list",
-          "status": 404,
-          "outcome": "not-served",
-          "is_served": false,
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
           "probed_with_created_record": false
         },
         {
@@ -682,8 +282,8 @@
           "probed_with_created_record": false
         }
       ],
-      "served": 4,
-      "not_served": 1,
+      "served": 5,
+      "not_served": 0,
       "errors": 0
     },
     {
@@ -728,9 +328,9 @@
           "probed_path": "/kilns",
           "declared_method": "GET",
           "kind": "list",
-          "status": 404,
-          "outcome": "not-served",
-          "is_served": false,
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
           "probed_with_created_record": false
         },
         {
@@ -738,14 +338,14 @@
           "probed_path": "/schedule",
           "declared_method": "GET",
           "kind": "list",
-          "status": 404,
-          "outcome": "not-served",
-          "is_served": false,
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
           "probed_with_created_record": false
         }
       ],
-      "served": 3,
-      "not_served": 2,
+      "served": 5,
+      "not_served": 0,
       "errors": 0
     },
     {
@@ -790,9 +390,9 @@
           "probed_path": "/generation",
           "declared_method": "GET",
           "kind": "list",
-          "status": 404,
-          "outcome": "not-served",
-          "is_served": false,
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
           "probed_with_created_record": false
         },
         {
@@ -800,14 +400,14 @@
           "probed_path": "/credits",
           "declared_method": "GET",
           "kind": "list",
-          "status": 404,
-          "outcome": "not-served",
-          "is_served": false,
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
           "probed_with_created_record": false
         }
       ],
-      "served": 3,
-      "not_served": 2,
+      "served": 5,
+      "not_served": 0,
       "errors": 0
     },
     {
@@ -894,9 +494,9 @@
           "probed_path": "/makers",
           "declared_method": "GET",
           "kind": "list",
-          "status": 404,
-          "outcome": "not-served",
-          "is_served": false,
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
           "probed_with_created_record": false
         },
         {
@@ -904,14 +504,14 @@
           "probed_path": "/disciplines",
           "declared_method": "GET",
           "kind": "list",
-          "status": 404,
-          "outcome": "not-served",
-          "is_served": false,
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
           "probed_with_created_record": false
         }
       ],
-      "served": 3,
-      "not_served": 2,
+      "served": 5,
+      "not_served": 0,
       "errors": 0
     },
     {
@@ -956,14 +556,14 @@
           "probed_path": "/events",
           "declared_method": "GET",
           "kind": "list",
-          "status": 404,
-          "outcome": "not-served",
-          "is_served": false,
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
           "probed_with_created_record": false
         }
       ],
-      "served": 3,
-      "not_served": 1,
+      "served": 4,
+      "not_served": 0,
       "errors": 0
     },
     {
@@ -1008,14 +608,14 @@
           "probed_path": "/tickets",
           "declared_method": "GET",
           "kind": "list",
-          "status": 404,
-          "outcome": "not-served",
-          "is_served": false,
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
           "probed_with_created_record": false
         }
       ],
-      "served": 3,
-      "not_served": 1,
+      "served": 4,
+      "not_served": 0,
       "errors": 0
     },
     {
@@ -1060,9 +660,9 @@
           "probed_path": "/courses",
           "declared_method": "GET",
           "kind": "list",
-          "status": 404,
-          "outcome": "not-served",
-          "is_served": false,
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
           "probed_with_created_record": false
         },
         {
@@ -1076,8 +676,8 @@
           "probed_with_created_record": false
         }
       ],
-      "served": 3,
-      "not_served": 2,
+      "served": 4,
+      "not_served": 1,
       "errors": 0
     },
     {
@@ -1122,14 +722,14 @@
           "probed_path": "/results",
           "declared_method": "GET",
           "kind": "list",
-          "status": 404,
-          "outcome": "not-served",
-          "is_served": false,
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
           "probed_with_created_record": false
         }
       ],
-      "served": 3,
-      "not_served": 1,
+      "served": 4,
+      "not_served": 0,
       "errors": 0
     },
     {
@@ -1174,14 +774,14 @@
           "probed_path": "/menu",
           "declared_method": "GET",
           "kind": "list",
-          "status": 404,
-          "outcome": "not-served",
-          "is_served": false,
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
           "probed_with_created_record": false
         }
       ],
-      "served": 3,
-      "not_served": 1,
+      "served": 4,
+      "not_served": 0,
       "errors": 0
     },
     {
@@ -1226,9 +826,9 @@
           "probed_path": "/jobs",
           "declared_method": "GET",
           "kind": "list",
-          "status": 404,
-          "outcome": "not-served",
-          "is_served": false,
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
           "probed_with_created_record": false
         },
         {
@@ -1242,8 +842,8 @@
           "probed_with_created_record": false
         }
       ],
-      "served": 3,
-      "not_served": 2,
+      "served": 4,
+      "not_served": 1,
       "errors": 0
     },
     {
@@ -1288,9 +888,9 @@
           "probed_path": "/docs",
           "declared_method": "GET",
           "kind": "list",
-          "status": 404,
-          "outcome": "not-served",
-          "is_served": false,
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
           "probed_with_created_record": false
         },
         {
@@ -1308,14 +908,14 @@
           "probed_path": "/soil-tests",
           "declared_method": "GET",
           "kind": "list",
-          "status": 404,
-          "outcome": "not-served",
-          "is_served": false,
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
           "probed_with_created_record": false
         }
       ],
-      "served": 3,
-      "not_served": 3,
+      "served": 5,
+      "not_served": 1,
       "errors": 0
     },
     {
@@ -1360,14 +960,14 @@
           "probed_path": "/stops",
           "declared_method": "GET",
           "kind": "list",
-          "status": 404,
-          "outcome": "not-served",
-          "is_served": false,
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
           "probed_with_created_record": false
         }
       ],
-      "served": 3,
-      "not_served": 1,
+      "served": 4,
+      "not_served": 0,
       "errors": 0
     },
     {
@@ -1412,14 +1012,14 @@
           "probed_path": "/expenses",
           "declared_method": "GET",
           "kind": "list",
-          "status": 404,
-          "outcome": "not-served",
-          "is_served": false,
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
           "probed_with_created_record": false
         }
       ],
-      "served": 3,
-      "not_served": 1,
+      "served": 4,
+      "not_served": 0,
       "errors": 0
     },
     {
@@ -1464,9 +1064,9 @@
           "probed_path": "/cultivars",
           "declared_method": "GET",
           "kind": "list",
-          "status": 404,
-          "outcome": "not-served",
-          "is_served": false,
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
           "probed_with_created_record": false
         },
         {
@@ -1480,8 +1080,8 @@
           "probed_with_created_record": false
         }
       ],
-      "served": 3,
-      "not_served": 2,
+      "served": 4,
+      "not_served": 1,
       "errors": 0
     },
     {
@@ -1526,14 +1126,14 @@
           "probed_path": "/services",
           "declared_method": "GET",
           "kind": "list",
-          "status": 404,
-          "outcome": "not-served",
-          "is_served": false,
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
           "probed_with_created_record": false
         }
       ],
-      "served": 3,
-      "not_served": 1,
+      "served": 4,
+      "not_served": 0,
       "errors": 0
     },
     {
@@ -1578,9 +1178,9 @@
           "probed_path": "/products",
           "declared_method": "GET",
           "kind": "list",
-          "status": 404,
-          "outcome": "not-served",
-          "is_served": false,
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
           "probed_with_created_record": false
         },
         {
@@ -1588,14 +1188,14 @@
           "probed_path": "/basket",
           "declared_method": "GET",
           "kind": "list",
-          "status": 404,
-          "outcome": "not-served",
-          "is_served": false,
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
           "probed_with_created_record": false
         }
       ],
-      "served": 3,
-      "not_served": 2,
+      "served": 5,
+      "not_served": 0,
       "errors": 0
     },
     {
@@ -1640,9 +1240,9 @@
           "probed_path": "/skiffs",
           "declared_method": "GET",
           "kind": "list",
-          "status": 404,
-          "outcome": "not-served",
-          "is_served": false,
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
           "probed_with_created_record": false
         },
         {
@@ -1650,14 +1250,14 @@
           "probed_path": "/safety-log",
           "declared_method": "GET",
           "kind": "list",
-          "status": 404,
-          "outcome": "not-served",
-          "is_served": false,
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
           "probed_with_created_record": false
         }
       ],
-      "served": 3,
-      "not_served": 2,
+      "served": 5,
+      "not_served": 0,
       "errors": 0
     },
     {
@@ -1702,14 +1302,14 @@
           "probed_path": "/tunes",
           "declared_method": "GET",
           "kind": "list",
-          "status": 404,
-          "outcome": "not-served",
-          "is_served": false,
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
           "probed_with_created_record": false
         }
       ],
-      "served": 3,
-      "not_served": 1,
+      "served": 4,
+      "not_served": 0,
       "errors": 0
     },
     {
@@ -1754,9 +1354,9 @@
           "probed_path": "/rides",
           "declared_method": "GET",
           "kind": "list",
-          "status": 404,
-          "outcome": "not-served",
-          "is_served": false,
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
           "probed_with_created_record": false
         },
         {
@@ -1764,14 +1364,14 @@
           "probed_path": "/dispatch",
           "declared_method": "GET",
           "kind": "list",
-          "status": 404,
-          "outcome": "not-served",
-          "is_served": false,
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
           "probed_with_created_record": false
         }
       ],
-      "served": 3,
-      "not_served": 2,
+      "served": 5,
+      "not_served": 0,
       "errors": 0
     },
     {
@@ -1816,9 +1416,9 @@
           "probed_path": "/trees",
           "declared_method": "GET",
           "kind": "list",
-          "status": 404,
-          "outcome": "not-served",
-          "is_served": false,
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
           "probed_with_created_record": false
         },
         {
@@ -1826,14 +1426,14 @@
           "probed_path": "/canopy-summary",
           "declared_method": "GET",
           "kind": "list",
-          "status": 404,
-          "outcome": "not-served",
-          "is_served": false,
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
           "probed_with_created_record": false
         }
       ],
-      "served": 3,
-      "not_served": 2,
+      "served": 5,
+      "not_served": 0,
       "errors": 0
     },
     {
@@ -1878,14 +1478,14 @@
           "probed_path": "/calculator",
           "declared_method": "GET",
           "kind": "list",
-          "status": 404,
-          "outcome": "not-served",
-          "is_served": false,
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
           "probed_with_created_record": false
         }
       ],
-      "served": 3,
-      "not_served": 1,
+      "served": 4,
+      "not_served": 0,
       "errors": 0
     },
     {
@@ -1930,9 +1530,9 @@
           "probed_path": "/pitches",
           "declared_method": "GET",
           "kind": "list",
-          "status": 404,
-          "outcome": "not-served",
-          "is_served": false,
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
           "probed_with_created_record": false
         },
         {
@@ -1940,14 +1540,14 @@
           "probed_path": "/market-layout",
           "declared_method": "GET",
           "kind": "list",
-          "status": 404,
-          "outcome": "not-served",
-          "is_served": false,
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
           "probed_with_created_record": false
         }
       ],
-      "served": 3,
-      "not_served": 2,
+      "served": 5,
+      "not_served": 0,
       "errors": 0
     },
     {
@@ -1992,14 +1592,14 @@
           "probed_path": "/interviews",
           "declared_method": "GET",
           "kind": "list",
-          "status": 404,
-          "outcome": "not-served",
-          "is_served": false,
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
           "probed_with_created_record": false
         }
       ],
-      "served": 3,
-      "not_served": 1,
+      "served": 4,
+      "not_served": 0,
       "errors": 0
     },
     {
@@ -2044,14 +1644,14 @@
           "probed_path": "/subscriptions",
           "declared_method": "GET",
           "kind": "list",
-          "status": 404,
-          "outcome": "not-served",
-          "is_served": false,
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
           "probed_with_created_record": false
         }
       ],
-      "served": 3,
-      "not_served": 1,
+      "served": 4,
+      "not_served": 0,
       "errors": 0
     },
     {
@@ -2096,14 +1696,14 @@
           "probed_path": "/concerts",
           "declared_method": "GET",
           "kind": "list",
-          "status": 404,
-          "outcome": "not-served",
-          "is_served": false,
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
           "probed_with_created_record": false
         }
       ],
-      "served": 3,
-      "not_served": 1,
+      "served": 4,
+      "not_served": 0,
       "errors": 0
     },
     {
@@ -2148,9 +1748,9 @@
           "probed_path": "/gear",
           "declared_method": "GET",
           "kind": "list",
-          "status": 404,
-          "outcome": "not-served",
-          "is_served": false,
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
           "probed_with_created_record": false
         },
         {
@@ -2158,14 +1758,14 @@
           "probed_path": "/tickets",
           "declared_method": "GET",
           "kind": "list",
-          "status": 404,
-          "outcome": "not-served",
-          "is_served": false,
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
           "probed_with_created_record": false
         }
       ],
-      "served": 3,
-      "not_served": 2,
+      "served": 5,
+      "not_served": 0,
       "errors": 0
     },
     {
@@ -2210,9 +1810,9 @@
           "probed_path": "/funds",
           "declared_method": "GET",
           "kind": "list",
-          "status": 404,
-          "outcome": "not-served",
-          "is_served": false,
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
           "probed_with_created_record": false
         },
         {
@@ -2220,14 +1820,14 @@
           "probed_path": "/ledger",
           "declared_method": "GET",
           "kind": "list",
-          "status": 404,
-          "outcome": "not-served",
-          "is_served": false,
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
           "probed_with_created_record": false
         }
       ],
-      "served": 3,
-      "not_served": 2,
+      "served": 5,
+      "not_served": 0,
       "errors": 0
     },
     {
@@ -2272,14 +1872,14 @@
           "probed_path": "/cleanups",
           "declared_method": "GET",
           "kind": "list",
-          "status": 404,
-          "outcome": "not-served",
-          "is_served": false,
+          "status": 200,
+          "outcome": "served",
+          "is_served": true,
           "probed_with_created_record": false
         }
       ],
-      "served": 3,
-      "not_served": 1,
+      "served": 4,
+      "not_served": 0,
       "errors": 0
     }
   ]
