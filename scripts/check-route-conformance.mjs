@@ -49,7 +49,6 @@ for (const brief of briefs) if (!byFamily.has(brief.family_id)) byFamily.set(bri
 // The builder lacks auth capabilities, so any route the brief lists that the
 // archetype does not declare is derived as the waived set. This avoids a restated
 // list that goes stale.
-import { fileURLToPath } from 'node:url';
 
 // We import the archetypes to derive the waived set.
 const { TRAINING_ARCHETYPES } = await import('file://' + join(REPO_ROOT, 'pilot', 'training-archetypes.mjs'));
