@@ -2,7 +2,16 @@
 /**
  * The corpus retention gate: prove every original named in a manifest is still reachable.
  *
- *   node scripts/verify-originals.mjs --manifest <manifest.jsonl> --repo <originals-repo> [--remote origin]
+ *   node scripts/verify-originals.mjs <manifest.jsonl> [--repo <originals-repo>] [--remote origin]
+ *   node scripts/verify-originals.mjs --manifest <manifest.jsonl> [--repo <originals-repo>] [--remote origin]
+ *
+ * With --if-present a manifest that is not there is a labelled skip and exit 0, for the package.json
+ * check wrapper; without it, naming a path that does not exist is a hard error.
+ *
+ * The manifest may be given positionally or with --manifest. The positional form is the convention
+ * scripts/validate-provenance.mjs already uses, and the two must not disagree: package.json's
+ * check:originals passed it positionally while this parser only accepted the flag, so the retention
+ * gate exited 2 with "unknown argument" and had never run (mwg-train-vkw).
  *
  * For every row that carries an original ref, this resolves the recorded REF (not a branch name
  * that may have been deleted), checks the object exists, and checks the ref still points at the
@@ -17,14 +26,15 @@
  *     && node scripts/verify-originals.mjs --manifest docs/provenance/manifest.jsonl --repo <dir> --remote origin
  */
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import process from 'node:process';
 
 import { checkOriginal } from '../src/provenance/originals.mjs';
 import { parseManifest } from '../src/provenance/record.mjs';
 
 function parseArgs(argv) {
-  const args = { repo: process.cwd(), remote: null, all: false };
+  const args = { repo: process.cwd(), remote: null, all: false, manifest: null };
+  const positional = [];
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
     const next = () => {
@@ -39,11 +49,27 @@ function parseArgs(argv) {
     if (arg === '--manifest') args.manifest = next();
     else if (arg === '--repo') args.repo = next();
     else if (arg === '--remote') args.remote = next();
+    else if (arg === '--if-present') args.ifPresent = true;
     else if (arg === '--help' || arg === '-h') args.help = true;
-    else {
+    else if (arg.startsWith('-') && arg !== '-') {
       console.error(`verify-originals: unknown argument '${arg}'`);
       process.exit(2);
+    } else positional.push(arg);
+  }
+  // A positional argument is the manifest, so that the form the sibling validate-provenance.mjs uses
+  // works here too. Naming it twice is ambiguous rather than last-one-wins: one of the two paths would
+  // be silently ignored, and a gate that reads a different file than the caller named is worse than one
+  // that refuses.
+  if (positional.length > 1) {
+    console.error(`verify-originals: expected at most one manifest path, got ${positional.length}: ${positional.join(' ')}`);
+    process.exit(2);
+  }
+  if (positional.length === 1) {
+    if (args.manifest !== null) {
+      console.error(`verify-originals: the manifest was given twice - positionally as '${positional[0]}' and with --manifest as '${args.manifest}'`);
+      process.exit(2);
     }
+    args.manifest = positional[0];
   }
   return args;
 }
@@ -94,12 +120,30 @@ function makeProbe(repo, remote) {
 
 function main() {
   const args = parseArgs(process.argv.slice(2));
+  // The corpus manifest is a deployment artifact: it is not committed, so a checkout normally has
+  // none. Rather than crash - or worse, be red on every clean checkout, which is how a gate stops
+  // being read - a caller that names a manifest which is not there can ask to be skipped, exactly as
+  // scripts/check-provenance-quotes.mjs does when its local captures are absent. This is OPT-IN: a
+  // path the caller named that does not exist is still a hard error by default, because a typo must
+  // not look like a clean result.
+  if (!args.help && args.ifPresent && args.manifest && !existsSync(args.manifest)) {
+    console.log(`verify-originals: no corpus manifest at '${args.manifest}' (the retention gate runs against the deployed corpus); skipped`);
+    process.exit(0);
+  }
   if (args.help || !args.manifest) {
-    console.error('usage: node scripts/verify-originals.mjs --manifest <manifest.jsonl> [--repo <dir>] [--remote origin]');
+    console.error('usage: node scripts/verify-originals.mjs <manifest.jsonl> [--repo <dir>] [--remote origin]');
+    console.error('       node scripts/verify-originals.mjs --manifest <manifest.jsonl> [--repo <dir>] [--remote origin]');
     process.exit(args.help ? 0 : 2);
   }
 
-  const rows = parseManifest(readFileSync(args.manifest, 'utf8'));
+  let source;
+  try {
+    source = readFileSync(args.manifest, 'utf8');
+  } catch (error) {
+    console.error(`verify-originals: cannot read '${args.manifest}': ${error.message}`);
+    process.exit(2);
+  }
+  const rows = parseManifest(source);
   const probe = makeProbe(args.repo, args.remote);
   const findings = [];
   let withRef = 0;
