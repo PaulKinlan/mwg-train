@@ -108,55 +108,112 @@ test('HARD REQUIREMENT: the committed training token record matches a fresh meas
   }
 });
 
-test('the scope table quoted in the docs matches the committed record', () => {
-  // Added because a review caught a transcription error in exactly this table within minutes of it being
-  // written: the full_tree band read 3,922,223 where the record says 3,879,223. The numbers in the docs are
-  // restated by hand, which is the same hazard as any other restated list, so the restatement is checked
-  // against the thing it restates rather than trusted. Parsed from the table rather than grepped for
-  // strings, so a row that is reformatted, reordered or dropped fails here instead of quietly passing.
-  const record = JSON.parse(readFileSync(RECORD, 'utf8'));
-  const lines = readFileSync(join(ROOT, 'docs/train/corpus/README.md'), 'utf8').split('\n');
-  const numberGroups = (cell) => [...cell.matchAll(/[\d][\d,]*/g)].map((m) => Number(m[0].replace(/,/g, '')));
+/**
+ * Compare one quoted scope table against the record it restates.
+ *
+ * The table is located by the '## ' heading above it, not by "the first row named app_sources". This file
+ * quotes TWO tables with the same scope names - the tr-* corpus and the pilot corpus - and the first version
+ * of this gate validated whichever happened to come first, which is a coin flip dressed as a check.
+ */
+function assertQuotedScopeTable({ markdown, sectionTitle, scopes, label }) {
+  const lines = markdown.split('\n');
+  const heading = lines.findIndex((line) => line.startsWith('## ') && line.includes(sectionTitle));
+  assert.ok(heading >= 0, `expected a '## ' section mentioning "${sectionTitle}" in docs/train/corpus/README.md`);
+  const after = lines.slice(heading + 1);
+  const next = after.findIndex((line) => line.startsWith('## '));
+  const section = next === -1 ? after : after.slice(0, next);
 
-  for (const [name, scope] of Object.entries(record.training.scopes)) {
-    const row = lines.find((line) => {
-      if (!line.startsWith('|')) return false;
-      const first = line.split('|')[1].replace(/[`*]/g, '').trim();
-      return first === name || first.startsWith(`${name} `) || first.startsWith(`${name}(`);
-    });
-    assert.ok(row, `docs/train/corpus/README.md must have a table row for the ${name} scope`);
-    const cells = row.split('|').slice(2, 7);
-    const found = cells.flatMap(numberGroups);
-    // The `prompt` scope states its characters as a plain zero rather than the {original, uplifted, total}
-    // object the others use, and the table writes that as three zeros. Read the shape rather than assume it,
-    // but do not SKIP the row: a scope whose row is missing or reformatted has to fail this test, not
-    // quietly drop out of it.
-    const charValue = (key) => (typeof scope.characters === 'number' ? scope.characters : scope.characters[key]);
-    const expected = [
-      charValue('original'),
-      charValue('uplifted'),
-      charValue('total'),
-      scope.tokens.derived,
-      ...scope.tokens.band,
+  const rows = section
+    .filter((line) => line.startsWith('|'))
+    .map((line) => line.split('|').slice(1, -1).map((cell) => cell.replace(/[`*]/g, '').trim()))
+    .filter((cells) => cells.length >= 6 && cells[0] !== 'Scope' && !/^[-:]+$/.test(cells[1] || ''))
+    .map((cells) => [cells[0].replace(/\s*\(all\)$/, ''), ...cells.slice(1)]);
+
+  // Compared as a SET, so a dropped row, an extra row naming a scope that does not exist, and a duplicated
+  // row all fail here. Row order is deliberately not checked: the numbers are attached to their scope name,
+  // so reordering the rows does not make the prose wrong, and an earlier commit message wrongly claimed it did.
+  assert.deepEqual(
+    rows.map((cells) => cells[0]).sort(),
+    Object.keys(scopes).sort(),
+    `${label}: the quoted table must have exactly one row per recorded scope`,
+  );
+
+  // Each cell is read on its own and must hold the exact number of figures it is supposed to. Flattening all
+  // five numeric cells together was the earlier version, and it accepted a row whose figures had been shifted
+  // across columns - the numbers were all present, so a count of them was satisfied by the wrong cells.
+  const numbers = (cell, count, where, scope) => {
+    const found = [...(cell || '').matchAll(/\d[\d,]*/g)].map((match) => Number(match[0].replace(/,/g, '')));
+    assert.equal(found.length, count, `${label}: the ${where} cell of the ${scope} row must hold ${count} number(s), found ${found.length} in "${cell}"`);
+    return found;
+  };
+
+  for (const [scope, values] of Object.entries(scopes)) {
+    const cells = rows.find((row) => row[0] === scope);
+    // The `prompt` scope records its characters as a plain zero where the others record an object. Read that
+    // one shape, and refuse any other: accepting any scalar as "the same figure three times" would let a
+    // corrupt record through, since only a zero reads the same when split into original, uplifted and total.
+    const scalar = typeof values.characters === 'number';
+    if (scalar) {
+      assert.ok(scope === 'prompt' && values.characters === 0, `${label}: only the prompt scope may state its characters as a plain zero, and only as zero`);
+    }
+    const charValue = (key) => (scalar ? values.characters : values.characters[key]);
+    const quoted = [
+      numbers(cells[1], 1, 'original', scope)[0],
+      numbers(cells[2], 1, 'uplifted', scope)[0],
+      numbers(cells[3], 1, 'total', scope)[0],
+      numbers(cells[4], 1, 'derived', scope)[0],
     ];
-    assert.deepEqual(found, expected, `the quoted ${name} row must match the record it restates`);
+    const recorded = [charValue('original'), charValue('uplifted'), charValue('total'), values.tokens.derived];
+    assert.deepEqual(quoted, recorded, `${label}: the quoted ${scope} row must match the record it restates`);
+    assert.deepEqual(numbers(cells[5], 2, 'band', scope), values.tokens.band, `${label}: the quoted ${scope} band must match the record`);
+  }
+}
+
+test('the tr-* scope table quoted in the docs matches the committed record', () => {
+  const record = JSON.parse(readFileSync(RECORD, 'utf8'));
+  assertQuotedScopeTable({
+    markdown: readFileSync(join(ROOT, 'docs/train/corpus/README.md'), 'utf8'),
+    sectionTitle: 'Training Corpus',
+    scopes: record.training.scopes,
+    label: 'docs/train/corpus/README.md',
+  });
+});
+
+test('the pilot scope table quoted in the docs matches a fresh measurement', () => {
+  // The pilot table quotes a DIFFERENT record and sits under the same scope names, so it is checked too
+  // rather than left as the table this gate happens not to be looking at. The pilot measurement is a pure
+  // function of the generator and plan.json - nothing is scaffolded - and it writes only to the temp path.
+  const dir = mkdtempSync(join(tmpdir(), 't0d-pilot-'));
+  try {
+    const out = join(dir, 'pilot.json');
+    execFileSync(process.execPath, [join(ROOT, 'scripts/train-corpus-tokens.mjs'), '--corpus', 'pilot', '--out', out, '--no-timestamp'], { cwd: ROOT, stdio: 'pipe' });
+    const measured = JSON.parse(readFileSync(out, 'utf8'));
+    assertQuotedScopeTable({
+      markdown: readFileSync(join(ROOT, 'docs/train/corpus/README.md'), 'utf8'),
+      sectionTitle: 'Pilot Corpus',
+      scopes: measured.scopes,
+      label: 'docs/train/corpus/README.md (pilot table)',
+    });
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
   }
 });
 
 test('the headline figure the docs quote is the one the record states', () => {
-  // The prose sites (README.md, docs/train/READINESS-EPIC.md) are not tables, so this asserts the current
-  // headline and band are quoted rather than that every number on the page is right - a stale headline is
-  // the failure this catches, which is the failure that actually happened.
+  // The prose sites are not tables, so this asserts the current headline and band are quoted rather than
+  // that every number on the page is right - a stale headline is the failure this catches, which is the
+  // failure that actually happened. A review found this checked the band bounds in the corpus README only,
+  // while README.md quotes them too.
   const record = JSON.parse(readFileSync(RECORD, 'utf8'));
   const tokens = record.training.total_training_tokens.toLocaleString('en-US');
   const band = record.training.tokens.band.map((n) => n.toLocaleString('en-US'));
   for (const file of ['README.md', 'docs/train/READINESS-EPIC.md']) {
-    const text = readFileSync(join(ROOT, file), 'utf8');
-    assert.ok(text.includes(tokens), `${file} must quote the headline ${tokens}`);
+    assert.ok(readFileSync(join(ROOT, file), 'utf8').includes(tokens), `${file} must quote the headline ${tokens}`);
   }
-  const corpusReadme = readFileSync(join(ROOT, 'docs/train/corpus/README.md'), 'utf8');
   for (const end of band) {
-    assert.ok(corpusReadme.includes(end), `docs/train/corpus/README.md must quote the band bound ${end}`);
+    for (const file of ['README.md', 'docs/train/corpus/README.md']) {
+      assert.ok(readFileSync(join(ROOT, file), 'utf8').includes(end), `${file} must quote the band bound ${end}`);
+    }
   }
 });
 
