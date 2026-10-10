@@ -1,9 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
-import { join } from 'node:path';
+import { readFileSync, mkdirSync, mkdtempSync, writeFileSync, rmSync, symlinkSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
 import { createServer } from 'node:http';
+import { spawn } from 'node:child_process';
 
 import { buildProjectFor } from '../pilot/frameworks.mjs';
 import { TRAINING_ARCHETYPES } from '../pilot/training-archetypes.mjs';
@@ -26,6 +27,53 @@ const tr01Routes = [
   { method: 'GET', path: readPath, kind: 'read-by-reference' },
   { method: 'GET', path: '/services', kind: 'list' },
 ];
+
+
+const ROOT = resolve(import.meta.dirname, '..');
+const NODE_MODULES = join(ROOT, 'node_modules');
+
+/**
+ * Write a generated project somewhere and drive its REAL server over HTTP.
+ *
+ * This exists because five tests in this file read as though they cover server behaviour while measuring
+ * something else: the three named "server execution" re-implemented the server's SQL inline and asserted
+ * against that copy (one even commented "Helper matching /api/records implementation"), and the SEARCH and
+ * UPDATE declaration tests assert that a source string CONTAINS a fetch call. None of them would fail if the
+ * generated server stopped working. test/edit-flow.test.mjs already drives a generated server over HTTP, so
+ * the technique is proven in this suite - it just was not used here (mwg-train-0xk).
+ */
+async function withLiveServer(built, port, fn, seed = null) {
+  const dir = mkdtempSync(join(tmpdir(), 'corpus-flows-live-'));
+  try {
+    for (const [rel, content] of Object.entries(built.files)) {
+      const target = join(dir, rel);
+      mkdirSync(join(dir, rel, '..'), { recursive: true });
+      mkdirSync(target.slice(0, target.lastIndexOf('/')), { recursive: true });
+      writeFileSync(target, content);
+    }
+    symlinkSync(NODE_MODULES, join(dir, 'node_modules'), 'dir');
+    // Seeded before the server starts, so the server reads a database that already holds the fixture. The
+    // schema is created by the server itself on boot; a seed that ran after spawn raced that.
+    if (seed) await seed(join(dir, 'pilot.sqlite'));
+    const child = spawn('node', ['server.mjs', '--port', String(port), '--db', join(dir, 'pilot.sqlite')], {
+      cwd: dir, stdio: ['ignore', 'ignore', 'pipe'],
+    });
+    try {
+      const base = `http://127.0.0.1:${port}`;
+      let up = false;
+      for (let attempt = 0; attempt < 40 && !up; attempt += 1) {
+        await new Promise((done) => setTimeout(done, 250));
+        up = await fetch(`${base}/__health`).then((r) => r.ok, () => false);
+      }
+      assert.ok(up, 'the generated server did not come up, so nothing below measures the real thing');
+      return await fn(base);
+    } finally {
+      child.kill('SIGKILL');
+    }
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
 
 function makeTr01Archetype(journeyOverrides = {}) {
   return {
@@ -178,7 +226,7 @@ test('UPDATE declaration: serves edit form on read page, POST /edit/:ref updates
   }
 });
 
-test('MULTI-STEP CARRY declaration: serves each step path, stores drafts, and renders server-side', () => {
+test('MULTI-STEP CARRY declaration: serves each step path, stores drafts, and renders server-side', async () => {
   const stepsDecl = [
     {
       path: '/book/step-1',
@@ -202,102 +250,136 @@ test('MULTI-STEP CARRY declaration: serves each step path, stores drafts, and re
     const built = buildProjectFor(archetype, { frameworkName, defects: [] });
     const serverSource = built.files['server.mjs'];
 
-    // 1. Server creates drafts table
-    assert.ok(serverSource.includes('CREATE TABLE IF NOT EXISTS drafts'), `${frameworkName}: server must create drafts table`);
-    assert.ok(serverSource.includes('INSERT OR REPLACE INTO drafts'), `${frameworkName}: server must prepare insertDraft`);
-    assert.ok(serverSource.includes('SELECT name, value FROM drafts WHERE sid = ?'), `${frameworkName}: server must prepare selectDrafts`);
+    // Generator-level template checks kept: verify that selector ID and styling class exist
+    // in the emitted source so browsers and styles can target them.
+    assert.ok(serverSource.includes('id="step-1-next"'), `${frameworkName}: generator output must include matching submit selector`);
+    assert.ok(serverSource.includes('draft-carried'), `${frameworkName}: server source must include draft-carried markup class`);
 
-    // 2. Server serves step paths
-    assert.ok(serverSource.includes('/book/step-1'), `${frameworkName}: server must serve /book/step-1`);
-    assert.ok(serverSource.includes('/book/step-2'), `${frameworkName}: server must serve /book/step-2`);
-    assert.ok(serverSource.includes('/draft'), `${frameworkName}: server must serve draft endpoint`);
+    await withLiveServer(built, 5613, async (base) => {
+      // 1. Server serves step paths and step 1 renders declared form controls
+      const step1Res = await fetch(`${base}/book/step-1`);
+      assert.equal(step1Res.status, 200, `${frameworkName}: server must serve /book/step-1`);
+      const step1Html = await step1Res.text();
+      assert.ok(step1Html.includes('name="phone"'), `${frameworkName}: premise - step 1 must render declared input field`);
+      assert.ok(step1Html.includes('id="step-1-next"'), `${frameworkName}: step 1 must render declared submit selector`);
+      const formAction = (step1Html.match(/<form[^>]*action="([^"]+)"/) ?? [])[1];
+      assert.equal(formAction, '/draft?next=%2Fbook%2Fstep-2', `${frameworkName}: step 1 must post to draft with next step`);
 
-    // 3. Step 1 renders form posting to draft with next parameter
-    assert.ok(serverSource.includes('action="/draft?next=%2Fbook%2Fstep-2"'), `${frameworkName}: step 1 must post to draft with next step`);
-    assert.ok(serverSource.includes('id="step-1-next"'), `${frameworkName}: step 1 must include matching submit selector`);
+      const step2Res = await fetch(`${base}/book/step-2`);
+      assert.equal(step2Res.status, 200, `${frameworkName}: server must serve /book/step-2`);
+      const step2Html = await step2Res.text();
+      assert.ok(step2Html.includes('name="package"'), `${frameworkName}: premise - step 2 must render declared select field`);
 
-    // 4. Carried text rendered server-side
-    assert.ok(serverSource.includes('draft-carried'), `${frameworkName}: server must render draft-carried container`);
-    assert.ok(serverSource.includes('selectDrafts.all(sidCookie)'), `${frameworkName}: server must read drafts by sid cookie`);
+      // 2. Server accepts draft posts at /draft and step paths, creating drafts table and running insertDraft
+      const postDraft = await fetch(`${base}/draft?next=${encodeURIComponent('/book/step-2')}`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ phone: '07700900077' }).toString(),
+        redirect: 'manual',
+      });
+      assert.equal(postDraft.status, 303, `${frameworkName}: /draft endpoint must accept post and redirect (got ${postDraft.status})`);
+      assert.equal(postDraft.headers.get('location'), '/book/step-2', `${frameworkName}: /draft must redirect to declared next path`);
+      const sessionCookie = postDraft.headers.get('set-cookie');
+      assert.ok(sessionCookie, `${frameworkName}: premise - server must set session cookie on draft post`);
+
+      // POST to declared step path is also accepted as a draft endpoint
+      const postStep1 = await fetch(`${base}/book/step-1`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ phone: '07700900077' }).toString(),
+        redirect: 'manual',
+      });
+      assert.equal(postStep1.status, 303, `${frameworkName}: declared step path /book/step-1 must accept POST and redirect`);
+      assert.equal(postStep1.headers.get('location'), '/book/step-2', `${frameworkName}: POST /book/step-1 must redirect to next step`);
+
+      // 3. Carried text rendered server-side on next step and startPath (proves selectDrafts by sid cookie)
+      const step2CarriedRes = await fetch(`${base}/book/step-2`, { headers: { cookie: sessionCookie } });
+      assert.equal(step2CarriedRes.status, 200, `${frameworkName}: step 2 must return 200 with session cookie`);
+      const step2CarriedHtml = await step2CarriedRes.text();
+      assert.ok(step2CarriedHtml.includes('draft-carried'), `${frameworkName}: step 2 must render draft-carried container`);
+      assert.ok(step2CarriedHtml.includes('07700900077'), `${frameworkName}: step 2 must carry value from step 1 (expectText)`);
+
+      const confirmCarriedRes = await fetch(`${base}/book/confirm`, { headers: { cookie: sessionCookie } });
+      assert.equal(confirmCarriedRes.status, 200, `${frameworkName}: startPath /book/confirm must return 200 with session cookie`);
+      const confirmCarriedHtml = await confirmCarriedRes.text();
+      assert.ok(confirmCarriedHtml.includes('draft-carried'), `${frameworkName}: confirm page must render draft-carried container`);
+      assert.ok(confirmCarriedHtml.includes('07700900077'), `${frameworkName}: confirm page must carry stored draft value`);
+
+      // 4. Session isolation: a fresh session without cookie receives no carried drafts (selectDrafts.all isolation)
+      const freshRes = await fetch(`${base}/book/confirm`);
+      assert.equal(freshRes.status, 200, `${frameworkName}: startPath must return 200 for fresh session`);
+      const freshHtml = await freshRes.text();
+      assert.ok(!freshHtml.includes('07700900077'), `${frameworkName}: session with no draft must not receive another session's carried value`);
+      assert.ok(!freshHtml.includes('draft-carried'), `${frameworkName}: session with no draft must not render draft-carried container`);
+
+      // 5. Subsequent step stores draft and startPath carries all values
+      const postStep2 = await fetch(`${base}/book/step-2`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/x-www-form-urlencoded', cookie: sessionCookie },
+        body: new URLSearchParams({ package: 'Full service' }).toString(),
+        redirect: 'manual',
+      });
+      assert.equal(postStep2.status, 303, `${frameworkName}: step 2 post must redirect to startPath`);
+      assert.equal(postStep2.headers.get('location'), '/book/confirm', `${frameworkName}: step 2 post must redirect to /book/confirm`);
+
+      const allCarriedHtml = await (await fetch(`${base}/book/confirm`, { headers: { cookie: sessionCookie } })).text();
+      assert.ok(allCarriedHtml.includes('07700900077'), `${frameworkName}: confirm page must carry step 1 value`);
+      assert.ok(allCarriedHtml.includes('Full service'), `${frameworkName}: confirm page must carry step 2 value`);
+    });
   }
 });
 
 test('server execution: update route preserves ref and updates in place (does not insert)', async () => {
-  const updateDecl = {
-    field: 'customer',
-    newValue: 'Jane Mechanic',
-  };
-
+  // Driven against the REAL generated server. The previous version never started it: it seeded a database,
+  // then ran UPDATE and SELECT statements of its own and asserted on those, under comments saying "Simulate
+  // POST /edit/ref-1234". Breaking the generated update route would not have failed it.
+  const updateDecl = { field: 'customer', newValue: 'Jane Mechanic' };
   const archetype = makeTr01Archetype({ update: updateDecl });
   const built = buildProjectFor(archetype, { frameworkName: 'raw', defects: [] });
 
-  const dir = join(tmpdir(), 'test-update-exec-' + Date.now());
-  for (const [rel, content] of Object.entries(built.files)) {
-    const target = join(dir, rel);
-    mkdirSync(join(target, '..'), { recursive: true });
-    writeFileSync(target, content);
-  }
-  writeFileSync(join(dir, 'spec.json'), JSON.stringify(built.spec, null, 2) + '\n');
-  writeFileSync(
-    join(dir, 'package.json'),
-    JSON.stringify({ name: 'test-exec', private: true, type: 'module' }, null, 2) + '\n',
-  );
+  await withLiveServer(built, 5611, async (base) => {
+    const listed = async () => (await (await fetch(`${base}/api/records`)).json());
+    const before = await listed();
+    assert.equal(before.length, 1, 'premise: exactly one seeded record, so "does not insert" means something');
+    const ref = before[0].ref;
+    assert.ok(ref, 'premise: the seeded record must carry a ref to route the update at');
 
-  const { DatabaseSync } = await import('node:sqlite');
-  const db = new DatabaseSync(join(dir, 'pilot.sqlite'));
-  db.exec(`CREATE TABLE IF NOT EXISTS records (
-    ref TEXT PRIMARY KEY,
-    created_at TEXT NOT NULL,
-    payload TEXT NOT NULL
-  )`);
+    // A real POST to the generated update route.
+    const posted = await fetch(`${base}/edit/${encodeURIComponent(ref)}`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ customer: 'Jane Mechanic' }).toString(),
+      redirect: 'manual',
+    });
+    assert.ok(posted.status === 303 || posted.status === 302 || posted.status === 200,
+      `the update route must accept the edit, got ${posted.status}`);
 
-  const insert = db.prepare('INSERT INTO records (ref, created_at, payload) VALUES (?, ?, ?)');
-  const select = db.prepare('SELECT ref, created_at, payload FROM records WHERE ref = ?');
-  const updateRecord = db.prepare('UPDATE records SET payload = ? WHERE ref = ?');
-  const count = db.prepare('SELECT COUNT(*) AS n FROM records');
+    const after = await listed();
+    assert.equal(after.length, 1, `UPDATE, not INSERT: still one record after the edit (got ${after.length})`);
+    assert.equal(after[0].ref, ref, 'and it is the SAME ref - the update replaced in place');
+    assert.equal(after[0].customer, 'Jane Mechanic', 'the edit was stored');
+    assert.equal(after[0].notes, before[0].notes, 'and the fields not in the form survived, so it merged rather than replaced the payload');
 
-  const initialCreatedAt = '2026-10-08T12:00:00.000Z';
-  const initialPayload = JSON.stringify({
-    customer: 'Original Customer',
-    phone: '0123456789',
-    address: '1 High Street',
-    package: 'Basic tune-up',
-    notes: 'Gate code 1234',
+    // Reading the record by ref agrees with the list.
+    const one = await (await fetch(`${base}/api/record/${encodeURIComponent(ref)}`)).json();
+    assert.equal(one.ref, ref);
+    assert.equal(one.customer, 'Jane Mechanic', 'the single-record route shows the edit too');
+  }, async (dbPath) => {
+    const { DatabaseSync } = await import('node:sqlite');
+    const db = new DatabaseSync(dbPath);
+    db.exec('CREATE TABLE IF NOT EXISTS records (ref TEXT PRIMARY KEY, created_at TEXT NOT NULL, payload TEXT NOT NULL)');
+    db.prepare('INSERT OR REPLACE INTO records (ref, created_at, payload) VALUES (?, ?, ?)').run(
+      'ref-1234', '2026-10-08T12:00:00.000Z',
+      JSON.stringify({ customer: 'Original Customer', phone: '0123456789', address: '1 High Street', package: 'Basic tune-up', notes: 'Gate code 1234' }),
+    );
+    db.close();
   });
-  insert.run('ref-1234', initialCreatedAt, initialPayload);
-
-  assert.equal(count.get().n, 1, 'initially 1 record');
-
-  // Verify unknown ref handling
-  const unknown = select.get('non-existent');
-  assert.equal(unknown, undefined, 'unknown ref is undefined');
-
-  // Simulate POST /edit/ref-1234 with new customer value
-  const editRef = 'ref-1234';
-  const row = select.get(editRef);
-  assert.ok(row, 'record must be found');
-
-  const existing = JSON.parse(row.payload);
-  const body = { customer: 'Jane Mechanic' };
-  const updated = { ...existing, ...body };
-
-  updateRecord.run(JSON.stringify(updated), editRef);
-
-  // Assertions:
-  assert.equal(count.get().n, 1, 'count must still be exactly 1: update must NOT insert a row');
-
-  const afterUpdate = select.get(editRef);
-  assert.equal(afterUpdate.ref, 'ref-1234', 'ref must be preserved');
-  assert.equal(afterUpdate.created_at, initialCreatedAt, 'created_at must be preserved');
-
-  const parsed = JSON.parse(afterUpdate.payload);
-  assert.equal(parsed.customer, 'Jane Mechanic', 'payload customer field must be updated');
-  assert.equal(parsed.phone, '0123456789', 'other fields in payload must be preserved');
-
-  rmSync(dir, { recursive: true, force: true });
 });
 
 test('server execution: search query filtering on /api/records', async () => {
+  // Driven against the REAL generated server. The previous version never started it: it re-implemented the
+  // /api/records filter in the test and asserted on that copy, under a comment saying "Helper matching
+  // /api/records implementation". Deleting the search query from the generator would not have failed it.
   const searchDecl = {
     path: '/search',
     queryParam: 'q',
@@ -305,103 +387,108 @@ test('server execution: search query filtering on /api/records', async () => {
     resultsSelector: '#results',
     expectIncludes: ['tune-up'],
   };
-
   const archetype = makeTr01Archetype({ search: searchDecl });
   const built = buildProjectFor(archetype, { frameworkName: 'raw', defects: [] });
 
-  const dir = join(tmpdir(), 'test-search-exec-' + Date.now());
-  for (const [rel, content] of Object.entries(built.files)) {
-    const target = join(dir, rel);
-    mkdirSync(join(target, '..'), { recursive: true });
-    writeFileSync(target, content);
-  }
+  await withLiveServer(built, 5610, async (base) => {
+    // The server seeds its own records, so the fixture is whatever it creates - asserted rather than assumed.
+    const all = await (await fetch(`${base}/api/records`)).json();
+    assert.ok(Array.isArray(all), 'the endpoint must return an array');
+    assert.ok(all.length > 0, 'the real server must serve at least one seeded record, or the filters below prove nothing');
 
-  const { DatabaseSync } = await import('node:sqlite');
-  const db = new DatabaseSync(join(dir, 'pilot.sqlite'));
-  db.exec(`CREATE TABLE IF NOT EXISTS records (
-    ref TEXT PRIMARY KEY,
-    created_at TEXT NOT NULL,
-    payload TEXT NOT NULL
-  )`);
-  const insert = db.prepare('INSERT INTO records (ref, created_at, payload) VALUES (?, ?, ?)');
-  const list = db.prepare('SELECT ref, payload FROM records ORDER BY created_at DESC LIMIT 50');
+    const noQuery = await (await fetch(`${base}/api/records?q=`)).json();
+    assert.equal(noQuery.length, all.length, 'an empty query returns everything, like no query');
 
-  insert.run('r1', '2026-10-08T10:00:00Z', JSON.stringify({ customer: 'Alice', notes: 'Basic tune-up needed' }));
-  insert.run('r2', '2026-10-08T11:00:00Z', JSON.stringify({ customer: 'Bob', notes: 'Brake pad replacement' }));
+    // A query is matched case-insensitively against the record payload, and returns a SUBSET.
+    const first = all.find((record) => String(record.customer ?? '').length > 1);
+    assert.ok(first, 'premise: a seeded record must carry a customer to search on');
+    const needle = String(first.customer).slice(0, 4);
+    const matched = await (await fetch(`${base}/api/records?q=${encodeURIComponent(needle)}`)).json();
+    assert.ok(matched.length > 0, `a query for ${JSON.stringify(needle)} must match the record it came from`);
+    assert.ok(matched.length <= all.length, 'and must never return more than the unfiltered list');
+    assert.ok(matched.every((record) => JSON.stringify(record).toLowerCase().includes(needle.toLowerCase())),
+      'every returned record must actually contain the query');
 
-  // Helper matching /api/records implementation
-  function getRecords(query) {
-    let rows = list.all();
-    if (query) rows = rows.filter((row) => row.payload.toLowerCase().includes(query.toLowerCase()));
-    return rows.map((row) => ({ ref: row.ref, ...JSON.parse(row.payload) }));
-  }
+    // Case-insensitivity is the property the old comment claimed and never checked against the server.
+    const upper = await (await fetch(`${base}/api/records?q=${encodeURIComponent(needle.toUpperCase())}`)).json();
+    assert.equal(upper.length, matched.length, 'the match must be case-insensitive');
 
-  // 1. Without query: returns all records
-  assert.equal(getRecords(null).length, 2);
-  assert.equal(getRecords('').length, 2);
-
-  // 2. With query matching r1:
-  const tuneUp = getRecords('tune-up');
-  assert.equal(tuneUp.length, 1);
-  assert.equal(tuneUp[0].ref, 'r1');
-
-  // 3. With query matching r2:
-  const brake = getRecords('BRAKE');
-  assert.equal(brake.length, 1);
-  assert.equal(brake[0].ref, 'r2');
-
-  // 4. With query matching nothing:
-  const none = getRecords('overhaul');
-  assert.equal(none.length, 0);
-
-  rmSync(dir, { recursive: true, force: true });
+    // A query matching nothing returns nothing - the empty case that a stand-in cannot get wrong.
+    const none = await (await fetch(`${base}/api/records?q=zzz-no-such-record-zzz`)).json();
+    assert.equal(none.length, 0, 'a query matching no record returns an empty list');
+  }, async (dbPath) => {
+    // The server creates its own schema on boot, so this runs first and only INSERTS. The two rows are the
+    // ones the old stand-in test used, so the assertions below are the same properties - now measured against
+    // the real endpoint instead of a copy of its filter.
+    const { DatabaseSync } = await import('node:sqlite');
+    const db = new DatabaseSync(dbPath);
+    db.exec('CREATE TABLE IF NOT EXISTS records (ref TEXT PRIMARY KEY, created_at TEXT NOT NULL, payload TEXT NOT NULL)');
+    const insert = db.prepare('INSERT OR REPLACE INTO records (ref, created_at, payload) VALUES (?, ?, ?)');
+    insert.run('r1', '2026-10-08T10:00:00Z', JSON.stringify({ customer: 'Alice', notes: 'Basic tune-up needed' }));
+    insert.run('r2', '2026-10-08T11:00:00Z', JSON.stringify({ customer: 'Bob', notes: 'Brake pad replacement' }));
+    db.close();
+  });
 });
 
 test('server execution: drafts table carries state across steps', async () => {
+  // Driven against the REAL generated server. The previous version never started it: it ran insertDraft and
+  // selectDrafts statements of its own, read the row back with its own SELECT, then BUILT the expected
+  // "carried html" as a template literal in the test and asserted that string contained the value it had just
+  // written into it. Every assertion measured the test. Breaking the generated draft routes, or removing the
+  // session cookie handling entirely, would not have failed it.
   const stepsDecl = [
-    {
-      path: '/step-1',
-      fill: { 'input[name=option]': 'Option A' },
-      submit: 'button[type=submit]',
-    },
-    {
-      path: '/step-2',
-      expectText: 'Option A',
-    },
+    { path: '/step-1', fill: { 'input[name=option]': 'Option A' }, submit: 'button[type=submit]' },
+    { path: '/step-2', expectText: 'Option A' },
   ];
-
-  const archetype = makeTr01Archetype({
-    startPath: '/confirm',
-    steps: stepsDecl,
-  });
+  const archetype = makeTr01Archetype({ startPath: '/confirm', steps: stepsDecl });
   const built = buildProjectFor(archetype, { frameworkName: 'raw', defects: [] });
 
-  const dir = join(tmpdir(), 'test-drafts-exec-' + Date.now());
-  for (const [rel, content] of Object.entries(built.files)) {
-    const target = join(dir, rel);
-    mkdirSync(join(target, '..'), { recursive: true });
-    writeFileSync(target, content);
-  }
+  await withLiveServer(built, 5612, async (base) => {
+    // Routes measured from the generated template rather than assumed: GET on the startPath renders the
+    // document, and if the session holds drafts it injects <div class="draft-carried"> before </main>. POST
+    // /step-1 stores the declared field. My first attempt guessed /confirm/step-1 and failed - the step paths
+    // carry no prefix.
+    // Routes MEASURED from the running server, not assumed: /confirm serves the write form, and /step-1
+    // serves the declared step page whose form posts to /draft?next=%2Fstep-2. My first two attempts guessed
+    // /confirm/step-1 and then expected the step field on /confirm, and both were wrong.
+    const step1 = await fetch(`${base}/step-1`);
+    assert.equal(step1.status, 200, 'the generated server must serve the declared step path');
+    const step1Html = await step1.text();
+    assert.ok(step1Html.includes('name="option"'), 'premise: the step page must render the declared field');
+    const stepFormAction = (step1Html.match(/<form[^>]*action="([^"]+)"/) ?? [])[1];
+    assert.ok(stepFormAction, 'premise: the step form must post somewhere');
 
-  const { DatabaseSync } = await import('node:sqlite');
-  const db = new DatabaseSync(join(dir, 'pilot.sqlite'));
-  db.exec('CREATE TABLE IF NOT EXISTS drafts (sid TEXT, name TEXT, value TEXT, PRIMARY KEY (sid, name))');
-  const insertDraft = db.prepare('INSERT OR REPLACE INTO drafts (sid, name, value) VALUES (?, ?, ?)');
-  const selectDrafts = db.prepare('SELECT name, value FROM drafts WHERE sid = ?');
+    const posted = await fetch(new URL(stepFormAction, base), {
+      method: 'POST',
+      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ option: 'Option A' }).toString(),
+      redirect: 'manual',
+    });
+    assert.ok(posted.status < 400, `the draft post must be accepted, got ${posted.status}`);
+    const sessionCookie = posted.headers.get('set-cookie');
+    assert.ok(sessionCookie, 'premise: the server must set a session cookie, or the draft belongs to nobody');
 
-  const sid = 'session-1234';
-  insertDraft.run(sid, 'option', 'Option A');
+    // THE PROPERTY THE TEST NAME PROMISES: the server carries the earlier step's value into the session, and
+    // renders it. The old version built this html in the test and asserted its own string.
+    const carried = await fetch(`${base}/confirm`, { headers: { cookie: sessionCookie } });
+    assert.equal(carried.status, 200);
+    const carriedHtml = await carried.text();
+    assert.ok(carriedHtml.includes('draft-carried'),
+      'the server must render the draft-carried container for a session holding a draft');
+    assert.ok(carriedHtml.includes('Option A'),
+      'and it must carry the value entered at the earlier step - the server does this, not the test');
 
-  const drafts = selectDrafts.all(sid);
-  assert.equal(drafts.length, 1);
-  assert.equal(drafts[0].name, 'option');
-  assert.equal(drafts[0].value, 'Option A');
+    // A session with no draft must not see it, or a hard-coded value would satisfy the assertion above.
+    const fresh = await fetch(`${base}/confirm`);
+    assert.equal(fresh.status, 200);
+    assert.ok(!(await fresh.text()).includes('Option A'),
+      'a session with no draft must not receive another session\'s carried value');
+  });
 
-  // Render carried HTML server-side
-  const carriedHtml = `<div class="draft-carried">${drafts.map((d) => `<p class="carried-value">${d.value}</p>`).join('\n')}</div>`;
-  assert.ok(carriedHtml.includes('Option A'), 'carried html must include stored option value');
-
-  rmSync(dir, { recursive: true, force: true });
+  // The template itself must carry the container the assertion above depends on; without this, renaming it
+  // would look like a server regression rather than a fixture drift.
+  const serverSource = built.files['server.mjs'] ?? '';
+  assert.ok(serverSource.includes('draft-carried'), 'the generated server must contain the carried container');
 });
 
 test('a flow and a capability page compose: the edit form is appended to whichever document the read route renders', () => {

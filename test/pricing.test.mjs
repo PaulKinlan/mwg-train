@@ -201,8 +201,12 @@ test('every disclosure is printed in full, and quote precision is preserved', ()
   assert.match(sheets, /treat the plan as unverified, the price as fetched/, 'the inferred-plan disclaimer must survive into the sheets');
   assert.ok(!/the plan toggle is client-side so the label is not in the\s*\|/.test(sheets), 'no disclosure may be truncated inside a table cell');
   // $4.103 is the quoted rate; it was displayed rounded to $4.10.
+  // The fixture row is REQUIRED to exist. Guarding the assertion with `if (quoted)` meant that renaming the
+  // band - the very change most likely to accompany a pricing edit - silently skipped it, and the property
+  // this test exists for would go unchecked while the suite stayed green (mwg-train-0xk).
   const quoted = quotes.find((row) => /Qwen 3\.8 27B/.test(row.model_size_band ?? '') && String(row.value).includes('4.103'));
-  if (quoted) assert.match(sheets, /\$4\.103/, 'the quoted precision must be preserved in the sheets');
+  assert.ok(quoted, 'premise: the quoted $4.103 Qwen row must still be in the dataset, or this test checks nothing');
+  assert.match(sheets, /\$4\.103/, 'the quoted precision must be preserved in the sheets');
 });
 
 test('the generator refuses to price a row that does not verify', () => {

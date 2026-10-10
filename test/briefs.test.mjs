@@ -177,6 +177,10 @@ test('the summary the preregistration quotes is computable', () => {
   const counts = summarizeBriefs(rows);
   assert.equal(counts.briefs, rows.length);
   assert.equal(counts.families, new Set(rows.map((r) => r.family_id)).size);
-  assert.equal(typeof counts.byStratum, 'object');
-  assert.equal(typeof counts.alreadyModern, 'number');
+  // `typeof null === 'object'` and `typeof NaN === 'number'`, so both of these passed on a summary that
+  // carried no usable value at all. byStratum had no content check anywhere in the suite either, which is
+  // what made this the weakest assertion in the file (mwg-train-0xk).
+  assert.ok(counts.byStratum && typeof counts.byStratum === 'object' && !Array.isArray(counts.byStratum), 'byStratum must be a real object, not null');
+  assert.ok(Object.keys(counts.byStratum).length > 0, 'and it must actually carry strata');
+  assert.ok(Number.isFinite(counts.alreadyModern), 'alreadyModern must be a finite count, not NaN or null');
 });
