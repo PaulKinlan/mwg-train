@@ -2,18 +2,18 @@
 
 > **mwg-train deterministic baseline** - deterministic output of this repository's own tooling, not an official `web-uplift` result.
 
-Seven stages, each with a nameable input and output. Nothing downstream of a stage may use
-anything except that stage's recorded output — that is what makes the eval honest and the training
-data attributable.
+Seven stages, each with a nameable input and output. To guarantee the eval remains honest and the training
+data attributable, stages that measure or price prior work consume only their recorded output, and
+the measurement step generates its corpus fresh to ensure it measures exactly what the generator produces today.
 
 | # | Stage | Command | Consumes | Produces |
 |---|-------|---------|----------|----------|
-| 1 | **BRIEFS** | `npm run check:briefs` | the eval brief manifest, sealed | `docs/eval/briefs/manifest.jsonl` — sealed eval inputs (seal `sha256:89a1f47d…`) |
-| 2 | **RULES** | `node scripts/extract-mwg-rules.mjs --skill-dir <installed skill dir> --out docs/eval/rules.json` | the sealed briefs + Modern Web Guidance | `docs/eval/rules.json` — the required MWG rules per brief |
-| 3 | **GENERATE** | `npm run pilot:scaffold` | the plan (`pilot/plan.json`) over archetypes × frameworks × seeded defects | `pilot/projects/` — the on-disk corpus of original (BASELINE) sites |
-| 4 | **MEASURE** | `npm run pilot:run` | the generated corpus + the rules | run records under `pilot/out/<run>/`: browser journeys, rule measurements, accept/reject decisions (drives headless journeys, verifies yield) |
-| 5 | **RECORD / VERIFY** | `npm run pilot:corpus` / `npm run check:pilot-corpus` | a completed run | `pilot/CORPUS.json` — the committed record of what was measured (tree SHAs, acceptance, improved rules); `--verify` re-derives all of it |
-| 6 | **PRICE** | `npm run price:two-backends` | the accepted pairs + provenance-checked quotes | cost per accepted pair, Fireworks vs the cluster (`docs/eval/two-backends.md`) |
+| 1 | **BRIEFS** | `npm run check:briefs` | `docs/eval/briefs/manifest.jsonl` | zero-exit-code validation of the sealed eval inputs (seal `sha256:89a1f47d…`) |
+| 2 | **RULES** | `node scripts/extract-mwg-rules.mjs --skill-dir <installed skill dir> --out docs/eval/rules.json` | Modern Web Guidance (the skill, installed locally) | `docs/eval/rules.json` — the required MWG rules per brief |
+| 3 | **GENERATE** | `npm run pilot:scaffold` | `pilot/plan.json` (archetypes × frameworks × seeded defects) | `pilot/projects/` — the reviewable on-disk baseline sites |
+| 4 | **MEASURE** | `npm run pilot:run` | `pilot/plan.json` (generated fresh in-memory) + the determinism rules | run records under `pilot/out/<run>/`: browser journeys, rule measurements, accept/reject decisions, and the yield report |
+| 5 | **RECORD / VERIFY** | `npm run pilot:corpus` / `npm run check:pilot-corpus` | a completed run under `pilot/out/<run>/` | `pilot/CORPUS.json` — the committed record of what was measured (tree SHAs, acceptance, improved rules); `--verify` re-derives all of it |
+| 6 | **PRICE** | `npm run price:two-backends` | `docs/eval/quotes.jsonl` + `docs/pilot/yield.json` | cost per accepted pair, Fireworks vs the cluster (`docs/eval/two-backends.md`) |
 | 7 | **TRAIN** | *(training command not implemented yet — queued behind bead `mwg-train-0ov`)*; the prerequisite evidence check is `npm run check:train-evidence` | a **disjoint** generated corpus (never the sealed eval set) | the training set the model is improved with |
 
 ## Current position
