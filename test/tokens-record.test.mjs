@@ -81,6 +81,8 @@ test('HARD REQUIREMENT: the committed training token record matches a fresh meas
     // deleting them cannot be a place for a real change to hide.
     assert.equal(committed.training.trees, 'pilot/training-projects', 'the record must measure the corpus trees');
     assert.equal(committed.training.record, 'pilot/TRAINING_CORPUS.json', 'the record must measure the corpus record');
+    assert.ok(measured.training.trees, 'the measurement must still report the trees it read, or the deletion below hides its removal');
+    assert.ok(measured.training.record, 'the measurement must still report the record it read, or the deletion below hides its removal');
     delete measured.training.trees;
     delete committed.training.trees;
     delete measured.training.record;
@@ -103,6 +105,58 @@ test('HARD REQUIREMENT: the committed training token record matches a fresh meas
     assert.ok(measured.training.total_training_tokens > 0, 'the measurement must produce a token total');
   } finally {
     rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('the scope table quoted in the docs matches the committed record', () => {
+  // Added because a review caught a transcription error in exactly this table within minutes of it being
+  // written: the full_tree band read 3,922,223 where the record says 3,879,223. The numbers in the docs are
+  // restated by hand, which is the same hazard as any other restated list, so the restatement is checked
+  // against the thing it restates rather than trusted. Parsed from the table rather than grepped for
+  // strings, so a row that is reformatted, reordered or dropped fails here instead of quietly passing.
+  const record = JSON.parse(readFileSync(RECORD, 'utf8'));
+  const lines = readFileSync(join(ROOT, 'docs/train/corpus/README.md'), 'utf8').split('\n');
+  const numberGroups = (cell) => [...cell.matchAll(/[\d][\d,]*/g)].map((m) => Number(m[0].replace(/,/g, '')));
+
+  for (const [name, scope] of Object.entries(record.training.scopes)) {
+    const row = lines.find((line) => {
+      if (!line.startsWith('|')) return false;
+      const first = line.split('|')[1].replace(/[`*]/g, '').trim();
+      return first === name || first.startsWith(`${name} `) || first.startsWith(`${name}(`);
+    });
+    assert.ok(row, `docs/train/corpus/README.md must have a table row for the ${name} scope`);
+    const cells = row.split('|').slice(2, 7);
+    const found = cells.flatMap(numberGroups);
+    // The `prompt` scope states its characters as a plain zero rather than the {original, uplifted, total}
+    // object the others use, and the table writes that as three zeros. Read the shape rather than assume it,
+    // but do not SKIP the row: a scope whose row is missing or reformatted has to fail this test, not
+    // quietly drop out of it.
+    const charValue = (key) => (typeof scope.characters === 'number' ? scope.characters : scope.characters[key]);
+    const expected = [
+      charValue('original'),
+      charValue('uplifted'),
+      charValue('total'),
+      scope.tokens.derived,
+      ...scope.tokens.band,
+    ];
+    assert.deepEqual(found, expected, `the quoted ${name} row must match the record it restates`);
+  }
+});
+
+test('the headline figure the docs quote is the one the record states', () => {
+  // The prose sites (README.md, docs/train/READINESS-EPIC.md) are not tables, so this asserts the current
+  // headline and band are quoted rather than that every number on the page is right - a stale headline is
+  // the failure this catches, which is the failure that actually happened.
+  const record = JSON.parse(readFileSync(RECORD, 'utf8'));
+  const tokens = record.training.total_training_tokens.toLocaleString('en-US');
+  const band = record.training.tokens.band.map((n) => n.toLocaleString('en-US'));
+  for (const file of ['README.md', 'docs/train/READINESS-EPIC.md']) {
+    const text = readFileSync(join(ROOT, file), 'utf8');
+    assert.ok(text.includes(tokens), `${file} must quote the headline ${tokens}`);
+  }
+  const corpusReadme = readFileSync(join(ROOT, 'docs/train/corpus/README.md'), 'utf8');
+  for (const end of band) {
+    assert.ok(corpusReadme.includes(end), `docs/train/corpus/README.md must quote the band bound ${end}`);
   }
 });
 

@@ -40,7 +40,7 @@ Recorded in `pilot/TRAINING_CORPUS.json`, spanning 30 synthetic families (`tr-01
 | `project_manifest` | 26,190 | 26,190 | 52,380 | 13,095 | [9,821, 16,369] | `package.json` dependencies & scripts |
 | `harness_metadata` | 949,073 | 949,073 | 1,898,146 | 474,537 | [355,902, 593,171] | `spec.json` harness metadata (EXCLUDED) |
 | `prompt` | 0 | 0 | 0 | 0 | [0, 0] | Measured zero (documented gap; see below) |
-| *full_tree (all)* | *6,132,783* | *6,280,729* | *12,413,512* | *3,103,378* | *[2,327,534, 3,922,223]* | *Total on-disk tree for comparison* |
+| *full_tree (all)* | *6,132,783* | *6,280,729* | *12,413,512* | *3,103,378* | *[2,327,534, 3,879,223]* | *Total on-disk tree for comparison* |
 
 - **Headline Characters (`app_sources`):** **10,462,986 characters** (5,157,520 original + 5,305,466 uplifted)
 - **Headline Derived Tokens:** **2,615,747 tokens**
