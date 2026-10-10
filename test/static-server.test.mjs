@@ -82,6 +82,16 @@ test('a URL cannot walk out of the directory it is mounted to', async () => {
     // 404 even when the guard is removed, so they never tested it. This one must be refused BY THE GUARD
     // - 403, not 404 - because the premise above has established the file is really there, so a 404
     // could only mean the lookup missed rather than the guard held.
+    //
+    // PINNING 403 IS DELIBERATE, and a review raised it as brittle (mwg-train-cmk review, P2). The
+    // argument for relaxing to `notEqual(status, 200)` is that a future guard might legitimately refuse
+    // with 404 instead. The argument against is the one that matters here: 404 is also the signature of a
+    // request that NEVER REACHED the handler, which is exactly how this test was vacuous before. Relaxing
+    // it would let the `%2f` form stop reaching the guard - through a future URL- or server-side
+    // normalisation change - and pass silently, which is the failure this test exists to catch. So the
+    // refusal code is treated as the guard's contract: the server already distinguishes 403 `forbidden`
+    // from 404 `not found` on purpose, and deliberately changing that should make this test fail and be
+    // updated on purpose.
     const decoded = await fetch(`${server.origin}/b/..%2f${name}`);
     assert.equal(
       decoded.status,
