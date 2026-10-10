@@ -739,6 +739,42 @@ export function exitCodeFor(report, { strict = false } = {}) {
   return findings.some((finding) => !ADVISORY_CODES.includes(finding?.code) && finding?.code !== 'BOARDS_MISSING') ? 1 : 0;
 }
 
+/**
+ * The line main() prints about what is not gating, derived from the same decision that sets the exit
+ * status rather than from a parallel assumption about it.
+ *
+ * The defect this replaces: the unmeasured case printed "advisory and do NOT fail this check" while
+ * exitCodeFor returned 1, so an operator reading a red result saw a line telling them it should not be
+ * red. A summary built from the exit code cannot disagree with it. Exported and pure so a test can
+ * assert the agreement without driving a browser.
+ *
+ * Returns null when the findings are not all advisory or unmeasured - in that case the FINDING lines
+ * above already said what failed, and a summary would only repeat them.
+ */
+export function summaryFor(report, options = {}) {
+  const findings = report?.findings ?? [];
+  const code = exitCodeFor(report, options);
+  if (findings.length === 0) return 'check-cross-arm-parity: PASS - no drift above budget';
+  const advisory = findings.filter((finding) => ADVISORY_CODES.includes(finding?.code));
+  const unmeasured = findings.filter((finding) => UNMEASURED_CODES.includes(finding?.code));
+  if (advisory.length + unmeasured.length !== findings.length) return null;
+  const advisories = `the ${advisory.length} board and palette finding(s) above are advisory`;
+  if (unmeasured.length > 0) {
+    // BOARDS_MISSING is absent input and does not gate, so the same count can produce either status;
+    // the wording follows the status rather than assuming one.
+    return code === 0
+      ? `check-cross-arm-parity: UNMEASURED - ${unmeasured.length} comparison(s) could not be measured; ${advisories} and do not fail this check`
+      : `check-cross-arm-parity: UNMEASURED - ${unmeasured.length} comparison(s) could not be measured; ${advisories}, and the unmeasured comparison(s) FAIL this check`;
+  }
+  // The advisory-only case needs the same treatment as the unmeasured one: with --strict, exitCodeFor
+  // returns 1 for a report that is entirely advisory, so a hardcoded PASS line here repeats the very
+  // defect this function exists to remove - it told the reader the findings do not fail a check the
+  // operator had just asked to fail on them.
+  return code === 0
+    ? `check-cross-arm-parity: PASS - no arm-against-arm drift above budget; ${advisories} and do NOT fail this check (pass --strict to fail on them)`
+    : `check-cross-arm-parity: FAIL (--strict) - no arm-against-arm drift above budget; ${advisories}, and fail this check because --strict was passed`;
+}
+
 async function main() {
   const options = parseArgs(process.argv.slice(2));
   const jsonPath = resolve(ROOT, options.out, `${options.archetype}-cross-arm.json`);
@@ -912,24 +948,8 @@ async function main() {
   // arm-against-arm PIXEL axis was left advisory while only the structural one gated. Classifying
   // report.findings by code scores every finding main() produces, including a code added later, which
   // GATES until someone classifies it deliberately (see ADVISORY_CODES).
-  const advisory = report.findings.filter((finding) => ADVISORY_CODES.includes(finding?.code));
-  const unmeasured = report.findings.filter((finding) => UNMEASURED_CODES.includes(finding?.code));
-
-  if (report.findings.length === 0) {
-    console.log('check-cross-arm-parity: PASS - no drift above budget');
-  } else if (advisory.length + unmeasured.length === report.findings.length) {
-    // Say what is NOT gating, and why, rather than exiting 0 over a screen of FINDING lines and leaving
-    // the reader to guess whether the check passed.
-    if (unmeasured.length > 0) {
-      console.log(
-        `check-cross-arm-parity: UNMEASURED - ${unmeasured.length} comparison(s) could not be measured; the ${advisory.length} board and palette finding(s) above are advisory and do NOT fail this check (pass --strict to fail on them)`,
-      );
-    } else {
-      console.log(
-        `check-cross-arm-parity: PASS - no arm-against-arm drift above budget; the ${advisory.length} board and palette finding(s) above are advisory and do NOT fail this check (pass --strict to fail on them)`,
-      );
-    }
-  }
+  const summaryLine = summaryFor(report, options);
+  if (summaryLine) console.log(summaryLine);
   return exitCodeFor(report, options);
 }
 

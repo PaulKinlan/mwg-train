@@ -19,6 +19,7 @@ import {
   unionFromAxes,
   exitCodeFor,
   parseArgs,
+  summaryFor,
 } from '../scripts/check-cross-arm-parity.mjs';
 import {
   ARM_PIXEL_CODES,
@@ -858,6 +859,59 @@ test('every finding code the committed report actually carries is classified del
       assert.ok(ADVISORY_CODES.includes(code), `${code} is in the committed report and must be classified advisory`);
     } else {
       assert.ok(!ADVISORY_CODES.includes(code), `${code} is in the committed report and must gate`);
+    }
+  }
+});
+
+// The defect: the UNMEASURED summary said the findings "do NOT fail this check" while exitCodeFor
+// returned 1, so a red result came with a line telling the reader it should not be red. The invariant
+// is not a particular wording but agreement - whatever the status is, the printed line must agree with
+// it. That is why the summary is derived from the exit code rather than written beside it.
+//
+// The fixtures go through the same consistency check the real report does, so the axis keys and their
+// union have to be right here too; a report the gate would reject is not a fair test of the summary.
+function reportWithBoardFindings(findings) {
+  return {
+    parity_findings: [],
+    palette_findings: [],
+    board_comparison: { findings },
+    arm_pixels: { findings: [] },
+    findings,
+  };
+}
+
+test('the printed summary agrees with the exit status it is printed beside', () => {
+  const advisory = { code: 'BOARD_STRUCTURE_DIVERGES', project: 'x' };
+  const unmeasured = { code: 'BOARD_STRUCTURE_UNMEASURED', project: 'x' };
+  const absent = { code: 'BOARDS_MISSING', project: 'x' };
+  const cases = [
+    ['unmeasured only', [unmeasured]],
+    ['advisory and unmeasured', [advisory, unmeasured]],
+    ['advisory only', [advisory]],
+    ['absent boards only', [absent]],
+    ['nothing', []],
+  ];
+  // Both modes are exercised because the first version of this test only checked strict: false, and
+  // that omission is exactly what let a real disagreement through: with --strict on an advisory-only
+  // report the exit code is 1 while the summary hardcoded a PASS line.
+  for (const strict of [false, true]) {
+    for (const [label, findings] of cases) {
+      const report = reportWithBoardFindings(findings);
+      const summary = summaryFor(report, { strict });
+      if (summary === null) continue; // mixed findings: the FINDING lines speak for themselves
+      const code = exitCodeFor(report, { strict });
+      // Asserted semantically, not against one phrasing: a summary may say it failed in any words, but
+      // it may never claim PASS, and never claim the findings do not fail the check, when the process
+      // exits non-zero.
+      const where = `${label} (strict=${strict})`;
+      assert.ok(
+        !(/\bPASS\b/.test(summary) && code !== 0),
+        `${where}: the summary claims PASS while the exit code is ${code}`
+      );
+      assert.ok(
+        !(/do(?:es)? ?NOT fail|do not fail/i.test(summary) && code !== 0),
+        `${where}: the summary claims the findings do not fail the check while the exit code is ${code}`
+      );
     }
   }
 });
