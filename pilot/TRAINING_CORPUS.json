@@ -1,6 +1,6 @@
 {
   "$comment": "The training corpus generated from the tr-* briefs: one project per family x framework, each with its tree hash. `node scripts/scaffold-training-corpus.mjs` re-derives every tree; a hash here must never collide with a hash in pilot/CORPUS.json (original or uplift), which is the disjointness the corpus exists to guarantee.",
-  "generated_at": "2026-10-08T21:02:21.125Z",
+  "generated_at": "2026-10-10T00:30:08.600Z",
   "generator": "scripts/scaffold-training-corpus.mjs",
   "summary": {
     "families": 30,
@@ -165,7 +165,7 @@
         "/book",
         "/bookings/:id"
       ],
-      "tree_sha": "sha256:19dd1fdb3d899d0baa0418856895f06489cbdbe356f0f93939f88acfb94bb05c"
+      "tree_sha": "sha256:ae4ce5fc12cf29f8917ec4c304c0e3399395938ae2536011b478fae64a8cd294"
     },
     {
       "project_id": "tr-01-raw",
@@ -811,7 +811,7 @@
         "/checkout",
         "/orders/:id"
       ],
-      "tree_sha": "sha256:a048c06f2f4fdc9f299eff2296b5ab9be8d8ef36e1c9fd001847325b61862044"
+      "tree_sha": "sha256:dd144f829e9ed4bbba0a08591ec888fb3937e2b1eb4fc680566725e48fcc2360"
     },
     {
       "project_id": "tr-02-raw",
@@ -1520,7 +1520,7 @@
         "/reservations/:id",
         "/schedule"
       ],
-      "tree_sha": "sha256:39b7237a6c602ae7b0a2062840ca06c6d246d83af52a0fded8efa6ac91f7b1af"
+      "tree_sha": "sha256:81d5e3fd7eb149837596c84302bcfaffc124daca25281c0d06f33982b6e21123"
     },
     {
       "project_id": "tr-03-raw",
@@ -2249,7 +2249,7 @@
         "/credits",
         "/credits/:account"
       ],
-      "tree_sha": "sha256:d5c925f2f4dfa82a66368522dd911f2ad22325715eccc3aab885f409d16d4a23"
+      "tree_sha": "sha256:0b68c1d2e4125e01817f46e2919b6970fe120893b604720edce0432f78e8b1d0"
     },
     {
       "project_id": "tr-04-raw",
@@ -2814,7 +2814,7 @@
         "/login",
         "/volunteer/profile"
       ],
-      "tree_sha": "sha256:8afdf046caef7ffd1098d3bf76f1df7ebd7b16d2ed0ce450f560fdefee9f554c"
+      "tree_sha": "sha256:c2c60de33982998e42f34ab8a8653191edff5e84fbf6a0c6bc219bb0ad5c0adf"
     },
     {
       "project_id": "tr-05-raw",
@@ -3590,7 +3590,7 @@
         "/makers/:id",
         "/disciplines"
       ],
-      "tree_sha": "sha256:82916075a668ef8366297bcd01d364dca8fec30ef216e8a1cba5f3f49211e887"
+      "tree_sha": "sha256:f2eae04f18b62fd3d51a99ace75834afb00ae505d883e808a73b13c953524eb6"
     },
     {
       "project_id": "tr-06-raw",
@@ -4215,7 +4215,7 @@
         "/register/:eventId",
         "/passes/:id"
       ],
-      "tree_sha": "sha256:8e15a60e1a4bb2c846a8019f2b6217726a1ec3d515c2e3aa149a6d8da31432c4"
+      "tree_sha": "sha256:c52757abb5963a5e5042947c57c8b6462db9f663494eb61a8e43a644cbf2d4c4"
     },
     {
       "project_id": "tr-07-raw",
@@ -4951,7 +4951,7 @@
         "/tickets/new",
         "/tickets/:id"
       ],
-      "tree_sha": "sha256:7fe624370801cd2315fe332e17ed744cdf96f60a6333fec5b9be20d368511357"
+      "tree_sha": "sha256:155e0a63ba8d6171d6227ddd9e8cc3e2df3111a4ee8b455a4dec2fce4cca5bcf"
     },
     {
       "project_id": "tr-08-raw",
@@ -5526,7 +5526,7 @@
         "/enrol",
         "/enrolments/:id"
       ],
-      "tree_sha": "sha256:367a6a3fac6431cbbf2d7ff00f55ad69f31afb658779271e0a04f95c4ba7d9b9"
+      "tree_sha": "sha256:6abeda1943bf3d68af924e4c531ac8499f0b6710f4f979fe1e68bbb74e4d9cab"
     },
     {
       "project_id": "tr-09-raw",
@@ -6107,7 +6107,7 @@
         "/survey/complete/:id",
         "/results"
       ],
-      "tree_sha": "sha256:868618d485e2ab0133d40fada0840eb5938741f578a7d216d12827c80fe4f221"
+      "tree_sha": "sha256:d37a4dc8180319af741551891458b88db159391bd1ee223812b6ca3b0457d815"
     },
     {
       "project_id": "tr-10-raw",
@@ -6696,7 +6696,7 @@
         "/order",
         "/orders/:id"
       ],
-      "tree_sha": "sha256:f48f22633e1ff4a69027729279f63ff539340d356dac29647d67c4a8efefb57f"
+      "tree_sha": "sha256:f7df5d95d6573fe7e28298a84e5d4d9f75727b43ccdc1bacf4a41849b61ca96c"
     },
     {
       "project_id": "tr-11-raw",
@@ -7334,7 +7334,7 @@
         "/jobs/:id/apply",
         "/applications/:id"
       ],
-      "tree_sha": "sha256:90e1416fd714b4668d32e0e98ec72d219829f6b64006417f9018948e2814edb3"
+      "tree_sha": "sha256:ddb6c30603e1f8dcd3014063d9242e8f394055f4fe75fb2f5137433e00bf7d18"
     },
     {
       "project_id": "tr-12-raw",
@@ -7959,7 +7959,7 @@
         "/soil-tests/new",
         "/soil-tests/:id"
       ],
-      "tree_sha": "sha256:b6a5799de14c95cacfa93be5e9e9263c958d5cfd447022731a6f7e1c499f8972"
+      "tree_sha": "sha256:c1b26ea05a30923bb50479120f2fdeaeddad25c5ce3e4811e393f8b1da4b6009"
     },
     {
       "project_id": "tr-13-raw",
@@ -8472,7 +8472,7 @@
         "/stops/:id",
         "/stops/:id/comment"
       ],
-      "tree_sha": "sha256:f0373d7a6ad23ea118e4d265eba58c2a7ee51eba6ec1fbeb371a093f19f22aa1"
+      "tree_sha": "sha256:3471cb476fe73f668ffcfb234724455a19641a83d07cd733a2cbd6ee07b139c8"
     },
     {
       "project_id": "tr-14-raw",
@@ -9007,7 +9007,7 @@
         "/expenses/new",
         "/expenses/:id"
       ],
-      "tree_sha": "sha256:e896430050eb4c984fb1953f0a5361c82e7f3f78a750bfdb57c96753ec1c1536"
+      "tree_sha": "sha256:20663090595f95032699f54ba5bd0e9897e12e6b6e28e92d2b98c139ed5d51c9"
     },
     {
       "project_id": "tr-15-raw",
@@ -9603,7 +9603,7 @@
         "/request",
         "/requests/:id"
       ],
-      "tree_sha": "sha256:fbeef506966c2e798b45d0454fc4c0fcc4cfab6806ff536dbb4995143367d528"
+      "tree_sha": "sha256:08c3a22a170693673d49f3aab8fad5971bd92277337e77f0c9c628858d2770f2"
     },
     {
       "project_id": "tr-16-raw",
@@ -10226,7 +10226,7 @@
         "/book-visit",
         "/visits/:id"
       ],
-      "tree_sha": "sha256:2881648b1a0bea8bde166c4639cfe22643634c71f683a53a2d6976bbc93c2e2a"
+      "tree_sha": "sha256:9e5c578c79ad6778d4a75cfa60d515020fb6a93a41e1467ee586c4fb2a357c62"
     },
     {
       "project_id": "tr-17-raw",
@@ -10960,7 +10960,7 @@
         "/checkout",
         "/orders/:id"
       ],
-      "tree_sha": "sha256:ef2a7bbc6d3095ec465b353771a015dd4f51e6dfa27310c319829adbaf1a4570"
+      "tree_sha": "sha256:4e1b60bb05be2c7a991c0cb3b8b33bdc48e8cd91dd64d92a3ba240a007c14b23"
     },
     {
       "project_id": "tr-18-raw",
@@ -11610,7 +11610,7 @@
         "/outings/:id",
         "/safety-log"
       ],
-      "tree_sha": "sha256:aab18044a0246a21ad0c709cb1fa250fea1ba4be06a6cf6f55e2556cc57a8400"
+      "tree_sha": "sha256:61e56d432350c65bde27f5065b7051da28d15e5a40657992686f92545796f4a0"
     },
     {
       "project_id": "tr-19-raw",
@@ -12289,7 +12289,7 @@
         "/tunes/:id",
         "/tunes/:id/notes"
       ],
-      "tree_sha": "sha256:07bfe763e2c4dd5b4f4f1e72b1b1564ef40e5d0d3b27cb9062e44a1f78bc14c3"
+      "tree_sha": "sha256:6f5a798aac01c585b7185893aa48a5f01130a54235f81f9172d69680fa93f932"
     },
     {
       "project_id": "tr-20-raw",
@@ -12930,7 +12930,7 @@
         "/rides/:id",
         "/dispatch"
       ],
-      "tree_sha": "sha256:6e930fdde910fd452a03c9e404df2224e12dced8606e1d551ee2ba54cf08c6e9"
+      "tree_sha": "sha256:a27edaee8874fb066490337c8b2562e1271f9ed19c29c8a25d5281b6bf863b3f"
     },
     {
       "project_id": "tr-21-raw",
@@ -13586,7 +13586,7 @@
         "/trees/:id/log",
         "/canopy-summary"
       ],
-      "tree_sha": "sha256:f0e40500a89c1f23d5454cafa511da10e511665c2aec3f6a88e524ddcb1e95fc"
+      "tree_sha": "sha256:4c69f648fb02d0c08629e9666fe30b22f005d564b00a098336dc4a5d96449cbd"
     },
     {
       "project_id": "tr-22-raw",
@@ -14209,7 +14209,7 @@
         "/calculator/submit",
         "/reports/:id"
       ],
-      "tree_sha": "sha256:a947c2a319139d48ed55158e515da37a905b87e88cb91abd23cecf14fabb2fa7"
+      "tree_sha": "sha256:1b2de32374a23ca4bb9285044f2abed0b1acfa9b76c9012c9a957c5406e8c2b3"
     },
     {
       "project_id": "tr-23-raw",
@@ -14959,7 +14959,7 @@
         "/bookings/:id",
         "/market-layout"
       ],
-      "tree_sha": "sha256:bfd26bec2d4b458b62f9127c15bd8765b9764cb9aedd4c9674b1fcf56c6bf02f"
+      "tree_sha": "sha256:15f611df1851b46852899f83458fbfb97f7492549b4d6e9702515b10cb76b294"
     },
     {
       "project_id": "tr-24-raw",
@@ -15685,7 +15685,7 @@
         "/interviews/:id",
         "/interviews/:id/notes"
       ],
-      "tree_sha": "sha256:d8f10a7ca8299559b2043f434e82bcfdf56b8111693c682011596f2e7f81d5fe"
+      "tree_sha": "sha256:fa49253b0822beeb74d1940d638dc1da78ca0671cb9611ccb3ee532d8e46e6c8"
     },
     {
       "project_id": "tr-25-raw",
@@ -16252,7 +16252,7 @@
         "/subscriptions/:id",
         "/subscriptions/:id/edit"
       ],
-      "tree_sha": "sha256:ce17ff67844ba0a714521154354eed85434c7ed958a176682f27b865dc2919d3"
+      "tree_sha": "sha256:e0b7c7fd1deb9d3d7bb46aa36168bf648c6502a534d047a3d82c2b2793e05a81"
     },
     {
       "project_id": "tr-26-raw",
@@ -16927,7 +16927,7 @@
         "/concerts/:id/reserve",
         "/reservations/:id"
       ],
-      "tree_sha": "sha256:cf042708f9cfbcaf9c2349f88357c7a735a12039ecdc5edd5a16e8ed4749d477"
+      "tree_sha": "sha256:63bc4b2eebf7115ee8fc4b4eaea2ef457b08289efde4d61110ff02d574161dda"
     },
     {
       "project_id": "tr-27-raw",
@@ -17498,7 +17498,7 @@
         "/tickets/new",
         "/tickets/:id"
       ],
-      "tree_sha": "sha256:5964e71f2a85cb89ab119dc7201f200def2a70a39d691503be00efebed37a5d2"
+      "tree_sha": "sha256:ec7a924974777426f77ea504ef1e77bcd5557cd28891eaf7eb70810a6036a97a"
     },
     {
       "project_id": "tr-28-raw",
@@ -18086,7 +18086,7 @@
         "/contributions/:id",
         "/ledger"
       ],
-      "tree_sha": "sha256:b780c0c5f487cece47fb84a145e146f19ac3726e746973c3900174f86826a07a"
+      "tree_sha": "sha256:faccf84aee840db5df7fa4666a796854bd9388725da913c228b282196eafd8d9"
     },
     {
       "project_id": "tr-29-raw",
@@ -18619,7 +18619,7 @@
         "/cleanups/:id/register",
         "/passes/:id"
       ],
-      "tree_sha": "sha256:b31f949f59733049b2cd97912e7e7f81adacc5968e3499a093dd9029328e6e8f"
+      "tree_sha": "sha256:28eea46f864e6c7b6d5efd0f9a44bb6c579d02cd95ea84d39a13c495298116f2"
     },
     {
       "project_id": "tr-30-raw",
