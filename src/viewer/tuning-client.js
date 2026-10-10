@@ -3,6 +3,14 @@ const form = document.querySelector('#tuning-draft');
 if (form) {
   const status = document.querySelector('#draft-status');
   const preview = document.querySelector('#draft-json');
+  const livePrompt = document.querySelector('#live-draft-text');
+  const draftBadge = document.querySelector('#draft-badge');
+  const wordCountPill = document.querySelector('#draft-word-count');
+  const deltaPill = document.querySelector('#draft-delta-pill');
+  const tempPill = document.querySelector('#draft-temp-pill');
+  const tokensPill = document.querySelector('#draft-tokens-pill');
+  const seedPill = document.querySelector('#draft-seed-pill');
+
   const key = `mwg-train:tuning:${form.dataset.briefId}:${form.dataset.framework}`;
   const initial = Object.fromEntries(new FormData(form));
   const values = () => Object.fromEntries(new FormData(form));
@@ -23,8 +31,42 @@ if (form) {
       },
     };
   };
+
+  const countWords = (text) => (text ? text.trim().split(/\s+/).filter(Boolean).length : 0);
+  const initialWords = countWords(initial.prompt);
+
   const setStatus = (message) => { status.textContent = message; };
-  const refresh = () => { preview.value = JSON.stringify(payload(), null, 2); };
+
+  const updateLivePreview = () => {
+    const current = values();
+    if (livePrompt) {
+      livePrompt.textContent = current.prompt;
+    }
+    const currentWords = countWords(current.prompt);
+    if (wordCountPill) {
+      wordCountPill.textContent = `${currentWords} words · ${current.prompt.length} chars`;
+    }
+    const isModified = current.prompt !== initial.prompt;
+    if (deltaPill) {
+      if (!isModified) {
+        deltaPill.textContent = 'Identical to authored voice';
+      } else {
+        const delta = currentWords - initialWords;
+        deltaPill.textContent = `${delta >= 0 ? '+' : ''}${delta} words vs authored`;
+      }
+    }
+    if (draftBadge) {
+      draftBadge.textContent = isModified ? 'MODIFIED LOCAL DRAFT · UNAPPROVED' : 'LOCAL DRAFT · UNAPPROVED';
+    }
+    if (tempPill) tempPill.textContent = `Temp: ${current.temperature}`;
+    if (tokensPill) tokensPill.textContent = `Max tokens: ${current.max_tokens}`;
+    if (seedPill) seedPill.textContent = `Seed: ${current.seed}`;
+  };
+
+  const refresh = () => {
+    preview.value = JSON.stringify(payload(), null, 2);
+    updateLivePreview();
+  };
 
   try {
     const saved = JSON.parse(localStorage.getItem(key) || 'null');
@@ -40,12 +82,15 @@ if (form) {
   } catch {
     setStatus('Browser storage is unavailable; you can still edit and export this draft.');
   }
+
   refresh();
+
   form.addEventListener('input', () => {
     refresh();
     try { localStorage.setItem(key, JSON.stringify({ ...values(), source_prompt: initial.prompt })); }
     catch { setStatus('Browser storage is unavailable; export the draft to keep it.'); }
   });
+
   form.addEventListener('submit', (event) => {
     event.preventDefault();
     if (!form.reportValidity()) return;
@@ -59,6 +104,7 @@ if (form) {
     setTimeout(() => URL.revokeObjectURL(url), 1000);
     setStatus('Downloaded an unapproved draft JSON file. No corpus files were changed.');
   });
+
   document.querySelector('#copy-draft').addEventListener('click', async () => {
     if (!form.reportValidity()) return;
     refresh();
@@ -69,6 +115,7 @@ if (form) {
       setStatus('Clipboard access is unavailable. Select and copy the export preview below instead.');
     }
   });
+
   document.querySelector('#reset-draft').addEventListener('click', () => {
     for (const [name, value] of Object.entries(initial)) form.elements.namedItem(name).value = value;
     try { localStorage.removeItem(key); } catch { /* Still reset the visible draft. */ }
