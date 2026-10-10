@@ -104,9 +104,11 @@ test('arms that agree produce no budget findings, and measured drift does', () =
   assert.ok(drifted.findings.length > 0, 'a drifted arm must produce a finding');
   const below = drifted.findings.filter((finding) => finding.code === PARITY_CODES.CROSS_ARM_BELOW_BUDGET);
   assert.ok(below.length > 0, 'the drifted arm must be reported as below budget');
+  // Number.isFinite, not typeof: `typeof NaN === 'number'`, so a finding carrying a NaN reading satisfied the
+  // old check while telling a reader nothing. Found by the mwg-train-0xk sweep (mwg-train-0xk).
   assert.ok(
-    below.every((finding) => typeof finding.axis === 'string' && typeof finding.actual === 'number'),
-    'every below-budget finding must name the axis and the actual reading',
+    below.every((finding) => typeof finding.axis === 'string' && Number.isFinite(finding.actual)),
+    'every below-budget finding must name the axis and a real (finite) reading',
   );
   assert.ok(
     below.some((finding) => typeof finding.pair === 'string' && finding.pair.includes('/')),
@@ -434,7 +436,14 @@ test('an identity code the parity layer does not know is named, not read as a me
   assert.equal(unknown, PARITY_CODES.CROSS_ARM_UNMAPPED_IDENTITY_CODE);
   // And the code we could not translate must still be readable somewhere, or a future reader sees
   // "unmapped" with no way to find out what was unmapped.
-  const carried = crossArmFindings({ arms: [arm('raw'), arm('hono'), arm('react')], budget: BUDGET });
+  // Three IDENTICAL arms produce NO findings, so this .every() returned true without running its body - a
+  // shape check on an empty list. It now uses a drifted arm and asserts the premise, matching the test below
+  // it (mwg-train-0xk).
+  const carried = crossArmFindings({
+    arms: [arm('raw'), arm('hono'), arm('react', { boxHeight: 0.5, controls: 1 })],
+    budget: BUDGET,
+  });
+  assert.ok(carried.findings.length > 0, 'premise: a drifted arm must produce findings for this to inspect');
   assert.ok(
     carried.findings.every((finding) => finding.identity_code === undefined),
     'a translated finding must not carry a redundant identity_code',
