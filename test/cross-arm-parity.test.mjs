@@ -11,7 +11,7 @@ import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import test from 'node:test';
 
-import { REFERENCE_PALETTE } from '../scripts/check-cross-arm-parity.mjs';
+import { REFERENCE_PALETTE, exitCodeFor, parseArgs } from '../scripts/check-cross-arm-parity.mjs';
 import {
   ARM_PIXEL_CODES,
   PARITY_CODES,
@@ -626,4 +626,49 @@ test('two palette findings that differ only by code both survive the collapse', 
   // `viewports` holds the viewport OBJECTS, not their keys - my first version expected strings, so it failed
   // on the shape of the value rather than on the behaviour. The code was right; the expectation was wrong.
   assert.deepEqual(collected[0].viewports.map((viewport) => viewport.key).sort(), ['desktop', 'mobile', 'tablet']);
+});
+
+// -----------------------------------------------------------------------------------------------------------
+// The gate policy, and the write separation. Both are pure decisions, so they are tested here rather than
+// by running the browser.
+//
+// mwg-train-a90: `check:cross-arm-parity` rewrote two tracked documents every time it ran (timings change
+// run to run, so the tree was never clean afterwards) and exited 0 while printing 140 FINDING lines.
+test('the exit code gates arm-against-arm parity but not the advisory board and palette drift', () => {
+  const board = { code: 'BOARD_STRUCTURE_DIVERGES' };
+  const palette = { code: 'PALETTE_DIVERGES' };
+
+  // Clean: nothing above budget.
+  assert.equal(exitCodeFor({ parityFindings: [], allFindings: [] }), 0);
+
+  // The case the committed report is in: 140 advisory findings and no parity drift. Exiting non-zero here
+  // would make this check red on every clean checkout for a divergence the report itself documents as
+  // expected, which is how a gate stops being read. It must still be VISIBLE - the CLI prints it - but it
+  // must not fail.
+  assert.equal(
+    exitCodeFor({ parityFindings: [], allFindings: [board, palette, board] }),
+    0,
+    'advisory board and palette drift must not fail the default check',
+  );
+  // ...and --strict is what fails on it, which is what --strict always did.
+  assert.equal(exitCodeFor({ parityFindings: [], allFindings: [board] }, { strict: true }), 1);
+
+  // Parity drift is this tool's subject: it fails with or without --strict.
+  assert.equal(exitCodeFor({ parityFindings: [board], allFindings: [board] }), 1);
+  assert.equal(exitCodeFor({ parityFindings: [board], allFindings: [board] }, { strict: true }), 1);
+
+  // A caller that cannot say which findings are parity gets a failure, not a pass.
+  assert.throws(() => exitCodeFor({ parityFindings: undefined, allFindings: [] }), TypeError);
+  assert.throws(() => exitCodeFor({}), TypeError);
+});
+
+test('the check does not write the committed report unless it is asked to', () => {
+  // A check that rewrites the artifact it checks dirties the tree on every run, so a reader cannot tell
+  // the tool's own output from a real edit.
+  assert.equal(parseArgs([]).write, false, 'writing must be off by default');
+  assert.equal(parseArgs(['--write']).write, true);
+  assert.equal(parseArgs(['--archetype', 'booking', '--write']).write, true);
+  // The other flags must not accidentally turn writing on.
+  assert.equal(parseArgs(['--strict']).write, false);
+  assert.equal(parseArgs(['--rerender']).write, false);
 });

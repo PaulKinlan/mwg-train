@@ -4,7 +4,9 @@
  *
  *   node scripts/check-cross-arm-parity.mjs                      # booking, all arms, three widths
  *   node scripts/check-cross-arm-parity.mjs --archetype booking
- *   node scripts/check-cross-arm-parity.mjs --strict             # exit non-zero when findings exist
+ *   node scripts/check-cross-arm-parity.mjs --write              # update the committed report; without it
+ *                                                                # this never touches a tracked file
+ *   node scripts/check-cross-arm-parity.mjs --strict             # also fail on ADVISORY drift, not just parity
  *   node scripts/check-cross-arm-parity.mjs --rerender           # rebuild the markdown from the JSON
  *
  * For each framework the pilot can build, this renders the arm at 390, 768 and 1280 wide, saves a
@@ -82,7 +84,7 @@ const TOKEN_SCRIPT = `return (() => {
   };
 })();`;
 
-function parseArgs(argv) {
+export function parseArgs(argv) {
   const options = {
     archetype: 'booking',
     out: 'docs/eval/conformance',
@@ -91,11 +93,17 @@ function parseArgs(argv) {
     port: 9600,
     strict: false,
     rerender: false,
+    // A check that rewrites the committed report it is checking cannot be run on a clean tree: it dirties
+    // the two files every time (timings differ run to run even when nothing else does), and anyone
+    // reading `git status` after a check cannot tell a real edit from the tool's own output. Writing is
+    // now explicit (mwg-train-a90).
+    write: false,
     reuseArms: false,
   };
   for (let index = 0; index < argv.length; index += 1) {
     const flag = argv[index];
-    if (flag === '--archetype') options.archetype = argv[++index];
+    if (flag === '--write') options.write = true;
+    else if (flag === '--archetype') options.archetype = argv[++index];
     else if (flag === '--out') options.out = argv[++index];
     else if (flag === '--run-root') options.runRoot = argv[++index];
     else if (flag === '--port') options.port = Number(argv[++index]);
@@ -206,7 +214,7 @@ function renderMarkdown(report) {
   lines.push(baselineAttributionLine());
   lines.push('');
   lines.push(
-    `Compares the ${(report.arms_observed ?? []).length ? new Set((report.arms_observed ?? []).map((arm) => arm.framework)).size : 0} framework arms for \`${report.archetype}\` with each other at ${report.viewports.length} widths, and compares every arm screenshot against the reference boards in pixels. Finds drift; does not gate it unless \`--strict\` is passed.`,
+    `Compares the ${(report.arms_observed ?? []).length ? new Set((report.arms_observed ?? []).map((arm) => arm.framework)).size : 0} framework arms for \`${report.archetype}\` with each other at ${report.viewports.length} widths, and compares every arm screenshot against the reference boards in pixels. Arm-against-arm drift fails this check; board and palette divergence is advisory and is reported without failing unless \`--strict\` is passed.`,
   );
   lines.push('');
   lines.push(
@@ -572,6 +580,29 @@ function compareOne({ screenshot, boardMetrics }) {
   };
 }
 
+/**
+ * The exit code for a finished run. Pure, so the gate policy can be tested without a browser.
+ *
+ * ARM-AGAINST-ARM PARITY GATES; BOARD AND PALETTE DRIFT IS ADVISORY. The committed report states the
+ * reason in its own words - board divergence "is expected on this repository: the generated arms use the
+ * pilot palette and have not adopted the boards' design" - and it carries the same 140 palette and board
+ * findings it carried when it was last regenerated. Failing the check on those would make it red on every
+ * clean checkout for a condition this repository has already decided is expected, and a check that is
+ * always red cannot show a new failure: that is the defect filed as mwg-train-jjl. `--strict` still fails
+ * on any finding, which is what it has always done.
+ *
+ * A caller that cannot say which findings are parity FAILS CLOSED - an unscorable report is a failure,
+ * not a pass - and a malformed call is an error rather than a silent zero.
+ */
+export function exitCodeFor({ parityFindings, allFindings }, { strict = false } = {}) {
+  if (!Array.isArray(parityFindings) || !Array.isArray(allFindings)) {
+    throw new TypeError('exitCodeFor needs parityFindings and allFindings arrays');
+  }
+  if (allFindings.length === 0) return 0;
+  if (strict) return 1;
+  return parityFindings.length > 0 ? 1 : 0;
+}
+
 async function main() {
   const options = parseArgs(process.argv.slice(2));
   const jsonPath = resolve(ROOT, options.out, `${options.archetype}-cross-arm.json`);
@@ -715,17 +746,35 @@ async function main() {
     },
   };
 
-  mkdirSync(dirname(jsonPath), { recursive: true });
-  writeFileSync(jsonPath, `${JSON.stringify(report, null, 2)}\n`);
-  writeFileSync(markdownPath, renderMarkdown(report));
+  // The report is still assembled and reported above; only SAVING it is opt-in, so a check can run on a
+  // clean tree and leave it clean.
+  if (options.write) {
+    mkdirSync(dirname(jsonPath), { recursive: true });
+    writeFileSync(jsonPath, `${JSON.stringify(report, null, 2)}\n`);
+    writeFileSync(markdownPath, renderMarkdown(report));
+  }
 
   console.log(
     `check-cross-arm-parity: ${report.arms_measured.length} arms measured, ${summary.findings.length} parity finding(s), ${palette.length} palette finding(s), ${report.board_comparison?.findings?.length ?? 0} board finding(s)`,
   );
   for (const finding of report.findings) console.log(`  FINDING ${finding.code} ${finding.message}`);
-  console.log(`check-cross-arm-parity: wrote ${jsonPath.replace(`${ROOT}/`, '')} and ${markdownPath.replace(`${ROOT}/`, '')}`);
-  if (report.findings.length === 0) console.log('check-cross-arm-parity: PASS - no drift above budget');
-  return options.strict && report.findings.length > 0 ? 1 : 0;
+  console.log(
+    options.write
+      ? `check-cross-arm-parity: wrote ${jsonPath.replace(`${ROOT}/`, '')} and ${markdownPath.replace(`${ROOT}/`, '')}`
+      : `check-cross-arm-parity: not writing ${jsonPath.replace(`${ROOT}/`, '')}; pass --write to update the committed report`,
+  );
+  const parity = summary.findings;
+  const advisory = report.findings.length - parity.length;
+  if (report.findings.length === 0) {
+    console.log('check-cross-arm-parity: PASS - no drift above budget');
+  } else if (parity.length === 0) {
+    // Say what is NOT gating, and why, rather than exiting 0 over a screen of FINDING lines and leaving
+    // the reader to guess whether the check passed.
+    console.log(
+      `check-cross-arm-parity: PASS - no arm-against-arm drift above budget; the ${advisory} board and palette finding(s) above are advisory and do NOT fail this check (pass --strict to fail on them)`,
+    );
+  }
+  return exitCodeFor({ parityFindings: parity, allFindings: report.findings }, options);
 }
 
 // Import-safe: a test asserts this script's declared palette still matches the reference boards' own
