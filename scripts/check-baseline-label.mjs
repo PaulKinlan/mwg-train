@@ -149,6 +149,11 @@ export const DOCUMENTS = {
   'docs/eval/design/account-recovery/plan.md': 'spec',
   'docs/eval/design/event-registration/plan.md': 'spec',
   'README.md': 'floor-report',
+  // Records the corpus's intentional XSS sinks, and the one real sink the corpus freeze currently
+  // protects, so a future audit checks this classification instead of re-deriving it (mwg-train-bkk).
+  // A reference about the state of the artifacts, not a report of measured floor evidence: it cites
+  // check:specs only to show that the frozen trees did not move.
+  'docs/KNOWN-SINKS.md': 'provenance',
   'docs/PIPELINE.md': 'floor-report',
   'docs/eval/conformance/README.md': 'floor-report',
   'docs/eval/conformance/account-recovery-identity.json': 'floor-report',
