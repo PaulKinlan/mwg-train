@@ -130,49 +130,69 @@ const EXCEPTIONS = [
 export function extractRoutes(content) {
   const served = new Set();
   
-  const honoMatches = content.matchAll(/app\.(get|post|put|delete|patch)\('([^']+)'/g);
-  for (const match of honoMatches) served.add(`${match[1].toUpperCase()} ${match[2]}`);
+  let remaining = content;
+
+  const honoRegex = /app\.(get|post|put|delete|patch)\(\s*(['"`])([^'"`]+)\2/g;
+  for (const match of content.matchAll(honoRegex)) served.add(`${match[1].toUpperCase()} ${match[3]}`);
+  remaining = remaining.replace(honoRegex, 'MATCHED_HONO');
   
-  const varPaths = content.matchAll(/const\s+([a-zA-Z0-9_]+)\s*=\s*"([^"]+)";[\s\S]*?app\.(get|post)\(\1/g);
-  for (const match of varPaths) served.add(`${match[3].toUpperCase()} ${match[2]}`);
+  const varPaths = /const\s+([a-zA-Z0-9_]+)\s*=\s*(['"`])([^'"`]+)\2;[\r\n\s]*app\.(get|post|put|delete|patch)\(\s*\1/g;
+  for (const match of content.matchAll(varPaths)) served.add(`${match[4].toUpperCase()} ${match[3]}`);
+  remaining = remaining.replace(varPaths, 'MATCHED_HONO_VAR');
   
-  const loops = content.matchAll(/for\s+\([^)]+of\s+\[([^\]]*)\]\)\s*\{\s*app\.(get|post)/g);
-  for (const match of loops) {
+  const loops = /for\s+\([^)]+of\s+\[([^\]]*)\]\)\s*\{\s*app\.(get|post|put|delete|patch)/g;
+  for (const match of content.matchAll(loops)) {
     if (!match[1].trim()) continue;
     const method = match[2].toUpperCase();
-    const strings = match[1].split(',').map(s => s.trim().replace(/^['"]|['"]$/g, '')).filter(s => s);
+    const strings = match[1].split(',').map(s => s.trim().replace(/^['"`]|['"`]$/g, '')).filter(s => s);
     for (const s of strings) served.add(`${method} ${s}`);
   }
+  remaining = remaining.replace(loops, 'MATCHED_HONO_LOOP');
 
-  const rawMatches = content.matchAll(/path\s*===\s*'([^']+)'(?:\s*&&\s*request\.method\s*===\s*'([^']+)')?/g);
-  for (const match of rawMatches) served.add(`${match[2] ? match[2].toUpperCase() : 'GET'} ${match[1]}`);
+  const rawMatches = /path\s*===\s*(['"`])([^'"`]+)\1(?:\s*&&\s*request\.method\s*===\s*(['"`])([^'"`]+)\3)?/g;
+  for (const match of content.matchAll(rawMatches)) served.add(`${match[4] ? match[4].toUpperCase() : 'GET'} ${match[2]}`);
+  remaining = remaining.replace(rawMatches, 'MATCHED_RAW');
   
-  const rawVarsBetter = content.matchAll(/const\s+[a-zA-Z0-9_]+\s*=\s*"([^"]+)";[\s\S]{0,200}?request\.method\s*===\s*'([^']+)'/g);
-  for (const match of rawVarsBetter) served.add(`${match[2].toUpperCase()} ${match[1]}`);
+  const rawVarsBetter = /const\s+([a-zA-Z0-9_]+)\s*=\s*(['"`])([^'"`]+)\2;[\s\S]{0,200}?request\.method\s*===\s*(['"`])([^'"`]+)\4/g;
+  for (const match of content.matchAll(rawVarsBetter)) served.add(`${match[5].toUpperCase()} ${match[3]}`);
+  remaining = remaining.replace(rawVarsBetter, 'MATCHED_RAW_VAR');
   
-  const rawArrays = content.matchAll(/\[([^\]]*)\]\.includes\(path\)(?:\s*&&\s*request\.method\s*===\s*'([^']+)')?/g);
-  for (const match of rawArrays) {
+  const rawArrays = /\[([^\]]*)\]\.includes\(path\)(?:\s*&&\s*request\.method\s*===\s*(['"`])([^'"`]+)\2)?/g;
+  for (const match of content.matchAll(rawArrays)) {
     if (!match[1].trim()) continue;
-    const method = match[2] ? match[2].toUpperCase() : 'GET';
-    const strings = match[1].split(',').map(s => s.trim().replace(/^['"]|['"]$/g, '')).filter(s => s);
+    const method = match[3] ? match[3].toUpperCase() : 'GET';
+    const strings = match[1].split(',').map(s => s.trim().replace(/^['"`]|['"`]$/g, '')).filter(s => s);
     for (const s of strings) served.add(`${method} ${s}`);
   }
+  remaining = remaining.replace(rawArrays, 'MATCHED_RAW_ARRAY');
 
-  const rawStarts = content.matchAll(/path\.startsWith\('([^']+)'\)(?:\s*&&\s*request\.method\s*===\s*'([^']+)')?/g);
-  for (const match of rawStarts) {
-    const method = match[2] ? match[2].toUpperCase() : 'GET';
-    let r = match[1];
+  const rawStarts = /path\.startsWith\(\s*(['"`])([^'"`]+)\1\s*\)(?:\s*&&\s*request\.method\s*===\s*(['"`])([^'"`]+)\3)?/g;
+  for (const match of content.matchAll(rawStarts)) {
+    const method = match[4] ? match[4].toUpperCase() : 'GET';
+    let r = match[2];
     if (r === '/api/record/') r = '/api/record/:ref';
     if (r === '/app/') r = '/app/:file';
     served.add(`${method} ${r}`);
   }
+  remaining = remaining.replace(rawStarts, 'MATCHED_RAW_STARTS');
 
-  return served;
+  const unparsed = [];
+  const routeLikeRegex = /app\.(?:get|post|put|delete|patch)\(|path\s*===\s*(['"`])|\.includes\(path\)|path\.startsWith\(/g;
+  let m;
+  while ((m = routeLikeRegex.exec(remaining)) !== null) {
+    const start = Math.max(0, m.index - 20);
+    const end = Math.min(remaining.length, m.index + 50);
+    unparsed.push(remaining.substring(start, end).replace(/\n/g, '\\n'));
+  }
+
+  return { served, unparsed };
 }
 
 export function checkProjectData(project_id, specRoutes, serverContent) {
   const declared = new Set(specRoutes.map(r => `${r.method} ${r.path}`));
-  const served = extractRoutes(serverContent);
+  const extracted = extractRoutes(serverContent);
+  const served = extracted.served;
+
   
   served.delete('GET /__health');
   served.delete('GET /app/:file');
@@ -196,7 +216,7 @@ export function checkProjectData(project_id, specRoutes, serverContent) {
     if (!declared.has(s)) servedNotDeclared.push(s);
   }
 
-  return { name: project_id, declaredNotServed, servedNotDeclared };
+  return { name: project_id, declaredNotServed, servedNotDeclared, unparsedRoutes: extracted.unparsed };
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
@@ -229,6 +249,13 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       const serverContent = readFileSync(join(dir, 'server.mjs'), 'utf8');
 
       const res = checkProjectData(spec.project_id, spec.routes, serverContent);
+
+      if (res.unparsedRoutes && res.unparsedRoutes.length > 0) {
+        for (const u of res.unparsedRoutes) {
+          console.log(`[${res.name}] Unparsed route-like block: ${u}`);
+        }
+        fail = true;
+      }
 
       for (const dec of res.declaredNotServed) {
         const ex = EXCEPTIONS.find(e => e.project === res.name && e.route === dec && e.direction === 'declared_not_served');
