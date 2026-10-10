@@ -612,6 +612,37 @@ export const ADVISORY_CODES = Object.freeze([
 ]);
 
 /**
+ * Assemble the findings union the gate scores, from the four axes it is published beside.
+ *
+ * The union used to be assembled by hand inside main(), and no unit test can traverse main(): a mutation
+ * deleting one axis from that line passed the suite twice (mwg-train-a90's delta review proved it), and the
+ * runtime guard that does catch it compares CONTENT, so it was dormant whenever the dropped axis was empty -
+ * which both gating axes are today, 0 parity and 0 arm-pixel (mwg-train-qfg). Requiring the four keys HERE
+ * turns deleting an axis into a MISSING KEY rather than a shorter array, and a missing key throws whether or
+ * not the axis has findings, so the wiring is provable in a unit test with no browser and no finding.
+ *
+ * THE IRREDUCIBLE LIMIT, stated rather than papered over: omitting a key is caught; PASSING AN EXPLICIT
+ * EMPTY ARRAY is not. A caller writing `armPixels: []` instead of forwarding the measured axis is
+ * indistinguishable here from an axis that genuinely produced no findings.
+ */
+export function assembleFindings({ parity, palette, board, armPixels }) {
+  const axes = [
+    ['parity', parity],
+    ['palette', palette],
+    ['board', board],
+    ['armPixels', armPixels],
+  ];
+  for (const [name, axis] of axes) {
+    if (!Array.isArray(axis)) {
+      throw new TypeError(
+        `assembleFindings: the ${name} axis must be an array, got ${axis === undefined ? 'no key at all' : typeof axis}`,
+      );
+    }
+  }
+  return [...parity, ...palette, ...board, ...armPixels];
+}
+
+/**
  * Every finding the report publishes must also be in the union the gate scores.
  *
  * The union `findings` is assembled by hand in main() from four axes, and no unit test can see an axis left
@@ -814,7 +845,15 @@ async function main() {
     // `--strict` can act on them. A cross-family review caught them living only in board_comparison,
     // where 105 measured disagreements were invisible to every one of those three. The arm-pixel findings
     // are included for the same reason on the first attempt rather than after a review.
-    findings: [...summary.findings, ...palette, ...(boardComparison?.findings ?? []), ...pixelComparison.findings],
+    // Assembled by the function above rather than by hand, so that dropping an axis is a missing key
+    // instead of a shorter array. `board` is forwarded WITHOUT a `?? []` default on purpose: defaulting a
+    // missing axis to an empty array is exactly the failure this function exists to remove.
+    findings: assembleFindings({
+      parity: summary.findings,
+      palette,
+      board: boardComparison?.findings,
+      armPixels: pixelComparison.findings,
+    }),
     screenshots,
     limits: {
       compares: 'layout and component structure between arms (structural, geometry, controls axes), real pixels between arms at each width, and real pixels against the reference boards',

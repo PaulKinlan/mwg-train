@@ -15,6 +15,7 @@ import {
   ADVISORY_CODES,
   REFERENCE_PALETTE,
   assertFindingsConsistent,
+  assembleFindings,
   exitCodeFor,
   parseArgs,
 } from '../scripts/check-cross-arm-parity.mjs';
@@ -724,6 +725,65 @@ test('the committed report satisfies its own union, so the guard is not vacuous 
   assert.match(axes, /board_comparison\.findings=105/, `the committed report must publish its board axis, got ${axes}`);
   assert.ok(report.findings.length >= 140, `the committed union must still carry every published finding, got ${report.findings.length}`);
   assert.equal(exitCodeFor(report), 0, 'the committed report has no arm-against-arm drift and must not fail');
+});
+
+test('assembleFindings requires all four axes and concatenates them in a fixed order', () => {
+  const parity = [{ code: 'P' }];
+  const palette = [{ code: 'A' }];
+  const board = [{ code: 'B' }];
+  const armPixels = [{ code: 'X' }];
+
+  // The order is fixed rather than incidental: this union is scored and printed, so a reshuffle changes the
+  // artifact even when the membership does not.
+  assert.deepEqual(
+    assembleFindings({ parity, palette, board, armPixels }),
+    [...parity, ...palette, ...board, ...armPixels],
+  );
+
+  // EVERY axis key is required, and that is the whole point of extracting this from main(). While both
+  // gating axes are empty, a mutation that drops one of them is invisible to a content-based guard, because
+  // dropping an empty axis changes nothing the guard can see (mwg-train-qfg). Here it is a missing key.
+  for (const key of ['parity', 'palette', 'board', 'armPixels']) {
+    const args = { parity, palette, board, armPixels };
+    delete args[key];
+    // The message has to NAME the axis, not merely report that something is missing - a guard that says
+    // "an axis is missing" when four axes exist is a guard whose reader still has to find it. A mutation
+    // crossing two labels in the table above left this test green until the axis name was asserted.
+    assert.throws(
+      () => assembleFindings(args),
+      new RegExp(`the ${key} axis must be an array, got no key at all`),
+      `${key} must be required, empty or not, and named in the error`,
+    );
+  }
+
+  // An empty array is still a valid AXIS. "this axis produced no findings" and "this axis was not passed"
+  // are different claims, and only the second one is a wiring bug.
+  assert.deepEqual(assembleFindings({ parity: [], palette: [], board: [], armPixels: [] }), []);
+
+  // A non-array axis is refused rather than spread. `null` and `undefined` both spread to nothing, so
+  // without this a caller passing a missing comparison would quietly contribute no findings - the same
+  // silent omission in a different disguise.
+  for (const bad of [null, 'findings', {}, 0, 7]) {
+    assert.throws(() => assembleFindings({ parity: bad, palette: [], board: [], armPixels: [] }), TypeError, `${String(bad)} must be refused`);
+  }
+});
+
+test('the committed report reassembles from its four axes, which the union line in main() cannot be tested for', () => {
+  // Real data, not synthetic: the shipped artifact carries 140 published findings across all four axes, and
+  // this asserts its `findings` is EXACTLY the four axes concatenated in the published order. Equality
+  // rather than membership, so an axis that is present with the right findings but in the wrong place - or
+  // one dropped from the union while its own copy still holds them - fails here. That is the a90 regression
+  // this bead is about, and it is why the assembly had to stop being a hand-written line inside main().
+  const report = JSON.parse(readFileSync(join(ROOT, 'docs/eval/conformance/booking-cross-arm.json'), 'utf8'));
+  assert.deepEqual(
+    assembleFindings({
+      parity: report.parity_findings,
+      palette: report.palette_findings,
+      board: report.board_comparison?.findings,
+      armPixels: report.arm_pixels?.findings,
+    }),
+    report.findings,
+  );
 });
 
 test('the check does not write the committed report unless it is asked to', () => {
