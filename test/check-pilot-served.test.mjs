@@ -273,3 +273,27 @@ test('a path.match route the anchored pattern does not cover is reported, not ig
     'an unrecognised path.match route must be reported as an unparsed block'
   );
 });
+
+// The non-goals documented at extractRoutes are real, and so is the parity between the families the
+// extractors recognise and the sentinels the residual scan reports. Each case below is a shape a human
+// reads as a route that the extraction patterns deliberately do not cover, and the residual scan must
+// report all of them - otherwise a family can be added without its sentinel, which is exactly how the
+// path.match case came to be silently dropped.
+// Measured, not assumed: the equality family is NOT in this list. Its sentinel deliberately requires a
+// quoted literal so it does not fire on non-route boilerplate like `path === EXTRA_ACTION`, which means
+// `path === routeVar` is invisible. That is recorded as a non-goal in the source rather than asserted
+// here, because asserting it would pin a gap that should be closed if the generator ever emits it.
+test('every route family the extractors recognise has a residual sentinel that reports what they cannot parse', () => {
+  const cases = [
+    ['app registration', 'app.get(pathVar, () => {});'],
+    ['array includes', 'if (routeList.includes(path)) {}'],
+    ['startsWith', 'if (path.startsWith(prefixVar)) {}'],
+    ['path.match', 'const m = path.match(unknownPattern);'],
+  ];
+  for (const [label, code] of cases) {
+    assert.ok(
+      (extractRoutes(code).unparsed ?? []).length > 0,
+      `${label}: a shape the extractors cannot parse must be reported, not ignored`
+    );
+  }
+});

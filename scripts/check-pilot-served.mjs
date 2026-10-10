@@ -127,6 +127,41 @@ const EXCEPTIONS = [
   { project: "event-registration-vue", route: "GET /search", direction: "served_not_declared", reason: "Generator fallback" }
 ];
 
+// WHAT THIS CHECK IS AND IS NOT.
+//
+// It is a static linter for the route idioms the pilot generator actually emits. It is not a general
+// JavaScript router analyser, and a passing run does not mean every route a server serves was accounted
+// for - it means the routes in the families below were.
+//
+// The extractors recognise five families, and the residual scan has one sentinel for each, so a shape
+// outside them is reported as an unparsed block rather than ignored:
+//   1. app.<verb>( '<path>'            <->  app.(get|post|put|delete|patch)(
+//   2. path === '<path>'               <->  path === <quote>      (see the limitation below)
+//   3. [ '<a>', '<b>' ].includes(path) <->  .includes(path)
+//   4. path.startsWith( '<prefix>' )   <->  path.startsWith(
+//   5. const r = '<path>'; ... path.match(new RegExp(... r ...)) <-> path.match(
+// Adding a family means adding its sentinel in the same change; the pairing is the point, because a
+// pattern with no sentinel is exactly how the path.match case came to be silently dropped.
+//
+// DELIBERATE NON-GOALS, enumerated rather than left to be discovered. These constructs are invisible to
+// both the extractors and the sentinels, so a route served only through one of them is not reported. That
+// is a boundary of a static regex linter, not an oversight:
+//   - switch (path) { case '/x': ... }
+//   - route tables and dictionary dispatch: routes[path](), new Map([...]).get(path)
+//   - the URLPattern API: new URLPattern({ pathname: '/x' }).test(url)
+//   - middleware and sub-router mounts: app.use('/prefix', ...), router.get(...)
+//   - flipped or loose equality: '/' === path, path == '/x'
+//   - alternate RegExp execution: re.test(path), re.exec(path)
+//   - alternate variable names: req.url === '/x', url.pathname === '/x'
+// If the generator starts emitting one of these, add a family AND its sentinel together - and extend the
+// list above only with idioms the generator actually produces, because inventing coverage for constructs
+// nobody emits trades a documented boundary for an untested claim.
+//
+// KNOWN NARROW REACH, recorded because it is the same class of gap this file keeps producing: the equality
+// sentinel requires a quoted literal on the right of ===, deliberately, so it does not fire on non-route
+// boilerplate like `path === EXTRA_ACTION`. That means a route reached only through a variable comparison,
+// `path === routeVar`, is outside both the extractors and the sentinel - it is invisible, and it is listed
+// above as an alternate variable name rather than merely unhandled.
 export function extractRoutes(content) {
   const served = new Set();
   
