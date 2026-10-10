@@ -74,8 +74,13 @@ The overarching training pipeline implements a closed-loop, model-to-model empir
 
 ### Vision vs Code Generation Pipeline Architecture (Paul's V4.1 Flash Directive)
 Under Paul's decision designating **DeepSeek V4.1 Flash** as the default student model:
-- **Image Reading & Interpretation**: If V4.1 Flash operates as a text/code-only model, image ingestion is handled either by a verified multimodal adapter on Fireworks or by an explicit Vision-Language (VL) front-end stage (e.g. Qwen 2.5 VL) that converts the high-fidelity design screenshot into structured visual tokens, layout semantics, and aesthetic constraints.
-- **Code Generation & Uplift Training**: DeepSeek V4.1 Flash consumes the functional `plan.md`, design contract, and visual layout representation to generate and iteratively refine the modern web application code across frameworks.
+- **Core Reasoning in Code/Text**: As Paul clarified, the model's core task is text reasoning over web application code. The primary output is clean, modern, multi-framework web application text.
+- **Role of the Design Image as a Target**: The high-fidelity design image is the **target goal** to aim at and the visual ground truth to compare against—not an input prompt to the code generation model.
+- **The Evaluation Vision Bridge (Decided Architecture)**:
+  To bridge the visual target image and the generated text output during the evaluation and curation loop, the pipeline adopts a **hybrid two-stage evaluation bridge**:
+  1. *Primary Functional & Structural Gate (Deterministic Text/DOM)*: The generated code is compiled, served, and driven in headless Chrome to assert functional routes, state transitions, DOM elements, accessibility tree, and Modern Web Guidance rules against `plan.md`. This is 100% loss-free, deterministic, and fast.
+  2. *Visual Fidelity Gate (Rendered Screenshot vs Target Image)*: The running site is rendered in headless Chrome at desktop (1376×768 / 16:9) and mobile (390px) viewports. A vision model (e.g. Qwen 2.5 VL or Gemini 3 Flash in evaluation mode) performs pixel-and-layout comparative evaluation against the target reference image, measuring layout hierarchy, visual density, color harmony, and aesthetic correspondence.
+  - *Why this architecture was chosen*: Performing deterministic functional checks first eliminates non-functional code immediately without visual overhead. Running visual comparison on the rendered browser screenshot directly against the target image preserves the full visual richness of the reference without lossy text-spec pre-conversion.
 - **Zero-Shot Base Qualification**: The base V4.1 Flash model must be evaluated zero-shot before data collection to confirm it can produce runnable, functional applications from the design inputs.
 
 *Infrastructure Constraint*: The fleet's 2-vCPU / 8GB VM has no training GPU. Local VM execution handles dataset orchestration, evaluation, and gate enforcement; model training requires rented GPU compute (RunPod/Lambda) or hosted training endpoints (Fireworks SFT).
