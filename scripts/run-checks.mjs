@@ -78,7 +78,12 @@ export function runChecks(names = CHECKS, spawn = spawnSync) {
       return 1;
     }
     if (result.status !== 0) {
-      process.stderr.write(`\ncheck:all - FAILED at ${name} (exit ${result.status}); ${index} of ${names.length} checks ran\n`);
+      // A check killed by a signal has no exit status - `spawnSync` leaves `status` null and names the signal. The
+      // gate still fails either way, but the log the merger reads should say which, rather than "exit null".
+      const how = result.status === null || result.status === undefined
+        ? `signal ${result.signal ?? 'unknown'}`
+        : `exit ${result.status}`;
+      process.stderr.write(`\ncheck:all - FAILED at ${name} (${how}); ${index} of ${names.length} checks ran\n`);
       return result.status ?? 1;
     }
   }
