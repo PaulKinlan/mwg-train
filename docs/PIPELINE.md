@@ -99,14 +99,17 @@ The seven stages below describe today's deterministic pilot baseline and evaluat
 | 4 | **MEASURE** | `npm run pilot:run` | `pilot/plan.json` (regenerated fresh into `.pilot-corpus/<runId>`) + the determinism rules | run records under `pilot/out/<run>/`: browser journeys, rule measurements, accept/reject decisions, and the yield report |
 | 5 | **RECORD / VERIFY** | `npm run pilot:corpus` / `npm run check:pilot-corpus` | `pilot:corpus`: `pilot/out/<run>/` + `pilot/plan.json` + `.pilot-uplifted/<runId>/`<br>`check:pilot-corpus`: `pilot/CORPUS.json` + `pilot/plan.json` | `pilot/CORPUS.json` — the committed record of what was measured (tree SHAs, acceptance, improved rules); `--verify` re-derives all of it |
 | 6 | **PRICE** | `npm run price:two-backends` | `docs/eval/quotes.jsonl` + `docs/pilot/yield.json` + `docs/eval/briefs/manifest.jsonl` | cost per accepted pair, Fireworks vs the cluster (`docs/eval/two-backends.md`) |
-| 7 | **TRAIN** | *(training command not implemented yet — queued behind bead `mwg-train-0ov`)*; the prerequisite evidence check is `npm run check:train-evidence` | a **disjoint** generated corpus (never the sealed eval set) | the training set the model is improved with |
+| 7 | **TRAIN** | *(no command runs a fine-tune yet: the seam is [`src/train/seam.mjs`](../src/train/seam.mjs) with both backends, and no `npm run` script drives training — see [plan.md](../plan.md))*; the prerequisite evidence check is `npm run check:train-evidence` | a **disjoint** generated corpus (never the sealed eval set) | the training set the model is improved with |
 
 ## Current position
 
-- Stages **1–6 are built, measured, and active**: the pilot corpus is generated, driven, recorded
-  (`pilot/CORPUS.json`), and priced, and the corpus viewer serves it for inspection.
-- Stage **7 (TRAIN) is queued** behind disjoint training-set generation (bead `mwg-train-0ov`).
-  **The sealed eval set is never trained on** — it exists only to measure.
+The current position lives in ONE place: [plan.md](../plan.md) — §4 for the dated snapshot with shas, §6 for the next step and who owns it. As of `8fbd58e` (2026-10-11) that says: stages
+**1–6 are built and active**; the disjoint training corpus landed on 2026-10-08 (bead `mwg-train-0ov`, **closed**)
+and is recorded in `pilot/TRAINING_CORPUS.json`; **stage 7 has a training seam and no command that runs a
+fine-tune**, and no bead owns the first run; the sealed eval set is never trained on — it exists only to measure.
+
+This section deliberately does not restate the state. It did for three days after the corpus landed, and quoted a
+closed bead as the active blocker while it did.
 
 ## The role of Uplift / MWG
 
@@ -129,7 +132,7 @@ Modern Web Guidance rules. Its role depends on the family:
   it is never consumed as training data.
 - **BASELINE** — the raw generated sites (stage 3). What the model produces today, kept to measure
   improvement FROM.
-- **TRAINING SOURCE** — the disjoint corpus generated for stage 7 (bead `mwg-train-0ov`).
+- **TRAINING SOURCE** — the disjoint corpus generated for stage 7 (recorded in `pilot/TRAINING_CORPUS.json`).
   Accepted pairs from this corpus — and only these — may become training data.
 - **COST INPUT** — the pricing evidence (stage 6). What an accepted pair costs to produce on each
   backend; decides where generation runs.
