@@ -250,6 +250,48 @@ test('a design with no anti-patterns is rejected', () => {
   assert.match(findings, /antiPatterns/);
 });
 
+test('a design that omits a token the target stylesheet declares is rejected', () => {
+  const frontmatter = DESIGN_FRONTMATTER.replace('  --tt-accent: "#2fa37a"\n', '');
+  assert.match(designFindings(designText({}, { frontmatter })).join('\n'), /declares '--tt-accent' but the frontmatter omits it/);
+});
+
+test('a design with no literals block is accepted, because a board may have none worth recording', () => {
+  const frontmatter = DESIGN_FRONTMATTER.replace('literals:\n  control-radius: 6px\n', '');
+  assert.deepEqual(designFindings(designText({}, { frontmatter })), []);
+});
+
+test('a literal is checked as a whole value, not word by word', () => {
+  const frontmatter = DESIGN_FRONTMATTER.replace('  control-radius: 6px', '  control-radius: 1.5rem 6px');
+  assert.match(designFindings(designText({}, { frontmatter })).join('\n'), /is not a value the target stylesheet contains/);
+});
+
+test('a design that claims a bare backticked route is rejected', () => {
+  const text = designText({ 'Grammar and layout': 'The client goes to `/book` when it submits.' });
+  assert.match(designFindings(text).join('\n'), /functional route claim; routes belong in plan.md/);
+});
+
+test('a plan cannot smuggle a route in as a markdown link, a query string or a bare table cell', () => {
+  const asLink = planText({ 'Routes and effects': '| `/` | form |\n[admin](/admin/backdoor)' });
+  assert.match(planFindings(asLink).join('\n'), /claims '\/admin\/backdoor' which the brief does not declare/);
+  const withQuery = planText({ 'Routes and effects': '| `/` | form |\n`/admin?action=reset`' });
+  assert.match(planFindings(withQuery).join('\n'), /claims '\/admin' which the brief does not declare/);
+  const bare = planText({ 'Routes and effects': '| `/` | form |\n| /rogue | unbackticked |' });
+  assert.match(planFindings(bare).join('\n'), /claims '\/rogue' which the brief does not declare/);
+});
+
+test('a field named only as a substring of an ordinary word is not named', () => {
+  const text = planText({
+    'Use case': 'The form asks for a telephone number and a customer record.',
+    'Validation and states': 'Required fields `customer` and `phone`; rules `forms/forms`.',
+  });
+  assert.match(planFindings(text).join('\n'), /does not name the brief's field 'phone' in backticks/);
+});
+
+test('a design that declares no tokens at all is rejected', () => {
+  const frontmatter = DESIGN_FRONTMATTER.replace('tokens:\n  --tt-bg: "#101820"\n  --tt-accent: "#2fa37a"\n', '');
+  assert.match(designFindings(designText({}, { frontmatter })).join('\n'), /frontmatter needs a `tokens` mapping/);
+});
+
 test('the committed documents describe the sources they claim: every family has a passing plan and design', () => {
   const rows = readFileSync(join(ROOT, TRAIN_BRIEFS_MANIFEST), 'utf8').split('\n').filter(Boolean).map((line) => JSON.parse(line));
   const families = [...new Set(rows.map((row) => row.family_id))].sort();

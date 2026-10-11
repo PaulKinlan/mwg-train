@@ -96,7 +96,30 @@ export function allowedPaths(brief) {
 }
 
 const METHOD_PATH = /(?<![a-z])(GET|POST|PUT|PATCH|DELETE)\s+(\/(?:[a-zA-Z0-9_/:.-]*[a-zA-Z0-9/])?)/gi;
-const BACKTICK_PATH = /`(\/[A-Za-z0-9_/:.-]+)`/g;
+// A backticked path, including the query string or fragment a claim might carry. The query is stripped
+// before the allowed-set comparison, because the brief declares paths, not query strings.
+const BACKTICK_PATH = /`(\/[A-Za-z0-9_/:.?&=#%+-]+)`/g;
+// A root-relative markdown link destination. `checkLinks` deliberately ignores these (they are not files),
+// so a route claim written as a link would otherwise be invisible to every other scan.
+const ROOT_RELATIVE_LINK = /\]\((\/[^)\s]+)\)/g;
+// Any absolute path written in prose. Applied to the Routes section with backticked spans removed, so an
+// unbackticked route cannot ride along beside a backticked one.
+const BARE_PATH = /(?<![\w/`])(\/[A-Za-z0-9_/:.-]*)/g;
+
+const normalisePath = (path) => path.split(/[?#]/)[0];
+
+/** Every path a document claims through any of the shapes a claim can take. */
+function claimedPaths(body, { bareSections = [] } = {}) {
+  const paths = new Set();
+  for (const match of body.matchAll(METHOD_PATH)) paths.add(normalisePath(match[2]));
+  for (const match of body.matchAll(BACKTICK_PATH)) paths.add(normalisePath(match[1]));
+  for (const match of body.matchAll(ROOT_RELATIVE_LINK)) paths.add(normalisePath(match[1]));
+  for (const section of bareSections) {
+    const withoutCode = (sectionBody(body, section) ?? '').replace(/`[^`]*`/g, ' ');
+    for (const match of withoutCode.matchAll(BARE_PATH)) paths.add(normalisePath(match[1]));
+  }
+  return paths;
+}
 
 /**
  * The functional half. Every claim is compared against the family's canonical brief row, so a plan.md
@@ -126,7 +149,9 @@ export function checkTrainPlanDocument({ name, text, brief, resolveLink = null }
 
   checkSections(body, TRAIN_PLAN_SECTIONS, at);
 
-  // Use case: the topic, the archetype and every field the form carries.
+  // Use case: the topic, the archetype and every field the form carries. A field slug is matched only in
+  // backticks, because a two-letter slug such as `ph` is a substring of ordinary words and a plain
+  // substring test would accept a paragraph that never names the control.
   const useCase = sectionBody(body, 'Use case') ?? '';
   if (!contains(useCase, brief.topic)) {
     at('Use case', `does not name the brief's topic '${brief.topic}'`);
@@ -135,8 +160,8 @@ export function checkTrainPlanDocument({ name, text, brief, resolveLink = null }
     at('Use case', `does not name the brief's archetype '${brief.archetype}'`);
   }
   for (const field of brief.fields ?? []) {
-    if (field.slug && !contains(useCase, field.slug)) {
-      at('Use case', `does not name the brief's field '${field.slug}'`);
+    if (field.slug && !contains(useCase, `\`${field.slug}\``)) {
+      at('Use case', `does not name the brief's field '${field.slug}' in backticks`);
     }
   }
 
@@ -147,9 +172,7 @@ export function checkTrainPlanDocument({ name, text, brief, resolveLink = null }
     if (!contains(routes, route)) at('Routes and effects', `does not name the brief's route '${route}'`);
   }
   const allowed = allowedPaths(brief);
-  const claimedRoutes = new Set([...body.matchAll(METHOD_PATH)].map((match) => match[2]));
-  const claimedPaths = new Set([...body.matchAll(BACKTICK_PATH)].map((match) => match[1]));
-  for (const path of [...claimedRoutes, ...claimedPaths]) {
+  for (const path of claimedPaths(body, { bareSections: ['Routes and effects'] })) {
     if (!allowed.has(path)) at('routes', `claims '${path}' which the brief does not declare`);
   }
 
@@ -211,7 +234,9 @@ export function checkTrainPlanDocument({ name, text, brief, resolveLink = null }
   // Validation: the required controls and the required rules, both named so neither can quietly shrink.
   const validation = sectionBody(body, 'Validation and states') ?? '';
   for (const field of (brief.fields ?? []).filter((item) => item.required)) {
-    if (!contains(validation, field.name)) at('Validation and states', `does not name required field '${field.name}'`);
+    if (!contains(validation, `\`${field.name}\``)) {
+      at('Validation and states', `does not name required field '${field.name}' in backticks`);
+    }
   }
   for (const rule of brief.required_rules ?? []) {
     if (!contains(validation, rule)) at('Validation and states', `does not name required rule '${rule}'`);
@@ -270,8 +295,10 @@ export function checkTrainDesignDocument({ name, text, family, target, resolveLi
     at('frontmatter', `target is '${frontmatter.target}', expected '${target.path}'`);
   }
 
-  // Tokens: each must be a custom property the target stylesheet emits, with that exact value.
+  // Tokens: each must be a custom property the target stylesheet emits, with that exact value - and the
+  // frontmatter must be COMPLETE, because a palette that omits half its roles is not the board's palette.
   const tokens = frontmatter.tokens;
+  const boardTokens = targetTokens(target.css) ?? new Map();
   if (tokens === null || typeof tokens !== 'object' || Array.isArray(tokens)) {
     at('tokens', 'frontmatter needs a `tokens` mapping');
   } else if (Object.keys(tokens).length === 0) {
@@ -287,18 +314,23 @@ export function checkTrainDesignDocument({ name, text, family, target, resolveLi
         at('tokens', `'${token}: ${value}' is not a declaration the target stylesheet makes`);
       }
     }
+    for (const token of boardTokens.keys()) {
+      if (!Object.hasOwn(tokens, token)) {
+        at('tokens', `the target stylesheet declares '${token}' but the frontmatter omits it`);
+      }
+    }
   }
 
-  // Literals: values the stylesheet uses that are not custom properties. They must still be real.
+  // Literals: values the stylesheet uses that are not custom properties. They must still be real, and the
+  // whole value must appear: checking its words independently would accept '14px solid purple' from three
+  // unrelated rules. An absent block is fine - not every board has a non-token literal worth recording.
   const literals = frontmatter.literals;
-  if (literals !== null && !(typeof literals === 'object' && !Array.isArray(literals))) {
+  if (literals !== undefined && literals !== null && !(typeof literals === 'object' && !Array.isArray(literals))) {
     at('literals', 'frontmatter `literals` must be a mapping');
   } else if (literals) {
     for (const [key, value] of Object.entries(literals)) {
-      for (const part of String(value).split(/\s+/)) {
-        if (!target.css.includes(part)) {
-          at('literals', `'${key}: ${value}' names '${part}', which the target stylesheet does not contain`);
-        }
+      if (!target.css.includes(String(value).trim())) {
+        at('literals', `'${key}: ${value}' is not a value the target stylesheet contains`);
       }
     }
   }
@@ -324,9 +356,13 @@ export function checkTrainDesignDocument({ name, text, family, target, resolveLi
     }
   }
 
-  // Route claims belong to plan.md, where they are checked against the brief.
+  // Route claims belong to plan.md, where they are checked against the brief: both a method-and-path claim
+  // and a bare backticked path are claims a design contract has no source of truth for.
   for (const match of body.matchAll(METHOD_PATH)) {
     at('Grammar and layout', `'${match[1].toUpperCase()} ${match[2]}' is a functional claim; routes belong in plan.md`);
+  }
+  for (const match of body.matchAll(BACKTICK_PATH)) {
+    at('Grammar and layout', `'${match[1]}' is a functional route claim; routes belong in plan.md`);
   }
 
   // The form the board shows is the brief's form; naming it keeps the component map anchored.
