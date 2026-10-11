@@ -59,7 +59,7 @@ const FIELD_KEYS = new Set(['slug', 'name', 'type', 'label', 'autocomplete', 're
 export { FIELD_KEYS };
 
 /** The functional-route capabilities a specification may opt into. A closed set, like FIELD_KEYS. */
-export const CAPABILITY_KEYS = new Set(['list_pages', 'detail_page', 'auth', 'cart', 'pricing_tiers']);
+export const CAPABILITY_KEYS = new Set(['list_pages', 'detail_page', 'auth', 'cart', 'pricing_tiers', 'checkout']);
 
 /** The field names a selector types into, from `[name=x]` / `[name="x"]` / `[name='x']`. */
 function selectorFieldNames(selector) {
@@ -270,6 +270,24 @@ export function validateSpec(spec) {
           at('capabilities.cart', 'is on, but no number field to accumulate a quantity in');
         }
       }
+      if (spec.capabilities.checkout === true) {
+        // A checkout is arithmetic over the cart's lines: without the cart there is nothing to pay for,
+        // and a second cart implementation here would be the defect rather than the feature (mwg-train-le6).
+        if (spec.capabilities.cart !== true) at('capabilities.checkout', 'needs capabilities.cart: there would be no cart to check out');
+        if (spec.session === true) at('capabilities.checkout', 'cannot combine with session: both own the sid cookie');
+        if (spec.capabilities.auth === true) at('capabilities.checkout', 'cannot combine with auth: both own the sid cookie');
+        if (spec.checkout === undefined) at('capabilities.checkout', 'is on, but no checkout block states the currency, the price field, the tax and the shipping');
+        const priceField = spec.checkout?.price_field;
+        const declaredNumberFields = (spec.fields ?? []).filter((field) => field?.type === 'number');
+        const quantityField = declaredNumberFields[0];
+        if (isString(priceField) && quantityField?.name === priceField) {
+          // The builder binds the first number field as the quantity to accumulate, so naming that same
+          // field as the price would charge the quantity as money. Refused rather than silently doubled.
+          at('checkout.price_field', `names ${priceField}, which is the field the cart accumulates as a quantity`);
+        } else if (isString(priceField) && priceField.trim() !== '' && !declaredNumberFields.some((field) => field.name === priceField)) {
+          at('checkout.price_field', `names ${priceField}, which is not a number field this specification declares`);
+        }
+      }
     }
   }
   if (spec.seed_accounts !== undefined) {
@@ -360,18 +378,60 @@ export function validateSpec(spec) {
       at('pricing_tiers', 'only meaningful with capabilities.pricing_tiers - there would be no page to render the tiers on');
     }
   }
+  if (spec.checkout !== undefined) {
+    const checkout = spec.checkout;
+    if (!isObject(checkout)) at('checkout', 'must be an object when present');
+    else {
+      for (const key of Object.keys(checkout)) {
+        if (!['currency', 'price_field', 'tax_rate_percent', 'shipping'].includes(key)) at(`checkout.${key}`, 'unknown key');
+      }
+      if (!isString(checkout.currency) || checkout.currency.trim() === '') at('checkout.currency', 'must be a currency name or symbol');
+      if (!isString(checkout.price_field) || checkout.price_field.trim() === '') at('checkout.price_field', "must name the number field that carries a product's price");
+      if (typeof checkout.tax_rate_percent !== 'number' || !Number.isFinite(checkout.tax_rate_percent) || checkout.tax_rate_percent < 0 || checkout.tax_rate_percent > 100) {
+        at('checkout.tax_rate_percent', 'must be a percentage between 0 and 100');
+      }
+      if (!Array.isArray(checkout.shipping) || checkout.shipping.length === 0) {
+        at('checkout.shipping', 'must list at least one shipping tier');
+      } else {
+        const shippingNames = new Set();
+        for (const [index, tier] of checkout.shipping.entries()) {
+          const where = `checkout.shipping[${index}]`;
+          if (!isObject(tier)) {
+            at(where, 'must be an object');
+            continue;
+          }
+          for (const key of Object.keys(tier)) {
+            if (!['name', 'price_minor'].includes(key)) at(`${where}.${key}`, 'unknown key');
+          }
+          if (!isString(tier.name) || tier.name.trim() === '') at(`${where}.name`, 'must be a shipping tier name');
+          else if (shippingNames.has(tier.name)) at(`${where}.name`, 'is a duplicate shipping tier name');
+          else shippingNames.add(tier.name);
+          // Money is an integer number of minor units everywhere, so there is no fractional minor unit to
+          // round and no float that can drift between what the page shows and what the receipt records.
+          if (!Number.isInteger(tier.price_minor) || tier.price_minor < 0) at(`${where}.price_minor`, 'must be a whole number of minor units, zero or more');
+        }
+      }
+    }
+    if (spec.capabilities?.checkout !== true) at('checkout', 'only meaningful with capabilities.checkout - there would be no page to pay on');
+  }
   if (spec.capabilities?.pricing_tiers === true && spec.pricing_tiers === undefined) {
     at('capabilities.pricing_tiers', 'is on, but no pricing_tiers block states the tiers');
   }
   // A capability's own routes are emitted before the declared ones, so a specification that declares
   // the same path would leave a handler nothing ever reaches. Refused rather than silently shadowed
   // (mwg-train-4lk review).
-  const capabilityOwnedRoutes = { cart: ['/cart', '/cart/add'], pricing_tiers: ['/pricing', '/pricing/select', '/pricing/:ref'] };
+  const capabilityOwnedRoutes = { cart: ['/cart', '/cart/add'], pricing_tiers: ['/pricing', '/pricing/select', '/pricing/:ref'], checkout: ['/checkout', '/checkout/pay', '/checkout/receipt/:ref'] };
   for (const [capability, owned] of Object.entries(capabilityOwnedRoutes)) {
     if (spec.capabilities?.[capability] !== true) continue;
     for (const route of spec.routes ?? []) {
       const path = String(route?.path ?? '');
-      if (owned.includes(path)) {
+      // Matched by PREFIX as well as exactly: `/checkout/receipt/:id` shadows `/checkout/receipt/:ref`
+      // just as surely as the same parameter name would, and the declared route would never be reached
+      // (mwg-train-le6 review, P3).
+      const shadows = owned.some((ownedPath) =>
+        ownedPath.includes(':') ? path.startsWith(ownedPath.slice(0, ownedPath.indexOf(':'))) : path === ownedPath || path.startsWith(`${ownedPath}/`),
+      );
+      if (shadows) {
         at('routes', `${path} is the ${capability} capability's own route, which is served first, so declaring it as well would leave a route nothing reaches`);
       }
     }
@@ -429,6 +489,9 @@ export function archetypeFromSpec(spec) {
     ...(spec.password_field === undefined ? {} : { passwordField: spec.password_field }),
     ...(spec.capabilities === undefined ? {} : { capabilities: spec.capabilities }),
     ...(spec.pricing_tiers === undefined ? {} : { pricingTiers: spec.pricing_tiers }),
+    // Carried under its own name: the spec key and the archetype key agree here (`checkout` is one word),
+    // but the mapping is an explicit list, so a block that is not named here never reaches the builder.
+    ...(spec.checkout === undefined ? {} : { checkout: spec.checkout }),
     ...(spec.seed_accounts === undefined ? {} : { seedAccounts: spec.seed_accounts }),
   };
 }

@@ -806,7 +806,7 @@ function searchPageDocument(search) {
  * like sessionTables, so the generated code needs no escaping of its own.
  */
 
-const capabilitiesOf = (archetype) => ({ list_pages: false, detail_page: false, auth: false, cart: false, pricing_tiers: false, ...(archetype.capabilities ?? {}) });
+const capabilitiesOf = (archetype) => ({ list_pages: false, detail_page: false, auth: false, cart: false, pricing_tiers: false, checkout: false, ...(archetype.capabilities ?? {}) });
 
 /*
  * The pricing-tiers capability (mwg-train-4lk): three tiers across a monthly/annual toggle, whose
@@ -834,8 +834,17 @@ const pricingPages = (archetype) => {
     "  const comparison = '<table><caption>What each tier includes</caption><thead><tr><th scope=\"col\">Feature</th>' + PRICING.tiers.map((tier) => '<th scope=\"col\">' + esc(tier.name) + '</th>').join('') + '</tr></thead><tbody>' + features.map((feature) => '<tr><th scope=\"row\">' + esc(feature) + '</th>' + PRICING.tiers.map((tier) => '<td>' + (tier.features.includes(feature) ? 'Included' : 'Not included') + '</td>').join('') + '</tr>').join('') + '</tbody></table>';",
     "  return capabilityPage('Pricing', '<h1>Pricing</h1>' + toggle + '<p id=\"billing-period\">Showing ' + period + ' prices</p>' + cards + comparison);",
     '};',
-    'const pricingConfirmationPage = (row) => {',
-    '  const choice = JSON.parse(row.payload);',
+    // The same shared-reference guard as the checkout receipt: a product's reference must not render a
+    // confirmation page that reads fields the row does not have (mwg-train-le6 review, P1 class).
+    'const pricingChoice = (row) => {',
+    '  try {',
+    "    const value = JSON.parse(row.payload);",
+    "    return value !== null && typeof value === 'object' && typeof value.tier === 'string' && typeof value.period === 'string' ? value : null;",
+    '  } catch {',
+    '    return null;',
+    '  }',
+    '};',
+    'const pricingConfirmationPage = (choice) => {',
     "  return capabilityPage('Your plan', '<h1>Your plan</h1>' + '<dl>' + '<dt>Billing period</dt><dd id=\"chosen-period\">' + esc(choice.period) + '</dd>' + '<dt>Tier</dt><dd id=\"chosen-tier\">' + esc(choice.tier) + '</dd>' + '<dt>Price</dt><dd id=\"chosen-price\">' + esc(choice.price) + '</dd>' + '</dl>');",
     '};',
   ].join('\n');
@@ -868,7 +877,12 @@ const rawPricingRoutes = () =>
     "      response.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });",
     "      return response.end('We could not find that selection.');",
     '    }',
-    '    return html(response, pricingConfirmationPage(pricingRow));',
+    '    const pricingValue = pricingRow ? pricingChoice(pricingRow) : null;',
+    '    if (!pricingValue) {',
+    "      response.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });",
+    "      return response.end('We could not find that selection.');",
+    '    }',
+    '    return html(response, pricingConfirmationPage(pricingValue));',
     '  }',
   ].join('\n');
 
@@ -891,7 +905,9 @@ const honoPricingRoutes = () =>
     "app.get('/pricing/:ref', (c) => {",
     "  const pricingRow = select.get(c.req.param('ref'));",
     "  if (!pricingRow) return c.text('We could not find that selection.', 404);",
-    '  return c.html(pricingConfirmationPage(pricingRow));',
+    '  const pricingValue = pricingRow ? pricingChoice(pricingRow) : null;',
+    "  if (!pricingValue) return c.text('We could not find that selection.', 404);",
+    '  return c.html(pricingConfirmationPage(pricingValue));',
     '});',
   ].join('\n');
 
@@ -903,18 +919,28 @@ const honoPricingRoutes = () =>
  */
 const cartVariantField = (archetype) => archetype.fields.find((field) => field.type === 'select');
 const cartQuantityField = (archetype) => archetype.fields.find((field) => field.type === 'number');
+/** The checkout policy block, or null when the capability is off - the flag and the data travel together. */
+const checkoutOf = (archetype) => (archetype.capabilities?.checkout === true ? archetype.checkout : null);
 const CART_SID_RAW =
   "(request.headers.cookie ?? '').split(';').map((part) => part.trim()).find((part) => part.startsWith('sid='))?.slice('sid='.length)";
 const CART_SID_HONO =
   "(c.req.header('cookie') ?? '').split(';').map((part) => part.trim()).find((part) => part.startsWith('sid='))?.slice('sid='.length)";
 
 /** One row per ADDED item, so adding a second product accumulates instead of overwriting the first. */
-const cartTables = () =>
-  [
-    "db.exec('CREATE TABLE IF NOT EXISTS cart_items (id INTEGER PRIMARY KEY AUTOINCREMENT, sid TEXT NOT NULL, ref TEXT NOT NULL, variant TEXT NOT NULL, qty INTEGER NOT NULL, created_at TEXT NOT NULL)');",
-    "const insertCartItem = db.prepare('INSERT INTO cart_items (sid, ref, variant, qty, created_at) VALUES (?, ?, ?, ?, ?)');",
-    "const selectCartItems = db.prepare('SELECT id, ref, variant, qty FROM cart_items WHERE sid = ? ORDER BY id');",
-  ].join('\n');
+const cartTables = (checkout = false) =>
+  checkout
+    ? [
+        // The unit price is captured when the item is added, in integer minor units, so a receipt can be
+        // re-read later and still add up even if the product record changes afterwards (mwg-train-le6).
+        "db.exec('CREATE TABLE IF NOT EXISTS cart_items (id INTEGER PRIMARY KEY AUTOINCREMENT, sid TEXT NOT NULL, ref TEXT NOT NULL, variant TEXT NOT NULL, qty INTEGER NOT NULL, unit_price_minor INTEGER NOT NULL, created_at TEXT NOT NULL)');",
+        "const insertCartItem = db.prepare('INSERT INTO cart_items (sid, ref, variant, qty, unit_price_minor, created_at) VALUES (?, ?, ?, ?, ?, ?)');",
+        "const selectCartItems = db.prepare('SELECT id, ref, variant, qty, unit_price_minor FROM cart_items WHERE sid = ? ORDER BY id');",
+      ].join('\n')
+    : [
+        "db.exec('CREATE TABLE IF NOT EXISTS cart_items (id INTEGER PRIMARY KEY AUTOINCREMENT, sid TEXT NOT NULL, ref TEXT NOT NULL, variant TEXT NOT NULL, qty INTEGER NOT NULL, created_at TEXT NOT NULL)');",
+        "const insertCartItem = db.prepare('INSERT INTO cart_items (sid, ref, variant, qty, created_at) VALUES (?, ?, ?, ?, ?)');",
+        "const selectCartItems = db.prepare('SELECT id, ref, variant, qty FROM cart_items WHERE sid = ? ORDER BY id');",
+      ].join('\n');
 
 /** The cart's two pages: the product page carrying the variant choice, and the accumulated cart. */
 const cartPages = (archetype) => {
@@ -927,9 +953,25 @@ const cartPages = (archetype) => {
 };
 
 /** The cart routes, raw arm: add an item (creating the visitor's sid), then read the accumulated cart. */
-const rawCartRoutes = (archetype, cookieFlags) => {
+const rawCartRoutes = (archetype, cookieFlags, checkout = null) => {
   const variant = cartVariantField(archetype);
   const quantity = cartQuantityField(archetype);
+  // A checkout is arithmetic over the cart's lines, so the line has to carry the price it was added at.
+  // The price comes from the product record's own declared field, in integer minor units (mwg-train-le6).
+  const price = checkout
+    ? [
+        `    const cartRecord = select.get(cartRef);`,
+        `    const cartPriceValue = cartRecord ? JSON.parse(cartRecord.payload)[${JSON.stringify(checkout.price_field)}] : undefined;`,
+        // `Number('')` and `Number(null)` are both 0, so a blank or null price would be stored as a free
+        // item rather than refused: the raw value is checked before it is coerced (mwg-train-le6 review,
+        // P2 and its P3 note - a row can carry JSON null, which is not the same as an absent key).
+        `    const cartUnitPrice = cartPriceValue === undefined || cartPriceValue === null || String(cartPriceValue).trim() === '' ? NaN : Number(cartPriceValue);`,
+        `    if (!Number.isInteger(cartUnitPrice) || cartUnitPrice < 0) {`,
+        `      response.writeHead(422, { 'content-type': 'text/plain; charset=utf-8' });`,
+        `      return response.end('That item has no price to check out with.');`,
+        `    }`,
+      ].join('\n')
+    : '';
   return [
     "  if (path === '/cart' && request.method === 'GET') {",
     `    const cartSid = ${CART_SID_RAW};`,
@@ -950,7 +992,8 @@ const rawCartRoutes = (archetype, cookieFlags) => {
     // empty sid as absent, so the cart would silently lose everything it had just accepted.
     `    const cartSid = ${CART_SID_RAW} || randomUUID();`,
     `    const cartQuantity = Math.max(1, Number.parseInt(String(cartBody[${JSON.stringify(quantity.name)}] ?? '1'), 10) || 1);`,
-    `    insertCartItem.run(cartSid, cartRef, cartVariant, cartQuantity, new Date().toISOString());`,
+    price ? `${price}` : '',
+    `    insertCartItem.run(cartSid, cartRef, cartVariant, cartQuantity${checkout ? ', cartUnitPrice' : ''}, new Date().toISOString());`,
     `    response.writeHead(303, { location: '/cart', 'set-cookie': 'sid=' + cartSid + '; ${cookieFlags}' });`,
     '    return response.end();',
     '  }',
@@ -958,9 +1001,17 @@ const rawCartRoutes = (archetype, cookieFlags) => {
 };
 
 /** The cart routes, hono arm: the same two routes, in Hono's routing. */
-const honoCartRoutes = (archetype, cookieFlags) => {
+const honoCartRoutes = (archetype, cookieFlags, checkout = null) => {
   const variant = cartVariantField(archetype);
   const quantity = cartQuantityField(archetype);
+  const price = checkout
+    ? [
+        `  const cartRecord = select.get(cartRef);`,
+        `  const cartPriceValue = cartRecord ? JSON.parse(cartRecord.payload)[${JSON.stringify(checkout.price_field)}] : undefined;`,
+        `  const cartUnitPrice = cartPriceValue === undefined || cartPriceValue === null || String(cartPriceValue).trim() === '' ? NaN : Number(cartPriceValue);`,
+        `  if (!Number.isInteger(cartUnitPrice) || cartUnitPrice < 0) return c.text('That item has no price to check out with.', 422);`,
+      ].join('\n')
+    : '';
   return [
     "app.get('/cart', (c) => {",
     `  const cartSid = ${CART_SID_HONO};`,
@@ -974,12 +1025,161 @@ const honoCartRoutes = (archetype, cookieFlags) => {
     // See rawCartRoutes: an empty `sid=` cookie must not become the key rows are stored under.
     `  const cartSid = ${CART_SID_HONO} || randomUUID();`,
     `  const cartQuantity = Math.max(1, Number.parseInt(String(cartBody[${JSON.stringify(quantity.name)}] ?? '1'), 10) || 1);`,
-    `  insertCartItem.run(cartSid, cartRef, cartVariant, cartQuantity, new Date().toISOString());`,
+    // The price is read BEFORE the insert that stores it: the other arm had this inverted and the
+    // generated server failed on the first add with a temporal-dead-zone ReferenceError (mwg-train-le6).
+    price ? `${price}` : '',
+    `  insertCartItem.run(cartSid, cartRef, cartVariant, cartQuantity${checkout ? ', cartUnitPrice' : ''}, new Date().toISOString());`,
     `  c.header('set-cookie', 'sid=' + cartSid + '; ${cookieFlags}');`,
     "  return c.redirect('/cart', 303);",
     '});',
   ].join('\n');
 };
+/** The checkout capability's statements: a paid checkout consumes the cart; a declined one must not. */
+const checkoutTables = () =>
+  ["const deleteCartItems = db.prepare('DELETE FROM cart_items WHERE sid = ?');"].join('\n');
+
+/**
+ * The checkout pages: arithmetic over the cart's lines, a simulated payment with a decline path, and a
+ * durable receipt. Every stored figure is an integer number of minor units and every printed figure is
+ * formatted by integer arithmetic, so a receipt read back later still adds up and no float ever touches
+ * a charge (mwg-train-le6). Nothing about the card is stored, and the page says so.
+ */
+const checkoutPages = (archetype) => {
+  const checkout = checkoutOf(archetype);
+  return [
+    `const CHECKOUT = ${JSON.stringify(checkout)};`,
+    "const checkoutMoney = (minor, currency = CHECKOUT.currency) => (minor < 0 ? '-' : '') + esc(currency) + ' ' + Math.floor(Math.abs(minor) / 100) + '.' + String(Math.abs(minor) % 100).padStart(2, '0');",
+    "const checkoutShippingTier = (name) => CHECKOUT.shipping.find((tier) => tier.name === name) ?? null;",
+    // Tax is charged on the lines' subtotal, not on shipping, and is rounded exactly once to a whole
+    // minor unit - the only rounding in the arithmetic.
+    "const checkoutTaxOn = (subtotal) => Math.round((subtotal * CHECKOUT.tax_rate_percent) / 100);",
+    "const checkoutFromCart = (rows, shipping) => {",
+    "  const lines = rows.map((row) => ({ ref: row.ref, variant: row.variant, qty: row.qty, unit_price_minor: row.unit_price_minor, line_total_minor: row.qty * row.unit_price_minor }));",
+    "  const subtotal = lines.reduce((sum, line) => sum + line.line_total_minor, 0);",
+    "  const tax = checkoutTaxOn(subtotal);",
+    "  return { cart: lines, subtotal_minor: subtotal, shipping_name: shipping.name, shipping_minor: shipping.price_minor, tax_rate_percent: CHECKOUT.tax_rate_percent, tax_minor: tax, total_minor: subtotal + shipping.price_minor + tax, currency: CHECKOUT.currency };",
+    "};",
+    "const checkoutLines = (lines, currency = CHECKOUT.currency) => lines.length === 0 ? '<p id=\"checkout-empty\">Your cart is empty, so there is nothing to pay for.</p>' : '<table id=\"checkout-lines\"><caption>What you are paying for</caption><thead><tr><th scope=\"col\">Item</th><th scope=\"col\">Variant</th><th scope=\"col\">Quantity</th><th scope=\"col\">Unit price</th><th scope=\"col\">Line total</th></tr></thead><tbody>' + lines.map((line) => '<tr data-ref=\"' + esc(line.ref) + '\" data-variant=\"' + esc(line.variant) + '\" data-qty=\"' + line.qty + '\"><th scope=\"row\">' + esc(line.ref) + '</th><td>' + esc(line.variant) + '</td><td class=\"quantity\">' + line.qty + '</td><td class=\"unit-price\">' + checkoutMoney(line.unit_price_minor, currency) + '</td><td class=\"line-total\">' + checkoutMoney(line.line_total_minor, currency) + '</td></tr>').join('') + '</tbody></table>';",
+    // The RECEIPT's own currency is rendered on the receipt: it records what was charged, so re-reading it
+    // later must not follow a store setting that changed since (mwg-train-le6 review, P2). The live pages
+    // carry the same field through, so one function still serves both.
+    "const checkoutTotals = (receipt, prefix) => '<dl class=\"totals\"><dt>Subtotal</dt><dd id=\"' + prefix + '-subtotal\">' + checkoutMoney(receipt.subtotal_minor, receipt.currency) + '</dd><dt>Shipping</dt><dd id=\"' + prefix + '-shipping\">' + checkoutMoney(receipt.shipping_minor, receipt.currency) + '</dd><dt>Tax (' + receipt.tax_rate_percent + '%)</dt><dd id=\"' + prefix + '-tax\">' + checkoutMoney(receipt.tax_minor, receipt.currency) + '</dd><dt>Total</dt><dd id=\"' + prefix + '-total\">' + checkoutMoney(receipt.total_minor, receipt.currency) + '</dd></dl>';",
+    "const checkoutShippingForm = (receipt) => '<form method=\"get\" action=\"/checkout\"><label for=\"shipping\">Shipping</label><select id=\"shipping\" name=\"shipping\">' + CHECKOUT.shipping.map((tier) => '<option value=\"' + esc(tier.name) + '\"' + (tier.name === receipt.shipping_name ? ' selected' : '') + '>' + esc(tier.name) + ' - ' + checkoutMoney(tier.price_minor) + '</option>').join('') + '</select><button type=\"submit\">Update total</button></form>';",
+    "const checkoutPaymentForm = (receipt) => '<form method=\"post\" action=\"/checkout/pay\"><input type=\"hidden\" name=\"shipping\" value=\"' + esc(receipt.shipping_name) + '\"><label for=\"card\">Card number (a simulation: nothing is stored or sent anywhere)</label><input type=\"text\" id=\"card\" name=\"card\" inputmode=\"numeric\" autocomplete=\"off\" required><button type=\"submit\">Pay ' + checkoutMoney(receipt.total_minor) + '</button></form>';",
+    "const checkoutPage = (rows, shipping) => {",
+    "  const receipt = checkoutFromCart(rows, shipping);",
+    "  return capabilityPage('Checkout', '<h1>Checkout</h1>' + checkoutLines(receipt.cart) + (receipt.cart.length === 0 ? '' : checkoutShippingForm(receipt) + '<p>Shipping by <span id=\"checkout-shipping-name\">' + esc(receipt.shipping_name) + '</span></p>' + checkoutTotals(receipt, 'checkout') + checkoutPaymentForm(receipt)));",
+    "};",
+    "const checkoutDeclinedPage = (rows, shipping, reason) => {",
+    "  const receipt = checkoutFromCart(rows, shipping);",
+    "  return capabilityPage('Payment declined', '<h1>Payment declined</h1><p id=\"decline-reason\" role=\"alert\">' + esc(reason) + '</p><p id=\"cart-kept\">Your cart still has ' + receipt.cart.length + ' line(s), so nothing was lost.</p>' + checkoutLines(receipt.cart) + checkoutShippingForm(receipt) + '<p>Shipping by <span id=\"checkout-shipping-name\">' + esc(receipt.shipping_name) + '</span></p>' + checkoutTotals(receipt, 'checkout') + checkoutPaymentForm(receipt));",
+    "};",
+    // The records table is shared with the engine's own reads, so a reference can name a product rather
+    // than a receipt. A row that is not a receipt is a 404 here, not a thrown TypeError one route away
+    // from an unhandled rejection that kills the process (mwg-train-le6 review, P1).
+    "const checkoutReceipt = (row) => {",
+    "  try {",
+    "    const value = JSON.parse(row.payload);",
+    "    return value !== null && typeof value === 'object' && Array.isArray(value.cart) ? value : null;",
+    "  } catch {",
+    "    return null;",
+    "  }",
+    "};",
+    "const receiptPage = (ref, receipt) => {",
+    "  return capabilityPage('Receipt ' + ref, '<h1>Receipt</h1><p id=\"receipt-ref\">' + esc(ref) + '</p>' + checkoutLines(receipt.cart, receipt.currency) + checkoutTotals(receipt, 'receipt') + '<p id=\"receipt-paid\">Paid ' + checkoutMoney(receipt.total_minor, receipt.currency) + ' by ' + esc(receipt.shipping_name) + '</p>');",
+    "};",
+  ].join('\n');
+};
+
+/** The checkout routes, raw arm: the payable page, the simulated payment, and the durable receipt. */
+const rawCheckoutRoutes = () =>
+  [
+    "  if (path === '/checkout' && request.method === 'GET') {",
+    `    const checkoutSid = ${CART_SID_RAW};`,
+    '    const checkoutRows = checkoutSid ? selectCartItems.all(checkoutSid) : [];',
+    "    const checkoutChoice = checkoutShippingTier(url.searchParams.get('shipping') ?? '') ?? CHECKOUT.shipping[0];",
+    '    return html(response, checkoutPage(checkoutRows, checkoutChoice));',
+    '  }',
+    "  if (path === '/checkout/pay' && request.method === 'POST') {",
+    '    const checkoutBody = await parseBody(request);',
+    `    const checkoutSid = ${CART_SID_RAW};`,
+    '    const checkoutRows = checkoutSid ? selectCartItems.all(checkoutSid) : [];',
+    "    const checkoutChoice = checkoutShippingTier(String(checkoutBody.shipping ?? ''));",
+    // A payment against an empty or unknown-shaped request is refused before anything is charged, and
+    // never consumes the cart: the consumer is the success path only.
+    '    if (checkoutRows.length === 0) {',
+    "      response.writeHead(422, { 'content-type': 'text/plain; charset=utf-8' });",
+    "      return response.end('Your cart is empty, so there is nothing to pay for.');",
+    '    }',
+    '    if (!checkoutChoice) {',
+    "      response.writeHead(422, { 'content-type': 'text/plain; charset=utf-8' });",
+    "      return response.end('Choose one of the shipping options this page lists.');",
+    '    }',
+    "    const checkoutCard = String(checkoutBody.card ?? '').replace(/\\s+/g, '');",
+    '    if (!/^\\d{12,19}$/.test(checkoutCard)) {',
+    "      return html(response, checkoutDeclinedPage(checkoutRows, checkoutChoice, 'Enter a card number of 12 to 19 digits.'), 422);",
+    '    }',
+    // The simulation's only rule: a card ending 0002 is declined. The decline path is what makes this a
+    // checkout rather than a happy path - it says why, and the cart is left exactly as it was.
+    "    if (checkoutCard.endsWith('0002')) {",
+    "      return html(response, checkoutDeclinedPage(checkoutRows, checkoutChoice, 'The bank declined this card. Nothing has been charged.'), 422);",
+    '    }',
+    '    const checkoutReceipt = checkoutFromCart(checkoutRows, checkoutChoice);',
+    '    const checkoutRef = randomUUID().slice(0, 8);',
+    '    insert.run(checkoutRef, new Date().toISOString(), JSON.stringify(checkoutReceipt));',
+    '    deleteCartItems.run(checkoutSid);',
+    "    response.writeHead(303, { location: '/checkout/receipt/' + checkoutRef });",
+    '    return response.end();',
+    '  }',
+    "  const receiptMatch = path.match(/^\\/checkout\\/receipt\\/([^/]+)$/);",
+    "  if (receiptMatch && request.method === 'GET') {",
+    '    const receiptRow = select.get(receiptMatch[1]);',
+    '    if (!receiptRow) {',
+    "      response.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });",
+    "      return response.end('We could not find that receipt.');",
+    '    }',
+    '    const receiptValue = checkoutReceipt(receiptRow);',
+    '    if (!receiptValue) {',
+    "      response.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });",
+    "      return response.end('We could not find that receipt.');",
+    '    }',
+    '    return html(response, receiptPage(receiptRow.ref, receiptValue));',
+    '  }',
+  ].join('\n');
+
+/** The checkout routes, hono arm: the same three, in Hono's routing. */
+const honoCheckoutRoutes = () =>
+  [
+    "app.get('/checkout', (c) => {",
+    `  const checkoutSid = ${CART_SID_HONO};`,
+    '  const checkoutRows = checkoutSid ? selectCartItems.all(checkoutSid) : [];',
+    "  const checkoutChoice = checkoutShippingTier(c.req.query('shipping') ?? '') ?? CHECKOUT.shipping[0];",
+    '  return c.html(checkoutPage(checkoutRows, checkoutChoice));',
+    '});',
+    "app.post('/checkout/pay', async (c) => {",
+    '  const checkoutBody = await c.req.parseBody();',
+    `  const checkoutSid = ${CART_SID_HONO};`,
+    '  const checkoutRows = checkoutSid ? selectCartItems.all(checkoutSid) : [];',
+    "  const checkoutChoice = checkoutShippingTier(String(checkoutBody.shipping ?? ''));",
+    "  if (checkoutRows.length === 0) return c.text('Your cart is empty, so there is nothing to pay for.', 422);",
+    "  if (!checkoutChoice) return c.text('Choose one of the shipping options this page lists.', 422);",
+    "  const checkoutCard = String(checkoutBody.card ?? '').replace(/\\s+/g, '');",
+    "  if (!/^\\d{12,19}$/.test(checkoutCard)) return c.html(checkoutDeclinedPage(checkoutRows, checkoutChoice, 'Enter a card number of 12 to 19 digits.'), 422);",
+    "  if (checkoutCard.endsWith('0002')) return c.html(checkoutDeclinedPage(checkoutRows, checkoutChoice, 'The bank declined this card. Nothing has been charged.'), 422);",
+    '  const checkoutReceipt = checkoutFromCart(checkoutRows, checkoutChoice);',
+    '  const checkoutRef = randomUUID().slice(0, 8);',
+    '  insert.run(checkoutRef, new Date().toISOString(), JSON.stringify(checkoutReceipt));',
+    '  deleteCartItems.run(checkoutSid);',
+    "  return c.redirect('/checkout/receipt/' + checkoutRef, 303);",
+    '});',
+    "app.get('/checkout/receipt/:ref', (c) => {",
+    "  const receiptRow = select.get(c.req.param('ref'));",
+    "  const receiptValue = receiptRow ? checkoutReceipt(receiptRow) : null;",
+    "  if (!receiptValue) return c.text('We could not find that receipt.', 404);",
+    '  return c.html(receiptPage(receiptRow.ref, receiptValue));',
+    '});',
+  ].join('\n');
+
 
 /** The small page renderers the capability handlers share, emitted only when a capability needs them. */
 const capabilityPages = () =>
@@ -1151,7 +1351,7 @@ db.exec(\`CREATE TABLE IF NOT EXISTS accounts (email TEXT PRIMARY KEY, password 
 const insert = db.prepare('INSERT INTO records (ref, created_at, payload) VALUES (?, ?, ?)');
 const select = db.prepare('SELECT ref, created_at, payload FROM records WHERE ref = ?');
 ${sessionTables(archetype)}${archetype.journey?.update ? `\nconst updateRecord = db.prepare('UPDATE records SET payload = ? WHERE ref = ?');` : ''}${draftTables(archetype) ? `\n${draftTables(archetype)}` : ''}
-${caps.auth ? `${authTables(archetype)}\n` : ''}${caps.cart ? `${cartTables()}\n` : ''}const count = db.prepare('SELECT COUNT(*) AS n FROM records');
+${caps.auth ? `${authTables(archetype)}\n` : ''}${caps.cart ? `${cartTables(caps.checkout)}\n` : ''}${caps.checkout ? `${checkoutTables()}\n` : ''}const count = db.prepare('SELECT COUNT(*) AS n FROM records');
 const list = db.prepare('SELECT ref, payload FROM records ORDER BY created_at DESC LIMIT 50');
 
 ${parameterisedWrite ? `// An edit flow edits something: the seeded record is what the form's action points at.
@@ -1177,7 +1377,7 @@ const json = (response, value, status = 200, headers = {}) => {
   response.end(JSON.stringify(value));
 };
 
-${caps.list_pages || caps.detail_page || caps.auth || caps.cart || caps.pricing_tiers ? `${capabilityPages()}${caps.cart ? `\n${cartPages(archetype)}` : ''}${caps.pricing_tiers ? `\n${pricingPages(archetype)}` : ''}\n` : ''}const REQUIRED = ${JSON.stringify(archetype.fields.filter((field) => field.type !== 'select' && !field.optional).map((field) => field.name))};
+${caps.list_pages || caps.detail_page || caps.auth || caps.cart || caps.pricing_tiers || caps.checkout ? `${capabilityPages()}${caps.cart ? `\n${cartPages(archetype)}` : ''}${caps.pricing_tiers ? `\n${pricingPages(archetype)}` : ''}${caps.checkout ? `\n${checkoutPages(archetype)}` : ''}\n` : ''}const REQUIRED = ${JSON.stringify(archetype.fields.filter((field) => field.type !== 'select' && !field.optional).map((field) => field.name))};
 
 ${enforceMin ? `const MIN_BOUNDS = ${JSON.stringify(minBounds)};\n` : ''}// The cart form has its own fields. Validating it against the search form's required list refused every
 // cart POST with 422, which the write journey caught: a second form on one page needs a second rule.
@@ -1365,7 +1565,7 @@ ${caps.auth ? `    if (!authSessionEmail(request.headers.cookie)) return json(re
     return json(response, { ref: row.ref, ...JSON.parse(row.payload) });
   }
 
-${caps.cart ? `${rawCartRoutes(archetype, cartCookieFlags)}\n\n` : ''}${caps.pricing_tiers ? `${rawPricingRoutes()}\n\n` : ''}  // A route the archetype declares is a route the server must serve: /account was declared as the
+${caps.cart ? `${rawCartRoutes(archetype, cartCookieFlags, checkoutOf(archetype))}\n\n` : ''}${caps.checkout ? `${rawCheckoutRoutes()}\n\n` : ''}${caps.pricing_tiers ? `${rawPricingRoutes()}\n\n` : ''}  // A route the archetype declares is a route the server must serve: /account was declared as the
   // account flow's page and never implemented, so the journey landed on a 404.
   if (${JSON.stringify(archetype.routes.filter((route) => route.kind === 'read-session').map((route) => route.path))}.includes(path) && request.method === 'GET') {
 ${caps.auth ? `${RAW_AUTH_GUARD}\n` : ''}    return html(response, await renderDocument({ title: 'Your account' }));
@@ -1504,7 +1704,7 @@ const requiredFor = (path) => (EXTRA_ACTION !== '' && path === EXTRA_ACTION ? EX
 ${sessionTables(archetype)}
 ${caps.auth ? `db.exec('CREATE TABLE IF NOT EXISTS accounts (email TEXT PRIMARY KEY, password TEXT NOT NULL, display_name TEXT)');
 ${authTables(archetype)}
-` : ''}${caps.cart ? `${cartTables()}\n` : ''}${caps.list_pages || caps.detail_page || caps.auth || caps.cart || caps.pricing_tiers ? `${capabilityPages()}${caps.cart ? `\n${cartPages(archetype)}` : ''}${caps.pricing_tiers ? `\n${pricingPages(archetype)}` : ''}
+` : ''}${caps.cart ? `${cartTables(caps.checkout)}\n` : ''}${caps.checkout ? `${checkoutTables()}\n` : ''}${caps.list_pages || caps.detail_page || caps.auth || caps.cart || caps.pricing_tiers || caps.checkout ? `${capabilityPages()}${caps.cart ? `\n${cartPages(archetype)}` : ''}${caps.pricing_tiers ? `\n${pricingPages(archetype)}` : ''}${caps.checkout ? `\n${checkoutPages(archetype)}` : ''}
 ` : ''}const requestLog = [];
 const app = new Hono();
 app.use('*', async (c, next) => {
@@ -1656,7 +1856,7 @@ ${caps.auth ? "  if (!authSessionEmail(c.req.header('cookie'))) return c.json({ 
   return c.json({ ref: row.ref, ...JSON.parse(row.payload) });
 });
 
-${caps.cart ? `${honoCartRoutes(archetype, cartCookieFlags)}\n\n` : ''}${caps.pricing_tiers ? `${honoPricingRoutes()}\n\n` : ''}for (const sessionPage of ${JSON.stringify(archetype.routes.filter((route) => route.kind === 'read-session').map((route) => route.path))}) {
+${caps.cart ? `${honoCartRoutes(archetype, cartCookieFlags, checkoutOf(archetype))}\n\n` : ''}${caps.checkout ? `${honoCheckoutRoutes()}\n\n` : ''}${caps.pricing_tiers ? `${honoPricingRoutes()}\n\n` : ''}for (const sessionPage of ${JSON.stringify(archetype.routes.filter((route) => route.kind === 'read-session').map((route) => route.path))}) {
 ${caps.auth ? `  app.get(sessionPage, (c) => {
     if (!authSessionEmail(c.req.header('cookie'))) return c.redirect('/login', 303);
     return c.html(renderDocument({ title: 'Your account' }));
