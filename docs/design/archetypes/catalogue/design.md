@@ -50,9 +50,10 @@ value everywhere.
 - **Measure is set per block, not globally.** The widest text block is the page's `.subtitle` at `46rem`;
   the empty state caps itself at `34rem` and its copy at `26rem`, so a centred apology never stretches to
   the width of a product row.
-- **The cart is a drawer, not a page.** It slides in over the grid with the only shadow in the stylesheet -
-  `box-shadow: -18px 0 40px rgba(0, 0, 0, 0.35)` - and its line items use a `3.75rem 1fr` grid, the artwork
-  column fixed so the names and quantity steppers line up down the list.
+- **The cart is a drawer, not a page.** It slides in over the grid with the stylesheet's only shadow -
+  `box-shadow: -18px 0 40px rgba(0, 0, 0, 0.35)`, declared twice and both times on the drawer itself (once
+  for its non-animated variant) - and its line items use a `3.75rem 1fr` grid, the artwork column fixed so
+  the names and quantity steppers line up down the list.
 - **Corners** are graded by size, and the grading is consistent enough to name every owner: `--radius-lg`
   (16px) is `.catalogue-controls`, `.product-card`, `.empty-state` and `.comparison-card`; `--radius-md`
   (12px) is `.cart-item`, `.cart-add`, `.cart-empty-note`, `.noscript-note`, `.legend`, `.view-image` and
@@ -66,8 +67,10 @@ Two system stacks: `--font-sans` for the interface and `--font-mono` for two thi
 line's part number (`.cart-item-part`). Nothing is downloaded, so the type does not shift after first paint.
 
 The display heading is the only viewport-scaled type - `clamp(1.6rem, 1.3rem + 1.4vw, 2.4rem)` on
-`.display-title`. Below it the scale is fixed and fairly tight: `1.125rem`, then `0.9375rem`, `0.875rem`
-for secondary and link text, `0.8125rem` for pills and metadata, and `0.75rem` for the smallest labels.
+`.display-title`. Below it the scale is fixed and tight, with nine sizes in use: `1.375rem`, `1.25rem` and
+`1.125rem` at the top, then `1.0625rem`, `0.9375rem` and `0.875rem` for secondary and link text,
+`0.8125rem` for pills and metadata (the commonest at eleven uses), and `0.75rem` for the smallest labels,
+under a body size of `1rem`.
 Body text is `1rem` at a line height of **`1.55`** - looser than the round `1.5` a rebuild would reach for,
 and the reason long product descriptions stay readable against a dark ground.
 
@@ -79,9 +82,10 @@ like.
 
 The last column names where each of the 29 colour tokens is actually used, with the selectors and the
 number of references, rather than describing an intended use. References are counted across the whole of
-`demo/styles.css`, *including* `:root` - except for the four `--art-*` rows, which are referenced only from
-the demo's HTML and are counted there. Two tokens - `--text-inverse` and `--action-glow` - are referenced
-nowhere in either file.
+`demo/styles.css`, *including* `:root`. The four `--art-*` rows are the only tokens with **no** stylesheet
+references at all, so those four are counted in the demo's HTML instead; a few other tokens appear in both
+files - `--surface-inset`, for one, has eight stylesheet references and five in the HTML. Two tokens -
+`--text-inverse` and `--action-glow` - are referenced nowhere in either file.
 
 | Token | Value | Where it is used (references; in `styles.css` unless stated) |
 |---|---|---|
@@ -121,9 +125,11 @@ coloured word on the dark ground clears contrast where the fill colour would not
 
 ## Spacing rhythm
 
-The scale is rem-based and clustered: across the stylesheet the most frequent gap between siblings is
-`0.75rem` (seven uses), then `0.5rem` (six), `0.35rem` (five), and `1rem` and `0.6rem` (four each), with
-`1.25rem` used twice. Padding is written as a bare `1rem` four times, with two further shorthands that
+The scale is rem-based and clustered. Each `gap` declaration is counted by the value it **leads** with,
+which is the convention behind every number below: the commonest is `0.75rem` (seven declarations), then
+`0.5rem` (six), `0.35rem` (five), then `1rem` and `0.6rem` (four each), and `1.25rem` leading twice. `0.6rem`
+appears once more inside a two-value gap (`0.6rem 1.25rem`), so a count of the declarations that *contain*
+it is one higher than the leading count. Padding is written as a bare `1rem` four times, with two further shorthands that
 begin with it (`1rem 1rem 1.15rem` and `1rem 1.25rem`); `1.5rem` is used twice.
 
 Two consequences are visible in the design. The gap scale's centre of mass is below `1rem`, which is what
@@ -137,14 +143,16 @@ not interchangeable: `0.5rem` separates a control's parts (`.cart-button`, `.sea
 
 Read from `demo/index.html`, `demo/cart.html` and `demo/empty.html`:
 
-- **The top bar** with the brand (`.brand`, carrying an SVG mark and the name *Kiln & Copper*) and
+- **The top bar** with the brand (`.brand`, carrying an SVG mark - a shopping-bag glyph - and the name
+  *Kiln & Copper*) and
   `nav[aria-label="Main navigation"]`, plus the cart button, which carries no `aria-label` of its own and
   shows the count in a `.cart-badge`. The label *Items in your cart* belongs to the cart's items list further
   down the page, not to this control.
 - **The search form**: `form#search-form`, `method="get"`, `action="/search"`, `role="search"` - the
   journey's own form - containing `input[name="q"]`.
-- **The filter row**: category pills with `aria-label="Filter by category"`, of which the current one is
-  marked `aria-current="page"`.
+- **The filter row**: category pills in a group labelled `aria-label="Filter by category"`. They are toggles
+  rather than navigation, so each carries `aria-pressed` - `true` on the active one and `false` on the five
+  others in the markup - and not `aria-current`.
 - **The grid**: a `.visually-hidden` heading carries the accessible name *Catalogue products*, and each
   `.product-card` holds artwork, a `.stock-pill` (with `--in`, `--low` and `--out` variants), an `h3`
   product name, a price and a `.btn--add` reading *Add to cart*.

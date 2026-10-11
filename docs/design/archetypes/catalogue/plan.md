@@ -61,12 +61,16 @@ generator furniture rather than anything this contract promises.
 
 - **Engine:** `sqlite`, in a file named on the command line, alive for one process - a store for the life of
   that process, not a durable one.
-- **Table:** `records`, with `ref` (TEXT, primary key), `created_at` (TEXT, not null) and `payload`
-  (TEXT, not null) - the same shape the other record-form archetypes use.
-- **The cart is not a table.** The spec's persistence block names `/cart` as both the write and the read
-  route and the reference as a **session id issued by the server as a cookie**; the reload assertion is
-  "reloading `/cart` still shows the cart the session stored". So the cart's identity is the session, and
-  its contents live in it.
+- **Tables:** two, and the second is what makes the cart work. `records` holds `ref` (TEXT, primary key),
+  `created_at` (TEXT, not null) and `payload` (TEXT, not null) - the value a write stores, read back by the
+  reference the server issued. `sessions` holds `sid` (TEXT, primary key), `ref` (TEXT, not null) and
+  `created_at` (TEXT, not null), described in the spec as "who the server decided the requester is, for this
+  session only".
+- **The cart is not a table of its own.** The spec's persistence block names `/cart` as both the write and
+  the read route and the reference as a **session id issued by the server as a cookie**; the reload
+  assertion is "reloading `/cart` still shows the cart the session stored". So a cart post writes a
+  `records` row, and the client's claim on it is the `sessions` row - which is why nothing about the cart can
+  be read back once the process, and with it the session, is gone.
 - **The query is not state at all.** It is reflected from the URL parameter on a `GET`, which is why the
   search has no row behind it and why a reload of `/search?q=...` can still be answered after the process
   that served it has gone.
@@ -146,7 +150,7 @@ on the cart board, and the contract stops at the cart.
   attribute, and the pilot serves over `http://127.0.0.1`, where a `Secure` cookie cannot be set at all.
   The status is recorded here and not adjudicated.
 - **The visual target is hand-written and static.** `demo/` holds a grid-with-drawer page, a cart page and
-  an empty page, plus `compare.html` and its stylesheet; the three boards are the reference pictures. The
+  an empty page, plus `compare.html` and the shared `styles.css`; the three boards are the reference pictures. The
   demo's README records the boundaries, and it answers from no server, holds no credential and stores
   nothing **server-side**: the cart is kept in the browser's `localStorage` as a stand-in for the session
   (the README names the key, `kiln-copper-cart-v1`), the drawer is populated by script rather than from a
