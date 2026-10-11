@@ -64,8 +64,9 @@ wearing an account's noun, and it is the failure this contract exists to name.
 One of these five the generated arms do **not** serve, and it is stated here rather than left for a
 reader to discover: `POST /reset` is declared by the spec and dropped by the generator, which emits
 only the first write route. That divergence is recorded as a named exception with its reason in
-`scripts/check-pilot-served.mjs`, which runs as part of `check:all`; *Implementation status* records
-what follows from it.
+`scripts/check-pilot-served.mjs`, a check that compares the route names a spec declares against those
+extracted from a generated server and runs as part of `check:all`; *Implementation status* records what
+follows from it - and because that check compares names, it settles nothing about behaviour.
 
 ## Data and state
 
@@ -147,10 +148,11 @@ sign-up half, steps 1-3, has no board at all.
 10. Returning from the sent state clears the field, restores the request card, and focuses the input.
 11. The demo's two states are driven in a real browser at 390, 768 and 1280 pixels wide, with no
     horizontal overflow and no page exceptions, by this archetype's own
-    `scripts/verify-account-recovery-demo.mjs`. That run covers criteria 7 to 10 and nothing else.
-    Criteria 1 to 6 describe the generated arms rather than the demo and are **not** covered by it;
-    what measures them is `check:pilot-served` against the spec, and one of them is not currently met
-    - see *Implementation status*.
+    `scripts/verify-account-recovery-demo.mjs` - covering criteria 7, 8 and 10 and the part of
+    criterion 9 that the countdown ticks without a write, but not its end state: that run stops before
+    the countdown reaches zero and never uses the resend control. Criteria 1 to 6 concern the generated
+    arms rather than the demo and are not covered by it; *Implementation status* says which of them is
+    measured where, and which is not met.
 
 ## Implementation status
 
@@ -174,13 +176,31 @@ claim:
   `/cart` - which are generator fallbacks rather than anything this contract promises. Criterion 6
   below is therefore a requirement the generated family does not currently meet, and reading this
   document's route table as a description of what the arms do would be wrong in exactly one row.
-- **No pilot-harness record exists for this archetype.** `src/corpus/harness.mjs` starts a project's
-  server, drives its declared journeys in a real browser and writes one record per project, and
-  `docs/eval/projects/` holds no such record for `account-recovery`. So the served half of this
-  contract is measured at the level of *routes*, by `check:pilot-served`, and its behaviour has not
-  been recorded by that harness. Saying so is the purpose of this section: a document claiming the
-  reset write works, when the only measurement of it is an exceptions file saying it is not served,
-  would be the kind of invention this section exists to prevent.
+- **The arms' behaviour is measured, and the measurement is committed.** `docs/pilot/records.json`,
+  produced by `scripts/pilot-records.mjs` from a run directory, holds one entry **per project per
+  version**. For the account-recovery arms each entry carries the browser journeys this archetype
+  declares - `server-persistence`, which reaches `/account` after a submit and reads the display name
+  back on a reload; `validation-failure`, which records a refused submission with a visible error and
+  the observation `refused-observed`; and `content` - together with per-rule status, security status and
+  the tree hashes, for both the original and the uplifted build. So criteria 3 and 5 are measured
+  directly - the display name is read back on a reload, and an empty submission is recorded as refused.
+  Criterion 2 is measured only as far as where the browser arrived: these journey summaries record the
+  landing address, not the response status, and the `303` the spec declares appears in one arm's record
+  and not the others'. The records name **seven** arms, including `svelte` and `webcomponents`, while
+  `pilot/projects/` holds five directories today: the file records a run, not the current tree.
+- **The record also carries a divergence from criterion 4, named rather than explained.**
+  `security.session-cookie-attributes` is recorded as `FAIL` for all seven arms in both builds. That
+  rule requires the session cookie to be `HttpOnly`, to be `Secure` and to carry a SameSite value, and
+  the pilot serves over `http://127.0.0.1`; the recorded status does not say which attribute produced
+  the verdict, so this document records it and does not adjudicate it. Criterion 4's own wording -
+  `Secure` "when the arm sets it" - is the qualification the spec already carries.
+- **Which measurement covers which criterion.** Criterion 3 and criterion 5 are measured by the pilot
+  records above, and criterion 2 only as far as the address the browser landed on; criterion 4 is
+  measured there too and recorded as failing; criterion 1's route is covered only as a route name; and
+  criterion 6 is not met. `check:pilot-served` compares route *names* and
+  establishes nothing about fields, redirects, reload persistence, cookie attributes or refusal, so
+  where this document says a criterion is measured it names the artefact that measures it rather than
+  the check that happens to run beside it.
 - The visual target is hand-written and static: `demo/` plus the two boards. It answers from no server,
   holds no credential, and sends nothing - the browser verifier asserts that submitting and letting the
   countdown run make no write. That is the design, not a shortfall: a preview that quietly claimed to
