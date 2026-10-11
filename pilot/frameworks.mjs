@@ -1909,9 +1909,11 @@ const honoWorkspaceRoutes = () =>
 // The capability pages load the same single enhancement script the arm templates do, but ONLY when a
 // capability that needs it is on. Without the tag the script was served and never loaded, so a capability
 // whose behaviour is client-side - the game's loop is the one - got a page and no behaviour at all
-// (mwg-train-ypr). The tag is gated rather than unconditional because EVERY project emits this helper: an
-// unconditional tag added 51 bytes to all 210 recorded training trees and moved the corpus hash and the
-// token record, which the full gate caught on the merger's merged tree 0d99d0f.
+// (mwg-train-ypr). The tag is gated rather than unconditional because every project with a list route emits this
+// helper: ungated it was 53 bytes in each of the 203 recorded training trees that emit it, and it moved the corpus
+// hash and the token record by exactly 10759 characters, which the full gate caught on the merger's merged tree
+// 0d99d0f. Those three numbers were measured when the fix was reviewed; the estimate first written here - 51 bytes
+// across all 210 trees - was wrong in both factors, which is why the gate, not the comment, is the authority.
 const capabilityPages = (caps) =>
   [
     "const esc = (value) => String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;');",
