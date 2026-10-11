@@ -17,10 +17,10 @@
  *   GET  /                              index: every project, filters, accept/reject, live links
  *   GET  /project/<id>[?run=]           pair evidence: rules, journeys, security, screenshots
  *   GET  /evidence/<id>/<file>[?run=]   screenshots and traces, path- and symlink-confined
- *   GET  /concepts                       illustrative boards and archetype/target visual pairs
+ *   GET  /concepts                       illustrative boards, the 30 A1 training targets, and the sealed A6 pairs
  *   GET  /concepts/images/<name>.jpg      confined concept JPEG
  *   GET  /concepts/images/booking/<step>.jpg  confined booking journey reference
- *   GET  /concepts/targets/<id>.png       confined A6 authored target render
+ *   GET  /concepts/targets/<id>.png       confined authored target render: A6 archetype or A1 tr-NN family
  *   GET  /tuning                         training-only prompt draft workbench
  *   POST /tuning/generate                one hosted image-model call: draft in, board bytes out (nothing written)
  *   GET  /tuning/client.js               browser-local draft/export helper and the generate button's wiring
