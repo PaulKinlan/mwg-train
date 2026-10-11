@@ -73,34 +73,38 @@ The target's colour system is scheme-aware: sixteen of its twenty-five colour to
 `light-dark()` pairs, so one stylesheet serves both schemes, and nine are single-valued -
 `--border-focus`, `--text-inverse`, `--accent`, `--accent-hover`, `--accent-active`, `--accent-glow`,
 `--error`, `--success` and `--success-border` - for which the table gives the same value in both columns.
-Even inside the error and success families it is only the root hue that is fixed; their surfaces,
-backgrounds, borders and text are pairs. Measured from `demo/styles.css`:
+Four of the declared tokens are **referenced nowhere in the demo** (`--accent-active`, `--accent-glow`,
+`--success-bg`, `--success-border`), so the last column names where each token is actually used, with the
+selector and the number of references, rather than describing an intended use. Counted in
+`demo/styles.css`:
 
-| Token | Light | Dark | Used for |
+| Token | Light | Dark | Where it is used (references in the stylesheet) |
 |---|---|---|---|
-| `--bg-page` | `#f1f5f9` | `#0f172a` | the page ground |
-| `--surface-card` | `#ffffff` | `#1e293b` | the ordinary card |
-| `--surface-card-subtle` | `#f8fafc` | `#162032` | inset panels inside a card |
-| `--surface-card-elevated` | `#ffffff` | `#243248` | the card above a card, e.g. a popover |
-| `--surface-input` | `#ffffff` | `#0f172a` | field backgrounds |
-| `--surface-pill` | `#e2e8f0` | `#1e293b` | pills and status badges |
-| `--border-subtle` | `#cbd5e1` | `#334155` | the default one-pixel border |
-| `--border-highlight` | `#94a3b8` | `#475569` | hovered or emphasised borders |
-| `--border-focus` | `#10b981` | `#10b981` | the focus ring |
-| `--text-primary` | `#0f172a` | `#f8fafc` | body and headings |
-| `--text-muted` | `#64748b` | `#94a3b8` | secondary text, hints, metadata |
-| `--text-inverse` | `#ffffff` | `#ffffff` | text on the accent |
-| `--accent` | `#10b981` | `#10b981` | the forward action |
-| `--accent-hover` / `--accent-active` | `#059669` / `#047857` | same | its interactive states |
-| `--accent-subtle` / `--accent-glow` | `rgba(16,185,129,.12)` / `rgba(16,185,129,.25)` | `.18` / same | tinted fills and rings |
-| `--error` | `#ef4444` | `#ef4444` | the error hue itself |
-| `--error-surface` | `#fef2f2` | `#3b1114` | inset error panels |
-| `--error-bg` | `#fee2e2` | `rgba(239,68,68,.15)` | the banner behind a refusal |
-| `--error-border` | `#f87171` | `rgba(239,68,68,.5)` | an invalid field's border |
-| `--error-text` | `#991b1b` | `#fca5a5` | the message under a field |
-| `--success` | `#10b981` | `#10b981` | the success hue |
-| `--success-bg` | `#ecfdf5` | `rgba(16,185,129,.15)` | the confirmation surface |
-| `--success-border` | `#10b981` | `#10b981` | the confirmation border |
+| `--bg-page` | `#f1f5f9` | `#0f172a` | `body` (1) |
+| `--surface-card` | `#ffffff` | `#1e293b` | `.top-bar`, `.step-circle` and three more (5) |
+| `--surface-card-subtle` | `#f8fafc` | `#162032` | `.state-switcher`, `.record-echo-box` and two more (4) |
+| `--surface-card-elevated` | `#ffffff` | `#243248` | `.btn-secondary:hover` (1) |
+| `--surface-input` | `#ffffff` | `#0f172a` | the form controls and `.record-echo-content` (2) |
+| `--surface-pill` | `#e2e8f0` | `#1e293b` | `.state-pill`, `.btn-secondary` (2) |
+| `--border-subtle` | `#cbd5e1` | `#334155` | `.top-bar`, `.state-switcher` and sixteen more (18) |
+| `--border-highlight` | `#94a3b8` | `#475569` | `.btn-secondary:hover` (1) |
+| `--border-focus` | `#10b981` | `#10b981` | focus rings on the fields and on `.btn-primary` (3) |
+| `--text-primary` | `#0f172a` | `#f8fafc` | `body`, `.brand` and ten more (12) |
+| `--text-muted` | `#64748b` | `#94a3b8` | `.top-nav a`, `.state-switcher-label` and eleven more (13) |
+| `--text-inverse` | `#ffffff` | `#ffffff` | `.step-item.completed .step-circle`, `.btn-primary` (2) |
+| `--accent` | `#10b981` | `#10b981` | `.brand-icon`, `.state-pill:hover`, `.state-pill.active` (16) |
+| `--accent-hover` | `#059669` | `#059669` | `.btn-primary:hover` (1) |
+| `--accent-active` | `#047857` | `#047857` | nothing - declared but referenced nowhere |
+| `--accent-subtle` | `rgba(16,185,129,.12)` | `rgba(16,185,129,.18)` | the halo on the active step and the active pills (4) |
+| `--accent-glow` | `rgba(16,185,129,.25)` | `rgba(16,185,129,.25)` | nothing - declared but referenced nowhere |
+| `--error` | `#ef4444` | `#ef4444` | invalid field borders, `.error-banner-icon`, `.error-msg-icon` (6) |
+| `--error-surface` | `#fef2f2` | `#3b1114` | `.error-banner` background (1) |
+| `--error-bg` | `#fee2e2` | `rgba(239,68,68,.15)` | the invalid field's background (2) |
+| `--error-border` | `#f87171` | `rgba(239,68,68,.5)` | `.error-banner` border (1) |
+| `--error-text` | `#991b1b` | `#fca5a5` | `.error-banner` and `.error-msg` colour (2) |
+| `--success` | `#10b981` | `#10b981` | valid fields after interaction (1) |
+| `--success-bg` | `#ecfdf5` | `rgba(16,185,129,.15)` | nothing - declared but referenced nowhere |
+| `--success-border` | `#10b981` | `#10b981` | nothing - declared but referenced nowhere |
 
 The accent family and the success family are the same emerald, which is a deliberate economy: a
 confirmation is not a new colour, it is the accent arriving.
