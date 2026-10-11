@@ -187,15 +187,66 @@ const selfCloseVoids = (markup) =>
     .replace(new RegExp(`<(${VOID_TAGS.join('|')})((?:[^>"']|"[^"]*"|'[^']*')*)>`, 'g'), '<$1$2 />')
     .replace(/ \/>/g, ' />');
 
+/**
+ * The JS a generated server needs to serve its archetype's boards out of the store.
+ *
+ * The boards are NOT copied into the tree: they are megabytes each, every generated tree is hashed and
+ * token-counted, and the token counter reads every file as utf8 - so a copy would be both a large
+ * duplicate and a source-character figure that means nothing. The server therefore resolves a board from
+ * the store at request time and serves it only when its bytes still hash to the digest the register
+ * recorded, so "this build is using the target's imagery" stays a checkable claim rather than a comment.
+ *
+ * The store is found by walking up from the tree, not by an absolute path: an absolute path baked into a
+ * generated file would put this machine into the tree hash. The walk is bounded and the failure is a 404,
+ * because a build with no store must serve nothing rather than something plausible.
+ *
+ * A no-set build emits nothing here, so its server stays byte-identical and its tree hash does not move.
+ */
+function assetRuntime(set) {
+  if (!set) return '';
+  const digests = Object.fromEntries(set.images.map((image) => [image.name, image.sha256]));
+  return `const ASSET_STORE = ${JSON.stringify(`assets/archetypes/${set.archetype}`)};
+const ASSET_DIGESTS = ${JSON.stringify(digests)};
+const ASSET_TYPES = { '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp', '.avif': 'image/avif', '.gif': 'image/gif', '.svg': 'image/svg+xml' };
+function readArchetypeAsset(name) {
+  if (!name || !Object.hasOwn(ASSET_DIGESTS, name)) return null;
+  let dir = here;
+  for (let depth = 0; depth < 8; depth += 1) {
+    const candidate = join(dir, ASSET_STORE, 'images', name);
+    if (existsSync(candidate)) {
+      const body = readFileSync(candidate);
+      if (createHash('sha256').update(body).digest('hex') !== ASSET_DIGESTS[name]) return null;
+      return { body, type: ASSET_TYPES[name.slice(name.lastIndexOf('.'))] ?? 'application/octet-stream' };
+    }
+    const parent = dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return null;
+}
+`;
+}
+
+/** The primary board a build shows, and the phrase it is described by. */
+function referenceBoardMarkup(set) {
+  if (!set || set.images.length === 0) return '';
+  const board = set.images[0];
+  return `<figure class="reference-board">
+        <img src="/app/${board.name}" alt="Reference board for ${escapeHtml(set.archetype)}" width="1280" height="900" loading="lazy" decoding="async">
+        <figcaption>Reference board for ${escapeHtml(set.archetype)}</figcaption>
+      </figure>`;
+}
+
 function pageSource(archetype, { defects, framework, set = null }) {
   // The brand line is built conditionally rather than interpolated as an empty string: an arm with no
   // brand must produce byte-identical markup to before the store existed, and a bare `${''}` leaves a
   // whitespace-only line behind, which is a different tree hash for every recorded project.
   const brand = brandMarkup(set);
+  const board = referenceBoardMarkup(set);
   const rawBody = `
 ${brand === '' ? '' : `      ${brand}\n`}      <h1>${archetype.title}</h1>
       <p>${archetype.story}</p>
-${formMarkup(archetype, { defects })}
+${board === '' ? '' : `      ${board}\n`}${formMarkup(archetype, { defects })}
 ${echoMarkup(archetype)}`;
   // The web-components arm renders the same tree as the raw arm and wraps the record section in a
   // custom element. Wrapping rather than replacing is deliberate: the server-rendered children stay in
@@ -380,6 +431,9 @@ main { max-width: 42rem; margin: 0 auto; }
 header.brand { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; }
 .brand-mark { display: inline-flex; color: var(--arm-accent); }
 .brand-name { font-weight: 700; letter-spacing: 0.01em; }
+figure.reference-board { margin: 0 0 1.25rem; }
+figure.reference-board img { display: block; width: 100%; height: auto; border: 1px solid var(--border-subtle, #cbd5e1); border-radius: 0.5rem; }
+figure.reference-board figcaption { color: var(--text-muted, #64748b); font-size: 0.8125rem; margin-top: 0.35rem; }
 h1 { font-size: 1.6rem; margin-bottom: 0.25rem; }
 .field { display: grid; gap: 0.25rem; margin-bottom: 1rem; }
 label { font-weight: 600; }
@@ -857,7 +911,7 @@ const honoListRoutes = (archetype, auth) => {
     .join('\n');
 };
 
-function serverSource(archetype, framework, defects = []) {
+function serverSource(archetype, framework, defects = [], set = null) {
   const caps = capabilitiesOf(archetype);
   const writeRoute = archetype.routes.find((route) => route.method === 'POST' && route.kind.startsWith('write'));
   const insecureCookie = archetype.session && !framework.cookieFlags;
@@ -880,8 +934,8 @@ function serverSource(archetype, framework, defects = []) {
  * measures behaviour, and a reviewer has to be able to see what the server does.
  */
 import { createServer } from 'node:http';
-import { readFileSync } from 'node:fs';
-import { randomUUID } from 'node:crypto';
+import { readFileSync${set ? ', existsSync' : ''} } from 'node:fs';
+import { randomUUID${set ? ', createHash' : ''} } from 'node:crypto';
 import { DatabaseSync } from 'node:sqlite';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -889,7 +943,7 @@ import { fileURLToPath } from 'node:url';
 import { renderDocument } from './app/page.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const arg = (name, fallback) => {
+${assetRuntime(set)}const arg = (name, fallback) => {
   const index = process.argv.indexOf(\`--\${name}\`);
   return index === -1 ? fallback : process.argv[index + 1];
 };
@@ -973,6 +1027,14 @@ const server = createServer(async (request, response) => {
       response.writeHead(200, { 'content-type': \`\${type}; charset=utf-8\` });
       return response.end(body);
     } catch {
+      // Not in the tree, so it may be one of the archetype's boards: served from the store, and only if
+      // its bytes still hash to the recorded digest. The provenance header is deliberate - a reader and a
+      // test can both tell a board of the target from a file the build itself wrote.
+      const asset = readArchetypeAsset(decodeURIComponent(path.slice('/app/'.length)));
+      if (asset) {
+        response.writeHead(200, { 'content-type': asset.type, 'x-asset-source': \`\${ASSET_STORE}/images\`, 'cache-control': 'no-store' });
+        return response.end(asset.body);
+      }
       response.writeHead(404);
       return response.end('not found');
     }
@@ -1189,7 +1251,7 @@ server.listen(port, '127.0.0.1', () => {
 
 
 /** The Hono arm's server: Hono owns routing and responses, node:http only carries them. */
-function honoServerSource(archetype, framework, defects = []) {
+function honoServerSource(archetype, framework, defects = [], set = null) {
   const caps = capabilitiesOf(archetype);
   const writeRoute = archetype.routes.find((route) => route.method === 'POST' && route.kind.startsWith('write'));
   // Hono routes :param segments natively; the FIRST parameter of an edit route is the record key.
@@ -1208,8 +1270,8 @@ function honoServerSource(archetype, framework, defects = []) {
  * markup stays plain HTML strings rather than a virtual DOM.
  */
 import { createServer } from 'node:http';
-import { readFileSync } from 'node:fs';
-import { randomUUID } from 'node:crypto';
+import { readFileSync${set ? ', existsSync' : ''} } from 'node:fs';
+import { randomUUID${set ? ', createHash' : ''} } from 'node:crypto';
 import { DatabaseSync } from 'node:sqlite';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -1218,7 +1280,7 @@ import { Hono } from 'hono';
 import { renderDocument, renderPage } from './app/page.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const arg = (name, fallback) => {
+${assetRuntime(set)}const arg = (name, fallback) => {
   const index = process.argv.indexOf(\`--\${name}\`);
   return index === -1 ? fallback : process.argv[index + 1];
 };
@@ -1268,6 +1330,12 @@ app.get('/app/:file', (c) => {
     const type = name.endsWith('.css') ? 'text/css' : name.endsWith('.js') ? 'text/javascript' : 'text/plain';
     return c.body(body, 200, { 'content-type': \`\${type}; charset=utf-8\` });
   } catch {
+    // Not in the tree, so it may be one of the archetype's boards: served from the store, and only if its
+    // bytes still hash to the recorded digest. Kept on the existing single-segment route rather than a new
+    // one deliberately - the route set is compared against the project's specification, and a second route
+    // for assets would have to be declared there and would make the arm differ from its spec.
+    const asset = readArchetypeAsset(name);
+    if (asset) return c.body(asset.body, 200, { 'content-type': asset.type, 'x-asset-source': \`\${ASSET_STORE}/images\`, 'cache-control': 'no-store' });
     return c.text('not found', 404);
   }
 });
@@ -1601,7 +1669,7 @@ export function buildProjectFor(archetype, { frameworkName, defects = [], flags 
   const projectId = `${archetype.id}-${frameworkName}${flags.variant ? `-${flags.variant}` : ''}`;
 
   const files = {
-    'server.mjs': framework.name === 'hono' ? honoServerSource(archetype, framework, defects) : serverSource(archetype, framework, defects),
+    'server.mjs': framework.name === 'hono' ? honoServerSource(archetype, framework, defects, set) : serverSource(archetype, framework, defects, set),
     [framework.markupFile]: pageSource(archetype, { defects, framework, set }),
     [framework.stylesFile]: stylesSource({ defects, framework, set }),
     [framework.enhanceFile]: enhanceSource(archetype, { defects, framework }),

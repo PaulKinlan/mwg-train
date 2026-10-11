@@ -14,15 +14,18 @@
  * not move.
  */
 import assert from 'node:assert/strict';
+import { spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import test from 'node:test';
 
 import { ARCHETYPES, ARCHETYPE_IDS } from '../pilot/archetypes.mjs';
-import { FRAMEWORKS, buildProjectFor } from '../pilot/frameworks.mjs';
+import { FRAMEWORKS, buildProjectFor, writeProject } from '../pilot/frameworks.mjs';
 import { buildProject } from '../pilot/projects.mjs';
+
+const ROOT = resolve(import.meta.dirname, '..');
 import {
   ArchetypeAssetError,
   assertConsumable,
@@ -113,6 +116,11 @@ test('every framework build carries the archetype set: brand, tokens, font, imag
         assert.ok(page.includes(escaped), `${where}: the page does not carry the target's brand name (${escaped})`);
         assert.ok(page.includes(`data-asset-store="assets/archetypes/${id}"`), `${where}: the brand does not say where it came from`);
       }
+      // The board it shows is the one the register records, at the harness's own asset path.
+      assert.ok(
+        page.includes(`<img src="/app/${set.images[0].name}"`),
+        `${where}: the page does not reference the archetype's first board (${set.images[0].name})`,
+      );
       // And the build records what it was given: the register with digests, and the rights.
       assert.equal(built.spec.assets.archetype, id, `${where}: the spec does not record the set it was given`);
       assert.deepEqual(
@@ -126,6 +134,91 @@ test('every framework build carries the archetype set: brand, tokens, font, imag
     // The same recognisable set in every arm: if one arm's register differed, that arm was built against
     // a different store and nothing measured from the pair would be comparable.
     assert.equal(seen.size, 1, `${id}: the arms were not all given the same image register`);
+  }
+});
+
+test('the harness serves the archetype boards from the store, and only while their bytes match the register', async () => {
+  // A generated tree inside the repository, because the server finds the store by walking up from itself -
+  // an absolute path baked into a generated file would put this machine into the tree hash. pilot/out is
+  // ignored, so an interrupted run leaves nothing tracked behind.
+  const root = mkdtempSync(join(ROOT, 'pilot/out/o3t-assets-'));
+  const set = loadArchetypeSet('booking');
+  const board = set.images[0];
+  const scripts = [];
+  try {
+    const built = buildProject({ archetypeId: 'booking', frameworkName: 'raw' });
+    writeProject(root, { ...built, includeDependencies: false });
+    const port = 4500 + Math.floor(Math.random() * 400);
+    const server = spawn(process.execPath, ['server.mjs', '--port', String(port)], { cwd: root, stdio: 'ignore' });
+    scripts.push(server);
+    const url = (path) => `http://127.0.0.1:${port}${path}`;
+    // Bounded readiness wait: the server is a child of this process, so there is nothing to poll that is not
+    // also being started by this test.
+    let mapped = false;
+    for (let attempt = 0; attempt < 40 && !mapped; attempt += 1) {
+      try {
+        const probe = await fetch(url('/__health'));
+        mapped = probe.ok;
+      } catch {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+    }
+    assert.ok(mapped, 'the generated server did not start');
+
+    const response = await fetch(url(`/app/${board.name}`));
+    assert.equal(response.status, 200, 'the harness did not serve the registered board');
+    assert.equal(response.headers.get('content-type'), 'image/jpeg');
+    // Provenance, so a reader (and this test) can tell a board of the target from a file the build wrote.
+    assert.equal(response.headers.get('x-asset-source'), `assets/archetypes/booking/images`);
+    const body = Buffer.from(await response.arrayBuffer());
+    assert.equal(createHash('sha256').update(body).digest('hex'), board.sha256, 'the served board is not the board the register records');
+
+    // A name the register does not record is not served, and neither is a tree file the build never wrote.
+    assert.equal((await fetch(url('/app/not-a-board.jpg'))).status, 404);
+    assert.equal((await fetch(url('/app/styles.css'))).status, 200);
+  } finally {
+    for (const script of scripts) script.kill('SIGKILL');
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('a board whose bytes no longer match the register is not served, even though the store still has it', async () => {
+  const root = mkdtempSync(join(ROOT, 'pilot/out/o3t-tamper-'));
+  const set = loadArchetypeSet('booking');
+  const board = set.images[0];
+  const scripts = [];
+  try {
+    const built = buildProject({ archetypeId: 'booking', frameworkName: 'raw' });
+    writeProject(root, { ...built, includeDependencies: false });
+    // The store itself is left alone: the digest the generated server holds is changed instead, which is
+    // the same disagreement (bytes on disk vs digest expected) with no writes to a shared artefact.
+    const serverPath = join(root, 'server.mjs');
+    const source = readFileSync(serverPath, 'utf8');
+    const tampered = source.replace(board.sha256, 'f'.repeat(64));
+    assert.notEqual(tampered, source, 'the generated server does not carry the register digest to tamper with');
+    writeFileSync(serverPath, tampered);
+
+    const port = 4900 + Math.floor(Math.random() * 90);
+    const server = spawn(process.execPath, ['server.mjs', '--port', String(port)], { cwd: root, stdio: 'ignore' });
+    scripts.push(server);
+    const url = (path) => `http://127.0.0.1:${port}${path}`;
+    let mapped = false;
+    for (let attempt = 0; attempt < 40 && !mapped; attempt += 1) {
+      try {
+        mapped = (await fetch(url('/__health'))).ok;
+      } catch {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+    }
+    assert.ok(mapped, 'the generated server did not start');
+    assert.equal(
+      (await fetch(url(`/app/${board.name}`))).status,
+      404,
+      'a board that no longer hashes to the recorded digest was served anyway',
+    );
+  } finally {
+    for (const script of scripts) script.kill('SIGKILL');
+    rmSync(root, { recursive: true, force: true });
   }
 });
 
