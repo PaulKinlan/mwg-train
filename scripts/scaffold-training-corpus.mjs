@@ -31,6 +31,7 @@ import { TRAINING_ARCHETYPES } from '../pilot/training-archetypes.mjs';
 import { builderFields, echoFieldFor, validateBriefSchema } from '../src/train/brief-schema.mjs';
 import { hashTree } from '../src/corpus/harness.mjs';
 import { DEFECT_ADDRESSABILITY } from '../src/eval/defects.mjs';
+import { KEY_FIELD, MODEL_FIELD, NO_MODEL, buildKey, buildKeyDefinition } from '../src/eval/build-key.mjs';
 
 const FRAMEWORK_NAMES = Object.keys(FRAMEWORKS);
 const REPO_ROOT = resolve(dirname(new URL(import.meta.url).pathname), '..');
@@ -405,6 +406,13 @@ function main() {
         topic: family.topic,
         routes: family.routes,
         tree_sha: treeSha,
+        // The third key (mwg-train-gzi). This corpus is deterministic - briefs, a shape and a builder, no
+        // model anywhere in the loop - so every row records the explicit sentinel rather than omitting the
+        // field, and the derived key beside it. The key is project_id@model, and project_id is
+        // family x framework for exactly the reason above: seven families share the `booking` archetype,
+        // so an archetype-based key would collide 63 times in this record alone.
+        [MODEL_FIELD]: NO_MODEL,
+        [KEY_FIELD]: buildKey({ projectId, model: NO_MODEL }),
       });
       byArchetype[family.archetype] = (byArchetype[family.archetype] ?? 0) + 1;
       byFramework[frameworkName] = (byFramework[frameworkName] ?? 0) + 1;
@@ -424,6 +432,7 @@ function main() {
       by_framework: byFramework,
     },
     defect_addressability: DEFECT_ADDRESSABILITY,
+    build_key_definition: buildKeyDefinition('pilot/TRAINING_CORPUS.json'),
     projects,
   };
 
