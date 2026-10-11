@@ -157,11 +157,13 @@ on the cart board, and the contract stops at the cart.
   session, and the drawer says as much itself - "Cart kept in this browser only (localStorage). This design
   target has no server session and no order route."
 - **The boards disagree with each other, and with the target, about who the shop is.** The three boards
-  carry **three different brand names** - `EARTH & OAK`, `ceramics` and `KERA` - where the demo has a fourth,
-  `Kiln & Copper`, with a shopping-bag mark. They also disagree about money: the grid board prices in **dollars**
-  (`$78.00`, `$64.00`, `$52.00`) and the cart board in **pounds** (`£19.99`, `£23.90`, `Subtotal: £43.89`).
-  The grid board is full-bleed, the empty board presents the page inside a rounded panel on a contrasting
-  ground, and the empty board's only action - `Reset Search` - is **orange** where every other action in the
+  carry **three different brand names** - `EARTH & OAK`, `ceramics` and `CLAY & ORE` - where the demo has a
+  fourth, `Kiln & Copper`, with a shopping-bag mark. They also disagree about money: the grid board prices in
+  **dollars** (`$78.00`, `$64.00`, `$52.00`) and the cart board in **pounds** (`£19.99`, `£23.90`,
+  `Subtotal: £43.89`). All three are full-bleed raw UI views with no window chrome and no presentation panel:
+  the empty board's rounded panel was removed on 2026-10-11 by regenerating it from an amended prompt, which
+  this directory's `README.md` and the Wave 2 register record. The empty board's only action - `Reset Search` -
+  is **orange** where every other action in the
   set and in the target is emerald. This directory's `README.md` records what the rasters depict, and it
   lists prices, category counts, inventory, totals, a shipping promise and checkout buttons among them, so
   the invented commercial detail is known and accepted rather than accidental; what the README does not

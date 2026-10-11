@@ -45,12 +45,12 @@ store, the register or the target have moved apart.
 ### catalogue
 
 - Target: `docs/design/archetypes/catalogue`
-- Readme: `docs/design/archetypes/catalogue/README.md` (sha256 `a7dafec272c969d5cb0d0ed7665bc1e8f6ef4cdc2052f5fac574a4beb7a7a9c0`)
+- Readme: `docs/design/archetypes/catalogue/README.md` (sha256 `9cad4fb55ee641f90bf475703aa499862e919df694f1a126a0c1b81f5828b1cd`)
 - Stylesheet: `docs/design/archetypes/catalogue/demo/styles.css` (sha256 `081e151f374766fffb78fedac1d57fe4d7d0a4f38257ac85ca67eda068bb5c64`)
 - Documents: `docs/design/archetypes/catalogue/demo/cart.html`, `docs/design/archetypes/catalogue/demo/compare.html`, `docs/design/archetypes/catalogue/demo/empty.html`, `docs/design/archetypes/catalogue/demo/index.html`
 - Rights: `excluded_from_training: true`, `approved_for_training: false` from `docs/design/archetypes/catalogue/README.md:5`
 - Brand: `Kiln & Copper`
-- Boards: `step1-grid.jpg` sha256 `d67e02068c0ac84bf178f3a58b468be1f68b0fd45976177a7d1536078e21a383`; `step2-cart.jpg` sha256 `13a1e108161d5b35d94d3b70058293f94a0468d96e4097bc3e40e60413f42306`; `step3-empty.jpg` sha256 `ccb2f4aa1d33d139156b9c41370afca3c6fc89b6af60ac0a0e0fa886a5dc980b`
+- Boards: `step1-grid.jpg` sha256 `d67e02068c0ac84bf178f3a58b468be1f68b0fd45976177a7d1536078e21a383`; `step2-cart.jpg` sha256 `13a1e108161d5b35d94d3b70058293f94a0468d96e4097bc3e40e60413f42306`; `step3-empty.jpg` sha256 `c564732d825446943215fb65d507ecf0a937dd01f36dad15dcfa0d5dc3c32246`
 
 ### contact-lead
 
