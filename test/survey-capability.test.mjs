@@ -304,9 +304,10 @@ test('functional: the branch decides which questions are asked, and the outcome 
 });
 
 /**
- * The capability keys, read out of the set rather than matched as a literal: pinning the whole set makes
- * every new capability edit every older capability's test, which is the landing trap this rebase existed to
- * resolve (mwg-train-ypr, mwg-train-ksn).
+ * The capability keys, read out of the set rather than matched as a literal. Pinning the whole set means
+ * every capability added later has to edit every older capability's test - which is how a landing trap is
+ * built, and it cost a merge two round trips before this (mwg-train-ksn). Membership is what the check
+ * means: the capability must be in the closed set, and must still be there if someone removes it.
  */
 const capabilityKeysIn = (source) =>
   /CAPABILITY_KEYS = new Set\(\[([^\]]*)\]\)/.exec(source)?.[1].split(',').map((entry) => entry.trim().replace(/^'|'$/g, '')).filter(Boolean) ?? [];

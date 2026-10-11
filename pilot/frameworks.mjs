@@ -806,7 +806,7 @@ function searchPageDocument(search) {
  * like sessionTables, so the generated code needs no escaping of its own.
  */
 
-const capabilitiesOf = (archetype) => ({ list_pages: false, detail_page: false, auth: false, cart: false, pricing_tiers: false, checkout: false, survey: false, game: false, ...(archetype.capabilities ?? {}) });
+const capabilitiesOf = (archetype) => ({ list_pages: false, detail_page: false, auth: false, cart: false, pricing_tiers: false, checkout: false, survey: false, game: false, workspace: false, ...(archetype.capabilities ?? {}) });
 
 /*
  * The pricing-tiers capability (mwg-train-4lk): three tiers across a monthly/annual toggle, whose
@@ -924,6 +924,7 @@ const cartQuantityField = (archetype) => archetype.fields.find((field) => field.
 const checkoutOf = (archetype) => (archetype.capabilities?.checkout === true ? archetype.checkout : null);
 /** The survey policy block, or null when the capability is off - the flag and the data travel together. */
 const surveyOf = (archetype) => (archetype.capabilities?.survey === true ? archetype.survey : null);
+const workspaceOf = (archetype) => (archetype.capabilities?.workspace === true ? archetype.workspace : null);
 const CART_SID_RAW =
   "(request.headers.cookie ?? '').split(';').map((part) => part.trim()).find((part) => part.startsWith('sid='))?.slice('sid='.length)";
 const CART_SID_HONO =
@@ -1424,7 +1425,6 @@ const honoCheckoutRoutes = () =>
   ].join('\n');
 
 
-/** The small page renderers the capability handlers share, emitted only when a capability needs them. */
 /**
  * The game's scoreboard, in its own table rather than in `records`.
  *
@@ -1672,12 +1672,248 @@ const gameEnhance = (archetype) => {
 `;
 };
 
-    // The capability pages load the same single enhancement script the arm templates do, but ONLY when a
-    // capability that needs it is on. Without the tag the script was served and never loaded, so a capability
-    // whose behaviour is client-side - the game's loop is the one - got a page and no behaviour at all
-    // (mwg-train-ypr). The tag is gated rather than unconditional because EVERY project emits this helper: an
-    // unconditional tag added 51 bytes to all 210 recorded training trees and moved the corpus hash and the
-    // token record, which the full gate caught on the merger's merged tree 0d99d0f.
+/**
+ * The workspace capability: a company the account owns, a second role that can read but not administer, an
+ * onboarding step that carries the chosen use case and plan into the workspace, and one setting only the
+ * owner can change (mwg-train-ksn).
+ *
+ * The permission boundary is enforced on the REQUEST, not by hiding the form: a member posting the admin
+ * route is refused with 403 whether or not they ever saw the button. Every state-changing request also
+ * carries a CSRF token derived from the session, because these are the first cookie-authenticated writes in
+ * the engine - `SameSite=Lax` covers the cross-site POST case, and the token covers the rest.
+ */
+const workspaceTables = () =>
+  [
+    "db.exec('CREATE TABLE IF NOT EXISTS workspaces (id TEXT PRIMARY KEY, name TEXT NOT NULL, use_case TEXT NOT NULL, plan TEXT NOT NULL, setting TEXT NOT NULL, created_at TEXT NOT NULL)');",
+    "db.exec('CREATE TABLE IF NOT EXISTS memberships (email TEXT NOT NULL, workspace_id TEXT NOT NULL, role TEXT NOT NULL, created_at TEXT NOT NULL, PRIMARY KEY (email, workspace_id))');",
+    "db.exec('CREATE TABLE IF NOT EXISTS invitations (email TEXT PRIMARY KEY, workspace_id TEXT NOT NULL, created_at TEXT NOT NULL)');",
+    "const insertAccount = db.prepare('INSERT INTO accounts (email, password, display_name) VALUES (?, ?, ?)');",
+    "const insertWorkspace = db.prepare('INSERT INTO workspaces (id, name, use_case, plan, setting, created_at) VALUES (?, ?, ?, ?, ?, ?)');",
+    "const selectWorkspace = db.prepare('SELECT id, name, use_case, plan, setting FROM workspaces WHERE id = ?');",
+    "const updateWorkspaceSetting = db.prepare('UPDATE workspaces SET setting = ? WHERE id = ?');",
+    "const insertMembership = db.prepare('INSERT OR REPLACE INTO memberships (email, workspace_id, role, created_at) VALUES (?, ?, ?, ?)');",
+    "const selectMemberships = db.prepare('SELECT email, role FROM memberships WHERE workspace_id = ? ORDER BY role, email');",
+    "const selectMembershipFor = db.prepare('SELECT workspace_id, role FROM memberships WHERE email = ?');",
+    "const insertInvitation = db.prepare('INSERT OR REPLACE INTO invitations (email, workspace_id, created_at) VALUES (?, ?, ?)');",
+    "const selectInvitation = db.prepare('SELECT email, workspace_id FROM invitations WHERE email = ?');",
+    "const deleteInvitation = db.prepare('DELETE FROM invitations WHERE email = ?');",
+    // The token is derived from the session cookie, which a cross-site page cannot read: it is HttpOnly and
+    // never rendered. A request without it, or with another session's token, is refused.
+    "const workspaceCsrf = (sid) => createHash('sha256').update(String(sid) + ':workspace-csrf').digest('hex').slice(0, 32);",
+    "const workspaceSameToken = (a, b) => Boolean(a) && Boolean(b) && a.length === b.length && timingSafeEqual(Buffer.from(a), Buffer.from(b));",
+    "const workspaceRoleFor = (email) => selectMembershipFor.get(email)?.role ?? null;",
+    "const workspaceOfMember = (email) => (email ? selectWorkspace.get(workspaceRoleFor(email) ? selectMembershipFor.get(email).workspace_id : '') ?? null : null);",
+    "const workspaceEmailField = (value) => String(value ?? '').trim().toLowerCase();",
+    "const workspaceEmailLooksReal = (value) => /^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/.test(value);",
+  ].join('\n');
+
+/** The workspace pages: onboarding, the workspace itself, and the two owner-only forms. */
+const workspacePages = (archetype) => {
+  const workspace = workspaceOf(archetype);
+  return [
+    `const WORKSPACE = ${JSON.stringify(workspace)};`,
+    "const workspaceOptions = (values, chosen) => values.map((value) => '<option value=\"' + esc(value) + '\"' + (value === chosen ? ' selected' : '') + '>' + esc(value) + '</option>').join('');",
+    "const onboardingPage = (error, values) => capabilityPage('Create a workspace', '<h1>Create a workspace</h1>' + (error ? '<p role=\"alert\">' + esc(error) + '</p>' : '') + '<form id=\"onboarding-form\" method=\"post\" action=\"/onboarding\">' + '<label for=\"email\">Work email</label><input id=\"email\" name=\"email\" type=\"email\" autocomplete=\"username\" value=\"' + esc(values?.email ?? '') + '\" required>' + '<label for=\"display_name\">Your name</label><input id=\"display_name\" name=\"display_name\" type=\"text\" autocomplete=\"name\" value=\"' + esc(values?.display_name ?? '') + '\">' + '<label for=\"password\">Password</label><input id=\"password\" name=\"password\" type=\"password\" autocomplete=\"new-password\" minlength=\"8\" required>' + '<label for=\"workspace_name\">Workspace</label><input id=\"workspace_name\" name=\"workspace_name\" type=\"text\" value=\"' + esc(values?.workspace_name ?? WORKSPACE.name) + '\" required>' + '<label for=\"use_case\">What will you use it for?</label><select id=\"use_case\" name=\"use_case\">' + workspaceOptions(WORKSPACE.use_cases, values?.use_case) + '</select>' + '<label for=\"plan\">Plan</label><select id=\"plan\" name=\"plan\">' + workspaceOptions(WORKSPACE.plans, values?.plan) + '</select>' + '<button type=\"submit\">Create workspace</button></form>' + '<p><a href=\"/login\">Already have an account? Sign in</a></p>');",
+    "const workspacePage = (workspace, members, role, csrf, notice) => capabilityPage(WORKSPACE.name, '<h1>' + esc(workspace.name) + '</h1>' + (notice ? '<p role=\"status\">' + esc(notice) + '</p>' : '') + '<dl id=\"workspace-facts\"><dt>Signed in as</dt><dd id=\"workspace-role\">' + esc(role) + '</dd><dt>Use case</dt><dd id=\"workspace-use-case\">' + esc(workspace.use_case) + '</dd><dt>Plan</dt><dd id=\"workspace-plan\">' + esc(workspace.plan) + '</dd><dt>' + esc(WORKSPACE.setting.label) + '</dt><dd id=\"workspace-setting\">' + esc(workspace.setting) + '</dd></dl>' + '<h2>Members</h2><ul id=\"workspace-members\">' + members.map((member) => '<li data-role=\"' + esc(member.role) + '\">' + esc(member.email) + '</li>').join('') + '</ul>' + (role === 'owner' ? '<form id=\"workspace-setting-form\" method=\"post\" action=\"/workspace/setting\"><input type=\"hidden\" name=\"csrf\" value=\"' + esc(csrf) + '\"><label for=\"setting\">' + esc(WORKSPACE.setting.label) + '</label><select id=\"setting\" name=\"setting\">' + workspaceOptions(WORKSPACE.setting.options, workspace.setting) + '</select><button type=\"submit\">Save setting</button></form>' + '<form id=\"workspace-invite-form\" method=\"post\" action=\"/workspace/invite\"><input type=\"hidden\" name=\"csrf\" value=\"' + esc(csrf) + '\"><label for=\"invite_email\">Invite a colleague</label><input id=\"invite_email\" name=\"invite_email\" type=\"email\" required><button type=\"submit\">Send invite</button></form>' : '<p id=\"workspace-read-only\">Only the workspace owner can change its settings or invite people.</p>') + '<form id=\"workspace-signout\" method=\"post\" action=\"/logout\"><input type=\"hidden\" name=\"csrf\" value=\"' + esc(csrf) + '\"><button type=\"submit\">Sign out</button></form>');",
+  ].join('\n');
+};
+
+/** The workspace routes, raw arm: onboarding, read, the owner-only write, the invite, and the refusals. */
+const rawWorkspaceRoutes = () =>
+  [
+    "  if (path === '/onboarding' && request.method === 'GET') {",
+    "    if (authSessionEmail(request.headers.cookie)) {",
+    "      response.writeHead(303, { location: '/workspace' });",
+    "      return response.end();",
+    "    }",
+    '    return html(response, onboardingPage());',
+    '  }',
+    "  if (path === '/onboarding' && request.method === 'POST') {",
+    '    const onboarding = await parseBody(request);',
+    "    const onboardingEmail = workspaceEmailField(onboarding.email);",
+    "    const onboardingPassword = String(onboarding.password ?? '');",
+    "    const onboardingName = String(onboarding.display_name ?? '').trim() || onboardingEmail;",
+    "    const onboardingWorkspaceName = String(onboarding.workspace_name ?? '').trim() || WORKSPACE.name;",
+    "    const onboardingUseCase = String(onboarding.use_case ?? '');",
+    "    const onboardingPlan = String(onboarding.plan ?? '');",
+    "    const onboardingValues = { email: onboardingEmail, display_name: onboardingName, workspace_name: onboardingWorkspaceName, use_case: onboardingUseCase, plan: onboardingPlan };",
+    // Refused with a reason rather than accepted and then unusable: an address that is not an address, a
+    // password too short to be one, or a use case and plan this workspace does not offer.
+    "    if (!workspaceEmailLooksReal(onboardingEmail)) return html(response, onboardingPage('Enter an email address.', onboardingValues), 422);",
+    "    if (onboardingPassword.length < 8) return html(response, onboardingPage('A password needs at least 8 characters.', onboardingValues), 422);",
+    "    if (!WORKSPACE.use_cases.includes(onboardingUseCase)) return html(response, onboardingPage('Choose what you will use it for.', onboardingValues), 422);",
+    "    if (!WORKSPACE.plans.includes(onboardingPlan)) return html(response, onboardingPage('Choose a plan.', onboardingValues), 422);",
+    "    if (selectAccountByEmail.get(onboardingEmail)) return html(response, onboardingPage('That address already has an account.', onboardingValues), 422);",
+    "    const onboardingSid = randomUUID();",
+    "    insertAccount.run(onboardingEmail, ACCOUNT_DISABLED, onboardingName);",
+    "    savePassword(onboardingEmail, onboardingPassword);",
+    // An invitation is how a second role exists: the invited address joins the EXISTING workspace, as a
+    // member, rather than creating one of its own. No temporary password is ever generated or sent.
+    "    const invitation = selectInvitation.get(onboardingEmail);",
+    "    if (invitation) {",
+    "      insertMembership.run(onboardingEmail, invitation.workspace_id, 'member', new Date().toISOString());",
+    "      deleteInvitation.run(onboardingEmail);",
+    "    } else {",
+    "      const workspaceId = randomUUID().slice(0, 8);",
+    "      insertWorkspace.run(workspaceId, onboardingWorkspaceName, onboardingUseCase, onboardingPlan, WORKSPACE.setting.options[0], new Date().toISOString());",
+    "      insertMembership.run(onboardingEmail, workspaceId, 'owner', new Date().toISOString());",
+    "    }",
+    "    insertAuthSession.run(onboardingSid, onboardingEmail, new Date().toISOString());",
+    "    response.writeHead(303, { location: '/workspace', 'set-cookie': 'sid=' + onboardingSid + '; HttpOnly; SameSite=Lax; Path=/; Max-Age=3600' });",
+    '    return response.end();',
+    '  }',
+    "  if (path === '/workspace' && request.method === 'GET') {",
+    "    const workspaceSession = sessionSid(request.headers.cookie);",
+    "    const workspaceViewer = authSessionEmail(request.headers.cookie);",
+    "    if (!workspaceSession || !workspaceViewer) {",
+    "      response.writeHead(303, { location: '/login' });",
+    "      return response.end();",
+    "    }",
+    "    const workspaceRow = workspaceOfMember(workspaceViewer);",
+    "    if (!workspaceRow) {",
+    "      response.writeHead(303, { location: '/onboarding' });",
+    "      return response.end();",
+    "    }",
+    "    const workspaceRole = workspaceRoleFor(workspaceViewer);",
+    "    return html(response, workspacePage(workspaceRow, selectMemberships.all(workspaceRow.id), workspaceRole, workspaceCsrf(workspaceSession)));",
+    '  }',
+    "  if (path === '/workspace/setting' && request.method === 'POST') {",
+    "    const settingSession = sessionSid(request.headers.cookie);",
+    "    const settingViewer = authSessionEmail(request.headers.cookie);",
+    "    const settingBody = await parseBody(request);",
+    "    if (!settingSession || !settingViewer) {",
+    "      response.writeHead(303, { location: '/login' });",
+    "      return response.end();",
+    "    }",
+    "    if (!workspaceSameToken(workspaceCsrf(settingSession), String(settingBody.csrf ?? ''))) {",
+    "      response.writeHead(403, { 'content-type': 'text/plain; charset=utf-8' });",
+    "      return response.end('That request did not come from your session.');",
+    "    }",
+    // The permission boundary, on the REQUEST: a member is refused here whether or not the form was drawn.
+    "    if (workspaceRoleFor(settingViewer) !== 'owner') {",
+    "      response.writeHead(403, { 'content-type': 'text/plain; charset=utf-8' });",
+    "      return response.end('Only the workspace owner can change this setting.');",
+    "    }",
+    "    const settingValue = String(settingBody.setting ?? '');",
+    "    if (!WORKSPACE.setting.options.includes(settingValue)) {",
+    "      response.writeHead(422, { 'content-type': 'text/plain; charset=utf-8' });",
+    "      return response.end('That is not a value this setting accepts.');",
+    "    }",
+    "    const settingWorkspace = workspaceOfMember(settingViewer);",
+    "    updateWorkspaceSetting.run(settingValue, settingWorkspace.id);",
+    "    response.writeHead(303, { location: '/workspace' });",
+    '    return response.end();',
+    '  }',
+    "  if (path === '/workspace/invite' && request.method === 'POST') {",
+    "    const inviteSession = sessionSid(request.headers.cookie);",
+    "    const inviteViewer = authSessionEmail(request.headers.cookie);",
+    "    const inviteBody = await parseBody(request);",
+    "    if (!inviteSession || !inviteViewer) {",
+    "      response.writeHead(303, { location: '/login' });",
+    "      return response.end();",
+    "    }",
+    "    if (!workspaceSameToken(workspaceCsrf(inviteSession), String(inviteBody.csrf ?? ''))) {",
+    "      response.writeHead(403, { 'content-type': 'text/plain; charset=utf-8' });",
+    "      return response.end('That request did not come from your session.');",
+    "    }",
+    "    if (workspaceRoleFor(inviteViewer) !== 'owner') {",
+    "      response.writeHead(403, { 'content-type': 'text/plain; charset=utf-8' });",
+    "      return response.end('Only the workspace owner can invite people.');",
+    "    }",
+    "    const inviteEmail = workspaceEmailField(inviteBody.invite_email);",
+    "    if (!workspaceEmailLooksReal(inviteEmail)) {",
+    "      response.writeHead(422, { 'content-type': 'text/plain; charset=utf-8' });",
+    "      return response.end('Invite an email address.');",
+    "    }",
+    "    const inviteWorkspace = workspaceOfMember(inviteViewer);",
+    "    insertInvitation.run(inviteEmail, inviteWorkspace.id, new Date().toISOString());",
+    "    response.writeHead(303, { location: '/workspace' });",
+    '    return response.end();',
+    '  }',
+  ].join('\n');
+
+/** The workspace routes, hono arm: the same five. */
+const honoWorkspaceRoutes = () =>
+  [
+    "app.get('/onboarding', (c) => {",
+    "  if (authSessionEmail(c.req.header('cookie'))) return c.redirect('/workspace', 303);",
+    '  return c.html(onboardingPage());',
+    '});',
+    "app.post('/onboarding', async (c) => {",
+    '  const onboarding = await c.req.parseBody();',
+    "  const onboardingEmail = workspaceEmailField(onboarding.email);",
+    "  const onboardingPassword = String(onboarding.password ?? '');",
+    "  const onboardingName = String(onboarding.display_name ?? '').trim() || onboardingEmail;",
+    "  const onboardingWorkspaceName = String(onboarding.workspace_name ?? '').trim() || WORKSPACE.name;",
+    "  const onboardingUseCase = String(onboarding.use_case ?? '');",
+    "  const onboardingPlan = String(onboarding.plan ?? '');",
+    "  const onboardingValues = { email: onboardingEmail, display_name: onboardingName, workspace_name: onboardingWorkspaceName, use_case: onboardingUseCase, plan: onboardingPlan };",
+    "  if (!workspaceEmailLooksReal(onboardingEmail)) return c.html(onboardingPage('Enter an email address.', onboardingValues), 422);",
+    "  if (onboardingPassword.length < 8) return c.html(onboardingPage('A password needs at least 8 characters.', onboardingValues), 422);",
+    "  if (!WORKSPACE.use_cases.includes(onboardingUseCase)) return c.html(onboardingPage('Choose what you will use it for.', onboardingValues), 422);",
+    "  if (!WORKSPACE.plans.includes(onboardingPlan)) return c.html(onboardingPage('Choose a plan.', onboardingValues), 422);",
+    "  if (selectAccountByEmail.get(onboardingEmail)) return c.html(onboardingPage('That address already has an account.', onboardingValues), 422);",
+    '  const onboardingSid = randomUUID();',
+    '  insertAccount.run(onboardingEmail, ACCOUNT_DISABLED, onboardingName);',
+    '  savePassword(onboardingEmail, onboardingPassword);',
+    '  const invitation = selectInvitation.get(onboardingEmail);',
+    '  if (invitation) {',
+    "    insertMembership.run(onboardingEmail, invitation.workspace_id, 'member', new Date().toISOString());",
+    '    deleteInvitation.run(onboardingEmail);',
+    '  } else {',
+    "    const workspaceId = randomUUID().slice(0, 8);",
+    "    insertWorkspace.run(workspaceId, onboardingWorkspaceName, onboardingUseCase, onboardingPlan, WORKSPACE.setting.options[0], new Date().toISOString());",
+    "    insertMembership.run(onboardingEmail, workspaceId, 'owner', new Date().toISOString());",
+    '  }',
+    "  insertAuthSession.run(onboardingSid, onboardingEmail, new Date().toISOString());",
+    "  c.header('set-cookie', 'sid=' + onboardingSid + '; HttpOnly; SameSite=Lax; Path=/; Max-Age=3600');",
+    "  return c.redirect('/workspace', 303);",
+    '});',
+    "app.get('/workspace', (c) => {",
+    "  const workspaceSession = sessionSid(c.req.header('cookie'));",
+    "  const workspaceViewer = authSessionEmail(c.req.header('cookie'));",
+    "  if (!workspaceSession || !workspaceViewer) return c.redirect('/login', 303);",
+    '  const workspaceRow = workspaceOfMember(workspaceViewer);',
+    "  if (!workspaceRow) return c.redirect('/onboarding', 303);",
+    "  return c.html(workspacePage(workspaceRow, selectMemberships.all(workspaceRow.id), workspaceRoleFor(workspaceViewer), workspaceCsrf(workspaceSession)));",
+    '});',
+    "app.post('/workspace/setting', async (c) => {",
+    "  const settingSession = sessionSid(c.req.header('cookie'));",
+    "  const settingViewer = authSessionEmail(c.req.header('cookie'));",
+    '  const settingBody = await c.req.parseBody();',
+    "  if (!settingSession || !settingViewer) return c.redirect('/login', 303);",
+    "  if (!workspaceSameToken(workspaceCsrf(settingSession), String(settingBody.csrf ?? ''))) return c.text('That request did not come from your session.', 403);",
+    "  if (workspaceRoleFor(settingViewer) !== 'owner') return c.text('Only the workspace owner can change this setting.', 403);",
+    "  const settingValue = String(settingBody.setting ?? '');",
+    "  if (!WORKSPACE.setting.options.includes(settingValue)) return c.text('That is not a value this setting accepts.', 422);",
+    '  const settingWorkspace = workspaceOfMember(settingViewer);',
+    '  updateWorkspaceSetting.run(settingValue, settingWorkspace.id);',
+    "  return c.redirect('/workspace', 303);",
+    '});',
+    "app.post('/workspace/invite', async (c) => {",
+    "  const inviteSession = sessionSid(c.req.header('cookie'));",
+    "  const inviteViewer = authSessionEmail(c.req.header('cookie'));",
+    '  const inviteBody = await c.req.parseBody();',
+    "  if (!inviteSession || !inviteViewer) return c.redirect('/login', 303);",
+    "  if (!workspaceSameToken(workspaceCsrf(inviteSession), String(inviteBody.csrf ?? ''))) return c.text('That request did not come from your session.', 403);",
+    "  if (workspaceRoleFor(inviteViewer) !== 'owner') return c.text('Only the workspace owner can invite people.', 403);",
+    "  const inviteEmail = workspaceEmailField(inviteBody.invite_email);",
+    "  if (!workspaceEmailLooksReal(inviteEmail)) return c.text('Invite an email address.', 422);",
+    '  const inviteWorkspace = workspaceOfMember(inviteViewer);',
+    '  insertInvitation.run(inviteEmail, inviteWorkspace.id, new Date().toISOString());',
+    "  return c.redirect('/workspace', 303);",
+    '});',
+  ].join('\n');
+
+/** The small page renderers the capability handlers share, emitted only when a capability needs them. */
+// The capability pages load the same single enhancement script the arm templates do, but ONLY when a
+// capability that needs it is on. Without the tag the script was served and never loaded, so a capability
+// whose behaviour is client-side - the game's loop is the one - got a page and no behaviour at all
+// (mwg-train-ypr). The tag is gated rather than unconditional because every project with a list route emits this
+// helper: ungated it was 53 bytes in each of the 203 recorded training trees that emit it, and it moved the corpus
+// hash and the token record by exactly 10759 characters, which the full gate caught on the merger's merged tree
+// 0d99d0f. Those three numbers were measured when the fix was reviewed; the estimate first written here - 51 bytes
+// across all 210 trees - was wrong in both factors, which is why the gate, not the comment, is the authority.
 const capabilityPages = (caps) =>
   [
     "const esc = (value) => String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;');",
@@ -1691,13 +1927,67 @@ const capabilityPages = (caps) =>
 const authTables = (archetype) =>
   [
     "db.exec('CREATE TABLE IF NOT EXISTS auth_sessions (sid TEXT PRIMARY KEY, email TEXT NOT NULL, created_at TEXT NOT NULL)');",
+    // Credentials live in their own table, and the legacy `accounts.password` column is written with a
+    // DISABLED marker rather than a secret. The plaintext comparison this replaces
+    // (`WHERE email = ? AND password = ?`) was the defect this bead exists to fix: it stored a password in
+    // the clear and checked it by string equality (mwg-train-ksn).
+    "db.exec('CREATE TABLE IF NOT EXISTS account_credentials (email TEXT PRIMARY KEY, kdf TEXT NOT NULL, salt TEXT NOT NULL, digest TEXT NOT NULL)');",
+    "const insertCredential = db.prepare('INSERT OR REPLACE INTO account_credentials (email, kdf, salt, digest) VALUES (?, ?, ?, ?)');",
+    "const selectCredential = db.prepare('SELECT email, kdf, salt, digest FROM account_credentials WHERE email = ?');",
+    // `!` in the legacy column means "no usable password here", the way a shadow file marks a locked
+    // account: the credential is in account_credentials, and this column holds no secret at all.
+    "const ACCOUNT_DISABLED = '!';",
+    "const ACCOUNT_KDF = 'scrypt';",
+    "const ACCOUNT_KEY_BYTES = 32;",
+    // A named KDF with a per-user random salt. The cost parameters are stated rather than defaulted, so a
+    // reader can see what is spent and raise it deliberately.
+    "const ACCOUNT_KDF_PARAMS = { N: 16384, r: 8, p: 1 };",
+    "const hashPassword = (password) => {",
+    "  const salt = randomBytes(16).toString('hex');",
+    "  const digest = scryptSync(String(password), salt, ACCOUNT_KEY_BYTES, ACCOUNT_KDF_PARAMS).toString('hex');",
+    "  return { kdf: ACCOUNT_KDF, salt, digest };",
+    "};",
+    // Constant-time, and it does the same work whether or not the address has an account: a login that
+    // answers faster for an address with no account tells an attacker which addresses have one.
+    "const DUMMY_CREDENTIAL = hashPassword('not-a-password');",
+    "const verifyPassword = (password, credential) => {",
+    "  const row = credential ?? DUMMY_CREDENTIAL;",
+    "  if (row.kdf !== ACCOUNT_KDF) return false;",
+    "  const expected = Buffer.from(row.digest, 'hex');",
+    // A digest that is not the length this code writes is not a credential, and this check is load-bearing:
+    // `Buffer.from('', 'hex')` and `Buffer.from('xyz', 'hex')` are both ZERO-length, `scryptSync(pw, salt, 0)`
+    // is zero-length, and `timingSafeEqual` between two empty buffers is TRUE - so a row whose digest was
+    // emptied, truncated or corrupted would have accepted ANY password. Deriving from the fixed constant
+    // rather than from the stored length also removes the 1-in-256 collision a one-byte digest would give
+    // (mwg-train-ksn security review, P1, proven with a runnable snippet).
+    "  if (expected.length !== ACCOUNT_KEY_BYTES) return false;",
+    "  const actual = scryptSync(String(password), row.salt, ACCOUNT_KEY_BYTES, ACCOUNT_KDF_PARAMS);",
+    "  const match = timingSafeEqual(expected, actual);",
+    "  return Boolean(credential) && match;",
+    "};",
+    "const savePassword = (email, password) => {",
+    "  const credential = hashPassword(password);",
+    "  insertCredential.run(email, credential.kdf, credential.salt, credential.digest);",
+    "};",
     "const insertAuthSession = db.prepare('INSERT INTO auth_sessions (sid, email, created_at) VALUES (?, ?, ?)');",
-    "const selectAuthSession = db.prepare('SELECT email FROM auth_sessions WHERE sid = ?');",
+    "const selectAuthSession = db.prepare('SELECT email, created_at FROM auth_sessions WHERE sid = ?');",
+    // The session's lifetime, in one place. It is the same hour the `Max-Age=3600` cookie asks the browser
+    // for, and the server enforces it too: the browser's Max-Age is the browser's promise, and a sid
+    // replayed by a script, an agent or a stolen cookie after it expired must not still be a session
+    // (mwg-train-ksn security review, P2).
+    "const AUTH_SESSION_SECONDS = 3600;",
     "const deleteAuthSession = db.prepare('DELETE FROM auth_sessions WHERE sid = ?');",
-    "const selectAccount = db.prepare('SELECT email, display_name FROM accounts WHERE email = ? AND password = ?');",
+    // Looked up by email ONLY: the password is no longer part of the query.
+    "const selectAccountByEmail = db.prepare('SELECT email, display_name FROM accounts WHERE email = ?');",
+    // The seeded password is HASHED at boot: it is never stored, never logged, and never rendered. The
+    // literal exists only in the specification this project is built from, which is the fixture, not the
+    // database (mwg-train-ksn). Both statements come from ONE map callback, so `account` is in scope for
+    // both - the first version of this edit put the second template in the map's argument list, where
+    // `account` does not exist, and the generator crashed on the first seeded spec.
     ...(archetype.seedAccounts ?? []).map(
       (account) =>
-        `db.prepare('INSERT OR IGNORE INTO accounts (email, password, display_name) VALUES (?, ?, ?)').run(${JSON.stringify(account.email)}, ${JSON.stringify(account.password)}, ${JSON.stringify(account.display_name ?? null)});`,
+        `db.prepare('INSERT OR IGNORE INTO accounts (email, password, display_name) VALUES (?, ?, ?)').run(${JSON.stringify(account.email)}, ACCOUNT_DISABLED, ${JSON.stringify(account.display_name ?? null)});\n` +
+        `savePassword(${JSON.stringify(account.email)}, ${JSON.stringify(account.password)});`,
     ),
     'const sessionSid = (cookieHeader) =>',
     "  (cookieHeader ?? '')",
@@ -1705,22 +1995,38 @@ const authTables = (archetype) =>
     '    .map((part) => part.trim())',
     "    .find((part) => part.startsWith('sid='))",
     "    ?.slice('sid='.length);",
+    'const authSessionFresh = (row) => Date.now() - Date.parse(row.created_at) < AUTH_SESSION_SECONDS * 1000;',
     'const authSessionEmail = (cookieHeader) => {',
     '  const sid = sessionSid(cookieHeader);',
-    '  return sid ? selectAuthSession.get(sid)?.email : undefined;',
+    '  const row = sid ? selectAuthSession.get(sid) : undefined;',
+    // An unparseable or missing `created_at` is treated as expired rather than as fresh: a row this code
+    // cannot date is a row it cannot vouch for.
+    '  return row && authSessionFresh(row) ? row.email : undefined;',
     '};',
   ].join('\n');
 
-/** The login/logout handlers, raw arm. */
+/**
+ * The login/logout handlers, raw arm.
+ *
+ * `/logout` deliberately does NOT require the CSRF token its form carries. Signing a visitor out is not a
+ * privilege it can abuse - the worst outcome is a forced sign-out - and an `auth`-only project has no token
+ * to send, so requiring one would break sign-out for every specification that does not also turn on the
+ * workspace capability. `SameSite=Lax` is the control on the cross-site POST case, and the token is still
+ * rendered so a project that wants to enforce it can (mwg-train-ksn security review, P3, answered rather
+ * than ignored).
+ */
 const rawAuthRoutes = () =>
   [
     "  if (path === '/login' && request.method === 'GET') return html(response, loginPage());",
     "  if (path === '/login' && request.method === 'POST') {",
     '    const body = await parseBody(request);',
-    "    const account = selectAccount.get(String(body.email ?? ''), String(body.password ?? ''));",
-    "    if (!account) return html(response, loginPage('Those credentials did not match an account.'), 401);",
+    "    const loginEmail = String(body.email ?? '').trim().toLowerCase();",
+    "    const loginAccount = selectAccountByEmail.get(loginEmail);",
+    "    const loginOk = verifyPassword(String(body.password ?? ''), selectCredential.get(loginEmail));",
+    // One message for every failure, so the response cannot be used to ask whether an address exists.
+    "    if (!loginAccount || !loginOk) return html(response, loginPage('Those credentials did not match an account.'), 401);",
     '    const sid = randomUUID();',
-    '    insertAuthSession.run(sid, account.email, new Date().toISOString());',
+    '    insertAuthSession.run(sid, loginAccount.email, new Date().toISOString());',
     "    response.writeHead(303, { location: '/', 'set-cookie': 'sid=' + sid + '; HttpOnly; SameSite=Lax; Path=/; Max-Age=3600' });",
     '    return response.end();',
     '  }',
@@ -1738,10 +2044,12 @@ const honoAuthRoutes = () =>
     "app.get('/login', (c) => c.html(loginPage()));",
     "app.post('/login', async (c) => {",
     '  const body = await c.req.parseBody();',
-    "  const account = selectAccount.get(String(body.email ?? ''), String(body.password ?? ''));",
-    "  if (!account) return c.html(loginPage('Those credentials did not match an account.'), 401);",
+    "  const loginEmail = String(body.email ?? '').trim().toLowerCase();",
+    "  const loginAccount = selectAccountByEmail.get(loginEmail);",
+    "  const loginOk = verifyPassword(String(body.password ?? ''), selectCredential.get(loginEmail));",
+    "  if (!loginAccount || !loginOk) return c.html(loginPage('Those credentials did not match an account.'), 401);",
     '  const sid = randomUUID();',
-    '  insertAuthSession.run(sid, account.email, new Date().toISOString());',
+    '  insertAuthSession.run(sid, loginAccount.email, new Date().toISOString());',
     "  c.header('set-cookie', 'sid=' + sid + '; HttpOnly; SameSite=Lax; Path=/; Max-Age=3600');",
     "  return c.redirect('/', 303);",
     '});',
@@ -1821,7 +2129,7 @@ function serverSource(archetype, framework, defects = [], set = null) {
  */
 import { createServer } from 'node:http';
 import { readFileSync${set ? ', existsSync' : ''} } from 'node:fs';
-import { randomUUID${set ? ', createHash' : ''} } from 'node:crypto';
+import { randomUUID${set ? ', createHash' : ''}${caps.workspace ? ', createHash' : ''}${caps.auth ? ', randomBytes, scryptSync, timingSafeEqual' : ''} } from 'node:crypto';
 import { DatabaseSync } from 'node:sqlite';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -1847,7 +2155,7 @@ db.exec(\`CREATE TABLE IF NOT EXISTS accounts (email TEXT PRIMARY KEY, password 
 const insert = db.prepare('INSERT INTO records (ref, created_at, payload) VALUES (?, ?, ?)');
 const select = db.prepare('SELECT ref, created_at, payload FROM records WHERE ref = ?');
 ${sessionTables(archetype)}${archetype.journey?.update ? `\nconst updateRecord = db.prepare('UPDATE records SET payload = ? WHERE ref = ?');` : ''}${draftTables(archetype) ? `\n${draftTables(archetype)}` : ''}
-${caps.auth ? `${authTables(archetype)}\n` : ''}${caps.cart ? `${cartTables(caps.checkout)}\n` : ''}${caps.checkout ? `${checkoutTables()}\n` : ''}${caps.survey ? `${surveyTables()}\n` : ''}${caps.game ? `${gameTables()}\n` : ''}const count = db.prepare('SELECT COUNT(*) AS n FROM records');
+${caps.auth ? `${authTables(archetype)}\n` : ''}${caps.cart ? `${cartTables(caps.checkout)}\n` : ''}${caps.checkout ? `${checkoutTables()}\n` : ''}${caps.survey ? `${surveyTables()}\n` : ''}${caps.game ? `${gameTables()}\n` : ''}${caps.workspace ? `${workspaceTables()}\n` : ''}const count = db.prepare('SELECT COUNT(*) AS n FROM records');
 const list = db.prepare('SELECT ref, payload FROM records ORDER BY created_at DESC LIMIT 50');
 
 ${parameterisedWrite ? `// An edit flow edits something: the seeded record is what the form's action points at.
@@ -1873,7 +2181,7 @@ const json = (response, value, status = 200, headers = {}) => {
   response.end(JSON.stringify(value));
 };
 
-${caps.list_pages || caps.detail_page || caps.auth || caps.cart || caps.pricing_tiers || caps.checkout || caps.survey || caps.game ? `${capabilityPages(caps)}${caps.cart ? `\n${cartPages(archetype)}` : ''}${caps.pricing_tiers ? `\n${pricingPages(archetype)}` : ''}${caps.checkout ? `\n${checkoutPages(archetype)}` : ''}${caps.survey ? `\n${surveyPages(archetype)}` : ''}${caps.game ? `\n${gamePages(archetype)}` : ''}\n` : ''}const REQUIRED = ${JSON.stringify(archetype.fields.filter((field) => field.type !== 'select' && !field.optional).map((field) => field.name))};
+${caps.list_pages || caps.detail_page || caps.auth || caps.cart || caps.pricing_tiers || caps.checkout || caps.survey || caps.game || caps.workspace ? `${capabilityPages(caps)}${caps.cart ? `\n${cartPages(archetype)}` : ''}${caps.pricing_tiers ? `\n${pricingPages(archetype)}` : ''}${caps.checkout ? `\n${checkoutPages(archetype)}` : ''}${caps.survey ? `\n${surveyPages(archetype)}` : ''}${caps.game ? `\n${gamePages(archetype)}` : ''}${caps.workspace ? `\n${workspacePages(archetype)}` : ''}\n` : ''}const REQUIRED = ${JSON.stringify(archetype.fields.filter((field) => field.type !== 'select' && !field.optional).map((field) => field.name))};
 
 ${enforceMin ? `const MIN_BOUNDS = ${JSON.stringify(minBounds)};\n` : ''}// The cart form has its own fields. Validating it against the search form's required list refused every
 // cart POST with 422, which the write journey caught: a second form on one page needs a second rule.
@@ -2061,7 +2369,7 @@ ${caps.auth ? `    if (!authSessionEmail(request.headers.cookie)) return json(re
     return json(response, { ref: row.ref, ...JSON.parse(row.payload) });
   }
 
-${caps.cart ? `${rawCartRoutes(archetype, cartCookieFlags, checkoutOf(archetype))}\n\n` : ''}${caps.checkout ? `${rawCheckoutRoutes()}\n\n` : ''}${caps.survey ? `${rawSurveyRoutes()}\n\n` : ''}${caps.game ? `${rawGameRoutes()}\n\n` : ''}${caps.pricing_tiers ? `${rawPricingRoutes()}\n\n` : ''}  // A route the archetype declares is a route the server must serve: /account was declared as the
+${caps.cart ? `${rawCartRoutes(archetype, cartCookieFlags, checkoutOf(archetype))}\n\n` : ''}${caps.checkout ? `${rawCheckoutRoutes()}\n\n` : ''}${caps.survey ? `${rawSurveyRoutes()}\n\n` : ''}${caps.game ? `${rawGameRoutes()}\n\n` : ''}${caps.workspace ? `${rawWorkspaceRoutes()}\n\n` : ''}${caps.pricing_tiers ? `${rawPricingRoutes()}\n\n` : ''}  // A route the archetype declares is a route the server must serve: /account was declared as the
   // account flow's page and never implemented, so the journey landed on a 404.
   if (${JSON.stringify(archetype.routes.filter((route) => route.kind === 'read-session').map((route) => route.path))}.includes(path) && request.method === 'GET') {
 ${caps.auth ? `${RAW_AUTH_GUARD}\n` : ''}    return html(response, await renderDocument({ title: 'Your account' }));
@@ -2159,7 +2467,7 @@ function honoServerSource(archetype, framework, defects = [], set = null) {
  */
 import { createServer } from 'node:http';
 import { readFileSync${set ? ', existsSync' : ''} } from 'node:fs';
-import { randomUUID${set ? ', createHash' : ''} } from 'node:crypto';
+import { randomUUID${set ? ', createHash' : ''}${caps.workspace ? ', createHash' : ''}${caps.auth ? ', randomBytes, scryptSync, timingSafeEqual' : ''} } from 'node:crypto';
 import { DatabaseSync } from 'node:sqlite';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -2200,7 +2508,7 @@ const requiredFor = (path) => (EXTRA_ACTION !== '' && path === EXTRA_ACTION ? EX
 ${sessionTables(archetype)}
 ${caps.auth ? `db.exec('CREATE TABLE IF NOT EXISTS accounts (email TEXT PRIMARY KEY, password TEXT NOT NULL, display_name TEXT)');
 ${authTables(archetype)}
-` : ''}${caps.cart ? `${cartTables(caps.checkout)}\n` : ''}${caps.checkout ? `${checkoutTables()}\n` : ''}${caps.survey ? `${surveyTables()}\n` : ''}${caps.game ? `${gameTables()}\n` : ''}${caps.list_pages || caps.detail_page || caps.auth || caps.cart || caps.pricing_tiers || caps.checkout || caps.survey || caps.game ? `${capabilityPages(caps)}${caps.cart ? `\n${cartPages(archetype)}` : ''}${caps.pricing_tiers ? `\n${pricingPages(archetype)}` : ''}${caps.checkout ? `\n${checkoutPages(archetype)}` : ''}${caps.survey ? `\n${surveyPages(archetype)}` : ''}${caps.game ? `\n${gamePages(archetype)}` : ''}
+` : ''}${caps.cart ? `${cartTables(caps.checkout)}\n` : ''}${caps.checkout ? `${checkoutTables()}\n` : ''}${caps.survey ? `${surveyTables()}\n` : ''}${caps.game ? `${gameTables()}\n` : ''}${caps.workspace ? `${workspaceTables()}\n` : ''}${caps.list_pages || caps.detail_page || caps.auth || caps.cart || caps.pricing_tiers || caps.checkout || caps.survey || caps.game || caps.workspace ? `${capabilityPages(caps)}${caps.cart ? `\n${cartPages(archetype)}` : ''}${caps.pricing_tiers ? `\n${pricingPages(archetype)}` : ''}${caps.checkout ? `\n${checkoutPages(archetype)}` : ''}${caps.survey ? `\n${surveyPages(archetype)}` : ''}${caps.game ? `\n${gamePages(archetype)}` : ''}${caps.workspace ? `\n${workspacePages(archetype)}` : ''}
 ` : ''}const requestLog = [];
 const app = new Hono();
 app.use('*', async (c, next) => {
@@ -2352,7 +2660,7 @@ ${caps.auth ? "  if (!authSessionEmail(c.req.header('cookie'))) return c.json({ 
   return c.json({ ref: row.ref, ...JSON.parse(row.payload) });
 });
 
-${caps.cart ? `${honoCartRoutes(archetype, cartCookieFlags, checkoutOf(archetype))}\n\n` : ''}${caps.checkout ? `${honoCheckoutRoutes()}\n\n` : ''}${caps.survey ? `${honoSurveyRoutes()}\n\n` : ''}${caps.game ? `${honoGameRoutes()}\n\n` : ''}${caps.pricing_tiers ? `${honoPricingRoutes()}\n\n` : ''}for (const sessionPage of ${JSON.stringify(archetype.routes.filter((route) => route.kind === 'read-session').map((route) => route.path))}) {
+${caps.cart ? `${honoCartRoutes(archetype, cartCookieFlags, checkoutOf(archetype))}\n\n` : ''}${caps.checkout ? `${honoCheckoutRoutes()}\n\n` : ''}${caps.survey ? `${honoSurveyRoutes()}\n\n` : ''}${caps.game ? `${honoGameRoutes()}\n\n` : ''}${caps.workspace ? `${honoWorkspaceRoutes()}\n\n` : ''}${caps.pricing_tiers ? `${honoPricingRoutes()}\n\n` : ''}for (const sessionPage of ${JSON.stringify(archetype.routes.filter((route) => route.kind === 'read-session').map((route) => route.path))}) {
 ${caps.auth ? `  app.get(sessionPage, (c) => {
     if (!authSessionEmail(c.req.header('cookie'))) return c.redirect('/login', 303);
     return c.html(renderDocument({ title: 'Your account' }));

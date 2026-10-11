@@ -271,8 +271,15 @@ export async function launchChrome({ proxy = null, args = [] } = {}) {
 
   return {
     version: built.version,
-    async newPage({ viewport = { width: 1280, height: 900 }, mobile = false } = {}) {
-      const { targetId } = await connection.send('Target.createTarget', { url: 'about:blank' });
+    /**
+     * `isolate: true` puts the page in its own browser context, which is a separate cookie jar. Without it a
+     * second page shares the first one's cookies, so a check that means to drive a DIFFERENT person is
+     * silently driving the same session - the workspace membership check reported the owner's cookie as a
+     * member until this was added (mwg-train-ksn). The context lives until the browser closes.
+     */
+    async newPage({ viewport = { width: 1280, height: 900 }, mobile = false, isolate = false } = {}) {
+      const browserContextId = isolate ? (await connection.send('Target.createBrowserContext')).browserContextId : undefined;
+      const { targetId } = await connection.send('Target.createTarget', { url: 'about:blank', ...(browserContextId ? { browserContextId } : {}) });
       const { sessionId } = await connection.send('Target.attachToTarget', { targetId, flatten: true });
       const session = { connection, sessionId, targetId };
       await connection.send('Page.enable', {}, sessionId);
@@ -424,7 +431,7 @@ export class Page {
     // listens for them (the game capability's loop does) was driven with `windowsVirtualKeyCode:
     // undefined` - Chrome delivered the key name but a keyCode of 0, which any listener reading keyCode or
     // which would have seen as nothing (mwg-train-ypr review, P3).
-    const codes = { Backspace: 8, Tab: 9, Enter: 13, Space: 32, Escape: 27, ArrowLeft: 37, ArrowUp: 38, ArrowRight: 39, ArrowDown: 40 };
+    const codes = { Backspace: 8, Tab: 9, Enter: 13, Space: 32, Escape: 27, End: 35, Home: 36, ArrowLeft: 37, ArrowUp: 38, ArrowRight: 39, ArrowDown: 40 };
     const params = { key, code: key, windowsVirtualKeyCode: codes[key], nativeVirtualKeyCode: codes[key] };
     await this.send('Input.dispatchKeyEvent', { type: 'keyDown', ...params });
     await this.send('Input.dispatchKeyEvent', { type: 'keyUp', ...params });
