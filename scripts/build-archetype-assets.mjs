@@ -1,0 +1,646 @@
+#!/usr/bin/env node
+/**
+ * Pull each archetype's shared asset set OUT OF its accepted design target.
+ *
+ * The direction of this dependency is deliberate and is the whole point of the file: the crafted target
+ * design is the source of truth and the asset store is an EXTRACTION from it, never something authored
+ * here ahead of the design. If a target changes, re-run this and the store changes with it. Nothing in
+ * `assets/archetypes/` is hand-written, and `check-archetype-assets.mjs` recomputes every value from the
+ * target and fails if the committed store disagrees.
+ *
+ * Why a store exists at all: five framework builds render the same archetype (booking-react,
+ * booking-vue, booking-hono, ...). If each build carries its own brand strings, palette and imagery then
+ * a model cannot render the intended UI from them, and the difference between two builds is no longer
+ * attributable to the model. The set is the input that makes "build this archetype" mean one thing.
+ *
+ *   node scripts/build-archetype-assets.mjs                 # dry run: report what it would write
+ *   node scripts/build-archetype-assets.mjs --write         # write the sets and the register
+ *   node scripts/build-archetype-assets.mjs --write --only booking,catalogue
+ *   node scripts/build-archetype-assets.mjs --register      # rewrite the register only, from committed sets
+ *
+ * It writes only under `assets/` and `docs/`; nothing here can reach the corpus arms under `data/`.
+ */
+import { createHash } from 'node:crypto';
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { dirname, join, relative, resolve, sep } from 'node:path';
+import process from 'node:process';
+
+import { ARCHETYPES } from '../pilot/archetypes.mjs';
+
+export const TARGET_DIR = 'docs/design/archetypes';
+export const STORE_DIR = 'assets/archetypes';
+export const REGISTER_PATH = 'docs/provenance/assets/archetype-asset-sets.md';
+
+/**
+ * Elements whose text is the archetype's own user-facing copy.
+ *
+ * Deliberately excludes `a` and `span`: a navigation link and a brand glyph are chrome around the copy,
+ * and including them buries the strings that matter in fragments like "->". Row detail still arrives
+ * through `td`/`th`/`li`, and every form label through `label`/`option`/`legend`.
+ */
+const COPY_ELEMENTS = new Set([
+  'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'li', 'td', 'th', 'dt', 'dd', 'label', 'button', 'option',
+  'legend', 'summary', 'figcaption', 'blockquote', 'caption', 'output',
+]);
+
+/**
+ * The demo pages carry their own controls - a state switcher, a board comparison toolbar. That is the
+ * demo's apparatus, not the archetype's interface, so it is stripped before the copy is read.
+ */
+const DEMO_CHROME_CLASS = /state-switcher|compar|toolbar/i;
+
+const REQUIRED_RIGHTS = { excluded_from_training: true, approved_for_training: false };
+
+export function sha256(bytes) {
+  return createHash('sha256').update(bytes).digest('hex');
+}
+
+function lineOf(text, index) {
+  let line = 1;
+  for (let i = 0; i < index && i < text.length; i += 1) if (text[i] === '\n') line += 1;
+  return line;
+}
+
+/** Remove `<tag ...>...</tag>` blocks, e.g. scripts and stylesheets, so their text is never read as copy. */
+export function stripBlocks(html, tag) {
+  const open = new RegExp(`<${tag}\\b[^>]*>`, 'gi');
+  const close = new RegExp(`</${tag}\\s*>`, 'gi');
+  let out = html;
+  for (;;) {
+    open.lastIndex = 0;
+    const start = open.exec(out);
+    if (!start) return out;
+    close.lastIndex = start.index;
+    const end = close.exec(out);
+    out = end ? out.slice(0, start.index) + out.slice(end.index + end[0].length) : out.slice(0, start.index);
+  }
+}
+
+/**
+ * Remove an element whose opening tag carries a chrome class, with everything inside it.
+ *
+ * Depth-aware rather than a regex, because a greedy match would swallow the rest of the document and a
+ * lazy one would stop at the first nested close tag. The demo toolbars hold no nested element of their
+ * own tag name, but a future one might, and silently eating half a page would look like "the target has
+ * no copy" rather than a parser bug.
+ */
+export function stripChrome(html) {
+  let out = html;
+  for (;;) {
+    const open = /<([a-z]+)\b[^>]*class="[^"]*"[^>]*>/gi;
+    let match;
+    let removed = false;
+    while ((match = open.exec(out)) !== null) {
+      const [tagText, tagName] = match;
+      if (!/class="([^"]*)"/.test(tagText) || !DEMO_CHROME_CLASS.test(/class="([^"]*)"/.exec(tagText)[1])) continue;
+      // Walk forward counting same-name opens and closes to find this element's end.
+      const scanner = new RegExp(`<${tagName}\\b[^>]*>|</${tagName}\\s*>`, 'gi');
+      scanner.lastIndex = match.index + tagText.length;
+      let depth = 1;
+      let step;
+      let end = -1;
+      while ((step = scanner.exec(out)) !== null) {
+        if (step[0].startsWith('</')) depth -= 1;
+        else depth += 1;
+        if (depth === 0) {
+          end = step.index + step[0].length;
+          break;
+        }
+      }
+      out = end === -1 ? out.slice(0, match.index) : out.slice(0, match.index) + out.slice(end);
+      removed = true;
+      break;
+    }
+    if (!removed) return out;
+  }
+}
+
+/** Text runs paired with the content element they belong to, in document order. */
+export function copyTexts(html) {
+  const body = stripBlocks(stripBlocks(stripChrome(html), 'script'), 'style').replace(/<!--[\s\S]*?-->/g, '');
+  const tokens = body.split(/(<[^>]+>)/).filter((part) => part !== '');
+  const stack = [];
+  const texts = [];
+  for (const token of tokens) {
+    if (token.startsWith('<')) {
+      const closing = /^<\s*\//.test(token);
+      const name = /^<\s*\/?\s*([a-zA-Z][a-zA-Z0-9-]*)/.exec(token);
+      if (!name) continue;
+      const tag = name[1].toLowerCase();
+      if (closing) {
+        const at = stack.lastIndexOf(tag);
+        if (at !== -1) stack.splice(at, 1);
+      } else if (!/\/>$/.test(token) && !['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'source', 'track', 'wbr'].includes(tag)) {
+        stack.push(tag);
+      }
+      continue;
+    }
+    const text = token.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, ' ');
+    const collapsed = text.replace(/\s+/g, ' ').trim();
+    if (collapsed === '') continue;
+    // The nearest content element in the open stack, so a <p><strong>x</strong></p> is read as one run.
+    let owner = null;
+    for (let i = stack.length - 1; i >= 0; i -= 1) {
+      if (COPY_ELEMENTS.has(stack[i])) {
+        owner = stack[i];
+        break;
+      }
+    }
+    if (!owner) continue;
+    const previous = texts[texts.length - 1];
+    if (previous && previous.tag === owner && previous.text === collapsed) continue;
+    texts.push({ tag: owner, text: collapsed });
+  }
+  return texts;
+}
+
+/** The accepted target's palette and typography: its custom properties, plus any font family it sets outright. */
+export function extractTokens(css, source) {
+  const colors = {};
+  const fonts = {};
+  // Comments are stripped once, up front. Without this the `:root` pass read a declaration preceded by a
+  // comment as the name `"/* Typography */\n  --font-sans"`, which does not start with `--`, so booking's
+  // main font stack was silently dropped while its mono stack survived.
+  const clean = css.replace(/\/\*[\s\S]*?\*\//g, '');
+  const blocks = clean.match(/:root\s*\{[^}]*\}/g) ?? [];
+  for (const block of blocks) {
+    for (const declaration of block.replace(/:root\s*\{/, '').replace(/\}\s*$/, '').split(';')) {
+      const at = declaration.indexOf(':');
+      if (at === -1) continue;
+      const name = declaration.slice(0, at).trim();
+      const value = declaration.slice(at + 1).trim();
+      if (!name.startsWith('--') || value === '') continue;
+      if (/(light-dark\(|#[0-9a-f]{3,8}\b|rgba?\(|oklch\(|color\()/i.test(value)) colors[name] = value;
+      else if (/(system-ui|sans-serif|serif|monospace|ui-)/i.test(value)) fonts[name] = value;
+    }
+  }
+  // Two of the five targets set the font stack on a selector rather than as a custom property, so
+  // reading only `:root` reported "no typography" for a target that plainly has one. Keyed by selector
+  // so the register can still say where the value came from.
+  for (const rule of clean.matchAll(/([^{}]+)\{([^}]*)\}/g)) {
+    const selector = rule[1].trim().replace(/\s+/g, ' ');
+    if (selector.startsWith('--') || selector.includes('@')) continue;
+    const declared = /(?:^|;)\s*font-family\s*:\s*([^;]+)/i.exec(rule[2]);
+    if (!declared) continue;
+    const value = declared[1].trim();
+    // `inherit` is not a typography token, and an alias to another token is already recorded under it.
+    if (value === '' || value in fonts) continue;
+    if (/^(inherit|initial|unset|revert|revert-layer)$/i.test(value)) continue;
+    fonts[selector] = value;
+  }
+  return { colors, fonts, source };
+}
+
+/**
+ * The brand, with every candidate and its source.
+ *
+ * The accepted target states the brand in more than one place and the places do not always agree. It is
+ * not this script's job to pick: a silent pick is how two framework builds come to render two brands.
+ * Candidates are recorded, disagreements are recorded as conflicts, and a conflict that has not been
+ * adjudicated in `assets/archetypes/<id>/decisions.json` fails the check rather than being resolved here.
+ */
+export function extractBrand({ archetype, readme, readmePath, indexHtml, indexPath }) {
+  const candidates = [];
+  const unescapeEntities = (value) => value
+    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, ' ');
+  const textOf = (html) => html
+    .replace(/<svg\b[\s\S]*?<\/svg>/gi, ' ')
+    .replace(/<[^>]*>/g, '\n')
+    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+    .split('\n')
+    .map((part) => part.replace(/\s+/g, ' ').trim())
+    .filter((part) => part !== '' && !/^[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]+$/u.test(part));
+  const add = (value, source, kind, strength) => {
+    if (value && !candidates.some((candidate) => candidate.value === value && candidate.kind === kind)) {
+      candidates.push({ value, source, kind, strength });
+    }
+  };
+
+  // An explicit brand element names the site. Text is read straight out of the anchor, not through
+  // copyTexts: the name sits in a bare <span>, which is not a content element, so the copy reader finds
+  // nothing there and two archetypes silently had no brand at all.
+  const brandAnchor = /<a\b[^>]*class="[^"]*brand[^"]*"[^>]*>([\s\S]*?)<\/a>/i.exec(indexHtml);
+  if (brandAnchor) {
+    const parts = textOf(brandAnchor[1]);
+    add(parts[parts.length - 1], `${indexPath}:${lineOf(indexHtml, brandAnchor.index)}`, 'demo-brand-element', 'strong');
+  }
+  // The target's own heading states the brand in the booking target and states nothing in the others.
+  const heading = /^#\s+[^\n(]*\(([^)]+)\)\s*$/m.exec(readme);
+  if (heading) add(heading[1].trim(), `${readmePath}:${lineOf(readme, heading.index)}`, 'target-heading', 'strong');
+  // A document title and an h1 are the page's own words, so either can be a page description rather
+  // than a brand - `Account recovery · visual demo` is not a site name. Weak candidates need an
+  // adjudication before they can become the set's brand.
+  const title = /<title>([^<]*)<\/title>/i.exec(indexHtml);
+  if (title) add(unescapeEntities(title[1]).split(/\s+[—–·|]\s+/)[0].trim(), `${indexPath}:${lineOf(indexHtml, title.index)}`, 'demo-title', 'weak');
+  const h1 = /<h1\b[^>]*>([\s\S]*?)<\/h1>/i.exec(indexHtml);
+  if (h1) {
+    const parts = textOf(h1[1]);
+    add(parts.join(' ').trim(), `${indexPath}:${lineOf(indexHtml, h1.index)}`, 'demo-heading', 'weak');
+  }
+
+  const distinct = [...new Set(candidates.map((candidate) => candidate.value))];
+  const strong = [...new Set(candidates.filter((candidate) => candidate.strength === 'strong').map((candidate) => candidate.value))];
+  const conflicts = strong.length > 1 ? [{ values: strong, candidates: candidates.filter((candidate) => candidate.strength === 'strong') }] : [];
+  const mark = (() => {
+    const icon = /<span\b[^>]*class="[^"]*(?:brand-icon|brand-mark|brand-badge)[^"]*"[^>]*>([\s\S]*?)<\/span>/i.exec(indexHtml);
+    if (!icon) return null;
+    const value = textOf(icon[1]).join(' ').trim();
+    // An SVG-only mark still is the archetype's mark, and its path data is the asset; record that
+    // rather than reporting no mark at all.
+    if (!value) {
+      const svg = /<svg\b[\s\S]*?<\/svg>/i.exec(icon[1]);
+      return svg ? { kind: 'svg', value: svg[0].replace(/\s+/g, ' ').trim(), source: `${indexPath}:${lineOf(indexHtml, icon.index)}` } : null;
+    }
+    return { kind: 'text', value, source: `${indexPath}:${lineOf(indexHtml, icon.index)}` };
+  })();
+
+  return { candidates, conflicts, distinct, strong, mark, archetype };
+}
+
+/** The rights boundary, inherited from the target rather than restated here. Fails closed if absent. */
+export function extractRights(readme, readmePath) {
+  const at = readme.search(/excluded_from_training/);
+  if (at === -1) return null;
+  const snippet = readme.slice(Math.max(0, at - 120), at + 200);
+  const excluded = /excluded_from_training[`*\s:]+(true|false)/i.exec(snippet);
+  const approved = /approved_for_training[`*\s:]+(true|false)/i.exec(snippet);
+  return {
+    excluded_from_training: excluded ? excluded[1] === 'true' : null,
+    approved_for_training: approved ? approved[1] === 'true' : null,
+    source: `${readmePath}:${lineOf(readme, at)}`,
+  };
+}
+
+export function archetypeIds(root) {
+  return Object.keys(ARCHETYPES).sort();
+}
+
+function listTargetDocuments(root, id) {
+  const dir = join(root, TARGET_DIR, id, 'demo');
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir)
+    .filter((name) => name.endsWith('.html'))
+    .sort()
+    .map((name) => join(TARGET_DIR, id, 'demo', name));
+}
+
+/**
+ * Read one archetype's accepted target and derive its whole asset set. Pure: it touches no store file,
+ * so the check can call it and compare the result against what is committed.
+ */
+export function extractSet(root, id) {
+  const targetPath = join(TARGET_DIR, id);
+  const readmePath = join(targetPath, 'README.md');
+  const stylesPath = join(targetPath, 'demo', 'styles.css');
+  if (!existsSync(join(root, readmePath))) throw new Error(`${id}: no accepted target at ${readmePath}`);
+
+  const readme = readFileSync(join(root, readmePath), 'utf8');
+  const documents = listTargetDocuments(root, id);
+  const indexRel = documents.find((doc) => doc.endsWith('index.html')) ?? documents[0];
+  if (!indexRel) throw new Error(`${id}: the accepted target has no demo document to read`);
+  const indexHtml = readFileSync(join(root, indexRel), 'utf8');
+
+  const copy = {};
+  for (const rel of documents) {
+    const html = readFileSync(join(root, rel), 'utf8');
+    const title = /<title>([^<]*)<\/title>/i.exec(html);
+    const lang = /<html\b[^>]*\blang="([^"]*)"/i.exec(html);
+    copy[rel.split('/').pop()] = {
+      title: title ? title[1].trim() : null,
+      lang: lang ? lang[1] : null,
+      strings: copyTexts(html).map((entry) => entry.text),
+      // The comparison page is the demo's own apparatus - it shows the boards side by side. It carries
+      // no archetype copy by design, so requiring copy from it would fail correct work.
+      apparatus: /class="[^"]*(?:compare|comparison)[-\s"]/i.test(html),
+      source: rel,
+      sha256: sha256(Buffer.from(html)),
+    };
+  }
+
+  const tokens = existsSync(join(root, stylesPath))
+    ? extractTokens(readFileSync(join(root, stylesPath), 'utf8'), stylesPath)
+    : { colors: {}, fonts: {}, source: null };
+
+  const brand = extractBrand({ archetype: id, readme, readmePath, indexHtml, indexPath: indexRel });
+  const rights = extractRights(readme, readmePath);
+
+  const targetDir = join(root, targetPath);
+  const images = readdirSync(targetDir)
+    .filter((name) => /^step\d+.*\.(jpe?g|png|webp|avif)$/i.test(name))
+    .sort()
+    .map((name) => {
+      const bytes = readFileSync(join(targetDir, name));
+      return { name, sha256: sha256(bytes), bytes: bytes.length, source: `${targetPath}/${name}`, content: bytes };
+    });
+
+  return {
+    archetype: id,
+    extracted_from: {
+      target_dir: targetPath,
+      readme: { path: readmePath, sha256: sha256(Buffer.from(readme)) },
+      documents: documents.map((rel) => ({ path: rel, sha256: sha256(readFileSync(join(root, rel))) })),
+      stylesheet: tokens.source ? { path: tokens.source, sha256: sha256(readFileSync(join(root, tokens.source))) } : null,
+    },
+    brand,
+    tokens,
+    copy,
+    rights,
+    images,
+  };
+}
+
+/** Everything that must hold for a set to be usable as the single source for builds. */
+export function setProblems(set) {
+  const problems = [];
+  const decision = set.decision;
+  if (!decision) {
+    if (set.brand.strong.length === 0) {
+      problems.push('the target states no brand outright - no brand element and no heading parenthetical - so decisions.json has to record either the brand or that the target is deliberately unbranded; a page title is a description, not a site name');
+    } else if (set.brand.strong.length > 1) {
+      problems.push(`brand conflict between ${set.brand.strong.map((value) => JSON.stringify(value)).join(' and ')} has not been adjudicated in decisions.json`);
+    }
+  } else if (decision.brandless) {
+    if (set.brand.strong.length > 0) {
+      problems.push(`decisions.json says the target is deliberately unbranded, but the target now states ${set.brand.strong.map((value) => JSON.stringify(value)).join(' and ')}; the decision is stale`);
+    }
+  } else {
+    if (!set.brand.distinct.includes(decision.siteName)) {
+      problems.push(`decisions.json names ${JSON.stringify(decision.siteName)}, which is not one of the target's own candidates`);
+    }
+    if (set.brand.strong.length === 1 && set.brand.strong[0] === decision.siteName) {
+      problems.push('decisions.json adjudicates a brand conflict that no longer exists: the target now states one brand, so the decision is stale and should be deleted');
+    }
+  }
+  if (Object.keys(set.tokens.colors).length === 0) problems.push('no palette: the target stylesheet declares no colour custom properties');
+  if (Object.keys(set.tokens.fonts).length === 0) problems.push('no typography: the target stylesheet declares no font stack');
+  if (Object.keys(set.copy).length === 0) problems.push('no copy: no demo document was read');
+  for (const [document, entry] of Object.entries(set.copy)) {
+    if (entry.strings.length === 0 && !entry.apparatus) problems.push(`${document}: no user-facing copy was extracted`);
+  }
+  if (set.images.length === 0) problems.push('no imagery: the target has no step board to extract');
+  if (!set.rights) problems.push('no rights statement in the target: the set cannot inherit a rights boundary it was never given');
+  else if (set.rights.excluded_from_training !== REQUIRED_RIGHTS.excluded_from_training || set.rights.approved_for_training !== REQUIRED_RIGHTS.approved_for_training) {
+    problems.push(`rights are not the inherited boundary: expected excluded_from_training: true and approved_for_training: false, read ${JSON.stringify(set.rights)}`);
+  }
+  return problems;
+}
+
+/** The committed shape of a set: everything except the image bytes, which live beside it. */
+export function setDocument(set) {
+  const decision = set.decision ?? null;
+  const siteName = decision
+    ? (decision.brandless ? null : decision.siteName)
+    : (set.brand.strong.length === 1 ? set.brand.strong[0] : null);
+  return {
+    archetype: set.archetype,
+    extracted_from: set.extracted_from,
+    brand: {
+      site_name: siteName,
+      brandless: decision ? decision.brandless : false,
+      candidates: set.brand.candidates,
+      conflicts: set.brand.conflicts,
+      mark: set.brand.mark,
+      decided: decision,
+    },
+    tokens: set.tokens,
+    copy: set.copy,
+    images: set.images.map(({ name, sha256: digest, bytes, source }) => ({ name, sha256: digest, bytes, source })),
+    rights: set.rights,
+  };
+}
+
+export function renderStoreReadme(document, problems) {
+  const brand = document.brand;
+  const brandLine = brand.brandless
+    ? 'The accepted target is deliberately unbranded: it names no site, and the store records that instead of inventing one.'
+    : (brand.site_name ? `**${brand.site_name}**` : '**unresolved**');
+  return `# ${document.archetype} asset set
+
+The shared assets for the \`${document.archetype}\` archetype: what every framework build for it draws
+from, so two builds of this archetype render the same brand, the same palette and the same imagery.
+
+**Do not edit by hand.** This set is an EXTRACTION from the accepted target at
+\`${document.extracted_from.target_dir}\`, written by \`scripts/build-archetype-assets.mjs\`. The crafted
+target design is the source of truth; the set is pulled out of it. Edit the target, then re-run:
+
+\`\`\`bash
+node scripts/build-archetype-assets.mjs --write --only ${document.archetype}
+\`\`\`
+
+## What it contains
+
+| Part | Where | Extracted from |
+| --- | --- | --- |
+| Brand, palette, typography, copy | \`set.json\` | \`${document.extracted_from.readme.path}\` and the \`demo/\` documents |
+| State imagery | \`images/\` | the target's own step boards |
+
+**Rights are inherited, not asserted here.** ${document.rights ? `\`excluded_from_training: ${document.rights.excluded_from_training}\`, \`approved_for_training: ${document.rights.approved_for_training}\`, from [\`${document.rights.source}\`](../../../${document.rights.source}).` : 'The target states no rights boundary, which is itself a finding.'} These are design-planning references: they are not corpus, not teacher output, and not evidence that any depicted flow works.
+
+## Brand
+
+${brandLine}
+
+${brand.candidates.length === 0 ? 'No brand candidate was found in the target.' : brand.candidates.map((candidate) => `- \`${candidate.value}\` — from \`${candidate.source}\` (${candidate.kind}, ${candidate.strength} candidate)`).join('\n')}
+
+${brand.conflicts.length > 0 ? `Those candidates do not agree, which is recorded rather than resolved:\n\n${brand.conflicts.map((conflict) => conflict.values.map((value) => `- \`${value}\``).join('\n')).join('\n')}\n` : ''}
+${brand.decided ? `${brand.decided.brandless ? 'Recorded on' : 'Adjudicated on'} ${brand.decided.decided_on}: ${brand.decided.brandless ? 'deliberately unbranded' : `**${brand.decided.siteName}**`}. ${brand.decided.because}` : ''}
+
+## The one hand-written file
+
+\`decisions.json\` is the only file here that is not generated, and it exists only where the target does not speak
+with one voice about its own brand: it records which candidate was chosen - or that the target is deliberately
+unbranded - why, and when, so the ambiguity is adjudicated in the open instead of being resolved by whichever value
+the extractor happened to read last. When the target stops being ambiguous the decision becomes stale and
+\`check:archetype-assets\` fails until it is deleted.
+
+${problems.length > 0 ? `## Open problems\n\n${problems.map((problem) => `- ${problem}`).join('\n')}\n` : ''}`;
+}
+
+export function renderRegister(documents) {
+  const rows = [];
+  for (const document of documents) {
+    rows.push(`| \`${document.archetype}/set.json\` | ${document.brand.site_name ? `\`${document.brand.site_name}\`` : (document.brand.brandless ? '_deliberately unbranded_' : '**unresolved**')} | ${Object.keys(document.tokens.colors).length} | ${Object.keys(document.copy).length} | ${document.images.length} | ${document.brand.conflicts.length > 0 ? '**yes** (see decisions.json)' : (document.brand.brandless ? 'yes (deliberately unbranded)' : 'no')} |`);
+  }
+  return `# Archetype asset sets
+
+> **mwg-train deterministic baseline** - deterministic output of this repository's own tooling, not an official \`web-uplift\` result.
+
+One asset set per archetype: the brand, palette, typography, copy and state imagery that every
+framework build for that archetype draws from. They exist so that "build the booking archetype" means
+one thing to every model that is asked to build it — a build that invents its own imagery or omits an
+asset the target has looks like a weak model when it is a missing input.
+
+Each set is an EXTRACTION from its accepted target under \`docs/design/archetypes/<archetype>/\`, written
+by \`scripts/build-archetype-assets.mjs\`. The register is written from the committed bytes, so it cannot
+drift from them: \`npm run check:archetype-assets\` re-derives every value from the target and fails if the
+store, the register or the target have moved apart.
+
+| Set | Brand | Palette colours | Copy documents | State boards | Brand adjudicated |
+| --- | --- | ---: | ---: | ---: | --- |
+${rows.join('\n')}
+
+## Where the values come from, per set
+
+${documents.map((document) => `### ${document.archetype}
+
+- Target: \`${document.extracted_from.target_dir}\`
+- Readme: \`${document.extracted_from.readme.path}\` (sha256 \`${document.extracted_from.readme.sha256}\`)
+- Stylesheet: ${document.extracted_from.stylesheet ? `\`${document.extracted_from.stylesheet.path}\` (sha256 \`${document.extracted_from.stylesheet.sha256}\`)` : 'none'}
+- Documents: ${document.extracted_from.documents.map((doc) => `\`${doc.path}\``).join(', ')}
+- Rights: ${document.rights ? `\`excluded_from_training: ${document.rights.excluded_from_training}\`, \`approved_for_training: ${document.rights.approved_for_training}\` from \`${document.rights.source}\`` : '**not stated by the target**'}
+- Brand: ${document.brand.site_name ? `\`${document.brand.site_name}\`` : '**unresolved**'}${document.brand.decided ? ` (adjudicated: ${document.brand.decided.because} — ${document.brand.decided.decided_on})` : ''}
+- Boards: ${document.images.map((image) => `\`${image.name}\` sha256 \`${image.sha256}\``).join('; ')}
+`).join('\n')}
+## What this register does not claim
+
+It pins bytes and provenance. It does not claim the assets are legally cleared for training - they
+inherit the target's own \`excluded_from_training\` boundary - and it does not claim the depicted flows
+work. Nothing here is a functional claim about a route or a state.
+`;
+}
+
+export function assertWritable(root, absolute) {
+  const allowed = [resolve(root, 'assets'), resolve(root, 'docs')];
+  if (!allowed.some((base) => absolute === base || absolute.startsWith(`${base}${sep}`))) {
+    throw new Error(`refusing to write outside assets/ and docs/: ${relative(root, absolute)}`);
+  }
+  return absolute;
+}
+
+export function readDecision(root, id) {
+  const path = join(root, STORE_DIR, id, 'decisions.json');
+  if (!existsSync(path)) return null;
+  const parsed = JSON.parse(readFileSync(path, 'utf8'));
+  const entry = parsed.brand ?? parsed;
+  if (!entry.because || !entry.decided_on) throw new Error(`${relative(root, path)}: a decision needs because and decided_on`);
+  if (!entry.siteName && !entry.brandless) throw new Error(`${relative(root, path)}: a decision needs siteName, or brandless: true for a target deliberately without one`);
+  return { siteName: entry.siteName ?? null, brandless: entry.brandless === true, because: entry.because, decided_on: entry.decided_on };
+}
+
+export function buildAll(root, ids = archetypeIds(root)) {
+  return ids.map((id) => {
+    const set = extractSet(root, id);
+    set.decision = readDecision(root, id);
+    return set;
+  });
+}
+
+/** Compare the committed store against what the target says today. Fails closed; never throws. */
+export function inspectCommitted(root, ids = archetypeIds(root)) {
+  const findings = [];
+  const documents = [];
+  for (const id of ids) {
+    let set;
+    try {
+      set = extractSet(root, id);
+      set.decision = readDecision(root, id);
+    } catch (error) {
+      findings.push(`${id}: ${error.message}`);
+      continue;
+    }
+    for (const problem of setProblems(set)) findings.push(`${id}: ${problem}`);
+    const document = setDocument(set);
+    documents.push(document);
+
+    const setPath = join(root, STORE_DIR, id, 'set.json');
+    if (!existsSync(setPath)) {
+      findings.push(`${id}: no committed set at ${STORE_DIR}/${id}/set.json`);
+      continue;
+    }
+    const committed = JSON.parse(readFileSync(setPath, 'utf8'));
+    for (const [name, value] of Object.entries(committed)) {
+      const expected = document[name];
+      if (name === 'images') continue;
+      if (JSON.stringify(value) !== JSON.stringify(expected)) findings.push(`${id}: committed set.json ${name} disagrees with the accepted target`);
+    }
+    for (const image of document.images) {
+      const stored = join(root, STORE_DIR, id, 'images', image.name);
+      if (!existsSync(stored)) {
+        findings.push(`${id}: no stored copy of ${image.name}`);
+        continue;
+      }
+      const bytes = readFileSync(stored);
+      if (sha256(bytes) !== image.sha256) findings.push(`${id}: stored ${image.name} is not the accepted target's own bytes`);
+    }
+    const registered = committed.images ?? [];
+    if (registered.length !== document.images.length) findings.push(`${id}: set.json lists ${registered.length} board(s), the target has ${document.images.length}`);
+  }
+  return { findings, documents };
+}
+
+export function writeRegister(root, documents) {
+  const path = resolve(root, REGISTER_PATH);
+  assertWritable(root, path);
+  mkdirSync(dirname(path), { recursive: true });
+  writeFileSync(path, renderRegister(documents));
+  return path;
+}
+
+export function writeSets(root, sets) {
+  for (const set of sets) {
+    const problems = setProblems(set);
+    if (problems.length > 0) throw new Error(`${set.archetype}: refusing to write an incomplete set — ${problems.join('; ')}`);
+    const dir = join(root, STORE_DIR, set.archetype);
+    const document = setDocument(set);
+    mkdirSync(join(dir, 'images'), { recursive: true });
+    const setPath = assertWritable(root, join(dir, 'set.json'));
+    writeFileSync(setPath, `${JSON.stringify(document, null, 2)}\n`);
+    for (const image of set.images) {
+      const path = assertWritable(root, join(dir, 'images', image.name));
+      writeFileSync(path, image.content);
+    }
+    writeFileSync(join(dir, 'README.md'), renderStoreReadme(document, problems));
+  }
+}
+
+function parseArgs(argv) {
+  const args = { write: false, register: false, only: null };
+  for (let i = 0; i < argv.length; i += 1) {
+    if (argv[i] === '--write') args.write = true;
+    else if (argv[i] === '--register') args.register = true;
+    else if (argv[i] === '--only') args.only = argv[++i].split(',').map((id) => id.trim()).filter(Boolean);
+    else if (argv[i] === '--help' || argv[i] === '-h') args.help = true;
+    else {
+      console.error(`build-archetype-assets: unknown argument '${argv[i]}'`);
+      process.exit(2);
+    }
+  }
+  return args;
+}
+
+function main() {
+  const args = parseArgs(process.argv.slice(2));
+  if (args.help) {
+    console.error('usage: node scripts/build-archetype-assets.mjs [--write] [--register] [--only id,id]');
+    process.exit(0);
+  }
+  const root = resolve('.');
+  const targets = args.only ?? archetypeIds(root);
+  const sets = buildAll(root, targets);
+  if (args.write) writeSets(root, sets);
+  for (const set of sets) {
+    const problems = setProblems(set);
+    console.log(`${set.archetype}: ${set.brand.distinct.length} brand candidate(s), ${Object.keys(set.tokens.colors).length} colour(s), ${Object.keys(set.copy).length} document(s), ${set.images.length} board(s)${problems.length > 0 ? ` — ${problems.length} problem(s)` : ''}`);
+    for (const problem of problems) console.log(`  PROBLEM ${problem}`);
+  }
+  // The register is always written from ALL archetypes or not at all: rewriting it from a subset would
+  // silently drop the other sets, which is how a register stops describing the tree it is named for.
+  if (args.write || args.register) {
+    const all = buildAll(root, archetypeIds(root));
+    const { findings, documents } = inspectCommitted(root, archetypeIds(root));
+    if (args.register && findings.length > 0) {
+      console.error('build-archetype-assets: refusing to rewrite the register while the sets disagree with the target:');
+      for (const finding of findings) console.error(`  ${finding}`);
+      process.exit(1);
+    }
+    if (args.write && all.some((set) => setProblems(set).length > 0)) {
+      console.error('build-archetype-assets: REFUSING to write the register: some sets are incomplete');
+      process.exit(1);
+    }
+    const path = writeRegister(root, args.write ? all.map(setDocument) : documents);
+    console.log(`register: wrote ${(args.write ? all : documents).length} set(s) to ${relative(root, path)}`);
+  }
+}
+
+if (import.meta.url === `file://${process.argv[1]}`) main();

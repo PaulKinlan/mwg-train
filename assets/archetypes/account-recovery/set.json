@@ -1,0 +1,129 @@
+{
+  "archetype": "account-recovery",
+  "extracted_from": {
+    "target_dir": "docs/design/archetypes/account-recovery",
+    "readme": {
+      "path": "docs/design/archetypes/account-recovery/README.md",
+      "sha256": "ce10bd7fec6f9ff3770a47c277a11bc91a74e36642ba5b0081d9488062fc8a14"
+    },
+    "documents": [
+      {
+        "path": "docs/design/archetypes/account-recovery/demo/compare.html",
+        "sha256": "fd37b8694be7a91309c74524a6fdcc6646ad2489d143382897b2ed0fc6bee658"
+      },
+      {
+        "path": "docs/design/archetypes/account-recovery/demo/index.html",
+        "sha256": "de8abebdc8397fbb3f895436b389bbe9eb08a205d5a734edb174d9a5abc340a8"
+      }
+    ],
+    "stylesheet": {
+      "path": "docs/design/archetypes/account-recovery/demo/styles.css",
+      "sha256": "b71411c5b9dfca99ac84ef191eb022140c1fd04ac87d0c56941c52df94fa1b6a"
+    }
+  },
+  "brand": {
+    "site_name": null,
+    "brandless": true,
+    "candidates": [
+      {
+        "value": "Account recovery",
+        "source": "docs/design/archetypes/account-recovery/demo/index.html:7",
+        "kind": "demo-title",
+        "strength": "weak"
+      },
+      {
+        "value": "Reset Your Password",
+        "source": "docs/design/archetypes/account-recovery/demo/index.html:16",
+        "kind": "demo-heading",
+        "strength": "weak"
+      }
+    ],
+    "conflicts": [],
+    "mark": null,
+    "decided": {
+      "siteName": null,
+      "brandless": true,
+      "because": "The accepted target depicts an unbranded journey: its demo carries no brand element, its own heading is 'Reset Your Password', and its README names no site. The store records the absence rather than inventing a brand the design never had - a framework build for this archetype should look like the target, and the target has no site name to render.",
+      "decided_on": "2026-10-11"
+    }
+  },
+  "tokens": {
+    "colors": {
+      "--page": "#0f172a",
+      "--card": "#1e293b",
+      "--field": "#172235",
+      "--border": "#64748b",
+      "--accent": "#10b981",
+      "--accent-ink": "#04231a",
+      "--accent-text": "#34d399",
+      "--text": "#f8fafc",
+      "--muted": "#cbd5e1",
+      "--error": "#fca5a5"
+    },
+    "fonts": {
+      ":root": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif"
+    },
+    "source": "docs/design/archetypes/account-recovery/demo/styles.css"
+  },
+  "copy": {
+    "compare.html": {
+      "title": "Account recovery · visual comparison",
+      "lang": "en",
+      "strings": [],
+      "apparatus": true,
+      "source": "docs/design/archetypes/account-recovery/demo/compare.html",
+      "sha256": "fd37b8694be7a91309c74524a6fdcc6646ad2489d143382897b2ed0fc6bee658"
+    },
+    "index.html": {
+      "title": "Account recovery · visual demo",
+      "lang": "en",
+      "strings": [
+        "Reset Your Password",
+        "Enter the email associated with your account to preview the recovery journey.",
+        "Email address",
+        "For this design preview only; no recovery email will be sent.",
+        "Enter a valid email address to continue.",
+        "Send Recovery Link",
+        "Sign-in is not implemented in this standalone visual demo.",
+        "JavaScript is required to preview this interaction; the form is disabled and cannot send an email.",
+        "Check Your Inbox",
+        "In a real service, a password reset link would be sent to",
+        "alex@example.com",
+        ".",
+        "Visual preview only. No email or reset link was sent; no expiry or server-side reset exists here.",
+        "Check your spam folder if you expected a real message from your service.",
+        "Resend preview available in",
+        "60",
+        "s",
+        "Restart preview",
+        "Open Email App",
+        "Unavailable in this preview: no email was sent and no app will open.",
+        "There is no sign-in screen in this static preview.",
+        "Return to the request form",
+        "."
+      ],
+      "apparatus": false,
+      "source": "docs/design/archetypes/account-recovery/demo/index.html",
+      "sha256": "de8abebdc8397fbb3f895436b389bbe9eb08a205d5a734edb174d9a5abc340a8"
+    }
+  },
+  "images": [
+    {
+      "name": "step1-request.jpg",
+      "sha256": "4426e0ca71c31013499a820fb8a21aa866b097ddcde61a1b8da302e194b447e2",
+      "bytes": 382476,
+      "source": "docs/design/archetypes/account-recovery/step1-request.jpg"
+    },
+    {
+      "name": "step2-sent.jpg",
+      "sha256": "84730c4bdb444f05892c75bb54bee3fa84640e8eae67638409caf60eec7cbe39",
+      "bytes": 398147,
+      "source": "docs/design/archetypes/account-recovery/step2-sent.jpg"
+    }
+  ],
+  "rights": {
+    "excluded_from_training": true,
+    "approved_for_training": false,
+    "source": "docs/design/archetypes/account-recovery/README.md:5"
+  }
+}

@@ -1,0 +1,265 @@
+{
+  "archetype": "booking",
+  "extracted_from": {
+    "target_dir": "docs/design/archetypes/booking",
+    "readme": {
+      "path": "docs/design/archetypes/booking/README.md",
+      "sha256": "4b2dddde85f2971ea15b8159ad55b057f40c2600f7c8bc097b5f472bc345bf56"
+    },
+    "documents": [
+      {
+        "path": "docs/design/archetypes/booking/demo/compare.html",
+        "sha256": "deff2344a7104737df8c3038268e2cc8b2666aebcd07af01e09d8722c683adba"
+      },
+      {
+        "path": "docs/design/archetypes/booking/demo/confirmation.html",
+        "sha256": "9a5b9511f9273c9235e16fa39d3c6a8a9667b1089794279a54d3943d58837fc7"
+      },
+      {
+        "path": "docs/design/archetypes/booking/demo/empty.html",
+        "sha256": "4e131736b6542926746a89d6c7c1f619c6a431fd3e6decd3abb3fedc1450c2bd"
+      },
+      {
+        "path": "docs/design/archetypes/booking/demo/index.html",
+        "sha256": "8531d202bc9a6ff5707d3992834bb15fafc9112b59c71b7d700efa8c46aad27e"
+      }
+    ],
+    "stylesheet": {
+      "path": "docs/design/archetypes/booking/demo/styles.css",
+      "sha256": "b0fba0e3633d6b7c8d1098729c32c2431f07e4e672094d91753e3f38328b71a3"
+    }
+  },
+  "brand": {
+    "site_name": "Evening Class Studio",
+    "brandless": false,
+    "candidates": [
+      {
+        "value": "Learning Hub",
+        "source": "docs/design/archetypes/booking/demo/index.html:13",
+        "kind": "demo-brand-element",
+        "strength": "strong"
+      },
+      {
+        "value": "Evening Class Studio",
+        "source": "docs/design/archetypes/booking/README.md:1",
+        "kind": "target-heading",
+        "strength": "strong"
+      },
+      {
+        "value": "Evening Class Booking",
+        "source": "docs/design/archetypes/booking/demo/index.html:7",
+        "kind": "demo-title",
+        "strength": "weak"
+      },
+      {
+        "value": "Find Your Next Evening Class",
+        "source": "docs/design/archetypes/booking/demo/index.html:39",
+        "kind": "demo-heading",
+        "strength": "weak"
+      }
+    ],
+    "conflicts": [
+      {
+        "values": [
+          "Learning Hub",
+          "Evening Class Studio"
+        ],
+        "candidates": [
+          {
+            "value": "Learning Hub",
+            "source": "docs/design/archetypes/booking/demo/index.html:13",
+            "kind": "demo-brand-element",
+            "strength": "strong"
+          },
+          {
+            "value": "Evening Class Studio",
+            "source": "docs/design/archetypes/booking/README.md:1",
+            "kind": "target-heading",
+            "strength": "strong"
+          }
+        ]
+      }
+    ],
+    "mark": null,
+    "decided": {
+      "siteName": "Evening Class Studio",
+      "brandless": false,
+      "because": "The accepted target's own heading and every one of its five board prompts name 'Evening Class Studio'; the demo page carries 'Learning Hub' instead. The demo's own README states it is an implementation of the visual language ESTABLISHED BY those boards, and it was authored 2026-10-09 while the boards were regenerated and accepted on 2026-10-11, so the boards are the source and 'Learning Hub' is the demo's drift. PROVISIONAL: this is a lane recommendation recorded with its evidence, not an owner decision - Paul should confirm which brand the archetype owns, or rename the demo.",
+      "decided_on": "2026-10-11"
+    }
+  },
+  "tokens": {
+    "colors": {
+      "--bg-page": "light-dark(#f1f5f9, #0f172a)",
+      "--surface-card": "light-dark(#ffffff, #1e293b)",
+      "--surface-card-subtle": "light-dark(#f8fafc, #162032)",
+      "--surface-card-elevated": "light-dark(#ffffff, #243248)",
+      "--surface-input": "light-dark(#ffffff, #0f172a)",
+      "--surface-pill": "light-dark(#e2e8f0, #1e293b)",
+      "--border-subtle": "light-dark(#cbd5e1, #334155)",
+      "--border-highlight": "light-dark(#94a3b8, #475569)",
+      "--border-focus": "#10b981",
+      "--text-primary": "light-dark(#0f172a, #f8fafc)",
+      "--text-muted": "light-dark(#64748b, #94a3b8)",
+      "--text-inverse": "#ffffff",
+      "--accent": "#10b981",
+      "--accent-hover": "#059669",
+      "--accent-active": "#047857",
+      "--accent-subtle": "light-dark(rgba(16, 185, 129, 0.12), rgba(16, 185, 129, 0.18))",
+      "--accent-glow": "rgba(16, 185, 129, 0.25)",
+      "--error": "#ef4444",
+      "--error-surface": "light-dark(#fef2f2, #3b1114)",
+      "--error-bg": "light-dark(#fee2e2, rgba(239, 68, 68, 0.15))",
+      "--error-border": "light-dark(#f87171, rgba(239, 68, 68, 0.5))",
+      "--error-text": "light-dark(#991b1b, #fca5a5)",
+      "--success": "#10b981",
+      "--success-bg": "light-dark(#ecfdf5, rgba(16, 185, 129, 0.15))",
+      "--success-border": "#10b981"
+    },
+    "fonts": {
+      "--font-sans": "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
+      "--font-mono": "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+      "body": "var(--font-sans)",
+      ".record-echo-content": "var(--font-mono)",
+      ".ticket-ref-badge": "var(--font-mono)"
+    },
+    "source": "docs/design/archetypes/booking/demo/styles.css"
+  },
+  "copy": {
+    "compare.html": {
+      "title": "Visual Design Comparison — Booking Archetype",
+      "lang": "en",
+      "strings": [
+        "Visual Design Reference Comparison",
+        "Side-by-side audit mapping the Nano Banana visual reference boards to the implemented booking design target."
+      ],
+      "apparatus": true,
+      "source": "docs/design/archetypes/booking/demo/compare.html",
+      "sha256": "deff2344a7104737df8c3038268e2cc8b2666aebcd07af01e09d8722c683adba"
+    },
+    "confirmation.html": {
+      "title": "Booking Confirmation &amp; Receipt — Learning Hub",
+      "lang": "en",
+      "strings": [
+        "Booking Confirmation & Receipt",
+        "Step 3: Verified Pass & Class Schedule",
+        "✓",
+        "1. Select Class",
+        "✓",
+        "2. Details & Registration",
+        "✓",
+        "3. Confirmation",
+        "Your Evening Class Pass",
+        "📅",
+        "Add to Calendar",
+        "📥",
+        "Download PDF Receipt"
+      ],
+      "apparatus": false,
+      "source": "docs/design/archetypes/booking/demo/confirmation.html",
+      "sha256": "9a5b9511f9273c9235e16fa39d3c6a8a9667b1089794279a54d3943d58837fc7"
+    },
+    "empty.html": {
+      "title": "Schedule Availability — Learning Hub",
+      "lang": "en",
+      "strings": [
+        "Find Your Next Evening Class",
+        "Weekly Class Schedule & Availability",
+        "No Evening Classes Available This Week",
+        "Try adjusting your category filters, or sign up for notifications when new sessions are published for the upcoming semester."
+      ],
+      "apparatus": false,
+      "source": "docs/design/archetypes/booking/demo/empty.html",
+      "sha256": "4e131736b6542926746a89d6c7c1f619c6a431fd3e6decd3abb3fedc1450c2bd"
+    },
+    "index.html": {
+      "title": "Evening Class Booking — Learning Hub",
+      "lang": "en",
+      "strings": [
+        "Find Your Next Evening Class",
+        "Step 2: Details & Registration",
+        "✓",
+        "1. Select Class",
+        "2",
+        "2. Details & Registration",
+        "3",
+        "3. Confirmation",
+        "Evening Class Summary",
+        "Introduction to Python",
+        "🕒",
+        "Mon 6:30 PM &ndash; 8:30 PM",
+        "📅",
+        "Starts: Oct 21st, 2024",
+        "📍",
+        "Room 2B, Downtown Campus",
+        "👤",
+        "Instructor: Alice C.",
+        "Your Personal Details",
+        "Complete your student registration below to secure your place.",
+        "Full name",
+        "*",
+        "✕",
+        "Please fill in full name.",
+        "Email",
+        "*",
+        "✕",
+        "Please enter a valid email address.",
+        "Delivery address",
+        "*",
+        "✕",
+        "Please fill in delivery address.",
+        "Postcode",
+        "*",
+        "✕",
+        "Please fill in postcode.",
+        "Anything we should know?",
+        "*",
+        "✕",
+        "Please fill in notes.",
+        "Continue to Confirmation",
+        "&rarr;",
+        "Stored Booking Note Echo"
+      ],
+      "apparatus": false,
+      "source": "docs/design/archetypes/booking/demo/index.html",
+      "sha256": "8531d202bc9a6ff5707d3992834bb15fafc9112b59c71b7d700efa8c46aad27e"
+    }
+  },
+  "images": [
+    {
+      "name": "step1-browse.jpg",
+      "sha256": "3a7f56d2fc42661a89d067a301c2035dbb89804bacb2533d28d0e745afdf5c11",
+      "bytes": 525042,
+      "source": "docs/design/archetypes/booking/step1-browse.jpg"
+    },
+    {
+      "name": "step2-form.jpg",
+      "sha256": "73633dd4b1c0a5ae877ec8bdcbe41c1260c4fbf48d25a3f9fac64e1884615074",
+      "bytes": 517592,
+      "source": "docs/design/archetypes/booking/step2-form.jpg"
+    },
+    {
+      "name": "step3-confirmation.jpg",
+      "sha256": "1b65cd87c9c693be2a159a3f3ead25ae32c4f3faaec664ea7d80684fce6e31ef",
+      "bytes": 394097,
+      "source": "docs/design/archetypes/booking/step3-confirmation.jpg"
+    },
+    {
+      "name": "step4-error.jpg",
+      "sha256": "d018d5b50bae312f497445e3e449191ea8c3ac6cccbd5c6058463d738e7d06f8",
+      "bytes": 466358,
+      "source": "docs/design/archetypes/booking/step4-error.jpg"
+    },
+    {
+      "name": "step5-empty.jpg",
+      "sha256": "6eae324018056198c8020855961eeb734db79f403355035ed36147c078540b3e",
+      "bytes": 447870,
+      "source": "docs/design/archetypes/booking/step5-empty.jpg"
+    }
+  ],
+  "rights": {
+    "excluded_from_training": true,
+    "approved_for_training": false,
+    "source": "docs/design/archetypes/booking/README.md:7"
+  }
+}

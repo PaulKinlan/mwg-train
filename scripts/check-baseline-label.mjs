@@ -84,6 +84,14 @@ export const GENERATED_PATTERNS = [
   /^data\/[^/]+\/targets\/[^/]+\/signature\.json$/,
   /^docs\/eval\/projects\/[^/]+\/[^/]+\/(?:package|spec|tree|snapshot)\.json$/,
   /^docs\/eval\/projects\/index\.json$/,
+  // Each archetype's asset-set page is written by scripts/build-archetype-assets.mjs from that
+  // archetype's accepted target. Not floor reports: they record what an asset set contains and the
+  // rights it inherited, and claim no measurement.
+  /^assets\/archetypes\/[^/]+\/README\.md$/,
+  /^assets\/archetypes\/[^/]+\/set\.json$/,
+  // The one hand-written file in an asset set: it adjudicates a brand the accepted target states
+  // ambiguously (or not at all), so the ambiguity is recorded rather than silently resolved.
+  /^assets\/archetypes\/[^/]+\/decisions\.json$/,
 ];
 
 /**
@@ -220,6 +228,7 @@ export const DOCUMENTS = {
   // published as planning documentation and deliberately kept out of the corpus, so it carries a rights record here
   // rather than a corpus manifest row.
   'docs/provenance/assets/training-reference-boards.md': 'provenance',
+  'docs/provenance/assets/archetype-asset-sets.md': 'provenance',
   'docs/provenance/original-refs.md': 'provenance',
   'docs/quarantine.md': 'provenance',
   'docs/eval/briefs/SCHEMA.md': 'spec',
