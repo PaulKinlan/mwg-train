@@ -49,9 +49,10 @@ sixteen hex colours are written outside `:root`, eleven of them values the ten t
   `.capacity-note` and `.pass-status` are `999px` pills; `.capacity-dot` is a `50%` circle; and
   `.event-pass::after` uses `3.5rem 3.5rem 0 0` to cut the pass's shoulders.
 - **There is no shadow anywhere.** The stylesheet contains no `box-shadow` declaration at all, which is the
-  opposite of the catalogue archetype's drawer and is why the pass has to earn its depth with a gradient and
-  a rounded silhouette rather than with elevation. On a single-column dark page, separation comes from
-  `--field` being darker than `--card`, and from the outline colour.
+  opposite of the catalogue archetype's drawer, and there is no gradient declaration either. So the pass
+  earns its shape from a notched silhouette and a darker field colour rather than from depth or elevation -
+  on a single-column dark page, separation comes from `--field` being darker than `--card`, and from the
+  outline colour.
 
 ## Typography
 
@@ -74,17 +75,18 @@ second target. Body text is `1rem` at a line height of `1.5`.
 ## Token usage
 
 Ten colour tokens, every one of them referenced somewhere - there is no dead token in this target. The
-owners and counts below are measured across the whole of `demo/styles.css`, `:root` included, and none of
-the ten is referenced from the demo's HTML:
+owners and counts below are measured across the whole of `demo/styles.css`, `:root` included, counting
+`var()` occurrences - a declaration shared by several selectors counts once, however many it names - and
+none of the ten is referenced from the demo's HTML:
 
 | Token | Value | Where it is used (references in the stylesheet) |
 |---|---|---|
-| `--page` | `#0f172a` | the page and the hero ground (3) |
+| `--page` | `#0f172a` | `body`, `.event-pass::after`, the comparison images and iframes (3) |
 | `--card` | `#1e293b` | the form card and the pass (2) |
-| `--field` | `#111b2e` | inputs and textareas (2) |
+| `--field` | `#111b2e` | `.ticket-row` and the field inputs and textareas (2) |
 | `--outline` | `#64748b` | `.ticket-row`, `.stepper`, `.stepper input` and five more (8) |
 | `--accent` | `#10b981` | `:root`'s `accent-color`, `::selection`, `.capacity-dot` and three more (6) |
-| `--accent-bright` | `#34d399` | links, `.estimate`, `.primary-action:hover` and one more (5) |
+| `--accent-bright` | `#34d399` | links, `.estimate`, `.primary-action:hover`, the field inputs and the quiet actions (5) |
 | `--accent-ink` | `#04231a` | text drawn on the accent (2) |
 | `--text` | `#f8fafc` | `.capacity-note`, `.stepper button`, `.qr-badge` and three more (6) |
 | `--muted` | `#cbd5e1` | `.event-hero > p`, `.form-lead`, `.hint`, `.ticket-row label span` and five more (10) |
@@ -127,13 +129,18 @@ Read from `demo/index.html`, with the pass view selected by `?view=pass` and the
   `Illustrated total: £120 for 1 ticket · not a charge`. The `not a charge` disclaimer is part of the
   target's own copy, not an annotation of it, and it is the reason the invented prices in this archetype are
   a presentation rather than a claim about money.
-- **The pass view**: `.event-pass` with the brand, a `.pass-status` pill reading `REGISTRATION CONFIRMED`,
-  the attendee in `#attendee-name`, a `.pass-details` list of pass type, date and location, a QR block
-  captioned `SCAN AT CHECK-IN`, and `.pass-actions` offering `Save to Apple Wallet` and
-  `Download PDF Badge`.
-- **The comparison page**: `h1` `Event registration: visual references and live demo`, with two
-  `Unmodified reference` figures embedding `index.html` and `index.html?view=pass` side by side, so the
-  target can be viewed against the boards that inspired it.
+- **The pass view**: `.event-pass` with the brand, the attendee in `#attendee-name`, a `.pass-details`
+  list of pass type, date and location, a QR block, and `.pass-actions` offering `Save to Apple Wallet` and
+  `Download PDF Badge`. The demo is explicit that its pass is a preview and not a ticket: its own labels
+  read `Design preview · not valid for entry` and `Illustrative badge · do not scan`, and its README says
+  the demo's pass is conspicuously labelled not valid. The stronger labels on the board - a
+  `REGISTRATION CONFIRMED` pill and a `SCAN AT CHECK-IN` caption - belong to the **board**, not to the
+  demo, and copying them into a rebuild would present an unissued pass as a confirmed one.
+- **The comparison page**: `h1` `Event registration: visual references and live demo`, and four figures in
+  two pairs. Each pair sets an `Unmodified reference` figure showing one of the boards
+  (`step1-event.jpg`, then `step2-pass.jpg`) beside a neighbouring live figure - captioned
+  `Live registration form` and `Live pass preview` - which embeds `index.html` and
+  `index.html?view=pass` in an iframe, so each board can be read against the target it inspired.
 
 ## Anti-patterns
 
@@ -184,7 +191,8 @@ like a way in.
   [`docs/provenance/assets/design-reference-wave2.md`](../../../provenance/assets/design-reference-wave2.md),
   with a SHA-256 digest and a byte count for each in [`README.md`](README.md). They were generated rather
   than designed, and the README says as much: the depicted content is "unverified placeholders" and the QR
-  graphic "is not a valid check" - so this document follows the demo where the two disagree and records the
+  graphic "is not a valid check-in pass; do not scan or use it" - so this document follows the demo where
+  the two disagree and records the
   disagreements rather than treating them as decisions.
 - **The demo** (`demo/`) is the accepted target, hand-written and static. It is not the sealed evaluation
   target, not part of the pilot corpus, and it stores nothing: the name in `#attendee-name` is scripted.
