@@ -11,7 +11,7 @@ register: docs/provenance/assets/design-reference-editorial-blog.md
 The behaviour of the `blog` type from the archetype type axis. This document is the type's contract:
 what a reader and an author can do, what the server does about it, and what a journey can assert.
 
-It is written in the section order that [`src/design/contract.mjs`](../../../src/design/contract.mjs)
+It is written in the section order that [`src/design/contract.mjs`](../../../../src/design/contract.mjs)
 requires of a plan (`PLAN_SECTIONS`), so it is reviewable the same way the evaluation side's plan
 documents are. It is **not** checked against a generated demo, because there is no generated demo for
 this type yet - see *Implementation status*. Nothing here should be read as describing running
@@ -119,7 +119,7 @@ already in the engine" is exactly the kind of half-truth this axis was written t
   evaluation set) and no family row in `docs/train/briefs/manifest.jsonl`. This type is A1 planning
   material; it is not a training pair and not an evaluation target.
 - The four reference boards are generated and independently reviewed
-  ([register](../../provenance/assets/design-reference-editorial-blog.md)); they are pictures of the
+  ([register](../../../provenance/assets/design-reference-editorial-blog.md)); they are pictures of the
   intended states and demonstrate no behaviour whatsoever.
 - What is required before this type could be called implemented, in the order it becomes true, is
   recorded on bead `mwg-train-efg`: a stable slug identity (the engine has none), a tag filter and a
@@ -128,12 +128,12 @@ already in the engine" is exactly the kind of half-truth this axis was written t
 
 ## Provenance
 
-- Type axis and the coverage table this type comes from: [`docs/train/briefs/TYPE-AXIS.md`](../../train/briefs/TYPE-AXIS.md).
+- Type axis and the coverage table this type comes from: [`docs/train/briefs/TYPE-AXIS.md`](../../../train/briefs/TYPE-AXIS.md).
 - Reference boards, prompts and their digests: [`docs/design/archetypes/editorial-blog/README.md`](README.md)
-  and [`docs/provenance/assets/design-reference-editorial-blog.md`](../../provenance/assets/design-reference-editorial-blog.md).
+  and [`docs/provenance/assets/design-reference-editorial-blog.md`](../../../provenance/assets/design-reference-editorial-blog.md).
   Those boards are `excluded_from_training` and not approved for training; they are planning
   references, and their depicted content (names, dates, prose) is invented.
 - Aesthetic system for the same type: [`design.md`](design.md) beside this file.
-- Expansion naming this archetype (`editorial-blog`) with its roles: [`docs/train/briefs/expansion-matrix.json`](../../train/briefs/expansion-matrix.json).
+- Expansion naming this archetype (`editorial-blog`) with its roles: [`docs/train/briefs/expansion-matrix.json`](../../../train/briefs/expansion-matrix.json).
 - Work: bead `mwg-train-efg` (type axis and the content-only template). Capability dependencies:
   stable slugs and author sessions are named there; real credential verification is `mwg-train-ksn`.

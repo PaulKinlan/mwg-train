@@ -8,14 +8,14 @@ register: docs/provenance/assets/design-reference-product-card-comparison.md
 # `product-card-comparison` — aesthetic system
 
 The look of the `card` type, derived from its four reference boards. This document is written in the
-section order [`src/design/contract.mjs`](../../../src/design/contract.mjs) requires of a design
+section order [`src/design/contract.mjs`](../../../../src/design/contract.mjs) requires of a design
 document (`DESIGN_SECTIONS`) so it is reviewable the way the evaluation side's design documents are.
 
 One difference from those documents is stated up front rather than implied: they describe an authored
 target board, and this describes a set of **generated** reference boards. Every value below is the set
 the generation prompts declared and the pictures were made from; the boards were inspected afterwards by
 a different model family and its per-board findings - including what it found wrong - are recorded in the
-[register](../../provenance/assets/design-reference-product-card-comparison.md), not tidied away here.
+[register](../../../provenance/assets/design-reference-product-card-comparison.md), not tidied away here.
 Behaviour is in [`plan.md`](plan.md), not in this file.
 
 ## Visual thesis
@@ -149,11 +149,11 @@ rather than edited out of the record.
 
 - Reference boards, the exact generation prompts and their byte and prompt digests:
   [`README.md`](README.md) beside this file and the
-  [register](../../provenance/assets/design-reference-product-card-comparison.md).
+  [register](../../../provenance/assets/design-reference-product-card-comparison.md).
 - Model and attestation: `gemini-nano-banana-2.1`, explicitly requested, at 16:9; the generator fails
   closed on any other model. Rights boundary and the `excluded_from_training` policy: the
-  [recorded Google consumer-account terms](../../provenance/accounts/google-antigravity-consumer.md).
+  [recorded Google consumer-account terms](../../../provenance/accounts/google-antigravity-consumer.md).
 - Functional contract for the same type: [`plan.md`](plan.md).
-- Type axis and coverage: [`docs/train/briefs/TYPE-AXIS.md`](../../train/briefs/TYPE-AXIS.md); archetype
-  roles and the observable: [`docs/train/briefs/expansion-matrix.json`](../../train/briefs/expansion-matrix.json).
+- Type axis and coverage: [`docs/train/briefs/TYPE-AXIS.md`](../../../train/briefs/TYPE-AXIS.md); archetype
+  roles and the observable: [`docs/train/briefs/expansion-matrix.json`](../../../train/briefs/expansion-matrix.json).
 - Work: bead `mwg-train-efg`.

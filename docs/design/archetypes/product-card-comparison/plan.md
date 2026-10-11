@@ -12,7 +12,7 @@ The behaviour of the `card` type from the archetype type axis. This document is 
 what a chooser and the catalogue's owner can do, what the server does about it, and what a journey can
 assert.
 
-It is written in the section order that [`src/design/contract.mjs`](../../../src/design/contract.mjs)
+It is written in the section order that [`src/design/contract.mjs`](../../../../src/design/contract.mjs)
 requires of a plan (`PLAN_SECTIONS`), so it is reviewable the same way the evaluation side's plan
 documents are. It is **not** checked against a generated demo, because there is no generated demo for
 this type - see *Implementation status*. Nothing here should be read as describing running software.
@@ -27,8 +27,8 @@ retiring one is what makes a carried selection refusable.
 
 Those roles need one clarification, because two source documents name them differently and the axis's
 rule is that a type earns its place only when a second actor's journey changes the state the first actor
-sees. The [expansion matrix](../../train/briefs/expansion-matrix.json) names the archetype's roles as
-`prospect` and `comparison-shopper`; the [type axis](../../train/briefs/TYPE-AXIS.md) names the chooser
+sees. The [expansion matrix](../../../train/briefs/expansion-matrix.json) names the archetype's roles as
+`prospect` and `comparison-shopper`; the [type axis](../../../train/briefs/TYPE-AXIS.md) names the chooser
 and the catalogue owner, with the observable *"a selection is refused for a retired option"*. Both are
 honoured by being explicit about what each contributes to the type:
 
@@ -166,7 +166,7 @@ cards" is exactly the half-truth this axis was written to stop:
   evaluation set) and no family row in `docs/train/briefs/manifest.jsonl`. This type is A1 planning
   material; it is not a training pair and not an evaluation target.
 - The four reference boards are generated, vision-reviewed and digest-pinned
-  ([register](../../provenance/assets/design-reference-product-card-comparison.md)); they are pictures of
+  ([register](../../../provenance/assets/design-reference-product-card-comparison.md)); they are pictures of
   the intended states - the catalogue, the comparison, the carried selection and the empty comparison -
   and they demonstrate no behaviour whatsoever.
 - What is required before this type could be called implemented, in the order it becomes true, is
@@ -176,15 +176,15 @@ cards" is exactly the half-truth this axis was written to stop:
 
 ## Provenance
 
-- Type axis and the coverage table this type comes from: [`docs/train/briefs/TYPE-AXIS.md`](../../train/briefs/TYPE-AXIS.md).
+- Type axis and the coverage table this type comes from: [`docs/train/briefs/TYPE-AXIS.md`](../../../train/briefs/TYPE-AXIS.md).
 - Reference boards, prompts and their digests: [`docs/design/archetypes/product-card-comparison/README.md`](README.md)
-  and [`docs/provenance/assets/design-reference-product-card-comparison.md`](../../provenance/assets/design-reference-product-card-comparison.md).
+  and [`docs/provenance/assets/design-reference-product-card-comparison.md`](../../../provenance/assets/design-reference-product-card-comparison.md).
   Those boards are `excluded_from_training` and not approved for training; they are planning
   references, and their depicted content (catalogue name, product names, prices, scores, attribute
   values) is invented.
 - Aesthetic system for the same type: [`design.md`](design.md) beside this file.
 - Expansion naming this archetype (`product-card-comparison`) with the roles `prospect` and
-  `comparison-shopper`, and the observable it must produce: [`docs/train/briefs/expansion-matrix.json`](../../train/briefs/expansion-matrix.json).
+  `comparison-shopper`, and the observable it must produce: [`docs/train/briefs/expansion-matrix.json`](../../../train/briefs/expansion-matrix.json).
   The reconciliation with the axis's chooser/owner pair is in *Use case* above, and is recorded on the
   work bead rather than left implicit.
 - Where this type's claims stand in the coverage table: **missing** today - no family has a card surface

@@ -8,7 +8,7 @@ register: docs/provenance/assets/design-reference-editorial-blog.md
 # `editorial-blog` — aesthetic system
 
 The look of the `blog` type, derived from its four reference boards. This document is written in the
-section order [`src/design/contract.mjs`](../../../src/design/contract.mjs) requires of a design
+section order [`src/design/contract.mjs`](../../../../src/design/contract.mjs) requires of a design
 document (`DESIGN_SECTIONS`) so it is reviewable the way the evaluation side's design documents are.
 
 One difference from those documents is stated up front rather than implied: they describe an authored
@@ -118,10 +118,10 @@ mis-spellings in secondary labels, and those are bugs in a picture, not decision
 ## Provenance
 
 - Boards, prompts and digests: [`README.md`](README.md) and
-  [`docs/provenance/assets/design-reference-editorial-blog.md`](../../provenance/assets/design-reference-editorial-blog.md).
+  [`docs/provenance/assets/design-reference-editorial-blog.md`](../../../provenance/assets/design-reference-editorial-blog.md).
   All four are `excluded_from_training: true`, `approved_for_training: false`, generated with
   `gemini-nano-banana-2.1` through an attesting gateway, and independently reviewed by a
   vision-capable model in a different family than the lane that produced them.
 - Behaviour for the same type: [`plan.md`](plan.md) beside this file.
-- Type axis, and the classification of this type as content-only: [`docs/train/briefs/TYPE-AXIS.md`](../../train/briefs/TYPE-AXIS.md).
+- Type axis, and the classification of this type as content-only: [`docs/train/briefs/TYPE-AXIS.md`](../../../train/briefs/TYPE-AXIS.md).
 - Section contract this document follows: `src/design/contract.mjs` (`DESIGN_SECTIONS`).

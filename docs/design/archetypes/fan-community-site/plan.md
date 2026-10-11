@@ -12,7 +12,7 @@ The behaviour of the `fan-community` type from the archetype type axis. This doc
 contract: what a fan and a moderator can do, what the server does about it, and what a journey can
 assert.
 
-It is written in the section order that [`src/design/contract.mjs`](../../../src/design/contract.mjs)
+It is written in the section order that [`src/design/contract.mjs`](../../../../src/design/contract.mjs)
 requires of a plan (`PLAN_SECTIONS`), so it is reviewable the same way the evaluation side's plan
 documents are. It is **not** checked against a generated demo, because there is no generated demo for
 this type - see *Implementation status*. Nothing here should be read as describing running software.
@@ -146,7 +146,7 @@ forms" is exactly the half-truth this axis was written to stop:
   evaluation set) and no family row in `docs/train/briefs/manifest.jsonl`. This type is A1 planning
   material; it is not a training pair and not an evaluation target.
 - The five reference boards are generated, vision-reviewed and digest-pinned
-  ([register](../../provenance/assets/design-reference-fan-community-site.md)); they are pictures of the
+  ([register](../../../provenance/assets/design-reference-fan-community-site.md)); they are pictures of the
   intended states - collection, composer, the fan's own list with status, the moderator queue, and the
   visitor's view - and they demonstrate no behaviour whatsoever.
 - What is required before this type could be called implemented, in the order it becomes true, is
@@ -157,14 +157,14 @@ forms" is exactly the half-truth this axis was written to stop:
 
 ## Provenance
 
-- Type axis and the coverage table this type comes from: [`docs/train/briefs/TYPE-AXIS.md`](../../train/briefs/TYPE-AXIS.md).
+- Type axis and the coverage table this type comes from: [`docs/train/briefs/TYPE-AXIS.md`](../../../train/briefs/TYPE-AXIS.md).
 - Reference boards, prompts and their digests: [`docs/design/archetypes/fan-community-site/README.md`](README.md)
-  and [`docs/provenance/assets/design-reference-fan-community-site.md`](../../provenance/assets/design-reference-fan-community-site.md).
+  and [`docs/provenance/assets/design-reference-fan-community-site.md`](../../../provenance/assets/design-reference-fan-community-site.md).
   Those boards are `excluded_from_training` and not approved for training; they are planning
   references, and their depicted content (community name, titles, handles, notes, counts) is invented.
 - Aesthetic system for the same type: [`design.md`](design.md) beside this file.
 - Expansion naming this archetype (`fan-community-site`) with its roles `fan` and `moderator` and the
-  observable it must produce: [`docs/train/briefs/expansion-matrix.json`](../../train/briefs/expansion-matrix.json).
+  observable it must produce: [`docs/train/briefs/expansion-matrix.json`](../../../train/briefs/expansion-matrix.json).
 - Where this type's claims stand in the coverage table: *partial* today - `community-forum` has notes
   and a thread route, and has neither a contribution edit path nor a moderation state.
 - Work: bead `mwg-train-efg` (type axis and the content-only template). Capability dependency: the

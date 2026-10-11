@@ -57,7 +57,7 @@ test('gallery serves the generated archetype reference boards and the authored e
   assert.ok(boardsOnDisk.length > 0, 'this checkout carries at least one designed board');
   assert.equal(gallery.trainingTargets.filter((family) => gallery.archetypes.some(({ id }) => id === family.id)).length, 0,
     'no id is listed in both arms');
-  assert.ok(gallery.journeys.every((journey) => journey.steps.every((step) => step.available)), 'all 14 supplied boards exist');
+  assert.ok(gallery.journeys.every((journey) => journey.steps.every((step) => step.available)), 'all 27 supplied boards exist');
   assert.deepEqual(gallery.bookingSteps.map(({ id, available }) => [id, available]), [
     ['step1-browse', true], ['step2-form', true], ['step3-confirmation', true],
     ['step4-error', true], ['step5-empty', true],
