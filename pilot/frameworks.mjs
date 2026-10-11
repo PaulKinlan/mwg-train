@@ -643,7 +643,7 @@ if (editForm && refForEdit) {
   return `// Progressive enhancement for the ${archetype.id} flow: one plain script for every arm.
 ${a11y}
 ${enterSubmit}
-${body}${searchEnhance}${updateEnhance}
+${body}${searchEnhance}${updateEnhance}${gameEnhance(archetype)}
 ${framework?.name === 'webcomponents' ? WC_SCRIPT : ''}`;
 }
 
@@ -806,8 +806,7 @@ function searchPageDocument(search) {
  * like sessionTables, so the generated code needs no escaping of its own.
  */
 
-const capabilitiesOf = (archetype) => ({ list_pages: false, detail_page: false, auth: false, cart: false, pricing_tiers: false, checkout: false, survey: false, ...(archetype.capabilities ?? {}) });
-
+const capabilitiesOf = (archetype) => ({ list_pages: false, detail_page: false, auth: false, cart: false, pricing_tiers: false, checkout: false, survey: false, game: false, ...(archetype.capabilities ?? {}) });
 /*
  * The pricing-tiers capability (mwg-train-4lk): three tiers across a monthly/annual toggle, whose
  * inclusions differ by more than price, and a selection that survives into the next step. The prices
@@ -923,7 +922,7 @@ const cartQuantityField = (archetype) => archetype.fields.find((field) => field.
 const checkoutOf = (archetype) => (archetype.capabilities?.checkout === true ? archetype.checkout : null);
 /** The survey policy block, or null when the capability is off - the flag and the data travel together. */
 const surveyOf = (archetype) => (archetype.capabilities?.survey === true ? archetype.survey : null);
-const CART_SID_RAW =
+const gameOf = (archetype) => (archetype.capabilities?.game === true ? archetype.game : null);const CART_SID_RAW =
   "(request.headers.cookie ?? '').split(';').map((part) => part.trim()).find((part) => part.startsWith('sid='))?.slice('sid='.length)";
 const CART_SID_HONO =
   "(c.req.header('cookie') ?? '').split(';').map((part) => part.trim()).find((part) => part.startsWith('sid='))?.slice('sid='.length)";
@@ -1424,6 +1423,246 @@ const honoCheckoutRoutes = () =>
 
 
 /** The small page renderers the capability handlers share, emitted only when a capability needs them. */
+/**
+ * The game's scoreboard, in its own table rather than in `records`.
+ *
+ * A score is not a submitted record: keeping it out of `records` means the engine's read-by-reference
+ * routes can never be asked to render one, and the record flow's pages never show a score as if a visitor
+ * had filled in a form (mwg-train-ypr).
+ */
+const gameTables = () =>
+  [
+    "db.exec('CREATE TABLE IF NOT EXISTS game_scores (ref TEXT PRIMARY KEY, score INTEGER NOT NULL, outcome TEXT NOT NULL, created_at TEXT NOT NULL)');",
+    "const insertGameScore = db.prepare('INSERT INTO game_scores (ref, score, outcome, created_at) VALUES (?, ?, ?, ?)');",
+    "const selectGameScores = db.prepare('SELECT ref, score, outcome, created_at FROM game_scores ORDER BY score DESC, created_at ASC');",
+  ].join('\n');
+
+/**
+ * The game's two pages: the field the loop plays in, and the scoreboard the recorded scores are read from.
+ *
+ * The markup is server-rendered and complete before the script runs - the field, the score, the lives and
+ * the state are all in the document, so the page says what it is without JavaScript and the loop only has
+ * to change what is already there.
+ */
+const gamePages = (archetype) => {
+  const game = gameOf(archetype);
+  return [
+    `const GAME = ${JSON.stringify(game)};`,
+    'const GAME_LANES = 4;',
+    'const GAME_FALL_TICKS = 5;',
+    "const gameField = (state) => '<div id=\"game-field\" data-state=\"' + state + '\" data-lane=\"1\" data-result=\"\" style=\"position:relative;width:' + GAME.width + 'px;height:' + GAME.height + 'px;overflow:hidden;border:1px solid #999\">' + '<div id=\"game-player\" data-lane=\"1\" style=\"position:absolute;bottom:0;left:0;width:36px;height:14px;background:#334\"></div>' + '<div id=\"game-target\" data-lane=\"1\" style=\"position:absolute;top:0;left:0;width:22px;height:22px;background:#b33\"></div>' + '</div>';",
+    "const gamePage = () => capabilityPage('Play ' + GAME.label, '<h1>' + esc(GAME.label) + '</h1>' + '<p id=\"game-intro\">Press Enter or click the field to start. Move with the left and right arrow keys.</p>' + gameField('ready') + '<p>Score <span id=\"game-score\">0</span> of <span id=\"game-target-score\">' + GAME.target + '</span>, lives <span id=\"game-lives\">' + GAME.lives + '</span>.</p>' + '<p id=\"game-state\" role=\"status\" aria-live=\"polite\">Ready</p>' + '<button id=\"game-restart\" type=\"button\">Restart</button>' + '<p><a href=\"/play/scores\">Recorded scores</a></p>');",
+    "const gameScoresPage = (rows) => capabilityPage('Recorded scores', '<h1>Recorded scores</h1>' + (rows.length === 0 ? '<p id=\"game-no-scores\">No scores have been recorded yet.</p>' : '<ol id=\"game-scores\">' + rows.map((row) => '<li data-ref=\"' + esc(row.ref) + '\"><span class=\"score\">' + row.score + '</span> - ' + esc(row.outcome) + '</li>').join('') + '</ol>'));",
+    // The browser is not trusted: the score has to be one this game could have produced. A win must be at
+    // or above the target and a loss below it, so a client cannot POST a win it did not play for, and a
+    // score above the target cannot be recorded at all. Refused with a reason rather than stored.
+    "const gameScoreRefusal = (score, outcome) => {",
+    "  if (!Number.isInteger(score) || score < 0 || score > GAME.target) return 'That is not a score this game could have produced.';",
+    "  if (outcome !== 'win' && outcome !== 'lose') return 'A game ends in a win or a loss.';",
+    "  if ((outcome === 'win') !== (score >= GAME.target)) return 'That outcome does not match that score.';",
+    "  return null;",
+    "};",
+  ].join('\n');
+};
+
+/** The game routes, raw arm: play, record a finished game, read the scoreboard. */
+const rawGameRoutes = () =>
+  [
+    "  if (path === '/play' && request.method === 'GET') {",
+    '    return html(response, gamePage());',
+    '  }',
+    "  if (path === '/play/scores' && request.method === 'GET') {",
+    '    return html(response, gameScoresPage(selectGameScores.all()));',
+    '  }',
+    "  if (path === '/play/score' && request.method === 'POST') {",
+    '    const gameBody = await parseBody(request);',
+    "    const gameScoreText = String(gameBody.score ?? '').trim();",
+    // The score arrives as text, so it is matched as digits: `Number('')` is 0 and `Number(' ')` is 0, and
+    // a blank score must not be recorded as a legitimate zero (the class of bug mwg-train-le6's review
+    // found in the price check).
+    "    const gameScoreValue = /^[0-9]{1,4}$/.test(gameScoreText) ? Number(gameScoreText) : NaN;",
+    "    const gameOutcomeValue = String(gameBody.outcome ?? '').trim();",
+    '    const gameRefusal = gameScoreRefusal(gameScoreValue, gameOutcomeValue);',
+    '    if (gameRefusal) {',
+    "      response.writeHead(422, { 'content-type': 'text/plain; charset=utf-8' });",
+    '      return response.end(gameRefusal);',
+    '    }',
+    "    insertGameScore.run(randomUUID().slice(0, 8), gameScoreValue, gameOutcomeValue, new Date().toISOString());",
+    "    response.writeHead(303, { location: '/play/scores' });",
+    '    return response.end();',
+    '  }',
+  ].join('\n');
+
+/** The game routes, hono arm: the same three, in Hono's routing. */
+const honoGameRoutes = () =>
+  [
+    "app.get('/play', (c) => {",
+    '  return c.html(gamePage());',
+    '});',
+    "app.get('/play/scores', (c) => {",
+    '  return c.html(gameScoresPage(selectGameScores.all()));',
+    '});',
+    "app.post('/play/score', async (c) => {",
+    '  const gameBody = await c.req.parseBody();',
+    "  const gameScoreText = String(gameBody.score ?? '').trim();",
+    "  const gameScoreValue = /^[0-9]{1,4}$/.test(gameScoreText) ? Number(gameScoreText) : NaN;",
+    "  const gameOutcomeValue = String(gameBody.outcome ?? '').trim();",
+    '  const gameRefusal = gameScoreRefusal(gameScoreValue, gameOutcomeValue);',
+    '  if (gameRefusal) return c.text(gameRefusal, 422);',
+    "  insertGameScore.run(randomUUID().slice(0, 8), gameScoreValue, gameOutcomeValue, new Date().toISOString());",
+    "  return c.redirect('/play/scores', 303);",
+    '});',
+  ].join('\n');
+
+/**
+ * The client input loop, the terminal state and the restart. Emitted only when the capability is on, and
+ * appended to the ONE plain-JS script every arm already loads, so no arm needs framework-specific code
+ * and a specification that does not opt in regenerates byte-identically (mwg-train-ypr).
+ */
+const gameEnhance = (archetype) => {
+  const game = gameOf(archetype);
+  if (!game) return '';
+  return `
+// The game: a fixed-timestep loop the visitor advances with the keyboard or the pointer, a terminal state
+// that says which way it ended, a restart that returns to the initial state without a reload, and a score
+// that is recorded by the server rather than only displayed.
+{
+  const gameFieldEl = document.getElementById('game-field');
+  if (gameFieldEl) {
+    const GAME_CONFIG = ${JSON.stringify(game)};
+    const GAME_LANES = 4;
+    const GAME_FALL_TICKS = 5;
+    const gamePlayerEl = document.getElementById('game-player');
+    const gameTargetEl = document.getElementById('game-target');
+    const gameScoreEl = document.getElementById('game-score');
+    const gameLivesEl = document.getElementById('game-lives');
+    const gameStateEl = document.getElementById('game-state');
+    let gameScore = 0;
+    let gameLives = GAME_CONFIG.lives;
+    let gameState = 'ready';
+    let gameResult = '';
+    let gamePlayerLane = 1;
+    let gameLane = 1;
+    let gameCycle = 1;
+    let gameFall = 0;
+    let gameTimer = null;
+    const gameLaneLeft = (lane) => Math.round((GAME_CONFIG.width / GAME_LANES) * lane);
+    const gameRender = () => {
+      gameFieldEl.dataset.state = gameState;
+      gameFieldEl.dataset.lane = String(gameLane);
+      gameFieldEl.dataset.result = gameResult;
+      gamePlayerEl.dataset.lane = String(gamePlayerLane);
+      gameTargetEl.dataset.lane = String(gameLane);
+      gamePlayerEl.style.left = gameLaneLeft(gamePlayerLane) + 'px';
+      gameTargetEl.style.left = gameLaneLeft(gameLane) + 'px';
+      gameTargetEl.style.top = Math.round((GAME_CONFIG.height / GAME_FALL_TICKS) * gameFall) + 'px';
+      gameScoreEl.textContent = String(gameScore);
+      gameLivesEl.textContent = String(gameLives);
+      gameStateEl.textContent = gameState === 'ready' ? 'Ready' : gameState === 'playing' ? 'Playing' : gameResult === 'win' ? 'You win' : 'You lose';
+    };
+    const gameStop = (result) => {
+      gameResult = result;
+      gameState = 'over';
+      if (gameTimer !== null) {
+        clearInterval(gameTimer);
+        gameTimer = null;
+      }
+      gameRender();
+      // The score is recorded by the server, which is what makes it a score rather than a number on a
+      // screen; the response is the scoreboard, which the visitor reaches by the link on the page.
+      fetch('/play/score', {
+        method: 'POST',
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ score: String(gameScore), outcome: result }).toString(),
+      });
+    };
+    const gameTick = () => {
+      gameFall += 1;
+      if (gameFall >= GAME_FALL_TICKS) {
+        if (gamePlayerLane === gameLane) gameScore += 1;
+        else gameLives -= 1;
+        gameFall = 0;
+        gameCycle += 1;
+        gameLane = gameCycle % GAME_LANES;
+      }
+      if (gameScore >= GAME_CONFIG.target) {
+        gameStop('win');
+        return;
+      }
+      if (gameLives <= 0) {
+        gameStop('lose');
+        return;
+      }
+      gameRender();
+    };
+    const gameStart = () => {
+      if (gameState === 'playing') return;
+      gameScore = 0;
+      gameLives = GAME_CONFIG.lives;
+      gameResult = '';
+      gameState = 'playing';
+      gamePlayerLane = 1;
+      gameLane = 1;
+      gameCycle = 1;
+      gameFall = 0;
+      gameRender();
+      gameTimer = setInterval(gameTick, GAME_CONFIG.tick_ms);
+    };
+    // The restart returns the field to the state it was served in, with no reload.
+    const gameReset = () => {
+      if (gameTimer !== null) {
+        clearInterval(gameTimer);
+        gameTimer = null;
+      }
+      gameScore = 0;
+      gameLives = GAME_CONFIG.lives;
+      gameResult = '';
+      gameState = 'ready';
+      gamePlayerLane = 1;
+      gameLane = 1;
+      gameCycle = 1;
+      gameFall = 0;
+      gameRender();
+    };
+    const gameMove = (delta) => {
+      const next = gamePlayerLane + delta;
+      if (next < 0 || next >= GAME_LANES) return;
+      gamePlayerLane = next;
+      gameRender();
+    };
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        gameMove(-1);
+      } else if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        gameMove(1);
+      } else if (event.key === 'Enter') {
+        event.preventDefault();
+        if (gameState === 'playing') return;
+        if (gameState === 'over') gameReset();
+        gameStart();
+      }
+    });
+    // Pointer input: the visitor can play with the mouse or a finger as well as the keyboard.
+    gameFieldEl.addEventListener('pointerdown', (event) => {
+      const bounds = gameFieldEl.getBoundingClientRect();
+      const lane = Math.max(0, Math.min(GAME_LANES - 1, Math.floor(((event.clientX - bounds.left) / bounds.width) * GAME_LANES)));
+      gamePlayerLane = lane;
+      if (gameState === 'ready') gameStart();
+      else if (gameState === 'over') {
+        gameReset();
+        gameStart();
+      }
+      gameRender();
+    });
+    document.getElementById('game-restart')?.addEventListener('click', gameReset);
+    gameRender();
+  }
+}
+`;
+};
+
 const capabilityPages = () =>
   [
     "const esc = (value) => String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;');",
@@ -1593,8 +1832,7 @@ db.exec(\`CREATE TABLE IF NOT EXISTS accounts (email TEXT PRIMARY KEY, password 
 const insert = db.prepare('INSERT INTO records (ref, created_at, payload) VALUES (?, ?, ?)');
 const select = db.prepare('SELECT ref, created_at, payload FROM records WHERE ref = ?');
 ${sessionTables(archetype)}${archetype.journey?.update ? `\nconst updateRecord = db.prepare('UPDATE records SET payload = ? WHERE ref = ?');` : ''}${draftTables(archetype) ? `\n${draftTables(archetype)}` : ''}
-${caps.auth ? `${authTables(archetype)}\n` : ''}${caps.cart ? `${cartTables(caps.checkout)}\n` : ''}${caps.checkout ? `${checkoutTables()}\n` : ''}${caps.survey ? `${surveyTables()}\n` : ''}const count = db.prepare('SELECT COUNT(*) AS n FROM records');
-const list = db.prepare('SELECT ref, payload FROM records ORDER BY created_at DESC LIMIT 50');
+${caps.auth ? `${authTables(archetype)}\n` : ''}${caps.cart ? `${cartTables(caps.checkout)}\n` : ''}${caps.checkout ? `${checkoutTables()}\n` : ''}${caps.survey ? `${surveyTables()}\n` : ''}${caps.game ? `${gameTables()}\n` : ''}const count = db.prepare('SELECT COUNT(*) AS n FROM records');const list = db.prepare('SELECT ref, payload FROM records ORDER BY created_at DESC LIMIT 50');
 
 ${parameterisedWrite ? `// An edit flow edits something: the seeded record is what the form's action points at.
 db.prepare('INSERT OR IGNORE INTO records (ref, created_at, payload) VALUES (?, ?, ?)').run('${EDIT_SEED_REF}', new Date().toISOString(), '{}');
@@ -1619,8 +1857,7 @@ const json = (response, value, status = 200, headers = {}) => {
   response.end(JSON.stringify(value));
 };
 
-${caps.list_pages || caps.detail_page || caps.auth || caps.cart || caps.pricing_tiers || caps.checkout || caps.survey ? `${capabilityPages()}${caps.cart ? `\n${cartPages(archetype)}` : ''}${caps.pricing_tiers ? `\n${pricingPages(archetype)}` : ''}${caps.checkout ? `\n${checkoutPages(archetype)}` : ''}${caps.survey ? `\n${surveyPages(archetype)}` : ''}\n` : ''}const REQUIRED = ${JSON.stringify(archetype.fields.filter((field) => field.type !== 'select' && !field.optional).map((field) => field.name))};
-
+${caps.list_pages || caps.detail_page || caps.auth || caps.cart || caps.pricing_tiers || caps.checkout || caps.survey || caps.game ? `${capabilityPages()}${caps.cart ? `\n${cartPages(archetype)}` : ''}${caps.pricing_tiers ? `\n${pricingPages(archetype)}` : ''}${caps.checkout ? `\n${checkoutPages(archetype)}` : ''}${caps.survey ? `\n${surveyPages(archetype)}` : ''}${caps.game ? `\n${gamePages(archetype)}` : ''}\n` : ''}const REQUIRED = ${JSON.stringify(archetype.fields.filter((field) => field.type !== 'select' && !field.optional).map((field) => field.name))};
 ${enforceMin ? `const MIN_BOUNDS = ${JSON.stringify(minBounds)};\n` : ''}// The cart form has its own fields. Validating it against the search form's required list refused every
 // cart POST with 422, which the write journey caught: a second form on one page needs a second rule.
 const EXTRA_ACTION = ${JSON.stringify(archetype.extraForm?.action ?? '')};
@@ -1807,8 +2044,7 @@ ${caps.auth ? `    if (!authSessionEmail(request.headers.cookie)) return json(re
     return json(response, { ref: row.ref, ...JSON.parse(row.payload) });
   }
 
-${caps.cart ? `${rawCartRoutes(archetype, cartCookieFlags, checkoutOf(archetype))}\n\n` : ''}${caps.checkout ? `${rawCheckoutRoutes()}\n\n` : ''}${caps.survey ? `${rawSurveyRoutes()}\n\n` : ''}${caps.pricing_tiers ? `${rawPricingRoutes()}\n\n` : ''}  // A route the archetype declares is a route the server must serve: /account was declared as the
-  // account flow's page and never implemented, so the journey landed on a 404.
+${caps.cart ? `${rawCartRoutes(archetype, cartCookieFlags, checkoutOf(archetype))}\n\n` : ''}${caps.checkout ? `${rawCheckoutRoutes()}\n\n` : ''}${caps.survey ? `${rawSurveyRoutes()}\n\n` : ''}${caps.game ? `${rawGameRoutes()}\n\n` : ''}${caps.pricing_tiers ? `${rawPricingRoutes()}\n\n` : ''}  // A route the archetype declares is a route the server must serve: /account was declared as the  // account flow's page and never implemented, so the journey landed on a 404.
   if (${JSON.stringify(archetype.routes.filter((route) => route.kind === 'read-session').map((route) => route.path))}.includes(path) && request.method === 'GET') {
 ${caps.auth ? `${RAW_AUTH_GUARD}\n` : ''}    return html(response, await renderDocument({ title: 'Your account' }));
   }
@@ -1946,8 +2182,7 @@ const requiredFor = (path) => (EXTRA_ACTION !== '' && path === EXTRA_ACTION ? EX
 ${sessionTables(archetype)}
 ${caps.auth ? `db.exec('CREATE TABLE IF NOT EXISTS accounts (email TEXT PRIMARY KEY, password TEXT NOT NULL, display_name TEXT)');
 ${authTables(archetype)}
-` : ''}${caps.cart ? `${cartTables(caps.checkout)}\n` : ''}${caps.checkout ? `${checkoutTables()}\n` : ''}${caps.survey ? `${surveyTables()}\n` : ''}${caps.list_pages || caps.detail_page || caps.auth || caps.cart || caps.pricing_tiers || caps.checkout || caps.survey ? `${capabilityPages()}${caps.cart ? `\n${cartPages(archetype)}` : ''}${caps.pricing_tiers ? `\n${pricingPages(archetype)}` : ''}${caps.checkout ? `\n${checkoutPages(archetype)}` : ''}${caps.survey ? `\n${surveyPages(archetype)}` : ''}
-` : ''}const requestLog = [];
+` : ''}${caps.cart ? `${cartTables(caps.checkout)}\n` : ''}${caps.checkout ? `${checkoutTables()}\n` : ''}${caps.survey ? `${surveyTables()}\n` : ''}${caps.game ? `${gameTables()}\n` : ''}${caps.list_pages || caps.detail_page || caps.auth || caps.cart || caps.pricing_tiers || caps.checkout || caps.survey ? `${capabilityPages()}${caps.cart ? `\n${cartPages(archetype)}` : ''}${caps.pricing_tiers ? `\n${pricingPages(archetype)}` : ''}${caps.checkout ? `\n${checkoutPages(archetype)}` : ''}${caps.survey ? `\n${surveyPages(archetype)}` : ''}` : ''}const requestLog = [];
 const app = new Hono();
 app.use('*', async (c, next) => {
   await next();
@@ -2098,8 +2333,7 @@ ${caps.auth ? "  if (!authSessionEmail(c.req.header('cookie'))) return c.json({ 
   return c.json({ ref: row.ref, ...JSON.parse(row.payload) });
 });
 
-${caps.cart ? `${honoCartRoutes(archetype, cartCookieFlags, checkoutOf(archetype))}\n\n` : ''}${caps.checkout ? `${honoCheckoutRoutes()}\n\n` : ''}${caps.survey ? `${honoSurveyRoutes()}\n\n` : ''}${caps.pricing_tiers ? `${honoPricingRoutes()}\n\n` : ''}for (const sessionPage of ${JSON.stringify(archetype.routes.filter((route) => route.kind === 'read-session').map((route) => route.path))}) {
-${caps.auth ? `  app.get(sessionPage, (c) => {
+${caps.cart ? `${honoCartRoutes(archetype, cartCookieFlags, checkoutOf(archetype))}\n\n` : ''}${caps.checkout ? `${honoCheckoutRoutes()}\n\n` : ''}${caps.survey ? `${honoSurveyRoutes()}\n\n` : ''}${caps.game ? `${honoGameRoutes()}\n\n` : ''}${caps.pricing_tiers ? `${honoPricingRoutes()}\n\n` : ''}for (const sessionPage of ${JSON.stringify(archetype.routes.filter((route) => route.kind === 'read-session').map((route) => route.path))}) {${caps.auth ? `  app.get(sessionPage, (c) => {
     if (!authSessionEmail(c.req.header('cookie'))) return c.redirect('/login', 303);
     return c.html(renderDocument({ title: 'Your account' }));
   });` : "  app.get(sessionPage, (c) => c.html(renderDocument({ title: 'Your account' })));"}
