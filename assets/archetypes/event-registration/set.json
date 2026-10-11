@@ -4,7 +4,7 @@
     "target_dir": "docs/design/archetypes/event-registration",
     "readme": {
       "path": "docs/design/archetypes/event-registration/README.md",
-      "sha256": "d0f4c3a5dc5bfbf3ad7d526f1430929bfe39ea8ed6baa2ec06386f884fc20bb3"
+      "sha256": "4d677a09e152224cd0f5876de1eab14a0229ee6a4466c4f4b8f7719268ab13f0"
     },
     "documents": [
       {
@@ -135,14 +135,14 @@
   "images": [
     {
       "name": "step1-event.jpg",
-      "sha256": "f04fa714789fa5fe2a4e57c4282fa8c36f64f14558f5add246cd4644edc1a3ea",
-      "bytes": 469692,
+      "sha256": "835a958739512d20e33a77392006d7179d4fd4dcea932f238c4d16176f727342",
+      "bytes": 476978,
       "source": "docs/design/archetypes/event-registration/step1-event.jpg"
     },
     {
       "name": "step2-pass.jpg",
-      "sha256": "4de701fe6ff9e96e88b8c6fbd985920db7b34153a6386842c7e305e4264529b7",
-      "bytes": 436861,
+      "sha256": "6d9652b8437048e3f921c588090bc71a671d6038f1d146dc0d3f78b31edd90b3",
+      "bytes": 431314,
       "source": "docs/design/archetypes/event-registration/step2-pass.jpg"
     }
   ],
