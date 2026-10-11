@@ -42,6 +42,10 @@ test('spec gate: the wiki corpus is validated as content, and a link to a page n
   assert.ok(says(pages((list) => [list[0]]), 'at least two pages'), 'a corpus of one page is refused');
   assert.ok(says(pages((list) => [list[0], { ...list[1], slug: 'soil' }]), 'repeats soil'), 'a duplicate slug is refused');
   assert.ok(says(pages((list) => [list[0], { ...list[1], slug: 'Not A Slug' }]), 'kebab-case'), 'a slug that is not an address is refused');
+  // The capability serves `/wiki/search` itself, before `/wiki/:slug`, so a page called `search` would be
+  // unreachable - the reader would get the search form. Found in review of this branch.
+  const searchPage = { slug: 'search', title: 'Search', revisions: [{ body: 'A page called search.', author: 'Ada Lovelace', created_at: '2026-05-01T00:00:00.000Z' }] };
+  assert.ok(says(pages((list) => [...list, searchPage]), "cannot be 'search'"), 'a page slugged search is refused, because that is where the search route is served');
   assert.ok(says(pages((list) => [list[0], { ...list[1], revisions: [] }]), 'nothing to read'), 'a page with no revisions is refused');
 
   // History is what separates this type from a blog (the type axis is explicit), and it has to be orderable

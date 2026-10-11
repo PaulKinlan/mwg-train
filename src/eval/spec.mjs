@@ -614,6 +614,11 @@ export function validateSpec(spec) {
           }
           if (!isString(page.slug) || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(page.slug)) {
             at(`${where}.slug`, "must be a kebab-case slug, because it is the address the page is read at");
+          } else if (page.slug === 'search') {
+            // `/wiki/search` is the capability's own route and is matched before `/wiki/:slug`, so a page
+            // called `search` would be unreachable - a reader asking for it would get the search form
+            // instead of the page (mwg-train-suu review).
+            at(`${where}.slug`, "cannot be 'search', which is where the search route is served");
           } else if (slugs.has(page.slug)) at(`${where}.slug`, `repeats ${page.slug}`);
           else slugs.add(page.slug);
           if (!isString(page.title) || page.title.trim() === '') at(`${where}.title`, 'must title the page');
