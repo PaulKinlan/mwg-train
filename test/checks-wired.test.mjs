@@ -5,28 +5,25 @@ import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
+import { CHECKS, EXCLUDED } from '../scripts/run-checks.mjs';
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
 
-// The set of checks the gate runs is DERIVED from `check:all` below, not listed here. It used to be a hand-written
-// `WIRED` set that the test then compared against `check:all`, which meant adding a check the correct way - a script
-// in package.json plus an entry in check:all - still failed this test until the same name was copied into a third
-// place. The failure mode was the worst kind: `check:all` green while `npm test` was red, because check:all does not
-// run this test. That trap cost mwg-train-9by a review round, and it is why the derivation and the assertions below
-// are shaped the way they are: what matters is that every check script is either run by the gate or excluded with a
-// reason, and a check must not be able to be silently absent from both.
+// The set of checks the gate runs is READ from `scripts/run-checks.mjs`, which is also what `check:all` runs. It used
+// to be derived by parsing `npm run <name>` back out of a 600-character shell string in package.json, which removed a
+// hand-written mirror but left the guard coupled to shell formatting - and the string could be malformed in ways the
+// derivation tolerated (`npm run check:bar && check:foo` scraped a usable-looking name out of a command a shell
+// cannot run). Now it is data in one place, so there is nothing to parse and nothing for a person to forget.
+//
+// The failure mode the derivation was introduced to prevent still governs the shape here: `check:all` green while
+// `npm test` is red, because check:all does not run this test. What matters is that every check script is either run
+// by the gate or excluded with a reason, and that a check cannot be silently absent from both.
 //
 // `EXCLUDED` stays explicit because it is the one thing that cannot be derived: the checks that must NOT be in the
 // gate, and the reason each one is not. Everything the gate does run works offline - no network, no browser, no
 // spawned server - which is what lets `check:all` run anywhere; any check that cannot meet that belongs here with
-// its reason.
-
-const EXCLUDED = new Map([
-  ['check:served-routes', 'requires a spawned HTTP server'],
-  ['check:served-routes:strict', 'requires a spawned HTTP server'],
-  ['check:cross-arm-parity', 'requires Chrome'],
-  ['check:cross-arm-parity:strict', 'requires Chrome']
-]);
+// its reason. It now lives beside the list, in the runner, so the gate and its exclusions are defined together.
 
 export async function executeChecks(checkNames, spawnFn, timeoutMs = 8000) {
   // NOTE: bead mwg-train-4oi covers the fail-open behaviour on empty input for existing check scripts.
@@ -56,27 +53,20 @@ test('derive and validate check set', async () => {
   const checkNames = Object.keys(pkg.scripts).filter(k => /^(check|scan|lint):/.test(k) && k !== 'check:all');
   assert.ok(checkNames.length >= 20, `Derived count too low: ${checkNames.length}`);
 
-  const checkAllStr = pkg.scripts['check:all'];
-  assert.ok(checkAllStr, 'check:all script is missing');
-
-  // The gate's own list is the authority for what is wired. Parsing it here - rather than keeping a second copy in
-  // this file - is what makes the trap impossible: there is nothing left for a developer to forget to update.
-  const checkAllParts = checkAllStr.split('&&').map((part) => part.trim());
-  // Every entry must be an `npm run <script>`. A bare command still runs when the gate is invoked through npm,
-  // but the shell runs check:all too - and a bare `check:foo` would break it there while passing every assertion
-  // below, because the name is scraped into `wired` either way.
-  for (const part of checkAllParts) {
-    assert.ok(
-      part.startsWith('npm run '),
-      `check:all entry "${part}" must start with "npm run " - a bare command runs under npm but not in a shell`,
-    );
-  }
-  const wired = new Set(checkAllParts.map((part) => part.replace(/^npm run /, '')));
-  assert.ok(wired.size >= 20, `check:all runs only ${wired.size} check(s)`);
+  // The gate's list is the authority for what is wired, and since mwg-train-60c it is read from where the gate reads
+  // it: scripts/run-checks.mjs. This assertion is the coupling - if package.json stops running the runner, the list in
+  // the runner is no longer what the gate does, and every assertion below would be about nothing.
   assert.strictEqual(
-    new Set(checkAllParts).size,
-    checkAllParts.length,
-    'check:all runs the same command twice',
+    pkg.scripts['check:all'],
+    'node scripts/run-checks.mjs',
+    'check:all must run scripts/run-checks.mjs, which is where this test reads the gate from',
+  );
+  const wired = new Set(CHECKS);
+  assert.ok(wired.size >= 20, `the gate runs only ${wired.size} check(s)`);
+  assert.strictEqual(
+    wired.size,
+    CHECKS.length,
+    'the gate runs the same check twice',
   );
 
   for (const name of checkNames) {
