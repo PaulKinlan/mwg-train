@@ -65,10 +65,32 @@ test('check:brief-schema healthy', () => {
   assert.ok(res.out.includes('PASS -'));
 });
 
-test('check:route-conformance healthy', () => {
+test('check:route-conformance healthy, or a labelled skip when its scaffolding is absent', () => {
+  // Two outcomes are legitimate here and the check documents both: with the generated projects present it
+  // compares every project and passes; with them absent it prints a labelled SKIP naming the command that
+  // produces them and exits 0, because a clean checkout never has them and failing there is how a gate stops
+  // being read (mwg-train-xku). The test used to assert the PASS line unconditionally, so it passed only in a
+  // worktree that happened to have the scaffolding and failed for everyone else for a reason that is not a
+  // defect (mwg-train-bx2). Asserting only the skip would be the same mistake mirrored, since it would fail in
+  // a scaffolded tree - so this branches on the same condition the check uses.
   const res = run(['scripts/check-route-conformance.mjs']);
-  assert.strictEqual(res.code, 0);
-  assert.ok(res.out.includes('PASS -'));
+  assert.strictEqual(res.code, 0, `a labelled skip is not a failure: ${res.out}`);
+  const projects = path.join(ROOT, 'pilot', 'training-projects');
+  if (fs.existsSync(projects)) {
+    // Scaffolding present: this really is a conformance run, and it has to have checked something.
+    assert.ok(res.out.includes('check-route-conformance: PASS - '), res.out);
+    assert.ok(/[1-9]\d* project\(s\) across [1-9]\d* families/.test(res.out), res.out);
+  } else {
+    // Scaffolding absent: the run must say so, name the path it wanted and the command that produces it, and
+    // must not be mistakable for a conformance result. The last assertion is the one that keeps this from
+    // becoming the vacuous version of the test - a check that skipped has not checked anything, so it must not
+    // be printing a PASS, and this test must not accept one.
+    assert.ok(res.out.includes('check-route-conformance: SKIPPED - '), res.out);
+    assert.ok(res.out.includes(projects), 'the skip has to name the path it looked for');
+    assert.ok(res.out.includes('scaffold:train-corpus'), 'the skip has to name the command that produces them');
+    assert.ok(res.out.includes('NOT a conformance result'), 'the skip must not be mistakable for a pass');
+    assert.equal(res.out.includes('PASS -'), false, 'a skipped check must not print a conformance result');
+  }
 });
 
 test('lint:provenance healthy', () => {
