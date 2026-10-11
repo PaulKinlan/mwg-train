@@ -58,7 +58,7 @@ a reflected GET query (`/search`), a server session (`/account`, `/profile`), a 
 | `blog` | **partial** | `docs-site` and `community-forum` have an index route and a `/record/:ref` detail route | long-form content, a stable deep link per article, and sharing - the detail page exists but holds a submitted record, not an article |
 | `storefront` | **partial** | `web-shop` has a products list and a checkout write; the pilot's `catalogue` has search and a session cart | variant selection, and a cart the user builds across pages - the list exists, the cart is one form |
 | `checkout` | **missing** | none | cart arithmetic, totals, shipping/tax, a simulated payment, and a durable receipt |
-| `wiki` | **missing** | none | a cross-linked corpus, search over it, and history or version - the listing route is not a wiki |
+| `wiki` | **partial** | no family yet; the builder now has the `wiki` capability - search over a seeded corpus by title and body, cross-links that resolve including a link to a page nobody has written, and revision history with author and date - tested in all seven arms and driven in a browser (mwg-train-suu) | a wiki-shaped training family: a corpus of pages that link to each other, and a page with two revisions a reader can tell apart |
 | `fan-community` | **partial** | `community-forum` has notes and a thread route | canon/media browsing, contribution editing, and a moderation boundary |
 | `interactive-demo` | **missing** | none | a configured run, a real execution, and inspectable output or errors |
 | `b2b-saas-signup` | **partial** | `onboarding-auth` writes an account and reads the session; the pilot's `account-recovery` adds a reset | sign-in (credential verification), a company/workspace, a plan, and any second role |
@@ -67,9 +67,11 @@ a reflected GET query (`/search`), a server session (`/account`, `/profile`), a 
 | `record-form` | **satisfied** | all 30 families; 7 of them `booking`, 3 `web-shop`, 2 each of `dashboard`, `directory-listing`, `event-registration`, `support-helpdesk`, `survey-form`, `docs-site`, `expense-tracker`, 1 each of 6 more | nothing - this is the one type the corpus covers |
 | `survey-eligibility` | **partial** | `tr-10`, `tr-23` declare survey shapes | branching, a review step, and a result derived from the answers rather than a saved record |
 
-So: **1 of 13 types is satisfied, 5 partially, 7 missing entirely** - and the satisfied one is the type
-Paul did not ask about. That is the gap he has been reporting as "not enough archetypes", and it is a
-capability gap in the builder, not a content gap in the manifest.
+So: **1 of 13 types is satisfied, 6 partially, 6 missing entirely** - and the satisfied one is still the type
+Paul did not ask about. The gap he has been reporting as "not enough archetypes" is closing from the other end,
+though: `wiki` is no longer missing, because the capability it needed now exists. That is still a capability gap in
+the builder rather than a content gap in the manifest, which is why the status column above counts corpus coverage
+while the table below counts what the builder can express.
 
 ## What each missing type needs before it can be a training pair
 
@@ -88,7 +90,6 @@ adding a route kind to satisfy a taxonomy is the wrong direction.
 | `storefront` | capability-gated | variant selection and a cart accumulated across pages |
 | `checkout` | capability-gated | arithmetic over cart lines, totals, and a simulated payment step |
 | `pricing-tiers` | capability-gated | a period toggle and a tier selection persisted into signup |
-| `wiki` | capability-gated | search over a corpus, cross-links, and history |
 | `interactive-explainer` | capability-gated | a derived value recomputed on input, and a visual bound to it |
 | `interactive-demo` | capability-gated | an execution path with inspectable output, sandboxed |
 | `game` | capability-gated | a client input loop and a state machine with a terminal state |

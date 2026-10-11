@@ -806,7 +806,7 @@ function searchPageDocument(search) {
  * like sessionTables, so the generated code needs no escaping of its own.
  */
 
-const capabilitiesOf = (archetype) => ({ list_pages: false, detail_page: false, auth: false, cart: false, pricing_tiers: false, checkout: false, survey: false, game: false, workspace: false, ...(archetype.capabilities ?? {}) });
+const capabilitiesOf = (archetype) => ({ list_pages: false, detail_page: false, auth: false, cart: false, pricing_tiers: false, checkout: false, survey: false, game: false, workspace: false, wiki: false, ...(archetype.capabilities ?? {}) });
 
 /*
  * The pricing-tiers capability (mwg-train-4lk): three tiers across a monthly/annual toggle, whose
@@ -925,6 +925,7 @@ const checkoutOf = (archetype) => (archetype.capabilities?.checkout === true ? a
 /** The survey policy block, or null when the capability is off - the flag and the data travel together. */
 const surveyOf = (archetype) => (archetype.capabilities?.survey === true ? archetype.survey : null);
 const workspaceOf = (archetype) => (archetype.capabilities?.workspace === true ? archetype.workspace : null);
+const wikiOf = (archetype) => (archetype.capabilities?.wiki === true ? archetype.wiki : null);
 const CART_SID_RAW =
   "(request.headers.cookie ?? '').split(';').map((part) => part.trim()).find((part) => part.startsWith('sid='))?.slice('sid='.length)";
 const CART_SID_HONO =
@@ -1905,6 +1906,192 @@ const honoWorkspaceRoutes = () =>
     '});',
   ].join('\n');
 
+/**
+ * The wiki capability's statements: pages and revisions tables, and prepared statements.
+ */
+const wikiTables = () =>
+  [
+    "db.exec('CREATE TABLE IF NOT EXISTS wiki_pages (slug TEXT PRIMARY KEY, title TEXT NOT NULL)');",
+    "db.exec('CREATE TABLE IF NOT EXISTS wiki_revisions (slug TEXT NOT NULL, revision INTEGER NOT NULL, body TEXT NOT NULL, author TEXT NOT NULL, created_at TEXT NOT NULL, PRIMARY KEY (slug, revision))');",
+    "const insertWikiPage = db.prepare('INSERT OR IGNORE INTO wiki_pages (slug, title) VALUES (?, ?)');",
+    "const insertWikiRevision = db.prepare('INSERT OR IGNORE INTO wiki_revisions (slug, revision, body, author, created_at) VALUES (?, ?, ?, ?, ?)');",
+    "const selectWikiPage = db.prepare('SELECT slug, title FROM wiki_pages WHERE slug = ?');",
+    "const selectWikiPages = db.prepare('SELECT slug, title FROM wiki_pages ORDER BY slug');",
+    "const selectWikiRevisions = db.prepare('SELECT slug, revision, body, author, created_at FROM wiki_revisions WHERE slug = ? ORDER BY revision');",
+    "const selectWikiRevision = db.prepare('SELECT slug, revision, body, author, created_at FROM wiki_revisions WHERE slug = ? AND revision = ?');",
+    "const selectWikiLatestRevision = db.prepare('SELECT slug, revision, body, author, created_at FROM wiki_revisions WHERE slug = ? ORDER BY revision DESC LIMIT 1');",
+    "const countWikiRevisions = db.prepare('SELECT COUNT(*) AS count FROM wiki_revisions WHERE slug = ?');",
+    "const searchWikiPages = db.prepare('SELECT DISTINCT p.slug, p.title FROM wiki_pages p JOIN wiki_revisions r ON p.slug = r.slug WHERE instr(lower(p.title), lower(?)) > 0 OR instr(lower(r.body), lower(?)) > 0 ORDER BY p.slug');",
+  ].join('\n');
+
+/**
+ * The wiki capability: seed corpus, cross-link resolution, backlinks, and pages.
+ */
+const wikiPages = (archetype) => {
+  const wiki = wikiOf(archetype);
+  return [
+    `const WIKI = ${JSON.stringify(wiki)};`,
+    "if (WIKI && Array.isArray(WIKI.pages)) {",
+    "  for (const page of WIKI.pages) {",
+    "    insertWikiPage.run(page.slug, page.title);",
+    "    for (let i = 0; i < page.revisions.length; i++) {",
+    "      const rev = page.revisions[i];",
+    "      insertWikiRevision.run(page.slug, i + 1, rev.body, rev.author, rev.created_at);",
+    "    }",
+    "  }",
+    "}",
+    "const wikiAnchor = (inner) => {",
+    "  const parts = String(inner).split('|');",
+    "  const slug = parts[0].trim();",
+    "  const label = parts.length > 1 ? parts.slice(1).join('|').trim() : slug;",
+    "  const page = selectWikiPage.get(slug);",
+    "  if (page) {",
+    "    return '<a href=\"/wiki/' + encodeURIComponent(slug) + '\" class=\"wiki-link\">' + esc(label) + '</a>';",
+    "  }",
+    "  return '<a href=\"/wiki/' + encodeURIComponent(slug) + '\" class=\"wiki-link missing\" data-create=\"true\">' + esc(label) + ' (create this page)</a>';",
+    "};",
+    "const wikiBody = (body) => String(body).split(/\\[\\[([^\\]]+)\\]\\]/).map((part, index) => (index % 2 === 1 ? wikiAnchor(part) : esc(part))).join('');",
+    "const wikiBacklinks = (slug) => {",
+    "  const allPages = selectWikiPages.all();",
+    "  return allPages.filter((page) => {",
+    "    if (page.slug === slug) return false;",
+    "    const latest = selectWikiLatestRevision.get(page.slug);",
+    "    if (!latest) return false;",
+    "    return latest.body.includes('[[' + slug + ']]') || latest.body.includes('[[' + slug + '|');",
+    "  });",
+    "};",
+    "const wikiIndexPage = (pages) => capabilityPage('Wiki', '<h1>Wiki</h1><form id=\"wiki-search-form\" method=\"get\" action=\"/wiki/search\"><label for=\"wiki-search-input\">Search wiki</label><input id=\"wiki-search-input\" name=\"q\" type=\"search\" required><button type=\"submit\">Search</button></form>' + (pages.length === 0 ? '<p id=\"wiki-empty\">No pages yet.</p>' : '<ul id=\"wiki-pages\">' + pages.map((page) => '<li><a href=\"/wiki/' + encodeURIComponent(page.slug) + '\" class=\"wiki-link\">' + esc(page.title) + '</a></li>').join('') + '</ul>'));",
+    "const wikiSearchResultsPage = (query, pages) => capabilityPage('Search: ' + query, '<h1>Search: ' + esc(query) + '</h1><form id=\"wiki-search-form\" method=\"get\" action=\"/wiki/search\"><label for=\"wiki-search-input\">Search wiki</label><input id=\"wiki-search-input\" name=\"q\" type=\"search\" value=\"' + esc(query) + '\" required><button type=\"submit\">Search</button></form>' + (pages.length === 0 ? '<p id=\"wiki-no-results\">No pages found matching &quot;' + esc(query) + '&quot;.</p>' : '<ul id=\"wiki-search-results\">' + pages.map((page) => '<li><a href=\"/wiki/' + encodeURIComponent(page.slug) + '\" class=\"wiki-link\">' + esc(page.title) + '</a></li>').join('') + '</ul>') + '<p><a href=\"/wiki\">Back to wiki index</a></p>');",
+    "const wikiPage = (page, latest, backlinks) => capabilityPage(page.title, '<h1>' + esc(page.title) + '</h1>' + (latest ? '<p class=\"wiki-meta\">Revision <span class=\"wiki-revision\">' + latest.revision + '</span> by <span class=\"wiki-author\">' + esc(latest.author) + '</span> on <time class=\"wiki-date\">' + esc(latest.created_at) + '</time> &mdash; <a href=\"/wiki/' + encodeURIComponent(page.slug) + '/history\" class=\"wiki-history-link\">History</a></p><div class=\"wiki-body\">' + wikiBody(latest.body) + '</div>' : '') + '<section class=\"wiki-backlinks\"><h2>Backlinks</h2>' + (backlinks.length === 0 ? '<p class=\"wiki-no-backlinks\">No backlinks.</p>' : '<ul class=\"wiki-backlinks-list\">' + backlinks.map((b) => '<li><a href=\"/wiki/' + encodeURIComponent(b.slug) + '\" class=\"wiki-link\">' + esc(b.title) + '</a></li>').join('') + '</ul>') + '</section>' + '<details class=\"wiki-edit-section\"><summary>Add revision</summary><form id=\"wiki-revision-form\" method=\"post\" action=\"/wiki/' + encodeURIComponent(page.slug) + '/create\"><label for=\"wiki-edit-author\">Author</label><input id=\"wiki-edit-author\" name=\"author\" type=\"text\" required><label for=\"wiki-edit-body\">Body</label><textarea id=\"wiki-edit-body\" name=\"body\" required>' + esc(latest?.body ?? '') + '</textarea><button type=\"submit\">Add revision</button></form></details>' + '<p><a href=\"/wiki\">Back to wiki index</a></p>');",
+    "const wikiMissingPage = (slug) => capabilityPage('Create ' + slug, '<h1>Create ' + esc(slug) + '</h1><p class=\"wiki-missing-notice\">This page does not exist yet. You can create it below.</p><form id=\"wiki-create-form\" method=\"post\" action=\"/wiki/' + encodeURIComponent(slug) + '/create\"><label for=\"wiki-title\">Title</label><input id=\"wiki-title\" name=\"title\" type=\"text\" value=\"' + esc(slug) + '\" required><label for=\"wiki-author\">Author</label><input id=\"wiki-author\" name=\"author\" type=\"text\" required><label for=\"wiki-body\">Body</label><textarea id=\"wiki-body\" name=\"body\" required></textarea><button type=\"submit\">Create page</button></form><p><a href=\"/wiki\">Back to wiki index</a></p>');",
+    "const wikiHistoryPage = (page, revisions) => capabilityPage('History: ' + page.title, '<h1>History of ' + esc(page.title) + '</h1>' + '<p><a href=\"/wiki/' + encodeURIComponent(page.slug) + '\">Back to current page</a></p><ul id=\"wiki-history\" class=\"wiki-revisions\">' + revisions.map((rev) => '<li class=\"wiki-revision-row\" data-revision=\"' + rev.revision + '\"><a href=\"/wiki/' + encodeURIComponent(page.slug) + '/revision/' + rev.revision + '\" class=\"wiki-revision-link\">Revision ' + rev.revision + '</a> &mdash; <span class=\"wiki-author\">' + esc(rev.author) + '</span> on <time class=\"wiki-date\">' + esc(rev.created_at) + '</time></li>').join('') + '</ul>');",
+    "const wikiRevisionPage = (page, revision) => capabilityPage(page.title + ' (Revision ' + revision.revision + ')', '<h1>' + esc(page.title) + '</h1><div class=\"wiki-revision-banner\" role=\"status\"><p>Viewing revision <strong>' + revision.revision + '</strong> by <span class=\"wiki-author\">' + esc(revision.author) + '</span> on <time class=\"wiki-date\">' + esc(revision.created_at) + '</time>. <a href=\"/wiki/' + encodeURIComponent(page.slug) + '\" class=\"wiki-current-link\">View current page</a></p></div><div class=\"wiki-body\">' + wikiBody(revision.body) + '</div><p><a href=\"/wiki/' + encodeURIComponent(page.slug) + '/history\">View history</a> | <a href=\"/wiki\">Back to wiki index</a></p>');",
+  ].join('\n');
+};
+
+/** The wiki routes, raw arm: search, history, revision, create, and page. */
+const rawWikiRoutes = () =>
+  [
+    "  if (path === '/wiki' && request.method === 'GET') {",
+    "    const wikiAllPages = selectWikiPages.all();",
+    "    return html(response, wikiIndexPage(wikiAllPages));",
+    "  }",
+    "  if (path === '/wiki/search' && request.method === 'GET') {",
+    "    const wikiQuery = (url.searchParams.get('q') ?? '').trim();",
+    "    const wikiResults = wikiQuery === '' ? [] : searchWikiPages.all(wikiQuery, wikiQuery);",
+    "    return html(response, wikiSearchResultsPage(wikiQuery, wikiResults));",
+    "  }",
+    "  const wikiHistoryMatch = path.match(/^\\/wiki\\/([^/]+)\\/history$/);",
+    "  if (wikiHistoryMatch && request.method === 'GET') {",
+    "    const wikiSlug = decodeURIComponent(wikiHistoryMatch[1]);",
+    "    const wikiPageRow = selectWikiPage.get(wikiSlug);",
+    "    if (!wikiPageRow) {",
+    "      return html(response, wikiMissingPage(wikiSlug), 200);",
+    "    }",
+    "    const wikiRevRows = selectWikiRevisions.all(wikiSlug);",
+    "    return html(response, wikiHistoryPage(wikiPageRow, wikiRevRows));",
+    "  }",
+    "  const wikiRevisionMatch = path.match(/^\\/wiki\\/([^/]+)\\/revision\\/([^/]+)$/);",
+    "  if (wikiRevisionMatch && request.method === 'GET') {",
+    "    const wikiSlug = decodeURIComponent(wikiRevisionMatch[1]);",
+    "    const wikiPageRow = selectWikiPage.get(wikiSlug);",
+    "    const wikiRevNum = Number.parseInt(wikiRevisionMatch[2], 10);",
+    "    const wikiRevRow = wikiPageRow && Number.isInteger(wikiRevNum) ? selectWikiRevision.get(wikiSlug, wikiRevNum) : null;",
+    "    if (!wikiRevRow) {",
+    "      response.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });",
+    "      return response.end('We could not find that revision.');",
+    "    }",
+    "    return html(response, wikiRevisionPage(wikiPageRow, wikiRevRow));",
+    "  }",
+    "  const wikiCreateMatch = path.match(/^\\/wiki\\/([^/]+)\\/create$/);",
+    "  if (wikiCreateMatch && request.method === 'POST') {",
+    "    const wikiSlug = decodeURIComponent(wikiCreateMatch[1]);",
+    "    const wikiBodyPayload = await parseBody(request);",
+    "    const wikiAuthor = String(wikiBodyPayload.author ?? '').trim();",
+    "    const wikiBodyText = String(wikiBodyPayload.body ?? '').trim();",
+    "    if (!wikiAuthor || !wikiBodyText) {",
+    "      response.writeHead(422, { 'content-type': 'text/plain; charset=utf-8' });",
+    "      return response.end('Author and body are required.');",
+    "    }",
+    "    const wikiExistingPage = selectWikiPage.get(wikiSlug);",
+    "    if (!wikiExistingPage) {",
+    "      const wikiTitle = String(wikiBodyPayload.title ?? '').trim() || wikiSlug;",
+    "      insertWikiPage.run(wikiSlug, wikiTitle);",
+    "      insertWikiRevision.run(wikiSlug, 1, wikiBodyText, wikiAuthor, new Date().toISOString());",
+    "    } else {",
+    "      const wikiNextRev = (selectWikiLatestRevision.get(wikiSlug)?.revision ?? 0) + 1;",
+    "      insertWikiRevision.run(wikiSlug, wikiNextRev, wikiBodyText, wikiAuthor, new Date().toISOString());",
+    "    }",
+    "    response.writeHead(303, { location: '/wiki/' + encodeURIComponent(wikiSlug) });",
+    "    return response.end();",
+    "  }",
+    "  const wikiPageMatch = path.match(/^\\/wiki\\/([^/]+)$/);",
+    "  if (wikiPageMatch && request.method === 'GET') {",
+    "    const wikiSlug = decodeURIComponent(wikiPageMatch[1]);",
+    "    const wikiPageRow = selectWikiPage.get(wikiSlug);",
+    "    if (!wikiPageRow) {",
+    "      return html(response, wikiMissingPage(wikiSlug), 200);",
+    "    }",
+    "    const wikiLatestRev = selectWikiLatestRevision.get(wikiSlug);",
+    "    const wikiBacklinkRows = wikiBacklinks(wikiSlug);",
+    "    return html(response, wikiPage(wikiPageRow, wikiLatestRev, wikiBacklinkRows));",
+    "  }",
+  ].join('\n');
+
+/** The wiki routes, hono arm: the same six in Hono routing. */
+const honoWikiRoutes = () =>
+  [
+    "app.get('/wiki', (c) => {",
+    "  const wikiAllPages = selectWikiPages.all();",
+    "  return c.html(wikiIndexPage(wikiAllPages));",
+    "});",
+    "app.get('/wiki/search', (c) => {",
+    "  const wikiQuery = (c.req.query('q') ?? '').trim();",
+    "  const wikiResults = wikiQuery === '' ? [] : searchWikiPages.all(wikiQuery, wikiQuery);",
+    "  return c.html(wikiSearchResultsPage(wikiQuery, wikiResults));",
+    "});",
+    "app.get('/wiki/:slug/history', (c) => {",
+    "  const wikiSlug = c.req.param('slug');",
+    "  const wikiPageRow = selectWikiPage.get(wikiSlug);",
+    "  if (!wikiPageRow) return c.html(wikiMissingPage(wikiSlug), 200);",
+    "  const wikiRevRows = selectWikiRevisions.all(wikiSlug);",
+    "  return c.html(wikiHistoryPage(wikiPageRow, wikiRevRows));",
+    "});",
+    "app.get('/wiki/:slug/revision/:n', (c) => {",
+    "  const wikiSlug = c.req.param('slug');",
+    "  const wikiPageRow = selectWikiPage.get(wikiSlug);",
+    "  const wikiRevNum = Number.parseInt(c.req.param('n'), 10);",
+    "  const wikiRevRow = wikiPageRow && Number.isInteger(wikiRevNum) ? selectWikiRevision.get(wikiSlug, wikiRevNum) : null;",
+    "  if (!wikiRevRow) return c.text('We could not find that revision.', 404);",
+    "  return c.html(wikiRevisionPage(wikiPageRow, wikiRevRow));",
+    "});",
+    "app.post('/wiki/:slug/create', async (c) => {",
+    "  const wikiSlug = c.req.param('slug');",
+    "  const wikiBodyPayload = await c.req.parseBody();",
+    "  const wikiAuthor = String(wikiBodyPayload.author ?? '').trim();",
+    "  const wikiBodyText = String(wikiBodyPayload.body ?? '').trim();",
+    "  if (!wikiAuthor || !wikiBodyText) return c.text('Author and body are required.', 422);",
+    "  const wikiExistingPage = selectWikiPage.get(wikiSlug);",
+    "  if (!wikiExistingPage) {",
+    "    const wikiTitle = String(wikiBodyPayload.title ?? '').trim() || wikiSlug;",
+    "    insertWikiPage.run(wikiSlug, wikiTitle);",
+    "    insertWikiRevision.run(wikiSlug, 1, wikiBodyText, wikiAuthor, new Date().toISOString());",
+    "  } else {",
+    "    const wikiNextRev = (selectWikiLatestRevision.get(wikiSlug)?.revision ?? 0) + 1;",
+    "    insertWikiRevision.run(wikiSlug, wikiNextRev, wikiBodyText, wikiAuthor, new Date().toISOString());",
+    "  }",
+    "  return c.redirect('/wiki/' + encodeURIComponent(wikiSlug), 303);",
+    "});",
+    "app.get('/wiki/:slug', (c) => {",
+    "  const wikiSlug = c.req.param('slug');",
+    "  const wikiPageRow = selectWikiPage.get(wikiSlug);",
+    "  if (!wikiPageRow) return c.html(wikiMissingPage(wikiSlug), 200);",
+    "  const wikiLatestRev = selectWikiLatestRevision.get(wikiSlug);",
+    "  const wikiBacklinkRows = wikiBacklinks(wikiSlug);",
+    "  return c.html(wikiPage(wikiPageRow, wikiLatestRev, wikiBacklinkRows));",
+    "});",
+  ].join('\n');
+
 /** The small page renderers the capability handlers share, emitted only when a capability needs them. */
 // The capability pages load the same single enhancement script the arm templates do, but ONLY when a
 // capability that needs it is on. Without the tag the script was served and never loaded, so a capability
@@ -2155,7 +2342,7 @@ db.exec(\`CREATE TABLE IF NOT EXISTS accounts (email TEXT PRIMARY KEY, password 
 const insert = db.prepare('INSERT INTO records (ref, created_at, payload) VALUES (?, ?, ?)');
 const select = db.prepare('SELECT ref, created_at, payload FROM records WHERE ref = ?');
 ${sessionTables(archetype)}${archetype.journey?.update ? `\nconst updateRecord = db.prepare('UPDATE records SET payload = ? WHERE ref = ?');` : ''}${draftTables(archetype) ? `\n${draftTables(archetype)}` : ''}
-${caps.auth ? `${authTables(archetype)}\n` : ''}${caps.cart ? `${cartTables(caps.checkout)}\n` : ''}${caps.checkout ? `${checkoutTables()}\n` : ''}${caps.survey ? `${surveyTables()}\n` : ''}${caps.game ? `${gameTables()}\n` : ''}${caps.workspace ? `${workspaceTables()}\n` : ''}const count = db.prepare('SELECT COUNT(*) AS n FROM records');
+${caps.auth ? `${authTables(archetype)}\n` : ''}${caps.cart ? `${cartTables(caps.checkout)}\n` : ''}${caps.checkout ? `${checkoutTables()}\n` : ''}${caps.survey ? `${surveyTables()}\n` : ''}${caps.game ? `${gameTables()}\n` : ''}${caps.workspace ? `${workspaceTables()}\n` : ''}${caps.wiki ? `${wikiTables()}\n` : ''}const count = db.prepare('SELECT COUNT(*) AS n FROM records');
 const list = db.prepare('SELECT ref, payload FROM records ORDER BY created_at DESC LIMIT 50');
 
 ${parameterisedWrite ? `// An edit flow edits something: the seeded record is what the form's action points at.
@@ -2181,7 +2368,7 @@ const json = (response, value, status = 200, headers = {}) => {
   response.end(JSON.stringify(value));
 };
 
-${caps.list_pages || caps.detail_page || caps.auth || caps.cart || caps.pricing_tiers || caps.checkout || caps.survey || caps.game || caps.workspace ? `${capabilityPages(caps)}${caps.cart ? `\n${cartPages(archetype)}` : ''}${caps.pricing_tiers ? `\n${pricingPages(archetype)}` : ''}${caps.checkout ? `\n${checkoutPages(archetype)}` : ''}${caps.survey ? `\n${surveyPages(archetype)}` : ''}${caps.game ? `\n${gamePages(archetype)}` : ''}${caps.workspace ? `\n${workspacePages(archetype)}` : ''}\n` : ''}const REQUIRED = ${JSON.stringify(archetype.fields.filter((field) => field.type !== 'select' && !field.optional).map((field) => field.name))};
+${caps.list_pages || caps.detail_page || caps.auth || caps.cart || caps.pricing_tiers || caps.checkout || caps.survey || caps.game || caps.workspace || caps.wiki ? `${capabilityPages(caps)}${caps.cart ? `\n${cartPages(archetype)}` : ''}${caps.pricing_tiers ? `\n${pricingPages(archetype)}` : ''}${caps.checkout ? `\n${checkoutPages(archetype)}` : ''}${caps.survey ? `\n${surveyPages(archetype)}` : ''}${caps.game ? `\n${gamePages(archetype)}` : ''}${caps.workspace ? `\n${workspacePages(archetype)}` : ''}${caps.wiki ? `\n${wikiPages(archetype)}` : ''}\n` : ''}const REQUIRED = ${JSON.stringify(archetype.fields.filter((field) => field.type !== 'select' && !field.optional).map((field) => field.name))};
 
 ${enforceMin ? `const MIN_BOUNDS = ${JSON.stringify(minBounds)};\n` : ''}// The cart form has its own fields. Validating it against the search form's required list refused every
 // cart POST with 422, which the write journey caught: a second form on one page needs a second rule.
@@ -2369,7 +2556,7 @@ ${caps.auth ? `    if (!authSessionEmail(request.headers.cookie)) return json(re
     return json(response, { ref: row.ref, ...JSON.parse(row.payload) });
   }
 
-${caps.cart ? `${rawCartRoutes(archetype, cartCookieFlags, checkoutOf(archetype))}\n\n` : ''}${caps.checkout ? `${rawCheckoutRoutes()}\n\n` : ''}${caps.survey ? `${rawSurveyRoutes()}\n\n` : ''}${caps.game ? `${rawGameRoutes()}\n\n` : ''}${caps.workspace ? `${rawWorkspaceRoutes()}\n\n` : ''}${caps.pricing_tiers ? `${rawPricingRoutes()}\n\n` : ''}  // A route the archetype declares is a route the server must serve: /account was declared as the
+${caps.cart ? `${rawCartRoutes(archetype, cartCookieFlags, checkoutOf(archetype))}\n\n` : ''}${caps.checkout ? `${rawCheckoutRoutes()}\n\n` : ''}${caps.survey ? `${rawSurveyRoutes()}\n\n` : ''}${caps.game ? `${rawGameRoutes()}\n\n` : ''}${caps.workspace ? `${rawWorkspaceRoutes()}\n\n` : ''}${caps.pricing_tiers ? `${rawPricingRoutes()}\n\n` : ''}${caps.wiki ? `${rawWikiRoutes()}\n\n` : ''}  // A route the archetype declares is a route the server must serve: /account was declared as the
   // account flow's page and never implemented, so the journey landed on a 404.
   if (${JSON.stringify(archetype.routes.filter((route) => route.kind === 'read-session').map((route) => route.path))}.includes(path) && request.method === 'GET') {
 ${caps.auth ? `${RAW_AUTH_GUARD}\n` : ''}    return html(response, await renderDocument({ title: 'Your account' }));
@@ -2508,7 +2695,7 @@ const requiredFor = (path) => (EXTRA_ACTION !== '' && path === EXTRA_ACTION ? EX
 ${sessionTables(archetype)}
 ${caps.auth ? `db.exec('CREATE TABLE IF NOT EXISTS accounts (email TEXT PRIMARY KEY, password TEXT NOT NULL, display_name TEXT)');
 ${authTables(archetype)}
-` : ''}${caps.cart ? `${cartTables(caps.checkout)}\n` : ''}${caps.checkout ? `${checkoutTables()}\n` : ''}${caps.survey ? `${surveyTables()}\n` : ''}${caps.game ? `${gameTables()}\n` : ''}${caps.workspace ? `${workspaceTables()}\n` : ''}${caps.list_pages || caps.detail_page || caps.auth || caps.cart || caps.pricing_tiers || caps.checkout || caps.survey || caps.game || caps.workspace ? `${capabilityPages(caps)}${caps.cart ? `\n${cartPages(archetype)}` : ''}${caps.pricing_tiers ? `\n${pricingPages(archetype)}` : ''}${caps.checkout ? `\n${checkoutPages(archetype)}` : ''}${caps.survey ? `\n${surveyPages(archetype)}` : ''}${caps.game ? `\n${gamePages(archetype)}` : ''}${caps.workspace ? `\n${workspacePages(archetype)}` : ''}
+` : ''}${caps.cart ? `${cartTables(caps.checkout)}\n` : ''}${caps.checkout ? `${checkoutTables()}\n` : ''}${caps.survey ? `${surveyTables()}\n` : ''}${caps.game ? `${gameTables()}\n` : ''}${caps.workspace ? `${workspaceTables()}\n` : ''}${caps.wiki ? `${wikiTables()}\n` : ''}${caps.list_pages || caps.detail_page || caps.auth || caps.cart || caps.pricing_tiers || caps.checkout || caps.survey || caps.game || caps.workspace || caps.wiki ? `${capabilityPages(caps)}${caps.cart ? `\n${cartPages(archetype)}` : ''}${caps.pricing_tiers ? `\n${pricingPages(archetype)}` : ''}${caps.checkout ? `\n${checkoutPages(archetype)}` : ''}${caps.survey ? `\n${surveyPages(archetype)}` : ''}${caps.game ? `\n${gamePages(archetype)}` : ''}${caps.workspace ? `\n${workspacePages(archetype)}` : ''}${caps.wiki ? `\n${wikiPages(archetype)}` : ''}
 ` : ''}const requestLog = [];
 const app = new Hono();
 app.use('*', async (c, next) => {
@@ -2660,7 +2847,7 @@ ${caps.auth ? "  if (!authSessionEmail(c.req.header('cookie'))) return c.json({ 
   return c.json({ ref: row.ref, ...JSON.parse(row.payload) });
 });
 
-${caps.cart ? `${honoCartRoutes(archetype, cartCookieFlags, checkoutOf(archetype))}\n\n` : ''}${caps.checkout ? `${honoCheckoutRoutes()}\n\n` : ''}${caps.survey ? `${honoSurveyRoutes()}\n\n` : ''}${caps.game ? `${honoGameRoutes()}\n\n` : ''}${caps.workspace ? `${honoWorkspaceRoutes()}\n\n` : ''}${caps.pricing_tiers ? `${honoPricingRoutes()}\n\n` : ''}for (const sessionPage of ${JSON.stringify(archetype.routes.filter((route) => route.kind === 'read-session').map((route) => route.path))}) {
+${caps.cart ? `${honoCartRoutes(archetype, cartCookieFlags, checkoutOf(archetype))}\n\n` : ''}${caps.checkout ? `${honoCheckoutRoutes()}\n\n` : ''}${caps.survey ? `${honoSurveyRoutes()}\n\n` : ''}${caps.game ? `${honoGameRoutes()}\n\n` : ''}${caps.workspace ? `${honoWorkspaceRoutes()}\n\n` : ''}${caps.pricing_tiers ? `${honoPricingRoutes()}\n\n` : ''}${caps.wiki ? `${honoWikiRoutes()}\n\n` : ''}for (const sessionPage of ${JSON.stringify(archetype.routes.filter((route) => route.kind === 'read-session').map((route) => route.path))}) {
 ${caps.auth ? `  app.get(sessionPage, (c) => {
     if (!authSessionEmail(c.req.header('cookie'))) return c.redirect('/login', 303);
     return c.html(renderDocument({ title: 'Your account' }));
