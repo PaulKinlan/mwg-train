@@ -166,12 +166,15 @@ Read from `demo/index.html`, with the pass view selected by `?view=pass` and the
 - **A pass for a ticket the previous board did not select.** The event board has General Admission selected
   at £120 with Workshop Pass at zero; the pass board's pass is a `Workshop Pass (£220)`.
 - **Illustrated commercial detail that contradicts the spec's own rule.** The boards show
-  `142 / 200 seats filled`, £120 and £220 prices and a `Principal Engineer` job title - the job title on the
-  pass board only, and none of them in the demo, whose pass is explicitly a preview rather than a ticket.
-  The spec declares `capacity: 3`, a single `ticket` select over `standard`, `accessible` and `student`, and
-  no price or role at all. The seats count is not a rendering of the capacity rule - it is a different idea
-  of capacity, and neither the demo nor the boards shows the waitlist the story promises. The raster QR is
-  not a check-in code either, which this directory's `README.md` states in its own words.
+  `142 / 200 seats filled`, £120 and £220 prices and a `Principal Engineer` job title. The spec declares
+  `capacity: 3`, a single `ticket` select over `standard`, `accessible` and `student`, and no price or role
+  at all. The demo carries the same invented figures but marks every one of them as illustrative rather than
+  real - its capacity note reads `Reference board depicts 142 of 200`, its ticket prices read `£120
+  illustrated` and `£220 illustrated`, and its estimate is `Illustrated total: £120 for 1 ticket · not a
+  charge` - and the `Principal Engineer` job title is the one piece of it that appears on the pass board only
+  and nowhere in the demo. So the seats count is not a rendering of the capacity rule - it is a different
+  idea of capacity, and neither the demo nor the boards shows the waitlist the story promises. The raster QR
+  is not a check-in code either, which this directory's `README.md` states in its own words.
 - **One board carries browser chrome and is exempt from the rule that forbids it.** `step1-event.jpg` is
   detected by `check:archetype-frames` and listed as a grandfathered image; `step2-pass.jpg` is clean. The
   exemption is deliberate and checked, so the pair should not be "fixed" without re-reading that rule.
@@ -197,7 +200,8 @@ like a way in.
   the two disagree and records the
   disagreements rather than treating them as decisions.
 - **The demo** (`demo/`) is the accepted target, hand-written and static. It is not the sealed evaluation
-  target, not part of the pilot corpus, and it stores nothing: the name in `#attendee-name` is scripted.
+  target, not part of the pilot corpus, and it stores nothing - it calls no storage API and issues no
+  request, so the name in `#attendee-name` is scripted from the attendee input rather than persisted.
 - **The measurements** - every token value, owner and reference count, the geometry, the radii and the
   selectors that carry them, the absence of any shadow and of any monospace family, the type sizes and line
   heights, the gap and padding values, the breakpoints, and the literal-hex count - were read from

@@ -156,8 +156,9 @@ useful thing this document can record:
     archetype's single identical pair, no arm's uplift left its tree unchanged.
 - **The visual target is hand-written and static.** `demo/` holds an event page (`index.html`), a pass view
   selected by `?view=pass`, a side-by-side comparison page, and one stylesheet. It answers from no server,
-  holds no credential and stores nothing; the reference it shows, `#attendee-name` carrying `Sarah Jenkins`,
-  is scripted.
+  holds no credential and stores nothing - not even in the browser, since the demo calls no storage API and
+  issues no request; the reference it shows, `#attendee-name` carrying `Sarah Jenkins`, is scripted from the
+  attendee input.
 - **The boards are two pictures of one event, framed differently, and one of them is a deliberate
   exception.** The frames rule (`check:archetype-frames`, part of `check:all`) detects browser chrome in
   `step1-event.jpg` and lists it as a **grandfathered** image rather than a failure, because the rule was
