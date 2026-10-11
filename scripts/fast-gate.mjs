@@ -123,6 +123,7 @@ const checkScriptMap = {
   'scripts/render-targets.mjs': 'check:targets',
   'scripts/rebuild-from-spec.mjs': 'check:specs',
   'scripts/check-archetype-assets.mjs': 'check:archetype-assets',
+  'scripts/check-archetype-frames.mjs': 'check:archetype-frames',
   'scripts/check-build-key.mjs': 'check:build-key',
   'scripts/pilot-corpus.mjs': 'check:pilot-corpus',
   'scripts/check-set-separation.mjs': 'check:set-separation',

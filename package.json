@@ -21,6 +21,7 @@
     "check:disjoint": "node scripts/check-disjoint.mjs",
     "check:doc-links": "node scripts/check-doc-links.mjs",
     "check:archetype-assets": "node scripts/check-archetype-assets.mjs",
+    "check:archetype-frames": "node scripts/check-archetype-frames.mjs",
     "check:build-key": "node scripts/check-build-key.mjs",
     "train:tokens": "node scripts/train-corpus-tokens.mjs",
     "targets:train:render": "node scripts/render-training-targets.mjs",
@@ -66,6 +67,7 @@
   "dependencies": {
     "hono": "^4.13.7",
     "htm": "^3.1.1",
+    "jpeg-js": "^0.4.4",
     "preact": "^10.27.2",
     "preact-render-to-string": "^6.6.3",
     "react": "^19.2.0",
