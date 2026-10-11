@@ -9,7 +9,7 @@
     "documents": [
       {
         "path": "docs/design/archetypes/booking/demo/compare.html",
-        "sha256": "deff2344a7104737df8c3038268e2cc8b2666aebcd07af01e09d8722c683adba"
+        "sha256": "5ddb619dc281c5b87648bfcc223384f090d8356abd0f2e7e516338d7a43672aa"
       },
       {
         "path": "docs/design/archetypes/booking/demo/confirmation.html",
@@ -132,7 +132,7 @@
       ],
       "apparatus": true,
       "source": "docs/design/archetypes/booking/demo/compare.html",
-      "sha256": "deff2344a7104737df8c3038268e2cc8b2666aebcd07af01e09d8722c683adba"
+      "sha256": "5ddb619dc281c5b87648bfcc223384f090d8356abd0f2e7e516338d7a43672aa"
     },
     "confirmation.html": {
       "title": "Booking Confirmation &amp; Receipt — Learning Hub",
