@@ -1123,7 +1123,11 @@ const surveyPages = (archetype) => {
     "const surveyStored = (row) => {",
     "  try {",
     "    const value = JSON.parse(row.payload);",
-    "    return value !== null && typeof value === 'object' && Array.isArray(value.answers) && Object.hasOwn(value, 'outcome') ? value : null;",
+    // Every ENTRY is checked, not only the array: a row carrying `answers: [null]` or `answers: [{}]` is
+    // shaped like a result and is not one, and rendering it threw on `entry.field` - which killed the whole
+    // process in the arms that share `http.createServer`, the same way a product row did in the checkout
+    // receipt (mwg-train-s0q review, P1).
+    "    return value !== null && typeof value === 'object' && Array.isArray(value.answers) && Object.hasOwn(value, 'outcome') && value.answers.every((entry) => entry !== null && typeof entry === 'object' && typeof entry.field === 'string' && typeof entry.value === 'string') ? value : null;",
     "  } catch {",
     "    return null;",
     "  }",
@@ -1141,6 +1145,14 @@ const rawSurveyRoutes = () =>
     `    const surveySid = ${CART_SID_RAW};`,
     '    const surveyAnswers = surveySid ? selectSurveyAnswers.all(surveySid) : [];',
     "    const surveyWanted = url.searchParams.get('question');",
+    // Asking for a question the branch currently hides is not a way to answer it: a question that is not
+    // asked cannot be reached by naming it, only by changing the answer that hid it (mwg-train-s0q review,
+    // P3).
+    "    const surveyReachable = surveyAsked(surveyAnswers).some((question) => question.field === surveyWanted);",
+    "    if (surveyWanted !== null && !surveyReachable) {",
+    "      response.writeHead(303, { location: '/survey' });",
+    "      return response.end();",
+    "    }",
     "    const surveyCurrent = surveyWanted ? surveyQuestion(surveyWanted) : surveyNext(surveyAnswers);",
     "    if (!surveyCurrent) {",
     "      response.writeHead(303, { location: '/survey/review' });",
@@ -1158,6 +1170,13 @@ const rawSurveyRoutes = () =>
     "    if (!answeredQuestion) {",
     "      response.writeHead(422, { 'content-type': 'text/plain; charset=utf-8' });",
     "      return response.end('That is not a question this survey asks.');",
+    "    }",
+    // The branch decides which questions exist: an answer for one the current answers hide is refused
+    // rather than stored, so a stored answer always belongs to a question that was actually asked
+    // (mwg-train-s0q review, P3).
+    "    if (!surveyAsked(selectSurveyAnswers.all(surveySid)).some((question) => question.field === answeredQuestion.field)) {",
+    "      response.writeHead(422, { 'content-type': 'text/plain; charset=utf-8' });",
+    "      return response.end('That question is not part of the survey as answered so far.');",
     "    }",
     "    const surveyValue = String(surveyBody.answer ?? '').trim();",
     "    if (surveyValue === '') {",
@@ -1214,6 +1233,8 @@ const honoSurveyRoutes = () =>
     `  const surveySid = ${CART_SID_HONO};`,
     '  const surveyAnswers = surveySid ? selectSurveyAnswers.all(surveySid) : [];',
     "  const surveyWanted = c.req.query('question');",
+    "  const surveyReachable = surveyAsked(surveyAnswers).some((question) => question.field === surveyWanted);",
+    "  if (surveyWanted !== undefined && !surveyReachable) return c.redirect('/survey', 303);",
     '  const surveyCurrent = surveyWanted ? surveyQuestion(surveyWanted) : surveyNext(surveyAnswers);',
     "  if (!surveyCurrent) return c.redirect('/survey/review', 303);",
     "  return c.html(surveyQuestionPage(surveyCurrent, surveyAnswer(surveyAnswers, surveyCurrent.field), c.req.query('from') === 'review'));",
@@ -1223,6 +1244,7 @@ const honoSurveyRoutes = () =>
     `  const surveySid = ${CART_SID_HONO} || randomUUID();`,
     "  const answeredQuestion = surveyQuestion(String(surveyBody.field ?? ''));",
     "  if (!answeredQuestion) return c.text('That is not a question this survey asks.', 422);",
+    "  if (!surveyAsked(selectSurveyAnswers.all(surveySid)).some((question) => question.field === answeredQuestion.field)) return c.text('That question is not part of the survey as answered so far.', 422);",
     "  const surveyValue = String(surveyBody.answer ?? '').trim();",
     "  if (surveyValue === '') return c.text('Answer the question before moving on.', 422);",
     '  insertSurveyAnswer.run(surveySid, answeredQuestion.field, surveyValue);',

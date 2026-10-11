@@ -94,6 +94,14 @@ test('spec gate: the survey capability validates as a closed set, and a conditio
   // The capability's own routes are served before the declared ones, so declaring one is refused.
   const colliding = surveySpec({ routes: [...surveySpec().routes, { method: 'GET', path: '/survey', kind: 'page' }] });
   assert.ok(validateSpec(colliding).some((p) => p.includes("the survey capability's own route")));
+  // The same rule on this capability's PARAMETERISED read route: `/survey/result/:id` shadows
+  // `/survey/result/:ref` as surely as the same parameter name would, and the declared route would never be
+  // reached (review P2 - the prefix rule came from mwg-train-le6 and reached this branch by the rebase,
+  // which is why it is asserted here as well as in the checkout suite).
+  const aliasedResult = surveySpec({ routes: [...surveySpec().routes, { method: 'GET', path: '/survey/result/:id', kind: 'page', effect: 'shadows the result route' }] });
+  assert.ok(validateSpec(aliasedResult).some((p) => p.includes("the survey capability's own route")), 'an aliased result route is refused');
+  const deeperResult = surveySpec({ routes: [...surveySpec().routes, { method: 'GET', path: '/survey/result/extra', kind: 'page', effect: 'shadows the result route' }] });
+  assert.ok(validateSpec(deeperResult).some((p) => p.includes("the survey capability's own route")), 'a path below the result route is refused');
 });
 
 test('wiring guard: the survey block reaches the builder archetype, and byte-invariance holds without it', () => {
@@ -224,6 +232,32 @@ test('functional: the branch decides which questions are asked, and the outcome 
         const stillServing = await fetch(`${base}/survey`);
         assert.equal(stillServing.status, 200, `${arm} the server survived a result lookup on a product reference`);
 
+        // A row can be shaped like a result without BEING one: the array is there and its entries are not
+        // answers. Rendering `entry.field` on `null` threw, and in the arms that share `http.createServer`
+        // that unhandled rejection killed the process - the same failure as the checkout receipt, one level
+        // deeper, which is why the shape check now covers every entry and not only the array (review P1).
+        const { DatabaseSync } = await import('node:sqlite');
+        const database = new DatabaseSync(join(dir, 'test.sqlite'));
+        const malformed = {
+          'result-null-entry': { answers: [null], outcome: 'test' },
+          'result-empty-entry': { answers: [{}], outcome: 'test' },
+          'result-typed-entry': { answers: [{ field: 1, value: 'x' }], outcome: 'test' },
+          'result-string': { answers: 'not an array', outcome: 'test' },
+          'result-no-outcome': { answers: [{ field: 'applicant', value: 'x' }] },
+        };
+        for (const [ref, payload] of Object.entries(malformed)) {
+          database.prepare('INSERT INTO records (ref, created_at, payload) VALUES (?, ?, ?)').run(ref, new Date().toISOString(), JSON.stringify(payload));
+        }
+        database.close();
+        for (const ref of Object.keys(malformed)) {
+          const wrong = await fetch(`${base}/survey/result/${ref}`);
+          assert.equal(wrong.status, 404, `${arm} a ${ref} row is not a survey result`);
+          // The process must still be there: a 404 proves less than a live server, which is exactly how
+          // this class of bug hid in the checkout capability.
+          const alive = await fetch(`${base}/survey`);
+          assert.equal(alive.status, 200, `${arm} the server survived reading ${ref}`);
+        }
+
         // THE STALE ANSWER: answer the conditional questions as an English household, then change the
         // answer they depended on. The income answer is now hidden, so it must not reach the outcome -
         // otherwise a household outside England would be told it had been assessed on income it was
@@ -234,6 +268,16 @@ test('functional: the branch decides which questions are asked, and the outcome 
         await answer('course', 'Full-time');
         await answer('household_income', '20000');
         await answer('residency', 'Scotland', { from: 'review' });
+        // Naming the hidden question directly must not be a way to answer it: the branch decides which
+        // questions exist, so the question cannot be served and an answer for it cannot be stored. The stale
+        // answer this capability exists to prevent would otherwise be re-creatable through the URL
+        // (review P3).
+        const hiddenPage = await fetch(`${base}/survey?question=household_income`, { headers: { cookie }, redirect: 'manual' });
+        assert.equal(hiddenPage.status, 303, `${arm} a hidden question is not served`);
+        assert.equal(hiddenPage.headers.get('location'), '/survey', `${arm} the hidden question redirects to the survey`);
+        const hiddenAnswer = await post('/survey/answer', { field: 'household_income', answer: '99000' }, { cookie });
+        assert.equal(hiddenAnswer.status, 422, `${arm} an answer for a hidden question is refused`);
+        assert.ok((await hiddenAnswer.text()).length > 0, `${arm} the refusal says why`);
         const afterChange = await fetch(`${base}/survey/review`, { headers: { cookie }, redirect: 'manual' });
         assert.equal(afterChange.status, 303, `${arm} a visible question is unanswered again`);
         await answer('notes', 'Please call before 5pm');

@@ -369,5 +369,5 @@ test('the checkout capability is registered, not silently dead', () => {
   const frameworks = readFileSync(join(ROOT, 'pilot/frameworks.mjs'), 'utf8');
   assert.match(frameworks, /const capabilitiesOf = \(archetype\) => \(\{ list_pages: false, detail_page: false, auth: false, cart: false, pricing_tiers: false, checkout: false/);
   const spec = readFileSync(join(ROOT, 'src/eval/spec.mjs'), 'utf8');
-  assert.match(spec, /CAPABILITY_KEYS = new Set\(\['list_pages', 'detail_page', 'auth', 'cart', 'pricing_tiers', 'checkout'\]\)/);
+  assert.match(spec, /CAPABILITY_KEYS = new Set\(\['list_pages', 'detail_page', 'auth', 'cart', 'pricing_tiers', 'checkout', 'survey'\]\)/);
 });
