@@ -44,6 +44,7 @@ export const ROUTE_KINDS = Object.freeze([
 ]);
 
 const isObject = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
+const fieldsOf = (spec) => (Array.isArray(spec.fields) ? spec.fields : []);
 const isString = (value) => typeof value === 'string' && value !== '';
 const isBoolean = (value) => typeof value === 'boolean';
 
@@ -149,7 +150,7 @@ export function validateSpec(spec) {
       // The required set is derived from `fields[].required` by the generator, so a second copy that
       // disagrees is a specification saying two things. It is checked rather than trusted because the
       // prose is the part a reader believes, and the fields are the part that runs.
-      const implemented = (spec.fields ?? []).filter((field) => field?.required && field?.type !== 'select').map((field) => field.name);
+      const implemented = fieldsOf(spec).filter((field) => field?.required && field?.type !== 'select').map((field) => field.name);
       const stated = spec.validation.required_fields;
       const omitted = implemented.filter((name) => !stated.includes(name));
       const extra = stated.filter((name) => !implemented.includes(name));
@@ -275,10 +276,10 @@ export function validateSpec(spec) {
         if (!(spec.routes ?? []).some((route) => route?.method === 'POST' && String(route?.kind ?? '').startsWith('write'))) {
           at('capabilities.cart', 'is on, but no route writes a record, so there would be nothing to add to the cart');
         }
-        if (!(spec.fields ?? []).some((field) => field?.type === 'select')) {
+        if (!fieldsOf(spec).some((field) => field?.type === 'select')) {
           at('capabilities.cart', 'is on, but no select field to choose a variant from');
         }
-        if (!(spec.fields ?? []).some((field) => field?.type === 'number')) {
+        if (!fieldsOf(spec).some((field) => field?.type === 'number')) {
           at('capabilities.cart', 'is on, but no number field to accumulate a quantity in');
         }
       }
@@ -298,7 +299,7 @@ export function validateSpec(spec) {
         if (spec.capabilities.auth === true) at('capabilities.checkout', 'cannot combine with auth: both own the sid cookie');
         if (spec.checkout === undefined) at('capabilities.checkout', 'is on, but no checkout block states the currency, the price field, the tax and the shipping');
         const priceField = spec.checkout?.price_field;
-        const declaredNumberFields = (spec.fields ?? []).filter((field) => field?.type === 'number');
+        const declaredNumberFields = fieldsOf(spec).filter((field) => field?.type === 'number');
         const quantityField = declaredNumberFields[0];
         if (isString(priceField) && quantityField?.name === priceField) {
           // The builder binds the first number field as the quantity to accumulate, so naming that same
@@ -463,7 +464,7 @@ export function validateSpec(spec) {
         for (const key of ['at_most', 'at_least']) {
           if (when[key] !== undefined && (typeof when[key] !== 'number' || !Number.isFinite(when[key]))) at(`${where}.${key}`, 'must be a number');
         }
-        const dependency = (spec.fields ?? []).find((entry) => entry?.name === when.field);
+        const dependency = fieldsOf(spec).find((entry) => entry?.name === when.field);
         if (dependency?.type === 'select') {
           const options = (dependency.options ?? []).map(String);
           if (when.equals !== undefined && !options.includes(String(when.equals))) {
@@ -491,7 +492,7 @@ export function validateSpec(spec) {
           for (const key of Object.keys(question)) {
             if (!['field', 'when'].includes(key)) at(`${where}.${key}`, 'unknown key');
           }
-          const field = (spec.fields ?? []).find((entry) => entry?.name === question.field);
+          const field = fieldsOf(spec).find((entry) => entry?.name === question.field);
           if (!isString(question.field) || question.field.trim() === '') at(`${where}.field`, 'must name a field this specification declares');
           else if (field === undefined) at(`${where}.field`, `names ${question.field}, which this specification does not declare`);
           else if (asked.has(question.field)) at(`${where}.field`, `asks ${question.field} twice`);
