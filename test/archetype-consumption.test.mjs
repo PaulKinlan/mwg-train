@@ -185,6 +185,10 @@ test('the harness serves the archetype boards from the store, and only while the
     // out of decodeURIComponent inside the request handler and kill the server, so the assertion here is not only
     // "404" but "and it is still answering" (review finding mwg-train-dtc).
     assert.equal((await fetch(url('/app/%zz'))).status, 404, 'a malformed asset path must fail closed');
+    // The other shape of the same defect, and the one coord's GLM review named: a percent-escape that is
+    // syntactically valid but not a valid UTF-8 sequence. decodeURIComponent throws on this too, so it is the same
+    // class of crash arriving by a different route and worth pinning separately.
+    assert.equal((await fetch(url('/app/%E0%A4%A'))).status, 404, 'an invalid UTF-8 escape must fail closed too');
     assert.ok((await fetch(url('/__health'))).ok, 'the server died on a malformed asset path');
   } finally {
     for (const script of scripts) script.kill('SIGKILL');
