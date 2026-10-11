@@ -144,7 +144,21 @@ test('end to end: a tree without the generated projects SKIPS, and says so', () 
     assert.match(out, /SKIPPED/, 'the run must say it skipped');
     // The old wording claimed a measurement over zero probes. It must not come back.
     assert.doesNotMatch(out, /MEASURED/, 'a skipped run must not report itself as a measurement');
-    assert.match(out, /npm run pilot:scaffold/, 'a skip must name the command that produces the input');
+    // mwg-train-zp4: this named `npm run pilot:scaffold`, which writes pilot/projects and never mentions
+    // training-projects, so an operator who followed the skip produced a different directory, re-ran, and was
+    // told the input was still missing. Pin the property, not just a string: the message must name the script
+    // that actually writes the directory this check reads, and must not name the unrelated one.
+    const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
+    const producer = /Run `npm run ([a-z0-9:-]+)` to produce the projects/.exec(out);
+    assert.ok(producer, 'a skip must name the command that produces the input');
+    const named = producer[1];
+    assert.ok(pkg.scripts?.[named], `the skip names '${named}', which is not a script in package.json`);
+    assert.match(
+      readFileSync(join(ROOT, pkg.scripts[named].replace(/^node\s+/, '')), 'utf8'),
+      /pilot\/training-projects/,
+      `the skip names '${named}', whose script does not produce pilot/training-projects`,
+    );
+    assert.doesNotMatch(out, /npm run pilot:scaffold/, 'the skip must not name the scaffolder for pilot/projects');
     assert.match(out, /NOT a served-routes result/, 'a skip must not be mistakable for a result');
 
     // Invoked through a symlink, the CLI must still RUN. A guard that concludes "this was an import" exits 0
