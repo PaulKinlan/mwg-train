@@ -140,3 +140,109 @@ test('resolution is relative to the file, and a leading slash means the root the
 test('inline code is blanked, not deleted, so reported line numbers stay honest', () => {
   assert.strictEqual(stripInlineCode('a `b` c').length, 'a `b` c'.length);
 });
+
+// The four cases below were reported as parser limits in the review of mwg-train-oae. The first two could make a
+// CORRECT document fail, which is the direction that matters: a gate that cries wolf gets switched off.
+test('balanced parentheses belong to the destination, so a correct link is not truncated into a false finding', () => {
+  const root = tree({
+    'doc.md': 'See [the guide](docs/(draft)/guide.md).\n',
+    'docs/(draft)/guide.md': '# guide\n',
+  });
+  const { ok, counts, findings } = run(root, ['doc.md']);
+  assert.strictEqual(ok, true, JSON.stringify(findings));
+  assert.strictEqual(counts.checked, 1);
+  assert.strictEqual(extractLinks('See [the guide](docs/(draft)/guide.md).')[0].target, 'docs/(draft)/guide.md');
+});
+
+test('a code span delimited by several backticks hides the link inside it', () => {
+  // An even number of backticks used to pair the opener with the closer, match empty, and leave the span contents
+  // exposed - so a document showing an example link in code could fail as if it made the link.
+  const text = 'Write ``[example](broken.md)`` in prose.\n\nAnd ``a`` plus ``b``.\n';
+  const root = tree({ 'doc.md': text });
+  const { ok, counts, findings } = run(root, ['doc.md']);
+  assert.strictEqual(ok, true, JSON.stringify(findings));
+  assert.strictEqual(counts.checked, 0);
+  assert.deepEqual(extractLinks(text), []);
+});
+
+test('a destination on the following line is still a link, but a blank line is not', () => {
+  const root = tree({ 'doc.md': 'See [the guide](\ndocs/guide.md).\n', 'docs/guide.md': '# guide\n' });
+  const { ok, counts } = run(root, ['doc.md']);
+  assert.strictEqual(ok, true);
+  assert.strictEqual(counts.checked, 1);
+
+  const blank = tree({ 'doc.md': 'Not [the guide](\n\ndocs/guide.md).\n', 'docs/guide.md': '# guide\n' });
+  assert.deepEqual(extractLinks('Not [the guide](\n\ndocs/guide.md).'), []);
+  assert.strictEqual(run(blank, ['doc.md']).counts.checked, 0);
+});
+
+test('an escaped bracket in link text does not end the text, so the link is still found', () => {
+  const text = 'See [foo \\] bar](docs/guide.md).\n';
+  const links = extractLinks(text);
+  assert.strictEqual(links.length, 1);
+  assert.strictEqual(links[0].target, 'docs/guide.md');
+  const root = tree({ 'doc.md': text, 'docs/guide.md': '# guide\n' });
+  assert.strictEqual(run(root, ['doc.md']).ok, true);
+});
+
+test('a fence closes only on a run at least as long as the one that opened it', () => {
+  // A shorter fence inside a longer one is content, so the link between them must stay hidden.
+  const text = ['````', '```', '[example](broken.md)', '```', '````', '', 'After: [real](docs/guide.md).', ''].join('\n');
+  const root = tree({ 'doc.md': text, 'docs/guide.md': '# guide\n' });
+  const { ok, counts, findings } = run(root, ['doc.md']);
+  assert.strictEqual(ok, true, JSON.stringify(findings));
+  assert.strictEqual(counts.checked, 1, 'only the link after the fence is a link');
+  assert.strictEqual(extractLinks(text)[0].target, 'docs/guide.md');
+});
+
+test('links come out in document order, whatever kind they are', () => {
+  const text = ['[one](a.md)', '', '<img src="b.png" alt="b">', '', '[two]: c.md', ''].join('\n');
+  assert.deepEqual(extractLinks(text).map((link) => link.target), ['a.md', 'b.png', 'c.md']);
+});
+
+// The five cases below are the review findings on this change. The first is a P1 because it made the scanner find LESS
+// than the regex it replaced: a valid link was silently dropped, which is worse than reporting a wrong one.
+test('whitespace before the closing parenthesis does not stop a link being a link', () => {
+  const root = tree({ 'doc.md': 'See [the guide](docs/guide.md ).\n', 'docs/guide.md': '# guide\n' });
+  const links = extractLinks('See [the guide](docs/guide.md ).');
+  assert.strictEqual(links.length, 1);
+  assert.strictEqual(links[0].target, 'docs/guide.md');
+  const { ok, counts, findings } = run(root, ['doc.md']);
+  assert.strictEqual(ok, true, JSON.stringify(findings));
+  assert.strictEqual(counts.checked, 1);
+});
+
+test('a reference definition inside a blockquote is found, and marked as quoted', () => {
+  const root = tree({ 'doc.md': '> [ref]: docs/guide.md\n', 'docs/guide.md': '# guide\n' });
+  const links = extractLinks('> [ref]: docs/guide.md');
+  assert.strictEqual(links.length, 1);
+  assert.strictEqual(links[0].target, 'docs/guide.md');
+  assert.strictEqual(links[0].quoted, true, 'a definition inside a blockquote is in a quotation');
+  assert.strictEqual(run(root, ['doc.md']).counts.quoted, 1);
+});
+
+test('a blank line inside a link is refused wherever it falls', () => {
+  // Between the text and the destination, and between the destination and a title: both end the paragraph.
+  assert.deepEqual(extractLinks('[the guide]\n\n(docs/guide.md)'), []);
+  assert.deepEqual(extractLinks('[the guide](\n\ndocs/guide.md)'), []);
+  assert.deepEqual(extractLinks('[the guide](docs/guide.md\n\n"a title")'), []);
+  // One line break is fine in the places markdown allows it.
+  assert.strictEqual(extractLinks('[the guide](\ndocs/guide.md)').length, 1);
+});
+
+test('a parenthesis must follow the link text immediately to be an inline link', () => {
+  assert.deepEqual(extractLinks('[the guide] (docs/guide.md)'), [], 'a space before the paren is not an inline link');
+  assert.strictEqual(extractLinks('[the guide](docs/guide.md)').length, 1);
+});
+
+test('one unmatched backtick does not leave the rest of the document unmasked', () => {
+  const text = 'A stray ` backtick here.\n\nThen ``[example](broken.md)`` inside code.\n';
+  assert.deepEqual(extractLinks(text), [], 'the later code span is still closed and hides its link');
+});
+
+test('a linked image yields both of its targets', () => {
+  const text = 'See [![the logo](logo.png)](home.md).\n';
+  // Document order is the order of the opening bracket, so the enclosing link comes first and the image it contains
+  // follows - both are real targets and a reference checker should see both.
+  assert.deepEqual(extractLinks(text).map((link) => link.target), ['home.md', 'logo.png']);
+});

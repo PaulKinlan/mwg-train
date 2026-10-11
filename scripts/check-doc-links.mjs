@@ -38,57 +38,260 @@ export function isPlaceholder(target) {
   return /[<>{}]/.test(target) || target === '...' || target.startsWith('...');
 }
 
-// Strip inline code spans so that a link *written about* in a sentence is not read as a link. Line structure is
-// kept, so reported line numbers stay honest.
-export function stripInlineCode(line) {
-  return line.replace(/`[^`]*`/g, (match) => ' '.repeat(match.length));
+// Masking replaces characters with spaces rather than deleting them, so every offset still maps to the line it came
+// from and a reported line number stays honest.
+function blank(chars, from, to) {
+  for (let i = from; i < to; i += 1) if (chars[i] !== '\n') chars[i] = ' ';
 }
 
-// A line that opens or closes a fenced code block. Fences are how this repository documents commands and example
-// markup, so a link inside one is content, not a reference.
-export function fenceMarker(line) {
-  const match = line.match(/^\s{0,3}(`{3,}|~{3,})/);
-  return match ? match[1][0] : null;
+// The byte ranges of fenced code blocks. A fence closes on a run of the same character at least as long as the run
+// that opened it, so a longer fence can contain shorter ones - which is how a document shows markdown samples.
+function fenceRanges(text) {
+  const ranges = [];
+  let offset = 0;
+  let open = null;
+  let openChar = '';
+  let openLength = 0;
+  for (const line of text.split('\n')) {
+    const match = line.match(/^\s{0,3}(`{3,}|~{3,})/);
+    if (match) {
+      const char = match[1][0];
+      const length = match[1].length;
+      if (open === null) {
+        open = offset;
+        openChar = char;
+        openLength = length;
+      } else if (char === openChar && length >= openLength) {
+        ranges.push([open, offset + line.length]);
+        open = null;
+      }
+    }
+    offset += line.length + 1;
+  }
+  if (open !== null) ranges.push([open, text.length]); // an unclosed fence runs to the end of the document
+  return ranges;
 }
 
-// Every link target in a markdown document, with the line it came from. Supports inline links and images
-// (`[text](target)`, `![alt](target)`, with an optional title), reference definitions (`[id]: target`), and the raw
-// HTML `href`/`src` attributes the tree uses in two places.
-export function extractLinks(text) {
-  const links = [];
-  const lines = text.split('\n');
-  let fence = null;
-  for (let i = 0; i < lines.length; i += 1) {
-    const lineNumber = i + 1;
-    const marker = fenceMarker(lines[i]);
-    if (marker) {
-      if (fence === null) fence = marker;
-      else if (fence === marker) fence = null;
+// Mask fenced code blocks and code spans, preserving every other byte's position. Fences are masked first because a
+// code span is delimited by a run of backticks of equal length and may cross lines: a span can legitimately contain
+// a shorter fence, so pairing spans before fences would close them in the wrong places.
+export function maskContent(text) {
+  const chars = text.split('');
+  for (const [from, to] of fenceRanges(text)) blank(chars, from, to);
+  let i = 0;
+  while (i < chars.length) {
+    if (chars[i] !== '`') {
+      i += 1;
       continue;
     }
-    if (fence !== null) continue;
-
-    const line = stripInlineCode(lines[i]);
-    const quoted = /^\s*>/.test(lines[i]);
-
-    const inline = /!?\[[^\]]*\]\(\s*(<[^>]*>|[^)\s]+)(?:\s+["'][^"']*["'])?\s*\)/g;
-    for (const match of line.matchAll(inline)) {
-      const raw = match[1];
-      links.push({ target: raw.startsWith('<') ? raw.slice(1, -1) : raw, line: lineNumber, quoted });
+    let length = 0;
+    while (chars[i + length] === '`') length += 1;
+    let close = -1;
+    let j = i + length;
+    while (j < chars.length) {
+      if (chars[j] !== '`') {
+        j += 1;
+        continue;
+      }
+      let run = 0;
+      while (chars[j + run] === '`') run += 1;
+      if (run === length) {
+        close = j;
+        break;
+      }
+      j += run;
     }
-
-    const definition = line.match(/^\s{0,3}\[[^\]]+\]:\s*(<[^>]*>|\S+)/);
-    if (definition) {
-      const raw = definition[1];
-      links.push({ target: raw.startsWith('<') ? raw.slice(1, -1) : raw, line: lineNumber, definition: true, quoted });
+    if (close === -1) {
+      // An unmatched opener is literal text, but it does not excuse the rest of the document: keep scanning, or a
+      // single stray backtick would leave every later code span unmasked and every link inside one reported.
+      i += length;
+      continue;
     }
+    blank(chars, i, close + length);
+    i = close + length;
+  }
+  return chars.join('');
+}
 
-    const attribute = /(?:href|src)\s*=\s*"([^"]*)"/g;
-    for (const match of line.matchAll(attribute)) {
-      links.push({ target: match[1], line: lineNumber, attribute: true, quoted });
+// Inline code for callers that have a single line; kept as the helper it always was, now with the same rules.
+export function stripInlineCode(line) {
+  return maskContent(line);
+}
+
+// The 1-based line number for a character offset.
+function lineOfIndex(lineStarts, offset) {
+  let low = 0;
+  let high = lineStarts.length - 1;
+  while (low < high) {
+    const middle = Math.ceil((low + high) / 2);
+    if (lineStarts[middle] <= offset) low = middle;
+    else high = middle - 1;
+  }
+  return low + 1;
+}
+
+// The index of the `]` that closes the `[` at `open`, respecting backslash escapes and nested brackets, or -1.
+function matchBracket(text, open) {
+  let depth = 0;
+  for (let i = open; i < text.length; i += 1) {
+    const char = text[i];
+    if (char === '\\') {
+      i += 1;
+      continue;
+    }
+    if (char === '[') depth += 1;
+    else if (char === ']') {
+      depth -= 1;
+      if (depth === 0) return i;
     }
   }
-  return links;
+  return -1;
+}
+
+// The destination that follows the `(` at `from`, with the index of its closing `)`, or null if this is not a link.
+// A destination may be wrapped in `<...>` - which is how a path containing spaces is written, and which is CommonMark
+// URL syntax rather than a placeholder - or it may be bare, in which case balanced parentheses belong to it, so
+// `path/(foo)/bar.md` is one destination instead of being truncated at the first `)`. A destination may also sit on
+// the line after the link text, which is why this runs over the whole masked document and not line by line.
+function parseDestination(text, from) {
+  let i = from;
+  // A link may be separated from its destination by a line break, but a BLANK line ends the paragraph, and no inline
+  // construct straddles the end of a paragraph. So every run of whitespace here tolerates one newline and no more.
+  const skipSpace = () => {
+    let breaks = 0;
+    while (i < text.length && /\s/.test(text[i])) {
+      if (text[i] === '\n') breaks += 1;
+      i += 1;
+    }
+    return breaks;
+  };
+  if (skipSpace() > 1) return null;
+  let target = '';
+  if (text[i] === '<') {
+    i += 1;
+    while (i < text.length && text[i] !== '>') {
+      if (text[i] === '\n') return null;
+      if (text[i] === '\\') {
+        i += 1;
+        if (i >= text.length) return null;
+      }
+      target += text[i];
+      i += 1;
+    }
+    if (text[i] !== '>') return null;
+    i += 1;
+  } else {
+    let depth = 0;
+    while (i < text.length) {
+      const char = text[i];
+      if (char === '\\' && i + 1 < text.length) {
+        target += text[i + 1];
+        i += 2;
+        continue;
+      }
+      if (/\s/.test(char)) break;
+      if (char === '(') {
+        depth += 1;
+        target += char;
+        i += 1;
+        continue;
+      }
+      if (char === ')') {
+        if (depth === 0) break;
+        depth -= 1;
+        target += char;
+        i += 1;
+        continue;
+      }
+      target += char;
+      i += 1;
+    }
+  }
+  const afterTarget = i;
+  if (skipSpace() > 1) return null;
+  if (text[i] === '"' || text[i] === "'") {
+    const quote = text[i];
+    i += 1;
+    while (i < text.length && text[i] !== quote) {
+      if (text[i] === '\\') i += 1;
+      i += 1;
+    }
+    if (text[i] !== quote) return null;
+    i += 1;
+    if (skipSpace() > 1) return null;
+  } else if (text[i] === '(' && i !== afterTarget) {
+    let depth = 0;
+    while (i < text.length) {
+      if (text[i] === '\\') {
+        i += 2;
+        continue;
+      }
+      if (text[i] === '(') depth += 1;
+      else if (text[i] === ')') {
+        depth -= 1;
+        if (depth === 0) {
+          i += 1;
+          break;
+        }
+      }
+      i += 1;
+    }
+    if (skipSpace() > 1) return null;
+  } else if (text[i] !== ')') {
+    // Whitespace may sit between the destination and the closing parenthesis, and a reader's link still works, so it
+    // is accepted; anything else there is not a link.
+    return null;
+  }
+  if (text[i] !== ')') return null;
+  return { target, end: i };
+}
+
+// Every link target in a markdown document, with the line it came from and its offset, in document order. Supports
+// inline links and images (`[text](target)`, `![alt](target)`, with an optional title, and link text containing an
+// escaped or nested bracket), reference definitions (`[id]: target`), and the raw HTML `href`/`src` attributes the
+// tree uses in two places.
+export function extractLinks(text) {
+  const masked = maskContent(text);
+  const lineStarts = [0];
+  for (let i = 0; i < masked.length; i += 1) if (masked[i] === '\n') lineStarts.push(i + 1);
+  const lineOf = (offset) => lineOfIndex(lineStarts, offset);
+  const lines = text.split('\n');
+  const quotedAt = (line) => /^\s*>/.test(lines[line - 1] ?? '');
+  const links = [];
+
+  for (let i = 0; i < masked.length; i += 1) {
+    if (masked[i] !== '[') continue;
+    const closeText = matchBracket(masked, i);
+    if (closeText === -1) continue;
+    // An inline link's opening parenthesis must follow its text immediately (CommonMark); a space here means this is
+    // not an inline link. Notice what this does NOT do: it leaves `i` where it is rather than skipping to the end of
+    // the construct. A linked image is `[![alt](image.png)](page.md)` and both targets are real, so the scanner has to
+    // keep looking inside the text it just consumed. Nothing is reported twice, because each `[` is examined once.
+    if (masked[closeText + 1] !== '(') continue;
+    const parsed = parseDestination(masked, closeText + 2);
+    if (parsed === null) continue;
+    const line = lineOf(i);
+    links.push({ target: parsed.target, line, index: i, quoted: quotedAt(line) });
+  }
+
+  for (const match of masked.matchAll(/^(?:\s{0,3}>)?\s{0,3}\[[^\]]+\]:\s*(<[^>]*>|\S+)/gm)) {
+    const raw = match[1];
+    const line = lineOf(match.index);
+    links.push({
+      target: raw.startsWith('<') ? raw.slice(1, -1) : raw,
+      line,
+      index: match.index,
+      definition: true,
+      quoted: quotedAt(line),
+    });
+  }
+
+  for (const match of masked.matchAll(/(?:href|src)\s*=\s*"([^"]*)"/g)) {
+    const line = lineOf(match.index);
+    links.push({ target: match[1], line, index: match.index, attribute: true, quoted: quotedAt(line) });
+  }
+
+  return links.sort((a, b) => a.index - b.index);
 }
 
 // Where a target points, relative to the file that made it. Returns null when the target is not ours to check.
@@ -113,7 +316,14 @@ export function resolveTarget(fromFile, target, root = ROOT) {
 // proper. A link that resolves on this machine but is not tracked is broken for anyone who clones.
 export function trackedFiles(root = ROOT) {
   try {
-    const out = execFileSync('git', ['ls-files', '-z'], { cwd: root, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+    // git prints a fatal line to stderr when the directory being checked is not a repository, which is exactly
+    // what the unit tests use, so its stderr is discarded rather than sprayed through a passing test run.
+    const out = execFileSync('git', ['ls-files', '-z'], {
+      cwd: root,
+      encoding: 'utf8',
+      maxBuffer: 64 * 1024 * 1024,
+      stdio: ['pipe', 'pipe', 'ignore'],
+    });
     return new Set(out.split('\0').filter(Boolean).map((entry) => path.resolve(root, entry)));
   } catch {
     return null;
