@@ -59,7 +59,7 @@ const FIELD_KEYS = new Set(['slug', 'name', 'type', 'label', 'autocomplete', 're
 export { FIELD_KEYS };
 
 /** The functional-route capabilities a specification may opt into. A closed set, like FIELD_KEYS. */
-export const CAPABILITY_KEYS = new Set(['list_pages', 'detail_page', 'auth', 'cart', 'pricing_tiers', 'checkout', 'survey', 'game', 'workspace']);
+export const CAPABILITY_KEYS = new Set(['list_pages', 'detail_page', 'auth', 'cart', 'pricing_tiers', 'checkout', 'survey', 'game', 'workspace', 'wiki']);
 
 /** The field names a selector types into, from `[name=x]` / `[name="x"]` / `[name='x']`. */
 function selectorFieldNames(selector) {
@@ -589,13 +589,92 @@ export function validateSpec(spec) {
   if (spec.capabilities?.workspace === true && spec.workspace === undefined) {
     at('capabilities.workspace', 'is on, but no workspace block states what is being created');
   }
+  if (spec.wiki !== undefined) {
+    const wiki = spec.wiki;
+    if (!isObject(wiki)) at('wiki', 'must be an object when present');
+    else {
+      for (const key of Object.keys(wiki)) {
+        if (key !== 'pages') at(`wiki.${key}`, 'unknown key');
+      }
+      if (!Array.isArray(wiki.pages) || wiki.pages.length < 2) {
+        // One page cannot be cross-linked, and a cross-linked corpus is the whole of what this type is:
+        // "search a cross-linked corpus, follow citations, see history or version" (the type axis).
+        at('wiki.pages', 'must list at least two pages');
+      } else {
+        const slugs = new Set();
+        let revisions = 0;
+        for (const [index, page] of wiki.pages.entries()) {
+          const where = `wiki.pages[${index}]`;
+          if (!isObject(page)) {
+            at(where, 'must be an object');
+            continue;
+          }
+          for (const key of Object.keys(page)) {
+            if (!['slug', 'title', 'revisions'].includes(key)) at(`${where}.${key}`, 'unknown key');
+          }
+          if (!isString(page.slug) || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(page.slug)) {
+            at(`${where}.slug`, "must be a kebab-case slug, because it is the address the page is read at");
+          } else if (slugs.has(page.slug)) at(`${where}.slug`, `repeats ${page.slug}`);
+          else slugs.add(page.slug);
+          if (!isString(page.title) || page.title.trim() === '') at(`${where}.title`, 'must title the page');
+          if (!Array.isArray(page.revisions) || page.revisions.length === 0) {
+            at(`${where}.revisions`, 'must list at least one revision, or the page has nothing to read');
+            continue;
+          }
+          revisions += page.revisions.length;
+          let previous = 0;
+          for (const [revisionIndex, revision] of page.revisions.entries()) {
+            const atRevision = `${where}.revisions[${revisionIndex}]`;
+            if (!isObject(revision)) {
+              at(atRevision, 'must be an object');
+              continue;
+            }
+            for (const key of Object.keys(revision)) {
+              if (!['body', 'author', 'created_at'].includes(key)) at(`${atRevision}.${key}`, 'unknown key');
+            }
+            if (!isString(revision.body) || revision.body.trim() === '') at(`${atRevision}.body`, 'must be the text of the revision');
+            if (!isString(revision.author) || revision.author.trim() === '') at(`${atRevision}.author`, 'must name who wrote the revision');
+            const when = Date.parse(revision.created_at);
+            if (!isString(revision.created_at) || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/.test(revision.created_at) || Number.isNaN(when)) {
+              at(`${atRevision}.created_at`, 'must be an ISO-8601 UTC instant');
+            } else if (when <= previous) {
+              // History is read in time order, so two revisions sharing an instant cannot be told apart,
+              // and one dated before the revision it follows reads as though the page went backwards.
+              at(`${atRevision}.created_at`, 'must be later than the revision before it');
+            } else previous = when;
+            if (isString(revision.body)) {
+              for (const [linkIndex, link] of [...revision.body.matchAll(/\[\[([^\]]*)\]\]/g)].entries()) {
+                const [target, label] = String(link[1]).split('|');
+                // A link to a page that does not exist yet is this type's characteristic state, so only the
+                // syntax is checked: an empty or malformed target is a typo, a missing page is content.
+                if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(String(target).trim())) {
+                  at(`${atRevision}.body`, `link ${linkIndex + 1} must name a page as a kebab-case slug`);
+                } else if (label !== undefined && String(label).trim() === '') {
+                  at(`${atRevision}.body`, `link ${linkIndex + 1} labels nothing - write [[${target}]] or [[${target}|label]]`);
+                }
+              }
+            }
+          }
+        }
+        // A corpus whose every page has one revision has no history anywhere, and a reading page with no
+        // history is a blog: the type axis is explicit that this type is distinguished by version.
+        if (revisions === wiki.pages.length) {
+          at('wiki.pages', 'must give at least one page a second revision: a corpus with no history is a blog, not a wiki');
+        }
+      }
+    }
+    if (spec.capabilities?.wiki !== true) at('wiki', 'only meaningful with capabilities.wiki - there would be no corpus to read');
+  }
+  if (spec.capabilities?.wiki === true && spec.wiki === undefined) {
+    at('capabilities.wiki', 'is on, but no wiki block states the pages');
+  }
   if (spec.capabilities?.pricing_tiers === true && spec.pricing_tiers === undefined) {
     at('capabilities.pricing_tiers', 'is on, but no pricing_tiers block states the tiers');
   }
   // A capability's own routes are emitted before the declared ones, so a specification that declares
   // the same path would leave a handler nothing ever reaches. Refused rather than silently shadowed
   // (mwg-train-4lk review).
-  const capabilityOwnedRoutes = { cart: ['/cart', '/cart/add'], pricing_tiers: ['/pricing', '/pricing/select', '/pricing/:ref'], checkout: ['/checkout', '/checkout/pay', '/checkout/receipt/:ref'], survey: ['/survey', '/survey/answer', '/survey/review', '/survey/submit', '/survey/result/:ref'], game: ['/play', '/play/score', '/play/scores'], workspace: ['/onboarding', '/workspace', '/workspace/invite', '/workspace/setting'] };
+  const capabilityOwnedRoutes = { cart: ['/cart', '/cart/add'], pricing_tiers: ['/pricing', '/pricing/select', '/pricing/:ref'], checkout: ['/checkout', '/checkout/pay', '/checkout/receipt/:ref'], survey: ['/survey', '/survey/answer', '/survey/review', '/survey/submit', '/survey/result/:ref'], game: ['/play', '/play/score', '/play/scores'], workspace: ['/onboarding', '/workspace', '/workspace/invite', '/workspace/setting'], wiki: ['/wiki', '/wiki/search', '/wiki/:slug', '/wiki/:slug/history', '/wiki/:slug/revision/:n', '/wiki/:slug/create'] };
   for (const [capability, owned] of Object.entries(capabilityOwnedRoutes)) {
     if (spec.capabilities?.[capability] !== true) continue;
     for (const route of spec.routes ?? []) {
@@ -672,6 +751,7 @@ export function archetypeFromSpec(spec) {
     // list is dropped silently, and the capability would then build a dead page (mwg-train-4lk review).
     ...(spec.game === undefined ? {} : { game: spec.game }),
     ...(spec.workspace === undefined ? {} : { workspace: spec.workspace }),
+    ...(spec.wiki === undefined ? {} : { wiki: spec.wiki }),
     ...(spec.seed_accounts === undefined ? {} : { seedAccounts: spec.seed_accounts }),
   };
 }
