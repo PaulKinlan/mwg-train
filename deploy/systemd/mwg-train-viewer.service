@@ -1,0 +1,21 @@
+[Unit]
+Description=mwg-train corpus viewer (the project's live surface: corpus, /concepts, /tuning)
+Documentation=https://github.com/PaulKinlan/mwg-train
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=exedev
+WorkingDirectory=/home/exedev/mwg-train
+Environment=HOME=/home/exedev
+Environment=PATH=/home/exedev/.nvm/versions/node/v24.21.0/bin:/home/exedev/fleet/bin:/home/exedev/.local/bin:/usr/local/bin:/usr/bin:/bin
+# A service, not a lane child: the fleet reaper kills anything a lane started after 120 minutes, which
+# is why this surface kept disappearing (mwg-train-arw). State lives outside the checkout because the
+# canonical checkout is reset to origin/main on a timer.
+ExecStart=/home/exedev/.nvm/versions/node/v24.21.0/bin/node src/viewer/server.mjs --corpus pilot --port 7700 --live-port 7701 --host 0.0.0.0 --state /home/exedev/.local/state/mwg-train-viewer
+Restart=always
+RestartSec=5
+Nice=5
+
+[Install]
+WantedBy=multi-user.target
