@@ -118,7 +118,7 @@ Token counts are derived using the repository's single canonical derivation func
 > As explicitly stated in `src/eval/cost.mjs`:
 > *"ESTIMATE from characters/4. Replace with an exact count from the training tokenizer before quoting a per-token price."*
 >
-> The spend boundary and preregistration discipline require that any price sheet presented to the owner state its derivation and uncertainty band plainly. An estimate cannot be cited as a measured fact. While these character-derived figures reliably anchor the order of magnitude (~1.55M tokens for `tr-*`, ~237k tokens for pilot), they must be replaced by a token count from the training tokenizer for the pinned base model (e.g. Qwen BPE tokenizer for `Qwen/Qwen2.5-Coder-7B-Instruct` or `Qwen/Qwen3.8-27B`) before treating any per-token price as a committed quote.
+> The spend boundary and preregistration discipline require that any price sheet presented to the owner state its derivation and uncertainty band plainly. An estimate cannot be cited as a measured fact. While these character-derived figures reliably anchor the order of magnitude (2,748,147 tokens for `tr-*` [2,061,110, 3,435,183], 295,925 for pilot [221,943, 369,906]), they must be replaced by a token count from the training tokenizer for the pinned base model (e.g. Qwen BPE tokenizer for `Qwen/Qwen2.5-Coder-7B-Instruct` or `Qwen/Qwen3.8-27B`) before treating any per-token price as a committed quote.
 
 ---
 
