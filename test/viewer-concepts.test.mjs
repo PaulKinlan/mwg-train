@@ -83,6 +83,11 @@ test('gallery presents all three excluded boards, honest booking slot, and autho
   assert.match(html, /Harness target render \(A1 conformance instrument\) · <code>data\/A1_self_generated\/targets\/tr-01\/target\.png<\/code> — a deterministic headless-Chrome render of <code>docs\/train\/targets\/tr-01\/index\.html<\/code>, NOT a designed board/);
   assert.match(html, /Designed board not generated yet\. Expected <code>docs\/design\/training\/tr-03\/reference\.jpg<\/code>/);
   assert.match(html, /AI-generated illustration, not training evidence and not proof a demo works/);
+  // The register lands with the boards only when it lands: citing a provenance path that is not in the tree would be
+  // an overclaim, so the page says the register is pending instead (review finding mwg-train-bmr).
+  assert.equal(gallery.trainingBoardRegister, null, 'the register is not in this checkout yet');
+  assert.match(html, /the register of the model and digests for those boards has not landed in this checkout yet \(expected <code>docs\/provenance\/assets\/training-reference-boards\.md<\/code>\)/);
+  assert.doesNotMatch(html, /Model and digests/, 'no provenance citation is made for a register that is not present');
   const renderedOrder = [...html.matchAll(/aria-labelledby="target-(tr-\d{2})"/g)].map((match) => match[1]);
   assert.deepEqual(renderedOrder.slice(0, 3), ['tr-01', 'tr-02', 'tr-04'], 'families with a designed board are listed first');
   assert.equal(renderedOrder.length, 30);
@@ -395,6 +400,20 @@ test('a designed board is shown as a designed board: measured, separately labell
   assert.equal(tr01.boardHeight, 768);
   assert.equal('boardWidth' in gallery.trainingTargets[1], false, 'no board means no measured size at all');
   assert.equal(trainingBoard(root, 'tr-01')?.bytes.equals(jpeg), true);
+  // The register is cited only when it is actually there; a symlinked register is not provenance.
+  assert.equal(listConcepts(root).trainingBoardRegister, null);
+  assert.match(renderConcepts(listConcepts(root)), /has not landed in this checkout yet/);
+  mkdirSync(join(root, 'docs/provenance/assets'), { recursive: true });
+  writeFileSync(join(root, 'docs/provenance/assets/training-reference-boards.md'), '# register\n');
+  assert.equal(listConcepts(root).trainingBoardRegister, 'docs/provenance/assets/training-reference-boards.md');
+  const cited = renderConcepts(listConcepts(root));
+  assert.match(cited, /Model and digests: <code>docs\/provenance\/assets\/training-reference-boards\.md<\/code>/);
+  assert.doesNotMatch(cited, /has not landed in this checkout yet/);
+  rmSync(join(root, 'docs/provenance/assets/training-reference-boards.md'));
+  const notARegister = join(root, 'not-a-register.txt');
+  writeFileSync(notARegister, 'nope');
+  symlinkSync(notARegister, join(root, 'docs/provenance/assets/training-reference-boards.md'));
+  assert.equal(listConcepts(root).trainingBoardRegister, null, 'a symlinked register is not a register');
   assert.equal(trainingBoard(root, 'tr-05'), null, 'a board the manifest never declared is not public');
   assert.equal(trainingBoard(root, 'tr-03'), null);
   assert.equal(trainingBoard(root, 'tr-99'), null);

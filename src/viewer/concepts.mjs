@@ -178,6 +178,18 @@ function boundedHead(file, bytes) {
   }
 }
 
+/** The register that records each designed board's model and digests, but ONLY when it is actually in the tree. The
+ *  boards and their register land in separate changes, so citing a provenance path that has not arrived would point a
+ *  reader at evidence this checkout cannot show - the page says the register is pending instead. */
+function trainingBoardRegister(repoRoot) {
+  const file = join(repoRoot, TRAINING_BOARD_REGISTER);
+  try {
+    return !lstatSync(file).isSymbolicLink() && lstatSync(file).isFile() ? TRAINING_BOARD_REGISTER : null;
+  } catch {
+    return null;
+  }
+}
+
 /** The confined designed board for a declared A1 family, or null when none has been generated yet. */
 function trainingBoardFile(repoRoot, id) {
   if (typeof id !== 'string' || !TRAINING_FAMILY.test(id)) return null;
@@ -247,6 +259,7 @@ export function listConcepts(repoRoot) {
       return { ...family, available: !!target, board: !!board, ...(target ? pngSize(target) : null),
         ...(boardSize ? { boardWidth: boardSize.width, boardHeight: boardSize.height } : {}) };
     }),
+    trainingBoardRegister: trainingBoardRegister(repoRoot),
     journeys,
     bookingSteps: journeys[0].steps,
   };
@@ -260,20 +273,20 @@ const boardFigure = (board, featured = false) => `<figure class="concept-board${
   <figcaption><strong>${escapeHtml(board.title)}</strong><span>${escapeHtml(board.grammar)}</span><p>${escapeHtml(board.note)}</p></figcaption>
 </figure>`;
 
-const trainingFamilyCard = ({ id, archetype, title, origin, available, width, height, board, boardWidth, boardHeight }) => `<article class="concept-comparison" aria-labelledby="target-${escapeHtml(id)}">
+const trainingFamilyCard = ({ id, archetype, title, origin, available, width, height, board, boardWidth, boardHeight }, register) => `<article class="concept-comparison" aria-labelledby="target-${escapeHtml(id)}">
   <h3 id="target-${escapeHtml(id)}">${escapeHtml(id)}${archetype ? ` · ${escapeHtml(archetype)}` : ''}</h3>
   ${title ? `<p class="muted">${escapeHtml(title)}</p>` : ''}
   <div class="concept-pair">
     <figure><div class="concept-image-frame">${board
       ? `<a href="/concepts/references/${escapeHtml(id)}.jpg" aria-label="Open the ${escapeHtml(id)} designed reference board at full size"><img src="/concepts/references/${escapeHtml(id)}.jpg" alt="Designed reference board for training family ${escapeHtml(id)}${archetype ? ` (${escapeHtml(archetype)})` : ''}"${boardWidth && boardHeight ? ` width="${boardWidth}" height="${boardHeight}"` : ''} loading="lazy"></a>`
-      : `<p class="muted">Designed board not generated yet. Expected ${code(`${TRAINING_BOARD_DIR}/${id}/reference.jpg`)}.</p>`}</div><figcaption>Designed reference board${board ? ` · ${code(`${TRAINING_BOARD_DIR}/${id}/reference.jpg`)}` : ' · pending'} — AI-generated illustration, not training evidence and not proof a demo works${board ? `. Model and digests: ${code(TRAINING_BOARD_REGISTER)}` : ''}</figcaption></figure>
+      : `<p class="muted">Designed board not generated yet. Expected ${code(`${TRAINING_BOARD_DIR}/${id}/reference.jpg`)}.</p>`}</div><figcaption>Designed reference board${board ? ` · ${code(`${TRAINING_BOARD_DIR}/${id}/reference.jpg`)}` : ' · pending'} — AI-generated illustration, not training evidence and not proof a demo works${board ? (register ? `. Model and digests: ${code(register)}` : `. The register of the model and digests for these boards has not landed in this checkout yet (expected ${code(TRAINING_BOARD_REGISTER)})`) : ''}</figcaption></figure>
     <figure><div class="concept-image-frame">${available
       ? `<a href="/concepts/targets/${escapeHtml(id)}.png" aria-label="Open the ${escapeHtml(id)} harness target render at full size"><img src="/concepts/targets/${escapeHtml(id)}.png" alt="Harness target render, the A1 conformance instrument, for ${escapeHtml(id)}"${width && height ? ` width="${width}" height="${height}"` : ''} loading="lazy"></a>`
       : `<p class="muted">Harness target render pending. Expected ${code(`${TRAINING_TARGET_DIR}/${id}/target.png`)}.</p>`}</div><figcaption>Harness target render (A1 conformance instrument)${available ? ` · ${code(`${TRAINING_TARGET_DIR}/${id}/target.png`)}` : ' · pending'} — a deterministic headless-Chrome render of ${origin ? code(origin) : 'the family&rsquo;s authored board'}, NOT a designed board${available ? `. Provenance: ${code('docs/provenance/assets/training-targets.md')}` : ''}</figcaption></figure>
   </div>
 </article>`;
 
-export function renderConcepts({ boards, archetypes, trainingTargets = [], bookingSteps = [], journeys = [] }) {
+export function renderConcepts({ boards, archetypes, trainingTargets = [], bookingSteps = [], journeys = [], trainingBoardRegister = null }) {
   const [featured, ...otherBoards] = boards;
   const boardSection = featured ? `${boardFigure(featured, true)}<div class="concept-board-grid">${otherBoards.map((board) => boardFigure(board)).join('')}</div>`
     : '<p class="notice">No layout concept boards are available in this checkout.</p>';
@@ -281,7 +294,7 @@ export function renderConcepts({ boards, archetypes, trainingTargets = [], booki
   // Families that already have a designed board come first: the page leads with designs and states the count, so a
   // reader cannot read a harness instrument as the deliverable and cannot miss how much of the set is still pending.
   const orderedTargets = [...trainingTargets].sort((a, b) => (Number(b.board) - Number(a.board)) || a.id.localeCompare(b.id));
-  const trainingSection = trainingTargets.length ? `<div class="concept-board-grid">${orderedTargets.map(trainingFamilyCard).join('')}</div>`
+  const trainingSection = trainingTargets.length ? `<div class="concept-board-grid">${orderedTargets.map((family) => trainingFamilyCard(family, trainingBoardRegister)).join('')}</div>`
     : '<p class="notice">No A1 training-family targets are declared in this checkout.</p>';
   const archetypeSection = archetypes.length ? archetypes.map(({ id, reference, target, referencePath }) => `<article class="concept-comparison" aria-labelledby="concept-${escapeHtml(id)}">
     <h3 id="concept-${escapeHtml(id)}">${escapeHtml(id.replaceAll('-', ' '))}</h3>
@@ -318,7 +331,7 @@ export function renderConcepts({ boards, archetypes, trainingTargets = [], booki
       ${boardSection}
     </section>
     <section aria-labelledby="training-targets-heading"><h2 id="training-targets-heading">Training families (A1): designed boards and harness targets</h2>
-      <p class="muted">${boardCount} of the ${trainingTargets.length || 30} training families have a designed reference board so far (model and digests: ${code(TRAINING_BOARD_REGISTER)}); every family below also has a harness target render, which is a deterministic headless-Chrome capture of its authored HTML board under ${code('docs/train/targets/')} and NOT a designed board. Families with a designed board are listed first, and the two images of a family are labelled so neither can be mistaken for the other. Neither kind is training evidence, and neither is proof a demo works.</p>
+      <p class="muted">${boardCount} of the ${trainingTargets.length || 30} training families have a designed reference board so far${trainingBoardRegister ? ` (model and digests: ${code(trainingBoardRegister)})` : `; the register of the model and digests for those boards has not landed in this checkout yet (expected ${code(TRAINING_BOARD_REGISTER)})`}; every family below also has a harness target render, which is a deterministic headless-Chrome capture of its authored HTML board under ${code('docs/train/targets/')} and NOT a designed board. Families with a designed board are listed first, and the two images of a family are labelled so neither can be mistaken for the other. Neither kind is training evidence, and neither is proof a demo works.</p>
       ${trainingSection}
     </section>
     <section aria-labelledby="eval-targets-heading"><h2 id="eval-targets-heading">Sealed evaluation targets (A6)</h2>
