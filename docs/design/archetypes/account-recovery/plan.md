@@ -166,8 +166,9 @@ claim:
   `npm run check:design-schema` checks against that spec. That plan and this one describe the same
   contract from two sides; where they differ, the spec is right and both are wrong.
 - Five arms are generated from the spec - `pilot/projects/account-recovery-{hono,preact,raw,react,vue}`
-  - rebuilt by `node scripts/rebuild-from-spec.mjs --family account-recovery`. Every declared `GET`
-  route is answered, `/account` by the generated fallback.
+  - rebuilt by `node scripts/rebuild-from-spec.mjs --family account-recovery`. The evaluation side's
+  plan records that every declared `GET` route is answered, `/account` by the generated fallback, and
+  `check:pilot-served` flags no account-recovery `GET` as declared-not-served, which agrees with it.
 - **The reset write is declared and not served, and the arms serve more than the spec declares.**
   `POST /reset` is dropped by the generator in all five arms, recorded with the reason "Generator only
   emits the first write route; /reset is dropped on account-recovery" as a named exception in
@@ -176,35 +177,30 @@ claim:
   `/cart` - which are generator fallbacks rather than anything this contract promises. Criterion 6
   below is therefore a requirement the generated family does not currently meet, and reading this
   document's route table as a description of what the arms do would be wrong in exactly one row.
-- **The arms' behaviour is measured, and the measurement is committed.** `docs/pilot/records.json`,
-  produced by `scripts/pilot-records.mjs` from a run directory, holds one entry **per project per
-  version**. For the account-recovery arms each entry carries the browser journeys this archetype
-  declares - `server-persistence`, which reaches `/account` after a submit and reads the display name
-  back on a reload; `validation-failure`, which records a refused submission with a visible error and
-  the observation `refused-observed`; and `content` - together with per-rule status, security status and
-  the tree hashes, for both the original and the uplifted build. So criteria 3 and 5 are measured
-  directly - the display name is read back on a reload, and an empty submission is recorded as refused.
-  Criterion 2 is measured only as far as where the browser arrived: these journey summaries record the
-  landing address, not the response status, and the `303` the spec declares appears in one arm's record
-  and not the others'. The records name **seven** arms, including `svelte` and `webcomponents`, while
-  `pilot/projects/` holds five directories today: the file records a run, not the current tree.
-- **The record also carries a divergence from criterion 4, named rather than explained.**
-  `security.session-cookie-attributes` is recorded as `FAIL` for all seven arms in both builds. That
-  rule requires the session cookie to be `HttpOnly`, to be `Secure` and to carry a SameSite value, and
-  the pilot serves over `http://127.0.0.1`; the recorded status does not say which attribute produced
-  the verdict, so this document records it and does not adjudicate it. Criterion 4's own wording -
-  `Secure` "when the arm sets it" - is the qualification the spec already carries.
-- **Which measurement covers which criterion.** Criterion 3 and criterion 5 are measured by the pilot
-  records above, and criterion 2 only as far as the address the browser landed on; criterion 4 is
-  measured there too and recorded as failing; criterion 1's route is covered only as a route name; and
-  criterion 6 is not met. `check:pilot-served` compares route *names* and
-  establishes nothing about fields, redirects, reload persistence, cookie attributes or refusal, so
-  where this document says a criterion is measured it names the artefact that measures it rather than
-  the check that happens to run beside it.
+- **What the pilot records contain.** `docs/pilot/records.json`, produced by `scripts/pilot-records.mjs`
+  from a run directory, holds one entry **per project per version**. Seven of its 35 projects are
+  account-recovery arms, and each has an `original` and an `uplifted` entry - fourteen in all. Every
+  entry carries the same three harness probes - `server-persistence`, `validation-failure` and
+  `content` - plus per-rule status, security status and the tree hashes. Measured field by field:
+  `server-persistence` records the browser arriving at `/account` after a submit and the display name
+  read back on a reload; `validation-failure` records a visible error on all fourteen entries, the
+  observation `refused-observed` on all seven arms, and a `serverRefused` flag that is true in five of
+  the fourteen; and `security.session-cookie-attributes` is `FAIL` on every entry.
+- **Which criterion each of those evidences, and which it does not.** Criterion 3 is evidenced by the
+  reload read-back. Criterion 5 is only **partly** evidenced: refusals and visible errors are recorded,
+  but nothing records that no account was created or that the form was re-rendered. Criteria 1, 2 and 6
+  are not evidenced here at all - these records carry no response status, so the `303` and the
+  `Location` the spec declares appear nowhere in them, and criterion 6's route is not served. Criterion
+  4 is evidenced as failing: the rule requires the session cookie to be `HttpOnly`, to be `Secure` and
+  to carry a SameSite value other than `None`; the recorded status names none of those attributes, and
+  the pilot serves over `http://127.0.0.1`; the verdict is recorded here rather than adjudicated. And
+  `check:pilot-served` compares route *names* only, so it establishes nothing about any of this. The
+  seven arms include `svelte` and `webcomponents`, which have no directory under `pilot/projects/`
+  today - the file records a run, not the current tree.
 - The visual target is hand-written and static: `demo/` plus the two boards. It answers from no server,
-  holds no credential, and sends nothing - the browser verifier asserts that submitting and letting the
-  countdown run make no write. That is the design, not a shortfall: a preview that quietly claimed to
-  have mailed a recovery link would be the more serious defect.
+  holds no credential, and sends nothing - the browser verifier asserts that the submit, and the
+  countdown's observed ticks, make no write. That is the design, not a shortfall: a preview that
+  quietly claimed to have mailed a recovery link would be the more serious defect.
 - **The boards cover the recovery half only.** Two states exist - the request form and the sent notice
   - and there is no board for the sign-up form, the account page, an error, an empty state, or the
   reference-addressed page. The sign-up half, which is the half the spec spends its fields and session
