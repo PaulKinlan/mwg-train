@@ -54,8 +54,9 @@ four is capacity-aware; they are generator furniture.
 
 ## Data and state
 
-- **Engine:** `sqlite`, in a file named on the command line, alive for one process - a store for the life of
-  that process, not a durable one.
+- **Engine:** `sqlite`, in a file named on the command line. The spec's **intended** lifetime for it is one
+  process - it calls the store "per process ... not a durable store" - but that is the intent rather than an
+  enforced behaviour, and the note below says what the generated arms actually do.
 - **Table:** one. `records` holds `ref` (TEXT, primary key), `created_at` (TEXT, not null) and `payload`
   (TEXT, not null) - the value a write stores, read back by the reference the server issued. Unlike the
   catalogue archetype, which also declares a `sessions` table, this spec declares nothing else.
