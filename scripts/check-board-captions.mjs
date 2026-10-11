@@ -95,19 +95,29 @@ const SRC = /\ssrc\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+))/i;
 
 const MENTION = /SHA-256/g;
 
-/** True when an element is hidden by a boolean attribute or by an inline display:none. */
-function hiddenAttributes(attributes) {
+/** True when an element carries an `open` attribute, whatever its value, as `details` and `dialog` use. */
+
+/** True when the element carries the named attribute, whatever its value. */
+function hasAttribute(attributes, wanted) {
   ATTRIBUTE.lastIndex = 0;
   let match;
   while ((match = ATTRIBUTE.exec(attributes))) {
-    const name = match[1].toLowerCase();
-    // `hidden` is a boolean attribute: its presence hides the element whatever its value says, which is why
-    // `hidden=""`, `hidden="false"` and `hidden="hidden"` all count.
-    if (name === 'hidden') return true;
-    if (name === 'style') {
-      const value = match[2] ?? match[3] ?? match[4] ?? '';
-      if (/display\s*:\s*none/i.test(value)) return true;
-    }
+    if (match[1].toLowerCase() === wanted) return true;
+  }
+  return false;
+}
+
+/** True when an element is hidden by a boolean attribute or by an inline display:none. */
+function hiddenAttributes(attributes) {
+  // `hidden` is a boolean attribute: its presence hides the element whatever its value says, which is why
+  // `hidden=""`, `hidden="false"` and `hidden="hidden"` all count.
+  if (hasAttribute(attributes, 'hidden')) return true;
+  ATTRIBUTE.lastIndex = 0;
+  let match;
+  while ((match = ATTRIBUTE.exec(attributes))) {
+    if (match[1].toLowerCase() !== 'style') continue;
+    const value = match[2] ?? match[3] ?? match[4] ?? '';
+    if (/display\s*:\s*none/i.test(value)) return true;
   }
   return false;
 }
@@ -158,11 +168,16 @@ export function hiddenRanges(text) {
     }
 
     const hidden = hiddenAttributes(attributes) || open.some((element) => element.hidden);
+    // Two elements are not rendered at all unless their markup says otherwise: a <details> shows only its
+    // first <summary> until it is open, and a <dialog> is hidden unless open. A board inside either is not on
+    // screen, so its subtree is masked whole - which errs towards reporting a board that a reader cannot see
+    // than towards passing one that is absent.
+    const hiddenByDefault = (name === 'details' || name === 'dialog') && !hasAttribute(attributes, 'open');
     if (VOID_ELEMENTS.has(name) || selfClosing === '/') {
-      if (hidden) ranges.push([match.index, end]);
+      if (hidden || hiddenByDefault) ranges.push([match.index, end]);
       continue;
     }
-    open.push({ name, start: match.index, hidden });
+    open.push({ name, start: match.index, hidden: hidden || hiddenByDefault });
   }
   // An element left open still hides whatever follows it.
   for (const element of open) {

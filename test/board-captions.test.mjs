@@ -330,6 +330,35 @@ test('renderedText removes comments and non-rendered element bodies, and keeps o
   assert.doesNotMatch(text, /b<\/p>|c<\/p>|d<\/p>/);
 });
 
+test('elements hidden by default are masked until their markup opens them', () => {
+  // A closed <details> shows only its first <summary>, and a <dialog> is hidden unless open. A board inside
+  // either is not on screen, and masking the whole subtree errs towards reporting a board a reader cannot see
+  // rather than passing one that is absent.
+  const prefix = sha256(BOARD).slice(0, 10);
+  const caption = wave2Caption(`${prefix}\u2026`);
+  const pair = `<img src="../step1-grid.jpg">${caption}`;
+  const [details, dialog] = [
+    ['closed details', `<details>${pair}</details>`],
+    ['closed dialog', `<dialog>${pair}</dialog>`],
+  ];
+  for (const [, inner] of [details, dialog]) {
+    const html = `<div>${inner}</div>`;
+    withFixture({ html }, (holder) => {
+      const result = checkBoardCaptions({ repoRoot: holder.root });
+      assert.equal(result.ok, false, 'a board inside a by-default-hidden element must not satisfy the page check');
+      assert.equal(result.boards, 0);
+    });
+  }
+  for (const [what, inner] of [['open details', `<details open>${pair}</details>`], ['open dialog', `<dialog open>${pair}</dialog>`]]) {
+    const html = `<div>${inner}</div>`;
+    withFixture({ html }, (holder) => {
+      const result = checkBoardCaptions({ repoRoot: holder.root });
+      assert.deepEqual(result.findings, [], `${what}: ${result.findings.join(' | ')}`);
+      assert.equal(result.boards, 1, what);
+    });
+  }
+});
+
 test('an attribute name inside another attribute\u2019s value is not an attribute', () => {
   // The masking has to read attributes, not search the tag text, or `title="hidden"` would hide a board.
   const prefix = sha256(BOARD).slice(0, 10);
