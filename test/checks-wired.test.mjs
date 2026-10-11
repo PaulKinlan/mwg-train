@@ -62,6 +62,15 @@ test('derive and validate check set', async () => {
   // The gate's own list is the authority for what is wired. Parsing it here - rather than keeping a second copy in
   // this file - is what makes the trap impossible: there is nothing left for a developer to forget to update.
   const checkAllParts = checkAllStr.split('&&').map((part) => part.trim());
+  // Every entry must be an `npm run <script>`. A bare command still runs when the gate is invoked through npm,
+  // but the shell runs check:all too - and a bare `check:foo` would break it there while passing every assertion
+  // below, because the name is scraped into `wired` either way.
+  for (const part of checkAllParts) {
+    assert.ok(
+      part.startsWith('npm run '),
+      `check:all entry "${part}" must start with "npm run " - a bare command runs under npm but not in a shell`,
+    );
+  }
   const wired = new Set(checkAllParts.map((part) => part.replace(/^npm run /, '')));
   assert.ok(wired.size >= 20, `check:all runs only ${wired.size} check(s)`);
   assert.strictEqual(
