@@ -83,10 +83,23 @@ test('wiring guard: the game block reaches the builder, and a spec that does not
   assert.notEqual(spec.game, undefined, 'this test needs a game block');
   assert.deepEqual(archetype.game, spec.game, 'the block validated but was dropped by archetypeFromSpec (expected archetype.game)');
   assert.equal(archetype.capabilities.game, true, 'the capability flag did not reach the builder');
+  // No game symbols, and - the stronger claim - the FLAG decides rather than the block: a specification
+  // that carries a game block with the capability off must emit exactly what the same specification emits
+  // with no block at all. A pattern check alone cannot catch arbitrary leaked text: a mutation that made
+  // `gameEnhance` return a stray comment for an opted-out spec sailed through the symbol check, which is
+  // how this comparison got here. The byte-level authority for the frozen trees stays `check:specs`, whose
+  // 35 hashes would drift if the shared path emitted anything extra.
   for (const frameworkName of ARMS) {
-    const { files } = buildProjectFromSpec({ spec: gameSpec({ game: undefined, capabilities: { list_pages: true } }), frameworkName });
+    const withoutBlock = gameSpec({ game: undefined, capabilities: { list_pages: true } });
+    const blockButOff = gameSpec({ game: GAME, capabilities: { list_pages: true, game: false } });
+    const first = buildProjectFromSpec({ spec: withoutBlock, frameworkName });
+    const second = buildProjectFromSpec({ spec: blockButOff, frameworkName });
+    for (const file of ['server.mjs', 'app/enhance.js', 'app/page.mjs', 'app/styles.css']) {
+      if (first.files[file] === undefined) continue;
+      assert.equal(second.files[file], first.files[file], `${frameworkName} emitted different ${file} for a block whose capability is off`);
+    }
     assert.equal(
-      /game_scores|game_field|GAME_CONFIG|gameTick|id="game-/.test(files['server.mjs']) || /GAME_CONFIG|gameTick/.test(files['app/enhance.js']),
+      /game_scores|game_field|GAME_CONFIG|gameTick|id="game-/.test(first.files['server.mjs']) || /GAME_CONFIG|gameTick/.test(first.files['app/enhance.js']),
       false,
       `${frameworkName} emitted game code for a specification that did not opt in`,
     );
