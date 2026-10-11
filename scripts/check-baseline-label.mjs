@@ -223,6 +223,8 @@ export const DOCUMENTS = {
   'docs/design/archetypes/contact-lead/demo/README.md': 'design',
   'docs/design/archetypes/event-registration/README.md': 'provenance',
   'docs/design/archetypes/event-registration/demo/README.md': 'design',
+  'docs/design/archetypes/event-registration/design.md': 'design',
+  'docs/design/archetypes/event-registration/plan.md': 'design',
   // The first archetype authored outside the five evaluation families (bead mwg-train-efg): a board brief whose
   // prompts the generator reads. Classified like the other archetype READMEs that record borrowed reference
   // material and its rights.
