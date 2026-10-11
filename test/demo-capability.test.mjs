@@ -157,6 +157,23 @@ test('functional: configure, run, read the output, then read the error - in all 
         assert.equal(/<script/i.test(initial), false, `${arm} runs without a client script`);
         assert.equal(/\bfetch\s*\(|XMLHttpRequest/.test(initial), false, `${arm} makes no network call from the page`);
 
+        // The arities of the whitelisted functions, which is a grammar decision rather than a bug fix
+        // (mwg-train-7tl). `round` and `abs` are unary and say so; `min` and `max` took one or more, so `min(1)`
+        // evaluated to 1 - the identity, which no demo author writes. They now need at least two. Two rather than
+        // exactly two, because refusing three would refuse `max(1, 2, 3)`, which is what Math.max means and what a
+        // demo may plausibly ask for; only the one-argument form is refused.
+        const unary = await run({ expression: 'min(1)' });
+        assert.ok(near(unary, 'demo-error')?.includes('at least 2 arguments'), `${arm} refuses min(1) and says why (found: ${near(unary, 'demo-error')})`);
+        const singleMax = await run({ expression: 'max(4)' });
+        assert.ok(near(singleMax, 'demo-error')?.includes('at least 2 arguments'), `${arm} refuses max(4) as well`);
+
+        const binary = await run({ expression: 'min(7, 2)' });
+        assert.equal(/id="demo-error"/.test(binary), false, `${arm} still runs min(7, 2)`);
+        assert.ok(near(binary, 'demo-output')?.includes('2'), `${arm} min(7, 2) is 2 (observed: ${near(binary, 'demo-output')})`);
+        const variadic = await run({ expression: 'max(1, 2, 3)' });
+        assert.equal(/id="demo-error"/.test(variadic), false, `${arm} still runs max(1, 2, 3): three arguments are not refused`);
+        assert.ok(near(variadic, 'demo-output')?.includes('3'), `${arm} max(1, 2, 3) is 3 (observed: ${near(variadic, 'demo-output')})`);
+
         // The failure path, which the bead requires to be as readable as the success path. Every one of these must
         // come back as a message rather than a crash or a blank panel - including the deeply nested one, where the
         // absence of a depth limit would be a stack overflow in the generated server rather than an error.
