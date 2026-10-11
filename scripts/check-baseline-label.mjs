@@ -165,6 +165,10 @@ export const DOCUMENTS = {
   // check:specs only to show that the frozen trees did not move.
   'docs/KNOWN-SINKS.md': 'provenance',
   'docs/PIPELINE.md': 'floor-report',
+  // The vocabulary decision (mwg-train-210): what the default is, what the ideal is, and the three
+  // reserved senses of "baseline". A contract rather than a floor report - it states no measurement,
+  // it fixes the words the measurements are read with, and check:set-separation enforces them.
+  'docs/vocabulary.md': 'contract',
   'docs/eval/conformance/README.md': 'floor-report',
   'docs/eval/conformance/account-recovery-identity.json': 'floor-report',
   'docs/eval/conformance/account-recovery-identity.md': 'floor-report',

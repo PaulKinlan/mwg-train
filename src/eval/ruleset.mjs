@@ -104,8 +104,11 @@ export function baselineAttributionLine() {
  */
 export const BASELINE_FIELDS = Object.freeze({
   baseline_label: BASELINE_LABEL,
+  // Names BOTH sides, because the word "baseline" alone is ambiguous in this repository: pilot/CORPUS.json
+  // used it for the repaired artefact while docs/PIPELINE.md used it for the raw one (mwg-train-210). A
+  // reader who meets this string in a record must be able to tell which side the record is describing.
   baseline_definition:
-    'deterministic repair of the project by our own Modern Web Guidance rule specifications; no model and no teacher in the loop',
+    'the MWG-uplifted (ideal) artefact, and not the default: deterministic repair of a project by our own Modern Web Guidance rule specifications, with no model and no teacher in the loop. The raw pre-uplift artefact is the default and is recorded separately.',
   baseline_tool: 'src/corpus/uplift.mjs',
 });
 

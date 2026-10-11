@@ -130,9 +130,14 @@ Modern Web Guidance rules. Its role depends on the family:
 
 - **EVAL INSTRUMENT** — the sealed briefs + rules + measured pairs (stages 1–2, 4–5). It measures;
   it is never consumed as training data.
-- **BASELINE** — the raw generated sites (stage 3). What the model produces today, kept to measure
-  improvement FROM.
+- **DEFAULT** — the raw generated sites (stage 3), with **no Modern Web Guidance and no uplift applied**.
+  What the model produces today, kept to measure improvement FROM. (This is what these documents used to
+  call the "baseline"; the raw side is the default, and the repaired side is the ideal — see
+  [docs/vocabulary.md](vocabulary.md), and `npm run check:set-separation` which enforces it.)
+- **IDEAL** — the same sites after the deterministic uplift, recorded as the ideal side of each pair.
+  It is the target, and it is the only side that may become training data.
 - **TRAINING SOURCE** — the disjoint corpus generated for stage 7 (recorded in `pilot/TRAINING_CORPUS.json`).
-  Accepted pairs from this corpus — and only these — may become training data.
+  Accepted pairs from this corpus — and only these — may become training data: the accepted pairs' **ideal**
+  side is the target, and their default side is the comparator, never an input.
 - **COST INPUT** — the pricing evidence (stage 6). What an accepted pair costs to produce on each
   backend; decides where generation runs.
