@@ -1,6 +1,7 @@
 ---
 archetype: account-recovery
 type: b2b-saas-signup
+spec: docs/eval/specs/account-recovery.json
 axis: docs/train/briefs/TYPE-AXIS.md
 boards: docs/design/archetypes/account-recovery/
 register: docs/provenance/assets/design-reference-wave2.md
@@ -59,6 +60,12 @@ five the shared engine can already express - a page, a write, a read. `GET /acco
 answered from **a reference**, so it returns the same thing to whoever holds the address, signed in or
 not. An archetype in which every read is answered from the request alone is the record-form type
 wearing an account's noun, and it is the failure this contract exists to name.
+
+One of these five the generated arms do **not** serve, and it is stated here rather than left for a
+reader to discover: `POST /reset` is declared by the spec and dropped by the generator, which emits
+only the first write route. That divergence is recorded as a named exception with its reason in
+`scripts/check-pilot-served.mjs`, which runs as part of `check:all`; *Implementation status* records
+what follows from it.
 
 ## Data and state
 
@@ -138,9 +145,12 @@ sign-up half, steps 1-3, has no board at all.
 9. The preview countdown reaches zero and offers a resend, and neither the submit nor the countdown
    makes a network write: the demo serves nothing.
 10. Returning from the sent state clears the field, restores the request card, and focuses the input.
-11. Every one of the above is driven in a real browser at 390, 768 and 1280 pixels wide with no
-    horizontal overflow and no page exceptions - the states of this archetype are the demo's own
-    `scripts/verify-account-recovery-demo.mjs`, and the criteria are only as good as that run.
+11. The demo's two states are driven in a real browser at 390, 768 and 1280 pixels wide, with no
+    horizontal overflow and no page exceptions, by this archetype's own
+    `scripts/verify-account-recovery-demo.mjs`. That run covers criteria 7 to 10 and nothing else.
+    Criteria 1 to 6 describe the generated arms rather than the demo and are **not** covered by it;
+    what measures them is `check:pilot-served` against the spec, and one of them is not currently met
+    - see *Implementation status*.
 
 ## Implementation status
 
@@ -154,9 +164,23 @@ claim:
   `npm run check:design-schema` checks against that spec. That plan and this one describe the same
   contract from two sides; where they differ, the spec is right and both are wrong.
 - Five arms are generated from the spec - `pilot/projects/account-recovery-{hono,preact,raw,react,vue}`
-  - rebuilt by `node scripts/rebuild-from-spec.mjs --family account-recovery`. The evaluation plan
-  records what is served: every declared `GET` route is answered, and `/account` by the generated
-  fallback.
+  - rebuilt by `node scripts/rebuild-from-spec.mjs --family account-recovery`. Every declared `GET`
+  route is answered, `/account` by the generated fallback.
+- **The reset write is declared and not served, and the arms serve more than the spec declares.**
+  `POST /reset` is dropped by the generator in all five arms, recorded with the reason "Generator only
+  emits the first write route; /reset is dropped on account-recovery" as a named exception in
+  `scripts/check-pilot-served.mjs`, which runs inside `check:all`. The same file records five routes
+  each arm serves that the spec does not declare - `GET /search`, `/roster`, `/inbox`, `/attendees`,
+  `/cart` - which are generator fallbacks rather than anything this contract promises. Criterion 6
+  below is therefore a requirement the generated family does not currently meet, and reading this
+  document's route table as a description of what the arms do would be wrong in exactly one row.
+- **No pilot-harness record exists for this archetype.** `src/corpus/harness.mjs` starts a project's
+  server, drives its declared journeys in a real browser and writes one record per project, and
+  `docs/eval/projects/` holds no such record for `account-recovery`. So the served half of this
+  contract is measured at the level of *routes*, by `check:pilot-served`, and its behaviour has not
+  been recorded by that harness. Saying so is the purpose of this section: a document claiming the
+  reset write works, when the only measurement of it is an exceptions file saying it is not served,
+  would be the kind of invention this section exists to prevent.
 - The visual target is hand-written and static: `demo/` plus the two boards. It answers from no server,
   holds no credential, and sends nothing - the browser verifier asserts that submitting and letting the
   countdown run make no write. That is the design, not a shortfall: a preview that quietly claimed to
