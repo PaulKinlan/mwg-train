@@ -59,7 +59,7 @@ const FIELD_KEYS = new Set(['slug', 'name', 'type', 'label', 'autocomplete', 're
 export { FIELD_KEYS };
 
 /** The functional-route capabilities a specification may opt into. A closed set, like FIELD_KEYS. */
-export const CAPABILITY_KEYS = new Set(['list_pages', 'detail_page', 'auth', 'cart', 'pricing_tiers', 'checkout']);
+export const CAPABILITY_KEYS = new Set(['list_pages', 'detail_page', 'auth', 'cart', 'pricing_tiers', 'checkout', 'survey']);
 
 /** The field names a selector types into, from `[name=x]` / `[name="x"]` / `[name='x']`. */
 function selectorFieldNames(selector) {
@@ -270,6 +270,14 @@ export function validateSpec(spec) {
           at('capabilities.cart', 'is on, but no number field to accumulate a quantity in');
         }
       }
+      if (spec.capabilities.survey === true) {
+        // The survey owns the sid cookie that carries a visitor's answers, and the cart, the session flow
+        // and auth all claim it too, so a survey that shared it would lose its own answers.
+        if (spec.session === true) at('capabilities.survey', 'cannot combine with session: both own the sid cookie');
+        if (spec.capabilities.auth === true) at('capabilities.survey', 'cannot combine with auth: both own the sid cookie');
+        if (spec.capabilities.cart === true) at('capabilities.survey', 'cannot combine with cart: both own the sid cookie');
+        if (spec.survey === undefined) at('capabilities.survey', 'is on, but no survey block states the questions and the outcome bands');
+      }
       if (spec.capabilities.checkout === true) {
         // A checkout is arithmetic over the cart's lines: without the cart there is nothing to pay for,
         // and a second cart implementation here would be the defect rather than the feature (mwg-train-le6).
@@ -414,13 +422,111 @@ export function validateSpec(spec) {
     }
     if (spec.capabilities?.checkout !== true) at('checkout', 'only meaningful with capabilities.checkout - there would be no page to pay on');
   }
+  if (spec.survey !== undefined) {
+    const survey = spec.survey;
+    if (!isObject(survey)) at('survey', 'must be an object when present');
+    else {
+      for (const key of Object.keys(survey)) {
+        if (!['title', 'questions', 'bands'].includes(key)) at(`survey.${key}`, 'unknown key');
+      }
+      if (!isString(survey.title) || survey.title.trim() === '') at('survey.title', 'must be a title the page can show');
+      // A condition may only look BACKWARDS at a question that was actually asked: one that depended on an
+      // answer given later could never be reached, and a survey that depended on itself would never start.
+      const conditionProblem = (when, where, askedBefore, allQuestions) => {
+        for (const key of Object.keys(when)) {
+          if (!['field', 'equals', 'in', 'at_most', 'at_least'].includes(key)) at(`${where}.${key}`, 'unknown key');
+        }
+        if (!isString(when.field) || when.field.trim() === '') {
+          at(`${where}.field`, 'must name a question this survey asks');
+        } else {
+          const known = allQuestions.some((question) => question?.field === when.field);
+          if (!known) at(`${where}.field`, `names ${when.field}, which this survey does not ask`);
+          else if (askedBefore && !askedBefore.some((question) => question?.field === when.field)) {
+            at(`${where}.field`, `names ${when.field}, which this survey only asks later, so the question could never be reached`);
+          }
+        }
+        const operators = ['equals', 'in', 'at_most', 'at_least'].filter((key) => when[key] !== undefined);
+        if (operators.length !== 1) at(where, 'must state exactly one of equals, in, at_most or at_least');
+        if (when.in !== undefined && (!Array.isArray(when.in) || when.in.length === 0)) at(`${where}.in`, 'must list at least one answer');
+        for (const key of ['at_most', 'at_least']) {
+          if (when[key] !== undefined && (typeof when[key] !== 'number' || !Number.isFinite(when[key]))) at(`${where}.${key}`, 'must be a number');
+        }
+        const dependency = (spec.fields ?? []).find((entry) => entry?.name === when.field);
+        if (dependency?.type === 'select') {
+          const options = (dependency.options ?? []).map(String);
+          if (when.equals !== undefined && !options.includes(String(when.equals))) {
+            at(`${where}.equals`, `is not one of the options ${dependency.name} offers, so this could never be satisfied`);
+          }
+          if (Array.isArray(when.in) && when.in.some((value) => !options.includes(String(value)))) {
+            at(`${where}.in`, `lists a value ${dependency.name} does not offer`);
+          }
+        }
+        if ((when.at_most !== undefined || when.at_least !== undefined) && dependency !== undefined && dependency.type !== 'number') {
+          at(where, `compares a number against ${dependency.name}, which is not a number field`);
+        }
+      };
+      const questions = Array.isArray(survey.questions) ? survey.questions : [];
+      if (!Array.isArray(survey.questions) || survey.questions.length === 0) {
+        at('survey.questions', 'must list at least one question');
+      } else {
+        const asked = new Set();
+        for (const [index, question] of survey.questions.entries()) {
+          const where = `survey.questions[${index}]`;
+          if (!isObject(question)) {
+            at(where, 'must be an object');
+            continue;
+          }
+          for (const key of Object.keys(question)) {
+            if (!['field', 'when'].includes(key)) at(`${where}.${key}`, 'unknown key');
+          }
+          const field = (spec.fields ?? []).find((entry) => entry?.name === question.field);
+          if (!isString(question.field) || question.field.trim() === '') at(`${where}.field`, 'must name a field this specification declares');
+          else if (field === undefined) at(`${where}.field`, `names ${question.field}, which this specification does not declare`);
+          else if (asked.has(question.field)) at(`${where}.field`, `asks ${question.field} twice`);
+          else asked.add(question.field);
+          if (question.when !== undefined) {
+            if (!isObject(question.when)) at(`${where}.when`, 'must be an object when present');
+            else conditionProblem(question.when, `${where}.when`, survey.questions.slice(0, index), survey.questions);
+          }
+        }
+      }
+      if (!Array.isArray(survey.bands) || survey.bands.length === 0) {
+        at('survey.bands', 'must list at least one outcome band');
+      } else {
+        let unconditional = 0;
+        for (const [index, band] of survey.bands.entries()) {
+          const where = `survey.bands[${index}]`;
+          if (!isObject(band)) {
+            at(where, 'must be an object');
+            continue;
+          }
+          for (const key of Object.keys(band)) {
+            if (!['name', 'when'].includes(key)) at(`${where}.${key}`, 'unknown key');
+          }
+          if (!isString(band.name) || band.name.trim() === '') at(`${where}.name`, 'must name the outcome');
+          if (band.when === undefined) {
+            unconditional += 1;
+            // A fallback band that is not last would make every band after it unreachable, so the visitor
+            // would be told an outcome the survey's own declarations never reached.
+            if (index !== survey.bands.length - 1) at(`${where}.when`, 'is missing, so every band after it could never be reached');
+          } else if (isObject(band.when)) {
+            conditionProblem(band.when, `${where}.when`, questions, questions);
+          } else {
+            at(`${where}.when`, 'must be an object when present');
+          }
+        }
+        if (unconditional === 0) at('survey.bands', 'must end with one band that always matches, or a visitor could finish with no outcome at all');
+      }
+    }
+    if (spec.capabilities?.survey !== true) at('survey', 'only meaningful with capabilities.survey - there would be no page to ask the questions on');
+  }
   if (spec.capabilities?.pricing_tiers === true && spec.pricing_tiers === undefined) {
     at('capabilities.pricing_tiers', 'is on, but no pricing_tiers block states the tiers');
   }
   // A capability's own routes are emitted before the declared ones, so a specification that declares
   // the same path would leave a handler nothing ever reaches. Refused rather than silently shadowed
   // (mwg-train-4lk review).
-  const capabilityOwnedRoutes = { cart: ['/cart', '/cart/add'], pricing_tiers: ['/pricing', '/pricing/select', '/pricing/:ref'], checkout: ['/checkout', '/checkout/pay', '/checkout/receipt/:ref'] };
+  const capabilityOwnedRoutes = { cart: ['/cart', '/cart/add'], pricing_tiers: ['/pricing', '/pricing/select', '/pricing/:ref'], checkout: ['/checkout', '/checkout/pay', '/checkout/receipt/:ref'], survey: ['/survey', '/survey/answer', '/survey/review', '/survey/submit', '/survey/result/:ref'] };
   for (const [capability, owned] of Object.entries(capabilityOwnedRoutes)) {
     if (spec.capabilities?.[capability] !== true) continue;
     for (const route of spec.routes ?? []) {
@@ -492,6 +598,7 @@ export function archetypeFromSpec(spec) {
     // Carried under its own name: the spec key and the archetype key agree here (`checkout` is one word),
     // but the mapping is an explicit list, so a block that is not named here never reaches the builder.
     ...(spec.checkout === undefined ? {} : { checkout: spec.checkout }),
+    ...(spec.survey === undefined ? {} : { survey: spec.survey }),
     ...(spec.seed_accounts === undefined ? {} : { seedAccounts: spec.seed_accounts }),
   };
 }
