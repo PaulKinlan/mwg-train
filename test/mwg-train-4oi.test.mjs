@@ -79,7 +79,7 @@ test('check:route-conformance healthy, or a labelled skip when its scaffolding i
   if (fs.existsSync(projects)) {
     // Scaffolding present: this really is a conformance run, and it has to have checked something.
     assert.ok(res.out.includes('check-route-conformance: PASS - '), res.out);
-    assert.ok(/\d+ project\(s\) across \d+ families/.test(res.out), res.out);
+    assert.ok(/[1-9]\d* project\(s\) across [1-9]\d* families/.test(res.out), res.out);
   } else {
     // Scaffolding absent: the run must say so, name the path it wanted and the command that produces it, and
     // must not be mistakable for a conformance result. The last assertion is the one that keeps this from
