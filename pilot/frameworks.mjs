@@ -850,9 +850,20 @@ const rawCartRoutes = (archetype, cookieFlags) => {
     '  }',
     "  if (path === '/cart/add' && request.method === 'POST') {",
     '    const cartBody = await parseBody(request);',
-    `    const cartSid = ${CART_SID_RAW} ?? randomUUID();`,
+    "    const cartRef = String(cartBody.ref ?? '').trim();",
+    `    const cartVariant = String(cartBody[${JSON.stringify(variant.name)}] ?? '').trim();`,
+    // The form marks both required, but a POST is not the form: an item with no product or no variant
+    // would be stored and then rendered as an empty line (mwg-train-11d review).
+    "    if (cartRef === '' || cartVariant === '') {",
+    "      response.writeHead(422, { 'content-type': 'text/plain; charset=utf-8' });",
+    "      return response.end('An item needs a product and a variant.');",
+    '    }',
+    // `||`, not `??`: a browser can send `sid=` with an empty value, and `??` would accept that empty
+    // string as the visitor's sid. The rows would then be stored under it while the read side treats an
+    // empty sid as absent, so the cart would silently lose everything it had just accepted.
+    `    const cartSid = ${CART_SID_RAW} || randomUUID();`,
     `    const cartQuantity = Math.max(1, Number.parseInt(String(cartBody[${JSON.stringify(quantity.name)}] ?? '1'), 10) || 1);`,
-    `    insertCartItem.run(cartSid, String(cartBody.ref ?? ''), String(cartBody[${JSON.stringify(variant.name)}] ?? ''), cartQuantity, new Date().toISOString());`,
+    `    insertCartItem.run(cartSid, cartRef, cartVariant, cartQuantity, new Date().toISOString());`,
     `    response.writeHead(303, { location: '/cart', 'set-cookie': 'sid=' + cartSid + '; ${cookieFlags}' });`,
     '    return response.end();',
     '  }',
@@ -870,9 +881,13 @@ const honoCartRoutes = (archetype, cookieFlags) => {
     '});',
     "app.post('/cart/add', async (c) => {",
     '  const cartBody = await c.req.parseBody();',
-    `  const cartSid = ${CART_SID_HONO} ?? randomUUID();`,
+    "  const cartRef = String(cartBody.ref ?? '').trim();",
+    `  const cartVariant = String(cartBody[${JSON.stringify(variant.name)}] ?? '').trim();`,
+    "  if (cartRef === '' || cartVariant === '') return c.text('An item needs a product and a variant.', 422);",
+    // See rawCartRoutes: an empty `sid=` cookie must not become the key rows are stored under.
+    `  const cartSid = ${CART_SID_HONO} || randomUUID();`,
     `  const cartQuantity = Math.max(1, Number.parseInt(String(cartBody[${JSON.stringify(quantity.name)}] ?? '1'), 10) || 1);`,
-    `  insertCartItem.run(cartSid, String(cartBody.ref ?? ''), String(cartBody[${JSON.stringify(variant.name)}] ?? ''), cartQuantity, new Date().toISOString());`,
+    `  insertCartItem.run(cartSid, cartRef, cartVariant, cartQuantity, new Date().toISOString());`,
     `  c.header('set-cookie', 'sid=' + cartSid + '; ${cookieFlags}');`,
     "  return c.redirect('/cart', 303);",
     '});',

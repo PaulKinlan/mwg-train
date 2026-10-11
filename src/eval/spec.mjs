@@ -253,6 +253,16 @@ export function validateSpec(spec) {
         if (spec.capabilities.detail_page === true) at('capabilities.cart', 'cannot combine with detail_page: the cart product page is the record page');
         const products = (spec.routes ?? []).filter((route) => route?.kind === 'read-by-reference');
         if (products.length === 0) at('capabilities.cart', 'is on, but no route is read-by-reference to serve as the product page');
+        // The builder binds the FIRST read-by-reference route as the product page, so a second one would
+        // be declared and never served. Refused here rather than silently 404ing (mwg-train-11d review).
+        if (products.length > 1) {
+          at('capabilities.cart', `is on, but ${products.length} routes are read-by-reference: only the first would serve the product page`);
+        }
+        // A cart with nothing to put in it: the product page adds a reference to a record, and only a
+        // write route creates one.
+        if (!(spec.routes ?? []).some((route) => route?.method === 'POST' && String(route?.kind ?? '').startsWith('write'))) {
+          at('capabilities.cart', 'is on, but no route writes a record, so there would be nothing to add to the cart');
+        }
         if (!(spec.fields ?? []).some((field) => field?.type === 'select')) {
           at('capabilities.cart', 'is on, but no select field to choose a variant from');
         }

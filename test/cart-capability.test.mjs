@@ -54,6 +54,14 @@ test('spec gate: the cart capability validates as a closed set, and fails closed
   assert.ok(validateSpec(noVariant).some((p) => p.includes('no select field')));
   const noQuantity = cartSpec({ fields: cartSpec().fields.filter((field) => field.type !== 'number') });
   assert.ok(validateSpec(noQuantity).some((p) => p.includes('no number field')));
+  // The builder binds the FIRST read-by-reference route as the product page, so a second would be
+  // declared and never served; and a cart with no write route has nothing to put in it.
+  const twoProductRoutes = cartSpec({
+    routes: [...cartSpec().routes, { method: 'GET', path: '/other/:ref', kind: 'read-by-reference' }],
+  });
+  assert.ok(validateSpec(twoProductRoutes).some((p) => p.includes('only the first would serve the product page')));
+  const noWriteRoute = cartSpec({ routes: cartSpec().routes.filter((route) => route.kind !== 'write') });
+  assert.ok(validateSpec(noWriteRoute).some((p) => p.includes('nothing to add to the cart')));
 });
 
 test('byte-invariance: a specification that does not opt in emits no cart code', () => {
@@ -138,6 +146,24 @@ test('functional: the cart accumulates across pages, with the variant each item 
         const anonymous = await (await fetch(`${base}/cart`)).text();
         assert.match(anonymous, /0 line\(s\), 0 item\(s\)/, `${arm} an anonymous visitor has an empty cart`);
         assert.match(anonymous, /id="cart-empty"/, `${arm} an empty cart says so`);
+
+        // A POST is not the form: an add with no product or no variant must be refused rather than
+        // stored and then rendered as an empty line (mwg-train-11d review).
+        const noProduct = await post('/cart/add', { variant: 'Dabinett Heritage', quantity: '1' });
+        assert.equal(noProduct.status, 422, `${arm} refuses an add with no product`);
+        const noVariant = await post('/cart/add', { ref: firstRef, quantity: '1' });
+        assert.equal(noVariant.status, 422, `${arm} refuses an add with no variant`);
+        const stillEmpty = await (await fetch(`${base}/cart`, { headers: { cookie } })).text();
+        assert.match(stillEmpty, /2 line\(s\), 5 item\(s\)/, `${arm} a refused add changed nothing`);
+
+        // An empty `sid=` cookie must not become the key an item is stored under: the read side treats
+        // an empty sid as absent, so the cart would accept the add and then lose it (mwg-train-11d review).
+        const emptySid = await post('/cart/add', { ref: firstRef, variant: 'Dabinett Heritage', quantity: '4' }, { cookie: 'sid=' });
+        assert.equal(emptySid.status, 303, `${arm} accepts an add from a browser carrying an empty sid cookie`);
+        const refreshedSid = (emptySid.headers.get('set-cookie') ?? '').split(';')[0];
+        assert.match(refreshedSid, /^sid=.+/, `${arm} issues a real sid instead of storing rows under the empty one`);
+        const afterEmptySid = await (await fetch(`${base}/cart`, { headers: { cookie: refreshedSid } })).text();
+        assert.match(afterEmptySid, /1 line\(s\), 4 item\(s\)/, `${arm} the item added under an empty sid is reachable at /cart`);
       } finally {
         child.kill('SIGKILL');
         rmSync(dir, { recursive: true, force: true });
