@@ -55,12 +55,12 @@ store, the register or the target have moved apart.
 ### contact-lead
 
 - Target: `docs/design/archetypes/contact-lead`
-- Readme: `docs/design/archetypes/contact-lead/README.md` (sha256 `e12415f4bcc5475a262ec38e4783bf8526a710d0659b41966eea043b47d886e9`)
+- Readme: `docs/design/archetypes/contact-lead/README.md` (sha256 `b0bce43cc0fb7290973cfd0de7f966a971e82c58878fc47694b8d60455166f62`)
 - Stylesheet: `docs/design/archetypes/contact-lead/demo/styles.css` (sha256 `bc6d1f9c3f67877a988ba703b669ff587c3ebb5a72ca29d44c7d9ca19d25d04c`)
 - Documents: `docs/design/archetypes/contact-lead/demo/compare.html`, `docs/design/archetypes/contact-lead/demo/index.html`, `docs/design/archetypes/contact-lead/demo/success.html`
 - Rights: `excluded_from_training: true`, `approved_for_training: false` from `docs/design/archetypes/contact-lead/README.md:5`
 - Brand: `ARKHITECTS Studio`
-- Boards: `step1-form.jpg` sha256 `2f66292d8c0f8e8800f8ce737cb83acf303d97dda38c5fc20299807a676454cf`; `step2-success.jpg` sha256 `382dfbfe8865811372dd6ca32446fb711ae815232328d7b8f42b6f18c7cfed7f`
+- Boards: `step1-form.jpg` sha256 `1005f6c1404e40a51342c6dd48a7ba9c4d8127e36d9bf251bac0eea2f0bee76f`; `step2-success.jpg` sha256 `cb5df48b6ff3a569a356f98d5e37fceb4c0e71a27dd52e07536d32d39135be64`
 
 ### event-registration
 

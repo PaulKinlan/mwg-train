@@ -4,7 +4,7 @@
     "target_dir": "docs/design/archetypes/contact-lead",
     "readme": {
       "path": "docs/design/archetypes/contact-lead/README.md",
-      "sha256": "e12415f4bcc5475a262ec38e4783bf8526a710d0659b41966eea043b47d886e9"
+      "sha256": "b0bce43cc0fb7290973cfd0de7f966a971e82c58878fc47694b8d60455166f62"
     },
     "documents": [
       {
@@ -205,14 +205,14 @@
   "images": [
     {
       "name": "step1-form.jpg",
-      "sha256": "2f66292d8c0f8e8800f8ce737cb83acf303d97dda38c5fc20299807a676454cf",
-      "bytes": 486223,
+      "sha256": "1005f6c1404e40a51342c6dd48a7ba9c4d8127e36d9bf251bac0eea2f0bee76f",
+      "bytes": 497305,
       "source": "docs/design/archetypes/contact-lead/step1-form.jpg"
     },
     {
       "name": "step2-success.jpg",
-      "sha256": "382dfbfe8865811372dd6ca32446fb711ae815232328d7b8f42b6f18c7cfed7f",
-      "bytes": 414215,
+      "sha256": "cb5df48b6ff3a569a356f98d5e37fceb4c0e71a27dd52e07536d32d39135be64",
+      "bytes": 397249,
       "source": "docs/design/archetypes/contact-lead/step2-success.jpg"
     }
   ],

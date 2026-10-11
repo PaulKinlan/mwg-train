@@ -9,8 +9,8 @@
 
 | Ordered board | What the raster depicts | SHA-256 of committed bytes | Bytes |
 | --- | --- | --- | ---: |
-| [`step1-form.jpg`](step1-form.jpg) | Studio identity and consultation form | `2f66292d8c0f8e8800f8ce737cb83acf303d97dda38c5fc20299807a676454cf` | 486223 |
-| [`step2-success.jpg`](step2-success.jpg) | Depicted acknowledgement and sample lead reference | `382dfbfe8865811372dd6ca32446fb711ae815232328d7b8f42b6f18c7cfed7f` | 414215 |
+| [`step1-form.jpg`](step1-form.jpg) | Studio identity and consultation form | `1005f6c1404e40a51342c6dd48a7ba9c4d8127e36d9bf251bac0eea2f0bee76f` | 486223 |
+| [`step2-success.jpg`](step2-success.jpg) | Depicted acknowledgement and sample lead reference | `cb5df48b6ff3a569a356f98d5e37fceb4c0e71a27dd52e07536d32d39135be64` | 414215 |
 
 Hashes identify the handed-off JPEG bytes, not legal rights, visual accuracy or reproducibility. The depicted process includes details beyond the frozen contact-lead functional contract.
 
@@ -19,11 +19,11 @@ Hashes identify the handed-off JPEG bytes, not legal rights, visual accuracy or 
 ### `step1-form.jpg`
 
 ```text
-Modern web application UI for an architectural studio contact & lead consultation form. Dark slate theme (#0f172a, card surface #1e293b, emerald green #10b981). Two-column layout: left column highlights studio identity, address in London, consultation process steps, and typical response time (< 24 hrs). Right column displays clean accessible contact form: Full Name, Work Email, Project Scope dropdown (Residential Renovation, Commercial Build, Interior Architecture), Budget range selector, Message textarea with character count, and 'Send Consultation Request' button. Accessible focus rings, modern system typography, balanced spacing.
+High-fidelity, production-quality full-bleed edge-to-edge web canvas with no floating window and no exterior drop shadow of a modern web application UI for an architectural studio contact & lead consultation form. Dark slate theme (#0f172a, card surface #1e293b, emerald green #10b981). Two-column layout: left column highlights studio identity, address in London, consultation process steps, and typical response time (< 24 hrs). Right column displays clean accessible contact form: Full Name, Work Email, Project Scope dropdown (Residential Renovation, Commercial Build, Interior Architecture), Budget range selector, Message textarea with character count, and 'Send Consultation Request' button. Accessible focus rings, modern system typography, balanced spacing.
 ```
 
 ### `step2-success.jpg`
 
 ```text
-Modern web application UI for an architectural studio contact consultation, Step 2: Submission Success State. Dark slate theme (#0f172a, card surface #1e293b, emerald green #10b981). Centered card displaying verified submission confirmation: glowing green checkmark circle badge, headline 'Consultation Request Received', personalized subtext 'Thank you, Elena. Our lead architect will review your project details and reach out within 24 hours at elena@studio.com.', summary panel echoing project scope (Residential Renovation, Soho), reference token #LEAD-7301, and button 'Return to Home' + secondary 'Download Summary PDF'. Crisp typography, generous whitespace.
+High-fidelity, production-quality full-bleed edge-to-edge web canvas with no floating window and no exterior drop shadow of a modern web application UI for an architectural studio contact consultation, Step 2: Submission Success State. Dark slate theme (#0f172a, card surface #1e293b, emerald green #10b981). Centered card displaying verified submission confirmation: glowing green checkmark circle badge, headline 'Consultation Request Received', personalized subtext 'Thank you, Elena. Our lead architect will review your project details and reach out within 24 hours at elena@studio.com.', summary panel echoing project scope (Residential Renovation, Soho), reference token #LEAD-7301, and button 'Return to Home' + secondary 'Download Summary PDF'. Crisp typography, generous whitespace.
 ```
