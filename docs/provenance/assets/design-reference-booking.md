@@ -17,7 +17,7 @@
 
 | Board | Purpose | SHA-256 | Bytes |
 | --- | --- | --- | ---: |
-| [`step1-browse.jpg`](../../design/archetypes/booking/step1-browse.jpg) | weekly timetable browse with search and category chips | `b43851e30368d98b2508758983165c9d104e95990826371cd64c88354ede2462` | 500442 |
+| [`step1-browse.jpg`](../../design/archetypes/booking/step1-browse.jpg) | weekly timetable browse with search and category chips | `faadc0cccd460f59761d53c191963e6b31831061b494920e3c4eb695eeefdfa9` | 663479 |
 | [`step2-form.jpg`](../../design/archetypes/booking/step2-form.jpg) | multi-step details and seat selection with a summary card | `230848d3bd282e7c2cecadea52418cdfd794c0dad8b1e1499c8b360d1992e48e` | 492023 |
 | [`step3-confirmation.jpg`](../../design/archetypes/booking/step3-confirmation.jpg) | verified booking pass and digital receipt | `31e6ed730371b55a9414c00680c04ce64d43219ca36518dc37e10b2b3f4953d8` | 406153 |
 | [`step4-error.jpg`](../../design/archetypes/booking/step4-error.jpg) | accessible validation and conflict error states | `0b7e463903a1b7c0994ad92513a4087aec8aed5d05cf76b8bab75ad5e815fc72` | 446021 |

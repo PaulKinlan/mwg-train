@@ -4,7 +4,7 @@
     "target_dir": "docs/design/archetypes/booking",
     "readme": {
       "path": "docs/design/archetypes/booking/README.md",
-      "sha256": "0a306cc4914bda48501a55224c8e88ca466d8aeb777355e4d4e9f3299da0be52"
+      "sha256": "1fe83b017139aeb46b527f168af90e69f60aa8f2d1c42bb10c70c0bd3002096c"
     },
     "documents": [
       {
@@ -225,8 +225,8 @@
   "images": [
     {
       "name": "step1-browse.jpg",
-      "sha256": "b43851e30368d98b2508758983165c9d104e95990826371cd64c88354ede2462",
-      "bytes": 500442,
+      "sha256": "faadc0cccd460f59761d53c191963e6b31831061b494920e3c4eb695eeefdfa9",
+      "bytes": 663479,
       "source": "docs/design/archetypes/booking/step1-browse.jpg"
     },
     {
