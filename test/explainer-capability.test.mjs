@@ -119,6 +119,8 @@ test('functional: the output is derived from the input, the narrative follows it
         // What the reader sees, not only what the attributes say. Counting steps proves a path is drawn, not that
         // it *looks* drawn: strip the markers and a count-based check still passes. (Review finding on this bead.)
         assert.ok(initial.includes('&#10003;'), `${arm} marks drawn months visibly rather than only with data-travelled`);
+        // Every drawn month, not just the first: a check mark emitted only on Month 1 would satisfy the line above.
+        assert.equal((initial.match(/&#10003;/g) ?? []).length, steps(initial), `${arm} every drawn month is marked, not just the first`);
         assert.ok(initial.includes('you are here'), `${arm} marks the month reached as the reader's position`);
         assert.ok(figure(initial)?.includes(String(MONTHS[60])), `${arm} derives the initial figure (observed: ${figure(initial)})`);
 
@@ -133,7 +135,15 @@ test('functional: the output is derived from the input, the narrative follows it
         }
         const beyond = await page('?monthly=40');
         assert.notEqual(narrative(beyond), initialNarrative, `${arm} the narrative changes when the path runs past the horizon`);
-        assert.notEqual(steps(beyond), steps(initial), `${arm} the drawn path changes with the input (initial ${steps(initial)} steps, beyond ${steps(beyond)})`);
+        // Inequality alone would pass on arbitrary text, so both branches are named: the ordinary path at 20 months,
+        // and the advice the past-horizon branch is supposed to give.
+        assert.ok(initialNarrative.includes('ordinary path'), `${arm} the initial narrative is the ordinary-path branch (read: "${initialNarrative.trim().slice(0, 60)}")`);
+        assert.ok(narrative(beyond).includes('Consider a larger amount'), `${arm} the past-horizon narrative gives the advice it claims (read: "${narrative(beyond).trim().slice(0, 80)}")`);
+        // The cap is asserted exactly, because an uncapped path would be 30 steps and `!==` would still pass it.
+        // The horizon comes from the specification this test passed in, not from the builder's returned spec: that
+        // one is the builder's own shape and does not carry the capability block, which is fine for generation and
+        // wrong for asserting what the block says.
+        assert.equal(steps(beyond), spec.explainer.horizon + 1, `${arm} the drawn path is exactly the horizon plus the summary step`);
         assert.ok(beyond.includes('past the horizon'), `${arm} marks the step past the horizon and says so in words`);
 
         // A query string is user input, so out-of-range and non-numeric values must fall back to something legal

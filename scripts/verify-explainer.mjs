@@ -91,6 +91,8 @@ export async function runJourney(arm) {
       // was missing: strip the markers and every count-based check still passes.
       mark: await page.evaluate(`return (document.querySelector('.explainer-step') || {}).textContent || ''`),
       current: await page.evaluate(`return (document.querySelector('#explainer-current') || {}).textContent || ''`),
+      // Every drawn month must carry its mark, not just the first one a single-element query happens to find.
+      allMarked: await page.evaluate(`return Array.from(document.querySelectorAll('.explainer-step')).every((el) => el.textContent.includes(String.fromCharCode(10003)))`),
     });
     const setAmount = async (amount) => {
       // The control arrives pre-filled with the initial amount, so this replaces the value rather than typing into
@@ -119,6 +121,7 @@ export async function runJourney(arm) {
     check('a reset control is on the page', initial.reset, 'reset anchor present');
     check('the initial path is drawn', initial.travelled > 0, `${initial.travelled} of ${initial.steps} steps travelled`);
     check('drawn months are marked for the reader, not only in an attribute', /\u2713\s*Month 1/.test(initial.mark), `first step reads "${initial.mark.trim()}"`);
+    check('every drawn month is marked, not just the first', initial.allMarked, `${initial.steps} steps, all carrying a mark: ${initial.allMarked}`);
     check('the month reached is marked as the reader\u2019s position', /you are here/.test(initial.current), `current step reads "${initial.current.trim()}"`);
 
     // 2. A different amount, typed and submitted for real: a smaller figure, so the journey has the two
@@ -129,6 +132,9 @@ export async function runJourney(arm) {
     check('setting a larger amount derives a smaller figure', shorter.figure.includes(String(SHORTER.months)), `figure="${shorter.figure.trim()}"`);
     check('the two inputs produce different derived output', shorter.figure !== initial.figure, `"${initial.figure.trim()}" vs "${shorter.figure.trim()}"`);
     check('the path follows the derived figure', shorter.travelled === SHORTER.months, `${shorter.travelled} steps travelled for ${SHORTER.months} months`);
+    // The marker has to move to the month reached, not merely exist: a count of travelled attributes is satisfied by
+    // a marker frozen at the initial month.
+    check('the month reached on the shorter path is marked as the reader\u2019s position', /Month 8/.test(shorter.current) && /you are here/.test(shorter.current), `current step reads "${shorter.current.trim()}"`);
 
     // 3. An amount whose path runs past the horizon: the narrative and the drawn path must say so rather than
     //    quietly showing a path that stops short.
