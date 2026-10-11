@@ -19,12 +19,14 @@ that carry one thing each, and a single emerald accent that marks the forward ac
 scale held in reserve for the moment the form pushes back.
 
 The ground is deep slate (`#0f172a` in the target's dark scheme) and every surface above it is a card
-(`#1e293b`) with a one-pixel border. Surfaces are drawn with borders and a single soft shadow: `.card`
-carries a two-stop elevation shadow, and everything else is a bordered plane. That is what lets a
+(`#1e293b`) with a one-pixel border. Surfaces are drawn with borders and, on three of them, a soft
+shadow: `.card` and `.ticket-card` carry an elevation shadow and `.qr-placeholder` a lighter one, while
+every other surface is a bordered plane. That is what lets a
 schedule grid and a two-column form sit on the same page without either reading as decoration. The
-accent is emerald (`#10b981`), and it is used for the primary action of
-a state - *Book*, *Confirm Booking*, *Add to Calendar*, *Reset Filters* - and for the one or two marks
-that mean the same thing, such as the completion tick on a step or the seat that is selected.
+accent is emerald (`#10b981`), and the demo spends it on one forward action per state - *Continue to
+Confirmation* on the form, *Download PDF Receipt* on the confirmation, *Clear Filters* on the empty
+state - with *Add to Calendar* deliberately demoted to the secondary button. It also marks the state that
+means the same thing: the completed step's tick and the active step's halo.
 
 Because the type is a form that can be refused, the palette is not just ground-and-accent: it carries a
 complete error scale (surface, background, border, text) and a matching success scale, all built from the
@@ -44,10 +46,10 @@ hue family.
   which is how the perforated stub is laid out beside the body of the ticket rather than under it.
 - **The empty state** is a centred card, capped at `38rem`, holding one icon, one heading, one sentence
   that says what is missing and why, and one way out.
-- **Corners** carry the hierarchy: cards and tickets at `--radius-lg` (16px), inputs at `--radius-md`
-  (12px), small controls at `--radius-sm` (8px), and anything that is a status rather than a container -
-  the filter pills, the badges, the ticket's reference badge and the payment chip - fully rounded
-  (`9999px`).
+- **Corners** carry the hierarchy: cards and tickets at `--radius-lg` (16px); the error banner and the
+  echoed-record box at `--radius-md` (12px); the form controls and small chips at `--radius-sm` (8px); and
+  anything that is a status rather than a container - the filter pills, the badges, the ticket's reference
+  badge and the payment chip - fully rounded (`9999px`).
 
 The five boards are laid out on this grammar but not always inside it: four of them are consumer pages
 with a top bar and no sidebar, while the empty-state board switches to an authenticated dashboard with a
@@ -61,11 +63,14 @@ and `--font-mono` for the things a machine issued, which in this target is exact
 record content (`.record-echo-content`) and the ticket's reference badge (`.ticket-ref-badge`). Both are
 system fonts, so no font is downloaded and the type never shifts after first paint.
 
-The display heading is the only large type on the page and it scales with the viewport:
-`clamp(1.5rem, 1.25rem + 1.25vw, 2.25rem)`. Body text is `1rem` at `1.5` line height. Card headings -
-*Order Summary*, *Guest Information*, *Seat Selection* - are left-aligned inside their own cards, which
-keeps them attached to the content they label; the one exception the boards show is the confirmation
-ticket, whose title and metadata are centred because the ticket itself is a centred object.
+The display heading is the largest type on the page and the only text that scales with the viewport:
+`clamp(1.5rem, 1.25rem + 1.25vw, 2.25rem)`. Below it sit three fixed sizes - `.card-title` at `1.25rem`,
+the price at `1.5rem`, and the confirmation and empty-state titles at `1.5rem` - and body text is `1rem`
+at `1.5` line height. Card headings in the demo, *Evening Class Summary* and *Your Personal Details*, are
+left-aligned inside their own cards, which keeps them attached to the content they label; the confirmation
+ticket centres its title, its reference and its booking details, because the ticket is a centred object.
+The boards use different heading text - *Order Summary*, *Guest Information*, *Seat Selection* - none of
+which appears in the demo.
 
 ## Token usage
 
@@ -92,7 +97,7 @@ selector and the number of references, rather than describing an intended use. C
 | `--text-primary` | `#0f172a` | `#f8fafc` | `body`, `.brand` and ten more (12) |
 | `--text-muted` | `#64748b` | `#94a3b8` | `.top-nav a`, `.state-switcher-label` and eleven more (13) |
 | `--text-inverse` | `#ffffff` | `#ffffff` | `.step-item.completed .step-circle`, `.btn-primary` (2) |
-| `--accent` | `#10b981` | `#10b981` | `.brand-icon`, `.state-pill:hover`, `.state-pill.active` (16) |
+| `--accent` | `#10b981` | `#10b981` | `:root`'s `accent-color`, `.brand-icon`, `.state-pill:hover`, `.state-pill.active` (17) |
 | `--accent-hover` | `#059669` | `#059669` | `.btn-primary:hover` (1) |
 | `--accent-active` | `#047857` | `#047857` | nothing - declared but referenced nowhere |
 | `--accent-subtle` | `rgba(16,185,129,.12)` | `rgba(16,185,129,.18)` | the halo on the active step and the active pills (4) |
@@ -113,14 +118,16 @@ confirmation is not a new colour, it is the accent arriving.
 
 The scale is rem-based and tight at the bottom. Measured frequency across the stylesheet, the gap
 between sibling elements is `0.5rem` more often than anything else, then `0.35rem`, then `1.25rem` and
-`1rem`; card padding runs `1.25rem` to `2rem`, with the widest surfaces using `3rem 2rem`. Small controls
-- pills, badges, the state switcher - use a compact `0.25rem 0.65rem` inset, which is what keeps them
-pill-shaped rather than button-shaped. Form controls sit slightly larger, around `0.7rem 0.85rem`, so a
-field never reads as a chip.
+`1rem`; card padding runs `1.25rem` to `2rem`, with the widest surfaces using `3rem 2rem`. The compact
+`0.25rem 0.65rem` inset belongs to the pills and the badges (`.state-pill`, `.badge-pill`), which is what
+keeps them pill-shaped rather than button-shaped - the demo's state switcher is chunkier, at `0.5rem
+1.5rem`. Form controls sit between the two, around `0.7rem 0.85rem`, so a field never reads as a chip.
 
 The rhythm's job is to make the two-column workbench and the single-column receipt feel like the same
-page at different widths: the vertical spacing inside a card is the same in both, and only the number of
-columns changes.
+page at different widths: the vertical spacing inside a card is the same in both, and the columns are what
+change most. Narrower than `640px` more changes than that - the container, the top bar and the card padding
+tighten, the stepper's gap drops to `0.25rem` and its text labels are hidden, and the form's action row
+becomes `column-reverse` so the primary button still reads first.
 
 ## Component hierarchy
 
