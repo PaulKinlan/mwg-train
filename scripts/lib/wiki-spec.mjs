@@ -27,8 +27,8 @@ export function wikiSpec(overrides = {}) {
       { method: 'POST', path: '/notes', kind: 'write', redirect: '/notes/:ref', effect: 'record a note against a page' },
       { method: 'GET', path: '/notes/:ref', kind: 'read-by-reference', effect: 'render one recorded note' },
     ],
-    echo: { field: 'gardener', container: '#note-echo', route: 'read-by-reference' },
     session: false,
+
     capabilities: { ...base.capabilities, wiki: true },
     wiki: {
       pages: [
