@@ -1,4 +1,4 @@
-import { existsSync, lstatSync, readFileSync, readdirSync } from 'node:fs';
+import { existsSync, lstatSync, readFileSync, readdirSync, realpathSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { escapeHtml, page } from './pages.mjs';
@@ -177,11 +177,9 @@ export function renderTuning({ data, familyId, variant = 'v1', framework = 'raw'
   const refImageSize = refWidth && refHeight ? ` width="${refWidth}" height="${refHeight}"` : '';
   const refDimensionsText = refAvailable && refWidth && refHeight ? `${refWidth} × ${refHeight} px` : '<span class="muted">absent</span>';
 
-  // Which families actually have a board is a FACT ABOUT THE TREE, not a list to restate. Deriving it here means the
-  // empty-state copy cannot go stale as boards are authored - it was a hardcoded sentence naming three families, which
-  // would have become false the moment a fourth board landed, in the one panel whose job is honesty about what is
-  // missing. Symlinks are refused here for the same reason the /tuning/reference/ route refuses them: a symlinked
-  // directory is not an authored board.
+  if (!selectedVariant) return page('prompt workbench', `<h1>No authored training briefs are available</h1><p>${data.missing?.length ? `Missing committed training input: ${data.missing.map(text).join(', ')}.` : 'There is nothing to tune in this checkout.'}</p>`);
+
+  // Which families actually have a board is a FACT ABOUT THE TREE, not a list to restate.
   const referenceFamilies = (() => {
     const dir = join(repoRoot, 'docs/design/training');
     if (!existsSync(dir)) return [];
@@ -198,7 +196,24 @@ export function renderTuning({ data, familyId, variant = 'v1', framework = 'raw'
       .sort();
   })();
 
-  if (!selectedVariant) return page('prompt workbench', `<h1>No authored training briefs are available</h1><p>${data.missing?.length ? `Missing committed training input: ${data.missing.map(text).join(', ')}.` : 'There is nothing to tune in this checkout.'}</p>`);
+  // Read the actual composed visual prompt if available, strictly confined within docs/design/training/<family>
+  const visualPromptText = (() => {
+    if (!selectedFamily || !FAMILY_RE.test(selectedFamily)) return null;
+    const trainingDir = join(repoRoot, 'docs/design/training');
+    const familyDir = join(trainingDir, selectedFamily);
+    const file = join(familyDir, 'prompt.txt');
+    try {
+      if (lstatSync(trainingDir).isSymbolicLink() || !lstatSync(trainingDir).isDirectory()) return null;
+      if (lstatSync(familyDir).isSymbolicLink() || !lstatSync(familyDir).isDirectory()) return null;
+      if (lstatSync(file).isSymbolicLink() || !lstatSync(file).isFile()) return null;
+      if (realpathSync(familyDir) !== join(realpathSync(trainingDir), selectedFamily)) return null;
+      if (realpathSync(file) !== join(realpathSync(familyDir), 'prompt.txt')) return null;
+      return readFileSync(file, 'utf8');
+    } catch {
+      return null;
+    }
+  })();
+  const initialPrompt = visualPromptText || selectedVariant.prompt;
 
   const selector = `<form method="get" action="/tuning" class="tuning-selector" aria-label="Choose training brief">
     <label for="family">Training family</label><select id="family" name="family">${ids.map((id) => option(id, `${id} · ${data.families.get(id)[0].topic}`, selectedFamily)).join('')}</select>
@@ -438,8 +453,12 @@ export function renderTuning({ data, familyId, variant = 'v1', framework = 'raw'
     <p class="muted">These settings are the hypothesis a generation is run with. They still do not affect the committed template, target or training data by themselves: a generation returns a board to this page, and a draft stays in this browser until it is exported. Generating a board from this model needs at least 4096 output tokens - below that the whole budget goes on thinking and no image comes back - so a smaller number is raised to 4096 for the request and the effective value is reported in the result.</p>
     <noscript><p class="danger">Editing and exporting local drafts requires JavaScript; the authored brief and target above remain readable.</p></noscript>
     <form id="tuning-draft" method="post" action="/tuning" data-brief-id="${text(selectedVariant.brief_id)}" data-framework="${text(selectedFramework)}">
-      <label for="prompt">Prompt wording</label><textarea id="prompt" name="prompt" rows="8" required minlength="80" aria-describedby="prompt-help">${text(selectedVariant.prompt)}</textarea>
-      <p id="prompt-help" class="muted">The original brief remains unchanged. Keep routes, journeys and assertions consistent with the contract.</p>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-block: 1rem 0.25rem;">
+        <label for="prompt" style="margin: 0;">Prompt wording</label>
+        ${visualPromptText ? `<span class="badge accepted">Preloaded from docs/design/training/${text(selectedFamily)}/prompt.txt</span>` : '<span class="badge">Preloaded from brief manifest</span>'}
+      </div>
+      <textarea id="prompt" name="prompt" rows="12" required minlength="80" aria-describedby="prompt-help">${text(initialPrompt)}</textarea>
+      <p id="prompt-help" class="muted">Pre-filled with the actual full visual design prompt for this family when available, or the site brief contract. Edit to fine-tune visual generation.</p>
       <label for="guidance">System guidance (sent as the model's system instruction)</label><textarea id="guidance" name="system_guidance" rows="4" aria-describedby="guidance-help"></textarea>
       <p id="guidance-help" class="muted">Optional. When set, this is sent as the generation's system instruction; when empty, nothing is sent in that field.</p>
       <div class="tuning-settings">

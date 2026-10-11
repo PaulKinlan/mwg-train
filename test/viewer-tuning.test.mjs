@@ -306,3 +306,10 @@ test('computeWordDiff highlights unique words and computes shared vocabulary ove
   assert.doesNotMatch(diff.htmlA, /<mark class="diff-chip diff-v1">need<\/mark>/);
   assert.equal(diff.stats.matchedWords > 0, true);
 });
+
+test('workbench preloads visual prompt from docs/design/training/tr-NN/prompt.txt when present', () => {
+  const data = loadTuningData(ROOT);
+  const html = renderTuning({ data, repoRoot: ROOT, familyId: 'tr-01', variant: 'v1', framework: 'raw' });
+  assert.match(html, /Preloaded from docs\/design\/training\/tr-01\/prompt\.txt/);
+  assert.match(html, /Create a finished, high-density screenshot of a real production website/);
+});

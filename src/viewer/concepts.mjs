@@ -308,14 +308,14 @@ const boardFigure = (board, featured = false) => `<figure class="concept-board${
 const trainingFamilyCard = ({ id, archetype, title, origin, available, width, height, board, boardWidth, boardHeight }, register) => `<article class="concept-comparison" aria-labelledby="target-${escapeHtml(id)}">
   <h3 id="target-${escapeHtml(id)}">${escapeHtml(id)}${archetype ? ` · ${escapeHtml(archetype)}` : ''}</h3>
   ${title ? `<p class="muted">${escapeHtml(title)}</p>` : ''}
-  <div class="concept-pair">
+  <div class="concept-main-board">
     <figure><div class="concept-image-frame">${board
       ? `<a href="/concepts/references/${escapeHtml(id)}.jpg" aria-label="Open the ${escapeHtml(id)} designed reference board at full size"><img src="/concepts/references/${escapeHtml(id)}.jpg" alt="Designed reference board for training family ${escapeHtml(id)}${archetype ? ` (${escapeHtml(archetype)})` : ''}"${boardWidth && boardHeight ? ` width="${boardWidth}" height="${boardHeight}"` : ''} loading="lazy"></a>`
       : `<p class="muted">Designed board not generated yet. Expected ${code(`${TRAINING_BOARD_DIR}/${id}/reference.jpg`)}.</p>`}</div><figcaption>Designed reference board${board ? ` · ${code(`${TRAINING_BOARD_DIR}/${id}/reference.jpg`)}` : ' · pending'} — AI-generated illustration, not training evidence and not proof a demo works${board ? (register ? `. Model and digests: ${code(register)}` : `. The register of the model and digests for these boards has not landed in this checkout yet (expected ${code(TRAINING_BOARD_REGISTER)})`) : ''}</figcaption></figure>
-    <figure><div class="concept-image-frame">${available
-      ? `<a href="/concepts/targets/${escapeHtml(id)}.png" aria-label="Open the ${escapeHtml(id)} harness target render at full size"><img src="/concepts/targets/${escapeHtml(id)}.png" alt="Harness target render, the A1 conformance instrument, for ${escapeHtml(id)}"${width && height ? ` width="${width}" height="${height}"` : ''} loading="lazy"></a>`
-      : `<p class="muted">Harness target render pending. Expected ${code(`${TRAINING_TARGET_DIR}/${id}/target.png`)}.</p>`}</div><figcaption>Harness target render (A1 conformance instrument)${available ? ` · ${code(`${TRAINING_TARGET_DIR}/${id}/target.png`)}` : ' · pending'} — a deterministic headless-Chrome render of ${origin ? code(origin) : 'the family&rsquo;s authored board'}, NOT a designed board${available ? `. Provenance: ${code('docs/provenance/assets/training-targets.md')}` : ''}</figcaption></figure>
   </div>
+  ${available ? `<details class="harness-target-drawer"><summary>Inspect A1 Conformance Harness Target (DOM test fixture)</summary>
+    <figure><div class="concept-image-frame"><a href="/concepts/targets/${escapeHtml(id)}.png" aria-label="Open the ${escapeHtml(id)} harness target render at full size"><img src="/concepts/targets/${escapeHtml(id)}.png" alt="Harness target render, the A1 conformance instrument, for ${escapeHtml(id)}"${width && height ? ` width="${width}" height="${height}"` : ''} loading="lazy"></a></div><figcaption>Harness target render (A1 conformance instrument) · ${code(`${TRAINING_TARGET_DIR}/${id}/target.png`)} — a deterministic headless-Chrome render of ${origin ? code(origin) : 'the family&rsquo;s authored board'}, NOT a designed board. Provenance: ${code('docs/provenance/assets/training-targets.md')}</figcaption></figure>
+  </details>` : `<p class="muted">Harness target render pending. Expected ${code(`${TRAINING_TARGET_DIR}/${id}/target.png`)}.</p>`}
 </article>`;
 
 export function renderConcepts({ boards, archetypes, trainingTargets = [], bookingSteps = [], journeys = [], trainingBoardRegister = null }) {
@@ -326,7 +326,7 @@ export function renderConcepts({ boards, archetypes, trainingTargets = [], booki
   // Families that already have a designed board come first: the page leads with designs and states the count, so a
   // reader cannot read a harness instrument as the deliverable and cannot miss how much of the set is still pending.
   const orderedTargets = [...trainingTargets].sort((a, b) => (Number(b.board) - Number(a.board)) || a.id.localeCompare(b.id));
-  const trainingSection = trainingTargets.length ? `<div class="concept-board-grid">${orderedTargets.map((family) => trainingFamilyCard(family, trainingBoardRegister)).join('')}</div>`
+  const trainingSection = trainingTargets.length ? `<div class="concept-board-flow">${orderedTargets.map((family) => trainingFamilyCard(family, trainingBoardRegister)).join('')}</div>`
     : '<p class="notice">No A1 training-family targets are declared in this checkout.</p>';
   const archetypeSection = archetypes.length ? archetypes.map(({ id, reference, target, referencePath }) => `<article class="concept-comparison" aria-labelledby="concept-${escapeHtml(id)}">
     <h3 id="concept-${escapeHtml(id)}">${escapeHtml(id.replaceAll('-', ' '))}</h3>
