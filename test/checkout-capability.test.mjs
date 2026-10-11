@@ -367,8 +367,9 @@ test('a product whose price the form may omit cannot be added to the cart as a f
 
 /**
  * The capability keys, read out of the set rather than matched as a literal. Pinning the whole set means
- * every capability added later has to edit every older capability's test - which is how the landing trap
- * that forced this rebase was built (mwg-train-ypr, mwg-train-ksn). Membership is what the check means.
+ * every capability added later has to edit every older capability's test - which is how a landing trap is
+ * built, and it cost a merge two round trips before this (mwg-train-ksn). Membership is what the check
+ * means: the capability must be in the closed set, and must still be there if someone removes it.
  */
 const capabilityKeysIn = (source) =>
   /CAPABILITY_KEYS = new Set\(\[([^\]]*)\]\)/.exec(source)?.[1].split(',').map((entry) => entry.trim().replace(/^'|'$/g, '')).filter(Boolean) ?? [];
