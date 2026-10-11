@@ -10,7 +10,7 @@
 | Ordered board | What the raster depicts | SHA-256 of committed bytes | Bytes |
 | --- | --- | --- | ---: |
 | [`step1-request.jpg`](step1-request.jpg) | Reset-link request form | `4426e0ca71c31013499a820fb8a21aa866b097ddcde61a1b8da302e194b447e2` | 382476 |
-| [`step2-sent.jpg`](step2-sent.jpg) | Depicted check-your-inbox notice | `84730c4bdb444f05892c75bb54bee3fa84640e8eae67638409caf60eec7cbe39` | 398147 |
+| [`step2-sent.jpg`](step2-sent.jpg) | Depicted check-your-inbox notice | `331771485fc540ef064ab9118e627fa860fb304815d62ab1090e4dbcd7bd57e4` | 389480 |
 
 Hashes pin the handed-off JPEG bytes, not rights, generation reproducibility or security validity.
 

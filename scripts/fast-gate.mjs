@@ -170,6 +170,10 @@ function routeDocument(file) {
     selectedChecks.add('lint:provenance');
     return true;
   }
+  if (file.startsWith('assets/archetypes/') && file.endsWith('/set.json')) {
+    selectedChecks.add('check:archetype-assets');
+    return true;
+  }
   if (file.endsWith('.md')) {
     // Any markdown doc change must pass link and baseline label checks
     selectedChecks.add('check:doc-links');

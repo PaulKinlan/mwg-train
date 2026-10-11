@@ -25,12 +25,12 @@ store, the register or the target have moved apart.
 ### account-recovery
 
 - Target: `docs/design/archetypes/account-recovery`
-- Readme: `docs/design/archetypes/account-recovery/README.md` (sha256 `ce10bd7fec6f9ff3770a47c277a11bc91a74e36642ba5b0081d9488062fc8a14`)
+- Readme: `docs/design/archetypes/account-recovery/README.md` (sha256 `a6a0c3e1e879961867588acaf9717850852ebaef32aa8bbccdefe4c24ff00544`)
 - Stylesheet: `docs/design/archetypes/account-recovery/demo/styles.css` (sha256 `b71411c5b9dfca99ac84ef191eb022140c1fd04ac87d0c56941c52df94fa1b6a`)
 - Documents: `docs/design/archetypes/account-recovery/demo/compare.html`, `docs/design/archetypes/account-recovery/demo/index.html`
 - Rights: `excluded_from_training: true`, `approved_for_training: false` from `docs/design/archetypes/account-recovery/README.md:5`
 - Brand: **unresolved** (adjudicated: The accepted target depicts an unbranded journey: its demo carries no brand element, its own heading is 'Reset Your Password', and its README names no site. The store records the absence rather than inventing a brand the design never had - a framework build for this archetype should look like the target, and the target has no site name to render. — 2026-10-11)
-- Boards: `step1-request.jpg` sha256 `4426e0ca71c31013499a820fb8a21aa866b097ddcde61a1b8da302e194b447e2`; `step2-sent.jpg` sha256 `84730c4bdb444f05892c75bb54bee3fa84640e8eae67638409caf60eec7cbe39`
+- Boards: `step1-request.jpg` sha256 `4426e0ca71c31013499a820fb8a21aa866b097ddcde61a1b8da302e194b447e2`; `step2-sent.jpg` sha256 `331771485fc540ef064ab9118e627fa860fb304815d62ab1090e4dbcd7bd57e4`
 
 ### booking
 
