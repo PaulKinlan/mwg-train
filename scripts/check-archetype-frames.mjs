@@ -22,7 +22,6 @@ const ARCHETYPES_DIR = path.join(ROOT, 'docs', 'design', 'archetypes');
 // A replacement image at the same path will NOT be exempt.
 const EXEMPT_HASHES = new Set([
   '948370acf1df59694dee09ef8e1f39d71828b4e509dfcfd3503ad6860982fe60', // editorial-blog/step1-index.jpg
-  'f04fa714789fa5fe2a4e57c4282fa8c36f64f14558f5add246cd4644edc1a3ea', // event-registration/step1-event.jpg
   'f3ae7b333e8e141e1bb8c63392e440124f7d171f08498a67cb2091183d01c1ca', // fan-community-site/step2-contribution.jpg
 ]);
 

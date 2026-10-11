@@ -65,12 +65,12 @@ store, the register or the target have moved apart.
 ### event-registration
 
 - Target: `docs/design/archetypes/event-registration`
-- Readme: `docs/design/archetypes/event-registration/README.md` (sha256 `d0f4c3a5dc5bfbf3ad7d526f1430929bfe39ea8ed6baa2ec06386f884fc20bb3`)
+- Readme: `docs/design/archetypes/event-registration/README.md` (sha256 `4d677a09e152224cd0f5876de1eab14a0229ee6a4466c4f4b8f7719268ab13f0`)
 - Stylesheet: `docs/design/archetypes/event-registration/demo/styles.css` (sha256 `3e3bdc2ddfdd70320fddcd613376c975c881cd0ebe779e2ccf72ccc5a6e5f68f`)
 - Documents: `docs/design/archetypes/event-registration/demo/compare.html`, `docs/design/archetypes/event-registration/demo/index.html`
 - Rights: `excluded_from_training: true`, `approved_for_training: false` from `docs/design/archetypes/event-registration/README.md:5`
 - Brand: `Future Web 2026` (adjudicated: The accepted target has no brand element. Its demo's own h1 names the event - 'Future Web 2026', with '24-25 October - Barbican Centre, London' - and for an event-registration site the event is the site's name. The candidate is weak (a heading can be a page title), which is exactly why the choice is recorded here with its evidence rather than extracted silently. — 2026-10-11)
-- Boards: `step1-event.jpg` sha256 `f04fa714789fa5fe2a4e57c4282fa8c36f64f14558f5add246cd4644edc1a3ea`; `step2-pass.jpg` sha256 `4de701fe6ff9e96e88b8c6fbd985920db7b34153a6386842c7e305e4264529b7`
+- Boards: `step1-event.jpg` sha256 `835a958739512d20e33a77392006d7179d4fd4dcea932f238c4d16176f727342`; `step2-pass.jpg` sha256 `6d9652b8437048e3f921c588090bc71a671d6038f1d146dc0d3f78b31edd90b3`
 
 ## What this register does not claim
 
