@@ -165,6 +165,8 @@ export function validateSpec(spec) {
   // to find out. Every driven form is checked against the declared fields.
   if (Array.isArray(spec.fields) && spec.fields.length > 0) {
     const declared = new Set(spec.fields.map((field) => field?.name));
+    const declaredSlugs = new Set(spec.fields.map((field) => field?.slug).filter(isString));
+    const slugList = [...declaredSlugs].join(', ');
     const journeys = [
       ['journey', spec.journey],
       ['extra_form', spec.extra_form],
@@ -176,6 +178,30 @@ export function validateSpec(spec) {
         const targets = selectorFieldNames(selector);
         if (targets.length === 0) at(`${name}.fill("${selector}")`, 'must name the field it types into, as [name=<field>]');
         for (const target of targets) if (!declared.has(target)) at(`${name}.fill("${selector}")`, `types into ${target}, which the fields do not declare`);
+      }
+      // Steps drive fields the same way the top-level journeys do, with the same selector shape, and the generator
+      // resolves them to a field for the label and the input type - falling back to the raw attribute value and
+      // `type="text"` on a miss, so an undeclared name produces a control that is not what the step describes
+      // (mwg-train-nmj0).
+      for (const step of journey?.steps ?? []) {
+        for (const selector of [...Object.keys(step?.fill ?? {}), ...Object.keys(step?.select ?? {})]) {
+          const targets = selectorFieldNames(selector);
+          if (targets.length === 0) at(`${name}.steps.fill/select("${selector}")`, 'must name the field it drives, as [name=<field>]');
+          for (const target of targets) if (!declared.has(target)) at(`${name}.steps.fill/select("${selector}")`, `drives ${target}, which the fields do not declare`);
+        }
+      }
+      // The search a journey drives is read out of the same object by the generator: `queryParam` becomes an id, a
+      // `[name=<field>]` selector and a label target, and `resultsSelector` is handed to getElementById and
+      // querySelector. Nothing resolved them to anything, so a missing or non-string value reached the emitted
+      // JavaScript (mwg-train-nmj0). Shape only: the query parameter is an id the page declares, not necessarily a
+      // form field, so it is not checked against the declared fields.
+      if (journey?.search !== undefined) {
+        if (!isObject(journey.search)) at(`${name}.search`, 'must describe the search the journey drives');
+        else {
+          for (const key of ['queryParam', 'resultsSelector']) {
+            if (!isString(journey.search[key])) at(`${name}.search.${key}`, 'must be a non-empty string');
+          }
+        }
       }
       // The edit journey names its field too, and the generator resolves it the same way - by name, into both a
       // selector and a label. Unchecked, a wrong name fails nowhere: the form never populates and the label points
@@ -192,9 +218,36 @@ export function validateSpec(spec) {
         }
       }
     }
+    // A form that narrows itself with a list of field slugs loses a control when one of them is undeclared, because
+    // the generator filters rather than refuses: the second form quietly drops it, and the main form's explicit list
+    // silently narrows the form instead of failing it (mwg-train-nmj0).
+    for (const [where, list] of [
+      ['extra_form.fields', spec.extra_form?.fields],
+      ['form.fields', spec.form?.fields],
+    ]) {
+      if (list === undefined) continue;
+      if (!Array.isArray(list)) {
+        at(where, 'must list the field slugs this form uses');
+        continue;
+      }
+      for (const slug of list) {
+        if (!isString(slug)) at(where, 'must list the field slugs this form uses');
+        else if (!declaredSlugs.has(slug)) at(where, `names ${slug}, which no declared field has; declared: ${slugList}`);
+      }
+    }
+    // `password_field` is a selector rather than a name - the shipping specs say `[name=password]` - and the
+    // generator falls back to `[name=password]` when it is absent, so `null` is a working value and not a defect.
+    // Only a selector that names a field is checked, and then the name it names has to be declared.
+    if (spec.password_field !== undefined && spec.password_field !== null) {
+      const targets = isString(spec.password_field) ? selectorFieldNames(spec.password_field) : [];
+      if (!isString(spec.password_field)) at('password_field', 'must be the selector that reaches the password field');
+      else if (targets.length > 0) {
+        for (const target of targets) {
+          if (!declared.has(target)) at('password_field', `names ${target}, which the fields do not declare; declared: ${[...declared].filter(isString).join(', ')}`);
+        }
+      }
+    }
   }
-
-  // A write route that redirects to a reference-addressed read route has to actually put the reference in
   // the redirect. Checked structurally, against the read route's own path and kind, rather than against
   // the prose in `persistence.reference`: keying it on the word "reference" was both too narrow - it
   // missed the second write route of a family whose prose described the first - and too broad - it would
@@ -234,6 +287,18 @@ export function validateSpec(spec) {
     // same wall.
     const slugs = spec.fields.map((field) => field?.slug).filter(isString);
     at('echo.field', `names ${spec.echo.field}, which no declared field has${slugs.length > 0 ? `; declared: ${slugs.join(', ')}` : ''}`);
+  }
+
+  // `echo.route` names a *kind* of route, not a path - the shipping specs say `read-by-reference` - and the generator
+  // uses it to decide which page shows the value back. An undeclared kind means no page does, so the value is never
+  // shown to the user rather than the build failing (mwg-train-nmj0). This is a separate check and deliberately not
+  // part of the chain above: inserting it between the `else if`s detached the declared-slug rule from that chain and
+  // silently disabled it for every specification that has an `echo.route`, which the echo test caught.
+  if (isString(spec.echo?.route)) {
+    const kinds = new Set((Array.isArray(spec.routes) ? spec.routes : []).map((route) => route?.kind).filter(isString));
+    if (!kinds.has(spec.echo.route)) {
+      at('echo.route', `names ${spec.echo.route}, which this specification does not declare as a route kind${kinds.size > 0 ? `; declared: ${[...kinds].join(', ')}` : ''}`);
+    }
   }
 
   if (!Array.isArray(spec.acceptance) || spec.acceptance.length === 0) at('acceptance', 'must state what has to be true for a pair to count');
