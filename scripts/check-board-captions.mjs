@@ -66,8 +66,15 @@ export const UNCAPTIONED_BY_DESIGN = Object.freeze({
  */
 export const CAPTION = /<code>([^<]+\.jpg)<\/code>[^<]*?SHA-256:?\s*<code>([0-9a-f]{1,64})(?:\.\.\.|\u2026)<\/code>/g;
 
-/** The board images a comparison page displays. */
-const DISPLAYED = /<img[^>]*\ssrc="([^"]+\.jpe?g)"/gi;
+/**
+ * Every `<img>` tag a comparison page carries, whatever its source spelling. Anything this cannot read a
+ * source from is reported rather than skipped: an image that disappears from the inventory takes its
+ * caption with it, which is how a page can lose content and still pass.
+ */
+const IMG_TAG = /<img\b[^>]*>/gi;
+
+/** `src` in double quotes, single quotes or unquoted, which is the whole of HTML's syntax for it. */
+const SRC = /\ssrc\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+))/i;
 
 const MENTION = /SHA-256/g;
 
@@ -84,6 +91,10 @@ function resolveCaptionBoard(file, archetypeDir, source) {
 /**
  * Collects the board images a comparison page displays, as absolute paths inside its archetype.
  *
+ * Every `<img>` on the page is examined, not only the ones whose `src` happens to be spelled the way this
+ * check first expected. An `<img>` whose source cannot be read, or that names a `.jpg` which is not
+ * committed, is a finding: an image missing from this inventory is an image whose caption nothing verifies.
+ *
  * @param {{ file: string, html: string, archetypeDir: string }} page
  * @returns {{ boards: string[], findings: string[] }}
  */
@@ -91,25 +102,49 @@ export function displayedBoards({ file, html, archetypeDir }) {
   const rel = path.relative(ROOT, file);
   const boards = [];
   const findings = [];
-  DISPLAYED.lastIndex = 0;
+  IMG_TAG.lastIndex = 0;
   let match;
-  while ((match = DISPLAYED.exec(html))) {
-    const source = match[1];
+  while ((match = IMG_TAG.exec(html))) {
+    const tag = match[0];
+    const src = SRC.exec(tag);
+    if (!src) {
+      // An <img> with no readable src is not a board this check can pin, and silently ignoring it is what
+      // let a single-quoted page slip through before. Fail closed.
+      findings.push(`${rel} carries an image whose source this check cannot read (${tag.trim().slice(0, 60)}); board images must name a .jpg in a readable src attribute`);
+      continue;
+    }
+    const source = (src[1] ?? src[2] ?? src[3] ?? '').trim();
+    if (source === '') {
+      // An <img> whose src is empty or whitespace names no file at all: not something to skip as "not a
+      // board", because the same rule has to catch every image this check cannot account for.
+      findings.push(`${rel} carries an image whose source this check cannot read (${tag.trim().slice(0, 60)}); board images must name a .jpg in a readable src attribute`);
+      continue;
+    }
+    if (!/\.jpe?g$/i.test(source)) continue; // not a reference board: live pages and favicons are not pinned here
     const board = path.resolve(path.dirname(file), source);
     if (path.relative(archetypeDir, board).startsWith('..')) {
       findings.push(`${rel} displays ${source}, which is outside its own archetype directory`);
       continue;
     }
+    if (!boards.includes(board)) boards.push(board);
     if (!fs.existsSync(board)) {
       // Still recorded as displayed, so the caption that describes it pairs up and the missing file is
       // reported once rather than also looking like a caption for a board the page does not show.
-      if (!boards.includes(board)) boards.push(board);
       findings.push(`${rel} displays ${source}, but no such board is committed`);
-      continue;
     }
-    if (!boards.includes(board)) boards.push(board);
   }
   return { boards, findings };
+}
+
+/**
+ * The boards an archetype has committed, so a page can be held to showing all of them.
+ *
+ * This closes the other half of the same hole: removing an <img> from a page used to remove the board from
+ * the inventory, and a page with nothing on it passed. A comparison page exists to show its boards, so every
+ * committed board must appear - which also means deleting one from the page fails rather than passing.
+ */
+export function committedBoards(archetypeDir) {
+  return fs.readdirSync(archetypeDir).filter((name) => /\.jpe?g$/i.test(name)).map((name) => path.join(archetypeDir, name));
 }
 
 /**
@@ -208,6 +243,14 @@ export function checkBoardCaptions({ repoRoot = ROOT } = {}) {
     captions += (html.match(CAPTION) || []).length;
     const { boards: displayed } = displayedBoards({ file, html, archetypeDir });
     boards += displayed.length;
+    // A comparison page exists to show its archetype's boards, so every committed board must be on it.
+    // Without this, deleting an <img> would remove the board from the inventory and shrink the page
+    // towards passing - the same hole as a caption that cannot be read.
+    for (const committed of committedBoards(archetypeDir)) {
+      if (!displayed.includes(committed)) {
+        findings.push(`${label} does not display ${path.basename(committed)}, which its archetype commits`);
+      }
+    }
     findings.push(...captionFindings({
       file,
       html,

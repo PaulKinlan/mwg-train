@@ -203,6 +203,44 @@ test('the command line passes with a count when the repository is in step', () =
   assert.match(stdout, /check:board-captions - PASS - checked \d+ caption\(s\) for \d+ displayed board\(s\) across \d+ demo comparison page\(s\)/);
 });
 
+test('a single-quoted image source is read, not skipped', () => {
+  // The hole this closes: only double quotes were recognised, so a page could spell its images with single
+  // quotes, lose its captions, and pass with an empty inventory. The caption here is removed entirely.
+  const html = `<div class="comparison">\n  <img src='../step1-grid.jpg' alt="board">\n  <p>No digest printed here.</p>\n</div>\n`;
+  withFixture({ html }, (holder) => {
+    const findings = captionFindings({ file: holder.file, html, archetypeDir: holder.archetypeDir });
+    assert.ok(findings.some((f) => /displays step1-grid\.jpg but prints no SHA-256 caption/.test(f)), findings.join(' | '));
+  });
+});
+
+test('an unquoted image source is read and paired with its caption', () => {
+  const prefix = sha256(BOARD).slice(0, 10);
+  const html = `<div>\n  <img src=../step1-grid.jpg alt="board">\n  ${wave2Caption(`${prefix}\u2026`)}\n</div>\n`;
+  withFixture({ html }, (holder) => {
+    const findings = captionFindings({ file: holder.file, html, archetypeDir: holder.archetypeDir });
+    assert.deepEqual(findings, []);
+  });
+});
+
+test('an image whose source cannot be read is a finding, not a silent skip', () => {
+  const html = `<div>\n  <img src="" alt="board">\n  <img alt="no source at all">\n</div>\n`;
+  withFixture({ html }, (holder) => {
+    const findings = captionFindings({ file: holder.file, html, archetypeDir: holder.archetypeDir });
+    assert.equal(findings.filter((f) => /cannot read/.test(f)).length, 2, findings.join(' | '));
+  });
+});
+
+test('a page that stops displaying a committed board is a finding', () => {
+  // Same hole one level up: delete the <img> and the board leaves the inventory. The page must show every
+  // board its archetype commits, so removal fails rather than shrinking towards passing.
+  const html = `<div><p>This page displays nothing now.</p></div>\n`;
+  withFixture({ html }, (holder) => {
+    const result = checkBoardCaptions({ repoRoot: holder.root });
+    assert.equal(result.ok, false);
+    assert.ok(result.findings.some((f) => /does not display step1-grid\.jpg, which its archetype commits/.test(f)), result.findings.join(' | '));
+  });
+});
+
 test('the exported regex only pairs a filename with a digest in the same element', () => {
   const html = `<p>Board <code>../step1-grid.jpg</code></p>\n<p>SHA-256 <code>0123456789\u2026</code></p>`;
   CAPTION.lastIndex = 0;
