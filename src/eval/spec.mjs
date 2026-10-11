@@ -59,7 +59,7 @@ const FIELD_KEYS = new Set(['slug', 'name', 'type', 'label', 'autocomplete', 're
 export { FIELD_KEYS };
 
 /** The functional-route capabilities a specification may opt into. A closed set, like FIELD_KEYS. */
-export const CAPABILITY_KEYS = new Set(['list_pages', 'detail_page', 'auth', 'cart', 'pricing_tiers', 'checkout', 'survey', 'game', 'workspace', 'wiki']);
+export const CAPABILITY_KEYS = new Set(['list_pages', 'detail_page', 'auth', 'cart', 'pricing_tiers', 'checkout', 'survey', 'game', 'workspace', 'wiki', 'explainer']);
 
 /** The field names a selector types into, from `[name=x]` / `[name="x"]` / `[name='x']`. */
 function selectorFieldNames(selector) {
@@ -673,13 +673,67 @@ export function validateSpec(spec) {
   if (spec.capabilities?.wiki === true && spec.wiki === undefined) {
     at('capabilities.wiki', 'is on, but no wiki block states the pages');
   }
+  if (spec.explainer !== undefined) {
+    const explainer = spec.explainer;
+    if (!isObject(explainer)) at('explainer', 'must be an object when present');
+    else {
+      for (const key of Object.keys(explainer)) {
+        if (!['title', 'summary', 'control', 'target', 'horizon'].includes(key)) at(`explainer.${key}`, 'unknown key');
+      }
+      if (!isString(explainer.title) || explainer.title.trim() === '') at('explainer.title', 'must title the explanation');
+      if (!isString(explainer.summary) || explainer.summary.trim() === '') at('explainer.summary', 'must say what is being explained');
+      // The single control the reader changes. One is the requirement: a control whose value changes a
+      // DERIVED result, not a page with two hard-coded states. The bounds matter because `initial` is what
+      // the reset returns to, and a reset that lands outside the control's own range would be a dead state.
+      const control = explainer.control;
+      if (!isObject(control)) at('explainer.control', 'must state the one control the reader changes');
+      else {
+        for (const key of Object.keys(control)) {
+          if (!['name', 'label', 'unit', 'min', 'max', 'initial'].includes(key)) at(`explainer.control.${key}`, 'unknown key');
+        }
+        if (!isString(control.name) || !/^[a-z][a-z0-9_]*$/.test(control.name)) at('explainer.control.name', 'must be a field name: lower case, digits and underscores');
+        if (!isString(control.label) || control.label.trim() === '') at('explainer.control.label', 'must label the control');
+        if (!isString(control.unit) || control.unit.trim() === '') at('explainer.control.unit', 'must state the unit the reader is entering, so the figure is not bare');
+        const bounded = (name, value) => {
+          if (!Number.isInteger(value) || value < 1 || value > 100000) at(`explainer.control.${name}`, 'must be a whole number between 1 and 100000');
+        };
+        bounded('min', control.min);
+        bounded('max', control.max);
+        if (Number.isInteger(control.min) && Number.isInteger(control.max) && control.min >= control.max) {
+          at('explainer.control.max', `must be above min (${control.min}): a range with nothing in it has nothing to explain`);
+        }
+        if (!Number.isInteger(control.initial) || control.initial < control.min || control.initial > control.max) {
+          // The reset returns to this value, so it has to be a value the control can actually hold.
+          at('explainer.control.initial', `must be a whole number between min and max, because resetting returns here`);
+        }
+      }
+      const target = explainer.target;
+      if (!isObject(target)) at('explainer.target', 'must state what the path is heading towards');
+      else {
+        for (const key of Object.keys(target)) {
+          if (!['label', 'amount'].includes(key)) at(`explainer.target.${key}`, 'unknown key');
+        }
+        if (!isString(target.label) || target.label.trim() === '') at('explainer.target.label', 'must label the target');
+        if (!Number.isInteger(target.amount) || target.amount < 1) at('explainer.target.amount', 'must be a whole amount above zero, or the derived figure is not a figure');
+      }
+      // How much of the path is drawn before the rest is summarised. Without a bound, the smallest legal
+      // control value draws a path longer than any page can show.
+      if (!Number.isInteger(explainer.horizon) || explainer.horizon < 4 || explainer.horizon > 60) {
+        at('explainer.horizon', 'must be a whole number of steps between 4 and 60');
+      }
+    }
+    if (spec.capabilities?.explainer !== true) at('explainer', 'only meaningful with capabilities.explainer - there would be no page to change anything on');
+  }
+  if (spec.capabilities?.explainer === true && spec.explainer === undefined) {
+    at('capabilities.explainer', 'is on, but no explainer block states the control and the target');
+  }
   if (spec.capabilities?.pricing_tiers === true && spec.pricing_tiers === undefined) {
     at('capabilities.pricing_tiers', 'is on, but no pricing_tiers block states the tiers');
   }
   // A capability's own routes are emitted before the declared ones, so a specification that declares
   // the same path would leave a handler nothing ever reaches. Refused rather than silently shadowed
   // (mwg-train-4lk review).
-  const capabilityOwnedRoutes = { cart: ['/cart', '/cart/add'], pricing_tiers: ['/pricing', '/pricing/select', '/pricing/:ref'], checkout: ['/checkout', '/checkout/pay', '/checkout/receipt/:ref'], survey: ['/survey', '/survey/answer', '/survey/review', '/survey/submit', '/survey/result/:ref'], game: ['/play', '/play/score', '/play/scores'], workspace: ['/onboarding', '/workspace', '/workspace/invite', '/workspace/setting'], wiki: ['/wiki', '/wiki/search', '/wiki/:slug', '/wiki/:slug/history', '/wiki/:slug/revision/:n', '/wiki/:slug/create'] };
+  const capabilityOwnedRoutes = { cart: ['/cart', '/cart/add'], pricing_tiers: ['/pricing', '/pricing/select', '/pricing/:ref'], checkout: ['/checkout', '/checkout/pay', '/checkout/receipt/:ref'], survey: ['/survey', '/survey/answer', '/survey/review', '/survey/submit', '/survey/result/:ref'], game: ['/play', '/play/score', '/play/scores'], workspace: ['/onboarding', '/workspace', '/workspace/invite', '/workspace/setting'], wiki: ['/wiki', '/wiki/search', '/wiki/:slug', '/wiki/:slug/history', '/wiki/:slug/revision/:n', '/wiki/:slug/create'], explainer: ['/explain', '/explain/reset'] };
   for (const [capability, owned] of Object.entries(capabilityOwnedRoutes)) {
     if (spec.capabilities?.[capability] !== true) continue;
     for (const route of spec.routes ?? []) {
@@ -757,6 +811,7 @@ export function archetypeFromSpec(spec) {
     ...(spec.game === undefined ? {} : { game: spec.game }),
     ...(spec.workspace === undefined ? {} : { workspace: spec.workspace }),
     ...(spec.wiki === undefined ? {} : { wiki: spec.wiki }),
+    ...(spec.explainer === undefined ? {} : { explainer: spec.explainer }),
     ...(spec.seed_accounts === undefined ? {} : { seedAccounts: spec.seed_accounts }),
   };
 }

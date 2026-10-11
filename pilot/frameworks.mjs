@@ -806,7 +806,7 @@ function searchPageDocument(search) {
  * like sessionTables, so the generated code needs no escaping of its own.
  */
 
-const capabilitiesOf = (archetype) => ({ list_pages: false, detail_page: false, auth: false, cart: false, pricing_tiers: false, checkout: false, survey: false, game: false, workspace: false, wiki: false, ...(archetype.capabilities ?? {}) });
+const capabilitiesOf = (archetype) => ({ list_pages: false, detail_page: false, auth: false, cart: false, pricing_tiers: false, checkout: false, survey: false, game: false, workspace: false, wiki: false, explainer: false, ...(archetype.capabilities ?? {}) });
 
 /*
  * The pricing-tiers capability (mwg-train-4lk): three tiers across a monthly/annual toggle, whose
@@ -926,6 +926,7 @@ const checkoutOf = (archetype) => (archetype.capabilities?.checkout === true ? a
 const surveyOf = (archetype) => (archetype.capabilities?.survey === true ? archetype.survey : null);
 const workspaceOf = (archetype) => (archetype.capabilities?.workspace === true ? archetype.workspace : null);
 const wikiOf = (archetype) => (archetype.capabilities?.wiki === true ? archetype.wiki : null);
+const explainerOf = (archetype) => (archetype.capabilities?.explainer === true ? archetype.explainer : null);
 const CART_SID_RAW =
   "(request.headers.cookie ?? '').split(';').map((part) => part.trim()).find((part) => part.startsWith('sid='))?.slice('sid='.length)";
 const CART_SID_HONO =
@@ -2092,6 +2093,77 @@ const honoWikiRoutes = () =>
     "});",
   ].join('\n');
 
+/**
+ * The explainer capability: stateless interactive derivation page.
+ */
+const explainerPages = (archetype) => {
+  const explainer = explainerOf(archetype);
+  return [
+    `const EXPLAINER = ${JSON.stringify(explainer)};`,
+    "const explainerPage = (queryValue) => {",
+    "  let value = EXPLAINER.control.initial;",
+    "  if (queryValue !== undefined && queryValue !== null && queryValue !== '') {",
+    "    const parsed = Number.parseInt(String(queryValue).trim(), 10);",
+    "    if (Number.isFinite(parsed)) {",
+    "      value = Math.max(EXPLAINER.control.min, Math.min(EXPLAINER.control.max, parsed));",
+    "    }",
+    "  }",
+    "  const months = Math.ceil(EXPLAINER.target.amount / value);",
+    "  const steps = [];",
+    "  const drawnSteps = Math.min(months, EXPLAINER.horizon);",
+    "  for (let i = 1; i <= drawnSteps; i++) {",
+    "    const isCurrent = i === months;",
+    "    steps.push('<li class=\"explainer-step\"' + (isCurrent ? ' id=\"explainer-current\"' : '') + ' data-travelled=\"true\" style=\"color:#14532d\">&#10003; Month ' + i + (isCurrent ? ' <strong>&larr; you are here</strong>' : '') + '</li>');",
+    "  }",
+    "  if (months > EXPLAINER.horizon) {",
+    "    const remaining = months - EXPLAINER.horizon;",
+    "    steps.push('<li class=\"explainer-step explainer-summary\" id=\"explainer-current\" style=\"color:#92400e;font-style:italic\">and ' + remaining + ' more ' + (remaining === 1 ? 'month' : 'months') + ' &larr; past the horizon</li>');",
+    "  }",
+    "  let narrative = '';",
+    "  if (months <= Math.floor(EXPLAINER.horizon / 2)) {",
+    "    narrative = 'A short path: you will reach ' + esc(EXPLAINER.target.label) + ' in ' + months + ' ' + (months === 1 ? 'month' : 'months') + '.';",
+    "  } else if (months <= EXPLAINER.horizon) {",
+    "    narrative = 'An ordinary path: you will reach ' + esc(EXPLAINER.target.label) + ' in ' + months + ' months.';",
+    "  } else {",
+    "    narrative = 'This path runs past the ' + EXPLAINER.horizon + '-month horizon, taking ' + months + ' months to reach ' + esc(EXPLAINER.target.label) + '. Consider a larger amount to reach your goal sooner.';",
+    "  }",
+    "  const formHtml = '<form id=\"explainer-control\" method=\"get\" action=\"/explain\">' +",
+    "    '<label for=\"' + esc(EXPLAINER.control.name) + '\">' + esc(EXPLAINER.control.label) + ' (' + esc(EXPLAINER.control.unit) + ')</label> ' +",
+    "    '<input id=\"' + esc(EXPLAINER.control.name) + '\" name=\"' + esc(EXPLAINER.control.name) + '\" type=\"number\" min=\"' + EXPLAINER.control.min + '\" max=\"' + EXPLAINER.control.max + '\" value=\"' + value + '\" required> ' +",
+    "    '<button type=\"submit\">Update</button>' +",
+    "    '</form>';",
+    "  const outputHtml = '<p id=\"explainer-output\" style=\"font-size:1.5rem;font-weight:700\">' + months + ' ' + (months === 1 ? 'month' : 'months') + '</p>';",
+    "  const pathHtml = '<ol id=\"explainer-path\">' + steps.join('') + '</ol>';",
+    "  const narrativeHtml = '<p id=\"explainer-narrative\">' + narrative + '</p>';",
+    "  const resetHtml = '<p><a id=\"explainer-reset\" href=\"/explain/reset\">Reset</a></p>';",
+    "  return capabilityPage(EXPLAINER.title, '<h1>' + esc(EXPLAINER.title) + '</h1><p id=\"explainer-summary\">' + esc(EXPLAINER.summary) + '</p>' + formHtml + outputHtml + pathHtml + narrativeHtml + resetHtml);",
+    "};",
+  ].join('\n');
+};
+
+/** The explainer routes, raw arm: the explanation page and the reset redirect. */
+const rawExplainerRoutes = () =>
+  [
+    "  if (path === '/explain/reset' && request.method === 'GET') {",
+    "    response.writeHead(303, { location: '/explain' });",
+    "    return response.end();",
+    "  }",
+    "  if (path === '/explain' && request.method === 'GET') {",
+    "    const explainerQuery = url.searchParams.get(EXPLAINER.control.name);",
+    "    return html(response, explainerPage(explainerQuery));",
+    "  }",
+  ].join('\n');
+
+/** The explainer routes, hono arm: the same two in Hono routing. */
+const honoExplainerRoutes = () =>
+  [
+    "app.get('/explain/reset', (c) => c.redirect('/explain', 303));",
+    "app.get('/explain', (c) => {",
+    "  const explainerQuery = c.req.query(EXPLAINER.control.name);",
+    "  return c.html(explainerPage(explainerQuery));",
+    "});",
+  ].join('\n');
+
 /** The small page renderers the capability handlers share, emitted only when a capability needs them. */
 // The capability pages load the same single enhancement script the arm templates do, but ONLY when a
 // capability that needs it is on. Without the tag the script was served and never loaded, so a capability
@@ -2368,7 +2440,7 @@ const json = (response, value, status = 200, headers = {}) => {
   response.end(JSON.stringify(value));
 };
 
-${caps.list_pages || caps.detail_page || caps.auth || caps.cart || caps.pricing_tiers || caps.checkout || caps.survey || caps.game || caps.workspace || caps.wiki ? `${capabilityPages(caps)}${caps.cart ? `\n${cartPages(archetype)}` : ''}${caps.pricing_tiers ? `\n${pricingPages(archetype)}` : ''}${caps.checkout ? `\n${checkoutPages(archetype)}` : ''}${caps.survey ? `\n${surveyPages(archetype)}` : ''}${caps.game ? `\n${gamePages(archetype)}` : ''}${caps.workspace ? `\n${workspacePages(archetype)}` : ''}${caps.wiki ? `\n${wikiPages(archetype)}` : ''}\n` : ''}const REQUIRED = ${JSON.stringify(archetype.fields.filter((field) => field.type !== 'select' && !field.optional).map((field) => field.name))};
+${caps.list_pages || caps.detail_page || caps.auth || caps.cart || caps.pricing_tiers || caps.checkout || caps.survey || caps.game || caps.workspace || caps.wiki || caps.explainer ? `${capabilityPages(caps)}${caps.cart ? `\n${cartPages(archetype)}` : ''}${caps.pricing_tiers ? `\n${pricingPages(archetype)}` : ''}${caps.checkout ? `\n${checkoutPages(archetype)}` : ''}${caps.survey ? `\n${surveyPages(archetype)}` : ''}${caps.game ? `\n${gamePages(archetype)}` : ''}${caps.workspace ? `\n${workspacePages(archetype)}` : ''}${caps.wiki ? `\n${wikiPages(archetype)}` : ''}${caps.explainer ? `\n${explainerPages(archetype)}` : ''}\n` : ''}const REQUIRED = ${JSON.stringify(archetype.fields.filter((field) => field.type !== 'select' && !field.optional).map((field) => field.name))};
 
 ${enforceMin ? `const MIN_BOUNDS = ${JSON.stringify(minBounds)};\n` : ''}// The cart form has its own fields. Validating it against the search form's required list refused every
 // cart POST with 422, which the write journey caught: a second form on one page needs a second rule.
@@ -2556,7 +2628,7 @@ ${caps.auth ? `    if (!authSessionEmail(request.headers.cookie)) return json(re
     return json(response, { ref: row.ref, ...JSON.parse(row.payload) });
   }
 
-${caps.cart ? `${rawCartRoutes(archetype, cartCookieFlags, checkoutOf(archetype))}\n\n` : ''}${caps.checkout ? `${rawCheckoutRoutes()}\n\n` : ''}${caps.survey ? `${rawSurveyRoutes()}\n\n` : ''}${caps.game ? `${rawGameRoutes()}\n\n` : ''}${caps.workspace ? `${rawWorkspaceRoutes()}\n\n` : ''}${caps.pricing_tiers ? `${rawPricingRoutes()}\n\n` : ''}${caps.wiki ? `${rawWikiRoutes()}\n\n` : ''}  // A route the archetype declares is a route the server must serve: /account was declared as the
+${caps.cart ? `${rawCartRoutes(archetype, cartCookieFlags, checkoutOf(archetype))}\n\n` : ''}${caps.checkout ? `${rawCheckoutRoutes()}\n\n` : ''}${caps.survey ? `${rawSurveyRoutes()}\n\n` : ''}${caps.game ? `${rawGameRoutes()}\n\n` : ''}${caps.workspace ? `${rawWorkspaceRoutes()}\n\n` : ''}${caps.pricing_tiers ? `${rawPricingRoutes()}\n\n` : ''}${caps.wiki ? `${rawWikiRoutes()}\n\n` : ''}${caps.explainer ? `${rawExplainerRoutes()}\n\n` : ''}  // A route the archetype declares is a route the server must serve: /account was declared as the
   // account flow's page and never implemented, so the journey landed on a 404.
   if (${JSON.stringify(archetype.routes.filter((route) => route.kind === 'read-session').map((route) => route.path))}.includes(path) && request.method === 'GET') {
 ${caps.auth ? `${RAW_AUTH_GUARD}\n` : ''}    return html(response, await renderDocument({ title: 'Your account' }));
@@ -2695,7 +2767,7 @@ const requiredFor = (path) => (EXTRA_ACTION !== '' && path === EXTRA_ACTION ? EX
 ${sessionTables(archetype)}
 ${caps.auth ? `db.exec('CREATE TABLE IF NOT EXISTS accounts (email TEXT PRIMARY KEY, password TEXT NOT NULL, display_name TEXT)');
 ${authTables(archetype)}
-` : ''}${caps.cart ? `${cartTables(caps.checkout)}\n` : ''}${caps.checkout ? `${checkoutTables()}\n` : ''}${caps.survey ? `${surveyTables()}\n` : ''}${caps.game ? `${gameTables()}\n` : ''}${caps.workspace ? `${workspaceTables()}\n` : ''}${caps.wiki ? `${wikiTables()}\n` : ''}${caps.list_pages || caps.detail_page || caps.auth || caps.cart || caps.pricing_tiers || caps.checkout || caps.survey || caps.game || caps.workspace || caps.wiki ? `${capabilityPages(caps)}${caps.cart ? `\n${cartPages(archetype)}` : ''}${caps.pricing_tiers ? `\n${pricingPages(archetype)}` : ''}${caps.checkout ? `\n${checkoutPages(archetype)}` : ''}${caps.survey ? `\n${surveyPages(archetype)}` : ''}${caps.game ? `\n${gamePages(archetype)}` : ''}${caps.workspace ? `\n${workspacePages(archetype)}` : ''}${caps.wiki ? `\n${wikiPages(archetype)}` : ''}
+` : ''}${caps.cart ? `${cartTables(caps.checkout)}\n` : ''}${caps.checkout ? `${checkoutTables()}\n` : ''}${caps.survey ? `${surveyTables()}\n` : ''}${caps.game ? `${gameTables()}\n` : ''}${caps.workspace ? `${workspaceTables()}\n` : ''}${caps.wiki ? `${wikiTables()}\n` : ''}${caps.list_pages || caps.detail_page || caps.auth || caps.cart || caps.pricing_tiers || caps.checkout || caps.survey || caps.game || caps.workspace || caps.wiki || caps.explainer ? `${capabilityPages(caps)}${caps.cart ? `\n${cartPages(archetype)}` : ''}${caps.pricing_tiers ? `\n${pricingPages(archetype)}` : ''}${caps.checkout ? `\n${checkoutPages(archetype)}` : ''}${caps.survey ? `\n${surveyPages(archetype)}` : ''}${caps.game ? `\n${gamePages(archetype)}` : ''}${caps.workspace ? `\n${workspacePages(archetype)}` : ''}${caps.wiki ? `\n${wikiPages(archetype)}` : ''}${caps.explainer ? `\n${explainerPages(archetype)}` : ''}
 ` : ''}const requestLog = [];
 const app = new Hono();
 app.use('*', async (c, next) => {
@@ -2847,7 +2919,7 @@ ${caps.auth ? "  if (!authSessionEmail(c.req.header('cookie'))) return c.json({ 
   return c.json({ ref: row.ref, ...JSON.parse(row.payload) });
 });
 
-${caps.cart ? `${honoCartRoutes(archetype, cartCookieFlags, checkoutOf(archetype))}\n\n` : ''}${caps.checkout ? `${honoCheckoutRoutes()}\n\n` : ''}${caps.survey ? `${honoSurveyRoutes()}\n\n` : ''}${caps.game ? `${honoGameRoutes()}\n\n` : ''}${caps.workspace ? `${honoWorkspaceRoutes()}\n\n` : ''}${caps.pricing_tiers ? `${honoPricingRoutes()}\n\n` : ''}${caps.wiki ? `${honoWikiRoutes()}\n\n` : ''}for (const sessionPage of ${JSON.stringify(archetype.routes.filter((route) => route.kind === 'read-session').map((route) => route.path))}) {
+${caps.cart ? `${honoCartRoutes(archetype, cartCookieFlags, checkoutOf(archetype))}\n\n` : ''}${caps.checkout ? `${honoCheckoutRoutes()}\n\n` : ''}${caps.survey ? `${honoSurveyRoutes()}\n\n` : ''}${caps.game ? `${honoGameRoutes()}\n\n` : ''}${caps.workspace ? `${honoWorkspaceRoutes()}\n\n` : ''}${caps.pricing_tiers ? `${honoPricingRoutes()}\n\n` : ''}${caps.wiki ? `${honoWikiRoutes()}\n\n` : ''}${caps.explainer ? `${honoExplainerRoutes()}\n\n` : ''}for (const sessionPage of ${JSON.stringify(archetype.routes.filter((route) => route.kind === 'read-session').map((route) => route.path))}) {
 ${caps.auth ? `  app.get(sessionPage, (c) => {
     if (!authSessionEmail(c.req.header('cookie'))) return c.redirect('/login', 303);
     return c.html(renderDocument({ title: 'Your account' }));

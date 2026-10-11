@@ -54,7 +54,7 @@ a reflected GET query (`/search`), a server session (`/account`, `/profile`), a 
 | Type | Status | Evidence | What is missing to satisfy it |
 |---|---|---|---|
 | `game` | **missing** | none | client-side input loop, a state machine with a terminal state, restart, and a browser journey that plays it |
-| `interactive-explainer` | **missing** | none | a derived value recomputed from an input, a visual that follows it, and a reset |
+| `interactive-explainer` | **partial** | no family yet; the builder now has the `explainer` capability - one control whose value changes a figure computed from it, a path and a narrative bound to that figure with the month reached marked and the past-the-horizon case called out, and a reset that returns the figure to its initial value - tested in all seven arms and driven in a browser in two of them (mwg-train-5k4) | an explainer-shaped training family: a derivation worth changing the input to see |
 | `blog` | **partial** | `docs-site` and `community-forum` have an index route and a `/record/:ref` detail route | long-form content, a stable deep link per article, and sharing - the detail page exists but holds a submitted record, not an article |
 | `storefront` | **partial** | `web-shop` has a products list and a checkout write; the pilot's `catalogue` has search and a session cart | variant selection, and a cart the user builds across pages - the list exists, the cart is one form |
 | `checkout` | **missing** | none | cart arithmetic, totals, shipping/tax, a simulated payment, and a durable receipt |
@@ -67,9 +67,9 @@ a reflected GET query (`/search`), a server session (`/account`, `/profile`), a 
 | `record-form` | **satisfied** | all 30 families; 7 of them `booking`, 3 `web-shop`, 2 each of `dashboard`, `directory-listing`, `event-registration`, `support-helpdesk`, `survey-form`, `docs-site`, `expense-tracker`, 1 each of 6 more | nothing - this is the one type the corpus covers |
 | `survey-eligibility` | **partial** | `tr-10`, `tr-23` declare survey shapes | branching, a review step, and a result derived from the answers rather than a saved record |
 
-So: **1 of 13 types is satisfied, 6 partially, 6 missing entirely** - and the satisfied one is still the type
+So: **1 of 13 types is satisfied, 7 partially, 5 missing entirely** - and the satisfied one is still the type
 Paul did not ask about. The gap he has been reporting as "not enough archetypes" is closing from the other end,
-though: `wiki` is no longer missing, because the capability it needed now exists. That is still a capability gap in
+though: `wiki` and `interactive-explainer` are no longer missing, because the capabilities they needed now exist. That is still a capability gap in
 the builder rather than a content gap in the manifest, which is why the status column above counts corpus coverage
 while the table below counts what the builder can express.
 
@@ -90,7 +90,6 @@ adding a route kind to satisfy a taxonomy is the wrong direction.
 | `storefront` | capability-gated | variant selection and a cart accumulated across pages |
 | `checkout` | capability-gated | arithmetic over cart lines, totals, and a simulated payment step |
 | `pricing-tiers` | capability-gated | a period toggle and a tier selection persisted into signup |
-| `interactive-explainer` | capability-gated | a derived value recomputed on input, and a visual bound to it |
 | `interactive-demo` | capability-gated | an execution path with inspectable output, sandboxed |
 | `game` | capability-gated | a client input loop and a state machine with a terminal state |
 | `survey-eligibility` | capability-gated (small) | branching steps and a derived result |
