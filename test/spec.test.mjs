@@ -505,7 +505,19 @@ test('a select field whose options is not an array is refused, not thrown', () =
     fields: base.fields.map((field) => (field?.type === 'select' ? { ...field, options: 'bad' } : field)),
   });
   assert.ok(Array.isArray(problems), 'a non-array options must return problems');
-  assert.ok(problems.length > 0, 'a non-array options must be refused');
+  // The exact refusal, not merely "some problem": any incidental problem in the fixture would satisfy a length
+  // check, and the point of the test is that the select rule itself fires rather than the process dying.
+  assert.match(
+    problems.join('\n'),
+    /fields\[\d+\]\.options: a select must list its options/,
+    'a non-array options must be refused by the select options rule',
+  );
+  // And the reader that used to throw now completes against the empty list, reporting a condition that could never
+  // be satisfied rather than failing to run (the reviewer supplied both messages; they are asserted, not guessed).
+  assert.ok(
+    problems.some((problem) => problem.includes('when.equals') && problem.includes('is not one of the options')),
+    'the downstream condition check evaluates against empty options without throwing',
+  );
 });
 
 test('no family in the corpus is refused by the echo cross-check', () => {
