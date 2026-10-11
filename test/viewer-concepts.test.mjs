@@ -4,7 +4,7 @@ import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
-import { conceptBookingStep, conceptImage, conceptJourneyStep, conceptTarget, listConcepts, renderConcepts } from '../src/viewer/concepts.mjs';
+import { conceptBookingStep, conceptImage, conceptJourneyStep, conceptTarget, listConcepts, renderConcepts, trainingBoard } from '../src/viewer/concepts.mjs';
 import { createViewer } from '../src/viewer/server.mjs';
 
 const ROOT = resolve(import.meta.dirname, '..');
@@ -38,7 +38,12 @@ test('gallery presents all three excluded boards, honest booking slot, and autho
   assert.deepEqual(gallery.trainingTargets[0], {
     id: 'tr-01', archetype: 'booking', title: 'Mobile bicycle mechanic service booking',
     origin: 'docs/train/targets/tr-01/index.html', available: true, width: 1280, height: 1080,
+    board: true, boardWidth: 1376, boardHeight: 768,
   });
+  // The two kinds of image are separate facts about the tree: every family has a harness instrument, and only the
+  // families whose designed board has been generated carry one.
+  assert.deepEqual(gallery.trainingTargets.filter((family) => family.board).map(({ id }) => id), ['tr-01', 'tr-02', 'tr-04']);
+  assert.ok(gallery.trainingTargets.every((family) => family.available), 'every declared family has a harness instrument');
   assert.equal(gallery.trainingTargets.filter((family) => gallery.archetypes.some(({ id }) => id === family.id)).length, 0,
     'no id is listed in both arms');
   assert.ok(gallery.journeys.every((journey) => journey.steps.every((step) => step.available)), 'all 14 supplied boards exist');
@@ -61,22 +66,33 @@ test('gallery presents all three excluded boards, honest booking slot, and autho
   assert.match(html, /unverified placeholders/);
   assert.equal((html.match(/\/concepts\/images\/booking\/step[1-5]-[a-z-]+\.jpg/g) ?? []).length, 12);
   assert.doesNotMatch(html, /Image pending:/);
-  assert.match(html, /Archetype training targets \(A1\)/);
+  assert.match(html, /Training families \(A1\): designed boards and harness targets/);
   assert.match(html, /Sealed evaluation targets \(A6\)/);
   assert.match(html, /not part of the 30 training families above/);
+  assert.match(html, /3 of the 30 training families have a designed reference board so far/);
   for (const family of ['tr-01', 'tr-17', 'tr-30']) {
     assert.match(html, new RegExp(`href="/concepts/targets/${family}\\.png"`));
-    assert.match(html, new RegExp(`alt="Authored training target render for ${family}`));
+    assert.match(html, new RegExp(`alt="Harness target render, the A1 conformance instrument, for ${family}`));
   }
-  assert.equal((html.match(/\/concepts\/targets\/tr-\d{2}\.png" aria-label/g) ?? []).length, 30, 'every declared family links its own target');
-  assert.doesNotMatch(html, /Target render pending/, 'no declared family is missing its render in this checkout');
+  assert.equal((html.match(/\/concepts\/targets\/tr-\d{2}\.png" aria-label/g) ?? []).length, 30, 'every declared family links its own harness instrument');
+  assert.doesNotMatch(html, /Harness target render pending/, 'no declared family is missing its instrument in this checkout');
+  // A designed board is rendered as its own labelled figure, never as the harness render, and the harness figure says
+  // in its own caption that it is not a designed board.
+  assert.equal((html.match(/\/concepts\/references\/tr-\d{2}\.jpg" aria-label/g) ?? []).length, 3, 'only the families with a designed board render one');
+  assert.match(html, /Designed reference board · <code>docs\/design\/training\/tr-01\/reference\.jpg<\/code>/);
+  assert.match(html, /Harness target render \(A1 conformance instrument\) · <code>data\/A1_self_generated\/targets\/tr-01\/target\.png<\/code> — a deterministic headless-Chrome render of <code>docs\/train\/targets\/tr-01\/index\.html<\/code>, NOT a designed board/);
+  assert.match(html, /Designed board not generated yet\. Expected <code>docs\/design\/training\/tr-03\/reference\.jpg<\/code>/);
+  assert.match(html, /AI-generated illustration, not training evidence and not proof a demo works/);
+  const renderedOrder = [...html.matchAll(/aria-labelledby="target-(tr-\d{2})"/g)].map((match) => match[1]);
+  assert.deepEqual(renderedOrder.slice(0, 3), ['tr-01', 'tr-02', 'tr-04'], 'families with a designed board are listed first');
+  assert.equal(renderedOrder.length, 30);
   assert.match(html, /not screenshots of generated websites/);
   assert.doesNotMatch(html, /<iframe/);
   const base = await serve(t, ROOT);
   const page = await fetch(`${base}/concepts`);
   assert.equal(page.status, 200);
   const pageHtml = await page.text();
-  assert.match(pageHtml, /Archetype training targets \(A1\)/);
+  assert.match(pageHtml, /Training families \(A1\): designed boards and harness targets/);
   assert.match(pageHtml, /Sealed evaluation targets \(A6\)/);
   for (const family of ['tr-01', 'tr-15', 'tr-30']) {
     const render = await fetch(`${base}/concepts/targets/${family}.png`);
@@ -85,6 +101,13 @@ test('gallery presents all three excluded boards, honest booking slot, and autho
     assert.equal(render.headers.get('x-content-type-options'), 'nosniff');
     assert.equal((await render.arrayBuffer()).byteLength > 1000, true);
   }
+  const board = await fetch(`${base}/concepts/references/tr-01.jpg`);
+  assert.equal(board.status, 200);
+  assert.match(board.headers.get('content-type'), /image\/jpeg/);
+  assert.equal(board.headers.get('x-content-type-options'), 'nosniff');
+  assert.ok((await board.arrayBuffer()).byteLength > 1000);
+  assert.equal((await fetch(`${base}/concepts/references/tr-03.jpg`)).status, 404, 'a family with no designed board has no board route');
+  assert.equal((await fetch(`${base}/concepts/references/tr-31.jpg`)).status, 404, 'an undeclared family has no board route');
   assert.equal((await fetch(`${base}/concepts/targets/tr-31.png`)).status, 404);
   assert.equal((await fetch(`${base}/concepts/targets/tr-1.png`)).status, 404);
   for (const name of ['layout-storefront', 'layout-saas', 'layout-explainer']) {
@@ -266,13 +289,13 @@ test('the A1 training arm is the manifest, not the directory: only declared fami
   writeFileSync(join(arm, 'manifest.jsonl'), [line(), line({ archetype: 'second-declaration' }), line({ family_id: 'tr-02', origin: 'docs/train/targets/tr-02/index.html', image_path: 'data/A1_self_generated/targets/tr-02/target.png' }), ''].join('\n'));
   const gallery = listConcepts(root);
   assert.deepEqual(gallery.trainingTargets, [
-    { id: 'tr-01', archetype: 'booking', title: 'Declared family', origin: 'docs/train/targets/tr-01/index.html', available: true },
-    { id: 'tr-02', archetype: 'booking', title: 'Declared family', origin: 'docs/train/targets/tr-02/index.html', available: false },
+    { id: 'tr-01', archetype: 'booking', title: 'Declared family', origin: 'docs/train/targets/tr-01/index.html', available: true, board: false },
+    { id: 'tr-02', archetype: 'booking', title: 'Declared family', origin: 'docs/train/targets/tr-02/index.html', available: false, board: false },
   ], 'first declaration wins, an absent render is an honest gap, and an undeclared file is not a family');
   assert.equal(conceptTarget(root, 'tr-07'), null, 'a file the manifest never declared is not public');
   assert.equal(conceptTarget(root, 'tr-01')?.bytes.equals(png), true);
   const html = renderConcepts(gallery);
-  assert.match(html, /Target render pending\. Expected <code>data\/A1_self_generated\/targets\/tr-02\/target\.png<\/code>/);
+  assert.match(html, /Harness target render pending\. Expected <code>data\/A1_self_generated\/targets\/tr-02\/target\.png<\/code>/);
   assert.doesNotMatch(html, /tr-07/, 'an undeclared directory cannot put a name on the page');
 
   // A hostile or malformed line adds nothing: wrong arm, wrong kind, a path that is not this family's, an id that
@@ -326,7 +349,7 @@ test('the A1 target size is measured from the PNG header, never taken from the m
     })}\n`);
     assert.deepEqual(listConcepts(root).trainingTargets, [{
       id: 'tr-09', archetype: 'booking', title: 'Tall capture', origin: 'docs/train/targets/tr-09/index.html',
-      available: true, width: 1280, height: 2400,
+      available: true, board: false, width: 1280, height: 2400,
     }]);
     assert.match(renderConcepts(listConcepts(root)), /width="1280" height="2400"/);
     // Bytes that are not a PNG header prove no size, so no width/height is claimed at all.
@@ -336,4 +359,66 @@ test('the A1 target size is measured from the PNG header, never taken from the m
     assert.equal('width' in unmeasured, false);
     assert.doesNotMatch(renderConcepts(listConcepts(root)), /width="1280" height="2400"/);
   } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test('a designed board is shown as a designed board: measured, separately labelled, and refused when undeclared', async (t) => {
+  const root = mkdtempSync(join(tmpdir(), 'viewer-concepts-board-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const arm = join(root, 'data/A1_self_generated/targets');
+  const boards = join(root, 'docs/design/training');
+  const png = Buffer.from([137, 80, 78, 71]);
+  const jpeg = Buffer.alloc(20);
+  jpeg[0] = 0xff; jpeg[1] = 0xd8; jpeg[2] = 0xff; jpeg[3] = 0xc0;
+  jpeg.writeUInt16BE(0x0011, 4); jpeg[6] = 8;
+  jpeg.writeUInt16BE(768, 7);   // height
+  jpeg.writeUInt16BE(1376, 9);  // width
+  const line = (id) => JSON.stringify({
+    id: `target-${id}`, arm: 'A1_self_generated', kind: 'asset', family_id: id, archetype: 'booking',
+    title: 'A family', origin: `docs/train/targets/${id}/index.html`,
+    image_path: `data/A1_self_generated/targets/${id}/target.png`, viewport: { width: 1280, height: 900 },
+  });
+  for (const id of ['tr-01', 'tr-02', 'tr-05']) {
+    mkdirSync(join(arm, id), { recursive: true });
+    writeFileSync(join(arm, id, 'target.png'), png);
+  }
+  writeFileSync(join(arm, 'manifest.jsonl'), [line('tr-01'), line('tr-02'), ''].join('\n'));
+  // tr-01 has a designed board, tr-05 has a board for a family the manifest never declared, tr-02 has none.
+  for (const id of ['tr-01', 'tr-05']) {
+    mkdirSync(join(boards, id), { recursive: true });
+    writeFileSync(join(boards, id, 'reference.jpg'), id === 'tr-01' ? jpeg : Buffer.from([0xff, 0xd8, 0x01]));
+  }
+  const gallery = listConcepts(root);
+  assert.deepEqual(gallery.trainingTargets.map(({ id, board }) => [id, board]), [['tr-01', true], ['tr-02', false]],
+    'a designed board is only reported for a family the manifest declares, and tr-05 is not a family at all');
+  const tr01 = gallery.trainingTargets[0];
+  assert.equal(tr01.boardWidth, 1376);
+  assert.equal(tr01.boardHeight, 768);
+  assert.equal('boardWidth' in gallery.trainingTargets[1], false, 'no board means no measured size at all');
+  assert.equal(trainingBoard(root, 'tr-01')?.bytes.equals(jpeg), true);
+  assert.equal(trainingBoard(root, 'tr-05'), null, 'a board the manifest never declared is not public');
+  assert.equal(trainingBoard(root, 'tr-03'), null);
+  assert.equal(trainingBoard(root, 'tr-99'), null);
+  assert.equal(trainingBoard(root, '../private'), null);
+  const html = renderConcepts(gallery);
+  assert.match(html, /\/concepts\/references\/tr-01\.jpg" aria-label="Open the tr-01 designed reference board at full size"><img src="\/concepts\/references\/tr-01\.jpg"[^>]*width="1376" height="768"/);
+  assert.doesNotMatch(html, /concepts\/references\/tr-05\.jpg/, 'an undeclared board cannot put a reference on the page');
+  assert.match(html, /Designed board not generated yet\. Expected <code>docs\/design\/training\/tr-02\/reference\.jpg<\/code>/);
+  assert.doesNotMatch(html, /Designed board not generated yet\. Expected <code>docs\/design\/training\/tr-01\/reference\.jpg<\/code>/);
+
+  // A symlinked board directory or file is unavailable, and the route refuses it too.
+  const outside = join(root, 'private.jpg');
+  writeFileSync(outside, 'PRIVATE');
+  rmSync(join(boards, 'tr-01/reference.jpg'));
+  symlinkSync(outside, join(boards, 'tr-01/reference.jpg'));
+  assert.equal(trainingBoard(root, 'tr-01'), null);
+  const base = await serve(t, root);
+  assert.equal((await fetch(`${base}/concepts/references/tr-01.jpg`)).status, 404);
+  assert.equal(await (await fetch(`${base}/concepts/references/tr-01.jpg`)).text(), 'designed reference board unavailable');
+  assert.equal(await (await fetch(`${base}/concepts/references/tr-05.jpg`)).text(), 'designed reference board unavailable');
+  const escaped = join(root, 'escaped');
+  mkdirSync(escaped, { recursive: true });
+  writeFileSync(join(escaped, 'reference.jpg'), jpeg);
+  rmSync(join(boards, 'tr-01'), { recursive: true });
+  symlinkSync(escaped, join(boards, 'tr-01'));
+  assert.equal(trainingBoard(root, 'tr-01'), null, 'a symlinked board directory is not the board directory');
 });

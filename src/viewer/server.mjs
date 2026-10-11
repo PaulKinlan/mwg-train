@@ -21,6 +21,7 @@
  *   GET  /concepts/images/<name>.jpg      confined concept JPEG
  *   GET  /concepts/images/booking/<step>.jpg  confined booking journey reference
  *   GET  /concepts/targets/<id>.png       confined authored target render: A6 archetype or A1 tr-NN family
+ *   GET  /concepts/references/<tr-NN>.jpg  confined designed reference board for a training family (A1)
  *   GET  /tuning                         training-only prompt draft workbench
  *   POST /tuning/generate                one hosted image-model call: draft in, board bytes out (nothing written)
  *   GET  /tuning/client.js               browser-local draft/export helper and the generate button's wiring
@@ -39,7 +40,7 @@ import { mkdir, readFile, rm } from 'node:fs/promises';
 import { dirname, extname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { conceptImage, conceptJourneyStep, conceptTarget, listConcepts, renderConcepts } from './concepts.mjs';
+import { conceptImage, conceptJourneyStep, conceptTarget, listConcepts, renderConcepts, trainingBoard } from './concepts.mjs';
 import { filterProjects, loadCorpus, projectView } from './corpus.mjs';
 import { hashTree } from '../corpus/tree-hash.mjs';
 import { scanTree, scanPairRecords, loadScanConfig, buildMatchers } from './owner-auth.mjs';
@@ -472,6 +473,13 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
       if (conceptTargetMatch && request.method === 'GET') {
         const image = conceptTarget(repoRoot, conceptTargetMatch[1]);
         if (!image) return textResponse(response, 'authored target unavailable', 404);
+        response.writeHead(200, { 'content-type': image.type, 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' });
+        return response.end(image.bytes);
+      }
+      const conceptReferenceMatch = path.match(/^\/concepts\/references\/(tr-\d{2})\.jpg$/);
+      if (conceptReferenceMatch && request.method === 'GET') {
+        const image = trainingBoard(repoRoot, conceptReferenceMatch[1]);
+        if (!image) return textResponse(response, 'designed reference board unavailable', 404);
         response.writeHead(200, { 'content-type': image.type, 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' });
         return response.end(image.bytes);
       }

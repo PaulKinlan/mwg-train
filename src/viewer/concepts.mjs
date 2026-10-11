@@ -2,6 +2,7 @@ import { closeSync, existsSync, lstatSync, openSync, readFileSync, readSync, rea
 import { join, relative } from 'node:path';
 
 import { escapeHtml, page } from './pages.mjs';
+import { readJpegDimensions } from './tuning.mjs';
 
 const BOARDS = [
   { id: 'layout-storefront', title: 'Storefront composition', grammar: 'Object ledger · Persuade', note: 'An illustrative product grid, choices and basket summary.', alt: 'Concept sketch of a product grid with details and a basket summary.' },
@@ -15,6 +16,12 @@ const BOARDS = [
 const EVAL_TARGETS = new Set(['account-recovery', 'booking', 'catalogue', 'contact-lead', 'event-registration']);
 const TRAINING_TARGET_DIR = 'data/A1_self_generated/targets';
 const TRAINING_FAMILY = /^tr-\d{2}$/;
+// The DESIGNED board for a family, and the register that records its model and digests. A designed board is a
+// different kind of artefact from the harness target render: one is a picture authored by an image model, the other
+// is a deterministic headless-Chrome capture of the family's authored HTML board. The page must never let a reader
+// mistake one for the other, so the two are labelled and rendered separately.
+const TRAINING_BOARD_DIR = 'docs/design/training';
+const TRAINING_BOARD_REGISTER = 'docs/provenance/assets/training-reference-boards.md';
 // Only these reviewed files may be served; the pictured journey need not match the functional spec.
 const JOURNEYS = {
   booking: [
@@ -152,6 +159,40 @@ function pngSize(file) {
   }
 }
 
+/** A bounded read of a file's head: enough for a JPEG SOF marker without pulling a whole 900 KB board into memory
+ *  to measure it. A marker that runs past the window yields no size, which is reported as an absent size. */
+function boundedHead(file, bytes) {
+  try {
+    const fd = openSync(file, 'r');
+    let head;
+    try {
+      const buffer = Buffer.alloc(bytes);
+      const read = readSync(fd, buffer, 0, bytes, 0);
+      head = read > 0 ? buffer.subarray(0, read) : null;
+    } finally {
+      closeSync(fd);
+    }
+    return head;
+  } catch {
+    return null;
+  }
+}
+
+/** The confined designed board for a declared A1 family, or null when none has been generated yet. */
+function trainingBoardFile(repoRoot, id) {
+  if (typeof id !== 'string' || !TRAINING_FAMILY.test(id)) return null;
+  const root = join(repoRoot, TRAINING_BOARD_DIR);
+  return confinedFile(root, join(root, id), 'reference.jpg');
+}
+
+/** Serve the designed reference board for a family: declared by the A1 manifest and present under
+ *  docs/design/training/<tr-NN>/reference.jpg. */
+export function trainingBoard(repoRoot, id) {
+  if (!trainingFamilies(repoRoot).some((family) => family.id === id)) return null;
+  const file = trainingBoardFile(repoRoot, id);
+  return file ? { bytes: readFileSync(file), type: 'image/jpeg' } : null;
+}
+
 /** These are authored A6 targets, not captures of the generated demo. */
 export function conceptTarget(repoRoot, id) {
   if (typeof id !== 'string') return null;
@@ -197,10 +238,14 @@ export function listConcepts(repoRoot) {
     }),
     // The training arm is listed whether or not its render is on disk: a declared family with no target yet is an
     // honest gap to report, not a family to hide. Only the A1 manifest declares these; nothing else adds to them.
-    // The image size is measured from the file so the page reserves the box the image will actually occupy.
+    // The harness target size is measured from the file so the page reserves the box the image will occupy; the
+    // designed board is measured from a bounded head read, and reported without dimensions when it has to be.
     trainingTargets: trainingFamilies(repoRoot).map((family) => {
-      const file = trainingTargetFile(repoRoot, family.id);
-      return { ...family, available: !!file, ...(file ? pngSize(file) : null) };
+      const target = trainingTargetFile(repoRoot, family.id);
+      const board = trainingBoardFile(repoRoot, family.id);
+      const boardSize = board ? readJpegDimensions(boundedHead(board, 65536)) : null;
+      return { ...family, available: !!target, board: !!board, ...(target ? pngSize(target) : null),
+        ...(boardSize ? { boardWidth: boardSize.width, boardHeight: boardSize.height } : {}) };
     }),
     journeys,
     bookingSteps: journeys[0].steps,
@@ -215,20 +260,28 @@ const boardFigure = (board, featured = false) => `<figure class="concept-board${
   <figcaption><strong>${escapeHtml(board.title)}</strong><span>${escapeHtml(board.grammar)}</span><p>${escapeHtml(board.note)}</p></figcaption>
 </figure>`;
 
-const trainingTargetFigure = ({ id, archetype, title, origin, available, width, height }) => `<article class="concept-comparison" aria-labelledby="target-${escapeHtml(id)}">
+const trainingFamilyCard = ({ id, archetype, title, origin, available, width, height, board, boardWidth, boardHeight }) => `<article class="concept-comparison" aria-labelledby="target-${escapeHtml(id)}">
   <h3 id="target-${escapeHtml(id)}">${escapeHtml(id)}${archetype ? ` · ${escapeHtml(archetype)}` : ''}</h3>
   ${title ? `<p class="muted">${escapeHtml(title)}</p>` : ''}
-  <figure><div class="concept-image-frame">${available
-    ? `<a href="/concepts/targets/${escapeHtml(id)}.png" aria-label="Open the ${escapeHtml(id)} training target render at full size"><img src="/concepts/targets/${escapeHtml(id)}.png" alt="Authored training target render for ${escapeHtml(id)}${archetype ? ` (${escapeHtml(archetype)})` : ''}"${width && height ? ` width="${width}" height="${height}"` : ''} loading="lazy"></a>`
-    : `<p class="muted">Target render pending. Expected ${code(`${TRAINING_TARGET_DIR}/${id}/target.png`)}.</p>`}</div><figcaption>Training target render${available ? ` · ${code(`${TRAINING_TARGET_DIR}/${id}/target.png`)}` : ' · pending'}</figcaption></figure>
-  ${origin ? `<p class="muted">Authored board: ${code(origin)}. Not a capture of a generated site. Provenance: ${code('docs/provenance/assets/training-targets.md')}.</p>` : ''}
+  <div class="concept-pair">
+    <figure><div class="concept-image-frame">${board
+      ? `<a href="/concepts/references/${escapeHtml(id)}.jpg" aria-label="Open the ${escapeHtml(id)} designed reference board at full size"><img src="/concepts/references/${escapeHtml(id)}.jpg" alt="Designed reference board for training family ${escapeHtml(id)}${archetype ? ` (${escapeHtml(archetype)})` : ''}"${boardWidth && boardHeight ? ` width="${boardWidth}" height="${boardHeight}"` : ''} loading="lazy"></a>`
+      : `<p class="muted">Designed board not generated yet. Expected ${code(`${TRAINING_BOARD_DIR}/${id}/reference.jpg`)}.</p>`}</div><figcaption>Designed reference board${board ? ` · ${code(`${TRAINING_BOARD_DIR}/${id}/reference.jpg`)}` : ' · pending'} — AI-generated illustration, not training evidence and not proof a demo works${board ? `. Model and digests: ${code(TRAINING_BOARD_REGISTER)}` : ''}</figcaption></figure>
+    <figure><div class="concept-image-frame">${available
+      ? `<a href="/concepts/targets/${escapeHtml(id)}.png" aria-label="Open the ${escapeHtml(id)} harness target render at full size"><img src="/concepts/targets/${escapeHtml(id)}.png" alt="Harness target render, the A1 conformance instrument, for ${escapeHtml(id)}"${width && height ? ` width="${width}" height="${height}"` : ''} loading="lazy"></a>`
+      : `<p class="muted">Harness target render pending. Expected ${code(`${TRAINING_TARGET_DIR}/${id}/target.png`)}.</p>`}</div><figcaption>Harness target render (A1 conformance instrument)${available ? ` · ${code(`${TRAINING_TARGET_DIR}/${id}/target.png`)}` : ' · pending'} — a deterministic headless-Chrome render of ${origin ? code(origin) : 'the family&rsquo;s authored board'}, NOT a designed board${available ? `. Provenance: ${code('docs/provenance/assets/training-targets.md')}` : ''}</figcaption></figure>
+  </div>
 </article>`;
 
 export function renderConcepts({ boards, archetypes, trainingTargets = [], bookingSteps = [], journeys = [] }) {
   const [featured, ...otherBoards] = boards;
   const boardSection = featured ? `${boardFigure(featured, true)}<div class="concept-board-grid">${otherBoards.map((board) => boardFigure(board)).join('')}</div>`
     : '<p class="notice">No layout concept boards are available in this checkout.</p>';
-  const trainingSection = trainingTargets.length ? `<div class="concept-board-grid">${trainingTargets.map(trainingTargetFigure).join('')}</div>`
+  const boardCount = trainingTargets.filter((family) => family.board).length;
+  // Families that already have a designed board come first: the page leads with designs and states the count, so a
+  // reader cannot read a harness instrument as the deliverable and cannot miss how much of the set is still pending.
+  const orderedTargets = [...trainingTargets].sort((a, b) => (Number(b.board) - Number(a.board)) || a.id.localeCompare(b.id));
+  const trainingSection = trainingTargets.length ? `<div class="concept-board-grid">${orderedTargets.map(trainingFamilyCard).join('')}</div>`
     : '<p class="notice">No A1 training-family targets are declared in this checkout.</p>';
   const archetypeSection = archetypes.length ? archetypes.map(({ id, reference, target, referencePath }) => `<article class="concept-comparison" aria-labelledby="concept-${escapeHtml(id)}">
     <h3 id="concept-${escapeHtml(id)}">${escapeHtml(id.replaceAll('-', ' '))}</h3>
@@ -259,13 +312,13 @@ export function renderConcepts({ boards, archetypes, trainingTargets = [], booki
 
   return page('concepts', `
     <h1>Visual concepts</h1>
-    <p class="concept-lede">Explore the ${trainingTargets.length || 30} training families' authored targets, layout ideas beside authored evaluation renders where they exist, and the sealed A6 evaluation set. These are references, not screenshots of generated websites or proof a demo works.</p>
+    <p class="concept-lede">Explore the ${trainingTargets.length || 30} training families' designed reference boards and their harness target renders, layout ideas beside authored evaluation renders where they exist, and the sealed A6 evaluation set. These are references, not screenshots of generated websites or proof a demo works.</p>
     <section aria-labelledby="boards-heading"><h2 id="boards-heading">Layout concept boards</h2>
       <p class="muted">AI-generated sketches with unverified placeholder words and prices. Illustrative only; excluded from training. Source and hashes: ${code('docs/provenance/assets/design-layouts.md')}.</p>
       ${boardSection}
     </section>
-    <section aria-labelledby="training-targets-heading"><h2 id="training-targets-heading">Archetype training targets (A1)</h2>
-      <p class="muted">The ${trainingTargets.length || 30} training families' authored target renders, declared by ${code(`${TRAINING_TARGET_DIR}/manifest.jsonl`)} and generated from each family's board under ${code('docs/train/targets/')} by ${code('scripts/render-training-targets.mjs')}. Authored references, not captures of generated sites, and not proof any demo works. These are a different, held-out set from the sealed evaluation targets below.</p>
+    <section aria-labelledby="training-targets-heading"><h2 id="training-targets-heading">Training families (A1): designed boards and harness targets</h2>
+      <p class="muted">${boardCount} of the ${trainingTargets.length || 30} training families have a designed reference board so far (model and digests: ${code(TRAINING_BOARD_REGISTER)}); every family below also has a harness target render, which is a deterministic headless-Chrome capture of its authored HTML board under ${code('docs/train/targets/')} and NOT a designed board. Families with a designed board are listed first, and the two images of a family are labelled so neither can be mistaken for the other. Neither kind is training evidence, and neither is proof a demo works.</p>
       ${trainingSection}
     </section>
     <section aria-labelledby="eval-targets-heading"><h2 id="eval-targets-heading">Sealed evaluation targets (A6)</h2>
