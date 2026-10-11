@@ -101,7 +101,12 @@ export function maskContent(text) {
       }
       j += run;
     }
-    if (close === -1) return chars.join(''); // an unmatched opener is literal text, and so is the rest
+    if (close === -1) {
+      // An unmatched opener is literal text, but it does not excuse the rest of the document: keep scanning, or a
+      // single stray backtick would leave every later code span unmasked and every link inside one reported.
+      i += length;
+      continue;
+    }
     blank(chars, i, close + length);
     i = close + length;
   }
@@ -203,7 +208,7 @@ function parseDestination(text, from) {
     }
   }
   const afterTarget = i;
-  skipSpace();
+  if (skipSpace() > 1) return null;
   if (text[i] === '"' || text[i] === "'") {
     const quote = text[i];
     i += 1;
@@ -232,8 +237,10 @@ function parseDestination(text, from) {
       i += 1;
     }
     if (skipSpace() > 1) return null;
-  } else if (i !== afterTarget) {
-    return null; // whitespace with no title after it: not a destination followed by a closing paren
+  } else if (text[i] !== ')') {
+    // Whitespace may sit between the destination and the closing parenthesis, and a reader's link still works, so it
+    // is accepted; anything else there is not a link.
+    return null;
   }
   if (text[i] !== ')') return null;
   return { target, end: i };
@@ -256,25 +263,18 @@ export function extractLinks(text) {
     if (masked[i] !== '[') continue;
     const closeText = matchBracket(masked, i);
     if (closeText === -1) continue;
-    let open = closeText + 1;
-    // A single line break may separate the text from its destination; a blank line may not.
-    let breaks = 0;
-    while (open < masked.length && (masked[open] === ' ' || masked[open] === '\t' || masked[open] === '\n')) {
-      if (masked[open] === '\n') {
-        breaks += 1;
-        if (breaks > 1) break;
-      }
-      open += 1;
-    }
-    if (breaks > 1 || masked[open] !== '(') continue;
-    const parsed = parseDestination(masked, open + 1);
+    // An inline link's opening parenthesis must follow its text immediately (CommonMark); a space here means this is
+    // not an inline link. Notice what this does NOT do: it leaves `i` where it is rather than skipping to the end of
+    // the construct. A linked image is `[![alt](image.png)](page.md)` and both targets are real, so the scanner has to
+    // keep looking inside the text it just consumed. Nothing is reported twice, because each `[` is examined once.
+    if (masked[closeText + 1] !== '(') continue;
+    const parsed = parseDestination(masked, closeText + 2);
     if (parsed === null) continue;
     const line = lineOf(i);
     links.push({ target: parsed.target, line, index: i, quoted: quotedAt(line) });
-    i = parsed.end;
   }
 
-  for (const match of masked.matchAll(/^\s{0,3}\[[^\]]+\]:\s*(<[^>]*>|\S+)/gm)) {
+  for (const match of masked.matchAll(/^(?:\s{0,3}>)?\s{0,3}\[[^\]]+\]:\s*(<[^>]*>|\S+)/gm)) {
     const raw = match[1];
     const line = lineOf(match.index);
     links.push({
