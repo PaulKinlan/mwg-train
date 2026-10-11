@@ -135,6 +135,38 @@ test('a callout is checked, and its continuation lines are checked with it', () 
   assert.match(second.findings[0].message, /gone\.md/);
 });
 
+// The review's edge-case table, in the two directions that matter. A lazy continuation is a line with no `>` that
+// still belongs to the blockquote, so it neither ends the block nor re-opens it: a callout stays a callout across one,
+// and a quotation stays a quotation.
+test('a lazy continuation does not end a block, in either kind of blockquote', () => {
+  const callout = tree({
+    'doc.md': ['> [!NOTE]', 'Belongs to the callout without a marker.', '> [still ours](gone.md)', ''].join('\n'),
+  });
+  assert.strictEqual(
+    run(callout, ['doc.md']).ok,
+    false,
+    'a callout resumed after a lazy continuation is still ours, so its broken link is reported',
+  );
+
+  const quotation = tree({
+    'doc.md': ['> [Quoted from elsewhere](ALSO-LICENSE)', 'Still the same quotation, lazily continued.', ''].join('\n'),
+  });
+  assert.strictEqual(run(quotation, ['doc.md']).ok, true, 'a lazily continued quotation must stay skipped');
+});
+
+// The other half of the claim: widening what is checked must not report what resolves. A callout's link is counted as
+// checked rather than quoted, which is what tells the two sets apart on a passing document.
+test('a valid link in a callout is checked and counted, not quoted', () => {
+  const root = tree({
+    'doc.md': ['> [!WARNING]', '> Read [the guide](guide.md) first.', ''].join('\n'),
+    'guide.md': '# the guide\n',
+  });
+  const { ok, counts } = run(root, ['doc.md']);
+  assert.strictEqual(ok, true, 'a link that resolves must not be reported');
+  assert.strictEqual(counts.checked, 1, 'the callout link counts as checked');
+  assert.strictEqual(counts.quoted, 0, 'and not as quoted');
+});
+
 test('a blockquote after a callout is a quotation again, not part of the callout', () => {
   // The block boundary. A callout ends where its `>` lines end, so tracking only "are we in a callout" and never
   // leaving would mark every later quotation as ours - the regression this test exists to catch.

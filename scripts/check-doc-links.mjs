@@ -285,19 +285,29 @@ export function extractLinks(text) {
   // A blockquote reproduces someone else's document, so its relative links are relative to that document rather than
   // to this repository, and skipping them is right. A callout - `> [!NOTE]` - is not a quotation: it is our own prose
   // in a marker, so its links are relative to this repository, and treating them as quoted was how a future callout's
-  // link would have gone unchecked (mwg-train-0ts). The block is the unit rather than the line, because a callout's
-  // continuation lines are as much ours as its first: a blockquote starts where a `>` line follows a non-`>` line,
-  // and the block is a callout only if that opening line carries the marker.
+  // link would have gone unchecked (mwg-train-0ts).
+  //
+  // The unit is the block, and the block ends at a blank line rather than at the last `>` line. That distinction is
+  // what the review's edge-case table was about: a lazy continuation line carries no `>` but is still inside the
+  // blockquote, so a callout whose second line is a lazy continuation does not end there, and a later `>` line is
+  // still the same callout. A blank line ends it, and the next opening line decides again. A quotation nested inside
+  // a callout (`> > text`) is not distinguished - one level of tracking, not a depth counter (mwg-train-0ts review).
   const calloutOpener = /^\s{0,3}>\s{0,3}\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]/;
   const quotedFlags = (() => {
     const flags = [];
-    let previousWasQuote = false;
+    let inBlock = false;
     let inCallout = false;
     for (const line of lines) {
       const isQuote = /^\s{0,3}>/.test(line);
-      if (isQuote && !previousWasQuote) inCallout = calloutOpener.test(line);
-      flags.push(isQuote && !inCallout);
-      previousWasQuote = isQuote;
+      // Only an opening line decides the kind of block; a continuation line must not reset it.
+      if (isQuote && !inBlock) inCallout = calloutOpener.test(line);
+      // A lazy continuation of a blockquote carries no `>`, so `isQuote` alone cannot mean "inside".
+      if (isQuote) inBlock = true;
+      flags.push(inBlock && !inCallout);
+      if (line.trim() === '') {
+        inBlock = false;
+        inCallout = false;
+      }
     }
     return flags;
   })();
