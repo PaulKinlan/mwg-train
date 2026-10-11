@@ -63,6 +63,17 @@ const TIMEOUT_MS = 180_000;
 export const BOARD_WIDTH = 1376;
 export const BOARD_HEIGHT = 768;
 
+/**
+ * The date every board is asked to treat as today, written into the prompt.
+ *
+ * This is a RECORDED constant, not `new Date()`, and it has to stay one: the composed prompt is what the register pins
+ * by digest, and a prompt that changed with the wall clock would stop matching the committed `prompt.txt` files the
+ * next morning. It exists because asking for "the near future" without saying when now is produced dates in 2023 and
+ * 2024 - the model's own training cut-off - which is how the second batch came back with twenty stale dates. Changing
+ * this line invalidates every committed board prompt and requires regenerating all of them.
+ */
+export const BOARD_PROMPT_DATE = '11 October 2026';
+
 /** Boards, prompts and the register. All three live under `docs/`, which is enforced rather than assumed. */
 export const BOARD_DIR = 'docs/design/training';
 export const REGISTER_PATH = 'docs/provenance/assets/training-reference-boards.md';
@@ -250,16 +261,20 @@ export function composePrompt(sources) {
   // Written as instruction prose rather than `LABEL: value` blocks: the first batch's blocks were rendered onto the
   // page on at least one board, which printed "home (/) route" and "locale en-GB" in the hero.
   return [
-    `Create a finished, high-density screenshot of a real production website. The screenshot is ONE full-bleed 16:9 ` +
-      `desktop browser window (${BOARD_WIDTH}x${BOARD_HEIGHT}): the browser chrome runs along the top edge - macOS-style ` +
+    `Create a finished, high-density screenshot of a real production website. The screenshot is ONE browser viewport ` +
+      `plus its chrome, at 16:9 (${BOARD_WIDTH}x${BOARD_HEIGHT}): the browser chrome runs along the top edge - macOS-style ` +
       `window controls, a single tab, and an address bar reading the URL "https://${inventedDomain(siteName, family.family_id)}${page}" - ` +
-      `and the website's own content fills the rest of the image, touching the left, right and bottom edges. Draw no ` +
-      `desktop wallpaper, no window shadow, no rounded card and no margin around the window. Show exactly one browser ` +
-      `window and one page, at one scroll position, scrolled to the top, with its complete footer visible. Never show the ` +
-      `same page twice, two windows side by side, or the frame split into two panes. This is a real screenshot, NOT a ` +
-      `sketch, NOT a wireframe, NOT a hand-drawn illustration, NOT a diagram, NOT low-fidelity.`,
+      `and below it the page fills the rest of the image. The image is cropped tight to the page: the content runs past ` +
+      `the left, right and bottom edges and you never see where the page ends horizontally. Draw no desktop wallpaper, no ` +
+      `window shadow, no rounded card, no surrounding margin and no second window or pane. Show exactly one page at one ` +
+      `scroll position, scrolled to the top, with its complete footer visible, and never show the same page twice or ` +
+      `split the frame into two panes or a comparison layout. This is a real screenshot, NOT a sketch, NOT a wireframe, ` +
+      `NOT a hand-drawn illustration, NOT a diagram, NOT low-fidelity.`,
     `The site is ${siteName}, a ${family.archetype} website about ${family.title}. Its owner describes it in these ` +
       `words: "${brief.prompt}" Write the page's copy in ${brief.locale} conventions. ${localeConventions(brief.locale)}`,
+    `Today's date is ${BOARD_PROMPT_DATE}. Date every event, booking, session, deadline, ledger entry and review on the ` +
+      `page in the weeks and months AFTER that date, never before it, and give each date the weekday it actually falls ` +
+      `on in that year.`,
     `The page in view is the site's home page. Its structure, top to bottom: ${structure || 'a brand header, a working surface and a footer'}. ` +
       `It must show, as a visitor would meet it: ${journeys.map((journey) => sentence(journey).replace(/\.?$/, '.')).join(' ')}`,
     fieldLabels.length ? `Controls on the page: ${fieldLabels.map((label) => `"${label}"`).join(', ')}.` : '',
@@ -273,13 +288,16 @@ export function composePrompt(sources) {
       `headings of two to five words, control labels of one to three words - and spell every word correctly. Include a ` +
       `short social-proof row of two or three customer reviews with star ratings wherever the page type allows, each ` +
       `reviewer a different invented name shown beside a small portrait, and a footer carrying the business's contact ` +
-      `details. Include at least one large editorial-quality photograph where the subject has something to photograph. ` +
-      `Never use lorem ipsum, "Your Company", "Placeholder", "John Doe", example.com addresses, or any real company ` +
-      `name, brand, trademark or third-party logo; use only invented fictional organisations, people, addresses and domains.`,
-    `This paragraph is instruction for you, not copy for the page: print no route path, no selector or class name, no ` +
-      `locale code, no file name, no date-format token such as MM/DD/YYYY, and no other technical detail on the page. Date ` +
-      `every event in the near future, give each one the weekday that date actually falls on, and make every total agree ` +
-      `with the rows it summarises.`,
+      `details. Include at least one large editorial-quality photograph where the subject has something to photograph, ` +
+      `sized as a hero or feature image that spans at least a third of the image's width, and never a thumbnail where a ` +
+      `large photograph belongs.`,
+    `Never use lorem ipsum, "Your Company", "Placeholder", "John Doe", example.com or example.co.uk addresses, a real ` +
+      `email provider such as gmail.com or fastmail, a real company or brand name or logo, or provider branding on a map ` +
+      `or chart; use only invented fictional organisations, people, addresses and domains.`,
+    `This paragraph is instruction for you, not copy for the page: print no URL, query string or slash-path text ` +
+      `anywhere except the address bar, no selector or class name, no locale code, no file name, no date-format token ` +
+      `such as MM/DD/YYYY, and no other technical detail on the page. Make every total agree with the rows it ` +
+      `summarises, and give every row, card and control its own distinct content.`,
     antiPatterns.length ? `Avoid: ${antiPatterns.join('; ')}.` : '',
   ]
     .filter((line) => line !== '')
@@ -398,8 +416,10 @@ export function renderRegister(entries, { generatedOn = null } = {}) {
     `- **Prompts:** composed deterministically from each family's own committed sources - its canonical (\`-v1\`) row in ` +
       `[\`docs/train/briefs/manifest.jsonl\`](../../train/briefs/manifest.jsonl), its [\`plan.md\`](../../train/design) routes, ` +
       `journeys and fields, and its \`design.md\` palette, typography and anti-patterns - and committed verbatim beside the ` +
-      `board as \`prompt.txt\`. The prompt digest below is over those exact bytes. Composing rather than hand-writing means ` +
-      `the owner's own description of the site is in every prompt verbatim, and the art direction is the family's own ` +
+      `board as \`prompt.txt\`. The prompt digest below is over those exact bytes. Every prompt names the RECORDED date ` +
+      `\`${BOARD_PROMPT_DATE}\` as today and asks for every event after it: the second batch, asked for "the near future" ` +
+      `without being told when now was, dated twenty boards in 2023 and 2024. Composing rather than hand-writing means the ` +
+      `owner's own description of the site is in every prompt verbatim, and the art direction is the family's own ` +
       `\`design.md\` rather than a shared template.`,
     `- **Rights:** [Google consumer-account terms](../accounts/google-antigravity-consumer.md) prohibit using AI-generated ` +
       `service content to develop machine-learning models. These boards are **not** corpus material: ` +

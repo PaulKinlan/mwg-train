@@ -20,6 +20,7 @@ import {
   BOARD_HEIGHT,
   BOARD_MAX_OUTPUT_TOKENS,
   BOARD_MODEL,
+  BOARD_PROMPT_DATE,
   BOARD_TEMPERATURE,
   BOARD_WIDTH,
   REGISTER_PATH,
@@ -87,10 +88,15 @@ test('every prompt is composed from the family own sources and carries the owner
   assert.match(tr01.prompt, /Use £ prices/, 'en-GB families are priced in sterling');
   assert.match(tr01.prompt, /#0f172a/, 'the design.md palette is carried into the prompt');
   assert.match(tr01.prompt, /Avoid: a calendar widget/, 'the design.md anti-patterns are carried into the prompt');
-  assert.match(tr01.prompt, /ONE full-bleed 16:9 desktop browser window/);
-  assert.match(tr01.prompt, /two windows side by side/, 'the duplicate-frame defect that a 16:9 request can trigger is named');
-  assert.match(tr01.prompt, /touching the left, right and bottom edges/, 'the frame is pinned: the page fills the image');
-  assert.match(tr01.prompt, /print no route path, no selector or class name/, 'the model is told not to print the prompt on the page');
+  assert.match(tr01.prompt, /ONE browser viewport/);
+  assert.match(tr01.prompt, /never show the same page twice/, 'the duplicate-frame defect that a 16:9 request can trigger is named');
+  assert.match(tr01.prompt, /cropped tight to the page/, 'the frame is pinned: the page fills the image and is cropped to it');
+  assert.match(tr01.prompt, /print no URL, query string or slash-path text/, 'the model is told not to print the prompt on the page');
+  // The recorded date, not the wall clock: a prompt that moved with `new Date()` would stop matching every committed
+  // prompt.txt the next morning, and the second batch is why it exists - asked for "the near future", the model dated
+  // twenty boards in 2023 and 2024.
+  assert.equal(BOARD_PROMPT_DATE, '11 October 2026');
+  assert.match(tr01.prompt, /Today's date is 11 October 2026\./);
   assert.match(tr01.prompt, /NOT a sketch, NOT a wireframe/);
   assert.doesNotMatch(tr01.prompt, /student model|measured against/i, 'no meta-language about the conformance artefact');
 
