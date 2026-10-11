@@ -200,8 +200,10 @@ like a way in.
   the two disagree and records the
   disagreements rather than treating them as decisions.
 - **The demo** (`demo/`) is the accepted target, hand-written and static. It is not the sealed evaluation
-  target, not part of the pilot corpus, and it stores nothing - it calls no storage API and issues no
-  request, so the name in `#attendee-name` is scripted from the attendee input rather than persisted.
+  target, not part of the pilot corpus, and it stores nothing: it calls no storage API, and it intercepts the
+  form's submit with `preventDefault` and renders the pass in the page, so nothing is sent or persisted. It
+  does load its own stylesheet, as a static page must. Its pass shows the literal sample name `Sarah Jenkins`,
+  replaced from the attendee input when the form is submitted.
 - **The measurements** - every token value, owner and reference count, the geometry, the radii and the
   selectors that carry them, the absence of any shadow and of any monospace family, the type sizes and line
   heights, the gap and padding values, the breakpoints, and the literal-hex count - were read from

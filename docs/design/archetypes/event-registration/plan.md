@@ -67,7 +67,11 @@ four is capacity-aware; they are generator furniture.
   returned in a `Location` header, and the reload assertion is "reloading `/registration/<ref>` still shows
   the stored attendee name" - so one registration is read back by its reference. The `GET /attendees` list
   route reads many at once, so the reference addresses a single record rather than being the only way to
-  read anything; either way, nothing survives the process that wrote it.
+  read anything. The spec then promises less than it may sound: it calls the store "per process, in a file
+  named on the command line - not a durable store", and the generated arm opens a **file-backed** database
+  by default - `pilot.sqlite`, created with `CREATE TABLE IF NOT EXISTS` - which no arm deletes on shutdown.
+  So a registration is not guaranteed to survive the process that wrote it, and it is not guaranteed to
+  disappear either.
 
 ## Journey
 
@@ -155,10 +159,11 @@ useful thing this document can record:
   - Both tree hashes are present for all seven arms and **differ in every one**; unlike the catalogue
     archetype's single identical pair, no arm's uplift left its tree unchanged.
 - **The visual target is hand-written and static.** `demo/` holds an event page (`index.html`), a pass view
-  selected by `?view=pass`, a side-by-side comparison page, and one stylesheet. It answers from no server,
-  holds no credential and stores nothing - not even in the browser, since the demo calls no storage API and
-  issues no request; the reference it shows, `#attendee-name` carrying `Sarah Jenkins`, is scripted from the
-  attendee input.
+  selected by `?view=pass`, a side-by-side comparison page, and one stylesheet. It talks to no backend,
+  holds no credential and stores nothing - not even in the browser, since it calls no storage API, and its
+  script intercepts the form's submit (`preventDefault`) and renders the pass itself, so no registration is
+  ever sent. It does load its own stylesheet and images, as a static page must. The pass it shows carries the
+  literal sample name `Sarah Jenkins`, replaced from the attendee input only when the form is submitted.
 - **The boards are two pictures of one event, framed differently, and one of them is a deliberate
   exception.** The frames rule (`check:archetype-frames`, part of `check:all`) detects browser chrome in
   `step1-event.jpg` and lists it as a **grandfathered** image rather than a failure, because the rule was
