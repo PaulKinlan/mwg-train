@@ -962,9 +962,10 @@ const rawCartRoutes = (archetype, cookieFlags, checkout = null) => {
     ? [
         `    const cartRecord = select.get(cartRef);`,
         `    const cartPriceValue = cartRecord ? JSON.parse(cartRecord.payload)[${JSON.stringify(checkout.price_field)}] : undefined;`,
-        // `Number('')` is 0, so a blank price would be stored as a free item rather than refused: the raw
-        // value is checked before it is coerced (mwg-train-le6 review, P2).
-        `    const cartUnitPrice = cartPriceValue === undefined || String(cartPriceValue).trim() === '' ? NaN : Number(cartPriceValue);`,
+        // `Number('')` and `Number(null)` are both 0, so a blank or null price would be stored as a free
+        // item rather than refused: the raw value is checked before it is coerced (mwg-train-le6 review,
+        // P2 and its P3 note - a row can carry JSON null, which is not the same as an absent key).
+        `    const cartUnitPrice = cartPriceValue === undefined || cartPriceValue === null || String(cartPriceValue).trim() === '' ? NaN : Number(cartPriceValue);`,
         `    if (!Number.isInteger(cartUnitPrice) || cartUnitPrice < 0) {`,
         `      response.writeHead(422, { 'content-type': 'text/plain; charset=utf-8' });`,
         `      return response.end('That item has no price to check out with.');`,
@@ -1007,7 +1008,7 @@ const honoCartRoutes = (archetype, cookieFlags, checkout = null) => {
     ? [
         `  const cartRecord = select.get(cartRef);`,
         `  const cartPriceValue = cartRecord ? JSON.parse(cartRecord.payload)[${JSON.stringify(checkout.price_field)}] : undefined;`,
-        `  const cartUnitPrice = cartPriceValue === undefined || String(cartPriceValue).trim() === '' ? NaN : Number(cartPriceValue);`,
+        `  const cartUnitPrice = cartPriceValue === undefined || cartPriceValue === null || String(cartPriceValue).trim() === '' ? NaN : Number(cartPriceValue);`,
         `  if (!Number.isInteger(cartUnitPrice) || cartUnitPrice < 0) return c.text('That item has no price to check out with.', 422);`,
       ].join('\n')
     : '';

@@ -346,6 +346,19 @@ test('a product whose price the form may omit cannot be added to the cart as a f
     assert.equal(add.status, 422, 'a priceless item is refused rather than added at zero');
     const cart = await (await fetch(`${base}/cart`, { headers: { cookie: (add.headers.get('set-cookie') ?? '').split(';')[0] } })).text();
     assert.match(cart, /0 line\(s\), 0 item\(s\)/, 'the refused item did not enter the cart');
+
+    // JSON null is not an absent key: `String(null)` is 'null' (not empty) and `Number(null)` is 0, so a
+    // row seeded with a null price took the £0.00 path the blank check was supposed to close (review P3
+    // note). The stored payload is rewritten the way a direct write would leave it.
+    const { DatabaseSync } = await import('node:sqlite');
+    const database = new DatabaseSync(join(dir, 'test.sqlite'));
+    const stored = JSON.parse(database.prepare('SELECT payload FROM records WHERE ref = ?').get(ref).payload);
+    database.prepare('UPDATE records SET payload = ? WHERE ref = ?').run(JSON.stringify({ ...stored, price_minor: null }), ref);
+    database.close();
+    const nullPrice = await post('/cart/add', { ref, variant: 'Dabinett Heritage', quantity: '1' });
+    assert.equal(nullPrice.status, 422, 'a null price is refused rather than added at zero');
+    const afterNull = await (await fetch(`${base}/cart`, { headers: { cookie: (nullPrice.headers.get('set-cookie') ?? '').split(';')[0] } })).text();
+    assert.match(afterNull, /0 line\(s\), 0 item\(s\)/, 'the null-priced item did not enter the cart');
   } finally {
     child.kill('SIGKILL');
     rmSync(dir, { recursive: true, force: true });
