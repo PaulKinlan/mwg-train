@@ -208,6 +208,18 @@ export function validateSpec(spec) {
 
   if (!isObject(spec.echo)) at('echo', 'every archetype shows a value back to the user');
   else if (!isString(spec.echo.field)) at('echo.field', 'must name the echoed field');
+  else if (Array.isArray(spec.fields) && !spec.fields.some((field) => field?.slug === spec.echo.field)) {
+    // The generator resolves this slug to a declared field and then reads that field's name. Resolving it to
+    // nothing used to validate cleanly and die inside the generator with a TypeError that named neither the echo
+    // block nor the field - which is the one thing this format is not allowed to do, since it exists to make sure
+    // an unreadable specification cannot rebuild a project that merely looks plausible. The guard on Array.isArray
+    // matters because `at` records a problem and keeps going, so a specification with non-array fields reaches
+    // here, and a validator that throws on the input it is meant to judge is worse than the bug. The declared
+    // slugs are named because a refusal that does not say what would have worked sends the next person into the
+    // same wall.
+    const slugs = spec.fields.map((field) => field?.slug).filter(isString);
+    at('echo.field', `names ${spec.echo.field}, which no declared field has${slugs.length > 0 ? `; declared: ${slugs.join(', ')}` : ''}`);
+  }
 
   if (!Array.isArray(spec.acceptance) || spec.acceptance.length === 0) at('acceptance', 'must state what has to be true for a pair to count');
 

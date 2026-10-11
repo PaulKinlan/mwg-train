@@ -352,3 +352,44 @@ test('a specification that is missing a functional fact is refused, not rebuilt'
   assert.equal(SPECS_DIR, 'docs/eval/specs');
   assert.ok(readFileSync(join(ROOT, SPECS_DIR, 'booking.json'), 'utf8').includes('reload_assertion'));
 });
+
+test('an echo naming a field the specification does not declare is refused, not deferred to the generator', () => {
+  // The generator resolves echo.field to a declared field by slug and then reads that field's name, in the raw and
+  // hono arms alike. Before this check a specification naming a field it never declared validated cleanly, and the
+  // generator then died with a TypeError that named neither the echo block nor the field - reproduced, not assumed.
+  // The point of the format is that an unreadable specification cannot rebuild a project that merely looks
+  // plausible, so this must be a refusal.
+  const base = read('booking');
+  const declared = base.fields.map((field) => field.slug);
+  assert.ok(declared.includes(base.echo.field), 'the corpus echoes a field it declares, so the rule cannot be refusing a correct specification');
+  assert.deepEqual(validateSpec(base), [], 'the unaltered specification stays clean');
+
+  const problems = validateSpec({ ...base, echo: { ...base.echo, field: 'no-such-field' } });
+  assert.equal(problems.length, 1, `expected exactly one problem, got: ${problems.join(' | ')}`);
+  assert.match(problems[0], /echo\.field/, 'the problem names the echo block');
+  assert.match(problems[0], /no-such-field/, 'the problem names the field that was written');
+  for (const slug of declared) {
+    assert.ok(problems[0].includes(slug), `the problem names every declared slug, including ${slug}, so the next person is not sent into the same wall`);
+  }
+
+  // The earlier rules still answer first for their own inputs: a non-string field is not a slug problem.
+  assert.match(validateSpec({ ...base, echo: { ...base.echo, field: 7 } })[0], /must name the echoed field/);
+  // An absent echo object is still its own problem, not a crash.
+  assert.match(validateSpec({ ...base, echo: undefined })[0], /shows a value back to the user/);
+
+  // `at` records a problem and continues, so an empty fields list reaches the cross-check. It must report rather
+  // than throw, and with nothing declared there is no list to name.
+  const emptied = validateSpec({ ...base, fields: [] }).find((problem) => problem.includes('echo.field'));
+  assert.ok(emptied, 'an empty fields list still gets an echo problem rather than a crash');
+  assert.match(emptied, /no declared field has/);
+});
+
+test('no family in the corpus is refused by the echo cross-check', () => {
+  // The other direction, because a validator that starts refusing documents which ship is a worse bug than the one
+  // being fixed. This asserts only this rule's own verdict, so it stays true even if some family has an unrelated
+  // problem of its own.
+  for (const family of ARCHETYPE_IDS) {
+    const refused = validateSpec(read(family)).filter((problem) => problem.includes('echo.field') && problem.includes('no declared field has'));
+    assert.deepEqual(refused, [], `${family}: the echo cross-check refuses a specification that ships`);
+  }
+});
