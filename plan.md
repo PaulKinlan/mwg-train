@@ -69,7 +69,7 @@ The landings that put the pipeline where it is:
 | 2026-10-08 | The backend-agnostic training seam, Fireworks managed plus a cluster stub (bead `mwg-train-rff`) | `4b2cec7` |
 | 2026-10-10 | `pilot/TRAINING_CORPUS.json` — 210 accepted projects, 2,748,147 derived tokens | — |
 | 2026-10-11 | The 30 designed reference boards, regenerated and registered (bead `mwg-train-mhd`) | `88eeb13` |
-| 2026-10-11 | The build key: archetype x framework x model recorded on every build (bead `mwg-train-gzi`) | `2927788` |
+| 2026-10-11 | The build key: archetype x framework x model recorded on every build (bead `mwg-train-gzi`) | `2927784` |
 | 2026-10-11 | `/concepts` shows all 30 training families, designed board beside harness instrument (bead `mwg-train-0xc`) | `8fbd58e` |
 
 ## 5. What is in flight — and why it is not pipeline progress
@@ -100,7 +100,7 @@ Until then, stage 8 (the sealed evaluation) cannot start, because arm **T** does
 | --- | --- | --- |
 | Does the corpus cover the archetype **types** Paul asked for, not just 30 subjects? | Open. `mwg-train-efg` is defining the type axis and mapping the existing 30 onto it. | `mwg-train-efg` (in progress) |
 | Does every framework build draw on its archetype's asset set? | Half open. The store landed; the consumption half is `mwg-train-o3t`. | `mwg-train-o3t` (in progress) |
-| Per-archetype, per-framework, or per-model keying? | Answered for *measurement*, open for *assets*. A build is keyed archetype x framework x model in code (bead `mwg-train-gzi`, `2927788`), so two builds of one archetype in different frameworks, or by different models, are never confused. What is still open is whether the shared asset set is keyed per archetype alone or per archetype *and* framework where the framework genuinely changes the resource — a question `mwg-train-fom` recorded for its owner and left unanswered, and one that bites again in `mwg-train-o3t`. | `mwg-train-o3t` / `mwg-train-fom` (mhd) |
+| Per-archetype, per-framework, or per-model keying? | Answered for *measurement*, open for *assets*. A build is keyed archetype x framework x model in code (bead `mwg-train-gzi`, `2927784`), so two builds of one archetype in different frameworks, or by different models, are never confused. What is still open is whether the shared asset set is keyed per archetype alone or per archetype *and* framework where the framework genuinely changes the resource — a question `mwg-train-fom` recorded for its owner and left unanswered, and one that bites again in `mwg-train-o3t`. | `mwg-train-o3t` / `mwg-train-fom` (mhd) |
 | Which brand is the booking archetype? Its boards say "Evening Class Studio" and its demo page says "Learning Hub". | Open, and a product decision rather than a code bug — the existing adjudication in the tree is marked PROVISIONAL. Carries the `needs-paul` label. | **Paul** (via `mwg-train-4xg`) |
 | What is the **rollback** if a quarantined asset is promoted into the public tree? | **Open, and unowned.** Promotion is explicit and append-only: [`scripts/promote.mjs`](scripts/promote.mjs) appends to `docs/provenance/promotions.jsonl` (absent) and refuses a target that already exists, so a promotion can only ever add. No promotion has been made — the ledger has never been created — `grep -rniE 'roll.?back' docs/ scripts/ src/` returns nothing, and a public commit cannot be unpublished. The cordon is well built on the way in and undocumented on the way back. | **unassigned** |
 | What does the first training run cost, per backend, per accepted pair? | Deferred. `mwg-train-f92` holds the projection. | `mwg-train-f92` (deferred) |
@@ -122,11 +122,11 @@ One more artefact needs naming because it is easy to misread: the 30 designed re
 node --test test/plan.test.mjs      # this file's own checks: sections, commands, paths, seal, snapshot
 git log -1 --format='%h %ad' --date=short origin/main
 npm run check:briefs                # the seal quoted in stage 1
-jq '.training.counts' pilot/TRAINING_CORPUS.json
-jq '.counts' pilot/CORPUS.json
+jq '.summary' pilot/TRAINING_CORPUS.json    # 30 families, 7 frameworks, 210 projects
+jq '.summary' pilot/CORPUS.json             # 35 attempted, 34 accepted, yield 0.971
 ls docs/design/training/*/reference.jpg | wc -l
 npm run check:train-design
 npm run viewer -- --corpus pilot    # stages 3-5 as a page, on :7700
 ```
 
-The test fails if this file cites an `npm run` script that does not exist, a repository path that is not there, a seal that has moved, or a snapshot commit that is not in history — and if a training command ever appears in `package.json` while stage 7 still claims none exists. When a stage's state changes, change its row and move the snapshot marker at the top of this file; do not add a second copy of the state anywhere else.
+The test fails if this file cites an `npm run` script that does not exist, a repository path that is not there (or calls a path absent when it now exists), a relative link that does not resolve, a commit sha that is not in history or a landings row whose date disagrees with its commit, a seal that has moved, or a snapshot commit that is not in history — and if a training command ever appears in `package.json` while stage 7 still claims none exists. When a stage's state changes, change its row and move the snapshot marker at the top of this file; do not add a second copy of the state anywhere else.

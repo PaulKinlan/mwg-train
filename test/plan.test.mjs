@@ -62,10 +62,19 @@ test('every npm script the plan cites exists', () => {
   }
 });
 
-test('every repository path the plan cites is on disk', () => {
+test('every repository path the plan cites is on disk, and every path it calls absent really is', () => {
+  // A path the plan names as ABSENT (followed by "(absent)") is a claim about the tree too - and the
+  // one claim that gets stale in the flattering direction, because the file appearing means the plan
+  // now says something is missing that is there. So it is asserted, not skipped (review finding
+  // mwg-train-sk5: the first version stripped these paths from the check instead).
+  const absent = [...plan.matchAll(/`([A-Za-z0-9_.-]+\/[A-Za-z0-9_./-]+)`[^\n]{0,4}\(absent\)/g)].map((match) => match[1]);
+  assert.ok(absent.length >= 1, 'the plan should name what is deliberately absent (the promotion ledger)');
+  for (const path of absent) {
+    assert.equal(existsSync(resolve(ROOT, path)), false, `plan.md calls ${path} absent, but it is in the tree now - update the plan`);
+  }
+
   // Backticked, slash-bearing, literal paths only: globs and <placeholders> say what they are, and
-  // anything without a slash is prose rather than a claim about a file. A path the plan names as
-  // ABSENT (followed by "(absent)") is a claim about the tree too, and is checked as one.
+  // anything without a slash is prose rather than a claim about a file.
   const checkable = plan.replace(/`[^`]+`[^\n]{0,4}\(absent\)/g, '');
   const cited = new Set(
     [...checkable.matchAll(/`([A-Za-z0-9_.-]+\/[A-Za-z0-9_./-]+)`/g)]
@@ -90,6 +99,24 @@ test('every relative link in the plan resolves', () => {
   for (const target of targets) {
     const path = target.split('#')[0];
     assert.equal(existsSync(resolve(ROOT, path)), true, `plan.md links to ${target}, which does not resolve`);
+  }
+});
+
+test('every commit sha the plan cites is in history, and dated as its row says', () => {
+  // The failure this catches is mine: the first version of plan.md pinned the build-key landing to
+  // `2927788`, a sha that does not exist, taken from a briefing instead of from git. Every backticked
+  // bare hex sha is resolved, and each landings row's date is compared with its commit's own date so
+  // a wrong-but-existing sha is caught too. It does not prove the commit did what the row says.
+  const cited = [...plan.matchAll(/`([0-9a-f]{7,40})`/g)].map((match) => match[1]);
+  assert.ok(cited.length >= 5, `expected the plan to pin its landings by sha, found ${cited.length}`);
+  for (const sha of cited) {
+    execFileSync('git', ['cat-file', '-e', `${sha}^{commit}`], { cwd: ROOT, encoding: 'utf8', stdio: 'pipe' });
+  }
+  const rows = [...plan.matchAll(/^\| (\d{4}-\d{2}-\d{2}) \|[^\n]*?\| `([0-9a-f]{7,40})` \|$/gm)];
+  assert.ok(rows.length >= 5, `expected dated landing rows, found ${rows.length}`);
+  for (const [, date, sha] of rows) {
+    const committed = execFileSync('git', ['log', '-1', '--format=%ad', '--date=short', sha], { cwd: ROOT, encoding: 'utf8' }).trim();
+    assert.equal(committed, date, `the landing row says ${sha} is ${date}, but ${sha} is dated ${committed}`);
   }
 });
 
