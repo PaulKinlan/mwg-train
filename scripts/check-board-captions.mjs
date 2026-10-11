@@ -44,6 +44,32 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const MIN_SHOWN = 8;
 
 /**
+ * The parts of a comparison page a browser renders, with the parts it does not removed.
+ *
+ * Both inventories are built from this rather than from the file's raw bytes, because markup that is present
+ * but not rendered used to satisfy the check: a board and its correct caption wrapped in an HTML comment were
+ * found by both regexes, hashed correctly, and counted as displayed while a reader saw nothing (review
+ * round 3). Comments, and the bodies of script, style, template, noscript and textarea elements, are removed
+ * here. What remains out of scope is honest rather than implied: this is text, not layout, so an image hidden
+ * by a stylesheet, by a class or by `aria-hidden` is not detected - a browser-driven check would be needed for
+ * that, and these pages are static markup whose visibility is expressed in the markup itself.
+ *
+ * @param {string} html
+ * @returns {string}
+ */
+export function renderedText(html) {
+  return html
+    .replace(/<!--[\s\S]*?-->/g, ' ')
+    .replace(/<(script|style|template|noscript|textarea)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, ' ');
+}
+
+/** True when the element's own markup keeps it out of the rendering, which is as far as a text scan reaches. */
+function hiddenByMarkup(tag) {
+  if (/\shidden(?=[\s/>])/i.test(tag)) return true;
+  return /style\s*=\s*("[^"]*display\s*:\s*none[^"]*"|'[^']*display\s*:\s*none[^']*')/i.test(tag);
+}
+
+/**
  * Comparison pages that display boards without any SHA-256 caption, and are not expected to gain one here.
  * Their boards predate the Wave 2 set and their pages never printed a digest, so there is nothing to pin
  * and nothing false to correct. They are named rather than inferred, so a page that loses its captions
@@ -100,12 +126,14 @@ function resolveCaptionBoard(file, archetypeDir, source) {
  */
 export function displayedBoards({ file, html, archetypeDir }) {
   const rel = path.relative(ROOT, file);
+  const text = renderedText(html);
   const boards = [];
   const findings = [];
   IMG_TAG.lastIndex = 0;
   let match;
-  while ((match = IMG_TAG.exec(html))) {
+  while ((match = IMG_TAG.exec(text))) {
     const tag = match[0];
+    if (hiddenByMarkup(tag)) continue; // the element is in the file but not in the rendering
     const src = SRC.exec(tag);
     if (!src) {
       // An <img> with no readable src is not a board this check can pin, and silently ignoring it is what
@@ -156,7 +184,8 @@ export function committedBoards(archetypeDir) {
 export function captionFindings({ file, html, archetypeDir, label = path.relative(ROOT, file), captionsRequired = true }) {
   const findings = [];
   const rel = label;
-  const mentions = (html.match(MENTION) || []).length;
+  const text = renderedText(html);
+  const mentions = (text.match(MENTION) || []).length;
   const { boards, findings: displayFindings } = displayedBoards({ file, html, archetypeDir });
   findings.push(...displayFindings);
 
@@ -166,7 +195,7 @@ export function captionFindings({ file, html, archetypeDir, label = path.relativ
 
   CAPTION.lastIndex = 0;
   let match;
-  while ((match = CAPTION.exec(html))) {
+  while ((match = CAPTION.exec(text))) {
     parsed += 1;
     const [, source, shown] = match;
     const board = resolveCaptionBoard(file, archetypeDir, source);
@@ -239,8 +268,9 @@ export function checkBoardCaptions({ repoRoot = ROOT } = {}) {
     if (!fs.existsSync(file)) continue;
     pages += 1;
     const html = fs.readFileSync(file, 'utf8');
+    const text = renderedText(html);
     const label = path.relative(repoRoot, file);
-    captions += (html.match(CAPTION) || []).length;
+    captions += (text.match(CAPTION) || []).length;
     const { boards: displayed } = displayedBoards({ file, html, archetypeDir });
     boards += displayed.length;
     // A comparison page exists to show its archetype's boards, so every committed board must be on it.

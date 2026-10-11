@@ -21,7 +21,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { CAPTION, UNCAPTIONED_BY_DESIGN, checkBoardCaptions, captionFindings } from '../scripts/check-board-captions.mjs';
+import { CAPTION, UNCAPTIONED_BY_DESIGN, checkBoardCaptions, captionFindings, renderedText } from '../scripts/check-board-captions.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const CHECK = join(ROOT, 'scripts', 'check-board-captions.mjs');
@@ -239,6 +239,57 @@ test('a page that stops displaying a committed board is a finding', () => {
     assert.equal(result.ok, false);
     assert.ok(result.findings.some((f) => /does not display step1-grid\.jpg, which its archetype commits/.test(f)), result.findings.join(' | '));
   });
+});
+
+test('a commented-out board and caption do not satisfy the check', () => {
+  // Review round 3: markup wrapped in an HTML comment is present in the file and absent from the rendering.
+  // Both inventories are built from rendered text now, so this page displays nothing and must fail.
+  const prefix = sha256(BOARD).slice(0, 10);
+  const html = `<div>\n  <!-- removed for now\n  <img src="../step1-grid.jpg" alt="board">\n  ${wave2Caption(`${prefix}\u2026`)}\n  -->\n</div>\n`;
+  withFixture({ html }, (holder) => {
+    // Nothing is rendered, so there are no boards and no captions: the finding belongs to the page-level rule
+    // that a comparison page must display every board its archetype commits, which is what catches this.
+    const result = checkBoardCaptions({ repoRoot: holder.root });
+    assert.equal(result.ok, false, 'a fully commented-out board must fail the page check');
+    assert.equal(result.findings.filter((f) => /does not display step1-grid\.jpg/.test(f)).length, 1, result.findings.join(' | '));
+    assert.equal(result.captions, 0, 'a commented-out caption must not be counted');
+    assert.equal(result.boards, 0, 'a commented-out image must not be counted as displayed');
+  });
+});
+
+test('markup inside script, style, template and noscript bodies is not rendered content', () => {
+  const prefix = sha256(BOARD).slice(0, 10);
+  const pair = `<img src="../step1-grid.jpg">${wave2Caption(`${prefix}\u2026`)}`;
+  for (const [open, close] of [['<script>', '</script>'], ['<style>', '</style>'], ['<template>', '</template>'], ['<noscript>', '</noscript>']]) {
+    const html = `<div>${open}${pair}${close}</div>`;
+    withFixture({ html }, (holder) => {
+      // Same shape as the commented-out case: the pair leaves the inventories, so the page-level rule that
+      // every committed board is displayed is what reports it.
+      const result = checkBoardCaptions({ repoRoot: holder.root });
+      assert.equal(result.ok, false, `${open} content must not satisfy the page check`);
+      assert.equal(result.captions, 0, `${open}: the caption must not be counted`);
+      assert.equal(result.boards, 0, `${open}: the image must not be counted as displayed`);
+    });
+  }
+});
+
+test('an image hidden by its own markup is not displayed', () => {
+  const prefix = sha256(BOARD).slice(0, 10);
+  for (const img of ['<img hidden src="../step1-grid.jpg">', '<img style="display:none" src="../step1-grid.jpg">']) {
+    const html = `<div>${img}${wave2Caption(`${prefix}\u2026`)}</div>`;
+    withFixture({ html }, (holder) => {
+      const findings = captionFindings({ file: holder.file, html, archetypeDir: holder.archetypeDir });
+      assert.ok(findings.some((f) => /does not display|but prints no SHA-256 caption|does not display/.test(f)), `${img}: ${findings.join(' | ')}`);
+    });
+  }
+});
+
+test('renderedText removes comments and non-rendered element bodies, and keeps ordinary markup', () => {
+  const html = `<p>a</p><!-- <p>b</p> --><script>const x = '<p>c</p>';</script><style>/* <p>d</p> */</style><p>e</p>`;
+  const text = renderedText(html);
+  assert.match(text, /<p>a<\/p>/);
+  assert.match(text, /<p>e<\/p>/);
+  assert.doesNotMatch(text, /b<\/p>|c<\/p>|d<\/p>/);
 });
 
 test('the exported regex only pairs a filename with a digest in the same element', () => {
