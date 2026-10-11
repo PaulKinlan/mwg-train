@@ -103,7 +103,12 @@ test('tuning routes serve only fixed training targets, never eval targets or mut
   assert.equal(refAsset.status, 200);
   assert.match(refAsset.headers.get('content-type'), /image\/jpeg/);
   assert.equal((await refAsset.arrayBuffer()).byteLength > 1000, true);
-  assert.equal((await fetch(`${base}/tuning/reference/tr-03.jpg`)).status, 404);
+  // Every training family now has a board, so there is no real family left whose file is missing - tr-03 used to be
+  // that case and this assertion would have gone on passing only while the corpus stayed incomplete. The missing-file,
+  // non-JPEG and symlink refusals are exercised against a purpose-built tree in
+  // test/viewer-reference-route.test.mjs (tr-99, a file named reference.jpg that is HTML, and a symlinked family).
+  // What matters here is that an id that is not a training family at all is still refused.
+  assert.equal((await fetch(`${base}/tuning/reference/tr-99.jpg`)).status, 404);
   assert.equal((await fetch(`${base}/tuning/reference/fam-r01.jpg`)).status, 404);
 
   assert.equal((await fetch(`${base}/tuning/target/fam-r01.png`)).status, 404);
@@ -184,31 +189,45 @@ test('workbench renders high-fidelity reference board when present, and degrades
   assert.match(htmlWithRef, new RegExp(`${board.width} \u00d7 ${board.height} px`));
   assert.match(htmlWithRef, /docs\/design\/training\/tr-01\/reference\.jpg/);
 
-  // tr-03 does not have a reference board
-  const htmlWithoutRef = renderTuning({ data, repoRoot: ROOT, familyId: 'tr-03', variant: 'v1', framework: 'raw' });
-  assert.doesNotMatch(htmlWithoutRef, /src="\/tuning\/reference\/tr-03\.jpg"/);
-  assert.match(htmlWithoutRef, /No reference board yet for this family\./);
-  // The empty-state copy names WHICH families have boards, so this must ask the tree rather than restate a list. This
-  // assertion used to be the literal string "tr-01, tr-02, and tr-04", which meant the test held the stale copy in
-  // place: it would have kept passing while the page told an operator that three boards existed and the rest were
-  // pending. That is precisely the failure this bead exists to remove - a copy restating a fact that already has a
-  // source - and a test written against the copy cannot see it. Deriving the expectation here is what makes a
-  // reintroduced hardcoded list fail as soon as the tree changes.
+  // The empty state is what an operator sees for a family whose board has not been generated yet. Every training
+  // family now has one, so there is no real family left to exercise it with - this used to point at tr-03, which was
+  // the last family without a board, and would have gone on passing only while the corpus stayed incomplete. The state
+  // is reached here through a temporary root that holds a board for tr-02 and none for the family being inspected,
+  // which tests both directions of the derived copy: it must name the family that has a board and no other.
+  const absentRoot = mkdtempSync(join(tmpdir(), 'viewer-tuning-noboard-'));
+  try {
+    mkdirSync(join(absentRoot, 'docs', 'design', 'training', 'tr-02'), { recursive: true });
+    writeFileSync(join(absentRoot, 'docs', 'design', 'training', 'tr-02', 'reference.jpg'), Buffer.from([0xff, 0xd8, 0xff, 0xd9]));
+    const htmlWithoutRef = renderTuning({ data, repoRoot: absentRoot, familyId: 'tr-01', variant: 'v1', framework: 'raw' });
+    assert.doesNotMatch(htmlWithoutRef, /src="\/tuning\/reference\/tr-01\.jpg"/);
+    assert.match(htmlWithoutRef, /No reference board yet for this family\./);
+    // The copy names WHICH families have boards, so it must ask the tree rather than restate a list: it names tr-02,
+    // the only board in this root, and claims nothing about a family that has none. This assertion used to be the
+    // literal string "tr-01, tr-02, and tr-04", which held the stale copy in place while the page told operators that
+    // three boards existed and the rest were pending.
+    assert.match(htmlWithoutRef, /<code>tr-02<\/code>/, 'the empty state must name the family that has a board on disk');
+    assert.doesNotMatch(htmlWithoutRef, /<code>tr-03<\/code>/, 'the empty state must not name a family with no board');
+    assert.match(htmlWithoutRef, /Reference board<\/dt><dd><span class="muted">no reference board yet for this family<\/span><\/dd>/);
+  } finally {
+    rmSync(absentRoot, { recursive: true, force: true });
+  }
+
+  // And the direction that matters most now that the corpus is complete: the tree and the page agree about every
+  // family, so a board added to disk without the page listing it - or a page listing a family whose board was never
+  // generated - fails here.
   const boardDir = join(ROOT, 'docs', 'design', 'training');
-  const boardFamilies = readdirSync(boardDir)
-    .filter((name) => /^tr-\d{2}$/.test(name) && existsSync(join(boardDir, name, 'reference.jpg')))
-    .sort();
+  const allFamilies = readdirSync(boardDir).filter((name) => /^tr-\d{2}$/.test(name)).sort();
+  const boardFamilies = allFamilies.filter((name) => existsSync(join(boardDir, name, 'reference.jpg')));
   assert.ok(boardFamilies.length >= 1, 'expected at least one authored board on disk, or this assertion means nothing');
-  for (const family of boardFamilies) {
-    assert.match(htmlWithoutRef, new RegExp(`<code>${family}</code>`), `the empty state must name ${family}, which has a board on disk`);
+  for (const family of allFamilies) {
+    const html = renderTuning({ data, repoRoot: ROOT, familyId: family, variant: 'v1', framework: 'raw' });
+    const hasBoard = boardFamilies.includes(family);
+    assert.equal(
+      new RegExp(`src="/tuning/reference/${family}\.jpg"`).test(html),
+      hasBoard,
+      `${family}: the page and the tree must agree about whether a reference board exists`,
+    );
   }
-  // And the converse direction, which is the one the stale copy would fail in once a fourth board landed: it must not
-  // name a family that has no board.
-  const allFamilies = readdirSync(boardDir).filter((name) => /^tr-\d{2}$/.test(name));
-  for (const family of allFamilies.filter((name) => !boardFamilies.includes(name))) {
-    assert.doesNotMatch(htmlWithoutRef, new RegExp(`<code>${family}</code>`), `the empty state must not claim ${family} has a board`);
-  }
-  assert.match(htmlWithoutRef, /Reference board<\/dt><dd><span class="muted">no reference board yet for this family<\/span><\/dd>/);
 });
 
 test('workbench renders side-by-side prompt comparison with legible differences', () => {

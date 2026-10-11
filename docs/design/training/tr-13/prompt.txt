@@ -1,0 +1,27 @@
+Create a finished, high-density screenshot of a real production website. The screenshot is ONE browser viewport plus its chrome, at 16:9 (1376x768): the browser chrome runs along the top edge - macOS-style window controls, a single tab, and an address bar reading the URL "https://urbansoil.shop/" - and below it the page fills the rest of the image. The image is cropped tight to the page: the content runs past the left, right and bottom edges and you never see where the page ends horizontally. Draw no desktop wallpaper, no window shadow, no rounded card, no surrounding margin and no second window or pane. Show exactly one page at one scroll position, scrolled to the top, with its complete footer visible, and never show the same page twice or split the frame into two panes or a comparison layout. This is a real screenshot, NOT a sketch, NOT a wireframe, NOT a hand-drawn illustration, NOT a diagram, NOT low-fidelity.
+
+The site is Urban Soil Collaborative — Composting Handbook & Soil Test Registry, a docs-site website about Backyard composting guidelines and soil test registry. Its owner describes it in these words: "Our community garden network needs a documentation handbook for backyard composting alongside a community soil test registry. Gardeners should be able to navigate composting troubleshooting guides by category, search by symptom like foul odour or slow breakdown, and submit local soil pH test results. Soil test submissions must be saved on the server so neighbours can look up soil data by neighbourhood plot." Write the page's copy in en-US conventions. Use $ prices, US English spelling and month-day dates.
+
+Today's date is 11 October 2026. Date every event, booking, session, deadline, ledger entry and review on the page in the weeks and months AFTER that date, never before it, and give each date the weekday it actually falls on in that year.
+
+The page in view is the site's home page. Its structure, top to bottom: a brand header, then a navigation bar, then a main content area, then a content section, then the working form, then a footer. It must show, as a visitor would meet it: Navigate composting documentation chapters and find troubleshooting instructions for nitrogen balance. Enter soil testing measurements including pH, organic matter percentage, and plot sector. Submit soil test results, view the confirmation record, and reload to verify data persistence.
+
+Controls on the page: "Gardener name", "Plot sector or number", "Soil pH measurement", "Organic matter percentage", "Compost and soil notes".
+
+The site also has 5 other pages, which are NOT on this page and must not appear on it.
+
+Art direction: Urban Soil Collaborative — Composting Handbook & Soil Test Registry: the page for backyard composting guidelines and soil test registry, in a light palette, recognisable by its own token prefix rather than by a shared template.
+
+Use exactly this palette: #3b251a (us-earth), #15803d (us-leaf), #fef08a (us-straw), #ffffff (us-card), #e7e5e4 (us-border), #292524 (us-text), #78716c (us-muted). The accent is the only chromatic colour and carries the single primary action.
+
+Structural constants: control-radius 8px, content-frame 1200px, control-border 1px solid var(--us-border), page-padding 1.5rem.
+
+Typography: a system UI sans-serif stack, exactly one h1, and section headings that keep a real document outline.
+
+Every name, address, price, date, quantity, time and label must be specific to this subject and internally consistent with the rest of the page; invent it rather than writing placeholder brackets. Keep text runs short - headings of two to five words, control labels of one to three words - and spell every word correctly. Include a short social-proof row of two or three customer reviews with star ratings wherever the page type allows, each reviewer a different invented name shown beside a small portrait, and a footer carrying the business's contact details. Include at least one large editorial-quality photograph where the subject has something to photograph, sized as a hero or feature image that spans at least a third of the image's width, and never a thumbnail where a large photograph belongs.
+
+Never use lorem ipsum, "Your Company", "Placeholder", "John Doe", example.com or example.co.uk addresses, a real email provider such as gmail.com or fastmail, a real company or brand name or logo, or provider branding on a map or chart; use only invented fictional organisations, people, addresses and domains.
+
+This paragraph is instruction for you, not copy for the page: print no URL, query string or slash-path text anywhere except the address bar, no selector or class name, no locale code, no file name, no date-format token such as MM/DD/YYYY, and no other technical detail on the page. Make every total agree with the rows it summarises, and give every row, card and control its own distinct content.
+
+Avoid: a code example that cannot be copied as text; a second accent colour competing with the primary action; placeholder text standing in for a visible label; a modal or step wizard hiding part of the form; colour alone carrying an error with no message naming the field.

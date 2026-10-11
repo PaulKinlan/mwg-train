@@ -16,6 +16,8 @@ const WIRED = new Set([
   'check:quotes',
   'check:briefs',
   'check:disjoint',
+  // Re-derives every archetype asset set from its accepted target; no network, no browser.
+  'check:archetype-assets',
   'check:eval-projects',
   'check:targets',
   'check:specs',

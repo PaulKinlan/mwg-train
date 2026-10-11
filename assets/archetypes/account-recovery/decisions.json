@@ -1,0 +1,9 @@
+{
+  "$comment": "See assets/archetypes/booking/decisions.json for what this file is for. Delete it if the target ever states a brand.",
+  "archetype": "account-recovery",
+  "brand": {
+    "brandless": true,
+    "because": "The accepted target depicts an unbranded journey: its demo carries no brand element, its own heading is 'Reset Your Password', and its README names no site. The store records the absence rather than inventing a brand the design never had - a framework build for this archetype should look like the target, and the target has no site name to render.",
+    "decided_on": "2026-10-11"
+  }
+}

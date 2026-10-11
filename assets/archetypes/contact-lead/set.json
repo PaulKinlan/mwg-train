@@ -1,0 +1,224 @@
+{
+  "archetype": "contact-lead",
+  "extracted_from": {
+    "target_dir": "docs/design/archetypes/contact-lead",
+    "readme": {
+      "path": "docs/design/archetypes/contact-lead/README.md",
+      "sha256": "e12415f4bcc5475a262ec38e4783bf8526a710d0659b41966eea043b47d886e9"
+    },
+    "documents": [
+      {
+        "path": "docs/design/archetypes/contact-lead/demo/compare.html",
+        "sha256": "5e7f6832a8d4f3bc821d5a7254599ae8eaa92e877cf8269f040faa72632a510a"
+      },
+      {
+        "path": "docs/design/archetypes/contact-lead/demo/index.html",
+        "sha256": "eb09fc8a672cc6e5cf10ace5730daae3d58523c19e1a6a6ed9152b2bc453a370"
+      },
+      {
+        "path": "docs/design/archetypes/contact-lead/demo/success.html",
+        "sha256": "bd875a2825f46f1dfa1fa411a717c062ffbeccd5e289b3e8f2c6e960fd988e07"
+      }
+    ],
+    "stylesheet": {
+      "path": "docs/design/archetypes/contact-lead/demo/styles.css",
+      "sha256": "bc6d1f9c3f67877a988ba703b669ff587c3ebb5a72ca29d44c7d9ca19d25d04c"
+    }
+  },
+  "brand": {
+    "site_name": "ARKHITECTS Studio",
+    "brandless": false,
+    "candidates": [
+      {
+        "value": "ARKHITECTS Studio",
+        "source": "docs/design/archetypes/contact-lead/demo/index.html:48",
+        "kind": "demo-brand-element",
+        "strength": "strong"
+      },
+      {
+        "value": "ARKHITECTS Studio",
+        "source": "docs/design/archetypes/contact-lead/demo/index.html:7",
+        "kind": "demo-title",
+        "strength": "weak"
+      },
+      {
+        "value": "ARKHITECTS Studio",
+        "source": "docs/design/archetypes/contact-lead/demo/index.html:73",
+        "kind": "demo-heading",
+        "strength": "weak"
+      }
+    ],
+    "conflicts": [],
+    "mark": {
+      "kind": "svg",
+      "value": "<svg width=\"18\" height=\"18\" viewBox=\"0 0 48 48\" focusable=\"false\"><use href=\"#mark-studio\"></use></svg>",
+      "source": "docs/design/archetypes/contact-lead/demo/index.html:49"
+    },
+    "decided": null
+  },
+  "tokens": {
+    "colors": {
+      "--bg-page": "#0f172a",
+      "--surface-card": "#1e293b",
+      "--surface-inset": "#162032",
+      "--surface-raised": "#243248",
+      "--surface-input": "#162032",
+      "--border-subtle": "#334155",
+      "--border-control": "#64748b",
+      "--border-highlight": "#94a3b8",
+      "--text-primary": "#f8fafc",
+      "--text-muted": "#94a3b8",
+      "--text-inverse": "#0b1220",
+      "--action": "#10b981",
+      "--action-hover": "#059669",
+      "--action-active": "#047857",
+      "--action-ink": "#04231a",
+      "--action-text": "#34d399",
+      "--action-subtle": "rgba(16, 185, 129, 0.18)",
+      "--action-border": "rgba(16, 185, 129, 0.38)",
+      "--action-glow": "rgba(16, 185, 129, 0.25)",
+      "--danger": "#ef4444",
+      "--danger-text": "#fca5a5",
+      "--blueprint": "rgba(148, 163, 184, 0.07)"
+    },
+    "fonts": {
+      "--font-sans": "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
+      "--font-mono": "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace"
+    },
+    "source": "docs/design/archetypes/contact-lead/demo/styles.css"
+  },
+  "copy": {
+    "compare.html": {
+      "title": "Visual design comparison — Contact-lead archetype",
+      "lang": "en",
+      "strings": [
+        "Visual design reference comparison",
+        "Each reference board from",
+        "../",
+        "beside the live page it informed, rendered in an iframe at a true 1280 × 900 desktop viewport and a 390 × 844 mobile viewport.",
+        "The boards are the two JPEGs committed alongside this demo. Per",
+        "../README.md",
+        "they are \"visual planning references only: not a working consultation form, a real submitted lead, a generated-site screenshot, a sealed evaluation target, or training/conformance evidence\", and \"the London address, identity, named attendee, email address, response-time promise, reference token and PDF button are unverified illustrated placeholders\".",
+        "Nothing on this page is a screenshot: the right-hand frames are the live files in this directory, loaded in an iframe, so no capture is committed and none can drift from the implementation. The left-hand images are the boards themselves, unmodified.",
+        "Comparison page only. It asserts no match with the boards and no conformance result; the contract's server routes, its",
+        "records",
+        "table and its session are not implemented by this demo. Read",
+        "README.md",
+        "for what it does and does not do."
+      ],
+      "apparatus": true,
+      "source": "docs/design/archetypes/contact-lead/demo/compare.html",
+      "sha256": "5e7f6832a8d4f3bc821d5a7254599ae8eaa92e877cf8269f040faa72632a510a"
+    },
+    "index.html": {
+      "title": "ARKHITECTS Studio — Request a consultation",
+      "lang": "en",
+      "strings": [
+        "ARKHITECTS",
+        "Studio",
+        "Address",
+        "Our consultation process",
+        "1. Initial contact",
+        "Complete the consultation form.",
+        "2. Project review",
+        "Our team analyses your enquiry.",
+        "3. Conceptual meeting",
+        "Schedule a 30-minute consultation.",
+        "4. Proposal & next steps",
+        "Receive a tailored project plan.",
+        "Typical response time",
+        "under 24 hrs",
+        "Request a consultation",
+        "Full name, work email and message are required. Project scope and budget help us route the enquiry to the right team.",
+        "Full Name",
+        "Work Email",
+        "Project Scope",
+        "Residential Renovation",
+        "Commercial Build",
+        "Interior Architecture",
+        "Not a required field. It routes your enquiry to the right team, and it opens on the kind of project we are asked about most.",
+        "Budget",
+        "(optional)",
+        "Not sure yet",
+        "Under £50,000",
+        "£50,000 – £150,000",
+        "£150,000 – £500,000",
+        "Over £500,000",
+        "Optional. A starting range helps us scope the first call — leave it as “Not sure yet” if you would rather not say.",
+        "Message",
+        "0/500 characters",
+        "What you want to change, the address if it matters, and any deadline you are working to.",
+        "Send Consultation Request",
+        "Static design target: submitting navigates to",
+        "success.html",
+        "with your answers in the URL. No enquiry is transmitted, stored or emailed, and the reference token on that page is the reference board's sample.",
+        "JavaScript is off, so the character count under the message will not update. The form still submits and",
+        "success.html",
+        "still loads — that page reads your answers back from the URL with a script, so without one it shows the board's sample values instead.",
+        "Static design target for the",
+        "contact-lead",
+        "archetype: hand-written HTML, CSS and one small inline script, with no server, no database and no network request. The spec's",
+        "POST /enquiry",
+        "route is not implemented here.",
+        "The studio name, the London address, the contact address, the response-time promise, the four process steps and the reference token are the reference board's illustrative placeholders, not a real studio's commitments. No enquiry is sent by this page."
+      ],
+      "apparatus": false,
+      "source": "docs/design/archetypes/contact-lead/demo/index.html",
+      "sha256": "eb09fc8a672cc6e5cf10ace5730daae3d58523c19e1a6a6ed9152b2bc453a370"
+    },
+    "success.html": {
+      "title": "Consultation Request Received — ARKHITECTS Studio",
+      "lang": "en",
+      "strings": [
+        "Sample view — this page was opened directly rather than submitted, so the details below are the reference board's illustrative example, not an enquiry you sent.",
+        "JavaScript is off, so this page cannot read your answers back out of the URL. The details below are the reference board's illustrative example, not necessarily your enquiry.",
+        "Consultation Request Received",
+        "Thank you,",
+        "Elena",
+        ". Our lead architect will review your project details and reach out within 24 hours",
+        "at",
+        "elena@studio.com",
+        ".",
+        "Your enquiry summary",
+        "Project scope",
+        "Residential Renovation, Soho",
+        "Reference token",
+        "#LEAD-7301",
+        "Your message",
+        "Interior refit of a ground-floor studio in Soho: a new meeting room, a kitchenette and lighting, starting this spring.",
+        "Download Summary PDF",
+        "#LEAD-7301 is the sample token drawn on the reference board. This static target issues no reference, stores no enquiry and sends nothing to the studio.",
+        "Static design target for the",
+        "contact-lead",
+        "archetype: hand-written HTML, CSS and one small inline script, with no server, no database and no network request. The spec's",
+        "POST /enquiry",
+        "and",
+        "GET /enquiry/:ref",
+        "routes are not implemented here.",
+        "The studio name, the London address, the contact address, the response-time promise and the reference token are the reference board's illustrative placeholders, not a real studio's commitments. Nothing on this page records that an enquiry was received."
+      ],
+      "apparatus": false,
+      "source": "docs/design/archetypes/contact-lead/demo/success.html",
+      "sha256": "bd875a2825f46f1dfa1fa411a717c062ffbeccd5e289b3e8f2c6e960fd988e07"
+    }
+  },
+  "images": [
+    {
+      "name": "step1-form.jpg",
+      "sha256": "2f66292d8c0f8e8800f8ce737cb83acf303d97dda38c5fc20299807a676454cf",
+      "bytes": 486223,
+      "source": "docs/design/archetypes/contact-lead/step1-form.jpg"
+    },
+    {
+      "name": "step2-success.jpg",
+      "sha256": "382dfbfe8865811372dd6ca32446fb711ae815232328d7b8f42b6f18c7cfed7f",
+      "bytes": 414215,
+      "source": "docs/design/archetypes/contact-lead/step2-success.jpg"
+    }
+  ],
+  "rights": {
+    "excluded_from_training": true,
+    "approved_for_training": false,
+    "source": "docs/design/archetypes/contact-lead/README.md:5"
+  }
+}

@@ -84,6 +84,11 @@ export const GENERATED_PATTERNS = [
   /^data\/[^/]+\/targets\/[^/]+\/signature\.json$/,
   /^docs\/eval\/projects\/[^/]+\/[^/]+\/(?:package|spec|tree|snapshot)\.json$/,
   /^docs\/eval\/projects\/index\.json$/,
+  // Each archetype's asset-set page is written by scripts/build-archetype-assets.mjs from that
+  // archetype's accepted target. Not floor reports: they record what an asset set contains and the
+  // rights it inherited, and claim no measurement.
+  /^assets\/archetypes\/[^/]+\/README\.md$/,
+  /^assets\/archetypes\/[^/]+\/set\.json$/,
 ];
 
 /**
@@ -216,6 +221,17 @@ export const DOCUMENTS = {
   'docs/provenance/assets/reproduction-studies.md': 'provenance',
   'docs/provenance/assets/student-base-models.md': 'provenance',
   'docs/provenance/assets/training-targets.md': 'provenance',
+  // Teacher-model visual reference boards for the 30 training families (bead mwg-train-mhd). Model output that is
+  // published as planning documentation and deliberately kept out of the corpus, so it carries a rights record here
+  // rather than a corpus manifest row.
+  'docs/provenance/assets/training-reference-boards.md': 'provenance',
+  'docs/provenance/assets/archetype-asset-sets.md': 'provenance',
+  // The one HAND-WRITTEN file in an asset store, and deliberately classified by name rather than by
+  // pattern: it adjudicates a brand the accepted target states ambiguously or not at all, so a new
+  // adjudication has to be classified on purpose instead of inheriting a classification.
+  'assets/archetypes/booking/decisions.json': 'provenance',
+  'assets/archetypes/account-recovery/decisions.json': 'provenance',
+  'assets/archetypes/event-registration/decisions.json': 'provenance',
   'docs/provenance/original-refs.md': 'provenance',
   'docs/quarantine.md': 'provenance',
   'docs/eval/briefs/SCHEMA.md': 'spec',

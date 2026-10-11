@@ -1,0 +1,9 @@
+{
+  "$comment": "See assets/archetypes/booking/decisions.json for what this file is for. Delete it if the target ever states a brand element.",
+  "archetype": "event-registration",
+  "brand": {
+    "siteName": "Future Web 2026",
+    "because": "The accepted target has no brand element. Its demo's own h1 names the event - 'Future Web 2026', with '24-25 October - Barbican Centre, London' - and for an event-registration site the event is the site's name. The candidate is weak (a heading can be a page title), which is exactly why the choice is recorded here with its evidence rather than extracted silently.",
+    "decided_on": "2026-10-11"
+  }
+}
