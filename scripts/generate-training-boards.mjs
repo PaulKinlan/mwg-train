@@ -37,7 +37,7 @@
 
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { join, relative, resolve, sep } from 'node:path';
+import { dirname, join, relative, resolve, sep } from 'node:path';
 
 import { sectionBody } from '../src/design/contract.mjs';
 import { parseFrontmatter } from '../src/design/yaml.mjs';
@@ -388,11 +388,17 @@ export function boardIsWidescreen(dimensions) {
  * committed bytes with no network call, which is also what `--check` reads.
  */
 export function renderRegister(entries, { generatedOn = null } = {}) {
+  // Resolve each link against the register's own directory instead of counting `../` by hand. Counting is what
+  // broke 60 links in this document: `../../docs/design/training/...` written from `docs/provenance/assets/`
+  // resolves to `docs/docs/design/training/...`. `path.relative` cannot make that mistake, and it stays right if
+  // the register or the boards ever move.
+  const registerDir = dirname(REGISTER_PATH);
+  const linkTo = (target) => relative(registerDir, target).split(sep).join('/');
   const rows = entries.map(
     (entry) =>
-      `| \`${entry.family}\` | [\`reference.jpg\`](../../${entry.board}) | \`${entry.boardSha256}\` | ${entry.bytes} | ` +
+      `| \`${entry.family}\` | [\`reference.jpg\`](${linkTo(entry.board)}) | \`${entry.boardSha256}\` | ${entry.bytes} | ` +
       `${entry.dimensions ? `${entry.dimensions.width} × ${entry.dimensions.height}` : 'unmeasured'} | ` +
-      `[\`prompt.txt\`](../../${entry.promptFile}) | \`${entry.promptSha256}\` | \`${entry.model}\` |`,
+      `[\`prompt.txt\`](${linkTo(entry.promptFile)}) | \`${entry.promptSha256}\` | \`${entry.model}\` |`,
   );
   const unattested = entries.filter((entry) => entry.model !== BOARD_MODEL);
   return [

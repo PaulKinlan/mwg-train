@@ -18,7 +18,7 @@ node scripts/build-archetype-assets.mjs --write --only booking
 | Brand, palette, typography, copy | `set.json` | `docs/design/archetypes/booking/README.md` and the `demo/` documents |
 | State imagery | `images/` | the target's own step boards |
 
-**Rights are inherited, not asserted here.** `excluded_from_training: true`, `approved_for_training: false`, from [`docs/design/archetypes/booking/README.md:7`](../../../docs/design/archetypes/booking/README.md:7). These are design-planning references: they are not corpus, not teacher output, and not evidence that any depicted flow works.
+**Rights are inherited, not asserted here.** `excluded_from_training: true`, `approved_for_training: false`, from [`docs/design/archetypes/booking/README.md:7`](../../../docs/design/archetypes/booking/README.md). These are design-planning references: they are not corpus, not teacher output, and not evidence that any depicted flow works.
 
 ## Brand
 
