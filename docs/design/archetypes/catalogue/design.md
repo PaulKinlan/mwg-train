@@ -173,7 +173,7 @@ Read from `demo/index.html`, `demo/cart.html` and `demo/empty.html`:
 ## Anti-patterns
 
 - **Three shops in three pictures.** The boards carry three different brand names - `EARTH & OAK`,
-  `ceramics` and `KERA` - while the demo has a fourth, `Kiln & Copper`. A reference set that cannot agree
+  `ceramics` and `CLAY & ORE` - while the demo has a fourth, `Kiln & Copper`. A reference set that cannot agree
   on the shop's name cannot be used to check branding.
 - **Two currencies, one catalogue.** The grid board prices in dollars and the cart board in pounds, in the
   same set, with no explanation.

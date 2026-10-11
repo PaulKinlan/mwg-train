@@ -11,7 +11,7 @@
 | --- | --- | --- | ---: |
 | [`step1-grid.jpg`](step1-grid.jpg) | Product browse grid and category/search controls | `d67e02068c0ac84bf178f3a58b468be1f68b0fd45976177a7d1536078e21a383` | 541719 |
 | [`step2-cart.jpg`](step2-cart.jpg) | Cart drawer and order summary | `13a1e108161d5b35d94d3b70058293f94a0468d96e4097bc3e40e60413f42306` | 463222 |
-| [`step3-empty.jpg`](step3-empty.jpg) | Empty search results and reset option | `ccb2f4aa1d33d139156b9c41370afca3c6fc89b6af60ac0a0e0fa886a5dc980b` | 410300 |
+| [`step3-empty.jpg`](step3-empty.jpg) | Empty search results and reset option | `c564732d825446943215fb65d507ecf0a937dd01f36dad15dcfa0d5dc3c32246` | 394902 |
 
 Hashes pin the handed-off JPEG bytes, not their generating model, prompt-to-pixel reproducibility or legal status. The corpus must derive from its own approved source and measured records, not these images.
 
