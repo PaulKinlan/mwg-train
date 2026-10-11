@@ -484,7 +484,7 @@ async function main() {
       `check-served-routes: SKIPPED - ${projectsRootAbs} does not exist, so no route was measured.\n` +
         '  These projects are generated and deliberately not committed, so a clean checkout never has them.\n' +
         '  This is NOT a served-routes result and says nothing about whether any route is served.\n' +
-        '  Run `npm run pilot:scaffold` to produce the projects, then run this again.\n' +
+        '  Run `npm run scaffold:train-corpus` to produce the projects, then run this again.\n' +
         '  (Naming the path with --projects makes its absence a fatal error instead.)',
     );
     return rootVerdict.code;
