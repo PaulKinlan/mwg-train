@@ -115,6 +115,71 @@ test('external, anchor-only and templated targets are ignored; an angle-wrapped 
   assert.strictEqual(counts.ignored, 6);
 });
 
+// A blockquote is skipped because it reproduces someone else's document, so its relative links are relative to that
+// document. A callout is not a quotation - it is our own prose inside a marker - so its block is checked, and the
+// block is the unit rather than the line, because a callout's continuation lines are as much ours as its first line
+// (mwg-train-0ts).
+test('a callout is checked, and its continuation lines are checked with it', () => {
+  const root = tree({
+    'doc.md': ['> [!NOTE]', '> See [the missing guide](missing.md) for more.', '', 'Body.'].join('\n'),
+  });
+  const { ok, findings } = run(root, ['doc.md']);
+  assert.strictEqual(ok, false, 'a callout link to a missing file must be reported');
+  assert.match(findings[0].message, /missing\.md/, 'the report names the target');
+  // The second line is the half a per-line fix would leave unchecked: it carries no marker of its own.
+  const continuation = tree({
+    'doc.md': ['> [!NOTE]', '> The first line is fine.', '> Then [a second-line link](gone.md).', ''].join('\n'),
+  });
+  const second = run(continuation, ['doc.md']);
+  assert.strictEqual(second.ok, false, 'a link on a callout continuation line must be reported too');
+  assert.match(second.findings[0].message, /gone\.md/);
+});
+
+// The review's edge-case table, in the two directions that matter. A lazy continuation is a line with no `>` that
+// still belongs to the blockquote, so it neither ends the block nor re-opens it: a callout stays a callout across one,
+// and a quotation stays a quotation.
+test('a lazy continuation does not end a block, in either kind of blockquote', () => {
+  const callout = tree({
+    'doc.md': ['> [!NOTE]', 'Belongs to the callout without a marker.', '> [still ours](gone.md)', ''].join('\n'),
+  });
+  assert.strictEqual(
+    run(callout, ['doc.md']).ok,
+    false,
+    'a callout resumed after a lazy continuation is still ours, so its broken link is reported',
+  );
+
+  const quotation = tree({
+    'doc.md': ['> [Quoted from elsewhere](ALSO-LICENSE)', 'Still the same quotation, lazily continued.', ''].join('\n'),
+  });
+  assert.strictEqual(run(quotation, ['doc.md']).ok, true, 'a lazily continued quotation must stay skipped');
+});
+
+// The other half of the claim: widening what is checked must not report what resolves. A callout's link is counted as
+// checked rather than quoted, which is what tells the two sets apart on a passing document.
+test('a valid link in a callout is checked and counted, not quoted', () => {
+  const root = tree({
+    'doc.md': ['> [!WARNING]', '> Read [the guide](guide.md) first.', ''].join('\n'),
+    'guide.md': '# the guide\n',
+  });
+  const { ok, counts } = run(root, ['doc.md']);
+  assert.strictEqual(ok, true, 'a link that resolves must not be reported');
+  assert.strictEqual(counts.checked, 1, 'the callout link counts as checked');
+  assert.strictEqual(counts.quoted, 0, 'and not as quoted');
+});
+
+test('a blockquote after a callout is a quotation again, not part of the callout', () => {
+  // The block boundary. A callout ends where its `>` lines end, so tracking only "are we in a callout" and never
+  // leaving would mark every later quotation as ours - the regression this test exists to catch.
+  const root = tree({
+    'doc.md': ['> [!NOTE]', '> Ours.', '', 'Ordinary text.', '', '> [Quoted from elsewhere](ALSO-LICENSE)', ''].join('\n'),
+  });
+  assert.strictEqual(
+    run(root, ['doc.md']).ok,
+    true,
+    'a blockquote following a callout must still be treated as a quotation',
+  );
+});
+
 test('a relative link inside a quotation is counted and skipped, not reported', () => {
   const root = tree({
     'doc.md': ['Own link: [gone](gone.md).', '', '> Quoted upstream: [license](LICENSE).'].join('\n'),

@@ -282,7 +282,36 @@ export function extractLinks(text) {
   for (let i = 0; i < masked.length; i += 1) if (masked[i] === '\n') lineStarts.push(i + 1);
   const lineOf = (offset) => lineOfIndex(lineStarts, offset);
   const lines = text.split('\n');
-  const quotedAt = (line) => /^\s*>/.test(lines[line - 1] ?? '');
+  // A blockquote reproduces someone else's document, so its relative links are relative to that document rather than
+  // to this repository, and skipping them is right. A callout - `> [!NOTE]` - is not a quotation: it is our own prose
+  // in a marker, so its links are relative to this repository, and treating them as quoted was how a future callout's
+  // link would have gone unchecked (mwg-train-0ts).
+  //
+  // The unit is the block, and the block ends at a blank line rather than at the last `>` line. That distinction is
+  // what the review's edge-case table was about: a lazy continuation line carries no `>` but is still inside the
+  // blockquote, so a callout whose second line is a lazy continuation does not end there, and a later `>` line is
+  // still the same callout. A blank line ends it, and the next opening line decides again. A quotation nested inside
+  // a callout (`> > text`) is not distinguished - one level of tracking, not a depth counter (mwg-train-0ts review).
+  const calloutOpener = /^\s{0,3}>\s{0,3}\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]/;
+  const quotedFlags = (() => {
+    const flags = [];
+    let inBlock = false;
+    let inCallout = false;
+    for (const line of lines) {
+      const isQuote = /^\s{0,3}>/.test(line);
+      // Only an opening line decides the kind of block; a continuation line must not reset it.
+      if (isQuote && !inBlock) inCallout = calloutOpener.test(line);
+      // A lazy continuation of a blockquote carries no `>`, so `isQuote` alone cannot mean "inside".
+      if (isQuote) inBlock = true;
+      flags.push(inBlock && !inCallout);
+      if (line.trim() === '') {
+        inBlock = false;
+        inCallout = false;
+      }
+    }
+    return flags;
+  })();
+  const quotedAt = (line) => quotedFlags[line - 1] ?? false;
   const links = [];
 
   for (let i = 0; i < masked.length; i += 1) {
