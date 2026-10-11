@@ -226,6 +226,21 @@ export const DOCUMENTS = {
   // design-reference records. Classified as provenance, not as a floor report: it records borrowed reference
   // material and its rights, and states no measured result of the corpus.
   'docs/provenance/assets/design-reference-editorial-blog.md': 'provenance',
+  // The second archetype outside the five evaluation families (bead mwg-train-efg), same shapes and the same
+  // reasoning as the block above: the README records borrowed reference material and its rights, the two
+  // contract documents describe how a page should look and behave, and the register pins board bytes and prompt
+  // digests. None of them states a measured result of the corpus.
+  'docs/design/archetypes/fan-community-site/README.md': 'provenance',
+  'docs/design/archetypes/fan-community-site/design.md': 'design',
+  'docs/design/archetypes/fan-community-site/plan.md': 'design',
+  'docs/provenance/assets/design-reference-fan-community-site.md': 'provenance',
+  // The third archetype outside the five evaluation families (bead mwg-train-efg), same shapes and the same
+  // reasoning again: a board brief, two contract documents, and a digest register, none of which states a
+  // measured result of the corpus.
+  'docs/design/archetypes/product-card-comparison/README.md': 'provenance',
+  'docs/design/archetypes/product-card-comparison/design.md': 'design',
+  'docs/design/archetypes/product-card-comparison/plan.md': 'design',
+  'docs/provenance/assets/design-reference-product-card-comparison.md': 'provenance',
   'docs/eval/ATTRIBUTION.md': 'contract',
   'docs/eval/PREREGISTRATION.md': 'contract',
   'docs/eval/owner-identity.json': 'config',
