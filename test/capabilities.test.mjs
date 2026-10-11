@@ -62,7 +62,7 @@ test('byte-invariance: a spec without capabilities emits no capability code, in 
   for (const family of ['booking', 'contact-lead', 'catalogue', 'account-recovery', 'event-registration']) {
     for (const arm of ARMS) {
       const { files } = buildProjectFromSpec({ spec: specForFamily(family, ROOT), frameworkName: arm });
-      assert.equal(/auth_sessions|loginPage|detailPage|listPage|cart_items|cartPage|cartProductPage|capabilities/.test(files['server.mjs']), false, `${family}/${arm} emitted capability code without opting in`);
+      assert.equal(/auth_sessions|loginPage|detailPage|listPage|cart_items|cartPage|cartProductPage|PRICING|pricingPage|capabilities/.test(files['server.mjs']), false, `${family}/${arm} emitted capability code without opting in`);
     }
   }
 });
