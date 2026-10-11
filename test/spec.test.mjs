@@ -457,13 +457,80 @@ test('a valid edit journey generates a label and an input naming the declared fi
   assert.ok(!text.includes('edit-undefined'), 'an accepted journey must not generate an undefined control');
 });
 
-test('no family in the corpus is refused for its edit journey', () => {
-  // A validator that starts refusing documents which ship is a worse bug than the one being fixed, so the corpus is
-  // checked in the direction that matters - this rule's own verdict, so it stays true if a family has an unrelated
-  // problem of its own.
+// The six lookups that resolved a name without anything checking it (mwg-train-nmj0). Each is exercised against a
+// real family using that family's own values, and each is wrong in the direction that matters: a rule that refuses a
+// specification which ships is worse than the gap it closed, so every case also asserts the untouched family is
+// accepted.
+const familyWith = (predicate) => ARCHETYPE_IDS.map((family) => read(family)).find(predicate);
+const refusals = (problems, needle) => problems.filter((problem) => problem.includes(needle));
+
+test('a form listing an undeclared field slug is refused, in both forms', () => {
+  const base = familyWith((spec) => Array.isArray(spec.extra_form?.fields));
+  assert.ok(base, 'a family with an extra_form.fields list is needed for this test');
+  assert.deepEqual(validateSpec(base), [], 'the unmodified family is accepted');
+
+  const extra = validateSpec({ ...base, extra_form: { ...base.extra_form, fields: [...base.extra_form.fields, 'no-such-field'] } });
+  assert.ok(refusals(extra, 'extra_form.fields').some((problem) => problem.includes('no-such-field')), 'an undeclared slug in the second form is refused by name');
+
+  const main = familyWith((spec) => Array.isArray(spec.form?.fields));
+  assert.ok(main, 'a family with a form.fields list is needed for this test');
+  const narrowed = validateSpec({ ...main, form: { ...main.form, fields: ['no-such-field'] } });
+  assert.ok(refusals(narrowed, 'form.fields').some((problem) => problem.includes('no-such-field')), 'an undeclared slug narrowing the main form is refused by name');
+});
+
+test('a password_field selector naming an undeclared field is refused, and null is not', () => {
+  const base = familyWith((spec) => typeof spec.password_field === 'string' && spec.password_field !== '');
+  assert.ok(base, 'a family with a password_field string is needed for this test');
+  assert.deepEqual(validateSpec(base), [], 'the family whose selector names a declared field is accepted');
+  assert.deepEqual(validateSpec({ ...base, password_field: null }), [], 'null is a working value: the generator falls back to [name=password]');
+
+  const problems = validateSpec({ ...base, password_field: '[name=no-such-field]' });
+  assert.ok(refusals(problems, 'password_field').some((problem) => problem.includes('no-such-field')), 'a selector naming an undeclared field is refused by name');
+});
+
+test('an echo route kind the specification does not declare is refused', () => {
+  const base = familyWith((spec) => typeof spec.echo?.route === 'string' && spec.echo.route !== '');
+  assert.ok(base, 'a family with an echo.route is needed for this test');
+  assert.deepEqual(validateSpec(base), [], 'the family whose echo.route is one of its route kinds is accepted');
+
+  const problems = validateSpec({ ...base, echo: { ...base.echo, route: 'no-such-kind' } });
+  assert.ok(refusals(problems, 'echo.route').some((problem) => problem.includes('no-such-kind')), 'an undeclared route kind is refused by name');
+});
+
+test('a journey search missing a selector, and a step driving an undeclared field, are refused', () => {
+  const base = read(ARCHETYPE_IDS[0]);
+  assert.deepEqual(validateSpec(base), [], 'the unmodified family is accepted');
+
+  const noParam = validateSpec({ ...base, journey: { ...base.journey, search: { resultsSelector: '#results' } } });
+  assert.ok(refusals(noParam, 'search.queryParam').length > 0, 'a search with no query parameter is refused');
+
+  const badType = validateSpec({ ...base, journey: { ...base.journey, search: { queryParam: 42, resultsSelector: '#results' } } });
+  assert.ok(refusals(badType, 'search.queryParam').length > 0, 'a non-string query parameter is refused');
+
+  const step = validateSpec({ ...base, journey: { ...base.journey, steps: [{ path: '/one', fill: { '[name=no-such-field]': 'x' } }] } });
+  const stepRefusal = refusals(step, 'steps').find((problem) => problem.includes('no-such-field'));
+  assert.ok(stepRefusal, 'a step driving an undeclared field is refused by name');
+  // It has to say what would have worked, like the rest of the block: being told only that a name is wrong sends the
+  // reader back into the document to find out what is right (mwg-train-nmj0 review).
+  assert.ok(stepRefusal.includes('declared:'), `the refusal lists the declared fields: ${stepRefusal}`);
+  for (const field of base.fields.map((each) => each.name)) assert.ok(stepRefusal.includes(field), `the refusal names ${field}`);
+});
+
+test('no family in the corpus is refused for any of the six lookups', () => {
+  // The other direction, over the whole corpus rather than the fixtures: on an untouched tree these rules must
+  // report nothing at all, which is what says they describe this format rather than my reading of it.
   for (const family of ARCHETYPE_IDS) {
-    const refused = validateSpec(read(family)).filter((problem) => problem.includes('update.field'));
-    assert.equal(refused.length, 0, `${family} is refused for its edit journey: ${refused.join('; ')}`);
+    const problems = validateSpec(read(family));
+    const introduced = problems.filter((problem) => /extra_form\.fields|form\.fields|password_field|echo\.route|search\.|steps\./.test(problem));
+    assert.deepEqual(introduced, [], `${family} is refused by a rule added in mwg-train-nmj0`);
+  }
+});
+
+test('no family in the corpus is refused for its edit journey', () => {
+  // Kept beside its siblings: this is the crt rule's corpus direction.
+  for (const family of ARCHETYPE_IDS) {
+    const problems = validateSpec(read(family));
+    assert.deepEqual(problems.filter((problem) => problem.includes('update.field')), [], `${family} is refused for its update journey`);
   }
 });
 
