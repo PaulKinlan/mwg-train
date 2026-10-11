@@ -59,7 +59,7 @@ const FIELD_KEYS = new Set(['slug', 'name', 'type', 'label', 'autocomplete', 're
 export { FIELD_KEYS };
 
 /** The functional-route capabilities a specification may opt into. A closed set, like FIELD_KEYS. */
-export const CAPABILITY_KEYS = new Set(['list_pages', 'detail_page', 'auth', 'cart', 'pricing_tiers', 'checkout', 'survey']);
+export const CAPABILITY_KEYS = new Set(['list_pages', 'detail_page', 'auth', 'cart', 'pricing_tiers', 'checkout', 'survey', 'game']);
 
 /** The field names a selector types into, from `[name=x]` / `[name="x"]` / `[name='x']`. */
 function selectorFieldNames(selector) {
@@ -520,13 +520,39 @@ export function validateSpec(spec) {
     }
     if (spec.capabilities?.survey !== true) at('survey', 'only meaningful with capabilities.survey - there would be no page to ask the questions on');
   }
+  if (spec.game !== undefined) {
+    const game = spec.game;
+    if (!isObject(game)) at('game', 'must be an object when present');
+    else {
+      for (const key of Object.keys(game)) {
+        if (!['label', 'width', 'height', 'tick_ms', 'target', 'lives'].includes(key)) at(`game.${key}`, 'unknown key');
+      }
+      if (!isString(game.label) || game.label.trim() === '') at('game.label', 'must name the game');
+      // Every one of these is a bound on something that has to be playable: a field too small to see, a
+      // tick so slow it is not a loop, a target of zero that ends the game before it starts, or no lives
+      // to lose. The bounds are refused rather than clamped, so a specification cannot quietly disagree
+      // with what it asked for (mwg-train-ypr).
+      const bound = (name, value, low, high) => {
+        if (!Number.isInteger(value) || value < low || value > high) at(`game.${name}`, `must be a whole number between ${low} and ${high}`);
+      };
+      bound('width', game.width, 120, 1200);
+      bound('height', game.height, 120, 1200);
+      bound('tick_ms', game.tick_ms, 16, 1000);
+      bound('target', game.target, 1, 99);
+      bound('lives', game.lives, 1, 9);
+    }
+    if (spec.capabilities?.game !== true) at('game', 'only meaningful with capabilities.game - there would be nothing to play on');
+  }
+  if (spec.capabilities?.game === true && spec.game === undefined) {
+    at('capabilities.game', 'is on, but no game block states what the game is');
+  }
   if (spec.capabilities?.pricing_tiers === true && spec.pricing_tiers === undefined) {
     at('capabilities.pricing_tiers', 'is on, but no pricing_tiers block states the tiers');
   }
   // A capability's own routes are emitted before the declared ones, so a specification that declares
   // the same path would leave a handler nothing ever reaches. Refused rather than silently shadowed
   // (mwg-train-4lk review).
-  const capabilityOwnedRoutes = { cart: ['/cart', '/cart/add'], pricing_tiers: ['/pricing', '/pricing/select', '/pricing/:ref'], checkout: ['/checkout', '/checkout/pay', '/checkout/receipt/:ref'], survey: ['/survey', '/survey/answer', '/survey/review', '/survey/submit', '/survey/result/:ref'] };
+  const capabilityOwnedRoutes = { cart: ['/cart', '/cart/add'], pricing_tiers: ['/pricing', '/pricing/select', '/pricing/:ref'], checkout: ['/checkout', '/checkout/pay', '/checkout/receipt/:ref'], survey: ['/survey', '/survey/answer', '/survey/review', '/survey/submit', '/survey/result/:ref'], game: ['/play', '/play/score', '/play/scores'] };
   for (const [capability, owned] of Object.entries(capabilityOwnedRoutes)) {
     if (spec.capabilities?.[capability] !== true) continue;
     for (const route of spec.routes ?? []) {
@@ -599,6 +625,9 @@ export function archetypeFromSpec(spec) {
     // but the mapping is an explicit list, so a block that is not named here never reaches the builder.
     ...(spec.checkout === undefined ? {} : { checkout: spec.checkout }),
     ...(spec.survey === undefined ? {} : { survey: spec.survey }),
+    // Named here for the same reason as the two above: a block that validates but is not named in this
+    // list is dropped silently, and the capability would then build a dead page (mwg-train-4lk review).
+    ...(spec.game === undefined ? {} : { game: spec.game }),
     ...(spec.seed_accounts === undefined ? {} : { seedAccounts: spec.seed_accounts }),
   };
 }

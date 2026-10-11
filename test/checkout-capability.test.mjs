@@ -365,9 +365,18 @@ test('a product whose price the form may omit cannot be added to the cart as a f
   }
 });
 
+/**
+ * The capability keys, read out of the set rather than matched as a literal. Pinning the whole set means
+ * every capability added later has to edit every older capability's test - which is how the landing trap
+ * that forced this rebase was built (mwg-train-ypr, mwg-train-ksn). Membership is what the check means.
+ */
+const capabilityKeysIn = (source) =>
+  /CAPABILITY_KEYS = new Set\(\[([^\]]*)\]\)/.exec(source)?.[1].split(',').map((entry) => entry.trim().replace(/^'|'$/g, '')).filter(Boolean) ?? [];
+
 test('the checkout capability is registered, not silently dead', () => {
   const frameworks = readFileSync(join(ROOT, 'pilot/frameworks.mjs'), 'utf8');
   assert.match(frameworks, /const capabilitiesOf = \(archetype\) => \(\{ list_pages: false, detail_page: false, auth: false, cart: false, pricing_tiers: false, checkout: false/);
   const spec = readFileSync(join(ROOT, 'src/eval/spec.mjs'), 'utf8');
-  assert.match(spec, /CAPABILITY_KEYS = new Set\(\['list_pages', 'detail_page', 'auth', 'cart', 'pricing_tiers', 'checkout', 'survey'\]\)/);
+  const keys = capabilityKeysIn(spec);
+  assert.ok(keys.includes('checkout'), `checkout is a capability key, found ${keys.join(', ')}`);
 });
