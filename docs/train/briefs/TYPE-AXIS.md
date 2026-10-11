@@ -72,7 +72,6 @@ Paul did not ask about. The status column counts corpus coverage, so a type is `
 already covers part of it and `missing` when no family does. Nine types now have the builder capability they
 needed - `wiki`, `interactive-explainer` and `interactive-demo` among them - but a capability is not a family:
 what remains for all nine of those is content, not engine work.
-while the table below counts what the builder can express.
 
 ## What each missing type needs before it can be a training pair
 
@@ -127,14 +126,14 @@ this axis inherits:
   and restarts; a first-time player sees instructions while an experienced player can skip them. A
   decorative canvas is a failure.
 
-## The role pairs for the initial three content-only archetypes
+## The role pairs for the initial three archetypes
 
 A type earns its place on this axis only if two actors have genuinely different goals or permissions in it.
 These are the pairs for the three types this template writes first, using the expansion matrix's own
 archetype ids (that file also carries the wording roles and required behaviours, for these and for the
-gated types). They are the three nearest to authoring - each needs a narrow addition to the engine rather than
-a new capability, which is why they are specified first - not the only three the table tracks, since several
-other types have had their capability built since.
+gated types). They are specified first because they are the initial trio - the three whose role pairs and design
+reference boards already exist - not because they are the easiest: nine other types need no engine addition at all,
+and what they are waiting for is a family.
 
 | Type | Archetype id | Primary actor | Second actor | What changes for the second actor |
 | --- | --- | --- | --- | --- |
