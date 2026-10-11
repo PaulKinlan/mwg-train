@@ -23,6 +23,10 @@
  *   node scripts/generate-archetype-boards.mjs                 # offline: parse + verify prompts, report current digests
  *   node scripts/generate-archetype-boards.mjs --write         # generate and overwrite the committed JPEGs
  *   node scripts/generate-archetype-boards.mjs --write --only booking,catalogue
+ *   node scripts/generate-archetype-boards.mjs --write --board step3-confirmation.jpg
+ *
+ * `--board` exists so a single board can be retried: image generation is stochastic, and re-running a whole family to
+ * fix one board's placeholder text would discard boards that are already correct.
  *
  * --write is deliberately the only mode that touches the tree, and it is never wired into `npm test` or check:all:
  * every check in this repository has to run offline, and this one makes billed model calls.
@@ -72,7 +76,7 @@ export function extractPrompts(readmeText) {
 }
 
 /** Board name -> prompt, for all five families, with a hard failure if a README yields nothing. */
-export function collectBoards({ only = null } = {}) {
+export function collectBoards({ only = null, boards: names = null } = {}) {
   const boards = [];
   for (const family of FAMILIES) {
     if (only && !only.includes(family)) continue;
@@ -80,8 +84,13 @@ export function collectBoards({ only = null } = {}) {
     const prompts = extractPrompts(readFileSync(readmePath, 'utf8'));
     if (prompts.size === 0) throw new Error(`${family}: no prompts parsed out of the README; refusing to guess`);
     for (const [name, prompt] of prompts) {
+      if (names && !names.includes(name)) continue;
       boards.push({ family, name, prompt, path: join(ROOT, 'docs/design/archetypes', family, name) });
     }
+  }
+  if (names && boards.length !== names.length) {
+    const found = new Set(boards.map((board) => board.name));
+    throw new Error(`--board named ${names.filter((name) => !found.has(name)).join(', ')}, which is not an authored board name`);
   }
   return boards;
 }
@@ -179,14 +188,19 @@ async function main() {
   const write = process.argv.includes('--write');
   const onlyArg = process.argv.indexOf('--only');
   const only = onlyArg === -1 ? null : process.argv[onlyArg + 1].split(',').map((value) => value.trim());
+  const boardArg = process.argv.indexOf('--board');
+  const boardNames = boardArg === -1 ? null : process.argv[boardArg + 1].split(',').map((value) => value.trim());
 
-  const boards = collectBoards({ only });
-  const verification = verifyRecordedPrompts(boards);
+  // The prompt guarantee is verified against EVERY authored board, not just the ones being generated: a targeted
+  // retry must not be able to skip the check that the parser still reads the recorded prompts byte-for-byte.
+  const allBoards = collectBoards();
+  const verification = verifyRecordedPrompts(allBoards);
   if (verification.failures.length) {
     for (const failure of verification.failures) console.error(`PROMPT MISMATCH ${failure}`);
     console.error('Refusing to generate: the prompts this script reads are not the prompts the records pin.');
     process.exit(1);
   }
+  const boards = collectBoards({ only, boards: boardNames });
   console.log(`prompt check: ${verification.checked} pinned Wave 2 prompt(s) reproduced byte-for-byte from the READMEs`);
   console.log(`model: ${BOARD_MODEL} (explicit) via ${BOARD_ENDPOINT}`);
   console.log(`settings: temperature ${BOARD_TEMPERATURE}, maxOutputTokens ${BOARD_MAX_OUTPUT_TOKENS}, ${boards.length} board(s)\n`);

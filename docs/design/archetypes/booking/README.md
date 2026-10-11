@@ -12,7 +12,7 @@
 ## Multi-Step Journey & State Reference Boards
 
 1. **Step 1: Browse & Schedule Selection**
-   - File: `step1-browse.jpg` (SHA-256: `fbcee138b08f90b58ab958b00bd5b57c428efe6caf34ca02332bf7c2cfb5ec81`)
+   - File: `step1-browse.jpg` (SHA-256: `3a7f56d2fc42661a89d067a301c2035dbb89804bacb2533d28d0e745afdf5c11`)
    - Model: `gemini-nano-banana-2.1` (gateway-attested)
    - Prompt: "High-fidelity, production-quality desktop browser screenshot of an evening class booking web application. Realistic modern UI design with crisp clean typography, realistic content density, precise grid alignment, and polished micro-details matching layout-storefront.jpg. Deep slate dark background #0f172a, card surface #1e293b with subtle 1px border #334155, vivid emerald green action buttons #10b981. The viewport shows a real desktop web page with top navigation (Logo, 'Evening Class Studio', Search bar, Cart badge), an interactive weekly schedule matrix (Monday-Friday 6:00pm-9:00pm) displaying actual course cards: 'Intro to Python (6:30 PM)', 'Wheel-Thrown Pottery', 'Woodworking Essentials', each with instructor portrait, class time, pill badge showing '4 seats remaining'. Clean system-ui font, sharp text rendering, realistic browser layout. NOT a sketch, NOT a hand-drawn illustration, NOT a wireframe, NOT low-fidelity."
    - Intent: Production weekly schedule matrix with class cards, instructor avatars, capacity indicators, and direct 'Book Now' actions.
@@ -24,7 +24,7 @@
    - Intent: Cohesive two-column checkout view with left order summary card and right personal details form + interactive 2D desk seat picker.
 
 3. **Step 3: Confirmation & Digital Receipt**
-   - File: `step3-confirmation.jpg` (SHA-256: `14ed7b7b09cd20c2cd6e864feba0b40b7f3570a4f24032f2d7624ca17dbcb647`)
+   - File: `step3-confirmation.jpg` (SHA-256: `1b65cd87c9c693be2a159a3f3ead25ae32c4f3faaec664ea7d80684fce6e31ef`)
    - Model: `gemini-nano-banana-2.1` (gateway-attested)
    - Prompt: "High-fidelity, production-quality desktop browser screenshot of 'Evening Class Studio', following directly from Step 2 after successful form submission. Exact same website and theme (#0f172a slate background, #1e293b cards with 1px border #334155, emerald green #10b981 accents). Step 3: Booking Confirmation & Digital Receipt. Top navigation shows 'Evening Class Studio', Browse Classes, My Bookings (active with badge 1). The main viewport displays a centered digital pass card: emerald green verified check badge, headline 'Booking Confirmed!', booking reference '#BK-92841', class details card (Intro to Python, Monday Oct 23, 6:30 PM - 8:30 PM, Room 2B, Desk B3, Instructor: Dr. Evelyn Reed), attendee 'Alex Thompson', payment receipt indicator 'Paid £45.00 via Card', a clean crisp QR code for entry check-in, and primary action buttons 'Add to Google / Apple Calendar' and 'Download PDF Receipt'. Realistic browser window frame, production web app typography and polish. NOT a sketch, NOT a hand-drawn illustration, NOT low-fidelity."
    - Intent: Digital pass card with booking reference `#BK-92841`, scannable entry QR code, receipt breakdown, and calendar/download actions.
