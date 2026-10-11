@@ -109,6 +109,23 @@ this axis inherits:
   and restarts; a first-time player sees instructions while an experienced player can skip them. A
   decorative canvas is a failure.
 
+## The role pairs for the three content-only types
+
+A type earns its place on this axis only if two actors have genuinely different goals or permissions in it.
+These are the pairs for the three types this template writes first, using the expansion matrix's own
+archetype ids (that file also carries the wording roles and required behaviours, for these and for the
+gated types):
+
+| Type | Archetype id | Primary actor | Second actor | What changes for the second actor |
+| --- | --- | --- | --- | --- |
+| blog | `editorial-blog` | an author writes and publishes one article | a reader with no account reads it and sends it on | publishing makes the article reachable at an address a reader can open |
+| fan-community | `fan-community-site` | a member contributes and bookmarks | a moderator decides whether a contribution is visible, and a visitor sees only the canon | a contribution is invisible to the visitor until the moderator crosses it |
+| card | `product-card-comparison` | a chooser compares cards and selects one | the catalogue owner publishes and retires the options | a selection is refused, with a reason, once the option is withdrawn |
+
+None of the three may be authored with a single actor. If the second actor's journey does not change the
+state the first actor sees, the family is the record-form type in different words - the failure this axis
+exists to catch.
+
 ## The rule this axis adds to authoring
 
 Every family must name a **primary actor and at least one distinct actor** whose goal or permission

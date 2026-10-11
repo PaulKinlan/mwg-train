@@ -217,6 +217,11 @@ export const DOCUMENTS = {
   // prompts the generator reads. Classified like the other archetype READMEs that record borrowed reference
   // material and its rights.
   'docs/design/archetypes/editorial-blog/README.md': 'provenance',
+  // The type's two contract documents, in the section order src/design/contract.mjs requires of a design and a
+  // plan document. Classified as 'design' like the eval side's equivalents that describe how a page should look
+  // and behave; neither states a measured corpus result.
+  'docs/design/archetypes/editorial-blog/design.md': 'design',
+  'docs/design/archetypes/editorial-blog/plan.md': 'design',
   // The register that pins the new archetype's board bytes and prompt digests, in the same shape as the other
   // design-reference records. Classified as provenance, not as a floor report: it records borrowed reference
   // material and its rights, and states no measured result of the corpus.
