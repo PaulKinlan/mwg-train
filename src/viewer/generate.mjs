@@ -50,8 +50,8 @@ export const MIN_IMAGE_OUTPUT_TOKENS = 4096;
 /** The workbench form's own upper bound. Kept here so request building cannot exceed what the UI offers. */
 export const MAX_IMAGE_OUTPUT_TOKENS = 8192;
 
-/** A board is ~0.5 MB; the response is base64 JSON, ~4/3 of that. A cap this far above observed output turns a
- * gateway that streams something unexpected into an error instead of a memory spike. */
+/** A board is ~0.5 MB; the response is base64 JSON, ~4/3 of that. The cap is enforced WHILE reading, not after: a
+ * gateway that streams something unexpected is stopped at the cap instead of being buffered until we can measure it. */
 export const MAX_RESPONSE_BYTES = 16 * 1024 * 1024;
 
 /** Generous: the observed wall clock is ~15 s, and the point is to bound a hung socket, not to race a slow image. */
@@ -83,6 +83,33 @@ const upstream = (code, message, status = 502) => new GenerationError(code, mess
 
 const isFiniteNumber = (value) => typeof value === 'number' && Number.isFinite(value);
 const sha256 = (value) => createHash('sha256').update(value).digest('hex');
+
+/**
+ * Read a response body up to a hard byte cap, and fail the moment the cap is passed rather than after buffering it.
+ * `content-length` is a claim a gateway may simply omit (chunked responses), so the declared-header check above is a
+ * fast path, not the bound - this is the bound. Falls back to `text()` only if the body carries no async iterator
+ * (a test double, or an older runtime), where the caller's own length check still applies.
+ */
+async function readBoundedBody(response, maxBytes) {
+  const body = response.body;
+  if (!body || typeof body[Symbol.asyncIterator] !== 'function') {
+    const text = await response.text();
+    if (text.length > maxBytes) throw upstream('RESPONSE_TOO_LARGE', `the image response is ${text.length} characters, above the ${maxBytes} byte cap`);
+    return text;
+  }
+  const decoder = new TextDecoder();
+  let text = '';
+  let bytes = 0;
+  for await (const chunk of body) {
+    bytes += chunk.length;
+    if (bytes > maxBytes) {
+      try { await body.cancel(); } catch { /* Already stopping; the error below is what matters. */ }
+      throw upstream('RESPONSE_TOO_LARGE', `the image response passed the ${maxBytes} byte cap while being read; it was not buffered in full`);
+    }
+    text += decoder.decode(chunk, { stream: true });
+  }
+  return text + decoder.decode();
+}
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
@@ -308,12 +335,10 @@ export function createBoardGenerator({
     }
     let text;
     try {
-      text = await response.text();
+      text = await readBoundedBody(response, maxResponseBytes);
     } catch (error) {
+      if (error instanceof GenerationError) throw error;
       throw upstream('UPSTREAM_UNREACHABLE', `the image response could not be read: ${String(error?.message ?? error).slice(0, 200)}`);
-    }
-    if (text.length > maxResponseBytes) {
-      throw upstream('RESPONSE_TOO_LARGE', `the image response is ${text.length} characters, above the ${maxResponseBytes} byte cap`);
     }
     if (!response.ok) {
       // The gateway's own words, truncated: an operator fixing a config needs the reason, and it is not a secret

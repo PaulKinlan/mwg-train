@@ -308,6 +308,25 @@ test('an unreachable endpoint, a timeout and an oversized response each fail wit
   const tooLarge = await generateAndCatch(huge);
   assert.equal(tooLarge.code, 'RESPONSE_TOO_LARGE');
 
+  // The cap that matters: a CHUNKED response with no content-length header at all. The declared-header check cannot
+  // see this one, so if the bound were only applied after buffering, this is the request that would prove it.
+  let chunksServed = 0;
+  const unbounded = createBoardGenerator({
+    fetchImpl: async () => new Response(new ReadableStream({
+      pull(controller) {
+        chunksServed += 1;
+        controller.enqueue(new Uint8Array(1024 * 1024).fill(0x61));
+        if (chunksServed > 64) controller.close();
+      },
+    }), { status: 200, headers: { 'content-type': 'application/json' } }),
+    maxResponseBytes: 4 * 1024 * 1024,
+    minIntervalMs: 0,
+  });
+  const stopped = await generateAndCatch(unbounded);
+  assert.equal(stopped.code, 'RESPONSE_TOO_LARGE');
+  assert.match(stopped.message, /was not buffered in full/);
+  assert.ok(chunksServed < 64, `reading must stop at the cap, but ${chunksServed} MiB was pulled from the stream`);
+
   const notJson = createBoardGenerator({ fetchImpl: async () => new Response('<html>gateway</html>', { status: 200 }), minIntervalMs: 0 });
   const unparsable = await generateAndCatch(notJson);
   assert.equal(unparsable.code, 'BAD_UPSTREAM_JSON');
