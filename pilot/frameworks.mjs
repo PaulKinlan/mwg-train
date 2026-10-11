@@ -208,8 +208,22 @@ function assetRuntime(set) {
   return `const ASSET_STORE = ${JSON.stringify(`assets/archetypes/${set.archetype}`)};
 const ASSET_DIGESTS = ${JSON.stringify(digests)};
 const ASSET_TYPES = { '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp', '.avif': 'image/avif', '.gif': 'image/gif', '.svg': 'image/svg+xml' };
+function decodeAssetName(raw) {
+  // Never throws: a malformed percent-escape (GET /app/%zz) used to raise a URIError out of the request handler
+  // and take the server process down with it. An empty string fails the name pattern below, so the request 404s
+  // the same way an unregistered board does.
+  try {
+    return decodeURIComponent(raw);
+  } catch {
+    return '';
+  }
+}
+
 function readArchetypeAsset(name) {
-  if (!name || !Object.hasOwn(ASSET_DIGESTS, name)) return null;
+  // A name that is not a plain board filename is refused first. The register lookup below would refuse it too,
+  // but this is what keeps a name carrying %, / or .. away from both the filesystem and the register.
+  if (typeof name !== 'string' || !/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(name)) return null;
+  if (!Object.hasOwn(ASSET_DIGESTS, name)) return null;
   let dir = here;
   for (let depth = 0; depth < 8; depth += 1) {
     const candidate = join(dir, ASSET_STORE, 'images', name);
@@ -1030,7 +1044,7 @@ const server = createServer(async (request, response) => {
 ${set ? `      // Not in the tree, so it may be one of the archetype's boards: served from the store, and only if
       // its bytes still hash to the recorded digest. The provenance header is deliberate - a reader and a
       // test can both tell a board of the target from a file the build itself wrote.
-      const asset = readArchetypeAsset(decodeURIComponent(path.slice('/app/'.length)));
+      const asset = readArchetypeAsset(decodeAssetName(path.slice('/app/'.length)));
       if (asset) {
         response.writeHead(200, { 'content-type': asset.type, 'x-asset-source': \`\${ASSET_STORE}/images\`, 'cache-control': 'no-store' });
         return response.end(asset.body);
@@ -1324,8 +1338,11 @@ app.get('/__requests', (c) => c.json(requestLog));
 app.get('/__health', (c) => c.json({ ok: true }));
 
 app.get('/app/:file', (c) => {
-  const name = c.req.param('file');
+  // The param read is INSIDE the try on purpose. Reading it decodes a percent-encoded path segment, and a
+  // malformed escape is a throw; if that escaped the handler the whole server would go down on GET /app/%zz.
+  let name = null;
   try {
+    name = c.req.param('file');
     const body = readFileSync(join(here, 'app', name));
     const type = name.endsWith('.css') ? 'text/css' : name.endsWith('.js') ? 'text/javascript' : 'text/plain';
     return c.body(body, 200, { 'content-type': \`\${type}; charset=utf-8\` });
@@ -1336,7 +1353,8 @@ ${set ? `    // Not in the tree, so it may be one of the archetype's boards: ser
     // for assets would have to be declared there and would make the arm differ from its spec.
     const asset = readArchetypeAsset(name);
     if (asset) return c.body(asset.body, 200, { 'content-type': asset.type, 'x-asset-source': \`\${ASSET_STORE}/images\`, 'cache-control': 'no-store' });
-` : ''}    return c.text('not found', 404);
+` : ''}
+    return c.text('not found', 404);
   }
 });
 

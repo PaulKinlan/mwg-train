@@ -141,6 +141,10 @@ test('the harness serves the archetype boards from the store, and only while the
   // A generated tree inside the repository, because the server finds the store by walking up from itself -
   // an absolute path baked into a generated file would put this machine into the tree hash. pilot/out is
   // ignored, so an interrupted run leaves nothing tracked behind.
+  // existing is not a precondition: pilot/out is gitignored, so a CLEAN checkout does not have it and mkdtemp fails
+  // with ENOENT. Creating it recursively is what makes this test pass in a fresh worktree, not only in one where a
+  // previous pilot run happened to leave the directory behind (review finding mwg-train-d4a).
+  mkdirSync(join(ROOT, 'pilot/out'), { recursive: true });
   const root = mkdtempSync(join(ROOT, 'pilot/out/o3t-assets-'));
   const set = loadArchetypeSet('booking');
   const board = set.images[0];
@@ -176,6 +180,12 @@ test('the harness serves the archetype boards from the store, and only while the
     // A name the register does not record is not served, and neither is a tree file the build never wrote.
     assert.equal((await fetch(url('/app/not-a-board.jpg'))).status, 404);
     assert.equal((await fetch(url('/app/styles.css'))).status, 200);
+
+    // A malformed percent-escape must not take the process down. GET /app/%zz used to throw an unhandled URIError
+    // out of decodeURIComponent inside the request handler and kill the server, so the assertion here is not only
+    // "404" but "and it is still answering" (review finding mwg-train-dtc).
+    assert.equal((await fetch(url('/app/%zz'))).status, 404, 'a malformed asset path must fail closed');
+    assert.ok((await fetch(url('/__health'))).ok, 'the server died on a malformed asset path');
   } finally {
     for (const script of scripts) script.kill('SIGKILL');
     rmSync(root, { recursive: true, force: true });
@@ -183,6 +193,7 @@ test('the harness serves the archetype boards from the store, and only while the
 });
 
 test('a board whose bytes no longer match the register is not served, even though the store still has it', async () => {
+  mkdirSync(join(ROOT, 'pilot/out'), { recursive: true }); // mwg-train-d4a: pilot/out is absent in a clean checkout
   const root = mkdtempSync(join(ROOT, 'pilot/out/o3t-tamper-'));
   const set = loadArchetypeSet('booking');
   const board = set.images[0];
