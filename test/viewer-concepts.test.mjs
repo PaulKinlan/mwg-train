@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
@@ -35,15 +35,24 @@ test('gallery presents all three excluded boards, honest booking slot, and autho
   assert.equal(gallery.trainingTargets.length, 30);
   assert.deepEqual(gallery.trainingTargets.map(({ id }) => id), Array.from({ length: 30 }, (_, index) => `tr-${String(index + 1).padStart(2, '0')}`));
   assert.ok(gallery.trainingTargets.every((family) => family.available), 'all 30 declared training targets exist');
-  assert.deepEqual(gallery.trainingTargets[0], {
-    id: 'tr-01', archetype: 'booking', title: 'Mobile bicycle mechanic service booking',
-    origin: 'docs/train/targets/tr-01/index.html', available: true, width: 1280, height: 1080,
-    board: true, boardWidth: 1376, boardHeight: 768,
-  });
-  // The two kinds of image are separate facts about the tree: every family has a harness instrument, and only the
-  // families whose designed board has been generated carry one.
-  assert.deepEqual(gallery.trainingTargets.filter((family) => family.board).map(({ id }) => id), ['tr-01', 'tr-02', 'tr-04']);
-  assert.ok(gallery.trainingTargets.every((family) => family.available), 'every declared family has a harness instrument');
+  const tr01 = gallery.trainingTargets[0];
+  assert.deepEqual(
+    (({ id, archetype, title, origin, available, board }) => ({ id, archetype, title, origin, available, board }))(tr01),
+    { id: 'tr-01', archetype: 'booking', title: 'Mobile bicycle mechanic service booking',
+      origin: 'docs/train/targets/tr-01/index.html', available: true, board: true },
+  );
+  // Both images report a size measured from their own bytes. The exact numbers are pinned by the fixture tests below;
+  // here the point is that a real render and a real board each yield a positive measured size.
+  assert.ok(Number.isInteger(tr01.width) && tr01.width > 0 && Number.isInteger(tr01.height) && tr01.height > 0, 'the harness render reports a measured PNG size');
+  assert.ok(Number.isInteger(tr01.boardWidth) && tr01.boardWidth > 0 && Number.isInteger(tr01.boardHeight) && tr01.boardHeight > 0, 'the designed board reports a measured JPEG size');
+  // The two kinds of image are separate facts about the TREE: every declared family has a harness instrument, and a
+  // family carries a designed board exactly when its reference.jpg is on disk. Deriving this from the tree is what
+  // keeps this test true as boards are authored, instead of restating a count that goes stale (review finding mwg-train-bmr).
+  const familyIds = gallery.trainingTargets.map(({ id }) => id);
+  const boardsOnDisk = familyIds.filter((id) => existsSync(join(ROOT, 'docs/design/training', id, 'reference.jpg')));
+  assert.deepEqual(gallery.trainingTargets.filter((family) => family.board).map(({ id }) => id), boardsOnDisk,
+    'a family is reported with a designed board exactly when its reference.jpg is on disk');
+  assert.ok(boardsOnDisk.length > 0, 'this checkout carries at least one designed board');
   assert.equal(gallery.trainingTargets.filter((family) => gallery.archetypes.some(({ id }) => id === family.id)).length, 0,
     'no id is listed in both arms');
   assert.ok(gallery.journeys.every((journey) => journey.steps.every((step) => step.available)), 'all 14 supplied boards exist');
@@ -69,7 +78,7 @@ test('gallery presents all three excluded boards, honest booking slot, and autho
   assert.match(html, /Training families \(A1\): designed boards and harness targets/);
   assert.match(html, /Sealed evaluation targets \(A6\)/);
   assert.match(html, /not part of the 30 training families above/);
-  assert.match(html, /3 of the 30 training families have a designed reference board so far/);
+  assert.match(html, new RegExp(`${boardsOnDisk.length} of the ${familyIds.length} training families have a designed reference board so far`));
   for (const family of ['tr-01', 'tr-17', 'tr-30']) {
     assert.match(html, new RegExp(`href="/concepts/targets/${family}\\.png"`));
     assert.match(html, new RegExp(`alt="Harness target render, the A1 conformance instrument, for ${family}`));
@@ -78,19 +87,27 @@ test('gallery presents all three excluded boards, honest booking slot, and autho
   assert.doesNotMatch(html, /Harness target render pending/, 'no declared family is missing its instrument in this checkout');
   // A designed board is rendered as its own labelled figure, never as the harness render, and the harness figure says
   // in its own caption that it is not a designed board.
-  assert.equal((html.match(/\/concepts\/references\/tr-\d{2}\.jpg" aria-label/g) ?? []).length, 3, 'only the families with a designed board render one');
+  assert.equal((html.match(/\/concepts\/references\/tr-\d{2}\.jpg" aria-label/g) ?? []).length, boardsOnDisk.length, 'exactly the families with a designed board render one');
   assert.match(html, /Designed reference board · <code>docs\/design\/training\/tr-01\/reference\.jpg<\/code>/);
   assert.match(html, /Harness target render \(A1 conformance instrument\) · <code>data\/A1_self_generated\/targets\/tr-01\/target\.png<\/code> — a deterministic headless-Chrome render of <code>docs\/train\/targets\/tr-01\/index\.html<\/code>, NOT a designed board/);
-  assert.match(html, /Designed board not generated yet\. Expected <code>docs\/design\/training\/tr-03\/reference\.jpg<\/code>/);
+  if (boardsOnDisk.includes('tr-03')) assert.doesNotMatch(html, /Designed board not generated yet/);
+  else assert.match(html, /Designed board not generated yet\. Expected <code>docs\/design\/training\/tr-03\/reference\.jpg<\/code>/);
   assert.match(html, /AI-generated illustration, not training evidence and not proof a demo works/);
-  // The register lands with the boards only when it lands: citing a provenance path that is not in the tree would be
-  // an overclaim, so the page says the register is pending instead (review finding mwg-train-bmr).
-  assert.equal(gallery.trainingBoardRegister, null, 'the register is not in this checkout yet');
-  assert.match(html, /the register of the model and digests for those boards has not landed in this checkout yet \(expected <code>docs\/provenance\/assets\/training-reference-boards\.md<\/code>\)/);
-  assert.doesNotMatch(html, /Model and digests/, 'no provenance citation is made for a register that is not present');
+  // The register is cited only when it is actually in the checkout: a citation for provenance this tree cannot show
+  // would be an overclaim (review finding mwg-train-bmr). Both directions are asserted from the tree.
+  const registerOnDisk = existsSync(join(ROOT, 'docs/provenance/assets/training-reference-boards.md'));
+  assert.equal(gallery.trainingBoardRegister, registerOnDisk ? 'docs/provenance/assets/training-reference-boards.md' : null);
+  if (registerOnDisk) {
+    assert.match(html, /Model and digests: <code>docs\/provenance\/assets\/training-reference-boards\.md<\/code>/);
+    assert.doesNotMatch(html, /has not landed in this checkout yet/);
+  } else {
+    assert.match(html, /the register of the model and digests for those boards has not landed in this checkout yet \(expected <code>docs\/provenance\/assets\/training-reference-boards\.md<\/code>\)/);
+    assert.doesNotMatch(html, /Model and digests/, 'no provenance citation is made for a register that is not present');
+  }
   const renderedOrder = [...html.matchAll(/aria-labelledby="target-(tr-\d{2})"/g)].map((match) => match[1]);
-  assert.deepEqual(renderedOrder.slice(0, 3), ['tr-01', 'tr-02', 'tr-04'], 'families with a designed board are listed first');
-  assert.equal(renderedOrder.length, 30);
+  assert.deepEqual(renderedOrder, [...boardsOnDisk, ...familyIds.filter((id) => !boardsOnDisk.includes(id))],
+    'families with a designed board are listed first, then the rest in id order');
+  assert.equal(renderedOrder.length, familyIds.length);
   assert.match(html, /not screenshots of generated websites/);
   assert.doesNotMatch(html, /<iframe/);
   const base = await serve(t, ROOT);
@@ -111,7 +128,9 @@ test('gallery presents all three excluded boards, honest booking slot, and autho
   assert.match(board.headers.get('content-type'), /image\/jpeg/);
   assert.equal(board.headers.get('x-content-type-options'), 'nosniff');
   assert.ok((await board.arrayBuffer()).byteLength > 1000);
-  assert.equal((await fetch(`${base}/concepts/references/tr-03.jpg`)).status, 404, 'a family with no designed board has no board route');
+  const boardless = familyIds.find((id) => !boardsOnDisk.includes(id));
+  if (boardless) assert.equal((await fetch(`${base}/concepts/references/${boardless}.jpg`)).status, 404, 'a family with no designed board has no board route');
+  else assert.equal((await fetch(`${base}/concepts/references/${boardsOnDisk.at(-1)}.jpg`)).status, 200, 'a family with a designed board serves it');
   assert.equal((await fetch(`${base}/concepts/references/tr-31.jpg`)).status, 404, 'an undeclared family has no board route');
   assert.equal((await fetch(`${base}/concepts/targets/tr-31.png`)).status, 404);
   assert.equal((await fetch(`${base}/concepts/targets/tr-1.png`)).status, 404);
