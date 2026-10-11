@@ -109,6 +109,7 @@ export function listTrackedDocuments({ cwd, argv = ['ls-files', '-z', '*.md', '*
 export const DOCUMENTS = {
   // Per-demo design contracts (mwg-train-tus). Authoring documents, verified against a freshly
   // generated demo by check:design-schema, and deliberately outside the byte-frozen generated trees.
+  'deploy/README.md': 'contract',
   'docs/eval/design/README.md': 'design',
   'docs/eval/design/account-recovery/hono.md': 'design',
   'docs/eval/design/account-recovery/preact.md': 'design',
