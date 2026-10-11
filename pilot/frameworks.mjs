@@ -1338,16 +1338,18 @@ app.get('/__requests', (c) => c.json(requestLog));
 app.get('/__health', (c) => c.json({ ok: true }));
 
 app.get('/app/:file', (c) => {
-  // The param read is INSIDE the try on purpose. Reading it decodes a percent-encoded path segment, and a
+${set ? `  // The param read is INSIDE the try on purpose. Reading it decodes a percent-encoded path segment, and a
   // malformed escape is a throw; if that escaped the handler the whole server would go down on GET /app/%zz.
   let name = null;
   try {
     name = c.req.param('file');
-    const body = readFileSync(join(here, 'app', name));
+` : `  const name = c.req.param('file');
+  try {
+`}    const body = readFileSync(join(here, 'app', name));
     const type = name.endsWith('.css') ? 'text/css' : name.endsWith('.js') ? 'text/javascript' : 'text/plain';
     return c.body(body, 200, { 'content-type': \`\${type}; charset=utf-8\` });
-  } catch {
-${set ? `    // Not in the tree, so it may be one of the archetype's boards: served from the store, and only if its
+  } catch {${set ? `
+    // Not in the tree, so it may be one of the archetype's boards: served from the store, and only if its
     // bytes still hash to the recorded digest. Kept on the existing single-segment route rather than a new
     // one deliberately - the route set is compared against the project's specification, and a second route
     // for assets would have to be declared there and would make the arm differ from its spec.
