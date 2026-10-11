@@ -257,22 +257,22 @@ export function indexBanner({ runEvidence, projectCount, archetypeCount, armCoun
     ? 'acceptance is backed by browser-run evidence you can click through (journeys, rule measurements, screenshots)'
     : 'this checkout has the committed record (CORPUS.json: decisions, tree SHAs, improved rules) but no local run records - journey-level evidence appears here after a local `npm run pilot:run`';
   return `
-<div class="notice"><strong>${num(projectCount)} generated sites</strong> · ${num(archetypeCount)} archetypes × ${num(armCount)} rendering arms. Compare each BASELINE with deterministic MWG repair (the TARGET floor). Accepted and rejected attempts remain visible together.
+<div class="notice"><strong>${num(projectCount)} generated sites</strong> · ${num(archetypeCount)} archetypes × ${num(armCount)} rendering arms. Compare each DEFAULT with deterministic MWG repair (the IDEAL floor). Accepted and rejected attempts remain visible together.
 <details><summary>What evidence is available, and why it matters</summary><p>This viewer covers pipeline stages 3–5 (GENERATE → MEASURE → RECORD). In this checkout, ${evidenceLine}. Rejected attempts stay visible because acceptance bias is only inspectable when they do. This is the EVAL instrument; training data comes only from a separate, disjoint corpus. <a href="/pipeline">Read the full pipeline</a>.</p></details></div>`;
 }
 
 export function projectBanner({ runEvidence }) {
   const evidenceLine = runEvidence
-    ? 'the measured BASELINE vs TARGET evidence (journeys, rule tables, screenshots)'
+    ? 'the measured DEFAULT vs IDEAL evidence (journeys, rule tables, screenshots)'
     : 'the committed decision and SHAs (journey-level evidence exists after a local `npm run pilot:run`)';
   return `
 <div class="notice"><strong>One project's evidence:</strong> attribution, acceptance, ${evidenceLine}, owner-auth status and live sandboxed trees.
-<details><summary>How to read the BASELINE and TARGET</summary><p>The TARGET is the deterministic mechanical-repair floor, not a model's work; the gap above it is what training exists to close. The served trees are hash-verified against the recorded corpus. Anything that cannot be reproduced to its recorded SHA is refused, not served.</p></details></div>`;
+<details><summary>How to read the DEFAULT and IDEAL</summary><p>The IDEAL is the deterministic mechanical-repair floor, not a model's work; the gap above it is what training exists to close. The served trees are hash-verified against the recorded corpus. Anything that cannot be reproduced to its recorded SHA is refused, not served.</p></details></div>`;
 }
 export const PIPELINE_STRIP = `
 <p class="muted"><strong>Pipeline</strong> (<a href="/pipeline">full doc</a>):
 1 BRIEFS → 2 RULES → 3 GENERATE → 4 MEASURE → 5 RECORD/VERIFY → 6 PRICE → <strong>7 TRAIN — queued behind disjoint training-set generation (mwg-train-0ov); the sealed eval set is never trained on</strong>.
-Stages 1–6 are built, measured, and active. Roles: <strong>EVAL INSTRUMENT</strong> measures and is never trained on · <strong>BASELINE</strong> is what we improve FROM · <strong>TRAINING SOURCE</strong> is the disjoint corpus accepted pairs come from · <strong>COST INPUT</strong> prices each accepted pair.</p>`;
+Stages 1–6 are built, measured, and active. Roles: <strong>EVAL INSTRUMENT</strong> measures and is never trained on · <strong>DEFAULT</strong> is what we improve FROM · <strong>TRAINING SOURCE</strong> is the disjoint corpus accepted pairs come from · <strong>COST INPUT</strong> prices each accepted pair.</p>`;
 
 export function stateBadge(view) {
   if (!view.hasRun) return '<span class="badge no-run">NOT YET RUN</span>';
@@ -299,7 +299,7 @@ export function scanBadge(scan) {
   if (scan.status === 'PARTIAL') {
     const originalPending = scan.original?.status === 'MISSING';
     const targetPending = scan.uplifted?.status === 'MISSING';
-    const pending = [originalPending && 'BASELINE', targetPending && 'TARGET'].filter(Boolean).join(' + ');
+    const pending = [originalPending && 'DEFAULT', targetPending && 'IDEAL'].filter(Boolean).join(' + ');
     const title = pending
       ? `${pending} not on disk in this checkout - materialized from the plan, hash-verified and scanned at serve time; nothing is claimed clean until then`
       : 'baseline tree clean; target snapshot not kept, regenerated and scanned at serve time';
@@ -368,7 +368,7 @@ function liveLinks(view, liveOrigin, runId) {
     ok
       ? `<form method="post" action="${escapeHtml(liveOrigin)}/live/${escapeHtml(view.id)}/${version}${escapeHtml(runPath)}/start" style="display:inline"><button type="submit">serve ${label} live</button></form>`
       : `<button type="button" disabled title="${why ?? `owner-auth scan: ${escapeHtml(scan?.[version]?.status ?? 'ERROR')}`}">serve ${label} live</button>`;
-  return `${button('original', 'BASELINE', originalOk)} ${button('uplifted', 'TARGET', upliftedOk)}`;
+  return `${button('original', 'DEFAULT', originalOk)} ${button('uplifted', 'IDEAL', upliftedOk)}`;
 }
 
 export function renderIndex({ views, allViews, filters, runId, runs, yieldReport, scanAvailable, liveOrigin }) {
@@ -430,7 +430,7 @@ export function renderIndex({ views, allViews, filters, runId, runs, yieldReport
 ${indexBanner({ runEvidence, projectCount: allViews.length, archetypeCount: archetypes.length, armCount: frameworks.length })}
 <details class="pipeline-context"><summary>Pipeline: stages 1–6 measured · training queued</summary>${PIPELINE_STRIP}</details>
 ${scanNotice}
-<details class="pipeline-context"><summary>Corpus terminology: BASELINE, TARGET and acceptance</summary><p class="muted">Roles: <strong>BASELINE</strong> = raw model output, kept to measure improvement FROM · <strong>TARGET</strong> = the <strong>${BASELINE_LABEL}</strong> to build TOWARDS · <strong>ACCEPTED PAIR</strong> = passed eval acceptance (training data comes only from accepted pairs of the DISJOINT training corpus — the eval set is never trained on) · <strong>REJECTED ATTEMPT</strong> = kept as negative example &amp; repair material.</p></details>
+<details class="pipeline-context"><summary>Corpus terminology: DEFAULT, IDEAL and acceptance</summary><p class="muted">Roles: <strong>DEFAULT</strong> = raw model output with no MWG and no uplift applied, kept to measure improvement FROM · <strong>IDEAL</strong> = the post-uplift <strong>${BASELINE_LABEL}</strong> to build TOWARDS · <strong>ACCEPTED PAIR</strong> = passed eval acceptance (training data comes only from accepted pairs of the DISJOINT training corpus — the eval set is never trained on) · <strong>REJECTED ATTEMPT</strong> = kept as negative example &amp; repair material.</p></details>
 <p>${counts.accepted} accepted pair(s) · ${counts.rejected} rejected attempt(s) · ${counts.noRun} not yet run — of ${allViews.length} project(s).</p>
 ${yieldLine}
 <form class="filters" method="get" action="/">
@@ -480,7 +480,7 @@ function renderRuleRows(view) {
 </tr>`;
     })
     .join('\n');
-  return `<p class="table-hint" id="rule-table-hint">Scroll sideways to compare every rule at narrow widths.</p><div class="table-scroll" role="region" aria-label="Rule measurements" aria-describedby="rule-table-hint" tabindex="0"><table><caption class="sr-only">Baseline and target rule measurements</caption><thead><tr><th scope="col">rule</th><th scope="col">BASELINE</th><th scope="col">TARGET</th><th scope="col">deciding detail</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  return `<p class="table-hint" id="rule-table-hint">Scroll sideways to compare every rule at narrow widths.</p><div class="table-scroll" role="region" aria-label="Rule measurements" aria-describedby="rule-table-hint" tabindex="0"><table><caption class="sr-only">Default and ideal rule measurements</caption><thead><tr><th scope="col">rule</th><th scope="col">DEFAULT</th><th scope="col">IDEAL</th><th scope="col">deciding detail</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 
 function renderJourney(record, title) {
@@ -539,7 +539,7 @@ export function renderProject({ view, runId, runs, liveOrigin }) {
   <p class="muted">seeded defects: ${decision.seededDefects.length > 0 ? escapeHtml(decision.seededDefects.join(', ')) : 'none (already-clean control)'}</p>
   ${
     decision.upliftEdits
-      ? `<details><summary>Deterministic MWG Repair — <strong>${BASELINE_LABEL}</strong> / Repair Reference (NOT training data): ${decision.upliftApplied.length} applied, ${decision.upliftSkipped.length} skipped, ${decision.upliftFailed.length} failed</summary><p class="muted">This is the mechanical linting floor: deterministic repair of the baseline using the Modern Web Guidance rules, produced by this repository's own tooling and not an official <code>web-uplift</code> result. For generate families it is a control &amp; measurement, not the training target; for repair families it is the reference fix for the seeded defects. It covers mechanical rules only (labels, landmarks, contrast, autofill, sanitised HTML) — it cannot repair a broken data model or missing server persistence.</p><pre>${escapeHtml(JSON.stringify(decision.upliftEdits, null, 2))}</pre></details>`
+      ? `<details><summary>Deterministic MWG Repair — <strong>${BASELINE_LABEL}</strong> / Repair Reference (NOT training data): ${decision.upliftApplied.length} applied, ${decision.upliftSkipped.length} skipped, ${decision.upliftFailed.length} failed</summary><p class="muted">This is the mechanical linting floor: deterministic repair of the default using the Modern Web Guidance rules, produced by this repository's own tooling and not an official <code>web-uplift</code> result. For generate families it is a control &amp; measurement, not the training target; for repair families it is the reference fix for the seeded defects. It covers mechanical rules only (labels, landmarks, contrast, autofill, sanitised HTML) — it cannot repair a broken data model or missing server persistence.</p><pre>${escapeHtml(JSON.stringify(decision.upliftEdits, null, 2))}</pre></details>`
       : ''
   }
 </div>`;
@@ -559,16 +559,16 @@ ${runSelector}
 ${attributionBlock(view)}
 <h2>live instances ${verificationBadge(view.verification, 'original')} ${verificationBadge(view.verification, 'uplifted')}</h2>
 <p>${liveLinks(view, liveOrigin, runId)}</p>
-<p class="muted">Live instances are the real servers, sandboxed (no network, no host filesystem, no environment beyond an allowlist), proxied with all owner auth material stripped. Tree SHAs: BASELINE <span class="sha">${escapeHtml(view.originalSha ?? 'unrecorded')}</span> · TARGET <span class="sha">${escapeHtml(view.upliftedSha ?? 'unrecorded')}</span></p>
+<p class="muted">Live instances are the real servers, sandboxed (no network, no host filesystem, no environment beyond an allowlist), proxied with all owner auth material stripped. Tree SHAs: DEFAULT <span class="sha">${escapeHtml(view.originalSha ?? 'unrecorded')}</span> · IDEAL <span class="sha">${escapeHtml(view.upliftedSha ?? 'unrecorded')}</span></p>
 <h2>acceptance</h2>
 ${decisionBlock}
-<h2>MWG rule measurements (BASELINE vs TARGET)</h2>
+<h2>MWG rule measurements (DEFAULT vs IDEAL)</h2>
 ${renderRuleRows(view)}
 <h2>owner-auth scan</h2>
 ${scanBlock}
 <div class="pair">
   <div class="panel">
-    <h3>BASELINE — browser journeys</h3>
+    <h3>DEFAULT — browser journeys</h3>
     ${renderJourney(view.original, 'baseline')}
     <h4>security checks</h4>
     ${renderSecurity(view.original)}
@@ -579,7 +579,7 @@ ${scanBlock}
     ${view.original?.errors?.length ? `<p class="danger">errors: ${escapeHtml(view.original.errors.join('; '))}</p>` : ''}
   </div>
   <div class="panel">
-    <h3>TARGET — browser journeys</h3>
+    <h3>IDEAL — browser journeys</h3>
     <p class="muted">the <strong>${BASELINE_LABEL}</strong> — mechanical linting by our own rule specifications, not an official <code>web-uplift</code> result, and not the training target for generate families</p>
     ${renderJourney(view.uplifted, 'target')}
     <h4>security checks</h4>
@@ -603,5 +603,5 @@ function renderScanFindings(scan) {
       .map((finding) => `<li><code>${escapeHtml(finding.file ?? '?')}</code>${finding.line ? `:${finding.line}` : ''} — ${escapeHtml(finding.patternId)}</li>`)
       .join('')}</ul>`;
   };
-  return `${scan.reason ? `<p class="danger">${escapeHtml(scan.reason)}</p>` : ''}${side('BASELINE', scan.original)}${side('TARGET', scan.uplifted)}`;
+  return `${scan.reason ? `<p class="danger">${escapeHtml(scan.reason)}</p>` : ''}${side('DEFAULT', scan.original)}${side('IDEAL', scan.uplifted)}`;
 }

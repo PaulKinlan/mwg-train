@@ -17,9 +17,9 @@ Today this repository is the **instrument** for that experiment rather than the 
 [`docs/PIPELINE.md`](docs/PIPELINE.md) §0 carries this in full, with the diagram and the trainable-model matrix; it is Paul's lifecycle, quoted there, and this is the one-line version of each step:
 
 1. **Select and qualify a trainable model** — open weights or verified hosted fine-tuning; a zero-shot vertical slice must build a working app before any bulk generation.
-2. **Build the untouched baseline** — the base model generates sites from the training-side specs; its defects are the empirical floor to improve from.
+2. **Build the untouched default** — the base model generates sites from the training-side specs; its defects are the empirical floor to improve from.
 3. **Cordon off the baseline checkpoint** — the raw outputs and the exact model revision, immutable, as the default comparator.
-4. **Evaluate the baseline with MWG / web-uplift** — measure exactly which rules passed and failed.
+4. **Evaluate the default with MWG / web-uplift** — measure exactly which rules passed and failed.
 5. **Improve the demos into the training set** — apply MWG and uplift until they meet the visual, functional and MWG criteria; this is the training set.
 6. **Re-evaluate to confirm outcomes** — function, accessibility, visual match and rights clearance.
 7. **Train the adapter** on the rights-cleared, disjoint `(spec -> uplifted code)` dataset.
@@ -78,7 +78,7 @@ The work in progress today is almost all **step-2 input**: the material the base
 
 - **Archetype type coverage** (`mwg-train-efg`, in progress): the 30 families vary mostly in *subject*, not in *type* — they are 30 flavours of one community/civic site, against the wider archetype list Paul asked for. Until that is fixed, the corpus tests one site type well and the rest thinly.
 - **The archetype asset store** (`mwg-train-fom`, closed; `mwg-train-o3t`, in progress): a shared per-archetype asset set (brand, palette, typography, copy, state boards) now exists under `assets/archetypes/<archetype>/`; **nothing consumes it yet**, which is `o3t`. Paul's reason is generation, not tidiness: a build that cannot see the brand or the imagery cannot render the intended UI, and the failure then looks like a weak model rather than a missing input.
-- **Corpus-record correctness** (`mwg-train-210`, open): the raw default output and the post-uplift ideal must be distinct sets, and the record currently calls the uplifted artefact "baseline", which is the opposite object.
+- **Corpus-record correctness** (`mwg-train-210`, fixed): the record called the MWG-repaired artefact "baseline" while the lifecycle documents used the same word for the raw output - opposite artefacts. [`docs/vocabulary.md`](docs/vocabulary.md) now settles the words (default = raw, ideal = repaired), the records' definition names both sides, and `npm run check:set-separation` fails if the two sides ever collapse into one hash, if a tree moves with no rule applied, or if a training tree collides with a pilot tree.
 - **Spec confirmation** (`mwg-train-qyt`, open): whether the 30 per-family `plan.md`/`design.md` specs match what Paul asked for — a check on step-2 input, not on the pipeline.
 
 Stages 1–6, by contrast, are done: they are wired into `npm test` through `npm run check:all`, and the gate that just ran on main covers all of them.
@@ -110,8 +110,9 @@ Until then, stage 8 (the sealed evaluation) cannot start, because arm **T** does
 Straight from [`docs/PIPELINE.md`](docs/PIPELINE.md), because a plan that cannot say which artefact is an instrument and which is training data is how a training set gets contaminated:
 
 - **EVAL INSTRUMENT** — the sealed briefs, the pinned rules and the measured pairs (stages 1–2, 4–5). It measures; it is **never** consumed as training data. The A6 targets in [`data/A6_evaluation/`](data/A6_evaluation) are the sealed design hashes training must never see.
-- **BASELINE** — the raw generated sites (stage 3). What the model produces today, kept to measure improvement **from**.
-- **TRAINING SOURCE** — the disjoint corpus generated for stage 7. Accepted pairs from this corpus, and only these, may become training data.
+- **DEFAULT** — the raw generated sites (stage 3), with **no MWG and no uplift applied**. What the model produces today, kept to measure improvement **from**. [`docs/vocabulary.md`](docs/vocabulary.md) settles this word: the default is recorded as `original_sha`, and the repaired side is the ideal.
+- **IDEAL** — the same sites after the deterministic uplift (`uplift_sha` / `uplifted_sha`). The target, and the only side that may become training data. `npm run check:set-separation` asserts the two are recorded as distinct artefacts.
+- **TRAINING SOURCE** — the disjoint corpus generated for stage 7. The **ideal** side of accepted pairs, and only these, may become training data; the default side stays the comparator.
 - **COST INPUT** — the pricing evidence (stage 6), which decides where generation runs.
 
 One more artefact needs naming because it is easy to misread: the 30 designed reference boards under [`docs/design/training/`](docs/design/training) are **planning references, not training data and not evaluation targets**. They are teacher-generated (`A3_teacher_generated`), quarantined from training and registered as such in [`docs/provenance/assets/training-reference-boards.md`](docs/provenance/assets/training-reference-boards.md). The A1 conformance instrument beside each family is a different file — a render of the family's authored board.
@@ -126,6 +127,7 @@ jq '.summary' pilot/TRAINING_CORPUS.json    # 30 families, 7 frameworks, 210 pro
 jq '.summary' pilot/CORPUS.json             # 35 attempted, 34 accepted, yield 0.971
 ls docs/design/training/*/reference.jpg | wc -l
 npm run check:train-design
+npm run check:set-separation        # the two sides are recorded as distinct artefacts
 npm run viewer -- --corpus pilot    # stages 3-5 as a page, on :7700
 ```
 

@@ -39,7 +39,7 @@ framework expresses it*:
 | `webcomponents` | the platform's component model |
 | `hono` | server-rendered variant |
 
-`defects` in the plan is what each original (BASELINE) is seeded with; the deterministic uplift
+`defects` in the plan is what each original (DEFAULT) is seeded with; the deterministic uplift
 (`src/corpus/uplift.mjs`) is then measured against them. See [../docs/PIPELINE.md](../docs/PIPELINE.md)
 for where this sits in the pipeline, and the corpus viewer for the measured evidence.
 

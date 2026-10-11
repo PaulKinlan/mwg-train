@@ -32,6 +32,7 @@ const WIRED = new Set([
   'check:design-schema',
   'check:train-design',
   'check:baseline-label',
+  'check:set-separation',
   'check:pilot-served',
   'check:served-gap'
 ]);

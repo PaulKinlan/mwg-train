@@ -5,7 +5,7 @@
   "generator": "scripts/scaffold-pilot.mjs",
   "uplift_tool": "src/corpus/uplift.mjs",
   "baseline_label": "mwg-train deterministic baseline",
-  "baseline_definition": "deterministic repair of the project by our own Modern Web Guidance rule specifications; no model and no teacher in the loop",
+  "baseline_definition": "the MWG-uplifted (ideal) artefact, and not the default: deterministic repair of a project by our own Modern Web Guidance rule specifications, with no model and no teacher in the loop. The raw pre-uplift artefact is the default and is recorded separately.",
   "baseline_tool": "src/corpus/uplift.mjs",
   "build_key_definition": {
     "formula": "build_key = project_id@model (project_id is the use case x framework pair)",

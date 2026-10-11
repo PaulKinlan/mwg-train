@@ -37,14 +37,14 @@ The overarching training pipeline implements a closed-loop, model-to-model empir
    - Select a verified trainable base model (open downloadable weights or verified hosted fine-tuning; e.g. DeepSeek V4.1 Flash via Fireworks Dedicated LoRA or private GPU).
    - In accordance with Paul's clarification, the model performs text reasoning over application code. Visual reference boards serve as targets to compare against and aim for, not direct model prompt inputs.
    - Run a zero-shot vertical slice (`plan.md + design contract specifications → working app`) before generating bulk data. Reject any base that cannot build functional applications.
-2. **Build the Untouched Baseline**:
+2. **Build the Untouched Default**:
    - Use the qualified base model to attempt generating web applications from training-side `plan.md` functional specs and `design.md` visual design contracts.
-   - The raw base output is intended to target the authored high-fidelity reference image and functional routes/state described in `plan.md`. Imperfections, semantic gaps, accessibility issues, and MWG defects in this raw generation are expected and preserved—they establish the empirical baseline to measure improvement *from*.
+   - The raw base output is intended to target the authored high-fidelity reference image and functional routes/state described in `plan.md`. Imperfections, semantic gaps, accessibility issues, and MWG defects in this raw generation are expected and preserved—they establish the empirical default to measure improvement *from*.
 3. **Cordon Off Baseline Checkpoint**:
    - Store the initial raw model outputs and exact model/revision checkpoint, cordoned off and immutable.
    - This frozen checkpoint serves as the default model / baseline comparator.
-4. **Evaluate Baseline with MWG / Web Uplift**:
-   - Run the Modern Web Guidance (MWG) and `web-uplift` evaluation framework across the baseline builds.
+4. **Evaluate the Default with MWG / Web Uplift**:
+   - Run the Modern Web Guidance (MWG) and `web-uplift` evaluation framework across the default builds.
    - Quantify exactly which MWG rules passed, which failed, and where mechanical vs architectural defects exist.
 5. **Improve Demos into the Training Set**:
    - Apply Modern Web Guidance and Web Uplift transformations, iteratively fixing defects, styling, semantic structure, accessibility, and server resilience until the demo meets all visual, functional, and MWG criteria.
@@ -89,13 +89,13 @@ Under Paul's decision designating **DeepSeek V4.1 Flash** as the default student
 
 ## 2. Existing Deterministic Instrumentation and Current Status
 
-The seven stages below describe today's deterministic pilot baseline and evaluation pipeline. They represent the reproducible scaffolding tooling, **not** an executed model-training run.
+The seven stages below describe today's deterministic pilot and evaluation pipeline. They represent the reproducible scaffolding tooling, **not** an executed model-training run.
 
 | # | Stage | Command | Consumes | Produces |
 |---|-------|---------|----------|----------|
 | 1 | **BRIEFS** | `npm run check:briefs` | `docs/eval/briefs/manifest.jsonl` + `docs/eval/rules.json` | zero-exit-code validation of the sealed eval inputs (seal `sha256:89a1f47d…`) |
 | 2 | **RULES** | `node scripts/extract-mwg-rules.mjs --skill-dir <installed skill dir> --out docs/eval/rules.json` | Modern Web Guidance (the skill, installed locally) | `docs/eval/rules.json` — the pinned MWG rule vocabulary and hash |
-| 3 | **GENERATE** | `npm run pilot:scaffold` | `pilot/plan.json` (archetypes × frameworks × seeded defects) | `pilot/projects/` — the reviewable on-disk baseline sites |
+| 3 | **GENERATE** | `npm run pilot:scaffold` | `pilot/plan.json` (archetypes × frameworks × seeded defects) | `pilot/projects/` — the reviewable on-disk default sites |
 | 4 | **MEASURE** | `npm run pilot:run` | `pilot/plan.json` (regenerated fresh into `.pilot-corpus/<runId>`) + the determinism rules | run records under `pilot/out/<run>/`: browser journeys, rule measurements, accept/reject decisions, and the yield report |
 | 5 | **RECORD / VERIFY** | `npm run pilot:corpus` / `npm run check:pilot-corpus` | `pilot:corpus`: `pilot/out/<run>/` + `pilot/plan.json` + `.pilot-uplifted/<runId>/`<br>`check:pilot-corpus`: `pilot/CORPUS.json` + `pilot/plan.json` | `pilot/CORPUS.json` — the committed record of what was measured (tree SHAs, acceptance, improved rules); `--verify` re-derives all of it |
 | 6 | **PRICE** | `npm run price:two-backends` | `docs/eval/quotes.jsonl` + `docs/pilot/yield.json` + `docs/eval/briefs/manifest.jsonl` | cost per accepted pair, Fireworks vs the cluster (`docs/eval/two-backends.md`) |
@@ -113,7 +113,7 @@ closed bead as the active blocker while it did.
 
 ## The role of Uplift / MWG
 
-The uplift (`src/corpus/uplift.mjs`) is a **deterministic** transform of a baseline site using the
+The uplift (`src/corpus/uplift.mjs`) is a **deterministic** transform of a default site using the
 Modern Web Guidance rules. Its role depends on the family:
 
 - **For GENERATE families** it is a *deterministic control & measurement* — the free floor. It
@@ -130,9 +130,14 @@ Modern Web Guidance rules. Its role depends on the family:
 
 - **EVAL INSTRUMENT** — the sealed briefs + rules + measured pairs (stages 1–2, 4–5). It measures;
   it is never consumed as training data.
-- **BASELINE** — the raw generated sites (stage 3). What the model produces today, kept to measure
-  improvement FROM.
+- **DEFAULT** — the raw generated sites (stage 3), with **no Modern Web Guidance and no uplift applied**.
+  What the model produces today, kept to measure improvement FROM. (This is what these documents used to
+  call the "baseline"; the raw side is the default, and the repaired side is the ideal — see
+  [docs/vocabulary.md](vocabulary.md), and `npm run check:set-separation` which enforces it.)
+- **IDEAL** — the same sites after the deterministic uplift, recorded as the ideal side of each pair.
+  It is the target, and it is the only side that may become training data.
 - **TRAINING SOURCE** — the disjoint corpus generated for stage 7 (recorded in `pilot/TRAINING_CORPUS.json`).
-  Accepted pairs from this corpus — and only these — may become training data.
+  Accepted pairs from this corpus — and only these — may become training data: the accepted pairs' **ideal**
+  side is the target, and their default side is the comparator, never an input.
 - **COST INPUT** — the pricing evidence (stage 6). What an accepted pair costs to produce on each
   backend; decides where generation runs.

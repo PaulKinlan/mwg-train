@@ -271,7 +271,7 @@ test('the project page renders per-rule before/after with the deciding detail', 
   const html = renderProject({ view, runId: corpus.runId, runs: corpus.runs, liveOrigin: 'http://127.0.0.1:7701' });
   assert.match(html, /forms\/required-field-feedback/);
   assert.match(html, /role="region" aria-label="Rule measurements" aria-describedby="rule-table-hint"/);
-  assert.match(html, /<caption class="sr-only">Baseline and target rule measurements<\/caption>/);
+  assert.match(html, /<caption class="sr-only">Default and ideal rule measurements<\/caption>/);
   assert.match(html, /FAIL/);
   assert.match(html, /PASS/);
   assert.match(html, /↑ improved/);
