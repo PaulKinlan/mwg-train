@@ -6,9 +6,10 @@
 - **Boundaries:**
   - **Not the sealed evaluation target:** this demonstration does not modify or replace
     `docs/eval/targets/catalogue/` (whose manifest digest is pinned by `EVAL_TARGETS_SEAL`).
-  - **Not part of pilot:** this demo lives outside `pilot/**` and `data/A6_evaluation/**`. The frozen
-    pilot corpora (`pilot/CORPUS.json`, `pilot/TRAINING_CORPUS.json`, and generated arm trees) remain
-    byte-identical.
+  - **Not part of pilot:** this demo lives outside `pilot/**` and `data/A6_evaluation/**` and is not
+    measured by the pilot; nothing in it is corpus input. Regenerating the reference boards elsewhere in
+    this archetype does change `pilot/CORPUS.json`, because the built arms embed each board's digest, so
+    the corpora are re-recorded rather than left byte-identical whenever a board changes.
   - **Not training data:** kept purely for visual verification and operator inspection.
   - **Not a conformance result:** nothing here asserts a match with the boards or a pass against the
     contract. It is hand-written markup, not a measured outcome.

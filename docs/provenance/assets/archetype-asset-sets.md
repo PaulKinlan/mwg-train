@@ -45,7 +45,7 @@ store, the register or the target have moved apart.
 ### catalogue
 
 - Target: `docs/design/archetypes/catalogue`
-- Readme: `docs/design/archetypes/catalogue/README.md` (sha256 `3a7443a5448153cee99988947b443bab8b83defa5e59e8f5eff1064d8cbe2421`)
+- Readme: `docs/design/archetypes/catalogue/README.md` (sha256 `9cad4fb55ee641f90bf475703aa499862e919df694f1a126a0c1b81f5828b1cd`)
 - Stylesheet: `docs/design/archetypes/catalogue/demo/styles.css` (sha256 `081e151f374766fffb78fedac1d57fe4d7d0a4f38257ac85ca67eda068bb5c64`)
 - Documents: `docs/design/archetypes/catalogue/demo/cart.html`, `docs/design/archetypes/catalogue/demo/compare.html`, `docs/design/archetypes/catalogue/demo/empty.html`, `docs/design/archetypes/catalogue/demo/index.html`
 - Rights: `excluded_from_training: true`, `approved_for_training: false` from `docs/design/archetypes/catalogue/README.md:5`
