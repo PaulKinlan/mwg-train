@@ -41,7 +41,7 @@ Steps 2–6 are what the deterministic stages in §3 automate. Step 7 is the one
 
 Two qualifications that belong in the plan rather than in a footnote:
 
-- **The training corpus's own verification is partial and the repository says so.** Of the 210 training projects, 40 were driven in a real browser through their journeys (384 journeys driven, 340 passed) and **170 are `scaffolded / unverified journey`** — a scaffold record says what was built, not that it runs. The token figure, **2,748,147 derived tokens** (band 2,061,110–3,435,183), is derived from characters rather than measured with a tokenizer, and is labelled an estimate where it is quoted. See [`docs/train/corpus/YIELD.md`](docs/train/corpus/YIELD.md).
+- **The training corpus's own verification is partial and the repository says so.** Of the 210 training projects, 40 were driven in a real browser through their journeys (396 journeys driven, 364 passed) and **170 are `scaffolded / unverified journey`** — a scaffold record says what was built, not that it runs. The token figure, **2,748,147 derived tokens** (band 2,061,110–3,435,183), is derived from characters rather than measured with a tokenizer, and is labelled an estimate where it is quoted. See [`docs/train/corpus/YIELD.md`](docs/train/corpus/YIELD.md).
 - **The deterministic uplift is a control, not the training target.** For GENERATE families it is the free mechanical floor (labels, landmarks, contrast, autofill, sanitised HTML); it cannot repair a broken data model or missing persistence. The gap between that floor and the target is exactly what training is supposed to close. The per-family split is in [`docs/PIPELINE.md`](docs/PIPELINE.md).
 
 ## 4. Where it is right now
