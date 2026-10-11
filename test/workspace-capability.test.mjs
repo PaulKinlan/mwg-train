@@ -231,6 +231,30 @@ for (const arm of ARMS) {
       assert.equal(leaked.length, 0, `${arm} no row in any table contains a password in the clear`);
       database.close();
 
+      // THE SECURITY REVIEW'S P1 AND P2, driven from the database, because that is where the defect was.
+      // A digest of the wrong length is not a credential: `Buffer.from('', 'hex')` and `Buffer.from('xyz',
+      // 'hex')` are zero-length, so before the fix any password authenticated against a corrupted row.
+      const security = new DatabaseSync(dbPath);
+      const stored = security.prepare('SELECT digest FROM account_credentials WHERE email = ?').get(OWNER.email).digest;
+      for (const malformed of ['', 'xyz', 'a', 'ab']) {
+        security.prepare('UPDATE account_credentials SET digest = ? WHERE email = ?').run(malformed, OWNER.email);
+        const refused = await post('/login', { email: OWNER.email, password: OWNER.password });
+        assert.equal(refused.status, 401, `${arm} a digest of ${JSON.stringify(malformed)} must not authenticate even the RIGHT password`);
+      }
+      security.prepare('UPDATE account_credentials SET digest = ? WHERE email = ?').run(stored, OWNER.email);
+      assert.equal((await post('/login', { email: OWNER.email, password: OWNER.password })).status, 303, `${arm} restoring the digest restores sign-in, so the refusals above were the corruption`);
+
+      // The server, not the browser, is what decides a session has ended: the cookie's Max-Age expires in
+      // the browser, and a sid replayed after it must not still be a session.
+      const live = security.prepare('SELECT sid FROM auth_sessions ORDER BY created_at DESC LIMIT 1').get();
+      security.prepare('UPDATE auth_sessions SET created_at = ? WHERE sid = ?').run(new Date(Date.now() - 7_200_000).toISOString(), live.sid);
+      const expired = await get('/workspace', `sid=${live.sid}`);
+      assert.equal(expired.status, 303, `${arm} a two-hour-old session is refused`);
+      assert.equal(expired.headers.get('location'), '/login', `${arm} and its holder is sent to sign in again`);
+      const fresh = cookiesOf(await post('/login', { email: OWNER.email, password: OWNER.password }));
+      assert.equal((await get('/workspace', fresh)).status, 200, `${arm} a fresh session still works, so that refusal is not a blanket one`);
+      security.close();
+
       // And the same claim about what leaves the server: no page, and no refusal, carries the password.
       for (const [path, cookie] of [['/onboarding', ''], ['/login', ''], ['/workspace', ownerAgain], ['/workspace', memberCookie]]) {
         const body = await (await get(path, cookie)).text();

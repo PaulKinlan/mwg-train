@@ -1952,8 +1952,15 @@ const authTables = (archetype) =>
     "  const row = credential ?? DUMMY_CREDENTIAL;",
     "  if (row.kdf !== ACCOUNT_KDF) return false;",
     "  const expected = Buffer.from(row.digest, 'hex');",
-    "  const actual = scryptSync(String(password), row.salt, expected.length, ACCOUNT_KDF_PARAMS);",
-    "  const match = expected.length === actual.length && timingSafeEqual(expected, actual);",
+    // A digest that is not the length this code writes is not a credential, and this check is load-bearing:
+    // `Buffer.from('', 'hex')` and `Buffer.from('xyz', 'hex')` are both ZERO-length, `scryptSync(pw, salt, 0)`
+    // is zero-length, and `timingSafeEqual` between two empty buffers is TRUE - so a row whose digest was
+    // emptied, truncated or corrupted would have accepted ANY password. Deriving from the fixed constant
+    // rather than from the stored length also removes the 1-in-256 collision a one-byte digest would give
+    // (mwg-train-ksn security review, P1, proven with a runnable snippet).
+    "  if (expected.length !== ACCOUNT_KEY_BYTES) return false;",
+    "  const actual = scryptSync(String(password), row.salt, ACCOUNT_KEY_BYTES, ACCOUNT_KDF_PARAMS);",
+    "  const match = timingSafeEqual(expected, actual);",
     "  return Boolean(credential) && match;",
     "};",
     "const savePassword = (email, password) => {",
@@ -1961,7 +1968,12 @@ const authTables = (archetype) =>
     "  insertCredential.run(email, credential.kdf, credential.salt, credential.digest);",
     "};",
     "const insertAuthSession = db.prepare('INSERT INTO auth_sessions (sid, email, created_at) VALUES (?, ?, ?)');",
-    "const selectAuthSession = db.prepare('SELECT email FROM auth_sessions WHERE sid = ?');",
+    "const selectAuthSession = db.prepare('SELECT email, created_at FROM auth_sessions WHERE sid = ?');",
+    // The session's lifetime, in one place. It is the same hour the `Max-Age=3600` cookie asks the browser
+    // for, and the server enforces it too: the browser's Max-Age is the browser's promise, and a sid
+    // replayed by a script, an agent or a stolen cookie after it expired must not still be a session
+    // (mwg-train-ksn security review, P2).
+    "const AUTH_SESSION_SECONDS = 3600;",
     "const deleteAuthSession = db.prepare('DELETE FROM auth_sessions WHERE sid = ?');",
     // Looked up by email ONLY: the password is no longer part of the query.
     "const selectAccountByEmail = db.prepare('SELECT email, display_name FROM accounts WHERE email = ?');",
@@ -1981,13 +1993,26 @@ const authTables = (archetype) =>
     '    .map((part) => part.trim())',
     "    .find((part) => part.startsWith('sid='))",
     "    ?.slice('sid='.length);",
+    'const authSessionFresh = (row) => Date.now() - Date.parse(row.created_at) < AUTH_SESSION_SECONDS * 1000;',
     'const authSessionEmail = (cookieHeader) => {',
     '  const sid = sessionSid(cookieHeader);',
-    '  return sid ? selectAuthSession.get(sid)?.email : undefined;',
+    '  const row = sid ? selectAuthSession.get(sid) : undefined;',
+    // An unparseable or missing `created_at` is treated as expired rather than as fresh: a row this code
+    // cannot date is a row it cannot vouch for.
+    '  return row && authSessionFresh(row) ? row.email : undefined;',
     '};',
   ].join('\n');
 
-/** The login/logout handlers, raw arm. */
+/**
+ * The login/logout handlers, raw arm.
+ *
+ * `/logout` deliberately does NOT require the CSRF token its form carries. Signing a visitor out is not a
+ * privilege it can abuse - the worst outcome is a forced sign-out - and an `auth`-only project has no token
+ * to send, so requiring one would break sign-out for every specification that does not also turn on the
+ * workspace capability. `SameSite=Lax` is the control on the cross-site POST case, and the token is still
+ * rendered so a project that wants to enforce it can (mwg-train-ksn security review, P3, answered rather
+ * than ignored).
+ */
 const rawAuthRoutes = () =>
   [
     "  if (path === '/login' && request.method === 'GET') return html(response, loginPage());",
