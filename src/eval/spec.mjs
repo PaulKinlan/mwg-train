@@ -59,7 +59,7 @@ const FIELD_KEYS = new Set(['slug', 'name', 'type', 'label', 'autocomplete', 're
 export { FIELD_KEYS };
 
 /** The functional-route capabilities a specification may opt into. A closed set, like FIELD_KEYS. */
-export const CAPABILITY_KEYS = new Set(['list_pages', 'detail_page', 'auth', 'cart', 'pricing_tiers', 'checkout', 'survey', 'game', 'workspace', 'wiki', 'explainer']);
+export const CAPABILITY_KEYS = new Set(['list_pages', 'detail_page', 'auth', 'cart', 'pricing_tiers', 'checkout', 'survey', 'game', 'workspace', 'wiki', 'explainer', 'demo']);
 
 /** The field names a selector types into, from `[name=x]` / `[name="x"]` / `[name='x']`. */
 function selectorFieldNames(selector) {
@@ -727,13 +727,55 @@ export function validateSpec(spec) {
   if (spec.capabilities?.explainer === true && spec.explainer === undefined) {
     at('capabilities.explainer', 'is on, but no explainer block states the control and the target');
   }
+  if (spec.demo !== undefined) {
+    const demo = spec.demo;
+    if (!isObject(demo)) at('demo', 'must be an object when present');
+    else {
+      for (const key of Object.keys(demo)) {
+        if (!['title', 'summary', 'expression', 'mode', 'limits'].includes(key)) at(`demo.${key}`, 'unknown key');
+      }
+      if (!isString(demo.title) || demo.title.trim() === '') at('demo.title', 'must title the demo');
+      if (!isString(demo.summary) || demo.summary.trim() === '') at('demo.summary', 'must say what the demo does');
+      // What the page opens with. It has to be something the demo can actually run: a configuration that starts
+      // outside the demo's own character limit would open the page on an error message, which is a broken demo rather
+      // than a contained one. That is the only limit checked here, because it is the one this module can measure
+      // exactly. Token count cannot be: counting words would be a proxy that refuses legal expressions (the text
+      // `(12*3.5)` is one word and five tokens), and re-implementing the tokenizer here would create a second grammar
+      // that could disagree with the evaluator's. The evaluator is the judge, and the corpus test asserts that the
+      // initial expression of the demo it ships actually runs rather than erroring.
+      if (!isString(demo.expression) || demo.expression.trim() === '') at('demo.expression', 'must state what the demo starts by running');
+      const modes = ['exact', 'whole'];
+      if (!modes.includes(demo.mode)) at('demo.mode', `must be one of ${modes.join(', ')}: a choice the reader can see has to be a choice the page can honour`);
+      const limits = demo.limits;
+      if (!isObject(limits)) at('demo.limits', 'must state the containment limits - the whole point of this capability');
+      else {
+        for (const key of Object.keys(limits)) {
+          if (!['characters', 'tokens', 'depth'].includes(key)) at(`demo.limits.${key}`, 'unknown key');
+        }
+        const bounded = (name, min, max) => {
+          const value = limits[name];
+          if (!Number.isInteger(value) || value < min || value > max) at(`demo.limits.${name}`, `must be a whole number between ${min} and ${max}`);
+        };
+        bounded('characters', 16, 2000);
+        bounded('tokens', 4, 500);
+        bounded('depth', 1, 32);
+        if (isString(demo.expression) && Number.isInteger(limits.characters) && demo.expression.length > limits.characters) {
+          at('demo.expression', `is longer than the demo's own character limit (${limits.characters}): the page would open on an error`);
+        }
+      }
+    }
+    if (spec.capabilities?.demo !== true) at('demo', 'only meaningful with capabilities.demo - there would be no page to run anything on');
+  }
+  if (spec.capabilities?.demo === true && spec.demo === undefined) {
+    at('capabilities.demo', 'is on, but no demo block states what it runs and under what limits');
+  }
   if (spec.capabilities?.pricing_tiers === true && spec.pricing_tiers === undefined) {
     at('capabilities.pricing_tiers', 'is on, but no pricing_tiers block states the tiers');
   }
   // A capability's own routes are emitted before the declared ones, so a specification that declares
   // the same path would leave a handler nothing ever reaches. Refused rather than silently shadowed
   // (mwg-train-4lk review).
-  const capabilityOwnedRoutes = { cart: ['/cart', '/cart/add'], pricing_tiers: ['/pricing', '/pricing/select', '/pricing/:ref'], checkout: ['/checkout', '/checkout/pay', '/checkout/receipt/:ref'], survey: ['/survey', '/survey/answer', '/survey/review', '/survey/submit', '/survey/result/:ref'], game: ['/play', '/play/score', '/play/scores'], workspace: ['/onboarding', '/workspace', '/workspace/invite', '/workspace/setting'], wiki: ['/wiki', '/wiki/search', '/wiki/:slug', '/wiki/:slug/history', '/wiki/:slug/revision/:n', '/wiki/:slug/create'], explainer: ['/explain', '/explain/reset'] };
+  const capabilityOwnedRoutes = { cart: ['/cart', '/cart/add'], pricing_tiers: ['/pricing', '/pricing/select', '/pricing/:ref'], checkout: ['/checkout', '/checkout/pay', '/checkout/receipt/:ref'], survey: ['/survey', '/survey/answer', '/survey/review', '/survey/submit', '/survey/result/:ref'], game: ['/play', '/play/score', '/play/scores'], workspace: ['/onboarding', '/workspace', '/workspace/invite', '/workspace/setting'], wiki: ['/wiki', '/wiki/search', '/wiki/:slug', '/wiki/:slug/history', '/wiki/:slug/revision/:n', '/wiki/:slug/create'], explainer: ['/explain', '/explain/reset'], demo: ['/demo', '/demo/run'] };
   for (const [capability, owned] of Object.entries(capabilityOwnedRoutes)) {
     if (spec.capabilities?.[capability] !== true) continue;
     for (const route of spec.routes ?? []) {
@@ -812,6 +854,7 @@ export function archetypeFromSpec(spec) {
     ...(spec.workspace === undefined ? {} : { workspace: spec.workspace }),
     ...(spec.wiki === undefined ? {} : { wiki: spec.wiki }),
     ...(spec.explainer === undefined ? {} : { explainer: spec.explainer }),
+    ...(spec.demo === undefined ? {} : { demo: spec.demo }),
     ...(spec.seed_accounts === undefined ? {} : { seedAccounts: spec.seed_accounts }),
   };
 }
