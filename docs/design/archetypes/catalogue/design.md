@@ -82,10 +82,12 @@ like.
 
 The last column names where each of the 29 colour tokens is actually used, with the selectors and the
 number of references, rather than describing an intended use. References are counted across the whole of
-`demo/styles.css`, *including* `:root`. The four `--art-*` rows are the only tokens with **no** stylesheet
-references at all, so those four are counted in the demo's HTML instead; a few other tokens appear in both
-files - `--surface-inset`, for one, has eight stylesheet references and five in the HTML. Two tokens -
-`--text-inverse` and `--action-glow` - are referenced nowhere in either file.
+`demo/styles.css`, *including* `:root`. The four `--art-*` rows are the only tokens referenced **solely** in the
+demo's HTML rather than the stylesheet, so those four are counted there instead; a few other tokens appear in
+both files - `--surface-inset`, for one, has eight stylesheet references and five in the HTML. Two tokens -
+`--text-inverse` and `--action-glow` - are referenced nowhere in either file. Neither of those two is a
+victim of the same accident as the art tokens: they have no HTML references either, so nothing is hiding in
+the markup.
 
 | Token | Value | Where it is used (references; in `styles.css` unless stated) |
 |---|---|---|
@@ -128,8 +130,8 @@ coloured word on the dark ground clears contrast where the fill colour would not
 The scale is rem-based and clustered. Each `gap` declaration is counted by the value it **leads** with,
 which is the convention behind every number below: the commonest is `0.75rem` (seven declarations), then
 `0.5rem` (six), `0.35rem` (five), then `1rem` and `0.6rem` (four each), and `1.25rem` leading twice. `0.6rem`
-appears once more inside a two-value gap (`0.6rem 1.25rem`), so a count of the declarations that *contain*
-it is one higher than the leading count. Padding is written as a bare `1rem` four times, with two further shorthands that
+always leads where it appears, in all four of its declarations; it is `1.25rem` that also sits in a trailing
+position, twice (`0.6rem 1.25rem` and `0.75rem 1.25rem`). Padding is written as a bare `1rem` four times, with two further shorthands that
 begin with it (`1rem 1rem 1.15rem` and `1rem 1.25rem`); `1.5rem` is used twice.
 
 Two consequences are visible in the design. The gap scale's centre of mass is below `1rem`, which is what

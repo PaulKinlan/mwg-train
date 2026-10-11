@@ -158,7 +158,7 @@ on the cart board, and the contract stops at the cart.
   target has no server session and no order route."
 - **The boards disagree with each other, and with the target, about who the shop is.** The three boards
   carry **three different brand names** - `EARTH & OAK`, `ceramics` and `KERA` - where the demo has a fourth,
-  `Kiln & Copper`, with a kiln mark. They also disagree about money: the grid board prices in **dollars**
+  `Kiln & Copper`, with a shopping-bag mark. They also disagree about money: the grid board prices in **dollars**
   (`$78.00`, `$64.00`, `$52.00`) and the cart board in **pounds** (`£19.99`, `£23.90`, `Subtotal: £43.89`).
   The grid board is full-bleed, the empty board presents the page inside a rounded panel on a contrasting
   ground, and the empty board's only action - `Reset Search` - is **orange** where every other action in the
