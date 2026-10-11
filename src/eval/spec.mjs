@@ -24,6 +24,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { buildProjectFor } from '../../pilot/frameworks.mjs';
+import { hasArchetypeSet, loadArchetypeSet } from '../design/archetype-assets.mjs';
 
 export const SPEC_VERSION = 1;
 export const SPECS_DIR = 'docs/eval/specs';
@@ -324,7 +325,16 @@ export function archetypeFromSpec(spec) {
  * path that still produces the project.
  */
 export function buildProjectFromSpec({ spec, frameworkName, defects = [] }) {
-  return buildProjectFor(archetypeFromSpec(spec), { frameworkName, defects });
+  // A rebuild has to produce the same tree the generator produces, and the generator now gives a build
+  // its archetype's asset set - so a rebuild that skipped the store would produce a differently
+  // paletted page and the drift test would be measuring the store rather than the spec. The set is
+  // loaded by the spec's own family id, and the store is a separate committed artefact from the
+  // archetype table, so a machine that can read docs/eval/specs can still rebuild without
+  // pilot/archetypes.mjs. An archetype with no set in the store (every training archetype) rebuilds
+  // exactly as it did before, which is why this asks the store rather than assuming.
+  const id = spec.family_id;
+  const set = hasArchetypeSet(id) ? loadArchetypeSet(id) : null;
+  return buildProjectFor(archetypeFromSpec(spec), { frameworkName, defects, set, purpose: 'build' });
 }
 
 /** The fields the server requires: required, and not a select (a select always has a value). */

@@ -32,6 +32,7 @@
  */
 import { A11Y_SCRIPT } from '../src/corpus/uplift.mjs';
 import { compileSvelteServer } from '../src/corpus/svelte.mjs';
+import { assertConsumable, assetManifest, derivePalette, renderTokenDeclarations } from '../src/design/archetype-assets.mjs';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { GENERATOR_DEFECT_TOKENS } from '../src/eval/defects.mjs';
@@ -186,11 +187,80 @@ const selfCloseVoids = (markup) =>
     .replace(new RegExp(`<(${VOID_TAGS.join('|')})((?:[^>"']|"[^"]*"|'[^']*')*)>`, 'g'), '<$1$2 />')
     .replace(/ \/>/g, ' />');
 
-function pageSource(archetype, { defects, framework }) {
+/**
+ * The JS a generated server needs to serve its archetype's boards out of the store.
+ *
+ * The boards are NOT copied into the tree: they are megabytes each, every generated tree is hashed and
+ * token-counted, and the token counter reads every file as utf8 - so a copy would be both a large
+ * duplicate and a source-character figure that means nothing. The server therefore resolves a board from
+ * the store at request time and serves it only when its bytes still hash to the digest the register
+ * recorded, so "this build is using the target's imagery" stays a checkable claim rather than a comment.
+ *
+ * The store is found by walking up from the tree, not by an absolute path: an absolute path baked into a
+ * generated file would put this machine into the tree hash. The walk is bounded and the failure is a 404,
+ * because a build with no store must serve nothing rather than something plausible.
+ *
+ * A no-set build emits nothing here, so its server stays byte-identical and its tree hash does not move.
+ */
+function assetRuntime(set) {
+  if (!set) return '';
+  const digests = Object.fromEntries(set.images.map((image) => [image.name, image.sha256]));
+  return `const ASSET_STORE = ${JSON.stringify(`assets/archetypes/${set.archetype}`)};
+const ASSET_DIGESTS = ${JSON.stringify(digests)};
+const ASSET_TYPES = { '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp', '.avif': 'image/avif', '.gif': 'image/gif', '.svg': 'image/svg+xml' };
+function decodeAssetName(raw) {
+  // Never throws: a malformed percent-escape (GET /app/%zz) used to raise a URIError out of the request handler
+  // and take the server process down with it. An empty string fails the name pattern below, so the request 404s
+  // the same way an unregistered board does.
+  try {
+    return decodeURIComponent(raw);
+  } catch {
+    return '';
+  }
+}
+
+function readArchetypeAsset(name) {
+  // A name that is not a plain board filename is refused first. The register lookup below would refuse it too,
+  // but this is what keeps a name carrying %, / or .. away from both the filesystem and the register.
+  if (typeof name !== 'string' || !/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(name)) return null;
+  if (!Object.hasOwn(ASSET_DIGESTS, name)) return null;
+  let dir = here;
+  for (let depth = 0; depth < 8; depth += 1) {
+    const candidate = join(dir, ASSET_STORE, 'images', name);
+    if (existsSync(candidate)) {
+      const body = readFileSync(candidate);
+      if (createHash('sha256').update(body).digest('hex') !== ASSET_DIGESTS[name]) return null;
+      return { body, type: ASSET_TYPES[name.slice(name.lastIndexOf('.'))] ?? 'application/octet-stream' };
+    }
+    const parent = dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return null;
+}
+`;
+}
+
+/** The primary board a build shows, and the phrase it is described by. */
+function referenceBoardMarkup(set) {
+  if (!set || set.images.length === 0) return '';
+  const board = set.images[0];
+  return `<figure class="reference-board">
+        <img src="/app/${board.name}" alt="Reference board for ${escapeHtml(set.archetype)}" width="1280" height="900" loading="lazy" decoding="async">
+        <figcaption>Reference board for ${escapeHtml(set.archetype)}</figcaption>
+      </figure>`;
+}
+
+function pageSource(archetype, { defects, framework, set = null }) {
+  // The brand line is built conditionally rather than interpolated as an empty string: an arm with no
+  // brand must produce byte-identical markup to before the store existed, and a bare `${''}` leaves a
+  // whitespace-only line behind, which is a different tree hash for every recorded project.
+  const brand = brandMarkup(set);
+  const board = referenceBoardMarkup(set);
   const rawBody = `
-      <h1>${archetype.title}</h1>
+${brand === '' ? '' : `      ${brand}\n`}      <h1>${archetype.title}</h1>
       <p>${archetype.story}</p>
-${formMarkup(archetype, { defects })}
+${board === '' ? '' : `      ${board}\n`}${formMarkup(archetype, { defects })}
 ${echoMarkup(archetype)}`;
   // The web-components arm renders the same tree as the raw arm and wraps the record section in a
   // custom element. Wrapping rather than replacing is deliberate: the server-rendered children stay in
@@ -325,7 +395,85 @@ export async function renderDocument({ title = '${archetype.title}', data = {} }
 `;
 }
 
-function stylesSource({ defects, framework }) {
+/**
+ * The archetype's brand, as the page's own header.
+ *
+ * This is the store's brand, not one the template invented: the name and (when the target's mark is
+ * self-contained) its svg. A brandless archetype renders NOTHING here rather than a made-up name - the
+ * accepted target for account-recovery has no brand of its own, and "every build for this archetype
+ * carries no brand" is a property worth being able to assert. The store's path is recorded on the
+ * element so a reader can tell where the value came from without opening the spec.
+ */
+function brandMarkup(set) {
+  if (!set || set.brand.state !== 'named') return '';
+  const mark = set.brand.mark_self_contained ? `<span class="brand-mark" aria-hidden="true">${set.brand.mark}</span>\n      ` : '';
+  return `<header class="brand" data-asset-store="assets/archetypes/${set.archetype}">
+        ${mark}<span class="brand-name">${escapeHtml(set.brand.name)}</span>
+      </header>`;
+}
+
+function escapeHtml(value) {
+  return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function stylesSource({ defects, framework, set = null }) {
+  // A caller with no asset set gets the pre-store stylesheet, byte for byte. That is not nostalgia:
+  // the training corpus records the tree hash of every generated project, and its 210 trees must not
+  // move because a different consumer gained the archetype's palette. `assets` is likewise omitted from
+  // such a spec rather than null, for the same reason. Every caller that IS given a set (the pilot) uses
+  // the emission below.
+  if (!set) return pilotPaletteStyles({ defects, framework });
+  const eager = defects.includes('eager-invalid');
+  // The palette and the font stack are the archetype's own when a set is supplied: the store's tokens are
+  // emitted verbatim (they are already CSS custom properties, several of them light-dark()), and the
+  // arm's own variables are aliases of the ones its roles resolve to. The lookup is by role because each
+  // target names its tokens its own way - booking has --accent, contact-lead has --action - so the alias
+  // is built from the name the set actually declares rather than from a hardcoded chain, which would fall
+  // back to the pilot palette the moment the vocabulary differed. That fallback is the old behaviour and
+  // is kept for a caller that supplies no set.
+  const palette = set ? derivePalette(set) : null;
+  const ref = (role, fallback) => (palette?.[role] ? `var(${palette[role].name})` : fallback);
+  const root = set
+    ? `:root {\n  color-scheme: light dark;\n${renderTokenDeclarations(set)}\n  --arm-fg: ${ref('fg', '#16181d')};\n  --arm-bg: ${ref('bg', '#ffffff')};\n  --arm-accent: ${ref('accent', '#1b4fd8')};\n  --arm-error: ${ref('error', '#b3261e')};\n}`
+    : ':root { color-scheme: light dark; --arm-fg: #16181d; --arm-bg: #ffffff; --arm-accent: #1b4fd8; --arm-error: #b3261e; }';
+  const dark = '';
+  return `/* ${framework.name} arm. Responsive first, light and dark, with visible focus. */
+${root}
+* { box-sizing: border-box; }
+body { margin: 0; padding: 1.5rem; font-family: ${ref('fontStack', 'system-ui, sans-serif')}; font-size: 16px; line-height: 1.5; color: var(--arm-fg); background: var(--arm-bg); }
+main { max-width: 42rem; margin: 0 auto; }
+header.brand { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; }
+.brand-mark { display: inline-flex; color: var(--arm-accent); }
+.brand-name { font-weight: 700; letter-spacing: 0.01em; }
+figure.reference-board { margin: 0 0 1.25rem; }
+figure.reference-board img { display: block; width: 100%; height: auto; border: 1px solid var(--border-subtle, #cbd5e1); border-radius: 0.5rem; }
+figure.reference-board figcaption { color: var(--text-muted, #64748b); font-size: 0.8125rem; margin-top: 0.35rem; }
+h1 { font-size: 1.6rem; margin-bottom: 0.25rem; }
+.field { display: grid; gap: 0.25rem; margin-bottom: 1rem; }
+label { font-weight: 600; }
+input, textarea, select { font: inherit; padding: 0.6rem; border: 1px solid #8a8f98; border-radius: 0.4rem; width: 100%; }
+input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 3px solid var(--arm-accent); outline-offset: 2px; }
+button { font: inherit; padding: 0.7rem 1.1rem; border-radius: 0.4rem; border: 0; background: var(--arm-accent); color: white; }
+.error-msg { display: none; color: var(--arm-error); font-size: 0.875rem; margin: 0.15rem 0 0; }
+.form-status { min-height: 1.25rem; }
+/* ${eager ? 'DEFECT: eager :invalid styling reports errors before the user has interacted.' : 'Only a field the user has actually left empty is reported.'} */
+input${eager ? ':invalid' : ':user-invalid'}, textarea${eager ? ':invalid' : ':user-invalid'} { border-color: var(--arm-error); background-color: #fdecea; }
+input${eager ? ':invalid' : ':user-invalid'} ~ .error-msg, textarea${eager ? ':invalid' : ':user-invalid'} ~ .error-msg { display: block; }
+table { border-collapse: collapse; width: 100%; }
+th, td { text-align: left; border-bottom: 1px solid #d5d8dd; padding: 0.4rem 0.3rem; }
+@media (width <= 30rem) { body { padding: 1rem; } h1 { font-size: 1.35rem; } }${dark}
+`;
+}
+
+/**
+ * The stylesheet a build with no archetype asset set gets, unchanged since before the store existed.
+ *
+ * FROZEN - do not edit. pilot/TRAINING_CORPUS.json records the tree hash of all 210 of these projects,
+ * and docs/train/corpus/tokens.json measures them, so an edit here invalidates a committed corpus and
+ * the browser evidence that goes with it. A build that is given a set uses the emitter above; this one
+ * is what "no set supplied" has always produced.
+ */
+function pilotPaletteStyles({ defects, framework }) {
   const eager = defects.includes('eager-invalid');
   return `/* ${framework.name} arm. Responsive first, light and dark, with visible focus. */
 :root { color-scheme: light dark; --fg: #16181d; --bg: #ffffff; --accent: #1b4fd8; }
@@ -777,7 +925,7 @@ const honoListRoutes = (archetype, auth) => {
     .join('\n');
 };
 
-function serverSource(archetype, framework, defects = []) {
+function serverSource(archetype, framework, defects = [], set = null) {
   const caps = capabilitiesOf(archetype);
   const writeRoute = archetype.routes.find((route) => route.method === 'POST' && route.kind.startsWith('write'));
   const insecureCookie = archetype.session && !framework.cookieFlags;
@@ -800,8 +948,8 @@ function serverSource(archetype, framework, defects = []) {
  * measures behaviour, and a reviewer has to be able to see what the server does.
  */
 import { createServer } from 'node:http';
-import { readFileSync } from 'node:fs';
-import { randomUUID } from 'node:crypto';
+import { readFileSync${set ? ', existsSync' : ''} } from 'node:fs';
+import { randomUUID${set ? ', createHash' : ''} } from 'node:crypto';
 import { DatabaseSync } from 'node:sqlite';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -809,7 +957,7 @@ import { fileURLToPath } from 'node:url';
 import { renderDocument } from './app/page.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const arg = (name, fallback) => {
+${assetRuntime(set)}const arg = (name, fallback) => {
   const index = process.argv.indexOf(\`--\${name}\`);
   return index === -1 ? fallback : process.argv[index + 1];
 };
@@ -893,7 +1041,15 @@ const server = createServer(async (request, response) => {
       response.writeHead(200, { 'content-type': \`\${type}; charset=utf-8\` });
       return response.end(body);
     } catch {
-      response.writeHead(404);
+${set ? `      // Not in the tree, so it may be one of the archetype's boards: served from the store, and only if
+      // its bytes still hash to the recorded digest. The provenance header is deliberate - a reader and a
+      // test can both tell a board of the target from a file the build itself wrote.
+      const asset = readArchetypeAsset(decodeAssetName(path.slice('/app/'.length)));
+      if (asset) {
+        response.writeHead(200, { 'content-type': asset.type, 'x-asset-source': \`\${ASSET_STORE}/images\`, 'cache-control': 'no-store' });
+        return response.end(asset.body);
+      }
+` : ''}      response.writeHead(404);
       return response.end('not found');
     }
   }
@@ -1109,7 +1265,7 @@ server.listen(port, '127.0.0.1', () => {
 
 
 /** The Hono arm's server: Hono owns routing and responses, node:http only carries them. */
-function honoServerSource(archetype, framework, defects = []) {
+function honoServerSource(archetype, framework, defects = [], set = null) {
   const caps = capabilitiesOf(archetype);
   const writeRoute = archetype.routes.find((route) => route.method === 'POST' && route.kind.startsWith('write'));
   // Hono routes :param segments natively; the FIRST parameter of an edit route is the record key.
@@ -1128,8 +1284,8 @@ function honoServerSource(archetype, framework, defects = []) {
  * markup stays plain HTML strings rather than a virtual DOM.
  */
 import { createServer } from 'node:http';
-import { readFileSync } from 'node:fs';
-import { randomUUID } from 'node:crypto';
+import { readFileSync${set ? ', existsSync' : ''} } from 'node:fs';
+import { randomUUID${set ? ', createHash' : ''} } from 'node:crypto';
 import { DatabaseSync } from 'node:sqlite';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -1138,7 +1294,7 @@ import { Hono } from 'hono';
 import { renderDocument, renderPage } from './app/page.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const arg = (name, fallback) => {
+${assetRuntime(set)}const arg = (name, fallback) => {
   const index = process.argv.indexOf(\`--\${name}\`);
   return index === -1 ? fallback : process.argv[index + 1];
 };
@@ -1182,12 +1338,24 @@ app.get('/__requests', (c) => c.json(requestLog));
 app.get('/__health', (c) => c.json({ ok: true }));
 
 app.get('/app/:file', (c) => {
-  const name = c.req.param('file');
+${set ? `  // The param read is INSIDE the try on purpose. Reading it decodes a percent-encoded path segment, and a
+  // malformed escape is a throw; if that escaped the handler the whole server would go down on GET /app/%zz.
+  let name = null;
   try {
-    const body = readFileSync(join(here, 'app', name));
+    name = c.req.param('file');
+` : `  const name = c.req.param('file');
+  try {
+`}    const body = readFileSync(join(here, 'app', name));
     const type = name.endsWith('.css') ? 'text/css' : name.endsWith('.js') ? 'text/javascript' : 'text/plain';
     return c.body(body, 200, { 'content-type': \`\${type}; charset=utf-8\` });
-  } catch {
+  } catch {${set ? `
+    // Not in the tree, so it may be one of the archetype's boards: served from the store, and only if its
+    // bytes still hash to the recorded digest. Kept on the existing single-segment route rather than a new
+    // one deliberately - the route set is compared against the project's specification, and a second route
+    // for assets would have to be declared there and would make the arm differ from its spec.
+    const asset = readArchetypeAsset(name);
+    if (asset) return c.body(asset.body, 200, { 'content-type': asset.type, 'x-asset-source': \`\${ASSET_STORE}/images\`, 'cache-control': 'no-store' });
+` : ''}
     return c.text('not found', 404);
   }
 });
@@ -1501,21 +1669,29 @@ export function writeProject(root, { projectId, files, spec, includeDependencies
   return root;
 }
 
-export function buildProjectFor(archetype, { frameworkName, defects = [], flags = {} }) {
+export function buildProjectFor(archetype, { frameworkName, defects = [], flags = {}, set = null, purpose = 'build' }) {
   const unknownDefects = defects.filter((d) => !GENERATOR_DEFECT_TOKENS.includes(d));
   if (unknownDefects.length > 0) {
     throw new Error(`buildProjectFor: unknown defect tokens [${unknownDefects.join(', ')}]. Known tokens: [${GENERATOR_DEFECT_TOKENS.join(', ')}]`);
   }
 
   if (!archetype?.id) throw new Error('buildProjectFor: an archetype with an id is required');
+  // A set is optional so that a caller with no store (the training scaffolder, which must not consume
+  // these sets: every one of them is excluded_from_training) keeps the plain palette it had. When one IS
+  // supplied the rights are checked here rather than left to each caller to remember, and a set built for
+  // the wrong purpose fails the build instead of becoming a finding later.
+  if (set) {
+    assertConsumable(set, { purpose });
+    if (set.archetype !== archetype.id) throw new Error(`buildProjectFor: the asset set is for '${set.archetype}' but the archetype is '${archetype.id}'`);
+  }
   const framework = { ...FRAMEWORKS[frameworkName], ...flags };
   if (!framework.name) throw new Error(`unknown framework ${frameworkName}`);
   const projectId = `${archetype.id}-${frameworkName}${flags.variant ? `-${flags.variant}` : ''}`;
 
   const files = {
-    'server.mjs': framework.name === 'hono' ? honoServerSource(archetype, framework, defects) : serverSource(archetype, framework, defects),
-    [framework.markupFile]: pageSource(archetype, { defects, framework }),
-    [framework.stylesFile]: stylesSource({ defects, framework }),
+    'server.mjs': framework.name === 'hono' ? honoServerSource(archetype, framework, defects, set) : serverSource(archetype, framework, defects, set),
+    [framework.markupFile]: pageSource(archetype, { defects, framework, set }),
+    [framework.stylesFile]: stylesSource({ defects, framework, set }),
     [framework.enhanceFile]: enhanceSource(archetype, { defects, framework }),
   };
   // An arm that declares a compile boundary (Svelte) also ships the compiled module and the page
@@ -1530,6 +1706,13 @@ export function buildProjectFor(archetype, { frameworkName, defects = [], flags 
     project_id: projectId,
     archetype: archetype.id,
     archetype_title: archetype.title,
+    // The archetype asset set this build was given, as a manifest: brand, token counts and the token
+    // each role resolved to, the copy slots, the image register with digests, and the rights. It records
+    // WHERE the assets come from rather than copying them - the boards are megabytes each, and the tree
+    // is hashed and token-counted, so a copy would be both a huge duplicate and (because the token
+    // counter reads every file as utf8) a source-character figure that means nothing. A build with no set
+    // has no such key at all, so a caller that supplies none keeps the tree it had.
+    ...(set ? { assets: assetManifest(set) } : {}),
     // Spread, not a hand-copied list: naming the fields one by one silently dropped a new one
     // (serverFile) the moment it was added to the table above.
     framework: { ...framework },
