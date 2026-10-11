@@ -194,7 +194,7 @@ test('the command line fails with a diagnostic when pointed at a repository with
     }
     assert.equal(status, 1, 'a stale caption must make the command line exit non-zero');
     assert.match(stderr, /check:board-captions - FAILED: .*shows SHA-256 deadbeef00/);
-    assert.match(stderr, /check:board-captions - FAILED: every board a comparison page displays/);
+    assert.match(stderr, /check:board-captions - FAILED: every board a comparison page renders/);
   });
 });
 
@@ -273,15 +273,53 @@ test('markup inside script, style, template and noscript bodies is not rendered 
   }
 });
 
-test('an image hidden by its own markup is not displayed', () => {
+test('hidden is honoured however it is spelled, and from an ancestor', () => {
+  // `hidden` is a boolean attribute: its presence hides the element whatever the value says, so
+  // `hidden=""`, `hidden="false"` and a bare `hidden` all hide. An ancestor's hidden hides its subtree,
+  // which is why the check walks nesting instead of inspecting one tag.
   const prefix = sha256(BOARD).slice(0, 10);
-  for (const img of ['<img hidden src="../step1-grid.jpg">', '<img style="display:none" src="../step1-grid.jpg">']) {
-    const html = `<div>${img}${wave2Caption(`${prefix}\u2026`)}</div>`;
+  const caption = wave2Caption(`${prefix}\u2026`);
+  const imageHidden = [
+    ['hidden="" on the image', '<img hidden="" src="../step1-grid.jpg">'],
+    ['hidden="false" on the image', '<img hidden="false" src="../step1-grid.jpg">'],
+    ['bare hidden on the image', '<img hidden src="../step1-grid.jpg">'],
+    ['display:none on the image', '<img style="display:none" src="../step1-grid.jpg">'],
+  ];
+  for (const [what, img] of imageHidden) {
+    const html = `<div>${img}${caption}</div>`;
     withFixture({ html }, (holder) => {
-      const findings = captionFindings({ file: holder.file, html, archetypeDir: holder.archetypeDir });
-      assert.ok(findings.some((f) => /does not display|but prints no SHA-256 caption|does not display/.test(f)), `${img}: ${findings.join(' | ')}`);
+      const result = checkBoardCaptions({ repoRoot: holder.root });
+      assert.equal(result.ok, false, `${what} must fail the page check`);
+      assert.equal(result.boards, 0, `${what}: the hidden image must not count as displayed`);
+      assert.equal(result.captions, 1, `${what}: the caption beside it is rendered and is still counted`);
     });
   }
+  const ancestorHidden = [
+    ['hidden on the containing article', '<article hidden>'],
+    ['hidden="" on the containing article', '<article hidden="">'],
+    ['display:none on the containing article', '<article style="display:none">'],
+  ];
+  for (const [what, openTag] of ancestorHidden) {
+    const html = `<div>${openTag}<img src="../step1-grid.jpg">${caption}</article></div>`;
+    withFixture({ html }, (holder) => {
+      const result = checkBoardCaptions({ repoRoot: holder.root });
+      assert.equal(result.ok, false, `${what} must fail the page check`);
+      assert.equal(result.boards, 0, `${what}: a hidden ancestor hides the image`);
+      assert.equal(result.captions, 0, `${what}: a hidden ancestor hides the caption too`);
+    });
+  }
+});
+
+test('masking hidden elements does not mask the visible ones', () => {
+  const prefix = sha256(BOARD).slice(0, 10);
+  const caption = wave2Caption(`${prefix}\u2026`);
+  const html = `<div>\n  <article hidden><img src="../step1-grid.jpg"><p>gone</p></article>\n  <article><img src="../step1-grid.jpg">${caption}</article>\n</div>`;
+  withFixture({ html }, (holder) => {
+    const result = checkBoardCaptions({ repoRoot: holder.root });
+    assert.deepEqual(result.findings, [], result.findings.join(' | '));
+    assert.equal(result.boards, 1, 'the visible copy is the one that counts');
+    assert.equal(result.captions, 1);
+  });
 });
 
 test('renderedText removes comments and non-rendered element bodies, and keeps ordinary markup', () => {
@@ -290,6 +328,17 @@ test('renderedText removes comments and non-rendered element bodies, and keeps o
   assert.match(text, /<p>a<\/p>/);
   assert.match(text, /<p>e<\/p>/);
   assert.doesNotMatch(text, /b<\/p>|c<\/p>|d<\/p>/);
+});
+
+test('an attribute name inside another attribute\u2019s value is not an attribute', () => {
+  // The masking has to read attributes, not search the tag text, or `title="hidden"` would hide a board.
+  const prefix = sha256(BOARD).slice(0, 10);
+  const html = `<div><img title="hidden section" src="../step1-grid.jpg">${wave2Caption(`${prefix}\u2026`)}</div>`;
+  withFixture({ html }, (holder) => {
+    const result = checkBoardCaptions({ repoRoot: holder.root });
+    assert.deepEqual(result.findings, [], result.findings.join(' | '));
+    assert.equal(result.boards, 1);
+  });
 });
 
 test('the exported regex only pairs a filename with a digest in the same element', () => {

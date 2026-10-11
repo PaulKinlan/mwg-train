@@ -1,6 +1,6 @@
 /**
  * Pins the SHA-256 prefixes that archetype demo comparison pages print for their boards, and ties each
- * caption to the image the page actually displays.
+ * caption to the image the page actually renders.
  *
  * `docs/design/archetypes/<family>/demo/compare.html` shows each board beside the live page and captions it
  * with the board's SHA-256 truncated to a short prefix. That page is a consumer of the board digest, and
@@ -11,25 +11,35 @@
  * captions across booking, catalogue and contact-lead were found to be showing earlier generations'
  * digests (bead mwg-train-7x8n).
  *
- * The check works from what the page displays, not from what a caption says:
+ * The check works from what the page renders, not from the file's bytes:
  *
- *   1. Each comparison page's board images are collected from its own `<img src>` elements. Those are the
+ *   1. The markup is reduced to rendered text: comments, and the bodies of script, style, template,
+ *      noscript and textarea elements, are not part of a rendering.
+ *   2. Elements a browser does not render are masked out of that text, including everything inside them.
+ *      `hidden` counts however it is spelled, because it is a boolean attribute whose presence is what
+ *      hides - `hidden`, `hidden=""`, `hidden="false"` and `hidden="until-found"` all hide an element - and
+ *      an ancestor's `hidden` hides its subtree, so the check walks element nesting rather than inspecting
+ *      one tag in isolation. An inline `display:none` is treated the same way.
+ *   3. Each comparison page's board images are collected from its own `<img src>` elements. Those are the
  *      boards a reader sees, and they are the ground truth for which files a caption may describe.
- *   2. Each `SHA-256` caption is resolved to a file. A `../x.jpg` caption is relative to the demo
- *      directory and a bare `x.jpg` is relative to the archetype directory - both name the archetype's own
- *      board, which is what the page displays (`<img src="../x.jpg">`) even when the caption omits the
- *      `../`. The first draft tried the demo directory first for both spellings, which meant a duplicate
- *      `demo/x.jpg` could satisfy the caption while the displayed board's caption stayed stale; a caption
- *      now has to name a file the page displays.
- *   3. Every displayed board must be captioned, and every caption must describe a displayed board. A page
- *      that displays boards without captions at all is declared in UNCAPTERED_BY_DESIGN with a reason, so a
- *      page that loses all of its captions fails rather than passing vacuously.
+ *   4. Each `SHA-256` caption is resolved to a file. A `../x.jpg` caption is relative to the demo directory
+ *      and a bare `x.jpg` is relative to the archetype directory - both name the archetype's own board,
+ *      which is what the page displays (`<img src="../x.jpg">`) even when the caption omits the `../`. A
+ *      caption must name a board the page displays.
+ *   5. Every displayed board must be captioned and every caption must describe a displayed board. A family
+ *      that has never printed a digest is declared in UNCAPTIONED_BY_DESIGN with a reason, so a page that
+ *      loses its captions fails rather than passing vacuously.
  *
  * The prefix itself is recomputed from the committed JPEG, so the image is the single source of truth and a
- * caption cannot agree with a stale record. Three more rules fail closed: every `SHA-256` mention must
- * parse (a caption this check cannot read is a caption nothing verifies); a shown prefix must be at least
- * MIN_SHOWN hex characters; and a caption resolving outside its own archetype is a finding, so the check
- * cannot be widened into an arbitrary-file reader by editing a demo page.
+ * caption cannot agree with a stale record. Four more rules fail closed: every `SHA-256` mention must
+ * parse; a shown prefix must be at least MIN_SHOWN hex characters; an image whose source cannot be read is
+ * a finding rather than a skip; and a page must display every board its archetype commits, so deleting an
+ * image fails instead of shrinking the page towards passing.
+ *
+ * THE BOUNDARY, stated rather than implied: this is a markup-level check. It reads text and element
+ * nesting, so an image hidden by a stylesheet, by a class, or by `aria-hidden` is NOT detected - that is a
+ * layout question and needs a browser, which is what the browser-driven pilot checks are for. Every case
+ * this check is expected to catch is expressed in the markup.
  *
  * Everything here is offline: file reads and hashing only.
  */
@@ -44,32 +54,6 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const MIN_SHOWN = 8;
 
 /**
- * The parts of a comparison page a browser renders, with the parts it does not removed.
- *
- * Both inventories are built from this rather than from the file's raw bytes, because markup that is present
- * but not rendered used to satisfy the check: a board and its correct caption wrapped in an HTML comment were
- * found by both regexes, hashed correctly, and counted as displayed while a reader saw nothing (review
- * round 3). Comments, and the bodies of script, style, template, noscript and textarea elements, are removed
- * here. What remains out of scope is honest rather than implied: this is text, not layout, so an image hidden
- * by a stylesheet, by a class or by `aria-hidden` is not detected - a browser-driven check would be needed for
- * that, and these pages are static markup whose visibility is expressed in the markup itself.
- *
- * @param {string} html
- * @returns {string}
- */
-export function renderedText(html) {
-  return html
-    .replace(/<!--[\s\S]*?-->/g, ' ')
-    .replace(/<(script|style|template|noscript|textarea)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, ' ');
-}
-
-/** True when the element's own markup keeps it out of the rendering, which is as far as a text scan reaches. */
-function hiddenByMarkup(tag) {
-  if (/\shidden(?=[\s/>])/i.test(tag)) return true;
-  return /style\s*=\s*("[^"]*display\s*:\s*none[^"]*"|'[^']*display\s*:\s*none[^']*')/i.test(tag);
-}
-
-/**
  * Comparison pages that display boards without any SHA-256 caption, and are not expected to gain one here.
  * Their boards predate the Wave 2 set and their pages never printed a digest, so there is nothing to pin
  * and nothing false to correct. They are named rather than inferred, so a page that loses its captions
@@ -79,6 +63,17 @@ export const UNCAPTIONED_BY_DESIGN = Object.freeze({
   'account-recovery': 'displays its two boards without digests; no caption has ever been printed',
   'event-registration': 'displays its two boards without digests; no caption has ever been printed',
 });
+
+/** Elements that never have children, so an open tag for one does not open a subtree. */
+const VOID_ELEMENTS = new Set([
+  'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr',
+]);
+
+/** One tag, with whatever attributes it carries, quoted values and all. */
+const TAG = /<(\/?)([a-zA-Z][a-zA-Z0-9:-]*)((?:"[^"]*"|'[^']*'|[^>"'])*?)(\/?)>/g;
+
+/** Attribute names and values, consumed in order so a name inside another attribute's value is not a name. */
+const ATTRIBUTE = /([a-zA-Z_:][-a-zA-Z0-9_:.]*)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/g;
 
 /**
  * Both caption forms in use, matched as one paragraph: the board filename, then the truncated digest.
@@ -92,11 +87,7 @@ export const UNCAPTIONED_BY_DESIGN = Object.freeze({
  */
 export const CAPTION = /<code>([^<]+\.jpg)<\/code>[^<]*?SHA-256:?\s*<code>([0-9a-f]{1,64})(?:\.\.\.|\u2026)<\/code>/g;
 
-/**
- * Every `<img>` tag a comparison page carries, whatever its source spelling. Anything this cannot read a
- * source from is reported rather than skipped: an image that disappears from the inventory takes its
- * caption with it, which is how a page can lose content and still pass.
- */
+/** Every `<img>` tag, whatever its source spelling. Anything unreadable is reported rather than skipped. */
 const IMG_TAG = /<img\b[^>]*>/gi;
 
 /** `src` in double quotes, single quotes or unquoted, which is the whole of HTML's syntax for it. */
@@ -104,12 +95,105 @@ const SRC = /\ssrc\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+))/i;
 
 const MENTION = /SHA-256/g;
 
+/** True when an element is hidden by a boolean attribute or by an inline display:none. */
+function hiddenAttributes(attributes) {
+  ATTRIBUTE.lastIndex = 0;
+  let match;
+  while ((match = ATTRIBUTE.exec(attributes))) {
+    const name = match[1].toLowerCase();
+    // `hidden` is a boolean attribute: its presence hides the element whatever its value says, which is why
+    // `hidden=""`, `hidden="false"` and `hidden="hidden"` all count.
+    if (name === 'hidden') return true;
+    if (name === 'style') {
+      const value = match[2] ?? match[3] ?? match[4] ?? '';
+      if (/display\s*:\s*none/i.test(value)) return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * The parts of a comparison page a browser renders, with the parts it does not removed.
+ *
+ * See the module header for the boundary this draws: comments and non-rendered element bodies go, layout is
+ * out of scope.
+ *
+ * @param {string} html
+ * @returns {string}
+ */
+export function renderedText(html) {
+  return html
+    .replace(/<!--[\s\S]*?-->/g, ' ')
+    .replace(/<(script|style|template|noscript|textarea)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, ' ');
+}
+
+/**
+ * The ranges of the given markup that a browser does not render, including everything inside a hidden
+ * element. Element nesting is walked rather than individual tags being inspected, because `hidden` on an
+ * ancestor hides the subtree - adding it to a card's `<article>` hides the board and its caption together.
+ *
+ * @param {string} text
+ * @returns {Array<[number, number]>} start and end offsets, unordered and possibly overlapping
+ */
+export function hiddenRanges(text) {
+  const ranges = [];
+  const open = [];
+  TAG.lastIndex = 0;
+  let match;
+  while ((match = TAG.exec(text))) {
+    const [, closing, rawName, attributes, selfClosing] = match;
+    const name = rawName.toLowerCase();
+    const end = match.index + match[0].length;
+
+    if (closing === '/') {
+      // Close the nearest matching element, tolerating stray or unclosed tags the way a browser does.
+      for (let i = open.length - 1; i >= 0; i -= 1) {
+        if (open[i].name !== name) continue;
+        const element = open[i];
+        open.length = i;
+        if (element.hidden) ranges.push([element.start, end]);
+        break;
+      }
+      continue;
+    }
+
+    const hidden = hiddenAttributes(attributes) || open.some((element) => element.hidden);
+    if (VOID_ELEMENTS.has(name) || selfClosing === '/') {
+      if (hidden) ranges.push([match.index, end]);
+      continue;
+    }
+    open.push({ name, start: match.index, hidden });
+  }
+  // An element left open still hides whatever follows it.
+  for (const element of open) {
+    if (element.hidden) ranges.push([element.start, text.length]);
+  }
+  return ranges;
+}
+
+/** Replaces the hidden ranges with spaces, keeping every offset in the text where it was. */
+export function maskHidden(text) {
+  const ranges = hiddenRanges(text);
+  if (ranges.length === 0) return text;
+  const sorted = ranges.slice().sort((a, b) => a[0] - b[0]);
+  let out = '';
+  let at = 0;
+  for (const [start, end] of sorted) {
+    if (end <= at) continue;
+    out += text.slice(at, Math.max(start, at)) + ' '.repeat(end - Math.max(start, at));
+    at = end;
+  }
+  return out + text.slice(at);
+}
+
+/** The markup a browser renders, with hidden elements masked out of it. */
+const visibleMarkup = (html) => maskHidden(renderedText(html));
+
 /** Resolves a caption's board name the way the page means it, and rejects paths outside the archetype. */
 function resolveCaptionBoard(file, archetypeDir, source) {
   const demoDir = path.dirname(file);
-  const relativeToDemo = path.resolve(demoDir, source);
   const bare = path.basename(source) === source;
-  const candidate = bare ? path.resolve(archetypeDir, source) : relativeToDemo;
+  const candidate = bare ? path.resolve(archetypeDir, source) : path.resolve(demoDir, source);
   if (path.relative(archetypeDir, candidate).startsWith('..')) return null;
   return candidate;
 }
@@ -117,8 +201,8 @@ function resolveCaptionBoard(file, archetypeDir, source) {
 /**
  * Collects the board images a comparison page displays, as absolute paths inside its archetype.
  *
- * Every `<img>` on the page is examined, not only the ones whose `src` happens to be spelled the way this
- * check first expected. An `<img>` whose source cannot be read, or that names a `.jpg` which is not
+ * Every `<img>` a browser renders is examined, not only the ones whose `src` happens to be spelled the way
+ * this check first expected. An `<img>` whose source cannot be read, or that names a `.jpg` which is not
  * committed, is a finding: an image missing from this inventory is an image whose caption nothing verifies.
  *
  * @param {{ file: string, html: string, archetypeDir: string }} page
@@ -126,25 +210,24 @@ function resolveCaptionBoard(file, archetypeDir, source) {
  */
 export function displayedBoards({ file, html, archetypeDir }) {
   const rel = path.relative(ROOT, file);
-  const text = renderedText(html);
+  const text = visibleMarkup(html);
   const boards = [];
   const findings = [];
   IMG_TAG.lastIndex = 0;
   let match;
   while ((match = IMG_TAG.exec(text))) {
     const tag = match[0];
-    if (hiddenByMarkup(tag)) continue; // the element is in the file but not in the rendering
     const src = SRC.exec(tag);
     if (!src) {
-      // An <img> with no readable src is not a board this check can pin, and silently ignoring it is what
-      // let a single-quoted page slip through before. Fail closed.
+      // An <img> with no readable src cannot be pinned, and silently ignoring it is what let a single-quoted
+      // page slip through before. Fail closed.
       findings.push(`${rel} carries an image whose source this check cannot read (${tag.trim().slice(0, 60)}); board images must name a .jpg in a readable src attribute`);
       continue;
     }
     const source = (src[1] ?? src[2] ?? src[3] ?? '').trim();
     if (source === '') {
-      // An <img> whose src is empty or whitespace names no file at all: not something to skip as "not a
-      // board", because the same rule has to catch every image this check cannot account for.
+      // An empty src names no file: not something to skip as "not a board", because the same rule has to
+      // account for every image this check cannot read.
       findings.push(`${rel} carries an image whose source this check cannot read (${tag.trim().slice(0, 60)}); board images must name a .jpg in a readable src attribute`);
       continue;
     }
@@ -184,7 +267,7 @@ export function committedBoards(archetypeDir) {
 export function captionFindings({ file, html, archetypeDir, label = path.relative(ROOT, file), captionsRequired = true }) {
   const findings = [];
   const rel = label;
-  const text = renderedText(html);
+  const text = visibleMarkup(html);
   const mentions = (text.match(MENTION) || []).length;
   const { boards, findings: displayFindings } = displayedBoards({ file, html, archetypeDir });
   findings.push(...displayFindings);
@@ -268,7 +351,7 @@ export function checkBoardCaptions({ repoRoot = ROOT } = {}) {
     if (!fs.existsSync(file)) continue;
     pages += 1;
     const html = fs.readFileSync(file, 'utf8');
-    const text = renderedText(html);
+    const text = visibleMarkup(html);
     const label = path.relative(repoRoot, file);
     captions += (text.match(CAPTION) || []).length;
     const { boards: displayed } = displayedBoards({ file, html, archetypeDir });
@@ -304,7 +387,7 @@ function main() {
   const result = checkBoardCaptions({ repoRoot: rootFrom(process.argv.slice(2)) });
   if (!result.ok) {
     for (const finding of result.findings) console.error(`check:board-captions - FAILED: ${finding}`);
-    console.error(`check:board-captions - FAILED: every board a comparison page displays must carry a caption that matches the committed board.`);
+    console.error(`check:board-captions - FAILED: every board a comparison page renders must carry a caption that matches the committed board.`);
     process.exit(1);
   }
   console.log(`check:board-captions - PASS - checked ${result.captions} caption(s) for ${result.boards} displayed board(s) across ${result.pages} demo comparison page(s)`);
