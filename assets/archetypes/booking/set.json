@@ -4,7 +4,7 @@
     "target_dir": "docs/design/archetypes/booking",
     "readme": {
       "path": "docs/design/archetypes/booking/README.md",
-      "sha256": "4b2dddde85f2971ea15b8159ad55b057f40c2600f7c8bc097b5f472bc345bf56"
+      "sha256": "0a306cc4914bda48501a55224c8e88ca466d8aeb777355e4d4e9f3299da0be52"
     },
     "documents": [
       {
@@ -225,32 +225,32 @@
   "images": [
     {
       "name": "step1-browse.jpg",
-      "sha256": "3a7f56d2fc42661a89d067a301c2035dbb89804bacb2533d28d0e745afdf5c11",
-      "bytes": 525042,
+      "sha256": "b43851e30368d98b2508758983165c9d104e95990826371cd64c88354ede2462",
+      "bytes": 500442,
       "source": "docs/design/archetypes/booking/step1-browse.jpg"
     },
     {
       "name": "step2-form.jpg",
-      "sha256": "73633dd4b1c0a5ae877ec8bdcbe41c1260c4fbf48d25a3f9fac64e1884615074",
-      "bytes": 517592,
+      "sha256": "230848d3bd282e7c2cecadea52418cdfd794c0dad8b1e1499c8b360d1992e48e",
+      "bytes": 492023,
       "source": "docs/design/archetypes/booking/step2-form.jpg"
     },
     {
       "name": "step3-confirmation.jpg",
-      "sha256": "1b65cd87c9c693be2a159a3f3ead25ae32c4f3faaec664ea7d80684fce6e31ef",
-      "bytes": 394097,
+      "sha256": "31e6ed730371b55a9414c00680c04ce64d43219ca36518dc37e10b2b3f4953d8",
+      "bytes": 406153,
       "source": "docs/design/archetypes/booking/step3-confirmation.jpg"
     },
     {
       "name": "step4-error.jpg",
-      "sha256": "d018d5b50bae312f497445e3e449191ea8c3ac6cccbd5c6058463d738e7d06f8",
-      "bytes": 466358,
+      "sha256": "0b7e463903a1b7c0994ad92513a4087aec8aed5d05cf76b8bab75ad5e815fc72",
+      "bytes": 446021,
       "source": "docs/design/archetypes/booking/step4-error.jpg"
     },
     {
       "name": "step5-empty.jpg",
-      "sha256": "6eae324018056198c8020855961eeb734db79f403355035ed36147c078540b3e",
-      "bytes": 447870,
+      "sha256": "cf586e1d6f2c2faefa603d0be4fb8b4c7b2f73375e69b23ae44b41931f07170e",
+      "bytes": 455551,
       "source": "docs/design/archetypes/booking/step5-empty.jpg"
     }
   ],

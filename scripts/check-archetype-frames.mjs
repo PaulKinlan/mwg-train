@@ -21,11 +21,6 @@ const ARCHETYPES_DIR = path.join(ROOT, 'docs', 'design', 'archetypes');
 // They are exempt by exact content hash to avoid breaking the sealed evaluation corpus.
 // A replacement image at the same path will NOT be exempt.
 const EXEMPT_HASHES = new Set([
-  '3a7f56d2fc42661a89d067a301c2035dbb89804bacb2533d28d0e745afdf5c11', // booking/step1-browse.jpg
-  '73633dd4b1c0a5ae877ec8bdcbe41c1260c4fbf48d25a3f9fac64e1884615074', // booking/step2-form.jpg
-  '1b65cd87c9c693be2a159a3f3ead25ae32c4f3faaec664ea7d80684fce6e31ef', // booking/step3-confirmation.jpg
-  'd018d5b50bae312f497445e3e449191ea8c3ac6cccbd5c6058463d738e7d06f8', // booking/step4-error.jpg
-  '6eae324018056198c8020855961eeb734db79f403355035ed36147c078540b3e', // booking/step5-empty.jpg
   '948370acf1df59694dee09ef8e1f39d71828b4e509dfcfd3503ad6860982fe60', // editorial-blog/step1-index.jpg
   'f04fa714789fa5fe2a4e57c4282fa8c36f64f14558f5add246cd4644edc1a3ea', // event-registration/step1-event.jpg
   'f3ae7b333e8e141e1bb8c63392e440124f7d171f08498a67cb2091183d01c1ca', // fan-community-site/step2-contribution.jpg

@@ -35,12 +35,12 @@ store, the register or the target have moved apart.
 ### booking
 
 - Target: `docs/design/archetypes/booking`
-- Readme: `docs/design/archetypes/booking/README.md` (sha256 `4b2dddde85f2971ea15b8159ad55b057f40c2600f7c8bc097b5f472bc345bf56`)
+- Readme: `docs/design/archetypes/booking/README.md` (sha256 `0a306cc4914bda48501a55224c8e88ca466d8aeb777355e4d4e9f3299da0be52`)
 - Stylesheet: `docs/design/archetypes/booking/demo/styles.css` (sha256 `b0fba0e3633d6b7c8d1098729c32c2431f07e4e672094d91753e3f38328b71a3`)
 - Documents: `docs/design/archetypes/booking/demo/compare.html`, `docs/design/archetypes/booking/demo/confirmation.html`, `docs/design/archetypes/booking/demo/empty.html`, `docs/design/archetypes/booking/demo/index.html`
 - Rights: `excluded_from_training: true`, `approved_for_training: false` from `docs/design/archetypes/booking/README.md:7`
 - Brand: `Evening Class Studio` (adjudicated: The accepted target's own heading and every one of its five board prompts name 'Evening Class Studio'; the demo page carries 'Learning Hub' instead. The demo's own README states it is an implementation of the visual language ESTABLISHED BY those boards, and it was authored 2026-10-09 while the boards were regenerated and accepted on 2026-10-11, so the boards are the source and 'Learning Hub' is the demo's drift. PROVISIONAL: this is a lane recommendation recorded with its evidence, not an owner decision - Paul should confirm which brand the archetype owns, or rename the demo. — 2026-10-11)
-- Boards: `step1-browse.jpg` sha256 `3a7f56d2fc42661a89d067a301c2035dbb89804bacb2533d28d0e745afdf5c11`; `step2-form.jpg` sha256 `73633dd4b1c0a5ae877ec8bdcbe41c1260c4fbf48d25a3f9fac64e1884615074`; `step3-confirmation.jpg` sha256 `1b65cd87c9c693be2a159a3f3ead25ae32c4f3faaec664ea7d80684fce6e31ef`; `step4-error.jpg` sha256 `d018d5b50bae312f497445e3e449191ea8c3ac6cccbd5c6058463d738e7d06f8`; `step5-empty.jpg` sha256 `6eae324018056198c8020855961eeb734db79f403355035ed36147c078540b3e`
+- Boards: `step1-browse.jpg` sha256 `b43851e30368d98b2508758983165c9d104e95990826371cd64c88354ede2462`; `step2-form.jpg` sha256 `230848d3bd282e7c2cecadea52418cdfd794c0dad8b1e1499c8b360d1992e48e`; `step3-confirmation.jpg` sha256 `31e6ed730371b55a9414c00680c04ce64d43219ca36518dc37e10b2b3f4953d8`; `step4-error.jpg` sha256 `0b7e463903a1b7c0994ad92513a4087aec8aed5d05cf76b8bab75ad5e815fc72`; `step5-empty.jpg` sha256 `cf586e1d6f2c2faefa603d0be4fb8b4c7b2f73375e69b23ae44b41931f07170e`
 
 ### catalogue
 
