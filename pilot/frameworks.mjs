@@ -806,7 +806,93 @@ function searchPageDocument(search) {
  * like sessionTables, so the generated code needs no escaping of its own.
  */
 
-const capabilitiesOf = (archetype) => ({ list_pages: false, detail_page: false, auth: false, ...(archetype.capabilities ?? {}) });
+const capabilitiesOf = (archetype) => ({ list_pages: false, detail_page: false, auth: false, cart: false, ...(archetype.capabilities ?? {}) });
+
+/*
+ * The cart capability (mwg-train-11d): a storefront cart the visitor BUILDS across pages, with a
+ * variant choice that is written with the record. The engine's session store cannot express it -
+ * `drafts` is keyed (sid, name), so a second add overwrites the first - so the cart owns a multi-row
+ * table and is emitted only when the spec opts in, exactly like list_pages/detail_page/auth.
+ */
+const cartVariantField = (archetype) => archetype.fields.find((field) => field.type === 'select');
+const cartQuantityField = (archetype) => archetype.fields.find((field) => field.type === 'number');
+const CART_SID_RAW =
+  "(request.headers.cookie ?? '').split(';').map((part) => part.trim()).find((part) => part.startsWith('sid='))?.slice('sid='.length)";
+const CART_SID_HONO =
+  "(c.req.header('cookie') ?? '').split(';').map((part) => part.trim()).find((part) => part.startsWith('sid='))?.slice('sid='.length)";
+
+/** One row per ADDED item, so adding a second product accumulates instead of overwriting the first. */
+const cartTables = () =>
+  [
+    "db.exec('CREATE TABLE IF NOT EXISTS cart_items (id INTEGER PRIMARY KEY AUTOINCREMENT, sid TEXT NOT NULL, ref TEXT NOT NULL, variant TEXT NOT NULL, qty INTEGER NOT NULL, created_at TEXT NOT NULL)');",
+    "const insertCartItem = db.prepare('INSERT INTO cart_items (sid, ref, variant, qty, created_at) VALUES (?, ?, ?, ?, ?)');",
+    "const selectCartItems = db.prepare('SELECT id, ref, variant, qty FROM cart_items WHERE sid = ? ORDER BY id');",
+  ].join('\n');
+
+/** The cart's two pages: the product page carrying the variant choice, and the accumulated cart. */
+const cartPages = (archetype) => {
+  const variant = cartVariantField(archetype);
+  const quantity = cartQuantityField(archetype);
+  return [
+    `const cartProductPage = (row) => capabilityPage('Product ' + row.ref, '<h1>Product ' + esc(row.ref) + '</h1>' + '<form id="add-to-cart" method="post" action="/cart/add">' + '<input type="hidden" name="ref" value="' + esc(row.ref) + '">' + '<label for="${variant.name}">${variant.label}</label>' + '<select id="${variant.name}" name="${variant.name}" required>' + ${JSON.stringify(variant.options ?? [])}.map((option) => '<option value="' + esc(option) + '">' + esc(option) + '</option>').join('') + '</select>' + '<label for="${quantity.name}">${quantity.label}</label>' + '<input id="${quantity.name}" name="${quantity.name}" type="number" min="1" value="1" required>' + '<button type="submit">Add to cart</button>' + '</form>')`,
+    "const cartPage = (rows) => capabilityPage('Your cart', '<h1>Your cart</h1>' + (rows.length === 0 ? '<p id=\"cart-empty\">Your cart is empty.</p>' : '<ul id=\"cart-lines\">' + rows.map((row) => '<li data-ref=\"' + esc(row.ref) + '\" data-variant=\"' + esc(row.variant) + '\">' + esc(row.ref) + ' - ' + esc(row.variant) + ' x ' + esc(row.qty) + '</li>').join('') + '</ul>') + '<p id=\"cart-summary\">' + rows.length + ' line(s), ' + rows.reduce((total, row) => total + Number(row.qty), 0) + ' item(s)</p>')",
+  ].join('\n');
+};
+
+/** The cart routes, raw arm: add an item (creating the visitor's sid), then read the accumulated cart. */
+const rawCartRoutes = (archetype, cookieFlags) => {
+  const variant = cartVariantField(archetype);
+  const quantity = cartQuantityField(archetype);
+  return [
+    "  if (path === '/cart' && request.method === 'GET') {",
+    `    const cartSid = ${CART_SID_RAW};`,
+    '    return html(response, cartPage(cartSid ? selectCartItems.all(cartSid) : []));',
+    '  }',
+    "  if (path === '/cart/add' && request.method === 'POST') {",
+    '    const cartBody = await parseBody(request);',
+    "    const cartRef = String(cartBody.ref ?? '').trim();",
+    `    const cartVariant = String(cartBody[${JSON.stringify(variant.name)}] ?? '').trim();`,
+    // The form marks both required, but a POST is not the form: an item with no product or no variant
+    // would be stored and then rendered as an empty line (mwg-train-11d review).
+    "    if (cartRef === '' || cartVariant === '') {",
+    "      response.writeHead(422, { 'content-type': 'text/plain; charset=utf-8' });",
+    "      return response.end('An item needs a product and a variant.');",
+    '    }',
+    // `||`, not `??`: a browser can send `sid=` with an empty value, and `??` would accept that empty
+    // string as the visitor's sid. The rows would then be stored under it while the read side treats an
+    // empty sid as absent, so the cart would silently lose everything it had just accepted.
+    `    const cartSid = ${CART_SID_RAW} || randomUUID();`,
+    `    const cartQuantity = Math.max(1, Number.parseInt(String(cartBody[${JSON.stringify(quantity.name)}] ?? '1'), 10) || 1);`,
+    `    insertCartItem.run(cartSid, cartRef, cartVariant, cartQuantity, new Date().toISOString());`,
+    `    response.writeHead(303, { location: '/cart', 'set-cookie': 'sid=' + cartSid + '; ${cookieFlags}' });`,
+    '    return response.end();',
+    '  }',
+  ].join('\n');
+};
+
+/** The cart routes, hono arm: the same two routes, in Hono's routing. */
+const honoCartRoutes = (archetype, cookieFlags) => {
+  const variant = cartVariantField(archetype);
+  const quantity = cartQuantityField(archetype);
+  return [
+    "app.get('/cart', (c) => {",
+    `  const cartSid = ${CART_SID_HONO};`,
+    '  return c.html(cartPage(cartSid ? selectCartItems.all(cartSid) : []));',
+    '});',
+    "app.post('/cart/add', async (c) => {",
+    '  const cartBody = await c.req.parseBody();',
+    "  const cartRef = String(cartBody.ref ?? '').trim();",
+    `  const cartVariant = String(cartBody[${JSON.stringify(variant.name)}] ?? '').trim();`,
+    "  if (cartRef === '' || cartVariant === '') return c.text('An item needs a product and a variant.', 422);",
+    // See rawCartRoutes: an empty `sid=` cookie must not become the key rows are stored under.
+    `  const cartSid = ${CART_SID_HONO} || randomUUID();`,
+    `  const cartQuantity = Math.max(1, Number.parseInt(String(cartBody[${JSON.stringify(quantity.name)}] ?? '1'), 10) || 1);`,
+    `  insertCartItem.run(cartSid, cartRef, cartVariant, cartQuantity, new Date().toISOString());`,
+    `  c.header('set-cookie', 'sid=' + cartSid + '; ${cookieFlags}');`,
+    "  return c.redirect('/cart', 303);",
+    '});',
+  ].join('\n');
+};
 
 /** The small page renderers the capability handlers share, emitted only when a capability needs them. */
 const capabilityPages = () =>
@@ -932,6 +1018,9 @@ function serverSource(archetype, framework, defects = [], set = null) {
   const cookieFlags = archetype.session
     ? `HttpOnly; SameSite=Lax; Path=/; Max-Age=3600${framework.secureCookie ? '; Secure' : ''}`
     : null;
+  // The cart's cookie is its own: `cart` cannot combine with `session` (both own `sid`), so it does not
+  // reuse `cookieFlags`, which is null for a cart-only spec.
+  const cartCookieFlags = `HttpOnly; SameSite=Lax; Path=/; Max-Age=3600${framework.secureCookie ? '; Secure' : ''}`;
   // The write route may be parameterised (e.g. /concerts/:id/reserve). The generic server matches it
   // with the same :param-to-capture rewrite it uses for the read route, so a literal write path (every
   // pilot route) is an exact match and a parameterised one captures each segment. The rewrite runs at
@@ -975,7 +1064,7 @@ db.exec(\`CREATE TABLE IF NOT EXISTS accounts (email TEXT PRIMARY KEY, password 
 const insert = db.prepare('INSERT INTO records (ref, created_at, payload) VALUES (?, ?, ?)');
 const select = db.prepare('SELECT ref, created_at, payload FROM records WHERE ref = ?');
 ${sessionTables(archetype)}${archetype.journey?.update ? `\nconst updateRecord = db.prepare('UPDATE records SET payload = ? WHERE ref = ?');` : ''}${draftTables(archetype) ? `\n${draftTables(archetype)}` : ''}
-${caps.auth ? `${authTables(archetype)}\n` : ''}const count = db.prepare('SELECT COUNT(*) AS n FROM records');
+${caps.auth ? `${authTables(archetype)}\n` : ''}${caps.cart ? `${cartTables()}\n` : ''}const count = db.prepare('SELECT COUNT(*) AS n FROM records');
 const list = db.prepare('SELECT ref, payload FROM records ORDER BY created_at DESC LIMIT 50');
 
 ${parameterisedWrite ? `// An edit flow edits something: the seeded record is what the form's action points at.
@@ -1001,7 +1090,7 @@ const json = (response, value, status = 200, headers = {}) => {
   response.end(JSON.stringify(value));
 };
 
-${caps.list_pages || caps.detail_page || caps.auth ? `${capabilityPages()}\n` : ''}const REQUIRED = ${JSON.stringify(archetype.fields.filter((field) => field.type !== 'select' && !field.optional).map((field) => field.name))};
+${caps.list_pages || caps.detail_page || caps.auth || caps.cart ? `${capabilityPages()}${caps.cart ? `\n${cartPages(archetype)}` : ''}\n` : ''}const REQUIRED = ${JSON.stringify(archetype.fields.filter((field) => field.type !== 'select' && !field.optional).map((field) => field.name))};
 
 ${enforceMin ? `const MIN_BOUNDS = ${JSON.stringify(minBounds)};\n` : ''}// The cart form has its own fields. Validating it against the search form's required list refused every
 // cart POST with 422, which the write journey caught: a second form on one page needs a second rule.
@@ -1134,7 +1223,7 @@ ${caps.detail_page && caps.auth ? `${RAW_AUTH_GUARD}\n` : ''}    const row = sel
       <button type="submit">Update</button>
     </form>\`;
     let doc = ${caps.detail_page ? 'detailPage(row)' : "await renderDocument({ title: 'Your submission', data: { ref: row.ref } })"};
-    return html(response, doc.replace('</main>', \`\${editForm}</main>\`));` : `${caps.detail_page ? `return html(response, detailPage(row));` : `return html(response, await renderDocument({ title: 'Your submission', data: { ref: row.ref } }));`}`}
+    return html(response, doc.replace('</main>', \`\${editForm}</main>\`));` : `${caps.cart ? `return html(response, cartProductPage(row));` : caps.detail_page ? `return html(response, detailPage(row));` : `return html(response, await renderDocument({ title: 'Your submission', data: { ref: row.ref } }));`}`}
   }${archetype.journey?.update ? `\n\n  const editMatch = path.match(/^\\/edit\\/([^/]+)$/);
   if (editMatch && request.method === 'POST') {
     const editRef = editMatch[1];
@@ -1189,7 +1278,7 @@ ${caps.auth ? `    if (!authSessionEmail(request.headers.cookie)) return json(re
     return json(response, { ref: row.ref, ...JSON.parse(row.payload) });
   }
 
-  // A route the archetype declares is a route the server must serve: /account was declared as the
+${caps.cart ? `${rawCartRoutes(archetype, cartCookieFlags)}\n\n` : ''}  // A route the archetype declares is a route the server must serve: /account was declared as the
   // account flow's page and never implemented, so the journey landed on a 404.
   if (${JSON.stringify(archetype.routes.filter((route) => route.kind === 'read-session').map((route) => route.path))}.includes(path) && request.method === 'GET') {
 ${caps.auth ? `${RAW_AUTH_GUARD}\n` : ''}    return html(response, await renderDocument({ title: 'Your account' }));
@@ -1272,6 +1361,8 @@ function honoServerSource(archetype, framework, defects = [], set = null) {
   const parameterisedWrite = /:[A-Za-z0-9_]+/.test(writeRoute.path);
   const writeParam = writeRoute.path.match(/:([A-Za-z0-9_]+)/)?.[1] ?? 'id';
   const cookieFlags = archetype.session ? 'HttpOnly; SameSite=Lax; Path=/; Max-Age=3600' : null;
+  // See serverSource: the cart owns its own cookie and `cart` cannot combine with `session`.
+  const cartCookieFlags = 'HttpOnly; SameSite=Lax; Path=/; Max-Age=3600';
   // Hono routes :param segments natively, so a parameterised write path needs no rewrite here. Only the
   // training-only bounds validation and client-only-state tokens differ; the pilot passes neither.
   const minBounds = archetype.fields.filter((field) => field.min !== undefined).map((field) => ({ name: field.name, min: Number(field.min) }));
@@ -1326,7 +1417,7 @@ const requiredFor = (path) => (EXTRA_ACTION !== '' && path === EXTRA_ACTION ? EX
 ${sessionTables(archetype)}
 ${caps.auth ? `db.exec('CREATE TABLE IF NOT EXISTS accounts (email TEXT PRIMARY KEY, password TEXT NOT NULL, display_name TEXT)');
 ${authTables(archetype)}
-` : ''}${caps.list_pages || caps.detail_page || caps.auth ? `${capabilityPages()}
+` : ''}${caps.cart ? `${cartTables()}\n` : ''}${caps.list_pages || caps.detail_page || caps.auth || caps.cart ? `${capabilityPages()}${caps.cart ? `\n${cartPages(archetype)}` : ''}
 ` : ''}const requestLog = [];
 const app = new Hono();
 app.use('*', async (c, next) => {
@@ -1431,7 +1522,7 @@ ${caps.detail_page && caps.auth ? "  if (!authSessionEmail(c.req.header('cookie'
     <button type="submit">Update</button>
   </form>\`;
   let doc = ${caps.detail_page ? 'detailPage(row)' : "await renderDocument({ title: 'Your submission' })"};
-  return c.html(doc.replace('</main>', \`\${editForm}</main>\`));` : `${caps.detail_page ? `return c.html(detailPage(row));` : `return c.html(renderDocument({ title: 'Your submission' }));`}`}
+  return c.html(doc.replace('</main>', \`\${editForm}</main>\`));` : `${caps.cart ? `return c.html(cartProductPage(row));` : caps.detail_page ? `return c.html(detailPage(row));` : `return c.html(renderDocument({ title: 'Your submission' }));`}`}
 });${archetype.journey?.update ? `\n\napp.post('/edit/:ref', async (c) => {
   const editRef = c.req.param('ref');
   const row = select.get(editRef);
@@ -1478,7 +1569,7 @@ ${caps.auth ? "  if (!authSessionEmail(c.req.header('cookie'))) return c.json({ 
   return c.json({ ref: row.ref, ...JSON.parse(row.payload) });
 });
 
-for (const sessionPage of ${JSON.stringify(archetype.routes.filter((route) => route.kind === 'read-session').map((route) => route.path))}) {
+${caps.cart ? `${honoCartRoutes(archetype, cartCookieFlags)}\n\n` : ''}for (const sessionPage of ${JSON.stringify(archetype.routes.filter((route) => route.kind === 'read-session').map((route) => route.path))}) {
 ${caps.auth ? `  app.get(sessionPage, (c) => {
     if (!authSessionEmail(c.req.header('cookie'))) return c.redirect('/login', 303);
     return c.html(renderDocument({ title: 'Your account' }));

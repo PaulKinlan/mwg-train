@@ -59,7 +59,7 @@ const FIELD_KEYS = new Set(['slug', 'name', 'type', 'label', 'autocomplete', 're
 export { FIELD_KEYS };
 
 /** The functional-route capabilities a specification may opt into. A closed set, like FIELD_KEYS. */
-export const CAPABILITY_KEYS = new Set(['list_pages', 'detail_page', 'auth']);
+export const CAPABILITY_KEYS = new Set(['list_pages', 'detail_page', 'auth', 'cart']);
 
 /** The field names a selector types into, from `[name=x]` / `[name="x"]` / `[name='x']`. */
 function selectorFieldNames(selector) {
@@ -241,6 +241,34 @@ export function validateSpec(spec) {
       if (spec.capabilities.detail_page === true) {
         const detail = (spec.routes ?? []).filter((route) => route?.kind === 'read-by-reference');
         if (detail.length === 0) at('capabilities.detail_page', 'is on, but no route is read-by-reference');
+      }
+      if (spec.capabilities.cart === true) {
+        // The cart owns the sid cookie, as the session flow and auth both do, and it needs a product
+        // route to add FROM, a variant to choose, and a quantity to accumulate. Each is refused here
+        // rather than silently emitting a cart that adds nothing (mwg-train-11d).
+        if (spec.session === true) at('capabilities.cart', 'cannot combine with session: both own the sid cookie');
+        if (spec.capabilities.auth === true) at('capabilities.cart', 'cannot combine with auth: both own the sid cookie');
+        // The cart's product page IS the record page (it shows the product and its variant choice), so
+        // asking for the read-only detail page as well would emit a renderer nothing ever reaches.
+        if (spec.capabilities.detail_page === true) at('capabilities.cart', 'cannot combine with detail_page: the cart product page is the record page');
+        const products = (spec.routes ?? []).filter((route) => route?.kind === 'read-by-reference');
+        if (products.length === 0) at('capabilities.cart', 'is on, but no route is read-by-reference to serve as the product page');
+        // The builder binds the FIRST read-by-reference route as the product page, so a second one would
+        // be declared and never served. Refused here rather than silently 404ing (mwg-train-11d review).
+        if (products.length > 1) {
+          at('capabilities.cart', `is on, but ${products.length} routes are read-by-reference: only the first would serve the product page`);
+        }
+        // A cart with nothing to put in it: the product page adds a reference to a record, and only a
+        // write route creates one.
+        if (!(spec.routes ?? []).some((route) => route?.method === 'POST' && String(route?.kind ?? '').startsWith('write'))) {
+          at('capabilities.cart', 'is on, but no route writes a record, so there would be nothing to add to the cart');
+        }
+        if (!(spec.fields ?? []).some((field) => field?.type === 'select')) {
+          at('capabilities.cart', 'is on, but no select field to choose a variant from');
+        }
+        if (!(spec.fields ?? []).some((field) => field?.type === 'number')) {
+          at('capabilities.cart', 'is on, but no number field to accumulate a quantity in');
+        }
       }
     }
   }
