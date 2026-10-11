@@ -116,6 +116,10 @@ test('functional: the output is derived from the input, the narrative follows it
         const initial = await page();
         assert.ok(initial.includes('id="explainer-control"'), `${arm} renders the control`);
         assert.ok(initial.includes('id="explainer-reset"'), `${arm} renders a reset control`);
+        // What the reader sees, not only what the attributes say. Counting steps proves a path is drawn, not that
+        // it *looks* drawn: strip the markers and a count-based check still passes. (Review finding on this bead.)
+        assert.ok(initial.includes('&#10003;'), `${arm} marks drawn months visibly rather than only with data-travelled`);
+        assert.ok(initial.includes('you are here'), `${arm} marks the month reached as the reader's position`);
         assert.ok(figure(initial)?.includes(String(MONTHS[60])), `${arm} derives the initial figure (observed: ${figure(initial)})`);
 
         // The output is DERIVED, not a hard-coded pair: three amounts, three answers that only arithmetic gives,
@@ -130,6 +134,7 @@ test('functional: the output is derived from the input, the narrative follows it
         const beyond = await page('?monthly=40');
         assert.notEqual(narrative(beyond), initialNarrative, `${arm} the narrative changes when the path runs past the horizon`);
         assert.notEqual(steps(beyond), steps(initial), `${arm} the drawn path changes with the input (initial ${steps(initial)} steps, beyond ${steps(beyond)})`);
+        assert.ok(beyond.includes('past the horizon'), `${arm} marks the step past the horizon and says so in words`);
 
         // A query string is user input, so out-of-range and non-numeric values must fall back to something legal
         // rather than producing a broken figure - clamping to max is the arithmetic, not a default.

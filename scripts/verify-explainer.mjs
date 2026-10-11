@@ -86,6 +86,11 @@ export async function runJourney(arm) {
       steps: await page.evaluate(`return document.querySelectorAll('.explainer-step').length`),
       travelled: await page.evaluate(`return document.querySelectorAll('.explainer-step[data-travelled="true"]').length`),
       reset: await page.evaluate(`return Boolean(document.querySelector('#explainer-reset'))`),
+      // The markers are content, not only attributes. Counting steps proves a path is drawn, not that it *looks*
+      // drawn - so these read the text the reader actually sees, which is what a review of this bead pointed out
+      // was missing: strip the markers and every count-based check still passes.
+      mark: await page.evaluate(`return (document.querySelector('.explainer-step') || {}).textContent || ''`),
+      current: await page.evaluate(`return (document.querySelector('#explainer-current') || {}).textContent || ''`),
     });
     const setAmount = async (amount) => {
       // The control arrives pre-filled with the initial amount, so this replaces the value rather than typing into
@@ -113,6 +118,8 @@ export async function runJourney(arm) {
     check('the initial figure is derived from the initial amount', initial.figure.includes(String(INITIAL.months)), `figure="${initial.figure.trim()}"`);
     check('a reset control is on the page', initial.reset, 'reset anchor present');
     check('the initial path is drawn', initial.travelled > 0, `${initial.travelled} of ${initial.steps} steps travelled`);
+    check('drawn months are marked for the reader, not only in an attribute', /\u2713\s*Month 1/.test(initial.mark), `first step reads "${initial.mark.trim()}"`);
+    check('the month reached is marked as the reader\u2019s position', /you are here/.test(initial.current), `current step reads "${initial.current.trim()}"`);
 
     // 2. A different amount, typed and submitted for real: a smaller figure, so the journey has the two
     //    recorded outputs the acceptance bar asks for.
@@ -131,6 +138,7 @@ export async function runJourney(arm) {
     check('an amount past the horizon derives its own figure', beyond.figure.includes(String(BEYOND.months)), `figure="${beyond.figure.trim()}"`);
     check('the narrative changes when the path runs past the horizon', beyond.narrative !== initial.narrative, `"${beyond.narrative.trim().slice(0, 70)}"`);
     check('the drawn path is capped at the horizon rather than drawn to 30 steps', beyond.travelled <= HORIZON && beyond.steps >= HORIZON, `${beyond.steps} steps, ${beyond.travelled} travelled`);
+    check('the step past the horizon is marked and says so', /past the horizon/.test(beyond.current), `current step reads "${beyond.current.trim()}"`);
 
     // 4. Reset: the output returns to its initial value, not merely to a page called reset.
     await page.click('#explainer-reset');
