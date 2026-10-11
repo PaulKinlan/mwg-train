@@ -25,7 +25,7 @@
     "scaffold:train-corpus": "node scripts/scaffold-training-corpus.mjs",
     "scaffold:train-design": "node scripts/scaffold-train-design.mjs",
     "check:eval-projects": "node scripts/scaffold-eval-projects.mjs --check",
-    "check:all": "npm run lint:provenance && npm run check:quotes && npm run check:briefs && npm run check:originals && npm run check:disjoint && npm run check:eval-projects && npm run check:targets && npm run check:specs && npm run check:archetype-assets && npm run check:build-key && npm run check:pilot-corpus && npm run check:set-separation && npm run check:train-evidence && npm run scan:owner-auth && npm run check:brief-schema && npm run check:route-conformance && npm run check:rules-pin && npm run check:design-schema && npm run check:train-design && npm run check:baseline-label && npm run check:pilot-served && npm run check:served-gap",
+    "check:all": "npm run lint:provenance && npm run check:quotes && npm run check:briefs && npm run check:originals && npm run check:disjoint && npm run check:eval-projects && npm run check:targets && npm run check:specs && npm run check:archetype-assets && npm run check:build-key && npm run check:pilot-corpus && npm run check:set-separation && npm run check:train-evidence && npm run check:train-records && npm run scan:owner-auth && npm run check:brief-schema && npm run check:route-conformance && npm run check:rules-pin && npm run check:design-schema && npm run check:train-design && npm run check:baseline-label && npm run check:pilot-served && npm run check:served-gap",
     "render:targets": "node scripts/render-targets.mjs",
     "check:targets": "node scripts/render-targets.mjs --check && node scripts/validate-provenance.mjs data/A6_evaluation/targets/manifest.jsonl",
     "score:conformance": "node scripts/score-conformance.mjs",
@@ -56,6 +56,7 @@
     "check:train-design": "node scripts/check-train-design.mjs",
     "check:baseline-label": "node scripts/check-baseline-label.mjs",
   "check:set-separation": "node scripts/check-set-separation.mjs",
+    "check:train-records": "node scripts/check-train-records.mjs",
     "label:baseline": "node scripts/label-baseline.mjs"
   },
   "license": "UNLICENSED",

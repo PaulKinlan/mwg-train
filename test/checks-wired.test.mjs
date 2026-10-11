@@ -25,6 +25,8 @@ const WIRED = new Set([
   'check:specs',
   'check:pilot-corpus',
   'check:train-evidence',
+  // Compares the recorded journey rows' corpus_tree_sha against the corpus; no regeneration, no browser.
+  'check:train-records',
   'scan:owner-auth',
   'check:brief-schema',
   'check:route-conformance',
