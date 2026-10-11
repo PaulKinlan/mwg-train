@@ -125,6 +125,18 @@ export const PAGE_CSS = `
   .target-preview-frame img { display: block; width: 100%; height: auto; }
   .draft-prompt-live { padding: 1rem; border-radius: 0.5rem; background: var(--ground); border: 1px solid var(--line); font-size: 0.95rem; line-height: 1.6; min-height: 7rem; white-space: pre-wrap; word-break: break-word; }
   .draft-meta-pills { margin-top: 0.4rem; }
+  .board-generation-panel { margin-bottom: 1.2rem; }
+  .board-generation-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1.2rem; align-items: start; }
+  .board-generation-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 0.4rem; }
+  .board-generation-actions button { min-height: 2.6rem; padding: 0.4rem 1rem; border: 1px solid var(--action); border-radius: 0.45rem; background: var(--surface); color: var(--action); font: inherit; font-weight: 700; cursor: pointer; }
+  .board-generation-actions button:hover:not(:disabled) { background: var(--action); color: var(--ground); }
+  .board-generation-actions button:disabled { cursor: progress; opacity: 0.6; }
+  .board-frame { border: 1px solid var(--line); border-radius: 0.4rem; overflow: hidden; background: var(--ground); }
+  .board-frame img { display: block; width: 100%; height: auto; }
+  .board-frame.board-empty { display: grid; place-items: center; min-height: 12rem; padding: 1.5rem 1rem; border-style: dashed; text-align: center; }
+  .board-frame.board-empty p { margin: 0; max-width: 34rem; }
+  .board-meta { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.55rem 0 0; padding: 0; list-style: none; }
+  .board-notes { margin: 0.5rem 0 0; padding-inline-start: 1.2rem; color: var(--muted); font-size: 0.86rem; }
   .target-inspection-panel .target-inspection-frame { position: relative; border: 1px solid var(--line); border-radius: 0.4rem; overflow: hidden; background: var(--ground); }
   .target-inspection-panel .target-inspection-frame img { display: block; width: 100%; height: auto; }
   .target-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 0.6rem; }
@@ -160,7 +172,7 @@ export const PAGE_CSS = `
   .concept-steps figure { min-width: 0; margin: 0; }
   .concept-steps figcaption { padding-block: 0.45rem; color: var(--muted); overflow-wrap: anywhere; }
   .concept-steps figcaption strong { color: var(--ink); }
-  @media (max-width: 55rem) { .tuning-grid, .prompt-comparison-grid, .convergence-grid, .target-boards-pair { grid-template-columns: minmax(0, 1fr); } .tuning-selector { grid-template-columns: repeat(2, minmax(0, 1fr)); } .tuning-selector label, .tuning-selector select, .tuning-selector button { grid-column: auto; grid-row: auto; } .tuning-selector button { grid-column: 1 / -1; } }
+  @media (max-width: 55rem) { .tuning-grid, .prompt-comparison-grid, .convergence-grid, .target-boards-pair, .board-generation-grid { grid-template-columns: minmax(0, 1fr); } .tuning-selector { grid-template-columns: repeat(2, minmax(0, 1fr)); } .tuning-selector label, .tuning-selector select, .tuning-selector button { grid-column: auto; grid-row: auto; } .tuning-selector button { grid-column: 1 / -1; } }
   @media (max-width: 35rem) { .tuning-selector, .tuning-settings { grid-template-columns: minmax(0, 1fr); } .tuning-selector button { grid-column: auto; } }
   @media (max-width: 48rem) {
     .concept-pair, .concept-board-grid { grid-template-columns: minmax(0, 1fr); }

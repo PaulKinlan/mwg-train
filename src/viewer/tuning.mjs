@@ -3,6 +3,7 @@ import { join } from 'node:path';
 
 import { escapeHtml, page } from './pages.mjs';
 import { BASELINE_LABEL } from '../eval/ruleset.mjs';
+import { IMAGE_MODEL } from './generate.mjs';
 
 const FAMILY_RE = /^tr-\d{2}$/;
 const sha = (value) => (value ? escapeHtml(String(value)) : '<span class="muted">absent</span>');
@@ -394,16 +395,53 @@ export function renderTuning({ data, familyId, variant = 'v1', framework = 'raw'
     ${record ? `<p>Measured sample from ${text(record.brief_id)} — <strong>${text(BASELINE_LABEL)}</strong> (our deterministic repair, not an official web-uplift result): ${record.decision.accepted ? 'accepted' : 'rejected'} · ${text(record.decision.category)}. Original ${sha(record.original_sha)} · target-floor uplift ${sha(record.uplifted_sha)}.</p><details><summary>Measurement details</summary>${list(record.decision.detail)}</details>` : '<p class="muted">No measured run for this family/framework in the 40-project sample; a missing record is not a failure or a pass.</p>'}
   </section>`;
 
-  // 6. Tune a local draft
+  // 6. Generate a board from the draft: the one interactive, hosted call in this surface
+  const generation = `<section class="panel board-generation-panel" aria-labelledby="generation-heading">
+    <div class="preview-panel-header">
+      <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem;">
+        <h2 id="generation-heading">Generate a board from this draft</h2>
+        <span class="badge warn">HOSTED MODEL - ONE BILLED CALL PER PRESS</span>
+      </div>
+      <p class="muted">This is the one button in the workbench that calls a model. It sends the prompt and settings you are editing to <code>${escapeHtml(IMAGE_MODEL)}</code> and puts the board it returns into this page. The compute happens on the provider's side - no model runs on this machine - and this process holds no credential of its own: the endpoint in front of the model injects the signed-in account's credentials. Every press is a real, billed generation, and it takes roughly 15 seconds.</p>
+      <div class="draft-callout">
+        <strong>The board comes back to your browser and nowhere else.</strong> No file is written by a generation: not the brief, not <code>docs/design/training/</code>, not a manifest, not a cache. Output from a hosted model is <code>hosted-api</code> material, which the provenance rules in this repository place in arm <code>A3_teacher_generated</code> with <code>excluded_from_training: true</code> and <code>approved_for_training: false</code>. Keeping a board you like is a separate promote step that records the provider, model, account reference, terms reference and the SHA of the exact bytes - a download from this page is a copy, not an approved corpus asset.
+      </div>
+    </div>
+    <div class="board-generation-grid">
+      <div class="convergence-target-col">
+        <div class="convergence-col-header"><h3>Controls</h3><span class="muted">uses the draft below</span></div>
+        <div class="board-generation-actions">
+          <button type="button" id="generate-board">Generate board from draft</button>
+        </div>
+        <p id="board-status" role="status" aria-live="polite" class="muted">Nothing generated in this browser yet.</p>
+        <ul id="board-notes" class="board-notes" hidden></ul>
+      </div>
+      <div class="convergence-target-col">
+        <div class="convergence-col-header">
+          <h3>Generated board</h3>
+          <span class="muted" id="board-summary">nothing generated yet</span>
+        </div>
+        <div id="board-result" class="board-frame board-empty">
+          <p class="muted">Edit the draft below, then press <strong>Generate board from draft</strong>. A board appears here with its model, dimensions and byte SHA - or an explicit failure, never a placeholder standing in for one.</p>
+        </div>
+        <ul id="board-meta" class="board-meta" hidden></ul>
+        <div class="target-actions" id="board-result-actions" hidden>
+          <a class="button-link small" id="board-download" download="board.jpg">Download board</a>
+        </div>
+      </div>
+    </div>
+  </section>`;
+
+  // 7. Tune a local draft
   const draft = `<section class="panel tuning-editor" aria-labelledby="draft-heading">
     <h2 id="draft-heading">Tune a local draft</h2>
-    <p class="muted">No model is run. These settings are hypotheses for a future generation pipeline; they do not affect the committed template, target or training data. Drafts stay in this browser until exported.</p>
+    <p class="muted">These settings are the hypothesis a generation is run with. They still do not affect the committed template, target or training data by themselves: a generation returns a board to this page, and a draft stays in this browser until it is exported. Generating a board from this model needs at least 4096 output tokens - below that the whole budget goes on thinking and no image comes back - so a smaller number is raised to 4096 for the request and the effective value is reported in the result.</p>
     <noscript><p class="danger">Editing and exporting local drafts requires JavaScript; the authored brief and target above remain readable.</p></noscript>
     <form id="tuning-draft" method="post" action="/tuning" data-brief-id="${text(selectedVariant.brief_id)}" data-framework="${text(selectedFramework)}">
       <label for="prompt">Prompt wording</label><textarea id="prompt" name="prompt" rows="8" required minlength="80" aria-describedby="prompt-help">${text(selectedVariant.prompt)}</textarea>
       <p id="prompt-help" class="muted">The original brief remains unchanged. Keep routes, journeys and assertions consistent with the contract.</p>
-      <label for="guidance">System guidance (draft only)</label><textarea id="guidance" name="system_guidance" rows="4" aria-describedby="guidance-help"></textarea>
-      <p id="guidance-help" class="muted">No system prompt or model runner exists in this repository yet.</p>
+      <label for="guidance">System guidance (sent as the model's system instruction)</label><textarea id="guidance" name="system_guidance" rows="4" aria-describedby="guidance-help"></textarea>
+      <p id="guidance-help" class="muted">Optional. When set, this is sent as the generation's system instruction; when empty, nothing is sent in that field.</p>
       <div class="tuning-settings">
         <div><label for="temperature">Temperature</label><input id="temperature" name="temperature" type="number" min="0" max="2" step="0.1" value="0.7" required></div>
         <div><label for="max-tokens">Max tokens</label><input id="max-tokens" name="max_tokens" type="number" min="256" max="8192" step="1" value="2048" required></div>
@@ -418,11 +456,12 @@ export function renderTuning({ data, familyId, variant = 'v1', framework = 'raw'
 
   return page('prompt workbench', `
     <h1>Prompt workbench</h1>
-    <p class="muted">Inspect authored training briefs, their design references and recorded template evidence. Work on one local, unapproved draft at a time. No hosted model calls or training jobs run here.</p>
+    <p class="muted">Inspect authored training briefs, their design references and recorded template evidence. Work on one local, unapproved draft at a time, and generate a design board from it against the hosted ${escapeHtml(IMAGE_MODEL)} model when you want to see one. No training job runs here and no generation writes to this checkout.</p>
     ${data.missing?.length ? `<p class="notice">Committed training input unavailable in this checkout: ${data.missing.map(text).join(', ')}. Missing evidence is not a pass or failure.</p>` : ''}
     ${selector}
     ${promptComparison}
     ${convergencePreview}
+    ${generation}
     <div class="tuning-grid"><div>${draft}${detail}</div><div>${target}${evidence}</div></div>
     <script src="/tuning/client.js" defer></script>
   `);
