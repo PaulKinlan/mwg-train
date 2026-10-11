@@ -82,16 +82,16 @@ Recorded in `pilot/CORPUS.json` from `pilot/plan.json`, covering 34 accepted tem
 
 | Scope | Original (chars) | Uplifted (chars) | Total (chars) | Derived Tokens | Band (±25%) | Role in Sizing |
 |---|---:|---:|---:|---:|---|---|
-| **`app_sources`** | **481,108** | **543,448** | **1,024,556** | **256,139** | **[192,104, 320,174]** | **PRIMARY headline figure** |
+| **`app_sources`** | **560,679** | **623,019** | **1,183,698** | **295,925** | **[221,943, 369,906]** | **PRIMARY headline figure** |
 | `project_manifest` | 4,498 | 4,498 | 8,996 | 2,249 | [1,687, 2,811] | `package.json` dependencies & scripts |
 | `harness_metadata` | 170,295 | 170,295 | 340,590 | 85,148 | [63,861, 106,434] | `spec.json` harness metadata (EXCLUDED) |
 | `prompt` | 0 | 0 | 0 | 0 | [0, 0] | Measured zero (documented gap; see below) |
-| *full_tree (all)* | *655,901* | *718,241* | *1,374,142* | *343,536* | *[257,652, 429,419]* | *Total on-disk tree for comparison* |
+| *full_tree (all)* | *735,472* | *797,812* | *1,533,284* | *383,321* | *[287,491, 479,151]* | *Total on-disk tree for comparison* |
 
-- **Headline Characters (`app_sources`):** **1,024,556 characters** (481,108 original + 543,448 uplifted)
-- **Headline Derived Tokens:** **256,139 tokens**
-- **Uncertainty Band:** **[192,104, 320,174] tokens** (±25% margin)
-- **Epoch Scaling:** 1 epoch = **256,139 tokens**; $N$ epochs = $N \times 256,139$ tokens.
+- **Headline Characters (`app_sources`):** **1,183,698 characters** (560,679 original + 623,019 uplifted)
+- **Headline Derived Tokens:** **295,925 tokens**
+- **Uncertainty Band:** **[221,943, 369,906] tokens** (±25% margin)
+- **Epoch Scaling:** 1 epoch = **295,925 tokens**; $N$ epochs = $N \times 295,925$ tokens.
 
 ---
 

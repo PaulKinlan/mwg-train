@@ -69,3 +69,24 @@ the family (`tr-01`) in the training corpus — already paired with its framewor
 the original and uplift tree hashes the record carries, so adding a field there changes 35 recorded hashes
 and needs a fresh browser pilot run to re-record honestly (`pilot-corpus.mjs --record` itself refuses a run
 whose originals no longer match). That is tracked as a follow-up rather than done silently.
+
+## What consumes the store
+
+The pilot's framework builds do: `buildProject` loads the archetype's set and hands it to the builder, so
+every arm for an archetype carries the target's brand, its palette and font stack (emitted verbatim as CSS
+custom properties, with the arm's own colour roles aliased to the token names the set declares) and shows
+its primary reference board. A caller that supplies no set - the training corpus, whose trees must not
+consume a set that is `excluded_from_training` - gets byte-identical output to before the store existed,
+and no `assets` key in its spec at all. That is a property, not a courtesy: `pilot/TRAINING_CORPUS.json`
+records the tree hash of all 210 training trees and `docs/train/corpus/tokens.json` measures them.
+
+The boards are referenced, never copied. They are megabytes each, every generated tree is hashed and
+token-counted, and the token counter reads every file as utf8, so a 525 KB JPEG would be counted as
+~525,000 source characters. A generated server therefore serves a board out of the store at request time,
+resolving the store by walking up from its own directory, and only when the bytes still hash to the digest
+in the register - with `x-asset-source` on the response saying where they came from. `spec.json` records
+the register (names, digests, store path) plus the rights, so a build says which set it was given.
+
+The set is optional per build, which is also how rights are kept honest: `assertConsumable` refuses a
+`training` purpose for these sets, and `buildProjectFor` checks it, so no caller can consume a set by
+forgetting the rule.

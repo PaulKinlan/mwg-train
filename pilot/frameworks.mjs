@@ -1027,7 +1027,7 @@ const server = createServer(async (request, response) => {
       response.writeHead(200, { 'content-type': \`\${type}; charset=utf-8\` });
       return response.end(body);
     } catch {
-      // Not in the tree, so it may be one of the archetype's boards: served from the store, and only if
+${set ? `      // Not in the tree, so it may be one of the archetype's boards: served from the store, and only if
       // its bytes still hash to the recorded digest. The provenance header is deliberate - a reader and a
       // test can both tell a board of the target from a file the build itself wrote.
       const asset = readArchetypeAsset(decodeURIComponent(path.slice('/app/'.length)));
@@ -1035,7 +1035,7 @@ const server = createServer(async (request, response) => {
         response.writeHead(200, { 'content-type': asset.type, 'x-asset-source': \`\${ASSET_STORE}/images\`, 'cache-control': 'no-store' });
         return response.end(asset.body);
       }
-      response.writeHead(404);
+` : ''}      response.writeHead(404);
       return response.end('not found');
     }
   }
@@ -1330,13 +1330,13 @@ app.get('/app/:file', (c) => {
     const type = name.endsWith('.css') ? 'text/css' : name.endsWith('.js') ? 'text/javascript' : 'text/plain';
     return c.body(body, 200, { 'content-type': \`\${type}; charset=utf-8\` });
   } catch {
-    // Not in the tree, so it may be one of the archetype's boards: served from the store, and only if its
+${set ? `    // Not in the tree, so it may be one of the archetype's boards: served from the store, and only if its
     // bytes still hash to the recorded digest. Kept on the existing single-segment route rather than a new
     // one deliberately - the route set is compared against the project's specification, and a second route
     // for assets would have to be declared there and would make the arm differ from its spec.
     const asset = readArchetypeAsset(name);
     if (asset) return c.body(asset.body, 200, { 'content-type': asset.type, 'x-asset-source': \`\${ASSET_STORE}/images\`, 'cache-control': 'no-store' });
-    return c.text('not found', 404);
+` : ''}    return c.text('not found', 404);
   }
 });
 
