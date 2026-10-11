@@ -88,14 +88,6 @@ pricing tiers, checkout, the survey, the game, the workspace, the wiki, the inte
 interactive demo have all landed and are tested in every framework arm. Those rows now name the capability and say
 that what is missing is the family.
 
-**What is also true, and what I got wrong in the first version of this paragraph: three types still need the
-builder to learn something, and their rows say what.** `blog` needs a stable slug identity for a written record,
-which the engine does not have - writes are addressed by a random reference - and an article rendering path. `card`
-needs a comparison vocabulary and a selection carried across steps, which today only the cart and pricing
-capabilities do. `fan-community` needs a moderation state whose transitions the server enforces and a route that a
-session's role decides, neither of which exists. They keep the `(near)` qualifier because the gap is small; it is
-not zero, and claiming otherwise would mislead exactly the reader this table exists for.
-
 | Type | Class | New capability the builder needs |
 |---|---|---|
 | `blog` | capability-gated (near) | a stable article route per record, and a share affordance; the index/detail shape exists |
@@ -129,11 +121,9 @@ this axis inherits:
 ## The role pairs for the initial three archetypes
 
 A type earns its place on this axis only if two actors have genuinely different goals or permissions in it.
-These are the pairs for the three types this template writes first, using the expansion matrix's own
-archetype ids (that file also carries the wording roles and required behaviours, for these and for the
-gated types). They are specified first because they are the initial trio - the three whose role pairs and design
-reference boards already exist - not because they are the easiest: nine other types need no engine addition at all,
-and what they are waiting for is a family.
+These are the role pairs for the initial three archetypes whose design reference boards and contracts were authored
+first (`editorial-blog`, `fan-community-site`, `product-card-comparison`), using the archetype IDs from
+`docs/train/briefs/expansion-matrix.json`.
 
 | Type | Archetype id | Primary actor | Second actor | What changes for the second actor |
 | --- | --- | --- | --- | --- |
