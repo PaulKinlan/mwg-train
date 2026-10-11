@@ -181,8 +181,15 @@ export function validateSpec(spec) {
       // selector and a label. Unchecked, a wrong name fails nowhere: the form never populates and the label points
       // at an id that does not exist. Same defect as the fill targets above, reported the same way, naming the
       // fields that are declared so the fix is one edit rather than a hunt (mwg-train-crt).
-      if (isString(journey?.update?.field) && !declared.has(journey.update.field)) {
-        at(`${name}.update.field`, `names ${journey.update.field}, which the fields do not declare; declared: ${spec.fields.map((field) => field?.name).filter(isString).join(', ')}`);
+      if (journey?.update !== undefined) {
+        // An update block that names no field is not a wrong name, it is a missing one: the generator would read
+        // `undefined` and emit `[name="undefined"]` with a label pointing at `edit-undefined`, which is worse than
+        // refusing it. A block, once present, has to be complete (mwg-train-crt review).
+        if (!isString(journey.update?.field)) {
+          at(`${name}.update.field`, 'must name the field the edit journey updates');
+        } else if (!declared.has(journey.update.field)) {
+          at(`${name}.update.field`, `names ${journey.update.field}, which the fields do not declare; declared: ${spec.fields.map((field) => field?.name).filter(isString).join(', ')}`);
+        }
       }
     }
   }

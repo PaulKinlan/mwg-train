@@ -428,6 +428,35 @@ test('an edit journey naming an undeclared field is refused, naming the declared
   assert.equal(validateSpec(good).filter((problem) => problem.includes('update.field')).length, 0);
 });
 
+// The hole the first review found: an update block that names no field is not a wrong name but a missing one, and it
+// reached the generator, which read `undefined` and emitted `[name="undefined"]` beside a label pointing at
+// `edit-undefined`. A block, once present, has to be complete.
+test('an update block that names no field is refused', () => {
+  const base = read(ARCHETYPE_IDS[0]);
+  for (const update of [{}, { field: '' }, { field: 123 }, { field: null }, { ref: 'x' }]) {
+    const problems = validateSpec({ ...base, journey: { ...base.journey, update } });
+    const refusal = problems.find((problem) => problem.includes('update.field'));
+    assert.ok(refusal, `an update block ${JSON.stringify(update)} must be refused`);
+    assert.match(refusal, /must name the field/, 'the refusal says what is missing');
+  }
+});
+
+// The positive branch against the generator itself, which is what a specification is for: a valid edit journey must
+// produce a form control and a label that name the declared field. The corpus test below cannot check this, because
+// no shipping archetype declares an update journey yet.
+test('a valid edit journey generates a label and an input naming the declared field', () => {
+  const base = read(ARCHETYPE_IDS[0]);
+  const field = base.fields[0].name;
+  const built = buildProjectFromSpec({
+    spec: { ...base, journey: { ...base.journey, update: { field } } },
+    frameworkName: 'raw',
+  });
+  const text = Object.values(built.files).join('\n');
+  assert.ok(text.includes(`id="edit-${field}"`), `the generated edit input names ${field}`);
+  assert.ok(text.includes(`for="edit-${field}"`), `the generated edit label points at ${field}`);
+  assert.ok(!text.includes('edit-undefined'), 'an accepted journey must not generate an undefined control');
+});
+
 test('no family in the corpus is refused for its edit journey', () => {
   // A validator that starts refusing documents which ship is a worse bug than the one being fixed, so the corpus is
   // checked in the direction that matters - this rule's own verdict, so it stays true if a family has an unrelated
