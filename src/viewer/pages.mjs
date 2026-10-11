@@ -151,6 +151,7 @@ export const PAGE_CSS = `
   .reference-missing-card p { margin: 0.25rem 0; }
   .concept-lede { font-size: 1.08rem; }
   .concept-board-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(0.9rem, 2vw, 1.5rem); }
+  .concept-board-flow { display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(1.5rem, 3vw, 2.5rem); }
   .concept-board, .concept-comparison figure { min-width: 0; margin: 0; }
   .concept-board { margin-block: 1rem 1.5rem; }
   .concept-board-featured { max-width: 68rem; }
@@ -166,6 +167,13 @@ export const PAGE_CSS = `
   .concept-image-frame { display: grid; place-items: center; min-height: 11rem; background: var(--surface); }
   .concept-image-frame img { display: block; max-width: 100%; width: 100%; height: auto; }
   .concept-image-frame p { padding: 1.5rem; overflow-wrap: anywhere; }
+  .concept-main-board { margin-bottom: 1rem; }
+  .concept-main-board figure { margin: 0; }
+  .concept-main-board img { display: block; width: 100%; max-width: 100%; height: auto; border-radius: 0.4rem; }
+  .harness-target-drawer { margin-top: 0.75rem; padding: 0.6rem 0.9rem; background: var(--surface); border: 1px solid var(--line); border-radius: 0.4rem; }
+  .harness-target-drawer summary { cursor: pointer; font-size: 0.9rem; color: var(--muted); font-weight: 500; }
+  .harness-target-drawer summary:hover { color: var(--ink); }
+  .harness-target-drawer figure { margin-top: 0.75rem; }
   .concept-comparison figcaption { margin-top: 0.45rem; overflow-wrap: anywhere; }
   .concept-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr)); gap: 1.5rem; padding-inline-start: 1.6rem; }
   .concept-steps li { min-width: 0; padding-inline-start: 0.2rem; }
