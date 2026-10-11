@@ -425,7 +425,13 @@ export function validateSpec(spec) {
     if (spec.capabilities?.[capability] !== true) continue;
     for (const route of spec.routes ?? []) {
       const path = String(route?.path ?? '');
-      if (owned.includes(path)) {
+      // Matched by PREFIX as well as exactly: `/checkout/receipt/:id` shadows `/checkout/receipt/:ref`
+      // just as surely as the same parameter name would, and the declared route would never be reached
+      // (mwg-train-le6 review, P3).
+      const shadows = owned.some((ownedPath) =>
+        ownedPath.includes(':') ? path.startsWith(ownedPath.slice(0, ownedPath.indexOf(':'))) : path === ownedPath || path.startsWith(`${ownedPath}/`),
+      );
+      if (shadows) {
         at('routes', `${path} is the ${capability} capability's own route, which is served first, so declaring it as well would leave a route nothing reaches`);
       }
     }

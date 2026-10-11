@@ -33,6 +33,7 @@ const SUBTOTAL = FIRST.price * FIRST.qty + SECOND.price * SECOND.qty;
 const TAX = Math.round((SUBTOTAL * 20) / 100);
 
 const money = (minor) => `GBP ${Math.floor(minor / 100)}.${String(minor % 100).padStart(2, '0')}`;
+const moneyIn = (currency, minor) => `${currency} ${Math.floor(minor / 100)}.${String(minor % 100).padStart(2, '0')}`;
 const figure = (html, id) => new RegExp(`id="${id}"[^>]*>([^<]*)<`).exec(html)?.[1]?.trim();
 
 async function availablePort() {
@@ -82,6 +83,15 @@ test('spec gate: the checkout capability validates as a closed set, and fails cl
   // The capability's own routes are served before the declared ones.
   const colliding = checkoutSpec({ routes: [...checkoutSpec().routes, { method: 'GET', path: '/checkout', kind: 'page' }] });
   assert.ok(validateSpec(colliding).some((p) => p.includes("the checkout capability's own route")));
+  // A DIFFERENT parameter name shadows the capability's route just as surely as the same one, and it was
+  // accepted before this rule was widened (mwg-train-le6 review, P3).
+  const aliased = checkoutSpec({ routes: [...checkoutSpec().routes, { method: 'GET', path: '/checkout/receipt/:id', kind: 'page' }] });
+  assert.ok(validateSpec(aliased).some((p) => p.includes("the checkout capability's own route")), 'an aliased receipt route is refused');
+  const nested = checkoutSpec({ routes: [...checkoutSpec().routes, { method: 'GET', path: '/cart/extra', kind: 'page' }] });
+  assert.ok(validateSpec(nested).some((p) => p.includes("the cart capability's own route")), 'a path below a capability route is refused');
+  // Widenning the rule must not refuse a legitimate neighbouring path.
+  const neighbour = checkoutSpec({ routes: [...checkoutSpec().routes, { method: 'GET', path: '/cartoon', kind: 'page', effect: 'render a page' }] });
+  assert.deepEqual(validateSpec(neighbour), [], 'a path that merely starts with the same letters is still allowed');
 });
 
 test('wiring guard: every block the schema validates reaches the builder archetype', () => {
@@ -185,6 +195,14 @@ test('functional: a paid receipt adds up, a declined payment keeps the cart', as
         const firstRef = await seed('Dabinett Heritage', FIRST.price);
         const secondRef = await seed('Kingston Black Reserve', SECOND.price);
 
+        // The records table is shared, so a reference can name a product. Asking for it as a receipt must
+        // be a 404, and above all the server must still be there afterwards: this row took the whole
+        // process down in six arms before the guard was added (mwg-train-le6 review, P1).
+        const wrongKind = await fetch(`${base}/checkout/receipt/${firstRef}`);
+        assert.equal(wrongKind.status, 404, `${arm} a product reference is not a receipt`);
+        const stillServing = await fetch(`${base}/cart`, { headers: { cookie: '' } });
+        assert.equal(stillServing.status, 200, `${arm} the server survived a receipt lookup on a product reference`);
+
         // Add two DIFFERENT products with different quantities: the arithmetic has two lines to add.
         const addFirst = await post('/cart/add', { ref: firstRef, variant: 'Dabinett Heritage', quantity: String(FIRST.qty) });
         assert.equal(addFirst.status, 303, `${arm} adds the first item`);
@@ -216,6 +234,8 @@ test('functional: a paid receipt adds up, a declined payment keeps the cart', as
         assert.match(declinedHtml, /id="decline-reason"[^>]*role="alert"|role="alert"[^>]*id="decline-reason"/, `${arm} the decline reason is announced`);
         assert.match(declinedHtml, /declined/i, `${arm} the decline says why`);
         assert.match(declinedHtml, /id="cart-kept"/, `${arm} the decline says the cart was kept`);
+        // The declined page says the same thing the checkout page does about the tier and the totals.
+        assert.match(declinedHtml, /id="checkout-shipping-name"[^>]*>Express</, `${arm} the decline names the shipping tier it totals`);
         const cartAfterDecline = await (await fetch(`${base}/cart`, { headers: { cookie } })).text();
         assert.match(cartAfterDecline, /2 line\(s\), 5 item\(s\)/, `${arm} the declined payment kept both cart lines`);
 
@@ -251,6 +271,22 @@ test('functional: a paid receipt adds up, a declined payment keeps the cart', as
         const missing = await fetch(`${base}/checkout/receipt/nope`);
         assert.equal(missing.status, 404, `${arm} an unknown receipt is a 404`);
 
+        // A receipt records the currency it was charged in, so re-reading it must not follow a store
+        // setting that changed since (mwg-train-le6 review, P2). The stored row is rewritten to EUR and
+        // the receipt has to follow the RECORD, not the running configuration.
+        const receiptRef = receiptPath.split('/').pop();
+        const { DatabaseSync } = await import('node:sqlite');
+        const database = new DatabaseSync(join(dir, 'test.sqlite'));
+        const storedReceipt = JSON.parse(database.prepare('SELECT payload FROM records WHERE ref = ?').get(receiptRef).payload);
+        database.prepare('UPDATE records SET payload = ? WHERE ref = ?').run(JSON.stringify({ ...storedReceipt, currency: 'EUR' }), receiptRef);
+        database.close();
+        const changedCurrency = await (await fetch(`${base}${receiptPath}`)).text();
+        assert.equal(
+          figure(changedCurrency, 'receipt-total'),
+          moneyIn('EUR', SUBTOTAL + 1200 + TAX),
+          `${arm} the receipt renders the currency it was charged in`,
+        );
+
         // A product whose price is not a whole number of minor units is refused at the cart, because a
         // checkout cannot add up a line it has no price for.
         const fractionalRef = await seed('Foxwhelp Bittersweet', 12.5);
@@ -261,6 +297,58 @@ test('functional: a paid receipt adds up, a declined payment keeps the cart', as
         rmSync(dir, { recursive: true, force: true });
       }
     });
+  }
+});
+
+test('a product whose price the form may omit cannot be added to the cart as a free item', async () => {
+  // The reachable form of the empty-price bug the review found: `checkout.price_field` may name any
+  // declared number field, including an OPTIONAL one, so the shop's own form can legitimately store a
+  // blank price. `Number("")` is 0, and `Number.isInteger(0)` is true, so the item was added at GBP 0.00
+  // and checked out for free rather than being refused (mwg-train-le6 review, P2). The guard is at the
+  // point of use, where the price is read, rather than in the validator - an optional price is a
+  // legitimate design, an unpriced cart line is not.
+  const optionalPrice = checkoutSpec().fields.map((field) =>
+    field.name === 'price_minor' ? { ...field, required: false, optional: true } : field,
+  );
+  const optionalPriceSpec = checkoutSpec({
+    fields: optionalPrice,
+    validation: { ...checkoutSpec().validation, required_fields: ['title', 'quantity'] },
+  });
+  assert.deepEqual(validateSpec(optionalPriceSpec), [], 'an optional price field is a legitimate specification');
+  const dir = mkdtempSync(join(tmpdir(), 'checkout-blank-price-'));
+  const port = await availablePort();
+  const { projectId, files, spec: projectSpec } = buildProjectFromSpec({ spec: optionalPriceSpec, frameworkName: 'raw' });
+  writeProject(dir, { projectId, files, spec: projectSpec, includeDependencies: true });
+  symlinkSync(NODE_MODULES, join(dir, 'node_modules'), 'dir');
+  const child = spawn('node', ['server.mjs', '--port', String(port), '--db', join(dir, 'test.sqlite')], {
+    cwd: dir,
+    stdio: ['ignore', 'ignore', 'pipe'],
+  });
+  try {
+    const base = `http://127.0.0.1:${port}`;
+    let up = false;
+    for (let attempt = 0; attempt < 40 && !up; attempt += 1) {
+      await new Promise((resolve) => setTimeout(resolve, 250));
+      up = await fetch(`${base}/__health`).then((r) => r.ok, () => false);
+    }
+    assert.ok(up, 'server did not come up');
+    const post = (path, body, headers = {}) =>
+      fetch(`${base}${path}`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/x-www-form-urlencoded', ...headers },
+        body: new URLSearchParams(body).toString(),
+        redirect: 'manual',
+      });
+    const created = await post('/orders', { title: 'Priceless item', quantity: '1', price_minor: '' });
+    assert.equal(created.status, 303, 'the form may store a blank price when the field is optional');
+    const ref = created.headers.get('location').split('/').pop();
+    const add = await post('/cart/add', { ref, variant: 'Dabinett Heritage', quantity: '1' });
+    assert.equal(add.status, 422, 'a priceless item is refused rather than added at zero');
+    const cart = await (await fetch(`${base}/cart`, { headers: { cookie: (add.headers.get('set-cookie') ?? '').split(';')[0] } })).text();
+    assert.match(cart, /0 line\(s\), 0 item\(s\)/, 'the refused item did not enter the cart');
+  } finally {
+    child.kill('SIGKILL');
+    rmSync(dir, { recursive: true, force: true });
   }
 });
 

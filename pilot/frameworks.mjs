@@ -834,8 +834,17 @@ const pricingPages = (archetype) => {
     "  const comparison = '<table><caption>What each tier includes</caption><thead><tr><th scope=\"col\">Feature</th>' + PRICING.tiers.map((tier) => '<th scope=\"col\">' + esc(tier.name) + '</th>').join('') + '</tr></thead><tbody>' + features.map((feature) => '<tr><th scope=\"row\">' + esc(feature) + '</th>' + PRICING.tiers.map((tier) => '<td>' + (tier.features.includes(feature) ? 'Included' : 'Not included') + '</td>').join('') + '</tr>').join('') + '</tbody></table>';",
     "  return capabilityPage('Pricing', '<h1>Pricing</h1>' + toggle + '<p id=\"billing-period\">Showing ' + period + ' prices</p>' + cards + comparison);",
     '};',
-    'const pricingConfirmationPage = (row) => {',
-    '  const choice = JSON.parse(row.payload);',
+    // The same shared-reference guard as the checkout receipt: a product's reference must not render a
+    // confirmation page that reads fields the row does not have (mwg-train-le6 review, P1 class).
+    'const pricingChoice = (row) => {',
+    '  try {',
+    "    const value = JSON.parse(row.payload);",
+    "    return value !== null && typeof value === 'object' && typeof value.tier === 'string' && typeof value.period === 'string' ? value : null;",
+    '  } catch {',
+    '    return null;',
+    '  }',
+    '};',
+    'const pricingConfirmationPage = (choice) => {',
     "  return capabilityPage('Your plan', '<h1>Your plan</h1>' + '<dl>' + '<dt>Billing period</dt><dd id=\"chosen-period\">' + esc(choice.period) + '</dd>' + '<dt>Tier</dt><dd id=\"chosen-tier\">' + esc(choice.tier) + '</dd>' + '<dt>Price</dt><dd id=\"chosen-price\">' + esc(choice.price) + '</dd>' + '</dl>');",
     '};',
   ].join('\n');
@@ -868,7 +877,12 @@ const rawPricingRoutes = () =>
     "      response.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });",
     "      return response.end('We could not find that selection.');",
     '    }',
-    '    return html(response, pricingConfirmationPage(pricingRow));',
+    '    const pricingValue = pricingRow ? pricingChoice(pricingRow) : null;',
+    '    if (!pricingValue) {',
+    "      response.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });",
+    "      return response.end('We could not find that selection.');",
+    '    }',
+    '    return html(response, pricingConfirmationPage(pricingValue));',
     '  }',
   ].join('\n');
 
@@ -891,7 +905,9 @@ const honoPricingRoutes = () =>
     "app.get('/pricing/:ref', (c) => {",
     "  const pricingRow = select.get(c.req.param('ref'));",
     "  if (!pricingRow) return c.text('We could not find that selection.', 404);",
-    '  return c.html(pricingConfirmationPage(pricingRow));',
+    '  const pricingValue = pricingRow ? pricingChoice(pricingRow) : null;',
+    "  if (!pricingValue) return c.text('We could not find that selection.', 404);",
+    '  return c.html(pricingConfirmationPage(pricingValue));',
     '});',
   ].join('\n');
 
@@ -945,7 +961,10 @@ const rawCartRoutes = (archetype, cookieFlags, checkout = null) => {
   const price = checkout
     ? [
         `    const cartRecord = select.get(cartRef);`,
-        `    const cartUnitPrice = cartRecord ? Number(JSON.parse(cartRecord.payload)[${JSON.stringify(checkout.price_field)}]) : NaN;`,
+        `    const cartPriceValue = cartRecord ? JSON.parse(cartRecord.payload)[${JSON.stringify(checkout.price_field)}] : undefined;`,
+        // `Number('')` is 0, so a blank price would be stored as a free item rather than refused: the raw
+        // value is checked before it is coerced (mwg-train-le6 review, P2).
+        `    const cartUnitPrice = cartPriceValue === undefined || String(cartPriceValue).trim() === '' ? NaN : Number(cartPriceValue);`,
         `    if (!Number.isInteger(cartUnitPrice) || cartUnitPrice < 0) {`,
         `      response.writeHead(422, { 'content-type': 'text/plain; charset=utf-8' });`,
         `      return response.end('That item has no price to check out with.');`,
@@ -987,7 +1006,8 @@ const honoCartRoutes = (archetype, cookieFlags, checkout = null) => {
   const price = checkout
     ? [
         `  const cartRecord = select.get(cartRef);`,
-        `  const cartUnitPrice = cartRecord ? Number(JSON.parse(cartRecord.payload)[${JSON.stringify(checkout.price_field)}]) : NaN;`,
+        `  const cartPriceValue = cartRecord ? JSON.parse(cartRecord.payload)[${JSON.stringify(checkout.price_field)}] : undefined;`,
+        `  const cartUnitPrice = cartPriceValue === undefined || String(cartPriceValue).trim() === '' ? NaN : Number(cartPriceValue);`,
         `  if (!Number.isInteger(cartUnitPrice) || cartUnitPrice < 0) return c.text('That item has no price to check out with.', 422);`,
       ].join('\n')
     : '';
@@ -1027,7 +1047,7 @@ const checkoutPages = (archetype) => {
   const checkout = checkoutOf(archetype);
   return [
     `const CHECKOUT = ${JSON.stringify(checkout)};`,
-    "const checkoutMoney = (minor) => (minor < 0 ? '-' : '') + esc(CHECKOUT.currency) + ' ' + Math.floor(Math.abs(minor) / 100) + '.' + String(Math.abs(minor) % 100).padStart(2, '0');",
+    "const checkoutMoney = (minor, currency = CHECKOUT.currency) => (minor < 0 ? '-' : '') + esc(currency) + ' ' + Math.floor(Math.abs(minor) / 100) + '.' + String(Math.abs(minor) % 100).padStart(2, '0');",
     "const checkoutShippingTier = (name) => CHECKOUT.shipping.find((tier) => tier.name === name) ?? null;",
     // Tax is charged on the lines' subtotal, not on shipping, and is rounded exactly once to a whole
     // minor unit - the only rounding in the arithmetic.
@@ -1038,8 +1058,11 @@ const checkoutPages = (archetype) => {
     "  const tax = checkoutTaxOn(subtotal);",
     "  return { cart: lines, subtotal_minor: subtotal, shipping_name: shipping.name, shipping_minor: shipping.price_minor, tax_rate_percent: CHECKOUT.tax_rate_percent, tax_minor: tax, total_minor: subtotal + shipping.price_minor + tax, currency: CHECKOUT.currency };",
     "};",
-    "const checkoutLines = (lines) => lines.length === 0 ? '<p id=\"checkout-empty\">Your cart is empty, so there is nothing to pay for.</p>' : '<table id=\"checkout-lines\"><caption>What you are paying for</caption><thead><tr><th scope=\"col\">Item</th><th scope=\"col\">Variant</th><th scope=\"col\">Quantity</th><th scope=\"col\">Unit price</th><th scope=\"col\">Line total</th></tr></thead><tbody>' + lines.map((line) => '<tr data-ref=\"' + esc(line.ref) + '\" data-variant=\"' + esc(line.variant) + '\" data-qty=\"' + line.qty + '\"><th scope=\"row\">' + esc(line.ref) + '</th><td>' + esc(line.variant) + '</td><td class=\"quantity\">' + line.qty + '</td><td class=\"unit-price\">' + checkoutMoney(line.unit_price_minor) + '</td><td class=\"line-total\">' + checkoutMoney(line.line_total_minor) + '</td></tr>').join('') + '</tbody></table>';",
-    "const checkoutTotals = (receipt, prefix) => '<dl class=\"totals\"><dt>Subtotal</dt><dd id=\"' + prefix + '-subtotal\">' + checkoutMoney(receipt.subtotal_minor) + '</dd><dt>Shipping</dt><dd id=\"' + prefix + '-shipping\">' + checkoutMoney(receipt.shipping_minor) + '</dd><dt>Tax (' + receipt.tax_rate_percent + '%)</dt><dd id=\"' + prefix + '-tax\">' + checkoutMoney(receipt.tax_minor) + '</dd><dt>Total</dt><dd id=\"' + prefix + '-total\">' + checkoutMoney(receipt.total_minor) + '</dd></dl>';",
+    "const checkoutLines = (lines, currency = CHECKOUT.currency) => lines.length === 0 ? '<p id=\"checkout-empty\">Your cart is empty, so there is nothing to pay for.</p>' : '<table id=\"checkout-lines\"><caption>What you are paying for</caption><thead><tr><th scope=\"col\">Item</th><th scope=\"col\">Variant</th><th scope=\"col\">Quantity</th><th scope=\"col\">Unit price</th><th scope=\"col\">Line total</th></tr></thead><tbody>' + lines.map((line) => '<tr data-ref=\"' + esc(line.ref) + '\" data-variant=\"' + esc(line.variant) + '\" data-qty=\"' + line.qty + '\"><th scope=\"row\">' + esc(line.ref) + '</th><td>' + esc(line.variant) + '</td><td class=\"quantity\">' + line.qty + '</td><td class=\"unit-price\">' + checkoutMoney(line.unit_price_minor, currency) + '</td><td class=\"line-total\">' + checkoutMoney(line.line_total_minor, currency) + '</td></tr>').join('') + '</tbody></table>';",
+    // The RECEIPT's own currency is rendered on the receipt: it records what was charged, so re-reading it
+    // later must not follow a store setting that changed since (mwg-train-le6 review, P2). The live pages
+    // carry the same field through, so one function still serves both.
+    "const checkoutTotals = (receipt, prefix) => '<dl class=\"totals\"><dt>Subtotal</dt><dd id=\"' + prefix + '-subtotal\">' + checkoutMoney(receipt.subtotal_minor, receipt.currency) + '</dd><dt>Shipping</dt><dd id=\"' + prefix + '-shipping\">' + checkoutMoney(receipt.shipping_minor, receipt.currency) + '</dd><dt>Tax (' + receipt.tax_rate_percent + '%)</dt><dd id=\"' + prefix + '-tax\">' + checkoutMoney(receipt.tax_minor, receipt.currency) + '</dd><dt>Total</dt><dd id=\"' + prefix + '-total\">' + checkoutMoney(receipt.total_minor, receipt.currency) + '</dd></dl>';",
     "const checkoutShippingForm = (receipt) => '<form method=\"get\" action=\"/checkout\"><label for=\"shipping\">Shipping</label><select id=\"shipping\" name=\"shipping\">' + CHECKOUT.shipping.map((tier) => '<option value=\"' + esc(tier.name) + '\"' + (tier.name === receipt.shipping_name ? ' selected' : '') + '>' + esc(tier.name) + ' - ' + checkoutMoney(tier.price_minor) + '</option>').join('') + '</select><button type=\"submit\">Update total</button></form>';",
     "const checkoutPaymentForm = (receipt) => '<form method=\"post\" action=\"/checkout/pay\"><input type=\"hidden\" name=\"shipping\" value=\"' + esc(receipt.shipping_name) + '\"><label for=\"card\">Card number (a simulation: nothing is stored or sent anywhere)</label><input type=\"text\" id=\"card\" name=\"card\" inputmode=\"numeric\" autocomplete=\"off\" required><button type=\"submit\">Pay ' + checkoutMoney(receipt.total_minor) + '</button></form>';",
     "const checkoutPage = (rows, shipping) => {",
@@ -1048,11 +1071,21 @@ const checkoutPages = (archetype) => {
     "};",
     "const checkoutDeclinedPage = (rows, shipping, reason) => {",
     "  const receipt = checkoutFromCart(rows, shipping);",
-    "  return capabilityPage('Payment declined', '<h1>Payment declined</h1><p id=\"decline-reason\" role=\"alert\">' + esc(reason) + '</p><p id=\"cart-kept\">Your cart still has ' + receipt.cart.length + ' line(s), so nothing was lost.</p>' + checkoutLines(receipt.cart) + checkoutShippingForm(receipt) + checkoutTotals(receipt, 'checkout') + checkoutPaymentForm(receipt));",
+    "  return capabilityPage('Payment declined', '<h1>Payment declined</h1><p id=\"decline-reason\" role=\"alert\">' + esc(reason) + '</p><p id=\"cart-kept\">Your cart still has ' + receipt.cart.length + ' line(s), so nothing was lost.</p>' + checkoutLines(receipt.cart) + checkoutShippingForm(receipt) + '<p>Shipping by <span id=\"checkout-shipping-name\">' + esc(receipt.shipping_name) + '</span></p>' + checkoutTotals(receipt, 'checkout') + checkoutPaymentForm(receipt));",
     "};",
-    "const receiptPage = (row) => {",
-    "  const receipt = JSON.parse(row.payload);",
-    "  return capabilityPage('Receipt ' + row.ref, '<h1>Receipt</h1><p id=\"receipt-ref\">' + esc(row.ref) + '</p>' + checkoutLines(receipt.cart) + checkoutTotals(receipt, 'receipt') + '<p id=\"receipt-paid\">Paid ' + checkoutMoney(receipt.total_minor) + ' by ' + esc(receipt.shipping_name) + '</p>');",
+    // The records table is shared with the engine's own reads, so a reference can name a product rather
+    // than a receipt. A row that is not a receipt is a 404 here, not a thrown TypeError one route away
+    // from an unhandled rejection that kills the process (mwg-train-le6 review, P1).
+    "const checkoutReceipt = (row) => {",
+    "  try {",
+    "    const value = JSON.parse(row.payload);",
+    "    return value !== null && typeof value === 'object' && Array.isArray(value.cart) ? value : null;",
+    "  } catch {",
+    "    return null;",
+    "  }",
+    "};",
+    "const receiptPage = (ref, receipt) => {",
+    "  return capabilityPage('Receipt ' + ref, '<h1>Receipt</h1><p id=\"receipt-ref\">' + esc(ref) + '</p>' + checkoutLines(receipt.cart, receipt.currency) + checkoutTotals(receipt, 'receipt') + '<p id=\"receipt-paid\">Paid ' + checkoutMoney(receipt.total_minor, receipt.currency) + ' by ' + esc(receipt.shipping_name) + '</p>');",
     "};",
   ].join('\n');
 };
@@ -1104,7 +1137,12 @@ const rawCheckoutRoutes = () =>
     "      response.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });",
     "      return response.end('We could not find that receipt.');",
     '    }',
-    '    return html(response, receiptPage(receiptRow));',
+    '    const receiptValue = checkoutReceipt(receiptRow);',
+    '    if (!receiptValue) {',
+    "      response.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });",
+    "      return response.end('We could not find that receipt.');",
+    '    }',
+    '    return html(response, receiptPage(receiptRow.ref, receiptValue));',
     '  }',
   ].join('\n');
 
@@ -1135,8 +1173,9 @@ const honoCheckoutRoutes = () =>
     '});',
     "app.get('/checkout/receipt/:ref', (c) => {",
     "  const receiptRow = select.get(c.req.param('ref'));",
-    "  if (!receiptRow) return c.text('We could not find that receipt.', 404);",
-    '  return c.html(receiptPage(receiptRow));',
+    "  const receiptValue = receiptRow ? checkoutReceipt(receiptRow) : null;",
+    "  if (!receiptValue) return c.text('We could not find that receipt.', 404);",
+    '  return c.html(receiptPage(receiptRow.ref, receiptValue));',
     '});',
   ].join('\n');
 

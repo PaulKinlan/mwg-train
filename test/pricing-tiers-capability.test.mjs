@@ -72,6 +72,47 @@ test('spec gate: the pricing-tiers capability and its data block fail closed', (
   assert.ok(validateSpec(pricingSpec({ routes: pricingRoutes })).some((p) => p.includes("the pricing_tiers capability's own route")));
 });
 
+test('a product reference asked for as a selection is a 404, not a crash', async () => {
+  // The engine's records table is shared, so a reference can name a product. The confirmation page parses
+  // whatever row it is given, and the same shared-reference hole took the process down in the checkout
+  // route before it was guarded (mwg-train-le6 review, P1 class).
+  const spec = pricingSpec();
+  const dir = mkdtempSync(join(tmpdir(), 'pricing-shared-ref-'));
+  const port = await availablePort();
+  const { projectId, files, spec: projectSpec } = buildProjectFromSpec({ spec, frameworkName: 'raw' });
+  writeProject(dir, { projectId, files, spec: projectSpec, includeDependencies: true });
+  symlinkSync(NODE_MODULES, join(dir, 'node_modules'), 'dir');
+  const child = spawn('node', ['server.mjs', '--port', String(port), '--db', join(dir, 'test.sqlite')], {
+    cwd: dir,
+    stdio: ['ignore', 'ignore', 'pipe'],
+  });
+  try {
+    const base = `http://127.0.0.1:${port}`;
+    let up = false;
+    for (let attempt = 0; attempt < 40 && !up; attempt += 1) {
+      await new Promise((resolve) => setTimeout(resolve, 250));
+      up = await fetch(`${base}/__health`).then((r) => r.ok, () => false);
+    }
+    assert.ok(up, 'server did not come up');
+    const writeRoute = spec.routes.find((route) => route.kind === 'write');
+    const created = await fetch(`${base}${writeRoute.path}`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ name: 'Ada Lovelace', email: 'ada@example.test', address: '12 Bridge Row', postcode: 'AB1 2CD', notes: 'n/a' }).toString(),
+      redirect: 'manual',
+    });
+    assert.equal(created.status, 303, 'a product record is written');
+    const ref = created.headers.get('location').split('/').pop();
+    const wrongKind = await fetch(`${base}/pricing/${ref}`);
+    assert.equal(wrongKind.status, 404, 'a product reference is not a tier selection');
+    const stillServing = await fetch(`${base}/pricing`);
+    assert.equal(stillServing.status, 200, 'the server survived a selection lookup on a product reference');
+  } finally {
+    child.kill('SIGKILL');
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test('hostile data: the currency is escaped, and a policy that saves nothing shows no saving line', async () => {
   const policy = pricingSpec().pricing_tiers;
   const spec = pricingSpec({ pricing_tiers: { ...policy, currency: 'GBP & <b>Co</b>', annual_months: 12 } });
