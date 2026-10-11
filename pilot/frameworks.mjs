@@ -1532,6 +1532,9 @@ const gameEnhance = (archetype) => {
     const GAME_CONFIG = ${JSON.stringify(game)};
     const GAME_LANES = 4;
     const GAME_FALL_TICKS = 5;
+    // The target is this tall, and its fall lands with its bottom on the player's row, so a catch is drawn
+    // where it happens rather than off the bottom edge of the field.
+    const GAME_TARGET_SIZE = 22;
     const gamePlayerEl = document.getElementById('game-player');
     const gameTargetEl = document.getElementById('game-target');
     const gameScoreEl = document.getElementById('game-score');
@@ -1555,7 +1558,7 @@ const gameEnhance = (archetype) => {
       gameTargetEl.dataset.lane = String(gameLane);
       gamePlayerEl.style.left = gameLaneLeft(gamePlayerLane) + 'px';
       gameTargetEl.style.left = gameLaneLeft(gameLane) + 'px';
-      gameTargetEl.style.top = Math.round((GAME_CONFIG.height / GAME_FALL_TICKS) * gameFall) + 'px';
+      gameTargetEl.style.top = Math.min(GAME_CONFIG.height - GAME_TARGET_SIZE, Math.round(((GAME_CONFIG.height - GAME_TARGET_SIZE) / GAME_FALL_TICKS) * gameFall)) + 'px';
       gameScoreEl.textContent = String(gameScore);
       gameLivesEl.textContent = String(gameLives);
       gameStateEl.textContent = gameState === 'ready' ? 'Ready' : gameState === 'playing' ? 'Playing' : gameResult === 'win' ? 'You win' : 'You lose';
@@ -1581,17 +1584,21 @@ const gameEnhance = (archetype) => {
       if (gameFall >= GAME_FALL_TICKS) {
         if (gamePlayerLane === gameLane) gameScore += 1;
         else gameLives -= 1;
+        // The game ends BEFORE the next throw is set up. The first version advanced the lane and reset the
+        // fall first, so the last render showed the NEXT target at the top of another lane instead of the
+        // catch that had just happened - the words "You win" above a board that did not show why
+        // (mwg-train-ypr review, P3).
+        if (gameScore >= GAME_CONFIG.target) {
+          gameStop('win');
+          return;
+        }
+        if (gameLives <= 0) {
+          gameStop('lose');
+          return;
+        }
         gameFall = 0;
         gameCycle += 1;
         gameLane = gameCycle % GAME_LANES;
-      }
-      if (gameScore >= GAME_CONFIG.target) {
-        gameStop('win');
-        return;
-      }
-      if (gameLives <= 0) {
-        gameStop('lose');
-        return;
       }
       gameRender();
     };

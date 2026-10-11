@@ -150,6 +150,11 @@ try {
   check('the game reaches a win', won.state === 'over' && won.result === 'win', `${won.state} / ${won.result} with a score of ${won.score}`);
   check('a win is detectable and says so', won.status === 'You win', won.status);
   check('the win was earned at the declared target', won.score >= GAME.target, `score ${won.score} of ${GAME.target}`);
+  // The board the win is announced over has to show the catch: the target on the player's own lane, at the
+  // bottom row, not the next throw at the top of another lane. My own hand-off claimed this was true when
+  // it was not - the reviewer read the screenshot and said so (review P3), so it is an assertion now.
+  check('the win is drawn where it was caught', won.lane === won.playerLane, `target lane ${won.lane}, player lane ${won.playerLane}`);
+  check('the caught target is on the player\'s row, not at the top of the field', Number.parseInt(won.targetTop, 10) === GAME.height - 22, `target top ${won.targetTop}, expected ${GAME.height - 22}`);
   const winShot = join(SHOTS, `game-over-won-${ARM}.png`);
   await page.screenshot(winShot);
 

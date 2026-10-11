@@ -420,7 +420,11 @@ export class Page {
 
   /** One trusted key press. */
   async realKey(key) {
-    const codes = { Backspace: 8, Tab: 9, Enter: 13, Escape: 27, ArrowUp: 38, ArrowDown: 40 };
+    // The full set of keys a page might branch on: ArrowLeft and ArrowRight were missing, so a page that
+    // listens for them (the game capability's loop does) was driven with `windowsVirtualKeyCode:
+    // undefined` - Chrome delivered the key name but a keyCode of 0, which any listener reading keyCode or
+    // which would have seen as nothing (mwg-train-ypr review, P3).
+    const codes = { Backspace: 8, Tab: 9, Enter: 13, Space: 32, Escape: 27, ArrowLeft: 37, ArrowUp: 38, ArrowRight: 39, ArrowDown: 40 };
     const params = { key, code: key, windowsVirtualKeyCode: codes[key], nativeVirtualKeyCode: codes[key] };
     await this.send('Input.dispatchKeyEvent', { type: 'keyDown', ...params });
     await this.send('Input.dispatchKeyEvent', { type: 'keyUp', ...params });
