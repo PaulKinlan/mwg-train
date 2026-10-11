@@ -27,7 +27,7 @@ Experiment: does training on Modern Web Guidance-applied sites make a model defa
 
 ```bash
 npm test                    # unit tests and the structural assertions that every check is wired into the gate
-npm run build               # the full gate the merger runs: the offline checks, then the unit tests
+npm run build               # the offline checks; the merger runs npm test after it
 npm run check:all           # run exactly the deterministic, offline checks wired into the gate
 npm run check:briefs        # validate + seal the brief manifest
 npm run quotes:verify       # every priced row must re-derive from the page it came from
