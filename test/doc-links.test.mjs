@@ -246,3 +246,36 @@ test('a linked image yields both of its targets', () => {
   // follows - both are real targets and a reference checker should see both.
   assert.deepEqual(extractLinks(text).map((link) => link.target), ['home.md', 'logo.png']);
 });
+
+test('a code span does not cross a blank line, so a stray backtick cannot hide links below it', () => {
+  // CommonMark example 337: a span may cross a single line break but not a blank line. Without that rule the stray
+  // backtick here paired with the equal-length run two paragraphs down and blanked everything between them - so the
+  // broken link in the middle was never even seen, which is the direction that hides real problems.
+  const text = 'A stray ` here.\n\nA [real](gone.md) link.\n\nAnd another ` later.\n';
+  assert.deepEqual(extractLinks(text).map((link) => link.target), ['gone.md']);
+  // A span across one line break is still a span, and still hides what is inside it: the rule is a blank line, not
+  // every newline, and over-refusing would report links inside code as broken.
+  assert.deepEqual(extractLinks('Write `[hidden](x.md)\nacross one\nline` here.\n'), []);
+});
+
+test('a quoted title does not cross a blank line, so the construct is not a link', () => {
+  assert.deepEqual(extractLinks('[the guide](docs/guide.md "a title\n\ncontinues")'), []);
+  assert.strictEqual(
+    extractLinks('[the guide](docs/guide.md "a title\ncontinues")').length,
+    1,
+    'one line break inside a title is allowed, as it is inside a destination',
+  );
+});
+
+test('a single-quoted HTML attribute is a target too, rather than invisible', () => {
+  assert.deepEqual(extractLinks("<a href='doc.md'>the guide</a>").map((link) => link.target), ['doc.md']);
+  assert.deepEqual(extractLinks('<img src="pic.png" alt="x">').map((link) => link.target), ['pic.png']);
+});
+
+test('an escaped opening bracket is literal text, so one link is not reported twice', () => {
+  // The inner `[` used to be treated as an opener as well, and because `](target.md)` follows it the same target was
+  // extracted twice - a duplicate in a checker whose whole job is to report each broken reference once.
+  assert.deepEqual(extractLinks('A literal \\[bracket\\] then [label\\[inner](target.md).').map((link) => link.target), ['target.md']);
+  // Two backslashes are an escaped backslash, so the bracket after them is a real opener and the link is real.
+  assert.strictEqual(extractLinks('Text \\\\[label](other.md).').length, 1);
+});

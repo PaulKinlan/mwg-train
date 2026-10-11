@@ -72,6 +72,26 @@ function fenceRanges(text) {
   return ranges;
 }
 
+// Is the character at `index` escaped by a run of backslashes? A doubled backslash escapes the backslash rather than
+// the character after it, so only an odd run hides it (CommonMark section 2.4). A bracket preceded by one is literal
+// text, not the start of a link - reporting it extracted the same target twice.
+function isEscaped(text, index) {
+  let backslashes = 0;
+  for (let k = index - 1; k >= 0 && text[k] === '\\'; k -= 1) backslashes += 1;
+  return backslashes % 2 === 1;
+}
+
+// Does a blank line begin at `index` - a line ending, then only spaces or tabs, then another line ending? A code span
+// cannot cross one (CommonMark example 337), and neither can a link title (section 4.8); both constructs stop there,
+// which is why a stray backtick in prose must not be paired with a run of backticks in a later paragraph and blank
+// every link in between. Works on a string or on the character array maskContent passes around.
+function blankLineAt(text, index) {
+  if (text[index] !== '\n') return false;
+  let k = index + 1;
+  while (k < text.length && (text[k] === ' ' || text[k] === '\t' || text[k] === '\r')) k += 1;
+  return text[k] === '\n';
+}
+
 // Mask fenced code blocks and code spans, preserving every other byte's position. Fences are masked first because a
 // code span is delimited by a run of backticks of equal length and may cross lines: a span can legitimately contain
 // a shorter fence, so pairing spans before fences would close them in the wrong places.
@@ -89,6 +109,9 @@ export function maskContent(text) {
     let close = -1;
     let j = i + length;
     while (j < chars.length) {
+      // A span cannot cross a blank line, so an opener with no closer before one is literal text - not a licence to
+      // blank everything up to the next run of backticks, which is how a broken link further down went unreported.
+      if (blankLineAt(chars, j)) break;
       if (chars[j] !== '`') {
         j += 1;
         continue;
@@ -213,6 +236,9 @@ function parseDestination(text, from) {
     const quote = text[i];
     i += 1;
     while (i < text.length && text[i] !== quote) {
+      // A title does not cross a blank line either; consuming one accepted `[x](a.md "title, blank line, more")`
+      // as a link, where the title is unterminated and the whole construct is not a link at all.
+      if (blankLineAt(text, i)) return null;
       if (text[i] === '\\') i += 1;
       i += 1;
     }
@@ -261,6 +287,9 @@ export function extractLinks(text) {
 
   for (let i = 0; i < masked.length; i += 1) {
     if (masked[i] !== '[') continue;
+    // `\[` is a literal bracket, not a link opener. Without this, `[a\[b](target.md)` had its `[` matched twice -
+    // once as text and once as the escaped one - and the same target was reported twice.
+    if (isEscaped(masked, i)) continue;
     const closeText = matchBracket(masked, i);
     if (closeText === -1) continue;
     // An inline link's opening parenthesis must follow its text immediately (CommonMark); a space here means this is
@@ -286,9 +315,11 @@ export function extractLinks(text) {
     });
   }
 
-  for (const match of masked.matchAll(/(?:href|src)\s*=\s*"([^"]*)"/g)) {
+  for (const match of masked.matchAll(/(?:href|src)\s*=\s*(?:"([^"]*)"|'([^']*)')/g)) {
     const line = lineOf(match.index);
-    links.push({ target: match[1], line, index: match.index, attribute: true, quoted: quotedAt(line) });
+    // Group 1 is the double-quoted value, group 2 the single-quoted one: HTML allows either, and this pattern only
+    // accepted double quotes, so `<a href='doc.md'>` was invisible to the checker.
+    links.push({ target: match[1] ?? match[2], line, index: match.index, attribute: true, quoted: quotedAt(line) });
   }
 
   return links.sort((a, b) => a.index - b.index);
