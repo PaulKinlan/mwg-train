@@ -59,7 +59,7 @@ const FIELD_KEYS = new Set(['slug', 'name', 'type', 'label', 'autocomplete', 're
 export { FIELD_KEYS };
 
 /** The functional-route capabilities a specification may opt into. A closed set, like FIELD_KEYS. */
-export const CAPABILITY_KEYS = new Set(['list_pages', 'detail_page', 'auth', 'cart', 'pricing_tiers', 'checkout', 'survey', 'game']);
+export const CAPABILITY_KEYS = new Set(['list_pages', 'detail_page', 'auth', 'cart', 'pricing_tiers', 'checkout', 'survey', 'game', 'workspace']);
 
 /** The field names a selector types into, from `[name=x]` / `[name="x"]` / `[name='x']`. */
 function selectorFieldNames(selector) {
@@ -546,13 +546,56 @@ export function validateSpec(spec) {
   if (spec.capabilities?.game === true && spec.game === undefined) {
     at('capabilities.game', 'is on, but no game block states what the game is');
   }
+  if (spec.workspace !== undefined) {
+    const workspace = spec.workspace;
+    if (!isObject(workspace)) at('workspace', 'must be an object when present');
+    else {
+      for (const key of Object.keys(workspace)) {
+        if (!['name', 'use_cases', 'plans', 'setting'].includes(key)) at(`workspace.${key}`, 'unknown key');
+      }
+      if (!isString(workspace.name) || workspace.name.trim() === '') at('workspace.name', 'must name the workspace');
+      const list = (name, values, least) => {
+        if (!Array.isArray(values) || values.length < least) {
+          at(`workspace.${name}`, `must list at least ${least}`);
+          return;
+        }
+        const seen = new Set();
+        for (const [index, value] of values.entries()) {
+          if (!isString(value) || value.trim() === '') at(`workspace.${name}[${index}]`, 'must be a non-empty choice');
+          else if (seen.has(value)) at(`workspace.${name}[${index}]`, `repeats ${value}`);
+          else seen.add(value);
+        }
+      };
+      // A picker with nothing to pick is a form that cannot be completed, which is the onboarding step this
+      // capability exists to have (mwg-train-ksn).
+      list('use_cases', workspace.use_cases, 1);
+      list('plans', workspace.plans, 1);
+      if (!isObject(workspace.setting)) at('workspace.setting', 'must state the setting only the owner can change');
+      else {
+        for (const key of Object.keys(workspace.setting)) {
+          if (!['label', 'options'].includes(key)) at(`workspace.setting.${key}`, 'unknown key');
+        }
+        if (!isString(workspace.setting.label) || workspace.setting.label.trim() === '') at('workspace.setting.label', 'must label the setting');
+        // Two options at least: a setting with one value cannot be changed, and a change nobody can make is
+        // not a permission boundary worth having.
+        list('setting.options', workspace.setting.options, 2);
+      }
+    }
+    // A workspace belongs to an account, and the session that says which account it is belongs to `auth`:
+    // there is no way to know who is asking without it.
+    if (spec.capabilities?.auth !== true) at('capabilities.workspace', 'needs capabilities.auth: there would be no account to own the workspace');
+    if (spec.capabilities?.workspace !== true) at('workspace', 'only meaningful with capabilities.workspace - there would be nothing to administer');
+  }
+  if (spec.capabilities?.workspace === true && spec.workspace === undefined) {
+    at('capabilities.workspace', 'is on, but no workspace block states what is being created');
+  }
   if (spec.capabilities?.pricing_tiers === true && spec.pricing_tiers === undefined) {
     at('capabilities.pricing_tiers', 'is on, but no pricing_tiers block states the tiers');
   }
   // A capability's own routes are emitted before the declared ones, so a specification that declares
   // the same path would leave a handler nothing ever reaches. Refused rather than silently shadowed
   // (mwg-train-4lk review).
-  const capabilityOwnedRoutes = { cart: ['/cart', '/cart/add'], pricing_tiers: ['/pricing', '/pricing/select', '/pricing/:ref'], checkout: ['/checkout', '/checkout/pay', '/checkout/receipt/:ref'], survey: ['/survey', '/survey/answer', '/survey/review', '/survey/submit', '/survey/result/:ref'], game: ['/play', '/play/score', '/play/scores'] };
+  const capabilityOwnedRoutes = { cart: ['/cart', '/cart/add'], pricing_tiers: ['/pricing', '/pricing/select', '/pricing/:ref'], checkout: ['/checkout', '/checkout/pay', '/checkout/receipt/:ref'], survey: ['/survey', '/survey/answer', '/survey/review', '/survey/submit', '/survey/result/:ref'], game: ['/play', '/play/score', '/play/scores'], workspace: ['/onboarding', '/workspace', '/workspace/invite', '/workspace/setting'] };
   for (const [capability, owned] of Object.entries(capabilityOwnedRoutes)) {
     if (spec.capabilities?.[capability] !== true) continue;
     for (const route of spec.routes ?? []) {
@@ -628,6 +671,7 @@ export function archetypeFromSpec(spec) {
     // Named here for the same reason as the two above: a block that validates but is not named in this
     // list is dropped silently, and the capability would then build a dead page (mwg-train-4lk review).
     ...(spec.game === undefined ? {} : { game: spec.game }),
+    ...(spec.workspace === undefined ? {} : { workspace: spec.workspace }),
     ...(spec.seed_accounts === undefined ? {} : { seedAccounts: spec.seed_accounts }),
   };
 }
