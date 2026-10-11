@@ -59,7 +59,7 @@ const FIELD_KEYS = new Set(['slug', 'name', 'type', 'label', 'autocomplete', 're
 export { FIELD_KEYS };
 
 /** The functional-route capabilities a specification may opt into. A closed set, like FIELD_KEYS. */
-export const CAPABILITY_KEYS = new Set(['list_pages', 'detail_page', 'auth']);
+export const CAPABILITY_KEYS = new Set(['list_pages', 'detail_page', 'auth', 'cart']);
 
 /** The field names a selector types into, from `[name=x]` / `[name="x"]` / `[name='x']`. */
 function selectorFieldNames(selector) {
@@ -241,6 +241,21 @@ export function validateSpec(spec) {
       if (spec.capabilities.detail_page === true) {
         const detail = (spec.routes ?? []).filter((route) => route?.kind === 'read-by-reference');
         if (detail.length === 0) at('capabilities.detail_page', 'is on, but no route is read-by-reference');
+      }
+      if (spec.capabilities.cart === true) {
+        // The cart owns the sid cookie, as the session flow and auth both do, and it needs a product
+        // route to add FROM, a variant to choose, and a quantity to accumulate. Each is refused here
+        // rather than silently emitting a cart that adds nothing (mwg-train-11d).
+        if (spec.session === true) at('capabilities.cart', 'cannot combine with session: both own the sid cookie');
+        if (spec.capabilities.auth === true) at('capabilities.cart', 'cannot combine with auth: both own the sid cookie');
+        const products = (spec.routes ?? []).filter((route) => route?.kind === 'read-by-reference');
+        if (products.length === 0) at('capabilities.cart', 'is on, but no route is read-by-reference to serve as the product page');
+        if (!(spec.fields ?? []).some((field) => field?.type === 'select')) {
+          at('capabilities.cart', 'is on, but no select field to choose a variant from');
+        }
+        if (!(spec.fields ?? []).some((field) => field?.type === 'number')) {
+          at('capabilities.cart', 'is on, but no number field to accumulate a quantity in');
+        }
       }
     }
   }

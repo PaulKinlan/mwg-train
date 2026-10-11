@@ -1,0 +1,227 @@
+/**
+ * The storefront cart capability (mwg-train-11d): a cart the visitor BUILDS across pages, with a
+ * variant choice that is written with the record.
+ *
+ * The engine's session store cannot express this - `drafts` is keyed `(sid, name)`, so a second add
+ * overwrites the first - so `capabilities.cart` owns a multi-row `cart_items` table. Two halves, like
+ * the 37a capability tests: the spec gate (a closed set that fails closed), and the functional half
+ * (all seven arms built, started, and driven over HTTP: two products added, both lines preserved with
+ * the variant each was added with).
+ */
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { spawn } from 'node:child_process';
+import { mkdtempSync, readFileSync, rmSync, symlinkSync } from 'node:fs';
+import { createServer } from 'node:net';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
+import { buildProjectFromSpec, specForFamily, validateSpec } from '../src/eval/spec.mjs';
+import { FRAMEWORKS, writeProject } from '../pilot/frameworks.mjs';
+
+const ROOT = new URL('..', import.meta.url).pathname;
+const NODE_MODULES = join(ROOT, 'node_modules');
+const ARMS = Object.keys(FRAMEWORKS);
+
+async function availablePort() {
+  const socket = createServer();
+  try {
+    await new Promise((resolve, reject) => socket.once('error', reject).listen(0, '127.0.0.1', resolve));
+    return socket.address().port;
+  } finally {
+    await new Promise((resolve) => socket.close(resolve));
+  }
+}
+
+/**
+ * A specification that opts into the cart: a product route to add FROM, a variant to choose, and a
+ * quantity to accumulate. It is built on a committed specification so the schema's required blocks
+ * (state, persistence, validation, acceptance) are real rather than hand-written, and the fields are
+ * the storefront's own vocabulary - the training corpus's storefront brief (tr-02) declares exactly
+ * these: a variant select, a quantity number, and a cart.
+ */
+function cartSpec(overrides = {}) {
+  const base = specForFamily('booking', ROOT);
+  return {
+    ...base,
+    family_id: 'storefront',
+    title: 'Cider storefront',
+    story: 'A local producer sells limited pressings to be collected at the farm gate.',
+    routes: [
+      { method: 'GET', path: '/', kind: 'page', effect: 'render the shop page' },
+      { method: 'GET', path: '/products', kind: 'list', effect: 'list the products' },
+      { method: 'POST', path: '/orders', kind: 'write', redirect: '/product/:ref', effect: 'record an order' },
+      { method: 'GET', path: '/product/:ref', kind: 'read-by-reference', effect: 'render one product with its variant choice' },
+    ],
+    echo: { field: 'title', container: '#order-echo', route: 'read-by-reference' },
+    session: false,
+    capabilities: { cart: true, list_pages: true },
+    journey: {
+      startPath: '/',
+      formSelector: 'form#order-form',
+      fill: { 'input[name=title]': 'Kingston Black Reserve' },
+      expectText: 'Kingston Black Reserve',
+    },
+    fields: [
+      { name: 'title', slug: 'title', type: 'text', label: 'Product', required: true },
+      {
+        name: 'variant',
+        slug: 'variant',
+        type: 'select',
+        label: 'Variant',
+        required: true,
+        options: ['Kingston Black Reserve', 'Dabinett Heritage', 'Foxwhelp Bittersweet'],
+      },
+      { name: 'quantity', slug: 'quantity', type: 'number', label: 'Quantity', required: true },
+    ],
+    state: {
+      ...base.state,
+      tables: [
+        ...base.state.tables,
+        {
+          name: 'cart_items',
+          purpose: 'one row per item the visitor ADDED, so a second add accumulates rather than overwrites',
+          columns: [
+            { name: 'sid', type: 'TEXT', constraints: 'NOT NULL' },
+            { name: 'ref', type: 'TEXT', constraints: 'NOT NULL' },
+            { name: 'variant', type: 'TEXT', constraints: 'NOT NULL' },
+            { name: 'qty', type: 'INTEGER', constraints: 'NOT NULL' },
+          ],
+        },
+      ],
+    },
+    persistence: {
+      write_route: '/orders',
+      read_route: '/product/:ref',
+      reference: 'server-issued reference, returned in the Location header of a 303',
+      reload_assertion: 'reloading /cart still lists every item added, with the variant each was added with',
+    },
+    validation: {
+      ...base.validation,
+      // A select is exempt from the server's required set (`REQUIRED` in pilot/frameworks.mjs filters
+      // selects out), and the schema holds the specification to the engine's actual behaviour.
+      required_fields: ['title', 'quantity'],
+    },
+    acceptance: [
+      'adding a second, different product leaves the first line in the cart',
+      'each cart line carries the variant it was added with',
+      'the cart line and item counts change with what was added',
+      'the cart belongs to the visitor, not the server: another visitor sees an empty cart',
+    ],
+    ...overrides,
+  };
+}
+
+test('spec gate: the cart capability validates as a closed set, and fails closed', () => {
+  assert.deepEqual(validateSpec(cartSpec()), [], 'a legitimate cart specification validates');
+  // Unknown keys stay refused now that the set has a fourth member.
+  assert.ok(validateSpec(cartSpec({ capabilities: { basket: true } })).some((p) => p.includes('unknown capability')));
+  assert.ok(validateSpec(cartSpec({ capabilities: { cart: 'yes' } })).some((p) => p.includes('must be a boolean')));
+  // The cart owns the sid cookie, as the session flow and auth both do.
+  assert.ok(validateSpec(cartSpec({ session: true })).some((p) => p.includes('cannot combine with session')));
+  assert.ok(validateSpec(cartSpec({ capabilities: { cart: true, auth: true } })).some((p) => p.includes('cannot combine with auth')));
+  // Each of the three things the cart needs is refused rather than silently omitted.
+  const noProduct = cartSpec({ routes: cartSpec().routes.filter((route) => route.kind !== 'read-by-reference') });
+  assert.ok(validateSpec(noProduct).some((p) => p.includes('no route is read-by-reference')));
+  const noVariant = cartSpec({ fields: cartSpec().fields.filter((field) => field.type !== 'select') });
+  assert.ok(validateSpec(noVariant).some((p) => p.includes('no select field')));
+  const noQuantity = cartSpec({ fields: cartSpec().fields.filter((field) => field.type !== 'number') });
+  assert.ok(validateSpec(noQuantity).some((p) => p.includes('no number field')));
+});
+
+test('byte-invariance: a specification that does not opt in emits no cart code', () => {
+  for (const family of ['booking', 'catalogue', 'account-recovery']) {
+    for (const arm of ARMS) {
+      const { files } = buildProjectFromSpec({ spec: specForFamily(family, ROOT), frameworkName: arm });
+      assert.equal(
+        /cart_items|cartProductPage|cartPage|insertCartItem|selectCartItems/.test(files['server.mjs']),
+        false,
+        `${family}/${arm} emitted cart code without opting in`,
+      );
+    }
+  }
+});
+
+test('functional: the cart accumulates across pages, with the variant each item was added with', async (t) => {
+  const spec = cartSpec();
+  assert.deepEqual(ARMS.slice().sort(), ['hono', 'preact', 'raw', 'react', 'svelte', 'vue', 'webcomponents']);
+  for (const arm of ARMS) {
+    await t.test(arm, async () => {
+      const dir = mkdtempSync(join(tmpdir(), `cart-${arm}-`));
+      const port = await availablePort();
+      const { projectId, files, spec: projectSpec } = buildProjectFromSpec({ spec, frameworkName: arm });
+      writeProject(dir, { projectId, files, spec: projectSpec, includeDependencies: true });
+      symlinkSync(NODE_MODULES, join(dir, 'node_modules'), 'dir');
+      const child = spawn('node', ['server.mjs', '--port', String(port), '--db', join(dir, 'test.sqlite')], {
+        cwd: dir,
+        stdio: ['ignore', 'ignore', 'pipe'],
+      });
+      try {
+        const base = `http://127.0.0.1:${port}`;
+        let up = false;
+        for (let attempt = 0; attempt < 40 && !up; attempt += 1) {
+          await new Promise((resolve) => setTimeout(resolve, 250));
+          up = await fetch(`${base}/__health`).then((r) => r.ok, () => false);
+        }
+        assert.ok(up, `${arm} server did not come up`);
+        const post = (path, body, headers = {}) =>
+          fetch(`${base}${path}`, {
+            method: 'POST',
+            headers: { 'content-type': 'application/x-www-form-urlencoded', ...headers },
+            body: new URLSearchParams(body).toString(),
+            redirect: 'manual',
+          });
+        // Two different products, each created by the shop's own write route.
+        const seed = async (title) => {
+          const response = await post('/orders', { title, quantity: '1' });
+          assert.equal(response.status, 303, `${arm} records an order`);
+          return response.headers.get('location').split('/').pop();
+        };
+        const firstRef = await seed('Dabinett Heritage');
+        const secondRef = await seed('Kingston Black Reserve');
+
+        // The product page carries the variant choice and the quantity to add.
+        const product = await fetch(`${base}/product/${firstRef}`);
+        assert.equal(product.status, 200, `${arm} serves the product route`);
+        const productHtml = await product.text();
+        assert.match(productHtml, /<form[^>]*id="add-to-cart"[^>]*action="\/cart\/add"/, `${arm} product page posts to the cart`);
+        assert.match(productHtml, /<select[^>]*name="variant"/, `${arm} product page offers the variant select`);
+        assert.match(productHtml, /<input[^>]*name="quantity"[^>]*type="number"/, `${arm} product page takes a quantity`);
+        assert.match(productHtml, /<option value="Dabinett Heritage"/, `${arm} product page lists the declared options`);
+
+        // Add the first product: the visitor gets a cart, and the cart knows one line.
+        const addFirst = await post('/cart/add', { ref: firstRef, variant: 'Dabinett Heritage', quantity: '2' });
+        assert.equal(addFirst.status, 303, `${arm} add redirects`);
+        assert.equal(addFirst.headers.get('location'), '/cart');
+        const cookie = (addFirst.headers.get('set-cookie') ?? '').split(';')[0];
+        assert.match(cookie, /^sid=/, `${arm} add sets a sid cookie`);
+        const oneLine = await (await fetch(`${base}/cart`, { headers: { cookie } })).text();
+        assert.match(oneLine, /1 line\(s\), 2 item\(s\)/, `${arm} cart counts one line and two items`);
+
+        // Adding a DIFFERENT product must not overwrite the first: this is the whole capability.
+        const addSecond = await post('/cart/add', { ref: secondRef, variant: 'Kingston Black Reserve', quantity: '3' }, { cookie });
+        assert.equal(addSecond.status, 303, `${arm} second add redirects`);
+        const twoLines = await (await fetch(`${base}/cart`, { headers: { cookie } })).text();
+        assert.match(twoLines, /2 line\(s\), 5 item\(s\)/, `${arm} the cart accumulated rather than overwrote`);
+        assert.equal((twoLines.match(/<li data-ref=/g) ?? []).length, 2, `${arm} the cart renders exactly two lines`);
+        assert.match(twoLines, new RegExp(`<li data-ref="${firstRef}" data-variant="Dabinett Heritage"`), `${arm} keeps the first line's variant`);
+        assert.match(twoLines, new RegExp(`<li data-ref="${secondRef}" data-variant="Kingston Black Reserve"`), `${arm} keeps the second line's variant`);
+
+        // The cart is the visitor's, not the server's: another visitor sees nothing.
+        const anonymous = await (await fetch(`${base}/cart`)).text();
+        assert.match(anonymous, /0 line\(s\), 0 item\(s\)/, `${arm} an anonymous visitor has an empty cart`);
+        assert.match(anonymous, /id="cart-empty"/, `${arm} an empty cart says so`);
+      } finally {
+        child.kill('SIGKILL');
+        rmSync(dir, { recursive: true, force: true });
+      }
+    });
+  }
+});
+
+test('the cart capability is registered, not silently dead', () => {
+  // A capability nobody can switch on is the failure `mwg-train-37a` designed the closed set to make
+  // visible: the key must be in the set, default off, and named in the builder's own contract.
+  const frameworks = readFileSync(join(ROOT, 'pilot/frameworks.mjs'), 'utf8');
+  assert.match(frameworks, /const capabilitiesOf = \(archetype\) => \(\{ list_pages: false, detail_page: false, auth: false, cart: false/);
+});
