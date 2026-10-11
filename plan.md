@@ -17,9 +17,9 @@ Today this repository is the **instrument** for that experiment rather than the 
 [`docs/PIPELINE.md`](docs/PIPELINE.md) §0 carries this in full, with the diagram and the trainable-model matrix; it is Paul's lifecycle, quoted there, and this is the one-line version of each step:
 
 1. **Select and qualify a trainable model** — open weights or verified hosted fine-tuning; a zero-shot vertical slice must build a working app before any bulk generation.
-2. **Build the untouched baseline** — the base model generates sites from the training-side specs; its defects are the empirical floor to improve from.
+2. **Build the untouched default** — the base model generates sites from the training-side specs; its defects are the empirical floor to improve from.
 3. **Cordon off the baseline checkpoint** — the raw outputs and the exact model revision, immutable, as the default comparator.
-4. **Evaluate the baseline with MWG / web-uplift** — measure exactly which rules passed and failed.
+4. **Evaluate the default with MWG / web-uplift** — measure exactly which rules passed and failed.
 5. **Improve the demos into the training set** — apply MWG and uplift until they meet the visual, functional and MWG criteria; this is the training set.
 6. **Re-evaluate to confirm outcomes** — function, accessibility, visual match and rights clearance.
 7. **Train the adapter** on the rights-cleared, disjoint `(spec -> uplifted code)` dataset.

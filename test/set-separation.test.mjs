@@ -77,10 +77,39 @@ test('a tree that moved with no rule applied is a finding', () => {
   assert.ok(codes(records).includes('CHANGE_WITHOUT_UPLIFT'));
 });
 
-test('an accepted project with no improvement is a finding', () => {
+test('an accepted pair with no improvement is a finding', () => {
   const records = fixture();
   records.pilot.projects[1].accepted = true;
-  assert.ok(codes(records).includes('ACCEPTED_WITHOUT_UPLIFT'));
+  assert.ok(codes(records).includes('ACCEPTED_WITHOUT_IMPROVEMENT'));
+  const training = fixture();
+  training.trainingRun.projects[0].decision.improved_rules = [];
+  assert.ok(codes(training).includes('ACCEPTED_WITHOUT_IMPROVEMENT'));
+});
+
+test('improvements recorded with no rule applied is a finding', () => {
+  const records = fixture();
+  records.pilot.projects[1].improved_rules = ['forms/required-field-feedback'];
+  assert.ok(codes(records).includes('IMPROVEMENT_WITHOUT_UPLIFT'));
+});
+
+test('a REJECTED pair that still improved some rules is legitimate, not a finding', () => {
+  // decidePair records improved_rules before it discovers a rule regression or a new security finding,
+  // so this is a real outcome of a real run (mwg-train-210 review, finding 1). Failing it here would
+  // make the gate fire on a correct record.
+  for (const category of ['rule-regression', 'security-regression']) {
+    const records = fixture();
+    const row = records.trainingRun.projects[0];
+    row.decision.accepted = false;
+    row.decision.category = category;
+    row.decision.improved_rules = ['forms/required-field-feedback'];
+    row.decision.regressed_rules = ['forms/labels-associated'];
+    assert.deepEqual(codes(records), [], `${category} must not be a finding`);
+  }
+  const pilot = fixture();
+  const row = pilot.pilot.projects[0];
+  row.accepted = false;
+  row.category = 'security-regression';
+  assert.deepEqual(codes(pilot), [], 'a rejected pilot pair with applied rules must not be a finding');
 });
 
 test('one project default being another project ideal is a finding', () => {

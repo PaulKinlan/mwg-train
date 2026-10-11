@@ -21,6 +21,11 @@
  * properties of what the records say, plus the one thing the records can prove about the trees - that
  * the default side and the ideal side never collapse into the same hash within a pair, and that no
  * project's default is another project's ideal.
+ *
+ * Scope discipline (from this check's review, mwg-train-210): it asserts only properties that hold for
+ * every legitimate record the run can produce. A rejection that still improved some rules is legitimate
+ * (categories 'rule-regression' and 'security-regression' carry a non-empty improved_rules), so nothing
+ * here fails a rejected pair. Over-tight rules turn a gate into noise, and a noisy gate gets bypassed.
  */
 import { readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
@@ -71,20 +76,19 @@ export function separationFindings({ pilot, trainingRun, trainingCorpus }) {
     if (applied.length > 0 && same) {
       find('UPLIFT_WITHOUT_CHANGE', `${id}: ${applied.length} rule(s) applied but default and ideal are the same tree`);
     }
-    if (applied.length > 0 && improved.length === 0) {
-      find('UPLIFT_WITHOUT_IMPROVEMENT', `${id}: rules applied but improved_rules is empty, so the ideal side claims no improvement`);
-    }
-    if (applied.length > 0 && project.accepted !== true) {
-      find('ACCEPTED_WITHOUT_UPLIFT', `${id}: rules applied but the project is not accepted - an ideal that is not accepted cannot be a target`);
-    }
     if (applied.length === 0 && !same) {
       find('CHANGE_WITHOUT_UPLIFT', `${id}: no rule applied but default and ideal differ, so something moved the tree that the record does not name`);
     }
-    if (applied.length === 0 && improved.length > 0) {
+    if (improved.length > 0 && applied.length === 0) {
       find('IMPROVEMENT_WITHOUT_UPLIFT', `${id}: improved_rules recorded with no rule applied`);
     }
-    if (applied.length === 0 && project.accepted === true) {
-      find('ACCEPTED_WITHOUT_UPLIFT', `${id}: accepted with no rule applied - nothing improved, so there is no ideal to train on`);
+    // Acceptance is the training-data claim, so it must mean something happened: an accepted pair whose
+    // ideal claims no improvement is a target identical to the raw default. Deliberately NOT asserted:
+    // the reverse (a rejected pair that still improved some rules). decidePair records improved_rules
+    // before it finds a rule regression or a new security finding, so accepted === false with a non-empty
+    // improved_rules is a legitimate outcome (categories 'rule-regression', 'security-regression').
+    if (project.accepted === true && improved.length === 0) {
+      find('ACCEPTED_WITHOUT_IMPROVEMENT', `${id}: accepted but the ideal claims no improvement, so the target would be the raw default`);
     }
     // The "no model and no teacher in the loop" claim is recorded, not assumed (mwg-train-gzi).
     if (project.model !== NO_MODEL) {
@@ -121,11 +125,11 @@ export function separationFindings({ pilot, trainingRun, trainingCorpus }) {
     if (improved.length > 0 && project.original_sha === project.uplifted_sha) {
       find('UPLIFT_WITHOUT_CHANGE', `${id}: improvements recorded but default and ideal are the same tree`);
     }
-    if (improved.length > 0 && accepted !== true) {
-      find('ACCEPTED_WITHOUT_UPLIFT', `${id}: improvements recorded but the pair is not accepted`);
-    }
-    if (accepted === false && improved.length > 0 && project.decision?.category !== 'no-warranted-change') {
-      find('REJECTED_WITH_IMPROVEMENT', `${id}: rejected (${project.decision?.category}) while claiming improvements`);
+    // Same rule as the pilot: acceptance is a training-data claim, so an accepted pair with nothing
+    // improved would put the raw default in the training set. A rejected pair with improvements is not a
+    // finding - see the pilot loop above (mwg-train-210 review, finding 1).
+    if (accepted === true && improved.length === 0) {
+      find('ACCEPTED_WITHOUT_IMPROVEMENT', `${id}: accepted but the pair claims no improvement, so the target would be the raw default`);
     }
     // corpus_tree_sha is the corpus's default tree for this project, so it must be the default side.
     if (project.corpus_tree_sha && project.corpus_tree_sha !== project.original_sha) {
