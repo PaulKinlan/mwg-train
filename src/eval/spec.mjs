@@ -45,6 +45,11 @@ export const ROUTE_KINDS = Object.freeze([
 
 const isObject = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
 const fieldsOf = (spec) => (Array.isArray(spec.fields) ? spec.fields : []);
+// `value ?? []` guards absence, not type: a present-but-wrong-typed property reaches the first array method and
+// throws, and in a `for...of` it is silently iterated as characters, which is worse than a throw because nothing
+// reports it. Every reader of a list-valued property goes through this, so the class of bug closes once rather than
+// per site.
+const listOf = (value) => (Array.isArray(value) ? value : []);
 const isString = (value) => typeof value === 'string' && value !== '';
 const isBoolean = (value) => typeof value === 'boolean';
 
@@ -253,7 +258,7 @@ export function validateSpec(spec) {
   // missed the second write route of a family whose prose described the first - and too broad - it would
   // have demanded a reference from every write route of a family that mentioned the word.
   const stripRef = (path) => String(path).replace(/\/:ref$/, '');
-  const reads = (spec.routes ?? []).filter((route) => route?.method === 'GET');
+  const reads = listOf(spec.routes).filter((route) => route?.method === 'GET');
   // A route read by reference has to take the reference in its path, or the write that issues one
   // redirects to a path the server does not serve. The structural check below strips `:ref` from both
   // sides to match them, so it would match a reference-less read route against a reference-carrying
@@ -265,7 +270,7 @@ export function validateSpec(spec) {
   }
   const served = new Set(reads.map((route) => stripRef(route.path)));
   const readByReference = new Set(reads.filter((route) => route?.kind === 'read-by-reference').map((route) => stripRef(route.path)));
-  for (const route of spec.routes ?? []) {
+  for (const route of listOf(spec.routes)) {
     if (!route?.kind?.startsWith('write') || !isString(route.redirect)) continue;
     const target = stripRef(route.redirect);
     const where = `routes(${route.method} ${route.path}).redirect`;
@@ -327,11 +332,11 @@ export function validateSpec(spec) {
         at('capabilities.auth', 'cannot combine with session: both own the sid cookie and /api/me');
       }
       if (spec.capabilities.list_pages === true) {
-        const lists = (spec.routes ?? []).filter((route) => route?.kind === 'list');
+        const lists = listOf(spec.routes).filter((route) => route?.kind === 'list');
         if (lists.length === 0) at('capabilities.list_pages', 'is on, but no route has kind list');
       }
       if (spec.capabilities.detail_page === true) {
-        const detail = (spec.routes ?? []).filter((route) => route?.kind === 'read-by-reference');
+        const detail = listOf(spec.routes).filter((route) => route?.kind === 'read-by-reference');
         if (detail.length === 0) at('capabilities.detail_page', 'is on, but no route is read-by-reference');
       }
       if (spec.capabilities.cart === true) {
@@ -343,7 +348,7 @@ export function validateSpec(spec) {
         // The cart's product page IS the record page (it shows the product and its variant choice), so
         // asking for the read-only detail page as well would emit a renderer nothing ever reaches.
         if (spec.capabilities.detail_page === true) at('capabilities.cart', 'cannot combine with detail_page: the cart product page is the record page');
-        const products = (spec.routes ?? []).filter((route) => route?.kind === 'read-by-reference');
+        const products = listOf(spec.routes).filter((route) => route?.kind === 'read-by-reference');
         if (products.length === 0) at('capabilities.cart', 'is on, but no route is read-by-reference to serve as the product page');
         // The builder binds the FIRST read-by-reference route as the product page, so a second one would
         // be declared and never served. Refused here rather than silently 404ing (mwg-train-11d review).
@@ -352,7 +357,7 @@ export function validateSpec(spec) {
         }
         // A cart with nothing to put in it: the product page adds a reference to a record, and only a
         // write route creates one.
-        if (!(spec.routes ?? []).some((route) => route?.method === 'POST' && String(route?.kind ?? '').startsWith('write'))) {
+        if (!listOf(spec.routes).some((route) => route?.method === 'POST' && String(route?.kind ?? '').startsWith('write'))) {
           at('capabilities.cart', 'is on, but no route writes a record, so there would be nothing to add to the cart');
         }
         if (!fieldsOf(spec).some((field) => field?.type === 'select')) {
@@ -545,7 +550,7 @@ export function validateSpec(spec) {
         }
         const dependency = fieldsOf(spec).find((entry) => entry?.name === when.field);
         if (dependency?.type === 'select') {
-          const options = (dependency.options ?? []).map(String);
+          const options = listOf(dependency.options).map(String);
           if (when.equals !== undefined && !options.includes(String(when.equals))) {
             at(`${where}.equals`, `is not one of the options ${dependency.name} offers, so this could never be satisfied`);
           }
@@ -870,7 +875,7 @@ export function validateSpec(spec) {
   const capabilityOwnedRoutes = { cart: ['/cart', '/cart/add'], pricing_tiers: ['/pricing', '/pricing/select', '/pricing/:ref'], checkout: ['/checkout', '/checkout/pay', '/checkout/receipt/:ref'], survey: ['/survey', '/survey/answer', '/survey/review', '/survey/submit', '/survey/result/:ref'], game: ['/play', '/play/score', '/play/scores'], workspace: ['/onboarding', '/workspace', '/workspace/invite', '/workspace/setting'], wiki: ['/wiki', '/wiki/search', '/wiki/:slug', '/wiki/:slug/history', '/wiki/:slug/revision/:n', '/wiki/:slug/create'], explainer: ['/explain', '/explain/reset'], demo: ['/demo', '/demo/run'] };
   for (const [capability, owned] of Object.entries(capabilityOwnedRoutes)) {
     if (spec.capabilities?.[capability] !== true) continue;
-    for (const route of spec.routes ?? []) {
+    for (const route of listOf(spec.routes)) {
       const path = String(route?.path ?? '');
       // Matched by PREFIX as well as exactly: `/checkout/receipt/:id` shadows `/checkout/receipt/:ref`
       // just as surely as the same parameter name would, and the declared route would never be reached

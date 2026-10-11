@@ -410,6 +410,32 @@ test('a non-array fields is refused, not thrown', () => {
   }
 });
 
+// The same defect class as `fields`, at the two other list-valued properties, and the pairs of readers are not the
+// same ones either: a non-array `routes` reached `.filter` and threw, and the `for...of` loops over it would have
+// iterated characters silently if the throwers had not been reached first. The cart and checkout fixtures cover the
+// route readers; the survey fixture is the one that reaches the condition reader mapping a select field's options,
+// which the cart's own select field does not exercise because it lacks the survey capability.
+//
+// Note on why all three fixtures appear in the routes test rather than one: measured against the merge base, all
+// three throw, but at the SAME earliest reader - the pre-fix code halts before any capability block - so the throws
+// do not by themselves show the fixtures are distinct. They are distinct for what they reach with the fix in place,
+// which is why they are kept and why the routes loop asserts each fixture declares routes at all.
+test('a non-array routes is refused, not thrown', () => {
+  for (const [label, specFor] of [['cartSpec', cartSpec], ['checkoutSpec', checkoutSpec], ['surveySpec', surveySpec]]) {
+    const base = specFor();
+    assert.ok(Array.isArray(base.routes) && base.routes.length > 0, `${label} declares routes, so the fixture is meaningful`);
+    for (const value of ['nope', 42, {}]) {
+      const problems = validateSpec({ ...base, routes: value });
+      assert.ok(Array.isArray(problems), `${label} routes: ${JSON.stringify(value)} must return problems`);
+      assert.match(
+        problems.join('\n'),
+        /routes: must list the server contract/,
+        `${label} routes: ${JSON.stringify(value)} must be refused by the routes rule`,
+      );
+    }
+  }
+});
+
 // The edit journey's field is resolved by name into a selector and a label, and a name that is not declared used to
 // fail nowhere: the validator said nothing, and the generator emitted a control that never populates next to a label
 // pointing at an id that does not exist. It is the same defect as a fill selector naming the wrong field, so it is
@@ -532,6 +558,33 @@ test('no family in the corpus is refused for its edit journey', () => {
     const problems = validateSpec(read(family));
     assert.deepEqual(problems.filter((problem) => problem.includes('update.field')), [], `${family} is refused for its update journey`);
   }
+});
+
+// A select field's `options` is read by the survey's condition check, which maps it - the one reader that reached a
+// non-array with nothing between it and the call. The cart fixture is deliberately not used here: it has a select
+// field, but not the survey capability that reads its options, so it would pass either way and prove nothing.
+test('a select field whose options is not an array is refused, not thrown', () => {
+  const base = surveySpec();
+  const selects = base.fields.filter((field) => field?.type === 'select');
+  assert.ok(selects.length > 0, 'the survey fixture has a select field, so the fixture is meaningful');
+  const problems = validateSpec({
+    ...base,
+    fields: base.fields.map((field) => (field?.type === 'select' ? { ...field, options: 'bad' } : field)),
+  });
+  assert.ok(Array.isArray(problems), 'a non-array options must return problems');
+  // The exact refusal, not merely "some problem": any incidental problem in the fixture would satisfy a length
+  // check, and the point of the test is that the select rule itself fires rather than the process dying.
+  assert.match(
+    problems.join('\n'),
+    /fields\[\d+\]\.options: a select must list its options/,
+    'a non-array options must be refused by the select options rule',
+  );
+  // And the reader that used to throw now completes against the empty list, reporting a condition that could never
+  // be satisfied rather than failing to run (the reviewer supplied both messages; they are asserted, not guessed).
+  assert.ok(
+    problems.some((problem) => problem.includes('when.equals') && problem.includes('is not one of the options')),
+    'the downstream condition check evaluates against empty options without throwing',
+  );
 });
 
 test('no family in the corpus is refused by the echo cross-check', () => {
