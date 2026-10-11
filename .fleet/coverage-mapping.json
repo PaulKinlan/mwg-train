@@ -1,0 +1,3 @@
+{
+  "scripts/check-archetype-frames.mjs": ["test/checks-wired.test.mjs"]
+}

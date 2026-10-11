@@ -35,6 +35,7 @@ export const CHECKS = [
   'check:targets',
   'check:specs',
   'check:archetype-assets',
+  'check:archetype-frames',
   'check:build-key',
   'check:pilot-corpus',
   'check:set-separation',

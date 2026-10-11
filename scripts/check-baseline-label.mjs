@@ -164,6 +164,7 @@ export const DOCUMENTS = {
   // protects, so a future audit checks this classification instead of re-deriving it (mwg-train-bkk).
   // A reference about the state of the artifacts, not a report of measured floor evidence: it cites
   // check:specs only to show that the frozen trees did not move.
+  '.fleet/coverage-mapping.json': 'contract',
   'docs/KNOWN-SINKS.md': 'provenance',
   'docs/PIPELINE.md': 'floor-report',
   // The vocabulary decision (mwg-train-210): what the default is, what the ideal is, and the three
