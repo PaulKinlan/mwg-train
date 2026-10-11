@@ -8,36 +8,18 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
 
-const WIRED = new Set([
-  // The npm script passes only --if-present, so this runs offline against local git objects.
-  // Network is only needed for an acceptance audit that passes --remote explicitly.
-  'check:originals',
-  'lint:provenance',
-  'check:quotes',
-  'check:briefs',
-  'check:disjoint',
-  // Re-derives every archetype asset set from its accepted target; no network, no browser.
-  'check:archetype-assets',
-  // Re-derives every build's key from its own project id and model; no network, no browser.
-  'check:build-key',
-  'check:eval-projects',
-  'check:targets',
-  'check:specs',
-  'check:pilot-corpus',
-  'check:train-evidence',
-  // Compares the recorded journey rows' corpus_tree_sha against the corpus; no regeneration, no browser.
-  'check:train-records',
-  'scan:owner-auth',
-  'check:brief-schema',
-  'check:route-conformance',
-  'check:rules-pin',
-  'check:design-schema',
-  'check:train-design',
-  'check:baseline-label',
-  'check:set-separation',
-  'check:pilot-served',
-  'check:served-gap'
-]);
+// The set of checks the gate runs is DERIVED from `check:all` below, not listed here. It used to be a hand-written
+// `WIRED` set that the test then compared against `check:all`, which meant adding a check the correct way - a script
+// in package.json plus an entry in check:all - still failed this test until the same name was copied into a third
+// place. The failure mode was the worst kind: `check:all` green while `npm test` was red, because check:all does not
+// run this test. That trap cost mwg-train-9by a review round, and it is why the derivation and the assertions below
+// are shaped the way they are: what matters is that every check script is either run by the gate or excluded with a
+// reason, and a check must not be able to be silently absent from both.
+//
+// `EXCLUDED` stays explicit because it is the one thing that cannot be derived: the checks that must NOT be in the
+// gate, and the reason each one is not. Everything the gate does run works offline - no network, no browser, no
+// spawned server - which is what lets `check:all` run anywhere; any check that cannot meet that belongs here with
+// its reason.
 
 const EXCLUDED = new Map([
   ['check:served-routes', 'requires a spawned HTTP server'],
@@ -74,29 +56,47 @@ test('derive and validate check set', async () => {
   const checkNames = Object.keys(pkg.scripts).filter(k => /^(check|scan|lint):/.test(k) && k !== 'check:all');
   assert.ok(checkNames.length >= 20, `Derived count too low: ${checkNames.length}`);
 
-  for (const name of checkNames) {
-    assert.ok(WIRED.has(name) || EXCLUDED.has(name), `Check ${name} is neither in WIRED nor EXCLUDED`);
-  }
-
-  for (const name of WIRED) {
-    assert.ok(checkNames.includes(name), `WIRED check ${name} is missing from package.json`);
-  }
-
-  for (const name of EXCLUDED.keys()) {
-    assert.ok(checkNames.includes(name), `EXCLUDED check ${name} is missing from package.json`);
-  }
-
   const checkAllStr = pkg.scripts['check:all'];
   assert.ok(checkAllStr, 'check:all script is missing');
-  
-  const checkAllNames = new Set(checkAllStr.split('&&').map(p => {
-    const match = p.trim().match(/^npm run (.*)$/);
-    return match ? match[1] : p.trim();
-  }));
 
-  assert.strictEqual(checkAllNames.size, WIRED.size, 'check:all size mismatch');
-  for (const name of WIRED) {
-    assert.ok(checkAllNames.has(name), `check:all missing ${name}`);
+  // The gate's own list is the authority for what is wired. Parsing it here - rather than keeping a second copy in
+  // this file - is what makes the trap impossible: there is nothing left for a developer to forget to update.
+  const checkAllParts = checkAllStr.split('&&').map((part) => part.trim());
+  // Every entry must be an `npm run <script>`. A bare command still runs when the gate is invoked through npm,
+  // but the shell runs check:all too - and a bare `check:foo` would break it there while passing every assertion
+  // below, because the name is scraped into `wired` either way.
+  for (const part of checkAllParts) {
+    assert.ok(
+      part.startsWith('npm run '),
+      `check:all entry "${part}" must start with "npm run " - a bare command runs under npm but not in a shell`,
+    );
+  }
+  const wired = new Set(checkAllParts.map((part) => part.replace(/^npm run /, '')));
+  assert.ok(wired.size >= 20, `check:all runs only ${wired.size} check(s)`);
+  assert.strictEqual(
+    new Set(checkAllParts).size,
+    checkAllParts.length,
+    'check:all runs the same command twice',
+  );
+
+  for (const name of checkNames) {
+    assert.ok(
+      wired.has(name) || EXCLUDED.has(name),
+      `Check ${name} is neither run by check:all nor in EXCLUDED - add it to check:all, or exclude it with a reason`,
+    );
+  }
+
+  for (const name of wired) {
+    assert.ok(checkNames.includes(name), `check:all runs ${name}, which is not a check script in package.json`);
+  }
+
+  for (const name of wired) {
+    assert.ok(!EXCLUDED.has(name), `${name} is both run by check:all and excluded from it`);
+  }
+
+  for (const [name, reason] of EXCLUDED) {
+    assert.ok(checkNames.includes(name), `EXCLUDED check ${name} is missing from package.json`);
+    assert.ok(reason && reason.trim().length > 0, `EXCLUDED check ${name} states no reason`);
   }
 
   const actualSpawn = (name, timeoutMs) => {
@@ -128,7 +128,7 @@ test('derive and validate check set', async () => {
     });
   };
 
-  const errors = await executeChecks(Array.from(WIRED), actualSpawn, 8000);
+  const errors = await executeChecks(Array.from(wired), actualSpawn, 8000);
   if (errors.length > 0) {
     assert.fail(`Execution failed:\n${errors.join('\n')}`);
   }
