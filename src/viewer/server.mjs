@@ -87,7 +87,14 @@ const textResponse = (response, body, status = 200) => {
 };
 
 const jsonResponse = (response, body, status) => {
-  response.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' });
+  response.writeHead(status, {
+    'content-type': 'application/json; charset=utf-8',
+    'cache-control': 'no-store',
+    // Every refusal on this route closes the connection. A refused body may be unread (see readBoundedJsonBody), and a
+    // response that promised keep-alive with unread bytes behind it would leave the socket waiting for a body nobody
+    // is going to read.
+    connection: 'close',
+  });
   response.end(`${JSON.stringify(body)}\n`);
 };
 
@@ -115,7 +122,13 @@ function readBoundedJsonBody(request, maxBytes = MAX_DRAFT_BYTES) {
     const fail = (error) => {
       if (settled) return;
       settled = true;
-      request.destroy();
+      // Stop reading the body, but do NOT destroy the socket here. `request.destroy()` aborts the connection
+      // immediately, so the 413 written by the route's catch arrives at nobody and the client sees a socket hang up
+      // instead of the reason - on the one path (a chunked body with no content-length) that has no early cap to hit.
+      // Pausing stops the read; the response carries `connection: close`, which is what ends the connection once the
+      // error has actually been delivered.
+      request.pause();
+      request.on('error', () => { /* The socket may abort once we stop draining it; the decision is already made. */ });
       rejectPromise(error);
     };
     request.on('data', (chunk) => {

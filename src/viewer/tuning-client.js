@@ -123,6 +123,10 @@ if (form) {
     for (const [name, value] of Object.entries(initial)) form.elements.namedItem(name).value = value;
     try { localStorage.removeItem(key); } catch { /* Still reset the visible draft. */ }
     refresh();
+    // Assigning `.value` programmatically fires no `input` event, so without this the stale-board notice below would not
+    // run: a board generated from an edited prompt would sit next to the restored authored prompt with nothing saying
+    // the two do not belong together. That is the exact confusion the notice exists to prevent.
+    form.dispatchEvent(new Event('input', { bubbles: true }));
     setStatus('Restored the authored prompt and default settings locally.');
   });
 

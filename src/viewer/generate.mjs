@@ -110,7 +110,6 @@ async function readBoundedBody(response, maxBytes) {
   }
   return text + decoder.decode();
 }
-
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
 /**
@@ -125,6 +124,13 @@ export function readImageDimensions(bytes) {
     let offset = 2;
     while (offset + 9 < bytes.length) {
       if (bytes[offset] !== 0xff) {
+        offset += 1;
+        continue;
+      }
+      // T.81 allows fill bytes before a marker (FF FF ... FF <marker>). Skipping one FF at a time walks to the marker
+      // that carries it; without this the second FF is read AS the marker and its bogus length skips over the frame
+      // header, so a perfectly valid JPEG would be reported as unmeasurable.
+      if (bytes[offset + 1] === 0xff) {
         offset += 1;
         continue;
       }
@@ -210,13 +216,16 @@ export function validateGenerationDraft(draft, allowed) {
   if (guidance.length > 4000) throw bad('OUT_OF_RANGE', `system_guidance is ${guidance.length} characters; the cap is 4000`);
   const settings = draft.settings ?? {};
   if (typeof settings !== 'object' || Array.isArray(settings)) throw bad('OUT_OF_RANGE', 'settings must be an object');
-  const temperature = Number(settings.temperature);
-  if (!isFiniteNumber(temperature) || temperature < 0 || temperature > 2) throw bad('OUT_OF_RANGE', 'settings.temperature must be between 0 and 2');
-  const maxTokens = Number(settings.max_tokens);
+  // Strict types, not `Number(...)`. Coercion silently accepted `true`, `""` and `[4096]` as valid settings; they all
+  // happened to land inside the legal range, which is exactly why the leniency was a habit worth breaking rather than a
+  // bug worth tolerating. A JSON endpoint should say what it accepts.
+  const temperature = settings.temperature;
+  if (!isFiniteNumber(temperature) || temperature < 0 || temperature > 2) throw bad('OUT_OF_RANGE', 'settings.temperature must be a number between 0 and 2');
+  const maxTokens = settings.max_tokens;
   if (!Number.isInteger(maxTokens) || maxTokens < 256 || maxTokens > MAX_IMAGE_OUTPUT_TOKENS) {
     throw bad('OUT_OF_RANGE', `settings.max_tokens must be an integer between 256 and ${MAX_IMAGE_OUTPUT_TOKENS}`);
   }
-  const seed = settings.seed === undefined || settings.seed === null || settings.seed === '' ? null : Number(settings.seed);
+  const seed = settings.seed === undefined || settings.seed === null || settings.seed === '' ? null : settings.seed;
   if (seed !== null && (!Number.isInteger(seed) || seed < 0 || seed > 2147483647)) {
     throw bad('OUT_OF_RANGE', 'settings.seed must be an integer between 0 and 2147483647');
   }
@@ -310,7 +319,7 @@ export function createBoardGenerator({
 } = {}) {
   if (typeof fetchImpl !== 'function') throw new Error('createBoardGenerator needs a fetch implementation');
   let inFlight = false;
-  let lastAttemptAt = 0;
+  let lastFinishedAt = 0;
 
   async function call({ body, signal }) {
     let response;
@@ -338,6 +347,12 @@ export function createBoardGenerator({
       text = await readBoundedBody(response, maxResponseBytes);
     } catch (error) {
       if (error instanceof GenerationError) throw error;
+      // A body that stalls until the deadline aborts the same way a connection that never answers does, so it gets the
+      // same answer: a timeout is a timeout, and reporting it as "unreachable" sends the operator to look at the wrong
+      // thing (the network) for a gateway that was reachable and then stopped talking.
+      if (error?.name === 'AbortError' || error?.name === 'TimeoutError') {
+        throw upstream('UPSTREAM_TIMEOUT', `the image endpoint stopped sending its response before the ${Math.round(timeoutMs / 1000)}s deadline`, 504);
+      }
       throw upstream('UPSTREAM_UNREACHABLE', `the image response could not be read: ${String(error?.message ?? error).slice(0, 200)}`);
     }
     if (!response.ok) {
@@ -363,13 +378,15 @@ export function createBoardGenerator({
   async function generate({ draft, allowed }) {
     const validated = validateGenerationDraft(draft, allowed);
     if (inFlight) throw new GenerationError('BUSY', 'an image is already being generated; wait for it to finish before starting another', 429);
-    const since = now() - lastAttemptAt;
-    if (lastAttemptAt && since < minIntervalMs) {
-      throw new GenerationError('COOLDOWN', `a generation was started ${Math.round(since / 1000)}s ago; this workbench allows one every ${Math.round(minIntervalMs / 1000)}s`, 429);
+    // The interval is enforced against the END of the previous call, not its start. A real generation takes ~15s, so a
+    // start-based clock made the interval meaningless: it had already elapsed while the model was drawing, and the very
+    // next press went straight out. This is the bound on spend, so it has to be measured where it means something.
+    const since = now() - lastFinishedAt;
+    if (lastFinishedAt && since < minIntervalMs) {
+      throw new GenerationError('COOLDOWN', `the previous generation finished ${Math.round(since / 1000)}s ago; this workbench allows one every ${Math.round(minIntervalMs / 1000)}s`, 429);
     }
     const { body, effectiveMaxOutputTokens, notes } = buildGenerationRequest(validated);
     inFlight = true;
-    lastAttemptAt = now();
     const startedAt = now();
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -405,6 +422,8 @@ export function createBoardGenerator({
       };
     } finally {
       clearTimeout(timer);
+      // Recorded at the END of the call, whichever way it ended: a failure is also something to space out.
+      lastFinishedAt = now();
       inFlight = false;
     }
   }

@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
+import { request as httpRequest } from 'node:http';
 import { mkdtempSync, readdirSync, readFileSync, rmSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, relative, resolve } from 'node:path';
@@ -180,6 +181,11 @@ test('image dimensions are read from the bytes, including the real committed boa
   assert.deepEqual(readImageDimensions(tinyJpeg(1376, 768)), { width: 1376, height: 768 });
   assert.deepEqual(readImageDimensions(tinyJpeg(640, 480)), { width: 640, height: 480 });
 
+  // T.81 permits fill bytes before a marker (FF FF ... FF C0). Read as a marker, that leading FF yields a bogus length
+  // which skips past the frame header and reports a valid JPEG as unmeasurable.
+  const filled = Buffer.concat([Buffer.from([0xff, 0xd8, 0xff, 0xff, 0xff]), tinyJpeg(800, 600).subarray(2)]);
+  assert.deepEqual(readImageDimensions(filled), { width: 800, height: 600 }, 'FF fill bytes must not hide the frame header');
+
   // The same reader against the authored reference board and an authored PNG target: if it disagreed with the files on
   // disk, every number the page shows beside a generated board would be unfounded.
   const reference = readImageDimensions(readFileSync(join(ROOT, 'docs/design/training/tr-01/reference.jpg')));
@@ -229,6 +235,14 @@ test('validation refuses anything the committed tree does not contain, and every
   expect(validDraft({ settings: { temperature: 0.7, max_tokens: 999999, seed: 1 } }), 'OUT_OF_RANGE');
   expect(validDraft({ settings: { temperature: 0.7, max_tokens: 4096.5, seed: 1 } }), 'OUT_OF_RANGE');
   expect(validDraft({ settings: { temperature: 0.7, max_tokens: 4096, seed: -1 } }), 'OUT_OF_RANGE');
+  // Coercion leniency: these all used to pass because `Number(...)` turned them into in-range numbers. A JSON endpoint
+  // that says "a number between 0 and 2" and then accepts `true` is describing itself wrongly.
+  expect(validDraft({ settings: { temperature: true, max_tokens: 4096, seed: 1 } }), 'OUT_OF_RANGE', /temperature must be a number/);
+  expect(validDraft({ settings: { temperature: '', max_tokens: 4096, seed: 1 } }), 'OUT_OF_RANGE');
+  expect(validDraft({ settings: { temperature: '0.7', max_tokens: 4096, seed: 1 } }), 'OUT_OF_RANGE');
+  expect(validDraft({ settings: { temperature: 0.7, max_tokens: [4096], seed: 1 } }), 'OUT_OF_RANGE');
+  expect(validDraft({ settings: { temperature: 0.7, max_tokens: '4096', seed: 1 } }), 'OUT_OF_RANGE');
+  expect(validDraft({ settings: { temperature: 0.7, max_tokens: 4096, seed: true } }), 'OUT_OF_RANGE');
   expect(validDraft({ brief_id: undefined }), 'MISSING_FIELD');
   expect(validDraft({ framework: undefined }), 'MISSING_FIELD');
   expect(null, 'BAD_DRAFT');
@@ -332,6 +346,29 @@ test('an unreachable endpoint, a timeout and an oversized response each fail wit
   assert.equal(unparsable.code, 'BAD_UPSTREAM_JSON');
 });
 
+test('a response that stalls mid-body is a timeout (504), not an unreachable gateway (502)', async () => {
+  // Headers arrive, then the body never does. The abort fires while reading the body, not while connecting, which is a
+  // different code path from a fetch that never resolves at all - and it must not tell the operator the network is
+  // down when the gateway answered and then went quiet.
+  let cancelled = false;
+  const stalling = createBoardGenerator({
+    fetchImpl: async (url, init) => new Response(new ReadableStream({
+      start(controller) {
+        controller.enqueue(new TextEncoder().encode('{"candidates":'));
+        init.signal.addEventListener('abort', () => { cancelled = true; controller.error(Object.assign(new Error('aborted'), { name: 'AbortError' })); });
+      },
+      cancel() { cancelled = true; },
+    }), { status: 200, headers: { 'content-type': 'application/json' } }),
+    timeoutMs: 30,
+    minIntervalMs: 0,
+  });
+  const stalled = await generateAndCatch(stalling);
+  assert.equal(stalled.code, 'UPSTREAM_TIMEOUT');
+  assert.equal(stalled.status, 504);
+  assert.match(stalled.message, /stopped sending its response before the 0s deadline|deadline/);
+  assert.equal(cancelled, true, 'the stalled stream must actually be aborted');
+});
+
 test('the workbench allows one generation at a time, with a cooldown between them', async () => {
   let release;
   const gate = new Promise((resolveGate) => { release = resolveGate; });
@@ -357,6 +394,24 @@ test('the workbench allows one generation at a time, with a cooldown between the
   clock += 5001;
   const allowedNow = await cooled.generate({ draft: validDraft(), allowed: allowedFor() });
   assert.equal(allowedNow.width, 1376);
+});
+
+test('the cooldown starts when a generation FINISHES, so a slow one still spaces out the next', async () => {
+  // The bug this pins: with the clock taken at the START of a call, a real ~15s generation had already outlived a 5s
+  // interval by the time it returned, so the next press went straight out and the interval bounded nothing at all -
+  // it only throttled fast failures. The clock below advances DURING the call, exactly as a real one does.
+  let clock = 500_000;
+  const fetchImpl = fakeFetch(() => { clock += 20_000; return imageResponse(tinyJpeg(1376, 768)); });
+  const generator = createBoardGenerator({ fetchImpl, minIntervalMs: 5000, now: () => clock });
+
+  await generator.generate({ draft: validDraft(), allowed: allowedFor() });
+  const immediately = await generateAndCatch(generator);
+  assert.equal(immediately.code, 'COOLDOWN', 'a 20s generation must still be followed by the interval');
+  assert.equal(fetchImpl.calls.length, 1);
+
+  clock += 5001;
+  await generator.generate({ draft: validDraft(), allowed: allowedFor() });
+  assert.equal(fetchImpl.calls.length, 2);
 });
 
 async function generateAndCatch(generator, draft = validDraft()) {
@@ -448,6 +503,32 @@ test('the route refuses a malformed, oversized or wrong-content-type body before
     assert.equal((await oversized.json()).error, 'BODY_TOO_LARGE');
 
     assert.equal(fetchImpl.calls.length, 0, 'none of these may reach the model');
+  });
+});
+
+test('a chunked body past the cap is answered 413, not a dropped socket', async (t) => {
+  // The body here declares no content-length, so the early header check cannot catch it and the running total is the
+  // only bound. Destroying the socket at that point aborts the connection before the 413 can be written, and the
+  // client sees a socket hang up instead of the reason, on the one path with no early cap to hit.
+  const fetchImpl = fakeFetch(() => imageResponse(tinyJpeg(1376, 768)));
+  await withViewer(t, { boardGenerator: createBoardGenerator({ fetchImpl, minIntervalMs: 0 }) }, async ({ base }) => {
+    const answer = await new Promise((resolveAnswer, rejectAnswer) => {
+      const url = new URL('/tuning/generate', base);
+      const req = httpRequest({ hostname: url.hostname, port: url.port, path: url.pathname, method: 'POST', headers: { 'content-type': 'application/json' } }, (res) => {
+        let body = '';
+        res.setEncoding('utf8');
+        res.on('data', (chunk) => { body += chunk; });
+        res.on('end', () => resolveAnswer({ status: res.statusCode, body, connection: res.headers.connection }));
+      });
+      // Settled before any late socket error can reject: the response is the evidence.
+      req.on('error', (error) => rejectAnswer(error));
+      for (let i = 0; i < 5; i += 1) req.write(Buffer.alloc(16 * 1024, 0x78));
+      req.end();
+    });
+    assert.equal(answer.status, 413, 'the refusal must reach the client as a response, not as ECONNRESET');
+    assert.equal(JSON.parse(answer.body).error, 'BODY_TOO_LARGE');
+    assert.equal(answer.connection, 'close');
+    assert.equal(fetchImpl.calls.length, 0);
   });
 });
 
