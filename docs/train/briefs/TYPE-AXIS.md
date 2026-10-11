@@ -82,17 +82,24 @@ express it and only the brief, target and journey are missing; it is **capabilit
 types need the builder contract extended and tested first, and the expansion plan is explicit that
 adding a route kind to satisfy a taxonomy is the wrong direction.
 
+**As of `mwg-train-7bk` there are no capability-gated types left on this axis.** Every capability the
+axis called for has been built and tested - the cart, pricing tiers, checkout, the survey, the game, the
+workspace, the wiki, the interactive explainer and the interactive demo - so each remaining type is
+content-only: what it needs is a family, not an engine change. The rows below were written before those
+capabilities landed and now name them as though they did not exist; they record what each family still
+has to contain, and the bead that built the capability is named so the claim can be checked.
+
 | Type | Class | New capability the builder needs |
 |---|---|---|
 | `blog` | content-only (near) | a stable article route per record, and a share affordance; the index/detail shape exists |
 | `fan-community` | content-only (near) | a contribution edit path, and a moderation state on the record |
-| `b2b-saas-signup` | capability-gated | credential verification for sign-in (the engine has no login), and a second role |
+| `b2b-saas-signup` | content-only | the `workspace` capability exists (mwg-train-ksn: credential verification, a second role, and an owner-only setting); what is missing is the family |
 | `card` | content-only | a card surface in the markup and a selection carried into the form |
-| `storefront` | capability-gated | variant selection and a cart accumulated across pages |
-| `checkout` | capability-gated | arithmetic over cart lines, totals, and a simulated payment step |
-| `pricing-tiers` | capability-gated | a period toggle and a tier selection persisted into signup |
-| `game` | capability-gated | a client input loop and a state machine with a terminal state |
-| `survey-eligibility` | capability-gated (small) | branching steps and a derived result |
+| `storefront` | content-only | the `cart` capability exists (mwg-train-11d: variant selection and a cart accumulated across pages); what is missing is the family |
+| `checkout` | content-only | the `checkout` capability exists (mwg-train-le6: arithmetic over cart lines, totals, shipping, tax and a simulated payment with a durable receipt); what is missing is the family |
+| `pricing-tiers` | content-only | the `pricing_tiers` capability exists (mwg-train-4lk: a period toggle, three tiers and the choice carried into signup); what is missing is the family |
+| `game` | content-only | the `game` capability exists (mwg-train-ypr: a client input loop, a state machine with a terminal state and a restart); what is missing is the family |
+| `survey-eligibility` | content-only | the `survey` capability exists (mwg-train-s0q: branching questions and a derived result); what is missing is the family |
 
 ## Worked examples the plan already carries
 
