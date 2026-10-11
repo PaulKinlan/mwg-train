@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { copyFileSync, existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import process from 'node:process';
@@ -11,6 +11,7 @@ import {
   TRACKED_RECORD_PATH,
   resolveRecordTarget,
   shrinkRefusal,
+  writeRecordAtomically,
 } from '../scripts/scaffold-training-corpus.mjs';
 
 // mwg-train-65v. `--out <dir>` relocated the generated trees but NOT the record, so a diagnostic or partial
@@ -59,6 +60,38 @@ test('an equal or larger write is allowed, and so is a deliberate shrink', () =>
   assert.equal(shrinkRefusal({ previous, next: { projects: [{ project_id: 'a' }] }, recordPath: '/repo/r.json', allowShrink: true }), null, 'explicit');
   assert.equal(shrinkRefusal({ previous: null, next: { projects: [{ project_id: 'a' }] }, recordPath: '/repo/r.json' }), null, 'no existing record');
   assert.equal(shrinkRefusal({ previous: { projects: [] }, next: { projects: [] }, recordPath: '/repo/r.json' }), null, 'both empty');
+});
+
+test('the record is written atomically and leaves no temp file behind', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'hud-65v-atomic-'));
+  try {
+    const target = join(dir, 'RECORD.json');
+    const record = { generated_at: 'x', projects: [{ project_id: 'a' }, { project_id: 'b' }] };
+    writeRecordAtomically(target, record);
+    assert.deepEqual(JSON.parse(readFileSync(target, 'utf8')).projects.length, 2);
+    assert.deepEqual(readdirSync(dir).filter((name) => name.includes('.tmp-')), [], 'no temp file may be left behind');
+    // A second write over the same path replaces it in place and is still litter-free.
+    writeRecordAtomically(target, { ...record, projects: [...record.projects, { project_id: 'c' }] });
+    assert.equal(JSON.parse(readFileSync(target, 'utf8')).projects.length, 3);
+    assert.deepEqual(readdirSync(dir).filter((name) => name.includes('.tmp-')), []);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('a write that cannot complete fails loudly, leaves no temp file, and keeps the old record', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'hud-65v-atomicfail-'));
+  try {
+    const target = join(dir, 'RECORD.json');
+    writeRecordAtomically(target, { projects: [{ project_id: 'keep' }] });
+    const before = readFileSync(target);
+    const missingParent = join(dir, 'no-such-dir', 'RECORD.json');
+    assert.throws(() => writeRecordAtomically(missingParent, { projects: [{ project_id: 'a' }] }), /ENOENT|no such file/i);
+    assert.deepEqual(readFileSync(target), before, 'a failed write must not disturb an existing record');
+    assert.deepEqual(readdirSync(dir).filter((name) => name.includes('.tmp-')), [], 'no temp file may survive a failure');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 test('a relocated scoped run does not touch the tracked record, and leaves its record beside the trees', () => {

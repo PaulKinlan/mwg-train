@@ -216,19 +216,28 @@ export function shrinkRefusal({ previous, next, recordPath, allowShrink = false 
 }
 
 /**
- * Write the record atomically: serialise, read back what was serialised, write a sibling temp file, rename
- * over the target. An interrupted or failing run cannot leave a truncated record - the failure mode the
- * plain `writeFileSync` had, where a crash mid-write destroyed the tracked file.
+ * Write the record atomically: serialise, write a sibling temp file, read that temp file BACK FROM DISK,
+ * and only then rename it over the target. An interrupted or failing run cannot leave a truncated record -
+ * the failure mode the plain `writeFileSync` had, where a crash mid-write destroyed the tracked file.
+ *
+ * The read-back is from disk, not from the string in memory (mwg-train-65v review, finding 1): comparing a
+ * string with `JSON.parse` of itself cannot fail, so an in-memory check would be theatre. Reading the temp
+ * file back means a short write - a full disk, an interrupted write - is caught before it is promoted over
+ * a good record, and the bytes that replace the record are known to parse and to carry every project.
  */
 export function writeRecordAtomically(recordPath, record) {
   const text = `${JSON.stringify(record, null, 2)}\n`;
-  const readBack = JSON.parse(text);
-  if (!Array.isArray(readBack.projects) || readBack.projects.length !== record.projects.length) {
-    throw new Error(`scaffold-training-corpus: refusing to write ${recordPath} - the serialised record does not read back with ${record.projects.length} project(s)`);
-  }
   const tmpPath = `${recordPath}.tmp-${process.pid}`;
   try {
     writeFileSync(tmpPath, text);
+    const onDisk = readFileSync(tmpPath, 'utf8');
+    if (onDisk !== text) {
+      throw new Error(`the temp file does not hold the bytes that were written (${onDisk.length} of ${text.length} characters)`);
+    }
+    const readBack = JSON.parse(onDisk);
+    if (!Array.isArray(readBack.projects) || readBack.projects.length !== record.projects.length) {
+      throw new Error(`the temp file does not read back with ${record.projects.length} project(s)`);
+    }
     renameSync(tmpPath, recordPath);
   } catch (error) {
     rmSync(tmpPath, { force: true });
@@ -401,8 +410,9 @@ function main() {
   const args = parseArgs(process.argv.slice(2));
   if (args.help) {
     console.error('usage: node scripts/scaffold-training-corpus.mjs [--out <dir>] [--record <file>] [--families tr-01,tr-02] [--clean] [--allow-shrink]');
-    console.error('  --out without --record writes the record beside the relocated trees; the tracked');
-    console.error(`  ${TRACKED_RECORD_PATH} is only written when --record names it, and never shrunk without --allow-shrink.`);
+    console.error('  A plain run writes the tracked record. --out relocates the trees and, without --record, the');
+    console.error(`  record goes beside them - so ${TRACKED_RECORD_PATH} is written by a relocated run only when --record names it.`);
+    console.error('  No write shrinks an existing record (fewer projects) unless --allow-shrink is passed.');
     process.exit(0);
   }
 
@@ -518,7 +528,12 @@ function main() {
     console.error(refusal);
     process.exit(1);
   }
-  writeRecordAtomically(recordPath, record);
+  try {
+    writeRecordAtomically(recordPath, record);
+  } catch (error) {
+    console.error(`scaffold-training-corpus: FAILED to write ${recordPath} - ${error.message}. The existing record was left untouched.`);
+    process.exit(1);
+  }
 
   console.log(`scaffold-training-corpus: wrote ${projects.length} projects to ${args.out}`);
   console.log(`scaffold-training-corpus: record at ${recordPath}`);
