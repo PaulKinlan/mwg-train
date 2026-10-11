@@ -17,6 +17,8 @@ import { existsSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { BASELINE_LABEL } from '../src/eval/ruleset.mjs';
+
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const PLAN_PATH = resolve(ROOT, 'plan.md');
 const plan = readFileSync(PLAN_PATH, 'utf8');
@@ -118,6 +120,18 @@ test('every commit sha the plan cites is in history, and dated as its row says',
     const committed = execFileSync('git', ['log', '-1', '--format=%ad', '--date=short', sha], { cwd: ROOT, encoding: 'utf8' }).trim();
     assert.equal(committed, date, `the landing row says ${sha} is ${date}, but ${sha} is dated ${committed}`);
   }
+});
+
+test('the plan carries the attribution label the repository requires', () => {
+  // plan.md is registered as a floor-report in scripts/check-baseline-label.mjs, because it quotes our own
+  // measured numbers rather than only describing the pipeline - and every floor report MUST carry this
+  // label, so that nobody reads our deterministic floor as an official web-uplift result. The check itself
+  // is what enforces it (it caught this file's absence from the registry on the merger's full gate); this
+  // assertion keeps the label tied to the one source of truth for the string.
+  assert.ok(
+    plan.includes(BASELINE_LABEL),
+    `plan.md must carry the baseline label ${JSON.stringify(BASELINE_LABEL)}`,
+  );
 });
 
 test('the seal quoted in the plan is the seal the check pins', () => {

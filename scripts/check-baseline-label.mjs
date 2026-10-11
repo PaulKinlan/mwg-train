@@ -154,6 +154,11 @@ export const DOCUMENTS = {
   'docs/eval/design/account-recovery/plan.md': 'spec',
   'docs/eval/design/event-registration/plan.md': 'spec',
   'README.md': 'floor-report',
+  // The top-level plan (mwg-train-qxm). Classified as a floor report because it quotes this repository's
+  // own measured numbers - corpus token volume, pilot yield, the acceptance split, the gate counts and the
+  // brief seal - rather than only describing the pipeline. It carries the label; test/plan.test.mjs asserts
+  // that against BASELINE_LABEL so the attribution cannot be dropped from the file without failing.
+  'plan.md': 'floor-report',
   // Records the corpus's intentional XSS sinks, and the one real sink the corpus freeze currently
   // protects, so a future audit checks this classification instead of re-deriving it (mwg-train-bkk).
   // A reference about the state of the artifacts, not a report of measured floor evidence: it cites
