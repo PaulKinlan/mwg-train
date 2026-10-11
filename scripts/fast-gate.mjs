@@ -1,0 +1,297 @@
+#!/usr/bin/env node
+/**
+ * Fast gate for mwg-train (fleet-1ojy.14).
+ *
+ * Runs only the tests and checks affected by changes in the current branch against origin/main.
+ * Emits "fast-gate: passed: <suites>" so fleet-check can track coverage.
+ * If a changed file has no mapped test suites, it fails loudly unless explicitly exempt.
+ * Fails closed on Git failures, builds full transitive dependency graph for modules,
+ * and routes checked markdown documents and manifests to their respective checks.
+ */
+import fs from 'node:fs';
+import path from 'node:path';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+
+// 1. Determine base commit and changed files (Fail closed on Git failures)
+const baseRef = process.env.GIT_BASE || 'origin/main';
+let changedFiles = [];
+
+if (process.env.GIT_CHANGED) {
+  changedFiles = process.env.GIT_CHANGED.split(/\s+/).filter(Boolean);
+} else {
+  let baseSha = '';
+  const mb = spawnSync('git', ['merge-base', baseRef, 'HEAD'], { cwd: ROOT, encoding: 'utf8' });
+  if (mb.status === 0 && mb.stdout.trim()) {
+    baseSha = mb.stdout.trim();
+  } else {
+    const rp = spawnSync('git', ['rev-parse', baseRef], { cwd: ROOT, encoding: 'utf8' });
+    if (rp.status === 0 && rp.stdout.trim()) {
+      baseSha = rp.stdout.trim();
+    } else {
+      console.error(`fast-gate: FAIL: base '${baseRef}' is not a resolvable commit in this repository.`);
+      process.exit(1);
+    }
+  }
+
+  const diff = spawnSync('git', ['diff', '--name-only', `${baseSha}...HEAD`], { cwd: ROOT, encoding: 'utf8' });
+  if (diff.status !== 0) {
+    console.error(`fast-gate: FAIL: 'git diff --name-only ${baseSha}...HEAD' failed to compute delta.`);
+    process.exit(1);
+  }
+  changedFiles = diff.stdout.trim().split('\n').filter(Boolean);
+}
+
+// 2. Discover all repository JS/MJS modules and build full transitive dependency graph
+function scanAllCodeFiles(dir) {
+  const results = [];
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  for (const entry of entries) {
+    if (entry.name.startsWith('.') || entry.name === 'node_modules') continue;
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      results.push(...scanAllCodeFiles(full));
+    } else if (entry.name.endsWith('.mjs') || entry.name.endsWith('.js')) {
+      results.push(full);
+    }
+  }
+  return results;
+}
+
+const allCodeFiles = scanAllCodeFiles(ROOT);
+// module -> Set of files that directly import it (reverse dependency graph)
+const reverseDeps = new Map();
+
+for (const codeFile of allCodeFiles) {
+  const relPath = path.normalize(path.relative(ROOT, codeFile));
+  try {
+    const content = fs.readFileSync(codeFile, 'utf8');
+    const importRegex = /(?:from\s+["']|import\s*\(["']|require\s*\(["'])([^"']+)["']/g;
+    let m;
+    while ((m = importRegex.exec(content)) !== null) {
+      const imp = m[1];
+      if (imp.startsWith('.')) {
+        const resolved = path.normalize(path.relative(ROOT, path.resolve(path.dirname(codeFile), imp)));
+        const candidates = [
+          resolved,
+          `${resolved}.mjs`,
+          `${resolved}.js`,
+          path.join(resolved, 'index.mjs'),
+          path.join(resolved, 'index.js'),
+        ];
+        for (const cand of candidates) {
+          if (fs.existsSync(path.join(ROOT, cand))) {
+            if (!reverseDeps.has(cand)) reverseDeps.set(cand, new Set());
+            reverseDeps.get(cand).add(relPath);
+            break;
+          }
+        }
+      }
+    }
+  } catch {}
+}
+
+// Compute all transitive dependents of a file
+function getTransitiveDependents(file, visited = new Set()) {
+  const norm = path.normalize(file);
+  if (visited.has(norm)) return visited;
+  visited.add(norm);
+  const direct = reverseDeps.get(norm);
+  if (direct) {
+    for (const dep of direct) {
+      getTransitiveDependents(dep, visited);
+    }
+  }
+  return visited;
+}
+
+// 3. Map changed files to test suites and check scripts
+const selectedSuites = new Set();
+const selectedChecks = new Set();
+const unmappedFiles = [];
+
+// Explicit script mapping for check scripts that don't have direct unit tests
+const checkScriptMap = {
+  'scripts/validate-provenance.mjs': 'lint:provenance',
+  'scripts/check-provenance-quotes.mjs': 'check:quotes',
+  'scripts/validate-briefs.mjs': 'check:briefs',
+  'scripts/verify-originals.mjs': 'check:originals',
+  'scripts/check-disjoint.mjs': 'check:disjoint',
+  'scripts/scaffold-eval-projects.mjs': 'check:eval-projects',
+  'scripts/render-targets.mjs': 'check:targets',
+  'scripts/rebuild-from-spec.mjs': 'check:specs',
+  'scripts/check-archetype-assets.mjs': 'check:archetype-assets',
+  'scripts/check-build-key.mjs': 'check:build-key',
+  'scripts/pilot-corpus.mjs': 'check:pilot-corpus',
+  'scripts/check-set-separation.mjs': 'check:set-separation',
+  'scripts/check-train-evidence.mjs': 'check:train-evidence',
+  'scripts/check-train-records.mjs': 'check:train-records',
+  'scripts/scan-owner-auth.mjs': 'scan:owner-auth',
+  'scripts/check-brief-schema.mjs': 'check:brief-schema',
+  'scripts/check-route-conformance.mjs': 'check:route-conformance',
+  'scripts/check-rules-pin.mjs': 'check:rules-pin',
+  'scripts/check-design-schema.mjs': 'check:design-schema',
+  'scripts/check-train-design.mjs': 'check:train-design',
+  'scripts/check-baseline-label.mjs': 'check:baseline-label',
+  'scripts/check-doc-links.mjs': 'check:doc-links',
+  'scripts/check-pilot-served.mjs': 'check:pilot-served',
+  'scripts/check-served-gap.mjs': 'check:served-gap',
+};
+
+// Document & manifest routing: files that are actively checked by the gate
+function routeDocument(file) {
+  if (file === 'docs/train/briefs/manifest.jsonl') {
+    selectedChecks.add('check:brief-schema');
+    selectedChecks.add('check:disjoint');
+    return true;
+  }
+  if (file.startsWith('docs/eval/design/') && file.endsWith('.md')) {
+    selectedChecks.add('check:design-schema');
+    selectedChecks.add('check:doc-links');
+    selectedChecks.add('check:baseline-label');
+    return true;
+  }
+  if (file.startsWith('docs/train/design/') && (file.endsWith('/plan.md') || file.endsWith('/design.md'))) {
+    selectedChecks.add('check:train-design');
+    selectedChecks.add('check:design-schema');
+    selectedChecks.add('check:doc-links');
+    selectedChecks.add('check:baseline-label');
+    return true;
+  }
+  if (file === 'docs/eval/briefs/manifest.jsonl') {
+    selectedChecks.add('check:briefs');
+    selectedChecks.add('check:disjoint');
+    return true;
+  }
+  if (file.startsWith('docs/provenance/manifest')) {
+    selectedChecks.add('lint:provenance');
+    return true;
+  }
+  if (file.endsWith('.md')) {
+    // Any markdown doc change must pass link and baseline label checks
+    selectedChecks.add('check:doc-links');
+    selectedChecks.add('check:baseline-label');
+    return true;
+  }
+  return false;
+}
+
+// Deliberately inert files that need no checks
+function isExempt(file) {
+  return (
+    file.endsWith('.jpg') ||
+    file.endsWith('.png') ||
+    file.endsWith('.svg') ||
+    file.startsWith('.fleet/') ||
+    file.startsWith('.beads/') ||
+    file.startsWith('deploy/') ||
+    file === '.gitignore' ||
+    file === 'package-lock.json' ||
+    file === 'scripts/fast-gate.mjs'
+  );
+}
+
+for (const file of changedFiles) {
+  // If the file itself is a test file
+  if (file.startsWith('test/') && file.endsWith('.test.mjs')) {
+    if (fs.existsSync(path.join(ROOT, file))) {
+      selectedSuites.add(file);
+    }
+    continue;
+  }
+
+  // Route checked documentation or schema files
+  if (routeDocument(file)) {
+    continue;
+  }
+
+  // Package.json changes affect package wiring and checks
+  if (file === 'package.json') {
+    selectedSuites.add('test/checks-wired.test.mjs');
+    continue;
+  }
+
+  // Check script direct match
+  if (checkScriptMap[file]) {
+    selectedChecks.add(checkScriptMap[file]);
+  }
+
+  // Find all transitive dependents and collect any test suites among them
+  const allDeps = getTransitiveDependents(file);
+  let matched = false;
+
+  for (const dep of allDeps) {
+    if (dep.startsWith('test/') && dep.endsWith('.test.mjs')) {
+      selectedSuites.add(dep);
+      matched = true;
+    }
+    if (checkScriptMap[dep]) {
+      selectedChecks.add(checkScriptMap[dep]);
+      matched = true;
+    }
+  }
+
+  // Name stem matching fallback (e.g. src/eval/foo.mjs -> test/foo.test.mjs)
+  const stem = path.basename(file, path.extname(file));
+  const candidateTest = `test/${stem}.test.mjs`;
+  if (fs.existsSync(path.join(ROOT, candidateTest))) {
+    selectedSuites.add(candidateTest);
+    matched = true;
+  }
+
+  if (matched || checkScriptMap[file]) {
+    continue;
+  }
+
+  if (isExempt(file)) {
+    continue;
+  }
+
+  unmappedFiles.push(file);
+}
+
+if (unmappedFiles.length > 0) {
+  console.error('fast-gate: FAIL: unmapped changed files with no test or check coverage:');
+  for (const u of unmappedFiles) {
+    console.error(`  - ${u}`);
+  }
+  process.exit(1);
+}
+
+// If no specific suites or checks were selected, run smoke baseline
+if (selectedSuites.size === 0 && selectedChecks.size === 0) {
+  console.log('fast-gate: no specific test suites or checks selected for changes. Running smoke suite (test/checks-wired.test.mjs).');
+  selectedSuites.add('test/checks-wired.test.mjs');
+}
+
+const suitesToRun = Array.from(selectedSuites).sort();
+const checksToRun = Array.from(selectedChecks).sort();
+
+console.log(`fast-gate: running ${checksToRun.length} check(s) and ${suitesToRun.length} test suite(s)`);
+
+for (const chk of checksToRun) {
+  console.log(`fast-gate: running check npm run ${chk}`);
+  const res = spawnSync('npm', ['run', chk], { cwd: ROOT, stdio: 'inherit' });
+  if (res.status !== 0) {
+    console.error(`fast-gate: check ${chk} failed with exit code ${res.status}`);
+    process.exit(res.status || 1);
+  }
+}
+
+if (suitesToRun.length > 0) {
+  const res = spawnSync('node', ['--test', ...suitesToRun], {
+    cwd: ROOT,
+    stdio: 'inherit',
+  });
+
+  if (res.status !== 0) {
+    console.error(`fast-gate: tests failed with exit code ${res.status}`);
+    process.exit(res.status || 1);
+  }
+}
+
+// Log execution completion markers in formats recognised by fleet-check / check-coverage.py
+console.log(`fast-gate: passed: ${suitesToRun.join(' ')}`);
+process.exit(0);
