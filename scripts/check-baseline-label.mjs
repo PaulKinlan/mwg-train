@@ -193,6 +193,9 @@ export const DOCUMENTS = {
   'docs/train/README.md': 'floor-report',
   'docs/train/READINESS-EPIC.md': 'floor-report',
   'docs/train/briefs/README.md': 'floor-report',
+  // The archetype type axis (bead mwg-train-efg): what a type is, which types exist, and what each build can
+  // currently express. It describes how the corpus and its evaluation are organised, and states no floor result.
+  'docs/train/briefs/TYPE-AXIS.md': 'contract',
   'docs/train/corpus/README.md': 'floor-report',
   'docs/train/corpus/YIELD.md': 'floor-report',
   'docs/train/corpus/records.json': 'floor-report',
@@ -210,6 +213,10 @@ export const DOCUMENTS = {
   'docs/design/archetypes/contact-lead/demo/README.md': 'design',
   'docs/design/archetypes/event-registration/README.md': 'provenance',
   'docs/design/archetypes/event-registration/demo/README.md': 'design',
+  // The first archetype authored outside the five evaluation families (bead mwg-train-efg): a board brief whose
+  // prompts the generator reads. Classified like the other archetype READMEs that record borrowed reference
+  // material and its rights.
+  'docs/design/archetypes/editorial-blog/README.md': 'provenance',
   'docs/eval/ATTRIBUTION.md': 'contract',
   'docs/eval/PREREGISTRATION.md': 'contract',
   'docs/eval/owner-identity.json': 'config',
