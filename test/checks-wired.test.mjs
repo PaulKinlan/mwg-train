@@ -2,7 +2,6 @@ import { test } from 'node:test';
 import assert from 'node:assert';
 import fs from 'node:fs';
 import path from 'node:path';
-import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 import { CHECKS, EXCLUDED } from '../scripts/run-checks.mjs';
@@ -25,24 +24,10 @@ const ROOT = path.resolve(__dirname, '..');
 // spawned server - which is what lets `check:all` run anywhere; any check that cannot meet that belongs here with
 // its reason. It now lives beside the list, in the runner, so the gate and its exclusions are defined together.
 
-export async function executeChecks(checkNames, spawnFn, timeoutMs = 8000) {
-  // NOTE: bead mwg-train-4oi covers the fail-open behaviour on empty input for existing check scripts.
-  // We don't fix it here, but we do catch completely empty stdout/stderr.
-  const errors = [];
-  for (const name of checkNames) {
-    try {
-      const output = await spawnFn(name, timeoutMs);
-      if (typeof output !== 'string' || output.trim() === '') {
-        errors.push(`${name}: produced no output`);
-      }
-    } catch (err) {
-      errors.push(`${name}: ${err.message}`);
-    }
-  }
-  return errors;
-}
+// The execution harness that used to live here is gone with the execution: nothing called it but its own mock test,
+// and the checks it would run are run by `npm run build` (which is `check:all`) on the merger's merged union.
 
-test('derive and validate check set', async () => {
+test('derive and validate check set', () => {
   let pkg;
   try {
     pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
@@ -89,54 +74,16 @@ test('derive and validate check set', async () => {
     assert.ok(reason && reason.trim().length > 0, `EXCLUDED check ${name} states no reason`);
   }
 
-  const actualSpawn = (name, timeoutMs) => {
-    return new Promise((resolve, reject) => {
-      const proc = spawn('npm', ['run', name], { cwd: ROOT, stdio: ['ignore', 'pipe', 'pipe'] });
-      
-      let out = '';
-      proc.stdout.on('data', d => out += d);
-      proc.stderr.on('data', d => out += d);
-
-      const t = setTimeout(() => {
-        proc.kill('SIGKILL');
-        reject(new Error('timed out'));
-      }, timeoutMs);
-
-      proc.on('close', code => {
-        clearTimeout(t);
-        if (code !== 0) {
-          reject(new Error(`exited non-zero (${code}):\n${out}`));
-        } else {
-          resolve(out);
-        }
-      });
-      
-      proc.on('error', err => {
-        clearTimeout(t);
-        reject(err);
-      });
-    });
-  };
-
-  const errors = await executeChecks(Array.from(wired), actualSpawn, 8000);
-  if (errors.length > 0) {
-    assert.fail(`Execution failed:\n${errors.join('\n')}`);
-  }
-});
-
-test('executeChecks harness can fail', async () => {
-  const fakeSpawn = async (name, timeoutMs) => {
-    if (name === 'pass') return 'some output';
-    if (name === 'fail') throw new Error('exited non-zero');
-    if (name === 'timeout') throw new Error('timed out');
-    if (name === 'empty') return '   \n ';
-    return 'out';
-  };
-
-  const errors = await executeChecks(['pass', 'fail', 'timeout', 'empty'], fakeSpawn, 1000);
-  
-  assert.strictEqual(errors.length, 3, 'Should report exactly 3 failures');
-  assert.ok(errors.find(e => e.includes('fail: exited non-zero')), 'Must report non-zero exit');
-  assert.ok(errors.find(e => e.includes('timeout: timed out')), 'Must report timeout');
-  assert.ok(errors.find(e => e.includes('empty: produced no output')), 'Must report empty output');
+  // The checks themselves are NOT run here. They are run by `check:all`, which is the gate, and by the merger's
+  // full gate on the merged union - running all 24 a second time inside `npm test` bought no coverage while making
+  // the suite pay the gate's cost twice. It also failed for a reason that was not a defect: each check was given
+  // 8 seconds, and under load (the merger's gate preempting an implementer's) a merely slow check reddened the
+  // suite. That is the mwg-train-bx2 family of false alarms, caused by the test rather than by anything it tests.
+  //
+  // What this file is FOR is the structural guard above - every script is either wired into the gate or excluded
+  // with a reason, and `check:all` still points at the runner - which is cheap, runs on every `npm test`, and is the
+  // thing that actually broke once (mwg-train-9by: check:all green while npm test was red). The harness that would
+  // execute checks is not part of this file any more: they run on the merged union, through `npm run build`
+  // (which is `check:all`), because the merger's fleet-check runs `npm run build && npm test` when a project
+  // defines a build script. That is what makes it safe to keep this test fast (mwg-train-2q9).
 });
