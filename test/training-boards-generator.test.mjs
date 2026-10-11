@@ -11,7 +11,7 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { test } from 'node:test';
 
 import {
@@ -201,14 +201,20 @@ test('the committed boards and the register, when the register exists, agree wit
     return;
   }
   const register = readFileSync(registerPath, 'utf8');
-  const rows = [...register.matchAll(/^\| `(tr-\d{2})` \| \[`reference\.jpg`\]\(\.\.\/\.\.\/([^)]+)\) \| `([0-9a-f]{64})` \| (\d+) \| (\d+) × (\d+) \| \[`prompt\.txt`\]\(\.\.\/\.\.\/([^)]+)\) \| `([0-9a-f]{64})` \|/gm)];
+  // Resolve each link against the register's own directory instead of hard-coding how far up the tree it sits. This
+  // test used to match the literal `../../` prefix and join the remainder to ROOT, which baked the register's depth
+  // into the test: when the register's links were corrected to `../../design/training/...`, the remainder became
+  // `design/training/...` and the test looked for it at the repository root. A test for links whose correctness
+  // depends on depth must not depend on depth itself.
+  const registerDir = dirname(registerPath);
+  const rows = [...register.matchAll(/^\| `(tr-\d{2})` \| \[`reference\.jpg`\]\(([^)]+)\) \| `([0-9a-f]{64})` \| (\d+) \| (\d+) × (\d+) \| \[`prompt\.txt`\]\(([^)]+)\) \| `([0-9a-f]{64})` \|/gm)];
   assert.ok(rows.length > 0, 'a register with no rows is not a register');
   for (const [, family, board, boardDigest, bytes, width, height, promptFile, promptDigest] of rows) {
-    const boardBytes = readFileSync(join(ROOT, board));
+    const boardBytes = readFileSync(resolve(registerDir, board));
     assert.equal(sha256(boardBytes), boardDigest, `${family}: committed board digest must match the register`);
     assert.equal(boardBytes.length, Number(bytes), `${family}: committed board byte count must match the register`);
     assert.equal(boardIsWidescreen({ width: Number(width), height: Number(height) }), true, `${family}: register must only pin 16:9 boards`);
-    assert.equal(sha256(readFileSync(join(ROOT, promptFile))), promptDigest, `${family}: committed prompt digest must match the register`);
+    assert.equal(sha256(readFileSync(resolve(registerDir, promptFile))), promptDigest, `${family}: committed prompt digest must match the register`);
   }
   assert.doesNotMatch(register, /UNATTESTED ROWS/, 'a committed register may not carry an unattested row');
 });

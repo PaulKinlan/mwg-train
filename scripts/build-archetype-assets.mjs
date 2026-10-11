@@ -460,7 +460,7 @@ node scripts/build-archetype-assets.mjs --write --only ${document.archetype}
 | Brand, palette, typography, copy | \`set.json\` | \`${document.extracted_from.readme.path}\` and the \`demo/\` documents |
 | State imagery | \`images/\` | the target's own step boards |
 
-**Rights are inherited, not asserted here.** ${document.rights ? `\`excluded_from_training: ${document.rights.excluded_from_training}\`, \`approved_for_training: ${document.rights.approved_for_training}\`, from [\`${document.rights.source}\`](../../../${document.rights.source}).` : 'The target states no rights boundary, which is itself a finding.'} These are design-planning references: they are not corpus, not teacher output, and not evidence that any depicted flow works.
+**Rights are inherited, not asserted here.** ${document.rights ? `\`excluded_from_training: ${document.rights.excluded_from_training}\`, \`approved_for_training: ${document.rights.approved_for_training}\`, from [\`${document.rights.source}\`](../../../${document.rights.source.replace(/:\d+$/, '')}).` : 'The target states no rights boundary, which is itself a finding.'} These are design-planning references: they are not corpus, not teacher output, and not evidence that any depicted flow works.
 
 ## Brand
 

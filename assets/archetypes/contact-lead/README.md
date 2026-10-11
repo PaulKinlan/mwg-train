@@ -18,7 +18,7 @@ node scripts/build-archetype-assets.mjs --write --only contact-lead
 | Brand, palette, typography, copy | `set.json` | `docs/design/archetypes/contact-lead/README.md` and the `demo/` documents |
 | State imagery | `images/` | the target's own step boards |
 
-**Rights are inherited, not asserted here.** `excluded_from_training: true`, `approved_for_training: false`, from [`docs/design/archetypes/contact-lead/README.md:5`](../../../docs/design/archetypes/contact-lead/README.md:5). These are design-planning references: they are not corpus, not teacher output, and not evidence that any depicted flow works.
+**Rights are inherited, not asserted here.** `excluded_from_training: true`, `approved_for_training: false`, from [`docs/design/archetypes/contact-lead/README.md:5`](../../../docs/design/archetypes/contact-lead/README.md). These are design-planning references: they are not corpus, not teacher output, and not evidence that any depicted flow works.
 
 ## Brand
 
