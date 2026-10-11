@@ -806,7 +806,7 @@ function searchPageDocument(search) {
  * like sessionTables, so the generated code needs no escaping of its own.
  */
 
-const capabilitiesOf = (archetype) => ({ list_pages: false, detail_page: false, auth: false, cart: false, pricing_tiers: false, checkout: false, ...(archetype.capabilities ?? {}) });
+const capabilitiesOf = (archetype) => ({ list_pages: false, detail_page: false, auth: false, cart: false, pricing_tiers: false, checkout: false, survey: false, ...(archetype.capabilities ?? {}) });
 
 /*
  * The pricing-tiers capability (mwg-train-4lk): three tiers across a monthly/annual toggle, whose
@@ -921,6 +921,8 @@ const cartVariantField = (archetype) => archetype.fields.find((field) => field.t
 const cartQuantityField = (archetype) => archetype.fields.find((field) => field.type === 'number');
 /** The checkout policy block, or null when the capability is off - the flag and the data travel together. */
 const checkoutOf = (archetype) => (archetype.capabilities?.checkout === true ? archetype.checkout : null);
+/** The survey policy block, or null when the capability is off - the flag and the data travel together. */
+const surveyOf = (archetype) => (archetype.capabilities?.survey === true ? archetype.survey : null);
 const CART_SID_RAW =
   "(request.headers.cookie ?? '').split(';').map((part) => part.trim()).find((part) => part.startsWith('sid='))?.slice('sid='.length)";
 const CART_SID_HONO =
@@ -1034,6 +1036,195 @@ const honoCartRoutes = (archetype, cookieFlags, checkout = null) => {
     '});',
   ].join('\n');
 };
+/** The survey capability's statements: the answers one visitor has given so far, and nothing else. */
+const surveyTables = () =>
+  [
+    "db.exec('CREATE TABLE IF NOT EXISTS survey_answers (sid TEXT NOT NULL, name TEXT NOT NULL, value TEXT NOT NULL, PRIMARY KEY (sid, name))');",
+    "const insertSurveyAnswer = db.prepare('INSERT OR REPLACE INTO survey_answers (sid, name, value) VALUES (?, ?, ?)');",
+    "const selectSurveyAnswers = db.prepare('SELECT name, value FROM survey_answers WHERE sid = ? ORDER BY rowid');",
+    "const deleteSurveyAnswers = db.prepare('DELETE FROM survey_answers WHERE sid = ?');",
+  ].join('\n');
+
+/**
+ * The survey pages and the branching rule: a question is asked only when its own condition is met by the
+ * answers already given, a hidden question's stored answer is ignored everywhere (so changing an earlier
+ * answer changes what the result is derived from), the visitor reviews the answers and can go back to
+ * change any one of them, and the outcome is derived from the VISIBLE answers and recorded, so it can be
+ * read back later (mwg-train-s0q).
+ */
+const surveyPages = (archetype) => {
+  const survey = surveyOf(archetype);
+  return [
+    `const SURVEY = ${JSON.stringify(survey)};`,
+    // The questions carry the FLOW (a field name and the condition it waits for); the control the visitor
+    // actually sees is the declared field, so its label, type and options are emitted alongside.
+    `const SURVEY_FIELDS = ${JSON.stringify(Object.fromEntries(survey.questions.map((question) => [question.field, (archetype.fields ?? []).find((field) => field.name === question.field) ?? {}])))};`,
+    "const surveyQuestion = (name) => SURVEY.questions.find((question) => question.field === name) ?? null;",
+    "const surveyAnswer = (answers, name) => answers.find((answer) => answer.name === name)?.value;",
+    "const surveySatisfied = (when, answers) => {",
+    "  const value = surveyAnswer(answers, when.field);",
+    // An unanswered question cannot satisfy a condition: the question that depends on it is not asked.
+    "  if (value === undefined) return false;",
+    "  if (when.equals !== undefined) return value === String(when.equals);",
+    "  if (Array.isArray(when.in)) return when.in.map(String).includes(value);",
+    "  const numeric = Number(value);",
+    "  if (!Number.isFinite(numeric)) return false;",
+    "  if (when.at_most !== undefined) return numeric <= when.at_most;",
+    "  if (when.at_least !== undefined) return numeric >= when.at_least;",
+    "  return false;",
+    "};",
+    "const surveyVisible = (question, answers) => question.when === undefined || surveySatisfied(question.when, answers);",
+    "const surveyAsked = (answers) => SURVEY.questions.filter((question) => surveyVisible(question, answers));",
+    "const surveyNext = (answers) => surveyAsked(answers).find((question) => surveyAnswer(answers, question.field) === undefined) ?? null;",
+    "const surveyOutcome = (answers) => {",
+    "  const asked = surveyAsked(answers);",
+    "  const band = SURVEY.bands.find((entry) => entry.when === undefined || surveySatisfied(entry.when, answers)) ?? null;",
+    "  return { outcome: band ? band.name : null, answers: asked.map((question) => ({ field: question.field, value: surveyAnswer(answers, question.field) })) };",
+    "};",
+    "const surveyControl = (field, current) => {",
+    "  const label = '<label for=\"answer\">' + esc(field.label ?? field.name) + '</label>';",
+    "  if (field.type === 'select') return label + '<select id=\"answer\" name=\"answer\" required>' + (field.options ?? []).map((option) => '<option value=\"' + esc(option) + '\"' + (option === current ? ' selected' : '') + '>' + esc(option) + '</option>').join('') + '</select>';",
+    "  if (field.type === 'textarea') return label + '<textarea id=\"answer\" name=\"answer\" required>' + esc(current ?? '') + '</textarea>';",
+    "  const type = field.type === 'number' ? 'number' : field.type === 'email' ? 'email' : 'text';",
+    "  return label + '<input id=\"answer\" name=\"answer\" type=\"' + type + '\" value=\"' + esc(current ?? '') + '\" required>';",
+    "};",
+    "const surveyQuestionPage = (question, current, fromReview) => {",
+    "  const definition = SURVEY_FIELDS[question.field] ?? { name: question.field };",
+    "  return capabilityPage('Survey', '<h1>' + esc(SURVEY.title) + '</h1><p id=\"survey-progress\">Question ' + (surveyFlowIndex(question) + 1) + ' of ' + SURVEY.questions.length + '</p><form method=\"post\" action=\"/survey/answer\"><input type=\"hidden\" name=\"field\" value=\"' + esc(question.field) + '\"><input type=\"hidden\" name=\"from\" value=\"' + (fromReview ? 'review' : 'flow') + '\">' + surveyControl(definition, current) + '<button type=\"submit\">' + (fromReview ? 'Save and return to the review' : 'Next') + '</button></form>');",
+    "};",
+    "const surveyFlowIndex = (question) => SURVEY.questions.indexOf(question);",
+    "const surveyReviewPage = (answers) => {",
+    "  const asked = surveyAsked(answers);",
+    "  const skipped = SURVEY.questions.filter((question) => !asked.includes(question));",
+    "  const rows = asked.map((question) => '<li data-field=\"' + esc(question.field) + '\"><span class=\"answer\">' + esc(surveyAnswer(answers, question.field) ?? '') + '</span> <a href=\"/survey?question=' + encodeURIComponent(question.field) + '\">Change ' + esc(question.field) + '</a></li>').join('');",
+    "  const notAsked = skipped.length === 0 ? '' : '<p id=\"survey-skipped\">Not asked, because of your earlier answers: ' + skipped.map((question) => esc(question.field)).join(', ') + '</p>';",
+    "  return capabilityPage('Review your answers', '<h1>Review your answers</h1><ul id=\"survey-answers\">' + rows + '</ul>' + notAsked + '<form method=\"post\" action=\"/survey/submit\"><button type=\"submit\">Submit</button></form>');",
+    "};",
+    "const surveyResultPage = (row) => {",
+    "  const stored = JSON.parse(row.payload);",
+    "  return capabilityPage('Your result', '<h1>Your result</h1><p id=\"survey-outcome\">' + esc(stored.outcome ?? '') + '</p><p id=\"survey-reference\">' + esc(row.ref) + '</p><dl id=\"survey-recap\">' + stored.answers.map((entry) => '<dt>' + esc(entry.field) + '</dt><dd>' + esc(entry.value) + '</dd>').join('') + '</dl>');",
+    "};",
+  ].join('\n');
+};
+
+/** The survey routes, raw arm: one question at a time, a review, and the derived result. */
+const rawSurveyRoutes = () =>
+  [
+    "  if (path === '/survey' && request.method === 'GET') {",
+    `    const surveySid = ${CART_SID_RAW};`,
+    '    const surveyAnswers = surveySid ? selectSurveyAnswers.all(surveySid) : [];',
+    "    const surveyWanted = url.searchParams.get('question');",
+    "    const surveyCurrent = surveyWanted ? surveyQuestion(surveyWanted) : surveyNext(surveyAnswers);",
+    "    if (!surveyCurrent) {",
+    "      response.writeHead(303, { location: '/survey/review' });",
+    "      return response.end();",
+    "    }",
+    "    const surveyFrom = url.searchParams.get('from') === 'review';",
+    "    return html(response, surveyQuestionPage(surveyCurrent, surveyAnswer(surveyAnswers, surveyCurrent.field), surveyFrom));",
+    '  }',
+    "  if (path === '/survey/answer' && request.method === 'POST') {",
+    '    const surveyBody = await parseBody(request);',
+    `    const surveySid = ${CART_SID_RAW} || randomUUID();`,
+    "    const answeredQuestion = surveyQuestion(String(surveyBody.field ?? ''));",
+    // A POST is not the form: an answer for a question this survey does not ask is refused rather than
+    // stored, and a blank answer is refused rather than recorded as an empty outcome.
+    "    if (!answeredQuestion) {",
+    "      response.writeHead(422, { 'content-type': 'text/plain; charset=utf-8' });",
+    "      return response.end('That is not a question this survey asks.');",
+    "    }",
+    "    const surveyValue = String(surveyBody.answer ?? '').trim();",
+    "    if (surveyValue === '') {",
+    "      response.writeHead(422, { 'content-type': 'text/plain; charset=utf-8' });",
+    "      return response.end('Answer the question before moving on.');",
+    "    }",
+    "    insertSurveyAnswer.run(surveySid, answeredQuestion.field, surveyValue);",
+    "    const surveyNextUrl = String(surveyBody.from ?? '') === 'review' ? '/survey/review' : '/survey';",
+    "    response.writeHead(303, { location: surveyNextUrl, 'set-cookie': 'sid=' + surveySid + '; Path=/; HttpOnly; SameSite=Lax; Max-Age=3600' });",
+    "    return response.end();",
+    '  }',
+    "  if (path === '/survey/review' && request.method === 'GET') {",
+    `    const surveySid = ${CART_SID_RAW};`,
+    '    const surveyAnswers = surveySid ? selectSurveyAnswers.all(surveySid) : [];',
+    // The review is only reachable with every ASKED question answered; a hidden question is not asked,
+    // so its stale answer cannot block the visitor here or reach the result.
+    '    if (surveyNext(surveyAnswers)) {',
+    "      response.writeHead(303, { location: '/survey' });",
+    "      return response.end();",
+    '    }',
+    '    return html(response, surveyReviewPage(surveyAnswers));',
+    '  }',
+    "  if (path === '/survey/submit' && request.method === 'POST') {",
+    '    const surveyBody = await parseBody(request);',
+    `    const surveySid = ${CART_SID_RAW};`,
+    '    const surveyAnswers = surveySid ? selectSurveyAnswers.all(surveySid) : [];',
+    "    if (!surveySid || surveyNext(surveyAnswers)) {",
+    "      response.writeHead(422, { 'content-type': 'text/plain; charset=utf-8' });",
+    "      return response.end('Answer every question this survey asks before submitting.');",
+    '    }',
+    '    const surveyOutcomeValue = surveyOutcome(surveyAnswers);',
+    '    const surveyRef = randomUUID().slice(0, 8);',
+    '    insert.run(surveyRef, new Date().toISOString(), JSON.stringify(surveyOutcomeValue));',
+    '    deleteSurveyAnswers.run(surveySid);',
+    "    response.writeHead(303, { location: '/survey/result/' + surveyRef });",
+    '    return response.end();',
+    '  }',
+    "  const surveyResultMatch = path.match(/^\\/survey\\/result\\/([^/]+)$/);",
+    "  if (surveyResultMatch && request.method === 'GET') {",
+    '    const surveyRow = select.get(surveyResultMatch[1]);',
+    '    if (!surveyRow) {',
+    "      response.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });",
+    "      return response.end('We could not find that result.');",
+    '    }',
+    '    return html(response, surveyResultPage(surveyRow));',
+    '  }',
+  ].join('\n');
+
+/** The survey routes, hono arm: the same five, in Hono's routing. */
+const honoSurveyRoutes = () =>
+  [
+    "app.get('/survey', (c) => {",
+    `  const surveySid = ${CART_SID_HONO};`,
+    '  const surveyAnswers = surveySid ? selectSurveyAnswers.all(surveySid) : [];',
+    "  const surveyWanted = c.req.query('question');",
+    '  const surveyCurrent = surveyWanted ? surveyQuestion(surveyWanted) : surveyNext(surveyAnswers);',
+    "  if (!surveyCurrent) return c.redirect('/survey/review', 303);",
+    "  return c.html(surveyQuestionPage(surveyCurrent, surveyAnswer(surveyAnswers, surveyCurrent.field), c.req.query('from') === 'review'));",
+    '});',
+    "app.post('/survey/answer', async (c) => {",
+    '  const surveyBody = await c.req.parseBody();',
+    `  const surveySid = ${CART_SID_HONO} || randomUUID();`,
+    "  const answeredQuestion = surveyQuestion(String(surveyBody.field ?? ''));",
+    "  if (!answeredQuestion) return c.text('That is not a question this survey asks.', 422);",
+    "  const surveyValue = String(surveyBody.answer ?? '').trim();",
+    "  if (surveyValue === '') return c.text('Answer the question before moving on.', 422);",
+    '  insertSurveyAnswer.run(surveySid, answeredQuestion.field, surveyValue);',
+    "  const surveyNextUrl = String(surveyBody.from ?? '') === 'review' ? '/survey/review' : '/survey';",
+    "  c.header('set-cookie', 'sid=' + surveySid + '; Path=/; HttpOnly; SameSite=Lax; Max-Age=3600');",
+    '  return c.redirect(surveyNextUrl, 303);',
+    '});',
+    "app.get('/survey/review', (c) => {",
+    `  const surveySid = ${CART_SID_HONO};`,
+    '  const surveyAnswers = surveySid ? selectSurveyAnswers.all(surveySid) : [];',
+    "  if (surveyNext(surveyAnswers)) return c.redirect('/survey', 303);",
+    '  return c.html(surveyReviewPage(surveyAnswers));',
+    '});',
+    "app.post('/survey/submit', async (c) => {",
+    `  const surveySid = ${CART_SID_HONO};`,
+    '  const surveyAnswers = surveySid ? selectSurveyAnswers.all(surveySid) : [];',
+    "  if (!surveySid || surveyNext(surveyAnswers)) return c.text('Answer every question this survey asks before submitting.', 422);",
+    '  const surveyOutcomeValue = surveyOutcome(surveyAnswers);',
+    '  const surveyRef = randomUUID().slice(0, 8);',
+    '  insert.run(surveyRef, new Date().toISOString(), JSON.stringify(surveyOutcomeValue));',
+    '  deleteSurveyAnswers.run(surveySid);',
+    "  return c.redirect('/survey/result/' + surveyRef, 303);",
+    '});',
+    "app.get('/survey/result/:ref', (c) => {",
+    "  const surveyRow = select.get(c.req.param('ref'));",
+    "  if (!surveyRow) return c.text('We could not find that result.', 404);",
+    '  return c.html(surveyResultPage(surveyRow));',
+    '});',
+  ].join('\n');
+
 /** The checkout capability's statements: a paid checkout consumes the cart; a declined one must not. */
 const checkoutTables = () =>
   ["const deleteCartItems = db.prepare('DELETE FROM cart_items WHERE sid = ?');"].join('\n');
@@ -1351,7 +1542,7 @@ db.exec(\`CREATE TABLE IF NOT EXISTS accounts (email TEXT PRIMARY KEY, password 
 const insert = db.prepare('INSERT INTO records (ref, created_at, payload) VALUES (?, ?, ?)');
 const select = db.prepare('SELECT ref, created_at, payload FROM records WHERE ref = ?');
 ${sessionTables(archetype)}${archetype.journey?.update ? `\nconst updateRecord = db.prepare('UPDATE records SET payload = ? WHERE ref = ?');` : ''}${draftTables(archetype) ? `\n${draftTables(archetype)}` : ''}
-${caps.auth ? `${authTables(archetype)}\n` : ''}${caps.cart ? `${cartTables(caps.checkout)}\n` : ''}${caps.checkout ? `${checkoutTables()}\n` : ''}const count = db.prepare('SELECT COUNT(*) AS n FROM records');
+${caps.auth ? `${authTables(archetype)}\n` : ''}${caps.cart ? `${cartTables(caps.checkout)}\n` : ''}${caps.checkout ? `${checkoutTables()}\n` : ''}${caps.survey ? `${surveyTables()}\n` : ''}const count = db.prepare('SELECT COUNT(*) AS n FROM records');
 const list = db.prepare('SELECT ref, payload FROM records ORDER BY created_at DESC LIMIT 50');
 
 ${parameterisedWrite ? `// An edit flow edits something: the seeded record is what the form's action points at.
@@ -1377,7 +1568,7 @@ const json = (response, value, status = 200, headers = {}) => {
   response.end(JSON.stringify(value));
 };
 
-${caps.list_pages || caps.detail_page || caps.auth || caps.cart || caps.pricing_tiers || caps.checkout ? `${capabilityPages()}${caps.cart ? `\n${cartPages(archetype)}` : ''}${caps.pricing_tiers ? `\n${pricingPages(archetype)}` : ''}${caps.checkout ? `\n${checkoutPages(archetype)}` : ''}\n` : ''}const REQUIRED = ${JSON.stringify(archetype.fields.filter((field) => field.type !== 'select' && !field.optional).map((field) => field.name))};
+${caps.list_pages || caps.detail_page || caps.auth || caps.cart || caps.pricing_tiers || caps.checkout || caps.survey ? `${capabilityPages()}${caps.cart ? `\n${cartPages(archetype)}` : ''}${caps.pricing_tiers ? `\n${pricingPages(archetype)}` : ''}${caps.checkout ? `\n${checkoutPages(archetype)}` : ''}${caps.survey ? `\n${surveyPages(archetype)}` : ''}\n` : ''}const REQUIRED = ${JSON.stringify(archetype.fields.filter((field) => field.type !== 'select' && !field.optional).map((field) => field.name))};
 
 ${enforceMin ? `const MIN_BOUNDS = ${JSON.stringify(minBounds)};\n` : ''}// The cart form has its own fields. Validating it against the search form's required list refused every
 // cart POST with 422, which the write journey caught: a second form on one page needs a second rule.
@@ -1565,7 +1756,7 @@ ${caps.auth ? `    if (!authSessionEmail(request.headers.cookie)) return json(re
     return json(response, { ref: row.ref, ...JSON.parse(row.payload) });
   }
 
-${caps.cart ? `${rawCartRoutes(archetype, cartCookieFlags, checkoutOf(archetype))}\n\n` : ''}${caps.checkout ? `${rawCheckoutRoutes()}\n\n` : ''}${caps.pricing_tiers ? `${rawPricingRoutes()}\n\n` : ''}  // A route the archetype declares is a route the server must serve: /account was declared as the
+${caps.cart ? `${rawCartRoutes(archetype, cartCookieFlags, checkoutOf(archetype))}\n\n` : ''}${caps.checkout ? `${rawCheckoutRoutes()}\n\n` : ''}${caps.survey ? `${rawSurveyRoutes()}\n\n` : ''}${caps.pricing_tiers ? `${rawPricingRoutes()}\n\n` : ''}  // A route the archetype declares is a route the server must serve: /account was declared as the
   // account flow's page and never implemented, so the journey landed on a 404.
   if (${JSON.stringify(archetype.routes.filter((route) => route.kind === 'read-session').map((route) => route.path))}.includes(path) && request.method === 'GET') {
 ${caps.auth ? `${RAW_AUTH_GUARD}\n` : ''}    return html(response, await renderDocument({ title: 'Your account' }));
@@ -1704,7 +1895,7 @@ const requiredFor = (path) => (EXTRA_ACTION !== '' && path === EXTRA_ACTION ? EX
 ${sessionTables(archetype)}
 ${caps.auth ? `db.exec('CREATE TABLE IF NOT EXISTS accounts (email TEXT PRIMARY KEY, password TEXT NOT NULL, display_name TEXT)');
 ${authTables(archetype)}
-` : ''}${caps.cart ? `${cartTables(caps.checkout)}\n` : ''}${caps.checkout ? `${checkoutTables()}\n` : ''}${caps.list_pages || caps.detail_page || caps.auth || caps.cart || caps.pricing_tiers || caps.checkout ? `${capabilityPages()}${caps.cart ? `\n${cartPages(archetype)}` : ''}${caps.pricing_tiers ? `\n${pricingPages(archetype)}` : ''}${caps.checkout ? `\n${checkoutPages(archetype)}` : ''}
+` : ''}${caps.cart ? `${cartTables(caps.checkout)}\n` : ''}${caps.checkout ? `${checkoutTables()}\n` : ''}${caps.survey ? `${surveyTables()}\n` : ''}${caps.list_pages || caps.detail_page || caps.auth || caps.cart || caps.pricing_tiers || caps.checkout || caps.survey ? `${capabilityPages()}${caps.cart ? `\n${cartPages(archetype)}` : ''}${caps.pricing_tiers ? `\n${pricingPages(archetype)}` : ''}${caps.checkout ? `\n${checkoutPages(archetype)}` : ''}${caps.survey ? `\n${surveyPages(archetype)}` : ''}
 ` : ''}const requestLog = [];
 const app = new Hono();
 app.use('*', async (c, next) => {
@@ -1856,7 +2047,7 @@ ${caps.auth ? "  if (!authSessionEmail(c.req.header('cookie'))) return c.json({ 
   return c.json({ ref: row.ref, ...JSON.parse(row.payload) });
 });
 
-${caps.cart ? `${honoCartRoutes(archetype, cartCookieFlags, checkoutOf(archetype))}\n\n` : ''}${caps.checkout ? `${honoCheckoutRoutes()}\n\n` : ''}${caps.pricing_tiers ? `${honoPricingRoutes()}\n\n` : ''}for (const sessionPage of ${JSON.stringify(archetype.routes.filter((route) => route.kind === 'read-session').map((route) => route.path))}) {
+${caps.cart ? `${honoCartRoutes(archetype, cartCookieFlags, checkoutOf(archetype))}\n\n` : ''}${caps.checkout ? `${honoCheckoutRoutes()}\n\n` : ''}${caps.survey ? `${honoSurveyRoutes()}\n\n` : ''}${caps.pricing_tiers ? `${honoPricingRoutes()}\n\n` : ''}for (const sessionPage of ${JSON.stringify(archetype.routes.filter((route) => route.kind === 'read-session').map((route) => route.path))}) {
 ${caps.auth ? `  app.get(sessionPage, (c) => {
     if (!authSessionEmail(c.req.header('cookie'))) return c.redirect('/login', 303);
     return c.html(renderDocument({ title: 'Your account' }));
