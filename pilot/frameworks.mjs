@@ -806,7 +806,7 @@ function searchPageDocument(search) {
  * like sessionTables, so the generated code needs no escaping of its own.
  */
 
-const capabilitiesOf = (archetype) => ({ list_pages: false, detail_page: false, auth: false, cart: false, pricing_tiers: false, checkout: false, survey: false, game: false, workspace: false, wiki: false, explainer: false, ...(archetype.capabilities ?? {}) });
+const capabilitiesOf = (archetype) => ({ list_pages: false, detail_page: false, auth: false, cart: false, pricing_tiers: false, checkout: false, survey: false, game: false, workspace: false, wiki: false, explainer: false, demo: false, ...(archetype.capabilities ?? {}) });
 
 /*
  * The pricing-tiers capability (mwg-train-4lk): three tiers across a monthly/annual toggle, whose
@@ -927,6 +927,7 @@ const surveyOf = (archetype) => (archetype.capabilities?.survey === true ? arche
 const workspaceOf = (archetype) => (archetype.capabilities?.workspace === true ? archetype.workspace : null);
 const wikiOf = (archetype) => (archetype.capabilities?.wiki === true ? archetype.wiki : null);
 const explainerOf = (archetype) => (archetype.capabilities?.explainer === true ? archetype.explainer : null);
+const demoOf = (archetype) => (archetype.capabilities?.demo === true ? archetype.demo : null);
 const CART_SID_RAW =
   "(request.headers.cookie ?? '').split(';').map((part) => part.trim()).find((part) => part.startsWith('sid='))?.slice('sid='.length)";
 const CART_SID_HONO =
@@ -2164,6 +2165,300 @@ const honoExplainerRoutes = () =>
     "});",
   ].join('\n');
 
+/** The demo capability: interactive bounded expression runner. */
+const demoPages = (archetype) => {
+  const demo = demoOf(archetype);
+  return [
+    `const DEMO = ${JSON.stringify(demo)};`,
+    "const tokenize = (input, maxTokens) => {",
+    "  const tokens = [];",
+    "  let i = 0;",
+    "  const len = input.length;",
+    "  while (i < len) {",
+    "    const ch = input[i];",
+    "    if (/\\s/.test(ch)) {",
+    "      i++;",
+    "      continue;",
+    "    }",
+    "    const pos = i;",
+    "    let token = null;",
+    "    if ((ch >= '0' && ch <= '9') || (ch === '.' && i + 1 < len && input[i + 1] >= '0' && input[i + 1] <= '9')) {",
+    "      let numStr = '';",
+    "      let hasDot = false;",
+    "      while (i < len) {",
+    "        const c = input[i];",
+    "        if (c >= '0' && c <= '9') {",
+    "          numStr += c;",
+    "          i++;",
+    "        } else if (c === '.' && !hasDot) {",
+    "          hasDot = true;",
+    "          numStr += c;",
+    "          i++;",
+    "        } else {",
+    "          break;",
+    "        }",
+    "      }",
+    "      token = { type: 'number', raw: numStr, value: Number(numStr), pos };",
+    "    } else if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || ch === '_') {",
+    "      let ident = '';",
+    "      while (i < len) {",
+    "        const c = input[i];",
+    "        if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c === '_') {",
+    "          ident += c;",
+    "          i++;",
+    "        } else {",
+    "          break;",
+    "        }",
+    "      }",
+    "      token = { type: 'ident', raw: ident, name: ident, pos };",
+    "    } else if (ch === '+') {",
+    "      token = { type: '+', raw: '+', pos };",
+    "      i++;",
+    "    } else if (ch === '-') {",
+    "      token = { type: '-', raw: '-', pos };",
+    "      i++;",
+    "    } else if (ch === '*') {",
+    "      token = { type: '*', raw: '*', pos };",
+    "      i++;",
+    "    } else if (ch === '/') {",
+    "      token = { type: '/', raw: '/', pos };",
+    "      i++;",
+    "    } else if (ch === '(') {",
+    "      token = { type: '(', raw: '(', pos };",
+    "      i++;",
+    "    } else if (ch === ')') {",
+    "      token = { type: ')', raw: ')', pos };",
+    "      i++;",
+    "    } else if (ch === ',') {",
+    "      token = { type: ',', raw: ',', pos };",
+    "      i++;",
+    "    } else {",
+    "      throw new Error('Unexpected character \"' + ch + '\" at position ' + pos);",
+    "    }",
+    "    if (tokens.length >= maxTokens) {",
+    "      throw new Error('Token count exceeds limit of ' + maxTokens + ' tokens at position ' + pos);",
+    "    }",
+    "    tokens.push(token);",
+    "  }",
+    "  return tokens;",
+    "};",
+    "const evaluate = (expr, mode, limits) => {",
+    "  const text = typeof expr === 'string' ? expr : String(expr ?? '');",
+    "  if (text.length > limits.characters) {",
+    "    throw new Error('Expression exceeds limit of ' + limits.characters + ' characters (length: ' + text.length + ') at position ' + limits.characters);",
+    "  }",
+    "  const tokens = tokenize(text, limits.tokens);",
+    "  if (tokens.length === 0) {",
+    "    throw new Error('Unexpected end of expression at position 0');",
+    "  }",
+    "  let cursor = 0;",
+    "  const parseFactor = (depth) => {",
+    "    if (cursor < tokens.length && tokens[cursor].type === '-') {",
+    "      const op = tokens[cursor];",
+    "      cursor++;",
+    "      if (depth + 1 > limits.depth) {",
+    "        throw new Error('Nesting depth exceeds limit of ' + limits.depth + ' at position ' + op.pos);",
+    "      }",
+    "      return -parseFactor(depth + 1);",
+    "    }",
+    "    if (cursor < tokens.length && tokens[cursor].type === '+') {",
+    "      const op = tokens[cursor];",
+    "      cursor++;",
+    "      if (depth + 1 > limits.depth) {",
+    "        throw new Error('Nesting depth exceeds limit of ' + limits.depth + ' at position ' + op.pos);",
+    "      }",
+    "      return parseFactor(depth + 1);",
+    "    }",
+    "    if (cursor >= tokens.length) {",
+    "      const endPos = tokens.length > 0 ? tokens[tokens.length - 1].pos + tokens[tokens.length - 1].raw.length : 0;",
+    "      throw new Error('Unexpected end of expression at position ' + endPos);",
+    "    }",
+    "    const tok = tokens[cursor];",
+    "    if (tok.type === 'number') {",
+    "      cursor++;",
+    "      return tok.value;",
+    "    }",
+    "    if (tok.type === '(') {",
+    "      const lparen = tok;",
+    "      cursor++;",
+    "      if (depth + 1 > limits.depth) {",
+    "        throw new Error('Nesting depth exceeds limit of ' + limits.depth + ' at position ' + lparen.pos);",
+    "      }",
+    "      const val = parseExpression(depth + 1);",
+    "      if (cursor >= tokens.length || tokens[cursor].type !== ')') {",
+    "        throw new Error('Unbalanced parenthesis at position ' + lparen.pos);",
+    "      }",
+    "      cursor++;",
+    "      return val;",
+    "    }",
+    "    if (tok.type === 'ident') {",
+    "      const fnTok = tok;",
+    "      cursor++;",
+    "      if (cursor >= tokens.length || tokens[cursor].type !== '(') {",
+    "        throw new Error('Expected \"(\" after function \"' + fnTok.name + '\" at position ' + fnTok.pos);",
+    "      }",
+    "      const lparen = tokens[cursor];",
+    "      cursor++;",
+    "      if (depth + 1 > limits.depth) {",
+    "        throw new Error('Nesting depth exceeds limit of ' + limits.depth + ' at position ' + lparen.pos);",
+    "      }",
+    "      const args = [];",
+    "      if (cursor < tokens.length && tokens[cursor].type !== ')') {",
+    "        args.push(parseExpression(depth + 1));",
+    "        while (cursor < tokens.length && tokens[cursor].type === ',') {",
+    "          cursor++;",
+    "          args.push(parseExpression(depth + 1));",
+    "        }",
+    "      }",
+    "      if (cursor >= tokens.length || tokens[cursor].type !== ')') {",
+    "        throw new Error('Unbalanced parenthesis at position ' + lparen.pos);",
+    "      }",
+    "      cursor++;",
+    "      switch (fnTok.name) {",
+    "        case 'round': {",
+    "          if (args.length !== 1) throw new Error('Function \"round\" requires 1 argument at position ' + fnTok.pos);",
+    "          return Math.round(args[0]);",
+    "        }",
+    "        case 'abs': {",
+    "          if (args.length !== 1) throw new Error('Function \"abs\" requires 1 argument at position ' + fnTok.pos);",
+    "          return Math.abs(args[0]);",
+    "        }",
+    "        case 'min': {",
+    "          if (args.length < 1) throw new Error('Function \"min\" requires at least 1 argument at position ' + fnTok.pos);",
+    "          return Math.min(...args);",
+    "        }",
+    "        case 'max': {",
+    "          if (args.length < 1) throw new Error('Function \"max\" requires at least 1 argument at position ' + fnTok.pos);",
+    "          return Math.max(...args);",
+    "        }",
+    "        default:",
+    "          throw new Error('Unknown function \"' + fnTok.name + '\" at position ' + fnTok.pos);",
+    "      }",
+    "    }",
+    "    if (tok.type === ')') {",
+    "      throw new Error('Unbalanced parenthesis at position ' + tok.pos);",
+    "    }",
+    "    throw new Error('Unexpected token \"' + tok.raw + '\" at position ' + tok.pos);",
+    "  };",
+    "  const parseTerm = (depth) => {",
+    "    let left = parseFactor(depth);",
+    "    while (cursor < tokens.length && (tokens[cursor].type === '*' || tokens[cursor].type === '/')) {",
+    "      const op = tokens[cursor];",
+    "      cursor++;",
+    "      const right = parseFactor(depth);",
+    "      if (op.type === '*') {",
+    "        left = left * right;",
+    "      } else {",
+    "        if (right === 0) {",
+    "          throw new Error('Division by zero at position ' + op.pos);",
+    "        }",
+    "        left = left / right;",
+    "        if (!Number.isFinite(left)) {",
+    "          throw new Error('Arithmetic error at position ' + op.pos);",
+    "        }",
+    "      }",
+    "    }",
+    "    return left;",
+    "  };",
+    "  const parseExpression = (depth) => {",
+    "    let left = parseTerm(depth);",
+    "    while (cursor < tokens.length && (tokens[cursor].type === '+' || tokens[cursor].type === '-')) {",
+    "      const op = tokens[cursor];",
+    "      cursor++;",
+    "      const right = parseTerm(depth);",
+    "      if (op.type === '+') {",
+    "        left = left + right;",
+    "      } else {",
+    "        left = left - right;",
+    "      }",
+    "    }",
+    "    return left;",
+    "  };",
+    "  const rawValue = parseExpression(0);",
+    "  if (cursor < tokens.length) {",
+    "    const extra = tokens[cursor];",
+    "    if (extra.type === ')') {",
+    "      throw new Error('Unbalanced parenthesis at position ' + extra.pos);",
+    "    }",
+    "    throw new Error('Unexpected token \"' + extra.raw + '\" at position ' + extra.pos);",
+    "  }",
+    "  if (!Number.isFinite(rawValue)) {",
+    "    throw new Error('Arithmetic error: result is not finite');",
+    "  }",
+    "  const value = mode === 'whole' ? Math.round(rawValue) : rawValue;",
+    "  return { value, tokens };",
+    "};",
+    "const demoPage = (queryExpr, queryMode) => {",
+    "  const currentExpr = (queryExpr !== undefined && queryExpr !== null) ? String(queryExpr) : DEMO.expression;",
+    "  const currentMode = (queryMode === 'exact' || queryMode === 'whole') ? queryMode : DEMO.mode;",
+    "  let result = null;",
+    "  let runError = null;",
+    "  try {",
+    "    result = evaluate(currentExpr, currentMode, DEMO.limits);",
+    "  } catch (err) {",
+    "    runError = err.message;",
+    "  }",
+    "  const formHtml = '<form id=\"demo-config\" method=\"post\" action=\"/demo/run\">' +",
+    "    '<label for=\"demo-expression\">Expression</label> ' +",
+    "    '<input id=\"demo-expression\" name=\"expression\" type=\"text\" value=\"' + esc(currentExpr) + '\" required> ' +",
+    "    '<label for=\"demo-mode\">Mode</label> ' +",
+    "    '<select id=\"demo-mode\" name=\"mode\">' +",
+    "    '<option value=\"exact\"' + (currentMode === 'exact' ? ' selected' : '') + '>exact</option>' +",
+    "    '<option value=\"whole\"' + (currentMode === 'whole' ? ' selected' : '') + '>whole</option>' +",
+    "    '</select> ' +",
+    "    '<button type=\"submit\" id=\"demo-run\">Run</button>' +",
+    "    '</form>';",
+    "  const limitsHtml = '<p id=\"demo-limits\">Limits: max ' + DEMO.limits.characters + ' characters, ' + DEMO.limits.tokens + ' tokens, depth ' + DEMO.limits.depth + '</p>';",
+    "  let resultHtml = '';",
+    "  if (runError) {",
+    "    resultHtml = '<p id=\"demo-error\" role=\"alert\">' + esc(runError) + '</p>';",
+    "  } else {",
+    "    const outputHtml = '<p id=\"demo-output\">' + esc(result.value) + '</p>';",
+    "    const stepsHtml = '<ol id=\"demo-steps\">' + result.tokens.map((t) => '<li class=\"demo-step\" data-type=\"' + esc(t.type) + '\">' + esc(t.raw) + '</li>').join('') + '</ol>';",
+    "    resultHtml = outputHtml + stepsHtml;",
+    "  }",
+    "  return capabilityPage(DEMO.title, '<h1>' + esc(DEMO.title) + '</h1><p id=\"demo-summary\">' + esc(DEMO.summary) + '</p>' + formHtml + limitsHtml + resultHtml);",
+    "};",
+  ].join('\n');
+};
+
+/** The demo routes, raw arm: the demo page and the run redirect. */
+const rawDemoRoutes = () =>
+  [
+    "  if (path === '/demo/run' && request.method === 'POST') {",
+    "    const demoBody = await parseBody(request);",
+    "    const demoParams = new URLSearchParams();",
+    "    if (demoBody.expression !== undefined) demoParams.set('expression', demoBody.expression);",
+    "    if (demoBody.mode !== undefined) demoParams.set('mode', demoBody.mode);",
+    "    const demoLocation = demoParams.toString() ? ('/demo?' + demoParams.toString()) : '/demo';",
+    "    response.writeHead(303, { location: demoLocation });",
+    "    return response.end();",
+    "  }",
+    "  if (path === '/demo' && request.method === 'GET') {",
+    "    const demoExpr = url.searchParams.get('expression');",
+    "    const demoMode = url.searchParams.get('mode');",
+    "    return html(response, demoPage(demoExpr, demoMode));",
+    "  }",
+  ].join('\n');
+
+/** The demo routes, hono arm: the same two in Hono routing. */
+const honoDemoRoutes = () =>
+  [
+    "app.post('/demo/run', async (c) => {",
+    "  const demoBody = await c.req.parseBody();",
+    "  const demoParams = new URLSearchParams();",
+    "  if (demoBody.expression !== undefined) demoParams.set('expression', String(demoBody.expression));",
+    "  if (demoBody.mode !== undefined) demoParams.set('mode', String(demoBody.mode));",
+    "  const demoLocation = demoParams.toString() ? ('/demo?' + demoParams.toString()) : '/demo';",
+    "  return c.redirect(demoLocation, 303);",
+    "});",
+    "app.get('/demo', (c) => {",
+    "  const demoExpr = c.req.query('expression');",
+    "  const demoMode = c.req.query('mode');",
+    "  return c.html(demoPage(demoExpr, demoMode));",
+    "});",
+  ].join('\n');
+
 /** The small page renderers the capability handlers share, emitted only when a capability needs them. */
 // The capability pages load the same single enhancement script the arm templates do, but ONLY when a
 // capability that needs it is on. Without the tag the script was served and never loaded, so a capability
@@ -2440,7 +2735,7 @@ const json = (response, value, status = 200, headers = {}) => {
   response.end(JSON.stringify(value));
 };
 
-${caps.list_pages || caps.detail_page || caps.auth || caps.cart || caps.pricing_tiers || caps.checkout || caps.survey || caps.game || caps.workspace || caps.wiki || caps.explainer ? `${capabilityPages(caps)}${caps.cart ? `\n${cartPages(archetype)}` : ''}${caps.pricing_tiers ? `\n${pricingPages(archetype)}` : ''}${caps.checkout ? `\n${checkoutPages(archetype)}` : ''}${caps.survey ? `\n${surveyPages(archetype)}` : ''}${caps.game ? `\n${gamePages(archetype)}` : ''}${caps.workspace ? `\n${workspacePages(archetype)}` : ''}${caps.wiki ? `\n${wikiPages(archetype)}` : ''}${caps.explainer ? `\n${explainerPages(archetype)}` : ''}\n` : ''}const REQUIRED = ${JSON.stringify(archetype.fields.filter((field) => field.type !== 'select' && !field.optional).map((field) => field.name))};
+${caps.list_pages || caps.detail_page || caps.auth || caps.cart || caps.pricing_tiers || caps.checkout || caps.survey || caps.game || caps.workspace || caps.wiki || caps.explainer || caps.demo ? `${capabilityPages(caps)}${caps.cart ? `\n${cartPages(archetype)}` : ''}${caps.pricing_tiers ? `\n${pricingPages(archetype)}` : ''}${caps.checkout ? `\n${checkoutPages(archetype)}` : ''}${caps.survey ? `\n${surveyPages(archetype)}` : ''}${caps.game ? `\n${gamePages(archetype)}` : ''}${caps.workspace ? `\n${workspacePages(archetype)}` : ''}${caps.wiki ? `\n${wikiPages(archetype)}` : ''}${caps.explainer ? `\n${explainerPages(archetype)}` : ''}${caps.demo ? `\n${demoPages(archetype)}` : ''}\n` : ''}const REQUIRED = ${JSON.stringify(archetype.fields.filter((field) => field.type !== 'select' && !field.optional).map((field) => field.name))};
 
 ${enforceMin ? `const MIN_BOUNDS = ${JSON.stringify(minBounds)};\n` : ''}// The cart form has its own fields. Validating it against the search form's required list refused every
 // cart POST with 422, which the write journey caught: a second form on one page needs a second rule.
@@ -2628,7 +2923,7 @@ ${caps.auth ? `    if (!authSessionEmail(request.headers.cookie)) return json(re
     return json(response, { ref: row.ref, ...JSON.parse(row.payload) });
   }
 
-${caps.cart ? `${rawCartRoutes(archetype, cartCookieFlags, checkoutOf(archetype))}\n\n` : ''}${caps.checkout ? `${rawCheckoutRoutes()}\n\n` : ''}${caps.survey ? `${rawSurveyRoutes()}\n\n` : ''}${caps.game ? `${rawGameRoutes()}\n\n` : ''}${caps.workspace ? `${rawWorkspaceRoutes()}\n\n` : ''}${caps.pricing_tiers ? `${rawPricingRoutes()}\n\n` : ''}${caps.wiki ? `${rawWikiRoutes()}\n\n` : ''}${caps.explainer ? `${rawExplainerRoutes()}\n\n` : ''}  // A route the archetype declares is a route the server must serve: /account was declared as the
+${caps.cart ? `${rawCartRoutes(archetype, cartCookieFlags, checkoutOf(archetype))}\n\n` : ''}${caps.checkout ? `${rawCheckoutRoutes()}\n\n` : ''}${caps.survey ? `${rawSurveyRoutes()}\n\n` : ''}${caps.game ? `${rawGameRoutes()}\n\n` : ''}${caps.workspace ? `${rawWorkspaceRoutes()}\n\n` : ''}${caps.pricing_tiers ? `${rawPricingRoutes()}\n\n` : ''}${caps.wiki ? `${rawWikiRoutes()}\n\n` : ''}${caps.explainer ? `${rawExplainerRoutes()}\n\n` : ''}${caps.demo ? `${rawDemoRoutes()}\n\n` : ''}  // A route the archetype declares is a route the server must serve: /account was declared as the
   // account flow's page and never implemented, so the journey landed on a 404.
   if (${JSON.stringify(archetype.routes.filter((route) => route.kind === 'read-session').map((route) => route.path))}.includes(path) && request.method === 'GET') {
 ${caps.auth ? `${RAW_AUTH_GUARD}\n` : ''}    return html(response, await renderDocument({ title: 'Your account' }));
@@ -2767,7 +3062,7 @@ const requiredFor = (path) => (EXTRA_ACTION !== '' && path === EXTRA_ACTION ? EX
 ${sessionTables(archetype)}
 ${caps.auth ? `db.exec('CREATE TABLE IF NOT EXISTS accounts (email TEXT PRIMARY KEY, password TEXT NOT NULL, display_name TEXT)');
 ${authTables(archetype)}
-` : ''}${caps.cart ? `${cartTables(caps.checkout)}\n` : ''}${caps.checkout ? `${checkoutTables()}\n` : ''}${caps.survey ? `${surveyTables()}\n` : ''}${caps.game ? `${gameTables()}\n` : ''}${caps.workspace ? `${workspaceTables()}\n` : ''}${caps.wiki ? `${wikiTables()}\n` : ''}${caps.list_pages || caps.detail_page || caps.auth || caps.cart || caps.pricing_tiers || caps.checkout || caps.survey || caps.game || caps.workspace || caps.wiki || caps.explainer ? `${capabilityPages(caps)}${caps.cart ? `\n${cartPages(archetype)}` : ''}${caps.pricing_tiers ? `\n${pricingPages(archetype)}` : ''}${caps.checkout ? `\n${checkoutPages(archetype)}` : ''}${caps.survey ? `\n${surveyPages(archetype)}` : ''}${caps.game ? `\n${gamePages(archetype)}` : ''}${caps.workspace ? `\n${workspacePages(archetype)}` : ''}${caps.wiki ? `\n${wikiPages(archetype)}` : ''}${caps.explainer ? `\n${explainerPages(archetype)}` : ''}
+` : ''}${caps.cart ? `${cartTables(caps.checkout)}\n` : ''}${caps.checkout ? `${checkoutTables()}\n` : ''}${caps.survey ? `${surveyTables()}\n` : ''}${caps.game ? `${gameTables()}\n` : ''}${caps.workspace ? `${workspaceTables()}\n` : ''}${caps.wiki ? `${wikiTables()}\n` : ''}${caps.list_pages || caps.detail_page || caps.auth || caps.cart || caps.pricing_tiers || caps.checkout || caps.survey || caps.game || caps.workspace || caps.wiki || caps.explainer || caps.demo ? `${capabilityPages(caps)}${caps.cart ? `\n${cartPages(archetype)}` : ''}${caps.pricing_tiers ? `\n${pricingPages(archetype)}` : ''}${caps.checkout ? `\n${checkoutPages(archetype)}` : ''}${caps.survey ? `\n${surveyPages(archetype)}` : ''}${caps.game ? `\n${gamePages(archetype)}` : ''}${caps.workspace ? `\n${workspacePages(archetype)}` : ''}${caps.wiki ? `\n${wikiPages(archetype)}` : ''}${caps.explainer ? `\n${explainerPages(archetype)}` : ''}${caps.demo ? `\n${demoPages(archetype)}` : ''}
 ` : ''}const requestLog = [];
 const app = new Hono();
 app.use('*', async (c, next) => {
@@ -2919,7 +3214,7 @@ ${caps.auth ? "  if (!authSessionEmail(c.req.header('cookie'))) return c.json({ 
   return c.json({ ref: row.ref, ...JSON.parse(row.payload) });
 });
 
-${caps.cart ? `${honoCartRoutes(archetype, cartCookieFlags, checkoutOf(archetype))}\n\n` : ''}${caps.checkout ? `${honoCheckoutRoutes()}\n\n` : ''}${caps.survey ? `${honoSurveyRoutes()}\n\n` : ''}${caps.game ? `${honoGameRoutes()}\n\n` : ''}${caps.workspace ? `${honoWorkspaceRoutes()}\n\n` : ''}${caps.pricing_tiers ? `${honoPricingRoutes()}\n\n` : ''}${caps.wiki ? `${honoWikiRoutes()}\n\n` : ''}${caps.explainer ? `${honoExplainerRoutes()}\n\n` : ''}for (const sessionPage of ${JSON.stringify(archetype.routes.filter((route) => route.kind === 'read-session').map((route) => route.path))}) {
+${caps.cart ? `${honoCartRoutes(archetype, cartCookieFlags, checkoutOf(archetype))}\n\n` : ''}${caps.checkout ? `${honoCheckoutRoutes()}\n\n` : ''}${caps.survey ? `${honoSurveyRoutes()}\n\n` : ''}${caps.game ? `${honoGameRoutes()}\n\n` : ''}${caps.workspace ? `${honoWorkspaceRoutes()}\n\n` : ''}${caps.pricing_tiers ? `${honoPricingRoutes()}\n\n` : ''}${caps.wiki ? `${honoWikiRoutes()}\n\n` : ''}${caps.explainer ? `${honoExplainerRoutes()}\n\n` : ''}${caps.demo ? `${honoDemoRoutes()}\n\n` : ''}for (const sessionPage of ${JSON.stringify(archetype.routes.filter((route) => route.kind === 'read-session').map((route) => route.path))}) {
 ${caps.auth ? `  app.get(sessionPage, (c) => {
     if (!authSessionEmail(c.req.header('cookie'))) return c.redirect('/login', 303);
     return c.html(renderDocument({ title: 'Your account' }));

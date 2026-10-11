@@ -60,16 +60,17 @@ a reflected GET query (`/search`), a server session (`/account`, `/profile`), a 
 | `checkout` | **missing** | none | cart arithmetic, totals, shipping/tax, a simulated payment, and a durable receipt |
 | `wiki` | **partial** | no family yet; the builder now has the `wiki` capability - search over a seeded corpus by title and body, cross-links that resolve including a link to a page nobody has written, and revision history with author and date - tested in all seven arms and driven in a browser (mwg-train-suu) | a wiki-shaped training family: a corpus of pages that link to each other, and a page with two revisions a reader can tell apart |
 | `fan-community` | **partial** | `community-forum` has notes and a thread route | canon/media browsing, contribution editing, and a moderation boundary |
-| `interactive-demo` | **missing** | none | a configured run, a real execution, and inspectable output or errors |
+| `interactive-demo` | **partial** | no family yet; the builder now has the `demo` capability - a visible configuration surface with an expression and a rounding choice that materially changes the result, a run action whose output shows the value and the tokens it came from, and a failure path that reports a readable message with a position. Containment is the point of this type: a hand-written tokenizer and recursive-descent evaluator over a closed grammar, limits on characters, tokens and nesting depth, no `eval`, no `Function` and no callee resolved from input - tested in all seven arms with the containment assertion proven not to be vacuous, and driven in a browser in two of them (mwg-train-kyu) | a demo-shaped training family: something worth configuring and running, where the output or the error is the thing a reader came for |
 | `b2b-saas-signup` | **partial** | `onboarding-auth` writes an account and reads the session; the pilot's `account-recovery` adds a reset | sign-in (credential verification), a company/workspace, a plan, and any second role |
 | `card` | **missing** | none | a card surface with comparable attributes and a selection that survives the next step |
 | `pricing-tiers` | **missing** | none | a billing-period toggle, three tiers, and the choice handed to the next step |
 | `record-form` | **satisfied** | all 30 families; 7 of them `booking`, 3 `web-shop`, 2 each of `dashboard`, `directory-listing`, `event-registration`, `support-helpdesk`, `survey-form`, `docs-site`, `expense-tracker`, 1 each of 6 more | nothing - this is the one type the corpus covers |
 | `survey-eligibility` | **partial** | `tr-10`, `tr-23` declare survey shapes | branching, a review step, and a result derived from the answers rather than a saved record |
 
-So: **1 of 13 types is satisfied, 7 partially, 5 missing entirely** - and the satisfied one is still the type
+So: **1 of 13 types is satisfied, 8 partially, 4 missing entirely** - and the satisfied one is still the type
 Paul did not ask about. The gap he has been reporting as "not enough archetypes" is closing from the other end,
-though: `wiki` and `interactive-explainer` are no longer missing, because the capabilities they needed now exist. That is still a capability gap in
+though: `wiki`, `interactive-explainer` and `interactive-demo` are no longer missing, because the capabilities they
+needed now exist. That is still a capability gap in
 the builder rather than a content gap in the manifest, which is why the status column above counts corpus coverage
 while the table below counts what the builder can express.
 
@@ -90,7 +91,6 @@ adding a route kind to satisfy a taxonomy is the wrong direction.
 | `storefront` | capability-gated | variant selection and a cart accumulated across pages |
 | `checkout` | capability-gated | arithmetic over cart lines, totals, and a simulated payment step |
 | `pricing-tiers` | capability-gated | a period toggle and a tier selection persisted into signup |
-| `interactive-demo` | capability-gated | an execution path with inspectable output, sandboxed |
 | `game` | capability-gated | a client input loop and a state machine with a terminal state |
 | `survey-eligibility` | capability-gated (small) | branching steps and a derived result |
 
