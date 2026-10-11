@@ -60,6 +60,50 @@ test('spec gate: the pricing-tiers capability and its data block fail closed', (
   // "Differ in more than price": identical inclusion sets make the comparison a price list.
   const sameFeatures = pricingSpec().pricing_tiers.tiers.map((tier) => ({ ...tier, features: ['Community support'] }));
   assert.ok(validateSpec(pricingSpec({ pricing_tiers: { ...pricingSpec().pricing_tiers, tiers: sameFeatures } })).some((p) => p.includes('at least one feature the lower tier does not')));
+  // Money finer than a minor unit prints a monthly price the derived annual column disagrees with.
+  const subCent = pricingSpec().pricing_tiers.tiers.map((tier) => ({ ...tier, monthly: tier.monthly + 0.0009 }));
+  assert.ok(validateSpec(pricingSpec({ pricing_tiers: { ...pricingSpec().pricing_tiers, tiers: subCent } })).some((p) => p.includes('whole number of minor units')));
+  // A repeat inside one tier renders twice on the card and once in the table.
+  const repeated = pricingSpec().pricing_tiers.tiers.map((tier) => ({ ...tier, features: [...tier.features, tier.features[0]] }));
+  assert.ok(validateSpec(pricingSpec({ pricing_tiers: { ...pricingSpec().pricing_tiers, tiers: repeated } })).some((p) => p.includes('must not list the same feature twice')));
+  // The capability's own routes are served first, so declaring them as well is refused rather than
+  // shadowed - and the same rule protects the cart capability's routes.
+  const pricingRoutes = [...pricingSpec().routes, { method: 'GET', path: '/pricing', kind: 'page' }];
+  assert.ok(validateSpec(pricingSpec({ routes: pricingRoutes })).some((p) => p.includes("the pricing_tiers capability's own route")));
+});
+
+test('hostile data: the currency is escaped, and a policy that saves nothing shows no saving line', async () => {
+  const policy = pricingSpec().pricing_tiers;
+  const spec = pricingSpec({ pricing_tiers: { ...policy, currency: 'GBP & <b>Co</b>', annual_months: 12 } });
+  assert.deepEqual(validateSpec(spec), [], 'a currency with metacharacters is still a currency');
+  const dir = mkdtempSync(join(tmpdir(), 'pricing-hostile-'));
+  const port = await availablePort();
+  const { projectId, files, spec: projectSpec } = buildProjectFromSpec({ spec, frameworkName: 'raw' });
+  writeProject(dir, { projectId, files, spec: projectSpec, includeDependencies: true });
+  symlinkSync(NODE_MODULES, join(dir, 'node_modules'), 'dir');
+  const child = spawn('node', ['server.mjs', '--port', String(port), '--db', join(dir, 'test.sqlite')], {
+    cwd: dir,
+    stdio: ['ignore', 'ignore', 'pipe'],
+  });
+  try {
+    const base = `http://127.0.0.1:${port}`;
+    let up = false;
+    for (let attempt = 0; attempt < 40 && !up; attempt += 1) {
+      await new Promise((resolve) => setTimeout(resolve, 250));
+      up = await fetch(`${base}/__health`).then((response) => response.ok, () => false);
+    }
+    assert.ok(up, 'server did not come up');
+    const annual = await (await fetch(`${base}/pricing?period=annual`)).text();
+    assert.match(annual, /GBP &amp; &lt;b&gt;Co&lt;\/b&gt;/, 'the currency is HTML-escaped, not injected');
+    assert.equal(annual.includes('<b>Co</b>'), false, 'no raw metacharacter reaches the page');
+    for (const tier of policy.tiers) {
+      assert.match(annual, new RegExp(`GBP &amp; &lt;b&gt;Co&lt;/b&gt; ${tier.monthly * 12} per year`), 'the annual figure is still derived from the policy');
+    }
+    assert.equal(/id="saving-\d+"/.test(annual), false, 'a policy that saves nothing shows no saving line');
+  } finally {
+    child.kill('SIGKILL');
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 test('byte-invariance: a specification that does not opt in emits no pricing code', () => {

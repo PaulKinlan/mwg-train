@@ -324,13 +324,24 @@ export function validateSpec(spec) {
           else names.add(tier.name);
           if (typeof tier.monthly !== 'number' || !Number.isFinite(tier.monthly) || tier.monthly <= 0) {
             at(`${where}.monthly`, 'must be a positive monthly figure');
-          } else if (previous !== null && tier.monthly <= previous) {
-            at(`${where}.monthly`, `must be higher than the tier before it (${previous})`);
           } else {
-            previous = tier.monthly;
+            // Money is printed to two places, so a figure finer than a minor unit would print a monthly
+            // price that the derived annual column does not match (9.999 shows as 10.00, not 9.999).
+            if (Math.abs(tier.monthly * 100 - Math.round(tier.monthly * 100)) > 1e-6) {
+              at(`${where}.monthly`, 'must be a whole number of minor units (at most two decimal places)');
+            }
+            if (previous !== null && tier.monthly <= previous) {
+              at(`${where}.monthly`, `must be higher than the tier before it (${previous})`);
+            } else {
+              previous = tier.monthly;
+            }
           }
           if (!Array.isArray(tier.features) || tier.features.length === 0 || tier.features.some((feature) => !isString(feature) || feature.trim() === '')) {
             at(`${where}.features`, 'must list at least one named feature');
+          } else if (new Set(tier.features).size !== tier.features.length) {
+            // The comparison table dedupes features, so a repeat inside one tier would render twice on
+            // the card and once in the table - one specification, two answers.
+            at(`${where}.features`, 'must not list the same feature twice');
           }
           if (tier.recommended !== undefined && typeof tier.recommended !== 'boolean') at(`${where}.recommended`, 'must be a boolean when present');
         }
@@ -351,6 +362,19 @@ export function validateSpec(spec) {
   }
   if (spec.capabilities?.pricing_tiers === true && spec.pricing_tiers === undefined) {
     at('capabilities.pricing_tiers', 'is on, but no pricing_tiers block states the tiers');
+  }
+  // A capability's own routes are emitted before the declared ones, so a specification that declares
+  // the same path would leave a handler nothing ever reaches. Refused rather than silently shadowed
+  // (mwg-train-4lk review).
+  const capabilityOwnedRoutes = { cart: ['/cart', '/cart/add'], pricing_tiers: ['/pricing', '/pricing/select', '/pricing/:ref'] };
+  for (const [capability, owned] of Object.entries(capabilityOwnedRoutes)) {
+    if (spec.capabilities?.[capability] !== true) continue;
+    for (const route of spec.routes ?? []) {
+      const path = String(route?.path ?? '');
+      if (owned.includes(path)) {
+        at('routes', `${path} is the ${capability} capability's own route, which is served first, so declaring it as well would leave a route nothing reaches`);
+      }
+    }
   }
   return problems;
 }

@@ -62,6 +62,10 @@ test('spec gate: the cart capability validates as a closed set, and fails closed
   assert.ok(validateSpec(twoProductRoutes).some((p) => p.includes('only the first would serve the product page')));
   const noWriteRoute = cartSpec({ routes: cartSpec().routes.filter((route) => route.kind !== 'write') });
   assert.ok(validateSpec(noWriteRoute).some((p) => p.includes('nothing to add to the cart')));
+  // The capability's own routes are served before the declared ones, so declaring /cart as well would
+  // leave a handler nothing reaches (mwg-train-4lk review - the rule is shared by both capabilities).
+  const collidingRoute = cartSpec({ routes: [...cartSpec().routes, { method: 'GET', path: '/cart', kind: 'list' }] });
+  assert.ok(validateSpec(collidingRoute).some((p) => p.includes("the cart capability's own route")));
 });
 
 test('byte-invariance: a specification that does not opt in emits no cart code', () => {
