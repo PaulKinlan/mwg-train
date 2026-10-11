@@ -193,6 +193,9 @@ export const DOCUMENTS = {
   'docs/train/README.md': 'floor-report',
   'docs/train/READINESS-EPIC.md': 'floor-report',
   'docs/train/briefs/README.md': 'floor-report',
+  // The archetype type axis (bead mwg-train-efg): what a type is, which types exist, and what each build can
+  // currently express. It describes how the corpus and its evaluation are organised, and states no floor result.
+  'docs/train/briefs/TYPE-AXIS.md': 'contract',
   'docs/train/corpus/README.md': 'floor-report',
   'docs/train/corpus/YIELD.md': 'floor-report',
   'docs/train/corpus/records.json': 'floor-report',
@@ -210,6 +213,34 @@ export const DOCUMENTS = {
   'docs/design/archetypes/contact-lead/demo/README.md': 'design',
   'docs/design/archetypes/event-registration/README.md': 'provenance',
   'docs/design/archetypes/event-registration/demo/README.md': 'design',
+  // The first archetype authored outside the five evaluation families (bead mwg-train-efg): a board brief whose
+  // prompts the generator reads. Classified like the other archetype READMEs that record borrowed reference
+  // material and its rights.
+  'docs/design/archetypes/editorial-blog/README.md': 'provenance',
+  // The type's two contract documents, in the section order src/design/contract.mjs requires of a design and a
+  // plan document. Classified as 'design' like the eval side's equivalents that describe how a page should look
+  // and behave; neither states a measured corpus result.
+  'docs/design/archetypes/editorial-blog/design.md': 'design',
+  'docs/design/archetypes/editorial-blog/plan.md': 'design',
+  // The register that pins the new archetype's board bytes and prompt digests, in the same shape as the other
+  // design-reference records. Classified as provenance, not as a floor report: it records borrowed reference
+  // material and its rights, and states no measured result of the corpus.
+  'docs/provenance/assets/design-reference-editorial-blog.md': 'provenance',
+  // The second archetype outside the five evaluation families (bead mwg-train-efg), same shapes and the same
+  // reasoning as the block above: the README records borrowed reference material and its rights, the two
+  // contract documents describe how a page should look and behave, and the register pins board bytes and prompt
+  // digests. None of them states a measured result of the corpus.
+  'docs/design/archetypes/fan-community-site/README.md': 'provenance',
+  'docs/design/archetypes/fan-community-site/design.md': 'design',
+  'docs/design/archetypes/fan-community-site/plan.md': 'design',
+  'docs/provenance/assets/design-reference-fan-community-site.md': 'provenance',
+  // The third archetype outside the five evaluation families (bead mwg-train-efg), same shapes and the same
+  // reasoning again: a board brief, two contract documents, and a digest register, none of which states a
+  // measured result of the corpus.
+  'docs/design/archetypes/product-card-comparison/README.md': 'provenance',
+  'docs/design/archetypes/product-card-comparison/design.md': 'design',
+  'docs/design/archetypes/product-card-comparison/plan.md': 'design',
+  'docs/provenance/assets/design-reference-product-card-comparison.md': 'provenance',
   'docs/eval/ATTRIBUTION.md': 'contract',
   'docs/eval/PREREGISTRATION.md': 'contract',
   'docs/eval/owner-identity.json': 'config',

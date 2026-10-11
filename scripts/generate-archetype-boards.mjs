@@ -33,7 +33,7 @@
  */
 
 import { createHash } from 'node:crypto';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
 const ROOT = resolve(import.meta.dirname, '..');
@@ -52,6 +52,24 @@ export const BOARD_TEMPERATURE = 0.7;
 const TIMEOUT_MS = 180_000;
 
 const FAMILIES = ['booking', 'catalogue', 'contact-lead', 'account-recovery', 'event-registration'];
+
+/**
+ * The board inventory is DISCOVERED from docs/design/archetypes/*, not taken from the list above.
+ *
+ * It used to BE the list above: five names, exactly the evaluation families. An authored README for any other
+ * archetype could sit in the tree with its prompts and never be generated, which is one of the reasons the A1
+ * corpus came to hold thirty subjects of one archetype while Paul was asking for blogs, games, wikis and
+ * storefronts. Discovery also keeps the Wave 2 digest check honest - a family is verified against the register
+ * when the register names it, and a family nobody has recorded yet is simply reported as unrecorded rather than
+ * silently skipped. FAMILIES stays as the evaluation set the pilot's own checks refer to.
+ */
+function discoverFamilies() {
+  const dir = join(ROOT, 'docs/design/archetypes');
+  return readdirSync(dir, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory() && existsSync(join(dir, entry.name, 'README.md')))
+    .map((entry) => entry.name)
+    .sort();
+}
 
 const WAVE2_RECORD = 'docs/provenance/assets/design-reference-wave2.md';
 
@@ -75,10 +93,10 @@ export function extractPrompts(readmeText) {
   return prompts;
 }
 
-/** Board name -> prompt, for all five families, with a hard failure if a README yields nothing. */
-export function collectBoards({ only = null, boards: names = null } = {}) {
+/** Board name -> prompt, for every archetype that has an authored README, with a hard failure if one yields nothing. */
+export function collectBoards({ only = null, boards: names = null, families = null } = {}) {
   const boards = [];
-  for (const family of FAMILIES) {
+  for (const family of families ?? discoverFamilies()) {
     if (only && !only.includes(family)) continue;
     const readmePath = join(ROOT, 'docs/design/archetypes', family, 'README.md');
     const prompts = extractPrompts(readFileSync(readmePath, 'utf8'));
@@ -207,6 +225,12 @@ async function main() {
 
   if (!write) {
     for (const board of boards) {
+      // A board that has not been generated yet is REPORTED, not a crash: the inventory is discovered now, so the
+      // first dry run after authoring a new archetype's README is exactly when the boards are absent.
+      if (!existsSync(board.path)) {
+        console.log(`${board.family}/${board.name}\tabsent (never generated)\tprompt ${board.prompt.length} chars`);
+        continue;
+      }
       const current = readFileSync(board.path);
       console.log(`${board.family}/${board.name}\tcurrent ${sha256(current).slice(0, 16)}...\t${current.length} bytes\tprompt ${board.prompt.length} chars`);
     }

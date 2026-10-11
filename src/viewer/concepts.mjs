@@ -4,10 +4,15 @@ import { join, relative } from 'node:path';
 import { escapeHtml, page } from './pages.mjs';
 import { readJpegDimensions } from './tuning.mjs';
 
+// The gallery serves the GENERATED archetype reference boards for the types authored beyond the five evaluation
+// families, through the same allowlisted two-segment route the journeys use. It is a literal list on purpose: the
+// hand-drawn `layout-*.jpg` sketches this section used to show are retired from the page, and a filesystem listing
+// must not be able to put a picture on it. One board per type is featured here; the journeys below carry each
+// type's whole sequence.
 const BOARDS = [
-  { id: 'layout-storefront', title: 'Storefront composition', grammar: 'Object ledger · Persuade', note: 'An illustrative product grid, choices and basket summary.', alt: 'Concept sketch of a product grid with details and a basket summary.' },
-  { id: 'layout-saas', title: 'SaaS decision workbench', grammar: 'Decision workbench · Operate', note: 'A comparison, billing choice and workspace sign-up layout.', alt: 'Concept sketch of pricing tiers beside a workspace sign-up flow.' },
-  { id: 'layout-explainer', title: 'Wiki and explainer', grammar: 'Field notes · Read', note: 'A reading column, table of contents and an interactive diagram layout.', alt: 'Concept sketch of a wiki reading layout alongside a diagram and controls.' },
+  { archetype: 'editorial-blog', id: 'step1-index', title: 'Blog index', grammar: 'Publishing · Read', note: 'An article index with search, tags and excerpt cards; the article it leads to is reached by its own address.', alt: 'Reference board of a blog article index with search, tag filters and excerpt cards.' },
+  { archetype: 'fan-community-site', id: 'step4-moderation', title: 'Moderator queue', grammar: 'Community · Operate', note: 'A moderator deciding whether a fan contribution becomes visible, with the reason the fan will read.', alt: 'Reference board of a moderation queue with approve and hold decisions and a reason field.' },
+  { archetype: 'product-card-comparison', id: 'step2-compare', title: 'Card comparison', grammar: 'Commerce · Compare', note: 'Attributes aligned by row across the options being compared, so the differences can be read across.', alt: 'Reference board of a side-by-side product comparison table with aligned attribute rows.' },
 ];
 // The A6 arm is a SEALED five-archetype evaluation set: fixed by design, held out from the training families, and
 // never extended by a directory listing, so it stays a literal allowlist on purpose - a name from the filesystem must
@@ -48,6 +53,27 @@ const JOURNEYS = {
     { id: 'step1-event', title: 'Select event ticket' },
     { id: 'step2-pass', title: 'Depicted ticket pass' },
   ],
+  // The authored types beyond the evaluation families (bead mwg-train-efg). Literal like the rest: a directory that
+  // appeared on disk must not be able to serve itself, and only reviewed boards are listed.
+  'editorial-blog': [
+    { id: 'step1-index', title: 'Article index' },
+    { id: 'step2-article', title: 'Article by deep link' },
+    { id: 'step3-composer', title: 'Author composer' },
+    { id: 'step4-empty', title: 'No search matches' },
+  ],
+  'fan-community-site': [
+    { id: 'step1-collection', title: 'Browse the collection' },
+    { id: 'step2-contribution', title: 'Contribute an artefact' },
+    { id: 'step3-my-contributions', title: 'Own contributions and status' },
+    { id: 'step4-moderation', title: 'Moderator decides visibility' },
+    { id: 'step5-visitor', title: 'What a visitor sees' },
+  ],
+  'product-card-comparison': [
+    { id: 'step1-cards', title: 'Inspect the cards' },
+    { id: 'step2-compare', title: 'Compare attributes' },
+    { id: 'step3-selected', title: 'Carry the selection forward' },
+    { id: 'step4-empty', title: 'Nothing chosen to compare' },
+  ],
 };
 const IMAGE_NAME = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
@@ -68,14 +94,15 @@ function confinedFile(root, dir, filename) {
   }
 }
 
-/** Serve only the three reviewed boards and JPEGs under the confined archetype-reference directory. */
+/** Serve a JPEG from the confined single-segment reference location under `docs/design/archetypes/`.
+ *  The three hand-drawn `layout-*.jpg` concept boards are RETIRED from the page: they stay in the repository as the
+ *  design-language history `docs/design.md` records, and the viewer no longer serves them, so this route carries no
+ *  board allowlist any more. Every reference the page shows is a generated archetype board, served through the
+ *  allowlisted two-segment route in conceptJourneyStep below. */
 export function conceptImage(repoRoot, name) {
   if (!IMAGE_NAME.test(name)) return null;
   const root = join(repoRoot, 'docs/design');
-  const board = BOARDS.some((entry) => entry.id === name);
-  const file = board
-    ? confinedFile(root, root, `${name}.jpg`)
-    : confinedFile(root, join(root, 'archetypes'), `${name}.jpg`);
+  const file = confinedFile(root, join(root, 'archetypes'), `${name}.jpg`);
   return file ? { bytes: readFileSync(file), type: 'image/jpeg' } : null;
 }
 
@@ -237,11 +264,15 @@ export function listConcepts(repoRoot) {
   }));
   // Booking remains first, including when its first image is absent. Never claim a reference pairing
   // for a family until an allowlisted image is actually available in the checkout.
-  const available = journeys.filter((journey) => journey.steps[0].available).map((journey) => journey.id);
+  const available = journeys.filter((journey) => EVAL_TARGETS.has(journey.id) && journey.steps[0].available).map((journey) => journey.id);
+  // The evaluation section lists only the SEALED set: a type authored for the training side (bead mwg-train-efg)
+  // has journeys and reference boards and must not be presented as an authored evaluation target, because its pair
+  // would be half-invented. Within the sealed set the old rule stands: a pair is listed only when its reference is
+  // actually available, so an empty checkout claims nothing.
   const archetypes = [...new Set(['booking', ...available, ...names])]
     .sort((a, b) => a === 'booking' ? -1 : b === 'booking' ? 1 : a.localeCompare(b));
   return {
-    boards: BOARDS.filter((board) => !!conceptImage(repoRoot, board.id)),
+    boards: BOARDS.filter((board) => !!conceptJourneyStep(repoRoot, board.archetype, board.id)),
     archetypes: archetypes.map((id) => {
       const first = journeys.find((journey) => journey.id === id)?.steps[0];
       const stepReference = !names.includes(id) && first?.available;
@@ -266,9 +297,10 @@ export function listConcepts(repoRoot) {
 }
 
 const code = (value) => `<code>${escapeHtml(value)}</code>`;
+const boardUrl = (board) => `/concepts/images/${board.archetype}/${board.id}.jpg`;
 const boardFigure = (board, featured = false) => `<figure class="concept-board${featured ? ' concept-board-featured' : ''}">
-  <a href="/concepts/images/${board.id}.jpg" aria-label="Open ${escapeHtml(board.title)} sketch at full size">
-    <img src="/concepts/images/${board.id}.jpg" alt="${escapeHtml(board.alt)}" width="1376" height="768"${featured ? ' fetchpriority="high"' : ' loading="lazy"'}>
+  <a href="${boardUrl(board)}" aria-label="Open the ${escapeHtml(board.title)} reference board at full size">
+    <img src="${boardUrl(board)}" alt="${escapeHtml(board.alt)}" width="1376" height="768"${featured ? ' fetchpriority="high"' : ' loading="lazy"'}>
   </a>
   <figcaption><strong>${escapeHtml(board.title)}</strong><span>${escapeHtml(board.grammar)}</span><p>${escapeHtml(board.note)}</p></figcaption>
 </figure>`;
@@ -289,7 +321,7 @@ const trainingFamilyCard = ({ id, archetype, title, origin, available, width, he
 export function renderConcepts({ boards, archetypes, trainingTargets = [], bookingSteps = [], journeys = [], trainingBoardRegister = null }) {
   const [featured, ...otherBoards] = boards;
   const boardSection = featured ? `${boardFigure(featured, true)}<div class="concept-board-grid">${otherBoards.map((board) => boardFigure(board)).join('')}</div>`
-    : '<p class="notice">No layout concept boards are available in this checkout.</p>';
+    : '<p class="notice">No archetype reference boards are available in this checkout.</p>';
   const boardCount = trainingTargets.filter((family) => family.board).length;
   // Families that already have a designed board come first: the page leads with designs and states the count, so a
   // reader cannot read a harness instrument as the deliverable and cannot miss how much of the set is still pending.
@@ -325,9 +357,9 @@ export function renderConcepts({ boards, archetypes, trainingTargets = [], booki
 
   return page('concepts', `
     <h1>Visual concepts</h1>
-    <p class="concept-lede">Explore the ${trainingTargets.length || 30} training families' designed reference boards and their harness target renders, layout ideas beside authored evaluation renders where they exist, and the sealed A6 evaluation set. These are references, not screenshots of generated websites or proof a demo works.</p>
-    <section aria-labelledby="boards-heading"><h2 id="boards-heading">Layout concept boards</h2>
-      <p class="muted">AI-generated sketches with unverified placeholder words and prices. Illustrative only; excluded from training. Source and hashes: ${code('docs/provenance/assets/design-layouts.md')}.</p>
+    <p class="concept-lede">Explore the ${trainingTargets.length || 30} training families' designed reference boards and their harness target renders, the authored archetype reference boards and their journeys beside authored evaluation renders where they exist, and the sealed A6 evaluation set. These are references, not screenshots of generated websites or proof a demo works.</p>
+    <section aria-labelledby="boards-heading"><h2 id="boards-heading">Archetype reference boards (authored types)</h2>
+      <p class="muted">Generated reference boards for the archetypes authored outside the five evaluation families - one per type, with each type's whole sequence in the journeys below. Illustrative only, unverified placeholders, excluded from training; the prompts, byte digests and independent vision review of each type are recorded in ${code('docs/provenance/assets/design-reference-<type>.md')}. The three hand-drawn layout sketches this section used to show are retired from the page and are no longer served by the viewer; they remain in the repository as the design-language history ${code('docs/design.md')} records.</p>
       ${boardSection}
     </section>
     <section aria-labelledby="training-targets-heading"><h2 id="training-targets-heading">Training families (A1): designed boards and harness targets</h2>

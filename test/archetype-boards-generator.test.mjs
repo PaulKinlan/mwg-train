@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
-import { readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { test } from 'node:test';
 
@@ -25,10 +25,31 @@ const sha256 = (data) => createHash('sha256').update(data).digest('hex');
  * are pinned by SHA-256 of their exact bytes. This test keeps that guarantee runnable offline, so a parser change that
  * silently started reading a different prompt would fail here instead of at the next billed generation.
  */
-test('the regenerator reads the recorded prompts byte-for-byte and covers all five archetypes', () => {
+test('the regenerator reads the recorded prompts byte-for-byte and covers every archetype with an authored README', () => {
   const boards = collectBoards();
-  assert.equal(boards.length, 14, 'five archetype sets: booking 5, catalogue 3, contact-lead 2, account-recovery 2, event-registration 2');
-  assert.deepEqual([...new Set(boards.map((board) => board.family))].sort(), [...FAMILIES].sort());
+  const byFamily = {};
+  for (const board of boards) byFamily[board.family] = (byFamily[board.family] ?? 0) + 1;
+
+  // The five evaluation families, with the exact board counts their READMEs author. Named individually because
+  // these are the boards whose prompts the digest register pins.
+  for (const [family, count] of Object.entries({ booking: 5, catalogue: 3, 'contact-lead': 2, 'account-recovery': 2, 'event-registration': 2 })) {
+    assert.equal(byFamily[family], count, `${family}: expected ${count} authored boards`);
+  }
+  assert.ok(boards.length >= 14, 'the evaluation families alone are 14 boards');
+  // And NO family is silently excluded. This assertion exists because the inventory used to be a hardcoded array of
+  // exactly those five names, so an authored README for any other archetype was never generated - which is how the
+  // corpus came to hold one type while Paul was asking for blogs, games, wikis and storefronts. A family with a
+  // README is a family this generator covers, and a new one is allowed to appear here without editing this test.
+  const discovered = [...new Set(boards.map((board) => board.family))].sort();
+  for (const family of FAMILIES) assert.ok(discovered.includes(family), `${family}: missing from the board inventory`);
+  assert.deepEqual(
+    discovered,
+    readdirSync(join(ROOT, 'docs/design/archetypes'), { withFileTypes: true })
+      .filter((entry) => entry.isDirectory() && existsSync(join(ROOT, 'docs/design/archetypes', entry.name, 'README.md')))
+      .map((entry) => entry.name)
+      .sort(),
+    'every archetype with an authored README must be in the inventory',
+  );
 
   const verification = verifyRecordedPrompts(boards);
   assert.deepEqual(verification.failures, [], 'every pinned Wave 2 prompt must be reproduced from the README');

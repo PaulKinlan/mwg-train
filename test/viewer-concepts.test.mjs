@@ -17,9 +17,10 @@ async function serve(t, repoRoot) {
   return `http://127.0.0.1:${server.address().port}`;
 }
 
-test('gallery presents all three excluded boards, honest booking slot, and authored eval target', async (t) => {
+test('gallery serves the generated archetype reference boards and the authored eval targets', async (t) => {
   const gallery = listConcepts(ROOT);
-  assert.deepEqual(gallery.boards.map((board) => board.id), ['layout-storefront', 'layout-saas', 'layout-explainer']);
+  assert.deepEqual(gallery.boards.map((board) => `${board.archetype}/${board.id}`),
+    ['editorial-blog/step1-index', 'fan-community-site/step4-moderation', 'product-card-comparison/step2-compare']);
   assert.deepEqual(gallery.archetypes, [
     { id: 'booking', reference: true, target: true, referencePath: '/concepts/images/booking/step1-browse.jpg' },
     { id: 'account-recovery', reference: true, target: true, referencePath: '/concepts/images/account-recovery/step1-request.jpg' },
@@ -29,6 +30,7 @@ test('gallery presents all three excluded boards, honest booking slot, and autho
   ]);
   assert.deepEqual(gallery.journeys.map(({ id, steps }) => [id, steps.length]), [
     ['booking', 5], ['catalogue', 3], ['contact-lead', 2], ['account-recovery', 2], ['event-registration', 2],
+    ['editorial-blog', 4], ['fan-community-site', 5], ['product-card-comparison', 4],
   ]);
   // The training arm is the 30 declared families, every one of them backed by a target render on disk, and none of
   // them is an A6 archetype id: the two arms cannot leak into each other's label space.
@@ -55,16 +57,19 @@ test('gallery presents all three excluded boards, honest booking slot, and autho
   assert.ok(boardsOnDisk.length > 0, 'this checkout carries at least one designed board');
   assert.equal(gallery.trainingTargets.filter((family) => gallery.archetypes.some(({ id }) => id === family.id)).length, 0,
     'no id is listed in both arms');
-  assert.ok(gallery.journeys.every((journey) => journey.steps.every((step) => step.available)), 'all 14 supplied boards exist');
+  assert.ok(gallery.journeys.every((journey) => journey.steps.every((step) => step.available)), 'all 27 supplied boards exist');
   assert.deepEqual(gallery.bookingSteps.map(({ id, available }) => [id, available]), [
     ['step1-browse', true], ['step2-form', true], ['step3-confirmation', true],
     ['step4-error', true], ['step5-empty', true],
   ]);
   const html = renderConcepts(gallery);
   assert.match(html, /href="\/concepts">concepts<\/a>/);
-  assert.match(html, /layout-storefront\.jpg" alt=/);
+  assert.match(html, /\/concepts\/images\/editorial-blog\/step1-index\.jpg" alt=/);
   assert.match(html, /fetchpriority="high"/);
-  assert.match(html, /layout-saas\.jpg" alt=.*loading="lazy"/);
+  assert.match(html, /\/concepts\/images\/fan-community-site\/step4-moderation\.jpg" alt=.*loading="lazy"/);
+  // The hand-drawn layout sketches are retired from the page: the gallery must not present them, and the
+  // retirement is asserted at the route below rather than only in the copy.
+  assert.doesNotMatch(html, /layout-(storefront|saas|explainer)\.jpg/);
   assert.match(html, /Side-by-side visual reference only/);
   assert.match(html, /Booking journey · five visual steps/);
   assert.match(html, /Catalogue journey · three visual steps/);
@@ -134,9 +139,15 @@ test('gallery presents all three excluded boards, honest booking slot, and autho
   assert.equal((await fetch(`${base}/concepts/references/tr-31.jpg`)).status, 404, 'an undeclared family has no board route');
   assert.equal((await fetch(`${base}/concepts/targets/tr-31.png`)).status, 404);
   assert.equal((await fetch(`${base}/concepts/targets/tr-1.png`)).status, 404);
+  // The retired hand-drawn sketches are no longer served by the viewer at all, while the generated archetype
+  // boards the gallery now shows are served through the allowlisted two-segment route.
   for (const name of ['layout-storefront', 'layout-saas', 'layout-explainer']) {
-    const response = await fetch(`${base}/concepts/images/${name}.jpg`);
-    assert.equal(response.status, 200);
+    assert.equal((await fetch(`${base}/concepts/images/${name}.jpg`)).status, 404, `${name} is retired from the viewer`);
+  }
+  for (const [archetype, step] of [['editorial-blog', 'step1-index'], ['fan-community-site', 'step4-moderation'],
+    ['product-card-comparison', 'step2-compare']]) {
+    const response = await fetch(`${base}/concepts/images/${archetype}/${step}.jpg`);
+    assert.equal(response.status, 200, `${archetype}/${step} is served`);
     assert.match(response.headers.get('content-type'), /image\/jpeg/);
     assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
     assert.equal((await response.arrayBuffer()).byteLength > 1000, true);
