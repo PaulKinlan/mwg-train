@@ -53,19 +53,19 @@ a reflected GET query (`/search`), a server session (`/account`, `/profile`), a 
 
 | Type | Status | Evidence | What is missing to satisfy it |
 |---|---|---|---|
-| `game` | **missing** | none | client-side input loop, a state machine with a terminal state, restart, and a browser journey that plays it |
+| `game` | **missing** | no family yet; the builder now has the `game` capability (mwg-train-ypr) - a client input loop, a state machine with a terminal state and a restart | a family that plays it: a route to the game, instructions a first-time player can read, and a journey that reaches a terminal state and restarts |
 | `interactive-explainer` | **partial** | no family yet; the builder now has the `explainer` capability - one control whose value changes a figure computed from it, a path and a narrative bound to that figure with the month reached marked and the past-the-horizon case called out, and a reset that returns the figure to its initial value - tested in all seven arms and driven in a browser in two of them (mwg-train-5k4) | an explainer-shaped training family: a derivation worth changing the input to see |
 | `blog` | **partial** | `docs-site` and `community-forum` have an index route and a `/record/:ref` detail route | long-form content, a stable deep link per article, and sharing - the detail page exists but holds a submitted record, not an article |
-| `storefront` | **partial** | `web-shop` has a products list and a checkout write; the pilot's `catalogue` has search and a session cart | variant selection, and a cart the user builds across pages - the list exists, the cart is one form |
-| `checkout` | **missing** | none | cart arithmetic, totals, shipping/tax, a simulated payment, and a durable receipt |
+| `storefront` | **partial** | `web-shop` has a products list and a checkout write; the pilot's `catalogue` has search and a session cart; the builder now has the `cart` capability (mwg-train-11d) - variant selection and a cart accumulated across pages | a family whose cart is the point: a product page with a variant to choose, and a journey that builds a multi-line cart |
+| `checkout` | **missing** | no family yet; the builder now has the `checkout` capability (mwg-train-le6) - arithmetic over cart lines, totals, shipping, tax and a simulated payment with a durable receipt | a family that pays: a cart to check out from, a priced line, and a journey that reads a durable receipt |
 | `wiki` | **partial** | no family yet; the builder now has the `wiki` capability - search over a seeded corpus by title and body, cross-links that resolve including a link to a page nobody has written, and revision history with author and date - tested in all seven arms and driven in a browser (mwg-train-suu) | a wiki-shaped training family: a corpus of pages that link to each other, and a page with two revisions a reader can tell apart |
 | `fan-community` | **partial** | `community-forum` has notes and a thread route | canon/media browsing, contribution editing, and a moderation boundary |
 | `interactive-demo` | **partial** | no family yet; the builder now has the `demo` capability - a visible configuration surface with an expression and a rounding choice that materially changes the result, a run action whose output shows the value and the tokens it came from, and a failure path that reports a readable message with a position. Containment is the point of this type: a hand-written tokenizer and recursive-descent evaluator over a closed grammar, limits on characters, tokens and nesting depth, no `eval`, no `Function` and no callee resolved from input - tested in all seven arms with the containment assertion proven not to be vacuous, and driven in a browser in two of them (mwg-train-kyu) | a demo-shaped training family: something worth configuring and running, where the output or the error is the thing a reader came for |
-| `b2b-saas-signup` | **partial** | `onboarding-auth` writes an account and reads the session; the pilot's `account-recovery` adds a reset | sign-in (credential verification), a company/workspace, a plan, and any second role |
+| `b2b-saas-signup` | **partial** | `onboarding-auth` writes an account and reads the session; the pilot's `account-recovery` adds a reset; the builder now has the `workspace` capability (mwg-train-ksn) - credential verification, a second role, and an owner-only setting | a family whose second actor is a colleague: signing in, creating a company, choosing a plan, and an owner-only boundary the member meets |
 | `card` | **missing** | none | a card surface with comparable attributes and a selection that survives the next step |
-| `pricing-tiers` | **missing** | none | a billing-period toggle, three tiers, and the choice handed to the next step |
+| `pricing-tiers` | **missing** | no family yet; the builder now has the `pricing_tiers` capability (mwg-train-4lk) - a period toggle, three tiers and the choice carried into a confirmation step | a family that chooses: three tiers that differ in more than price, and a journey where the choice changes what the next actor sees |
 | `record-form` | **satisfied** | all 30 families; 7 of them `booking`, 3 `web-shop`, 2 each of `dashboard`, `directory-listing`, `event-registration`, `support-helpdesk`, `survey-form`, `docs-site`, `expense-tracker`, 1 each of 6 more | nothing - this is the one type the corpus covers |
-| `survey-eligibility` | **partial** | `tr-10`, `tr-23` declare survey shapes | branching, a review step, and a result derived from the answers rather than a saved record |
+| `survey-eligibility` | **partial** | `tr-10`, `tr-23` declare survey shapes; the builder now has the `survey` capability (mwg-train-s0q) - branching questions and a derived result | a family that branches: a question whose answer decides the next one, a review step, and a result derived from the answers rather than a saved record |
 
 So: **1 of 13 types is satisfied, 8 partially, 4 missing entirely** - and the satisfied one is still the type
 Paul did not ask about. The gap he has been reporting as "not enough archetypes" is closing from the other end,
@@ -82,12 +82,18 @@ express it and only the brief, target and journey are missing; it is **capabilit
 types need the builder contract extended and tested first, and the expansion plan is explicit that
 adding a route kind to satisfy a taxonomy is the wrong direction.
 
-**As of `mwg-train-7bk` there are no capability-gated types left on this axis.** Every capability the
-axis called for has been built and tested - the cart, pricing tiers, checkout, the survey, the game, the
-workspace, the wiki, the interactive explainer and the interactive demo - so each remaining type is
-content-only: what it needs is a family, not an engine change. The rows below were written before those
-capabilities landed and now name them as though they did not exist; they record what each family still
-has to contain, and the bead that built the capability is named so the claim can be checked.
+**As of `mwg-train-7bk` every type whose only obstacle was a missing builder capability now has one**: the cart,
+pricing tiers, checkout, the survey, the game, the workspace, the wiki, the interactive explainer and the
+interactive demo have all landed and are tested in every framework arm. Those rows now name the capability and say
+that what is missing is the family.
+
+**What is also true, and what I got wrong in the first version of this paragraph: three types still need the
+builder to learn something, and their rows say what.** `blog` needs a stable slug identity for a written record,
+which the engine does not have - writes are addressed by a random reference - and an article rendering path. `card`
+needs a comparison vocabulary and a selection carried across steps, which today only the cart and pricing
+capabilities do. `fan-community` needs a moderation state whose transitions the server enforces and a route that a
+session's role decides, neither of which exists. They keep the `(near)` qualifier because the gap is small; it is
+not zero, and claiming otherwise would mislead exactly the reader this table exists for.
 
 | Type | Class | New capability the builder needs |
 |---|---|---|
@@ -97,7 +103,7 @@ has to contain, and the bead that built the capability is named so the claim can
 | `card` | content-only | a card surface in the markup and a selection carried into the form |
 | `storefront` | content-only | the `cart` capability exists (mwg-train-11d: variant selection and a cart accumulated across pages); what is missing is the family |
 | `checkout` | content-only | the `checkout` capability exists (mwg-train-le6: arithmetic over cart lines, totals, shipping, tax and a simulated payment with a durable receipt); what is missing is the family |
-| `pricing-tiers` | content-only | the `pricing_tiers` capability exists (mwg-train-4lk: a period toggle, three tiers and the choice carried into signup); what is missing is the family |
+| `pricing-tiers` | content-only | the `pricing_tiers` capability exists (mwg-train-4lk: a period toggle, three tiers and the choice carried into a confirmation step); what is missing is the family |
 | `game` | content-only | the `game` capability exists (mwg-train-ypr: a client input loop, a state machine with a terminal state and a restart); what is missing is the family |
 | `survey-eligibility` | content-only | the `survey` capability exists (mwg-train-s0q: branching questions and a derived result); what is missing is the family |
 
@@ -116,12 +122,13 @@ this axis inherits:
   and restarts; a first-time player sees instructions while an experienced player can skip them. A
   decorative canvas is a failure.
 
-## The role pairs for the three content-only types
+## The role pairs for the initial three content-only archetypes
 
 A type earns its place on this axis only if two actors have genuinely different goals or permissions in it.
 These are the pairs for the three types this template writes first, using the expansion matrix's own
 archetype ids (that file also carries the wording roles and required behaviours, for these and for the
-gated types):
+gated types). They are the three that need no engine change at all, which is why they come first - not the
+only three the table calls content-only, since several other types have had their capability built since.
 
 | Type | Archetype id | Primary actor | Second actor | What changes for the second actor |
 | --- | --- | --- | --- | --- |
