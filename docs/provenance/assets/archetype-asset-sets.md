@@ -55,7 +55,7 @@ store, the register or the target have moved apart.
 ### contact-lead
 
 - Target: `docs/design/archetypes/contact-lead`
-- Readme: `docs/design/archetypes/contact-lead/README.md` (sha256 `b0bce43cc0fb7290973cfd0de7f966a971e82c58878fc47694b8d60455166f62`)
+- Readme: `docs/design/archetypes/contact-lead/README.md` (sha256 `03a1b3365af5dcf6775e0c41c5cd69886d52163858aef270fe483d729fb42292`)
 - Stylesheet: `docs/design/archetypes/contact-lead/demo/styles.css` (sha256 `bc6d1f9c3f67877a988ba703b669ff587c3ebb5a72ca29d44c7d9ca19d25d04c`)
 - Documents: `docs/design/archetypes/contact-lead/demo/compare.html`, `docs/design/archetypes/contact-lead/demo/index.html`, `docs/design/archetypes/contact-lead/demo/success.html`
 - Rights: `excluded_from_training: true`, `approved_for_training: false` from `docs/design/archetypes/contact-lead/README.md:5`
