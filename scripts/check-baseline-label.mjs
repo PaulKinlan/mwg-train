@@ -206,6 +206,8 @@ export const DOCUMENTS = {
   'docs/design.md': 'design',
   'docs/design/archetypes/account-recovery/README.md': 'provenance',
   'docs/design/archetypes/account-recovery/demo/README.md': 'design',
+  'docs/design/archetypes/account-recovery/design.md': 'design',
+  'docs/design/archetypes/account-recovery/plan.md': 'design',
   'docs/design/archetypes/booking/README.md': 'design',
   'docs/design/archetypes/booking/demo/README.md': 'design',
   'docs/design/archetypes/catalogue/README.md': 'provenance',
