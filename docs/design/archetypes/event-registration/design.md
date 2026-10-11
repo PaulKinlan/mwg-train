@@ -49,10 +49,11 @@ sixteen hex colours are written outside `:root`, eleven of them values the ten t
   `.capacity-note` and `.pass-status` are `999px` pills; `.capacity-dot` is a `50%` circle; and
   `.event-pass::after` uses `3.5rem 3.5rem 0 0` to cut the pass's shoulders.
 - **There is no shadow anywhere.** The stylesheet contains no `box-shadow` declaration at all, which is the
-  opposite of the catalogue archetype's drawer, and there is no gradient declaration either. So the pass
-  earns its shape from a notched silhouette and a darker field colour rather than from depth or elevation -
-  on a single-column dark page, separation comes from `--field` being darker than `--card`, and from the
-  outline colour.
+  opposite of the catalogue archetype's drawer, and there is no gradient declaration either. The pass earns
+  its shape from a notched silhouette - a `var(--card)` surface with its shoulders cut using `--page` -
+  rather than from depth or elevation. Where this page does separate a surface from its ground, it is by fill
+  rather than by shadow: the ticket rows and the form fields sit on `--field`, which is darker than the
+  `--card` around them, and the outline colour does the rest.
 
 ## Typography
 
@@ -86,10 +87,10 @@ none of the ten is referenced from the demo's HTML:
 | `--field` | `#111b2e` | `.ticket-row` and the field inputs and textareas (2) |
 | `--outline` | `#64748b` | `.ticket-row`, `.stepper`, `.stepper input` and five more (8) |
 | `--accent` | `#10b981` | `:root`'s `accent-color`, `::selection`, `.capacity-dot` and three more (6) |
-| `--accent-bright` | `#34d399` | links, `.estimate`, `.primary-action:hover`, the field inputs and the quiet actions (5) |
+| `--accent-bright` | `#34d399` | links, `.estimate`, `.primary-action:hover`, the field inputs and textareas and the quiet actions (5) |
 | `--accent-ink` | `#04231a` | text drawn on the accent (2) |
 | `--text` | `#f8fafc` | `.capacity-note`, `.stepper button`, `.qr-badge` and three more (6) |
-| `--muted` | `#cbd5e1` | `.event-hero > p`, `.form-lead`, `.hint`, `.ticket-row label span` and five more (10) |
+| `--muted` | `#cbd5e1` | `.event-hero > p`, `.form-lead`, `.hint`, `.ticket-row label span` and seven more declarations (10) |
 | `--error` | `#fca5a5` | `input:user-invalid`, `textarea:user-invalid`, `.error-message` (2) |
 
 Two of the ten are worth reading closely. `--muted` is the commonest token in the stylesheet (ten
@@ -164,12 +165,13 @@ Read from `demo/index.html`, with the pass view selected by `?view=pass` and the
   reference set that cannot agree on the attendee cannot be used to check an echoed name.
 - **A pass for a ticket the previous board did not select.** The event board has General Admission selected
   at £120 with Workshop Pass at zero; the pass board's pass is a `Workshop Pass (£220)`.
-- **Illustrated commercial detail that contradicts the spec's own rule.** The boards and the demo show
-  `142 / 200 seats filled`, £120 and £220 prices and a `Principal Engineer` job title; the spec declares
-  `capacity: 3`, a single `ticket` select over `standard`, `accessible` and `student`, and no price or role
-  at all. The seats count is not a rendering of the capacity rule - it is a different idea of capacity, and
-  neither the demo nor the boards shows the waitlist the story promises. The raster QR is not a check-in
-  code either, which this directory's `README.md` states in its own words.
+- **Illustrated commercial detail that contradicts the spec's own rule.** The boards show
+  `142 / 200 seats filled`, £120 and £220 prices and a `Principal Engineer` job title - the job title on the
+  pass board only, and none of them in the demo, whose pass is explicitly a preview rather than a ticket.
+  The spec declares `capacity: 3`, a single `ticket` select over `standard`, `accessible` and `student`, and
+  no price or role at all. The seats count is not a rendering of the capacity rule - it is a different idea
+  of capacity, and neither the demo nor the boards shows the waitlist the story promises. The raster QR is
+  not a check-in code either, which this directory's `README.md` states in its own words.
 - **One board carries browser chrome and is exempt from the rule that forbids it.** `step1-event.jpg` is
   detected by `check:archetype-frames` and listed as a grandfathered image; `step2-pass.jpg` is clean. The
   exemption is deliberate and checked, so the pair should not be "fixed" without re-reading that rule.

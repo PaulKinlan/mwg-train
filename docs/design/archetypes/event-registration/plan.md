@@ -114,7 +114,7 @@ useful thing this document can record:
 - **Criterion 1 is evidenced directly.** In all fourteen pilot entries the `server-persistence` probe's
   `afterSubmit` value is a `/registration/<ref>` URL, one per entry - the first is
   `http://127.0.0.1:4356/registration/61483c64` and the other thirteen run from `.../6fb90c8b` to
-  `.../dd89d029` - so the landing page after a submit is recorded, not inferred.
+  `.../fa49c4fb` - so the landing page after a submit is recorded, not inferred.
 - **Criterion 2 is evidenced directly.** The same probe's `persistedText` is `Katherine Johnson` in all
   fourteen entries, which is the reload assertion's own subject: the stored attendee name comes back.
 - **Criterion 3 is evidenced nowhere.** Measured across all fourteen entries and all three probes, **no key
