@@ -1666,7 +1666,10 @@ const gameEnhance = (archetype) => {
 const capabilityPages = () =>
   [
     "const esc = (value) => String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;');",
-    "const capabilityPage = (title, body) => '<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><title>' + esc(title) + '</title><link rel=\"stylesheet\" href=\"/app/styles.css\"></head><body><main>' + body + '</main></body></html>';",
+    // The capability pages load the same single enhancement script the arm templates do. Without this the
+    // script was served but never loaded on these pages, so a capability whose behaviour is client-side -
+    // the game's loop is one - got a page and no behaviour at all (mwg-train-ypr).
+    "const capabilityPage = (title, body) => '<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><title>' + esc(title) + '</title><link rel=\"stylesheet\" href=\"/app/styles.css\"></head><body><main>' + body + '</main><script type=\"module\" src=\"/app/enhance.js\"></script></body></html>';",
     "const loginPage = (error) => capabilityPage('Sign in', '<h1>Sign in</h1>' + (error ? '<p role=\"alert\">' + esc(error) + '</p>' : '') + '<form method=\"post\" action=\"/login\"><label for=\"email\">Email</label><input type=\"email\" id=\"email\" name=\"email\" required autocomplete=\"username\"><label for=\"password\">Password</label><input type=\"password\" id=\"password\" name=\"password\" required autocomplete=\"current-password\"><button type=\"submit\">Sign in</button></form>');",
     "const listPage = (title, detailPrefix, rows) => capabilityPage(title, '<h1>' + esc(title) + '</h1><ul>' + rows.map((row) => '<li><a href=\"' + detailPrefix + esc(row.ref) + '\">' + esc(row.ref) + '</a> ' + esc(JSON.stringify(row.payload)) + '</li>').join('') + '</ul>');",
     "const detailPage = (row) => capabilityPage('Record ' + row.ref, '<h1>Record ' + esc(row.ref) + '</h1><dl>' + Object.entries(JSON.parse(row.payload)).map(([key, value]) => '<dt>' + esc(key) + '</dt><dd>' + esc(value) + '</dd>').join('') + '</dl>');",

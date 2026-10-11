@@ -402,6 +402,22 @@ export class Page {
     await this.send('Input.insertText', { text });
   }
 
+  /**
+   * One trusted pointer press at a viewport coordinate.
+   *
+   * `click(selector)` calls `el.click()`, which is a synthetic click and does NOT produce a pointerdown -
+   * so a page that listens for the pointer (the game capability's field does) cannot be driven by it.
+   * This dispatches real mouse events, which Chrome turns into the whole pointer sequence
+   * (mwg-train-ypr).
+   */
+  async realPointer(x, y) {
+    const point = { x: Math.round(x), y: Math.round(y), button: 'left', clickCount: 1 };
+    await this.send('Input.dispatchMouseEvent', { type: 'mouseMoved', ...point });
+    await this.send('Input.dispatchMouseEvent', { type: 'mousePressed', ...point });
+    await this.send('Input.dispatchMouseEvent', { type: 'mouseReleased', ...point });
+    await this.#settle();
+  }
+
   /** One trusted key press. */
   async realKey(key) {
     const codes = { Backspace: 8, Tab: 9, Enter: 13, Escape: 27, ArrowUp: 38, ArrowDown: 40 };
