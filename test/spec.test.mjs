@@ -21,6 +21,7 @@ import { ARCHETYPES, ARCHETYPE_IDS } from '../pilot/archetypes.mjs';
 import { FRAMEWORKS, writeProject } from '../pilot/frameworks.mjs';
 import { hashTree } from '../src/corpus/harness.mjs';
 import { archetypeFromSpec, buildProjectFromSpec, FIELD_KEYS, requiredFieldNames, specForFamily, SPECS_DIR, validateSpec } from '../src/eval/spec.mjs';
+import { cartSpec } from '../scripts/lib/cart-spec.mjs';
 
 const ROOT = resolve(import.meta.dirname, '..');
 const read = (familyId) => specForFamily(familyId, ROOT);
@@ -382,6 +383,32 @@ test('an echo naming a field the specification does not declare is refused, not 
   const emptied = validateSpec({ ...base, fields: [] }).find((problem) => problem.includes('echo.field'));
   assert.ok(emptied, 'an empty fields list still gets an echo problem rather than a crash');
   assert.match(emptied, /no declared field has/);
+});
+
+// `fields` that is present but not an array is refused by the rule that runs first, and every later reader of the
+// list must still answer rather than throw on the way there: `spec.fields ?? []` guards absence, not type, which is
+// how a specification could reach `.filter` with a string and take the process down instead of reporting a problem.
+test('a non-array fields is refused, not thrown', () => {
+  const base = cartSpec();
+  for (const value of ['nope', 42, {}, true]) {
+    const problems = validateSpec({ ...base, fields: value });
+    assert.ok(Array.isArray(problems), `fields: ${JSON.stringify(value)} must return problems`);
+    assert.match(
+      problems.join('\n'),
+      /fields: must list the form fields/,
+      `fields: ${JSON.stringify(value)} must be refused by the fields rule`,
+    );
+  }
+});
+
+// The other direction, because a validator that starts refusing documents which ship is a worse bug than the one
+// being fixed. No family in the corpus has a non-array fields, so no family may be refused for its shape - if one
+// ever did, the change that made the readers total would have turned a crash into a refusal without saying so.
+test('no family in the corpus is refused for the shape of its fields', () => {
+  for (const family of ARCHETYPE_IDS) {
+    const refused = validateSpec(read(family)).filter((problem) => problem.includes('must list the form fields'));
+    assert.equal(refused.length, 0, `${family} is refused for its fields shape: ${refused.join('; ')}`);
+  }
 });
 
 test('no family in the corpus is refused by the echo cross-check', () => {
