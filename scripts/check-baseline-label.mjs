@@ -216,6 +216,10 @@ export const DOCUMENTS = {
   'docs/provenance/assets/reproduction-studies.md': 'provenance',
   'docs/provenance/assets/student-base-models.md': 'provenance',
   'docs/provenance/assets/training-targets.md': 'provenance',
+  // Teacher-model visual reference boards for the 30 training families (bead mwg-train-mhd). Model output that is
+  // published as planning documentation and deliberately kept out of the corpus, so it carries a rights record here
+  // rather than a corpus manifest row.
+  'docs/provenance/assets/training-reference-boards.md': 'provenance',
   'docs/provenance/original-refs.md': 'provenance',
   'docs/quarantine.md': 'provenance',
   'docs/eval/briefs/SCHEMA.md': 'spec',
