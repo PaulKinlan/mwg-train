@@ -806,7 +806,94 @@ function searchPageDocument(search) {
  * like sessionTables, so the generated code needs no escaping of its own.
  */
 
-const capabilitiesOf = (archetype) => ({ list_pages: false, detail_page: false, auth: false, cart: false, ...(archetype.capabilities ?? {}) });
+const capabilitiesOf = (archetype) => ({ list_pages: false, detail_page: false, auth: false, cart: false, pricing_tiers: false, ...(archetype.capabilities ?? {}) });
+
+/*
+ * The pricing-tiers capability (mwg-train-4lk): three tiers across a monthly/annual toggle, whose
+ * inclusions differ by more than price, and a selection that survives into the next step. The prices
+ * are COMPUTED from one source - each tier's monthly figure and the annual policy - so the annual
+ * column and the saving cannot drift from the monthly column, which is what "computed rather than
+ * restated" means here. Opt-in, like the other capabilities, so no existing tree moves.
+ */
+const pricingOf = (archetype) => archetype.pricingTiers ?? null;
+
+/** The pricing capability's derived arithmetic and its three pages, dialect-independent. */
+const pricingPages = (archetype) => {
+  const pricing = pricingOf(archetype);
+  return [
+    `const PRICING = ${JSON.stringify(pricing)};`,
+    "const pricingMoney = (amount) => esc(PRICING.currency) + ' ' + (Number.isInteger(amount) ? String(amount) : amount.toFixed(2));",
+    'const pricingAnnual = (monthly) => monthly * PRICING.annual_months;',
+    'const pricingSaving = (monthly) => monthly * 12 - pricingAnnual(monthly);',
+    'const pricingPrice = (tier, period) => (period === \'annual\' ? pricingAnnual(tier.monthly) : tier.monthly);',
+    'const pricingPage = (period) => {',
+    '  const priceSuffix = period === \'annual\' ? \'per year\' : \'per month\';',
+    "  const cards = PRICING.tiers.map((tier, index) => '<section aria-labelledby=\"tier-' + index + '\">' + '<h2 id=\"tier-' + index + '\">' + esc(tier.name) + '</h2>' + (tier.recommended ? '<p class=\"recommendation\">Recommended</p>' : '') + '<p id=\"price-' + index + '\" class=\"price\">' + pricingMoney(pricingPrice(tier, period)) + ' ' + priceSuffix + '</p>' + (period === 'annual' && pricingSaving(tier.monthly) > 0 ? '<p id=\"saving-' + index + '\" class=\"saving\">Saves ' + pricingMoney(pricingSaving(tier.monthly)) + ' a year</p>' : '') + '<ul>' + tier.features.map((feature) => '<li>' + esc(feature) + '</li>').join('') + '</ul>' + '<form method=\"post\" action=\"/pricing/select\">' + '<input type=\"hidden\" name=\"tier\" value=\"' + esc(tier.name) + '\">' + '<input type=\"hidden\" name=\"period\" value=\"' + period + '\">' + '<button type=\"submit\">Choose ' + esc(tier.name) + '</button>' + '</form>' + '</section>').join('');",
+    "  const toggle = '<nav class=\"billing-period\">' + '<a href=\"/pricing?period=monthly\"' + (period === 'monthly' ? ' aria-current=\"page\"' : '') + '>Monthly</a> ' + '<a href=\"/pricing?period=annual\"' + (period === 'annual' ? ' aria-current=\"page\"' : '') + '>Annual</a>' + '</nav>';",
+    "  const features = [...new Set(PRICING.tiers.flatMap((tier) => tier.features))];",
+    "  const comparison = '<table><caption>What each tier includes</caption><thead><tr><th scope=\"col\">Feature</th>' + PRICING.tiers.map((tier) => '<th scope=\"col\">' + esc(tier.name) + '</th>').join('') + '</tr></thead><tbody>' + features.map((feature) => '<tr><th scope=\"row\">' + esc(feature) + '</th>' + PRICING.tiers.map((tier) => '<td>' + (tier.features.includes(feature) ? 'Included' : 'Not included') + '</td>').join('') + '</tr>').join('') + '</tbody></table>';",
+    "  return capabilityPage('Pricing', '<h1>Pricing</h1>' + toggle + '<p id=\"billing-period\">Showing ' + period + ' prices</p>' + cards + comparison);",
+    '};',
+    'const pricingConfirmationPage = (row) => {',
+    '  const choice = JSON.parse(row.payload);',
+    "  return capabilityPage('Your plan', '<h1>Your plan</h1>' + '<dl>' + '<dt>Billing period</dt><dd id=\"chosen-period\">' + esc(choice.period) + '</dd>' + '<dt>Tier</dt><dd id=\"chosen-tier\">' + esc(choice.tier) + '</dd>' + '<dt>Price</dt><dd id=\"chosen-price\">' + esc(choice.price) + '</dd>' + '</dl>');",
+    '};',
+  ].join('\n');
+};
+
+/** The pricing routes, raw arm: the tiers page, the selection write, and the confirmation read. */
+const rawPricingRoutes = () =>
+  [
+    "  if (path === '/pricing' && request.method === 'GET') {",
+    "    const pricingPeriod = url.searchParams.get('period') === 'annual' ? 'annual' : 'monthly';",
+    '    return html(response, pricingPage(pricingPeriod));',
+    '  }',
+    "  if (path === '/pricing/select' && request.method === 'POST') {",
+    '    const pricingBody = await parseBody(request);',
+    '    const pricingTier = PRICING.tiers.find((tier) => tier.name === String(pricingBody.tier ?? \'\'));',
+    '    if (!pricingTier) {',
+    "      response.writeHead(422, { 'content-type': 'text/plain; charset=utf-8' });",
+    "      return response.end('Choose one of the tiers this page lists.');",
+    '    }',
+    "    const pricingPeriod = String(pricingBody.period ?? '') === 'annual' ? 'annual' : 'monthly';",
+    '    const pricingRef = randomUUID().slice(0, 8);',
+    "    insert.run(pricingRef, new Date().toISOString(), JSON.stringify({ tier: pricingTier.name, period: pricingPeriod, price: pricingMoney(pricingPrice(pricingTier, pricingPeriod)) }));",
+    "    response.writeHead(303, { location: '/pricing/' + pricingRef });",
+    '    return response.end();',
+    '  }',
+    '  const pricingMatch = path.match(/^\\/pricing\\/([^/]+)$/);',
+    "  if (pricingMatch && request.method === 'GET') {",
+    '    const pricingRow = select.get(pricingMatch[1]);',
+    '    if (!pricingRow) {',
+    "      response.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });",
+    "      return response.end('We could not find that selection.');",
+    '    }',
+    '    return html(response, pricingConfirmationPage(pricingRow));',
+    '  }',
+  ].join('\n');
+
+/** The pricing routes, hono arm: the same three, in Hono's routing. */
+const honoPricingRoutes = () =>
+  [
+    "app.get('/pricing', (c) => {",
+    "  const pricingPeriod = c.req.query('period') === 'annual' ? 'annual' : 'monthly';",
+    '  return c.html(pricingPage(pricingPeriod));',
+    '});',
+    "app.post('/pricing/select', async (c) => {",
+    '  const pricingBody = await c.req.parseBody();',
+    '  const pricingTier = PRICING.tiers.find((tier) => tier.name === String(pricingBody.tier ?? \'\'));',
+    "  if (!pricingTier) return c.text('Choose one of the tiers this page lists.', 422);",
+    "  const pricingPeriod = String(pricingBody.period ?? '') === 'annual' ? 'annual' : 'monthly';",
+    '  const pricingRef = randomUUID().slice(0, 8);',
+    "  insert.run(pricingRef, new Date().toISOString(), JSON.stringify({ tier: pricingTier.name, period: pricingPeriod, price: pricingMoney(pricingPrice(pricingTier, pricingPeriod)) }));",
+    "  return c.redirect('/pricing/' + pricingRef, 303);",
+    '});',
+    "app.get('/pricing/:ref', (c) => {",
+    "  const pricingRow = select.get(c.req.param('ref'));",
+    "  if (!pricingRow) return c.text('We could not find that selection.', 404);",
+    '  return c.html(pricingConfirmationPage(pricingRow));',
+    '});',
+  ].join('\n');
 
 /*
  * The cart capability (mwg-train-11d): a storefront cart the visitor BUILDS across pages, with a
@@ -1090,7 +1177,7 @@ const json = (response, value, status = 200, headers = {}) => {
   response.end(JSON.stringify(value));
 };
 
-${caps.list_pages || caps.detail_page || caps.auth || caps.cart ? `${capabilityPages()}${caps.cart ? `\n${cartPages(archetype)}` : ''}\n` : ''}const REQUIRED = ${JSON.stringify(archetype.fields.filter((field) => field.type !== 'select' && !field.optional).map((field) => field.name))};
+${caps.list_pages || caps.detail_page || caps.auth || caps.cart || caps.pricing_tiers ? `${capabilityPages()}${caps.cart ? `\n${cartPages(archetype)}` : ''}${caps.pricing_tiers ? `\n${pricingPages(archetype)}` : ''}\n` : ''}const REQUIRED = ${JSON.stringify(archetype.fields.filter((field) => field.type !== 'select' && !field.optional).map((field) => field.name))};
 
 ${enforceMin ? `const MIN_BOUNDS = ${JSON.stringify(minBounds)};\n` : ''}// The cart form has its own fields. Validating it against the search form's required list refused every
 // cart POST with 422, which the write journey caught: a second form on one page needs a second rule.
@@ -1278,7 +1365,7 @@ ${caps.auth ? `    if (!authSessionEmail(request.headers.cookie)) return json(re
     return json(response, { ref: row.ref, ...JSON.parse(row.payload) });
   }
 
-${caps.cart ? `${rawCartRoutes(archetype, cartCookieFlags)}\n\n` : ''}  // A route the archetype declares is a route the server must serve: /account was declared as the
+${caps.cart ? `${rawCartRoutes(archetype, cartCookieFlags)}\n\n` : ''}${caps.pricing_tiers ? `${rawPricingRoutes()}\n\n` : ''}  // A route the archetype declares is a route the server must serve: /account was declared as the
   // account flow's page and never implemented, so the journey landed on a 404.
   if (${JSON.stringify(archetype.routes.filter((route) => route.kind === 'read-session').map((route) => route.path))}.includes(path) && request.method === 'GET') {
 ${caps.auth ? `${RAW_AUTH_GUARD}\n` : ''}    return html(response, await renderDocument({ title: 'Your account' }));
@@ -1417,7 +1504,7 @@ const requiredFor = (path) => (EXTRA_ACTION !== '' && path === EXTRA_ACTION ? EX
 ${sessionTables(archetype)}
 ${caps.auth ? `db.exec('CREATE TABLE IF NOT EXISTS accounts (email TEXT PRIMARY KEY, password TEXT NOT NULL, display_name TEXT)');
 ${authTables(archetype)}
-` : ''}${caps.cart ? `${cartTables()}\n` : ''}${caps.list_pages || caps.detail_page || caps.auth || caps.cart ? `${capabilityPages()}${caps.cart ? `\n${cartPages(archetype)}` : ''}
+` : ''}${caps.cart ? `${cartTables()}\n` : ''}${caps.list_pages || caps.detail_page || caps.auth || caps.cart || caps.pricing_tiers ? `${capabilityPages()}${caps.cart ? `\n${cartPages(archetype)}` : ''}${caps.pricing_tiers ? `\n${pricingPages(archetype)}` : ''}
 ` : ''}const requestLog = [];
 const app = new Hono();
 app.use('*', async (c, next) => {
@@ -1569,7 +1656,7 @@ ${caps.auth ? "  if (!authSessionEmail(c.req.header('cookie'))) return c.json({ 
   return c.json({ ref: row.ref, ...JSON.parse(row.payload) });
 });
 
-${caps.cart ? `${honoCartRoutes(archetype, cartCookieFlags)}\n\n` : ''}for (const sessionPage of ${JSON.stringify(archetype.routes.filter((route) => route.kind === 'read-session').map((route) => route.path))}) {
+${caps.cart ? `${honoCartRoutes(archetype, cartCookieFlags)}\n\n` : ''}${caps.pricing_tiers ? `${honoPricingRoutes()}\n\n` : ''}for (const sessionPage of ${JSON.stringify(archetype.routes.filter((route) => route.kind === 'read-session').map((route) => route.path))}) {
 ${caps.auth ? `  app.get(sessionPage, (c) => {
     if (!authSessionEmail(c.req.header('cookie'))) return c.redirect('/login', 303);
     return c.html(renderDocument({ title: 'Your account' }));

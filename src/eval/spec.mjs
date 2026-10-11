@@ -59,7 +59,7 @@ const FIELD_KEYS = new Set(['slug', 'name', 'type', 'label', 'autocomplete', 're
 export { FIELD_KEYS };
 
 /** The functional-route capabilities a specification may opt into. A closed set, like FIELD_KEYS. */
-export const CAPABILITY_KEYS = new Set(['list_pages', 'detail_page', 'auth', 'cart']);
+export const CAPABILITY_KEYS = new Set(['list_pages', 'detail_page', 'auth', 'cart', 'pricing_tiers']);
 
 /** The field names a selector types into, from `[name=x]` / `[name="x"]` / `[name='x']`. */
 function selectorFieldNames(selector) {
@@ -290,6 +290,92 @@ export function validateSpec(spec) {
   if (spec.seed_accounts !== undefined && spec.capabilities?.auth !== true) {
     at('seed_accounts', 'only meaningful with capabilities.auth - accounts need a login to be for');
   }
+  // The pricing-tiers capability's data (mwg-train-4lk): the tiers, their monthly figures and the
+  // annual policy. The annual prices and the saving are DERIVED from those, so a specification cannot
+  // restate them and let the two columns drift ("computed rather than restated"), and the block is
+  // refused unless the capability is on.
+  if (spec.pricing_tiers !== undefined) {
+    const pricing = spec.pricing_tiers;
+    if (!isObject(pricing)) at('pricing_tiers', 'must be an object when present');
+    else {
+      for (const key of Object.keys(pricing)) {
+        if (!['currency', 'annual_months', 'tiers'].includes(key)) at(`pricing_tiers.${key}`, 'unknown key');
+      }
+      if (!isString(pricing.currency) || pricing.currency.trim() === '') at('pricing_tiers.currency', 'must be a currency name or symbol');
+      if (!Number.isInteger(pricing.annual_months) || pricing.annual_months < 10 || pricing.annual_months > 12) {
+        at('pricing_tiers.annual_months', 'must be a whole number of months between 10 and 12');
+      }
+      if (!Array.isArray(pricing.tiers) || pricing.tiers.length < 3) {
+        at('pricing_tiers.tiers', 'must list at least three tiers (lower, middle, upper)');
+      } else {
+        const names = new Set();
+        let previous = null;
+        for (const [index, tier] of pricing.tiers.entries()) {
+          const where = `pricing_tiers.tiers[${index}]`;
+          if (!isObject(tier)) {
+            at(where, 'must be an object');
+            continue;
+          }
+          for (const key of Object.keys(tier)) {
+            if (!['name', 'monthly', 'features', 'recommended'].includes(key)) at(`${where}.${key}`, 'unknown key');
+          }
+          if (!isString(tier.name) || tier.name.trim() === '') at(`${where}.name`, 'must be a tier name');
+          else if (names.has(tier.name)) at(`${where}.name`, 'is a duplicate tier name');
+          else names.add(tier.name);
+          if (typeof tier.monthly !== 'number' || !Number.isFinite(tier.monthly) || tier.monthly <= 0) {
+            at(`${where}.monthly`, 'must be a positive monthly figure');
+          } else {
+            // Money is printed to two places, so a figure finer than a minor unit would print a monthly
+            // price that the derived annual column does not match (9.999 shows as 10.00, not 9.999).
+            if (Math.abs(tier.monthly * 100 - Math.round(tier.monthly * 100)) > 1e-6) {
+              at(`${where}.monthly`, 'must be a whole number of minor units (at most two decimal places)');
+            }
+            if (previous !== null && tier.monthly <= previous) {
+              at(`${where}.monthly`, `must be higher than the tier before it (${previous})`);
+            } else {
+              previous = tier.monthly;
+            }
+          }
+          if (!Array.isArray(tier.features) || tier.features.length === 0 || tier.features.some((feature) => !isString(feature) || feature.trim() === '')) {
+            at(`${where}.features`, 'must list at least one named feature');
+          } else if (new Set(tier.features).size !== tier.features.length) {
+            // The comparison table dedupes features, so a repeat inside one tier would render twice on
+            // the card and once in the table - one specification, two answers.
+            at(`${where}.features`, 'must not list the same feature twice');
+          }
+          if (tier.recommended !== undefined && typeof tier.recommended !== 'boolean') at(`${where}.recommended`, 'must be a boolean when present');
+        }
+        const recommended = pricing.tiers.filter((tier) => tier?.recommended === true).length;
+        if (recommended !== 1) at('pricing_tiers.tiers', `must mark exactly one tier as recommended, not ${recommended}`);
+        // "differ in more than price": the upper tier must include something the lower one does not, or
+        // the comparison is a price list wearing three cards.
+        const lower = pricing.tiers[0]?.features;
+        const upper = pricing.tiers.at(-1)?.features;
+        if (Array.isArray(lower) && Array.isArray(upper) && !upper.some((feature) => !lower.includes(feature))) {
+          at('pricing_tiers.tiers', 'the upper tier must include at least one feature the lower tier does not');
+        }
+      }
+    }
+    if (spec.capabilities?.pricing_tiers !== true) {
+      at('pricing_tiers', 'only meaningful with capabilities.pricing_tiers - there would be no page to render the tiers on');
+    }
+  }
+  if (spec.capabilities?.pricing_tiers === true && spec.pricing_tiers === undefined) {
+    at('capabilities.pricing_tiers', 'is on, but no pricing_tiers block states the tiers');
+  }
+  // A capability's own routes are emitted before the declared ones, so a specification that declares
+  // the same path would leave a handler nothing ever reaches. Refused rather than silently shadowed
+  // (mwg-train-4lk review).
+  const capabilityOwnedRoutes = { cart: ['/cart', '/cart/add'], pricing_tiers: ['/pricing', '/pricing/select', '/pricing/:ref'] };
+  for (const [capability, owned] of Object.entries(capabilityOwnedRoutes)) {
+    if (spec.capabilities?.[capability] !== true) continue;
+    for (const route of spec.routes ?? []) {
+      const path = String(route?.path ?? '');
+      if (owned.includes(path)) {
+        at('routes', `${path} is the ${capability} capability's own route, which is served first, so declaring it as well would leave a route nothing reaches`);
+      }
+    }
+  }
   return problems;
 }
 
@@ -342,6 +428,7 @@ export function archetypeFromSpec(spec) {
     ...(spec.capacity === undefined ? {} : { capacity: spec.capacity }),
     ...(spec.password_field === undefined ? {} : { passwordField: spec.password_field }),
     ...(spec.capabilities === undefined ? {} : { capabilities: spec.capabilities }),
+    ...(spec.pricing_tiers === undefined ? {} : { pricingTiers: spec.pricing_tiers }),
     ...(spec.seed_accounts === undefined ? {} : { seedAccounts: spec.seed_accounts }),
   };
 }
