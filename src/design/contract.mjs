@@ -74,8 +74,8 @@ export const PLAN_SECTIONS = [
   'Provenance',
 ];
 
-const squash = (text) => text.replace(/\s+/g, ' ').trim();
-const contains = (body, needle) => {
+export const squash = (text) => text.replace(/\s+/g, ' ').trim();
+export const contains = (body, needle) => {
   const text = squash(String(needle));
   const haystack = squash(body);
   if (!text.startsWith('/')) return haystack.includes(text);
@@ -86,7 +86,7 @@ const contains = (body, needle) => {
   return pattern.test(haystack);
 };
 
-function sectionBody(text, heading) {
+export function sectionBody(text, heading) {
   const start = text.indexOf(`## ${heading}`);
   if (start === -1) return null;
   const rest = text.slice(start + heading.length + 3);
@@ -94,7 +94,7 @@ function sectionBody(text, heading) {
   return next === -1 ? rest : rest.slice(0, next);
 }
 
-function checkSections(text, required, at) {
+export function checkSections(text, required, at) {
   const headings = [...text.matchAll(/^## (.+)$/gm)].map((match) => match[1].trim());
   for (const heading of required) {
     if (!headings.includes(heading)) at('sections', `missing required section '## ${heading}'`);
@@ -109,7 +109,7 @@ function checkSections(text, required, at) {
   }
 }
 
-function checkLinks(text, name, resolveLink, at) {
+export function checkLinks(text, name, resolveLink, at) {
   // Documents rot: a relative link that resolves nowhere is a finding wherever the caller can resolve it. This
   // rule exists because every relative link in the first seven contracts pointed one directory too shallow -
   // correct in the README they were copied from, dead in each per-demo file - and nothing in the build noticed.
@@ -122,7 +122,7 @@ function checkLinks(text, name, resolveLink, at) {
   }
 }
 
-function frontmatterOf(name, text, at) {
+export function frontmatterOf(name, text, at) {
   const { frontmatter, problems } = parseFrontmatter(text);
   for (const problem of problems) at('frontmatter', `${name}: ${problem}`);
   return frontmatter;

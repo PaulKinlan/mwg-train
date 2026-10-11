@@ -26,6 +26,7 @@ const WIRED = new Set([
   'check:route-conformance',
   'check:rules-pin',
   'check:design-schema',
+  'check:train-design',
   'check:baseline-label',
   'check:pilot-served',
   'check:served-gap'
