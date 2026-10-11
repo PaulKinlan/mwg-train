@@ -18,6 +18,8 @@ const WIRED = new Set([
   'check:disjoint',
   // Re-derives every archetype asset set from its accepted target; no network, no browser.
   'check:archetype-assets',
+  // Re-derives every build's key from its own project id and model; no network, no browser.
+  'check:build-key',
   'check:eval-projects',
   'check:targets',
   'check:specs',

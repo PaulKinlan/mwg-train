@@ -22,6 +22,7 @@ import { generateCorpus } from '../pilot/generate.mjs';
 import { upliftProject } from '../src/corpus/uplift.mjs';
 import { hashTree } from '../src/corpus/harness.mjs';
 import { BASELINE_FIELDS } from '../src/eval/ruleset.mjs';
+import { KEY_FIELD, MODEL_FIELD, NO_MODEL, assertModelIdentity, buildKey, buildKeyDefinition, duplicateBuildKeys } from '../src/eval/build-key.mjs';
 
 const repoRoot = resolve(dirname(new URL(import.meta.url).pathname), '..');
 const corpusPath = join(repoRoot, 'pilot/CORPUS.json');
@@ -102,9 +103,21 @@ function record(runDir) {
           improved_rules: decision.improved_rules,
           accepted: decision.accepted,
           category: decision.category,
+          // The third key (mwg-train-gzi). The pilot is deterministic - no model and no teacher are in
+          // the loop - so it records the explicit sentinel rather than leaving the field out, and the
+          // derived key beside it so the record shows the key it is measured under.
+          [MODEL_FIELD]: NO_MODEL,
+          [KEY_FIELD]: buildKey({ projectId: decision.project_id, model: NO_MODEL }),
         };
       })
       .sort((a, b) => a.project_id.localeCompare(b.project_id));
+
+    // A duplicate key is the failure the third key exists to prevent, so recording one is refused here
+    // rather than left for a reader to notice.
+    const collisions = duplicateBuildKeys(projects);
+    if (collisions.length > 0) {
+      refuse(`${collisions.length} build key(s) are carried by more than one project: ${collisions.map((entry) => entry.key).join(', ')}`);
+    }
 
     writeFileSync(
       corpusPath,
@@ -119,6 +132,7 @@ function record(runDir) {
           // The floor this record measures is ours, not an official uplift product's. Added after review
           // found the label reached the individual decisions but not the committed record (bead mwg-train-6ek).
           ...BASELINE_FIELDS,
+          build_key_definition: buildKeyDefinition('pilot/CORPUS.json'),
           summary: run.summary,
           projects,
         },
@@ -145,6 +159,32 @@ function verify() {
   try {
     const generated = generate(plan, scratch);
     const byId = new Map(recorded.projects.map((project) => [project.project_id, project]));
+
+    // The model key is part of every row's identity, so a record that has lost it - or whose derived key
+    // no longer agrees with its own project id and model - is a failed verification and not a cosmetic
+    // difference: the builds in it can no longer be told apart from another model's builds (mwg-train-gzi).
+    const keyable = [];
+    for (const project of recorded.projects) {
+      let derived;
+      try {
+        assertModelIdentity(project[MODEL_FIELD], { context: `${project.project_id} in pilot/CORPUS.json` });
+        derived = buildKey({ projectId: project.project_id, model: project[MODEL_FIELD] });
+      } catch (error) {
+        // A row with no usable model or project id is a problem, not a crash: this script reports findings
+        // and exits non-zero, and a stack trace from it would hide every other row's verdict.
+        problems.push(error.message);
+        continue;
+      }
+      keyable.push(project);
+      if (project[KEY_FIELD] !== derived) {
+        problems.push(
+          `${project.project_id}: the recorded ${KEY_FIELD} is ${JSON.stringify(project[KEY_FIELD])}, but its own project id and model derive ${derived}`,
+        );
+      }
+    }
+    for (const collision of duplicateBuildKeys(keyable)) {
+      problems.push(`${collision.key} is the key of more than one project (${collision.projectIds.join(', ')})`);
+    }
 
     if (byId.size !== plan.projects.length) {
       problems.push(`the plan has ${plan.projects.length} projects but the record has ${byId.size}`);

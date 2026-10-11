@@ -6,6 +6,14 @@
   "uplift_tool": "src/corpus/uplift.mjs",
   "baseline_label": "mwg-train deterministic baseline",
   "baseline_definition": "deterministic repair of the project by our own Modern Web Guidance rule specifications; no model and no teacher in the loop",
+  "baseline_tool": "src/corpus/uplift.mjs",
+  "build_key_definition": {
+    "formula": "build_key = project_id@model (project_id is the use case x framework pair)",
+    "model_field": "model",
+    "key_field": "build_key",
+    "no_model": "deterministic:no-model",
+    "note": "Every row of pilot/CORPUS.json records the model that produced the build, in the provider/id form the lane rotation uses, and the derived key beside it. pilot/CORPUS.json is deterministic - its own baseline_definition says no model and no teacher are in the loop - so every row records the explicit sentinel 'deterministic:no-model' instead of leaving the field out. The sealed evaluation compares arms that differ by model alone, and a build with no model identity cannot be attributed to the model that produced it (mwg-train-gzi)."
+  },
   "summary": {
     "attempted": 35,
     "accepted": 34,
@@ -102,7 +110,9 @@
         "security/sanitize-untrusted-html"
       ],
       "accepted": true,
-      "category": "accepted"
+      "category": "accepted",
+      "model": "deterministic:no-model",
+      "build_key": "account-recovery-hono@deterministic:no-model"
     },
     {
       "project_id": "account-recovery-preact",
@@ -124,7 +134,9 @@
         "forms/autofill-sign-up-form"
       ],
       "accepted": true,
-      "category": "accepted"
+      "category": "accepted",
+      "model": "deterministic:no-model",
+      "build_key": "account-recovery-preact@deterministic:no-model"
     },
     {
       "project_id": "account-recovery-raw",
@@ -151,7 +163,9 @@
         "forms/autofill-sign-up-form"
       ],
       "accepted": true,
-      "category": "accepted"
+      "category": "accepted",
+      "model": "deterministic:no-model",
+      "build_key": "account-recovery-raw@deterministic:no-model"
     },
     {
       "project_id": "account-recovery-react",
@@ -172,7 +186,9 @@
         "security/sanitize-untrusted-html"
       ],
       "accepted": true,
-      "category": "accepted"
+      "category": "accepted",
+      "model": "deterministic:no-model",
+      "build_key": "account-recovery-react@deterministic:no-model"
     },
     {
       "project_id": "account-recovery-svelte",
@@ -199,7 +215,9 @@
         "forms/autofill-sign-up-form"
       ],
       "accepted": true,
-      "category": "accepted"
+      "category": "accepted",
+      "model": "deterministic:no-model",
+      "build_key": "account-recovery-svelte@deterministic:no-model"
     },
     {
       "project_id": "account-recovery-vue",
@@ -220,7 +238,9 @@
         "security/sanitize-untrusted-html"
       ],
       "accepted": true,
-      "category": "accepted"
+      "category": "accepted",
+      "model": "deterministic:no-model",
+      "build_key": "account-recovery-vue@deterministic:no-model"
     },
     {
       "project_id": "account-recovery-webcomponents",
@@ -247,7 +267,9 @@
         "forms/autofill-sign-up-form"
       ],
       "accepted": true,
-      "category": "accepted"
+      "category": "accepted",
+      "model": "deterministic:no-model",
+      "build_key": "account-recovery-webcomponents@deterministic:no-model"
     },
     {
       "project_id": "booking-hono",
@@ -277,7 +299,9 @@
         "security/sanitize-untrusted-html"
       ],
       "accepted": true,
-      "category": "accepted"
+      "category": "accepted",
+      "model": "deterministic:no-model",
+      "build_key": "booking-hono@deterministic:no-model"
     },
     {
       "project_id": "booking-preact",
@@ -301,7 +325,9 @@
         "forms/autofill-address-form"
       ],
       "accepted": true,
-      "category": "accepted"
+      "category": "accepted",
+      "model": "deterministic:no-model",
+      "build_key": "booking-preact@deterministic:no-model"
     },
     {
       "project_id": "booking-raw",
@@ -331,7 +357,9 @@
         "security/sanitize-untrusted-html"
       ],
       "accepted": true,
-      "category": "accepted"
+      "category": "accepted",
+      "model": "deterministic:no-model",
+      "build_key": "booking-raw@deterministic:no-model"
     },
     {
       "project_id": "booking-react",
@@ -361,7 +389,9 @@
         "security/sanitize-untrusted-html"
       ],
       "accepted": true,
-      "category": "accepted"
+      "category": "accepted",
+      "model": "deterministic:no-model",
+      "build_key": "booking-react@deterministic:no-model"
     },
     {
       "project_id": "booking-svelte",
@@ -391,7 +421,9 @@
         "security/sanitize-untrusted-html"
       ],
       "accepted": true,
-      "category": "accepted"
+      "category": "accepted",
+      "model": "deterministic:no-model",
+      "build_key": "booking-svelte@deterministic:no-model"
     },
     {
       "project_id": "booking-vue",
@@ -413,7 +445,9 @@
         "forms/autofill-address-form"
       ],
       "accepted": true,
-      "category": "accepted"
+      "category": "accepted",
+      "model": "deterministic:no-model",
+      "build_key": "booking-vue@deterministic:no-model"
     },
     {
       "project_id": "booking-webcomponents",
@@ -443,7 +477,9 @@
         "security/sanitize-untrusted-html"
       ],
       "accepted": true,
-      "category": "accepted"
+      "category": "accepted",
+      "model": "deterministic:no-model",
+      "build_key": "booking-webcomponents@deterministic:no-model"
     },
     {
       "project_id": "catalogue-hono",
@@ -465,7 +501,9 @@
         "security/sanitize-untrusted-html"
       ],
       "accepted": true,
-      "category": "accepted"
+      "category": "accepted",
+      "model": "deterministic:no-model",
+      "build_key": "catalogue-hono@deterministic:no-model"
     },
     {
       "project_id": "catalogue-preact",
@@ -483,7 +521,9 @@
         "forms/validate-input-after-interaction"
       ],
       "accepted": true,
-      "category": "accepted"
+      "category": "accepted",
+      "model": "deterministic:no-model",
+      "build_key": "catalogue-preact@deterministic:no-model"
     },
     {
       "project_id": "catalogue-raw",
@@ -501,7 +541,9 @@
         "security/sanitize-untrusted-html"
       ],
       "accepted": true,
-      "category": "accepted"
+      "category": "accepted",
+      "model": "deterministic:no-model",
+      "build_key": "catalogue-raw@deterministic:no-model"
     },
     {
       "project_id": "catalogue-react",
@@ -523,7 +565,9 @@
         "security/sanitize-untrusted-html"
       ],
       "accepted": true,
-      "category": "accepted"
+      "category": "accepted",
+      "model": "deterministic:no-model",
+      "build_key": "catalogue-react@deterministic:no-model"
     },
     {
       "project_id": "catalogue-svelte",
@@ -541,7 +585,9 @@
         "security/sanitize-untrusted-html"
       ],
       "accepted": true,
-      "category": "accepted"
+      "category": "accepted",
+      "model": "deterministic:no-model",
+      "build_key": "catalogue-svelte@deterministic:no-model"
     },
     {
       "project_id": "catalogue-vue",
@@ -553,7 +599,9 @@
       "uplift_applied": [],
       "improved_rules": [],
       "accepted": false,
-      "category": "no-warranted-change"
+      "category": "no-warranted-change",
+      "model": "deterministic:no-model",
+      "build_key": "catalogue-vue@deterministic:no-model"
     },
     {
       "project_id": "catalogue-webcomponents",
@@ -571,7 +619,9 @@
         "security/sanitize-untrusted-html"
       ],
       "accepted": true,
-      "category": "accepted"
+      "category": "accepted",
+      "model": "deterministic:no-model",
+      "build_key": "catalogue-webcomponents@deterministic:no-model"
     },
     {
       "project_id": "contact-lead-hono",
@@ -596,7 +646,9 @@
         "security/sanitize-untrusted-html"
       ],
       "accepted": true,
-      "category": "accepted"
+      "category": "accepted",
+      "model": "deterministic:no-model",
+      "build_key": "contact-lead-hono@deterministic:no-model"
     },
     {
       "project_id": "contact-lead-preact",
@@ -617,7 +669,9 @@
         "accessibility/accessible-error-announcement"
       ],
       "accepted": true,
-      "category": "accepted"
+      "category": "accepted",
+      "model": "deterministic:no-model",
+      "build_key": "contact-lead-preact@deterministic:no-model"
     },
     {
       "project_id": "contact-lead-raw",
@@ -644,7 +698,9 @@
         "security/sanitize-untrusted-html"
       ],
       "accepted": true,
-      "category": "accepted"
+      "category": "accepted",
+      "model": "deterministic:no-model",
+      "build_key": "contact-lead-raw@deterministic:no-model"
     },
     {
       "project_id": "contact-lead-react",
@@ -665,7 +721,9 @@
         "security/sanitize-untrusted-html"
       ],
       "accepted": true,
-      "category": "accepted"
+      "category": "accepted",
+      "model": "deterministic:no-model",
+      "build_key": "contact-lead-react@deterministic:no-model"
     },
     {
       "project_id": "contact-lead-svelte",
@@ -692,7 +750,9 @@
         "security/sanitize-untrusted-html"
       ],
       "accepted": true,
-      "category": "accepted"
+      "category": "accepted",
+      "model": "deterministic:no-model",
+      "build_key": "contact-lead-svelte@deterministic:no-model"
     },
     {
       "project_id": "contact-lead-vue",
@@ -716,7 +776,9 @@
         "security/sanitize-untrusted-html"
       ],
       "accepted": true,
-      "category": "accepted"
+      "category": "accepted",
+      "model": "deterministic:no-model",
+      "build_key": "contact-lead-vue@deterministic:no-model"
     },
     {
       "project_id": "contact-lead-webcomponents",
@@ -743,7 +805,9 @@
         "security/sanitize-untrusted-html"
       ],
       "accepted": true,
-      "category": "accepted"
+      "category": "accepted",
+      "model": "deterministic:no-model",
+      "build_key": "contact-lead-webcomponents@deterministic:no-model"
     },
     {
       "project_id": "event-registration-hono",
@@ -765,7 +829,9 @@
         "forms/validate-input-after-interaction"
       ],
       "accepted": true,
-      "category": "accepted"
+      "category": "accepted",
+      "model": "deterministic:no-model",
+      "build_key": "event-registration-hono@deterministic:no-model"
     },
     {
       "project_id": "event-registration-preact",
@@ -787,7 +853,9 @@
         "security/sanitize-untrusted-html"
       ],
       "accepted": true,
-      "category": "accepted"
+      "category": "accepted",
+      "model": "deterministic:no-model",
+      "build_key": "event-registration-preact@deterministic:no-model"
     },
     {
       "project_id": "event-registration-raw",
@@ -812,7 +880,9 @@
         "security/sanitize-untrusted-html"
       ],
       "accepted": true,
-      "category": "accepted"
+      "category": "accepted",
+      "model": "deterministic:no-model",
+      "build_key": "event-registration-raw@deterministic:no-model"
     },
     {
       "project_id": "event-registration-react",
@@ -833,7 +903,9 @@
         "security/sanitize-untrusted-html"
       ],
       "accepted": true,
-      "category": "accepted"
+      "category": "accepted",
+      "model": "deterministic:no-model",
+      "build_key": "event-registration-react@deterministic:no-model"
     },
     {
       "project_id": "event-registration-svelte",
@@ -858,7 +930,9 @@
         "security/sanitize-untrusted-html"
       ],
       "accepted": true,
-      "category": "accepted"
+      "category": "accepted",
+      "model": "deterministic:no-model",
+      "build_key": "event-registration-svelte@deterministic:no-model"
     },
     {
       "project_id": "event-registration-vue",
@@ -882,7 +956,9 @@
         "forms/validate-input-after-interaction"
       ],
       "accepted": true,
-      "category": "accepted"
+      "category": "accepted",
+      "model": "deterministic:no-model",
+      "build_key": "event-registration-vue@deterministic:no-model"
     },
     {
       "project_id": "event-registration-webcomponents",
@@ -907,8 +983,9 @@
         "security/sanitize-untrusted-html"
       ],
       "accepted": true,
-      "category": "accepted"
+      "category": "accepted",
+      "model": "deterministic:no-model",
+      "build_key": "event-registration-webcomponents@deterministic:no-model"
     }
-  ],
-  "baseline_tool": "src/corpus/uplift.mjs"
+  ]
 }
