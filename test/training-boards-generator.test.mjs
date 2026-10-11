@@ -28,6 +28,7 @@ import {
   boardPath,
   collectBoards,
   composePrompt,
+  describeStructure,
   familySources,
   inventedDomain,
   boardIsWidescreen,
@@ -64,6 +65,16 @@ test('the site name and art direction come from design.md, with the conformance 
   assert.doesNotMatch(direction, /student model|measured against|\btarget\b/);
 });
 
+test('the component map is translated to words, because the model renders markup it is shown', () => {
+  assert.equal(
+    describeStructure(['header.vf-header', 'nav.vf-nav', 'main.vf-hero', 'form#velofix-booking', 'fieldset.vf-fieldset', 'fieldset.vf-fieldset', 'fieldset.vf-fieldset', 'footer.vf-footer']),
+    'a brand header, then a navigation bar, then a main content area, then the working form, then a group of fields (3 of them), then a footer',
+  );
+  assert.equal(describeStructure([]), '');
+  assert.equal(describeStructure(['div.card', 'div.card']), 'a surface (2 of them)');
+  assert.equal(describeStructure(['unknownwidget.thing']), 'a unknownwidget block');
+});
+
 test('every prompt is composed from the family own sources and carries the owner words verbatim', () => {
   const boards = collectBoards();
   assert.equal(boards.length, TRAINING_TARGET_FAMILIES.length, 'one board per training family');
@@ -72,14 +83,23 @@ test('every prompt is composed from the family own sources and carries the owner
   const brief = JSON.parse(readFileSync(join(ROOT, 'docs/train/briefs/manifest.jsonl'), 'utf8').split('\n')[0]);
   const tr01 = boards[0];
   assert.ok(tr01.prompt.includes(brief.prompt), 'the canonical brief prompt appears in the board prompt verbatim');
-  assert.match(tr01.prompt, /LOCALE: en-GB\./, 'the family locale is stated');
+  assert.match(tr01.prompt, /Write the page's copy in en-GB conventions\./, 'the family locale is stated in prose');
   assert.match(tr01.prompt, /Use £ prices/, 'en-GB families are priced in sterling');
   assert.match(tr01.prompt, /#0f172a/, 'the design.md palette is carried into the prompt');
-  assert.match(tr01.prompt, /AVOID: a calendar widget/, 'the design.md anti-patterns are carried into the prompt');
+  assert.match(tr01.prompt, /Avoid: a calendar widget/, 'the design.md anti-patterns are carried into the prompt');
   assert.match(tr01.prompt, /ONE full-bleed 16:9 desktop browser window/);
-  assert.match(tr01.prompt, /never show two windows side by side/, 'the duplicate-frame defect that a 16:9 request can trigger is named');
+  assert.match(tr01.prompt, /two windows side by side/, 'the duplicate-frame defect that a 16:9 request can trigger is named');
+  assert.match(tr01.prompt, /touching the left, right and bottom edges/, 'the frame is pinned: the page fills the image');
+  assert.match(tr01.prompt, /print no route path, no selector or class name/, 'the model is told not to print the prompt on the page');
   assert.match(tr01.prompt, /NOT a sketch, NOT a wireframe/);
   assert.doesNotMatch(tr01.prompt, /student model|measured against/i, 'no meta-language about the conformance artefact');
+
+  // The first batch printed `header.ot-head` and `form#expense-log-form` ON the page (tr-15) because the prompt showed
+  // the model the raw component map. No prompt may carry markup syntax again.
+  for (const board of boards) {
+    assert.doesNotMatch(board.prompt, /\b(?:header|nav|main|section|form|fieldset|footer|aside)\.[a-z][\w-]*/, `${board.family}: selector syntax leaked into the prompt`);
+    assert.doesNotMatch(board.prompt, /#[a-z][\w-]*(?:-form|-grid|-nav)/, `${board.family}: id selector leaked into the prompt`);
+  }
 
   const tr01Family = TRAINING_TARGET_FAMILIES[0];
   assert.equal(composePrompt(familySources(tr01Family)), tr01.prompt, 'collectBoards must be a thin wrapper over familySources + composePrompt');

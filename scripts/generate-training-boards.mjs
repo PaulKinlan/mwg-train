@@ -196,52 +196,94 @@ export function localeConventions(locale) {
  * Compose one family's image prompt. Pure: the same inputs produce the same bytes, which is what lets the register pin
  * a prompt digest and a later reader reproduce the exact text that was sent.
  */
+/**
+ * Plain-language page structure, derived from design.md's component map.
+ *
+ * The map is written as markup (`header.vf-header`, `form#velofix-booking`) because it is checked against the authored
+ * board, and putting that text in an image prompt is how three boards in the first batch came back with 'header.ot-head'
+ * and 'form#expense-log-form' PRINTED ON THE PAGE: the model renders what it is shown. So the selectors are translated
+ * to what the block is, and runs of the same block are counted rather than repeated.
+ */
+const TAG_WORDS = Object.freeze({
+  header: 'a brand header',
+  nav: 'a navigation bar',
+  main: 'a main content area',
+  section: 'a content section',
+  article: 'a card',
+  aside: 'a supporting panel',
+  form: 'the working form',
+  fieldset: 'a group of fields',
+  field: 'a field',
+  label: 'a field label',
+  ul: 'a list',
+  table: 'a data table',
+  h1: 'the page heading',
+  h2: 'a section heading',
+  footer: 'a footer',
+  div: 'a surface',
+});
+
+export function describeStructure(entries) {
+  const words = entries
+    .map((entry) => entry.split(/[.#[\s]/)[0].trim().toLowerCase())
+    .filter(Boolean)
+    .map((tag) => TAG_WORDS[tag] ?? `a ${tag} block`);
+  const runs = [];
+  for (const word of words) {
+    const last = runs.at(-1);
+    if (last && last.word === word) last.count += 1;
+    else runs.push({ word, count: 1 });
+  }
+  return runs
+    .map(({ word, count }) => (count === 1 ? word : `${word} (${count} of them)`))
+    .join(', then ');
+}
+
 export function composePrompt(sources) {
   const { family, brief, siteName, tokens, literals, antiPatterns, visualThesis, componentHierarchy, routes, journeys, fieldLabels } = sources;
-  const tokenList = Object.entries(tokens).map(([name, value]) => `${name}=${value}`).join(', ');
-  const literalList = Object.entries(literals).map(([name, value]) => `${name}=${value}`).join(', ');
+  const tokenList = Object.entries(tokens).map(([name, value]) => `${value} (${name.replace(/^--/, '')})`).join(', ');
+  const literalList = Object.entries(literals).map(([name, value]) => `${name} ${value}`).join(', ');
   const page = routes[0] ?? '/';
   const otherRoutes = routes.filter((route) => route !== page);
+  const structure = describeStructure(componentHierarchy);
 
+  // Written as instruction prose rather than `LABEL: value` blocks: the first batch's blocks were rendered onto the
+  // page on at least one board, which printed "home (/) route" and "locale en-GB" in the hero.
   return [
-    `A finished, high-density production screenshot of a real website: ONE full-bleed 16:9 desktop browser window ` +
-      `(${BOARD_WIDTH}x${BOARD_HEIGHT}). Draw that single window's chrome inside the image - macOS-style window controls ` +
-      `at the top left, one row of tabs, and an address bar showing the URL "https://${inventedDomain(siteName, family.family_id)}${page}". ` +
-      `Exactly one browser window and one page: never show the site twice, never show two windows side by side, and never ` +
-      `split the frame into two panes. The website fills the frame edge to edge: no phone or laptop mockup, no card ` +
-      `floating on a desktop wallpaper, no drop shadow, no surrounding background. ` +
-      `NOT a sketch, NOT a wireframe, NOT a hand-drawn illustration, NOT a diagram, NOT low-fidelity.`,
-    ``,
-    `SITE: ${siteName} - a ${family.archetype} website about ${family.title}.`,
-    `ARCHETYPE: ${family.archetype}`,
-    `LOCALE: ${brief.locale}. ${localeConventions(brief.locale)}`,
-    `WHAT THE SITE IS, in the owner's own words: "${brief.prompt}"`,
-    ``,
-    `THE PAGE IN VIEW is the site's ${page} route. Its structure, top to bottom: ${componentHierarchy.join(' then ') || 'header, working surface, footer'}.`,
-    `Content it must show, as a visitor would meet it:`,
-    ...journeys.map((journey) => `- ${sentence(journey)}`),
-    fieldLabels.length ? `Form controls on the page: ${fieldLabels.map((label) => `"${label}"`).join(', ')}.` : '',
-    otherRoutes.length ? `Routes the site serves elsewhere (not shown): ${otherRoutes.join(', ')}.` : '',
-    ``,
-    `ART DIRECTION: ${visualThesis}`,
-    tokenList ? `Palette, use exactly these colours: ${tokenList}. The accent is the only chromatic colour and carries the single primary action.` : '',
-    literalList ? `Structure literals: ${literalList}.` : '',
-    `Typography: a system UI sans-serif stack; exactly one h1; section headings keep a real document outline rather than a size effect.`,
-    ``,
-    `CONTENT RULES: every name, address, price, date, quantity, time, review and label is specific to this subject and ` +
-      `internally consistent with the rest of the page. Invent the content rather than writing placeholder brackets. ` +
-      `Keep every text run short - headings of two to five words, control labels of one to three words - and spell every ` +
-      `word correctly, because long strings of generated text come out garbled. Include a short social-proof row (two or ` +
-      `three short customer reviews with star ratings) wherever the page type allows it, and a footer carrying the ` +
-      `business's contact details. Include at least one large editorial-quality photograph where the subject has something ` +
-      `to photograph, and a portrait or small photograph beside any person named in the page. Never repeat the same ` +
-      `sentence twice; never write lorem ipsum, "Your Company" or "Placeholder". Use only fictional organisations, ` +
-      `people, addresses and domains. Show no real brand logo, trademark or third-party logo, and no photograph of a real ` +
-      `identifiable person.`,
-    antiPatterns.length ? `AVOID: ${antiPatterns.join('; ')}.` : '',
+    `Create a finished, high-density screenshot of a real production website. The screenshot is ONE full-bleed 16:9 ` +
+      `desktop browser window (${BOARD_WIDTH}x${BOARD_HEIGHT}): the browser chrome runs along the top edge - macOS-style ` +
+      `window controls, a single tab, and an address bar reading the URL "https://${inventedDomain(siteName, family.family_id)}${page}" - ` +
+      `and the website's own content fills the rest of the image, touching the left, right and bottom edges. Draw no ` +
+      `desktop wallpaper, no window shadow, no rounded card and no margin around the window. Show exactly one browser ` +
+      `window and one page, at one scroll position, scrolled to the top, with its complete footer visible. Never show the ` +
+      `same page twice, two windows side by side, or the frame split into two panes. This is a real screenshot, NOT a ` +
+      `sketch, NOT a wireframe, NOT a hand-drawn illustration, NOT a diagram, NOT low-fidelity.`,
+    `The site is ${siteName}, a ${family.archetype} website about ${family.title}. Its owner describes it in these ` +
+      `words: "${brief.prompt}" Write the page's copy in ${brief.locale} conventions. ${localeConventions(brief.locale)}`,
+    `The page in view is the site's home page. Its structure, top to bottom: ${structure || 'a brand header, a working surface and a footer'}. ` +
+      `It must show, as a visitor would meet it: ${journeys.map((journey) => sentence(journey).replace(/\.?$/, '.')).join(' ')}`,
+    fieldLabels.length ? `Controls on the page: ${fieldLabels.map((label) => `"${label}"`).join(', ')}.` : '',
+    otherRoutes.length ? `The site also has ${otherRoutes.length} other pages, which are NOT on this page and must not appear on it.` : '',
+    `Art direction: ${visualThesis}`,
+    tokenList ? `Use exactly this palette: ${tokenList}. The accent is the only chromatic colour and carries the single primary action.` : '',
+    literalList ? `Structural constants: ${literalList}.` : '',
+    `Typography: a system UI sans-serif stack, exactly one h1, and section headings that keep a real document outline.`,
+    `Every name, address, price, date, quantity, time and label must be specific to this subject and internally ` +
+      `consistent with the rest of the page; invent it rather than writing placeholder brackets. Keep text runs short - ` +
+      `headings of two to five words, control labels of one to three words - and spell every word correctly. Include a ` +
+      `short social-proof row of two or three customer reviews with star ratings wherever the page type allows, each ` +
+      `reviewer a different invented name shown beside a small portrait, and a footer carrying the business's contact ` +
+      `details. Include at least one large editorial-quality photograph where the subject has something to photograph. ` +
+      `Never use lorem ipsum, "Your Company", "Placeholder", "John Doe", example.com addresses, or any real company ` +
+      `name, brand, trademark or third-party logo; use only invented fictional organisations, people, addresses and domains.`,
+    `This paragraph is instruction for you, not copy for the page: print no route path, no selector or class name, no ` +
+      `locale code, no file name, no date-format token such as MM/DD/YYYY, and no other technical detail on the page. Date ` +
+      `every event in the near future, give each one the weekday that date actually falls on, and make every total agree ` +
+      `with the rows it summarises.`,
+    antiPatterns.length ? `Avoid: ${antiPatterns.join('; ')}.` : '',
   ]
     .filter((line) => line !== '')
-    .join('\n');
+    .join('\n\n');
 }
 
 /** Every family with its composed prompt, ready to generate. */
@@ -439,7 +481,7 @@ async function main() {
   console.log(`settings: temperature ${BOARD_TEMPERATURE}, maxOutputTokens ${BOARD_MAX_OUTPUT_TOKENS}, ${boards.length} board(s)\n`);
 
   if (registerOnly) {
-    const { entries, problems } = inspectCommitted({ only });
+    const { entries, problems } = inspectCommitted({ only: null });
     if (problems.length) {
       for (const problem of problems) console.error(`PROBLEM ${problem}`);
       console.error('Refusing to write the register: the committed boards and prompts do not agree with their sources.');
@@ -493,14 +535,18 @@ async function main() {
     process.exit(1);
   }
 
-  const { entries, problems } = inspectCommitted({ only });
+  // A retry with --only rewrites one family, but the register is a record of ALL of them: writing it from the subset
+  // would silently drop the other rows - the exact drift a generated register exists to prevent. So the subset is
+  // generated, then the whole set is re-inspected and the register is only written when every family passes.
+  const { problems } = inspectCommitted({ only: null });
   if (problems.length) {
     for (const problem of problems) console.error(`PROBLEM ${problem}`);
-    console.error('Generated boards did not pass the offline re-check; not writing the register.');
+    console.error('The tree does not pass the offline re-check for every family; not writing the register.');
     process.exit(1);
   }
-  const path = writeRegister(entries, { generatedOn: process.env.MWG_TRAIN_BOARDS_DATE ?? null });
-  console.log(`\nregister: wrote ${entries.length} row(s) to ${relative(ROOT, path)}`);
+  const full = inspectCommitted({ only: null });
+  const path = writeRegister(full.entries, { generatedOn: process.env.MWG_TRAIN_BOARDS_DATE ?? null });
+  console.log(`\nregister: wrote ${full.entries.length} row(s) to ${relative(ROOT, path)}`);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
