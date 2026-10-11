@@ -45,16 +45,25 @@ const REPO_ROOT = resolve(import.meta.dirname, '..');
 const norm = (path) => path.replace(/:[A-Za-z_][A-Za-z0-9_]*/g, ':x');
 
 const args = process.argv.slice(2);
-const flag = (name, fallback) => {
+// A flag the caller NAMED must carry a value. `--projects` as the last argument used to fall through to
+// `path.isAbsolute(undefined)` and die with a raw TypeError (bead mwg-train-64b review, P2). The fix is NOT to
+// fall back to the default: a malformed flag that quietly ran against the default path would exit 0, which is the
+// one outcome the named-path rule exists to prevent. A named flag with no value is a usage error, and it says so.
+const namedFlag = (name, fallback) => {
   const index = args.indexOf(name);
-  return index === -1 ? fallback : args[index + 1];
+  if (index === -1) return { named: false, value: fallback };
+  const value = args[index + 1];
+  if (value === undefined || value.startsWith('--')) {
+    console.error(`check-route-conformance: FATAL - ${name} needs a value, and none was given.`);
+    process.exit(1);
+  }
+  return { named: true, value };
 };
 const asJson = args.includes('--json');
-const corpusPath = flag('--corpus', 'pilot/TRAINING_CORPUS.json');
-const projectsRoot = flag('--projects', 'pilot/training-projects');
-const manifestPath = flag('--manifest', 'docs/train/briefs/manifest.jsonl');
+const corpusPath = namedFlag('--corpus', 'pilot/TRAINING_CORPUS.json').value;
+const manifestPath = namedFlag('--manifest', 'docs/train/briefs/manifest.jsonl').value;
 // Whether the caller NAMED the path, which decides whether its absence is an error or a skip.
-const projectsRootNamed = args.includes('--projects');
+const { named: projectsRootNamed, value: projectsRoot } = namedFlag('--projects', 'pilot/training-projects');
 
 const readJson = (path) => JSON.parse(readFileSync(isAbsolute(path) ? path : join(REPO_ROOT, path), 'utf8'));
 const readJsonl = (path) =>

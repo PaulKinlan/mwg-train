@@ -94,6 +94,30 @@ test('a corpus defect fails even while the generated projects are absent', () =>
   }
 });
 
+test('a flag the caller NAMED with no value is a usage error, not a silent fallback to the default', () => {
+  // Review finding P2 on this bead: `--projects` as the last argument used to reach path.isAbsolute(undefined) and
+  // die with a raw TypeError. The fix must NOT be to fall back to the default path - that would run the check
+  // against the default and exit 0, which is exactly the 'a typo cannot look clean' failure the named-path rule
+  // exists to prevent. So: a clear usage error, exit 1, and no conformance or skip verdict on stdout.
+  const dir = bareTree();
+  try {
+    for (const flag of ['--projects', '--corpus', '--manifest']) {
+      const result = runCli(dir, [flag]);
+      assert.equal(result.code, 1, `${flag} with no value must exit 1, got ${result.code}: ${result.stdout}${result.stderr}`);
+      const out = result.stdout + result.stderr;
+      assert.match(out, /needs a value/, `${flag} with no value must say so`);
+      assert.doesNotMatch(out, /ERR_INVALID_ARG_TYPE|TypeError/, `${flag} with no value must not be a raw runtime TypeError`);
+      assert.doesNotMatch(out, /PASS -|SKIPPED/, `${flag} with no value must not produce a verdict`);
+    }
+    // And a flag whose value is another flag is the same usage error, not a path called '--json'.
+    const swallowed = runCli(dir, ['--projects', '--json']);
+    assert.equal(swallowed.code, 1);
+    assert.match(swallowed.stdout + swallowed.stderr, /needs a value/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test('the CLI still RUNS when invoked through a symlink, and the skip is machine-readable under --json', () => {
   const dir = bareTree();
   try {
