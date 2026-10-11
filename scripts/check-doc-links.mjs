@@ -282,7 +282,26 @@ export function extractLinks(text) {
   for (let i = 0; i < masked.length; i += 1) if (masked[i] === '\n') lineStarts.push(i + 1);
   const lineOf = (offset) => lineOfIndex(lineStarts, offset);
   const lines = text.split('\n');
-  const quotedAt = (line) => /^\s*>/.test(lines[line - 1] ?? '');
+  // A blockquote reproduces someone else's document, so its relative links are relative to that document rather than
+  // to this repository, and skipping them is right. A callout - `> [!NOTE]` - is not a quotation: it is our own prose
+  // in a marker, so its links are relative to this repository, and treating them as quoted was how a future callout's
+  // link would have gone unchecked (mwg-train-0ts). The block is the unit rather than the line, because a callout's
+  // continuation lines are as much ours as its first: a blockquote starts where a `>` line follows a non-`>` line,
+  // and the block is a callout only if that opening line carries the marker.
+  const calloutOpener = /^\s{0,3}>\s{0,3}\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]/;
+  const quotedFlags = (() => {
+    const flags = [];
+    let previousWasQuote = false;
+    let inCallout = false;
+    for (const line of lines) {
+      const isQuote = /^\s{0,3}>/.test(line);
+      if (isQuote && !previousWasQuote) inCallout = calloutOpener.test(line);
+      flags.push(isQuote && !inCallout);
+      previousWasQuote = isQuote;
+    }
+    return flags;
+  })();
+  const quotedAt = (line) => quotedFlags[line - 1] ?? false;
   const links = [];
 
   for (let i = 0; i < masked.length; i += 1) {
