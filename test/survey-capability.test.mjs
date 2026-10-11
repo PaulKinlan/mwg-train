@@ -213,6 +213,16 @@ test('functional: the branch decides which questions are asked, and the outcome 
         }
         const missing = await fetch(`${base}/survey/result/nope`);
         assert.equal(missing.status, 404, `${arm} an unknown result is a 404`);
+        // The records table is shared, so a reference can name a product: the result route must 404 on a
+        // row that is not a result, and the process must still be there afterwards. This is the class the
+        // checkout review found (mwg-train-le6), closed here before this capability is handed over.
+        const productResponse = await post('/applications', { applicant: 'A product', household_income: '1', notes: 'n/a' });
+        assert.equal(productResponse.status, 303, `${arm} the application route writes a record`);
+        const productRef = productResponse.headers.get('location').split('/').pop();
+        const wrongKind = await fetch(`${base}/survey/result/${productRef}`);
+        assert.equal(wrongKind.status, 404, `${arm} a product reference is not a survey result`);
+        const stillServing = await fetch(`${base}/survey`);
+        assert.equal(stillServing.status, 200, `${arm} the server survived a result lookup on a product reference`);
 
         // THE STALE ANSWER: answer the conditional questions as an English household, then change the
         // answer they depended on. The income answer is now hidden, so it must not reach the outcome -

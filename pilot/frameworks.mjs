@@ -1074,12 +1074,28 @@ const surveyPages = (archetype) => {
     "  return false;",
     "};",
     "const surveyVisible = (question, answers) => question.when === undefined || surveySatisfied(question.when, answers);",
-    "const surveyAsked = (answers) => SURVEY.questions.filter((question) => surveyVisible(question, answers));",
+    // Walking the questions in order is the point: a question is judged against the answers given to the
+    // questions BEFORE it, and only a visible question's answer joins that set. A hidden question's
+    // stale answer therefore cannot satisfy a condition further down - which is what makes changing an
+    // earlier answer change the outcome rather than leave a phantom answer behind (mwg-train-s0q).
+    "const surveyAsked = (answers) => {",
+    "  const considered = [];",
+    "  const asked = [];",
+    "  for (const question of SURVEY.questions) {",
+    "    if (question.when !== undefined && !surveySatisfied(question.when, considered)) continue;",
+    "    asked.push(question);",
+    "    considered.push({ name: question.field, value: surveyAnswer(answers, question.field) });",
+    "  }",
+    "  return asked;",
+    "};",
     "const surveyNext = (answers) => surveyAsked(answers).find((question) => surveyAnswer(answers, question.field) === undefined) ?? null;",
     "const surveyOutcome = (answers) => {",
     "  const asked = surveyAsked(answers);",
-    "  const band = SURVEY.bands.find((entry) => entry.when === undefined || surveySatisfied(entry.when, answers)) ?? null;",
-    "  return { outcome: band ? band.name : null, answers: asked.map((question) => ({ field: question.field, value: surveyAnswer(answers, question.field) })) };",
+    // The bands are evaluated against the answers that were ASKED, not against everything the visitor
+    // once typed: an answer to a question the branch has since hidden must not decide the outcome.
+    "  const considered = asked.map((question) => ({ name: question.field, value: surveyAnswer(answers, question.field) }));",
+    "  const band = SURVEY.bands.find((entry) => entry.when === undefined || surveySatisfied(entry.when, considered)) ?? null;",
+    "  return { outcome: band ? band.name : null, answers: considered.map((entry) => ({ field: entry.name, value: entry.value })) };",
     "};",
     "const surveyControl = (field, current) => {",
     "  const label = '<label for=\"answer\">' + esc(field.label ?? field.name) + '</label>';",
