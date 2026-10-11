@@ -412,9 +412,14 @@ test('a non-array fields is refused, not thrown', () => {
 
 // The same defect class as `fields`, at the two other list-valued properties, and the pairs of readers are not the
 // same ones either: a non-array `routes` reached `.filter` and threw, and the `for...of` loops over it would have
-// iterated characters silently if the throwers had not been reached first. All three fixtures are exercised because
-// they guard different capabilities - the cart and checkout reach the route readers, the survey reaches the
-// condition reader that maps a select field's options.
+// iterated characters silently if the throwers had not been reached first. The cart and checkout fixtures cover the
+// route readers; the survey fixture is the one that reaches the condition reader mapping a select field's options,
+// which the cart's own select field does not exercise because it lacks the survey capability.
+//
+// Note on why all three fixtures appear in the routes test rather than one: measured against the merge base, all
+// three throw, but at the SAME earliest reader - the pre-fix code halts before any capability block - so the throws
+// do not by themselves show the fixtures are distinct. They are distinct for what they reach with the fix in place,
+// which is why they are kept and why the routes loop asserts each fixture declares routes at all.
 test('a non-array routes is refused, not thrown', () => {
   for (const [label, specFor] of [['cartSpec', cartSpec], ['checkoutSpec', checkoutSpec], ['surveySpec', surveySpec]]) {
     const base = specFor();
