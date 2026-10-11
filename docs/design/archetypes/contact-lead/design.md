@@ -19,12 +19,12 @@ The two-column layout places the studio identity and process on the left and the
 
 - **The page** is a responsive viewport with content inside a `.container`.
 - **The consultation workbench** is a two-column grid. The left column `.studio-panel` holds the studio identity, address, and consultation process steps. The right column `.form-card` holds the form fields.
-- **The success view** replaces the form column with a receipt card, displaying the server-issued reference token and the echoed message.
+- **The success view** replaces the two-column grid with a standalone centered `.success-shell` without the studio-panel side card, displaying the static reference token (`#LEAD-7301`) and the echoed message.
 - **Corners** use a hierarchical scale: `.form-card` and `.studio-panel` use `--radius-lg` (16px), `.process-list` uses `--radius-md` (12px), form controls use `--radius-sm` (8px), and the state pills use `--radius-pill` (9999px).
 
 ## Typography
 
-Two families, both from the system: `--font-sans` (the `system-ui` stack) for everything a person reads, and `--font-mono` for machine-issued tokens like the reference ID. 
+Two families, both from the system: `--font-sans` (the `system-ui` stack) for everything a person reads, and `--font-mono` for the reference ID. 
 
 The studio name uses the display sizes. The form labels and text are highly legible at `1rem` with a `1.5` line height. The character count and field hints use a smaller, muted text style to remain secondary to the inputs.
 
@@ -66,7 +66,7 @@ Read from `demo/index.html`:
 - `.studio-panel` holding the identity, address, and process list.
 - `.form-card` holding `#enquiry-form`.
 - The form includes fields for `name`, `email`, `scope`, `budget`, and `message`, with `#message-count` and `#message-status` for the character limit.
-- `demo/success.html` replaces the form with a success panel showing the reference and the echoed message.
+- `demo/success.html` replaces the two-column grid with a standalone centered `.success-shell` panel showing the static `#LEAD-7301` reference and the echoed message.
 
 ## Anti-patterns
 
