@@ -52,7 +52,9 @@ with `Add to cart` as its submit. So the write is reachable both from the grid a
 compares the route names a spec declares against those extracted from a generated server, and it files
 **no** `declared_not_served` entry for this archetype. It does record four routes each generated arm serves
 that the spec does not declare - `GET /record/:ref`, `GET /roster`, `GET /inbox`, `GET /attendees` - across
-five arms, twenty exceptions in all, all `Generator fallback` or `Hardcoded generator fallback`. Those are
+five arms, twenty exceptions in all. Their reasons are not uniform: the five `GET /record/:ref` entries are
+recorded as `Generator discrepancy`, and the other fifteen - three list routes on each of the five arms - as
+`Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)`. Those are
 generator furniture rather than anything this contract promises.
 
 ## Data and state
@@ -105,7 +107,7 @@ printed a fixed string, would satisfy a careless reading of it.
 
 Criteria 1 to 3 are the spec's own acceptance strings, quoted. Criterion 4 is the target's; note that the
 `Proceed to checkout` button has **no declared route behind it** - the button is pictured in the demo and
-on two boards, and the contract stops at the cart.
+on the cart board, and the contract stops at the cart.
 
 ## Implementation status
 
@@ -124,7 +126,11 @@ on two boards, and the contract stops at the cart.
     every one of the fourteen (`part-muziszq5-drsuw9`, `part-muzit3tg-fhtprq`, and so on). Criterion 2 is
     therefore evidenced directly, and uniquely: fourteen distinct values is what "unique to this attempt"
     means;
-  - `validation-failure` records a visible error and `refused-observed` on all seven arms;
+  - `validation-failure` observes `refused-observed` on five of the seven arms; `catalogue-hono` and
+    `catalogue-react` observe `accepted-empty`, and their original entries record zero visible errors where
+    all seven uplifted entries record two. No entry in either version records a server refusal -
+    `serverRefused` is false in all fourteen - so what this probe observed is a rendered error, not a refused
+    write;
   - `security.session-cookie-attributes` is `FAIL` on all fourteen entries and `form-token-exposure` is
     `PASS` on all fourteen;
   - both tree hashes are present for all seven arms and **differ in six of the seven** -
@@ -142,7 +148,10 @@ on two boards, and the contract stops at the cart.
 - **The visual target is hand-written and static.** `demo/` holds a grid-with-drawer page, a cart page and
   an empty page, plus `compare.html` and its stylesheet; the three boards are the reference pictures. The
   demo's README records the boundaries, and it answers from no server, holds no credential and stores
-  nothing: the cart drawer in the demo is populated by script, not by a session.
+  nothing **server-side**: the cart is kept in the browser's `localStorage` as a stand-in for the session
+  (the README names the key, `kiln-copper-cart-v1`), the drawer is populated by script rather than from a
+  session, and the drawer says as much itself - "Cart kept in this browser only (localStorage). This design
+  target has no server session and no order route."
 - **The boards disagree with each other, and with the target, about who the shop is.** The three boards
   carry **three different brand names** - `EARTH & OAK`, `ceramics` and `KERA` - where the demo has a fourth,
   `Kiln & Copper`, with a kiln mark. They also disagree about money: the grid board prices in **dollars**

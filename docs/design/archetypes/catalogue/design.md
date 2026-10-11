@@ -26,12 +26,17 @@ no-script note. **Red** (`--danger`, `--danger-text`, `--danger-subtle`, `--dang
 family, used on invalid fields, out-of-stock items and the remove control's hover.
 
 The scheme is **dark only, and deliberately so**: the stylesheet declares `color-scheme: dark` and contains
-**no** `light-dark()` pair and no `prefers-color-scheme` block. Every one of its 29 colour tokens is
-single-valued. A rebuild that adds a light scheme is designing a second target, not completing this one.
+**no** `light-dark()` pair and no `prefers-color-scheme` block. All 29 colour tokens are single-valued in
+`:root` - though *in `:root`* is not the same as *throughout the stylesheet*, as the clay family below
+shows. A rebuild that adds a light scheme is designing a second target, not completing this one.
 
-The target also carries a fourth family it never uses: `--art-clay`, `--art-clay-dark`,
-`--art-clay-light` and `--art-glaze`. All four are declared and none is referenced anywhere, which is worth
-knowing before treating them as part of the system.
+The target also carries a clay family that only the artwork uses: `--art-clay`, `--art-clay-dark`,
+`--art-clay-light` and `--art-glaze`. **None of the four is referenced from the stylesheet at all**, which is
+why searching `demo/styles.css` alone reports them as unused; all four are used from inline SVG in the demo's
+HTML instead - 21, 30, 18 and 16 references respectively. The first three are not even fixed values: five
+`[data-tone]` variants (`ash`, `celadon`, `cream`, `graphite`, `terracotta`) re-value them, which makes the
+clay family the one part of the palette that takes more than one value. Only `--art-glaze` holds a single
+value everywhere.
 
 ## Grammar and layout
 
@@ -48,16 +53,17 @@ knowing before treating them as part of the system.
 - **The cart is a drawer, not a page.** It slides in over the grid with the only shadow in the stylesheet -
   `box-shadow: -18px 0 40px rgba(0, 0, 0, 0.35)` - and its line items use a `3.75rem 1fr` grid, the artwork
   column fixed so the names and quantity steppers line up down the list.
-- **Corners** are graded by size: the large surfaces (`--radius-lg`, 16px) are `.catalogue-controls`,
-  `.product-card` and `.comparison-card`; the medium (`--radius-md`, 12px) is the `.cart-add` control and the
-  `.view-image`; the small (`--radius-sm`, 8px) is the brand mark, the drawer's close button, the cart item
-  artwork and the quantity stepper; and the full pill (`9999px`) is the `.cart-badge`, the `.state-pill` and
-  the `.stock-pill`.
+- **Corners** are graded by size, and the grading is consistent enough to name every owner: `--radius-lg`
+  (16px) is `.catalogue-controls`, `.product-card`, `.empty-state` and `.comparison-card`; `--radius-md`
+  (12px) is `.cart-item`, `.cart-add`, `.cart-empty-note`, `.noscript-note`, `.legend`, `.view-image` and
+  `.view-frame`; `--radius-sm` (8px) is `.btn`, `select`, `.brand-mark`, `.drawer-close`, `.cart-item-art`,
+  `.qty-stepper` and `.cart-remove`; and the full pill (`9999px`) is `.cart-button`, `.cart-badge`,
+  `.state-pill`, `.chip` and `.stock-pill`.
 
 ## Typography
 
-Two system stacks: `--font-sans` for the interface and `--font-mono` for exactly one thing, a cart line's
-part number (`.cart-item-part`). Nothing is downloaded, so the type does not shift after first paint.
+Two system stacks: `--font-sans` for the interface and `--font-mono` for two things - `code` and a cart
+line's part number (`.cart-item-part`). Nothing is downloaded, so the type does not shift after first paint.
 
 The display heading is the only viewport-scaled type - `clamp(1.6rem, 1.3rem + 1.4vw, 2.4rem)` on
 `.display-title`. Below it the scale is fixed and fairly tight: `1.125rem`, then `0.9375rem`, `0.875rem`
@@ -71,12 +77,13 @@ like.
 
 ## Token usage
 
-The target declares 29 colour tokens and all of them are single-valued - there is no second scheme. Six are
-**referenced nowhere** in the demo (`--text-inverse`, `--action-glow`, and the four `--art-*` values), so
-the last column names where each token is actually used, with the selectors and the number of references,
-rather than describing an intended use. Counted across the whole of `demo/styles.css`, including `:root`:
+The last column names where each of the 29 colour tokens is actually used, with the selectors and the
+number of references, rather than describing an intended use. References are counted across the whole of
+`demo/styles.css`, *including* `:root` - except for the four `--art-*` rows, which are referenced only from
+the demo's HTML and are counted there. Two tokens - `--text-inverse` and `--action-glow` - are referenced
+nowhere in either file.
 
-| Token | Value | Where it is used (references in the stylesheet) |
+| Token | Value | Where it is used (references; in `styles.css` unless stated) |
 |---|---|---|
 | `--bg-page` | `#0f172a` | `body`, `.view-image` (3) |
 | `--surface-card` | `#1e293b` | `.top-bar`, `.state-pill` and seven more (9) |
@@ -88,14 +95,14 @@ rather than describing an intended use. Counted across the whole of `demo/styles
 | `--border-highlight` | `#94a3b8` | `.chip:hover:not([disabled])` (1) |
 | `--text-primary` | `#f8fafc` | `body`, `.brand` and thirteen more (15) |
 | `--text-muted` | `#94a3b8` | `.top-nav a`, `.state-switcher-label` and twenty-six more (28) |
-| `--text-inverse` | `#0b1220` | nothing - declared but referenced nowhere |
+| `--text-inverse` | `#0b1220` | nothing - referenced nowhere in the stylesheet or the HTML |
 | `--action` | `#10b981` | `:root`'s `accent-color`, buttons and links (17) |
 | `--action-hover` | `#059669` | `.btn--action:hover`, `.btn--add:hover` (5) |
 | `--action-active` | `#047857` | `.btn--action:active` (2) |
 | `--action-ink` | `#04231a` | `.brand-mark`, `.cart-badge` (6) |
 | `--action-text` | `#34d399` | `.cart-button:hover`, the current pill (8) |
 | `--action-subtle` | `rgba(16,185,129,.18)` | the current pill, the in-stock pill (3) |
-| `--action-glow` | `rgba(16,185,129,.25)` | nothing - declared but referenced nowhere |
+| `--action-glow` | `rgba(16,185,129,.25)` | nothing - referenced nowhere in the stylesheet or the HTML |
 | `--caution` | `#fcd34d` | the low-stock pill, the no-script note (3) |
 | `--caution-subtle` | `rgba(245,158,11,.16)` | the low-stock pill, the no-script note (2) |
 | `--caution-border` | `#f59e0b` | the no-script note (1) |
@@ -103,10 +110,10 @@ rather than describing an intended use. Counted across the whole of `demo/styles
 | `--danger-text` | `#fca5a5` | an error status, the out-of-stock pill (3) |
 | `--danger-subtle` | `rgba(239,68,68,.16)` | the out-of-stock pill, the remove button (2) |
 | `--danger-border` | `rgba(239,68,68,.5)` | the remove button's hover (1) |
-| `--art-clay` | `#c8ab86` | nothing - declared but referenced nowhere |
-| `--art-clay-dark` | `#a9855d` | nothing - declared but referenced nowhere |
-| `--art-clay-light` | `#e0cbaa` | nothing - declared but referenced nowhere |
-| `--art-glaze` | `#34d399` | nothing - declared but referenced nowhere |
+| `--art-clay` | `#c8ab86` | inline SVG in the demo's HTML (21); none in the stylesheet |
+| `--art-clay-dark` | `#a9855d` | inline SVG in the demo's HTML (30); none in the stylesheet |
+| `--art-clay-light` | `#e0cbaa` | inline SVG in the demo's HTML (18); none in the stylesheet |
+| `--art-glaze` | `#34d399` | inline SVG in the demo's HTML (16); none in the stylesheet |
 
 The action and danger families are not the same emerald-and-red pair the record-form archetypes use by
 accident: this target keeps a **separate text tone** for each (`--action-text`, `--danger-text`) so that a
@@ -116,8 +123,8 @@ coloured word on the dark ground clears contrast where the fill colour would not
 
 The scale is rem-based and clustered: across the stylesheet the most frequent gap between siblings is
 `0.75rem` (seven uses), then `0.5rem` (six), `0.35rem` (five), and `1rem` and `0.6rem` (four each), with
-`1.25rem` used twice. Padding runs `1rem` on the common surfaces (four uses) and `1.5rem` on the larger
-ones (two uses).
+`1.25rem` used twice. Padding is written as a bare `1rem` four times, with two further shorthands that
+begin with it (`1rem 1rem 1.15rem` and `1rem 1.25rem`); `1.5rem` is used twice.
 
 Two consequences are visible in the design. The gap scale's centre of mass is below `1rem`, which is what
 lets a three-column grid read as a catalogue rather than a spreadsheet. And the two commonest values are
@@ -131,7 +138,9 @@ not interchangeable: `0.5rem` separates a control's parts (`.cart-button`, `.sea
 Read from `demo/index.html`, `demo/cart.html` and `demo/empty.html`:
 
 - **The top bar** with the brand (`.brand`, carrying an SVG mark and the name *Kiln & Copper*) and
-  `nav[aria-label="Main navigation"]`, plus the cart button, whose `aria-label` is *Items in your cart*.
+  `nav[aria-label="Main navigation"]`, plus the cart button, which carries no `aria-label` of its own and
+  shows the count in a `.cart-badge`. The label *Items in your cart* belongs to the cart's items list further
+  down the page, not to this control.
 - **The search form**: `form#search-form`, `method="get"`, `action="/search"`, `role="search"` - the
   journey's own form - containing `input[name="q"]`.
 - **The filter row**: category pills with `aria-label="Filter by category"`, of which the current one is
@@ -142,8 +151,9 @@ Read from `demo/index.html`, `demo/cart.html` and `demo/empty.html`:
 - **The cart drawer**: a slide-over whose title is *Your cart* (`#cart-drawer-title`), with a close control
   labelled *Close cart*, one row per line item (artwork, name, price, `.qty-btn` minus and plus, a remove
   control), the subtotal, and `form#cart-form` (`method="post"`, `action="/cart"`) for the add-by-part form.
-- **The checkout affordance**: a `.btn--checkout` reading *Proceed to checkout*. It is the last element in
-  the drawer and it has **no route behind it** - the spec declares none.
+- **The checkout affordance**: a `.btn--checkout` reading *Proceed to checkout*. Two notes follow it - a
+  status paragraph and the browser-storage note - and it has **no route behind it**: the spec declares none,
+  and the drawer says so itself, that this target "has no server session and no order route".
 - **The empty state**: `h2.empty-state-title` quoting the search term, a `.btn--action` reading *Reset
   search*, and a `.link-quiet` escape hatch.
 - **A demo state switcher** (`aria-label="Demo state switcher"`). Like the other archetypes' switchers this
@@ -167,8 +177,10 @@ Read from `demo/index.html`, `demo/cart.html` and `demo/empty.html`:
 - **Invented commercial detail.** Stock pills, category counts with numbers in them, `Cart (3)`, `2 items`,
   subtotals and *Free shipping over £40 applied* are all pictured; none is state the spec declares. Prices
   and inventory are illustration, and a rebuild should not treat them as fixtures.
-- **A preview that pretends to persist.** The demo's cart drawer is populated by script. It must not read
-  as a session-backed cart, because nothing in the demo stores anything.
+- **A preview that pretends to persist.** The demo's cart drawer is populated by script and kept in the
+  browser's `localStorage`, not in a session. Two opposite mistakes follow: taking the demo for a
+  session-backed cart that stores something server-side, and taking its `localStorage` stand-in - which the
+  README names as a substitute for the session - for the session the spec actually declares.
 
 ## Rationale
 
@@ -188,7 +200,8 @@ because a search with no results is a designed outcome in this type, not an erro
   designed, which is why the disagreements recorded under *Anti-patterns* are gaps in the reference set
   rather than decisions; this document follows the demo where the two differ.
 - **The demo** (`demo/`) is the accepted target, hand-written and static. It is not the sealed evaluation
-  target, not part of the pilot corpus, and its cart is scripted rather than stored.
+  target, not part of the pilot corpus, and its cart is scripted and kept in browser storage rather than
+  stored on a server.
 - **The measurements** in this document - every token value and reference count, the geometry, the radii and
   their selectors, the type sizes and line height, the spacing frequencies, the shadow and the breakpoints -
   were read from `demo/styles.css`, the component list from the demo's HTML, and the board descriptions from
