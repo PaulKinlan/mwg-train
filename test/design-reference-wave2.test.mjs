@@ -24,8 +24,15 @@ test('nine Wave 2 boards have three-way matching README/record/file hashes and p
   assert.match(classification, /'docs\/provenance\/assets\/design-reference-wave2\.md': 'provenance'/);
   assert.match(record, /excluded_from_training: true/);
   assert.match(record, /approved_for_training: false/);
+  // Contract changed by bead mwg-train-c1c: these boards are now generated with an EXPLICITLY named model, and the
+  // register has to record the gateway's attestation of it rather than a lane's report of it. The superseded
+  // generation stays described in the same file on purpose - replacing the bytes must not erase the fact that the
+  // first set could not name its model, which is what made the owner reject it and this bead exist.
+  assert.match(record, /gemini-nano-banana-2\.1/);
+  assert.match(record, /modelVersion/);
+  assert.match(record, /attested/i);
   assert.match(record, /gemini-3-pro-image/);
-  assert.match(record, /reported.*not model attestations|reported.*not an attested model ID|reported.*tool responses contain paths/s);
+  assert.match(record, /reported as `gemini-3-pro-image`[^.]*rather than model attestations/s);
 
   for (const [family, names] of Object.entries(STEPS)) {
     const dir = `docs/design/archetypes/${family}/`;
@@ -33,6 +40,8 @@ test('nine Wave 2 boards have three-way matching README/record/file hashes and p
     assert.deepEqual(readdirSync(new URL(dir, root)).filter((name) => name.endsWith('.jpg')).sort(), names.slice().sort(), `${family}: no unregistered raster files`);
     assert.match(readme, /excluded_from_training: true/);
     assert.match(readme, /approved_for_training: false/);
+    // The current generation must be named, and the superseded one must still be named too.
+    assert.match(readme, /gemini-nano-banana-2\.1/);
     assert.match(readme, /gemini-3-pro-image/);
     assert.match(readme, /Google consumer-account terms/);
     assert.match(readme, /design-reference-wave2\.md/);

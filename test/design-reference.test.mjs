@@ -70,7 +70,10 @@ test('the reference boards are not the sealed evaluation target', () => {
   const record = text('docs/provenance/assets/design-reference-booking.md');
   assert.match(record, /not approved as training data, not a conformance\s+target/);
   assert.match(record, /not\*\* the\s+sealed A6 evaluation target/);
-  // The origin gap is recorded, not papered over: this lane did not generate the images and the repo does not
-  // state the model id or prompts.
+  // The model is no longer a gap. Bead mwg-train-c1c regenerated these boards with an explicitly named model and this
+  // record must carry the gateway's own attestation of it, while still recording which model the superseded set used -
+  // so the assertion is that BOTH appear, not that the old one has been quietly dropped.
+  assert.match(record, /gemini-nano-banana-2\.1/);
+  assert.match(record, /modelVersion/);
   assert.match(record, /gemini-3-pro-image/);
 });

@@ -2,7 +2,8 @@
 
 - **Status:** illustrative AI-generated visual reference, **not approved as training data, not a conformance
   target, and not an input to any generator**.
-- **Origin:** generated on 2026-10-09 using `gemini-3-pro-image` via Google Antigravity OAuth image generation tool. Original prompts authored to produce high-fidelity desktop browser application mockups matching `layout-storefront.jpg` density and typography.
+- **Origin:** REGENERATED 2026-10-11 UTC with `model: gemini-nano-banana-2.1` passed explicitly, replacing the 2026-10-09 boards generated with `gemini-3-pro-image` and no explicit model (owner-rejected on sight; bead `mwg-train-c1c`). Produced by `scripts/generate-archetype-boards.mjs`, which fails closed unless the gateway attests the requested model in its `modelVersion` response field; all five boards are attested `gemini-nano-banana-2.1`. Recorded settings: `responseModalities: ["IMAGE"]`, temperature 0.7, `maxOutputTokens` 8192. Original prompts unchanged, authored to produce high-fidelity desktop browser application mockups matching `layout-storefront.jpg` density and typography. The attestation is a property of the gateway's own response, not a cryptographic proof about the pixels: it records the model the service states it executed, and nothing here should be read as reproducing these bytes from a prompt, since no seed was set.
+- **Observed placeholder artefacts, inspected and accepted:** an independent vision review of this 2026-10-11 set found no corrupted text in a primary position anywhere - the defect class that caused the previous set's rejection - and reported one cosmetic quirk, left uncorrected because re-rolling a board for illustrative noise would discard a board that is otherwise correct: `step2-form.jpg` renders desks `A3` and `B3` both as selected, where the prompt specifies only `B3`. `step1-browse.jpg` and `step3-confirmation.jpg` were each retried once to clear a corrupted subtitle and a misrendered booking reference respectively; the reference they now show, `#BK-92841`, matches both the prompt and the URL bar on the same board.
 - **Rights:** no claim of CC0, model-output exclusivity, provider permission for training, or legal clearance is
   made. Output-use and training terms need review before any reuse beyond this project's planning
   documentation.
@@ -16,11 +17,11 @@
 
 | Board | Purpose | SHA-256 | Bytes |
 | --- | --- | --- | ---: |
-| [`step1-browse.jpg`](../../design/archetypes/booking/step1-browse.jpg) | weekly timetable browse with search and category chips | `941d3ca9d19e34b2025eaa1dae3570f7e97d3218f4737a3ef899249674727e4b` | 425903 |
-| [`step2-form.jpg`](../../design/archetypes/booking/step2-form.jpg) | multi-step details and seat selection with a summary card | `4767765102ff750b3f9521c1a159b24e5710367cfaea88b809f987558117a5a8` | 453206 |
-| [`step3-confirmation.jpg`](../../design/archetypes/booking/step3-confirmation.jpg) | verified booking pass and digital receipt | `daf301bdcbe8cf040acc5faeb30fc5a8db86843d8ae0cc45e74fab6d8fdd5a5f` | 441793 |
-| [`step4-error.jpg`](../../design/archetypes/booking/step4-error.jpg) | accessible validation and conflict error states | `5cc76aabb6e16cb2b8b5f079d84c2ebb6dfdc3a34d557786af4b54836427ac07` | 478909 |
-| [`step5-empty.jpg`](../../design/archetypes/booking/step5-empty.jpg) | honest empty state with recovery actions | `0b553968c4cdc90638daf11e3ebfc6240178946f5bfffe28da19f4a1db7ce58f` | 459349 |
+| [`step1-browse.jpg`](../../design/archetypes/booking/step1-browse.jpg) | weekly timetable browse with search and category chips | `3a7f56d2fc42661a89d067a301c2035dbb89804bacb2533d28d0e745afdf5c11` | 525042 |
+| [`step2-form.jpg`](../../design/archetypes/booking/step2-form.jpg) | multi-step details and seat selection with a summary card | `73633dd4b1c0a5ae877ec8bdcbe41c1260c4fbf48d25a3f9fac64e1884615074` | 517592 |
+| [`step3-confirmation.jpg`](../../design/archetypes/booking/step3-confirmation.jpg) | verified booking pass and digital receipt | `1b65cd87c9c693be2a159a3f3ead25ae32c4f3faaec664ea7d80684fce6e31ef` | 394097 |
+| [`step4-error.jpg`](../../design/archetypes/booking/step4-error.jpg) | accessible validation and conflict error states | `d018d5b50bae312f497445e3e449191ea8c3ac6cccbd5c6058463d738e7d06f8` | 466358 |
+| [`step5-empty.jpg`](../../design/archetypes/booking/step5-empty.jpg) | honest empty state with recovery actions | `6eae324018056198c8020855961eeb734db79f403355035ed36147c078540b3e` | 447870 |
 
 **Reproduction boundary:** image generation is stochastic; these hashes verify the committed bytes, not
 reproducibility from the same prompt. The journey the boards describe - timetable browse, seat selection,

@@ -1,16 +1,16 @@
 # Event registration — illustrative two-step visual references
 
 - **Archetype:** `event-registration`; event/ticket selection and depicted pass.
-- **Generation:** 2026-10-09 UTC via the Google Antigravity OAuth `generate_image` tool. The generating lane reports its default model as `gemini-3-pro-image`; no explicit `model` was sent and tool responses contain paths, not an attested model ID. Both requested `aspectRatio: "16:9"` and returned 1376 × 768 JPEGs. Prompts below reproduce the exact recorded tool-call arguments.
+- **Generation:** 2026-10-11 UTC: REGENERATED with an explicitly named model, replacing the 2026-10-09 boards (the owner rejected those on sight; bead `mwg-train-c1c`). The first set was produced with no explicit `model` and so fell back to `gemini-3-pro-image`, and its records could report that model but never attest it. `scripts/generate-archetype-boards.mjs` now passes `model: gemini-nano-banana-2.1` explicitly to the project's model gateway and refuses to write a board unless the response's own `modelVersion` attestation equals it, so every board here is gateway-attested as `gemini-nano-banana-2.1`. Recorded settings: `responseModalities: ["IMAGE"]`, temperature 0.7, `maxOutputTokens` 8192; each board returned a 1376 × 768 JPEG. The prompts below are UNCHANGED - the generator reads them out of this file and refuses to run unless the Wave 2 prompts reproduce the digest register byte-for-byte, so this is the same brief rendered by a named model, not a new brief.
 - **Policy:** `excluded_from_training: true`, `approved_for_training: false`. Visual design references only, not a real event, purchased ticket, issued badge, generated-site screenshot, sealed evaluation target, or training/conformance evidence.
 - **Cross-family provenance:** [Wave 2 image and prompt digest register](../../../provenance/assets/design-reference-wave2.md).
-- **Rights boundary:** The [Google consumer-account terms record](../../../provenance/accounts/google-antigravity-consumer.md) prohibits using AI-generated service content to develop machine-learning models. No separate license clearance, exclusive rights or reproducible generation seed/settings were supplied. Public visual review is not training or commercial reuse authorization.
+- **Rights boundary:** The [Google consumer-account terms record](../../../provenance/accounts/google-antigravity-consumer.md) prohibits using AI-generated service content to develop machine-learning models. No separate license clearance, exclusive rights or a seed were supplied; the generation settings are now recorded, and no seed was set, so the boards remain non-reproducible. Public visual review is not training or commercial reuse authorization.
 - **Depicted content:** Event name/date/location, attendee name, capacity, ticket tiers/prices, confirmation and Wallet/PDF controls are unverified placeholders. The raster QR graphic is not a valid check-in pass; do not scan or use it. No registration or payment was performed to produce these images.
 
 | Ordered board | What the raster depicts | SHA-256 of committed bytes | Bytes |
 | --- | --- | --- | ---: |
-| [`step1-event.jpg`](step1-event.jpg) | Event overview and attendee/ticket choices | `62f1a32c31af6d389127ce26b253b29c705a754eaf381a1c6a958b6d1ac0ad1d` | 409753 |
-| [`step2-pass.jpg`](step2-pass.jpg) | Depicted ticket pass and confirmation | `f8fa1f4c0d51fab2b77ebc4e968e9ffcf172fceeb55c3a77bfbcf126eeeea967` | 390791 |
+| [`step1-event.jpg`](step1-event.jpg) | Event overview and attendee/ticket choices | `f04fa714789fa5fe2a4e57c4282fa8c36f64f14558f5add246cd4644edc1a3ea` | 469692 |
+| [`step2-pass.jpg`](step2-pass.jpg) | Depicted ticket pass and confirmation | `4de701fe6ff9e96e88b8c6fbd985920db7b34153a6386842c7e305e4264529b7` | 436861 |
 
 Hashes identify the handed-off JPEG bytes, not their legal status or reproducibility. The illustrated ticket/payment details may exceed the frozen event-registration functional contract.
 
