@@ -69,9 +69,12 @@ ticket, whose title and metadata are centred because the ticket itself is a cent
 
 ## Token usage
 
-The target defines its surfaces, borders and text as `light-dark()` pairs, so one stylesheet serves both
-schemes; the accent, error and success families are single-valued, and the table gives the same value in
-both columns for those. Measured from `demo/styles.css`:
+The target's colour system is scheme-aware: sixteen of its twenty-five colour tokens are written as
+`light-dark()` pairs, so one stylesheet serves both schemes, and nine are single-valued -
+`--border-focus`, `--text-inverse`, `--accent`, `--accent-hover`, `--accent-active`, `--accent-glow`,
+`--error`, `--success` and `--success-border` - for which the table gives the same value in both columns.
+Even inside the error and success families it is only the root hue that is fixed; their surfaces,
+backgrounds, borders and text are pairs. Measured from `demo/styles.css`:
 
 | Token | Light | Dark | Used for |
 |---|---|---|---|
@@ -90,8 +93,14 @@ both columns for those. Measured from `demo/styles.css`:
 | `--accent` | `#10b981` | `#10b981` | the forward action |
 | `--accent-hover` / `--accent-active` | `#059669` / `#047857` | same | its interactive states |
 | `--accent-subtle` / `--accent-glow` | `rgba(16,185,129,.12)` / `rgba(16,185,129,.25)` | `.18` / same | tinted fills and rings |
-| `--error` `--error-surface` `--error-bg` `--error-border` `--error-text` | `#ef4444` `#fef2f2` `#fee2e2` `#f87171` `#991b1b` | `rgba(239,68,68,.15)` `rgba(239,68,68,.5)` `#fca5a5` | refusals, in field borders, banner and text |
-| `--success` `--success-bg` `--success-border` | `#10b981` `#ecfdf5` `#10b981` | `rgba(16,185,129,.15)` `#10b981` | the confirmation, built from the accent |
+| `--error` | `#ef4444` | `#ef4444` | the error hue itself |
+| `--error-surface` | `#fef2f2` | `#3b1114` | inset error panels |
+| `--error-bg` | `#fee2e2` | `rgba(239,68,68,.15)` | the banner behind a refusal |
+| `--error-border` | `#f87171` | `rgba(239,68,68,.5)` | an invalid field's border |
+| `--error-text` | `#991b1b` | `#fca5a5` | the message under a field |
+| `--success` | `#10b981` | `#10b981` | the success hue |
+| `--success-bg` | `#ecfdf5` | `rgba(16,185,129,.15)` | the confirmation surface |
+| `--success-border` | `#10b981` | `#10b981` | the confirmation border |
 
 The accent family and the success family are the same emerald, which is a deliberate economy: a
 confirmation is not a new colour, it is the accent arriving.
@@ -119,10 +128,11 @@ Read from `demo/index.html`:
   `#btn-state-error`, `#btn-state-fill`). This is a verification control, not part of the archetype: it
   exists so a person can see the error and filled states without a server, and a rebuild should not ship
   it as product UI.
-- `nav.stepper-nav` (`aria-label="Booking Progress"`) holding three `li.step-item` elements, each with a
-  `.step-circle` and a `.step-connector`, using the states `completed` and `active` and marking the
-  current one with `aria-current="step"`. In the target it reads `1. Select Class`,
-  `2. Details & Registration`, `3. Confirmation`.
+- `nav.stepper-nav` (`aria-label="Booking Progress"`) holding an `ol.stepper` whose five children are
+  three `li.step-item` elements separated by two `li.step-connector` elements - the connectors are siblings
+  of the steps, not children of them - each step carrying a `.step-circle` and using the states
+  `completed` and `active`, with the current one marked `aria-current="step"`. In the target it reads
+  `1. Select Class`, `2. Details & Registration`, `3. Confirmation`.
 - The **class summary** column, a labelled region (`aria-label="Evening Class Summary"`) carrying what is
   being booked: title, time, instructor and the price lines.
 - `section.card.form-card` (`aria-labelledby="form-heading"`) containing `#form-heading`, the five fields,
