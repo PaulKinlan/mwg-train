@@ -30,6 +30,17 @@ test('gallery presents all three excluded boards, honest booking slot, and autho
   assert.deepEqual(gallery.journeys.map(({ id, steps }) => [id, steps.length]), [
     ['booking', 5], ['catalogue', 3], ['contact-lead', 2], ['account-recovery', 2], ['event-registration', 2],
   ]);
+  // The training arm is the 30 declared families, every one of them backed by a target render on disk, and none of
+  // them is an A6 archetype id: the two arms cannot leak into each other's label space.
+  assert.equal(gallery.trainingTargets.length, 30);
+  assert.deepEqual(gallery.trainingTargets.map(({ id }) => id), Array.from({ length: 30 }, (_, index) => `tr-${String(index + 1).padStart(2, '0')}`));
+  assert.ok(gallery.trainingTargets.every((family) => family.available), 'all 30 declared training targets exist');
+  assert.deepEqual(gallery.trainingTargets[0], {
+    id: 'tr-01', archetype: 'booking', title: 'Mobile bicycle mechanic service booking',
+    origin: 'docs/train/targets/tr-01/index.html', available: true, width: 1280, height: 1080,
+  });
+  assert.equal(gallery.trainingTargets.filter((family) => gallery.archetypes.some(({ id }) => id === family.id)).length, 0,
+    'no id is listed in both arms');
   assert.ok(gallery.journeys.every((journey) => journey.steps.every((step) => step.available)), 'all 14 supplied boards exist');
   assert.deepEqual(gallery.bookingSteps.map(({ id, available }) => [id, available]), [
     ['step1-browse', true], ['step2-form', true], ['step3-confirmation', true],
@@ -50,13 +61,32 @@ test('gallery presents all three excluded boards, honest booking slot, and autho
   assert.match(html, /unverified placeholders/);
   assert.equal((html.match(/\/concepts\/images\/booking\/step[1-5]-[a-z-]+\.jpg/g) ?? []).length, 12);
   assert.doesNotMatch(html, /Image pending:/);
-  assert.match(html, /Authored target render/);
+  assert.match(html, /Archetype training targets \(A1\)/);
+  assert.match(html, /Sealed evaluation targets \(A6\)/);
+  assert.match(html, /not part of the 30 training families above/);
+  for (const family of ['tr-01', 'tr-17', 'tr-30']) {
+    assert.match(html, new RegExp(`href="/concepts/targets/${family}\\.png"`));
+    assert.match(html, new RegExp(`alt="Authored training target render for ${family}`));
+  }
+  assert.equal((html.match(/\/concepts\/targets\/tr-\d{2}\.png" aria-label/g) ?? []).length, 30, 'every declared family links its own target');
+  assert.doesNotMatch(html, /Target render pending/, 'no declared family is missing its render in this checkout');
   assert.match(html, /not screenshots of generated websites/);
   assert.doesNotMatch(html, /<iframe/);
   const base = await serve(t, ROOT);
   const page = await fetch(`${base}/concepts`);
   assert.equal(page.status, 200);
-  assert.match(await page.text(), /Archetype references and targets/);
+  const pageHtml = await page.text();
+  assert.match(pageHtml, /Archetype training targets \(A1\)/);
+  assert.match(pageHtml, /Sealed evaluation targets \(A6\)/);
+  for (const family of ['tr-01', 'tr-15', 'tr-30']) {
+    const render = await fetch(`${base}/concepts/targets/${family}.png`);
+    assert.equal(render.status, 200, family);
+    assert.match(render.headers.get('content-type'), /image\/png/);
+    assert.equal(render.headers.get('x-content-type-options'), 'nosniff');
+    assert.equal((await render.arrayBuffer()).byteLength > 1000, true);
+  }
+  assert.equal((await fetch(`${base}/concepts/targets/tr-31.png`)).status, 404);
+  assert.equal((await fetch(`${base}/concepts/targets/tr-1.png`)).status, 404);
   for (const name of ['layout-storefront', 'layout-saas', 'layout-explainer']) {
     const response = await fetch(`${base}/concepts/images/${name}.jpg`);
     assert.equal(response.status, 200);
@@ -216,4 +246,94 @@ test('Wave 2 routes allow only named archetype/step pairs and reject symlinked f
   symlinkSync(escaped, archetypeDir);
   assert.equal(conceptJourneyStep(root, 'catalogue', 'step1-grid'), null);
   assert.equal((await fetch(`${base}/concepts/images/catalogue/step1-grid.jpg`)).status, 404);
+});
+
+test('the A1 training arm is the manifest, not the directory: only declared families are listed and served', async (t) => {
+  const root = mkdtempSync(join(tmpdir(), 'viewer-concepts-a1-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const arm = join(root, 'data/A1_self_generated/targets');
+  const png = Buffer.from([137, 80, 78, 71]);
+  const line = (over = {}) => JSON.stringify({
+    id: 'target-tr-01', arm: 'A1_self_generated', kind: 'asset', family_id: 'tr-01',
+    archetype: 'booking', title: 'Declared family', origin: 'docs/train/targets/tr-01/index.html',
+    image_path: 'data/A1_self_generated/targets/tr-01/target.png', viewport: { width: 1280, height: 900 }, ...over,
+  });
+  for (const id of ['tr-01', 'tr-07']) {
+    mkdirSync(join(arm, id), { recursive: true });
+    writeFileSync(join(arm, id, 'target.png'), png);
+  }
+  // tr-01 declared and present; tr-02 declared twice and absent; tr-07 present on disk but never declared.
+  writeFileSync(join(arm, 'manifest.jsonl'), [line(), line({ archetype: 'second-declaration' }), line({ family_id: 'tr-02', origin: 'docs/train/targets/tr-02/index.html', image_path: 'data/A1_self_generated/targets/tr-02/target.png' }), ''].join('\n'));
+  const gallery = listConcepts(root);
+  assert.deepEqual(gallery.trainingTargets, [
+    { id: 'tr-01', archetype: 'booking', title: 'Declared family', origin: 'docs/train/targets/tr-01/index.html', available: true },
+    { id: 'tr-02', archetype: 'booking', title: 'Declared family', origin: 'docs/train/targets/tr-02/index.html', available: false },
+  ], 'first declaration wins, an absent render is an honest gap, and an undeclared file is not a family');
+  assert.equal(conceptTarget(root, 'tr-07'), null, 'a file the manifest never declared is not public');
+  assert.equal(conceptTarget(root, 'tr-01')?.bytes.equals(png), true);
+  const html = renderConcepts(gallery);
+  assert.match(html, /Target render pending\. Expected <code>data\/A1_self_generated\/targets\/tr-02\/target\.png<\/code>/);
+  assert.doesNotMatch(html, /tr-07/, 'an undeclared directory cannot put a name on the page');
+
+  // A hostile or malformed line adds nothing: wrong arm, wrong kind, a path that is not this family's, an id that
+  // is not tr-NN, and unparseable JSON are all ignored rather than followed.
+  writeFileSync(join(arm, 'manifest.jsonl'), [
+    line({ family_id: '../private', image_path: 'data/A1_self_generated/targets/../private/target.png' }),
+    line({ family_id: 'tr-03', arm: 'A6_evaluation' }),
+    line({ family_id: 'tr-04', kind: 'report' }),
+    line({ family_id: 'tr-05', image_path: 'docs/design/archetypes/tr-05/target.png' }),
+    line({ family_id: 'booking' }),
+    '{ not json',
+  ].join('\n'));
+  assert.deepEqual(listConcepts(root).trainingTargets, []);
+  for (const id of ['tr-03', 'tr-04', 'tr-05', 'private', 'booking']) assert.equal(conceptTarget(root, id), null, id);
+  assert.match(renderConcepts(listConcepts(root)), /No A1 training-family targets are declared in this checkout\./);
+
+  // A symlinked family directory or target is unavailable, not a path to follow.
+  const outside = join(root, 'private.png');
+  writeFileSync(outside, 'PRIVATE');
+  writeFileSync(join(arm, 'manifest.jsonl'), `${line()}\n`);
+  rmSync(join(arm, 'tr-01/target.png'));
+  symlinkSync(outside, join(arm, 'tr-01/target.png'));
+  assert.equal(conceptTarget(root, 'tr-01'), null);
+  const base = await serve(t, root);
+  assert.equal((await fetch(`${base}/concepts/targets/tr-01.png`)).status, 404);
+  assert.equal(await (await fetch(`${base}/concepts/targets/tr-01.png`)).text(), 'authored target unavailable');
+  assert.equal(await (await fetch(`${base}/concepts/targets/tr-07.png`)).text(), 'authored target unavailable', 'an undeclared file is refused by the route, not served');
+  assert.equal(await (await fetch(`${base}/concepts/targets/%2e%2e%2fprivate.png`)).text(), 'not found');
+  const dir = join(root, 'escaped');
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(join(dir, 'target.png'), png);
+  rmSync(join(arm, 'tr-01'), { recursive: true });
+  symlinkSync(dir, join(arm, 'tr-01'));
+  assert.equal(conceptTarget(root, 'tr-01'), null, 'a symlinked family directory is not the family directory');
+});
+
+test('the A1 target size is measured from the PNG header, never taken from the manifest viewport', () => {
+  const root = mkdtempSync(join(tmpdir(), 'viewer-concepts-size-'));
+  try {
+    const arm = join(root, 'data/A1_self_generated/targets/tr-09');
+    mkdirSync(arm, { recursive: true });
+    // A 24-byte PNG header with a full-page capture size (1280x2400), declared as a 1280x900 viewport.
+    const header = Buffer.alloc(24);
+    header.writeUInt32BE(0x89504e47, 0); header.writeUInt32BE(0x0d0a1a0a, 4);
+    header.write('IHDR', 12, 'latin1'); header.writeUInt32BE(1280, 16); header.writeUInt32BE(2400, 20);
+    writeFileSync(join(arm, 'target.png'), header);
+    writeFileSync(join(root, 'data/A1_self_generated/targets/manifest.jsonl'), `${JSON.stringify({
+      id: 'target-tr-09', arm: 'A1_self_generated', kind: 'asset', family_id: 'tr-09', archetype: 'booking',
+      title: 'Tall capture', origin: 'docs/train/targets/tr-09/index.html',
+      image_path: 'data/A1_self_generated/targets/tr-09/target.png', viewport: { width: 1280, height: 900 },
+    })}\n`);
+    assert.deepEqual(listConcepts(root).trainingTargets, [{
+      id: 'tr-09', archetype: 'booking', title: 'Tall capture', origin: 'docs/train/targets/tr-09/index.html',
+      available: true, width: 1280, height: 2400,
+    }]);
+    assert.match(renderConcepts(listConcepts(root)), /width="1280" height="2400"/);
+    // Bytes that are not a PNG header prove no size, so no width/height is claimed at all.
+    writeFileSync(join(arm, 'target.png'), Buffer.from([137, 80, 78, 71]));
+    const unmeasured = listConcepts(root).trainingTargets[0];
+    assert.equal(unmeasured.available, true);
+    assert.equal('width' in unmeasured, false);
+    assert.doesNotMatch(renderConcepts(listConcepts(root)), /width="1280" height="2400"/);
+  } finally { rmSync(root, { recursive: true, force: true }); }
 });
