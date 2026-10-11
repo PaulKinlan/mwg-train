@@ -410,6 +410,34 @@ test('a non-array fields is refused, not thrown', () => {
   }
 });
 
+// The edit journey's field is resolved by name into a selector and a label, and a name that is not declared used to
+// fail nowhere: the validator said nothing, and the generator emitted a control that never populates next to a label
+// pointing at an id that does not exist. It is the same defect as a fill selector naming the wrong field, so it is
+// refused the same way - and the message names the declared fields, because being told only that a name is wrong
+// sends the reader back into the document to find out what would be right.
+test('an edit journey naming an undeclared field is refused, naming the declared ones', () => {
+  const base = read(ARCHETYPE_IDS[0]);
+  const problems = validateSpec({ ...base, journey: { ...base.journey, update: { field: 'no-such-field' } } });
+  const refusal = problems.find((problem) => problem.includes('update.field'));
+  assert.ok(refusal, 'an update journey naming an undeclared field must be refused');
+  assert.match(refusal, /no-such-field/, 'the refusal names the field it could not find');
+  for (const field of base.fields) assert.ok(refusal.includes(field.name), `the refusal names the declared field ${field.name}`);
+  // The other direction on the same fixture: naming a field that IS declared is accepted, so the rule cannot refuse
+  // a correct document while catching a wrong one.
+  const good = { ...base, journey: { ...base.journey, update: { field: base.fields[0].name } } };
+  assert.equal(validateSpec(good).filter((problem) => problem.includes('update.field')).length, 0);
+});
+
+test('no family in the corpus is refused for its edit journey', () => {
+  // A validator that starts refusing documents which ship is a worse bug than the one being fixed, so the corpus is
+  // checked in the direction that matters - this rule's own verdict, so it stays true if a family has an unrelated
+  // problem of its own.
+  for (const family of ARCHETYPE_IDS) {
+    const refused = validateSpec(read(family)).filter((problem) => problem.includes('update.field'));
+    assert.equal(refused.length, 0, `${family} is refused for its edit journey: ${refused.join('; ')}`);
+  }
+});
+
 test('no family in the corpus is refused by the echo cross-check', () => {
   // The other direction, because a validator that starts refusing documents which ship is a worse bug than the one
   // being fixed. This asserts only this rule's own verdict, so it stays true even if some family has an unrelated

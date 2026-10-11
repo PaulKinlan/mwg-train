@@ -177,6 +177,13 @@ export function validateSpec(spec) {
         if (targets.length === 0) at(`${name}.fill("${selector}")`, 'must name the field it types into, as [name=<field>]');
         for (const target of targets) if (!declared.has(target)) at(`${name}.fill("${selector}")`, `types into ${target}, which the fields do not declare`);
       }
+      // The edit journey names its field too, and the generator resolves it the same way - by name, into both a
+      // selector and a label. Unchecked, a wrong name fails nowhere: the form never populates and the label points
+      // at an id that does not exist. Same defect as the fill targets above, reported the same way, naming the
+      // fields that are declared so the fix is one edit rather than a hunt (mwg-train-crt).
+      if (isString(journey?.update?.field) && !declared.has(journey.update.field)) {
+        at(`${name}.update.field`, `names ${journey.update.field}, which the fields do not declare; declared: ${spec.fields.map((field) => field?.name).filter(isString).join(', ')}`);
+      }
     }
   }
 
