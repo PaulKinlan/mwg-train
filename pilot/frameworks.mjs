@@ -807,6 +807,7 @@ function searchPageDocument(search) {
  */
 
 const capabilitiesOf = (archetype) => ({ list_pages: false, detail_page: false, auth: false, cart: false, pricing_tiers: false, checkout: false, survey: false, game: false, ...(archetype.capabilities ?? {}) });
+
 /*
  * The pricing-tiers capability (mwg-train-4lk): three tiers across a monthly/annual toggle, whose
  * inclusions differ by more than price, and a selection that survives into the next step. The prices
@@ -917,12 +918,13 @@ const honoPricingRoutes = () =>
  * table and is emitted only when the spec opts in, exactly like list_pages/detail_page/auth.
  */
 const cartVariantField = (archetype) => archetype.fields.find((field) => field.type === 'select');
+const gameOf = (archetype) => (archetype.capabilities?.game === true ? archetype.game : null);
 const cartQuantityField = (archetype) => archetype.fields.find((field) => field.type === 'number');
 /** The checkout policy block, or null when the capability is off - the flag and the data travel together. */
 const checkoutOf = (archetype) => (archetype.capabilities?.checkout === true ? archetype.checkout : null);
 /** The survey policy block, or null when the capability is off - the flag and the data travel together. */
 const surveyOf = (archetype) => (archetype.capabilities?.survey === true ? archetype.survey : null);
-const gameOf = (archetype) => (archetype.capabilities?.game === true ? archetype.game : null);const CART_SID_RAW =
+const CART_SID_RAW =
   "(request.headers.cookie ?? '').split(';').map((part) => part.trim()).find((part) => part.startsWith('sid='))?.slice('sid='.length)";
 const CART_SID_HONO =
   "(c.req.header('cookie') ?? '').split(';').map((part) => part.trim()).find((part) => part.startsWith('sid='))?.slice('sid='.length)";
@@ -1670,12 +1672,12 @@ const gameEnhance = (archetype) => {
 `;
 };
 
-const capabilityPages = () =>
-  [
-    "const esc = (value) => String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;');",
     // The capability pages load the same single enhancement script the arm templates do. Without this the
     // script was served but never loaded on these pages, so a capability whose behaviour is client-side -
     // the game's loop is one - got a page and no behaviour at all (mwg-train-ypr).
+const capabilityPages = () =>
+  [
+    "const esc = (value) => String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;');",
     "const capabilityPage = (title, body) => '<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><title>' + esc(title) + '</title><link rel=\"stylesheet\" href=\"/app/styles.css\"></head><body><main>' + body + '</main><script type=\"module\" src=\"/app/enhance.js\"></script></body></html>';",
     "const loginPage = (error) => capabilityPage('Sign in', '<h1>Sign in</h1>' + (error ? '<p role=\"alert\">' + esc(error) + '</p>' : '') + '<form method=\"post\" action=\"/login\"><label for=\"email\">Email</label><input type=\"email\" id=\"email\" name=\"email\" required autocomplete=\"username\"><label for=\"password\">Password</label><input type=\"password\" id=\"password\" name=\"password\" required autocomplete=\"current-password\"><button type=\"submit\">Sign in</button></form>');",
     "const listPage = (title, detailPrefix, rows) => capabilityPage(title, '<h1>' + esc(title) + '</h1><ul>' + rows.map((row) => '<li><a href=\"' + detailPrefix + esc(row.ref) + '\">' + esc(row.ref) + '</a> ' + esc(JSON.stringify(row.payload)) + '</li>').join('') + '</ul>');",
@@ -1842,7 +1844,8 @@ db.exec(\`CREATE TABLE IF NOT EXISTS accounts (email TEXT PRIMARY KEY, password 
 const insert = db.prepare('INSERT INTO records (ref, created_at, payload) VALUES (?, ?, ?)');
 const select = db.prepare('SELECT ref, created_at, payload FROM records WHERE ref = ?');
 ${sessionTables(archetype)}${archetype.journey?.update ? `\nconst updateRecord = db.prepare('UPDATE records SET payload = ? WHERE ref = ?');` : ''}${draftTables(archetype) ? `\n${draftTables(archetype)}` : ''}
-${caps.auth ? `${authTables(archetype)}\n` : ''}${caps.cart ? `${cartTables(caps.checkout)}\n` : ''}${caps.checkout ? `${checkoutTables()}\n` : ''}${caps.survey ? `${surveyTables()}\n` : ''}${caps.game ? `${gameTables()}\n` : ''}const count = db.prepare('SELECT COUNT(*) AS n FROM records');const list = db.prepare('SELECT ref, payload FROM records ORDER BY created_at DESC LIMIT 50');
+${caps.auth ? `${authTables(archetype)}\n` : ''}${caps.cart ? `${cartTables(caps.checkout)}\n` : ''}${caps.checkout ? `${checkoutTables()}\n` : ''}${caps.survey ? `${surveyTables()}\n` : ''}${caps.game ? `${gameTables()}\n` : ''}const count = db.prepare('SELECT COUNT(*) AS n FROM records');
+const list = db.prepare('SELECT ref, payload FROM records ORDER BY created_at DESC LIMIT 50');
 
 ${parameterisedWrite ? `// An edit flow edits something: the seeded record is what the form's action points at.
 db.prepare('INSERT OR IGNORE INTO records (ref, created_at, payload) VALUES (?, ?, ?)').run('${EDIT_SEED_REF}', new Date().toISOString(), '{}');
@@ -1868,6 +1871,7 @@ const json = (response, value, status = 200, headers = {}) => {
 };
 
 ${caps.list_pages || caps.detail_page || caps.auth || caps.cart || caps.pricing_tiers || caps.checkout || caps.survey || caps.game ? `${capabilityPages()}${caps.cart ? `\n${cartPages(archetype)}` : ''}${caps.pricing_tiers ? `\n${pricingPages(archetype)}` : ''}${caps.checkout ? `\n${checkoutPages(archetype)}` : ''}${caps.survey ? `\n${surveyPages(archetype)}` : ''}${caps.game ? `\n${gamePages(archetype)}` : ''}\n` : ''}const REQUIRED = ${JSON.stringify(archetype.fields.filter((field) => field.type !== 'select' && !field.optional).map((field) => field.name))};
+
 ${enforceMin ? `const MIN_BOUNDS = ${JSON.stringify(minBounds)};\n` : ''}// The cart form has its own fields. Validating it against the search form's required list refused every
 // cart POST with 422, which the write journey caught: a second form on one page needs a second rule.
 const EXTRA_ACTION = ${JSON.stringify(archetype.extraForm?.action ?? '')};
@@ -2054,7 +2058,8 @@ ${caps.auth ? `    if (!authSessionEmail(request.headers.cookie)) return json(re
     return json(response, { ref: row.ref, ...JSON.parse(row.payload) });
   }
 
-${caps.cart ? `${rawCartRoutes(archetype, cartCookieFlags, checkoutOf(archetype))}\n\n` : ''}${caps.checkout ? `${rawCheckoutRoutes()}\n\n` : ''}${caps.survey ? `${rawSurveyRoutes()}\n\n` : ''}${caps.game ? `${rawGameRoutes()}\n\n` : ''}${caps.pricing_tiers ? `${rawPricingRoutes()}\n\n` : ''}  // A route the archetype declares is a route the server must serve: /account was declared as the  // account flow's page and never implemented, so the journey landed on a 404.
+${caps.cart ? `${rawCartRoutes(archetype, cartCookieFlags, checkoutOf(archetype))}\n\n` : ''}${caps.checkout ? `${rawCheckoutRoutes()}\n\n` : ''}${caps.survey ? `${rawSurveyRoutes()}\n\n` : ''}${caps.game ? `${rawGameRoutes()}\n\n` : ''}${caps.pricing_tiers ? `${rawPricingRoutes()}\n\n` : ''}  // A route the archetype declares is a route the server must serve: /account was declared as the
+  // account flow's page and never implemented, so the journey landed on a 404.
   if (${JSON.stringify(archetype.routes.filter((route) => route.kind === 'read-session').map((route) => route.path))}.includes(path) && request.method === 'GET') {
 ${caps.auth ? `${RAW_AUTH_GUARD}\n` : ''}    return html(response, await renderDocument({ title: 'Your account' }));
   }
@@ -2192,7 +2197,8 @@ const requiredFor = (path) => (EXTRA_ACTION !== '' && path === EXTRA_ACTION ? EX
 ${sessionTables(archetype)}
 ${caps.auth ? `db.exec('CREATE TABLE IF NOT EXISTS accounts (email TEXT PRIMARY KEY, password TEXT NOT NULL, display_name TEXT)');
 ${authTables(archetype)}
-` : ''}${caps.cart ? `${cartTables(caps.checkout)}\n` : ''}${caps.checkout ? `${checkoutTables()}\n` : ''}${caps.survey ? `${surveyTables()}\n` : ''}${caps.game ? `${gameTables()}\n` : ''}${caps.list_pages || caps.detail_page || caps.auth || caps.cart || caps.pricing_tiers || caps.checkout || caps.survey ? `${capabilityPages()}${caps.cart ? `\n${cartPages(archetype)}` : ''}${caps.pricing_tiers ? `\n${pricingPages(archetype)}` : ''}${caps.checkout ? `\n${checkoutPages(archetype)}` : ''}${caps.survey ? `\n${surveyPages(archetype)}` : ''}` : ''}const requestLog = [];
+` : ''}${caps.cart ? `${cartTables(caps.checkout)}\n` : ''}${caps.checkout ? `${checkoutTables()}\n` : ''}${caps.survey ? `${surveyTables()}\n` : ''}${caps.game ? `${gameTables()}\n` : ''}${caps.list_pages || caps.detail_page || caps.auth || caps.cart || caps.pricing_tiers || caps.checkout || caps.survey || caps.game ? `${capabilityPages()}${caps.cart ? `\n${cartPages(archetype)}` : ''}${caps.pricing_tiers ? `\n${pricingPages(archetype)}` : ''}${caps.checkout ? `\n${checkoutPages(archetype)}` : ''}${caps.survey ? `\n${surveyPages(archetype)}` : ''}${caps.game ? `\n${gamePages(archetype)}` : ''}
+` : ''}const requestLog = [];
 const app = new Hono();
 app.use('*', async (c, next) => {
   await next();
@@ -2343,7 +2349,8 @@ ${caps.auth ? "  if (!authSessionEmail(c.req.header('cookie'))) return c.json({ 
   return c.json({ ref: row.ref, ...JSON.parse(row.payload) });
 });
 
-${caps.cart ? `${honoCartRoutes(archetype, cartCookieFlags, checkoutOf(archetype))}\n\n` : ''}${caps.checkout ? `${honoCheckoutRoutes()}\n\n` : ''}${caps.survey ? `${honoSurveyRoutes()}\n\n` : ''}${caps.game ? `${honoGameRoutes()}\n\n` : ''}${caps.pricing_tiers ? `${honoPricingRoutes()}\n\n` : ''}for (const sessionPage of ${JSON.stringify(archetype.routes.filter((route) => route.kind === 'read-session').map((route) => route.path))}) {${caps.auth ? `  app.get(sessionPage, (c) => {
+${caps.cart ? `${honoCartRoutes(archetype, cartCookieFlags, checkoutOf(archetype))}\n\n` : ''}${caps.checkout ? `${honoCheckoutRoutes()}\n\n` : ''}${caps.survey ? `${honoSurveyRoutes()}\n\n` : ''}${caps.game ? `${honoGameRoutes()}\n\n` : ''}${caps.pricing_tiers ? `${honoPricingRoutes()}\n\n` : ''}for (const sessionPage of ${JSON.stringify(archetype.routes.filter((route) => route.kind === 'read-session').map((route) => route.path))}) {
+${caps.auth ? `  app.get(sessionPage, (c) => {
     if (!authSessionEmail(c.req.header('cookie'))) return c.redirect('/login', 303);
     return c.html(renderDocument({ title: 'Your account' }));
   });` : "  app.get(sessionPage, (c) => c.html(renderDocument({ title: 'Your account' })));"}

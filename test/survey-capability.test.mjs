@@ -303,9 +303,18 @@ test('functional: the branch decides which questions are asked, and the outcome 
   }
 });
 
+/**
+ * The capability keys, read out of the set rather than matched as a literal: pinning the whole set makes
+ * every new capability edit every older capability's test, which is the landing trap this rebase existed to
+ * resolve (mwg-train-ypr, mwg-train-ksn).
+ */
+const capabilityKeysIn = (source) =>
+  /CAPABILITY_KEYS = new Set\(\[([^\]]*)\]\)/.exec(source)?.[1].split(',').map((entry) => entry.trim().replace(/^'|'$/g, '')).filter(Boolean) ?? [];
+
 test('the survey capability is registered, not silently dead', () => {
   const frameworks = readFileSync(join(ROOT, 'pilot/frameworks.mjs'), 'utf8');
   assert.match(frameworks, /const capabilitiesOf = \(archetype\) => \(\{ list_pages: false, detail_page: false, auth: false, cart: false, pricing_tiers: false, checkout: false, survey: false/);
   const spec = readFileSync(join(ROOT, 'src/eval/spec.mjs'), 'utf8');
-  assert.match(spec, /CAPABILITY_KEYS = new Set\(\['list_pages', 'detail_page', 'auth', 'cart', 'pricing_tiers', 'checkout', 'survey'\]\)/);
+  const keys = capabilityKeysIn(spec);
+  assert.ok(keys.includes('survey'), `survey is a capability key, found ${keys.join(', ')}`);
 });
