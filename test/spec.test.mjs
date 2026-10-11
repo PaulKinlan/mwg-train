@@ -508,7 +508,12 @@ test('a journey search missing a selector, and a step driving an undeclared fiel
   assert.ok(refusals(badType, 'search.queryParam').length > 0, 'a non-string query parameter is refused');
 
   const step = validateSpec({ ...base, journey: { ...base.journey, steps: [{ path: '/one', fill: { '[name=no-such-field]': 'x' } }] } });
-  assert.ok(refusals(step, 'steps').some((problem) => problem.includes('no-such-field')), 'a step driving an undeclared field is refused by name');
+  const stepRefusal = refusals(step, 'steps').find((problem) => problem.includes('no-such-field'));
+  assert.ok(stepRefusal, 'a step driving an undeclared field is refused by name');
+  // It has to say what would have worked, like the rest of the block: being told only that a name is wrong sends the
+  // reader back into the document to find out what is right (mwg-train-nmj0 review).
+  assert.ok(stepRefusal.includes('declared:'), `the refusal lists the declared fields: ${stepRefusal}`);
+  for (const field of base.fields.map((each) => each.name)) assert.ok(stepRefusal.includes(field), `the refusal names ${field}`);
 });
 
 test('no family in the corpus is refused for any of the six lookups', () => {

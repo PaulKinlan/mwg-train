@@ -177,7 +177,7 @@ export function validateSpec(spec) {
       for (const selector of Object.keys(journey?.fill ?? {})) {
         const targets = selectorFieldNames(selector);
         if (targets.length === 0) at(`${name}.fill("${selector}")`, 'must name the field it types into, as [name=<field>]');
-        for (const target of targets) if (!declared.has(target)) at(`${name}.fill("${selector}")`, `types into ${target}, which the fields do not declare`);
+        for (const target of targets) if (!declared.has(target)) at(`${name}.fill("${selector}")`, `types into ${target}, which the fields do not declare; declared: ${[...declared].filter(isString).join(', ')}`);
       }
       // Steps drive fields the same way the top-level journeys do, with the same selector shape, and the generator
       // resolves them to a field for the label and the input type - falling back to the raw attribute value and
@@ -187,7 +187,7 @@ export function validateSpec(spec) {
         for (const selector of [...Object.keys(step?.fill ?? {}), ...Object.keys(step?.select ?? {})]) {
           const targets = selectorFieldNames(selector);
           if (targets.length === 0) at(`${name}.steps.fill/select("${selector}")`, 'must name the field it drives, as [name=<field>]');
-          for (const target of targets) if (!declared.has(target)) at(`${name}.steps.fill/select("${selector}")`, `drives ${target}, which the fields do not declare`);
+          for (const target of targets) if (!declared.has(target)) at(`${name}.steps.fill/select("${selector}")`, `drives ${target}, which the fields do not declare; declared: ${[...declared].filter(isString).join(', ')}`);
         }
       }
       // The search a journey drives is read out of the same object by the generator: `queryParam` becomes an id, a
