@@ -6,6 +6,13 @@
  *   node scripts/scaffold-training-corpus.mjs --families tr-01,tr-02        # a bounded tranche
  *   node scripts/scaffold-training-corpus.mjs --clean --out <dir>           # wipe and rebuild
  *
+ * Where the record goes (mwg-train-65v). `--out` relocates the trees, so it relocates the record with
+ * them: a diagnostic run (`--out /tmp/x --families tr-01`) writes `<out>/TRAINING_CORPUS.json` and does
+ * NOT touch the tracked `pilot/TRAINING_CORPUS.json`, which is what it used to truncate to the scoped
+ * subset. Writing the tracked record therefore takes an explicit `--record pilot/TRAINING_CORPUS.json`,
+ * and any write that would shrink an existing record fails closed unless `--allow-shrink` says it is
+ * deliberate. The write itself is atomic (temp file + rename), so an interrupted run cannot leave a
+ * half-written record behind.
  * The briefs manifest (`docs/train/briefs/manifest.jsonl`) is the source of truth for the tr-* corpus.
  * Each family maps to a training archetype by its `archetype` field (looked up in
  * pilot/training-archetypes.mjs, NOT the pilot table), and the family's own `topic`/`routes` relabel the
@@ -21,7 +28,7 @@
  * pilot/CORPUS.json. A collision is a BLOCKER (exit 1), never a hidden note. It also refuses any
  * family_id that is not a tr-* id.
  */
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
@@ -37,6 +44,11 @@ const FRAMEWORK_NAMES = Object.keys(FRAMEWORKS);
 const REPO_ROOT = resolve(dirname(new URL(import.meta.url).pathname), '..');
 const MANIFEST_PATH = 'docs/train/briefs/manifest.jsonl';
 const PILOT_CORPUS_PATH = 'pilot/CORPUS.json';
+/**
+ * The one record this repository tracks. A relocated or scoped run must never write it by accident
+ * (mwg-train-65v: `--out <dir> --families tr-01` truncated it from 210 projects to 7).
+ */
+export const TRACKED_RECORD_PATH = 'pilot/TRAINING_CORPUS.json';
 
 const refPlaceholder = '${ref}';
 
@@ -143,18 +155,26 @@ function defectsForFamily(family) {
 function parseArgs(argv) {
   const args = {
     out: 'pilot/training-projects',
-    record: 'pilot/TRAINING_CORPUS.json',
+    outGiven: false,
+    record: null,
+    recordGiven: false,
     manifest: MANIFEST_PATH,
     families: null,
     clean: false,
+    allowShrink: false,
     help: false,
   };
   for (let i = 0; i < argv.length; i += 1) {
-    if (argv[i] === '--out') args.out = argv[++i];
-    else if (argv[i] === '--record') args.record = argv[++i];
-    else if (argv[i] === '--manifest') args.manifest = argv[++i];
+    if (argv[i] === '--out') {
+      args.out = argv[++i];
+      args.outGiven = true;
+    } else if (argv[i] === '--record') {
+      args.record = argv[++i];
+      args.recordGiven = true;
+    } else if (argv[i] === '--manifest') args.manifest = argv[++i];
     else if (argv[i] === '--families') args.families = argv[++i];
     else if (argv[i] === '--clean') args.clean = true;
+    else if (argv[i] === '--allow-shrink') args.allowShrink = true;
     else if (argv[i] === '--help' || argv[i] === '-h') args.help = true;
     else {
       console.error(`scaffold-training-corpus: unknown argument '${argv[i]}'`);
@@ -162,6 +182,67 @@ function parseArgs(argv) {
     }
   }
   return args;
+}
+
+/**
+ * Where the record for THIS run goes.
+ *
+ * - `--record <file>` names it outright, including the tracked one - the only way to write that on purpose.
+ * - `--out <dir>` without `--record` relocates it beside the relocated trees, so a diagnostic run leaves the
+ *   tracked record alone instead of truncating it to whatever subset was asked for.
+ * - neither: the tracked record, which is the normal full-corpus path.
+ */
+export function resolveRecordTarget({ outDir, outGiven = false, record = null, repoRoot = REPO_ROOT }) {
+  if (record) return { path: resolve(repoRoot, record), kind: 'explicit' };
+  if (outGiven) return { path: join(outDir, 'TRAINING_CORPUS.json'), kind: 'relocated' };
+  return { path: resolve(repoRoot, TRACKED_RECORD_PATH), kind: 'tracked' };
+}
+
+/**
+ * The fail-closed guard. Returns a refusal message when writing `next` over an existing record would drop
+ * projects, or null when the write is allowed. A scoped run over a fuller record is data loss (the exact
+ * bug in mwg-train-65v), so it needs `--allow-shrink` to be deliberate rather than accidental.
+ */
+export function shrinkRefusal({ previous, next, recordPath, allowShrink = false }) {
+  if (allowShrink) return null;
+  const before = Array.isArray(previous?.projects) ? previous.projects.length : null;
+  const after = Array.isArray(next?.projects) ? next.projects.length : null;
+  if (before === null || after === null || after >= before) return null;
+  return (
+    `scaffold-training-corpus: REFUSING to write ${recordPath} - it holds ${before} project(s) and this run produced ${after}, ` +
+    'so a scoped run would truncate a fuller record. Pass --allow-shrink to overwrite deliberately, ' +
+    '--record <file> to write somewhere else, or run without --families for the whole corpus.'
+  );
+}
+
+/**
+ * Write the record atomically: serialise, write a sibling temp file, read that temp file BACK FROM DISK,
+ * and only then rename it over the target. An interrupted or failing run cannot leave a truncated record -
+ * the failure mode the plain `writeFileSync` had, where a crash mid-write destroyed the tracked file.
+ *
+ * The read-back is from disk, not from the string in memory (mwg-train-65v review, finding 1): comparing a
+ * string with `JSON.parse` of itself cannot fail, so an in-memory check would be theatre. Reading the temp
+ * file back means a short write - a full disk, an interrupted write - is caught before it is promoted over
+ * a good record, and the bytes that replace the record are known to parse and to carry every project.
+ */
+export function writeRecordAtomically(recordPath, record) {
+  const text = `${JSON.stringify(record, null, 2)}\n`;
+  const tmpPath = `${recordPath}.tmp-${process.pid}`;
+  try {
+    writeFileSync(tmpPath, text);
+    const onDisk = readFileSync(tmpPath, 'utf8');
+    if (onDisk !== text) {
+      throw new Error(`the temp file does not hold the bytes that were written (${onDisk.length} of ${text.length} characters)`);
+    }
+    const readBack = JSON.parse(onDisk);
+    if (!Array.isArray(readBack.projects) || readBack.projects.length !== record.projects.length) {
+      throw new Error(`the temp file does not read back with ${record.projects.length} project(s)`);
+    }
+    renameSync(tmpPath, recordPath);
+  } catch (error) {
+    rmSync(tmpPath, { force: true });
+    throw error;
+  }
 }
 
 /** The canonical (v1) row for each family: variants differ only in prompt/brief_id/variant_of. */
@@ -328,7 +409,10 @@ function readPreviousRecord(recordPath) {
 function main() {
   const args = parseArgs(process.argv.slice(2));
   if (args.help) {
-    console.error('usage: node scripts/scaffold-training-corpus.mjs [--out <dir>] [--record <file>] [--families tr-01,tr-02] [--clean]');
+    console.error('usage: node scripts/scaffold-training-corpus.mjs [--out <dir>] [--record <file>] [--families tr-01,tr-02] [--clean] [--allow-shrink]');
+    console.error('  A plain run writes the tracked record. --out relocates the trees and, without --record, the');
+    console.error(`  record goes beside them - so ${TRACKED_RECORD_PATH} is written by a relocated run only when --record names it.`);
+    console.error('  No write shrinks an existing record (fewer projects) unless --allow-shrink is passed.');
     process.exit(0);
   }
 
@@ -342,7 +426,8 @@ function main() {
   }
 
   const outDir = resolve(REPO_ROOT, args.out);
-  const recordPath = resolve(REPO_ROOT, args.record);
+  const target = resolveRecordTarget({ outDir, outGiven: args.outGiven, record: args.record });
+  const recordPath = target.path;
   if (args.clean) rmSync(outDir, { recursive: true, force: true });
   mkdirSync(outDir, { recursive: true });
 
@@ -436,11 +521,28 @@ function main() {
     projects,
   };
 
-  const record = { ...pendingRecord, generated_at: resolveGeneratedAt(readPreviousRecord(recordPath), pendingRecord) };
-  writeFileSync(recordPath, `${JSON.stringify(record, null, 2)}\n`);
+  const previousRecord = readPreviousRecord(recordPath);
+  const record = { ...pendingRecord, generated_at: resolveGeneratedAt(previousRecord, pendingRecord) };
+  const refusal = shrinkRefusal({ previous: previousRecord, next: record, recordPath, allowShrink: args.allowShrink });
+  if (refusal) {
+    console.error(refusal);
+    process.exit(1);
+  }
+  try {
+    writeRecordAtomically(recordPath, record);
+  } catch (error) {
+    console.error(`scaffold-training-corpus: FAILED to write ${recordPath} - ${error.message}. The existing record was left untouched.`);
+    process.exit(1);
+  }
 
   console.log(`scaffold-training-corpus: wrote ${projects.length} projects to ${args.out}`);
-  console.log(`scaffold-training-corpus: record at ${args.record}`);
+  console.log(`scaffold-training-corpus: record at ${recordPath}`);
+  if (target.kind === 'relocated') {
+    console.log(
+      `scaffold-training-corpus: --out was given without --record, so the record went beside the trees; ${TRACKED_RECORD_PATH} was NOT touched ` +
+        `(pass --record ${TRACKED_RECORD_PATH} to update it on purpose)`,
+    );
+  }
   console.log(`scaffold-training-corpus: frameworks ${JSON.stringify(byFramework)}`);
 
   // The disjointness assertions: every generated tree must be absent from the pilot's recorded
