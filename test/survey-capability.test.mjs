@@ -182,7 +182,7 @@ test('functional: the branch decides which questions are asked, and the outcome 
 
         // Changing the answer to England brings the conditional questions back into the flow.
         await answer('residency', 'England', { from: 'review' });
-        const reviewNow = await post('/survey/review', {}, { cookie });
+        const reviewNow = await fetch(`${base}/survey/review`, { headers: { cookie }, redirect: 'manual' });
         assert.equal(reviewNow.status, 303, `${arm} the review is no longer complete`);
         assert.equal(await asked(), 'course', `${arm} the conditional question is asked again`);
 
@@ -224,7 +224,7 @@ test('functional: the branch decides which questions are asked, and the outcome 
         await answer('course', 'Full-time');
         await answer('household_income', '20000');
         await answer('residency', 'Scotland', { from: 'review' });
-        const afterChange = await post('/survey/review', {}, { cookie });
+        const afterChange = await fetch(`${base}/survey/review`, { headers: { cookie }, redirect: 'manual' });
         assert.equal(afterChange.status, 303, `${arm} a visible question is unanswered again`);
         await answer('notes', 'Please call before 5pm');
         const changedReview = await page('/survey/review');

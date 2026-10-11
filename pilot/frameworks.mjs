@@ -1100,9 +1100,20 @@ const surveyPages = (archetype) => {
     "  const notAsked = skipped.length === 0 ? '' : '<p id=\"survey-skipped\">Not asked, because of your earlier answers: ' + skipped.map((question) => esc(question.field)).join(', ') + '</p>';",
     "  return capabilityPage('Review your answers', '<h1>Review your answers</h1><ul id=\"survey-answers\">' + rows + '</ul>' + notAsked + '<form method=\"post\" action=\"/survey/submit\"><button type=\"submit\">Submit</button></form>');",
     "};",
-    "const surveyResultPage = (row) => {",
-    "  const stored = JSON.parse(row.payload);",
-    "  return capabilityPage('Your result', '<h1>Your result</h1><p id=\"survey-outcome\">' + esc(stored.outcome ?? '') + '</p><p id=\"survey-reference\">' + esc(row.ref) + '</p><dl id=\"survey-recap\">' + stored.answers.map((entry) => '<dt>' + esc(entry.field) + '</dt><dd>' + esc(entry.value) + '</dd>').join('') + '</dl>');",
+    // The records table is shared with the engine's own reads, so a reference can name a product rather
+    // than a result: a row that is not this capability's is a 404, not a TypeError that takes the process
+    // with it. This is the class mwg-train-le6's review found in the checkout receipt, closed here before
+    // this capability is handed over.
+    "const surveyStored = (row) => {",
+    "  try {",
+    "    const value = JSON.parse(row.payload);",
+    "    return value !== null && typeof value === 'object' && Array.isArray(value.answers) && Object.hasOwn(value, 'outcome') ? value : null;",
+    "  } catch {",
+    "    return null;",
+    "  }",
+    "};",
+    "const surveyResultPage = (ref, stored) => {",
+    "  return capabilityPage('Your result', '<h1>Your result</h1><p id=\"survey-outcome\">' + esc(stored.outcome ?? '') + '</p><p id=\"survey-reference\">' + esc(ref) + '</p><dl id=\"survey-recap\">' + stored.answers.map((entry) => '<dt>' + esc(entry.field) + '</dt><dd>' + esc(entry.value) + '</dd>').join('') + '</dl>');",
     "};",
   ].join('\n');
 };
@@ -1171,11 +1182,12 @@ const rawSurveyRoutes = () =>
     "  const surveyResultMatch = path.match(/^\\/survey\\/result\\/([^/]+)$/);",
     "  if (surveyResultMatch && request.method === 'GET') {",
     '    const surveyRow = select.get(surveyResultMatch[1]);',
-    '    if (!surveyRow) {',
+    '    const surveyStoredValue = surveyRow ? surveyStored(surveyRow) : null;',
+    '    if (!surveyStoredValue) {',
     "      response.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });",
     "      return response.end('We could not find that result.');",
     '    }',
-    '    return html(response, surveyResultPage(surveyRow));',
+    '    return html(response, surveyResultPage(surveyRow.ref, surveyStoredValue));',
     '  }',
   ].join('\n');
 
@@ -1220,8 +1232,9 @@ const honoSurveyRoutes = () =>
     '});',
     "app.get('/survey/result/:ref', (c) => {",
     "  const surveyRow = select.get(c.req.param('ref'));",
-    "  if (!surveyRow) return c.text('We could not find that result.', 404);",
-    '  return c.html(surveyResultPage(surveyRow));',
+    "  const surveyStoredValue = surveyRow ? surveyStored(surveyRow) : null;",
+    "  if (!surveyStoredValue) return c.text('We could not find that result.', 404);",
+    '  return c.html(surveyResultPage(surveyRow.ref, surveyStoredValue));',
     '});',
   ].join('\n');
 
