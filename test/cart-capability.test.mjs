@@ -43,6 +43,10 @@ test('spec gate: the cart capability validates as a closed set, and fails closed
   // The cart owns the sid cookie, as the session flow and auth both do.
   assert.ok(validateSpec(cartSpec({ session: true })).some((p) => p.includes('cannot combine with session')));
   assert.ok(validateSpec(cartSpec({ capabilities: { cart: true, auth: true } })).some((p) => p.includes('cannot combine with auth')));
+  assert.ok(
+    validateSpec(cartSpec({ capabilities: { cart: true, detail_page: true } })).some((p) => p.includes('cannot combine with detail_page')),
+    'the cart owns the record page, so the read-only detail page would be dead code',
+  );
   // Each of the three things the cart needs is refused rather than silently omitted.
   const noProduct = cartSpec({ routes: cartSpec().routes.filter((route) => route.kind !== 'read-by-reference') });
   assert.ok(validateSpec(noProduct).some((p) => p.includes('no route is read-by-reference')));

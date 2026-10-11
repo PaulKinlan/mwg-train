@@ -248,6 +248,9 @@ export function validateSpec(spec) {
         // rather than silently emitting a cart that adds nothing (mwg-train-11d).
         if (spec.session === true) at('capabilities.cart', 'cannot combine with session: both own the sid cookie');
         if (spec.capabilities.auth === true) at('capabilities.cart', 'cannot combine with auth: both own the sid cookie');
+        // The cart's product page IS the record page (it shows the product and its variant choice), so
+        // asking for the read-only detail page as well would emit a renderer nothing ever reaches.
+        if (spec.capabilities.detail_page === true) at('capabilities.cart', 'cannot combine with detail_page: the cart product page is the record page');
         const products = (spec.routes ?? []).filter((route) => route?.kind === 'read-by-reference');
         if (products.length === 0) at('capabilities.cart', 'is on, but no route is read-by-reference to serve as the product page');
         if (!(spec.fields ?? []).some((field) => field?.type === 'select')) {
