@@ -55,6 +55,14 @@ artefact from the family's authored conformance board
 [`src/eval/conformance.mjs`](../../../src/eval/conformance.mjs) scores against). The generator refuses to write
 anywhere outside `docs/`, so a model-generated image cannot reach the `A1_self_generated` arm.
 
+They are also **illustrative, not accurate**. Every word inside a board is placeholder content the model invented,
+and the set was reviewed by eye, board by board, by reviewers independent of the generator; that review is recorded
+on bead `mwg-train-mhd`. Its findings are of two kinds and neither is hidden by a green check: **composition** (a
+board may draw the page inside a window on a desktop rather than as a tight crop of one viewport, or lay one page
+out as two panes) and **invented content** (a garbled word in a sentence, or a business name that happens to be a
+real company). The register pins the bytes and the prompts; it does not claim the text inside them is true, and
+nothing depicted is a functional claim about a route, a state or a payment.
+
 ## Regenerating and checking
 
 ```bash
