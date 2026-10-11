@@ -8,9 +8,7 @@
  * asked to build the archetype is given what it needs to render the intended UI.
  */
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
-import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
@@ -27,6 +25,7 @@ import {
   renderRegister,
   setDocument,
   setProblems,
+  sha256,
 } from '../scripts/build-archetype-assets.mjs';
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -49,6 +48,27 @@ function withTarget({ readme, indexHtml, css = '' }, body) {
 
 const RIGHTS_README = '`excluded_from_training: true`, `approved_for_training: false`.\n';
 const PALETTE = ':root {\n  --accent: #10b981;\n  --font-sans: system-ui, sans-serif;\n}\n';
+
+/** A throwaway root holding one complete, internally consistent store built from a real set document. */
+function withSyntheticStore(document, body) {
+  const root = mkdtempSync(join(tmpdir(), 'archetype-store-'));
+  const dir = join(root, 'assets/archetypes/booking');
+  mkdirSync(join(dir, 'images'), { recursive: true });
+  writeFileSync(join(dir, 'set.json'), JSON.stringify(document));
+  writeFileSync(join(dir, 'images/step1-browse.jpg'), 'board');
+  writeFileSync(join(dir, 'README.md'), 'store page');
+  const target = join(root, 'docs/design/archetypes/booking');
+  mkdirSync(join(target, 'demo'), { recursive: true });
+  writeFileSync(join(target, 'README.md'), `# Visual reference: Booking (${document.brand.site_name})\n\n${RIGHTS_README}`);
+  writeFileSync(join(target, 'demo/index.html'), `<a class="brand"><span>${document.brand.site_name}</span></a><p>Book a class.</p>`);
+  writeFileSync(join(target, 'demo/styles.css'), PALETTE);
+  writeFileSync(join(target, 'step1-browse.jpg'), 'board');
+  try {
+    return body(root);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+}
 
 test('every archetype has a committed set, and every set is complete', () => {
   const documents = buildAll(repoRoot);
@@ -103,25 +123,48 @@ test('a brand the target states twice is a recorded conflict, not a silent pick'
   );
 });
 
-test('an adjudicated conflict resolves, and a stale adjudication is itself a finding', () => {
+test('an adjudicated conflict resolves, and every way it can go stale is a finding', () => {
   withTarget(
-    { readme: `# Visual reference: Booking (Evening Class Studio)\n\n${RIGHTS_README}`, indexHtml: '<a class="brand"><span>Learning Hub</span></a><p>Book a class.</p>', css: PALETTE },
+    {
+      readme: `# Visual reference: Booking (Evening Class Studio)\n\n${RIGHTS_README}`,
+      indexHtml: '<a class="brand"><span>Learning Hub</span></a><p>Book a class.</p>',
+      css: PALETTE,
+    },
     (root) => {
       mkdirSync(join(root, STORE_DIR, 'booking'), { recursive: true });
-      writeFileSync(
-        join(root, STORE_DIR, 'booking/decisions.json'),
-        JSON.stringify({ brand: { siteName: 'Evening Class Studio', because: 'the boards are the accepted artefact', decided_on: '2026-10-11' } }),
-      );
+      const decide = (entry) => writeFileSync(join(root, STORE_DIR, 'booking/decisions.json'), JSON.stringify({ brand: entry }));
+
+      decide({ siteName: 'Evening Class Studio', because: 'the boards are the accepted artefact', decided_on: '2026-10-11' });
       const adjudicated = buildAll(root, ['booking'])[0];
       assert.deepEqual(setProblems(adjudicated), [], 'an adjudicated conflict is not a problem');
       assert.equal(setDocument(adjudicated).brand.site_name, 'Evening Class Studio');
 
-      // A decision that picks a value the target never states is not an adjudication.
+      // A decision that names a value the target never states is not an adjudication, and it has to be a
+      // finding rather than an assertion about a value quietly absent from the candidates.
+      decide({ siteName: 'Neither Brand', because: 'x', decided_on: '2026-10-11' });
+      const invalid = buildAll(root, ['booking'])[0];
+      assert.equal(setProblems(invalid).filter((problem) => problem.includes('not one of the target')).length, 1, 'a decision naming an unstated brand is a finding');
+      assert.equal(setDocument(invalid).brand.site_name, 'Neither Brand', 'and it is what the set would otherwise publish, which is why it must fail');
+
+      // Stale: the target stops contradicting itself and settles on the brand the decision named, so
+      // there is nothing left to adjudicate and the file should go.
+      writeFileSync(join(root, 'docs/design/archetypes/booking/README.md'), `# Visual reference: Booking (Learning Hub)\n\n${RIGHTS_README}`);
+      decide({ siteName: 'Learning Hub', because: 'x', decided_on: '2026-10-11' });
+      const stale = buildAll(root, ['booking'])[0];
+      assert.deepEqual(stale.brand.strong, ['Learning Hub'], 'the target now states one brand');
+      assert.equal(setProblems(stale).filter((problem) => problem.includes('no longer exists')).length, 1, 'a stale decision is a finding');
+
+      // The target settles on a brand the decision does not name, while the decided name survives only as
+      // a weak candidate - the case that silently published the wrong brand before.
+      decide({ siteName: 'Evening Class Studio', because: 'x', decided_on: '2026-10-11' });
       writeFileSync(
-        join(root, STORE_DIR, 'booking/decisions.json'),
-        JSON.stringify({ brand: { siteName: 'Neither Brand', because: 'x', decided_on: '2026-10-11' } }),
+        join(root, 'docs/design/archetypes/booking/demo/index.html'),
+        '<a class="brand"><span>Learning Hub</span></a><h1>Evening Class Studio</h1><p>Book a class.</p>',
       );
-      assert.equal(buildAll(root, ['booking'])[0].brand.distinct.includes('Neither Brand'), false);
+      const contradicting = buildAll(root, ['booking'])[0];
+      assert.deepEqual(contradicting.brand.strong, ['Learning Hub']);
+      assert.ok(contradicting.brand.distinct.includes('Evening Class Studio'), 'it survives as a weak candidate, which is how this hid before');
+      assert.equal(setProblems(contradicting).filter((problem) => problem.includes('contradicts it')).length, 1, 'a decision contradicting the target single brand is a finding');
     },
   );
 });
@@ -182,6 +225,35 @@ test('the store can only ever be written inside assets/ and docs/', () => {
   for (const forbidden of ['data/A1_self_generated/targets/tr-01/target.png', '../outside/x', 'assets-evil/x', 'docs-evil/x']) {
     assert.throws(() => assertWritable(root, join(root, forbidden)), /refusing to write outside/, `${forbidden} must be refused`);
   }
+  // An unresolved path is the bypass that matters: `<root>/assets/../data/x` begins with an allowed
+  // prefix, so a guard that compares before it resolves waves it through.
+  for (const traversal of ['assets/../data/A1_self_generated/x.png', 'docs/../../etc/x', 'assets/./../data/x']) {
+    assert.throws(() => assertWritable(root, join(root, traversal)), /refusing to write outside/, `${traversal} must be refused`);
+  }
+});
+
+test('a brand name split across spans is one name, and the mark is not part of it', () => {
+  withTarget(
+    {
+      readme: `# Visual reference: Catalogue\n\n${RIGHTS_README}`,
+      indexHtml: '<a class="brand"><span class="brand-mark">\u{1F3FA}</span><span>Kiln &amp;</span> <span>Copper</span></a><p>Browse the catalogue.</p>',
+      css: PALETTE,
+    },
+    (root) => {
+      const set = buildAll(root, ['booking'])[0];
+      const strong = set.brand.candidates.filter((candidate) => candidate.strength === 'strong');
+      assert.deepEqual(strong.map((candidate) => candidate.value), ['Kiln & Copper'], 'the whole name, not the last fragment');
+      assert.deepEqual(setProblems(set), []);
+    },
+  );
+});
+
+test('two identical strings in sibling elements are two copy entries, not one', () => {
+  // The dedupe exists for a text run split by inline markup; applied by tag alone it silently dropped a
+  // repeated label, which is a real thing a page has.
+  const texts = copyTexts('<ul><li>Pending</li><li>Pending</li></ul><p><strong>Book</strong> now</p>');
+  assert.deepEqual(texts.filter((entry) => entry.text === 'Pending').length, 2, 'both list items are recorded');
+  assert.deepEqual(texts.map((entry) => entry.text), ['Pending', 'Pending', 'Book', 'now']);
 });
 
 test('the committed store matches the accepted targets as they are today', () => {
@@ -189,6 +261,44 @@ test('the committed store matches the accepted targets as they are today', () =>
   // heavier check:all run a landing later.
   const { findings } = inspectCommitted(repoRoot);
   assert.deepEqual(findings, []);
+});
+
+test('a tampered digest, an unexpected file and an unreadable set are all findings', () => {
+  const document = JSON.parse(readFileSync(join(repoRoot, STORE_DIR, 'booking/set.json'), 'utf8'));
+  withSyntheticStore(document, (root) => {
+    // Every other key is compared, `images` included: a digest in the record that no longer matches the
+    // target is a lie about the bytes, even when the bytes themselves are still correct.
+    const tampered = structuredClone(document);
+    tampered.images[0].sha256 = 'deadbeef';
+    writeFileSync(join(root, STORE_DIR, 'booking/set.json'), JSON.stringify(tampered));
+    assert.equal(inspectCommitted(root, ['booking']).findings.filter((finding) => finding.includes('images disagrees')).length, 1);
+
+    writeFileSync(join(root, STORE_DIR, 'booking/set.json'), JSON.stringify(document));
+    writeFileSync(join(root, STORE_DIR, 'booking/stray.txt'), 'a claim that looks generated');
+    assert.equal(inspectCommitted(root, ['booking']).findings.filter((finding) => finding.includes('unexpected file')).length, 1);
+    rmSync(join(root, STORE_DIR, 'booking/stray.txt'));
+
+    // Fail closed, not a stack trace: an unreadable record is the operator's finding to act on.
+    writeFileSync(join(root, STORE_DIR, 'booking/set.json'), '{ not json');
+    const findings = inspectCommitted(root, ['booking']).findings;
+    assert.equal(findings.filter((finding) => finding.includes('cannot be read as JSON')).length, 1);
+  });
+});
+
+test('cpSync of the store keeps the digest agreement the check relies on', () => {
+  // The store is copied into a build, so the assertion is about the bytes surviving the copy. Asserting
+  // the length alone would have passed for a re-encoded image, which is the failure this guards.
+  const root = mkdtempSync(join(tmpdir(), 'archetype-copy-'));
+  try {
+    cpSync(join(repoRoot, STORE_DIR), join(root, STORE_DIR), { recursive: true });
+    for (const name of ['booking/images/step1-browse.jpg', 'catalogue/images/step1-grid.jpg']) {
+      const copied = readFileSync(join(root, STORE_DIR, name));
+      const original = readFileSync(join(repoRoot, STORE_DIR, name));
+      assert.equal(sha256(copied), sha256(original), `${name}: the copy is not the same bytes`);
+    }
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
 });
 
 test('the set is not corpus: nothing in it claims to be a functional or training artefact', () => {
@@ -199,15 +309,3 @@ test('the set is not corpus: nothing in it claims to be a functional or training
   }
 });
 
-test('cpSync of the store keeps the digest agreement the check relies on', () => {
-  // Cheap guard against the store being moved or re-encoded by a copy step: the bytes are the identity.
-  const root = mkdtempSync(join(tmpdir(), 'archetype-copy-'));
-  try {
-    cpSync(join(repoRoot, STORE_DIR), join(root, STORE_DIR), { recursive: true });
-    const before = execFileSync('git', ['ls-files', '-s', 'assets/archetypes'], { cwd: repoRoot, encoding: 'utf8' }).trim().split('\n').length;
-    assert.ok(before > 0, 'the store is tracked');
-    assert.equal(readFileSync(join(root, STORE_DIR, 'booking/images/step1-browse.jpg')).length, readFileSync(join(repoRoot, STORE_DIR, 'booking/images/step1-browse.jpg')).length);
-  } finally {
-    rmSync(root, { recursive: true, force: true });
-  }
-});

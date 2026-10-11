@@ -18,7 +18,7 @@ store, the register or the target have moved apart.
 | `booking/set.json` | `Evening Class Studio` | 25 | 4 | 5 | **yes** (see decisions.json) |
 | `catalogue/set.json` | `Kiln & Copper` | 29 | 4 | 3 | no |
 | `contact-lead/set.json` | `ARKHITECTS Studio` | 22 | 3 | 2 | no |
-| `event-registration/set.json` | `Future Web 2026` | 10 | 2 | 2 | no |
+| `event-registration/set.json` | `Future Web 2026` | 10 | 2 | 2 | **yes** (see decisions.json) |
 
 ## Where the values come from, per set
 

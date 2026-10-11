@@ -118,10 +118,7 @@
     },
     "fonts": {
       "--font-sans": "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
-      "--font-mono": "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-      "body": "var(--font-sans)",
-      ".record-echo-content": "var(--font-mono)",
-      ".ticket-ref-badge": "var(--font-mono)"
+      "--font-mono": "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace"
     },
     "source": "docs/design/archetypes/booking/demo/styles.css"
   },

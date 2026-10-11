@@ -55,9 +55,22 @@ function main() {
   // The register and the generated store pages are themselves checked, because a hand-edited register
   // that disagrees with the bytes it names is worse than no register: it looks like provenance.
   const registerPath = join(root, 'docs/provenance/assets/archetype-asset-sets.md');
+  // Every read is guarded: an unreadable file is a finding, and a gate that exits with a stack trace has
+  // told the operator nothing about which document is wrong.
+  const readOrNull = (path) => {
+    try {
+      return readFileSync(path, 'utf8');
+    } catch {
+      return null;
+    }
+  };
   if (!existsSync(registerPath)) findings.push('no register at docs/provenance/assets/archetype-asset-sets.md');
-  else if (readFileSync(registerPath, 'utf8') !== renderRegister(result.documents)) {
-    findings.push('the register disagrees with the sets it describes; re-run scripts/build-archetype-assets.mjs --register');
+  else {
+    const committedRegister = readOrNull(registerPath);
+    if (committedRegister === null) findings.push('the register exists but cannot be read');
+    else if (committedRegister !== renderRegister(result.documents)) {
+      findings.push('the register disagrees with the sets it describes; re-run scripts/build-archetype-assets.mjs --register');
+    }
   }
   for (const document of result.documents) {
     const readmePath = join(root, STORE_DIR, document.archetype, 'README.md');
@@ -65,7 +78,9 @@ function main() {
       findings.push(`${document.archetype}: no store README`);
       continue;
     }
-    if (readFileSync(readmePath, 'utf8') !== renderStoreReadme(document, [])) {
+    const committedReadme = readOrNull(readmePath);
+    if (committedReadme === null) findings.push(`${document.archetype}: its store README cannot be read`);
+    else if (committedReadme !== renderStoreReadme(document, [])) {
       findings.push(`${document.archetype}: the store README disagrees with its set; re-run scripts/build-archetype-assets.mjs --write`);
     }
   }

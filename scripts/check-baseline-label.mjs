@@ -89,9 +89,6 @@ export const GENERATED_PATTERNS = [
   // rights it inherited, and claim no measurement.
   /^assets\/archetypes\/[^/]+\/README\.md$/,
   /^assets\/archetypes\/[^/]+\/set\.json$/,
-  // The one hand-written file in an asset set: it adjudicates a brand the accepted target states
-  // ambiguously (or not at all), so the ambiguity is recorded rather than silently resolved.
-  /^assets\/archetypes\/[^/]+\/decisions\.json$/,
 ];
 
 /**
@@ -229,6 +226,12 @@ export const DOCUMENTS = {
   // rather than a corpus manifest row.
   'docs/provenance/assets/training-reference-boards.md': 'provenance',
   'docs/provenance/assets/archetype-asset-sets.md': 'provenance',
+  // The one HAND-WRITTEN file in an asset store, and deliberately classified by name rather than by
+  // pattern: it adjudicates a brand the accepted target states ambiguously or not at all, so a new
+  // adjudication has to be classified on purpose instead of inheriting a classification.
+  'assets/archetypes/booking/decisions.json': 'provenance',
+  'assets/archetypes/account-recovery/decisions.json': 'provenance',
+  'assets/archetypes/event-registration/decisions.json': 'provenance',
   'docs/provenance/original-refs.md': 'provenance',
   'docs/quarantine.md': 'provenance',
   'docs/eval/briefs/SCHEMA.md': 'spec',

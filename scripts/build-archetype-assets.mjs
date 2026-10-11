@@ -19,6 +19,10 @@
  *   node scripts/build-archetype-assets.mjs --register      # rewrite the register only, from committed sets
  *
  * It writes only under `assets/` and `docs/`; nothing here can reach the corpus arms under `data/`.
+ *
+ * Two files in the store are not derived from the target. `decisions.json` records an adjudication where the
+ * target contradicts itself about its own brand - it is hand-written, deliberate, and the gate fails while a
+ * contradiction is unadjudicated or while an adjudication has gone stale.
  */
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
@@ -121,6 +125,7 @@ export function copyTexts(html) {
   const tokens = body.split(/(<[^>]+>)/).filter((part) => part !== '');
   const stack = [];
   const texts = [];
+  let instance = 0;
   for (const token of tokens) {
     if (token.startsWith('<')) {
       const closing = /^<\s*\//.test(token);
@@ -128,10 +133,12 @@ export function copyTexts(html) {
       if (!name) continue;
       const tag = name[1].toLowerCase();
       if (closing) {
-        const at = stack.lastIndexOf(tag);
+        const at = stack.findLastIndex((frame) => frame.tag === tag);
         if (at !== -1) stack.splice(at, 1);
       } else if (!/\/>$/.test(token) && !['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'source', 'track', 'wbr'].includes(tag)) {
-        stack.push(tag);
+        // Each element carries its own identity, so two identical strings in two sibling elements are
+        // two entries and only a text run split by inline markup collapses to one.
+        stack.push({ tag, id: (instance += 1) });
       }
       continue;
     }
@@ -141,15 +148,15 @@ export function copyTexts(html) {
     // The nearest content element in the open stack, so a <p><strong>x</strong></p> is read as one run.
     let owner = null;
     for (let i = stack.length - 1; i >= 0; i -= 1) {
-      if (COPY_ELEMENTS.has(stack[i])) {
+      if (COPY_ELEMENTS.has(stack[i].tag)) {
         owner = stack[i];
         break;
       }
     }
     if (!owner) continue;
     const previous = texts[texts.length - 1];
-    if (previous && previous.tag === owner && previous.text === collapsed) continue;
-    texts.push({ tag: owner, text: collapsed });
+    if (previous && previous.id === owner.id && previous.text === collapsed) continue;
+    texts.push({ tag: owner.tag, id: owner.id, text: collapsed });
   }
   return texts;
 }
@@ -183,9 +190,13 @@ export function extractTokens(css, source) {
     const declared = /(?:^|;)\s*font-family\s*:\s*([^;]+)/i.exec(rule[2]);
     if (!declared) continue;
     const value = declared[1].trim();
-    // `inherit` is not a typography token, and an alias to another token is already recorded under it.
-    if (value === '' || value in fonts) continue;
+    if (value === '') continue;
+    // `inherit` is not a typography token, and an alias to a token already recorded is not a second
+    // one. The earlier version compared the VALUE against the token KEYS, so `var(--font-sans)` never
+    // matched `--font-sans` and every alias was stored as if it were a stack of its own.
     if (/^(inherit|initial|unset|revert|revert-layer)$/i.test(value)) continue;
+    const alias = /^var\(\s*(--[a-z0-9-]+)\s*\)$/i.exec(value);
+    if (alias && alias[1] in fonts) continue;
     fonts[selector] = value;
   }
   return { colors, fonts, source };
@@ -222,8 +233,15 @@ export function extractBrand({ archetype, readme, readmePath, indexHtml, indexPa
   // nothing there and two archetypes silently had no brand at all.
   const brandAnchor = /<a\b[^>]*class="[^"]*brand[^"]*"[^>]*>([\s\S]*?)<\/a>/i.exec(indexHtml);
   if (brandAnchor) {
-    const parts = textOf(brandAnchor[1]);
-    add(parts[parts.length - 1], `${indexPath}:${lineOf(indexHtml, brandAnchor.index)}`, 'demo-brand-element', 'strong');
+    // The mark is a glyph or an inline SVG; the name is what remains. Every remaining fragment is
+    // joined, because a name split across two spans is one name - taking the last fragment alone would
+    // record "Copper" for a brand called "Kiln & Copper".
+    const named = brandAnchor[1].replace(
+      /<span\b[^>]*class="[^"]*(?:brand-icon|brand-mark|brand-badge)[^"]*"[^>]*>[\s\S]*?<\/span>/gi,
+      ' ',
+    );
+    const parts = textOf(named);
+    add(parts.join(' ').trim(), `${indexPath}:${lineOf(indexHtml, brandAnchor.index)}`, 'demo-brand-element', 'strong');
   }
   // The target's own heading states the brand in the booking target and states nothing in the others.
   const heading = /^#\s+[^\n(]*\(([^)]+)\)\s*$/m.exec(readme);
@@ -260,15 +278,16 @@ export function extractBrand({ archetype, readme, readmePath, indexHtml, indexPa
 
 /** The rights boundary, inherited from the target rather than restated here. Fails closed if absent. */
 export function extractRights(readme, readmePath) {
-  const at = readme.search(/excluded_from_training/);
-  if (at === -1) return null;
-  const snippet = readme.slice(Math.max(0, at - 120), at + 200);
-  const excluded = /excluded_from_training[`*\s:]+(true|false)/i.exec(snippet);
-  const approved = /approved_for_training[`*\s:]+(true|false)/i.exec(snippet);
+  // Both tokens are searched for across the whole target, not within a fixed window: explanatory prose
+  // between them is normal, and a window that ended early reported `approved_for_training: null` for a
+  // target that states it, which fails closed on a document that is in fact compliant.
+  const excluded = /excluded_from_training[`*\s:]+(true|false)/i.exec(readme);
+  const approved = /approved_for_training[`*\s:]+(true|false)/i.exec(readme);
+  if (!excluded && !approved) return null;
   return {
     excluded_from_training: excluded ? excluded[1] === 'true' : null,
     approved_for_training: approved ? approved[1] === 'true' : null,
-    source: `${readmePath}:${lineOf(readme, at)}`,
+    source: `${readmePath}:${lineOf(readme, (excluded ?? approved).index)}`,
   };
 }
 
@@ -367,9 +386,15 @@ export function setProblems(set) {
   } else {
     if (!set.brand.distinct.includes(decision.siteName)) {
       problems.push(`decisions.json names ${JSON.stringify(decision.siteName)}, which is not one of the target's own candidates`);
-    }
-    if (set.brand.strong.length === 1 && set.brand.strong[0] === decision.siteName) {
-      problems.push('decisions.json adjudicates a brand conflict that no longer exists: the target now states one brand, so the decision is stale and should be deleted');
+    } else if (set.brand.strong.length === 1) {
+      // The target now states exactly one brand, so there is nothing left to adjudicate. Either the
+      // decision agrees with it - stale, delete the file - or it disagrees, in which case letting the
+      // decision win would silently overrule the target.
+      problems.push(
+        set.brand.strong[0] === decision.siteName
+          ? 'decisions.json adjudicates a brand conflict that no longer exists: the target now states one brand, so the decision is stale and should be deleted'
+          : `decisions.json names ${JSON.stringify(decision.siteName)} while the target now states ${JSON.stringify(set.brand.strong[0])}: the target has settled on one brand and the decision contradicts it`,
+      );
     }
   }
   if (Object.keys(set.tokens.colors).length === 0) problems.push('no palette: the target stylesheet declares no colour custom properties');
@@ -460,7 +485,7 @@ ${problems.length > 0 ? `## Open problems\n\n${problems.map((problem) => `- ${pr
 export function renderRegister(documents) {
   const rows = [];
   for (const document of documents) {
-    rows.push(`| \`${document.archetype}/set.json\` | ${document.brand.site_name ? `\`${document.brand.site_name}\`` : (document.brand.brandless ? '_deliberately unbranded_' : '**unresolved**')} | ${Object.keys(document.tokens.colors).length} | ${Object.keys(document.copy).length} | ${document.images.length} | ${document.brand.conflicts.length > 0 ? '**yes** (see decisions.json)' : (document.brand.brandless ? 'yes (deliberately unbranded)' : 'no')} |`);
+    rows.push(`| \`${document.archetype}/set.json\` | ${document.brand.site_name ? `\`${document.brand.site_name}\`` : (document.brand.brandless ? '_deliberately unbranded_' : '**unresolved**')} | ${Object.keys(document.tokens.colors).length} | ${Object.keys(document.copy).length} | ${document.images.length} | ${document.brand.decided ? (document.brand.brandless ? 'yes (deliberately unbranded)' : '**yes** (see decisions.json)') : 'no'} |`);
   }
   return `# Archetype asset sets
 
@@ -500,7 +525,11 @@ work. Nothing here is a functional claim about a route or a state.
 `;
 }
 
-export function assertWritable(root, absolute) {
+export function assertWritable(root, path) {
+  // Resolve BEFORE comparing. The earlier version compared the unresolved path, so
+  // `<root>/assets/../data/x` started with the allowed prefix and was returned unblocked - a guard that a
+  // `..` walks past is not a guard.
+  const absolute = resolve(root, path);
   const allowed = [resolve(root, 'assets'), resolve(root, 'docs')];
   if (!allowed.some((base) => absolute === base || absolute.startsWith(`${base}${sep}`))) {
     throw new Error(`refusing to write outside assets/ and docs/: ${relative(root, absolute)}`);
@@ -548,11 +577,28 @@ export function inspectCommitted(root, ids = archetypeIds(root)) {
       findings.push(`${id}: no committed set at ${STORE_DIR}/${id}/set.json`);
       continue;
     }
-    const committed = JSON.parse(readFileSync(setPath, 'utf8'));
+    let committed;
+    try {
+      committed = JSON.parse(readFileSync(setPath, 'utf8'));
+    } catch (error) {
+      // A malformed set.json is a finding, not a stack trace: the gate is contracted to fail closed.
+      findings.push(`${id}: committed set.json cannot be read as JSON (${error.message})`);
+      continue;
+    }
     for (const [name, value] of Object.entries(committed)) {
       const expected = document[name];
-      if (name === 'images') continue;
-      if (JSON.stringify(value) !== JSON.stringify(expected)) findings.push(`${id}: committed set.json ${name} disagrees with the accepted target`);
+      // Every key is compared, `images` included. Skipping it meant a tampered digest or source path
+      // inside set.json was invisible to the gate: the bytes on disk were checked, the record of them was not.
+      if (JSON.stringify(value) !== JSON.stringify(expected)) {
+        findings.push(`${id}: committed set.json ${name} disagrees with the accepted target`);
+      }
+    }
+    // An unexpected file in a generated directory is how a hand-written claim appears to be generated.
+    const storeDir = join(root, STORE_DIR, id);
+    const expectedFiles = new Set(['set.json', 'README.md', 'decisions.json']);
+    for (const entry of readdirSync(storeDir)) {
+      if (expectedFiles.has(entry) || entry === 'images') continue;
+      findings.push(`${id}: unexpected file ${STORE_DIR}/${id}/${entry} - the store holds set.json, README.md, images/ and decisions.json only`);
     }
     for (const image of document.images) {
       const stored = join(root, STORE_DIR, id, 'images', image.name);
@@ -565,6 +611,7 @@ export function inspectCommitted(root, ids = archetypeIds(root)) {
     }
     const registered = committed.images ?? [];
     if (registered.length !== document.images.length) findings.push(`${id}: set.json lists ${registered.length} board(s), the target has ${document.images.length}`);
+    if (!existsSync(join(storeDir, 'images'))) findings.push(`${id}: no images/ directory in the store`);
   }
   return { findings, documents };
 }
@@ -590,7 +637,7 @@ export function writeSets(root, sets) {
       const path = assertWritable(root, join(dir, 'images', image.name));
       writeFileSync(path, image.content);
     }
-    writeFileSync(join(dir, 'README.md'), renderStoreReadme(document, problems));
+    writeFileSync(assertWritable(root, join(dir, 'README.md')), renderStoreReadme(document, problems));
   }
 }
 
