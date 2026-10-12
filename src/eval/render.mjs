@@ -26,14 +26,33 @@ import { TARGET_VIEWPORT } from './targets.mjs';
  * instrument reads computed design tokens this way). They are taken HERE, on the page that is already
  * open and measured, rather than in a second visit - a second visit would measure a different page load
  * and could disagree with the signature.
+ *
+ * `path` is which page of the project to render, and it defaults to `/` so every existing caller is
+ * byte-identical to before this parameter existed. It is a parameter rather than a second function for the
+ * same reason `viewport` is: rendering a project at a state is the same job whatever the state is, and the
+ * server lifecycle, the settle wait and the signature script must not acquire a second place to drift.
+ *
+ * It exists because the cross-arm instrument compares rendered arms against the archetype's reference
+ * boards, and boards exist for states that are not the root - catalogue's empty page, contact-lead's
+ * refusal re-render. Until this parameter existed captureSignature reached `/` and nothing else, so those
+ * states could not be compared to their boards at all (mwg-train-bosi).
+ *
+ * A path must be root-relative. It is concatenated onto the local origin, so anything else would either
+ * escape the origin or silently render the wrong page, and both failures would surface as a measurement of
+ * the arm rather than as a mistake in the call.
  */
-export async function captureSignature({ chrome, projectDir, port, runDir, viewport = TARGET_VIEWPORT, screenshotPath = null, collect = null }) {
+export async function captureSignature({ chrome, projectDir, port, runDir, viewport = TARGET_VIEWPORT, screenshotPath = null, collect = null, path = '/' }) {
+  // `//host/path` is rejected as well as `host/path`: it starts with "/" but a browser reads it as a
+  // protocol-relative URL, so the guard would pass a call that leaves the origin. A test caught that.
+  if (typeof path !== 'string' || !path.startsWith('/') || path.startsWith('//')) {
+    throw new TypeError(`captureSignature: path must be root-relative and start with a single "/", got ${JSON.stringify(path)}`);
+  }
   let server = null;
   let page = null;
   try {
     server = await startServer(projectDir, { port, dbPath: `${runDir}/${port}.sqlite` });
     page = await chrome.newPage({ viewport });
-    await page.goto(`http://127.0.0.1:${port}/`);
+    await page.goto(`http://127.0.0.1:${port}${path}`);
     await page.waitForSettled();
     const signature = await page.evaluate(SIGNATURE_SCRIPT);
     // `collect` is discriminated by whether it was PROVIDED, not by what it returned: a caller whose
