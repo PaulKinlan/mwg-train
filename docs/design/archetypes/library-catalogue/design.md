@@ -14,7 +14,7 @@ training reference into a full multi-step journey. This document is written in t
 (`DESIGN_SECTIONS`).
 
 **One system, one board.** `tr-16` is the only training family, and its board is the only depiction this
-archetype has. The evaluation-side family `fam-16` (a local archive of antiquarian books) has **no reference
+archetype has. The evaluation-side family `fam-16` (a local archive of antiquarian books, eval split: test) has **no reference
 board** in `docs/design/training/`; its journeys are prose in `docs/eval/briefs/manifest.jsonl`, and this
 document does not invent a look for it.
 
