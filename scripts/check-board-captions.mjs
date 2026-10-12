@@ -92,9 +92,6 @@ const ATTRIBUTE = /([a-zA-Z_:][-a-zA-Z0-9_:.]*)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|
  */
 export const CAPTION = /<code>([^<]+\.jpg)<\/code>[^<]*?SHA-256:?\s*<code>([0-9a-f]{1,64})(?:\.\.\.|\u2026)<\/code>/g;
 
-/** Every `<img>` tag, whatever its source spelling. Anything unreadable is reported rather than skipped. */
-const IMG_TAG = /<img\b[^>]*>/gi;
-
 /** `src` in double quotes, single quotes or unquoted, which is the whole of HTML's syntax for it. */
 const SRC = /\ssrc\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+))/i;
 
@@ -264,6 +261,51 @@ export function unaccountedMarkup(text) {
 /** The markup a browser renders, with hidden elements masked out of it. */
 const visibleMarkup = (html) => maskHidden(renderedText(html));
 
+/**
+ * Splits markup into the tokens a browser's lexer sees: tags, and the text between them.
+ *
+ * This exists because scanning the raw bytes cannot tell an element from an apparent one written inside an
+ * attribute value. A page whose only content is an element whose `title` reads
+ * `<img src='...'><code>...</code> SHA-256 <code>...</code>` renders a title, but the image and caption
+ * scanners both found their patterns inside it and passed a page showing nothing (review round 6). Reading
+ * tags and their attributes here means the scanners see what a browser sees, not what the bytes contain.
+ *
+ * @param {string} text
+ * @returns {Array<{ kind: 'tag'|'text', name?: string, closing?: boolean, attributes?: string, raw: string }>}
+ */
+export function markupTokens(text) {
+  const tokens = [];
+  let at = 0;
+  TAG.lastIndex = 0;
+  let match;
+  while ((match = TAG.exec(text))) {
+    if (match.index > at) tokens.push({ kind: 'text', raw: text.slice(at, match.index) });
+    tokens.push({
+      kind: 'tag',
+      name: match[2].toLowerCase(),
+      closing: match[1] === '/',
+      attributes: match[3],
+      raw: match[0],
+    });
+    at = match.index + match[0].length;
+  }
+  if (at < text.length) tokens.push({ kind: 'text', raw: text.slice(at) });
+  return tokens;
+}
+
+/**
+ * The same markup with every tag reduced to its name, so attribute contents cannot masquerade as markup.
+ * Captions are read from this: their own `<code>` markers survive, and a `<code>` inside a `title` is gone.
+ *
+ * @param {string} text
+ * @returns {string}
+ */
+export function normalizedMarkup(text) {
+  return markupTokens(text)
+    .map((token) => (token.kind === 'tag' ? `<${token.closing ? '/' : ''}${token.name}>` : token.raw))
+    .join('');
+}
+
 /** Resolves a caption's board name the way the page means it, and rejects paths outside the archetype. */
 function resolveCaptionBoard(file, archetypeDir, source) {
   const demoDir = path.dirname(file);
@@ -288,11 +330,12 @@ export function displayedBoards({ file, html, archetypeDir }) {
   const text = visibleMarkup(html);
   const boards = [];
   const findings = [];
-  IMG_TAG.lastIndex = 0;
-  let match;
-  while ((match = IMG_TAG.exec(text))) {
-    const tag = match[0];
-    const src = SRC.exec(tag);
+  // The inventory is read from the tokenizer's tags, not from a pattern over the raw text: an apparent
+  // `<img>` inside a quoted attribute is text, not an element, and a regex cannot tell them apart.
+  for (const token of markupTokens(text)) {
+    if (token.kind !== 'tag' || token.name !== 'img' || token.closing) continue;
+    const tag = token.raw;
+    const src = SRC.exec(token.attributes);
     if (!src) {
       // An <img> with no readable src cannot be pinned, and silently ignoring it is what let a single-quoted
       // page slip through before. Fail closed.
@@ -343,10 +386,13 @@ export function captionFindings({ file, html, archetypeDir, label = path.relativ
   const findings = [];
   const rel = label;
   const text = visibleMarkup(html);
+  // Captions and their mentions are read from the normalized markup, where attribute contents cannot pose as
+  // markup, while the unaccounted-markup guard reads the masked text, which is where unparsed tags show up.
+  const scan = normalizedMarkup(text);
   for (const stray of unaccountedMarkup(text)) {
     findings.push(`${rel} contains markup this check cannot account for (${stray}); every tag on a comparison page must parse`);
   }
-  const mentions = (text.match(MENTION) || []).length;
+  const mentions = (scan.match(MENTION) || []).length;
   const { boards, findings: displayFindings } = displayedBoards({ file, html, archetypeDir });
   findings.push(...displayFindings);
 
@@ -356,7 +402,7 @@ export function captionFindings({ file, html, archetypeDir, label = path.relativ
 
   CAPTION.lastIndex = 0;
   let match;
-  while ((match = CAPTION.exec(text))) {
+  while ((match = CAPTION.exec(scan))) {
     parsed += 1;
     const [, source, shown] = match;
     const board = resolveCaptionBoard(file, archetypeDir, source);
@@ -431,7 +477,7 @@ export function checkBoardCaptions({ repoRoot = ROOT } = {}) {
     const html = fs.readFileSync(file, 'utf8');
     const text = visibleMarkup(html);
     const label = path.relative(repoRoot, file);
-    captions += (text.match(CAPTION) || []).length;
+    captions += (normalizedMarkup(text).match(CAPTION) || []).length;
     const { boards: displayed } = displayedBoards({ file, html, archetypeDir });
     boards += displayed.length;
     // A comparison page exists to show its archetype's boards, so every committed board must be on it.

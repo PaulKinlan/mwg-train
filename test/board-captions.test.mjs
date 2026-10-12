@@ -310,6 +310,32 @@ test('hidden is honoured however it is spelled, and from an ancestor', () => {
   }
 });
 
+test('an apparent board and caption inside an attribute value are not markup', () => {
+  // Review round 6: everything between the quotes of a title attribute is text, so a page whose only content
+  // is that attribute renders no board. Scanning raw bytes found the apparent tags and passed the page.
+  const prefix = sha256(BOARD).slice(0, 10);
+  const html = `<div title="<img src='../step1-grid.jpg'><code>../step1-grid.jpg</code> SHA-256 <code>${prefix}\u2026</code>"></div>`;
+  withFixture({ html }, (holder) => {
+    const result = checkBoardCaptions({ repoRoot: holder.root });
+    assert.equal(result.ok, false, 'an attribute value must not satisfy the page check');
+    assert.equal(result.boards, 0, 'the apparent img is text, not a displayed board');
+    assert.equal(result.captions, 0, 'the apparent caption is text, not a caption');
+  });
+});
+
+test('attributes on a caption\u2019s own tags do not stop it being read', () => {
+  // The other direction: normalizing tags must keep real captions working, including when their own tags
+  // carry attributes such as a class.
+  const prefix = sha256(BOARD).slice(0, 10);
+  const html = `<div><img src="../step1-grid.jpg" alt="board"><p class="comparison-source">Board <code class="file">../step1-grid.jpg</code> (1376 \u00d7 768, SHA-256 <code class="digest">${prefix}\u2026</code>) &middot; live page <code>index.html</code></p></div>`;
+  withFixture({ html }, (holder) => {
+    const result = checkBoardCaptions({ repoRoot: holder.root });
+    assert.deepEqual(result.findings, [], result.findings.join(' | '));
+    assert.equal(result.boards, 1);
+    assert.equal(result.captions, 1);
+  });
+});
+
 test('fallback content of iframe, object, video, audio and canvas is not rendered', () => {
   // An iframe renders its document, not its children; the others render their children only when they cannot
   // play or be drawn. In every case a board and caption inside are not on screen.
