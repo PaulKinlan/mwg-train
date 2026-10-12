@@ -119,12 +119,16 @@ filter by sun tolerance and flowering season; inspect the botanical propagation 
 cutting counts for a specimen; then submit a reservation, receive a collection voucher, and reload to confirm
 the details. That ordering is the contract, not a description.
 
-**`fam-16`, the archive.** The row states three journeys rather than a fixture, quoted here as the contract:
-search the catalogue by keyword or subject, select a historical manuscript, review its accession details,
-submit a reading-room reservation with researcher details and a date, and receive a reservation reference;
-reload `/reservation/:ref` and verify that the manuscript title, reservation code and appointment date persist
-from server storage; and attempt a reservation without a researcher name or with an invalid date, verify the
-inline accessible errors, correct the fields, and successfully reserve.
+**`fam-16`, the archive.** The row states three journeys rather than a fixture, and they are the contract for the
+evaluation-side family. Quoted verbatim:
+
+1. "search the archive catalogue by keyword or subject, select a historical manuscript, review accession
+   details, submit a reading room reservation request with researcher details and date, and receive a
+   reservation reference"
+2. "reload the reservation confirmation page /reservation/:ref, verifying that the manuscript title,
+   reservation code, and appointment date persist from server storage"
+3. "attempt to submit a reservation without a researcher name or with an invalid reservation date, verify inline
+   accessible error messages, correct the fields, and successfully reserve"
 
 Mapped to the five planned boards: step 1 the catalogue and its filters → `step1-catalogue`, step 2 one item's
 detail → `step2-item`, step 3 the reservation form → `step3-reserve`, step 4 the receipt and the staff view →
