@@ -95,8 +95,7 @@ being inferred for every listed path.
   disappear either.
 
 **Implementing-family fields and server state (not the target's sqlite schema).** `*` denotes
-required; only `tr-07`'s `notes` is optional. `tr-07` has nine fields; its `date` is the only
-`date`-typed field among this archetype's families. `tr-30` has only three fields, the fewest in the corpus.
+required; only `tr-07`'s `notes` is optional. `tr-07` has nine fields; its `date` field is a `date` input rendered as a select on the reference board. `tr-30` has only three fields, the fewest in the corpus.
 
 | Family | Declared fields (type and required flag) | Select options |
 |---|---|---|
@@ -176,7 +175,7 @@ expects `Priya Raman` echoed, then searches, updates and confirms intake in the 
 an extra pass. `tr-30` requires a valid beach zone and accessible feedback when it is omitted.
 `fam-07` requires `forms/required-field-feedback` and
 `accessibility/accessible-error-announcement` (alongside `accessibility/accessibility`);
-it also carries this archetype's only `ui-components/progress-ring` rule. Its seeded-defects
+it also carries the `ui-components/progress-ring` rule (along with `fam-04`). Its seeded-defects
 array is empty. These rules extend the family contracts, not the accepted target's validation.
 
 ## Acceptance criteria
