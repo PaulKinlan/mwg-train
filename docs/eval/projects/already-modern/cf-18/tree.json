@@ -1,9 +1,10 @@
 {
   "files": {
     "package.json": "d0d6bfa0e82ee8079a60c22c2f0e4f4bbbe485f5fce18f88434d20de5447fe52",
-    "server.mjs": "b6ac52ff2ca7539002940013ebf29b701a1f3183f48d075fbb08dcba19f3e678",
+    "server.mjs": "6c29182ca6203afa72198b84692683da71d228453579b745c77c5d00679866c3",
+    "site-kit.mjs": "256af922ae146be129b1b61f47adf15b56584aa058d8918359b830091e0e747c",
     "spec.json": "8d07dddeea896d228757840a06e0949128a1dbc0cfaee4abd36dca69564ca664"
   },
-  "tree": "b9ad041c8c9d8d25e934f465ef6e4ddd70adc3be426a240633c27161bf7a95d6",
-  "count": 3
+  "tree": "cb69fb542c5720a3b071584bdc4c3b1749ac3af5bfe96455c25bf4519c4b39d4",
+  "count": 4
 }

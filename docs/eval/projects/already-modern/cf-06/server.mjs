@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { createRoutes, openStore, serve } from '../../../../../src/eval/site-kit.mjs';
+import { createRoutes, openStore, serve } from './site-kit.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 export const spec = JSON.parse(readFileSync(join(here, 'spec.json'), 'utf8'));
