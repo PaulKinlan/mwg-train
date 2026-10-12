@@ -767,6 +767,7 @@ export async function runProjectVersion({ chrome, projectDir, spec, label, port,
     dialect: spec.framework.dialect,
     label,
     base_url: base,
+    sandbox: null,
     started_at: new Date().toISOString(),
     ...runEnvironment(chrome),
     journeys: [],
@@ -782,6 +783,7 @@ export async function runProjectVersion({ chrome, projectDir, spec, label, port,
   let page = null;
   try {
     server = await startServer(projectDir, { port, dbPath });
+    record.sandbox = 'bubblewrap';
     page = await chrome.newPage({ viewport: { width: 1280, height: 900 } });
     let runtimeObservers = false;
     try {
