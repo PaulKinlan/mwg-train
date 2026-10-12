@@ -94,6 +94,9 @@ export function checkDesign(results, briefs, arms = ARMS) {
   const briefIds = new Set(briefs.map((brief) => brief.brief_id));
   const seen = new Map();
   for (const result of results) {
+    if (result?.platform !== 'linux') {
+      problems.push({ code: 'PLATFORM_NOT_LINUX', brief_id: result?.brief_id, arm: result?.arm, message: `sealed runs must be executed on Linux (found ${result?.platform ?? 'none'})` });
+    }
     if (!briefIds.has(result?.brief_id)) {
       problems.push({ code: 'UNKNOWN_BRIEF', brief_id: result?.brief_id, arm: result?.arm, message: 'result for a brief that is not in the sealed set' });
       continue;

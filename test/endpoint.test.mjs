@@ -20,6 +20,7 @@ function result(briefId, arm, overrides = {}) {
   return {
     brief_id: briefId,
     arm,
+    platform: 'linux',
     runnable: true,
     functional: true,
     rule_results: { [RULE]: true },
@@ -62,6 +63,10 @@ test('an incomplete design is an error, not a smaller denominator', () => {
   const duplicated = [...complete, result('f2-v1', 'T_trained_adapter')];
   assert.ok(checkDesign(duplicated, briefs).some((p) => p.code === 'DUPLICATE_RESULT'));
   assert.ok(checkDesign([result('ghost', 'T_trained_adapter')], briefs).some((p) => p.code === 'UNKNOWN_BRIEF'));
+
+  const macOsResult = result('f1-v1', 'T_trained_adapter', { platform: 'darwin' });
+  const macOsProblems = checkDesign([...complete.filter(r => r.brief_id !== 'f1-v1' || r.arm !== 'T_trained_adapter'), macOsResult], briefs);
+  assert.ok(macOsProblems.some((p) => p.code === 'PLATFORM_NOT_LINUX'));
 });
 
 test('the bootstrap resamples families, so a split family cannot buy confidence', () => {
@@ -280,7 +285,7 @@ test('a reportable verdict goes through the checked entry point', () => {
     { brief_id: 'd2', family_id: 'd2', split: 'dev', task: 'generate', required_rules: [] },
   ];
   const devResults = ['T_trained_adapter', 'C1_bare_base', 'C2_base_mwg_prompt', 'C3_base_uplift_tool'].flatMap((arm) =>
-    devBriefs.map((brief) => ({ brief_id: brief.brief_id, arm, runnable: true, functional: arm === 'T_trained_adapter', rule_results: {}, blocker_accessibility: 0, blocker_security: 0 })),
+    devBriefs.map((brief) => ({ brief_id: brief.brief_id, arm, platform: 'linux', runnable: true, functional: arm === 'T_trained_adapter', rule_results: {}, blocker_accessibility: 0, blocker_security: 0 })),
   );
   const refused = analyseSealed(devResults, devBriefs, { seal: 'sha256:91d75f29afe10fa419b53fc412abdfaf970068d7725fe40c69894e64c36ed59e' });
   assert.equal(refused.ok, false, 'a dev split must not produce a verdict');
@@ -289,7 +294,7 @@ test('a reportable verdict goes through the checked entry point', () => {
 
   const testBriefs = devBriefs.map((brief, index) => ({ ...brief, brief_id: `t${index + 1}`, family_id: `t${index + 1}`, split: 'test' }));
   const testResults = ['T_trained_adapter', 'C1_bare_base', 'C2_base_mwg_prompt', 'C3_base_uplift_tool'].flatMap((arm) =>
-    testBriefs.map((brief) => ({ brief_id: brief.brief_id, arm, runnable: true, functional: true, rule_results: {}, blocker_accessibility: 0, blocker_security: 0 })),
+    testBriefs.map((brief) => ({ brief_id: brief.brief_id, arm, platform: 'linux', runnable: true, functional: true, rule_results: {}, blocker_accessibility: 0, blocker_security: 0 })),
   );
   // the right split but the wrong seal is still refused
   assert.equal(analyseSealed(testResults, testBriefs, { seal: 'sha256:deadbeef' }).ok, false);
