@@ -60,47 +60,51 @@ async function scoreFamily({ family, chrome, runDir, outDir, ports }) {
   if (projects.length === 0) throw new Error(`score-variant-identity: the pilot has no projects for family '${family.family_id}'`);
   const isolatedRepoRoot = mkdtempSync(join(tmpdir(), `identity-repo-`));
   const corpusRoot = mkdtempSync(join(tmpdir(), `identity-corpus-`));
-  const { projects: generated } = generateCorpus({ plan: { ...plan, projects }, outDir: corpusRoot });
+  try {
+    const { projects: generated } = generateCorpus({ plan: { ...plan, projects }, outDir: corpusRoot });
 
-  const variants = [];
-  for (const project of generated) {
-    const storedOriginal = storeOutput({ projectId: project.projectId, model: NO_MODEL }, 'A1_self_generated', project.dir, { repoRoot: isolatedRepoRoot });
+    const variants = [];
+    for (const project of generated) {
+      const storedOriginal = storeOutput({ projectId: project.projectId, model: NO_MODEL }, 'A1_self_generated', project.dir, { repoRoot: isolatedRepoRoot });
 
-    const upliftedTemp = mkdtempSync(join(tmpdir(), `identity-uplifted-`));
-    upliftProject(project.dir, project.spec, upliftedTemp);
-    const storedUplifted = storeOutput({ projectId: project.projectId, model: NO_MODEL }, 'A2_mwg_uplift_deterministic', upliftedTemp, { repoRoot: isolatedRepoRoot });
+      const upliftedTemp = mkdtempSync(join(tmpdir(), `identity-uplifted-`));
+      try {
+        upliftProject(project.dir, project.spec, upliftedTemp);
+        const storedUplifted = storeOutput({ projectId: project.projectId, model: NO_MODEL }, 'A2_mwg_uplift_deterministic', upliftedTemp, { repoRoot: isolatedRepoRoot });
 
-    const raw = await captureSignature({ chrome, projectDir: storedOriginal, port: ports.value++, runDir });
-    const arm = await captureSignature({ chrome, projectDir: storedUplifted, port: ports.value++, runDir });
-    const score = scoreArm({ target: target.signature, raw, arm });
-    variants.push({ framework: project.framework, ...score, raw_signature: raw });
-    
-    // Cleanup ephemeral uplifted temp directory; outputs store retains the persisted copies.
-    rmSync(upliftedTemp, { recursive: true, force: true });
+        const raw = await captureSignature({ chrome, projectDir: storedOriginal, port: ports.value++, runDir });
+        const arm = await captureSignature({ chrome, projectDir: storedUplifted, port: ports.value++, runDir });
+        const score = scoreArm({ target: target.signature, raw, arm });
+        variants.push({ framework: project.framework, ...score, raw_signature: raw });
+      } finally {
+        // Cleanup ephemeral uplifted temp directory; outputs store isolates the temporary copies.
+        rmSync(upliftedTemp, { recursive: true, force: true });
+      }
+    }
+
+    const identity = variantIdentity(target.signature, variants.map((variant) => ({ framework: variant.framework, signature: variant.raw_signature })));
+    const findings = identityFindings(identity, IDENTITY_BUDGET);
+    const report = {
+      ...BASELINE_FIELDS,
+      family: family.family_id,
+      target_signature: target.relativePath,
+      target_sha256: target.sha256,
+      generated_at: new Date().toISOString(),
+      variants: variants.map(({ raw_signature, ...variant }) => variant),
+      identity: { ...identity, target_conformance: identity.target_conformance },
+      budget: IDENTITY_BUDGET,
+      findings,
+    };
+    writeFileSync(join(outDir, `${family.family_id}-identity.json`), `${JSON.stringify(report, null, 2)}\n`);
+    writeFileSync(join(outDir, `${family.family_id}-identity.md`), renderIdentityMarkdown(report));
+    console.log(`score-variant-identity: ${family.family_id} identity ${fmt(identity.identity.overall)} (weakest ${identity.weakest_pair ? `${identity.weakest_pair.a}/${identity.weakest_pair.b} ${fmt(identity.weakest_pair.overall)}` : 'n/a'}), ${findings.length} below budget`);
+    for (const variant of variants) console.log(`  ${variant.framework.padEnd(7)} raw ${fmt(variant.raw)} -> target ${fmt(variant.target)} (delta ${Number.isFinite(variant.delta) ? (variant.delta >= 0 ? '+' : '') + variant.delta.toFixed(3) : 'N/A'})`);
+    return { family: family.family_id, identity: identity.identity.overall, findings: findings.length };
+  } finally {
+    // Cleanup ephemeral corpus and isolated outputs store
+    rmSync(corpusRoot, { recursive: true, force: true });
+    rmSync(isolatedRepoRoot, { recursive: true, force: true });
   }
-
-  // Cleanup ephemeral corpus
-  rmSync(corpusRoot, { recursive: true, force: true });
-  rmSync(isolatedRepoRoot, { recursive: true, force: true });
-
-  const identity = variantIdentity(target.signature, variants.map((variant) => ({ framework: variant.framework, signature: variant.raw_signature })));
-  const findings = identityFindings(identity, IDENTITY_BUDGET);
-  const report = {
-    ...BASELINE_FIELDS,
-    family: family.family_id,
-    target_signature: target.relativePath,
-    target_sha256: target.sha256,
-    generated_at: new Date().toISOString(),
-    variants: variants.map(({ raw_signature, ...variant }) => variant),
-    identity: { ...identity, target_conformance: identity.target_conformance },
-    budget: IDENTITY_BUDGET,
-    findings,
-  };
-  writeFileSync(join(outDir, `${family.family_id}-identity.json`), `${JSON.stringify(report, null, 2)}\n`);
-  writeFileSync(join(outDir, `${family.family_id}-identity.md`), renderIdentityMarkdown(report));
-  console.log(`score-variant-identity: ${family.family_id} identity ${fmt(identity.identity.overall)} (weakest ${identity.weakest_pair ? `${identity.weakest_pair.a}/${identity.weakest_pair.b} ${fmt(identity.weakest_pair.overall)}` : 'n/a'}), ${findings.length} below budget`);
-  for (const variant of variants) console.log(`  ${variant.framework.padEnd(7)} raw ${fmt(variant.raw)} -> target ${fmt(variant.target)} (delta ${Number.isFinite(variant.delta) ? (variant.delta >= 0 ? '+' : '') + variant.delta.toFixed(3) : 'N/A'})`);
-  return { family: family.family_id, identity: identity.identity.overall, findings: findings.length };
 }
 
 /**

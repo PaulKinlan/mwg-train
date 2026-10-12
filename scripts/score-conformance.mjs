@@ -86,7 +86,7 @@ async function main() {
       results.push({ framework: project.framework, ...score });
       console.log(`score-conformance: ${project.projectId} raw ${Number.isFinite(score.raw) ? score.raw.toFixed(3) : 'N/A'} -> target ${Number.isFinite(score.target) ? score.target.toFixed(3) : 'N/A'} (delta ${Number.isFinite(score.delta) ? (score.delta >= 0 ? '+' : '') + score.delta.toFixed(3) : 'N/A'})`);
       
-      // Cleanup ephemeral uplifted temp directory; outputs store retains the persisted copies.
+      // Cleanup ephemeral uplifted temp directory; outputs store isolates the temporary copies.
       rmSync(upliftedTemp, { recursive: true, force: true });
     }
   } finally {
