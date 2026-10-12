@@ -116,12 +116,16 @@ to `Dara Whitfield (updated)`. Its intake steps submit `/intake` having selected
 `Backpack`, and `/intake/confirm` expects `Backpack` back.
 
 **`fam-08`, the radio station.** The row states four journeys rather than a fill/select fixture, and they are
-quoted here as the contract for the evaluation-side family: file a ticket about a broadcast issue or studio
-equipment fault naming the category, urgency, listener name and email; view the generated ticket status page,
-verify the assigned reference and its initial open status, and **reload to confirm persistence**; have a
-station engineer **access the agent queue**, select an open ticket, and **post a response or status update**,
-verifying the update changes the record; and submit an invalid ticket to confirm accessible inline validation
-appears **without clearing the valid inputs already entered**.
+the contract for the evaluation-side family. Quoted verbatim:
+
+1. "file a new support ticket regarding a radio broadcast issue or studio equipment malfunction, specifying
+   issue category, urgency, listener name, and email"
+2. "view the generated ticket status page, verify the assigned ticket reference and initial open status, then
+   reload the page to confirm the details persist"
+3. "station engineers access the agent queue, select an open ticket, post an internal response or status update,
+   and verify the update updates the ticket record"
+4. "submit an invalid ticket submission with missing mandatory fields and verify accessible inline validation
+   errors appear without clearing valid inputs"
 
 Mapped to the five planned boards: step 1 the ticket desk as a new request → `step1-queue`, step 2 the ticket
 form → `step2-form`, step 3 the receipt → `step3-status`, step 4 the staff side working the queue and replying
