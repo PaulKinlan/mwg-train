@@ -146,7 +146,7 @@ function buildArms({ archetype, runRoot, reuse = false }) {
 }
 
 /** Render each arm at each viewport, saving one screenshot per arm and width. */
-async function measure({ chrome, arms, viewports, runRoot, port }) {
+async function measure({ chrome, arms, viewports, runRoot, port, pathsToCapture }) {
   const screenshotDir = join(runRoot, 'screenshots');
   mkdirSync(screenshotDir, { recursive: true });
   const armsByViewport = {};
@@ -156,51 +156,60 @@ async function measure({ chrome, arms, viewports, runRoot, port }) {
     for (const requested of viewports) {
       armsByViewport[requested.key] = [];
       for (const arm of arms) {
-        const screenshotPath = join(screenshotDir, `${arm.projectId}-${requested.key}.png`);
-        const started = Date.now();
-        // An arm that cannot be rendered is a FINDING, not a crash. `parity.mjs` documents that absence
-        // is never silence and has an `ARM_UNMEASURED` code for it, but a cross-family review caught that
-        // the code was unreachable in the live instrument: anything `captureSignature` threw propagated
-        // out of `main()` and exited 2 with no report, so a broken arm produced nothing at all. The tool
-        // is strongest when it is measuring something unexpected, which is exactly when it must not die.
-        try {
-          const signature = await captureSignature({
-            chrome,
-            projectDir: arm.dir,
-            port: nextPort++,
-            runDir: runRoot,
-            viewport: { width: requested.width, height: requested.height },
-            screenshotPath,
-            collect: TOKEN_SCRIPT,
-          });
-          const collected = signature.collected ?? null;
-          const clean = { ...signature };
-          delete clean.collected;
-          armsByViewport[requested.key].push({
-            framework: arm.framework,
-            viewport: requested.key,
-            signature: clean,
-            // The body's computed colours are kept, not discarded: they are the browser's own measurement
-            // of what the page looks like, which is the strongest evidence available for a palette
-            // comparison. Dead data in a probe is a measurement somebody wrote and then stopped reading.
-            tokens: { ...(collected?.tokens ?? {}), 'body-background': collected?.bodyBackground ?? '' },
-            colorScheme: collected?.colorScheme ?? '',
-            milliseconds: Date.now() - started,
-          });
-          screenshots.push({ arm: arm.framework, viewport: requested.key, path: screenshotPath.replace(`${ROOT}/`, '') });
-          console.log(
-            `  ${arm.framework.padEnd(14)} ${requested.key.padEnd(9)} ${signature.viewport.width}x${signature.viewport.height} ${Math.round((Date.now() - started) / 100) / 10}s`,
-          );
-        } catch (error) {
-          armsByViewport[requested.key].push({
-            framework: arm.framework,
-            viewport: requested.key,
-            signature: null,
-            error: error?.message ?? String(error),
-            milliseconds: Date.now() - started,
-          });
-          console.log(`  ${arm.framework.padEnd(14)} ${requested.key.padEnd(9)} FAILED: ${error?.message ?? error}`);
+        for (const statePath of pathsToCapture) {
+          const slug = statePath === '/' ? '' : `-${statePath.replace(/[^a-z0-9]/gi, '-').replace(/^-|-$/g, '')}`;
+          const screenshotPath = join(screenshotDir, `${arm.projectId}-${requested.key}${slug}.png`);
+          const started = Date.now();
+          // An arm that cannot be rendered is a FINDING, not a crash. `parity.mjs` documents that absence
+          // is never silence and has an `ARM_UNMEASURED` code for it, but a cross-family review caught that
+          // the code was unreachable in the live instrument: anything `captureSignature` threw propagated
+          // out of `main()` and exited 2 with no report, so a broken arm produced nothing at all. The tool
+          // is strongest when it is measuring something unexpected, which is exactly when it must not die.
+          try {
+            const signature = await captureSignature({
+              chrome,
+              projectDir: arm.dir,
+              port: nextPort,
+              runDir: runRoot,
+              viewport: { width: requested.width, height: requested.height },
+              screenshotPath,
+              path: statePath,
+              collect: TOKEN_SCRIPT,
+            });
+            const collected = signature.collected ?? null;
+            const clean = { ...signature };
+            delete clean.collected;
+            if (statePath === '/') {
+              armsByViewport[requested.key].push({
+                framework: arm.framework,
+                viewport: requested.key,
+                signature: clean,
+                // The body's computed colours are kept, not discarded: they are the browser's own measurement
+                // of what the page looks like, which is the strongest evidence available for a palette
+                // comparison. Dead data in a probe is a measurement somebody wrote and then stopped reading.
+                tokens: { ...(collected?.tokens ?? {}), 'body-background': collected?.bodyBackground ?? '' },
+                colorScheme: collected?.colorScheme ?? '',
+                milliseconds: Date.now() - started,
+              });
+            }
+            screenshots.push({ arm: arm.framework, viewport: requested.key, statePath, path: screenshotPath.replace(`${ROOT}/`, '') });
+            console.log(
+              `  ${arm.framework.padEnd(14)} ${requested.key.padEnd(9)} [${statePath}] ${signature.viewport.width}x${signature.viewport.height} ${Math.round((Date.now() - started) / 100) / 10}s`,
+            );
+          } catch (error) {
+            if (statePath === '/') {
+              armsByViewport[requested.key].push({
+                framework: arm.framework,
+                viewport: requested.key,
+                signature: null,
+                error: error?.message ?? String(error),
+                milliseconds: Date.now() - started,
+              });
+            }
+            console.log(`  ${arm.framework.padEnd(14)} ${requested.key.padEnd(9)} [${statePath}] FAILED: ${error?.message ?? error}`);
+          }
         }
+        nextPort++;
       }
     }
   }
@@ -439,7 +448,7 @@ export function metricTerms(a, b) {
  * Each finding names BOTH images, so a reader can open the board and the arm and judge the finding for
  * themselves - which is the whole point of reporting a diff rather than a verdict.
  */
-async function compareAgainstBoards({ chrome, armRoot, screenshots, arms, archetype }) {
+async function compareAgainstBoards({ chrome, armRoot, screenshots, arms, archetype, archetypeStates }) {
   const boardDir = resolve(ROOT, `docs/design/archetypes/${archetype}`);
   const boards = readdirSync(boardDir)
     .filter((name) => /^step\d+.*\.jpg$/i.test(name))
@@ -508,9 +517,11 @@ async function compareAgainstBoards({ chrome, armRoot, screenshots, arms, archet
     });
   }
 
-  const perArm = screenshots.map((screenshot) =>
-    compareOne({ screenshot: { ...screenshot, analysis: analyzed[`/shot/${screenshot.path.split('/').pop()}`] }, boardMetrics }),
+  const perArmRaw = screenshots.map((screenshot) =>
+    compareOne({ screenshot: { ...screenshot, analysis: analyzed[`/shot/${screenshot.path.split('/').pop()}`] }, boardMetrics, archetypeStates }),
   );
+  // Filter out screenshots that had no applicable boards mapped to their state path
+  const perArm = perArmRaw.filter(Boolean);
   // Arms that produced no screenshot at all are recorded as such rather than being absent from the table.
   for (const arm of arms) {
     if (perArm.some((entry) => entry.arm === arm.framework)) continue;
@@ -538,15 +549,24 @@ async function compareAgainstBoards({ chrome, armRoot, screenshots, arms, archet
 }
 
 /** Compare one screenshot against every board that could be measured, and name the closest. */
-function compareOne({ screenshot, boardMetrics }) {
+export function compareOne({ screenshot, boardMetrics, archetypeStates }) {
   if (boardMetrics.length === 0) {
     return { ...screenshot, error: 'no reference board could be measured' };
   }
+
+  const eligibleBoards = boardMetrics.filter((board) => {
+    const stateInfo = archetypeStates[board.name];
+    const expectedPath = stateInfo && stateInfo.path ? stateInfo.path : '/';
+    return expectedPath === screenshot.statePath;
+  });
+
+  if (eligibleBoards.length === 0) return null;
+
   const analysed = screenshot.analysis;
   if (!analysed || analysed.error) {
     return { ...screenshot, error: analysed?.error ?? 'the screenshot could not be analysed' };
   }
-  const comparisons = boardMetrics.map((board) => ({
+  const comparisons = eligibleBoards.map((board) => ({
     board: board.file,
     distance: metricDistance(board.metrics, analysed),
     // The three terms behind that distance. A commit on this branch claimed they were disclosed per pair and
@@ -787,6 +807,16 @@ async function main() {
     return 0;
   }
 
+  const boardStatesPath = resolve(ROOT, 'docs/provenance/assets/board-states.json');
+  const boardStatesRaw = existsSync(boardStatesPath) ? JSON.parse(readFileSync(boardStatesPath, 'utf8')) : {};
+  const archetypeStates = boardStatesRaw[options.archetype] ?? {};
+
+  const pathsToCapture = new Set(['/']);
+  for (const boardName of Object.keys(archetypeStates)) {
+    const state = archetypeStates[boardName];
+    if (state && state.path) pathsToCapture.add(state.path);
+  }
+
   // Arms must resolve node_modules, so the run directory is always inside the repository: an arm
   // generated under it resolves its framework, and one generated anywhere else does not. See buildArms.
   const armRoot = options.runRoot
@@ -796,7 +826,7 @@ async function main() {
   console.log(`check-cross-arm-parity: building ${Object.keys(FRAMEWORKS).length} arms for ${options.archetype}`);
   const arms = buildArms({ archetype: options.archetype, runRoot: armRoot, reuse: options.reuseArms });
   const expectedArms = arms.map((arm) => arm.framework);
-  console.log(`check-cross-arm-parity: rendering ${arms.length} arms at ${options.viewports.map((v) => v.key).join(', ')}`);
+  console.log(`check-cross-arm-parity: rendering ${arms.length} arms at ${options.viewports.map((v) => v.key).join(', ')} across ${pathsToCapture.size} state(s)`);
   // One browser for the whole run, owned here rather than inside a measurement step, because the board
   // comparison needs the same browser afterwards: the browser is the only image decoder available.
   const chrome = await launchChrome({});
@@ -809,9 +839,10 @@ async function main() {
       viewports: options.viewports,
       runRoot: armRoot,
       port: options.port,
+      pathsToCapture,
     });
     console.log('check-cross-arm-parity: comparing every arm screenshot against the reference boards');
-    boardComparison = await compareAgainstBoards({ chrome, armRoot, screenshots: measured.screenshots, arms, archetype: options.archetype });
+    boardComparison = await compareAgainstBoards({ chrome, armRoot, screenshots: measured.screenshots, arms, archetype: options.archetype, archetypeStates });
   } finally {
     await chrome.close().catch(() => {});
   }
