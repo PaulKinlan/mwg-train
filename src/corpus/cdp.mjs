@@ -163,6 +163,7 @@ export async function launchChrome({ proxy = null, args = [] } = {}) {
       // that does not carry the profile directory on its command line - can be killed together. Killing
       // only the parent left pieces behind.
       detached: true,
+      env: { ...process.env, TMPDIR: userDataDir, TEMP: userDataDir, TMP: userDataDir },
     },
   );
 
