@@ -203,17 +203,17 @@ export function isMeasurable(signature) {
   const nodeCount = signature?.nodes?.length ?? 0;
   const boxCount = signature?.boxes?.length ?? 0;
   const controlCount = signature?.controls?.length ?? 0;
-  
+
   if (boxCount > 0 || controlCount > 0) return true;
   if (nodeCount === 0) return false;
-  
+
   // Empty SPA root check: if the page rendered no semantic boxes and no controls, it must have at least
   // one node that is not a generic container to be considered measured.
-  // A nested tree of purely divs, spans, or custom element mounts (e.g. body > div#root > app-root) 
+  // A nested tree of purely divs, spans, or custom element mounts (e.g. body > div#root > app-root)
   // with no roles or text-bearing tags is an empty unmeasured shell.
-  return signature.nodes.some(node => 
+  return signature.nodes.some(node =>
     (node.tag !== 'div' && node.tag !== 'span' && !node.tag.includes('-')) ||
-    node.role !== null || node.name !== null || node.type !== null
+    node.role != null || node.name != null || node.type != null
   );
 }
 
@@ -288,7 +288,7 @@ export function variantIdentity(target, variants) {
   // family of blank pages reported 1.000 identity (mwg-train-z92).
   const measuredVariants = variants.filter(v => isMeasurable(v.signature));
   const degenerate = measuredVariants.length < 2;
-  
+
   const unmeasured = Object.fromEntries(IDENTITY_AXES.map((axis) => [axis, null]));
   if (degenerate) {
     return {
@@ -301,12 +301,12 @@ export function variantIdentity(target, variants) {
       degenerate: true,
     };
   }
-  
+
   const targets = variants.map((variant) => {
     if (!isMeasurable(variant.signature)) return { framework: variant.framework, ...unmeasured };
     return { framework: variant.framework, ...conformanceScore(target, variant.signature) };
   });
-  
+
   const pairwise = [];
   for (let i = 0; i < measuredVariants.length; i += 1) {
     for (let j = i + 1; j < measuredVariants.length; j += 1) {

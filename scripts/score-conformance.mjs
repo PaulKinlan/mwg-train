@@ -95,7 +95,8 @@ async function main() {
     rmSync(runDir, { recursive: true, force: true });
   }
 
-  const meanDelta = results.reduce((sum, row) => sum + row.delta, 0) / results.length;
+  const validDeltas = results.map(r => r.delta).filter(d => Number.isFinite(d));
+  const meanDelta = validDeltas.length > 0 ? validDeltas.reduce((sum, d) => sum + d, 0) / validDeltas.length : null;
   const report = {
     ...BASELINE_FIELDS,
     family: args.family,
@@ -103,7 +104,7 @@ async function main() {
     target_sha256: createHash('sha256').update(readFileSync(target.absolutePath)).digest('hex'),
     generated_at: new Date().toISOString(),
     arms: results,
-    mean_delta: Math.round(meanDelta * 10000) / 10000,
+    mean_delta: meanDelta !== null ? Math.round(meanDelta * 10000) / 10000 : null,
   };
   const jsonPath = join(outDir, `${args.family}.json`);
   writeFileSync(jsonPath, `${JSON.stringify(report, null, 2)}\n`);
