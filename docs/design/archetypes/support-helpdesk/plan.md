@@ -154,7 +154,7 @@ and the evaluation-side family makes central.
 
 ## Acceptance criteria
 
-**`tr-08`:** (1) `POST /tickets/new` creates a support ticket with a timestamp and redirects to `/tickets/:id`.
+**`tr-08`:** (1) `POST /tickets/new` creates a support ticket with timestamp and redirects to `/tickets/:id`.
 (2) `GET /tickets/:id` displays the logged equipment name, fault description, and current status.
 (3) submitting a ticket without selecting an issue category highlights the field with an accessible message.
 
@@ -183,8 +183,8 @@ All eleven criteria are quoted from the two manifests rather than restated.
   [training reference register](../../../provenance/assets/training-reference-boards.md) alongside its declared
   prompt. Each depicts **one page at one scroll position**, and neither is a picture of the five states above.
 - **The two boards are different designs, not two renders of one.** Their token prefixes differ (`dr-` and
-  `th-`), their palettes differ, and one declares a light palette while the other declares none. A generator
-  must not average them.
+  `th-`), their palettes differ, and one declares a light palette while the other declares a dark, low-glare
+  one. A generator must not average them.
 - **The evaluation-side family has no reference board here.** There is no `fam-08` board in
   `docs/design/training/`, and the evaluation side's assets are not this directory's to depict.
 - **The five journey boards are planned, not generated.** `step1-queue`, `step2-form`, `step3-status`,

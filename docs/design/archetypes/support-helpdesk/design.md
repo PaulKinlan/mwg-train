@@ -19,7 +19,7 @@ wrong:
 
 | Family | Subject | Token prefix | Declared theme | Observed theme |
 |---|---|---|---|---|
-| `tr-08` | Grain & Silver Darkroom Co-op — equipment and chemistry helpdesk | `dr-` | no light/dark sentence; palette is near-black | **dark**, measured against the declared values |
+| `tr-08` | Grain & Silver Darkroom Co-op — equipment and chemistry helpdesk | `dr-` | "in a dark, low-glare palette" | **dark**, measured against the declared values |
 | `tr-28` | Trailhead Youth Gear Locker — equipment repair and maintenance tickets | `th-` | "in a light palette" | **light**, as declared |
 
 The evaluation-side family (`fam-08`, a community radio station) has **no reference board** in
@@ -127,10 +127,12 @@ All values are declared; every observed use was read out of the committed bytes.
 | `th-text` | `#111827` | Headings and body copy |
 | `th-muted` | `#6b7280` | Labels, timestamps, helper text |
 
-**A near-miss worth naming on the dark board.** `tr-08` declares no light/dark sentence, and its values are
-near-black; read from the token names alone that would be an assumption, and this corpus has produced two
-boards where exactly that assumption was wrong. The vision pass measured the raster instead, and it agrees —
-but the agreement is a finding, not a premise.
+**Why the measurement was still worth doing.** `tr-08` declares "in a dark, low-glare palette", and its values
+are near-black, so on this board the declaration, the token names and the raster all agree. That is exactly why
+the agreement is reported as a check rather than assumed: this corpus has produced boards whose dark-named
+tokens were ink on a **light** ground, so a token name or a hex value settles nothing by itself. The vision pass
+measured the raster and confirmed the declared theme rather than contradicting it — which is a weaker result
+than a divergence, and is recorded as such.
 
 ## Spacing rhythm
 
