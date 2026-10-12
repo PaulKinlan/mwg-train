@@ -197,7 +197,8 @@ All eight criteria are quoted from the two manifests rather than restated.
   `docs/eval/briefs/manifest.jsonl` (family `fam-16`). Route names, field slugs, control types, option lists,
   the form selector, fill values, select values, the search leg, the update leg, the intake steps, the stated
   `fam-16` journeys and all eight acceptance criteria are quoted from those rows rather than invented. The `tr-16`
-  journeys are derived summaries of the evaluation journeys rather than quotations, as section 3 records.
+  journeys are derived summaries of the structured journey rows in `docs/train/briefs/manifest.jsonl`
+  rather than quotations of them, as the Journey section records.
 - **The reference** is the training family's generated board, digest-pinned in
   `docs/provenance/assets/training-reference-boards.md`; the prompt that declared it is committed beside it.
   The five journey boards are planned and unpinned.
