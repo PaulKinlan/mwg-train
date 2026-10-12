@@ -1,0 +1,51 @@
+{
+  "_note": "Which path renders the state each reference board depicts. The board-to-state association is AUTHORED here, in one file, because no source in the repository covers it: only 5 of 21 archetypes have a demo directory with any pages, and only 5 of these 27 boards have a demo page of the same name (measured, see mwg-train-elx3). A path is listed ONLY where a script in this repository was observed navigating to it - the verify-*-demo.mjs scripts drive these demos in a browser and their goto() calls are the evidence, recorded in `source`. Everything else is null with a reason, because an unestablished path would be a fabricated one and a wrong path is worse than an honest gap: the comparator would report a state mismatch against the wrong page.",
+  "_schema": {
+    "path": "root-relative path a served demo answers, or null",
+    "source": "what establishes the path, or why none is established",
+    "kind": "page = a distinct document reachable by a path; interaction = a state of a page, reached by acting on it, so NO path selects it (see mwg-train-bosi); absent = the archetype has no demo to serve"
+  },
+  "account-recovery": {
+    "step1-request.jpg": { "path": "/index.html", "kind": "page", "source": "scripts/verify-account-recovery-demo.mjs navigates to `${base}/index.html` to drive the reset-link request form" },
+    "step2-sent.jpg": { "path": null, "kind": "interaction", "source": "the check-your-inbox notice is shown after submitting the form on index.html, so no path selects it" }
+  },
+  "booking": {
+    "step1-browse.jpg": { "path": "/index.html", "kind": "page", "source": "the browse list is the demo's index document" },
+    "step2-form.jpg": { "path": null, "kind": "interaction", "source": "the booking form is reached by selecting a slot on index.html" },
+    "step3-confirmation.jpg": { "path": "/confirmation.html", "kind": "page", "source": "a document on disk whose name matches the board slug" },
+    "step4-error.jpg": { "path": null, "kind": "interaction", "source": "the refusal is a state of the form, not a document" },
+    "step5-empty.jpg": { "path": "/empty.html", "kind": "page", "source": "a document on disk whose name matches the board slug" }
+  },
+  "catalogue": {
+    "step1-grid.jpg": { "path": "/index.html", "kind": "page", "source": "the product grid is the demo's index document" },
+    "step2-cart.jpg": { "path": "/cart.html", "kind": "page", "source": "a document on disk whose name matches the board slug" },
+    "step3-empty.jpg": { "path": "/empty.html", "kind": "page", "source": "a document on disk whose name matches the board slug; plan.md:97 names demo/empty.html as the first-class empty page" }
+  },
+  "contact-lead": {
+    "step1-form.jpg": { "path": "/index.html", "kind": "page", "source": "scripts/verify-contact-lead-demo.mjs navigates to `${base}/index.html` to drive the consultation form" },
+    "step2-success.jpg": { "path": "/success.html", "kind": "page", "source": "scripts/verify-contact-lead-demo.mjs asserts the filled submission lands on a path matching success.html" }
+  },
+  "editorial-blog": {
+    "step1-index.jpg": { "path": null, "kind": "absent", "source": "this archetype has no demo directory, so nothing serves this state" },
+    "step2-article.jpg": { "path": null, "kind": "absent", "source": "this archetype has no demo directory, so nothing serves this state" },
+    "step3-composer.jpg": { "path": null, "kind": "absent", "source": "this archetype has no demo directory, so nothing serves this state" },
+    "step4-empty.jpg": { "path": null, "kind": "absent", "source": "this archetype has no demo directory, so nothing serves this state" }
+  },
+  "event-registration": {
+    "step1-event.jpg": { "path": "/index.html", "kind": "page", "source": "scripts/verify-event-registration-demo.mjs drives the event overview on the demo's index document" },
+    "step2-pass.jpg": { "path": null, "kind": "interaction", "source": "the pass is previewed after the form is submitted, so no path selects it" }
+  },
+  "fan-community-site": {
+    "step1-collection.jpg": { "path": null, "kind": "absent", "source": "this archetype has no demo directory, so nothing serves this state" },
+    "step2-contribution.jpg": { "path": null, "kind": "absent", "source": "this archetype has no demo directory, so nothing serves this state" },
+    "step3-my-contributions.jpg": { "path": null, "kind": "absent", "source": "this archetype has no demo directory, so nothing serves this state" },
+    "step4-moderation.jpg": { "path": null, "kind": "absent", "source": "this archetype has no demo directory, so nothing serves this state" },
+    "step5-visitor.jpg": { "path": null, "kind": "absent", "source": "this archetype has no demo directory, so nothing serves this state" }
+  },
+  "product-card-comparison": {
+    "step1-cards.jpg": { "path": null, "kind": "absent", "source": "this archetype has no demo directory, so nothing serves this state" },
+    "step2-compare.jpg": { "path": null, "kind": "absent", "source": "this archetype has no demo directory, so nothing serves this state" },
+    "step3-selected.jpg": { "path": null, "kind": "absent", "source": "this archetype has no demo directory, so nothing serves this state" },
+    "step4-empty.jpg": { "path": null, "kind": "absent", "source": "this archetype has no demo directory, so nothing serves this state" }
+  }
+}
