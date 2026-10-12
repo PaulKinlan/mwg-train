@@ -21,7 +21,7 @@ function gitRepo(dir, origin) {
 }
 
 function fixture(t) {
-  const root = mkdtempSync(join(tmpdir(), 'quarantine-test-'));
+  const root = realpathSync(mkdtempSync(join(tmpdir(), 'quarantine-test-')));
   t.after(() => rmSync(root, { recursive: true, force: true }));
   const publicRepo = gitRepo(join(root, 'mwg-train'), 'https://github.example/PaulKinlan/mwg-train');
   const store = gitRepo(join(root, 'mwg-quarantine'), 'https://github.example/PaulKinlan/mwg-quarantine');
@@ -49,7 +49,7 @@ test('store verification is fail-closed', (t) => {
   const same = gitRepo(join(root, 'twin'), 'https://github.example/PaulKinlan/mwg-train');
   assert.throws(() => assertQuarantineStore(same, { repoRoot: publicRepo }), /STORE_IS_PUBLIC_REPO/);
   // the real thing passes
-  assert.equal(assertQuarantineStore(store, { repoRoot: publicRepo }), realpathSync(store));
+  assert.equal(assertQuarantineStore(store, { repoRoot: publicRepo }), store);
 });
 
 test('default-write routing: quarantined arms go to the store, cleared arms to the public tree', (t) => {
