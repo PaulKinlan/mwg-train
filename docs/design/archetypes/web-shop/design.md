@@ -2,72 +2,76 @@
 archetype: web-shop
 type: storefront
 boards: docs/design/archetypes/web-shop/
+register: docs/provenance/assets/training-reference-boards.md
 ---
 
 # `web-shop` — aesthetic system
 
-The look of the `web-shop` type, expanding from the `tr-02`, `tr-18`, `tr-26` and `fam-02` reference boards into a full multi-step journey. This document is written in the section order `src/design/contract.mjs` requires of a design document (`DESIGN_SECTIONS`).
-
-One difference from those documents is stated up front rather than implied: they describe an authored target board, and this describes a set of **pending generated** reference boards for the full multi-step journey. Every value below is the set the generation prompts will declare. Behaviour is in [`plan.md`](plan.md), not in this file.
+The look of the `web-shop` archetype. This document covers the aesthetic choices across the implementing families: the three training families (`tr-02`, `tr-18`, `tr-26`) and the evaluation family (`fam-02`). It describes the multi-step storefront journey in the section order the evaluation side requires of a design (`DESIGN_SECTIONS`).
 
 ## Visual thesis
 
-A premium direct-to-consumer e-commerce storefront. The visual language conveys craftsmanship, tangibility, and modern retail efficiency: large bleed photography, generous whitespace, and highly structured checkout forms. The palette is grounded in a muted, artisanal aesthetic—ideal for ceramics, heritage cider, or bulk dry goods—allowing the product imagery to dominate the visual hierarchy.
+A storefront is a display grid leading to a transaction. The thesis follows from that: **a calm ground, strong product photography or typography, and a single accent that marks the forward path to purchase**, with a full error scale held in reserve for validation.
 
-The layout emphasizes exploration followed by frictionless conversion. The catalogue and product detail views prioritize high-resolution imagery and clear typography for dimensions or ingredients. The cart and checkout views pivot to rigorous, accessible data entry, isolating the user from marketing distractions to prevent order abandonment.
+**The family designs must not be averaged.** The three training families employ distinctly different aesthetic systems within light palettes. For instance, `tr-02` (cider pre-orders) and `tr-18` (bulk dry goods) use distinct light palettes reflecting artisanal and organic domains ("in a light palette"), while `tr-26` (coffee subscription) opts for a light palette enriched with deep roast and gold tones suited for coffee beans. Each board uses its own primary action token.
 
 ## Grammar and layout
 
-- One page frame, `--content-frame: 1200px`, centred, with `--page-padding: 2rem` at the sides, collapsing gracefully to edge-to-edge on mobile.
-- The catalogue index (`step1-catalogue`) presents a masonry or uniform grid of product cards with clean pricing metadata.
-- The product detail (`step2-product`) splits the viewport between expansive product imagery and a sticky purchasing sidebar with variant selectors.
-- The interactive cart (`step3-cart`) is an accessible tray or dedicated view allowing immediate quantity adjustments and clear subtotal visibility.
-- The checkout flow (`step4-checkout`) is a secure, single-column intake form prioritizing legible labels, browser autocomplete hints, and simulated payment fields.
-- The persistent receipt (`step5-receipt`) acts as a durable, shareable order ticket detailing the shipping address, total charge, and purchased items.
+- **The catalogue** is a grid layout (typically `minmax` columns) that displays product cards. Each card groups an image (or title), price, and a primary action.
+- **The product detail** expands the hierarchy to a split view or single dominant column, prioritizing large imagery alongside configuration selects (quantity, variant, grind).
+- **The cart and checkout** collapse into a two-column grid at desktop widths - a summary column beside the form - which collapses to a single column below its breakpoint. The summary is deliberately pinned to a minimum width: it is the thing that tells the shopper *what they are buying*.
+- **The receipt** is a narrower column. The receipt presents the order confirmation cleanly, often resembling a digital ticket or printed invoice.
+- **The empty state** is a centred card holding one icon, one heading, one sentence that says the cart is empty, and one way out (back to the catalogue).
 
 ## Typography
 
-- A sophisticated serif for brand headings and product titles to convey heritage and craftsmanship, paired with a highly legible sans-serif for UI elements, forms, and pricing.
-- Exactly one `h1` per page.
-- Clear typographic hierarchy distinguishes product titles from descriptive copy and pricing numbers.
-- Checkout form inputs feature clear programmatic labels placed directly above the fields to prevent visual tracking errors.
+Two families: `--font-sans` (the `system-ui` stack) for everything a person reads, and `--font-mono` for receipts and product SKUs. 
+
+The display heading is the largest type on the page. Card headings are left-aligned inside their own cards; the confirmation receipt centres its title and its reference. 
+
+Each training family adopts typography suited to its domain: rustic or elegant sans-serifs for cider and pottery, and starker geometric types for coffee subscriptions.
 
 ## Token usage
 
-| Token | Value | Used for |
-| --- | --- | --- |
-| `--bg-page` | `#fafaf9` | The warm stone page ground |
-| `--bg-surface` | `#ffffff` | Elevated cart surfaces and checkout forms |
-| `--border` | `#e7e5e4` | Soft structural dividers and form borders |
-| `--accent` | `#292524` | Charcoal primary actions, 'Add to Cart' buttons, and focus states |
-| `--text-primary` | `#1c1917` | High-contrast dark stone text for primary readability |
-| `--text-muted` | `#78716c` | Muted metadata (dimensions, secondary product text) |
+The colour system defines the brand and guides the transaction. 
+The primary accent (`--accent`) is used for primary actions (Add to Cart, Checkout, Save Subscription) and active states. The error scale (`--error`, `--error-bg`, `--error-border`, `--error-text`) ensures checkout validation is clearly visible.
+
+**The training families define their own distinct palettes:**
+- `tr-02` (cider pre-orders): light, crisp palette reflecting apples and heritage brewing.
+- `tr-18` (bulk dry goods): earthy, organic tones reflecting natural zero-waste products.
+- `tr-26` (coffee subscription): light palette with deep roast and gold tones.
+
+Each family relies on these color signatures to establish its own identity.
 
 ## Spacing rhythm
 
-- `--page-padding: 2rem`, `--control-radius: 4px`, `--control-border: 1px solid var(--border)`.
-- Generous padding around product imagery to create a premium, uncrowded browsing experience.
-- Form fields in the checkout view are separated by ample vertical rhythm, ensuring validation error messages fit seamlessly beneath inputs without causing layout jumps.
+The scale is rem-based. The gap between sibling elements in product grids is generous to separate distinct items. The checkout form relies on tighter rhythm (`0.5rem` to `1rem`) for logical groupings. Card padding runs `1.25rem` to `2rem`.
+
+The rhythm's job is to make the product grid and the single-column checkout feel like the same application at different widths. 
 
 ## Component hierarchy
 
-1. **Brand Header** - Logo mark, main navigation, and persistent cart toggle with item count badge.
-2. **Product Grid** - Image-first cards with title, price, and subtle hover interactions.
-3. **Purchasing Panel** - Sticky product details with variant dropdowns and primary 'Add to Cart' action.
-4. **Cart Drawer/View** - Line items with increment/decrement controls and aggregate totals.
-5. **Checkout Form** - Shipping address inputs, payment mockups, and order summary.
-6. **Receipt Confirmation** - Order reference number, shipping breakdown, and purchased item list.
+Read from the expected archetype structure:
+- `header.top-bar` with `nav.top-nav` - the persistent chrome containing the cart badge.
+- A **product grid** (`ul.product-list` or similar) displaying item cards.
+- The **cart drawer or page**, a labelled region carrying line items and a subtotal.
+- `section.card.checkout-card` containing the shipping/payment fields, and - for the error state - `#form-error-banner` with `role="alert"`.
+- The receipt page carries the success mark, reference, and itemised list.
+
+Each training family implements its equivalent semantic structure matching its `plan.md` form definition. `tr-26` explicitly focuses on a `.subscription-card` rather than a cart.
 
 ## Anti-patterns
 
-- Missing `autocomplete` attributes on shipping address or payment fields, forcing users to type everything manually.
-- Using low-contrast gray text for critical pricing or shipping costs that fail WCAG requirements.
-- Trapping keyboard users inside a cart drawer modal or failing to return focus to the trigger button when closed.
+- **Two primary actions competing.** The accent marks the forward action of a state. Product cards should not compete with the primary checkout button.
+- **A different logo on every screen.** The mark should be consistent across the entire user journey.
+- **Inventing what the spec withholds.** A user session, a password field, an account dashboard (unless specified, like `tr-26` subscriptions), a cancellation route, or an expiry on the receipt - none of these are declared.
+- **Transmitting real payment details.** The simulation uses mock/simulated fields; real financial tokens must never be used.
 
 ## Rationale
 
-The independent retail e-commerce use case demands both aesthetic appeal and absolute transactional clarity. Shoppers require high-quality imagery to evaluate artisanal products like ceramics or cider, meaning the catalogue layout must prioritize visual space. Conversely, the checkout flow handles sensitive financial and logistical data, demanding accessible, unambiguous form design. The warm stone and charcoal palette provides a premium, dependable aesthetic that showcases the products without competing with them, while ensuring strict contrast compliance for pricing and error states.
+The type is `storefront` - a catalogue, an aggregation state (cart), a write that stores one order row, and a read-back by reference. Dark or light grounds and bordered cards let a grid, a form and a receipt be the same kind of object at different widths; one accent keeps *what do I do next* unambiguous. 
 
 ## Provenance
 
-- Evaluated against the A1 training families (`tr-02`, `tr-18`, `tr-26`) and the A6 evaluation spec (`fam-02` / `web-shop`).
+- **The training reference boards** are 3 distinct generation outcomes registered in [`docs/provenance/assets/training-reference-boards.md`](../../../provenance/assets/training-reference-boards.md). They declare and establish the visual baselines for `tr-02`, `tr-18`, and `tr-26`.
+- **The measurements** in this document reflect the generated baselines for these families against their recorded prompts.
