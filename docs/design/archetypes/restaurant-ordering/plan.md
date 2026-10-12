@@ -54,7 +54,7 @@ The families declare their own routes. The archetype's common shape is a menu vi
 
 The declared journeys. For the evaluation family (`fam-11`), these are quoted verbatim from the manifests. For the training family (`tr-11`), these are derived summaries of the structured `journey` objects defined in the manifest:
 
-**`tr-11` (sourdough-cottage):**
+**`tr-11` (sourdough bakery):**
 - Starts at `/`, submits `form#bread-order-form` with `input[name=customer]` `Nadia Rossi`, `input[name=phone]` `+44 7700 900888`, `input[name=quantity]` `2`, `textarea[name=notes]` `Please slice if possible`, selecting `select[name=style]` `Seeded Rye Sourdough`, `select[name=window]` `Friday 14:00 - 16:00`.
 - Expects `Nadia Rossi` echoed back and again after a reload.
 - Searches via `/search?q=Nadia` to verify the search endpoint finds the stored record.

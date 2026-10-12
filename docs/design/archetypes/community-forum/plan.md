@@ -56,7 +56,7 @@ The families declare their own routes. The archetype's common shape is an index 
 
 The declared journeys. For the evaluation family (`fam-14`), these are quoted verbatim from the manifests. For the training family (`tr-20`), these are derived summaries of the structured `journey` objects defined in the manifest:
 
-**`tr-20` (traditional-tune):**
+**`tr-20` (folk tune archive):**
 - Starts at `/`, submits `form#note-form` with `input[name=author]` `Mairead O'Connor`, `input[name=tune]` `The Silver Spear`, `textarea[name=note]` `Play briskly with lift on the second beat`, selecting `select[name=rhythm]` `Jig`, `select[name=key]` `G major`.
 - Expects `Play briskly with lift on the second beat` echoed back and again after a reload.
 - Searches via `/search?q=Play` to verify the search endpoint finds the stored record.

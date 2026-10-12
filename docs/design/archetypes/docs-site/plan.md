@@ -59,14 +59,14 @@ The families declare their own routes. The archetype's common shape is an index 
 
 The declared journeys. For the evaluation family (`fam-13`), these are quoted verbatim from the manifests. For the training families, these are derived summaries of the structured `journey` objects defined in the manifest:
 
-**`tr-13` (backyard-composting):**
+**`tr-13` (composting handbook):**
 - Starts at `/`, submits `form#soil-test-form` with `input[name=gardener]` `Avery Quinn`, `input[name=plot]` `Plot 14-B`, `input[name=ph]` `6.8`, `input[name=organic]` `5`, `textarea[name=notes]` `High earthworm activity and dark loamy texture`.
 - Expects `Plot 14-B` echoed back and again after a reload.
 - Searches via `/search?q=Plot` to verify the search endpoint finds the stored record.
 - Updates the `plot` to `Plot 14-B (updated)`.
 - Its intake steps submit `/intake` having filled `input[name=plot]` `Plot 14-B`, and `/intake/confirm` expects `Plot 14-B` back.
 
-**`tr-25` (community-elder):**
+**`tr-25` (oral history archive):**
 - Starts at `/`, submits `form#footnote-form` with `input[name=contributor]` `Dr Arthur Prendergast`, `input[name=email]` `arthur.prendergast@countyhistory.test`, `input[name=passage]` `00:14:32 (Weaving shed)`, `textarea[name=footnote]` `The cotton mill closed in 1968, not 1972 as recalled in the recording.`, selecting `select[name=category]` `Biographical note`.
 - Expects `The cotton mill closed in 1968, not 1972 as recalled in the recording.` echoed back and again after a reload.
 - Searches via `/search?q=The` to verify the search endpoint finds the stored record.

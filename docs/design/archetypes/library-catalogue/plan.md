@@ -106,7 +106,7 @@ staff view `GET /admin/loans` is named with its method and status by the fourth 
 
 The declared journeys. For the evaluation family (`fam-16`), these are quoted verbatim from the manifests. For the training family (`tr-16`), these are derived summaries of the structured `journey` objects defined in the manifest:
 
-**`tr-16` (rare-perennial):**
+**`tr-16` (perennial repository):**
 - Starts at `/`, submits `form#cutting-request-form` with `input[name=gardener]` `Dr Linnaeus Fox`, `input[name=email]` `linnaeus.fox@botanical.test`, `input[name=cultivar]` `Salvia nemorosa Caradonna`, `input[name=quantity]` `3`, `textarea[name=notes]` `Keep moist for root propagation`, selecting `select[name=cutting]` `Root cutting`.
 - Expects `Salvia nemorosa Caradonna` echoed back and again after a reload.
 - Searches via `/search?q=Salvia` to verify the search endpoint finds the stored record.

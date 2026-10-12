@@ -55,14 +55,14 @@ The families declare their own routes. The archetype's common shape is a directo
 
 The declared journeys. For the evaluation family (`fam-06`), these are quoted verbatim from the manifests. For the training families, these are derived summaries of the structured `journey` objects defined in the manifest:
 
-**`tr-06` (craft-guild):**
+**`tr-06` (artisan profiles):**
 - Starts at `/`, submits `form#artisan-profile-form` with `input[name=artisan]` `Rowan Ashcroft`, `input[name=location]` `The Old Mill, Stroud`, `input[name=hours]` `Thu-Sat 10:00-16:00`, `input[name=openday]` `2026-11-28`, `textarea[name=biography]` `Master woodworker crafting hand-turned bowls and shaker boxes`, selecting `select[name=discipline]` `Ceramics`.
 - Expects `Master woodworker crafting hand-turned bowls and shaker boxes` echoed back and again after a reload.
 - Searches via `/search?q=Master` to verify the search endpoint finds the stored record.
 - Updates the `biography` to `Master woodworker crafting hand-turned bowls and shaker boxes (updated)`.
 - Its intake steps submit `/intake` having selected `select[name=discipline]` `Ceramics`, and `/intake/confirm` expects `Ceramics` back.
 
-**`tr-14` (self-guided):**
+**`tr-14` (heritage stops):**
 - Starts at `/`, submits `form#heritage-comment-form` with `input[name=visitor]` `Sam Whitfield`, `textarea[name=comment]` `The timber framing on the south gable is beautifully preserved.`, selecting `select[name=stop]` `Stop 2 - Guildhall Timber Yard`, `select[name=category]` `Historical memory`.
 - Expects `The timber framing on the south gable is beautifully preserved.` echoed back and again after a reload.
 - Searches via `/search?q=The` to verify the search endpoint finds the stored record.
