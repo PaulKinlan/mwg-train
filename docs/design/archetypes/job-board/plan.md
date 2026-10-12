@@ -58,9 +58,10 @@ that the detail view and the application both have to respect.
 
 **On the methods.** The manifest declares routes as paths and carries no `method` key, so the methods above
 are only as firm as their source: `POST /jobs/:id/apply` and `GET /applications/:id` are named by this
-family's second and third assertions, and `GET /jobs` appears with its query string in its first. The
-remaining routes are pages, served by `GET` as a reading of the kind column rather than something the row
-states. `GET /` is the one route whose method rests on that reading alone.
+family's second and third assertions, and `GET /jobs` appears with its query string in its first. Every other
+route's method is a reading of its kind column rather than something the row states — `GET /` and
+`GET /jobs/:id` rest on that reading alone, and `/jobs/:id` in particular is the one method in this table with
+neither an assertion nor a page kind behind it.
 
 ## Data and state
 
