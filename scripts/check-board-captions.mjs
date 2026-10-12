@@ -49,12 +49,18 @@
  *   so making the input unreadable is not a way to pass.
  *
  * WHAT IT DOES NOT CLAIM: it does not model every element content model, and it does not model layout. An
- * image hidden by a stylesheet, by a class or by `aria-hidden` is not detected, and neither is content whose
- * content model the tokenizer does not implement - a `<` inside `<svg><desc>`, `<option>`, `<select>` or
- * foreign-content CDATA. Closing those needs an HTML parser rather than another excluded-element pattern,
- * which is why the broad claim was withdrawn in review round 7: a deliberately crafted page that models its
- * own content is out of scope. What this check is for is the pages this repository commits, read the way a
- * browser reads them, plus failing closed when it cannot read what it is given.
+ * image hidden by a stylesheet or by a class is not detected, and neither is content whose content model the
+ * tokenizer does not implement - a `<` inside `<svg><desc>`, `<option>`, `<select>` or foreign-content
+ * CDATA. Closing those needs an HTML parser rather than another excluded-element pattern, which is why the
+ * broad claim was withdrawn in review round 7: a deliberately crafted page that models its own content is out
+ * of scope. What this check is for is the pages this repository commits, read the way a browser reads them,
+ * plus failing closed when it cannot read what it is given.
+ *
+ * ACCESSIBILITY EXPOSURE IS A SEPARATE LIMITATION, not a kind of hiding, and the earlier wording here
+ * conflated the two by listing `aria-hidden` beside stylesheets and classes. `aria-hidden` does not visually
+ * hide an image: a board carrying it is still rendered, so this check still counts it, and for a check about
+ * what a page shows that is the correct answer. Whether a page exposes an image to assistive technology is a
+ * different question, and this check does not assess it at all.
  *
  * Everything here is offline: file reads and hashing only.
  */
