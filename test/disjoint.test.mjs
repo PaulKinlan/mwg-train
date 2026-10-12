@@ -4,7 +4,7 @@
  * not generalisation. These tests pin the fail-closed contract: unreadable input is a finding,
  * never a pass and never a throw.
  */
-import test from 'node:test';
+import { after, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -37,9 +37,17 @@ const TARGET_ROWS = [
 
 const toJsonl = (rows) => rows.map((row) => JSON.stringify(row)).join('\n') + '\n';
 
+const tempDirs = [];
+after(() => {
+  for (const dir of tempDirs) {
+    try { rmSync(dir, { recursive: true, force: true }); } catch {}
+  }
+});
+
 /** A fixture directory with a sealed eval manifest, eval targets, and room for a training manifest. */
 function makeFixture({ evalRows = EVAL_ROWS, targetRows = TARGET_ROWS, trainRows = null, trainText = null } = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'disjoint-'));
+  tempDirs.push(dir);
   const evalPath = join(dir, 'eval.jsonl');
   const targetsPath = join(dir, 'targets.jsonl');
   writeFileSync(evalPath, toJsonl(evalRows));

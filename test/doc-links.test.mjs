@@ -1,14 +1,23 @@
-import { test } from 'node:test';
+import { after, test } from 'node:test';
 import assert from 'node:assert';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { checkDocLinks, extractLinks, resolveTarget, stripInlineCode } from '../scripts/check-doc-links.mjs';
 
+const tempDirs = [];
+
+after(() => {
+  for (const dir of tempDirs) {
+    try { fs.rmSync(dir, { recursive: true, force: true }); } catch {}
+  }
+});
+
 // A scratch tree, so each case is a document that either resolves or does not. The check takes its file list and its
 // tracked set as arguments precisely so a test does not need git or the repository to exercise it.
 function tree(files) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'doc-links-'));
+  tempDirs.push(root);
   for (const [relative, content] of Object.entries(files)) {
     const absolute = path.join(root, relative);
     fs.mkdirSync(path.dirname(absolute), { recursive: true });

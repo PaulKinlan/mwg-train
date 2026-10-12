@@ -4,7 +4,7 @@
  * is tested with the attack rather than with a description of the defence.
  */
 import assert from 'node:assert/strict';
-import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, join } from 'node:path';
 import test from 'node:test';
@@ -30,6 +30,8 @@ async function withServer(run) {
     return await run({ server, dir, secret });
   } finally {
     await server.close();
+    try { rmSync(dir, { recursive: true, force: true }); } catch {}
+    try { rmSync(secret, { force: true }); } catch {}
   }
 }
 
