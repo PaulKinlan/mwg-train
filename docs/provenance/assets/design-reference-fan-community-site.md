@@ -23,7 +23,9 @@
   screens alone. The moderation boundary appears as an *absence* in the visitor board and as a *verb* in
   the queue board, and the status words appear with the same names the contract uses.
 
-## Independent vision review
+## Independent vision review (Historical First-Wave Audit)
+
+**Note (2026-10-11 UTC deframing):** The five boards were regenerated (bead `mwg-train-d0zi.1`) with explicit prompts to ban all floating macOS window frames and enforce a full-bleed web canvas. The independent vision review findings below describe the *original* first-wave generations. As such, historical references to simulated browser chrome (e.g., in `step2-contribution.jpg`), specific typo quirks (`Titie`), and old `step5` SHAs apply to those previous artifacts. The new boards are pending an independent post-regeneration vision review.
 
 Commissioned from a vision-capable model of a different family from the authoring lane (Gemini 3.8 Flash,
 high thinking, through the fleet's reviewer role), 2026-10-11 UTC. It was asked to read each raster and
@@ -73,7 +75,7 @@ without being tidied up, including the two attempts it rejected.
     gone, but the review found the grid **miscounted**: seven cards in four columns with column four
     empty, `The Clockwork Key` duplicated, and **two green `Published` chips on every card**. Verdict:
     **re-roll** - unusable as a reference because the duplication is visible.
-  - *Attempt 3* (the committed `step5-visitor.jpg`, sha256 `9e4f8eb2…`): **accepted.** The review read
+  - *Attempt 3* (the accepted first-wave `step5-visitor.jpg`, sha256 `9e4f8eb2…`): **accepted.** The review read
     exactly three cards in one row - `The Lamplighter's Coat`, `Set 12 - Harbour Street`,
     `Aunt Martha's Teapot` - with exactly three `Published` chips (one per card), one `Bookmark` button
     per card, the `Sign in to bookmark` tooltip under the first, the four sidebar sections matching the
@@ -93,14 +95,14 @@ without being tidied up, including the two attempts it rejected.
 
 | Archetype | Ordered image | SHA-256 (JPEG bytes) | Bytes | SHA-256 (exact UTF-8 prompt) |
 | --- | --- | --- | ---: | --- |
-| [`fan-community-site`](../../design/archetypes/fan-community-site/README.md) | [`step1-collection.jpg`](../../design/archetypes/fan-community-site/step1-collection.jpg) | `69badd4dad7c2fffb79cc282377440f6d12e5886d2cbedc9c0a553b98de87e8c` | 586435 | `31652af54ba48cccae0004f01174cb05c969b75237956ce7839e95ffd87beaf6` |
-| [`fan-community-site`](../../design/archetypes/fan-community-site/README.md) | [`step2-contribution.jpg`](../../design/archetypes/fan-community-site/step2-contribution.jpg) | `f3ae7b333e8e141e1bb8c63392e440124f7d171f08498a67cb2091183d01c1ca` | 404849 | `4b89dead3a7dd7a90faa2d8ddbc5bf94297c275fbbb02cfa6f5816e4f71389f8` |
-| [`fan-community-site`](../../design/archetypes/fan-community-site/README.md) | [`step3-my-contributions.jpg`](../../design/archetypes/fan-community-site/step3-my-contributions.jpg) | `2532770ea9db4c52bad8d068774b3402ee63cd8cb9c0da5c948e3a7b312d9f8a` | 473425 | `908d92e6835dc59a26e945be964b72b37a63a9e02f3b1bb5fddd8262f8683153` |
-| [`fan-community-site`](../../design/archetypes/fan-community-site/README.md) | [`step4-moderation.jpg`](../../design/archetypes/fan-community-site/step4-moderation.jpg) | `350cf4f1530a976286ff1ca4fabce8b5620006934406cb4d37f009f77ca542ad` | 539828 | `ee6889cb3c102d15bcad1dc9ceb2c3cb8d3bc1c0047f9201c08d22f78ff32813` |
-| [`fan-community-site`](../../design/archetypes/fan-community-site/README.md) | [`step5-visitor.jpg`](../../design/archetypes/fan-community-site/step5-visitor.jpg) | `9e4f8eb29ee0446b3fc40cd31170922dd0261d223026616f1bf881ae6eb7116d` | 556088 | `2a7a5dff32344ed1a22fc9ffcc85ddf82e5dfc11d36652fefbacd2789ec5eaf9` |
+| [`fan-community-site`](../../design/archetypes/fan-community-site/README.md) | [`step1-collection.jpg`](../../design/archetypes/fan-community-site/step1-collection.jpg) | `9cfe729e403fa26d98eadacc4b029807dd3a928d3911838504b4fda6fd71c33c` | 655257 | `48b695c13960cffbcffb11c936fe2c88a5c6421e97029a8f5a6fa10195dfd14d` |
+| [`fan-community-site`](../../design/archetypes/fan-community-site/README.md) | [`step2-contribution.jpg`](../../design/archetypes/fan-community-site/step2-contribution.jpg) | `25290c6553176a6ccf850a25b78b8bf5aeebc1e9d0d1eead2afef45a4644dfbc` | 417126 | `cece28b8805684aaa77c5e17d4a0bbf83a75d094cce2c96fbfc5e391f70a96b2` |
+| [`fan-community-site`](../../design/archetypes/fan-community-site/README.md) | [`step3-my-contributions.jpg`](../../design/archetypes/fan-community-site/step3-my-contributions.jpg) | `6b2330778717e170a328165ba5e81a618f8c33980f1ee065eb30c61aea6c99b6` | 464242 | `8382e05efdd4b22eaa3e9b9b9c3ead84690f6940d27375d76f9a123cd892ff23` |
+| [`fan-community-site`](../../design/archetypes/fan-community-site/README.md) | [`step4-moderation.jpg`](../../design/archetypes/fan-community-site/step4-moderation.jpg) | `4805444b02aa36f8d2e527fe05f28fa59573141e63b8e8a127543a499442a584` | 520495 | `7f91fc243a854f5ae97db4d6f2385d637e12cd97dc2566bb092a47f0f50df4c2` |
+| [`fan-community-site`](../../design/archetypes/fan-community-site/README.md) | [`step5-visitor.jpg`](../../design/archetypes/fan-community-site/step5-visitor.jpg) | `336ee5a676783d4fb7a01efa15ab30c5d83ce2f12439548c810562d7fca38f0f` | 518126 | `b31be22365c8b474e8b0a032f7c413fc13f12905313438ff7b6f7495f9d6c9d0` |
 
 The JPEG digests prove only the handed-off files' integrity. Prompt digests prove the transcribed README
 text is the text that was sent; they do **not** prove the model received it unaltered, nor that the
 picture is what the prompt describes - only an independent reading of the raster can say that, which is
-what the review above is for. Neither digest proves the boards' legal status, which is why the rights
+what the first-wave review above provided. Neither digest proves the boards' legal status, which is why the rights
 boundary is stated separately.
