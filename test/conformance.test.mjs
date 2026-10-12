@@ -441,15 +441,45 @@ test('an empty mount is unmeasured whatever its tag is, and content or a role is
   assert.equal(isMeasurable({ nodes: [{ depth: 0, role: 'main' }], boxes: [], controls: [] }), true);
   assert.equal(isMeasurable({ nodes: [{ depth: 0, name: 'q' }], boxes: [], controls: [] }), true);
 
-  // A KNOWN LIMIT, asserted so it is recorded rather than assumed: container tags that are neither box tags nor
-  // div/span/custom still count as content, because the signature records no text and no child count, so
-  // emptiness is undecidable for them from this data. main/section/article do not reach here at all - the
-  // extractor gives every box tag a bounding box, so boxCount > 0 settles those before this rule runs. Closing
-  // the rest needs the extractor to record text or child counts; changing the tag list would be guessing.
+  // A node with a content-bearing tag and NO recorded signal keeps its previous verdict. This is not a limit any
+  // more - the capture records the signal (mwg-train-vysz) - it is the backward-compatibility rule for
+  // signatures that predate the field. See the signal test below for why that rule is mandatory.
   assert.equal(isMeasurable({ nodes: [{ tag: 'figure' }], boxes: [], controls: [] }), true,
-    'if this ever becomes false, the extractor started reporting content and this limit note is stale');
-  assert.equal(isMeasurable({ nodes: [{ tag: 'blockquote' }], boxes: [], controls: [] }), true,
-    'same limit: a container tag with no box and no content signal still counts');
+    'an unrecorded signal must not be read as empty');
+});
+
+test('a recorded content signal decides whether a content tag counted, and its absence never does', () => {
+  // mwg-train-vysz. The tag names the element but says nothing about whether anything was rendered into it, so
+  // `<body><figure></figure></body>` produced a figure node with no boxes and no controls and scored perfect
+  // cross-arm parity. The capture now records textLength and childCount per node, and this test pins what the
+  // predicate does with them.
+  const node = (extra) => ({ nodes: [{ tag: 'figure', ...extra }], boxes: [], controls: [] });
+
+  // Recorded and empty: unmeasured, whatever container tag it is.
+  assert.equal(isMeasurable(node({ textLength: 0, childCount: 0 })), false, 'an empty captured figure was measured');
+  assert.equal(isMeasurable({ nodes: [{ tag: 'blockquote', textLength: 0, childCount: 0 }], boxes: [], controls: [] }), false);
+  assert.equal(isMeasurable({ nodes: [{ tag: 'p', textLength: 0, childCount: 0 }], boxes: [], controls: [] }), false);
+
+  // Recorded and non-empty, by either signal: measured.
+  assert.equal(isMeasurable(node({ textLength: 17, childCount: 0 })), true, 'a figure with text is content');
+  assert.equal(isMeasurable(node({ textLength: 0, childCount: 1 })), true, 'a figure with a child element is content');
+
+  // A semantic attribute still qualifies an otherwise empty node.
+  assert.equal(isMeasurable(node({ textLength: 0, childCount: 0, role: 'doc-abstract' })), true);
+
+  // NOT RECORDED: previous verdict kept. This is mandatory, not a leftover limit. The committed target
+  // signatures under data/A6_evaluation and data/A1_self_generated carry only {tag, depth, name, role, type},
+  // they are the TARGET side of scoreArm (scripts/score-conformance.mjs:86), and their sha256 is published in
+  // reports as target_sha256. Reading an absent signal as "empty" would make every committed target unmeasurable
+  // and refuse every score - so the assertion below is a compatibility guard, and the one after it shows the
+  // consequence that would follow from flipping it.
+  assert.equal(isMeasurable(node({})), true, 'a signature predating the signal must keep its previous verdict');
+  assert.equal(isMeasurable({ nodes: [{ tag: 'figure', depth: 0, name: null, role: null, type: null }] }), true,
+    'this is the exact node shape committed in the target signatures');
+
+  // And the consequence, asserted so nobody flips it casually: a committed-shape node is measurable, which is
+  // what keeps conformanceScore able to score at all.
+  assert.equal(isMeasurable({ nodes: [{ tag: 'p', depth: 0, name: null, role: null, type: null }], boxes: [], controls: [] }), true);
 });
 
 test('an unmeasurable signature is refused, not scored a perfect 1.000', () => {

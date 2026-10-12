@@ -37,7 +37,10 @@ export const SIGNATURE_SCRIPT = `return (() => {
     for (const child of element.children) {
       const tag = child.tagName.toLowerCase();
       if (SKIP.has(tag)) continue;
-      nodes.push({ tag, depth, type: child.getAttribute('type') ?? null, name: child.getAttribute('name') ?? null, role: child.getAttribute('role') ?? null });
+      // textLength and childCount are the content signal mwg-train-vysz needs: the tag says which element this is,
+    // not whether anything was rendered INTO it. An empty <figure></figure> and a <figure> with content are
+    // the same node by tag alone, which is how an empty mount scored perfect parity across arms.
+    nodes.push({ tag, depth, textLength: (child.textContent ?? '').trim().length, childCount: child.childElementCount, type: child.getAttribute('type') ?? null, name: child.getAttribute('name') ?? null, role: child.getAttribute('role') ?? null });
       walk(child, depth + 1);
     }
   };
@@ -232,7 +235,24 @@ export function isMeasurable(signature) {
     // Role, name and type are semantic attributes rather than tags, so they still qualify a wrapper. This is what
     // keeps `<div role="alert">` measurable while `<div>` is not, and it is the other half of the "content or a
     // semantic role" rule.
-    return !looksLikeWrapper || node.role != null || node.name != null || node.type != null;
+    // Role, name and type are semantic attributes rather than tags, so they qualify any node, wrapper or not.
+    if (node.role != null || node.name != null || node.type != null) return true;
+    if (looksLikeWrapper) return false;
+
+    // The tag says which element this is; it does not say whether anything was rendered INTO it. That was the
+    // mwg-train-vysz gap: `<body><figure></figure></body>` yields one figure node, no boxes and no controls, so a
+    // non-wrapper tag returned true and three empty shells scored perfect parity.
+    //
+    // The capture now records textLength and childCount per node. A signature that PREDATES those fields has
+    // neither, and must keep its previous verdict rather than being read as empty: the committed target
+    // signatures under data/A6_evaluation and data/A1_self_generated carry only {tag, depth, name, role, type},
+    // they are the TARGET side of scoreArm (scripts/score-conformance.mjs:86), and their sha256 is published in
+    // reports as target_sha256. Reading an absent signal as "empty" would make every committed target
+    // unmeasurable and refuse every score, and regenerating them is outside this repository's write scope.
+    // Unrecorded is therefore not the same as empty; only a recorded signal can prove a mount empty.
+    const signalRecorded = typeof node.textLength === 'number' || typeof node.childCount === 'number';
+    if (!signalRecorded) return true;
+    return (node.textLength ?? 0) > 0 || (node.childCount ?? 0) > 0;
   });
 }
 
