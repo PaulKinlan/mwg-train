@@ -111,7 +111,7 @@ The families define specific observable assertions:
 ## Implementation status
 
 **Not implemented in the sealed pilot.** Nothing drives these multi-step routes today in the pilot corpus, and the pending visual boards are the only artefact of this expanded type that exists. Being precise about what does exist:
-- The single-step `tr-02`, `tr-18`, `tr-26`, and `fam-02` targets generally evaluate basic cart checkout forms in the harness, but the full multi-step `web-shop` inventory catalogue, product detail, interactive cart drawer, and persistent receipt lifecycle are not driven end-to-end.
+- Only the training families (`tr-02`, `tr-18`, `tr-26`) have single-step targets in `docs/train/targets/` that evaluate basic cart checkout forms. The evaluation family (`fam-02`) is declared as a brief in `docs/eval/briefs/manifest.jsonl` but has no single-step target in the sealed evaluation target set, and none drive the full multi-step `web-shop` inventory catalogue, product detail, interactive cart drawer, and persistent receipt lifecycle end-to-end.
 - There is no full A6 evaluation specification for this expanded multi-step type under `docs/eval/specs/`.
 
 ## Provenance

@@ -111,7 +111,7 @@ The families define specific observable assertions:
 
 **Not implemented as a multi-step flow in the sealed pilot.** Being precise about what does exist:
 - **Two landing references exist, one for each training family:** `tr-13/reference.jpg` and `tr-25/reference.jpg`. Each depicts one page at one scroll position. The multi-step journey boards are planned and ungenerated.
-- The single-step `tr-13`, `tr-25`, and `fam-13` targets are simple pages containing a form, but do not evaluate the full multi-step `docs-site` article hierarchy, semantic code tabs, or dedicated search functionality end-to-end.
+- Only the training families (`tr-13`, `tr-25`) have single-step targets in `docs/train/targets/`. The evaluation family (`fam-13`) is declared as a brief in `docs/eval/briefs/manifest.jsonl` but has no single-step target in the sealed evaluation target set, and none evaluate the full multi-step `docs-site` article hierarchy, semantic code tabs, or dedicated search functionality end-to-end.
 - There is no full A6 evaluation specification for this expanded multi-step type under `docs/eval/specs/`.
 
 ## Provenance
