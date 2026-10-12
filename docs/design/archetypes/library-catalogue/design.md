@@ -88,12 +88,21 @@ board is the counterexample.
 
 All values are declared; every observed use was read out of the committed bytes.
 
+**Known conformance gap, recorded rather than retuned.** The declared control border is
+`var(--hp-border)`, which is `#e2e8f0` and measures **1.23:1** on `#ffffff` and **1.18:1** on `#f8fafc`.
+WCAG 2.1 1.4.11 requires 3:1 for UI component boundaries, so the inputs and selects this palette
+describes do not meet it. `#7c8ba1` would clear the requirement on both surfaces (3.46:1 and 3.31:1),
+but it is not in the family's generation prompt, so adopting it here would be a change to the
+generation contract rather than a description of it, and this document would be describing a board
+nobody generated. The remedy therefore belongs in `docs/design/training/tr-16/prompt.txt` and in a
+regenerated reference; until that happens this document records the gap and does not claim a fix.
+
 | Token | Value | Observed use |
 | --- | --- | --- |
 | `hp-sage` | `#15803d` | **Brand identity only**: the leaf mark and the repository's wordmark and subtitle. It fills no control and carries no action |
 | `hp-purple` | `#7c3aed` | **Every interactive accent**: the filter action's fill, the per-card request links, and the primary submit's fill |
 | `hp-card` | `#ffffff` | Card and form-input grounds, including the specimen cards and the review cards |
-| `hp-border` | `#e2e8f0` | The hairlines framing cards, inputs, selects and reviews |
+| `hp-border` | `#e2e8f0` | The hairlines framing cards, controls, selects and reviews, as the generation prompt declares |
 | `hp-bg` | `#f8fafc` | The page ground |
 | `hp-text` | `#1e293b` | The `h1`, section headings, cultivar names, form labels and review copy |
 | `hp-muted` | `#64748b` | The hero subtitle, placeholders, card attribute metadata and footer contact details |
@@ -159,10 +168,10 @@ alone reads as the primary.
 
 These are properties of the committed board, not of the archetype.
 
-- **Every specimen card duplicates or contradicts its own cutting count.** One card prints "14 cuttings
-  available" twice; another prints "19 cuttings available" and then "8 cuttings available" on the next line; the
-  third prints "19 cuttings available" twice. The count is the number a reservation is made against, so this is
-  a correctness defect rather than a cosmetic one.
+- **Two of the three specimen cards print their cutting count twice.** The *Acanthus mollis* card prints
+  "14 cuttings available" twice and the *Achillea millefolium* card prints "19 cuttings available" twice,
+  while the *Campanula lactiflora* card prints a single "8 cuttings available". The count is the number a
+  reservation is made against, so a repeated count is a correctness defect rather than a cosmetic one.
 - **The filter dimensions disagree with the brief.** The board filters by sun requirements and soil type; the
   family's stated journey filters by sun tolerance and flowering season. Flowering season is absent from the
   board.

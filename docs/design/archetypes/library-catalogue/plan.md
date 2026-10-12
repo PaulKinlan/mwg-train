@@ -186,6 +186,10 @@ All eight criteria are quoted from the two manifests rather than restated.
   "returns HTTP 200 listing all pending reservation requests with their reservation references", so the
   staff view is not a gap this archetype fills: the evaluation side specifies and asserts it. What
   this archetype adds is the assertions attached to these pages, which is what this section is for.
+  Neither capability is rendered by the pilot - a search across `pilot/` finds no staff view and no HTTP
+  refusal response, and the archetype's own pilot project carries neither - so they are requirements this
+  contract states rather than pages that exist today, and a validator that reported them as already satisfied
+  would be wrong.
 - **No evaluation spec:** there is no `docs/eval/specs/library-catalogue.json`. This contract is validated by
   section order and internal consistency, not against a spec.
 - **The briefs:** two training rows (`tr-16-v1`, `tr-16-v2`) and three evaluation rows (`fam-16-v1` through
@@ -196,7 +200,9 @@ All eight criteria are quoted from the two manifests rather than restated.
 - **The behaviour** is derived from `docs/train/briefs/manifest.jsonl` (family `tr-16`) and
   `docs/eval/briefs/manifest.jsonl` (family `fam-16`). Route names, field slugs, control types, option lists,
   the form selector, fill values, select values, the search leg, the update leg, the intake steps, the stated
-  journeys and all eight acceptance criteria are quoted from those rows rather than invented.
+  `fam-16` journeys and all eight acceptance criteria are quoted from those rows rather than invented. The `tr-16`
+  journeys are derived summaries of the structured journey rows in `docs/train/briefs/manifest.jsonl`
+  rather than quotations of them, as the Journey section records.
 - **The reference** is the training family's generated board, digest-pinned in
   `docs/provenance/assets/training-reference-boards.md`; the prompt that declared it is committed beside it.
   The five journey boards are planned and unpinned.
