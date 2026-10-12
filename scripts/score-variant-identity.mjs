@@ -21,7 +21,7 @@ import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { basename, join, resolve } from 'node:path';
+import { join, resolve } from 'node:path';
 import process from 'node:process';
 
 import { launchChrome } from '../src/corpus/cdp.mjs';
@@ -58,8 +58,7 @@ async function scoreFamily({ family, chrome, runDir, outDir, ports }) {
   const plan = readPlan();
   const projects = plan.projects.filter((project) => project.archetype === family.family_id);
   if (projects.length === 0) throw new Error(`score-variant-identity: the pilot has no projects for family '${family.family_id}'`);
-  const runId = basename(runDir);
-  const isolatedRepoRoot = mkdtempSync(join(tmpdir(), `identity-repo-${runId}-`));
+  const isolatedRepoRoot = mkdtempSync(join(tmpdir(), `identity-repo-`));
   const corpusRoot = mkdtempSync(join(tmpdir(), `identity-corpus-`));
   const { projects: generated } = generateCorpus({ plan: { ...plan, projects }, outDir: corpusRoot });
 
