@@ -58,8 +58,6 @@ async function main() {
     return;
   }
   const target = resolveTarget(args.family);
-  const runDir = mkdtempSync(join(tmpdir(), `conformance-${args.family}-`));
-  const isolatedRepoRoot = mkdtempSync(join(tmpdir(), `conformance-repo-`));
   const outDir = resolve(args.out);
   mkdirSync(outDir, { recursive: true });
 
@@ -67,33 +65,42 @@ async function main() {
   const projects = plan.projects.filter((project) => project.archetype === args.family && (args.framework ? project.framework === args.framework : true));
   if (projects.length === 0) throw new Error(`score-conformance: no pilot project for family '${args.family}'${args.framework ? ` and framework '${args.framework}'` : ''}`);
 
-  const corpusRoot = mkdtempSync(join(tmpdir(), `conformance-corpus-`));
-  const { projects: generated } = generateCorpus({ plan: { ...plan, projects }, outDir: corpusRoot });
-  const chrome = await launchChrome();
+  let runDir = null;
+  let isolatedRepoRoot = null;
+  let corpusRoot = null;
+  let chrome = null;
   const results = [];
-  let port = args.port;
   try {
+    runDir = mkdtempSync(join(tmpdir(), `conformance-${args.family}-`));
+    isolatedRepoRoot = mkdtempSync(join(tmpdir(), `conformance-repo-`));
+    corpusRoot = mkdtempSync(join(tmpdir(), `conformance-corpus-`));
+
+    const { projects: generated } = generateCorpus({ plan: { ...plan, projects }, outDir: corpusRoot });
+    chrome = await launchChrome();
+    let port = args.port;
     for (const project of generated) {
       const storedOriginal = storeOutput({ projectId: project.projectId, model: NO_MODEL }, 'A1_self_generated', project.dir, { repoRoot: isolatedRepoRoot });
 
       const upliftedTemp = mkdtempSync(join(tmpdir(), `conformance-uplifted-`));
-      upliftProject(project.dir, project.spec, upliftedTemp);
-      const storedUplifted = storeOutput({ projectId: project.projectId, model: NO_MODEL }, 'A2_mwg_uplift_deterministic', upliftedTemp, { repoRoot: isolatedRepoRoot });
+      try {
+        upliftProject(project.dir, project.spec, upliftedTemp);
+        const storedUplifted = storeOutput({ projectId: project.projectId, model: NO_MODEL }, 'A2_mwg_uplift_deterministic', upliftedTemp, { repoRoot: isolatedRepoRoot });
 
-      const raw = await captureSignature({ chrome, projectDir: storedOriginal, port: port++, runDir });
-      const arm = await captureSignature({ chrome, projectDir: storedUplifted, port: port++, runDir });
-      const score = scoreArm({ target: target.signature, raw, arm });
-      results.push({ framework: project.framework, ...score });
-      console.log(`score-conformance: ${project.projectId} raw ${Number.isFinite(score.raw) ? score.raw.toFixed(3) : 'N/A'} -> target ${Number.isFinite(score.target) ? score.target.toFixed(3) : 'N/A'} (delta ${Number.isFinite(score.delta) ? (score.delta >= 0 ? '+' : '') + score.delta.toFixed(3) : 'N/A'})`);
-      
-      // Cleanup ephemeral uplifted temp directory; outputs store isolates the temporary copies.
-      rmSync(upliftedTemp, { recursive: true, force: true });
+        const raw = await captureSignature({ chrome, projectDir: storedOriginal, port: port++, runDir });
+        const arm = await captureSignature({ chrome, projectDir: storedUplifted, port: port++, runDir });
+        const score = scoreArm({ target: target.signature, raw, arm });
+        results.push({ framework: project.framework, ...score });
+        console.log(`score-conformance: ${project.projectId} raw ${Number.isFinite(score.raw) ? score.raw.toFixed(3) : 'N/A'} -> target ${Number.isFinite(score.target) ? score.target.toFixed(3) : 'N/A'} (delta ${Number.isFinite(score.delta) ? (score.delta >= 0 ? '+' : '') + score.delta.toFixed(3) : 'N/A'})`);
+      } finally {
+        // Cleanup ephemeral uplifted temp directory; outputs store isolates the temporary copies.
+        rmSync(upliftedTemp, { recursive: true, force: true });
+      }
     }
   } finally {
-    await chrome.close();
-    rmSync(corpusRoot, { recursive: true, force: true });
-    rmSync(runDir, { recursive: true, force: true });
-    rmSync(isolatedRepoRoot, { recursive: true, force: true });
+    if (chrome) await chrome.close();
+    if (corpusRoot) rmSync(corpusRoot, { recursive: true, force: true });
+    if (runDir) rmSync(runDir, { recursive: true, force: true });
+    if (isolatedRepoRoot) rmSync(isolatedRepoRoot, { recursive: true, force: true });
   }
 
   const validDeltas = results.map(r => r.delta).filter(d => Number.isFinite(d));
