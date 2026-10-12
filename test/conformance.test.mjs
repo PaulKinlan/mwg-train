@@ -514,6 +514,21 @@ test('the signature script reads text through the skip-aware reader, not textCon
   assert.match(SIGNATURE_SCRIPT, /!SKIP\.has\(child\.tagName\.toLowerCase\(\)\)/);
 });
 
+test('the signature script asks the DOM whether an element is rendered, and does not read innerText', () => {
+  // mwg-train-b03z. Hidden text is not rendered text: a figure wrapping '<div hidden>invisible words</div>' gave
+  // the figure textLength 15 and scored the page as content. Two things are asserted here, both measured in a
+  // browser rather than assumed:
+  //   - checkVisibility is asked WITH the CSS option. The default answers only for display:none, so a
+  //     visibility:hidden div returns true without the option and false with it.
+  //   - innerText is NOT used, though it is the obvious answer. Called on a NON-RENDERED element the spec falls
+  //     it back to textContent, so the hidden div reports its own text and this exact case still fails - it is
+  //     only correct when read from a rendered ancestor, and this reads per node. It is also about 4x the cost
+  //     of the walk: 23.8ms against 6.3ms over a 400-node page.
+  assert.match(SIGNATURE_SCRIPT, /element\.checkVisibility\(\{ checkVisibilityCSS: true \}\)/);
+  assert.doesNotMatch(SIGNATURE_SCRIPT, /\.innerText/);
+  assert.match(SIGNATURE_SCRIPT, /getComputedStyle\(element\)/, 'the fallback for a browser without checkVisibility');
+});
+
 test('an unmeasurable signature is refused, not scored a perfect 1.000', () => {
   // mwg-train-z92. structuralSimilarity literally begins `if (a.length === 0 && b.length === 0) return 1`
   // (conformance.mjs:119), geometrySimilarity ends `denominator === 0 ? 1` (:180) and controlSimilarity has

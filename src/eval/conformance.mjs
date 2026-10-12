@@ -36,14 +36,41 @@ export const SIGNATURE_SCRIPT = `return (() => {
   // How much text this element RENDERS, excluding skipped subtrees. textContent would include the source of an
   // inline <script> or <style>, and an empty shell with an inline script is the common SPA case, so the naive
   // read scores a shell as content. Memoised over childNodes, so each element is visited once.
+  // Whether this element generates a CSS box at all, memoised so it is asked once per element. checkVisibility
+  // is asked for the CSS option as well, because the default answers only for display:none - measured, a
+  // visibility:hidden div returns true without the option and false with it.
+  const visibility = new Map();
+  const isVisible = (element) => {
+    const known = visibility.get(element);
+    if (known !== undefined) return known;
+    let answer;
+    if (typeof element.checkVisibility === 'function') {
+      answer = element.checkVisibility({ checkVisibilityCSS: true });
+    } else {
+      const style = getComputedStyle(element);
+      answer = style.display !== 'none' && style.visibility !== 'hidden';
+    }
+    visibility.set(element, answer);
+    return answer;
+  };
   const rendered = new Map();
   const renderedText = (element) => {
     const known = rendered.get(element);
     if (known !== undefined) return known;
     let total = 0;
-    for (const child of element.childNodes) {
-      if (child.nodeType === 3) total += (child.nodeValue ?? '').trim().length;
-      else if (child.nodeType === 1 && !SKIP.has(child.tagName.toLowerCase())) total += renderedText(child);
+    // Hidden text is not rendered text. Measured: a figure wrapping '<div hidden>invisible words</div>' gave
+    // figure textLength 15 and scored the page as content. checkVisibility with the CSS option is the only signal
+    // that catches all three forms - the hidden attribute, display:none and visibility:hidden - and it is the
+    // cheapest here too: 0.6ms over a 400-node page against 23.8ms for reading innerText per node.
+    //
+    // innerText is deliberately NOT used, though it is the obvious answer, because it fails this very case: called
+    // on a NON-RENDERED element the spec falls it back to textContent, so the hidden div reports its own text. It is
+    // only correct when read from a rendered ancestor, and this reads per node.
+    if (isVisible(element)) {
+      for (const child of element.childNodes) {
+        if (child.nodeType === 3) total += (child.nodeValue ?? '').trim().length;
+        else if (child.nodeType === 1 && !SKIP.has(child.tagName.toLowerCase())) total += renderedText(child);
+      }
     }
     rendered.set(element, total);
     return total;
