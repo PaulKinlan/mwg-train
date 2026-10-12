@@ -33,14 +33,31 @@ export const WEIGHTS = Object.freeze({ structural: 0.4, geometry: 0.35, controls
 export const SIGNATURE_SCRIPT = `return (() => {
   const SKIP = new Set(['script', 'style', 'template', 'link', 'meta', 'noscript']);
   const nodes = [];
+  // How much text this element RENDERS, excluding skipped subtrees. textContent would include the source of an
+  // inline <script> or <style>, and an empty shell with an inline script is the common SPA case, so the naive
+  // read scores a shell as content. Memoised over childNodes, so each element is visited once.
+  const rendered = new Map();
+  const renderedText = (element) => {
+    const known = rendered.get(element);
+    if (known !== undefined) return known;
+    let total = 0;
+    for (const child of element.childNodes) {
+      if (child.nodeType === 3) total += (child.nodeValue ?? '').trim().length;
+      else if (child.nodeType === 1 && !SKIP.has(child.tagName.toLowerCase())) total += renderedText(child);
+    }
+    rendered.set(element, total);
+    return total;
+  };
   const walk = (element, depth) => {
     for (const child of element.children) {
       const tag = child.tagName.toLowerCase();
       if (SKIP.has(tag)) continue;
-      // textLength and childCount are the content signal mwg-train-vysz needs: the tag says which element this is,
-    // not whether anything was rendered INTO it. An empty <figure></figure> and a <figure> with content are
-    // the same node by tag alone, which is how an empty mount scored perfect parity across arms.
-    nodes.push({ tag, depth, textLength: (child.textContent ?? '').trim().length, childCount: child.childElementCount, type: child.getAttribute('type') ?? null, name: child.getAttribute('name') ?? null, role: child.getAttribute('role') ?? null });
+  // textLength is the content signal mwg-train-vysz and mwg-train-knch need: the tag says which element
+  // this is, not whether anything was rendered INTO it. An empty <figure></figure> and a <figure> with
+  // content are the same node by tag alone, which is how an empty mount scored perfect parity.
+  // childCount deliberately is NOT captured: it counts elements, not content, so a wrapper around a
+  // wrapper has children and still renders nothing.
+  nodes.push({ tag, depth, textLength: renderedText(child), type: child.getAttribute('type') ?? null, name: child.getAttribute('name') ?? null, role: child.getAttribute('role') ?? null });
       walk(child, depth + 1);
     }
   };
@@ -201,6 +218,14 @@ export function controlSimilarity(target, candidate) {
   return round(0.6 * match + 0.4 * labelled);
 }
 
+const NON_TEXT_CONTENT = new Set(['img', 'picture', 'svg', 'canvas', 'video', 'audio', 'object', 'embed']);
+
+/** A wrapper renders its children and nothing of its own, so a wrapper alone is not evidence of content. */
+const isWrapperTag = (tag) => {
+  const name = typeof tag === 'string' ? tag : '';
+  return name === '' || name === 'div' || name === 'span' || name.includes('-');
+};
+
 /** Whether a signature carries anything that can actually be compared. */
 export function isMeasurable(signature) {
   const nodeCount = signature?.nodes?.length ?? 0;
@@ -210,50 +235,34 @@ export function isMeasurable(signature) {
   if (boxCount > 0 || controlCount > 0) return true;
   if (nodeCount === 0) return false;
 
-  // Empty SPA root check: if the page rendered no semantic boxes and no controls, it must have at least
-  // one node that is not a generic container to be considered measured.
-  // A nested tree of purely divs, spans, or custom element mounts (e.g. body > div#root > app-root)
-  // with no roles or text-bearing tags is an empty unmeasured shell.
-  return signature.nodes.some((node) => {
-    // A null or undefined ENTRY is not an entity at all, so it is not evidence that anything rendered.
-    if (node == null) return false;
+  const nodes = signature.nodes;
 
-    // A tag identifies its element only when it is a non-empty string, and only a tag that identifies a
-    // CONTENT-bearing element counts. A div, a span and a custom-element mount are wrappers; a node with no
-    // usable tag has not been shown to be anything at all, so it is a wrapper too - the emptiest one there is.
-    // This function answers "whether a signature carries anything that can actually be compared", and a node
-    // whose tag is absent, null, empty or not a string carries nothing comparable.
-    //
-    // This REVERSES the tagless-node value I chose in mwg-train-75cq, where I kept `true` to match that bead's
-    // merge-base. 75cq's complaint was that the guard THREW, and its totality contract is unchanged here; later
-    // review (mwg-train-7qze) showed the VALUE was wrong, because that same shape is what makes an empty shell
-    // read as rendered content. The two findings are reconcilable only in this direction: a guard must answer,
-    // and for a tag it cannot identify the honest answer is "this is not evidence of content".
-    const tag = typeof node.tag === 'string' ? node.tag : '';
-    const looksLikeWrapper = tag === '' || tag === 'div' || tag === 'span' || tag.includes('-');
+  // A role, name or type is a semantic attribute rather than a tag, so it qualifies any node, wrapper or not.
+  // This is what keeps `<div role="alert">` measurable while `<div>` is not.
+  if (nodes.some((node) => node != null && (node.role != null || node.name != null || node.type != null))) return true;
 
-    // Role, name and type are semantic attributes rather than tags, so they still qualify a wrapper. This is what
-    // keeps `<div role="alert">` measurable while `<div>` is not, and it is the other half of the "content or a
-    // semantic role" rule.
-    // Role, name and type are semantic attributes rather than tags, so they qualify any node, wrapper or not.
-    if (node.role != null || node.name != null || node.type != null) return true;
-    if (looksLikeWrapper) return false;
+  // EMPTY TREE CHECK (mwg-train-7qze, -vysz, -knch). With no boxes and no controls the question is whether the
+  // node tree renders anything at all, and it has to be asked of the WHOLE TREE rather than of one node. Asking
+  // it per node is what let `<figure><div></div></figure>` through: figure had a child ELEMENT, so it looked like
+  // content, while nothing in the tree rendered anything. A tree of empty wrappers has textLength 0 on every
+  // node, so one pass over the tree answers it however deeply the wrappers nest.
+  const measured = nodes.filter((node) => node != null && typeof node.textLength === 'number');
+  if (measured.length > 0) {
+    if (measured.some((node) => node.textLength > 0)) return true;
 
-    // The tag says which element this is; it does not say whether anything was rendered INTO it. That was the
-    // mwg-train-vysz gap: `<body><figure></figure></body>` yields one figure node, no boxes and no controls, so a
-    // non-wrapper tag returned true and three empty shells scored perfect parity.
-    //
-    // The capture now records textLength and childCount per node. A signature that PREDATES those fields has
-    // neither, and must keep its previous verdict rather than being read as empty: the committed target
-    // signatures under data/A6_evaluation and data/A1_self_generated carry only {tag, depth, name, role, type},
-    // they are the TARGET side of scoreArm (scripts/score-conformance.mjs:86), and their sha256 is published in
-    // reports as target_sha256. Reading an absent signal as "empty" would make every committed target
-    // unmeasurable and refuse every score, and regenerating them is outside this repository's write scope.
-    // Unrecorded is therefore not the same as empty; only a recorded signal can prove a mount empty.
-    const signalRecorded = typeof node.textLength === 'number' || typeof node.childCount === 'number';
-    if (!signalRecorded) return true;
-    return (node.textLength ?? 0) > 0 || (node.childCount ?? 0) > 0;
-  });
+    // Nothing renders text. Elements that render without text are still content, so an image-only or canvas-only
+    // page is not an empty shell; without this the rule would trade a false positive for a false negative.
+    if (nodes.some((node) => node != null && NON_TEXT_CONTENT.has(node.tag))) return true;
+    return false;
+  }
+
+  // NO RECORDED SIGNAL: a signature predating textLength keeps its previous verdict. This is mandatory, not a
+  // leftover limit. The committed target signatures under data/A6_evaluation and data/A1_self_generated carry
+  // only {tag, depth, name, role, type}, they are the TARGET side of scoreArm (scripts/score-conformance.mjs:86),
+  // and their sha256 is published in reports as target_sha256. Reading an absent signal as "empty" would make
+  // every committed target unmeasurable and refuse every score, and regenerating them is outside this
+  // repository's write scope. So unrecorded is not the same as empty.
+  return nodes.some((node) => node != null && !isWrapperTag(node.tag));
 }
 
 /** The three axes and their weighted mean, as one object so a report never has to recompute them. */

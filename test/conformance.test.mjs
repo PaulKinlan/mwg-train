@@ -12,7 +12,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
-import { isMeasurable, controlSimilarity, conformanceScore, geometrySimilarity, IDENTITY_AXES, identityFindings, scoreArm, structuralSimilarity, variantIdentity, WEIGHTS } from '../src/eval/conformance.mjs';
+import { isMeasurable, controlSimilarity, conformanceScore, geometrySimilarity, IDENTITY_AXES, identityFindings, scoreArm, structuralSimilarity, variantIdentity, WEIGHTS, SIGNATURE_SCRIPT } from '../src/eval/conformance.mjs';
 import { validateManifest } from '../src/provenance/record.mjs';
 import { parseManifest } from '../src/provenance/record.mjs';
 import { IDENTITY_BUDGET, TARGETS_MANIFEST, TARGETS_STORAGE, TARGET_FAMILIES } from '../src/eval/targets.mjs';
@@ -448,38 +448,58 @@ test('an empty mount is unmeasured whatever its tag is, and content or a role is
     'an unrecorded signal must not be read as empty');
 });
 
-test('a recorded content signal decides whether a content tag counted, and its absence never does', () => {
-  // mwg-train-vysz. The tag names the element but says nothing about whether anything was rendered into it, so
-  // `<body><figure></figure></body>` produced a figure node with no boxes and no controls and scored perfect
-  // cross-arm parity. The capture now records textLength and childCount per node, and this test pins what the
-  // predicate does with them.
-  const node = (extra) => ({ nodes: [{ tag: 'figure', ...extra }], boxes: [], controls: [] });
+test('an empty tree is unmeasured however the wrappers nest, and a recorded signal decides it', () => {
+  // mwg-train-7qze, -vysz and -knch. The question is whether the TREE renders anything, not whether one node
+  // happens to have a child ELEMENT: `<figure><div></div></figure>` has a figure with one child and nothing
+  // rendered, so a per-node child check let it through. A tree of empty wrappers has textLength 0 on EVERY node,
+  // so one pass over the tree answers it however deeply the wrappers nest.
+  const sig = (nodes) => ({ nodes, boxes: [], controls: [] });
 
-  // Recorded and empty: unmeasured, whatever container tag it is.
-  assert.equal(isMeasurable(node({ textLength: 0, childCount: 0 })), false, 'an empty captured figure was measured');
-  assert.equal(isMeasurable({ nodes: [{ tag: 'blockquote', textLength: 0, childCount: 0 }], boxes: [], controls: [] }), false);
-  assert.equal(isMeasurable({ nodes: [{ tag: 'p', textLength: 0, childCount: 0 }], boxes: [], controls: [] }), false);
+  // Nested empty wrappers - the knch repro - unmeasured at any depth.
+  assert.equal(isMeasurable(sig([{ tag: 'figure', textLength: 0 }, { tag: 'div', textLength: 0 }])), false,
+    'a nested empty wrapper was measured because the parent had a child element');
+  assert.equal(isMeasurable(sig([
+    { tag: 'section-x', textLength: 0 }, { tag: 'div', textLength: 0 },
+    { tag: 'figure', textLength: 0 }, { tag: 'span', textLength: 0 },
+  ])), false, 'an empty tree is empty however deep it nests');
 
-  // Recorded and non-empty, by either signal: measured.
-  assert.equal(isMeasurable(node({ textLength: 17, childCount: 0 })), true, 'a figure with text is content');
-  assert.equal(isMeasurable(node({ textLength: 0, childCount: 1 })), true, 'a figure with a child element is content');
+  // Text ANYWHERE makes the tree measured, however deep it sits.
+  assert.equal(isMeasurable(sig([{ tag: 'figure', textLength: 12 }, { tag: 'div', textLength: 12 }])), true);
+  assert.equal(isMeasurable(sig([{ tag: 'figure', textLength: 0 }, { tag: 'div', textLength: 0 }, { tag: 'p', textLength: 4 }])), true,
+    'text at the deepest level still counts');
 
-  // A semantic attribute still qualifies an otherwise empty node.
-  assert.equal(isMeasurable(node({ textLength: 0, childCount: 0, role: 'doc-abstract' })), true);
+  // A single empty mount, per vysz.
+  assert.equal(isMeasurable(sig([{ tag: 'figure', textLength: 0 }])), false);
+  assert.equal(isMeasurable(sig([{ tag: 'blockquote', textLength: 0 }])), false);
+
+  // An element that renders without text is still content, so "no text" is not read as "nothing rendered".
+  // Without this the empty-tree rule would trade a false positive for a false negative.
+  assert.equal(isMeasurable(sig([{ tag: 'img', textLength: 0 }])), true, 'an image-only page is not an empty shell');
+  assert.equal(isMeasurable(sig([{ tag: 'svg', textLength: 0 }, { tag: 'circle', textLength: 0 }])), true);
+  assert.equal(isMeasurable(sig([{ tag: 'canvas', textLength: 0 }])), true);
+
+  // A semantic attribute is content whatever the tree renders.
+  assert.equal(isMeasurable(sig([{ tag: 'figure', textLength: 0, role: 'doc-abstract' }])), true);
 
   // NOT RECORDED: previous verdict kept. This is mandatory, not a leftover limit. The committed target
-  // signatures under data/A6_evaluation and data/A1_self_generated carry only {tag, depth, name, role, type},
-  // they are the TARGET side of scoreArm (scripts/score-conformance.mjs:86), and their sha256 is published in
-  // reports as target_sha256. Reading an absent signal as "empty" would make every committed target unmeasurable
-  // and refuse every score - so the assertion below is a compatibility guard, and the one after it shows the
-  // consequence that would follow from flipping it.
-  assert.equal(isMeasurable(node({})), true, 'a signature predating the signal must keep its previous verdict');
-  assert.equal(isMeasurable({ nodes: [{ tag: 'figure', depth: 0, name: null, role: null, type: null }] }), true,
-    'this is the exact node shape committed in the target signatures');
+  // signatures carry only {tag, depth, name, role, type}, they are the TARGET side of scoreArm
+  // (scripts/score-conformance.mjs:86), and their sha256 is published in reports as target_sha256. Reading an
+  // absent signal as "empty" would make every committed target unmeasurable and refuse every score.
+  assert.equal(isMeasurable(sig([{ tag: 'p' }])), true, 'a signature predating the signal keeps its previous verdict');
+  assert.equal(isMeasurable(sig([{ tag: 'figure', depth: 0, name: null, role: null, type: null }])), true,
+    'the exact node shape committed in the target signatures');
+  assert.equal(isMeasurable(sig([{ tag: 'div' }])), false, 'and a wrapper alone still does not count');
+});
 
-  // And the consequence, asserted so nobody flips it casually: a committed-shape node is measurable, which is
-  // what keeps conformanceScore able to score at all.
-  assert.equal(isMeasurable({ nodes: [{ tag: 'p', depth: 0, name: null, role: null, type: null }], boxes: [], controls: [] }), true);
+test('the signature script reads text through the skip-aware reader, not textContent', () => {
+  // SIGNATURE_SCRIPT runs inside the page, so this asserts on its source - and it guards a real trap rather than
+  // a style preference. textContent includes the source of an inline <script> or <style>, and an empty shell with
+  // an inline script is the common SPA case, so the naive read reports a shell as full of content. The browser
+  // verification covers the behaviour; this stops the naive read reappearing for a future reader to reach for.
+  assert.match(SIGNATURE_SCRIPT, /nodes\.push\(\{ tag, depth, textLength: renderedText\(child\)/);
+  assert.doesNotMatch(SIGNATURE_SCRIPT, /textLength: \(child\.textContent/);
+  assert.match(SIGNATURE_SCRIPT, /const renderedText = \(element\) => \{/);
+  assert.match(SIGNATURE_SCRIPT, /!SKIP\.has\(child\.tagName\.toLowerCase\(\)\)/);
 });
 
 test('an unmeasurable signature is refused, not scored a perfect 1.000', () => {
