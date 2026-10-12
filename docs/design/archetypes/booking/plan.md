@@ -126,6 +126,21 @@ The declared journeys. For evaluation families (`fam-01`, `fam-r01`), these are 
 - reserve a pew by selecting the section and entering attendee numbers and contact details
 - submit the reservation to receive an allocated reference and ensure the booking persists
 
+### pilot
+The declared journey, verbatim from the spec:
+
+- it starts at `/`;
+- it submits `form#booking-form` with five fills - `input[name=name]` `Ada Lovelace`,
+  `input[name=email]` `ada@example.test`, `input[name=address]` `12 Bridge Row`,
+  `input[name=postcode]` `AB1 2CD`, and `textarea[name=notes]` `Window seat please`;
+- and it expects to find `Ada Lovelace` on what the submit returns.
+
+Two details are easy to lose. The journey's expected text is the **name**, while the value that proves
+persistence is the **notes** - the spec's `echo` block names `notes` as the field echoed back into
+`#booking-notes` on the read-by-reference route, which is what a reload assertion can check without
+depending on layout. And the notes text is free prose: `Window seat please` is a value, not a label any
+form has to print.
+
 ### `fam-01`
 - select a repair service tier, pick an available workshop bench time slot, fill in customer contact details, and view the persistent booking confirmation page
 - reload the booking confirmation URL directly and verify that the booking reference, chosen service, bench slot, and contact details persist intact
@@ -202,6 +217,14 @@ Criterion 4 is the one that is easiest to fake and hardest to check: a reference
   - the original and uplifted tree hashes are present for all seven arms and **differ in every one** - the
     uplift changed the tree in all seven cases;
   - no booking entry carries a response status at all.
+- **Which criterion each of those evidences, and which it does not.** Criterion 1 is evidenced by the
+  arrival at `/booking/<ref>`, and criterion 2 by the reload read-back. Criterion 3 is evidenced at arm
+  level - `refused-observed` on all seven - while the per-entry `serverRefused` flag is true in six of
+  fourteen. Criterion 4 is **not** evidenced by these records: nothing in them distinguishes a reference
+  newly issued from one read out of an existing row, and the recorded `afterSubmit` URL shows only that a
+  reference existed. Criterion 5 is only partly evidenced - a visible error is recorded, but no field
+  records that nothing was stored. Criteria 6 and 7 are not evidenced here at all, and the records carry
+  no response status, so neither the `303` nor the `Location` the spec declares appears in them.
 - **A divergence, named rather than adjudicated.** The rule behind `session-cookie-attributes` requires a
   session cookie to be `HttpOnly`, to be `Secure` and to carry a SameSite value other than `None`, and it
   is recorded as `FAIL` on every booking entry - in an archetype whose spec declares `session: false`, no
@@ -218,13 +241,35 @@ Criterion 4 is the one that is easiest to fake and hardest to check: a reference
   walks `docs/eval/design`, so the order and no-`###` shape of `docs/design/archetypes/*` documents is
   kept by hand. If that gap should close, it is a bead of its own.
 
+- **The boards do not agree with each other, and three of them do not agree with the target.** All five
+  are framed in a desktop browser window rather than showing unframed UI, and they disagree about which
+  browser: steps 1 and 5 are drawn in a Safari frame, steps 2, 3 and 4 in a Chrome frame with a tab bar.
+  Their step indicators describe three different flows - `1. Choose Class / 2. Details & Seats /
+  3. Payment` on step 2, `1. Details / 2. Payment / 3. Confirmation` on step 3, and
+  `Step 1: Choose Class / Step 2: Details & Seating / Step 3: Payment` on step 4 - while the accepted
+  target's own stepper reads `1. Select Class`, `2. Details & Registration`, `3. Confirmation`, so no
+  board matches the target and the flow cannot be both three steps ending at Payment and three steps
+  ending at Confirmation. Each board also carries a **different logo mark** behind the constant
+  `Evening Class Studio` wordmark, step 5 switches from the consumer storefront layout to an authenticated
+  dashboard with a left sidebar of `Dashboard`, `Schedule`, `Classes`, `Instructors` and `Settings`, and
+  step 4's seat grid is three rows by four columns where step 2's is four by six. Two further
+differences are contract-level rather than decorative: the boards' forms carry a **phone number** field
+and neither **address** nor **postcode** - two of the spec's five required fields - and two boards picture
+a **seat picker** that no declared field describes, where the demo has no seat picker at all and mentions
+seats only as a `5 seats left` capacity count and the wording of the notes placeholder. The bead that
+would strip the browser chrome is `mwg-train-ondc`;
+the stepper, logo, layout and field differences are not in its scope and are not covered by it.
+- **The section order of this file is a convention, not a checked rule.** `test/design-contract.test.mjs`
+  walks `docs/eval/design`, so the order and no-`###` shape of `docs/design/archetypes/*` documents is
+  kept by hand. If that gap should close, it is a bead of its own.
+
 ## Provenance
 
 - **The pilot boards** are registered in
   [`docs/provenance/assets/design-reference-booking.md`](../../../provenance/assets/design-reference-booking.md),
   and [`README.md`](README.md) in this directory quotes a SHA-256 digest for each of the five files and
   the prompt each was generated from. They were generated rather than designed, so the disagreements
-  are evidence about the generator, not about the archetype.
+  above are evidence about the generator, not about the archetype.
 - **The training reference boards** are 7 distinct generation outcomes registered in [`docs/provenance/assets/training-reference-boards.md`](../../../provenance/assets/training-reference-boards.md).
 - **The behaviour** is declared by [`docs/eval/specs/booking.json`](../../../eval/specs/booking.json) for the pilot, and the respective JSONL manifest rows for the training and evaluation families. Its
   durability block records that it was authored on 2026-10-08, transcribed from the pilot archetype and
