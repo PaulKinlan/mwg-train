@@ -186,10 +186,13 @@ All eight criteria are quoted from the two manifests rather than restated.
   "returns HTTP 200 listing all pending reservation requests with their reservation references", so the
   staff view is not a gap this archetype fills: the evaluation side specifies and asserts it. What
   this archetype adds is the assertions attached to these pages, which is what this section is for.
-  Neither capability is rendered by the pilot - a search across `pilot/` finds no staff view and no HTTP
-  refusal response, and the archetype's own pilot project carries neither - so they are requirements this
-  contract states rather than pages that exist today, and a validator that reported them as already satisfied
-  would be wrong.
+  What the pilot does not render is these two capabilities as this contract states them. A search across
+  `pilot/` finds no staff view at all. An HTTP refusal response is not absent, though: the catalogue pilot
+  itself answers an incomplete cart submission with HTTP 422 and an inline alert, and its not-found path
+  answers 404, so the refusal shape exists in the corpus and in this pilot. What this pilot lacks is a refusal
+  attached to a reservation, because it implements no reservation route - its only validated write is the cart
+  submission. Both therefore remain requirements this contract states rather than pages that exist today, and a
+  validator that reported them as already satisfied would be wrong.
 - **No evaluation spec:** there is no `docs/eval/specs/library-catalogue.json`. This contract is validated by
   section order and internal consistency, not against a spec.
 - **The briefs:** two training rows (`tr-16-v1`, `tr-16-v2`) and three evaluation rows (`fam-16-v1` through
