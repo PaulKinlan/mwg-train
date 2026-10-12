@@ -114,6 +114,7 @@ export function chromeArgs({ userDataDir, proxy = null, blockEgress = false, ext
     '--window-size=1280,900',
     ...(blockEgress ? [
       '--proxy-server=http://127.0.0.1:9',
+      // NOT a UDP boundary: a literal-IP STUN listener still received 4 packets with this flag.
       '--force-webrtc-ip-handling-policy=disable_non_proxied_udp',
     ] : proxy ? [`--proxy-server=${proxy}`] : []),
     // Only allowlisted caller arguments pass. Not "the sandbox-disabling ones are refused": a caller cannot widen
@@ -434,20 +435,18 @@ export class Page {
     this.network = [];
     this.requests = new Map();
     this.blockedRequests = [];
+    this.allowedOrigin = null;
     this.#observe();
   }
 
-  // Fetch interception is installed before navigating to the untrusted document. Unlike a blocked-URL
-  // wildcard, it can continue loopback requests while failing all other HTTP(S) requests explicitly.
+  // Fetch interception is installed before navigating to the untrusted document. Only the origin
+  // explicitly driven by goto() is permitted; other loopback services are not part of the harness.
   async blockEgress() {
     const { connection, sessionId } = this.session;
     connection.on('Fetch.requestPaused', (params, sid) => {
       if (sid !== sessionId) return;
       const url = new URL(params.request.url);
-      const host = url.hostname.toLowerCase().replace(/^\[|\]$/g, '');
-      const loopback = host === 'localhost' || host.endsWith('.localhost') || host === '::1'
-        || /^127(?:\.\d{1,3}){3}$/.test(host);
-      const denied = !loopback;
+      const denied = url.origin !== this.allowedOrigin;
       connection.send(denied ? 'Fetch.failRequest' : 'Fetch.continueRequest',
         denied ? { requestId: params.requestId, errorReason: 'BlockedByClient' } : { requestId: params.requestId },
         sessionId).then(() => {
@@ -496,6 +495,12 @@ export class Page {
    * Waiting on observable state (URL, readyState) instead of an event removes the race.
    */
   async goto(url, { timeout = 15_000 } = {}) {
+    // The harness navigates to its own forwarder before generated code executes. Lock the page to
+    // that one origin; later page-controlled navigations cannot grant themselves another local port.
+    const destination = new URL(url);
+    if (!this.allowedOrigin && destination.protocol === 'http:' && destination.hostname === '127.0.0.1') {
+      this.allowedOrigin = destination.origin;
+    }
     await this.send('Page.navigate', { url });
     const started = Date.now();
     for (;;) {
