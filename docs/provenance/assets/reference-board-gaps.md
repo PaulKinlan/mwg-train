@@ -103,14 +103,14 @@ target" as sufficient. It is necessary and not sufficient - the comparison also 
 
 ## What follows
 
-1. **Capture coverage first, as its own tasks (mwg-train-bosi, closed; and mwg-train-elx3).** `captureSignature` must be able to reach the
+1. **Capture coverage first, as its own tasks (mwg-train-bosi, closed; and mwg-train-j3o4).** `captureSignature` must be able to reach the
    states the assertions and contracts describe - a list after a filter returns nothing, a form after a refusal -
    before any board for those states can be compared to anything.
 2. **Wave 2 boards required by the contract and manifests:** contact-lead (mwg-train-cdp0), account-recovery
    (mwg-train-uh0o), and event-registration (mwg-train-wkto, for its 20 manifest-asserted capacity and validation refusals). catalogue needs nothing.
 3. **Seven boards outside Wave 2**, one per archetype, for the states each actually asserts -
    restaurant-ordering both, web-shop empty only, the rest error only, each named in its own bead.
-4. **All ten depend on mwg-train-bosi (capture, closed) and mwg-train-elx3 (comparator state wiring).** A board for a state the capture cannot reach is an artefact nothing
+4. **All ten depend on mwg-train-bosi (capture, closed) and mwg-train-j3o4 (comparator state wiring).** A board for a state the capture cannot reach is an artefact nothing
    reads, which is what the first version of this document would have produced seven of.
 
 The decision is deliberately narrow: it does not claim the corpus needs uniform state coverage, and it does not
