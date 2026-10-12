@@ -41,26 +41,28 @@ test('CPU limit kills a spinner only when enabled; wall-clock limit closes the l
     writeFileSync(join(temp, 'server.mjs'), `
 import { createServer } from 'node:http';
 createServer((req, res) => {
-  if (req.url === '/spin') { for (;;) {} }
+  if (req.url === '/spin') {
+    res.writeHead(200).end('spinning');
+    setImmediate(() => { for (;;) {} });
+    return;
+  }
   res.writeHead(200).end('ok');
 }).listen(Number(process.env.PILOT_PORT), '127.0.0.1');
 `);
     const control = await startCorpusSandbox(temp, { port: 0, cpuSeconds: null, wallMs: 10_000 });
     t.after(() => control.stop());
-    const spinning = fetch(`http://127.0.0.1:${control.port}/spin`).catch(() => {});
+    assert.equal((await fetch(`http://127.0.0.1:${control.port}/spin`)).status, 200, 'control entered spinner');
     await delay(2200);
     assert.equal(control.sandbox.alive, true, 'identical spinner survives without CPU limit');
     assert.doesNotMatch(control.log(), /site gone/, 'unlimited site has not exited');
     await control.stop();
-    await spinning;
 
     const limited = await startCorpusSandbox(temp, { port: 0, cpuSeconds: 2, wallMs: 10_000 });
     t.after(() => limited.stop());
-    const limitedSpin = fetch(`http://127.0.0.1:${limited.port}/spin`).catch(() => {});
+    assert.equal((await fetch(`http://127.0.0.1:${limited.port}/spin`)).status, 200, 'limited run entered spinner');
     for (let i = 0; i < 60 && limited.sandbox.alive; i++) await delay(100);
     assert.equal(limited.sandbox.alive, false, 'RLIMIT_CPU kills the spinning site and its bridge');
     await limited.stop();
-    await limitedSpin;
 
     const wall = await startCorpusSandbox(temp, { port: 0, wallMs: 300 });
     t.after(() => wall.stop());
