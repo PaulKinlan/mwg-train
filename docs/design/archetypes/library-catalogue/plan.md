@@ -176,8 +176,13 @@ All eight criteria are quoted from the two manifests rather than restated.
   `docs/train/targets/tr-16/index.html`.
 - **What the engine offers is capability, not implementation.** The shared engine can render a list, a
   read-by-reference page and a write, and this family uses those for the cultivar index and a reservation
-  receipt. No family in the corpus supports a list whose filter results are asserted, a staff view of pending
-  reservations, or a refusal carrying an HTTP status code.
+  receipt. What this archetype adds is not a new page shape but the assertions attached to these. Two clauses that
+  previously claimed a corpus-wide absence are in fact present elsewhere: `tr-06` (directory-listing)
+  asserts that `GET /makers?craft=woodworking` filters maker cards, so a list with asserted filter results is
+  not absent, and `fam-16`, this archetype's own evaluation family, asserts a 4xx refusal, so a refusal
+  carrying an HTTP status code is not absent either. The staff view of pending reservations is the part no
+  family was found to assert, and that is stated as this archetype's own contribution rather than as a
+  corpus-wide fact, because an absence across all 139 families is not something these documents can support.
 - **No evaluation spec:** there is no `docs/eval/specs/library-catalogue.json`. This contract is validated by
   section order and internal consistency, not against a spec.
 - **The briefs:** two training rows (`tr-16-v1`, `tr-16-v2`) and three evaluation rows (`fam-16-v1` through
