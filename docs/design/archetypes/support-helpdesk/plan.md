@@ -25,7 +25,7 @@ evaluation-side, and the evaluation-side family carries two capabilities the tra
 |---|---|---|---|
 | `tr-08` | train | Community darkroom maintenance and supply requests | a validation assertion that a missing category highlights the field |
 | `tr-28` | train | Outdoor equipment loan repair and missing part tickets | a gear list route in front of the ticket desk |
-| `fam-08` | eval | Community radio station listener inquiries and equipment issues | a **staff queue**, a **reply** write, and collapsible content that must be keyboard operable |
+| `fam-08` | test | Community radio station listener inquiries and equipment issues | a **staff queue**, a **reply** write, and collapsible content that must be keyboard operable |
 
 ## Use case
 
@@ -94,8 +94,7 @@ staff who "access the agent queue", not by any stated method.
 
 ## Journey
 
-Each family declares its own journey. They share a shape — file, land on the receipt, read it back, search for
-it, amend it — and differ in values and in what the third step asserts.
+The declared journeys. For the evaluation family (`fam-08`), these are quoted verbatim from the manifests. For the training families, these are derived summaries of the structured `journey` objects defined in the manifest:
 
 **`tr-08`, the darkroom.** It starts at `/`, files `form#darkroom-ticket-form` with `input[name=reporter]`
 `Julian Alvarez`, `input[name=equipment]` `Beseler 23C II Enlarger` and `textarea[name=description]` `Timer
