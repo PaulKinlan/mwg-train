@@ -2,72 +2,85 @@
 archetype: restaurant-ordering
 type: storefront
 boards: docs/design/archetypes/restaurant-ordering/
+register: docs/provenance/assets/training-reference-boards.md
 ---
 
 # `restaurant-ordering` — aesthetic system
 
-The look of the `restaurant-ordering` type, expanding from the `tr-11`, `tr-27` and `fam-11` reference boards into a full multi-step journey. This document is written in the section order `src/design/contract.mjs` requires of a design document (`DESIGN_SECTIONS`).
+The look of the `storefront` type as the `restaurant-ordering` archetype implements it, expanded from the training family's landing reference into a full multi-step journey. This document is written in the section order [`src/design/contract.mjs`](../../../../src/design/contract.mjs) requires of a design document (`DESIGN_SECTIONS`).
 
-One difference from those documents is stated up front rather than implied: they describe an authored target board, and this describes a set of **pending generated** reference boards for the full multi-step journey. Every value below is the set the generation prompts will declare. Behaviour is in [`plan.md`](plan.md), not in this file.
+**Where this system comes from:** The archetype's visual baseline is declared by the single training family:
+
+- **`tr-11`, Crust & Crumb Micro-Bakery** — [`prompt.txt`](../../training/tr-11/prompt.txt), [`reference.jpg`](../../training/tr-11/reference.jpg).
+
+The evaluation-side family (`fam-11`, Wood-fired Pizzeria) has **no reference board** in `docs/design/training/`; its journeys are prose in `docs/eval/briefs/manifest.jsonl`, and this document does not invent a look for it.
 
 ## Visual thesis
 
-A digital menu and checkout platform for hospitality. The visual language conveys warmth, appetite appeal, and operational efficiency: large photographic imagery for menu items, clear dietary labeling, and highly accessible checkout forms. The palette is grounded in a warm, artisanal aesthetic suitable for a wood-fired pizzeria or sourdough bakery.
+A restaurant ordering page is an appetite trigger followed by an exact logistical contract. The thesis follows from that: **warm, appetizing grounds and accents, strong food photography, and unambiguous fulfillment controls**, with a full error scale held in reserve for validation.
 
-The layout emphasizes rapid visual scanning and frictionless purchasing. The menu prioritizes enticing item cards over dense text. The checkout and cart forms act as rigorous intake steps to ensure no orders are lost or misrouted to the wrong table. The kitchen dashboard strips away marketing elements in favor of high-contrast tabular efficiency.
+The `tr-11` board establishes this directly: a warm, light palette utilizing rich bread and crust tones. The accent marks the forward action to secure the weekly loaf order.
 
 ## Grammar and layout
 
-- One page frame, `--content-frame: 1200px`, centred, with `--page-padding: 1.5rem` at the sides.
-- The menu view (`step1-menu`) presents categorized items (pizzas, sides) in an appealing grid with clear 'Add to Order' affordances.
-- The cart view (`step2-cart`) is an interactive tray allowing quantity adjustments and displaying the running subtotal.
-- The checkout intake (`step3-checkout`) is a clean, single-column form requesting table/collection details and payment configuration.
-- The persistent receipt (`step4-receipt`) serves as a durable digital ticket confirming the order items and current preparation status.
-- The kitchen dashboard (`step5-kitchen`) is a dense, high-contrast list view prioritizing active orders and time-since-placed metrics.
+The reference establishes the grammar:
+- **The menu catalog** is a grid or list layout displaying the menu items. Each card groups an image, description, price, and a primary action to add or customize.
+- **The cart and checkout** form a focused flow. The summary is deliberately pinned to a minimum width: it is the thing that tells the customer *what they are ordering*.
+- **The receipt** presents the order confirmation clearly, often resembling a printed kitchen docket.
+- **The kitchen view** (`fam-11`) is an operational kanban or queue layout, prioritizing ticket statuses.
+- **The empty state** is a centred card explaining that the cart is empty, directing the user back to the menu.
+
+The `tr-11` reference is a **browser viewport**: chrome runs along the top edge with an address bar (`https://crustcrumb.collective/`), depicting the page as a framed composition.
 
 ## Typography
 
-- A highly legible system sans-serif stack for structure, paired with an expressive serif or rounded display font for brand headings to convey artisanal warmth.
-- Exactly one `h1` per page.
-- Clear typographic hierarchy distinguishes menu item titles from ingredient lists.
-- Form inputs feature clear programmatic labels placed directly above the fields.
+Two families: `--font-sans` (the `system-ui` stack) for everything a person reads. 
+
+The display heading is the largest type on the page. Form controls carry **permanent visible labels**, guaranteeing clarity when users select their critical pickup windows.
 
 ## Token usage
 
-| Token | Value | Used for |
-| --- | --- | --- |
-| `--bg-page` | `#fffbf7` | The warm off-white page ground |
-| `--bg-surface` | `#ffffff` | Clean card surfaces and form backgrounds |
-| `--border` | `#e5e7eb` | Soft structural borders |
-| `--accent` | `#dc2626` | Tomato red primary actions, 'Add to Cart' buttons, and active states |
-| `--text-primary` | `#1c1917` | High-contrast dark stone text for primary readability |
-| `--text-muted` | `#78716c` | Muted metadata (ingredients, item descriptions) |
+The `tr-11` palette is explicitly built as a warm, artisanal light theme reflecting a sourdough bakery. All values are declared in the prompt; observed uses reflect their deployment.
+
+**`tr-11`, Crust & Crumb Micro-Bakery — a warm light palette.**
+- **Ground (`cb-bg`):** `#fffbeb` (warm cream)
+- **Surface (`cb-card`):** `#ffffff`
+- **Border (`cb-border`):** `#fde68a`
+- **Text (`cb-bread`):** `#451a03` (deep bread ink)
+- **Accent (`cb-crust`):** `#78350f` (the single primary action, rich crust tone)
+- **Secondary (`cb-warm`):** `#fef3c7`
+
+A generator must carefully preserve these exact hex values and apply them to their respective semantic roles without blending them into generic storefront templates.
 
 ## Spacing rhythm
 
-- `--page-padding: 1.5rem`, `--control-radius: 8px`, `--control-border: 1px solid var(--border)`.
-- Generous padding inside menu cards to showcase imagery and prevent accidental mis-taps on mobile devices.
-- Form fields are separated by ample vertical rhythm, ensuring error messages fit seamlessly between inputs without causing layout jumps.
+- The declared constants: a centred frame (`1200px`), page padding (`1.5rem`), an eight-pixel control radius (`8px`), and a one-pixel border drawn in the border token.
+- **Menu cards** maintain generous internal padding to emphasize the photography and isolate the customization controls.
+- **The intake form** separates its rows generously so that validation feedback can appear inline.
 
 ## Component hierarchy
 
-1. **Brand Header** - Logo mark, main navigation, and persistent cart toggle.
-2. **Menu Grid** - Photographic item cards with titles, prices, and dietary tags.
-3. **Cart Sidebar/Drawer** - Active order breakdown and subtotal calculation.
-4. **Checkout Form** - Fulfillment options (Table or Collection) and contact details.
-5. **Receipt View** - Order reference number, item breakdown, and live status.
-6. **Kitchen Dashboard** - High-density tabular view of pending tickets.
+1. **Brand header** — the mark, the bakery's name, the section navigation.
+2. **Hero image** — an editorial-quality photograph of the food.
+3. **Menu list / Grid** — the available items with pricing and add-to-order controls.
+4. **Intake form** — the labelled fields for entering contact and collection details.
+5. **Receipt view** — the dedicated view for the finalized order.
+6. **Footer** — contact details and copyright.
 
 ## Anti-patterns
 
-- Using low-contrast or illegible decorative fonts for critical pricing or dietary allergen information.
-- Trapping keyboard users inside the cart drawer or failing to return focus when closed.
-- Swallowing validation errors when attempting to checkout an empty cart, stranding the user.
+- **A menu option that cannot be reached by keyboard.**
+- **A modal or step wizard hiding part of the form.** The entry form should be fully visible inline.
+- **Colour alone carrying an error state with no message naming the field.** 
+- A second accent colour competing with the primary action.
+- Placeholder text standing in for a visible label.
 
 ## Rationale
 
-The restaurant ordering use case bridges consumer hospitality and back-of-house operations. Diners require an enticing, frictionless browsing experience, meaning large touch targets and clear dietary labels are critical. Kitchen staff require immediate clarity, meaning the administrative dashboard must be dense and unambiguous. The design system therefore elevates standard e-commerce flows to handle both environments. The warm off-white and tomato red palette provides an artisanal, appetizing aesthetic that reinforces the brand identity while maintaining strict WCAG contrast requirements for accessibility.
+Food ordering is inherently time-sensitive and physically rooted. The user must easily trace exactly what they are ordering, when they will receive it, and where. This requires unambiguous forms and highly visible error states preventing zero-item or un-schedulable submissions.
 
 ## Provenance
 
-- Evaluated against the A1 training families (`tr-11`, `tr-27`) and the A6 evaluation spec (`fam-11` / `restaurant-ordering`).
+- **The declarations:** `docs/design/training/tr-11/prompt.txt`, which names the palette, the structural constants, the page structure, the control labels and the prohibited patterns.
+- **The depictions:** `docs/design/training/tr-11/reference.jpg`. The file and prompt are pinned in [`docs/provenance/assets/training-reference-boards.md`](../../../provenance/assets/training-reference-boards.md).
+- **The behaviour behind the screens:** `docs/train/briefs/manifest.jsonl` (family `tr-11`), and `docs/eval/briefs/manifest.jsonl` (`fam-11`).
