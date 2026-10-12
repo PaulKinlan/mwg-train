@@ -51,8 +51,16 @@ export async function captureSignature({ chrome, projectDir, port, runDir, viewp
   let page = null;
   try {
     server = await startServer(projectDir, { port, dbPath: `${runDir}/${port}.sqlite` });
+
+    // Verify route reachability: do not screenshot and score a 404 page against reference boards
+    const targetUrl = `http://127.0.0.1:${port}${path}`;
+    const res = await fetch(targetUrl).catch(() => ({ status: 0 }));
+    if (res.status === 404) {
+      throw new Error(`captureSignature: path ${path} returned HTTP 404 Not Found`);
+    }
+
     page = await chrome.newPage({ viewport });
-    await page.goto(`http://127.0.0.1:${port}${path}`);
+    await page.goto(targetUrl);
     await page.waitForSettled();
     const signature = await page.evaluate(SIGNATURE_SCRIPT);
     // `collect` is discriminated by whether it was PROVIDED, not by what it returned: a caller whose
