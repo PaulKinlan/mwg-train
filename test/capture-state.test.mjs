@@ -48,6 +48,10 @@ const pages = {
   // cosmetic one.
   '/plain': '<h1>VISIBLE</h1><p>visible words</p>',
   '/hidden': '<h1>VISIBLE</h1><p>visible words</p><div hidden role="alert">invisible words</div>',
+  // mwg-train-0qnu. visibility:hidden on a parent does NOT stop a child rendering - CSS lets the child set
+  // visibility:visible - so the walk must not prune there. display:none is the opposite case and must still prune.
+  '/override': '<div style="visibility:hidden"><p style="visibility:visible">Visible</p></div>',
+  '/none': '<div style="display:none"><p>invisible words</p></div><p>Visible</p>',
 };
 createServer((req, res) => {
   const path = (req.url || '/').split('?')[0];
@@ -111,7 +115,7 @@ test('captureSignature refuses a path that is not root-relative', async () => {
   }
 });
 
-test('hidden markup cannot change how two pages with identical rendered output compare', async () => {
+test('hidden markup neither moves a score nor hides a visible override beneath it', async () => {
   // mwg-train-uh9q. The previous fix recorded `visible: false` on each node and honoured it in isMeasurable, but
   // tokens() maps EVERY node to a structural token and did not honour it - so a page carrying hidden markup
   // scored 0.5 structural similarity against a page with identical rendered output, from a real capture.
@@ -143,6 +147,20 @@ test('hidden markup cannot change how two pages with identical rendered output c
 
     assert.equal(structuralSimilarity(plain, hidden), 1, 'identical rendered output must compare as identical');
     assert.equal(conformanceScore(plain, hidden).structural, 1);
+
+    // A visible child inside a visibility:hidden parent is rendered, so pruning the SUBTREE there loses real
+    // content. This was a false negative: the page matched the visible content but captured no nodes, and
+    // isMeasurable then reported a page with visible text as an empty shell.
+    const override = await captureSignature({ chrome, projectDir, port: 7946, runDir, path: '/override' });
+    assert.deepEqual(override.nodes.map((n) => n.tag), ['p'], 'the visible override is a node');
+    assert.ok(override.nodes[0].textLength > 0, 'and its text is counted');
+    assert.equal(isMeasurable(override), true, 'so the page is measurable and not an empty shell');
+
+    // The control that keeps the fix honest: display:none must STILL prune, because nothing inside it can render.
+    // Without this, "always descend" would be indistinguishable from "never prune".
+    const none = await captureSignature({ chrome, projectDir, port: 7947, runDir, path: '/none' });
+    assert.deepEqual(none.nodes.map((n) => n.tag), ['p'], 'only the element outside the display:none subtree');
+    assert.equal(none.nodes[0].textLength, 'Visible'.length, 'and the hidden words contribute no text');
   } finally {
     if (chrome) await chrome.close().catch(() => {});
   }

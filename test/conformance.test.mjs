@@ -514,7 +514,7 @@ test('the signature script reads text through the skip-aware reader, not textCon
   assert.match(SIGNATURE_SCRIPT, /!SKIP\.has\(child\.tagName\.toLowerCase\(\)\)/);
 });
 
-test('the capture does not emit hidden elements as nodes, so no consumer can include them', () => {
+test('a hidden element is not a node, but a visible child inside one still is', () => {
   // mwg-train-uh9q. Recording `visible: false` per node and honouring it in isMeasurable was NOT enough: tokens()
   // maps every node to a structural token and did not honour it, so a page carrying hidden markup scored 0.5
   // structural similarity against a page with identical rendered output.
@@ -524,9 +524,18 @@ test('the capture does not emit hidden elements as nodes, so no consumer can inc
   // which is exactly what happened here. Asserted in two places because they fail differently: this guards the
   // CODE, and test/capture-state.test.mjs drives two REAL pages with identical rendered output and asserts their
   // node lists are equal and their structural similarity is 1.
-  assert.match(SIGNATURE_SCRIPT, /if \(!isVisible\(child\)\) continue;/, 'a hidden element is refused with its subtree');
+  assert.match(SIGNATURE_SCRIPT, /if \(isVisible\(child\)\) \{/, 'only a rendered element is collected as a node');
+  assert.match(SIGNATURE_SCRIPT, /if \(isPruned\(child\)\) continue;/, 'and only a display-pruning element stops the walk');
   assert.doesNotMatch(SIGNATURE_SCRIPT, /visible: isVisible\(child\)/, 'no redundant flag for consumers to honour');
   assert.doesNotMatch(SIGNATURE_SCRIPT, /node\.visible/, 'and no consumer-side visibility rule to forget');
+  // mwg-train-0qnu, and the reason the two predicates are separate: pruning the WALK on visibility deleted a
+  // child that legitimately set visibility:visible inside a visibility:hidden parent, so a page with visible text
+  // captured no nodes and isMeasurable called it an empty shell. Whether an element is a node and whether the walk
+  // can stop are different questions, and answering the second with the first is a false negative - the direction
+  // that silently refuses to score a real page.
+  const pruned = SIGNATURE_SCRIPT.slice(SIGNATURE_SCRIPT.indexOf('const isPruned'), SIGNATURE_SCRIPT.indexOf('const walk'));
+  assert.match(pruned, /style\.display === 'none' \|\| style\.contentVisibility === 'hidden'/, 'pruning is display-only');
+  assert.doesNotMatch(pruned, /visibility === 'hidden'/, 'visibility NEVER prunes: a child may override it');
 });
 
 test('the signature script asks the DOM whether an element is rendered, and does not read innerText', () => {

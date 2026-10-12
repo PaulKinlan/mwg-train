@@ -74,32 +74,51 @@ export const SIGNATURE_SCRIPT = `return (() => {
     // innerText is deliberately NOT used, though it is the obvious answer, because it fails this very case: called
     // on a NON-RENDERED element the spec falls it back to textContent, so the hidden div reports its own text. It is
     // only correct when read from a rendered ancestor, and this reads per node.
-    if (isVisible(element)) {
+    // An element's OWN text renders only if the element renders, but its children are walked even when it does
+    // not: a visible descendant can override visibility:hidden on its parent (mwg-train-0qnu), and pruning here
+    // lost that text. display:none is different in kind - nothing inside it can render - so it stops there.
+    if (!isPruned(element)) {
+      const own = isVisible(element);
       for (const child of element.childNodes) {
-        if (child.nodeType === 3) total += (child.nodeValue ?? '').trim().length;
+        if (child.nodeType === 3) { if (own) total += (child.nodeValue ?? '').trim().length; }
         else if (child.nodeType === 1 && !SKIP.has(child.tagName.toLowerCase())) total += renderedText(child);
       }
     }
     rendered.set(element, total);
     return total;
   };
+  // Whether the walk can STOP here, which is a different question from whether this element is a node.
+  // display:none and content-visibility:hidden remove the subtree from the rendering tree, so nothing inside can
+  // render and there is nothing below to find. visibility:hidden is deliberately NOT in that class, and that is
+  // mwg-train-0qnu: CSS lets a child set visibility:visible and render inside an invisible parent, so pruning on
+  // visibility deleted those children and a page with VISIBLE text captured no nodes at all - which isMeasurable
+  // then reported as an empty shell. A guard that answers the wrong question is worse than no guard, because it
+  // looked like the safe direction.
+  const pruned = new Map();
+  const isPruned = (element) => {
+    const known = pruned.get(element);
+    if (known !== undefined) return known;
+    const style = getComputedStyle(element);
+    const answer = style.display === 'none' || style.contentVisibility === 'hidden';
+    pruned.set(element, answer);
+    return answer;
+  };
   const walk = (element, depth) => {
     for (const child of element.children) {
       const tag = child.tagName.toLowerCase();
       if (SKIP.has(tag)) continue;
-      // A hidden element is not rendered, so it is not a node and neither is anything inside it. Filtering here,
-      // rather than recording a flag for each consumer to honour, is the point (mwg-train-uh9q): the previous
-      // fix recorded visibility per node and filtered it in isMeasurable, but tokens() maps every node to a
-      // structural token and did not - so two pages with IDENTICAL rendered output scored 0.5 structural
-      // similarity, purely because one carried hidden markup. The nodes array now holds exactly the rendered nodes, so
-      // no consumer can forget, and it is the same rule already applied to boxes, controls, labels and headings.
-  // textLength is the content signal mwg-train-vysz and mwg-train-knch need: the tag says which element
-  // this is, not whether anything was rendered INTO it. An empty <figure></figure> and a <figure> with
-  // content are the same node by tag alone, which is how an empty mount scored perfect parity.
-  // childCount deliberately is NOT captured: it counts elements, not content, so a wrapper around a
-  // wrapper has children and still renders nothing.
-  if (!isVisible(child)) continue;
-    nodes.push({ tag, depth, textLength: renderedText(child), type: child.getAttribute('type') ?? null, name: child.getAttribute('name') ?? null, role: child.getAttribute('role') ?? null });
+      if (isPruned(child)) continue;
+      // A hidden element is not a node (mwg-train-uh9q), but its children are STILL VISITED (mwg-train-0qnu).
+      // The nodes array therefore holds exactly the rendered nodes, so no consumer can forget to filter - which is
+      // what went wrong when a per-node visible flag was honoured by isMeasurable and ignored by tokens.
+      if (isVisible(child)) {
+        // textLength is the content signal mwg-train-vysz and mwg-train-knch need: the tag says which element this
+        // is, not whether anything was rendered INTO it. An empty <figure></figure> and a <figure> with content are
+        // the same node by tag alone, which is how an empty mount scored perfect parity. childCount deliberately is
+        // NOT captured: it counts elements, not content, so a wrapper around a wrapper has children and renders
+        // nothing.
+        nodes.push({ tag, depth, textLength: renderedText(child), type: child.getAttribute('type') ?? null, name: child.getAttribute('name') ?? null, role: child.getAttribute('role') ?? null });
+      }
       walk(child, depth + 1);
     }
   };
