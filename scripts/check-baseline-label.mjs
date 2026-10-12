@@ -388,6 +388,11 @@ export const DOCUMENTS = {
   'package-lock.json': 'spec',
   'pilot/README.md': 'contract',
   'pilot/plan.json': 'input',
+  // The train-side archetype pair for survey-form (bead mwg-train-3p21.1). Registered here rather than beside
+  // the other archetype entries because this branch and the merge-queued library-catalogue branch would
+  // otherwise both insert at the same line and conflict; the classification is the same as theirs.
+  'docs/design/archetypes/survey-form/design.md': 'design',
+  'docs/design/archetypes/survey-form/plan.md': 'design',
 };
 
 /** The documents that must carry the label, derived from the classification. */
