@@ -189,6 +189,37 @@ describe('storeOutput symlink containment', () => {
     }
   });
 
+  test('a symlinked ARM ROOT is refused before the recursive removal', () => {
+    // rev-1's case, mwg-train-0ult. With data/A1_self_generated itself a symlink to <repo>/docs, realpath(root)
+    // is docs/ while the candidate keeps the link's own segments. Those share no prefix, so the old slice
+    // produced unrelated components, every one of them "did not exist yet", the guard returned, and the removal
+    // and copy ran through the link - deleting the committed file and rewriting the subtree. Root absence from
+    // the guard is why this is a distinct case from the intra-repo symlink above: there the root is real and a
+    // component escapes, here the root IS the escape.
+    const { base, repoRoot, source } = makeRepo('rootsymlink');
+    try {
+      // The victim is placed at exactly where the write would land once the root is linked into docs/.
+      const victimDir = join(repoRoot, 'docs', outputRelativePath({ projectId: 'proj', model: 'deepseek/deepseek-flash' }));
+      mkdirSync(victimDir, { recursive: true });
+      const marker = join(victimDir, 'IMPORTANT.md');
+      writeFileSync(marker, 'committed doc');
+
+      const dataDir = join(repoRoot, 'data');
+      mkdirSync(dataDir, { recursive: true });
+      symlinkSync(join(repoRoot, 'docs'), join(dataDir, 'A1_self_generated'), 'dir');
+
+      assert.throws(
+        () => storeOutput({ projectId: 'proj', model: 'deepseek/deepseek-flash' }, 'A1_self_generated', source, { repoRoot }),
+        /SYMLINK_ESCAPE/,
+        'a symlinked arm root was not refused',
+      );
+      assert.ok(existsSync(marker), 'the committed file was deleted through the symlinked arm root');
+      assert.ok(!existsSync(join(victimDir, 'generated.txt')), 'generated output was written through the symlinked arm root');
+    } finally {
+      rmSync(base, { recursive: true, force: true });
+    }
+  });
+
   test('a symlink pointing outside the repository is still refused', () => {
     // The regression guard for the half that already worked before mwg-train-vqb7.
     const { base, repoRoot, source } = makeRepo('outside');
