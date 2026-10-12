@@ -63,11 +63,15 @@ async function snapshotSource(fixture, { store }) {
 }
 
 async function snapshotBody(fixture) {
-  const { mkdtempSync } = await import('node:fs');
+  const { mkdtempSync, rmSync } = await import('node:fs');
   const { tmpdir } = await import('node:os');
   const dir = mkdtempSync(join(tmpdir(), 'eval-snapshot-'));
-  const snapshot = await snapshotSource(fixture, { store: openStore(join(dir, 'data.json'), snapshotSeed(fixture)) });
-  return `${JSON.stringify(snapshot, null, 2)}\n`;
+  try {
+    const snapshot = await snapshotSource(fixture, { store: openStore(join(dir, 'data.json'), snapshotSeed(fixture)) });
+    return `${JSON.stringify(snapshot, null, 2)}\n`;
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 }
 
 function projectFiles(fixture) {
