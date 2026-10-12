@@ -22,7 +22,7 @@ antiPatterns:
   - colour alone carrying an error with no message naming the field
 ---
 
-# `tr-25` target design — Voices of the Mill Valley — Elder Oral History Archive & Transcript Index
+# `tr-25` target design — Voices of the Oakhaven Valley — Elder Oral History Archive & Transcript Index
 
 The aesthetic system of the `tr-25` family's authored target board
 [`index.html`](../../targets/tr-25/index.html). The family's behaviour is specified
@@ -31,7 +31,7 @@ so this body describes what each token is for rather than what it holds.
 
 ## Visual thesis
 
-Voices of the Mill Valley — Elder Oral History Archive & Transcript Index: the board for community elder oral history recordings and transcript index, in a light palette, recognisable by its
+Voices of the Oakhaven Valley — Elder Oral History Archive & Transcript Index: the board for community elder oral history recordings and transcript index, in a light palette, recognisable by its
 own token prefix rather than by a shared template. The board's job is to be a *target*: a student model's
 output is measured against it, so the design states one clear hierarchy - brand header, working panel,
 the form - and nothing decorative competing with it.

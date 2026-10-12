@@ -1,6 +1,6 @@
 {
   "$comment": "The training corpus generated from the tr-* briefs: one project per family x framework, each with its tree hash. `node scripts/scaffold-training-corpus.mjs` re-derives every tree; a hash here must never collide with a hash in pilot/CORPUS.json (original or uplift), which is the disjointness the corpus exists to guarantee.",
-  "generated_at": "2026-10-11T11:32:46.287Z",
+  "generated_at": "2026-10-12T12:50:02.382Z",
   "generator": "scripts/scaffold-training-corpus.mjs",
   "summary": {
     "families": 30,
@@ -13217,7 +13217,7 @@
         "/rides/:id",
         "/dispatch"
       ],
-      "tree_sha": "sha256:6614a48c7158860e76bb1f4d109e915f6e8ca27d61eee91cdcf5813394ff0740",
+      "tree_sha": "sha256:35a62f1bfbc209183bf8094ed98457511fde4e7bead517096f4062a6b1a1eb82",
       "model": "deterministic:no-model",
       "build_key": "tr-21-hono@deterministic:no-model"
     },
@@ -13314,7 +13314,7 @@
         "/rides/:id",
         "/dispatch"
       ],
-      "tree_sha": "sha256:be774abe91f0afca8faded4575df8076b63d0375f0528d24ff9a6f246967f8fb",
+      "tree_sha": "sha256:7eaa606d2e82094cf9720aca255ac7bb6bb78e1147e2ead35da53feeab65fa83",
       "model": "deterministic:no-model",
       "build_key": "tr-21-raw@deterministic:no-model"
     },
@@ -13411,7 +13411,7 @@
         "/rides/:id",
         "/dispatch"
       ],
-      "tree_sha": "sha256:1ffffffb4608aa5c14ac8901dfc36366925ea140b68c9d06eb0b9cf7c088a9d1",
+      "tree_sha": "sha256:4063a95d0a23761e09d419db0bb5c9458a0152f1faa86c0205e064b336cd5b4d",
       "model": "deterministic:no-model",
       "build_key": "tr-21-react@deterministic:no-model"
     },
@@ -13508,7 +13508,7 @@
         "/rides/:id",
         "/dispatch"
       ],
-      "tree_sha": "sha256:8f607fa1d0cbb518cea2be392ec9258ad93c4eda576c329ad76ad52e56167d17",
+      "tree_sha": "sha256:18288a0690099a0acf130de183d89517f8d0d906578f344f113e59101f64ca42",
       "model": "deterministic:no-model",
       "build_key": "tr-21-preact@deterministic:no-model"
     },
@@ -13605,7 +13605,7 @@
         "/rides/:id",
         "/dispatch"
       ],
-      "tree_sha": "sha256:60304c5c29af1f8a25770ffe4fa2a5d63000be32ed9a996d5228d2c9d580c4b3",
+      "tree_sha": "sha256:5cf22dcc587453102afac58fa06b94a311875b965ae718da410c758c5492d913",
       "model": "deterministic:no-model",
       "build_key": "tr-21-vue@deterministic:no-model"
     },
@@ -13702,7 +13702,7 @@
         "/rides/:id",
         "/dispatch"
       ],
-      "tree_sha": "sha256:83154831c835cf66ac7f8e7ab49e54c4c171c9fffdc79d892f3831d529ab51c1",
+      "tree_sha": "sha256:50c906f00c25c2193be2235f84f2eea4e0319c21aae7e7ba8353ea8aac340687",
       "model": "deterministic:no-model",
       "build_key": "tr-21-webcomponents@deterministic:no-model"
     },
@@ -13799,7 +13799,7 @@
         "/rides/:id",
         "/dispatch"
       ],
-      "tree_sha": "sha256:0143c18709b8454d958d1889ebba93f7dcf1fa1253505c85a1e7e3b9ae22fb14",
+      "tree_sha": "sha256:ee970b93d1a06dbea8e4161c73e19724668613732e200d9c5a4dd3d49fc77713",
       "model": "deterministic:no-model",
       "build_key": "tr-21-svelte@deterministic:no-model"
     },

@@ -14,7 +14,7 @@ The look of the `record-form` type as the `docs-site` archetype implements it, e
 | Family | Subject | Token prefix | Declared theme |
 |---|---|---|---|
 | `tr-13` | Urban Soil Collaborative — Composting Handbook & Soil Test Registry | `us-` | "in a light palette" |
-| `tr-25` | Voices of the Mill Valley — Elder Oral History Archive & Transcript Index | `oh-` | "in a light palette" |
+| `tr-25` | Voices of the Oakhaven Valley — Elder Oral History Archive & Transcript Index | `oh-` | "in a light palette" |
 
 The evaluation-side family (`fam-13`, Environmental Sensor Network) has **no reference board** in `docs/design/training/`; its journeys are prose in `docs/eval/briefs/manifest.jsonl`, and this document does not invent a look for it.
 
@@ -54,7 +54,7 @@ All values are declared in the prompts; observed uses reflect their deployment.
 - **Highlight (`us-straw`):** `#fef08a`
 - **Muted (`us-muted`):** `#78716c`
 
-**`tr-25`, Voices of the Mill Valley — an archival academic palette.**
+**`tr-25`, Voices of the Oakhaven Valley — an archival academic palette.**
 - **Ground (`oh-bg`):** `#f8fafc`
 - **Surface (`oh-card`):** `#ffffff`
 - **Border (`oh-border`):** `#e2e8f0`
