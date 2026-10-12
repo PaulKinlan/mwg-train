@@ -99,6 +99,44 @@ test('a viewport that did not take effect is a finding, not a quiet measurement'
   assert.equal(unmeasured[0].code, PARITY_CODES.ARM_UNMEASURED);
 });
 
+test('an empty shell with a node and nothing rendered is ARM_UNMEASURED, not a perfect identity', () => {
+  // mwg-train-7nqt. The empty-shell fix (mwg-train-7pol) closed the path for a shell that HAS nodes and still
+  // renders nothing, and nothing exercised it here: the arm() helper above builds a full page, so every parity
+  // test used a measurable signature and a later edit to the depth heuristic could reopen this silently.
+  //
+  // The shell below is the real SIGNATURE_SCRIPT shape - {tag, depth, type, name, role} - with ONE node and no
+  // boxes or controls. That non-zero length is the point: tests previously only covered the zero-length arm.
+  const shell = () => ({
+    viewport: { width: 1280, height: 900 },
+    nodes: [{ tag: 'div', depth: 0, type: null, name: null, role: null }],
+    boxes: [],
+    controls: [],
+  });
+  const { identity, findings } = crossArmFindings({
+    arms: ['raw', 'hono', 'react'].map((framework) => ({ framework, signature: shell() })),
+    budget: BUDGET,
+  });
+
+  assert.equal(findings.filter((f) => f.code === PARITY_CODES.ARM_UNMEASURED).length, 3,
+    'every arm of the empty family must be reported unmeasured');
+  assert.equal(findings.find((f) => f.code === PARITY_CODES.CROSS_ARM_DEGENERATE)?.code, PARITY_CODES.CROSS_ARM_DEGENERATE,
+    'a family that measured nothing is degenerate, not conformant');
+  assert.equal(identity, null, 'three empty shells must not score a perfect identity');
+
+  // mwg-train-0dit. The message contradicted the arm it described: it said "no nodes" while nodes.length is 1.
+  for (const finding of findings.filter((f) => f.code === PARITY_CODES.ARM_UNMEASURED)) {
+    assert.doesNotMatch(finding.message, /no nodes, boxes or controls/,
+      'the arm has one node, so asserting no nodes is false');
+    assert.match(finding.message, /no semantic nodes, boxes or controls/);
+  }
+
+  // Control: the same call with real pages IS measured. Without this the assertions above would also pass if the
+  // helper or the budget were broken, which is what makes the shell assertions mean emptiness rather than error.
+  const real = crossArmFindings({ arms: [arm('raw'), arm('hono'), arm('react')], budget: BUDGET });
+  assert.notEqual(real.identity, null, 'three real pages must still be measured');
+  assert.equal(real.findings.filter((f) => f.code === PARITY_CODES.ARM_UNMEASURED).length, 0);
+});
+
 test('arms that agree produce no budget findings, and measured drift does', () => {
   const agree = crossArmFindings({ arms: [arm('raw'), arm('hono'), arm('react')], budget: BUDGET });
   assert.deepEqual(agree.findings, [], 'three arms with the same signature must be within budget');
