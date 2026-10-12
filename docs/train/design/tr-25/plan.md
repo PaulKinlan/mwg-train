@@ -4,7 +4,7 @@ brief: docs/train/briefs/manifest.jsonl
 brief_id: tr-25-v1
 ---
 
-# `tr-25` functional specification — Voices of the Mill Valley — Elder Oral History Archive & Transcript Index
+# `tr-25` functional specification — Voices of the Oakhaven Valley — Elder Oral History Archive & Transcript Index
 
 The behaviour of the `tr-25` training family, bound to its canonical brief row
 [`tr-25-v1`](../../briefs/manifest.jsonl) rather than restated from memory: every claim below is

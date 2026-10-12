@@ -38,9 +38,9 @@ Recorded in `pilot/TRAINING_CORPUS.json`, spanning 30 synthetic families (`tr-01
 |---|---:|---:|---:|---:|---|---|
 | **`app_sources`** | **5,422,320** | **5,570,266** | **10,992,586** | **2,748,147** | **[2,061,110, 3,435,183]** | **PRIMARY headline figure** |
 | `project_manifest` | 26,190 | 26,190 | 52,380 | 13,095 | [9,821, 16,369] | `package.json` dependencies & scripts |
-| `harness_metadata` | 949,073 | 949,073 | 1,898,146 | 474,537 | [355,902, 593,171] | `spec.json` harness metadata (EXCLUDED) |
+| `harness_metadata` | 949,094 | 949,094 | 1,898,188 | 474,547 | [355,910, 593,184] | `spec.json` harness metadata (EXCLUDED) |
 | `prompt` | 0 | 0 | 0 | 0 | [0, 0] | Measured zero (documented gap; see below) |
-| *full_tree (all)* | *6,397,583* | *6,545,529* | *12,943,112* | *3,235,778* | *[2,426,834, 4,044,723]* | *Total on-disk tree for comparison* |
+| *full_tree (all)* | *6,397,604* | *6,545,550* | *12,943,154* | *3,235,789* | *[2,426,841, 4,044,736]* | *Total on-disk tree for comparison* |
 
 - **Headline Characters (`app_sources`):** **10,992,586 characters** (5,422,320 original + 5,570,266 uplifted)
 - **Headline Derived Tokens:** **2,748,147 tokens**

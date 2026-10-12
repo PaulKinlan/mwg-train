@@ -58,7 +58,7 @@ The flow the harness drives, with the selectors it uses:
 
 1. Before the form page, visit `/intake`, then choose "Folding walker" in `select[name=mobility]`, then submit the form.
 2. Before the form page, visit `/intake/confirm`, then see "Folding walker".
-3. On `/`, fill form#ride-booking-form: `input[name=passenger]` with "Arthur Pendelton", `input[name=phone]` with "+44 7700 900345", `input[name=pickup]` with "14 Church Lane, Oakham", `input[name=destination]` with "Rutland Memorial Hospital", `input[name=time]` with "10:30", `textarea[name=notes]` with "Front step has handrail"; choose "Folding walker" in `select[name=mobility]`.
+3. On `/`, fill form#ride-booking-form: `input[name=passenger]` with "Arthur Pendelton", `input[name=phone]` with "+44 7700 900345", `input[name=pickup]` with "14 Church Lane, Oakhaven", `input[name=destination]` with "Elmwood Community Hospital", `input[name=time]` with "10:30", `textarea[name=notes]` with "Front step has handrail"; choose "Folding walker" in `select[name=mobility]`.
 4. Submit; the read page shows "Arthur Pendelton", the value typed into the echoed field.
 
 Separately, the brief declares a search flow: `/search` with query parameter `q`="Arthur" lists "Arthur Pendelton" inside `#search-results` and does not list "zzz-decoy".

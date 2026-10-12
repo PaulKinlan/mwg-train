@@ -15,7 +15,7 @@ It is written in the section order that [`src/design/contract.mjs`](../../../../
 Three families implement this archetype, and all are described together because the archetype is the contract they share rather than any one alone:
 
 - **`tr-13`, Urban Soil Collaborative** — backyard composting guidelines and soil test registry.
-- **`tr-25`, Voices of the Mill Valley** — community elder oral history recordings and transcript index.
+- **`tr-25`, Voices of the Oakhaven Valley** — community elder oral history recordings and transcript index.
 - **`fam-13`, Environmental Sensor Network** — developer documentation and API reference (eval split: test).
 
 ## Use case

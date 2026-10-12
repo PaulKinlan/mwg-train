@@ -283,9 +283,10 @@ export function composePrompt(sources) {
     tokenList ? `Use exactly this palette: ${tokenList}. The accent is the only chromatic colour and carries the single primary action.` : '',
     literalList ? `Structural constants: ${literalList}. Require the control to remain identifiable in its default unfocused state by a persistent alternate visual cue (e.g. distinct background fill or contrasting icon) since the control border is low contrast.` : '',
     `Typography: a system UI sans-serif stack, exactly one h1, and section headings that keep a real document outline.`,
-    `Every name, address, price, date, quantity, time and label must be specific to this subject and internally ` +
-      `consistent with the rest of the page; invent it rather than writing placeholder brackets. Keep text runs short - ` +
-      `headings of two to five words, control labels of one to three words - and spell every word correctly. Include a ` +
+    `Every name, address, brand, institution, price, date, quantity, time and label must be entirely fictional, specific to this subject and internally ` +
+      `consistent with the rest of the page; invent fictional entities rather than using real-world ones or writing placeholder brackets. Keep text runs short - ` +
+      `headings of two to five words, control labels of one to three words - and ensure all generated text is clean, legible, and correctly spelled with no garbled prose. Include a ` +
+      (family.family_id === 'tr-21' ? `Destination Hospital: Elmwood General Clinic, 142 Elmwood Boulevard. Strictly fictional hospital name and address; do not use Leicester Royal Infirmary or any real NHS site. Render a single centered desktop browser window, single full-bleed page layout, no split-screen or side-by-side duplicate views. ` : '') +
       `short social-proof row of two or three customer reviews with star ratings wherever the page type allows, each ` +
       `reviewer a different invented name shown beside a small portrait, and a footer carrying the business's contact ` +
       `details. Include at least one large editorial-quality photograph where the subject has something to photograph, ` +
