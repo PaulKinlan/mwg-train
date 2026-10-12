@@ -44,8 +44,8 @@ or a running total — and the record is an increment to it. The dashboard has t
 anything is submitted, and the log has to change what it shows afterwards.
 
 `TYPE-AXIS.md` records `record-form` as **satisfied** — "the one type the corpus covers" — and counts this
-archetype's families among the thirty. So this contract is not proposing a new capability for the corpus;
-it is writing down the shape its two dashboard families already share.
+archetype's two training families among the thirty. So this contract is not proposing a new capability for the corpus;
+it is writing down the shape its two training families already share.
 
 ## Routes and effects
 

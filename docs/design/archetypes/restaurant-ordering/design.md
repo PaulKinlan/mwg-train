@@ -7,7 +7,7 @@ register: docs/provenance/assets/training-reference-boards.md
 
 # `restaurant-ordering` — aesthetic system
 
-The look of the `storefront` type as the `restaurant-ordering` archetype implements it, expanded from the training family's landing reference into a full multi-step journey. This document is written in the section order [`src/design/contract.mjs`](../../../../src/design/contract.mjs) requires of a design document (`DESIGN_SECTIONS`).
+The look of the `record-form` type as the `restaurant-ordering` archetype implements it, expanded from the training family's landing reference into a full multi-step journey. This document is written in the section order [`src/design/contract.mjs`](../../../../src/design/contract.mjs) requires of a design document (`DESIGN_SECTIONS`).
 
 **Where this system comes from:** The archetype's visual baseline is declared by the single training family:
 
