@@ -370,6 +370,41 @@ test('isMeasurable correctly identifies empty SPA shells and legitimately render
   assert.equal(isMeasurable({ nodes: [{ tag: 'div', depth: 0 }], boxes: [], controls: [{ tag: 'input', type: 'text', name: 'q' }] }), true);
 });
 
+test('isMeasurable is TOTAL: no input makes it throw, every input yields a boolean', () => {
+  // mwg-train-75cq. The empty-SPA-root rewrite replaced a total predicate with one that read `node.tag.includes`,
+  // so a node whose tag key was absent or null threw a TypeError out of this exported guard. The harm is not the
+  // crash itself but where it lands: conformanceScore calls isMeasurable and then raises its OWN TypeError naming
+  // the unmeasured arm, and that diagnostic was replaced by "cannot read properties of undefined".
+  //
+  // The cases below are the whole input domain this function can meet, and the assertion is deliberately the
+  // CONTRACT rather than the values: it must return a boolean, and it must not throw, for any of them.
+  const cases = [
+    ['a node with an absent tag key', { nodes: [{ depth: 0 }], boxes: [], controls: [] }],
+    ['a node with a null tag', { nodes: [{ tag: null, depth: 0 }], boxes: [], controls: [] }],
+    ['a node with a non-string tag', { nodes: [{ tag: 5 }], boxes: [], controls: [] }],
+    ['a node with an empty-string tag', { nodes: [{ tag: '' }], boxes: [], controls: [] }],
+    ['a null node entry', { nodes: [null] }],
+    ['an undefined node entry', { nodes: [undefined] }],
+    ['a null entry beside a real node', { nodes: [null, { tag: 'button' }] }],
+    ['no nodes key', {}],
+    ['an empty signature', {}],
+    ['an undefined signature', undefined],
+    ['a null signature', null],
+  ];
+  for (const [label, signature] of cases) {
+    let result;
+    assert.doesNotThrow(() => { result = isMeasurable(signature); }, `${label} made isMeasurable throw`);
+    assert.equal(typeof result, 'boolean', `${label} returned ${typeof result}, not a boolean`);
+  }
+
+  // And the semantics the fix preserves, so totality was not bought by changing any existing answer.
+  assert.equal(isMeasurable({ nodes: [{ depth: 0 }] }), true, 'a tagless node is not a generic container, so it counts');
+  assert.equal(isMeasurable({ nodes: [{ tag: null }] }), true, 'a null tag is still not a div, span or custom element');
+  assert.equal(isMeasurable({ nodes: [{ tag: 'div' }] }), false, 'a div-only shell is still unmeasured');
+  assert.equal(isMeasurable({ nodes: [{ tag: 'app-root' }] }), false, 'a custom-element mount is still unmeasured');
+  assert.equal(isMeasurable({ nodes: [null] }), false, 'a null entry is not evidence that anything rendered');
+});
+
 test('an unmeasurable signature is refused, not scored a perfect 1.000', () => {
   // mwg-train-z92. structuralSimilarity literally begins `if (a.length === 0 && b.length === 0) return 1`
   // (conformance.mjs:119), geometrySimilarity ends `denominator === 0 ? 1` (:180) and controlSimilarity has
