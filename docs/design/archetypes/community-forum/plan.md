@@ -38,6 +38,7 @@ The families declare their own routes. The archetype's common shape is an index 
 | `GET /topics` | `fam-14` | page | serves the discussion forum index |
 | `GET /topics/:id` | `fam-14` | read-by-reference | serves a discussion thread and its nested replies |
 | `GET /new-topic` | `fam-14` | page | serves the topic creation form |
+| `GET /login` | `fam-14` | page | serves the authentication portal for session identity |
 | `POST /topics/:id/reply` | `fam-14` | write | persists a reply with session credentials and redirects |
 | `GET /admin/moderation` | `fam-14` | page | serves the moderator queue of flagged posts |
 | `POST /admin/moderation/:id/hide` | `fam-14` | write | removes or masks the flagged post on the public topic view |

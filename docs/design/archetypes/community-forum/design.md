@@ -19,7 +19,7 @@ The evaluation-side family (`fam-14`, Urban Gardening Forum) has **no reference 
 
 A community forum must organize densely nested conversations without overwhelming the reader. The thesis follows from that: **a structured, low-glare reading environment, clear typographic hierarchies for nested replies, and distinct surfaces separating the index from the thread**.
 
-The `tr-20` board establishes this directly: a light, warm parchment palette invoking sheet music and traditional folk archives. The primary accent guides the user toward contributing notes, while the layout gives the threaded discussion room to breathe.
+The `tr-20` board establishes this directly: a light, warm parchment palette invoking sheet music and traditional folk archives. The primary gold accent guides the user toward contributing notes, while the layout gives the threaded discussion room to breathe.
 
 ## Grammar and layout
 
@@ -45,9 +45,9 @@ The `tr-20` palette is explicitly built as a light parchment theme reflecting a 
 - **Ground (`fv-parchment`):** `#fefce8` (warm light yellow/parchment)
 - **Surface (`fv-card`):** `#ffffff`
 - **Border (`fv-border`):** `#fef08a`
-- **Text (`fv-text`):** `#292524` (deep ink)
-- **Accent (`fv-brown`):** `#450a0a` (the single primary action, deep brown)
-- **Secondary (`fv-gold`):** `#b45309` (emphasis or status indicators)
+- **Text / Primary Ink (`fv-brown`):** `#450a0a` (deep brown ink for headings and dark ground text)
+- **Accent (`fv-gold`):** `#b45309` (the single primary action and active states)
+- **Secondary Ink (`fv-text`):** `#292524` (deep ink for body copy)
 - **Muted (`fv-muted`):** `#78716c`
 
 A generator must carefully preserve these exact hex values and apply them to their respective semantic roles without blending them into generic forum templates.
