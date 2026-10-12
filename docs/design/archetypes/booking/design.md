@@ -124,38 +124,6 @@ Each family relies on these color signatures to establish its own identity.
 
 ## Spacing rhythm
 
-The pilot scale is rem-based and tight at the bottom. The gap between sibling elements is `0.5rem` more often than anything else. Card padding runs `1.25rem` to `2rem`. The compact `0.25rem 0.65rem` inset belongs to the pills and the badges. Form controls sit between the two, around `0.7rem 0.85rem`.
-
-The rhythm's job is to make the two-column workbench and the single-column receipt feel like the same page at different widths. 
-
-## Component hierarchy
-
-Read from the pilot `demo/index.html`:
-- `header.top-bar` with `nav.top-nav` - the persistent chrome.
-- A **demo state switcher** for verification without a server.
-- `nav.stepper-nav` holding a progress stepper.
-- The **summary** column, a labelled region carrying what is being booked.
-- `section.card.form-card` containing the fields, and - for the error state - `#form-error-banner` with `role="alert"`.
-- The receipt page carries the ticket: success mark, reference, the booking's details, a perforated divider, and the QR block.
-
-Each training family implements its equivalent semantic structure matching its `plan.md` form definition.
-
-## Anti-patterns
-
-- **Two primary actions competing.** The accent marks the forward action of a state. The browse board puts a solid primary button on each of five cards and badges besides, which turns the signal into wallpaper.
-- **A step indicator that disagrees with the flow it depicts.** The pilot boards show three different step models.
-- **A different logo on every screen.** The pilot boards carry five different marks behind one constant wordmark.
-- **Inventing what the spec withholds.** A session, a password field, a payment step, a cancellation route, a confirmation email, or an expiry on the reference - none of these are declared.
-- **A seat grid that changes size.** (Present in the original pilot boards).
-
-## Rationale
-
-The type is `record-form` - a page with a form, a write that stores one row, and a read-back by reference - and every visual choice here serves that shape. Dark or light grounds and bordered cards let a schedule, a form and a receipt be the same kind of object at different widths; one accent keeps *what do I do next* unambiguous. The ticket treatment for the receipt is the visual form of *this row now exists and can be read back*.
-
-
-
-## Spacing rhythm
-
 The scale is rem-based and tight at the bottom. Measured frequency across the stylesheet, the gap
 between sibling elements is `0.5rem` more often than anything else, then `0.35rem`, then `1.25rem` and
 `1rem`; card padding runs `1.25rem` to `2rem`, with the widest surfaces using `3rem 2rem`. The compact
@@ -172,6 +140,9 @@ becomes `column-reverse` so the primary button still reads first.
 ## Component hierarchy
 
 Read from `demo/index.html`:
+
+Each training family implements its equivalent semantic structure matching its `plan.md` form definition.
+
 
 - `header.top-bar` with `nav.top-nav` (`aria-label="Main Navigation"`, `aria-current="page"` on the
   current item) - the persistent chrome.
