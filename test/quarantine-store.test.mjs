@@ -5,7 +5,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -49,7 +49,7 @@ test('store verification is fail-closed', (t) => {
   const same = gitRepo(join(root, 'twin'), 'https://github.example/PaulKinlan/mwg-train');
   assert.throws(() => assertQuarantineStore(same, { repoRoot: publicRepo }), /STORE_IS_PUBLIC_REPO/);
   // the real thing passes
-  assert.equal(assertQuarantineStore(store, { repoRoot: publicRepo }), store);
+  assert.equal(assertQuarantineStore(store, { repoRoot: publicRepo }), realpathSync(store));
 });
 
 test('default-write routing: quarantined arms go to the store, cleared arms to the public tree', (t) => {

@@ -118,7 +118,7 @@ corpus records) is neither accepted nor served.
 - **Portability Check**: Run `npm run check:portability` (`npm ci && npm test`) locally to verify macOS suite greenness without requiring a CI runner.
 - **Browser Automation**: `src/corpus/cdp.mjs` automatically resolves standard Chrome/Chromium installation paths on macOS (`/Applications/...`). If your binary is elsewhere, export `CHROME_PATH=/path/to/chrome`.
 - **Registry**: Installation via `npm ci` relies on the canonical `registry.npmjs.org`. If using a restricted mirror, some exact lockfile versions (e.g., `hono 4.13.13`, `svelte 5.57.2`) may be missing.
-- **Limitations**: Untrusted code sandboxing (`bwrap`) is fundamentally Linux-only; the pipeline fails closed rather than running generated servers unsandboxed on macOS.
+- **Limitations**: Untrusted code sandboxing (`bwrap`) is fundamentally Linux-only. Safely executing model-generated servers on macOS is deferred to the upcoming `mwg-train-i5i2.5` sandbox uplift.
 
 Design decisions and their reasons are recorded in the bead for each change and in the documents
 above; a number in the docs is only as good as the check that recomputes it.
