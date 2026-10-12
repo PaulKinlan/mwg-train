@@ -36,9 +36,9 @@ uplift rule that only works on one of them is a rule that works on a third of th
 | --- | --- | --- | --- |
 | `raw` | platform, no framework | HTML string | The control: much of MWG is about what a framework does or hides for you |
 | `react` | 19.2.0 | `htm/react` + `react-dom/server` | The dominant framework family |
-| `preact` | 10.27.2 | `htm/preact` + `preact-render-to-string` | A second runtime in the same family |
-| `vue` | 3.5.22 | runtime template compiler + `@vue/server-renderer` | A non-React framework |
-| `hono` | 4.9.12 | Hono routing + `hono/html` templates | A modern server framework, no virtual DOM |
+| `preact` | 10.29.8 | `htm/preact` + `preact-render-to-string` | A second runtime in the same family |
+| `vue` | 3.5.43 | runtime template compiler + `@vue/server-renderer` | A non-React framework |
+| `hono` | 4.13.7 | Hono routing + `hono/html` templates | A modern server framework, no virtual DOM |
 | `webcomponents` | platform, no dependency | custom elements + shadow DOM | The platform's own component primitive: no build and no dependency, upgrading the same server-rendered tree |
 | `svelte` | 5.57.2 | Svelte 5, server-rendered | The one arm with a compile step; the boundary is named below |
 
