@@ -38,8 +38,9 @@ test('refuses a missing, empty or non-string corpusRoot rather than defaulting t
 // The positive control. Without this the three assertions above would still pass if createViewer simply threw on
 // everything, which would be a worse bug than the one being fixed.
 test('still accepts a real corpus directory', (t) => {
-  const viewer = createViewer({ corpusRoot: join(ROOT, 'pilot'), stateDir: mkdtempSync(join(tmpdir(), 'viewer-corpus-ok-')) });
-  t.after(() => { viewer.pool.stopAll(); viewer.server.close(); viewer.liveServer.close(); });
+  const stateDir = mkdtempSync(join(tmpdir(), 'viewer-corpus-ok-'));
+  const viewer = createViewer({ corpusRoot: join(ROOT, 'pilot'), stateDir });
+  t.after(() => { viewer.pool.stopAll(); viewer.server.close(); viewer.liveServer.close(); try { rmSync(stateDir, { recursive: true, force: true }); } catch {} });
   assert.ok(viewer.server && viewer.liveServer, 'a real corpus must still produce a working viewer');
 });
 
