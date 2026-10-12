@@ -1,7 +1,7 @@
 # Provenance: which archetypes need reference boards for state coverage
 
 - **Decision:** boards are needed wherever a state is defined by the archetype's own contract (`plan.md`) or
-  asserted by a family in the manifests, and the comparator can reach it. On that test Wave 2 needs two boards it
+  asserted by a family in the manifests, and the comparator can reach it. On that test Wave 2 needs three boards it
   does not have, and seven archetypes outside Wave 2 need one or more. All of them depend on the capture work in
   mwg-train-bosi before any comparison can use them.
 - **Decided:** 2026-10-12. Corrected twice the same day after review (mwg-train-pgcv, mwg-train-fjfn): the first
@@ -47,9 +47,8 @@ that the board **depicts** the required empty page. So that board is a response 
 not the "supplied visual reference rather than a response to an assertion" that the first version called it. The
 one Wave 2 archetype that has a state board is the one that demonstrates what state boards are for.
 
-So Wave 2 needs two boards it does not have: contact-lead (mwg-train-cdp0) and account-recovery
-(mwg-train-uh0o). catalogue has the board its contract calls for, and event-registration is covered under
-source 2.
+So Wave 2 needs three boards it does not have: contact-lead (mwg-train-cdp0), account-recovery
+(mwg-train-uh0o), and event-registration (mwg-train-wkto). catalogue has the board its contract calls for.
 
 ### Source 2: the manifests
 
@@ -104,14 +103,14 @@ target" as sufficient. It is necessary and not sufficient - the comparison also 
 
 ## What follows
 
-1. **Capture coverage first, as its own task (mwg-train-bosi).** `captureSignature` must be able to reach the
+1. **Capture coverage first, as its own tasks (mwg-train-bosi, closed; and mwg-train-elx3).** `captureSignature` must be able to reach the
    states the assertions and contracts describe - a list after a filter returns nothing, a form after a refusal -
    before any board for those states can be compared to anything.
 2. **Wave 2 boards required by the contract and manifests:** contact-lead (mwg-train-cdp0), account-recovery
    (mwg-train-uh0o), and event-registration (mwg-train-wkto, for its 20 manifest-asserted capacity and validation refusals). catalogue needs nothing.
 3. **Seven boards outside Wave 2**, one per archetype, for the states each actually asserts -
    restaurant-ordering both, web-shop empty only, the rest error only, each named in its own bead.
-4. **All nine depend on mwg-train-bosi.** A board for a state the capture cannot reach is an artefact nothing
+4. **All ten depend on mwg-train-bosi (capture, closed) and mwg-train-elx3 (comparator state wiring).** A board for a state the capture cannot reach is an artefact nothing
    reads, which is what the first version of this document would have produced seven of.
 
 The decision is deliberately narrow: it does not claim the corpus needs uniform state coverage, and it does not
