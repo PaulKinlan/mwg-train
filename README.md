@@ -105,5 +105,16 @@ owner-auth scan (`scripts/scan-owner-auth.mjs`, config `docs/eval/owner-identity
 closed - a pair that cannot be shown free of owner-identifying material (in its trees AND its
 corpus records) is neither accepted nor served.
 
+## Supported Environments
+
+**Linux (Canonical Execution)**
+- The deterministic `check:all` gate, model evaluation runs, and headless browser corpus executions (e.g., `fleet-gate pilot-run`) run canonically on Linux. 
+- Pipeline guarantees around container-based isolation, headless Chrome, and filesystem paths are tuned and validated against this target.
+
+**macOS (Development)**
+- The test suite (`npm test`), tooling, and corpus viewer are fully supported on macOS for local development.
+- `src/corpus/cdp.mjs` automatically resolves standard Chrome/Chromium installation paths on macOS (`/Applications/...`).
+- Pipeline assertions around temporary directories natively account for macOS symlink differences (such as `/var` resolving to `/private/var`), ensuring tests stay green without compromising the quarantine store boundary.
+
 Design decisions and their reasons are recorded in the bead for each change and in the documents
 above; a number in the docs is only as good as the check that recomputes it.

@@ -28,6 +28,8 @@ const CHROME_CANDIDATES = [
   '/usr/bin/google-chrome-stable',
   '/usr/bin/chromium',
   '/usr/bin/chromium-browser',
+  '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+  '/Applications/Chromium.app/Contents/MacOS/Chromium',
 ].filter(Boolean);
 
 export class CdpError extends Error {
@@ -47,7 +49,7 @@ function chromeBinary() {
       /* try the next one */
     }
   }
-  throw new CdpError('NO_CHROME', `no Chrome binary found (tried ${CHROME_CANDIDATES.join(', ')})`);
+  throw new CdpError('NO_CHROME', `no Chrome binary found (tried ${CHROME_CANDIDATES.join(', ')}). Set CHROME_PATH environment variable if installed elsewhere.`);
 }
 
 /** A single CDP connection that multiplexes one browser target and its page sessions. */
@@ -136,13 +138,16 @@ async function fetchJson(url, attempts = 40) {
 export async function launchChrome({ proxy = null, args = [] } = {}) {
   const userDataDir = mkdtempSync(join(tmpdir(), 'mwg-chrome-'));
   const binary = chromeBinary();
+  const isRoot = process.getuid && process.getuid() === 0;
+  const inContainer = existsSync('/.dockerenv');
+  const needsNoSandbox = process.env.MWG_NO_SANDBOX || isRoot || inContainer;
   const child = spawn(
     binary,
     [
       '--headless=new',
       '--remote-debugging-port=0',
       `--user-data-dir=${userDataDir}`,
-      '--no-sandbox',
+      ...(needsNoSandbox ? ['--no-sandbox'] : []),
       '--disable-gpu',
       '--disable-dev-shm-usage',
       '--hide-scrollbars',
