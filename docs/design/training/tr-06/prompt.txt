@@ -14,7 +14,7 @@ Art direction: Highland Guild of Craftsmen — Artisan Directory & Open Studios:
 
 Use exactly this palette: #451a03 (cg-bark), #b45309 (cg-copper), #fdfbf7 (cg-parchment), #f5f5f4 (cg-stone), #e7e5e4 (cg-border), #292524 (cg-text), #78716c (cg-muted). The accent is the only chromatic colour and carries the single primary action.
 
-Structural constants: control-radius 8px, content-frame 1200px, control-border 1px solid var(--cg-border), page-padding 1.5rem.
+Structural constants: control-radius 8px, content-frame 1200px, control-border 1px solid var(--cg-border), page-padding 1.5rem. Require the control to remain identifiable in its default unfocused state by a persistent alternate visual cue (e.g. distinct background fill or contrasting icon) since the control border is low contrast.
 
 Typography: a system UI sans-serif stack, exactly one h1, and section headings that keep a real document outline.
 

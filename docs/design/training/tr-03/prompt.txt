@@ -14,7 +14,7 @@ Art direction: Terraform Ceramics Co-op — Kiln Firing Shelf Booking: the page 
 
 Use exactly this palette: #c2410c (tc-clay), #fef3c7 (tc-sand), #78350f (tc-earth), #292524 (tc-slate), #fafaf9 (tc-bg), #e7e5e4 (tc-border), #ffffff (tc-surface). The accent is the only chromatic colour and carries the single primary action.
 
-Structural constants: control-radius 8px, content-frame 1200px, control-border 1px solid var(--tc-border), page-padding 1.5rem.
+Structural constants: control-radius 8px, content-frame 1200px, control-border 1px solid var(--tc-border), page-padding 1.5rem. Require the control to remain identifiable in its default unfocused state by a persistent alternate visual cue (e.g. distinct background fill or contrasting icon) since the control border is low contrast.
 
 Typography: a system UI sans-serif stack, exactly one h1, and section headings that keep a real document outline.
 

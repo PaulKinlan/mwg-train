@@ -14,7 +14,7 @@ Art direction: Grain & Silver Darkroom Co-op — Equipment & Chemistry Helpdesk:
 
 Use exactly this palette: #09090b (dr-bg), #18181b (dr-surface), #27272a (dr-card), #3f3f46 (dr-border), #f59e0b (dr-amber), #f4f4f5 (dr-text), #a1a1aa (dr-muted). The accent is the only chromatic colour and carries the single primary action.
 
-Structural constants: control-radius 8px, content-frame 1200px, control-border 1px solid var(--dr-border), page-padding 1.5rem.
+Structural constants: control-radius 8px, content-frame 1200px, control-border 1px solid var(--dr-border), page-padding 1.5rem. Require the control to remain identifiable in its default unfocused state by a persistent alternate visual cue (e.g. distinct background fill or contrasting icon) since the control border is low contrast.
 
 Typography: a system UI sans-serif stack, exactly one h1, and section headings that keep a real document outline.
 

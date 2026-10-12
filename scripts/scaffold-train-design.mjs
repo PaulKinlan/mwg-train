@@ -329,6 +329,7 @@ the form - and nothing decorative competing with it.
 - ${mediaSentence}
 - Composition order follows the task: header with brand and navigation, then the working surface with the
   form, with supporting panels beside or below it.
+- **Control borders:** the palette intentionally declares low-contrast control borders (\`< 3:1\`). Because these borders fall below the WCAG 1.4.11 boundary contrast requirement, every control MUST remain identifiable in its default unfocused state by an alternate persistent visual cue (e.g. distinct background fill or contrasting icon).
 - The routes the real project serves are functional claims and live in [\`plan.md\`](plan.md), not here.
 
 ## Typography

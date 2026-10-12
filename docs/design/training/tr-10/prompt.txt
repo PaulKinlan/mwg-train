@@ -14,7 +14,7 @@ Art direction: Greenwood Safe Streets — Community Crosswalk & Traffic Survey: 
 
 Use exactly this palette: #1e3a8a (ss-navy), #d97706 (ss-amber), #ffffff (ss-card), #f8fafc (ss-bg), #cbd5e1 (ss-border), #0f172a (ss-text), #64748b (ss-muted). The accent is the only chromatic colour and carries the single primary action.
 
-Structural constants: control-radius 8px, content-frame 1100px, control-border 1px solid var(--ss-border), page-padding 1.5rem.
+Structural constants: control-radius 8px, content-frame 1100px, control-border 1px solid var(--ss-border), page-padding 1.5rem. Require the control to remain identifiable in its default unfocused state by a persistent alternate visual cue (e.g. distinct background fill or contrasting icon) since the control border is low contrast.
 
 Typography: a system UI sans-serif stack, exactly one h1, and section headings that keep a real document outline.
 

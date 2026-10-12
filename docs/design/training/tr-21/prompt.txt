@@ -14,7 +14,7 @@ Art direction: Good Neighbour Community Transit — Volunteer Hospital Lift Book
 
 Use exactly this palette: #0f766e (gn-teal), #0284c7 (gn-blue), #ffffff (gn-card), #cbd5e1 (gn-border), #f8fafc (gn-bg), #0f172a (gn-text), #64748b (gn-muted). The accent is the only chromatic colour and carries the single primary action.
 
-Structural constants: control-radius 8px, content-frame 1200px, control-border 1px solid var(--gn-border), page-padding 1.5rem.
+Structural constants: control-radius 8px, content-frame 1200px, control-border 1px solid var(--gn-border), page-padding 1.5rem. Require the control to remain identifiable in its default unfocused state by a persistent alternate visual cue (e.g. distinct background fill or contrasting icon) since the control border is low contrast.
 
 Typography: a system UI sans-serif stack, exactly one h1, and section headings that keep a real document outline.
 

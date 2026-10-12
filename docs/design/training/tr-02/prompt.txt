@@ -14,7 +14,7 @@ Art direction: Foxhill Orchard & Press — Seasonal Cider Pre-Orders: the page f
 
 Use exactly this palette: #fdfbf7 (fo-bg), #382013 (fo-bark), #b45309 (fo-amber), #f59e0b (fo-gold), #fef3c7 (fo-cream), #e2d9cc (fo-border), #261a12 (fo-text), #786657 (fo-muted). The accent is the only chromatic colour and carries the single primary action.
 
-Structural constants: control-radius 8px, content-frame 1200px, control-border 1px solid var(--fo-border), page-padding 1.5rem.
+Structural constants: control-radius 8px, content-frame 1200px, control-border 1px solid var(--fo-border), page-padding 1.5rem. Require the control to remain identifiable in its default unfocused state by a persistent alternate visual cue (e.g. distinct background fill or contrasting icon) since the control border is low contrast.
 
 Typography: a system UI sans-serif stack, exactly one h1, and section headings that keep a real document outline.
 

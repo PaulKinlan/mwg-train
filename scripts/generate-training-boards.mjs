@@ -281,7 +281,7 @@ export function composePrompt(sources) {
     otherRoutes.length ? `The site also has ${otherRoutes.length} other pages, which are NOT on this page and must not appear on it.` : '',
     `Art direction: ${visualThesis}`,
     tokenList ? `Use exactly this palette: ${tokenList}. The accent is the only chromatic colour and carries the single primary action.` : '',
-    literalList ? `Structural constants: ${literalList}.` : '',
+    literalList ? `Structural constants: ${literalList}. Require the control to remain identifiable in its default unfocused state by a persistent alternate visual cue (e.g. distinct background fill or contrasting icon) since the control border is low contrast.` : '',
     `Typography: a system UI sans-serif stack, exactly one h1, and section headings that keep a real document outline.`,
     `Every name, address, price, date, quantity, time and label must be specific to this subject and internally ` +
       `consistent with the rest of the page; invent it rather than writing placeholder brackets. Keep text runs short - ` +
@@ -419,10 +419,9 @@ export function renderRegister(entries, { generatedOn = null } = {}) {
       `each board is generated in one ${BOARD_WIDTH}×${BOARD_HEIGHT} 16:9 frame. The attestation is a property of the ` +
       `gateway's own response, not a cryptographic proof about the pixels, and no seed was set: the bytes are not ` +
       `reproducible from the same prompt.`,
-    `- **Prompts:** composed deterministically from each family's own committed sources - its canonical (\`-v1\`) row in ` +
+    `- **Prompts:** The boards were generated from an earlier prompt revision. The current canonical prompts are composed deterministically from each family's own committed sources - its canonical (\`-v1\`) row in ` +
       `[\`docs/train/briefs/manifest.jsonl\`](../../train/briefs/manifest.jsonl), its [\`plan.md\`](../../train/design) routes, ` +
-      `journeys and fields, and its \`design.md\` palette, typography and anti-patterns - and committed verbatim beside the ` +
-      `board as \`prompt.txt\`. The prompt digest below is over those exact bytes. Every prompt names the RECORDED date ` +
+      `journeys and fields, and its \`design.md\` palette, typography and anti-patterns. Every prompt names the RECORDED date ` +
       `\`${BOARD_PROMPT_DATE}\` as today and asks for every event after it: the second batch, asked for "the near future" ` +
       `without being told when now was, dated twenty boards in 2023 and 2024. Composing rather than hand-writing means the ` +
       `owner's own description of the site is in every prompt verbatim, and the art direction is the family's own ` +
@@ -446,8 +445,7 @@ export function renderRegister(entries, { generatedOn = null } = {}) {
     `| --- | --- | --- | ---: | --- | --- | --- | --- |`,
     ...rows,
     ``,
-    `The JPEG digests prove the handed-off files' integrity. The prompt digests prove the committed prompt is the text ` +
-      `that was sent. Neither is a reproduction claim.`,
+    `The JPEG digests prove the handed-off files' integrity. The boards were generated from an earlier prompt revision; the prompt digests below reflect the current canonical prompts, which append a WCAG contrast direction. Neither is a reproduction claim.`,
     ``,
   ].join('\n');
 }
