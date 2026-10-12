@@ -13,7 +13,7 @@ A multi-step booking journey: a schedule or service list to browse, one form tha
 receipt read back at the reference the server issued. This document is the contract for the `booking`
 archetype - what a user can do, what the server does about it, and what a journey can assert.
 
-It covers the ten implementing families in this corpus: the seven training-side families (`tr-01`, `tr-03`, `tr-17`, `tr-19`, `tr-21`, `tr-24`, `tr-27`), the two evaluation-side families (`fam-01`, `fam-r01`), and the sealed pilot evaluation target (`docs/eval/specs/booking.json`).
+It covers the nine implementing families in this corpus: the seven training-side families (`tr-01`, `tr-03`, `tr-17`, `tr-19`, `tr-21`, `tr-24`, `tr-27`), the two evaluation-side families (`fam-01`, `fam-r01`), and the sealed pilot evaluation target (`docs/eval/specs/booking.json`).
 
 It is written in the section order that [`src/design/contract.mjs`](../../../../src/design/contract.mjs)
 requires of a plan (`PLAN_SECTIONS`). It describes the accepted targets and generated implementations, **not** the
@@ -38,8 +38,8 @@ the flow is a booking, not a payment, so no money moves and no card is ever aske
 | `tr-21` | train | volunteer driver hospital appointment lift coordination | transport logistics matching |
 | `tr-24` | train | weekend farmers market pitch booking and power requirements | space allocation with resource limits |
 | `tr-27` | train | parish church acoustic concert seat selection | venue seating reservations |
-| `fam-01` | test | community bicycle repair workshop appointments | bench time slot assignment |
-| `fam-r01` | test (repair) | village hall booking | date scheduling and accessibility |
+| `fam-01` | dev | community bicycle repair workshop appointments | bench time slot assignment |
+| `fam-r01` | dev | village hall booking | date scheduling and accessibility (repair) |
 
 Three absences are part of the contract rather than gaps in it. The specs declare no session at all
 (`session: false`, `password_field: null`), no edit or delete route, and no second form. A
