@@ -25,7 +25,7 @@ evaluation-side, and the evaluation-side family carries two capabilities the tra
 |---|---|---|---|
 | `tr-08` | train | Community darkroom maintenance and supply requests | a validation assertion that a missing category highlights the field |
 | `tr-28` | train | Outdoor equipment loan repair and missing part tickets | a gear list route in front of the ticket desk |
-| `fam-08` | test | Community radio station listener inquiries and equipment issues | a **staff queue**, a **reply** write, and collapsible content that must be keyboard operable |
+| `fam-08` | eval | Community radio station listener inquiries and equipment issues | a **staff queue**, a **reply** write, and collapsible content that must be keyboard operable |
 
 ## Use case
 

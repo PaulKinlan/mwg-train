@@ -1,6 +1,6 @@
 ---
 archetype: restaurant-ordering
-type: storefront
+type: record-form
 axis: docs/train/briefs/TYPE-AXIS.md
 boards: docs/design/archetypes/restaurant-ordering/
 register: docs/provenance/assets/training-reference-boards.md
@@ -99,4 +99,4 @@ The families define specific observable assertions:
 
 - **The behaviour** is derived from `docs/train/briefs/manifest.jsonl` (family `tr-11`) and `docs/eval/briefs/manifest.jsonl` (`fam-11`). Route names, field slugs, control types, selectors, fill values, and all acceptance criteria are quoted from those rows rather than invented.
 - **The reference** is the training family's generated board, digest-pinned in `docs/provenance/assets/training-reference-boards.md`; the prompt that declared it is committed beside it. The journey boards are planned and unpinned.
-- **The axis position** is quoted from `docs/train/briefs/TYPE-AXIS.md`, where `storefront` is listed.
+- **The axis position** is derived from `docs/train/briefs/TYPE-AXIS.md` rather than quoted: this archetype is not named on any row, and its type follows from the `record-form` row's own accounting, which closes over all thirty training families and exactly fifteen archetypes.
