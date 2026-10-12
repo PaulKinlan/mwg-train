@@ -205,6 +205,11 @@ export const DOCUMENTS = {
   'pilot/CORPUS.json': 'floor-report',
   'docs/design-brief-2026-10-08.md': 'design',
   'docs/design.md': 'design',
+  // The train-side archetypes that have a canonical pair but no committed boards yet (mwg-train-0bkp.1,
+  // community-forum). Classified as design rather than spec because no docs/eval/specs/<archetype>.json
+  // exists for them, so check:design-schema does not validate them against one.
+  'docs/design/archetypes/community-forum/design.md': 'design',
+  'docs/design/archetypes/community-forum/plan.md': 'design',
   'docs/design/archetypes/account-recovery/README.md': 'provenance',
   'docs/design/archetypes/account-recovery/demo/README.md': 'design',
   'docs/design/archetypes/account-recovery/design.md': 'design',
