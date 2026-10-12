@@ -390,6 +390,18 @@ test('isMeasurable is TOTAL: no input makes it throw, every input yields a boole
     ['an empty signature', {}],
     ['an undefined signature', undefined],
     ['a null signature', null],
+    // mwg-train-z14v. An ARRAY-LIKE has a truthy length and no `.some`, so it passed the empty check and the call
+    // threw at the first `.some` - which made the contract asserted above false. The collections are normalised
+    // now, and these are the shapes that made the claim wrong.
+    ['an array-like in place of nodes', { nodes: { 0: { tag: 'div' }, length: 1 } }],
+    ['an array-like in place of boxes', { nodes: [{ tag: 'p', textLength: 1 }], boxes: { 0: {}, length: 1 } }],
+    ['an array-like in place of controls', { nodes: [{ tag: 'div' }], controls: { 0: {}, length: 1 } }],
+    ['a string in place of nodes', { nodes: 'nope' }],
+    ['a number in place of nodes', { nodes: 7 }],
+    ['null nodes beside real boxes', { nodes: null, boxes: [{ tag: 'main' }] }],
+    ['nodes of primitives', { nodes: [1, 'a', null, true] }],
+    ['an array-like node entry', { nodes: [{ 0: 'x', length: 1 }] }],
+    ['strings for all three collections', { nodes: 'x', boxes: 'y', controls: 'z' }],
   ];
   for (const [label, signature] of cases) {
     let result;

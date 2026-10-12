@@ -228,14 +228,17 @@ const isWrapperTag = (tag) => {
 
 /** Whether a signature carries anything that can actually be compared. */
 export function isMeasurable(signature) {
-  const nodeCount = signature?.nodes?.length ?? 0;
-  const boxCount = signature?.boxes?.length ?? 0;
-  const controlCount = signature?.controls?.length ?? 0;
+  // nodes, boxes and controls must be ARRAYS. Anything else - an array-like, a string, an object - is not a
+  // signature this function can read, and reading it as "no records" keeps the guard total instead of throwing
+  // from inside it. mwg-train-z14v: `{nodes: {0: {...}, length: 1}}` has a truthy length, so it passed the empty
+  // check and the call then threw at the first `.some`. A guard whose failure mode is a throw has handed the
+  // caller nothing to act on, which is the same defect 75cq fixed for a node and this fixes for the collection.
+  const nodes = Array.isArray(signature?.nodes) ? signature.nodes : [];
+  const boxCount = Array.isArray(signature?.boxes) ? signature.boxes.length : 0;
+  const controlCount = Array.isArray(signature?.controls) ? signature.controls.length : 0;
 
   if (boxCount > 0 || controlCount > 0) return true;
-  if (nodeCount === 0) return false;
-
-  const nodes = signature.nodes;
+  if (nodes.length === 0) return false;
 
   // A role, name or type is a semantic attribute rather than a tag, so it qualifies any node, wrapper or not.
   // This is what keeps `<div role="alert">` measurable while `<div>` is not.
