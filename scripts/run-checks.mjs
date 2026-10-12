@@ -64,6 +64,7 @@ export const EXCLUDED = new Map([
   ['check:served-routes:strict', 'requires a spawned HTTP server'],
   ['check:cross-arm-parity', 'requires Chrome'],
   ['check:cross-arm-parity:strict', 'requires Chrome'],
+  ['check:portability', 'requires network (npm ci) and runs the entire test suite'],
 ]);
 
 /**

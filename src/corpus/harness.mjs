@@ -17,6 +17,7 @@ import { spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import process from 'node:process';
 import { setTimeout as delay } from 'node:timers/promises';
 
 import { RULES, SECURITY_CHECKS } from './rules.mjs';
@@ -668,6 +669,9 @@ export async function runProjectVersion({ chrome, projectDir, spec, label, port,
     label,
     base_url: base,
     started_at: new Date().toISOString(),
+    platform: process.platform,
+    node_version: process.version,
+    browser: chrome.version,
     journeys: [],
     console: [],
     network: [],
