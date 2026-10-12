@@ -165,6 +165,7 @@ export function serve(routes, { port = 0 } = {}) {
  */
 export function createRoutes(spec, store) {
   const defects = new Set(spec.defects ?? []);
+  const unpersistedRecords = [];
   const nav = spec.nav ?? [];
   const page = (title, body) => document({ title, nav, body });
 
@@ -174,7 +175,9 @@ export function createRoutes(spec, store) {
     if (fieldSpec.widget === 'custom' && defects.has('no-keyboard-widget')) {
       // The seeded defect: a custom widget that looks like a dropdown but is a div, has no label and
       // cannot be reached or operated from the keyboard.
-      return `<p><div role="combobox" class="amount-widget" data-value="${escapeHtml(fieldSpec.options?.[0] ?? '')}">${(fieldSpec.options ?? []).map((option) => `<span>${escapeHtml(option)}</span>`).join('')}</div></p>`;
+      const hiddenInput = `<input type="hidden" name="${escapeHtml(fieldSpec.name)}" value="${escapeHtml(fieldSpec.options?.[0] ?? '')}">`;
+      const spans = (fieldSpec.options ?? []).map((option) => `<span tabindex="-1" onclick="this.parentNode.dataset.value=this.innerText; this.parentNode.querySelector('input').value=this.innerText;">${escapeHtml(option)}</span>`).join('');
+      return `<div><div role="combobox" class="amount-widget" data-value="${escapeHtml(fieldSpec.options?.[0] ?? '')}">${hiddenInput}${spans}</div></div>`;
     }
     if (!withLabel || defects.has('no-label')) {
       const id = `field-${fieldSpec.name}`;
@@ -220,9 +223,16 @@ export function createRoutes(spec, store) {
       routes.push({
         path: pageSpec.path,
         handler: (ctx) => {
-          const record = store.get(pageSpec.collection, ctx.params.id);
+          let record = store.get(pageSpec.collection, ctx.params.id);
+          if (!record && defects.has('no-persistence')) {
+            const index = unpersistedRecords.findIndex((r) => r.id === ctx.params.id && r._collection === pageSpec.collection);
+            if (index !== -1) {
+              record = unpersistedRecords[index];
+              unpersistedRecords.splice(index, 1);
+            }
+          }
           if (!record) return ctx.send(404, page('Not found', '<h1>Not found</h1>'));
-          const rows = (pageSpec.show ?? Object.keys(record)).filter((key) => key !== 'id').map((key) => `<dt>${escapeHtml(key)}</dt><dd>${escapeHtml(record[key] ?? '')}</dd>`).join('');
+          const rows = (pageSpec.show ?? Object.keys(record)).filter((key) => key !== 'id' && key !== '_collection').map((key) => `<dt>${escapeHtml(key)}</dt><dd>${escapeHtml(record[key] ?? '')}</dd>`).join('');
           return ctx.send(200, page(pageSpec.heading ?? 'Confirmation', [`<h1>${escapeHtml(pageSpec.heading ?? 'Confirmation')}</h1>`, `<dl>${rows}</dl>`]));
         },
       });
@@ -256,10 +266,15 @@ export function createRoutes(spec, store) {
             const names = [...(skipRequired ? [] : requiredMissing), ...formatBad].map((fieldSpec) => fieldSpec.name).join(', ');
             return render(ctx, `Please provide a valid ${names}`);
           }
-          const record = { id: `${pageSpec.collection}-${store.list(pageSpec.collection).length + 1}`, ...ctx.request.form };
+          const nextId = store.list(pageSpec.collection).length + unpersistedRecords.filter(r => r._collection === pageSpec.collection).length + 1;
+          const record = { id: `${pageSpec.collection}-${nextId}`, ...ctx.request.form };
           // `no-persistence` is the seeded "confirmation is rebuilt from memory" defect: the record never
           // reaches the store, so it is gone on the next request.
-          if (!defects.has('no-persistence')) store.insert(pageSpec.collection, record);
+          if (!defects.has('no-persistence')) {
+            store.insert(pageSpec.collection, record);
+          } else {
+            unpersistedRecords.push({ ...record, _collection: pageSpec.collection });
+          }
           return ctx.redirect((pageSpec.success ?? '/').replace(':id', record.id));
         },
       });
@@ -271,10 +286,19 @@ export function createRoutes(spec, store) {
       method: 'POST',
       path: saveSpec.path,
       handler: (ctx) => {
-        const item = store.get(saveSpec.collection, ctx.request.form.id);
-        if (item && !defects.has('no-persistence')) {
+        let item = store.get(saveSpec.collection, ctx.request.form.id);
+        if (!item && defects.has('no-persistence')) {
+          item = unpersistedRecords.find((r) => r.id === ctx.request.form.id && r._collection === saveSpec.collection);
+        }
+        if (item) {
           const { id: _id, ...extra } = ctx.request.form;
-          store.insert(saveSpec.into, { id: `${store.list(saveSpec.into).length + 1}`, title: item.title, meta: item.meta ?? '', ...extra });
+          const nextId = store.list(saveSpec.into).length + unpersistedRecords.filter(r => r._collection === saveSpec.into).length + 1;
+          const newRecord = { id: `${nextId}`, title: item.title, meta: item.meta ?? '', ...extra };
+          if (!defects.has('no-persistence')) {
+            store.insert(saveSpec.into, newRecord);
+          } else {
+            unpersistedRecords.push({ ...newRecord, _collection: saveSpec.into });
+          }
         }
         return ctx.redirect(saveSpec.success ?? saveSpec.path);
       },
