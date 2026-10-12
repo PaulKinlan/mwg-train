@@ -13,8 +13,10 @@
  *
  * The check works from what the page renders, not from the file's bytes:
  *
- *   1. The markup is reduced to rendered text: comments, and the bodies of script, style, template,
- *      noscript and textarea elements, are not part of a rendering.
+ *   1. The markup is reduced to rendered text: comments (including an unterminated one, which runs to the end
+ *      of the document), the bodies of elements that never render their contents (script, style, template,
+ *      noscript), of raw-text elements whose content is text (title, textarea) and of the elements whose
+ *      children are fallback content (iframe, object, video, audio, canvas), are not part of a rendering.
  *   2. Elements a browser does not render are masked out of that text, including everything inside them.
  *      `hidden` counts however it is spelled, because it is a boolean attribute whose presence is what
  *      hides - `hidden`, `hidden=""`, `hidden="false"` and `hidden="until-found"` all hide an element - and
@@ -36,10 +38,23 @@
  * a finding rather than a skip; and a page must display every board its archetype commits, so deleting an
  * image fails instead of shrinking the page towards passing.
  *
- * THE BOUNDARY, stated rather than implied: this is a markup-level check. It reads text and element
- * nesting, so an image hidden by a stylesheet, by a class, or by `aria-hidden` is NOT detected - that is a
- * layout question and needs a browser, which is what the browser-driven pilot checks are for. Every case
- * this check is expected to catch is expressed in the markup.
+ * THE CLAIM, narrowed to what this check actually establishes, because seven review rounds showed the broad
+ * version could not be met without an HTML parser:
+ *
+ *   It pins the captions in the five COMMITTED comparison pages under
+ *   `docs/design/archetypes/<family>/demo/compare.html` to the boards those pages display and to the JPEGs the
+ *   archetype commits. Markup is read as tags, attribute text and the text between tags, so a pattern that
+ *   appears only inside an attribute is not markup, and a raw-text element's content (title, textarea) is
+ *   text. It fails closed on markup its tokenizer cannot parse and on an image whose source it cannot read,
+ *   so making the input unreadable is not a way to pass.
+ *
+ * WHAT IT DOES NOT CLAIM: it does not model every element content model, and it does not model layout. An
+ * image hidden by a stylesheet, by a class or by `aria-hidden` is not detected, and neither is content whose
+ * content model the tokenizer does not implement - a `<` inside `<svg><desc>`, `<option>`, `<select>` or
+ * foreign-content CDATA. Closing those needs an HTML parser rather than another excluded-element pattern,
+ * which is why the broad claim was withdrawn in review round 7: a deliberately crafted page that models its
+ * own content is out of scope. What this check is for is the pages this repository commits, read the way a
+ * browser reads them, plus failing closed when it cannot read what it is given.
  *
  * Everything here is offline: file reads and hashing only.
  */
@@ -153,19 +168,22 @@ export function stripComments(html) {
  * The parts of a comparison page a browser renders, with the parts it does not removed.
  *
  * Comments go, and so do the bodies of two kinds of element: those that never render their contents (script,
- * style, template, noscript, textarea) and those whose children are FALLBACK content, rendered only when the
- * element itself cannot be - iframe, object, video, audio and canvas. An iframe renders its document rather
- * than its children, so a board and its caption inside one are not on screen (review round 5). `<picture>` is
- * deliberately not in this list: its `<img>` child is what renders.
+ * style, template, noscript), raw-text elements whose content is text rather than markup (title, textarea),
+ * and those whose children are FALLBACK content, rendered only when the element itself cannot be - iframe,
+ * object, video, audio and canvas. An iframe renders its document rather than its children, so a board and
+ * its caption inside one are not on screen (review round 5); a title's content is text, so apparent tags
+ * inside one are not elements at all (review round 7). `<picture>` is deliberately not in this list: its
+ * `<img>` child is what renders.
  *
- * See the module header for the boundary this draws: layout is out of scope.
+ * This list is not a content-model implementation and does not claim to be; see the module header for the
+ * claim and its limits.
  *
  * @param {string} html
  * @returns {string}
  */
 export function renderedText(html) {
   return stripComments(html)
-    .replace(/<(script|style|template|noscript|textarea|iframe|object|video|audio|canvas)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, ' ');
+    .replace(/<(script|style|template|noscript|title|textarea|iframe|object|video|audio|canvas)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, ' ');
 }
 
 /**
@@ -514,7 +532,7 @@ function main() {
     console.error(`check:board-captions - FAILED: every board a comparison page renders must carry a caption that matches the committed board.`);
     process.exit(1);
   }
-  console.log(`check:board-captions - PASS - checked ${result.captions} caption(s) for ${result.boards} displayed board(s) across ${result.pages} demo comparison page(s)`);
+  console.log(`check:board-captions - PASS - checked ${result.captions} caption(s) for ${result.boards} displayed board(s) across ${result.pages} committed comparison page(s)`);
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main();

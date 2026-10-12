@@ -200,7 +200,7 @@ test('the command line fails with a diagnostic when pointed at a repository with
 
 test('the command line passes with a count when the repository is in step', () => {
   const stdout = execFileSync(process.execPath, [CHECK], { cwd: ROOT, encoding: 'utf8' });
-  assert.match(stdout, /check:board-captions - PASS - checked \d+ caption\(s\) for \d+ displayed board\(s\) across \d+ demo comparison page\(s\)/);
+  assert.match(stdout, /check:board-captions - PASS - checked \d+ caption\(s\) for \d+ displayed board\(s\) across \d+ committed comparison page\(s\)/);
 });
 
 test('a single-quoted image source is read, not skipped', () => {
@@ -308,6 +308,32 @@ test('hidden is honoured however it is spelled, and from an ancestor', () => {
       assert.equal(result.captions, 0, `${what}: a hidden ancestor hides the caption too`);
     });
   }
+});
+
+test('a title element\u2019s content is text, so apparent tags inside it are not markup', () => {
+  // Review round 7: <title> is a raw-text element. Its content is text, so the apparent img and caption
+  // inside it create no element and no caption - the page shows no board.
+  const prefix = sha256(BOARD).slice(0, 10);
+  const html = `<head><title><img src='../step1-grid.jpg'><code>../step1-grid.jpg</code> SHA-256 <code>${prefix}\u2026</code></title></head>
+<body><p>Nothing here is illustrated.</p></body>`;
+  withFixture({ html }, (holder) => {
+    const result = checkBoardCaptions({ repoRoot: holder.root });
+    assert.equal(result.ok, false, 'title content must not satisfy the page check');
+    assert.equal(result.boards, 0, 'title content is text, not a displayed board');
+    assert.equal(result.captions, 0, 'title content is text, not a caption');
+  });
+});
+
+test('an ordinary title does not interfere with the page', () => {
+  const prefix = sha256(BOARD).slice(0, 10);
+  const html = `<head><title>Step 1 - browse</title></head>
+<body><img src="../step1-grid.jpg" alt="board"><p>Board <code>../step1-grid.jpg</code> (1376 \u00d7 768, SHA-256 <code>${prefix}\u2026</code>)</p></body>`;
+  withFixture({ html }, (holder) => {
+    const result = checkBoardCaptions({ repoRoot: holder.root });
+    assert.deepEqual(result.findings, [], result.findings.join(' | '));
+    assert.equal(result.boards, 1);
+    assert.equal(result.captions, 1);
+  });
 });
 
 test('an apparent board and caption inside an attribute value are not markup', () => {
