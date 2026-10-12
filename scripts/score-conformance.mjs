@@ -84,7 +84,7 @@ async function main() {
       const arm = await captureSignature({ chrome, projectDir: storedUplifted, port: port++, runDir });
       const score = scoreArm({ target: target.signature, raw, arm });
       results.push({ framework: project.framework, ...score });
-      console.log(`score-conformance: ${project.projectId} raw ${score.raw.toFixed(3)} -> target ${score.target.toFixed(3)} (delta ${score.delta >= 0 ? '+' : ''}${score.delta.toFixed(3)})`);
+      console.log(`score-conformance: ${project.projectId} raw ${Number.isFinite(score.raw) ? score.raw.toFixed(3) : 'N/A'} -> target ${Number.isFinite(score.target) ? score.target.toFixed(3) : 'N/A'} (delta ${Number.isFinite(score.delta) ? (score.delta >= 0 ? '+' : '') + score.delta.toFixed(3) : 'N/A'})`);
       
       // Cleanup ephemeral uplifted temp directory; outputs store retains the persisted copies.
       rmSync(upliftedTemp, { recursive: true, force: true });
@@ -119,6 +119,9 @@ async function main() {
  * not be an occasion to re-measure it - re-scoring these families would re-run browser measurements and
  * could shift committed evaluation numbers while claiming only to add a line.
  */
+const fmt = (value, digits = 3) => (Number.isFinite(value) ? value.toFixed(digits) : 'N/A');
+const fmtDelta = (value, digits = 3) => (Number.isFinite(value) ? (value >= 0 ? '+' : '') + value.toFixed(digits) : 'N/A');
+
 export function renderConformanceMarkdown(report) {
   const results = report.arms;
   return [
@@ -132,11 +135,11 @@ export function renderConformanceMarkdown(report) {
     '| --- | --- | --- | --- | --- | --- | --- |',
     ...results.map(
       (row) =>
-        `| ${row.framework} | ${row.raw.toFixed(3)} | ${row.target.toFixed(3)} | ${row.delta >= 0 ? '+' : ''}${row.delta.toFixed(3)} | ` +
-        `${row.axes.arm.structural.toFixed(3)} | ${row.axes.arm.geometry.toFixed(3)} | ${row.axes.arm.controls.toFixed(3)} |`,
+        `| ${row.framework} | ${fmt(row.raw)} | ${fmt(row.target)} | ${fmtDelta(row.delta)} | ` +
+        `${fmt(row.axes.arm.structural)} | ${fmt(row.axes.arm.geometry)} | ${fmt(row.axes.arm.controls)} |`,
     ),
     '',
-    `Mean delta across ${results.length} framework(s): ${report.mean_delta >= 0 ? '+' : ''}${report.mean_delta.toFixed(3)}`,
+    `Mean delta across ${results.length} framework(s): ${fmtDelta(report.mean_delta)}`,
     '',
   ].join('\n');
 }

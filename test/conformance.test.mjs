@@ -352,18 +352,20 @@ test('isMeasurable correctly identifies empty SPA shells and legitimately render
 
   // An empty SPA root: body > div#root. depth=0, no semantic boxes or controls.
   assert.equal(isMeasurable({ nodes: [{ tag: 'div', depth: 0 }], boxes: [], controls: [] }), false);
-  
-  // A nested empty shell: body > div#root > div.app. All are divs/spans, no boxes/controls.
-  // Wait, if there's a depth > 0 node, the new isMeasurable returns TRUE! 
-  // Wait, the finding said: "Checking depth > 0 is bypassed by any wrapper (e.g. body > div#root > div.app gives depth 0 and 1, but boxes=[] and controls=[]). When boxes and controls are empty, there is no rendered content regardless of nested empty divs."
-  // Wait, I updated isMeasurable to check `node.tag !== 'div' && node.tag !== 'span'`, NOT `depth > 0`.
+
+  // A nested empty shell or custom element mount: body > div#root > app-root.
+  // When boxes and controls are empty, generic wrappers (div, span, custom elements) without roles
+  // are not sufficient to be considered rendered content.
   assert.equal(isMeasurable({ nodes: [{ tag: 'div', depth: 0 }, { tag: 'div', depth: 1 }], boxes: [], controls: [] }), false);
   assert.equal(isMeasurable({ nodes: [{ tag: 'div', depth: 0 }, { tag: 'span', depth: 1 }], boxes: [], controls: [] }), false);
+  assert.equal(isMeasurable({ nodes: [{ tag: 'div', depth: 0 }, { tag: 'app-root', depth: 1 }], boxes: [], controls: [] }), false);
 
-  // But if there is a <p> tag, it is measurable even if it is not a semantic box
+  // But if there is a semantic inline tag (like <p>), it is measurable even if it is not a box
   assert.equal(isMeasurable({ nodes: [{ tag: 'div', depth: 0 }, { tag: 'p', depth: 1 }], boxes: [], controls: [] }), true);
-  
-  // If there are boxes or controls, it's obviously measurable
+  // Semantic attributes also count as measurable content
+  assert.equal(isMeasurable({ nodes: [{ tag: 'div', depth: 0, role: 'alert' }], boxes: [], controls: [] }), true);
+
+  // If there are boxes or controls, it is obviously measurable
   assert.equal(isMeasurable({ nodes: [{ tag: 'div', depth: 0 }], boxes: [box('main', 0, 0, 1, 1)], controls: [] }), true);
   assert.equal(isMeasurable({ nodes: [{ tag: 'div', depth: 0 }], boxes: [], controls: [{ tag: 'input', type: 'text', name: 'q' }] }), true);
 });

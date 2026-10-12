@@ -208,9 +208,13 @@ export function isMeasurable(signature) {
   if (nodeCount === 0) return false;
   
   // Empty SPA root check: if the page rendered no semantic boxes and no controls, it must have at least
-  // one node that is not a generic wrapper (<div id="root"> or <span>) to be considered measured.
-  // A nested tree of purely divs/spans (like body > div#root > div.app) with no boxes or controls is an empty unmeasured shell.
-  return signature.nodes.some(node => node.tag !== 'div' && node.tag !== 'span');
+  // one node that is not a generic container to be considered measured.
+  // A nested tree of purely divs, spans, or custom element mounts (e.g. body > div#root > app-root) 
+  // with no roles or text-bearing tags is an empty unmeasured shell.
+  return signature.nodes.some(node => 
+    (node.tag !== 'div' && node.tag !== 'span' && !node.tag.includes('-')) ||
+    node.role !== null || node.name !== null || node.type !== null
+  );
 }
 
 /** The three axes and their weighted mean, as one object so a report never has to recompute them. */
