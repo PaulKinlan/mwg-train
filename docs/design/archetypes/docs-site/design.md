@@ -2,72 +2,98 @@
 archetype: docs-site
 type: record-form
 boards: docs/design/archetypes/docs-site/
+register: docs/provenance/assets/training-reference-boards.md
 ---
 
 # `docs-site` — aesthetic system
 
-The look of the `docs-site` type, expanding from the `tr-13`, `tr-25` and `fam-13` reference boards into a full multi-step journey. This document is written in the section order `src/design/contract.mjs` requires of a design document (`DESIGN_SECTIONS`).
+The look of the `record-form` type as the `docs-site` archetype implements it, expanded from the two training families' landing references into a full multi-step journey. This document is written in the section order [`src/design/contract.mjs`](../../../../src/design/contract.mjs) requires of a design document (`DESIGN_SECTIONS`).
 
-One difference from those documents is stated up front rather than implied: they describe an authored target board, and this describes a set of **pending generated** reference boards for the full multi-step journey. Every value below is the set the generation prompts will declare. Behaviour is in [`plan.md`](plan.md), not in this file.
+**Two systems, and they must not be averaged.** This archetype's training families represent two distinct domains built upon light palettes:
+
+| Family | Subject | Token prefix | Declared theme |
+|---|---|---|---|
+| `tr-13` | Urban Soil Collaborative — Composting Handbook & Soil Test Registry | `us-` | "in a light palette" |
+| `tr-25` | Voices of the Mill Valley — Elder Oral History Archive & Transcript Index | `oh-` | "in a light palette" |
+
+The evaluation-side family (`fam-13`, Environmental Sensor Network) has **no reference board** in `docs/design/training/`; its journeys are prose in `docs/eval/briefs/manifest.jsonl`, and this document does not invent a look for it.
 
 ## Visual thesis
 
-A technical documentation portal and API reference system. The visual language conveys precision, legibility, and developer focus: crisp typography, high-contrast code blocks, and an unambiguous navigational hierarchy. The palette is grounded in a sharp, modern technical aesthetic providing comfortable reading for long-form content.
+A documentation site exists to make deep reading and referencing effortless. Both families resolve this by utilizing high-contrast typography, distinct hierarchical sidebars for navigation, and calm grounds that prevent visual fatigue during long reading sessions.
 
-The layout emphasizes the reading experience and spatial orientation. Documentation articles use wide, comfortable line lengths, while persistent sidebars keep the reader grounded in the overall document structure. The integrated feedback form is unobtrusive but accessible, positioned at the end of the content flow.
+The composting handbook (`tr-13`) utilizes an **organic earthy palette** — incorporating leaf and straw tones to ground the content. The oral history archive (`tr-25`) utilizes an **archival academic palette** — utilizing deep indigo and gold to signal preservation and authority.
 
 ## Grammar and layout
 
-- One page frame, `--content-frame: 1400px` (wider to accommodate sidebars), centred, with `--page-padding: 2rem` at the sides.
-- The landing page (`step1-landing`) introduces the platform with a hero section and quick-start links.
-- The documentation index (`step2-index`) presents a high-level grid of topics, API categories, and integration guides.
-- The article view (`step3-article`) is a rigorous three-column reading page: a left navigation tree, a central content column with code blocks, and a right-side scrollspy table of contents.
-- The feedback confirmation (`step4-feedback`) is a clean, authoritative receipt panel confirming the stored rating and developer notes.
-- The empty state (`step5-empty`) is a helpful "not found" search panel directing the reader to related API concepts or the main index.
+Both families declare the structural constants `--content-frame: 1200px` (or similar constraints), `--page-padding: 1.5rem`, `--control-radius: 8px` and `--control-border: 1px solid var(--*-border)`, and both declare the same page structure: a brand header, a navigation bar, a main content area, one content section, the working form, and a footer.
+
+- **The article layout** relies heavily on a split view: a persistent sidebar containing the table of contents or index, and a dominant reading column.
+- **Hierarchical navigation** utilizes semantic heading structures. Active sections are visually highlighted (e.g., via `aria-current="page"`).
+- **Code examples and transcripts** are presented within distinctive blocked containers. `fam-13` specifically demands contrast-compliant styling for code snippet blocks.
+- **Both references are browser viewports** with chrome and an address bar (`https://urbansoil.shop/` and `https://voicesof.studio/`), depicting the page as a framed composition.
+- **The intake form** is rendered open and inline, either at the bottom of the article for feedback (`fam-13`, `tr-25`) or on a dedicated registry page (`tr-13`).
+- **The empty state** is a search modal or page that clearly names the failed query.
 
 ## Typography
 
-- A highly legible system sans-serif stack for prose, and a distinct monospace stack (e.g. `ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas`) for code snippets and endpoints.
-- Exactly one `h1` per page, serving as the main article title.
-- Section headings maintain a strict document outline to organize technical payloads and integration steps.
-- Form inputs feature clear programmatic labels placed directly above the fields.
+- A system UI sans-serif stack, as declared by both families.
+- Exactly one `h1` on each reference establishing the document or site's title.
+- **Semantic structure:** Both families prioritize proper document outlining and heading hierarchy (`h2`, `h3`) to ensure long-form text remains readable. Form controls carry permanent visible labels.
 
 ## Token usage
 
-| Token | Value | Used for |
-| --- | --- | --- |
-| `--bg-page` | `#ffffff` | The clean white page ground on all reading states |
-| `--bg-surface` | `#f8fafc` | Subtle code block backgrounds and sidebar panels |
-| `--border` | `#e2e8f0` | Structural borders dividing sidebars and content |
-| `--accent` | `#6366f1` | Indigo primary actions, active navigation highlights, and submit buttons |
-| `--text-primary` | `#0f172a` | High-contrast slate text for extended prose readability |
-| `--text-muted` | `#64748b` | Muted metadata and inactive table of contents links |
+All values are declared in the prompts; observed uses reflect their deployment.
+
+**`tr-13`, Urban Soil Collaborative — an organic earthy palette.**
+- **Ground (`us-card` / `us-bg` implicitly):** `#ffffff`
+- **Border (`us-border`):** `#e7e5e4`
+- **Text (`us-text`):** `#292524`
+- **Accent (`us-earth`):** `#3b251a` (deep brown action token)
+- **Secondary (`us-leaf`):** `#15803d` (green emphasis or status)
+- **Highlight (`us-straw`):** `#fef08a`
+- **Muted (`us-muted`):** `#78716c`
+
+**`tr-25`, Voices of the Mill Valley — an archival academic palette.**
+- **Ground (`oh-bg`):** `#f8fafc`
+- **Surface (`oh-card`):** `#ffffff`
+- **Border (`oh-border`):** `#e2e8f0`
+- **Text (`oh-text`):** `#1e293b`
+- **Accent (`oh-indigo`):** `#1e1b4b` (primary action, deep academic indigo)
+- **Secondary (`oh-gold`):** `#b45309` (emphasis or status)
+- **Muted (`oh-muted`):** `#64748b`
+
+Both families are explicitly built as light palettes. A generator must carefully preserve these exact hex values and apply them to their respective semantic roles without blending them.
 
 ## Spacing rhythm
 
-- `--page-padding: 2rem`, `--control-radius: 6px`, `--control-border: 1px solid var(--border)`.
-- Generous line-height (`1.6` or greater) and constrained line lengths (e.g. `70ch`) in the central content column to ensure comfortable reading of dense technical material.
-- Form fields are separated by ample vertical rhythm, ensuring error messages fit seamlessly between inputs without causing layout jumps.
+- The declared constants are shared: a centred frame, page padding, an eight-pixel control radius, and a one-pixel border drawn in each family's own border token.
+- **Reading columns** limit their maximum width (typically around 65-75 characters) to ensure optimal reading rhythm for long-form prose and transcripts.
+- **The intake form** separates its rows generously so that validation feedback can appear inline.
 
 ## Component hierarchy
 
-1. **Brand Header** - Logo mark, main navigation, and global documentation search.
-2. **Left Navigation Tree** - Hierarchical link list of all documentation chapters.
-3. **Article Content** - The central reading column featuring prose, `<pre><code>` blocks, and data tables.
-4. **Right Table of Contents** - A scrollspy sidebar reflecting the `h2` and `h3` outline of the current article.
-5. **Feedback Form** - Rating selector and comment textarea anchored at the bottom of the article.
-6. **State Panels** - Empty search states and feedback receipt confirmations.
+1. **Brand header** — the mark, the handbook/archive name.
+2. **Search bar / Filter** — URL-parameter-driven controls selecting categories or full-text queries.
+3. **Table of Contents (Sidebar)** — hierarchical navigation linking to document anchors.
+4. **Article Body** — rich text formatting, transcripts, or code blocks (`fam-13`).
+5. **Intake form** — the labelled fields for entering feedback, annotations, or test records.
+6. **Footer** — contact details and copyright.
 
 ## Anti-patterns
 
-- Rendering text lines wider than 80 characters, causing eye fatigue during long-form reading.
-- Using low-contrast colours for code syntax highlighting that fail WCAG requirements.
-- Omitting `aria-current="page"` from the active navigation link, breaking orientation for screen reader users.
+- **A code example that cannot be copied as text.**
+- **Filter controls that break browser history.** URL parameters must drive the search/filter state.
+- **A modal or step wizard hiding part of the form.** The entry form should be fully visible inline.
+- A second accent colour competing with the primary action.
+- Placeholder text standing in for a visible label.
 
 ## Rationale
 
-The technical documentation use case demands spatial orientation and extended reading comfort. Developers require structural clarity to rapidly jump to specific endpoints, meaning the layout must prioritize persistent navigation and clear heading hierarchies. The design system therefore elevates standard prose to a highly readable, multi-column technical format. The indigo and white palette provides a sharp, modern aesthetic that reinforces professional authority without introducing distracting visual noise.
+A documentation portal exists to transfer complex knowledge accurately. The user must understand exactly where they are in the documentation hierarchy, how to jump to related topics, and how to read the text without fatigue. This requires rigorous typographic hierarchy, semantic code styling, and highly visible active-state indicators on the navigation tree.
 
 ## Provenance
 
-- Evaluated against the A1 training families (`tr-13`, `tr-25`) and the A6 evaluation spec (`fam-13` / `docs-site`).
+- **The declarations:** `docs/design/training/tr-13/prompt.txt` and `docs/design/training/tr-25/prompt.txt`, which name each palette, the structural constants, the page structure, the control labels and the prohibited patterns.
+- **The depictions:** `docs/design/training/tr-13/reference.jpg` and `docs/design/training/tr-25/reference.jpg`. Both files and both prompts are pinned in [`docs/provenance/assets/training-reference-boards.md`](../../../provenance/assets/training-reference-boards.md).
+- **The behaviour behind the screens:** `docs/train/briefs/manifest.jsonl` (families `tr-13`, `tr-25`), and `docs/eval/briefs/manifest.jsonl` (`fam-13`).
