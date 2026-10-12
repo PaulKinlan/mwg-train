@@ -33,7 +33,7 @@ The reference establishes the grammar:
 
 ## Typography
 
-Two families: `--font-sans` (the `system-ui` stack) for everything a person reads. 
+A system UI sans-serif stack for everything a person reads. 
 
 The display heading is the largest type on the page. **Metadata and Author Tags** are set distinctly: author names, timestamps, and musical keys carry specific muted or weighted treatments so a musician can scan a thread to see *who* is speaking before reading *what* they said. Form controls carry **permanent visible labels**.
 
