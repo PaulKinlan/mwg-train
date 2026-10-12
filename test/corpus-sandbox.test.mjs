@@ -74,6 +74,40 @@ test('default browser denies outbound fetch and WebSocket; explicit opt-out conn
     console.log(`browser egress default: fetch=false websocket=false; explicit opt-out: fetch=true websocket=true; CDP failed: ${contained.blockedRequests.join(', ')}; loopback loaded`);
   });
 
+test('browser permits driven loopback port but denies a different local service; opt-out control reaches it',
+  { timeout: 30_000 }, async (t) => {
+    let unrelatedHits = 0;
+    const unrelated = createHttpServer((_req, res) => {
+      unrelatedHits++;
+      res.writeHead(200, { 'access-control-allow-origin': '*', 'content-type': 'text/plain' }).end('local-secret');
+    });
+    await new Promise((resolve) => unrelated.listen(0, '127.0.0.1', resolve));
+    t.after(() => unrelated.close());
+    const app = createHttpServer((_req, res) => res.writeHead(200, { 'content-type': 'text/html' }).end(`<title>driven port</title><script>
+      window.probe = () => fetch(${JSON.stringify(`http://127.0.0.1:${unrelated.address().port}/secret`)})
+        .then((response) => response.text(), () => 'denied');
+    </script>`));
+    await new Promise((resolve) => app.listen(0, '127.0.0.1', resolve));
+    t.after(() => app.close());
+    const probe = async (options) => {
+      const chrome = await launchChrome(options);
+      try {
+        const page = await chrome.newPage();
+        await page.goto(`http://127.0.0.1:${app.address().port}/`);
+        assert.equal(await page.evaluate('return document.title'), 'driven port');
+        return { body: await page.evaluate('return await window.probe()'), blockedRequests: page.blockedRequests };
+      } finally { await chrome.close(); }
+    };
+    const contained = await probe();
+    assert.equal(contained.body, 'denied');
+    assert.equal(unrelatedHits, 0, 'unrelated loopback service receives no contained request');
+    assert.ok(contained.blockedRequests.some((url) => url.includes(`:${unrelated.address().port}/secret`)), 'CDP denied unrelated port');
+    const control = await probe({ allowEgress: true });
+    assert.equal(control.body, 'local-secret', 'opt-out must reach unrelated loopback port');
+    assert.equal(unrelatedHits, 1);
+    console.log(`loopback scope: driven port ${app.address().port} loaded; unrelated ${unrelated.address().port} contained hits=0, opt-out hits=1`);
+  });
+
 test('custom proxy conflicts with default containment', async () => {
   await assert.rejects(launchChrome({ proxy: 'http://127.0.0.1:3128' }), { code: 'EGRESS_PROXY_CONFLICT' });
 });
