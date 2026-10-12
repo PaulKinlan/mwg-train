@@ -13,50 +13,23 @@
  * It never asserts on source code. Everything it reports is something the browser observed, because
  * the whole point of the pilot is that a tidy diff is not evidence that a site works.
  */
-import { spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 
+import { startCorpusSandbox } from './sandbox.mjs';
 import { RULES, SECURITY_CHECKS } from './rules.mjs';
 import { completeSelectorFieldName, selectorFieldName } from '../train/brief-schema.mjs';
 
-const READY_TIMEOUT_MS = 20_000;
-
-/** Start a project's server and wait for it to answer. */
-export async function startServer(projectDir, { port, dbPath }) {
-  const child = spawn(process.execPath, [join(projectDir, 'server.mjs'), '--port', String(port), '--db', dbPath], {
-    cwd: projectDir,
-    stdio: ['ignore', 'pipe', 'pipe'],
-    env: { ...process.env, NODE_ENV: 'test', PILOT_PORT: String(port) },
-  });
-  let log = '';
-  child.stdout.on('data', (chunk) => {
-    log += chunk.toString();
-  });
-  child.stderr.on('data', (chunk) => {
-    log += chunk.toString();
-  });
-  const started = Date.now();
-  while (Date.now() - started < READY_TIMEOUT_MS) {
-    try {
-      const response = await fetch(`http://127.0.0.1:${port}/__health`, { signal: AbortSignal.timeout(1500) });
-      if (response.ok) return { child, log: () => log };
-    } catch {
-      /* keep waiting */
-    }
-    await delay(120);
-  }
-  child.kill('SIGKILL');
-  throw new Error(`server did not become ready in ${READY_TIMEOUT_MS}ms:\n${log}`);
+/** Start a generated project only inside the Linux namespace sandbox. dbPath remains a caller
+ * argument for compatibility; the bridge uses a fresh /data/site.sqlite tmpfs per run instead. */
+export async function startServer(projectDir, { port }) {
+  return startCorpusSandbox(projectDir, { port });
 }
 
 export async function stopServer(server) {
-  if (!server?.child) return;
-  server.child.kill('SIGTERM');
-  await delay(150);
-  if (!server.child.killed) server.child.kill('SIGKILL');
+  await server?.stop();
 }
 
 /**
@@ -667,6 +640,8 @@ export async function runProjectVersion({ chrome, projectDir, spec, label, port,
     dialect: spec.framework.dialect,
     label,
     base_url: base,
+    sandbox: 'bubblewrap',
+    platform: process.platform,
     started_at: new Date().toISOString(),
     journeys: [],
     console: [],
