@@ -1,6 +1,6 @@
 import { existsSync, realpathSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { isAbsolute, resolve } from 'node:path';
+import { isAbsolute, resolve, join } from 'node:path';
 import { isInside } from '../provenance/arms.mjs';
 import { assertQuarantineStore, assertResolvesInside, quarantineRoot, QuarantineError, REPO_ROOT } from '../provenance/store.mjs';
 
@@ -38,11 +38,13 @@ export function resolveCaptureOutputPath(path, { env = process.env, repoRoot = R
   const temp = realpathSync(tmpdir());
   const testTemp = env.MWG_TRAIN_CAPTURE_TEST_TEMP;
   if (testTemp && isAbsolute(testTemp) && existsSync(testTemp)) {
+    const lexicalTestTemp = resolve(testTemp);
     const realTestTemp = realpathSync(testTemp);
-    if (isInside(temp, realTestTemp) && realTestTemp !== temp && isInside(realTestTemp, destination)) {
+    if (isInside(temp, realTestTemp) && realTestTemp !== temp && isInside(lexicalTestTemp, destination)) {
       try {
         assertResolvesInside(temp, realTestTemp, 'test temp directory');
-        return assertResolvesInside(realTestTemp, destination, 'capture output');
+        const canonicalDestination = join(realTestTemp, destination.slice(lexicalTestTemp.length));
+        return assertResolvesInside(realTestTemp, canonicalDestination, 'capture output');
       } catch (err) {
         throw new QuarantineError('OUTPUT_OUTSIDE_QUARANTINE', `refusing output path '${destination}': ${err.message}`);
       }

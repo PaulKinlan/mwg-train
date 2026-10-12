@@ -1,7 +1,10 @@
+import { existsSync, lstatSync, realpathSync, mkdirSync, symlinkSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, dirname } from 'node:path';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { validateCapture, validateFlow, isReservedControlName, CAPTURE_VERSION, FLOW_VERSION } from '../src/capture/schema.mjs';
+import { resolveCaptureOutputPath, validateCapture, validateFlow, isReservedControlName, CAPTURE_VERSION, FLOW_VERSION } from '../src/capture/schema.mjs';
 
 // A minimal capture that MUST pass. Every negative case below is built by mutating exactly one thing, so a
 // failure names the rule that broke rather than the fixture.
@@ -154,4 +157,27 @@ test('every problem is reported, not just the first, so one pass tells the whole
   c.assets.dom.sha256 = 'nope';
   const problems = validateCapture(c);
   assert.ok(problems.length >= 2, `expected several problems, got ${JSON.stringify(problems)}`);
+});
+
+test('resolveCaptureOutputPath handles macOS symlinked tmpdir transparently', () => {
+  const realTmp = realpathSync(tmpdir());
+  const testRoot = join(realTmp, 'capture-schema-symlink-test-' + Date.now());
+  mkdirSync(testRoot);
+  
+  const realDir = join(testRoot, 'real-dir');
+  mkdirSync(realDir);
+  const symlinkDir = join(testRoot, 'symlink-dir');
+  symlinkSync(realDir, symlinkDir, 'dir');
+  
+  try {
+    const env = { MWG_TRAIN_CAPTURE_TEST_TEMP: symlinkDir };
+    const outPath = join(symlinkDir, 'my-output');
+    
+    // Pass a fake repo root so it doesn't trip REPO_WRITE_PROHIBITED
+    const fakeRepoRoot = join(realTmp, 'some-other-repo');
+    const resolved = resolveCaptureOutputPath(outPath, { env, repoRoot: fakeRepoRoot });
+    assert.equal(resolved, join(realDir, 'my-output'));
+  } finally {
+    rmSync(testRoot, { recursive: true, force: true });
+  }
 });
