@@ -60,6 +60,7 @@ async function main() {
   const runId = new Date().toISOString().replace(/[:.]/g, '-');
   const target = resolveTarget(args.family);
   const runDir = mkdtempSync(join(tmpdir(), `conformance-${args.family}-`));
+  const isolatedRepoRoot = mkdtempSync(join(tmpdir(), `conformance-repo-${runId}-`));
   const outDir = resolve(args.out);
   mkdirSync(outDir, { recursive: true });
 
@@ -74,11 +75,11 @@ async function main() {
   let port = args.port;
   try {
     for (const project of generated) {
-      const storedOriginal = storeOutput({ projectId: project.projectId, model: NO_MODEL }, 'A1_self_generated', project.dir, { repoRoot: ROOT });
+      const storedOriginal = storeOutput({ projectId: project.projectId, model: NO_MODEL }, 'A1_self_generated', project.dir, { repoRoot: isolatedRepoRoot });
 
       const upliftedTemp = mkdtempSync(join(tmpdir(), `conformance-uplifted-`));
       upliftProject(project.dir, project.spec, upliftedTemp);
-      const storedUplifted = storeOutput({ projectId: project.projectId, model: NO_MODEL }, 'A2_mwg_uplift_deterministic', upliftedTemp, { repoRoot: ROOT });
+      const storedUplifted = storeOutput({ projectId: project.projectId, model: NO_MODEL }, 'A2_mwg_uplift_deterministic', upliftedTemp, { repoRoot: isolatedRepoRoot });
 
       const raw = await captureSignature({ chrome, projectDir: storedOriginal, port: port++, runDir });
       const arm = await captureSignature({ chrome, projectDir: storedUplifted, port: port++, runDir });
@@ -93,6 +94,7 @@ async function main() {
     await chrome.close();
     rmSync(corpusRoot, { recursive: true, force: true });
     rmSync(runDir, { recursive: true, force: true });
+    rmSync(isolatedRepoRoot, { recursive: true, force: true });
   }
 
   const validDeltas = results.map(r => r.delta).filter(d => Number.isFinite(d));

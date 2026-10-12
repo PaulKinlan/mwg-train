@@ -59,16 +59,17 @@ async function scoreFamily({ family, chrome, runDir, outDir, ports }) {
   const projects = plan.projects.filter((project) => project.archetype === family.family_id);
   if (projects.length === 0) throw new Error(`score-variant-identity: the pilot has no projects for family '${family.family_id}'`);
   const runId = basename(runDir);
+  const isolatedRepoRoot = mkdtempSync(join(tmpdir(), `identity-repo-${runId}-`));
   const corpusRoot = mkdtempSync(join(tmpdir(), `identity-corpus-`));
   const { projects: generated } = generateCorpus({ plan: { ...plan, projects }, outDir: corpusRoot });
 
   const variants = [];
   for (const project of generated) {
-    const storedOriginal = storeOutput({ projectId: project.projectId, model: NO_MODEL }, 'A1_self_generated', project.dir, { repoRoot: ROOT });
+    const storedOriginal = storeOutput({ projectId: project.projectId, model: NO_MODEL }, 'A1_self_generated', project.dir, { repoRoot: isolatedRepoRoot });
 
     const upliftedTemp = mkdtempSync(join(tmpdir(), `identity-uplifted-`));
     upliftProject(project.dir, project.spec, upliftedTemp);
-    const storedUplifted = storeOutput({ projectId: project.projectId, model: NO_MODEL }, 'A2_mwg_uplift_deterministic', upliftedTemp, { repoRoot: ROOT });
+    const storedUplifted = storeOutput({ projectId: project.projectId, model: NO_MODEL }, 'A2_mwg_uplift_deterministic', upliftedTemp, { repoRoot: isolatedRepoRoot });
 
     const raw = await captureSignature({ chrome, projectDir: storedOriginal, port: ports.value++, runDir });
     const arm = await captureSignature({ chrome, projectDir: storedUplifted, port: ports.value++, runDir });
@@ -81,6 +82,7 @@ async function scoreFamily({ family, chrome, runDir, outDir, ports }) {
 
   // Cleanup ephemeral corpus
   rmSync(corpusRoot, { recursive: true, force: true });
+  rmSync(isolatedRepoRoot, { recursive: true, force: true });
 
   const identity = variantIdentity(target.signature, variants.map((variant) => ({ framework: variant.framework, signature: variant.raw_signature })));
   const findings = identityFindings(identity, IDENTITY_BUDGET);
