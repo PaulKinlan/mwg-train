@@ -259,9 +259,6 @@ a **seat picker** that no declared field describes, where the demo has no seat p
 seats only as a `5 seats left` capacity count and the wording of the notes placeholder. The bead that
 would strip the browser chrome is `mwg-train-ondc`;
 the stepper, logo, layout and field differences are not in its scope and are not covered by it.
-- **The section order of this file is a convention, not a checked rule.** `test/design-contract.test.mjs`
-  walks `docs/eval/design`, so the order and no-`###` shape of `docs/design/archetypes/*` documents is
-  kept by hand. If that gap should close, it is a bead of its own.
 
 ## Provenance
 
