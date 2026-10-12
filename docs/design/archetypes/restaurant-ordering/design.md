@@ -1,6 +1,6 @@
 ---
 archetype: restaurant-ordering
-type: storefront
+type: record-form
 boards: docs/design/archetypes/restaurant-ordering/
 register: docs/provenance/assets/training-reference-boards.md
 ---
