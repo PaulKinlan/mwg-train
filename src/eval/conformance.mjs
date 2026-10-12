@@ -50,6 +50,14 @@ export const SIGNATURE_SCRIPT = `return (() => {
       const style = getComputedStyle(element);
       answer = style.display !== 'none' && style.visibility !== 'hidden';
     }
+    // checkVisibility does not answer for content-visibility: hidden - measured, all four option combinations
+    // (plain, checkVisibilityCSS, contentVisibilityAuto, both) return true for a content-visibility:hidden element -
+    // so it is read directly. getComputedStyle over 400 nodes is 0.5ms, so the extra read is not worth avoiding.
+    //
+    // content-visibility: auto is deliberately NOT treated as hidden, though it also skips content. Skipping there is
+    // an off-screen optimisation that renders on scroll, so the content is part of the page and a capture taken with
+    // it off-screen must not call the page empty. hidden never renders, so it is the same case as display:none.
+    if (answer && getComputedStyle(element).contentVisibility === 'hidden') answer = false;
     visibility.set(element, answer);
     return answer;
   };

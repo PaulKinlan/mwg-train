@@ -527,6 +527,13 @@ test('the signature script asks the DOM whether an element is rendered, and does
   assert.match(SIGNATURE_SCRIPT, /element\.checkVisibility\(\{ checkVisibilityCSS: true \}\)/);
   assert.doesNotMatch(SIGNATURE_SCRIPT, /\.innerText/);
   assert.match(SIGNATURE_SCRIPT, /getComputedStyle\(element\)/, 'the fallback for a browser without checkVisibility');
+  // checkVisibility does not answer for content-visibility: hidden - measured, all four option combinations
+  // (plain, checkVisibilityCSS, contentVisibilityAuto, both) return TRUE for a content-visibility:hidden element -
+  // so the reader consults the computed property directly. content-visibility: auto is deliberately NOT treated as
+  // hidden: it skips off-screen content as an optimisation and renders it on scroll, so a capture taken with that
+  // content off-screen must not call the page empty.
+  assert.match(SIGNATURE_SCRIPT, /getComputedStyle\(element\)\.contentVisibility === 'hidden'/);
+  assert.doesNotMatch(SIGNATURE_SCRIPT, /contentVisibilityAuto: true/);
 });
 
 test('an unmeasurable signature is refused, not scored a perfect 1.000', () => {
