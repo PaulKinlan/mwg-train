@@ -65,3 +65,32 @@ test('fast-gate fails closed on invalid git base', () => {
   assert.notStrictEqual(res.status, 0);
   assert.ok(res.stderr.includes('FAIL: base \'nonexistent-ref-xyz\' is not a resolvable commit'));
 });
+
+test('fast-gate routes evaluation fixture files to check:eval-projects', () => {
+  // Fixtures under docs/eval/projects/ have no unit test of their own; check:eval-projects re-derives
+  // each one byte-for-byte, which is the coverage the gate should select. Before the prefix mapping
+  // existed, any change here made the gate exit 1 with "unmapped changed files".
+  const env = { ...process.env, GIT_CHANGED: 'docs/eval/projects/already-modern/cf-06/server.mjs' };
+  const res = spawnSync('node', [FAST_GATE], { cwd: ROOT, env, encoding: 'utf8' });
+  assert.strictEqual(res.status, 0, `expected exit 0, got ${res.status}: ${res.stderr}`);
+  assert.ok(res.stdout.includes('check:eval-projects'), 'must select check:eval-projects');
+});
+
+test('fast-gate routes a changed fixture tree hash to check:eval-projects', () => {
+  // tree.json is derived from the whole project directory, so an added or removed file there changes
+  // it - the same prefix rule therefore covers the case that is easiest to forget.
+  const env = { ...process.env, GIT_CHANGED: 'docs/eval/projects/already-modern/cf-06/tree.json' };
+  const res = spawnSync('node', [FAST_GATE], { cwd: ROOT, env, encoding: 'utf8' });
+  assert.strictEqual(res.status, 0, `expected exit 0, got ${res.status}: ${res.stderr}`);
+  assert.ok(res.stdout.includes('check:eval-projects'), 'must select check:eval-projects');
+});
+
+test('fast-gate does not fail on other files inside an evaluation fixture project', () => {
+  // The prefix rule deliberately runs before isExempt, so a binary inside a fixture project still
+  // routes to check:eval-projects rather than being waved through: the project's tree hash covers
+  // every file in it, images included.
+  const env = { ...process.env, GIT_CHANGED: 'docs/eval/projects/already-modern/cf-06/reference.jpg' };
+  const res = spawnSync('node', [FAST_GATE], { cwd: ROOT, env, encoding: 'utf8' });
+  assert.strictEqual(res.status, 0, `expected exit 0, got ${res.status}: ${res.stderr}`);
+  assert.ok(!res.stderr.includes('unmapped changed files'), 'must not report an unmapped file');
+});
