@@ -18,17 +18,18 @@ are. It is **not** checked against a generated demo, because there is no generat
 flow and no evaluation spec for this archetype — see *Implementation status*. Nothing here should be read as
 describing running software.
 
-Two training families implement this archetype, and both are described together because the archetype is the
-contract they share rather than either one alone:
+Three families implement this archetype, and all are described together because the archetype is the
+contract they share rather than any one alone:
 
 - **`tr-04`, SunHarbor Community Solar** — array telemetry and member credits for a community solar co-op.
 - **`tr-22`, Canopy Guardian** — street tree health and watering for an urban forestry programme.
+- **`fam-04`, Community Solar Microgrid** — real-time metric feeds, battery charge states, and threshold operations (eval split: test).
 
 ## Use case
 
 A community operation monitors something distributed and needs to act on it: a co-op watches what its solar
-array generates and what that credits its members, and a neighbourhood committee watches the health of the
-street trees it planted and records what it waters or treats. Both are the same shape of problem — a
+array generates and what that credits its members, a neighbourhood committee watches the health of the
+street trees it planted and records what it waters or treats, and a microgrid team monitors storage thresholds. All are the same shape of problem — a
 monitored resource, a periodic measurement, a threshold or status that somebody has to notice, and a log of
 what was done about it.
 
@@ -43,38 +44,41 @@ or a running total — and the record is an increment to it. The dashboard has t
 anything is submitted, and the log has to change what it shows afterwards.
 
 `TYPE-AXIS.md` records `record-form` as **satisfied** — "the one type the corpus covers" — and counts this
-archetype's two families among the thirty. So this contract is not proposing a new capability for the corpus;
+archetype's families among the thirty. So this contract is not proposing a new capability for the corpus;
 it is writing down the shape its two dashboard families already share.
 
 ## Routes and effects
 
-The two families declare their own routes, and both are listed because the archetype's routes are the union
-of its instances rather than either one's. The archetype's common shape is a landing view, a per-subject read
+The families declare their own routes, and all are listed because the archetype's routes are the union
+of its instances rather than any one's. The archetype's common shape is a landing view, a per-subject read
 view, and a write that attaches a record to one subject.
 
 | Route | Family | Kind | Effect |
 |---|---|---|---|
-| `GET /` | both | page | serves the dashboard's landing view: current state, and the entry points into the subject views |
-| `GET /generation` | `tr-04` | page | serves the array's generation view |
+| `GET /` | all | page | serves the dashboard's landing view: current state, and the entry points into the subject views |
+| `GET /generation` | `tr-04`, `fam-04` | page | serves the array's generation view |
 | `GET /credits` | `tr-04` | page | serves the member credit view |
 | `GET /credits/:account` | `tr-04` | read-by-reference | reads one account's accrued credits |
 | `GET /trees` | `tr-22` | page | serves the tree inventory, filterable by neighbourhood block |
 | `GET /trees/:id` | `tr-22` | read-by-reference | reads one tree's profile and its logging history |
 | `POST /trees/:id/log` | `tr-22` | write | records a maintenance event against that tree and updates its last-actioned date |
 | `GET /canopy-summary` | `tr-22` | page | serves the programme-level summary |
+| `GET /batteries` | `fam-04` | page | serves detailed battery storage levels |
+| `GET /settings` | `fam-04` | page | serves threshold configurations and grid feed-in caps |
+| `POST /api/settings` | `fam-04` | write | updates microgrid threshold parameters and returns them |
 
-**On the methods in that table.** The manifest declares routes as paths rather than methods, and carries no `method` key anywhere. The methods shown are therefore only as firm as their source: `GET /credits/:account` is named by `tr-04`'s first assertion, and `POST /trees/:id/log` and `GET /trees/:id` are named by `tr-22`'s first two. The remaining routes are pages and are served by `GET`, which is a reading of the kind column rather than something the rows state.
+**On the methods in that table.** The manifest declares routes as paths rather than methods, and carries no `method` key anywhere. The methods shown are therefore only as firm as their source: `GET /credits/:account` is named by `tr-04`'s first assertion, `POST /trees/:id/log` and `GET /trees/:id` are named by `tr-22`'s first two, and `POST /api/settings` is named by `fam-04`'s first assertion. The remaining routes are pages and are served by `GET`, which is a reading of the kind column rather than something the rows state.
 
-Both families also declare a search view addressed by a `q` query parameter (`/search?q=…`), which the two
+The training families also declare a search view addressed by a `q` query parameter (`/search?q=…`), which the two
 journeys use differently: `tr-04` searches by meter reference and `tr-22` by date.
 
 **Not proposed here.** Unlike the other archetype contracts, this one adds no route the families do not
-declare. `TYPE-AXIS.md` calls `record-form` the one type the corpus covers, and both families already carry
+declare. `TYPE-AXIS.md` calls `record-form` the one type the corpus covers, and the families already carry
 the read and write routes this document describes.
 
 ## Data and state
 
-- **Stored on the server**, per both families' `server_persistence`: the monitored subject and the records
+- **Stored on the server**, per the families' `server_persistence`: the monitored subject and the records
   attached to it.
 - **The monitored subject** is identified by a reference: `account` and `meter` for the solar co-op, `tree`
   for the forestry programme. Each family carries a subject identifier and a human-readable one.
@@ -83,14 +87,13 @@ the read and write routes this document describes.
 - **The record** carries `notes`, a free-text observation, and an attributed actor: the form is filled with a
   member's account and meter, or a steward's name.
 - **Write routes:** `POST /trees/:id/log` for `tr-22`; `tr-04`'s declared journey submits
-  `form#solar-credits-form` and its assertions read the credit back from `/credits/:account`.
-- **Read by reference:** both families read one subject's state back by its identifier, which is what makes a
+  `form#solar-credits-form` and its assertions read the credit back from `/credits/:account`; `fam-04` writes to `POST /api/settings`.
+- **Read by reference:** the families read one subject's state back by its identifier, which is what makes a
   reload the test of server persistence rather than of client state.
 
 ## Journey
 
-Both families declare a journey; they are the archetype's two instance journeys rather than one journey with
-variations.
+The declared journeys. For the evaluation family (`fam-04`), these are quoted verbatim from the manifests. For the training families, these are derived summaries of the structured `journey` objects defined in the manifest:
 
 **`tr-04` (solar co-op):** it starts at `/`; it reads the landing telemetry; it submits
 `form#solar-credits-form` with fills `input[name=account]` `MTR-9042`, `input[name=meter]` `SOL-4021`,
@@ -112,6 +115,12 @@ expecting the logged timestamp among them with the decoy `zzz-decoy` absent. Its
 declares an update leg that rewrites `timestamp` to `2026-05-18 10:15 (updated)`, which lets a steward
 correct a log entry they got wrong rather than adding a second one.
 
+**`fam-04` (solar microgrid):**
+- inspect real-time microgrid metrics including solar generation kilowatts, battery state of charge, and neighborhood consumption rates on the main dashboard
+- switch between metric tabs or views to inspect generation breakdown by solar array and battery storage cycles
+- adjust export threshold settings on the configuration screen, save the preferences to the server, and verify the threshold remains active after a full page reload
+- toggle theme preferences or high-contrast display options and confirm the dashboard preserves legible visual presentation
+
 Mapped to the five planned boards: step 1 dashboard → `step1-overview`, step 2 subject view →
 `step2-subject`, step 3 log form → `step3-log`, step 4 the filtered or status view → `step4-filtered`,
 step 5 empty → `step5-empty`.
@@ -121,7 +130,7 @@ step 5 empty → `step5-empty`.
 - **Required fields.** `tr-04`: `account`, `meter`, `reading`, `period` (its `notes` is optional). `tr-22`:
   `tree`, `steward`, `timestamp`, `action` (its `litres` and `notes` are optional).
 - **On a missing required field:** the write is refused and the form re-renders with feedback naming the
-  field. Both families carry `accessibility/accessibility` among their required rules, so this is an
+  field. The families carry `accessibility/accessibility` among their required rules, so this is an
   assertion about the target rather than a nicety.
 - **Accessibility:** `tr-04` requires keyboard navigation to survive a summary update and its tables to stay
   usable and horizontally scrollable on a mobile viewport; `tr-22` requires accessible labels on its status
@@ -145,7 +154,14 @@ step 5 empty → `step5-empty`.
 5. `GET /trees/:id` shows the updated maintenance timestamp following a page reload.
 6. All status tables and action forms meet accessibility standards with proper aria labels.
 
-Criteria 1–6 are the two families' own assertions, quoted from `docs/train/briefs/manifest.jsonl`.
+`fam-04`:
+
+7. `POST /api/settings` updates microgrid threshold parameters and returns HTTP 200 with persisted JSON values.
+8. `GET /settings` reflects previously saved solar export limit numbers following a page refresh.
+9. Data tables and metric status cards provide accessible names and semantic role bindings for screen reader users.
+10. Interactive charts or progress indicators have descriptive alternative text summaries reflecting current percentage values.
+
+Criteria 1–10 are the families' own assertions, quoted from `docs/train/briefs/manifest.jsonl` and `docs/eval/briefs/manifest.jsonl`.
 
 ## Implementation status
 
@@ -166,17 +182,17 @@ exist" is exactly the half-truth this axis was written to stop:
   `docs/train/targets/tr-04/index.html`, likewise for `tr-22`. They describe the single-step target, which is
   a different artefact from this archetype contract.
 - **What the engine offers is capability, not implementation.** The shared engine can render a list, a
-  read-by-reference page and a write, and both families use those. No family in the corpus carries a chart, a
+  read-by-reference page and a write, and the families use those. No family in the corpus carries a chart, a
   status whose transitions the server enforces, or a summary figure derived from other rows.
 - **No evaluation spec:** there is no `docs/eval/specs/dashboard.json`; that directory is the sealed A6
   evaluation set. This contract is validated by section order and internal consistency, not against a spec.
 
 ## Provenance
 
-- **The behaviour** is derived from `docs/train/briefs/manifest.jsonl`, families `tr-04` and `tr-22`. Route
-  names, field slugs, control types, selectors, fill values, search parameters, intake steps and all six
+- **The behaviour** is derived from `docs/train/briefs/manifest.jsonl` (families `tr-04`, `tr-22`) and `docs/eval/briefs/manifest.jsonl` (`fam-04`). Route
+  names, field slugs, control types, selectors, fill values, search parameters, intake steps and all ten
   acceptance criteria are quoted from those rows rather than invented.
-- **The references** are the two families' generated boards, digest-pinned in
+- **The references** are the training families' generated boards, digest-pinned in
   `docs/provenance/assets/training-reference-boards.md`; the prompts that declared them are committed beside
   them. The five journey boards are planned and unpinned.
 - **The axis position** is quoted from `docs/train/briefs/TYPE-AXIS.md`, where `record-form` is recorded as
