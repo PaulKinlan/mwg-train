@@ -160,11 +160,15 @@ export function crossArmFindings({ arms, budget }) {
   // and this module's contract is that an absence is a finding with a code (mwg-train-z92 review).
   const measured = arms.filter((arm) => isMeasurable(arm.signature));
   const unrendered = arms.filter((arm) => !isMeasurable(arm.signature));
+  // The message must describe the arm without asserting a node count the empty-shell fix made false
+  // (mwg-train-0dit): the shell it now catches HAS a node - body > div#root - so "no nodes" contradicted the very
+  // case being reported, while the arm's own signature said nodes.length === 1. "No semantic nodes" is true of
+  // both the zero-node arm and the one-node shell, so one wording covers both rather than a special case.
   const blankFindings = unrendered.map((arm) => ({
     code: PARITY_CODES.ARM_UNMEASURED,
     arm: arm.framework ?? 'unknown',
     viewport: arm.signature?.viewport ?? arms[0]?.viewport ?? null,
-    message: `${arm.framework ?? 'unknown'} rendered nothing measurable - no nodes, boxes or controls, only a viewport - so there is nothing about it to compare`,
+    message: `${arm.framework ?? 'unknown'} rendered nothing measurable - no semantic nodes, boxes or controls, only a viewport - so there is nothing about it to compare`,
   }));
   if (measured.length < 2) {
     return {
