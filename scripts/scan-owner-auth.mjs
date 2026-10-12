@@ -15,7 +15,7 @@
  *
  * Exit code 0 only if every scanned tree is clean.
  */
-import { existsSync, mkdtempSync, readFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -65,7 +65,7 @@ function report(label, result) {
  * the recorded sha. Returns the directory to scan, or null when regeneration is impossible or
  * fails verification (the caller then fails closed).
  */
-async function regenerateUplifted(project, originalDir, corpusRoot) {
+async function regenerateUplifted(project, originalDir, corpusRoot, tempDirs) {
   const expected = project.decision?.uplifted_sha;
   if (!expected) return null;
   const upliftTool = resolve(corpusRoot, '..', 'src/corpus/uplift.mjs');
@@ -75,6 +75,7 @@ async function regenerateUplifted(project, originalDir, corpusRoot) {
   const spec = project.spec?.routes ? project.spec : readJson(join(originalDir, 'spec.json'));
   if (!spec) return null;
   const dir = mkdtempSync(join(tmpdir(), 'owner-auth-uplift-'));
+  tempDirs.push(dir);
   try {
     const { upliftProject } = await import(upliftTool);
     upliftProject(originalDir, spec, dir);
@@ -92,7 +93,7 @@ async function regenerateUplifted(project, originalDir, corpusRoot) {
 
 /** The plan-materialized measured originals, generated once per invocation. */
 let materializedDir = null;
-async function materializeMeasuredOriginals() {
+async function materializeMeasuredOriginals(tempDirs) {
   if (materializedDir !== null) return materializedDir || null;
   const generatePath = resolve(repoRoot, 'pilot/generate.mjs');
   if (!existsSync(generatePath)) {
@@ -100,6 +101,7 @@ async function materializeMeasuredOriginals() {
     return null;
   }
   const outDir = mkdtempSync(join(tmpdir(), 'owner-auth-originals-'));
+  tempDirs.push(outDir);
   const { generateCorpus } = await import(generatePath);
   generateCorpus({ outDir, planPath: resolve(repoRoot, 'pilot/plan.json') });
   materializedDir = outDir;
@@ -108,136 +110,147 @@ async function materializeMeasuredOriginals() {
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
+  const tempDirs = [];
 
-  let matchers;
-  let scanOptions = {};
   try {
-    const config = loadScanConfig(args.config);
-    matchers = buildMatchers(config);
-    scanOptions = config.scan ?? {};
-  } catch (error) {
-    // Fail-closed: an unreadable config means nothing is accepted.
-    console.error(`ERROR (fail-closed): ${error.message}`);
-    process.exit(3);
-  }
-
-  let failed = 0;
-  let scanned = 0;
-  const scanOne = (label, dir) => {
-    scanned += 1;
-    if (!dir || !existsSync(dir)) {
-      failed += 1;
-      console.log(`FAIL ${label} - tree missing (${dir ?? 'none'})`);
-      return;
+    let matchers;
+    let scanOptions = {};
+    try {
+      const config = loadScanConfig(args.config);
+      matchers = buildMatchers(config);
+      scanOptions = config.scan ?? {};
+    } catch (error) {
+      // Fail-closed: an unreadable config means nothing is accepted.
+      console.error(`ERROR (fail-closed): ${error.message}`);
+      return 3;
     }
-    const result = scanTree(dir, matchers, scanOptions);
-    if (result.status !== 'PASS') failed += 1;
-    report(label, result);
-  };
 
-  if (args.corpus) {
-    // Default to the MANIFEST's recorded run, not the newest local run dir: a fresh local run
-    // with no decisions yet must not leave the gate scanning zero accepted pairs and passing.
-    const manifestRun = readJson(join(args.corpus, 'CORPUS.json'))?.run_id ?? null;
-    const runId = args.run ?? manifestRun ?? listRuns(args.corpus)[0] ?? null;
-    const corpus = loadCorpus(args.corpus, runId);
-    if (corpus.projects.length === 0) {
-      console.error('ERROR (fail-closed): no projects found - nothing to accept');
-      process.exit(3);
-    }
-    for (const project of corpus.projects) {
-      // The gate is over ACCEPTED pairs (Paul's rule). A project without an accepted decision is
-      // reported for visibility but is not gated - there is no accepted pair to contaminate yet.
-      if (project.decision?.accepted !== true) {
-        console.log(`SKIP ${project.id} - no accepted pair recorded (state: ${project.decision?.category ?? 'no run'})`);
-        continue;
-      }
-      // The original of record is the MEASURED tree: the committed tree when it still hashes to
-      // the recorded original sha, otherwise the plan-regenerated one. A drifted committed tree
-      // cannot smuggle a clean scan over a tree the record never measured.
-      const expectedOriginal = project.decision?.original_sha ?? null;
-      if (!expectedOriginal) {
+    let failed = 0;
+    let scanned = 0;
+    const scanOne = (label, dir) => {
+      scanned += 1;
+      if (!dir || !existsSync(dir)) {
         failed += 1;
-        console.log(`FAIL ${project.id} - the accepted decision records no original sha`);
-        continue;
+        console.log(`FAIL ${label} - tree missing (${dir ?? 'none'})`);
+        return;
       }
-      let originalDir = project.originalTreeDir;
-      if (hashTree(originalDir) !== expectedOriginal) {
-        const materialized = await materializeMeasuredOriginals();
-        const candidate = materialized ? join(materialized, project.id) : null;
-        if (candidate && existsSync(candidate) && hashTree(candidate) === expectedOriginal) {
-          originalDir = candidate;
-        } else {
-          failed += 1;
-          console.log(`FAIL ${project.id} - the measured original cannot be reproduced to its recorded sha`);
+      const result = scanTree(dir, matchers, scanOptions);
+      if (result.status !== 'PASS') failed += 1;
+      report(label, result);
+    };
+
+    if (args.corpus) {
+      // Default to the MANIFEST's recorded run, not the newest local run dir: a fresh local run
+      // with no decisions yet must not leave the gate scanning zero accepted pairs and passing.
+      const manifestRun = readJson(join(args.corpus, 'CORPUS.json'))?.run_id ?? null;
+      const runId = args.run ?? manifestRun ?? listRuns(args.corpus)[0] ?? null;
+      const corpus = loadCorpus(args.corpus, runId);
+      if (corpus.projects.length === 0) {
+        console.error('ERROR (fail-closed): no projects found - nothing to accept');
+        return 3;
+      }
+      for (const project of corpus.projects) {
+        // The gate is over ACCEPTED pairs (Paul's rule). A project without an accepted decision is
+        // reported for visibility but is not gated - there is no accepted pair to contaminate yet.
+        if (project.decision?.accepted !== true) {
+          console.log(`SKIP ${project.id} - no accepted pair recorded (state: ${project.decision?.category ?? 'no run'})`);
           continue;
         }
-      }
-      scanOne(`${project.id} (original)`, originalDir);
-      // The rule covers the corpus RECORD as well as the site source, and BOTH records are in
-      // scope: the committed manifest whenever it exists, plus the local run records (mandatory
-      // once a run covers the project). Owner material in either fails the pair.
-      scanned += 1;
-      const recordResult = (() => {
-        const manifestPath = join(args.corpus, 'CORPUS.json');
-        const manifestResult = existsSync(manifestPath) ? scanTree(manifestPath, matchers, scanOptions) : null;
-        const runResult = project.runDir ? scanPairRecords(project, matchers, scanOptions) : null;
-        if (!manifestResult && !runResult) {
-          return { status: 'FAIL', findings: [{ file: manifestPath, line: null, patternId: 'record-missing', kind: 'scan-error' }] };
+        // The original of record is the MEASURED tree: the committed tree when it still hashes to
+        // the recorded original sha, otherwise the plan-regenerated one. A drifted committed tree
+        // cannot smuggle a clean scan over a tree the record never measured.
+        const expectedOriginal = project.decision?.original_sha ?? null;
+        if (!expectedOriginal) {
+          failed += 1;
+          console.log(`FAIL ${project.id} - the accepted decision records no original sha`);
+          continue;
         }
-        const findings = [...(manifestResult?.findings ?? []), ...(runResult?.findings ?? [])];
-        return { status: findings.length === 0 ? 'PASS' : 'FAIL', findings };
-      })();
-      if (recordResult.status !== 'PASS') failed += 1;
-      report(`${project.id} (corpus records)`, recordResult);
-      const expectedUplift = project.decision?.uplifted_sha ?? null;
-      if (!expectedUplift) {
-        failed += 1;
-        console.log(`FAIL ${project.id} - the accepted decision records no uplift sha`);
-        continue;
-      }
-      if (project.upliftedTreeDir && existsSync(project.upliftedTreeDir)) {
-        // A kept TARGET is scanned only when it still IS the recorded tree.
-        if (hashTree(project.upliftedTreeDir) === expectedUplift) {
-          scanOne(`${project.id} (uplifted)`, project.upliftedTreeDir);
+        let originalDir = project.originalTreeDir;
+        if (hashTree(originalDir) !== expectedOriginal) {
+          const materialized = await materializeMeasuredOriginals(tempDirs);
+          const candidate = materialized ? join(materialized, project.id) : null;
+          if (candidate && existsSync(candidate) && hashTree(candidate) === expectedOriginal) {
+            originalDir = candidate;
+          } else {
+            failed += 1;
+            console.log(`FAIL ${project.id} - the measured original cannot be reproduced to its recorded sha`);
+            continue;
+          }
+        }
+        scanOne(`${project.id} (original)`, originalDir);
+        // The rule covers the corpus RECORD as well as the site source, and BOTH records are in
+        // scope: the committed manifest whenever it exists, plus the local run records (mandatory
+        // once a run covers the project). Owner material in either fails the pair.
+        scanned += 1;
+        const recordResult = (() => {
+          const manifestPath = join(args.corpus, 'CORPUS.json');
+          const manifestResult = existsSync(manifestPath) ? scanTree(manifestPath, matchers, scanOptions) : null;
+          const runResult = project.runDir ? scanPairRecords(project, matchers, scanOptions) : null;
+          if (!manifestResult && !runResult) {
+            return { status: 'FAIL', findings: [{ file: manifestPath, line: null, patternId: 'record-missing', kind: 'scan-error' }] };
+          }
+          const findings = [...(manifestResult?.findings ?? []), ...(runResult?.findings ?? [])];
+          return { status: findings.length === 0 ? 'PASS' : 'FAIL', findings };
+        })();
+        if (recordResult.status !== 'PASS') failed += 1;
+        report(`${project.id} (corpus records)`, recordResult);
+        const expectedUplift = project.decision?.uplifted_sha ?? null;
+        if (!expectedUplift) {
+          failed += 1;
+          console.log(`FAIL ${project.id} - the accepted decision records no uplift sha`);
+          continue;
+        }
+        if (project.upliftedTreeDir && existsSync(project.upliftedTreeDir)) {
+          // A kept TARGET is scanned only when it still IS the recorded tree.
+          if (hashTree(project.upliftedTreeDir) === expectedUplift) {
+            scanOne(`${project.id} (uplifted)`, project.upliftedTreeDir);
+          } else {
+            const regenerated = await regenerateUplifted(project, originalDir, args.corpus, tempDirs);
+            if (regenerated) scanOne(`${project.id} (uplifted, regenerated+verified)`, regenerated);
+            else {
+              failed += 1;
+              console.log(
+                `FAIL ${project.id} - kept uplifted tree drifted from the recorded sha and regeneration could not reproduce it`,
+              );
+            }
+          }
         } else {
-          const regenerated = await regenerateUplifted(project, originalDir, args.corpus);
+          const regenerated = await regenerateUplifted(project, originalDir, args.corpus, tempDirs);
           if (regenerated) scanOne(`${project.id} (uplifted, regenerated+verified)`, regenerated);
           else {
             failed += 1;
             console.log(
-              `FAIL ${project.id} - kept uplifted tree drifted from the recorded sha and regeneration could not reproduce it`,
+              `FAIL ${project.id} (uplifted) - tree not kept and not reproducibly regenerable; the scan cannot run, so the pair is not accepted`,
             );
           }
         }
-      } else {
-        const regenerated = await regenerateUplifted(project, originalDir, args.corpus);
-        if (regenerated) scanOne(`${project.id} (uplifted, regenerated+verified)`, regenerated);
-        else {
-          failed += 1;
-          console.log(
-            `FAIL ${project.id} (uplifted) - tree not kept and not reproducibly regenerable; the scan cannot run, so the pair is not accepted`,
-          );
-        }
+      }
+    } else if (args.trees.length > 0) {
+      for (const tree of args.trees) scanOne(tree, tree);
+    } else {
+      console.error('nothing to scan: pass trees or --corpus');
+      return 2;
+    }
+
+    console.log(`owner-auth scan: ${scanned} tree(s), ${failed} failed`);
+    // Fail-closed on vacuity: a gate that scanned nothing approved nothing, and must not exit 0.
+    if (scanned === 0) {
+      console.error('ERROR (fail-closed): zero trees scanned - nothing was verified, so nothing passes');
+      return 3;
+    }
+    return failed === 0 ? 0 : 1;
+  } finally {
+    for (const dir of tempDirs) {
+      try {
+        rmSync(dir, { recursive: true, force: true });
+      } catch (e) {
+        console.error(`ERROR cleaning up temp dir ${dir}: ${e.message}`);
       }
     }
-  } else if (args.trees.length > 0) {
-    for (const tree of args.trees) scanOne(tree, tree);
-  } else {
-    console.error('nothing to scan: pass trees or --corpus');
-    process.exit(2);
   }
-
-  console.log(`owner-auth scan: ${scanned} tree(s), ${failed} failed`);
-  // Fail-closed on vacuity: a gate that scanned nothing approved nothing, and must not exit 0.
-  if (scanned === 0) {
-    console.error('ERROR (fail-closed): zero trees scanned - nothing was verified, so nothing passes');
-    process.exit(3);
-  }
-  process.exit(failed === 0 ? 0 : 1);
 }
 
-main().catch((error) => {
+main().then(code => process.exit(code)).catch((error) => {
   console.error(`ERROR (fail-closed): ${error.message}`);
   process.exit(3);
 });
