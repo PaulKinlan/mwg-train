@@ -77,7 +77,7 @@ only as firm as their source, and here the two sides differ sharply. `tr-16` sta
 assertion (`POST /request`) and its filters by query string in its first. `fam-16` names methods for three routes
 and gives two of them **status codes** — `POST /reserve/:id` redirecting with HTTP 303, `GET /reservation/:ref`
 returning HTTP 200 after a reload, and a missing researcher name returning HTTP 400 — so the evaluation-side
-family is the first in this corpus whose assertions pin protocol behaviour rather than only page content. The
+family asserts HTTP status codes as well as page content. The
 staff view `GET /admin/loans` is named with its method and status by the fourth assertion.
 
 ## Data and state

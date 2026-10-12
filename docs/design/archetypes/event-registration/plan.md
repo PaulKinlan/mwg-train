@@ -95,7 +95,7 @@ being inferred for every listed path.
   disappear either.
 
 **Implementing-family fields and server state (not the target's sqlite schema).** `*` denotes
-required; only `tr-07`'s `notes` is optional. `tr-07` has nine fields; its `date` field is a `date` input rendered as a select on the reference board. `tr-30` has only three fields, the fewest in the corpus.
+required; only `tr-07`'s `notes` is optional. `tr-07` has nine fields; its `date` field is a `date` input rendered as a select on the reference board. `tr-30` has three fields, tying three other families for the fewest recorded in the corpus.
 
 | Family | Declared fields (type and required flag) | Select options |
 |---|---|---|
