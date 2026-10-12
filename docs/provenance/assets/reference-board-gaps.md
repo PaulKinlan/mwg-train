@@ -111,7 +111,7 @@ target" as sufficient. It is necessary and not sufficient - the comparison also 
 3. **Seven boards outside Wave 2**, one per archetype, for the states each actually asserts -
    restaurant-ordering both, web-shop empty only, the rest error only, each named in its own bead.
 4. **All ten depend on mwg-train-bosi (capture, closed) and mwg-train-j3o4 (comparator state wiring).** A board for a state the capture cannot reach is an artefact nothing
-   reads, which is what the first version of this document would have produced seven of.
+   reads, which is what the first version of this document would have produced seven of. (All 10 board tasks now have explicit dependency edges on mwg-train-j3o4 recorded in the tracker).
 
 The decision is deliberately narrow: it does not claim the corpus needs uniform state coverage, and it does not
 ask for artefacts that nothing can read.
