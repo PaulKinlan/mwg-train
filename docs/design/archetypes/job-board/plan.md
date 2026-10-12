@@ -51,8 +51,8 @@ that the detail view and the application both have to respect.
 
 ## Routes and effects
 
-| Route | Kind | Effect |
-|---|---|---|
+| Route | Family | Kind | Effect |
+|---|---|---|---|
 | `GET /` | all | page | serves the network's landing view and its entry points into the board |
 | `GET /jobs` | all | page | serves the vacancy list, filterable by trade/discipline |
 | `GET /jobs/new` | `fam-12` | page | serves the employer vacancy intake form |
