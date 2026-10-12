@@ -31,6 +31,8 @@ import { BASELINE_FIELDS, baselineAttributionLine } from '../src/eval/ruleset.mj
 import { captureSignature } from '../src/eval/render.mjs';
 import { IDENTITY_BUDGET, TARGETS_STORAGE, TARGET_FAMILIES } from '../src/eval/targets.mjs';
 import { generateCorpus, readPlan } from '../pilot/generate.mjs';
+import { storeOutput } from '../src/eval/outputs.mjs';
+import { NO_MODEL } from '../src/eval/build-key.mjs';
 
 const ROOT = resolve(process.cwd());
 
@@ -57,18 +59,28 @@ async function scoreFamily({ family, chrome, runDir, outDir, ports }) {
   const projects = plan.projects.filter((project) => project.archetype === family.family_id);
   if (projects.length === 0) throw new Error(`score-variant-identity: the pilot has no projects for family '${family.family_id}'`);
   const runId = basename(runDir);
-  const corpusRoot = resolve('.conformance-corpus', runId, family.family_id);
+  const corpusRoot = mkdtempSync(join(tmpdir(), `identity-corpus-`));
   const { projects: generated } = generateCorpus({ plan: { ...plan, projects }, outDir: corpusRoot });
 
   const variants = [];
   for (const project of generated) {
-    const raw = await captureSignature({ chrome, projectDir: project.dir, port: ports.value++, runDir });
-    const upliftedDir = resolve('.conformance-uplifted', runId, project.projectId);
-    upliftProject(project.dir, project.spec, upliftedDir);
-    const arm = await captureSignature({ chrome, projectDir: upliftedDir, port: ports.value++, runDir });
+    const storedOriginal = storeOutput({ projectId: project.projectId, model: NO_MODEL }, 'A1_self_generated', project.dir, { repoRoot: ROOT });
+
+    const upliftedTemp = mkdtempSync(join(tmpdir(), `identity-uplifted-`));
+    upliftProject(project.dir, project.spec, upliftedTemp);
+    const storedUplifted = storeOutput({ projectId: project.projectId, model: NO_MODEL }, 'A2_mwg_uplift_deterministic', upliftedTemp, { repoRoot: ROOT });
+
+    const raw = await captureSignature({ chrome, projectDir: storedOriginal, port: ports.value++, runDir });
+    const arm = await captureSignature({ chrome, projectDir: storedUplifted, port: ports.value++, runDir });
     const score = scoreArm({ target: target.signature, raw, arm });
     variants.push({ framework: project.framework, ...score, raw_signature: raw });
+    
+    // Cleanup ephemeral uplifted temp directory; outputs store retains the persisted copies.
+    rmSync(upliftedTemp, { recursive: true, force: true });
   }
+
+  // Cleanup ephemeral corpus
+  rmSync(corpusRoot, { recursive: true, force: true });
 
   const identity = variantIdentity(target.signature, variants.map((variant) => ({ framework: variant.framework, signature: variant.raw_signature })));
   const findings = identityFindings(identity, IDENTITY_BUDGET);
@@ -187,9 +199,6 @@ async function main() {
   } finally {
     if (chrome) await chrome.close();
     if (runDir) {
-      const runId = basename(runDir);
-      rmSync(resolve('.conformance-corpus', runId), { recursive: true, force: true });
-      rmSync(resolve('.conformance-uplifted', runId), { recursive: true, force: true });
       rmSync(runDir, { recursive: true, force: true });
     }
   }

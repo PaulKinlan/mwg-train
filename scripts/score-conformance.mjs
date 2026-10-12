@@ -28,6 +28,8 @@ import { BASELINE_FIELDS, baselineAttributionLine } from '../src/eval/ruleset.mj
 import { captureSignature } from '../src/eval/render.mjs';
 import { TARGETS_STORAGE } from '../src/eval/targets.mjs';
 import { generateCorpus, readPlan } from '../pilot/generate.mjs';
+import { storeOutput } from '../src/eval/outputs.mjs';
+import { NO_MODEL } from '../src/eval/build-key.mjs';
 
 const ROOT = resolve(process.cwd());
 
@@ -65,25 +67,31 @@ async function main() {
   const projects = plan.projects.filter((project) => project.archetype === args.family && (args.framework ? project.framework === args.framework : true));
   if (projects.length === 0) throw new Error(`score-conformance: no pilot project for family '${args.family}'${args.framework ? ` and framework '${args.framework}'` : ''}`);
 
-  const corpusRoot = resolve('.conformance-corpus', runId);
+  const corpusRoot = mkdtempSync(join(tmpdir(), `conformance-corpus-`));
   const { projects: generated } = generateCorpus({ plan: { ...plan, projects }, outDir: corpusRoot });
   const chrome = await launchChrome();
   const results = [];
   let port = args.port;
   try {
     for (const project of generated) {
-      const raw = await captureSignature({ chrome, projectDir: project.dir, port: port++, runDir });
-      const upliftedDir = resolve('.conformance-uplifted', runId, project.projectId);
-      upliftProject(project.dir, project.spec, upliftedDir);
-      const arm = await captureSignature({ chrome, projectDir: upliftedDir, port: port++, runDir });
+      const storedOriginal = storeOutput({ projectId: project.projectId, model: NO_MODEL }, 'A1_self_generated', project.dir, { repoRoot: ROOT });
+
+      const upliftedTemp = mkdtempSync(join(tmpdir(), `conformance-uplifted-`));
+      upliftProject(project.dir, project.spec, upliftedTemp);
+      const storedUplifted = storeOutput({ projectId: project.projectId, model: NO_MODEL }, 'A2_mwg_uplift_deterministic', upliftedTemp, { repoRoot: ROOT });
+
+      const raw = await captureSignature({ chrome, projectDir: storedOriginal, port: port++, runDir });
+      const arm = await captureSignature({ chrome, projectDir: storedUplifted, port: port++, runDir });
       const score = scoreArm({ target: target.signature, raw, arm });
       results.push({ framework: project.framework, ...score });
       console.log(`score-conformance: ${project.projectId} raw ${score.raw.toFixed(3)} -> target ${score.target.toFixed(3)} (delta ${score.delta >= 0 ? '+' : ''}${score.delta.toFixed(3)})`);
+      
+      // Cleanup ephemeral uplifted temp directory; outputs store retains the persisted copies.
+      rmSync(upliftedTemp, { recursive: true, force: true });
     }
   } finally {
     await chrome.close();
     rmSync(corpusRoot, { recursive: true, force: true });
-    rmSync(resolve('.conformance-uplifted', runId), { recursive: true, force: true });
     rmSync(runDir, { recursive: true, force: true });
   }
 
