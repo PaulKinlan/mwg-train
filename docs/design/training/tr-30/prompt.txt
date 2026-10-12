@@ -14,7 +14,7 @@ Art direction: Shoreline Marine Stewardship — Coastal Beach Cleanup & Kit Pass
 
 Use exactly this palette: #075985 (sm-ocean), #0f766e (sm-teal), #ffffff (sm-card), #bae6fd (sm-border), #f0fdfa (sm-bg), #0f172a (sm-text), #64748b (sm-muted). The accent is the only chromatic colour and carries the single primary action.
 
-Structural constants: control-radius 8px, content-frame 1200px, control-border 1px solid var(--sm-border), page-padding 1.5rem.
+Structural constants: control-radius 8px, content-frame 1200px, control-border 1px solid var(--sm-border), page-padding 1.5rem. Require the control to remain identifiable in its default unfocused state by a persistent alternate visual cue (e.g. distinct background fill or contrasting icon) since the control border is low contrast.
 
 Typography: a system UI sans-serif stack, exactly one h1, and section headings that keep a real document outline.
 

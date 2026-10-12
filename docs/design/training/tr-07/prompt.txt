@@ -14,7 +14,7 @@ Art direction: Starlight Ridge Dark Sky Observatory — Public Viewing Pass: the
 
 Use exactly this palette: #030712 (ds-bg), #0b1120 (ds-surface), #111c33 (ds-card), #1e2e4f (ds-border), #38bdf8 (ds-cyan), #6366f1 (ds-indigo), #f1f5f9 (ds-text), #94a3b8 (ds-muted). The accent is the only chromatic colour and carries the single primary action.
 
-Structural constants: control-radius 12px, content-frame 1200px, control-border 1px solid var(--ds-border), page-padding 1.5rem.
+Structural constants: control-radius 12px, content-frame 1200px, control-border 1px solid var(--ds-border), page-padding 1.5rem. Require the control to remain identifiable in its default unfocused state by a persistent alternate visual cue (e.g. distinct background fill or contrasting icon) since the control border is low contrast.
 
 Typography: a system UI sans-serif stack, exactly one h1, and section headings that keep a real document outline.
 

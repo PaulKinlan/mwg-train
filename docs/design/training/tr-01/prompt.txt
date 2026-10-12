@@ -14,7 +14,7 @@ Art direction: VeloFix Mobile Mechanic — Doorstep Bicycle Tuning & Repair: the
 
 Use exactly this palette: #0f172a (vf-bg), #1e293b (vf-surface), #273549 (vf-card), #334155 (vf-border), #10b981 (vf-accent), #059669 (vf-accent-hover), #f8fafc (vf-text), #94a3b8 (vf-text-muted). The accent is the only chromatic colour and carries the single primary action.
 
-Structural constants: control-radius 8px, content-frame 1200px, control-border 1px solid var(--vf-border), page-padding 1.5rem.
+Structural constants: control-radius 8px, content-frame 1200px, control-border 1px solid var(--vf-border), page-padding 1.5rem. Require the control to remain identifiable in its default unfocused state by a persistent alternate visual cue (e.g. distinct background fill or contrasting icon) since the control border is low contrast.
 
 Typography: a system UI sans-serif stack, exactly one h1, and section headings that keep a real document outline.
 

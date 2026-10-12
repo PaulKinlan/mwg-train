@@ -14,7 +14,7 @@ Art direction: Meadowbrook Wildlife Hospital — Volunteer Onboarding & Credenti
 
 Use exactly this palette: #14532d (wb-green), #22c55e (wb-leaf), #f0fdf4 (wb-light), #cbd5e1 (wb-border), #0f172a (wb-dark), #ffffff (wb-card). The accent is the only chromatic colour and carries the single primary action.
 
-Structural constants: control-radius 10px, content-frame 1100px, control-border 1px solid var(--wb-border), page-padding 1.5rem.
+Structural constants: control-radius 10px, content-frame 1100px, control-border 1px solid var(--wb-border), page-padding 1.5rem. Require the control to remain identifiable in its default unfocused state by a persistent alternate visual cue (e.g. distinct background fill or contrasting icon) since the control border is low contrast.
 
 Typography: a system UI sans-serif stack, exactly one h1, and section headings that keep a real document outline.
 

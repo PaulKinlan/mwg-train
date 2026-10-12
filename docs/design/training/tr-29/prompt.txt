@@ -14,7 +14,7 @@ Art direction: Community Woodland Trust — Memorial Tree Fund & Dedication Ledg
 
 Use exactly this palette: #14532d (cw-green), #854d0e (cw-brass), #ffffff (cw-card), #bbf7d0 (cw-border), #f0fdf4 (cw-bg), #14532d (cw-text), #4b5563 (cw-muted). The accent is the only chromatic colour and carries the single primary action.
 
-Structural constants: control-radius 8px, content-frame 1200px, control-border 1px solid var(--cw-border), page-padding 1.5rem.
+Structural constants: control-radius 8px, content-frame 1200px, control-border 1px solid var(--cw-border), page-padding 1.5rem. Require the control to remain identifiable in its default unfocused state by a persistent alternate visual cue (e.g. distinct background fill or contrasting icon) since the control border is low contrast.
 
 Typography: a system UI sans-serif stack, exactly one h1, and section headings that keep a real document outline.
 

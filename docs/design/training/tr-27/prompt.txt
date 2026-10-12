@@ -14,7 +14,7 @@ Art direction: St. Jude’s Chamber Music — Acoustic Concert Pew Reservation: 
 
 Use exactly this palette: #44403c (sj-stone), #831843 (sj-ruby), #d97706 (sj-gold), #ffffff (sj-card), #e7e5e4 (sj-border), #fafaf9 (sj-bg), #1c1917 (sj-text), #78716c (sj-muted). The accent is the only chromatic colour and carries the single primary action.
 
-Structural constants: control-radius 8px, content-frame 1200px, control-border 1px solid var(--sj-border), page-padding 1.5rem.
+Structural constants: control-radius 8px, content-frame 1200px, control-border 1px solid var(--sj-border), page-padding 1.5rem. Require the control to remain identifiable in its default unfocused state by a persistent alternate visual cue (e.g. distinct background fill or contrasting icon) since the control border is low contrast.
 
 Typography: a system UI sans-serif stack, exactly one h1, and section headings that keep a real document outline.
 

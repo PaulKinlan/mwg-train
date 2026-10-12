@@ -14,7 +14,7 @@ Art direction: Atlas Roasters — Single-Origin Coffee Subscription Manager: the
 
 Use exactly this palette: #261814 (ar-roast), #b45309 (ar-gold), #ffffff (ar-card), #e7e5e4 (ar-border), #fafaf9 (ar-bg), #292524 (ar-text), #78716c (ar-muted). The accent is the only chromatic colour and carries the single primary action.
 
-Structural constants: control-radius 8px, content-frame 1100px, control-border 1px solid var(--ar-border), page-padding 1.5rem.
+Structural constants: control-radius 8px, content-frame 1100px, control-border 1px solid var(--ar-border), page-padding 1.5rem. Require the control to remain identifiable in its default unfocused state by a persistent alternate visual cue (e.g. distinct background fill or contrasting icon) since the control border is low contrast.
 
 Typography: a system UI sans-serif stack, exactly one h1, and section headings that keep a real document outline.
 

@@ -14,7 +14,7 @@ Art direction: Stonegate Heritage Trail — Historical Stops & Audio Transcripts
 
 Use exactly this palette: #581c87 (st-plum), #b45309 (st-gold), #f5f5f4 (st-sand), #ffffff (st-card), #e7e5e4 (st-border), #292524 (st-text), #78716c (st-muted). The accent is the only chromatic colour and carries the single primary action.
 
-Structural constants: control-radius 8px, content-frame 1200px, control-border 1px solid var(--st-border), page-padding 1.5rem.
+Structural constants: control-radius 8px, content-frame 1200px, control-border 1px solid var(--st-border), page-padding 1.5rem. Require the control to remain identifiable in its default unfocused state by a persistent alternate visual cue (e.g. distinct background fill or contrasting icon) since the control border is low contrast.
 
 Typography: a system UI sans-serif stack, exactly one h1, and section headings that keep a real document outline.
 

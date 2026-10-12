@@ -14,7 +14,7 @@ Art direction: Heirloom Perennial Repository — Cuttings & Seed Strain Index: t
 
 Use exactly this palette: #15803d (hp-sage), #7c3aed (hp-purple), #ffffff (hp-card), #e2e8f0 (hp-border), #f8fafc (hp-bg), #1e293b (hp-text), #64748b (hp-muted). The accent is the only chromatic colour and carries the single primary action.
 
-Structural constants: control-radius 8px, content-frame 1200px, control-border 1px solid var(--hp-border), page-padding 1.5rem.
+Structural constants: control-radius 8px, content-frame 1200px, control-border 1px solid var(--hp-border), page-padding 1.5rem. Require the control to remain identifiable in its default unfocused state by a persistent alternate visual cue (e.g. distinct background fill or contrasting icon) since the control border is low contrast.
 
 Typography: a system UI sans-serif stack, exactly one h1, and section headings that keep a real document outline.
 

@@ -14,7 +14,7 @@ Art direction: Civic Warm Homes Partnership — Home Retrofit Grant & Heat Pump 
 
 Use exactly this palette: #c2410c (wh-orange), #0369a1 (wh-blue), #ffffff (wh-card), #fed7aa (wh-border), #fffbeb (wh-bg), #1c1917 (wh-text), #78716c (wh-muted). The accent is the only chromatic colour and carries the single primary action.
 
-Structural constants: control-radius 8px, content-frame 1100px, control-border 1px solid var(--wh-border), page-padding 1.5rem.
+Structural constants: control-radius 8px, content-frame 1100px, control-border 1px solid var(--wh-border), page-padding 1.5rem. Require the control to remain identifiable in its default unfocused state by a persistent alternate visual cue (e.g. distinct background fill or contrasting icon) since the control border is low contrast.
 
 Typography: a system UI sans-serif stack, exactly one h1, and section headings that keep a real document outline.
 

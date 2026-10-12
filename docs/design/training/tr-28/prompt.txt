@@ -14,7 +14,7 @@ Art direction: Trailhead Youth Gear Locker — Equipment Repair & Maintenance Ti
 
 Use exactly this palette: #064e3b (th-forest), #eab308 (th-yellow), #1f2937 (th-slate), #ffffff (th-card), #d1d5db (th-border), #f9fafb (th-bg), #111827 (th-text), #6b7280 (th-muted). The accent is the only chromatic colour and carries the single primary action.
 
-Structural constants: control-radius 8px, content-frame 1200px, control-border 1px solid var(--th-border), page-padding 1.5rem.
+Structural constants: control-radius 8px, content-frame 1200px, control-border 1px solid var(--th-border), page-padding 1.5rem. Require the control to remain identifiable in its default unfocused state by a persistent alternate visual cue (e.g. distinct background fill or contrasting icon) since the control border is low contrast.
 
 Typography: a system UI sans-serif stack, exactly one h1, and section headings that keep a real document outline.
 

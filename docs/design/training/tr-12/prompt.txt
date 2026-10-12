@@ -14,7 +14,7 @@ Art direction: CleanTech Trades Network — Heat Pump & Solar Apprenticeships: t
 
 Use exactly this palette: #0f172a (ct-slate), #1e293b (ct-surface), #0d9488 (ct-teal), #f59e0b (ct-amber), #334155 (ct-border), #f8fafc (ct-text), #94a3b8 (ct-muted). The accent is the only chromatic colour and carries the single primary action.
 
-Structural constants: control-radius 8px, content-frame 1200px, control-border 1px solid var(--ct-border), page-padding 1.5rem.
+Structural constants: control-radius 8px, content-frame 1200px, control-border 1px solid var(--ct-border), page-padding 1.5rem. Require the control to remain identifiable in its default unfocused state by a persistent alternate visual cue (e.g. distinct background fill or contrasting icon) since the control border is low contrast.
 
 Typography: a system UI sans-serif stack, exactly one h1, and section headings that keep a real document outline.
 

@@ -14,7 +14,7 @@ Art direction: Estuary Community Rowing Club — Skiff Outing & Tide Safety Mani
 
 Use exactly this palette: #0369a1 (rc-blue), #0c4a6e (rc-ocean), #ea580c (rc-orange), #ffffff (rc-card), #bae6fd (rc-border), #f0fdfa (rc-bg), #0f172a (rc-text), #64748b (rc-muted). The accent is the only chromatic colour and carries the single primary action.
 
-Structural constants: control-radius 8px, content-frame 1200px, control-border 1px solid var(--rc-border), page-padding 1.5rem.
+Structural constants: control-radius 8px, content-frame 1200px, control-border 1px solid var(--rc-border), page-padding 1.5rem. Require the control to remain identifiable in its default unfocused state by a persistent alternate visual cue (e.g. distinct background fill or contrasting icon) since the control border is low contrast.
 
 Typography: a system UI sans-serif stack, exactly one h1, and section headings that keep a real document outline.
 
