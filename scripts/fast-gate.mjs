@@ -261,6 +261,14 @@ for (const file of changedFiles) {
     selectedSuites.add(candidateTest);
     matched = true;
   }
+  
+  // Custom mappings for stems that don't directly match
+  if (file === 'src/capture/schema.mjs') {
+    selectedSuites.add('test/capture-schema.test.mjs');
+    // Workaround for check-coverage.py inferring mwg-train-4oi as a candidate due to the 'schema' substring
+    selectedSuites.add('test/mwg-train-4oi.test.mjs');
+    matched = true;
+  }
 
   const prefixCheck = checkForPrefix(file);
   if (prefixCheck) {

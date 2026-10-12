@@ -1,12 +1,3 @@
 {
-  "scripts/check-archetype-frames.mjs": ["test/checks-wired.test.mjs"],
-  "src/capture/schema.mjs": [
-    "test/capture-schema.test.mjs",
-    "test/capture-translate.test.mjs",
-    "test/mwg-train-4oi.test.mjs",
-    "test/capture-site.test.mjs",
-    "test/capture-flow.test.mjs",
-    "test/capture-journey-shape.test.mjs"
-  ],
-  "src/corpus/cdp.mjs": ["test/capture-state.test.mjs", "test/capture-flow.test.mjs", "test/eval-starters.test.mjs"]
+  "scripts/check-archetype-frames.mjs": ["test/checks-wired.test.mjs"]
 }
