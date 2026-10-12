@@ -97,7 +97,7 @@ The families define specific observable assertions:
 
 **Not implemented as a multi-step flow in the sealed pilot.** Being precise about what does exist:
 - **One landing reference exists:** `tr-05/reference.jpg`. It depicts one page at one scroll position. The multi-step journey boards are planned and ungenerated.
-- The single-step `tr-05` and `fam-05` targets evaluate basic registration forms in the harness, but do not evaluate the full multi-step `onboarding-auth` session retention, sign-in, and reset token life cycles end-to-end.
+- Only the training family (`tr-05`) has a single-step target in `docs/train/targets/` that evaluates a basic registration form in the harness. The evaluation family (`fam-05`) is declared as a brief in `docs/eval/briefs/manifest.jsonl` but has no single-step target in the sealed evaluation target set, and neither evaluates the full multi-step `onboarding-auth` session retention, sign-in, and reset token life cycles end-to-end.
 - There is no full A6 evaluation specification for this expanded multi-step type under `docs/eval/specs/`.
 
 ## Provenance

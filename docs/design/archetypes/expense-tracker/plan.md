@@ -33,6 +33,7 @@ The families declare their own routes, and all are listed because the archetype'
 |---|---|---|---|
 | `GET /` | all | page | serves the landing or overview page |
 | `GET /expenses` | `tr-15`, `fam-15` | page | serves the chronological ledger of recorded expenses |
+| `GET /categories` | `fam-15` | page | serves the category listing or management view |
 | `GET /expenses/new` | `tr-15`, `fam-15`, `fam-r03` | page | serves the expense logging intake form |
 | `POST /expenses/new` | `tr-15`, `fam-15`, `fam-r03` | write | inserts an expense record and redirects to the receipt or ledger |
 | `GET /expenses/:id` | `tr-15`, `fam-15`, `fam-r03` | read-by-reference | reads the detailed expense receipt by reference |
@@ -120,7 +121,7 @@ The families define specific observable assertions:
 
 **Not implemented as a multi-step flow in the sealed pilot.** Being precise about what does exist:
 - **Two landing references exist, one for each training family:** `tr-15/reference.jpg` and `tr-29/reference.jpg`. Each depicts one page at one scroll position. The multi-step journey boards are planned and ungenerated.
-- The single-step `tr-15`, `tr-29`, `fam-15`, and `fam-r03` targets are simple pages containing a form, but do not evaluate the full multi-step `expense-tracker` ledger, intake form, and aggregated reports functionality end-to-end.
+- Only the training families (`tr-15`, `tr-29`) have single-step targets in `docs/train/targets/`. The evaluation families (`fam-15`, `fam-r03`) are declared as briefs in `docs/eval/briefs/manifest.jsonl` but have no single-step targets in the sealed evaluation target set, and none evaluate the full multi-step `expense-tracker` ledger, intake form, and aggregated reports functionality end-to-end.
 - There is no full A6 evaluation specification for this expanded multi-step type under `docs/eval/specs/`.
 
 ## Provenance
