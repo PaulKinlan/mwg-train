@@ -22,20 +22,25 @@ function hasBwrap() {
 }
 
 const MAX_BODY = 16 * 1024 * 1024;
+const CORPUS_CPU_SECONDS = 20;
+const CORPUS_WALL_MS = 120_000;
 
 /** Expose a sandboxed server on host loopback, preserving root-relative URLs verbatim. */
-export async function startCorpusSandbox(projectDir, { port }) {
+export async function startCorpusSandbox(projectDir, { port, cpuSeconds = CORPUS_CPU_SECONDS, wallMs = CORPUS_WALL_MS }) {
   requireCorpusSandbox();
   const sandbox = new Sandbox({
     id: `corpus:${process.pid}:${port}:${Date.now()}`,
     siteDir: resolve(projectDir),
     nodeModulesDir: resolve(import.meta.dirname, '../../node_modules'),
+    cpuSeconds,
   });
   let listener;
+  let wallTimer;
   let stopped = false;
   const stop = async () => {
     if (stopped) return;
     stopped = true;
+    clearTimeout(wallTimer);
     sandbox.stop();
     // Close existing connections as well: a stalled untrusted request must not hold shutdown open.
     if (listener) {
@@ -84,6 +89,9 @@ export async function startCorpusSandbox(projectDir, { port }) {
         done();
       });
     });
+    // Independent of any stalled Chrome journey: the server cannot remain alive past this deadline.
+    wallTimer = setTimeout(() => void stop(), wallMs);
+    wallTimer.unref();
     return { port: listener.address().port, child: sandbox.child, log: () => sandbox.log, stop, sandbox };
   } catch (error) {
     await stop();

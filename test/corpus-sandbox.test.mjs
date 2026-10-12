@@ -8,7 +8,7 @@ import { join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 
 import { requireCorpusSandbox, startCorpusSandbox } from '../src/corpus/sandbox.mjs';
-import { startServer, stopServer } from '../src/corpus/harness.mjs';
+import { runProjectVersion, startServer, stopServer } from '../src/corpus/harness.mjs';
 
 const available = (() => { try { execFileSync('bwrap', ['--version'], { stdio: 'ignore' }); return true; } catch { return false; } })();
 
@@ -33,6 +33,65 @@ async function loopbackGet(port, path) {
   const response = await fetch(`http://127.0.0.1:${port}${path}`, { signal: AbortSignal.timeout(5000) });
   return { status: response.status, body: await response.json() };
 }
+
+test('CPU limit kills a spinner only when enabled; wall-clock limit closes the listener',
+  { skip: process.platform !== 'linux' || !available, timeout: 30_000 }, async (t) => {
+    const temp = mkdtempSync(join(tmpdir(), 'corpus-cpu-test-'));
+    t.after(() => rmSync(temp, { recursive: true, force: true }));
+    writeFileSync(join(temp, 'server.mjs'), `
+import { createServer } from 'node:http';
+createServer((req, res) => {
+  if (req.url === '/spin') { for (;;) {} }
+  res.writeHead(200).end('ok');
+}).listen(Number(process.env.PILOT_PORT), '127.0.0.1');
+`);
+    const control = await startCorpusSandbox(temp, { port: 0, cpuSeconds: null, wallMs: 10_000 });
+    t.after(() => control.stop());
+    const spinning = fetch(`http://127.0.0.1:${control.port}/spin`).catch(() => {});
+    await delay(2200);
+    assert.equal(control.sandbox.alive, true, 'identical spinner survives without CPU limit');
+    assert.doesNotMatch(control.log(), /site gone/, 'unlimited site has not exited');
+    await control.stop();
+    await spinning;
+
+    const limited = await startCorpusSandbox(temp, { port: 0, cpuSeconds: 2, wallMs: 10_000 });
+    t.after(() => limited.stop());
+    const limitedSpin = fetch(`http://127.0.0.1:${limited.port}/spin`).catch(() => {});
+    for (let i = 0; i < 60 && limited.sandbox.alive; i++) await delay(100);
+    assert.equal(limited.sandbox.alive, false, 'RLIMIT_CPU kills the spinning site and its bridge');
+    await limited.stop();
+    await limitedSpin;
+
+    const wall = await startCorpusSandbox(temp, { port: 0, wallMs: 300 });
+    t.after(() => wall.stop());
+    await delay(600);
+    assert.equal(wall.sandbox.alive, false, 'wall deadline stops the sandbox even without requests');
+    await assert.rejects(fetch(`http://127.0.0.1:${wall.port}/__health`), 'wall deadline closes listener');
+  });
+
+test('failed browser run records sandbox mechanism and platform and stops its listener',
+  { skip: process.platform !== 'linux' || !available, timeout: 15_000 }, async (t) => {
+    const temp = mkdtempSync(join(tmpdir(), 'corpus-record-sandbox-'));
+    t.after(() => rmSync(temp, { recursive: true, force: true }));
+    writeFileSync(join(temp, 'server.mjs'), `
+import { createServer } from 'node:http';
+createServer((_req, res) => res.writeHead(200).end('ok')).listen(Number(process.env.PILOT_PORT), '127.0.0.1');
+`);
+    const reservation = createServer();
+    const port = await new Promise((done) => reservation.listen(0, '127.0.0.1', () => {
+      const number = reservation.address().port;
+      reservation.close(() => done(number));
+    }));
+    const record = await runProjectVersion({
+      chrome: { newPage: async () => { throw new Error('browser probe ended'); } },
+      projectDir: temp, spec: { project_id: 'probe', archetype: 'probe', framework: { name: 'probe', version: '1', dialect: 'js' } },
+      label: 'probe', port, runDir: temp, dbPath: join(temp, 'db.sqlite'),
+    });
+    assert.deepEqual(record.errors, ['browser probe ended']);
+    assert.equal(record.sandbox, 'bubblewrap');
+    assert.equal(record.platform, 'linux');
+    await assert.rejects(fetch(`http://127.0.0.1:${port}/__health`), 'run finally closed listener');
+  });
 
 test('adversarial control escapes; sandbox denies env, host write, network and fork lifetime while returning a verdict',
   { skip: process.platform !== 'linux' || !available, timeout: 60_000 }, async (t) => {

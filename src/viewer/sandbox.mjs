@@ -89,7 +89,11 @@ export class Sandbox {
    * @param {string} args.siteDir       the tree to serve; mounted read-only at /site
    * @param {string} [args.entry]       entry point relative to /site, default server.mjs
    */
-  constructor({ id, siteDir, entry = 'server.mjs', nodeModulesDir = null }) {
+  constructor({ id, siteDir, entry = 'server.mjs', nodeModulesDir = null, cpuSeconds = null }) {
+    if (cpuSeconds !== null && (!Number.isSafeInteger(cpuSeconds) || cpuSeconds < 1)) {
+      throw new TypeError('cpuSeconds must be a positive integer or null');
+    }
+    this.cpuSeconds = cpuSeconds;
     this.id = id;
     this.siteDir = siteDir;
     this.entry = entry;
@@ -186,7 +190,10 @@ export class Sandbox {
       // explicit child mounts: /tmp, /data and /dev retain their independent size/writability.
       '--remount-ro', '/',
       '--',
-      '/node/bin/node', '/viewer/bridge-wrapper.mjs', '--entry', `/site/${this.entry}`, '--port', String(SANDBOX_PORT),
+      ...(this.cpuSeconds === null
+        ? ['/node/bin/node', '/viewer/bridge-wrapper.mjs']
+        : ['/bin/sh', '-c', 'ulimit -t "$1" || exit 1; shift; exec /node/bin/node /viewer/bridge-wrapper.mjs "$@"', 'corpus-cpu-limit', String(this.cpuSeconds)]),
+      '--entry', `/site/${this.entry}`, '--port', String(SANDBOX_PORT),
     ];
     this.child = spawn('bwrap', args, { stdio: ['pipe', 'pipe', 'pipe'] });
     this.child.stderr.on('data', (chunk) => {
