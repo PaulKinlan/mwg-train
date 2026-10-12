@@ -103,6 +103,29 @@ export const SIGNATURE_SCRIPT = `return (() => {
     pruned.set(element, answer);
     return answer;
   };
+  // Whether an element paints generated content of its own, which is content the DOM does not expose through
+  // textContent: an icon-font glyph, a ::before label, a counter. This is a regression the branch introduced:
+  // earlier work here narrowed "does this render" to "does it have textContent or a media tag", so a page whose
+  // only visible text is <p class="icon"></p> with .icon::before{content:"..."} went from measurable on main to
+  // refused here - icon fonts and CSS-generated labels, not an exotic case. Recorded at CAPTURE because it cannot
+  // be derived from a signature at scoring time, and read as absent-means-false so committed targets keep the
+  // verdict they were captured under.
+  //
+  // Measured: both pseudo-elements over 411 elements cost 2.3ms, and the computed forms are distinguishable -
+  // "text" for a string, "" for an empty one, "item " counter(c) for a counter, url(...) for an image, none when
+  // there is nothing. The empty string and the two keywords mean nothing is painted.
+  const generated = new Map();
+  const paintsGenerated = (element) => {
+    const known = generated.get(element);
+    if (known !== undefined) return known;
+    let answer = false;
+    for (const pseudo of ['::before', '::after']) {
+      const content = getComputedStyle(element, pseudo).content;
+      if (content && content !== 'none' && content !== 'normal' && content !== '""') { answer = true; break; }
+    }
+    generated.set(element, answer);
+    return answer;
+  };
   const walk = (element, depth) => {
     for (const child of element.children) {
       const tag = child.tagName.toLowerCase();
@@ -117,7 +140,7 @@ export const SIGNATURE_SCRIPT = `return (() => {
         // the same node by tag alone, which is how an empty mount scored perfect parity. childCount deliberately is
         // NOT captured: it counts elements, not content, so a wrapper around a wrapper has children and renders
         // nothing.
-        nodes.push({ tag, depth, textLength: renderedText(child), type: child.getAttribute('type') ?? null, name: child.getAttribute('name') ?? null, role: child.getAttribute('role') ?? null });
+        nodes.push({ tag, depth, textLength: renderedText(child), generated: paintsGenerated(child), type: child.getAttribute('type') ?? null, name: child.getAttribute('name') ?? null, role: child.getAttribute('role') ?? null });
       }
       walk(child, depth + 1);
     }
@@ -327,6 +350,11 @@ export function isMeasurable(signature) {
     // Nothing renders text. Elements that render without text are still content, so an image-only or canvas-only
     // page is not an empty shell; without this the rule would trade a false positive for a false negative.
     if (nodes.some((node) => node != null && NON_TEXT_CONTENT.has(node.tag))) return true;
+
+    // Generated content counts as content: an icon-font glyph or a ::before label is rendered, so a page built
+    // from them is not an empty shell. Absent means false, so a committed target keeps the verdict it was
+    // captured under.
+    if (nodes.some((node) => node != null && node.generated === true)) return true;
     return false;
   }
 
