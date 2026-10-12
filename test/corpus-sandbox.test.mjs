@@ -1,16 +1,77 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn, execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import { createServer as createHttpServer } from 'node:http';
 import { createServer } from 'node:net';
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { networkInterfaces, tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 
+import { launchChrome } from '../src/corpus/cdp.mjs';
 import { requireCorpusSandbox, startCorpusSandbox } from '../src/corpus/sandbox.mjs';
 import { runProjectVersion, startServer, stopServer } from '../src/corpus/harness.mjs';
 
 const available = (() => { try { execFileSync('bwrap', ['--version'], { stdio: 'ignore' }); return true; } catch { return false; } })();
+
+test('generated page egress control connects; contained page denies fetch and WebSocket but serves loopback',
+  { timeout: 30_000 }, async (t) => {
+    const address = Object.values(networkInterfaces()).flat().find((a) => a.family === 'IPv4' && !a.internal)?.address;
+    assert.ok(address, 'control needs a reachable non-loopback host interface');
+    const hits = { fetch: 0, websocket: 0 };
+    const outbound = createHttpServer((req, res) => {
+      hits.fetch++;
+      res.writeHead(200, { 'access-control-allow-origin': '*', 'content-type': 'text/plain' }).end('connected');
+    });
+    outbound.on('upgrade', (req, socket) => {
+      hits.websocket++;
+      const accept = createHash('sha1').update(`${req.headers['sec-websocket-key']}258EAFA5-E914-47DA-95CA-C5AB0DC85B11`).digest('base64');
+      socket.end(`HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: ${accept}\r\n\r\n`);
+    });
+    await new Promise((resolve) => outbound.listen(0, address, resolve));
+    t.after(() => outbound.close());
+    const endpoint = `http://${address}:${outbound.address().port}/probe`;
+    const app = createHttpServer((_req, res) => res.writeHead(200, { 'content-type': 'text/html' }).end(`<title>generated page</title><script>
+      window.egressProbe = (async () => {
+        const endpoint = ${JSON.stringify(endpoint)};
+        const fetched = await Promise.race([
+          fetch(endpoint).then((res) => res.text()).then((body) => body === 'connected', () => false),
+          new Promise((resolve) => setTimeout(() => resolve(false), 3000)),
+        ]);
+        const websocket = await new Promise((resolve) => {
+          const ws = new WebSocket(endpoint.replace('http:', 'ws:'));
+          const timer = setTimeout(() => { ws.close(); resolve(false); }, 3000);
+          ws.onopen = () => { clearTimeout(timer); ws.close(); resolve(true); };
+          ws.onerror = () => { clearTimeout(timer); resolve(false); };
+        });
+        return { fetched, websocket };
+      })();
+    </script>`));
+    await new Promise((resolve) => app.listen(0, '127.0.0.1', resolve));
+    t.after(() => app.close());
+    const probe = async (blockEgress) => {
+      const chrome = await launchChrome({ blockEgress });
+      try {
+        const page = await chrome.newPage();
+        await page.goto(`http://127.0.0.1:${app.address().port}/`);
+        assert.equal(await page.evaluate('return document.title'), 'generated page', 'loopback app must load');
+        const result = await page.evaluate('return await window.egressProbe');
+        return { ...result, blockedRequests: page.blockedRequests };
+      } finally { await chrome.close(); }
+    };
+    const control = await probe(false);
+    assert.equal(control.fetched, true, 'without containment browser fetch must connect');
+    assert.equal(control.websocket, true, 'without containment browser WebSocket must connect');
+    assert.deepEqual(hits, { fetch: 1, websocket: 1 }, 'outbound listener saw both control requests');
+    const contained = await probe(true);
+    assert.equal(contained.fetched, false, 'contained browser fetch must fail');
+    assert.equal(contained.websocket, false, 'contained browser WebSocket must fail');
+    assert.deepEqual(hits, { fetch: 1, websocket: 1 }, 'outbound listener saw no contained requests');
+    assert.ok(contained.blockedRequests.some((url) => url.startsWith('http://') && url.includes(address)),
+      'CDP explicitly failed the outbound fetch, not merely a proxy connection error');
+    console.log(`browser egress control: fetch=true websocket=true; contained: fetch=false websocket=false; CDP failed: ${contained.blockedRequests.join(', ')}; loopback loaded`);
+  });
 
 test('unsupported platforms and unavailable bubblewrap refuse without a fallback', () => {
   assert.throws(() => requireCorpusSandbox({ platform: 'darwin', bwrapAvailable: true }), /darwin.*bubblewrap.*unsupported.*refusing/);
