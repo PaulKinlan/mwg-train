@@ -288,7 +288,7 @@ export function controlSimilarity(target, candidate) {
   return round(0.6 * match + 0.4 * labelled);
 }
 
-const NON_TEXT_CONTENT = new Set(['img', 'picture', 'svg', 'canvas', 'video', 'audio', 'object', 'embed']);
+const NON_TEXT_CONTENT = new Set(['img', 'picture', 'svg', 'canvas', 'video', 'audio', 'object', 'embed', 'hr']);
 
 /** A wrapper renders its children and nothing of its own, so a wrapper alone is not evidence of content. */
 const isWrapperTag = (tag) => {
