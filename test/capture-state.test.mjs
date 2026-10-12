@@ -14,7 +14,7 @@
  * and thrown. So what is asserted here is that a second page is actually rendered, and that the root is still
  * the default.
  */
-import { test } from 'node:test';
+import { after, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -26,6 +26,10 @@ import { conformanceScore, isMeasurable, structuralSimilarity } from '../src/eva
 
 const ROOT = resolve(import.meta.dirname, '..');
 const TMP = mkdtempSync(join(tmpdir(), 'mwg-capture-state-'));
+
+after(() => {
+  try { rmSync(TMP, { recursive: true, force: true }); } catch {}
+});
 
 /**
  * A project the harness can actually serve.
