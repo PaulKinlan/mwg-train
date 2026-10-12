@@ -310,6 +310,29 @@ test('hidden is honoured however it is spelled, and from an ancestor', () => {
   }
 });
 
+test('src written inside another attribute is not the element\u2019s source', () => {
+  // Review round 8: searching the attribute text for `src` found one inside a title before the real one, so
+  // the check captioned the committed JPEG while the browser showed the placeholder.
+  const prefix = sha256(BOARD).slice(0, 10);
+  const html = `<div><img title="Example src='../step1-grid.jpg'" src="../placeholder.png"><p>Board <code>../step1-grid.jpg</code> (1376 \u00d7 768, SHA-256 <code>${prefix}\u2026</code>)</p></div>`;
+  withFixture({ html }, (holder) => {
+    const result = checkBoardCaptions({ repoRoot: holder.root });
+    assert.equal(result.ok, false, 'the committed JPEG is not displayed, so the page must fail');
+    assert.equal(result.boards, 0, 'placeholder.png is not a reference board');
+    assert.ok(result.findings.some((f) => /does not display/.test(f)), result.findings.join(' | '));
+  });
+});
+
+test('a title on an image does not displace the image\u2019s own src', () => {
+  const prefix = sha256(BOARD).slice(0, 10);
+  const html = `<div><img title="Board preview" alt="board" src="../step1-grid.jpg"><p>Board <code>../step1-grid.jpg</code> (1376 \u00d7 768, SHA-256 <code>${prefix}\u2026</code>)</p></div>`;
+  withFixture({ html }, (holder) => {
+    const result = checkBoardCaptions({ repoRoot: holder.root });
+    assert.deepEqual(result.findings, [], result.findings.join(' | '));
+    assert.equal(result.boards, 1);
+  });
+});
+
 test('a title element\u2019s content is text, so apparent tags inside it are not markup', () => {
   // Review round 7: <title> is a raw-text element. Its content is text, so the apparent img and caption
   // inside it create no element and no caption - the page shows no board.

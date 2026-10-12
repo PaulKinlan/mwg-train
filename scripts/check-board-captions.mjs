@@ -108,20 +108,35 @@ const ATTRIBUTE = /([a-zA-Z_:][-a-zA-Z0-9_:.]*)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|
 export const CAPTION = /<code>([^<]+\.jpg)<\/code>[^<]*?SHA-256:?\s*<code>([0-9a-f]{1,64})(?:\.\.\.|\u2026)<\/code>/g;
 
 /** `src` in double quotes, single quotes or unquoted, which is the whole of HTML's syntax for it. */
-const SRC = /\ssrc\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+))/i;
-
 const MENTION = /SHA-256/g;
 
 /** True when an element carries an `open` attribute, whatever its value, as `details` and `dialog` use. */
 
-/** True when the element carries the named attribute, whatever its value. */
-function hasAttribute(attributes, wanted) {
+/**
+ * The value of a named attribute, or undefined when the element does not carry that attribute.
+ *
+ * Attributes are read by NAME rather than by searching the attribute text for a pattern. `src` written inside
+ * another attribute's value, as in `title="Example src='step1-grid.jpg'"`, is that attribute's text and not
+ * the element's source; searching the whole string found it first and captioned a board the browser never
+ * showed (review round 8). The first occurrence wins, which is also the browser's rule for a repeated
+ * attribute.
+ *
+ * @param {string} attributes
+ * @param {string} wanted
+ * @returns {string|undefined}
+ */
+function attributeValue(attributes, wanted) {
   ATTRIBUTE.lastIndex = 0;
   let match;
   while ((match = ATTRIBUTE.exec(attributes))) {
-    if (match[1].toLowerCase() === wanted) return true;
+    if (match[1].toLowerCase() === wanted) return match[2] ?? match[3] ?? match[4] ?? '';
   }
-  return false;
+  return undefined;
+}
+
+/** True when the element carries the named attribute, whatever its value. */
+function hasAttribute(attributes, wanted) {
+  return attributeValue(attributes, wanted) !== undefined;
 }
 
 /** True when an element is hidden by a boolean attribute or by an inline display:none. */
@@ -353,14 +368,14 @@ export function displayedBoards({ file, html, archetypeDir }) {
   for (const token of markupTokens(text)) {
     if (token.kind !== 'tag' || token.name !== 'img' || token.closing) continue;
     const tag = token.raw;
-    const src = SRC.exec(token.attributes);
-    if (!src) {
+    const src = attributeValue(token.attributes, 'src');
+    if (src === undefined) {
       // An <img> with no readable src cannot be pinned, and silently ignoring it is what let a single-quoted
       // page slip through before. Fail closed.
       findings.push(`${rel} carries an image whose source this check cannot read (${tag.trim().slice(0, 60)}); board images must name a .jpg in a readable src attribute`);
       continue;
     }
-    const source = (src[1] ?? src[2] ?? src[3] ?? '').trim();
+    const source = src.trim();
     if (source === '') {
       // An empty src names no file: not something to skip as "not a board", because the same rule has to
       // account for every image this check cannot read.
