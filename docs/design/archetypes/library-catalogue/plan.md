@@ -184,7 +184,7 @@ All eight criteria are quoted from the two manifests rather than restated.
   All three clauses of the original claim were therefore false, including the staff view. `fam-16` - this
   archetype's own evaluation family - lists `GET /admin/loans` among its routes and asserts that it
   "returns HTTP 200 listing all pending reservation requests with their reservation references", so the
-  staff view is not a gap this archetype fills: the evaluation side already renders and asserts it. What
+  staff view is not a gap this archetype fills: the evaluation side specifies and asserts it. What
   this archetype adds is the assertions attached to these pages, which is what this section is for.
 - **No evaluation spec:** there is no `docs/eval/specs/library-catalogue.json`. This contract is validated by
   section order and internal consistency, not against a spec.
