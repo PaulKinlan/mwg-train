@@ -211,24 +211,29 @@ export function isMeasurable(signature) {
   // one node that is not a generic container to be considered measured.
   // A nested tree of purely divs, spans, or custom element mounts (e.g. body > div#root > app-root)
   // with no roles or text-bearing tags is an empty unmeasured shell.
-  return signature.nodes.some(node =>
-    // This predicate is a GUARD and must be TOTAL: absent, null and non-string tags all count, rather than
-    // throwing. It is called by conformanceScore, which relies on a boolean so it can raise its own TypeError
-    // naming the unmeasured arm; a TypeError from in here replaced that diagnostic with "cannot read properties
-    // of undefined" (mwg-train-75cq). `String(node.tag ?? '')` covers both the reported cases and any non-string
-    // tag. A tagless node is not a generic container - it is not a div, a span or a custom element - so it
-    // counts, which is what this returned before the empty-SPA-root rewrite and what an empty-string tag still
-    // does today.
-    // A null or undefined ENTRY carries nothing comparable, so it is skipped rather than crashing. That is a
-    // different case from the one above: a node object with an absent tag is an entity whose tag is missing, and
-    // it counts as a node that is not a generic container; a null entry is not an entity at all, so it is not
-    // evidence that anything rendered. Skipping is also the safe direction for a caller - returning false here
-    // makes conformanceScore refuse the arm instead of scoring a signature that is partly garbage.
-    node != null && (
-      (node.tag !== 'div' && node.tag !== 'span' && !String(node.tag ?? '').includes('-')) ||
-      node.role != null || node.name != null || node.type != null
-    )
-  );
+  return signature.nodes.some((node) => {
+    // A null or undefined ENTRY is not an entity at all, so it is not evidence that anything rendered.
+    if (node == null) return false;
+
+    // A tag identifies its element only when it is a non-empty string, and only a tag that identifies a
+    // CONTENT-bearing element counts. A div, a span and a custom-element mount are wrappers; a node with no
+    // usable tag has not been shown to be anything at all, so it is a wrapper too - the emptiest one there is.
+    // This function answers "whether a signature carries anything that can actually be compared", and a node
+    // whose tag is absent, null, empty or not a string carries nothing comparable.
+    //
+    // This REVERSES the tagless-node value I chose in mwg-train-75cq, where I kept `true` to match that bead's
+    // merge-base. 75cq's complaint was that the guard THREW, and its totality contract is unchanged here; later
+    // review (mwg-train-7qze) showed the VALUE was wrong, because that same shape is what makes an empty shell
+    // read as rendered content. The two findings are reconcilable only in this direction: a guard must answer,
+    // and for a tag it cannot identify the honest answer is "this is not evidence of content".
+    const tag = typeof node.tag === 'string' ? node.tag : '';
+    const looksLikeWrapper = tag === '' || tag === 'div' || tag === 'span' || tag.includes('-');
+
+    // Role, name and type are semantic attributes rather than tags, so they still qualify a wrapper. This is what
+    // keeps `<div role="alert">` measurable while `<div>` is not, and it is the other half of the "content or a
+    // semantic role" rule.
+    return !looksLikeWrapper || node.role != null || node.name != null || node.type != null;
+  });
 }
 
 /** The three axes and their weighted mean, as one object so a report never has to recompute them. */

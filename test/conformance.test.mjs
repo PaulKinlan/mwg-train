@@ -397,12 +397,59 @@ test('isMeasurable is TOTAL: no input makes it throw, every input yields a boole
     assert.equal(typeof result, 'boolean', `${label} returned ${typeof result}, not a boolean`);
   }
 
-  // And the semantics the fix preserves, so totality was not bought by changing any existing answer.
-  assert.equal(isMeasurable({ nodes: [{ depth: 0 }] }), true, 'a tagless node is not a generic container, so it counts');
-  assert.equal(isMeasurable({ nodes: [{ tag: null }] }), true, 'a null tag is still not a div, span or custom element');
+  // The values this fix preserves. NOTE the first two: 75cq pinned them to `true`, and mwg-train-7qze showed
+  // that was the wrong value, so they are `false` here. The totality contract above is untouched by that
+  // correction - the guard still answers for every input, which is what 75cq was for; only what it answers for
+  // an unidentifiable node changed. See the sibling test below for the reasoning.
+  assert.equal(isMeasurable({ nodes: [{ depth: 0 }] }), false, 'a node with no usable tag is not evidence of content');
+  assert.equal(isMeasurable({ nodes: [{ tag: null }] }), false, 'nor is a null tag');
   assert.equal(isMeasurable({ nodes: [{ tag: 'div' }] }), false, 'a div-only shell is still unmeasured');
   assert.equal(isMeasurable({ nodes: [{ tag: 'app-root' }] }), false, 'a custom-element mount is still unmeasured');
   assert.equal(isMeasurable({ nodes: [null] }), false, 'a null entry is not evidence that anything rendered');
+});
+
+test('an empty mount is unmeasured whatever its tag is, and content or a role is not', () => {
+  // mwg-train-7qze. The empty-SPA-root rule was a TAG DENYLIST - only 'div' and 'span' were treated as wrappers -
+  // so a mount whose tag was neither a div, a span nor a custom element was counted as rendered content. That is
+  // the same defect as 7pol for a different shell, and the reachable form of it is the tagless node: the test
+  // helper in this file builds nodes as `{ tag }`, and a node whose tag is absent, null or not a string slipped
+  // through both comparisons and counted.
+  //
+  // The rule is now "a node counts only when its tag identifies content-bearing element, or it carries a
+  // semantic role, name or type". A tag that cannot be read is treated as a wrapper, because a node whose tag is
+  // unreadable has not been shown to be anything.
+  for (const [label, node] of [
+    ['an absent tag', { depth: 0 }],
+    ['a null tag', { tag: null }],
+    ['an empty-string tag', { tag: '' }],
+    ['a non-string tag', { tag: 5 }],
+  ]) {
+    assert.equal(isMeasurable({ nodes: [node], boxes: [], controls: [] }), false, `${label} was counted as content`);
+  }
+
+  // Wrappers stay unmeasured, including the nested shell from the sibling test above.
+  assert.equal(isMeasurable({ nodes: [{ tag: 'div' }, { tag: 'app-root' }], boxes: [], controls: [] }), false);
+  assert.equal(isMeasurable({ nodes: [{ tag: 'span' }], boxes: [], controls: [] }), false);
+  assert.equal(isMeasurable({ nodes: [{ tag: 'x-mount' }], boxes: [], controls: [] }), false);
+
+  // Content-bearing tags are still measurable, and so is a semantic attribute on a wrapper. This is the half that
+  // must NOT regress: `p` is asserted true by the test above, and a div with a role is asserted true by it too.
+  assert.equal(isMeasurable({ nodes: [{ tag: 'p' }], boxes: [], controls: [] }), true);
+  assert.equal(isMeasurable({ nodes: [{ tag: 'h4' }], boxes: [], controls: [] }), true);
+  assert.equal(isMeasurable({ nodes: [{ tag: 'a' }], boxes: [], controls: [] }), true);
+  assert.equal(isMeasurable({ nodes: [{ tag: 'div', role: 'alert' }], boxes: [], controls: [] }), true);
+  assert.equal(isMeasurable({ nodes: [{ depth: 0, role: 'main' }], boxes: [], controls: [] }), true);
+  assert.equal(isMeasurable({ nodes: [{ depth: 0, name: 'q' }], boxes: [], controls: [] }), true);
+
+  // A KNOWN LIMIT, asserted so it is recorded rather than assumed: container tags that are neither box tags nor
+  // div/span/custom still count as content, because the signature records no text and no child count, so
+  // emptiness is undecidable for them from this data. main/section/article do not reach here at all - the
+  // extractor gives every box tag a bounding box, so boxCount > 0 settles those before this rule runs. Closing
+  // the rest needs the extractor to record text or child counts; changing the tag list would be guessing.
+  assert.equal(isMeasurable({ nodes: [{ tag: 'figure' }], boxes: [], controls: [] }), true,
+    'if this ever becomes false, the extractor started reporting content and this limit note is stale');
+  assert.equal(isMeasurable({ nodes: [{ tag: 'blockquote' }], boxes: [], controls: [] }), true,
+    'same limit: a container tag with no box and no content signal still counts');
 });
 
 test('an unmeasurable signature is refused, not scored a perfect 1.000', () => {
