@@ -70,7 +70,12 @@ const VOID_ELEMENTS = new Set([
 ]);
 
 /** One tag, with whatever attributes it carries, quoted values and all. */
-const TAG = /<(\/?)([a-zA-Z][a-zA-Z0-9:-]*)((?:"[^"]*"|'[^']*'|[^>"'])*?)(\/?)>/g;
+/**
+ * One tag, with whatever attributes it carries, quoted values and all. A `<` inside the attribute text ends the
+ * attempt: in HTML a `<` starts a new tag, so tolerating one here let a truncated tag swallow its neighbour and
+ * defeat the unaccounted-markup guard below.
+ */
+const TAG = /<(\/?)([a-zA-Z][a-zA-Z0-9:-]*)((?:"[^"]*"|'[^']*'|[^<>"'])*?)(\/?)>/g;
 
 /** Attribute names and values, consumed in order so a name inside another attribute's value is not a name. */
 const ATTRIBUTE = /([a-zA-Z_:][-a-zA-Z0-9_:.]*)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/g;
@@ -123,18 +128,47 @@ function hiddenAttributes(attributes) {
 }
 
 /**
+ * Removes HTML comments the way the specification defines them: a comment ends at `-->`, and an unterminated
+ * one runs to the end of the document. Treating an unterminated `<!--` as ordinary text left everything after
+ * it visible to the scanners, so a board and caption past it counted as displayed (review round 5).
+ *
+ * @param {string} html
+ * @returns {string}
+ */
+export function stripComments(html) {
+  let out = '';
+  let at = 0;
+  for (;;) {
+    const open = html.indexOf('<!--', at);
+    if (open === -1) {
+      out += html.slice(at);
+      break;
+    }
+    out += `${html.slice(at, open)} `;
+    const close = html.indexOf('-->', open + 4);
+    if (close === -1) break; // unterminated: the rest of the document is comment
+    at = close + 3;
+  }
+  return out;
+}
+
+/**
  * The parts of a comparison page a browser renders, with the parts it does not removed.
  *
- * See the module header for the boundary this draws: comments and non-rendered element bodies go, layout is
- * out of scope.
+ * Comments go, and so do the bodies of two kinds of element: those that never render their contents (script,
+ * style, template, noscript, textarea) and those whose children are FALLBACK content, rendered only when the
+ * element itself cannot be - iframe, object, video, audio and canvas. An iframe renders its document rather
+ * than its children, so a board and its caption inside one are not on screen (review round 5). `<picture>` is
+ * deliberately not in this list: its `<img>` child is what renders.
+ *
+ * See the module header for the boundary this draws: layout is out of scope.
  *
  * @param {string} html
  * @returns {string}
  */
 export function renderedText(html) {
-  return html
-    .replace(/<!--[\s\S]*?-->/g, ' ')
-    .replace(/<(script|style|template|noscript|textarea)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, ' ');
+  return stripComments(html)
+    .replace(/<(script|style|template|noscript|textarea|iframe|object|video|audio|canvas)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, ' ');
 }
 
 /**
@@ -199,6 +233,32 @@ export function maskHidden(text) {
     at = end;
   }
   return out + text.slice(at);
+}
+
+/**
+ * Tag-like markup in the given text that the tag scanner did not account for.
+ *
+ * The other guards all assume the scanner can see the markup. This one covers the case where it cannot: a tag
+ * with no closing `>`, an attribute value swallowing the rest of the line, anything that leaves a `<` looking
+ * like a tag start. Unaccounted markup fails the check rather than being quietly ignored, so the check cannot
+ * be made to pass by making its input unreadable.
+ *
+ * @param {string} text
+ * @returns {string[]} the unaccounted fragments, empty when every tag parsed
+ */
+export function unaccountedMarkup(text) {
+  const consumed = new Uint8Array(text.length);
+  TAG.lastIndex = 0;
+  let match;
+  while ((match = TAG.exec(text))) {
+    for (let i = match.index; i < match.index + match[0].length; i += 1) consumed[i] = 1;
+  }
+  const stray = [];
+  const tagLike = /<\/?[a-zA-Z][a-zA-Z0-9:-]*/g;
+  while ((match = tagLike.exec(text))) {
+    if (!consumed[match.index]) stray.push(match[0]);
+  }
+  return stray;
 }
 
 /** The markup a browser renders, with hidden elements masked out of it. */
@@ -283,6 +343,9 @@ export function captionFindings({ file, html, archetypeDir, label = path.relativ
   const findings = [];
   const rel = label;
   const text = visibleMarkup(html);
+  for (const stray of unaccountedMarkup(text)) {
+    findings.push(`${rel} contains markup this check cannot account for (${stray}); every tag on a comparison page must parse`);
+  }
   const mentions = (text.match(MENTION) || []).length;
   const { boards, findings: displayFindings } = displayedBoards({ file, html, archetypeDir });
   findings.push(...displayFindings);

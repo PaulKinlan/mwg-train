@@ -21,7 +21,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { CAPTION, UNCAPTIONED_BY_DESIGN, checkBoardCaptions, captionFindings, renderedText } from '../scripts/check-board-captions.mjs';
+import { CAPTION, UNCAPTIONED_BY_DESIGN, checkBoardCaptions, captionFindings, renderedText, unaccountedMarkup } from '../scripts/check-board-captions.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const CHECK = join(ROOT, 'scripts', 'check-board-captions.mjs');
@@ -308,6 +308,65 @@ test('hidden is honoured however it is spelled, and from an ancestor', () => {
       assert.equal(result.captions, 0, `${what}: a hidden ancestor hides the caption too`);
     });
   }
+});
+
+test('fallback content of iframe, object, video, audio and canvas is not rendered', () => {
+  // An iframe renders its document, not its children; the others render their children only when they cannot
+  // play or be drawn. In every case a board and caption inside are not on screen.
+  const prefix = sha256(BOARD).slice(0, 10);
+  const pair = `<img src="../step1-grid.jpg">${wave2Caption(`${prefix}\u2026`)}`;
+  const cases = [
+    ['iframe', `<iframe src="index.html">${pair}</iframe>`],
+    ['object', `<object data="board.svg">${pair}</object>`],
+    ['video', `<video src="clip.mp4">${pair}</video>`],
+    ['audio', `<audio src="clip.mp3">${pair}</audio>`],
+    ['canvas', `<canvas>${pair}</canvas>`],
+  ];
+  for (const [what, inner] of cases) {
+    const html = `<div>${inner}</div>`;
+    withFixture({ html }, (holder) => {
+      const result = checkBoardCaptions({ repoRoot: holder.root });
+      assert.equal(result.ok, false, `${what} fallback content must not satisfy the page check`);
+      assert.equal(result.boards, 0, `${what}: fallback content is not displayed`);
+    });
+  }
+});
+
+test('a picture element keeps its rendered img, so the masking is not over-broad', () => {
+  const prefix = sha256(BOARD).slice(0, 10);
+  const html = `<div>\n  <picture><source srcset="../step1-grid.jpg"><img src="../step1-grid.jpg"></picture>\n  ${wave2Caption(`${prefix}\u2026`)}
+</div>`;
+  withFixture({ html }, (holder) => {
+    const result = checkBoardCaptions({ repoRoot: holder.root });
+    assert.deepEqual(result.findings, [], result.findings.join(' | '));
+    assert.equal(result.boards, 1);
+  });
+});
+
+test('an unterminated comment runs to the end of the document', () => {
+  // Per the specification an unterminated `<!--` is a comment to EOF, so what follows it is not rendered.
+  const prefix = sha256(BOARD).slice(0, 10);
+  const html = `<div>\n<!-- left open by mistake\n  <img src="../step1-grid.jpg">${wave2Caption(`${prefix}\u2026`)}
+  <p>still inside the comment</p>\n`;
+  withFixture({ html }, (holder) => {
+    const page = renderedText(html);
+    assert.doesNotMatch(page, /still inside the comment/);
+    const result = checkBoardCaptions({ repoRoot: holder.root });
+    assert.equal(result.ok, false, 'a board masked by an unterminated comment must fail the page check');
+    assert.equal(result.boards, 0);
+  });
+});
+
+test('markup the scanner cannot account for is a finding rather than being ignored', () => {
+  // The tag has no closing `>`, so the scanner cannot read it. Ignoring it is how an image leaves the
+  // inventory; it fails the check instead.
+  const prefix = sha256(BOARD).slice(0, 10);
+  const html = `<div>\n  <img src="../step1-grid.jpg" alt="board"\n  ${wave2Caption(`${prefix}\u2026`)}
+</div>`;
+  withFixture({ html }, (holder) => {
+    const findings = captionFindings({ file: holder.file, html, archetypeDir: holder.archetypeDir });
+    assert.ok(findings.some((f) => /cannot account for/.test(f)), findings.join(' | '));
+  });
 });
 
 test('masking hidden elements does not mask the visible ones', () => {
