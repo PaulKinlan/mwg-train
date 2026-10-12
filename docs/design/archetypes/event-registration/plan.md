@@ -31,6 +31,16 @@ one it marks **satisfied**, and its family list names `event-registration` among
 the same way the `blog` or `storefront` archetypes are; what it is waiting on is a *proof*, and that is
 criterion 3's problem rather than a missing route.
 
+The **limited-capacity** contract is shared by three implementing families, but they carry it to different depths and only two of them assert a refusal. `tr-07` and `fam-07` enforce a cap: `tr-07` refuses a booking larger than the remaining capacity, and `fam-07` accepts it onto a waitlist and promotes the first waitlisted attendee when an admin cancels. `tr-30` does not assert a cap rejection at all - its persistence statement says sector capacity **allocations** are stored, and its only submission assertion is that a valid beach zone is required with accessible feedback when omitted. Its table row below records the allocation rather than an enforcement.
+`docs/train/briefs/TYPE-AXIS.md` line 67 **names** `event-registration` on the satisfied
+`record-form` row, so this type is **quoted, not derived**.
+
+| Family | Side | Subject | Distinguishing contract |
+|---|---|---|---|
+| `tr-07` | train | dark sky observatory public viewing night sign-up | party tickets decrement remaining viewing capacity |
+| `tr-30` | train | low-tide beach cleanup zone assignment and kit allocation | valid beach zone and sector capacity allocation |
+| `fam-07` | eval | coastal marine conservation volunteer weekend surveys | waitlist ordering and promotion after admin cancellation |
+
 ## Routes and effects
 
 | Route | Kind | Effect |
@@ -51,6 +61,16 @@ for this archetype. It does record four routes each generated arm serves that th
 Their reasons are not uniform: five entries are `Generator fallback` and fifteen are
 `Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)`. None of the
 four is capacity-aware; they are generator furniture.
+
+**Separate implementing-family routes (not the accepted target's route table above).** The manifests
+list paths; the read and write methods below come from each family's own assertions, rather than
+being inferred for every listed path.
+
+| Family | Declared paths | Asserted write and read-by-reference |
+|---|---|---|
+| `tr-07` | `/`, `/events`, `/register/:eventId`, `/passes/:id` | `POST /register/:eventId` → `GET /passes/:id` |
+| `tr-30` | `/`, `/cleanups`, `/cleanups/:id/register`, `/passes/:id` | `POST /cleanups/:id/register` → `GET /passes/:id` |
+| `fam-07` | `/`, `/events`, `/events/:id/register`, `/registration/:id`, `/admin/events/:id` | `POST /events/:id/register` → `GET /registration/:id` |
 
 ## Data and state
 
@@ -74,6 +94,38 @@ four is capacity-aware; they are generator furniture.
   So a registration is not guaranteed to survive the process that wrote it, and it is not guaranteed to
   disappear either.
 
+**Implementing-family fields and server state (not the target's sqlite schema).** `*` denotes
+required; only `tr-07`'s `notes` is optional. `tr-07` has nine fields; its `date` is the only
+`date`-typed field among this archetype's families. `tr-30` has only three fields, the fewest in the corpus.
+
+| Family | Declared fields (type and required flag) | Select options |
+|---|---|---|
+| `tr-07` | `attendees:text*` (echoed), `email:email*`, `phone:tel*`, `date:date*`, `session:select*`, `party:number*`, `adults:number*`, `children:number*`, `notes:textarea` (optional) | `session`: Early Session (20:00 - 22:00); Late Session (22:30 - 01:00) |
+| `tr-30` | `volunteer:text*` (echoed), `phone:tel*`, `zone:select*` | `zone`: North Cove; Harbour Wall; East Sands |
+| `fam-07` | The evaluation side owns its field slugs; its journeys describe volunteer contact information, emergency contact, and dietary or accessibility needs. Its applicable rules are `accessibility/accessible-error-announcement`, `accessibility/accessibility`, `forms/required-field-feedback`, `ui-components/progress-ring` and `forms/autofill-address-form`; the first three are required rules. | Its field slugs and options are not restated here. |
+
+The training families' fill and select values are distinct from the accepted target's fields.
+`tr-07` fills `input[name=attendees]` with `Cassiopeia Vance`, `email` with
+`cassiopeia@example.test`, `phone` with `+44 7700 900789`, `date` with `2026-10-24`,
+`party` with `3`, `adults` with `2` and `children` with `1`, and `textarea[name=notes]` with `First-time telescope viewers`; it selects `select[name=session]` =
+`Late Session (22:30 - 01:00)`. `tr-30` fills `input[name=volunteer]` with `Priya Raman`,
+`phone` with `+44 7700 900654` and selects `select[name=zone]` = `Harbour Wall`.
+
+The training families also specify harness search, update and intake legs, separate from the accepted
+target's journey. `tr-07` searches `/search?q=Cassiopeia` in `#search-results`, expects
+`Cassiopeia Vance` and excludes `zzz-decoy`; its update changes `attendees` to
+`Cassiopeia Vance (updated)`. At `/intake` it selects `Late Session (22:30 - 01:00)`;
+`/intake/confirm` must return that text. `tr-30` searches `/search?q=Priya` in
+`#search-results`, expects `Priya Raman` and excludes `zzz-decoy`; its update changes
+`volunteer` to `Priya Raman (updated)`. At `/intake` it selects `Harbour Wall`;
+`/intake/confirm` must return `Harbour Wall`.
+
+The families' `server_persistence` statements are distinct: `tr-07` says "viewing night
+registrations and remaining capacity quotas are stored on the server"; `tr-30` says
+"cleanup volunteer registrations and sector capacity allocations are stored on the server";
+`fam-07` says "event registrations, capacity quotas, waitlist ordering, and attendee status
+updates persist in server storage across page reloads".
+
 ## Journey
 
 The declared journey is a form submission that asserts its own echo:
@@ -90,6 +142,19 @@ has to satisfy that requirement some other way (a default selection) for the dec
 all. And there is **no write journey**: the spec's `write_journey` is null, which is why the records below
 carry no `write-journey` probe and why criterion 3 is not covered by one either.
 
+**Implementing-family journeys, distinct from the landed spec journey above.** `tr-07`
+submits its named attendees, contact details, visit date, party sizes and late session,
+expects `Cassiopeia Vance` echoed, then searches, updates and confirms intake as described
+under *Data and state*. `tr-30` submits its volunteer contact and selected beach zone,
+expects `Priya Raman` echoed, then searches, updates and confirms intake in the same way.
+
+`fam-07`'s four journeys, quoted verbatim from `docs/eval/briefs/manifest.jsonl`:
+
+1. "select an upcoming coastal shoreline wildlife survey event with limited volunteer capacity and start the multi-step registration process"
+2. "navigate through the multi-step registration wizard: step 1 enters volunteer contact information, step 2 collects emergency contact and dietary or accessibility needs, and step 3 presents a review and confirmation screen"
+3. "submit registration when capacity is available to receive a confirmed ticket reference, then reload the confirmation URL and verify registration status persists"
+4. "attempt registration when an event reaches maximum capacity to be placed on a waitlist, and when an admin cancels an earlier attendee, verify the waitlisted volunteer is promoted to a confirmed slot and their status reflects this after reload"
+
 ## Validation and states
 
 - **Required fields:** `name` and `email`. `ticket` is required too, and is a `select` over
@@ -98,12 +163,21 @@ carry no `write-journey` probe and why criterion 3 is not covered by one either.
   nothing is stored.
 - **On success:** the spec says the server inserts one row into `records` and answers `303` with a
   `Location` header pointing at the new registration's reference.
-- **The waitlist state is declared but has no shape.** The story promises that over-capacity registrations
-  are waitlisted, and the third acceptance criterion requires the fourth to be waitlisted rather than
-  silently accepted - but no route, field, column or journey describes what a waitlisted registration looks
-  like, and the target pictures no waitlist state at all.
+- **The eval spec leaves the waitlist state shapeless; the `fam-07` family contract defines it.**
+  The spec's story promises that over-capacity registrations are waitlisted, and its third acceptance
+  criterion requires the fourth to be waitlisted rather than silently accepted. The spec's state has no
+  waitlist column and its target pictures no waitlist state; however `fam-07` journey 4 and assertion 3
+  specify waitlist status and promotion of the **first waitlisted attendee** to confirmed when an admin
+  cancels an earlier attendee, with that status still visible after reload.
 - **No security journey is declared**, consistent with there being no session: `session` is false and
   `password_field` is null.
+
+**Family refusals and validation:** `tr-07` prevents an over-capacity booking rather than issuing
+an extra pass. `tr-30` requires a valid beach zone and accessible feedback when it is omitted.
+`fam-07` requires `forms/required-field-feedback` and
+`accessibility/accessible-error-announcement` (alongside `accessibility/accessibility`);
+it also carries this archetype's only `ui-components/progress-ring` rule. Its seeded-defects
+array is empty. These rules extend the family contracts, not the accepted target's validation.
 
 ## Acceptance criteria
 
@@ -130,6 +204,29 @@ useful thing this document can record:
   is worth stating plainly: **a rebuild that accepted every registration, however many arrived, would
   satisfy every recorded check in this repository.** The rule is real in the spec and unverified in the
   corpus.
+
+**Implementing-family assertions: ten total** — three for `tr-07`, three for `tr-30`,
+four for `fam-07`, quoted from the training and evaluation manifests and separate from the
+accepted spec's three criteria above.
+
+`tr-07`:
+
+1. "POST /register/:eventId decrements available capacity and redirects to /passes/:id"
+2. "GET /passes/:id displays the confirmed attendee names, party size, and visit date"
+3. "attempting to book more tickets than remaining capacity triggers an error and prevents booking"
+
+`tr-30`:
+
+1. "POST /cleanups/:id/register saves the volunteer registration to the server and returns a pass ID"
+2. "GET /passes/:id displays the volunteer's assigned beach zone and safety briefing time after reload"
+3. "form submission requires choosing a valid beach zone and displays accessible error feedback if omitted"
+
+`fam-07`:
+
+1. "POST /events/:id/register stores multi-step form submissions on the server, enforcing capacity caps and redirecting to /registration/:id"
+2. "GET /registration/:id shows confirmed or waitlisted status, attendee name, and event title across a browser reload"
+3. "when event capacity is exceeded, subsequent submissions receive waitlist status; triggering an admin cancellation promotes the first waitlisted attendee to confirmed status"
+4. "the multi-step registration form announces step progression, preserves entered values across step transitions, and links validation errors to their corresponding inputs with aria-describedby"
 
 ## Implementation status
 
@@ -188,6 +285,14 @@ useful thing this document can record:
   walks `docs/eval/design`, so the order and no-`###` shape of `docs/design/archetypes/*` documents is kept
   by hand.
 
+- **Implementing-family references:** two committed training boards exist: `tr-07`'s dark
+  [`reference.jpg`](../../training/tr-07/reference.jpg) and `tr-30`'s light
+  [`reference.jpg`](../../training/tr-30/reference.jpg). There is **no `fam-07` reference**.
+  Neither training board depicts a pass, ticket or confirmation view, even though every family's
+  contract asserts a `GET /passes/:id` or `GET /registration/:id` read-by-reference.
+  Outcome boards are designed from the briefs rather than copied from these two references.
+  This does not replace this directory's own `step1-event.jpg` and `step2-pass.jpg` boards.
+
 ## Provenance
 
 - **The boards** are registered in
@@ -205,3 +310,11 @@ useful thing this document can record:
 - **The measurements** here were taken from the spec, from `scripts/check-pilot-served.mjs`,
   `scripts/check-archetype-frames.mjs`, `docs/pilot/records.json`, this directory's `README.md`, the demo's
   markup and stylesheet, and the two JPEGs. Where a number appears it was read from one of those.
+- **Family declarations:** [`docs/train/briefs/manifest.jsonl`](../../../train/briefs/manifest.jsonl),
+  [`docs/eval/briefs/manifest.jsonl`](../../../eval/briefs/manifest.jsonl),
+  [`tr-07/prompt.txt`](../../training/tr-07/prompt.txt) and
+  [`tr-30/prompt.txt`](../../training/tr-30/prompt.txt). The training JPEGs above were measured
+  with `sha256sum` and `stat -c%s`: `tr-07/reference.jpg` is 677609 bytes, SHA-256
+  `db55eaa21f2709e8b2a803302c9b306fc4a92a7fa7329b47b383920382841eda`;
+  `tr-30/reference.jpg` is 572091 bytes, SHA-256
+  `d3bc8e0cffac6b45a834a558070da205c4cd7dddad05c7eed817057843613857`.
