@@ -556,7 +556,7 @@ export function compareOne({ screenshot, boardMetrics, archetypeStates }) {
 
   const eligibleBoards = boardMetrics.filter((board) => {
     const stateInfo = archetypeStates[board.name];
-    const expectedPath = stateInfo && stateInfo.path ? stateInfo.path : '/';
+    const expectedPath = stateInfo && 'path' in stateInfo ? stateInfo.path : '/';
     return expectedPath === screenshot.statePath;
   });
 

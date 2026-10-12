@@ -992,4 +992,7 @@ test('compareOne restricts board comparisons to the exact mapped path', () => {
   const fallbackResult = compareOne({ screenshot: rootScreenshot, boardMetrics, archetypeStates: {} });
   assert.notEqual(fallbackResult, null);
   assert.equal(fallbackResult.closest_board, 'step1-browse.jpg', 'boards without mapping default to root /');
+
+  const nullStateResult = compareOne({ screenshot: rootScreenshot, boardMetrics, archetypeStates: { 'step1-browse.jpg': { path: null }, 'step3-confirmation.jpg': { path: null } } });
+  assert.equal(nullStateResult, null, 'boards mapped explicitly to null do not evaluate against root');
 });
