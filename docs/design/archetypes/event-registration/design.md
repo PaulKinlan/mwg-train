@@ -33,6 +33,11 @@ and has no `prefers-color-scheme` block. Every one of the ten tokens is single-v
 That small palette is not the whole story of the colour in this target - see the first anti-pattern below:
 sixteen hex colours are written outside `:root`, eleven of them values the ten tokens never declare.
 
+**The family designs must not be averaged.** `tr-07` is **dark** — its prompt says "in a dark,
+low-glare palette" — while `tr-30` is **light**. They are opposite aesthetic systems alongside,
+not replacements for, the accepted target above. `fam-07` has no committed reference board,
+so its evaluation-side flow has no visual system to infer here.
+
 ## Grammar and layout
 
 - **The shell** is `width: min(100% - 2rem, 52rem)` - a single measured column, narrower than the catalogue
@@ -55,6 +60,13 @@ sixteen hex colours are written outside `:root`, eleven of them values the ten t
   rather than by shadow: the ticket rows and the form fields sit on `--field`, which is darker than the
   `--card` around them, and the outline colour does the rest.
 
+The two training boards each declare `content-frame 1200px` and `page-padding 1.5rem`.
+Their control radii differ: `tr-07` declares 12px, `tr-30` 8px. Both boards bound the page
+with a complete footer inside the viewport; this observation is scoped to these two boards,
+not the entire corpus (`tr-16` bleeds while keeping its footer). `tr-07` puts an observatory
+photo and reviews to the left of the "Reserve Your Pass" form card; `tr-30` puts an event
+card, an available-zones panel, photo and reviews to the left of its form card.
+
 ## Typography
 
 One family only: `system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`. This target has
@@ -72,6 +84,11 @@ cluster into `0.875rem` (twice), `0.825rem`, `0.82rem` (three times) and `0.8rem
 within `0.025rem` of each other is more precision than a reader can perceive, and it means the target's
 small text is essentially one size with three near-misses - worth knowing before copying the numbers into a
 second target. Body text is `1rem` at a line height of `1.5`.
+
+Each training board shows **exactly one visible `h1`**: `tr-07` says "Public Telescope
+Viewing Passes" and `tr-30` says "Low-Tide Beach Cleanup & Kit Pass". Both prompts
+specify a system UI sans-serif stack; their board titles are distinct from the target's
+conference headline.
 
 ## Token usage
 
@@ -98,6 +115,41 @@ references) even though it is a metadata colour, which is what a form-heavy page
 label, hint and description is deliberately quieter than the value beside it. And `--error` is attached to
 `:user-invalid` rather than to a class - the failure colour arrives from the platform's own validation state
 rather than from script, which is consistent with the target's refusal treatment.
+
+**Declared family tokens and observed uses (not stylesheet reference counts).** The tables
+below are sourced from the family prompts and the committed boards; they do not re-measure
+or replace the target's ten-token table above.
+
+`tr-07` — dark observatory:
+
+| Token | Value | Observed use |
+|---|---|---|
+| `ds-bg` | `#030712` | dark page ground |
+| `ds-surface` | `#0b1120` | dark surface behind content |
+| `ds-card` | `#111c33` | form card |
+| `ds-border` | `#1e2e4f` | dark surface and control borders |
+| `ds-cyan` | `#38bdf8` | submit-button fill, logo star and active navigation |
+| `ds-indigo` | `#6366f1` | barely visible or omitted entirely; at most blended into dark surfaces |
+| `ds-text` | `#f1f5f9` | light foreground text |
+| `ds-muted` | `#94a3b8` | quieter supporting text |
+
+`tr-30` — light beach cleanup:
+
+| Token | Value | Observed use |
+|---|---|---|
+| `sm-ocean` | `#075985` | submit-button fill |
+| `sm-teal` | `#0f766e` | brand identity: anchor logo, active navigation, calendar badge, review stars and photo accents; never a button fill |
+| `sm-card` | `#ffffff` | white form card |
+| `sm-border` | `#bae6fd` | pale borders |
+| `sm-bg` | `#f0fdfa` | mint/aqua-tinted page ground |
+| `sm-text` | `#0f172a` | dark foreground text |
+| `sm-muted` | `#64748b` | quieter supporting text |
+
+**The two-chromatic question has different answers.** `tr-07`'s `ds-cyan` fills the
+"Reserve Passes • $30.00 →" button, while `ds-indigo` is barely visible at all — the
+weakest second-token role recorded in this lane. Amber `#fbbf24` appears on its review
+stars only, outside its declared palette. `tr-30`'s `sm-ocean` fills the "Register &
+Secure Kit Pass" button; `sm-teal` is brand identity only, not a second action colour.
 
 ## Spacing rhythm
 
@@ -143,6 +195,13 @@ Read from `demo/index.html`, with the pass view selected by `?view=pass` and the
   `Live registration form` and `Live pass preview` - which embeds `index.html` and
   `index.html?view=pass` in an iframe, so each board can be read against the target it inspired.
 
+**Capacity is depicted on both family boards, because limited capacity is the whole subject
+of this archetype.** `tr-07` embeds "(14 spots left)" in the viewing-night date select's
+option label, not in a separate meter. `tr-30` lists Zone A: North Shingle with 12 spots
+left, Zone B: Estuary Mudflats with 8, and Zone C: South Promenade with 15 in the
+Available Coastal Zones panel; its selected Zone B matches the eight-spot listing. These
+are the boards' illustrations, not evidence that either board enforces the cap.
+
 ## Anti-patterns
 
 - **A ten-token palette with sixteen hex values beside it.** Outside `:root` this stylesheet writes sixteen
@@ -179,6 +238,21 @@ Read from `demo/index.html`, with the pass view selected by `?view=pass` and the
   detected by `check:archetype-frames` and listed as a grandfathered image; `step2-pass.jpg` is clean. The
   exemption is deliberate and checked, so the pair should not be "fixed" without re-reading that rule.
 
+**Training-board defects and divergences (not rules for the accepted target):**
+
+- `tr-07` declares `date:date*` but renders Viewing Night Date as a **select**; it declares
+  `notes:textarea` but renders Accessibility and Telescope Requirements as a **single-line
+  input**. Its board labels the names field differently from `attendees`. The footer says
+  `© 2028` against the page's 2026 dates, and a small "Register" badge overlaps the
+  navigation CTA border.
+- `tr-30` declares **three** fields, but its board shows **four** controls: volunteer name,
+  contact number, Cleanup zone, and an extra Litter Kit Allocation select. The declared
+  zone names North Cove / Harbour Wall / East Sands differ entirely from the board's
+  North Shingle / Estuary Mudflats / South Promenade. Do not substitute the board's
+  options into the contract.
+- Neither family board depicts a pass, ticket or confirmation view; those outcomes are
+  designed from the briefs' read-by-reference contracts, not copied from a board.
+
 ## Rationale
 
 The type is `record-form`, and the design's job is to get a form filled and out of the way. So the page is a
@@ -209,3 +283,13 @@ like a way in.
   heights, the gap and padding values, the breakpoints, and the literal-hex count - were read from
   `demo/styles.css` and the demo's markup; the board descriptions come from the two JPEGs and the framing
   verdict from `check:archetype-frames`.
+- **The family declarations** are [`docs/train/briefs/manifest.jsonl`](../../../train/briefs/manifest.jsonl)
+  and [`docs/eval/briefs/manifest.jsonl`](../../../eval/briefs/manifest.jsonl). The palettes
+  and constants are declared in [`tr-07/prompt.txt`](../../training/tr-07/prompt.txt) and
+  [`tr-30/prompt.txt`](../../training/tr-30/prompt.txt). The independent vision readings
+  concern [`tr-07/reference.jpg`](../../training/tr-07/reference.jpg) (677609 bytes,
+  SHA-256 `db55eaa21f2709e8b2a803302c9b306fc4a92a7fa7329b47b383920382841eda`)
+  and [`tr-30/reference.jpg`](../../training/tr-30/reference.jpg) (572091 bytes,
+  SHA-256 `d3bc8e0cffac6b45a834a558070da205c4cd7dddad05c7eed817057843613857`),
+  measured with `sha256sum` and `stat -c%s`. These are separate from this directory's
+  two target boards and its measured demo stylesheet.
