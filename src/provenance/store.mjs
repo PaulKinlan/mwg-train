@@ -92,6 +92,19 @@ export function assertResolvesInside(root, path, what = 'path') {
   // realpath(root), which is the same string whenever the root is a real directory and an unrelated one whenever
   // it is not.
   const lexicalRoot = resolve(root);
+  // The root must be reached WITHOUT traversing a symlink, at any depth above it.
+  //
+  // Refusing only a root that is itself a symlink was not enough (mwg-train-j15h): with `repo/data` linked to
+  // `repo/docs`, `data/A1_self_generated` is a REAL directory, so it passed. realpath(root) is then
+  // `<repo>/docs/A1_self_generated` while resolve(root) is `<repo>/data/A1_self_generated` - two different
+  // strings - and every path below the root was consequently measured against the wrong directory. Comparing
+  // the two catches a symlink at ANY depth between the caller's root and its real location, which is the general
+  // condition the per-depth lstat walk below cannot see because it starts at realpath(root) and never walks the
+  // segments leading to it.
+  const ancestorReal = realpathSync(root);
+  if (ancestorReal !== lexicalRoot) {
+    throw new QuarantineError('SYMLINK_ESCAPE', `SYMLINK_ESCAPE: ${what} root is reached through a symlink: ${lexicalRoot} -> ${ancestorReal}`);
+  }
   const candidate = resolve(path);
   if (candidate !== lexicalRoot && !candidate.startsWith(`${lexicalRoot}${sep}`)) {
     throw new QuarantineError('SYMLINK_ESCAPE', `SYMLINK_ESCAPE: ${what} does not sit lexically inside its root: ${candidate} is not under ${lexicalRoot}`);

@@ -220,6 +220,34 @@ describe('storeOutput symlink containment', () => {
     }
   });
 
+  test('a symlinked ANCESTOR of the arm root is refused', () => {
+    // mwg-train-j15h, the third variant of the same defect. Here `repo/data` is the symlink, so
+    // `data/A1_self_generated` is a REAL directory and a check that only lstat's the root sees nothing wrong.
+    // realpath(root) is then <repo>/docs/A1_self_generated while resolve(root) is <repo>/data/A1_self_generated,
+    // so every path under the root was compared against the wrong directory and the removal ran through the
+    // ancestor link. The general condition is that the root must be reached without traversing a symlink at any
+    // depth - the walk below starts at realpath(root) and can never see the segments leading to it.
+    const { base, repoRoot, source } = makeRepo('ancestorsymlink');
+    try {
+      const victimDir = join(repoRoot, 'docs', 'A1_self_generated', outputRelativePath({ projectId: 'proj', model: 'deepseek/deepseek-flash' }));
+      mkdirSync(victimDir, { recursive: true });
+      const marker = join(victimDir, 'IMPORTANT.md');
+      writeFileSync(marker, 'committed doc');
+
+      // The ANCESTOR is the link; the arm root beneath it is real.
+      symlinkSync(join(repoRoot, 'docs'), join(repoRoot, 'data'), 'dir');
+
+      assert.throws(
+        () => storeOutput({ projectId: 'proj', model: 'deepseek/deepseek-flash' }, 'A1_self_generated', source, { repoRoot }),
+        /SYMLINK_ESCAPE/,
+        'a symlinked ancestor of the arm root was not refused',
+      );
+      assert.ok(existsSync(marker), 'the committed file was deleted through the symlinked ancestor');
+    } finally {
+      rmSync(base, { recursive: true, force: true });
+    }
+  });
+
   test('a symlink pointing outside the repository is still refused', () => {
     // The regression guard for the half that already worked before mwg-train-vqb7.
     const { base, repoRoot, source } = makeRepo('outside');
