@@ -13,12 +13,14 @@ single landing reference into a full multi-step journey. This document is writte
 [`src/design/contract.mjs`](../../../../src/design/contract.mjs) requires of a design document
 (`DESIGN_SECTIONS`).
 
-**Where this system comes from, and which of the two references it describes.** The archetype has two
-implementing families, so there are two declared systems and two committed boards:
+**Where this system comes from, and which of the references it describes.** The archetype has three
+implementing families, with two training families providing the generated visual baselines:
 
 - **`tr-04`, SunHarbor Community Solar** — [`prompt.txt`](../../training/tr-04/prompt.txt),
   [`reference.jpg`](../../training/tr-04/reference.jpg);
 - **`tr-22`, Canopy Guardian** — [`prompt.txt`](../../training/tr-22/prompt.txt),
+  [`reference.jpg`](../../training/tr-22/reference.jpg);
+- **`fam-04`, Community Solar Microgrid** — evaluation family.
   [`reference.jpg`](../../training/tr-22/reference.jpg).
 
 Both prompts declare the **same structural constants** and the **same five base roles with identical
