@@ -2,72 +2,83 @@
 archetype: onboarding-auth
 type: b2b-saas-signup
 boards: docs/design/archetypes/onboarding-auth/
+register: docs/provenance/assets/training-reference-boards.md
 ---
 
 # `onboarding-auth` — aesthetic system
 
-The look of the `onboarding-auth` type, expanding from the `tr-05` and `fam-05` reference boards into a full multi-step journey. This document is written in the section order `src/design/contract.mjs` requires of a design document (`DESIGN_SECTIONS`).
+The look of the `b2b-saas-signup` type as the `onboarding-auth` archetype implements it, expanded from the training family's landing reference into a full multi-step journey. This document is written in the section order [`src/design/contract.mjs`](../../../../src/design/contract.mjs) requires of a design document (`DESIGN_SECTIONS`).
 
-One difference from those documents is stated up front rather than implied: they describe an authored target board, and this describes a set of **pending generated** reference boards for the full multi-step journey. Every value below is the set the generation prompts will declare. Behaviour is in [`plan.md`](plan.md), not in this file.
+**Where this system comes from:** The archetype's visual baseline is declared by the single training family:
+
+- **`tr-05`, Meadowbrook Wildlife Hospital** — [`prompt.txt`](../../training/tr-05/prompt.txt), [`reference.jpg`](../../training/tr-05/reference.jpg).
+
+The evaluation-side family (`fam-05`, Independent Bookshop) has **no reference board** in `docs/design/training/`; its journeys are prose in `docs/eval/briefs/manifest.jsonl`, and this document does not invent a look for it.
 
 ## Visual thesis
 
-A secure member onboarding and authentication portal. The visual language conveys privacy, security, and institutional trust: focused, distraction-free centered forms, unmistakable validation states, and unambiguous session controls. The palette is grounded in an accessible, professional aesthetic appropriate for a reading society or civic volunteer network.
+An onboarding portal establishes trust and competence immediately. The thesis follows from that: **a focused, distraction-free central form, clear primary actions, and immediate accessible feedback**, supported by a thematic but restrained light palette.
 
-The layout emphasizes the primacy of the credential exchange. Forms are isolated from complex navigation to prevent distraction during sensitive data entry. The authenticated profile view pivots from the tight onboarding layout to a wider, personalized dashboard that reinforces the user's logged-in state.
+The `tr-05` board establishes this directly: a crisp, light palette utilizing natural green tones appropriate for wildlife rehabilitation. The primary accent guides the user exclusively toward establishing their credential.
 
 ## Grammar and layout
 
-- A focused page frame for authentication states, `--auth-frame: 480px`, vertically and horizontally centred, with subtle shadow elevation.
-- The registration page (`step1-signup`) is a clean, single-column form collecting name, email, and password.
-- The sign-in page (`step2-login`) mirrors the registration structure but prioritizes the credential fields and password recovery link.
-- The authenticated dashboard (`step3-profile`) breaks out of the narrow auth frame into a wider `--content-frame: 1000px`, displaying the member's details and a prominent 'Log out' action.
-- The password recovery request (`step4-forgot`) is a simplified form asking only for the registered email address.
-- The password update state (`step5-reset`) securely captures and confirms the new credential verified by the token.
+The reference establishes the grammar:
+- **The onboarding form** is typically a single column or split layout (form on one side, brand/imagery on the other). The form is deliberately constrained in width to prevent excessively long input lines.
+- **The login view** is highly focused, stripping away non-essential navigation to prioritize credential entry and recovery links.
+- **The authenticated profile** transitions into an application layout, often introducing a sidebar or a distinct authenticated navigation header.
+- **The password reset flow** isolates the user, minimizing UI elements down to a simple central card to eliminate distraction during a sensitive operation.
+- **The reference** is a **browser viewport**: chrome runs along the top edge with an address bar (`https://meadowbrookwildlife.shop/`), depicting the page as a framed composition.
 
 ## Typography
 
-- A highly legible system sans-serif stack ensuring critical email characters (like 'l' vs 'I') are unambiguous.
-- Exactly one `h1` per page, clearly titling the authentication step (e.g. "Create your account" or "Sign in").
-- Form inputs feature clear programmatic labels placed directly above the fields.
-- Validation errors and password strength hints use a slightly smaller, distinct font weight to distinguish them from standard input labels.
+Two families: `--font-sans` (the `system-ui` stack) for everything a person reads. 
+
+The display heading is the largest type on the page, establishing the brand and the purpose of the current step (e.g., "Create your volunteer profile"). Form controls carry **permanent visible labels**, guaranteeing clarity.
 
 ## Token usage
 
-| Token | Value | Used for |
-| --- | --- | --- |
-| `--bg-page` | `#f8fafc` | The clean page ground isolating the auth cards |
-| `--bg-surface` | `#ffffff` | Elevated auth cards and profile dashboards |
-| `--border` | `#cbd5e1` | Structural input borders and card outlines |
-| `--accent` | `#0f766e` | Teal primary actions, submit buttons, and focus rings |
-| `--text-primary` | `#0f172a` | High-contrast slate text for primary readability |
-| `--text-error` | `#b91c1c` | Crimson red for inline accessible validation warnings |
+The `tr-05` palette is explicitly built as a light botanical theme reflecting wildlife rehabilitation. All values are declared in the prompt; observed uses reflect their deployment.
+
+**`tr-05`, Meadowbrook Wildlife Hospital — a light botanical palette.**
+- **Ground (`wb-light`):** `#f0fdf4` (very light green tint)
+- **Surface (`wb-card`):** `#ffffff`
+- **Border (`wb-border`):** `#cbd5e1`
+- **Text (`wb-dark`):** `#0f172a` (deep slate ink)
+- **Accent (`wb-green`):** `#14532d` (the single primary action, dark forest green)
+- **Secondary (`wb-leaf`):** `#22c55e` (emphasis or status indicators)
+
+A generator must carefully preserve these exact hex values and apply them to their respective semantic roles without blending them into generic signup templates.
 
 ## Spacing rhythm
 
-- `--page-padding: 2rem` surrounding the auth card, `--control-radius: 6px`, `--control-border: 1px solid var(--border)`.
-- Ample spacing (`1.5rem` or more) between adjacent inputs to prevent accidental mis-taps on mobile devices.
-- Form fields are separated by sufficient vertical rhythm so that `aria-invalid` error messages fit seamlessly beneath inputs without causing jarring layout shifts when they appear.
+- The declared constants: a centred frame (`1100px`), page padding (`1.5rem`), a rounded control radius (`10px`), and a one-pixel border drawn in the border token.
+- **Form inputs** maintain generous internal padding to ensure touch targets are accessible and text is legible.
+- **The layout** separates its rows generously so that validation feedback (e.g., password strength meters or missing field alerts) can appear inline without shifting the layout abruptly.
 
 ## Component hierarchy
 
-1. **Brand Header** - Minimal logo mark centered above the auth card (no complex navigation).
-2. **Auth Card** - The elevated surface housing the active credential form.
-3. **Form Fields** - Standardized email, text, and password inputs with autofill attributes.
-4. **Validation Messages** - Inline text tied to inputs via `aria-describedby`.
-5. **Primary Action** - The high-contrast submit button.
-6. **Secondary Links** - Contextual navigation (e.g. "Forgot password?" or "Already have an account?").
+1. **Brand header** — the mark, the organization's name.
+2. **Authentication Card** — a centered surface containing the intake/login fields.
+3. **Intake form** — the labelled fields for entering credentials and onboarding data.
+4. **Validation feedback** — inline error messages and password strength indicators explicitly associated with inputs via `aria-describedby`.
+5. **Profile view** — the dedicated authenticated state showing the stored configuration.
+6. **Footer** — contact details and copyright.
 
 ## Anti-patterns
 
-- Relying exclusively on red borders without accompanying text to indicate an invalid password or email.
-- Trapping users in a narrow auth frame after they successfully log in; the profile should expand to utilize the full viewport.
-- Omitting proper `autocomplete` attributes, which needlessly frustrates users relying on password managers.
+- **A credential field without an autocomplete token.** Critical for accessibility and security (`autocomplete='new-password'`, `autocomplete='email'`).
+- **A modal or step wizard hiding part of the form.** The entry form should be fully visible inline.
+- **Colour alone carrying an error state with no message naming the field.** 
+- A second accent colour competing with the primary action.
+- Placeholder text standing in for a visible label.
 
 ## Rationale
 
-The authentication and account recovery use case demands absolute clarity and security. Users are exchanging sensitive credentials, meaning the layout cannot afford distracting marketing sidebars or ambiguous validation errors. The design system therefore elevates standard forms into focused, trustworthy isolation chambers. The teal and slate palette provides a calming, professional aesthetic that reinforces institutional safety while guaranteeing strict WCAG contrast for accessible error reporting.
+Account onboarding handles sensitive credentials. The user must feel secure and guided. This requires unambiguous forms, explicit and immediate error states, proper autocomplete semantics for password managers, and a layout that removes distractions during the authentication event.
 
 ## Provenance
 
-- Evaluated against the A1 training family (`tr-05`) and the A6 evaluation spec (`fam-05` / `onboarding-auth`).
+- **The declarations:** `docs/design/training/tr-05/prompt.txt`, which names the palette, the structural constants, the page structure, the control labels and the prohibited patterns.
+- **The depictions:** `docs/design/training/tr-05/reference.jpg`. The file and prompt are pinned in [`docs/provenance/assets/training-reference-boards.md`](../../../provenance/assets/training-reference-boards.md).
+- **The behaviour behind the screens:** `docs/train/briefs/manifest.jsonl` (family `tr-05`), and `docs/eval/briefs/manifest.jsonl` (`fam-05`).
