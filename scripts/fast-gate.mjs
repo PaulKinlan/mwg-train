@@ -269,6 +269,12 @@ for (const file of changedFiles) {
     selectedSuites.add('test/mwg-train-4oi.test.mjs');
     matched = true;
   }
+  if (file === 'src/corpus/cdp.mjs') {
+    selectedSuites.add('test/capture-state.test.mjs');
+    selectedSuites.add('test/capture-flow.test.mjs');
+    selectedSuites.add('test/eval-starters.test.mjs');
+    matched = true;
+  }
 
   const prefixCheck = checkForPrefix(file);
   if (prefixCheck) {
