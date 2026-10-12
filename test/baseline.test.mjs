@@ -10,9 +10,9 @@
  *   3. the already-modern baselines are clean, so a run that makes the one requested change is not
  *      fighting a pre-existing problem.
  */
-import { test } from 'node:test';
+import { after, test } from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, mkdtempSync, readFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
@@ -30,8 +30,17 @@ function rows() {
   return parseBriefs(readFileSync(MANIFEST, 'utf8'));
 }
 
+const tempDirs = [];
+
+after(() => {
+  for (const dir of tempDirs) {
+    try { rmSync(dir, { recursive: true, force: true }); } catch {}
+  }
+});
+
 function makeStore(fixture) {
   const dir = mkdtempSync(join(tmpdir(), `eval-fixture-${fixture.project_id}-`));
+  tempDirs.push(dir);
   return openStore(join(dir, 'data.json'), snapshotSeed(fixture));
 }
 
@@ -102,14 +111,18 @@ test('the repair starters exhibit exactly the seeded defects their family names'
       assert.ok(DEFECT_CLASSES.includes(id), `unknown defect class ${id}`);
       return id;
     });
-    const audited = await auditProject(fixture, { storeFile: join(mkdtempSync(join(tmpdir(), `audit-${fixture.project_id}-`)), 'store.json') });
+    const dir = mkdtempSync(join(tmpdir(), `audit-${fixture.project_id}-`));
+    tempDirs.push(dir);
+    const audited = await auditProject(fixture, { storeFile: join(dir, 'store.json') });
     assert.deepEqual(audited, [...new Set(declared)].sort(), `${fixture.family_id}: audited defects must equal the seeded ones`);
   }
 });
 
 test('the already-modern baselines carry no seeded defect', async () => {
   for (const fixture of FIXTURES.filter((candidate) => candidate.group === 'already-modern')) {
-    const audited = await auditProject(fixture, { storeFile: join(mkdtempSync(join(tmpdir(), `audit-clean-${fixture.project_id}-`)), 'store.json') });
+    const dir = mkdtempSync(join(tmpdir(), `audit-clean-${fixture.project_id}-`));
+    tempDirs.push(dir);
+    const audited = await auditProject(fixture, { storeFile: join(dir, 'store.json') });
     assert.deepEqual(audited, [], `${fixture.project_id} should already be modern`);
   }
 });
