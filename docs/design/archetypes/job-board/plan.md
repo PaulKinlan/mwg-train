@@ -18,8 +18,11 @@ are. It is **not** checked against a generated demo, because there is no generat
 and no evaluation spec for this archetype — see *Implementation status*. Nothing here should be read as
 describing running software.
 
-One training family implements this archetype: **`tr-12`, CleanTech Trades Network** — heat pump and solar
-installer apprenticeships, serving local trades employers and the people applying to them.
+Two families implement this archetype, and both are described together because the archetype is the
+contract they share rather than either one alone:
+
+- **`tr-12`, CleanTech Trades Network** — heat pump and solar installer apprenticeships.
+- **`fam-12`, Biotechnology Research Jobs** — life sciences research job board and employer dashboard (eval split: test).
 
 ## Use case
 
@@ -48,20 +51,19 @@ that the detail view and the application both have to respect.
 
 ## Routes and effects
 
-| Route | Kind | Effect |
-|---|---|---|
-| `GET /` | page | serves the network's landing view and its entry points into the board |
-| `GET /jobs` | page | serves the vacancy list, filterable (the archetype's assertion filters it by `trade`) |
-| `GET /jobs/:id` | read-by-reference | serves one vacancy: its location, trade, level and terms |
-| `POST /jobs/:id/apply` | write | stores one application against that vacancy |
-| `GET /applications/:id` | read-by-reference | reads the submitted application back by its own reference |
+| Route | Family | Kind | Effect |
+|---|---|---|---|
+| `GET /` | all | page | serves the network's landing view and its entry points into the board |
+| `GET /jobs` | all | page | serves the vacancy list, filterable by trade/discipline |
+| `GET /jobs/new` | `fam-12` | page | serves the employer vacancy intake form |
+| `POST /jobs/new` | `fam-12` | write | creates a new job listing and redirects |
+| `GET /jobs/:id` | all | read-by-reference | serves one vacancy: its location, trade, level and terms |
+| `POST /jobs/:id/apply` | all | write | stores one application against that vacancy |
+| `GET /applications/:id` | all | read-by-reference | reads the submitted application back by its own reference |
+| `GET /employer/dashboard` | `fam-12` | page | serves the employer view of active vacancies |
 
-**On the methods.** The manifest declares routes as paths and carries no `method` key, so the methods above
-are only as firm as their source: `POST /jobs/:id/apply` and `GET /applications/:id` are named by this
-family's second and third assertions, and `GET /jobs` appears with its query string in its first. Every other
-route's method is a reading of its kind column rather than something the row states — `GET /` and
-`GET /jobs/:id` rest on that reading alone, and `/jobs/:id` in particular is the one method in this table with
-neither an assertion nor a page kind behind it.
+**On the methods.** The manifest declares routes as paths and carries no `method` key. The methods above
+are derived from assertions: `POST /jobs/new`, `POST /jobs/:id/apply` and `GET /applications/:id` are explicitly named. `GET /jobs` appears with its query string. The remaining routes are pages served by `GET`.
 
 ## Data and state
 
@@ -82,7 +84,9 @@ neither an assertion nor a page kind behind it.
 
 ## Journey
 
-The declared journey:
+The declared journeys. For the evaluation family (`fam-12`), these are quoted verbatim from the manifests. For the training family (`tr-12`), these are derived summaries of the structured `journey` objects defined in the manifest:
+
+**`tr-12` (trades network):**
 
 - it starts at `/`;
 - it narrows the board to a trade and opens one vacancy at `/jobs/:id`;
@@ -99,6 +103,11 @@ The declared journey:
   submitted value can be amended rather than only appended.
 - The row's `journey.steps` add the two intake legs: `/intake` submits the form having selected
   `select[name=trade]` `Solar PV Installer`, and `/intake/confirm` expects to read `Solar PV Installer` back.
+
+**`fam-12` (biotech research):**
+- browse biotechnology listings by discipline, select Senior Bioinformatician, read job description, submit application with candidate details, resume summary, and cover note, and view submission confirmation with an application reference
+- post a new vacancy via `/jobs/new` with title, laboratory location, salary range, and requirements, submit, reload `/jobs/:id`, and verify the newly posted job persists on the server and is visible in search listings
+- attempt to post a job without mandatory job title and contact email, verify specific inline validation messages appear, correct errors, and verify the vacancy appears on `/employer/dashboard`
 
 Mapped to the five planned boards: step 1 board → `step1-listings`, step 2 vacancy → `step2-vacancy`,
 step 3 application form → `step3-apply`, step 4 the filtered board → `step4-filtered`, step 5 empty →
@@ -120,11 +129,19 @@ step 3 application form → `step3-apply`, step 4 the filtered board → `step4-
 
 ## Acceptance criteria
 
+The families define specific observable assertions:
+
+`tr-12`:
 1. `GET /jobs?trade=heat-pumps` returns only heat pump apprenticeship listings.
 2. `POST /jobs/:id/apply` saves the applicant's submission and redirects to `/applications/:id`.
 3. `GET /applications/:id` returns the submitted application details upon page refresh.
 
-Criteria 1–3 are the family's own assertions, quoted from `docs/train/briefs/manifest.jsonl`.
+`fam-12`:
+4. `POST /jobs/new` with valid vacancy data saves the listing and redirects to `/jobs/:id` with HTTP 303
+5. `GET /jobs/:id` returns HTTP 200 showing the job title, laboratory location, and application button across reloads
+6. `POST /jobs/:id/apply` with candidate details creates an application record viewable at `/applications/:id`
+7. submitting `/jobs/new` with missing title or email yields HTTP 400 with explicit inline form error feedback
+8. search filters on `/jobs` correctly update the listed job count and results matching the query parameter
 
 ## Implementation status
 
@@ -155,10 +172,9 @@ is exactly the half-truth this axis was written to stop:
 
 ## Provenance
 
-- **The behaviour** is derived from `docs/train/briefs/manifest.jsonl`, family `tr-12`. Route names, field
+- **The behaviour** is derived from `docs/train/briefs/manifest.jsonl` (family `tr-12`) and `docs/eval/briefs/manifest.jsonl` (`fam-12`). Route names, field
   slugs, control types, option lists, the form selector, fill values, select values, the search leg, the
-  update leg, the intake steps and all three acceptance criteria are quoted from that row rather than
-  invented.
+  update leg, the intake steps and all acceptance criteria are quoted from the rows rather than invented.
 - **The reference** is the family's generated board, digest-pinned in
   `docs/provenance/assets/training-reference-boards.md`; the prompt that declared it is committed beside it.
   The five journey boards are planned and unpinned.
