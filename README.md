@@ -110,11 +110,15 @@ corpus records) is neither accepted nor served.
 **Linux (Canonical Execution)**
 - The deterministic `check:all` gate, model evaluation runs, and headless browser corpus executions (e.g., `fleet-gate pilot-run`) run canonically on Linux. 
 - Pipeline guarantees around container-based isolation, headless Chrome, and filesystem paths are tuned and validated against this target.
+- Untrusted generated code sandboxing (using `bwrap` via `src/viewer/sandbox.mjs`) is Linux-only.
+- Model fine-tuning (Fireworks managed endpoints or Linux clusters) executes here.
 
-**macOS (Development)**
+**macOS (Development & Verification)**
 - The test suite (`npm test`), tooling, and corpus viewer are fully supported on macOS for local development.
-- `src/corpus/cdp.mjs` automatically resolves standard Chrome/Chromium installation paths on macOS (`/Applications/...`).
-- Pipeline assertions around temporary directories natively account for macOS symlink differences (such as `/var` resolving to `/private/var`), ensuring tests stay green without compromising the quarantine store boundary.
+- **Portability Check**: Run `npm run check:portability` (`npm ci && npm test`) locally to verify macOS suite greenness without requiring a CI runner.
+- **Browser Automation**: `src/corpus/cdp.mjs` automatically resolves standard Chrome/Chromium installation paths on macOS (`/Applications/...`). If your binary is elsewhere, export `CHROME_PATH=/path/to/chrome`.
+- **Registry**: Installation via `npm ci` relies on the canonical `registry.npmjs.org`. If using a restricted mirror, some exact lockfile versions (e.g., `hono 4.13.13`, `svelte 5.57.2`) may be missing.
+- **Limitations**: Untrusted code sandboxing (`bwrap`) is fundamentally Linux-only; the pipeline fails closed rather than running generated servers unsandboxed on macOS.
 
 Design decisions and their reasons are recorded in the bead for each change and in the documents
 above; a number in the docs is only as good as the check that recomputes it.
