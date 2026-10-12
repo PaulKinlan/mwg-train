@@ -25,7 +25,7 @@ A **shopper** browses the catalogue, selects products or variants (quantities, s
 | `tr-02` | train | seasonal cider pre-orders and local pickup | pre-ordering products for a collection slot |
 | `tr-18` | train | bring-your-own-container bulk dry goods orders | bulk ordering by gram weights |
 | `tr-26` | train | single-origin coffee subscription renewal and grind preference | managing an active subscription configuration |
-| `fam-02` | test | artisan pottery and ceramics studio shop | traditional multi-item cart and shipping |
+| `fam-02` | dev | artisan pottery and ceramics studio shop | traditional multi-item cart and shipping |
 
 Three absences are part of the contract rather than gaps in it. The specs declare no user accounts (`session: false`, `password_field: null`), no complex inventory management for admins, and no real payment gateways. A rebuild that invents an account or transmits real credit card numbers has gone beyond the type, not improved on it.
 
@@ -53,7 +53,7 @@ The families implement variations of the multi-step storefront journey:
 
 ## Journey
 
-The declared journeys, verbatim from the manifests:
+The declared journeys. For evaluation families (`fam-02`), these are quoted verbatim from the manifests. For the training families, these are derived summaries of the structured `journey` objects defined in the manifest:
 
 ### `tr-02`
 - browse available cider varieties and select a quantity for local pickup

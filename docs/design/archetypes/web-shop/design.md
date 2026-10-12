@@ -13,7 +13,7 @@ The look of the `web-shop` archetype. This document covers the aesthetic choices
 
 A storefront is a display grid leading to a transaction. The thesis follows from that: **a calm ground, strong product photography or typography, and a single accent that marks the forward path to purchase**, with a full error scale held in reserve for validation.
 
-**The family designs must not be averaged.** The three training families employ distinctly different aesthetic systems. For instance, `tr-02` (cider pre-orders) and `tr-18` (bulk dry goods) use distinct light palettes reflecting artisanal and organic domains ("in a light palette"), while `tr-26` (coffee subscription) opts for a richer or starker palette suited for coffee beans. Each board uses its own primary action token.
+**The family designs must not be averaged.** The three training families employ distinctly different aesthetic systems within light palettes. For instance, `tr-02` (cider pre-orders) and `tr-18` (bulk dry goods) use distinct light palettes reflecting artisanal and organic domains ("in a light palette"), while `tr-26` (coffee subscription) opts for a light palette enriched with deep roast and gold tones suited for coffee beans. Each board uses its own primary action token.
 
 ## Grammar and layout
 
@@ -39,7 +39,7 @@ The primary accent (`--accent`) is used for primary actions (Add to Cart, Checko
 **The training families define their own distinct palettes:**
 - `tr-02` (cider pre-orders): light, crisp palette reflecting apples and heritage brewing.
 - `tr-18` (bulk dry goods): earthy, organic tones reflecting natural zero-waste products.
-- `tr-26` (coffee subscription): warm, deep tones reflecting roasted beans.
+- `tr-26` (coffee subscription): light palette with deep roast and gold tones.
 
 Each family relies on these color signatures to establish its own identity.
 
@@ -63,7 +63,7 @@ Each training family implements its equivalent semantic structure matching its `
 ## Anti-patterns
 
 - **Two primary actions competing.** The accent marks the forward action of a state. Product cards should not compete with the primary checkout button.
-- **A different logo on every screen.** 
+- **A different logo on every screen.** The mark should be consistent across the entire user journey.
 - **Inventing what the spec withholds.** A user session, a password field, an account dashboard (unless specified, like `tr-26` subscriptions), a cancellation route, or an expiry on the receipt - none of these are declared.
 - **Transmitting real payment details.** The simulation uses mock/simulated fields; real financial tokens must never be used.
 
