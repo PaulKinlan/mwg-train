@@ -36,9 +36,8 @@ pilot/out/
 .pilot-corpus/
 # Uplifted copies of the training-corpus projects (scripts/train-corpus-run.mjs): regenerated per run.
 .train-uplifted/
-# Conformance runs: the generated corpus and the uplifted copies are rebuilt per run.
+# Conformance runs: cross-arm parity checks write transient roots here.
 .conformance-corpus/
-.conformance-uplifted/
 # Training corpus projects: 210 trees (30 families x 7 frameworks) rebuilt deterministically per run.
 # pilot/TRAINING_CORPUS.json records every tree hash, and scripts/scaffold-training-corpus.mjs
 # asserts zero collisions against the pilot corpus, so the trees do not need to be tracked to be

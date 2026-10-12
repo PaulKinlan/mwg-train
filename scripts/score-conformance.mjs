@@ -57,10 +57,9 @@ async function main() {
     rerender(args.out);
     return;
   }
-  const runId = new Date().toISOString().replace(/[:.]/g, '-');
   const target = resolveTarget(args.family);
   const runDir = mkdtempSync(join(tmpdir(), `conformance-${args.family}-`));
-  const isolatedRepoRoot = mkdtempSync(join(tmpdir(), `conformance-repo-${runId}-`));
+  const isolatedRepoRoot = mkdtempSync(join(tmpdir(), `conformance-repo-`));
   const outDir = resolve(args.out);
   mkdirSync(outDir, { recursive: true });
 
