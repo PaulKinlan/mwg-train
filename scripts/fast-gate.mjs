@@ -112,6 +112,22 @@ const selectedSuites = new Set();
 const selectedChecks = new Set();
 const unmappedFiles = [];
 
+// Path-prefix mapping for whole directories whose files are covered by a check rather than a unit
+// test. The generated evaluation fixtures have no test suite of their own: check:eval-projects
+// re-derives every file in docs/eval/projects/ and fails on any drift, which is precisely the
+// coverage the fast gate exists to find. Without this, any change to a fixture makes the gate exit 1
+// with "unmapped changed files", so the fast gate cannot be run on a branch that touches them.
+const checkPrefixMap = {
+  'docs/eval/projects/': 'check:eval-projects',
+};
+
+function checkForPrefix(file) {
+  for (const [prefix, check] of Object.entries(checkPrefixMap)) {
+    if (file.startsWith(prefix)) return check;
+  }
+  return null;
+}
+
 // Explicit script mapping for check scripts that don't have direct unit tests
 const checkScriptMap = {
   'scripts/validate-provenance.mjs': 'lint:provenance',
@@ -243,6 +259,12 @@ for (const file of changedFiles) {
   const candidateTest = `test/${stem}.test.mjs`;
   if (fs.existsSync(path.join(ROOT, candidateTest))) {
     selectedSuites.add(candidateTest);
+    matched = true;
+  }
+
+  const prefixCheck = checkForPrefix(file);
+  if (prefixCheck) {
+    selectedChecks.add(prefixCheck);
     matched = true;
   }
 
