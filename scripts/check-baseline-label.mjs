@@ -401,6 +401,10 @@ export const DOCUMENTS = {
   // otherwise both insert at the same line and conflict; the classification is the same as theirs.
   'docs/design/archetypes/survey-form/design.md': 'design',
   'docs/design/archetypes/survey-form/plan.md': 'design',
+  // Decided from the manifests, the board comparator and the board inventory rather than from a coverage
+  // preference. Records measurements, states no floor value, and is hand-written - hence provenance, not
+  // a generated pattern or a floor report (mwg-train-49w).
+  'docs/provenance/assets/reference-board-gaps.md': 'provenance',
 };
 
 /** The documents that must carry the label, derived from the classification. */

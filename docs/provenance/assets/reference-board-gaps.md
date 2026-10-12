@@ -23,17 +23,26 @@ Wave 2 is nine boards across four archetypes: `catalogue`, `contact-lead`, `acco
 `event-registration`. Checked against all 139 family rows in `docs/train/briefs/manifest.jsonl` and
 `docs/eval/briefs/manifest.jsonl`:
 
-| Archetype | asserts an empty state | asserts a 4xx/5xx error |
+| Archetype | asserts an empty state | asserts an error state (any wording) |
 | --- | --- | --- |
 | catalogue | no | no |
 | contact-lead | no | no |
 | account-recovery | no | no |
-| event-registration | no | no |
+| event-registration | no | **yes - 20 assertions** |
 
-None of the four asserts an empty state and none asserts a refusal. An empty-state or error-state board for
-them would depict a state that no assertion in the corpus checks and that the comparator would therefore have
-nothing to compare against. `catalogue` already carries `step3-empty.jpg`, and that is consistent with this:
-the board is a supplied visual reference, not a response to an assertion.
+**Correction, and it changes the argument.** The first version of this table tested for `HTTP 4xx/5xx` and
+recorded event-registration as asserting no error state. That was wrong: the manifests assert errors in prose
+without a status code. tr-07 asserts "attempting to book more tickets than remaining capacity triggers an
+error"; tr-30 asserts the form "displays accessible error feedback if omitted"; fam-07 asserts capacity caps
+are enforced; fam-r02 asserts "a validation error is announced to assistive technology". Twenty assertions
+across four of its families. The scope of the probe was the defect - an error state is not the same thing as
+an HTTP status, and a table asserting a universal has to be derived from the widest definition its sentence
+implies.
+
+So the honest position is narrower than the first version claimed. One of Wave 2's four archetypes does assert
+error states, so an error-state board for event-registration is not vacuous. catalogue carries
+`step3-empty.jpg` while asserting no empty state, which remains a supplied visual reference rather than a
+response to an assertion.
 
 ## Where the gap actually is
 
@@ -54,11 +63,29 @@ archetypes assert one or both, and seven of them have no board directory at all:
 `restaurant-ordering` is the sharpest case: it asserts both an empty state and a 4xx refusal and has no
 reference board for either, so its parity comparison reports `BOARDS_MISSING` for both.
 
+## The blocker that makes the previous recommendation wrong
+
+`captureSignature` in `src/eval/render.mjs` navigates to `http://127.0.0.1:${port}/` and screenshots that page.
+It captures ONE page, the homepage, for every archetype and every arm. So the comparator cannot compare an
+empty state or an error state to anything, whatever boards exist: a board of a state the capture never reaches
+has no counterpart on the rendered side.
+
+That reverses the recommendation this document first made. Seven state-specific board tasks were filed on the
+reasoning that a board is needed where a comparison needs a target. The comparison does not reach those targets
+either, so the boards would be produced and never read. Boards are still worth having as visual planning
+references - that is what catalogue's `step3-empty.jpg` is - but they are not the thing standing between the
+corpus and state coverage. The capture paths are.
+
 ## What follows
 
-Seven generative board tasks, one per archetype, each asking for boards for the states that archetype
-actually asserts - not a uniform empty/error/success triple. Filed as beads and referenced from this
-document's log rather than listed here, because the beads are the ledger.
+1. The comparator's state coverage comes first, as its own task: `captureSignature` must be able to reach the
+   states the assertions describe (a list after a filter returns nothing, a form after a refusal) before any
+   board for those states can be compared against anything.
+2. The earlier board tasks are re-scoped, not deleted: each now reads as a visual planning reference for a
+   state its archetype asserts, explicitly not as a comparison target, and each depends on the capture work.
+3. event-registration joins the list, because it does assert error states - twenty of them, including capacity
+   refusal and accessible validation feedback - and the first version of this document wrongly recorded it as
+   asserting none.
 
-This is the decision the bead asked for, and it is narrow on purpose: it does not claim the corpus needs
-uniform state coverage, and it does not ask for boards where nothing would read them.
+The decision is deliberately narrow: it does not claim the corpus needs uniform state coverage, and it does
+not ask for artefacts that nothing can read.
