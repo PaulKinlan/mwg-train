@@ -508,39 +508,25 @@ test('the signature script reads text through the skip-aware reader, not textCon
   // a style preference. textContent includes the source of an inline <script> or <style>, and an empty shell with
   // an inline script is the common SPA case, so the naive read reports a shell as full of content. The browser
   // verification covers the behaviour; this stops the naive read reappearing for a future reader to reach for.
-  assert.match(SIGNATURE_SCRIPT, /nodes\.push\(\{ tag, depth, visible: isVisible\(child\), textLength: renderedText\(child\)/);
+  assert.match(SIGNATURE_SCRIPT, /nodes\.push\(\{ tag, depth, textLength: renderedText\(child\)/);
   assert.doesNotMatch(SIGNATURE_SCRIPT, /textLength: \(child\.textContent/);
   assert.match(SIGNATURE_SCRIPT, /const renderedText = \(element\) => \{/);
   assert.match(SIGNATURE_SCRIPT, /!SKIP\.has\(child\.tagName\.toLowerCase\(\)\)/);
 });
 
-test('a hidden element is not rendered content, whatever it qualifies by', () => {
-  // mwg-train-b03z, second round. Removing hidden TEXT was not enough: a hidden node still qualified through its
-  // tag - img, svg, canvas - and through its role, because those two rules read node metadata and the capture
-  // recorded no visibility at all. Measured before this fix: a hidden img and a hidden role=alert both scored
-  // measurable, and so did <main hidden> and <input hidden> through a box and a control.
-  const sig = (nodes) => ({ nodes, boxes: [], controls: [] });
-
-  // Hidden: not content, however it qualifies.
-  assert.equal(isMeasurable(sig([{ tag: 'img', visible: false, textLength: 0 }])), false,
-    'a hidden image renders nothing');
-  assert.equal(isMeasurable(sig([{ tag: 'div', role: 'alert', visible: false, textLength: 0 }])), false,
-    'a hidden role is not a rendered alert');
-  assert.equal(isMeasurable(sig([{ tag: 'p', visible: false, textLength: 20 }])), false,
-    'hidden text is not rendered text');
-  assert.equal(isMeasurable(sig([
-    { tag: 'figure', visible: false, textLength: 0 }, { tag: 'img', visible: false, textLength: 0 },
-  ])), false, 'a whole hidden tree is still empty');
-
-  // Visible: still measured, so this is about visibility and not about the tag or the role being disallowed.
-  assert.equal(isMeasurable(sig([{ tag: 'img', visible: true, textLength: 0 }])), true);
-  assert.equal(isMeasurable(sig([{ tag: 'div', role: 'alert', visible: true, textLength: 0 }])), true);
-
-  // NOT RECORDED: treated as visible, which is the behaviour it was captured under. This is mandatory for the
-  // committed target signatures, which carry no visibility field - see the compatibility test above.
-  assert.equal(isMeasurable(sig([{ tag: 'img', textLength: 0 }])), true,
-    'a signature predating the field must keep its previous verdict');
-  assert.equal(isMeasurable(sig([{ tag: 'div', role: 'alert', textLength: 0 }])), true);
+test('the capture does not emit hidden elements as nodes, so no consumer can include them', () => {
+  // mwg-train-uh9q. Recording `visible: false` per node and honouring it in isMeasurable was NOT enough: tokens()
+  // maps every node to a structural token and did not honour it, so a page carrying hidden markup scored 0.5
+  // structural similarity against a page with identical rendered output.
+  //
+  // So the element is refused at capture instead - the same rule already applied to boxes, controls, labels and
+  // headings - because a flag that every consumer must remember to honour is a flag that one of them will forget,
+  // which is exactly what happened here. Asserted in two places because they fail differently: this guards the
+  // CODE, and test/capture-state.test.mjs drives two REAL pages with identical rendered output and asserts their
+  // node lists are equal and their structural similarity is 1.
+  assert.match(SIGNATURE_SCRIPT, /if \(!isVisible\(child\)\) continue;/, 'a hidden element is refused with its subtree');
+  assert.doesNotMatch(SIGNATURE_SCRIPT, /visible: isVisible\(child\)/, 'no redundant flag for consumers to honour');
+  assert.doesNotMatch(SIGNATURE_SCRIPT, /node\.visible/, 'and no consumer-side visibility rule to forget');
 });
 
 test('the signature script asks the DOM whether an element is rendered, and does not read innerText', () => {
@@ -565,7 +551,6 @@ test('the signature script asks the DOM whether an element is rendered, and does
   // And the same rule is applied to EVERY collection, because the defect reached the metrics through three
   // separate channels: a node's own metadata, the boxes collection and the controls collection. Guarding only the
   // reported channel would leave <main hidden> and <input hidden> scoring a page that renders nothing.
-  assert.match(SIGNATURE_SCRIPT, /visible: isVisible\(child\)/, 'visibility is recorded per node');
   assert.match(SIGNATURE_SCRIPT, /isVisible\(element\)\) continue;/, 'boxes and controls skip hidden elements');
   assert.match(SIGNATURE_SCRIPT, /filter\(\(h\) => isVisible\(h\)\)/, 'headings skip hidden elements');
   assert.doesNotMatch(SIGNATURE_SCRIPT, /contentVisibilityAuto: true/);

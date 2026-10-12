@@ -87,12 +87,19 @@ export const SIGNATURE_SCRIPT = `return (() => {
     for (const child of element.children) {
       const tag = child.tagName.toLowerCase();
       if (SKIP.has(tag)) continue;
+      // A hidden element is not rendered, so it is not a node and neither is anything inside it. Filtering here,
+      // rather than recording a flag for each consumer to honour, is the point (mwg-train-uh9q): the previous
+      // fix recorded visibility per node and filtered it in isMeasurable, but tokens() maps every node to a
+      // structural token and did not - so two pages with IDENTICAL rendered output scored 0.5 structural
+      // similarity, purely because one carried hidden markup. The nodes array now holds exactly the rendered nodes, so
+      // no consumer can forget, and it is the same rule already applied to boxes, controls, labels and headings.
   // textLength is the content signal mwg-train-vysz and mwg-train-knch need: the tag says which element
   // this is, not whether anything was rendered INTO it. An empty <figure></figure> and a <figure> with
   // content are the same node by tag alone, which is how an empty mount scored perfect parity.
   // childCount deliberately is NOT captured: it counts elements, not content, so a wrapper around a
   // wrapper has children and still renders nothing.
-  nodes.push({ tag, depth, visible: isVisible(child), textLength: renderedText(child), type: child.getAttribute('type') ?? null, name: child.getAttribute('name') ?? null, role: child.getAttribute('role') ?? null });
+  if (!isVisible(child)) continue;
+    nodes.push({ tag, depth, textLength: renderedText(child), type: child.getAttribute('type') ?? null, name: child.getAttribute('name') ?? null, role: child.getAttribute('role') ?? null });
       walk(child, depth + 1);
     }
   };
@@ -284,27 +291,23 @@ export function isMeasurable(signature) {
   if (boxCount > 0 || controlCount > 0) return true;
   if (nodes.length === 0) return false;
 
-  // A hidden element is not rendered content, and it must not qualify through ANY rule below - not its role, not
-  // its tag, not its text. The capture records visibility per node; a signature predating the field is treated as
-  // visible, which is the behaviour it was captured under, so committed targets are unchanged.
-  const rendered = nodes.filter((node) => node != null && node.visible !== false);
 
   // A role, name or type is a semantic attribute rather than a tag, so it qualifies any node, wrapper or not.
   // This is what keeps `<div role="alert">` measurable while `<div>` is not.
-  if (rendered.some((node) => node != null && (node.role != null || node.name != null || node.type != null))) return true;
+  if (nodes.some((node) => node != null && (node.role != null || node.name != null || node.type != null))) return true;
 
   // EMPTY TREE CHECK (mwg-train-7qze, -vysz, -knch). With no boxes and no controls the question is whether the
   // node tree renders anything at all, and it has to be asked of the WHOLE TREE rather than of one node. Asking
   // it per node is what let `<figure><div></div></figure>` through: figure had a child ELEMENT, so it looked like
   // content, while nothing in the tree rendered anything. A tree of empty wrappers has textLength 0 on every
   // node, so one pass over the tree answers it however deeply the wrappers nest.
-  const measured = rendered.filter((node) => node != null && typeof node.textLength === 'number');
+  const measured = nodes.filter((node) => node != null && typeof node.textLength === 'number');
   if (measured.length > 0) {
     if (measured.some((node) => node.textLength > 0)) return true;
 
     // Nothing renders text. Elements that render without text are still content, so an image-only or canvas-only
     // page is not an empty shell; without this the rule would trade a false positive for a false negative.
-    if (rendered.some((node) => node != null && NON_TEXT_CONTENT.has(node.tag))) return true;
+    if (nodes.some((node) => node != null && NON_TEXT_CONTENT.has(node.tag))) return true;
     return false;
   }
 
@@ -314,7 +317,7 @@ export function isMeasurable(signature) {
   // and their sha256 is published in reports as target_sha256. Reading an absent signal as "empty" would make
   // every committed target unmeasurable and refuse every score, and regenerating them is outside this
   // repository's write scope. So unrecorded is not the same as empty.
-  return rendered.some((node) => node != null && !isWrapperTag(node.tag));
+  return nodes.some((node) => node != null && !isWrapperTag(node.tag));
 }
 
 /** The three axes and their weighted mean, as one object so a report never has to recompute them. */

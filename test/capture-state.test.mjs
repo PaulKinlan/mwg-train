@@ -22,6 +22,7 @@ import { join, resolve } from 'node:path';
 
 import { launchChrome } from '../src/corpus/cdp.mjs';
 import { captureSignature } from '../src/eval/render.mjs';
+import { conformanceScore, isMeasurable, structuralSimilarity } from '../src/eval/conformance.mjs';
 
 const ROOT = resolve(import.meta.dirname, '..');
 const TMP = mkdtempSync(join(tmpdir(), 'mwg-capture-state-'));
@@ -42,6 +43,11 @@ const port = Number(process.env.PILOT_PORT || 0);
 const pages = {
   '/': '<h1>ROOT PAGE</h1><p id="a">alpha</p>',
   '/empty': '<h1>EMPTY STATE</h1><p id="b">nothing here</p><p id="c">still nothing</p><button id="d">retry</button>',
+  // mwg-train-uh9q. Two pages with IDENTICAL rendered output; the second carries hidden markup. A capture that
+  // emits the hidden element as a node makes them compare as 0.5 structurally, which is a scoring defect, not a
+  // cosmetic one.
+  '/plain': '<h1>VISIBLE</h1><p>visible words</p>',
+  '/hidden': '<h1>VISIBLE</h1><p>visible words</p><div hidden role="alert">invisible words</div>',
 };
 createServer((req, res) => {
   const path = (req.url || '/').split('?')[0];
@@ -102,5 +108,42 @@ test('captureSignature refuses a path that is not root-relative', async () => {
     }
   } finally {
     rmSync(runDir, { recursive: true, force: true });
+  }
+});
+
+test('hidden markup cannot change how two pages with identical rendered output compare', async () => {
+  // mwg-train-uh9q. The previous fix recorded `visible: false` on each node and honoured it in isMeasurable, but
+  // tokens() maps EVERY node to a structural token and did not honour it - so a page carrying hidden markup
+  // scored 0.5 structural similarity against a page with identical rendered output, from a real capture.
+  //
+  // The capture now refuses to emit a hidden element or anything inside it, so this is asserted on two REAL
+  // pages rather than on hand-built signatures: a hand-built signature can always contain a node the page did not
+  // render, which is exactly the shape the metric cannot protect itself from. A source guard in
+  // test/conformance.test.mjs covers the code; this covers the behaviour.
+  let chrome = null;
+  // The fixture is written into the run directory, as the test above does - pointing projectDir at TMP instead
+  // gives the harness no server.mjs and it fails with "server did not become ready", which is how this test
+  // first failed.
+  const runDir = mkdtempSync(join(tmpdir(), 'mwg-capture-state-hidden-'));
+  const projectDir = join(runDir, 'project');
+  mkdirSync(projectDir, { recursive: true });
+  writeFixture(projectDir);
+  try {
+    chrome = await launchChrome();
+    const plain = await captureSignature({ chrome, projectDir, port: 7944, runDir, path: '/plain' });
+    const hidden = await captureSignature({ chrome, projectDir, port: 7945, runDir, path: '/hidden' });
+
+    assert.deepEqual(hidden.nodes, plain.nodes, 'hidden markup must not add nodes');
+
+    // The control that makes this meaningful: without it both pages could be empty and everything below would
+    // pass for the wrong reason.
+    assert.ok(plain.nodes.length > 0, 'the visible page must actually capture nodes');
+    assert.equal(isMeasurable(plain), true);
+    assert.equal(isMeasurable(hidden), true, 'the hidden page still renders its visible paragraphs');
+
+    assert.equal(structuralSimilarity(plain, hidden), 1, 'identical rendered output must compare as identical');
+    assert.equal(conformanceScore(plain, hidden).structural, 1);
+  } finally {
+    if (chrome) await chrome.close().catch(() => {});
   }
 });
