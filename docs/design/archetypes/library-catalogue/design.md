@@ -41,7 +41,7 @@ darkroom board in the `support-helpdesk` archetype makes with a ticket list and 
 ## Grammar and layout
 
 - Declared structural constants: `--content-frame: 1200px`, `--page-padding: 1.5rem`, `--control-radius: 8px`,
-  `--control-border: 1px solid var(--hp-control)`.
+  `--control-border: 1px solid var(--hp-border)`.
 - Declared page structure: a brand header, a navigation bar, a main content area, a content section, the working
   form, and a footer.
 - **The reference arranges it as a two-column split.** The left column carries the hero, the search and filter
@@ -88,13 +88,21 @@ board is the counterexample.
 
 All values are declared; every observed use was read out of the committed bytes.
 
+**Known conformance gap, recorded rather than retuned.** The declared control border is
+`var(--hp-border)`, which is `#e2e8f0` and measures **1.23:1** on `#ffffff` and **1.18:1** on `#f8fafc`.
+WCAG 2.1 1.4.11 requires 3:1 for UI component boundaries, so the inputs and selects this palette
+describes do not meet it. `#7c8ba1` would clear the requirement on both surfaces (3.46:1 and 3.31:1),
+but it is not in the family's generation prompt, so adopting it here would be a change to the
+generation contract rather than a description of it, and this document would be describing a board
+nobody generated. The remedy therefore belongs in `docs/design/training/tr-16/prompt.txt` and in a
+regenerated reference; until that happens this document records the gap and does not claim a fix.
+
 | Token | Value | Observed use |
 | --- | --- | --- |
 | `hp-sage` | `#15803d` | **Brand identity only**: the leaf mark and the repository's wordmark and subtitle. It fills no control and carries no action |
 | `hp-purple` | `#7c3aed` | **Every interactive accent**: the filter action's fill, the per-card request links, and the primary submit's fill |
 | `hp-card` | `#ffffff` | Card and form-input grounds, including the specimen cards and the review cards |
-| `hp-border` | `#e2e8f0` | The decorative hairlines framing cards and reviews. Not used for interactive controls, whose border must meet WCAG 1.4.11 |
-| `hp-control` | `#7c8ba1` | The border of interactive controls - inputs, selects and their focus outlines. 3.46:1 on `#ffffff` and 3.31:1 on `#f8fafc`, clearing the 3:1 that WCAG 1.4.11 requires of UI component boundaries |
+| `hp-border` | `#e2e8f0` | The hairlines framing cards, controls, selects and reviews, as the generation prompt declares |
 | `hp-bg` | `#f8fafc` | The page ground |
 | `hp-text` | `#1e293b` | The `h1`, section headings, cultivar names, form labels and review copy |
 | `hp-muted` | `#64748b` | The hero subtitle, placeholders, card attribute metadata and footer contact details |
