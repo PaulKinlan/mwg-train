@@ -96,7 +96,7 @@ being inferred for every listed path.
 
 **Implementing-family fields and server state (not the target's sqlite schema).** `*` denotes
 required; only `tr-07`'s `notes` is optional. `tr-07` has nine fields; its `date` is the only
-`date`-typed field in the corpus. `tr-30` has only three fields, the fewest in the corpus.
+`date`-typed field among this archetype's families. `tr-30` has only three fields, the fewest in the corpus.
 
 | Family | Declared fields (type and required flag) | Select options |
 |---|---|---|
@@ -107,7 +107,7 @@ required; only `tr-07`'s `notes` is optional. `tr-07` has nine fields; its `date
 The training families' fill and select values are distinct from the accepted target's fields.
 `tr-07` fills `input[name=attendees]` with `Cassiopeia Vance`, `email` with
 `cassiopeia@example.test`, `phone` with `+44 7700 900789`, `date` with `2026-10-24`,
-`party` with `3` and `adults` with `2`; it selects `select[name=session]` =
+`party` with `3`, `adults` with `2` and `children` with `1`, and `textarea[name=notes]` with `First-time telescope viewers`; it selects `select[name=session]` =
 `Late Session (22:30 - 01:00)`. `tr-30` fills `input[name=volunteer]` with `Priya Raman`,
 `phone` with `+44 7700 900654` and selects `select[name=zone]` = `Harbour Wall`.
 
@@ -176,7 +176,7 @@ expects `Priya Raman` echoed, then searches, updates and confirms intake in the 
 an extra pass. `tr-30` requires a valid beach zone and accessible feedback when it is omitted.
 `fam-07` requires `forms/required-field-feedback` and
 `accessibility/accessible-error-announcement` (alongside `accessibility/accessibility`);
-it also carries the corpus's only `ui-components/progress-ring` rule. Its seeded-defects
+it also carries this archetype's only `ui-components/progress-ring` rule. Its seeded-defects
 array is empty. These rules extend the family contracts, not the accepted target's validation.
 
 ## Acceptance criteria
@@ -211,15 +211,15 @@ accepted spec's three criteria above.
 
 `tr-07`:
 
-1. `POST /register/:eventId` **decrements available capacity** and redirects to `/passes/:id`
-2. `GET /passes/:id` displays the confirmed attendee names, party size and visit date
-3. attempting to book **more tickets than remaining capacity triggers an error and prevents booking**
+1. "POST /register/:eventId decrements available capacity and redirects to /passes/:id"
+2. "GET /passes/:id displays the confirmed attendee names, party size, and visit date"
+3. "attempting to book more tickets than remaining capacity triggers an error and prevents booking"
 
 `tr-30`:
 
-1. `POST /cleanups/:id/register` saves the registration and **returns a pass ID**
-2. `GET /passes/:id` displays the assigned beach zone and **safety briefing time** after reload
-3. submission **requires choosing a valid beach zone** and displays **accessible error feedback** if omitted
+1. "POST /cleanups/:id/register saves the volunteer registration to the server and returns a pass ID"
+2. "GET /passes/:id displays the volunteer's assigned beach zone and safety briefing time after reload"
+3. "form submission requires choosing a valid beach zone and displays accessible error feedback if omitted"
 
 `fam-07`:
 
