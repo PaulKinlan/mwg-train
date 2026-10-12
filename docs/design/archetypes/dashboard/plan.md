@@ -95,7 +95,9 @@ variations.
 **`tr-04` (solar co-op):** it starts at `/`; it reads the landing telemetry; it submits
 `form#solar-credits-form` with fills `input[name=account]` `MTR-9042`, `input[name=meter]` `SOL-4021`,
 `input[name=reading]` `48` and `textarea[name=notes]` `Optimal irradiance, array operating at 96%
-efficiency`; it expects to find `MTR-9042` echoed back; and its search leg queries `/search?q=MTR-9042`. Its
+efficiency`; it expects to find `MTR-9042` echoed back; and its search leg queries `/search?q=MTR-9042`,
+reading results from `#search-results` and expecting the posted value among them with the decoy `zzz-decoy`
+absent, which is what makes the search assertion mean something rather than pass on an empty list. Its
 intake steps select `select[name=period]` `Monthly cumulative` at `/intake` and expect `Monthly cumulative` at
 `/intake/confirm`; and it declares an update leg that rewrites `account` to `MTR-9042 (updated)`, which is
 the journey's proof that a stored value can be amended rather than only appended.
@@ -104,7 +106,8 @@ the journey's proof that a stored value can be amended rather than only appended
 `form#tree-log-form` with fills `input[name=tree]` `Maple #104`, `input[name=steward]` `Rowan Thorne`,
 `input[name=timestamp]` `2026-05-18 10:15`, `input[name=litres]` `20` and `textarea[name=notes]` `Bag emptied
 and sapling thriving`; it expects the timestamp `2026-05-18 10:15` echoed back, which is what proves the log
-was written; and its search leg queries `/search?q=2026-05-18`. Its intake steps select
+was written; and its search leg queries `/search?q=2026-05-18`, reading results from `#search-results` and
+expecting the logged timestamp among them with the decoy `zzz-decoy` absent. Its intake steps select
 `select[name=action]` `Insect damage observed` at `/intake` and expect it at `/intake/confirm`. It also
 declares an update leg that rewrites `timestamp` to `2026-05-18 10:15 (updated)`, which lets a steward
 correct a log entry they got wrong rather than adding a second one.
