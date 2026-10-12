@@ -2,72 +2,98 @@
 archetype: directory-listing
 type: record-form
 boards: docs/design/archetypes/directory-listing/
+register: docs/provenance/assets/training-reference-boards.md
 ---
 
 # `directory-listing` — aesthetic system
 
-The look of the `directory-listing` type, expanding from the `tr-06`, `tr-14` and `fam-06` reference boards into a full multi-step journey. This document is written in the section order `src/design/contract.mjs` requires of a design document (`DESIGN_SECTIONS`).
+The look of the `record-form` type as the `directory-listing` archetype implements it, expanded from the two training families' landing references into a full multi-step journey. This document is written in the section order [`src/design/contract.mjs`](../../../../src/design/contract.mjs) requires of a design document (`DESIGN_SECTIONS`).
 
-One difference from those documents is stated up front rather than implied: they describe an authored target board, and this describes a set of **pending generated** reference boards for the full multi-step journey. Every value below is the set the generation prompts will declare. Behaviour is in [`plan.md`](plan.md), not in this file.
+**Two systems, and they must not be averaged.** This archetype's training families represent two distinct domains built upon light palettes:
+
+| Family | Subject | Token prefix | Declared theme |
+|---|---|---|---|
+| `tr-06` | Highland Guild of Craftsmen — Artisan Directory & Open Studios | `cg-` | "in a light palette" |
+| `tr-14` | Stonegate Heritage Trail — Historical Stops & Audio Transcripts | `st-` | "in a light palette" |
+
+The evaluation-side family (`fam-06`, Neighbourhood Trades) has **no reference board** in `docs/design/training/`; its journeys are prose in `docs/eval/briefs/manifest.jsonl`, and this document does not invent a look for it.
 
 ## Visual thesis
 
-A neighborhood independent trades and artisan directory system. The visual language conveys trust, locality, and professionalism: clear trade categories, distinct verified badges, and highly legible contact cards. The palette is grounded in a civic, dependable aesthetic providing high contrast and readability.
+A directory listing must prioritize rapid scanning and immediate orientation. Both families resolve this by leading with highly legible search and filter controls atop a structured card grid or list.
 
-The layout emphasizes rapid filtering and scanning. Listings are treated as structured business cards, prioritizing operating hours and phone numbers. The submission form is clear and authoritative, encouraging local businesses to provide comprehensive, accurate details.
+The artisan guild (`tr-06`) reads as an **editorial catalogue** — utilizing parchment and stone tones to evoke natural materials. The heritage trail (`tr-14`) reads as a **civic or museum guide** — utilizing plum and sand tones to denote historical authority.
 
 ## Grammar and layout
 
-- One page frame, `--content-frame: 1200px`, centred, with `--page-padding: 1.5rem` at the sides.
-- The landing page (`step1-landing`) introduces the directory with featured categories and a primary search bar.
-- The directory index (`step2-directory`) presents listings in a robust grid or list, complete with filtering sidebar and summary cards.
-- The detail view (`step3-profile`) is a comprehensive profile page: business hero image, operating hours, verified badges, full description, and customer reviews.
-- The submission intake (`step4-submit`) is a clean, single-column form prioritizing legible labels and accessibility.
-- The empty state (`step5-empty`) is a helpful, informative panel explaining the lack of matching trades and offering a clear path to adjust filters.
+Both families declare the structural constants `--content-frame: 1200px`, `--page-padding: 1.5rem`, `--control-radius: 8px` and `--control-border: 1px solid var(--*-border)`, and both declare the same page structure: a brand header, a navigation bar, a main content area, one content section, the working form, and a footer.
+
+- **The index** is a grid or list layout displaying entity cards. Each card groups a title, category badge, short excerpt, and a link to the profile.
+- **The filter region** sits prominently above or beside the index, utilizing native selects or pill groups.
+- **The detailed profile** expands the hierarchy into a split view or dominant column prioritizing biographical text and photography.
+- **Both references are browser viewports** with chrome and an address bar (`https://highlandguild.club/` and `https://stonegateheritage.club/`), depicting the page as a framed composition.
+- **The intake form** is rendered open and inline, either for submitting a new entity (`fam-06`, `tr-06`) or appending a visitor comment (`tr-14`).
+- **The empty state** is a centred card explaining that the filter or search query matched no results.
 
 ## Typography
 
-- A system UI sans-serif stack for clarity and modern readability.
-- Exactly one `h1` per page.
-- Section headings maintain a strict document outline to organize categories, business details, and form sections.
-- Form inputs feature clear programmatic labels placed directly above or beside the fields.
+- A system UI sans-serif stack, as declared by both families.
+- Exactly one `h1` on each reference establishing the directory's purpose.
+- **Semantic structure:** Both families prioritize proper document outlining and ARIA landmarks to ensure assistive technologies can scan the directory items efficiently. Form controls carry permanent visible labels.
 
 ## Token usage
 
-| Token | Value | Used for |
-| --- | --- | --- |
-| `--bg-page` | `#f8fafc` | The clean page ground on all states |
-| `--bg-surface` | `#ffffff` | Elevated card surfaces and form backgrounds |
-| `--border` | `#e2e8f0` | Structural borders and list dividers |
-| `--accent` | `#0284c7` | Civic blue primary actions, selection states, and submit buttons |
-| `--text-primary` | `#0f172a` | Primary slate text for readability |
-| `--text-muted` | `#64748b` | Muted metadata (operating hours, postcodes, category tags) |
+All values are declared in the prompts; observed uses reflect their deployment.
+
+**`tr-06`, Highland Guild of Craftsmen — a parchment editorial palette.**
+- **Ground (`cg-parchment`):** `#fdfbf7`
+- **Surface (`cg-stone`):** `#f5f5f4`
+- **Border (`cg-border`):** `#e7e5e4`
+- **Text (`cg-text`):** `#292524`
+- **Accent (`cg-bark`):** `#451a03` (primary action, deep brown)
+- **Secondary (`cg-copper`):** `#b45309` (emphasis or status)
+- **Muted (`cg-muted`):** `#78716c`
+
+**`tr-14`, Stonegate Heritage Trail — a civic museum palette.**
+- **Ground (`st-sand`):** `#f5f5f4`
+- **Surface (`st-card`):** `#ffffff`
+- **Border (`st-border`):** `#e7e5e4`
+- **Text (`st-text`):** `#292524`
+- **Accent (`st-plum`):** `#581c87` (primary action, deep rich plum)
+- **Secondary (`st-gold`):** `#b45309` (emphasis or status)
+- **Muted (`st-muted`):** `#78716c`
+
+Both families are explicitly built as light palettes. A generator must carefully preserve these exact hex values and apply them to their respective semantic roles without blending them.
 
 ## Spacing rhythm
 
-- `--page-padding: 1.5rem`, `--control-radius: 8px`, `--control-border: 1px solid var(--border)`.
-- Generous padding inside listing cards to clearly distinguish distinct businesses.
-- Form fields are separated by ample vertical rhythm, ensuring error messages fit seamlessly between inputs without causing layout jumps.
+- The declared constants are shared: a centred frame, page padding, an eight-pixel control radius, and a one-pixel border drawn in each family's own border token.
+- **Directory cards** maintain internal padding that ensures titles and category badges align horizontally across the grid.
+- **The intake form** separates its rows generously so that validation feedback can appear inline.
 
 ## Component hierarchy
 
-1. **Brand Header** - Logo mark, main navigation, and global search.
-2. **Filter Sidebar** - Trade categories, location radius, and sorting controls.
-3. **Listing Grid** - Business summary cards with category tags, phone numbers, and verified credentials.
-4. **Profile View** - Comprehensive business details, operating hours table, and customer reviews.
-5. **Submission Form** - Business name, category, phone, postcode, and description inputs.
-6. **State Panels** - Empty search states and no-matches responses.
+1. **Brand header** — the mark, the civic/guild name.
+2. **Search & Filter bar** — URL-parameter-driven controls selecting categories or queries.
+3. **Directory list / Grid** — the matching entities.
+4. **Entity Profile** — the dedicated detailed view for a single maker or stop.
+5. **Intake form** — the labelled fields for entering comments or new registrations.
+6. **Footer** — contact details and copyright.
 
 ## Anti-patterns
 
-- Rendering a listing as unstructured dense text rather than distinct data points (postcode, phone, hours).
-- Overwhelming the submission form with aggressive real-time validation before the user has finished typing.
-- Using decorative illegible fonts for trade names, sacrificing readability.
+- **A listing card whose entire surface is not the link it appears to be.** 
+- **Filter controls that break browser history.** URL parameters must drive the search/filter state.
+- **A modal or step wizard hiding part of the form.** The entry form should be fully visible inline.
+- A second accent colour competing with the primary action.
+- Placeholder text standing in for a visible label.
 
 ## Rationale
 
-The neighborhood civic directory use case demands trust, clarity, and accessibility. Residents are looking for dependable local trades, meaning verified credentials and clear contact details are critical. The design system therefore elevates listings from simple lists to robust, highly accessible profile cards. The civic blue and slate palette provides a professional, dependable aesthetic that reinforces the local community identity without sacrificing WCAG contrast requirements.
+A community directory depends on effortless exploration and persistent wayfinding. The user must understand exactly where they are in the taxonomy, how to filter the list further, and how to reliably share a filtered view. This requires standard URL parameters, strong keyboard-accessible interactive lists, and card boundaries that behave as predictable hit areas.
 
 ## Provenance
 
-- Evaluated against the A1 training families (`tr-06`, `tr-14`) and the A6 evaluation spec (`fam-06` / `directory-listing`).
+- **The declarations:** `docs/design/training/tr-06/prompt.txt` and `docs/design/training/tr-14/prompt.txt`, which name each palette, the structural constants, the page structure, the control labels and the prohibited patterns.
+- **The depictions:** `docs/design/training/tr-06/reference.jpg` and `docs/design/training/tr-14/reference.jpg`. Both files and both prompts are pinned in [`docs/provenance/assets/training-reference-boards.md`](../../../provenance/assets/training-reference-boards.md).
+- **The behaviour behind the screens:** `docs/train/briefs/manifest.jsonl` (families `tr-06`, `tr-14`), and `docs/eval/briefs/manifest.jsonl` (`fam-06`).
