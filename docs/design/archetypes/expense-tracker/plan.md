@@ -57,17 +57,19 @@ The families declare their own routes, and all are listed because the archetype'
 
 The declared journeys. For the evaluation families (`fam-15`, `fam-r03`), these are quoted verbatim from the manifests. For the training families, these are derived summaries of the structured `journey` objects defined in the manifest:
 
-**`tr-15` (tenant co-op):**
-- Starts at `/`, submits `form#maintenance-expense-form` with `input[name=tenant]` `Casey Duval`, `input[name=vendor]` `City Hardware Supply`, `input[name=amount]` `42`, `input[name=date]` `2026-03-15`, `input[name=description]` `Hallway LED lightbulbs` and selects `Winter Salt and Grounds`.
-- Expects `Hallway LED lightbulbs` echoed back to confirm the write.
-- Updates the description field and submits to test amendment.
-- Searches via `/search?q=Hallway` to find the stored transaction.
+**`tr-15` (tenant-collective):**
+- Starts at `/`, submits `form#maintenance-expense-form` with `input[name=tenant]` `Casey Duval`, `input[name=vendor]` `City Hardware Supply`, `input[name=amount]` `42`, `input[name=date]` `2026-03-15`, `input[name=description]` `Hallway LED lightbulbs`, selecting `select[name=category]` `Winter Salt and Grounds`.
+- Expects `Hallway LED lightbulbs` echoed back and again after a reload.
+- Searches via `/search?q=Hallway` to verify the search endpoint finds the stored record.
+- Updates the `description` to `Hallway LED lightbulbs (updated)`.
+- Its intake steps submit `/intake` having selected `select[name=category]` `Winter Salt and Grounds`, and `/intake/confirm` expects `Winter Salt and Grounds` back.
 
-**`tr-29` (tree fund):**
-- Starts at `/`, submits `form#contribution-form` with `input[name=contributor]` `Marta Vidal`, `input[name=amount]` `75`, `textarea[name=message]` `In memory of Rosa Vidal` and selects `Church Lane Green`.
-- Expects `Marta Vidal` echoed back to confirm the write.
-- Updates the contributor field and submits to test amendment.
-- Searches via `/search?q=Marta` to find the stored contribution.
+**`tr-29` (memorial-tree):**
+- Starts at `/`, submits `form#contribution-form` with `input[name=contributor]` `Marta Vidal`, `input[name=amount]` `75`, `textarea[name=message]` `In memory of Rosa Vidal`, selecting `select[name=site]` `Church Lane Green`.
+- Expects `Marta Vidal` echoed back and again after a reload.
+- Searches via `/search?q=Marta` to verify the search endpoint finds the stored record.
+- Updates the `contributor` to `Marta Vidal (updated)`.
+- Its intake steps submit `/intake` having selected `select[name=site]` `Church Lane Green`, and `/intake/confirm` expects `Church Lane Green` back.
 
 **`fam-15` (independent film):**
 - log a new production expense for camera equipment rental with amount, department, receipt reference, and notes, submit, and view the updated expense list

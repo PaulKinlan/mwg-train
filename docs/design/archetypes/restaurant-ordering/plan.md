@@ -54,11 +54,12 @@ The families declare their own routes. The archetype's common shape is a menu vi
 
 The declared journeys. For the evaluation family (`fam-11`), these are quoted verbatim from the manifests. For the training family (`tr-11`), these are derived summaries of the structured `journey` objects defined in the manifest:
 
-**`tr-11` (sourdough bakery):**
-- Starts at `/`, submits `form#bread-order-form` with `input[name=customer]` `Nadia Rossi`, `input[name=phone]` `+44 7700 900888`, `input[name=quantity]` `2`, `textarea[name=notes]` `Please slice if possible`, and selects `Seeded Rye Sourdough` and `Friday 14:00 - 16:00`.
-- Expects `Seeded Rye Sourdough` echoed back to confirm the write.
-- Updates the customer field and submits to test amendment.
-- Searches via `/search?q=Nadia` to find the stored bread order.
+**`tr-11` (sourdough-cottage):**
+- Starts at `/`, submits `form#bread-order-form` with `input[name=customer]` `Nadia Rossi`, `input[name=phone]` `+44 7700 900888`, `input[name=quantity]` `2`, `textarea[name=notes]` `Please slice if possible`, selecting `select[name=style]` `Seeded Rye Sourdough`, `select[name=window]` `Friday 14:00 - 16:00`.
+- Expects `Nadia Rossi` echoed back and again after a reload.
+- Searches via `/search?q=Nadia` to verify the search endpoint finds the stored record.
+- Updates the `customer` to `Nadia Rossi (updated)`.
+- Its intake steps submit `/intake` having selected `select[name=style]` `Seeded Rye Sourdough`, and `/intake/confirm` expects `Seeded Rye Sourdough` back.
 
 **`fam-11` (wood-fired pizzeria):**
 - browse pizza menu categories, customise a pizza with toppings, add items to cart, proceed to checkout with table number or collection time, submit order, and view live order receipt

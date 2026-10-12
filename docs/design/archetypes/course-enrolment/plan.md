@@ -56,11 +56,12 @@ The families declare their own routes. The archetype's common shape is a catalog
 
 The declared journeys. For the evaluation family (`fam-09`), these are quoted verbatim from the manifests. For the training family (`tr-09`), these are derived summaries of the structured `journey` objects defined in the manifest:
 
-**`tr-09` (botanical school):**
-- Starts at `/`, submits `form#course-enrolment-form` with `input[name=student]` `Maya Soren`, `input[name=contact]` `+44 7700 300456`, `textarea[name=dietary]` `No nuts; wheelchair access required`, and selects `Wild Greens Masterclass` / `Sunday 18 May`.
-- Expects `Wild Greens Masterclass` echoed back to confirm the write.
-- Updates the student field to test amendment.
-- Searches via `/search?q=Maya` to verify the stored enrolment record.
+**`tr-09` (wild-edibles):**
+- Starts at `/`, submits `form#course-enrolment-form` with `input[name=student]` `Maya Soren`, `input[name=contact]` `+44 7700 300456`, `textarea[name=dietary]` `No nuts; wheelchair access required`, selecting `select[name=course]` `Wild Greens Masterclass`, `select[name=session]` `Sunday 18 May`.
+- Expects `Maya Soren` echoed back and again after a reload.
+- Searches via `/search?q=Maya` to verify the search endpoint finds the stored record.
+- Updates the `student` to `Maya Soren (updated)`.
+- Its intake steps submit `/intake` having selected `select[name=course]` `Wild Greens Masterclass`, and `/intake/confirm` expects `Wild Greens Masterclass` back.
 
 **`fam-09` (marine navigation):**
 - browse available navigation courses, select Coastal Skipper Theory, complete the enrolment form with student details and emergency contact, submit and receive an enrolment confirmation reference

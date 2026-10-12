@@ -106,11 +106,12 @@ staff view `GET /admin/loans` is named with its method and status by the fourth 
 
 The declared journeys. For the evaluation family (`fam-16`), these are quoted verbatim from the manifests. For the training family (`tr-16`), these are derived summaries of the structured `journey` objects defined in the manifest:
 
-**`tr-16` (perennial repository):**
-- Starts at `/`, files `form#cutting-request-form` with `input[name=gardener]` `Dr Linnaeus Fox`, `input[name=email]` `linnaeus.fox@botanical.test`, `input[name=cultivar]` `Salvia nemorosa Caradonna`, `input[name=quantity]` `3` and `textarea[name=notes]` `Keep moist for root propagation`, selecting `select[name=cutting]` `Root cutting`.
+**`tr-16` (rare-perennial):**
+- Starts at `/`, submits `form#cutting-request-form` with `input[name=gardener]` `Dr Linnaeus Fox`, `input[name=email]` `linnaeus.fox@botanical.test`, `input[name=cultivar]` `Salvia nemorosa Caradonna`, `input[name=quantity]` `3`, `textarea[name=notes]` `Keep moist for root propagation`, selecting `select[name=cutting]` `Root cutting`.
 - Expects `Salvia nemorosa Caradonna` echoed back and again after a reload.
-- Searches via `/search?q=Salvia` to verify the stored record appears in search.
-- Updates the cultivar to `Salvia nemorosa Caradonna (updated)`.
+- Searches via `/search?q=Salvia` to verify the search endpoint finds the stored record.
+- Updates the `cultivar` to `Salvia nemorosa Caradonna (updated)`.
+- Its intake steps submit `/intake` having selected `select[name=cutting]` `Root cutting`, and `/intake/confirm` expects `Root cutting` back.
 
 **`fam-16` (archive):** Quoted verbatim from `docs/eval/briefs/manifest.jsonl`:
 

@@ -106,17 +106,19 @@ column alone.
 
 The declared journeys. For the evaluation family (`fam-10`), these are quoted verbatim from the manifests. For the training families (`tr-10`, `tr-23`), these are derived summaries of the structured `journey` objects defined in the manifest:
 
-**`tr-10` (street-safety survey):**
-- Starts at `/`, submits `form#street-safety-survey-form` with `input[name=respondent]` `Jo Delgado`, `input[name=location]` `Oak Avenue at 2nd Street`, `textarea[name=proposals]` `Install a raised zebra crossing and flashing beacon`, selecting `Poor crossing visibility` and `2 - Moderate concern`.
-- Expects `Jo Delgado` echoed back and again after a reload to confirm persistence.
-- Updates the respondent field to test amendment.
-- Searches via `/search?q=Delgado` to verify the search endpoint finds the stored response.
+**`tr-10` (residential-street):**
+- Starts at `/`, submits `form#street-safety-survey-form` with `input[name=respondent]` `Jo Delgado`, `input[name=location]` `Oak Avenue at 2nd Street`, `textarea[name=proposals]` `Install a raised zebra crossing and flashing beacon`, selecting `select[name=hazard]` `Poor crossing visibility`, `select[name=rating]` `2 - Moderate concern`.
+- Expects `Jo Delgado` echoed back and again after a reload.
+- Searches via `/search?q=Delgado` to verify the search endpoint finds the stored record.
+- Updates the `respondent` to `Jo Delgado (updated)`.
+- Its intake steps submit `/intake` having selected `select[name=hazard]` `Poor crossing visibility`, and `/intake/confirm` expects `Poor crossing visibility` back.
 
-**`tr-23` (retrofit calculator):**
-- Starts at `/`, submits `form#eligibility-form` with `input[name=applicant]` `Fiona Gallagher`, `input[name=email]` `fiona.gallagher@example.test`, `input[name=address]` `42 Orchard Way, Lincoln`, `textarea[name=notes]` `Drafty bay windows on ground floor`, selecting `1930-1965`, `Heat pump`, and `Cavity uninsulated`.
+**`tr-23` (home-energy):**
+- Starts at `/`, submits `form#eligibility-form` with `input[name=applicant]` `Fiona Gallagher`, `input[name=email]` `fiona.gallagher@example.test`, `input[name=address]` `42 Orchard Way, Lincoln`, `textarea[name=notes]` `Drafty bay windows on ground floor`, selecting `select[name=era]` `1930-1965`, `select[name=heating]` `Heat pump`, `select[name=insulation]` `Cavity uninsulated`.
 - Expects `42 Orchard Way, Lincoln` echoed back and again after a reload.
-- Updates the address field to test amendment.
-- Searches via `/search?q=Orchard` to verify the search endpoint finds the stored response.
+- Searches via `/search?q=Orchard` to verify the search endpoint finds the stored record.
+- Updates the `address` to `42 Orchard Way, Lincoln (updated)`.
+- Its intake steps submit `/intake` having selected `select[name=era]` `1930-1965`, and `/intake/confirm` expects `1930-1965` back.
 
 **`fam-10` (transit survey):** Quoted verbatim from `docs/eval/briefs/manifest.jsonl`:
 
@@ -204,7 +206,7 @@ All eleven criteria are quoted verbatim from the two manifests.
 
 - **The behaviour** is derived from `docs/train/briefs/manifest.jsonl` (families `tr-10`, `tr-23`) and
   `docs/eval/briefs/manifest.jsonl` (family `fam-10`). Route names, field slugs, control types, option lists,
-  form selectors, fill values, select values, search legs, update legs, intake steps, stated journeys and all
+  form selectors, fill values, select values, search legs, update legs, intake steps and all
   eleven acceptance criteria are quoted from those rows rather than invented; the evaluation-side journeys are
   quoted verbatim.
 - **The two references** are the training families' generated boards, digest-pinned in
