@@ -13,12 +13,11 @@ single landing reference into a full multi-step journey. This document is writte
 [`src/design/contract.mjs`](../../../../src/design/contract.mjs) requires of a design document
 (`DESIGN_SECTIONS`).
 
-**Where this system comes from.** The family is `tr-12`, CleanTech Trades Network, and the token set below is
+**Where this system comes from.** The training family is `tr-12`, CleanTech Trades Network, and the token set below is
 **declared** by its generation prompt ([`prompt.txt`](../../training/tr-12/prompt.txt)): a palette under the
 `ct-` prefix, chosen so the type is "recognisable by its own token prefix rather than by a shared template".
 The committed landing reference ([`reference.jpg`](../../training/tr-12/reference.jpg)) is a depiction of that
-declaration, and every observed use recorded here was read out of those bytes. The five journey boards this
-document describes do not exist yet — see *Implementation status* in `plan.md`.
+declaration, and every observed use recorded here was read out of those bytes. The evaluation family (`fam-12`, Biotechnology Research Jobs) has **no reference board** in `docs/design/training/`; its journeys are prose in the manifest, and this document does not invent a look for it.
 
 ## Visual thesis
 
