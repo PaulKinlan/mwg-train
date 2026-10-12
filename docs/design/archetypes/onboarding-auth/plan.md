@@ -57,7 +57,7 @@ The families declare their own routes. The archetype's common shape is a registr
 
 The declared journeys. For the evaluation family (`fam-05`), these are quoted verbatim from the manifests. For the training family (`tr-05`), these are derived summaries of the structured `journey` objects defined in the manifest:
 
-**`tr-05` (wildlife-rehabilitation):**
+**`tr-05` (wildlife hospital):**
 - Starts at `/`, submits `form#volunteer-registration-form` with `input[name=name]` `Morgan Reed`, `input[name=email]` `morgan.reed@example.test`, `input[name=phone]` `+44 7700 900456`, `input[name=password]` `Str0ng#Passw0rd!2026`, `textarea[name=notes]` `Wildlife first aid certified, 3 years mammal rescue experience`, selecting `select[name=vaccination]` `Tetanus only`, `select[name=experience]` `1 to 2 years experience`, `select[name=species]` `Small mammals and hedgehogs`.
 - Expects `Morgan Reed` echoed back and again after a reload.
 - Searches via `/search?q=Morgan` to verify the search endpoint finds the stored record.
