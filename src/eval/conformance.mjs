@@ -92,14 +92,20 @@ export const SIGNATURE_SCRIPT = `return (() => {
   // content are the same node by tag alone, which is how an empty mount scored perfect parity.
   // childCount deliberately is NOT captured: it counts elements, not content, so a wrapper around a
   // wrapper has children and still renders nothing.
-  nodes.push({ tag, depth, textLength: renderedText(child), type: child.getAttribute('type') ?? null, name: child.getAttribute('name') ?? null, role: child.getAttribute('role') ?? null });
+  nodes.push({ tag, depth, visible: isVisible(child), textLength: renderedText(child), type: child.getAttribute('type') ?? null, name: child.getAttribute('name') ?? null, role: child.getAttribute('role') ?? null });
       walk(child, depth + 1);
     }
   };
   walk(document.body, 0);
   const boxes = [];
   const boxTags = ['header', 'nav', 'main', 'aside', 'footer', 'form', 'fieldset', 'label', 'input', 'select', 'textarea', 'button', 'h1', 'h2', 'h3', 'ul', 'li', 'article', 'section', 'table'];
+  // ONLY RENDERED ELEMENTS ARE RECORDED, in every collection below (mwg-train-b03z). A hidden element is not
+  // rendered content, and it reached the metrics through three separate channels - a node's role or tag, a box,
+  // and a control - so fixing one channel left the others reporting a page that renders nothing as measurable.
+  // Measured before this change: a hidden img and a hidden role=alert scored measurable through the NODES, while
+  // <main hidden> and <input hidden> scored measurable through a BOX and a CONTROL.
   for (const element of document.querySelectorAll(boxTags.join(','))) {
+    if (!isVisible(element)) continue;
     const tag = element.tagName.toLowerCase();
     const rect = element.getBoundingClientRect();
     boxes.push({
@@ -109,17 +115,20 @@ export const SIGNATURE_SCRIPT = `return (() => {
     });
   }
   const labels = [];
-  for (const label of document.querySelectorAll('label[for]')) labels.push({ for: label.getAttribute('for'), text: (label.textContent ?? '').trim().slice(0, 80) });
+  for (const label of document.querySelectorAll('label[for]')) {
+    if (!isVisible(label)) continue; labels.push({ for: label.getAttribute('for'), text: (label.textContent ?? '').trim().slice(0, 80) });
+  }
   const byId = new Map(labels.map((label) => [label.for, label.text]));
   const controls = [];
   for (const element of document.querySelectorAll('input, select, textarea')) {
     const type = element.getAttribute('type') ?? null;
     if (type === 'hidden') continue;
+    if (!isVisible(element)) continue;
     const id = element.getAttribute('id');
     const label = (id && byId.get(id)) || element.getAttribute('aria-label') || null;
     controls.push({ tag: element.tagName.toLowerCase(), type, name: element.getAttribute('name') ?? null, label });
   }
-  const headings = [...document.querySelectorAll('h1, h2, h3')].map((h) => (h.textContent ?? '').trim().slice(0, 120));
+  const headings = [...document.querySelectorAll('h1, h2, h3')].filter((h) => isVisible(h)).map((h) => (h.textContent ?? '').trim().slice(0, 120));
   return { title: document.title, viewport: { width: innerWidth, height: innerHeight }, nodes, boxes, labels, controls, headings };
 })();`;
 
@@ -275,22 +284,27 @@ export function isMeasurable(signature) {
   if (boxCount > 0 || controlCount > 0) return true;
   if (nodes.length === 0) return false;
 
+  // A hidden element is not rendered content, and it must not qualify through ANY rule below - not its role, not
+  // its tag, not its text. The capture records visibility per node; a signature predating the field is treated as
+  // visible, which is the behaviour it was captured under, so committed targets are unchanged.
+  const rendered = nodes.filter((node) => node != null && node.visible !== false);
+
   // A role, name or type is a semantic attribute rather than a tag, so it qualifies any node, wrapper or not.
   // This is what keeps `<div role="alert">` measurable while `<div>` is not.
-  if (nodes.some((node) => node != null && (node.role != null || node.name != null || node.type != null))) return true;
+  if (rendered.some((node) => node != null && (node.role != null || node.name != null || node.type != null))) return true;
 
   // EMPTY TREE CHECK (mwg-train-7qze, -vysz, -knch). With no boxes and no controls the question is whether the
   // node tree renders anything at all, and it has to be asked of the WHOLE TREE rather than of one node. Asking
   // it per node is what let `<figure><div></div></figure>` through: figure had a child ELEMENT, so it looked like
   // content, while nothing in the tree rendered anything. A tree of empty wrappers has textLength 0 on every
   // node, so one pass over the tree answers it however deeply the wrappers nest.
-  const measured = nodes.filter((node) => node != null && typeof node.textLength === 'number');
+  const measured = rendered.filter((node) => node != null && typeof node.textLength === 'number');
   if (measured.length > 0) {
     if (measured.some((node) => node.textLength > 0)) return true;
 
     // Nothing renders text. Elements that render without text are still content, so an image-only or canvas-only
     // page is not an empty shell; without this the rule would trade a false positive for a false negative.
-    if (nodes.some((node) => node != null && NON_TEXT_CONTENT.has(node.tag))) return true;
+    if (rendered.some((node) => node != null && NON_TEXT_CONTENT.has(node.tag))) return true;
     return false;
   }
 
@@ -300,7 +314,7 @@ export function isMeasurable(signature) {
   // and their sha256 is published in reports as target_sha256. Reading an absent signal as "empty" would make
   // every committed target unmeasurable and refuse every score, and regenerating them is outside this
   // repository's write scope. So unrecorded is not the same as empty.
-  return nodes.some((node) => node != null && !isWrapperTag(node.tag));
+  return rendered.some((node) => node != null && !isWrapperTag(node.tag));
 }
 
 /** The three axes and their weighted mean, as one object so a report never has to recompute them. */
