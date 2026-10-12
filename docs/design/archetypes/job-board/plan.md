@@ -162,9 +162,11 @@ is exactly the half-truth this axis was written to stop:
   `docs/train/targets/tr-12/index.html`. They describe the single-step target bound to the canonical brief
   row, which is a different artefact from this archetype contract.
 - **What the engine offers is capability, not implementation.** The shared engine can render a list, a
-  read-by-reference page and a write, and this family uses those for listings and a receipt. No family in the
-  corpus supports a query-filtered list whose results are asserted, or an application that carries the terms
-  of the vacancy it was made against.
+  read-by-reference page and a write, and this family uses those for listings and a receipt. What this
+  archetype adds is the application that carries the terms of the vacancy it was made against; the filter-with-
+  asserted-results half of that comparison is not unique to it, because `tr-06` (directory-listing) already
+  asserts that `GET /makers?craft=woodworking` filters maker cards to only woodworking artisans. A corpus-wide
+  absence was claimed here and was not true, so the claim is stated as what this archetype adds instead.
 - **No evaluation spec:** there is no `docs/eval/specs/job-board.json`; that directory is the sealed A6
   evaluation set. This contract is validated by section order and internal consistency, not against a spec.
 - **The brief:** two rows, `tr-12-v1` and `tr-12-v2`, which the train-side pair describes as the same contract
