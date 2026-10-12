@@ -31,7 +31,7 @@ one it marks **satisfied**, and its family list names `event-registration` among
 the same way the `blog` or `storefront` archetypes are; what it is waiting on is a *proof*, and that is
 criterion 3's problem rather than a missing route.
 
-The **limited-capacity** contract is shared by three implementing families: all three enforce a cap.
+The **limited-capacity** contract is shared by three implementing families, but they carry it to different depths and only two of them assert a refusal. `tr-07` and `fam-07` enforce a cap: `tr-07` refuses a booking larger than the remaining capacity, and `fam-07` accepts it onto a waitlist and promotes the first waitlisted attendee when an admin cancels. `tr-30` does not assert a cap rejection at all - its persistence statement says sector capacity **allocations** are stored, and its only submission assertion is that a valid beach zone is required with accessible feedback when omitted. Its table row below records the allocation rather than an enforcement.
 `docs/train/briefs/TYPE-AXIS.md` line 67 **names** `event-registration` on the satisfied
 `record-form` row, so this type is **quoted, not derived**.
 
