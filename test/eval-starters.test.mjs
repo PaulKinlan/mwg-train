@@ -24,17 +24,31 @@ test('Starter defects test: mwg-train-n2wa', async () => {
     await r03Page.type('input[name="description"]', 'Team Lunch');
     await r03Page.type('input[name="spent_on"]', '2026-10-12');
 
-    // Trust pointer click on the SECOND span option (which is "10")
-    const inputVal = await r03Page.evaluate(`
+    // A TRUSTED pointer click on the SECOND span option (which is "10").
+    //
+    // This used to call `spans[1].click()` inside evaluate. That is a synthetic click: it produces no
+    // pointerdown and performs no hit-testing, so a widget that covered its own options, set
+    // `pointer-events: none`, or laid them out under another element still passed this test. The comment
+    // above the old code claimed a "Trust pointer click", so the assertion was the opposite of what the
+    // test said it was doing - the version of "it passes" that proves nothing (mwg-train-cu9b).
+    //
+    // Real mouse events at the option's own centre mean a hit-testing or pointer-events regression now
+    // fails here rather than passing silently.
+    const secondSpan = await r03Page.evaluate(`
       const widget = document.querySelector('.amount-widget');
       if (!widget) return null;
       const spans = widget.querySelectorAll('span');
       if (spans.length < 2) return null;
-      spans[1].click();
+      const bounds = spans[1].getBoundingClientRect();
+      return { x: bounds.left + bounds.width / 2, y: bounds.top + bounds.height / 2 };
+    `);
+    assert.ok(secondSpan, 'the amount widget must expose at least two span options to click');
+    await r03Page.realPointer(secondSpan.x, secondSpan.y);
+    const inputVal = await r03Page.evaluate(`
       const input = document.querySelector('.amount-widget input');
       return input ? input.value : null;
     `);
-    assert.strictEqual(inputVal, "10", "Input value should be updated to 10 via pointer click");
+    assert.strictEqual(inputVal, "10", "Input value should be updated to 10 via a trusted pointer click");
 
     await r03Page.submit('form');
     
