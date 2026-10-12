@@ -1,33 +1,37 @@
 import assert from 'node:assert/strict';
-import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, rmSync, writeFileSync, mkdtempSync } from 'node:fs';
 import { join } from 'node:path';
+import { tmpdir } from 'node:os';
+import { execSync } from 'node:child_process';
 import { test, describe, before, after } from 'node:test';
 
 import { outputRelativePath, outputPath, storeOutput, loadOutput } from '../src/eval/outputs.mjs';
 
 describe('outputs store', () => {
-  const TEST_DIR = join(process.cwd(), '.test-outputs-store');
-  const PUBLIC_REPO = join(TEST_DIR, 'public');
-  const QUARANTINE_REPO = join(TEST_DIR, 'quarantine');
+  let TEST_DIR;
+  let PUBLIC_REPO;
+  let QUARANTINE_REPO;
 
   before(() => {
-    rmSync(TEST_DIR, { recursive: true, force: true });
+    TEST_DIR = mkdtempSync(join(tmpdir(), 'mwg-train-outputs-test-'));
+    PUBLIC_REPO = join(TEST_DIR, 'public');
+    QUARANTINE_REPO = join(TEST_DIR, 'quarantine');
+
     mkdirSync(PUBLIC_REPO, { recursive: true });
     mkdirSync(QUARANTINE_REPO, { recursive: true });
+
     // Make the quarantine store appear as a git worktree root
-    import('node:child_process').then(({ execSync }) => {
-      execSync('git init', { cwd: PUBLIC_REPO });
-      execSync('git remote add origin https://example.com/Public/repo.git', { cwd: PUBLIC_REPO });
-      execSync('git init', { cwd: QUARANTINE_REPO });
-      execSync('git remote add origin https://example.com/PaulKinlan/mwg-quarantine.git', { cwd: QUARANTINE_REPO });
-    });
+    execSync('git init', { cwd: PUBLIC_REPO });
+    execSync('git remote add origin https://example.com/Public/repo.git', { cwd: PUBLIC_REPO });
+    execSync('git init', { cwd: QUARANTINE_REPO });
+    execSync('git remote add origin https://example.com/PaulKinlan/mwg-quarantine.git', { cwd: QUARANTINE_REPO });
   });
 
   after(() => {
-    rmSync(TEST_DIR, { recursive: true, force: true });
+    if (TEST_DIR && existsSync(TEST_DIR)) {
+      rmSync(TEST_DIR, { recursive: true, force: true });
+    }
   });
-
-  const options = { repoRoot: PUBLIC_REPO, quarantineRoot: QUARANTINE_REPO };
 
   test('outputRelativePath constructs well-formed paths', () => {
     assert.equal(
@@ -46,6 +50,7 @@ describe('outputs store', () => {
   });
 
   test('storeOutput and loadOutput roundtrip an output tree into A1 (public)', () => {
+    const options = { repoRoot: PUBLIC_REPO, quarantineRoot: QUARANTINE_REPO };
     const sourceDir = join(TEST_DIR, 'source-a1');
     mkdirSync(sourceDir, { recursive: true });
     writeFileSync(join(sourceDir, 'test.txt'), 'hello A1');
@@ -62,6 +67,7 @@ describe('outputs store', () => {
   });
 
   test('storeOutput and loadOutput roundtrip an output tree into A3 (quarantine)', () => {
+    const options = { repoRoot: PUBLIC_REPO, quarantineRoot: QUARANTINE_REPO };
     const sourceDir = join(TEST_DIR, 'source-a3');
     mkdirSync(sourceDir, { recursive: true });
     writeFileSync(join(sourceDir, 'test.txt'), 'hello A3');
@@ -78,28 +84,35 @@ describe('outputs store', () => {
   });
 
   test('loadOutput returns null for non-existent outputs', () => {
+    const options = { repoRoot: PUBLIC_REPO, quarantineRoot: QUARANTINE_REPO };
     const loaded = loadOutput({ projectId: 'missing-project', model: 'deepseek/deepseek-flash' }, 'A1_self_generated', options);
     assert.equal(loaded, null);
   });
 });
 
 describe('outputs store overwriting', () => {
-  const TEST_DIR = join(process.cwd(), '.test-outputs-store-overwrite');
-  const PUBLIC_REPO = join(TEST_DIR, 'public');
-  const QUARANTINE_REPO = join(TEST_DIR, 'quarantine');
+  let TEST_DIR;
+  let PUBLIC_REPO;
+  let QUARANTINE_REPO;
 
   before(() => {
-    rmSync(TEST_DIR, { recursive: true, force: true });
+    TEST_DIR = mkdtempSync(join(tmpdir(), 'mwg-train-outputs-overwrite-'));
+    PUBLIC_REPO = join(TEST_DIR, 'public');
+    QUARANTINE_REPO = join(TEST_DIR, 'quarantine');
+
     mkdirSync(PUBLIC_REPO, { recursive: true });
     mkdirSync(QUARANTINE_REPO, { recursive: true });
-    import('node:child_process').then(({ execSync }) => {
-      execSync('git init', { cwd: PUBLIC_REPO });
-      execSync('git remote add origin https://example.com/Public/repo.git', { cwd: PUBLIC_REPO });
-    });
+
+    execSync('git init', { cwd: PUBLIC_REPO });
+    execSync('git remote add origin https://example.com/Public/repo.git', { cwd: PUBLIC_REPO });
+    execSync('git init', { cwd: QUARANTINE_REPO });
+    execSync('git remote add origin https://example.com/PaulKinlan/mwg-quarantine.git', { cwd: QUARANTINE_REPO });
   });
 
   after(() => {
-    rmSync(TEST_DIR, { recursive: true, force: true });
+    if (TEST_DIR && existsSync(TEST_DIR)) {
+      rmSync(TEST_DIR, { recursive: true, force: true });
+    }
   });
 
   test('storeOutput overwrites existing directory', () => {

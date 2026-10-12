@@ -7,7 +7,8 @@
 import { cpSync, existsSync, mkdirSync, rmSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { assertModelIdentity } from './build-key.mjs';
-import { assetStoragePath } from '../provenance/store.mjs';
+import { assetStoragePath, armStorageRoot, assertResolvesInside, REPO_ROOT } from '../provenance/store.mjs';
+import { ARMS } from '../provenance/arms.mjs';
 
 const PROJECT_ID_PATTERN = /^[a-z0-9][a-z0-9-]*$/i;
 
@@ -40,6 +41,18 @@ export function storeOutput({ projectId, model }, armId, sourceDir, options = {}
   if (!existsSync(sourceDir)) {
     throw new Error(`storeOutput: source directory does not exist: ${sourceDir}`);
   }
+
+  // Ensure targetDir resolves safely inside its root (protect against symlink escapes)
+  const root = armStorageRoot(armId, options);
+  mkdirSync(root, { recursive: true });
+  
+  if (ARMS[armId].publication === 'public') {
+    const publicRoot = options.repoRoot ?? REPO_ROOT;
+    assertResolvesInside(publicRoot, targetDir, 'target output directory');
+  } else {
+    assertResolvesInside(root, targetDir, 'target output directory');
+  }
+
   if (existsSync(targetDir)) {
     rmSync(targetDir, { recursive: true, force: true });
   }
