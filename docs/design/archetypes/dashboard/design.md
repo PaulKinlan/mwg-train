@@ -21,9 +21,8 @@ implementing families, with two training families providing the generated visual
 - **`tr-22`, Canopy Guardian** — [`prompt.txt`](../../training/tr-22/prompt.txt),
   [`reference.jpg`](../../training/tr-22/reference.jpg);
 - **`fam-04`, Community Solar Microgrid** — evaluation family.
-  [`reference.jpg`](../../training/tr-22/reference.jpg).
 
-Both prompts declare the **same structural constants** and the **same five base roles with identical
+Both training prompts declare the **same structural constants** and the **same five base roles with identical
 values**, and differ in the two chromatic values they name. So the system below is presented as the shared
 base plus each family's accent, and every use recorded against a token was read out of the committed bytes
 rather than assumed from the declaration. The five journey boards this document describes are planned — see
