@@ -7,8 +7,7 @@
 import { cpSync, existsSync, mkdirSync, rmSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { assertModelIdentity } from './build-key.mjs';
-import { assetStoragePath, armStorageRoot, assertResolvesInside, REPO_ROOT } from '../provenance/store.mjs';
-import { ARMS } from '../provenance/arms.mjs';
+import { assetStoragePath, armStorageRoot, assertResolvesInside } from '../provenance/store.mjs';
 
 const PROJECT_ID_PATTERN = /^[a-z0-9][a-z0-9-]*$/i;
 
@@ -42,16 +41,19 @@ export function storeOutput({ projectId, model }, armId, sourceDir, options = {}
     throw new Error(`storeOutput: source directory does not exist: ${sourceDir}`);
   }
 
-  // Ensure targetDir resolves safely inside its root (protect against symlink escapes)
+  // Ensure targetDir resolves inside its ARM root, whatever the arm's publication class.
+  //
+  // This asserted against the repository root for public arms until mwg-train-vqb7, and a repo-root test cannot
+  // contain a destructive write: a symlink anywhere inside the repository - `data/A1_self_generated/outputs` ->
+  // `<repo>/docs` is the repro - resolves to a path that IS inside the repo, so the guard passed and the
+  // rmSync below followed the link and deleted committed files under docs/, which cpSync then replaced with the
+  // generated tree. The escape OUT of the repository was already refused; this is the same class of escape
+  // performed within it, and the arm root is the boundary that actually applies, since the arm root is the only
+  // directory storeOutput is entitled to delete and rewrite. It is created just above, so it is real for
+  // realpathSync, and containment is asserted before any removal.
   const root = armStorageRoot(armId, options);
   mkdirSync(root, { recursive: true });
-  
-  if (ARMS[armId].publication === 'public') {
-    const publicRoot = options.repoRoot ?? REPO_ROOT;
-    assertResolvesInside(publicRoot, targetDir, 'target output directory');
-  } else {
-    assertResolvesInside(root, targetDir, 'target output directory');
-  }
+  assertResolvesInside(root, targetDir, 'target output directory');
 
   if (existsSync(targetDir)) {
     rmSync(targetDir, { recursive: true, force: true });
