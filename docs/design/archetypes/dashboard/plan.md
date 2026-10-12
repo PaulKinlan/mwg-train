@@ -60,8 +60,10 @@ view, and a write that attaches a record to one subject.
 | `GET /credits/:account` | `tr-04` | read-by-reference | reads one account's accrued credits |
 | `GET /trees` | `tr-22` | page | serves the tree inventory, filterable by neighbourhood block |
 | `GET /trees/:id` | `tr-22` | read-by-reference | reads one tree's profile and its logging history |
-| `GET /trees/:id/log` | `tr-22` | write | records a maintenance event against that tree and updates its last-actioned date |
+| `POST /trees/:id/log` | `tr-22` | write | records a maintenance event against that tree and updates its last-actioned date |
 | `GET /canopy-summary` | `tr-22` | page | serves the programme-level summary |
+
+**On the methods in that table.** The manifest declares routes as paths rather than methods, and carries no `method` key anywhere. The methods shown are therefore only as firm as their source: `GET /credits/:account` is named by `tr-04`'s first assertion, and `POST /trees/:id/log` and `GET /trees/:id` are named by `tr-22`'s first two. The remaining routes are pages and are served by `GET`, which is a reading of the kind column rather than something the rows state.
 
 Both families also declare a search view addressed by a `q` query parameter (`/search?q=…`), which the two
 journeys use differently: `tr-04` searches by meter reference and `tr-22` by date.
@@ -95,14 +97,17 @@ variations.
 `input[name=reading]` `48` and `textarea[name=notes]` `Optimal irradiance, array operating at 96%
 efficiency`; it expects to find `MTR-9042` echoed back; and its search leg queries `/search?q=MTR-9042`. Its
 intake steps select `select[name=period]` `Monthly cumulative` at `/intake` and expect `Monthly cumulative` at
-`/intake/confirm`.
+`/intake/confirm`; and it declares an update leg that rewrites `account` to `MTR-9042 (updated)`, which is
+the journey's proof that a stored value can be amended rather than only appended.
 
 **`tr-22` (urban forestry):** it starts at `/`; it opens a tree from the inventory; it submits
 `form#tree-log-form` with fills `input[name=tree]` `Maple #104`, `input[name=steward]` `Rowan Thorne`,
 `input[name=timestamp]` `2026-05-18 10:15`, `input[name=litres]` `20` and `textarea[name=notes]` `Bag emptied
 and sapling thriving`; it expects the timestamp `2026-05-18 10:15` echoed back, which is what proves the log
 was written; and its search leg queries `/search?q=2026-05-18`. Its intake steps select
-`select[name=action]` `Insect damage observed` at `/intake` and expect it at `/intake/confirm`.
+`select[name=action]` `Insect damage observed` at `/intake` and expect it at `/intake/confirm`. It also
+declares an update leg that rewrites `timestamp` to `2026-05-18 10:15 (updated)`, which lets a steward
+correct a log entry they got wrong rather than adding a second one.
 
 Mapped to the five planned boards: step 1 dashboard → `step1-overview`, step 2 subject view →
 `step2-subject`, step 3 log form → `step3-log`, step 4 the filtered or status view → `step4-filtered`,
