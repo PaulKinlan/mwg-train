@@ -21,7 +21,7 @@ are two different designs rather than two renders of one, and one detail among t
 | `tr-10` | Greenwood Safe Streets — crosswalk and traffic survey | `ss-` | "in a light palette" | light | navy, used **structurally** — headings and the footer band |
 | `tr-23` | Civic Warm Homes Partnership — retrofit subsidy calculator | `wh-` | "in a light palette" | light | blue, used **for the brand mark only** |
 
-The evaluation-side family (`fam-10`, a municipal transit survey) has **no reference board** in
+The evaluation-side family (`fam-10`, a municipal public transport commuter satisfaction survey, eval split: dev) has **no reference board** in
 `docs/design/training/`; its journeys are prose in `docs/eval/briefs/manifest.jsonl`, and this document does not
 invent a look for it.
 
