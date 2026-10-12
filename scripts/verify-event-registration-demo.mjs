@@ -62,6 +62,12 @@ try {
     const spaces = JSON.parse(await page.evaluate(`return JSON.stringify({ pass: document.querySelector('#pass-view').hidden, mismatch: document.querySelector('#attendee').validity.patternMismatch, aria: document.querySelector('#attendee').getAttribute('aria-invalid'), focus: document.activeElement.id })`));
     check(`whitespace-only attendee name is refused at ${width}`, spaces.pass && spaces.mismatch && spaces.aria === 'true' && spaces.focus === 'attendee', JSON.stringify(spaces));
     await page.evaluate(`document.querySelector('#attendee').select(); return true;`);
+    await page.realType('#attendee', '\u200B\u200B\u2060');
+    await page.evaluate(`document.querySelector('#registration-form').requestSubmit(); return true;`);
+    await sleep(65);
+    const zeroWidth = JSON.parse(await page.evaluate(`return JSON.stringify({ pass: document.querySelector('#pass-view').hidden, mismatch: document.querySelector('#attendee').validity.patternMismatch, aria: document.querySelector('#attendee').getAttribute('aria-invalid'), focus: document.activeElement.id })`));
+    check(`zero-width-only attendee name is refused at ${width}`, zeroWidth.pass && zeroWidth.mismatch && zeroWidth.aria === 'true' && zeroWidth.focus === 'attendee', JSON.stringify(zeroWidth));
+    await page.evaluate(`document.querySelector('#attendee').select(); return true;`);
     await page.realType('#attendee', 'Katherine Johnson');
     await page.realType('#email', 'wrong-email');
     await page.evaluate(`document.querySelector('#registration-form').requestSubmit(); return true;`);

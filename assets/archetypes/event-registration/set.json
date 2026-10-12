@@ -13,7 +13,7 @@
       },
       {
         "path": "docs/design/archetypes/event-registration/demo/index.html",
-        "sha256": "1cd74f3d46bfad8b25f10f4b113abea2c8cb6c764f44a81f05409c4adf389144"
+        "sha256": "249a0f0ed849b0a7510b78e6447720694244402a242f37074c64dd06b2f64719"
       }
     ],
     "stylesheet": {
@@ -129,7 +129,7 @@
       ],
       "apparatus": false,
       "source": "docs/design/archetypes/event-registration/demo/index.html",
-      "sha256": "1cd74f3d46bfad8b25f10f4b113abea2c8cb6c764f44a81f05409c4adf389144"
+      "sha256": "249a0f0ed849b0a7510b78e6447720694244402a242f37074c64dd06b2f64719"
     }
   },
   "images": [
