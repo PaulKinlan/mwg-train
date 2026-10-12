@@ -79,7 +79,7 @@ staff who "access the agent queue", not by any stated method.
   |---|---|
   | `tr-08` | `reporter` (text, required), `equipment` (text, required, echoed), `category` (select, required: Enlarger malfunction, Chemical replenishment (Fixer/Dev), Safelight / Timer electrical, Water supply / Wash bath), `urgency` (select, required: Routine maintenance, Needs attention today, Urgent / Darkroom unusable), `description` (textarea, required) |
   | `tr-28` | `reporter` (text, required, echoed), `serial` (text, required), `gear` (select, required: Tent, Backpack, Sleeping bag, Stove), `issue` (textarea, required), `urgency` (select, required: Low, Normal, Urgent) |
-  | `fam-08` | the brief's journeys name name, email, broadcast frequency or studio room, issue category and urgency; the field slugs are the evaluation side's own and are not restated here |
+  | `fam-08` | the brief's prompt and journeys name name, email, broadcast frequency or studio room, issue category and urgency; the field slugs are the evaluation side's own and are not restated here |
 
 - **The category taxonomy differs by subject, and that is the point.** A darkroom's categories are chemistry
   and equipment faults; a gear locker's are equipment types; a radio station's are broadcast and studio faults.
