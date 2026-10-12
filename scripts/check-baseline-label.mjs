@@ -207,8 +207,10 @@ export const DOCUMENTS = {
   'docs/design.md': 'design',
   // The train-side archetypes that have a canonical pair but no committed boards yet (mwg-train-0bkp.1,
   // community-forum; mwg-train-59ly.1, dashboard; mwg-train-exvw.1, job-board; mwg-train-5cx2.1,
-  // support-helpdesk). Classified as design rather than spec because no docs/eval/specs/<archetype>.json exists
-  // for them, so check:design-schema does not validate them.
+  // support-helpdesk; mwg-train-a1ux.1, library-catalogue). Classified as design rather than spec because no
+  // docs/eval/specs/<archetype>.json exists for them, so check:design-schema does not validate them.
+  'docs/design/archetypes/library-catalogue/design.md': 'design',
+  'docs/design/archetypes/library-catalogue/plan.md': 'design',
   'docs/design/archetypes/support-helpdesk/design.md': 'design',
   'docs/design/archetypes/support-helpdesk/plan.md': 'design',
   'docs/design/archetypes/job-board/design.md': 'design',
