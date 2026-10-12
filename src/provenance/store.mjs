@@ -74,8 +74,43 @@ export function expectedStoreRepo(env = process.env) {
  * it is realpath-checked too. A symlinked arm directory pointing into the public tree fails here.
  */
 export function assertResolvesInside(root, path, what = 'path') {
+  // A symlinked ROOT cannot be contained by comparing realpath(root) against a lexically resolved candidate.
+  // realpath(root) becomes the link's TARGET while the candidate keeps the link's own segments, so the two share
+  // no prefix, the slice below produces unrelated components, and the walk starts from the target with the wrong
+  // names. Every component then "does not exist yet", the guard returns, and the caller's recursive removal runs
+  // through the link. That is how a symlinked arm root (data/A1_self_generated -> <repo>/docs) passed this check
+  // and let storeOutput delete and rewrite files under docs/ (mwg-train-0ult).
+  //
+  // The root is created by the caller before this is reached, so lstat is safe here, and a root that is itself a
+  // symlink is refused outright: containment is then unanswerable by construction, and the arm root is only ever
+  // meant to be the arm's own directory.
+  const rootStat = lstatSync(root);
+  if (rootStat.isSymbolicLink()) {
+    throw new QuarantineError('SYMLINK_ESCAPE', `SYMLINK_ESCAPE: ${what} root is itself a symlink: ${root} -> ${realpathSync(root)}`);
+  }
+  // Lexical containment FIRST, against the root as given. This is the comparison the old code performed against
+  // realpath(root), which is the same string whenever the root is a real directory and an unrelated one whenever
+  // it is not.
+  const lexicalRoot = resolve(root);
+  // The root must be reached WITHOUT traversing a symlink, at any depth above it.
+  //
+  // Refusing only a root that is itself a symlink was not enough (mwg-train-j15h): with `repo/data` linked to
+  // `repo/docs`, `data/A1_self_generated` is a REAL directory, so it passed. realpath(root) is then
+  // `<repo>/docs/A1_self_generated` while resolve(root) is `<repo>/data/A1_self_generated` - two different
+  // strings - and every path below the root was consequently measured against the wrong directory. Comparing
+  // the two catches a symlink at ANY depth between the caller's root and its real location, which is the general
+  // condition the per-depth lstat walk below cannot see because it starts at realpath(root) and never walks the
+  // segments leading to it.
+  const ancestorReal = realpathSync(root);
+  if (ancestorReal !== lexicalRoot) {
+    throw new QuarantineError('SYMLINK_ESCAPE', `SYMLINK_ESCAPE: ${what} root is reached through a symlink: ${lexicalRoot} -> ${ancestorReal}`);
+  }
+  const candidate = resolve(path);
+  if (candidate !== lexicalRoot && !candidate.startsWith(`${lexicalRoot}${sep}`)) {
+    throw new QuarantineError('SYMLINK_ESCAPE', `SYMLINK_ESCAPE: ${what} does not sit lexically inside its root: ${candidate} is not under ${lexicalRoot}`);
+  }
   const realRoot = realpathSync(root);
-  const relative = resolve(path).slice(realRoot.length).split(sep).filter(Boolean);
+  const relative = candidate.slice(lexicalRoot.length).split(sep).filter(Boolean);
   // Walk every component with lstat: existsSync follows links, so a DANGLING symlink looks absent
   // and would let a later write create the linked-to file outside the root.
   let current = realRoot;
