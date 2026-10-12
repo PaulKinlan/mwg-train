@@ -16,7 +16,11 @@ target board, and this describes a set of **generated** reference boards. Every 
 the generation prompts declared and the pictures were made from; the boards were inspected afterwards by
 a different model family and its per-board findings - including anything it found wrong - are recorded in
 the [register](../../../provenance/assets/design-reference-fan-community-site.md), not tidied away here.
-Behaviour is in [`plan.md`](plan.md), not in this file.
+That inspection covered the **first-wave** rasters. The five were regenerated full-bleed on 2026-10-11 under
+bead `mwg-train-d0zi.1` (`step1-collection.jpg`, `step2-contribution.jpg`, `step3-my-contributions.jpg`,
+`step4-moderation.jpg`, `step5-visitor.jpg`), which is why the register files the earlier findings as
+historical and why the regenerated boards are pending an inspection of their own. Behaviour is in
+[`plan.md`](plan.md), not in this file.
 
 ## Visual thesis
 
@@ -38,7 +42,12 @@ greyscale print.
 
 ## Grammar and layout
 
-- The page is a centred frame at a maximum width; the collection is **sidebar plus grid**, the composer
+- The five boards are one screen each, and the whole aesthetic system is the same system across them:
+  `step1-collection.jpg` is the shelf a visitor and a fan both see, `step2-contribution.jpg` the composer,
+  `step3-my-contributions.jpg` the fan's own list carrying moderation status, `step4-moderation.jpg` the
+  queue, and `step5-visitor.jpg` the published-only collection seen without a session. Where this file
+  names a screen, it means the board that depicts it.
+- The page is a centred content column at a maximum width; the collection is **sidebar plus grid**, the composer
   is a single centred column at reading measure, and the queue is a two-column workspace with a counts
   rail on the right. Three pages, three grammars, chosen by what the page is for.
 - The collection grid is three cards across on a desktop viewport, two on a tablet and one at a narrow

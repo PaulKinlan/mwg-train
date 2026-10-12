@@ -78,25 +78,31 @@ the server applies to every read of the collection.
 
 ## Journey
 
+The five reference boards are one step each - `step1-collection.jpg`, `step2-contribution.jpg`,
+`step3-my-contributions.jpg`, `step4-moderation.jpg`, `step5-visitor.jpg` - but they are not five pages in
+sequence. `step1` and `step5` are the same collection screen seen with and without a session, so the journey
+below crosses between boards as the role changes, and each numbered step names the board it lands on.
+
 Fan, in one pass:
 
-1. Open the collection as a signed-out visitor. Every row is published; there is no "pending" row and no
-   moderation control anywhere on the page.
-2. Sign in as a fan. Filter by a section, search for a phrase, and open an artefact.
+1. Open the collection as a signed-out visitor (`step5-visitor.jpg`). Every row is published; there is no
+   "pending" row and no moderation control anywhere on the page.
+2. Sign in as a fan (`step1-collection.jpg`). Filter by a section, search for a phrase, and open an
+   artefact.
 3. Bookmark it. Reload the page: the bookmark is still there.
-4. Open the composer and submit a contribution.
-5. The fan's own list now shows it with the status word *In review*, and it is **not** in the public
-   collection - the same request a visitor makes does not return it.
-6. The moderator holds it with a reason. The fan's list shows the status *Needs changes* and quotes the
-   reason; the fan revises and resubmits, and the status returns to *In review*.
+4. Open the composer (`step2-contribution.jpg`) and submit a contribution.
+5. The fan's own list (`step3-my-contributions.jpg`) now shows it with the status word *In review*, and it
+   is **not** in the public collection - the same request a visitor makes does not return it.
+6. The moderator holds it with a reason (`step4-moderation.jpg`). The fan's list shows the status *Needs
+   changes* and quotes the reason; the fan revises and resubmits, and the status returns to *In review*.
 
 Moderator, in one pass:
 
 7. Open the queue as a fan first: the request is refused with a stated reason, so the boundary is proved
    by a request rather than by the absence of a button.
 8. As the moderator, approve one contribution and hold another, giving each a reason.
-9. As the visitor again, reload the collection: the approved contribution is present and the held one is
-   absent - twice, because a visibility rule that is not deterministic is not a rule.
+9. As the visitor again, reload the collection (`step5-visitor.jpg`): the approved contribution is present
+   and the held one is absent - twice, because a visibility rule that is not deterministic is not a rule.
 
 ## Validation and states
 
@@ -145,10 +151,14 @@ forms" is exactly the half-truth this axis was written to stop:
 - There is no specification for this type under `docs/eval/specs/` (that directory is the sealed A6
   evaluation set) and no family row in `docs/train/briefs/manifest.jsonl`. This type is A1 planning
   material; it is not a training pair and not an evaluation target.
-- The five reference boards are generated, vision-reviewed and digest-pinned
-  ([register](../../../provenance/assets/design-reference-fan-community-site.md)); they are pictures of the
-  intended states - collection, composer, the fan's own list with status, the moderator queue, and the
-  visitor's view - and they demonstrate no behaviour whatsoever.
+- The five reference boards are generated, digest-pinned and **regenerated full-bleed** under bead
+  `mwg-train-d0zi.1` ([register](../../../provenance/assets/design-reference-fan-community-site.md)); they are
+  pictures of the intended states - `step1-collection.jpg` collection, `step2-contribution.jpg` composer,
+  `step3-my-contributions.jpg` the fan's own list with status, `step4-moderation.jpg` the moderator queue,
+  and `step5-visitor.jpg` the visitor's view - and they demonstrate no behaviour whatsoever. One provenance
+  caveat is stated rather than implied: the independent vision review on record inspected the **first-wave**
+  rasters, the register carries its findings under a historical heading for that reason, and the regenerated
+  boards are pending an inspection of their own.
 - What is required before this type could be called implemented, in the order it becomes true, is
   recorded on bead `mwg-train-efg`: a session that carries a role (the capability this depends on is
   the second role in `mwg-train-ksn`, which the engine is gaining), a status field whose transitions only the server performs, a decision route with a permission check proved by a request, a
