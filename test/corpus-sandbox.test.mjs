@@ -15,7 +15,7 @@ import { runProjectVersion, startServer, stopServer } from '../src/corpus/harnes
 
 const available = (() => { try { execFileSync('bwrap', ['--version'], { stdio: 'ignore' }); return true; } catch { return false; } })();
 
-test('generated page egress control connects; contained page denies fetch and WebSocket but serves loopback',
+test('default browser denies outbound fetch and WebSocket; explicit opt-out connects; loopback still loads',
   { timeout: 30_000 }, async (t) => {
     const address = Object.values(networkInterfaces()).flat().find((a) => a.family === 'IPv4' && !a.internal)?.address;
     assert.ok(address, 'control needs a reachable non-loopback host interface');
@@ -50,8 +50,8 @@ test('generated page egress control connects; contained page denies fetch and We
     </script>`));
     await new Promise((resolve) => app.listen(0, '127.0.0.1', resolve));
     t.after(() => app.close());
-    const probe = async (blockEgress) => {
-      const chrome = await launchChrome({ blockEgress });
+    const probe = async (options) => {
+      const chrome = await launchChrome(options);
       try {
         const page = await chrome.newPage();
         await page.goto(`http://127.0.0.1:${app.address().port}/`);
@@ -60,18 +60,23 @@ test('generated page egress control connects; contained page denies fetch and We
         return { ...result, blockedRequests: page.blockedRequests };
       } finally { await chrome.close(); }
     };
-    const control = await probe(false);
-    assert.equal(control.fetched, true, 'without containment browser fetch must connect');
-    assert.equal(control.websocket, true, 'without containment browser WebSocket must connect');
-    assert.deepEqual(hits, { fetch: 1, websocket: 1 }, 'outbound listener saw both control requests');
-    const contained = await probe(true);
+    const contained = await probe();
     assert.equal(contained.fetched, false, 'contained browser fetch must fail');
     assert.equal(contained.websocket, false, 'contained browser WebSocket must fail');
-    assert.deepEqual(hits, { fetch: 1, websocket: 1 }, 'outbound listener saw no contained requests');
+    assert.deepEqual(hits, { fetch: 0, websocket: 0 }, 'outbound listener saw no contained requests');
     assert.ok(contained.blockedRequests.some((url) => url.startsWith('http://') && url.includes(address)),
       'CDP explicitly failed the outbound fetch, not merely a proxy connection error');
-    console.log(`browser egress control: fetch=true websocket=true; contained: fetch=false websocket=false; CDP failed: ${contained.blockedRequests.join(', ')}; loopback loaded`);
+    // Positive control: deliberately reopen egress to prove the listener is reachable.
+    const control = await probe({ allowEgress: true });
+    assert.equal(control.fetched, true, 'explicit opt-out browser fetch must connect');
+    assert.equal(control.websocket, true, 'explicit opt-out browser WebSocket must connect');
+    assert.deepEqual(hits, { fetch: 1, websocket: 1 }, 'outbound listener saw both control requests');
+    console.log(`browser egress default: fetch=false websocket=false; explicit opt-out: fetch=true websocket=true; CDP failed: ${contained.blockedRequests.join(', ')}; loopback loaded`);
   });
+
+test('custom proxy conflicts with default containment', async () => {
+  await assert.rejects(launchChrome({ proxy: 'http://127.0.0.1:3128' }), { code: 'EGRESS_PROXY_CONFLICT' });
+});
 
 test('unsupported platforms and unavailable bubblewrap refuse without a fallback', () => {
   assert.throws(() => requireCorpusSandbox({ platform: 'darwin', bwrapAvailable: true }), /darwin.*bubblewrap.*unsupported.*refusing/);

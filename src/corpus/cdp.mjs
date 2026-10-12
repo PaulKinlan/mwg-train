@@ -133,9 +133,10 @@ async function fetchJson(url, attempts = 40) {
  * One browser at a time is a fleet rule (the reaper kills orphans and the box has two cores), so the
  * harness reuses a single instance across projects and closes it in a finally block.
  */
-export async function launchChrome({ proxy = null, blockEgress = false, args = [] } = {}) {
-  // The opt-in is separate from proxy: callers using their own proxy retain its original meaning.
-  if (blockEgress && proxy) throw new CdpError('EGRESS_PROXY_CONFLICT', 'blockEgress cannot share a custom proxy');
+export async function launchChrome({ proxy = null, allowEgress = false, args = [] } = {}) {
+  // A custom proxy does not implicitly permit egress; an exception must be explicit.
+  const blockEgress = !allowEgress;
+  if (blockEgress && proxy) throw new CdpError('EGRESS_PROXY_CONFLICT', 'containment cannot share a custom proxy');
   const userDataDir = mkdtempSync(join(tmpdir(), 'mwg-chrome-'));
   const binary = chromeBinary();
   const child = spawn(
