@@ -99,7 +99,7 @@ async function main() {
 
   const runDir = join(ROOT, '.spec-rebuild');
   mkdirSync(runDir, { recursive: true });
-  const chrome = args.run ? await launchChrome() : null;
+  const chrome = args.run ? await launchChrome({ blockEgress: true }) : null;
   // A hard self-bound, because a browser must not outlive the run that started it. A subagent whose model
   // was cut off mid-verification left a headless Chrome running for 46 minutes until the reaper caught it;
   // the `finally` below only helps a process that gets to run. This timer fires whether or not anything is

@@ -94,7 +94,7 @@ export function allowedCallerArgs(args = []) {
   return args.filter((arg) => CALLER_ARG_ALLOWLIST.includes(String(arg)));
 }
 
-export function chromeArgs({ userDataDir, proxy = null, extra = [], unsandboxed = false, url = 'about:blank' } = {}) {
+export function chromeArgs({ userDataDir, proxy = null, blockEgress = false, extra = [], unsandboxed = false, url = 'about:blank' } = {}) {
   return [
     '--headless=new',
     '--remote-debugging-port=0',
@@ -112,7 +112,10 @@ export function chromeArgs({ userDataDir, proxy = null, extra = [], unsandboxed 
     '--disable-features=Translate,BackForwardCache,AcceptCHFrame,MediaRouter,OptimizationHints',
     '--force-color-profile=srgb',
     '--window-size=1280,900',
-    ...(proxy ? [`--proxy-server=${proxy}`] : []),
+    ...(blockEgress ? [
+      '--proxy-server=http://127.0.0.1:9',
+      '--force-webrtc-ip-handling-policy=disable_non_proxied_udp',
+    ] : proxy ? [`--proxy-server=${proxy}`] : []),
     // Only allowlisted caller arguments pass. Not "the sandbox-disabling ones are refused": a caller cannot widen
     // this process's reach by naming a flag, and a flag Chromium adds next year is refused because it is not on the
     // list rather than because somebody remembered to add it to a refusal list.
@@ -216,7 +219,9 @@ async function fetchJson(url, attempts = 40) {
  * One browser at a time is a fleet rule (the reaper kills orphans and the box has two cores), so the
  * harness reuses a single instance across projects and closes it in a finally block.
  */
-export async function launchChrome({ proxy = null, args = [] } = {}) {
+export async function launchChrome({ proxy = null, blockEgress = false, args = [] } = {}) {
+  // The opt-in is separate from proxy: callers using their own proxy retain its original meaning.
+  if (blockEgress && proxy) throw new CdpError('EGRESS_PROXY_CONFLICT', 'blockEgress cannot share a custom proxy');
   const userDataDir = mkdtempSync(join(tmpdir(), 'mwg-chrome-'));
   const binary = chromeBinary();
   const unsandboxed = chromeIsUnsandboxed();
@@ -239,7 +244,7 @@ export async function launchChrome({ proxy = null, args = [] } = {}) {
   }
   const child = spawn(
     binary,
-    chromeArgs({ userDataDir, proxy, extra: args, unsandboxed }),
+    chromeArgs({ userDataDir, proxy, blockEgress, extra: args, unsandboxed }),
     {
       stdio: ['ignore', 'pipe', 'pipe'],
       // Its own process group, so the whole tree - zygotes, gpu, network, and anything the browser spawns
@@ -376,13 +381,15 @@ export async function launchChrome({ proxy = null, args = [] } = {}) {
       await connection.send('Page.enable', {}, sessionId);
       await connection.send('Runtime.enable', {}, sessionId);
       await connection.send('Network.enable', {}, sessionId);
+      const page = new Page(session, viewport);
+      if (blockEgress) await page.blockEgress();
       if (mobile) {
         await connection.send('Emulation.setDeviceMetricsOverride', { width: viewport.width, height: viewport.height, deviceScaleFactor: 2, mobile: true, screenWidth: viewport.width, screenHeight: viewport.height }, sessionId);
         await connection.send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 }, sessionId);
       } else {
         await connection.send('Emulation.setDeviceMetricsOverride', { width: viewport.width, height: viewport.height, deviceScaleFactor: 1, mobile: false }, sessionId);
       }
-      return new Page(session, viewport);
+      return page;
     },
     async close() {
       try {
@@ -425,7 +432,28 @@ export class Page {
     this.console = [];
     this.network = [];
     this.requests = new Map();
+    this.blockedRequests = [];
     this.#observe();
+  }
+
+  // Fetch interception is installed before navigating to the untrusted document. Unlike a blocked-URL
+  // wildcard, it can continue loopback requests while failing all other HTTP(S) requests explicitly.
+  async blockEgress() {
+    const { connection, sessionId } = this.session;
+    connection.on('Fetch.requestPaused', (params, sid) => {
+      if (sid !== sessionId) return;
+      const url = new URL(params.request.url);
+      const host = url.hostname.toLowerCase().replace(/^\[|\]$/g, '');
+      const loopback = host === 'localhost' || host.endsWith('.localhost') || host === '::1'
+        || /^127(?:\.\d{1,3}){3}$/.test(host);
+      const denied = !loopback;
+      connection.send(denied ? 'Fetch.failRequest' : 'Fetch.continueRequest',
+        denied ? { requestId: params.requestId, errorReason: 'BlockedByClient' } : { requestId: params.requestId },
+        sessionId).then(() => {
+        if (denied) this.blockedRequests.push(params.request.url);
+      }).catch((error) => { this.egressError = error; });
+    });
+    await this.send('Fetch.enable', { patterns: [{ urlPattern: '*', requestStage: 'Request' }] });
   }
 
   #observe() {
@@ -453,6 +481,7 @@ export class Page {
   }
 
   send(method, params) {
+    if (this.egressError) throw this.egressError;
     return this.session.connection.send(method, params, this.sessionId);
   }
 
