@@ -107,7 +107,7 @@ async function main() {
     .slice(0, args.limit ?? undefined);
 
   console.log(`pilot: ${projectIds.length} project(s) -> ${runDir}`);
-  const chrome = await launchChrome();
+  const chrome = await launchChrome({ blockEgress: true });
   const decisions = [];
   const notes = [];
   let port = args.port;
