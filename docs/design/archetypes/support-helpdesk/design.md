@@ -78,9 +78,12 @@ footer.
 **A divergence recorded rather than smoothed over, because it is systematic.** Both prompts instruct that the
 content "runs past the left, right and bottom edges" and that "you never see where the page ends
 horizontally", while also requiring the complete footer to be visible. Both rasters resolve that contradiction
-the way every board in this corpus has: the page is bounded, centred, and fully visible with its footer. This is
-the fifth archetype where the same instruction resolves the same way, so these baselines should be read as
-framed compositions rather than as bleed demos.
+by bounding the page inside the viewport, centred, and fully visible with its footer. This is the fifth
+archetype in this lane's reading where the same instruction resolves that way, and **the resolution is not
+universal, so it must not be assumed**. The `tr-16` reference in the library-catalogue pair is a measured
+counterexample: it bleeds off the bottom left of its grid while its footer and reviews remain fully visible on
+the right, so bleed and a complete footer can coexist. These baselines should be read as framed compositions
+rather than as bleed demos, without inferring from the bleed instruction either.
 
 ## Typography
 
