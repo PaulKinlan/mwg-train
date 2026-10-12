@@ -89,7 +89,8 @@ Fan, in one pass:
    "pending" row and no moderation control anywhere on the page.
 2. Sign in as a fan (`step1-collection.jpg`). Filter by a section, search for a phrase, and open an
    artefact.
-3. Bookmark it. Reload the page: the bookmark is still there.
+3. Bookmark it (`step1-collection.jpg`, whose bookmark affordance this is). Reload the page: the bookmark is
+   still there.
 4. Open the composer (`step2-contribution.jpg`) and submit a contribution.
 5. The fan's own list (`step3-my-contributions.jpg`) now shows it with the status word *In review*, and it
    is **not** in the public collection - the same request a visitor makes does not return it.
@@ -100,7 +101,8 @@ Moderator, in one pass:
 
 7. Open the queue as a fan first: the request is refused with a stated reason, so the boundary is proved
    by a request rather than by the absence of a button.
-8. As the moderator, approve one contribution and hold another, giving each a reason.
+8. As the moderator, approve one contribution and hold another, giving each a reason
+   (`step4-moderation.jpg`).
 9. As the visitor again, reload the collection (`step5-visitor.jpg`): the approved contribution is present
    and the held one is absent - twice, because a visibility rule that is not deterministic is not a rule.
 

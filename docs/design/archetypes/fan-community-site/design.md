@@ -43,7 +43,7 @@ greyscale print.
 ## Grammar and layout
 
 - The five boards are one screen each, and the whole aesthetic system is the same system across them:
-  `step1-collection.jpg` is the shelf a visitor and a fan both see, `step2-contribution.jpg` the composer,
+  `step1-collection.jpg` is the shelf as a signed-in fan sees it, `step2-contribution.jpg` the composer,
   `step3-my-contributions.jpg` the fan's own list carrying moderation status, `step4-moderation.jpg` the
   queue, and `step5-visitor.jpg` the published-only collection seen without a session. Where this file
   names a screen, it means the board that depicts it.
