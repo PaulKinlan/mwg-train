@@ -12,7 +12,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
-import { controlSimilarity, conformanceScore, geometrySimilarity, IDENTITY_AXES, identityFindings, scoreArm, structuralSimilarity, variantIdentity, WEIGHTS } from '../src/eval/conformance.mjs';
+import { isMeasurable, controlSimilarity, conformanceScore, geometrySimilarity, IDENTITY_AXES, identityFindings, scoreArm, structuralSimilarity, variantIdentity, WEIGHTS } from '../src/eval/conformance.mjs';
 import { validateManifest } from '../src/provenance/record.mjs';
 import { parseManifest } from '../src/provenance/record.mjs';
 import { IDENTITY_BUDGET, TARGETS_MANIFEST, TARGETS_STORAGE, TARGET_FAMILIES } from '../src/eval/targets.mjs';
@@ -343,6 +343,29 @@ test('every axis the identity layer measures has a budget, or it is judged nowhe
   const decorative = budgeted.filter((axis) => !measured.includes(axis));
   assert.deepEqual(unjudged, [], `these axes are measured but have no floor, so nothing judges them: ${unjudged.join(', ')}`);
   assert.deepEqual(decorative, [], `these axes have a floor but are never measured, so the floor is decorative: ${decorative.join(', ')}`);
+});
+
+test('isMeasurable correctly identifies empty SPA shells and legitimately rendered content', () => {
+  // A completely empty signature is unmeasurable
+  assert.equal(isMeasurable({}), false);
+  assert.equal(isMeasurable({ nodes: [], boxes: [], controls: [] }), false);
+
+  // An empty SPA root: body > div#root. depth=0, no semantic boxes or controls.
+  assert.equal(isMeasurable({ nodes: [{ tag: 'div', depth: 0 }], boxes: [], controls: [] }), false);
+  
+  // A nested empty shell: body > div#root > div.app. All are divs/spans, no boxes/controls.
+  // Wait, if there's a depth > 0 node, the new isMeasurable returns TRUE! 
+  // Wait, the finding said: "Checking depth > 0 is bypassed by any wrapper (e.g. body > div#root > div.app gives depth 0 and 1, but boxes=[] and controls=[]). When boxes and controls are empty, there is no rendered content regardless of nested empty divs."
+  // Wait, I updated isMeasurable to check `node.tag !== 'div' && node.tag !== 'span'`, NOT `depth > 0`.
+  assert.equal(isMeasurable({ nodes: [{ tag: 'div', depth: 0 }, { tag: 'div', depth: 1 }], boxes: [], controls: [] }), false);
+  assert.equal(isMeasurable({ nodes: [{ tag: 'div', depth: 0 }, { tag: 'span', depth: 1 }], boxes: [], controls: [] }), false);
+
+  // But if there is a <p> tag, it is measurable even if it is not a semantic box
+  assert.equal(isMeasurable({ nodes: [{ tag: 'div', depth: 0 }, { tag: 'p', depth: 1 }], boxes: [], controls: [] }), true);
+  
+  // If there are boxes or controls, it's obviously measurable
+  assert.equal(isMeasurable({ nodes: [{ tag: 'div', depth: 0 }], boxes: [box('main', 0, 0, 1, 1)], controls: [] }), true);
+  assert.equal(isMeasurable({ nodes: [{ tag: 'div', depth: 0 }], boxes: [], controls: [{ tag: 'input', type: 'text', name: 'q' }] }), true);
 });
 
 test('an unmeasurable signature is refused, not scored a perfect 1.000', () => {

@@ -200,7 +200,17 @@ export function controlSimilarity(target, candidate) {
 
 /** Whether a signature carries anything that can actually be compared. */
 export function isMeasurable(signature) {
-  return (signature?.nodes?.length ?? 0) > 0 || (signature?.boxes?.length ?? 0) > 0 || (signature?.controls?.length ?? 0) > 0;
+  const nodeCount = signature?.nodes?.length ?? 0;
+  const boxCount = signature?.boxes?.length ?? 0;
+  const controlCount = signature?.controls?.length ?? 0;
+  
+  if (boxCount > 0 || controlCount > 0) return true;
+  if (nodeCount === 0) return false;
+  
+  // Empty SPA root check: if the page rendered no semantic boxes and no controls, it must have at least
+  // one node that is not a generic wrapper (<div id="root"> or <span>) to be considered measured.
+  // A nested tree of purely divs/spans (like body > div#root > div.app) with no boxes or controls is an empty unmeasured shell.
+  return signature.nodes.some(node => node.tag !== 'div' && node.tag !== 'span');
 }
 
 /** The three axes and their weighted mean, as one object so a report never has to recompute them. */
@@ -242,12 +252,13 @@ export function conformanceScore(target, candidate) {
  * caller wanting these numbers reads the conformance report, it does not look in an endpoint result.
  */
 export function scoreArm({ target, raw, arm }) {
-  const baseline = conformanceScore(target, raw);
-  const conformant = conformanceScore(target, arm);
+  const unmeasured = Object.fromEntries(IDENTITY_AXES.map((axis) => [axis, null]));
+  const baseline = isMeasurable(raw) ? conformanceScore(target, raw) : unmeasured;
+  const conformant = isMeasurable(arm) ? conformanceScore(target, arm) : unmeasured;
   return {
     raw: baseline.overall,
     target: conformant.overall,
-    delta: round(conformant.overall - baseline.overall),
+    delta: baseline.overall !== null && conformant.overall !== null ? round(conformant.overall - baseline.overall) : null,
     axes: { raw: baseline, arm: conformant },
   };
 }
@@ -271,11 +282,13 @@ export function variantIdentity(target, variants) {
   // must stay a recorded fact rather than a crash - it is exactly what the degenerate finding is for. The
   // numbers must also stop claiming perfect agreement: an empty pairwise list scored mean 1, which is how a
   // family of blank pages reported 1.000 identity (mwg-train-z92).
-  const degenerate = variants.length < 2 || variants.every((variant) => !isMeasurable(variant.signature));
+  const measuredVariants = variants.filter(v => isMeasurable(v.signature));
+  const degenerate = measuredVariants.length < 2;
+  
+  const unmeasured = Object.fromEntries(IDENTITY_AXES.map((axis) => [axis, null]));
   if (degenerate) {
-    const unmeasured = Object.fromEntries(IDENTITY_AXES.map((axis) => [axis, null]));
     return {
-      target_conformance: [],
+      target_conformance: variants.map(v => ({ framework: v.framework, ...unmeasured })),
       pairwise: [],
       identity: unmeasured,
       variance: Object.fromEntries(IDENTITY_AXES.map((axis) => [axis, null])),
@@ -284,16 +297,21 @@ export function variantIdentity(target, variants) {
       degenerate: true,
     };
   }
-  const targets = variants.map((variant) => ({ framework: variant.framework, ...conformanceScore(target, variant.signature) }));
+  
+  const targets = variants.map((variant) => {
+    if (!isMeasurable(variant.signature)) return { framework: variant.framework, ...unmeasured };
+    return { framework: variant.framework, ...conformanceScore(target, variant.signature) };
+  });
+  
   const pairwise = [];
-  for (let i = 0; i < variants.length; i += 1) {
-    for (let j = i + 1; j < variants.length; j += 1) {
+  for (let i = 0; i < measuredVariants.length; i += 1) {
+    for (let j = i + 1; j < measuredVariants.length; j += 1) {
       // Both directions, averaged. Every axis is symmetric now, but averaging makes the pairwise shell
       // robust to a future asymmetric one rather than silently reporting whichever order came first.
-      const forward = conformanceScore(variants[i].signature, variants[j].signature);
-      const backward = conformanceScore(variants[j].signature, variants[i].signature);
+      const forward = conformanceScore(measuredVariants[i].signature, measuredVariants[j].signature);
+      const backward = conformanceScore(measuredVariants[j].signature, measuredVariants[i].signature);
       const axes = Object.fromEntries(IDENTITY_AXES.map((axis) => [axis, round((forward[axis] + backward[axis]) / 2)]));
-      pairwise.push({ a: variants[i].framework, b: variants[j].framework, ...axes });
+      pairwise.push({ a: measuredVariants[i].framework, b: measuredVariants[j].framework, ...axes });
     }
   }
   const mean = (values) => (values.length === 0 ? 1 : round(values.reduce((sum, value) => sum + value, 0) / values.length));
