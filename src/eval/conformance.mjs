@@ -103,6 +103,45 @@ export const SIGNATURE_SCRIPT = `return (() => {
     pruned.set(element, answer);
     return answer;
   };
+  // Whether an element paints generated content of its own, which is content the DOM does not expose through
+  // textContent: an icon-font glyph, a ::before label, a counter. This is a regression the branch introduced:
+  // earlier work here narrowed "does this render" to "does it have textContent or a media tag", so a page whose
+  // only visible text is <p class="icon"></p> with .icon::before{content:"..."} went from measurable on main to
+  // refused here - icon fonts and CSS-generated labels, not an exotic case. Recorded at CAPTURE because it cannot
+  // be derived from a signature at scoring time, and read as absent-means-false so committed targets keep the
+  // verdict they were captured under.
+  //
+  // Measured: both pseudo-elements over 411 elements cost 2.3ms, and the computed forms are distinguishable -
+  // "text" for a string, "" for an empty one, "item " counter(c) for a counter, url(...) for an image, none when
+  // there is nothing. The empty string and the two keywords mean nothing is painted.
+  const generated = new Map();
+  const paintsGenerated = (element) => {
+    const known = generated.get(element);
+    if (known !== undefined) return known;
+    let answer = false;
+    for (const pseudo of ['::before', '::after']) {
+      const style = getComputedStyle(element, pseudo);
+      const content = style.content;
+      if (!content || content === 'none' || content === 'normal' || content === '""') continue;
+      // A pseudo-element does not render because it has content DECLARED; it renders if the pseudo itself renders.
+      // mwg-train-rdkd: ::before{content:"label";display:none} paints nothing, so a page whose only content is that
+      // pseudo is a blank white page - but reading content alone recorded generated: true and judged it measurable.
+      // Measured in Chrome before writing this: a default ::before reports display inline and visibility visible,
+      // so these tests cannot reject the ordinary case that the generated-content rule exists for.
+      // opacity is deliberately NOT tested here, for pseudos or for elements (mwg-train-rdkd, second half). An
+      // element at opacity 0 is still rendered and still laid out - opacity is a compositing effect, not a
+      // rendering decision - and it is the usual starting state of an entrance animation, so a capture can
+      // legitimately catch content mid-fade. Measured before deciding: a page whose only content is an element at
+      // opacity 0 is measured, and so is one whose only content is a pseudo at opacity 0. Adding the test for
+      // pseudos alone would make elements and pseudos disagree about the same effect, which is the defect class
+      // this area keeps producing, and refusing to score a real page is the more damaging direction.
+      if (style.display === 'none' || style.visibility === 'hidden' || style.contentVisibility === 'hidden') continue;
+      answer = true;
+      break;
+    }
+    generated.set(element, answer);
+    return answer;
+  };
   const walk = (element, depth) => {
     for (const child of element.children) {
       const tag = child.tagName.toLowerCase();
@@ -111,13 +150,18 @@ export const SIGNATURE_SCRIPT = `return (() => {
       // A hidden element is not a node (mwg-train-uh9q), but its children are STILL VISITED (mwg-train-0qnu).
       // The nodes array therefore holds exactly the rendered nodes, so no consumer can forget to filter - which is
       // what went wrong when a per-node visible flag was honoured by isMeasurable and ignored by tokens.
-      if (isVisible(child)) {
+      // The element renders, OR its own pseudo-element does. visibility is inherited and a child may override
+      // it, and a pseudo-element is a child: a hidden <p> with ::before{content:"X";visibility:visible} paints an
+      // X, verified by reading a screenshot of it, yet the element is not visible so it was never collected and
+      // the page was refused as an empty shell. Same mechanism as mwg-train-0qnu, one level in.
+      const paints = paintsGenerated(child);
+      if (isVisible(child) || paints) {
         // textLength is the content signal mwg-train-vysz and mwg-train-knch need: the tag says which element this
         // is, not whether anything was rendered INTO it. An empty <figure></figure> and a <figure> with content are
         // the same node by tag alone, which is how an empty mount scored perfect parity. childCount deliberately is
         // NOT captured: it counts elements, not content, so a wrapper around a wrapper has children and renders
         // nothing.
-        nodes.push({ tag, depth, textLength: renderedText(child), type: child.getAttribute('type') ?? null, name: child.getAttribute('name') ?? null, role: child.getAttribute('role') ?? null });
+        nodes.push({ tag, depth, textLength: renderedText(child), generated: paints, type: child.getAttribute('type') ?? null, name: child.getAttribute('name') ?? null, role: child.getAttribute('role') ?? null });
       }
       walk(child, depth + 1);
     }
@@ -327,6 +371,11 @@ export function isMeasurable(signature) {
     // Nothing renders text. Elements that render without text are still content, so an image-only or canvas-only
     // page is not an empty shell; without this the rule would trade a false positive for a false negative.
     if (nodes.some((node) => node != null && NON_TEXT_CONTENT.has(node.tag))) return true;
+
+    // Generated content counts as content: an icon-font glyph or a ::before label is rendered, so a page built
+    // from them is not an empty shell. Absent means false, so a committed target keeps the verdict it was
+    // captured under.
+    if (nodes.some((node) => node != null && node.generated === true)) return true;
     return false;
   }
 

@@ -56,6 +56,19 @@ const pages = {
   // visibility:visible - so the walk must not prune there. display:none is the opposite case and must still prune.
   '/override': '<div style="visibility:hidden"><p style="visibility:visible">Visible</p></div>',
   '/none': '<div style="display:none"><p>invisible words</p></div><p>Visible</p>',
+  // Content that RENDERS but is not in textContent. The branch's earlier work narrowed "does this render" to
+  // "does it have textContent or a media tag", so these pages went from measurable on main to refused here.
+  '/generated': '<style>.g::before{content:"Generated label"}</style><p class="g"></p>',
+  // ...and the controls that must NOT become measurable, so the new rule cannot re-break the earlier findings.
+  '/empty-mount': '<figure></figure>',
+  '/empty-wrapper': '<div><span><figure></figure></span></div>',
+  '/hidden-generated': '<style>.g::before{content:"Generated label"}</style><p class="g" hidden></p>',
+  // mwg-train-rdkd. A pseudo-element is not rendered because it has content DECLARED: one that is itself
+  // display:none paints nothing, so this page is blank white and must not be measured.
+  '/pseudo-hidden': '<style>.g::before{content:"Generated label";display:none}</style><p class="g"></p>',
+  // The pseudo-level version of the visibility:hidden override, verified by reading a screenshot of it: the
+  // element is hidden, its ::before sets visibility:visible, and the glyph IS painted - so the page is not empty.
+  '/pseudo-override': '<style>.g::before{content:"Generated label";visibility:visible}</style><p class="g" style="visibility:hidden"></p>',
 };
 createServer((req, res) => {
   const path = (req.url || '/').split('?')[0];
@@ -165,6 +178,55 @@ test('hidden markup neither moves a score nor hides a visible override beneath i
     const none = await captureSignature({ chrome, projectDir, port: 7947, runDir, path: '/none' });
     assert.deepEqual(none.nodes.map((n) => n.tag), ['p'], 'only the element outside the display:none subtree');
     assert.equal(none.nodes[0].textLength, 'Visible'.length, 'and the hidden words contribute no text');
+  } finally {
+    if (chrome) await chrome.close().catch(() => {});
+  }
+});
+
+test('CSS-generated content counts only when the pseudo-element itself renders', async () => {
+  // mwg-train-0qnu's sibling, and a regression this branch introduced. main's rule counted any node that is not a
+  // div, span or custom element, so a <p> with no textContent counted; the text-based rule needs textLength > 0
+  // and refused it. That is icon fonts and CSS-generated labels, not an exotic case - and it is a false negative,
+  // the direction that silently refuses to score a real page.
+  //
+  // The field is recorded at CAPTURE because it cannot be derived from a signature at scoring time, and the
+  // controls below are what stop it from re-breaking the empty-shell findings this branch exists to fix.
+  let chrome = null;
+  const runDir = mkdtempSync(join(tmpdir(), 'mwg-capture-generated-'));
+  const projectDir = join(runDir, 'project');
+  mkdirSync(projectDir, { recursive: true });
+  writeFixture(projectDir);
+  try {
+    chrome = await launchChrome();
+
+    const generated = await captureSignature({ chrome, projectDir, port: 7948, runDir, path: '/generated' });
+    assert.equal(isMeasurable(generated), true, 'generated text is rendered text, so the page is measurable');
+    assert.equal(generated.nodes[0].generated, true, 'and it is recorded as generated at capture');
+    // The point of the field: the DOM reports no text, which is exactly why textLength alone was not enough.
+    assert.equal(generated.nodes[0].textLength, 0, 'textContent stays empty - this is why the field is needed');
+    assert.equal(conformanceScore(generated, generated).overall, 1, 'and it still scores against itself');
+
+    // CONTROLS - the empty-shell findings must stay fixed. Without these, "generated content counts" could be
+    // widened into "anything counts" and the page-level tree rule would be gone without a test noticing.
+    const emptyMount = await captureSignature({ chrome, projectDir, port: 7949, runDir, path: '/empty-mount' });
+    assert.equal(isMeasurable(emptyMount), false, 'an empty <figure> mount is still an empty shell');
+    const emptyWrapper = await captureSignature({ chrome, projectDir, port: 7950, runDir, path: '/empty-wrapper' });
+    assert.equal(isMeasurable(emptyWrapper), false, 'and so is a tree of empty wrappers');
+    const hiddenGenerated = await captureSignature({ chrome, projectDir, port: 7951, runDir, path: '/hidden-generated' });
+    assert.equal(isMeasurable(hiddenGenerated), false, 'generated content on a HIDDEN element renders nothing');
+
+    // The adversarial case from the review, and the reason the rule reads the pseudo-element's own rendering
+    // rather than whether content is declared: content declares the text, display:none stops it painting.
+    const pseudoHidden = await captureSignature({ chrome, projectDir, port: 7952, runDir, path: '/pseudo-hidden' });
+    assert.equal(isMeasurable(pseudoHidden), false, 'a pseudo-element that does not render paints nothing');
+    assert.equal(pseudoHidden.nodes[0].generated, false, 'and it is not recorded as generated');
+
+    // And the mirror of that: visibility is inherited and a pseudo-element is a child, so a pseudo that sets
+    // visibility:visible paints inside a hidden element. A screenshot proves the glyph is there, so refusing this
+    // page would be a false negative - the direction that refuses to score a real page.
+    const pseudoOverride = await captureSignature({ chrome, projectDir, port: 7953, runDir, path: '/pseudo-override' });
+    assert.equal(isMeasurable(pseudoOverride), true, 'a pseudo that overrides visibility on a hidden element renders');
+    assert.equal(pseudoOverride.nodes[0].generated, true, 'and the element is collected because its pseudo paints');
   } finally {
     if (chrome) await chrome.close().catch(() => {});
   }
