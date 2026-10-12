@@ -33,7 +33,7 @@ The reference establishes the grammar:
 
 ## Typography
 
-Two families: `--font-sans` (the `system-ui` stack) for everything a person reads. 
+A system UI sans-serif stack for everything a person reads. 
 
 The display heading is the largest type on the page, establishing the brand and the purpose of the current step (e.g., "Wild Greens Masterclass"). Form controls carry **permanent visible labels**, guaranteeing clarity when users are submitting sensitive emergency or dietary information.
 

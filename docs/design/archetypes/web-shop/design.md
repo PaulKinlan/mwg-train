@@ -29,7 +29,7 @@ Two families: `--font-sans` (the `system-ui` stack) for everything a person read
 
 The display heading is the largest type on the page. Card headings are left-aligned inside their own cards; the confirmation receipt centres its title and its reference. 
 
-Each training family adopts typography suited to its domain: rustic or elegant sans-serifs for cider and pottery, and starker geometric types for coffee subscriptions.
+Each training family adopts typography suited to its domain: rustic or elegant sans-serifs for cider and bulk dry goods, and starker geometric types for coffee subscriptions.
 
 ## Token usage
 
@@ -45,7 +45,7 @@ Each family relies on these color signatures to establish its own identity.
 
 ## Spacing rhythm
 
-The scale is rem-based. The gap between sibling elements in product grids is generous to separate distinct items. The checkout form relies on tighter rhythm (`0.5rem` to `1rem`) for logical groupings. Card padding runs `1.25rem` to `2rem`.
+The scale is rem-based. The gap between sibling elements in product grids is generous to separate distinct items. The checkout form relies on tighter rhythm (`0.5rem` to `1rem`) for logical groupings. Card padding is expected to run `1.25rem` to `2rem` as a design guideline.
 
 The rhythm's job is to make the product grid and the single-column checkout feel like the same application at different widths. 
 
@@ -74,4 +74,4 @@ The type is `storefront` - a catalogue, an aggregation state (cart), a write tha
 ## Provenance
 
 - **The training reference boards** are 3 distinct generation outcomes registered in [`docs/provenance/assets/training-reference-boards.md`](../../../provenance/assets/training-reference-boards.md). They declare and establish the visual baselines for `tr-02`, `tr-18`, and `tr-26`.
-- **The measurements** in this document reflect the generated baselines for these families against their recorded prompts.
+- **Structural constants:** The prompts declare fixed constants for the training families: `tr-02` and `tr-18` define `control-radius 8px, content-frame 1200px, page-padding 1.5rem`, while `tr-26` defines `control-radius 8px, content-frame 1100px, page-padding 1.5rem`.

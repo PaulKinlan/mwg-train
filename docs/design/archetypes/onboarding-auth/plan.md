@@ -43,7 +43,7 @@ The families declare their own routes. The archetype's common shape is a registr
 | `GET /reset-password/:token` | `fam-05` | read-by-reference | serves the password update form validated by the reference token |
 | `POST /reset-password/:token` | `fam-05` | write | updates the password credential |
 
-**On the methods in that table.** The manifest declares routes as paths rather than methods. The methods shown are therefore only as firm as their source: `POST /signup`, `POST /login`, and `POST /reset-password/:token` are named by the families' assertions. The remaining routes are pages served by `GET`.
+**On the methods in that table.** The manifest declares routes as paths rather than methods. The methods shown are therefore only as firm as their source: `POST /register`, `POST /signup`, `POST /login`, `POST /forgot-password`, and `POST /reset-password/:token` are derived from the families' expected behaviors and assertions. The remaining routes are pages served by `GET`.
 
 ## Data and state
 

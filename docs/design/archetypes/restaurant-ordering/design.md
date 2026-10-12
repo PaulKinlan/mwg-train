@@ -34,7 +34,7 @@ The `tr-11` reference is a **browser viewport**: chrome runs along the top edge 
 
 ## Typography
 
-Two families: `--font-sans` (the `system-ui` stack) for everything a person reads. 
+A system UI sans-serif stack for everything a person reads. 
 
 The display heading is the largest type on the page. Form controls carry **permanent visible labels**, guaranteeing clarity when users select their critical pickup windows.
 
