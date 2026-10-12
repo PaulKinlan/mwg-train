@@ -59,6 +59,9 @@ const pages = {
   '/empty-mount': '<figure></figure>',
   '/empty-wrapper': '<div><span><figure></figure></span></div>',
   '/hidden-generated': '<style>.g::before{content:"Generated label"}</style><p class="g" hidden></p>',
+  // mwg-train-rdkd. A pseudo-element is not rendered because it has content DECLARED: one that is itself
+  // display:none paints nothing, so this page is blank white and must not be measured.
+  '/pseudo-hidden': '<style>.g::before{content:"Generated label";display:none}</style><p class="g"></p>',
 };
 createServer((req, res) => {
   const path = (req.url || '/').split('?')[0];
@@ -173,7 +176,7 @@ test('hidden markup neither moves a score nor hides a visible override beneath i
   }
 });
 
-test('a page whose only visible content is CSS-generated is not an empty shell', async () => {
+test('CSS-generated content counts only when the pseudo-element itself renders', async () => {
   // mwg-train-0qnu's sibling, and a regression this branch introduced. main's rule counted any node that is not a
   // div, span or custom element, so a <p> with no textContent counted; the text-based rule needs textLength > 0
   // and refused it. That is icon fonts and CSS-generated labels, not an exotic case - and it is a false negative,
@@ -204,6 +207,12 @@ test('a page whose only visible content is CSS-generated is not an empty shell',
     assert.equal(isMeasurable(emptyWrapper), false, 'and so is a tree of empty wrappers');
     const hiddenGenerated = await captureSignature({ chrome, projectDir, port: 7951, runDir, path: '/hidden-generated' });
     assert.equal(isMeasurable(hiddenGenerated), false, 'generated content on a HIDDEN element renders nothing');
+
+    // The adversarial case from the review, and the reason the rule reads the pseudo-element's own rendering
+    // rather than whether content is declared: content declares the text, display:none stops it painting.
+    const pseudoHidden = await captureSignature({ chrome, projectDir, port: 7952, runDir, path: '/pseudo-hidden' });
+    assert.equal(isMeasurable(pseudoHidden), false, 'a pseudo-element that does not render paints nothing');
+    assert.equal(pseudoHidden.nodes[0].generated, false, 'and it is not recorded as generated');
   } finally {
     if (chrome) await chrome.close().catch(() => {});
   }

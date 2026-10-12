@@ -120,8 +120,17 @@ export const SIGNATURE_SCRIPT = `return (() => {
     if (known !== undefined) return known;
     let answer = false;
     for (const pseudo of ['::before', '::after']) {
-      const content = getComputedStyle(element, pseudo).content;
-      if (content && content !== 'none' && content !== 'normal' && content !== '""') { answer = true; break; }
+      const style = getComputedStyle(element, pseudo);
+      const content = style.content;
+      if (!content || content === 'none' || content === 'normal' || content === '""') continue;
+      // A pseudo-element does not render because it has content DECLARED; it renders if the pseudo itself renders.
+      // mwg-train-rdkd: ::before{content:"label";display:none} paints nothing, so a page whose only content is that
+      // pseudo is a blank white page - but reading content alone recorded generated: true and judged it measurable.
+      // Measured in Chrome before writing this: a default ::before reports display inline and visibility visible,
+      // so these tests cannot reject the ordinary case that the generated-content rule exists for.
+      if (style.display === 'none' || style.visibility === 'hidden' || style.contentVisibility === 'hidden') continue;
+      answer = true;
+      break;
     }
     generated.set(element, answer);
     return answer;
