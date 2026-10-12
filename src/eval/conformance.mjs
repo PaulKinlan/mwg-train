@@ -128,6 +128,13 @@ export const SIGNATURE_SCRIPT = `return (() => {
       // pseudo is a blank white page - but reading content alone recorded generated: true and judged it measurable.
       // Measured in Chrome before writing this: a default ::before reports display inline and visibility visible,
       // so these tests cannot reject the ordinary case that the generated-content rule exists for.
+      // opacity is deliberately NOT tested here, for pseudos or for elements (mwg-train-rdkd, second half). An
+      // element at opacity 0 is still rendered and still laid out - opacity is a compositing effect, not a
+      // rendering decision - and it is the usual starting state of an entrance animation, so a capture can
+      // legitimately catch content mid-fade. Measured before deciding: a page whose only content is an element at
+      // opacity 0 is measured, and so is one whose only content is a pseudo at opacity 0. Adding the test for
+      // pseudos alone would make elements and pseudos disagree about the same effect, which is the defect class
+      // this area keeps producing, and refusing to score a real page is the more damaging direction.
       if (style.display === 'none' || style.visibility === 'hidden' || style.contentVisibility === 'hidden') continue;
       answer = true;
       break;

@@ -538,12 +538,15 @@ test('a hidden element is not a node, but a visible child inside one still is', 
   // captured no nodes and isMeasurable called it an empty shell. Whether an element is a node and whether the walk
   // can stop are different questions, and answering the second with the first is a false negative - the direction
   // that silently refuses to score a real page.
-  // The slice ends at the generated-content recorder, not at the walk: the recorder legitimately reads
-  // visibility === 'hidden' for the PSEUDO-ELEMENT it is asking about, which is a different question from whether
-  // an element's subtree can render. A check whose scope drifts onto the next function starts asserting about code
-  // it was never written for - this guard failed for exactly that reason when the recorder was added between the
-  // two functions it spans.
-  const pruned = SIGNATURE_SCRIPT.slice(SIGNATURE_SCRIPT.indexOf('const isPruned'), SIGNATURE_SCRIPT.indexOf('const generated = new Map'));
+  // Read the isPruned FUNCTION rather than a positional slice between two anchors. mwg-train-j3xh was that a slice
+  // from isPruned to the walk began matching paintsGenerated once the recorder was inserted between them, which was
+  // correct. The robust answer is for the guard to name the function it is asserting about: any slice between two
+  // anchors is one insertion away from the same failure, so moving code to keep a test's slicing happy is the wrong
+  // direction, and this version cannot drift because it does not depend on what sits next to what.
+  const prunedMatch = SIGNATURE_SCRIPT.match(/const isPruned = \(element\) => \{[\s\S]*?\n  \};/);
+  assert.ok(prunedMatch, 'isPruned is present in the signature script');
+  const pruned = prunedMatch[0];
+  assert.doesNotMatch(pruned, /paintsGenerated/, 'and the guard reads isPruned alone, not whatever follows it');
   assert.match(pruned, /style\.display === 'none' \|\| style\.contentVisibility === 'hidden'/, 'pruning is display-only');
   assert.doesNotMatch(pruned, /visibility === 'hidden'/, 'visibility NEVER prunes: a child may override it');
 });
