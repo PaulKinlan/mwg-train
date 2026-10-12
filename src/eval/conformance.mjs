@@ -212,8 +212,22 @@ export function isMeasurable(signature) {
   // A nested tree of purely divs, spans, or custom element mounts (e.g. body > div#root > app-root)
   // with no roles or text-bearing tags is an empty unmeasured shell.
   return signature.nodes.some(node =>
-    (node.tag !== 'div' && node.tag !== 'span' && !node.tag.includes('-')) ||
-    node.role != null || node.name != null || node.type != null
+    // This predicate is a GUARD and must be TOTAL: absent, null and non-string tags all count, rather than
+    // throwing. It is called by conformanceScore, which relies on a boolean so it can raise its own TypeError
+    // naming the unmeasured arm; a TypeError from in here replaced that diagnostic with "cannot read properties
+    // of undefined" (mwg-train-75cq). `String(node.tag ?? '')` covers both the reported cases and any non-string
+    // tag. A tagless node is not a generic container - it is not a div, a span or a custom element - so it
+    // counts, which is what this returned before the empty-SPA-root rewrite and what an empty-string tag still
+    // does today.
+    // A null or undefined ENTRY carries nothing comparable, so it is skipped rather than crashing. That is a
+    // different case from the one above: a node object with an absent tag is an entity whose tag is missing, and
+    // it counts as a node that is not a generic container; a null entry is not an entity at all, so it is not
+    // evidence that anything rendered. Skipping is also the safe direction for a caller - returning false here
+    // makes conformanceScore refuse the arm instead of scoring a signature that is partly garbage.
+    node != null && (
+      (node.tag !== 'div' && node.tag !== 'span' && !String(node.tag ?? '').includes('-')) ||
+      node.role != null || node.name != null || node.type != null
+    )
   );
 }
 
