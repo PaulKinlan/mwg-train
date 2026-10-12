@@ -5,7 +5,7 @@
 - **Policy:** `excluded_from_training: true`, `approved_for_training: false`.
 - **Boundaries:**
   - **Not the sealed evaluation target:** This demonstration does not modify or replace `docs/eval/targets/booking/` (whose manifest digest is pinned by `EVAL_TARGETS_SEAL`).
-  - **Not part of pilot:** This demo lives outside `pilot/**` and `data/A6_evaluation/**`. The frozen pilot corpora (`pilot/CORPUS.json`, `pilot/TRAINING_CORPUS.json`, and generated arm trees) remain byte-identical.
+  - **Not part of pilot:** This demo lives outside `pilot/**` and `data/A6_evaluation/**` and is not measured by the pilot; nothing in it is corpus input. Regenerating this archetype's reference boards does change `pilot/CORPUS.json`, because each built arm embeds its board's digest through the spec - the deframing in `190ae1c` recorded all seven of booking's rows there.
   - **Not training data:** Kept purely for visual verification and operator inspection.
 
 ## Purpose
