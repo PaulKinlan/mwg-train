@@ -15,7 +15,7 @@ A booking page is a decision with a receipt. The thesis follows from that: **a c
 
 **The pilot target's aesthetic:** The ground is deep slate (`#0f172a` in the target's dark scheme) and every surface above it is a card (`#1e293b`) with a one-pixel border. The accent is emerald (`#10b981`), and the demo spends it on one forward action per state - *Continue to Confirmation* on the form, *Download PDF Receipt* on the confirmation, *Clear Filters* on the empty state. It also marks the state that means the same thing: the completed step's tick and the active step's halo. Because the type is a form that can be refused, the palette is not just ground-and-accent: it carries a complete error scale and a matching success scale.
 
-**The family designs must not be averaged.** The seven training families employ distinctly different aesthetic systems. For instance, `tr-01` (bicycle mechanic) and `tr-03` (pottery kiln) are declared dark ("in a dark, low-glare palette"), while `tr-17` (farm vet) and `tr-21` (volunteer lift) use light palettes ("in a light palette"). Each board uses its own primary action token.
+**The family designs must not be averaged.** The seven training families employ distinctly different aesthetic systems. For instance, `tr-01` (bicycle mechanic) is declared dark ("in a dark, low-glare palette"), while `tr-03` (pottery kiln), `tr-17` (farm vet) and `tr-21` (volunteer lift) use light palettes ("in a light palette"). Each board uses its own primary action token.
 
 ## Grammar and layout
 
@@ -42,7 +42,7 @@ The primary accent is `--accent` (`#10b981`), used for actions and active states
 
 **The training families define their own distinct palettes:**
 - `tr-01` (mobile bicycle mechanic): dark slate ground with bright primary actions.
-- `tr-03` (pottery kiln): dark studio interface.
+- `tr-03` (pottery kiln): light studio interface with clay/earth tones.
 - `tr-17` (farm vet): light outdoor/agricultural theme.
 - `tr-19` (rowing skiff): light nautical theme.
 - `tr-21` (volunteer lift): light community theme.

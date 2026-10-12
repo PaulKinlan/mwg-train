@@ -89,7 +89,7 @@ so a booking either exists at its reference or it does not.
 
 ## Journey
 
-The declared journeys, verbatim from the manifests:
+The declared journeys. For evaluation families (\`fam-01\`, \`fam-r01\`), these are quoted verbatim from the manifests. For the training families, these are derived summaries of the structured \`journey\` objects defined in the manifest:
 
 ### `tr-01`
 - browse available tune-up packages, choose a service, and proceed to booking
