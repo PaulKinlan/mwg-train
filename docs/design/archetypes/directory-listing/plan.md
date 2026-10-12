@@ -55,17 +55,19 @@ The families declare their own routes. The archetype's common shape is a directo
 
 The declared journeys. For the evaluation family (`fam-06`), these are quoted verbatim from the manifests. For the training families, these are derived summaries of the structured `journey` objects defined in the manifest:
 
-**`tr-06` (artisan profiles):**
-- Starts at `/`, submits `form#artisan-profile-form` with `input[name=artisan]` `Rowan Ashcroft`, `input[name=location]` `The Old Mill, Stroud`, `input[name=hours]` `Thu-Sat 10:00-16:00`, `input[name=openday]` `2026-11-28`, `textarea[name=biography]` `Master woodworker crafting hand-turned bowls and shaker boxes`, and selects `Ceramics`.
-- Expects `Master woodworker crafting hand-turned bowls and shaker boxes` echoed back.
-- Updates the biography field to test amendment.
-- Searches via `/search?q=Master` to verify URL-parameter search.
+**`tr-06` (craft-guild):**
+- Starts at `/`, submits `form#artisan-profile-form` with `input[name=artisan]` `Rowan Ashcroft`, `input[name=location]` `The Old Mill, Stroud`, `input[name=hours]` `Thu-Sat 10:00-16:00`, `input[name=openday]` `2026-11-28`, `textarea[name=biography]` `Master woodworker crafting hand-turned bowls and shaker boxes`, selecting `select[name=discipline]` `Ceramics`.
+- Expects `Master woodworker crafting hand-turned bowls and shaker boxes` echoed back and again after a reload.
+- Searches via `/search?q=Master` to verify the search endpoint finds the stored record.
+- Updates the `biography` to `Master woodworker crafting hand-turned bowls and shaker boxes (updated)`.
+- Its intake steps submit `/intake` having selected `select[name=discipline]` `Ceramics`, and `/intake/confirm` expects `Ceramics` back.
 
-**`tr-14` (heritage stops):**
-- Starts at `/`, submits `form#heritage-comment-form` with `input[name=visitor]` `Sam Whitfield`, `textarea[name=comment]` `The timber framing on the south gable is beautifully preserved.`, and selects `Stop 2 - Guildhall Timber Yard` and `Historical memory`.
-- Expects the comment text echoed back to confirm the write.
-- Updates the comment field and submits to test amendment.
-- Searches via `/search?q=The` to find the stored visitor note.
+**`tr-14` (self-guided):**
+- Starts at `/`, submits `form#heritage-comment-form` with `input[name=visitor]` `Sam Whitfield`, `textarea[name=comment]` `The timber framing on the south gable is beautifully preserved.`, selecting `select[name=stop]` `Stop 2 - Guildhall Timber Yard`, `select[name=category]` `Historical memory`.
+- Expects `The timber framing on the south gable is beautifully preserved.` echoed back and again after a reload.
+- Searches via `/search?q=The` to verify the search endpoint finds the stored record.
+- Updates the `comment` to `The timber framing on the south gable is beautifully preserved. (updated)`.
+- Its intake steps submit `/intake` having selected `select[name=stop]` `Stop 2 - Guildhall Timber Yard`, and `/intake/confirm` expects `Stop 2 - Guildhall Timber Yard` back.
 
 **`fam-06` (neighbourhood trades):**
 - search and filter local trade listings by trade category like plumbing, carpentry, or electrical repair, and view matching business summary cards

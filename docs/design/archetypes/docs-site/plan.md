@@ -59,17 +59,19 @@ The families declare their own routes. The archetype's common shape is an index 
 
 The declared journeys. For the evaluation family (`fam-13`), these are quoted verbatim from the manifests. For the training families, these are derived summaries of the structured `journey` objects defined in the manifest:
 
-**`tr-13` (composting handbook):**
-- Starts at `/`, submits `form#soil-test-form` with `input[name=gardener]` `Avery Quinn`, `input[name=plot]` `Plot 14-B`, `input[name=ph]` `6.8`, `input[name=organic]` `5`, and `textarea[name=notes]` `High earthworm activity and dark loamy texture`.
-- Expects `Plot 14-B` echoed back to confirm the write.
-- Updates the plot field to test amendment.
-- Searches via `/search?q=Plot` to verify the stored soil test record.
+**`tr-13` (backyard-composting):**
+- Starts at `/`, submits `form#soil-test-form` with `input[name=gardener]` `Avery Quinn`, `input[name=plot]` `Plot 14-B`, `input[name=ph]` `6.8`, `input[name=organic]` `5`, `textarea[name=notes]` `High earthworm activity and dark loamy texture`.
+- Expects `Plot 14-B` echoed back and again after a reload.
+- Searches via `/search?q=Plot` to verify the search endpoint finds the stored record.
+- Updates the `plot` to `Plot 14-B (updated)`.
+- Its intake steps submit `/intake` having filled `input[name=plot]` `Plot 14-B`, and `/intake/confirm` expects `Plot 14-B` back.
 
-**`tr-25` (oral history archive):**
-- Starts at `/`, submits `form#footnote-form` with `input[name=contributor]` `Dr Arthur Prendergast`, `input[name=email]` `arthur.prendergast@countyhistory.test`, `input[name=passage]` `00:14:32 (Weaving shed)`, `textarea[name=footnote]` `The cotton mill closed in 1968, not 1972 as recalled in the recording.`, and selects `Biographical note`.
-- Expects the footnote text echoed back to confirm the write.
-- Updates the footnote field to test amendment.
-- Searches via `/search?q=The` to find the annotated transcript note.
+**`tr-25` (community-elder):**
+- Starts at `/`, submits `form#footnote-form` with `input[name=contributor]` `Dr Arthur Prendergast`, `input[name=email]` `arthur.prendergast@countyhistory.test`, `input[name=passage]` `00:14:32 (Weaving shed)`, `textarea[name=footnote]` `The cotton mill closed in 1968, not 1972 as recalled in the recording.`, selecting `select[name=category]` `Biographical note`.
+- Expects `The cotton mill closed in 1968, not 1972 as recalled in the recording.` echoed back and again after a reload.
+- Searches via `/search?q=The` to verify the search endpoint finds the stored record.
+- Updates the `footnote` to `The cotton mill closed in 1968, not 1972 as recalled in the recording. (updated)`.
+- Its intake steps submit `/intake` having selected `select[name=category]` `Biographical note`, and `/intake/confirm` expects `Biographical note` back.
 
 **`fam-13` (developer documentation):**
 - navigate documentation sections from table of contents, jump to REST ingest endpoints, inspect code snippets, copy an endpoint sample, and submit documentation feedback with rating and notes
