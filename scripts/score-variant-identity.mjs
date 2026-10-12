@@ -98,7 +98,7 @@ async function scoreFamily({ family, chrome, runDir, outDir, ports }) {
   writeFileSync(join(outDir, `${family.family_id}-identity.json`), `${JSON.stringify(report, null, 2)}\n`);
   writeFileSync(join(outDir, `${family.family_id}-identity.md`), renderIdentityMarkdown(report));
   console.log(`score-variant-identity: ${family.family_id} identity ${fmt(identity.identity.overall)} (weakest ${identity.weakest_pair ? `${identity.weakest_pair.a}/${identity.weakest_pair.b} ${fmt(identity.weakest_pair.overall)}` : 'n/a'}), ${findings.length} below budget`);
-  for (const variant of variants) console.log(`  ${variant.framework.padEnd(7)} raw ${variant.raw.toFixed(3)} -> target ${variant.target.toFixed(3)} (delta ${variant.delta >= 0 ? '+' : ''}${variant.delta.toFixed(3)})`);
+  for (const variant of variants) console.log(`  ${variant.framework.padEnd(7)} raw ${fmt(variant.raw)} -> target ${fmt(variant.target)} (delta ${Number.isFinite(variant.delta) ? (variant.delta >= 0 ? '+' : '') + variant.delta.toFixed(3) : 'N/A'})`);
   return { family: family.family_id, identity: identity.identity.overall, findings: findings.length };
 }
 
@@ -127,7 +127,7 @@ export function renderIdentityMarkdown(report) {
     '',
     '| framework | raw baseline | target conformance | delta |',
     '| --- | --- | --- | --- |',
-    ...report.variants.map((variant) => `| ${variant.framework} | ${variant.raw.toFixed(3)} | ${variant.target.toFixed(3)} | ${variant.delta >= 0 ? '+' : ''}${variant.delta.toFixed(3)} |`),
+    ...report.variants.map((variant) => `| ${variant.framework} | ${fmt(variant.raw)} | ${fmt(variant.target)} | ${Number.isFinite(variant.delta) ? (variant.delta >= 0 ? '+' : '') + variant.delta.toFixed(3) : 'N/A'} |`),
     '',
     '## Cross-variant identity (raw variants, pairwise)',
     '',
