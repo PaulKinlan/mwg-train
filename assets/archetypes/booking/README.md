@@ -24,17 +24,13 @@ node scripts/build-archetype-assets.mjs --write --only booking
 
 **Evening Class Studio**
 
-- `Learning Hub` — from `docs/design/archetypes/booking/demo/index.html:13` (demo-brand-element, strong candidate)
+- `Evening Class Studio` — from `docs/design/archetypes/booking/demo/index.html:13` (demo-brand-element, strong candidate)
 - `Evening Class Studio` — from `docs/design/archetypes/booking/README.md:1` (target-heading, strong candidate)
 - `Evening Class Booking` — from `docs/design/archetypes/booking/demo/index.html:7` (demo-title, weak candidate)
 - `Find Your Next Evening Class` — from `docs/design/archetypes/booking/demo/index.html:39` (demo-heading, weak candidate)
 
-Those candidates do not agree, which is recorded rather than resolved:
 
-- `Learning Hub`
-- `Evening Class Studio`
 
-Adjudicated on 2026-10-11: **Evening Class Studio**. The accepted target's own heading and every one of its five board prompts name 'Evening Class Studio'; the demo page carries 'Learning Hub' instead. The demo's own README states it is an implementation of the visual language ESTABLISHED BY those boards, and it was authored 2026-10-09 while the boards were regenerated and accepted on 2026-10-11, so the boards are the source and 'Learning Hub' is the demo's drift. PROVISIONAL: this is a lane recommendation recorded with its evidence, not an owner decision - Paul should confirm which brand the archetype owns, or rename the demo.
 
 ## The one hand-written file
 

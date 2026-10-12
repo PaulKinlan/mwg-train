@@ -1,9 +1,0 @@
-{
-  "$comment": "The only hand-written file in this store. It exists only where the accepted target contradicts itself, and check:archetype-assets fails while a contradiction is unadjudicated OR while a decision has gone stale. Delete it the moment the target speaks with one voice.",
-  "archetype": "booking",
-  "brand": {
-    "siteName": "Evening Class Studio",
-    "because": "The accepted target's own heading and every one of its five board prompts name 'Evening Class Studio'; the demo page carries 'Learning Hub' instead. The demo's own README states it is an implementation of the visual language ESTABLISHED BY those boards, and it was authored 2026-10-09 while the boards were regenerated and accepted on 2026-10-11, so the boards are the source and 'Learning Hub' is the demo's drift. PROVISIONAL: this is a lane recommendation recorded with its evidence, not an owner decision - Paul should confirm which brand the archetype owns, or rename the demo.",
-    "decided_on": "2026-10-11"
-  }
-}

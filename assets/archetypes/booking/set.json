@@ -9,19 +9,19 @@
     "documents": [
       {
         "path": "docs/design/archetypes/booking/demo/compare.html",
-        "sha256": "5ddb619dc281c5b87648bfcc223384f090d8356abd0f2e7e516338d7a43672aa"
+        "sha256": "32627934c12dfa7335fa2afacddd54d8f2774e5e410d4a25c803ddd30c60242c"
       },
       {
         "path": "docs/design/archetypes/booking/demo/confirmation.html",
-        "sha256": "9a5b9511f9273c9235e16fa39d3c6a8a9667b1089794279a54d3943d58837fc7"
+        "sha256": "91f139648117379804f21fc4490c76a9df6bbe882ecb11d4b62827c8fb450903"
       },
       {
         "path": "docs/design/archetypes/booking/demo/empty.html",
-        "sha256": "4e131736b6542926746a89d6c7c1f619c6a431fd3e6decd3abb3fedc1450c2bd"
+        "sha256": "14d6f0d6ab5e8880f297dc4027be0b9217666494f6e8af1d49ace03de42ccefd"
       },
       {
         "path": "docs/design/archetypes/booking/demo/index.html",
-        "sha256": "8531d202bc9a6ff5707d3992834bb15fafc9112b59c71b7d700efa8c46aad27e"
+        "sha256": "62ce758b01802ac45e90df25d794439008fe5ffd28888fde271304dc579afa35"
       }
     ],
     "stylesheet": {
@@ -34,7 +34,7 @@
     "brandless": false,
     "candidates": [
       {
-        "value": "Learning Hub",
+        "value": "Evening Class Studio",
         "source": "docs/design/archetypes/booking/demo/index.html:13",
         "kind": "demo-brand-element",
         "strength": "strong"
@@ -58,35 +58,9 @@
         "strength": "weak"
       }
     ],
-    "conflicts": [
-      {
-        "values": [
-          "Learning Hub",
-          "Evening Class Studio"
-        ],
-        "candidates": [
-          {
-            "value": "Learning Hub",
-            "source": "docs/design/archetypes/booking/demo/index.html:13",
-            "kind": "demo-brand-element",
-            "strength": "strong"
-          },
-          {
-            "value": "Evening Class Studio",
-            "source": "docs/design/archetypes/booking/README.md:1",
-            "kind": "target-heading",
-            "strength": "strong"
-          }
-        ]
-      }
-    ],
+    "conflicts": [],
     "mark": null,
-    "decided": {
-      "siteName": "Evening Class Studio",
-      "brandless": false,
-      "because": "The accepted target's own heading and every one of its five board prompts name 'Evening Class Studio'; the demo page carries 'Learning Hub' instead. The demo's own README states it is an implementation of the visual language ESTABLISHED BY those boards, and it was authored 2026-10-09 while the boards were regenerated and accepted on 2026-10-11, so the boards are the source and 'Learning Hub' is the demo's drift. PROVISIONAL: this is a lane recommendation recorded with its evidence, not an owner decision - Paul should confirm which brand the archetype owns, or rename the demo.",
-      "decided_on": "2026-10-11"
-    }
+    "decided": null
   },
   "tokens": {
     "colors": {
@@ -132,10 +106,10 @@
       ],
       "apparatus": true,
       "source": "docs/design/archetypes/booking/demo/compare.html",
-      "sha256": "5ddb619dc281c5b87648bfcc223384f090d8356abd0f2e7e516338d7a43672aa"
+      "sha256": "32627934c12dfa7335fa2afacddd54d8f2774e5e410d4a25c803ddd30c60242c"
     },
     "confirmation.html": {
-      "title": "Booking Confirmation &amp; Receipt — Learning Hub",
+      "title": "Booking Confirmation &amp; Receipt — Evening Class Studio",
       "lang": "en",
       "strings": [
         "Booking Confirmation & Receipt",
@@ -154,10 +128,10 @@
       ],
       "apparatus": false,
       "source": "docs/design/archetypes/booking/demo/confirmation.html",
-      "sha256": "9a5b9511f9273c9235e16fa39d3c6a8a9667b1089794279a54d3943d58837fc7"
+      "sha256": "91f139648117379804f21fc4490c76a9df6bbe882ecb11d4b62827c8fb450903"
     },
     "empty.html": {
-      "title": "Schedule Availability — Learning Hub",
+      "title": "Schedule Availability — Evening Class Studio",
       "lang": "en",
       "strings": [
         "Find Your Next Evening Class",
@@ -167,10 +141,10 @@
       ],
       "apparatus": false,
       "source": "docs/design/archetypes/booking/demo/empty.html",
-      "sha256": "4e131736b6542926746a89d6c7c1f619c6a431fd3e6decd3abb3fedc1450c2bd"
+      "sha256": "14d6f0d6ab5e8880f297dc4027be0b9217666494f6e8af1d49ace03de42ccefd"
     },
     "index.html": {
-      "title": "Evening Class Booking — Learning Hub",
+      "title": "Evening Class Booking — Evening Class Studio",
       "lang": "en",
       "strings": [
         "Find Your Next Evening Class",
@@ -219,7 +193,7 @@
       ],
       "apparatus": false,
       "source": "docs/design/archetypes/booking/demo/index.html",
-      "sha256": "8531d202bc9a6ff5707d3992834bb15fafc9112b59c71b7d700efa8c46aad27e"
+      "sha256": "62ce758b01802ac45e90df25d794439008fe5ffd28888fde271304dc579afa35"
     }
   },
   "images": [
