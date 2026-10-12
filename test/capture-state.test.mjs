@@ -27,7 +27,15 @@ import { conformanceScore, isMeasurable, structuralSimilarity } from '../src/eva
 const ROOT = resolve(import.meta.dirname, '..');
 const TMP = mkdtempSync(join(tmpdir(), 'mwg-capture-state-'));
 
-after(() => {
+// mwg-train-7sh0. Three of the four tests below each launched their own browser, and a Chrome start is the
+// dominant cost of this file: measured at 7.7-8.1s for the file with three launches. One browser is now shared and
+// closed here. It is launched LAZILY rather than in a before() hook, so a run that selects only the no-browser
+// guard test - or one that fails before reaching any browser - still starts no Chrome.
+let chromePromise = null;
+const getChrome = () => (chromePromise ??= launchChrome());
+
+after(async () => {
+  if (chromePromise) await chromePromise.then((c) => c.close()).catch(() => {});
   try { rmSync(TMP, { recursive: true, force: true }); } catch {}
 });
 
@@ -80,10 +88,9 @@ createServer((req, res) => {
 }
 
 test('captureSignature renders the requested state, and the root by default', async () => {
-  let chrome = null;
+  const chrome = await getChrome();
   const runDir = mkdtempSync(join(tmpdir(), 'mwg-capture-state-'));
   try {
-    chrome = await launchChrome();
 
     const projectDir = join(runDir, 'project');
     mkdirSync(projectDir, { recursive: true });
@@ -109,7 +116,6 @@ test('captureSignature renders the requested state, and the root by default', as
     );
 
   } finally {
-    if (chrome) await chrome.close().catch(() => {});
     rmSync(runDir, { recursive: true, force: true });
   }
 });
@@ -141,16 +147,15 @@ test('hidden markup neither moves a score nor hides a visible override beneath i
   // pages rather than on hand-built signatures: a hand-built signature can always contain a node the page did not
   // render, which is exactly the shape the metric cannot protect itself from. A source guard in
   // test/conformance.test.mjs covers the code; this covers the behaviour.
-  let chrome = null;
   // The fixture is written into the run directory, as the test above does - pointing projectDir at TMP instead
   // gives the harness no server.mjs and it fails with "server did not become ready", which is how this test
-  // first failed.
+  // first failed. Each test keeps its own run directory and ports; only the browser is shared.
   const runDir = mkdtempSync(join(tmpdir(), 'mwg-capture-state-hidden-'));
   const projectDir = join(runDir, 'project');
   mkdirSync(projectDir, { recursive: true });
   writeFixture(projectDir);
   try {
-    chrome = await launchChrome();
+    const chrome = await getChrome();
     const plain = await captureSignature({ chrome, projectDir, port: 7944, runDir, path: '/plain' });
     const hidden = await captureSignature({ chrome, projectDir, port: 7945, runDir, path: '/hidden' });
 
@@ -179,7 +184,7 @@ test('hidden markup neither moves a score nor hides a visible override beneath i
     assert.deepEqual(none.nodes.map((n) => n.tag), ['p'], 'only the element outside the display:none subtree');
     assert.equal(none.nodes[0].textLength, 'Visible'.length, 'and the hidden words contribute no text');
   } finally {
-    if (chrome) await chrome.close().catch(() => {});
+    rmSync(runDir, { recursive: true, force: true });
   }
 });
 
@@ -191,13 +196,12 @@ test('CSS-generated content counts only when the pseudo-element itself renders',
   //
   // The field is recorded at CAPTURE because it cannot be derived from a signature at scoring time, and the
   // controls below are what stop it from re-breaking the empty-shell findings this branch exists to fix.
-  let chrome = null;
   const runDir = mkdtempSync(join(tmpdir(), 'mwg-capture-generated-'));
   const projectDir = join(runDir, 'project');
   mkdirSync(projectDir, { recursive: true });
   writeFixture(projectDir);
   try {
-    chrome = await launchChrome();
+    const chrome = await getChrome();
 
     const generated = await captureSignature({ chrome, projectDir, port: 7948, runDir, path: '/generated' });
     assert.equal(isMeasurable(generated), true, 'generated text is rendered text, so the page is measurable');
@@ -228,6 +232,6 @@ test('CSS-generated content counts only when the pseudo-element itself renders',
     assert.equal(isMeasurable(pseudoOverride), true, 'a pseudo that overrides visibility on a hidden element renders');
     assert.equal(pseudoOverride.nodes[0].generated, true, 'and the element is collected because its pseudo paints');
   } finally {
-    if (chrome) await chrome.close().catch(() => {});
+    rmSync(runDir, { recursive: true, force: true });
   }
 });
