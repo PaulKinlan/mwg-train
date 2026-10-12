@@ -60,9 +60,13 @@ falls on a real day.
 
 **A divergence recorded rather than smoothed over, because it is systematic.** The prompt instructs that the
 content "runs past the left, right and bottom edges" with no visible page end, while also requiring a complete
-footer. The raster resolves that contradiction the way every other board in this corpus has: the whole page is
-bounded inside the viewport with a visible footer band. This is the fourth archetype where the same
-contradiction resolves the same way, so a future generator should read these baselines as framed compositions.
+footer. The raster resolves that contradiction by bounding the whole page inside the viewport with a visible
+footer band. This is the fourth archetype in this lane's reading where the same contradiction resolves that
+way, and **the resolution is not universal, so it must not be assumed**. The `tr-16` reference in the
+library-catalogue pair is a measured counterexample: it bleeds off the bottom left of its grid while its footer
+and reviews remain fully visible on the right, so bleed and a complete footer can coexist. A future generator
+should read these baselines as framed compositions without treating any bleed as evidence that the footer is
+missing.
 
 **Two observations about this raster, recorded so they are not mistaken for rules.** First, it depicts a
 **post-save state**: a confirmation banner carries a checkmark, the words "Application Saved", a reference
