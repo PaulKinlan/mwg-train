@@ -12,7 +12,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
-import { isMeasurable, controlSimilarity, conformanceScore, geometrySimilarity, IDENTITY_AXES, identityFindings, scoreArm, structuralSimilarity, variantIdentity, WEIGHTS } from '../src/eval/conformance.mjs';
+import { isMeasurable, controlSimilarity, conformanceScore, geometrySimilarity, IDENTITY_AXES, identityFindings, scoreArm, structuralSimilarity, variantIdentity, WEIGHTS, SIGNATURE_SCRIPT } from '../src/eval/conformance.mjs';
 import { validateManifest } from '../src/provenance/record.mjs';
 import { parseManifest } from '../src/provenance/record.mjs';
 import { IDENTITY_BUDGET, TARGETS_MANIFEST, TARGETS_STORAGE, TARGET_FAMILIES } from '../src/eval/targets.mjs';
@@ -390,6 +390,18 @@ test('isMeasurable is TOTAL: no input makes it throw, every input yields a boole
     ['an empty signature', {}],
     ['an undefined signature', undefined],
     ['a null signature', null],
+    // mwg-train-z14v. An ARRAY-LIKE has a truthy length and no `.some`, so it passed the empty check and the call
+    // threw at the first `.some` - which made the contract asserted above false. The collections are normalised
+    // now, and these are the shapes that made the claim wrong.
+    ['an array-like in place of nodes', { nodes: { 0: { tag: 'div' }, length: 1 } }],
+    ['an array-like in place of boxes', { nodes: [{ tag: 'p', textLength: 1 }], boxes: { 0: {}, length: 1 } }],
+    ['an array-like in place of controls', { nodes: [{ tag: 'div' }], controls: { 0: {}, length: 1 } }],
+    ['a string in place of nodes', { nodes: 'nope' }],
+    ['a number in place of nodes', { nodes: 7 }],
+    ['null nodes beside real boxes', { nodes: null, boxes: [{ tag: 'main' }] }],
+    ['nodes of primitives', { nodes: [1, 'a', null, true] }],
+    ['an array-like node entry', { nodes: [{ 0: 'x', length: 1 }] }],
+    ['strings for all three collections', { nodes: 'x', boxes: 'y', controls: 'z' }],
   ];
   for (const [label, signature] of cases) {
     let result;
@@ -397,12 +409,160 @@ test('isMeasurable is TOTAL: no input makes it throw, every input yields a boole
     assert.equal(typeof result, 'boolean', `${label} returned ${typeof result}, not a boolean`);
   }
 
-  // And the semantics the fix preserves, so totality was not bought by changing any existing answer.
-  assert.equal(isMeasurable({ nodes: [{ depth: 0 }] }), true, 'a tagless node is not a generic container, so it counts');
-  assert.equal(isMeasurable({ nodes: [{ tag: null }] }), true, 'a null tag is still not a div, span or custom element');
+  // The values this fix preserves. NOTE the first two: 75cq pinned them to `true`, and mwg-train-7qze showed
+  // that was the wrong value, so they are `false` here. The totality contract above is untouched by that
+  // correction - the guard still answers for every input, which is what 75cq was for; only what it answers for
+  // an unidentifiable node changed. See the sibling test below for the reasoning.
+  assert.equal(isMeasurable({ nodes: [{ depth: 0 }] }), false, 'a node with no usable tag is not evidence of content');
+  assert.equal(isMeasurable({ nodes: [{ tag: null }] }), false, 'nor is a null tag');
   assert.equal(isMeasurable({ nodes: [{ tag: 'div' }] }), false, 'a div-only shell is still unmeasured');
   assert.equal(isMeasurable({ nodes: [{ tag: 'app-root' }] }), false, 'a custom-element mount is still unmeasured');
   assert.equal(isMeasurable({ nodes: [null] }), false, 'a null entry is not evidence that anything rendered');
+});
+
+test('an empty mount is unmeasured whatever its tag is, and content or a role is not', () => {
+  // mwg-train-7qze. The empty-SPA-root rule was a TAG DENYLIST - only 'div' and 'span' were treated as wrappers -
+  // so a mount whose tag was neither a div, a span nor a custom element was counted as rendered content. That is
+  // the same defect as 7pol for a different shell, and the reachable form of it is the tagless node: the test
+  // helper in this file builds nodes as `{ tag }`, and a node whose tag is absent, null or not a string slipped
+  // through both comparisons and counted.
+  //
+  // The rule is now "a node counts only when its tag identifies content-bearing element, or it carries a
+  // semantic role, name or type". A tag that cannot be read is treated as a wrapper, because a node whose tag is
+  // unreadable has not been shown to be anything.
+  for (const [label, node] of [
+    ['an absent tag', { depth: 0 }],
+    ['a null tag', { tag: null }],
+    ['an empty-string tag', { tag: '' }],
+    ['a non-string tag', { tag: 5 }],
+  ]) {
+    assert.equal(isMeasurable({ nodes: [node], boxes: [], controls: [] }), false, `${label} was counted as content`);
+  }
+
+  // Wrappers stay unmeasured, including the nested shell from the sibling test above.
+  assert.equal(isMeasurable({ nodes: [{ tag: 'div' }, { tag: 'app-root' }], boxes: [], controls: [] }), false);
+  assert.equal(isMeasurable({ nodes: [{ tag: 'span' }], boxes: [], controls: [] }), false);
+  assert.equal(isMeasurable({ nodes: [{ tag: 'x-mount' }], boxes: [], controls: [] }), false);
+
+  // Content-bearing tags are still measurable, and so is a semantic attribute on a wrapper. This is the half that
+  // must NOT regress: `p` is asserted true by the test above, and a div with a role is asserted true by it too.
+  assert.equal(isMeasurable({ nodes: [{ tag: 'p' }], boxes: [], controls: [] }), true);
+  assert.equal(isMeasurable({ nodes: [{ tag: 'h4' }], boxes: [], controls: [] }), true);
+  assert.equal(isMeasurable({ nodes: [{ tag: 'a' }], boxes: [], controls: [] }), true);
+  assert.equal(isMeasurable({ nodes: [{ tag: 'div', role: 'alert' }], boxes: [], controls: [] }), true);
+  assert.equal(isMeasurable({ nodes: [{ depth: 0, role: 'main' }], boxes: [], controls: [] }), true);
+  assert.equal(isMeasurable({ nodes: [{ depth: 0, name: 'q' }], boxes: [], controls: [] }), true);
+
+  // A node with a content-bearing tag and NO recorded signal keeps its previous verdict. This is not a limit any
+  // more - the capture records the signal (mwg-train-vysz) - it is the backward-compatibility rule for
+  // signatures that predate the field. See the signal test below for why that rule is mandatory.
+  assert.equal(isMeasurable({ nodes: [{ tag: 'figure' }], boxes: [], controls: [] }), true,
+    'an unrecorded signal must not be read as empty');
+});
+
+test('an empty tree is unmeasured however the wrappers nest, and a recorded signal decides it', () => {
+  // mwg-train-7qze, -vysz and -knch. The question is whether the TREE renders anything, not whether one node
+  // happens to have a child ELEMENT: `<figure><div></div></figure>` has a figure with one child and nothing
+  // rendered, so a per-node child check let it through. A tree of empty wrappers has textLength 0 on EVERY node,
+  // so one pass over the tree answers it however deeply the wrappers nest.
+  const sig = (nodes) => ({ nodes, boxes: [], controls: [] });
+
+  // Nested empty wrappers - the knch repro - unmeasured at any depth.
+  assert.equal(isMeasurable(sig([{ tag: 'figure', textLength: 0 }, { tag: 'div', textLength: 0 }])), false,
+    'a nested empty wrapper was measured because the parent had a child element');
+  assert.equal(isMeasurable(sig([
+    { tag: 'section-x', textLength: 0 }, { tag: 'div', textLength: 0 },
+    { tag: 'figure', textLength: 0 }, { tag: 'span', textLength: 0 },
+  ])), false, 'an empty tree is empty however deep it nests');
+
+  // Text ANYWHERE makes the tree measured, however deep it sits.
+  assert.equal(isMeasurable(sig([{ tag: 'figure', textLength: 12 }, { tag: 'div', textLength: 12 }])), true);
+  assert.equal(isMeasurable(sig([{ tag: 'figure', textLength: 0 }, { tag: 'div', textLength: 0 }, { tag: 'p', textLength: 4 }])), true,
+    'text at the deepest level still counts');
+
+  // A single empty mount, per vysz.
+  assert.equal(isMeasurable(sig([{ tag: 'figure', textLength: 0 }])), false);
+  assert.equal(isMeasurable(sig([{ tag: 'blockquote', textLength: 0 }])), false);
+
+  // An element that renders without text is still content, so "no text" is not read as "nothing rendered".
+  // Without this the empty-tree rule would trade a false positive for a false negative.
+  assert.equal(isMeasurable(sig([{ tag: 'img', textLength: 0 }])), true, 'an image-only page is not an empty shell');
+  assert.equal(isMeasurable(sig([{ tag: 'svg', textLength: 0 }, { tag: 'circle', textLength: 0 }])), true);
+  assert.equal(isMeasurable(sig([{ tag: 'canvas', textLength: 0 }])), true);
+
+  // A semantic attribute is content whatever the tree renders.
+  assert.equal(isMeasurable(sig([{ tag: 'figure', textLength: 0, role: 'doc-abstract' }])), true);
+
+  // NOT RECORDED: previous verdict kept. This is mandatory, not a leftover limit. The committed target
+  // signatures carry only {tag, depth, name, role, type}, they are the TARGET side of scoreArm
+  // (scripts/score-conformance.mjs:86), and their sha256 is published in reports as target_sha256. Reading an
+  // absent signal as "empty" would make every committed target unmeasurable and refuse every score.
+  assert.equal(isMeasurable(sig([{ tag: 'p' }])), true, 'a signature predating the signal keeps its previous verdict');
+  assert.equal(isMeasurable(sig([{ tag: 'figure', depth: 0, name: null, role: null, type: null }])), true,
+    'the exact node shape committed in the target signatures');
+  assert.equal(isMeasurable(sig([{ tag: 'div' }])), false, 'and a wrapper alone still does not count');
+});
+
+test('the signature script reads text through the skip-aware reader, not textContent', () => {
+  // SIGNATURE_SCRIPT runs inside the page, so this asserts on its source - and it guards a real trap rather than
+  // a style preference. textContent includes the source of an inline <script> or <style>, and an empty shell with
+  // an inline script is the common SPA case, so the naive read reports a shell as full of content. The browser
+  // verification covers the behaviour; this stops the naive read reappearing for a future reader to reach for.
+  assert.match(SIGNATURE_SCRIPT, /nodes\.push\(\{ tag, depth, textLength: renderedText\(child\)/);
+  assert.doesNotMatch(SIGNATURE_SCRIPT, /textLength: \(child\.textContent/);
+  assert.match(SIGNATURE_SCRIPT, /const renderedText = \(element\) => \{/);
+  assert.match(SIGNATURE_SCRIPT, /!SKIP\.has\(child\.tagName\.toLowerCase\(\)\)/);
+});
+
+test('a hidden element is not a node, but a visible child inside one still is', () => {
+  // mwg-train-uh9q. Recording `visible: false` per node and honouring it in isMeasurable was NOT enough: tokens()
+  // maps every node to a structural token and did not honour it, so a page carrying hidden markup scored 0.5
+  // structural similarity against a page with identical rendered output.
+  //
+  // So the element is refused at capture instead - the same rule already applied to boxes, controls, labels and
+  // headings - because a flag that every consumer must remember to honour is a flag that one of them will forget,
+  // which is exactly what happened here. Asserted in two places because they fail differently: this guards the
+  // CODE, and test/capture-state.test.mjs drives two REAL pages with identical rendered output and asserts their
+  // node lists are equal and their structural similarity is 1.
+  assert.match(SIGNATURE_SCRIPT, /if \(isVisible\(child\)\) \{/, 'only a rendered element is collected as a node');
+  assert.match(SIGNATURE_SCRIPT, /if \(isPruned\(child\)\) continue;/, 'and only a display-pruning element stops the walk');
+  assert.doesNotMatch(SIGNATURE_SCRIPT, /visible: isVisible\(child\)/, 'no redundant flag for consumers to honour');
+  assert.doesNotMatch(SIGNATURE_SCRIPT, /node\.visible/, 'and no consumer-side visibility rule to forget');
+  // mwg-train-0qnu, and the reason the two predicates are separate: pruning the WALK on visibility deleted a
+  // child that legitimately set visibility:visible inside a visibility:hidden parent, so a page with visible text
+  // captured no nodes and isMeasurable called it an empty shell. Whether an element is a node and whether the walk
+  // can stop are different questions, and answering the second with the first is a false negative - the direction
+  // that silently refuses to score a real page.
+  const pruned = SIGNATURE_SCRIPT.slice(SIGNATURE_SCRIPT.indexOf('const isPruned'), SIGNATURE_SCRIPT.indexOf('const walk'));
+  assert.match(pruned, /style\.display === 'none' \|\| style\.contentVisibility === 'hidden'/, 'pruning is display-only');
+  assert.doesNotMatch(pruned, /visibility === 'hidden'/, 'visibility NEVER prunes: a child may override it');
+});
+
+test('the signature script asks the DOM whether an element is rendered, and does not read innerText', () => {
+  // mwg-train-b03z. Hidden text is not rendered text: a figure wrapping '<div hidden>invisible words</div>' gave
+  // the figure textLength 15 and scored the page as content. Two things are asserted here, both measured in a
+  // browser rather than assumed:
+  //   - checkVisibility is asked WITH the CSS option. The default answers only for display:none, so a
+  //     visibility:hidden div returns true without the option and false with it.
+  //   - innerText is NOT used, though it is the obvious answer. Called on a NON-RENDERED element the spec falls
+  //     it back to textContent, so the hidden div reports its own text and this exact case still fails - it is
+  //     only correct when read from a rendered ancestor, and this reads per node. It is also about 4x the cost
+  //     of the walk: 23.8ms against 6.3ms over a 400-node page.
+  assert.match(SIGNATURE_SCRIPT, /element\.checkVisibility\(\{ checkVisibilityCSS: true \}\)/);
+  assert.doesNotMatch(SIGNATURE_SCRIPT, /\.innerText/);
+  assert.match(SIGNATURE_SCRIPT, /getComputedStyle\(element\)/, 'the fallback for a browser without checkVisibility');
+  // checkVisibility does not answer for content-visibility: hidden - measured, all four option combinations
+  // (plain, checkVisibilityCSS, contentVisibilityAuto, both) return TRUE for a content-visibility:hidden element -
+  // so the reader consults the computed property directly. content-visibility: auto is deliberately NOT treated as
+  // hidden: it skips off-screen content as an optimisation and renders it on scroll, so a capture taken with that
+  // content off-screen must not call the page empty.
+  assert.match(SIGNATURE_SCRIPT, /getComputedStyle\(element\)\.contentVisibility === 'hidden'/);
+  // And the same rule is applied to EVERY collection, because the defect reached the metrics through three
+  // separate channels: a node's own metadata, the boxes collection and the controls collection. Guarding only the
+  // reported channel would leave <main hidden> and <input hidden> scoring a page that renders nothing.
+  assert.match(SIGNATURE_SCRIPT, /isVisible\(element\)\) continue;/, 'boxes and controls skip hidden elements');
+  assert.match(SIGNATURE_SCRIPT, /filter\(\(h\) => isVisible\(h\)\)/, 'headings skip hidden elements');
+  assert.doesNotMatch(SIGNATURE_SCRIPT, /contentVisibilityAuto: true/);
 });
 
 test('an unmeasurable signature is refused, not scored a perfect 1.000', () => {

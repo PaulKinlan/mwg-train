@@ -33,18 +33,105 @@ export const WEIGHTS = Object.freeze({ structural: 0.4, geometry: 0.35, controls
 export const SIGNATURE_SCRIPT = `return (() => {
   const SKIP = new Set(['script', 'style', 'template', 'link', 'meta', 'noscript']);
   const nodes = [];
+  // How much text this element RENDERS, excluding skipped subtrees. textContent would include the source of an
+  // inline <script> or <style>, and an empty shell with an inline script is the common SPA case, so the naive
+  // read scores a shell as content. Memoised over childNodes, so each element is visited once.
+  // Whether this element generates a CSS box at all, memoised so it is asked once per element. checkVisibility
+  // is asked for the CSS option as well, because the default answers only for display:none - measured, a
+  // visibility:hidden div returns true without the option and false with it.
+  const visibility = new Map();
+  const isVisible = (element) => {
+    const known = visibility.get(element);
+    if (known !== undefined) return known;
+    let answer;
+    if (typeof element.checkVisibility === 'function') {
+      answer = element.checkVisibility({ checkVisibilityCSS: true });
+    } else {
+      const style = getComputedStyle(element);
+      answer = style.display !== 'none' && style.visibility !== 'hidden';
+    }
+    // checkVisibility does not answer for content-visibility: hidden - measured, all four option combinations
+    // (plain, checkVisibilityCSS, contentVisibilityAuto, both) return true for a content-visibility:hidden element -
+    // so it is read directly. getComputedStyle over 400 nodes is 0.5ms, so the extra read is not worth avoiding.
+    //
+    // content-visibility: auto is deliberately NOT treated as hidden, though it also skips content. Skipping there is
+    // an off-screen optimisation that renders on scroll, so the content is part of the page and a capture taken with
+    // it off-screen must not call the page empty. hidden never renders, so it is the same case as display:none.
+    if (answer && getComputedStyle(element).contentVisibility === 'hidden') answer = false;
+    visibility.set(element, answer);
+    return answer;
+  };
+  const rendered = new Map();
+  const renderedText = (element) => {
+    const known = rendered.get(element);
+    if (known !== undefined) return known;
+    let total = 0;
+    // Hidden text is not rendered text. Measured: a figure wrapping '<div hidden>invisible words</div>' gave
+    // figure textLength 15 and scored the page as content. checkVisibility with the CSS option is the only signal
+    // that catches all three forms - the hidden attribute, display:none and visibility:hidden - and it is the
+    // cheapest here too: 0.6ms over a 400-node page against 23.8ms for reading innerText per node.
+    //
+    // innerText is deliberately NOT used, though it is the obvious answer, because it fails this very case: called
+    // on a NON-RENDERED element the spec falls it back to textContent, so the hidden div reports its own text. It is
+    // only correct when read from a rendered ancestor, and this reads per node.
+    // An element's OWN text renders only if the element renders, but its children are walked even when it does
+    // not: a visible descendant can override visibility:hidden on its parent (mwg-train-0qnu), and pruning here
+    // lost that text. display:none is different in kind - nothing inside it can render - so it stops there.
+    if (!isPruned(element)) {
+      const own = isVisible(element);
+      for (const child of element.childNodes) {
+        if (child.nodeType === 3) { if (own) total += (child.nodeValue ?? '').trim().length; }
+        else if (child.nodeType === 1 && !SKIP.has(child.tagName.toLowerCase())) total += renderedText(child);
+      }
+    }
+    rendered.set(element, total);
+    return total;
+  };
+  // Whether the walk can STOP here, which is a different question from whether this element is a node.
+  // display:none and content-visibility:hidden remove the subtree from the rendering tree, so nothing inside can
+  // render and there is nothing below to find. visibility:hidden is deliberately NOT in that class, and that is
+  // mwg-train-0qnu: CSS lets a child set visibility:visible and render inside an invisible parent, so pruning on
+  // visibility deleted those children and a page with VISIBLE text captured no nodes at all - which isMeasurable
+  // then reported as an empty shell. A guard that answers the wrong question is worse than no guard, because it
+  // looked like the safe direction.
+  const pruned = new Map();
+  const isPruned = (element) => {
+    const known = pruned.get(element);
+    if (known !== undefined) return known;
+    const style = getComputedStyle(element);
+    const answer = style.display === 'none' || style.contentVisibility === 'hidden';
+    pruned.set(element, answer);
+    return answer;
+  };
   const walk = (element, depth) => {
     for (const child of element.children) {
       const tag = child.tagName.toLowerCase();
       if (SKIP.has(tag)) continue;
-      nodes.push({ tag, depth, type: child.getAttribute('type') ?? null, name: child.getAttribute('name') ?? null, role: child.getAttribute('role') ?? null });
+      if (isPruned(child)) continue;
+      // A hidden element is not a node (mwg-train-uh9q), but its children are STILL VISITED (mwg-train-0qnu).
+      // The nodes array therefore holds exactly the rendered nodes, so no consumer can forget to filter - which is
+      // what went wrong when a per-node visible flag was honoured by isMeasurable and ignored by tokens.
+      if (isVisible(child)) {
+        // textLength is the content signal mwg-train-vysz and mwg-train-knch need: the tag says which element this
+        // is, not whether anything was rendered INTO it. An empty <figure></figure> and a <figure> with content are
+        // the same node by tag alone, which is how an empty mount scored perfect parity. childCount deliberately is
+        // NOT captured: it counts elements, not content, so a wrapper around a wrapper has children and renders
+        // nothing.
+        nodes.push({ tag, depth, textLength: renderedText(child), type: child.getAttribute('type') ?? null, name: child.getAttribute('name') ?? null, role: child.getAttribute('role') ?? null });
+      }
       walk(child, depth + 1);
     }
   };
   walk(document.body, 0);
   const boxes = [];
   const boxTags = ['header', 'nav', 'main', 'aside', 'footer', 'form', 'fieldset', 'label', 'input', 'select', 'textarea', 'button', 'h1', 'h2', 'h3', 'ul', 'li', 'article', 'section', 'table'];
+  // ONLY RENDERED ELEMENTS ARE RECORDED, in every collection below (mwg-train-b03z). A hidden element is not
+  // rendered content, and it reached the metrics through three separate channels - a node's role or tag, a box,
+  // and a control - so fixing one channel left the others reporting a page that renders nothing as measurable.
+  // Measured before this change: a hidden img and a hidden role=alert scored measurable through the NODES, while
+  // <main hidden> and <input hidden> scored measurable through a BOX and a CONTROL.
   for (const element of document.querySelectorAll(boxTags.join(','))) {
+    if (!isVisible(element)) continue;
     const tag = element.tagName.toLowerCase();
     const rect = element.getBoundingClientRect();
     boxes.push({
@@ -54,17 +141,20 @@ export const SIGNATURE_SCRIPT = `return (() => {
     });
   }
   const labels = [];
-  for (const label of document.querySelectorAll('label[for]')) labels.push({ for: label.getAttribute('for'), text: (label.textContent ?? '').trim().slice(0, 80) });
+  for (const label of document.querySelectorAll('label[for]')) {
+    if (!isVisible(label)) continue; labels.push({ for: label.getAttribute('for'), text: (label.textContent ?? '').trim().slice(0, 80) });
+  }
   const byId = new Map(labels.map((label) => [label.for, label.text]));
   const controls = [];
   for (const element of document.querySelectorAll('input, select, textarea')) {
     const type = element.getAttribute('type') ?? null;
     if (type === 'hidden') continue;
+    if (!isVisible(element)) continue;
     const id = element.getAttribute('id');
     const label = (id && byId.get(id)) || element.getAttribute('aria-label') || null;
     controls.push({ tag: element.tagName.toLowerCase(), type, name: element.getAttribute('name') ?? null, label });
   }
-  const headings = [...document.querySelectorAll('h1, h2, h3')].map((h) => (h.textContent ?? '').trim().slice(0, 120));
+  const headings = [...document.querySelectorAll('h1, h2, h3')].filter((h) => isVisible(h)).map((h) => (h.textContent ?? '').trim().slice(0, 120));
   return { title: document.title, viewport: { width: innerWidth, height: innerHeight }, nodes, boxes, labels, controls, headings };
 })();`;
 
@@ -198,37 +288,55 @@ export function controlSimilarity(target, candidate) {
   return round(0.6 * match + 0.4 * labelled);
 }
 
+const NON_TEXT_CONTENT = new Set(['img', 'picture', 'svg', 'canvas', 'video', 'audio', 'object', 'embed']);
+
+/** A wrapper renders its children and nothing of its own, so a wrapper alone is not evidence of content. */
+const isWrapperTag = (tag) => {
+  const name = typeof tag === 'string' ? tag : '';
+  return name === '' || name === 'div' || name === 'span' || name.includes('-');
+};
+
 /** Whether a signature carries anything that can actually be compared. */
 export function isMeasurable(signature) {
-  const nodeCount = signature?.nodes?.length ?? 0;
-  const boxCount = signature?.boxes?.length ?? 0;
-  const controlCount = signature?.controls?.length ?? 0;
+  // nodes, boxes and controls must be ARRAYS. Anything else - an array-like, a string, an object - is not a
+  // signature this function can read, and reading it as "no records" keeps the guard total instead of throwing
+  // from inside it. mwg-train-z14v: `{nodes: {0: {...}, length: 1}}` has a truthy length, so it passed the empty
+  // check and the call then threw at the first `.some`. A guard whose failure mode is a throw has handed the
+  // caller nothing to act on, which is the same defect 75cq fixed for a node and this fixes for the collection.
+  const nodes = Array.isArray(signature?.nodes) ? signature.nodes : [];
+  const boxCount = Array.isArray(signature?.boxes) ? signature.boxes.length : 0;
+  const controlCount = Array.isArray(signature?.controls) ? signature.controls.length : 0;
 
   if (boxCount > 0 || controlCount > 0) return true;
-  if (nodeCount === 0) return false;
+  if (nodes.length === 0) return false;
 
-  // Empty SPA root check: if the page rendered no semantic boxes and no controls, it must have at least
-  // one node that is not a generic container to be considered measured.
-  // A nested tree of purely divs, spans, or custom element mounts (e.g. body > div#root > app-root)
-  // with no roles or text-bearing tags is an empty unmeasured shell.
-  return signature.nodes.some(node =>
-    // This predicate is a GUARD and must be TOTAL: absent, null and non-string tags all count, rather than
-    // throwing. It is called by conformanceScore, which relies on a boolean so it can raise its own TypeError
-    // naming the unmeasured arm; a TypeError from in here replaced that diagnostic with "cannot read properties
-    // of undefined" (mwg-train-75cq). `String(node.tag ?? '')` covers both the reported cases and any non-string
-    // tag. A tagless node is not a generic container - it is not a div, a span or a custom element - so it
-    // counts, which is what this returned before the empty-SPA-root rewrite and what an empty-string tag still
-    // does today.
-    // A null or undefined ENTRY carries nothing comparable, so it is skipped rather than crashing. That is a
-    // different case from the one above: a node object with an absent tag is an entity whose tag is missing, and
-    // it counts as a node that is not a generic container; a null entry is not an entity at all, so it is not
-    // evidence that anything rendered. Skipping is also the safe direction for a caller - returning false here
-    // makes conformanceScore refuse the arm instead of scoring a signature that is partly garbage.
-    node != null && (
-      (node.tag !== 'div' && node.tag !== 'span' && !String(node.tag ?? '').includes('-')) ||
-      node.role != null || node.name != null || node.type != null
-    )
-  );
+
+  // A role, name or type is a semantic attribute rather than a tag, so it qualifies any node, wrapper or not.
+  // This is what keeps `<div role="alert">` measurable while `<div>` is not.
+  if (nodes.some((node) => node != null && (node.role != null || node.name != null || node.type != null))) return true;
+
+  // EMPTY TREE CHECK (mwg-train-7qze, -vysz, -knch). With no boxes and no controls the question is whether the
+  // node tree renders anything at all, and it has to be asked of the WHOLE TREE rather than of one node. Asking
+  // it per node is what let `<figure><div></div></figure>` through: figure had a child ELEMENT, so it looked like
+  // content, while nothing in the tree rendered anything. A tree of empty wrappers has textLength 0 on every
+  // node, so one pass over the tree answers it however deeply the wrappers nest.
+  const measured = nodes.filter((node) => node != null && typeof node.textLength === 'number');
+  if (measured.length > 0) {
+    if (measured.some((node) => node.textLength > 0)) return true;
+
+    // Nothing renders text. Elements that render without text are still content, so an image-only or canvas-only
+    // page is not an empty shell; without this the rule would trade a false positive for a false negative.
+    if (nodes.some((node) => node != null && NON_TEXT_CONTENT.has(node.tag))) return true;
+    return false;
+  }
+
+  // NO RECORDED SIGNAL: a signature predating textLength keeps its previous verdict. This is mandatory, not a
+  // leftover limit. The committed target signatures under data/A6_evaluation and data/A1_self_generated carry
+  // only {tag, depth, name, role, type}, they are the TARGET side of scoreArm (scripts/score-conformance.mjs:86),
+  // and their sha256 is published in reports as target_sha256. Reading an absent signal as "empty" would make
+  // every committed target unmeasurable and refuse every score, and regenerating them is outside this
+  // repository's write scope. So unrecorded is not the same as empty.
+  return nodes.some((node) => node != null && !isWrapperTag(node.tag));
 }
 
 /** The three axes and their weighted mean, as one object so a report never has to recompute them. */
