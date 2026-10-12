@@ -345,6 +345,17 @@ test('every axis the identity layer measures has a budget, or it is judged nowhe
   assert.deepEqual(decorative, [], `these axes have a floor but are never measured, so the floor is decorative: ${decorative.join(', ')}`);
 });
 
+test('Pre-existing boundary: CSS-painted content without semantic tags or text is unmeasurable', () => {
+  // A page whose only visual content is CSS-painted (e.g. background-image on a div without text, list-markers
+  // on an element that is not tracked as a box) is classified as unmeasurable in isMeasurable.
+  // This is a known, pre-existing boundary because checking computed styles (backgroundImage, borders)
+  // on every wrapper node would be prohibitively slow and bloat the signature format.
+  // We explicitly track <hr> as NON_TEXT_CONTENT, but purely CSS-decorated wrapper divs fall through.
+  assert.equal(isMeasurable({ nodes: [{ tag: 'div', depth: 0, textLength: 0 }], boxes: [], controls: [] }), false);
+  assert.equal(isMeasurable({ nodes: [{ tag: 'span', depth: 0, textLength: 0 }], boxes: [], controls: [] }), false);
+  assert.equal(isMeasurable({ nodes: [{ tag: 'hr', depth: 0, textLength: 0 }], boxes: [], controls: [] }), true);
+});
+
 test('isMeasurable correctly identifies empty SPA shells and legitimately rendered content', () => {
   // A completely empty signature is unmeasurable
   assert.equal(isMeasurable({}), false);
