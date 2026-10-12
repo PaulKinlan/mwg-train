@@ -24,7 +24,7 @@ than the archetype's name suggests:
 | Family | Side | Subject | Distinctive behaviour |
 |---|---|---|---|
 | `tr-16` | train | Heirloom Perennial Repository — rare perennial cuttings and seed strain index | a cultivar index filtered by sun tolerance and flowering season; the reservation is for **cuttings**, by quantity |
-| `fam-16` | eval | local archive and antiquarian book collection catalogue | a staff view of pending reservations, HTTP status assertions, and a validated reservation date |
+| `fam-16` | eval (test) | local archive and antiquarian book collection catalogue | a staff view of pending reservations, HTTP status assertions, and a validated reservation date |
 
 ## Use case
 
@@ -59,18 +59,18 @@ axis warns explicitly that reclassifying a subject change as a type change is th
 
 ## Routes and effects
 
-| Route | Kind | Families | Effect |
+| Route | Family | Kind | Effect |
 |---|---|---|---|
-| `GET /` | page | both | serves the repository's landing view and its route into the catalogue |
-| `GET /cultivars` | page | `tr-16` | serves the cultivar index, filterable (the family's first assertion filters it by `sun`) |
-| `GET /cultivars/:id` | read-by-reference | `tr-16` | serves one specimen: its propagation notes and available cutting counts |
-| `POST /request` | write | `tr-16` | creates a cutting reservation and redirects to its receipt |
-| `GET /requests/:id` | read-by-reference | `tr-16` | reads the reservation back by its own reference |
-| `GET /catalog` | page | `fam-16` | serves the archive catalogue, filtered dynamically by its controls |
-| `GET /catalog/:id` | read-by-reference | `fam-16` | serves one record: its accession details |
-| `POST /reserve/:id` | write | `fam-16` | creates a reading-room reservation, redirecting to the receipt with HTTP 303 |
-| `GET /reservation/:ref` | read-by-reference | `fam-16` | reads the reservation back by its reference |
-| `GET /admin/loans` | page | `fam-16` | serves the staff view listing pending reservations |
+| `GET /` | both | page | serves the repository's landing view and its route into the catalogue |
+| `GET /cultivars` | `tr-16` | page | serves the cultivar index, filterable (the family's first assertion filters it by `sun`) |
+| `GET /cultivars/:id` | `tr-16` | read-by-reference | serves one specimen: its propagation notes and available cutting counts |
+| `POST /request` | `tr-16` | write | creates a cutting reservation and redirects to its receipt |
+| `GET /requests/:id` | `tr-16` | read-by-reference | reads the reservation back by its own reference |
+| `GET /catalog` | `fam-16` | page | serves the archive catalogue, filtered dynamically by its controls |
+| `GET /catalog/:id` | `fam-16` | read-by-reference | serves one record: its accession details |
+| `POST /reserve/:id` | `fam-16` | write | creates a reading-room reservation, redirecting to the receipt with HTTP 303 |
+| `GET /reservation/:ref` | `fam-16` | read-by-reference | reads the reservation back by its reference |
+| `GET /admin/loans` | `fam-16` | page | serves the staff view listing pending reservations |
 
 **On the methods.** The manifests declare routes as paths and carry no `method` key, so the methods above are
 only as firm as their source, and here the two sides differ sharply. `tr-16` states its write in its second
@@ -104,31 +104,19 @@ staff view `GET /admin/loans` is named with its method and status by the fourth 
 
 ## Journey
 
-**`tr-16`, the perennial repository.** It starts at `/`, files `form#cutting-request-form` with
-`input[name=gardener]` `Dr Linnaeus Fox`, `input[name=email]` `linnaeus.fox@botanical.test`,
-`input[name=cultivar]` `Salvia nemorosa Caradonna`, `input[name=quantity]` `3` and `textarea[name=notes]` `Keep
-moist for root propagation`, selecting `select[name=cutting]` `Root cutting`. It expects `Salvia nemorosa
-Caradonna` echoed back by what the submit returns, then again after a reload. Its search leg queries
-`/search?q=Salvia`, reads `#search-results`, expects `Salvia nemorosa Caradonna` among them and the decoy
-`zzz-decoy` absent. Its update leg rewrites `cultivar` to `Salvia nemorosa Caradonna (updated)`. Its intake
-steps submit `/intake` having selected `select[name=cutting]` `Root cutting`, and `/intake/confirm` expects
-`Root cutting` back.
+The declared journeys. For the evaluation family (`fam-16`), these are quoted verbatim from the manifests. For the training family (`tr-16`), these are derived summaries of the structured `journey` objects defined in the manifest:
 
-Its three stated journeys put the **filter** first, ahead of the write: search the cultivar repository and
-filter by sun tolerance and flowering season; inspect the botanical propagation instructions and the available
-cutting counts for a specimen; then submit a reservation, receive a collection voucher, and reload to confirm
-the details. That ordering is the contract, not a description.
+**`tr-16` (perennial repository):**
+- Starts at `/`, files `form#cutting-request-form` with `input[name=gardener]` `Dr Linnaeus Fox`, `input[name=email]` `linnaeus.fox@botanical.test`, `input[name=cultivar]` `Salvia nemorosa Caradonna`, `input[name=quantity]` `3` and `textarea[name=notes]` `Keep moist for root propagation`, selecting `select[name=cutting]` `Root cutting`.
+- Expects `Salvia nemorosa Caradonna` echoed back and again after a reload.
+- Searches via `/search?q=Salvia` to verify the stored record appears in search.
+- Updates the cultivar to `Salvia nemorosa Caradonna (updated)`.
 
-**`fam-16`, the archive.** The row states three journeys rather than a fixture, and they are the contract for the
-evaluation-side family. Quoted verbatim:
+**`fam-16` (archive):** Quoted verbatim from `docs/eval/briefs/manifest.jsonl`:
 
-1. "search the archive catalogue by keyword or subject, select a historical manuscript, review accession
-   details, submit a reading room reservation request with researcher details and date, and receive a
-   reservation reference"
-2. "reload the reservation confirmation page /reservation/:ref, verifying that the manuscript title,
-   reservation code, and appointment date persist from server storage"
-3. "attempt to submit a reservation without a researcher name or with an invalid reservation date, verify inline
-   accessible error messages, correct the fields, and successfully reserve"
+- search the archive catalogue by keyword or subject, select a historical manuscript, review accession details, submit a reading room reservation request with researcher details and date, and receive a reservation reference
+- reload the reservation confirmation page /reservation/:ref, verifying that the manuscript title, reservation code, and appointment date persist from server storage
+- attempt to submit a reservation without a researcher name or with an invalid reservation date, verify inline accessible error messages, correct the fields, and successfully reserve
 
 Mapped to the five planned boards: step 1 the catalogue and its filters → `step1-catalogue`, step 2 one item's
 detail → `step2-item`, step 3 the reservation form → `step3-reserve`, step 4 the receipt and the staff view →
