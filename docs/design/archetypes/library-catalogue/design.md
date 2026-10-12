@@ -41,7 +41,7 @@ darkroom board in the `support-helpdesk` archetype makes with a ticket list and 
 ## Grammar and layout
 
 - Declared structural constants: `--content-frame: 1200px`, `--page-padding: 1.5rem`, `--control-radius: 8px`,
-  `--control-border: 1px solid var(--hp-border)`.
+  `--control-border: 1px solid var(--hp-control)`.
 - Declared page structure: a brand header, a navigation bar, a main content area, a content section, the working
   form, and a footer.
 - **The reference arranges it as a two-column split.** The left column carries the hero, the search and filter
@@ -93,7 +93,8 @@ All values are declared; every observed use was read out of the committed bytes.
 | `hp-sage` | `#15803d` | **Brand identity only**: the leaf mark and the repository's wordmark and subtitle. It fills no control and carries no action |
 | `hp-purple` | `#7c3aed` | **Every interactive accent**: the filter action's fill, the per-card request links, and the primary submit's fill |
 | `hp-card` | `#ffffff` | Card and form-input grounds, including the specimen cards and the review cards |
-| `hp-border` | `#e2e8f0` | The hairlines framing cards, inputs, selects and reviews |
+| `hp-border` | `#e2e8f0` | The decorative hairlines framing cards and reviews. Not used for interactive controls, whose border must meet WCAG 1.4.11 |
+| `hp-control` | `#7c8ba1` | The border of interactive controls - inputs, selects and their focus outlines. 3.46:1 on `#ffffff` and 3.31:1 on `#f8fafc`, clearing the 3:1 that WCAG 1.4.11 requires of UI component boundaries |
 | `hp-bg` | `#f8fafc` | The page ground |
 | `hp-text` | `#1e293b` | The `h1`, section headings, cultivar names, form labels and review copy |
 | `hp-muted` | `#64748b` | The hero subtitle, placeholders, card attribute metadata and footer contact details |
@@ -159,10 +160,10 @@ alone reads as the primary.
 
 These are properties of the committed board, not of the archetype.
 
-- **Every specimen card duplicates or contradicts its own cutting count.** One card prints "14 cuttings
-  available" twice; another prints "19 cuttings available" and then "8 cuttings available" on the next line; the
-  third prints "19 cuttings available" twice. The count is the number a reservation is made against, so this is
-  a correctness defect rather than a cosmetic one.
+- **Two of the three specimen cards print their cutting count twice.** The *Acanthus mollis* card prints
+  "14 cuttings available" twice and the *Achillea millefolium* card prints "19 cuttings available" twice,
+  while the *Campanula lactiflora* card prints a single "8 cuttings available". The count is the number a
+  reservation is made against, so a repeated count is a correctness defect rather than a cosmetic one.
 - **The filter dimensions disagree with the brief.** The board filters by sun requirements and soil type; the
   family's stated journey filters by sun tolerance and flowering season. Flowering season is absent from the
   board.
