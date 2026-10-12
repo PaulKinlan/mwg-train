@@ -254,6 +254,8 @@ export const DOCUMENTS = {
   'docs/design/archetypes/fan-community-site/plan.md': 'design',
   'docs/design/archetypes/course-enrolment/design.md': 'design',
   'docs/design/archetypes/course-enrolment/plan.md': 'design',
+  'docs/design/archetypes/directory-listing/design.md': 'design',
+  'docs/design/archetypes/directory-listing/plan.md': 'design',
   'docs/provenance/assets/design-reference-fan-community-site.md': 'provenance',
   // The third archetype outside the five evaluation families (bead mwg-train-efg), same shapes and the same
   // reasoning again: a board brief, two contract documents, and a digest register, none of which states a
