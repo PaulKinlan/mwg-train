@@ -76,7 +76,7 @@ async function main() {
     corpusRoot = mkdtempSync(join(tmpdir(), `conformance-corpus-`));
 
     const { projects: generated } = generateCorpus({ plan: { ...plan, projects }, outDir: corpusRoot });
-    chrome = await launchChrome({ blockEgress: true });
+    chrome = await launchChrome();
     let port = args.port;
     for (const project of generated) {
       const storedOriginal = storeOutput({ projectId: project.projectId, model: NO_MODEL }, 'A1_self_generated', project.dir, { repoRoot: isolatedRepoRoot });

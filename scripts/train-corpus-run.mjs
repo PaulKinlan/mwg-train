@@ -444,7 +444,7 @@ async function main() {
   let port = args.port;
   try {
     for (const projectId of selectedIds) {
-      chrome = await launchChrome({ blockEgress: true });
+      chrome = await launchChrome();
       const corpusEntry = byId.get(projectId);
       const projectDir = join(resolve(REPO_ROOT, PROJECTS_ROOT), projectId);
       const spec = JSON.parse(readFileSync(join(projectDir, 'spec.json'), 'utf8'));

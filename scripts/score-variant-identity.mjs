@@ -199,7 +199,7 @@ async function main() {
   let chrome = null;
   try {
     runDir = mkdtempSync(join(tmpdir(), 'variant-identity-'));
-    chrome = await launchChrome({ blockEgress: true });
+    chrome = await launchChrome();
     for (const family of families) summary.push(await scoreFamily({ family, chrome, runDir, outDir, ports }));
   } finally {
     if (chrome) await chrome.close();
