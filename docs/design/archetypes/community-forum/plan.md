@@ -3,26 +3,25 @@ archetype: community-forum
 type: fan-community
 axis: docs/train/briefs/TYPE-AXIS.md
 boards: docs/design/archetypes/community-forum/
+register: docs/provenance/assets/training-reference-boards.md
 ---
 
 # `community-forum` — functional contract
 
-A traditional-music session archive with a discussion board: a library of tunes to browse and filter by
-dance rhythm, a tune thread carrying comments from earlier sessions, a composer for a tempo note or a
-regional variation, a moderation boundary, and an empty state. This document is the contract for the
-`community-forum` archetype — what a player can do, what the server does about it, and what a journey can
-assert.
+The behaviour of the `fan-community` type as this archetype implements it. This document is the archetype's
+contract: what a player and a moderator can do, what the server does about it, and what a journey can assert.
 
-It is written in the section order [`src/design/contract.mjs`](../../../../src/design/contract.mjs) requires
-of a plan (`PLAN_SECTIONS`). What it describes is the full canonical journey expanded from the training
-target `tr-20`. **No reference boards exist for this archetype yet** — the five named under Implementation
-status are planned, and this document describes the system they will depict rather than bytes that exist.
+It is written in the section order that [`src/design/contract.mjs`](../../../../src/design/contract.mjs)
+requires of a plan (`PLAN_SECTIONS`), so it is reviewable the same way the evaluation side's plan documents
+are. It is **not** checked against a generated demo, because there is no generated demo for the five-step
+flow and no evaluation spec for this archetype — see *Implementation status*. Nothing here should be read as
+describing running software.
 
 ## Use case
 
 A weekly pub folk session needs a shared digital tune repository and discussion board. Musicians look up
-traditional jigs, reels, hornpipes and polkas, inspect a tune's musical key and background, and post tempo
-suggestions or regional variations so the thread survives a reload.
+traditional jigs, reels, hornpipes and polkas, inspect a tune's musical key and its background, and post
+tempo suggestions or regional variations so that the thread survives a reload.
 
 A **player** browses the tune library and filters it by dance rhythm, opens one tune's thread, reads the
 notes earlier players left, and contributes a note or variation of their own. Contributed notes are stored
@@ -31,10 +30,10 @@ own comment. A **moderator** can hold a contribution back from the public thread
 
 The flow differs from `editorial-blog` because contributions are stored rows attached to a parent record
 rather than authored articles with stable deep links, and from the evaluated `fan-community-site` because
-the contributed object is a first-class domain record — a tune with a key and a rhythm — rather than a
-comment on media. `TYPE-AXIS.md` currently records this archetype as a **partial** member of the `blog` and
-`fan-community` axes: it has the index and thread routes, and the gaps it names are the contribution-editing
-and moderation boundary this document specifies.
+the contributed object is a first-class domain record — a tune with a key and a rhythm, carrying a notation
+snippet — rather than a contribution to a collection of media. `TYPE-AXIS.md` currently records this
+archetype as a **partial** member of the `blog` and `fan-community` axes: it has the index and thread routes,
+and the gaps the axis names are the contribution-editing and moderation boundary this document specifies.
 
 ## Routes and effects
 
@@ -42,7 +41,7 @@ and moderation boundary this document specifies.
 |---|---|---|
 | `GET /` | page | serves the session's landing view and its entry points into the library |
 | `GET /tunes` | page | serves the tune library, filterable by dance rhythm |
-| `GET /tunes/:id` | read-by-reference | serves one tune's key, background and its discussion thread, including notes stored on earlier visits |
+| `GET /tunes/:id` | read-by-reference | serves one tune's key, background and discussion thread, including notes stored on earlier visits |
 | `POST /tunes/:id/notes` | write | stores one comment on that tune and refreshes the discussion view |
 | `GET /search` | page | serves the full-text search result view, addressed by the `q` query parameter |
 | `GET /intake` | page | serves the declared intake step, whose rhythm selection carries into the next step |
@@ -59,7 +58,7 @@ route plus a status field on the note row). Nothing here should be read as a rou
 - **Stored on the server**, per the brief's `server_persistence`: traditional tune records, and the musician
   discussion comments attached to them. The brief does not name a storage engine, so none is claimed here.
 - **The tune record** carries the library's identifiers: `tune`, `rhythm` (Reel, Jig, Hornpipe or Polka), and
-  `key` (D major, G major, A dorian or E minor) — the three values the journey filters and selects by.
+  `key` (D major, G major, A dorian or E minor) — the values the journey filters and selects by.
 - **The comment row** carries `author` (with `name` autocomplete), an optional `tempo` in BPM, and the `note`
   body, which is the field the journey posts and later updates.
 - **Write route:** `POST /tunes/:id/notes` stores one comment against its tune.
@@ -85,15 +84,14 @@ The declared journey, expanding the `tr-20` brief row:
   `select[name=rhythm]` `Jig`, and `/intake/confirm` expects to read `Jig` back.
 
 Mapped to the five planned boards: step 1 browse → `step1-browse`, step 2 thread → `step2-thread`,
-step 3 composer → `step3-composer`, step 4 moderation → `step4-moderation`, step 5 empty →
-`step5-empty`.
+step 3 composer → `step3-composer`, step 4 moderation → `step4-moderation`, step 5 empty → `step5-empty`.
 
 ## Validation and states
 
 - **Required fields:** `author`, `tune`, `rhythm`, `key` and `note`. `tempo` is declared optional.
 - **On a missing required field:** the server refuses the submission and re-renders the form with feedback
   naming the field. The brief carries `forms/required-field-feedback` among its applicable rules, so this is
-  an assertion about the target, not an optional nicety.
+  an assertion about the target rather than an optional nicety.
 - **Accessibility:** every filter tag and comment input field is labelled and keyboard-focusable; the brief
   carries `accessibility/accessibility` among its required rules.
 - **Empty state:** a search or filter with no match renders an empty result state rather than an error page.
@@ -113,14 +111,28 @@ Criteria 1–3 are the brief's own assertions, quoted from `docs/train/briefs/ma
 
 ## Implementation status
 
-- **The reference boards:** expanding from the single `tr-20` landing board, five full multi-step visual flow
-  boards are planned (`step1-browse`, `step2-thread`, `step3-composer`, `step4-moderation`, `step5-empty`).
-  They are **pending generation**; when created they will be recorded in a register under
-  `docs/provenance/assets/`.
-- **Artefacts that do exist** for this archetype today: the train-side canonical pair
-  `docs/train/design/tr-20/plan.md` and `docs/train/design/tr-20/design.md`, and its authored target
-  `docs/train/targets/tr-20/index.html`. There is no `docs/eval/specs/community-forum.json`, so this contract
-  is validated by section order and internal consistency, not against an evaluation spec.
+**Not implemented as a multi-step flow.** Being precise about what does exist, because "tr-20 already exists"
+is exactly the half-truth this axis was written to stop:
+
+- **The landing reference does exist.** The family's single reference board is
+  [`docs/design/training/tr-20/reference.jpg`](../../training/tr-20/reference.jpg) — 1376 × 768, 659761 bytes,
+  sha256 `3e000d4f2c68620c312a99ad…`, generated by `gemini-nano-banana-2.1` and pinned in the
+  [training reference register](../../../provenance/assets/training-reference-boards.md) alongside its
+  declared prompt, [`prompt.txt`](../../training/tr-20/prompt.txt). It depicts a **landing page**: the
+  library, one selected tune's thread, the note form and the community row all on one screen at one scroll
+  position. It demonstrates no behaviour whatsoever, and it is not a picture of the five states below.
+- **The five-step boards are planned, not generated.** `step1-browse`, `step2-thread`, `step3-composer`,
+  `step4-moderation` and `step5-empty` do not exist as bytes in any ref, and this directory has no committed
+  board of its own. When they are generated they will be pinned in the same training register.
+- **What the engine offers is capability, not implementation.** The shared engine
+  (`pilot/frameworks.mjs`) can render a list, a read-by-reference page and a write, and the training families
+  use those for record lists and receipts. No family in the corpus has a moderation route, and no family has
+  a note whose visibility depends on who is reading.
+- **Artefacts that do exist** for this archetype today: the train-side pair
+  `docs/train/design/tr-20/plan.md` and `docs/train/design/tr-20/design.md`, and its authored single-step
+  target `docs/train/targets/tr-20/index.html`. There is no `docs/eval/specs/community-forum.json` — that
+  directory is the sealed A6 evaluation set — so this contract is validated by section order and internal
+  consistency, not against an evaluation spec.
 - **The brief:** two rows, `tr-20-v1` and `tr-20-v2`, which differ only in their prompt text and variant
   linkage.
 
@@ -128,8 +140,9 @@ Criteria 1–3 are the brief's own assertions, quoted from `docs/train/briefs/ma
 
 - **The behaviour** is derived from `docs/train/briefs/manifest.jsonl`, family `tr-20` (`tr-20-v1`,
   `tr-20-v2`). Route names, field slugs, options, selectors, fill values, assertions and the intake steps are
-  quoted from that row rather than invented.
-- **The boards** are pending generation; nothing here depicts bytes that exist, and the register that will
-  pin them does not yet exist.
+  quoted from those rows rather than invented.
+- **The landing reference** is the family's generated board, digest-pinned in
+  `docs/provenance/assets/training-reference-boards.md`; the prompt that declared it is committed beside it.
+  The five-step boards are planned and unpinned.
 - **The axis position** is quoted from `docs/train/briefs/TYPE-AXIS.md`, where `community-forum` is recorded
-  as a partial member of two axes.
+  as a partial member of the `blog` and `fan-community` axes.
