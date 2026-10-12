@@ -25,7 +25,7 @@ page or several:
 |---|---|---|---|---|
 | `tr-10` | train | Greenwood Safe Streets — residential street safety and crosswalk feedback | one page, multiple questions | an aggregate results view |
 | `tr-23` | train | Civic Warm Homes Partnership — home energy retrofit subsidy eligibility | one page, sequential questions | a computed grant eligibility report |
-| `fam-10` | eval | municipal public transport commuter satisfaction | **stepped**, with a review summary and server-persisted drafts | a submission receipt, and an admin view of responses |
+| `fam-10` | eval (dev) | municipal public transport commuter satisfaction | **stepped**, with a review summary and server-persisted drafts | a submission receipt, and an admin view of responses |
 
 ## Use case
 
@@ -53,21 +53,21 @@ third training subject. Because it is named, this contract's type is quoted rath
 
 ## Routes and effects
 
-| Route | Kind | Families | Effect |
+| Route | Family | Kind | Effect |
 |---|---|---|---|
-| `GET /` | page | all three | serves the survey's landing view and its route into the questionnaire |
-| `GET /survey` | page | `tr-10`, `fam-10` | serves the questionnaire |
-| `POST /survey` | write | `tr-10` | persists a response and redirects to its receipt |
-| `GET /survey/complete/:id` | read-by-reference | `tr-10`, `fam-10` | reads the receipt back by its reference |
-| `GET /results` | page | `tr-10` | serves the aggregate view across recorded responses |
-| `GET /calculator` | page | `tr-23` | serves the eligibility questionnaire |
-| `POST /calculator/submit` | write | `tr-23` | computes eligibility and redirects to the report |
-| `GET /reports/:id` | read-by-reference | `tr-23` | reads the saved characteristics and qualifying grant list |
-| `GET /survey/step/:step` | page | `fam-10` | serves one step of the stepped questionnaire, keeping drafts |
-| `POST /survey/step/:step` | write | `fam-10` | saves a step's data to the session and advances |
-| `GET /survey/summary` | page | `fam-10` | serves the review summary before submission |
-| `POST /survey/submit` | write | `fam-10` | finalises the submission |
-| `GET /admin/responses` | page | `fam-10` | serves the staff view of finalised responses |
+| `GET /` | all three | page | serves the survey's landing view and its route into the questionnaire |
+| `GET /survey` | `tr-10`, `fam-10` | page | serves the questionnaire |
+| `POST /survey` | `tr-10` | write | persists a response and redirects to its receipt |
+| `GET /survey/complete/:id` | `tr-10`, `fam-10` | read-by-reference | reads the receipt back by its reference |
+| `GET /results` | `tr-10` | page | serves the aggregate view across recorded responses |
+| `GET /calculator` | `tr-23` | page | serves the eligibility questionnaire |
+| `POST /calculator/submit` | `tr-23` | write | computes eligibility and redirects to the report |
+| `GET /reports/:id` | `tr-23` | read-by-reference | reads the saved characteristics and qualifying grant list |
+| `GET /survey/step/:step` | `fam-10` | page | serves one step of the stepped questionnaire, keeping drafts |
+| `POST /survey/step/:step` | `fam-10` | write | saves a step's data to the session and advances |
+| `GET /survey/summary` | `fam-10` | page | serves the review summary before submission |
+| `POST /survey/submit` | `fam-10` | write | finalises the submission |
+| `GET /admin/responses` | `fam-10` | page | serves the staff view of finalised responses |
 
 **On the methods.** The manifests declare routes as paths and carry no `method` key; the methods above are named
 by the families' own assertions. `tr-10` names `POST /survey` and `GET /results`; `tr-23` names
@@ -104,42 +104,25 @@ column alone.
 
 ## Journey
 
-**`tr-10`, the street-safety survey.** It starts at `/`, files `form#street-safety-survey-form` with
-`input[name=respondent]` `Jo Delgado`, `input[name=location]` `Oak Avenue at 2nd Street` and
-`textarea[name=proposals]` `Install a raised zebra crossing and flashing beacon`, selecting
-`select[name=hazard]` `Poor crossing visibility` and `select[name=rating]` `2 - Moderate concern`. It expects
-`Jo Delgado` echoed back by what the submit returns, then again after a reload. Its search leg queries
-`/search?q=Delgado`, reads `#search-results`, expects `Jo Delgado` among them and the decoy `zzz-decoy` absent.
-Its update leg rewrites `respondent` to `Jo Delgado (updated)`. Its intake steps submit `/intake` having
-selected `select[name=hazard]` `Poor crossing visibility`, and `/intake/confirm` expects `Poor crossing
-visibility` back.
+The declared journeys. For the evaluation family (`fam-10`), these are quoted verbatim from the manifests. For the training families (`tr-10`, `tr-23`), these are derived summaries of the structured `journey` objects defined in the manifest:
 
-Its three stated journeys are: read the survey introduction and complete the **multi-question** street safety
-questionnaire; provide the street location, select hazard categories, and submit; and view the confirmation
-receipt and reload to ensure submission integrity.
+**`tr-10` (street-safety survey):**
+- Starts at `/`, submits `form#street-safety-survey-form` with `input[name=respondent]` `Jo Delgado`, `input[name=location]` `Oak Avenue at 2nd Street`, `textarea[name=proposals]` `Install a raised zebra crossing and flashing beacon`, selecting `Poor crossing visibility` and `2 - Moderate concern`.
+- Expects `Jo Delgado` echoed back and again after a reload to confirm persistence.
+- Updates the respondent field to test amendment.
+- Searches via `/search?q=Delgado` to verify the search endpoint finds the stored response.
 
-**`tr-23`, the retrofit calculator.** It starts at `/`, files `form#eligibility-form` with
-`input[name=applicant]` `Fiona Gallagher`, `input[name=email]` `fiona.gallagher@example.test`,
-`input[name=address]` `42 Orchard Way, Lincoln` and `textarea[name=notes]` `Drafty bay windows on ground floor`,
-selecting `select[name=era]` `1930-1965`, `select[name=heating]` `Heat pump` and `select[name=insulation]`
-`Cavity uninsulated`. It expects `42 Orchard Way, Lincoln` echoed back and again after a reload. Its search leg
-queries `/search?q=Orchard`, reads `#search-results`, expects the address and expects `zzz-decoy` absent. Its
-update leg rewrites `address` to `42 Orchard Way, Lincoln (updated)`. Its intake steps submit `/intake` having
-selected `select[name=era]` `1930-1965`, and `/intake/confirm` expects `1930-1965` back.
+**`tr-23` (retrofit calculator):**
+- Starts at `/`, submits `form#eligibility-form` with `input[name=applicant]` `Fiona Gallagher`, `input[name=email]` `fiona.gallagher@example.test`, `input[name=address]` `42 Orchard Way, Lincoln`, `textarea[name=notes]` `Drafty bay windows on ground floor`, selecting `1930-1965`, `Heat pump`, and `Cavity uninsulated`.
+- Expects `42 Orchard Way, Lincoln` echoed back and again after a reload.
+- Updates the address field to test amendment.
+- Searches via `/search?q=Orchard` to verify the search endpoint finds the stored response.
 
-Its three journeys are: answer **sequential** questions about construction era, current boiler and loft
-insulation; provide contact details and submit to compute eligible retrofit subsidies; and review the
-customised grant eligibility report and reload to confirm the stored results.
+**`fam-10` (transit survey):** Quoted verbatim from `docs/eval/briefs/manifest.jsonl`:
 
-**`fam-10`, the transit survey.** Quoted verbatim from `docs/eval/briefs/manifest.jsonl`:
-
-1. "start the survey, fill step 1 (travel frequency and routes), proceed to step 2 (service ratings and
-   punctuality), fill step 3 (demographics and suggestions), inspect review summary, submit, and receive a
-   submission receipt ID"
-2. "partially complete step 1 and step 2, reload the browser at /survey/step/2, and verify that previously
-   entered responses in step 1 and step 2 are preserved from server-backed session state"
-3. "attempt to advance to the next step with missing mandatory rating questions, verify inline accessible error
-   validation highlights the invalid controls, correct them, and advance"
+- start the survey, fill step 1 (travel frequency and routes), proceed to step 2 (service ratings and punctuality), fill step 3 (demographics and suggestions), inspect review summary, submit, and receive a submission receipt ID
+- partially complete step 1 and step 2, reload the browser at /survey/step/2, and verify that previously entered responses in step 1 and step 2 are preserved from server-backed session state
+- attempt to advance to the next step with missing mandatory rating questions, verify inline accessible error validation highlights the invalid controls, correct them, and advance
 
 Mapped to the five planned boards: step 1 the introduction and the questionnaire's opening → `step1-intro`,
 step 2 the questionnaire in full → `step2-questions`, step 3 validation with a refused submission →
