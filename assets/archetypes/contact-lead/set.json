@@ -9,7 +9,7 @@
     "documents": [
       {
         "path": "docs/design/archetypes/contact-lead/demo/compare.html",
-        "sha256": "5e7f6832a8d4f3bc821d5a7254599ae8eaa92e877cf8269f040faa72632a510a"
+        "sha256": "174749a9d5729dc1ec9baa0eb278f70586473a60728e28400f7e2fcd597a5139"
       },
       {
         "path": "docs/design/archetypes/contact-lead/demo/index.html",
@@ -108,7 +108,7 @@
       ],
       "apparatus": true,
       "source": "docs/design/archetypes/contact-lead/demo/compare.html",
-      "sha256": "5e7f6832a8d4f3bc821d5a7254599ae8eaa92e877cf8269f040faa72632a510a"
+      "sha256": "174749a9d5729dc1ec9baa0eb278f70586473a60728e28400f7e2fcd597a5139"
     },
     "index.html": {
       "title": "ARKHITECTS Studio — Request a consultation",
