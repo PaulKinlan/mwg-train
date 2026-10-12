@@ -62,7 +62,8 @@
     "check:set-separation": "node scripts/check-set-separation.mjs",
     "check:train-records": "node scripts/check-train-records.mjs",
     "label:baseline": "node scripts/label-baseline.mjs",
-    "check:board-captions": "node scripts/check-board-captions.mjs"
+    "check:board-captions": "node scripts/check-board-captions.mjs",
+    "check:board-states": "node scripts/check-board-states.mjs"
   },
   "license": "UNLICENSED",
   "dependencies": {

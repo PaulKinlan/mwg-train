@@ -305,6 +305,7 @@ export const DOCUMENTS = {
   // published as planning documentation and deliberately kept out of the corpus, so it carries a rights record here
   // rather than a corpus manifest row.
   'docs/provenance/assets/training-reference-boards.md': 'provenance',
+  'docs/provenance/assets/board-states.json': 'provenance',
   'docs/provenance/assets/archetype-asset-sets.md': 'provenance',
   // The one HAND-WRITTEN file in an asset store, and deliberately classified by name rather than by
   // pattern: it adjudicates a brand the accepted target states ambiguously or not at all, so a new
