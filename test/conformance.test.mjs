@@ -524,7 +524,12 @@ test('a hidden element is not a node, but a visible child inside one still is', 
   // which is exactly what happened here. Asserted in two places because they fail differently: this guards the
   // CODE, and test/capture-state.test.mjs drives two REAL pages with identical rendered output and asserts their
   // node lists are equal and their structural similarity is 1.
-  assert.match(SIGNATURE_SCRIPT, /if \(isVisible\(child\)\) \{/, 'only a rendered element is collected as a node');
+  // The collection rule, which now has two ways in rather than one. A hidden element is still not a node, but an
+  // element whose own PSEUDO-ELEMENT renders IS one: visibility is inherited and a child may override it, and a
+  // pseudo-element is a child, so ::before{visibility:visible} paints inside a visibility:hidden element. Verified
+  // by reading a screenshot of that page before changing the rule - the glyph is there - and the mirror case, a
+  // hidden pseudo, still collects nothing.
+  assert.match(SIGNATURE_SCRIPT, /if \(isVisible\(child\) \|\| paints\) \{/, 'a node is collected when the element renders or its pseudo does');
   assert.match(SIGNATURE_SCRIPT, /if \(isPruned\(child\)\) continue;/, 'and only a display-pruning element stops the walk');
   assert.doesNotMatch(SIGNATURE_SCRIPT, /visible: isVisible\(child\)/, 'no redundant flag for consumers to honour');
   assert.doesNotMatch(SIGNATURE_SCRIPT, /node\.visible/, 'and no consumer-side visibility rule to forget');
@@ -533,7 +538,12 @@ test('a hidden element is not a node, but a visible child inside one still is', 
   // captured no nodes and isMeasurable called it an empty shell. Whether an element is a node and whether the walk
   // can stop are different questions, and answering the second with the first is a false negative - the direction
   // that silently refuses to score a real page.
-  const pruned = SIGNATURE_SCRIPT.slice(SIGNATURE_SCRIPT.indexOf('const isPruned'), SIGNATURE_SCRIPT.indexOf('const walk'));
+  // The slice ends at the generated-content recorder, not at the walk: the recorder legitimately reads
+  // visibility === 'hidden' for the PSEUDO-ELEMENT it is asking about, which is a different question from whether
+  // an element's subtree can render. A check whose scope drifts onto the next function starts asserting about code
+  // it was never written for - this guard failed for exactly that reason when the recorder was added between the
+  // two functions it spans.
+  const pruned = SIGNATURE_SCRIPT.slice(SIGNATURE_SCRIPT.indexOf('const isPruned'), SIGNATURE_SCRIPT.indexOf('const generated = new Map'));
   assert.match(pruned, /style\.display === 'none' \|\| style\.contentVisibility === 'hidden'/, 'pruning is display-only');
   assert.doesNotMatch(pruned, /visibility === 'hidden'/, 'visibility NEVER prunes: a child may override it');
 });

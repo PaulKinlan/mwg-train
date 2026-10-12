@@ -143,13 +143,18 @@ export const SIGNATURE_SCRIPT = `return (() => {
       // A hidden element is not a node (mwg-train-uh9q), but its children are STILL VISITED (mwg-train-0qnu).
       // The nodes array therefore holds exactly the rendered nodes, so no consumer can forget to filter - which is
       // what went wrong when a per-node visible flag was honoured by isMeasurable and ignored by tokens.
-      if (isVisible(child)) {
+      // The element renders, OR its own pseudo-element does. visibility is inherited and a child may override
+      // it, and a pseudo-element is a child: a hidden <p> with ::before{content:"X";visibility:visible} paints an
+      // X, verified by reading a screenshot of it, yet the element is not visible so it was never collected and
+      // the page was refused as an empty shell. Same mechanism as mwg-train-0qnu, one level in.
+      const paints = paintsGenerated(child);
+      if (isVisible(child) || paints) {
         // textLength is the content signal mwg-train-vysz and mwg-train-knch need: the tag says which element this
         // is, not whether anything was rendered INTO it. An empty <figure></figure> and a <figure> with content are
         // the same node by tag alone, which is how an empty mount scored perfect parity. childCount deliberately is
         // NOT captured: it counts elements, not content, so a wrapper around a wrapper has children and renders
         // nothing.
-        nodes.push({ tag, depth, textLength: renderedText(child), generated: paintsGenerated(child), type: child.getAttribute('type') ?? null, name: child.getAttribute('name') ?? null, role: child.getAttribute('role') ?? null });
+        nodes.push({ tag, depth, textLength: renderedText(child), generated: paints, type: child.getAttribute('type') ?? null, name: child.getAttribute('name') ?? null, role: child.getAttribute('role') ?? null });
       }
       walk(child, depth + 1);
     }

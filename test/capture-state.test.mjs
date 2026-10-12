@@ -62,6 +62,9 @@ const pages = {
   // mwg-train-rdkd. A pseudo-element is not rendered because it has content DECLARED: one that is itself
   // display:none paints nothing, so this page is blank white and must not be measured.
   '/pseudo-hidden': '<style>.g::before{content:"Generated label";display:none}</style><p class="g"></p>',
+  // The pseudo-level version of the visibility:hidden override, verified by reading a screenshot of it: the
+  // element is hidden, its ::before sets visibility:visible, and the glyph IS painted - so the page is not empty.
+  '/pseudo-override': '<style>.g::before{content:"Generated label";visibility:visible}</style><p class="g" style="visibility:hidden"></p>',
 };
 createServer((req, res) => {
   const path = (req.url || '/').split('?')[0];
@@ -213,6 +216,13 @@ test('CSS-generated content counts only when the pseudo-element itself renders',
     const pseudoHidden = await captureSignature({ chrome, projectDir, port: 7952, runDir, path: '/pseudo-hidden' });
     assert.equal(isMeasurable(pseudoHidden), false, 'a pseudo-element that does not render paints nothing');
     assert.equal(pseudoHidden.nodes[0].generated, false, 'and it is not recorded as generated');
+
+    // And the mirror of that: visibility is inherited and a pseudo-element is a child, so a pseudo that sets
+    // visibility:visible paints inside a hidden element. A screenshot proves the glyph is there, so refusing this
+    // page would be a false negative - the direction that refuses to score a real page.
+    const pseudoOverride = await captureSignature({ chrome, projectDir, port: 7953, runDir, path: '/pseudo-override' });
+    assert.equal(isMeasurable(pseudoOverride), true, 'a pseudo that overrides visibility on a hidden element renders');
+    assert.equal(pseudoOverride.nodes[0].generated, true, 'and the element is collected because its pseudo paints');
   } finally {
     if (chrome) await chrome.close().catch(() => {});
   }
