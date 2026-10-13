@@ -38,6 +38,8 @@ pilot/out/
 .pilot-corpus/
 # Uplifted copies of the training-corpus projects (scripts/train-corpus-run.mjs): regenerated per run.
 .train-uplifted/
+# Model-generated project trees and run records are untrusted local output; never commit them or keys.
+.generated-runs/
 # Conformance runs: cross-arm parity checks write transient roots here.
 .conformance-corpus/
 # Training corpus projects: 210 trees (30 families x 7 frameworks) rebuilt deterministically per run.
