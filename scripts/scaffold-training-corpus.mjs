@@ -320,7 +320,7 @@ function deriveRoutes(family, base) {
  * Session flows keep their canonical routes because the cookie + read-session redirect is part of the
  * archetype, not the brief.
  */
-function familyArchetype(family, base) {
+export function familyArchetype(family, base) {
   const overrides = {
     title: titleCase(family.topic),
     story: `${capitalize(family.topic)}: a server-backed flow that stores each submission and shows it back on reload.`,

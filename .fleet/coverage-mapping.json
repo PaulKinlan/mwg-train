@@ -76,11 +76,15 @@
     "test/scaffold-training-corpus-record.test.mjs"
   ],
   "pilot/frameworks.mjs": [
+    "test/training-served-reverse.test.mjs",
     "test/frameworks.test.mjs",
     "test/reflected-title-escape.test.mjs",
     "test/reflected-title-helper.test.mjs",
     "test/known-sinks.test.mjs",
     "test/wiki-capability.test.mjs"
+  ],
+  "scripts/scaffold-training-corpus.mjs": [
+    "test/training-served-reverse.test.mjs"
   ],
   "scripts/capture-site.mjs": [
     "test/capture-site.test.mjs"
