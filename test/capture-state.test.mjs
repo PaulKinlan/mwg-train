@@ -427,3 +427,26 @@ test('a marker the clean page already carries is refused, not treated as reachin
     rmSync(runDir, { recursive: true, force: true });
   }
 });
+
+test('waitForFunction polls until the page answers truthy, and gives up rather than hanging', async () => {
+  // mwg-train-khhk. The demo verifiers read a comparison page's live iframes after a fixed delay; a bounded
+  // wait is the fix, and this is the primitive it rests on. Two properties matter: it returns as soon as the
+  // condition holds, and it throws instead of waiting forever when it never does.
+  const chrome = await getChrome();
+  const page = await chrome.newPage({ viewport: { width: 600, height: 400 } });
+  try {
+    await page.goto('data:text/html,<p id="late">loading</p><script>setTimeout(() => { document.getElementById("late").textContent = "ready"; }, 250);</script>');
+    const started = Date.now();
+    await page.waitForFunction('return document.getElementById("late").textContent === "ready"', { timeout: 5_000 });
+    // It waited for the condition rather than assuming a fixed delay was enough, and it did not burn the bound.
+    assert.ok(Date.now() - started < 5_000, 'waitForFunction used its whole timeout on a condition that became true');
+
+    await assert.rejects(
+      () => page.waitForFunction('return document.getElementById("never") !== null', { timeout: 400 }),
+      (error) => /WAIT_TIMEOUT|never became truthy/.test(String(error?.message ?? error)),
+      'a condition that never holds did not throw',
+    );
+  } finally {
+    await page.close();
+  }
+});
