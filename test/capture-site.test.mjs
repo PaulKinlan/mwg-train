@@ -14,7 +14,7 @@
 
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { execFileSync, spawn } from 'node:child_process';
+import { execFile, execFileSync, spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import http from 'node:http';
@@ -23,6 +23,7 @@ import { join, resolve } from 'node:path';
 import process from 'node:process';
 
 import { captureSite } from '../src/capture/site.mjs';
+import { assertCaptureTarget } from '../src/capture/target.mjs';
 import { validateCapture } from '../src/capture/schema.mjs';
 import { recordFlow } from '../src/capture/flow.mjs';
 import { translateCapture } from '../src/capture/translate.mjs';
@@ -136,6 +137,7 @@ test('captureSite captures fixture site, validates schema, and writes raw assets
     url: baseUrl,
     rightsRef,
     env,
+    allowPrivate: true,
     outDir: 'fixture-site',
     pages: ['/about'],
   });
@@ -243,6 +245,7 @@ test('the real capture producer feeds its unmodified output into translation', a
       url: baseUrl,
       rightsRef: 'docs/provenance/assets/reproduction-studies.md',
       env: { ...process.env, MWG_TRAIN_QUARANTINE: quarantineStore },
+      allowPrivate: true,
     });
     const flow = await recordFlow({
       url: baseUrl,
@@ -334,6 +337,7 @@ test('refusal: if schema validator fails, refuse to write any assets to quaranti
       url: baseUrl,
       rightsRef,
       env,
+      allowPrivate: true,
       outDir: 'refused-site',
       _mutateCapture: (c) => {
         c.source.arm = 'A1_self_generated';
@@ -394,6 +398,7 @@ test('captureSite handles DOM edge cases (unnamed submit buttons, options in sel
     url: `http://127.0.0.1:${port}/`,
     rightsRef: 'docs/provenance/assets/reproduction-studies.md',
     env,
+    allowPrivate: true,
     outDir: 'edge-cases',
     pages: ['/', '/'], // test deduplication
   });
@@ -477,6 +482,7 @@ test('CLI: scripts/capture-site.mjs executes and validates correctly', async (t)
     '--rights-ref', 'docs/provenance/assets/reproduction-studies.md',
     '--pages', '/about',
     '--out', 'cli-captured-site',
+    '--allow-private',
   ]);
 
   assert.equal(success.code, 0, `CLI failed with stderr: ${success.stderr}`);
@@ -497,10 +503,115 @@ test('CLI: scripts/capture-site.mjs executes and validates correctly', async (t)
   assert.equal(written.pages[1].path, '/about');
 
   const rejected = join(REPO_ROOT, 'data/capture-site-refused');
-  const refusal = await runCli(['--url', baseUrl, '--rights-ref', 'docs/ref.md', '--out', rejected]);
+  const refusal = await runCli(['--url', baseUrl, '--rights-ref', 'docs/ref.md', '--out', rejected, '--allow-private']);
   assert.notEqual(refusal.code, 0);
   assert.match(refusal.stderr, /refus|repo tree/i);
   assert.ok(refusal.stderr.includes(rejected));
   assert.ok(!existsSync(rejected));
   assert.ok(!existsSync(join(quarantineStore, 'data/A5_black_box_reproduction', rejected.slice(1))));
+});
+
+test('a capture refuses a loopback destination unless the caller asks for a private target', async (t) => {
+  // The property this change exists for (mwg-train-3pqm): the URL a capture is given comes from outside, and without a
+  // restriction it can name the host's own services, the private network behind it, or a cloud metadata endpoint.
+  const root = mkdtempSync(join(tmpdir(), 'capture-ssrf-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const server = http.createServer((_request, response) => response.end('<html><body>should not be reached</body></html>'));
+  await new Promise((resolveListen) => server.listen(0, '127.0.0.1', resolveListen));
+  t.after(() => server.close());
+  const loopback = `http://127.0.0.1:${server.address().port}/`;
+  const env = { ...process.env, MWG_TRAIN_QUARANTINE: root };
+
+  const refused = await captureSite({ url: loopback, rightsRef: 'docs/provenance/assets/reproduction-studies.md', env, outDir: 'refused-private' })
+    .then(() => null, (error) => error);
+  assert.equal(refused?.name, 'CaptureTargetError', 'a private destination must be refused');
+  assert.equal(refused?.code, 'PRIVATE_TARGET');
+  assert.match(refused.message, /--allow-private/, 'the refusal must name the way out');
+  assert.ok(!existsSync(join(root, 'data')), 'nothing may be written for a refused destination');
+
+  // The metadata address, a private range and IPv6 loopback are refused for the same reason, with no server behind them.
+  for (const target of ['http://169.254.169.254/latest/meta-data/', 'http://10.1.2.3/', 'http://[::1]:8080/']) {
+    await assert.rejects(
+      () => captureSite({ url: target, rightsRef: 'docs/provenance/assets/reproduction-studies.md', env, outDir: 'refused-private' }),
+      (error) => error.code === 'PRIVATE_TARGET',
+      `${target} must be refused`,
+    );
+  }
+});
+
+test('the target check refuses what a capture must not reach, and admits what it may', async () => {
+  // Addresses are judged after URL normalisation, so the alternative spellings of loopback are covered without
+  // enumerating them by hand: 2130706433, 0x7f000001 and 127.1 all arrive at the check as 127.0.0.1 (measured).
+  const publicAnswer = { lookup: async () => [{ address: '93.184.216.34' }] };
+  const blocked = [
+    'http://127.0.0.1/',
+    'http://127.1/',
+    'http://2130706433/',
+    'http://0x7f000001/',
+    'http://localhost/',
+    'http://localhost./',
+    'http://api.localhost/',
+    'http://0.0.0.0/',
+    'http://169.254.169.254/latest/meta-data/',
+    'http://169.254.0.1/',
+    'http://10.0.0.1/',
+    'http://172.16.0.1/',
+    'http://172.31.255.254/',
+    'http://192.168.1.1/',
+    'http://100.64.0.1/',
+    'http://198.18.0.1/',
+    'http://[::1]/',
+    'http://[fd00::1]/',
+    'http://[fe80::1]/',
+    'http://[::ffff:127.0.0.1]/',
+    'http://[64:ff9b::10.0.0.1]/',
+  ];
+  for (const target of blocked) {
+    await assert.rejects(
+      () => assertCaptureTarget(target, publicAnswer),
+      (error) => error.code === 'PRIVATE_TARGET',
+      `${target} must be refused`,
+    );
+  }
+  const allowed = [
+    'http://93.184.216.34/',
+    'http://example.com/',
+    'https://example.com/path?q=1',
+    'http://[2606:2800:220:1:248:1893:25c8:1946]/',
+    'http://[::ffff:8.8.8.8]/', // IPv4-mapped IPv6 is judged by the IPv4 destination it carries
+  ];
+  for (const target of allowed) {
+    assert.equal(await assertCaptureTarget(target, publicAnswer), new URL(target).href, `${target} must be allowed`);
+  }
+  // A public-looking name that resolves to a private address is refused, and one private answer among public ones is
+  // enough: the browser could take any of them, so the whole answer set has to be public.
+  await assert.rejects(
+    () => assertCaptureTarget('http://internal.example/', { lookup: async () => [{ address: '10.0.0.5' }, { address: '93.184.216.34' }] }),
+    (error) => error.code === 'PRIVATE_TARGET' && /10\.0\.0\.5/.test(error.message),
+  );
+  // A name that cannot be resolved is not a target: fail closed rather than let the browser try.
+  await assert.rejects(
+    () => assertCaptureTarget('http://does-not-resolve.invalid/', { lookup: async () => { throw new Error('ENOTFOUND'); } }),
+    (error) => error.code === 'UNRESOLVABLE',
+  );
+  // The explicit opt-in admits a private destination - how this suite captures the server it started itself.
+  assert.equal(await assertCaptureTarget('http://127.0.0.1:3000/', { allowPrivate: true }), 'http://127.0.0.1:3000/');
+});
+
+test('CLI: a private --url is refused without --allow-private', async (t) => {
+  const scriptPath = resolve(REPO_ROOT, 'scripts/capture-site.mjs');
+  const server = http.createServer((_request, response) => response.end('<html><body>local</body></html>'));
+  await new Promise((resolveListen) => server.listen(0, '127.0.0.1', resolveListen));
+  t.after(() => server.close());
+  const loopback = `http://127.0.0.1:${server.address().port}/`;
+  const run = (args) => new Promise((resolveRun) => {
+    execFile('node', [scriptPath, ...args], { cwd: REPO_ROOT, env: { ...process.env } }, (error, stdout, stderr) => {
+      resolveRun({ code: error?.code ?? 0, stdout, stderr });
+    });
+  });
+
+  const refused = await run(['--url', loopback, '--rights-ref', 'docs/ref.md']);
+  assert.notEqual(refused.code, 0, 'a private URL must fail without the flag');
+  assert.match(refused.stderr, /non-public address/);
+  assert.match(refused.stderr, /--allow-private/);
 });

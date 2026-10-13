@@ -18,6 +18,7 @@ import { dirname, isAbsolute, join } from 'node:path';
 import process from 'node:process';
 
 import { launchChrome } from '../corpus/cdp.mjs';
+import { assertCaptureTarget } from './target.mjs';
 import { assetStoragePath } from '../provenance/store.mjs';
 import { validateCapture, CAPTURE_VERSION, resolveCaptureOutputPath } from './schema.mjs';
 
@@ -218,6 +219,10 @@ export async function captureSite({
   env = process.env,
   outDir = null,
   pages = [],
+  // A capture's URL arrives from outside - an operator or a CI job - so a non-public destination has to be asked for
+  // explicitly. The harness and the suites pass true because they capture servers they started on loopback
+  // (mwg-train-3pqm).
+  allowPrivate = false,
   _mutateCapture = null,
 } = {}) {
   if (!rightsRef || typeof rightsRef !== 'string' || rightsRef.trim() === '') {
@@ -230,6 +235,10 @@ export async function captureSite({
 
   const targetUrl = new URL(url).href;
   const baseOrigin = new URL(targetUrl).origin;
+  // Refuse a destination on the host's own network, or a cloud metadata address, before a browser is launched or an
+  // asset is written. A name is resolved here and every answer is checked; the re-checks after each navigation below
+  // are what catch a redirect that lands somewhere else (mwg-train-3pqm).
+  await assertCaptureTarget(targetUrl, { allowPrivate });
   // Refuse an explicit forbidden destination before launching a browser or writing any assets.
   const absoluteOut = outDir && isAbsolute(outDir) ? resolveCaptureOutputPath(outDir, { env }) : null;
   const cleanOut = absoluteOut ? defaultOutDir(targetUrl) : (outDir ? cleanRelativeDir(outDir) : defaultOutDir(targetUrl));
@@ -255,6 +264,9 @@ export async function captureSite({
     await page.goto(targetUrl, { timeout: 15_000 });
     await page.waitForSettled({ timeout: 10_000 });
     finalUrl = await page.url();
+    // A redirect is the ordinary way a validated public URL reaches a private one, so the landing URL is judged as
+    // well as the requested one, before anything is captured from it.
+    await assertCaptureTarget(finalUrl, { allowPrivate });
 
     // 2. Extract initial page structural data
     const initialPageData = await extractPageStructure(page);
@@ -322,6 +334,7 @@ export async function captureSite({
 
       await page.goto(pageUrl.href, { timeout: 15_000 });
       await page.waitForSettled({ timeout: 10_000 });
+      await assertCaptureTarget(await page.url(), { allowPrivate });
       const additionalPageData = await extractPageStructure(page);
       capturedPages.push({
         path: pagePath,

@@ -3,7 +3,7 @@
  * CLI for capturing a third-party site into quarantine arm A5_black_box_reproduction.
  *
  * Usage:
- *   node scripts/capture-site.mjs --url <url> --rights-ref <ref> [--pages /a,/b] [--out <dir>]
+ *   node scripts/capture-site.mjs --url <url> --rights-ref <ref> [--pages /a,/b] [--out <dir>] [--allow-private]
  */
 
 import process from 'node:process';
@@ -15,6 +15,7 @@ function parseArgs(argv) {
     rightsRef: null,
     pages: null,
     out: null,
+    allowPrivate: false,
   };
 
   for (let i = 0; i < argv.length; i++) {
@@ -35,6 +36,10 @@ function parseArgs(argv) {
       options.out = argv[++i];
     } else if (arg.startsWith('--out=')) {
       options.out = arg.slice('--out='.length);
+    } else if (arg === '--allow-private') {
+      // Explicit, and named for what it gives up: a capture may reach the host's own network, which is how this
+      // project captures the loopback servers it started itself (mwg-train-3pqm).
+      options.allowPrivate = true;
     }
   }
 
@@ -58,6 +63,7 @@ try {
   const capture = await captureSite({
     url: args.url,
     rightsRef: args.rightsRef,
+    allowPrivate: args.allowPrivate,
     outDir: args.out,
     pages,
     env: process.env,
