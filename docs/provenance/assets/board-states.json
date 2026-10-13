@@ -187,9 +187,9 @@
   },
   "web-shop": {
     "step1-empty.jpg": {
-      "path": "/",
-      "kind": "page",
-      "source": "the empty-order state is the initial state of the shop root for this archetype (the order form on `/`, pilot/training-archetypes.mjs 'web-shop'); captureSignature visits `/` for every arm, so the board has a counterpart on the rendered side (mwg-train-2uog)"
+      "path": null,
+      "kind": "interaction",
+      "source": "the empty basket is a state of the shopping flow, not a document: the generated arms serve the pre-order form at / and the product list at /products (pilot/training-archetypes.mjs 'web-shop'), with no cart route and no empty-basket page, so no path selects this state - mapping it to / compared an empty-basket design against a blank order form (mwg-train-wrsj)"
     }
   }
 }
