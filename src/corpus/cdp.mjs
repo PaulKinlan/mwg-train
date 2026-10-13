@@ -133,7 +133,7 @@ async function fetchJson(url, attempts = 40) {
  * One browser at a time is a fleet rule (the reaper kills orphans and the box has two cores), so the
  * harness reuses a single instance across projects and closes it in a finally block.
  */
-export async function launchChrome({ proxy = null, allowEgress = false, args = [] } = {}) {
+export async function launchChrome({ proxy = null, allowEgress = false, disableWebRtc = true, args = [] } = {}) {
   // A custom proxy does not implicitly permit egress; an exception must be explicit.
   const blockEgress = !allowEgress;
   if (blockEgress && proxy) throw new CdpError('EGRESS_PROXY_CONFLICT', 'containment cannot share a custom proxy');
@@ -160,7 +160,7 @@ export async function launchChrome({ proxy = null, allowEgress = false, args = [
         '--proxy-server=http://127.0.0.1:9',
         // NOT a UDP boundary: a literal-IP STUN listener still received 4 packets with this flag;
         // --disable-webrtc sent 3 and --disable-features=WebRTC sent 4 (opt-out control: 4).
-        // WebRTC egress needs a network-level boundary or an explicit fail-closed policy.
+        // The page-context CDP script below is the WebRTC boundary, not this flag.
         '--force-webrtc-ip-handling-policy=disable_non_proxied_udp',
       ] : proxy ? [`--proxy-server=${proxy}`] : []),
       ...args,
@@ -296,6 +296,15 @@ export async function launchChrome({ proxy = null, allowEgress = false, args = [
       const { sessionId } = await connection.send('Target.attachToTarget', { targetId, flatten: true });
       const session = { connection, sessionId, targetId };
       await connection.send('Page.enable', {}, sessionId);
+      if (disableWebRtc) {
+        // Install in the page's own world before navigation, including its same-origin frames.
+        // Non-configurable accessors prevent generated code from restoring the constructors.
+        await connection.send('Page.addScriptToEvaluateOnNewDocument', { source: `
+          for (const name of ['RTCPeerConnection', 'webkitRTCPeerConnection']) {
+            Object.defineProperty(window, name, { configurable: false, get: () => undefined });
+          }
+        ` }, sessionId);
+      }
       await connection.send('Runtime.enable', {}, sessionId);
       await connection.send('Network.enable', {}, sessionId);
       const page = new Page(session, viewport);
