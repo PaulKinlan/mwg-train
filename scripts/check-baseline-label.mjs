@@ -308,6 +308,11 @@ export const DOCUMENTS = {
   // register pins board bytes and the prompt digest. Neither states a measured result of the corpus.
   'docs/design/archetypes/restaurant-ordering/README.md': 'provenance',
   'docs/provenance/assets/design-reference-restaurant-ordering.md': 'provenance',
+  // The library-catalogue reservation-refusal board (bead mwg-train-ew6n), same shape and the same
+  // reasoning as the blocks above: the README records borrowed reference material and its rights, and the
+  // register pins board bytes and the prompt digest. Neither states a measured result of the corpus.
+  'docs/design/archetypes/library-catalogue/README.md': 'provenance',
+  'docs/provenance/assets/design-reference-library-catalogue.md': 'provenance',
   // The third archetype outside the five evaluation families (bead mwg-train-efg), same shapes and the same
   // reasoning again: a board brief, two contract documents, and a digest register, none of which states a
   // measured result of the corpus.
