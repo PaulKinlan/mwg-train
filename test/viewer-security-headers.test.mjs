@@ -84,17 +84,76 @@ test('the policy names the hash of the style block the page actually emits', asy
   assert.ok(style[1].includes(PAGE_CSS.slice(0, 40)), 'the served block is PAGE_CSS');
 });
 
-test('viewer pages carry no inline style attributes and no inline scripts, so the policy needs no exception', async (t) => {
+/**
+ * Every page the viewer links to from its own index and nav. A fixed list of routes is what let an inline handler
+ * live on the project page while this suite stayed green: the policy is only as good as the pages the test looks
+ * at, so the test walks the viewer's own links instead of naming a few routes (mwg-train-i56c).
+ */
+async function linkedPages(base) {
+  const routes = new Set(['/', '/concepts', '/tuning', '/pipeline']);
+  for (const seed of ['/', '/concepts']) {
+    const body = await (await fetch(`${base}${seed}`)).text();
+    for (const match of body.matchAll(/href="(\/[^"#]*)"/g)) {
+      // Query strings carry the selected run: the page is the same page, so compare paths.
+      const path = match[1].split('?')[0];
+      // /live/ is a sandboxed site proxied through this origin and carries its own policy, not this one; the rest
+      // of the exclusions are assets rather than pages.
+      if (path.startsWith('/live/') || /\.(jpe?g|png|webp|gif|css|js|json|txt|ico|svg)$/i.test(path)) continue;
+      routes.add(path);
+    }
+  }
+  return [...routes].slice(0, 12);
+}
+
+test('every linked viewer page is servable under the policy: no inline style, script or handler', async (t) => {
   const base = await serve(t);
-  for (const route of ['/', '/concepts', '/tuning', '/pipeline']) {
-    const body = await (await fetch(`${base}${route}`)).text();
-    // Not a source-text check: this is the HTML the server actually produced. An inline style attribute or an
-    // inline <script> that a page grew would be blocked by the policy above, and this says so at the test that
-    // would otherwise be a mystery bug report about a style somewhere not applying.
+  const routes = await linkedPages(base);
+  assert.ok(
+    routes.some((route) => route.startsWith('/project/')),
+    `the crawl must reach a project page - that is the page the inline handler hid on. Saw: ${routes.join(', ')}`,
+  );
+  for (const route of routes) {
+    const response = await fetch(`${base}${route}`);
+    assert.equal(response.status, 200, `${route} is served`);
+    const body = await response.text();
+    // Not a source-text check: this is the HTML the server actually produced. An inline style attribute, inline
+    // <script> or inline handler that a page grew would be silently blocked by the policy above, and this says so
+    // here rather than in a bug report about a control that does nothing when it is used.
     assert.ok(!/\sstyle="/.test(body), `${route}: an inline style attribute would be blocked by style-src`);
     assert.ok(!/<script(?![^>]*\bsrc=)/i.test(body), `${route}: an inline script would be blocked by script-src`);
     // \s before 'on': without it, 'content="' matches and the test reports a handler that is not there.
     assert.ok(!/<[^>]*\son[a-z]+\s*=/i.test(body), `${route}: an inline event handler would be blocked by script-src`);
+  }
+});
+
+test('the run selector navigates without a script, because an inline handler cannot', async (t) => {
+  const base = await serve(t);
+  const index = await (await fetch(`${base}/`)).text();
+  const project = index.match(/href="\/project\/([a-z0-9-]+)(?:\?[^"]*)?"/i)?.[1];
+  assert.ok(project, 'the index links to a project');
+  const response = await fetch(`${base}/project/${project}`);
+  const body = await response.text();
+  // The select used to auto-submit through onchange="this.form.submit()", which script-src 'self' blocks: the
+  // control would have looked fine and done nothing. It is a GET form with a submit button now, so it works with
+  // no script at all (mwg-train-i56c).
+  const form = body.match(/<form[^>]*action="\/project\/[^"]*"[^>]*>[\s\S]*?<\/form>/)?.[0];
+  assert.ok(form, 'the project page carries a run form');
+  assert.ok(!/onchange/i.test(form), 'the selector must not rely on an inline handler');
+  assert.match(form, /<select name="run"/, 'the run select posts its value as `run`');
+  assert.match(form, /<button type="submit"/, 'a submit button is what replaces the inline handler');
+  assert.match(form, /method="get"/i, 'a GET form needs no script to navigate');
+
+  // And the no-script path really works: asking for another run returns that run.
+  const others = [...body.matchAll(/<option value="([^"]+)"/g)].map((m) => m[1]);
+  if (others.length > 1) {
+    const other = others.find((run) => run !== others[others.length - 1]) ?? others[0];
+    const selected = await fetch(`${base}/project/${project}?run=${encodeURIComponent(other)}`);
+    assert.equal(selected.status, 200);
+    const selectedBody = await selected.text();
+    assert.ok(
+      selectedBody.includes(`value="${other}" selected`),
+      'selecting a run through the form shows that run',
+    );
   }
 });
 

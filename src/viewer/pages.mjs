@@ -555,7 +555,7 @@ export function renderProject({ view, runId, runs, liveOrigin }) {
   const runEvidence = !!view.runDir;
   const runSelector =
     runs.length > 0
-      ? `<form method="get" action="/project/${escapeHtml(view.id)}"><label>run <select name="run" onchange="this.form.submit()">${runs.map((run) => `<option value="${escapeHtml(run)}"${run === runId ? ' selected' : ''}>${escapeHtml(run)}</option>`).join('')}</select></label></form>`
+      ? `<form method="get" action="/project/${escapeHtml(view.id)}"><label>run <select name="run">${runs.map((run) => `<option value="${escapeHtml(run)}"${run === runId ? ' selected' : ''}>${escapeHtml(run)}</option>`).join('')}</select></label> <button type="submit">show</button></form>`
       : '';
 
   const decisionBlock = !view.hasRun
