@@ -37,20 +37,34 @@ export class CaptureTargetError extends Error {
 }
 
 /**
- * Ranges a capture may not reach without allowPrivate. Kept as an explicit list of ranges rather than a "is it
- * global" test because the question is answerable exactly this way and a wrong answer here is a request to someone
- * else's infrastructure.
+ * Ranges a capture may not reach without allowPrivate: the special-purpose address registry, not a list of the ones
+ * that came to mind.
+ *
+ * The rule this implements is "only a global unicast destination may be reached", and in IPv4 that set is defined by
+ * exclusion - IANA's special-purpose registry names what is NOT globally reachable - so the registry is what is
+ * transcribed here. Writing a shorter list is how multicast (224.0.0.0/4), reserved (240.0.0.0/4, which includes
+ * 255.255.255.255) and the documentation ranges were admitted until a reviewer checked
+ * (mwg-train-uin8): the list was a denylist of remembered cases, and a remembered case is one a reader cannot check.
+ *
+ * Maintained against https://www.iana.org/assignments/iana-ipv4-special-registry/. If a prefix is added there and not
+ * here, the policy admits a destination that is not globally reachable, which is the failure direction that matters.
  */
 const BLOCKED_IPV4 = [
-  ['0.0.0.0', 8], // "this network"
-  ['10.0.0.0', 8], // private
-  ['100.64.0.0', 10], // carrier-grade NAT
-  ['127.0.0.0', 8], // loopback
-  ['169.254.0.0', 16], // link-local, including the cloud metadata address 169.254.169.254
-  ['172.16.0.0', 12], // private
-  ['192.0.0.0', 24], // IETF protocol assignments
-  ['192.168.0.0', 16], // private
-  ['198.18.0.0', 15], // benchmarking
+  ['0.0.0.0', 8], // "this network" (RFC 1122)
+  ['10.0.0.0', 8], // private (RFC 1918)
+  ['100.64.0.0', 10], // carrier-grade NAT (RFC 6598)
+  ['127.0.0.0', 8], // loopback (RFC 1122)
+  ['169.254.0.0', 16], // link-local, including the cloud metadata address 169.254.169.254 (RFC 3927)
+  ['172.16.0.0', 12], // private (RFC 1918)
+  ['192.0.0.0', 24], // IETF protocol assignments (RFC 6890)
+  ['192.0.2.0', 24], // TEST-NET-1, documentation (RFC 5737)
+  ['192.88.99.0', 24], // 6to4 relay anycast, deprecated (RFC 7526)
+  ['192.168.0.0', 16], // private (RFC 1918)
+  ['198.18.0.0', 15], // benchmarking (RFC 2544)
+  ['198.51.100.0', 24], // TEST-NET-2, documentation (RFC 5737)
+  ['203.0.113.0', 24], // TEST-NET-3, documentation (RFC 5737)
+  ['224.0.0.0', 4], // multicast (RFC 5771)
+  ['240.0.0.0', 4], // reserved, including the broadcast address 255.255.255.255 (RFC 1112)
 ];
 
 /** An IPv4 dotted quad as a 32-bit integer, or null when the value is not one. */
@@ -116,11 +130,17 @@ export function isBlockedIpv6(address) {
     const low = parseInt(lower[7] ?? '0', 16);
     return isBlockedIpv4(`${high >> 8}.${high & 0xff}.${low >> 8}.${low & 0xff}`);
   }
+  const second = parseInt(lower[1] ?? '0', 16);
   if (groups.every((group) => parseInt(group, 16) === 0)) return true; // ::
-  if (lower.slice(0, 7).every((group) => parseInt(group, 16) === 0) && parseInt(lower[7], 16) === 1) return true; // ::1
+  if (lower.slice(0, 7).every((group) => parseInt(group, 16) === 0) && parseInt(lower[7] ?? '0', 16) === 1) return true; // ::1
+  if (first === 0x0100 && lower.slice(1, 4).every((group) => parseInt(group, 16) === 0)) return true; // 100::/64 discard-only (RFC 6666)
   if ((first & 0xffc0) === 0xfe80) return true; // fe80::/10 link-local
+  if ((first & 0xffc0) === 0xfec0) return true; // fec0::/10 site-local, deprecated (RFC 3879)
   if ((first & 0xfe00) === 0xfc00) return true; // fc00::/7 unique local
   if ((first & 0xff00) === 0xff00) return true; // ff00::/8 multicast
+  if (first === 0x2001 && second === 0x0db8) return true; // 2001:db8::/32 documentation (RFC 3849)
+  if (first === 0x2002) return true; // 2002::/16 6to4 (RFC 3056)
+  if (first === 0x0064 && second === 0xff9b && parseInt(lower[2] ?? '0', 16) === 1) return true; // 64:ff9b:1::/48 local-use NAT64
   return false;
 }
 
