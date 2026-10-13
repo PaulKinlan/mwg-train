@@ -14,7 +14,7 @@
  * not move.
  */
 import assert from 'node:assert/strict';
-import { spawn } from 'node:child_process';
+import { startArmServer } from './helpers/arm-server.mjs';
 import { createHash } from 'node:crypto';
 import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -153,7 +153,7 @@ test('the harness serves the archetype boards from the store, and only while the
     const built = buildProject({ archetypeId: 'booking', frameworkName: 'raw' });
     writeProject(root, { ...built, includeDependencies: false });
     const port = 4500 + Math.floor(Math.random() * 400);
-    const server = spawn(process.execPath, ['server.mjs', '--port', String(port)], { cwd: root, stdio: 'ignore' });
+    const server = startArmServer({ projectDir: root, port: port, stdio: 'ignore' });
     scripts.push(server);
     const url = (path) => `http://127.0.0.1:${port}${path}`;
     // Bounded readiness wait: the server is a child of this process, so there is nothing to poll that is not
@@ -214,7 +214,7 @@ test('a board whose bytes no longer match the register is not served, even thoug
     writeFileSync(serverPath, tampered);
 
     const port = 4900 + Math.floor(Math.random() * 90);
-    const server = spawn(process.execPath, ['server.mjs', '--port', String(port)], { cwd: root, stdio: 'ignore' });
+    const server = startArmServer({ projectDir: root, port: port, stdio: 'ignore' });
     scripts.push(server);
     const url = (path) => `http://127.0.0.1:${port}${path}`;
     let mapped = false;

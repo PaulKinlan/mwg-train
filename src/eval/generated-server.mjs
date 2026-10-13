@@ -69,6 +69,18 @@ function systemBinds() {
 }
 
 /**
+ * The generated server's own argument list. A caller that passes no port or no database gets a server that chooses
+ * its own: the eval fixtures announce the port they picked on stdout, and their server needs no database path.
+ */
+export function serverArgv({ port, dbPath } = {}) {
+  return [
+    'server.mjs',
+    ...(port === undefined || port === null ? [] : ['--port', String(port)]),
+    ...(dbPath === undefined || dbPath === null ? [] : ['--db', dbPath]),
+  ];
+}
+
+/**
  * Build the bubblewrap argument list. Exported so a test can assert the sandbox flags without starting anything.
  *
  * --unshare-pid is the fix for the /proc channel: inside a new PID namespace with a fresh --proc mount, the
@@ -77,7 +89,9 @@ function systemBinds() {
  */
 export function sandboxArgs({ projectDir, port, dbPath }) {
   const env = generatedServerEnv();
-  const dbDir = dirname(dbPath);
+  // A caller that passes no database - the eval fixtures and the board harness start a server that keeps its own -
+  // has no directory to bind, and dirname(undefined) is a crash rather than an absent argument (mwg-train-pdsb).
+  const dbDir = dbPath ? dirname(dbPath) : null;
   const args = [
     '--die-with-parent',
     '--clearenv',
@@ -102,9 +116,9 @@ export function sandboxArgs({ projectDir, port, dbPath }) {
   // The database has to be visible to the host, which reads it back after the run, so its directory is bound
   // read-write at the same path. Only that directory, never all of /tmp: a per-run directory is what makes that
   // possible, since the host has to see the same file the server wrote.
-  if (dbDir !== projectDir) args.push('--bind', dbDir, dbDir);
+  if (dbDir && dbDir !== projectDir) args.push('--bind', dbDir, dbDir);
   args.push('--dev', '/dev', '--proc', '/proc', '--chdir', projectDir);
-  args.push('--', '/node/bin/node', 'server.mjs', '--port', String(port), '--db', dbPath);
+  args.push('--', '/node/bin/node', ...['server.mjs', ...serverArgv({ port, dbPath })]);
   return args;
 }
 
@@ -120,20 +134,47 @@ export function sandboxArgs({ projectDir, port, dbPath }) {
  * a measurement it was not entitled to make. MWG_ALLOW_UNSANDBOXED_GENERATED_SERVER=1 is the documented escape
  * hatch for a machine that genuinely cannot sandbox (macOS, some CI); it prints a warning naming what is lost.
  */
+let warnedPortableFallback = false;
+
 export function startGeneratedServer({
   projectDir,
   port,
   dbPath,
   stdio = ['ignore', 'pipe', 'pipe'],
   detached = true,
+  sandbox = 'require',
   spawnImpl = spawn,
 }) {
+  if (sandbox !== 'require' && sandbox !== 'prefer') {
+    throw new Error(`startGeneratedServer: sandbox must be 'require' or 'prefer', got ${JSON.stringify(sandbox)}`);
+  }
   if (sandboxAvailable()) {
     // bubblewrap itself is spawned with the same allowlist, not the parent environment. It is PID 1 inside the new
     // PID namespace and therefore visible in the sandbox's /proc: with the full environment inherited, a generated
     // server read the canary straight out of /proc/1/environ (caught by test/generated-server-env.test.mjs). The
     // child's environment is built explicitly by --clearenv and --setenv, so bwrap needs almost nothing of its own.
     return spawnImpl(bwrapPath(), sandboxArgs({ projectDir, port, dbPath }), {
+      cwd: projectDir,
+      stdio,
+      detached,
+      env: generatedServerEnv(),
+    });
+  }
+  // 'prefer' is the test-side policy (mwg-train-pdsb): the unit suites have to run on a machine with no
+  // bubblewrap, so the sandbox is used when it is there and the allowlisted environment is the floor when it is
+  // not. That is a warning, not a refusal - but it is said out loud once, because the difference is real: without
+  // a PID namespace the generated server can read the operator's environment out of /proc.
+  if (sandbox === 'prefer') {
+    if (!warnedPortableFallback) {
+      warnedPortableFallback = true;
+      process.stderr.write(
+        `WARNING: bubblewrap not found at ${bwrapPath()} on ${process.platform} - starting generated servers with the ` +
+          'allowlisted environment only, with no PID namespace. Correct for unit tests on a host that cannot ' +
+          'sandbox; anything that executes model-authored projects for real should run where bubblewrap exists ' +
+          '(mwg-train-pdsb, mwg-train-6wpn).\n',
+      );
+    }
+    return spawnImpl(process.execPath, serverArgv({ port, dbPath }), {
       cwd: projectDir,
       stdio,
       detached,
@@ -152,7 +193,7 @@ export function startGeneratedServer({
     'WARNING: MWG_ALLOW_UNSANDBOXED_GENERATED_SERVER=1 - running generated server code on the host with no PID ' +
       'namespace. It can read the operator\'s environment from /proc and can see and signal their processes.\n',
   );
-  return spawnImpl(process.execPath, ['server.mjs', '--port', String(port), '--db', dbPath], {
+  return spawnImpl(process.execPath, serverArgv({ port, dbPath }), {
     cwd: projectDir,
     stdio,
     detached,

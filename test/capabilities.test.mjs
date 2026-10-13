@@ -10,7 +10,7 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { spawn } from 'node:child_process';
+import { startArmServer } from './helpers/arm-server.mjs';
 import { once } from 'node:events';
 import { mkdtempSync, readFileSync, rmSync, symlinkSync } from 'node:fs';
 import { createServer } from 'node:net';
@@ -90,7 +90,7 @@ test('functional: login, protection, list, detail and logout work in all 7 arms'
       if (arm === 'svelte') assert.equal(manifest.dependencies.svelte, '5.57.2', 'standalone Svelte SSR declares its compiler/runtime');
       if (arm === 'webcomponents') assert.deepEqual(manifest.dependencies, {}, 'Web Components uses the platform without packages');
       symlinkSync(NODE_MODULES, join(dir, 'node_modules'), 'dir');
-      const child = spawn('node', ['server.mjs', '--port', String(port), '--db', join(dir, 'test.sqlite')], { cwd: dir, stdio: ['ignore', 'ignore', 'pipe'] });
+      const child = startArmServer({ projectDir: dir, port: port, dbPath: join(dir, 'test.sqlite'), stdio: ['ignore', 'ignore', 'pipe'] });
       try {
         const base = `http://127.0.0.1:${port}`;
         // Readiness, not a fixed delay: poll the health endpoint until the server answers.

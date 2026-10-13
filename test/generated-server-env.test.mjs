@@ -18,6 +18,7 @@ import {
   generatedServerEnv,
   sandboxArgs,
   sandboxAvailable,
+  serverArgv,
   startGeneratedServer,
 } from '../src/eval/generated-server.mjs';
 
@@ -176,6 +177,56 @@ test('a generated server cannot read the operator environment out of /proc', asy
   }
 });
 
+test('the server argument list is built from what the caller actually passes', () => {
+  // The eval fixtures start a server that announces its own port, so "no port" and "no database" are legitimate
+  // shapes rather than omissions (mwg-train-pdsb). A caller that passes neither gets a bare server.mjs.
+  assert.deepEqual(serverArgv({ port: 1234, dbPath: '/tmp/d/routes.sqlite' }), ['server.mjs', '--port', '1234', '--db', '/tmp/d/routes.sqlite']);
+  assert.deepEqual(serverArgv({ port: 1234 }), ['server.mjs', '--port', '1234']);
+  assert.deepEqual(serverArgv({}), ['server.mjs']);
+  assert.deepEqual(serverArgv(), ['server.mjs']);
+});
+
+test("the test-side 'prefer' policy warns and still strips the environment where no sandbox exists", async (t) => {
+  // Unit suites have to run on hosts without bubblewrap (macOS, some CI), so 'prefer' degrades to the allowlisted
+  // environment instead of failing closed - loudly, because the difference is real: no PID namespace means the
+  // generated server can read this process's environment out of /proc (mwg-train-s1xp).
+  const savedBwrap = process.env.MWG_BWRAP_PATH;
+  const savedCanary = process.env.MWG_TRAIN_TEST_PORTABLE_CANARY;
+  process.env.MWG_BWRAP_PATH = '/nonexistent/bwrap';
+  process.env.MWG_TRAIN_TEST_PORTABLE_CANARY = CANARY;
+  const warnings = [];
+  const written = process.stderr.write.bind(process.stderr);
+  process.stderr.write = (chunk, ...rest) => {
+    warnings.push(String(chunk));
+    return true;
+  };
+  let child = null;
+  try {
+    // No throw: that is the whole point of the portable mode.
+    child = startGeneratedServer({ projectDir: '/tmp', port: 1, dbPath: '/tmp/x.sqlite', sandbox: 'prefer', spawnImpl: () => ({ pid: 0, unref() {}, on() {} }) });
+    assert.ok(child, "the portable mode starts the process instead of refusing");
+    assert.ok(
+      warnings.some((line) => line.includes('bubblewrap not found')),
+      'the fallback must say what is being given up',
+    );
+    const env = generatedServerEnv();
+    assert.equal(env.MWG_TRAIN_TEST_PORTABLE_CANARY, undefined, 'the fallback still strips the environment');
+  } finally {
+    process.stderr.write = written;
+    if (savedBwrap === undefined) delete process.env.MWG_BWRAP_PATH;
+    else process.env.MWG_BWRAP_PATH = savedBwrap;
+    if (savedCanary === undefined) delete process.env.MWG_TRAIN_TEST_PORTABLE_CANARY;
+    else process.env.MWG_TRAIN_TEST_PORTABLE_CANARY = savedCanary;
+  }
+});
+
+test('an unknown sandbox mode is refused rather than guessed', () => {
+  assert.throws(
+    () => startGeneratedServer({ projectDir: '/tmp', port: 1, dbPath: '/tmp/x.sqlite', sandbox: 'maybe' }),
+    /sandbox must be 'require' or 'prefer'/,
+  );
+});
+
 test('the launch refuses to run generated code unsandboxed rather than quietly downgrading', async () => {
   const saved = process.env.MWG_BWRAP_PATH;
   try {
@@ -199,7 +250,11 @@ const KNOWN_UNFIXED = {
   'src/corpus/harness.mjs': 'mwg-train-i5i2.5 (owner: mwg-train-hud) - the harness sandbox bead; it starts servers itself until that lands',
 };
 
-const SCANNED_DIRS = ['scripts', 'src/eval', 'src/corpus'];
+// The test tree is scanned too (mwg-train-pdsb): every unit suite used to launch arms with its own inline spawn, so
+// the scan is what keeps a new one from quietly doing it again. The two tests that spawn a CLI with their own
+// environment - test/served-routes.test.mjs driving the prober, test/capture-site.test.mjs driving a script - are
+// not generated-server launches and do not match.
+const SCANNED_DIRS = ['scripts', 'src/eval', 'src/corpus', 'test'];
 
 // A spawn that runs a generated project's server. Matched by the argument list rather than by the option object, so
 // the scan still sees a call site written in another style.

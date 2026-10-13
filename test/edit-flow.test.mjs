@@ -6,7 +6,7 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { spawn } from 'node:child_process';
+import { startArmServer } from './helpers/arm-server.mjs';
 import { mkdtempSync, rmSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -54,7 +54,7 @@ test('an edit POST updates the seeded record in place, in both arms', async (t) 
       const { projectId, files, spec } = buildProjectFor(archetype, { frameworkName: arm });
       writeProject(dir, { projectId, files, spec });
       symlinkSync(NODE_MODULES, join(dir, 'node_modules'), 'dir');
-      const child = spawn('node', ['server.mjs', '--port', String(port), '--db', join(dir, 'test.sqlite')], { cwd: dir, stdio: ['ignore', 'ignore', 'pipe'] });
+      const child = startArmServer({ projectDir: dir, port: port, dbPath: join(dir, 'test.sqlite'), stdio: ['ignore', 'ignore', 'pipe'] });
       try {
         const base = `http://127.0.0.1:${port}`;
         let up = false;
