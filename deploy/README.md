@@ -20,7 +20,9 @@ being gone. Nothing the viewer needs to remember belongs in the checkout.
 ## The deployed viewer needs a token
 
 The unit passes `--host 0.0.0.0`, so the deployed viewer is reachable from the VM's network and not only from
-loopback. Since mwg-train-hwbs it will not serve anything without a token. Set one in the unit's environment:
+loopback, on BOTH of its ports - 7700 for the viewer and 7701 for the live origin, which serves the projects'
+original and uplifted trees. Since mwg-train-hwbs both require a token, and both accept the same one. Set it in the
+unit's environment:
 
 ```sh
 sudo systemctl edit mwg-train-viewer   # add: Environment=MWG_VIEWER_TOKEN=<a long random value>
@@ -28,7 +30,9 @@ sudo systemctl edit mwg-train-viewer   # add: Environment=MWG_VIEWER_TOKEN=<a lo
 
 and give that value to whoever opens the workbench. They can also open `http://<host>:7700/?token=<value>` once:
 the viewer sets a `mwg_viewer` cookie and redirects the query away, so the token does not stay in the address bar,
-in a bookmark, or in the `Referer` of every asset the page loads. Keep the value out of the repository - the unit's
+in a bookmark, or in the `Referer` of every asset the page loads. The cookie is scoped to the host and not the port, so
+it is accepted on 7701 as well, which is what keeps a workbench preview loading in place; opening a preview in a new
+tab without it is refused, which is the intended behaviour rather than a defect. Keep the value out of the repository - the unit's
 environment is where a deployment secret belongs, and if none is configured the viewer generates one per process and
 prints it to the journal (`journalctl -u mwg-train-viewer | grep 'viewer token'`), which is fine for a local run and
 noisy for a deployment. `MWG_ALLOW_ANONYMOUS_VIEWER=1` restores the previous open behaviour, and the viewer says so

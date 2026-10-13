@@ -11,7 +11,7 @@
 // test in this file can see that; the guard being the first statement in the handler is the property, and it is one
 // line to review.
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, readdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import test from 'node:test';
@@ -20,6 +20,9 @@ import { AUTH_EXEMPT_PATHS, createViewer, viewerAuthToken, viewerAuthVerdict } f
 
 const ROOT = resolve(import.meta.dirname, '..');
 const TOKEN = 'test-viewer-token-9f2c';
+// A real project id from the corpus, so the live-origin assertions fetch a route that exists rather than one that 404s
+// for reasons unrelated to authentication - a 404 would pass a loose "not 200" check while proving nothing.
+const LIVE_PROJECT = readdirSync(join(ROOT, 'pilot', 'projects')).filter((name) => !name.startsWith('.')).sort()[0];
 const request = (headers = {}) => ({ url: '/', method: 'GET', headers });
 
 async function serve(t, options = {}) {
@@ -38,7 +41,13 @@ async function serve(t, options = {}) {
     rmSync(stateDir, { recursive: true, force: true });
   });
   await new Promise((resolveListen) => server.listen(0, '127.0.0.1', resolveListen));
-  return { base: `http://127.0.0.1:${server.address().port}`, authToken, authGenerated };
+  await new Promise((resolveListen) => liveServer.listen(0, '127.0.0.1', resolveListen));
+  return {
+    base: `http://127.0.0.1:${server.address().port}`,
+    live: `http://127.0.0.1:${liveServer.address().port}`,
+    authToken,
+    authGenerated,
+  };
 }
 
 test('the token is configured, or generated per process, but never absent', () => {
@@ -153,8 +162,46 @@ test('a wrong token is refused without being repeated back', async (t) => {
   }
 });
 
+test('the live origin is the same surface behind the same token, on its own port', async (t) => {
+  // mwg-train-i4j5, and it was my own pre-emptive note that became the finding: the viewer is two listeners on one host
+  // and the CLI gives both the same --host, so authenticating /concepts while serving the corpus projects' trees from
+  // the port beside it would close half the hole. This asserts the part that is easy to get wrong - that the cookie the
+  // VIEWER set is accepted HERE, on a different port - because that is what keeps the workbench's preview working.
+  const { base, live } = await serve(t);
+  const path = `/live/${LIVE_PROJECT}/original/`;
+
+  const anonymousLive = await fetch(`${live}${path}`);
+  assert.equal(anonymousLive.status, 401, `the live origin served ${path} without a token`);
+  assert.match(anonymousLive.headers.get('content-type') ?? '', /^text\/plain/);
+  assert.ok(!/<html|<!doctype/i.test(await anonymousLive.text()), 'the refusal must not carry the project page');
+
+  // The viewer port refuses the same path, so the two are now the same surface rather than two of them.
+  assert.equal((await fetch(`${base}${path}`)).status, 401);
+
+  // Cookies ignore the port, so the cookie the viewer's ?token= redirect set works on the live origin unchanged. If
+  // this ever fails, the live origin's protection has broken the workbench preview rather than the anonymous reader.
+  const firstVisit = await fetch(`${base}/concepts?token=${TOKEN}`, { redirect: 'manual' });
+  const cookie = (firstVisit.headers.get('set-cookie') ?? '').split(';')[0];
+  assert.ok(cookie.includes('mwg_viewer='), 'the viewer has to have set a cookie to test the live origin with');
+  const withCookie = await fetch(`${live}${path}`, { headers: { cookie } });
+  assert.equal(withCookie.status, 200, 'the cookie set by the viewer port must be accepted on the live port');
+  assert.match(withCookie.headers.get('content-type') ?? '', /text\/html/);
+  assert.match(await withCookie.text(), /<html/i);
+
+  // A header works here too, for a script that never visits the viewer port at all.
+  assert.equal((await fetch(`${live}${path}`, { headers: { authorization: `Bearer ${TOKEN}` } })).status, 200);
+  // And a wrong token is refused, with the value not echoed.
+  const wrong = await fetch(`${live}${path}`, { headers: { authorization: 'Bearer nope-live-origin' } });
+  assert.equal(wrong.status, 401);
+  assert.ok(!(await wrong.text()).includes('nope-live-origin'));
+  // The exemption is shared: the live origin answers /healthz just as the viewer does, and nothing else is exempt.
+  assert.equal((await fetch(`${live}/healthz`)).status, 200);
+  assert.deepEqual([...AUTH_EXEMPT_PATHS], ['/healthz'], 'both listeners read the one list, so a second entry would open a route on both');
+});
+
 test('the opt-in restores anonymous access and says so on stdout', async (t) => {
-  const { base } = await serve(t, { allowAnonymous: true });
+  const { base, live } = await serve(t, { allowAnonymous: true });
   assert.equal((await fetch(`${base}/concepts`)).status, 200);
   assert.equal((await fetch(`${base}/tuning/client.js`)).status, 200);
+  assert.equal((await fetch(`${live}/live/${LIVE_PROJECT}/original/`)).status, 200, 'the opt-in has to cover both listeners or one run is half-open');
 });

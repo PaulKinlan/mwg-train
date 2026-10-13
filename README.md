@@ -100,11 +100,15 @@ never reach a site. Uplifted snapshots come from the run's kept tree or a determ
 regeneration that must reproduce the recorded SHA - a mismatch is refused, not served.
 
 The exe.dev proxy in front of each port is the gate for the deployed viewer, and the served artefacts are
-auth-free by construction. Since mwg-train-hwbs the viewer also requires a token of its own: a shared secret
-from `MWG_VIEWER_TOKEN` (or one generated per process and printed at startup), presented as
-`Authorization: Bearer <token>`, as a `mwg_viewer` cookie, or once as `?token=<token>` which sets the cookie
-and redirects the query away. `/healthz` is the only exempt path, because it answers a constant.
-`MWG_ALLOW_ANONYMOUS_VIEWER=1` turns it off again for a local run. The reason is that the proxy protects the
+auth-free by construction. Since mwg-train-hwbs the viewer also requires a token of its own, on BOTH of its
+ports - the corpus viewer and the live origin, which serves the projects' original and uplifted trees under
+`/live/<projectId>/...` (mwg-train-i4j5): a shared secret from `MWG_VIEWER_TOKEN` (or one generated per process
+and printed at startup), presented as `Authorization: Bearer <token>`, as a `mwg_viewer` cookie, or once as
+`?token=<token>` which sets the cookie and redirects the query away. `/healthz` is the only exempt path, on
+either port, because it answers a constant. The cookie is host-scoped and ignores the port, so the one the
+viewer sets is accepted by the live origin and a workbench preview keeps loading in place; opening a preview
+in a new tab without the cookie is refused, which is intended. `MWG_ALLOW_ANONYMOUS_VIEWER=1` turns all of it
+off again for a local run. The reason is that the proxy protects the
 PORT and nothing protects the process: any local process, any mistyped `--host`, or anything that reaches the
 port around the proxy could read the corpus and drive `/tuning/generate`, which spends money. The other
 direction is enforced: the

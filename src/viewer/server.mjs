@@ -895,6 +895,15 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
       const url = new URL(request.url, 'http://live.internal');
       const path = url.pathname;
 
+      // The same check as the viewer's handler, and it has to be here for the same reason (mwg-train-i4j5): this is a
+      // SECOND listener on the same host, the CLI passes the same --host to both, and this one serves the corpus
+      // projects' own original/uplifted trees under /live/<projectId>/... - so leaving it open would close the viewer
+      // port and leave the material it exists to protect reachable on the port beside it. The cookie the viewer sets
+      // works here without any change, because cookies are scoped by host and ignore the port, and SameSite compares
+      // site, which a port does not affect. A preview opened in a new tab without the cookie is refused, deliberately.
+      const auth = viewerAuthVerdict(request, { token: authToken, pathname: path, search: url.search, allowAnonymous });
+      if (auth) return authRefusal(response, auth);
+
       // The serve-live form posts to this origin (a different port on the same host), so it needs the same check.
       if (crossOriginRefusal(request, response, { viewerPort, livePort })) return;
 
