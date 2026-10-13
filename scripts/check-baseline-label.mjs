@@ -298,6 +298,11 @@ export const DOCUMENTS = {
   // the corpus.
   'docs/design/archetypes/survey-form/README.md': 'provenance',
   'docs/provenance/assets/design-reference-survey-form.md': 'provenance',
+  // The expense-tracker entry-refusal board (bead mwg-train-skm3), same shape and the same reasoning as the
+  // blocks above: the README records borrowed reference material and its rights, and the register pins board
+  // bytes and the prompt digest. Neither states a measured result of the corpus.
+  'docs/design/archetypes/expense-tracker/README.md': 'provenance',
+  'docs/provenance/assets/design-reference-expense-tracker.md': 'provenance',
   // The third archetype outside the five evaluation families (bead mwg-train-efg), same shapes and the same
   // reasoning again: a board brief, two contract documents, and a digest register, none of which states a
   // measured result of the corpus.
