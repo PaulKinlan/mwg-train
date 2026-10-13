@@ -504,3 +504,50 @@ test('CLI: scripts/capture-site.mjs executes and validates correctly', async (t)
   assert.ok(!existsSync(rejected));
   assert.ok(!existsSync(join(quarantineStore, 'data/A5_black_box_reproduction', rejected.slice(1))));
 });
+
+test('CLI: a URL carrying a credential is redacted in what the CLI prints', async (t) => {
+  // mwg-train-s7iu, asserted against the CLI's real output rather than against the helper: the finding is about what
+  // lands in a CI log, so stdout and stderr are what this test reads.
+  const { server, baseUrl } = await createFixtureServer();
+  const quarantineStore = setupTempQuarantineStore();
+  const scriptPath = resolve(REPO_ROOT, 'scripts/capture-site.mjs');
+  t.after(() => {
+    server.close();
+    rmSync(quarantineStore, { recursive: true, force: true });
+  });
+  const env = { ...process.env, MWG_TRAIN_QUARANTINE: quarantineStore };
+  const runCli = (args) =>
+    new Promise((resolveRun, rejectRun) => {
+      const cp = spawn('node', [scriptPath, ...args], { env, timeout: 30000, stdio: ['ignore', 'pipe', 'pipe'] });
+      let stdout = '';
+      let stderr = '';
+      cp.stdout.on('data', (d) => { stdout += d.toString(); });
+      cp.stderr.on('data', (d) => { stderr += d.toString(); });
+      cp.on('error', rejectRun);
+      cp.on('close', (code) => resolveRun({ code, stdout, stderr }));
+    });
+
+  // Built through the URL API rather than by appending to baseUrl, which already ends in a slash: a doubled slash
+  // becomes a protocol-relative path and the fixture server refuses to parse it.
+  const target = new URL(baseUrl);
+  target.searchParams.set('token', 'SUPERSECRET');
+  target.searchParams.set('q', 'shoes');
+  const success = await runCli([
+    '--url', target.href,
+    '--rights-ref', 'docs/provenance/assets/reproduction-studies.md',
+    '--out', 'cli-secret-log',
+  ]);
+  assert.equal(success.code, 0, `CLI failed with stderr: ${success.stderr}`);
+  assert.ok(!success.stdout.includes('SUPERSECRET'), `stdout leaked the token: ${success.stdout}`);
+  assert.ok(!success.stderr.includes('SUPERSECRET'), `stderr leaked the token: ${success.stderr}`);
+  // Redacted, not dropped: a reader still sees which parameter was there, and the ordinary one is untouched.
+  assert.match(success.stdout, /token=REDACTED/);
+  assert.match(success.stdout, /q=shoes/);
+  assert.match(success.stdout, new RegExp(`Successfully captured http://127\\.0\\.0\\.1:\\d+/\\?token=REDACTED`));
+
+  // The rejected-input path echoes what the operator typed, which is exactly the URL that can carry credentials.
+  const rejected = await runCli(['--url', 'http://user:hunter2@example.com/a b', '--rights-ref', 'docs/ref.md']);
+  assert.equal(rejected.code, 1);
+  assert.ok(!rejected.stderr.includes('hunter2'), `stderr leaked the password: ${rejected.stderr}`);
+  assert.match(rejected.stderr, /--url must be an http\(s\) URL/);
+});

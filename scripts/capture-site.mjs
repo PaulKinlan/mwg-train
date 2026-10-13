@@ -7,6 +7,7 @@
  */
 
 import process from 'node:process';
+import { redactSecretsInText, sanitizeUrlForLog } from '../src/capture/log.mjs';
 import { captureSite } from '../src/capture/site.mjs';
 
 function parseArgs(argv) {
@@ -49,7 +50,9 @@ if (!args.rightsRef || typeof args.rightsRef !== 'string' || args.rightsRef.trim
 }
 
 if (!args.url || typeof args.url !== 'string' || !/^https?:\/\//.test(args.url) || args.url.includes(' ')) {
-  console.error(`Error: --url must be an http(s) URL without spaces, got '${args.url ?? ''}'`);
+  // The rejected value is echoed because a human has to fix it, and sanitized because a rejected URL can still be a
+  // credentialed one - a space or a typo is what made it invalid, not the token in its query string (mwg-train-s7iu).
+  console.error(`Error: --url must be an http(s) URL without spaces, got '${sanitizeUrlForLog(args.url ?? '')}'`);
   process.exit(1);
 }
 
@@ -63,12 +66,14 @@ try {
     env: process.env,
   });
 
-  console.log(`Successfully captured ${capture.source.url}`);
+  console.log(`Successfully captured ${sanitizeUrlForLog(capture.source.url)}`);
   if (capture.capturePath) {
     console.log(`Capture written to: ${capture.capturePath}`);
   }
   process.exit(0);
 } catch (error) {
-  console.error(`Error: ${error.message}`);
+  // Error text can quote the URL at issue - the browser layer's navigation errors and this project's own target
+  // refusals both do - so it is redacted even though the author of the message is not the CLI.
+  console.error(`Error: ${redactSecretsInText(error.message)}`);
   process.exit(1);
 }

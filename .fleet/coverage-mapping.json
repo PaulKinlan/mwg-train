@@ -136,5 +136,16 @@
   "src/viewer/tuning.mjs": [
     "test/viewer-tuning.test.mjs",
     "test/viewer-tuning-generate.test.mjs"
+  ],
+  "src/capture/log.mjs": [
+    "test/capture-log.test.mjs",
+    "test/capture-site.test.mjs"
+  ],
+  "src/capture/site.mjs": [
+    "test/capture-site.test.mjs",
+    "test/capture-schema.test.mjs"
+  ],
+  "scripts/capture-site.mjs": [
+    "test/capture-site.test.mjs"
   ]
 }

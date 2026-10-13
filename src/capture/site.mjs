@@ -17,6 +17,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, join } from 'node:path';
 import process from 'node:process';
 
+import { redactSecretsInText } from './log.mjs';
 import { launchChrome } from '../corpus/cdp.mjs';
 import { assetStoragePath } from '../provenance/store.mjs';
 import { validateCapture, CAPTURE_VERSION, resolveCaptureOutputPath } from './schema.mjs';
@@ -431,11 +432,11 @@ export async function captureSite({
 
   for (const page of capture.pages) {
     for (const dropped of page.dropped_controls) {
-      console.warn(`Dropped control at ${page.path}: name '${dropped.name}', type '${dropped.type}': ${dropped.reason}`);
+      console.warn(`Dropped control at ${redactSecretsInText(page.path)}: name '${dropped.name}', type '${dropped.type}': ${redactSecretsInText(dropped.reason)}`);
     }
     for (const form of page.forms) {
       if (form.id === '') {
-        console.warn(`Captured ${form.method.toUpperCase()} form at ${page.path} (action: ${form.action}, controls: ${form.controls.map((control) => control.name).join(', ')}) has no id and cannot be clean-room translated`);
+        console.warn(`Captured ${form.method.toUpperCase()} form at ${redactSecretsInText(page.path)} (action: ${redactSecretsInText(form.action)}, controls: ${form.controls.map((control) => control.name).join(', ')}) has no id and cannot be clean-room translated`);
       }
     }
   }
