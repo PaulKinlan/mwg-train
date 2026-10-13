@@ -41,7 +41,8 @@
     "test/generator-runner.test.mjs"
   ],
   "scripts/generate.mjs": [
-    "test/generator-runner.test.mjs"
+    "test/generator-runner.test.mjs",
+    "test/corpus.test.mjs"
   ],
   "src/eval/generator.mjs": [
     "test/generator-runner.test.mjs"

@@ -19,12 +19,13 @@ export async function main(argv = process.argv.slice(2)) {
   const args = options(argv);
   const backend = args.live === 'true' ? 'live' : 'stub';
   const canned = args['stub-file'] ? JSON.parse(await readFile(args['stub-file'], 'utf8')) : undefined;
+  const guidance = args['guidance-file'] ? await readFile(args['guidance-file'], 'utf8') : '';
   const batches = args.batch ? JSON.parse(await readFile(args.batch, 'utf8')) : [{ family: args.family, framework: args.framework }];
   if (!Array.isArray(batches) || batches.length === 0 || batches.length > 210) throw new Error('batch must contain 1-210 project identities');
   const records = [];
   for (const row of batches) {
     const result = await generateProject({ family: row.family, framework: row.framework, model: args.model,
-      revision: args.revision, arm: args.arm ?? 'default', backend, dryRun: args['dry-run'] === 'true',
+      revision: args.revision, arm: args.arm ?? 'default', guidance, backend, dryRun: args['dry-run'] === 'true',
       outRoot: args.out ?? '.generated-runs', sourceRoot: args.source ?? '.', canned,
       retry: args.retry === 'true' });
     records.push({ project_id: row.family && row.framework ? `${row.family}-${row.framework}` : 'INVALID',

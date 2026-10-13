@@ -12,6 +12,8 @@ const finitePositive = (value) => typeof value === 'number' && Number.isFinite(v
 
 /** The Beads issue description is not an approval. Only a signed, verbatim owner comment is eligible. */
 export function readGenerationApprovalComments() {
+  // Local Beads can lag the owner/hub; a failed sync refuses rather than trusting stale approval.
+  execFileSync('bd', ['dolt', 'pull'], { encoding: 'utf8', timeout: 20_000, maxBuffer: 1024 * 1024 });
   return JSON.parse(execFileSync('bd', ['comments', GENERATION_BEAD, '--json'], {
     encoding: 'utf8', timeout: 15_000, maxBuffer: 1024 * 1024,
   }));
@@ -25,6 +27,9 @@ export function verifyGenerationApproval(comments, { key, model, now = new Date(
   for (const comment of [...comments].reverse()) {
     if (comment.issue_id !== GENERATION_BEAD || !TRUSTED_AUTHORS.has(comment.author)) continue;
     const text = String(comment.text ?? '');
+    if (text.startsWith('OWNER-AUTHORIZATION-REVOKED\n')) {
+      throw new Error('NO_OWNER_AUTH: generation authorisation was revoked; stop before another request');
+    }
     const lines = Object.fromEntries(text.split('\n').map((line) => {
       const match = /^([A-Za-z-]+): (.+)$/.exec(line);
       return match ? [match[1], match[2]] : [null, null];
