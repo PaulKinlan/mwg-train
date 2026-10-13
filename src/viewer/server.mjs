@@ -44,7 +44,7 @@ import { conceptImage, conceptJourneyStep, conceptTarget, listConcepts, renderCo
 import { filterProjects, loadCorpus, projectView } from './corpus.mjs';
 import { hashTree } from '../corpus/tree-hash.mjs';
 import { scanTree, scanPairRecords, loadScanConfig, buildMatchers } from './owner-auth.mjs';
-import { renderIndex, renderProject, renderMarkdown, escapeHtml, page } from './pages.mjs';
+import { renderIndex, renderProject, renderMarkdown, escapeHtml, page, pageStyleHash } from './pages.mjs';
 import { loadTuningData, renderTuning } from './tuning.mjs';
 import { allowedTargetsFromTuningData, createBoardGenerator, DEFAULT_IMAGE_ENDPOINT, GenerationError, IMAGE_MODEL } from './generate.mjs';
 import { proxyRequest } from './proxy.mjs';
@@ -77,13 +77,48 @@ function readJson(path) {
   }
 }
 
-const htmlResponse = (response, body, status = 200) => {
-  response.writeHead(status, { 'content-type': 'text/html; charset=utf-8' });
+/**
+ * The headers every response this viewer generates carries (mwg-train-mslb). Built in one place and applied by the
+ * response helpers below rather than at each route, so a new page cannot be added without them.
+ *
+ * This viewer renders escaped corpus text and links into a separate live origin, so the policy does not have to be
+ * generous: nothing external is loaded, scripts come only from this origin (the tuning workbench's /tuning/client.js),
+ * and the one inline style block the pages carry is named by hash. `form-action` admits the live origin because
+ * 'serve live' posts to it - a different origin by design, which is what stops served site code from reading the
+ * evidence pages.
+ *
+ * Deliberately NOT applied to responses relayed from a sandboxed site: those are the generated pages under test and
+ * they need their own policy, not this one.
+ */
+export function viewerHeaders(liveOrigin = '') {
+  const policy = [
+    "default-src 'none'",
+    "script-src 'self'",
+    `style-src 'self' 'sha256-${pageStyleHash()}'`,
+    "img-src 'self'",
+    "connect-src 'self'",
+    // A page whose form posts to the live origin passes it here; a page with only same-origin forms passes nothing.
+    `form-action 'self'${liveOrigin ? ` ${liveOrigin}` : ''}`,
+    "base-uri 'none'",
+    "frame-ancestors 'none'",
+    "object-src 'none'",
+  ].join('; ');
+  return {
+    'content-security-policy': policy,
+    // Generated and third-party content is displayed by this viewer, and a browser must never be allowed to decide
+    // that a response is really a script or a stylesheet on the strength of its bytes.
+    'x-content-type-options': 'nosniff',
+    'referrer-policy': 'no-referrer',
+  };
+}
+
+const htmlResponse = (response, body, status = 200, liveOrigin = '') => {
+  response.writeHead(status, { 'content-type': 'text/html; charset=utf-8', ...viewerHeaders(liveOrigin) });
   response.end(body);
 };
 
 const textResponse = (response, body, status = 200) => {
-  response.writeHead(status, { 'content-type': 'text/plain; charset=utf-8' });
+  response.writeHead(status, { 'content-type': 'text/plain; charset=utf-8', ...viewerHeaders() });
   response.end(body);
 };
 
@@ -91,6 +126,7 @@ const jsonResponse = (response, body, status) => {
   response.writeHead(status, {
     'content-type': 'application/json; charset=utf-8',
     'cache-control': 'no-store',
+    ...viewerHeaders(),
     // Every refusal on this route closes the connection. A refused body may be unread (see readBoundedJsonBody), and a
     // response that promised keep-alive with unread bytes behind it would leave the socket waiting for a body nobody
     // is going to read.
@@ -453,7 +489,7 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
       if (path === '/healthz') return textResponse(response, 'ok');
 
       if (path === '/concepts' && request.method === 'GET') {
-        return htmlResponse(response, renderConcepts(listConcepts(repoRoot)));
+        return htmlResponse(response, renderConcepts(listConcepts(repoRoot)), 200, liveOrigin);
       }
       const journeyImageMatch = path.match(/^\/concepts\/images\/([a-z0-9-]+)\/(step[1-9][0-9]*-[a-z0-9-]+)\.jpg$/);
       if (journeyImageMatch && request.method === 'GET') {
@@ -488,7 +524,7 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
         const data = loadTuningData(repoRoot);
         return htmlResponse(response, renderTuning({ data, repoRoot,
           familyId: url.searchParams.get('family'), variant: url.searchParams.get('variant'),
-          framework: url.searchParams.get('framework') }));
+          framework: url.searchParams.get('framework') }), 200, liveOrigin);
       }
       // One hosted image-model call per request: the draft in the body, the board bytes in the response. It writes
       // nothing - not a file, not a cache, not a manifest - so the corpus, the provenance tables and the authored
@@ -526,7 +562,7 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
         return response.end(board.bytes);
       }
       if (path === '/tuning/client.js' && request.method === 'GET') {
-        response.writeHead(200, { 'content-type': 'text/javascript; charset=utf-8', 'cache-control': 'no-store' });
+        response.writeHead(200, { 'content-type': 'text/javascript; charset=utf-8', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' });
         return response.end(readFileSync(join(repoRoot, 'src/viewer/tuning-client.js')));
       }
       const tuningTarget = path.match(/^\/tuning\/target\/(tr-\d{2})\.png$/);
@@ -566,7 +602,7 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
         // The pipeline doc is the source of truth; the viewer renders it so the two cannot drift.
         const docPath = join(repoRoot, 'docs', 'PIPELINE.md');
         if (!existsSync(docPath)) return textResponse(response, 'docs/PIPELINE.md not present in this checkout', 404);
-        return htmlResponse(response, page('pipeline', renderMarkdown(readFileSync(docPath, 'utf8'))));
+        return htmlResponse(response, page('pipeline', renderMarkdown(readFileSync(docPath, 'utf8'))), 200, liveOrigin);
       }
 
       if (path === '/' && request.method === 'GET') {
@@ -591,8 +627,7 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
             yieldReport: corpus.yieldReport,
             scanAvailable: allViews.every((view) => view.scan?.status !== 'ERROR'),
             liveOrigin,
-          }),
-        );
+          }), 200, liveOrigin,);
       }
 
       const projectMatch = path.match(/^\/project\/([a-z0-9-]+)$/i);
@@ -603,7 +638,7 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
         if (!project) return textResponse(response, 'no such project', 404);
         const scan = scanFor(project);
         const view = projectView(project, { scan, verification: verification(project) });
-        return htmlResponse(response, renderProject({ view, runId: corpus.runId, runs: corpus.runs, liveOrigin }));
+        return htmlResponse(response, renderProject({ view, runId: corpus.runId, runs: corpus.runs, liveOrigin }), 200, liveOrigin);
       }
 
       const evidenceMatch = path.match(/^\/evidence\/([a-z0-9-]+)\/([a-z0-9.-]+)$/i);
@@ -654,8 +689,7 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
         if (path === '/' && request.method === 'GET') {
           return htmlResponse(
             response,
-            page('live origin', `<h1>mwg-train live site origin</h1><p class="muted">This origin serves only sandboxed corpus sites under <code>/live/&lt;project&gt;/&lt;version&gt;/</code>. It is deliberately a separate origin from the viewer so untrusted site code cannot read the evidence pages. Start sites from the <a href="/">viewer index</a>.</p>`),
-          );
+            page('live origin', `<h1>mwg-train live site origin</h1><p class="muted">This origin serves only sandboxed corpus sites under <code>/live/&lt;project&gt;/&lt;version&gt;/</code>. It is deliberately a separate origin from the viewer so untrusted site code cannot read the evidence pages. Start sites from the <a href="/">viewer index</a>.</p>`), 200, liveOrigin,);
         }
         return textResponse(response, 'not found', 404);
       }
@@ -678,8 +712,7 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
         return htmlResponse(
           response,
           page('refused', `<h1>live serving refused</h1><p class="danger">The owner-auth scan of this pair is ${escapeHtml(scan.status)}${scan.reason ? ` (${escapeHtml(scan.reason)})` : ''}, and the rule is fail-closed: a pair that cannot be shown clean of owner-identifying material - in its trees AND its records - is not served.</p>`),
-          403,
-        );
+          403, liveOrigin,);
       }
 
       // Resolve the tree first, then scan exactly the tree that will be served: a regenerated
@@ -696,8 +729,7 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
           return htmlResponse(
             response,
             page('refused', `<h1>live serving refused</h1><p class="danger">${escapeHtml(resolved.reason ?? 'the measured original cannot be reproduced')}</p>`),
-            409,
-          );
+            409, liveOrigin,);
         }
         siteDir = resolved.dir;
         treeSource = resolved.source;
@@ -707,8 +739,7 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
           return htmlResponse(
             response,
             page('snapshot unavailable', `<h1>uplifted snapshot unavailable</h1><p class="notice">${escapeHtml(resolved.reason ?? 'the run did not keep the uplifted tree')}</p>`),
-            404,
-          );
+            404, liveOrigin,);
         }
         siteDir = resolved.dir;
         treeSource = resolved.source;
@@ -719,8 +750,7 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
         return htmlResponse(
           response,
           page('refused', `<h1>live serving refused</h1><p class="danger">The owner-auth scan of the ${escapeHtml(version)} tree is ${escapeHtml(treeScan.status)}, and the rule is fail-closed: a tree that cannot be shown clean of owner-identifying material is not served.</p>`),
-          403,
-        );
+          403, liveOrigin,);
       }
 
       // The paired tree of a RECORDED pair must resolve, hash-verify and scan clean before either
@@ -734,15 +764,13 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
           return htmlResponse(
             response,
             page('refused', `<h1>live serving refused</h1><p class="danger">This pair's ${pairedLabel} tree cannot be resolved and verified (${escapeHtml(paired.reason ?? 'unknown')}), so the pair is not servable. The pair is served together or not at all.</p>`),
-            403,
-          );
+            403, liveOrigin,);
         }
         if (scanTreeCached(paired.dir).status !== 'PASS') {
           return htmlResponse(
             response,
             page('refused', `<h1>live serving refused</h1><p class="danger">The paired ${pairedLabel} tree fails the owner-auth scan; the pair is served together or not at all.</p>`),
-            403,
-          );
+            403, liveOrigin,);
         }
       }
 
@@ -755,7 +783,7 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
         try {
           sandbox = await pool.start({ runId: corpus.runId, projectId: id, version, siteDir });
         } catch (error) {
-          return htmlResponse(response, page('sandbox failed', `<h1>the sandboxed site did not start</h1><pre>${escapeHtml(error.message)}</pre>`), 502);
+          return htmlResponse(response, page('sandbox failed', `<h1>the sandboxed site did not start</h1><pre>${escapeHtml(error.message)}</pre>`), 502, liveOrigin);
         }
       }
       sandbox.touch();
