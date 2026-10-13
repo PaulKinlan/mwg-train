@@ -50,7 +50,7 @@ async function serve(t, options = {}) {
   };
 }
 
-test('the token is configured, or generated per process, but never absent', () => {
+test('the token is configured, or generated per process, but never absent', (t) => {
   const configured = viewerAuthToken({ env: { MWG_VIEWER_TOKEN: '  from-the-environment  ' } });
   assert.deepEqual(configured, { token: 'from-the-environment', generated: false });
   const generated = viewerAuthToken({ env: {} });
@@ -59,7 +59,9 @@ test('the token is configured, or generated per process, but never absent', () =
   // Two processes must not share a generated token, or "generated" would be a fixed default in disguise.
   assert.notEqual(viewerAuthToken({ env: {} }).token, generated.token);
   // A viewer built without a token generates one rather than authenticating nothing.
-  const viewer = createViewer({ corpusRoot: join(ROOT, 'pilot'), stateDir: mkdtempSync(join(tmpdir(), 'viewer-auth-gen-')), repoRoot: ROOT });
+  const genDir = mkdtempSync(join(tmpdir(), 'viewer-auth-gen-'));
+  t.after(() => rmSync(genDir, { recursive: true, force: true }));
+  const viewer = createViewer({ corpusRoot: join(ROOT, 'pilot'), stateDir: genDir, repoRoot: ROOT });
   assert.equal(viewer.authGenerated, true);
   assert.ok(viewer.authToken.length >= 32);
   viewer.pool.stopAll();
@@ -98,7 +100,7 @@ test('the three ways to present the token are each enough, and each one is compa
   assert.equal(viewerAuthVerdict({ ...request() }, { token: TOKEN, allowAnonymous: true }), null);
 });
 
-test('an empty credential is never a credential, however it is presented', () => {
+test('an empty credential is never a credential, however it is presented', (t) => {
   // mwg-train-o459, which was a real bypass and not a theoretical one. Measured before the fix, with
   // MWG_VIEWER_TOKEN empty: anonymous /concepts was refused (401) but `Cookie: mwg_viewer=` returned the 93KB concepts
   // page, because an empty expected token and an empty presented token compared equal. The bug's shape is worth more
@@ -113,10 +115,15 @@ test('an empty credential is never a credential, however it is presented', () =>
   assert.deepEqual(viewerAuthVerdict({ url: '/?token=', method: 'GET', headers: {} }, { token: '' , pathname: '/', search: '?token=' }), { status: 401 });
   // A blank value means "not configured", so the viewer generates one instead of enforcing nothing. Whitespace counts
   // as blank: it is what an operator produces by pasting an empty variable into a unit file.
+  // mwg-train-quxp: this suite left state directories behind - 40 were counted on this VM. Every mkdtempSync in the
+  // file now has a t.after, and every test that makes one takes t, which is the defect this finding names: a t.after
+  // written in a test that never received t does nothing at all.
   for (const blank of ['', '   ', '\t', null, undefined]) {
+    const blankDir = mkdtempSync(join(tmpdir(), 'viewer-auth-blank-'));
+    t.after(() => rmSync(blankDir, { recursive: true, force: true }));
     const viewer = createViewer({
       corpusRoot: join(ROOT, 'pilot'),
-      stateDir: mkdtempSync(join(tmpdir(), 'viewer-auth-blank-')),
+      stateDir: blankDir,
       repoRoot: ROOT,
       authToken: blank,
     });
@@ -127,9 +134,11 @@ test('an empty credential is never a credential, however it is presented', () =>
     viewer.liveServer.close();
   }
   // A configured value is still used exactly, whitespace and all being trimmed rather than trusted.
+  const configuredDir = mkdtempSync(join(tmpdir(), 'viewer-auth-configured-'));
+  t.after(() => rmSync(configuredDir, { recursive: true, force: true }));
   const configured = createViewer({
     corpusRoot: join(ROOT, 'pilot'),
-    stateDir: mkdtempSync(join(tmpdir(), 'viewer-auth-configured-')),
+    stateDir: configuredDir,
     repoRoot: ROOT,
     authToken: '  a-real-configured-token  ',
   });
@@ -212,6 +221,24 @@ test('over HTTP, the token is accepted as a header, as a cookie, and once as a q
   assert.equal(followUp.status, 200, 'the cookie the redirect set has to actually work on the next request');
   // And the token is not in the URL the browser keeps.
   assert.ok(!(firstVisit.headers.get('location') ?? '').includes(TOKEN));
+});
+
+test('a first-visit token cannot trigger a state-changing route', async (t) => {
+  // Measured live before this test existed: POST /tuning/generate?token=<valid> answers 302 with Location
+  // /tuning/generate, and a browser follows a 302 with a GET, so the route that spends money at the image endpoint is
+  // never reached by an operator clicking a link. Without the token the same POST is 401, not a redirect - refused
+  // rather than rewritten into something else. Both halves are worth pinning: a redirect that preserved the method
+  // would be worse than the open port this replaces, and a refusal that redirected would hide which of the two
+  // happened.
+  const { base } = await serve(t);
+  const visit = await fetch(`${base}/tuning/generate?token=${TOKEN}`, { method: 'POST', redirect: 'manual' });
+  assert.equal(visit.status, 302);
+  assert.equal(visit.headers.get('location'), '/tuning/generate', 'the redirect must not carry the token back');
+  assert.match(visit.headers.get('set-cookie') ?? '', /mwg_viewer=/);
+
+  const anonymous = await fetch(`${base}/tuning/generate`, { method: 'POST', headers: { origin: base } });
+  assert.equal(anonymous.status, 401, 'a state-changing route with no token must be refused, not redirected');
+  assert.equal(anonymous.headers.get('location'), null);
 });
 
 test('a wrong token is refused without being repeated back', async (t) => {
