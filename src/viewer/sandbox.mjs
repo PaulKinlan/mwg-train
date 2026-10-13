@@ -13,8 +13,9 @@
  *     works inside the namespace without administrative help; `ip link set lo up` is NOT available
  *     here - the bounding capability set is empty - and is not needed.)
  *   - the filesystem is assembled from scratch: the node runtime and system libraries read-only,
- *     the site tree read-only at /site, an empty writable tmpfs at /data for the ephemeral SQLite
- *     database, /tmp a tmpfs. Nothing else on the host exists for the process - no repo, no beads
+ *     the site tree read-only at /site, a 64 MiB tmpfs at /data for the ephemeral SQLite
+ *     database, a separate 64 MiB tmpfs at /tmp, and a 4 MiB /dev with minimal device nodes.
+ *     These bound scratch storage, NOT process RSS. Nothing else on the host exists - no repo, no beads
  *     DB, no ~/.config, no SSH keys. There is NO shared writable directory at all.
  *   - the environment is rebuilt from an allowlist (PATH, HOME, NODE_ENV, TZ, PILOT_PORT). No
  *     token, proxy URL or credential name survives --clearenv.
@@ -31,11 +32,19 @@ import { spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { boundedDeviceArgs } from '../sandbox/devices.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const WRAPPER_PATH = resolve(here, 'bridge-wrapper.mjs');
 const SANDBOX_PORT = 18080;
 const READY_TIMEOUT_MS = 25_000;
+export const VIEWER_TMPFS_BYTES = 64 * 1024 * 1024;
+
+/** Limit both private RAM-backed mounts; each --size applies only to the immediately following --tmpfs. */
+export function viewerTmpfsArgs() {
+  return ['--size', String(VIEWER_TMPFS_BYTES), '--tmpfs', '/tmp',
+    '--size', String(VIEWER_TMPFS_BYTES), '--tmpfs', '/data'];
+}
 
 const T_READY = 1;
 const T_REQUEST = 2;
@@ -101,10 +110,12 @@ export class Sandbox {
       // node_modules; inside the sandbox /site's parent is /, so it is mounted there, read-only.
       ...(this.nodeModulesDir && existsSync(this.nodeModulesDir) ? ['--ro-bind', this.nodeModulesDir, '/node_modules'] : []),
       '--ro-bind', WRAPPER_PATH, '/viewer/bridge-wrapper.mjs',
-      '--tmpfs', '/tmp',
-      '--tmpfs', '/data',
-      '--dev', '/dev',
+      ...viewerTmpfsArgs(),
+      ...boundedDeviceArgs(),
       '--proc', '/proc',
+      // Bubblewrap's implicit root is an unsized tmpfs. Remount it read-only only AFTER the
+      // explicit child mounts: /tmp, /data and /dev retain their independent size/writability.
+      '--remount-ro', '/',
       '--',
       '/node/bin/node', '/viewer/bridge-wrapper.mjs', '--entry', `/site/${this.entry}`, '--port', String(SANDBOX_PORT),
     ];

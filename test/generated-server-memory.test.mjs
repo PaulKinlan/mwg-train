@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { once } from 'node:events';
 import { generatedServerMemoryMb, sandboxArgs, sandboxAvailable, startGeneratedServer } from '../src/eval/generated-server.mjs';
+import { DEVICE_TMPFS_BYTES } from '../src/sandbox/devices.mjs';
 const TMPFS_BYTES = 64 * 1024 * 1024;
 const DEADLINE = 20_000;
 const killTree = (child) => { if (!child?.pid) return; try { process.kill(-child.pid, 'SIGKILL'); } catch { try { child.kill('SIGKILL'); } catch {} } };
@@ -65,6 +66,27 @@ test('normal Node server starts with a bounded old-space and private /tmp, not a
   assert.equal(result.memory.mode, 'heap-only');
   assert.equal(result.memory.rssContained, false);
   assert.match(result.memory.reason, /no host cgroup attachment/);
+});
+
+test('eval sandbox /dev is 4MiB and implicit root rejects ordinary writes', { timeout: DEADLINE + 5000 }, async (t) => {
+  if (!sandboxAvailable()) { t.skip('bubblewrap unavailable; no generated code run without it'); return; }
+  const result = await runSandboxed(`import { writeFileSync, statfsSync, openSync, closeSync, writeSync } from 'node:fs';
+    const chunk = Buffer.alloc(1024 * 1024);
+    const fd = openSync('/dev/bounded-fill', 'w'); let bytes = 0, errorCode = null;
+    try { for (let i = 0; i < 8; i++) {
+      try { bytes += writeSync(fd, chunk); }
+      catch (error) { errorCode = error.code; break; }
+    } } finally { closeSync(fd); }
+    let rootError = null;
+    try { writeFileSync('/bounded-root-write', 'no'); } catch (error) { rootError = error.code; }
+    const fs = statfsSync('/dev');
+    writeFileSync(__REPORT__, JSON.stringify({ maxBytes: fs.bsize * fs.blocks, bytes, errorCode, rootError }));`, 64);
+  assert.equal(result.timedOut, false, result.stderr);
+  assert.equal(result.code, 0, result.stderr);
+  assert.equal(result.report.maxBytes, DEVICE_TMPFS_BYTES);
+  assert.equal(result.report.errorCode, 'ENOSPC');
+  assert.equal(result.report.rootError, 'EROFS', 'unsized implicit root must be read-only');
+  assert.ok(result.report.bytes >= DEVICE_TMPFS_BYTES - 1024 * 1024 && result.report.bytes <= DEVICE_TMPFS_BYTES);
 });
 
 test('JS-old-space runaway is reaped before the independent 20s bound', { timeout: DEADLINE + 5000 }, async (t) => {
