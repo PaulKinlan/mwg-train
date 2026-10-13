@@ -13,7 +13,9 @@
  *
  * What this does cover: the environment (an allowlist, and a clean environment block via --clearenv), and process
  * isolation - the generated code cannot see or signal the operator's processes, and /proc cannot be used as a
- * side channel to their environments.
+ * side channel to their environments. /tmp has a bounded tmpfs. V8 old-space has a configured heap mitigation,
+ * but total RSS is bounded only when memoryContainment.mode is 'cgroup-v2' after a delegated-controller attach.
+ * On hosts without delegation the launcher warns loudly and reports 'heap-only', NOT memory containment.
  *
  * What it does NOT cover, deliberately and visibly: network isolation. The prober and the verifier scripts reach
  * these servers over localhost HTTP, so the network namespace stays shared. There is also no attempt to confine
@@ -30,6 +32,29 @@ import { fileURLToPath } from 'node:url';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(HERE, '..', '..');
+const TMPFS_BYTES = 64 * 1024 * 1024;
+const DEFAULT_MEMORY_MB = 512;
+
+/** Mitigation only: V8 old-space does NOT bound RSS, Buffers/native allocations or child processes. */
+export function generatedServerMemoryMb(value = process.env.MWG_GENERATED_SERVER_MEMORY_MB) {
+  if (value === undefined) return DEFAULT_MEMORY_MB;
+  if (!/^[1-9]\d*$/.test(String(value)) || !Number.isSafeInteger(Number(value)) || Number(value) < 64 || Number(value) > 4096) {
+    throw new Error('MWG_GENERATED_SERVER_MEMORY_MB must be an integer from 64 to 4096');
+  }
+  return Number(value);
+}
+const heapOption = (memoryMb) => `--max-old-space-size=${memoryMb}`;
+
+function memoryStatus(child, memoryMb, hasPrivateTmp) {
+  // Host cgroup modification is explicitly prohibited on this deployment VM. No access checks or writes to
+  // /sys/fs/cgroup here; an operator must provide a separately delegated/atomic mechanism for RSS limits.
+  child.memoryContainment = { mode: 'heap-only', rssContained: false, nodeHeapMb: memoryMb,
+    tmpfsBytes: hasPrivateTmp ? TMPFS_BYTES : null,
+    reason: 'no host cgroup attachment: V8 old-space and private /tmp limits are mitigations only' };
+  process.stderr.write(`WARNING: generated-server RSS is NOT contained: V8 heap capped at ${memoryMb}MB` +
+    `${hasPrivateTmp ? ', private /tmp at 64MB' : ', no private /tmp'}; native Buffers and subprocesses remain unbounded.\n`);
+  return child;
+}
 
 /** Set MWG_BWRAP_PATH to test against a different bubblewrap build. */
 export const bwrapPath = () => process.env.MWG_BWRAP_PATH ?? '/usr/bin/bwrap';
@@ -87,7 +112,7 @@ export function serverArgv({ port, dbPath } = {}) {
  * operator's processes are not in the table at all.
  * The network is deliberately NOT unshared - see the module comment.
  */
-export function sandboxArgs({ projectDir, port, dbPath }) {
+export function sandboxArgs({ projectDir, port, dbPath, memoryMb = generatedServerMemoryMb() }) {
   const env = generatedServerEnv();
   // A caller that passes no database - the eval fixtures and the board harness start a server that keeps its own -
   // has no directory to bind, and dirname(undefined) is a crash rather than an absent argument (mwg-train-pdsb).
@@ -98,6 +123,7 @@ export function sandboxArgs({ projectDir, port, dbPath }) {
     ...Object.entries(env).flatMap(([name, value]) => ['--setenv', name, String(value)]),
     '--setenv', 'PATH', '/node/bin:/usr/bin:/bin',
     '--setenv', 'HOME', '/tmp',
+    '--setenv', 'NODE_OPTIONS', heapOption(memoryMb),
     '--unshare-pid',
     '--unshare-uts',
     '--unshare-ipc',
@@ -111,7 +137,7 @@ export function sandboxArgs({ projectDir, port, dbPath }) {
   if (existsSync(nodeModules)) args.push('--ro-bind', nodeModules, nodeModules);
   // A private, empty /tmp: HOME points here, and it keeps the host's temporary files out of the sandbox. Mounted
   // before the binds below so that a project or database that lives under /tmp still mounts on top of it.
-  args.push('--tmpfs', '/tmp');
+  args.push('--size', String(TMPFS_BYTES), '--tmpfs', '/tmp');
   // A generated harness that lives inside the repository can look for its inputs by walking up from its own
   // directory - the archetype board harness finds assets/archetypes/<id>/images that way, and the test projects are
   // created under pilot/out precisely so that walk keeps working. With only the project directory mounted that walk
@@ -155,6 +181,7 @@ export function startGeneratedServer({
   sandbox = 'require',
   spawnImpl = spawn,
 }) {
+  const memoryMb = generatedServerMemoryMb();
   if (sandbox !== 'require' && sandbox !== 'prefer') {
     throw new Error(`startGeneratedServer: sandbox must be 'require' or 'prefer', got ${JSON.stringify(sandbox)}`);
   }
@@ -163,12 +190,13 @@ export function startGeneratedServer({
     // PID namespace and therefore visible in the sandbox's /proc: with the full environment inherited, a generated
     // server read the canary straight out of /proc/1/environ (caught by test/generated-server-env.test.mjs). The
     // child's environment is built explicitly by --clearenv and --setenv, so bwrap needs almost nothing of its own.
-    return spawnImpl(bwrapPath(), sandboxArgs({ projectDir, port, dbPath }), {
+    const child = spawnImpl(bwrapPath(), sandboxArgs({ projectDir, port, dbPath, memoryMb }), {
       cwd: projectDir,
       stdio,
       detached,
       env: generatedServerEnv(),
     });
+    return memoryStatus(child, memoryMb, true);
   }
   // 'prefer' is the test-side policy (mwg-train-pdsb): the unit suites have to run on a machine with no
   // bubblewrap, so the sandbox is used when it is there and the allowlisted environment is the floor when it is
@@ -184,12 +212,13 @@ export function startGeneratedServer({
           '(mwg-train-pdsb, mwg-train-6wpn).\n',
       );
     }
-    return spawnImpl(process.execPath, serverArgv({ port, dbPath }), {
+    const child = spawnImpl(process.execPath, serverArgv({ port, dbPath }), {
       cwd: projectDir,
       stdio,
       detached,
-      env: generatedServerEnv(),
+      env: { ...generatedServerEnv(), NODE_OPTIONS: heapOption(memoryMb) },
     });
+    return memoryStatus(child, memoryMb, false);
   }
   if (process.env.MWG_ALLOW_UNSANDBOXED_GENERATED_SERVER !== '1') {
     throw new Error(
@@ -203,10 +232,11 @@ export function startGeneratedServer({
     'WARNING: MWG_ALLOW_UNSANDBOXED_GENERATED_SERVER=1 - running generated server code on the host with no PID ' +
       'namespace. It can read the operator\'s environment from /proc and can see and signal their processes.\n',
   );
-  return spawnImpl(process.execPath, serverArgv({ port, dbPath }), {
+  const child = spawnImpl(process.execPath, serverArgv({ port, dbPath }), {
     cwd: projectDir,
     stdio,
     detached,
-    env: generatedServerEnv(),
+    env: { ...generatedServerEnv(), NODE_OPTIONS: heapOption(memoryMb) },
   });
+  return memoryStatus(child, memoryMb, false);
 }
