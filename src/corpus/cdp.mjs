@@ -60,7 +60,7 @@ export function chromeIsUnsandboxed(env = process.env) {
  * the reason the opt-in exists, but it is not a reason to run unsandboxed by default on a host that can sandbox.
  */
 /**
- * Caller arguments this project's launch sites are measured to need, matched on the flag name before any '='.
+ * Caller arguments this project's launch sites are measured to need, as EXACT strings.
  *
  * An ALLOWLIST rather than a list of flags to refuse, because the refusal list could not be finished: mwg-train-p58l was
  * a caller passing --no-sandbox in extra args, the fix for it was a denylist, and mwg-train-kkcv then named
@@ -69,16 +69,27 @@ export function chromeIsUnsandboxed(env = process.env) {
  * (allowlist, never denylist) before writing the denylist. A list of what may pass is finite; a list of what may not is
  * not, and every entry in it was found by a reviewer.
  *
- * Measured basis for the members, so the list is not a guess either: no production call site passes extra args at all
- * today (the only caller is a test), and the capture proxy work in tag parked/frame-gate-capture-proxy needs
+ * The entries are whole arguments, not flag names, and that distinction is mwg-train-c1nk: allowing
+ * --proxy-bypass-list by NAME let a caller pass --proxy-bypass-list=* and bypass the intercepting proxy completely,
+ * which was the enforcement point for the whole capture destination policy. The value is the decision, not the flag -
+ * the name says which knob, the value says how far. Allowing one exact argument keeps the knob and pins its setting.
+ *
+ * Measured basis for the member, so the list is not a guess either: no production call site passes extra args at all
+ * today (the only caller is a test), and the capture proxy work in tag parked/frame-gate-capture-proxy needs exactly
  * --proxy-bypass-list=<-loopback> to remove Chrome's implicit loopback bypass so every request reaches its proxy.
- * Adding a flag here is therefore a reviewable decision, which is the point of an allowlist.
+ * Adding an argument here is therefore a reviewable decision, which is the point of an allowlist.
  */
-export const CALLER_ARG_ALLOWLIST = ['--proxy-bypass-list'];
+export const CALLER_ARG_ALLOWLIST = ['--proxy-bypass-list=<-loopback>'];
 
-/** The caller arguments that pass: everything else is dropped, whatever it is. */
+/**
+ * The caller arguments that pass, compared as whole strings: everything else is dropped, whatever it is.
+ *
+ * Exact comparison rather than a prefix or name match, so there is no spelling of this flag that widens the bypass:
+ * `*`, an extra pattern after the marker, an empty value and even a trailing character are all refused, because none
+ * of them IS the one argument that was reviewed.
+ */
 export function allowedCallerArgs(args = []) {
-  return args.filter((arg) => CALLER_ARG_ALLOWLIST.includes(String(arg).split('=')[0]));
+  return args.filter((arg) => CALLER_ARG_ALLOWLIST.includes(String(arg)));
 }
 
 export function chromeArgs({ userDataDir, proxy = null, extra = [], unsandboxed = false, url = 'about:blank' } = {}) {

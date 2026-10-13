@@ -48,9 +48,26 @@ test('a caller argument passes only if it is on the allowlist, whatever it is', 
   }
 });
 
+test('the allowlisted argument is exact: no spelling of the same flag can widen it', () => {
+  // mwg-train-c1nk: allowing --proxy-bypass-list by NAME let a caller pass --proxy-bypass-list=* and bypass the
+  // intercepting proxy entirely, which was the enforcement point for the capture destination policy. The flag names the
+  // knob; the value is how far it turns, so the allowlist holds a whole argument and every other value is dropped.
+  for (const arg of [
+    '--proxy-bypass-list=*',
+    '--proxy-bypass-list=<-loopback>,*',
+    '--proxy-bypass-list=*.<local>',
+    '--proxy-bypass-list=',
+    '--proxy-bypass-list=<-loopback> ', // a trailing space is a different argument
+    '--proxy-bypass-list=<-loopback>x',
+  ]) {
+    const args = chromeArgs({ userDataDir: '/tmp/example', extra: [arg] });
+    assert.equal(args.some((a) => a.startsWith('--proxy-bypass-list')), false, `${arg} must not reach Chrome`);
+  }
+});
+
 test('a caller argument that IS on the allowlist arrives, value and all', () => {
-  // The allowlist matches the flag name before any '=', so a flag that carries a value still arrives with it. Without
-  // this test the allowlist could be implemented as "drop everything" and every other test here would still pass.
+  // The other direction, because an allowlist that drops everything passes every refusal test above. This also pins
+  // the one argument the parked capture proxy work needs.
   const kept = chromeArgs({ userDataDir: '/tmp/example', extra: ['--proxy-bypass-list=<-loopback>', '--no-sandbox'] });
   assert.ok(kept.includes('--proxy-bypass-list=<-loopback>'));
   assert.equal(kept.includes('--no-sandbox'), false);
@@ -67,17 +84,17 @@ test('the opt-in does not reopen the caller path', () => {
 test('launchChrome says out loud which argument it dropped, and what the rule is', async (t) => {
   // Silently dropping it would be the other half of the same problem: a caller that asked for something and did not
   // get it needs to be told, or the next run looks like a mystery. The message names the allowlist so the answer to
-  // "I need this flag" is in the warning itself.
+  // "I need this argument" is in the warning itself. The dropped one here is the wildcard from mwg-train-c1nk.
   const warnings = [];
   const onWarning = (warning) => warnings.push(warning);
   process.on('warning', onWarning);
   t.after(() => process.off('warning', onWarning));
 
-  const chrome = await launchChrome({ args: ['--disable-seccomp-filter-sandbox'] });
+  const chrome = await launchChrome({ args: ['--proxy-bypass-list=*'] });
   t.after(() => chrome.close());
   const dropped = warnings.find((w) => w.code === 'MWG_CALLER_ARGS_DROPPED');
   assert.ok(dropped, 'the dropped argument must be announced');
-  assert.match(dropped.message, /--disable-seccomp-filter-sandbox/);
+  assert.match(dropped.message, /--proxy-bypass-list=\*/);
   assert.match(dropped.message, /CALLER_ARG_ALLOWLIST/);
 });
 
