@@ -1,49 +1,4 @@
 {
-  "scripts/check-archetype-frames.mjs": [
-    "test/checks-wired.test.mjs"
-  ],
-  "src/corpus/cdp.mjs": [
-    "test/capture-flow.test.mjs",
-    "test/capture-state.test.mjs",
-    "test/chrome-sandbox.test.mjs",
-    "test/eval-starters.test.mjs"
-  ],
-  "pilot/CORPUS.json": [
-    "test/build-key.test.mjs"
-  ],
-  "docs/train/corpus/tokens.json": [
-    "test/tokens-record.test.mjs"
-  ],
-  "scripts/verify-account-recovery-demo.mjs": [
-    "test/demo-verifiers.test.mjs"
-  ],
-  "scripts/verify-event-registration-demo.mjs": [
-    "test/demo-verifiers.test.mjs"
-  ],
-  "scripts/verify-contact-lead-demo.mjs": [
-    "test/demo-verifiers.test.mjs"
-  ],
-  "docs/design/archetypes/account-recovery/demo/compare.html": [
-    "test/demo-verifiers.test.mjs"
-  ],
-  "docs/design/archetypes/account-recovery/demo/index.html": [
-    "test/demo-verifiers.test.mjs"
-  ],
-  "docs/design/archetypes/event-registration/demo/compare.html": [
-    "test/demo-verifiers.test.mjs"
-  ],
-  "docs/design/archetypes/event-registration/demo/index.html": [
-    "test/demo-verifiers.test.mjs"
-  ],
-  "docs/design/archetypes/contact-lead/demo/compare.html": [
-    "test/demo-verifiers.test.mjs"
-  ],
-  "docs/design/archetypes/contact-lead/demo/index.html": [
-    "test/demo-verifiers.test.mjs"
-  ],
-  "scripts/check-cross-arm-parity.mjs": [
-    "test/cross-arm-parity.test.mjs"
-  ],
   "docs/design/archetypes/*/README.md": [
     "test/archetype-boards-generator.test.mjs",
     "test/board-states.test.mjs",
@@ -55,23 +10,33 @@
     "test/archetype-boards-generator.test.mjs",
     "test/design-reference-wave2.test.mjs"
   ],
-  "src/corpus/harness.mjs": [
-    "test/harness-server.test.mjs",
-    "test/corpus-flows-harness.test.mjs",
-    "test/corpus-flows.test.mjs"
+  "docs/design/archetypes/account-recovery/demo/compare.html": [
+    "test/demo-verifiers.test.mjs"
   ],
-  "scripts/check-baseline-label.mjs": [
-    "test/baseline-label.test.mjs",
-    "test/design-contract.test.mjs",
-    "test/design-reference-wave2.test.mjs",
-    "test/design-reference.test.mjs"
+  "docs/design/archetypes/account-recovery/demo/index.html": [
+    "test/demo-verifiers.test.mjs"
   ],
-  "pilot/frameworks.mjs": [
-    "test/frameworks.test.mjs",
-    "test/reflected-title-escape.test.mjs",
-    "test/reflected-title-helper.test.mjs",
-    "test/known-sinks.test.mjs",
-    "test/wiki-capability.test.mjs"
+  "docs/design/archetypes/contact-lead/demo/compare.html": [
+    "test/demo-verifiers.test.mjs"
+  ],
+  "docs/design/archetypes/contact-lead/demo/index.html": [
+    "test/demo-verifiers.test.mjs"
+  ],
+  "docs/design/archetypes/event-registration/demo/compare.html": [
+    "test/demo-verifiers.test.mjs"
+  ],
+  "docs/design/archetypes/event-registration/demo/index.html": [
+    "test/demo-verifiers.test.mjs"
+  ],
+  "docs/train/corpus/records.json": [
+    "test/corpus-journey-evidence.test.mjs",
+    "test/corpus-record-stamp.test.mjs"
+  ],
+  "docs/train/corpus/tokens.json": [
+    "test/tokens-record.test.mjs"
+  ],
+  "pilot/CORPUS.json": [
+    "test/build-key.test.mjs"
   ],
   "pilot/TRAINING_CORPUS.json": [
     "test/corpus-journey-evidence.test.mjs",
@@ -82,33 +47,57 @@
     "test/set-separation.test.mjs",
     "test/scaffold-training-corpus-record.test.mjs"
   ],
-  "docs/train/corpus/records.json": [
-    "test/corpus-journey-evidence.test.mjs",
-    "test/corpus-record-stamp.test.mjs"
+  "pilot/frameworks.mjs": [
+    "test/frameworks.test.mjs",
+    "test/reflected-title-escape.test.mjs",
+    "test/reflected-title-helper.test.mjs",
+    "test/known-sinks.test.mjs",
+    "test/wiki-capability.test.mjs"
+  ],
+  "scripts/capture-site.mjs": [
+    "test/capture-site.test.mjs"
+  ],
+  "scripts/check-archetype-frames.mjs": [
+    "test/checks-wired.test.mjs"
+  ],
+  "scripts/check-baseline-label.mjs": [
+    "test/baseline-label.test.mjs",
+    "test/design-contract.test.mjs",
+    "test/design-reference-wave2.test.mjs",
+    "test/design-reference.test.mjs"
+  ],
+  "scripts/check-cross-arm-parity.mjs": [
+    "test/cross-arm-parity.test.mjs"
   ],
   "scripts/check-served-routes.mjs": [
     "test/served-routes.test.mjs",
     "test/generated-server-env.test.mjs"
   ],
-  "src/eval/generated-server.mjs": [
+  "scripts/verify-account-recovery-demo.mjs": [
+    "test/demo-verifiers.test.mjs"
+  ],
+  "scripts/verify-checkout.mjs": [
     "test/generated-server-env.test.mjs"
   ],
-  "scripts/verify-storefront-cart.mjs": [
+  "scripts/verify-contact-lead-demo.mjs": [
+    "test/demo-verifiers.test.mjs"
+  ],
+  "scripts/verify-demo.mjs": [
     "test/generated-server-env.test.mjs"
+  ],
+  "scripts/verify-event-registration-demo.mjs": [
+    "test/demo-verifiers.test.mjs"
   ],
   "scripts/verify-explainer.mjs": [
     "test/generated-server-env.test.mjs"
   ],
-  "scripts/verify-workspace.mjs": [
+  "scripts/verify-game.mjs": [
     "test/generated-server-env.test.mjs"
   ],
   "scripts/verify-pricing-tiers.mjs": [
     "test/generated-server-env.test.mjs"
   ],
-  "scripts/verify-demo.mjs": [
-    "test/generated-server-env.test.mjs"
-  ],
-  "scripts/verify-checkout.mjs": [
+  "scripts/verify-storefront-cart.mjs": [
     "test/generated-server-env.test.mjs"
   ],
   "scripts/verify-survey.mjs": [
@@ -117,8 +106,38 @@
   "scripts/verify-wiki.mjs": [
     "test/generated-server-env.test.mjs"
   ],
-  "scripts/verify-game.mjs": [
+  "scripts/verify-workspace.mjs": [
     "test/generated-server-env.test.mjs"
+  ],
+  "src/capture/ip-ranges.mjs": [
+    "test/ip-intervals.test.mjs"
+  ],
+  "src/capture/proxy.mjs": [
+    "test/capture-proxy.test.mjs",
+    "test/capture-site.test.mjs"
+  ],
+  "src/capture/target.mjs": [
+    "test/capture-proxy.test.mjs",
+    "test/capture-site.test.mjs"
+  ],
+  "src/corpus/cdp.mjs": [
+    "test/capture-flow.test.mjs",
+    "test/capture-state.test.mjs",
+    "test/chrome-sandbox.test.mjs",
+    "test/eval-starters.test.mjs"
+  ],
+  "src/corpus/harness.mjs": [
+    "test/harness-server.test.mjs",
+    "test/corpus-flows-harness.test.mjs",
+    "test/corpus-flows.test.mjs"
+  ],
+  "src/eval/generated-server.mjs": [
+    "test/generated-server-env.test.mjs"
+  ],
+  "src/viewer/pages.mjs": [
+    "test/viewer-security-headers.test.mjs",
+    "test/viewer-corpus.test.mjs",
+    "test/known-sinks.test.mjs"
   ],
   "src/viewer/server.mjs": [
     "test/viewer-auth.test.mjs",
@@ -130,16 +149,8 @@
     "test/viewer-tuning-generate.test.mjs",
     "test/viewer-tuning.test.mjs"
   ],
-  "src/viewer/pages.mjs": [
-    "test/viewer-security-headers.test.mjs",
-    "test/viewer-corpus.test.mjs",
-    "test/known-sinks.test.mjs"
-  ],
   "src/viewer/tuning.mjs": [
     "test/viewer-tuning.test.mjs",
     "test/viewer-tuning-generate.test.mjs"
-  ],
-  "src/capture/ip-ranges.mjs": [
-    "test/ip-intervals.test.mjs"
   ]
 }
