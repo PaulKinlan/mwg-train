@@ -17,6 +17,23 @@ The unit's `--state` points at `~/.local/state/mwg-train-viewer`, not into the r
 `/home/exedev/mwg-train` is reset to `origin/main` on a timer, so anything written inside it is one reset away from
 being gone. Nothing the viewer needs to remember belongs in the checkout.
 
+## The deployed viewer needs a token
+
+The unit passes `--host 0.0.0.0`, so the deployed viewer is reachable from the VM's network and not only from
+loopback. Since mwg-train-hwbs it will not serve anything without a token. Set one in the unit's environment:
+
+```sh
+sudo systemctl edit mwg-train-viewer   # add: Environment=MWG_VIEWER_TOKEN=<a long random value>
+```
+
+and give that value to whoever opens the workbench. They can also open `http://<host>:7700/?token=<value>` once:
+the viewer sets a `mwg_viewer` cookie and redirects the query away, so the token does not stay in the address bar,
+in a bookmark, or in the `Referer` of every asset the page loads. Keep the value out of the repository - the unit's
+environment is where a deployment secret belongs, and if none is configured the viewer generates one per process and
+prints it to the journal (`journalctl -u mwg-train-viewer | grep 'viewer token'`), which is fine for a local run and
+noisy for a deployment. `MWG_ALLOW_ANONYMOUS_VIEWER=1` restores the previous open behaviour, and the viewer says so
+on stdout when it is taken.
+
 ## Install
 
 ```sh

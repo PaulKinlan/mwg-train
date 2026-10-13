@@ -14,7 +14,7 @@ const REAL_JPEG = readFileSync(join(ROOT, 'docs', 'design', 'training', 'tr-01',
 
 async function serve(t, repoRoot) {
   const stateDir = mkdtempSync(join(tmpdir(), 'viewer-reference-state-'));
-  const { server, liveServer, pool } = createViewer({ corpusRoot: join(ROOT, 'pilot'), stateDir, repoRoot });
+  const { server, liveServer, pool } = createViewer({ allowAnonymous: true, corpusRoot: join(ROOT, 'pilot'), stateDir, repoRoot });
   t.after(() => { pool.stopAll(); server.close(); liveServer.close(); rmSync(stateDir, { recursive: true, force: true }); });
   await new Promise((resolveListen) => server.listen(0, '127.0.0.1', resolveListen));
   return `http://127.0.0.1:${server.address().port}`;

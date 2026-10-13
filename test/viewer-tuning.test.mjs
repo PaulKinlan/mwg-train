@@ -87,7 +87,7 @@ test('untrusted prompt text is escaped and unknown family falls back to an autho
 
 test('tuning routes serve only fixed training targets, never eval targets or mutated drafts', async (t) => {
   const stateDir = mkdtempSync(join(tmpdir(), 'viewer-tuning-'));
-  const { server, liveServer, pool } = createViewer({ corpusRoot: join(ROOT, 'pilot'), stateDir, repoRoot: ROOT });
+  const { server, liveServer, pool } = createViewer({ allowAnonymous: true, corpusRoot: join(ROOT, 'pilot'), stateDir, repoRoot: ROOT });
   t.after(() => { pool.stopAll(); server.close(); liveServer.close(); rmSync(stateDir, { recursive: true, force: true }); });
   await new Promise((resolveListen) => server.listen(0, '127.0.0.1', resolveListen));
   const base = `http://127.0.0.1:${server.address().port}`;
@@ -128,7 +128,7 @@ test('training target route refuses symlinked and non-file images', async (t) =>
   writeFileSync(outside, Buffer.from([137, 80, 78, 71]));
   const image = join(dir, 'target.png');
   symlinkSync(outside, image);
-  const { server, pool } = createViewer({ corpusRoot: join(ROOT, 'pilot'), stateDir: join(root, 'state'), repoRoot: root });
+  const { server, pool } = createViewer({ allowAnonymous: true, corpusRoot: join(ROOT, 'pilot'), stateDir: join(root, 'state'), repoRoot: root });
   t.after(() => { pool.stopAll(); server.close(); });
   await new Promise((resolveListen) => server.listen(0, '127.0.0.1', resolveListen));
   const url = `http://127.0.0.1:${server.address().port}/tuning/target/tr-01.png`;

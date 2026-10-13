@@ -15,7 +15,7 @@ const ROOT = resolve(import.meta.dirname, '..');
 // starts; it is that it refuses.
 test('refuses a corpus path that does not exist', () => {
   assert.throws(
-    () => createViewer({ corpusRoot: join(tmpdir(), 'no-such-corpus-6h3'), stateDir: join(tmpdir(), 'state-6h3') }),
+    () => createViewer({ allowAnonymous: true, corpusRoot: join(tmpdir(), 'no-such-corpus-6h3'), stateDir: join(tmpdir(), 'state-6h3') }),
     /corpusRoot is not an existing directory/,
   );
 });
@@ -25,12 +25,12 @@ test('refuses a corpus path that is a file rather than a directory', (t) => {
   t.after(() => rmSync(dir, { recursive: true, force: true }));
   const file = join(dir, 'corpus.json');
   writeFileSync(file, '{}');
-  assert.throws(() => createViewer({ corpusRoot: file, stateDir: dir }), /corpusRoot is not an existing directory/);
+  assert.throws(() => createViewer({ allowAnonymous: true, corpusRoot: file, stateDir: dir }), /corpusRoot is not an existing directory/);
 });
 
 test('refuses a missing, empty or non-string corpusRoot rather than defaulting to something', () => {
   for (const value of [undefined, null, '', '   ', 42]) {
-    assert.throws(() => createViewer({ corpusRoot: value, stateDir: tmpdir() }), /createViewer requires a corpusRoot path/,
+    assert.throws(() => createViewer({ allowAnonymous: true, corpusRoot: value, stateDir: tmpdir() }), /createViewer requires a corpusRoot path/,
       `corpusRoot ${JSON.stringify(value)} must be refused`);
   }
 });
@@ -39,7 +39,7 @@ test('refuses a missing, empty or non-string corpusRoot rather than defaulting t
 // everything, which would be a worse bug than the one being fixed.
 test('still accepts a real corpus directory', (t) => {
   const stateDir = mkdtempSync(join(tmpdir(), 'viewer-corpus-ok-'));
-  const viewer = createViewer({ corpusRoot: join(ROOT, 'pilot'), stateDir });
+  const viewer = createViewer({ allowAnonymous: true, corpusRoot: join(ROOT, 'pilot'), stateDir });
   t.after(() => { viewer.pool.stopAll(); viewer.server.close(); viewer.liveServer.close(); try { rmSync(stateDir, { recursive: true, force: true }); } catch {} });
   assert.ok(viewer.server && viewer.liveServer, 'a real corpus must still produce a working viewer');
 });

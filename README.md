@@ -99,8 +99,15 @@ from an allowlist and re-scans the outbound set before every request, so owner a
 never reach a site. Uplifted snapshots come from the run's kept tree or a deterministic
 regeneration that must reproduce the recorded SHA - a mismatch is refused, not served.
 
-The viewer carries NO auth of its own: the exe.dev proxy in front of each port is the gate, and
-the served artefacts are auth-free by construction. The other direction is enforced: the
+The exe.dev proxy in front of each port is the gate for the deployed viewer, and the served artefacts are
+auth-free by construction. Since mwg-train-hwbs the viewer also requires a token of its own: a shared secret
+from `MWG_VIEWER_TOKEN` (or one generated per process and printed at startup), presented as
+`Authorization: Bearer <token>`, as a `mwg_viewer` cookie, or once as `?token=<token>` which sets the cookie
+and redirects the query away. `/healthz` is the only exempt path, because it answers a constant.
+`MWG_ALLOW_ANONYMOUS_VIEWER=1` turns it off again for a local run. The reason is that the proxy protects the
+PORT and nothing protects the process: any local process, any mistyped `--host`, or anything that reaches the
+port around the proxy could read the corpus and drive `/tuning/generate`, which spends money. The other
+direction is enforced: the
 owner-auth scan (`scripts/scan-owner-auth.mjs`, config `docs/eval/owner-identity.json`) fails
 closed - a pair that cannot be shown free of owner-identifying material (in its trees AND its
 corpus records) is neither accepted nor served.

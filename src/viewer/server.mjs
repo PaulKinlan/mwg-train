@@ -34,7 +34,7 @@
  *   ANY  /live/<id>/<version>/...       the site itself, proxied from its sandbox
  */
 import { createServer } from 'node:http';
-import { createHash } from 'node:crypto';
+import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import { existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, realpathSync, statSync, writeFileSync } from 'node:fs';
 import { mkdir, readFile, rm } from 'node:fs/promises';
 import { dirname, extname, join, resolve } from 'node:path';
@@ -222,7 +222,9 @@ const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 /**
  * Is this request's Origin - or, failing that, its Referer - an origin this viewer serves? (mwg-train-we0o)
  *
- * The viewer has no accounts and its state-changing routes do real things: /tuning/generate spends money at the
+ * The viewer has no accounts (mwg-train-hwbs added a shared token, checked in front of every route - see
+ * viewerAuthVerdict - but no accounts, so the origin check below is still what stands between a page the operator
+ * visits and the routes that act) and its state-changing routes do real things: /tuning/generate spends money at the
  * hosted image model, and a live route starts a sandbox. Without a check, any page the operator visits can make
  * their browser POST here, and the request is acted on whether or not it carried anything of ours.
  *
@@ -306,7 +308,105 @@ function crossOriginRefusal(request, response, { viewerPort = null, livePort = n
   return true;
 }
 
-export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(REPO_ROOT, 'docs/eval/owner-identity.json'), repoRoot = REPO_ROOT, livePort = 7701, imageEndpoint = DEFAULT_IMAGE_ENDPOINT, boardGenerator = null }) {
+/**
+ * The viewer has no accounts, and until now that was a statement about its ROUTES rather than a limit on who could
+ * reach them: anything that could open the port could read the corpus and drive the workbench (mwg-train-hwbs). A
+ * single shared secret is the smallest thing that closes that without inventing accounts nobody asked for.
+ *
+ * MWG_VIEWER_TOKEN is the token when it is set. Otherwise one is generated per process and printed at startup, so the
+ * default is "closed, with a way in" rather than "open": not passing a flag does not produce a readable corpus.
+ * MWG_ALLOW_ANONYMOUS_VIEWER=1 restores the previous behaviour for a local run, and says so on stdout when taken -
+ * the same shape as MWG_ALLOW_UNSANDBOXED_GENERATED_SERVER, which is the project's other explicit opt-in.
+ *
+ * /healthz is the one exempt path. It answers a constant and is what a deployment probes, so it discloses nothing;
+ * everything else, including every asset a page loads, is behind the token. Listing the exemption rather than testing
+ * for it means a second open route has to be added deliberately, in one place.
+ */
+export const AUTH_EXEMPT_PATHS = new Set(['/healthz']);
+
+/** The token to enforce, and whether it was generated rather than configured. Configuring it is what a deployment does. */
+export function viewerAuthToken({ env = process.env, random = randomBytes } = {}) {
+  const configured = (env.MWG_VIEWER_TOKEN ?? '').trim();
+  if (configured) return { token: configured, generated: false };
+  return { token: random(32).toString('hex'), generated: true };
+}
+
+/**
+ * Compares without leaking where two values first differ. The length check is not an optimisation: timingSafeEqual
+ * throws on a length mismatch, so a caller sending one character would crash the route rather than be refused.
+ */
+const tokensMatch = (presented, token) => {
+  const left = Buffer.from(String(presented));
+  const right = Buffer.from(String(token));
+  if (left.length !== right.length) return false;
+  return timingSafeEqual(left, right);
+};
+
+const VIEWER_COOKIE = 'mwg_viewer';
+
+/**
+ * The verdict for one request: null to proceed, or a refusal the caller writes out. Returned rather than written so the
+ * decision can be tested without a socket, in the same spirit as originVerdict.
+ *
+ * Three ways to present the token, because a browser and curl are both first-class here: an Authorization header for
+ * scripts, a cookie for everything the page then loads, and ?token= once for the operator's first visit. The query is
+ * consumed by redirecting to the same path without it, so the token does not end up in the address bar's history,
+ * the Referer of every asset, or a bookmark.
+ */
+export function viewerAuthVerdict(request, { token = '', pathname = null, search = '', allowAnonymous = false } = {}) {
+  if (allowAnonymous) return null;
+  const path = pathname ?? new URL(request.url, 'http://viewer.internal').pathname;
+  if (AUTH_EXEMPT_PATHS.has(path)) return null;
+
+  const header = request.headers?.authorization ?? '';
+  const bearer = /^Bearer (.+)$/i.exec(header.trim());
+  if (bearer && tokensMatch(bearer[1], token)) return null;
+
+  const cookies = String(request.headers?.cookie ?? '');
+  const cookie = cookies.split(';').map((part) => part.trim()).find((part) => part.startsWith(`${VIEWER_COOKIE}=`));
+  if (cookie && tokensMatch(decodeURIComponent(cookie.slice(VIEWER_COOKIE.length + 1)), token)) return null;
+
+  const queryToken = new URLSearchParams(search.startsWith('?') ? search.slice(1) : search).get('token');
+  if (queryToken && tokensMatch(queryToken, token)) {
+    const location = new URL(request.url, 'http://viewer.internal');
+    location.searchParams.delete('token');
+    // HttpOnly so a script injected into rendered corpus content cannot read it, SameSite=Strict so another origin
+    // cannot use the cookie, and deliberately NOT Secure: the deployed viewer sits behind the VM's proxy on plain
+    // http, and a Secure cookie would simply never be stored there.
+    return {
+      status: 302,
+      location: `${location.pathname}${location.search}`,
+      setCookie: `${VIEWER_COOKIE}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Strict`,
+    };
+  }
+
+  // The 401 says how to get in and never repeats what was presented (mwg-train-s7iu: a refusal must not echo the
+  // credential, valid or not, into a log or a terminal).
+  return { status: 401 };
+}
+
+/** Writes a verdict from viewerAuthVerdict. */
+function authRefusal(response, verdict) {
+  response.writeHead(verdict.status, {
+    ...viewerHeaders(),
+    // text/plain, and stated rather than left to sniffing: this body is read by a person on a terminal as often as by
+    // a script, and an unsniffable refusal is one less surface. The live run printed no content-type at all, which no
+    // test in this suite noticed - the test now asserts it.
+    'content-type': 'text/plain; charset=utf-8',
+    'cache-control': 'no-store',
+    'www-authenticate': 'Bearer realm="mwg-train viewer"',
+    ...(verdict.setCookie ? { 'set-cookie': verdict.setCookie } : {}),
+    ...(verdict.location ? { location: verdict.location } : {}),
+  });
+  response.end(verdict.status === 302 ? '' : 'viewer authentication required: send the token as "Authorization: Bearer <token>", or open this URL once with ?token=<token>\n');
+}
+
+export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(REPO_ROOT, 'docs/eval/owner-identity.json'), repoRoot = REPO_ROOT, livePort = 7701, imageEndpoint = DEFAULT_IMAGE_ENDPOINT, boardGenerator = null, authToken: configuredToken = null, allowAnonymous = false }) {
+  // No token passed means generate one, never "no authentication": the caller that forgets gets a viewer it has to
+  // read the startup line to use, which is the failure direction to fail in. allowAnonymous is deliberately an
+  // explicit argument here rather than read from the environment inside this function, so the CLI names the opt-in in
+  // one place and the tests can exercise both states without touching process.env.
+  const { token: authToken, generated: authGenerated } = configuredToken === null ? viewerAuthToken() : { token: configuredToken, generated: false };
   // Fail closed. This viewer has exactly one job - read a corpus - and it used to come up happily with the corpus path
   // pointing at a directory that did not exist: it listened on its ports, served 200 on routes that looked healthy, and
   // recorded the problem only in a log line nobody reads. A viewer with no corpus to read is a misconfiguration, not a
@@ -590,6 +690,13 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
     try {
       const url = new URL(request.url, 'http://viewer.internal');
       const path = url.pathname;
+
+      // Authentication first, before anything else in the handler can look at the request or act on it. One call site
+      // for the whole surface: a route added below is covered by construction, which is the property that matters here
+      // and is stronger than testing a list of routes (mwg-train-hwbs).
+      const auth = viewerAuthVerdict(request, { token: authToken, pathname: path, search: url.search, allowAnonymous });
+      if (auth) return authRefusal(response, auth);
+
       const liveOrigin = liveOriginFor(request, livePort);
 
       // Every state-changing request is checked here, before any route can act on it (mwg-train-we0o).
@@ -927,7 +1034,7 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
     viewerPort = server.address()?.port ?? null;
   });
 
-  return { server, liveServer, pool };
+  return { server, liveServer, pool, authToken, authGenerated };
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
@@ -950,13 +1057,16 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   // documented proxy; it carries no credential, and this process has no key to send it.
   const imageEndpoint = arg('image-endpoint', process.env.MWG_TRAIN_IMAGE_ENDPOINT || DEFAULT_IMAGE_ENDPOINT);
   let viewer;
+  // The opt-in is read here, once, and printed when taken: an operator who has turned authentication off should not
+  // have to remember that they did.
+  const allowAnonymous = process.env.MWG_ALLOW_ANONYMOUS_VIEWER === '1';
   try {
-    viewer = createViewer({ corpusRoot, stateDir, livePort, imageEndpoint });
+    viewer = createViewer({ corpusRoot, stateDir, livePort, imageEndpoint, authToken: process.env.MWG_VIEWER_TOKEN ?? null, allowAnonymous });
   } catch (error) {
     console.error(`viewer startup failed: ${error.message}`);
     process.exit(1);
   }
-  const { server, liveServer, pool } = viewer;
+  const { server, liveServer, pool, authToken, authGenerated } = viewer;
   const shutdown = () => {
     pool.stopAll();
     server.close();
@@ -967,6 +1077,14 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   process.on('SIGINT', shutdown);
   server.listen(port, host, () => {
     console.log(`mwg-train corpus viewer on http://${host}:${port}/ reading corpus ${corpusRoot}`);
+    console.log(
+      allowAnonymous
+        ? 'viewer auth: OFF - MWG_ALLOW_ANONYMOUS_VIEWER=1, so anything that can reach this port can read the corpus and drive the workbench'
+        : `viewer auth: token from ${authGenerated ? 'this process (printed below)' : 'MWG_VIEWER_TOKEN'} - send it as 'Authorization: Bearer <token>', or open http://${host}:${port}/?token=<token> once to set the cookie (/healthz is exempt)`,
+    );
+    // Deliberately printed only when it was generated. A token supplied by the environment is the deployment's secret,
+    // and echoing it here would copy it into every log and every captured CI transcript.
+    if (authGenerated && !allowAnonymous) console.log(`viewer token: ${authToken}`);
   });
   liveServer.listen(livePort, host, () => {
     console.log(`mwg-train live site origin on http://${host}:${livePort}/ (sandboxed sites only)`);
