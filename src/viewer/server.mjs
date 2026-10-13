@@ -217,6 +217,95 @@ export function liveOriginFor(request, livePort) {
   return `${scheme}://${hostname}:${livePort}`;
 }
 
+const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
+
+/**
+ * Is this request's Origin - or, failing that, its Referer - an origin this viewer serves? (mwg-train-we0o)
+ *
+ * The viewer has no accounts and its state-changing routes do real things: /tuning/generate spends money at the
+ * hosted image model, and a live route starts a sandbox. Without a check, any page the operator visits can make
+ * their browser POST here, and the request is acted on whether or not it carried anything of ours.
+ *
+ * The rule is host equality against the Host header, reusing the trust rule liveOriginFor already applies to that
+ * header: a host we would not trust for links is not a host whose origin we accept. Requiring a declaration is the
+ * other half - a POST with neither Origin nor Referer is refused rather than assumed safe, which is a deliberate
+ * change for curl-style use (set -H 'Origin: http://127.0.0.1:7700').
+ *
+ * The PORT is deliberately not part of the rule. The viewer's own port is not known here (the CLI binds it and a
+ * test binds 0), while the live origin is a different port on the same host by design, so a port rule would either
+ * refuse the serve-live form or need the port threaded through this module for no security gain worth having: a page
+ * served from another port on this host means something already runs on this host.
+ */
+export function originVerdict(request, { viewerPort = null, livePort = null } = {}) {
+  const host = String(request.headers.host ?? '');
+  if (!/^[a-z0-9.-]+(:\d+)?$/i.test(host)) return { allowed: false, reason: 'the request host is not usable' };
+  const hostname = host.replace(/:\d+$/, '').toLowerCase();
+  const trusted = hostname === '127.0.0.1' || hostname === 'localhost' || /(^|\.)exe\.xyz$/.test(hostname);
+  if (!trusted) return { allowed: false, reason: `the request host ${hostname} is not this viewer` };
+  const scheme = hostname.endsWith('.exe.xyz') ? 'https' : 'http';
+
+  const declared = request.headers.origin ?? originOf(request.headers.referer);
+  if (!declared) {
+    return { allowed: false, reason: 'no Origin or Referer: a state-changing request has to say where it came from' };
+  }
+  let origin;
+  try {
+    origin = new URL(declared);
+  } catch {
+    return { allowed: false, reason: `unparseable origin ${declared}` };
+  }
+  if (origin.hostname.toLowerCase() !== hostname) {
+    return { allowed: false, reason: `origin ${origin.origin} is not this viewer (${hostname})` };
+  }
+  if (origin.protocol !== `${scheme}:`) {
+    return { allowed: false, reason: `origin ${origin.origin} is not served over ${scheme}` };
+  }
+  // The port has to be one of ours: the port the request itself arrived on, this viewer's own (learned when the
+  // socket binds, since the CLI and a test do not always pass it), or the live origin's, which is a different port
+  // on the same host by design.
+  //
+  // The scheme's default port (80 for http, 443 for https) is admitted ONLY when the request did not name a port
+  // either, because a Host without a port is a request that arrived on the default port - so a page on
+  // http://127.0.0.1 is the same origin as a request to http://127.0.0.1. Admitting 80 unconditionally instead let a
+  // page served from local port 80 drive the live start route on a viewer listening on an ephemeral port
+  // (mwg-train-h3qn); the default and the request's own port are not interchangeable.
+  const defaultPort = (protocol) => (protocol === 'https:' ? '443' : '80');
+  const requestPort = (host.match(/:(\d+)$/) ?? [])[1] ?? null;
+  const allowedPorts = new Set([requestPort ?? defaultPort(`${scheme}:`)]);
+  // 443 is also admitted for an https host, because that is a TLS-terminating proxy in front of this viewer: the
+  // browser's origin is https://host with no port while the Host header may well carry the backend's port. The
+  // asymmetry with http is deliberate - reaching port 80 needs nothing but a local listener, which is the bypass
+  // this rule exists to close, while reaching 443 as a trusted origin needs a certificate the browser accepts.
+  if (scheme === 'https') allowedPorts.add('443');
+  for (const port of [viewerPort, livePort]) if (port) allowedPorts.add(String(port));
+  if (!allowedPorts.has(origin.port || defaultPort(origin.protocol))) {
+    return { allowed: false, reason: `origin ${origin.origin} is not a port this viewer serves` };
+  }
+  return { allowed: true };
+}
+
+/** The origin of a Referer, or null when it is absent or unparseable. */
+function originOf(referer) {
+  if (!referer) return null;
+  try {
+    return new URL(referer).origin;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Refuse a state-changing request before any route sees it. Applied at the top of both servers rather than in the
+ * routes, so a new POST route is covered by existing, and so the refusal happens before anything acts.
+ */
+function crossOriginRefusal(request, response, { viewerPort = null, livePort = null } = {}) {
+  if (SAFE_METHODS.has(String(request.method ?? 'GET').toUpperCase())) return false;
+  const verdict = originVerdict(request, { viewerPort, livePort });
+  if (verdict.allowed) return false;
+  textResponse(response, `refused: ${verdict.reason}`, 403);
+  return true;
+}
+
 export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(REPO_ROOT, 'docs/eval/owner-identity.json'), repoRoot = REPO_ROOT, livePort = 7701, imageEndpoint = DEFAULT_IMAGE_ENDPOINT, boardGenerator = null }) {
   // Fail closed. This viewer has exactly one job - read a corpus - and it used to come up happily with the corpus path
   // pointing at a directory that did not exist: it listened on its ports, served 200 on routes that looked healthy, and
@@ -488,6 +577,10 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
     return result;
   }
 
+  // The viewer's own port is known only once the socket binds: the CLI passes it to listen, and a test binds 0, so
+  // the origin check reads it from here rather than from the arguments (mwg-train-we0o).
+  let viewerPort = null;
+
   function findProject(corpus, id) {
     if (!/^[a-z0-9][a-z0-9-]*$/i.test(id)) return null;
     return corpus.projects.find((project) => project.id === id) ?? null;
@@ -498,6 +591,9 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
       const url = new URL(request.url, 'http://viewer.internal');
       const path = url.pathname;
       const liveOrigin = liveOriginFor(request, livePort);
+
+      // Every state-changing request is checked here, before any route can act on it (mwg-train-we0o).
+      if (crossOriginRefusal(request, response, { viewerPort, livePort })) return;
 
       if (path === '/healthz') return textResponse(response, 'ok');
 
@@ -692,6 +788,9 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
       const url = new URL(request.url, 'http://live.internal');
       const path = url.pathname;
 
+      // The serve-live form posts to this origin (a different port on the same host), so it needs the same check.
+      if (crossOriginRefusal(request, response, { viewerPort, livePort })) return;
+
       if (path === '/healthz') return textResponse(response, 'ok');
 
       // The run is part of the live URL so every in-site link (rewritten under the prefix) keeps
@@ -822,6 +921,10 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
     } catch (error) {
       return textResponse(response, `live origin error: ${error.message}`, 500);
     }
+  });
+
+  server.on('listening', () => {
+    viewerPort = server.address()?.port ?? null;
   });
 
   return { server, liveServer, pool };

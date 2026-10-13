@@ -170,7 +170,7 @@ test('gallery serves the generated archetype reference boards and the authored e
   assert.equal(step.status, 200);
   assert.equal(step.headers.get('content-type'), 'image/jpeg');
   assert.equal((await step.arrayBuffer()).byteLength > 1000, true);
-  assert.equal((await fetch(`${base}/concepts`, { method: 'POST' })).status, 404);
+  assert.equal((await fetch(`${base}/concepts`, { method: 'POST', headers: { origin: new URL(base).origin } })).status, 404);
   assert.equal((await fetch(`${base}/live/example/original/`)).status, 404);
 });
 
