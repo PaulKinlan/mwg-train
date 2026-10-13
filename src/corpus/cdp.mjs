@@ -494,6 +494,25 @@ export class Page {
     }
   }
 
+  /**
+   * Poll a page expression until it answers truthy, bounded, and throw when it never does.
+   *
+   * Why this exists (the demo-verifier flake): three acceptance verifiers read their comparison page's live
+   * iframes after a fixed `sleep(300)` and then asserted every frame's `contentDocument.readyState === 'complete'`.
+   * That is a race, not a check - on a loaded two-vCPU VM the three embedded demos have not always finished
+   * bootstrapping in 300ms, and the verifier then reported a page defect for what was a slow machine. Polling
+   * until the frames are complete removes the race while keeping the assertion strict: a frame that never loads
+   * still times out here and the caller's own check still fails with what each frame actually was.
+   */
+  async waitForFunction(expression, { timeout = 10_000, interval = 60 } = {}) {
+    const started = Date.now();
+    for (;;) {
+      if (await this.evaluate(expression)) return true;
+      if (Date.now() - started > timeout) throw new CdpError('WAIT_TIMEOUT', `expression never became truthy within ${timeout}ms: ${String(expression).slice(0, 200)}`);
+      await new Promise((resolve) => setTimeout(resolve, interval));
+    }
+  }
+
   async evaluate(expression) {
     const { result, exceptionDetails } = await this.send('Runtime.evaluate', {
       // An async wrapper, resolved by awaitPromise below: a check that needs to fetch from the page

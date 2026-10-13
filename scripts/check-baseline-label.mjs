@@ -135,11 +135,14 @@ export function listTrackedDocuments({ cwd, argv = ['ls-files', '-z', '*.md', '*
  * coverage map named (mwg-train-7zot). A test that asks the classifier gets the same answer whether the document
  * is classified by name or by pattern, so moving an entry between the two cannot break it again.
  */
-export function classifyDocument(path) {
-  if (DOCUMENTS[path]) return DOCUMENTS[path];
+export function classifyByPattern(path) {
   if (PROVENANCE_PATTERNS.some((pattern) => pattern.test(path))) return 'provenance';
   if (GENERATED_PATTERNS.some((pattern) => pattern.test(path))) return 'generated';
   return null;
+}
+
+export function classifyDocument(path) {
+  return DOCUMENTS[path] ?? classifyByPattern(path);
 }
 
 export const DOCUMENTS = {
@@ -472,18 +475,12 @@ export const REGISTRY = Object.entries(DOCUMENTS)
 export function checkDocumentClassification(paths) {
   const findings = [];
   for (const path of paths) {
-    const kind =
-      DOCUMENTS[path] ??
-      (PROVENANCE_PATTERNS.some((pattern) => pattern.test(path))
-        ? 'provenance'
-        : GENERATED_PATTERNS.some((pattern) => pattern.test(path))
-          ? 'generated'
-          : null);
+    const kind = classifyDocument(path);
     if (!kind) {
       findings.push({
         code: 'UNCLASSIFIED_DOCUMENT',
         subject: path,
-        message: 'not in DOCUMENTS and not matched by GENERATED_PATTERNS; classify it as a floor report (which must carry the label) or as the kind of document it is',
+        message: 'not in DOCUMENTS and matched by no pattern; classify it as a floor report (which must carry the label) or as the kind of document it is',
       });
       continue;
     }
@@ -772,8 +769,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const byPattern = { provenance: 0, generated: 0 };
   for (const path of trackedFiles) {
     if (DOCUMENTS[path]) continue;
-    if (PROVENANCE_PATTERNS.some((pattern) => pattern.test(path))) byPattern.provenance += 1;
-    else if (GENERATED_PATTERNS.some((pattern) => pattern.test(path))) byPattern.generated += 1;
+    const kind = classifyByPattern(path);
+    if (kind) byPattern[kind] += 1;
   }
   if (!asJson) console.log(`check-baseline-label: PASS - ${REGISTRY.length} floor report(s) carry '${BASELINE_LABEL}'; all ${scanned} tracked document(s) are classified (${Object.keys(DOCUMENTS).length} by name, ${byPattern.provenance} by the provenance pattern, and the rest by generated pattern), and no document classified as a non-report states floor evidence without the label (${Object.keys(EXCLUSIONS).length} excluded by name)`);
 }

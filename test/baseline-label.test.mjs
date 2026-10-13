@@ -15,6 +15,7 @@ import { join, resolve } from 'node:path';
 import {
   checkBaselineLabel,
   checkDocumentClassification,
+  classifyDocument,
   DOCUMENTS,
   EXCLUSIONS,
   falseProvenance,
@@ -533,4 +534,22 @@ test('the provenance patterns classify a new family, while an explicit entry sti
   const nested = 'docs/design/archetypes/contact-lead/demo/README.md';
   assert.equal(DOCUMENTS[nested], 'design');
   assert.deepEqual(checkDocumentClassification([nested]), []);
+
+  // mwg-train-ugpk. These assertions have to be about THE CHECKER, not a helper beside it. classifyDocument used
+  // to be a second implementation of the precedence - the checker had its own inline copy and so did the PASS
+  // summary - so a test written against the helper could pass while the check itself decided something else. The
+  // checker now calls classifyDocument, and this asserts both halves of that: the checker classifies these paths,
+  // and it still refuses a path nothing classifies.
+  const unclassified = 'docs/design/archetypes/a-family-nobody-has-authored-yet/design.md';
+  const refused = checkDocumentClassification([unclassified]);
+  assert.deepEqual(refused.map((f) => f.code), ['UNCLASSIFIED_DOCUMENT'], 'the checker stopped refusing an unclassified document');
+  assert.equal(classifyDocument(unclassified), null);
+  for (const path of [...unseen, 'docs/design/archetypes/booking/README.md', nested]) {
+    assert.deepEqual(checkDocumentClassification([path]), [], `${path}: the checker and classifyDocument disagree`);
+    assert.ok(classifyDocument(path), `${path}: classified by the checker but not by classifyDocument`);
+  }
+  assert.equal(classifyDocument(unseen[0]), 'provenance');
+  assert.equal(classifyDocument(unseen[1]), 'provenance');
+  assert.equal(classifyDocument('docs/design/archetypes/booking/README.md'), 'design');
+  assert.equal(classifyDocument(nested), 'design');
 });

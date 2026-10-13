@@ -99,6 +99,13 @@ try {
     await compare.waitFor('.comparison');
     await compare.evaluate(`document.querySelectorAll('.comparison')[1].scrollIntoView(); return true;`);
     await sleep(300);
+    // Wait for the three embedded demos to finish loading rather than reading them after a fixed delay: under
+    // load they have not always bootstrapped in the sleep below, and this check then reported a slow machine as
+    // a page defect - exactly what failed the merged-tree full gate. Bounded, and the check below still fails,
+    // naming what each frame actually was, if a frame never reaches complete.
+    await compare
+      .waitForFunction(`const frames = [...document.querySelectorAll('.comparison iframe')]; return frames.length === 3 && frames.every((frame) => frame.contentDocument?.readyState === 'complete');`, { timeout: 20_000 })
+      .catch(() => false);
     const views = JSON.parse(await compare.evaluate(`return JSON.stringify({
       images: [...document.querySelectorAll('.comparison img')].map((i) => [i.naturalWidth, i.naturalHeight]),
       frames: [...document.querySelectorAll('.comparison iframe')].map((frame) => ({
