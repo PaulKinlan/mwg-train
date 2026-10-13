@@ -133,7 +133,12 @@ test('authorisation requires signed verbatim owner cap, exact model, scope, expi
   assert.throws(() => verifyGenerationApproval([comment], { key: 'test-only', model: 'fireworks/deepseek-v4-flash', now: TEST_NOW }), /NO_OWNER_AUTH/);
   assert.throws(() => verifyGenerationApproval([signedComment({ expiry: '2020-01-01T00:00:00Z' })], { key: 'test-only', model: MODEL, now: TEST_NOW }), /NO_OWNER_AUTH/);
   assert.throws(() => verifyGenerationApproval([signedComment({ host: 'another-vm' })], { key: 'test-only', model: MODEL, now: TEST_NOW }), /NO_OWNER_AUTH/);
-  for (const text of ['OWNER-AUTHORIZATION-REVOKED', ' OWNER-AUTHORIZATION-REVOKED ', 'OWNER-AUTHORIZATION-REVOKED\nPaul revoked generation']) {
+  for (const text of [
+    'OWNER-AUTHORIZATION-REVOKED', ' OWNER-AUTHORIZATION-REVOKED ',
+    'OWNER-AUTHORIZATION-REVOKED\nPaul revoked generation',
+    'OWNER-AUTHORIZATION-REVOKED: cap withdrawn', 'OWNER-AUTHORIZATION-REVOKED.',
+    '## OWNER-AUTHORIZATION-REVOKED', '  ### OWNER-AUTHORIZATION-REVOKED: reason',
+  ]) {
     assert.throws(() => verifyGenerationApproval([comment, { issue_id: GENERATION_BEAD, author: 'fleet-manager-coord', text }],
       { key: 'test-only', model: MODEL, now: TEST_NOW }), /revoked/);
   }

@@ -30,7 +30,9 @@ export function verifyGenerationApproval(comments, { key, model, now = new Date(
   for (const comment of [...comments].reverse()) {
     if (comment.issue_id !== GENERATION_BEAD || !TRUSTED_AUTHORS.has(comment.author)) continue;
     const text = String(comment.text ?? '');
-    if (/^OWNER-AUTHORIZATION-REVOKED(?:\s|$)/.test(text.trimStart())) {
+    // A revocation is fail-closed even when the hub appends a reason/punctuation or formats it
+    // as a Markdown heading. Requiring a trailing newline or word boundary silently re-enables spend.
+    if (text.trimStart().replace(/^#{1,6}\s*/, '').startsWith('OWNER-AUTHORIZATION-REVOKED')) {
       throw new Error('NO_OWNER_AUTH: generation authorisation was revoked; stop before another request');
     }
     const lines = Object.fromEntries(text.split('\n').map((line) => {
