@@ -269,6 +269,32 @@ const KNOWN_UNFIXED = {
   'src/corpus/harness.mjs': 'mwg-train-i5i2.5 (owner: mwg-train-hud) - the harness sandbox bead; it starts servers itself until that lands',
 };
 
+// The launch sites this guard is answerable for, measured from the tree (2026-10-13) rather than inferred: the route
+// prober, the nine verifiers, and the test-side wrapper. The guard asserts this set EXACTLY, so a site that is
+// deleted, renamed, or has its import dropped fails here instead of quietly leaving the scan (mwg-train-zamd).
+//
+// This is the difference between a guard that reports what it saw and one that treats the absence of findings as
+// coverage: the scan below can only ever find what it recognises, so the inventory is pinned separately and the
+// count of files it walked is asserted too. A launch whose script name is computed into a variable, or that happens
+// in a directory outside SCANNED_DIRS, is still out of a text scan's reach - the pin is what makes that loss of
+// coverage loud rather than silent.
+const LAUNCHER_MODULE = 'src/eval/generated-server.mjs';
+const GUARD_FILE = 'test/generated-server-env.test.mjs';
+const PROTECTED_LAUNCH_SITES = [
+  'scripts/check-served-routes.mjs',
+  'scripts/verify-checkout.mjs',
+  'scripts/verify-demo.mjs',
+  'scripts/verify-explainer.mjs',
+  'scripts/verify-game.mjs',
+  'scripts/verify-pricing-tiers.mjs',
+  'scripts/verify-storefront-cart.mjs',
+  'scripts/verify-survey.mjs',
+  'scripts/verify-wiki.mjs',
+  'scripts/verify-workspace.mjs',
+  'test/helpers/arm-server.mjs',
+];
+const MIN_SCANNED_FILES = 190;
+
 // The test tree is scanned too (mwg-train-pdsb): every unit suite used to launch arms with its own inline spawn, so
 // the scan is what keeps a new one from quietly doing it again. The two tests that spawn a CLI with their own
 // environment - test/served-routes.test.mjs driving the prober, test/capture-site.test.mjs driving a script - are
@@ -312,8 +338,11 @@ test('every call site that starts a generated server goes through the sandbox', 
       if (relative.endsWith('.mjs')) files.push(relative);
     }
   }
+  const callers = [];
   for (const relative of files.sort()) {
-    const callSites = startsGeneratedServer(readFileSync(join(ROOT, relative), 'utf8'));
+    const text = readFileSync(join(ROOT, relative), 'utf8');
+    if (relative !== LAUNCHER_MODULE && relative !== GUARD_FILE && text.includes('startGeneratedServer(')) callers.push(relative);
+    const callSites = startsGeneratedServer(text);
     if (callSites.length === 0) continue;
     const exempt = KNOWN_UNFIXED[relative];
     if (exempt) {
@@ -323,6 +352,23 @@ test('every call site that starts a generated server goes through the sandbox', 
     }
     for (const site of callSites) offenders.push(`${relative}:${site.line}`);
   }
+
+  // The walk itself is asserted first: an empty or short walk would make every check below pass for the wrong reason.
+  assert.ok(files.length >= MIN_SCANNED_FILES, `the scan walked only ${files.length} files, so it cannot be trusted to have seen the launch sites`);
+
+  // The inventory, in both directions. A protected site that stops calling the launcher - or stops existing, or loses
+  // the import - shows up as a missing entry; a new caller shows up as an unexpected one, which is the moment to
+  // decide whether it belongs in this list.
+  assert.deepEqual(callers, PROTECTED_LAUNCH_SITES, 'the set of files that launch a generated server through the sandbox changed');
+  for (const site of PROTECTED_LAUNCH_SITES) {
+    assert.ok(existsSync(join(ROOT, site)), `${site} is pinned as a protected launch site but no longer exists`);
+    assert.match(
+      readFileSync(join(ROOT, site), 'utf8'),
+      /from '[^']*src\/eval\/generated-server\.mjs'/,
+      `${site} calls startGeneratedServer without importing it from the launcher module`,
+    );
+  }
+  assert.deepEqual(Object.keys(KNOWN_UNFIXED), ['src/corpus/harness.mjs'], 'the exemption list is pinned too: a new bypass needs its own bead, not a new key');
   assert.deepEqual(
     offenders,
     [],
