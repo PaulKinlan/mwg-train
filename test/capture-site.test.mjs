@@ -542,11 +542,14 @@ test('a hostile resolution the browser would have used is irrelevant, because th
     rightsRef: 'docs/provenance/assets/reproduction-studies.md',
     env: { ...process.env, MWG_TRAIN_QUARANTINE: root },
     outDir: 'rebinding-name',
-    // Public by the range rules and unroutable, so the validated connection fails fast rather than hanging.
+    // The resolver's answer is what the policy judges, and it is refused: 255.255.255.255 is reserved, which the
+    // policy now knows (mwg-train-uin8). The browser's own mapping says loopback; the refusal proves which of the two
+    // the capture believed.
     _lookup: async () => [{ address: '255.255.255.255' }],
     _chromeArgs: ['--host-resolver-rules=MAP rebind.test 127.0.0.1'],
   }).then(() => null, (error) => error);
 
   assert.ok(outcome instanceof Error, `the capture must not reach the rebound page, got: ${JSON.stringify(outcome)}`);
+  assert.equal(outcome.code, 'PRIVATE_TARGET', 'the resolver\'s answer is what is judged, and it is the one refused');
   assert.equal(hits.length, 0, 'the browser\'s own resolution must not be able to reach a local server');
 });
