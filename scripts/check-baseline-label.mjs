@@ -125,6 +125,23 @@ export function listTrackedDocuments({ cwd, argv = ['ls-files', '-z', '*.md', '*
 }
 
 /** Every tracked prose or JSON document, classified. */
+/**
+ * The kind this check decides for one document: its name entry, else the provenance patterns, else the generated
+ * patterns, else null (which is an UNCLASSIFIED_DOCUMENT finding).
+ *
+ * Exported because a test that asserts a document is classified has to assert THE MECHANISM. Two tests asserted
+ * this file's text contained a literal `'<path>': 'provenance'` line, and broke the moment the reference-board
+ * entries became pattern-matched - the merge gate caught it after the fast gate had run only the two suites the
+ * coverage map named (mwg-train-7zot). A test that asks the classifier gets the same answer whether the document
+ * is classified by name or by pattern, so moving an entry between the two cannot break it again.
+ */
+export function classifyDocument(path) {
+  if (DOCUMENTS[path]) return DOCUMENTS[path];
+  if (PROVENANCE_PATTERNS.some((pattern) => pattern.test(path))) return 'provenance';
+  if (GENERATED_PATTERNS.some((pattern) => pattern.test(path))) return 'generated';
+  return null;
+}
+
 export const DOCUMENTS = {
   // Per-demo design contracts (mwg-train-tus). Authoring documents, verified against a freshly
   // generated demo by check:design-schema, and deliberately outside the byte-frozen generated trees.
