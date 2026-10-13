@@ -92,11 +92,19 @@ test('the connect-time decision: an address is resolved once, checked, and retur
     (error) => error.code === 'UNRESOLVABLE',
   );
   // A globally reachable address is still admitted, which is what keeps this a policy rather than a blanket refusal.
+  // This list has to move with the policy: 100:0:0:1::1 was here as "a public IPv6 address" and became refused when the
+  // registry check found the Dummy IPv6 Prefix it belongs to (mwg-train-htw), so a policy change has to sweep every suite
+  // that asserts what the policy allows. 2001:200::1 sits just outside the IETF protocol umbrella, which is refused.
   for (const hostname of [
-    '8.8.8.8', '93.184.216.34', '2606:4700::1111', '100:0:0:1::1',
+    '8.8.8.8', '93.184.216.34', '2606:4700::1111', '2001:200::1',
     // Just outside each prefix added above: a policy that refuses everything also passes a refusal test, so the
     // neighbouring address of every new prefix is asserted admitted. These are the masks being tested, not the intent.
-    '2001:3::1', '2001:40::1', '3fff:1000::1', '5f01::1',
+    //
+    // 2001:40::1 used to be in this list as "just outside the non-reachable sub-prefixes of 2001::/23". It is not
+    // outside them in any useful sense: it is inside the umbrella in space no registry row covers, which is the hole
+    // mwg-train-mkdx found, so this assertion was pinning the hole open. Removed rather than replaced - it was here as
+    // an example of reachable space, and 2001:200::1 above is a real one.
+    '2001:3::1', '3fff:1000::1', '5f01::1',
   ]) {
     await resolveAllowedAddress({ hostname, port: 443, lookup: publicLookup });
   }
