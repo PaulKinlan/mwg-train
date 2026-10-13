@@ -63,6 +63,16 @@ test('the connect-time decision: an address is resolved once, checked, and retur
     '2002::1', // 6to4
     '100::1', // discard-only
     '64:ff9b:1::1', // local-use NAT64
+    // mwg-train-4dn2: the rest of the registry's IPv6 allocations that are not globally reachable. The first
+    // transcription of this list was IPv4's; these are the sub-prefixes within 2001::/23 and elsewhere that a second
+    // review found, and they are transcribed per sub-prefix rather than as one block because part of that block
+    // (Teredo, the AS112 delegations) IS globally reachable.
+    '2001:2::1', // benchmarking (RFC 5180)
+    '2001:10::1', // ORCHID, deprecated (RFC 4843)
+    '2001:20::1', // ORCHIDv2 (RFC 7343)
+    '2001:30::1', // Drone Remote ID (RFC 9374)
+    '3fff::1', // documentation (RFC 9637)
+    '5f00::1', // SRv6 SIDs (RFC 9602)
   ]) {
     await assert.rejects(
       () => resolveAllowedAddress({ hostname, port: 80, lookup: publicLookup }),
@@ -82,7 +92,12 @@ test('the connect-time decision: an address is resolved once, checked, and retur
     (error) => error.code === 'UNRESOLVABLE',
   );
   // A globally reachable address is still admitted, which is what keeps this a policy rather than a blanket refusal.
-  for (const hostname of ['8.8.8.8', '93.184.216.34', '2606:4700::1111', '100:0:0:1::1']) {
+  for (const hostname of [
+    '8.8.8.8', '93.184.216.34', '2606:4700::1111', '100:0:0:1::1',
+    // Just outside each prefix added above: a policy that refuses everything also passes a refusal test, so the
+    // neighbouring address of every new prefix is asserted admitted. These are the masks being tested, not the intent.
+    '2001:3::1', '2001:40::1', '3fff:1000::1', '5f01::1',
+  ]) {
     await resolveAllowedAddress({ hostname, port: 443, lookup: publicLookup });
   }
   // allowPrivate is the explicit opt-in the project needs for capturing servers it started itself.
