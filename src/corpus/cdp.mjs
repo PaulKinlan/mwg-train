@@ -60,17 +60,25 @@ export function chromeIsUnsandboxed(env = process.env) {
  * the reason the opt-in exists, but it is not a reason to run unsandboxed by default on a host that can sandbox.
  */
 /**
- * Chromium flags that turn a sandbox off. Listed so the decision to disable one is made in ONE place instead of by
- * whoever passes args, which is what this list is for: rev-1's mwg-train-p58l was that a caller could append
- * --no-sandbox to `extra` and get an unsandboxed renderer with no warning and no opt-in, and an invariant a caller can
- * step around is not an invariant. --disable-gpu-sandbox is here for the same reason although it is narrower: it
- * removes the GPU process's sandbox, which is a real one on a host that also decodes untrusted media.
+ * Caller arguments this project's launch sites are measured to need, matched on the flag name before any '='.
+ *
+ * An ALLOWLIST rather than a list of flags to refuse, because the refusal list could not be finished: mwg-train-p58l was
+ * a caller passing --no-sandbox in extra args, the fix for it was a denylist, and mwg-train-kkcv then named
+ * --disable-seccomp-filter-sandbox - with --disable-namespace-sandbox and whatever Chromium adds next still to come.
+ * That is the shape of a class that keeps producing findings, and this lane had already recorded the lesson
+ * (allowlist, never denylist) before writing the denylist. A list of what may pass is finite; a list of what may not is
+ * not, and every entry in it was found by a reviewer.
+ *
+ * Measured basis for the members, so the list is not a guess either: no production call site passes extra args at all
+ * today (the only caller is a test), and the capture proxy work in tag parked/frame-gate-capture-proxy needs
+ * --proxy-bypass-list=<-loopback> to remove Chrome's implicit loopback bypass so every request reaches its proxy.
+ * Adding a flag here is therefore a reviewable decision, which is the point of an allowlist.
  */
-export const SANDBOX_DISABLING_FLAGS = ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu-sandbox'];
+export const CALLER_ARG_ALLOWLIST = ['--proxy-bypass-list'];
 
-/** Which sandbox-disabling flags a caller asked for, in the form they were passed. */
-export function sandboxDisablingArgs(args = []) {
-  return args.filter((arg) => SANDBOX_DISABLING_FLAGS.includes(String(arg).split('=')[0]));
+/** The caller arguments that pass: everything else is dropped, whatever it is. */
+export function allowedCallerArgs(args = []) {
+  return args.filter((arg) => CALLER_ARG_ALLOWLIST.includes(String(arg).split('=')[0]));
 }
 
 export function chromeArgs({ userDataDir, proxy = null, extra = [], unsandboxed = false, url = 'about:blank' } = {}) {
@@ -90,13 +98,10 @@ export function chromeArgs({ userDataDir, proxy = null, extra = [], unsandboxed 
     '--force-color-profile=srgb',
     '--window-size=1280,900',
     ...(proxy ? [`--proxy-server=${proxy}`] : []),
-    // Caller args cannot reach around the sandbox decision: a sandbox-disabling flag is dropped unless the opt-in is
-    // in force, and launchChrome says so out loud rather than ignoring it quietly.
-    ...(unsandboxed
-      // The opt-in already puts --no-sandbox in the base flags, so a caller's copy is dropped to keep exactly one;
-      // its other requests, including --disable-gpu-sandbox, are honoured.
-      ? extra.filter((arg) => String(arg).split('=')[0] !== '--no-sandbox')
-      : extra.filter((arg) => sandboxDisablingArgs([arg]).length === 0)),
+    // Only allowlisted caller arguments pass. Not "the sandbox-disabling ones are refused": a caller cannot widen
+    // this process's reach by naming a flag, and a flag Chromium adds next year is refused because it is not on the
+    // list rather than because somebody remembered to add it to a refusal list.
+    ...allowedCallerArgs(extra),
     url,
   ];
 }
@@ -208,13 +213,13 @@ export async function launchChrome({ proxy = null, args = [] } = {}) {
       { code: 'MWG_UNSANDBOXED_CHROME' },
     );
   }
-  // A caller that asked for a sandbox-disabling flag and did not get it is told, because silence here is the other
-  // half of the same problem: a run that quietly ran sandboxed when somebody believed otherwise is a mystery later.
-  const dropped = unsandboxed ? [] : sandboxDisablingArgs(args);
+  // A caller whose argument was dropped is told which one and what the rule is, because silence here is the other
+  // half of the same problem: a run that ignored a flag somebody believed mattered is a mystery later.
+  const dropped = args.filter((arg) => allowedCallerArgs([arg]).length === 0);
   if (dropped.length > 0) {
     process.emitWarning(
-      `Chrome was launched with ${dropped.join(', ')} in its extra arguments, and it was ignored: the renderer sandbox is only disabled by MWG_ALLOW_UNSANDBOXED_CHROME=1. Remove the flag, or set that variable if this host genuinely cannot sandbox.`,
-      { code: 'MWG_SANDBOX_FLAG_IGNORED' },
+      `Chrome was launched with ${dropped.join(', ')} in its extra arguments, and ${dropped.length === 1 ? 'it was' : 'they were'} dropped: caller arguments pass only if they are on CALLER_ARG_ALLOWLIST in src/corpus/cdp.mjs (${CALLER_ARG_ALLOWLIST.join(', ')}). Add the flag there with a reason if a launch site needs it.`,
+      { code: 'MWG_CALLER_ARGS_DROPPED' },
     );
   }
   const child = spawn(
