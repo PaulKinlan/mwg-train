@@ -98,6 +98,71 @@ test('the three ways to present the token are each enough, and each one is compa
   assert.equal(viewerAuthVerdict({ ...request() }, { token: TOKEN, allowAnonymous: true }), null);
 });
 
+test('an empty credential is never a credential, however it is presented', () => {
+  // mwg-train-o459, which was a real bypass and not a theoretical one. Measured before the fix, with
+  // MWG_VIEWER_TOKEN empty: anonymous /concepts was refused (401) but `Cookie: mwg_viewer=` returned the 93KB concepts
+  // page, because an empty expected token and an empty presented token compared equal. The bug's shape is worth more
+  // than the bug: the CLI passed its environment straight into createViewer, which accepted '' as a token, so the trim
+  // inside viewerAuthToken was never reached - an invariant a caller can step around is not an invariant.
+  const empty = { url: '/', method: 'GET', headers: {} };
+  assert.deepEqual(viewerAuthVerdict(empty, { token: '' }), { status: 401 }, 'an empty token must refuse, not admit');
+  assert.deepEqual(viewerAuthVerdict({ ...request({ cookie: 'mwg_viewer=' }) }, { token: '' }), { status: 401 });
+  assert.deepEqual(viewerAuthVerdict({ ...request({ authorization: 'Bearer ' }) }, { token: '' }), { status: 401 });
+  assert.deepEqual(viewerAuthVerdict({ ...request({ cookie: 'mwg_viewer=' }) }, { token: TOKEN }), { status: 401 });
+  assert.deepEqual(viewerAuthVerdict({ ...request({ authorization: 'Bearer ' }) }, { token: TOKEN }), { status: 401 });
+  assert.deepEqual(viewerAuthVerdict({ url: '/?token=', method: 'GET', headers: {} }, { token: '' , pathname: '/', search: '?token=' }), { status: 401 });
+  // A blank value means "not configured", so the viewer generates one instead of enforcing nothing. Whitespace counts
+  // as blank: it is what an operator produces by pasting an empty variable into a unit file.
+  for (const blank of ['', '   ', '\t', null, undefined]) {
+    const viewer = createViewer({
+      corpusRoot: join(ROOT, 'pilot'),
+      stateDir: mkdtempSync(join(tmpdir(), 'viewer-auth-blank-')),
+      repoRoot: ROOT,
+      authToken: blank,
+    });
+    assert.equal(viewer.authGenerated, true, `authToken ${JSON.stringify(blank)} must be treated as not configured`);
+    assert.ok(viewer.authToken.length >= 32, `a blank token must be replaced by a real one, got ${JSON.stringify(viewer.authToken)}`);
+    viewer.pool.stopAll();
+    viewer.server.close();
+    viewer.liveServer.close();
+  }
+  // A configured value is still used exactly, whitespace and all being trimmed rather than trusted.
+  const configured = createViewer({
+    corpusRoot: join(ROOT, 'pilot'),
+    stateDir: mkdtempSync(join(tmpdir(), 'viewer-auth-configured-')),
+    repoRoot: ROOT,
+    authToken: '  a-real-configured-token  ',
+  });
+  assert.equal(configured.authGenerated, false);
+  assert.equal(configured.authToken, 'a-real-configured-token');
+  configured.pool.stopAll();
+  configured.server.close();
+  configured.liveServer.close();
+});
+
+test('a malformed cookie is refused rather than fatal', () => {
+  // decodeURIComponent raises URIError on a broken escape and a cookie is attacker-controlled, so without a
+  // never-throwing decode a hostile client turns a 401 into a 500. Measured before the fix against the real CLI:
+  // Cookie: mwg_viewer=% answered 500.
+  for (const malformed of ['%', '%E0%A4%A', 'abc%', '%%', 'a%zz']) {
+    assert.deepEqual(
+      viewerAuthVerdict({ ...request({ cookie: `mwg_viewer=${malformed}` }) }, { token: TOKEN }),
+      { status: 401 },
+      `Cookie: mwg_viewer=${malformed} must be refused, not throw`,
+    );
+  }
+});
+
+test('over HTTP, an empty cookie is refused on both ports and a malformed one is not a 500', async (t) => {
+  const { base, live } = await serve(t);
+  for (const url of [`${base}/concepts`, `${live}/live/${LIVE_PROJECT}/original/`]) {
+    const emptyCookie = await fetch(url, { headers: { cookie: 'mwg_viewer=' } });
+    assert.equal(emptyCookie.status, 401, `${url} admitted an empty cookie`);
+    const malformed = await fetch(url, { headers: { cookie: 'mwg_viewer=%' } });
+    assert.equal(malformed.status, 401, `${url} answered ${malformed.status} for a malformed cookie instead of refusing it`);
+  }
+});
+
 test('the exempt paths are a list of one, and it is the route that answers a constant', () => {
   // Asserting the size fails when somebody exempts a second route without deciding to, which is the whole reason the
   // exemption is a list rather than a test for the health path.

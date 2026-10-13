@@ -332,17 +332,37 @@ export function viewerAuthToken({ env = process.env, random = randomBytes } = {}
 }
 
 /**
- * Compares without leaking where two values first differ. The length check is not an optimisation: timingSafeEqual
- * throws on a length mismatch, so a caller sending one character would crash the route rather than be refused.
+ * Compares without leaking where two values first differ. Length is checked first because timingSafeEqual throws on a
+ * mismatch, so a caller sending one character would crash the route rather than be refused.
+ *
+ * The empty check is not defensive padding, it is the rule that closes mwg-train-o459: an empty credential is never a
+ * credential. Without it an empty expected token and an empty presented token compare equal, and every request is
+ * admitted - measured before the fix, with MWG_VIEWER_TOKEN empty, `Cookie: mwg_viewer=` returned the 93KB concepts
+ * page. This is the one place both sides of the comparison pass through, so the rule belongs here rather than at each
+ * of the three ways a token can be presented.
  */
 const tokensMatch = (presented, token) => {
-  const left = Buffer.from(String(presented));
-  const right = Buffer.from(String(token));
+  const left = Buffer.from(String(presented ?? ''));
+  const right = Buffer.from(String(token ?? ''));
+  if (left.length === 0 || right.length === 0) return false;
   if (left.length !== right.length) return false;
   return timingSafeEqual(left, right);
 };
 
 const VIEWER_COOKIE = 'mwg_viewer';
+
+/**
+ * decodeURIComponent throws URIError on a malformed escape, and a cookie is attacker-controlled: a broken percent
+ * encoding has to mean "not the token" rather than terminate the handler. Same shape as the never-throwing decoders on
+ * the write routes - a refusal, not a crash. Measured before the fix: Cookie: mwg_viewer=% answered 500.
+ */
+const decodeCookieValue = (value) => {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return null;
+  }
+};
 
 /**
  * The verdict for one request: null to proceed, or a refusal the caller writes out. Returned rather than written so the
@@ -364,7 +384,8 @@ export function viewerAuthVerdict(request, { token = '', pathname = null, search
 
   const cookies = String(request.headers?.cookie ?? '');
   const cookie = cookies.split(';').map((part) => part.trim()).find((part) => part.startsWith(`${VIEWER_COOKIE}=`));
-  if (cookie && tokensMatch(decodeURIComponent(cookie.slice(VIEWER_COOKIE.length + 1)), token)) return null;
+  const cookieValue = cookie ? decodeCookieValue(cookie.slice(VIEWER_COOKIE.length + 1)) : null;
+  if (cookieValue !== null && tokensMatch(cookieValue, token)) return null;
 
   const queryToken = new URLSearchParams(search.startsWith('?') ? search.slice(1) : search).get('token');
   if (queryToken && tokensMatch(queryToken, token)) {
@@ -406,7 +427,17 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
   // read the startup line to use, which is the failure direction to fail in. allowAnonymous is deliberately an
   // explicit argument here rather than read from the environment inside this function, so the CLI names the opt-in in
   // one place and the tests can exercise both states without touching process.env.
-  const { token: authToken, generated: authGenerated } = configuredToken === null ? viewerAuthToken() : { token: configuredToken, generated: false };
+  //
+  // An empty or whitespace-only value means "not configured" rather than "the token is the empty string"
+  // (mwg-train-o459). It has to be decided HERE, at the one place a viewer is built, because the CLI passes its
+  // environment straight through: it handed '' to this function, this function took it as a token, and the trim inside
+  // viewerAuthToken was never reached. A blank value now falls back to a generated token, which is the same default a
+  // missing value gets, so every path into a viewer ends with a real secret.
+  const { token: authToken, generated: authGenerated } = (() => {
+    const configured = typeof configuredToken === 'string' ? configuredToken.trim() : '';
+    if (configured) return { token: configured, generated: false };
+    return viewerAuthToken();
+  })();
   // Fail closed. This viewer has exactly one job - read a corpus - and it used to come up happily with the corpus path
   // pointing at a directory that did not exist: it listened on its ports, served 200 on routes that looked healthy, and
   // recorded the problem only in a log line nobody reads. A viewer with no corpus to read is a misconfiguration, not a
