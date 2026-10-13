@@ -204,11 +204,13 @@
     "test/compare.test.mjs"
   ],
   "src/viewer/pages.mjs": [
+    "test/viewer-live-index.test.mjs",
     "test/viewer-security-headers.test.mjs",
     "test/viewer-corpus.test.mjs",
     "test/known-sinks.test.mjs"
   ],
   "src/viewer/server.mjs": [
+    "test/viewer-live-index.test.mjs",
     "test/viewer-auth.test.mjs",
     "test/viewer-concepts.test.mjs",
     "test/viewer-corpus-required.test.mjs",

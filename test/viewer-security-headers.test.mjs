@@ -44,7 +44,8 @@ test('every viewer response carries a restrictive policy and nosniff', async (t)
     const response = await fetch(`${base}${route}`);
     assert.equal(response.headers.get('x-content-type-options'), 'nosniff', `${route}: nosniff must be set`);
     assert.ok(response.headers.get('content-security-policy'), `${route}: a policy must be set`);
-    assert.equal(response.headers.get('referrer-policy'), 'no-referrer', `${route}: referrer-policy must be set`);
+    assert.equal(response.headers.get('referrer-policy'), route === '/' ? 'strict-origin-when-cross-origin' : 'no-referrer',
+      `${route}: only pages with live Start forms disclose an origin, never an evidence path`);
     const policy = directives(policyOf(response));
     assert.equal(policy['default-src'], "'none'", `${route}: default-src must be none`);
     assert.equal(policy['object-src'], "'none'", `${route}: object-src must be none`);
