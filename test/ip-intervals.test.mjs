@@ -125,18 +125,22 @@ test('MUTANT: a hole anywhere inside a range fails equality, and the addresses a
   // sampled test cannot: that equality FAILS, and that the difference is exactly the address that was removed.
   const whole = cidrs('10.0.0.0/8');
   const mutants = [
-    ['10.0.0.77', 'interior - the address that beat first/middle/last sampling'],
-    ['10.0.0.0', 'the first address, which is what an off-by-one produces'],
-    ['10.255.255.255', 'the last address, the other off-by-one'],
-    ['10.0.0.255', 'the last address of the first /24 - a boundary a stride scan would also catch'],
+    ['10.0.0.77', '10.0.0.78', 'interior - the address that beat first/middle/last sampling'],
+    ['10.0.0.0', '10.0.0.1', 'the first address, which is what an off-by-one produces'],
+    ['10.255.255.255', '10.255.255.254', 'the last address, the other off-by-one'],
+    ['10.0.0.255', '10.0.0.254', 'the last address of the first /24 - a boundary a stride scan would also catch'],
   ];
-  for (const [address, why] of mutants) {
+  for (const [address, neighbour, why] of mutants) {
     const mutant = difference(whole, [addressRange(address)]);
     assert.equal(equals(whole, mutant), false, `a range with ${address} removed is not the same set (${why})`);
     assert.deepEqual(holes(whole, mutant), [addressRange(address)], `holes() must name exactly ${address} (${why})`);
     assert.equal(contains(mutant, address), false);
     // And the neighbours are untouched, so a test that named the wrong address would be caught here.
     assert.equal(size(mutant), 16777215n);
+    // The neighbour BY NAME as well as the size: mwg-train-xamf caught this comment claiming the neighbours were
+    // asserted while the code checked the removed address and the total size only. Naming it is what catches a test
+    // that removes or reports the wrong address.
+    assert.equal(contains(mutant, neighbour), true, `${neighbour} must still be contained after removing ${address}`);
   }
 });
 
@@ -210,14 +214,17 @@ test('the functions never mutate the sets they are given', () => {
   // The registry test this exists for compares sets built once and used many times; a normalisation that sorted in
   // place would corrupt the caller's copy and make a later assertion lie.
   const original = cidrs('10.0.0.128/25', '10.0.0.0/25');
-  // formatSet rather than JSON.stringify: a range holds BigInts, and stringify throws on them, which would have made
-  // this test fail for a reason that has nothing to do with mutation.
-  const before = formatSet(original);
+  // A RAW snapshot - order, and the values themselves - not formatSet and not JSON.stringify. mwg-train-xamf found
+  // this check was a false green: formatSet normalises what it is given, so a set sorted in place produced the same
+  // string before and after and the assertion could never fail. JSON.stringify cannot stand in for it either, because
+  // a range holds BigInts and stringify throws on them, which would fail for a reason unrelated to mutation.
+  const snapshot = (set) => set.map((range) => `${range.family}:${range.start}:${range.end}:${range.bits}`).join('|');
+  const before = snapshot(original);
   normalize(original);
   union(original, cidrs('192.168.0.0/16'));
   difference(original, cidrs('10.0.0.0/26'));
   intersect(original, cidrs('10.0.0.0/24'));
   contains(original, '10.0.0.1');
   size(original);
-  assert.equal(formatSet(original), before);
+  assert.equal(snapshot(original), before);
 });
