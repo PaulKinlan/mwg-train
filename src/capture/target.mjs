@@ -63,6 +63,11 @@ const BLOCKED_IPV4 = [
   ['192.0.2.0', 24], // TEST-NET-1, documentation (RFC 5737)
   ['192.88.99.0', 24], // 6to4 relay anycast, deprecated (RFC 7526)
   ['192.168.0.0', 16], // private (RFC 1918)
+  // 192.88.99.0/24 is UNASSERTED (blank) in the IANA registry, and this policy is fail-closed for an unasserted row
+  // (see 2001:10::/28). Until this line it blocked 192.88.99.0/31 and 192.88.99.3-255 and ADMITTED 192.88.99.2: a
+  // one-address hole that the interval-set comparison against the registry found, and that point sampling could not
+  // have reported because the samples chosen for that row land in the blocked part.
+  ['192.88.99.0', 24],
   ['198.18.0.0', 15], // benchmarking (RFC 2544)
   ['198.51.100.0', 24], // TEST-NET-2, documentation (RFC 5737)
   ['203.0.113.0', 24], // TEST-NET-3, documentation (RFC 5737)
