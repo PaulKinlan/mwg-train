@@ -49,6 +49,9 @@
   "docs/eval/evaluable-primary-endpoint.md": [
     "test/evaluable-primary-endpoint.test.mjs"
   ],
+  "docs/train/memory-containment.md": [
+    "test/generated-server-memory.test.mjs"
+  ],
   "docs/provenance/iana/special-purpose-addresses.json": [
     "test/capture-target-registry.test.mjs"
   ],
