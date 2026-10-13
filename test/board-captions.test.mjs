@@ -122,8 +122,12 @@ test('a family declared uncaptioned is allowed to display boards without caption
   });
 });
 
-test('the exemptions are the two families measured as never printing a digest', () => {
-  assert.deepEqual(Object.keys(UNCAPTIONED_BY_DESIGN).sort(), ['account-recovery', 'event-registration']);
+test('the exemptions are exactly the families measured as never printing a digest', () => {
+  // account-recovery left the list on 2026-10-13 (mwg-train-uh0o): its compare page now prints
+  // SHA-256 captions for all three boards, so the family no longer qualifies as uncaptioned by
+  // design. A family that gains its first caption must be removed here in the same change - this
+  // test exists to force that.
+  assert.deepEqual(Object.keys(UNCAPTIONED_BY_DESIGN).sort(), ['event-registration']);
   for (const reason of Object.values(UNCAPTIONED_BY_DESIGN)) assert.ok(reason.length > 20, 'each exemption carries its reason');
 });
 
