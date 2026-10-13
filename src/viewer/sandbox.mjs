@@ -113,6 +113,9 @@ export class Sandbox {
       ...viewerTmpfsArgs(),
       ...boundedDeviceArgs(),
       '--proc', '/proc',
+      // Bubblewrap's implicit root is an unsized tmpfs. Remount it read-only only AFTER the
+      // explicit child mounts: /tmp, /data and /dev retain their independent size/writability.
+      '--remount-ro', '/',
       '--',
       '/node/bin/node', '/viewer/bridge-wrapper.mjs', '--entry', `/site/${this.entry}`, '--port', String(SANDBOX_PORT),
     ];

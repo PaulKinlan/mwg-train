@@ -68,7 +68,7 @@ test('normal Node server starts with a bounded old-space and private /tmp, not a
   assert.match(result.memory.reason, /no host cgroup attachment/);
 });
 
-test('eval sandbox /dev has a real 4MiB ceiling with no unbounded device tmpfs', { timeout: DEADLINE + 5000 }, async (t) => {
+test('eval sandbox /dev is 4MiB and implicit root rejects ordinary writes', { timeout: DEADLINE + 5000 }, async (t) => {
   if (!sandboxAvailable()) { t.skip('bubblewrap unavailable; no generated code run without it'); return; }
   const result = await runSandboxed(`import { writeFileSync, statfsSync, openSync, closeSync, writeSync } from 'node:fs';
     const chunk = Buffer.alloc(1024 * 1024);
@@ -77,12 +77,15 @@ test('eval sandbox /dev has a real 4MiB ceiling with no unbounded device tmpfs',
       try { bytes += writeSync(fd, chunk); }
       catch (error) { errorCode = error.code; break; }
     } } finally { closeSync(fd); }
+    let rootError = null;
+    try { writeFileSync('/bounded-root-write', 'no'); } catch (error) { rootError = error.code; }
     const fs = statfsSync('/dev');
-    writeFileSync(__REPORT__, JSON.stringify({ maxBytes: fs.bsize * fs.blocks, bytes, errorCode }));`, 64);
+    writeFileSync(__REPORT__, JSON.stringify({ maxBytes: fs.bsize * fs.blocks, bytes, errorCode, rootError }));`, 64);
   assert.equal(result.timedOut, false, result.stderr);
   assert.equal(result.code, 0, result.stderr);
   assert.equal(result.report.maxBytes, DEVICE_TMPFS_BYTES);
   assert.equal(result.report.errorCode, 'ENOSPC');
+  assert.equal(result.report.rootError, 'EROFS', 'unsized implicit root must be read-only');
   assert.ok(result.report.bytes >= DEVICE_TMPFS_BYTES - 1024 * 1024 && result.report.bytes <= DEVICE_TMPFS_BYTES);
 });
 

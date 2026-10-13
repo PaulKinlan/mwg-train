@@ -151,7 +151,9 @@ export function sandboxArgs({ projectDir, port, dbPath, memoryMb = generatedServ
   // read-write at the same path. Only that directory, never all of /tmp: a per-run directory is what makes that
   // possible, since the host has to see the same file the server wrote.
   if (dbDir && dbDir !== projectDir) args.push('--bind', dbDir, dbDir);
-  args.push(...boundedDeviceArgs(), '--proc', '/proc', '--chdir', projectDir);
+  // Bubblewrap's implicit root is an unsized tmpfs; make it read-only after all child mounts.
+  // The explicit /tmp, /dev and project/database binds keep their own mount permissions.
+  args.push(...boundedDeviceArgs(), '--proc', '/proc', '--remount-ro', '/', '--chdir', projectDir);
   // serverArgv already begins with the script name, so it is spread once: prepending it again would run the
   // server with a stray positional argument (`node server.mjs server.mjs --port ...`), which is invisible until a
   // generated server reads its arguments by position (mwg-train-pdsb follow-up).

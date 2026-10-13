@@ -24,7 +24,7 @@ test('viewer sizes each distinct tmpfs mount explicitly', () => {
   }
 });
 
-test('viewer /tmp, /data and /dev reject bounded fill at their separate ceilings, while site starts normally',
+test('viewer root is read-only while /tmp, /data and /dev reject bounded fill at their separate ceilings',
   { skip: !hasBwrap, timeout: 60_000 }, async (t) => {
     const siteDir = mkdtempSync(join(tmpdir(), 'viewer-memory-site-'));
     // The fixture keeps exactly one 1MiB Buffer and makes at most 80 writes per mount.
@@ -36,6 +36,13 @@ test('viewer /tmp, /data and /dev reject bounded fill at their separate ceilings
       createServer((request, response) => {
         const dir = new URL(request.url, 'http://localhost').pathname.slice(1);
         if (dir === '__health') { response.end('ok'); return; }
+        if (dir === 'root') {
+          let errorCode = null;
+          try { const fd = openSync('/bounded-root-write', 'w'); closeSync(fd); }
+          catch (error) { errorCode = error.code; }
+          response.setHeader('content-type', 'application/json');
+          response.end(JSON.stringify({ errorCode })); return;
+        }
         if (dir !== 'tmp' && dir !== 'data' && dir !== 'dev') { response.writeHead(404); response.end(); return; }
         const mount = '/' + dir;
         const fs = statfsSync(mount);
@@ -55,6 +62,10 @@ test('viewer /tmp, /data and /dev reject bounded fill at their separate ceilings
     const sandbox = new Sandbox({ id: 'test:bounded-tmpfs', siteDir });
     t.after(() => { sandbox.stop(); rmSync(siteDir, { recursive: true, force: true }); });
     await sandbox.start();
+    const root = await sandbox.request({ method: 'GET', path: '/root', headers: {} });
+    assert.equal(root.status, 200, sandbox.log);
+    assert.equal(JSON.parse(Buffer.from(root.bodyBase64, 'base64').toString('utf8')).errorCode,
+      'EROFS', 'implicit unsized root tmpfs must reject any ordinary file write');
     for (const mount of ['tmp', 'data', 'dev']) {
       const result = await sandbox.request({ method: 'GET', path: `/${mount}`, headers: {} });
       assert.equal(result.status, 200, `${mount}: ${sandbox.log}`);
