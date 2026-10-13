@@ -105,7 +105,7 @@ try {
       })),
       overflow: document.documentElement.scrollWidth - innerWidth
     })`));
-    check(`comparison loads both genuine boards and live iframes at ${width}`, views.images.length === 2 && views.images.every(([w, h]) => w === 1376 && h === 768) && views.frames.length === 2 && views.frames.every((f) => f.ready === 'complete') && views.frames[0].sent === true && views.frames[1].sent === false && /no email or reset link was sent/i.test(views.frames[1].notice), JSON.stringify(views));
+    check(`comparison loads all three genuine boards and live iframes at ${width}`, views.images.length === 3 && views.images.every(([w, h]) => w === 1376 && h === 768) && views.frames.length === 3 && views.frames.every((f) => f.ready === 'complete') && views.frames[0].sent === true && views.frames[1].sent === false && /no email or reset link was sent/i.test(views.frames[1].notice) && views.frames[2].sent === true, JSON.stringify(views));
     check(`comparison has no horizontal overflow at ${width}`, views.overflow <= 1, `${views.overflow}px`);
     await compare.screenshot(join(shots, `compare-${width}.png`), { fullPage: true });
     check(`no comparison exceptions at ${width}`, compare.console.every((entry) => entry.type !== 'exception'), JSON.stringify(compare.console));
