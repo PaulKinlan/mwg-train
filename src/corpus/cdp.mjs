@@ -383,6 +383,10 @@ export async function launchChrome({ proxy = null, allowEgress = false, disableW
       await connection.send('Page.enable', {}, sessionId);
       if (disableWebRtc) {
         // Install in the page's own world before navigation, including its same-origin frames.
+        // Opaque sandboxed srcdoc frames are NOT covered: a non-loopback UDP listener received
+        // 4 STUN packets, versus 4 with neutering off. Flattened Target.setAutoAttach with
+        // waitForDebuggerOnStart, child-session Page injection + Runtime.evaluate, and
+        // Runtime.runIfWaitingForDebugger still yielded 4 packets (2026-10-13, esqc).
         // Non-configurable accessors prevent generated code from restoring the constructors.
         await connection.send('Page.addScriptToEvaluateOnNewDocument', { source: `
           for (const name of ['RTCPeerConnection', 'webkitRTCPeerConnection']) {
