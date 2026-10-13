@@ -23,12 +23,10 @@
 export const EVIDENCE = {
   'fireworks.cost-estimator': {
     url: 'https://docs.fireworks.ai/fine-tuning/cost-estimator.md',
-    fetched_at: '2026-10-08T11:32:00Z',
+    fetched_at: '2026-10-13T16:24:11Z',
     http_status: 200,
-    // Full 64-character digest. The previous value shared this record's first 16 characters and
-    // invented the other 48, which is the failure mode a short or copied digest hides.
-    sha256: 'sha256:ff6f3b30919fe51a8017bbb0314d8a309fe1d1a1c597a13134e35427355e0a22',
-    bytes: 67062,
+    sha256: 'sha256:1aa937104e7ae3a57d99ecf55cb4bcf1162f94a0bf789033c6089446be77d919',
+    bytes: 67277,
     quote: '"managedRates": [{ "maxParams": 16000000000, "sft": 0.5, "dpo": 1 }, { "maxParams": 80000000000, "sft": 3, "dpo": 6 }, { "maxParams": 300000000000, "sft": 6, "dpo": 12 }, { "maxParams": null, "sft": 10, "dpo": 20 }]',
     model_quotes: {
       'qwen3-8b': '"id": "qwen3-8b", "label": "Qwen 3 8B", "paramCount": 8190735360, "managed": true, "managedSft": true, "managedDpo": true',
@@ -36,18 +34,24 @@ export const EVIDENCE = {
       'qwen3-14b': '"id": "qwen3-14b", "label": "Qwen 3 14B", "paramCount": 14768307200, "managed": true, "managedSft": true, "managedDpo": true',
       'gemma-4-26b-a4b-it': '"id": "gemma-4-26b-a4b-it", "label": "Gemma 4 26B A4B IT", "paramCount": 26000000000, "managed": true, "managedSft": true, "managedDpo": true',
       'gemma-4-31b-it': '"id": "gemma-4-31b-it", "label": "Gemma 4 31B IT", "paramCount": 32216731964, "managed": true, "managedSft": true, "managedDpo": true',
+      'deepseek-v4p1-flash': '"id": "deepseek-v4p1-flash", "label": "DeepSeek V4.1 Flash", "paramCount": 552000000000, "managed": true, "managedSft": true, "managedDpo": true',
+      'deepseek-v4-flash': '"id": "deepseek-v4-flash", "label": "DeepSeek-V4-Flash", "paramCount": 284000000000, "managed": true, "managedSft": true, "managedDpo": true',
     },
     note: 'The same rate bands as the pricing page, from the per-model data that also carries paramCount and the managedSft/managedDpo flags. Per-model quotes are whitespace-normalised excerpts; the checker compares them against the fetched body the same way.',
   },
   'fireworks.fine-tuning-catalogue': {
     url: 'https://docs.fireworks.ai/fine-tuning/models.md',
-    fetched_at: '2026-10-08T11:32:00Z',
+    fetched_at: '2026-10-13T16:24:11Z',
     http_status: 200,
-    sha256: 'sha256:4c383b3a3fb67c64fc32d9c1fab8147b4b468c732452422eca0c1c4eb44362b5',
-    bytes: 90422,
-    quote: '"generatedAt": "2026-10-04 17:24 UTC"',
+    sha256: 'sha256:f0f5af90afa8a1865530cfbedbbeb170a0954c4a9d0c4143d75a385d43adda7c',
+    bytes: 90710,
+    quote: '"generatedAt": "2026-10-08 16:12 UTC"',
     model_count: 44,
-    note: 'The trainable-model catalogue: 44 distinct ids at this revision (the checker counts them). It lists qwen2p5-32b-instruct and no Qwen2.5-Coder-7B-Instruct, which is why the preregistered student had to change; the absence is a fact about this fetched revision, not an assumption.',
+    model_quotes: {
+      'deepseek-v4p1-flash': '"shape": "deepseek-v4p1-flash-262k-b300-lora", "method": "LoRA", "managedSft": true, "managedDpo": true, "gpus": "4 × B300"',
+      'deepseek-v4-flash': '"shape": "deepseek-v4-flash-256k-lora", "method": "LoRA", "managedSft": true, "managedDpo": true, "gpus": "4 × B300"',
+    },
+    note: 'The updated catalogue still lists 44 distinct ids; V4.1 and V4 Flash now have named managed LoRA shapes. The shape is training hardware, NOT evidence that a trained adapter can be served on that GPU count.',
   },
   'fireworks.inference-models': {
     url: 'https://fireworks.int.exe.xyz/inference/v1/models',
@@ -97,7 +101,16 @@ export function bandFor(params, rates = MANAGED_RATES) {
  * `cardData.license` at a pinned revision. An uncited licence is the one field on this table that can
  * silently make a run unlawful, so it is checked rather than assumed.
  */
+// Per-model managed LoRA prices are deliberately attached to their exact catalogue IDs. The separate
+// deepseek-v4-flash-0731 serverless Train/$5.20 quote is NOT a price for either checkpoint here.
+export const DEEPSEEK_MANAGED_RATES = {
+  'deepseek-v4p1-flash': { lora_sft: 10, lora_dpo: 20, quote_id: 'fireworks-lora-sft--300b-e-g-deepseek-v3-kimi-k2-' },
+  'deepseek-v4-flash': { lora_sft: 6, lora_dpo: 12, quote_id: 'fireworks-lora-sft-80b-300b-e-g-qwen3-235b-gpt-oss-120b-' },
+};
+
 export const FIREWORKS_TRAINABLE = [
+  { id: 'deepseek-v4p1-flash', params: 552_000_000_000, family: 'DeepSeek V4.1 Flash', licence: 'mit', managed_sft: true, managed_dpo: true, lora_shapes: 1, source: 'fireworks.cost-estimator', shape_source: 'fireworks.fine-tuning-catalogue', revision: '2cba9e42aa026125f3ed06c6d98c1db82f7ca027', hf_repo: 'deepseek-ai/DeepSeek-V4.1-Flash', rate: DEEPSEEK_MANAGED_RATES['deepseek-v4p1-flash'], provider_revision_attested: false, account_entitlement_verified: false, licence_source: { url: 'https://huggingface.co/api/models/deepseek-ai/DeepSeek-V4.1-Flash/revision/2cba9e42aa026125f3ed06c6d98c1db82f7ca027', field: 'cardData.license', revision: '2cba9e42aa026125f3ed06c6d98c1db82f7ca027', fetched_at: '2026-10-13T16:24:11Z', http_status: 200 } },
+  { id: 'deepseek-v4-flash', params: 284_000_000_000, family: 'DeepSeek V4 Flash', licence: 'mit', managed_sft: true, managed_dpo: true, lora_shapes: 1, source: 'fireworks.cost-estimator', shape_source: 'fireworks.fine-tuning-catalogue', revision: '60d8d70770c6776ff598c94bb586a859a38244f1', hf_repo: 'deepseek-ai/DeepSeek-V4-Flash', rate: DEEPSEEK_MANAGED_RATES['deepseek-v4-flash'], provider_revision_attested: false, account_entitlement_verified: false, licence_source: { url: 'https://huggingface.co/api/models/deepseek-ai/DeepSeek-V4-Flash/revision/60d8d70770c6776ff598c94bb586a859a38244f1', field: 'cardData.license', revision: '60d8d70770c6776ff598c94bb586a859a38244f1', fetched_at: '2026-10-13T16:24:11Z', http_status: 200 } },
   { id: 'qwen3-8b', params: 8_190_735_360, family: 'Qwen 3', licence: 'apache-2.0', managed_sft: true, managed_dpo: true, lora_shapes: 1, source: 'fireworks.cost-estimator', licence_source: { url: 'https://huggingface.co/api/models/Qwen/Qwen3-8B', field: 'cardData.license', revision: 'b968826d9c46dd6066d109eabc6255188de91218', fetched_at: '2026-10-08T11:37:00Z', http_status: 200 } },
   { id: 'qwen3p5-9b', params: 9_409_813_744, family: 'Qwen 3.5', licence: 'apache-2.0', managed_sft: true, managed_dpo: true, lora_shapes: 2, source: 'fireworks.cost-estimator', licence_source: { url: 'https://huggingface.co/api/models/Qwen/Qwen3.5-9B', field: 'cardData.license', revision: 'c202236235762e1c871ad0ccb60c8ee5ba337b9a', fetched_at: '2026-10-08T11:37:00Z', http_status: 200 } },
   { id: 'qwen3-14b', params: 14_768_307_200, family: 'Qwen 3', licence: 'apache-2.0', managed_sft: true, managed_dpo: true, lora_shapes: 1, source: 'fireworks.cost-estimator', licence_source: { url: 'https://huggingface.co/api/models/Qwen/Qwen3-14B', field: 'cardData.license', revision: '40c069824f4251a91eefaf281ebe4c544efd3e18', fetched_at: '2026-10-08T11:37:00Z', http_status: 200 } },
@@ -180,10 +193,12 @@ export function reachability(modelId) {
   const onCluster = CLUSTER_TRAINABLE.find((model) => model.id === modelId);
   return {
     modelId,
-    fireworks: Boolean(onFireworks),
+    fireworks: Boolean(onFireworks), // catalogue-listed, not an attestation of the provider's exact weights
     cluster: Boolean(onCluster),
+    provider_revision_attested: onFireworks?.provider_revision_attested ?? null,
+    training_verified: Boolean(onFireworks && onFireworks.provider_revision_attested !== false && onFireworks.account_entitlement_verified !== false),
     params: onFireworks?.params ?? onCluster?.params ?? null,
     licence: onFireworks?.licence ?? onCluster?.licence ?? null,
-    comparison_eligible: Boolean(onFireworks && onCluster),
+    comparison_eligible: Boolean(onFireworks && onCluster && onFireworks.provider_revision_attested !== false && onFireworks.account_entitlement_verified !== false),
   };
 }

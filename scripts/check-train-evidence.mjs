@@ -19,7 +19,7 @@
 import { createHash } from 'node:crypto';
 import process from 'node:process';
 
-import { CLUSTER_TRAINABLE, EVIDENCE, FIREWORKS_TRAINABLE } from '../src/train/reachability.mjs';
+import { bandFor, CLUSTER_TRAINABLE, EVIDENCE, FIREWORKS_TRAINABLE } from '../src/train/reachability.mjs';
 
 const SHA256 = /^sha256:[a-f0-9]{64}$/;
 const COMMIT = /^[a-f0-9]{40}$/;
@@ -56,6 +56,31 @@ export function validateTrainEvidence() {
       if (!normalised.includes(`"${field}": ${value}`)) add('ROW_QUOTE_FACT', model.id, `the quoted evidence does not contain ${field}=${value}`);
     }
     if (!(model.lora_shapes > 0)) add('ROW_LORA', model.id, 'a trainable row needs at least one LoRA shape');
+    if (model.shape_source) {
+      const shapeQuote = EVIDENCE[model.shape_source]?.model_quotes?.[model.id];
+      if (!shapeQuote || !normalise(shapeQuote).includes('"method": "LoRA", "managedSft": true')) {
+        add('ROW_SHAPE', model.id, 'no cited managed LoRA shape in the training catalogue');
+      }
+    }
+    if (model.rate) {
+      const band = bandFor(model.params);
+      for (const field of ['lora_sft', 'lora_dpo', 'quote_id']) {
+        if (model.rate[field] !== band[field]) add('ROW_RATE', model.id, `${field} does not match its provider-managed size band`);
+      }
+      if (!COMMIT.test(String(model.revision))) add('ROW_REVISION', model.id, 'DeepSeek row needs a full 40-character HF revision');
+      if (model.provider_revision_attested === true && !model.provider_attestation?.url) {
+        add('ROW_ATTESTATION', model.id, 'provider/HF equivalence needs a cited provider attestation before training');
+      }
+      if (model.provider_revision_attested !== true && model.provider_revision_attested !== false) {
+        add('ROW_ATTESTATION', model.id, 'provider/HF equivalence must be explicitly verified or unverified');
+      }
+      if (model.account_entitlement_verified === true && !model.entitlement_evidence?.url) {
+        add('ROW_ENTITLEMENT', model.id, 'account entitlement needs a cited confirmation before training');
+      }
+      if (model.account_entitlement_verified !== true && model.account_entitlement_verified !== false) {
+        add('ROW_ENTITLEMENT', model.id, 'account entitlement must be explicitly verified or unverified');
+      }
+    }
     // The licence is the one field that can silently make a run unlawful, and the cost-estimator does
     // not state it, so each row must cite a source for it.
     const licenceSource = model.licence_source;

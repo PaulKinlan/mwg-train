@@ -30,7 +30,7 @@ test('a digest is a full 64-character sha256, never truncated or invented', () =
     assert.match(String(record.sha256), /^sha256:[a-f0-9]{64}$/, `${key} must carry a full digest`);
   }
   // The two records this check was written for: a fabricated suffix and a truncation.
-  assert.equal(EVIDENCE['fireworks.cost-estimator'].sha256, 'sha256:ff6f3b30919fe51a8017bbb0314d8a309fe1d1a1c597a13134e35427355e0a22');
+  assert.equal(EVIDENCE['fireworks.cost-estimator'].sha256, 'sha256:1aa937104e7ae3a57d99ecf55cb4bcf1162f94a0bf789033c6089446be77d919');
   assert.notEqual(EVIDENCE['fireworks.cost-estimator'].sha256, 'sha256:ff6f3b30919fe51a6c4c1b1b1a5c1a1b8f5a3b6c1a2d3e4f5a6b7c8d9e0f1a2b');
   assert.equal(EVIDENCE['fireworks.serving-fees'].sha256, 'sha256:589d38640de8545d9f65ae36067a5633ea68ad0bce1e0423874a976668b8ee88');
   assert.equal(EVIDENCE['fireworks.serving-fees'].bytes, 1493);
@@ -75,5 +75,18 @@ test('the reachability map and shared-checkpoint resolution still agree across t
   assert.ok(sharedCheckpoints().length >= 2);
   assert.equal(bandFor(8_190_735_360).lora_sft, 0.5);
   assert.equal(bandFor(26_000_000_000).lora_sft, 3.0);
-  assert.equal(bandFor(552_000_000_000).lora_sft, 10.0, 'the teacher-class model is twenty times the price per token');
+  assert.equal(bandFor(552_000_000_000).lora_sft, 10.0, 'the V4.1 provider parameter band is twenty times the 8B rate');
+  for (const [id, revision, params, rate] of [
+    ['deepseek-v4p1-flash', '2cba9e42aa026125f3ed06c6d98c1db82f7ca027', 552_000_000_000, 10],
+    ['deepseek-v4-flash', '60d8d70770c6776ff598c94bb586a859a38244f1', 284_000_000_000, 6],
+  ]) {
+    const model = FIREWORKS_TRAINABLE.find((row) => row.id === id);
+    assert.equal(model.revision, revision);
+    assert.equal(model.params, params, 'provider priced parameter count, not HF safetensors.total');
+    assert.equal(model.licence, 'mit');
+    assert.equal(model.rate.lora_sft, rate);
+    assert.equal(model.provider_revision_attested, false);
+    assert.equal(reachability(id).training_verified, false);
+    assert.equal(reachability(id).comparison_eligible, false);
+  }
 });
