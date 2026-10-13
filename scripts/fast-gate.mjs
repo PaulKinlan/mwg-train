@@ -128,6 +128,32 @@ function checkForPrefix(file) {
   return null;
 }
 
+// Coverage contract (mwg-train-dfas): .fleet/coverage-mapping.json is read BOTH here and by the
+// fleet coverage oracle (remote/check-coverage.py), from the same bytes. The oracle's import scan
+// cannot see named imports - a test can bind only `launchChrome` out of the cdp module, carrying
+// the stem solely in the module path - so a source file covered exclusively that way looks
+// uncovered to the oracle even when this gate runs its three importing suites. Declaring such
+// files in the shared contract and selecting from it HERE means the gate and the oracle can no
+// longer disagree about what covers what: a mapping that rots fails this gate closed instead of
+// warning after the fact (the drift fleet-r571 caught when the contract and the selection were
+// separate artefacts).
+const coverageMappingPath = process.env.FAST_GATE_COVERAGE_MAP
+  ? path.resolve(process.env.FAST_GATE_COVERAGE_MAP)
+  : path.join(ROOT, '.fleet', 'coverage-mapping.json');
+let coverageMapping = {};
+if (fs.existsSync(coverageMappingPath)) {
+  try {
+    coverageMapping = JSON.parse(fs.readFileSync(coverageMappingPath, 'utf8'));
+  } catch (error) {
+    console.error(`fast-gate: FAIL: coverage mapping ${coverageMappingPath} is not valid JSON: ${error.message}`);
+    process.exit(1);
+  }
+  if (typeof coverageMapping !== 'object' || coverageMapping === null || Array.isArray(coverageMapping)) {
+    console.error(`fast-gate: FAIL: coverage mapping ${coverageMappingPath} must be a JSON object of file -> suites.`);
+    process.exit(1);
+  }
+}
+
 // Explicit script mapping for check scripts that don't have direct unit tests
 const checkScriptMap = {
   'scripts/validate-provenance.mjs': 'lint:provenance',
@@ -268,6 +294,26 @@ for (const file of changedFiles) {
     matched = true;
   }
 
+  // Explicit coverage contract entry: select the declared suites, failing closed if the contract
+  // names a suite that is not a file on disk. A silent skip here would recreate exactly the drift
+  // the shared contract exists to prevent - the oracle would keep crediting a suite the gate never
+  // runs.
+  const mappedSuites = coverageMapping[file];
+  if (mappedSuites !== undefined) {
+    if (!Array.isArray(mappedSuites) || mappedSuites.length === 0 || mappedSuites.some((s) => typeof s !== 'string')) {
+      console.error(`fast-gate: FAIL: coverage mapping entry for ${file} must be a non-empty array of suite paths.`);
+      process.exit(1);
+    }
+    for (const suite of mappedSuites) {
+      if (!fs.existsSync(path.join(ROOT, suite))) {
+        console.error(`fast-gate: FAIL: coverage mapping entry for ${file} names a suite that is not a file on disk: ${suite}`);
+        process.exit(1);
+      }
+      selectedSuites.add(suite);
+    }
+    matched = true;
+  }
+
   if (matched || checkScriptMap[file]) {
     continue;
   }
@@ -295,6 +341,16 @@ if (selectedSuites.size === 0 && selectedChecks.size === 0) {
 
 const suitesToRun = Array.from(selectedSuites).sort();
 const checksToRun = Array.from(selectedChecks).sort();
+
+// Listing mode (FAST_GATE_LIST=1): print the selection and exit without executing anything. Used by
+// test/fast-gate.test.mjs to pin mapping selections cheaply - the cdp.mjs contract maps to three
+// BROWSER suites, and re-launching Chrome for every mapping assertion would tax every fast gate
+// (docs/speed.md). The unmapped fail-closed check above still applies in this mode, so a listing
+// can never paper over a file the gate cannot cover.
+if (process.env.FAST_GATE_LIST) {
+  console.log(`fast-gate: would run: checks=[${checksToRun.join(' ')}] suites=[${suitesToRun.join(' ')}]`);
+  process.exit(0);
+}
 
 console.log(`fast-gate: running ${checksToRun.length} check(s) and ${suitesToRun.length} test suite(s)`);
 
