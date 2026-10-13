@@ -37,8 +37,10 @@ export class CaptureTargetError extends Error {
 }
 
 /**
- * Ranges a capture may not reach without allowPrivate: the special-purpose address registry, not a list of the ones
- * that came to mind.
+ * Ranges a capture may not reach without allowPrivate: the special-purpose address registries, IPv4 and IPv6, not a
+ * list of the ones that came to mind. Both families have now been extended by review findings after being written
+ * that way - IPv4 by mwg-train-uin8 and IPv6 twice, by uin8 and mwg-train-4dn2 - and the entries below carry the
+ * registry section each one comes from so a reader can check the transcription rather than trust it.
  *
  * The rule this implements is "only a global unicast destination may be reached", and in IPv4 that set is defined by
  * exclusion - IANA's special-purpose registry names what is NOT globally reachable - so the registry is what is
@@ -138,8 +140,17 @@ export function isBlockedIpv6(address) {
   if ((first & 0xffc0) === 0xfec0) return true; // fec0::/10 site-local, deprecated (RFC 3879)
   if ((first & 0xfe00) === 0xfc00) return true; // fc00::/7 unique local
   if ((first & 0xff00) === 0xff00) return true; // ff00::/8 multicast
+  // The IETF Protocol Assignments block (2001::/23) is transcribed per sub-prefix rather than as one block, because
+  // some of it IS globally reachable - Teredo and the AS112 delegations - and refusing those would be over-blocking
+  // rather than policy. Each entry below is a sub-prefix the registry does not mark globally reachable.
+  if (first === 0x2001 && second === 0x0002 && parseInt(lower[2] ?? '0', 16) === 0) return true; // 2001:2::/48 benchmarking (RFC 5180)
+  if (first === 0x2001 && (second & 0xfff0) === 0x0010) return true; // 2001:10::/28 ORCHID, deprecated (RFC 4843)
+  if (first === 0x2001 && (second & 0xfff0) === 0x0020) return true; // 2001:20::/28 ORCHIDv2 (RFC 7343)
+  if (first === 0x2001 && (second & 0xfff0) === 0x0030) return true; // 2001:30::/28 Drone Remote ID (RFC 9374)
   if (first === 0x2001 && second === 0x0db8) return true; // 2001:db8::/32 documentation (RFC 3849)
   if (first === 0x2002) return true; // 2002::/16 6to4 (RFC 3056)
+  if (first === 0x3fff && (second & 0xf000) === 0) return true; // 3fff::/20 documentation (RFC 9637)
+  if (first === 0x5f00) return true; // 5f00::/16 SRv6 SIDs (RFC 9602)
   if (first === 0x0064 && second === 0xff9b && parseInt(lower[2] ?? '0', 16) === 1) return true; // 64:ff9b:1::/48 local-use NAT64
   return false;
 }
