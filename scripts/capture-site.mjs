@@ -50,9 +50,12 @@ if (!args.rightsRef || typeof args.rightsRef !== 'string' || args.rightsRef.trim
 }
 
 if (!args.url || typeof args.url !== 'string' || !/^https?:\/\//.test(args.url) || args.url.includes(' ')) {
-  // The rejected value is echoed because a human has to fix it, and sanitized because a rejected URL can still be a
-  // credentialed one - a space or a typo is what made it invalid, not the token in its query string (mwg-train-s7iu).
-  console.error(`Error: --url must be an http(s) URL without spaces, got '${sanitizeUrlForLog(args.url ?? '')}'`);
+  // The rejected value is NOT echoed. It was, with redaction, and redaction is the wrong tool for input that is by
+  // definition malformed: a string that does not parse as a URL takes the text path, where any rule about what a
+  // credential looks like in an unparseable string is a guess (mwg-train-6rvi printed `?myOwnThing=...` intact). The
+  // operator typed the value and can see it in their own command; a CI log cannot forget it. Not echoing is the only
+  // form of this message that cannot leak.
+  console.error('Error: --url must be an http(s) URL without spaces');
   process.exit(1);
 }
 

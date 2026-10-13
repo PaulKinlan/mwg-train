@@ -548,9 +548,16 @@ test('CLI: a URL carrying a credential is redacted in what the CLI prints', asyn
   assert.doesNotMatch(success.stdout, /q=shoes/);
   assert.match(success.stdout, new RegExp(`Successfully captured http://127\\.0\\.0\\.1:\\d+/\\?token=REDACTED&q=REDACTED`));
 
-  // The rejected-input path echoes what the operator typed, which is exactly the URL that can carry credentials.
-  const rejected = await runCli(['--url', 'http://user:hunter2@example.com/a b', '--rights-ref', 'docs/ref.md']);
-  assert.equal(rejected.code, 1);
-  assert.ok(!rejected.stderr.includes('hunter2'), `stderr leaked the password: ${rejected.stderr}`);
-  assert.match(rejected.stderr, /--url must be an http\(s\) URL/);
+  // The rejected-input path no longer echoes the input at all (mwg-train-6rvi). Two shapes, because redaction is a
+  // guess about a malformed string: a credential in userinfo, and a parameter whose name no rule would recognise on a
+  // string that does not parse as a URL.
+  for (const bad of ['http://user:hunter2@example.com/a b', 'http://exa mple.com/a b?myOwnThing=SK_live_SECRET', 'http://user:hunter2@example.com/a b?f9a2b=opaque']) {
+    const rejected = await runCli(['--url', bad, '--rights-ref', 'docs/ref.md']);
+    assert.equal(rejected.code, 1);
+    for (const secret of ['hunter2', 'SK_live_SECRET', 'opaque']) {
+      assert.ok(!rejected.stderr.includes(secret), `stderr leaked '${secret}' for ${bad}: ${rejected.stderr}`);
+      assert.ok(!rejected.stdout.includes(secret), `stdout leaked '${secret}' for ${bad}: ${rejected.stdout}`);
+    }
+    assert.match(rejected.stderr, /--url must be an http\(s\) URL/);
+  }
 });

@@ -20,8 +20,13 @@
  * `redactSecretsInText` is for text that CONTAINS a URL rather than being one: error messages from the browser layer
  * and from this project's own refusals both interpolate the URL, and a refusal that quotes the URL it refused should
  * not be the thing that leaks it. It applies the same fail-closed rule to any URL it finds - userinfo out, the whole
- * query replaced - and keeps a credential-name rule only for a loose `?name=value` that is not inside a scheme URL,
- * where "redact everything that looks like a parameter" would mangle ordinary prose.
+ * query replaced - and to any loose `?name=value` run outside a scheme URL, whatever the name is.
+ *
+ * There is deliberately NO list of credential-shaped names anywhere in this module any more. It had one twice: first
+ * as the URL rule (mwg-train-34ms: it missed `apiKey`, `accessToken`, `AWSAccessKeyId`), then only in the text path
+ * (mwg-train-6rvi: a rejected URL with whitespace in its host does not parse, so it fell to that path and a vendor
+ * parameter like `?myOwnThing=` was printed with its value). Both are the same defect - a list can only hold what its
+ * author thought of - so the second fix deletes the mechanism rather than narrowing its reach.
  *
  * Stated as limits rather than presented as a guarantee, because the point of the rewrite is that a guarantee this
  * code cannot give is worse than a limit it states:
@@ -32,23 +37,12 @@
  *     residual: names are what tell an operator which parameters the URL had. If a reviewer wants the tighter form,
  *     dropping the query entirely (`origin+pathname` only) is a one-line change to `sanitizeUrlForLog`.
  *   - Text redaction is heuristic about where a URL ends inside prose. It over-redacts rather than under-redacts,
- *     because a redacted log line costs a reader a moment and a leaked secret costs them a lot.
+ *     because a redacted log line costs a reader a moment and a leaked secret costs them a lot. A message that
+ *     mentions `?step=2` loses the `2`; that is the price of the rule above, and it is worth paying.
  */
 
 /** The value substituted for every redacted part. Exported so callers and tests can name it once. */
 export const REDACTED = 'REDACTED';
-
-/**
- * Does this parameter name look like it carries a credential? Used ONLY by the text redactor, for a loose
- * `?name=value` outside a scheme URL. It is deliberately a case-insensitive SUBSTRING test, because its job is to
- * over-redact prose: narrowing it is how the original URL bug happened, and here a false positive costs nothing but a
- * few characters in a log line. It is NOT the rule that protects URLs - that rule redacts every value.
- */
-const CREDENTIAL_WORD = /token|secret|key|sig|signature|password|passwd|pwd|auth|credential|session|bearer|jwt|otp|code/i;
-
-export function looksLikeCredentialParam(name) {
-  return CREDENTIAL_WORD.test(String(name));
-}
 
 /**
  * A URL with every query parameter value redacted, every fragment dropped and userinfo removed. Names are kept, so
@@ -81,6 +75,8 @@ export function redactSecretsInText(value) {
     .replace(/([a-zA-Z][a-zA-Z0-9+.-]*:\/\/)[^/\s@]*@/g, `$1${REDACTED}@`)
     // The whole query of any URL the message contains: fail closed, as above.
     .replace(/([a-zA-Z][a-zA-Z0-9+.-]*:\/\/[^\s'"<>()]*?)\?[^\s'"<>()]*/g, `$1?${REDACTED}`)
-    // A loose credential-shaped pair outside a scheme URL, e.g. a relative path in a refusal.
-    .replace(/([?&#][^=&\s]*?(?:token|secret|key|sig|signature|password|passwd|pwd|auth|credential|session|bearer|jwt|otp|code)[^=&\s]*=)[^&\s]*/gi, `$1${REDACTED}`);
+    // Any loose name=value pair outside a scheme URL, whatever the name is: a relative path in a refusal, a rejected
+    // input that did not parse as a URL, or a query the rule above could not reach because the string it was embedded
+    // in was not URL-shaped at all. Over-redacting prose is the accepted cost of having no list to be incomplete.
+    .replace(/([?&#][^=&\s]*=)[^&\s]*/g, `$1${REDACTED}`);
 }

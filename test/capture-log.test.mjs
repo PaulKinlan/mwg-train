@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { REDACTED, looksLikeCredentialParam, redactSecretsInText, sanitizeUrlForLog } from '../src/capture/log.mjs';
+import { REDACTED, redactSecretsInText, sanitizeUrlForLog } from '../src/capture/log.mjs';
 
 test('a logged URL keeps its origin, path and parameter names, and loses every value', () => {
   // mwg-train-s7iu, revised for mwg-train-34ms. The rule is fail-closed: the enumeration of credential-shaped names
@@ -53,12 +53,21 @@ test('text that contains a URL is redacted, because error messages quote the URL
   assert.equal(redactSecretsInText(null), '');
 });
 
-test('the credential-name test over-redacts on purpose, and is not what protects URLs', () => {
-  // This helper survives only for a loose `?name=value` in prose. It matches substrings case-insensitively, so
-  // `keyword` counts as credential-shaped here - which is the safe direction for text and irrelevant for URLs, where
-  // every value is redacted regardless. Asserted so nobody narrows it back into a URL rule unnoticed.
-  assert.equal(looksLikeCredentialParam('keyword'), true);
-  assert.equal(looksLikeCredentialParam('apiKey'), true);
-  assert.equal(looksLikeCredentialParam('AWSAccessKeyId'), true);
-  assert.equal(looksLikeCredentialParam('page'), false);
+test('text that does not parse as a URL still loses every parameter value, whatever the name is', () => {
+  // mwg-train-6rvi. This is the case that made the name list untenable: a rejected input with whitespace in its host
+  // does not parse, so it takes the text path, and there the old rule consulted a list of credential-looking names.
+  // `myOwnThing` was not on it, so the value was printed intact. Two shapes are covered - a string that fails to
+  // parse, and one where the query sits outside what the scheme-URL rule can reach.
+  assert.equal(sanitizeUrlForLog('http://exa mple.com/a?myOwnThing=SK_live_SECRET'),
+    `http://exa mple.com/a?myOwnThing=${REDACTED}`);
+  assert.equal(sanitizeUrlForLog('not a url?myOwnThing=SK_live_SECRET'), `not a url?myOwnThing=${REDACTED}`);
+  assert.ok(!sanitizeUrlForLog('http://exa mple.com/a?f9a2b=SK_live_SECRET').includes('SK_live_SECRET'));
+  // A relative path with a query, which is what a page path or a form action looks like inside the warnings.
+  assert.equal(redactSecretsInText('Dropped control at /checkout?step=2'),
+    `Dropped control at /checkout?step=${REDACTED}`);
+  assert.equal(redactSecretsInText('action: /submit?f9a2b=opaque'),
+    `action: /submit?f9a2b=${REDACTED}`);
+  // Over-redaction in prose is the accepted cost of having no list to be incomplete: there is no name, anywhere in
+  // this module, that decides whether a value is redacted.
+  assert.equal(redactSecretsInText('page?x=1'), `page?x=${REDACTED}`);
 });
