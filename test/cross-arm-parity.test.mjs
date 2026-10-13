@@ -20,6 +20,7 @@ import {
   unionFromAxes,
   exitCodeFor,
   parseArgs,
+  resolveArchetype,
   summaryFor,
 } from '../scripts/check-cross-arm-parity.mjs';
 import {
@@ -1003,4 +1004,19 @@ test('compareOne restricts board comparisons to the exact mapped path', () => {
   assert.equal(errorResult.closest_findings.length, 1);
   assert.equal(errorResult.closest_findings[0].code, 'STATE_UNMEASURED');
   assert.ok(errorResult.closest_findings[0].message.includes('HTTP 404'));
+});
+
+// mwg-train-2uog: the checker resolved archetypes from the pilot table only, so every training-side
+// board - web-shop's included - was unreachable and the run exited 2 instead of comparing a board that
+// exists. Resolution now spans both registries, which are separate modules by design.
+test('an archetype resolves from either registry, and an unknown one names both', () => {
+  // A pilot/evaluation archetype still comes from the pilot table...
+  assert.equal(resolveArchetype('booking').title, 'Evening class booking');
+  // ...and a training-side family from the training table, whose web-shop has no pilot counterpart.
+  assert.equal(resolveArchetype('web-shop').id, 'web-shop');
+  assert.equal(resolveArchetype('job-board').id, 'job-board');
+  // The two tables must not be conflated: booking exists in both, with different titles, and the pilot
+  // object must win so a pilot parity run keeps measuring the sealed design.
+  assert.notEqual(resolveArchetype('booking').title, 'House-call service visit booking');
+  assert.throws(() => resolveArchetype('not-an-archetype'), /unknown archetype not-an-archetype; known: .*booking.*web-shop/);
 });

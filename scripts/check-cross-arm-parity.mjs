@@ -32,6 +32,7 @@ import { ANALYSIS_METRIC_NOTES, ANALYSIS_PAGE_HTML, profileShapeDistance, profil
 import { armPixelFindings, armPixelPairs } from '../src/eval/parity.mjs';
 import { startStaticServer } from './lib/static-server.mjs';
 import { ARCHETYPES } from '../pilot/archetypes.mjs';
+import { TRAINING_ARCHETYPES } from '../pilot/training-archetypes.mjs';
 import { FRAMEWORKS, buildProjectFor, writeProject } from '../pilot/frameworks.mjs';
 import { launchChrome } from '../src/corpus/cdp.mjs';
 import { captureSignature } from '../src/eval/render.mjs';
@@ -121,6 +122,26 @@ export function parseArgs(argv) {
 }
 
 /**
+ * The archetype object an arm is built from, from EITHER registry.
+ *
+ * A reference board can belong to either side of the house: the five pilot/evaluation archetypes in
+ * `pilot/archetypes.mjs`, and the training-side families in `pilot/training-archetypes.mjs`. The two
+ * modules are deliberately separate (the pilot table is pinned to exactly `docs/eval/specs/*.json`), but
+ * `buildProjectFor` consumes any archetype *object*, so one arm builder serves both. Resolving only the
+ * pilot table made every training-side board unreachable to this instrument, and the checker exited 2 on
+ * an archetype whose board exists rather than comparing it (mwg-train-2uog). Exported so the resolution
+ * is testable without building seven arms.
+ */
+export function resolveArchetype(archetype) {
+  const definition = ARCHETYPES[archetype] ?? TRAINING_ARCHETYPES[archetype];
+  if (!definition) {
+    const known = [...Object.keys(ARCHETYPES), ...Object.keys(TRAINING_ARCHETYPES)];
+    throw new Error(`unknown archetype ${archetype}; known: ${known.join(', ')}`);
+  }
+  return definition;
+}
+
+/**
  * Build every arm for the archetype into a run directory inside the repository.
  *
  * Inside the repository, not /tmp: five of the seven arms import their framework from node_modules, and
@@ -129,9 +150,8 @@ export function parseArgs(argv) {
  * not. This is the one place where "generate somewhere harmless" would have silently produced five of
  * seven arms as connection-refused.
  */
-function buildArms({ archetype, runRoot, reuse = false }) {
-  const definition = ARCHETYPES[archetype];
-  if (!definition) throw new Error(`unknown archetype ${archetype}; known: ${Object.keys(ARCHETYPES).join(', ')}`);
+export function buildArms({ archetype, runRoot, reuse = false }) {
+  const definition = resolveArchetype(archetype);
   const arms = [];
   for (const frameworkName of Object.keys(FRAMEWORKS)) {
     const built = buildProjectFor(definition, { frameworkName });

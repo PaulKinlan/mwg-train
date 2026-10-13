@@ -187,9 +187,9 @@
   },
   "web-shop": {
     "step1-empty.jpg": {
-      "path": "/cart",
+      "path": "/",
       "kind": "page",
-      "source": "the tr-02 brief's route table lists /cart and every generated web-shop renders its empty cart there as the page's initial state; captureSignature reaches it by path (mwg-train-j3o4)"
+      "source": "the empty-order state is the initial state of the shop root for this archetype (the order form on `/`, pilot/training-archetypes.mjs 'web-shop'); captureSignature visits `/` for every arm, so the board has a counterpart on the rendered side (mwg-train-2uog)"
     }
   }
 }
