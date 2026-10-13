@@ -116,6 +116,10 @@
     "test/capture-proxy.test.mjs",
     "test/capture-site.test.mjs"
   ],
+  "src/capture/site.mjs": [
+    "test/capture-site.test.mjs",
+    "test/capture-proxy.test.mjs"
+  ],
   "src/capture/target.mjs": [
     "test/capture-proxy.test.mjs",
     "test/capture-site.test.mjs"
