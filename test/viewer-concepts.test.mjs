@@ -11,7 +11,7 @@ const ROOT = resolve(import.meta.dirname, '..');
 
 async function serve(t, repoRoot) {
   const stateDir = mkdtempSync(join(tmpdir(), 'viewer-concepts-state-'));
-  const { server, liveServer, pool } = createViewer({ corpusRoot: join(ROOT, 'pilot'), stateDir, repoRoot });
+  const { server, liveServer, pool } = createViewer({ allowAnonymous: true, corpusRoot: join(ROOT, 'pilot'), stateDir, repoRoot });
   t.after(() => { pool.stopAll(); server.close(); liveServer.close(); rmSync(stateDir, { recursive: true, force: true }); });
   await new Promise((resolveListen) => server.listen(0, '127.0.0.1', resolveListen));
   return `http://127.0.0.1:${server.address().port}`;

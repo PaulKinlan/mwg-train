@@ -19,7 +19,7 @@ const ROOT = resolve(import.meta.dirname, '..');
 
 async function serve(t) {
   const stateDir = mkdtempSync(join(tmpdir(), 'viewer-headers-state-'));
-  const { server, liveServer, pool } = createViewer({ corpusRoot: join(ROOT, 'pilot'), stateDir, repoRoot: ROOT });
+  const { server, liveServer, pool } = createViewer({ allowAnonymous: true, corpusRoot: join(ROOT, 'pilot'), stateDir, repoRoot: ROOT });
   t.after(() => {
     pool.stopAll();
     server.close();

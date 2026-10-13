@@ -444,7 +444,7 @@ function fingerprint(dir) {
 
 async function withViewer(t, options, run) {
   const stateDir = mkdtempSync(join(tmpdir(), 'nb0-generate-'));
-  const { server, pool } = createViewer({ corpusRoot: join(ROOT, 'pilot'), stateDir, repoRoot: ROOT, ...options });
+  const { server, pool } = createViewer({ allowAnonymous: true, corpusRoot: join(ROOT, 'pilot'), stateDir, repoRoot: ROOT, ...options });
   t.after(() => { pool.stopAll(); server.close(); rmSync(stateDir, { recursive: true, force: true }); });
   await new Promise((resolveListen) => server.listen(0, '127.0.0.1', resolveListen));
   return run({
