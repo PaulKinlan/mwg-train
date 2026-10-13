@@ -16,6 +16,7 @@ import {
   REFERENCE_PALETTE,
   assertFindingsConsistent,
   assembleFindings,
+  compareOne,
   unionFromAxes,
   exitCodeFor,
   parseArgs,
@@ -961,4 +962,45 @@ test('the printed summary agrees with the exit status it is printed beside', () 
       );
     }
   }
+});
+
+test('compareOne restricts board comparisons to the exact mapped path', () => {
+  const screenshot = {
+    arm: 'raw',
+    viewport: '390x844',
+    statePath: '/confirmation.html',
+    path: 'shot.png',
+    analysis: { width: 390, height: 844, luminance: { mean: 1, p10: 1, p50: 1, p90: 1 }, ink: 0, colours: [], rowLuminance: [], bandLuminance: [] }
+  };
+  const boardMetrics = [
+    { name: 'step1-browse.jpg', file: 'step1-browse.jpg', metrics: screenshot.analysis },
+    { name: 'step3-confirmation.jpg', file: 'step3-confirmation.jpg', metrics: screenshot.analysis }
+  ];
+  const archetypeStates = {
+    'step1-browse.jpg': { path: '/index.html' },
+    'step3-confirmation.jpg': { path: '/confirmation.html' }
+  };
+
+  const result = compareOne({ screenshot, boardMetrics, archetypeStates });
+  assert.notEqual(result, null);
+  assert.equal(result.closest_board, 'step3-confirmation.jpg');
+
+  const rootScreenshot = { ...screenshot, statePath: '/' };
+  const rootResult = compareOne({ screenshot: rootScreenshot, boardMetrics, archetypeStates });
+  assert.equal(rootResult, null, 'a screenshot path with no eligible boards returns null');
+
+  const fallbackResult = compareOne({ screenshot: rootScreenshot, boardMetrics, archetypeStates: {} });
+  assert.notEqual(fallbackResult, null);
+  assert.equal(fallbackResult.closest_board, 'step1-browse.jpg', 'boards without mapping default to root /');
+
+  const nullStateResult = compareOne({ screenshot: rootScreenshot, boardMetrics, archetypeStates: { 'step1-browse.jpg': { path: null }, 'step3-confirmation.jpg': { path: null } } });
+  assert.equal(nullStateResult, null, 'boards mapped explicitly to null do not evaluate against root');
+
+  const errorScreenshot = { ...screenshot, analysis: { error: 'captureSignature: path /confirmation.html returned HTTP 404 Not Found' } };
+  const errorResult = compareOne({ screenshot: errorScreenshot, boardMetrics, archetypeStates });
+  assert.notEqual(errorResult, null);
+  assert.equal(errorResult.error, 'captureSignature: path /confirmation.html returned HTTP 404 Not Found');
+  assert.equal(errorResult.closest_findings.length, 1);
+  assert.equal(errorResult.closest_findings[0].code, 'STATE_UNMEASURED');
+  assert.ok(errorResult.closest_findings[0].message.includes('HTTP 404'));
 });

@@ -138,6 +138,24 @@ test('captureSignature refuses a path that is not root-relative', async () => {
   }
 });
 
+test('captureSignature refuses to capture an HTTP 404 response', async () => {
+  const chrome = await getChrome();
+  const runDir = mkdtempSync(join(tmpdir(), 'mwg-capture-404-'));
+  try {
+    const projectDir = join(runDir, 'project');
+    mkdirSync(projectDir, { recursive: true });
+    writeFixture(projectDir);
+
+    await assert.rejects(
+      () => captureSignature({ chrome, projectDir, port: 9597, runDir, path: '/does-not-exist.html' }),
+      (error) => error instanceof Error && /returned HTTP 404 Not Found/.test(error.message),
+      'must refuse 404'
+    );
+  } finally {
+    rmSync(runDir, { recursive: true, force: true });
+  }
+});
+
 test('hidden markup neither moves a score nor hides a visible override beneath it', async () => {
   // mwg-train-uh9q. The previous fix recorded `visible: false` on each node and honoured it in isMeasurable, but
   // tokens() maps EVERY node to a structural token and did not honour it - so a page carrying hidden markup
