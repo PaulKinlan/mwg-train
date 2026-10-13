@@ -59,6 +59,20 @@ export function chromeIsUnsandboxed(env = process.env) {
  * Chrome will refuse to start on a host with no user namespaces and no setuid helper. That is a real environment and
  * the reason the opt-in exists, but it is not a reason to run unsandboxed by default on a host that can sandbox.
  */
+/**
+ * Chromium flags that turn a sandbox off. Listed so the decision to disable one is made in ONE place instead of by
+ * whoever passes args, which is what this list is for: rev-1's mwg-train-p58l was that a caller could append
+ * --no-sandbox to `extra` and get an unsandboxed renderer with no warning and no opt-in, and an invariant a caller can
+ * step around is not an invariant. --disable-gpu-sandbox is here for the same reason although it is narrower: it
+ * removes the GPU process's sandbox, which is a real one on a host that also decodes untrusted media.
+ */
+export const SANDBOX_DISABLING_FLAGS = ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu-sandbox'];
+
+/** Which sandbox-disabling flags a caller asked for, in the form they were passed. */
+export function sandboxDisablingArgs(args = []) {
+  return args.filter((arg) => SANDBOX_DISABLING_FLAGS.includes(String(arg).split('=')[0]));
+}
+
 export function chromeArgs({ userDataDir, proxy = null, extra = [], unsandboxed = false, url = 'about:blank' } = {}) {
   return [
     '--headless=new',
@@ -76,7 +90,13 @@ export function chromeArgs({ userDataDir, proxy = null, extra = [], unsandboxed 
     '--force-color-profile=srgb',
     '--window-size=1280,900',
     ...(proxy ? [`--proxy-server=${proxy}`] : []),
-    ...extra,
+    // Caller args cannot reach around the sandbox decision: a sandbox-disabling flag is dropped unless the opt-in is
+    // in force, and launchChrome says so out loud rather than ignoring it quietly.
+    ...(unsandboxed
+      // The opt-in already puts --no-sandbox in the base flags, so a caller's copy is dropped to keep exactly one;
+      // its other requests, including --disable-gpu-sandbox, are honoured.
+      ? extra.filter((arg) => String(arg).split('=')[0] !== '--no-sandbox')
+      : extra.filter((arg) => sandboxDisablingArgs([arg]).length === 0)),
     url,
   ];
 }
@@ -186,6 +206,15 @@ export async function launchChrome({ proxy = null, args = [] } = {}) {
     process.emitWarning(
       'MWG_ALLOW_UNSANDBOXED_CHROME=1 - Chrome is running with --no-sandbox, so generated code shares this host with no renderer sandbox. Unset it unless this host cannot sandbox (no user namespaces and no setuid helper).',
       { code: 'MWG_UNSANDBOXED_CHROME' },
+    );
+  }
+  // A caller that asked for a sandbox-disabling flag and did not get it is told, because silence here is the other
+  // half of the same problem: a run that quietly ran sandboxed when somebody believed otherwise is a mystery later.
+  const dropped = unsandboxed ? [] : sandboxDisablingArgs(args);
+  if (dropped.length > 0) {
+    process.emitWarning(
+      `Chrome was launched with ${dropped.join(', ')} in its extra arguments, and it was ignored: the renderer sandbox is only disabled by MWG_ALLOW_UNSANDBOXED_CHROME=1. Remove the flag, or set that variable if this host genuinely cannot sandbox.`,
+      { code: 'MWG_SANDBOX_FLAG_IGNORED' },
     );
   }
   const child = spawn(

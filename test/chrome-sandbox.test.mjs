@@ -29,13 +29,39 @@ test('the opt-in is a value an operator sets, not a default', () => {
   assert.equal(chromeIsUnsandboxed({ MWG_ALLOW_UNSANDBOXED_CHROME: '1' }), true);
 });
 
-test('an explicit --no-sandbox in the caller extra args cannot be reached by accident', () => {
-  // Callers pass extra args through, and the extra list is appended after the base flags, so a caller CAN ask for
-  // it. That is deliberate - a caller that knows it needs it may say so - but the default path must never contain it,
-  // and this test is what makes the difference between the two a thing somebody decided.
-  const withCallerFlag = chromeArgs({ userDataDir: '/tmp/example', extra: ['--no-sandbox'] });
-  assert.equal(withCallerFlag.filter((a) => a === '--no-sandbox').length, 1);
-  assert.equal(chromeArgs({ userDataDir: '/tmp/example' }).includes('--no-sandbox'), false);
+test('a caller cannot turn the sandbox off from its extra arguments', () => {
+  // mwg-train-p58l: extra args are appended after the base flags, so a caller could pass --no-sandbox and get an
+  // unsandboxed renderer with no opt-in and no warning. The earlier version of this test asserted that pass-through
+  // as if it were a feature, which is the shape of the bug: an invariant a caller can step around is not one.
+  for (const flag of ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu-sandbox']) {
+    const args = chromeArgs({ userDataDir: '/tmp/example', extra: [flag] });
+    assert.equal(args.includes(flag), false, `${flag} must not reach Chrome without the opt-in`);
+  }
+  // The caller's other arguments still arrive: this drops a sandbox decision, not the caller's request wholesale.
+  const kept = chromeArgs({ userDataDir: '/tmp/example', extra: ['--proxy-bypass-list=<-loopback>', '--no-sandbox'] });
+  assert.ok(kept.includes('--proxy-bypass-list=<-loopback>'));
+});
+
+test('the opt-in is what lets a sandbox-disabling flag through, whatever carried it', () => {
+  for (const flag of ['--no-sandbox', '--disable-gpu-sandbox']) {
+    const args = chromeArgs({ userDataDir: '/tmp/example', extra: [flag], unsandboxed: true });
+    assert.equal(args.filter((a) => a === flag).length, 1);
+  }
+});
+
+test('launchChrome says out loud when it ignores a sandbox-disabling flag', async (t) => {
+  // Silently dropping it would be the other half of the same problem: a caller that asked for something and did not
+  // get it needs to be told, or the next run looks like a mystery.
+  const warnings = [];
+  const onWarning = (warning) => warnings.push(warning);
+  process.on('warning', onWarning);
+  t.after(() => process.off('warning', onWarning));
+
+  const chrome = await launchChrome({ args: ['--no-sandbox'] });
+  t.after(() => chrome.close());
+  const ignored = warnings.find((w) => w.code === 'MWG_SANDBOX_FLAG_IGNORED');
+  assert.ok(ignored, 'the ignored flag must be announced');
+  assert.match(ignored.message, /MWG_ALLOW_UNSANDBOXED_CHROME=1/);
 });
 
 test('the real launch path drives generated JS with the sandbox on', async (t) => {
