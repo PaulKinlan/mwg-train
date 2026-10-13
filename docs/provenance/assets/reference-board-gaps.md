@@ -118,6 +118,32 @@ therefore **exempt from path-based comparator sweeps** until the instrument impl
 (simulating the submission that produces the refusal). That work belongs to the instrument, not to the board,
 and a board task must not be blocked on it.
 
+### The instrument half of that exemption is now implemented; the arm half is what remains (measured 2026-10-13)
+
+The comparator can now drive a form. A board may carry a `drive` block (recipe plus a required `expectText`
+marker, mwg-train-mr6t), so an interaction board without a URL is measurable and comparable - the recipe is part
+of the board's identity, and `captureSignature` refuses a marker that is already on the page before the drive,
+so a successful submission cannot be mistaken for the depicted refusal.
+
+Drive recipes were then attempted for the seven nulled refusal boards and **all seven were removed**, because the
+arm cannot raise the state the board depicts. The initial archetype arm generator serves simple initial forms
+only, so what a board shows and what its arm can do are different things:
+
+| board | what it depicts | why no drive reaches it |
+|---|---|---|
+| job-board `step1-error` | the EMPLOYER's "Post a New Vacancy" refusal | the arm's only write is `POST /apply`, a candidate application (Applicant name / Email / Role applied for / Why you are a good fit) - a different form and a different actor |
+| community-forum `step3-refusal` | a reply inside an EXISTING thread | the arm's only write is `POST /notes` (Your name / Entry or tune / Note or variation), a parentless note, so the refusal produced is not the one depicted |
+| restaurant-ordering `step1-error` | an empty ORDER | the arm's write is the order form itself; no submission leaves the order empty |
+| web-shop `step1-empty` | an empty BASKET | a basket is not produced by submitting a form at all |
+| survey-form `step3-validation` | a choice-rule refusal | the arm's select control always carries a value, so the rule cannot fail |
+| library-catalogue `step3-refusal` | a date-from-today rule refusal | the arm's form has no date control to violate it with |
+| expense-tracker `step1-error` | a message on the AMOUNT alone | submitting empty raises a message on EVERY required field (measured 3, 3, 3, 3, 4 across the five families of that round), never on one field alone |
+
+The last row is the general rule, and it is why a partial drive cannot be faked: a board that depicts a single
+field in error can only be reached by a form whose other requirements are satisfied. Reaching these states is
+**arm work, not board work or instrument work**, and it is parked as mwg-train-7ix4 with this measurement on the
+bead, so a future attempt extends the generator first instead of re-deriving the table.
+
 ## What follows
 
 1. **Capture coverage first, as its own tasks (mwg-train-bosi, closed; and mwg-train-j3o4).** `captureSignature` must be able to reach the
