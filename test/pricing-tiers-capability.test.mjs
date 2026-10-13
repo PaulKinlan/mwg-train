@@ -9,7 +9,7 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { spawn } from 'node:child_process';
+import { startArmServer } from './helpers/arm-server.mjs';
 import { mkdtempSync, readFileSync, rmSync, symlinkSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
@@ -82,10 +82,7 @@ test('a product reference asked for as a selection is a 404, not a crash', async
   const { projectId, files, spec: projectSpec } = buildProjectFromSpec({ spec, frameworkName: 'raw' });
   writeProject(dir, { projectId, files, spec: projectSpec, includeDependencies: true });
   symlinkSync(NODE_MODULES, join(dir, 'node_modules'), 'dir');
-  const child = spawn('node', ['server.mjs', '--port', String(port), '--db', join(dir, 'test.sqlite')], {
-    cwd: dir,
-    stdio: ['ignore', 'ignore', 'pipe'],
-  });
+  const child = startArmServer({ projectDir: dir, port: port, dbPath: join(dir, 'test.sqlite'), stdio: ['ignore', 'ignore', 'pipe'] });
   try {
     const base = `http://127.0.0.1:${port}`;
     let up = false;
@@ -122,10 +119,7 @@ test('hostile data: the currency is escaped, and a policy that saves nothing sho
   const { projectId, files, spec: projectSpec } = buildProjectFromSpec({ spec, frameworkName: 'raw' });
   writeProject(dir, { projectId, files, spec: projectSpec, includeDependencies: true });
   symlinkSync(NODE_MODULES, join(dir, 'node_modules'), 'dir');
-  const child = spawn('node', ['server.mjs', '--port', String(port), '--db', join(dir, 'test.sqlite')], {
-    cwd: dir,
-    stdio: ['ignore', 'ignore', 'pipe'],
-  });
+  const child = startArmServer({ projectDir: dir, port: port, dbPath: join(dir, 'test.sqlite'), stdio: ['ignore', 'ignore', 'pipe'] });
   try {
     const base = `http://127.0.0.1:${port}`;
     let up = false;
@@ -171,10 +165,7 @@ test('functional: the toggle derives the annual figures, and the chosen tier is 
       const { projectId, files, spec: projectSpec } = buildProjectFromSpec({ spec, frameworkName: arm });
       writeProject(dir, { projectId, files, spec: projectSpec, includeDependencies: true });
       symlinkSync(NODE_MODULES, join(dir, 'node_modules'), 'dir');
-      const child = spawn('node', ['server.mjs', '--port', String(port), '--db', join(dir, 'test.sqlite')], {
-        cwd: dir,
-        stdio: ['ignore', 'ignore', 'pipe'],
-      });
+      const child = startArmServer({ projectDir: dir, port: port, dbPath: join(dir, 'test.sqlite'), stdio: ['ignore', 'ignore', 'pipe'] });
       try {
         const base = `http://127.0.0.1:${port}`;
         let up = false;

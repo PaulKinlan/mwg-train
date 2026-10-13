@@ -15,7 +15,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { cpSync, existsSync, mkdtempSync, rmSync } from 'node:fs';
-import { spawn } from 'node:child_process';
+import { startArmServer } from './helpers/arm-server.mjs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
@@ -26,7 +26,7 @@ const FIXTURE = 'docs/eval/projects/already-modern/cf-06';
 /** Start `server.mjs` in `dir` and resolve once it announces its port. */
 function startServer(dir) {
   return new Promise((resolveStart, rejectStart) => {
-    const child = spawn(process.execPath, ['server.mjs'], { cwd: dir, stdio: ['ignore', 'pipe', 'pipe'] });
+    const child = startArmServer({ projectDir: dir, stdio: ['ignore', 'pipe', 'pipe'] });
     let out = '';
     let err = '';
     const timer = setTimeout(() => {

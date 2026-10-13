@@ -4,7 +4,7 @@ import { readFileSync, mkdirSync, mkdtempSync, writeFileSync, rmSync, symlinkSyn
 import { join, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
 import { createServer } from 'node:http';
-import { spawn } from 'node:child_process';
+import { startArmServer } from './helpers/arm-server.mjs';
 
 import { buildProjectFor } from '../pilot/frameworks.mjs';
 import { TRAINING_ARCHETYPES } from '../pilot/training-archetypes.mjs';
@@ -55,9 +55,7 @@ async function withLiveServer(built, port, fn, seed = null) {
     // Seeded before the server starts, so the server reads a database that already holds the fixture. The
     // schema is created by the server itself on boot; a seed that ran after spawn raced that.
     if (seed) await seed(join(dir, 'pilot.sqlite'));
-    const child = spawn('node', ['server.mjs', '--port', String(port), '--db', join(dir, 'pilot.sqlite')], {
-      cwd: dir, stdio: ['ignore', 'ignore', 'pipe'],
-    });
+    const child = startArmServer({ projectDir: dir, port: port, dbPath: join(dir, 'pilot.sqlite'), stdio: ['ignore', 'ignore', 'pipe'] });
     try {
       const base = `http://127.0.0.1:${port}`;
       let up = false;

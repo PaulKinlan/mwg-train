@@ -15,7 +15,7 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { spawn } from 'node:child_process';
+import { startArmServer } from './helpers/arm-server.mjs';
 import { mkdtempSync, rmSync, symlinkSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
@@ -94,7 +94,7 @@ for (const arm of ARMS) {
     writeProject(dir, { projectId, files, spec: projectSpec, includeDependencies: true });
     symlinkSync(NODE_MODULES, join(dir, 'node_modules'), 'dir');
     const dbPath = join(dir, 'test.sqlite');
-    const child = spawn('node', ['server.mjs', '--port', String(port), '--db', dbPath], { cwd: dir, stdio: ['ignore', 'ignore', 'pipe'] });
+    const child = startArmServer({ projectDir: dir, port: port, dbPath: dbPath, stdio: ['ignore', 'ignore', 'pipe'] });
     try {
       const base = `http://127.0.0.1:${port}`;
       let up = false;

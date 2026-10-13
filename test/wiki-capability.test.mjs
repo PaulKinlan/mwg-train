@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { spawn } from 'node:child_process';
+import { startArmServer } from './helpers/arm-server.mjs';
 import { mkdtempSync, rmSync, symlinkSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
@@ -104,10 +104,7 @@ test('functional: a reader searches the corpus, follows a cross-link, reads hist
       const { projectId, files, spec: projectSpec } = buildProjectFromSpec({ spec, frameworkName: arm });
       writeProject(dir, { projectId, files, spec: projectSpec, includeDependencies: true });
       symlinkSync(NODE_MODULES, join(dir, 'node_modules'), 'dir');
-      const child = spawn('node', ['server.mjs', '--port', String(port), '--db', join(dir, 'test.sqlite')], {
-        cwd: dir,
-        stdio: ['ignore', 'ignore', 'pipe'],
-      });
+      const child = startArmServer({ projectDir: dir, port: port, dbPath: join(dir, 'test.sqlite'), stdio: ['ignore', 'ignore', 'pipe'] });
       try {
         const base = `http://127.0.0.1:${port}`;
         let up = false;
