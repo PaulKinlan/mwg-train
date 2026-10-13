@@ -205,5 +205,12 @@
       "kind": "interaction",
       "source": "the refusal is a re-render of the entry form after a refused submission with a negative or blank amount (plan.md:83, plan.md:88-89, plan.md:100, plan.md:105): a state of the form, not a document - the same convention as the Wave 2 refusal boards and booking's step4-error.jpg"
     }
+  },
+  "restaurant-ordering": {
+    "step1-error.jpg": {
+      "path": null,
+      "kind": "interaction",
+      "source": "the refusal is a re-render of the checkout after a refused submission with an empty order (tr-11's zero total items and fam-11's empty cart are that same state; plan.md:67, plan.md:72-73, plan.md:88): a state of the form, not a document - the same convention as the Wave 2 refusal boards and booking's step4-error.jpg"
+    }
   }
 }
