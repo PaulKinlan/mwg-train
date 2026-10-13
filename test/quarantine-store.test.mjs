@@ -317,3 +317,32 @@ test('the public repo carries no quarantine submodule and no commit pin', () => 
   // And the sibling default the doc names is still what the module resolves.
   assert.equal(quarantineRoot({ repoRoot: ROOT, env: {} }), join(ROOT, '..', 'mwg-quarantine'));
 });
+
+test('the documented statements about the missing pin are asserted, beside the facts they describe', () => {
+  // mwg-train-y6iw. The test above asserts the REPOSITORY and never the DOCUMENT, so reverting the documented
+  // sentence to its earlier pin claim left the suite green - rev-1 reproduced exactly that. The link is made in the
+  // one direction that can be checked: every statement the document makes about the absence of a pin is asserted
+  // verbatim here, next to the repository facts it describes, so an edit to either side fails.
+  //
+  // Whitespace is folded before matching, because these sentences wrap across lines and an author rewrapping a
+  // paragraph should not fail a suite. What is asserted is the words, not the layout.
+  const ROOT = fileURLToPath(new URL('..', import.meta.url));
+  const flat = readFileSync(join(ROOT, 'docs/quarantine.md'), 'utf8').replace(/\s+/g, ' ');
+  const required = [
+    // Rule 2's headline claim.
+    'the public repo carries no submodule and no commit pin',
+    // The three repository facts as the document states them.
+    'There is no `.gitmodules`, no `quarantine/` path and no gitlink here today',
+    // The default the module actually resolves, asserted above.
+    '`../mwg-quarantine` by default',
+    // And the boundary of the guarantee, so the document cannot quietly lose the part that says what is checked.
+    'The guarantee is over the statements listed here, not over the document.',
+  ];
+  for (const statement of required) {
+    assert.ok(flat.includes(statement), `docs/quarantine.md must state: ${statement}`);
+  }
+  // A statement the document never makes is not covered by the test, so the test must not imply otherwise. This
+  // asserts the absence of the OVERCLAIM rather than the absence of a pin claim: the previous wording said the claim
+  // and the repository "cannot drift apart again", which was not true of a document whose prose is unchecked.
+  assert.ok(!flat.includes('cannot drift apart again'), 'the document must not claim more than the test checks');
+});

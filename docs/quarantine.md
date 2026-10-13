@@ -28,9 +28,14 @@ one. Only a separate private repository is a boundary.
    **invalid**: `.gitmodules` pointed at an internal URL (`github.int.exe.xyz/...`) with a gitlink
    at `quarantine/`, which no plain clone can fetch and which publishes a reference to the private
    store from the public repo (commit `24df971`). There is no `.gitmodules`, no `quarantine/` path
-   and no gitlink here today, and `test/quarantine-store.test.mjs` asserts that, so the claim and
-   the repository cannot drift apart again (mwg-train-xztp: this rule documented the removed pin
-   for days).
+   and no gitlink here today.
+
+   **What is asserted, and what is not.** `test/quarantine-store.test.mjs` asserts the repository
+   facts in the paragraph above, and it asserts the statements in this rule verbatim - an edit to
+   either side fails the suite. It cannot check the rest of this file's prose, and no test can: a
+   sentence nobody wrote a check for is a sentence that can drift (mwg-train-xztp documented the
+   removed pin for days, and revising that sentence alone broke nothing, which is mwg-train-y6iw).
+   The guarantee is over the statements listed here, not over the document.
 3. **The public surface check:** `curl -i https://api.github.com/repos/PaulKinlan/mwg-quarantine`
    unauthenticated must return **404**. Anything else is a leak.
 4. **Publication boundary, not a training-permission boundary.** The store decides *visibility*;
