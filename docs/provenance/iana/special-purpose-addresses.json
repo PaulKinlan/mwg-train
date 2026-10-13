@@ -1,0 +1,319 @@
+{
+  "note": "Derived from the IANA special-purpose address registries so the capture destination policy is checked against a dated document instead of a list somebody remembered. Refreshed by hand (see README.md): the XML is parsed by a real XML parser at refresh time and the test reads this JSON. Divergences between this file and src/capture/target.mjs are not allowed to be silent - the test names every one.",
+  "registries": [
+    {
+      "family": "ipv4",
+      "source": "https://www.iana.org/assignments/iana-ipv4-special-registry/iana-ipv4-special-registry.xml",
+      "registry_updated": "2025-10-09",
+      "records": [
+        {
+          "address": "0.0.0.0/8",
+          "name": "\"This network\"",
+          "global": "False",
+          "spec": ""
+        },
+        {
+          "address": "0.0.0.0/32",
+          "name": "\"This host on this network\"",
+          "global": "False",
+          "spec": ""
+        },
+        {
+          "address": "10.0.0.0/8",
+          "name": "Private-Use",
+          "global": "False",
+          "spec": ""
+        },
+        {
+          "address": "100.64.0.0/10",
+          "name": "Shared Address Space",
+          "global": "False",
+          "spec": ""
+        },
+        {
+          "address": "127.0.0.0/8",
+          "name": "Loopback",
+          "global": "False",
+          "spec": ""
+        },
+        {
+          "address": "169.254.0.0/16",
+          "name": "Link Local",
+          "global": "False",
+          "spec": ""
+        },
+        {
+          "address": "172.16.0.0/12",
+          "name": "Private-Use",
+          "global": "False",
+          "spec": ""
+        },
+        {
+          "address": "192.0.0.0/24",
+          "name": "IETF Protocol Assignments",
+          "global": "False",
+          "spec": ""
+        },
+        {
+          "address": "192.0.0.0/29",
+          "name": "IPv4 Service Continuity Prefix",
+          "global": "False",
+          "spec": ""
+        },
+        {
+          "address": "192.0.0.8/32",
+          "name": "IPv4 dummy address",
+          "global": "False",
+          "spec": ""
+        },
+        {
+          "address": "192.0.0.9/32",
+          "name": "Port Control Protocol Anycast",
+          "global": "True",
+          "spec": ""
+        },
+        {
+          "address": "192.0.0.10/32",
+          "name": "Traversal Using Relays around NAT Anycast",
+          "global": "True",
+          "spec": ""
+        },
+        {
+          "address": "192.0.0.170/32, 192.0.0.171/32",
+          "name": "NAT64/DNS64 Discovery",
+          "global": "False",
+          "spec": ""
+        },
+        {
+          "address": "192.0.2.0/24",
+          "name": "Documentation (TEST-NET-1)",
+          "global": "False",
+          "spec": ""
+        },
+        {
+          "address": "192.31.196.0/24",
+          "name": "AS112-v4",
+          "global": "True",
+          "spec": ""
+        },
+        {
+          "address": "192.52.193.0/24",
+          "name": "AMT",
+          "global": "True",
+          "spec": ""
+        },
+        {
+          "address": "192.88.99.0/24",
+          "name": "Deprecated (6to4 Relay Anycast)",
+          "global": "",
+          "spec": ""
+        },
+        {
+          "address": "192.88.99.2/32",
+          "name": "6a44-relay anycast address",
+          "global": "False",
+          "spec": ""
+        },
+        {
+          "address": "192.168.0.0/16",
+          "name": "Private-Use",
+          "global": "False",
+          "spec": ""
+        },
+        {
+          "address": "192.175.48.0/24",
+          "name": "Direct Delegation AS112 Service",
+          "global": "True",
+          "spec": ""
+        },
+        {
+          "address": "198.18.0.0/15",
+          "name": "Benchmarking",
+          "global": "False",
+          "spec": ""
+        },
+        {
+          "address": "198.51.100.0/24",
+          "name": "Documentation (TEST-NET-2)",
+          "global": "False",
+          "spec": ""
+        },
+        {
+          "address": "203.0.113.0/24",
+          "name": "Documentation (TEST-NET-3)",
+          "global": "False",
+          "spec": ""
+        },
+        {
+          "address": "240.0.0.0/4",
+          "name": "Reserved",
+          "global": "False",
+          "spec": ""
+        },
+        {
+          "address": "255.255.255.255/32",
+          "name": "Limited Broadcast",
+          "global": "False",
+          "spec": ""
+        }
+      ]
+    },
+    {
+      "family": "ipv6",
+      "source": "https://www.iana.org/assignments/iana-ipv6-special-registry/iana-ipv6-special-registry.xml",
+      "registry_updated": "2025-10-09",
+      "records": [
+        {
+          "address": "::1/128",
+          "name": "Loopback Address",
+          "global": "False",
+          "spec": ""
+        },
+        {
+          "address": "::/128",
+          "name": "Unspecified Address",
+          "global": "False",
+          "spec": ""
+        },
+        {
+          "address": "::ffff:0:0/96",
+          "name": "IPv4-mapped Address",
+          "global": "False",
+          "spec": ""
+        },
+        {
+          "address": "64:ff9b::/96",
+          "name": "IPv4-IPv6 Translat.",
+          "global": "True",
+          "spec": ""
+        },
+        {
+          "address": "64:ff9b:1::/48",
+          "name": "IPv4-IPv6 Translat.",
+          "global": "False",
+          "spec": ""
+        },
+        {
+          "address": "100::/64",
+          "name": "Discard-Only Address Block",
+          "global": "False",
+          "spec": ""
+        },
+        {
+          "address": "100:0:0:1::/64",
+          "name": "Dummy IPv6 Prefix",
+          "global": "False",
+          "spec": ""
+        },
+        {
+          "address": "2001::/23",
+          "name": "IETF Protocol Assignments",
+          "global": "False",
+          "spec": ""
+        },
+        {
+          "address": "2001::/32",
+          "name": "TEREDO",
+          "global": "N/A",
+          "spec": ""
+        },
+        {
+          "address": "2001:1::1/128",
+          "name": "Port Control Protocol Anycast",
+          "global": "True",
+          "spec": ""
+        },
+        {
+          "address": "2001:1::2/128",
+          "name": "Traversal Using Relays around NAT Anycast",
+          "global": "True",
+          "spec": ""
+        },
+        {
+          "address": "2001:1::3/128",
+          "name": "DNS-SD Service Registration Protocol Anycast",
+          "global": "True",
+          "spec": ""
+        },
+        {
+          "address": "2001:2::/48",
+          "name": "Benchmarking",
+          "global": "False",
+          "spec": ""
+        },
+        {
+          "address": "2001:3::/32",
+          "name": "AMT",
+          "global": "True",
+          "spec": ""
+        },
+        {
+          "address": "2001:4:112::/48",
+          "name": "AS112-v6",
+          "global": "True",
+          "spec": ""
+        },
+        {
+          "address": "2001:10::/28",
+          "name": "Deprecated (previously ORCHID)",
+          "global": "",
+          "spec": ""
+        },
+        {
+          "address": "2001:20::/28",
+          "name": "ORCHIDv2",
+          "global": "True",
+          "spec": ""
+        },
+        {
+          "address": "2001:30::/28",
+          "name": "Drone Remote ID Protocol Entity Tags (DETs) Prefix",
+          "global": "True",
+          "spec": ""
+        },
+        {
+          "address": "2001:db8::/32",
+          "name": "Documentation",
+          "global": "False",
+          "spec": ""
+        },
+        {
+          "address": "2002::/16",
+          "name": "6to4",
+          "global": "N/A",
+          "spec": ""
+        },
+        {
+          "address": "2620:4f:8000::/48",
+          "name": "Direct Delegation AS112 Service",
+          "global": "True",
+          "spec": ""
+        },
+        {
+          "address": "3fff::/20",
+          "name": "Documentation",
+          "global": "False",
+          "spec": ""
+        },
+        {
+          "address": "5f00::/16",
+          "name": "Segment Routing (SRv6) SIDs",
+          "global": "False",
+          "spec": ""
+        },
+        {
+          "address": "fc00::/7",
+          "name": "Unique-Local",
+          "global": "False",
+          "spec": ""
+        },
+        {
+          "address": "fe80::/10",
+          "name": "Link-Local Unicast",
+          "global": "False",
+          "spec": ""
+        }
+      ]
+    }
+  ]
+}
