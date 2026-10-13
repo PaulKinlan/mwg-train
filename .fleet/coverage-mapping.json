@@ -3,8 +3,9 @@
     "test/checks-wired.test.mjs"
   ],
   "src/corpus/cdp.mjs": [
-    "test/capture-state.test.mjs",
     "test/capture-flow.test.mjs",
+    "test/capture-state.test.mjs",
+    "test/chrome-sandbox.test.mjs",
     "test/eval-starters.test.mjs"
   ],
   "pilot/CORPUS.json": [

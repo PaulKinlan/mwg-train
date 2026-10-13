@@ -38,7 +38,50 @@ export class CdpError extends Error {
   }
 }
 
-function chromeBinary() {
+/**
+ * Whether this process is allowed to run Chrome without its sandbox. An explicit, documented opt-in rather than a
+ * fallback: the sandbox is the only thing between generated code and this host, so it is on unless an operator says
+ * otherwise, and the same shape as MWG_ALLOW_UNSANDBOXED_GENERATED_SERVER in src/eval/generated-server.mjs.
+ */
+export function chromeIsUnsandboxed(env = process.env) {
+  return env.MWG_ALLOW_UNSANDBOXED_CHROME === '1';
+}
+
+/**
+ * The arguments Chrome is launched with, in one place so a test can read them without starting a browser.
+ *
+ * `--no-sandbox` used to be here unconditionally, and it was the one hole in this project's sandboxing: the
+ * generated server is wrapped in bwrap with its environment stripped, and then the browser that drives the
+ * generated code was launched with its renderer sandbox off. Measured on this VM (mwg-train-u7ev), Chrome starts
+ * fine without the flag - user namespaces are available - and the difference is the whole point: with the flag, 0 of
+ * 5 renderers are in their own user namespace; without it, 5 of 5 are.
+ *
+ * Chrome will refuse to start on a host with no user namespaces and no setuid helper. That is a real environment and
+ * the reason the opt-in exists, but it is not a reason to run unsandboxed by default on a host that can sandbox.
+ */
+export function chromeArgs({ userDataDir, proxy = null, extra = [], unsandboxed = false, url = 'about:blank' } = {}) {
+  return [
+    '--headless=new',
+    '--remote-debugging-port=0',
+    `--user-data-dir=${userDataDir}`,
+    ...(unsandboxed ? ['--no-sandbox'] : []),
+    '--disable-gpu',
+    '--disable-dev-shm-usage',
+    '--hide-scrollbars',
+    '--no-first-run',
+    '--no-default-browser-check',
+    '--disable-extensions',
+    '--disable-background-networking',
+    '--disable-features=Translate,BackForwardCache,AcceptCHFrame,MediaRouter,OptimizationHints',
+    '--force-color-profile=srgb',
+    '--window-size=1280,900',
+    ...(proxy ? [`--proxy-server=${proxy}`] : []),
+    ...extra,
+    url,
+  ];
+}
+
+export function chromeBinary() {
   for (const candidate of CHROME_CANDIDATES) {
     try {
       readFileSync(candidate);
@@ -136,27 +179,18 @@ async function fetchJson(url, attempts = 40) {
 export async function launchChrome({ proxy = null, args = [] } = {}) {
   const userDataDir = mkdtempSync(join(tmpdir(), 'mwg-chrome-'));
   const binary = chromeBinary();
+  const unsandboxed = chromeIsUnsandboxed();
+  if (unsandboxed) {
+    // Announced once per launch rather than only documented: a run that has turned the sandbox off should say so in
+    // its own output, because the reader of a failing generated-code run needs to know what was protecting the host.
+    process.emitWarning(
+      'MWG_ALLOW_UNSANDBOXED_CHROME=1 - Chrome is running with --no-sandbox, so generated code shares this host with no renderer sandbox. Unset it unless this host cannot sandbox (no user namespaces and no setuid helper).',
+      { code: 'MWG_UNSANDBOXED_CHROME' },
+    );
+  }
   const child = spawn(
     binary,
-    [
-      '--headless=new',
-      '--remote-debugging-port=0',
-      `--user-data-dir=${userDataDir}`,
-      '--no-sandbox',
-      '--disable-gpu',
-      '--disable-dev-shm-usage',
-      '--hide-scrollbars',
-      '--no-first-run',
-      '--no-default-browser-check',
-      '--disable-extensions',
-      '--disable-background-networking',
-      '--disable-features=Translate,BackForwardCache,AcceptCHFrame,MediaRouter,OptimizationHints',
-      '--force-color-profile=srgb',
-      '--window-size=1280,900',
-      ...(proxy ? [`--proxy-server=${proxy}`] : []),
-      ...args,
-      'about:blank',
-    ],
+    chromeArgs({ userDataDir, proxy, extra: args, unsandboxed }),
     {
       stdio: ['ignore', 'pipe', 'pipe'],
       // Its own process group, so the whole tree - zygotes, gpu, network, and anything the browser spawns
@@ -255,7 +289,11 @@ export async function launchChrome({ proxy = null, args = [] } = {}) {
       child.stderr.on('data', onData);
       child.on('exit', (code) => {
         clearTimeout(timer);
-        reject(new CdpError('CHROME_EXIT', `Chrome exited early with code ${code}`));
+        // Chrome refusing to start is how a host with no user namespaces and no setuid helper looks, so the exit is
+        // where the opt-in is worth naming: the alternative is somebody reading "exited early with code 1" and
+        // reaching for --no-sandbox themselves, which is the thing this change stopped doing by default.
+        const hint = unsandboxed ? '' : ' (if this host cannot sandbox Chrome - no user namespaces and no setuid helper - set MWG_ALLOW_UNSANDBOXED_CHROME=1)';
+        reject(new CdpError('CHROME_EXIT', `Chrome exited early with code ${code}${hint}`));
       });
     });
 
