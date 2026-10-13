@@ -18,6 +18,11 @@ import { dirname, isAbsolute, join } from 'node:path';
 import process from 'node:process';
 
 import { launchChrome } from '../corpus/cdp.mjs';
+import { startCaptureProxy } from './proxy.mjs';
+
+/** A promise that never settles, for racing a navigation when no proxy is running to signal a refusal. */
+const NEVER = new Promise(() => {});
+import { assertCaptureTarget } from './target.mjs';
 import { assetStoragePath } from '../provenance/store.mjs';
 import { validateCapture, CAPTURE_VERSION, resolveCaptureOutputPath } from './schema.mjs';
 
@@ -218,6 +223,14 @@ export async function captureSite({
   env = process.env,
   outDir = null,
   pages = [],
+  // Reach loopback, private and link-local destinations. Off by default and deliberately explicit: the capture CLI
+  // takes a URL from outside, so reaching this host's own services has to be asked for at that boundary rather than
+  // assumed (mwg-train-ypgu). The project's own harness sets it, because it captures servers it started itself.
+  allowPrivate = false,
+  _lookup = undefined,
+  // Test hooks, named as internal for the reason _mutateCapture is: a suite has to be able to point the browser's own
+  // resolver somewhere hostile, to show that the proxy makes that irrelevant (mwg-train-ypgu).
+  _chromeArgs = [],
   _mutateCapture = null,
 } = {}) {
   if (!rightsRef || typeof rightsRef !== 'string' || rightsRef.trim() === '') {
@@ -238,7 +251,11 @@ export async function captureSite({
     ? pages
     : (typeof pages === 'string' ? pages.split(',').map((p) => p.trim()).filter(Boolean) : []);
 
+  // Fail fast on a URL that is refused anyway, before a browser or a proxy exists, so the operator gets the policy's
+  // message rather than a browser-level error.
+  await assertCaptureTarget(targetUrl, { allowPrivate, lookup: _lookup });
   let chrome = null;
+  let proxy = null;
   let desktopBuffer = null;
   let mobileBuffer = null;
   let domBuffer = null;
@@ -248,12 +265,29 @@ export async function captureSite({
   let requestEntries = [];
 
   try {
-    chrome = await launchChrome();
+    // The proxy is the enforcement point: every request the browser makes arrives here, the host is resolved here,
+    // and the connection is made to the address this process validated - including redirects and subresources, and
+    // including a destination the browser would have resolved differently. --proxy-bypass-list=<--loopback> removes
+    // Chrome's implicit loopback bypass, so a request to a local address goes through the same check as any other
+    // rather than around it. With allowPrivate the capture is unbounded by design, so no proxy is started.
+    if (!allowPrivate) proxy = await startCaptureProxy({ lookup: _lookup });
+    chrome = await launchChrome({
+      proxy: proxy ? proxy.url : null,
+      args: [...(proxy ? ['--proxy-bypass-list=<-loopback>'] : []), ..._chromeArgs],
+    });
     const page = await chrome.newPage({ viewport: { width: 1280, height: 900 } });
 
     // 1. Navigate to initial page and wait for settling
-    await page.goto(targetUrl, { timeout: 15_000 });
-    await page.waitForSettled({ timeout: 10_000 });
+    // The proxy refuses a blocked destination before connecting, so the browser may render an error page and report
+    // the navigation as finished. The refusal is the truer message, so it is preferred to whatever the browser says.
+    const navigation = page.goto(targetUrl, { timeout: 15_000 }).then(() => null, (error) => error);
+    const outcome = await Promise.race([navigation, proxy?.blockedSignal ?? NEVER]);
+    if (outcome !== null) throw proxy?.refusal() ?? outcome;
+    try {
+      await page.waitForSettled({ timeout: 10_000 });
+    } catch (error) {
+      throw proxy?.refusal() ?? error;
+    }
     finalUrl = await page.url();
 
     // 2. Extract initial page structural data
@@ -320,8 +354,14 @@ export async function captureSite({
       }
       visitedPaths.add(pagePath);
 
-      await page.goto(pageUrl.href, { timeout: 15_000 });
-      await page.waitForSettled({ timeout: 10_000 });
+      const pageNavigation = page.goto(pageUrl.href, { timeout: 15_000 }).then(() => null, (error) => error);
+      const pageOutcome = await Promise.race([pageNavigation, proxy?.blockedSignal ?? NEVER]);
+      if (pageOutcome !== null) throw proxy?.refusal() ?? pageOutcome;
+      try {
+        await page.waitForSettled({ timeout: 10_000 });
+      } catch (error) {
+        throw proxy?.refusal() ?? error;
+      }
       const additionalPageData = await extractPageStructure(page);
       capturedPages.push({
         path: pagePath,
@@ -343,6 +383,7 @@ export async function captureSite({
         status: Number.isInteger(r.status) ? r.status : null,
       }));
   } finally {
+    if (proxy) await proxy.close().catch(() => {});
     if (chrome) {
       await chrome.close();
     }
