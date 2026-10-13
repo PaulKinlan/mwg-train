@@ -243,6 +243,7 @@ export const DOCUMENTS = {
   // The archetype type axis (bead mwg-train-efg): what a type is, which types exist, and what each build can
   // currently express. It describes how the corpus and its evaluation are organised, and states no floor result.
   'docs/train/briefs/TYPE-AXIS.md': 'contract',
+  'docs/train/sft-serializer.md': 'spec',
   'docs/train/corpus/README.md': 'floor-report',
   'docs/train/corpus/YIELD.md': 'floor-report',
   'docs/train/corpus/records.json': 'floor-report',
