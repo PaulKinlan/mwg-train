@@ -125,24 +125,31 @@ marker, mwg-train-mr6t), so an interaction board without a URL is measurable and
 of the board's identity, and `captureSignature` refuses a marker that is already on the page before the drive,
 so a successful submission cannot be mistaken for the depicted refusal.
 
-Drive recipes were then attempted for the seven nulled refusal boards and **all seven were removed**, because the
-arm cannot raise the state the board depicts. The initial archetype arm generator serves simple initial forms
-only, so what a board shows and what its arm can do are different things:
+Drive recipes were then attempted for the seven nulled refusal boards and **all seven were removed**. An earlier
+version of the table below gave the reason as the arm being unable to isolate a field at all. That is wrong and is
+corrected here (mwg-train-8szu, raised by review): the arms DO isolate single fields, and one applies a value rule.
+The measurements below come from driving each family's raw arm, one write route at a time, with every other field
+satisfied - so each row says what the arm measurably does, against what the raster depicts:
 
-| board | what it depicts | why no drive reaches it |
+| board (what the raster depicts) | the arm's write route, and what it measurably refuses | why no drive compares |
 |---|---|---|
-| job-board `step1-error` | the EMPLOYER's "Post a New Vacancy" refusal | the arm's only write is `POST /apply`, a candidate application (Applicant name / Email / Role applied for / Why you are a good fit) - a different form and a different actor |
-| community-forum `step3-refusal` | a reply inside an EXISTING thread | the arm's only write is `POST /notes` (Your name / Entry or tune / Note or variation), a parentless note, so the refusal produced is not the one depicted |
-| restaurant-ordering `step1-error` | an empty ORDER | the arm's write is the order form itself; no submission leaves the order empty |
-| web-shop `step1-empty` | an empty BASKET | a basket is not produced by submitting a form at all |
-| survey-form `step3-validation` | a choice-rule refusal | the arm's select control always carries a value, so the rule cannot fail |
-| library-catalogue `step3-refusal` | a date-from-today rule refusal | the arm's form has no date control to violate it with |
-| expense-tracker `step1-error` | a message on the AMOUNT alone | submitting empty raises a message on EVERY required field (measured 3, 3, 3, 3, 4 across the five families of that round), never on one field alone |
+| job-board `step1-error`: the vacancy-posting form refused with inline errors on title and contact email | `POST /apply` - a candidate application (applicant, email, role, statement); each field alone reports `Missing: <field>` | the depicted posting form does not exist in the arm: a different form, for a different actor |
+| community-forum `step3-refusal`: the reply composer refused on an empty required note body | `POST /notes` (author, entry, note); an empty note alone reports `Missing: note` | the refusal is reachable, but the arm's write is a parentless entry while the board's composer replies inside an existing thread - the same message on a different action |
+| expense-tracker `step1-error`: a negative amount refused, with a top alert and an inline message beside the field | `POST /expenses` (member, vendor, category, amount); `amount=-1` alone reports `Below minimum: amount` | the refusal is reachable, but the arm renders one alert naming the field on a four-field form, where the raster shows a two-part refusal (a card-level alert plus a field message) on a richer form with a running-total panel - the same rule, a different rendered state |
+| survey-form `step3-validation`: refused on unanswered mandatory RATING questions | `POST /survey` (respondent, location, hazard, comments) has no rating control; its select accepts any value (an unlisted option returns 303, not a refusal) | the depicted rule cannot be raised: the control it applies to does not exist in the arm, and the select it does have is not validated against its options |
+| library-catalogue `step3-refusal`: refused without a researcher name and with an invalid date | `POST /request` (gardener, specimen, quantity); a missing name alone reports `Missing: gardener`; `quantity=-1` is accepted (303) | the depicted refusal is the missing name AND the invalid date together; the arm has no date control and no rule on its numeric field, so half of the depicted state cannot exist |
+| restaurant-ordering `step1-error`: checkout refused on an empty order, with a path back to the menu | `POST /order` (customer, bread, window); an empty submission reports `Missing: customer, bread` | the arm has no cart: its write is a single order form, and empty reports missing fields - a field-level refusal, not the depicted empty-order refusal |
+| web-shop `step1-empty`: an empty cart with checkout disabled and a path back to the ciders | `POST /checkout` (customer, email, items, collection); an empty submission reports `Missing: customer, email, items, collection` | the pictured state is not a refusal at all: it is a cart state with a disabled action, which no submission produces |
 
-The last row is the general rule, and it is why a partial drive cannot be faked: a board that depicts a single
-field in error can only be reached by a form whose other requirements are satisfied. Reaching these states is
-**arm work, not board work or instrument work**, and it is parked as mwg-train-7ix4 with this measurement on the
-bead, so a future attempt extends the generator first instead of re-deriving the table.
+What the measurements do and do not support, because the corrected reason matters more than the table: an **empty**
+submission does report every missing required field at once (3, 3, 3, 3 and 4 across the five families measured in
+that round), so a board depicting one field in error is not reached by submitting empty. But a single field CAN be
+isolated - satisfying every other field and omitting one reports that one alone (`Missing: member`), and the expense
+arm applies a value rule (`Below minimum: amount`) - so "the arm cannot isolate a field" is not why these recipes
+are absent. The reason is that a drive compares the **rendered state**, and these boards specify the planned
+product's form while the arm renders a reduced one: the refusal exists on both sides, with different fields, wording
+and layout. That is **arm work, not board work or instrument work**, parked as mwg-train-7ix4 with this measurement
+on the bead, so a future attempt extends the generator first instead of re-deriving the table.
 
 ## What follows
 
