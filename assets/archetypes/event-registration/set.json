@@ -4,12 +4,12 @@
     "target_dir": "docs/design/archetypes/event-registration",
     "readme": {
       "path": "docs/design/archetypes/event-registration/README.md",
-      "sha256": "4d677a09e152224cd0f5876de1eab14a0229ee6a4466c4f4b8f7719268ab13f0"
+      "sha256": "43434757eb95592fead0fba8290b03654de36228a892e912954e17861968185a"
     },
     "documents": [
       {
         "path": "docs/design/archetypes/event-registration/demo/compare.html",
-        "sha256": "dd119c1e137fa911a2c031e36403c127ea0c5c06dcd6da11d70f04afa13713fa"
+        "sha256": "046ed36817d0e171ef760b9c0411d1fb20a08485c8ee0673b4558733d2d0da94"
       },
       {
         "path": "docs/design/archetypes/event-registration/demo/index.html",
@@ -72,7 +72,7 @@
       "strings": [],
       "apparatus": true,
       "source": "docs/design/archetypes/event-registration/demo/compare.html",
-      "sha256": "dd119c1e137fa911a2c031e36403c127ea0c5c06dcd6da11d70f04afa13713fa"
+      "sha256": "046ed36817d0e171ef760b9c0411d1fb20a08485c8ee0673b4558733d2d0da94"
     },
     "index.html": {
       "title": "Future Web 2026 · event registration visual demo",
@@ -144,6 +144,12 @@
       "sha256": "6d9652b8437048e3f921c588090bc71a671d6038f1d146dc0d3f78b31edd90b3",
       "bytes": 431314,
       "source": "docs/design/archetypes/event-registration/step2-pass.jpg"
+    },
+    {
+      "name": "step3-refusal.jpg",
+      "sha256": "1722c3bee039d0810fb86dee20e861de708d3dd5b4771d91c02d0fa1117a3e2d",
+      "bytes": 408360,
+      "source": "docs/design/archetypes/event-registration/step3-refusal.jpg"
     }
   ],
   "rights": {
