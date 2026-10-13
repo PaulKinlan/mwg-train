@@ -351,6 +351,7 @@ export const DOCUMENTS = {
   'docs/eval/deepseek-checkpoint-matrix.md': 'design', // provisional model decision and quote provenance, not a floor result
   'docs/eval/decode-config.deepseek-flash.json': 'config', // proposed request knobs, not a measured floor result
   'docs/eval/evaluator-interface-contract.md': 'design', // preregistration amendment draft, not yet ratified
+  'docs/eval/evaluable-primary-endpoint.md': 'design', // unratified endpoint decision memo, not outcome evidence
   'docs/eval/owner-identity.json': 'config',
   'docs/eval/pricing.sheets.md': 'provider-data',
   'docs/eval/quotes.raw/fetched.json': 'provider-data',

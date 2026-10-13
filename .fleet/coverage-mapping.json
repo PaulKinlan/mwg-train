@@ -46,6 +46,9 @@
   "docs/eval/evaluator-interface-contract.md": [
     "test/harness-oracle.test.mjs"
   ],
+  "docs/eval/evaluable-primary-endpoint.md": [
+    "test/evaluable-primary-endpoint.test.mjs"
+  ],
   "docs/provenance/iana/special-purpose-addresses.json": [
     "test/capture-target-registry.test.mjs"
   ],
