@@ -8,7 +8,8 @@ function makePage(formId, { createAction = null, editAction = 'Save changes', vi
   const writes = [];
   const form = {
     id: formId,
-    elements: [{ name: 'customer' }],
+    // A reloaded edit input reflects the persisted record, even when the page has no text echo.
+    elements: [{ name: 'customer', get value() { return stored.customer; } }],
     querySelectorAll: () => [{ textContent: editAction }],
     setAttribute(name) { this.marker = name; },
   };
@@ -93,6 +94,9 @@ test('stored field visible only in an edit input does not satisfy the post-reloa
     recordUrl: 'http://example.test/bookings/r-1', interfaceContract,
   });
   assert.equal(result.verdict.detail.newValueStored, true, 'the server-side update succeeded');
+  assert.equal(page.form.elements[0].value, 'After', 'the reloaded edit input really contains the new value');
+  assert.equal(await page.evaluate('return document.body.innerText'), 'Booking details',
+    'the new value appears only in the input, not visible body text');
   assert.equal(result.verdict.detail.visibleAfterReload, false, 'an input value alone is not body.innerText');
   assert.equal(result.verdict.passed, false);
 });
