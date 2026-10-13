@@ -34,6 +34,14 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 // anchor-only reference, or a placeholder a human is meant to fill in.
 const IGNORED = /^(?:[a-zA-Z][a-zA-Z0-9+.-]*:|\/\/|#|$)/;
 
+// A target like `plan.md:84` is NOT an external URI whose scheme happens to be "plan.md": RFC 3986 allows a dot
+// in a scheme, but no link in this repository ever meant one. It is a relative filename with a line reference
+// glued inside the parentheses, and the one that did it (mwg-train-x1l4, web-shop README line 3) was a broken
+// link that the ignore rule above made silently green - a citation a reader cannot click and a check that
+// cannot say so. A scheme-like prefix that ends in a file extension this repository actually uses is therefore
+// resolved as the relative path it was meant to be, and a target like it fails loudly as nonexistent.
+const FILE_SUFFIX_SCHEME = /^[a-zA-Z][a-zA-Z0-9+.-]*\.(?:md|mjs|cjs|js|json|css|html?|jpe?g|png|gif|webp|svg|txt|ya?ml):/;
+
 export function isPlaceholder(target) {
   return /[<>{}]/.test(target) || target === '...' || target.startsWith('...');
 }
@@ -358,7 +366,7 @@ export function extractLinks(text) {
 // `root` is the repository root the caller is checking, not the module's own root: an absolute `/path` target means
 // `root/path` for whoever asked, and a test or a tool that checks another tree must get that tree's answer.
 export function resolveTarget(fromFile, target, root = ROOT) {
-  if (IGNORED.test(target) || isPlaceholder(target)) return null;
+  if ((IGNORED.test(target) && !FILE_SUFFIX_SCHEME.test(target)) || isPlaceholder(target)) return null;
   const withoutFragment = target.split('#')[0].split('?')[0];
   if (withoutFragment === '') return null;
   let decoded = withoutFragment;

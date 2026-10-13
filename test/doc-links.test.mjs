@@ -353,3 +353,19 @@ test('an escaped opening bracket is literal text, so one link is not reported tw
   // Two backslashes are an escaped backslash, so the bracket after them is a real opener and the link is real.
   assert.strictEqual(extractLinks('Text \\\\[label](other.md).').length, 1);
 });
+
+test('a line reference glued into a link target is a broken link, not an external URI', () => {
+  // mwg-train-x1l4. `plan.md:84` parsed as URI scheme "plan.md", which the ignore rule happily skipped, so the
+  // web-shop README's contract citation was a dead link the check called green. A scheme-like prefix that ends
+  // in a file extension this repository uses is a relative path with a line reference glued on, and the file
+  // "plan.md:84" does not exist - so the check must say so. The honest form, a link to the file with the line
+  // reference outside the parentheses, stays green.
+  const root = tree({
+    'plan.md': '# Plan\n',
+    'readme.md': 'Cites ([`plan.md`](plan.md:84)) badly and ([`plan.md`](plan.md):84) well.\n',
+  });
+  const result = run(root, ['readme.md']);
+  assert.equal(result.ok, false, 'the glued line reference was ignored as an external URI');
+  assert.equal(result.findings.length, 1);
+  assert.match(result.findings[0].message, /plan\.md:84/);
+});
