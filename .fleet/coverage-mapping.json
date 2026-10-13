@@ -153,5 +153,8 @@
   "src/capture/site.mjs": [
     "test/capture-site.test.mjs",
     "test/capture-proxy.test.mjs"
+  ],
+  "docs/provenance/iana/special-purpose-addresses.json": [
+    "test/capture-target-registry.test.mjs"
   ]
 }
