@@ -4,6 +4,7 @@ import { spawn, execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { createServer as createHttpServer } from 'node:http';
 import { createServer } from 'node:net';
+import { createSocket } from 'node:dgram';
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { networkInterfaces, tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -106,6 +107,65 @@ test('browser permits driven loopback port but denies a different local service;
     assert.equal(control.body, 'local-secret', 'opt-out must reach unrelated loopback port');
     assert.equal(unrelatedHits, 1);
     console.log(`loopback scope: driven port ${app.address().port} loaded; unrelated ${unrelated.address().port} contained hits=0, opt-out hits=1`);
+  });
+
+test('page-context WebRTC denial stops non-loopback STUN packets; unprotected control reaches listener',
+  { timeout: 30_000 }, async (t) => {
+    const address = Object.values(networkInterfaces()).flat().find((a) => a.family === 'IPv4' && !a.internal)?.address;
+    assert.ok(address, 'control needs a non-loopback UDP listener');
+    const udp = createSocket('udp4');
+    let packets = 0;
+    udp.on('message', () => packets++);
+    await new Promise((resolve) => udp.bind(0, address, resolve));
+    t.after(() => udp.close());
+    const stun = `stun:${address}:${udp.address().port}`;
+    const app = createHttpServer((_req, res) => res.writeHead(200, { 'content-type': 'text/html' }).end(`<title>STUN probe</title><script>
+      window.probe = (async () => {
+        try {
+          const pc = new RTCPeerConnection({ iceServers: [{ urls: ${JSON.stringify(stun)} }] });
+          pc.createDataChannel('probe');
+          await pc.setLocalDescription(await pc.createOffer());
+          return true;
+        } catch { return false; }
+      })();
+    </script>`));
+    await new Promise((resolve) => app.listen(0, '127.0.0.1', resolve));
+    t.after(() => app.close());
+    const probe = async (disableWebRtc) => {
+      const chrome = await launchChrome({ disableWebRtc });
+      try {
+        const page = await chrome.newPage();
+        await page.goto(`http://127.0.0.1:${app.address().port}/`);
+        const result = await page.evaluate(`
+          const frame = document.createElement('iframe');
+          frame.srcdoc = '<title>same-origin frame</title>';
+          document.body.append(frame);
+          await new Promise((resolve) => frame.onload = resolve);
+          const check = (win) => ({
+            type: typeof win.RTCPeerConnection,
+            webkitType: typeof win.webkitRTCPeerConnection,
+            constructThrows: (() => { try { new win.RTCPeerConnection(); return false; } catch { return true; } })(),
+          });
+          return { constructed: await window.probe, page: check(window), frame: check(frame.contentWindow) };
+        `);
+        await delay(2000);
+        return result;
+      } finally { await chrome.close(); }
+    };
+    const control = await probe(false);
+    const controlPackets = packets;
+    assert.equal(control.constructed, true, 'unprotected page constructed a peer connection');
+    assert.equal(control.page.type, 'function', 'control has the native peer connection constructor');
+    assert.ok(controlPackets > 0, 'unprotected control must send real STUN packets to non-loopback UDP listener');
+    const contained = await probe(true);
+    const containedPackets = packets - controlPackets;
+    assert.deepEqual(contained, {
+      constructed: false,
+      page: { type: 'undefined', webkitType: 'undefined', constructThrows: true },
+      frame: { type: 'undefined', webkitType: 'undefined', constructThrows: true },
+    });
+    assert.equal(containedPackets, 0, 'same generated page must send zero STUN packets with WebRTC disabled');
+    console.log(`STUN UDP packets: unprotected=${controlPackets} protected=${containedPackets}; page/frame constructors unavailable`);
   });
 
 test('custom proxy conflicts with default containment', async () => {
