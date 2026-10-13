@@ -509,3 +509,28 @@ test('relabelling a record that carries only some fields adds the rest and touch
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test('the provenance patterns classify a new family, while an explicit entry still wins', () => {
+  // mwg-train-7zot. Before this, every reference-board family appended two lines to the same hunk of DOCUMENTS,
+  // so each family's landing conflicted with the next one's - the merger resolved that union seven times in one
+  // batch. The pattern means a family needs no entry; the precedence means the one document that is deliberately
+  // NOT provenance stays 'design'.
+  const unseen = [
+    'docs/design/archetypes/a-family-nobody-has-authored-yet/README.md',
+    'docs/provenance/assets/design-reference-a-family-nobody-has-authored-yet.md',
+  ];
+  const findings = checkDocumentClassification(unseen);
+  assert.deepEqual(findings, [], `an unseen family was not classified by pattern: ${JSON.stringify(findings)}`);
+
+  // booking's README is the exception: an explicit 'design' entry must beat the pattern rather than be
+  // silently reclassified as provenance.
+  assert.equal(DOCUMENTS['docs/design/archetypes/booking/README.md'], 'design');
+  const bookingFindings = checkDocumentClassification(['docs/design/archetypes/booking/README.md']);
+  assert.deepEqual(bookingFindings, []);
+
+  // A nested README is not a board brief: the pattern's single path segment must not swallow the demo READMEs,
+  // which have their own 'design' entries.
+  const nested = 'docs/design/archetypes/contact-lead/demo/README.md';
+  assert.equal(DOCUMENTS[nested], 'design');
+  assert.deepEqual(checkDocumentClassification([nested]), []);
+});

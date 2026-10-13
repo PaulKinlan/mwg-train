@@ -79,6 +79,25 @@ export const DOCUMENT_KINDS = {
  * classification. Each pattern therefore pins the basename, so a new document inside one of these trees
  * matches nothing and has to be classified.
  */
+/**
+ * Provenance documents classified by PATTERN rather than by name (mwg-train-7zot).
+ *
+ * Every reference-board family contributes the same two documents: an archetype README that records the borrowed
+ * reference material, its rights and the exact generation prompt, and a register under docs/provenance/assets/
+ * that pins the board bytes and prompt digests. Listing them by name meant every new family appended two lines to
+ * the same hunk of the same map, so each family's landing conflicted with the next one's and the merger resolved
+ * the same union seven times in one batch (the ko9i rebase, then l9zm, z5q7, skm3, ixp9, ew6n). A pattern makes
+ * a new family need no edit here at all.
+ *
+ * Checked AFTER `DOCUMENTS`, so an explicit entry still wins: booking's README is deliberately classified
+ * 'design' rather than 'provenance' and stays that way. Nested READMEs are not covered - the `[^/]+` segment
+ * means `docs/design/archetypes/<family>/demo/README.md` keeps its own 'design' entry.
+ */
+export const PROVENANCE_PATTERNS = [
+  /^docs\/design\/archetypes\/[^/]+\/README\.md$/,
+  /^docs\/provenance\/assets\/design-reference-[^/]+\.md$/,
+];
+
 export const GENERATED_PATTERNS = [
   /^pilot\/projects\/[^/]+\/(?:package|spec)\.json$/,
   /^data\/[^/]+\/targets\/[^/]+\/signature\.json$/,
@@ -219,7 +238,9 @@ export const DOCUMENTS = {
   'docs/design/archetypes/dashboard/plan.md': 'design',
   'docs/design/archetypes/community-forum/design.md': 'design',
   'docs/design/archetypes/community-forum/plan.md': 'design',
-  'docs/design/archetypes/account-recovery/README.md': 'provenance',
+  // The archetype READMEs and their design-reference registers are no longer listed here: they are classified
+  // by PROVENANCE_PATTERNS above, so a new family needs no entry in this map (mwg-train-7zot). The one
+  // exception is booking's README, which stays explicit because it is 'design', not 'provenance'.
   'docs/design/archetypes/account-recovery/demo/README.md': 'design',
   'docs/design/archetypes/account-recovery/design.md': 'design',
   'docs/design/archetypes/account-recovery/plan.md': 'design',
@@ -229,20 +250,16 @@ export const DOCUMENTS = {
   'docs/design/archetypes/contact-lead/design.md': 'design',
   'docs/design/archetypes/contact-lead/plan.md': 'design',
   'docs/design/archetypes/booking/demo/README.md': 'design',
-  'docs/design/archetypes/catalogue/README.md': 'provenance',
   'docs/design/archetypes/catalogue/demo/README.md': 'design',
   'docs/design/archetypes/catalogue/design.md': 'design',
   'docs/design/archetypes/catalogue/plan.md': 'design',
-  'docs/design/archetypes/contact-lead/README.md': 'provenance',
   'docs/design/archetypes/contact-lead/demo/README.md': 'design',
-  'docs/design/archetypes/event-registration/README.md': 'provenance',
   'docs/design/archetypes/event-registration/demo/README.md': 'design',
   'docs/design/archetypes/event-registration/design.md': 'design',
   'docs/design/archetypes/event-registration/plan.md': 'design',
   // The first archetype authored outside the five evaluation families (bead mwg-train-efg): a board brief whose
   // prompts the generator reads. Classified like the other archetype READMEs that record borrowed reference
   // material and its rights.
-  'docs/design/archetypes/editorial-blog/README.md': 'provenance',
   // The type's two contract documents, in the section order src/design/contract.mjs requires of a design and a
   // plan document. Classified as 'design' like the eval side's equivalents that describe how a page should look
   // and behave; neither states a measured corpus result.
@@ -251,12 +268,10 @@ export const DOCUMENTS = {
   // The register that pins the new archetype's board bytes and prompt digests, in the same shape as the other
   // design-reference records. Classified as provenance, not as a floor report: it records borrowed reference
   // material and its rights, and states no measured result of the corpus.
-  'docs/provenance/assets/design-reference-editorial-blog.md': 'provenance',
   // The second archetype outside the five evaluation families (bead mwg-train-efg), same shapes and the same
   // reasoning as the block above: the README records borrowed reference material and its rights, the two
   // contract documents describe how a page should look and behave, and the register pins board bytes and prompt
   // digests. None of them states a measured result of the corpus.
-  'docs/design/archetypes/fan-community-site/README.md': 'provenance',
   'docs/design/archetypes/fan-community-site/design.md': 'design',
   'docs/design/archetypes/fan-community-site/plan.md': 'design',
   'docs/design/archetypes/course-enrolment/design.md': 'design',
@@ -273,53 +288,36 @@ export const DOCUMENTS = {
   'docs/design/archetypes/restaurant-ordering/plan.md': 'design',
   'docs/design/archetypes/web-shop/design.md': 'design',
   'docs/design/archetypes/web-shop/plan.md': 'design',
-  'docs/provenance/assets/design-reference-fan-community-site.md': 'provenance',
   // The community-forum reply-refusal board (bead mwg-train-tzy0), same shape and the same reasoning as
   // the job-board, web-shop and survey-form blocks above: the README records borrowed reference material
   // and its rights, and the register pins board bytes and the prompt digest. Neither states a measured
   // result of the corpus.
-  'docs/design/archetypes/community-forum/README.md': 'provenance',
-  'docs/provenance/assets/design-reference-community-forum.md': 'provenance',
   // The job-board posting-refusal board (bead mwg-train-ko9i), an in-family training archetype rather than
   // one of the five evaluation families: same shape and the same reasoning as editorial-blog above - the
   // README records borrowed reference material and its rights, and the register pins board bytes and the
   // prompt digest. Neither states a measured result of the corpus.
-  'docs/design/archetypes/job-board/README.md': 'provenance',
-  'docs/provenance/assets/design-reference-job-board.md': 'provenance',
   // The web-shop empty-cart board (bead mwg-train-l9zm), an in-family training archetype rather than one of the
   // five evaluation families: same shape and the same reasoning as editorial-blog above - the README records
   // borrowed reference material and its rights, and the register pins board bytes and the prompt digest.
   // Neither states a measured result of the corpus.
-  'docs/design/archetypes/web-shop/README.md': 'provenance',
-  'docs/provenance/assets/design-reference-web-shop.md': 'provenance',
   // The survey-form validation-refusal board (bead mwg-train-z5q7), same shape and the same reasoning as
   // the job-board and web-shop blocks above: the README records borrowed reference material and its
   // rights, and the register pins board bytes and the prompt digest. Neither states a measured result of
   // the corpus.
-  'docs/design/archetypes/survey-form/README.md': 'provenance',
-  'docs/provenance/assets/design-reference-survey-form.md': 'provenance',
   // The expense-tracker entry-refusal board (bead mwg-train-skm3), same shape and the same reasoning as the
   // blocks above: the README records borrowed reference material and its rights, and the register pins board
   // bytes and the prompt digest. Neither states a measured result of the corpus.
-  'docs/design/archetypes/expense-tracker/README.md': 'provenance',
-  'docs/provenance/assets/design-reference-expense-tracker.md': 'provenance',
   // The restaurant-ordering empty-order refusal board (bead mwg-train-ixp9), same shape and the same
   // reasoning as the blocks above: the README records borrowed reference material and its rights, and the
   // register pins board bytes and the prompt digest. Neither states a measured result of the corpus.
-  'docs/design/archetypes/restaurant-ordering/README.md': 'provenance',
-  'docs/provenance/assets/design-reference-restaurant-ordering.md': 'provenance',
   // The library-catalogue reservation-refusal board (bead mwg-train-ew6n), same shape and the same
   // reasoning as the blocks above: the README records borrowed reference material and its rights, and the
   // register pins board bytes and the prompt digest. Neither states a measured result of the corpus.
-  'docs/design/archetypes/library-catalogue/README.md': 'provenance',
-  'docs/provenance/assets/design-reference-library-catalogue.md': 'provenance',
   // The third archetype outside the five evaluation families (bead mwg-train-efg), same shapes and the same
   // reasoning again: a board brief, two contract documents, and a digest register, none of which states a
   // measured result of the corpus.
-  'docs/design/archetypes/product-card-comparison/README.md': 'provenance',
   'docs/design/archetypes/product-card-comparison/design.md': 'design',
   'docs/design/archetypes/product-card-comparison/plan.md': 'design',
-  'docs/provenance/assets/design-reference-product-card-comparison.md': 'provenance',
   'docs/eval/ATTRIBUTION.md': 'contract',
   'docs/eval/PREREGISTRATION.md': 'contract',
   'docs/eval/owner-identity.json': 'config',
@@ -332,8 +330,6 @@ export const DOCUMENTS = {
   'docs/provenance/accounts/google-antigravity-consumer.md': 'provenance',
   'docs/provenance/accounts/openai-codex.md': 'provenance',
   'docs/provenance/accounts/zai-api.md': 'provenance',
-  'docs/provenance/assets/design-reference-booking.md': 'provenance',
-  'docs/provenance/assets/design-reference-wave2.md': 'provenance',
   'docs/provenance/assets/design-layouts.md': 'provenance',
   'docs/provenance/assets/eval-targets.md': 'provenance',
   'docs/provenance/assets/mwg-modern-web-guidance.md': 'provenance',
@@ -459,7 +455,13 @@ export const REGISTRY = Object.entries(DOCUMENTS)
 export function checkDocumentClassification(paths) {
   const findings = [];
   for (const path of paths) {
-    const kind = DOCUMENTS[path] ?? (GENERATED_PATTERNS.some((pattern) => pattern.test(path)) ? 'generated' : null);
+    const kind =
+      DOCUMENTS[path] ??
+      (PROVENANCE_PATTERNS.some((pattern) => pattern.test(path))
+        ? 'provenance'
+        : GENERATED_PATTERNS.some((pattern) => pattern.test(path))
+          ? 'generated'
+          : null);
     if (!kind) {
       findings.push({
         code: 'UNCLASSIFIED_DOCUMENT',
@@ -729,10 +731,11 @@ const asJson = process.argv.includes('--json');
 if (import.meta.url === `file://${process.argv[1]}`) {
   const findings = [...checkBaselineLabel(REGISTRY)];
   let scanned = 0;
+  let trackedFiles = [];
   try {
-    const files = listTrackedDocuments();
-    scanned = files.length;
-    findings.push(...checkDocumentClassification(files));
+    trackedFiles = listTrackedDocuments();
+    scanned = trackedFiles.length;
+    findings.push(...checkDocumentClassification(trackedFiles));
   } catch (error) {
     findings.push({ code: 'SCAN_FAILED', subject: 'git ls-files', message: `could not list tracked files: ${error?.message ?? error}` });
   }
@@ -747,5 +750,13 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     console.error(`check-baseline-label: FAIL - ${findings.length} finding(s); a floor report is unattributed or misattributed`);
     process.exit(1);
   }
-  if (!asJson) console.log(`check-baseline-label: PASS - ${REGISTRY.length} floor report(s) carry '${BASELINE_LABEL}'; all ${scanned} tracked document(s) are classified (${Object.keys(DOCUMENTS).length} by name, the rest by generated pattern), and no document classified as a non-report states floor evidence without the label (${Object.keys(EXCLUSIONS).length} excluded by name)`);
+  // Counted rather than described: the two pattern lists classify documents as different KINDS, so a summary
+  // that lumps them together as "generated" would misstate what the checker decided (mwg-train-7zot).
+  const byPattern = { provenance: 0, generated: 0 };
+  for (const path of trackedFiles) {
+    if (DOCUMENTS[path]) continue;
+    if (PROVENANCE_PATTERNS.some((pattern) => pattern.test(path))) byPattern.provenance += 1;
+    else if (GENERATED_PATTERNS.some((pattern) => pattern.test(path))) byPattern.generated += 1;
+  }
+  if (!asJson) console.log(`check-baseline-label: PASS - ${REGISTRY.length} floor report(s) carry '${BASELINE_LABEL}'; all ${scanned} tracked document(s) are classified (${Object.keys(DOCUMENTS).length} by name, ${byPattern.provenance} by the provenance pattern, and the rest by generated pattern), and no document classified as a non-report states floor evidence without the label (${Object.keys(EXCLUSIONS).length} excluded by name)`);
 }
