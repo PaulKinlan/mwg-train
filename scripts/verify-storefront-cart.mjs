@@ -9,7 +9,7 @@
  * Usage: node scripts/verify-storefront-cart.mjs   (CART_ARM=vue to check another arm)
  * Evidence (screenshots + a JSON report) is written to /tmp/storefront-cart-shots.
  */
-import { spawn } from 'node:child_process';
+import { startGeneratedServer } from '../src/eval/generated-server.mjs';
 import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
@@ -41,9 +41,14 @@ const dir = mkdtempSync(join(tmpdir(), `cart-verify-${ARM}-`));
 writeProject(dir, { projectId, files, spec: projectSpec, includeDependencies: true });
 symlinkSync(join(ROOT, 'node_modules'), join(dir, 'node_modules'), 'dir');
 const base = `http://127.0.0.1:${PORT}`;
-const server = spawn('node', ['server.mjs', '--port', String(PORT), '--db', join(dir, 'verify.sqlite')], {
-  cwd: dir,
+const server = startGeneratedServer({
+  projectDir: dir,
+  port: PORT,
+  dbPath: join(dir, 'verify.sqlite'),
   stdio: ['ignore', 'ignore', 'pipe'],
+  // Not detached: this script kills the sandbox by pid, and the kernel tears the whole PID
+  // namespace down with it, so nothing is left behind either way.
+  detached: false,
 });
 let chrome;
 try {

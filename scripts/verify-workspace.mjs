@@ -13,7 +13,7 @@
  * Usage: node scripts/verify-workspace.mjs   (WORKSPACE_ARM=vue to check another arm)
  * Evidence (screenshots + a JSON report) is written to /tmp/workspace-shots.
  */
-import { spawn } from 'node:child_process';
+import { startGeneratedServer } from '../src/eval/generated-server.mjs';
 import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
@@ -40,7 +40,15 @@ const { projectId, files, spec } = buildProjectFromSpec({ spec: workspaceSpec(),
 const dir = mkdtempSync(join(tmpdir(), `workspace-belief-${ARM}-`));
 writeProject(dir, { projectId, files, spec, includeDependencies: true });
 symlinkSync(join(ROOT, 'node_modules'), join(dir, 'node_modules'), 'dir');
-const server = spawn('node', ['server.mjs', '--port', String(PORT), '--db', join(dir, 'belief.sqlite')], { cwd: dir, stdio: ['ignore', 'ignore', 'pipe'] });
+const server = startGeneratedServer({
+  projectDir: dir,
+  port: PORT,
+  dbPath: join(dir, 'belief.sqlite'),
+  stdio: ['ignore', 'ignore', 'pipe'],
+  // Not detached: this script kills the sandbox by pid, and the kernel tears the whole PID
+  // namespace down with it, so nothing is left behind either way.
+  detached: false,
+});
 let browser;
 const base = `http://127.0.0.1:${PORT}`;
 // `evaluate` wraps its argument in an async function BODY, so a bare expression is a statement and comes

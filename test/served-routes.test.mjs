@@ -34,6 +34,10 @@ function bareTree() {
   // make it look for the corpus and the projects in the real checkout instead of this fixture.
   copyFileSync(SCRIPT, join(dir, 'scripts', 'check-served-routes.mjs'));
   symlinkSync(join(ROOT, 'pilot', 'TRAINING_CORPUS.json'), join(dir, 'pilot', 'TRAINING_CORPUS.json'));
+  // src/ is part of a clean checkout and is now imported by the script (the shared environment policy for generated
+  // servers, mwg-train-6wpn). Without it the fixture tests "the import is missing", not "the generated projects are
+  // missing", and the three end-to-end cases fail with ERR_MODULE_NOT_FOUND instead of the exit codes they pin.
+  symlinkSync(join(ROOT, 'src'), join(dir, 'src'), 'dir');
   symlinkSync(join(ROOT, 'docs', 'train', 'briefs', 'manifest.jsonl'), join(dir, 'docs', 'train', 'briefs', 'manifest.jsonl'));
   return dir;
 }

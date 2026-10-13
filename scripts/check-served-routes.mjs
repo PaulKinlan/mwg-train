@@ -39,10 +39,14 @@
  *     that divergence is the documented gap this tool exists to measure.
  */
 import { spawn, execFileSync } from 'node:child_process';
-import { randomUUID } from 'node:crypto';
-import { existsSync, mkdirSync, readFileSync, realpathSync, unlinkSync, writeFileSync } from 'node:fs';
+
+// The environment policy and the launch shape for a generated server live in one shared module: the prober is
+// one of ten call sites (mwg-train-6wpn), and a second implementation is how they drift apart.
+import { startGeneratedServer } from '../src/eval/generated-server.mjs';
+import { tmpdir } from 'node:os';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, unlinkSync, writeFileSync } from 'node:fs';
 import { createServer as createNetServer } from 'node:net';
-import { dirname, isAbsolute, join, resolve } from 'node:path';
+import { basename, dirname, isAbsolute, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import process from 'node:process';
 
@@ -182,6 +186,17 @@ function cleanupDb(dbPath) {
       if (existsSync(dbPath + ext)) unlinkSync(dbPath + ext);
     } catch {}
   }
+  // The per-run directory this run created for the database, and only that (see unsafeToRemoveDir).
+  const dir = dirname(dbPath);
+  if (existsSync(dir) && !unsafeToRemoveDir(dir)) {
+    try { rmSync(dir, { recursive: true, force: true }); } catch {}
+  }
+}
+
+// Never remove a directory we did not create: the database directory is always one this script made itself, under
+// the temporary directory, with its own prefix. Anything else is a path an operator or a caller supplied.
+function unsafeToRemoveDir(dir) {
+  return !dir.startsWith(realpathSync(tmpdir())) || !basename(dir).startsWith('check-served-');
 }
 
 function emergencyCleanup() {
@@ -311,7 +326,10 @@ async function probeProject(project, projectsRoot) {
   const writeRoute = declaredRoutes.find((route) => (route.method ?? 'GET') === 'POST');
   const specFields = spec.fields ?? [];
   const port = await getFreePort();
-  const dbPath = join('/tmp', `check-served-${project.project_id}-${Date.now()}-${randomUUID().slice(0, 8)}.sqlite`);
+  // A per-run directory rather than a file directly in /tmp: the sandbox mounts this directory read-write and
+  // nothing else of the host's /tmp, and the host still sees the same database afterwards (mwg-train-6wpn).
+  const dbDir = mkdtempSync(join(tmpdir(), `check-served-${project.project_id}-`));
+  const dbPath = join(dbDir, 'routes.sqlite');
 
   allUsedPorts.add(port);
   allCreatedDbs.add(dbPath);
@@ -321,11 +339,7 @@ async function probeProject(project, projectsRoot) {
   const projectDeadline = Date.now() + PROJECT_TIMEOUT_MS;
 
   try {
-    child = spawn(process.execPath, ['server.mjs', '--port', String(port), '--db', dbPath], {
-      cwd: projectDir,
-      stdio: ['ignore', 'pipe', 'pipe'],
-      detached: true,
-    });
+    child = startGeneratedServer({ projectDir, port, dbPath });
     activeServers.set(port, { child, dbPath });
 
     const maxWaitMs = Math.min(SERVER_POLL_TIMEOUT_MS, Math.max(1000, projectDeadline - Date.now()));
