@@ -31,6 +31,24 @@
   "docs/PIPELINE.md": [
     "test/reachability.test.mjs"
   ],
+  ".gitignore": [
+    "test/generator-runner.test.mjs"
+  ],
+  "package.json": [
+    "test/generator-runner.test.mjs"
+  ],
+  "docs/eval/generator-runner.md": [
+    "test/generator-runner.test.mjs"
+  ],
+  "scripts/generate.mjs": [
+    "test/generator-runner.test.mjs"
+  ],
+  "src/eval/generator.mjs": [
+    "test/generator-runner.test.mjs"
+  ],
+  "src/eval/spend-ledger.mjs": [
+    "test/generator-runner.test.mjs"
+  ],
   "docs/eval/deepseek-cost-projection.md": [
     "test/compare.test.mjs"
   ],
