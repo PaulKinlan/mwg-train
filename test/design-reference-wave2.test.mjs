@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { readFileSync, readdirSync } from 'node:fs';
 import { test } from 'node:test';
+import { classifyDocument } from '../scripts/check-baseline-label.mjs';
 
 const root = new URL('../', import.meta.url);
 const text = (path) => readFileSync(new URL(path, root), 'utf8');
@@ -20,8 +21,9 @@ test('twelve Wave 2 boards have three-way matching README/record/file hashes and
   const rows = [...record.matchAll(/\|\s*\[`([a-z-]+)`\]\([^|]+\)\s*\|\s*\[`(step[0-9]+-[a-z0-9-]+\.jpg)`\]\([^|]+\)\s*\|\s*`([0-9a-f]{64})`\s*\|\s*(\d+)\s*\|\s*`([0-9a-f]{64})`\s*\|/g)];
   const expected = Object.entries(STEPS).flatMap(([family, names]) => names.map((name) => `${family}/${name}`));
   assert.deepEqual(rows.map(([, family, name]) => `${family}/${name}`).sort(), expected.sort(), 'no board may be duplicated or omitted from provenance');
-  const classification = text('scripts/check-baseline-label.mjs');
-  assert.match(classification, /'docs\/provenance\/assets\/design-reference-wave2\.md': 'provenance'/);
+  // Ask the classifier rather than grepping this file's text: the entry may be a name or a pattern, and
+  // a test that reads the mechanism survives either (mwg-train-7zot).
+  assert.equal(classifyDocument('docs/provenance/assets/design-reference-wave2.md'), 'provenance');
   assert.match(record, /excluded_from_training: true/);
   assert.match(record, /approved_for_training: false/);
   // Contract changed by bead mwg-train-c1c: these boards are now generated with an EXPLICITLY named model, and the
@@ -45,7 +47,7 @@ test('twelve Wave 2 boards have three-way matching README/record/file hashes and
     assert.match(readme, /gemini-3-pro-image/);
     assert.match(readme, /Google consumer-account terms/);
     assert.match(readme, /design-reference-wave2\.md/);
-    assert.ok(classification.includes(`'${dir}README.md': 'provenance'`), `${family}: missing explicit document classification`);
+    assert.equal(classifyDocument(`${dir}README.md`), 'provenance', `${family}: the README is not classified as provenance`);
     const readmeRows = [...readme.matchAll(/\|\s*\[`(step[0-9]+-[a-z0-9-]+\.jpg)`\]\([^|]+\)\s*\|[^|]*\|\s*`([0-9a-f]{64})`\s*\|\s*(\d+)\s*\|/g)];
     assert.deepEqual(readmeRows.map(([, name]) => name).sort(), names.slice().sort(), `${family}: README must name each board exactly once`);
     for (const name of names) {

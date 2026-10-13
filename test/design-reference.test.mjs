@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { readFileSync, readdirSync } from 'node:fs';
 import { test } from 'node:test';
+import { classifyDocument } from '../scripts/check-baseline-label.mjs';
 
 const root = new URL('../', import.meta.url);
 const text = (path) => readFileSync(new URL(path, root), 'utf8');
@@ -40,7 +41,9 @@ test('the reference boards declare and enforce exclusion from training', () => {
   assert.match(record, /approved_for_training: false/);
   const classification = text('scripts/check-baseline-label.mjs');
   assert.match(classification, /'docs\/design\/archetypes\/booking\/README\.md': 'design'/);
-  assert.match(classification, /'docs\/provenance\/assets\/design-reference-booking\.md': 'provenance'/);
+  // Classification is asked of the classifier, not read out of this file's text (mwg-train-7zot): the
+  // register is matched by pattern now, and the assertion must not care which mechanism applies.
+  assert.equal(classifyDocument('docs/provenance/assets/design-reference-booking.md'), 'provenance');
   // Every board appears in the provenance table, so a board cannot be added without a rights record.
   for (const name of STEPS) assert.ok(record.includes(name), `${name}: missing from the provenance table`);
 });
