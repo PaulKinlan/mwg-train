@@ -125,7 +125,10 @@ export function sandboxArgs({ projectDir, port, dbPath }) {
   // possible, since the host has to see the same file the server wrote.
   if (dbDir && dbDir !== projectDir) args.push('--bind', dbDir, dbDir);
   args.push('--dev', '/dev', '--proc', '/proc', '--chdir', projectDir);
-  args.push('--', '/node/bin/node', ...['server.mjs', ...serverArgv({ port, dbPath })]);
+  // serverArgv already begins with the script name, so it is spread once: prepending it again would run the
+  // server with a stray positional argument (`node server.mjs server.mjs --port ...`), which is invisible until a
+  // generated server reads its arguments by position (mwg-train-pdsb follow-up).
+  args.push('--', '/node/bin/node', ...serverArgv({ port, dbPath }));
   return args;
 }
 

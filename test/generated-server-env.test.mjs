@@ -197,6 +197,11 @@ test('the server argument list is built from what the caller actually passes', (
   assert.deepEqual(serverArgv({ port: 1234, dbPath: '/tmp/d/routes.sqlite' }), ['server.mjs', '--port', '1234', '--db', '/tmp/d/routes.sqlite']);
   assert.deepEqual(serverArgv({ port: 1234 }), ['server.mjs', '--port', '1234']);
   assert.deepEqual(serverArgv({}), ['server.mjs']);
+  // The sandbox's argv names the script exactly once: serverArgv already starts with it, and spreading it after a
+  // hard-coded copy ran the server as `node server.mjs server.mjs --port ...` (a stray positional argument).
+  const sandboxed = sandboxArgs({ projectDir: '/tmp/project', port: 1234, dbPath: '/tmp/db/routes.sqlite' });
+  assert.equal(sandboxed.filter((arg) => arg === 'server.mjs').length, 1, `the script name appears once in ${sandboxed.join(' ')}`);
+  assert.deepEqual(sandboxed.slice(-7), ['--', '/node/bin/node', 'server.mjs', '--port', '1234', '--db', '/tmp/db/routes.sqlite']);
   assert.deepEqual(serverArgv(), ['server.mjs']);
 });
 
