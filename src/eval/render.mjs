@@ -40,12 +40,57 @@ import { TARGET_VIEWPORT } from './targets.mjs';
  * A path must be root-relative. It is concatenated onto the local origin, so anything else would either
  * escape the origin or silently render the wrong page, and both failures would surface as a measurement of
  * the arm rather than as a mistake in the call.
+ *
+ * `drive` is the same argument for a state that has NO path: a page whose refusal, validation or empty state
+ * only exists after somebody acts on it. A path selects a document; a drive selects a state of a document, by
+ * filling fields and submitting, and only then measuring. It is passed HERE rather than done by the caller
+ * because the drive has to happen on the page that is measured: a caller that opened a second page would
+ * measure a different load, and the signature, the `collect` probe and the screenshot would disagree.
+ *
+ * `drive.expectText` is not decoration. Without it a drive that silently SUCCEEDED - the submission was
+ * accepted, no refusal was rendered - would produce a clean screenshot of a different page, which would then
+ * be compared against a refusal board and reported as a visual difference. A drive that does not reach the
+ * state its board depicts throws instead, so the comparison is reported as unmeasured rather than as a wrong
+ * answer (mwg-train-mr6t).
  */
-export async function captureSignature({ chrome, projectDir, port, runDir, viewport = TARGET_VIEWPORT, screenshotPath = null, collect = null, path = '/' }) {
+export async function captureSignature({ chrome, projectDir, port, runDir, viewport = TARGET_VIEWPORT, screenshotPath = null, collect = null, path = '/', drive = null }) {
   // `//host/path` is rejected as well as `host/path`: it starts with "/" but a browser reads it as a
   // protocol-relative URL, so the guard would pass a call that leaves the origin. A test caught that.
   if (typeof path !== 'string' || !path.startsWith('/') || path.startsWith('//')) {
     throw new TypeError(`captureSignature: path must be root-relative and start with a single "/", got ${JSON.stringify(path)}`);
+  }
+  // A drive that names no action would capture the plain page and be compared as though it were the state, so
+  // it is refused rather than treated as a no-op: the failure mode is a silent wrong answer, which is the one
+  // thing an instrument must not produce.
+  if (drive !== null && (typeof drive !== 'object' || Array.isArray(drive))) {
+    throw new TypeError(`captureSignature: drive must be null or an object, got ${JSON.stringify(drive)}`);
+  }
+  if (drive) {
+    const { fill = null, submit = null, expectText = null } = drive;
+    if (fill === null && submit === null) {
+      throw new TypeError('captureSignature: drive must name at least one action (fill or submit) - a drive with no action captures the plain page');
+    }
+    if (fill !== null && (typeof fill !== 'object' || Array.isArray(fill))) {
+      throw new TypeError(`captureSignature: drive.fill must be an object of selector -> value, got ${JSON.stringify(fill)}`);
+    }
+    for (const [selector, value] of Object.entries(fill ?? {})) {
+      if (typeof selector !== 'string' || !selector.trim()) {
+        throw new TypeError('captureSignature: drive.fill has an empty selector');
+      }
+      if (typeof value !== 'string' && typeof value !== 'number') {
+        throw new TypeError(`captureSignature: drive.fill[${JSON.stringify(selector)}] must be a string or number, got ${JSON.stringify(value)}`);
+      }
+    }
+    if (submit !== null && (typeof submit !== 'string' || !submit.trim())) {
+      throw new TypeError(`captureSignature: drive.submit must be a non-empty selector, got ${JSON.stringify(submit)}`);
+    }
+    // Required, not optional (mwg-train-pv44): without it the capture cannot tell a refusal from a successful
+    // submission, and the screenshot of the wrong state would be compared against the refusal board with full
+    // confidence. The mapping validator refuses such an entry; this guard means the API agrees even when called
+    // directly.
+    if (expectText === null || typeof expectText !== 'string' || !expectText.trim()) {
+      throw new TypeError(`captureSignature: drive.expectText is required and must be a non-empty string, got ${JSON.stringify(expectText)}; without it a successful submission cannot be told from the state the board depicts`);
+    }
   }
   let server = null;
   let page = null;
@@ -62,6 +107,50 @@ export async function captureSignature({ chrome, projectDir, port, runDir, viewp
     page = await chrome.newPage({ viewport });
     await page.goto(targetUrl);
     await page.waitForSettled();
+    if (drive) {
+      // Wait for the selectors before acting on them. An arm that hydrates on the client - react and preact both
+      // build their DOM after the response is parsed - can be served with the form in the HTML and still have no
+      // form in the document at the moment the drive runs, and `type`/`submit` report that as "not found".
+      // Measured on a real sweep: six arms captured the driven state and the react arm failed with
+      // `submit(form#order-form) failed: not found` while its own page.mjs emitted exactly that id, which is a
+      // race, not a missing form. The wait turns it into the state the board depicts (or a timeout that names
+      // the selector, which is what a genuinely missing form should look like).
+      for (const selector of [...Object.keys(drive.fill ?? {}), ...(drive.submit ? [drive.submit] : [])]) {
+        await page.waitFor(selector);
+      }
+      // mwg-train-78z6: the marker is sampled BEFORE the drive as well as after. A marker that the clean page
+      // already carries - help text like "orders could not be submitted? contact support" - cannot distinguish
+      // the state the board depicts from the page as it loaded, so a submission that silently SUCCEEDED would
+      // pass the after-check on text that was there all along. innerText, not textContent, so a message that is
+      // present in the markup but not rendered (a hidden error element the state reveals) still counts as
+      // absent until the state actually shows it.
+      if (drive.expectText) {
+        const beforeText = await page
+          .evaluate('return document.body ? document.body.innerText : ""')
+          .catch(() => '');
+        if (String(beforeText).includes(drive.expectText)) {
+          throw new Error(
+            `captureSignature: drive.expectText ${JSON.stringify(drive.expectText)} is already on the page before the drive, so it cannot tell the state the board depicts from the clean page - choose a marker the refusal ADDS (mwg-train-78z6)`,
+          );
+        }
+      }
+      for (const [selector, value] of Object.entries(drive.fill ?? {})) await page.type(selector, String(value));
+      if (drive.submit) await page.submit(drive.submit);
+      // `submit` waits for the document to settle, but a refusal rendered CLIENT-side makes no request, so that
+      // wait can return before the framework has painted the error. The longer quiet period is what makes the
+      // screenshot and the signature describe the state after the re-render rather than the state before it.
+      await page.waitForSettled({ timeout: 10_000, quiet: 300 });
+      if (drive.expectText) {
+        const text = await page
+          .evaluate('return document.body ? document.body.innerText : ""')
+          .catch(() => '');
+        if (!String(text).includes(drive.expectText)) {
+          throw new Error(
+            `captureSignature: the drive did not reach the expected state: the page does not contain ${JSON.stringify(drive.expectText)}. A submission that succeeded, or a state that never rendered, must be reported as unmeasured rather than compared against a refusal board.`,
+          );
+        }
+      }
+    }
     const signature = await page.evaluate(SIGNATURE_SCRIPT);
     // `collect` is discriminated by whether it was PROVIDED, not by what it returned: a caller whose
     // script legitimately evaluates to null must still receive `collected: null` rather than a signature

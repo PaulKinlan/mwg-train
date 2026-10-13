@@ -16,6 +16,7 @@
 import { spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
+import { createConnection } from 'node:net';
 import { join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 
@@ -25,7 +26,36 @@ import { completeSelectorFieldName, selectorFieldName } from '../train/brief-sch
 const READY_TIMEOUT_MS = 20_000;
 
 /** Start a project's server and wait for it to answer. */
+/**
+ * Does anything at all answer on this port? A raw TCP connect, not an HTTP request: the question is "is a
+ * process listening", and the leaked server that motivated this (mwg-train-jxz7) served HTTP, but anything
+ * that accepts the connection means the port is not ours to spawn on.
+ */
+function portAcceptsConnections(port, timeoutMs = 500) {
+  return new Promise((resolve) => {
+    const socket = createConnection({ port, host: '127.0.0.1' });
+    const finish = (result) => {
+      socket.destroy();
+      resolve(result);
+    };
+    socket.setTimeout(timeoutMs, () => finish(false));
+    socket.on('connect', () => finish(true));
+    socket.on('error', () => finish(false));
+  });
+}
+
 export async function startServer(projectDir, { port, dbPath }) {
+  // mwg-train-jxz7. A server leaked by an earlier run (a booking arm, still alive 1h26m later) was sitting on a
+  // sweep port, and this function's health poll happily accepted ITS answers: every capture for that arm then
+  // measured the WRONG APPLICATION, and the plain capture of it succeeded silently. The health check proves
+  // somebody is serving; it has never proved it is the process we spawned. So the port must be verifiably free
+  // BEFORE the child is spawned, and the child must still be alive when health first answers - either failure
+  // is a loud refusal naming the port, never a measurement of whatever happened to be listening there.
+  if (await portAcceptsConnections(port)) {
+    throw new Error(
+      `startServer: port ${port} is already in use by another process, so measuring it would measure that process and not ${projectDir}. A server leaked from an earlier run survives its sweep - stop whatever is listening on ${port} and run again (mwg-train-jxz7).`,
+    );
+  }
   const child = spawn(process.execPath, [join(projectDir, 'server.mjs'), '--port', String(port), '--db', dbPath], {
     cwd: projectDir,
     stdio: ['ignore', 'pipe', 'pipe'],
@@ -40,11 +70,22 @@ export async function startServer(projectDir, { port, dbPath }) {
   });
   const started = Date.now();
   while (Date.now() - started < READY_TIMEOUT_MS) {
+    let response = null;
     try {
-      const response = await fetch(`http://127.0.0.1:${port}/__health`, { signal: AbortSignal.timeout(1500) });
-      if (response.ok) return { child, log: () => log };
+      response = await fetch(`http://127.0.0.1:${port}/__health`, { signal: AbortSignal.timeout(1500) });
     } catch {
       /* keep waiting */
+    }
+    if (response && response.ok) {
+      // The belt to the pre-flight check above: a child that has already exited cannot be the process that
+      // answered, so health passing here means somebody else owns the port. Thrown outside the fetch's try so
+      // the catch above cannot swallow it.
+      if (child.exitCode !== null) {
+        throw new Error(
+          `startServer: the spawned server for ${projectDir} exited (code ${child.exitCode}) while port ${port} answered its health check, so the answering process is not the one this run spawned - another server is holding the port. Stop it and run again (mwg-train-jxz7). Child log:\n${log}`,
+        );
+      }
+      return { child, log: () => log };
     }
     await delay(120);
   }

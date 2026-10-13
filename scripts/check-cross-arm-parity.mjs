@@ -166,19 +166,31 @@ export function buildArms({ archetype, runRoot, reuse = false }) {
 }
 
 /** Render each arm at each viewport, saving one screenshot per arm and width. */
-async function measure({ chrome, arms, viewports, runRoot, port, pathsToCapture }) {
+async function measure({ chrome, arms, viewports, runRoot, port, pathsToCapture, driveRequests = [] }) {
   const screenshotDir = join(runRoot, 'screenshots');
   mkdirSync(screenshotDir, { recursive: true });
   const armsByViewport = {};
   const screenshots = [];
   let nextPort = port;
+  // Plain captures first, then drives, on the same arm and port. A drive submits a form, so on an arm that
+  // writes it would leave a row behind for whatever is captured next; capturing it last keeps that side effect
+  // away from every other state, including the arm signature the parity comparison itself reads.
+  const captureRequests = [
+    ...[...pathsToCapture].map((statePath) => ({ statePath, drive: null, driveKey: null })),
+    ...driveRequests,
+  ];
   {
     for (const requested of viewports) {
       armsByViewport[requested.key] = [];
       for (const arm of arms) {
-        for (const statePath of pathsToCapture) {
+        for (const request of captureRequests) {
+          const { statePath, drive, driveKey } = request;
           const slug = statePath === '/' ? '' : `-${statePath.replace(/[^a-z0-9]/gi, '-').replace(/^-|-$/g, '')}`;
-          const screenshotPath = join(screenshotDir, `${arm.projectId}-${requested.key}${slug}.png`);
+          // The drive's board name is part of the filename: two captures can start at the same path and end in
+          // different states, and one overwriting the other's screenshot would leave a report that names one
+          // board and shows another board's state.
+          const driveSlug = driveKey ? `-drive-${driveKey.replace(/\.jpg$/, '').replace(/[^a-z0-9]/gi, '-')}` : '';
+          const screenshotPath = join(screenshotDir, `${arm.projectId}-${requested.key}${slug}${driveSlug}.png`);
           const started = Date.now();
           // An arm that cannot be rendered is a FINDING, not a crash. `parity.mjs` documents that absence
           // is never silence and has an `ARM_UNMEASURED` code for it, but a cross-family review caught that
@@ -194,12 +206,16 @@ async function measure({ chrome, arms, viewports, runRoot, port, pathsToCapture 
               viewport: { width: requested.width, height: requested.height },
               screenshotPath,
               path: statePath,
+              drive,
               collect: TOKEN_SCRIPT,
             });
             const collected = signature.collected ?? null;
             const clean = { ...signature };
             delete clean.collected;
-            if (statePath === '/') {
+            // Only an undriven root capture is the ARM's signature. A driven capture of the root is a state of
+            // the arm (a refusal), not the arm, and pushing it here would give the arm two signatures and let a
+            // refusal page stand in for the framework's own design.
+            if (statePath === '/' && !drive) {
               armsByViewport[requested.key].push({
                 framework: arm.framework,
                 viewport: requested.key,
@@ -212,12 +228,12 @@ async function measure({ chrome, arms, viewports, runRoot, port, pathsToCapture 
                 milliseconds: Date.now() - started,
               });
             }
-            screenshots.push({ arm: arm.framework, viewport: requested.key, statePath, path: screenshotPath.replace(`${ROOT}/`, '') });
+            screenshots.push({ arm: arm.framework, viewport: requested.key, statePath, driveKey, drive: Boolean(drive), path: screenshotPath.replace(`${ROOT}/`, '') });
             console.log(
-              `  ${arm.framework.padEnd(14)} ${requested.key.padEnd(9)} [${statePath}] ${signature.viewport.width}x${signature.viewport.height} ${Math.round((Date.now() - started) / 100) / 10}s`,
+              `  ${arm.framework.padEnd(14)} ${requested.key.padEnd(9)} [${driveKey ?? statePath}] ${signature.viewport.width}x${signature.viewport.height} ${Math.round((Date.now() - started) / 100) / 10}s`,
             );
           } catch (error) {
-            if (statePath === '/') {
+            if (statePath === '/' && !drive) {
               armsByViewport[requested.key].push({
                 framework: arm.framework,
                 viewport: requested.key,
@@ -226,23 +242,26 @@ async function measure({ chrome, arms, viewports, runRoot, port, pathsToCapture 
                 milliseconds: Date.now() - started,
               });
             }
-            // A failed non-root capture must reach compareAgainstBoards (mwg-train-os9p): the
-            // placeholder carries no path, so nothing is screenshot or analysed, but the state is
-            // present in the report as an error and compareOne turns it into a STATE_UNMEASURED
-            // finding. Logging alone - the previous behaviour - made the failure vanish from the
-            // comparison entirely, and the check exited 0 with a false PASS while every mapped
-            // state of an arm had failed to render. Root failures keep their own path: they are
-            // already reported as ARM_UNMEASURED through armsByViewport.
-            if (statePath !== '/') {
+            // A failed capture must reach compareAgainstBoards (mwg-train-os9p): the placeholder carries no path,
+            // so nothing is screenshot or analysed, but the state is present in the report as an error and
+            // compareOne turns it into a STATE_UNMEASURED finding. Logging alone - the previous behaviour - made
+            // the failure vanish from the comparison entirely, and the check exited 0 with a false PASS while
+            // every mapped state of an arm had failed to render. Root failures keep their own path: they are
+            // already reported as ARM_UNMEASURED through armsByViewport. A DRIVEN capture is always a state, even
+            // when it starts at the root, so it always gets a placeholder - a drive that could not reach its
+            // state is exactly the case that must not disappear.
+            if (statePath !== '/' || drive) {
               screenshots.push({
                 arm: arm.framework,
                 viewport: requested.key,
                 statePath,
+                driveKey,
+                drive: Boolean(drive),
                 path: null,
                 error: error?.message ?? String(error),
               });
             }
-            console.log(`  ${arm.framework.padEnd(14)} ${requested.key.padEnd(9)} [${statePath}] FAILED: ${error?.message ?? error}`);
+            console.log(`  ${arm.framework.padEnd(14)} ${requested.key.padEnd(9)} [${driveKey ?? statePath}] FAILED: ${error?.message ?? error}`);
           }
         }
         nextPort++;
@@ -606,10 +625,16 @@ export function compareOne({ screenshot, boardMetrics, archetypeStates }) {
     return { ...screenshot, error: 'no reference board could be measured' };
   }
 
+  // A board is eligible for a screenshot only when the two describe the SAME state, and there are two kinds of
+  // state. A board with a plain path is a document, so the path decides. A board with a drive block is a state
+  // OF a document - the refusal a form renders after a submission - so its own name is the key: the drive
+  // capture for that board carries the board's name, and no plain capture can claim it. Matching a driven
+  // board by path alone was the bug this closes: every driven capture starts at a path that a plain board may
+  // also own, so the two states would have been compared against each other's boards (mwg-train-mr6t).
   const eligibleBoards = boardMetrics.filter((board) => {
     const stateInfo = archetypeStates[board.name];
-    const expectedPath = stateInfo && 'path' in stateInfo ? stateInfo.path : '/';
-    return expectedPath === screenshot.statePath;
+    if (stateInfo && stateInfo.drive) return screenshot.driveKey === board.name;
+    return screenshot.driveKey ? false : (stateInfo && 'path' in stateInfo ? stateInfo.path : '/') === screenshot.statePath;
   });
 
   if (eligibleBoards.length === 0) return null;
@@ -878,9 +903,20 @@ async function main() {
   const archetypeStates = boardStatesRaw[options.archetype] ?? {};
 
   const pathsToCapture = new Set(['/']);
+  const driveRequests = [];
   for (const boardName of Object.keys(archetypeStates)) {
     const state = archetypeStates[boardName];
-    if (state && state.path) pathsToCapture.add(state.path);
+    if (!state) continue;
+    // A drive block is an instruction for a state that no path selects: capture the page the drive starts on,
+    // act on it, and screenshot what the refusal produced. The start path is a plain capture too unless a board
+    // already claims it, so it joins the same set rather than being captured twice.
+    if (state.drive) {
+      const startPath = state.drive.startPath ?? '/';
+      pathsToCapture.add(startPath);
+      driveRequests.push({ statePath: startPath, drive: state.drive, driveKey: boardName });
+      continue;
+    }
+    if (state.path) pathsToCapture.add(state.path);
   }
 
   // Arms must resolve node_modules, so the run directory is always inside the repository: an arm
@@ -892,7 +928,7 @@ async function main() {
   console.log(`check-cross-arm-parity: building ${Object.keys(FRAMEWORKS).length} arms for ${options.archetype}`);
   const arms = buildArms({ archetype: options.archetype, runRoot: armRoot, reuse: options.reuseArms });
   const expectedArms = arms.map((arm) => arm.framework);
-  console.log(`check-cross-arm-parity: rendering ${arms.length} arms at ${options.viewports.map((v) => v.key).join(', ')} across ${pathsToCapture.size} state(s)`);
+  console.log(`check-cross-arm-parity: rendering ${arms.length} arms at ${options.viewports.map((v) => v.key).join(', ')} across ${pathsToCapture.size} state(s)${driveRequests.length ? ` and ${driveRequests.length} driven state(s)` : ''}`);
   // One browser for the whole run, owned here rather than inside a measurement step, because the board
   // comparison needs the same browser afterwards: the browser is the only image decoder available.
   const chrome = await launchChrome({});
@@ -906,6 +942,7 @@ async function main() {
       runRoot: armRoot,
       port: options.port,
       pathsToCapture,
+      driveRequests,
     });
     console.log('check-cross-arm-parity: comparing every arm screenshot against the reference boards');
     boardComparison = await compareAgainstBoards({ chrome, armRoot, screenshots: measured.screenshots, arms, archetype: options.archetype, archetypeStates });
