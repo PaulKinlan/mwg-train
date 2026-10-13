@@ -83,8 +83,8 @@ export async function buildSheet({ checkpoint = 'qwen3-8b', servingGpuHours = 2,
   const yieldNow = pilotYield();
   const job = {
     corpus: { path: 'docs/eval/briefs/manifest.jsonl', sha256: `sha256:${'0'.repeat(64)}`, rows: corpus.rows },
-    // The canonical id, which each adapter resolves to its own provider's name.
-    base: { repo: checkpoint, model_id: checkpoint, revision: 'c03e6d358207e414f1eca0bb1891e29f1db0e242', licence: model.licence },
+    // The canonical id identifies the provider row; the immutable HF repo/revision identify the actual weights.
+    base: { repo: model.hf_repo, model_id: checkpoint, revision: model.revision, licence: model.licence },
     hyperparameters: { method: 'lora-sft', rank: 16, epochs: 2, max_seq_len: 4096, learning_rate: 0.0002 },
     output_ref: 'runs/dry-run-1',
   };

@@ -17,10 +17,11 @@ import {
   validateJob,
 } from '../src/train/seam.mjs';
 import { FIREWORKS_TRAINABLE, bandFor, reachability } from '../src/train/reachability.mjs';
-import { plan as fireworksPlan } from '../src/train/backends/fireworks.mjs';
+import { validateTrainEvidence } from '../scripts/check-train-evidence.mjs';
+import { plan as fireworksPlan, run as fireworksRun } from '../src/train/backends/fireworks.mjs';
 import { plan as clusterPlan } from '../src/train/backends/cluster.mjs';
 
-const COMMIT = 'c03e6d358207e414f1eca0bb1891e29f1db0e242';
+const COMMIT = 'b968826d9c46dd6066d109eabc6255188de91218';
 const CORPUS = `sha256:${'a'.repeat(64)}`;
 const ADAPTER = `sha256:${'b'.repeat(64)}`;
 
@@ -340,7 +341,7 @@ test('the cluster plan carries every declared hyperparameter, not only the ones 
 
 test('a checkpoint the backend cannot train is refused with the reason', () => {
   assert.throws(
-    () => fireworksPlan(job({ base: { repo: 'Qwen/Qwen2.5-Coder-7B-Instruct', revision: COMMIT, licence: 'apache-2.0' } })),
+    () => fireworksPlan(job({ base: { repo: 'Qwen/Qwen2.5-Coder-7B-Instruct', model_id: 'qwen2p5-coder-7b', revision: COMMIT, licence: 'apache-2.0' } })),
     (error) => error instanceof TrainingSeamError && error.code === 'UNREACHABLE_BASE' && /inference list is not the training list/.test(error.message),
   );
 });
@@ -357,7 +358,54 @@ test('the reachability map says which checkpoints a comparison may use', () => {
     FIREWORKS_TRAINABLE.every((model) => model.managed_sft && model.managed_dpo && model.lora_shapes > 0),
     'every listed checkpoint is trainable by both methods, with a LoRA shape',
   );
-  assert.ok(!FIREWORKS_TRAINABLE.some((model) => model.params > 80_000_000_000), 'nothing teacher-class is listed as a student');
+  assert.equal(FIREWORKS_TRAINABLE.filter((model) => model.params > 80_000_000_000).length, 2,
+    'the two large DeepSeek candidates are catalogue-listed, not silently treated as the 8B student');
+});
+
+test('DeepSeek model-specific managed rates cannot borrow the distinct -0731 quote or an unattested HF revision', async () => {
+  for (const [id, repo, revision, rate, quoteId] of [
+    ['deepseek-v4p1-flash', 'deepseek-ai/DeepSeek-V4.1-Flash', '2cba9e42aa026125f3ed06c6d98c1db82f7ca027', 10, 'fireworks-lora-sft--300b-e-g-deepseek-v3-kimi-k2-'],
+    ['deepseek-v4-flash', 'deepseek-ai/DeepSeek-V4-Flash', '60d8d70770c6776ff598c94bb586a859a38244f1', 6, 'fireworks-lora-sft-80b-300b-e-g-qwen3-235b-gpt-oss-120b-'],
+  ]) {
+    const candidate = job({ base: { repo, model_id: id, revision, licence: 'mit' } });
+    const planned = fireworksPlan(candidate);
+    assert.equal(planned.rate.usd_per_million_training_tokens, rate);
+    assert.deepEqual(planned.rate.quote_ids, [quoteId]);
+    assert.equal(planned.checkpoint_binding, 'unverified');
+    assert.throws(() => fireworksPlan(job({ base: { ...candidate.base, revision: COMMIT } })),
+      (error) => error.code === 'REVISION_MISMATCH');
+    assert.throws(() => fireworksPlan(job({ base: { ...candidate.base, repo: 'deepseek-ai/Wrong-Weights' } })),
+      (error) => error.code === 'BASE_MISMATCH');
+    let networkCalls = 0;
+    await assert.rejects(() => fireworksRun(candidate, { client: async () => { networkCalls += 1; } }),
+      (error) => error.code === 'UNATTESTED_BASE');
+    assert.equal(networkCalls, 0, 'no billable call before provider revision attestation');
+    assert.throws(() => fireworksPlan(job({ base: { repo, model_id: 'qwen3-8b', revision, licence: 'mit' } })),
+      (error) => error.code === 'BASE_MISMATCH', 'a declared model id cannot resolve to a different repo');
+  }
+});
+
+test('all catalogue rows fail closed before any network call when attestation is absent', async () => {
+  for (const model of FIREWORKS_TRAINABLE) {
+    const candidate = job({ base: { repo: model.hf_repo, model_id: model.id, revision: model.revision, licence: model.licence } });
+    assert.equal(fireworksPlan(candidate).checkpoint_binding, 'unverified');
+    let called = false;
+    await assert.rejects(() => fireworksRun(candidate, { client: async () => { called = true; } }), (error) => error.code === 'UNATTESTED_BASE');
+    assert.equal(called, false);
+  }
+});
+
+test('omitting a catalogue revision or attestation flag fails both evidence check and plan', () => {
+  const row = FIREWORKS_TRAINABLE.find((model) => model.id === 'deepseek-v4p1-flash');
+  const candidate = job({ base: { repo: row.hf_repo, model_id: row.id, revision: row.revision, licence: row.licence } });
+  for (const key of ['revision', 'provider_revision_attested', 'account_entitlement_verified']) {
+    const saved = row[key];
+    try {
+      delete row[key];
+      assert.ok(validateTrainEvidence().some((finding) => finding.subject === row.id), `${key}: evidence must flag absence`);
+      assert.throws(() => fireworksPlan(candidate), (error) => error.code === 'UNVERIFIED_BASE', `${key}: plan must refuse`);
+    } finally { row[key] = saved; }
+  }
 });
 
 test('validateCorpusGates reports findings instead of throwing, whatever it is handed', () => {

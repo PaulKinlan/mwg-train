@@ -19,15 +19,15 @@ Sources: [training briefs](briefs/README.md), [corpus caveats](corpus/README.md)
 
 ## Gate 0 — Trainable model and modality qualification
 
-No base model is selected by default. Before any training data collection, authoring, or spend decision:
+Paul selected DeepSeek V4.1 Flash provisionally (docs/PIPELINE.md §1); V4 versus V4.1 and the exact provider-to-HF weight binding still require his ratification. Before any training data collection, authoring, or spend decision:
 
 1. **Trainable Base Model Matrix & Qualification**:
    - Establish an exact checkpoint matrix detailing open downloadable weights, licence terms (Apache-2.0, MIT), self-hosted rented-GPU feasibility, provider-specific hosted fine-tuning (e.g. Fireworks SFT V2), exact account entitlement, and adapter export/serving options.
-   - Pinned text-only catalogue entries (e.g., Qwen 2.5 Coder 7B) do not establish vision-language fine-tuning. For vision-language tasks (image -> app), the candidate must natively take high-fidelity design screenshots (e.g. Qwen 2.5 VL 7B / Qwen3-VL-8B-Instruct).
+   - Qualify the modality of the **agreed task**, not a different image-input task: per docs/PIPELINE.md §1 the selected student receives text plan/design contract, while the design image is an evaluation target. The pinned [V4.1 model card](https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash/blob/2cba9e42aa026125f3ed06c6d98c1db82f7ca027/README.md) actually reports native image-and-text support; that capability does not change the agreed text-only input. An image-input experiment needs its own owner-approved protocol.
 2. **Zero-Shot Task Qualification**:
-   - Run a single-family zero-shot vertical slice (`design image + plan.md + design contract → working app`) using the un-tuned base model.
-   - Test whether the base model can understand the visual layout and build a substantially functional application.
-   - **NO-GO** if the base model cannot consume the design image or lacks the basic capability to construct functional web apps. No amount of fine-tuning rescues a student model fundamentally incapable of generating code from visual specs.
+   - Run a single-family zero-shot vertical slice (`plan.md + text design contract → working app; compare rendered site to design image`) using the un-tuned base model.
+   - Test whether the base can implement the text-specified layout and substantially functional application; assess the design image only after rendering.
+   - **NO-GO** only on a correctly contracted, adequately budgeted functional slice when the base cannot construct the app. Do not reject the selected student because it cannot consume an image it was never asked to receive.
 3. **Hardware & Backend Realism**:
    - The fleet's 2-vCPU / 8GB CPU-only VM cannot train models locally. Planning must target rented GPU compute (RunPod, Lambda) or verified hosted training endpoints (Fireworks).
 

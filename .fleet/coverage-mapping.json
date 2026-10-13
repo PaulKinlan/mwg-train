@@ -28,6 +28,15 @@
   "docs/design/archetypes/event-registration/demo/index.html": [
     "test/demo-verifiers.test.mjs"
   ],
+  "docs/PIPELINE.md": [
+    "test/reachability.test.mjs"
+  ],
+  "docs/eval/deepseek-checkpoint-matrix.md": [
+    "test/reachability.test.mjs"
+  ],
+  "docs/train/READINESS-EPIC.md": [
+    "test/reachability.test.mjs"
+  ],
   "docs/eval/decode-config.deepseek-flash.json": [
     "test/decode-config.test.mjs"
   ],
@@ -74,6 +83,12 @@
     "test/design-contract.test.mjs",
     "test/design-reference-wave2.test.mjs",
     "test/design-reference.test.mjs"
+  ],
+  "scripts/check-train-evidence.mjs": [
+    "test/reachability.test.mjs"
+  ],
+  "scripts/price-two-backends.mjs": [
+    "test/compare.test.mjs"
   ],
   "scripts/check-cross-arm-parity.mjs": [
     "test/cross-arm-parity.test.mjs"
@@ -155,6 +170,14 @@
   ],
   "src/eval/generated-server.mjs": [
     "test/generated-server-env.test.mjs"
+  ],
+  "src/train/backends/fireworks.mjs": [
+    "test/seam.test.mjs"
+  ],
+  "src/train/reachability.mjs": [
+    "test/reachability.test.mjs",
+    "test/seam.test.mjs",
+    "test/compare.test.mjs"
   ],
   "src/viewer/pages.mjs": [
     "test/viewer-security-headers.test.mjs",

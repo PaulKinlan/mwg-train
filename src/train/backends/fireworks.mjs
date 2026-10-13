@@ -1,8 +1,8 @@
 /**
  * The Fireworks managed-training adapter. Implemented; the other backend is documented only.
  *
- * Managed training is priced per training token by parameter band, so the plan states which band the
- * checkpoint falls in and where that rate came from. No request is made here: `run` requires a client,
+ * Managed training is priced per training token: per-model DeepSeek rows pin their own exact band quote,
+ * while the existing smaller models use the general parameter band. No request is made here: `run` requires a client,
  * and the hub injects the key server side, so this module never needs one to be correct.
  */
 import { TrainingSeamError } from '../seam.mjs';
@@ -18,8 +18,22 @@ export function plan(job) {
       `"${job.base.repo}" is not a checkpoint this backend can train (trainable: ${known}). The serverless inference list is not the training list.`,
     );
   }
+  if (!model.hf_repo || !/^[a-f0-9]{40}$/.test(model.revision) ||
+      typeof model.provider_revision_attested !== 'boolean' || typeof model.account_entitlement_verified !== 'boolean') {
+    throw new TrainingSeamError('UNVERIFIED_BASE', `${model.id} lacks an explicit HF repo/revision or provider attestation/entitlement status`);
+  }
+  if (job.base.model_id && job.base.model_id !== model.id) {
+    throw new TrainingSeamError('BASE_MISMATCH', `${job.base.model_id} and ${job.base.repo} do not identify the same Fireworks row`);
+  }
+  if (job.base.repo !== model.hf_repo) {
+    throw new TrainingSeamError('BASE_MISMATCH', `${model.id} names ${model.hf_repo}, not ${job.base.repo}`);
+  }
+  if (job.base.revision !== model.revision) {
+    throw new TrainingSeamError('REVISION_MISMATCH', `${model.id} requires HF revision ${model.revision}, not ${job.base.revision}`);
+  }
   const band = bandFor(model.params);
-  const rate = job.hyperparameters.method === 'lora-dpo' ? band.lora_dpo : band.lora_sft;
+  const priced = model.rate ?? band;
+  const rate = job.hyperparameters.method === 'lora-dpo' ? priced.lora_dpo : priced.lora_sft;
   return {
     backend: 'fireworks',
     endpoint: 'managed-training',
@@ -32,7 +46,7 @@ export function plan(job) {
       band: band.max_params === null ? 'above 300B' : `up to ${band.max_params / 1e9}B`,
       // The rate row in docs/eval/quotes.jsonl (verified by verify-quotes.mjs). The reachability
       // document the band and the per-model flags come from is cited separately in `evidence`.
-      quote_ids: [band.quote_id],
+      quote_ids: [priced.quote_id],
     },
     payload: {
       base_model: model.id,
@@ -42,7 +56,10 @@ export function plan(job) {
       lora_rank: job.hyperparameters.rank ?? null,
       learning_rate: job.hyperparameters.learning_rate ?? null,
     },
-    evidence: [EVIDENCE['fireworks.cost-estimator']],
+    // HF and provider catalogue names alone do not attest identical bytes. Record the unresolved binding;
+    // run() refuses DeepSeek until a provider revision attestation closes this gap.
+    checkpoint_binding: model.provider_revision_attested && model.account_entitlement_verified ? 'attested' : 'unverified',
+    evidence: [EVIDENCE['fireworks.cost-estimator'], ...(model.shape_source ? [EVIDENCE[model.shape_source]] : [])],
   };
 }
 
@@ -56,6 +73,9 @@ export async function run(job, context = {}) {
     throw new TrainingSeamError('NO_CLIENT', 'no Fireworks client was supplied; the key is injected server side, so a run without one cannot proceed');
   }
   const planned = plan(job);
+  if (planned.checkpoint_binding === 'unverified') {
+    throw new TrainingSeamError('UNATTESTED_BASE', `Fireworks ${planned.base.model_id} lacks proof of exact HF revision ${planned.base.resolved_revision} and account entitlement; do not send a training request under an unverified label`);
+  }
   const response = await client('https://api.fireworks.ai/v1/accounts/fireworks/fine_tuning/jobs', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
