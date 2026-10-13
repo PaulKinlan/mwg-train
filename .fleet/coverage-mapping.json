@@ -144,7 +144,8 @@
   ],
   "src/capture/target.mjs": [
     "test/capture-proxy.test.mjs",
-    "test/capture-site.test.mjs"
+    "test/capture-site.test.mjs",
+    "test/capture-target-registry.test.mjs"
   ],
   "scripts/capture-site.mjs": [
     "test/capture-site.test.mjs"
