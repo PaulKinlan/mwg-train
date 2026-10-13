@@ -550,21 +550,42 @@ async function driveSearchJourney(page, base, journey, search, { seedField }) {
  * The update-existing journey (`journey.update`): change one field of the record the create step
  * just wrote, and prove the change landed IN PLACE.
  *
- * The ref comes from the create step's redirect target (or `/api/me` for a session flow). The edit form
- * lives on the record page itself and posts to `/edit/<ref>` - that is what the generator emits, and the
- * field is addressed by name, which the schema has already confined to characters a selector can carry.
- * The per-record read is `/api/record/<ref>`: the generator serves the singular form and reserves
- * `/api/records` for the list, so a driver that guessed the plural would report a real update as a
- * missing API. The verdict (`updateVerdict`) requires all three of:
+ * The scaffold's API routes are defaults for existing pilot projects, not a secret oracle contract for a model.
+ * Model-generated projects must pass their declared interface contract: routes are explicit, and a form selector
+ * may be declared or selected by its field and submit action instead of guessing a scaffold-owned element id.
+ * The verdict (`updateVerdict`) requires all three of:
  * the new value visible on the reloaded record page, the server's API for the ref showing the new
  * value and not the old one, and an UNCHANGED row count - the last is what catches an "edit" route
  * that silently creates a second row.
  */
-async function driveUpdateJourney(page, base, journey, update, { recordUrl = null } = {}) {
+export async function updateFormSelector(page, field, declaredSelector = null) {
+  if (declaredSelector) return declaredSelector;
+  // A temporary marker scopes the field and submit to the SAME form without depending on its wrapper ID.
+  // Refuse ambiguous matches rather than editing the first form on a page that also has a create form.
+  const result = await page.evaluate(`
+    const field = ${JSON.stringify(field)};
+    const matches = [...document.forms].filter((form) => [...form.elements].some((control) => control.name === field));
+    const named = matches.filter((form) => [...form.querySelectorAll('button,input[type=submit]')].some((button) =>
+      /\\b(update|save|edit|change)\\b/i.test(button.textContent || button.value || button.getAttribute('aria-label') || '')));
+    const choices = named.length ? named : matches;
+    if (choices.length !== 1) return { count: choices.length };
+    choices[0].setAttribute('data-mwg-oracle-update', '');
+    return { count: 1 };
+  `);
+  if (result?.count !== 1) throw new Error(`update journey: expected one update form for ${field}, found ${result?.count ?? 0}`);
+  return 'form[data-mwg-oracle-update]';
+}
+
+export async function driveUpdateJourney(page, base, journey, update, { recordUrl = null, interfaceContract = null } = {}) {
+  const paths = interfaceContract ?? { records: '/api/records', record: '/api/record/{ref}', current: '/api/me' };
+  for (const name of ['records', 'record', 'current']) {
+    if (typeof paths[name] !== 'string' || !paths[name].startsWith('/')) throw new Error(`update journey: missing ${name} route in interface contract`);
+  }
+  if (!paths.record.includes('{ref}')) throw new Error('update journey: record route must contain {ref}');
   let ref = recordUrl ? recordUrl.split('/').filter(Boolean).pop() : null;
   if (!ref) {
     const me = await page.evaluate(`
-      const response = await fetch('/api/me');
+      const response = await fetch(${JSON.stringify(paths.current)});
       return { status: response.status, body: (await response.text()).slice(0, 4000) };
     `);
     if (me.status === 200) {
@@ -585,7 +606,7 @@ async function driveUpdateJourney(page, base, journey, update, { recordUrl = nul
 
   const countRows = () =>
     page.evaluate(`
-      const response = await fetch('/api/records');
+      const response = await fetch(${JSON.stringify(paths.records)});
       return { status: response.status, body: (await response.text()).slice(0, 20000) };
     `);
   const before = await countRows();
@@ -593,15 +614,11 @@ async function driveUpdateJourney(page, base, journey, update, { recordUrl = nul
 
   let pageText = '';
   if (recordPath) {
-    // The record page carries the edit form (id edit-form, action /edit/<ref>); there is no separate
-    // edit page to navigate to, and posting to `<recordPath>/edit` would 404.
     await page.goto(`${base}${recordPath}`);
-    // Scoped to the EDIT FORM, not the page: a read page can carry more than one control with this
-    // name (the generator's own client render puts the original form on the page too), and typing into
-    // the first match re-submits the value that is already stored - an update that changed nothing,
-    // reported as a failure by the row-count and old-value assertions rather than as a pass.
-    await page.type(`form#edit-form [name=${JSON.stringify(update.field)}]`, update.newValue);
-    await page.submit('form#edit-form');
+    // Scope the input and submission to the same update form, regardless of arbitrary wrapper IDs.
+    const form = await updateFormSelector(page, update.field, interfaceContract?.formSelector);
+    await page.type(`${form} [name=${JSON.stringify(update.field)}]`, update.newValue);
+    await page.submit(form);
     // Visible after a RELOAD of the record page, not merely on whatever the submit redirected to.
     await page.goto(`${base}${recordPath}`);
     pageText = await page.evaluate('return document.body.innerText');
@@ -611,7 +628,7 @@ async function driveUpdateJourney(page, base, journey, update, { recordUrl = nul
 
   const api = ref
     ? await page.evaluate(`
-        const response = await fetch('/api/record/' + ${JSON.stringify(ref)});
+        const response = await fetch(${JSON.stringify(paths.record.replace('{ref}', encodeURIComponent(ref ?? '')))});
         return { status: response.status, body: (await response.text()).slice(0, 8000) };
       `)
     : { status: null, body: '' };
@@ -739,7 +756,10 @@ export async function runProjectVersion({ chrome, projectDir, spec, label, port,
       if (spec.journey.update) {
         // The record to update is the one the create step just redirected to.
         record.journeys.push(
-          await driveUpdateJourney(page, base, spec.journey, spec.journey.update, { recordUrl: record.journeys[0]?.afterSubmit ?? null }),
+          await driveUpdateJourney(page, base, spec.journey, spec.journey.update, {
+            recordUrl: record.journeys[0]?.afterSubmit ?? null,
+            interfaceContract: spec.interface_contract?.update ?? null,
+          }),
         );
       }
       if (spec.content_journey) {

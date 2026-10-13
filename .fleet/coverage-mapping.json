@@ -28,6 +28,12 @@
   "docs/design/archetypes/event-registration/demo/index.html": [
     "test/demo-verifiers.test.mjs"
   ],
+  "docs/eval/decode-config.deepseek-flash.json": [
+    "test/decode-config.test.mjs"
+  ],
+  "docs/eval/evaluator-interface-contract.md": [
+    "test/harness-oracle.test.mjs"
+  ],
   "docs/provenance/iana/special-purpose-addresses.json": [
     "test/capture-target-registry.test.mjs"
   ],
@@ -135,9 +141,17 @@
     "test/eval-starters.test.mjs"
   ],
   "src/corpus/harness.mjs": [
+    "test/harness-oracle.test.mjs",
     "test/harness-server.test.mjs",
     "test/corpus-flows-harness.test.mjs",
     "test/corpus-flows.test.mjs"
+  ],
+  "src/eval/build-key.mjs": [
+    "test/build-key.test.mjs",
+    "test/decode-config.test.mjs"
+  ],
+  "src/eval/decode-config.mjs": [
+    "test/decode-config.test.mjs"
   ],
   "src/eval/generated-server.mjs": [
     "test/generated-server-env.test.mjs"
