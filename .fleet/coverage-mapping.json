@@ -70,5 +70,18 @@
     "test/reflected-title-escape.test.mjs",
     "test/reflected-title-helper.test.mjs",
     "test/known-sinks.test.mjs"
+  ],
+  "pilot/TRAINING_CORPUS.json": [
+    "test/corpus-journey-evidence.test.mjs",
+    "test/corpus-flows.test.mjs",
+    "test/tokens-record.test.mjs",
+    "test/build-key.test.mjs",
+    "test/corpus-record-stamp.test.mjs",
+    "test/set-separation.test.mjs",
+    "test/scaffold-training-corpus-record.test.mjs"
+  ],
+  "docs/train/corpus/records.json": [
+    "test/corpus-journey-evidence.test.mjs",
+    "test/corpus-record-stamp.test.mjs"
   ]
 }
