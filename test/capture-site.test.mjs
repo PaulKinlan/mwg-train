@@ -134,6 +134,7 @@ test('captureSite captures fixture site, validates schema, and writes raw assets
 
   const capture = await captureSite({
     url: baseUrl,
+    allowPrivate: true,
     rightsRef,
     env,
     outDir: 'fixture-site',
@@ -241,6 +242,7 @@ test('the real capture producer feeds its unmodified output into translation', a
     // captureSite and recordFlow each own one browser and close it in their finally block.
     const capture = await captureSite({
       url: baseUrl,
+      allowPrivate: true,
       rightsRef: 'docs/provenance/assets/reproduction-studies.md',
       env: { ...process.env, MWG_TRAIN_QUARANTINE: quarantineStore },
     });
@@ -332,6 +334,7 @@ test('refusal: if schema validator fails, refuse to write any assets to quaranti
   await assert.rejects(
     () => captureSite({
       url: baseUrl,
+      allowPrivate: true,
       rightsRef,
       env,
       outDir: 'refused-site',
@@ -392,6 +395,7 @@ test('captureSite handles DOM edge cases (unnamed submit buttons, options in sel
   const warning = t.mock.method(console, 'warn', () => {});
   const capture = await captureSite({
     url: `http://127.0.0.1:${port}/`,
+    allowPrivate: true,
     rightsRef: 'docs/provenance/assets/reproduction-studies.md',
     env,
     outDir: 'edge-cases',
@@ -474,6 +478,7 @@ test('CLI: scripts/capture-site.mjs executes and validates correctly', async (t)
   // 3. Successful execution with --url, --rights-ref, --pages, --out
   const success = await runCli([
     '--url', baseUrl,
+    '--allow-private',
     '--rights-ref', 'docs/provenance/assets/reproduction-studies.md',
     '--pages', '/about',
     '--out', 'cli-captured-site',
@@ -503,4 +508,48 @@ test('CLI: scripts/capture-site.mjs executes and validates correctly', async (t)
   assert.ok(refusal.stderr.includes(rejected));
   assert.ok(!existsSync(rejected));
   assert.ok(!existsSync(join(quarantineStore, 'data/A5_black_box_reproduction', rejected.slice(1))));
+});
+
+test('a loopback capture is refused without the opt-in, before a browser or a proxy exists', async (t) => {
+  // The policy has to be the thing that stops this, and it has to stop it early: the point of a capture tool is that
+  // a URL arrives from outside, so reaching this host's own services is a decision, not a default (mwg-train-ypgu).
+  const { server, baseUrl } = await createFixtureServer();
+  t.after(() => server.close());
+  const refused = await captureSite({ url: baseUrl, rightsRef: 'docs/ref.md', env: process.env }).then(() => null, (error) => error);
+  assert.equal(refused?.code, 'PRIVATE_TARGET');
+  assert.match(refused.message, /requires --allow-private/);
+});
+
+test('a hostile resolution the browser would have used is irrelevant, because the browser never resolves', async (t) => {
+  // The case that failed the previous design (mwg-train-car1, third FAIL): Chrome was told by --host-resolver-rules
+  // where a name lived, and with a proxy configured its own --host-resolver-rules never mattered because the PROXY
+  // resolved and connected. Here the browser is given exactly that hostile mapping and a resolver the capture
+  // controls, and the local server must still see nothing: the connection is made to the address this process
+  // validated, and the name is never resolved a second time.
+  const root = mkdtempSync(join(tmpdir(), 'capture-proxy-rebind-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const hits = [];
+  const loopback = http.createServer((request, response) => {
+    hits.push(request.url);
+    response.end('<html><body>rebound</body></html>');
+  });
+  await new Promise((resolveListen) => loopback.listen(0, '127.0.0.1', resolveListen));
+  t.after(() => loopback.close());
+  const port = loopback.address().port;
+
+  const outcome = await captureSite({
+    url: `http://rebind.test:${port}/`,
+    rightsRef: 'docs/provenance/assets/reproduction-studies.md',
+    env: { ...process.env, MWG_TRAIN_QUARANTINE: root },
+    outDir: 'rebinding-name',
+    // The resolver's answer is what the policy judges, and it is refused: 255.255.255.255 is reserved, which the
+    // policy now knows (mwg-train-uin8). The browser's own mapping says loopback; the refusal proves which of the two
+    // the capture believed.
+    _lookup: async () => [{ address: '255.255.255.255' }],
+    _chromeArgs: ['--host-resolver-rules=MAP rebind.test 127.0.0.1'],
+  }).then(() => null, (error) => error);
+
+  assert.ok(outcome instanceof Error, `the capture must not reach the rebound page, got: ${JSON.stringify(outcome)}`);
+  assert.equal(outcome.code, 'PRIVATE_TARGET', 'the resolver\'s answer is what is judged, and it is the one refused');
+  assert.equal(hits.length, 0, 'the browser\'s own resolution must not be able to reach a local server');
 });

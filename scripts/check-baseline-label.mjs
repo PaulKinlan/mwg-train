@@ -96,6 +96,12 @@ export const DOCUMENT_KINDS = {
 export const PROVENANCE_PATTERNS = [
   /^docs\/design\/archetypes\/[^/]+\/README\.md$/,
   /^docs\/provenance\/assets\/design-reference-[^/]+\.md$/,
+  // The IANA special-purpose registries derived into data the capture destination policy is checked against, plus the
+  // README that says where they came from. Named individually rather than as a directory pattern, for the reason the
+  // comment above gives: a new document has to be decided deliberately, and a fourth file appearing here should be a
+  // decision rather than a match.
+  /^docs\/provenance\/iana\/README\.md$/,
+  /^docs\/provenance\/iana\/special-purpose-addresses\.json$/,
 ];
 
 export const GENERATED_PATTERNS = [
@@ -715,6 +721,10 @@ export const EXCLUSIONS = {
   'docs/eval/PREREGISTRATION.md': 'states the registered design and its comparison arms, not a measured result - and a pre-registration is the one document that should not be retro-edited to carry a later label',
   'docs/train/design/tr-17/plan.md': "the journey fill value 'CPH 42/108/0019' - a synthetic county parish holding number copied from the tr-17 brief - matches the N/M floor-evidence heuristic; the document states no measurement of our work",
   'docs/provenance/README.md': 'defines what the provenance arms ARE (including the deterministic uplift arm) for rights purposes; it reports no measurement of its own',
+  // The CIDR prefixes this file exists to hold - "240.0.0.0/4", "2001::/23" - match the N/M floor-evidence heuristic. It
+  // is registry data with a source and a date, not a measurement of our work, and the data cannot be reworded the way a
+  // sentence can, which is what this list is for.
+  'docs/provenance/iana/special-purpose-addresses.json': 'the IANA special-purpose registries as data; its slashed prefixes are CIDR notation and match the N/M heuristic, and registry rows are not ours to reword',
 };
 
 /**
