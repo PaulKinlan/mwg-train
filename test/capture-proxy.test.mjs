@@ -93,10 +93,10 @@ test('the connect-time decision: an address is resolved once, checked, and retur
   );
   // A globally reachable address is still admitted, which is what keeps this a policy rather than a blanket refusal.
   for (const hostname of [
-    '8.8.8.8', '93.184.216.34', '2606:4700::1111', '100:0:0:1::1',
+    '8.8.8.8', '93.184.216.34', '2606:4700::1111', '2001:200::1',
     // Just outside each prefix added above: a policy that refuses everything also passes a refusal test, so the
     // neighbouring address of every new prefix is asserted admitted. These are the masks being tested, not the intent.
-    '2001:3::1', '2001:40::1', '3fff:1000::1', '5f01::1',
+    '2001:3::1', '3fff:1000::1', '5f01::1',
   ]) {
     await resolveAllowedAddress({ hostname, port: 443, lookup: publicLookup });
   }

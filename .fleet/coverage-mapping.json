@@ -28,6 +28,9 @@
   "docs/design/archetypes/event-registration/demo/index.html": [
     "test/demo-verifiers.test.mjs"
   ],
+  "docs/provenance/iana/special-purpose-addresses.json": [
+    "test/capture-target-registry.test.mjs"
+  ],
   "docs/train/corpus/records.json": [
     "test/corpus-journey-evidence.test.mjs",
     "test/corpus-record-stamp.test.mjs"
@@ -122,7 +125,8 @@
   ],
   "src/capture/target.mjs": [
     "test/capture-proxy.test.mjs",
-    "test/capture-site.test.mjs"
+    "test/capture-site.test.mjs",
+    "test/capture-target-registry.test.mjs"
   ],
   "src/corpus/cdp.mjs": [
     "test/capture-flow.test.mjs",
