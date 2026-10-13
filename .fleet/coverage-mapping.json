@@ -67,7 +67,8 @@
     "test/tokens-record.test.mjs"
   ],
   "pilot/CORPUS.json": [
-    "test/build-key.test.mjs"
+    "test/build-key.test.mjs",
+    "test/training-served-reverse.test.mjs"
   ],
   "pilot/TRAINING_CORPUS.json": [
     "test/corpus-journey-evidence.test.mjs",
