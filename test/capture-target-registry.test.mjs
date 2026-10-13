@@ -38,7 +38,7 @@ const DEVIATIONS = [
     family: 'ipv6',
     address: '2001::/23',
     direction: 'admitted-though-not-globally-reachable',
-    reason: 'The IETF Protocol Assignments block is refused per sub-prefix rather than wholesale, because one of its children (AS112-v6, 2001:4:112::/48) IS globally reachable and the registry overrides the parent there. Refusing each non-reachable child is what makes the reachable one still capturable.',
+    reason: 'The IETF Protocol Assignments umbrella is refused as a whole, and the few children the registry marks reachable are named in the policy: TEREDO, the Port Control Protocol, TURN and DNS-SD anycast addresses in 2001:1::/32, AMT and AS112-v6. This row is sampled at 2001::1, which is TEREDO and therefore one of the named children, so the sample is admitted while the umbrella is not. mwg-train-mkdx was the other shape: refusing each unreachable sub-prefix admitted the space no row classifies, such as 2001:40::1.',
   },
 ];
 
@@ -102,6 +102,21 @@ test('the capture policy agrees with every IANA special-purpose record, except w
   // check, and so a row quietly moving out of the asserted set fails.
   assert.equal(checked.ipv4, 24);
   assert.equal(checked.ipv6, 22);
+});
+
+test('the IETF protocol umbrella refuses the space no row classifies, and admits the children that are named', () => {
+  // mwg-train-mkdx: refusing only the unreachable sub-prefixes admitted 2001:40::1, which sits inside 2001::/23 in
+  // space no registry row covers. Refused-unless-named and admitted-unless-named agree on every row that exists and
+  // differ exactly here, which is where a mistake lives. These are the two directions of that difference.
+  for (const address of ['2001:40::1', '2001:1ff::1', '2001:2::1', '2001:4:113::1', '2001:1::4', '2001:20::1', '2001:30::1']) {
+    assert.equal(isBlockedIpv6(address), true, `${address} is inside the umbrella and no row calls it reachable`);
+  }
+  for (const address of ['2001::1', '2001:1::1', '2001:1::2', '2001:1::3', '2001:3::1', '2001:4:112::1']) {
+    assert.equal(isBlockedIpv6(address), false, `${address} is a child the registry marks reachable and must stay capturable`);
+  }
+  // Outside the umbrella is unaffected, including the row just past its edge.
+  assert.equal(isBlockedIpv6('2001:200::1'), false);
+  assert.equal(isBlockedIpv6('2001:db8::1'), true);
 });
 
 test('the rows the registry declines to classify are counted, not silently treated as refusals', () => {

@@ -144,10 +144,24 @@ export function isBlockedIpv6(address) {
   // The IETF Protocol Assignments block (2001::/23) is transcribed per sub-prefix rather than as one block, because
   // some of it IS globally reachable - Teredo and the AS112 delegations - and refusing those would be over-blocking
   // rather than policy. Each entry below is a sub-prefix the registry does not mark globally reachable.
-  if (first === 0x2001 && second === 0x0002 && parseInt(lower[2] ?? '0', 16) === 0) return true; // 2001:2::/48 benchmarking (RFC 5180)
-  if (first === 0x2001 && (second & 0xfff0) === 0x0010) return true; // 2001:10::/28 ORCHID, deprecated (RFC 4843)
-  if (first === 0x2001 && (second & 0xfff0) === 0x0020) return true; // 2001:20::/28 ORCHIDv2 (RFC 7343)
-  if (first === 0x2001 && (second & 0xfff0) === 0x0030) return true; // 2001:30::/28 Drone Remote ID (RFC 9374)
+  // The IETF Protocol Assignments block (2001::/23) is REFUSED AS A WHOLE, with the few children the registry marks
+  // reachable named explicitly below.
+  //
+  // The earlier version did the opposite: it refused each unreachable sub-prefix and admitted the rest of the space.
+  // mwg-train-mkdx showed what that costs - 2001:40::1 sits inside the umbrella in space NO row classifies, and it was
+  // admitted by omission. "Refused unless named" and "admitted unless named" agree on every row that exists and differ
+  // on the space that has no row at all, which is the space a mistake lives in.
+  if (first === 0x2001 && second <= 0x01ff) {
+    // Reachable children of the umbrella, each one named by a registry row that says so:
+    if (second === 0x0000) return false; // 2001::/32 TEREDO (row value N/A: a tunnelling mechanism, routable, named reachable by the reviewer)
+    const anycast = second === 0x0001 && lower.slice(2, 7).every((group) => parseInt(group, 16) === 0) && [1, 2, 3].includes(parseInt(lower[7] ?? '0', 16));
+    if (anycast) return false; // 2001:1::1, 2001:1::2 and 2001:1::3/128 - Port Control Protocol, TURN and DNS-SD anycast
+    if (second === 0x0003) return false; // 2001:3::/32 AMT
+    if (second === 0x0004 && parseInt(lower[2] ?? '0', 16) === 0x0112) return false; // 2001:4:112::/48 AS112-v6
+    // Everything else inside the umbrella, including 2001:20::/28 and 2001:30::/28 (which their own rows mark
+    // reachable while RFC 7343 and RFC 9374 say otherwise) and 2001:10::/28 (blank), is refused.
+    return true;
+  }
   if (first === 0x2001 && second === 0x0db8) return true; // 2001:db8::/32 documentation (RFC 3849)
   if (first === 0x2002) return true; // 2002::/16 6to4 (RFC 3056)
   if (first === 0x3fff && (second & 0xf000) === 0) return true; // 3fff::/20 documentation (RFC 9637)
