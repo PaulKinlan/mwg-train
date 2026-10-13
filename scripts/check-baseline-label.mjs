@@ -352,7 +352,7 @@ export const DOCUMENTS = {
   'docs/eval/decode-config.deepseek-flash.json': 'config', // proposed request knobs, not a measured floor result
   'docs/eval/evaluator-interface-contract.md': 'design', // preregistration amendment draft, not yet ratified
   'docs/eval/evaluable-primary-endpoint.md': 'design', // unratified endpoint decision memo, not outcome evidence
-  'docs/eval/generated-server-memory.md': 'design', // containment boundaries, not a measured floor report
+  'docs/train/memory-containment.md': 'design', // containment boundaries and reaper incident, not a floor report
   'docs/eval/owner-identity.json': 'config',
   'docs/eval/pricing.sheets.md': 'provider-data',
   'docs/eval/quotes.raw/fetched.json': 'provider-data',
