@@ -14,8 +14,8 @@
  *     here - the bounding capability set is empty - and is not needed.)
  *   - the filesystem is assembled from scratch: the node runtime and system libraries read-only,
  *     the site tree read-only at /site, a 64 MiB tmpfs at /data for the ephemeral SQLite
- *     database, and a separate 64 MiB tmpfs at /tmp. These bound scratch storage, NOT process RSS.
- *     Nothing else on the host exists for the process - no repo, no beads
+ *     database, a separate 64 MiB tmpfs at /tmp, and a 4 MiB /dev with minimal device nodes.
+ *     These bound scratch storage, NOT process RSS. Nothing else on the host exists - no repo, no beads
  *     DB, no ~/.config, no SSH keys. There is NO shared writable directory at all.
  *   - the environment is rebuilt from an allowlist (PATH, HOME, NODE_ENV, TZ, PILOT_PORT). No
  *     token, proxy URL or credential name survives --clearenv.
@@ -32,6 +32,7 @@ import { spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { boundedDeviceArgs } from '../sandbox/devices.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const WRAPPER_PATH = resolve(here, 'bridge-wrapper.mjs');
@@ -110,7 +111,7 @@ export class Sandbox {
       ...(this.nodeModulesDir && existsSync(this.nodeModulesDir) ? ['--ro-bind', this.nodeModulesDir, '/node_modules'] : []),
       '--ro-bind', WRAPPER_PATH, '/viewer/bridge-wrapper.mjs',
       ...viewerTmpfsArgs(),
-      '--dev', '/dev',
+      ...boundedDeviceArgs(),
       '--proc', '/proc',
       '--',
       '/node/bin/node', '/viewer/bridge-wrapper.mjs', '--entry', `/site/${this.entry}`, '--port', String(SANDBOX_PORT),

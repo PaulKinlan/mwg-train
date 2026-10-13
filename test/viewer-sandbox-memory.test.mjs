@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { Sandbox, viewerTmpfsArgs, VIEWER_TMPFS_BYTES } from '../src/viewer/sandbox.mjs';
+import { boundedDeviceArgs, DEVICE_TMPFS_BYTES } from '../src/sandbox/devices.mjs';
 
 const hasBwrap = (() => { try { execFileSync('which', ['bwrap'], { stdio: 'ignore' }); return true; } catch { return false; } })();
 const MiB = 1024 * 1024;
@@ -15,9 +16,15 @@ test('viewer sizes each distinct tmpfs mount explicitly', () => {
     '--size', String(64 * MiB), '--tmpfs', '/data',
   ]);
   assert.equal(VIEWER_TMPFS_BYTES, 64 * MiB);
+  const devices = boundedDeviceArgs();
+  assert.deepEqual(devices.slice(0, 4), ['--size', String(4 * MiB), '--tmpfs', '/dev']);
+  assert.ok(!devices.includes('--dev'), 'the unbounded bubblewrap --dev mount must not return');
+  for (let i = 0; i < devices.length; i++) {
+    if (devices[i] === '--dev-bind') assert.notEqual(devices[i + 1], '/dev/pts', 'never bind host PTYs');
+  }
 });
 
-test('viewer /tmp and /data each reject bounded fill at the 64MiB ceiling, while site starts normally',
+test('viewer /tmp, /data and /dev reject bounded fill at their separate ceilings, while site starts normally',
   { skip: !hasBwrap, timeout: 60_000 }, async (t) => {
     const siteDir = mkdtempSync(join(tmpdir(), 'viewer-memory-site-'));
     // The fixture keeps exactly one 1MiB Buffer and makes at most 80 writes per mount.
@@ -29,14 +36,14 @@ test('viewer /tmp and /data each reject bounded fill at the 64MiB ceiling, while
       createServer((request, response) => {
         const dir = new URL(request.url, 'http://localhost').pathname.slice(1);
         if (dir === '__health') { response.end('ok'); return; }
-        if (dir !== 'tmp' && dir !== 'data') { response.writeHead(404); response.end(); return; }
+        if (dir !== 'tmp' && dir !== 'data' && dir !== 'dev') { response.writeHead(404); response.end(); return; }
         const mount = '/' + dir;
         const fs = statfsSync(mount);
         const maxBytes = fs.bsize * fs.blocks;
         let bytes = 0, errorCode = null;
         const fd = openSync(mount + '/bounded-fill', 'w');
         try {
-          for (let i = 0; i < 80; i++) {
+          for (let i = 0; i < (dir === 'dev' ? 8 : 80); i++) {
             try { bytes += writeSync(fd, chunk); }
             catch (error) { errorCode = error.code; break; }
           }
@@ -48,13 +55,14 @@ test('viewer /tmp and /data each reject bounded fill at the 64MiB ceiling, while
     const sandbox = new Sandbox({ id: 'test:bounded-tmpfs', siteDir });
     t.after(() => { sandbox.stop(); rmSync(siteDir, { recursive: true, force: true }); });
     await sandbox.start();
-    for (const mount of ['tmp', 'data']) {
+    for (const mount of ['tmp', 'data', 'dev']) {
       const result = await sandbox.request({ method: 'GET', path: `/${mount}`, headers: {} });
       assert.equal(result.status, 200, `${mount}: ${sandbox.log}`);
       const report = JSON.parse(Buffer.from(result.bodyBase64, 'base64').toString('utf8'));
-      assert.equal(report.maxBytes, VIEWER_TMPFS_BYTES, `${mount} mount has exact bound`);
+      const limit = mount === 'dev' ? DEVICE_TMPFS_BYTES : VIEWER_TMPFS_BYTES;
+      assert.equal(report.maxBytes, limit, `${mount} mount has exact bound`);
       assert.equal(report.errorCode, 'ENOSPC', `${mount} refuses additional writes; not just a declared quota`);
-      assert.ok(report.bytes >= 60 * MiB && report.bytes <= VIEWER_TMPFS_BYTES,
+      assert.ok(report.bytes >= limit - MiB && report.bytes <= limit,
         `${mount} should fill to ceiling with only one bounded 1MiB Buffer: ${JSON.stringify(report)}`);
     }
   });

@@ -50,7 +50,8 @@
     "test/evaluable-primary-endpoint.test.mjs"
   ],
   "docs/train/memory-containment.md": [
-    "test/generated-server-memory.test.mjs"
+    "test/generated-server-memory.test.mjs",
+    "test/viewer-sandbox-memory.test.mjs"
   ],
   "docs/provenance/iana/special-purpose-addresses.json": [
     "test/capture-target-registry.test.mjs"

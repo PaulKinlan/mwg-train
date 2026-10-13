@@ -29,6 +29,7 @@ import { spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { boundedDeviceArgs } from '../sandbox/devices.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(HERE, '..', '..');
@@ -150,7 +151,7 @@ export function sandboxArgs({ projectDir, port, dbPath, memoryMb = generatedServ
   // read-write at the same path. Only that directory, never all of /tmp: a per-run directory is what makes that
   // possible, since the host has to see the same file the server wrote.
   if (dbDir && dbDir !== projectDir) args.push('--bind', dbDir, dbDir);
-  args.push('--dev', '/dev', '--proc', '/proc', '--chdir', projectDir);
+  args.push(...boundedDeviceArgs(), '--proc', '/proc', '--chdir', projectDir);
   // serverArgv already begins with the script name, so it is spread once: prepending it again would run the
   // server with a stray positional argument (`node server.mjs server.mjs --port ...`), which is invisible until a
   // generated server reads its arguments by position (mwg-train-pdsb follow-up).
