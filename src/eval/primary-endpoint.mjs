@@ -53,9 +53,14 @@ const measure = (value) => value.status === 'PASS';
  * verify artifact bytes and the exact tree/build identity before a production decision is allowed.
  */
 export function evaluatePrimary(allBriefs, witnesses, { devOnly = false, rulePlan = {}, iterations = 5000, seed = 20261008 } = {}) {
+  if (!Array.isArray(allBriefs) || !Array.isArray(witnesses)) throw new TypeError('briefs and witnesses must be arrays');
+  if (allBriefs.some((brief) => !brief || typeof brief !== 'object' || Array.isArray(brief))) throw new TypeError('every brief must be an object');
+  if (!rulePlan || typeof rulePlan !== 'object' || Array.isArray(rulePlan) || typeof devOnly !== 'boolean' ||
+    !Number.isSafeInteger(iterations) || iterations < 1 || iterations > 50_000 || !Number.isSafeInteger(seed)) {
+    throw new TypeError('rulePlan, devOnly, iterations and seed must be valid evaluation options');
+  }
   const coverage = auditPrimaryCoverage(allBriefs);
   const problems = [];
-  if (!Array.isArray(allBriefs) || !Array.isArray(witnesses)) throw new TypeError('briefs and witnesses must be arrays');
   if (devOnly) {
     if (allBriefs.some((b) => b.split !== 'dev')) problems.push({ code: 'NOT_DEV_ONLY', message: 'dry audit may not inspect test briefs' });
   } else if (sealHash(allBriefs) !== EVAL_SEAL) {
@@ -63,6 +68,16 @@ export function evaluatePrimary(allBriefs, witnesses, { devOnly = false, rulePla
   }
   const briefs = allBriefs.filter((b) => b.split === (devOnly ? 'dev' : 'test') && b.task === 'generate');
   if (!briefs.length) problems.push({ code: 'NO_PRIMARY_BRIEFS' });
+  const requiredFields = ['routes', 'journeys', 'assertions', 'required_rules'];
+  const malformedById = new Map();
+  for (const brief of briefs) {
+    const fields = requiredFields.filter((field) => !Array.isArray(brief[field]) || !brief[field].length ||
+      brief[field].some((item) => typeof item !== 'string' || !item.trim()) || new Set(brief[field]).size !== brief[field].length);
+    if (fields.length) {
+      malformedById.set(brief.brief_id, fields);
+      problems.push({ code: 'MALFORMED_BRIEF', brief_id: brief.brief_id, fields });
+    }
+  }
   const briefById = new Map(briefs.map((b) => [b.brief_id, b]));
   const design = checkDesign(witnesses, briefs);
   problems.push(...design);
@@ -73,7 +88,7 @@ export function evaluatePrimary(allBriefs, witnesses, { devOnly = false, rulePla
       if (brief && !ARMS.includes(witness.arm)) problems.push({ code: 'UNKNOWN_ARM', brief_id: brief.brief_id, arm: witness.arm });
       continue;
     }
-    const missing = [];
+    const missing = (malformedById.get(brief.brief_id) ?? []).map((field) => `MALFORMED_BRIEF:${field}`);
     if (!sha.test(witness.build_tree_sha256 ?? '')) missing.push('build_tree_sha256');
     if (!observation(witness.runnable, 'build')) missing.push('runnable');
     for (const [field, kind] of [['routes', 'browser'], ['journeys', 'browser'], ['assertions', 'browser']]) {
