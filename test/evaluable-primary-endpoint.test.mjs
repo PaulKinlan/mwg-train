@@ -99,6 +99,23 @@ test('zero or malformed declared obligations are NOT_EVALUABLE, never vacuously 
   assert.ok(duplicate.problems.some((p) => p.code === 'MALFORMED_BRIEF' && p.fields.includes('routes')));
 });
 
+test('a fully empty declared brief with matching empty witness maps cannot vacuously pass', () => {
+  const emptyBrief = { ...dev, routes: [], journeys: [], assertions: [], required_rules: [] };
+  const emptyWitnesses = complete().map((witness) => ({ ...witness, routes: {}, journeys: {}, assertions: {}, rules: {} }));
+  const result = evaluatePrimary([emptyBrief], emptyWitnesses, { devOnly: true, rulePlan: {}, iterations: 10 });
+  assert.equal(result.status, 'NOT_EVALUABLE');
+  assert.equal(result.reportable, false);
+  assert.equal(result.denominators.observed_cells, 4);
+  assert.equal(result.denominators.evaluable_cells, 0);
+  assert.equal(result.dry_arithmetic, null, 'even complete witness coverage is not a score without declared obligations');
+  assert.deepEqual(result.problems.find((p) => p.code === 'MALFORMED_BRIEF')?.fields,
+    ['routes', 'journeys', 'assertions', 'required_rules']);
+  for (const arm of ARMS) {
+    assert.equal(result.cells.find((cell) => cell.arm === arm).status, 'NOT_EVALUABLE');
+    assert.equal(result.per_family[0].arms[arm].pass_rate, null);
+  }
+});
+
 test('a measured failure is a failure only when the complete dev fixture evidence set exists', () => {
   const receipts = complete();
   receipts[0].assertions[dev.assertions[0]] = evidence('browser', 'FAIL');
