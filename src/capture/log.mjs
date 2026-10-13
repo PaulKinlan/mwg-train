@@ -12,10 +12,10 @@
  * what to redact can only ever hold what its author thought of, so this module now fails closed instead: EVERY query
  * parameter's value is redacted, and every fragment is dropped, whether or not the name looks like a credential.
  *
- * What survives is what a reader needs to follow the capture and cannot be a secret: the origin, the path, and the
- * NAMES of the parameters. So `https://user:pw@example.com/a/b?apiKey=secret&page=2#tok=x` logs as
- * `https://example.com/a/b?apiKey=REDACTED&page=2#REDACTED` - enough to see what was captured and which parameters
- * were present, with nothing that can be a credential in it.
+ * What survives is the origin and the path: `https://user:pw@example.com/a/b?apiKey=secret#tok=x` logs as
+ * `https://example.com/a/b#REDACTED`. The query is dropped rather than redacted value by value, because a NAME can be
+ * the secret (`?SK_live_...=1` and `?SK_live_...` both printed it, found by probing the shapes rather than reasoning
+ * about them), and a query carries nothing a capture log needs. A fragment is marked rather than shown.
  *
  * `redactSecretsInText` is for text that CONTAINS a URL rather than being one: error messages from the browser layer
  * and from this project's own refusals both interpolate the URL, and a refusal that quotes the URL it refused should
@@ -33,9 +33,8 @@
  *   - A secret carried in a PATH segment (`/reset/abc123`) is not redacted. The path is what makes a log line useful
  *     and the finding accepts origin+path; redacting it would trade a leak this code cannot detect for a log nobody
  *     can act on.
- *   - A secret carried as a parameter NAME is still visible, since names survive. That is deliberate and is the one
- *     residual: names are what tell an operator which parameters the URL had. If a reviewer wants the tighter form,
- *     dropping the query entirely (`origin+pathname` only) is a one-line change to `sanitizeUrlForLog`.
+ *   - The query is not logged at all, so an operator cannot see which parameters a URL carried. That is the accepted
+ *     cost of the rule above, and it is the only residual besides the path.
  *   - Text redaction is heuristic about where a URL ends inside prose. It over-redacts rather than under-redacts,
  *     because a redacted log line costs a reader a moment and a leaked secret costs them a lot. A message that
  *     mentions `?step=2` loses the `2`; that is the price of the rule above, and it is worth paying.
@@ -58,10 +57,12 @@ export function sanitizeUrlForLog(value) {
     // refusing to print it, because the reason this is being logged is usually that a human has to fix it.
     return redactSecretsInText(text);
   }
-  const names = [...new URLSearchParams(parsed.search).keys()];
-  const query = names.map((name) => `${encodeURIComponent(name)}=${REDACTED}`).join('&');
+  // The query is dropped ENTIRELY, not redacted name by name. Keeping names looked harmless and is not: a parameter
+  // whose NAME is the credential (`?SK_live_...=1`) prints it, a valueless one (`?SK_live_...`) prints it too, and a
+  // probe of 17 adversarial shapes found both. Dropping the query leaves one residual - a secret in the path - where
+  // keeping names left two, and nothing in a query can leak by any spelling including ones nobody thought of.
   // parsed.origin carries no userinfo, so `https://user:pass@host/x` becomes `https://host/x`.
-  return `${parsed.origin}${parsed.pathname}${query ? `?${query}` : ''}${parsed.hash ? `#${REDACTED}` : ''}`;
+  return `${parsed.origin}${parsed.pathname}${parsed.hash ? `#${REDACTED}` : ''}`;
 }
 
 /**
@@ -75,8 +76,10 @@ export function redactSecretsInText(value) {
     .replace(/([a-zA-Z][a-zA-Z0-9+.-]*:\/\/)[^/\s@]*@/g, `$1${REDACTED}@`)
     // The whole query of any URL the message contains: fail closed, as above.
     .replace(/([a-zA-Z][a-zA-Z0-9+.-]*:\/\/[^\s'"<>()]*?)\?[^\s'"<>()]*/g, `$1?${REDACTED}`)
-    // Any loose name=value pair outside a scheme URL, whatever the name is: a relative path in a refusal, a rejected
-    // input that did not parse as a URL, or a query the rule above could not reach because the string it was embedded
-    // in was not URL-shaped at all. Over-redacting prose is the accepted cost of having no list to be incomplete.
-    .replace(/([?&#][^=&\s]*=)[^&\s]*/g, `$1${REDACTED}`);
+    // Any loose query or fragment run outside a scheme URL, collapsed to the marker with no name kept: a relative path
+    // in a refusal, a rejected input that did not parse as a URL, a query the rule above could not reach because the
+    // string it was embedded in was not URL-shaped. Dropping the name too is deliberate - a name can be the secret.
+    // The run stops at characters that end a URL inside prose - brackets, quotes, commas, semicolons - so a message
+    // like `(now at http://h/p?x=1)` does not lose its closing bracket to the redaction.
+    .replace(/([?&#])[^\s'"<>()\[\],;]*/g, `$1${REDACTED}`);
 }

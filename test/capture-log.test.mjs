@@ -8,22 +8,17 @@ test('a logged URL keeps its origin, path and parameter names, and loses every v
   // this test used to assert on missed camelCase spellings, and any such list can only hold what its author thought
   // of. Every value is redacted now, and names survive because they are what tells an operator which parameters the
   // URL carried.
-  assert.equal(sanitizeUrlForLog('https://user:s3cret@example.com/a/b?q=hello'),
-    `https://example.com/a/b?q=${REDACTED}`);
+  // The query is dropped entirely now, so nothing in it can leak by any spelling - including a secret used as a
+  // parameter NAME, which keeping names had printed.
+  assert.equal(sanitizeUrlForLog('https://user:s3cret@example.com/a/b?q=hello'), 'https://example.com/a/b');
   assert.ok(!sanitizeUrlForLog('https://user:s3cret@example.com/a').includes('s3cret'));
 
-  // The three spellings the finding named, which the previous rule let through.
-  assert.equal(sanitizeUrlForLog('https://example.com/a?apiKey=abc123'), `https://example.com/a?apiKey=${REDACTED}`);
-  assert.equal(sanitizeUrlForLog('https://example.com/a?accessToken=abc123'), `https://example.com/a?accessToken=${REDACTED}`);
-  assert.equal(sanitizeUrlForLog('https://example.com/a?AWSAccessKeyId=abc123'), `https://example.com/a?AWSAccessKeyId=${REDACTED}`);
-  assert.ok(!sanitizeUrlForLog('https://example.com/a?apiKey=abc123').includes('abc123'));
-
-  // And a name nobody thought of is redacted too, because the rule no longer depends on recognising it. This is the
-  // assertion that makes the earlier failure impossible to repeat rather than merely fixed.
-  assert.equal(sanitizeUrlForLog('https://example.com/a?myOwnThing=abc123&sessionId=xyz'),
-    `https://example.com/a?myOwnThing=${REDACTED}&sessionId=${REDACTED}`);
-  assert.equal(sanitizeUrlForLog('https://example.com/a?page=2&lang=en'),
-    `https://example.com/a?page=${REDACTED}&lang=${REDACTED}`);
+  // Every spelling is gone at once, rather than one rule covering the three the first finding named.
+  for (const query of ['?apiKey=abc123', '?accessToken=abc123', '?AWSAccessKeyId=abc123', '?myOwnThing=abc123&sessionId=xyz', '?page=2&lang=en', '?SK_live_SECRET=1', '?SK_live_SECRET']) {
+    const logged = sanitizeUrlForLog(`https://example.com/a${query}`);
+    assert.equal(logged, 'https://example.com/a', `${query} must leave nothing behind`);
+    assert.ok(!logged.includes('abc123') && !logged.includes('xyz') && !logged.includes('SK_live_SECRET'));
+  }
 });
 
 test('a fragment is dropped whole, because a fragment is not a query string', () => {
@@ -44,7 +39,7 @@ test('text that contains a URL is redacted, because error messages quote the URL
     `did not complete (now at http://127.0.0.1:8080/private?${REDACTED})`);
   assert.ok(!redactSecretsInText('Error: refused http://example.com/x?token=abc123').includes('abc123'));
   // A relative path is not a parseable URL on its own, and a credential-shaped pair in it still loses its value.
-  assert.equal(sanitizeUrlForLog('/reset?token=abc'), `/reset?token=${REDACTED}`);
+  assert.equal(sanitizeUrlForLog('/reset?token=abc'), `/reset?${REDACTED}`);
   // Prose that is not a URL is left alone.
   assert.equal(redactSecretsInText("got 'http://example.com/a b'"), "got 'http://example.com/a b'");
   // Nothing in, nothing out, and nothing thrown.
@@ -58,16 +53,50 @@ test('text that does not parse as a URL still loses every parameter value, whate
   // does not parse, so it takes the text path, and there the old rule consulted a list of credential-looking names.
   // `myOwnThing` was not on it, so the value was printed intact. Two shapes are covered - a string that fails to
   // parse, and one where the query sits outside what the scheme-URL rule can reach.
-  assert.equal(sanitizeUrlForLog('http://exa mple.com/a?myOwnThing=SK_live_SECRET'),
-    `http://exa mple.com/a?myOwnThing=${REDACTED}`);
-  assert.equal(sanitizeUrlForLog('not a url?myOwnThing=SK_live_SECRET'), `not a url?myOwnThing=${REDACTED}`);
+  assert.equal(sanitizeUrlForLog('http://exa mple.com/a?myOwnThing=SK_live_SECRET'), `http://exa mple.com/a?${REDACTED}`);
+  assert.equal(sanitizeUrlForLog('not a url?myOwnThing=SK_live_SECRET'), `not a url?${REDACTED}`);
   assert.ok(!sanitizeUrlForLog('http://exa mple.com/a?f9a2b=SK_live_SECRET').includes('SK_live_SECRET'));
   // A relative path with a query, which is what a page path or a form action looks like inside the warnings.
-  assert.equal(redactSecretsInText('Dropped control at /checkout?step=2'),
-    `Dropped control at /checkout?step=${REDACTED}`);
-  assert.equal(redactSecretsInText('action: /submit?f9a2b=opaque'),
-    `action: /submit?f9a2b=${REDACTED}`);
-  // Over-redaction in prose is the accepted cost of having no list to be incomplete: there is no name, anywhere in
-  // this module, that decides whether a value is redacted.
-  assert.equal(redactSecretsInText('page?x=1'), `page?x=${REDACTED}`);
+  // Names go too, because a name can be the secret: `?SK_live_...` printed it whether or not it had a value.
+  assert.equal(redactSecretsInText('Dropped control at /checkout?step=2'), `Dropped control at /checkout?${REDACTED}`);
+  assert.equal(redactSecretsInText('action: /submit?f9a2b=opaque'), `action: /submit?${REDACTED}`);
+  assert.equal(redactSecretsInText('page?x=1'), `page?${REDACTED}`);
+  assert.equal(redactSecretsInText('a?SK_live_SECRET'), `a?${REDACTED}`);
+});
+
+test('no value survives in any of the shapes that carry one, whatever its name', () => {
+  // The adversarial list, as a regression test rather than a one-off run: every shape here carried the sentinel in a
+  // spelling the two earlier name lists missed, and in this form none of them can. The path is excluded because it is
+  // the module's single stated residual, and asserting a leak as expected behaviour would freeze it rather than
+  // record it.
+  const sentinel = 'SK_live_PROBE123';
+  const shapes = [
+    `https://user:${sentinel}@h.test/p`,
+    `https://h.test/p?k=${sentinel}`,
+    `https://h.test/p?apiKey=${sentinel}`,
+    `https://h.test/p?AWSAccessKeyId=${sentinel}`,
+    `https://h.test/p?${sentinel}`,
+    `https://h.test/p?${sentinel}=1`,
+    `https://h.test/p?a=1;b=${sentinel}`,
+    `https://h.test/p?a=${sentinel}=x`,
+    `https://h.test/p?a=${sentinel}&a=${sentinel}`,
+    `https://h.test/p#${sentinel}`,
+    `https://h.test/p#tok=${sentinel}`,
+  ];
+  for (const url of shapes) {
+    const logged = sanitizeUrlForLog(url);
+    assert.ok(!logged.includes(sentinel), `${url} leaked: ${logged}`);
+  }
+  const prose = [
+    `did not complete (now at https://h.test/p?k=${sentinel})`,
+    `got 'http://exa mple.test/a?k=${sentinel}'`,
+    `Dropped control at /checkout?k=${sentinel}`,
+    `something ?k=${sentinel} here`,
+  ];
+  for (const message of prose) {
+    assert.ok(!redactSecretsInText(message).includes(sentinel), `${message} leaked`);
+  }
+  // The path is the one residual, asserted here so the limit is visible in the suite rather than only in the module
+  // comment: if a future change redacts paths too, this assertion should be deleted deliberately, not discovered.
+  assert.ok(sanitizeUrlForLog(`https://h.test/${sentinel}/p`).includes(sentinel));
 });

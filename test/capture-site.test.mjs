@@ -543,10 +543,12 @@ test('CLI: a URL carrying a credential is redacted in what the CLI prints', asyn
   // Redacted, not dropped: a reader still sees WHICH parameters were there, and no value survives - including the
   // ordinary one, because a rule that redacts only recognised names misses apiKey, accessToken and every other
   // spelling (mwg-train-34ms).
-  assert.match(success.stdout, /token=REDACTED/);
-  assert.match(success.stdout, /q=REDACTED/);
+  // The whole query is gone, so neither the secret nor the ordinary parameter survives - and the line still says
+  // exactly what was captured.
+  assert.match(success.stdout, new RegExp(`Successfully captured http://127\\.0\\.0\\.1:\\d+/$`, 'm'));
+  assert.doesNotMatch(success.stdout, /\?/);
   assert.doesNotMatch(success.stdout, /q=shoes/);
-  assert.match(success.stdout, new RegExp(`Successfully captured http://127\\.0\\.0\\.1:\\d+/\\?token=REDACTED&q=REDACTED`));
+  assert.doesNotMatch(success.stdout, /token/);
 
   // The rejected-input path no longer echoes the input at all (mwg-train-6rvi). Two shapes, because redaction is a
   // guess about a malformed string: a credential in userinfo, and a parameter whose name no rule would recognise on a
