@@ -280,6 +280,12 @@ export const DOCUMENTS = {
   // result of the corpus.
   'docs/design/archetypes/community-forum/README.md': 'provenance',
   'docs/provenance/assets/design-reference-community-forum.md': 'provenance',
+  // The job-board posting-refusal board (bead mwg-train-ko9i), an in-family training archetype rather than
+  // one of the five evaluation families: same shape and the same reasoning as editorial-blog above - the
+  // README records borrowed reference material and its rights, and the register pins board bytes and the
+  // prompt digest. Neither states a measured result of the corpus.
+  'docs/design/archetypes/job-board/README.md': 'provenance',
+  'docs/provenance/assets/design-reference-job-board.md': 'provenance',
   // The third archetype outside the five evaluation families (bead mwg-train-efg), same shapes and the same
   // reasoning again: a board brief, two contract documents, and a digest register, none of which states a
   // measured result of the corpus.
