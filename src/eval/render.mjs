@@ -104,6 +104,16 @@ export async function captureSignature({ chrome, projectDir, port, runDir, viewp
     await page.goto(targetUrl);
     await page.waitForSettled();
     if (drive) {
+      // Wait for the selectors before acting on them. An arm that hydrates on the client - react and preact both
+      // build their DOM after the response is parsed - can be served with the form in the HTML and still have no
+      // form in the document at the moment the drive runs, and `type`/`submit` report that as "not found".
+      // Measured on a real sweep: six arms captured the driven state and the react arm failed with
+      // `submit(form#order-form) failed: not found` while its own page.mjs emitted exactly that id, which is a
+      // race, not a missing form. The wait turns it into the state the board depicts (or a timeout that names
+      // the selector, which is what a genuinely missing form should look like).
+      for (const selector of [...Object.keys(drive.fill ?? {}), ...(drive.submit ? [drive.submit] : [])]) {
+        await page.waitFor(selector);
+      }
       for (const [selector, value] of Object.entries(drive.fill ?? {})) await page.type(selector, String(value));
       if (drive.submit) await page.submit(drive.submit);
       // `submit` waits for the document to settle, but a refusal rendered CLIENT-side makes no request, so that

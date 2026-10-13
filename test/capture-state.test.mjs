@@ -81,6 +81,15 @@ const pages = {
   // from the clean form - the page only shows the error after an empty submission - which is exactly why a path
   // cannot select it and the drive exists. The form is served with the error only when the submission is a GET
   // without the field, so the state is produced by acting, not by asking for a URL.
+  // mwg-train-mr6t, from a real sweep: the react arm failed with submit(form#order-form) failed: not found
+  // while its own page.mjs emitted that exact id - it had been served and not yet hydrated. This page reproduces
+  // the race deliberately: the markup is in a template and is moved into the document 250ms after load, so a
+  // drive that does not wait acts on a form that is not there yet.
+  '/hydrated-form': '<div id="mount">loading</div><template id="tpl"><form id="late-form"><input id="n" name="n"><button type="submit">Send</button></form></template>'
+    + '<script>setTimeout(function () { var m = document.getElementById("mount"); m.appendChild(document.getElementById("tpl").content.cloneNode(true));'
+    + ' var f = document.getElementById("late-form");'
+    + ' f.addEventListener("submit", function (e) { e.preventDefault(); var p = document.createElement("p");'
+    + ' p.setAttribute("role", "alert"); p.textContent = "Late refusal shown"; document.body.appendChild(p); }); }, 1500);</script>',
   '/refusal-form': '<form id="reserve" action="/refusal-form" method="get"><label for="r">Researcher name</label><input id="r" name="researcher"><button type="submit">Request reservation</button></form>'
     + '<script>document.getElementById("reserve").addEventListener("submit", (e) => { e.preventDefault(); const v = document.getElementById("r").value; document.getElementById("banner")?.remove(); const p = document.createElement("p"); p.id = "banner"; p.setAttribute("role", "alert"); p.textContent = v ? "Reservation submitted for " + v : "Your reservation could not be submitted"; document.body.appendChild(p); });</script>',
 };
@@ -337,6 +346,32 @@ test('a drive that names no action is refused before any browser starts', async 
       (error) => error instanceof TypeError && /at least one action/.test(error.message),
       'a drive with no action was not refused',
     );
+  } finally {
+    rmSync(runDir, { recursive: true, force: true });
+  }
+});
+
+test('a drive waits for a form the arm has not hydrated yet', async () => {
+  // mwg-train-mr6t, from a real sweep: the react arm was served with `form#order-form` in its HTML and had no
+  // such form in the document when the drive ran, so `submit` reported "not found" - and the instrument reported
+  // that arm as an unmeasured state. The form appears 250ms after load here, which is far shorter than the wait
+  // and far longer than the settle the capture does before driving.
+  const chrome = await getChrome();
+  const runDir = mkdtempSync(join(tmpdir(), 'mwg-capture-drive-hydrate-'));
+  try {
+    const projectDir = join(runDir, 'project');
+    mkdirSync(projectDir, { recursive: true });
+    writeFixture(projectDir);
+
+    const driven = await captureSignature({
+      chrome,
+      projectDir,
+      port: 7965,
+      runDir,
+      path: '/hydrated-form',
+      drive: { submit: 'form#late-form', expectText: 'Late refusal shown' },
+    });
+    assert.ok(driven.nodes.length > 0, 'the driven capture produced no nodes');
   } finally {
     rmSync(runDir, { recursive: true, force: true });
   }
