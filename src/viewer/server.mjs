@@ -112,6 +112,19 @@ export function viewerHeaders(liveOrigin = '') {
   };
 }
 
+/**
+ * The headers for a file this viewer serves from its own disk: a concept image, a reference board, a generated
+ * board's target, its own script, or an evidence file. One shape, because every one of those is a file whose bytes
+ * a browser must not be allowed to reinterpret as a script or a stylesheet - and because a route that hand-writes
+ * its own header set is how the evidence route came to be the one file response without nosniff (mwg-train-sj8a).
+ * Exported so the shape can be asserted directly, not only through a route that may have no file to serve.
+ */
+export const assetHeaders = (type) => ({
+  'content-type': type,
+  'cache-control': 'no-store',
+  'x-content-type-options': 'nosniff',
+});
+
 const htmlResponse = (response, body, status = 200, liveOrigin = '') => {
   response.writeHead(status, { 'content-type': 'text/html; charset=utf-8', ...viewerHeaders(liveOrigin) });
   response.end(body);
@@ -495,28 +508,28 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
       if (journeyImageMatch && request.method === 'GET') {
         const image = conceptJourneyStep(repoRoot, journeyImageMatch[1], journeyImageMatch[2]);
         if (!image) return textResponse(response, 'archetype reference unavailable', 404);
-        response.writeHead(200, { 'content-type': image.type, 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' });
+        response.writeHead(200, assetHeaders(image.type));
         return response.end(image.bytes);
       }
       const conceptImageMatch = path.match(/^\/concepts\/images\/([a-z0-9-]+)\.jpg$/);
       if (conceptImageMatch && request.method === 'GET') {
         const image = conceptImage(repoRoot, conceptImageMatch[1]);
         if (!image) return textResponse(response, 'concept image unavailable', 404);
-        response.writeHead(200, { 'content-type': image.type, 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' });
+        response.writeHead(200, assetHeaders(image.type));
         return response.end(image.bytes);
       }
       const conceptTargetMatch = path.match(/^\/concepts\/targets\/([a-z0-9-]+)\.png$/);
       if (conceptTargetMatch && request.method === 'GET') {
         const image = conceptTarget(repoRoot, conceptTargetMatch[1]);
         if (!image) return textResponse(response, 'authored target unavailable', 404);
-        response.writeHead(200, { 'content-type': image.type, 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' });
+        response.writeHead(200, assetHeaders(image.type));
         return response.end(image.bytes);
       }
       const conceptReferenceMatch = path.match(/^\/concepts\/references\/(tr-\d{2})\.jpg$/);
       if (conceptReferenceMatch && request.method === 'GET') {
         const image = trainingBoard(repoRoot, conceptReferenceMatch[1]);
         if (!image) return textResponse(response, 'designed reference board unavailable', 404);
-        response.writeHead(200, { 'content-type': image.type, 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' });
+        response.writeHead(200, assetHeaders(image.type));
         return response.end(image.bytes);
       }
 
@@ -562,7 +575,7 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
         return response.end(board.bytes);
       }
       if (path === '/tuning/client.js' && request.method === 'GET') {
-        response.writeHead(200, { 'content-type': 'text/javascript; charset=utf-8', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' });
+        response.writeHead(200, assetHeaders('text/javascript; charset=utf-8'));
         return response.end(readFileSync(join(repoRoot, 'src/viewer/tuning-client.js')));
       }
       const tuningTarget = path.match(/^\/tuning\/target\/(tr-\d{2})\.png$/);
@@ -574,7 +587,7 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
             realpathSync(image) !== join(realpathSync(dir), 'target.png')) {
           return textResponse(response, 'target unavailable', 404);
         }
-        response.writeHead(200, { 'content-type': 'image/png', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' });
+        response.writeHead(200, assetHeaders('image/png'));
         return response.end(readFileSync(image));
       }
       const tuningReference = path.match(/^\/tuning\/reference\/(tr-\d{2})\.jpg$/);
@@ -594,7 +607,7 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
         if (bytes.length < 2 || bytes[0] !== 0xff || bytes[1] !== 0xd8) {
           return textResponse(response, 'reference board unavailable', 404);
         }
-        response.writeHead(200, { 'content-type': 'image/jpeg', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' });
+        response.writeHead(200, assetHeaders('image/jpeg'));
         return response.end(bytes);
       }
 
@@ -661,7 +674,7 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
         if (realFile !== join(realDir, file)) return textResponse(response, 'confined', 403);
         const body = await readFile(realFile);
         const type = extname(file).toLowerCase() === '.png' ? 'image/png' : extname(file).toLowerCase() === '.json' ? 'application/json' : 'application/octet-stream';
-        response.writeHead(200, { 'content-type': type, 'cache-control': 'no-store' });
+        response.writeHead(200, assetHeaders(type));
         return response.end(body);
       }
 

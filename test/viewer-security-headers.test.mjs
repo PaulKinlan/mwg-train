@@ -13,7 +13,7 @@ import { join, resolve } from 'node:path';
 import test from 'node:test';
 
 import { PAGE_CSS, pageStyleHash } from '../src/viewer/pages.mjs';
-import { createViewer, viewerHeaders } from '../src/viewer/server.mjs';
+import { assetHeaders, createViewer, viewerHeaders } from '../src/viewer/server.mjs';
 
 const ROOT = resolve(import.meta.dirname, '..');
 
@@ -56,15 +56,46 @@ test('every viewer response carries a restrictive policy and nosniff', async (t)
   }
 });
 
-test('the viewer\'s own static assets carry nosniff as well', async (t) => {
-  // The policy is for documents; nosniff belongs on everything the viewer generates, including the workbench's
-  // script, because a browser must never sniff a response into being executable (mwg-train-mslb).
+test('every file this viewer serves carries nosniff', async (t) => {
+  // The policy is for documents; nosniff belongs on everything the viewer serves from its own disk, because a
+  // browser must never sniff those bytes into being executable. Pinned as a shape rather than only through routes,
+  // since a route with no file present would otherwise pass by serving nothing (mwg-train-sj8a).
+  const headers = assetHeaders('image/png');
+  assert.equal(headers['x-content-type-options'], 'nosniff', 'the shared file-response shape carries nosniff');
+  assert.equal(headers['cache-control'], 'no-store');
+  assert.equal(headers['content-type'], 'image/png');
+
   const base = await serve(t);
   for (const route of ['/tuning/client.js']) {
     const response = await fetch(`${base}${route}`);
     assert.equal(response.status, 200, `${route} is served`);
     assert.equal(response.headers.get('x-content-type-options'), 'nosniff', `${route}: nosniff must be set`);
   }
+});
+
+test('evidence files are served with nosniff, like every other file', async (t) => {
+  // The evidence route was the one file response that hand-wrote its headers and so had no nosniff: it serves the
+  // screenshots and JSON a run recorded, and the pages link them directly (mwg-train-sj8a).
+  const base = await serve(t);
+  const index = await (await fetch(`${base}/`)).text();
+  const project = index.match(/href="\/project\/([a-z0-9-]+)(?:\?[^"]*)?"/i)?.[1];
+  assert.ok(project, 'the index links to a project');
+  const page = await (await fetch(`${base}/project/${project}`)).text();
+  const evidence = page.match(/href="(\/evidence\/[^"]+)"/)?.[1];
+  if (!evidence) {
+    // A checkout with no materialised run has no evidence directory to serve. Said out loud rather than passed
+    // silently: the shape assertion above still covers the header, and this test starts biting wherever runs exist.
+    t.skip('no evidence file is linked: this checkout has no materialised pilot run');
+    return;
+  }
+  const response = await fetch(`${base}${evidence.replace(/&amp;/g, '&')}`);
+  assert.equal(response.status, 200, `${evidence} is served`);
+  assert.equal(response.headers.get('x-content-type-options'), 'nosniff', 'an evidence file must not be sniffable');
+  assert.ok(
+    ['image/png', 'image/jpeg', 'application/json'].includes(response.headers.get('content-type')),
+    `evidence keeps its recorded type, got ${response.headers.get('content-type')}`,
+  );
+  assert.ok((await response.arrayBuffer()).byteLength > 0, 'the evidence file has bytes');
 });
 
 test('the policy names the hash of the style block the page actually emits', async (t) => {
