@@ -277,6 +277,7 @@ ${echoMarkup(archetype)}`;
   return \`${body}\`;
 }
 
+const escapeTitle = (value) => String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 export async function renderDocument({ title = '${archetype.title}', data = {} } = {}) {
   const body = await renderPage(data);
   return \`<!doctype html>
@@ -284,7 +285,7 @@ export async function renderDocument({ title = '${archetype.title}', data = {} }
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>\${title}</title>
+    <title>\${escapeTitle(title)}</title>
     <link rel="stylesheet" href="/app/styles.css">
   </head>
   <body>
@@ -341,13 +342,14 @@ export async function renderPage() {
   return ${render}(html\`<\${Page} />\`);
 }
 
+const escapeTitle = (value) => String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 export async function renderDocument({ title = '${archetype.title}' } = {}) {
   return \`<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>\${title}</title>
+    <title>\${escapeTitle(title)}</title>
     <link rel="stylesheet" href="/app/styles.css">
   </head>
   <body>
@@ -376,13 +378,14 @@ export async function renderPage(data = {}) {
   return renderToString(app);
 }
 
+const escapeTitle = (value) => String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 export async function renderDocument({ title = '${archetype.title}', data = {} } = {}) {
   return \`<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>\${title}</title>
+    <title>\${escapeTitle(title)}</title>
     <link rel="stylesheet" href="/app/styles.css">
   </head>
   <body>
@@ -3342,13 +3345,14 @@ export async function renderPage() {
   return body;
 }
 
+const escapeTitle = (value) => String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 export async function renderDocument({ title = '${archetype.title}' } = {}) {
   return \`<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>\${title}</title>
+    <title>\${escapeTitle(title)}</title>
     <link rel="stylesheet" href="/app/styles.css">
   </head>
   <body>

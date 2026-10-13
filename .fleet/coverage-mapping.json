@@ -64,5 +64,11 @@
     "test/design-contract.test.mjs",
     "test/design-reference-wave2.test.mjs",
     "test/design-reference.test.mjs"
+  ],
+  "pilot/frameworks.mjs": [
+    "test/frameworks.test.mjs",
+    "test/reflected-title-escape.test.mjs",
+    "test/reflected-title-helper.test.mjs",
+    "test/known-sinks.test.mjs"
   ]
 }
