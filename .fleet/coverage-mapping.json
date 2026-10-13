@@ -90,6 +90,12 @@
   "scripts/check-train-evidence.mjs": [
     "test/reachability.test.mjs"
   ],
+  "scripts/count-deepseek-sft.py": [
+    "test/sft-serializer.test.mjs"
+  ],
+  "scripts/serialize-sft.mjs": [
+    "test/sft-serializer.test.mjs"
+  ],
   "scripts/price-two-backends.mjs": [
     "test/compare.test.mjs"
   ],
