@@ -180,6 +180,36 @@ test('functional: a reader searches the corpus, follows a cross-link, reads hist
 
         const backlinks = await page('/wiki/clay');
         assert.ok(backlinks.html.includes('wiki-backlinks') && backlinks.html.includes('Soil'), `${arm} lists the pages that link here`);
+
+        // mwg-train-lfz0. A malformed percent-escape used to escape decodeURIComponent as a URIError, and because
+        // the throw happened inside the request handler the WHOLE PROCESS exited: one bad URL for every reader, not
+        // one failed request. Reproduced against this same served arm before the fix (GET /wiki/%/history -> server
+        // exited 1, URIError on stderr, every later request failed). The three requests below are driven against the
+        // live server on purpose - a unit test on the helper would not have seen the process die.
+        const malformed = [
+          ['/wiki/%/history', undefined],
+          ['/wiki/%', undefined],
+          ['/wiki/%/revision/1', undefined],
+          ['/wiki/%/create', { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: 'author=A&body=B', redirect: 'manual' }],
+        ];
+        for (const [path, init] of malformed) {
+          const response = await fetch(`${base}${path}`, init);
+          if (arm === 'hono') {
+            // Hono's router decodes path params with its own try/fallback (node_modules/hono/dist/utils/url.js,
+            // tryDecodeURIComponent), so nothing can throw here: the bad escape stays a literal slug and the page
+            // simply does not exist. Recorded rather than asserted away - the arms differ deliberately, and the
+            // asset route's earlier fix for this same crash class is raw-only for the same reason.
+            assert.notEqual(response.status, 400, `${arm} cannot raise the URIError this fix answers, so it must not claim to`);
+          } else {
+            assert.equal(response.status, 400, `${arm} refuses a malformed escape with 400`);
+            assert.match(await response.text(), /Malformed page name/, `${arm} says what was wrong`);
+          }
+        }
+
+        // The DoS assertion, and the reason this regression test exists: the server is still serving after them.
+        const health = await fetch(`${base}/__health`);
+        assert.ok(health.ok, `${arm} survives a malformed escape instead of exiting`);
+        assert.equal((await page('/wiki/soil')).status, 200, `${arm} still serves a real page afterwards`);
       } finally {
         child.kill('SIGTERM');
         rmSync(dir, { recursive: true, force: true });

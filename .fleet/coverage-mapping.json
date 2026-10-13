@@ -69,7 +69,8 @@
     "test/frameworks.test.mjs",
     "test/reflected-title-escape.test.mjs",
     "test/reflected-title-helper.test.mjs",
-    "test/known-sinks.test.mjs"
+    "test/known-sinks.test.mjs",
+    "test/wiki-capability.test.mjs"
   ],
   "pilot/TRAINING_CORPUS.json": [
     "test/corpus-journey-evidence.test.mjs",
