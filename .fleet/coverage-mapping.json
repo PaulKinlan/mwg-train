@@ -53,5 +53,10 @@
     "test/board-states.test.mjs",
     "test/archetype-boards-generator.test.mjs",
     "test/design-reference-wave2.test.mjs"
+  ],
+  "src/corpus/harness.mjs": [
+    "test/harness-server.test.mjs",
+    "test/corpus-flows-harness.test.mjs",
+    "test/corpus-flows.test.mjs"
   ]
 }
