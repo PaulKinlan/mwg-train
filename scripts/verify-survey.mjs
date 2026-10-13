@@ -12,6 +12,7 @@
  * Evidence (screenshots + a JSON report) is written to /tmp/survey-shots.
  */
 import { spawn } from 'node:child_process';
+import { generatedServerEnv } from '../src/eval/generated-server.mjs';
 import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
@@ -52,6 +53,7 @@ const base = `http://127.0.0.1:${PORT}`;
 const server = spawn('node', ['server.mjs', '--port', String(PORT), '--db', join(dir, 'verify.sqlite')], {
   cwd: dir,
   stdio: ['ignore', 'ignore', 'pipe'],
+  env: generatedServerEnv(),
 });
 let chrome;
 try {

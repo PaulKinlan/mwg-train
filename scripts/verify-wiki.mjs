@@ -16,6 +16,7 @@
  * Evidence (screenshots) is written to /tmp/wiki-shots.
  */
 import { spawn } from 'node:child_process';
+import { generatedServerEnv } from '../src/eval/generated-server.mjs';
 import { mkdirSync, mkdtempSync, rmSync, symlinkSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
@@ -61,6 +62,7 @@ export async function runJourney(arm) {
   const server = spawn('node', ['server.mjs', '--port', String(port), '--db', join(dir, 'verify.sqlite')], {
     cwd: dir,
     stdio: ['ignore', 'ignore', 'pipe'],
+    env: generatedServerEnv(),
   });
 
   let chrome;

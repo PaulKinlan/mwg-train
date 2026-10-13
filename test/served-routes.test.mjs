@@ -4,7 +4,7 @@
 // through all three outcomes - none of which starts a server, so the whole file is cheap.
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import test from 'node:test';
@@ -16,7 +16,7 @@ import {
   evaluateServedGap,
   extractUnservedRoutes,
 } from '../scripts/check-served-gap.mjs';
-import { generatedServerEnv, runVerdict, startGeneratedServer } from '../scripts/check-served-routes.mjs';
+import { runVerdict } from '../scripts/check-served-routes.mjs';
 
 const ROOT = resolve(import.meta.dirname, '..');
 const SCRIPT = join(ROOT, 'scripts', 'check-served-routes.mjs');
@@ -34,6 +34,10 @@ function bareTree() {
   // make it look for the corpus and the projects in the real checkout instead of this fixture.
   copyFileSync(SCRIPT, join(dir, 'scripts', 'check-served-routes.mjs'));
   symlinkSync(join(ROOT, 'pilot', 'TRAINING_CORPUS.json'), join(dir, 'pilot', 'TRAINING_CORPUS.json'));
+  // src/ is part of a clean checkout and is now imported by the script (the shared environment policy for generated
+  // servers, mwg-train-6wpn). Without it the fixture tests "the import is missing", not "the generated projects are
+  // missing", and the three end-to-end cases fail with ERR_MODULE_NOT_FOUND instead of the exit codes they pin.
+  symlinkSync(join(ROOT, 'src'), join(dir, 'src'), 'dir');
   symlinkSync(join(ROOT, 'docs', 'train', 'briefs', 'manifest.jsonl'), join(dir, 'docs', 'train', 'briefs', 'manifest.jsonl'));
   return dir;
 }
@@ -597,82 +601,6 @@ test('check-served-gap: a document whose gap-section heading has been renamed or
     }
     assert.ok(threw, 'CLI must exit non-zero for renamed heading');
   } finally {
-    rmSync(dir, { recursive: true, force: true });
-  }
-});
-
-// mwg-train-6wpn. The prober starts a generated project's server, and generated code is untrusted, so the
-// environment it inherits decides whether a secret in this shell can leave the machine. The two tests below are
-// deliberately different: the first pins the policy, and the second drives the spawn path the prober actually uses,
-// because a policy that no call site consults is not a fix.
-test('a generated server gets an allowlisted environment, not the parent one', () => {
-  const canaries = {
-    MWG_TRAIN_TEST_SECRET_CANARY: 'sk-live-do-not-leak-me',
-    MWG_TRAIN_TEST_INNOCUOUS_CANARY: 'this-is-not-even-a-secret',
-  };
-  const saved = Object.fromEntries(Object.keys(canaries).map((name) => [name, process.env[name]]));
-  try {
-    Object.assign(process.env, canaries);
-    const env = generatedServerEnv();
-    for (const name of Object.keys(canaries)) {
-      // An innocuous canary as well as a secret-looking one: a denylist keyed on how a variable looks would pass
-      // the second and fail the first, and this is an allowlist.
-      assert.equal(env[name], undefined, `${name} must not be inherited by a generated server`);
-    }
-    assert.deepEqual(
-      Object.keys(env).filter((name) => !['PATH', 'TMPDIR', 'TEMP', 'TMP', 'LANG', 'LC_ALL', 'TZ'].includes(name)),
-      [],
-      'nothing outside the allowlist may pass through',
-    );
-    assert.equal(env.PATH, process.env.PATH, 'the allowlist keeps what a node process needs to start');
-    assert.notDeepEqual(env, process.env, 'the whole parent environment must not be handed over');
-  } finally {
-    for (const [name, value] of Object.entries(saved)) {
-      if (value === undefined) delete process.env[name];
-      else process.env[name] = value;
-    }
-  }
-});
-
-test('the spawn path the prober uses starts a server without the parent environment', async () => {
-  const canary = 'sk-live-the-real-spawn-path-must-not-inherit-this';
-  const saved = process.env.MWG_TRAIN_TEST_SPAWN_CANARY;
-  process.env.MWG_TRAIN_TEST_SPAWN_CANARY = canary;
-  const dir = mkdtempSync(join(tmpdir(), 'xku-env-'));
-  const envFile = join(dir, 'child-env.json');
-  writeFileSync(
-    join(dir, 'server.mjs'),
-    `import { writeFileSync } from 'node:fs';\n` +
-      `writeFileSync(${JSON.stringify(envFile)}, JSON.stringify(process.env));\n` +
-      `// Stay alive so the test can check the process group, exactly as a real server does.\n` +
-      `setTimeout(() => {}, 10000);\n`,
-  );
-  let child = null;
-  try {
-    child = startGeneratedServer({ projectDir: dir, port: 0, dbPath: join(dir, 'x.sqlite') });
-    const deadline = Date.now() + 10_000;
-    while (!existsSync(envFile) && Date.now() < deadline) await new Promise((r) => setTimeout(r, 50));
-    assert.ok(existsSync(envFile), 'the generated server ran and reported its environment');
-    const childEnv = JSON.parse(readFileSync(envFile, 'utf8'));
-    assert.equal(childEnv.MWG_TRAIN_TEST_SPAWN_CANARY, undefined, 'the canary must not reach the generated server');
-    assert.equal(childEnv.PATH, process.env.PATH, 'PATH still reaches it, so this strips rather than empties');
-    // detached is load-bearing: it is what lets stopServer's killProcessGroup take the whole tree down. Asserted
-    // through the group rather than by reading the option back, so removing it fails here instead of in production.
-    assert.doesNotThrow(() => process.kill(-child.pid, 0), 'the server must be its own process group leader');
-  } finally {
-    if (child?.pid) {
-      try {
-        process.kill(-child.pid, 'SIGKILL');
-      } catch {
-        try {
-          process.kill(child.pid, 'SIGKILL');
-        } catch {
-          /* already gone */
-        }
-      }
-    }
-    if (saved === undefined) delete process.env.MWG_TRAIN_TEST_SPAWN_CANARY;
-    else process.env.MWG_TRAIN_TEST_SPAWN_CANARY = saved;
     rmSync(dir, { recursive: true, force: true });
   }
 });

@@ -39,6 +39,10 @@
  *     that divergence is the documented gap this tool exists to measure.
  */
 import { spawn, execFileSync } from 'node:child_process';
+
+// The environment policy and the launch shape for a generated server live in one shared module: the prober is
+// one of ten call sites (mwg-train-6wpn), and a second implementation is how they drift apart.
+import { startGeneratedServer } from '../src/eval/generated-server.mjs';
 import { randomUUID } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, realpathSync, unlinkSync, writeFileSync } from 'node:fs';
 import { createServer as createNetServer } from 'node:net';
@@ -279,34 +283,6 @@ function selectProjects(corpus, options) {
     }
   }
   return [...byArchetype.values()].slice(0, limit);
-}
-
-// mwg-train-6wpn. probeProject starts a GENERATED project's server, and generated code is untrusted, so inheriting
-// the parent environment hands it every exported API key, token and cloud credential in this shell. Only what a
-// bare node server needs is passed through; everything else is dropped. This closes the ENVIRONMENT half of this
-// execution path, not the sandbox: there is still no network isolation and no filesystem confinement, which is
-// mwg-train-i5i2.5's bead, and src/corpus/harness.mjs is a second entry point for the same class of risk.
-//
-// The list is an allowlist rather than a denylist on purpose: a denylist cannot be kept current, and the failure
-// mode is a secret leaving the machine rather than a test going red.
-const GENERATED_SERVER_ENV_ALLOWLIST = ['PATH', 'TMPDIR', 'TEMP', 'TMP', 'LANG', 'LC_ALL', 'TZ'];
-
-export const generatedServerEnv = (parent = process.env) =>
-  Object.fromEntries(
-    GENERATED_SERVER_ENV_ALLOWLIST.filter((name) => parent[name] !== undefined).map((name) => [name, parent[name]]),
-  );
-
-// The single place a generated server is started from this script, so the environment decision cannot be bypassed
-// by a second call site that forgets it. detached stays true deliberately: it is what puts the server in its own
-// process group so stopServer's killProcessGroup can take the whole tree down, and orphaned servers are the
-// failure this file spent mwg-train-* fixing. The process group is not what leaks the environment.
-export function startGeneratedServer({ projectDir, port, dbPath }) {
-  return spawn(process.execPath, ['server.mjs', '--port', String(port), '--db', dbPath], {
-    cwd: projectDir,
-    stdio: ['ignore', 'pipe', 'pipe'],
-    detached: true,
-    env: generatedServerEnv(),
-  });
 }
 
 async function probeProject(project, projectsRoot) {

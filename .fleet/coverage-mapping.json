@@ -86,6 +86,37 @@
     "test/corpus-record-stamp.test.mjs"
   ],
   "scripts/check-served-routes.mjs": [
-    "test/served-routes.test.mjs"
+    "test/served-routes.test.mjs",
+    "test/generated-server-env.test.mjs"
+  ],
+  "src/eval/generated-server.mjs": [
+    "test/generated-server-env.test.mjs"
+  ],
+  "scripts/verify-storefront-cart.mjs": [
+    "test/generated-server-env.test.mjs"
+  ],
+  "scripts/verify-explainer.mjs": [
+    "test/generated-server-env.test.mjs"
+  ],
+  "scripts/verify-workspace.mjs": [
+    "test/generated-server-env.test.mjs"
+  ],
+  "scripts/verify-pricing-tiers.mjs": [
+    "test/generated-server-env.test.mjs"
+  ],
+  "scripts/verify-demo.mjs": [
+    "test/generated-server-env.test.mjs"
+  ],
+  "scripts/verify-checkout.mjs": [
+    "test/generated-server-env.test.mjs"
+  ],
+  "scripts/verify-survey.mjs": [
+    "test/generated-server-env.test.mjs"
+  ],
+  "scripts/verify-wiki.mjs": [
+    "test/generated-server-env.test.mjs"
+  ],
+  "scripts/verify-game.mjs": [
+    "test/generated-server-env.test.mjs"
   ]
 }
