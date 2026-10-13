@@ -274,6 +274,12 @@ export const DOCUMENTS = {
   'docs/design/archetypes/web-shop/design.md': 'design',
   'docs/design/archetypes/web-shop/plan.md': 'design',
   'docs/provenance/assets/design-reference-fan-community-site.md': 'provenance',
+  // The community-forum reply-refusal board (bead mwg-train-tzy0), same shape and the same reasoning as
+  // the job-board, web-shop and survey-form blocks above: the README records borrowed reference material
+  // and its rights, and the register pins board bytes and the prompt digest. Neither states a measured
+  // result of the corpus.
+  'docs/design/archetypes/community-forum/README.md': 'provenance',
+  'docs/provenance/assets/design-reference-community-forum.md': 'provenance',
   // The third archetype outside the five evaluation families (bead mwg-train-efg), same shapes and the same
   // reasoning again: a board brief, two contract documents, and a digest register, none of which states a
   // measured result of the corpus.
