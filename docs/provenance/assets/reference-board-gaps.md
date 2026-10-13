@@ -146,10 +146,35 @@ submission does report every missing required field at once (3, 3, 3, 3 and 4 ac
 that round), so a board depicting one field in error is not reached by submitting empty. But a single field CAN be
 isolated - satisfying every other field and omitting one reports that one alone (`Missing: member`), and the expense
 arm applies a value rule (`Below minimum: amount`) - so "the arm cannot isolate a field" is not why these recipes
-are absent. The reason is that a drive compares the **rendered state**, and these boards specify the planned
-product's form while the arm renders a reduced one: the refusal exists on both sides, with different fields, wording
-and layout. That is **arm work, not board work or instrument work**, parked as mwg-train-7ix4 with this measurement
-on the bead, so a future attempt extends the generator first instead of re-deriving the table.
+are absent.
+
+There is also no single reason shared by all seven, and saying there is would misstate both the arms and the work
+(mwg-train-fb7k, raised by review: an earlier version of this paragraph gave one reason for all seven - that the arm
+refuses the same thing the raster pictures, only with different fields, wording and layout - which holds for two of
+them and is wrong for the other five).
+Read by what the arm can actually render, the seven fall into three classes, and the classes are the finding:
+
+- **Two raise the same refusal in a different rendered state.** expense-tracker applies the amount rule the raster
+  depicts, but renders one alert naming the field where the raster shows a top alert plus a field message;
+  community-forum refuses an empty required note body, also the raster's own rule, but on a parentless entry rather
+  than in the thread composer. The rule is right and the rendering is smaller.
+- **Four cannot raise the pictured refusal at all, because the control, rule or form the board pictures does not
+  exist in the arm.** survey-form has no rating control and does not validate its select against its options;
+  library-catalogue can raise the missing-name half of its pictured pair but has no date control and no rule on its
+  numeric field, so the two errors together cannot exist; job-board has no vacancy-posting form at
+  all - its write is a candidate application, a different actor; restaurant-ordering has no cart, so its empty
+  submission is a field-level refusal where the raster shows an empty-order one. A drive cannot reach a state the arm
+  cannot produce.
+- **One is not a refusal.** web-shop `step1-empty` pictures an empty cart with checkout disabled, a state no
+  submission produces on either side.
+
+What the three classes share is narrower than that: a drive compares a **rendered state**, and in each of the seven
+the arm cannot render the pictured one - in two because it renders a different
+state, in four because the control, rule or form is absent, and in one because the board pictures a state rather than
+a refusal. Every one of them is **arm (generator) work, not board work or instrument work**: the boards state the
+planned product correctly, and the instrument can already drive a form, so the recipes stay absent until the
+generator grows the form, control or rule each board specifies. That work is parked as mwg-train-7ix4 with this
+measurement on the bead, so a future attempt extends the generator first instead of re-deriving the table.
 
 ## What follows
 
