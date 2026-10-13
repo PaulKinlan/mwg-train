@@ -1,0 +1,90 @@
+import assert from 'node:assert/strict';
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
+import test from 'node:test';
+
+import { archetypeBrief, stepImagePrompt, trainingBrief, trainingBriefs } from '../src/viewer/concept-briefs.mjs';
+import { listConcepts, renderConcepts } from '../src/viewer/concepts.mjs';
+
+const ROOT = resolve(import.meta.dirname, '..');
+
+test('all current prompt and state claims come from real authored sources', () => {
+  const gallery = listConcepts(ROOT);
+  assert.equal(gallery.patterns.length, 21);
+  assert.equal(gallery.patterns.flatMap((pattern) => pattern.steps).filter((step) => step.available).length, 37);
+  for (const pattern of gallery.patterns) {
+    const { brief, steps } = pattern;
+    assert.ok(brief?.sitePrompt.includes('Use case:'), `${pattern.id} has a complete source-backed site prompt`);
+    assert.ok(brief.sitePrompt.includes('Layout and components:'));
+    assert.ok(brief.sitePrompt.includes('Step-by-step behaviour:'));
+    if (!steps.length) assert.ok(brief.fallbackImagePrompt, `${pattern.id} names its inherited, non-step training prompt`);
+    for (const step of steps) {
+      assert.ok(step.available && step.state && step.imagePrompt, `${pattern.id}/${step.id} has actual bytes, mapping and its own authored image prompt`);
+      assert.ok(step.imagePrompt.length > 100);
+    }
+  }
+  assert.equal(gallery.trainingTargets.length, 30, '12 target expansion families are not fabricated');
+  for (const target of gallery.trainingTargets) {
+    assert.ok(target.brief?.sitePrompt.includes('Required assertions:'));
+    assert.ok(target.brief.imagePrompt?.length > 100);
+  }
+  assert.match(gallery.trainingTargets[0].brief.sitePrompt, /Palette values from the authored design:[\s\S]*#0f172a/,
+    'the full site prompt includes exact UI tokens, not only their names');
+  assert.doesNotMatch(gallery.trainingTargets[0].brief.sitePrompt, /no media queries|one fixed composition|browser chrome runs/i,
+    'a functional site brief must not inherit instructions for the static conformance render');
+  const html = renderConcepts(gallery);
+  assert.equal((html.match(/class="concept-pattern-index"/g) ?? []).length, 1);
+  assert.equal((html.match(/href="#pattern-[a-z-]+"/g) ?? []).length, 26, '21 index links plus 5 held-out cross-links');
+  assert.equal((html.match(/Image Generation Prompt for this state/g) ?? []).length, 37);
+  assert.equal((html.match(/<summary>Site Generation Prompt/g) ?? []).length, 51);
+  assert.doesNotMatch(html, /<script[^>]*>/, 'reading prompts requires no client JS');
+});
+
+test('early inline and later fenced image prompts are returned intact, never inferred from filenames', () => {
+  const early = readFileSync(join(ROOT, 'docs/design/archetypes/booking/README.md'), 'utf8');
+  const late = readFileSync(join(ROOT, 'docs/design/archetypes/community-forum/README.md'), 'utf8');
+  assert.match(stepImagePrompt(early, 'step1-browse.jpg'), /Evening Class Studio/);
+  assert.match(stepImagePrompt(late, 'step3-refusal.jpg'), /Your note was not posted/);
+  assert.equal(stepImagePrompt(late, 'step99-private.jpg'), null);
+  assert.equal(stepImagePrompt(late, '../private.jpg'), null);
+});
+
+test('unavailable or symlinked prompt inputs fail closed and injected text stays escaped', (t) => {
+  const repo = mkdtempSync(join(tmpdir(), 'concept-prompts-'));
+  t.after(() => rmSync(repo, { recursive: true, force: true }));
+  const dir = join(repo, 'docs/design/archetypes/booking');
+  mkdirSync(dir, { recursive: true });
+  const plan = '## Use case\nA <script>alert(1)</script> shop.\n## Journey\n1. Browse.\n## Acceptance criteria\n- Saved records reload.\n';
+  const design = '## Visual thesis\nA calm page.\n## Grammar and layout\nA labelled form.\n## Token usage\nUse one accent.\n## Component hierarchy\nHeader, form, confirmation.\n';
+  writeFileSync(join(dir, 'plan.md'), plan);
+  writeFileSync(join(dir, 'design.md'), design);
+  const brief = archetypeBrief(repo, 'booking');
+  assert.match(brief.sitePrompt, /A <script>alert\(1\)<\/script> shop/);
+  assert.match(brief.sitePrompt, /Saved records reload/);
+  const rendered = renderConcepts({ patterns: [{ id: 'booking', brief, steps: [] }] });
+  assert.doesNotMatch(rendered, /<script>alert\(1\)<\/script>/);
+  assert.match(rendered, /A &lt;script&gt;alert\(1\)&lt;\/script&gt; shop/);
+  assert.equal(archetypeBrief(repo, '../private'), null);
+  rmSync(join(dir, 'plan.md'));
+  const outside = join(repo, 'outside-plan.md');
+  writeFileSync(outside, plan);
+  symlinkSync(outside, join(dir, 'plan.md'));
+  assert.equal(archetypeBrief(repo, 'booking'), null, 'a symlink does not become a site prompt');
+});
+
+test('training prompts require an exact v1 declaration and reject malformed or uncommitted briefs', (t) => {
+  const repo = mkdtempSync(join(tmpdir(), 'training-prompt-'));
+  t.after(() => rmSync(repo, { recursive: true, force: true }));
+  const dir = join(repo, 'docs/train/briefs');
+  mkdirSync(dir, { recursive: true });
+  const row = { family_id: 'tr-01', brief_id: 'tr-01-v1', archetype: 'booking', prompt: 'A real test scenario.', assertions: ['A record persists.'] };
+  writeFileSync(join(dir, 'manifest.jsonl'), [JSON.stringify({ ...row, brief_id: 'tr-01-v2' }), JSON.stringify(row), '{ malformed'].join('\n'));
+  const declared = trainingBriefs(repo);
+  assert.deepEqual([...declared.keys()], ['tr-01']);
+  assert.match(trainingBrief(repo, 'tr-01', declared.get('tr-01')).sitePrompt, /A real test scenario/);
+  assert.equal(trainingBrief(repo, 'tr-02', declared.get('tr-01')), null);
+  rmSync(dir, { recursive: true });
+  symlinkSync(join(repo, 'outside'), dir);
+  assert.equal(trainingBriefs(repo).size, 0, 'symlinked brief directories cannot supply a prompt');
+});

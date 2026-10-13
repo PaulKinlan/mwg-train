@@ -159,18 +159,20 @@ export const PAGE_CSS = `
   .target-board-card h3 { margin: 0; font-size: 1.05rem; }
   .reference-missing-card { display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 12rem; padding: 1.5rem 1rem; border: 1px dashed var(--line); border-radius: 0.4rem; background: var(--ground); text-align: center; }
   .reference-missing-card p { margin: 0.25rem 0; }
-  .concept-lede { font-size: 1.08rem; }
-  .concept-board-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(0.9rem, 2vw, 1.5rem); }
+  .concept-lede { font-size: 1.08rem; max-width: 72ch; }
+  .concept-jump { display: flex; flex-wrap: wrap; gap: 0.6rem 1.2rem; padding-block: 0.65rem; border-block: 1px solid var(--line); }
+  .concept-jump a { display: inline-flex; align-items: center; min-height: 2.75rem; }
+  .concept-pattern-index { display: block; padding: 0.4rem 0; }
+  .concept-pattern-index ul { columns: 15rem; padding-inline-start: 1.5rem; margin-block: 0.5rem 1.5rem; }
+  .concept-pattern-index li { break-inside: avoid; padding-block: 0.12rem; }
+  .concept-explainer { max-width: 76ch; padding-block: 0.5rem 1.3rem; }
+  .concept-explainer p { margin-block: 0.6rem; }
   .concept-board-flow { display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(1.5rem, 3vw, 2.5rem); }
-  .concept-board, .concept-comparison figure { min-width: 0; margin: 0; }
-  .concept-board { margin-block: 1rem 1.5rem; }
-  .concept-board-featured { max-width: 68rem; }
-  .concept-board img { display: block; width: 100%; height: auto; border-radius: 0.4rem; }
-  .concept-board a, .concept-image-frame a { display: block; background: var(--surface); }
-  .concept-board figcaption { padding-block: 0.45rem 0.7rem; }
-  .concept-board figcaption strong { display: block; font-size: 1.12rem; }
-  .concept-board figcaption span, .concept-comparison figcaption { color: var(--muted); font-size: 0.88rem; }
-  .concept-board figcaption p { margin: 0.25rem 0; }
+  .concept-comparison figure { min-width: 0; margin: 0; }
+  .concept-prompt { max-width: 75ch; padding-block: 0.2rem; border-bottom: 1px solid var(--line); }
+  .concept-prompt summary { color: var(--action); font-weight: 650; }
+  .concept-prompt-copy { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.55; color: var(--ink); }
+  .concept-image-frame a { display: block; background: var(--surface); }
   .concept-comparison { padding-block: 0.6rem 1.5rem; border-top: 1px solid var(--line); }
   .concept-comparison h3 { margin: 0.3rem 0 0.8rem; text-transform: capitalize; }
   .concept-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(0.9rem, 2vw, 1.5rem); }
@@ -193,7 +195,7 @@ export const PAGE_CSS = `
   @media (max-width: 55rem) { .tuning-grid, .prompt-comparison-grid, .convergence-grid, .target-boards-pair, .board-generation-grid { grid-template-columns: minmax(0, 1fr); } .tuning-selector { grid-template-columns: repeat(2, minmax(0, 1fr)); } .tuning-selector label, .tuning-selector select, .tuning-selector button { grid-column: auto; grid-row: auto; } .tuning-selector button { grid-column: 1 / -1; } }
   @media (max-width: 35rem) { .tuning-selector, .tuning-settings { grid-template-columns: minmax(0, 1fr); } .tuning-selector button { grid-column: auto; } }
   @media (max-width: 48rem) {
-    .concept-pair, .concept-board-grid { grid-template-columns: minmax(0, 1fr); }
+    .concept-pair { grid-template-columns: minmax(0, 1fr); }
     .pair { grid-template-columns: minmax(0, 1fr); }
     dl { grid-template-columns: minmax(0, 1fr); gap: 0.1rem; }
     dd { margin-bottom: 0.5rem; }
