@@ -20,6 +20,15 @@ function receipt(arm, options = {}) {
 }
 const complete = () => ARMS.map((arm) => receipt(arm));
 
+test('input guard runs before audit and reports deterministic errors for malformed collections', () => {
+  assert.throws(() => evaluatePrimary(null, []), { name: 'TypeError', message: 'briefs and witnesses must be arrays' });
+  assert.throws(() => evaluatePrimary([], null), { name: 'TypeError', message: 'briefs and witnesses must be arrays' });
+  assert.throws(() => evaluatePrimary([null], []), { name: 'TypeError', message: 'every brief must be an object' });
+  for (const options of [{ rulePlan: null }, { devOnly: 'false' }, { iterations: 0 }, { iterations: 50001 }, { seed: NaN }]) {
+    assert.throws(() => evaluatePrimary([], [], options), { name: 'TypeError', message: 'rulePlan, devOnly, iterations and seed must be valid evaluation options' });
+  }
+});
+
 test('audit sealed manifest preserves primary 50-generate vs four repair secondary and rule denominators', () => {
   const audit = auditPrimaryCoverage(SEALED);
   assert.deepEqual(audit.universe, { sealed_rows: 79, test_rows: 54, primary_briefs: 50, primary_families: 30,
@@ -74,6 +83,20 @@ test('missing or unplanned umbrella, browser artifact, and any declared journey 
   const result = evaluatePrimary([umbrella], complete().map((r) => ({ ...r, rules: { 'accessibility/accessibility': evidence('browser') } })),
     { devOnly: true });
   assert.match(JSON.stringify(result.problems), /UNPLANNED_RULE:accessibility\/accessibility/);
+});
+
+test('zero or malformed declared obligations are NOT_EVALUABLE, never vacuously PASS', () => {
+  for (const field of ['routes', 'journeys', 'assertions', 'required_rules']) {
+    const brief = { ...dev, [field]: [] };
+    const result = evaluatePrimary([brief], complete(), { devOnly: true, rulePlan, iterations: 10 });
+    assert.equal(result.status, 'NOT_EVALUABLE');
+    assert.equal(result.reportable, false);
+    assert.ok(result.problems.some((p) => p.code === 'MALFORMED_BRIEF' && p.fields.includes(field)));
+    assert.equal(result.cells[0].status, 'NOT_EVALUABLE');
+    assert.equal(result.per_family[0].arms[ARMS[0]].pass_rate, null);
+  }
+  const duplicate = evaluatePrimary([{ ...dev, routes: ['/', '/'] }], complete(), { devOnly: true, rulePlan });
+  assert.ok(duplicate.problems.some((p) => p.code === 'MALFORMED_BRIEF' && p.fields.includes('routes')));
 });
 
 test('a measured failure is a failure only when the complete dev fixture evidence set exists', () => {
