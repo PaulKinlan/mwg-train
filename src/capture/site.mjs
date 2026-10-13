@@ -18,7 +18,7 @@ import { dirname, isAbsolute, join } from 'node:path';
 import process from 'node:process';
 
 import { launchChrome } from '../corpus/cdp.mjs';
-import { assertCaptureTarget, installTargetGuard } from './target.mjs';
+import { assertCaptureTarget, captureChromeArgs, hostResolverPin, installTargetGuard } from './target.mjs';
 
 /** A promise that never settles: the race below needs a second arm even when no interception is installed. */
 const NEVER = new Promise(() => {});
@@ -226,6 +226,9 @@ export async function captureSite({
   // explicitly. The harness and the suites pass true because they capture servers they started on loopback
   // (mwg-train-3pqm).
   allowPrivate = false,
+  // How long a navigation may take. A real option rather than a test hook: a slow site wants a longer bound, and a
+  // caller that knows a page will not load wants a shorter one, instead of every capture paying the same 15 seconds.
+  navigationTimeoutMs = 15_000,
   _mutateCapture = null,
   // Test hooks, named as internal for the same reason _mutateCapture is: a suite has to be able to exercise the
   // request interception against a local server and a name of its own choosing (mwg-train-zpjt).
@@ -246,6 +249,9 @@ export async function captureSite({
   // asset is written. A name is resolved here and every answer is checked; the re-checks after each navigation below
   // are what catch a redirect that lands somewhere else (mwg-train-3pqm).
   await assertCaptureTarget(targetUrl, { allowPrivate, lookup: _lookup });
+  // Pin the hostname to the address just validated, so the browser cannot be told a different answer than this
+  // process checked (mwg-train-car1). Computed here and passed at launch because the flag cannot be added later.
+  const pin = allowPrivate ? null : await hostResolverPin(targetUrl, { lookup: _lookup });
   // Refuse an explicit forbidden destination before launching a browser or writing any assets.
   const absoluteOut = outDir && isAbsolute(outDir) ? resolveCaptureOutputPath(outDir, { env }) : null;
   const cleanOut = absoluteOut ? defaultOutDir(targetUrl) : (outDir ? cleanRelativeDir(outDir) : defaultOutDir(targetUrl));
@@ -265,7 +271,7 @@ export async function captureSite({
   let requestEntries = [];
 
   try {
-    chrome = await launchChrome({ args: _chromeArgs });
+    chrome = await launchChrome({ args: captureChromeArgs({ pin, extra: _chromeArgs }) });
     const page = await chrome.newPage({ viewport: { width: 1280, height: 900 } });
 
     // Interception goes on before the first navigation, because a redirect is followed by Chrome itself: checking the
@@ -278,7 +284,7 @@ export async function captureSite({
     // against it: the decision is already made, and waiting 15 seconds to report it is wrong for the gate and for an
     // operator. The navigation promise keeps its rejection handled either way.
     // null means the navigation completed; anything else is a refusal (an object) or a navigation error.
-    const navigation = page.goto(targetUrl, { timeout: 15_000 }).then(() => null, (error) => error);
+    const navigation = page.goto(targetUrl, { timeout: navigationTimeoutMs }).then(() => null, (error) => error);
     const outcome = await Promise.race([navigation, targetGuard?.blockedSignal ?? NEVER]);
     if (outcome !== null) throw targetGuard?.refusal() ?? outcome;
     try {
@@ -358,7 +364,7 @@ export async function captureSite({
       }
       visitedPaths.add(pagePath);
 
-      const pageNavigation = page.goto(pageUrl.href, { timeout: 15_000 }).then(() => null, (error) => error);
+      const pageNavigation = page.goto(pageUrl.href, { timeout: navigationTimeoutMs }).then(() => null, (error) => error);
       const pageOutcome = await Promise.race([pageNavigation, targetGuard?.blockedSignal ?? NEVER]);
       if (pageOutcome !== null) throw targetGuard?.refusal() ?? pageOutcome;
       try {

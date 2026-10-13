@@ -14,15 +14,23 @@
  * redirect to loopback, a private range or a metadata address is refused on the wire and the traffic never leaves
  * this host. The post-navigation checks in src/capture/site.mjs stay as a second, readable line of defence.
  *
- * Two limits are stated rather than hidden:
- *   - A name is resolved here and every answer is checked, but the browser may resolve it again differently. A name
- *     whose answer changes between the two lookups (DNS rebinding) is not caught by the pre-flight check. This is
- *     also why the interceptor treats an UNRESOLVABLE name as permission to continue: the browser's resolver is not
- *     always this process's (a host-resolver-rules flag in tests, a proxy, a hosts file entry), and failing closed on
- *     a name this process cannot resolve would break legitimate pages. Address literals and names that resolve are
- *     judged either way, which is the case that matters here.
+ * How the two halves work together, and where the line is:
+ *   - The host being captured is PINNED: hostResolverPin() resolves it here, checks every answer, and launches the
+ *     browser with --host-resolver-rules so Chrome connects to the address this process validated. The browser's own
+ *     lookup is therefore not in the path for the initial navigation or for any later request to that host, which is
+ *     what closes DNS rebinding, split-horizon DNS and any other resolver divergence (mwg-train-car1). The hostname
+ *     stays in the URL, so TLS still verifies against the name the operator asked for.
+ *   - A different host reached later - a redirect, a subresource - cannot be pinned, because the flag cannot be added
+ *     after the browser starts. Those requests are judged by the interceptor on their URL, which catches a private
+ *     literal and a name that resolves privately here, but NOT a second host that rebinds at connect time. Closing
+ *     that needs destination-IP enforcement at connect time (an intercepting proxy), which is a larger change and is
+ *     named here rather than implied away.
+ *   - An UNRESOLVABLE name is continued rather than failed: the browser's resolver is not always this process's (a
+ *     proxy, a hosts entry, a test's resolver rules), and failing a legitimate subresource breaks the page without
+ *     protecting anything. Address literals and names that DO resolve are judged either way.
  *   - Interception is disabled when the caller passes allowPrivate, because that flag means private destinations are
- *     wanted: the project captures servers it started itself, and every asset those pages load comes from there.
+ *     wanted: the project captures servers it started itself, and every asset those pages load comes from there. No
+ *     pin is computed then either, for the same reason.
  */
 import { lookup as dnsLookup } from 'node:dns/promises';
 
@@ -268,4 +276,73 @@ export async function installTargetGuard(page, { allowPrivate = false, lookup = 
 
   handle.enabled = true;
   return handle;
+}
+
+/**
+ * The address Chrome must use for a validated hostname, as a --host-resolver-rules argument, or null when there is
+ * nothing to pin because the target is already an address literal.
+ *
+ * Validating the URL is not enough on its own: the URL says `http://name/`, and CHROME resolves `name`. A name whose
+ * answer changes between this process's lookup and the browser's - DNS rebinding, split-horizon DNS, a resolver that
+ * disagrees with this host's - makes the browser connect somewhere this process never approved, with a URL that still
+ * looks public to every check that reads it (mwg-train-car1). Pinning the hostname to the address validated here
+ * removes the browser's own lookup from the path: it can no longer be told a different answer.
+ *
+ * The caller must pass this to the browser at launch, because the flag cannot be added afterwards. It covers the
+ * initial navigation and every later request to the SAME host, and - importantly - it keeps the hostname in the URL,
+ * so TLS still verifies the certificate against the name the operator asked for rather than against an IP.
+ *
+ * A redirect or subresource that names a DIFFERENT host is not covered by a launch-time flag; those requests are
+ * judged by the interceptor on their URL, which catches a private literal or a name that resolves privately here but
+ * cannot catch a second host that rebinds. Closing that needs destination-IP enforcement at connect time (an
+ * intercepting proxy), which is a larger change than this one and is recorded as such.
+ */
+export async function hostResolverPin(url, { lookup = dnsLookup } = {}) {
+  const { hostname } = new URL(url);
+  const unbracketed = hostname.replace(/^\[|\]$/g, '');
+  if (ipv4ToInt(unbracketed) !== null || ipv6Groups(unbracketed) || isLocalName(hostname)) return null;
+  let answers;
+  try {
+    answers = await lookup(hostname, { all: true });
+  } catch {
+    return null; // an unresolvable name is refused before launch; there is nothing to pin
+  }
+  const addresses = (Array.isArray(answers) ? answers : [answers]).map((answer) => answer?.address).filter(Boolean);
+  const blocked = addresses.filter((address) => (ipv4ToInt(address) !== null ? isBlockedIpv4(address) : isBlockedIpv6(address)));
+  if (blocked.length > 0) {
+    throw new CaptureTargetError(
+      'PRIVATE_TARGET',
+      `capture target ${hostname} resolves to a non-public address (${blocked.join(', ')}); ` +
+        'capturing loopback, private or link-local destinations requires --allow-private',
+    );
+  }
+  if (addresses.length === 0) return null;
+  // One address is pinned, and it is one this process just validated as public. A name with several public answers
+  // would otherwise let the browser pick another, so the first is chosen deliberately and the others are not offered.
+  return `--host-resolver-rules=${['MAP', hostname, addresses[0]].join(' ')}`;
+}
+
+/**
+ * The browser arguments for a capture: the pin, and any caller-supplied mapping merged into the SAME
+ * --host-resolver-rules flag with the pin's rule first.
+ *
+ * The merging is the point, and it is a measured decision rather than tidiness. Within one flag Chrome applies the
+ * first rule that matches, so pinning `h.test` inside a single flag puts this process's validated address ahead of a
+ * caller's mapping for the same host. Passing them as two separate flags instead leaves the outcome to how Chrome
+ * reconciles a repeated switch, which is not the same rule at all - the first version of this function did that, and
+ * its test caught it: with the pin first and the attacker's mapping second, as two flags, the request still went to
+ * the attacker's address.
+ *
+ * A caller's other flags are appended unchanged, so nothing else about the launch narrows.
+ */
+export function captureChromeArgs({ pin = null, extra = [] } = {}) {
+  const rules = [];
+  if (pin) rules.push(pin.replace(/^--host-resolver-rules=/, ''));
+  const rest = [];
+  for (const arg of extra) {
+    const match = /^--host-resolver-rules=(.*)$/.exec(arg);
+    if (match) rules.push(match[1]);
+    else rest.push(arg);
+  }
+  return [...(rules.length > 0 ? [`--host-resolver-rules=${rules.join(',')}`] : []), ...rest];
 }

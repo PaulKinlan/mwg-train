@@ -23,7 +23,8 @@ import { join, resolve } from 'node:path';
 import process from 'node:process';
 
 import { captureSite } from '../src/capture/site.mjs';
-import { assertCaptureTarget, installTargetGuard, interceptionVerdict } from '../src/capture/target.mjs';
+import { launchChrome } from '../src/corpus/cdp.mjs';
+import { assertCaptureTarget, captureChromeArgs, hostResolverPin, installTargetGuard, interceptionVerdict } from '../src/capture/target.mjs';
 import { validateCapture } from '../src/capture/schema.mjs';
 import { recordFlow } from '../src/capture/flow.mjs';
 import { translateCapture } from '../src/capture/translate.mjs';
@@ -623,8 +624,12 @@ test('a redirect to a private destination is blocked before the browser sends it
   t.after(() => rmSync(root, { recursive: true, force: true }));
   const hits = [];
   const server = http.createServer((request, response) => {
-    hits.push(request.url);
-    if (request.url === '/') {
+    // Absolute-form, because the browser is talking to a proxy: the target URL IS the request URL.
+    const requested = new URL(request.url, 'http://placeholder');
+    // Host and path, because a browser talks to its own services through a configured proxy too (a network-time
+    // query, for instance) and those requests are not this test's business.
+    hits.push({ host: request.headers.host, path: requested.pathname });
+    if (requested.pathname === '/') {
       response.writeHead(302, { location: `http://127.0.0.1:${server.address().port}/private` });
       response.end();
       return;
@@ -638,18 +643,28 @@ test('a redirect to a private destination is blocked before the browser sends it
   // The target must be judged public for the capture to start - that is what the injected resolver states - while
   // the browser is told where the name actually lives. So the page is reachable, the policy is in force, and the
   // redirect is the only thing standing between them.
+  // The initial page is reached through a local proxy rather than by lying about where the name lives, because the
+  // capture now PINS the name to the address this process validated: a resolver mapping would be overridden by that
+  // pin, which is the fix working rather than a test obstacle. The proxy is contacted because it is configured, not
+  // because of the name, so the page is still served while the pinned address stays untouched - and a request to the
+  // redirect target would reach this same server directly, so the measurement below is unchanged.
   const refused = await captureSite({
     url: `http://public.test:${port}/`,
     rightsRef: 'docs/provenance/assets/reproduction-studies.md',
     env: { ...process.env, MWG_TRAIN_QUARANTINE: root },
     outDir: 'redirected-private',
     _lookup: async () => [{ address: '93.184.216.34' }],
-    _chromeArgs: ['--host-resolver-rules=MAP public.test 127.0.0.1'],
+    _chromeArgs: [`--proxy-server=http://127.0.0.1:${port}`],
   }).then(() => null, (error) => error);
 
   assert.equal(refused?.code, 'PRIVATE_TARGET', `the capture must refuse the redirect, got: ${refused?.message}`);
   assert.match(refused.message, /blocked before it was sent/);
-  assert.deepEqual(hits, ['/'], 'the redirected request must never reach the server');
+  assert.deepEqual(
+    hits.filter((hit) => hit.host === `public.test:${port}`).map((hit) => hit.path),
+    ['/'],
+    'exactly the initial page reached the target host, and the redirected request never did',
+  );
+  assert.ok(!hits.some((hit) => hit.path === '/private'), 'no request for the redirect target arrived from anywhere');
   assert.ok(!existsSync(join(root, 'data')), 'nothing may be written for a refused capture');
 });
 
@@ -704,4 +719,76 @@ test("the request interception decides before Chrome sends, and leaves the brows
   assert.deepEqual(await interceptionVerdict('http://169.254.169.254/latest/meta-data/', { lookup: async () => [] }), ['169.254.169.254']);
   assert.deepEqual(await interceptionVerdict('http://10.0.0.9/', { lookup: async () => [] }), ['10.0.0.9']);
   assert.deepEqual(await interceptionVerdict('http://example.com/', { lookup: async () => [{ address: '93.184.216.34' }] }), []);
+});
+
+test('the resolved address is pinned for the browser, ahead of any mapping a caller adds', async () => {
+  // mwg-train-car1. Validating the URL is not enough: the URL names a host and CHROME resolves it, so a name whose
+  // answer differs between this process and the browser reaches somewhere this process never approved. The pin
+  // removes the browser's own lookup from the path; the order matters because the first matching rule wins, which
+  // was measured against two servers on two addresses rather than assumed.
+  const lookup = async () => [{ address: '93.184.216.34' }, { address: '93.184.216.35' }];
+  assert.equal(await hostResolverPin('http://example.com/x', { lookup }), '--host-resolver-rules=MAP example.com 93.184.216.34');
+  // Nothing to pin for an address literal or a local name: the interceptor judges those directly.
+  assert.equal(await hostResolverPin('http://127.0.0.1:3000/', { lookup }), null);
+  assert.equal(await hostResolverPin('http://[::1]:3000/', { lookup }), null);
+  assert.equal(await hostResolverPin('http://localhost:3000/', { lookup }), null);
+  // A name that resolves privately is refused rather than pinned, and one that resolves nowhere is not pinned either.
+  await assert.rejects(
+    () => hostResolverPin('http://name.test/', { lookup: async () => [{ address: '10.0.0.5' }] }),
+    (error) => error.code === 'PRIVATE_TARGET',
+  );
+  assert.equal(await hostResolverPin('http://name.test/', { lookup: async () => { throw new Error('ENOTFOUND'); } }), null);
+  // A caller-supplied mapping for the same host is merged into ONE flag with the pin's rule first, because that is
+  // the ordering Chrome actually arbitrates by: within one flag the first matching rule wins. Two separate flags
+  // would leave it to how a repeated switch is reconciled, which is a different question with a different answer.
+  assert.deepEqual(captureChromeArgs({ pin: '--host-resolver-rules=MAP h.test 1.2.3.4', extra: ['--host-resolver-rules=MAP h.test 127.0.0.1'] }), [
+    '--host-resolver-rules=MAP h.test 1.2.3.4,MAP h.test 127.0.0.1',
+  ]);
+  assert.deepEqual(captureChromeArgs({ pin: '--host-resolver-rules=MAP h.test 1.2.3.4', extra: ['--no-sandbox', '--host-resolver-rules=MAP other.test 127.0.0.1'] }), [
+    '--host-resolver-rules=MAP h.test 1.2.3.4,MAP other.test 127.0.0.1',
+    '--no-sandbox',
+  ]);
+  assert.deepEqual(captureChromeArgs({ pin: null, extra: ['--x'] }), ['--x']);
+});
+
+test('a rebinding name never reaches loopback, and the capture itself refuses to reach it', async (t) => {
+  // mwg-train-car1's scenario driven through captureSite rather than through launchChrome, because the wiring is a
+  // property of the capture: the first version of this test launched the browser itself, so deleting the pin from
+  // site.mjs left it passing - it was measuring Chrome's rule precedence while claiming to measure the capture.
+  //
+  // The name is classified public (255.255.255.255 is outside every blocked range) while the hostile mapping sends it
+  // to a local server. Two things have to hold: the browser must use the address this process validated, and the
+  // local server must never be contacted. Deleting the pin makes Chrome obey the hostile mapping instead, the
+  // server records a hit and the capture SUCCEEDS against the local page - which is how this test fails without the
+  // fix, and why it is worth its browser launch.
+  const root = mkdtempSync(join(tmpdir(), 'capture-rebind-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  let loopbackHits = 0;
+  const loopback = http.createServer((_request, response) => {
+    loopbackHits += 1;
+    response.end('<html><body>rebound</body></html>');
+  });
+  await new Promise((resolveListen) => loopback.listen(0, '127.0.0.1', resolveListen));
+  t.after(() => loopback.close());
+  const port = loopback.address().port;
+  const validated = '255.255.255.255'; // public by the range rules, and unroutable, so a pin to it fails rather than connects
+
+  const outcome = await captureSite({
+    url: `http://rebind.test:${port}/`,
+    rightsRef: 'docs/provenance/assets/reproduction-studies.md',
+    env: { ...process.env, MWG_TRAIN_QUARANTINE: root },
+    outDir: 'rebinding-name',
+    // The pin sends the browser to an unroutable address, so the navigation is bounded rather than left to hang: the
+    // refusal is the property under test, not how long Chrome takes to give up on an address it cannot reach.
+    navigationTimeoutMs: 1_500,
+    _lookup: async () => [{ address: validated }],
+    _chromeArgs: ['--host-resolver-rules=MAP rebind.test 127.0.0.1'],
+  }).then(() => null, (error) => error);
+
+  assert.ok(outcome instanceof Error, `the capture must not reach the rebound page, got: ${JSON.stringify(outcome)}`);
+  assert.equal(loopbackHits, 0, 'the pinned address must be used, so the rebound server is never contacted');
+  // The pin is what refused this, not the interceptor: the interceptor judged the URL public and let it through, so a
+  // /blocked before it was sent/ message here would mean the wrong layer is being credited.
+  assert.doesNotMatch(String(outcome.message), /blocked before it was sent/);
+  assert.ok(!existsSync(join(root, 'data')), 'nothing may be written for a capture that never reached its page');
 });
