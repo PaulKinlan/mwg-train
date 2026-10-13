@@ -18,6 +18,18 @@ EXPECTED = {
 }
 
 
+def validate_pairs(pairs):
+    if not isinstance(pairs, list) or not pairs or len(pairs) > 3000000:
+        raise ValueError('expected nonempty array of at most 3 million message pairs')
+    for messages in pairs:
+        if (not isinstance(messages, list) or len(messages) != 2 or
+            any(not isinstance(m, dict) or set(m) != {'role', 'content'} for m in messages) or
+            [m['role'] for m in messages] != ['user', 'assistant'] or
+            any(not isinstance(m['content'], str) for m in messages)):
+            raise ValueError('each pair needs only role/content: user string and assistant string, without reasoning_content')
+    return pairs
+
+
 def main():
     if len(sys.argv) != 2:
         raise ValueError('usage: count-deepseek-sft.py <directory containing pinned tokenizer files>')
@@ -26,6 +38,7 @@ def main():
         actual = hashlib.sha256((directory / filename).read_bytes()).hexdigest()
         if actual != digest:
             raise ValueError(f'PINNED_TOKENIZER_MISMATCH: {filename} at HF {REVISION}: {actual}')
+    pairs = validate_pairs(json.load(sys.stdin))
     import transformers
     if transformers.__version__ != '4.57.6':
         raise ValueError(f'TRANSFORMERS_VERSION: need 4.57.6, got {transformers.__version__}')
@@ -34,15 +47,8 @@ def main():
         tokenizer_file=str(directory / 'tokenizer.json'),
         chat_template=(directory / 'chat_template.jinja').read_text(encoding='utf8'),
     )
-    pairs = json.load(sys.stdin)
-    if not isinstance(pairs, list) or not pairs or len(pairs) > 3000000:
-        raise ValueError('expected nonempty array of at most 3 million message pairs')
     result = []
     for messages in pairs:
-        if (not isinstance(messages, list) or len(messages) != 2 or
-            [m.get('role') for m in messages if isinstance(m, dict)] != ['user', 'assistant'] or
-            any(not isinstance(m.get('content'), str) for m in messages)):
-            raise ValueError('each pair needs a user string and assistant string, without reasoning_content')
         options = dict(thinking_mode='thinking', reasoning_effort='high')
         prompt = tokenizer.apply_chat_template(messages[:1], tokenize=True, add_generation_prompt=True, **options)
         full = tokenizer.apply_chat_template(messages, tokenize=True, **options)
