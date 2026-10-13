@@ -64,11 +64,15 @@ function expectedRanges() {
   return difference(union(withUnasserted, ranges(NON_REGISTRY_BLOCKS)), ranges(UNASSERTED.filter((item) => !item.blocked).map((item) => item.prefix)));
 }
 
+// This test proves exact equality for the EXPORTED INTERVAL SET, not for every input to the independently coded
+// connection-time predicates. The predicate boundary and payload tests below catch transcription drift at those
+// points, but cannot prove there is no arbitrary interior exception in isBlockedIpv4/isBlockedIpv6. Deriving both
+// the predicates and blockedRanges() from one representation would be needed to make that stronger claim.
 const actual = blockedRanges();
 const expected = expectedRanges();
 const forFamily = (set, family) => set.filter((range) => range.family === FAMILY[family]);
 
-test('both registry families agree with the blocked interval set, including every address inside each prefix', () => {
+test('the exported blocked interval set agrees exactly with both registries plus named exceptions', () => {
   assert.equal(indexed.filter((row) => row.family === 'ipv4' && row.global !== '').length, 24);
   assert.equal(indexed.filter((row) => row.family === 'ipv6' && ['True', 'False'].includes(row.global)).length, 22);
   for (const family of ['ipv4', 'ipv6']) {
