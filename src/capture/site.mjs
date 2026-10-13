@@ -19,6 +19,9 @@ import process from 'node:process';
 
 import { launchChrome } from '../corpus/cdp.mjs';
 import { assertCaptureTarget, installTargetGuard } from './target.mjs';
+
+/** A promise that never settles: the race below needs a second arm even when no interception is installed. */
+const NEVER = new Promise(() => {});
 import { assetStoragePath } from '../provenance/store.mjs';
 import { validateCapture, CAPTURE_VERSION, resolveCaptureOutputPath } from './schema.mjs';
 
@@ -271,11 +274,16 @@ export async function captureSite({
     targetGuard = await installTargetGuard(page, { allowPrivate, lookup: _lookup });
 
     // 1. Navigate to initial page and wait for settling
+    // A refused request leaves the navigation hanging until the browser's own timeout, so the refusal is raced
+    // against it: the decision is already made, and waiting 15 seconds to report it is wrong for the gate and for an
+    // operator. The navigation promise keeps its rejection handled either way.
+    // null means the navigation completed; anything else is a refusal (an object) or a navigation error.
+    const navigation = page.goto(targetUrl, { timeout: 15_000 }).then(() => null, (error) => error);
+    const outcome = await Promise.race([navigation, targetGuard?.blockedSignal ?? NEVER]);
+    if (outcome !== null) throw targetGuard?.refusal() ?? outcome;
     try {
-      await page.goto(targetUrl, { timeout: 15_000 });
       await page.waitForSettled({ timeout: 10_000 });
     } catch (error) {
-      // A refused request can surface as a navigation failure; the refusal is the truer message, so it wins.
       throw targetGuard?.refusal() ?? error;
     }
     finalUrl = await page.url();
@@ -350,8 +358,14 @@ export async function captureSite({
       }
       visitedPaths.add(pagePath);
 
-      await page.goto(pageUrl.href, { timeout: 15_000 });
-      await page.waitForSettled({ timeout: 10_000 });
+      const pageNavigation = page.goto(pageUrl.href, { timeout: 15_000 }).then(() => null, (error) => error);
+      const pageOutcome = await Promise.race([pageNavigation, targetGuard?.blockedSignal ?? NEVER]);
+      if (pageOutcome !== null) throw targetGuard?.refusal() ?? pageOutcome;
+      try {
+        await page.waitForSettled({ timeout: 10_000 });
+      } catch (error) {
+        throw targetGuard?.refusal() ?? error;
+      }
       const refused = targetGuard?.refusal();
       if (refused) throw refused;
       await assertCaptureTarget(await page.url(), { allowPrivate, lookup: _lookup });

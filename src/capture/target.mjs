@@ -206,12 +206,20 @@ export async function interceptionVerdict(url, { lookup = dnsLookup } = {}) {
  */
 export async function installTargetGuard(page, { allowPrivate = false, lookup = dnsLookup, onBlocked = null } = {}) {
   const blocked = [];
+  // Resolved by the first refusal, so a caller waiting on a navigation does not have to wait for the browser's own
+  // timeout to learn that the request was refused: a blocked redirect leaves the navigation hanging, and 15 seconds
+  // of a gate (and of an operator's patience) is a long time to spend on a decision already made (mwg-train-zpjt).
+  let signalBlocked;
+  const blockedSignal = new Promise((resolve) => {
+    signalBlocked = resolve;
+  });
   // One handle shape whatever the policy: a caller must not have to know whether interception was installed to ask
   // whether anything was refused (the first version returned a different shape here, and the capture path called
   // refusal() on it).
   const handle = {
     blocked,
     enabled: false,
+    blockedSignal,
     refusal() {
       if (blocked.length === 0) return null;
       const first = blocked[0];
@@ -236,6 +244,7 @@ export async function installTargetGuard(page, { allowPrivate = false, lookup = 
     const addresses = await interceptionVerdict(request?.url ?? '', { lookup });
     if (addresses.length > 0) {
       blocked.push({ url: request.url, addresses });
+      signalBlocked({ url: request.url, addresses });
       if (onBlocked) onBlocked({ url: request.url, addresses });
       await page.send('Fetch.failRequest', { requestId, errorReason: 'AccessDenied' });
       return;
