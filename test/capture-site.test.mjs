@@ -540,10 +540,13 @@ test('CLI: a URL carrying a credential is redacted in what the CLI prints', asyn
   assert.equal(success.code, 0, `CLI failed with stderr: ${success.stderr}`);
   assert.ok(!success.stdout.includes('SUPERSECRET'), `stdout leaked the token: ${success.stdout}`);
   assert.ok(!success.stderr.includes('SUPERSECRET'), `stderr leaked the token: ${success.stderr}`);
-  // Redacted, not dropped: a reader still sees which parameter was there, and the ordinary one is untouched.
+  // Redacted, not dropped: a reader still sees WHICH parameters were there, and no value survives - including the
+  // ordinary one, because a rule that redacts only recognised names misses apiKey, accessToken and every other
+  // spelling (mwg-train-34ms).
   assert.match(success.stdout, /token=REDACTED/);
-  assert.match(success.stdout, /q=shoes/);
-  assert.match(success.stdout, new RegExp(`Successfully captured http://127\\.0\\.0\\.1:\\d+/\\?token=REDACTED`));
+  assert.match(success.stdout, /q=REDACTED/);
+  assert.doesNotMatch(success.stdout, /q=shoes/);
+  assert.match(success.stdout, new RegExp(`Successfully captured http://127\\.0\\.0\\.1:\\d+/\\?token=REDACTED&q=REDACTED`));
 
   // The rejected-input path echoes what the operator typed, which is exactly the URL that can carry credentials.
   const rejected = await runCli(['--url', 'http://user:hunter2@example.com/a b', '--rights-ref', 'docs/ref.md']);
