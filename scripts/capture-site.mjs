@@ -3,7 +3,11 @@
  * CLI for capturing a third-party site into quarantine arm A5_black_box_reproduction.
  *
  * Usage:
- *   node scripts/capture-site.mjs --url <url> --rights-ref <ref> [--pages /a,/b] [--out <dir>]
+ *   node scripts/capture-site.mjs --url <url> --rights-ref <ref> [--pages /a,/b] [--out <dir>] [--allow-private]
+ *
+ * Without --allow-private the capture refuses a destination that resolves to loopback, a private range, a link-local
+ * or metadata address, or a name this host cannot resolve: the URL is resolved here and the browser is sent through a
+ * local proxy that connects to the address that was checked, so a redirect or a subresource cannot reach one either.
  */
 
 import process from 'node:process';
@@ -15,6 +19,7 @@ function parseArgs(argv) {
     rightsRef: null,
     pages: null,
     out: null,
+    allowPrivate: false,
   };
 
   for (let i = 0; i < argv.length; i++) {
@@ -35,6 +40,10 @@ function parseArgs(argv) {
       options.out = argv[++i];
     } else if (arg.startsWith('--out=')) {
       options.out = arg.slice('--out='.length);
+    } else if (arg === '--allow-private') {
+      // Explicit, because it turns the destination policy off: used for capturing servers this project started
+      // itself, never for a URL that arrived from outside (mwg-train-ypgu).
+      options.allowPrivate = true;
     }
   }
 
@@ -60,6 +69,7 @@ try {
     rightsRef: args.rightsRef,
     outDir: args.out,
     pages,
+    allowPrivate: args.allowPrivate,
     env: process.env,
   });
 
