@@ -43,3 +43,6 @@ pilot/out/
 # asserts zero collisions against the pilot corpus, so the trees do not need to be tracked to be
 # verifiable - and 1,320 generated files in every clone forever is a poor trade for that.
 pilot/training-projects/
+
+# Serializer outputs are review artifacts, not automatically approved/licensed training inputs.
+.sft-output/
