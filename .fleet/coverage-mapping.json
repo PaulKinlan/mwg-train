@@ -210,6 +210,7 @@
     "test/known-sinks.test.mjs"
   ],
   "src/viewer/server.mjs": [
+    "test/viewer-board-asset.test.mjs",
     "test/viewer-live-index.test.mjs",
     "test/viewer-auth.test.mjs",
     "test/viewer-concepts.test.mjs",
