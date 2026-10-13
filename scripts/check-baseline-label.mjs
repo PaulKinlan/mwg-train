@@ -292,6 +292,12 @@ export const DOCUMENTS = {
   // Neither states a measured result of the corpus.
   'docs/design/archetypes/web-shop/README.md': 'provenance',
   'docs/provenance/assets/design-reference-web-shop.md': 'provenance',
+  // The survey-form validation-refusal board (bead mwg-train-z5q7), same shape and the same reasoning as
+  // the job-board and web-shop blocks above: the README records borrowed reference material and its
+  // rights, and the register pins board bytes and the prompt digest. Neither states a measured result of
+  // the corpus.
+  'docs/design/archetypes/survey-form/README.md': 'provenance',
+  'docs/provenance/assets/design-reference-survey-form.md': 'provenance',
   // The third archetype outside the five evaluation families (bead mwg-train-efg), same shapes and the same
   // reasoning again: a board brief, two contract documents, and a digest register, none of which states a
   // measured result of the corpus.

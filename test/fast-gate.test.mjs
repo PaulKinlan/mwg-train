@@ -152,10 +152,62 @@ test('the committed coverage mapping stays truthful: every mapped key and suite 
   // file is caught here, at the moment of the edit, not after a future branch trips over it.
   const mapping = JSON.parse(fs.readFileSync(path.join(ROOT, '.fleet', 'coverage-mapping.json'), 'utf8'));
   for (const [file, suites] of Object.entries(mapping)) {
-    assert.ok(fs.existsSync(path.join(ROOT, file)), `mapping key ${file} does not exist on disk`);
+    // A key carrying glob metacharacters is a PATTERN the oracle and this gate both match, not a file on
+    // disk; the gate's loader exempts them for the same reason, and it must stay exempt here or a shared
+    // pattern entry could never be committed.
+    if (!/[*?[]/.test(file)) {
+      assert.ok(fs.existsSync(path.join(ROOT, file)), `mapping key ${file} does not exist on disk`);
+    }
     assert.ok(Array.isArray(suites) && suites.length > 0, `mapping entry for ${file} must be a non-empty array`);
     for (const suite of suites) {
       assert.ok(fs.existsSync(path.join(ROOT, suite)), `mapping for ${file} names missing suite ${suite}`);
     }
   }
+});
+
+// A pattern entry in the shared contract must select the same suites in this gate as it does in the
+// oracle. It silently selected nothing before, and because pattern keys are exempt from the on-disk key
+// check the drift could not be seen: adding an archetype README changed the board generator's discovery
+// input while its gate ran only the routed checks.
+test('a glob entry in the coverage contract selects suites for a matching changed file', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'mwg-fast-gate-glob-'));
+  try {
+    const mapPath = path.join(tmp, 'coverage-mapping.json');
+    fs.writeFileSync(mapPath, JSON.stringify({ 'docs/design/archetypes/*/README.md': ['test/archetype-boards-generator.test.mjs'] }));
+    const env = { ...process.env, GIT_CHANGED: 'docs/design/archetypes/booking/README.md', FAST_GATE_LIST: '1', FAST_GATE_COVERAGE_MAP: mapPath };
+    const res = spawnSync('node', [FAST_GATE], { cwd: ROOT, env, encoding: 'utf8' });
+    assert.strictEqual(res.status, 0, res.stderr);
+    assert.match(res.stdout, /suites=\[test\/archetype-boards-generator\.test\.mjs\]/, `the pattern must select its suite: ${res.stdout}`);
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
+// The regression that motivated the pattern work: a ROUTED document (markdown is routed to its checks)
+// used to `continue` before the coverage contract was consulted, so a mapped document never ran its
+// suites. This uses the committed contract, so it also guards that the archetype-README entry is real.
+test('a routed document still runs the suites the contract maps to it', () => {
+  const env = { ...process.env, GIT_CHANGED: 'docs/design/archetypes/booking/README.md', FAST_GATE_LIST: '1' };
+  const res = spawnSync('node', [FAST_GATE], { cwd: ROOT, env, encoding: 'utf8' });
+  assert.strictEqual(res.status, 0, res.stderr);
+  assert.ok(res.stdout.includes('test/archetype-boards-generator.test.mjs'), `a mapped document must select its suite: ${res.stdout}`);
+  assert.ok(res.stdout.includes('check:baseline-label'), `and keep its routed check: ${res.stdout}`);
+});
+
+test('an unmapped routed document is still not an unmapped-file failure', () => {
+  // The short-circuit was load-bearing for documents nothing maps: they must still pass.
+  const env = { ...process.env, GIT_CHANGED: 'docs/provenance/accounts/google-antigravity-consumer.md', FAST_GATE_LIST: '1' };
+  const res = spawnSync('node', [FAST_GATE], { cwd: ROOT, env, encoding: 'utf8' });
+  assert.strictEqual(res.status, 0, `an unmapped routed document must not fail the gate: ${res.stderr}`);
+});
+
+// A reference board used to select nothing at all: the frames rule (the repo's fails-closed framing
+// check) and the caption contract are both about these files, and neither ran for a board change.
+test('a reference board change runs the framing and caption checks', () => {
+  const env = { ...process.env, GIT_CHANGED: 'docs/design/archetypes/booking/step1-browse.jpg', FAST_GATE_LIST: '1' };
+  const res = spawnSync('node', [FAST_GATE], { cwd: ROOT, env, encoding: 'utf8' });
+  assert.strictEqual(res.status, 0, res.stderr);
+  assert.ok(res.stdout.includes('check:archetype-frames'), `framing must run for a board: ${res.stdout}`);
+  assert.ok(res.stdout.includes('check:board-captions'), `captions must run for a board: ${res.stdout}`);
+  assert.ok(res.stdout.includes('test/board-states.test.mjs'), `classification must run for a board: ${res.stdout}`);
 });

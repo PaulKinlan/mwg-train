@@ -174,7 +174,37 @@ if (fs.existsSync(coverageMappingPath)) {
       }
     }
   }
+
+
 }
+
+// PATTERN support, so the two consumers of this contract agree. The oracle matches with Python's
+// fnmatch; this gate matched exact keys only, so a shared glob entry was embraced by the oracle and
+// silently selected nothing here - and because a pattern key is exempt from the on-disk check, that
+// drift was invisible (a new archetype README changed the generator suite's discovery input while its
+// gate ran only the board suites: mwg-train-*). Translation mirrors fnmatch: `*` matches any run
+// (including `/`), `?` one character, `[seq]`/`[!seq]` a character class.
+const globToRegExp = (pattern) => {
+  let out = '';
+  for (let i = 0; i < pattern.length; i += 1) {
+    const ch = pattern[i];
+    if (ch === '*') out += '.*';
+    else if (ch === '?') out += '.';
+    else if (ch === '[') {
+      const end = pattern.indexOf(']', i + 1);
+      if (end === -1) out += '\\[';
+      else {
+        const body = pattern.slice(i + 1, end);
+        out += `[${body.startsWith('!') ? `^${body.slice(1)}` : body}]`;
+        i = end;
+      }
+    } else out += ch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+  return new RegExp(`^${out}$`);
+};
+const coveragePatterns = Object.entries(coverageMapping)
+  .filter(([key]) => /[*?[]/.test(key))
+  .map(([pattern, suites]) => [pattern, globToRegExp(pattern), suites]);
 
 // Explicit script mapping for check scripts that don't have direct unit tests
 const checkScriptMap = {
@@ -238,6 +268,14 @@ function routeDocument(file) {
     selectedChecks.add('check:archetype-assets');
     return true;
   }
+  if (file.startsWith('docs/design/archetypes/') && /\/step[^/]*\.(jpg|jpeg|png)$/.test(file)) {
+    // A reference board is the subject of BOTH contracts: the framing rule that fails closed, and the
+    // caption contract that pins every displayed board by SHA-256. Adding or replacing a board used to
+    // select nothing at all, so a framed board could land with the smoke suite as its only gate.
+    selectedChecks.add('check:archetype-frames');
+    selectedChecks.add('check:board-captions');
+    return true;
+  }
   if (file.endsWith('.md')) {
     // Any markdown doc change must pass link and baseline label checks
     selectedChecks.add('check:doc-links');
@@ -271,10 +309,12 @@ for (const file of changedFiles) {
     continue;
   }
 
-  // Route checked documentation or schema files
-  if (routeDocument(file)) {
-    continue;
-  }
+  // Route checked documentation or schema files. Routing no longer SKIPS the shared coverage contract:
+  // a document can be the discovery input of a test suite - an archetype README is what the board
+  // generator's `discoverFamilies()` reads, so adding one changes that suite's input while its gate ran
+  // only the routed checks (the failure this switch fixes). The route is remembered and consulted at the
+  // bottom of the loop, so an unmapped routed document still `continue`s exactly as before.
+  const routedDocument = routeDocument(file);
 
   // Package.json changes affect package wiring and checks
   if (file === 'package.json') {
@@ -326,7 +366,16 @@ for (const file of changedFiles) {
     matched = true;
   }
 
-  if (matched || checkScriptMap[file]) {
+  // Shared-contract glob entries (e.g. one pattern covering every archetype README), matched the same
+  // way the oracle's fnmatch does. Exact keys are consulted first so a specific override still wins.
+  for (const [, pattern, suites] of coveragePatterns) {
+    if (pattern.test(file)) {
+      for (const suite of suites) selectedSuites.add(suite);
+      matched = true;
+    }
+  }
+
+  if (routedDocument || matched || checkScriptMap[file]) {
     continue;
   }
 

@@ -42,5 +42,16 @@
   ],
   "scripts/check-cross-arm-parity.mjs": [
     "test/cross-arm-parity.test.mjs"
+  ],
+  "docs/design/archetypes/*/README.md": [
+    "test/archetype-boards-generator.test.mjs",
+    "test/board-states.test.mjs",
+    "test/baseline-label.test.mjs"
+  ],
+  "docs/design/archetypes/*/step*.jpg": [
+    "test/board-captions.test.mjs",
+    "test/board-states.test.mjs",
+    "test/archetype-boards-generator.test.mjs",
+    "test/design-reference-wave2.test.mjs"
   ]
 }
