@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { Readable } from 'node:stream';
 import { generateProject, buildGenerationPrompt, parseProjectFiles, streamCompletion } from '../src/eval/generator.mjs';
 import { GENERATION_BEAD, verifyGenerationApproval, worstCaseGenerationUsd, reserveGeneration, settleGeneration } from '../src/eval/spend-ledger.mjs';
-import { decodeConfig } from '../src/eval/decode-config.mjs';
+import { decodeConfig, pinnedEvaluationBuildKey } from '../src/eval/decode-config.mjs';
 
 const REVISION = '2cba9e42aa026125f3ed06c6d98c1db82f7ca027';
 const MODEL = decodeConfig.build_model;
@@ -30,7 +30,8 @@ test('offline stub writes inert files and a complete build-keyed run record; res
     const marker = join(dir, 'postinstall-was-executed');
     const first = await generateProject(options(dir, { canned: canned(project(marker)), chromeVersion: 'UNVERIFIED' }));
     assert.equal(first.status, 'SUCCESS');
-    assert.match(first.build_key, /tr-01-hono@fireworks\/deepseek-v4p1-flash@decode-sha256:[a-f0-9]{64}/);
+    assert.equal(first.build_key, pinnedEvaluationBuildKey({ projectId: 'tr-01-hono' }),
+      'transport streaming must not change the evaluator-pinned decode identity');
     assert.equal(first.content_tokens, 32);
     assert.equal(first.reasoning_tokens, 10);
     assert.equal(first.finish_reason, 'stop');
@@ -132,7 +133,10 @@ test('authorisation requires signed verbatim owner cap, exact model, scope, expi
   assert.throws(() => verifyGenerationApproval([comment], { key: 'test-only', model: 'fireworks/deepseek-v4-flash', now: TEST_NOW }), /NO_OWNER_AUTH/);
   assert.throws(() => verifyGenerationApproval([signedComment({ expiry: '2020-01-01T00:00:00Z' })], { key: 'test-only', model: MODEL, now: TEST_NOW }), /NO_OWNER_AUTH/);
   assert.throws(() => verifyGenerationApproval([signedComment({ host: 'another-vm' })], { key: 'test-only', model: MODEL, now: TEST_NOW }), /NO_OWNER_AUTH/);
-  assert.throws(() => verifyGenerationApproval([comment, { issue_id: GENERATION_BEAD, author: 'fleet-manager-coord', text: 'OWNER-AUTHORIZATION-REVOKED\nPaul revoked generation' }], { key: 'test-only', model: MODEL, now: TEST_NOW }), /revoked/);
+  for (const text of ['OWNER-AUTHORIZATION-REVOKED', ' OWNER-AUTHORIZATION-REVOKED ', 'OWNER-AUTHORIZATION-REVOKED\nPaul revoked generation']) {
+    assert.throws(() => verifyGenerationApproval([comment, { issue_id: GENERATION_BEAD, author: 'fleet-manager-coord', text }],
+      { key: 'test-only', model: MODEL, now: TEST_NOW }), /revoked/);
+  }
 });
 
 test('a cited exact-SKU rate and bounded prompt/output are mandatory; a training quote or -0731 rate cannot pass', () => {
@@ -149,6 +153,9 @@ test('durable reservations count against the cap, are never refunded by unknown 
   try {
     const ledgerPath = join(dir, 'private', 'ledger.jsonl');
     const approval = verifyGenerationApproval([signedComment()], { key: 'test-only', model: MODEL, now: TEST_NOW });
+    assert.throws(() => reserveGeneration({ ledgerPath, approval: { ...approval, capUsd: 1_000_000 },
+      chargeBoundUsd: 6, requestId: 'forged', model: MODEL }), /missing scope, approval or charge bound/);
+    assert.equal(existsSync(ledgerPath), false, 'forged object did not create a ledger');
     reserveGeneration({ ledgerPath, approval, chargeBoundUsd: 6, requestId: 'one', model: MODEL });
     settleGeneration({ ledgerPath, requestId: 'one', model: MODEL, status: 'unknown' });
     assert.throws(() => reserveGeneration({ ledgerPath, approval, chargeBoundUsd: 6, requestId: 'two', model: MODEL }), /cap exhausted/);
