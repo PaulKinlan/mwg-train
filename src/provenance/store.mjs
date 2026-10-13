@@ -5,9 +5,11 @@
  *   - corpus tooling writes quarantined-arm material to the quarantine tree BY DEFAULT; the
  *     public tree receives it only through the explicit promote step (scripts/promote.mjs);
  *   - the store is a separate PRIVATE companion repo (the journal/journal-data pattern). Working
- *     checkouts are SIBLINGS of this repo; the public repo pins the store's commit at quarantine/
- *     as a provenance pointer only - it is never a working location (this module refuses a store
- *     inside the public tree), and no public build, deploy or CI path fetches it;
+ *     checkouts are SIBLINGS of this repo and never a location inside it (this module refuses a
+ *     store inside the public tree). The public repo carries NO submodule and NO commit pin: an
+ *     internal pointer was built and then removed as invalid (mwg-train-291 built it, 24df971
+ *     removed it), because a gitlink plus an internal URL publishes a reference to the private
+ *     store that no plain clone can fetch (mwg-train-xztp);
  *   - the store is a PUBLICATION boundary, not a training-permission boundary: rights sign-off is
  *     the provenance layer's job (src/provenance/arms.mjs), this layer's job is that unpublished
  *     material is simply not in the public tree.
