@@ -1020,3 +1020,47 @@ test('an archetype resolves from either registry, and an unknown one names both'
   assert.notEqual(resolveArchetype('booking').title, 'House-call service visit booking');
   assert.throws(() => resolveArchetype('not-an-archetype'), /unknown archetype not-an-archetype; known: .*booking.*web-shop/);
 });
+
+test('a driven board is matched by its drive, not by the path its drive starts on', () => {
+  // mwg-train-mr6t. A refusal board has no path, and the capture that reaches it starts at a path a plain board
+  // may also own. Matching by path alone therefore pairs each state with the other state's board - the refusal
+  // compared against the clean form's board, and the clean form against the refusal's - which is a wrong answer
+  // reported with full confidence. The drive key is the board's own name, so the two cannot be confused.
+  const analysis = { width: 390, height: 844, luminance: { mean: 1, p10: 1, p50: 1, p90: 1 }, ink: 0, colours: [], rowLuminance: [], bandLuminance: [] };
+  const boardMetrics = [
+    { name: 'step1-form.jpg', file: 'step1-form.jpg', metrics: analysis },
+    { name: 'step3-refusal.jpg', file: 'step3-refusal.jpg', metrics: analysis },
+  ];
+  const archetypeStates = {
+    'step1-form.jpg': { path: '/request', kind: 'page', source: 'x' },
+    'step3-refusal.jpg': { path: null, kind: 'interaction', source: 'x', drive: { startPath: '/request', submit: 'form#f' } },
+  };
+
+  const plain = { arm: 'raw', viewport: '390x844', statePath: '/request', path: 'clean.png', analysis };
+  const plainResult = compareOne({ screenshot: plain, boardMetrics, archetypeStates });
+  assert.notEqual(plainResult, null);
+  assert.equal(plainResult.closest_board, 'step1-form.jpg', 'the undriven capture must be compared against the page board');
+
+  const driven = { ...plain, path: 'driven.png', driveKey: 'step3-refusal.jpg', drive: true };
+  const drivenResult = compareOne({ screenshot: driven, boardMetrics, archetypeStates });
+  assert.notEqual(drivenResult, null);
+  assert.equal(drivenResult.closest_board, 'step3-refusal.jpg', 'the driven capture must be compared against the refusal board');
+
+  // A driven capture whose analysis failed is a state that was NOT measured, and it must say so against the board
+  // it was meant to be - not silently disappear from the comparison.
+  const failedDrive = { ...driven, path: null, analysis: { error: 'captureSignature: the drive did not reach the expected state' } };
+  const failedResult = compareOne({ screenshot: failedDrive, boardMetrics, archetypeStates });
+  assert.notEqual(failedResult, null, 'a failed drive must still reach the comparison as an unmeasured state');
+  // The failure path reports the error and the finding, not a closest board - like the 404 case above, which is
+  // the same shape: nothing was measured, so naming a closest board would be inventing one.
+  assert.ok(failedResult.error.includes('did not reach the expected state'));
+  assert.equal(failedResult.closest_findings.length, 1);
+  assert.equal(failedResult.closest_findings[0].code, 'STATE_UNMEASURED');
+  assert.ok(failedResult.closest_findings[0].board.includes('step3-refusal.jpg'), 'the unmeasured state must name the board it was meant to be');
+  assert.ok(failedResult.closest_findings[0].message.includes('did not reach the expected state'));
+
+  // And a driven board is never eligible for a plain capture even when the paths coincide, which is the exact
+  // pairing mistake above.
+  const nullOnly = { 'step3-refusal.jpg': archetypeStates['step3-refusal.jpg'] };
+  assert.equal(compareOne({ screenshot: plain, boardMetrics, archetypeStates: nullOnly }), null, 'a driven board claimed a plain capture');
+});

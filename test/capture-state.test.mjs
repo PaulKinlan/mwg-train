@@ -16,7 +16,7 @@
  */
 import { after, test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
@@ -77,6 +77,12 @@ const pages = {
   // The pseudo-level version of the visibility:hidden override, verified by reading a screenshot of it: the
   // element is hidden, its ::before sets visibility:visible, and the glyph IS painted - so the page is not empty.
   '/pseudo-override': '<style>.g::before{content:"Generated label";visibility:visible}</style><p class="g" style="visibility:hidden"></p>',
+  // mwg-train-mr6t. The refusal state a DRIVE has to reach: nothing about the served document distinguishes it
+  // from the clean form - the page only shows the error after an empty submission - which is exactly why a path
+  // cannot select it and the drive exists. The form is served with the error only when the submission is a GET
+  // without the field, so the state is produced by acting, not by asking for a URL.
+  '/refusal-form': '<form id="reserve" action="/refusal-form" method="get"><label for="r">Researcher name</label><input id="r" name="researcher"><button type="submit">Request reservation</button></form>'
+    + '<script>document.getElementById("reserve").addEventListener("submit", (e) => { e.preventDefault(); const v = document.getElementById("r").value; document.getElementById("banner")?.remove(); const p = document.createElement("p"); p.id = "banner"; p.setAttribute("role", "alert"); p.textContent = v ? "Reservation submitted for " + v : "Your reservation could not be submitted"; document.body.appendChild(p); });</script>',
 };
 createServer((req, res) => {
   const path = (req.url || '/').split('?')[0];
@@ -249,6 +255,88 @@ test('CSS-generated content counts only when the pseudo-element itself renders',
     const pseudoOverride = await captureSignature({ chrome, projectDir, port: 7953, runDir, path: '/pseudo-override' });
     assert.equal(isMeasurable(pseudoOverride), true, 'a pseudo that overrides visibility on a hidden element renders');
     assert.equal(pseudoOverride.nodes[0].generated, true, 'and the element is collected because its pseudo paints');
+  } finally {
+    rmSync(runDir, { recursive: true, force: true });
+  }
+});
+
+test('a drive reaches a state no path can select, and the screenshot is of that state', async () => {
+  // mwg-train-mr6t. Reference boards exist for refusals two to four interactions into a journey (a form after an
+  // empty submission, a cart after a refused checkout). No path serves those states, so the board could only ever
+  // be compared against the page as it loaded, which is a different state - and the earlier fix for that
+  // (board-states kind: interaction, path null) made them permanently exempt instead of measurable.
+  //
+  // Asserted on a real page with a real submission because the alternative - asserting that a `drive` parameter
+  // exists - passes with the drive wired to nothing, which is the failure mode this whole test file exists for.
+  const chrome = await getChrome();
+  const runDir = mkdtempSync(join(tmpdir(), 'mwg-capture-drive-'));
+  try {
+    const projectDir = join(runDir, 'project');
+    mkdirSync(projectDir, { recursive: true });
+    writeFixture(projectDir);
+
+    const clean = await captureSignature({ chrome, projectDir, port: 7961, runDir, path: '/refusal-form' });
+    const screenshotPath = join(runDir, 'driven.png');
+    const driven = await captureSignature({
+      chrome,
+      projectDir,
+      port: 7962,
+      runDir,
+      path: '/refusal-form',
+      screenshotPath,
+      drive: { fill: { '#r': '' }, submit: 'form#reserve', expectText: 'could not be submitted' },
+    });
+
+    // The driven capture rendered something and its structure differs from the clean form: the error banner is a
+    // node the clean page does not have, so "the drive was accepted and then ignored" cannot pass.
+    assert.ok(driven.nodes.length > 0, 'the driven capture produced no nodes');
+    assert.notDeepEqual(driven.nodes, clean.nodes, 'the driven capture produced the same nodes as the untouched page, so the drive did nothing');
+    assert.ok(existsSync(screenshotPath), 'no screenshot was written for the driven state');
+    assert.ok(statSync(screenshotPath).size > 0, 'the driven screenshot is empty');
+  } finally {
+    rmSync(runDir, { recursive: true, force: true });
+  }
+});
+
+test('a drive that does not reach the state it claims is refused rather than measured', async () => {
+  // The one dangerous outcome: the submission SUCCEEDED, the page shows no refusal, and the screenshot is then
+  // compared against a refusal board and reported as a visual difference. `expectText` turns that into an
+  // unmeasured state. The drive here fills the field, so the fixture succeeds and the refusal never renders.
+  const chrome = await getChrome();
+  const runDir = mkdtempSync(join(tmpdir(), 'mwg-capture-drive-expect-'));
+  try {
+    const projectDir = join(runDir, 'project');
+    mkdirSync(projectDir, { recursive: true });
+    writeFixture(projectDir);
+
+    await assert.rejects(
+      () =>
+        captureSignature({
+          chrome,
+          projectDir,
+          port: 7963,
+          runDir,
+          path: '/refusal-form',
+          drive: { fill: { '#r': 'A. Researcher' }, submit: 'form#reserve', expectText: 'could not be submitted' },
+        }),
+      (error) => error instanceof Error && /did not reach the expected state/.test(error.message),
+      'a drive that silently succeeded was not refused',
+    );
+  } finally {
+    rmSync(runDir, { recursive: true, force: true });
+  }
+});
+
+test('a drive that names no action is refused before any browser starts', async () => {
+  // It would capture the plain page and be compared as if it were the state, so it is a TypeError on the
+  // parameter contract, tested here with chrome: null because the guard must run before the browser is used.
+  const runDir = mkdtempSync(join(tmpdir(), 'mwg-capture-drive-guard-'));
+  try {
+    await assert.rejects(
+      () => captureSignature({ chrome: null, projectDir: TMP, port: 7964, runDir, drive: { startPath: '/' } }),
+      (error) => error instanceof TypeError && /at least one action/.test(error.message),
+      'a drive with no action was not refused',
+    );
   } finally {
     rmSync(runDir, { recursive: true, force: true });
   }

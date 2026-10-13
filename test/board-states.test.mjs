@@ -73,3 +73,48 @@ test('boardsOnDisk reads the tree and finds at least the boards the mapping cove
     assert.ok(boards[archetype], `the mapping names ${archetype} but no boards were found for it`);
   }
 });
+
+test('a drive block that names no action is a finding, because it would capture the plain page', () => {
+  // mwg-train-mr6t. The drive is how a state with no path is captured. A drive with neither fill nor submit is
+  // not a drive at all: the comparator would screenshot the page as it loaded and compare that against a board
+  // of the refusal, which reports a design difference where the real fault is a missing instruction.
+  const findings = boardStateFindings({
+    boards: { catalogue: ['step1-refusal.jpg'] },
+    mapping: { catalogue: { 'step1-refusal.jpg': { path: null, kind: 'interaction', source: 'x', drive: { startPath: '/' } } } },
+  });
+  assert.deepEqual(codes(findings), ['DRIVE_WITH_NO_ACTION']);
+});
+
+test('a driven board that also claims a path is a finding, because the two describe different things', () => {
+  const findings = boardStateFindings({
+    boards: { catalogue: ['step1-refusal.jpg'] },
+    mapping: { catalogue: { 'step1-refusal.jpg': { path: '/index.html', kind: 'interaction', source: 'x', drive: { submit: 'form#f' } } } },
+  });
+  assert.deepEqual(codes(findings), ['DRIVE_WITH_PATH']);
+});
+
+test('a malformed drive names the finding rather than failing as a capture', () => {
+  // Each of these would otherwise surface as a browser error during a sweep, where the cause is invisible: a
+  // selector that is not a selector, a start path the capture refuses, and an expectText that is not text.
+  const findings = boardStateFindings({
+    boards: { catalogue: ['step1-refusal.jpg'] },
+    mapping: {
+      catalogue: {
+        'step1-refusal.jpg': { path: null, kind: 'interaction', source: 'x', drive: { fill: { 'input[name=a]': { deep: true } }, submit: '', expectText: 7, startPath: 'shortlist' } },
+      },
+    },
+  });
+  assert.deepEqual(codes(findings), ['DRIVE_EXPECT_TEXT_NOT_A_STRING', 'DRIVE_FILL_BAD_VALUE', 'DRIVE_START_PATH_NOT_ROOT_RELATIVE', 'DRIVE_SUBMIT_NOT_A_SELECTOR']);
+});
+
+test('a well-formed drive passes, so the contract above is not punishing the feature itself', () => {
+  const findings = boardStateFindings({
+    boards: { catalogue: ['step1-refusal.jpg'] },
+    mapping: {
+      catalogue: {
+        'step1-refusal.jpg': { path: null, kind: 'interaction', source: 'x', drive: { startPath: '/', fill: { 'input[name=researcher]': '' }, submit: 'form#reserve', expectText: 'could not be submitted' } },
+      },
+    },
+  });
+  assert.deepEqual(findings, []);
+});
