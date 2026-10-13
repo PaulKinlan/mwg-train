@@ -14,8 +14,8 @@
  * What this does cover: the environment (an allowlist, and a clean environment block via --clearenv), and process
  * isolation - the generated code cannot see or signal the operator's processes, and /proc cannot be used as a
  * side channel to their environments. /tmp has a bounded tmpfs. V8 old-space has a configured heap mitigation,
- * but total RSS is bounded only when memoryContainment.mode is 'cgroup-v2' after a delegated-controller attach.
- * On hosts without delegation the launcher warns loudly and reports 'heap-only', NOT memory containment.
+ * but this launcher does not attach a memory cgroup even if host delegation becomes available. It always reports
+ * 'heap-only' and warns that RSS is NOT contained; a separate host-owner implementation is required for that.
  *
  * What it does NOT cover, deliberately and visibly: network isolation. The prober and the verifier scripts reach
  * these servers over localhost HTTP, so the network namespace stays shared. There is also no attempt to confine
@@ -51,7 +51,7 @@ function memoryStatus(child, memoryMb, hasPrivateTmp) {
   child.memoryContainment = { mode: 'heap-only', rssContained: false, nodeHeapMb: memoryMb,
     tmpfsBytes: hasPrivateTmp ? TMPFS_BYTES : null,
     reason: 'no host cgroup attachment: V8 old-space and private /tmp limits are mitigations only' };
-  process.stderr.write(`WARNING: generated-server RSS is NOT contained: V8 heap capped at ${memoryMb}MB` +
+  process.stderr.write(`WARNING: generated-server RSS is NOT contained: V8 old-space configured to ${memoryMb}MB` +
     `${hasPrivateTmp ? ', private /tmp at 64MB' : ', no private /tmp'}; native Buffers and subprocesses remain unbounded.\n`);
   return child;
 }
