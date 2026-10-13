@@ -7,7 +7,8 @@
   },
   "account-recovery": {
     "step1-request.jpg": { "path": "/index.html", "kind": "page", "source": "scripts/verify-account-recovery-demo.mjs navigates to `${base}/index.html` to drive the reset-link request form" },
-    "step2-sent.jpg": { "path": null, "kind": "interaction", "source": "the check-your-inbox notice is shown after submitting the form on index.html, so no path selects it" }
+    "step2-sent.jpg": { "path": null, "kind": "interaction", "source": "the check-your-inbox notice is shown after submitting the form on index.html, so no path selects it" },
+    "step3-refusal.jpg": { "path": null, "kind": "interaction", "source": "the empty or malformed address is refused by the field's own constraint before submission (plan.md:114); a state of the field on index.html, not a document" }
   },
   "booking": {
     "step1-browse.jpg": { "path": "/index.html", "kind": "page", "source": "the browse list is the demo's index document" },
