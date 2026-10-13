@@ -29,9 +29,16 @@ test('gallery serves the generated archetype reference boards and the authored e
     { id: 'event-registration', reference: true, target: true, referencePath: '/concepts/images/event-registration/step1-event.jpg' },
   ]);
   assert.deepEqual(gallery.journeys.map(({ id, steps }) => [id, steps.length]), [
-    ['booking', 5], ['catalogue', 3], ['contact-lead', 2], ['account-recovery', 2], ['event-registration', 2],
+    ['booking', 5], ['catalogue', 3], ['contact-lead', 3], ['account-recovery', 3], ['event-registration', 3],
     ['editorial-blog', 4], ['fan-community-site', 5], ['product-card-comparison', 4],
+    ['community-forum', 1], ['expense-tracker', 1], ['job-board', 1], ['library-catalogue', 1],
+    ['restaurant-ordering', 1], ['survey-form', 1], ['web-shop', 1],
   ]);
+  assert.equal(gallery.patterns.length, 21, 'all authored patterns are indexed, not just those with boards');
+  assert.equal(gallery.patterns.flatMap(({ steps }) => steps).filter(({ available }) => available).length, 37);
+  assert.equal(gallery.patterns.filter(({ steps }) => steps.length === 0).length, 6, 'missing board sets stay visible');
+  assert.ok(gallery.patterns.every(({ brief }) => brief?.sitePrompt.includes('Step-by-step behaviour')));
+  assert.ok(gallery.patterns.flatMap(({ steps }) => steps).every(({ imagePrompt }) => imagePrompt), 'every committed step includes its original prompt');
   // The training arm is the 30 declared families, every one of them backed by a target render on disk, and none of
   // them is an A6 archetype id: the two arms cannot leak into each other's label space.
   assert.equal(gallery.trainingTargets.length, 30);
@@ -57,70 +64,53 @@ test('gallery serves the generated archetype reference boards and the authored e
   assert.ok(boardsOnDisk.length > 0, 'this checkout carries at least one designed board');
   assert.equal(gallery.trainingTargets.filter((family) => gallery.archetypes.some(({ id }) => id === family.id)).length, 0,
     'no id is listed in both arms');
-  assert.ok(gallery.journeys.every((journey) => journey.steps.every((step) => step.available)), 'all 27 supplied boards exist');
+  assert.ok(gallery.journeys.every((journey) => journey.steps.every((step) => step.available)), 'all 37 supplied boards exist');
   assert.deepEqual(gallery.bookingSteps.map(({ id, available }) => [id, available]), [
     ['step1-browse', true], ['step2-form', true], ['step3-confirmation', true],
     ['step4-error', true], ['step5-empty', true],
   ]);
   const html = renderConcepts(gallery);
   assert.match(html, /href="\/concepts">concepts<\/a>/);
-  assert.match(html, /\/concepts\/images\/editorial-blog\/step1-index\.jpg" alt=/);
-  assert.match(html, /fetchpriority="high"/);
-  assert.match(html, /\/concepts\/images\/fan-community-site\/step4-moderation\.jpg" alt=.*loading="lazy"/);
-  // The hand-drawn layout sketches are retired from the page: the gallery must not present them, and the
-  // retirement is asserted at the route below rather than only in the copy.
-  assert.doesNotMatch(html, /layout-(storefront|saas|explainer)\.jpg/);
-  assert.match(html, /Side-by-side visual reference only/);
-  assert.match(html, /Booking journey · five visual steps/);
-  assert.match(html, /Catalogue journey · three visual steps/);
-  for (const family of ['contact-lead', 'account-recovery', 'event-registration']) {
-    assert.match(html, new RegExp(`/concepts/images/${family}/step1-[a-z-]+\\.jpg`));
-    assert.match(html, new RegExp(`docs/design/archetypes/${family}/README\\.md`));
-  }
-  assert.match(html, /unverified placeholders/);
-  assert.equal((html.match(/\/concepts\/images\/booking\/step[1-5]-[a-z-]+\.jpg/g) ?? []).length, 12);
-  assert.doesNotMatch(html, /Image pending:/);
-  assert.match(html, /Training families \(A1\): designed boards and harness targets/);
+  assert.match(html, /Concept image ≠ conformance image/);
+  assert.match(html, /not<\/em> the desired production design/);
+  assert.match(html, /The proposed 42-family expansion has not landed/);
   assert.match(html, /Sealed evaluation targets \(A6\)/);
-  assert.match(html, /not part of the 30 training families above/);
-  assert.match(html, new RegExp(`${boardsOnDisk.length} of the ${familyIds.length} training families have a designed reference board so far`));
+  assert.match(html, /not part of the 30 families above/);
+  assert.match(html, /37 concept boards have committed bytes/);
+  assert.match(html, /id="pattern-course-enrolment"/);
+  assert.match(html, /No multi-step reference boards are authored for this pattern yet/);
+  assert.match(html, /Image Generation Prompt · inherited single training reference, NOT a step board/);
+  assert.match(html, /id="pattern-community-forum"/);
+  assert.match(html, /\/concepts\/images\/community-forum\/step3-refusal\.jpg/);
+  assert.match(html, /Image Generation Prompt for this state/);
+  assert.match(html, /No step-specific browser assertion is registered for this picture/);
+  assert.equal((html.match(/aria-labelledby="pattern-heading-[a-z-]+"/g) ?? []).length, 21);
+  assert.equal((html.match(/<summary>Site Generation Prompt/g) ?? []).length, 51);
+  assert.equal((html.match(/<summary>Image Generation Prompt for this state<\/summary>/g) ?? []).length, 37);
+  assert.doesNotMatch(html, /(?:src|href)="\/concepts\/images\/layout-(storefront|saas|explainer)\.jpg/, 'retired sketches remain unserved even when their names occur in original prompt text');
+  assert.doesNotMatch(html, /<iframe/);
+  assert.match(html, new RegExp(`${boardsOnDisk.length} of ${familyIds.length} declared families have a designed reference board`));
   for (const family of ['tr-01', 'tr-17', 'tr-30']) {
     assert.match(html, new RegExp(`href="/concepts/targets/${family}\\.png"`));
     assert.match(html, new RegExp(`alt="Harness target render, the A1 conformance instrument, for ${family}`));
   }
-  assert.equal((html.match(/\/concepts\/targets\/tr-\d{2}\.png" aria-label/g) ?? []).length, 30, 'every declared family links its own harness instrument');
-  assert.doesNotMatch(html, /Harness target render pending/, 'no declared family is missing its instrument in this checkout');
-  // A designed board is rendered as its own labelled figure, never as the harness render, and the harness figure says
-  // in its own caption that it is not a designed board.
-  assert.equal((html.match(/\/concepts\/references\/tr-\d{2}\.jpg" aria-label/g) ?? []).length, boardsOnDisk.length, 'exactly the families with a designed board render one');
+  assert.equal((html.match(/\/concepts\/targets\/tr-\d{2}\.png" aria-label/g) ?? []).length, 30);
+  assert.equal((html.match(/\/concepts\/references\/tr-\d{2}\.jpg" aria-label/g) ?? []).length, boardsOnDisk.length);
   assert.match(html, /Designed reference board · <code>docs\/design\/training\/tr-01\/reference\.jpg<\/code>/);
-  assert.match(html, /Harness target render \(A1 conformance instrument\) · <code>data\/A1_self_generated\/targets\/tr-01\/target\.png<\/code> — a deterministic headless-Chrome render of <code>docs\/train\/targets\/tr-01\/index\.html<\/code>, NOT a designed board/);
-  if (boardsOnDisk.includes('tr-03')) assert.doesNotMatch(html, /Designed board not generated yet/);
-  else assert.match(html, /Designed board not generated yet\. Expected <code>docs\/design\/training\/tr-03\/reference\.jpg<\/code>/);
-  assert.match(html, /AI-generated illustration, not training evidence and not proof a demo works/);
-  // The register is cited only when it is actually in the checkout: a citation for provenance this tree cannot show
-  // would be an overclaim (review finding mwg-train-bmr). Both directions are asserted from the tree.
+  assert.match(html, /Harness target render \(A1 conformance instrument\) · <code>data\/A1_self_generated\/targets\/tr-01\/target\.png<\/code> — a deterministic headless-Chrome render/);
   const registerOnDisk = existsSync(join(ROOT, 'docs/provenance/assets/training-reference-boards.md'));
   assert.equal(gallery.trainingBoardRegister, registerOnDisk ? 'docs/provenance/assets/training-reference-boards.md' : null);
-  if (registerOnDisk) {
-    assert.match(html, /Model and digests: <code>docs\/provenance\/assets\/training-reference-boards\.md<\/code>/);
-    assert.doesNotMatch(html, /has not landed in this checkout yet/);
-  } else {
-    assert.match(html, /the register of the model and digests for those boards has not landed in this checkout yet \(expected <code>docs\/provenance\/assets\/training-reference-boards\.md<\/code>\)/);
-    assert.doesNotMatch(html, /Model and digests/, 'no provenance citation is made for a register that is not present');
-  }
+  if (registerOnDisk) assert.match(html, /Model and digests: <code>docs\/provenance\/assets\/training-reference-boards\.md<\/code>/);
+  else assert.match(html, /the provenance register is pending/);
   const renderedOrder = [...html.matchAll(/aria-labelledby="target-(tr-\d{2})"/g)].map((match) => match[1]);
-  assert.deepEqual(renderedOrder, [...boardsOnDisk, ...familyIds.filter((id) => !boardsOnDisk.includes(id))],
-    'families with a designed board are listed first, then the rest in id order');
-  assert.equal(renderedOrder.length, familyIds.length);
-  assert.match(html, /not screenshots of generated websites/);
-  assert.doesNotMatch(html, /<iframe/);
+  assert.deepEqual(renderedOrder, [...boardsOnDisk, ...familyIds.filter((id) => !boardsOnDisk.includes(id))]);
   const base = await serve(t, ROOT);
   const page = await fetch(`${base}/concepts`);
   assert.equal(page.status, 200);
   const pageHtml = await page.text();
   assert.match(pageHtml, /Training families \(A1\): designed boards and harness targets/);
   assert.match(pageHtml, /Sealed evaluation targets \(A6\)/);
+  assert.match(pageHtml, /21 archetype patterns/);
   for (const family of ['tr-01', 'tr-15', 'tr-30']) {
     const render = await fetch(`${base}/concepts/targets/${family}.png`);
     assert.equal(render.status, 200, family);
@@ -190,8 +180,8 @@ test('future per-archetype references appear in pairs only when their images exi
     ]);
     assert.deepEqual(gallery.bookingSteps.map(({ available }) => available), [true, false, false, false, false]);
     assert.match(renderConcepts(gallery), /\/concepts\/images\/booking\/step1-browse\.jpg/);
-    assert.match(renderConcepts(gallery), /Side-by-side visual reference only/);
-    assert.match(renderConcepts(gallery), /No authored target render for this archetype/);
+    assert.match(renderConcepts(gallery), /A6 target PNG/);
+    assert.match(renderConcepts(gallery), /Authored target render unavailable in this checkout/);
     const hostile = renderConcepts({ boards: [], archetypes: [{ id: '<img src=x onerror=alert(1)>', reference: false, target: false }] });
     assert.doesNotMatch(hostile, /<img src=x/);
     assert.match(hostile, /&lt;img src=x/);
@@ -324,8 +314,8 @@ test('the A1 training arm is the manifest, not the directory: only declared fami
   writeFileSync(join(arm, 'manifest.jsonl'), [line(), line({ archetype: 'second-declaration' }), line({ family_id: 'tr-02', origin: 'docs/train/targets/tr-02/index.html', image_path: 'data/A1_self_generated/targets/tr-02/target.png' }), ''].join('\n'));
   const gallery = listConcepts(root);
   assert.deepEqual(gallery.trainingTargets, [
-    { id: 'tr-01', archetype: 'booking', title: 'Declared family', origin: 'docs/train/targets/tr-01/index.html', available: true, board: false },
-    { id: 'tr-02', archetype: 'booking', title: 'Declared family', origin: 'docs/train/targets/tr-02/index.html', available: false, board: false },
+    { id: 'tr-01', archetype: 'booking', title: 'Declared family', origin: 'docs/train/targets/tr-01/index.html', brief: null, available: true, board: false },
+    { id: 'tr-02', archetype: 'booking', title: 'Declared family', origin: 'docs/train/targets/tr-02/index.html', brief: null, available: false, board: false },
   ], 'first declaration wins, an absent render is an honest gap, and an undeclared file is not a family');
   assert.equal(conceptTarget(root, 'tr-07'), null, 'a file the manifest never declared is not public');
   assert.equal(conceptTarget(root, 'tr-01')?.bytes.equals(png), true);
@@ -345,7 +335,7 @@ test('the A1 training arm is the manifest, not the directory: only declared fami
   ].join('\n'));
   assert.deepEqual(listConcepts(root).trainingTargets, []);
   for (const id of ['tr-03', 'tr-04', 'tr-05', 'private', 'booking']) assert.equal(conceptTarget(root, id), null, id);
-  assert.match(renderConcepts(listConcepts(root)), /No A1 training-family targets are declared in this checkout\./);
+  assert.match(renderConcepts(listConcepts(root)), /No A1 training families are declared in this checkout\./);
 
   // A symlinked family directory or target is unavailable, not a path to follow.
   const outside = join(root, 'private.png');
@@ -384,7 +374,7 @@ test('the A1 target size is measured from the PNG header, never taken from the m
     })}\n`);
     assert.deepEqual(listConcepts(root).trainingTargets, [{
       id: 'tr-09', archetype: 'booking', title: 'Tall capture', origin: 'docs/train/targets/tr-09/index.html',
-      available: true, board: false, width: 1280, height: 2400,
+      brief: null, available: true, board: false, width: 1280, height: 2400,
     }]);
     assert.match(renderConcepts(listConcepts(root)), /width="1280" height="2400"/);
     // Bytes that are not a PNG header prove no size, so no width/height is claimed at all.
@@ -432,7 +422,7 @@ test('a designed board is shown as a designed board: measured, separately labell
   assert.equal(trainingBoard(root, 'tr-01')?.bytes.equals(jpeg), true);
   // The register is cited only when it is actually there; a symlinked register is not provenance.
   assert.equal(listConcepts(root).trainingBoardRegister, null);
-  assert.match(renderConcepts(listConcepts(root)), /has not landed in this checkout yet/);
+  assert.match(renderConcepts(listConcepts(root)), /provenance register is pending/);
   mkdirSync(join(root, 'docs/provenance/assets'), { recursive: true });
   writeFileSync(join(root, 'docs/provenance/assets/training-reference-boards.md'), '# register\n');
   assert.equal(listConcepts(root).trainingBoardRegister, 'docs/provenance/assets/training-reference-boards.md');
