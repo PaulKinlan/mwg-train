@@ -36,16 +36,16 @@ Recorded in `pilot/TRAINING_CORPUS.json`, spanning 30 synthetic families (`tr-01
 
 | Scope | Original (chars) | Uplifted (chars) | Total (chars) | Derived Tokens | Band (±25%) | Role in Sizing |
 |---|---:|---:|---:|---:|---|---|
-| **`app_sources`** | **5,422,320** | **5,570,266** | **10,992,586** | **2,748,147** | **[2,061,110, 3,435,183]** | **PRIMARY headline figure** |
+| **`app_sources`** | **5,454,540** | **5,602,486** | **11,057,026** | **2,764,257** | **[2,073,192, 3,455,321]** | **PRIMARY headline figure** |
 | `project_manifest` | 26,190 | 26,190 | 52,380 | 13,095 | [9,821, 16,369] | `package.json` dependencies & scripts |
 | `harness_metadata` | 949,094 | 949,094 | 1,898,188 | 474,547 | [355,910, 593,184] | `spec.json` harness metadata (EXCLUDED) |
 | `prompt` | 0 | 0 | 0 | 0 | [0, 0] | Measured zero (documented gap; see below) |
-| *full_tree (all)* | *6,397,604* | *6,545,550* | *12,943,154* | *3,235,789* | *[2,426,841, 4,044,736]* | *Total on-disk tree for comparison* |
+| *full_tree (all)* | *6,429,824* | *6,577,770* | *13,007,594* | *3,251,899* | *[2,438,924, 4,064,873]* | *Total on-disk tree for comparison* |
 
-- **Headline Characters (`app_sources`):** **10,992,586 characters** (5,422,320 original + 5,570,266 uplifted)
-- **Headline Derived Tokens:** **2,748,147 tokens**
-- **Uncertainty Band:** **[2,061,110, 3,435,183] tokens** (±25% margin)
-- **Epoch Scaling:** 1 epoch = **2,748,147 tokens**; $N$ epochs = $N \times 2,748,147$ tokens.
+- **Headline Characters (`app_sources`):** **11,057,026 characters** (5,454,540 original + 5,602,486 uplifted)
+- **Headline Derived Tokens:** **2,764,257 tokens**
+- **Uncertainty Band:** **[2,073,192, 3,455,321] tokens** (±25% margin)
+- **Epoch Scaling:** 1 epoch = **2,764,257 tokens**; $N$ epochs = $N \times 2,764,257$ tokens.
 
 > **These figures have now moved four times, and what moved them is worth reading.** On
 > 2026-10-08 the headline went 1,477,348 → 1,556,588 → 1,550,364 while all 30 families were re-authored
@@ -65,6 +65,12 @@ Recorded in `pilot/TRAINING_CORPUS.json`, spanning 30 synthetic families (`tr-01
 > did not - the honest cost of serving the route the brief declares instead of four hardcoded paths. The
 > trees grew by about 5% and the measurement moved with them, which is what the gate added in the previous
 > move is for: the record and the figures quoted from it move together, or the test fails.
+>
+> The fifth move is this one: **2,748,147 → 2,764,257**, and its cause is a security fix rather than a
+> drift. Every non-Hono page module now escapes the document title (`mwg-train-kipj`), so the 30 affected
+> trees each carry an inline `escapeTitle` helper and one changed line in `renderDocument`. The pilot
+> corpus moved the same way in the same change - 308,920 → 311,516 derived tokens - and both sets of
+> figures below are quoted from the regenerated record rather than restated by hand.
 >
 > A cost projection built from the pre-2026-10-10 figure is off by up to 68.7% at the headline. The
 > figures remain derived from characters rather than tokenizer-measured, so the ±25% band is the residual
@@ -118,7 +124,7 @@ Token counts are derived using the repository's single canonical derivation func
 > As explicitly stated in `src/eval/cost.mjs`:
 > *"ESTIMATE from characters/4. Replace with an exact count from the training tokenizer before quoting a per-token price."*
 >
-> The spend boundary and preregistration discipline require that any price sheet presented to the owner state its derivation and uncertainty band plainly. An estimate cannot be cited as a measured fact. While these character-derived figures reliably anchor the order of magnitude (2,748,147 tokens for `tr-*` [2,061,110, 3,435,183], 308,920 for pilot [231,690, 386,150]), they must be replaced by a token count from the training tokenizer for the pinned base model (e.g. Qwen BPE tokenizer for `Qwen/Qwen2.5-Coder-7B-Instruct` or `Qwen/Qwen3.8-27B`) before treating any per-token price as a committed quote.
+> The spend boundary and preregistration discipline require that any price sheet presented to the owner state its derivation and uncertainty band plainly. An estimate cannot be cited as a measured fact. While these character-derived figures reliably anchor the order of magnitude (2,764,257 tokens for `tr-*` [2,073,192, 3,455,321], 311,516 for pilot [233,637, 389,394]), they must be replaced by a token count from the training tokenizer for the pinned base model (e.g. Qwen BPE tokenizer for `Qwen/Qwen2.5-Coder-7B-Instruct` or `Qwen/Qwen3.8-27B`) before treating any per-token price as a committed quote.
 
 ---
 
