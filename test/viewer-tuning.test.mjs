@@ -113,7 +113,7 @@ test('tuning routes serve only fixed training targets, never eval targets or mut
 
   assert.equal((await fetch(`${base}/tuning/target/fam-r01.png`)).status, 404);
   assert.equal((await fetch(`${base}/tuning/target/tr-27.json`)).status, 404);
-  assert.equal((await fetch(`${base}/tuning`, { method: 'POST', body: 'prompt=secret' })).status, 404);
+  assert.equal((await fetch(`${base}/tuning`, { method: 'POST', headers: { origin: new URL(base).origin }, body: 'prompt=secret' })).status, 404);
   const client = await fetch(`${base}/tuning/client.js`);
   assert.equal(client.status, 200);
   assert.match(await client.text(), /source_prompt/);

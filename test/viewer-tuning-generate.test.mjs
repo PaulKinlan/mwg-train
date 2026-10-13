@@ -451,7 +451,8 @@ async function withViewer(t, options, run) {
     base: `http://127.0.0.1:${server.address().port}`,
     post: (body, init = {}) => fetch(`http://127.0.0.1:${server.address().port}/tuning/generate`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      // A browser always says where a POST came from; the viewer refuses one that does not (mwg-train-we0o).
+      headers: { 'content-type': 'application/json', origin: `http://127.0.0.1:${server.address().port}` },
       body: typeof body === 'string' ? body : JSON.stringify(body),
       ...init,
     }),
@@ -490,7 +491,7 @@ test('POST /tuning/generate returns the board with its metadata and writes nothi
 test('the route refuses a malformed, oversized or wrong-content-type body before it reads a draft', async (t) => {
   const fetchImpl = fakeFetch(() => imageResponse(tinyJpeg(1376, 768)));
   await withViewer(t, { boardGenerator: createBoardGenerator({ fetchImpl, minIntervalMs: 0 }) }, async ({ post, base }) => {
-    const wrongType = await fetch(`${base}/tuning/generate`, { method: 'POST', headers: { 'content-type': 'text/plain' }, body: '{}' });
+    const wrongType = await fetch(`${base}/tuning/generate`, { method: 'POST', headers: { 'content-type': 'text/plain', origin: new URL(base).origin }, body: '{}' });
     assert.equal(wrongType.status, 400);
     assert.equal((await wrongType.json()).error, 'BAD_CONTENT_TYPE');
 
@@ -514,7 +515,7 @@ test('a chunked body past the cap is answered 413, not a dropped socket', async 
   await withViewer(t, { boardGenerator: createBoardGenerator({ fetchImpl, minIntervalMs: 0 }) }, async ({ base }) => {
     const answer = await new Promise((resolveAnswer, rejectAnswer) => {
       const url = new URL('/tuning/generate', base);
-      const req = httpRequest({ hostname: url.hostname, port: url.port, path: url.pathname, method: 'POST', headers: { 'content-type': 'application/json' } }, (res) => {
+      const req = httpRequest({ hostname: url.hostname, port: url.port, path: url.pathname, method: 'POST', headers: { 'content-type': 'application/json', origin: `http://127.0.0.1:${url.port}` } }, (res) => {
         let body = '';
         res.setEncoding('utf8');
         res.on('data', (chunk) => { body += chunk; });

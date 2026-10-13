@@ -13,7 +13,7 @@ import { join, resolve } from 'node:path';
 import test from 'node:test';
 
 import { PAGE_CSS, pageStyleHash } from '../src/viewer/pages.mjs';
-import { assetHeaders, createViewer, viewerHeaders } from '../src/viewer/server.mjs';
+import { assetHeaders, createViewer, originVerdict, viewerHeaders } from '../src/viewer/server.mjs';
 
 const ROOT = resolve(import.meta.dirname, '..');
 
@@ -222,4 +222,88 @@ test('a page with only same-origin forms needs no live origin, and gets none', (
   const policy = directives(viewerHeaders()['content-security-policy']);
   assert.equal(policy['form-action'], "'self'");
   assert.equal(directives(viewerHeaders('http://127.0.0.1:7701')['content-security-policy'])['form-action'], "'self' http://127.0.0.1:7701");
+});
+
+test('a state-changing POST from another origin is refused before anything acts', async (t) => {
+  const base = await serve(t);
+  const attacker = { origin: 'https://evil.example' };
+  // /tuning/generate spends money at the hosted image model, so it is the route worth protecting most.
+  const generate = await fetch(`${base}/tuning/generate`, {
+    method: 'POST',
+    headers: { ...attacker, 'content-type': 'application/json' },
+    body: JSON.stringify({ prompt: 'anything' }),
+  });
+  assert.equal(generate.status, 403, 'a cross-origin POST must be refused');
+  const body = await generate.text();
+  assert.match(body, /refused:/, 'and say it was refused');
+  // A refusal has to happen BEFORE the work: the message must be the origin refusal, not a model error, because a
+  // 403 that still reached the endpoint would have spent the operator's money on the way.
+  assert.ok(!/image model|generate|timed out|fetch failed/i.test(body), `the refusal must precede the action, got: ${body.slice(0, 200)}`);
+
+  // The live origin starts a sandbox, and it is a different port on the same host, so it needs the same protection.
+  const start = await fetch(`${base}/live/account-recovery-hono/original/start`, { method: 'POST', headers: attacker, redirect: 'manual' });
+  assert.equal(start.status, 403, 'a cross-origin POST to the live origin must be refused');
+});
+
+test('a state-changing POST that does not say where it came from is refused', async (t) => {
+  const base = await serve(t);
+  // No Origin and no Referer: curl-style use has to state its origin now. Documented in the launcher's comment,
+  // and the honest default for a tool with no accounts.
+  const response = await fetch(`${base}/tuning/generate`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ prompt: 'anything' }),
+  });
+  assert.equal(response.status, 403);
+  assert.match(await response.text(), /Origin or Referer/);
+});
+
+test('the viewer accepts its own origin, and a Referer when no Origin is sent', async (t) => {
+  const base = await serve(t);
+  const origin = new URL(base).origin;
+  for (const headers of [{ origin }, { referer: `${origin}/tuning` }]) {
+    const response = await fetch(`${base}/tuning/generate`, {
+      method: 'POST',
+      headers: { ...headers, 'content-type': 'application/json' },
+      body: JSON.stringify({ prompt: 'anything' }),
+    });
+    // Whatever the generation route ends up doing without a reachable endpoint, it must not be the origin refusal:
+    // that is the difference between "the gate let this through" and "the gate refused a legitimate request".
+    assert.notEqual(response.status, 403, `${JSON.stringify(headers)} must be accepted`);
+    assert.doesNotMatch(await response.text(), /refused: (origin|no Origin)/);
+  }
+});
+
+test('read-only requests are unaffected, so the viewer keeps serving pages', async (t) => {
+  const base = await serve(t);
+  for (const url of ['/', '/concepts', '/tuning']) {
+    assert.equal((await fetch(url === '/' ? base : `${base}${url}`)).status, 200, `${url} still serves`);
+  }
+  // A GET carrying a foreign Origin is not state-changing and is not what this check is for.
+  const withOrigin = await fetch(`${base}/`, { headers: { origin: 'https://evil.example' } });
+  assert.equal(withOrigin.status, 200, 'GET is not gated');
+});
+
+test('the origin verdict itself: this host, one of our ports, and a declaration is required', () => {
+  const request = (headers) => ({ headers });
+  const ports = { viewerPort: 7700, livePort: 7701 };
+  // Same trusted host and one of our ports: allowed. This covers the ordinary case and the serve-live form, which
+  // posts from the viewer port to the live port on the same host.
+  assert.equal(originVerdict(request({ host: '127.0.0.1:7700', origin: 'http://127.0.0.1:7700' }), ports).allowed, true);
+  assert.equal(originVerdict(request({ host: '127.0.0.1:7701', origin: 'http://127.0.0.1:7700' }), ports).allowed, true);
+  assert.equal(originVerdict(request({ host: 'localhost:7700', referer: 'http://localhost:7700/tuning' }), ports).allowed, true);
+  // A fronting proxy terminates at 443, so the browser sends an origin with no port at all.
+  assert.equal(originVerdict(request({ host: 'mwg-train.exe.xyz:7700', origin: 'https://mwg-train.exe.xyz' }), ports).allowed, true);
+  // Another host we would not trust, a port that is not ours, no declaration, an unparseable one, a scheme that is
+  // not ours, and a trusted *suffix* that is not this host: all refused. The port case is the one a page served
+  // from another local port would otherwise pass - the browser test for this change caught exactly that.
+  assert.equal(originVerdict(request({ host: '127.0.0.1:7700', origin: 'https://evil.example' }), ports).allowed, false);
+  assert.equal(originVerdict(request({ host: 'evil.example', origin: 'http://evil.example' }), ports).allowed, false);
+  assert.equal(originVerdict(request({ host: '127.0.0.1:7700', origin: 'http://127.0.0.1:9999' }), ports).allowed, false);
+  assert.equal(originVerdict(request({ host: '127.0.0.1:7700' }), ports).allowed, false);
+  assert.equal(originVerdict(request({ host: '127.0.0.1:7700', origin: 'not a url' }), ports).allowed, false);
+  assert.equal(originVerdict(request({ host: 'mwg-train.exe.xyz:7700', origin: 'http://mwg-train.exe.xyz' }), ports).allowed, false);
+  assert.equal(originVerdict(request({ host: 'mwg-train.exe.xyz:7700', origin: 'https://other.exe.xyz' }), ports).allowed, false);
+  // The request's own port is always acceptable: a POST back to the port it arrived on is this viewer by definition.
+  assert.equal(originVerdict(request({ host: '127.0.0.1:8123', origin: 'http://127.0.0.1:8123' })).allowed, true);
 });
