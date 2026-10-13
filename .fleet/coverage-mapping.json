@@ -39,5 +39,8 @@
   ],
   "docs/design/archetypes/contact-lead/demo/index.html": [
     "test/demo-verifiers.test.mjs"
+  ],
+  "scripts/check-cross-arm-parity.mjs": [
+    "test/cross-arm-parity.test.mjs"
   ]
 }

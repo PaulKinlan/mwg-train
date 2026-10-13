@@ -66,6 +66,13 @@
       "source": "a document on disk whose name matches the board slug; plan.md:97 names demo/empty.html as the first-class empty page"
     }
   },
+  "community-forum": {
+    "step3-refusal.jpg": {
+      "path": null,
+      "kind": "interaction",
+      "source": "the refusal is a re-render of the reply composer after a refused submission with a missing required note body (plan.md:75-76, fam-14): a state of the form, not a document - the same convention as the Wave 2 refusal boards and booking's step4-error.jpg"
+    }
+  },
   "contact-lead": {
     "step1-form.jpg": {
       "path": "/index.html",
@@ -149,6 +156,13 @@
       "source": "this archetype has no demo directory, so nothing serves this state"
     }
   },
+  "job-board": {
+    "step1-error.jpg": {
+      "path": null,
+      "kind": "interaction",
+      "source": "the posting refusal is a re-render of the /jobs/new form after a refused submission (plan.md:110, plan.md:119); a state of the form, not a document - the same convention as booking's step4-error.jpg"
+    }
+  },
   "product-card-comparison": {
     "step1-cards.jpg": {
       "path": null,
@@ -171,17 +185,11 @@
       "source": "this archetype has no demo directory, so nothing serves this state"
     }
   },
-  "community-forum": {
-    "step3-refusal.jpg": {
+  "web-shop": {
+    "step1-empty.jpg": {
       "path": null,
       "kind": "interaction",
-      "source": "the refusal is a re-render of the reply composer after a refused submission with a missing required note body (plan.md:75-76, fam-14): a state of the form, not a document - the same convention as the Wave 2 refusal boards and booking's step4-error.jpg"
+      "source": "the empty basket is a state of the shopping flow, not a document: the generated arms serve the pre-order form at / and the product list at /products (pilot/training-archetypes.mjs 'web-shop'), with no cart route and no empty-basket page, so no path selects this state - mapping it to / compared an empty-basket design against a blank order form (mwg-train-wrsj)"
     }
-  },
-  "job-board": {
-    "step1-error.jpg": {
-      "path": null,
-      "kind": "interaction",
-      "source": "the posting refusal is a re-render of the /jobs/new form after a refused submission (plan.md:110, plan.md:119); a state of the form, not a document - the same convention as booking's step4-error.jpg"    }
   }
 }
