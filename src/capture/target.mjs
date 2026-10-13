@@ -136,6 +136,7 @@ export function isBlockedIpv6(address) {
   if (groups.every((group) => parseInt(group, 16) === 0)) return true; // ::
   if (lower.slice(0, 7).every((group) => parseInt(group, 16) === 0) && parseInt(lower[7] ?? '0', 16) === 1) return true; // ::1
   if (first === 0x0100 && lower.slice(1, 4).every((group) => parseInt(group, 16) === 0)) return true; // 100::/64 discard-only (RFC 6666)
+  if (first === 0x0100 && parseInt(lower[1] ?? '0', 16) === 0 && parseInt(lower[2] ?? '0', 16) === 0 && parseInt(lower[3] ?? '0', 16) === 1) return true; // 100:0:0:1::/64 Dummy IPv6 Prefix (RFC 9780)
   if ((first & 0xffc0) === 0xfe80) return true; // fe80::/10 link-local
   if ((first & 0xffc0) === 0xfec0) return true; // fec0::/10 site-local, deprecated (RFC 3879)
   if ((first & 0xfe00) === 0xfc00) return true; // fc00::/7 unique local
