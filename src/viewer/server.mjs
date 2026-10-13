@@ -796,7 +796,11 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const corpusRoot = resolve(REPO_ROOT, arg('corpus', 'pilot'));
   const port = Number(arg('port', '7700'));
   const livePort = Number(arg('live-port', '7701'));
-  const host = arg('host', '0.0.0.0');
+  // Loopback by default: the viewer serves whatever corpus it is pointed at, so binding every interface should be
+  // a deliberate choice rather than the shape you get for not passing a flag. The deployed unit passes --host
+  // 0.0.0.0 explicitly (deploy/systemd/mwg-train-viewer.service) because it is fronted by the VM's proxy, so this
+  // default changes nothing there - it only stops a local run from being reachable from the network by accident.
+  const host = arg('host', '127.0.0.1');
   const stateDir = resolve(arg('state', '.viewer-state'));
   // Overridable so an operator can repoint the workbench at another gateway without editing code. The default is the
   // documented proxy; it carries no credential, and this process has no key to send it.
