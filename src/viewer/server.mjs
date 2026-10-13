@@ -77,6 +77,48 @@ function readJson(path) {
   }
 }
 
+const BOARD_IMAGE_TYPES = Object.freeze({ jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp', avif: 'image/avif', gif: 'image/gif', svg: 'image/svg+xml' });
+
+/**
+ * Serve a registered board from the trusted asset store without mounting that store into untrusted site code.
+ * The generated server pins the same filename and digest, and the set register pins the source bytes. If either
+ * record or the bytes drift, keep the existing 404 rather than serving a plausible but different image.
+ */
+export function registeredBoardAsset({ repoRoot, siteDir, archetype, name }) {
+  if (typeof archetype !== 'string' || !/^[a-z0-9][a-z0-9-]*$/i.test(archetype)) return null;
+  if (typeof name !== 'string' || !/^[a-z0-9][a-z0-9._-]*$/i.test(name) || name.includes('..')) return null;
+  const type = BOARD_IMAGE_TYPES[name.split('.').at(-1)?.toLowerCase()];
+  if (!type) return null;
+  try {
+    const dir = join(repoRoot, 'assets', 'archetypes', archetype);
+    const imagesDir = join(dir, 'images');
+    const registerPath = join(dir, 'set.json');
+    const assetPath = join(imagesDir, name);
+    const generatedPath = join(siteDir, 'server.mjs');
+    if (![dir, imagesDir].every((path) => lstatSync(path).isDirectory())) return null;
+    if (![registerPath, assetPath, generatedPath].every((path) => lstatSync(path).isFile())) return null;
+    if (statSync(generatedPath).size > 512 * 1024) return null;
+    const source = readFileSync(generatedPath, 'utf8');
+    const store = `assets/archetypes/${archetype}`;
+    if (!source.includes(`const ASSET_STORE = ${JSON.stringify(store)};`)) return null;
+    const match = source.match(/^const ASSET_DIGESTS = (\{[^\r\n]*\});$/m);
+    if (!match) return null;
+    const generatedDigests = JSON.parse(match[1]);
+    const register = readJson(registerPath);
+    const entry = register?.archetype === archetype && Array.isArray(register.images)
+      ? register.images.find((image) => image.name === name) : null;
+    if (!entry || !/^[a-f0-9]{64}$/.test(entry.sha256) ||
+        !Object.hasOwn(generatedDigests, name) || generatedDigests[name] !== entry.sha256) return null;
+    const size = statSync(assetPath).size;
+    if (size > 16 * 1024 * 1024 || size !== entry.bytes) return null;
+    const body = readFileSync(assetPath);
+    if (createHash('sha256').update(body).digest('hex') !== entry.sha256) return null;
+    return { body, type };
+  } catch {
+    return null;
+  }
+}
+
 /**
  * The headers every response this viewer generates carries (mwg-train-mslb). Built in one place and applied by the
  * response helpers below rather than at each route, so a new page cannot be added without them.
@@ -1049,6 +1091,16 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
             response,
             livePage('refused', `<h1>live serving refused</h1><p class="danger">The paired ${pairedLabel} tree fails the owner-auth scan; the pair is served together or not at all.</p>`),
             403, liveOrigin,);
+        }
+      }
+
+      // The site has no access to the host asset store inside bwrap. Resolve only images named and pinned
+      // by BOTH the verified generated server and its set register, through this already-gated live route.
+      if ((request.method === 'GET' || request.method === 'HEAD') && rest?.startsWith('/app/')) {
+        const image = registeredBoardAsset({ repoRoot, siteDir, archetype: project.spec?.archetype, name: rest.slice('/app/'.length) });
+        if (image) {
+          response.writeHead(200, { ...assetHeaders(image.type), 'content-length': image.body.length, 'x-asset-source': 'registered-board' });
+          return response.end(request.method === 'HEAD' ? undefined : image.body);
         }
       }
 
