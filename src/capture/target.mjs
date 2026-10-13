@@ -8,12 +8,21 @@
  * started itself - but that reaching a non-global address has to be asked for explicitly, at the one boundary where
  * a URL arrives from outside.
  *
+ * Validating a URL is not enough on its own, because a public URL can redirect to a private one and the browser then
+ * sends that request before any check that runs afterwards can see it (mwg-train-zpjt). installTargetGuard closes
+ * that: it enables CDP request interception on the page and judges every request BEFORE Chrome sends it, so a
+ * redirect to loopback, a private range or a metadata address is refused on the wire and the traffic never leaves
+ * this host. The post-navigation checks in src/capture/site.mjs stay as a second, readable line of defence.
+ *
  * Two limits are stated rather than hidden:
- *   - A name is resolved here and every address it answers with is checked, but the browser resolves again when it
- *     navigates. A name whose answer changes between those two lookups (DNS rebinding) is not caught by this check;
- *     the check after the navigation in src/capture/site.mjs is what catches the common case of a redirect.
- *   - Only the document is validated. Subresources a public page pulls in are the browser's requests, not this
- *     function's, and are not intercepted.
+ *   - A name is resolved here and every answer is checked, but the browser may resolve it again differently. A name
+ *     whose answer changes between the two lookups (DNS rebinding) is not caught by the pre-flight check. This is
+ *     also why the interceptor treats an UNRESOLVABLE name as permission to continue: the browser's resolver is not
+ *     always this process's (a host-resolver-rules flag in tests, a proxy, a hosts file entry), and failing closed on
+ *     a name this process cannot resolve would break legitimate pages. Address literals and names that resolve are
+ *     judged either way, which is the case that matters here.
+ *   - Interception is disabled when the caller passes allowPrivate, because that flag means private destinations are
+ *     wanted: the project captures servers it started itself, and every asset those pages load comes from there.
  */
 import { lookup as dnsLookup } from 'node:dns/promises';
 
@@ -159,4 +168,95 @@ export async function assertCaptureTarget(url, { allowPrivate = false, lookup = 
     );
   }
   return new URL(url).href;
+}
+
+/** Should this already-sent-or-not request be refused? Same policy as blockedAddresses, with the browser's resolver in
+ * mind: an address literal or local name is decided here, a name that resolves is judged, and a name that cannot be
+ * resolved here is left to the browser rather than failed (see the module comment). */
+export async function interceptionVerdict(url, { lookup = dnsLookup } = {}) {
+  let parsed;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return [];
+  }
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return [];
+  const hostname = parsed.hostname;
+  const unbracketed = hostname.replace(/^\[|\]$/g, '');
+  if (ipv4ToInt(unbracketed) !== null) return isBlockedIpv4(unbracketed) ? [unbracketed] : [];
+  if (ipv6Groups(unbracketed)) return isBlockedIpv6(unbracketed) ? [unbracketed] : [];
+  if (isLocalName(hostname)) return [hostname];
+  try {
+    const answers = await lookup(hostname, { all: true });
+    return (Array.isArray(answers) ? answers : [answers])
+      .map((answer) => answer?.address)
+      .filter((address) => (ipv4ToInt(address) !== null ? isBlockedIpv4(address) : isBlockedIpv6(address)));
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Judge every request a page makes before Chrome sends it, and refuse the ones the policy above rejects. Returns a
+ * handle whose `blocked` list is the evidence (and what src/capture/site.mjs turns into a clear refusal), and whose
+ * stop() removes the interception.
+ *
+ * A paused request MUST always be answered - continue or fail - or the page waits forever, so every path below
+ * responds exactly once.
+ */
+export async function installTargetGuard(page, { allowPrivate = false, lookup = dnsLookup, onBlocked = null } = {}) {
+  const blocked = [];
+  // One handle shape whatever the policy: a caller must not have to know whether interception was installed to ask
+  // whether anything was refused (the first version returned a different shape here, and the capture path called
+  // refusal() on it).
+  const handle = {
+    blocked,
+    enabled: false,
+    refusal() {
+      if (blocked.length === 0) return null;
+      const first = blocked[0];
+      return new CaptureTargetError(
+        'PRIVATE_TARGET',
+        `capture refused: ${first.url} resolves to a non-public address (${first.addresses.join(', ')}); ` +
+          'the request was blocked before it was sent',
+      );
+    },
+    async stop() {
+      if (!handle.enabled) return;
+      try {
+        await page.send('Fetch.disable');
+      } catch {
+        /* the session is already gone, and there is nothing left to disable */
+      }
+    },
+  };
+  if (allowPrivate) return handle;
+
+  const decide = async ({ requestId, request }) => {
+    const addresses = await interceptionVerdict(request?.url ?? '', { lookup });
+    if (addresses.length > 0) {
+      blocked.push({ url: request.url, addresses });
+      if (onBlocked) onBlocked({ url: request.url, addresses });
+      await page.send('Fetch.failRequest', { requestId, errorReason: 'AccessDenied' });
+      return;
+    }
+    await page.send('Fetch.continueRequest', { requestId });
+  };
+  const onPaused = (params, sessionId) => {
+    // Another page's requests are not this page's business, and answering them would capture its traffic.
+    if (sessionId !== undefined && page.sessionId !== undefined && sessionId !== page.sessionId) return;
+    // Never let a decision error leave a request hanging: answering is this handler's contract.
+    decide(params).catch(async () => {
+      try {
+        await page.send('Fetch.continueRequest', { requestId: params.requestId });
+      } catch {
+        /* the page or the browser is gone; nothing to answer */
+      }
+    });
+  };
+  page.session.connection.on('Fetch.requestPaused', onPaused);
+  await page.send('Fetch.enable', { patterns: [{ urlPattern: '*', requestStage: 'Request' }] });
+
+  handle.enabled = true;
+  return handle;
 }

@@ -18,7 +18,7 @@ import { dirname, isAbsolute, join } from 'node:path';
 import process from 'node:process';
 
 import { launchChrome } from '../corpus/cdp.mjs';
-import { assertCaptureTarget } from './target.mjs';
+import { assertCaptureTarget, installTargetGuard } from './target.mjs';
 import { assetStoragePath } from '../provenance/store.mjs';
 import { validateCapture, CAPTURE_VERSION, resolveCaptureOutputPath } from './schema.mjs';
 
@@ -224,6 +224,10 @@ export async function captureSite({
   // (mwg-train-3pqm).
   allowPrivate = false,
   _mutateCapture = null,
+  // Test hooks, named as internal for the same reason _mutateCapture is: a suite has to be able to exercise the
+  // request interception against a local server and a name of its own choosing (mwg-train-zpjt).
+  _lookup = undefined,
+  _chromeArgs = [],
 } = {}) {
   if (!rightsRef || typeof rightsRef !== 'string' || rightsRef.trim() === '') {
     throw new Error('captureSite: --rights-ref is required and must name the rights record authorising this capture');
@@ -238,7 +242,7 @@ export async function captureSite({
   // Refuse a destination on the host's own network, or a cloud metadata address, before a browser is launched or an
   // asset is written. A name is resolved here and every answer is checked; the re-checks after each navigation below
   // are what catch a redirect that lands somewhere else (mwg-train-3pqm).
-  await assertCaptureTarget(targetUrl, { allowPrivate });
+  await assertCaptureTarget(targetUrl, { allowPrivate, lookup: _lookup });
   // Refuse an explicit forbidden destination before launching a browser or writing any assets.
   const absoluteOut = outDir && isAbsolute(outDir) ? resolveCaptureOutputPath(outDir, { env }) : null;
   const cleanOut = absoluteOut ? defaultOutDir(targetUrl) : (outDir ? cleanRelativeDir(outDir) : defaultOutDir(targetUrl));
@@ -252,21 +256,35 @@ export async function captureSite({
   let mobileBuffer = null;
   let domBuffer = null;
   let finalUrl = targetUrl;
+  let targetGuard = null;
   const capturedPages = [];
   let consoleEntries = [];
   let requestEntries = [];
 
   try {
-    chrome = await launchChrome();
+    chrome = await launchChrome({ args: _chromeArgs });
     const page = await chrome.newPage({ viewport: { width: 1280, height: 900 } });
 
+    // Interception goes on before the first navigation, because a redirect is followed by Chrome itself: checking the
+    // landing URL afterwards would be checking a request that has already been sent (mwg-train-zpjt). The guard
+    // answers every paused request, and refusing one here means no traffic left this host.
+    targetGuard = await installTargetGuard(page, { allowPrivate, lookup: _lookup });
+
     // 1. Navigate to initial page and wait for settling
-    await page.goto(targetUrl, { timeout: 15_000 });
-    await page.waitForSettled({ timeout: 10_000 });
+    try {
+      await page.goto(targetUrl, { timeout: 15_000 });
+      await page.waitForSettled({ timeout: 10_000 });
+    } catch (error) {
+      // A refused request can surface as a navigation failure; the refusal is the truer message, so it wins.
+      throw targetGuard?.refusal() ?? error;
+    }
     finalUrl = await page.url();
-    // A redirect is the ordinary way a validated public URL reaches a private one, so the landing URL is judged as
-    // well as the requested one, before anything is captured from it.
-    await assertCaptureTarget(finalUrl, { allowPrivate });
+    // The interceptor should have caught a redirect to a private destination before it was sent. If one slipped
+    // through anyway - a name that resolved differently for the browser - the landing URL is judged here as the
+    // second line of defence, so the capture still refuses rather than measuring the wrong page.
+    const refusal = targetGuard?.refusal();
+    if (refusal) throw refusal;
+    await assertCaptureTarget(finalUrl, { allowPrivate, lookup: _lookup });
 
     // 2. Extract initial page structural data
     const initialPageData = await extractPageStructure(page);
@@ -334,7 +352,9 @@ export async function captureSite({
 
       await page.goto(pageUrl.href, { timeout: 15_000 });
       await page.waitForSettled({ timeout: 10_000 });
-      await assertCaptureTarget(await page.url(), { allowPrivate });
+      const refused = targetGuard?.refusal();
+      if (refused) throw refused;
+      await assertCaptureTarget(await page.url(), { allowPrivate, lookup: _lookup });
       const additionalPageData = await extractPageStructure(page);
       capturedPages.push({
         path: pagePath,
@@ -356,6 +376,7 @@ export async function captureSite({
         status: Number.isInteger(r.status) ? r.status : null,
       }));
   } finally {
+    if (targetGuard) await targetGuard.stop().catch(() => {});
     if (chrome) {
       await chrome.close();
     }

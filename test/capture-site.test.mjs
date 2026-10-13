@@ -23,7 +23,7 @@ import { join, resolve } from 'node:path';
 import process from 'node:process';
 
 import { captureSite } from '../src/capture/site.mjs';
-import { assertCaptureTarget } from '../src/capture/target.mjs';
+import { assertCaptureTarget, installTargetGuard, interceptionVerdict } from '../src/capture/target.mjs';
 import { validateCapture } from '../src/capture/schema.mjs';
 import { recordFlow } from '../src/capture/flow.mjs';
 import { translateCapture } from '../src/capture/translate.mjs';
@@ -614,4 +614,94 @@ test('CLI: a private --url is refused without --allow-private', async (t) => {
   assert.notEqual(refused.code, 0, 'a private URL must fail without the flag');
   assert.match(refused.stderr, /non-public address/);
   assert.match(refused.stderr, /--allow-private/);
+});
+
+test('a redirect to a private destination is blocked before the browser sends it', async (t) => {
+  // mwg-train-zpjt: checking the landing URL after the navigation is checking a request Chrome has already sent. The
+  // measurement that matters is not the error - it is whether the server ever saw the redirected request.
+  const root = mkdtempSync(join(tmpdir(), 'capture-redirect-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const hits = [];
+  const server = http.createServer((request, response) => {
+    hits.push(request.url);
+    if (request.url === '/') {
+      response.writeHead(302, { location: `http://127.0.0.1:${server.address().port}/private` });
+      response.end();
+      return;
+    }
+    response.end('<html><body>should not be reached</body></html>');
+  });
+  await new Promise((resolveListen) => server.listen(0, '127.0.0.1', resolveListen));
+  t.after(() => server.close());
+  const port = server.address().port;
+
+  // The target must be judged public for the capture to start - that is what the injected resolver states - while
+  // the browser is told where the name actually lives. So the page is reachable, the policy is in force, and the
+  // redirect is the only thing standing between them.
+  const refused = await captureSite({
+    url: `http://public.test:${port}/`,
+    rightsRef: 'docs/provenance/assets/reproduction-studies.md',
+    env: { ...process.env, MWG_TRAIN_QUARANTINE: root },
+    outDir: 'redirected-private',
+    _lookup: async () => [{ address: '93.184.216.34' }],
+    _chromeArgs: ['--host-resolver-rules=MAP public.test 127.0.0.1'],
+  }).then(() => null, (error) => error);
+
+  assert.equal(refused?.code, 'PRIVATE_TARGET', `the capture must refuse the redirect, got: ${refused?.message}`);
+  assert.match(refused.message, /blocked before it was sent/);
+  assert.deepEqual(hits, ['/'], 'the redirected request must never reach the server');
+  assert.ok(!existsSync(join(root, 'data')), 'nothing may be written for a refused capture');
+});
+
+test("the request interception decides before Chrome sends, and leaves the browser own resolution alone", async () => {
+  // The interceptor is a CDP client, so its decisions are asserted against a page stub that records the calls: what
+  // is checked here is that a private destination is FAILED and everything else is CONTINUED, because a paused
+  // request that is never answered hangs the page.
+  const calls = [];
+  const handlers = new Map();
+  const stubPage = {
+    sessionId: 'page-1',
+    session: { connection: { on: (event, handler) => handlers.set(event, handler) } },
+    send: async (method, params) => { calls.push([method, params]); },
+  };
+  const guard = await installTargetGuard(stubPage, { lookup: async () => [{ address: '93.184.216.34' }] });
+  assert.equal(calls[0][0], 'Fetch.enable', 'interception must be enabled before anything navigates');
+
+  const paused = (url, requestId) => handlers.get('Fetch.requestPaused')({ requestId, request: { url } }, 'page-1');
+  const settle = () => new Promise((resolveTick) => setTimeout(resolveTick, 5));
+
+  calls.length = 0;
+  await paused('http://127.0.0.1:8080/private', 'r1');
+  await settle();
+  assert.deepEqual(calls.at(-1), ['Fetch.failRequest', { requestId: 'r1', errorReason: 'AccessDenied' }]);
+  assert.equal(guard.blocked.length, 1);
+  assert.match(guard.refusal().message, /blocked before it was sent/);
+
+  calls.length = 0;
+  await paused('https://example.com/asset.css', 'r2');
+  await settle();
+  assert.deepEqual(calls.at(-1), ['Fetch.continueRequest', { requestId: 'r2' }]);
+
+  // A name this process cannot resolve is left to the browser: its resolver is not always ours (a host-resolver-rules
+  // flag, a proxy, a hosts entry), and failing it would break legitimate pages.
+  calls.length = 0;
+  await paused('http://browser-only.test/x', 'r3');
+  await settle();
+  assert.deepEqual(calls.at(-1), ['Fetch.continueRequest', { requestId: 'r3' }]);
+
+  // Another page's requests are not this page's business.
+  calls.length = 0;
+  handlers.get('Fetch.requestPaused')({ requestId: 'r4', request: { url: 'http://127.0.0.1/x' } }, 'other-page');
+  await settle();
+  assert.deepEqual(calls, [], 'another session\'s requests must be left alone');
+
+  calls.length = 0;
+  await guard.stop();
+  assert.equal(calls.at(-1)[0], 'Fetch.disable');
+
+  // And the verdict function itself: an address literal is decided without a lookup, and a metadata address is
+  // refused the same way a loopback one is.
+  assert.deepEqual(await interceptionVerdict('http://169.254.169.254/latest/meta-data/', { lookup: async () => [] }), ['169.254.169.254']);
+  assert.deepEqual(await interceptionVerdict('http://10.0.0.9/', { lookup: async () => [] }), ['10.0.0.9']);
+  assert.deepEqual(await interceptionVerdict('http://example.com/', { lookup: async () => [{ address: '93.184.216.34' }] }), []);
 });
