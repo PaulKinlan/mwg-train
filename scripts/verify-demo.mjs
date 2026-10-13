@@ -13,8 +13,7 @@
  * Usage: node scripts/verify-demo.mjs [arm]   (or DEMO_ARM=vue; `all` runs raw and hono)
  * Evidence (screenshots) is written to /tmp/demo-shots.
  */
-import { spawn } from 'node:child_process';
-import { generatedServerEnv } from '../src/eval/generated-server.mjs';
+import { startGeneratedServer } from '../src/eval/generated-server.mjs';
 import { mkdirSync, mkdtempSync, rmSync, symlinkSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
@@ -61,10 +60,14 @@ export async function runJourney(arm) {
   symlinkSync(join(ROOT, 'node_modules'), join(dir, 'node_modules'), 'dir');
 
   const base = `http://127.0.0.1:${port}`;
-  const server = spawn('node', ['server.mjs', '--port', String(port), '--db', join(dir, 'verify.sqlite')], {
-    cwd: dir,
+  const server = startGeneratedServer({
+    projectDir: dir,
+    port: port,
+    dbPath: join(dir, 'verify.sqlite'),
     stdio: ['ignore', 'ignore', 'pipe'],
-    env: generatedServerEnv(),
+    // Not detached: this script kills the sandbox by pid, and the kernel tears the whole PID
+    // namespace down with it, so nothing is left behind either way.
+    detached: false,
   });
 
   let chrome;
