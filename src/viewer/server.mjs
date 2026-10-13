@@ -44,7 +44,7 @@ import { conceptImage, conceptJourneyStep, conceptTarget, listConcepts, renderCo
 import { filterProjects, loadCorpus, projectView } from './corpus.mjs';
 import { hashTree } from '../corpus/tree-hash.mjs';
 import { scanTree, scanPairRecords, loadScanConfig, buildMatchers } from './owner-auth.mjs';
-import { renderIndex, renderProject, renderMarkdown, escapeHtml, page, pageStyleHash } from './pages.mjs';
+import { renderIndex, renderLiveIndex, renderProject, renderMarkdown, escapeHtml, page, pageStyleHash } from './pages.mjs';
 import { loadTuningData, renderTuning } from './tuning.mjs';
 import { allowedTargetsFromTuningData, createBoardGenerator, DEFAULT_IMAGE_ENDPOINT, GenerationError, IMAGE_MODEL } from './generate.mjs';
 import { proxyRequest } from './proxy.mjs';
@@ -90,7 +90,7 @@ function readJson(path) {
  * Deliberately NOT applied to responses relayed from a sandboxed site: those are the generated pages under test and
  * they need their own policy, not this one.
  */
-export function viewerHeaders(liveOrigin = '') {
+export function viewerHeaders(liveOrigin = '', { formNavigation = false } = {}) {
   const policy = [
     "default-src 'none'",
     "script-src 'self'",
@@ -108,7 +108,9 @@ export function viewerHeaders(liveOrigin = '') {
     // Generated and third-party content is displayed by this viewer, and a browser must never be allowed to decide
     // that a response is really a script or a stylesheet on the strength of its bytes.
     'x-content-type-options': 'nosniff',
-    'referrer-policy': 'no-referrer',
+    // Chromium sends Origin: null for HTML POST forms under no-referrer, which the CSRF guard rightly refuses.
+    // Only pages with Start forms disclose the origin (never an evidence path) across the viewer/live boundary.
+    'referrer-policy': formNavigation ? 'strict-origin-when-cross-origin' : 'no-referrer',
   };
 }
 
@@ -125,8 +127,8 @@ export const assetHeaders = (type) => ({
   'x-content-type-options': 'nosniff',
 });
 
-const htmlResponse = (response, body, status = 200, liveOrigin = '') => {
-  response.writeHead(status, { 'content-type': 'text/html; charset=utf-8', ...viewerHeaders(liveOrigin) });
+const htmlResponse = (response, body, status = 200, liveOrigin = '', options = {}) => {
+  response.writeHead(status, { 'content-type': 'text/html; charset=utf-8', ...viewerHeaders(liveOrigin, options) });
   response.end(body);
 };
 
@@ -207,14 +209,23 @@ function readBoundedJsonBody(request, maxBytes = MAX_DRAFT_BYTES) {
  * the Host header is attacker-influenced, and a bad parse must never produce an attacker
  * authority) with the live port substituted. An unrecognised host falls back to loopback.
  */
-export function liveOriginFor(request, livePort) {
+function trustedOriginFor(request, port) {
   const host = String(request.headers.host ?? '');
-  if (!/^[a-z0-9.-]+(:\d+)?$/i.test(host)) return `http://127.0.0.1:${livePort}`;
+  if (!/^[a-z0-9.-]+(:\d+)?$/i.test(host)) return `http://127.0.0.1:${port}`;
   const hostname = host.replace(/:\d+$/, '').toLowerCase();
   const trusted = hostname === '127.0.0.1' || hostname === 'localhost' || /(^|\.)exe\.xyz$/.test(hostname);
-  if (!trusted) return `http://127.0.0.1:${livePort}`;
+  if (!trusted) return `http://127.0.0.1:${port}`;
   const scheme = hostname.endsWith('.exe.xyz') ? 'https' : 'http';
-  return `${scheme}://${hostname}:${livePort}`;
+  return `${scheme}://${hostname}:${port}`;
+}
+
+export function liveOriginFor(request, livePort) {
+  return trustedOriginFor(request, livePort);
+}
+
+/** The paired viewer listener's actual bound port, not a guessed 7700 or the live port. */
+export function viewerOriginFor(request, viewerPort) {
+  return viewerPort ? trustedOriginFor(request, viewerPort) : null;
 }
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
@@ -874,7 +885,7 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
             yieldReport: corpus.yieldReport,
             scanAvailable: allViews.every((view) => view.scan?.status !== 'ERROR'),
             liveOrigin,
-          }), 200, liveOrigin,);
+          }), 200, liveOrigin, { formNavigation: true });
       }
 
       const projectMatch = path.match(/^\/project\/([a-z0-9-]+)$/i);
@@ -885,7 +896,7 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
         if (!project) return textResponse(response, 'no such project', 404);
         const scan = scanFor(project);
         const view = projectView(project, { scan, verification: verification(project) });
-        return htmlResponse(response, renderProject({ view, runId: corpus.runId, runs: corpus.runs, liveOrigin }), 200, liveOrigin);
+        return htmlResponse(response, renderProject({ view, runId: corpus.runId, runs: corpus.runs, liveOrigin }), 200, liveOrigin, { formNavigation: true });
       }
 
       const evidenceMatch = path.match(/^\/evidence\/([a-z0-9-]+)\/([a-z0-9.-]+)$/i);
@@ -935,6 +946,10 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
       const auth = viewerAuthVerdict(request, { token: authToken, pathname: path, search: url.search, allowAnonymous });
       if (auth) return authRefusal(response, auth);
 
+      const liveOrigin = liveOriginFor(request, livePort);
+      const viewerOrigin = viewerOriginFor(request, viewerPort);
+      const livePage = (title, body) => page(title, body, { navOrigin: viewerOrigin });
+
       // The serve-live form posts to this origin (a different port on the same host), so it needs the same check.
       if (crossOriginRefusal(request, response, { viewerPort, livePort })) return;
 
@@ -946,9 +961,13 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
       const liveMatch = path.match(/^\/live\/([a-z0-9-]+)\/(original|uplifted)(?:\/run\/([A-Za-z0-9._-]+))?(\/.*)?$/i);
       if (!liveMatch) {
         if (path === '/' && request.method === 'GET') {
-          return htmlResponse(
-            response,
-            page('live origin', `<h1>mwg-train live site origin</h1><p class="muted">This origin serves only sandboxed corpus sites under <code>/live/&lt;project&gt;/&lt;version&gt;/</code>. It is deliberately a separate origin from the viewer so untrusted site code cannot read the evidence pages. Start sites from the <a href="/">viewer index</a>.</p>`), 200, liveOrigin,);
+          if (!viewerOrigin) return textResponse(response, 'viewer origin is not listening yet', 503);
+          const corpus = load(null);
+          const views = corpus.projects.map((project) => projectView(project, { scan: scanFor(project) }));
+          const active = [...pool.instances.values()]
+            .filter((sandbox) => sandbox.alive)
+            .map((sandbox) => ({ id: sandbox.id.split(':')[0], version: sandbox.id.split(':')[1], runId: sandbox.runId }));
+          return htmlResponse(response, renderLiveIndex({ views, runId: corpus.runId, runs: corpus.runs, active, viewerOrigin }), 200, liveOrigin, { formNavigation: true });
         }
         return textResponse(response, 'not found', 404);
       }
@@ -970,7 +989,7 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
       if (scan.status === 'ERROR' || scan.status === 'FAIL') {
         return htmlResponse(
           response,
-          page('refused', `<h1>live serving refused</h1><p class="danger">The owner-auth scan of this pair is ${escapeHtml(scan.status)}${scan.reason ? ` (${escapeHtml(scan.reason)})` : ''}, and the rule is fail-closed: a pair that cannot be shown clean of owner-identifying material - in its trees AND its records - is not served.</p>`),
+          livePage('refused', `<h1>live serving refused</h1><p class="danger">The owner-auth scan of this pair is ${escapeHtml(scan.status)}${scan.reason ? ` (${escapeHtml(scan.reason)})` : ''}, and the rule is fail-closed: a pair that cannot be shown clean of owner-identifying material - in its trees AND its records - is not served.</p>`),
           403, liveOrigin,);
       }
 
@@ -987,7 +1006,7 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
         if (!resolved.dir) {
           return htmlResponse(
             response,
-            page('refused', `<h1>live serving refused</h1><p class="danger">${escapeHtml(resolved.reason ?? 'the measured original cannot be reproduced')}</p>`),
+            livePage('refused', `<h1>live serving refused</h1><p class="danger">${escapeHtml(resolved.reason ?? 'the measured original cannot be reproduced')}</p>`),
             409, liveOrigin,);
         }
         siteDir = resolved.dir;
@@ -997,7 +1016,7 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
         if (!resolved.dir) {
           return htmlResponse(
             response,
-            page('snapshot unavailable', `<h1>uplifted snapshot unavailable</h1><p class="notice">${escapeHtml(resolved.reason ?? 'the run did not keep the uplifted tree')}</p>`),
+            livePage('snapshot unavailable', `<h1>uplifted snapshot unavailable</h1><p class="notice">${escapeHtml(resolved.reason ?? 'the run did not keep the uplifted tree')}</p>`),
             404, liveOrigin,);
         }
         siteDir = resolved.dir;
@@ -1008,7 +1027,7 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
       if (treeScan.status !== 'PASS') {
         return htmlResponse(
           response,
-          page('refused', `<h1>live serving refused</h1><p class="danger">The owner-auth scan of the ${escapeHtml(version)} tree is ${escapeHtml(treeScan.status)}, and the rule is fail-closed: a tree that cannot be shown clean of owner-identifying material is not served.</p>`),
+          livePage('refused', `<h1>live serving refused</h1><p class="danger">The owner-auth scan of the ${escapeHtml(version)} tree is ${escapeHtml(treeScan.status)}, and the rule is fail-closed: a tree that cannot be shown clean of owner-identifying material is not served.</p>`),
           403, liveOrigin,);
       }
 
@@ -1022,13 +1041,13 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
         if (!paired.dir) {
           return htmlResponse(
             response,
-            page('refused', `<h1>live serving refused</h1><p class="danger">This pair's ${pairedLabel} tree cannot be resolved and verified (${escapeHtml(paired.reason ?? 'unknown')}), so the pair is not servable. The pair is served together or not at all.</p>`),
+            livePage('refused', `<h1>live serving refused</h1><p class="danger">This pair's ${pairedLabel} tree cannot be resolved and verified (${escapeHtml(paired.reason ?? 'unknown')}), so the pair is not servable. The pair is served together or not at all.</p>`),
             403, liveOrigin,);
         }
         if (scanTreeCached(paired.dir).status !== 'PASS') {
           return htmlResponse(
             response,
-            page('refused', `<h1>live serving refused</h1><p class="danger">The paired ${pairedLabel} tree fails the owner-auth scan; the pair is served together or not at all.</p>`),
+            livePage('refused', `<h1>live serving refused</h1><p class="danger">The paired ${pairedLabel} tree fails the owner-auth scan; the pair is served together or not at all.</p>`),
             403, liveOrigin,);
         }
       }
@@ -1042,7 +1061,7 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
         try {
           sandbox = await pool.start({ runId: corpus.runId, projectId: id, version, siteDir });
         } catch (error) {
-          return htmlResponse(response, page('sandbox failed', `<h1>the sandboxed site did not start</h1><pre>${escapeHtml(error.message)}</pre>`), 502, liveOrigin);
+          return htmlResponse(response, livePage('sandbox failed', `<h1>the sandboxed site did not start</h1><pre>${escapeHtml(error.message)}</pre>`), 502, liveOrigin);
         }
       }
       sandbox.touch();

@@ -213,7 +213,8 @@ export function pageStyleHash() {
   return createHash('sha256').update(PAGE_CSS).digest('base64');
 }
 
-export function page(title, body) {
+export function page(title, body, { navOrigin = '' } = {}) {
+  const base = escapeHtml(navOrigin);
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -223,7 +224,7 @@ export function page(title, body) {
 <style>${PAGE_CSS}</style>
 </head>
 <body>
-<nav><a href="/">corpus index</a> · <a href="/concepts">concepts</a> · <a href="/tuning">prompt workbench</a> · <a href="/pipeline">pipeline</a></nav>
+<nav aria-label="Primary"><a href="${base}/">corpus index</a> · <a href="${base}/concepts">concepts</a> · <a href="${base}/tuning">prompt workbench</a> · <a href="${base}/pipeline">pipeline</a></nav>
 <main id="content">${body}</main>
 </body>
 </html>`;
@@ -400,6 +401,27 @@ function liveLinks(view, liveOrigin, runId) {
       ? `<form class="inline-form" method="post" action="${escapeHtml(liveOrigin)}/live/${escapeHtml(view.id)}/${version}${escapeHtml(runPath)}/start"><button type="submit">serve ${label} live</button></form>`
       : `<button type="button" disabled title="${why ?? `owner-auth scan: ${escapeHtml(scan?.[version]?.status ?? 'ERROR')}`}">serve ${label} live</button>`;
   return `${button('original', 'DEFAULT', originalOk)} ${button('uplifted', 'IDEAL', upliftedOk)}`;
+}
+
+export function renderLiveIndex({ views, runId, runs, active, viewerOrigin }) {
+  const visible = views.filter((view) => /^[a-z0-9][a-z0-9-]*$/i.test(view.id));
+  const projectIds = new Set(visible.map((view) => view.id));
+  const currentRuns = new Set([null, ...runs]);
+  const running = active.filter((instance) => projectIds.has(instance.id) &&
+    ['original', 'uplifted'].includes(instance.version) && currentRuns.has(instance.runId));
+  const projects = visible.length
+    ? `<ul>${visible.map((view) => `<li><a href="${escapeHtml(viewerOrigin)}/project/${encodeURIComponent(view.id)}">${escapeHtml(view.id)}</a> — ${liveLinks(view, '', runId)}</li>`).join('')}</ul>`
+    : `<p>No corpus projects are available here. Visit the <a href="${escapeHtml(viewerOrigin)}/">viewer index</a> to check the corpus.</p>`;
+  const runningList = running.length
+    ? `<ul>${running.map(({ id, version, runId: instanceRun }) => {
+        const runPath = instanceRun ? `/run/${encodeURIComponent(instanceRun)}` : '';
+        return `<li><a href="/live/${encodeURIComponent(id)}/${version}${runPath}/">Open ${escapeHtml(id)} ${version}</a></li>`;
+      }).join('')}</ul>`
+    : '<p>No sandboxed sites are running yet.</p>';
+  return page('live sites', `<h1>Sandboxed corpus sites</h1>
+<p class="muted">These sites run on a separate origin so their code cannot read <a href="${escapeHtml(viewerOrigin)}/">viewer evidence</a>. Start a site below, then open its sandboxed page. Sites that fail owner-auth checks cannot start.</p>
+<h2>Available corpus projects</h2>${projects}
+<h2>Running sites</h2>${runningList}`, { navOrigin: viewerOrigin });
 }
 
 export function renderIndex({ views, allViews, filters, runId, runs, yieldReport, scanAvailable, liveOrigin }) {
