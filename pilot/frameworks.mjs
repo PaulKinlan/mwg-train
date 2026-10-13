@@ -1977,6 +1977,19 @@ const wikiPages = (archetype) => {
 /** The wiki routes, raw arm: search, history, revision, create, and page. */
 const rawWikiRoutes = () =>
   [
+    // A malformed percent-escape (GET /wiki/%/history) raised a URIError out of the request handler and took the
+    // whole server process down with it - one bad URL for every reader. decodeWikiSlug never throws, and answers
+    // 400 rather than falling back to a literal slug the way the router-tolerant frameworks do: /wiki/:slug/create
+    // is a WRITE, so a malformed slug must be refused rather than stored.
+    "function decodeWikiSlug(raw, response) {",
+    "  try {",
+    "    return decodeURIComponent(raw);",
+    "  } catch {",
+    "    response.writeHead(400, { 'content-type': 'text/plain; charset=utf-8' });",
+    "    response.end('Malformed page name.');",
+    "    return null;",
+    "  }",
+    "}",
     "  if (path === '/wiki' && request.method === 'GET') {",
     "    const wikiAllPages = selectWikiPages.all();",
     "    return html(response, wikiIndexPage(wikiAllPages));",
@@ -1988,7 +2001,8 @@ const rawWikiRoutes = () =>
     "  }",
     "  const wikiHistoryMatch = path.match(/^\\/wiki\\/([^/]+)\\/history$/);",
     "  if (wikiHistoryMatch && request.method === 'GET') {",
-    "    const wikiSlug = decodeURIComponent(wikiHistoryMatch[1]);",
+    "    const wikiSlug = decodeWikiSlug(wikiHistoryMatch[1], response);",
+    "    if (wikiSlug === null) return;",
     "    const wikiPageRow = selectWikiPage.get(wikiSlug);",
     "    if (!wikiPageRow) {",
     "      return html(response, wikiMissingPage(wikiSlug), 200);",
@@ -1998,7 +2012,8 @@ const rawWikiRoutes = () =>
     "  }",
     "  const wikiRevisionMatch = path.match(/^\\/wiki\\/([^/]+)\\/revision\\/([^/]+)$/);",
     "  if (wikiRevisionMatch && request.method === 'GET') {",
-    "    const wikiSlug = decodeURIComponent(wikiRevisionMatch[1]);",
+    "    const wikiSlug = decodeWikiSlug(wikiRevisionMatch[1], response);",
+    "    if (wikiSlug === null) return;",
     "    const wikiPageRow = selectWikiPage.get(wikiSlug);",
     "    const wikiRevNum = Number.parseInt(wikiRevisionMatch[2], 10);",
     "    const wikiRevRow = wikiPageRow && Number.isInteger(wikiRevNum) ? selectWikiRevision.get(wikiSlug, wikiRevNum) : null;",
@@ -2010,7 +2025,8 @@ const rawWikiRoutes = () =>
     "  }",
     "  const wikiCreateMatch = path.match(/^\\/wiki\\/([^/]+)\\/create$/);",
     "  if (wikiCreateMatch && request.method === 'POST') {",
-    "    const wikiSlug = decodeURIComponent(wikiCreateMatch[1]);",
+    "    const wikiSlug = decodeWikiSlug(wikiCreateMatch[1], response);",
+    "    if (wikiSlug === null) return;",
     "    const wikiBodyPayload = await parseBody(request);",
     "    const wikiAuthor = String(wikiBodyPayload.author ?? '').trim();",
     "    const wikiBodyText = String(wikiBodyPayload.body ?? '').trim();",
@@ -2032,7 +2048,8 @@ const rawWikiRoutes = () =>
     "  }",
     "  const wikiPageMatch = path.match(/^\\/wiki\\/([^/]+)$/);",
     "  if (wikiPageMatch && request.method === 'GET') {",
-    "    const wikiSlug = decodeURIComponent(wikiPageMatch[1]);",
+    "    const wikiSlug = decodeWikiSlug(wikiPageMatch[1], response);",
+    "    if (wikiSlug === null) return;",
     "    const wikiPageRow = selectWikiPage.get(wikiSlug);",
     "    if (!wikiPageRow) {",
     "      return html(response, wikiMissingPage(wikiSlug), 200);",
