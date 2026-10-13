@@ -206,6 +206,22 @@ async function measure({ chrome, arms, viewports, runRoot, port, pathsToCapture 
                 milliseconds: Date.now() - started,
               });
             }
+            // A failed non-root capture must reach compareAgainstBoards (mwg-train-os9p): the
+            // placeholder carries no path, so nothing is screenshot or analysed, but the state is
+            // present in the report as an error and compareOne turns it into a STATE_UNMEASURED
+            // finding. Logging alone - the previous behaviour - made the failure vanish from the
+            // comparison entirely, and the check exited 0 with a false PASS while every mapped
+            // state of an arm had failed to render. Root failures keep their own path: they are
+            // already reported as ARM_UNMEASURED through armsByViewport.
+            if (statePath !== '/') {
+              screenshots.push({
+                arm: arm.framework,
+                viewport: requested.key,
+                statePath,
+                path: null,
+                error: error?.message ?? String(error),
+              });
+            }
             console.log(`  ${arm.framework.padEnd(14)} ${requested.key.padEnd(9)} [${statePath}] FAILED: ${error?.message ?? error}`);
           }
         }
@@ -350,7 +366,12 @@ function renderMarkdown(report) {
   lines.push('## Screenshots');  lines.push('');
   lines.push('Saved for inspection (untracked run directory, full-page, one per arm and width):');
   lines.push('');
-  for (const shot of report.screenshots) lines.push(`- \`${shot.path}\``);
+  for (const shot of report.screenshots) {
+    // A failed mapped capture keeps a row, named by its state, so the report shows the gap rather
+    // than listing only the shots that worked (mwg-train-os9p).
+    const target = shot.path ?? `[${shot.statePath}] capture failed: ${shot.error ?? 'unknown error'}`;
+    lines.push(`- \`${target}\``);
+  }
   lines.push('');
   return `${lines.join('\n')}\n`;
 }
@@ -474,7 +495,7 @@ async function compareAgainstBoards({ chrome, armRoot, screenshots, arms, archet
   try {
     page = await chrome.newPage({});
     await page.goto(`${server.origin}/analyse.html`);
-    for (const url of [...boards.map((name) => `/board/${name}`), ...screenshots.map((shot) => `/shot/${shot.path.split('/').pop()}`)]) {
+    for (const url of [...boards.map((name) => `/board/${name}`), ...screenshots.filter((shot) => shot.path).map((shot) => `/shot/${shot.path.split('/').pop()}`)]) {
       try {
         analyzed[url] = await page.evaluate(`return await window.analyseImage(${JSON.stringify(url)});`);
       } catch (error) {
@@ -518,7 +539,18 @@ async function compareAgainstBoards({ chrome, armRoot, screenshots, arms, archet
   }
 
   const perArmRaw = screenshots.map((screenshot) =>
-    compareOne({ screenshot: { ...screenshot, analysis: analyzed[`/shot/${screenshot.path.split('/').pop()}`] }, boardMetrics, archetypeStates }),
+    compareOne({
+      screenshot: {
+        ...screenshot,
+        // A placeholder for a failed capture has no path and so no analysis entry; its own error
+        // becomes the analysis error compareOne reports as STATE_UNMEASURED (mwg-train-os9p).
+        analysis: screenshot.path
+          ? analyzed[`/shot/${screenshot.path.split('/').pop()}`]
+          : { error: screenshot.error ?? 'the capture failed before any screenshot existed' },
+      },
+      boardMetrics,
+      archetypeStates,
+    }),
   );
   // Filter out screenshots that had no applicable boards mapped to their state path
   const perArm = perArmRaw.filter(Boolean);
