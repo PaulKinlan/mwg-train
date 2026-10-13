@@ -129,6 +129,20 @@ test('the sandbox unshares a PID namespace, keeps the network, and clears the en
   const binds = args.join(' ');
   assert.ok(binds.includes('--bind /tmp/d /tmp/d'), 'the database directory is mounted for the host to read back');
   assert.ok(!binds.includes('--bind /tmp /tmp'), 'and never all of /tmp');
+  assert.ok(!binds.includes('--ro-bind ' + ROOT + ' ' + ROOT), 'a project outside the repository needs no repository mount');
+});
+
+test('a harness inside the repository can walk up to its own inputs', () => {
+  // A generated harness finds its inputs by walking up from its directory - the archetype board harness looks for
+  // assets/archetypes/<id>/images that way - so a project inside the repository needs the repository mounted
+  // read-only, with the project itself read-write on top. Without this the walk stops at the sandbox's empty root
+  // and the harness returns 404 for a board it can serve on the host (mwg-train-pdsb).
+  const insideRepo = sandboxArgs({ projectDir: ROOT + '/pilot/out/o3t-assets-x', port: 1 }).join(' ');
+  assert.ok(insideRepo.includes(`--ro-bind ${ROOT} ${ROOT}`), 'the repository is mounted for in-repo projects');
+  assert.ok(
+    insideRepo.indexOf(`--ro-bind ${ROOT} ${ROOT}`) < insideRepo.indexOf(`--bind ${ROOT}/pilot/out/o3t-assets-x`),
+    'and the project directory is mounted read-write on top of it, so the mount order keeps the project writable',
+  );
 });
 
 test('a generated server cannot read the operator environment out of /proc', async (t) => {

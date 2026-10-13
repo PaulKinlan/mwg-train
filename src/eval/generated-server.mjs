@@ -112,6 +112,13 @@ export function sandboxArgs({ projectDir, port, dbPath }) {
   // A private, empty /tmp: HOME points here, and it keeps the host's temporary files out of the sandbox. Mounted
   // before the binds below so that a project or database that lives under /tmp still mounts on top of it.
   args.push('--tmpfs', '/tmp');
+  // A generated harness that lives inside the repository can look for its inputs by walking up from its own
+  // directory - the archetype board harness finds assets/archetypes/<id>/images that way, and the test projects are
+  // created under pilot/out precisely so that walk keeps working. With only the project directory mounted that walk
+  // stops at the sandbox's empty root and the harness 404s, so the repository is mounted read-only first and the
+  // project directory is mounted read-write on top of it. Outside the repository - the capability suites build
+  // their projects in the temporary directory - there is nothing to mount and nothing to walk to.
+  if (projectDir.startsWith(REPO_ROOT + '/')) args.push('--ro-bind', REPO_ROOT, REPO_ROOT);
   args.push('--bind', projectDir, projectDir);
   // The database has to be visible to the host, which reads it back after the run, so its directory is bound
   // read-write at the same path. Only that directory, never all of /tmp: a per-run directory is what makes that
