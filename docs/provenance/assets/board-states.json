@@ -23,7 +23,8 @@
   },
   "contact-lead": {
     "step1-form.jpg": { "path": "/index.html", "kind": "page", "source": "scripts/verify-contact-lead-demo.mjs navigates to `${base}/index.html` to drive the consultation form" },
-    "step2-success.jpg": { "path": "/success.html", "kind": "page", "source": "scripts/verify-contact-lead-demo.mjs asserts the filled submission lands on a path matching success.html" }
+    "step2-success.jpg": { "path": "/success.html", "kind": "page", "source": "scripts/verify-contact-lead-demo.mjs asserts the filled submission lands on a path matching success.html" },
+    "step3-refusal.jpg": { "path": null, "kind": "interaction", "source": "the invalid-submit refusal re-renders the form (plan.md:54); a state of the page, not a document - the same convention as booking's step4-error.jpg" }
   },
   "editorial-blog": {
     "step1-index.jpg": { "path": null, "kind": "absent", "source": "this archetype has no demo directory, so nothing serves this state" },

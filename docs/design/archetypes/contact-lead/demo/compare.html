@@ -44,7 +44,7 @@
 
       <div class="legend">
         <p>
-          The boards are the two JPEGs committed alongside this demo. Per <code>../README.md</code> they
+          The boards are the three JPEGs committed alongside this demo. Per <code>../README.md</code> they
           are "visual planning references only: not a working consultation form, a real submitted lead, a
           generated-site screenshot, a sealed evaluation target, or training/conformance evidence", and
           "the London address, identity, named attendee, email address, response-time promise, reference
@@ -207,6 +207,76 @@
             <li><strong>Buttons:</strong> <em>Return to Home</em> is a link to <code>index.html</code> styled as the primary action; <em>Download Summary PDF</em> is a real button that says in a live region that nothing is downloaded, because this directory generates no PDF.</li>
             <li><strong>Not on the board:</strong> the board's marketing chrome — "Step 2 · Successful contact consultation", <em>Log in</em> and <em>Sign up</em> — is replaced by the demo's own navigation, since this page is not a product's second step and has no accounts.</li>
             <li><strong>Sample state:</strong> opened with no query string at all, the page keeps the board's example values and says on the card that they are the board's illustrative example rather than a submitted enquiry.</li>
+          </ul>
+        </article>
+
+        <!-- Board 3: the invalid-submit refusal -->
+        <article class="comparison-card">
+          <div class="comparison-head">
+            <h2>3. Invalid-submit refusal</h2>
+            <p class="comparison-source">
+              Board <code>../step3-refusal.jpg</code> (1376 × 768, SHA-256 <code>6692bb286cb7…</code>)
+              &middot; the refused state of <code>index.html</code> — the state the live page below
+              reaches when its required fields are empty, not a separate document
+            </p>
+          </div>
+
+          <div class="comparison-views">
+            <div class="view-box">
+              <p class="view-title">Reference board</p>
+              <div class="view-image">
+                <img
+                  src="../step3-refusal.jpg"
+                  alt="Reference board 3: the same dark two-column studio consultation page as board 1, with the form card re-rendered after an empty submission was refused. A red banner with a warning-triangle icon at the top of the form card reads Please complete the required fields to send your request. The Full Name, Work Email and Message fields are outlined in red, each with a red helper line reading This field is required. The emerald Send Consultation Request button is unchanged, and no confirmation content appears anywhere."
+                  width="1376"
+                  height="768"
+                >
+              </div>
+              <p class="view-caption">
+                The board is a planning reference for the contract's refusal state (plan.md:54); the
+                placeholder copy on it is model-generated, like every board here.
+              </p>
+            </div>
+
+            <div class="view-box">
+              <p class="view-title">Live page — 1280 × 900</p>
+              <div class="view-frame">
+                <iframe
+                  src="index.html"
+                  title="Live consultation form at a 1280 by 900 viewport, the page whose refused state the board depicts"
+                  width="1280"
+                  height="900"
+                  loading="lazy"
+                ></iframe>
+              </div>
+              <p class="view-caption">
+                Iframe viewport 1280 × 900, scaled to fit the column.
+                <a href="index.html">Open it full size</a>.
+              </p>
+            </div>
+
+            <div class="view-box">
+              <p class="view-title">Live page — 390 × 844</p>
+              <div class="view-frame view-frame--mobile">
+                <iframe
+                  src="index.html"
+                  title="Live consultation form at a 390 by 844 viewport, the page whose refused state the board depicts"
+                  width="390"
+                  height="844"
+                  loading="lazy"
+                ></iframe>
+              </div>
+              <p class="view-caption">
+                Iframe viewport 390 × 844: the page the refusal is a state of, one column on mobile.
+              </p>
+            </div>
+          </div>
+
+          <ul class="rationale-list">
+            <li><strong>The state, not a page:</strong> the contract (plan.md:54) refuses a missing-field submission and re-renders the form; nothing is stored and no separate document exists. <code>board-states.json</code> registers this board as <code>kind: interaction</code> with no path — booking's <code>step4-error.jpg</code> sets the convention — so the parity comparator deliberately compares nothing against it by path.</li>
+            <li><strong>The live counterpart:</strong> <code>index.html</code> is the page that gets re-rendered. Its empty submit is refused by native validation and stays on the page (<code>verify-contact-lead-demo.mjs</code> drives exactly that: submit clicked, path unchanged, <code>checkValidity()</code> false), where the board's banner and field errors depict what the contract requires the re-render to show.</li>
+            <li><strong>Error styling:</strong> the board's red banner, red field outlines and red helper text are the accepted depiction of the refusal; the demo itself shows the clean form because a static page cannot re-render a POST it never accepts.</li>
+            <li><strong>Cross-board quirks, recorded:</strong> the board's placeholder copy differs from board 1's in the same way the register already accepts for this family — studio name (<em>AURA ARCHITECTURAL STUDIO</em> vs board 1's <em>AURA ARCHITECTS</em>) and card heading (<em>Start Your Project</em> vs <em>Request a Consultation</em>). An acceptance vision review (2026-10-13) confirmed the banner and helper text render correctly and the page colour reaches all four edges.</li>
           </ul>
         </article>
       </div>

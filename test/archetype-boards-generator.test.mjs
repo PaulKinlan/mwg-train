@@ -32,7 +32,7 @@ test('the regenerator reads the recorded prompts byte-for-byte and covers every 
 
   // The five evaluation families, with the exact board counts their READMEs author. Named individually because
   // these are the boards whose prompts the digest register pins.
-  for (const [family, count] of Object.entries({ booking: 5, catalogue: 3, 'contact-lead': 2, 'account-recovery': 2, 'event-registration': 2 })) {
+  for (const [family, count] of Object.entries({ booking: 5, catalogue: 3, 'contact-lead': 3, 'account-recovery': 2, 'event-registration': 2 })) {
     assert.equal(byFamily[family], count, `${family}: expected ${count} authored boards`);
   }
   assert.ok(boards.length >= 14, 'the evaluation families alone are 14 boards');
@@ -53,7 +53,7 @@ test('the regenerator reads the recorded prompts byte-for-byte and covers every 
 
   const verification = verifyRecordedPrompts(boards);
   assert.deepEqual(verification.failures, [], 'every pinned Wave 2 prompt must be reproduced from the README');
-  assert.equal(verification.checked, 9, 'the register pins nine prompts and all nine must be checked');
+  assert.equal(verification.checked, 10, 'the register pins ten prompts and all ten must be checked');
   for (const board of boards) {
     assert.match(board.name, /^step\d+-[a-z0-9-]+\.jpg$/, `${board.family}: unexpected board name ${board.name}`);
     assert.ok(board.prompt.length > 100, `${board.family}/${board.name}: prompt looks truncated (${board.prompt.length} chars)`);

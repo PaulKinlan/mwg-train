@@ -4,12 +4,12 @@
     "target_dir": "docs/design/archetypes/contact-lead",
     "readme": {
       "path": "docs/design/archetypes/contact-lead/README.md",
-      "sha256": "03a1b3365af5dcf6775e0c41c5cd69886d52163858aef270fe483d729fb42292"
+      "sha256": "0d65694aa8c5660909133557a8c762981c597d5074b9c058f958f6dc90428372"
     },
     "documents": [
       {
         "path": "docs/design/archetypes/contact-lead/demo/compare.html",
-        "sha256": "174749a9d5729dc1ec9baa0eb278f70586473a60728e28400f7e2fcd597a5139"
+        "sha256": "37f16a3543b6fbff92e71a7a4fa34b0808c7a1809a088fbc1f0ef7969e75ebad"
       },
       {
         "path": "docs/design/archetypes/contact-lead/demo/index.html",
@@ -96,7 +96,7 @@
         "Each reference board from",
         "../",
         "beside the live page it informed, rendered in an iframe at a true 1280 × 900 desktop viewport and a 390 × 844 mobile viewport.",
-        "The boards are the two JPEGs committed alongside this demo. Per",
+        "The boards are the three JPEGs committed alongside this demo. Per",
         "../README.md",
         "they are \"visual planning references only: not a working consultation form, a real submitted lead, a generated-site screenshot, a sealed evaluation target, or training/conformance evidence\", and \"the London address, identity, named attendee, email address, response-time promise, reference token and PDF button are unverified illustrated placeholders\".",
         "Nothing on this page is a screenshot: the right-hand frames are the live files in this directory, loaded in an iframe, so no capture is committed and none can drift from the implementation. The left-hand images are the boards themselves, unmodified.",
@@ -108,7 +108,7 @@
       ],
       "apparatus": true,
       "source": "docs/design/archetypes/contact-lead/demo/compare.html",
-      "sha256": "174749a9d5729dc1ec9baa0eb278f70586473a60728e28400f7e2fcd597a5139"
+      "sha256": "37f16a3543b6fbff92e71a7a4fa34b0808c7a1809a088fbc1f0ef7969e75ebad"
     },
     "index.html": {
       "title": "ARKHITECTS Studio — Request a consultation",
@@ -214,6 +214,12 @@
       "sha256": "cb5df48b6ff3a569a356f98d5e37fceb4c0e71a27dd52e07536d32d39135be64",
       "bytes": 397249,
       "source": "docs/design/archetypes/contact-lead/step2-success.jpg"
+    },
+    {
+      "name": "step3-refusal.jpg",
+      "sha256": "6692bb286cb77d7af9bdb52430c4e2fa1fdb47a2c2bb9cf73dfaf7376ac74f38",
+      "bytes": 462229,
+      "source": "docs/design/archetypes/contact-lead/step3-refusal.jpg"
     }
   ],
   "rights": {

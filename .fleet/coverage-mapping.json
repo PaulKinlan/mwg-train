@@ -1,4 +1,6 @@
 {
   "scripts/check-archetype-frames.mjs": ["test/checks-wired.test.mjs"],
-  "src/corpus/cdp.mjs": ["test/capture-state.test.mjs", "test/capture-flow.test.mjs", "test/eval-starters.test.mjs"]
+  "src/corpus/cdp.mjs": ["test/capture-state.test.mjs", "test/capture-flow.test.mjs", "test/eval-starters.test.mjs"],
+  "pilot/CORPUS.json": ["test/build-key.test.mjs"],
+  "docs/train/corpus/tokens.json": ["test/tokens-record.test.mjs"]
 }
