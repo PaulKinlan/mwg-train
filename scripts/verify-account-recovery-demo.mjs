@@ -27,6 +27,9 @@ try {
   for (const width of [390, 768, 1280]) {
     const page = await chrome.newPage({ viewport: { width, height: 844 }, mobile: width === 390 });
     await page.goto(`${base}/index.html`);
+    // mvhm: never evaluate against a page that has not rendered its primary card yet - under gate
+    // load the readyState alone can race the inline script that builds the view.
+    await page.waitFor('#request-card');
     const before = JSON.parse(await page.evaluate(`return JSON.stringify({
       request: !document.querySelector('#request-card').hidden,
       sent: document.querySelector('#sent-card').hidden,
@@ -93,6 +96,7 @@ try {
 
     const compare = await chrome.newPage({ viewport: { width, height: 844 }, mobile: width === 390 });
     await compare.goto(`${base}/compare.html`);
+    await compare.waitFor('.comparison');
     await compare.evaluate(`document.querySelectorAll('.comparison')[1].scrollIntoView(); return true;`);
     await sleep(300);
     const views = JSON.parse(await compare.evaluate(`return JSON.stringify({

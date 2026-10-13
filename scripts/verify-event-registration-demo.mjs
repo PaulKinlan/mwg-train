@@ -26,6 +26,8 @@ try {
   for (const width of [390, 768, 1280]) {
     const page = await chrome.newPage({ viewport: { width, height: 900 }, mobile: width === 390 });
     await page.goto(`${base}/index.html`);
+    // mvhm: same readiness guard as the recovery verifier.
+    await page.waitFor('#registration-view');
     const first = JSON.parse(await page.evaluate(`return JSON.stringify({
       form: !document.querySelector('#registration-view').hidden,
       pass: document.querySelector('#pass-view').hidden,
@@ -113,6 +115,7 @@ try {
 
     const compare = await chrome.newPage({ viewport: { width, height: 900 }, mobile: width === 390 });
     await compare.goto(`${base}/compare.html`);
+    await compare.waitFor('.comparison');
     await compare.evaluate(`document.querySelectorAll('.comparison')[1].scrollIntoView(); return true;`);
     await sleep(350);
     const views = JSON.parse(await compare.evaluate(`return JSON.stringify({ images:[...document.querySelectorAll('.comparison img')].map((x)=>[x.naturalWidth,x.naturalHeight]), frames:[...document.querySelectorAll('.comparison iframe')].map((x)=>({ready:x.contentDocument?.readyState,pass:x.contentDocument?.querySelector('#pass-view')?.hidden,warning:x.contentDocument?.querySelector('.preview-warning')?.textContent})),overflow:document.documentElement.scrollWidth - innerWidth })`));
