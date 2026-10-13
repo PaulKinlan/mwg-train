@@ -81,7 +81,6 @@ export const MIN_SHOWN = 8;
  * fails instead of silently joining them; adding captions to them is a separate decision, not this check's.
  */
 export const UNCAPTIONED_BY_DESIGN = Object.freeze({
-  'account-recovery': 'displays its two boards without digests; no caption has ever been printed',
   'event-registration': 'displays its two boards without digests; no caption has ever been printed',
 });
 

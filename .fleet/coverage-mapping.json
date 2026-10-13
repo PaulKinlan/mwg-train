@@ -1,6 +1,43 @@
 {
-  "scripts/check-archetype-frames.mjs": ["test/checks-wired.test.mjs"],
-  "src/corpus/cdp.mjs": ["test/capture-state.test.mjs", "test/capture-flow.test.mjs", "test/eval-starters.test.mjs"],
-  "pilot/CORPUS.json": ["test/build-key.test.mjs"],
-  "docs/train/corpus/tokens.json": ["test/tokens-record.test.mjs"]
+  "scripts/check-archetype-frames.mjs": [
+    "test/checks-wired.test.mjs"
+  ],
+  "src/corpus/cdp.mjs": [
+    "test/capture-state.test.mjs",
+    "test/capture-flow.test.mjs",
+    "test/eval-starters.test.mjs"
+  ],
+  "pilot/CORPUS.json": [
+    "test/build-key.test.mjs"
+  ],
+  "docs/train/corpus/tokens.json": [
+    "test/tokens-record.test.mjs"
+  ],
+  "scripts/verify-account-recovery-demo.mjs": [
+    "test/demo-verifiers.test.mjs"
+  ],
+  "scripts/verify-event-registration-demo.mjs": [
+    "test/demo-verifiers.test.mjs"
+  ],
+  "scripts/verify-contact-lead-demo.mjs": [
+    "test/demo-verifiers.test.mjs"
+  ],
+  "docs/design/archetypes/account-recovery/demo/compare.html": [
+    "test/demo-verifiers.test.mjs"
+  ],
+  "docs/design/archetypes/account-recovery/demo/index.html": [
+    "test/demo-verifiers.test.mjs"
+  ],
+  "docs/design/archetypes/event-registration/demo/compare.html": [
+    "test/demo-verifiers.test.mjs"
+  ],
+  "docs/design/archetypes/event-registration/demo/index.html": [
+    "test/demo-verifiers.test.mjs"
+  ],
+  "docs/design/archetypes/contact-lead/demo/compare.html": [
+    "test/demo-verifiers.test.mjs"
+  ],
+  "docs/design/archetypes/contact-lead/demo/index.html": [
+    "test/demo-verifiers.test.mjs"
+  ]
 }

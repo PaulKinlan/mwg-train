@@ -10,7 +10,7 @@
 <body class="compare-page">
   <main class="compare-shell">
     <h1>Account recovery: visual references and live demo</h1>
-    <p class="compare-lead">Two unmodified Wave 2 reference boards beside independently rendered, interactive HTML previews. Open each preview at full size to inspect the behavior or tab into an iframe to try it here.</p>
+    <p class="compare-lead">Three unmodified Wave 2 reference boards beside independently rendered, interactive HTML previews. Open each preview at full size to inspect the behavior or tab into an iframe to try it here.</p>
     <p class="compare-disclaimer">The boards are illustrative, rights-restricted design references, not generated-site captures or evidence of working email, tokens, expiry, or security controls. The preview sends no email, exposes no server route, and must not enter training or evaluation. See <a href="../README.md">board provenance</a> and <a href="README.md">demo boundaries</a>.</p>
     <article class="comparison">
       <h2>Request a reset link</h2>
@@ -18,7 +18,7 @@
       <div class="compare-grid">
         <figure>
           <img src="../step1-request.jpg" width="1376" height="768" alt="Illustrative dark-slate recovery card with a logo, email field, Send Recovery Link button and Back to Sign In link">
-          <figcaption>Unmodified reference · <a href="../step1-request.jpg">open the JPEG</a>.</figcaption>
+          <figcaption>Unmodified reference, <code>../step1-request.jpg</code> · SHA-256 <code>4426e0ca71c3…</code> · <a href="../step1-request.jpg">open the JPEG</a>.</figcaption>
         </figure>
         <figure>
           <iframe src="index.html" title="Live recovery request form visual demo, no email sent" loading="lazy"></iframe>
@@ -32,11 +32,25 @@
       <div class="compare-grid">
         <figure>
           <img src="../step2-sent.jpg" width="1376" height="768" alt="Illustrative dark-slate inbox card with an emerald tray icon, Check Your Inbox heading, countdown, Open Email App button and Return to Sign In link">
-          <figcaption>Unmodified reference · <a href="../step2-sent.jpg">open the JPEG</a>.</figcaption>
+          <figcaption>Unmodified reference, <code>../step2-sent.jpg</code> · SHA-256 <code>331771485fc5…</code> · <a href="../step2-sent.jpg">open the JPEG</a>.</figcaption>
         </figure>
         <figure>
           <iframe src="index.html?state=sent" title="Live inbox confirmation visual preview, no email sent" loading="lazy"></iframe>
           <figcaption>Live HTML state preview · <a href="index.html?state=sent">open it full size</a>. The email address is illustrative, and app launch is deliberately disabled.</figcaption>
+        </figure>
+      </div>
+    </article>
+    <article class="comparison">
+      <h2>Invalid-address refusal preview</h2>
+      <p>Board 3 (added by mwg-train-uh0o): the contract's refusal state (plan.md:114) - an empty or malformed address is refused by the field's own constraint before submission, the error announced in text. A state of the field, not a document.</p>
+      <div class="compare-grid">
+        <figure>
+          <img src="../step3-refusal.jpg" width="1376" height="768" alt="Illustrative dark-slate recovery card with the email field outlined red after an invalid address, a bound error message reading Enter a valid email address, the emerald Send Recovery Link button unchanged and the Back to Sign In link">
+          <figcaption>Unmodified reference, <code>../step3-refusal.jpg</code> · SHA-256 <code>a66fd4abe71f…</code> · <a href="../step3-refusal.jpg">open the JPEG</a>.</figcaption>
+        </figure>
+        <figure>
+          <iframe src="index.html" title="Live recovery request form, the page whose field constraint the board depicts" loading="lazy"></iframe>
+          <figcaption>Live HTML form preview · <a href="index.html">open it full size</a>. The board depicts this form's own refusal state; this demo's validation is native, and <code>board-states.json</code> registers the board as an interaction with no path, so the parity comparator deliberately compares nothing against it by path.</figcaption>
         </figure>
       </div>
     </article>
