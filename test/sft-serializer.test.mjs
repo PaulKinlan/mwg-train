@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync, rmSync, symlinkSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync, rmSync, symlinkSync, lstatSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -120,6 +120,20 @@ test('a missing or symlinked rights record fails before output even with an appr
   symlinkSync(join(f.root, 'prompt.txt'), ref);
   assert.throws(() => serializeSft({ ...f, tokenizer: tokenizer() }), /NOT_APPROVED/);
   assert.equal(existsSync(f.outputPath), false);
+}));
+
+test('rights_ref through a symlinked directory outside root is refused even when the leaf is a regular file', () => withFixture((f) => {
+  const outside = mkdtempSync(join(tmpdir(), 'mwg-sft-outside-rights-'));
+  try {
+    writeFileSync(join(outside, 'approved.md'), 'Synthetic external rights fixture; not a real approval.\n');
+    symlinkSync(outside, join(f.root, 'docs', 'provenance', 'outside'), 'dir');
+    f.row.rights_ref = 'docs/provenance/outside/approved.md';
+    writeFileSync(f.manifestPath, `${JSON.stringify(f.row)}\n`);
+    assert.equal(lstatSync(join(f.root, f.row.rights_ref)).isFile(), true,
+      'this must test the realpath-within guard, not a symlinked final file');
+    assert.throws(() => serializeSft({ ...f, tokenizer: tokenizer() }), /NOT_APPROVED/);
+    assert.equal(existsSync(f.outputPath), false);
+  } finally { rmSync(outside, { recursive: true, force: true }); }
 }));
 
 test('both conservative trainCtx and 262K LoRA shape exceedances fail with exact measured counts, never truncate', () => withFixture((f) => {
