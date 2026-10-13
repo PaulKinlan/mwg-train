@@ -212,5 +212,12 @@
       "kind": "interaction",
       "source": "the refusal is a re-render of the checkout after a refused submission with an empty order (tr-11's zero total items and fam-11's empty cart are that same state; plan.md:67, plan.md:72-73, plan.md:88): a state of the form, not a document - the same convention as the Wave 2 refusal boards and booking's step4-error.jpg"
     }
+  },
+  "library-catalogue": {
+    "step3-refusal.jpg": {
+      "path": null,
+      "kind": "interaction",
+      "source": "the refusal is a re-render of the reservation form after a refused submission without a researcher name or with an invalid date (plan.md:120, plan.md:133-137): a state of the form, not a document - the same convention as the Wave 2 refusal boards and booking's step4-error.jpg"
+    }
   }
 }
