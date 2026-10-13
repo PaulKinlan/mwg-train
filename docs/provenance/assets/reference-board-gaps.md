@@ -101,6 +101,23 @@ This is the condition that governs every board task in this document, and it is 
 rather than ready. It also corrects an assumption in the first two versions, which treated "a comparison needs a
 target" as sufficient. It is necessary and not sufficient - the comparison also has to reach the state.
 
+## Scope boundary for interaction boards (recorded 2026-10-13)
+
+Every board in this document depicts an **asserted state**, and several of those states have no URL: a refusal
+re-renders the form that was submitted. Those boards are classified `kind: 'interaction'` with a deliberately
+null `path` in `board-states.json`, with a source naming the assertion they serve - the convention booking's
+`step4-error.jpg` and the three Wave 2 refusal boards (contact-lead, account-recovery, event-registration)
+established.
+
+**What such a board does and does not do today.** It supplies the canonical visual specification for the
+asserted state, and it resolves the board-missing side of the asset registry. It is **not** compared against any
+rendered arm, because `check-cross-arm-parity` captures by URL path only: `captureSignature` navigates to a
+root-relative path, so a state that exists only after a refused submission cannot be reached, and giving it a
+path would compare an unrelated page and report the mismatch as a design difference. Interaction boards are
+therefore **exempt from path-based comparator sweeps** until the instrument implements interactive driving
+(simulating the submission that produces the refusal). That work belongs to the instrument, not to the board,
+and a board task must not be blocked on it.
+
 ## What follows
 
 1. **Capture coverage first, as its own tasks (mwg-train-bosi, closed; and mwg-train-j3o4).** `captureSignature` must be able to reach the
