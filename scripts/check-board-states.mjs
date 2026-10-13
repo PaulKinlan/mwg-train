@@ -121,8 +121,12 @@ export function driveFindings({ archetype, board, entry }) {
   if (submit !== null && (typeof submit !== 'string' || !submit.trim())) {
     findings.push({ code: 'DRIVE_SUBMIT_NOT_A_SELECTOR', archetype, board, message: `${at} has submit ${JSON.stringify(submit)}, which is not a non-empty selector` });
   }
-  if (expectText !== null && (typeof expectText !== 'string' || !expectText.trim())) {
-    findings.push({ code: 'DRIVE_EXPECT_TEXT_NOT_A_STRING', archetype, board, message: `${at} has expectText ${JSON.stringify(expectText)}, which is not a non-empty string; without it a drive that silently succeeded would be compared against this refusal board` });
+  // mwg-train-pv44 (rev-1): expectText is REQUIRED, not optional. A drive without it still captures and
+  // compares whatever page the submission produced, so an author who omits it gets exactly the silent wrong
+  // answer expectText exists to prevent - a successful submission compared against a refusal board. The
+  // contract refuses the entry rather than trusting the author to remember.
+  if (expectText === null || typeof expectText !== 'string' || !expectText.trim()) {
+    findings.push({ code: 'DRIVE_EXPECT_TEXT_NOT_A_STRING', archetype, board, message: `${at} has expectText ${JSON.stringify(expectText)}, which is not a non-empty string; a drive without it would compare whatever the submission produced against this refusal board, including a successful submission (mwg-train-pv44)` });
   }
   if (startPath !== undefined) {
     if (typeof startPath !== 'string' || !startPath.startsWith('/') || startPath.startsWith('//')) {

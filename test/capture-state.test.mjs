@@ -376,3 +376,18 @@ test('a drive waits for a form the arm has not hydrated yet', async () => {
     rmSync(runDir, { recursive: true, force: true });
   }
 });
+
+test('a drive with no expectText is refused before any browser starts', async () => {
+  // mwg-train-pv44: the API agrees with the mapping validator, so a direct caller cannot opt out of the marker
+  // either. Tested with chrome: null because the guard must run before the browser is used.
+  const runDir = mkdtempSync(join(tmpdir(), 'mwg-capture-drive-expect-guard-'));
+  try {
+    await assert.rejects(
+      () => captureSignature({ chrome: null, projectDir: TMP, port: 7966, runDir, drive: { submit: 'form#f' } }),
+      (error) => error instanceof TypeError && /expectText is required/.test(error.message),
+      'a drive without expectText was not refused',
+    );
+  } finally {
+    rmSync(runDir, { recursive: true, force: true });
+  }
+});

@@ -84,8 +84,12 @@ export async function captureSignature({ chrome, projectDir, port, runDir, viewp
     if (submit !== null && (typeof submit !== 'string' || !submit.trim())) {
       throw new TypeError(`captureSignature: drive.submit must be a non-empty selector, got ${JSON.stringify(submit)}`);
     }
-    if (expectText !== null && (typeof expectText !== 'string' || !expectText.trim())) {
-      throw new TypeError(`captureSignature: drive.expectText must be a non-empty string, got ${JSON.stringify(expectText)}`);
+    // Required, not optional (mwg-train-pv44): without it the capture cannot tell a refusal from a successful
+    // submission, and the screenshot of the wrong state would be compared against the refusal board with full
+    // confidence. The mapping validator refuses such an entry; this guard means the API agrees even when called
+    // directly.
+    if (expectText === null || typeof expectText !== 'string' || !expectText.trim()) {
+      throw new TypeError(`captureSignature: drive.expectText is required and must be a non-empty string, got ${JSON.stringify(expectText)}; without it a successful submission cannot be told from the state the board depicts`);
     }
   }
   let server = null;

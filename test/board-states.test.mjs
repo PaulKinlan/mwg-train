@@ -80,7 +80,7 @@ test('a drive block that names no action is a finding, because it would capture 
   // of the refusal, which reports a design difference where the real fault is a missing instruction.
   const findings = boardStateFindings({
     boards: { catalogue: ['step1-refusal.jpg'] },
-    mapping: { catalogue: { 'step1-refusal.jpg': { path: null, kind: 'interaction', source: 'x', drive: { startPath: '/' } } } },
+    mapping: { catalogue: { 'step1-refusal.jpg': { path: null, kind: 'interaction', source: 'x', drive: { startPath: '/', expectText: 'anything' } } } },
   });
   assert.deepEqual(codes(findings), ['DRIVE_WITH_NO_ACTION']);
 });
@@ -88,7 +88,7 @@ test('a drive block that names no action is a finding, because it would capture 
 test('a driven board that also claims a path is a finding, because the two describe different things', () => {
   const findings = boardStateFindings({
     boards: { catalogue: ['step1-refusal.jpg'] },
-    mapping: { catalogue: { 'step1-refusal.jpg': { path: '/index.html', kind: 'interaction', source: 'x', drive: { submit: 'form#f' } } } },
+    mapping: { catalogue: { 'step1-refusal.jpg': { path: '/index.html', kind: 'interaction', source: 'x', drive: { submit: 'form#f', expectText: 'anything' } } } },
   });
   assert.deepEqual(codes(findings), ['DRIVE_WITH_PATH']);
 });
@@ -117,4 +117,16 @@ test('a well-formed drive passes, so the contract above is not punishing the fea
     },
   });
   assert.deepEqual(findings, []);
+});
+
+test('a drive without expectText is refused, because a successful submission cannot be told from the refusal', () => {
+  // mwg-train-pv44 (rev-1). The drive exists so a state no URL selects can be captured; expectText is how the
+  // capture knows the drive REACHED that state rather than silently succeeding. An entry without it would
+  // compare whatever the submission produced against the refusal board with full confidence - the exact wrong
+  // answer the instrument must never produce - so the contract refuses the entry instead of trusting the author.
+  const findings = boardStateFindings({
+    boards: { catalogue: ['step1-refusal.jpg'] },
+    mapping: { catalogue: { 'step1-refusal.jpg': { path: null, kind: 'interaction', source: 'x', drive: { submit: 'form#reserve' } } } },
+  });
+  assert.deepEqual(codes(findings), ['DRIVE_EXPECT_TEXT_NOT_A_STRING']);
 });
