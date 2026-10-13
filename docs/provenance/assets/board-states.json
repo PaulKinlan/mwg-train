@@ -6,49 +6,176 @@
     "kind": "page = a distinct document reachable by a path; interaction = a state of a page, reached by acting on it, so NO path selects it (see mwg-train-bosi); absent = the archetype has no demo to serve"
   },
   "account-recovery": {
-    "step1-request.jpg": { "path": "/index.html", "kind": "page", "source": "scripts/verify-account-recovery-demo.mjs navigates to `${base}/index.html` to drive the reset-link request form" },
-    "step2-sent.jpg": { "path": null, "kind": "interaction", "source": "the check-your-inbox notice is shown after submitting the form on index.html, so no path selects it" },
-    "step3-refusal.jpg": { "path": null, "kind": "interaction", "source": "the empty or malformed address is refused by the field's own constraint before submission (plan.md:114); a state of the field on index.html, not a document" }
+    "step1-request.jpg": {
+      "path": "/index.html",
+      "kind": "page",
+      "source": "scripts/verify-account-recovery-demo.mjs navigates to `${base}/index.html` to drive the reset-link request form"
+    },
+    "step2-sent.jpg": {
+      "path": null,
+      "kind": "interaction",
+      "source": "the check-your-inbox notice is shown after submitting the form on index.html, so no path selects it"
+    },
+    "step3-refusal.jpg": {
+      "path": null,
+      "kind": "interaction",
+      "source": "the empty or malformed address is refused by the field's own constraint before submission (plan.md:114); a state of the field on index.html, not a document"
+    }
   },
   "booking": {
-    "step1-browse.jpg": { "path": "/index.html", "kind": "page", "source": "the browse list is the demo's index document" },
-    "step2-form.jpg": { "path": null, "kind": "interaction", "source": "the booking form is reached by selecting a slot on index.html" },
-    "step3-confirmation.jpg": { "path": "/confirmation.html", "kind": "page", "source": "a document on disk whose name matches the board slug" },
-    "step4-error.jpg": { "path": null, "kind": "interaction", "source": "the refusal is a state of the form, not a document" },
-    "step5-empty.jpg": { "path": "/empty.html", "kind": "page", "source": "a document on disk whose name matches the board slug" }
+    "step1-browse.jpg": {
+      "path": "/index.html",
+      "kind": "page",
+      "source": "the browse list is the demo's index document"
+    },
+    "step2-form.jpg": {
+      "path": null,
+      "kind": "interaction",
+      "source": "the booking form is reached by selecting a slot on index.html"
+    },
+    "step3-confirmation.jpg": {
+      "path": "/confirmation.html",
+      "kind": "page",
+      "source": "a document on disk whose name matches the board slug"
+    },
+    "step4-error.jpg": {
+      "path": null,
+      "kind": "interaction",
+      "source": "the refusal is a state of the form, not a document"
+    },
+    "step5-empty.jpg": {
+      "path": "/empty.html",
+      "kind": "page",
+      "source": "a document on disk whose name matches the board slug"
+    }
   },
   "catalogue": {
-    "step1-grid.jpg": { "path": "/index.html", "kind": "page", "source": "the product grid is the demo's index document" },
-    "step2-cart.jpg": { "path": "/cart.html", "kind": "page", "source": "a document on disk whose name matches the board slug" },
-    "step3-empty.jpg": { "path": "/empty.html", "kind": "page", "source": "a document on disk whose name matches the board slug; plan.md:97 names demo/empty.html as the first-class empty page" }
+    "step1-grid.jpg": {
+      "path": "/index.html",
+      "kind": "page",
+      "source": "the product grid is the demo's index document"
+    },
+    "step2-cart.jpg": {
+      "path": "/cart.html",
+      "kind": "page",
+      "source": "a document on disk whose name matches the board slug"
+    },
+    "step3-empty.jpg": {
+      "path": "/empty.html",
+      "kind": "page",
+      "source": "a document on disk whose name matches the board slug; plan.md:97 names demo/empty.html as the first-class empty page"
+    }
   },
   "contact-lead": {
-    "step1-form.jpg": { "path": "/index.html", "kind": "page", "source": "scripts/verify-contact-lead-demo.mjs navigates to `${base}/index.html` to drive the consultation form" },
-    "step2-success.jpg": { "path": "/success.html", "kind": "page", "source": "scripts/verify-contact-lead-demo.mjs asserts the filled submission lands on a path matching success.html" },
-    "step3-refusal.jpg": { "path": null, "kind": "interaction", "source": "the invalid-submit refusal re-renders the form (plan.md:54); a state of the page, not a document - the same convention as booking's step4-error.jpg" }
+    "step1-form.jpg": {
+      "path": "/index.html",
+      "kind": "page",
+      "source": "scripts/verify-contact-lead-demo.mjs navigates to `${base}/index.html` to drive the consultation form"
+    },
+    "step2-success.jpg": {
+      "path": "/success.html",
+      "kind": "page",
+      "source": "scripts/verify-contact-lead-demo.mjs asserts the filled submission lands on a path matching success.html"
+    },
+    "step3-refusal.jpg": {
+      "path": null,
+      "kind": "interaction",
+      "source": "the invalid-submit refusal re-renders the form (plan.md:54); a state of the page, not a document - the same convention as booking's step4-error.jpg"
+    }
   },
   "editorial-blog": {
-    "step1-index.jpg": { "path": null, "kind": "absent", "source": "this archetype has no demo directory, so nothing serves this state" },
-    "step2-article.jpg": { "path": null, "kind": "absent", "source": "this archetype has no demo directory, so nothing serves this state" },
-    "step3-composer.jpg": { "path": null, "kind": "absent", "source": "this archetype has no demo directory, so nothing serves this state" },
-    "step4-empty.jpg": { "path": null, "kind": "absent", "source": "this archetype has no demo directory, so nothing serves this state" }
+    "step1-index.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step2-article.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step3-composer.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step4-empty.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    }
   },
   "event-registration": {
-    "step1-event.jpg": { "path": "/index.html", "kind": "page", "source": "scripts/verify-event-registration-demo.mjs drives the event overview on the demo's index document" },
-    "step2-pass.jpg": { "path": null, "kind": "interaction", "source": "the pass is previewed after the form is submitted, so no path selects it" },
-    "step3-refusal.jpg": { "path": null, "kind": "interaction", "source": "the capacity and validation refusal re-renders the registration form after a refused POST (plan.md:34); a state of the form, not a document" }
+    "step1-event.jpg": {
+      "path": "/index.html",
+      "kind": "page",
+      "source": "scripts/verify-event-registration-demo.mjs drives the event overview on the demo's index document"
+    },
+    "step2-pass.jpg": {
+      "path": null,
+      "kind": "interaction",
+      "source": "the pass is previewed after the form is submitted, so no path selects it"
+    },
+    "step3-refusal.jpg": {
+      "path": null,
+      "kind": "interaction",
+      "source": "the capacity and validation refusal re-renders the registration form after a refused POST (plan.md:34); a state of the form, not a document"
+    }
   },
   "fan-community-site": {
-    "step1-collection.jpg": { "path": null, "kind": "absent", "source": "this archetype has no demo directory, so nothing serves this state" },
-    "step2-contribution.jpg": { "path": null, "kind": "absent", "source": "this archetype has no demo directory, so nothing serves this state" },
-    "step3-my-contributions.jpg": { "path": null, "kind": "absent", "source": "this archetype has no demo directory, so nothing serves this state" },
-    "step4-moderation.jpg": { "path": null, "kind": "absent", "source": "this archetype has no demo directory, so nothing serves this state" },
-    "step5-visitor.jpg": { "path": null, "kind": "absent", "source": "this archetype has no demo directory, so nothing serves this state" }
+    "step1-collection.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step2-contribution.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step3-my-contributions.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step4-moderation.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step5-visitor.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    }
   },
   "product-card-comparison": {
-    "step1-cards.jpg": { "path": null, "kind": "absent", "source": "this archetype has no demo directory, so nothing serves this state" },
-    "step2-compare.jpg": { "path": null, "kind": "absent", "source": "this archetype has no demo directory, so nothing serves this state" },
-    "step3-selected.jpg": { "path": null, "kind": "absent", "source": "this archetype has no demo directory, so nothing serves this state" },
-    "step4-empty.jpg": { "path": null, "kind": "absent", "source": "this archetype has no demo directory, so nothing serves this state" }
+    "step1-cards.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step2-compare.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step3-selected.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step4-empty.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    }
+  },
+  "community-forum": {
+    "step3-refusal.jpg": {
+      "path": null,
+      "kind": "interaction",
+      "source": "the refusal is a re-render of the reply composer after a refused submission with a missing required note body (plan.md:75-76, fam-14): a state of the form, not a document - the same convention as the Wave 2 refusal boards and booking's step4-error.jpg"
+    }
   }
 }
