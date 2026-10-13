@@ -152,6 +152,28 @@ if (fs.existsSync(coverageMappingPath)) {
     console.error(`fast-gate: FAIL: coverage mapping ${coverageMappingPath} must be a JSON object of file -> suites.`);
     process.exit(1);
   }
+  // Validate the WHOLE contract at load, not just the entries this run selects (mwg-train-ukct):
+  // the mapping file itself is exempt from the changed-file unmapped check (.fleet/ prefix), so a
+  // mapping edited on its own would otherwise pass green while naming a suite no branch can ever
+  // run. Rot is caught the moment it lands, whichever files changed. Keys carrying glob
+  // metacharacters are exempt from the on-disk key check: the fleet oracle also accepts fnmatch
+  // patterns this gate's exact-match consumption does not select, and a pattern is not a file.
+  for (const [mappedFile, suites] of Object.entries(coverageMapping)) {
+    if (!Array.isArray(suites) || suites.length === 0 || suites.some((s) => typeof s !== 'string')) {
+      console.error(`fast-gate: FAIL: coverage mapping entry for ${mappedFile} must be a non-empty array of suite paths.`);
+      process.exit(1);
+    }
+    if (!/[*?\[]/.test(mappedFile) && !fs.existsSync(path.join(ROOT, mappedFile))) {
+      console.error(`fast-gate: FAIL: coverage mapping key ${mappedFile} does not exist on disk.`);
+      process.exit(1);
+    }
+    for (const suite of suites) {
+      if (!fs.existsSync(path.join(ROOT, suite))) {
+        console.error(`fast-gate: FAIL: coverage mapping entry for ${mappedFile} names a suite that is not a file on disk: ${suite}`);
+        process.exit(1);
+      }
+    }
+  }
 }
 
 // Explicit script mapping for check scripts that don't have direct unit tests
@@ -294,21 +316,11 @@ for (const file of changedFiles) {
     matched = true;
   }
 
-  // Explicit coverage contract entry: select the declared suites, failing closed if the contract
-  // names a suite that is not a file on disk. A silent skip here would recreate exactly the drift
-  // the shared contract exists to prevent - the oracle would keep crediting a suite the gate never
-  // runs.
+  // Explicit coverage contract entry (validated wholesale at load — see coverageMapping above):
+  // selecting the declared suites is all that remains to do here.
   const mappedSuites = coverageMapping[file];
   if (mappedSuites !== undefined) {
-    if (!Array.isArray(mappedSuites) || mappedSuites.length === 0 || mappedSuites.some((s) => typeof s !== 'string')) {
-      console.error(`fast-gate: FAIL: coverage mapping entry for ${file} must be a non-empty array of suite paths.`);
-      process.exit(1);
-    }
     for (const suite of mappedSuites) {
-      if (!fs.existsSync(path.join(ROOT, suite))) {
-        console.error(`fast-gate: FAIL: coverage mapping entry for ${file} names a suite that is not a file on disk: ${suite}`);
-        process.exit(1);
-      }
       selectedSuites.add(suite);
     }
     matched = true;

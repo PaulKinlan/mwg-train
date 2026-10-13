@@ -118,10 +118,28 @@ test('fast-gate fails closed when the coverage mapping names a suite that does n
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'mwg-fast-gate-map-'));
   try {
     const mapPath = path.join(tmp, 'coverage-mapping.json');
-    fs.writeFileSync(mapPath, JSON.stringify({ 'src/anything.mjs': ['test/does-not-exist.test.mjs'] }));
-    const env = { ...process.env, GIT_CHANGED: 'src/anything.mjs', FAST_GATE_LIST: '1', FAST_GATE_COVERAGE_MAP: mapPath };
+    fs.writeFileSync(mapPath, JSON.stringify({ 'src/eval/cost.mjs': ['test/does-not-exist.test.mjs'] }));
+    const env = { ...process.env, GIT_CHANGED: 'src/eval/cost.mjs', FAST_GATE_LIST: '1', FAST_GATE_COVERAGE_MAP: mapPath };
     const res = spawnSync('node', [FAST_GATE], { cwd: ROOT, env, encoding: 'utf8' });
     assert.notStrictEqual(res.status, 0, 'a rotten mapping entry must fail the gate');
+    assert.ok(res.stderr.includes('not a file on disk'), `must name the missing suite: ${res.stderr}`);
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
+test('fast-gate validates the coverage contract even when only the mapping file changed (mwg-train-ukct)', () => {
+  // .fleet/ is exempt from the changed-file unmapped check, so a rotten mapping edited on its own
+  // used to pass green: no mapped source file was in the changed set, so no entry was ever
+  // selected - and nothing validated the rest of the contract. Validation now runs at load,
+  // unconditionally, so the gate fails closed whichever files changed.
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'mwg-fast-gate-map2-'));
+  try {
+    const mapPath = path.join(tmp, 'coverage-mapping.json');
+    fs.writeFileSync(mapPath, JSON.stringify({ 'src/corpus/cdp.mjs': ['test/capture-state.test.mjs'], 'src/eval/cost.mjs': ['test/does-not-exist.test.mjs'] }));
+    const env = { ...process.env, GIT_CHANGED: '.fleet/coverage-mapping.json', FAST_GATE_LIST: '1', FAST_GATE_COVERAGE_MAP: mapPath };
+    const res = spawnSync('node', [FAST_GATE], { cwd: ROOT, env, encoding: 'utf8' });
+    assert.notStrictEqual(res.status, 0, 'a rotten mapping must fail the gate even when no mapped source file changed');
     assert.ok(res.stderr.includes('not a file on disk'), `must name the missing suite: ${res.stderr}`);
   } finally {
     fs.rmSync(tmp, { recursive: true, force: true });
