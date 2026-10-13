@@ -47,6 +47,17 @@ test('Fireworks rows quote their exact parameter count and flags from the estima
   assert.equal(FIREWORKS_TRAINABLE.find((model) => model.id === 'qwen3-14b').params, 14_768_307_200);
 });
 
+test('a model-specific rate is checked against its provider quote rather than inferred from parameter band', () => {
+  const model = FIREWORKS_TRAINABLE.find((row) => row.id === 'deepseek-v4p1-flash');
+  const saved = model.rate;
+  try {
+    model.rate = { ...saved, lora_sft: 5.2 };
+    assert.ok(validateTrainEvidence().some((finding) => finding.code === 'ROW_RATE' && finding.subject === model.id));
+    model.rate = { ...saved, quote_id: 'fireworks-train-deepseek-v4-flash-0731', lora_sft: 5.2 };
+    assert.ok(validateTrainEvidence().some((finding) => finding.code === 'ROW_RATE_SCOPE' && finding.subject === model.id));
+  } finally { model.rate = saved; }
+});
+
 test('every trainable row cites the licence it claims, from the model it names', () => {
   for (const model of FIREWORKS_TRAINABLE) {
     assert.ok(model.licence.length > 0, `${model.id} has a licence`);

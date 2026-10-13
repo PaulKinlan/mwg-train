@@ -87,6 +87,9 @@
   "scripts/check-train-evidence.mjs": [
     "test/reachability.test.mjs"
   ],
+  "scripts/price-two-backends.mjs": [
+    "test/compare.test.mjs"
+  ],
   "scripts/check-cross-arm-parity.mjs": [
     "test/cross-arm-parity.test.mjs"
   ],

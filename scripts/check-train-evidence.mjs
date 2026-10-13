@@ -17,9 +17,13 @@
  * fields rather than a body hash.
  */
 import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import process from 'node:process';
 
-import { bandFor, CLUSTER_TRAINABLE, EVIDENCE, FIREWORKS_TRAINABLE } from '../src/train/reachability.mjs';
+import { CLUSTER_TRAINABLE, EVIDENCE, FIREWORKS_TRAINABLE } from '../src/train/reachability.mjs';
+
+const PRICE_QUOTES = new Map(readFileSync(new URL('../docs/eval/quotes.jsonl', import.meta.url), 'utf8')
+  .split('\n').filter(Boolean).map((line) => { const quote = JSON.parse(line); return [quote.quote_id, quote]; }));
 
 const SHA256 = /^sha256:[a-f0-9]{64}$/;
 const COMMIT = /^[a-f0-9]{40}$/;
@@ -62,28 +66,39 @@ export function validateTrainEvidence() {
         add('ROW_SHAPE', model.id, 'no cited managed LoRA shape in the training catalogue');
       }
     }
+    // A licence source and a row must name the SAME pinned HF revision; a catalogue name alone is not an identity.
+    const licenceSource = model.licence_source;
+    if (!COMMIT.test(String(model.revision)) || model.revision !== licenceSource?.revision) {
+      add('ROW_REVISION', model.id, 'every catalogue row needs its own exact HF revision matching the licence source');
+    }
+    if (model.hf_repo !== licenceSource?.url?.split('/api/models/')[1]?.split('/revision/')[0]) {
+      add('ROW_REPO', model.id, 'the top-level HF repo must match the licence source URL');
+    }
+    if (model.provider_revision_attested === true && !model.provider_attestation?.url) {
+      add('ROW_ATTESTATION', model.id, 'provider/HF equivalence needs a cited provider attestation before training');
+    }
+    if (model.provider_revision_attested !== true && model.provider_revision_attested !== false) {
+      add('ROW_ATTESTATION', model.id, 'provider/HF equivalence must be explicitly verified or unverified');
+    }
+    if (model.account_entitlement_verified === true && !model.entitlement_evidence?.url) {
+      add('ROW_ENTITLEMENT', model.id, 'account entitlement needs a cited confirmation before training');
+    }
+    if (model.account_entitlement_verified !== true && model.account_entitlement_verified !== false) {
+      add('ROW_ENTITLEMENT', model.id, 'account entitlement must be explicitly verified or unverified');
+    }
     if (model.rate) {
-      const band = bandFor(model.params);
-      for (const field of ['lora_sft', 'lora_dpo', 'quote_id']) {
-        if (model.rate[field] !== band[field]) add('ROW_RATE', model.id, `${field} does not match its provider-managed size band`);
+      const quote = PRICE_QUOTES.get(model.rate.quote_id);
+      if (!quote || quote.provider !== 'Fireworks' || quote.unit !== 'usd_per_million_training_tokens' || quote.value !== model.rate.lora_sft) {
+        add('ROW_RATE', model.id, 'model-specific SFT rate must match its cited Fireworks quote value exactly');
       }
-      if (!COMMIT.test(String(model.revision))) add('ROW_REVISION', model.id, 'DeepSeek row needs a full 40-character HF revision');
-      if (model.provider_revision_attested === true && !model.provider_attestation?.url) {
-        add('ROW_ATTESTATION', model.id, 'provider/HF equivalence needs a cited provider attestation before training');
+      if (quote?.quote_id?.includes('0731') && !model.id.includes('0731')) {
+        add('ROW_RATE_SCOPE', model.id, 'a distinct -0731 model quote cannot price this checkpoint');
       }
-      if (model.provider_revision_attested !== true && model.provider_revision_attested !== false) {
-        add('ROW_ATTESTATION', model.id, 'provider/HF equivalence must be explicitly verified or unverified');
-      }
-      if (model.account_entitlement_verified === true && !model.entitlement_evidence?.url) {
-        add('ROW_ENTITLEMENT', model.id, 'account entitlement needs a cited confirmation before training');
-      }
-      if (model.account_entitlement_verified !== true && model.account_entitlement_verified !== false) {
-        add('ROW_ENTITLEMENT', model.id, 'account entitlement must be explicitly verified or unverified');
+      if (!quote?.notes?.includes(`DPO $${Number(model.rate.lora_dpo).toFixed(2)}`)) {
+        add('ROW_DPO_RATE', model.id, 'model-specific DPO rate must match the cited quote notes');
       }
     }
-    // The licence is the one field that can silently make a run unlawful, and the cost-estimator does
-    // not state it, so each row must cite a source for it.
-    const licenceSource = model.licence_source;
+    // The licence is not in the cost-estimator; each row cites its pinned HF model API.
     if (!licenceSource || !/^https:\/\//.test(String(licenceSource.url))) add('ROW_LICENCE_SOURCE', model.id, 'a trainable row must cite an https source for its licence');
     if (licenceSource?.field !== 'cardData.license') add('ROW_LICENCE_FIELD', model.id, 'the licence source field must be cardData.license');
     if (!COMMIT.test(String(licenceSource?.revision))) add('ROW_LICENCE_REVISION', model.id, 'the licence source needs a resolved 40-character revision');

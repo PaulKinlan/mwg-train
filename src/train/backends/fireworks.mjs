@@ -18,10 +18,17 @@ export function plan(job) {
       `"${job.base.repo}" is not a checkpoint this backend can train (trainable: ${known}). The serverless inference list is not the training list.`,
     );
   }
-  if (model.hf_repo && job.base.repo !== model.hf_repo) {
+  if (!model.hf_repo || !/^[a-f0-9]{40}$/.test(model.revision) ||
+      typeof model.provider_revision_attested !== 'boolean' || typeof model.account_entitlement_verified !== 'boolean') {
+    throw new TrainingSeamError('UNVERIFIED_BASE', `${model.id} lacks an explicit HF repo/revision or provider attestation/entitlement status`);
+  }
+  if (job.base.model_id && job.base.model_id !== model.id) {
+    throw new TrainingSeamError('BASE_MISMATCH', `${job.base.model_id} and ${job.base.repo} do not identify the same Fireworks row`);
+  }
+  if (job.base.repo !== model.hf_repo) {
     throw new TrainingSeamError('BASE_MISMATCH', `${model.id} names ${model.hf_repo}, not ${job.base.repo}`);
   }
-  if (model.revision && job.base.revision !== model.revision) {
+  if (job.base.revision !== model.revision) {
     throw new TrainingSeamError('REVISION_MISMATCH', `${model.id} requires HF revision ${model.revision}, not ${job.base.revision}`);
   }
   const band = bandFor(model.params);
@@ -51,7 +58,7 @@ export function plan(job) {
     },
     // HF and provider catalogue names alone do not attest identical bytes. Record the unresolved binding;
     // run() refuses DeepSeek until a provider revision attestation closes this gap.
-    checkpoint_binding: model.revision ? (model.provider_revision_attested && model.account_entitlement_verified ? 'attested' : 'unverified') : 'not-pinned-in-this-row',
+    checkpoint_binding: model.provider_revision_attested && model.account_entitlement_verified ? 'attested' : 'unverified',
     evidence: [EVIDENCE['fireworks.cost-estimator'], ...(model.shape_source ? [EVIDENCE[model.shape_source]] : [])],
   };
 }
