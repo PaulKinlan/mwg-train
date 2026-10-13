@@ -305,12 +305,12 @@ export function renderTuning({ data, familyId, variant = 'v1', framework = 'raw'
       <span class="chip" id="draft-tokens-pill">Max tokens: 2048</span>
       <span class="chip" id="draft-seed-pill">Seed: 42</span>
     </div>
-    <p class="muted" style="margin-top: 0.5rem; font-size: 0.85rem;">Edit the draft in the form below. As you type, this preview updates live so you can judge convergence against the reference target on the left.</p>
+    <p class="muted tuning-hint">Edit the draft in the form below. As you type, this preview updates live so you can judge convergence against the reference target on the left.</p>
   </div>`;
 
   const convergencePreview = `<section class="panel convergence-preview-panel" aria-labelledby="convergence-heading">
     <div class="preview-panel-header">
-      <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem;">
+      <div class="tuning-row">
         <h2 id="convergence-heading">Draft convergence preview</h2>
         <span class="badge warn" id="draft-badge">LOCAL DRAFT · UNAPPROVED</span>
       </div>
@@ -377,14 +377,14 @@ export function renderTuning({ data, familyId, variant = 'v1', framework = 'raw'
           </div>` : `
           <div class="reference-missing-card">
             <p class="muted">No reference board yet for this family.</p>
-            <p class="muted" style="font-size: 0.85rem;">${referenceFamilies.length
+            <p class="muted tuning-note">${referenceFamilies.length
               ? `High-fidelity reference boards currently exist for ${referenceFamilies.map((f) => `<code>${escapeHtml(f)}</code>`).join(', ')}.`
               : 'No high-fidelity reference boards have been authored yet.'} Other families are pending visual standard authoring.</p>
           </div>`}
       </div>
     </div>
 
-    <h3 style="margin-top: 1.5rem;">Target manifest metadata</h3>
+    <h3 class="tuning-subhead">Target manifest metadata</h3>
     <p class="muted">Committed record from <code>data/A1_self_generated/targets/manifest.jsonl</code>. Fields not in this family's record are reported honestly as absent.</p>
     <dl class="tuning-target-meta">
       <dt>Manifest ID</dt><dd><code>${targetRecord?.id ? escapeHtml(targetRecord.id) : '<span class="muted">absent</span>'}</code></dd>
@@ -413,7 +413,7 @@ export function renderTuning({ data, familyId, variant = 'v1', framework = 'raw'
   // 6. Generate a board from the draft: the one interactive, hosted call in this surface
   const generation = `<section class="panel board-generation-panel" aria-labelledby="generation-heading">
     <div class="preview-panel-header">
-      <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem;">
+      <div class="tuning-row">
         <h2 id="generation-heading">Generate a board from this draft</h2>
         <span class="badge warn">HOSTED MODEL - ONE BILLED CALL PER PRESS</span>
       </div>
@@ -453,8 +453,8 @@ export function renderTuning({ data, familyId, variant = 'v1', framework = 'raw'
     <p class="muted">These settings are the hypothesis a generation is run with. They still do not affect the committed template, target or training data by themselves: a generation returns a board to this page, and a draft stays in this browser until it is exported. Generating a board from this model needs at least 4096 output tokens - below that the whole budget goes on thinking and no image comes back - so a smaller number is raised to 4096 for the request and the effective value is reported in the result.</p>
     <noscript><p class="danger">Editing and exporting local drafts requires JavaScript; the authored brief and target above remain readable.</p></noscript>
     <form id="tuning-draft" method="post" action="/tuning" data-brief-id="${text(selectedVariant.brief_id)}" data-framework="${text(selectedFramework)}">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-block: 1rem 0.25rem;">
-        <label for="prompt" style="margin: 0;">Prompt wording</label>
+      <div class="tuning-actions">
+        <label for="prompt" class="tuning-label-flush">Prompt wording</label>
         ${visualPromptText ? `<span class="badge accepted">Preloaded from docs/design/training/${text(selectedFamily)}/prompt.txt</span>` : '<span class="badge">Preloaded from brief manifest</span>'}
       </div>
       <textarea id="prompt" name="prompt" rows="12" required minlength="80" aria-describedby="prompt-help">${text(initialPrompt)}</textarea>

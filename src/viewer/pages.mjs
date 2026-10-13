@@ -7,6 +7,7 @@
  * the viewer is not a demo of anything except the corpus.
  */
 
+import { createHash } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { BASELINE_LABEL } from '../eval/ruleset.mjs';
@@ -37,6 +38,15 @@ export const PAGE_CSS = `
   nav { display: flex; flex-wrap: wrap; align-items: center; gap: 0.55rem; padding-block: 0.55rem 1rem; border-bottom: 1px solid var(--line); }
   nav a { display: inline-flex; align-items: center; min-height: 2.75rem; padding-inline: 0.45rem; font-weight: 650; }
   .muted { color: var(--muted); }
+  .inline-form { display: inline; }
+  /* The prompt workbench's own layout, kept here so viewer pages carry no inline styles at all and the CSP can
+     name this block by hash (mwg-train-mslb). Declarations moved verbatim from the elements that carried them. */
+  .tuning-hint { margin-top: 0.5rem; font-size: 0.85rem; }
+  .tuning-note { font-size: 0.85rem; }
+  .tuning-subhead { margin-top: 1.5rem; }
+  .tuning-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem; }
+  .tuning-actions { display: flex; justify-content: space-between; align-items: center; margin-block: 1rem 0.25rem; }
+  .tuning-label-flush { margin: 0; }
   .notice, .danger { max-width: none; padding: 0.9rem 1rem; border-radius: 0.65rem; }
   .notice { background: var(--warning-bg); color: var(--ink); }
   .danger { background: var(--error-bg); color: var(--ink); }
@@ -191,6 +201,17 @@ export const PAGE_CSS = `
     .table-hint { display: block; }
   }
 `;
+
+/**
+ * The sha256 of the page's style block, for the Content-Security-Policy's style-src (mwg-train-mslb). The viewer
+ * emits PAGE_CSS as one inline <style> block; naming its hash is what lets the policy refuse inline styles
+ * everywhere else rather than allowing 'unsafe-inline' for the sake of that one block. Because it is computed from
+ * the same constant the page emits, adding or editing a CSS rule cannot silently break the page's styling; a test
+ * asserts the header's hash and the served block still agree.
+ */
+export function pageStyleHash() {
+  return createHash('sha256').update(PAGE_CSS).digest('base64');
+}
 
 export function page(title, body) {
   return `<!doctype html>
@@ -372,9 +393,11 @@ function liveLinks(view, liveOrigin, runId) {
       ? `owner-auth scan: ${escapeHtml(scan.status)} - the pair is refused, records included`
       : null;
   const runPath = runId ? `/run/${encodeURIComponent(runId)}` : '';
+  // A class, not style="display:inline": every style on a viewer page comes from PAGE_CSS, so the CSP can pin the
+  // page's style block by hash and does not have to allow inline styles (mwg-train-mslb).
   const button = (version, label, ok) =>
     ok
-      ? `<form method="post" action="${escapeHtml(liveOrigin)}/live/${escapeHtml(view.id)}/${version}${escapeHtml(runPath)}/start" style="display:inline"><button type="submit">serve ${label} live</button></form>`
+      ? `<form class="inline-form" method="post" action="${escapeHtml(liveOrigin)}/live/${escapeHtml(view.id)}/${version}${escapeHtml(runPath)}/start"><button type="submit">serve ${label} live</button></form>`
       : `<button type="button" disabled title="${why ?? `owner-auth scan: ${escapeHtml(scan?.[version]?.status ?? 'ERROR')}`}">serve ${label} live</button>`;
   return `${button('original', 'DEFAULT', originalOk)} ${button('uplifted', 'IDEAL', upliftedOk)}`;
 }
@@ -532,7 +555,7 @@ export function renderProject({ view, runId, runs, liveOrigin }) {
   const runEvidence = !!view.runDir;
   const runSelector =
     runs.length > 0
-      ? `<form method="get" action="/project/${escapeHtml(view.id)}"><label>run <select name="run" onchange="this.form.submit()">${runs.map((run) => `<option value="${escapeHtml(run)}"${run === runId ? ' selected' : ''}>${escapeHtml(run)}</option>`).join('')}</select></label></form>`
+      ? `<form method="get" action="/project/${escapeHtml(view.id)}"><label>run <select name="run">${runs.map((run) => `<option value="${escapeHtml(run)}"${run === runId ? ' selected' : ''}>${escapeHtml(run)}</option>`).join('')}</select></label> <button type="submit">show</button></form>`
       : '';
 
   const decisionBlock = !view.hasRun
