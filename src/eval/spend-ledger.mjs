@@ -8,6 +8,9 @@ export const GENERATION_BEAD = 'mwg-train-i5i2.1';
 export const GENERATION_SCOPE = 'generation';
 const TRUSTED_AUTHORS = new Set(['fleet-manager-coord', 'mwg-train-coord', 'paulkinlan']);
 const SHA = /^[a-f0-9]{64}$/;
+// Private capability: only a successfully verified signed comment can mint a reservation ticket.
+// Object-shape checks alone let a future caller forge an approval-shaped object.
+const VERIFIED_APPROVALS = new WeakSet();
 const finitePositive = (value) => typeof value === 'number' && Number.isFinite(value) && value > 0;
 
 /** The Beads issue description is not an approval. Only a signed, verbatim owner comment is eligible. */
@@ -27,7 +30,7 @@ export function verifyGenerationApproval(comments, { key, model, now = new Date(
   for (const comment of [...comments].reverse()) {
     if (comment.issue_id !== GENERATION_BEAD || !TRUSTED_AUTHORS.has(comment.author)) continue;
     const text = String(comment.text ?? '');
-    if (text.startsWith('OWNER-AUTHORIZATION-REVOKED\n')) {
+    if (/^OWNER-AUTHORIZATION-REVOKED(?:\s|$)/.test(text.trimStart())) {
       throw new Error('NO_OWNER_AUTH: generation authorisation was revoked; stop before another request');
     }
     const lines = Object.fromEntries(text.split('\n').map((line) => {
@@ -49,7 +52,10 @@ export function verifyGenerationApproval(comments, { key, model, now = new Date(
     const expected = createHmac('sha256', key).update(payload).digest('hex');
     const signature = lines.Signature?.replace(/^hmac-sha256:/, '');
     if (!SHA.test(signature ?? '') || !timingSafeEqual(Buffer.from(signature, 'hex'), Buffer.from(expected, 'hex'))) continue;
-    return { bead: GENERATION_BEAD, scope: GENERATION_SCOPE, capUsd: cap, stopPct: stop, expiry: lines.Expiry, commentId: comment.id, model, host, verbatim: lines.Verbatim };
+    const approval = Object.freeze({ bead: GENERATION_BEAD, scope: GENERATION_SCOPE, capUsd: cap, stopPct: stop,
+      expiry: lines.Expiry, commentId: comment.id, model, host, verbatim: lines.Verbatim });
+    VERIFIED_APPROVALS.add(approval);
+    return approval;
   }
   throw new Error('NO_OWNER_AUTH: no unexpired, signed verbatim amount-scoped authorisation on the generation bead');
 }
@@ -89,7 +95,7 @@ export function worstCaseGenerationUsd({ tariff, model, promptTokensUpperBound, 
  * A shared account across VMs requires a single shared atomic ledger/lock, else live calls must refuse.
  */
 export function reserveGeneration({ ledgerPath, approval, chargeBoundUsd, requestId, model }) {
-  if (!ledgerPath || !requestId || !approval || approval.bead !== GENERATION_BEAD ||
+  if (!ledgerPath || !requestId || !approval || !VERIFIED_APPROVALS.has(approval) || approval.bead !== GENERATION_BEAD ||
       approval.scope !== GENERATION_SCOPE || approval.model !== model || approval.host !== hostname() || !finitePositive(chargeBoundUsd)) {
     throw new Error('SPEND_GUARD: missing scope, approval or charge bound');
   }

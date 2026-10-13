@@ -115,7 +115,8 @@ export async function generateProject({ family, framework, model = decodeConfig.
   const design = await readFile(join(source, 'docs/train/design', family, 'design.md'), 'utf8');
   const prompt = buildGenerationPrompt({ plan, design, arm, guidance });
   const promptSha256 = hash(prompt);
-  const request = { ...decodeConfig.request, stream: true };
+  // Streaming is a transport detail, not a decode knob: the evaluator and runner must share one key.
+  const request = decodeConfig.request;
   const decodeSha = decodeConfigSha256(request);
   const projectId = `${family}-${framework}`;
   const buildKey = evaluationBuildKey({ projectId, model, decodeConfigSha256: decodeSha });
@@ -143,6 +144,7 @@ export async function generateProject({ family, framework, model = decodeConfig.
   let reserved = false;
   const record = { status: 'FAILED', project_id: projectId, family, framework, arm, model,
     resolved_revision: revision, build_key: buildKey, decode_config_sha256: decodeSha, decode_config: request,
+    transport: { stream: backend === 'live' }, time_limit_ms: backend === 'live' ? 20 * 60_000 : null,
     prompt_sha256: promptSha256, plan_sha256: hash(plan), design_sha256: hash(design), prompt,
     scope: backend === 'live' ? 'generation' : 'offline-stub', bead: backend === 'live' ? 'mwg-train-i5i2.1' : null,
     request_id: requestId, backend, platform: process.platform, node_version: process.version, chrome_version: chromeVersion,
