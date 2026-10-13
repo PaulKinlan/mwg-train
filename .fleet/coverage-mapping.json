@@ -84,5 +84,8 @@
   "docs/train/corpus/records.json": [
     "test/corpus-journey-evidence.test.mjs",
     "test/corpus-record-stamp.test.mjs"
+  ],
+  "scripts/check-served-routes.mjs": [
+    "test/served-routes.test.mjs"
   ]
 }
