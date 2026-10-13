@@ -191,5 +191,12 @@
       "kind": "interaction",
       "source": "the empty basket is a state of the shopping flow, not a document: the generated arms serve the pre-order form at / and the product list at /products (pilot/training-archetypes.mjs 'web-shop'), with no cart route and no empty-basket page, so no path selects this state - mapping it to / compared an empty-basket design against a blank order form (mwg-train-wrsj)"
     }
+  },
+  "survey-form": {
+    "step3-validation.jpg": {
+      "path": null,
+      "kind": "interaction",
+      "source": "the questionnaire page is /survey (pilot/training-archetypes.mjs 'survey-form'), but the refusal only exists after a refused advance with missing mandatory ratings, so no path selects it - a state of the form, not a document (plan.md:127, plan.md:141; the same convention as the Wave 2 refusal boards and booking's step4-error.jpg)"
+    }
   }
 }
