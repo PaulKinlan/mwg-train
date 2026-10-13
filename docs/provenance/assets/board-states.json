@@ -66,6 +66,13 @@
       "source": "a document on disk whose name matches the board slug; plan.md:97 names demo/empty.html as the first-class empty page"
     }
   },
+  "community-forum": {
+    "step3-refusal.jpg": {
+      "path": null,
+      "kind": "interaction",
+      "source": "the refusal is a re-render of the reply composer after a refused submission with a missing required note body (plan.md:75-76, fam-14): a state of the form, not a document - the same convention as the Wave 2 refusal boards and booking's step4-error.jpg"
+    }
+  },
   "contact-lead": {
     "step1-form.jpg": {
       "path": "/index.html",
@@ -149,6 +156,13 @@
       "source": "this archetype has no demo directory, so nothing serves this state"
     }
   },
+  "job-board": {
+    "step1-error.jpg": {
+      "path": null,
+      "kind": "interaction",
+      "source": "the posting refusal is a re-render of the /jobs/new form after a refused submission (plan.md:110, plan.md:119); a state of the form, not a document - the same convention as booking's step4-error.jpg"
+    }
+  },
   "product-card-comparison": {
     "step1-cards.jpg": {
       "path": null,
@@ -171,17 +185,11 @@
       "source": "this archetype has no demo directory, so nothing serves this state"
     }
   },
-  "community-forum": {
-    "step3-refusal.jpg": {
-      "path": null,
-      "kind": "interaction",
-      "source": "the refusal is a re-render of the reply composer after a refused submission with a missing required note body (plan.md:75-76, fam-14): a state of the form, not a document - the same convention as the Wave 2 refusal boards and booking's step4-error.jpg"
+  "web-shop": {
+    "step1-empty.jpg": {
+      "path": "/cart",
+      "kind": "page",
+      "source": "the tr-02 brief's route table lists /cart and every generated web-shop renders its empty cart there as the page's initial state; captureSignature reaches it by path (mwg-train-j3o4)"
     }
-  },
-  "job-board": {
-    "step1-error.jpg": {
-      "path": null,
-      "kind": "interaction",
-      "source": "the posting refusal is a re-render of the /jobs/new form after a refused submission (plan.md:110, plan.md:119); a state of the form, not a document - the same convention as booking's step4-error.jpg"    }
   }
 }

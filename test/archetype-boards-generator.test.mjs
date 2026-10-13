@@ -21,7 +21,7 @@ const sha256 = (data) => createHash('sha256').update(data).digest('hex');
 
 /**
  * Bead mwg-train-c1c regenerated the archetype boards with an explicitly named model. The regeneration is only worth
- * anything if it used the SAME prompts, and the only evidence of that is the digest register: the nine Wave 2 prompts
+ * anything if it used the SAME prompts, and the only evidence of that is the digest register: every Wave 2 prompt
  * are pinned by SHA-256 of their exact bytes. This test keeps that guarantee runnable offline, so a parser change that
  * silently started reading a different prompt would fail here instead of at the next billed generation.
  */
