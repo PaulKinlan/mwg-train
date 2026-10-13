@@ -55,10 +55,21 @@ function connectTarget(authority) {
  */
 export async function startCaptureProxy({ allowPrivate = false, lookup = undefined, onBlocked = null } = {}) {
   const blocked = [];
+  // Every socket the proxy holds, tunnels and forwarded requests alike. close() must be able to finish even when a
+  // browser was killed mid-request: server.close() waits for open connections, so a socket left behind keeps the
+  // promise pending and the capture hanging after its work is done (measured: a test file sat for 400s on exactly
+  // this before the socket set was tracked).
   const live = new Set();
+  // Resolved by the first refusal, so a caller waiting on a navigation does not have to wait for the browser's own
+  // timeout to learn that the request was refused: the decision is already made.
+  let signalBlocked;
+  const blockedSignal = new Promise((resolveSignal) => {
+    signalBlocked = resolveSignal;
+  });
 
   const record = (entry) => {
     blocked.push(entry);
+    signalBlocked(entry);
     if (onBlocked) onBlocked(entry);
   };
 
@@ -115,6 +126,11 @@ export async function startCaptureProxy({ allowPrivate = false, lookup = undefin
     });
   });
 
+  server.on('connection', (socket) => {
+    live.add(socket);
+    socket.on('close', () => live.delete(socket));
+  });
+
   server.on('connect', (request, clientSocket, head) => {
     clientSocket.on('error', () => clientSocket.destroy());
     void (async () => {
@@ -151,6 +167,7 @@ export async function startCaptureProxy({ allowPrivate = false, lookup = undefin
     port,
     url: `http://127.0.0.1:${port}`,
     blocked,
+    blockedSignal,
     /** The refusal a blocked navigation deserves, or null when nothing was refused. */
     refusal() {
       if (blocked.length === 0) return null;
@@ -158,12 +175,13 @@ export async function startCaptureProxy({ allowPrivate = false, lookup = undefin
       return new CaptureTargetError(first.code, first.message);
     },
     async close() {
+      // Destroy first, then close: server.close() waits for open connections, so the order matters and a socket left
+      // behind here is a hanging capture rather than a tidy shutdown.
       for (const socket of live) socket.destroy();
       live.clear();
-      await new Promise((resolveClose) => server.close(resolveClose));
-      // close() waits for open connections, so any socket the browser left behind is destroyed first; a tunnel left
-      // open would keep this promise pending and the capture hanging after it had already finished its work.
+      const closed = new Promise((resolveClose) => server.close(resolveClose));
       server.closeAllConnections?.();
+      await closed;
     },
   };
 }
