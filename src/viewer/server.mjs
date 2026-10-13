@@ -260,13 +260,23 @@ export function originVerdict(request, { viewerPort = null, livePort = null } = 
   if (origin.protocol !== `${scheme}:`) {
     return { allowed: false, reason: `origin ${origin.origin} is not served over ${scheme}` };
   }
-  // The port has to be one of ours: this viewer's own (learned when the socket binds, since a test binds 0), the
-  // live origin's, the port the request itself arrived on, or the scheme's default for a request that came through
-  // a proxy terminating at 443. Without this, any page served from another port on this host - an unrelated local
-  // dev server, or something an operator ran by accident - could drive these routes, which is a real if smaller
-  // version of the same problem (the browser test for this change caught exactly that).
+  // The port has to be one of ours: the port the request itself arrived on, this viewer's own (learned when the
+  // socket binds, since the CLI and a test do not always pass it), or the live origin's, which is a different port
+  // on the same host by design.
+  //
+  // The scheme's default port (80 for http, 443 for https) is admitted ONLY when the request did not name a port
+  // either, because a Host without a port is a request that arrived on the default port - so a page on
+  // http://127.0.0.1 is the same origin as a request to http://127.0.0.1. Admitting 80 unconditionally instead let a
+  // page served from local port 80 drive the live start route on a viewer listening on an ephemeral port
+  // (mwg-train-h3qn); the default and the request's own port are not interchangeable.
   const defaultPort = (protocol) => (protocol === 'https:' ? '443' : '80');
-  const allowedPorts = new Set([defaultPort(`${scheme}:`), (host.match(/:(\d+)$/) ?? [])[1] ?? defaultPort(`${scheme}:`)]);
+  const requestPort = (host.match(/:(\d+)$/) ?? [])[1] ?? null;
+  const allowedPorts = new Set([requestPort ?? defaultPort(`${scheme}:`)]);
+  // 443 is also admitted for an https host, because that is a TLS-terminating proxy in front of this viewer: the
+  // browser's origin is https://host with no port while the Host header may well carry the backend's port. The
+  // asymmetry with http is deliberate - reaching port 80 needs nothing but a local listener, which is the bypass
+  // this rule exists to close, while reaching 443 as a trusted origin needs a certificate the browser accepts.
+  if (scheme === 'https') allowedPorts.add('443');
   for (const port of [viewerPort, livePort]) if (port) allowedPorts.add(String(port));
   if (!allowedPorts.has(origin.port || defaultPort(origin.protocol))) {
     return { allowed: false, reason: `origin ${origin.origin} is not a port this viewer serves` };
