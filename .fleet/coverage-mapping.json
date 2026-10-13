@@ -56,6 +56,9 @@
   "docs/provenance/iana/special-purpose-addresses.json": [
     "test/capture-target-registry.test.mjs"
   ],
+  "docs/train/briefs/manifest.jsonl": [
+    "test/training-served-reverse.test.mjs"
+  ],
   "docs/train/corpus/records.json": [
     "test/corpus-journey-evidence.test.mjs",
     "test/corpus-record-stamp.test.mjs"
