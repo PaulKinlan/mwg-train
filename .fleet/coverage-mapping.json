@@ -31,6 +31,9 @@
   "docs/PIPELINE.md": [
     "test/reachability.test.mjs"
   ],
+  "docs/eval/deepseek-cost-projection.md": [
+    "test/compare.test.mjs"
+  ],
   "docs/eval/deepseek-checkpoint-matrix.md": [
     "test/reachability.test.mjs"
   ],
