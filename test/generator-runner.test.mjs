@@ -13,6 +13,7 @@ import { decodeConfig } from '../src/eval/decode-config.mjs';
 
 const REVISION = '2cba9e42aa026125f3ed06c6d98c1db82f7ca027';
 const MODEL = decodeConfig.build_model;
+const TEST_NOW = new Date('2026-10-13T17:00:00Z');
 const root = () => mkdtempSync(join(tmpdir(), 'mwg-generator-'));
 const options = (outRoot, extra = {}) => ({ family: 'tr-01', framework: 'hono', model: MODEL,
   revision: REVISION, outRoot, ...extra });
@@ -58,6 +59,17 @@ test('CLI generates an offline project and resumes a batch without paid calls', 
     assert.ok(first.every((entry) => entry.status === 'SUCCESS'));
     const again = JSON.parse(execFileSync(process.execPath, args, { encoding: 'utf8', timeout: 15_000 }));
     assert.deepEqual(again.map((entry) => entry.status), ['SUCCESS', 'SUCCESS']);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('dry-run produces a keyed prompt without writing an app or requiring spend authority', async () => {
+  const dir = root();
+  try {
+    const result = await generateProject(options(join(dir, 'not-created'), { backend: 'live', dryRun: true,
+      apiKey: undefined, approvalComments: () => { throw Error('auth must not be read'); } }));
+    assert.equal(result.status, 'DRY_RUN');
+    assert.equal(existsSync(result.output_dir), false);
+    assert.ok(result.prompt_sha256);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
@@ -114,11 +126,13 @@ function signedComment({ cap = 20, stop = 50, model = MODEL, expiry = '2030-01-0
 
 test('authorisation requires signed verbatim owner cap, exact model, scope, expiry and trusted author', () => {
   const comment = signedComment();
-  assert.equal(verifyGenerationApproval([comment], { key: 'test-only', model: MODEL }).capUsd, 20);
-  assert.throws(() => verifyGenerationApproval([comment], { key: 'wrong', model: MODEL }), /NO_OWNER_AUTH/);
-  assert.throws(() => verifyGenerationApproval([{ ...comment, author: 'mwg-train-imp-1' }], { key: 'test-only', model: MODEL }), /NO_OWNER_AUTH/);
-  assert.throws(() => verifyGenerationApproval([comment], { key: 'test-only', model: 'fireworks/deepseek-v4-flash' }), /NO_OWNER_AUTH/);
-  assert.throws(() => verifyGenerationApproval([signedComment({ expiry: '2020-01-01T00:00:00Z' })], { key: 'test-only', model: MODEL }), /NO_OWNER_AUTH/);
+  assert.equal(verifyGenerationApproval([comment], { key: 'test-only', model: MODEL, now: TEST_NOW }).capUsd, 20);
+  assert.throws(() => verifyGenerationApproval([comment], { key: 'wrong', model: MODEL, now: TEST_NOW }), /NO_OWNER_AUTH/);
+  assert.throws(() => verifyGenerationApproval([{ ...comment, author: 'mwg-train-imp-1' }], { key: 'test-only', model: MODEL, now: TEST_NOW }), /NO_OWNER_AUTH/);
+  assert.throws(() => verifyGenerationApproval([comment], { key: 'test-only', model: 'fireworks/deepseek-v4-flash', now: TEST_NOW }), /NO_OWNER_AUTH/);
+  assert.throws(() => verifyGenerationApproval([signedComment({ expiry: '2020-01-01T00:00:00Z' })], { key: 'test-only', model: MODEL, now: TEST_NOW }), /NO_OWNER_AUTH/);
+  assert.throws(() => verifyGenerationApproval([signedComment({ host: 'another-vm' })], { key: 'test-only', model: MODEL, now: TEST_NOW }), /NO_OWNER_AUTH/);
+  assert.throws(() => verifyGenerationApproval([comment, { issue_id: GENERATION_BEAD, author: 'fleet-manager-coord', text: 'OWNER-AUTHORIZATION-REVOKED\nPaul revoked generation' }], { key: 'test-only', model: MODEL, now: TEST_NOW }), /revoked/);
 });
 
 test('a cited exact-SKU rate and bounded prompt/output are mandatory; a training quote or -0731 rate cannot pass', () => {
@@ -134,7 +148,7 @@ test('durable reservations count against the cap, are never refunded by unknown 
   const dir = root();
   try {
     const ledgerPath = join(dir, 'private', 'ledger.jsonl');
-    const approval = verifyGenerationApproval([signedComment()], { key: 'test-only', model: MODEL });
+    const approval = verifyGenerationApproval([signedComment()], { key: 'test-only', model: MODEL, now: TEST_NOW });
     reserveGeneration({ ledgerPath, approval, chargeBoundUsd: 6, requestId: 'one', model: MODEL });
     settleGeneration({ ledgerPath, requestId: 'one', model: MODEL, status: 'unknown' });
     assert.throws(() => reserveGeneration({ ledgerPath, approval, chargeBoundUsd: 6, requestId: 'two', model: MODEL }), /cap exhausted/);
