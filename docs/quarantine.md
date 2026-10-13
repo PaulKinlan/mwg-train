@@ -18,12 +18,19 @@ one. Only a separate private repository is a boundary.
    A4 and A6 route directly to the public tree; publishing quarantined A3/A5 material requires
    the explicit promote step (`scripts/promote.mjs`), which appends to
    `docs/provenance/promotions.jsonl`.
-2. **The submodule is a pointer, never a working location.** The public repo pins the store's
-   commit at `quarantine/` as a provenance record ("this public commit corresponds to that store
-   state"). The pin is inert: this repo has no CI, no build, and no recursive-fetch path, and a
-   plain clone does not fetch submodules. Working checkouts are SIBLINGS (`../mwg-quarantine` by
-   default, or `$MWG_TRAIN_QUARANTINE`) — `src/provenance/store.mjs` refuses a store located
-   inside the public tree, so initialising the submodule for work is rejected by construction.
+2. **The store is a SIBLING checkout, and the public repo carries no submodule and no commit
+   pin.** Working checkouts live next to this repo (`../mwg-quarantine` by default, or
+   `$MWG_TRAIN_QUARANTINE`), and `src/provenance/store.mjs` refuses a store located inside the
+   public tree, so an in-tree store is rejected by construction — by the code, not by a
+   convention.
+
+   An internal submodule pointer was built first (mwg-train-291, commit `091ab2c`) and removed as
+   **invalid**: `.gitmodules` pointed at an internal URL (`github.int.exe.xyz/...`) with a gitlink
+   at `quarantine/`, which no plain clone can fetch and which publishes a reference to the private
+   store from the public repo (commit `24df971`). There is no `.gitmodules`, no `quarantine/` path
+   and no gitlink here today, and `test/quarantine-store.test.mjs` asserts that, so the claim and
+   the repository cannot drift apart again (mwg-train-xztp: this rule documented the removed pin
+   for days).
 3. **The public surface check:** `curl -i https://api.github.com/repos/PaulKinlan/mwg-quarantine`
    unauthenticated must return **404**. Anything else is a leak.
 4. **Publication boundary, not a training-permission boundary.** The store decides *visibility*;

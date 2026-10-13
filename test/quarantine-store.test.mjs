@@ -8,6 +8,7 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { quarantineRoot, assertQuarantineStore, armStorageRoot, assetStoragePath, QuarantineError } from '../src/provenance/store.mjs';
 import { ARMS, isTrainable } from '../src/provenance/arms.mjs';
@@ -300,4 +301,19 @@ test('promote: explicit, ledgered, and refuses quarantined arms without acknowle
   // escape attempts: refused
   assert.equal(run(['../outside', 'docs/x', '--acknowledge-boundary']).code, 1);
   assert.equal(run(['data/A3_teacher_generated/sites/example', '../outside', '--acknowledge-boundary']).code, 1);
+});
+
+test('the public repo carries no quarantine submodule and no commit pin', () => {
+  // mwg-train-xztp. The documented rule described a submodule pin at quarantine/ that a removal commit (24df971) had
+  // already deleted, and nothing failed while the document and the repository disagreed. The invariant is asserted
+  // instead of trusted, because a gitlink plus an internal URL in a public repo is exactly the shape this store
+  // exists to prevent: it publishes a reference to the private store and breaks a plain clone.
+  const ROOT = fileURLToPath(new URL('..', import.meta.url));
+  assert.equal(existsSync(join(ROOT, '.gitmodules')), false, 'submodule configuration must not exist in the public repo');
+  assert.equal(existsSync(join(ROOT, 'quarantine')), false, 'no quarantine path may exist inside the public tree');
+  // The index is what a clone would act on, so it is read directly rather than inferred from the worktree.
+  const tracked = execFileSync('git', ['ls-files', '-s', 'quarantine', '.gitmodules'], { cwd: ROOT, encoding: 'utf8' }).trim();
+  assert.equal(tracked, '', `nothing may be tracked at quarantine/ or .gitmodules, found:\n${tracked}`);
+  // And the sibling default the doc names is still what the module resolves.
+  assert.equal(quarantineRoot({ repoRoot: ROOT, env: {} }), join(ROOT, '..', 'mwg-quarantine'));
 });
