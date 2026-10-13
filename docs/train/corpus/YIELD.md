@@ -1,8 +1,8 @@
-# Training-corpus acceptance yield (2026-10-11T16-20-04-154Z)
+# Training-corpus acceptance yield (2026-10-13T07-06-31-348Z)
 
 > **mwg-train deterministic baseline** - deterministic output of this repository's own tooling, not an official `web-uplift` result.
 
-Generated 2026-10-11T16:25:32.692Z by `scripts/train-corpus-run.mjs`. 40 sampled pairs, 396 journeys driven, 364 passed.
+Generated 2026-10-13T07:12:08.663Z by `scripts/train-corpus-run.mjs`. 40 sampled pairs, 396 journeys driven, 364 passed.
 
 The SAMPLED projects' numbers come from records produced by driving the project in a real
 browser; the per-project records, screenshots and traces are under the run output directory.

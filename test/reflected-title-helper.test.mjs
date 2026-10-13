@@ -65,3 +65,20 @@ test('the patched interpolation shape is escaped, and the unpatched shape is exa
   assert.doesNotMatch(after, /\$\{title\}/, 'the patched form must not contain the bare interpolation');
   assert.match(after, /\$\{escapeTitle\(title\)\}/);
 });
+
+test('every non-Hono page module emits exactly this helper text, and uses it', async () => {
+  // mwg-train-kipj. Until this bead the helper was STAGED here and emitted nowhere; now it is in the generator, so the
+  // two copies are cross-checked. The emitted text must be byte-for-byte this string - a helper edited in one place
+  // and not the other is how a fix silently stops matching the payload it was raised from.
+  const { ARCHETYPES } = await import('../pilot/archetypes.mjs');
+  const { buildProjectFor } = await import('../pilot/frameworks.mjs');
+  const NON_HONO = ['raw', 'webcomponents', 'react', 'preact', 'vue', 'svelte'];
+  for (const frameworkName of NON_HONO) {
+    const page = String(buildProjectFor(ARCHETYPES.catalogue, { frameworkName }).files['app/page.mjs'] ?? '');
+    assert.ok(page.includes(ESCAPE_TITLE_SOURCE), `${frameworkName}: the emitted page module does not carry the staged helper text`);
+    assert.match(page, /<title>\$\{escapeTitle\(title\)\}<\/title>/, `${frameworkName}: the title is not passed through the helper`);
+  }
+  // And hono is not, and must not be: its tagged template escapes at runtime, so escaping there double-encodes.
+  const honoPage = String(buildProjectFor(ARCHETYPES.catalogue, { frameworkName: 'hono' }).files['app/page.mjs'] ?? '');
+  assert.ok(!honoPage.includes('const escapeTitle ='), 'hono must not carry the helper');
+});

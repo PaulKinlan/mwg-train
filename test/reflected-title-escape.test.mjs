@@ -4,26 +4,19 @@ import assert from 'node:assert/strict';
 import { ARCHETYPES } from '../pilot/archetypes.mjs';
 import { FRAMEWORKS, buildProjectFor } from '../pilot/frameworks.mjs';
 
-// The reflected-title XSS documented in docs/KNOWN-SINKS.md section 2: every non-Hono renderDocument interpolates title
-// into <title>${title}</title> with a plain template literal, and the generated /search handler feeds it
-// url.searchParams.get('q'). It is unfixed only because fixing it rewrites 30 of the 35 frozen trees in
-// pilot/CORPUS.json, and re-recording needs a browser pipeline run a lane cannot perform (see the bead for the bill).
+// The reflected-title XSS documented in docs/KNOWN-SINKS.md section 2, fixed by bead mwg-train-kipj.
 //
-// So this test does not pretend the corpus is fixed. It pins the debt: it derives, from the generator itself, exactly
-// which arms still interpolate title unescaped, and fails if that set differs from the exception list below in either
-// direction. Adding a board, changing an archetype, or fixing one arm without removing it here all fail.
+// History, because the file changed sides: this suite was written by mwg-train-sia to PIN the debt - it derived which
+// arms still interpolated title unescaped and failed if that set differed from a recorded list of 30 in either
+// direction, so the re-record bill could not go out of date quietly. mwg-train-kipj paid the bill: every non-Hono page
+// module now emits an inline escapeTitle helper and every title interpolation goes through it, and the frozen corpus
+// was re-recorded in the same change.
+//
+// So the exception list is empty and the assertions are inverted: no arm may interpolate title unescaped, and the
+// derived offender set must stay empty. Hono is still excluded by name rather than by text, for the reason below.
 
-// Derived rather than restated, but written out so a failure reads as a name rather than an index. Six non-Hono
-// frameworks x five archetypes. Hono is absent on purpose - see the note in the loop.
-const KNOWN_UNESCAPED_TITLE_ARMS = new Set([
-  'account-recovery-preact', 'account-recovery-raw', 'account-recovery-react', 'account-recovery-svelte',
-  'account-recovery-vue', 'account-recovery-webcomponents',
-  'booking-preact', 'booking-raw', 'booking-react', 'booking-svelte', 'booking-vue', 'booking-webcomponents',
-  'catalogue-preact', 'catalogue-raw', 'catalogue-react', 'catalogue-svelte', 'catalogue-vue', 'catalogue-webcomponents',
-  'contact-lead-preact', 'contact-lead-raw', 'contact-lead-react', 'contact-lead-svelte', 'contact-lead-vue', 'contact-lead-webcomponents',
-  'event-registration-preact', 'event-registration-raw', 'event-registration-react', 'event-registration-svelte',
-  'event-registration-vue', 'event-registration-webcomponents',
-]);
+// Derived rather than restated. Empty is the fixed state; a non-empty list is a regression, not a bill to pay.
+const KNOWN_UNESCAPED_TITLE_ARMS = new Set([]);
 
 // Hono is excluded by NAME and not by text. Its emitted page module contains the same literal
 // <title>${title}</title>, because the interpolation happens inside hono/html's tagged template, which escapes at
@@ -44,15 +37,15 @@ function emittedFor(archetype, frameworkName) {
   return pageModule ? String(pageModule) : '';
 }
 
-// The defect's exact shape: an unescaped title interpolation into the title element. An escaped fix would read
-// ${escapeTitle(title)} or similar and therefore would not contain the bare form.
+// The defect's exact shape: an unescaped title interpolation into the title element. An escaped fix reads
+// ${escapeTitle(title)} and therefore does not contain the bare form.
 function interpolatesTitleUnescaped(source) {
   const titleLine = source.split('\n').find((line) => line.includes('<title>'));
   if (!titleLine) return false;
   return /\$\{title\}/.test(titleLine) && !/escape|esc\(|encode/i.test(titleLine);
 }
 
-test('every non-Hono renderDocument still interpolates title unescaped, and the exception list is exactly right', () => {
+test('no non-Hono renderDocument interpolates title unescaped', () => {
   const offenders = [];
   for (const archetype of Object.values(ARCHETYPES)) {
     for (const frameworkName of Object.keys(FRAMEWORKS)) {
@@ -63,23 +56,32 @@ test('every non-Hono renderDocument still interpolates title unescaped, and the 
     }
   }
 
-  // Staleness in both directions, which is the point of the list. An arm that has been fixed must come off it, and an
-  // arm that regresses must go on it - so this fails loudly rather than letting the debt drift out of date.
+  // Both directions, which is the point of deriving rather than restating: a regression must appear here, and a fix
+  // must empty the documented list rather than leaving it stale.
   const unlisted = offenders.filter((arm) => !KNOWN_UNESCAPED_TITLE_ARMS.has(arm));
   const stale = [...KNOWN_UNESCAPED_TITLE_ARMS].filter((arm) => !offenders.includes(arm));
 
   assert.deepEqual(unlisted, [], `these arms interpolate title unescaped but are not in the exception list: ${unlisted.join(', ')}`);
-  assert.deepEqual(stale, [], `these arms are listed as unescaped but no longer are - remove them, and the re-record bill shrank: ${stale.join(', ')}`);
+  assert.deepEqual(stale, [], `these arms are listed as unescaped but no longer are - remove them: ${stale.join(', ')}`);
 
-  // And the floor, so this cannot pass by finding nothing: the defect this file documents must still be present.
-  assert.ok(offenders.length >= KNOWN_UNESCAPED_TITLE_ARMS.size,
-    'the scan found fewer unescaped arms than the known bill, which means the scan itself broke');
+  // The scan must reach something: every non-Hono arm emits a page module with a title line, so a detector that
+  // suddenly found no title lines at all would otherwise pass by finding nothing.
+  for (const archetype of Object.values(ARCHETYPES)) {
+    for (const frameworkName of Object.keys(FRAMEWORKS)) {
+      if (ESCAPES_AT_RUNTIME.has(frameworkName)) continue;
+      const page = emittedFor(archetype, frameworkName);
+      assert.match(page, /<title>/, `${archetype.id}-${frameworkName}: no title line for the scan to judge`);
+    }
+  }
 });
 
 test('hono is safe at runtime and must never be added to the exception list', () => {
   const emitted = emittedFor(ARCHETYPES.catalogue, 'hono');
   // Its source looks identical - that is exactly why this assertion exists.
   assert.match(emitted.split('\n').find((line) => line.includes('<title>')) ?? '', /\$\{title\}/);
+  // The tag is on the line above the title, which is what makes this arm safe: assert it is really there, so an
+  // edit that moved the title out of the tagged template would be caught rather than assumed.
+  assert.match(emitted, /return html`<\!doctype html>[\s\S]{0,400}?<title>\$\{title\}<\/title>/, 'the hono title must sit inside the tagged template');
   assert.ok(!KNOWN_UNESCAPED_TITLE_ARMS.has('catalogue-hono'),
     'hono escapes through the tagged html template; listing it would misreport a safe arm as vulnerable');
 });
@@ -89,7 +91,7 @@ function serverFor(archetype, frameworkName) {
   return String(files['server.mjs'] ?? '');
 }
 
-test('the /search handler that reflects the query exists in every arm, which is why the radius is 30 and not 6', () => {
+test('the /search handler that reflects the query exists in every arm, which is why the radius was 30 and not 6', () => {
   const offenders = [];
   for (const archetype of Object.values(ARCHETYPES)) {
     for (const frameworkName of Object.keys(FRAMEWORKS)) {

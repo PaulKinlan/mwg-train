@@ -1,9 +1,9 @@
 {
-  "run_id": "2026-10-11T16-20-04-154Z",
+  "run_id": "2026-10-13T07-06-31-348Z",
   "baseline_label": "mwg-train deterministic baseline",
   "baseline_definition": "the MWG-uplifted (ideal) artefact, and not the default: deterministic repair of a project by our own Modern Web Guidance rule specifications, with no model and no teacher in the loop. The raw pre-uplift artefact is the default and is recorded separately.",
   "baseline_tool": "src/corpus/uplift.mjs",
-  "generated_at": "2026-10-11T16:25:32.692Z",
+  "generated_at": "2026-10-13T07:12:08.663Z",
   "generator": "scripts/train-corpus-run.mjs",
   "corpus": "pilot/TRAINING_CORPUS.json",
   "selection": {
@@ -320,7 +320,7 @@
         "archetype": "booking",
         "framework": "raw",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:46121c432c43de3a109c7f0851481eafdd0936bdda518c0d10adab64a4c1dda7"
+        "tree_sha": "sha256:98cc18fe3432f4249bee297786b1ed6ee1f75c3f67e9b968a3ca7d98ab6c630a"
       },
       {
         "project_id": "tr-01-react",
@@ -328,7 +328,7 @@
         "archetype": "booking",
         "framework": "react",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:3f58201030edd767ff11a77df953c5f18241d107533a1135ca5257ebda729b28"
+        "tree_sha": "sha256:fa98b1387254dedc858b18a958ed9b8fefd91a9b7ba11a99132a7e50ae2f9cb5"
       },
       {
         "project_id": "tr-01-webcomponents",
@@ -336,7 +336,7 @@
         "archetype": "booking",
         "framework": "webcomponents",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:e763e852a62ea29ea0e48e858b608151225cc1b42cd30da7c2106f83e2f915f7"
+        "tree_sha": "sha256:5c663c3a41ccfc4a0eeca8043495c535cd229c9f0f583ba2dc5c29ab7aea1235"
       },
       {
         "project_id": "tr-01-svelte",
@@ -344,7 +344,7 @@
         "archetype": "booking",
         "framework": "svelte",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:0c8a48f0b1236b6e611c132fb6ed47390d6b40c8925f85bf95a2433cd692bbcf"
+        "tree_sha": "sha256:5246683a18e280f9ec6207b93183219d5cb92e0cf41f47de75f2430f00b864f3"
       },
       {
         "project_id": "tr-02-hono",
@@ -360,7 +360,7 @@
         "archetype": "web-shop",
         "framework": "raw",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:2f39847568e05b1648b7c7669307426392d700d752324671ef04059ecd7cc07b"
+        "tree_sha": "sha256:b23cef2c1afcd2961625edda53bc6df7f79a3a0119fb17a867b25be2a2779099"
       },
       {
         "project_id": "tr-02-react",
@@ -368,7 +368,7 @@
         "archetype": "web-shop",
         "framework": "react",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:05b39774ce81baf38f4b9920b66d4cea74f53f6f97efd7f50b3da02e4f2d2046"
+        "tree_sha": "sha256:ff07383843b1e74ccf665d0b1ce0609b16c276490f062a7e3ebaba1b2822319c"
       },
       {
         "project_id": "tr-02-preact",
@@ -376,7 +376,7 @@
         "archetype": "web-shop",
         "framework": "preact",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:6680665d5db3754c1865f84eb03d49ea17844b2a699cfc2aba2a9d103ed6bc1d"
+        "tree_sha": "sha256:c4152c470099ba548b33ddb6b5419b8e0aa889e5d4ad3d72a4bffd6974e990f9"
       },
       {
         "project_id": "tr-02-vue",
@@ -384,7 +384,7 @@
         "archetype": "web-shop",
         "framework": "vue",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:7771b139394601dad8d7ee89cdecbc5d4583ae53a62ab5ed1725c2ebeaafe307"
+        "tree_sha": "sha256:d7ea979218ad7610efc4b36b6a36dbc538932e519651fc4ae242cd1684261c63"
       },
       {
         "project_id": "tr-03-hono",
@@ -400,7 +400,7 @@
         "archetype": "booking",
         "framework": "raw",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:da563533a67d966b343b5e53e71a387411aa97c39982ec0e248a03e271fb8051"
+        "tree_sha": "sha256:268cbbe5c2e06e91bfb4f967b9f7c34bcb25d8bab41bdbf872592dd07f220acb"
       },
       {
         "project_id": "tr-03-react",
@@ -408,7 +408,7 @@
         "archetype": "booking",
         "framework": "react",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:afe32c81107bca59d2aa45b681aac9126b57fe7876a5d2f54caad0947c4d1d51"
+        "tree_sha": "sha256:d8b7503143fd6e48fc12080431ec36eda742e34fb4e49c5f5a2d28f7cfd23640"
       },
       {
         "project_id": "tr-03-preact",
@@ -416,7 +416,7 @@
         "archetype": "booking",
         "framework": "preact",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:87306b0bdee5a177445c31ab0e1f8a45e9afa05cd293fac2ab2626800caedead"
+        "tree_sha": "sha256:8d3bc94cb8f3595091b17ff5e464989e0a819152aaae5bc98cc575816d8471d8"
       },
       {
         "project_id": "tr-03-vue",
@@ -424,7 +424,7 @@
         "archetype": "booking",
         "framework": "vue",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:e6d15ce2fa5d9f8bea464ef22fb8fb7df93d34640fd5a4f1c80465229d855948"
+        "tree_sha": "sha256:edff71796ca67da19749727c21e4d1264632aafcb9a643f62d71aaff3e505848"
       },
       {
         "project_id": "tr-03-webcomponents",
@@ -432,7 +432,7 @@
         "archetype": "booking",
         "framework": "webcomponents",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:9159705c7dc249fd4ce07ec738d7dcf5f89bdfa89ebfaac55cbfcd8a2b3509d0"
+        "tree_sha": "sha256:0cd289678cd74263d0561d91773bea484d9d919d112754861d6c9f35df3845da"
       },
       {
         "project_id": "tr-03-svelte",
@@ -440,7 +440,7 @@
         "archetype": "booking",
         "framework": "svelte",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:9ba95fd98e990f7eac83c5eb8eba99decdd7a5c824ba59dd98cec1c800ab6246"
+        "tree_sha": "sha256:327a80837c9db7b2bba5521c9d3668b2246bd99ab78d951b586f8b3bf3bfd162"
       },
       {
         "project_id": "tr-04-react",
@@ -448,7 +448,7 @@
         "archetype": "dashboard",
         "framework": "react",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:13f51db2a408ef6bd4b09b5e04885e0e13055cf4d92c5c21a8cf42f970aef515"
+        "tree_sha": "sha256:813e6e6807beadb2b9c80b58490ff73e7e5cf3f7889770c71e5ede944169bbee"
       },
       {
         "project_id": "tr-04-preact",
@@ -456,7 +456,7 @@
         "archetype": "dashboard",
         "framework": "preact",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:825f49888b191553bbd3bea92cecd9ded57feb7196c05a5c6e1551ab748ab7d9"
+        "tree_sha": "sha256:0b2fc422c187a65bdcde33151ef8ec2ab2f6cccdafe5d0fa32903c3764c630b3"
       },
       {
         "project_id": "tr-04-vue",
@@ -464,7 +464,7 @@
         "archetype": "dashboard",
         "framework": "vue",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:df24c1c77d22e7d5a0966c74d7c570e35f5318e8de49d4f5e514e129b8abbc12"
+        "tree_sha": "sha256:6fcf6a9350023cefa0ad2a943bce0269ec49be217686d3ff8ff5c9cbdce78043"
       },
       {
         "project_id": "tr-04-webcomponents",
@@ -472,7 +472,7 @@
         "archetype": "dashboard",
         "framework": "webcomponents",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:3ab6513a820c28b05cccccde7cb54e33db3559cf801bbfebb006784f95067dec"
+        "tree_sha": "sha256:b408ca5567cc1af0e83a35e78e8b3be14eb9f7762e29cbeb6104dd5b3730b220"
       },
       {
         "project_id": "tr-04-svelte",
@@ -480,7 +480,7 @@
         "archetype": "dashboard",
         "framework": "svelte",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:2afbd3e05502430dedfdc3959b67bd660944ad5e0fee8414e2f1f727bafe2650"
+        "tree_sha": "sha256:7ac13ab923bea4043d033841b1c833fda3ab674281b10613ed60153eaafbbe96"
       },
       {
         "project_id": "tr-05-hono",
@@ -496,7 +496,7 @@
         "archetype": "onboarding-auth",
         "framework": "raw",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:c824b45b411bc152ddc5b8b6426f12a90742e632971aa9527bf30b20b8953761"
+        "tree_sha": "sha256:618ede5a21078ed5711095f42e70f1e518af4af055905c32ac7313825b26138e"
       },
       {
         "project_id": "tr-05-vue",
@@ -504,7 +504,7 @@
         "archetype": "onboarding-auth",
         "framework": "vue",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:dd069281f0b0236ece307e773486cd3f66af19f10ae17e721265c6bb08b65f18"
+        "tree_sha": "sha256:a5e29c6f8df80b3b16855b2a7cfcd9808166ad6d7932e837b3dd43c60c2b0abc"
       },
       {
         "project_id": "tr-05-webcomponents",
@@ -512,7 +512,7 @@
         "archetype": "onboarding-auth",
         "framework": "webcomponents",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:53e7c27dc610899fd6008f8d32242f0228b4afb42c1d49b122afc2aa6c9bb0fd"
+        "tree_sha": "sha256:22a5a3a2c361e4fbbc7fb3b310226b62e404cabbe9c79707caf0f020d86e15ca"
       },
       {
         "project_id": "tr-05-svelte",
@@ -520,7 +520,7 @@
         "archetype": "onboarding-auth",
         "framework": "svelte",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:ef2ab6b68875f06a075741ec6adb6e177e1996dc74a0e6838a2a9ff25f286684"
+        "tree_sha": "sha256:7b7d9e3b2642dfd8398ad237a5859a10c4663a675e6259375e5315f6c854754a"
       },
       {
         "project_id": "tr-06-hono",
@@ -536,7 +536,7 @@
         "archetype": "directory-listing",
         "framework": "raw",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:39ee19131ba7a33b35e090b660e62845b242f47e0bab2124ff9623f734adb02b"
+        "tree_sha": "sha256:d870ae9145fb6b9616d84dc357d10870f7b14ae65d2620f8a07139eb7ce4e5dc"
       },
       {
         "project_id": "tr-06-react",
@@ -544,7 +544,7 @@
         "archetype": "directory-listing",
         "framework": "react",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:b12d25e24b0fa6d154fd87e090c9aa75c33b455397a5cc201f2c7ba754add079"
+        "tree_sha": "sha256:7a1720b208f31b16c49b5ae1c37a4742bb375950c2417e505c555ee7a64c7317"
       },
       {
         "project_id": "tr-06-preact",
@@ -552,7 +552,7 @@
         "archetype": "directory-listing",
         "framework": "preact",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:058bbf770eda6b92e021b0e8d385ad76645d83c3fba657e0867ab7585a0da721"
+        "tree_sha": "sha256:67b8fe11b161098f8f25a58c0bd905fc63ee4e900587eae6e29c82fa7270d8f7"
       },
       {
         "project_id": "tr-06-svelte",
@@ -560,7 +560,7 @@
         "archetype": "directory-listing",
         "framework": "svelte",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:e1de37d90386b7a0f7622f27a671d1fdd59d5ff5b37da744fe69de6e5d330563"
+        "tree_sha": "sha256:809b7ad8ca60ca1a4a6301ac6a0df4fb23b98361349c8246ba1467a34cbd14e5"
       },
       {
         "project_id": "tr-07-raw",
@@ -568,7 +568,7 @@
         "archetype": "event-registration",
         "framework": "raw",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:506868381ef95a54538022343f83405549e7c64e4815eed9b08acf580a3e33c7"
+        "tree_sha": "sha256:bc383678b8fa5a8f1fa34a68d8c9343c6be3edd807bc2bf67c08052532aaa3bc"
       },
       {
         "project_id": "tr-07-react",
@@ -576,7 +576,7 @@
         "archetype": "event-registration",
         "framework": "react",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:054aa32d4895861ec5482c3e7fe73478800ec4a7f8803293b6645acb57a7c9b3"
+        "tree_sha": "sha256:14f4d35d462ae9ebc9a172c17f4310ec9cf006ea316236d7276faa9c0b4b186e"
       },
       {
         "project_id": "tr-07-preact",
@@ -584,7 +584,7 @@
         "archetype": "event-registration",
         "framework": "preact",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:4a9b6e5c002ee0e41c66923a69ebcd574cd567866cf2d9bc61ad9912c243ac96"
+        "tree_sha": "sha256:0d51121d6f0ef10ffcdb5f221973a85e38b61c5594d654ae1c37065cab5b0929"
       },
       {
         "project_id": "tr-07-vue",
@@ -592,7 +592,7 @@
         "archetype": "event-registration",
         "framework": "vue",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:fcb28bb21b9f38421841375216c616c2cf0564aa6c546b7bdb72e4bd82fdf479"
+        "tree_sha": "sha256:bdbde319784df0475398772c063846d7c1565b53d43cfc3be7d74ece4534f333"
       },
       {
         "project_id": "tr-07-webcomponents",
@@ -600,7 +600,7 @@
         "archetype": "event-registration",
         "framework": "webcomponents",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:324e26c0dc255f82c4f8d35d4b214aecf2180462eaef6014d1b905d16e159c8c"
+        "tree_sha": "sha256:f9ffd805ed3d175f1c6ee3080b51fe10eb560d5bc0370f6cb148eac78758f412"
       },
       {
         "project_id": "tr-08-hono",
@@ -616,7 +616,7 @@
         "archetype": "support-helpdesk",
         "framework": "preact",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:05e7c4272b92dca40cc62839cdd9cf4865ba335ed2cdbcf11caba7067c61e792"
+        "tree_sha": "sha256:bac7ce774a4b846921c5736e4b88b8bcca342262eadf5af2a985ec9a1dfd3a76"
       },
       {
         "project_id": "tr-08-vue",
@@ -624,7 +624,7 @@
         "archetype": "support-helpdesk",
         "framework": "vue",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:f8ed1aeee4c23ba8f63fa6c34b8218ed471b0c730d1dc74bc75135b8c3d2537f"
+        "tree_sha": "sha256:5d4a1a4dc446ced1187c2ca129e526a7ea350ac0c13c6159ab6337b52c2f3b2d"
       },
       {
         "project_id": "tr-08-webcomponents",
@@ -632,7 +632,7 @@
         "archetype": "support-helpdesk",
         "framework": "webcomponents",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:b7c61c25579c2270a582349f67fe505dec92886d2e02dc580359612947d135a8"
+        "tree_sha": "sha256:88b4fe6b33d35cdd70b441b9d0dee82acdae91e9fd208ff0c243410955098179"
       },
       {
         "project_id": "tr-08-svelte",
@@ -640,7 +640,7 @@
         "archetype": "support-helpdesk",
         "framework": "svelte",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:28231ff8612281331ecdb38081fa406b6fea5c965ef78af1423dbf074bf010d8"
+        "tree_sha": "sha256:01da2ece1a966df80c0d5c0d272dc922940c4b4c85e4ded0802a0458933613a1"
       },
       {
         "project_id": "tr-09-hono",
@@ -656,7 +656,7 @@
         "archetype": "course-enrolment",
         "framework": "raw",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:6f32dba19aa0ad9bbd775c4ee6451696ce2376e1fcfb7bb332d7de14cd92c735"
+        "tree_sha": "sha256:afa7f0074f3df267fe7563358cfd57162eb9581437660ea39d7837d0248f032d"
       },
       {
         "project_id": "tr-09-react",
@@ -664,7 +664,7 @@
         "archetype": "course-enrolment",
         "framework": "react",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:760572214b90f535170e0466379b0d7133f42080557391ffe15a93c0ab95b9bf"
+        "tree_sha": "sha256:c073cbbd53678742e9e5876c7f290e519ff9eb72d6f9dade5b5cd4e320484e92"
       },
       {
         "project_id": "tr-09-webcomponents",
@@ -672,7 +672,7 @@
         "archetype": "course-enrolment",
         "framework": "webcomponents",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:63923fd372bb861351916f7d8c062e581bfa5a21cfd14f0fbd59c69e164cbe43"
+        "tree_sha": "sha256:664155aa69d761e8bbed6221492ea9a0f386389d10c44f6767fe7b4daf52d5f7"
       },
       {
         "project_id": "tr-09-svelte",
@@ -680,7 +680,7 @@
         "archetype": "course-enrolment",
         "framework": "svelte",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:04cc5e4446c7e95289c3cefcc22b67f5de1ce78a1cfd410de2bab40cdb389b45"
+        "tree_sha": "sha256:a62781952eca07d278439d69a101c1ac92f9434595103aea5d6d6f59f4e5f970"
       },
       {
         "project_id": "tr-10-hono",
@@ -696,7 +696,7 @@
         "archetype": "survey-form",
         "framework": "raw",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:c701f192a871e8a4e400f2cd1dd7d97e8138266d37fee2a3f75fab5ac999688f"
+        "tree_sha": "sha256:76542af049ab503a6633a2c080001d16b002a9e061254c4e98b13f35fa20918d"
       },
       {
         "project_id": "tr-10-react",
@@ -704,7 +704,7 @@
         "archetype": "survey-form",
         "framework": "react",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:f371e83f64250fbd3b0a33ff9fc9fb423da07abd42f4f61495213633b52a9f12"
+        "tree_sha": "sha256:35eb32b2a350b17d8b4932505716e9e26a9813e981850846cf301ebe4ae96efa"
       },
       {
         "project_id": "tr-10-preact",
@@ -712,7 +712,7 @@
         "archetype": "survey-form",
         "framework": "preact",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:f3142b618c09d5c32f5558a397a3a785ef87f75d2fdcd6c9ff4ee9053b248f54"
+        "tree_sha": "sha256:03a2b1ff5f48e77012d297c73dc262115337fa0091bff56dcf7699bbfbb4689c"
       },
       {
         "project_id": "tr-10-vue",
@@ -720,7 +720,7 @@
         "archetype": "survey-form",
         "framework": "vue",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:61eff388ed627f286ccfbca4006d5f234c8ed1c3f68f67fe4ea9335d334f63c6"
+        "tree_sha": "sha256:25bb6085eb69af41f69e7e673cd87e56c7b327265a7b5835f6231ded957c0439"
       },
       {
         "project_id": "tr-11-react",
@@ -728,7 +728,7 @@
         "archetype": "restaurant-ordering",
         "framework": "react",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:8d57f220cdb5020adefce71b0e7fec84a8ec82b6041f9bcd97991445b4c337a5"
+        "tree_sha": "sha256:ea8212e7a59a2791a93aae94ca660c82f770cdca2cbf0086a90184a4151ee15c"
       },
       {
         "project_id": "tr-11-preact",
@@ -736,7 +736,7 @@
         "archetype": "restaurant-ordering",
         "framework": "preact",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:df449c1ca01143fa9f2711d248506625cf73608d26d503554799199b64a80ef9"
+        "tree_sha": "sha256:1b90d157ef8dd8700ae2a1025b98215c006c32385eac531f656ae1ecef202eaa"
       },
       {
         "project_id": "tr-11-vue",
@@ -744,7 +744,7 @@
         "archetype": "restaurant-ordering",
         "framework": "vue",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:b42569792ac228499c54ec6792cd2aeca70193cfd7afcccf2fd04f9ed37dcdb2"
+        "tree_sha": "sha256:455853feb15de16fc4c19fad324891f35dc993adc8273cd44f6a1911e04a5a3f"
       },
       {
         "project_id": "tr-11-webcomponents",
@@ -752,7 +752,7 @@
         "archetype": "restaurant-ordering",
         "framework": "webcomponents",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:1beb61598f09c1d5b0fdbb6c8c90bf2ed979d7babea933d81bfc021e92593196"
+        "tree_sha": "sha256:cfa80b350f43a608acdfd95cd41499659a491901efd0ab32d52131fe64aa36a7"
       },
       {
         "project_id": "tr-11-svelte",
@@ -760,7 +760,7 @@
         "archetype": "restaurant-ordering",
         "framework": "svelte",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:446796ea665751fb590279ef4c48fd820060ae0be1e18c700f1e38d1a47e58fa"
+        "tree_sha": "sha256:241605eb4ee6dc5d3c045b0c01428fca1f3aad653171f904055a3f5867a6bc3f"
       },
       {
         "project_id": "tr-12-hono",
@@ -776,7 +776,7 @@
         "archetype": "job-board",
         "framework": "raw",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:8b33b69dab2cf6b7048c2423ffc24e5e8ad886028d379ce65d809a5e69fd720f"
+        "tree_sha": "sha256:24eec38167954c9b82534116e3d47a50acffa9fef85236e2947091c8816de168"
       },
       {
         "project_id": "tr-12-vue",
@@ -784,7 +784,7 @@
         "archetype": "job-board",
         "framework": "vue",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:46988892fc019611642f2b1b4282824f5edc94c9efbc98579775d66c4aab5aa2"
+        "tree_sha": "sha256:a64fbef2c31be94c0c1592ffa0ce35f9b51a364dd2fd0910b352c16f72ec9e91"
       },
       {
         "project_id": "tr-12-webcomponents",
@@ -792,7 +792,7 @@
         "archetype": "job-board",
         "framework": "webcomponents",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:cbd980bf5fbdde517727973d0ceabfcb00a2e11f9eca5eb215ba33bd6bd8e181"
+        "tree_sha": "sha256:d838901b7b0c4a90e3f6c0a9053f510cb74c52a842b54be5741009669c598f0b"
       },
       {
         "project_id": "tr-12-svelte",
@@ -800,7 +800,7 @@
         "archetype": "job-board",
         "framework": "svelte",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:a038644c2da0d1c5c2734f33ebdb53c3da3a404e94fbf192ddaf1ec02d9b614f"
+        "tree_sha": "sha256:82587a46b1e6f8a9c26cd7f6fb84e98bd8b230db4d9c09ca3011f1ed7c38432b"
       },
       {
         "project_id": "tr-13-hono",
@@ -816,7 +816,7 @@
         "archetype": "docs-site",
         "framework": "raw",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:bb399731a4d3fade6dbb51c62370e2b51705a0ede712b50f7844a0ed0ce1f5d3"
+        "tree_sha": "sha256:e4f9ff187fd11c38f8fcb931f00a6f7fa56ffe91350944a21f78f44a3282e393"
       },
       {
         "project_id": "tr-13-react",
@@ -824,7 +824,7 @@
         "archetype": "docs-site",
         "framework": "react",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:2be065239a0eebeed627108b82ec72599e87ea3a67250b3434eee5eb26c78cc9"
+        "tree_sha": "sha256:78324c1530dbbf1e73c8d1b92d8cca69e88104baedc913cd1d8b0587dafc05cf"
       },
       {
         "project_id": "tr-13-preact",
@@ -832,7 +832,7 @@
         "archetype": "docs-site",
         "framework": "preact",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:fe05d1e7aaa6df00d11db1039b1c103c64f7851739daa1afdfa993229b317977"
+        "tree_sha": "sha256:0d7b333155839339ff6e4627bd14ae7f88c0f1db2a34a79479f2368b0b688861"
       },
       {
         "project_id": "tr-13-svelte",
@@ -840,7 +840,7 @@
         "archetype": "docs-site",
         "framework": "svelte",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:bf6964e575bd3e5d5949ddc3332c834c4bd8416bbeb0586637bde68ca9581cc6"
+        "tree_sha": "sha256:d929cdcef9b71078adafb3d1263371eee20953c93a520ada532a781179a41c33"
       },
       {
         "project_id": "tr-14-hono",
@@ -856,7 +856,7 @@
         "archetype": "directory-listing",
         "framework": "raw",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:9566ed3b7baabf8153e0ff5d11f425e8d1c77668245a28d227cce42a3449a459"
+        "tree_sha": "sha256:063c0edf7037d314863d9127fd7835cf58523c3f8efe199744846e22b4122d94"
       },
       {
         "project_id": "tr-14-react",
@@ -864,7 +864,7 @@
         "archetype": "directory-listing",
         "framework": "react",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:54238264e6fb04d58fae29c42f4f92d0be5b98fb73bba414b0170c4a5e71cd57"
+        "tree_sha": "sha256:f61c8ebdc0bddfc3bb9adecfcc5c0fe3df78a483fcd713999cf5a2cfd449a55e"
       },
       {
         "project_id": "tr-14-preact",
@@ -872,7 +872,7 @@
         "archetype": "directory-listing",
         "framework": "preact",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:ce04ac5a420e1d1f4acfb4dd3cc084f4ac6c222ac3b420800085a36bbf3000eb"
+        "tree_sha": "sha256:8416b9cee1ae9b249284914a7382687eb266e3ab743d5b3226578a2c6949b76f"
       },
       {
         "project_id": "tr-14-vue",
@@ -880,7 +880,7 @@
         "archetype": "directory-listing",
         "framework": "vue",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:170ea1a3886ce4114b12479cb36be52b7246a27070b9d9c0393b05baaf8724c2"
+        "tree_sha": "sha256:43e9f4a96c086193312775524baadeb632e25d1a88f4dd410afdf6e3294cf89a"
       },
       {
         "project_id": "tr-14-webcomponents",
@@ -888,7 +888,7 @@
         "archetype": "directory-listing",
         "framework": "webcomponents",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:54058701bc8064ca706cec9512769d5091fba68f484ef7a47c90ab8d2e74a073"
+        "tree_sha": "sha256:e99ee550a228fe592e8051c5e9d1eed2dc019eb251d2725f6c1e1391ef755c00"
       },
       {
         "project_id": "tr-14-svelte",
@@ -896,7 +896,7 @@
         "archetype": "directory-listing",
         "framework": "svelte",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:1e61b0d751796a9d7abfa1919e2e19d0782bbabb343665425894a9698e4afe3d"
+        "tree_sha": "sha256:c0f59afe7ccd5968be4b6edcecbca0c868e8c76fc186ede9515e5f0b99ee6d1d"
       },
       {
         "project_id": "tr-15-raw",
@@ -904,7 +904,7 @@
         "archetype": "expense-tracker",
         "framework": "raw",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:99fed92d60a800ccbaba04163a375a5dbd899a5ff1fea17c61e86290c2aec621"
+        "tree_sha": "sha256:3fc62e98624ffca845831632e3af63b39e546b0619615dd8143357275a6d69d3"
       },
       {
         "project_id": "tr-15-react",
@@ -912,7 +912,7 @@
         "archetype": "expense-tracker",
         "framework": "react",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:3ccd739aef38be32b4f0e1480af10aa8755447bf0c154706331a439928148b34"
+        "tree_sha": "sha256:b2d871cb4f958ff953ff83515347ce0dfdf824d0e12f0bcb2dde3ab0e846b7d3"
       },
       {
         "project_id": "tr-15-preact",
@@ -920,7 +920,7 @@
         "archetype": "expense-tracker",
         "framework": "preact",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:b76ff01123e8ae77a509e9b67396cf0927305c1f4173e5c44fefabe74cbda043"
+        "tree_sha": "sha256:57d673fbde0a94001534f00f048e581dc4896510b2e8a12ccec31a2a1d8111fc"
       },
       {
         "project_id": "tr-15-vue",
@@ -928,7 +928,7 @@
         "archetype": "expense-tracker",
         "framework": "vue",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:a596853df661d06cc4f1e374a426d58a6f6068641d9c45077182c3398f96bb89"
+        "tree_sha": "sha256:7cb0f589daad7a0ad4e79df621fca3fa01bcd88ce499d44b53f027efea7da062"
       },
       {
         "project_id": "tr-15-webcomponents",
@@ -936,7 +936,7 @@
         "archetype": "expense-tracker",
         "framework": "webcomponents",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:67224fe836febf60aa2de654188c4f4f9268ae56d54d6a5524ce8ca4464cf497"
+        "tree_sha": "sha256:4c7ecdc39544319522cd97a4ed5985e58a1d38d3d4f8d8062c705cbd4096cd8b"
       },
       {
         "project_id": "tr-16-hono",
@@ -952,7 +952,7 @@
         "archetype": "library-catalogue",
         "framework": "preact",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:4a422178fbecdf072790c9a31df7f7c6a3894a968c50d6866fac31230878e7c3"
+        "tree_sha": "sha256:9a6a9264c6f07bcfed416af3fbacc7490be4fb495bc923602e1c699936803285"
       },
       {
         "project_id": "tr-16-vue",
@@ -960,7 +960,7 @@
         "archetype": "library-catalogue",
         "framework": "vue",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:811face16211fd2857289842fcde394f1f3d8f51dac9f0ebaef41b05b71231c5"
+        "tree_sha": "sha256:40bb0a9e42622e3522b2164789df0cc4be06ae8d33cf00e47b54e3f9cc267ba8"
       },
       {
         "project_id": "tr-16-webcomponents",
@@ -968,7 +968,7 @@
         "archetype": "library-catalogue",
         "framework": "webcomponents",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:9561bccfb19968ba519f5f474603cbe041178709fef1ce06e48bf4c01a3e3196"
+        "tree_sha": "sha256:d01b59094bf425ad230672339a08f54b2fc5df99c9fc4a49c5d3e1bc5d9254f1"
       },
       {
         "project_id": "tr-16-svelte",
@@ -976,7 +976,7 @@
         "archetype": "library-catalogue",
         "framework": "svelte",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:151e78eb4b232f3b7c6c8d23e6585d64e253611abc87df675db2641e64693317"
+        "tree_sha": "sha256:5207953f7ed5ed6a750a81760c0b266e5b79721cd6398f9dee53c8629ec3caaf"
       },
       {
         "project_id": "tr-17-hono",
@@ -992,7 +992,7 @@
         "archetype": "booking",
         "framework": "raw",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:9e817504504c40b9f75478452ded59d5af6139c23ff8faf3adac53af342c72f5"
+        "tree_sha": "sha256:cc94106e272d31de61d7a6f466bafa7f5cb369204e4bb3b487ead6a453cb1cc8"
       },
       {
         "project_id": "tr-17-react",
@@ -1000,7 +1000,7 @@
         "archetype": "booking",
         "framework": "react",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:6d953e1ed15769d262f9ec93d9da90eb3564c8c401ecca6dabfec04d1c2850a2"
+        "tree_sha": "sha256:690723f2db58bcf001e47dea8d0332e10c7727d7e20374f1ed29cdd2dda44379"
       },
       {
         "project_id": "tr-17-preact",
@@ -1008,7 +1008,7 @@
         "archetype": "booking",
         "framework": "preact",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:4e374dc5cf35a912f814367ddd45c49b86399e00fa1fd0453d2a33b0bb9b3626"
+        "tree_sha": "sha256:55acc533099a3eaeae3d0c7a62226e5f258a4100c073502de354a245dd284729"
       },
       {
         "project_id": "tr-17-vue",
@@ -1016,7 +1016,7 @@
         "archetype": "booking",
         "framework": "vue",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:e6f5f7479578b660fb399fa89cc8eae30294b19258d119eef4a88c2357467b39"
+        "tree_sha": "sha256:64e40800a0c2dd5bac85fab18ba081cbd19f0c0e102254c3a84c06d6749e9412"
       },
       {
         "project_id": "tr-17-webcomponents",
@@ -1024,7 +1024,7 @@
         "archetype": "booking",
         "framework": "webcomponents",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:a6bee0bacc62a51516c5f07609b944f41c8611edea691f1bc630a0297fd9b0ba"
+        "tree_sha": "sha256:bae62974a7d516c3b5b27eec7cfc2f79b5459c7585303bb1db1a7a2b2b08b2ee"
       },
       {
         "project_id": "tr-17-svelte",
@@ -1032,7 +1032,7 @@
         "archetype": "booking",
         "framework": "svelte",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:473342e9cb29c980e5b4ff8e6ccb9cba7989abd0436c928c428a832479459777"
+        "tree_sha": "sha256:e7fdd81a8c4c14e061a42b153283756a0201c4f9c8b98b8314a664376a03d9e2"
       },
       {
         "project_id": "tr-18-hono",
@@ -1048,7 +1048,7 @@
         "archetype": "web-shop",
         "framework": "raw",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:fb9f3bfcec7150df155cf06d3efa70685d21ca7c24e52de55dce9f402b105557"
+        "tree_sha": "sha256:311c30684190d696f89b001685e75681f3d69ce54c3acf9a501c8564822c1458"
       },
       {
         "project_id": "tr-18-react",
@@ -1056,7 +1056,7 @@
         "archetype": "web-shop",
         "framework": "react",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:c797cc442e43fb55ac7897097c58df505ee17e67be30fcdc886670dda594a97a"
+        "tree_sha": "sha256:6d3b250684fb3ba58f875173324b43ca54fb7436558fce3b613cc47517998fd8"
       },
       {
         "project_id": "tr-18-preact",
@@ -1064,7 +1064,7 @@
         "archetype": "web-shop",
         "framework": "preact",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:701ce7099292c3d9dc2ebdaf00a9783f004dde10f35db1a5ada6835c40c5f329"
+        "tree_sha": "sha256:281d3e9bdde1674f774522cea1ccd60a707e17057423c1b48dbd90e55ea3942d"
       },
       {
         "project_id": "tr-18-vue",
@@ -1072,7 +1072,7 @@
         "archetype": "web-shop",
         "framework": "vue",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:c9183bb4d890ef01946cd52a8fcb27889d90554513cf097267bafe37e3a34c6e"
+        "tree_sha": "sha256:45390568d1c9a4ba870c9d3078623990c4a8d31fcdd44dfb14229376f4519609"
       },
       {
         "project_id": "tr-18-webcomponents",
@@ -1080,7 +1080,7 @@
         "archetype": "web-shop",
         "framework": "webcomponents",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:4b3564550a61e01c9913239749137cde4db12014632e6da2ee01c7773a43ce4d"
+        "tree_sha": "sha256:7f48d39e73ba757a96581fed60eb3f0dd8ea8a9c4c9a32ad327eba993fbb70e7"
       },
       {
         "project_id": "tr-18-svelte",
@@ -1088,7 +1088,7 @@
         "archetype": "web-shop",
         "framework": "svelte",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:a63f591b6efb630b3b7ada5858359bc937ab1fa4cfa76bf189be221aca094efa"
+        "tree_sha": "sha256:33e6acfd2d912b77593c4e9ca7ccdb5832bba7e8e23636c461c4e2c292c31dc1"
       },
       {
         "project_id": "tr-19-hono",
@@ -1104,7 +1104,7 @@
         "archetype": "booking",
         "framework": "raw",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:94c9445bc3643a30427205aea0a7c12674798c940a2054a1b5f98f577e544548"
+        "tree_sha": "sha256:5aa64852c40eebd46096e9aebc00411512e6d4f3d88e720d845fe554a9a531b9"
       },
       {
         "project_id": "tr-19-react",
@@ -1112,7 +1112,7 @@
         "archetype": "booking",
         "framework": "react",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:4603fe8859d9f452816badc5e43369849391778b16c4c07ddfde2f2d4326d3c4"
+        "tree_sha": "sha256:e26eebe8d26d59972be60d50dbb7a401ad0efc8e2dbe9dd8de662dbedeb576c2"
       },
       {
         "project_id": "tr-19-preact",
@@ -1120,7 +1120,7 @@
         "archetype": "booking",
         "framework": "preact",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:5dfdf6898ff8bb709c5637fc1cd7c4402ea08a522e002c82b7105a80119238c6"
+        "tree_sha": "sha256:1970283b24c860b2975674ef8b96782d8c77c33a43f206a150d30e789da43980"
       },
       {
         "project_id": "tr-19-vue",
@@ -1128,7 +1128,7 @@
         "archetype": "booking",
         "framework": "vue",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:03300532ae19e673a215a56b6cbacb7ae78e1d95b9416493d046e20e96628962"
+        "tree_sha": "sha256:3086ea715b396ded28f31843f5365aebddd27f2fb8d96fba552855f99f8a1b68"
       },
       {
         "project_id": "tr-19-webcomponents",
@@ -1136,7 +1136,7 @@
         "archetype": "booking",
         "framework": "webcomponents",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:429fcc76f23f63ad0343a5869807315ab5e7e5cd092202cec290e7f802c2c87c"
+        "tree_sha": "sha256:0bf7a214042afff7890b14a25c09d0a1de93e17b217b3de63c236f8e783ac64e"
       },
       {
         "project_id": "tr-19-svelte",
@@ -1144,7 +1144,7 @@
         "archetype": "booking",
         "framework": "svelte",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:7bbed90a85aa12bae10d59af4f900e220472336d5062215bc5f1bd93fc0d270d"
+        "tree_sha": "sha256:14842e5a876452ce064b5d2c50aee87d8385a6fb38deeaf064b8cfffc57c2e33"
       },
       {
         "project_id": "tr-20-hono",
@@ -1160,7 +1160,7 @@
         "archetype": "community-forum",
         "framework": "raw",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:ba874cb7d0d3a1c65a6b5c55205ca2ad71d466f997a50ecb73500c5e84f0836b"
+        "tree_sha": "sha256:2ad1b63fd553c164e51524779bffc660d68c2b6569f81bc4d3d5bbd33aa2dec5"
       },
       {
         "project_id": "tr-20-react",
@@ -1168,7 +1168,7 @@
         "archetype": "community-forum",
         "framework": "react",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:18810ea09d70d02c21d88bf5b54753dc670dc6c36907318530692c414efaf5c2"
+        "tree_sha": "sha256:1855283b0abb90683b045bf5584d6443400355d2ad0c2661669f9c2be44342df"
       },
       {
         "project_id": "tr-20-webcomponents",
@@ -1176,7 +1176,7 @@
         "archetype": "community-forum",
         "framework": "webcomponents",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:64130a24f72cf6db789251be4b31fd8d6e0fe5429892de75e750f5228e8b3402"
+        "tree_sha": "sha256:9956008bf7952cd05509c8d92a01b0dde2aa9c6bab15413352e6e69427447809"
       },
       {
         "project_id": "tr-20-svelte",
@@ -1184,7 +1184,7 @@
         "archetype": "community-forum",
         "framework": "svelte",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:df97c27cce6b88d8daa0bd84ab146808153538645716bb64c21a9decd56b0455"
+        "tree_sha": "sha256:6670eb6e7e670a4cd32aa5acaba2f7da499e2863114cadb5fb6686f7581ce837"
       },
       {
         "project_id": "tr-21-hono",
@@ -1192,7 +1192,7 @@
         "archetype": "booking",
         "framework": "hono",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:6614a48c7158860e76bb1f4d109e915f6e8ca27d61eee91cdcf5813394ff0740"
+        "tree_sha": "sha256:35a62f1bfbc209183bf8094ed98457511fde4e7bead517096f4062a6b1a1eb82"
       },
       {
         "project_id": "tr-21-raw",
@@ -1200,7 +1200,7 @@
         "archetype": "booking",
         "framework": "raw",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:be774abe91f0afca8faded4575df8076b63d0375f0528d24ff9a6f246967f8fb"
+        "tree_sha": "sha256:8028277038e07dd241662e90b431640741880dcb5e129c69d7c3cf5fd8721e96"
       },
       {
         "project_id": "tr-21-react",
@@ -1208,7 +1208,7 @@
         "archetype": "booking",
         "framework": "react",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:1ffffffb4608aa5c14ac8901dfc36366925ea140b68c9d06eb0b9cf7c088a9d1"
+        "tree_sha": "sha256:2272a6c82a05acb7a40454c0a7470e4cf8b46d90c23de36c7158a684681abe60"
       },
       {
         "project_id": "tr-21-preact",
@@ -1216,7 +1216,7 @@
         "archetype": "booking",
         "framework": "preact",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:8f607fa1d0cbb518cea2be392ec9258ad93c4eda576c329ad76ad52e56167d17"
+        "tree_sha": "sha256:7d55f4f707e1a9a859e80994c31a26a5d0bc121c59e0363888ba2652a4ee43e9"
       },
       {
         "project_id": "tr-21-vue",
@@ -1224,7 +1224,7 @@
         "archetype": "booking",
         "framework": "vue",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:60304c5c29af1f8a25770ffe4fa2a5d63000be32ed9a996d5228d2c9d580c4b3"
+        "tree_sha": "sha256:3be382104db18e0ca39a6b49bb38fc820a431caccba4840411bcb970ff69c80f"
       },
       {
         "project_id": "tr-21-webcomponents",
@@ -1232,7 +1232,7 @@
         "archetype": "booking",
         "framework": "webcomponents",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:83154831c835cf66ac7f8e7ab49e54c4c171c9fffdc79d892f3831d529ab51c1"
+        "tree_sha": "sha256:b58a72e7cd3e6040630c9ef942f967da3d2a5cbdc5a96d20cf9f7a553277af88"
       },
       {
         "project_id": "tr-21-svelte",
@@ -1240,7 +1240,7 @@
         "archetype": "booking",
         "framework": "svelte",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:0143c18709b8454d958d1889ebba93f7dcf1fa1253505c85a1e7e3b9ae22fb14"
+        "tree_sha": "sha256:2ef9e61162e9008e235a9e3b1cad97e8d3a8c47281bd41c1027ff6cb8c1d73bb"
       },
       {
         "project_id": "tr-22-hono",
@@ -1256,7 +1256,7 @@
         "archetype": "dashboard",
         "framework": "raw",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:16350dceb8867bd6d3da1b74aed102e50f0f61e2372410527dfa2033a230f61d"
+        "tree_sha": "sha256:128b6504ec9ba943a95d8bcd2a62beaf876023b820485f9cba4bb29d02b7021c"
       },
       {
         "project_id": "tr-22-react",
@@ -1264,7 +1264,7 @@
         "archetype": "dashboard",
         "framework": "react",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:76b4be1c7ca376023d4798971499588c2e2a8328549951da9fa5e23895e5e9ca"
+        "tree_sha": "sha256:a61a364919f5337a3091b98d3a66342edf7dd54055626b17418b913c15163d7f"
       },
       {
         "project_id": "tr-22-preact",
@@ -1272,7 +1272,7 @@
         "archetype": "dashboard",
         "framework": "preact",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:c503b3c60bcd949ca78ab95ad1ce29c2ccab1e6df01240175e3609f8712d66a4"
+        "tree_sha": "sha256:875fdf329bae3b4d38e810fcdeafb9091604c7b7e666743c78cd1bbfb8d8d510"
       },
       {
         "project_id": "tr-22-vue",
@@ -1280,7 +1280,7 @@
         "archetype": "dashboard",
         "framework": "vue",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:035cb037bf1871795d0ea35c6d99aa6bf202535f5864cfc5162cc627be889c55"
+        "tree_sha": "sha256:d7b2a2f1cb0515d18cb41e8b4493fec36926ce4fe3cf7f7ad3caf037f38fbb84"
       },
       {
         "project_id": "tr-22-webcomponents",
@@ -1288,7 +1288,7 @@
         "archetype": "dashboard",
         "framework": "webcomponents",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:e5e2128baa5666bdee786ecf3fea4d23556b1da28235f31caf0c833ec902f1df"
+        "tree_sha": "sha256:332c13ac0c250ee9eac9df2a65020186a9bbd86c8b3a950f88e5ff7848dff33d"
       },
       {
         "project_id": "tr-22-svelte",
@@ -1296,7 +1296,7 @@
         "archetype": "dashboard",
         "framework": "svelte",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:1ab06a61c09f0442ca62fa1be2c4d2b40da2f443659ed61aef101e6cdcf503fc"
+        "tree_sha": "sha256:d94321f67ff7831f3ee35eafb071643a1d82f48eb8f7be5c905e404e2787a069"
       },
       {
         "project_id": "tr-23-hono",
@@ -1312,7 +1312,7 @@
         "archetype": "survey-form",
         "framework": "raw",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:39b6fdc561b2b4a14fef0dfad33debf29dbbd79a8bef8f82770d2bdf4816d054"
+        "tree_sha": "sha256:efb4543d0af57582f2e1eab68cbbf3f3d4a20219033f2e40e1f8ae48ce447da8"
       },
       {
         "project_id": "tr-23-react",
@@ -1320,7 +1320,7 @@
         "archetype": "survey-form",
         "framework": "react",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:38658c1c65cb42631b3766f2c163b6ddba4592e4fb62b0afc04feab21603c7df"
+        "tree_sha": "sha256:7de12e39df2c584ea38bfccd113374846e8f8e79d531de6036c156a2651cdbf2"
       },
       {
         "project_id": "tr-23-preact",
@@ -1328,7 +1328,7 @@
         "archetype": "survey-form",
         "framework": "preact",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:c555d9fde6b555b5afc4a9a04d3f8161db3eba017e5ae2dae6c13a47dd3aba0f"
+        "tree_sha": "sha256:62c3e592a5ff4607432b8c3e02eb556f3fd9b6d1fc512199cd6b73a6f8d6f79d"
       },
       {
         "project_id": "tr-23-vue",
@@ -1336,7 +1336,7 @@
         "archetype": "survey-form",
         "framework": "vue",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:f6bcaff253cd1ad85605f6aad50c8bf94fac9e47ca6c4e588d6dac7eee15ace4"
+        "tree_sha": "sha256:09bcde2ce83f4be84fc5be3a810db777b6e75b1bf47a95c4f7a589a50f3a8387"
       },
       {
         "project_id": "tr-23-webcomponents",
@@ -1344,7 +1344,7 @@
         "archetype": "survey-form",
         "framework": "webcomponents",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:f73a296683a60fbb74f9608e7a60346de53e98caf00ffa59371dc1c1c0a15158"
+        "tree_sha": "sha256:09f8a95f24fe501631c8ffa9a05d363a848f464615e84f830186300fde82831b"
       },
       {
         "project_id": "tr-23-svelte",
@@ -1352,7 +1352,7 @@
         "archetype": "survey-form",
         "framework": "svelte",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:498deb02abb705aa0558469c399fbb247a255f8865c96ba51e37a2d617f2e008"
+        "tree_sha": "sha256:4406164526a0c6a56ddecbb1b28e80fd728bad80f3b4edf0648e0ff2e0673175"
       },
       {
         "project_id": "tr-24-hono",
@@ -1368,7 +1368,7 @@
         "archetype": "booking",
         "framework": "raw",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:2013b57d2b564094d2f9fc51dd8b41396b120229a96517f4f4933dbf384dce04"
+        "tree_sha": "sha256:983ad5213215676e1d2ab3f6420a4d2855b440852e84714963471c6704f9091e"
       },
       {
         "project_id": "tr-24-react",
@@ -1376,7 +1376,7 @@
         "archetype": "booking",
         "framework": "react",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:97850b3a7eb4a8a449768d9495dbb13ff6f59dc7a523b65b2500a9f50be205f1"
+        "tree_sha": "sha256:4d1676ca1e3da9fc2596168d1be0718c0267ed9ec2ba84f5230aaaa3e45399e0"
       },
       {
         "project_id": "tr-24-preact",
@@ -1384,7 +1384,7 @@
         "archetype": "booking",
         "framework": "preact",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:e41f52100e482315c6bb1725c616d5689c1c53c1e583b2375fddbca448054a12"
+        "tree_sha": "sha256:5062dfe3f0dbf9e9a5563a6bd57370d2792d78f909026f666fd5466eda1843da"
       },
       {
         "project_id": "tr-24-vue",
@@ -1392,7 +1392,7 @@
         "archetype": "booking",
         "framework": "vue",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:f1ca6e9029013155051cef77e034f035e31f9600c2a40bba3bb385bd7de26e7f"
+        "tree_sha": "sha256:c06e8021f736978ed49979ba2ee4ea173e4cd0d3cf3a7def7835b47a3ae67401"
       },
       {
         "project_id": "tr-24-webcomponents",
@@ -1400,7 +1400,7 @@
         "archetype": "booking",
         "framework": "webcomponents",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:4b6c4d8f57b8606f1490470be3028a00fc2d792fb1dcc8cea1a18351c89dbe28"
+        "tree_sha": "sha256:54ba3e704f0583517a393f3d8d2850b02d48733ffda042b54d17dd665890e47f"
       },
       {
         "project_id": "tr-24-svelte",
@@ -1408,7 +1408,7 @@
         "archetype": "booking",
         "framework": "svelte",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:f9324725c3b01c738112a5dc59ec3ece20dff4304bba8aa13f6acb5f268beb38"
+        "tree_sha": "sha256:4ed0846fd05bc6df09c7de8019e20b10ceb5faac500bf4899a4e7949cce4c925"
       },
       {
         "project_id": "tr-25-hono",
@@ -1424,7 +1424,7 @@
         "archetype": "docs-site",
         "framework": "raw",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:866d43c3a5c8c4ebbf9578254426828d02394a0104a4263d8e9886c5675403b6"
+        "tree_sha": "sha256:6fff14bd1019d32dfe0e176637f36cbceb7592f9fbac3ebc9fd0a91ee6b5b194"
       },
       {
         "project_id": "tr-25-react",
@@ -1432,7 +1432,7 @@
         "archetype": "docs-site",
         "framework": "react",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:d5647f288a5da5bcb57684c61e11fcafad48881c245fa7d09ad12cd5791f9dd3"
+        "tree_sha": "sha256:d81c682c05cc304e4254fb9e44dbfe7ed87a5300e7717618f7402d13c7c64cb4"
       },
       {
         "project_id": "tr-25-preact",
@@ -1440,7 +1440,7 @@
         "archetype": "docs-site",
         "framework": "preact",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:611b43beb5906ae2a5644b872a1f90e925da823731e124f20f657bbfd3fe2651"
+        "tree_sha": "sha256:9d427c4e0fb891b2b37747d5f001111dea5f3423fe189958586629b761660dee"
       },
       {
         "project_id": "tr-25-vue",
@@ -1448,7 +1448,7 @@
         "archetype": "docs-site",
         "framework": "vue",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:527dabb8648cff40e0e345b987237571cddccc84e3f5e50e932c89c8c2e71bf9"
+        "tree_sha": "sha256:b4d85b84cbef36ce19641c4d6d91ff099f329ceac88572ca8ccf3295b0c98545"
       },
       {
         "project_id": "tr-25-webcomponents",
@@ -1456,7 +1456,7 @@
         "archetype": "docs-site",
         "framework": "webcomponents",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:5e83050d92f270ebc735028584e3cb6f46d9f60feb8b304bf7562aef6d7f170c"
+        "tree_sha": "sha256:b08a92ad8592f822fe7b04e678b82c16bc5a3a241baeaad3d7359f57755d6de6"
       },
       {
         "project_id": "tr-25-svelte",
@@ -1464,7 +1464,7 @@
         "archetype": "docs-site",
         "framework": "svelte",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:1d59d16383d8b8cabc07c1bd805498f126c1d30c57e2923b6685751000e87af9"
+        "tree_sha": "sha256:f7a098cfe7e31dd041c55c2ae88d5494e52c5f12089a25f35140ae8cf44662ff"
       },
       {
         "project_id": "tr-26-react",
@@ -1472,7 +1472,7 @@
         "archetype": "web-shop",
         "framework": "react",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:e26ad4be0e2290f385e3fdb89b0e3cb527f850be202b78702e5cea9dcba6bd94"
+        "tree_sha": "sha256:ea624c2ce55b48cc050a2c6ce263b90929fb410538619cf0c35f5989ae4bb9d3"
       },
       {
         "project_id": "tr-26-preact",
@@ -1480,7 +1480,7 @@
         "archetype": "web-shop",
         "framework": "preact",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:88ed2e059fb76589de99bcd435ce59c76d42bb9b8f26d44a3bcc8f1dfc7a9350"
+        "tree_sha": "sha256:eea75f554c8a8a4af20f68620d37a6376f7a9b548f0d00fece08fbb80da3be4a"
       },
       {
         "project_id": "tr-26-vue",
@@ -1488,7 +1488,7 @@
         "archetype": "web-shop",
         "framework": "vue",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:288e0854c51748af12be322cb8554bdcb028e9ed589f54460f7e0466ee51ebf0"
+        "tree_sha": "sha256:d26a37d72b931d8f376bada849f8f321b711df4da975f0aafc4abeb7865e2f6b"
       },
       {
         "project_id": "tr-26-webcomponents",
@@ -1496,7 +1496,7 @@
         "archetype": "web-shop",
         "framework": "webcomponents",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:0b7d8c15190edd18fcfccab87a002726726a4db4bfcb70426f4d9813245672ad"
+        "tree_sha": "sha256:4b9ce3a71fe21ed309043a5601a501603cbac501e611b3148f56c4a9a952c288"
       },
       {
         "project_id": "tr-26-svelte",
@@ -1504,7 +1504,7 @@
         "archetype": "web-shop",
         "framework": "svelte",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:ad950c4079c3cec99086bcf97f04e95105ad678a5fa01aa82660ce123a207ff5"
+        "tree_sha": "sha256:91938b858f47b677958176d96d25adc2d6dcdb512cb1d053b9df469aa2efdf88"
       },
       {
         "project_id": "tr-27-hono",
@@ -1520,7 +1520,7 @@
         "archetype": "booking",
         "framework": "raw",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:59430ac5df326f3295c37d1ed2feac7e8b8d4eb7b650ebb551cd0abcdfd9031c"
+        "tree_sha": "sha256:4cebb81c74ff5dd183399ea729f140bcf01bccb6bf7c26074fe775c1b3b0bcc9"
       },
       {
         "project_id": "tr-27-vue",
@@ -1528,7 +1528,7 @@
         "archetype": "booking",
         "framework": "vue",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:a71ee949cb45db5426e89102f137d5229e0e94dae352ccf2db08fe9f0fb3540e"
+        "tree_sha": "sha256:8e3ad7c6f859949c1586abd9e97b91101435524069d5aad385c191ef4c4de564"
       },
       {
         "project_id": "tr-27-webcomponents",
@@ -1536,7 +1536,7 @@
         "archetype": "booking",
         "framework": "webcomponents",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:f053c54774a69ed49b92cdea5dae9018d5c0b71f87f261e965664afb03d59503"
+        "tree_sha": "sha256:3b57a0e598fc7bba8ac19083be8ebb5afae2292ac769f1fdaa058a1b175e69f9"
       },
       {
         "project_id": "tr-27-svelte",
@@ -1544,7 +1544,7 @@
         "archetype": "booking",
         "framework": "svelte",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:cdf412ef63d1953f5f8822d2f3a4ba1f8aeae36aa848159d83f9384716f2ed18"
+        "tree_sha": "sha256:433e0e838a7f9ee900a9ed1d2bb399bed475d065bf7d1c8b4718ffc79f7ae44f"
       },
       {
         "project_id": "tr-28-hono",
@@ -1560,7 +1560,7 @@
         "archetype": "support-helpdesk",
         "framework": "raw",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:eedd518d79a6d1d3bc703fe5eae358ebb016f9ac6fa91176b36dba88f00b0e3c"
+        "tree_sha": "sha256:d830b47f3b63ac05d60097f0dcdce32208946c5dae19505143421691d06b6d41"
       },
       {
         "project_id": "tr-28-react",
@@ -1568,7 +1568,7 @@
         "archetype": "support-helpdesk",
         "framework": "react",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:44185f6c03b9e02fb35db100f0c98a234a24c6a148e5bccea055b5c86de72b84"
+        "tree_sha": "sha256:a02a76e0ba78d3adc13b5312881314b01c0c3741fd0a2ccc94afeea0b5761cce"
       },
       {
         "project_id": "tr-28-preact",
@@ -1576,7 +1576,7 @@
         "archetype": "support-helpdesk",
         "framework": "preact",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:a2a3eb9f05f03f5285deb74d3539196124023e689da56b5504fe141c1cdf717a"
+        "tree_sha": "sha256:723903366a3748301544de904d0848e780e9f88fad8eac9426b5e6a8e49d14b2"
       },
       {
         "project_id": "tr-28-svelte",
@@ -1584,7 +1584,7 @@
         "archetype": "support-helpdesk",
         "framework": "svelte",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:dd131f5230e2297919817d68f1985aafa0d64d84dde7b0ede0bebe4794a1fa76"
+        "tree_sha": "sha256:15cae0ea4ced0715681686cb0c7a24d177c0c53a14154766200390693b430d24"
       },
       {
         "project_id": "tr-29-raw",
@@ -1592,7 +1592,7 @@
         "archetype": "expense-tracker",
         "framework": "raw",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:c0130fd6d405f3b1ad037296dfd1fc0fab352b98d48da34ab2c2eddc681e2e59"
+        "tree_sha": "sha256:92c7eeb0739b23365e679ff7404c6d57040020e48e4b9a11081a0345908eb470"
       },
       {
         "project_id": "tr-29-react",
@@ -1600,7 +1600,7 @@
         "archetype": "expense-tracker",
         "framework": "react",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:b3f463a7618ea709eb3f48c34e87e5a4ce3a797ec692ba2a2e4cef6dd65a7b7d"
+        "tree_sha": "sha256:e68c1640bb7739916f3180a7eac5ccf232a209427f889069efc44206d46f3f55"
       },
       {
         "project_id": "tr-29-preact",
@@ -1608,7 +1608,7 @@
         "archetype": "expense-tracker",
         "framework": "preact",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:5d7419b2860ecacc35868b87c6e83a0969de9abe9399bf6de08f13cec6237faa"
+        "tree_sha": "sha256:4a52cef8c04f4296ac00707ff58413dddf3c0fd41db62565416b9074cd5885ca"
       },
       {
         "project_id": "tr-29-vue",
@@ -1616,7 +1616,7 @@
         "archetype": "expense-tracker",
         "framework": "vue",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:4e5221e93058c59e715c4ab9f3313f6a3731952be79cab5f90dd2f4f1701a761"
+        "tree_sha": "sha256:71992562bee837ddc4cebaf69da9a459615f27a318a88773202937e9ff5d6a50"
       },
       {
         "project_id": "tr-29-webcomponents",
@@ -1624,7 +1624,7 @@
         "archetype": "expense-tracker",
         "framework": "webcomponents",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:955d723f660cafa2e5cc02a63fd0f6066501af4d5562977261c0cd607281b987"
+        "tree_sha": "sha256:7cea2f027804e4687999f3e158bc33dd67e244ed505d611c647d43b666e700d9"
       },
       {
         "project_id": "tr-30-hono",
@@ -1640,7 +1640,7 @@
         "archetype": "event-registration",
         "framework": "preact",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:769833400f70bff87962a49b1fbda5131c832962a2c7cf6d6d4f4d06d9a48526"
+        "tree_sha": "sha256:d891df4df47d1dd6452e51e125ffd70da60a512d77b5515b8fdaa38cf3f63f5f"
       },
       {
         "project_id": "tr-30-vue",
@@ -1648,7 +1648,7 @@
         "archetype": "event-registration",
         "framework": "vue",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:07e7cc3cdf91f63d714013f897a02c9de616b48535dc56d8d22e95ff6e6174f8"
+        "tree_sha": "sha256:8f5a811ad60b62eadb859a19b7dbe113ebdd31a1e5498e208dadfd09c1c5ebe3"
       },
       {
         "project_id": "tr-30-webcomponents",
@@ -1656,7 +1656,7 @@
         "archetype": "event-registration",
         "framework": "webcomponents",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:b45896de42b38c91bcf138cb60110e5a2150a1a945afae787ef01eb6bf42aa88"
+        "tree_sha": "sha256:8d789c0cc43169f58ff59c37332c05c8ed8b25ad36e604c9da9ab1c6f2f2190b"
       },
       {
         "project_id": "tr-30-svelte",
@@ -1664,7 +1664,7 @@
         "archetype": "event-registration",
         "framework": "svelte",
         "status": "scaffolded / unverified journey",
-        "tree_sha": "sha256:55790ca06e1ed3ca36f9f4bb0d87b0128b7cf7796f5ab5ccf9257213996f3e0a"
+        "tree_sha": "sha256:7c4c37b170066a786a5622e7603ee4ed81b88d528f297bfc7d1ea096b5114cdb"
       }
     ]
   },
@@ -1891,7 +1891,7 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv4149re-9r9d5u"
+                "zzz-decoy-mv6c83us-rmmsfi"
               ],
               "controlMissing": [],
               "filteredRefs": []
@@ -2016,7 +2016,7 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv414cug-pq4xgd"
+                "zzz-decoy-mv6c87e4-pwlhl3"
               ],
               "controlMissing": [],
               "filteredRefs": []
@@ -2097,9 +2097,9 @@
       "archetype": "web-shop",
       "framework": "raw",
       "task": "repair",
-      "original_sha": "sha256:98d644e77d063a8fcd7a07b2492f4de7cb7a43f6bf43045fe2412ff1ea5b0cd7",
-      "corpus_tree_sha": "sha256:98d644e77d063a8fcd7a07b2492f4de7cb7a43f6bf43045fe2412ff1ea5b0cd7",
-      "uplifted_sha": "sha256:eddef4dcff94caa8ade3b6beb096e20aab94cfabcbc67ca4d611322fc1c62f73",
+      "original_sha": "sha256:cc26136521c78beac0aa89d1143c0d208ad335eee1a9f86e486d851cf8c1bf43",
+      "corpus_tree_sha": "sha256:cc26136521c78beac0aa89d1143c0d208ad335eee1a9f86e486d851cf8c1bf43",
+      "uplifted_sha": "sha256:31eeb4fe2ca3ca38320fbf419cf6fc4ce3498094e44c09b538273d4b1dda6114",
       "seeded_defects": [
         "no-aria-sync",
         "enter-submits"
@@ -2199,7 +2199,7 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv414gj4-naggnw"
+                "zzz-decoy-mv6c8ba6-43934a"
               ],
               "controlMissing": [],
               "filteredRefs": []
@@ -2324,7 +2324,7 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv414jzh-480jm5"
+                "zzz-decoy-mv6c8eh1-x49l8b"
               ],
               "controlMissing": [],
               "filteredRefs": []
@@ -2405,9 +2405,9 @@
       "archetype": "booking",
       "framework": "react",
       "task": "repair",
-      "original_sha": "sha256:05bda1384ac9189c649faf4c2a77ec609bd00c1be9e6bb220a3c9b961fb7d315",
-      "corpus_tree_sha": "sha256:05bda1384ac9189c649faf4c2a77ec609bd00c1be9e6bb220a3c9b961fb7d315",
-      "uplifted_sha": "sha256:3c663d934928f54d7aaab433123c06baf79e41d59ca74a6aaa58ec64f089a2b4",
+      "original_sha": "sha256:1f17c293e0416537a29956125d58cf3f55692a1a6d5aa4671bd4a05b7ba55aae",
+      "corpus_tree_sha": "sha256:1f17c293e0416537a29956125d58cf3f55692a1a6d5aa4671bd4a05b7ba55aae",
+      "uplifted_sha": "sha256:fc9db0a15ce158fdec1f37254d11f82d62b0af0fad96cc510d4721f55550ba9e",
       "seeded_defects": [
         "no-required"
       ],
@@ -2504,7 +2504,7 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv414nnf-f0ufqd"
+                "zzz-decoy-mv6c8i2k-pcfnzf"
               ],
               "controlMissing": [],
               "filteredRefs": []
@@ -2627,7 +2627,7 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv414rdm-tpvqlv"
+                "zzz-decoy-mv6c8lgr-520jjx"
               ],
               "controlMissing": [],
               "filteredRefs": []
@@ -2709,9 +2709,9 @@
       "archetype": "booking",
       "framework": "preact",
       "task": "repair",
-      "original_sha": "sha256:5ce608b3423a196bc9392b2be252c3b092293e821495d0f8240a7f79bb63129f",
-      "corpus_tree_sha": "sha256:5ce608b3423a196bc9392b2be252c3b092293e821495d0f8240a7f79bb63129f",
-      "uplifted_sha": "sha256:e53cf1af20ec89eb0d044222316782b3c4a9d2c7ed0fc43e534285c2345ef513",
+      "original_sha": "sha256:dba17ab4fcb6815f90fb2c8374534457461aa93304249ed3147086fe912250d3",
+      "corpus_tree_sha": "sha256:dba17ab4fcb6815f90fb2c8374534457461aa93304249ed3147086fe912250d3",
+      "uplifted_sha": "sha256:2ebe6d3e1bdeebeb594f47af14ae548336211e78104a06b72c8460b6467b5792",
       "seeded_defects": [
         "no-required"
       ],
@@ -2808,7 +2808,7 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv414ubt-1xiu5x"
+                "zzz-decoy-mv6c8ox2-os02an"
               ],
               "controlMissing": [],
               "filteredRefs": []
@@ -2931,7 +2931,7 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv414x5d-qz3nyo"
+                "zzz-decoy-mv6c8rva-t5osty"
               ],
               "controlMissing": [],
               "filteredRefs": []
@@ -3013,9 +3013,9 @@
       "archetype": "support-helpdesk",
       "framework": "vue",
       "task": "repair",
-      "original_sha": "sha256:2f03623a2d3ed3daf45bfecda92b647756a9e03c53ffc4aded8df108ed0a41a3",
-      "corpus_tree_sha": "sha256:2f03623a2d3ed3daf45bfecda92b647756a9e03c53ffc4aded8df108ed0a41a3",
-      "uplifted_sha": "sha256:dd5e47b4efd8f59bbca801e26c0650a8b54b982ca0e700c2c38f7f184dafe047",
+      "original_sha": "sha256:f12e722ecb74c289e79acee93772dc43604f4576b195def3ee6990dc5d9fba86",
+      "corpus_tree_sha": "sha256:f12e722ecb74c289e79acee93772dc43604f4576b195def3ee6990dc5d9fba86",
+      "uplifted_sha": "sha256:3d8532e12f75758080a3e7747b6feeea6bffcbcdf7b822f35dea255d95d7a8b5",
       "seeded_defects": [
         "no-required"
       ],
@@ -3073,7 +3073,7 @@
             ],
             "detail": {
               "submit_status": 200,
-              "reload_url": "http://127.0.0.1:4308/tickets/d16cac2d",
+              "reload_url": "http://127.0.0.1:4308/tickets/0c3999c8",
               "echoed": "Dara Whitfield"
             },
             "carry": {
@@ -3098,7 +3098,7 @@
           {
             "name": "content",
             "passed": true,
-            "url": "http://127.0.0.1:4308/tickets/d16cac2d"
+            "url": "http://127.0.0.1:4308/tickets/0c3999c8"
           },
           {
             "name": "search",
@@ -3113,21 +3113,21 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv4150ik-zvduba"
+                "zzz-decoy-mv6c8vvd-r2mh6p"
               ],
               "controlMissing": [],
               "filteredRefs": [
-                "25a32d67",
-                "d16cac2d"
+                "dedc3263",
+                "0c3999c8"
               ]
             }
           },
           {
             "name": "update-existing",
             "passed": true,
-            "ref": "d16cac2d",
+            "ref": "0c3999c8",
             "detail": {
-              "ref": "d16cac2d",
+              "ref": "0c3999c8",
               "oldValue": "Dara Whitfield",
               "newValue": "Dara Whitfield (updated)",
               "visibleAfterReload": true,
@@ -3200,7 +3200,7 @@
             ],
             "detail": {
               "submit_status": 200,
-              "reload_url": "http://127.0.0.1:4309/tickets/863121a5",
+              "reload_url": "http://127.0.0.1:4309/tickets/edc5d3e5",
               "echoed": "Dara Whitfield"
             },
             "carry": {
@@ -3225,7 +3225,7 @@
           {
             "name": "content",
             "passed": true,
-            "url": "http://127.0.0.1:4309/tickets/863121a5"
+            "url": "http://127.0.0.1:4309/tickets/edc5d3e5"
           },
           {
             "name": "search",
@@ -3240,21 +3240,21 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv4153g7-lygfsz"
+                "zzz-decoy-mv6c8zem-nrri0w"
               ],
               "controlMissing": [],
               "filteredRefs": [
-                "7715f63a",
-                "863121a5"
+                "12eed160",
+                "edc5d3e5"
               ]
             }
           },
           {
             "name": "update-existing",
             "passed": true,
-            "ref": "863121a5",
+            "ref": "edc5d3e5",
             "detail": {
-              "ref": "863121a5",
+              "ref": "edc5d3e5",
               "oldValue": "Dara Whitfield",
               "newValue": "Dara Whitfield (updated)",
               "visibleAfterReload": true,
@@ -3325,9 +3325,9 @@
       "archetype": "support-helpdesk",
       "framework": "webcomponents",
       "task": "repair",
-      "original_sha": "sha256:0e6d648c0e33446974561dd456c1e075649f4e0b29478092ade20eca0b96a26a",
-      "corpus_tree_sha": "sha256:0e6d648c0e33446974561dd456c1e075649f4e0b29478092ade20eca0b96a26a",
-      "uplifted_sha": "sha256:a139c49ddd654b725ef4d5c3d57186ed5da89e1643e8d0eddb1d9e07eec0e9a4",
+      "original_sha": "sha256:9471ed0234f27bbe833e372e7f481d9fdf590e7f08b481dbd9b132163c4ff91f",
+      "corpus_tree_sha": "sha256:9471ed0234f27bbe833e372e7f481d9fdf590e7f08b481dbd9b132163c4ff91f",
+      "uplifted_sha": "sha256:85e01aa23696fba0becad130a6e0dafa99dea5d58b72618c839597e4558d9451",
       "seeded_defects": [
         "no-required"
       ],
@@ -3385,7 +3385,7 @@
             ],
             "detail": {
               "submit_status": 200,
-              "reload_url": "http://127.0.0.1:4310/tickets/65dad844",
+              "reload_url": "http://127.0.0.1:4310/tickets/d13d9e46",
               "echoed": "Dara Whitfield"
             },
             "carry": {
@@ -3410,7 +3410,7 @@
           {
             "name": "content",
             "passed": true,
-            "url": "http://127.0.0.1:4310/tickets/65dad844"
+            "url": "http://127.0.0.1:4310/tickets/d13d9e46"
           },
           {
             "name": "search",
@@ -3425,21 +3425,21 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv4156pe-jgppu4"
+                "zzz-decoy-mv6c92up-p72j27"
               ],
               "controlMissing": [],
               "filteredRefs": [
-                "268f483c",
-                "65dad844"
+                "8b216d09",
+                "d13d9e46"
               ]
             }
           },
           {
             "name": "update-existing",
             "passed": true,
-            "ref": "65dad844",
+            "ref": "d13d9e46",
             "detail": {
-              "ref": "65dad844",
+              "ref": "d13d9e46",
               "oldValue": "Dara Whitfield",
               "newValue": "Dara Whitfield (updated)",
               "visibleAfterReload": true,
@@ -3512,7 +3512,7 @@
             ],
             "detail": {
               "submit_status": 200,
-              "reload_url": "http://127.0.0.1:4311/tickets/9d3fa7fb",
+              "reload_url": "http://127.0.0.1:4311/tickets/2ddc7fc0",
               "echoed": "Dara Whitfield"
             },
             "carry": {
@@ -3537,7 +3537,7 @@
           {
             "name": "content",
             "passed": true,
-            "url": "http://127.0.0.1:4311/tickets/9d3fa7fb"
+            "url": "http://127.0.0.1:4311/tickets/2ddc7fc0"
           },
           {
             "name": "search",
@@ -3552,30 +3552,30 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv4159rz-83w3pc"
+                "zzz-decoy-mv6c95v1-6wh4fr"
               ],
               "controlMissing": [],
               "filteredRefs": [
-                "30a3a30d",
-                "9d3fa7fb"
+                "14257750",
+                "2ddc7fc0"
               ]
             }
           },
           {
             "name": "update-existing",
-            "passed": false,
-            "ref": "9d3fa7fb",
+            "passed": true,
+            "ref": "2ddc7fc0",
             "detail": {
-              "ref": "9d3fa7fb",
+              "ref": "2ddc7fc0",
               "oldValue": "Dara Whitfield",
               "newValue": "Dara Whitfield (updated)",
-              "visibleAfterReload": false,
+              "visibleAfterReload": true,
               "apiStatus": 200,
               "field": "reporter",
               "comparedAsField": true,
-              "storedField": "Dara Whitfield",
-              "newValueStored": false,
-              "oldValueGone": false,
+              "storedField": "Dara Whitfield (updated)",
+              "newValueStored": true,
+              "oldValueGone": true,
               "rowsBefore": 3,
               "rowsAfter": 3,
               "rowCountUnchanged": true
@@ -3637,9 +3637,9 @@
       "archetype": "expense-tracker",
       "framework": "svelte",
       "task": "repair",
-      "original_sha": "sha256:b25c59ceb6702ad31b73d818d6b890ee48da207278a955aa8925c8fe5e777fcc",
-      "corpus_tree_sha": "sha256:b25c59ceb6702ad31b73d818d6b890ee48da207278a955aa8925c8fe5e777fcc",
-      "uplifted_sha": "sha256:dd2b699751d35a6e7b374270a2d662eabfd55f65f332aa570fcae77b3991b560",
+      "original_sha": "sha256:28299aab906c3b240ce8dd30d5449352eadd0f48afac0189716542c9f34c1171",
+      "corpus_tree_sha": "sha256:28299aab906c3b240ce8dd30d5449352eadd0f48afac0189716542c9f34c1171",
+      "uplifted_sha": "sha256:3a3f1c4b71f30e3fd66e7daca23819b5e997d454c7a317e4fd84a13525d7257b",
       "seeded_defects": [
         "accept-invalid-amount",
         "no-field-labels",
@@ -3698,7 +3698,7 @@
             ],
             "detail": {
               "submit_status": 200,
-              "reload_url": "http://127.0.0.1:4312/contributions/45f01778",
+              "reload_url": "http://127.0.0.1:4312/contributions/1cd69ab3",
               "echoed": "Marta Vidal"
             },
             "carry": {
@@ -3723,7 +3723,7 @@
           {
             "name": "content",
             "passed": true,
-            "url": "http://127.0.0.1:4312/contributions/45f01778"
+            "url": "http://127.0.0.1:4312/contributions/1cd69ab3"
           },
           {
             "name": "search",
@@ -3738,21 +3738,21 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv415d4c-dmr2pl"
+                "zzz-decoy-mv6c99fu-opcrtw"
               ],
               "controlMissing": [],
               "filteredRefs": [
-                "8c90b662",
-                "45f01778"
+                "fcd64af2",
+                "1cd69ab3"
               ]
             }
           },
           {
             "name": "update-existing",
             "passed": true,
-            "ref": "45f01778",
+            "ref": "1cd69ab3",
             "detail": {
-              "ref": "45f01778",
+              "ref": "1cd69ab3",
               "oldValue": "Marta Vidal",
               "newValue": "Marta Vidal (updated)",
               "visibleAfterReload": true,
@@ -3824,7 +3824,7 @@
             ],
             "detail": {
               "submit_status": 200,
-              "reload_url": "http://127.0.0.1:4313/contributions/399e4d00",
+              "reload_url": "http://127.0.0.1:4313/contributions/eb33d388",
               "echoed": "Marta Vidal"
             },
             "carry": {
@@ -3849,7 +3849,7 @@
           {
             "name": "content",
             "passed": true,
-            "url": "http://127.0.0.1:4313/contributions/399e4d00"
+            "url": "http://127.0.0.1:4313/contributions/eb33d388"
           },
           {
             "name": "search",
@@ -3864,24 +3864,24 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv415g6m-xis1bq"
+                "zzz-decoy-mv6c9cgc-16zqrf"
               ],
               "controlMissing": [],
               "filteredRefs": [
-                "ad2fe746",
-                "399e4d00"
+                "dcf68e02",
+                "eb33d388"
               ]
             }
           },
           {
             "name": "update-existing",
-            "passed": false,
-            "ref": "399e4d00",
+            "passed": true,
+            "ref": "eb33d388",
             "detail": {
-              "ref": "399e4d00",
+              "ref": "eb33d388",
               "oldValue": "Marta Vidal",
               "newValue": "Marta Vidal (updated)",
-              "visibleAfterReload": false,
+              "visibleAfterReload": true,
               "apiStatus": 200,
               "field": "contributor",
               "comparedAsField": true,
@@ -4010,7 +4010,7 @@
             ],
             "detail": {
               "submit_status": 200,
-              "reload_url": "http://127.0.0.1:4314/contributions/a279c2d6",
+              "reload_url": "http://127.0.0.1:4314/contributions/93fa392e",
               "echoed": "Marta Vidal"
             },
             "carry": {
@@ -4035,7 +4035,7 @@
           {
             "name": "content",
             "passed": true,
-            "url": "http://127.0.0.1:4314/contributions/a279c2d6"
+            "url": "http://127.0.0.1:4314/contributions/93fa392e"
           },
           {
             "name": "search",
@@ -4050,30 +4050,30 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv415ja4-ifm1ty"
+                "zzz-decoy-mv6c9fox-uofr33"
               ],
               "controlMissing": [],
               "filteredRefs": [
-                "21de0e92",
-                "a279c2d6"
+                "3843572c",
+                "93fa392e"
               ]
             }
           },
           {
             "name": "update-existing",
-            "passed": true,
-            "ref": "a279c2d6",
+            "passed": false,
+            "ref": "93fa392e",
             "detail": {
-              "ref": "a279c2d6",
+              "ref": "93fa392e",
               "oldValue": "Marta Vidal",
               "newValue": "Marta Vidal (updated)",
-              "visibleAfterReload": true,
+              "visibleAfterReload": false,
               "apiStatus": 200,
               "field": "contributor",
               "comparedAsField": true,
-              "storedField": "Marta Vidal (updated)",
-              "newValueStored": true,
-              "oldValueGone": true,
+              "storedField": "Marta Vidal",
+              "newValueStored": false,
+              "oldValueGone": false,
               "rowsBefore": 3,
               "rowsAfter": 3,
               "rowCountUnchanged": true
@@ -4136,7 +4136,7 @@
             ],
             "detail": {
               "submit_status": 200,
-              "reload_url": "http://127.0.0.1:4315/contributions/19f0bb63",
+              "reload_url": "http://127.0.0.1:4315/contributions/e87add16",
               "echoed": "Marta Vidal"
             },
             "carry": {
@@ -4161,7 +4161,7 @@
           {
             "name": "content",
             "passed": true,
-            "url": "http://127.0.0.1:4315/contributions/19f0bb63"
+            "url": "http://127.0.0.1:4315/contributions/e87add16"
           },
           {
             "name": "search",
@@ -4176,21 +4176,21 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv415ma0-d72q9p"
+                "zzz-decoy-mv6c9ii0-nwkem0"
               ],
               "controlMissing": [],
               "filteredRefs": [
-                "dac8b0b1",
-                "19f0bb63"
+                "c234da52",
+                "e87add16"
               ]
             }
           },
           {
             "name": "update-existing",
             "passed": true,
-            "ref": "19f0bb63",
+            "ref": "e87add16",
             "detail": {
-              "ref": "19f0bb63",
+              "ref": "e87add16",
               "oldValue": "Marta Vidal",
               "newValue": "Marta Vidal (updated)",
               "visibleAfterReload": true,
@@ -4261,9 +4261,9 @@
       "archetype": "event-registration",
       "framework": "raw",
       "task": "repair",
-      "original_sha": "sha256:55edddf6161a0a4aee9af27034da656fb367f28e3725863c48fbdbca99d27c32",
-      "corpus_tree_sha": "sha256:55edddf6161a0a4aee9af27034da656fb367f28e3725863c48fbdbca99d27c32",
-      "uplifted_sha": "sha256:ae71c2e4da2626cd5f3f6f5e51e6ad38d5960f3e5848f411716e6e6292b9ee21",
+      "original_sha": "sha256:6ff70266e86fb66b45c33ce5fe4570b1b3368b8961ab39f13e3d1de28a1a95f8",
+      "corpus_tree_sha": "sha256:6ff70266e86fb66b45c33ce5fe4570b1b3368b8961ab39f13e3d1de28a1a95f8",
+      "uplifted_sha": "sha256:29656a324f726402b29a9b97501d1e3869564c96ea95a9047610a8768eacd8e2",
       "seeded_defects": [
         "enter-submits",
         "no-aria-sync"
@@ -4360,7 +4360,7 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv415pek-nfkqdf"
+                "zzz-decoy-mv6c9lhj-t065n4"
               ],
               "controlMissing": [],
               "filteredRefs": []
@@ -4482,7 +4482,7 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv415s4o-wzf3aq"
+                "zzz-decoy-mv6c9oe8-p95ki3"
               ],
               "controlMissing": [],
               "filteredRefs": []
@@ -4563,9 +4563,9 @@
       "archetype": "event-registration",
       "framework": "react",
       "task": "repair",
-      "original_sha": "sha256:05705572925955cb1ae94e4b405403d57d5a758ab8bb81e1de05f9fbfe4bbd01",
-      "corpus_tree_sha": "sha256:05705572925955cb1ae94e4b405403d57d5a758ab8bb81e1de05f9fbfe4bbd01",
-      "uplifted_sha": "sha256:ff6b624db323714b88f93fe3289215a5f61b5f676eb71b03ae0d1623e06d5140",
+      "original_sha": "sha256:94279e9f72b727bdbd83a3ff4882496fe6a02f745315d7127c783a2857feebde",
+      "corpus_tree_sha": "sha256:94279e9f72b727bdbd83a3ff4882496fe6a02f745315d7127c783a2857feebde",
+      "uplifted_sha": "sha256:00ddb029d83c9477138a54627b04f99bcd492e66215c5bf912ace19681d0a65b",
       "seeded_defects": [
         "enter-submits",
         "no-aria-sync"
@@ -4662,7 +4662,7 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv415vrf-egazs1"
+                "zzz-decoy-mv6c9ru1-z9kav2"
               ],
               "controlMissing": [],
               "filteredRefs": []
@@ -4784,7 +4784,7 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv415yqw-5kb0iz"
+                "zzz-decoy-mv6c9uwk-r4h9ge"
               ],
               "controlMissing": [],
               "filteredRefs": []
@@ -4865,9 +4865,9 @@
       "archetype": "booking",
       "framework": "preact",
       "task": "generate",
-      "original_sha": "sha256:8e11361f6377a85eeb0af242b483e28c6591160054ab0cf13f8f50b28acd8225",
-      "corpus_tree_sha": "sha256:8e11361f6377a85eeb0af242b483e28c6591160054ab0cf13f8f50b28acd8225",
-      "uplifted_sha": "sha256:5f2d59cf484d0fca5301ebd3856505fffb6ef4d285b9c925e25b2a42ed5674d0",
+      "original_sha": "sha256:c73d6cbd73ce8072fd652719a3494a59a6a4d9a71b0fd374038898b9e9e240ca",
+      "corpus_tree_sha": "sha256:c73d6cbd73ce8072fd652719a3494a59a6a4d9a71b0fd374038898b9e9e240ca",
+      "uplifted_sha": "sha256:2832e2621dc2439fd522848874796acdc4cb704fd386714395170430e6caa321",
       "seeded_defects": [
         "no-required"
       ],
@@ -4926,7 +4926,7 @@
             ],
             "detail": {
               "submit_status": 200,
-              "reload_url": "http://127.0.0.1:4320/bookings/9bd31cf5",
+              "reload_url": "http://127.0.0.1:4320/bookings/02f0e0ff",
               "echoed": "Ada Lovelace"
             },
             "carry": {
@@ -4951,7 +4951,7 @@
           {
             "name": "content",
             "passed": true,
-            "url": "http://127.0.0.1:4320/bookings/9bd31cf5"
+            "url": "http://127.0.0.1:4320/bookings/02f0e0ff"
           },
           {
             "name": "search",
@@ -4966,21 +4966,21 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv41622t-kgomzu"
+                "zzz-decoy-mv6c9y7z-41juzj"
               ],
               "controlMissing": [],
               "filteredRefs": [
-                "2e1bed9c",
-                "9bd31cf5"
+                "8f6883d0",
+                "02f0e0ff"
               ]
             }
           },
           {
             "name": "update-existing",
             "passed": true,
-            "ref": "9bd31cf5",
+            "ref": "02f0e0ff",
             "detail": {
-              "ref": "9bd31cf5",
+              "ref": "02f0e0ff",
               "oldValue": "Ada Lovelace",
               "newValue": "Ada Lovelace (updated)",
               "visibleAfterReload": true,
@@ -5054,7 +5054,7 @@
             ],
             "detail": {
               "submit_status": 200,
-              "reload_url": "http://127.0.0.1:4321/bookings/9e1368e4",
+              "reload_url": "http://127.0.0.1:4321/bookings/68015463",
               "echoed": "Ada Lovelace"
             },
             "carry": {
@@ -5079,7 +5079,7 @@
           {
             "name": "content",
             "passed": true,
-            "url": "http://127.0.0.1:4321/bookings/9e1368e4"
+            "url": "http://127.0.0.1:4321/bookings/68015463"
           },
           {
             "name": "search",
@@ -5094,21 +5094,21 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv4164qw-lyxfcs"
+                "zzz-decoy-mv6ca1cb-o1gydj"
               ],
               "controlMissing": [],
               "filteredRefs": [
-                "8416b395",
-                "9e1368e4"
+                "db0dca14",
+                "68015463"
               ]
             }
           },
           {
             "name": "update-existing",
             "passed": true,
-            "ref": "9e1368e4",
+            "ref": "68015463",
             "detail": {
-              "ref": "9e1368e4",
+              "ref": "68015463",
               "oldValue": "Ada Lovelace",
               "newValue": "Ada Lovelace (updated)",
               "visibleAfterReload": true,
@@ -5179,9 +5179,9 @@
       "archetype": "booking",
       "framework": "vue",
       "task": "generate",
-      "original_sha": "sha256:02041f08a9ca6deae0b1c09f0a34602a1fdf6f07f5de5a11bc17e50a197bb2d8",
-      "corpus_tree_sha": "sha256:02041f08a9ca6deae0b1c09f0a34602a1fdf6f07f5de5a11bc17e50a197bb2d8",
-      "uplifted_sha": "sha256:09fe6ddec15d73b7476dee45f67dbeecd5b33d413e9148aac2625bbe3c5cd22f",
+      "original_sha": "sha256:f922223e4d1fc96134bac0ac221db917c2f678022f759b0702252047a857b47a",
+      "corpus_tree_sha": "sha256:f922223e4d1fc96134bac0ac221db917c2f678022f759b0702252047a857b47a",
+      "uplifted_sha": "sha256:a45c8ea77a29ab17c34aaeb8df33f1b2048fc013e745ebff249832a885d36a46",
       "seeded_defects": [
         "no-required"
       ],
@@ -5240,7 +5240,7 @@
             ],
             "detail": {
               "submit_status": 200,
-              "reload_url": "http://127.0.0.1:4322/bookings/e71d6c53",
+              "reload_url": "http://127.0.0.1:4322/bookings/8d74b1ec",
               "echoed": "Ada Lovelace"
             },
             "carry": {
@@ -5265,7 +5265,7 @@
           {
             "name": "content",
             "passed": true,
-            "url": "http://127.0.0.1:4322/bookings/e71d6c53"
+            "url": "http://127.0.0.1:4322/bookings/8d74b1ec"
           },
           {
             "name": "search",
@@ -5280,21 +5280,21 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv4168be-eh183d"
+                "zzz-decoy-mv6ca4ph-u7ynkx"
               ],
               "controlMissing": [],
               "filteredRefs": [
-                "c775d5b8",
-                "e71d6c53"
+                "142249ef",
+                "8d74b1ec"
               ]
             }
           },
           {
             "name": "update-existing",
             "passed": true,
-            "ref": "e71d6c53",
+            "ref": "8d74b1ec",
             "detail": {
-              "ref": "e71d6c53",
+              "ref": "8d74b1ec",
               "oldValue": "Ada Lovelace",
               "newValue": "Ada Lovelace (updated)",
               "visibleAfterReload": true,
@@ -5368,7 +5368,7 @@
             ],
             "detail": {
               "submit_status": 200,
-              "reload_url": "http://127.0.0.1:4323/bookings/ae2f67e0",
+              "reload_url": "http://127.0.0.1:4323/bookings/37b2a657",
               "echoed": "Ada Lovelace"
             },
             "carry": {
@@ -5393,7 +5393,7 @@
           {
             "name": "content",
             "passed": true,
-            "url": "http://127.0.0.1:4323/bookings/ae2f67e0"
+            "url": "http://127.0.0.1:4323/bookings/37b2a657"
           },
           {
             "name": "search",
@@ -5408,21 +5408,21 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv416b84-snc2yy"
+                "zzz-decoy-mv6ca7v5-ugtkzf"
               ],
               "controlMissing": [],
               "filteredRefs": [
-                "6f47758a",
-                "ae2f67e0"
+                "81ba1c32",
+                "37b2a657"
               ]
             }
           },
           {
             "name": "update-existing",
             "passed": true,
-            "ref": "ae2f67e0",
+            "ref": "37b2a657",
             "detail": {
-              "ref": "ae2f67e0",
+              "ref": "37b2a657",
               "oldValue": "Ada Lovelace",
               "newValue": "Ada Lovelace (updated)",
               "visibleAfterReload": true,
@@ -5493,9 +5493,9 @@
       "archetype": "web-shop",
       "framework": "webcomponents",
       "task": "generate",
-      "original_sha": "sha256:94da42a5fda2d05e8b8b43c9dc92a0aa77100fbaee8bcbfdc09774030bd7c319",
-      "corpus_tree_sha": "sha256:94da42a5fda2d05e8b8b43c9dc92a0aa77100fbaee8bcbfdc09774030bd7c319",
-      "uplifted_sha": "sha256:f624fc3e94416334f60ba212a32fdecba47510da07076867242f725d2e39a271",
+      "original_sha": "sha256:6543282c34bb01ca62d015daadcce35f4c6db2b5eaf3e96ffeedc746cbfca24b",
+      "corpus_tree_sha": "sha256:6543282c34bb01ca62d015daadcce35f4c6db2b5eaf3e96ffeedc746cbfca24b",
+      "uplifted_sha": "sha256:b51ad96765c07d3427d6d8cfcee4d60b66e2786666dccff5542969e2049c462e",
       "seeded_defects": [
         "no-required"
       ],
@@ -5555,7 +5555,7 @@
             ],
             "detail": {
               "submit_status": 200,
-              "reload_url": "http://127.0.0.1:4324/orders/a2c0380d",
+              "reload_url": "http://127.0.0.1:4324/orders/f32174de",
               "echoed": "6 bottles Kingston Black Reserve"
             },
             "carry": {
@@ -5580,7 +5580,7 @@
           {
             "name": "content",
             "passed": true,
-            "url": "http://127.0.0.1:4324/orders/a2c0380d"
+            "url": "http://127.0.0.1:4324/orders/f32174de"
           },
           {
             "name": "search",
@@ -5595,21 +5595,21 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv416h2t-taa768"
+                "zzz-decoy-mv6caayp-1vqa7e"
               ],
               "controlMissing": [],
               "filteredRefs": [
-                "61b62014",
-                "a2c0380d"
+                "24908735",
+                "f32174de"
               ]
             }
           },
           {
             "name": "update-existing",
             "passed": true,
-            "ref": "a2c0380d",
+            "ref": "f32174de",
             "detail": {
-              "ref": "a2c0380d",
+              "ref": "f32174de",
               "oldValue": "6 bottles Kingston Black Reserve",
               "newValue": "6 bottles Kingston Black Reserve (updated)",
               "visibleAfterReload": true,
@@ -5684,7 +5684,7 @@
             ],
             "detail": {
               "submit_status": 200,
-              "reload_url": "http://127.0.0.1:4325/orders/e60dbc5b",
+              "reload_url": "http://127.0.0.1:4325/orders/0184c79e",
               "echoed": "6 bottles Kingston Black Reserve"
             },
             "carry": {
@@ -5709,7 +5709,7 @@
           {
             "name": "content",
             "passed": true,
-            "url": "http://127.0.0.1:4325/orders/e60dbc5b"
+            "url": "http://127.0.0.1:4325/orders/0184c79e"
           },
           {
             "name": "search",
@@ -5724,21 +5724,21 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv416kel-amiy0f"
+                "zzz-decoy-mv6cadvk-lnnz4e"
               ],
               "controlMissing": [],
               "filteredRefs": [
-                "19f75e77",
-                "e60dbc5b"
+                "25607737",
+                "0184c79e"
               ]
             }
           },
           {
             "name": "update-existing",
             "passed": true,
-            "ref": "e60dbc5b",
+            "ref": "0184c79e",
             "detail": {
-              "ref": "e60dbc5b",
+              "ref": "0184c79e",
               "oldValue": "6 bottles Kingston Black Reserve",
               "newValue": "6 bottles Kingston Black Reserve (updated)",
               "visibleAfterReload": true,
@@ -5809,9 +5809,9 @@
       "archetype": "web-shop",
       "framework": "svelte",
       "task": "generate",
-      "original_sha": "sha256:49e3b752e77dafaa54adfe6246b41b2c92038bf3080d5486f5a5cdf0f7d910a2",
-      "corpus_tree_sha": "sha256:49e3b752e77dafaa54adfe6246b41b2c92038bf3080d5486f5a5cdf0f7d910a2",
-      "uplifted_sha": "sha256:435506eec81a200ee45a5d5aa65559903508f25c8ca96aa36c458b9fafe4fe4b",
+      "original_sha": "sha256:b97811124855e00ea734fc883b3510002848a6735b6e1d6c462c57709a51eef2",
+      "corpus_tree_sha": "sha256:b97811124855e00ea734fc883b3510002848a6735b6e1d6c462c57709a51eef2",
+      "uplifted_sha": "sha256:c651bd004da3a69fdf027dee570950f5e35a499f5d2bcf0b6942873eaac44ed3",
       "seeded_defects": [
         "no-required"
       ],
@@ -5871,7 +5871,7 @@
             ],
             "detail": {
               "submit_status": 200,
-              "reload_url": "http://127.0.0.1:4326/orders/4ee7254c",
+              "reload_url": "http://127.0.0.1:4326/orders/d4a3a8c9",
               "echoed": "6 bottles Kingston Black Reserve"
             },
             "carry": {
@@ -5896,7 +5896,7 @@
           {
             "name": "content",
             "passed": true,
-            "url": "http://127.0.0.1:4326/orders/4ee7254c"
+            "url": "http://127.0.0.1:4326/orders/d4a3a8c9"
           },
           {
             "name": "search",
@@ -5911,21 +5911,21 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv416oof-w0xfrg"
+                "zzz-decoy-mv6cahdh-6jgbpp"
               ],
               "controlMissing": [],
               "filteredRefs": [
-                "7d209606",
-                "4ee7254c"
+                "31adf0d4",
+                "d4a3a8c9"
               ]
             }
           },
           {
             "name": "update-existing",
             "passed": true,
-            "ref": "4ee7254c",
+            "ref": "d4a3a8c9",
             "detail": {
-              "ref": "4ee7254c",
+              "ref": "d4a3a8c9",
               "oldValue": "6 bottles Kingston Black Reserve",
               "newValue": "6 bottles Kingston Black Reserve (updated)",
               "visibleAfterReload": true,
@@ -6000,7 +6000,7 @@
             ],
             "detail": {
               "submit_status": 200,
-              "reload_url": "http://127.0.0.1:4327/orders/0b06155c",
+              "reload_url": "http://127.0.0.1:4327/orders/79381d20",
               "echoed": "6 bottles Kingston Black Reserve"
             },
             "carry": {
@@ -6025,7 +6025,7 @@
           {
             "name": "content",
             "passed": true,
-            "url": "http://127.0.0.1:4327/orders/0b06155c"
+            "url": "http://127.0.0.1:4327/orders/79381d20"
           },
           {
             "name": "search",
@@ -6040,21 +6040,21 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv416ruk-z7byyk"
+                "zzz-decoy-mv6cakdg-1b4zuo"
               ],
               "controlMissing": [],
               "filteredRefs": [
-                "c121d8ba",
-                "0b06155c"
+                "b7c377da",
+                "79381d20"
               ]
             }
           },
           {
             "name": "update-existing",
             "passed": true,
-            "ref": "0b06155c",
+            "ref": "79381d20",
             "detail": {
-              "ref": "0b06155c",
+              "ref": "79381d20",
               "oldValue": "6 bottles Kingston Black Reserve",
               "newValue": "6 bottles Kingston Black Reserve (updated)",
               "visibleAfterReload": true,
@@ -6185,7 +6185,7 @@
             ],
             "detail": {
               "submit_status": 200,
-              "reload_url": "http://127.0.0.1:4328/credits/2d56bbc4",
+              "reload_url": "http://127.0.0.1:4328/credits/82c0fe45",
               "echoed": "MTR-9042"
             },
             "carry": {
@@ -6210,7 +6210,7 @@
           {
             "name": "content",
             "passed": true,
-            "url": "http://127.0.0.1:4328/credits/2d56bbc4"
+            "url": "http://127.0.0.1:4328/credits/82c0fe45"
           },
           {
             "name": "search",
@@ -6225,21 +6225,21 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv416veh-yxra9y"
+                "zzz-decoy-mv6cao3c-akivwp"
               ],
               "controlMissing": [],
               "filteredRefs": [
-                "a17fb4da",
-                "2d56bbc4"
+                "5eb49adf",
+                "82c0fe45"
               ]
             }
           },
           {
             "name": "update-existing",
             "passed": true,
-            "ref": "2d56bbc4",
+            "ref": "82c0fe45",
             "detail": {
-              "ref": "2d56bbc4",
+              "ref": "82c0fe45",
               "oldValue": "MTR-9042",
               "newValue": "MTR-9042 (updated)",
               "visibleAfterReload": true,
@@ -6312,7 +6312,7 @@
             ],
             "detail": {
               "submit_status": 200,
-              "reload_url": "http://127.0.0.1:4329/credits/c8c3b239",
+              "reload_url": "http://127.0.0.1:4329/credits/6344402c",
               "echoed": "MTR-9042"
             },
             "carry": {
@@ -6337,7 +6337,7 @@
           {
             "name": "content",
             "passed": true,
-            "url": "http://127.0.0.1:4329/credits/c8c3b239"
+            "url": "http://127.0.0.1:4329/credits/6344402c"
           },
           {
             "name": "search",
@@ -6352,21 +6352,21 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv416yht-9oq575"
+                "zzz-decoy-mv6caque-yhjbby"
               ],
               "controlMissing": [],
               "filteredRefs": [
-                "ff19b064",
-                "c8c3b239"
+                "8c5c0ebf",
+                "6344402c"
               ]
             }
           },
           {
             "name": "update-existing",
             "passed": true,
-            "ref": "c8c3b239",
+            "ref": "6344402c",
             "detail": {
-              "ref": "c8c3b239",
+              "ref": "6344402c",
               "oldValue": "MTR-9042",
               "newValue": "MTR-9042 (updated)",
               "visibleAfterReload": true,
@@ -6437,9 +6437,9 @@
       "archetype": "dashboard",
       "framework": "raw",
       "task": "generate",
-      "original_sha": "sha256:016f70f88a9467edca08e1066d2ae90c3f76bffee5220f4b6541b21be16d2769",
-      "corpus_tree_sha": "sha256:016f70f88a9467edca08e1066d2ae90c3f76bffee5220f4b6541b21be16d2769",
-      "uplifted_sha": "sha256:87d42a50e2fefc868a4d2b082f5b34bc1e22503fa76cc4d904a132836c5ef6ac",
+      "original_sha": "sha256:3ac7d67ddd38a6d4d0ce0bba8a81d6efd8d1712f2c694af9947732fe907a77a7",
+      "corpus_tree_sha": "sha256:3ac7d67ddd38a6d4d0ce0bba8a81d6efd8d1712f2c694af9947732fe907a77a7",
+      "uplifted_sha": "sha256:6a9983afb1057e24685b6d8e8a623990a2c4703f4b8b672bcf8cdd192fe67ef1",
       "seeded_defects": [
         "no-required"
       ],
@@ -6497,7 +6497,7 @@
             ],
             "detail": {
               "submit_status": 200,
-              "reload_url": "http://127.0.0.1:4330/credits/4aea5707",
+              "reload_url": "http://127.0.0.1:4330/credits/ac05c440",
               "echoed": "MTR-9042"
             },
             "carry": {
@@ -6522,7 +6522,7 @@
           {
             "name": "content",
             "passed": true,
-            "url": "http://127.0.0.1:4330/credits/4aea5707"
+            "url": "http://127.0.0.1:4330/credits/ac05c440"
           },
           {
             "name": "search",
@@ -6537,21 +6537,21 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv4171ht-mmqbqk"
+                "zzz-decoy-mv6catxm-zfr725"
               ],
               "controlMissing": [],
               "filteredRefs": [
-                "7c500580",
-                "4aea5707"
+                "6eed1f02",
+                "ac05c440"
               ]
             }
           },
           {
             "name": "update-existing",
             "passed": true,
-            "ref": "4aea5707",
+            "ref": "ac05c440",
             "detail": {
-              "ref": "4aea5707",
+              "ref": "ac05c440",
               "oldValue": "MTR-9042",
               "newValue": "MTR-9042 (updated)",
               "visibleAfterReload": true,
@@ -6624,7 +6624,7 @@
             ],
             "detail": {
               "submit_status": 200,
-              "reload_url": "http://127.0.0.1:4331/credits/8a5e2f50",
+              "reload_url": "http://127.0.0.1:4331/credits/883917be",
               "echoed": "MTR-9042"
             },
             "carry": {
@@ -6649,7 +6649,7 @@
           {
             "name": "content",
             "passed": true,
-            "url": "http://127.0.0.1:4331/credits/8a5e2f50"
+            "url": "http://127.0.0.1:4331/credits/883917be"
           },
           {
             "name": "search",
@@ -6664,21 +6664,21 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv417470-4ocftv"
+                "zzz-decoy-mv6cawsa-cmy2o6"
               ],
               "controlMissing": [],
               "filteredRefs": [
-                "1d241aba",
-                "8a5e2f50"
+                "13684bdc",
+                "883917be"
               ]
             }
           },
           {
             "name": "update-existing",
             "passed": true,
-            "ref": "8a5e2f50",
+            "ref": "883917be",
             "detail": {
-              "ref": "8a5e2f50",
+              "ref": "883917be",
               "oldValue": "MTR-9042",
               "newValue": "MTR-9042 (updated)",
               "visibleAfterReload": true,
@@ -6749,9 +6749,9 @@
       "archetype": "onboarding-auth",
       "framework": "react",
       "task": "generate",
-      "original_sha": "sha256:300888f22dfb6c2523d5d2bddd94b9ca180f2ed1bbfd2968a22bd0fe11f2dfbc",
-      "corpus_tree_sha": "sha256:300888f22dfb6c2523d5d2bddd94b9ca180f2ed1bbfd2968a22bd0fe11f2dfbc",
-      "uplifted_sha": "sha256:5314bb2fa2cdc6a7075ba30bd3aaa7b5097e12e23ca70bab69ea77b6fd8d4def",
+      "original_sha": "sha256:1bb9902c6ea736542efa28e05b9d1651c3ffe7a5bb313b35d0e49e26a5bdc54c",
+      "corpus_tree_sha": "sha256:1bb9902c6ea736542efa28e05b9d1651c3ffe7a5bb313b35d0e49e26a5bdc54c",
+      "uplifted_sha": "sha256:9c76a6833e889f84d9c8c5549c6d38b0f0adf5a8d4c29e54c6c1662a149b7c16",
       "seeded_defects": [
         "no-required"
       ],
@@ -6852,12 +6852,12 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv4177lb-j5x9w1"
+                "zzz-decoy-mv6cb04r-mfyxa0"
               ],
               "controlMissing": [],
               "filteredRefs": [
-                "bea2a422",
-                "2f32fb27"
+                "d725bd32",
+                "07b213e6"
               ]
             }
           }
@@ -6962,12 +6962,12 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv417akl-ijqd2r"
+                "zzz-decoy-mv6cb300-7jv7sb"
               ],
               "controlMissing": [],
               "filteredRefs": [
-                "be1d0c59",
-                "771d06ed"
+                "2a55d065",
+                "115867d4"
               ]
             }
           }
@@ -7027,9 +7027,9 @@
       "archetype": "onboarding-auth",
       "framework": "preact",
       "task": "generate",
-      "original_sha": "sha256:ad775b61204a2a89597bf11358778992c2ead3b67051c82f19207c6f905ff835",
-      "corpus_tree_sha": "sha256:ad775b61204a2a89597bf11358778992c2ead3b67051c82f19207c6f905ff835",
-      "uplifted_sha": "sha256:e49fabe22529145a1b2d63112f4f7d7b279fa55cbf6e7300284e7e8dfb1244de",
+      "original_sha": "sha256:387803e87e035583a461913c8771c88d4fb9845db3eaf900fd8ff2b3693ad7ae",
+      "corpus_tree_sha": "sha256:387803e87e035583a461913c8771c88d4fb9845db3eaf900fd8ff2b3693ad7ae",
+      "uplifted_sha": "sha256:62786a74f8d3297354b02becf1fe921f54e2c8ac112c3ced36f5632fa3e04bc6",
       "seeded_defects": [
         "no-required"
       ],
@@ -7130,12 +7130,12 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv417dr7-zfs2mx"
+                "zzz-decoy-mv6cb5yu-7g6xcj"
               ],
               "controlMissing": [],
               "filteredRefs": [
-                "717e609f",
-                "5ecf9d90"
+                "20da5c3f",
+                "8f7459aa"
               ]
             }
           }
@@ -7240,12 +7240,12 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv417g9k-7nwrd2"
+                "zzz-decoy-mv6cb8m5-dlkxb7"
               ],
               "controlMissing": [],
               "filteredRefs": [
-                "088cd6c3",
-                "7235c4fb"
+                "0fd33fd9",
+                "88076d22"
               ]
             }
           }
@@ -7305,9 +7305,9 @@
       "archetype": "directory-listing",
       "framework": "vue",
       "task": "generate",
-      "original_sha": "sha256:6ea61c1c0d42dab5cb9e18c2f4b6bfdef5a8fcb5b104471182f87a843e09d961",
-      "corpus_tree_sha": "sha256:6ea61c1c0d42dab5cb9e18c2f4b6bfdef5a8fcb5b104471182f87a843e09d961",
-      "uplifted_sha": "sha256:704f74fe155592269ed024f85aff4790427f4fe809c19e6f7d8b8e105d8f2297",
+      "original_sha": "sha256:7d8cbef83104220e5c387b2b73715a4eb5ef479824dbc1f3163f463b893df1af",
+      "corpus_tree_sha": "sha256:7d8cbef83104220e5c387b2b73715a4eb5ef479824dbc1f3163f463b893df1af",
+      "uplifted_sha": "sha256:896135b78c511d9ab66ecc2a58e80afff7bef4cc3deda9a63891999888dec04d",
       "seeded_defects": [
         "no-required"
       ],
@@ -7366,7 +7366,7 @@
             ],
             "detail": {
               "submit_status": 200,
-              "reload_url": "http://127.0.0.1:4336/makers/2ef3d6d6",
+              "reload_url": "http://127.0.0.1:4336/makers/18bcbcdb",
               "echoed": "Master woodworker crafting hand-turned bowls and shaker boxes"
             },
             "carry": {
@@ -7391,7 +7391,7 @@
           {
             "name": "content",
             "passed": true,
-            "url": "http://127.0.0.1:4336/makers/2ef3d6d6"
+            "url": "http://127.0.0.1:4336/makers/18bcbcdb"
           },
           {
             "name": "search",
@@ -7406,21 +7406,21 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv417j3r-m5ovvj"
+                "zzz-decoy-mv6cbbrq-py4rfk"
               ],
               "controlMissing": [],
               "filteredRefs": [
-                "5fe9fa5e",
-                "2ef3d6d6"
+                "f7c4413a",
+                "18bcbcdb"
               ]
             }
           },
           {
             "name": "update-existing",
             "passed": true,
-            "ref": "2ef3d6d6",
+            "ref": "18bcbcdb",
             "detail": {
-              "ref": "2ef3d6d6",
+              "ref": "18bcbcdb",
               "oldValue": "Master woodworker crafting hand-turned bowls and shaker boxes",
               "newValue": "Master woodworker crafting hand-turned bowls and shaker boxes (updated)",
               "visibleAfterReload": true,
@@ -7494,7 +7494,7 @@
             ],
             "detail": {
               "submit_status": 200,
-              "reload_url": "http://127.0.0.1:4337/makers/2a3e3b5e",
+              "reload_url": "http://127.0.0.1:4337/makers/d2fd2f28",
               "echoed": "Master woodworker crafting hand-turned bowls and shaker boxes"
             },
             "carry": {
@@ -7519,7 +7519,7 @@
           {
             "name": "content",
             "passed": true,
-            "url": "http://127.0.0.1:4337/makers/2a3e3b5e"
+            "url": "http://127.0.0.1:4337/makers/d2fd2f28"
           },
           {
             "name": "search",
@@ -7534,21 +7534,21 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv417m0r-3v2cev"
+                "zzz-decoy-mv6cbevr-5rfal4"
               ],
               "controlMissing": [],
               "filteredRefs": [
-                "ef4b1d9e",
-                "2a3e3b5e"
+                "c486787c",
+                "d2fd2f28"
               ]
             }
           },
           {
             "name": "update-existing",
             "passed": true,
-            "ref": "2a3e3b5e",
+            "ref": "d2fd2f28",
             "detail": {
-              "ref": "2a3e3b5e",
+              "ref": "d2fd2f28",
               "oldValue": "Master woodworker crafting hand-turned bowls and shaker boxes",
               "newValue": "Master woodworker crafting hand-turned bowls and shaker boxes (updated)",
               "visibleAfterReload": true,
@@ -7619,9 +7619,9 @@
       "archetype": "directory-listing",
       "framework": "webcomponents",
       "task": "generate",
-      "original_sha": "sha256:84aa50341c56a419bc51ed5c24be782bd6513a9fb9f5a3255aaeecdafbc6a8b0",
-      "corpus_tree_sha": "sha256:84aa50341c56a419bc51ed5c24be782bd6513a9fb9f5a3255aaeecdafbc6a8b0",
-      "uplifted_sha": "sha256:faa8551c6c12e41361584ef064885225bf32ccdcdfffdb2124ff46b57244fe10",
+      "original_sha": "sha256:8a3e79dba220ddffb41fc17728d77e35fd5b2be13c14ca73bccc26eb6222ba5f",
+      "corpus_tree_sha": "sha256:8a3e79dba220ddffb41fc17728d77e35fd5b2be13c14ca73bccc26eb6222ba5f",
+      "uplifted_sha": "sha256:65c5707526ab7052ca56d42b93d0acd2860bf389ef7c614dc4c5c4417727a702",
       "seeded_defects": [
         "no-required"
       ],
@@ -7680,7 +7680,7 @@
             ],
             "detail": {
               "submit_status": 200,
-              "reload_url": "http://127.0.0.1:4338/makers/3c5c792d",
+              "reload_url": "http://127.0.0.1:4338/makers/bfd3a2e2",
               "echoed": "Master woodworker crafting hand-turned bowls and shaker boxes"
             },
             "carry": {
@@ -7705,7 +7705,7 @@
           {
             "name": "content",
             "passed": true,
-            "url": "http://127.0.0.1:4338/makers/3c5c792d"
+            "url": "http://127.0.0.1:4338/makers/bfd3a2e2"
           },
           {
             "name": "search",
@@ -7720,21 +7720,21 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv417p6x-rg48ew"
+                "zzz-decoy-mv6cbi4r-vik6pg"
               ],
               "controlMissing": [],
               "filteredRefs": [
-                "43f32f95",
-                "3c5c792d"
+                "f98252ba",
+                "bfd3a2e2"
               ]
             }
           },
           {
             "name": "update-existing",
             "passed": true,
-            "ref": "3c5c792d",
+            "ref": "bfd3a2e2",
             "detail": {
-              "ref": "3c5c792d",
+              "ref": "bfd3a2e2",
               "oldValue": "Master woodworker crafting hand-turned bowls and shaker boxes",
               "newValue": "Master woodworker crafting hand-turned bowls and shaker boxes (updated)",
               "visibleAfterReload": true,
@@ -7808,7 +7808,7 @@
             ],
             "detail": {
               "submit_status": 200,
-              "reload_url": "http://127.0.0.1:4339/makers/654f1e92",
+              "reload_url": "http://127.0.0.1:4339/makers/c52d12c7",
               "echoed": "Master woodworker crafting hand-turned bowls and shaker boxes"
             },
             "carry": {
@@ -7833,7 +7833,7 @@
           {
             "name": "content",
             "passed": true,
-            "url": "http://127.0.0.1:4339/makers/654f1e92"
+            "url": "http://127.0.0.1:4339/makers/c52d12c7"
           },
           {
             "name": "search",
@@ -7848,21 +7848,21 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv417s71-sxqorc"
+                "zzz-decoy-mv6cblhd-nyg757"
               ],
               "controlMissing": [],
               "filteredRefs": [
-                "26526955",
-                "654f1e92"
+                "b65075a1",
+                "c52d12c7"
               ]
             }
           },
           {
             "name": "update-existing",
             "passed": true,
-            "ref": "654f1e92",
+            "ref": "c52d12c7",
             "detail": {
-              "ref": "654f1e92",
+              "ref": "c52d12c7",
               "oldValue": "Master woodworker crafting hand-turned bowls and shaker boxes",
               "newValue": "Master woodworker crafting hand-turned bowls and shaker boxes (updated)",
               "visibleAfterReload": true,
@@ -7933,9 +7933,9 @@
       "archetype": "event-registration",
       "framework": "svelte",
       "task": "generate",
-      "original_sha": "sha256:bbc108c8102656098d36de47a1bcb02733d84586df25c6b203985b96c77841ac",
-      "corpus_tree_sha": "sha256:bbc108c8102656098d36de47a1bcb02733d84586df25c6b203985b96c77841ac",
-      "uplifted_sha": "sha256:141ce01ef2864d814f22d739e0b45779d735a8e8b182cc3a1162940f4dd847cd",
+      "original_sha": "sha256:1a9f7acc9ce23a0bd0330452ba519ac195d08a0c4be7f033a3b06cece8fa3c30",
+      "corpus_tree_sha": "sha256:1a9f7acc9ce23a0bd0330452ba519ac195d08a0c4be7f033a3b06cece8fa3c30",
+      "uplifted_sha": "sha256:ce1f9a61213283d2e8e3043c4a5153dffa59e8550b96f45886e179df85fe1a13",
       "seeded_defects": [
         "no-required"
       ],
@@ -8037,7 +8037,7 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv417vmj-5nkcl5"
+                "zzz-decoy-mv6cbp42-11nihy"
               ],
               "controlMissing": [],
               "filteredRefs": []
@@ -8165,7 +8165,7 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv417ywv-thjlbv"
+                "zzz-decoy-mv6cbsgm-e9y7t9"
               ],
               "controlMissing": [],
               "filteredRefs": []
@@ -8183,7 +8183,7 @@
               "apiStatus": 200,
               "field": "attendees",
               "comparedAsField": true,
-              "storedField": "zzz-decoy-mv417ywv-thjlbv-0",
+              "storedField": "zzz-decoy-mv6cbsgm-e9y7t9-0",
               "newValueStored": false,
               "oldValueGone": true,
               "rowsBefore": 1,
@@ -8351,7 +8351,7 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv41828w-apni9f"
+                "zzz-decoy-mv6cbw9q-eed5b9"
               ],
               "controlMissing": [],
               "filteredRefs": []
@@ -8479,7 +8479,7 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv4185cn-ibms11"
+                "zzz-decoy-mv6cbzif-ryk2v9"
               ],
               "controlMissing": [],
               "filteredRefs": []
@@ -8561,9 +8561,9 @@
       "archetype": "support-helpdesk",
       "framework": "raw",
       "task": "generate",
-      "original_sha": "sha256:53a6d86df29c13d1d91a62f7c1729c453a2da1052f39cbb3f2e0fdc4b4241516",
-      "corpus_tree_sha": "sha256:53a6d86df29c13d1d91a62f7c1729c453a2da1052f39cbb3f2e0fdc4b4241516",
-      "uplifted_sha": "sha256:9e33746e9d4a3f8004b5fa62139c0aeadb643b2ee3cffba7b35727ea0d632bdf",
+      "original_sha": "sha256:07a66d1b2642db4fa0d23dc6dd29763ce317a76b384f508aefa3393a5781bbd4",
+      "corpus_tree_sha": "sha256:07a66d1b2642db4fa0d23dc6dd29763ce317a76b384f508aefa3393a5781bbd4",
+      "uplifted_sha": "sha256:e19c54ee346378cc4b9e8f06ef1267acc9eeff6e1686c668a029b2a22b9ed2f4",
       "seeded_defects": [
         "no-required"
       ],
@@ -8621,7 +8621,7 @@
             ],
             "detail": {
               "submit_status": 200,
-              "reload_url": "http://127.0.0.1:4344/tickets/4f168a17",
+              "reload_url": "http://127.0.0.1:4344/tickets/e3287699",
               "echoed": "Beseler 23C II Enlarger"
             },
             "carry": {
@@ -8646,7 +8646,7 @@
           {
             "name": "content",
             "passed": true,
-            "url": "http://127.0.0.1:4344/tickets/4f168a17"
+            "url": "http://127.0.0.1:4344/tickets/e3287699"
           },
           {
             "name": "search",
@@ -8661,21 +8661,21 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv4188sz-ot3fk7"
+                "zzz-decoy-mv6cc2z6-j8xhb1"
               ],
               "controlMissing": [],
               "filteredRefs": [
-                "741c5fff",
-                "4f168a17"
+                "9f2f454f",
+                "e3287699"
               ]
             }
           },
           {
             "name": "update-existing",
             "passed": true,
-            "ref": "4f168a17",
+            "ref": "e3287699",
             "detail": {
-              "ref": "4f168a17",
+              "ref": "e3287699",
               "oldValue": "Beseler 23C II Enlarger",
               "newValue": "Beseler 23C II Enlarger (updated)",
               "visibleAfterReload": true,
@@ -8748,7 +8748,7 @@
             ],
             "detail": {
               "submit_status": 200,
-              "reload_url": "http://127.0.0.1:4345/tickets/ec6a2bd3",
+              "reload_url": "http://127.0.0.1:4345/tickets/b64408f6",
               "echoed": "Beseler 23C II Enlarger"
             },
             "carry": {
@@ -8773,7 +8773,7 @@
           {
             "name": "content",
             "passed": true,
-            "url": "http://127.0.0.1:4345/tickets/ec6a2bd3"
+            "url": "http://127.0.0.1:4345/tickets/b64408f6"
           },
           {
             "name": "search",
@@ -8788,21 +8788,21 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv418bpx-j398iv"
+                "zzz-decoy-mv6cc5sn-htcdia"
               ],
               "controlMissing": [],
               "filteredRefs": [
-                "f5ec5978",
-                "ec6a2bd3"
+                "b5f8ec98",
+                "b64408f6"
               ]
             }
           },
           {
             "name": "update-existing",
             "passed": true,
-            "ref": "ec6a2bd3",
+            "ref": "b64408f6",
             "detail": {
-              "ref": "ec6a2bd3",
+              "ref": "b64408f6",
               "oldValue": "Beseler 23C II Enlarger",
               "newValue": "Beseler 23C II Enlarger (updated)",
               "visibleAfterReload": true,
@@ -8873,9 +8873,9 @@
       "archetype": "support-helpdesk",
       "framework": "react",
       "task": "generate",
-      "original_sha": "sha256:a84918c698036f832354ed1581c781e51c287233626717f924c2de43288bc8e0",
-      "corpus_tree_sha": "sha256:a84918c698036f832354ed1581c781e51c287233626717f924c2de43288bc8e0",
-      "uplifted_sha": "sha256:726abce5fffff6d737903fb523eff67e94fd3c40a19c3bcadf1b9d1be3585621",
+      "original_sha": "sha256:08bd2f1fa9f655e82574b479629790a4c2a0c537aa24c178f45df4df7bd05864",
+      "corpus_tree_sha": "sha256:08bd2f1fa9f655e82574b479629790a4c2a0c537aa24c178f45df4df7bd05864",
+      "uplifted_sha": "sha256:a7b672eadaef1566a35af9287d00a7b13fb2543afed7ae6222730be1a085f878",
       "seeded_defects": [
         "no-required"
       ],
@@ -8933,7 +8933,7 @@
             ],
             "detail": {
               "submit_status": 200,
-              "reload_url": "http://127.0.0.1:4346/tickets/953f2273",
+              "reload_url": "http://127.0.0.1:4346/tickets/81b55672",
               "echoed": "Beseler 23C II Enlarger"
             },
             "carry": {
@@ -8958,7 +8958,7 @@
           {
             "name": "content",
             "passed": true,
-            "url": "http://127.0.0.1:4346/tickets/953f2273"
+            "url": "http://127.0.0.1:4346/tickets/81b55672"
           },
           {
             "name": "search",
@@ -8973,21 +8973,21 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv418eu4-obtsjj"
+                "zzz-decoy-mv6cc94x-dayx97"
               ],
               "controlMissing": [],
               "filteredRefs": [
-                "c46073d2",
-                "953f2273"
+                "d2b37db8",
+                "81b55672"
               ]
             }
           },
           {
             "name": "update-existing",
             "passed": true,
-            "ref": "953f2273",
+            "ref": "81b55672",
             "detail": {
-              "ref": "953f2273",
+              "ref": "81b55672",
               "oldValue": "Beseler 23C II Enlarger",
               "newValue": "Beseler 23C II Enlarger (updated)",
               "visibleAfterReload": true,
@@ -9060,7 +9060,7 @@
             ],
             "detail": {
               "submit_status": 200,
-              "reload_url": "http://127.0.0.1:4347/tickets/acf3d7ed",
+              "reload_url": "http://127.0.0.1:4347/tickets/44a2ee16",
               "echoed": "Beseler 23C II Enlarger"
             },
             "carry": {
@@ -9085,7 +9085,7 @@
           {
             "name": "content",
             "passed": true,
-            "url": "http://127.0.0.1:4347/tickets/acf3d7ed"
+            "url": "http://127.0.0.1:4347/tickets/44a2ee16"
           },
           {
             "name": "search",
@@ -9100,21 +9100,21 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv418hsq-tva9rv"
+                "zzz-decoy-mv6ccc1b-8tynzz"
               ],
               "controlMissing": [],
               "filteredRefs": [
-                "44be1a69",
-                "acf3d7ed"
+                "68672edf",
+                "44a2ee16"
               ]
             }
           },
           {
             "name": "update-existing",
             "passed": true,
-            "ref": "acf3d7ed",
+            "ref": "44a2ee16",
             "detail": {
-              "ref": "acf3d7ed",
+              "ref": "44a2ee16",
               "oldValue": "Beseler 23C II Enlarger",
               "newValue": "Beseler 23C II Enlarger (updated)",
               "visibleAfterReload": true,
@@ -9185,9 +9185,9 @@
       "archetype": "course-enrolment",
       "framework": "preact",
       "task": "generate",
-      "original_sha": "sha256:2518de23964ef2b4de06a8b5e198292471d04f0690670e77818a11a7b624d632",
-      "corpus_tree_sha": "sha256:2518de23964ef2b4de06a8b5e198292471d04f0690670e77818a11a7b624d632",
-      "uplifted_sha": "sha256:3eecb8ca6850cb13fb7970a2f5f468491887f424927aa2d7b1526a1fccd5191e",
+      "original_sha": "sha256:2237e810542ee7936e03e2f79b068d4e58394a289d9b3d8b6b51481ff00dd131",
+      "corpus_tree_sha": "sha256:2237e810542ee7936e03e2f79b068d4e58394a289d9b3d8b6b51481ff00dd131",
+      "uplifted_sha": "sha256:34f7cd3aabce74c7f6e340cb0b733f333a3e47e486e651086cfac94e0243950f",
       "seeded_defects": [
         "no-required"
       ],
@@ -9245,7 +9245,7 @@
             ],
             "detail": {
               "submit_status": 200,
-              "reload_url": "http://127.0.0.1:4348/enrolments/ef50785a",
+              "reload_url": "http://127.0.0.1:4348/enrolments/b06f333b",
               "echoed": "Maya Soren"
             },
             "carry": {
@@ -9270,7 +9270,7 @@
           {
             "name": "content",
             "passed": true,
-            "url": "http://127.0.0.1:4348/enrolments/ef50785a"
+            "url": "http://127.0.0.1:4348/enrolments/b06f333b"
           },
           {
             "name": "search",
@@ -9285,30 +9285,30 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv418l10-zymjwb"
+                "zzz-decoy-mv6ccf13-plx5d5"
               ],
               "controlMissing": [],
               "filteredRefs": [
-                "334d21ed",
-                "ef50785a"
+                "05ee9064",
+                "b06f333b"
               ]
             }
           },
           {
             "name": "update-existing",
-            "passed": false,
-            "ref": "ef50785a",
+            "passed": true,
+            "ref": "b06f333b",
             "detail": {
-              "ref": "ef50785a",
+              "ref": "b06f333b",
               "oldValue": "Maya Soren",
               "newValue": "Maya Soren (updated)",
-              "visibleAfterReload": false,
+              "visibleAfterReload": true,
               "apiStatus": 200,
               "field": "student",
               "comparedAsField": true,
-              "storedField": "Maya Soren",
-              "newValueStored": false,
-              "oldValueGone": false,
+              "storedField": "Maya Soren (updated)",
+              "newValueStored": true,
+              "oldValueGone": true,
               "rowsBefore": 3,
               "rowsAfter": 3,
               "rowCountUnchanged": true
@@ -9372,7 +9372,7 @@
             ],
             "detail": {
               "submit_status": 200,
-              "reload_url": "http://127.0.0.1:4349/enrolments/85f18ce6",
+              "reload_url": "http://127.0.0.1:4349/enrolments/9f8d5552",
               "echoed": "Maya Soren"
             },
             "carry": {
@@ -9397,7 +9397,7 @@
           {
             "name": "content",
             "passed": true,
-            "url": "http://127.0.0.1:4349/enrolments/85f18ce6"
+            "url": "http://127.0.0.1:4349/enrolments/9f8d5552"
           },
           {
             "name": "search",
@@ -9412,21 +9412,21 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv418nw8-z66u6t"
+                "zzz-decoy-mv6ccic0-r0py3z"
               ],
               "controlMissing": [],
               "filteredRefs": [
-                "1bbee39e",
-                "85f18ce6"
+                "4b5d40d5",
+                "9f8d5552"
               ]
             }
           },
           {
             "name": "update-existing",
             "passed": true,
-            "ref": "85f18ce6",
+            "ref": "9f8d5552",
             "detail": {
-              "ref": "85f18ce6",
+              "ref": "9f8d5552",
               "oldValue": "Maya Soren",
               "newValue": "Maya Soren (updated)",
               "visibleAfterReload": true,
@@ -9497,9 +9497,9 @@
       "archetype": "course-enrolment",
       "framework": "vue",
       "task": "generate",
-      "original_sha": "sha256:9b9edc7d7e2366c720c136ac960098ae88cf238823e088ee03f6f958f6736718",
-      "corpus_tree_sha": "sha256:9b9edc7d7e2366c720c136ac960098ae88cf238823e088ee03f6f958f6736718",
-      "uplifted_sha": "sha256:76700bff1a7ac2c6bf5e55a99e05f89ca02ebc2c213cb3831b96e36216cc0945",
+      "original_sha": "sha256:56078d7bf1c54b7d83abcbed56858c1ba80acc4d2d899ab8b2dcd097c9b2f6d9",
+      "corpus_tree_sha": "sha256:56078d7bf1c54b7d83abcbed56858c1ba80acc4d2d899ab8b2dcd097c9b2f6d9",
+      "uplifted_sha": "sha256:1438eac38d1ddce1333c97b0635396505da8904685bc894c471cb1cd2b20a34a",
       "seeded_defects": [
         "no-required"
       ],
@@ -9557,7 +9557,7 @@
             ],
             "detail": {
               "submit_status": 200,
-              "reload_url": "http://127.0.0.1:4350/enrolments/1f99a9fa",
+              "reload_url": "http://127.0.0.1:4350/enrolments/0e859554",
               "echoed": "Maya Soren"
             },
             "carry": {
@@ -9582,7 +9582,7 @@
           {
             "name": "content",
             "passed": true,
-            "url": "http://127.0.0.1:4350/enrolments/1f99a9fa"
+            "url": "http://127.0.0.1:4350/enrolments/0e859554"
           },
           {
             "name": "search",
@@ -9597,21 +9597,21 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv418qyu-nq163j"
+                "zzz-decoy-mv6cclb2-tvyz3s"
               ],
               "controlMissing": [],
               "filteredRefs": [
-                "c3871195",
-                "1f99a9fa"
+                "a42c71a6",
+                "0e859554"
               ]
             }
           },
           {
             "name": "update-existing",
             "passed": true,
-            "ref": "1f99a9fa",
+            "ref": "0e859554",
             "detail": {
-              "ref": "1f99a9fa",
+              "ref": "0e859554",
               "oldValue": "Maya Soren",
               "newValue": "Maya Soren (updated)",
               "visibleAfterReload": true,
@@ -9684,7 +9684,7 @@
             ],
             "detail": {
               "submit_status": 200,
-              "reload_url": "http://127.0.0.1:4351/enrolments/9ff4b482",
+              "reload_url": "http://127.0.0.1:4351/enrolments/66fecff3",
               "echoed": "Maya Soren"
             },
             "carry": {
@@ -9709,7 +9709,7 @@
           {
             "name": "content",
             "passed": true,
-            "url": "http://127.0.0.1:4351/enrolments/9ff4b482"
+            "url": "http://127.0.0.1:4351/enrolments/66fecff3"
           },
           {
             "name": "search",
@@ -9724,21 +9724,21 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv418tpc-umnkov"
+                "zzz-decoy-mv6cco4a-ugft97"
               ],
               "controlMissing": [],
               "filteredRefs": [
-                "9b1774c9",
-                "9ff4b482"
+                "aea6b9a0",
+                "66fecff3"
               ]
             }
           },
           {
             "name": "update-existing",
             "passed": true,
-            "ref": "9ff4b482",
+            "ref": "66fecff3",
             "detail": {
-              "ref": "9ff4b482",
+              "ref": "66fecff3",
               "oldValue": "Maya Soren",
               "newValue": "Maya Soren (updated)",
               "visibleAfterReload": true,
@@ -9809,9 +9809,9 @@
       "archetype": "survey-form",
       "framework": "webcomponents",
       "task": "generate",
-      "original_sha": "sha256:152ee6e7fdb8d1e07c1af88e48f208c9f2dff648de234115387f35234468bc64",
-      "corpus_tree_sha": "sha256:152ee6e7fdb8d1e07c1af88e48f208c9f2dff648de234115387f35234468bc64",
-      "uplifted_sha": "sha256:cd34b76e1801bf19eecb6f415758058a3a62f586f82de48da7cfeeb6f8da6186",
+      "original_sha": "sha256:07f9ba86a89d03945d24e01b543340881557e88b559cf2f421386b6f6fa2519d",
+      "corpus_tree_sha": "sha256:07f9ba86a89d03945d24e01b543340881557e88b559cf2f421386b6f6fa2519d",
+      "uplifted_sha": "sha256:a2cd649542d58a971313f87877facb604fbd55d42edaa568b331baa317e0d556",
       "seeded_defects": [
         "no-required"
       ],
@@ -9869,7 +9869,7 @@
             ],
             "detail": {
               "submit_status": 200,
-              "reload_url": "http://127.0.0.1:4352/survey/complete/4e9b88e6",
+              "reload_url": "http://127.0.0.1:4352/survey/complete/ebf3382a",
               "echoed": "Jo Delgado"
             },
             "carry": {
@@ -9894,7 +9894,7 @@
           {
             "name": "content",
             "passed": true,
-            "url": "http://127.0.0.1:4352/survey/complete/4e9b88e6"
+            "url": "http://127.0.0.1:4352/survey/complete/ebf3382a"
           },
           {
             "name": "search",
@@ -9909,30 +9909,30 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv418wy5-bkf6x8"
+                "zzz-decoy-mv6ccrfd-fpw7nu"
               ],
               "controlMissing": [],
               "filteredRefs": [
-                "3689d1eb",
-                "4e9b88e6"
+                "df8939c6",
+                "ebf3382a"
               ]
             }
           },
           {
             "name": "update-existing",
-            "passed": true,
-            "ref": "4e9b88e6",
+            "passed": false,
+            "ref": "ebf3382a",
             "detail": {
-              "ref": "4e9b88e6",
+              "ref": "ebf3382a",
               "oldValue": "Jo Delgado",
               "newValue": "Jo Delgado (updated)",
-              "visibleAfterReload": true,
+              "visibleAfterReload": false,
               "apiStatus": 200,
               "field": "respondent",
               "comparedAsField": true,
-              "storedField": "Jo Delgado (updated)",
-              "newValueStored": true,
-              "oldValueGone": true,
+              "storedField": "Jo Delgado",
+              "newValueStored": false,
+              "oldValueGone": false,
               "rowsBefore": 3,
               "rowsAfter": 3,
               "rowCountUnchanged": true
@@ -9996,7 +9996,7 @@
             ],
             "detail": {
               "submit_status": 200,
-              "reload_url": "http://127.0.0.1:4353/survey/complete/6fda9ce0",
+              "reload_url": "http://127.0.0.1:4353/survey/complete/c7a19bcc",
               "echoed": "Jo Delgado"
             },
             "carry": {
@@ -10021,7 +10021,7 @@
           {
             "name": "content",
             "passed": true,
-            "url": "http://127.0.0.1:4353/survey/complete/6fda9ce0"
+            "url": "http://127.0.0.1:4353/survey/complete/c7a19bcc"
           },
           {
             "name": "search",
@@ -10036,21 +10036,21 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv418zy5-teleg5"
+                "zzz-decoy-mv6ccue5-9ilddb"
               ],
               "controlMissing": [],
               "filteredRefs": [
-                "a5129e35",
-                "6fda9ce0"
+                "e7baa33d",
+                "c7a19bcc"
               ]
             }
           },
           {
             "name": "update-existing",
             "passed": true,
-            "ref": "6fda9ce0",
+            "ref": "c7a19bcc",
             "detail": {
-              "ref": "6fda9ce0",
+              "ref": "c7a19bcc",
               "oldValue": "Jo Delgado",
               "newValue": "Jo Delgado (updated)",
               "visibleAfterReload": true,
@@ -10121,9 +10121,9 @@
       "archetype": "survey-form",
       "framework": "svelte",
       "task": "generate",
-      "original_sha": "sha256:fc50aec02d13eaf9046462c9a81708984b81ff7b2f0836fd396343500c07bbae",
-      "corpus_tree_sha": "sha256:fc50aec02d13eaf9046462c9a81708984b81ff7b2f0836fd396343500c07bbae",
-      "uplifted_sha": "sha256:7b65620418024afd440e29c7653154d8f7f12d57b8dc118d1f0bdd18dcb55a98",
+      "original_sha": "sha256:5704d75bc3ccfd96d57d98c362708199f7154558acf7aebf60080d153ed68a15",
+      "corpus_tree_sha": "sha256:5704d75bc3ccfd96d57d98c362708199f7154558acf7aebf60080d153ed68a15",
+      "uplifted_sha": "sha256:57c5c4575d1ae65b9305b7317f7fc6d559353c0fc37db9041b82e35310570b13",
       "seeded_defects": [
         "no-required"
       ],
@@ -10181,7 +10181,7 @@
             ],
             "detail": {
               "submit_status": 200,
-              "reload_url": "http://127.0.0.1:4354/survey/complete/29ce6457",
+              "reload_url": "http://127.0.0.1:4354/survey/complete/140392f7",
               "echoed": "Jo Delgado"
             },
             "carry": {
@@ -10206,7 +10206,7 @@
           {
             "name": "content",
             "passed": true,
-            "url": "http://127.0.0.1:4354/survey/complete/29ce6457"
+            "url": "http://127.0.0.1:4354/survey/complete/140392f7"
           },
           {
             "name": "search",
@@ -10221,21 +10221,21 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv41935y-c6lxp0"
+                "zzz-decoy-mv6ccxf2-g6kug3"
               ],
               "controlMissing": [],
               "filteredRefs": [
-                "defe056b",
-                "29ce6457"
+                "379c92f0",
+                "140392f7"
               ]
             }
           },
           {
             "name": "update-existing",
             "passed": true,
-            "ref": "29ce6457",
+            "ref": "140392f7",
             "detail": {
-              "ref": "29ce6457",
+              "ref": "140392f7",
               "oldValue": "Jo Delgado",
               "newValue": "Jo Delgado (updated)",
               "visibleAfterReload": true,
@@ -10308,7 +10308,7 @@
             ],
             "detail": {
               "submit_status": 200,
-              "reload_url": "http://127.0.0.1:4355/survey/complete/064b61c6",
+              "reload_url": "http://127.0.0.1:4355/survey/complete/e1e02018",
               "echoed": "Jo Delgado"
             },
             "carry": {
@@ -10333,7 +10333,7 @@
           {
             "name": "content",
             "passed": true,
-            "url": "http://127.0.0.1:4355/survey/complete/064b61c6"
+            "url": "http://127.0.0.1:4355/survey/complete/e1e02018"
           },
           {
             "name": "search",
@@ -10348,21 +10348,21 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv41966t-p04s6x"
+                "zzz-decoy-mv6cd06n-oje8lw"
               ],
               "controlMissing": [],
               "filteredRefs": [
-                "f18a0632",
-                "064b61c6"
+                "80206cf5",
+                "e1e02018"
               ]
             }
           },
           {
             "name": "update-existing",
             "passed": true,
-            "ref": "064b61c6",
+            "ref": "e1e02018",
             "detail": {
-              "ref": "064b61c6",
+              "ref": "e1e02018",
               "oldValue": "Jo Delgado",
               "newValue": "Jo Delgado (updated)",
               "visibleAfterReload": true,
@@ -10494,7 +10494,7 @@
             ],
             "detail": {
               "submit_status": 200,
-              "reload_url": "http://127.0.0.1:4356/orders/bc80af8a",
+              "reload_url": "http://127.0.0.1:4356/orders/953a722d",
               "echoed": "Nadia Rossi"
             },
             "carry": {
@@ -10519,7 +10519,7 @@
           {
             "name": "content",
             "passed": true,
-            "url": "http://127.0.0.1:4356/orders/bc80af8a"
+            "url": "http://127.0.0.1:4356/orders/953a722d"
           },
           {
             "name": "search",
@@ -10534,21 +10534,21 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv4199i9-8na2z6"
+                "zzz-decoy-mv6cd3fp-4etzis"
               ],
               "controlMissing": [],
               "filteredRefs": [
-                "12778492",
-                "bc80af8a"
+                "a3daa0b0",
+                "953a722d"
               ]
             }
           },
           {
             "name": "update-existing",
             "passed": true,
-            "ref": "bc80af8a",
+            "ref": "953a722d",
             "detail": {
-              "ref": "bc80af8a",
+              "ref": "953a722d",
               "oldValue": "Nadia Rossi",
               "newValue": "Nadia Rossi (updated)",
               "visibleAfterReload": true,
@@ -10622,7 +10622,7 @@
             ],
             "detail": {
               "submit_status": 200,
-              "reload_url": "http://127.0.0.1:4357/orders/e5ac9bb0",
+              "reload_url": "http://127.0.0.1:4357/orders/3f0dca45",
               "echoed": "Nadia Rossi"
             },
             "carry": {
@@ -10647,7 +10647,7 @@
           {
             "name": "content",
             "passed": true,
-            "url": "http://127.0.0.1:4357/orders/e5ac9bb0"
+            "url": "http://127.0.0.1:4357/orders/3f0dca45"
           },
           {
             "name": "search",
@@ -10662,21 +10662,21 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv419cfg-hux7rm"
+                "zzz-decoy-mv6cd6q1-okkc0n"
               ],
               "controlMissing": [],
               "filteredRefs": [
-                "db17f259",
-                "e5ac9bb0"
+                "a6ce12ec",
+                "3f0dca45"
               ]
             }
           },
           {
             "name": "update-existing",
             "passed": true,
-            "ref": "e5ac9bb0",
+            "ref": "3f0dca45",
             "detail": {
-              "ref": "e5ac9bb0",
+              "ref": "3f0dca45",
               "oldValue": "Nadia Rossi",
               "newValue": "Nadia Rossi (updated)",
               "visibleAfterReload": true,
@@ -10747,9 +10747,9 @@
       "archetype": "restaurant-ordering",
       "framework": "raw",
       "task": "generate",
-      "original_sha": "sha256:6ad0f9cff55bfe6e5099e8a35e6c4b7b8a0210a69990bd4881ec019ade51c1d9",
-      "corpus_tree_sha": "sha256:6ad0f9cff55bfe6e5099e8a35e6c4b7b8a0210a69990bd4881ec019ade51c1d9",
-      "uplifted_sha": "sha256:e55f602609108e8393d7f285f740998da8fbc77fbe14f869f9baabeb37bb6e7f",
+      "original_sha": "sha256:81342c289121f978ab4483e55d0b8a7da67f99f9bdf3c39a5f3d4e5630623029",
+      "corpus_tree_sha": "sha256:81342c289121f978ab4483e55d0b8a7da67f99f9bdf3c39a5f3d4e5630623029",
+      "uplifted_sha": "sha256:edb741f1657e490ab49cdb2ce660505e775716670bf0314150b4e8ccaa942253",
       "seeded_defects": [
         "no-required"
       ],
@@ -10808,7 +10808,7 @@
             ],
             "detail": {
               "submit_status": 200,
-              "reload_url": "http://127.0.0.1:4358/orders/6a0dbb83",
+              "reload_url": "http://127.0.0.1:4358/orders/fd79d1aa",
               "echoed": "Nadia Rossi"
             },
             "carry": {
@@ -10833,7 +10833,7 @@
           {
             "name": "content",
             "passed": true,
-            "url": "http://127.0.0.1:4358/orders/6a0dbb83"
+            "url": "http://127.0.0.1:4358/orders/fd79d1aa"
           },
           {
             "name": "search",
@@ -10848,21 +10848,21 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv419fh5-ece3uq"
+                "zzz-decoy-mv6cda4c-emx9l8"
               ],
               "controlMissing": [],
               "filteredRefs": [
-                "7809d28d",
-                "6a0dbb83"
+                "cb3d16ab",
+                "fd79d1aa"
               ]
             }
           },
           {
             "name": "update-existing",
             "passed": true,
-            "ref": "6a0dbb83",
+            "ref": "fd79d1aa",
             "detail": {
-              "ref": "6a0dbb83",
+              "ref": "fd79d1aa",
               "oldValue": "Nadia Rossi",
               "newValue": "Nadia Rossi (updated)",
               "visibleAfterReload": true,
@@ -10936,7 +10936,7 @@
             ],
             "detail": {
               "submit_status": 200,
-              "reload_url": "http://127.0.0.1:4359/orders/e98d858c",
+              "reload_url": "http://127.0.0.1:4359/orders/106375d7",
               "echoed": "Nadia Rossi"
             },
             "carry": {
@@ -10961,7 +10961,7 @@
           {
             "name": "content",
             "passed": true,
-            "url": "http://127.0.0.1:4359/orders/e98d858c"
+            "url": "http://127.0.0.1:4359/orders/106375d7"
           },
           {
             "name": "search",
@@ -10976,21 +10976,21 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv419i8n-p2y3zw"
+                "zzz-decoy-mv6cdczp-zv4yc5"
               ],
               "controlMissing": [],
               "filteredRefs": [
-                "5820f97a",
-                "e98d858c"
+                "a8b57a9d",
+                "106375d7"
               ]
             }
           },
           {
             "name": "update-existing",
             "passed": true,
-            "ref": "e98d858c",
+            "ref": "106375d7",
             "detail": {
-              "ref": "e98d858c",
+              "ref": "106375d7",
               "oldValue": "Nadia Rossi",
               "newValue": "Nadia Rossi (updated)",
               "visibleAfterReload": true,
@@ -11061,9 +11061,9 @@
       "archetype": "job-board",
       "framework": "react",
       "task": "generate",
-      "original_sha": "sha256:48d3f73184d6623f64c2d083a351fb1ff6b16b0d6a69aeca317b1c1176e052a4",
-      "corpus_tree_sha": "sha256:48d3f73184d6623f64c2d083a351fb1ff6b16b0d6a69aeca317b1c1176e052a4",
-      "uplifted_sha": "sha256:f4639e554089fa9208f4a895c95fd5dfd4ef80daf7e9b201985dd69f5395e6fe",
+      "original_sha": "sha256:b36d5bc1b24773214285b93c93882b17e4ccc14041228c933dcefe3449ba52dc",
+      "corpus_tree_sha": "sha256:b36d5bc1b24773214285b93c93882b17e4ccc14041228c933dcefe3449ba52dc",
+      "uplifted_sha": "sha256:64fee8cc34c6b4bb7aaea55b624f959268bc04b6ccf8185d5bb954ab5859b2a3",
       "seeded_defects": [
         "no-required"
       ],
@@ -11162,7 +11162,7 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv419le1-xub4v6"
+                "zzz-decoy-mv6cdgdw-ego6o3"
               ],
               "controlMissing": [],
               "filteredRefs": []
@@ -11287,7 +11287,7 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv419ogk-nxah5l"
+                "zzz-decoy-mv6cdjbu-ufh3c5"
               ],
               "controlMissing": [],
               "filteredRefs": []
@@ -11369,9 +11369,9 @@
       "archetype": "job-board",
       "framework": "preact",
       "task": "generate",
-      "original_sha": "sha256:245f34535ba4416845bfaec88e2d17b35f7451676dbbadb5da6e1333829c6ceb",
-      "corpus_tree_sha": "sha256:245f34535ba4416845bfaec88e2d17b35f7451676dbbadb5da6e1333829c6ceb",
-      "uplifted_sha": "sha256:66eaa93b26efea263922ab0bb7ff2528bd6f0425ebcdd365bb804eff6f75a101",
+      "original_sha": "sha256:ff167ad196e765e596d0d2c6ebd654a4f2bce1c89af729aa9e7cd736aa58fd24",
+      "corpus_tree_sha": "sha256:ff167ad196e765e596d0d2c6ebd654a4f2bce1c89af729aa9e7cd736aa58fd24",
+      "uplifted_sha": "sha256:7749a5d15c8ebccf65db092c1e1e484aa4be4385971ea0ed819926b99c40ea89",
       "seeded_defects": [
         "no-required"
       ],
@@ -11470,7 +11470,7 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv419rnu-njslfy"
+                "zzz-decoy-mv6cdmrh-84gqly"
               ],
               "controlMissing": [],
               "filteredRefs": []
@@ -11595,7 +11595,7 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv419uu5-v2rnhy"
+                "zzz-decoy-mv6cdpxx-ceg9c3"
               ],
               "controlMissing": [],
               "filteredRefs": []
@@ -11677,9 +11677,9 @@
       "archetype": "docs-site",
       "framework": "vue",
       "task": "generate",
-      "original_sha": "sha256:74c690c7b1d7cc35642086bc49532e582ccf6993e9239555d425aa45d3dfcebf",
-      "corpus_tree_sha": "sha256:74c690c7b1d7cc35642086bc49532e582ccf6993e9239555d425aa45d3dfcebf",
-      "uplifted_sha": "sha256:4d9bb53de249bd59a2c6275963a2aea6f675602c0340f7617597115a0e28e9c5",
+      "original_sha": "sha256:6984314135a25a0d09356f6a29ad3bfea823eb1b6528be70bedfc4c3dac1db50",
+      "corpus_tree_sha": "sha256:6984314135a25a0d09356f6a29ad3bfea823eb1b6528be70bedfc4c3dac1db50",
+      "uplifted_sha": "sha256:5c94f5d055c1ef4e0e30c44901e5037a724d868ff83d555fecf628dea52b0b15",
       "seeded_defects": [
         "no-required"
       ],
@@ -11732,7 +11732,7 @@
             ],
             "detail": {
               "submit_status": 200,
-              "reload_url": "http://127.0.0.1:4364/soil-tests/a913bcc2",
+              "reload_url": "http://127.0.0.1:4364/soil-tests/ddaa2f00",
               "echoed": "Plot 14-B"
             },
             "carry": {
@@ -11757,7 +11757,7 @@
           {
             "name": "content",
             "passed": true,
-            "url": "http://127.0.0.1:4364/soil-tests/a913bcc2"
+            "url": "http://127.0.0.1:4364/soil-tests/ddaa2f00"
           },
           {
             "name": "search",
@@ -11771,26 +11771,26 @@
               "includesMissing": [],
               "excludesLeaked": [
                 "zzz-decoy",
-                "zzz-decoy-mv419y7b-bzrefa"
+                "zzz-decoy-mv6cdtmj-jisyx4"
               ],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv419y7b-bzrefa"
+                "zzz-decoy-mv6cdtmj-jisyx4"
               ],
               "controlMissing": [],
               "filteredRefs": [
-                "3bc81785",
-                "41fd4679",
-                "a913bcc2"
+                "a23af79b",
+                "e56a26c4",
+                "ddaa2f00"
               ]
             }
           },
           {
             "name": "update-existing",
             "passed": true,
-            "ref": "a913bcc2",
+            "ref": "ddaa2f00",
             "detail": {
-              "ref": "a913bcc2",
+              "ref": "ddaa2f00",
               "oldValue": "Plot 14-B",
               "newValue": "Plot 14-B (updated)",
               "visibleAfterReload": true,
@@ -11858,7 +11858,7 @@
             ],
             "detail": {
               "submit_status": 200,
-              "reload_url": "http://127.0.0.1:4365/soil-tests/4b7f8c95",
+              "reload_url": "http://127.0.0.1:4365/soil-tests/6734d5aa",
               "echoed": "Plot 14-B"
             },
             "carry": {
@@ -11883,7 +11883,7 @@
           {
             "name": "content",
             "passed": true,
-            "url": "http://127.0.0.1:4365/soil-tests/4b7f8c95"
+            "url": "http://127.0.0.1:4365/soil-tests/6734d5aa"
           },
           {
             "name": "search",
@@ -11897,26 +11897,26 @@
               "includesMissing": [],
               "excludesLeaked": [
                 "zzz-decoy",
-                "zzz-decoy-mv41a1ad-x2he3p"
+                "zzz-decoy-mv6cdwu3-kj4eg0"
               ],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv41a1ad-x2he3p"
+                "zzz-decoy-mv6cdwu3-kj4eg0"
               ],
               "controlMissing": [],
               "filteredRefs": [
-                "c1dba4de",
-                "72c49197",
-                "4b7f8c95"
+                "23808faf",
+                "289ea75a",
+                "6734d5aa"
               ]
             }
           },
           {
             "name": "update-existing",
             "passed": true,
-            "ref": "4b7f8c95",
+            "ref": "6734d5aa",
             "detail": {
-              "ref": "4b7f8c95",
+              "ref": "6734d5aa",
               "oldValue": "Plot 14-B",
               "newValue": "Plot 14-B (updated)",
               "visibleAfterReload": true,
@@ -11987,9 +11987,9 @@
       "archetype": "docs-site",
       "framework": "webcomponents",
       "task": "generate",
-      "original_sha": "sha256:93663d8f1d1e21a949f20020fa0662264b9722bf9dcce0da40f3c390241cd373",
-      "corpus_tree_sha": "sha256:93663d8f1d1e21a949f20020fa0662264b9722bf9dcce0da40f3c390241cd373",
-      "uplifted_sha": "sha256:011047e7abfd77ba0af94707db6b99d5db6c82dfa6262e72cd47c003168ac0ea",
+      "original_sha": "sha256:68d445b43ac2782d4417a1527892de980387ca563dcd0f91c88dfc98ab6ee299",
+      "corpus_tree_sha": "sha256:68d445b43ac2782d4417a1527892de980387ca563dcd0f91c88dfc98ab6ee299",
+      "uplifted_sha": "sha256:089fe267dcb0e72f68beff49c1c636452cf8fab7a8a6ab4bd80c9aa7f72a67c4",
       "seeded_defects": [
         "no-required"
       ],
@@ -12042,7 +12042,7 @@
             ],
             "detail": {
               "submit_status": 200,
-              "reload_url": "http://127.0.0.1:4366/soil-tests/2cbd17c1",
+              "reload_url": "http://127.0.0.1:4366/soil-tests/d8e7766c",
               "echoed": "Plot 14-B"
             },
             "carry": {
@@ -12067,7 +12067,7 @@
           {
             "name": "content",
             "passed": true,
-            "url": "http://127.0.0.1:4366/soil-tests/2cbd17c1"
+            "url": "http://127.0.0.1:4366/soil-tests/d8e7766c"
           },
           {
             "name": "search",
@@ -12081,26 +12081,26 @@
               "includesMissing": [],
               "excludesLeaked": [
                 "zzz-decoy",
-                "zzz-decoy-mv41a4an-htcmtx"
+                "zzz-decoy-mv6ce0mg-p9su0h"
               ],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv41a4an-htcmtx"
+                "zzz-decoy-mv6ce0mg-p9su0h"
               ],
               "controlMissing": [],
               "filteredRefs": [
-                "f3e7bc89",
-                "4a37bfcf",
-                "2cbd17c1"
+                "3775aba8",
+                "64e16eeb",
+                "d8e7766c"
               ]
             }
           },
           {
             "name": "update-existing",
             "passed": true,
-            "ref": "2cbd17c1",
+            "ref": "d8e7766c",
             "detail": {
-              "ref": "2cbd17c1",
+              "ref": "d8e7766c",
               "oldValue": "Plot 14-B",
               "newValue": "Plot 14-B (updated)",
               "visibleAfterReload": true,
@@ -12168,7 +12168,7 @@
             ],
             "detail": {
               "submit_status": 200,
-              "reload_url": "http://127.0.0.1:4367/soil-tests/eb29a874",
+              "reload_url": "http://127.0.0.1:4367/soil-tests/f0d21564",
               "echoed": "Plot 14-B"
             },
             "carry": {
@@ -12193,7 +12193,7 @@
           {
             "name": "content",
             "passed": true,
-            "url": "http://127.0.0.1:4367/soil-tests/eb29a874"
+            "url": "http://127.0.0.1:4367/soil-tests/f0d21564"
           },
           {
             "name": "search",
@@ -12207,26 +12207,26 @@
               "includesMissing": [],
               "excludesLeaked": [
                 "zzz-decoy",
-                "zzz-decoy-mv41a72o-btas81"
+                "zzz-decoy-mv6ce4an-6cvzs9"
               ],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv41a72o-btas81"
+                "zzz-decoy-mv6ce4an-6cvzs9"
               ],
               "controlMissing": [],
               "filteredRefs": [
-                "c0688208",
-                "4a758cf8",
-                "eb29a874"
+                "d31d7334",
+                "0cbc5a53",
+                "f0d21564"
               ]
             }
           },
           {
             "name": "update-existing",
             "passed": true,
-            "ref": "eb29a874",
+            "ref": "f0d21564",
             "detail": {
-              "ref": "eb29a874",
+              "ref": "f0d21564",
               "oldValue": "Plot 14-B",
               "newValue": "Plot 14-B (updated)",
               "visibleAfterReload": true,
@@ -12297,9 +12297,9 @@
       "archetype": "expense-tracker",
       "framework": "svelte",
       "task": "generate",
-      "original_sha": "sha256:83ba59117dead5f9e985c688b56d4200a7f43f8e644c30dbd72a8b1d413cb77d",
-      "corpus_tree_sha": "sha256:83ba59117dead5f9e985c688b56d4200a7f43f8e644c30dbd72a8b1d413cb77d",
-      "uplifted_sha": "sha256:3fedea4867e414c2df7bdf091bed8da4d6f6fe6a878e6d8b96bf53619d00794d",
+      "original_sha": "sha256:4e21ffeed9d5ef0eafd386e2f3364ca28197de7d0f4d590b155b03ae6d9e4169",
+      "corpus_tree_sha": "sha256:4e21ffeed9d5ef0eafd386e2f3364ca28197de7d0f4d590b155b03ae6d9e4169",
+      "uplifted_sha": "sha256:69d8150599d2cfe8a3c9fd51b856b5a457b95b91ac0ce8272bb9613cd8df0d10",
       "seeded_defects": [
         "no-required"
       ],
@@ -12358,7 +12358,7 @@
             ],
             "detail": {
               "submit_status": 200,
-              "reload_url": "http://127.0.0.1:4368/expenses/39f7a520",
+              "reload_url": "http://127.0.0.1:4368/expenses/015e45b1",
               "echoed": "Hallway LED lightbulbs"
             },
             "carry": {
@@ -12383,7 +12383,7 @@
           {
             "name": "content",
             "passed": true,
-            "url": "http://127.0.0.1:4368/expenses/39f7a520"
+            "url": "http://127.0.0.1:4368/expenses/015e45b1"
           },
           {
             "name": "search",
@@ -12398,30 +12398,30 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv41aabx-3bxey7"
+                "zzz-decoy-mv6ce7mz-ltrcrs"
               ],
               "controlMissing": [],
               "filteredRefs": [
-                "2eaad706",
-                "39f7a520"
+                "70949bb1",
+                "015e45b1"
               ]
             }
           },
           {
             "name": "update-existing",
-            "passed": true,
-            "ref": "39f7a520",
+            "passed": false,
+            "ref": "015e45b1",
             "detail": {
-              "ref": "39f7a520",
+              "ref": "015e45b1",
               "oldValue": "Hallway LED lightbulbs",
               "newValue": "Hallway LED lightbulbs (updated)",
-              "visibleAfterReload": true,
+              "visibleAfterReload": false,
               "apiStatus": 200,
               "field": "description",
               "comparedAsField": true,
-              "storedField": "Hallway LED lightbulbs (updated)",
-              "newValueStored": true,
-              "oldValueGone": true,
+              "storedField": "Hallway LED lightbulbs",
+              "newValueStored": false,
+              "oldValueGone": false,
               "rowsBefore": 3,
               "rowsAfter": 3,
               "rowCountUnchanged": true
@@ -12486,7 +12486,7 @@
             ],
             "detail": {
               "submit_status": 200,
-              "reload_url": "http://127.0.0.1:4369/expenses/140821ae",
+              "reload_url": "http://127.0.0.1:4369/expenses/cf099e22",
               "echoed": "Hallway LED lightbulbs"
             },
             "carry": {
@@ -12511,7 +12511,7 @@
           {
             "name": "content",
             "passed": true,
-            "url": "http://127.0.0.1:4369/expenses/140821ae"
+            "url": "http://127.0.0.1:4369/expenses/cf099e22"
           },
           {
             "name": "search",
@@ -12526,21 +12526,21 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv41ad8m-xixmcf"
+                "zzz-decoy-mv6cearv-zr0sbz"
               ],
               "controlMissing": [],
               "filteredRefs": [
-                "a4824bfd",
-                "140821ae"
+                "6f204070",
+                "cf099e22"
               ]
             }
           },
           {
             "name": "update-existing",
             "passed": true,
-            "ref": "140821ae",
+            "ref": "cf099e22",
             "detail": {
-              "ref": "140821ae",
+              "ref": "cf099e22",
               "oldValue": "Hallway LED lightbulbs",
               "newValue": "Hallway LED lightbulbs (updated)",
               "visibleAfterReload": true,
@@ -12672,7 +12672,7 @@
             ],
             "detail": {
               "submit_status": 200,
-              "reload_url": "http://127.0.0.1:4370/expenses/8e17da6e",
+              "reload_url": "http://127.0.0.1:4370/expenses/370572f7",
               "echoed": "Hallway LED lightbulbs"
             },
             "carry": {
@@ -12697,7 +12697,7 @@
           {
             "name": "content",
             "passed": true,
-            "url": "http://127.0.0.1:4370/expenses/8e17da6e"
+            "url": "http://127.0.0.1:4370/expenses/370572f7"
           },
           {
             "name": "search",
@@ -12712,21 +12712,21 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv41agbc-80sevr"
+                "zzz-decoy-mv6cee7g-5ey3m2"
               ],
               "controlMissing": [],
               "filteredRefs": [
-                "4cd7acde",
-                "8e17da6e"
+                "d6f6bfea",
+                "370572f7"
               ]
             }
           },
           {
             "name": "update-existing",
             "passed": true,
-            "ref": "8e17da6e",
+            "ref": "370572f7",
             "detail": {
-              "ref": "8e17da6e",
+              "ref": "370572f7",
               "oldValue": "Hallway LED lightbulbs",
               "newValue": "Hallway LED lightbulbs (updated)",
               "visibleAfterReload": true,
@@ -12800,7 +12800,7 @@
             ],
             "detail": {
               "submit_status": 200,
-              "reload_url": "http://127.0.0.1:4371/expenses/c8bee9cd",
+              "reload_url": "http://127.0.0.1:4371/expenses/c94f17bb",
               "echoed": "Hallway LED lightbulbs"
             },
             "carry": {
@@ -12825,7 +12825,7 @@
           {
             "name": "content",
             "passed": true,
-            "url": "http://127.0.0.1:4371/expenses/c8bee9cd"
+            "url": "http://127.0.0.1:4371/expenses/c94f17bb"
           },
           {
             "name": "search",
@@ -12840,21 +12840,21 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv41aj8z-4zb0ab"
+                "zzz-decoy-mv6cehia-7azl01"
               ],
               "controlMissing": [],
               "filteredRefs": [
-                "1f711887",
-                "c8bee9cd"
+                "71af3bc6",
+                "c94f17bb"
               ]
             }
           },
           {
             "name": "update-existing",
             "passed": true,
-            "ref": "c8bee9cd",
+            "ref": "c94f17bb",
             "detail": {
-              "ref": "c8bee9cd",
+              "ref": "c94f17bb",
               "oldValue": "Hallway LED lightbulbs",
               "newValue": "Hallway LED lightbulbs (updated)",
               "visibleAfterReload": true,
@@ -12925,9 +12925,9 @@
       "archetype": "library-catalogue",
       "framework": "raw",
       "task": "generate",
-      "original_sha": "sha256:9818c646bb7ee7aa464ae7393a19e2056240d06c436258c465a64e584e2a3321",
-      "corpus_tree_sha": "sha256:9818c646bb7ee7aa464ae7393a19e2056240d06c436258c465a64e584e2a3321",
-      "uplifted_sha": "sha256:c7be9466aa4a2bcdc9978802b9b45916483a148046dcaaac75cb4bc4d057284f",
+      "original_sha": "sha256:84d057f9e7d2ca17a5006e1f5a446381e489a4f8dd12c638280d3ae234421170",
+      "corpus_tree_sha": "sha256:84d057f9e7d2ca17a5006e1f5a446381e489a4f8dd12c638280d3ae234421170",
+      "uplifted_sha": "sha256:6c02d8bab3a3cc9c3b0cf710ae890e3fe8c3e762c154e768bffa79cd30900ca8",
       "seeded_defects": [
         "no-required"
       ],
@@ -12986,7 +12986,7 @@
             ],
             "detail": {
               "submit_status": 200,
-              "reload_url": "http://127.0.0.1:4372/requests/250bf5f3",
+              "reload_url": "http://127.0.0.1:4372/requests/62b5450a",
               "echoed": "Salvia nemorosa Caradonna"
             },
             "carry": {
@@ -13011,7 +13011,7 @@
           {
             "name": "content",
             "passed": true,
-            "url": "http://127.0.0.1:4372/requests/250bf5f3"
+            "url": "http://127.0.0.1:4372/requests/62b5450a"
           },
           {
             "name": "search",
@@ -13026,21 +13026,21 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv41amfq-8862cd"
+                "zzz-decoy-mv6cel2q-i537ye"
               ],
               "controlMissing": [],
               "filteredRefs": [
-                "3d74c2ff",
-                "250bf5f3"
+                "3a41943f",
+                "62b5450a"
               ]
             }
           },
           {
             "name": "update-existing",
             "passed": true,
-            "ref": "250bf5f3",
+            "ref": "62b5450a",
             "detail": {
-              "ref": "250bf5f3",
+              "ref": "62b5450a",
               "oldValue": "Salvia nemorosa Caradonna",
               "newValue": "Salvia nemorosa Caradonna (updated)",
               "visibleAfterReload": true,
@@ -13114,7 +13114,7 @@
             ],
             "detail": {
               "submit_status": 200,
-              "reload_url": "http://127.0.0.1:4373/requests/e4c34284",
+              "reload_url": "http://127.0.0.1:4373/requests/07c11b60",
               "echoed": "Salvia nemorosa Caradonna"
             },
             "carry": {
@@ -13139,7 +13139,7 @@
           {
             "name": "content",
             "passed": true,
-            "url": "http://127.0.0.1:4373/requests/e4c34284"
+            "url": "http://127.0.0.1:4373/requests/07c11b60"
           },
           {
             "name": "search",
@@ -13154,21 +13154,21 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv41apfd-ssrtna"
+                "zzz-decoy-mv6ceohn-w9yb4l"
               ],
               "controlMissing": [],
               "filteredRefs": [
-                "cd4fe03f",
-                "e4c34284"
+                "936e1f62",
+                "07c11b60"
               ]
             }
           },
           {
             "name": "update-existing",
             "passed": true,
-            "ref": "e4c34284",
+            "ref": "07c11b60",
             "detail": {
-              "ref": "e4c34284",
+              "ref": "07c11b60",
               "oldValue": "Salvia nemorosa Caradonna",
               "newValue": "Salvia nemorosa Caradonna (updated)",
               "visibleAfterReload": true,
@@ -13239,9 +13239,9 @@
       "archetype": "library-catalogue",
       "framework": "react",
       "task": "generate",
-      "original_sha": "sha256:32430fa168e04b6eea4a3921685716cf5535025a64e04c6cb14ab90257754b6c",
-      "corpus_tree_sha": "sha256:32430fa168e04b6eea4a3921685716cf5535025a64e04c6cb14ab90257754b6c",
-      "uplifted_sha": "sha256:690f79378badf6779d3d07748beb8a3bfd8699c605beae49396ceeb8dbb44942",
+      "original_sha": "sha256:02886c058a0b35161643b9978ceea4d06ac166cd8916eb53d6e68ba592ae4956",
+      "corpus_tree_sha": "sha256:02886c058a0b35161643b9978ceea4d06ac166cd8916eb53d6e68ba592ae4956",
+      "uplifted_sha": "sha256:77bc66c179b51053ae0d48228dd7893d6df233e7fbe83a5051c1cef674726ee8",
       "seeded_defects": [
         "no-required"
       ],
@@ -13300,7 +13300,7 @@
             ],
             "detail": {
               "submit_status": 200,
-              "reload_url": "http://127.0.0.1:4374/requests/9c807b2e",
+              "reload_url": "http://127.0.0.1:4374/requests/55be160d",
               "echoed": "Salvia nemorosa Caradonna"
             },
             "carry": {
@@ -13325,7 +13325,7 @@
           {
             "name": "content",
             "passed": true,
-            "url": "http://127.0.0.1:4374/requests/9c807b2e"
+            "url": "http://127.0.0.1:4374/requests/55be160d"
           },
           {
             "name": "search",
@@ -13340,21 +13340,21 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv41asiv-1812yj"
+                "zzz-decoy-mv6cesaq-p00jqs"
               ],
               "controlMissing": [],
               "filteredRefs": [
-                "6062001e",
-                "9c807b2e"
+                "b79e7758",
+                "55be160d"
               ]
             }
           },
           {
             "name": "update-existing",
             "passed": true,
-            "ref": "9c807b2e",
+            "ref": "55be160d",
             "detail": {
-              "ref": "9c807b2e",
+              "ref": "55be160d",
               "oldValue": "Salvia nemorosa Caradonna",
               "newValue": "Salvia nemorosa Caradonna (updated)",
               "visibleAfterReload": true,
@@ -13428,7 +13428,7 @@
             ],
             "detail": {
               "submit_status": 200,
-              "reload_url": "http://127.0.0.1:4375/requests/f09bc1af",
+              "reload_url": "http://127.0.0.1:4375/requests/408821e8",
               "echoed": "Salvia nemorosa Caradonna"
             },
             "carry": {
@@ -13453,7 +13453,7 @@
           {
             "name": "content",
             "passed": true,
-            "url": "http://127.0.0.1:4375/requests/f09bc1af"
+            "url": "http://127.0.0.1:4375/requests/408821e8"
           },
           {
             "name": "search",
@@ -13468,21 +13468,21 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv41avgw-7wobbc"
+                "zzz-decoy-mv6cevg7-9d520x"
               ],
               "controlMissing": [],
               "filteredRefs": [
-                "aed58193",
-                "f09bc1af"
+                "2ca5b492",
+                "408821e8"
               ]
             }
           },
           {
             "name": "update-existing",
             "passed": true,
-            "ref": "f09bc1af",
+            "ref": "408821e8",
             "detail": {
-              "ref": "f09bc1af",
+              "ref": "408821e8",
               "oldValue": "Salvia nemorosa Caradonna",
               "newValue": "Salvia nemorosa Caradonna (updated)",
               "visibleAfterReload": true,
@@ -13553,9 +13553,9 @@
       "archetype": "community-forum",
       "framework": "preact",
       "task": "generate",
-      "original_sha": "sha256:9c822e5841d61b4c3ead58c594bfa5885f5874641f28793eb2fe94cabd3290c8",
-      "corpus_tree_sha": "sha256:9c822e5841d61b4c3ead58c594bfa5885f5874641f28793eb2fe94cabd3290c8",
-      "uplifted_sha": "sha256:3beea273a390ddc3e684069f136c71c17b5a01d949c8d92ebf6a7d47ca24f2cb",
+      "original_sha": "sha256:aa08e9b714cc2f82c27d7bcce3e89b2e4c58359fc508482398908303d99d68ba",
+      "corpus_tree_sha": "sha256:aa08e9b714cc2f82c27d7bcce3e89b2e4c58359fc508482398908303d99d68ba",
+      "uplifted_sha": "sha256:c53bb64622f163f901dd69f07ae2b7a247b85a8c8988c1f83504d0a83af32038",
       "seeded_defects": [
         "no-required"
       ],
@@ -13653,7 +13653,7 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv41ayj0-b9tmvm"
+                "zzz-decoy-mv6cez0x-lib949"
               ],
               "controlMissing": [],
               "filteredRefs": []
@@ -13777,7 +13777,7 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv41b1fn-xoishe"
+                "zzz-decoy-mv6cf2f6-5pi9sa"
               ],
               "controlMissing": [],
               "filteredRefs": []
@@ -13859,9 +13859,9 @@
       "archetype": "community-forum",
       "framework": "vue",
       "task": "generate",
-      "original_sha": "sha256:df29fc5a0065bfecfc8805223d9e7e8a3f6f64395234b5b6f1e3a619d93caf9b",
-      "corpus_tree_sha": "sha256:df29fc5a0065bfecfc8805223d9e7e8a3f6f64395234b5b6f1e3a619d93caf9b",
-      "uplifted_sha": "sha256:7cbf5742b3a1c723f8d91691f9b4a43530db39a530ed268d8b9c30760bbe9a04",
+      "original_sha": "sha256:4bbc81eade5ae5d25bed9964ca4d748934b131fc8504b6fd068fabc9bca47948",
+      "corpus_tree_sha": "sha256:4bbc81eade5ae5d25bed9964ca4d748934b131fc8504b6fd068fabc9bca47948",
+      "uplifted_sha": "sha256:31186ecbf20d94f6d1cbfc336d20b9a56d5bef13dc87ef5436535738d829c238",
       "seeded_defects": [
         "no-required"
       ],
@@ -13959,7 +13959,7 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv41b4q0-wrx9zv"
+                "zzz-decoy-mv6cf5q9-qc0ejk"
               ],
               "controlMissing": [],
               "filteredRefs": []
@@ -14083,7 +14083,7 @@
               "excludesLeaked": [],
               "controlPresent": [
                 "zzz-decoy",
-                "zzz-decoy-mv41b7pi-z6uhs7"
+                "zzz-decoy-mv6cf8v6-10hi1r"
               ],
               "controlMissing": [],
               "filteredRefs": []

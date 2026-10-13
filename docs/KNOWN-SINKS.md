@@ -41,7 +41,7 @@ Three things follow, and each was checked rather than assumed:
 still emit none. A future "sanitize the generator" change now fails loudly instead of quietly deleting
 curriculum.
 
-## 2. The reflected query in the page title — a real gap in every non-Hono arm, frozen by invariant
+## 2. The reflected query in the page title — FIXED in every non-Hono arm (mwg-train-kipj)
 
 Separate from the above, and **not** defect-gated:
 
@@ -95,8 +95,8 @@ so it is asserted rather than described: `test/known-sinks.test.mjs` renders a h
 real `hono/html` tag and requires it to come out escaped, which means an upgrade that stopped escaping
 would fail a test rather than silently reopening this.
 
-**It is nevertheless not being fixed here, by explicit ruling.** Correcting the raw arm changes what the
-generator emits, which changes the bytes of every raw and webcomponents tree that carries a search
+**It was left unfixed for a while, by explicit ruling, because the fix moves frozen bytes.** Correcting any
+non-Hono arm changes what the generator emits, which changes the bytes of every tree that carries a search
 journey. That collides with the frozen-corpus invariant in both directions:
 
 - `pilot/CORPUS.json` plus `npm run check:specs`, which must reproduce the 35 pilot trees exactly;
@@ -104,12 +104,52 @@ journey. That collides with the frozen-corpus invariant in both directions:
   `test/tokens-record.test.mjs`.
 
 Re-recording the pilot corpus requires a completed browser run with staged uplifts
-(`scripts/pilot-corpus.mjs --record`), so the freeze cannot be re-taken from a lane at all. The fix is
-therefore deferred to whoever owns that pipeline, and the sink is recorded here instead. When it is fixed,
-both corpus records and the token figures move with it, in one reviewed change — not as a drive-by.
-**Re-record every non-Hono search tree and leave only the Hono ones alone.** Concretely, the arms whose
-`server.mjs` carries the search route and whose `page.mjs` interpolates unescaped: raw, webcomponents,
-react, preact, vue, svelte.
+(`scripts/pilot-corpus.mjs --record`). **mwg-train-kipj did exactly that**, in one reviewed change rather
+than a drive-by: the fix, the re-record and the token figures moved together.
+
+### The fix, as applied
+
+Every non-Hono page module now emits an inline `escapeTitle` helper and passes its title through it —
+`<title>${title}</title>` became `<title>${escapeTitle(title)}</title>` — for raw, webcomponents, react,
+preact, vue and svelte. The helper text is byte-for-byte the string this document and
+`test/reflected-title-helper.test.mjs` had already staged, and that test now also asserts the emitted copy
+matches it in every non-Hono module and is absent from Hono. The Hono arm is untouched on purpose: its
+tagged `html` template escapes at runtime, so escaping there would double-encode the title.
+
+Measured, not asserted: the reflection was reproduced against a really-served arm before the fix (a request
+for `/search?q=</title><script>alert(1)</script>` returned a document whose title element closed early and
+which contained a literal `<script>alert(1)</script>`) and re-run after it (the title comes back as
+`Search: &lt;/title&gt;&lt;script&gt;alert(1)&lt;/script&gt;` and no literal script tag appears). The route is
+emitted unconditionally by `serverSource()`, so it was live in all six non-Hono arms, not latent in any.
+
+What the re-record moved, all from `npm run pilot:run` → `pilot-corpus.mjs --record` → `train:tokens`:
+
+| figure | before | after |
+|---|---:|---:|
+| `app_sources` characters (original + uplifted) | 586,670 + 649,010 | 591,861 + 654,201 |
+| `app_sources` derived tokens | 308,920 | 311,516 |
+| `full_tree` derived tokens | 398,588 | 401,184 |
+| `pilot/CORPUS.json` trees reproducing | 30 of 35 differed | 35 of 35, 0 failures |
+
+The training corpus moves with it too, and this document said the opposite for one commit (corrected here, and
+raised as `mwg-train-lftf` by review): the tr-* trees are REGENERATED and compared against
+`pilot/TRAINING_CORPUS.json`, so the 210 tree hashes, the training token figures quoted from them and the
+committed journey evidence all had to be re-recorded as well. The bill is therefore three parts, not one:
+
+1. the pilot corpus and the pilot token figures (§ above);
+2. the training corpus, its token figures, and every document that quotes them - the corpus README, the
+top-level `README.md` and `docs/train/READINESS-EPIC.md`. Measured: `app_sources` 5,422,320 → 5,454,540
+   characters original and 5,570,266 → 5,602,486 uplifted, derived tokens 2,748,147 → 2,764,257, band
+   [2,061,110, 3,435,183] → [2,073,192, 3,455,321], `full_tree` tokens 3,235,789 → 3,251,899;
+3. `docs/train/corpus/records.json`, the browser-journey evidence, whose rows each attest to the sha256 of
+the tree that was driven (`check-train-records`: 34 of 40 rows went stale). All 40 were re-driven against
+the current trees, with the same outcomes as the run before the fix (396 carried out, 364 satisfied) -
+   which is also the evidence that escaping the title changed no behaviour.
+
+A generator change is judged by two gates, not one, and passing one says nothing about the other:
+`check:all` runs the check scripts (it catches part 3), while the training corpus and token records are
+asserted by `node --test` suites that only the fast gate runs (it catches parts 1 and 2). Measuring only the
+pilot corpus and concluding the rest had not moved is what made this document wrong for a commit.
 
 ### Correction: the radius is 30 trees, not six arms, and the exact bill (mwg-train-sia)
 
@@ -132,20 +172,24 @@ So any real fix costs one corpus re-record covering these 30, whichever side of 
 
 The failure signature is `npm run check:specs` failing 30 of 35: the gate hashes generated files, so an escaping helper
 in the emitted source changes the tree even though a clean title renders identically. Re-recording requires a browser
-run with staged uplifts (`scripts/pilot-corpus.mjs --record`), which cannot be done from a lane.
+run with staged uplifts (`scripts/pilot-corpus.mjs --record`) - a lane can and did run it (mwg-train-kipj, 214s
+through the heavy queue), so the earlier "cannot be done from a lane" ruling in this section was wrong about the
+tooling and only right about the cost.
 
-**The fix is staged, not applied.** `test/reflected-title-helper.test.mjs` holds the exact inline helper text, evaluated
-the way the generated module would, and asserts against the payload this section was raised from. The change in each
-page module is one line: `<title>${title}</title>` becomes `<title>${escapeTitle(title)}</title>`, with the helper
-emitted alongside it - it must be inline, because a generated project is standalone and cannot import from this repo.
-The ampersand is escaped first; escaping it last double-encodes `&lt;` into `&amp;lt;`.
+**The fix was staged here first, and is now applied** (mwg-train-kipj). `test/reflected-title-helper.test.mjs` holds
+the exact inline helper text, evaluated the way the generated module would, and asserts against the payload this
+section was raised from. The change in each page module is one line: `<title>${title}</title>` becomes
+`<title>${escapeTitle(title)}</title>`, with the helper emitted alongside it - it must be inline, because a generated
+project is standalone and cannot import from this repo. The ampersand is escaped first; escaping it last
+double-encodes `&lt;` into `&amp;lt;`.
 
-**And the debt is now pinned rather than described.** `test/reflected-title-escape.test.mjs` derives which arms still
-interpolate `title` unescaped and fails if that set differs from the recorded 30 in either direction - an arm that
-regresses is unlisted, and an arm that gets fixed is stale and must come off. Applying the fix therefore turns the list
-red until the re-record happens, which is the point: the bill cannot go out of date quietly. Hono is excluded by name
-rather than by text, because its emitted page contains the identical literal `<title>${title}</title>` while escaping
-at runtime through `hono/html`.
+**The debt was pinned, and paying it emptied the pin.** `test/reflected-title-escape.test.mjs` derived which arms
+still interpolated `title` unescaped and failed if that set differed from the recorded 30 in either direction - an arm
+that regressed was unlisted, and an arm that got fixed was stale and had to come off. Applying the fix emptied that
+list, so the suite is inverted rather than deleted: it now asserts that no non-Hono arm interpolates `title`
+unescaped, keeps the derived scan (so a regression still appears), and keeps the floor that the scan reaches a title
+line for every arm. Hono is excluded by name rather than by text, because its emitted page contains the identical
+literal `<title>${title}</title>` while escaping at runtime through `hono/html`.
 
 ## 3. Our own tooling — checked, and already safe
 
