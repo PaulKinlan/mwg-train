@@ -1,6 +1,6 @@
-# Account recovery — illustrative two-step visual references
+# Account recovery — illustrative recovery-state visual references
 
-- **Archetype:** `account-recovery`; request form and depicted inbox notice.
+- **Archetype:** `account-recovery`; reset request, invalid-address refusal and depicted inbox notice.
 - **Generation:** 2026-10-11 UTC: REGENERATED with an explicitly named model, replacing the 2026-10-09 boards (the owner rejected those on sight; bead `mwg-train-c1c`). The first set was produced with no explicit `model` and so fell back to `gemini-3-pro-image`, and its records could report that model but never attest it. `scripts/generate-archetype-boards.mjs` now passes `model: gemini-nano-banana-2.1` explicitly to the project's model gateway and refuses to write a board unless the response's own `modelVersion` attestation equals it, so every board here is gateway-attested as `gemini-nano-banana-2.1`. Recorded settings: `responseModalities: ["IMAGE"]`, temperature 0.7, `maxOutputTokens` 8192; each board returned a 1376 × 768 JPEG. The prompts below are UNCHANGED - the generator reads them out of this file and refuses to run unless the Wave 2 prompts reproduce the digest register byte-for-byte, so this is the same brief rendered by a named model, not a new brief.
 - **Policy:** `excluded_from_training: true`, `approved_for_training: false`. These are design-planning rasters, not a functional reset flow, a sent message, a verified link, a generated-site capture, a sealed evaluation target or training/conformance evidence.
 - **Cross-family provenance:** [Wave 2 image and prompt digest register](../../../provenance/assets/design-reference-wave2.md).
