@@ -11,6 +11,7 @@ export const CONSERVATIVE_TRAIN_CONTEXT = 65_536;
 const SHA = /^sha256:[a-f0-9]{64}$/;
 const sha = (bytes) => `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
 const deny = (code, message) => { throw new Error(`${code}: ${message}`); };
+const nonEmpty = (value) => typeof value === 'string' && value.trim().length > 0;
 const within = (root, path) => { const rel = relative(root, path); return rel && rel !== '..' && !rel.startsWith(`..${sep}`) && !isAbsolute(rel); };
 const pathIn = (root, name) => {
   if (typeof name !== 'string' || !name || name.includes('\\') || isAbsolute(name)) deny('UNSAFE_PATH', String(name));
@@ -18,8 +19,10 @@ const pathIn = (root, name) => {
   if (!within(root, path)) deny('UNSAFE_PATH', name);
   return path;
 };
-const excluded = (name) => name.split('/').some((part) => part === 'node_modules' || part === '.git' || part === 'dist' || part === 'build') ||
-  /(?:^|\/)(?:package-lock\.json|pnpm-lock\.yaml|yarn\.lock|bun\.lockb?|spec\.json|README\.md|\.DS_Store)$/.test(name) ||
+const BUILD_DIRS = new Set(['node_modules', '.git', 'dist', 'build', '.next', 'out', 'coverage', '_site', 'target']);
+const excluded = (name) => name.split('/').some((part) => BUILD_DIRS.has(part)) ||
+  name === 'spec.json' || // the root-level corpus harness spec, not an app's nested source file
+  /(?:^|\/)(?:package-lock\.json|npm-shrinkwrap\.json|pnpm-lock\.yaml|yarn\.lock|bun\.lockb?|README\.md|\.DS_Store)$/.test(name) ||
   /\.(?:png|jpe?g|webp|gif|svg|ico|woff2?|ttf|pdf|zip|wasm|map|lock)$/i.test(name);
 
 /** Deterministic application source selection. Reject symlinks and binary bytes rather than leaking them. */
@@ -68,11 +71,15 @@ export function serializeSft({ manifestPath, root, outputPath, tokenizer }) {
   const rows = bytes.toString('utf8').trim().split('\n').map((line) => JSON.parse(line));
   const jsonl = [], messagesByRow = [], char4ByRow = [], measured = [], seen = new Set();
   for (const row of rows) {
-    if (!row || row.split !== 'train' || !isTrainable(row) || typeof row.rights_ref !== 'string' || !row.rights_ref ||
-      !/^tr-\d{2}-[a-z0-9-]+$/.test(row.project_id ?? '') || typeof row.brief_id !== 'string' || !row.brief_id || seen.has(row.project_id)) {
-      deny('NOT_APPROVED', `row ${row?.project_id ?? '?'} lacks unique, explicitly trainable project provenance`);
+    if (!row || row.split !== 'train' || !isTrainable(row) || !nonEmpty(row.rights_ref) ||
+      !nonEmpty(row.approved_by) || !nonEmpty(row.approved_at) ||
+      !/^tr-\d{2}-[a-z0-9-]+$/.test(row.project_id ?? '') || !nonEmpty(row.brief_id) || seen.has(row.project_id)) {
+      deny('NOT_APPROVED', `row ${row?.project_id ?? '?'} lacks unique, explicitly approved project provenance`);
     }
     seen.add(row.project_id);
+    const rightsPath = pathIn(rootReal, row.rights_ref);
+    if (!existsSync(rightsPath) || lstatSync(rightsPath).isSymbolicLink() || !lstatSync(rightsPath).isFile() ||
+      !within(rootReal, realpathSync(rightsPath))) deny('NOT_APPROVED', `missing or unsafe rights_ref for ${row.project_id}`);
     const promptPath = pathIn(rootReal, row.prompt_path);
     const sourcePath = pathIn(rootReal, row.project_dir);
     if (lstatSync(promptPath).isSymbolicLink() || lstatSync(sourcePath).isSymbolicLink() || !within(rootReal, realpathSync(promptPath)) || !within(rootReal, realpathSync(sourcePath))) deny('SYMLINK_SOURCE', row.project_id);

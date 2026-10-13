@@ -14,9 +14,12 @@ function fixture(edit = (row) => row) {
   writeFileSync(join(root, 'prompt.txt'), 'Build a Hono service with a persisted form and server route.');
   writeFileSync(join(root, 'project', 'server.mjs'), 'export const app = "ok";\n');
   writeFileSync(join(root, 'project', 'package-lock.json'), 'DO-NOT-TRAIN');
+  mkdirSync(join(root, 'docs', 'provenance', 'assets'), { recursive: true });
+  writeFileSync(join(root, 'docs', 'provenance', 'assets', 'approved-asset.md'), 'Synthetic test approval; not a real training permission.\n');
   const target = serializeFiles(projectSources(join(root, 'project')));
   const row = edit({ brief_id: 'tr-01-v1', family_id: 'tr-01', split: 'train', project_id: 'tr-01-hono',
     arm: 'A1_self_generated', excluded_from_training: false, approved_for_training: true,
+    approved_by: 'synthetic-test-fixture', approved_at: '2026-10-13T00:00:00Z',
     rights_ref: 'docs/provenance/assets/approved-asset.md', prompt_path: 'prompt.txt', project_dir: 'project',
     prompt_sha256: sha(readFileSync(join(root, 'prompt.txt'))), target_sha256: sha(target) });
   const manifestPath = join(root, 'approved.jsonl');
@@ -35,6 +38,20 @@ test('Python helper refuses missing pinned files before importing optional token
   assert.equal(result.status, 1);
   assert.match(result.stderr, /TOKENIZER_REFUSED/);
 }));
+
+test('Python helper rejects invented reasoning and any extra message keys before tokenizer work', () => {
+  const code = `import json, runpy, sys\nrunpy.run_path('scripts/count-deepseek-sft.py')['validate_pairs'](json.load(sys.stdin))`;
+  const count = (pair) => spawnSync('python3', ['-c', code], {
+    cwd: process.cwd(), input: JSON.stringify([pair]), encoding: 'utf8', timeout: 10_000,
+  });
+  const user = { role: 'user', content: 'brief' }, assistant = { role: 'assistant', content: 'code' };
+  assert.equal(count([user, assistant]).status, 0);
+  for (const extra of [{ reasoning_content: 'SECRET TRACE' }, { tool_calls: [] }, { metadata: {} }]) {
+    const result = count([user, { ...assistant, ...extra }]);
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /only role\/content/);
+  }
+});
 
 test('CLI refuses a missing approved manifest/tokenizer instead of writing output', () => {
   const result = spawnSync(process.execPath, ['scripts/serialize-sft.mjs'], { cwd: process.cwd(), encoding: 'utf8' });
@@ -62,6 +79,11 @@ test('no missing approval, changed prompt, changed target, or held-out split can
   for (const change of [
     (r) => { r.approved_for_training = false; },
     (r) => { r.excluded_from_training = true; },
+    (r) => { delete r.approved_by; },
+    (r) => { r.approved_by = '   '; },
+    (r) => { delete r.approved_at; },
+    (r) => { r.approved_at = '   '; },
+    (r) => { r.rights_ref = 'docs/provenance/assets/does-not-exist.md'; },
     (r) => { r.prompt_sha256 = sha('old prompt'); },
     (r) => { r.target_sha256 = sha('old target'); },
     (r) => { r.split = 'eval'; },
@@ -74,6 +96,31 @@ test('no missing approval, changed prompt, changed target, or held-out split can
     } finally { rmSync(f.root, { recursive: true, force: true }); }
   }
 });
+
+test('source selection matches documented build/lock/readme exclusions but retains nested app spec.json', () => withFixture((f) => {
+  const project = join(f.root, 'project');
+  for (const dir of ['dist', 'build', '.next', 'out', 'coverage', '_site', 'target']) {
+    mkdirSync(join(project, dir));
+    writeFileSync(join(project, dir, 'generated.mjs'), 'DO-NOT-TRAIN');
+  }
+  for (const file of ['README.md', '.DS_Store', 'spec.json', 'npm-shrinkwrap.json']) {
+    writeFileSync(join(project, file), 'DO-NOT-TRAIN');
+  }
+  assert.equal(serializeFiles(projectSources(project)), f.target, 'excluded files must not change the target digest');
+  mkdirSync(join(project, 'src'));
+  writeFileSync(join(project, 'src', 'spec.json'), '{"useful":true}\n');
+  assert.match(serializeFiles(projectSources(project)), /FILE "src\/spec.json" BYTES/);
+}));
+
+test('a missing or symlinked rights record fails before output even with an approval flag', () => withFixture((f) => {
+  const ref = join(f.root, f.row.rights_ref);
+  rmSync(ref);
+  assert.throws(() => serializeSft({ ...f, tokenizer: tokenizer() }), /NOT_APPROVED/);
+  assert.equal(existsSync(f.outputPath), false);
+  symlinkSync(join(f.root, 'prompt.txt'), ref);
+  assert.throws(() => serializeSft({ ...f, tokenizer: tokenizer() }), /NOT_APPROVED/);
+  assert.equal(existsSync(f.outputPath), false);
+}));
 
 test('both conservative trainCtx and 262K LoRA shape exceedances fail with exact measured counts, never truncate', () => withFixture((f) => {
   for (const n of [CONSERVATIVE_TRAIN_CONTEXT + 1, LORA_SHAPE_CONTEXT + 1]) {
