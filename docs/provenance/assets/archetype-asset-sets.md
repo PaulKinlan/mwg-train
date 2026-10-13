@@ -25,7 +25,7 @@ store, the register or the target have moved apart.
 ### account-recovery
 
 - Target: `docs/design/archetypes/account-recovery`
-- Readme: `docs/design/archetypes/account-recovery/README.md` (sha256 `3939164eed4a7566fdeacc14c08fe7ed73c3fee6932fa1e1eb4b87906499572a`)
+- Readme: `docs/design/archetypes/account-recovery/README.md` (sha256 `7d2984bbfcdded721bafdb82df999a07baa1fad8859285f567120f4c30c26905`)
 - Stylesheet: `docs/design/archetypes/account-recovery/demo/styles.css` (sha256 `b71411c5b9dfca99ac84ef191eb022140c1fd04ac87d0c56941c52df94fa1b6a`)
 - Documents: `docs/design/archetypes/account-recovery/demo/compare.html`, `docs/design/archetypes/account-recovery/demo/index.html`
 - Rights: `excluded_from_training: true`, `approved_for_training: false` from `docs/design/archetypes/account-recovery/README.md:5`

@@ -4,12 +4,12 @@
     "target_dir": "docs/design/archetypes/account-recovery",
     "readme": {
       "path": "docs/design/archetypes/account-recovery/README.md",
-      "sha256": "3939164eed4a7566fdeacc14c08fe7ed73c3fee6932fa1e1eb4b87906499572a"
+      "sha256": "7d2984bbfcdded721bafdb82df999a07baa1fad8859285f567120f4c30c26905"
     },
     "documents": [
       {
         "path": "docs/design/archetypes/account-recovery/demo/compare.html",
-        "sha256": "6a8c1db9135e62b10a5468aec27bbb69b302fa4f8c947a4e3dc3d2f87dbb4166"
+        "sha256": "9682811838720adf99e119e3b7a7ee255578b6cced83fa5dbec8a4768a8036f2"
       },
       {
         "path": "docs/design/archetypes/account-recovery/demo/index.html",
@@ -72,7 +72,7 @@
       "strings": [],
       "apparatus": true,
       "source": "docs/design/archetypes/account-recovery/demo/compare.html",
-      "sha256": "6a8c1db9135e62b10a5468aec27bbb69b302fa4f8c947a4e3dc3d2f87dbb4166"
+      "sha256": "9682811838720adf99e119e3b7a7ee255578b6cced83fa5dbec8a4768a8036f2"
     },
     "index.html": {
       "title": "Account recovery · visual demo",
