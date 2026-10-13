@@ -128,6 +128,54 @@ function checkForPrefix(file) {
   return null;
 }
 
+// Coverage contract (mwg-train-dfas): .fleet/coverage-mapping.json is read BOTH here and by the
+// fleet coverage oracle (remote/check-coverage.py), from the same bytes. The oracle's import scan
+// cannot see named imports - a test can bind only `launchChrome` out of the cdp module, carrying
+// the stem solely in the module path - so a source file covered exclusively that way looks
+// uncovered to the oracle even when this gate runs its three importing suites. Declaring such
+// files in the shared contract and selecting from it HERE means the gate and the oracle can no
+// longer disagree about what covers what: a mapping that rots fails this gate closed instead of
+// warning after the fact (the drift fleet-r571 caught when the contract and the selection were
+// separate artefacts).
+const coverageMappingPath = process.env.FAST_GATE_COVERAGE_MAP
+  ? path.resolve(process.env.FAST_GATE_COVERAGE_MAP)
+  : path.join(ROOT, '.fleet', 'coverage-mapping.json');
+let coverageMapping = {};
+if (fs.existsSync(coverageMappingPath)) {
+  try {
+    coverageMapping = JSON.parse(fs.readFileSync(coverageMappingPath, 'utf8'));
+  } catch (error) {
+    console.error(`fast-gate: FAIL: coverage mapping ${coverageMappingPath} is not valid JSON: ${error.message}`);
+    process.exit(1);
+  }
+  if (typeof coverageMapping !== 'object' || coverageMapping === null || Array.isArray(coverageMapping)) {
+    console.error(`fast-gate: FAIL: coverage mapping ${coverageMappingPath} must be a JSON object of file -> suites.`);
+    process.exit(1);
+  }
+  // Validate the WHOLE contract at load, not just the entries this run selects (mwg-train-ukct):
+  // the mapping file itself is exempt from the changed-file unmapped check (.fleet/ prefix), so a
+  // mapping edited on its own would otherwise pass green while naming a suite no branch can ever
+  // run. Rot is caught the moment it lands, whichever files changed. Keys carrying glob
+  // metacharacters are exempt from the on-disk key check: the fleet oracle also accepts fnmatch
+  // patterns this gate's exact-match consumption does not select, and a pattern is not a file.
+  for (const [mappedFile, suites] of Object.entries(coverageMapping)) {
+    if (!Array.isArray(suites) || suites.length === 0 || suites.some((s) => typeof s !== 'string')) {
+      console.error(`fast-gate: FAIL: coverage mapping entry for ${mappedFile} must be a non-empty array of suite paths.`);
+      process.exit(1);
+    }
+    if (!/[*?\[]/.test(mappedFile) && !fs.existsSync(path.join(ROOT, mappedFile))) {
+      console.error(`fast-gate: FAIL: coverage mapping key ${mappedFile} does not exist on disk.`);
+      process.exit(1);
+    }
+    for (const suite of suites) {
+      if (!fs.existsSync(path.join(ROOT, suite))) {
+        console.error(`fast-gate: FAIL: coverage mapping entry for ${mappedFile} names a suite that is not a file on disk: ${suite}`);
+        process.exit(1);
+      }
+    }
+  }
+}
+
 // Explicit script mapping for check scripts that don't have direct unit tests
 const checkScriptMap = {
   'scripts/validate-provenance.mjs': 'lint:provenance',
@@ -268,6 +316,16 @@ for (const file of changedFiles) {
     matched = true;
   }
 
+  // Explicit coverage contract entry (validated wholesale at load — see coverageMapping above):
+  // selecting the declared suites is all that remains to do here.
+  const mappedSuites = coverageMapping[file];
+  if (mappedSuites !== undefined) {
+    for (const suite of mappedSuites) {
+      selectedSuites.add(suite);
+    }
+    matched = true;
+  }
+
   if (matched || checkScriptMap[file]) {
     continue;
   }
@@ -295,6 +353,16 @@ if (selectedSuites.size === 0 && selectedChecks.size === 0) {
 
 const suitesToRun = Array.from(selectedSuites).sort();
 const checksToRun = Array.from(selectedChecks).sort();
+
+// Listing mode (FAST_GATE_LIST=1): print the selection and exit without executing anything. Used by
+// test/fast-gate.test.mjs to pin mapping selections cheaply - the cdp.mjs contract maps to three
+// BROWSER suites, and re-launching Chrome for every mapping assertion would tax every fast gate
+// (docs/speed.md). The unmapped fail-closed check above still applies in this mode, so a listing
+// can never paper over a file the gate cannot cover.
+if (process.env.FAST_GATE_LIST) {
+  console.log(`fast-gate: would run: checks=[${checksToRun.join(' ')}] suites=[${suitesToRun.join(' ')}]`);
+  process.exit(0);
+}
 
 console.log(`fast-gate: running ${checksToRun.length} check(s) and ${suitesToRun.length} test suite(s)`);
 

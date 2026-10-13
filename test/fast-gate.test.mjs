@@ -1,5 +1,7 @@
 import { test } from 'node:test';
-import assert from 'node:assert';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
@@ -93,4 +95,67 @@ test('fast-gate does not fail on other files inside an evaluation fixture projec
   const res = spawnSync('node', [FAST_GATE], { cwd: ROOT, env, encoding: 'utf8' });
   assert.strictEqual(res.status, 0, `expected exit 0, got ${res.status}: ${res.stderr}`);
   assert.ok(!res.stderr.includes('unmapped changed files'), 'must not report an unmapped file');
+});
+
+test('fast-gate selects the suites declared in .fleet/coverage-mapping.json (mwg-train-dfas)', () => {
+  // The fleet coverage oracle's import scan cannot see named imports, so src/corpus/cdp.mjs - whose
+  // three covering suites each bind only `launchChrome` out of that module - is declared in the
+  // shared contract file instead. FAST_GATE_LIST pins the selection without launching Chrome: the
+  // mapped suites are browser suites, and re-running them for every mapping assertion would tax
+  // every fast gate.
+  const env = { ...process.env, GIT_CHANGED: 'src/corpus/cdp.mjs', FAST_GATE_LIST: '1' };
+  const res = spawnSync('node', [FAST_GATE], { cwd: ROOT, env, encoding: 'utf8' });
+  assert.strictEqual(res.status, 0, `expected exit 0, got ${res.status}: ${res.stderr}`);
+  assert.ok(res.stdout.includes('fast-gate: would run:'), 'list mode must describe the selection');
+  for (const suite of ['test/capture-state.test.mjs', 'test/capture-flow.test.mjs', 'test/eval-starters.test.mjs']) {
+    assert.ok(res.stdout.includes(suite), `must select ${suite}`);
+  }
+});
+
+test('fast-gate fails closed when the coverage mapping names a suite that does not exist', () => {
+  // A contract entry that names a missing suite must fail the gate rather than silently skipping:
+  // a skip would let the oracle keep crediting a suite the gate never runs (fleet-r571's drift).
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'mwg-fast-gate-map-'));
+  try {
+    const mapPath = path.join(tmp, 'coverage-mapping.json');
+    fs.writeFileSync(mapPath, JSON.stringify({ 'src/eval/cost.mjs': ['test/does-not-exist.test.mjs'] }));
+    const env = { ...process.env, GIT_CHANGED: 'src/eval/cost.mjs', FAST_GATE_LIST: '1', FAST_GATE_COVERAGE_MAP: mapPath };
+    const res = spawnSync('node', [FAST_GATE], { cwd: ROOT, env, encoding: 'utf8' });
+    assert.notStrictEqual(res.status, 0, 'a rotten mapping entry must fail the gate');
+    assert.ok(res.stderr.includes('not a file on disk'), `must name the missing suite: ${res.stderr}`);
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
+test('fast-gate validates the coverage contract even when only the mapping file changed (mwg-train-ukct)', () => {
+  // .fleet/ is exempt from the changed-file unmapped check, so a rotten mapping edited on its own
+  // used to pass green: no mapped source file was in the changed set, so no entry was ever
+  // selected - and nothing validated the rest of the contract. Validation now runs at load,
+  // unconditionally, so the gate fails closed whichever files changed.
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'mwg-fast-gate-map2-'));
+  try {
+    const mapPath = path.join(tmp, 'coverage-mapping.json');
+    fs.writeFileSync(mapPath, JSON.stringify({ 'src/corpus/cdp.mjs': ['test/capture-state.test.mjs'], 'src/eval/cost.mjs': ['test/does-not-exist.test.mjs'] }));
+    const env = { ...process.env, GIT_CHANGED: '.fleet/coverage-mapping.json', FAST_GATE_LIST: '1', FAST_GATE_COVERAGE_MAP: mapPath };
+    const res = spawnSync('node', [FAST_GATE], { cwd: ROOT, env, encoding: 'utf8' });
+    assert.notStrictEqual(res.status, 0, 'a rotten mapping must fail the gate even when no mapped source file changed');
+    assert.ok(res.stderr.includes('not a file on disk'), `must name the missing suite: ${res.stderr}`);
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
+test('the committed coverage mapping stays truthful: every mapped key and suite exists on disk', () => {
+  // The contract file is read by two independent systems (this gate and fleet's coverage oracle);
+  // this test is the anti-rot layer for the committed copy - a renamed suite or a deleted source
+  // file is caught here, at the moment of the edit, not after a future branch trips over it.
+  const mapping = JSON.parse(fs.readFileSync(path.join(ROOT, '.fleet', 'coverage-mapping.json'), 'utf8'));
+  for (const [file, suites] of Object.entries(mapping)) {
+    assert.ok(fs.existsSync(path.join(ROOT, file)), `mapping key ${file} does not exist on disk`);
+    assert.ok(Array.isArray(suites) && suites.length > 0, `mapping entry for ${file} must be a non-empty array`);
+    for (const suite of suites) {
+      assert.ok(fs.existsSync(path.join(ROOT, suite)), `mapping for ${file} names missing suite ${suite}`);
+    }
+  }
 });
