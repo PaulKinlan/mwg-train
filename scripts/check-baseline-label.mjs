@@ -346,6 +346,8 @@ export const DOCUMENTS = {
   'docs/design/archetypes/product-card-comparison/plan.md': 'design',
   'docs/eval/ATTRIBUTION.md': 'contract',
   'docs/eval/PREREGISTRATION.md': 'contract',
+  'docs/eval/decode-config.deepseek-flash.json': 'config', // proposed request knobs, not a measured floor result
+  'docs/eval/evaluator-interface-contract.md': 'design', // preregistration amendment draft, not yet ratified
   'docs/eval/owner-identity.json': 'config',
   'docs/eval/pricing.sheets.md': 'provider-data',
   'docs/eval/quotes.raw/fetched.json': 'provider-data',

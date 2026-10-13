@@ -103,6 +103,20 @@ export function buildKey({ projectId, model }) {
   return `${projectId}@${model}`;
 }
 
+/**
+ * Model-generated evaluation builds have a fourth identity component: the exact decode-config SHA-256.
+ * Existing deterministic corpus keys remain project@model (no inference occurred). This separate entry point
+ * refuses an unpinned model run rather than silently colliding with another decoding configuration.
+ */
+export function evaluationBuildKey({ projectId, model, decodeConfigSha256 }) {
+  const base = buildKey({ projectId, model });
+  if (!isProviderModelIdentity(model)) throw new Error('evaluation build key: a model-generated build needs a provider/id');
+  if (typeof decodeConfigSha256 !== 'string' || !/^[a-f0-9]{64}$/.test(decodeConfigSha256)) {
+    throw new Error('evaluation build key: missing exact decode-config SHA-256');
+  }
+  return `${base}@decode-sha256:${decodeConfigSha256}`;
+}
+
 /** The same key, read out of a record row that carries `project_id` and `model`. */
 export function buildKeyForRow(row) {
   if (row === null || typeof row !== 'object') throw new Error('build key: a record row is required');
