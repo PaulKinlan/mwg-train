@@ -21,5 +21,23 @@
   ],
   "scripts/verify-contact-lead-demo.mjs": [
     "test/demo-verifiers.test.mjs"
+  ],
+  "docs/design/archetypes/account-recovery/demo/compare.html": [
+    "test/demo-verifiers.test.mjs"
+  ],
+  "docs/design/archetypes/account-recovery/demo/index.html": [
+    "test/demo-verifiers.test.mjs"
+  ],
+  "docs/design/archetypes/event-registration/demo/compare.html": [
+    "test/demo-verifiers.test.mjs"
+  ],
+  "docs/design/archetypes/event-registration/demo/index.html": [
+    "test/demo-verifiers.test.mjs"
+  ],
+  "docs/design/archetypes/contact-lead/demo/compare.html": [
+    "test/demo-verifiers.test.mjs"
+  ],
+  "docs/design/archetypes/contact-lead/demo/index.html": [
+    "test/demo-verifiers.test.mjs"
   ]
 }
