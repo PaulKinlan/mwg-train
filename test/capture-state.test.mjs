@@ -90,6 +90,12 @@ const pages = {
     + ' var f = document.getElementById("late-form");'
     + ' f.addEventListener("submit", function (e) { e.preventDefault(); var p = document.createElement("p");'
     + ' p.setAttribute("role", "alert"); p.textContent = "Late refusal shown"; document.body.appendChild(p); }); }, 1500);</script>',
+  // mwg-train-78z6. Help text that already contains the refusal marker: without the before-sample, a drive
+  // whose submission SUCCEEDED would pass the after-check on this text and be compared against a refusal board.
+  '/marker-already-there': '<form id="clean-form"><input id="q" name="q" value="filled"><button type="submit">Send</button></form>'
+    + '<p>Orders could not be submitted? Contact support and we will help.</p>'
+    + '<script>document.getElementById("clean-form").addEventListener("submit", (e) => { e.preventDefault();'
+    + ' const p = document.createElement("p"); p.textContent = "Thank you - your order was accepted"; document.body.appendChild(p); });</script>',
   '/refusal-form': '<form id="reserve" action="/refusal-form" method="get"><label for="r">Researcher name</label><input id="r" name="researcher"><button type="submit">Request reservation</button></form>'
     + '<script>document.getElementById("reserve").addEventListener("submit", (e) => { e.preventDefault(); const v = document.getElementById("r").value; document.getElementById("banner")?.remove(); const p = document.createElement("p"); p.id = "banner"; p.setAttribute("role", "alert"); p.textContent = v ? "Reservation submitted for " + v : "Your reservation could not be submitted"; document.body.appendChild(p); });</script>',
 };
@@ -386,6 +392,36 @@ test('a drive with no expectText is refused before any browser starts', async ()
       () => captureSignature({ chrome: null, projectDir: TMP, port: 7966, runDir, drive: { submit: 'form#f' } }),
       (error) => error instanceof TypeError && /expectText is required/.test(error.message),
       'a drive without expectText was not refused',
+    );
+  } finally {
+    rmSync(runDir, { recursive: true, force: true });
+  }
+});
+
+test('a marker the clean page already carries is refused, not treated as reaching the state', async () => {
+  // mwg-train-78z6 (rev-1). The after-check alone cannot tell a refusal from a successful submission when the
+  // clean page already shows the marker in help text: here the submission SUCCEEDS ("Thank you - your order was
+  // accepted") while the marker sits in the footer, so without the before-sample this drive would pass and its
+  // screenshot of a successful state would be compared against a refusal board with full confidence.
+  const chrome = await getChrome();
+  const runDir = mkdtempSync(join(tmpdir(), 'mwg-capture-drive-marker-'));
+  try {
+    const projectDir = join(runDir, 'project');
+    mkdirSync(projectDir, { recursive: true });
+    writeFixture(projectDir);
+
+    await assert.rejects(
+      () =>
+        captureSignature({
+          chrome,
+          projectDir,
+          port: 7967,
+          runDir,
+          path: '/marker-already-there',
+          drive: { submit: 'form#clean-form', expectText: 'could not be submitted' },
+        }),
+      (error) => error instanceof Error && /already on the page before the drive/.test(error.message),
+      'a pre-existing marker let a successful submission pass as the refusal state',
     );
   } finally {
     rmSync(runDir, { recursive: true, force: true });

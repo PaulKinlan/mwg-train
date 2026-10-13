@@ -118,6 +118,22 @@ export async function captureSignature({ chrome, projectDir, port, runDir, viewp
       for (const selector of [...Object.keys(drive.fill ?? {}), ...(drive.submit ? [drive.submit] : [])]) {
         await page.waitFor(selector);
       }
+      // mwg-train-78z6: the marker is sampled BEFORE the drive as well as after. A marker that the clean page
+      // already carries - help text like "orders could not be submitted? contact support" - cannot distinguish
+      // the state the board depicts from the page as it loaded, so a submission that silently SUCCEEDED would
+      // pass the after-check on text that was there all along. innerText, not textContent, so a message that is
+      // present in the markup but not rendered (a hidden error element the state reveals) still counts as
+      // absent until the state actually shows it.
+      if (drive.expectText) {
+        const beforeText = await page
+          .evaluate('return document.body ? document.body.innerText : ""')
+          .catch(() => '');
+        if (String(beforeText).includes(drive.expectText)) {
+          throw new Error(
+            `captureSignature: drive.expectText ${JSON.stringify(drive.expectText)} is already on the page before the drive, so it cannot tell the state the board depicts from the clean page - choose a marker the refusal ADDS (mwg-train-78z6)`,
+          );
+        }
+      }
       for (const [selector, value] of Object.entries(drive.fill ?? {})) await page.type(selector, String(value));
       if (drive.submit) await page.submit(drive.submit);
       // `submit` waits for the document to settle, but a refusal rendered CLIENT-side makes no request, so that
