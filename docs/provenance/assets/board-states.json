@@ -177,5 +177,11 @@
       "kind": "interaction",
       "source": "the refusal is a re-render of the reply composer after a refused submission with a missing required note body (plan.md:75-76, fam-14): a state of the form, not a document - the same convention as the Wave 2 refusal boards and booking's step4-error.jpg"
     }
+  },
+  "job-board": {
+    "step1-error.jpg": {
+      "path": null,
+      "kind": "interaction",
+      "source": "the posting refusal is a re-render of the /jobs/new form after a refused submission (plan.md:110, plan.md:119); a state of the form, not a document - the same convention as booking's step4-error.jpg"    }
   }
 }
