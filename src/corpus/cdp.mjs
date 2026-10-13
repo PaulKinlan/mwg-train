@@ -38,7 +38,86 @@ export class CdpError extends Error {
   }
 }
 
-function chromeBinary() {
+/**
+ * Whether this process is allowed to run Chrome without its sandbox. An explicit, documented opt-in rather than a
+ * fallback: the sandbox is the only thing between generated code and this host, so it is on unless an operator says
+ * otherwise, and the same shape as MWG_ALLOW_UNSANDBOXED_GENERATED_SERVER in src/eval/generated-server.mjs.
+ */
+export function chromeIsUnsandboxed(env = process.env) {
+  return env.MWG_ALLOW_UNSANDBOXED_CHROME === '1';
+}
+
+/**
+ * The arguments Chrome is launched with, in one place so a test can read them without starting a browser.
+ *
+ * `--no-sandbox` used to be here unconditionally, and it was the one hole in this project's sandboxing: the
+ * generated server is wrapped in bwrap with its environment stripped, and then the browser that drives the
+ * generated code was launched with its renderer sandbox off. Measured on this VM (mwg-train-u7ev), Chrome starts
+ * fine without the flag - user namespaces are available - and the difference is the whole point: with the flag, 0 of
+ * 5 renderers are in their own user namespace; without it, 5 of 5 are.
+ *
+ * Chrome will refuse to start on a host with no user namespaces and no setuid helper. That is a real environment and
+ * the reason the opt-in exists, but it is not a reason to run unsandboxed by default on a host that can sandbox.
+ */
+/**
+ * Caller arguments this project's launch sites are measured to need, as EXACT strings.
+ *
+ * An ALLOWLIST rather than a list of flags to refuse, because the refusal list could not be finished: mwg-train-p58l was
+ * a caller passing --no-sandbox in extra args, the fix for it was a denylist, and mwg-train-kkcv then named
+ * --disable-seccomp-filter-sandbox - with --disable-namespace-sandbox and whatever Chromium adds next still to come.
+ * That is the shape of a class that keeps producing findings, and this lane had already recorded the lesson
+ * (allowlist, never denylist) before writing the denylist. A list of what may pass is finite; a list of what may not is
+ * not, and every entry in it was found by a reviewer.
+ *
+ * The entries are whole arguments, not flag names, and that distinction is mwg-train-c1nk: allowing
+ * --proxy-bypass-list by NAME let a caller pass --proxy-bypass-list=* and bypass the intercepting proxy completely,
+ * which was the enforcement point for the whole capture destination policy. The value is the decision, not the flag -
+ * the name says which knob, the value says how far. Allowing one exact argument keeps the knob and pins its setting.
+ *
+ * Measured basis for the member, so the list is not a guess either: no production call site passes extra args at all
+ * today (the only caller is a test), and the capture proxy work in tag parked/frame-gate-capture-proxy needs exactly
+ * --proxy-bypass-list=<-loopback> to remove Chrome's implicit loopback bypass so every request reaches its proxy.
+ * Adding an argument here is therefore a reviewable decision, which is the point of an allowlist.
+ */
+export const CALLER_ARG_ALLOWLIST = ['--proxy-bypass-list=<-loopback>'];
+
+/**
+ * The caller arguments that pass, compared as whole strings: everything else is dropped, whatever it is.
+ *
+ * Exact comparison rather than a prefix or name match, so there is no spelling of this flag that widens the bypass:
+ * `*`, an extra pattern after the marker, an empty value and even a trailing character are all refused, because none
+ * of them IS the one argument that was reviewed.
+ */
+export function allowedCallerArgs(args = []) {
+  return args.filter((arg) => CALLER_ARG_ALLOWLIST.includes(String(arg)));
+}
+
+export function chromeArgs({ userDataDir, proxy = null, extra = [], unsandboxed = false, url = 'about:blank' } = {}) {
+  return [
+    '--headless=new',
+    '--remote-debugging-port=0',
+    `--user-data-dir=${userDataDir}`,
+    ...(unsandboxed ? ['--no-sandbox'] : []),
+    '--disable-gpu',
+    '--disable-dev-shm-usage',
+    '--hide-scrollbars',
+    '--no-first-run',
+    '--no-default-browser-check',
+    '--disable-extensions',
+    '--disable-background-networking',
+    '--disable-features=Translate,BackForwardCache,AcceptCHFrame,MediaRouter,OptimizationHints',
+    '--force-color-profile=srgb',
+    '--window-size=1280,900',
+    ...(proxy ? [`--proxy-server=${proxy}`] : []),
+    // Only allowlisted caller arguments pass. Not "the sandbox-disabling ones are refused": a caller cannot widen
+    // this process's reach by naming a flag, and a flag Chromium adds next year is refused because it is not on the
+    // list rather than because somebody remembered to add it to a refusal list.
+    ...allowedCallerArgs(extra),
+    url,
+  ];
+}
+
+export function chromeBinary() {
   for (const candidate of CHROME_CANDIDATES) {
     try {
       readFileSync(candidate);
@@ -136,27 +215,27 @@ async function fetchJson(url, attempts = 40) {
 export async function launchChrome({ proxy = null, args = [] } = {}) {
   const userDataDir = mkdtempSync(join(tmpdir(), 'mwg-chrome-'));
   const binary = chromeBinary();
+  const unsandboxed = chromeIsUnsandboxed();
+  if (unsandboxed) {
+    // Announced once per launch rather than only documented: a run that has turned the sandbox off should say so in
+    // its own output, because the reader of a failing generated-code run needs to know what was protecting the host.
+    process.emitWarning(
+      'MWG_ALLOW_UNSANDBOXED_CHROME=1 - Chrome is running with --no-sandbox, so generated code shares this host with no renderer sandbox. Unset it unless this host cannot sandbox (no user namespaces and no setuid helper).',
+      { code: 'MWG_UNSANDBOXED_CHROME' },
+    );
+  }
+  // A caller whose argument was dropped is told which one and what the rule is, because silence here is the other
+  // half of the same problem: a run that ignored a flag somebody believed mattered is a mystery later.
+  const dropped = args.filter((arg) => allowedCallerArgs([arg]).length === 0);
+  if (dropped.length > 0) {
+    process.emitWarning(
+      `Chrome was launched with ${dropped.join(', ')} in its extra arguments, and ${dropped.length === 1 ? 'it was' : 'they were'} dropped: caller arguments pass only if they are on CALLER_ARG_ALLOWLIST in src/corpus/cdp.mjs (${CALLER_ARG_ALLOWLIST.join(', ')}). Add the flag there with a reason if a launch site needs it.`,
+      { code: 'MWG_CALLER_ARGS_DROPPED' },
+    );
+  }
   const child = spawn(
     binary,
-    [
-      '--headless=new',
-      '--remote-debugging-port=0',
-      `--user-data-dir=${userDataDir}`,
-      '--no-sandbox',
-      '--disable-gpu',
-      '--disable-dev-shm-usage',
-      '--hide-scrollbars',
-      '--no-first-run',
-      '--no-default-browser-check',
-      '--disable-extensions',
-      '--disable-background-networking',
-      '--disable-features=Translate,BackForwardCache,AcceptCHFrame,MediaRouter,OptimizationHints',
-      '--force-color-profile=srgb',
-      '--window-size=1280,900',
-      ...(proxy ? [`--proxy-server=${proxy}`] : []),
-      ...args,
-      'about:blank',
-    ],
+    chromeArgs({ userDataDir, proxy, extra: args, unsandboxed }),
     {
       stdio: ['ignore', 'pipe', 'pipe'],
       // Its own process group, so the whole tree - zygotes, gpu, network, and anything the browser spawns
@@ -255,7 +334,11 @@ export async function launchChrome({ proxy = null, args = [] } = {}) {
       child.stderr.on('data', onData);
       child.on('exit', (code) => {
         clearTimeout(timer);
-        reject(new CdpError('CHROME_EXIT', `Chrome exited early with code ${code}`));
+        // Chrome refusing to start is how a host with no user namespaces and no setuid helper looks, so the exit is
+        // where the opt-in is worth naming: the alternative is somebody reading "exited early with code 1" and
+        // reaching for --no-sandbox themselves, which is the thing this change stopped doing by default.
+        const hint = unsandboxed ? '' : ' (if this host cannot sandbox Chrome - no user namespaces and no setuid helper - set MWG_ALLOW_UNSANDBOXED_CHROME=1)';
+        reject(new CdpError('CHROME_EXIT', `Chrome exited early with code ${code}${hint}`));
       });
     });
 
