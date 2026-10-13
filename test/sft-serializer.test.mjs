@@ -136,6 +136,39 @@ test('rights_ref through a symlinked directory outside root is refused even when
   } finally { rmSync(outside, { recursive: true, force: true }); }
 }));
 
+test('prompt_path reached through a symlinked directory outside root is refused despite a matching digest', () => withFixture((f) => {
+  const outside = mkdtempSync(join(tmpdir(), 'mwg-sft-outside-prompt-'));
+  try {
+    const externalPrompt = join(outside, 'prompt.txt');
+    writeFileSync(externalPrompt, 'Synthetic external prompt; not approved for training.\n');
+    symlinkSync(outside, join(f.root, 'prompt-leak'), 'dir');
+    f.row.prompt_path = 'prompt-leak/prompt.txt';
+    f.row.prompt_sha256 = sha(readFileSync(externalPrompt));
+    writeFileSync(f.manifestPath, `${JSON.stringify(f.row)}\n`);
+    assert.equal(lstatSync(join(f.root, f.row.prompt_path)).isFile(), true,
+      'the leaf must be a regular file, not the symlink checked by the sibling clause');
+    assert.throws(() => serializeSft({ ...f, tokenizer: tokenizer() }), /SYMLINK_SOURCE/);
+    assert.equal(existsSync(f.outputPath), false);
+  } finally { rmSync(outside, { recursive: true, force: true }); }
+}));
+
+test('project_dir reached through a symlinked directory outside root is refused despite a matching target digest', () => withFixture((f) => {
+  const outside = mkdtempSync(join(tmpdir(), 'mwg-sft-outside-project-'));
+  try {
+    const externalProject = join(outside, 'project');
+    mkdirSync(externalProject);
+    writeFileSync(join(externalProject, 'server.mjs'), 'export const leaked = true;\n');
+    symlinkSync(outside, join(f.root, 'project-leak'), 'dir');
+    f.row.project_dir = 'project-leak/project';
+    f.row.target_sha256 = sha(serializeFiles(projectSources(externalProject)));
+    writeFileSync(f.manifestPath, `${JSON.stringify(f.row)}\n`);
+    assert.equal(lstatSync(join(f.root, f.row.project_dir)).isDirectory(), true,
+      'the leaf must be a regular directory, not the symlink checked by the sibling clause');
+    assert.throws(() => serializeSft({ ...f, tokenizer: tokenizer() }), /SYMLINK_SOURCE/);
+    assert.equal(existsSync(f.outputPath), false);
+  } finally { rmSync(outside, { recursive: true, force: true }); }
+}));
+
 test('both conservative trainCtx and 262K LoRA shape exceedances fail with exact measured counts, never truncate', () => withFixture((f) => {
   for (const n of [CONSERVATIVE_TRAIN_CONTEXT + 1, LORA_SHAPE_CONTEXT + 1]) {
     assert.throws(() => serializeSft({ ...f, tokenizer: tokenizer(n) }), (e) => e.message.includes('OVER_CONTEXT') &&
