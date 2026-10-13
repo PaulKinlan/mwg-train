@@ -27,10 +27,18 @@ export function resolveCaptureOutputPath(path, { env = process.env, repoRoot = R
     throw new QuarantineError('REPO_WRITE_PROHIBITED', `refusing output path '${destination}': repo tree is not a quarantine store`);
   }
   const store = quarantineRoot({ repoRoot, env });
-  if (isInside(store, destination)) {
+  const realStore = existsSync(store) ? realpathSync(store) : null;
+  const matchedStore = realStore && isInside(realStore, destination)
+    ? realStore
+    : isInside(store, destination)
+      ? resolve(store)
+      : null;
+  if (matchedStore !== null) {
     try {
-      assertQuarantineStore(store, { repoRoot });
-      return assertResolvesInside(store, destination, 'capture output');
+      const verifiedStore = assertQuarantineStore(store, { repoRoot });
+      const canonicalDestination = join(verifiedStore, destination.slice(matchedStore.length));
+      assertResolvesInside(verifiedStore, canonicalDestination, 'capture output');
+      return destination;
     } catch (err) {
       throw new QuarantineError('OUTPUT_OUTSIDE_QUARANTINE', `refusing output path '${destination}': ${err.message}`);
     }
@@ -40,10 +48,15 @@ export function resolveCaptureOutputPath(path, { env = process.env, repoRoot = R
   if (testTemp && isAbsolute(testTemp) && existsSync(testTemp)) {
     const lexicalTestTemp = resolve(testTemp);
     const realTestTemp = realpathSync(testTemp);
-    if (isInside(temp, realTestTemp) && realTestTemp !== temp && isInside(lexicalTestTemp, destination)) {
+    const matchedBase = isInside(realTestTemp, destination)
+      ? realTestTemp
+      : isInside(lexicalTestTemp, destination)
+        ? lexicalTestTemp
+        : null;
+    if (isInside(temp, realTestTemp) && realTestTemp !== temp && matchedBase !== null) {
       try {
         assertResolvesInside(temp, realTestTemp, 'test temp directory');
-        const canonicalDestination = join(realTestTemp, destination.slice(lexicalTestTemp.length));
+        const canonicalDestination = join(realTestTemp, destination.slice(matchedBase.length));
         return assertResolvesInside(realTestTemp, canonicalDestination, 'capture output');
       } catch (err) {
         throw new QuarantineError('OUTPUT_OUTSIDE_QUARANTINE', `refusing output path '${destination}': ${err.message}`);

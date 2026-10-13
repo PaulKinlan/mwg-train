@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, realpathSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import process from 'node:process';
 
@@ -270,7 +270,7 @@ export function checkProjectData(project_id, specRoutes, serverContent) {
   return { name: project_id, declaredNotServed, servedNotDeclared, unparsedRoutes: extracted.unparsed };
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === `file://${realpathSync(process.argv[1])}`) {
   async function main() {
     const start = performance.now();
     let allDirs = [];
