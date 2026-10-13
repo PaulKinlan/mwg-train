@@ -26,6 +26,7 @@
  * problem and out of scope for an address policy.
  */
 import { lookup as dnsLookup } from 'node:dns/promises';
+import { difference, normalize, parseCidr } from './ip-ranges.mjs';
 
 /** A refused target, with a code so a caller can distinguish a policy refusal from a bad argument. */
 export class CaptureTargetError extends Error {
@@ -182,6 +183,51 @@ function isLocalName(hostname) {
  * resolved and every answer checked, because a name that answers with one public and one private address must not be
  * admitted on the strength of the public one.
  */
+/**
+ * The addresses this policy blocks, as a canonical interval set (mwg-train-i147, second half).
+ *
+ * Why it exists: a claim like "the policy blocks exactly what the IANA registries mark not globally reachable" has to
+ * be CHECKED, and predicates cannot be compared as sets - you can only sample them, and sampling cannot prove a prefix
+ * property (a hole at 10.0.0.77 inside a blocked 10.0.0.0/8 survived first/middle/last sampling). With the blocked set
+ * expressed as intervals the check is set equality against the registry rows, which is exact.
+ *
+ * Everything below is a transcription of the predicates above, and the two have to agree: the registry test asserts this
+ * set against the registries and the proxy suite asserts the predicates, so a change to one that the other does not
+ * follow is a failing test rather than a silent divergence.
+ *
+ * The IETF protocol umbrella is expressed exactly rather than approximated: it is blocked EXCEPT for the reachable
+ * children the registry names, which is a set difference the interval engine already has. Same rule as the predicate's
+ * allowlist, same list, written once as ranges.
+ *
+ * NOT here, because they are rules rather than ranges: ::ffff:0:0/96 (IPv4-mapped) and 64:ff9b::/96 (IPv4-IPv6
+ * translation) are judged by the IPv4 address they carry, so which parts are blocked depends on that address and not on
+ * a position in the IPv6 space. They are named in IPV6_RULE_CLASSES so a reader can see they were decided rather than
+ * forgotten, and the predicate above is where their behaviour lives.
+ */
+export const IPV6_RULE_CLASSES = [
+  { prefix: '::ffff:0:0/96', rule: 'blocked when the embedded IPv4 address is blocked, admitted when it is not (::ffff:8.8.8.8 in, ::ffff:127.0.0.1 out)' },
+  { prefix: '64:ff9b::/96', rule: 'blocked when the translated IPv4 address is blocked, admitted when it is not (64:ff9b::808:808 in, 64:ff9b::0 out)' },
+];
+
+// The reachable children of the IETF protocol umbrella, from the registry rows that say so. Named once and used to carve
+// the umbrella, so a change here is a change to both the blocked set and the predicate's allowlist.
+const IETF_UMBRELLA_CHILDREN = ['2001::/32', '2001:1::1/128', '2001:1::2/128', '2001:1::3/128', '2001:3::/32', '2001:4:112::/48'];
+
+const IPV6_BLOCKED_CIDRS = [
+  '::/128', '::1/128', '100::/64', '100:0:0:1::/64', 'fe80::/10', 'fec0::/10', 'fc00::/7', 'ff00::/8',
+  '2001:2::/48', '2001:10::/28', '2001:20::/28', '2001:30::/28', '2001:db8::/32', '2002::/16', '3fff::/20',
+  '5f00::/16', '64:ff9b:1::/48',
+];
+
+/** The blocked set as intervals, canonicalised. Every address the predicates refuse is in here, and the converse. */
+export function blockedRanges() {
+  // BLOCKED_IPV4 holds [base, bits] pairs, so the prefix length has to be put back on before parsing.
+  const v4 = BLOCKED_IPV4.map(([base, bits]) => parseCidr(`${base}/${bits}`));
+  const v6 = IPV6_BLOCKED_CIDRS.map((cidr) => parseCidr(cidr));
+  const umbrella = difference([parseCidr('2001::/23')], IETF_UMBRELLA_CHILDREN.map((cidr) => parseCidr(cidr)));
+  return normalize([...v4, ...v6, ...umbrella]);
+}
+
 export async function blockedAddresses(url, { lookup = dnsLookup } = {}) {
   const parsed = url instanceof URL ? url : new URL(String(url));
   const hostname = parsed.hostname;
