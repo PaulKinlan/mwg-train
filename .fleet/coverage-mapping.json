@@ -106,6 +106,9 @@
   "scripts/verify-workspace.mjs": [
     "test/generated-server-env.test.mjs"
   ],
+  "src/capture/site.mjs": [
+    "test/capture-site.test.mjs"
+  ],
   "src/capture/target.mjs": [
     "test/capture-site.test.mjs"
   ],
