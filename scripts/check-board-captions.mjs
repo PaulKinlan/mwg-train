@@ -81,7 +81,9 @@ export const MIN_SHOWN = 8;
  * fails instead of silently joining them; adding captions to them is a separate decision, not this check's.
  */
 export const UNCAPTIONED_BY_DESIGN = Object.freeze({
-  'event-registration': 'displays its two boards without digests; no caption has ever been printed',
+  // 2026-10-13: empty. account-recovery and event-registration both gained their first SHA-256
+  // captions when their refusal boards landed (mwg-train-uh0o, mwg-train-wkto), and a family that
+  // has printed a digest no longer qualifies. A family added here must never have printed one.
 });
 
 /** Elements that never have children, so an open tag for one does not open a subtree. */

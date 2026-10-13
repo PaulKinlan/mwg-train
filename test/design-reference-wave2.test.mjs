@@ -11,11 +11,11 @@ const STEPS = {
   catalogue: ['step1-grid.jpg', 'step2-cart.jpg', 'step3-empty.jpg'],
   'contact-lead': ['step1-form.jpg', 'step2-success.jpg', 'step3-refusal.jpg'],
   'account-recovery': ['step1-request.jpg', 'step2-sent.jpg', 'step3-refusal.jpg'],
-  'event-registration': ['step1-event.jpg', 'step2-pass.jpg'],
+  'event-registration': ['step1-event.jpg', 'step2-pass.jpg', 'step3-refusal.jpg'],
 };
 const RECORD_PATH = 'docs/provenance/assets/design-reference-wave2.md';
 
-test('eleven Wave 2 boards have three-way matching README/record/file hashes and pinned exact prompts', () => {
+test('twelve Wave 2 boards have three-way matching README/record/file hashes and pinned exact prompts', () => {
   const record = text(RECORD_PATH);
   const rows = [...record.matchAll(/\|\s*\[`([a-z-]+)`\]\([^|]+\)\s*\|\s*\[`(step[0-9]+-[a-z0-9-]+\.jpg)`\]\([^|]+\)\s*\|\s*`([0-9a-f]{64})`\s*\|\s*(\d+)\s*\|\s*`([0-9a-f]{64})`\s*\|/g)];
   const expected = Object.entries(STEPS).flatMap(([family, names]) => names.map((name) => `${family}/${name}`));

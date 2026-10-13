@@ -82,16 +82,16 @@ Recorded in `pilot/CORPUS.json` from `pilot/plan.json`, covering 34 accepted tem
 
 | Scope | Original (chars) | Uplifted (chars) | Total (chars) | Derived Tokens | Band (±25%) | Role in Sizing |
 |---|---:|---:|---:|---:|---|---|
-| **`app_sources`** | **586,061** | **648,401** | **1,234,462** | **308,616** | **[231,462, 385,769]** | **PRIMARY headline figure** |
+| **`app_sources`** | **586,670** | **649,010** | **1,235,680** | **308,920** | **[231,690, 386,150]** | **PRIMARY headline figure** |
 | `project_manifest` | 4,498 | 4,498 | 8,996 | 2,249 | [1,687, 2,811] | `package.json` dependencies & scripts |
-| `harness_metadata` | 173,305 | 173,305 | 346,610 | 86,653 | [64,989, 108,316] | `spec.json` harness metadata (EXCLUDED) |
+| `harness_metadata` | 174,838 | 174,838 | 349,676 | 87,419 | [65,564, 109,274] | `spec.json` harness metadata (EXCLUDED) |
 | `prompt` | 0 | 0 | 0 | 0 | [0, 0] | Measured zero (documented gap; see below) |
-| *full_tree (all)* | *763,864* | *826,204* | *1,590,068* | *397,517* | *[298,138, 496,896]* | *Total on-disk tree for comparison* |
+| *full_tree (all)* | *766,006* | *828,346* | *1,594,352* | *398,588* | *[298,941, 498,235]* | *Total on-disk tree for comparison* |
 
-- **Headline Characters (`app_sources`):** **1,234,462 characters** (586,061 original + 648,401 uplifted)
-- **Headline Derived Tokens:** **308,616 tokens**
-- **Uncertainty Band:** **[231,462, 385,769] tokens** (±25% margin)
-- **Epoch Scaling:** 1 epoch = **308,616 tokens**; $N$ epochs = $N \times 308,616$ tokens.
+- **Headline Characters (`app_sources`):** **1,235,680 characters** (586,670 original + 649,010 uplifted)
+- **Headline Derived Tokens:** **308,920 tokens**
+- **Uncertainty Band:** **[231,690, 386,150] tokens** (±25% margin)
+- **Epoch Scaling:** 1 epoch = **308,920 tokens**; $N$ epochs = $N \times 308,920$ tokens.
 
 ---
 
@@ -118,7 +118,7 @@ Token counts are derived using the repository's single canonical derivation func
 > As explicitly stated in `src/eval/cost.mjs`:
 > *"ESTIMATE from characters/4. Replace with an exact count from the training tokenizer before quoting a per-token price."*
 >
-> The spend boundary and preregistration discipline require that any price sheet presented to the owner state its derivation and uncertainty band plainly. An estimate cannot be cited as a measured fact. While these character-derived figures reliably anchor the order of magnitude (2,748,147 tokens for `tr-*` [2,061,110, 3,435,183], 308,616 for pilot [231,462, 385,769]), they must be replaced by a token count from the training tokenizer for the pinned base model (e.g. Qwen BPE tokenizer for `Qwen/Qwen2.5-Coder-7B-Instruct` or `Qwen/Qwen3.8-27B`) before treating any per-token price as a committed quote.
+> The spend boundary and preregistration discipline require that any price sheet presented to the owner state its derivation and uncertainty band plainly. An estimate cannot be cited as a measured fact. While these character-derived figures reliably anchor the order of magnitude (2,748,147 tokens for `tr-*` [2,061,110, 3,435,183], 308,920 for pilot [231,690, 386,150]), they must be replaced by a token count from the training tokenizer for the pinned base model (e.g. Qwen BPE tokenizer for `Qwen/Qwen2.5-Coder-7B-Instruct` or `Qwen/Qwen3.8-27B`) before treating any per-token price as a committed quote.
 
 ---
 

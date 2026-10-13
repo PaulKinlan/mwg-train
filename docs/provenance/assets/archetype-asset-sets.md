@@ -18,7 +18,7 @@ store, the register or the target have moved apart.
 | `booking/set.json` | `Evening Class Studio` | 25 | 4 | 5 | **yes** (see decisions.json) |
 | `catalogue/set.json` | `Kiln & Copper` | 29 | 4 | 3 | no |
 | `contact-lead/set.json` | `ARKHITECTS Studio` | 22 | 3 | 3 | no |
-| `event-registration/set.json` | `Future Web 2026` | 10 | 2 | 2 | **yes** (see decisions.json) |
+| `event-registration/set.json` | `Future Web 2026` | 10 | 2 | 3 | **yes** (see decisions.json) |
 
 ## Where the values come from, per set
 
@@ -65,12 +65,12 @@ store, the register or the target have moved apart.
 ### event-registration
 
 - Target: `docs/design/archetypes/event-registration`
-- Readme: `docs/design/archetypes/event-registration/README.md` (sha256 `4d677a09e152224cd0f5876de1eab14a0229ee6a4466c4f4b8f7719268ab13f0`)
+- Readme: `docs/design/archetypes/event-registration/README.md` (sha256 `a8077914901c31c17c6569d9cd23ddab7f9129e1d93426d08991a1ec2a0c4e1d`)
 - Stylesheet: `docs/design/archetypes/event-registration/demo/styles.css` (sha256 `3e3bdc2ddfdd70320fddcd613376c975c881cd0ebe779e2ccf72ccc5a6e5f68f`)
 - Documents: `docs/design/archetypes/event-registration/demo/compare.html`, `docs/design/archetypes/event-registration/demo/index.html`
 - Rights: `excluded_from_training: true`, `approved_for_training: false` from `docs/design/archetypes/event-registration/README.md:5`
 - Brand: `Future Web 2026` (adjudicated: The accepted target has no brand element. Its demo's own h1 names the event - 'Future Web 2026', with '24-25 October - Barbican Centre, London' - and for an event-registration site the event is the site's name. The candidate is weak (a heading can be a page title), which is exactly why the choice is recorded here with its evidence rather than extracted silently. — 2026-10-11)
-- Boards: `step1-event.jpg` sha256 `835a958739512d20e33a77392006d7179d4fd4dcea932f238c4d16176f727342`; `step2-pass.jpg` sha256 `6d9652b8437048e3f921c588090bc71a671d6038f1d146dc0d3f78b31edd90b3`
+- Boards: `step1-event.jpg` sha256 `835a958739512d20e33a77392006d7179d4fd4dcea932f238c4d16176f727342`; `step2-pass.jpg` sha256 `6d9652b8437048e3f921c588090bc71a671d6038f1d146dc0d3f78b31edd90b3`; `step3-refusal.jpg` sha256 `17bbdd1e51cea87aaab7d984567a47dd0224771011b8ef9353b74d66b4999ee1`
 
 ## What this register does not claim
 

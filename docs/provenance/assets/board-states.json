@@ -35,7 +35,8 @@
   },
   "event-registration": {
     "step1-event.jpg": { "path": "/index.html", "kind": "page", "source": "scripts/verify-event-registration-demo.mjs drives the event overview on the demo's index document" },
-    "step2-pass.jpg": { "path": null, "kind": "interaction", "source": "the pass is previewed after the form is submitted, so no path selects it" }
+    "step2-pass.jpg": { "path": null, "kind": "interaction", "source": "the pass is previewed after the form is submitted, so no path selects it" },
+    "step3-refusal.jpg": { "path": null, "kind": "interaction", "source": "the capacity and validation refusal re-renders the registration form after a refused POST (plan.md:34); a state of the form, not a document" }
   },
   "fan-community-site": {
     "step1-collection.jpg": { "path": null, "kind": "absent", "source": "this archetype has no demo directory, so nothing serves this state" },

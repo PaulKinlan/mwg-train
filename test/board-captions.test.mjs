@@ -127,7 +127,7 @@ test('the exemptions are exactly the families measured as never printing a diges
   // SHA-256 captions for all three boards, so the family no longer qualifies as uncaptioned by
   // design. A family that gains its first caption must be removed here in the same change - this
   // test exists to force that.
-  assert.deepEqual(Object.keys(UNCAPTIONED_BY_DESIGN).sort(), ['event-registration']);
+  assert.deepEqual(Object.keys(UNCAPTIONED_BY_DESIGN).sort(), []);
   for (const reason of Object.values(UNCAPTIONED_BY_DESIGN)) assert.ok(reason.length > 20, 'each exemption carries its reason');
 });
 

@@ -11,6 +11,7 @@
 | --- | --- | --- | ---: |
 | [`step1-event.jpg`](step1-event.jpg) | Event overview and attendee/ticket choices | `835a958739512d20e33a77392006d7179d4fd4dcea932f238c4d16176f727342` | 476978 |
 | [`step2-pass.jpg`](step2-pass.jpg) | Depicted ticket pass and confirmation | `6d9652b8437048e3f921c588090bc71a671d6038f1d146dc0d3f78b31edd90b3` | 431314 |
+| [`step3-refusal.jpg`](step3-refusal.jpg) | Capacity and validation refusal: the registration form after a refused submission - omitted-field validation and a ticket selection exceeding remaining capacity, both announced in text (the contract-required states at plan.md:34 and the tr-07/fam-r02 assertions; added by mwg-train-wkto) | `17bbdd1e51cea87aaab7d984567a47dd0224771011b8ef9353b74d66b4999ee1` | 395432 |
 
 Hashes identify the handed-off JPEG bytes, not their legal status or reproducibility. The illustrated ticket/payment details may exceed the frozen event-registration functional contract.
 
@@ -26,4 +27,10 @@ High-fidelity, production-quality full-bleed edge-to-edge web canvas with no flo
 
 ```text
 High-fidelity, production-quality full-bleed edge-to-edge web canvas with no floating window and no exterior drop shadow of a modern web application UI for a design conference event registration, Step 2: Digital Ticket Pass & Confirmation. Dark slate theme (#0f172a, card surface #1e293b, emerald green #10b981). Centered digital conference pass card with decorative notch, QR code check-in scanner graphic, attendee details (Sarah Jenkins, Principal Engineer), Pass Type: Workshop Pass (£220), Event: Future Web 2026, Date: Oct 24-25 Barbican London, verified 'Registration Confirmed' badge, and action buttons 'Save to Apple Wallet' and 'Download PDF Badge'. Clean modern typography, high contrast, generous whitespace.
+```
+
+### `step3-refusal.jpg`
+
+```text
+Full-bleed desktop screenshot of a web application's own viewport: a design conference event registration form, Capacity-Refused and Validation State. The application fills the entire 1376x768 frame edge to edge - no browser window, no OS title bar or traffic lights, no device frame, no page container, no rounded panel around the page, no surrounding background margin and no drop shadow around the interface. The only background visible is the application's own page colour (#0f172a), and it reaches all four edges. On that page: the same registration card (surface #1e293b) as the event overview step, with the 'Future Web 2026' banner, the date and venue line, and the capacity pill now reading '200 / 200 seats filled'. The form is shown after a refused submission: a red error banner at the top of the card reads 'Registration could not be completed', with two announced errors bound to the fields they describe - the Attendee Name field outlined in red with helper text 'This field is required', and a red notice beside the ticket tier stepper reading 'Only 3 General Admission tickets remain - your selection of 4 exceeds the remaining capacity' with the stepper showing 4. The emerald 'Continue to Payment' button is unchanged, and no payment or confirmation content appears anywhere because nothing was registered. Accessible focus states, crisp system typography, generous spacing, high contrast.
 ```
