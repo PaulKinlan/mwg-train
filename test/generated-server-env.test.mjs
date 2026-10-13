@@ -303,9 +303,63 @@ const SCANNED_DIRS = ['scripts', 'src/eval', 'src/corpus', 'test'];
 
 // A spawn that runs a generated project's server. Matched by the argument list rather than by the option object, so
 // the scan still sees a call site written in another style.
+/**
+ * Two views of a source file, because a text scan has to be careful about what it is looking at (mwg-train-c7rs).
+ *
+ * `code` keeps string literals and drops comments: the spawn detector needs to read the literal 'server.mjs' out of
+ * an argument list. `bare` drops comments AND the contents of string and template literals, so a mention of the
+ * launcher that is not a call - a commented-out line, a string handed to assert.match - cannot stand in for the call
+ * itself. Newlines survive both views, so a line number stays meaningful.
+ */
+function scanViews(text) {
+  const blank = (chunk) => chunk.replace(/[^\n]/g, ' ');
+  let code = '';
+  let bare = '';
+  let i = 0;
+  while (i < text.length) {
+    const two = text.slice(i, i + 2);
+    if (two === '//' || two === '/*') {
+      const end = two === '//' ? text.indexOf('\n', i) : text.indexOf('*/', i + 2);
+      const stop = end === -1 ? text.length : two === '//' ? end : end + 2;
+      code += blank(text.slice(i, stop));
+      bare += blank(text.slice(i, stop));
+      i = stop;
+      continue;
+    }
+    const quote = text[i];
+    if (quote === "'" || quote === '"' || quote === '`') {
+      let j = i + 1;
+      let literal = quote;
+      while (j < text.length) {
+        if (text[j] === '\\') {
+          literal += text[j] + (text[j + 1] ?? '');
+          j += 2;
+          continue;
+        }
+        literal += text[j];
+        j += 1;
+        if (text[j - 1] === quote) break;
+      }
+      code += literal;
+      bare += blank(literal);
+      i = j;
+      continue;
+    }
+    code += text[i];
+    bare += text[i];
+    i += 1;
+  }
+  return { code, bare };
+}
+
+// Spawning a generated project's server directly, however it is written: spawn, and the exec family that the first
+// version of this scan did not look at. A method call such as a regular expression's .exec() is not a spawn, hence
+// the lookbehind (mwg-train-c7rs).
+const DIRECT_SPAWN = /(?<![.\w$])(spawn|spawnSync|execFile|execFileSync|exec)\s*\(/g;
+
 function startsGeneratedServer(text) {
   const calls = [];
-  const spawnCall = /\bspawn\s*\(/g;
+  const spawnCall = new RegExp(DIRECT_SPAWN.source, 'g');
   let match;
   while ((match = spawnCall.exec(text)) !== null) {
     let depth = 0;
@@ -324,10 +378,32 @@ function startsGeneratedServer(text) {
     if (end === -1) continue;
     const call = text.slice(match.index, end);
     if (!/'server\.mjs'|"server\.mjs"/.test(call)) continue;
+    // The viewer's own CLI happens to share the filename but is not generated code - it lives at src/viewer/server.mjs
+    // and two suites spawn it to check its exit codes - so a call whose path names the viewer is not a generated
+    // launch. Widening the scan to the exec family made this class visible.
+    if (/'viewer'/.test(call)) continue;
     calls.push({ call, line: text.slice(0, match.index).split('\n').length });
   }
   return calls;
 }
+
+test('a mention of the launcher is not a call to it, and a spawn is a spawn however it is written', () => {
+  // mwg-train-c7rs: the pin asked whether the file's TEXT contains the launcher, so `// startGeneratedServer(` in a
+  // comment - or inside a string handed to assert.match - stood in for a real call, and a launch rewritten as
+  // execFile was invisible to a scan that only knew about spawn(). Both halves are asserted here so the bypass
+  // cannot return without this test failing.
+  assert.ok(!scanViews('// startGeneratedServer({ projectDir });\n').bare.includes('startGeneratedServer('), 'a commented-out call is not a call');
+  assert.ok(!scanViews('assert.match(source, \'startGeneratedServer(\');\n').bare.includes('startGeneratedServer('), 'a mention inside a string is not a call');
+  assert.ok(scanViews('startGeneratedServer({ projectDir });\n').bare.includes('startGeneratedServer('), 'a real call still counts');
+  assert.ok(scanViews('/* startGeneratedServer({ */\nstartGeneratedServer({ projectDir });\n').bare.includes('startGeneratedServer('), 'a call after a block comment still counts');
+  // The exec family launches a server just as spawn does.
+  assert.equal(startsGeneratedServer("execFile(process.execPath, [join(projectDir, 'server.mjs')])").length, 1);
+  assert.equal(startsGeneratedServer("spawnSync(node, [join(projectDir, 'server.mjs')])").length, 1);
+  assert.equal(startsGeneratedServer("await exec(`node ${join(projectDir, 'server.mjs')}`)").length, 1);
+  // A regular expression's .exec() is not a spawn, and the viewer's CLI is not generated code.
+  assert.equal(startsGeneratedServer('const match = pattern.exec(text);').length, 0);
+  assert.equal(startsGeneratedServer("spawnSync(node, [join(ROOT, 'src', 'viewer', 'server.mjs')])").length, 0);
+});
 
 test('every call site that starts a generated server goes through the sandbox', () => {
   const offenders = [];
@@ -340,9 +416,11 @@ test('every call site that starts a generated server goes through the sandbox', 
   }
   const callers = [];
   for (const relative of files.sort()) {
-    const text = readFileSync(join(ROOT, relative), 'utf8');
-    if (relative !== LAUNCHER_MODULE && relative !== GUARD_FILE && text.includes('startGeneratedServer(')) callers.push(relative);
-    const callSites = startsGeneratedServer(text);
+    const { code, bare } = scanViews(readFileSync(join(ROOT, relative), 'utf8'));
+    if (relative !== LAUNCHER_MODULE && relative !== GUARD_FILE && bare.includes('startGeneratedServer(')) callers.push(relative);
+    // The guard's own fixtures QUOTE launch snippets in order to assert about them, so it is not scanned for real
+    // launches - the same reason it is not in the caller inventory. Nothing here starts a generated server.
+    const callSites = relative === GUARD_FILE ? [] : startsGeneratedServer(code);
     if (callSites.length === 0) continue;
     const exempt = KNOWN_UNFIXED[relative];
     if (exempt) {
@@ -363,7 +441,7 @@ test('every call site that starts a generated server goes through the sandbox', 
   for (const site of PROTECTED_LAUNCH_SITES) {
     assert.ok(existsSync(join(ROOT, site)), `${site} is pinned as a protected launch site but no longer exists`);
     assert.match(
-      readFileSync(join(ROOT, site), 'utf8'),
+      scanViews(readFileSync(join(ROOT, site), 'utf8')).code,
       /from '[^']*src\/eval\/generated-server\.mjs'/,
       `${site} calls startGeneratedServer without importing it from the launcher module`,
     );
