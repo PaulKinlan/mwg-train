@@ -138,5 +138,8 @@
   "src/viewer/tuning.mjs": [
     "test/viewer-tuning.test.mjs",
     "test/viewer-tuning-generate.test.mjs"
+  ],
+  "src/capture/ip-ranges.mjs": [
+    "test/ip-intervals.test.mjs"
   ]
 }
