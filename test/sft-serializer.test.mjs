@@ -169,6 +169,32 @@ test('project_dir reached through a symlinked directory outside root is refused 
   } finally { rmSync(outside, { recursive: true, force: true }); }
 }));
 
+test('rights_ref naming a directory is refused even when it exists within root', () => withFixture((f) => {
+  f.row.rights_ref = 'docs/provenance/assets';
+  writeFileSync(f.manifestPath, `${JSON.stringify(f.row)}\n`);
+  assert.equal(lstatSync(join(f.root, f.row.rights_ref)).isDirectory(), true);
+  assert.throws(() => serializeSft({ ...f, tokenizer: tokenizer() }), /NOT_APPROVED/);
+  assert.equal(existsSync(f.outputPath), false);
+}));
+
+test('prompt_path leaf symlink pointing within root is refused even with a matching digest', () => withFixture((f) => {
+  symlinkSync(join(f.root, 'prompt.txt'), join(f.root, 'prompt-link.txt'));
+  f.row.prompt_path = 'prompt-link.txt';
+  writeFileSync(f.manifestPath, `${JSON.stringify(f.row)}\n`);
+  assert.equal(lstatSync(join(f.root, f.row.prompt_path)).isSymbolicLink(), true);
+  assert.throws(() => serializeSft({ ...f, tokenizer: tokenizer() }), /SYMLINK_SOURCE/);
+  assert.equal(existsSync(f.outputPath), false);
+}));
+
+test('project_dir leaf symlink pointing within root is refused even with a matching target digest', () => withFixture((f) => {
+  symlinkSync(join(f.root, 'project'), join(f.root, 'project-link'), 'dir');
+  f.row.project_dir = 'project-link';
+  writeFileSync(f.manifestPath, `${JSON.stringify(f.row)}\n`);
+  assert.equal(lstatSync(join(f.root, f.row.project_dir)).isSymbolicLink(), true);
+  assert.throws(() => serializeSft({ ...f, tokenizer: tokenizer() }), /SYMLINK_SOURCE/);
+  assert.equal(existsSync(f.outputPath), false);
+}));
+
 test('both conservative trainCtx and 262K LoRA shape exceedances fail with exact measured counts, never truncate', () => withFixture((f) => {
   for (const n of [CONSERVATIVE_TRAIN_CONTEXT + 1, LORA_SHAPE_CONTEXT + 1]) {
     assert.throws(() => serializeSft({ ...f, tokenizer: tokenizer(n) }), (e) => e.message.includes('OVER_CONTEXT') &&
