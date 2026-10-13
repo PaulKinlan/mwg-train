@@ -131,9 +131,25 @@ What the re-record moved, all from `npm run pilot:run` → `pilot-corpus.mjs --r
 | `full_tree` derived tokens | 398,588 | 401,184 |
 | `pilot/CORPUS.json` trees reproducing | 30 of 35 differed | 35 of 35, 0 failures |
 
-The training-corpus figures in the same record did **not** move: those trees are recorded from a completed
-training run rather than regenerated, so `check:specs` and `check:pilot-corpus` are the two gates that
-judge this change, and both pass.
+The training corpus moves with it too, and this document said the opposite for one commit (corrected here, and
+raised as `mwg-train-lftf` by review): the tr-* trees are REGENERATED and compared against
+`pilot/TRAINING_CORPUS.json`, so the 210 tree hashes, the training token figures quoted from them and the
+committed journey evidence all had to be re-recorded as well. The bill is therefore three parts, not one:
+
+1. the pilot corpus and the pilot token figures (§ above);
+2. the training corpus, its token figures, and every document that quotes them - the corpus README, the
+top-level `README.md` and `docs/train/READINESS-EPIC.md`. Measured: `app_sources` 5,422,320 → 5,454,540
+   characters original and 5,570,266 → 5,602,486 uplifted, derived tokens 2,748,147 → 2,764,257, band
+   [2,061,110, 3,435,183] → [2,073,192, 3,455,321], `full_tree` tokens 3,235,789 → 3,251,899;
+3. `docs/train/corpus/records.json`, the browser-journey evidence, whose rows each attest to the sha256 of
+the tree that was driven (`check-train-records`: 34 of 40 rows went stale). All 40 were re-driven against
+the current trees, with the same outcomes as the run before the fix (396 carried out, 364 satisfied) -
+   which is also the evidence that escaping the title changed no behaviour.
+
+A generator change is judged by two gates, not one, and passing one says nothing about the other:
+`check:all` runs the check scripts (it catches part 3), while the training corpus and token records are
+asserted by `node --test` suites that only the fast gate runs (it catches parts 1 and 2). Measuring only the
+pilot corpus and concluding the rest had not moved is what made this document wrong for a commit.
 
 ### Correction: the radius is 30 trees, not six arms, and the exact bill (mwg-train-sia)
 
