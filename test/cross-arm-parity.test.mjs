@@ -995,4 +995,12 @@ test('compareOne restricts board comparisons to the exact mapped path', () => {
 
   const nullStateResult = compareOne({ screenshot: rootScreenshot, boardMetrics, archetypeStates: { 'step1-browse.jpg': { path: null }, 'step3-confirmation.jpg': { path: null } } });
   assert.equal(nullStateResult, null, 'boards mapped explicitly to null do not evaluate against root');
+
+  const errorScreenshot = { ...screenshot, analysis: { error: 'captureSignature: path /confirmation.html returned HTTP 404 Not Found' } };
+  const errorResult = compareOne({ screenshot: errorScreenshot, boardMetrics, archetypeStates });
+  assert.notEqual(errorResult, null);
+  assert.equal(errorResult.error, 'captureSignature: path /confirmation.html returned HTTP 404 Not Found');
+  assert.equal(errorResult.closest_findings.length, 1);
+  assert.equal(errorResult.closest_findings[0].code, 'STATE_UNMEASURED');
+  assert.ok(errorResult.closest_findings[0].message.includes('HTTP 404'));
 });

@@ -564,7 +564,20 @@ export function compareOne({ screenshot, boardMetrics, archetypeStates }) {
 
   const analysed = screenshot.analysis;
   if (!analysed || analysed.error) {
-    return { ...screenshot, error: analysed?.error ?? 'the screenshot could not be analysed' };
+    const errorMsg = analysed?.error ?? 'the screenshot could not be analysed';
+    return {
+      ...screenshot,
+      error: errorMsg,
+      closest_findings: [
+        {
+          code: 'STATE_UNMEASURED',
+          axis: 'reference',
+          message: `State path ${screenshot.statePath} for arm ${screenshot.arm} could not be captured or measured: ${errorMsg}`,
+          board: eligibleBoards.map(b => b.file).join(', '),
+          screenshot: screenshot.path ?? 'none'
+        }
+      ]
+    };
   }
   const comparisons = eligibleBoards.map((board) => ({
     board: board.file,
@@ -635,6 +648,7 @@ export const ADVISORY_CODES = Object.freeze([
 export const UNMEASURED_CODES = Object.freeze([
   'BOARD_STRUCTURE_UNMEASURED',
   'BOARDS_MISSING',
+  'STATE_UNMEASURED',
 ]);
 
 /**
