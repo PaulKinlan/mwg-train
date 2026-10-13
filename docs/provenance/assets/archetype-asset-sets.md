@@ -17,7 +17,7 @@ store, the register or the target have moved apart.
 | `account-recovery/set.json` | _deliberately unbranded_ | 10 | 2 | 2 | yes (deliberately unbranded) |
 | `booking/set.json` | `Evening Class Studio` | 25 | 4 | 5 | **yes** (see decisions.json) |
 | `catalogue/set.json` | `Kiln & Copper` | 29 | 4 | 3 | no |
-| `contact-lead/set.json` | `ARKHITECTS Studio` | 22 | 3 | 2 | no |
+| `contact-lead/set.json` | `ARKHITECTS Studio` | 22 | 3 | 3 | no |
 | `event-registration/set.json` | `Future Web 2026` | 10 | 2 | 2 | **yes** (see decisions.json) |
 
 ## Where the values come from, per set
@@ -55,12 +55,12 @@ store, the register or the target have moved apart.
 ### contact-lead
 
 - Target: `docs/design/archetypes/contact-lead`
-- Readme: `docs/design/archetypes/contact-lead/README.md` (sha256 `03a1b3365af5dcf6775e0c41c5cd69886d52163858aef270fe483d729fb42292`)
+- Readme: `docs/design/archetypes/contact-lead/README.md` (sha256 `2bc40a18b54f13b66da8fe5c7d2f687b8bf8522ea7970040eaabc761cae639ca`)
 - Stylesheet: `docs/design/archetypes/contact-lead/demo/styles.css` (sha256 `bc6d1f9c3f67877a988ba703b669ff587c3ebb5a72ca29d44c7d9ca19d25d04c`)
 - Documents: `docs/design/archetypes/contact-lead/demo/compare.html`, `docs/design/archetypes/contact-lead/demo/index.html`, `docs/design/archetypes/contact-lead/demo/success.html`
 - Rights: `excluded_from_training: true`, `approved_for_training: false` from `docs/design/archetypes/contact-lead/README.md:5`
 - Brand: `ARKHITECTS Studio`
-- Boards: `step1-form.jpg` sha256 `1005f6c1404e40a51342c6dd48a7ba9c4d8127e36d9bf251bac0eea2f0bee76f`; `step2-success.jpg` sha256 `cb5df48b6ff3a569a356f98d5e37fceb4c0e71a27dd52e07536d32d39135be64`
+- Boards: `step1-form.jpg` sha256 `1005f6c1404e40a51342c6dd48a7ba9c4d8127e36d9bf251bac0eea2f0bee76f`; `step2-success.jpg` sha256 `cb5df48b6ff3a569a356f98d5e37fceb4c0e71a27dd52e07536d32d39135be64`; `step3-refusal.jpg` sha256 `6692bb286cb77d7af9bdb52430c4e2fa1fdb47a2c2bb9cf73dfaf7376ac74f38`
 
 ### event-registration
 

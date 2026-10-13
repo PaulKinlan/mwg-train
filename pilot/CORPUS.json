@@ -1,7 +1,7 @@
 {
   "$comment": "The corpus the pilot measured: generated projects, their tree hashes, and the hash of the uplift the tool produced from each. `node scripts/pilot-corpus.mjs --verify` re-derives all of it; a mismatch means the measured artefact can no longer be reproduced.",
-  "run_id": "2026-10-11T23-44-15-721Z",
-  "generated_at": "2026-10-11T23:48:00.211Z",
+  "run_id": "2026-10-13T01-39-49-269Z",
+  "generated_at": "2026-10-13T01:43:15.146Z",
   "generator": "scripts/scaffold-pilot.mjs",
   "uplift_tool": "src/corpus/uplift.mjs",
   "baseline_label": "mwg-train deterministic baseline",
@@ -632,8 +632,8 @@
         "eager-invalid",
         "xss-innerhtml"
       ],
-      "original_sha": "sha256:9d967b10e921041ada922aeb0ed832892aac50b5f16d9269e802ad7da23d2283",
-      "uplift_sha": "sha256:dcae145393324d29dd925be8b1281d5870e55bac5a7a24ebd4c433b1f366766c",
+      "original_sha": "sha256:2288d7ef83f4ec447a632d4d226fc1d41a411ce0018ea275aeadc97c2b883c16",
+      "uplift_sha": "sha256:bbce49eedeb99d788e7c915f77b2070228853dea1fe3987f21181ea09470fb48",
       "uplift_applied": [
         "forms/required-field-feedback",
         "forms/validate-input-after-interaction",
@@ -658,8 +658,8 @@
         "no-required",
         "no-aria-sync"
       ],
-      "original_sha": "sha256:3f2aa38426719cc92bff4f628b91e0dbbd417a647e6fb47e9242d4a0782752de",
-      "uplift_sha": "sha256:e85dd7e752b6c09b7eb0406805116c693e13fadfe5bfefa4a51c6c394cbfda1a",
+      "original_sha": "sha256:05164f2794f68af78bc087410e16a2244609af61a92f115bec47e4a46d675f34",
+      "uplift_sha": "sha256:678bd81df080f0f44ad368737c1b8c859e6fcfff9b279327fa6b0848434a18b6",
       "uplift_applied": [
         "forms/required-field-feedback",
         "accessibility/accessible-error-announcement"
@@ -683,8 +683,8 @@
         "no-aria-sync",
         "xss-innerhtml"
       ],
-      "original_sha": "sha256:e39e4fe9b7d4fab0a166fee9948aeda1d0b33840aaf1a70157ca8e7b1b7a7fdb",
-      "uplift_sha": "sha256:dfa211fd3b07c698aee07926c5fc6a44ed112934474b489a6469c1aaca95915a",
+      "original_sha": "sha256:ad45c2f9480c48aede00eab41f58631f7aa98813f5ef2b9bda9200c933c5fc3e",
+      "uplift_sha": "sha256:a01ed9aed603b8952ce1c56be1b24d09bc7a6a0528e0d64394e0c855184d994d",
       "uplift_applied": [
         "forms/required-field-feedback",
         "forms/validate-input-after-interaction",
@@ -710,8 +710,8 @@
         "eager-invalid",
         "xss-innerhtml"
       ],
-      "original_sha": "sha256:02b4078a05272f7b54c8b365a250b9da2d2938f55e133a2b917590f7ab6c52ee",
-      "uplift_sha": "sha256:85b76e9b59498d29cdf1902bee803cc2cc5061bbd5c04a42fac57146233ec77e",
+      "original_sha": "sha256:1644c7771ee3c60b378daddc6ab505e0d8637240391a9010cb66c46c0c9dad5c",
+      "uplift_sha": "sha256:cbd8787d0e0bb822185ed95d2f81a80cb6700e5b3b82d207d59201a7a9c38c48",
       "uplift_applied": [
         "forms/validate-input-after-interaction",
         "security/sanitize-untrusted-html"
@@ -735,8 +735,8 @@
         "no-aria-sync",
         "xss-innerhtml"
       ],
-      "original_sha": "sha256:16efec3a22bb9cbbfa6b9236c35aa730fcf951a029a2658eebf995670bf1049f",
-      "uplift_sha": "sha256:55eef4e1a65b88489d358da5d266e7b72f159aace63c3b5204967c945bfdffd2",
+      "original_sha": "sha256:c07d59e193194289a17bdc4290dde04eee9793bdf491ed8934e8b67cdb9d06ee",
+      "uplift_sha": "sha256:ea2d7ccbcdf0505d8930eb242608535d4cc650eb803c8cf97a8e35834f4f29e4",
       "uplift_applied": [
         "forms/required-field-feedback",
         "forms/validate-input-after-interaction",
@@ -763,8 +763,8 @@
         "no-aria-sync",
         "xss-innerhtml"
       ],
-      "original_sha": "sha256:7d0edbf1b56aa0ad09e4ab2b6bbc0eed7a55fab52829e12ab13240115ca3b256",
-      "uplift_sha": "sha256:bf39d68560869f36889fda33b00257b53f3ee1a0ce3445c459563d0785190b4b",
+      "original_sha": "sha256:54275f3b7f80e10e168255acd3f5b449fbf10f0ad930bdeb5de3c4cbcaf0758c",
+      "uplift_sha": "sha256:5448d1c9029e18ae7ee8b080191606e200b111d982e29abcc97854155e2ca925",
       "uplift_applied": [
         "forms/validate-input-after-interaction",
         "accessibility/accessible-error-announcement",
@@ -790,8 +790,8 @@
         "no-aria-sync",
         "xss-innerhtml"
       ],
-      "original_sha": "sha256:0e5f5351e4eec6570e249a7121db4fde43e4523816f230ad8aea45e8dfbaca1a",
-      "uplift_sha": "sha256:ad9cdee5e1835cfc691182f9353a6febf5ed10e8b34ed996ff4fe8db77620d11",
+      "original_sha": "sha256:dc7ac1b45923bb3bde426b634d46d6cc5f693fff4eabba8b64fbe8f8e6270d9d",
+      "uplift_sha": "sha256:4cd1b57cb72d7b2a5d14afcdc2db0788e7feec51cba79be186aa4c21835b323b",
       "uplift_applied": [
         "forms/required-field-feedback",
         "forms/validate-input-after-interaction",

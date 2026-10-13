@@ -51,6 +51,19 @@ network requests**. It opens from the filesystem or from any static server.
    Home" and an outlined "Download Summary PDF". The board's thin top bar ("Step 2 · Successful contact
    consultation", a centre mark, "Log in" and "Sign up") is **not** copied — this page is not a
    product's second step and has no accounts, so its own demo navigation takes that strip's place.
+3. **Board 3 — the invalid-submit refusal (`step3-refusal.jpg`, added 2026-10-13 by `mwg-train-cdp0`).**
+   The contract (plan.md:54) requires the state the first two boards skip: on a missing field the
+   server refuses the submission and re-renders the form, and nothing is stored. The board depicts the
+   form card after that refusal — a red banner reading "Please complete the required fields to send
+   your request" across the top of the card, red outlines and "This field is required" helper text on
+   the Full Name, Work Email and Message fields, and the emerald submit button unchanged. It is a
+   planning reference for the state, not a page this demo serves: the refusal is a state of
+   `index.html`, which is why `board-states.json` registers it as `kind: interaction` with no path —
+   the same convention as booking's `step4-error.jpg` — and why `compare.html` pairs it with the form
+   page itself rather than a separate document. A vision acceptance review (2026-10-13) recorded the
+   same cross-board placeholder quirks the register already accepts for this family: the studio name
+   differs from board 1's ("AURA ARCHITECTURAL STUDIO" vs "AURA ARCHITECTS") and the card heading
+   reads "Start Your Project" where board 1 has "Request a Consultation".
 
 ## Layout and palette decisions
 
