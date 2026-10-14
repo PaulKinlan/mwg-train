@@ -5,7 +5,7 @@ import { resolve } from 'node:path';
 import test from 'node:test';
 
 const ROOT = resolve(import.meta.dirname, '..');
-const EXPECTED_EDGES_SHA256 = '2505b10103561ac6df1d1c8e661e9a857ca11f48d9fd6c60b1fd325308345353';
+const EXPECTED_EDGES_SHA256 = '3f2cb45f480b293a7aba235fcc5d68f5103a5b432c5427aa5d7f55f422185937';
 
 test('the fast-gate coverage contract cannot silently lose any declared suite edge', () => {
   const mapping = JSON.parse(readFileSync(resolve(ROOT, '.fleet/coverage-mapping.json'), 'utf8'));
@@ -34,6 +34,11 @@ test('dark-mode board changes and provenance records route to their byte-identit
     'docs/provenance/assets/archetype-dark-boards.json', 'docs/provenance/assets/archetype-dark-boards.md']) {
     assert.ok(mapping[file]?.includes('test/archetype-dark-provenance.test.mjs'),
       `${file} must rerun the complete 61-board inventory`);
+  }
+  for (const file of ['docs/provenance/assets/archetype-dark-boards.json',
+    'docs/provenance/assets/archetype-dark-boards.md']) {
+    assert.ok(mapping[file]?.includes('test/baseline-label.test.mjs'),
+      `${file} must rerun the floor-report classification guard`);
   }
 });
 
