@@ -6,6 +6,11 @@
     "test/coverage-map-invariant.test.mjs",
     "test/viewer-concepts-budget-routing.test.mjs"
   ],
+  "README.md": [
+    "test/design-language.test.mjs",
+    "test/plan.test.mjs",
+    "test/readme-token-source.test.mjs"
+  ],
   "docs/design/archetypes/scroll-storytelling-launch/README.md": [
     "test/scroll-storytelling-prompts.test.mjs"
   ],
