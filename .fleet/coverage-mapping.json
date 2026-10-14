@@ -14,6 +14,18 @@
   "docs/design/archetypes/scroll-storytelling-launch/PROVENANCE.md": [
     "test/scroll-storytelling-prompts.test.mjs"
   ],
+  "docs/design/archetypes/browser-puzzle-game/README.md": [
+    "test/browser-puzzle-game-prompts.test.mjs"
+  ],
+  "docs/design/archetypes/browser-puzzle-game/design.md": [
+    "test/browser-puzzle-game-prompts.test.mjs"
+  ],
+  "docs/design/archetypes/browser-puzzle-game/plan.md": [
+    "test/browser-puzzle-game-prompts.test.mjs"
+  ],
+  "docs/design/archetypes/browser-puzzle-game/PROVENANCE.md": [
+    "test/browser-puzzle-game-prompts.test.mjs"
+  ],
   "docs/design/archetypes/*/README.md": [
     "test/archetype-boards-generator.test.mjs",
     "test/board-states.test.mjs",
