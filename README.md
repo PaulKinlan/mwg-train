@@ -29,7 +29,7 @@ Experiment: does training on Modern Web Guidance-applied sites make a model defa
 npm test                    # full unit suite on demand; not part of the merger's configured gate
 npm run test:fast           # affected unit suites and mapped checks vs origin/main
 npm run build               # alias for npm run check:all; does not run npm test
-npm run check:all           # 27 deterministic offline checks; the merger's full gate, not the unit suite
+npm run check:all           # deterministic offline checks; the merger's full gate, not the unit suite
 npm run check:briefs        # validate + seal the brief manifest
 npm run quotes:verify       # every priced row must re-derive from the page it came from
 npm run quotes:fetch        # re-fetch those pages and report whether they still hash the same
