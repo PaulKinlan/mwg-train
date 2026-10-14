@@ -1005,6 +1005,7 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
         const filters = {
           archetype: url.searchParams.get('archetype') || null,
           framework: url.searchParams.get('framework') || null,
+          model: url.searchParams.get('model') || null,
           state: url.searchParams.get('state') || null,
           rule: url.searchParams.get('rule') || null,
         };

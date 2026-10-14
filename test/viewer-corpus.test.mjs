@@ -277,3 +277,63 @@ test('the project page renders per-rule before/after with the deciding detail', 
   assert.match(html, /↑ improved/);
   assert.match(html, /sha256:aaaa/);
 });
+
+test('loadCorpus, filterProjects and renderIndex preserve and filter multiple generating models per project_id', (t) => {
+  const root = buildFixtureCorpus();
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  writeFileSync(
+    join(root, 'CORPUS.json'),
+    JSON.stringify({
+      run_id: '2026-10-08T00-00-00-000Z',
+      generated_at: '2026-10-08T00:00:00.000Z',
+      generator: 'scripts/scaffold-pilot.mjs',
+      projects: [
+        {
+          project_id: 'booking-raw',
+          archetype: 'booking',
+          framework: 'raw',
+          model: 'deterministic:no-model',
+          build_key: 'booking-raw@deterministic:no-model',
+          accepted: true,
+          original_sha: 'sha256:aaaa',
+          uplift_sha: 'sha256:bbbb',
+        },
+        {
+          project_id: 'booking-raw',
+          archetype: 'booking',
+          framework: 'raw',
+          model: 'deepseek/deepseek-flash',
+          build_key: 'booking-raw@deepseek/deepseek-flash',
+          accepted: true,
+          original_sha: 'sha256:1111',
+          uplift_sha: 'sha256:2222',
+        },
+      ],
+    }),
+  );
+  const corpus = loadCorpus(root);
+  const views = corpus.projects.map((project) => projectView(project));
+  const bookingViews = views.filter((v) => v.id === 'booking-raw');
+  assert.equal(bookingViews.length, 2, 'both model builds for booking-raw must be preserved');
+  assert.deepEqual(
+    bookingViews.map((v) => v.buildKey).sort(),
+    ['booking-raw@deepseek/deepseek-flash', 'booking-raw@deterministic:no-model'],
+  );
+  const deepseekOnly = filterProjects(views, { model: 'deepseek/deepseek-flash' });
+  assert.equal(deepseekOnly.length, 1);
+  assert.equal(deepseekOnly[0].buildKey, 'booking-raw@deepseek/deepseek-flash');
+  assert.equal(deepseekOnly[0].attribution.model, 'deepseek/deepseek-flash');
+  const html = renderIndex({
+    views: deepseekOnly,
+    allViews: views,
+    filters: { model: 'deepseek/deepseek-flash' },
+    runId: corpus.runId,
+    runs: corpus.runs,
+    yieldReport: null,
+    scanAvailable: true,
+    liveOrigin: 'http://127.0.0.1:7701',
+  });
+  assert.match(html, /<select name="model">[\s\S]*<option value="deepseek\/deepseek-flash" selected>deepseek\/deepseek-flash<\/option>/);
+  assert.match(html, /<th scope="col">model<\/th>/);
+  assert.match(html, /<td><code>deepseek\/deepseek-flash<\/code><\/td>/);
+});

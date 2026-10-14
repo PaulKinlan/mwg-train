@@ -380,6 +380,7 @@ function attributionBlock(view) {
   <h2>attribution</h2>
   <dl>
     ${row('generating model', a.model)}
+    ${a.buildKey ? row('build key', a.buildKey) : ''}
     ${row('brief', a.brief)}
     ${row('framework', a.framework)}
     ${row('generator', a.generator)}
@@ -438,6 +439,7 @@ export function renderIndex({ views, allViews, filters, runId, runs, yieldReport
   const runEvidence = allViews.some((view) => view.runDir);
   const archetypes = [...new Set(allViews.map((view) => view.archetype))].sort();
   const frameworks = [...new Set(allViews.map((view) => view.framework))].sort();
+  const models = [...new Set(allViews.map((view) => view.model).filter(Boolean))].sort();
   const categories = [...new Set(allViews.filter((view) => view.hasRun && !view.accepted).map((view) => view.category))].sort();
   const rules = [...new Set(allViews.flatMap((view) => view.requiredRules))].sort();
 
@@ -463,6 +465,7 @@ export function renderIndex({ views, allViews, filters, runId, runs, yieldReport
   <td><a href="/project/${escapeHtml(view.id)}${runId ? `?run=${escapeHtml(runId)}` : ''}"><code>${escapeHtml(view.id)}</code></a>${view.archetypeTitle ? `<br><span class="muted">${escapeHtml(view.archetypeTitle)}</span>` : ''}</td>
   <td>${escapeHtml(view.archetype)}</td>
   <td>${escapeHtml(view.framework)}${view.frameworkVersion ? ` <span class="muted">${escapeHtml(view.frameworkVersion)}</span>` : ''}</td>
+  <td><code>${escapeHtml(view.model ?? 'deterministic:no-model')}</code></td>
   <td>${stateBadge(view)}</td>
   <td>${scanBadge(view.scan)}</td>
   <td>${view.improvedRules.length > 0 ? `<span class="chips">${view.improvedRules.map((rule) => `<span class="chip">${escapeHtml(rule)}</span>`).join('')}</span>` : '<span class="muted">—</span>'}</td>
@@ -481,7 +484,7 @@ export function renderIndex({ views, allViews, filters, runId, runs, yieldReport
     : '<p class="danger">The owner-auth scan configuration is missing or invalid, so no pair can be treated as accepted and live serving is refused (fail-closed).</p>';
 
   const hasRunData = allViews.some((view) => view.hasRun);
-  const activeFilters = ['archetype', 'framework', 'state', 'rule'].some((key) => filters[key]);
+  const activeFilters = ['archetype', 'framework', 'model', 'state', 'rule'].some((key) => filters[key]);
   const emptyMessage = allViews.length === 0
     ? 'No corpus projects are present in this checkout. Point the viewer at a populated corpus.'
     : !hasRunData
@@ -500,6 +503,7 @@ ${yieldLine}
   ${runSelector}
   <label>archetype <select name="archetype"><option value="">(all)</option>${archetypes.map((a) => option(a, a, filters.archetype)).join('')}</select></label>
   <label>framework <select name="framework"><option value="">(all)</option>${frameworks.map((f) => option(f, f, filters.framework)).join('')}</select></label>
+  <label>model <select name="model"><option value="">(all)</option>${models.map((m) => option(m, m, filters.model)).join('')}</select></label>
   <label>state <select name="state">
     ${option('', '(all)', filters.state)}
     ${unknownState}
@@ -515,9 +519,9 @@ ${yieldLine}
 <div class="table-scroll" role="region" aria-label="Corpus projects" aria-describedby="corpus-table-hint" tabindex="0">
 <table class="corpus-table">
 <caption class="sr-only">Project decisions and run evidence</caption>
-<thead><tr><th scope="col">project</th><th scope="col">archetype</th><th scope="col">framework</th><th scope="col">state</th><th scope="col">owner-auth</th><th scope="col">rules improved</th><th scope="col">tree sha</th><th scope="col">live</th></tr></thead>
+<thead><tr><th scope="col">project</th><th scope="col">archetype</th><th scope="col">framework</th><th scope="col">model</th><th scope="col">state</th><th scope="col">owner-auth</th><th scope="col">rules improved</th><th scope="col">tree sha</th><th scope="col">live</th></tr></thead>
 <tbody>
-${rows || `<tr class="empty-row"><td colspan="8">${emptyMessage}</td></tr>`}
+${rows || `<tr class="empty-row"><td colspan="9">${emptyMessage}</td></tr>`}
 </tbody>
 </table>
 </div>`);

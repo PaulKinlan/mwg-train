@@ -210,3 +210,30 @@ test('unverified tokenizer, escaping source, symlink and invalid token results f
   assert.throws(() => serializeSft({ ...f, tokenizer: tokenizer() }), /SYMLINK_SOURCE/);
   assert.equal(existsSync(f.outputPath), false);
 }));
+
+test('multiple generating models for the same project_id serialize under distinct build_keys while duplicates and drift fail closed', () => withFixture((f) => {
+  const rowA = { ...f.row, model: 'deepseek/deepseek-flash', build_key: 'tr-01-hono@deepseek/deepseek-flash' };
+  const rowB = { ...f.row, model: 'qwen-token-plan-individual/qwen3.8-max', build_key: 'tr-01-hono@qwen-token-plan-individual/qwen3.8-max' };
+  writeFileSync(f.manifestPath, `${JSON.stringify(rowA)}\n${JSON.stringify(rowB)}\n`);
+  const result = serializeSft({ ...f, tokenizer: tokenizer(50) });
+  assert.equal(result.report.pairs.length, 2);
+  assert.deepEqual(
+    result.report.pairs.map((p) => ({ project_id: p.project_id, model: p.model, build_key: p.build_key })),
+    [
+      { project_id: 'tr-01-hono', model: 'deepseek/deepseek-flash', build_key: 'tr-01-hono@deepseek/deepseek-flash' },
+      { project_id: 'tr-01-hono', model: 'qwen-token-plan-individual/qwen3.8-max', build_key: 'tr-01-hono@qwen-token-plan-individual/qwen3.8-max' },
+    ],
+  );
+  rmSync(f.outputPath, { force: true });
+
+  // Duplicate (project_id, model) is refused
+  writeFileSync(f.manifestPath, `${JSON.stringify(rowA)}\n${JSON.stringify(rowA)}\n`);
+  assert.throws(() => serializeSft({ ...f, tokenizer: tokenizer(50) }), /NOT_APPROVED/);
+  assert.equal(existsSync(f.outputPath), false);
+
+  // Drifted build_key is refused
+  const drifted = { ...rowA, build_key: 'tr-01-hono@other/model' };
+  writeFileSync(f.manifestPath, `${JSON.stringify(drifted)}\n`);
+  assert.throws(() => serializeSft({ ...f, tokenizer: tokenizer(50) }), /NOT_APPROVED/);
+  assert.equal(existsSync(f.outputPath), false);
+}));

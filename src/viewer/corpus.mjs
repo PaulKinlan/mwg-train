@@ -103,15 +103,22 @@ export function loadCorpus(corpusRoot, runId = null, { includeTraining = false }
   // local runs at all): attributing one run's measurements to another run's view would be a lie.
   const manifestApplies = corpusManifest?.projects && (selectedRun === null || selectedRun === corpusManifest.run_id);
   if (manifestApplies) {
-    const byId = new Map(corpusManifest.projects.map((entry) => [entry.project_id, entry]));
+    const byId = new Map();
+    for (const entry of corpusManifest.projects) {
+      if (!byId.has(entry.project_id)) byId.set(entry.project_id, entry);
+    }
     for (const project of projects) {
       const entry = byId.get(project.id);
       if (!entry) continue;
+      project.model ??= entry.model ?? null;
+      project.buildKey ??= entry.build_key ?? null;
       if (!project.decision) {
         project.decision = {
           project_id: entry.project_id,
           archetype: entry.archetype,
           framework: entry.framework,
+          model: entry.model ?? null,
+          build_key: entry.build_key ?? null,
           accepted: entry.accepted ?? false,
           category: entry.category ?? null,
           detail: ['from the committed corpus manifest (pilot/CORPUS.json); journey-level run records are not in this checkout'],
@@ -125,19 +132,26 @@ export function loadCorpus(corpusRoot, runId = null, { includeTraining = false }
           record_source: 'manifest',
         };
       }
-      // The manifest's SHAs are the record even when a run dir exists locally.
+      // The manifest's SHAs and model identity are the record even when a run dir exists locally.
+      project.decision.model ??= entry.model ?? null;
+      project.decision.build_key ??= entry.build_key ?? null;
       project.decision.original_sha ??= entry.original_sha ?? null;
       project.decision.uplifted_sha ??= entry.uplift_sha ?? null;
     }
     // Projects the plan generates but this checkout never materialized (e.g. arms added after the
-    // trees were last written to disk) are still corpus members: they are included, and their
-    // measured trees are materialized from the plan at serve time.
-    const known = new Set(projects.map((project) => project.id));
+    // trees were last written to disk), or additional model-keyed builds for the same project_id,
+    // are still corpus members: they are included and keyed by build_key (falling back to project_id).
+    const knownKeys = new Set(projects.map((project) => project.buildKey ?? project.id));
+    const knownIds = new Set(projects.map((project) => project.id));
     for (const entry of corpusManifest.projects) {
-      if (known.has(entry.project_id)) continue;
-      known.add(entry.project_id);
+      const entryKey = entry.build_key ?? entry.project_id;
+      if (knownKeys.has(entryKey) || (!entry.build_key && knownIds.has(entry.project_id))) continue;
+      knownKeys.add(entryKey);
+      knownIds.add(entry.project_id);
       projects.push({
         id: entry.project_id,
+        model: entry.model ?? null,
+        buildKey: entry.build_key ?? null,
         spec: {
           archetype: entry.archetype,
           framework: { name: entry.framework },
@@ -151,6 +165,8 @@ export function loadCorpus(corpusRoot, runId = null, { includeTraining = false }
           project_id: entry.project_id,
           archetype: entry.archetype,
           framework: entry.framework,
+          model: entry.model ?? null,
+          build_key: entry.build_key ?? null,
           accepted: entry.accepted ?? false,
           category: entry.category ?? null,
           detail: ['from the committed corpus manifest (pilot/CORPUS.json); the tree is materialized from the plan at serve time (not on disk in this checkout)'],
@@ -171,17 +187,26 @@ export function loadCorpus(corpusRoot, runId = null, { includeTraining = false }
     }
     const trainingManifest = includeTraining ? readJson(join(corpusRoot, 'TRAINING_CORPUS.json')) : null;
     const trainingRecords = includeTraining ? readJson(join(dirname(corpusRoot), 'docs', 'train', 'corpus', 'records.json')) : null;
-    const scoredTrainingById = new Map(
-      (trainingRecords?.projects ?? []).map((entry) => [entry.project_id, entry]),
-    );
+    const scoredTrainingByKey = new Map();
+    const scoredTrainingById = new Map();
+    for (const entry of trainingRecords?.projects ?? []) {
+      if (entry.build_key) scoredTrainingByKey.set(entry.build_key, entry);
+      if (!scoredTrainingById.has(entry.project_id)) scoredTrainingById.set(entry.project_id, entry);
+    }
     if (Array.isArray(trainingManifest?.projects)) {
       for (const entry of trainingManifest.projects) {
-        if (known.has(entry.project_id)) continue;
-        known.add(entry.project_id);
-        const scored = scoredTrainingById.get(entry.project_id) ?? null;
+        const entryKey = entry.build_key ?? entry.project_id;
+        if (knownKeys.has(entryKey) || (!entry.build_key && knownIds.has(entry.project_id))) continue;
+        knownKeys.add(entryKey);
+        knownIds.add(entry.project_id);
+        const scored = (entry.build_key && scoredTrainingByKey.get(entry.build_key)) ?? scoredTrainingById.get(entry.project_id) ?? null;
         const originalSha = entry.tree_sha ?? entry.original_sha ?? null;
+        const model = entry.model ?? scored?.model ?? null;
+        const buildKey = entry.build_key ?? scored?.build_key ?? null;
         projects.push({
           id: entry.project_id,
+          model,
+          buildKey,
           spec: {
             archetype: entry.archetype,
             archetype_title: entry.topic ? `${entry.family_id} · ${entry.topic}` : entry.family_id,
@@ -196,6 +221,8 @@ export function loadCorpus(corpusRoot, runId = null, { includeTraining = false }
             project_id: entry.project_id,
             archetype: entry.archetype,
             framework: entry.framework,
+            model,
+            build_key: buildKey,
             has_run: Boolean(scored?.decision),
             accepted: scored?.decision ? Boolean(scored.decision.accepted) : null,
             category: scored?.decision?.category ?? null,
@@ -220,7 +247,7 @@ export function loadCorpus(corpusRoot, runId = null, { includeTraining = false }
         });
       }
     }
-    projects.sort((a, b) => a.id.localeCompare(b.id));
+    projects.sort((a, b) => a.id.localeCompare(b.id) || String(a.model ?? '').localeCompare(String(b.model ?? '')));
     // The manifest's run id is a valid selection in every view it applies to - including explicit
     // ?run= requests - or the live URLs the index generates would 404 on their own run.
     if (corpusManifest.run_id && !runs.includes(corpusManifest.run_id)) {
@@ -250,8 +277,13 @@ export function loadCorpus(corpusRoot, runId = null, { includeTraining = false }
     }
     const decision = project.decision;
     const hasRun = decision !== null && decision.has_run !== false;
+    const recordedModel = project.model ?? decision?.model ?? spec.seeded_by ?? null;
+    const recordedBuildKey = project.buildKey ?? decision?.build_key ?? null;
     project.attribution = {
-      model: spec.seeded_by ?? 'none — deterministic generator (no model wrote this artefact)',
+      model: recordedModel && recordedModel !== 'deterministic:no-model'
+        ? recordedModel
+        : 'none — deterministic generator (no model wrote this artefact)',
+      buildKey: recordedBuildKey,
       brief: project.id.startsWith('tr-')
         ? `docs/train/briefs/manifest.jsonl → ${project.id} (${spec.archetype_title ?? spec.archetype ?? 'unknown'})`
         : `pilot/plan.json → ${project.id} (archetype: ${spec.archetype ?? decision?.archetype ?? 'unknown'})`,
@@ -277,8 +309,12 @@ export function projectView(project, { scan = null, verification = null } = {}) 
   const spec = project.spec ?? {};
   const decision = project.decision ?? null;
   const hasRun = decision !== null && decision.has_run !== false;
+  const model = project.model ?? decision?.model ?? spec.seeded_by ?? 'deterministic:no-model';
+  const buildKey = project.buildKey ?? decision?.build_key ?? `${project.id}@${model}`;
   return {
     id: project.id,
+    model,
+    buildKey,
     archetype: spec.archetype ?? decision?.archetype ?? 'unknown',
     archetypeTitle: spec.archetype_title ?? null,
     framework: spec.framework?.name ?? decision?.framework ?? 'unknown',
@@ -311,11 +347,12 @@ export function projectView(project, { scan = null, verification = null } = {}) 
   };
 }
 
-/** Index filters: archetype, framework, accept state (incl. per-category rejects), and rule. */
-export function filterProjects(views, { archetype = null, framework = null, state = null, rule = null } = {}) {
+/** Index filters: archetype, framework, model, accept state (incl. per-category rejects), and rule. */
+export function filterProjects(views, { archetype = null, framework = null, model = null, state = null, rule = null } = {}) {
   return views.filter((view) => {
     if (archetype && view.archetype !== archetype) return false;
     if (framework && view.framework !== framework) return false;
+    if (model && view.model !== model) return false;
     if (state) {
       if (state === 'accepted' && view.accepted !== true) return false;
       if (state === 'rejected' && (view.accepted !== false || !view.hasRun)) return false;

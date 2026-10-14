@@ -3,6 +3,7 @@ import { readFileSync, readdirSync, lstatSync, realpathSync, writeFileSync, rena
 import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { assertDisjointTrainingCorpus } from './disjoint.mjs';
 import { isTrainable } from '../provenance/arms.mjs';
+import { buildKey, isModelIdentity } from '../eval/build-key.mjs';
 
 export const LORA_SHAPE_CONTEXT = 262_144;
 // The same provider catalogue advertises trainCtx=65,536 for V4.1 despite a 262,144 LoRA shape.
@@ -69,14 +70,34 @@ export function serializeSft({ manifestPath, root, outputPath, tokenizer }) {
   if (!gate.ok) deny('NOT_DISJOINT', gate.findings.map((f) => f.code).join(', '));
   const bytes = readFileSync(manifestReal);
   const rows = bytes.toString('utf8').trim().split('\n').map((line) => JSON.parse(line));
-  const jsonl = [], messagesByRow = [], char4ByRow = [], measured = [], seen = new Set();
+  const jsonl = [], messagesByRow = [], char4ByRow = [], measured = [], seen = new Set(), seenModelProjectIds = new Set(), derivedKeys = [];
   for (const row of rows) {
     if (!row || row.split !== 'train' || !isTrainable(row) || !nonEmpty(row.rights_ref) ||
       !nonEmpty(row.approved_by) || !nonEmpty(row.approved_at) ||
-      !/^tr-\d{2}-[a-z0-9-]+$/.test(row.project_id ?? '') || !nonEmpty(row.brief_id) || seen.has(row.project_id)) {
+      !/^tr-\d{2}-[a-z0-9-]+$/.test(row.project_id ?? '') || !nonEmpty(row.brief_id)) {
       deny('NOT_APPROVED', `row ${row?.project_id ?? '?'} lacks unique, explicitly approved project provenance`);
     }
-    seen.add(row.project_id);
+    let rowBuildKey = null;
+    if (row.model !== undefined || row.build_key !== undefined) {
+      if (!isModelIdentity(row.model)) {
+        deny('NOT_APPROVED', `row ${row.project_id} carries an invalid model identity`);
+      }
+      rowBuildKey = buildKey({ projectId: row.project_id, model: row.model });
+      if (row.build_key !== undefined && row.build_key !== rowBuildKey) {
+        deny('NOT_APPROVED', `row ${row.project_id} build_key disagrees with derived ${rowBuildKey}`);
+      }
+      if (seen.has(rowBuildKey) || seen.has(row.project_id)) {
+        deny('NOT_APPROVED', `row ${rowBuildKey} duplicates an already approved project/model pair`);
+      }
+      seen.add(rowBuildKey);
+      seenModelProjectIds.add(row.project_id);
+    } else {
+      if (seen.has(row.project_id) || seenModelProjectIds.has(row.project_id)) {
+        deny('NOT_APPROVED', `row ${row.project_id} lacks unique, explicitly approved project provenance`);
+      }
+      seen.add(row.project_id);
+    }
+    derivedKeys.push(rowBuildKey);
     const rightsPath = pathIn(rootReal, row.rights_ref);
     if (!existsSync(rightsPath) || lstatSync(rightsPath).isSymbolicLink() || !lstatSync(rightsPath).isFile() ||
       !within(rootReal, realpathSync(rightsPath))) deny('NOT_APPROVED', `missing or unsafe rights_ref for ${row.project_id}`);
@@ -97,11 +118,20 @@ export function serializeSft({ manifestPath, root, outputPath, tokenizer }) {
   const counts = tokenizer.countBatch(messagesByRow);
   if (!Array.isArray(counts) || counts.length !== rows.length) deny('TOKEN_COUNT', 'one exact count per approved pair is required');
   counts.forEach((count, index) => {
-    const projectId = rows[index].project_id;
+    const row = rows[index];
+    const projectId = row.project_id;
+    const rowBuildKey = derivedKeys[index];
     if (!Number.isSafeInteger(count?.prompt) || count.prompt <= 0 || !Number.isSafeInteger(count?.total) || count.total < count.prompt) deny('TOKEN_COUNT', projectId);
-    measured.push({ project_id: projectId, prompt_tokens: count.prompt, target_tokens: count.total - count.prompt, total_tokens: count.total,
+    measured.push({
+      project_id: projectId,
+      ...(rowBuildKey ? { model: row.model, build_key: rowBuildKey } : {}),
+      prompt_tokens: count.prompt,
+      target_tokens: count.total - count.prompt,
+      total_tokens: count.total,
       char4_estimate: char4ByRow[index],
-      over_262k: count.total > LORA_SHAPE_CONTEXT, over_conservative_train_ctx: count.total > CONSERVATIVE_TRAIN_CONTEXT });
+      over_262k: count.total > LORA_SHAPE_CONTEXT,
+      over_conservative_train_ctx: count.total > CONSERVATIVE_TRAIN_CONTEXT,
+    });
   });
   if (measured.some((row) => row.over_262k || row.over_conservative_train_ctx)) {
     deny('OVER_CONTEXT', JSON.stringify(measured.filter((row) => row.over_262k || row.over_conservative_train_ctx)));
