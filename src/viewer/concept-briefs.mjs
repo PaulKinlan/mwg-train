@@ -215,21 +215,70 @@ function trainingLayoutProse(text) {
   return protectedText.restore(prose);
 }
 
+function markdownBullets(text) {
+  const bullets = [];
+  let current = null;
+  let fence = null;
+  let comment = false;
+  for (const line of (text ?? '').split('\n')) {
+    const trimmed = line.trim();
+    if (comment) {
+      if (trimmed.includes('-->')) comment = false;
+      current = null;
+      continue;
+    }
+    const marker = trimmed.match(/^(`{3,}|~{3,})/);
+    if (marker) {
+      if (fence === null) fence = marker[1][0];
+      else if (fence === marker[1][0]) fence = null;
+      current = null;
+      continue;
+    }
+    if (fence) { current = null; continue; }
+    if (trimmed.startsWith('<!--')) {
+      comment = !trimmed.includes('-->');
+      current = null;
+      continue;
+    }
+    const thematic = /^(?:-{3,}|\*{3,}|_{3,})$/.test(trimmed.replace(/\s+/g, ''));
+    if (thematic || /^\s*(?:\d+[.)]\s+|>|\||#{1,6}\s+|<\/?[A-Za-z][\w-]*\b)/.test(line)) {
+      // A new Markdown block is never the previous role's lazy continuation.
+      current = null;
+      continue;
+    }
+    // CommonMark unordered list markers are -, * and +; classify before lazy prose.
+    const item = line.match(/^\s*[-*+]\s+(\S(?:.*\S)?)\s*$/);
+    if (item) {
+      const content = item[1].trim();
+      current = { text: content, classified: /^\*\*[A-Za-z]+:\*\*/.test(content) };
+      bullets.push(current);
+    } else if (current && trimmed && (!current.classified || /^[ \t]+/.test(line))) {
+      // Only an indented continuation may extend a classified family-safe role.
+      // Unclassified pattern bullets can still use unindented lazy prose.
+      current.text += ` ${trimmed}`;
+    } else {
+      current = null;
+    }
+  }
+  return bullets.map(({ text }) => text);
+}
+
 function eventFunctionalLayout(design, { family = false } = {}) {
   // One authored projection, with four explicitly classified family-safe roles.
   // Unclassified shared bullets remain in the pattern, not family prompts;
   // changing the classified role contract fails closed until reviewed.
   const projection = section(design, 'Grammar and layout')?.split('\n### Functional site projection\n')[1];
   const shared = projection?.split('\n#### Shared structure\n')[1]?.split('\n#### Pattern-specific details\n')[0];
+  const sharedBullets = markdownBullets(shared);
+  const role = /^\*\*([A-Za-z]+):\*\*\s*(.+)$/;
+  const entries = sharedBullets.map((text) => text.match(role)).filter(Boolean);
   const roles = ['Shell', 'Choices', 'Form', 'Outcome'];
-  const entries = [...(shared?.matchAll(/^- \*\*([A-Za-z]+):\*\* ([^\n]+)$/gm) ?? [])];
   if (entries.length !== roles.length || entries.some((entry, index) => entry[1] !== roles[index])) return null;
   const common = entries.map(([, , text]) => `- ${text}`).join('\n');
   if (family) return common;
-  const authoredShared = [...(shared?.matchAll(/^- ([^\n]+)$/gm) ?? [])]
-    .map(([, text]) => `- ${text.replace(/^\*\*[A-Za-z]+:\*\* /, '')}`).join('\n');
+  const authoredShared = sharedBullets.map((text) => `- ${text.replace(role, '$2')}`).join('\n');
   const pattern = projection?.split('\n#### Pattern-specific details\n')[1];
-  const details = [...(pattern?.matchAll(/^- ([^\n]+)$/gm) ?? [])].map(([, text]) => `- ${text}`);
+  const details = markdownBullets(pattern).map((text) => `- ${text}`);
   return details.length ? `${details.join('\n')}\n${authoredShared}` : null;
 }
 

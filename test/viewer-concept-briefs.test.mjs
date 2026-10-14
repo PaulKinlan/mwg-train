@@ -119,9 +119,10 @@ test('event pattern and training layouts read one authored functional source as 
       readFileSync(join(ROOT, 'docs/design/archetypes/event-registration', name)));
     writeFileSync(join(archetype, 'design.md'), design
       .replace('capped at `52rem`', 'capped at `54rem`')
-      .replace('A responsive selection region', 'An adaptive selection region')
+      .replace('A responsive selection region adapts to available space and includes',
+        'An adaptive selection region adapts to available space\n  and includes')
       .replace('#### Pattern-specific details',
-        '- A capacity note reads 142 / 200 seats filled beside the event hero.\n\n#### Pattern-specific details'));
+        '  - A capacity note reads 142 / 200 seats filled\n    beside the event hero.\n* A visitor roster appears only in the pattern\nwhen its plan specifies it.\n+ A plus-marked guide note belongs only in the pattern.\n\n#### Pattern-specific details'));
     for (const id of ['tr-07', 'tr-30']) for (const name of ['plan.md', 'design.md']) {
       writeFileSync(join(scratch, 'docs/train/design', id, name),
         readFileSync(join(ROOT, 'docs/train/design', id, name)));
@@ -130,10 +131,14 @@ test('event pattern and training layouts read one authored functional source as 
     const projectedPattern = archetypeBrief(scratch, 'event-registration').sitePrompt;
     assert.match(projectedPattern, /Layout and components:[\s\S]*54rem/i,
       'changing the authored cap updates the pattern without a code change');
-    assert.match(projectedPattern, /An adaptive selection region/i,
-      'changes to the shared structural source update the pattern');
-    assert.match(projectedPattern, /142 \/ 200 seats filled/i,
-      'unclassified authored Shared-structure bullets remain in the archetype pattern');
+    assert.match(projectedPattern, /An adaptive selection region adapts to available space and includes/i,
+      'a wrapped classified role keeps its continuation in the pattern');
+    assert.match(projectedPattern, /142 \/ 200 seats filled beside the event hero/i,
+      'indented and wrapped Shared-structure bullets remain complete in the pattern');
+    assert.match(projectedPattern, /A visitor roster appears only in the pattern when its plan specifies it/i,
+      'asterisk-marked Shared bullets retain even lazy unindented continuations in the pattern');
+    assert.match(projectedPattern, /(?:^|\n)- A plus-marked guide note belongs only in the pattern\./i,
+      'plus-marked Shared bullets remain distinct pattern guidance after a blank line');
     assert.doesNotMatch(projectedPattern, /52rem/);
     for (const id of ['tr-07', 'tr-30']) {
       const row = rows.get(id);
@@ -142,19 +147,73 @@ test('event pattern and training layouts read one authored functional source as 
       const layout = projectedFamily.split('UI layout:\n')[1]?.split('Family visual direction and tokens:')[0] ?? '';
       assert.doesNotMatch(layout, /\b(?:52|54)rem\b|\blive estimate\b/i,
         `${id}: the archetype demo cap and estimate do not become family requirements`);
-      assert.match(layout, /An adaptive selection region/i,
-        `${id}: shared structural source changes still update the family`);
-      assert.doesNotMatch(layout, /142 \/ 200 seats filled/i,
-        `${id}: a new unclassified demo bullet cannot enter the family prompt`);
+      assert.match(layout, /An adaptive selection region adapts to available space and includes/i,
+        `${id}: wrapped classified role remains complete in the family`);
+      assert.doesNotMatch(layout, /142 \/ 200 seats filled|visitor roster|plus-marked guide note/i,
+        `${id}: new indented, asterisk and plus unclassified bullets cannot enter the family prompt`);
+    }
+    const adjacentBlocks = [
+      ['ordered list', '1. Beside the event hero.'],
+      ['thematic break', '---\nBeside the event hero.'],
+      ['blockquote', '> Beside the event hero.'],
+      ['table row', '| Beside the event hero. | Pattern only |'],
+      ['heading', '# Beside the event hero.'],
+      ['HTML comment', '<!--\n- **Capacity:** Beside the event hero.\n-->'],
+      ['HTML block', '<aside>Beside the event hero.</aside>'],
+      ['fenced block', '```text\n- **Capacity:** Beside the event hero.\n```'],
+      ['setext h1', 'Beside the event hero.\n==='],
+      ['setext h2', 'Beside the event hero.\n---'],
+      ['HTML declaration', '<!DOCTYPE html> Beside the event hero.'],
+      ['CDATA block', '<![CDATA[ Beside the event hero. ]]>'],
+      ['processing instruction', '<?xml version=1.0?> Beside the event hero.'],
+      ['footnote-like prose', '[^1]: Beside the event hero.'],
+      ['bare dash and prose', '-\nBeside the event hero.'],
+      ['digit-first prose', '142 Beside the event hero.'],
+      ['unrecognized line', 'Novel block boundary: Beside the event hero.'],
+    ];
+    for (const [kind, block] of adjacentBlocks) {
+      writeFileSync(join(archetype, 'design.md'), design.replace('\n\n#### Pattern-specific details\n',
+        `\n${block}\n#### Pattern-specific details\n`));
+      const patternPrompt = archetypeBrief(scratch, 'event-registration').sitePrompt;
+      assert.match(patternPrompt, /confirmation\/read-back view/i,
+        `${kind}: the genuine Outcome role remains in the pattern`);
+      assert.doesNotMatch(patternPrompt, /Beside the event hero/i,
+        `${kind}: unclassified non-bullet content must not extend a classified role in the pattern`);
+      for (const id of ['tr-07', 'tr-30']) {
+        const familyPrompt = trainingBrief(scratch, id, rows.get(id)).sitePrompt;
+        assert.match(familyPrompt, /confirmation\/read-back view/i,
+          `${id}: the genuine Outcome role remains after ${kind}`);
+        assert.doesNotMatch(familyPrompt, /Beside the event hero/i,
+          `${id}: an adjacent ${kind} must not become family Outcome guidance`);
+      }
+    }
+    writeFileSync(join(archetype, 'design.md'), design.replace('\n\n#### Pattern-specific details\n',
+      '\n+ A plus-marked capacity note reads 142 / 200 seats filled.\n#### Pattern-specific details\n'));
+    const adjacentPattern = archetypeBrief(scratch, 'event-registration').sitePrompt;
+    assert.match(adjacentPattern, /(?:^|\n)- A plus-marked capacity note reads 142 \/ 200 seats filled\./i,
+      'a plus bullet immediately after Outcome is a separate pattern-only item');
+    for (const id of ['tr-07', 'tr-30']) {
+      assert.doesNotMatch(trainingBrief(scratch, id, rows.get(id)).sitePrompt, /plus-marked capacity note/i,
+        `${id}: adjacent plus bullet must not merge into the classified Outcome role`);
     }
     writeFileSync(join(archetype, 'design.md'), design.replace('#### Pattern-specific details',
-      '- **Capacity:** A capacity note reads 142 / 200 seats filled.\n\n#### Pattern-specific details'));
+      '  + **Capacity:** A capacity note reads 142 / 200 seats filled.\n\n#### Pattern-specific details'));
     assert.match(archetypeBrief(scratch, 'event-registration').sitePrompt,
       /Layout and components: Not yet documented in this checkout\./,
       'a new classified shared role also fails the pattern contract closed');
     for (const id of ['tr-07', 'tr-30']) {
       assert.match(trainingBrief(scratch, id, rows.get(id)).sitePrompt, /UI layout: Not yet documented in this checkout\./,
         `${id}: a new classified source role changes the contract and fails closed`);
+    }
+    writeFileSync(join(archetype, 'design.md'), design.replace(
+      '- A live estimate is clearly marked as illustrative rather than a charge.',
+      '- A live estimate is clearly marked as illustrative rather than a charge.\n+ A plus-marked pattern detail remains separate.'));
+    const plusDetail = archetypeBrief(scratch, 'event-registration').sitePrompt;
+    assert.match(plusDetail, /(?:^|\n)- A plus-marked pattern detail remains separate\./i,
+      'a plus bullet under Pattern-specific details is its own item');
+    for (const id of ['tr-07', 'tr-30']) {
+      assert.doesNotMatch(trainingBrief(scratch, id, rows.get(id)).sitePrompt, /plus-marked pattern detail/i,
+        `${id}: pattern detail never becomes family structure`);
     }
   } finally { rmSync(scratch, { recursive: true, force: true }); }
 });
