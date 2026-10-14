@@ -89,11 +89,29 @@ export function checkUniverse(briefs, { split = 'test', task = 'generate', requi
  * cell is an error rather than a silently smaller denominator, because a per-arm pass rate computed
  * over a different brief set is not a paired comparison at all.
  */
-export function checkDesign(results, briefs, arms = ARMS) {
+export function checkDesign(results, briefs, arms = ARMS, { requireEnvironment = true } = {}) {
   const problems = [];
   const briefIds = new Set(briefs.map((brief) => brief.brief_id));
   const seen = new Map();
   for (const result of results) {
+    if (requireEnvironment) {
+      // This audits what a row CLAIMS, not historical provenance. An exact Node/Chrome version pin
+      // needs separate ratification; do not derive one from these caller-supplied result records.
+      if (result?.platform !== 'linux') {
+        problems.push({ code: 'PLATFORM_NOT_LINUX', brief_id: result?.brief_id, arm: result?.arm,
+          message: `sealed results require a Linux run record (found ${result?.platform ?? 'none'})` });
+      }
+      const node = /^v(\d+)\.\d+\.\d+$/.exec(result?.node_version ?? '');
+      if (!node || Number(node[1]) < 20) {
+        problems.push({ code: 'NODE_VERSION_UNRECORDED', brief_id: result?.brief_id, arm: result?.arm,
+          message: 'run record needs a supported, explicit Node version; this is not a version pin' });
+      }
+      const chrome = /^(?:Chrome|HeadlessChrome|Chromium)\/([1-9]\d*)\.\d+\.\d+\.\d+$/.test(result?.chrome_version ?? '');
+      if (!chrome || result?.browser?.product !== result.chrome_version) {
+        problems.push({ code: 'CHROME_VERSION_UNRECORDED', brief_id: result?.brief_id, arm: result?.arm,
+          message: 'run record needs a CDP browser product matching its Chrome version; this is not a version pin' });
+      }
+    }
     if (!briefIds.has(result?.brief_id)) {
       problems.push({ code: 'UNKNOWN_BRIEF', brief_id: result?.brief_id, arm: result?.arm, message: 'result for a brief that is not in the sealed set' });
       continue;

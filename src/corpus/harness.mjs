@@ -706,6 +706,17 @@ async function captureEvidence(page, dir, label, protocol) {
   return { screenshot, mobileShot, tracePath };
 }
 
+/** A measured runtime stamp, including runs that later fail to start their server. */
+export function runEnvironment(chrome) {
+  const browser = chrome?.version ?? null; // Browser.getVersion from the live CDP connection.
+  return {
+    platform: process.platform,
+    node_version: process.version,
+    browser,
+    chrome_version: typeof browser?.product === 'string' && browser.product ? browser.product : null,
+  };
+}
+
 /**
  * Run one project version end to end.
  *
@@ -726,6 +737,7 @@ export async function runProjectVersion({ chrome, projectDir, spec, label, port,
     label,
     base_url: base,
     started_at: new Date().toISOString(),
+    ...runEnvironment(chrome),
     journeys: [],
     console: [],
     network: [],

@@ -26,6 +26,11 @@ function result(briefId, arm, overrides = {}) {
     blocker_accessibility: 0,
     blocker_security: 0,
     failures: [],
+    // Synthetic test-only runtime; never evidence of a measured browser or sealed execution.
+    platform: 'linux',
+    node_version: 'v24.21.0',
+    chrome_version: 'Chrome/155.0.8059.39',
+    browser: { product: 'Chrome/155.0.8059.39' },
     ...overrides,
   };
 }
@@ -62,6 +67,28 @@ test('an incomplete design is an error, not a smaller denominator', () => {
   const duplicated = [...complete, result('f2-v1', 'T_trained_adapter')];
   assert.ok(checkDesign(duplicated, briefs).some((p) => p.code === 'DUPLICATE_RESULT'));
   assert.ok(checkDesign([result('ghost', 'T_trained_adapter')], briefs).some((p) => p.code === 'UNKNOWN_BRIEF'));
+});
+
+test('evaluation refuses unrecorded or non-Linux runtime instead of trusting platform-only labels', () => {
+  const briefs = [brief('f1', 1)];
+  const complete = ARMS.map((arm) => result(briefs[0].brief_id, arm));
+  assert.deepEqual(checkDesign(complete, briefs), []);
+  for (const [changed, expected] of [
+    [{ platform: 'darwin' }, 'PLATFORM_NOT_LINUX'],
+    [{ platform: undefined }, 'PLATFORM_NOT_LINUX'],
+    [{ node_version: 'v0.0.0' }, 'NODE_VERSION_UNRECORDED'],
+    [{ node_version: undefined }, 'NODE_VERSION_UNRECORDED'],
+    [{ chrome_version: 'unverified', browser: { product: 'unverified' } }, 'CHROME_VERSION_UNRECORDED'],
+    [{ chrome_version: 'Chrome/155.0.8059.39', browser: { product: 'Chrome/154.0.0.0' } }, 'CHROME_VERSION_UNRECORDED'],
+    [{ browser: undefined }, 'CHROME_VERSION_UNRECORDED'],
+  ]) {
+    const altered = [{ ...complete[0], ...changed }, ...complete.slice(1)];
+    assert.ok(checkDesign(altered, briefs).some((p) => p.code === expected), JSON.stringify(changed));
+    const sealed = analyseSealed(altered, briefs, { iterations: 10 });
+    assert.equal(sealed.ok, false);
+    assert.equal(sealed.decision, null);
+    assert.ok(sealed.problems.some((p) => p.code === expected));
+  }
 });
 
 test('the bootstrap resamples families, so a split family cannot buy confidence', () => {
@@ -280,7 +307,7 @@ test('a reportable verdict goes through the checked entry point', () => {
     { brief_id: 'd2', family_id: 'd2', split: 'dev', task: 'generate', required_rules: [] },
   ];
   const devResults = ['T_trained_adapter', 'C1_bare_base', 'C2_base_mwg_prompt', 'C3_base_uplift_tool'].flatMap((arm) =>
-    devBriefs.map((brief) => ({ brief_id: brief.brief_id, arm, runnable: true, functional: arm === 'T_trained_adapter', rule_results: {}, blocker_accessibility: 0, blocker_security: 0 })),
+    devBriefs.map((brief) => result(brief.brief_id, arm, { functional: arm === 'T_trained_adapter', rule_results: {} })),
   );
   const refused = analyseSealed(devResults, devBriefs, { seal: 'sha256:91d75f29afe10fa419b53fc412abdfaf970068d7725fe40c69894e64c36ed59e' });
   assert.equal(refused.ok, false, 'a dev split must not produce a verdict');
@@ -289,7 +316,7 @@ test('a reportable verdict goes through the checked entry point', () => {
 
   const testBriefs = devBriefs.map((brief, index) => ({ ...brief, brief_id: `t${index + 1}`, family_id: `t${index + 1}`, split: 'test' }));
   const testResults = ['T_trained_adapter', 'C1_bare_base', 'C2_base_mwg_prompt', 'C3_base_uplift_tool'].flatMap((arm) =>
-    testBriefs.map((brief) => ({ brief_id: brief.brief_id, arm, runnable: true, functional: true, rule_results: {}, blocker_accessibility: 0, blocker_security: 0 })),
+    testBriefs.map((brief) => result(brief.brief_id, arm, { rule_results: {} })),
   );
   // the right split but the wrong seal is still refused
   assert.equal(analyseSealed(testResults, testBriefs, { seal: 'sha256:deadbeef' }).ok, false);
