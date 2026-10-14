@@ -290,6 +290,10 @@ export const DOCUMENTS = {
   'docs/design/archetypes/browser-puzzle-game/design.md': 'design',
   'docs/design/archetypes/browser-puzzle-game/plan.md': 'design',
   'docs/design/archetypes/browser-puzzle-game/PROVENANCE.md': 'provenance',
+  // Proposed Kestrel sprint workspace; local prompt provenance is not a measured corpus report.
+  'docs/design/archetypes/saas-workspace-board/design.md': 'design',
+  'docs/design/archetypes/saas-workspace-board/plan.md': 'design',
+  'docs/design/archetypes/saas-workspace-board/PROVENANCE.md': 'provenance',
   // The first archetype authored outside the five evaluation families (bead mwg-train-efg): a board brief whose
   // prompts the generator reads. Classified like the other archetype READMEs that record borrowed reference
   // material and its rights.
