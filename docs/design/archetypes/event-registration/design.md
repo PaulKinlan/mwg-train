@@ -67,6 +67,17 @@ not the entire corpus (`tr-16` bleeds while keeping its footer). `tr-07` puts an
 photo and reviews to the left of the "Reserve Your Pass" form card; `tr-30` puts an event
 card, an available-zones panel, photo and reviews to the left of its form card.
 
+### Functional site projection
+
+This layout is for the interactive event site, not the static demo stylesheet or either family's
+fixture-specific form ID. The event's own journey supplies its choices and evidence of capacity.
+
+- A fluid, narrow page shell capped at `52rem` frames event details and a labelled registration form.
+- Tickets are a two-column grid that collapses to one column on narrow screens; ticket rows and labelled quantity controls remain usable at every width.
+- The event hero names the date and location, and shows availability only when backed by actual registration state.
+- The registration form has labelled attendee fields, inline announced validation, a refusal state and a live estimate clearly marked as illustrative rather than a charge.
+- A confirmation/read-back view shows the stored attendee and pass details; an illustrative QR or badge must not claim real entry.
+
 ## Typography
 
 One family only: `system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`. This target has

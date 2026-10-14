@@ -46,11 +46,15 @@ test('event-registration pattern prompt describes a functional event site withou
   const pattern = gallery.patterns.find((item) => item.id === 'event-registration');
   assert.ok(pattern?.brief?.sitePrompt);
   const prompt = pattern.brief.sitePrompt;
+  assert.doesNotMatch(prompt, /see the first anti-pattern below/i,
+    'the pattern brief cannot point below to an Anti-patterns section it does not project');
+  assert.match(prompt, /sixteen hex colours are written outside :root/i,
+    'dropping the dangling reference must keep its inline colour-system observation');
   assert.doesNotMatch(prompt, /\.(?:ticket-grid|ticket-row|event-hero|event-pass|capacity-note|pass-status|capacity-dot)\b|#registration-form\b/i,
     'no demo stylesheet selectors or fixed demo form ID should become build instructions');
   assert.doesNotMatch(prompt, /(?:^|\n)Read from demo\/|demo\/compare\.html|the two training boards each declare|tr-07 puts|tr-30 puts/i,
     'a site brief does not need demo-file or unrelated family-board observations');
-  assert.match(prompt, /Layout and components:[\s\S]*ticket options use a two-column grid[\s\S]*registration form[\s\S]*confirmation/i,
+  assert.match(prompt, /Layout and components:[\s\S]*Tickets are a two-column grid[\s\S]*registration form[\s\S]*confirmation/i,
     'retain responsive ticket layout, labelled registration and a confirmation view');
   const design = readFileSync(join(ROOT, 'docs/design/archetypes/event-registration/design.md'), 'utf8');
   const authoredTokens = [...design.matchAll(/^\| `(--[a-z-]+)` \| `(#[0-9a-f]{6})` \|/gmi)];
@@ -64,6 +68,45 @@ test('event-registration pattern prompt describes a functional event site withou
     assert.match(family.brief.sitePrompt, /UI layout:[\s\S]*#(?:observatory-registration-form|registration-form)\b/i,
       `${id} keeps its plan-owned form ID in the training brief`);
   }
+});
+
+test('event pattern and training layouts read one authored functional source as design facts change', () => {
+  const sourceFile = join(ROOT, 'docs/design/archetypes/event-registration/design.md');
+  const design = readFileSync(sourceFile, 'utf8');
+  const source = design.match(/^### Functional site projection\n([\s\S]*?)(?=^## )/m)?.[1]?.trim();
+  assert.ok(source?.includes('52rem') && source.includes('two-column grid'),
+    'the design document declares the shared functional layout instead of code duplicating it');
+  const rawGrammar = design.match(/^## Grammar and layout\n([\s\S]*?)(?=^### Functional site projection)/m)?.[1] ?? '';
+  const measuredCap = rawGrammar.match(/width: min\(100% - 2rem, (\d+rem)\)/)?.[1];
+  assert.ok(measuredCap && source.includes(`capped at \`${measuredCap}\``),
+    'the functional cap must agree with the same design document’s measured shell');
+  const pattern = archetypeBrief(ROOT, 'event-registration').sitePrompt;
+  const training = listConcepts(ROOT).trainingTargets.find((target) => target.id === 'tr-07').brief.sitePrompt;
+  assert.match(pattern, /Layout and components:[\s\S]*52rem[\s\S]*two-column grid/i);
+  assert.match(training, /UI layout:[\s\S]*52rem[\s\S]*two-column grid/i);
+
+  const scratch = mkdtempSync(join(tmpdir(), 'event-layout-source-'));
+  try {
+    const archetype = join(scratch, 'docs/design/archetypes/event-registration');
+    const family = join(scratch, 'docs/train/design/tr-07');
+    mkdirSync(archetype, { recursive: true });
+    mkdirSync(family, { recursive: true });
+    for (const name of ['plan.md', 'README.md']) writeFileSync(join(archetype, name),
+      readFileSync(join(ROOT, 'docs/design/archetypes/event-registration', name)));
+    writeFileSync(join(archetype, 'design.md'), design.replace('capped at `52rem`', 'capped at `54rem`'));
+    for (const name of ['plan.md', 'design.md']) writeFileSync(join(family, name),
+      readFileSync(join(ROOT, 'docs/train/design/tr-07', name)));
+    const row = trainingBriefs(ROOT).get('tr-07');
+    assert.ok(row, 'the family manifest declares tr-07');
+    const projectedPattern = archetypeBrief(scratch, 'event-registration').sitePrompt;
+    const projectedFamily = trainingBrief(scratch, 'tr-07', row).sitePrompt;
+    assert.match(projectedPattern, /Layout and components:[\s\S]*54rem/i,
+      'changing the authored cap updates the pattern without a code change');
+    assert.match(projectedFamily, /UI layout:[\s\S]*54rem/i,
+      'changing the same authored cap updates the family without a code change');
+    assert.doesNotMatch(projectedPattern, /52rem/);
+    assert.doesNotMatch(projectedFamily, /52rem/);
+  } finally { rmSync(scratch, { recursive: true, force: true }); }
 });
 
 test('site prompts omit wrapped reference-viewport framing while retaining site layout instructions', () => {

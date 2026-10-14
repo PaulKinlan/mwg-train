@@ -140,12 +140,6 @@ const TRAINING_LAYOUTS = {
     '- Validation names the affected question and is announced. The family journey decides whether questions step, how drafts persist, and which receipt or outcome view follows.',
     '- A separate empty result view names the filter or response set with no matches.',
   ].join('\n'),
-  'event-registration': [
-    '- A fluid, narrow page shell keeps the event details and labelled registration form readable as the viewport changes.',
-    '- Tickets are a two-column grid that collapses to one column on narrow screens; only include options the family plan declares.',
-    '- The form #registration-form presents family-defined participation fields, announced validation and a clear refusal state.',
-    '- A confirmation/read-back view shows the stored outcome; include a pass only when the family journey defines one.',
-  ].join('\n'),
   'docs-site': [
     '- A brand header and navigation frame a persistent table-of-contents sidebar beside a dominant reading column.',
     '- Hierarchical headings and an aria-current page marker keep the article structure navigable; code or transcript blocks remain selectable text when declared.',
@@ -221,19 +215,30 @@ function trainingLayoutProse(text) {
   return protectedText.restore(prose);
 }
 
+function eventFunctionalLayout(design) {
+  // The authored grammar carries a functional subsection alongside static-demo observations.
+  // Both pattern and training prompts project this ONE source rather than duplicate its bullets.
+  const projection = section(design, 'Grammar and layout')?.split('\n### Functional site projection\n')[1]
+    ?.split('\n### ', 1)[0];
+  // Its explanatory preface distinguishes the demo; only the functional bullets
+  // belong in either build brief.
+  return projection?.match(/^- [\s\S]+/m)?.[0]?.trim() ?? null;
+}
+
 function trainingSiteLayout(design, archetype, journey) {
   const layout = section(design, 'Grammar and layout');
   if (!layout) return null;
   // The shared archetype source also records raster defects and source-vs-board divergences;
   // those observations are not requirements for any family's functional website.
-  const structural = trainingLayoutProse(TRAINING_LAYOUTS[archetype] ?? layout);
+  const structural = trainingLayoutProse(archetype === 'event-registration'
+    ? eventFunctionalLayout(design) ?? '' : TRAINING_LAYOUTS[archetype] ?? layout);
   if (archetype === 'booking') return structural.replace(/\bthe student\b/gi, 'the user');
   if (archetype === 'web-shop') return structural.replace(/configuration selects \(quantity, variant, grind\)/i,
     'the configuration controls this family’s plan declares');
   if (archetype === 'event-registration') {
-    // The archetype measures its demo form, but the family journey owns the real form ID.
+    // The family journey owns its form ID; the shared authored pattern names no demo ID.
     const familyFormId = journey?.match(/\bform#([a-z][a-z0-9-]*)\b/)?.[1];
-    return structural.replace(/#registration-form\b/g, familyFormId ? `#${familyFormId}` : 'the family registration form');
+    return structural.replace(/\bThe registration form\b/, familyFormId ? `The form #${familyFormId}` : 'The registration form');
   }
   return structural;
 }
@@ -265,16 +270,6 @@ function siteComponentHierarchy(design, { trainingArchetype = null } = {}) {
   return trainingArchetype ? trainingLayoutProse(cleaned) : cleaned;
 }
 
-// The event design describes a static demo in CSS-selector and form-ID terms. Its
-// pattern prompt needs the source-backed page structure, not selectors to copy.
-const EVENT_PATTERN_COMPONENTS = [
-  '- A fluid single-column shell capped at 52rem frames the event details and a labelled registration form.',
-  '- Ticket options use a two-column grid that collapses to one column on narrow screens; ticket rows and labelled quantity controls remain usable at every width.',
-  '- The event hero names the date and location, and shows availability only when backed by actual registration state.',
-  '- The registration form has labelled attendee fields, inline announced validation, a refusal state and a live estimate clearly marked as illustrative rather than a charge.',
-  '- A confirmation/read-back view shows the stored attendee and pass details; an illustrative QR or badge must not claim real entry.',
-].join('\n');
-
 function eventPatternTokens(design) {
   // Derive declared colour values from the authored table, not its demo
   // stylesheet-usage column (which names static selectors and reference counts).
@@ -295,8 +290,9 @@ export function archetypeBrief(repoRoot, id, trainingImagePrompt = null) {
   const sitePrompt = [
     `Build a complete, interactive ${id.replaceAll('-', ' ')} website. This is a site implementation brief, not an image-generation or model-performance result.`,
     group('Use case', section(plan, 'Use case')),
-    group('UI composition', section(design, 'Visual thesis')),
-    group('Layout and components', eventPattern ? EVENT_PATTERN_COMPONENTS :
+    group('UI composition', eventPattern ? section(design, 'Visual thesis')
+      ?.replace(/\s*-\s*see the\s+first anti-pattern below:/i, ':') : section(design, 'Visual thesis')),
+    group('Layout and components', eventPattern ? eventFunctionalLayout(design) :
       [section(design, 'Grammar and layout'), section(design, 'Component hierarchy')].filter(Boolean).join('\n\n')),
     group('Visual tokens', eventPattern ? eventPatternTokens(design) : section(design, 'Token usage')),
     group('Step-by-step behaviour', section(plan, 'Journey')),
