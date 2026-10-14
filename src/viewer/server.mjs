@@ -39,6 +39,7 @@ import { existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, realpathSy
 import { mkdir, readFile, rm } from 'node:fs/promises';
 import { dirname, extname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { deflateSync, gzipSync } from 'node:zlib';
 
 import { conceptImage, conceptJourneyStep, conceptTarget, listConcepts, renderConcepts, trainingBoard } from './concepts.mjs';
 import { filterProjects, loadCorpus, projectView } from './corpus.mjs';
@@ -173,6 +174,46 @@ const htmlResponse = (response, body, status = 200, liveOrigin = '', options = {
   response.writeHead(status, { 'content-type': 'text/html; charset=utf-8', ...viewerHeaders(liveOrigin, options) });
   response.end(body);
 };
+
+// Only /concepts has a large, deterministic, authored HTML body. Keep the transport contract local to
+// that route; other viewer pages and evidence assets retain their existing no-store/no-compression policy.
+function encodingQuality(header, name, defaultQuality = 0) {
+  if (typeof header !== 'string' || !header.trim()) return defaultQuality;
+  const qualities = new Map();
+  for (const choice of header.split(',')) {
+    const [encoding, ...parameters] = choice.split(';').map((part) => part.trim().toLowerCase());
+    if (!encoding) continue;
+    const quality = parameters.find((parameter) => parameter.startsWith('q='));
+    const q = quality === undefined ? 1 : Number(quality.slice(2));
+    qualities.set(encoding, Number.isFinite(q) && q >= 0 && q <= 1 ? q : 0);
+  }
+  return qualities.get(name) ?? qualities.get('*') ?? defaultQuality;
+}
+
+function conceptsResponse(request, response, html, liveOrigin) {
+  const raw = Buffer.from(html, 'utf8');
+  const accepted = request.headers['accept-encoding'];
+  const encoding = raw.length >= 1024 && encodingQuality(accepted, 'gzip') > 0 ? 'gzip'
+    : raw.length >= 1024 && encodingQuality(accepted, 'deflate') > 0 ? 'deflate' : 'identity';
+  if (encoding === 'identity' && encodingQuality(accepted, 'identity', 1) === 0) {
+    response.writeHead(406, { ...viewerHeaders(liveOrigin), vary: 'Accept-Encoding', 'cache-control': 'private, no-cache' });
+    return response.end();
+  }
+  // This is a private authenticated page. Revalidation hashes the current render, so edits to source
+  // briefs or image availability cannot be hidden behind a process-lifetime cached HTML snapshot.
+  const etag = `W/"${createHash('sha256').update(raw).digest('hex')}-${encoding}"`;
+  const headers = { 'content-type': 'text/html; charset=utf-8', ...viewerHeaders(liveOrigin),
+    'cache-control': 'private, no-cache', vary: 'Accept-Encoding', etag,
+    ...(encoding === 'identity' ? {} : { 'content-encoding': encoding }) };
+  if (String(request.headers['if-none-match'] ?? '').split(',').some((tag) => tag.trim() === etag || tag.trim() === '*')) {
+    response.writeHead(304, headers);
+    return response.end();
+  }
+  const body = encoding === 'gzip' ? gzipSync(raw, { level: 6 })
+    : encoding === 'deflate' ? deflateSync(raw, { level: 6 }) : raw;
+  response.writeHead(200, { ...headers, 'content-length': body.length });
+  return response.end(body);
+}
 
 const textResponse = (response, body, status = 200) => {
   response.writeHead(status, { 'content-type': 'text/plain; charset=utf-8', ...viewerHeaders() });
@@ -789,7 +830,7 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
       if (path === '/healthz') return textResponse(response, 'ok');
 
       if (path === '/concepts' && request.method === 'GET') {
-        return htmlResponse(response, renderConcepts(listConcepts(repoRoot)), 200, liveOrigin);
+        return conceptsResponse(request, response, renderConcepts(listConcepts(repoRoot)), liveOrigin);
       }
       const journeyImageMatch = path.match(/^\/concepts\/images\/([a-z0-9-]+)\/(step[1-9][0-9]*-[a-z0-9-]+)\.jpg$/);
       if (journeyImageMatch && request.method === 'GET') {

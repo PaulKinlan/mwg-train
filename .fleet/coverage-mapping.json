@@ -319,6 +319,7 @@
     "test/known-sinks.test.mjs"
   ],
   "src/viewer/server.mjs": [
+    "test/viewer-concepts-delivery.test.mjs",
     "test/viewer-board-asset.test.mjs",
     "test/viewer-live-index.test.mjs",
     "test/viewer-auth.test.mjs",
