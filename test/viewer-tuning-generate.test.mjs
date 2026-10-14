@@ -186,10 +186,12 @@ test('image dimensions are read from the bytes, including the real committed boa
   const filled = Buffer.concat([Buffer.from([0xff, 0xd8, 0xff, 0xff, 0xff]), tinyJpeg(800, 600).subarray(2)]);
   assert.deepEqual(readImageDimensions(filled), { width: 800, height: 600 }, 'FF fill bytes must not hide the frame header');
 
-  // The same reader against the authored reference board and an authored PNG target: if it disagreed with the files on
-  // disk, every number the page shows beside a generated board would be unfounded.
-  const reference = readImageDimensions(readFileSync(join(ROOT, 'docs/design/training/tr-01/reference.jpg')));
-  assert.deepEqual(reference, { width: 1376, height: 768 });
+  // Compare the committed derived board to its crop ledger, not the uncropped source dimensions. The board may be
+  // cropped again without invalidating the image reader; its bytes must still match the pinned derived hash.
+  const crop = JSON.parse(readFileSync(join(ROOT, 'docs/provenance/assets/training-frame-crops.json'), 'utf8')).boards['tr-01'];
+  const referenceBytes = readFileSync(join(ROOT, 'docs/design/training/tr-01/reference.jpg'));
+  assert.equal(createHash('sha256').update(referenceBytes).digest('hex'), crop.derivedSha256);
+  assert.deepEqual(readImageDimensions(referenceBytes), { width: crop.derivedDimensions[0], height: crop.derivedDimensions[1] });
   const target = readImageDimensions(readFileSync(join(ROOT, 'data/A1_self_generated/targets/tr-01/target.png')));
   assert.equal(target.width, 1280);
 
