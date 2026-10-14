@@ -153,18 +153,26 @@ function confinedFile(root, dir, filename) {
  *  design-language history `docs/design.md` records, and the viewer no longer serves them, so this route carries no
  *  board allowlist any more. Every reference the page shows is a generated archetype board, served through the
  *  allowlisted two-segment route in conceptJourneyStep below. */
-export function conceptImage(repoRoot, name) {
+function conceptImageFile(repoRoot, name) {
   if (!IMAGE_NAME.test(name)) return null;
   const root = join(repoRoot, 'docs/design');
-  const file = confinedFile(root, join(root, 'archetypes'), `${name}.jpg`);
+  return confinedFile(root, join(root, 'archetypes'), `${name}.jpg`);
+}
+
+export function conceptImage(repoRoot, name) {
+  const file = conceptImageFile(repoRoot, name);
   return file ? { bytes: readFileSync(file), type: 'image/jpeg' } : null;
 }
 
 /** Only fixed archetype/step pairs are public; neither path segment comes from a filesystem listing. */
-export function conceptJourneyStep(repoRoot, archetype, id) {
+function journeyStepFile(repoRoot, archetype, id) {
   if (!Object.hasOwn(JOURNEYS, archetype) || !JOURNEYS[archetype].some((step) => step.id === id)) return null;
   const root = join(repoRoot, 'docs/design');
-  const file = confinedFile(root, join(root, 'archetypes', archetype), `${id}.jpg`);
+  return confinedFile(root, join(root, 'archetypes', archetype), `${id}.jpg`);
+}
+
+export function conceptJourneyStep(repoRoot, archetype, id) {
+  const file = journeyStepFile(repoRoot, archetype, id);
   return file ? { bytes: readFileSync(file), type: 'image/jpeg' } : null;
 }
 
@@ -321,13 +329,13 @@ export function listConcepts(repoRoot) {
   const referenceDir = join(repoRoot, 'docs/design/archetypes');
   const names = existsSync(referenceDir) && !lstatSync(referenceDir).isSymbolicLink() && lstatSync(referenceDir).isDirectory()
     ? readdirSync(referenceDir).filter((name) => name.endsWith('.jpg')).map((name) => name.slice(0, -4))
-      .filter((name) => IMAGE_NAME.test(name) && !!conceptImage(repoRoot, name))
+      .filter((name) => !!conceptImageFile(repoRoot, name))
     : [];
   const briefRows = trainingBriefs(repoRoot);
   const states = boardStateRegister(repoRoot);
   const journeys = Object.entries(JOURNEYS).map(([id, steps]) => ({
     id, title: id.replaceAll('-', ' '),
-    steps: steps.map((step) => ({ ...step, available: !!conceptJourneyStep(repoRoot, id, step.id) })),
+    steps: steps.map((step) => ({ ...step, available: !!journeyStepFile(repoRoot, id, step.id) })),
   }));
   // Booking remains first, including when its first image is absent. Never claim a reference pairing
   // for a family until an allowlisted image is actually available in the checkout.
@@ -350,7 +358,7 @@ export function listConcepts(repoRoot) {
         state: states[id]?.[`${step.id}.jpg`] ?? null,
       })) };
     }),
-    boards: BOARDS.filter((board) => !!conceptJourneyStep(repoRoot, board.archetype, board.id)),
+    boards: BOARDS.filter((board) => !!journeyStepFile(repoRoot, board.archetype, board.id)),
     archetypes: archetypes.map((id) => {
       const first = journeys.find((journey) => journey.id === id)?.steps[0];
       const stepReference = !names.includes(id) && first?.available;

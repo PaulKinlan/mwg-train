@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
@@ -193,6 +194,41 @@ test('gallery serves the generated archetype reference boards and the authored e
   assert.equal((await fetch(`${base}/live/example/original/`)).status, 404);
 });
 
+test('listing checks confined JPEG availability without reading full image bytes', () => {
+  const root = mkdtempSync(join(tmpdir(), 'viewer-concepts-stat-'));
+  try {
+    const archetypes = join(root, 'docs/design/archetypes');
+    mkdirSync(join(archetypes, 'booking'), { recursive: true });
+    mkdirSync(join(archetypes, 'editorial-blog'), { recursive: true });
+    const bytes = Buffer.from([0xff, 0xd8, 0xff, 0xd9]);
+    writeFileSync(join(archetypes, 'booking/step1-browse.jpg'), bytes);
+    writeFileSync(join(archetypes, 'editorial-blog/step1-index.jpg'), bytes);
+    writeFileSync(join(archetypes, 'future-reference.jpg'), bytes);
+    const script = `
+      import fs from 'node:fs';
+      import { syncBuiltinESMExports } from 'node:module';
+      const read = fs.readFileSync;
+      fs.readFileSync = (file, ...args) => {
+        if (typeof file === 'string' && file.endsWith('.jpg')) throw Error('list read full JPEG: ' + file);
+        return read(file, ...args);
+      };
+      syncBuiltinESMExports();
+      const { listConcepts } = await import(process.argv[2]);
+      const gallery = listConcepts(process.argv[1]);
+      console.log(JSON.stringify({
+        booking: gallery.bookingSteps[0].available,
+        board: gallery.boards.some(({ archetype, id }) => archetype === 'editorial-blog' && id === 'step1-index'),
+        discovered: gallery.archetypes.some(({ id, reference }) => id === 'future-reference' && reference),
+      }));
+    `;
+    const output = execFileSync(process.execPath, ['--input-type=module', '-e', script, root,
+      new URL('../src/viewer/concepts.mjs', import.meta.url).href], { encoding: 'utf8', timeout: 10000 });
+    assert.deepEqual(JSON.parse(output), { booking: true, board: true, discovered: true });
+    assert.deepEqual(conceptBookingStep(root, 'step1-browse')?.bytes, bytes,
+      'the image-serving accessor still reads and returns the exact JPEG bytes');
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
 test('future per-archetype references appear in pairs only when their images exist; escape every label', () => {
   const root = mkdtempSync(join(tmpdir(), 'viewer-concepts-list-'));
   try {
@@ -254,6 +290,9 @@ test('five booking step routes are exact and reject nested symlink/file escapes'
   writeFileSync(outside, 'PRIVATE');
   rmSync(join(dir, 'step4-error.jpg'));
   symlinkSync(outside, join(dir, 'step4-error.jpg'));
+  writeFileSync(join(dir, 'step6-exploit.jpg'), bytes);
+  assert.deepEqual(listConcepts(root).bookingSteps.map(({ available }) => available),
+    [true, true, true, false, true], 'listing excludes a symlink and does not discover an unallowlisted step');
   const base = await serve(t, root);
   for (const id of ['step1-browse', 'step2-form', 'step3-confirmation', 'step5-empty']) {
     assert.equal(conceptBookingStep(root, id)?.bytes.equals(bytes), true);
@@ -270,6 +309,8 @@ test('five booking step routes are exact and reject nested symlink/file escapes'
   mkdirSync(join(root, 'external'));
   writeFileSync(join(root, 'external/step1-browse.jpg'), bytes);
   symlinkSync(join(root, 'external'), dir);
+  assert.ok(listConcepts(root).bookingSteps.every(({ available }) => !available),
+    'a symlinked ancestor makes every journey step unavailable');
   assert.equal(conceptBookingStep(root, 'step1-browse'), null);
   assert.equal((await fetch(`${base}/concepts/images/booking/step1-browse.jpg`)).status, 404);
 });
