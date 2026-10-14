@@ -62,6 +62,18 @@
   "docs/design/archetypes/interactive-product-configurator/PROVENANCE.md": [
     "test/interactive-product-configurator-prompts.test.mjs"
   ],
+  "docs/design/archetypes/developer-media-playground/README.md": [
+    "test/developer-media-playground-prompts.test.mjs"
+  ],
+  "docs/design/archetypes/developer-media-playground/design.md": [
+    "test/developer-media-playground-prompts.test.mjs"
+  ],
+  "docs/design/archetypes/developer-media-playground/plan.md": [
+    "test/developer-media-playground-prompts.test.mjs"
+  ],
+  "docs/design/archetypes/developer-media-playground/PROVENANCE.md": [
+    "test/developer-media-playground-prompts.test.mjs"
+  ],
   "docs/design/archetypes/*/README.md": [
     "test/archetype-boards-generator.test.mjs",
     "test/board-states.test.mjs",
