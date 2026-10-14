@@ -1,4 +1,4 @@
-import { closeSync, existsSync, lstatSync, openSync, readFileSync, readSync, readdirSync, realpathSync } from 'node:fs';
+import { accessSync, closeSync, constants, existsSync, lstatSync, openSync, readFileSync, readSync, readdirSync, realpathSync } from 'node:fs';
 import { join, relative } from 'node:path';
 
 import { escapeHtml, page } from './pages.mjs';
@@ -141,6 +141,9 @@ function confinedFile(root, dir, filename) {
     if (lstatSync(file).isSymbolicLink() || !lstatSync(file).isFile()) return null;
     if (realpathSync(dir) !== join(realpathSync(root), subdir)) return null;
     if (realpathSync(file) !== join(realpathSync(dir), filename)) return null;
+    // A regular confined file that this process cannot open is not an available image.
+    // This probes permission without loading bytes; the GET rechecks confinement below.
+    accessSync(file, constants.R_OK);
     return file;
   } catch {
     // An absent, replaced or unreadable reference is unavailable, not a path to follow.
@@ -159,9 +162,20 @@ function conceptImageFile(repoRoot, name) {
   return confinedFile(root, join(root, 'archetypes'), `${name}.jpg`);
 }
 
+function readConceptJpeg(file) {
+  if (!file) return null;
+  try {
+    return { bytes: readFileSync(file), type: 'image/jpeg' };
+  } catch (error) {
+    // A file can disappear or become unreadable between the path probe and the read.
+    // Report a missing image rather than aborting the /concepts request or its GET.
+    if (['EACCES', 'EPERM', 'ENOENT', 'EISDIR', 'ELOOP', 'ESTALE'].includes(error?.code)) return null;
+    throw error;
+  }
+}
+
 export function conceptImage(repoRoot, name) {
-  const file = conceptImageFile(repoRoot, name);
-  return file ? { bytes: readFileSync(file), type: 'image/jpeg' } : null;
+  return readConceptJpeg(conceptImageFile(repoRoot, name));
 }
 
 /** Only fixed archetype/step pairs are public; neither path segment comes from a filesystem listing. */
@@ -172,8 +186,7 @@ function journeyStepFile(repoRoot, archetype, id) {
 }
 
 export function conceptJourneyStep(repoRoot, archetype, id) {
-  const file = journeyStepFile(repoRoot, archetype, id);
-  return file ? { bytes: readFileSync(file), type: 'image/jpeg' } : null;
+  return readConceptJpeg(journeyStepFile(repoRoot, archetype, id));
 }
 
 /** Preserve the booking accessor for existing callers and tests. */
