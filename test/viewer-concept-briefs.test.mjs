@@ -70,6 +70,27 @@ test('event-registration pattern prompt describes a functional event site withou
   }
 });
 
+test('event families inherit structural layout but not the archetype demo cap or undeclared estimate', () => {
+  const gallery = listConcepts(ROOT);
+  const pattern = gallery.patterns.find((item) => item.id === 'event-registration').brief.sitePrompt;
+  assert.match(pattern, /Layout and components:[\s\S]*capped at 52rem[\s\S]*live estimate/i,
+    'the pattern remains an account of its authored archetype');
+  for (const id of ['tr-07', 'tr-30']) {
+    const family = gallery.trainingTargets.find((item) => item.id === id).brief.sitePrompt;
+    const layout = family.match(/UI layout:\n([\s\S]*?)(?=\n\nFamily visual direction and tokens:)/)?.[1] ?? '';
+    assert.doesNotMatch(layout, /\bcapped at \d+(?:\.\d+)?rem\b|\blive estimate\b|\b52rem\b/i,
+      `${id} does not inherit demo dimensions or an undeclared estimate`);
+    assert.match(layout, /Tickets are a two-column grid[\s\S]*only ticket options this family’s journey declares/i,
+      `${id} keeps shared responsive structure but uses family authority for options`);
+    assert.match(layout, /include a pass or QR only when this family’s journey defines one/i,
+      `${id} must not infer issued credentials from an archetype illustration`);
+    const plan = readFileSync(join(ROOT, 'docs/train/design', id, 'plan.md'), 'utf8');
+    const design = readFileSync(join(ROOT, 'docs/train/design', id, 'design.md'), 'utf8');
+    assert.doesNotMatch(plan + design, /\b(?:estimate|charge|price|cost|paid)\b/i,
+      `${id} authors no price or live-estimate requirement`);
+  }
+});
+
 test('event pattern and training layouts read one authored functional source as design facts change', () => {
   const sourceFile = join(ROOT, 'docs/design/archetypes/event-registration/design.md');
   const design = readFileSync(sourceFile, 'utf8');
@@ -83,7 +104,11 @@ test('event pattern and training layouts read one authored functional source as 
   const pattern = archetypeBrief(ROOT, 'event-registration').sitePrompt;
   const training = listConcepts(ROOT).trainingTargets.find((target) => target.id === 'tr-07').brief.sitePrompt;
   assert.match(pattern, /Layout and components:[\s\S]*52rem[\s\S]*two-column grid/i);
-  assert.match(training, /UI layout:[\s\S]*52rem[\s\S]*two-column grid/i);
+  const trainingLayout = training.split('UI layout:\n')[1]?.split('Family visual direction and tokens:')[0] ?? '';
+  assert.match(trainingLayout, /two-column grid/i,
+    'the family keeps the shared responsive structural fact');
+  assert.doesNotMatch(trainingLayout, /52rem|live estimate/i,
+    'the demo-only numeric cap and estimate are not shared family facts');
 
   const scratch = mkdtempSync(join(tmpdir(), 'event-layout-source-'));
   try {
@@ -93,7 +118,9 @@ test('event pattern and training layouts read one authored functional source as 
     mkdirSync(family, { recursive: true });
     for (const name of ['plan.md', 'README.md']) writeFileSync(join(archetype, name),
       readFileSync(join(ROOT, 'docs/design/archetypes/event-registration', name)));
-    writeFileSync(join(archetype, 'design.md'), design.replace('capped at `52rem`', 'capped at `54rem`'));
+    writeFileSync(join(archetype, 'design.md'), design
+      .replace('capped at `52rem`', 'capped at `54rem`')
+      .replace('- Tickets are a two-column grid that collapses', '- Ticket choices use a two-column grid that collapses'));
     for (const name of ['plan.md', 'design.md']) writeFileSync(join(family, name),
       readFileSync(join(ROOT, 'docs/train/design/tr-07', name)));
     const row = trainingBriefs(ROOT).get('tr-07');
@@ -102,10 +129,14 @@ test('event pattern and training layouts read one authored functional source as 
     const projectedFamily = trainingBrief(scratch, 'tr-07', row).sitePrompt;
     assert.match(projectedPattern, /Layout and components:[\s\S]*54rem/i,
       'changing the authored cap updates the pattern without a code change');
-    assert.match(projectedFamily, /UI layout:[\s\S]*54rem/i,
-      'changing the same authored cap updates the family without a code change');
+    assert.doesNotMatch(projectedFamily.split('UI layout:\n')[1]?.split('Family visual direction and tokens:')[0] ?? '',
+      /\b(?:52|54)rem\b|\blive estimate\b/i,
+      'changing the archetype demo cap must not introduce either cap or its estimate into a family site');
+    assert.match(projectedPattern, /Ticket choices use a two-column grid/i,
+      'changes to the shared structural source update the pattern');
+    assert.match(projectedFamily, /Ticket choices use a two-column grid/i,
+      'changes to the shared structural source still update the family');
     assert.doesNotMatch(projectedPattern, /52rem/);
-    assert.doesNotMatch(projectedFamily, /52rem/);
   } finally { rmSync(scratch, { recursive: true, force: true }); }
 });
 
