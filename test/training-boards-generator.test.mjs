@@ -191,6 +191,7 @@ test('inspectBoard measures the bytes and the 16:9 contract, and the register re
   assert.match(register, /A3_teacher_generated/);
   assert.match(register, /fails closed unless the response's own `modelVersion`/);
   assert.match(register, /\| `tr-01` \|/);
+  assert.match(register, /Scope:\*\* 1 illustrative JPEG, one per training family \(`tr-01`\.\.`tr-01`\)/);
   assert.match(register, new RegExp(`\\\`${'a'.repeat(64)}\\\``));
   assert.match(register, /1376 × 768/);
   assert.doesNotMatch(register, /UNATTESTED/);
@@ -198,6 +199,14 @@ test('inspectBoard measures the bytes and the 16:9 contract, and the register re
     { family: 'tr-02', board: 'b', promptFile: 'p', model: 'gemini-3-pro-image', bytes: 1, dimensions: null, boardSha256: 'c', promptSha256: 'd' },
   ]);
   assert.match(unattested, /UNATTESTED ROWS/);
+  const twoFamilies = renderRegister([
+    { family: 'tr-39', board: 'b39', promptFile: 'p39', model: BOARD_MODEL, bytes: 1, dimensions: null, boardSha256: 'e', promptSha256: 'f' },
+    { family: 'tr-31', board: 'b31', promptFile: 'p31', model: BOARD_MODEL, bytes: 1, dimensions: null, boardSha256: 'g', promptSha256: 'h' },
+  ]);
+  assert.match(twoFamilies, /Scope:\*\* 2 illustrative JPEGs, one per training family \(`tr-31`\.\.`tr-39`\)/,
+    'the scope must derive its range from the actual families, not a fixed upper bound or entry order');
+  assert.match(renderRegister([]), /Scope:\*\* 0 illustrative JPEGs, no training families/,
+    'an empty register must not invent a family range');
 });
 
 test('the committed boards and the register, when the register exists, agree with each other', () => {
@@ -232,6 +241,10 @@ test('the committed boards and the register, when the register exists, agree wit
   const registerDir = dirname(registerPath);
   const rows = [...register.matchAll(/^\| `(tr-\d{2})` \| \[`reference\.jpg`\]\(([^)]+)\) \| `([0-9a-f]{64})` \| (\d+) \| (\d+) × (\d+) \| \[`prompt\.txt`\]\(([^)]+)\) \| `([0-9a-f]{64})` \|/gm)];
   assert.ok(rows.length > 0, 'a register with no rows is not a register');
+  const families = rows.map(([, family]) => family).sort((a, b) => a.localeCompare(b, 'en', { numeric: true }));
+  const scope = register.split('\n').find((line) => line.startsWith('- **Scope:** '));
+  assert.ok(scope?.includes(`${rows.length} illustrative JPEGs, one per training family (\`${families[0]}\`..\`${families.at(-1)}\`)`),
+    'the checked-in scope count and endpoints must agree with its actual table rows');
   for (const [, family, board, boardDigest, bytes, width, height, promptFile, promptDigest] of rows) {
     const boardBytes = readFileSync(resolve(registerDir, board));
     assert.equal(sha256(boardBytes), boardDigest, `${family}: committed board digest must match the register`);
