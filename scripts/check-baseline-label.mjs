@@ -210,6 +210,8 @@ export const DOCUMENTS = {
   // A reference about the state of the artifacts, not a report of measured floor evidence: it cites
   // check:specs only to show that the frozen trees did not move.
   '.fleet/coverage-mapping.json': 'contract',
+  // Reviewed clean-frame SHA set: evidence of what was scanned, not a floor measurement.
+  '.fleet/frame-scan-pins.json': 'provenance',
   'docs/KNOWN-SINKS.md': 'provenance',
   'docs/PIPELINE.md': 'floor-report',
   // The vocabulary decision (mwg-train-210): what the default is, what the ideal is, and the three
