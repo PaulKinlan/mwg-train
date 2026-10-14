@@ -135,6 +135,12 @@
     "test/training-boards-generator.test.mjs",
     "test/viewer-concepts-delivery.test.mjs"
   ],
+  "docs/provenance/assets/design-layouts.md": [
+    "test/design-language.test.mjs"
+  ],
+  "docs/provenance/assets/design-reference-booking.md": [
+    "test/design-reference.test.mjs"
+  ],
   "docs/provenance/assets/training-frame-crops.json": [
     "test/training-boards-generator.test.mjs",
     "test/check-archetype-frames.test.mjs"
@@ -202,6 +208,9 @@
   "docs/train/corpus/records.json": [
     "test/corpus-journey-evidence.test.mjs",
     "test/corpus-record-stamp.test.mjs"
+  ],
+  "docs/train/corpus/SERVED.md": [
+    "test/served-routes.test.mjs"
   ],
   "docs/train/corpus/README.md": [
     "test/tokens-record.test.mjs"
