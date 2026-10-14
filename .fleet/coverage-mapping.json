@@ -75,9 +75,16 @@
     "test/developer-media-playground-prompts.test.mjs"
   ],
   "docs/design/archetypes/*/README.md": [
+    "test/viewer-concepts-delivery.test.mjs",
     "test/archetype-boards-generator.test.mjs",
     "test/board-states.test.mjs",
     "test/baseline-label.test.mjs"
+  ],
+  "docs/design/archetypes/*/design.md": [
+    "test/viewer-concepts-delivery.test.mjs"
+  ],
+  "docs/design/archetypes/*/plan.md": [
+    "test/viewer-concepts-delivery.test.mjs"
   ],
   "docs/design/archetypes/*/step*.jpg": [
     "test/board-captions.test.mjs",
@@ -109,7 +116,8 @@
     "test/viewer-tuning.test.mjs"
   ],
   "docs/design/training/tr-*/prompt.txt": [
-    "test/training-boards-generator.test.mjs"
+    "test/training-boards-generator.test.mjs",
+    "test/viewer-concepts-delivery.test.mjs"
   ],
   "docs/provenance/assets/training-frame-crops.json": [
     "test/training-boards-generator.test.mjs",
@@ -117,6 +125,9 @@
   ],
   "docs/provenance/assets/training-reference-boards.md": [
     "test/training-boards-generator.test.mjs"
+  ],
+  "docs/provenance/assets/board-states.json": [
+    "test/viewer-concepts-delivery.test.mjs"
   ],
   "docs/PIPELINE.md": [
     "test/reachability.test.mjs"
@@ -147,7 +158,17 @@
     "test/capture-target-registry.test.mjs"
   ],
   "docs/train/briefs/manifest.jsonl": [
-    "test/training-served-reverse.test.mjs"
+    "test/training-served-reverse.test.mjs",
+    "test/viewer-concepts-delivery.test.mjs"
+  ],
+  "docs/train/design/tr-*/design.md": [
+    "test/viewer-concepts-delivery.test.mjs"
+  ],
+  "docs/train/design/tr-*/plan.md": [
+    "test/viewer-concepts-delivery.test.mjs"
+  ],
+  "data/A1_self_generated/targets/manifest.jsonl": [
+    "test/viewer-concepts-delivery.test.mjs"
   ],
   "docs/train/corpus/records.json": [
     "test/corpus-journey-evidence.test.mjs",
@@ -159,6 +180,9 @@
   "pilot/CORPUS.json": [
     "test/build-key.test.mjs",
     "test/training-served-reverse.test.mjs"
+  ],
+  "pilot/training-archetypes.mjs": [
+    "test/viewer-concepts-delivery.test.mjs"
   ],
   "pilot/TRAINING_CORPUS.json": [
     "test/corpus-journey-evidence.test.mjs",
@@ -303,10 +327,12 @@
     "test/compare.test.mjs"
   ],
   "src/viewer/concept-briefs.mjs": [
+    "test/viewer-concepts-delivery.test.mjs",
     "test/viewer-concept-briefs.test.mjs",
     "test/viewer-concepts.test.mjs"
   ],
   "src/viewer/concepts.mjs": [
+    "test/viewer-concepts-delivery.test.mjs",
     "test/viewer-concept-briefs.test.mjs",
     "test/viewer-concepts.test.mjs"
   ],
