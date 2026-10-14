@@ -46,6 +46,16 @@ test('fast-gate routes eval design markdown to check:design-schema', () => {
   assert.ok(res.stdout.includes('check:design-schema'));
 });
 
+test('a SERVED.md edit selects its route comparison check and asserting suite', () => {
+  const env = { ...process.env, GIT_CHANGED: 'docs/train/corpus/SERVED.md', FAST_GATE_LIST: '1' };
+  const res = spawnSync('node', [FAST_GATE], { cwd: ROOT, env, encoding: 'utf8' });
+  assert.strictEqual(res.status, 0, res.stderr);
+  for (const check of ['check:baseline-label', 'check:doc-links', 'check:served-gap']) {
+    assert.match(res.stdout, new RegExp(`checks=\\[[^\\]]*${check}`), `must select ${check}`);
+  }
+  assert.match(res.stdout, /suites=\[[^\]]*test\/served-routes\.test\.mjs/);
+});
+
 test('fast-gate routes training briefs manifest to check:brief-schema and check:disjoint', () => {
   const env = { ...process.env, GIT_CHANGED: 'docs/train/briefs/manifest.jsonl' };
   const res = spawnSync('node', [FAST_GATE], { cwd: ROOT, env, encoding: 'utf8' });

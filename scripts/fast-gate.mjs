@@ -277,9 +277,10 @@ function routeDocument(file) {
     return true;
   }
   if (file.endsWith('.md')) {
-    // Any markdown doc change must pass link and baseline label checks
+    // Any markdown doc change must pass link and baseline label checks.
     selectedChecks.add('check:doc-links');
     selectedChecks.add('check:baseline-label');
+    if (file === 'docs/train/corpus/SERVED.md') selectedChecks.add('check:served-gap');
     return true;
   }
   return false;
