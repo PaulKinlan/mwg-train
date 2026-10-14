@@ -345,7 +345,7 @@ const patternCard = ({ id, brief, steps }) => `<article id="pattern-${escapeHtml
     ${promptDetails('Site Generation Prompt', brief.sitePrompt, `${brief.planSource} + ${brief.designSource}`)}`
     : '<p class="notice">Design specification pending; no generation prompt can be claimed.</p>'}
   ${steps.length ? `<h4>${steps.filter((step) => step.available).length} pictured state${steps.length === 1 ? '' : 's'} · ${steps.length} declared</h4>
-    ${steps.some((step) => step.available) ? `<p class="muted">Depicted QR codes and receipts are unverified placeholders: do not scan depicted codes. A model ID may be reported rather than attested; check each board&rsquo;s provenance in ${code(`docs/design/archetypes/${id}/README.md`)}. These illustrations are excluded from training unless separately approved; this is not a claim about their legal reuse rights.</p>` : ''}
+    ${steps.some((step) => step.available && /\bQR\b/i.test(step.imagePrompt ?? '')) ? `<p class="muted">Depicted QR codes are unverified placeholders: do not scan depicted codes. A model ID may be reported rather than attested; check each board&rsquo;s provenance in ${code(`docs/design/archetypes/${id}/README.md`)}. These illustrations are excluded from training unless separately approved; this is not a claim about their legal reuse rights.</p>` : ''}
     <ol class="concept-steps">${steps.map(({ id: stepId, title, available, state, imagePrompt }) => {
       const path = `/concepts/images/${id}/${stepId}.jpg`;
       const mapped = state?.kind === 'page' ? `Document state at ${state.path ?? 'no confirmed route'}`

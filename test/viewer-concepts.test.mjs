@@ -82,9 +82,10 @@ test('gallery serves the generated archetype reference boards and the authored e
   assert.match(html, /Concept images are excluded from training unless separately approved/);
   assert.match(html, /exclusion is not a claim that their rights forbid reuse/, 'policy exclusion must not invent a rights restriction');
   assert.doesNotMatch(html, /image rights do not permit training reuse/i);
-  const picturedPatterns = gallery.patterns.filter(({ steps }) => steps.some(({ available }) => available)).length;
-  assert.equal((html.match(/do not scan depicted codes/g) ?? []).length, picturedPatterns + 1,
-    'one warning is visible near each pictured pattern plus the page explainer, not for pending patterns');
+  const qrPatterns = gallery.patterns.filter(({ steps }) => steps.some(({ available, imagePrompt }) => available && /\bQR\b/i.test(imagePrompt ?? '')));
+  assert.deepEqual(qrPatterns.map(({ id }) => id), ['booking', 'event-registration']);
+  assert.equal((html.match(/do not scan depicted codes/g) ?? []).length, qrPatterns.length + 1,
+    'QR-specific warnings appear beside only the two source-backed QR patterns, plus the page explainer');
   assert.match(html, /id="pattern-course-enrolment"/);
   assert.match(html, /No multi-step reference boards are authored for this pattern yet/);
   assert.match(html, /Image Generation Prompt · inherited single training reference, NOT a step board/);
