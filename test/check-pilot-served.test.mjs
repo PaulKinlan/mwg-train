@@ -274,6 +274,23 @@ test('a path.match route the anchored pattern does not cover is reported, not ig
   );
 });
 
+test('literal edit/:ref route in a generated raw server is parsed only with its adjacent POST method', () => {
+  const declaration = String.raw`const editMatch = path.match(/^\/edit\/([^/]+)$/);`;
+  const valid = `${declaration}\nif (editMatch && request.method === 'POST') {}`;
+  const parsed = extractRoutes(valid);
+  assert.deepStrictEqual([...parsed.served], ['POST /edit/:ref']);
+  assert.deepStrictEqual(parsed.unparsed, [], 'the exact emitted edit route is fully accounted for');
+  for (const candidate of [
+    `${declaration}\nif (otherMatch && request.method === 'POST') {}`,
+    `${declaration}\nif (editMatch && request.method === 'GET') {}`,
+    `${declaration}\napp.get(dynamicRoute, () => {});\nif (editMatch && request.method === 'POST') {}`,
+  ]) {
+    const result = extractRoutes(candidate);
+    assert.ok(result.unparsed.length > 0, 'changed condition or intervening route must not disappear');
+    assert.equal(result.served.has('POST /edit/:ref'), false, 'a changed or separated condition cannot attest this route');
+  }
+});
+
 // The non-goals documented at extractRoutes are real, and so is the parity between the families the
 // extractors recognise and the sentinels the residual scan reports. Each case below is a shape a human
 // reads as a route that the extraction patterns deliberately do not cover, and the residual scan must

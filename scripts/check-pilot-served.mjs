@@ -133,13 +133,14 @@ const EXCEPTIONS = [
 // JavaScript router analyser, and a passing run does not mean every route a server serves was accounted
 // for - it means the routes in the families below were.
 //
-// The extractors recognise five families, and the residual scan has one sentinel for each, so a shape
-// outside them is reported as an unparsed block rather than ignored:
+// The extractors recognise five families, with two forms of path.match. The residual scan has
+// one sentinel for each family, so an unrecognised shape is reported rather than ignored:
 //   1. app.<verb>( '<path>'            <->  app.(get|post|put|delete|patch)(
 //   2. path === '<path>'               <->  path === <quote>      (see the limitation below)
 //   3. [ '<a>', '<b>' ].includes(path) <->  .includes(path)
 //   4. path.startsWith( '<prefix>' )   <->  path.startsWith(
 //   5. const r = '<path>'; ... path.match(new RegExp(... r ...)) <-> path.match(
+//      const m = path.match(/^\\/edit\\/([^/]+)$/); if (m && method === 'POST') <-> path.match(
 // Adding a family means adding its sentinel in the same change; the pairing is the point, because a
 // pattern with no sentinel is exactly how the path.match case came to be silently dropped.
 //
@@ -207,7 +208,15 @@ export function extractRoutes(content) {
   const rawVarsBetter = /const\s+(?<pathVar>[a-zA-Z0-9_]+)\s*=\s*(?<pathQuote>['"`])(?<path>[^'"`]+)\k<pathQuote>;\s*const\s+(?<matchVar>[a-zA-Z0-9_]+)\s*=\s*path\.match\(new\s+RegExp\([^;]*?\b\k<pathVar>\b[^;]*?\)\);\s*if\s*\(\s*\k<matchVar>\s*&&\s*request\.method\s*===\s*(?<methodQuote>['"`])(?<method>[^'"`]+)\k<methodQuote>/g;
   for (const match of content.matchAll(rawVarsBetter)) served.add(`${match.groups.method.toUpperCase()} ${match.groups.path}`);
   remaining = remaining.replace(rawVarsBetter, 'MATCHED_RAW_VAR');
-  
+
+  // The five new no-list families emit exactly this literal edit route in raw-style servers.
+  // Bind the match variable to its adjacent POST condition: a broad wildcard here would
+  // erase an unrelated route and falsely report it as covered. Unknown path.match forms
+  // still reach the existing residual sentinel below.
+  const rawLiteralEdit = /const\s+(?<matchVar>\w+)\s*=\s*path\.match\(\/\^\\\/edit\\\/\(\[\^\/\]\+\)\$\/\);\s*if\s*\(\s*\k<matchVar>\s*&&\s*request\.method\s*===\s*(?<quote>['"`])(?<method>POST)\k<quote>/g;
+  for (const match of content.matchAll(rawLiteralEdit)) served.add(`${match.groups.method} /edit/:ref`);
+  remaining = remaining.replace(rawLiteralEdit, 'MATCHED_RAW_LITERAL_EDIT');
+
   const rawArrays = /\[(?<list>[^\]]*)\]\.includes\(path\)(?:\s*&&\s*request\.method\s*===\s*(?<methodQuote>['"`])(?<method>[^'"`]+)\k<methodQuote>)?/g;
   for (const match of content.matchAll(rawArrays)) {
     if (!match.groups.list.trim()) continue;
