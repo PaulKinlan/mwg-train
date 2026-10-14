@@ -38,6 +38,18 @@
   "docs/design/archetypes/saas-workspace-board/PROVENANCE.md": [
     "test/saas-workspace-board-prompts.test.mjs"
   ],
+  "docs/design/archetypes/realtime-telemetry-dashboard/README.md": [
+    "test/realtime-telemetry-dashboard-prompts.test.mjs"
+  ],
+  "docs/design/archetypes/realtime-telemetry-dashboard/design.md": [
+    "test/realtime-telemetry-dashboard-prompts.test.mjs"
+  ],
+  "docs/design/archetypes/realtime-telemetry-dashboard/plan.md": [
+    "test/realtime-telemetry-dashboard-prompts.test.mjs"
+  ],
+  "docs/design/archetypes/realtime-telemetry-dashboard/PROVENANCE.md": [
+    "test/realtime-telemetry-dashboard-prompts.test.mjs"
+  ],
   "docs/design/archetypes/*/README.md": [
     "test/archetype-boards-generator.test.mjs",
     "test/board-states.test.mjs",
