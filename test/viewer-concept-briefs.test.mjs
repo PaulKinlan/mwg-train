@@ -90,12 +90,27 @@ test('training site prompts keep functional components without inheriting demo-o
     assert.doesNotMatch(target.brief.sitePrompt, /Read from\s+demo\/|\bdemo\/[a-z0-9-]+\.html|demo state switcher|Demo State Switcher|#btn-state-(?:default|error|fill)/i,
       `${target.id} must not cite a demo file or ship its verification switcher`);
   }
+  const componentsOf = (target) => target.brief.sitePrompt.match(/Expected components:\n([\s\S]*?)(?=\nStep-by-step interactions:)/)?.[1] ?? '';
+  const bookingFamilies = targets.filter((target) => /^Build a functional booking website/.test(target.brief.sitePrompt));
+  assert.equal(bookingFamilies.length, 7);
+  for (const target of bookingFamilies) {
+    const components = componentsOf(target);
+    assert.match(components, /persistent header[\s\S]*progress stepper[\s\S]*labelled summary region[\s\S]*form card[\s\S]*confirmation ticket/,
+      `${target.id} retains the structural booking components`);
+    assert.doesNotMatch(components, /Evening Class Summary|1\. Select Class|Details & Registration|\binstructor\b|Full name|Delivery address|Postcode|#form-heading|#form-error-banner/i,
+      `${target.id} must use its own journey and field labels, never the Evening Class demo values`);
+  }
   const tr17 = targets.find((target) => target.id === 'tr-17').brief.sitePrompt;
-  assert.match(tr17, /Expected components:[\s\S]*header\.top-bar[\s\S]*nav\.stepper-nav[\s\S]*section\.card\.form-card/,
-    'booking-derived training prompts retain the actual header, stepper and form layout');
-  assert.match(tr17, /#form-error-banner/, 'real inline error feedback remains in the functional site brief');
-  assert.match(tr17, /the confirmation page carries the ticket[\s\S]*the empty page carries the\s+empty card/,
-    'ticket and empty-state components survive without copying demo file paths');
+  assert.match(tr17, /select\[name=species\][\s\S]*form#visit-booking-form/,
+    'the veterinary family plan still supplies its own functional field and form selectors');
+  assert.doesNotMatch(tr17, /the student|Evening Class Summary|1\. Select Class/,
+    'a farm visit site must not inherit a class-booking audience or step labels');
+  for (const id of ['tr-02', 'tr-18', 'tr-26']) {
+    const components = componentsOf(targets.find((target) => target.id === id));
+    assert.doesNotMatch(components, /^Read from\b/m, `${id} must not point at an internal archetype document`);
+    assert.match(components, /product grid[\s\S]*cart drawer or page[\s\S]*receipt page/i,
+      `${id} retains real storefront components after removing the internal pointer`);
+  }
   const tr07 = targets.find((target) => target.id === 'tr-07').brief.sitePrompt;
   assert.match(tr07, /Expected components:[\s\S]*event hero/i,
     'wrapped event-registration demo path removal must leave its real event components intact');

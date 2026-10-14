@@ -72,9 +72,21 @@ function familyVisualThesis(design) {
   return thesis?.includes(marker) ? thesis.split(marker, 1)[0].replace(/\bthe board for\b/i, 'the site for').trim() : null;
 }
 
-function siteComponentHierarchy(design) {
+// Booking's authored component list also contains one particular class demo's step names, field
+// labels and selector IDs. Keep its source-backed structure, not those values: the family plan below
+// is the only authority for a bicycle, farm, market or other booking form's actual fields and labels.
+const TRAINING_BOOKING_COMPONENTS = [
+  '- A persistent header with primary navigation and a current-page indicator.',
+  '- An ordered progress stepper with the active step indicated by aria-current="step"; use this family’s journey for its labels.',
+  '- A labelled summary region for the booking details declared by this family.',
+  '- A form card with this family’s fields and labels, inline validation text and an announced error summary.',
+  '- A confirmation ticket for the declared outcome and a separate empty state when there is no booking.',
+].join('\n');
+
+function siteComponentHierarchy(design, { trainingArchetype = null } = {}) {
   const hierarchy = section(design, 'Component hierarchy');
   if (!hierarchy) return null;
+  if (trainingArchetype === 'booking') return TRAINING_BOOKING_COMPONENTS;
   // The archetype design also documents its static demo. The site brief needs its functional
   // components, not the demo file inventory or a state switcher that must never ship as product UI.
   let skipDemoBullet = false;
@@ -85,7 +97,7 @@ function siteComponentHierarchy(design) {
     .filter((line) => {
       if (/^\s*[-*]\s/.test(line)) skipDemoBullet = /\bdemo state switcher\b/i.test(line);
       else if (!line.trim()) skipDemoBullet = false;
-      return !skipDemoBullet;
+      return !skipDemoBullet && !/^\s*Read from\b/i.test(line);
     })
     .join('\n')
     // Keep the ticket/empty-state component description, but not paths into the static demo.
@@ -176,9 +188,11 @@ export function trainingBrief(repoRoot, id, row) {
     sitePrompt: [
       `Build a functional ${row.archetype.replaceAll('-', ' ')} website for this scenario. The image prompt below is an illustration brief; it is not a substitute for implementing the behaviour.`,
       group('Use case', row.prompt),
-      group('UI layout', section(siteDesign, 'Grammar and layout')),
+      group('UI layout', row.archetype === 'booking'
+        ? section(siteDesign, 'Grammar and layout')?.replace(/\bthe student\b/gi, 'the user')
+        : section(siteDesign, 'Grammar and layout')),
       group('Family visual direction and tokens', [familyVisualThesis(design), declaredTokens(design), section(design, 'Token usage')].filter(Boolean).join('\n\n')),
-      group('Expected components', siteComponentHierarchy(siteDesign)),
+      group('Expected components', siteComponentHierarchy(siteDesign, { trainingArchetype: siteDesign !== design ? row.archetype : null })),
       group('Step-by-step interactions', section(plan, 'Journey')),
       group('Validation and server state', section(plan, 'Validation and states')),
       group('Required assertions', assertions.length ? assertions.map((assertion) => `- ${assertion}`).join('\n') : null),
