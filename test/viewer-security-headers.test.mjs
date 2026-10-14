@@ -39,7 +39,8 @@ const directives = (policy) =>
 
 test('every viewer response carries a restrictive policy and nosniff', async (t) => {
   const base = await serve(t);
-  const routes = ['/', '/concepts', '/tuning', '/pipeline', '/healthz', '/no-such-route'];
+  const routes = ['/', '/concepts', '/concepts/pattern/booking', '/concepts/family/tr-01',
+    '/tuning', '/pipeline', '/healthz', '/no-such-route'];
   for (const route of routes) {
     const response = await fetch(`${base}${route}`);
     assert.equal(response.headers.get('x-content-type-options'), 'nosniff', `${route}: nosniff must be set`);

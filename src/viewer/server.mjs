@@ -17,7 +17,9 @@
  *   GET  /                              index: every project, filters, accept/reject, live links
  *   GET  /project/<id>[?run=]           pair evidence: rules, journeys, security, screenshots
  *   GET  /evidence/<id>/<file>[?run=]   screenshots and traces, path- and symlink-confined
- *   GET  /concepts                       illustrative boards, the 30 A1 training targets, and the sealed A6 pairs
+ *   GET  /concepts                       no-JS index of authored patterns, A1 families and sealed A6 pairs
+ *   GET  /concepts/pattern/<id>          one allowlisted pattern with pictured states and prompts
+ *   GET  /concepts/family/<tr-NN>        one declared A1 family with its designed board and harness target
  *   GET  /concepts/images/<name>.jpg      confined concept JPEG
  *   GET  /concepts/images/booking/<step>.jpg  confined booking journey reference
  *   GET  /concepts/targets/<id>.png       confined authored target render: A6 archetype or A1 tr-NN family
@@ -41,7 +43,7 @@ import { dirname, extname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { deflateSync, gzipSync } from 'node:zlib';
 
-import { conceptImage, conceptJourneyStep, conceptTarget, listConcepts, readConfinedImage, renderConcepts, trainingBoard } from './concepts.mjs';
+import { conceptImage, conceptJourneyStep, conceptTarget, listConcepts, readConfinedImage, renderConceptFamily, renderConceptIndex, renderConceptPattern, trainingBoard } from './concepts.mjs';
 import { filterProjects, loadCorpus, projectView } from './corpus.mjs';
 import { hashTree } from '../corpus/tree-hash.mjs';
 import { scanTree, scanPairRecords, loadScanConfig, buildMatchers } from './owner-auth.mjs';
@@ -175,8 +177,8 @@ const htmlResponse = (response, body, status = 200, liveOrigin = '', options = {
   response.end(body);
 };
 
-// Only /concepts has a large, deterministic, authored HTML body. Keep the transport contract local to
-// that route; other viewer pages and evidence assets retain their existing no-store/no-compression policy.
+// The /concepts index and its one-pattern/one-family documents are authored HTML.
+// Keep their transport contract local; other pages and assets retain no-store/no-compression.
 function encodingQuality(header, name, defaultQuality = 0) {
   if (typeof header !== 'string' || !header.trim()) return defaultQuality;
   const qualities = new Map();
@@ -867,7 +869,19 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
       if (path === '/healthz') return textResponse(response, 'ok');
 
       if (path === '/concepts' && request.method === 'GET') {
-        return conceptsResponse(request, response, renderConcepts(listConcepts(repoRoot)), liveOrigin);
+        return conceptsResponse(request, response, renderConceptIndex(listConcepts(repoRoot, { view: 'index' })), liveOrigin);
+      }
+      const patternPageMatch = path.match(/^\/concepts\/pattern\/([a-z0-9][a-z0-9-]*)$/);
+      if (patternPageMatch && request.method === 'GET') {
+        const id = patternPageMatch[1];
+        const html = renderConceptPattern(listConcepts(repoRoot, { view: 'pattern', id }), id);
+        return html ? conceptsResponse(request, response, html, liveOrigin) : textResponse(response, 'pattern unavailable', 404);
+      }
+      const familyPageMatch = path.match(/^\/concepts\/family\/(tr-\d{2})$/);
+      if (familyPageMatch && request.method === 'GET') {
+        const id = familyPageMatch[1];
+        const html = renderConceptFamily(listConcepts(repoRoot, { view: 'family', id }), id);
+        return html ? conceptsResponse(request, response, html, liveOrigin) : textResponse(response, 'family unavailable', 404);
       }
       const journeyImageMatch = path.match(/^\/concepts\/images\/([a-z0-9-]+)\/(step[1-9][0-9]*-[a-z0-9-]+)\.jpg$/);
       if (journeyImageMatch && request.method === 'GET') {

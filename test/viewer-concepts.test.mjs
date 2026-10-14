@@ -5,7 +5,7 @@ import { existsSync, mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync 
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
-import { conceptBookingStep, conceptImage, conceptJourneyStep, conceptTarget, listConcepts, renderConcepts, trainingBoard, trainingTarget } from '../src/viewer/concepts.mjs';
+import { conceptBookingStep, conceptImage, conceptJourneyStep, conceptTarget, listConcepts, renderConceptIndex, renderConcepts, trainingBoard, trainingTarget } from '../src/viewer/concepts.mjs';
 import { createViewer } from '../src/viewer/server.mjs';
 
 const ROOT = resolve(import.meta.dirname, '..');
@@ -199,6 +199,55 @@ test('gallery serves the generated archetype reference boards and the authored e
   assert.equal((await fetch(`${base}/live/example/original/`)).status, 404);
 });
 
+test('the no-JS /concepts index links to allowlisted pattern and family pages, never inlines all prompts', async (t) => {
+  const base = await serve(t, ROOT);
+  const indexResponse = await fetch(`${base}/concepts`);
+  assert.equal(indexResponse.status, 200);
+  const index = await indexResponse.text();
+  assert.match(index, /Concept image ≠ conformance image/);
+  assert.match(index, /do not scan depicted codes/i);
+  assert.match(index, /No reuse license or clearance is granted here/);
+  assert.match(index, /A6 target PNG:[\s\S]*held-out evaluation asset/);
+  assert.equal((index.match(/href="\/concepts\/pattern\/[a-z0-9-]+"/g) ?? []).length >= 27, true);
+  assert.equal((index.match(/href="\/concepts\/family\/tr-\d{2}"/g) ?? []).length, 39);
+  assert.doesNotMatch(index, /<summary>Site Generation Prompt|class="concept-comparison"|<img\b/,
+    'the initial document contains navigable links, not every prompt and image');
+  assert.match(index, /id="pattern-booking"[\s\S]*href="\/concepts\/pattern\/booking"/);
+  assert.match(index, /id="target-tr-01"[\s\S]*href="\/concepts\/family\/tr-01"/);
+
+  const pattern = await fetch(`${base}/concepts/pattern/booking`);
+  assert.equal(pattern.status, 200);
+  const patternHtml = await pattern.text();
+  assert.match(patternHtml, /<summary>Site Generation Prompt/);
+  assert.match(patternHtml, /do not scan depicted codes/i);
+  assert.match(patternHtml, /no reuse clearance is granted here/i);
+  assert.match(patternHtml, /A6 authored evaluation target/i);
+  assert.match(patternHtml, /href="\/concepts\/family\/tr-01"/);
+  assert.doesNotMatch(patternHtml, /id="pattern-heading-dashboard"|aria-labelledby="target-tr-02"/);
+  const family = await fetch(`${base}/concepts/family/tr-01`);
+  assert.equal(family.status, 200);
+  const familyHtml = await family.text();
+  assert.match(familyHtml, /<summary>Site Generation Prompt · functional build/);
+  assert.match(familyHtml, /AI-generated illustration, not training evidence and not proof a demo works/i);
+  assert.match(familyHtml, /<img src="\/concepts\/references\/tr-01\.jpg"[^>]*width="1376" height="710" loading="eager" fetchpriority="high"/,
+    'the first designed board is above the fold; preserve its aspect ratio and do not delay it');
+  assert.match(familyHtml, /A1 conformance instrument[\s\S]*deterministic headless-Chrome render/i);
+  assert.match(familyHtml, /href="\/concepts\/pattern\/booking"/);
+  assert.doesNotMatch(familyHtml, /aria-labelledby="target-tr-02"|A6 authored evaluation target for booking/);
+  for (const [path, label] of [['/concepts/pattern/product-card-comparison', 'Archetype pattern: product card comparison'],
+    ['/concepts/family/tr-39', 'Training family: tr-39']]) {
+    const response = await fetch(`${base}${path}`);
+    assert.equal(response.status, 200, `${path} is a declared late expansion`);
+    assert.ok((await response.text()).includes(label), `${path} renders its own page`);
+  }
+  for (const path of ['/concepts/pattern/unknown', '/concepts/pattern/tr-01', '/concepts/pattern/..%2f..',
+    '/concepts/pattern/booking/extra', '/concepts/family/tr-40', '/concepts/family/tr-1',
+    '/concepts/family/booking', '/concepts/family/%2e%2e%2fprivate']) {
+    assert.equal((await fetch(`${base}${path}`)).status, 404, `${path} is not declared`);
+  }
+  assert.equal((await fetch(`${base}/concepts/pattern/booking`, { method: 'POST', headers: { origin: new URL(base).origin } })).status, 404);
+});
+
 test('listing checks confined image availability without reading full JPEG or PNG bytes', () => {
   const root = mkdtempSync(join(tmpdir(), 'viewer-concepts-stat-'));
   try {
@@ -233,7 +282,8 @@ test('listing checks confined image availability without reading full JPEG or PN
     `;
     const output = execFileSync(process.execPath, ['--input-type=module', '-e', script, root,
       new URL('../src/viewer/concepts.mjs', import.meta.url).href], { encoding: 'utf8', timeout: 10000 });
-    assert.deepEqual(JSON.parse(output), { booking: true, target: true, board: true, discovered: true });
+    assert.deepEqual(JSON.parse(output), { booking: true, target: true, board: true, discovered: false },
+      'unregistered files cannot declare a new A6 archetype');
     assert.deepEqual(conceptBookingStep(root, 'step1-browse')?.bytes, bytes,
       'the JPEG accessor still serves the exact bytes');
     assert.deepEqual(conceptTarget(root, 'booking')?.bytes, png,
@@ -572,7 +622,7 @@ test('macOS fd fallback serves verified bytes and missing procfs elsewhere fails
   }
 });
 
-test('future per-archetype references appear in pairs only when their images exist; escape every label', () => {
+test('only sealed A6 references appear when their images exist; escape every label', () => {
   const root = mkdtempSync(join(tmpdir(), 'viewer-concepts-list-'));
   try {
     mkdirSync(join(root, 'docs/design/archetypes/booking'), { recursive: true });
@@ -582,14 +632,13 @@ test('future per-archetype references appear in pairs only when their images exi
     writeFileSync(join(root, 'docs/design/archetypes/booking/step1-browse.jpg'), Buffer.from([0xff, 0xd8, 0xff]));
     writeFileSync(join(root, 'data/A6_evaluation/targets/booking/target.png'), Buffer.from([137, 80, 78, 71]));
     const gallery = listConcepts(root);
-    assert.deepEqual(gallery.archetypes, [
-      { id: 'booking', reference: true, target: true },
-      { id: 'future-reference', reference: true, target: false },
-    ]);
+    assert.deepEqual(gallery.archetypes, [{ id: 'booking', reference: true, target: true }],
+      'an unregistered JPEG cannot add a new held-out evaluation pattern');
     assert.deepEqual(gallery.bookingSteps.map(({ available }) => available), [true, false, false, false, false]);
     assert.match(renderConcepts(gallery), /\/concepts\/images\/booking\/step1-browse\.jpg/);
     assert.match(renderConcepts(gallery), /A6 target PNG/);
-    assert.match(renderConcepts(gallery), /Authored target render unavailable in this checkout/);
+    assert.doesNotMatch(renderConceptIndex(listConcepts(root, { view: 'index' })), /future-reference/,
+      'the no-JS index cannot advertise a filesystem-only A6 id');
     const hostile = renderConcepts({ boards: [], archetypes: [{ id: '<img src=x onerror=alert(1)>', reference: false, target: false }] });
     assert.doesNotMatch(hostile, /<img src=x/);
     assert.match(hostile, /&lt;img src=x/);
