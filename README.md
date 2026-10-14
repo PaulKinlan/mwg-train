@@ -27,6 +27,7 @@ Experiment: does training on Modern Web Guidance-applied sites make a model defa
 
 ```bash
 npm test                    # full unit suite on demand; not part of the merger's configured gate
+npm run check:portability   # fresh npm ci followed by the full npm test suite (Linux or macOS)
 npm run test:fast           # affected unit suites and mapped checks vs origin/main
 npm run build               # alias for npm run check:all; does not run npm test
 npm run check:all           # deterministic offline checks; the merger's full gate, not the unit suite
@@ -47,6 +48,12 @@ The fleet fast gate (`fleet-check --fast`) runs `scripts/fast-gate.mjs` (also av
 The merger runs its configured `npm run check:all` once on the merged tree; neither it nor
 `npm run build` runs `npm test`. Run `npm test` explicitly when the full unit suite is needed:
 a passing fast gate and `check:all` do not prove that unselected unit suites pass.
+`check:portability` is an explicit, expensive local platform check, not CI or a
+replacement for the merger's offline gate. Use the public npm registry for `npm ci`
+if a mirror lacks the exact locked dependencies; record the commit, platform,
+Node and Chrome versions with the resulting test log. macOS verifies local
+development, while canonical sealed evaluation runs on pinned Linux. macOS
+portability does not imply the Linux-only generated-code sandbox is available.
 
 ## The quarantine store
 
