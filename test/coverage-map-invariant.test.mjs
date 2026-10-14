@@ -5,7 +5,7 @@ import { resolve } from 'node:path';
 import test from 'node:test';
 
 const ROOT = resolve(import.meta.dirname, '..');
-const EXPECTED_EDGES_SHA256 = '3f2cb45f480b293a7aba235fcc5d68f5103a5b432c5427aa5d7f55f422185937';
+const EXPECTED_EDGES_SHA256 = '32c3d9751471184aabf906e18af7ebbe9f14b4765a12369b3c217af244c02c86';
 
 test('the fast-gate coverage contract cannot silently lose any declared suite edge', () => {
   const mapping = JSON.parse(readFileSync(resolve(ROOT, '.fleet/coverage-mapping.json'), 'utf8'));
@@ -30,7 +30,7 @@ test('the puzzle generator and its provenance both route to the no-network attes
 
 test('dark-mode board changes and provenance records route to their byte-identity regression', () => {
   const mapping = JSON.parse(readFileSync(resolve(ROOT, '.fleet/coverage-mapping.json'), 'utf8'));
-  for (const file of ['docs/design/archetypes/*/dark/*.jpg',
+  for (const file of ['docs/design/archetypes/*/dark/*',
     'docs/provenance/assets/archetype-dark-boards.json', 'docs/provenance/assets/archetype-dark-boards.md']) {
     assert.ok(mapping[file]?.includes('test/archetype-dark-provenance.test.mjs'),
       `${file} must rerun the complete 61-board inventory`);

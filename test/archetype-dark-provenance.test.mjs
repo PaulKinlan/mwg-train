@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
@@ -19,14 +20,40 @@ const paths = readdirSync(join(ROOT, BASE), { withFileTypes: true })
   .flatMap(({ name }) => {
     const dark = join(ROOT, BASE, name, 'dark');
     try {
+      // A new filename, non-JPEG, symlink or subdirectory is not an implicit exception:
+      // fail the closed inventory before attempting to read any unregistered path.
       return readdirSync(dark, { withFileTypes: true })
-        .filter((entry) => entry.isFile() && /^step[a-z0-9-]+\.jpg$/.test(entry.name))
         .map(({ name: file }) => `${BASE}/${name}/dark/${file}`);
     } catch (error) {
       if (error.code === 'ENOENT') return [];
       throw error;
     }
   }).sort();
+
+if (!process.env.DARK_INVENTORY_MUTANT) test('a non-step Dark entry is rejected rather than skipped by the inventory', () => {
+  // Patch just one directory listing in an isolated process: no copied JPEG corpus,
+  // no mutation of the worktree, and no reliance on test order or machine files.
+  const script = `
+    import fs from 'node:fs';
+    import { syncBuiltinESMExports } from 'node:module';
+    const dark = process.argv[2];
+    const original = fs.readdirSync;
+    fs.readdirSync = (path, options) => path === dark
+      ? [...original(path, options), { name: 'preview.jpg', isFile: () => true }]
+      : original(path, options);
+    syncBuiltinESMExports();
+    await import(process.argv[1]);
+  `;
+  const env = { ...process.env, DARK_INVENTORY_MUTANT: '1' };
+  delete env.NODE_TEST_CONTEXT; // Node's child-v8 runner protocol is not a text reporter.
+  const child = spawnSync(process.execPath, ['--input-type=module', '-e', script,
+    import.meta.url, join(ROOT, BASE, 'account-recovery', 'dark')], {
+    encoding: 'utf8', timeout: 8_000, env,
+  });
+  assert.equal(child.status, 1, child.stdout + child.stderr);
+  assert.match(child.stdout + child.stderr, /this fixed initial register covers the 61 current dark-mode boards/,
+    'the child inventory must fail because an extra Dark entry was enumerated');
+});
 
 test('dark-board prose distinguishes image pins from generator attestations and rights', () => {
   const text = readFileSync(join(ROOT, 'docs/provenance/assets/archetype-dark-boards.md'), 'utf8');

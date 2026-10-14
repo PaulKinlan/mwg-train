@@ -106,7 +106,7 @@
   "docs/design/archetypes/*/plan.md": [
     "test/viewer-concepts-delivery.test.mjs"
   ],
-  "docs/design/archetypes/*/dark/*.jpg": [
+  "docs/design/archetypes/*/dark/*": [
     "test/archetype-dark-provenance.test.mjs"
   ],
   "docs/design/archetypes/*/step*.jpg": [
