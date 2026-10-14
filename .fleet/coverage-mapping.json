@@ -154,6 +154,12 @@
   "docs/provenance/assets/board-states.json": [
     "test/viewer-concepts-delivery.test.mjs"
   ],
+  "docs/portability/evidence/README.md": [
+    "test/portability-evidence.test.mjs"
+  ],
+  "docs/portability/evidence/linux-7216ff3f.log.gz": [
+    "test/portability-evidence.test.mjs"
+  ],
   "docs/PIPELINE.md": [
     "test/pipeline-docs.test.mjs"
   ],
