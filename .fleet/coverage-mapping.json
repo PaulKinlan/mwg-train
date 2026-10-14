@@ -205,6 +205,9 @@
     "test/known-sinks.test.mjs",
     "test/wiki-capability.test.mjs"
   ],
+  "scripts/fast-gate.mjs": [
+    "test/fast-gate.test.mjs"
+  ],
   "scripts/scaffold-training-corpus.mjs": [
     "test/training-served-reverse.test.mjs"
   ],
