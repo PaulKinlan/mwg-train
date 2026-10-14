@@ -1,4 +1,4 @@
-import { accessSync, closeSync, constants, existsSync, lstatSync, openSync, readFileSync, readSync, readdirSync, realpathSync } from 'node:fs';
+import { accessSync, closeSync, constants, existsSync, fstatSync, lstatSync, openSync, readFileSync, readSync, readdirSync, realpathSync } from 'node:fs';
 import { join, relative } from 'node:path';
 
 import { escapeHtml, page } from './pages.mjs';
@@ -162,20 +162,29 @@ function conceptImageFile(repoRoot, name) {
   return confinedFile(root, join(root, 'archetypes'), `${name}.jpg`);
 }
 
-function readConceptImage(file, type) {
+function readConceptImage(repoRoot, file, type) {
   if (!file) return null;
+  let fd;
   try {
-    return { bytes: readFileSync(file), type };
+    // The path probe can race with a replacement. Open the leaf without following
+    // links, then validate the *opened fd's* canonical location as well: O_NOFOLLOW
+    // alone does not stop a swapped ancestor directory from redirecting the open.
+    const expected = join(realpathSync(repoRoot), relative(repoRoot, file));
+    fd = openSync(file, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
+    if (!fstatSync(fd).isFile() || realpathSync(`/proc/self/fd/${fd}`) !== expected) return null;
+    return { bytes: readFileSync(fd), type };
   } catch (error) {
-    // A file can disappear or become unreadable between the path probe and the read.
-    // Report a missing image rather than aborting the /concepts request or its GET.
-    if (['EACCES', 'EPERM', 'ENOENT', 'EISDIR', 'ELOOP', 'ESTALE'].includes(error?.code)) return null;
+    // Linux procfs is required for the fd identity check; fail closed on hosts
+    // without it. Known read/open races are unavailable images, not HTTP 500s.
+    if (['EACCES', 'EPERM', 'ENOENT', 'ENOTDIR', 'EISDIR', 'ELOOP', 'ESTALE'].includes(error?.code)) return null;
     throw error;
+  } finally {
+    if (fd !== undefined) closeSync(fd);
   }
 }
 
 export function conceptImage(repoRoot, name) {
-  return readConceptImage(conceptImageFile(repoRoot, name), 'image/jpeg');
+  return readConceptImage(repoRoot, conceptImageFile(repoRoot, name), 'image/jpeg');
 }
 
 /** Only fixed archetype/step pairs are public; neither path segment comes from a filesystem listing. */
@@ -186,7 +195,7 @@ function journeyStepFile(repoRoot, archetype, id) {
 }
 
 export function conceptJourneyStep(repoRoot, archetype, id) {
-  return readConceptImage(journeyStepFile(repoRoot, archetype, id), 'image/jpeg');
+  return readConceptImage(repoRoot, journeyStepFile(repoRoot, archetype, id), 'image/jpeg');
 }
 
 /** Preserve the booking accessor for existing callers and tests. */
@@ -304,7 +313,7 @@ function trainingBoardFile(repoRoot, id) {
 export function trainingBoard(repoRoot, id) {
   if (!trainingFamilies(repoRoot).some((family) => family.id === id)) return null;
   const file = trainingBoardFile(repoRoot, id);
-  return readConceptImage(file, 'image/jpeg');
+  return readConceptImage(repoRoot, file, 'image/jpeg');
 }
 
 /** Resolve a target only when its arm declares the id and its file remains confined.
@@ -321,7 +330,7 @@ function conceptTargetFile(repoRoot, id) {
 
 /** These are authored A6 targets, not captures of the generated demo. */
 export function conceptTarget(repoRoot, id) {
-  return readConceptImage(conceptTargetFile(repoRoot, id), 'image/png');
+  return readConceptImage(repoRoot, conceptTargetFile(repoRoot, id), 'image/png');
 }
 
 /** Serve the authored A1 training target for a family: declared in the manifest AND present, confined, under
@@ -329,7 +338,7 @@ export function conceptTarget(repoRoot, id) {
  *  route cannot be used to probe for files the arm never published. */
 export function trainingTarget(repoRoot, id) {
   if (!trainingFamilies(repoRoot).some((family) => family.id === id)) return null;
-  return readConceptImage(trainingTargetFile(repoRoot, id), 'image/png');
+  return readConceptImage(repoRoot, trainingTargetFile(repoRoot, id), 'image/png');
 }
 
 function boardStateRegister(repoRoot) {
