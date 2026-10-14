@@ -105,7 +105,7 @@ const TRAINING_WEB_SHOP_COMPONENTS = [
   '- A receipt or confirmation view for the outcome this family actually implements.',
 ].join('\n');
 
-function trainingSiteLayout(design, archetype) {
+function trainingSiteLayout(design, archetype, journey) {
   const layout = section(design, 'Grammar and layout');
   if (!layout) return null;
   // The shared archetype source also records raster defects and source-vs-board divergences;
@@ -116,6 +116,11 @@ function trainingSiteLayout(design, archetype) {
   if (archetype === 'booking') return structural.replace(/\bthe student\b/gi, 'the user');
   if (archetype === 'web-shop') return structural.replace(/configuration selects \(quantity, variant, grind\)/i,
     'the configuration controls this family’s plan declares');
+  if (archetype === 'event-registration') {
+    // The archetype measures its demo form, but the family journey owns the real form ID.
+    const familyFormId = journey?.match(/\bform#([a-z][a-z0-9-]*)\b/)?.[1];
+    return structural.replace(/#registration-form\b/g, familyFormId ? `#${familyFormId}` : 'the family registration form');
+  }
   return structural;
 }
 
@@ -222,14 +227,15 @@ export function trainingBrief(repoRoot, id, row) {
   const siteDesign = authoredText(repoRoot, 'docs/design/archetypes', row.archetype, 'design.md') ?? design;
   const imagePrompt = authoredText(repoRoot, 'docs/design/training', id, 'prompt.txt');
   const assertions = Array.isArray(row.assertions) ? row.assertions.filter((assertion) => typeof assertion === 'string') : [];
+  const journey = section(plan, 'Journey');
   return {
     sitePrompt: [
       `Build a functional ${row.archetype.replaceAll('-', ' ')} website for this scenario. The image prompt below is an illustration brief; it is not a substitute for implementing the behaviour.`,
       group('Use case', row.prompt),
-      group('UI layout', trainingSiteLayout(siteDesign, row.archetype)),
+      group('UI layout', trainingSiteLayout(siteDesign, row.archetype, journey)),
       group('Family visual direction and tokens', [familyVisualThesis(design), declaredTokens(design), section(design, 'Token usage')].filter(Boolean).join('\n\n')),
       group('Expected components', siteComponentHierarchy(siteDesign, { trainingArchetype: siteDesign !== design ? row.archetype : null })),
-      group('Step-by-step interactions', section(plan, 'Journey')),
+      group('Step-by-step interactions', journey),
       group('Validation and server state', section(plan, 'Validation and states')),
       group('Required assertions', assertions.length ? assertions.map((assertion) => `- ${assertion}`).join('\n') : null),
     ].join('\n\n'),

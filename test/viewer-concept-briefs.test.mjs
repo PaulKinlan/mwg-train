@@ -130,8 +130,15 @@ test('training site prompts keep functional components without inheriting demo-o
       `${id} keeps the reusable event registration structure`);
     assert.doesNotMatch(components, /Future Web 2026|General Admission|Workshop Pass|142\s*\/\s*200|£120|Attendee name|Dietary preferences|#registration-form|#estimate|#tier-error|#attendee-name/i,
       `${id} must not inherit event-demo names, counts, prices, fields or DOM IDs`);
-    assert.match(prompt, id === 'tr-07' ? /form#observatory-registration-form/ : /form#registration-form/,
-      `${id} must retain the family plan's actual registration form ID`);
+    const layout = prompt.match(/UI layout:\n([\s\S]*?)(?=\nFamily visual direction and tokens:)/)?.[1] ?? '';
+    const journey = prompt.match(/Step-by-step interactions:\n([\s\S]*?)(?=\nValidation and server state:)/)?.[1] ?? '';
+    const familyFormId = journey.match(/\bform#([a-z][a-z0-9-]*)\b/)?.[1];
+    assert.equal(familyFormId, id === 'tr-07' ? 'observatory-registration-form' : 'registration-form');
+    assert.ok(layout.includes(`#${familyFormId}`), `${id} layout must use the form ID declared by its own journey`);
+    assert.match(layout, /Tickets are a two-column grid[\s\S]*Radii are spelled literally/i,
+      `${id} keeps the spatial layout rather than deleting the entire authored section`);
+    if (id === 'tr-07') assert.doesNotMatch(layout, /#registration-form\b/,
+      'the observatory layout must not contradict its journey with the demo form ID');
   }
 });
 
