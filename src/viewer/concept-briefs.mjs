@@ -265,6 +265,24 @@ function siteComponentHierarchy(design, { trainingArchetype = null } = {}) {
   return trainingArchetype ? trainingLayoutProse(cleaned) : cleaned;
 }
 
+// The event design describes a static demo in CSS-selector and form-ID terms. Its
+// pattern prompt needs the source-backed page structure, not selectors to copy.
+const EVENT_PATTERN_COMPONENTS = [
+  '- A fluid single-column shell capped at 52rem frames the event details and a labelled registration form.',
+  '- Ticket options use a two-column grid that collapses to one column on narrow screens; ticket rows and labelled quantity controls remain usable at every width.',
+  '- The event hero names the date and location, and shows availability only when backed by actual registration state.',
+  '- The registration form has labelled attendee fields, inline announced validation, a refusal state and a live estimate clearly marked as illustrative rather than a charge.',
+  '- A confirmation/read-back view shows the stored attendee and pass details; an illustrative QR or badge must not claim real entry.',
+].join('\n');
+
+function eventPatternTokens(design) {
+  // Derive declared colour values from the authored table, not its demo
+  // stylesheet-usage column (which names static selectors and reference counts).
+  const rows = section(design, 'Token usage')?.matchAll(/^\| `(--[a-z-]+)` \| `(#[0-9a-f]{6})` \|/gmi) ?? [];
+  const tokens = [...rows].map(([, name, value]) => `- ${name}: ${value}`);
+  return tokens.length ? `Exact palette values from the authored design:\n${tokens.join('\n')}` : null;
+}
+
 /** The authored archetype plan/design are the source; this is a readable prompt assembled from them, not model output. */
 export function archetypeBrief(repoRoot, id, trainingImagePrompt = null) {
   if (!ID.test(id)) return null;
@@ -273,18 +291,21 @@ export function archetypeBrief(repoRoot, id, trainingImagePrompt = null) {
   const design = authoredText(repoRoot, directory, id, 'design.md');
   if (!plan || !design) return null;
   const readme = authoredText(repoRoot, directory, id, 'README.md');
+  const eventPattern = id === 'event-registration';
+  const sitePrompt = [
+    `Build a complete, interactive ${id.replaceAll('-', ' ')} website. This is a site implementation brief, not an image-generation or model-performance result.`,
+    group('Use case', section(plan, 'Use case')),
+    group('UI composition', section(design, 'Visual thesis')),
+    group('Layout and components', eventPattern ? EVENT_PATTERN_COMPONENTS :
+      [section(design, 'Grammar and layout'), section(design, 'Component hierarchy')].filter(Boolean).join('\n\n')),
+    group('Visual tokens', eventPattern ? eventPatternTokens(design) : section(design, 'Token usage')),
+    group('Step-by-step behaviour', section(plan, 'Journey')),
+    group('Validation and persisted states', section(plan, 'Validation and states')),
+    group('Acceptance contract', section(plan, 'Acceptance criteria')),
+  ].join('\n\n');
   return {
     id,
-    sitePrompt: [
-      `Build a complete, interactive ${id.replaceAll('-', ' ')} website. This is a site implementation brief, not an image-generation or model-performance result.`,
-      group('Use case', section(plan, 'Use case')),
-      group('UI composition', section(design, 'Visual thesis')),
-      group('Layout and components', [section(design, 'Grammar and layout'), section(design, 'Component hierarchy')].filter(Boolean).join('\n\n')),
-      group('Visual tokens', section(design, 'Token usage')),
-      group('Step-by-step behaviour', section(plan, 'Journey')),
-      group('Validation and persisted states', section(plan, 'Validation and states')),
-      group('Acceptance contract', section(plan, 'Acceptance criteria')),
-    ].join('\n\n'),
+    sitePrompt: eventPattern ? sitePrompt.replace(/\bform#registration-form\b|#registration-form\b/g, 'the registration form') : sitePrompt,
     imagePromptSource: readme ? `docs/design/archetypes/${id}/README.md` : trainingImagePrompt?.source ?? null,
     fallbackImagePrompt: readme ? null : trainingImagePrompt?.text ?? null,
     planSource: `${directory}/${id}/plan.md`,
