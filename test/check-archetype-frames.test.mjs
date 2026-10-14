@@ -1,10 +1,11 @@
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { join, relative, resolve } from 'node:path';
 import test from 'node:test';
 import jpeg from 'jpeg-js';
-import { hasBrowserChrome, scanFrames } from '../scripts/check-archetype-frames.mjs';
+import { hasBrowserChrome, loadCleanPins, scanFrames } from '../scripts/check-archetype-frames.mjs';
 import { TRAINING_TARGET_FAMILIES } from '../src/train/targets.mjs';
 
 const ROOT = resolve(import.meta.dirname, '..');
@@ -41,13 +42,28 @@ test('frame gate scans training references as well as archetypes, rejecting chro
   writeFileSync(board, image(false));
   result = scanFrames({ archetypesDir, trainingDir });
   assert.deepEqual(result.failed, []);
+  const pins = Object.fromEntries(result.images.map((file) => [relative(root, file).replaceAll('\\', '/'),
+    createHash('sha256').update(readFileSync(file)).digest('hex')]));
+  assert.equal(scanFrames({ root, archetypesDir, trainingDir, cleanPins: pins }).decoded, 0,
+    'byte-identical clean images need no full-JPEG re-decode');
+  writeFileSync(board, image(true));
+  result = scanFrames({ root, archetypesDir, trainingDir, cleanPins: pins });
+  assert.deepEqual(result.failed, [board], 'changed pixels are decoded and cannot reuse a clean pin');
+  assert.equal(result.decoded, 1);
+  writeFileSync(board, Buffer.concat([image(false), Buffer.from([0])]));
+  result = scanFrames({ root, archetypesDir, trainingDir, cleanPins: pins });
+  assert.deepEqual(result.failed, [board], 'a byte-changed but visually clean JPEG needs a deliberate re-pin too');
+  assert.deepEqual(result.stale, [board]);
   rmSync(board);
   symlinkSync(join(archetypesDir, 'booking/step1.jpg'), board);
   assert.deepEqual(scanFrames({ archetypesDir, trainingDir }).failed, [board], 'a symlink cannot hide a board from the gate');
 });
 
 test('every declared training board is included in the real frame scan', () => {
-  const result = scanFrames();
+  const pins = loadCleanPins();
+  const result = scanFrames({ cleanPins: pins });
+  assert.equal(result.decoded, 0, 'unchanged current files must use reviewed SHA pins, not re-decode 67 full JPEGs every fast gate');
+  assert.equal(Object.keys(pins).length, result.images.length);
   const training = result.images.filter((file) => file.startsWith(join(ROOT, 'docs/design/training/')));
   for (const family of TRAINING_TARGET_FAMILIES) {
     assert.ok(training.includes(join(ROOT, 'docs/design/training', family.family_id, 'reference.jpg')),

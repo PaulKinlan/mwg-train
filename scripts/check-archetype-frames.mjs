@@ -17,6 +17,8 @@ import jpeg from 'jpeg-js';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const ARCHETYPES_DIR = path.join(ROOT, 'docs', 'design', 'archetypes');
 const TRAINING_DIR = path.join(ROOT, 'docs', 'design', 'training');
+const CLEAN_PINS_PATH = path.join(ROOT, '.fleet', 'frame-scan-pins.json');
+const SCAN_ALGORITHM = 'macos-triplets-chroma-v2';
 
 // These images were generated with browser chrome before this gate was added.
 // They are exempt by exact content hash to avoid breaking the sealed evaluation corpus.
@@ -129,31 +131,69 @@ function findJpegs(dir, list = []) {
   return list;
 }
 
-export function scanFrames({ archetypesDir = ARCHETYPES_DIR, trainingDir = TRAINING_DIR } = {}) {
-  const images = [...findJpegs(archetypesDir), ...findJpegs(trainingDir)];
+export function scanFrames({ archetypesDir = ARCHETYPES_DIR, trainingDir = TRAINING_DIR, root = ROOT, cleanPins = null } = {}) {
+  const images = [...findJpegs(archetypesDir), ...findJpegs(trainingDir)].sort();
   const failed = [];
   const exempt = [];
+  const stale = [];
+  const hashes = {};
+  let decoded = 0;
   for (const image of images) {
+    const rel = path.relative(root, image).split(path.sep).join('/');
     // Do not follow a symlink into an unscanned file, even if it happens to contain a valid image.
     if (fs.lstatSync(image).isSymbolicLink()) { failed.push(image); continue; }
     const bytes = fs.readFileSync(image);
     const hash = crypto.createHash('sha256').update(bytes).digest('hex');
-    if (!hasBrowserChrome(bytes)) continue;
-    if (EXEMPT_HASHES.has(hash)) exempt.push(image);
-    else failed.push(image);
+    hashes[rel] = hash;
+    // Content-addressed clean evidence: unchanged bytes need no repeat full-JPEG decode on every fast gate.
+    // New or altered images are ALWAYS decoded and fail until a deliberate clean re-pin. A metadata-only
+    // change can never waive the first scan, and the pin file is reviewed alongside the changed JPEG.
+    if (cleanPins?.[rel] === hash) continue;
+    decoded++;
+    if (hasBrowserChrome(bytes)) {
+      if (EXEMPT_HASHES.has(hash)) exempt.push(image);
+      else failed.push(image);
+    } else if (cleanPins) {
+      stale.push(image);
+      failed.push(image);
+    }
   }
-  return { images, failed, exempt };
+  if (cleanPins) for (const rel of Object.keys(cleanPins)) {
+    if (Object.hasOwn(hashes, rel)) continue;
+    const removed = path.resolve(root, rel);
+    stale.push(removed);
+    failed.push(removed);
+  }
+  return { images, failed, exempt, stale, hashes, decoded };
+}
+
+export function loadCleanPins(file = CLEAN_PINS_PATH) {
+  const data = JSON.parse(fs.readFileSync(file, 'utf8'));
+  if (data.schemaVersion !== 1 || data.algorithm !== SCAN_ALGORITHM || !data.images
+    || typeof data.images !== 'object' || Array.isArray(data.images)
+    || Object.entries(data.images).some(([fileName, hash]) => !/^docs\/design\/(?:archetypes|training)\//.test(fileName)
+      || !/^[a-f0-9]{64}$/.test(hash))) throw new Error('frame scan pins have an invalid version, path or digest');
+  return data.images;
 }
 
 function runCheck() {
-  const { images, failed, exempt } = scanFrames();
+  const pinClean = process.argv.includes('--pin-clean');
+  let cleanPins = null;
+  if (!pinClean) {
+    try { cleanPins = loadCleanPins(); }
+    catch (error) { console.error(`check:archetype-frames - FAILED: ${error.message}; run --pin-clean after inspecting all images`); process.exit(1); }
+  }
+  const { images, failed, exempt, stale, hashes, decoded } = scanFrames({ cleanPins });
   for (const image of exempt) console.warn(`EXEMPT: Browser chrome detected in ${path.relative(ROOT, image)} (grandfathered image)`);
-  for (const image of failed) console.error(`check:archetype-frames - FAILED: Browser chrome or unscannable link in ${path.relative(ROOT, image)}`);
-  if (failed.length) {
-    console.error('check:archetype-frames - FAILED: Concept and training-reference images must not contain browser/OS window frames.');
+  for (const image of failed) console.error(`check:archetype-frames - FAILED: ${stale.includes(image) ? 'unverified changed/unpinned JPEG' : 'browser chrome or unscannable link'} in ${path.relative(ROOT, image)}`);
+  if (failed.length || exempt.length) {
+    console.error('check:archetype-frames - FAILED: Concept and training-reference images must have a clean, byte-pinned frame scan.');
     process.exit(1);
   }
-  console.log(`check:archetype-frames - PASS - checked ${images.length} images for browser chrome`);
+  if (pinClean) {
+    fs.writeFileSync(CLEAN_PINS_PATH, JSON.stringify({ schemaVersion: 1, algorithm: SCAN_ALGORITHM, images: hashes }, null, 2) + '\n');
+    console.log(`check:archetype-frames - PINNED ${images.length} clean images after decoding ${decoded} JPEGs`);
+  } else console.log(`check:archetype-frames - PASS - checked ${images.length} pinned image digests; decoded ${decoded} changed JPEGs`);
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

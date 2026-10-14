@@ -1,4 +1,7 @@
 {
+  ".fleet/frame-scan-pins.json": [
+    "test/check-archetype-frames.test.mjs"
+  ],
   "docs/design/archetypes/*/README.md": [
     "test/archetype-boards-generator.test.mjs",
     "test/board-states.test.mjs",

@@ -446,6 +446,11 @@ export function renderRegister(entries, { generatedOn = null } = {}) {
         `uses Pillow 12.3.0 at JPEG quality 95/subsampling 0, with no image-model call, scaling or inpainting. ` +
         `The cropped bytes are DERIVED from attested originals; they are not freshly generated model outputs. ` +
         `Their varying aspect ratios preserve page content and are not claims of an exact 16:9 render.`,
+      `- **Frame gate:** the committed images were decoded and checked for macOS-style traffic lights before their ` +
+        `exact clean-byte SHA pins were written to [\`.fleet/frame-scan-pins.json\`](../../../.fleet/frame-scan-pins.json). ` +
+        `The routine gate hashes unchanged bytes without decoding every full JPEG; changed or unpinned images are ` +
+        `decoded, rejected until a deliberate full \`--pin-clean\` scan, and must be independently reviewed. ` +
+        `The colour detector is not a substitute for visual assessment of window borders or clipped controls.`,
     ] : []),
     `- **Prompts:** The boards were generated from an earlier prompt revision. The current canonical prompts are composed deterministically from each family's own committed sources - its canonical (\`-v1\`) row in ` +
       `[\`docs/train/briefs/manifest.jsonl\`](../../train/briefs/manifest.jsonl), its [\`plan.md\`](../../train/design) routes, ` +
