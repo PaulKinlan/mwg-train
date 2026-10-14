@@ -465,10 +465,14 @@ export function renderRegister(entries, { generatedOn = null } = {}) {
   );
   const crops = entries.filter((entry) => entry.crop);
   const unattested = entries.filter((entry) => entry.model !== BOARD_MODEL);
+  const families = entries.map((entry) => entry.family).sort((a, b) => a.localeCompare(b, 'en', { numeric: true }));
+  const scope = families.length
+    ? `one per training family (\`${families[0]}\`..\`${families.at(-1)}\`)`
+    : 'no training families';
   return [
     `# Provenance: training-family visual reference boards`,
     ``,
-    `- **Scope:** ${entries.length} illustrative JPEGs, one per training family (\`tr-01\`..\`tr-30\`), under ` +
+    `- **Scope:** ${entries.length} illustrative JPEG${entries.length === 1 ? '' : 's'}, ${scope}, under ` +
       `[\`docs/design/training/<family>/reference.jpg\`](../../design/training). They are visual planning references for the ` +
       `training families - what a finished, production-quality version of each family's site should look like. They are ` +
       `**not** functional interfaces, **not** generated-site screenshots, **not** corpus or training data, and **not** the ` +
