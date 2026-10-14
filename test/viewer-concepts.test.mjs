@@ -229,6 +229,63 @@ test('listing checks confined JPEG availability without reading full image bytes
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
 
+test('an unreadable JPEG is neither advertised nor allowed to throw from its image route', () => {
+  const root = mkdtempSync(join(tmpdir(), 'viewer-concepts-unreadable-'));
+  try {
+    const dir = join(root, 'docs/design/archetypes/booking');
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(join(dir, 'step1-browse.jpg'), Buffer.from([0xff, 0xd8, 0xff, 0xd9]));
+    // Simulate EACCES in a child so this test is deterministic even under root, and no fs patch
+    // can leak into another test. Denial of access tests the listing; a later read denial tests
+    // the race after the path was validated and its HTTP response.
+    const script = `
+      import assert from 'node:assert/strict';
+      import fs from 'node:fs';
+      import { syncBuiltinESMExports } from 'node:module';
+      import { mkdtempSync, rmSync } from 'node:fs';
+      import { tmpdir } from 'node:os';
+      import { join } from 'node:path';
+      const root = process.argv[1];
+      const file = join(root, 'docs/design/archetypes/booking/step1-browse.jpg');
+      const denied = () => { const error = Error('permission denied'); error.code = 'EACCES'; throw error; };
+      const access = fs.accessSync;
+      fs.accessSync = (path, ...args) => path === file ? denied() : access(path, ...args);
+      syncBuiltinESMExports();
+      const { listConcepts, conceptBookingStep } = await import(process.argv[2]);
+      assert.equal(listConcepts(root).bookingSteps[0].available, false);
+      assert.equal(conceptBookingStep(root, 'step1-browse'), null);
+      fs.accessSync = access;
+      syncBuiltinESMExports();
+      assert.equal(listConcepts(root).bookingSteps[0].available, true);
+      const read = fs.readFileSync;
+      fs.readFileSync = (path, ...args) => path === file ? denied() : read(path, ...args);
+      syncBuiltinESMExports();
+      assert.equal(conceptBookingStep(root, 'step1-browse'), null);
+      const { createViewer } = await import(process.argv[3]);
+      const stateDir = mkdtempSync(join(tmpdir(), 'viewer-concepts-unreadable-state-'));
+      const { server, liveServer, pool } = createViewer({ allowAnonymous: true, repoRoot: root,
+        corpusRoot: process.argv[4], stateDir });
+      try {
+        await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+        const response = await fetch('http://127.0.0.1:' + server.address().port +
+          '/concepts/images/booking/step1-browse.jpg');
+        assert.equal(response.status, 404, 'an image read failure must be a safe missing asset, not 500');
+      } finally {
+        pool.stopAll();
+        await Promise.all([new Promise(resolve => server.close(resolve)),
+          new Promise(resolve => liveServer.close(resolve))]);
+        rmSync(stateDir, { recursive: true, force: true });
+      }
+      console.log('permission denied in listing and GET without a response crash');
+    `;
+    const output = execFileSync(process.execPath, ['--input-type=module', '-e', script, root,
+      new URL('../src/viewer/concepts.mjs', import.meta.url).href,
+      new URL('../src/viewer/server.mjs', import.meta.url).href, join(ROOT, 'pilot')],
+    { encoding: 'utf8', timeout: 12000 });
+    assert.match(output, /permission denied in listing and GET without a response crash/);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
 test('future per-archetype references appear in pairs only when their images exist; escape every label', () => {
   const root = mkdtempSync(join(tmpdir(), 'viewer-concepts-list-'));
   try {
