@@ -112,6 +112,16 @@ test('fast-gate selects the suites declared in .fleet/coverage-mapping.json (mwg
   }
 });
 
+test('a selector edit declares its own suite route in the hashed coverage contract', () => {
+  const mapping = JSON.parse(fs.readFileSync(path.join(ROOT, '.fleet/coverage-mapping.json'), 'utf8'));
+  assert.deepStrictEqual(mapping['scripts/fast-gate.mjs'], ['test/fast-gate.test.mjs'],
+    'the selector suite must be a reviewed mapping edge, not only a name-stem coincidence');
+  const env = { ...process.env, GIT_CHANGED: 'scripts/fast-gate.mjs', FAST_GATE_LIST: '1' };
+  const res = spawnSync('node', [FAST_GATE], { cwd: ROOT, env, encoding: 'utf8' });
+  assert.strictEqual(res.status, 0, res.stderr);
+  assert.match(res.stdout, /suites=\[[^\]]*test\/fast-gate\.test\.mjs/);
+});
+
 test('mapping changes select the edge hash even if its mapping self-entry is deleted', () => {
   // This belongs in the suite selected by changes to scripts/fast-gate.mjs, NOT the hash
   // suite itself: removing the independent selector must still leave a failing regression.
