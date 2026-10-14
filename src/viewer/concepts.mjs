@@ -1,5 +1,5 @@
 import { accessSync, closeSync, constants, fstatSync, lstatSync, openSync, readFileSync, readSync, realpathSync } from 'node:fs';
-import { dirname, join, relative } from 'node:path';
+import { dirname, isAbsolute, join, relative, sep } from 'node:path';
 
 import { escapeHtml, page } from './pages.mjs';
 import { readJpegDimensions } from './tuning.mjs';
@@ -174,16 +174,21 @@ function macOSOpenFileMatches(file, expected, opened) {
     realpathSync(dirname(file)) === dirname(expected) && realpathSync(file) === expected;
 }
 
-/** Read an allowlisted image only after the caller has checked its path confinement.
- *  The opened fd is independently bound to the expected canonical location. */
+/** Read only an image path inside the repo root, even when called without an allowlist probe.
+ *  The opened fd is independently bound to its expected canonical location. A confined
+ *  hardlink can still name externally originated bytes; that provenance policy is separate. */
 export function readConfinedImage(repoRoot, file, type) {
   if (!file) return null;
   let fd;
   try {
+    // A lexical escape must be rejected BEFORE join() normalizes ../ against the real root.
+    // Callers also use allowlists, but this exported reader must not trust their checks.
+    const underRoot = relative(repoRoot, file);
+    if (!underRoot || underRoot === '..' || underRoot.startsWith(`..${sep}`) || isAbsolute(underRoot)) return null;
     // The path probe can race with a replacement. Open the leaf without following
     // links, then validate the *opened fd's* identity: O_NOFOLLOW alone does not
     // stop a swapped ancestor directory from redirecting the open.
-    const expected = join(realpathSync(repoRoot), relative(repoRoot, file));
+    const expected = join(realpathSync(repoRoot), underRoot);
     fd = openSync(file, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
     const opened = fstatSync(fd, { bigint: true });
     if (!opened.isFile()) return null;
