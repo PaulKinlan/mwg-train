@@ -7,7 +7,7 @@ register: docs/design/archetypes/browser-puzzle-game/PROVENANCE.md
 
 # `browser-puzzle-game` — authored visual system
 
-**Planning, not generated-image evidence.** Signal Grid is a fictional game in a brief. The palette and four frames below describe intended art direction; no gameplay, solved puzzle, canvas output, Web Audio, streak data or model-produced pixels exist yet. Behaviour belongs to [`plan.md`](plan.md).
+**Design planning, not runtime evidence.** Signal Grid is a fictional game in a brief. The palette and four frames below describe intended art direction; eight illustrative JPEGs exist, but seven lack retained model/prompt attestation. No gameplay, solved puzzle, canvas output, Web Audio or streak data have been verified. Behaviour belongs to [`plan.md`](plan.md).
 
 ## Direction contract
 
@@ -86,11 +86,11 @@ Board cells divide one available square into six equal tracks, with enough visua
 
 ## Rationale
 
-A puzzle earns attention only if choices visibly affect an intelligible state. The restrained board, coordinate marks and tool labels give the player a stable frame of reference; cyan/amber paths, geometry and prose explain the rules; the victory display waits on a computed condition. DOM and canvas have separate responsibilities, preventing attractive screenshots from masquerading as functional input or accessible output. Sound and background drawing stay optional to respect user choice and CPU/battery limits. The four images will remain illustrative planning references even after authorised generation; their quality and provenance must be inspected before publication.
+A puzzle earns attention only if choices visibly affect an intelligible state. The restrained board, coordinate marks and tool labels give the player a stable frame of reference; cyan/amber paths, geometry and prose explain the rules; the victory display waits on a computed condition. DOM and canvas have separate responsibilities, preventing attractive screenshots from masquerading as functional input or accessible output. Sound and background drawing stay optional to respect user choice and CPU/battery limits. The eight committed images remain illustrative planning references; seven have unverified provenance, and their quality and source must be independently inspected before any stronger publication claim.
 
 ## Provenance
 
-- Functional contract and honesty boundary: [`plan.md`](plan.md). Exact four pending image briefs: [`README.md`](README.md). [Local pending provenance](PROVENANCE.md) records actual prompt hashes, absent JPEGs and no model attestations.
+- Functional contract and honesty boundary: [`plan.md`](plan.md). Four authored Light image briefs: [`README.md`](README.md). [Local provenance](PROVENANCE.md) pins eight committed JPEGs and identifies the seven unverified scratch-file imports.
 - The existing [`game` type axis](../../../train/briefs/TYPE-AXIS.md) is not satisfied by this authored document. A real family, replayable win and distinct editor boundary are still needed.
 - Modern Web Guidance's accessibility guidance informed the native dialog, roving keyboard focus and intentionally quiet live region. The background-processing guide was inspected but its `content-visibility: auto`/`contentvisibilityautostatechange` event is not used: the playable board sits above the fold, while the required `visibilitychange` pause remains a separate browser lifecycle requirement. This is a design contract, not shipped JS.
 - `excluded_from_training: true`; `approved_for_training: false` for any future generated visual reference absent owner clearance. No A6 target or A1 training row is modified.

@@ -77,11 +77,11 @@ Define the puzzle fixture and solver BEFORE presenting a 14-move win: finite vis
 
 ## Implementation status
 
-**Planning only.** No playable Signal Grid site, puzzle fixture, proven 14-move solution, editor route, screenshot, local streak record or four JPEG boards exists for this archetype. The four prompt blocks in [`README.md`](README.md) are offline text; no model gateway call is authorised here. The sealed A6 evaluation set and current A1 training manifest are untouched. The proposed editor role and a later image-generation pass require separate implementation, spend approval and independent review.
+**Planning only for functionality.** No playable Signal Grid site, puzzle fixture, proven 14-move solution, editor route or local streak record exists for this archetype. Eight illustrative JPEG boards are committed; the original Light Step 1 has a generation record, but seven replacement/imported boards lack retained model responses or generator prompts (see [local provenance](PROVENANCE.md)). The four authored prompt blocks in [`README.md`](README.md) cannot attest the seven imports. The sealed A6 evaluation set and current A1 training manifest are untouched. The proposed editor role and any new image-generation pass require separate implementation, spend approval and independent review.
 
 ## Provenance
 
 - Type-axis context: [`TYPE-AXIS.md`](../../../train/briefs/TYPE-AXIS.md) (existing `game` type remains unsatisfied by this planning document).
-- Aesthetic brief: [`design.md`](design.md). Exact unframed image instructions: [`README.md`](README.md). [Local pending provenance](PROVENANCE.md) lists real prompt digests and absent JPEG/model evidence without fabricated hashes.
+- Aesthetic brief: [`design.md`](design.md). Authored unframed Light image briefs: [`README.md`](README.md). [Local provenance](PROVENANCE.md) pins eight existing JPEGs while marking seven replacement/imported boards unverified.
 - `excluded_from_training: true`; `approved_for_training: false` for future illustrative images absent an owner-cleared rights record. No source licence or verified gameplay claim arises from a generated still.
 - Work: `mwg-train-07ka.2` offline deliverable, with image generation, taxonomy and viewer wiring deferred to a separately approved follow-up.
