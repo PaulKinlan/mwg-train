@@ -223,9 +223,22 @@ function journeyResults(record, spec) {
   return journeys;
 }
 
-/** One version's observation, reduced to the facts the yield report reasons about. */
-function versionRecord(record, spec) {
+/** One version's observation, reduced without discarding the browser run's measured runtime. */
+export function versionRecord(record, spec) {
+  // The historical committed sample has no stamp: never invent one while rendering its report.
+  // Freshly driven rows MUST carry one; refusing here prevents another unstamped commit.
+  if (!['linux', 'darwin'].includes(record?.platform)) throw new Error('train-corpus-run: missing measured platform (linux or darwin)');
+  const node = /^v(\d+)\.\d+\.\d+$/.exec(record?.node_version ?? '');
+  if (!node || Number(node[1]) < 20) throw new Error('train-corpus-run: missing measured Node version (requires Node >=20)');
+  if (!/^(?:Chrome|HeadlessChrome|Chromium)\/[1-9]\d*\.\d+\.\d+\.\d+$/.test(record?.chrome_version ?? '') ||
+    record?.browser?.product !== record.chrome_version) {
+    throw new Error('train-corpus-run: missing measured CDP browser product matching Chrome version');
+  }
   return {
+    platform: record.platform,
+    node_version: record.node_version,
+    browser: record.browser,
+    chrome_version: record.chrome_version,
     persistence_ok: persistenceOk(record, spec),
     validation_observation: validationObservation(record),
     journeys: journeyResults(record, spec),
