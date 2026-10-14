@@ -465,6 +465,106 @@ test('image GETs reject leaf and ancestor swaps after the confined path probe', 
   }
 });
 
+test('macOS fd fallback serves verified bytes and missing procfs elsewhere fails visibly closed', () => {
+  const root = mkdtempSync(join(tmpdir(), 'viewer-concepts-no-proc-'));
+  const outside = mkdtempSync(join(tmpdir(), 'viewer-concepts-no-proc-outside-'));
+  try {
+    const booking = join(root, 'data/A6_evaluation/targets/booking');
+    const board = join(root, 'docs/design/training/tr-01');
+    const targets = join(root, 'data/A1_self_generated/targets');
+    for (const dir of [booking, board, join(targets, 'tr-01')]) mkdirSync(dir, { recursive: true });
+    const png = Buffer.from([137, 80, 78, 71]);
+    const jpg = Buffer.from([0xff, 0xd8, 0xff, 0xd9]);
+    writeFileSync(join(booking, 'target.png'), png);
+    writeFileSync(join(board, 'reference.jpg'), jpg);
+    writeFileSync(join(targets, 'tr-01/target.png'), png);
+    writeFileSync(join(outside, 'reference.jpg'), Buffer.from('OUTSIDE SECRET JPEG'));
+    writeFileSync(join(targets, 'manifest.jsonl'), `${JSON.stringify({
+      arm: 'A1_self_generated', kind: 'asset', family_id: 'tr-01', archetype: 'booking',
+      image_path: 'data/A1_self_generated/targets/tr-01/target.png',
+    })}\n`);
+    const script = `
+      import assert from 'node:assert/strict';
+      import fs from 'node:fs';
+      import { syncBuiltinESMExports } from 'node:module';
+      import { mkdtempSync, rmSync } from 'node:fs';
+      import { tmpdir } from 'node:os';
+      import { join } from 'node:path';
+      const [root, outside] = process.argv.slice(1);
+      const realpath = fs.realpathSync, open = fs.openSync;
+      fs.realpathSync = (file, ...args) => {
+        if (typeof file === 'string' && file.startsWith('/proc/self/fd/')) {
+          const error = Error('procfs not mounted'); error.code = 'ENOENT'; throw error;
+        }
+        return realpath(file, ...args);
+      };
+      let swapBoard = false, swaps = 0;
+      const boardDir = join(root, 'docs/design/training/tr-01');
+      fs.openSync = (file, ...args) => {
+        if (!swapBoard || file !== join(boardDir, 'reference.jpg')) return open(file, ...args);
+        swaps++;
+        fs.renameSync(boardDir, boardDir + '.inside');
+        fs.symlinkSync(outside, boardDir, 'dir');
+        try { return open(file, ...args); }
+        finally { fs.unlinkSync(boardDir); fs.renameSync(boardDir + '.inside', boardDir); }
+      };
+      syncBuiltinESMExports();
+      Object.defineProperty(process, 'platform', { configurable: true, value: 'darwin' });
+      const { conceptTarget, trainingTarget, trainingBoard } = await import(process.argv[3]);
+      const png = Buffer.from([137, 80, 78, 71]);
+      const jpg = Buffer.from([0xff, 0xd8, 0xff, 0xd9]);
+      assert.deepEqual(conceptTarget(root, 'booking')?.bytes, png, 'no procfs must not break macOS A6');
+      assert.deepEqual(trainingTarget(root, 'tr-01')?.bytes, png, 'no procfs must not break macOS A1');
+      assert.deepEqual(trainingBoard(root, 'tr-01')?.bytes, jpg, 'no procfs must not break macOS board');
+      swapBoard = true;
+      assert.equal(trainingBoard(root, 'tr-01'), null, 'ancestor swap must fail fd identity fallback');
+      const { createViewer } = await import(process.argv[4]);
+      const stateDir = mkdtempSync(join(tmpdir(), 'viewer-concepts-no-proc-state-'));
+      const { server, liveServer, pool } = createViewer({ allowAnonymous: true, repoRoot: root,
+        corpusRoot: process.argv[5], stateDir });
+      try {
+        await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+        const base = 'http://127.0.0.1:' + server.address().port;
+        let response = await fetch(base + '/concepts/references/tr-01.jpg');
+        assert.equal(response.status, 404, 'swapped board is refused on macOS fallback');
+        swapBoard = false;
+        response = await fetch(base + '/concepts/targets/booking.png');
+        assert.equal(response.status, 200);
+        assert.deepEqual(Buffer.from(await response.arrayBuffer()), png);
+        response = await fetch(base + '/concepts/references/tr-01.jpg');
+        assert.equal(response.status, 200);
+        assert.deepEqual(Buffer.from(await response.arrayBuffer()), jpg);
+        Object.defineProperty(process, 'platform', { configurable: true, value: 'linux' });
+        const warnings = [], warn = console.warn;
+        console.warn = (...args) => warnings.push(args.join(' '));
+        try {
+          response = await fetch(base + '/concepts/targets/booking.png');
+          assert.equal(response.status, 404, 'missing procfs without macOS fallback must fail closed');
+          response = await fetch(base + '/concepts/targets/booking.png');
+          assert.equal(response.status, 404);
+          assert.equal(warnings.length, 1, 'diagnose the unavailable fd identity once, not per request');
+          assert.match(warnings[0], /procfs.*identity|identity.*procfs/i);
+        } finally { console.warn = warn; }
+        assert.ok(swaps >= 2, 'both direct and HTTP board reads must exercise the ancestor swap');
+      } finally {
+        pool.stopAll();
+        await Promise.all([new Promise(resolve => server.close(resolve)),
+          new Promise(resolve => liveServer.close(resolve))]);
+        rmSync(stateDir, { recursive: true, force: true });
+      }
+      console.log('macOS fallback serves confined images and rejects a swapped board');
+    `;
+    const output = execFileSync(process.execPath, ['--input-type=module', '-e', script, root, outside,
+      new URL('../src/viewer/concepts.mjs', import.meta.url).href,
+      new URL('../src/viewer/server.mjs', import.meta.url).href, join(ROOT, 'pilot')],
+    { encoding: 'utf8', timeout: 15000 });
+    assert.match(output, /macOS fallback serves confined images and rejects a swapped board/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+    rmSync(outside, { recursive: true, force: true });
+  }
+});
+
 test('future per-archetype references appear in pairs only when their images exist; escape every label', () => {
   const root = mkdtempSync(join(tmpdir(), 'viewer-concepts-list-'));
   try {
