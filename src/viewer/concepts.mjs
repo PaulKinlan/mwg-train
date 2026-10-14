@@ -183,9 +183,7 @@ export function readConfinedImage(repoRoot, file, type) {
     // The path probe can race with a replacement. Open the leaf without following
     // links, then validate the *opened fd's* identity: O_NOFOLLOW alone does not
     // stop a swapped ancestor directory from redirecting the open.
-    const underRoot = relative(repoRoot, file);
-    if (!underRoot || underRoot.startsWith('..') || underRoot.startsWith('/')) return null;
-    const expected = join(realpathSync(repoRoot), underRoot);
+    const expected = join(realpathSync(repoRoot), relative(repoRoot, file));
     fd = openSync(file, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
     const opened = fstatSync(fd, { bigint: true });
     if (!opened.isFile()) return null;
@@ -223,9 +221,18 @@ export function conceptImage(repoRoot, name) {
 
 /** Only fixed archetype/step pairs are public; neither path segment comes from a filesystem listing. */
 function journeyStepFile(repoRoot, archetype, id) {
-  if (!Object.hasOwn(JOURNEYS, archetype) || !JOURNEYS[archetype].some((step) => step.id === id)) return null;
+  if (!Object.hasOwn(JOURNEYS, archetype) || typeof id !== 'string') return null;
+  const isDark = id.endsWith('-dark');
+  const baseId = isDark ? id.slice(0, -5) : id;
+  if (!JOURNEYS[archetype].some((step) => step.id === baseId)) return null;
   const root = join(repoRoot, 'docs/design');
-  return confinedFile(root, join(root, 'archetypes', archetype), `${id}.jpg`);
+  const archetypeDir = join(root, 'archetypes', archetype);
+  try {
+    if (lstatSync(archetypeDir).isSymbolicLink() || !lstatSync(archetypeDir).isDirectory()) return null;
+  } catch {
+    return null;
+  }
+  return confinedFile(root, isDark ? join(archetypeDir, 'dark') : archetypeDir, `${baseId}.jpg`);
 }
 
 export function conceptJourneyStep(repoRoot, archetype, id) {
@@ -396,7 +403,11 @@ export function listConcepts(repoRoot) {
   const states = boardStateRegister(repoRoot);
   const journeys = Object.entries(JOURNEYS).map(([id, steps]) => ({
     id, title: id.replaceAll('-', ' '),
-    steps: steps.map((step) => ({ ...step, available: !!journeyStepFile(repoRoot, id, step.id) })),
+    steps: steps.map((step) => ({
+      ...step,
+      available: !!journeyStepFile(repoRoot, id, step.id),
+      darkAvailable: !!journeyStepFile(repoRoot, id, `${step.id}-dark`),
+    })),
   }));
   // Booking remains first, including when its first image is absent. Never claim a reference pairing
   // for a family until an allowlisted image is actually available in the checkout.
@@ -487,23 +498,38 @@ const patternCard = ({ id, brief, steps }, families = []) => {
   ${brief ? `<p class="muted">Design and interaction contract: ${code(brief.planSource)} · ${code(brief.designSource)}${familyLinks}.</p>
     ${promptDetails('Site Generation Prompt', brief.sitePrompt, `${brief.planSource} + ${brief.designSource}`)}`
     : `<p class="notice">Design specification pending; no generation prompt can be claimed.${familyLinks}</p>`}
-  ${steps.length ? `<h4>${steps.filter((step) => step.available).length} pictured state${steps.length === 1 ? '' : 's'} · ${steps.length} declared</h4>
+  ${steps.length ? `<h4>${steps.filter((step) => step.available).length} pictured state${steps.length === 1 ? '' : 's'} · ${steps.length} declared · ${steps.filter((step) => step.darkAvailable).length} dark-mode twin state${steps.length === 1 ? '' : 's'}</h4>
+    <p class="muted"><strong>Consistent context-chained Light &amp; Dark Mode sets:</strong> Every step in the Light Mode set uses ${code(`docs/design/archetypes/${id}/design.md`)} and Step 1 Light as reference context; every step in the Dark Mode set uses ${code(`docs/design/archetypes/${id}/design.md`)}, its corresponding Light Mode step, and Step 1 Dark as reference context so layout, navigation, and styling remain consistent throughout.</p>
     ${steps.some((step) => step.available && /\bQR\b/i.test(step.imagePrompt ?? '')) ? `<p class="muted">Depicted QR codes are unverified placeholders: do not scan depicted codes. A model ID may be reported rather than attested; check each board&rsquo;s provenance in ${code(`docs/design/archetypes/${id}/README.md`)}. These illustrations remain excluded from training; no reuse clearance is granted here. Check each board&rsquo;s provenance: some records identify provider terms prohibiting use of the image to develop machine-learning models; others say training and output-use rights were not supplied.</p>` : ''}
-    <ol class="concept-steps">${steps.map(({ id: stepId, title, available, state, imagePrompt }) => {
-      const path = `/concepts/images/${id}/${stepId}.jpg`;
-      const mapped = state?.kind === 'page' ? `Document state at ${state.path ?? 'no confirmed route'}`
-        : state?.kind === 'interaction' ? 'Interaction state; no standalone document URL'
-          : 'Illustrative only; no executable demo state is registered';
-      const claim = state?.drive?.expectText ? `Assert after the registered interaction: ${state.drive.expectText}`
-        : 'No step-specific browser assertion is registered for this picture.';
-      return `<li><figure><div class="concept-image-frame">${available
-        ? `<a href="${path}" aria-label="Open ${escapeHtml(id)} ${escapeHtml(title)} concept board"><img src="${path}" alt="Illustrative ${escapeHtml(id)} state: ${escapeHtml(title)}" width="1376" height="768" loading="lazy"></a>`
-        : `<p class="muted">State image pending: ${code(`docs/design/archetypes/${id}/${stepId}.jpg`)}</p>`}</div>
-        <figcaption><strong>${escapeHtml(title)}</strong><p>${escapeHtml(mapped)}. ${escapeHtml(claim)}</p>
-        ${state?.source ? `<p class="muted">State mapping: ${escapeHtml(state.source)}</p>` : ''}
-        ${promptDetails('Image Generation Prompt for this state', imagePrompt, brief?.imagePromptSource)}
-        </figcaption></figure></li>`;
-    }).join('')}</ol>` : `<p class="notice">No multi-step reference boards are authored for this pattern yet. The design and site brief above are available; images and per-state checks are pending.</p>
+    <div class="concept-theme-set concept-theme-light">
+      <h5 class="concept-theme-heading"><span class="theme-pill theme-pill-light">☀ Light Mode Set</span> Complete ${steps.length}-step Light Mode UI (${code(`docs/design/archetypes/${id}/step*.jpg`)})</h5>
+      <ol class="concept-steps">${steps.map(({ id: stepId, title, available, state, imagePrompt }) => {
+        const path = `/concepts/images/${id}/${stepId}.jpg`;
+        const mapped = state?.kind === 'page' ? `Document state at ${state.path ?? 'no confirmed route'}`
+          : state?.kind === 'interaction' ? 'Interaction state; no standalone document URL'
+            : 'Illustrative only; no executable demo state is registered';
+        const claim = state?.drive?.expectText ? `Assert after the registered interaction: ${state.drive.expectText}`
+          : 'No step-specific browser assertion is registered for this picture.';
+        return `<li><figure><div class="concept-image-frame">${available
+          ? `<a href="${path}" aria-label="Open ${escapeHtml(id)} ${escapeHtml(title)} concept board"><img src="${path}" alt="Illustrative ${escapeHtml(id)} state: ${escapeHtml(title)}" width="1376" height="768" loading="lazy"></a>`
+          : `<p class="muted">State image pending: ${code(`docs/design/archetypes/${id}/${stepId}.jpg`)}</p>`}</div>
+          <figcaption><strong>${escapeHtml(title)} · Light Mode</strong><p>${escapeHtml(mapped)}. ${escapeHtml(claim)}</p>
+          ${state?.source ? `<p class="muted">State mapping: ${escapeHtml(state.source)}</p>` : ''}
+          ${promptDetails('Image Generation Prompt for this state', imagePrompt, brief?.imagePromptSource)}
+          </figcaption></figure></li>`;
+      }).join('')}</ol>
+    </div>
+    <div class="concept-theme-set concept-theme-dark">
+      <h5 class="concept-theme-heading"><span class="theme-pill theme-pill-dark">☾ Dark Mode Set</span> Complete ${steps.length}-step matching Dark Mode UI (${code(`docs/design/archetypes/${id}/dark/step*.jpg`)})</h5>
+      <ol class="concept-steps concept-steps-dark">${steps.map(({ id: stepId, title, darkAvailable }) => {
+        const darkPath = `/concepts/images/${id}/${stepId}-dark.jpg`;
+        return `<li><figure><div class="concept-image-frame">${darkAvailable
+          ? `<a href="${darkPath}" aria-label="Open ${escapeHtml(id)} ${escapeHtml(title)} dark mode concept board"><img src="${darkPath}" alt="Illustrative ${escapeHtml(id)} dark mode state: ${escapeHtml(title)}" width="1376" height="768" loading="lazy"></a>`
+          : `<p class="muted">Dark mode state image pending: ${code(`docs/design/archetypes/${id}/dark/${stepId}.jpg`)}</p>`}</div>
+          <figcaption><strong>${escapeHtml(title)} · Dark Mode</strong><p class="muted">Context-chained from ${code(`${stepId}.jpg`)} + ${code('design.md')} dark palette (${code(`docs/design/archetypes/${id}/dark/${stepId}.jpg`)}).</p>
+          </figcaption></figure></li>`;
+      }).join('')}</ol>
+    </div>` : `<p class="notice">No multi-step reference boards are authored for this pattern yet. The design and site brief above are available; images and per-state checks are pending.</p>
       ${brief?.fallbackImagePrompt ? promptDetails('Image Generation Prompt · inherited single training reference, NOT a step board', brief.fallbackImagePrompt, brief.imagePromptSource)
         : promptDetails('Image Generation Prompt · no state image authored', null, null)}`}
   ${brief?.assertions.length ? `<details class="concept-prompt"><summary>Acceptance assertions from the plan · not image verification</summary><ul>${brief.assertions.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul></details>` : ''}
@@ -537,6 +563,7 @@ const trainingFamilyCard = ({ id, archetype, title, origin, available, width, he
 
 export function renderConcepts({ patterns = [], archetypes = [], trainingTargets = [], trainingBoardRegister = null }) {
   const pictured = patterns.reduce((count, pattern) => count + pattern.steps.filter((step) => step.available).length, 0);
+  const darkPictured = patterns.reduce((count, pattern) => count + pattern.steps.filter((step) => step.darkAvailable).length, 0);
   const boardCount = trainingTargets.filter((family) => family.board).length;
   const orderedTargets = [...trainingTargets].sort((a, b) => (Number(b.board) - Number(a.board)) || a.id.localeCompare(b.id));
   const familiesByArchetype = new Map();
@@ -549,13 +576,25 @@ export function renderConcepts({ patterns = [], archetypes = [], trainingTargets
     : '<p class="notice">No A1 training families are declared in this checkout.</p>';
   const patternSection = patterns.length ? patterns.map((pattern) => patternCard(pattern, familiesByArchetype.get(pattern.id) ?? [])).join('')
     : '<p class="notice">No authored archetype patterns are available in this checkout.</p>';
-  const evaluationSection = archetypes.length ? archetypes.map(({ id, target }) => `<article class="concept-comparison" aria-labelledby="concept-${escapeHtml(id)}">
-    <h3 id="concept-${escapeHtml(id)}">${escapeHtml(id.replaceAll('-', ' '))}</h3>
+  const evaluationSection = archetypes.length ? archetypes.map(({ id, target }) => {
+    const pattern = patterns.find((entry) => entry.id === id);
+    const firstStep = pattern?.steps?.[0];
+    return `<article class="concept-comparison" aria-labelledby="concept-${escapeHtml(id)}">
+    <h3 id="concept-${escapeHtml(id)}">${escapeHtml(id.replaceAll('-', ' '))}${patternSubject(id) ? ` · <span class="muted">${escapeHtml(patternSubject(id))}</span>` : ''}</h3>
     <p>Read the <a href="#pattern-${escapeHtml(id)}">${escapeHtml(id)} pattern, its site prompt and pictured states</a> above. Its illustrative JPEGs are <em>not</em> the target below.</p>
-    ${target ? `<figure><div class="concept-image-frame"><a href="/concepts/targets/${escapeHtml(id)}.png" aria-label="Open ${escapeHtml(id)} A6 authored target render"><img src="/concepts/targets/${escapeHtml(id)}.png" alt="A6 authored evaluation target for ${escapeHtml(id)}" loading="lazy"></a></div>
-      <figcaption>A6 authored target · ${code(`data/A6_evaluation/targets/${id}/target.png`)}. A fixed evaluation instrument; not an AI-generated concept image or proof of a working site.</figcaption></figure>`
-      : '<p class="muted">Authored target render unavailable in this checkout.</p>'}
-  </article>`).join('') : '<p class="notice">No held-out evaluation targets are available in this checkout.</p>';
+    <div class="eval-target-showcase">
+      ${target ? `<figure><div class="concept-image-frame"><a href="/concepts/targets/${escapeHtml(id)}.png" aria-label="Open ${escapeHtml(id)} A6 authored target render"><img src="/concepts/targets/${escapeHtml(id)}.png" alt="A6 authored evaluation target for ${escapeHtml(id)}" width="1280" height="900" loading="lazy"></a></div>
+        <figcaption><strong>A6 authored evaluation target</strong> · ${code(`data/A6_evaluation/targets/${id}/target.png`)} (rendered from ${code(`docs/eval/targets/${id}/index.html`)} + ${code('docs/eval/targets/base.css')}). A fixed evaluation instrument; not an AI-generated concept image or proof of a working site.</figcaption></figure>`
+        : '<p class="muted">Authored target render unavailable in this checkout.</p>'}
+      ${firstStep?.available ? `<div class="eval-reference-pair">
+        <figure><div class="concept-image-frame"><a href="/concepts/images/${escapeHtml(id)}/${escapeHtml(firstStep.id)}.jpg" aria-label="Open ${escapeHtml(id)} Light Mode Step 1 concept board"><img src="/concepts/images/${escapeHtml(id)}/${escapeHtml(firstStep.id)}.jpg" alt="Light Mode Step 1 concept board for ${escapeHtml(id)}" width="1376" height="768" loading="lazy"></a></div>
+          <figcaption><span class="theme-pill theme-pill-light">☀ Light Mode Step 1</span> ${code(`${id}/${firstStep.id}.jpg`)}</figcaption></figure>
+        ${firstStep.darkAvailable ? `<figure><div class="concept-image-frame"><a href="/concepts/images/${escapeHtml(id)}/${escapeHtml(firstStep.id)}-dark.jpg" aria-label="Open ${escapeHtml(id)} Dark Mode Step 1 concept board"><img src="/concepts/images/${escapeHtml(id)}/${escapeHtml(firstStep.id)}-dark.jpg" alt="Dark Mode Step 1 concept board for ${escapeHtml(id)}" width="1376" height="768" loading="lazy"></a></div>
+          <figcaption><span class="theme-pill theme-pill-dark">☾ Dark Mode Step 1</span> ${code(`${id}/dark/${firstStep.id}.jpg`)}</figcaption></figure>` : ''}
+      </div>` : ''}
+    </div>
+  </article>`;
+  }).join('') : '<p class="notice">No held-out evaluation targets are available in this checkout.</p>';
 
   return page('concepts', `
     <h1>Visual concepts and test instruments</h1>
@@ -568,7 +607,7 @@ export function renderConcepts({ patterns = [], archetypes = [], trainingTargets
       <p><strong>A6 target PNG:</strong> an authored, held-out evaluation asset, not part of the training corpus. The pattern's JPEGs below are illustrative and must never be read as paired output from a model.</p>
     </section>
     <section id="archetype-patterns" aria-labelledby="patterns-heading"><h2 id="patterns-heading">Archetype patterns · ${patterns.length} authored specifications</h2>
-      <p class="muted">${pictured} concept boards have committed bytes across these patterns. Patterns without step boards retain their authored design and site briefs but are explicitly marked pending. The step mapping describes what a board depicts; a picture is not a passing browser assertion.</p>
+      <p class="muted">${pictured} concept boards have committed bytes across these patterns (${darkPictured} matching dark-mode twin boards, ${pictured + darkPictured} committed archetype JPEGs total). Patterns without step boards retain their authored design and site briefs but are explicitly marked pending. The step mapping describes what a board depicts; a picture is not a passing browser assertion.</p>
       ${patterns.length ? `<nav class="concept-pattern-index" aria-label="Jump to an archetype pattern"><ul>${patterns.map(({ id }) => {
         const subject = patternSubject(id);
         return `<li><a href="#pattern-${escapeHtml(id)}">${escapeHtml(id.replaceAll('-', ' '))}${subject ? ` — ${escapeHtml(subject)}` : ''}</a></li>`;

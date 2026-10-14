@@ -10,8 +10,8 @@
 | Ordered board | What the raster depicts | SHA-256 of committed bytes | Bytes |
 | --- | --- | --- | ---: |
 | [`step1-request.jpg`](step1-request.jpg) | Reset-link request form | `1a6989fb1979ebd0c7a1b8691f4df0f0843fdec994a8328ad54fc1756d187da2` | 160681 |
-| [`step2-sent.jpg`](step2-sent.jpg) | Depicted check-your-inbox notice | `c0a1d752ae068d34fcfb146c4ded4629192ca45a4d46b33ca9113f90984aaa4d` | 404248 |
-| [`step3-refusal.jpg`](step3-refusal.jpg) | Invalid-address refusal: the field's own constraint refuses an empty or malformed address before submission, the error announced in text (the contract-required state at plan.md:114, added by mwg-train-uh0o) | `a51fb224518f52a8519d0c73bb0ffbc3e815fd124e935910fe906d7a2c6b1f00` | 141923 |
+| [`step2-sent.jpg`](step2-sent.jpg) | Depicted check-your-inbox notice | `2ebfcab74be289c17db8b585e786cdc6757bd0c88cb81900dd7256cffbbb0eeb` | 207955 |
+| [`step3-refusal.jpg`](step3-refusal.jpg) | Invalid-address refusal: the field's own constraint refuses an empty or malformed address before submission, the error announced in text (the contract-required state at plan.md:114, added by mwg-train-uh0o) | `4d937b3ab1031b82ced3d36d181e2419501f7da22b3eeb6a9460f19515a82b38` | 284470 |
 
 Hashes pin the handed-off JPEG bytes, not rights, generation reproducibility or security validity.
 

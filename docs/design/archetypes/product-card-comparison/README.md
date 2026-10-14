@@ -34,9 +34,9 @@
 | Ordered board | What the raster depicts | SHA-256 of committed bytes | Bytes |
 | --- | --- | --- | ---: |
 | [`step1-cards.jpg`](step1-cards.jpg) | Catalogue of cards with comparable attributes, a select action and a compare toggle | `27c11e7058344c7c02d624d8a04b48fe99eb8b057dc1bf332dab176bf51242d6` | 656438 |
-| [`step2-compare.jpg`](step2-compare.jpg) | Side-by-side comparison with attributes aligned by row and differences marked | `214707ef17c240ed5493458cdeb286bcb8bd3a8bea760e8ab958b422f1b7143c` | 551108 |
-| [`step3-selected.jpg`](step3-selected.jpg) | The chosen card carried into the next step, with the selection changeable | `694cb299aacf197a1bd91726803e23cb7fb7d6d99d2215bb736341893f5b1e10` | 515832 |
-| [`step4-empty.jpg`](step4-empty.jpg) | The comparison state before two cards are chosen, and its one clear action | `1eca6fcb1cab2c07e0c21f89f5d50c84047dde3b3b400a66962f7a8adcb10a7f` | 453257 |
+| [`step2-compare.jpg`](step2-compare.jpg) | Side-by-side comparison with attributes aligned by row and differences marked | `edad3920cf35bb000d9671dd914615d314227ef1b13dc4711c93e40ba96f64c5` | 575681 |
+| [`step3-selected.jpg`](step3-selected.jpg) | The chosen card carried into the next step, with the selection changeable | `8b7f909c14f37975f37e0b420c5e8f3a47893e0799e43e6e23fa338c01c913d9` | 504705 |
+| [`step4-empty.jpg`](step4-empty.jpg) | The comparison state before two cards are chosen, and its one clear action | `b28768b4de0f72af9f6958133a61010430e290697e2b1170df4136042e0d5885` | 632059 |
 
 The digests pin the handed-off JPEG bytes, not their generating model, prompt-to-pixel reproducibility or
 legal status. The corpus must derive from its own approved material, never from these. Per-board

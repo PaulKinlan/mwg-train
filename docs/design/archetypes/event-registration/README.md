@@ -9,9 +9,9 @@
 
 | Ordered board | What the raster depicts | SHA-256 of committed bytes | Bytes |
 | --- | --- | --- | ---: |
-| [`step1-event.jpg`](step1-event.jpg) | Event overview and attendee/ticket choices | `d9553a3f1b6718f05530ca8eed77878246c84a229fb06f893f0e8de9bcf44e4e` | 536711 |
-| [`step2-pass.jpg`](step2-pass.jpg) | Depicted ticket pass and confirmation | `16e7dc0f62b9e3983366d78d4a5531a17e195d27971a69eca296f6f4cf44b3a0` | 371540 |
-| [`step3-refusal.jpg`](step3-refusal.jpg) | Capacity and validation refusal: the registration form after a refused submission - omitted-field validation and a ticket selection exceeding remaining capacity, both announced in text (the contract-required states at plan.md:34 and the tr-07/fam-r02 assertions; added by mwg-train-wkto) | `26fe1717f72a4ce671aeb16b154d0ff81e65d8380c9c6ebfabb879af68f48ad8` | 588057 |
+| [`step1-event.jpg`](step1-event.jpg) | Event overview and attendee/ticket choices | `e55cc58b71b4ac39242682e90e4554897cc0fbb1f3911174251d8a2da0ba3046` | 470870 |
+| [`step2-pass.jpg`](step2-pass.jpg) | Depicted ticket pass and confirmation | `0315a4fdc6386db4182a5bc119126892ee66d422a0708acb5d474da7d5f68a3a` | 511185 |
+| [`step3-refusal.jpg`](step3-refusal.jpg) | Capacity and validation refusal: the registration form after a refused submission - omitted-field validation and a ticket selection exceeding remaining capacity, both announced in text (the contract-required states at plan.md:34 and the tr-07/fam-r02 assertions; added by mwg-train-wkto) | `4ae22312d61d4ed5e284e81e450fb93e498eb39b83042c66c2979c0736966717` | 569492 |
 
 Hashes identify the handed-off JPEG bytes, not their legal status or reproducibility. The illustrated ticket/payment details may exceed the frozen event-registration functional contract.
 

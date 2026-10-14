@@ -10,8 +10,8 @@
 | Ordered board | What the raster depicts | SHA-256 of committed bytes | Bytes |
 | --- | --- | --- | ---: |
 | [`step1-grid.jpg`](step1-grid.jpg) | Product browse grid and category/search controls | `93f3b8c5056685e981e523b9c1550dd4d27f55a5a0ecd5fff82b0cf447c7f0cd` | 525363 |
-| [`step2-cart.jpg`](step2-cart.jpg) | Cart drawer and order summary | `36170d05468183ca262b46d2f187c60d6c41cb29a1081293d5f7f61a30acfae0` | 448333 |
-| [`step3-empty.jpg`](step3-empty.jpg) | Empty search results and reset option | `31aff477070366b7cfdfaf076b1cdd1721f97926273d1773b6c206d7ee09203e` | 352136 |
+| [`step2-cart.jpg`](step2-cart.jpg) | Cart drawer and order summary | `864a10b7c056667af9c1972d399d1bff739d780cd673cd3bcc013e1cc6996adc` | 449337 |
+| [`step3-empty.jpg`](step3-empty.jpg) | Empty search results and reset option | `9b8a4e58550892fef25ebab0a15c6078d0a40d8781292bfb2ba1be0ec384e9c0` | 416841 |
 
 Hashes pin the handed-off JPEG bytes, not their generating model, prompt-to-pixel reproducibility or legal status. The corpus must derive from its own approved source and measured records, not these images.
 

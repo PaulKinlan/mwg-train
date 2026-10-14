@@ -4,12 +4,12 @@
     "target_dir": "docs/design/archetypes/contact-lead",
     "readme": {
       "path": "docs/design/archetypes/contact-lead/README.md",
-      "sha256": "7bbb6b8680399974c351b22b1ce2537971e54e043e928ab6309ff5b9f4d4c14a"
+      "sha256": "42e552dfbc95b9547e45e692cfced5380572c1118125e8e9437355729bd4fea5"
     },
     "documents": [
       {
         "path": "docs/design/archetypes/contact-lead/demo/compare.html",
-        "sha256": "87d06a1101f2384ac2a583dd69a1efa08921cefa78da7a7ee35a3210ec168b1c"
+        "sha256": "a50d9207c03bb149697178a3cffa19715f200a9ae3c35966cb3ffe7158d101d8"
       },
       {
         "path": "docs/design/archetypes/contact-lead/demo/index.html",
@@ -108,7 +108,7 @@
       ],
       "apparatus": true,
       "source": "docs/design/archetypes/contact-lead/demo/compare.html",
-      "sha256": "87d06a1101f2384ac2a583dd69a1efa08921cefa78da7a7ee35a3210ec168b1c"
+      "sha256": "a50d9207c03bb149697178a3cffa19715f200a9ae3c35966cb3ffe7158d101d8"
     },
     "index.html": {
       "title": "ARKHITECTS Studio — Request a consultation",
@@ -205,20 +205,20 @@
   "images": [
     {
       "name": "step1-form.jpg",
-      "sha256": "d2e215fd7f8047606069818583c4160f0002a194dee58f22e50f570124d8e6ec",
-      "bytes": 484041,
+      "sha256": "e3ed49ff25a2f65ca0a79dec64e0d24b0b4626aafffa5b044860f2a6db196ac1",
+      "bytes": 376349,
       "source": "docs/design/archetypes/contact-lead/step1-form.jpg"
     },
     {
       "name": "step2-success.jpg",
-      "sha256": "f1c840aa1527daec74837cdde69ae94d7b4b3cde3eb82af702f0797985dcd6c3",
-      "bytes": 314966,
+      "sha256": "ec268f5ce58804555bf1d51d59cc1cf7ad143779a17e0f2c33b3a32dc700011f",
+      "bytes": 505172,
       "source": "docs/design/archetypes/contact-lead/step2-success.jpg"
     },
     {
       "name": "step3-refusal.jpg",
-      "sha256": "1c2e3377fef36e2a23a91b7f4e7c9bf1bd9a6b3be1ffcfe6f53527439cbf8925",
-      "bytes": 407366,
+      "sha256": "1f27699e3fb408ef7c70553b4ce189d20e4ba8c4cb520d177144e52354a64592",
+      "bytes": 437348,
       "source": "docs/design/archetypes/contact-lead/step3-refusal.jpg"
     }
   ],

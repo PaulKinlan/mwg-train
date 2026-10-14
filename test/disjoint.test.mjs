@@ -24,7 +24,7 @@ const TARGET_HASH = 'aa'.repeat(32);
 // The booking target's real image_sha256 from the committed targets manifest. The reviewer's bypass
 // used exactly this: a training row carrying the REAL hash, plus a substituted manifest naming a fake
 // hash for booking, so the collision vanished. The pin (EVAL_TARGETS_SEAL) is what defeats it.
-const BOOKING_TARGET_HASH = '00b96c509d7c555cafd07073e5761a189a5702d5ea7b1846a03654f3846e47e5';
+const BOOKING_TARGET_HASH = '3a0b655ba2fd809fe98984eaa929edeeaaaa9e2ffbf3f63619440aa6d8a636f0';
 
 const EVAL_ROWS = [
   { brief_id: 'eval-01', family_id: 'held-out-a', split: 'test' },
@@ -238,7 +238,7 @@ test('the real sealed eval manifest and targets manifest satisfy the exported co
   assert.equal(EVAL_MANIFEST, 'docs/eval/briefs/manifest.jsonl');
   assert.equal(EVAL_TARGETS_MANIFEST, 'data/A6_evaluation/targets/manifest.jsonl');
   assert.equal(EVAL_SEAL, 'sha256:89a1f47d638c5eab733074d87bc19d6615401aeb9a77ecbd86cf10b443e272b1');
-  assert.equal(EVAL_TARGETS_SEAL, 'sha256:4ba07d58873525d57a043cb6b9d76664fc9d8c2952d16aea819b28cfa290d7c4');
+  assert.equal(EVAL_TARGETS_SEAL, 'sha256:3516cdb630a0969a872a03d27c27bcdd4482c1478a3a4b7105090139cdb88322');
   // And the committed eval manifest must actually seal to that value, else every default fails.
   const evalRows = parseBriefs(readFileSync(resolve(ROOT, EVAL_MANIFEST), 'utf8'));
   assert.equal(sealHash(evalRows), EVAL_SEAL);

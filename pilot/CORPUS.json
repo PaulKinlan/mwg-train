@@ -94,8 +94,8 @@
         "no-autofill",
         "xss-innerhtml"
       ],
-      "original_sha": "sha256:d208e93e6cf854afeecddc4a74610e574b0baac3e0c5a09dbff88b696e7010b7",
-      "uplift_sha": "sha256:0e138bb6a042de98157892de35e8116861e78ca7fe74bbfa30267cc326159789",
+      "original_sha": "sha256:4369e56506146f519bfe21f6ada5ab77575844b2215e8769cd249bb8c8cbc2fc",
+      "uplift_sha": "sha256:5109d163168a3d30859f8f5166e235e09a68039de7d33e27e8e4f7d375ae66be",
       "uplift_applied": [
         "forms/required-field-feedback",
         "forms/validate-input-after-interaction",
@@ -122,8 +122,8 @@
         "no-required",
         "no-autofill"
       ],
-      "original_sha": "sha256:8b19d70f46292ef8d023b3ab13d590ec10159b8ee30919309e02233592e13192",
-      "uplift_sha": "sha256:ed0ce1221379969310aa00766f955d15e3c60de3ba279c80ba4a60ef1f41691d",
+      "original_sha": "sha256:9ce79c14fae691bbcea23de9d04944f0ca0b8d7c11fc002722cc07e034f40cb2",
+      "uplift_sha": "sha256:933205979f2fa237ace28161791df11f50dc1dfefc0c432f86497659fcdc7db6",
       "uplift_applied": [
         "forms/required-field-feedback",
         "forms/autofill-sign-up-form"
@@ -148,8 +148,8 @@
         "no-aria-sync",
         "no-autofill"
       ],
-      "original_sha": "sha256:15e1fc6325aa1e9f9f5f18e20a515520df1214c41e1e9410e9164d8d9555de41",
-      "uplift_sha": "sha256:3d9a79b11bacc60968cd6dc3e462177d3505b3382dbb73c2d9eb92aa303d4842",
+      "original_sha": "sha256:35c6270afa87f1c93145019988baf83ab7a310af76b09f70625be855652ddf8b",
+      "uplift_sha": "sha256:6cc563e7c1bb41e5cecff41f2d8031366d66928bdee2e4695c399a5b73d1532c",
       "uplift_applied": [
         "forms/required-field-feedback",
         "forms/validate-input-after-interaction",
@@ -175,8 +175,8 @@
         "no-autofill",
         "xss-innerhtml"
       ],
-      "original_sha": "sha256:fbdfcdfc709e5d66ef021a7dbd8920ab9c499fcb4ade5489120ce9ec0419b7a3",
-      "uplift_sha": "sha256:72ef80f34e092c445abed25b98ab1af086f52ffb04815b3e86f1100b09f76aac",
+      "original_sha": "sha256:f28b6cabf6d237141d00f0b1dba1a78466c11510ff897e62d31c4eb178419059",
+      "uplift_sha": "sha256:d0f97786d47185c346c3bdc0aa8d8395ef932b68e72f2b7c4567ad56c42a0988",
       "uplift_applied": [
         "forms/autofill-sign-up-form",
         "security/sanitize-untrusted-html"
@@ -200,8 +200,8 @@
         "no-aria-sync",
         "no-autofill"
       ],
-      "original_sha": "sha256:3ae986b78ba7646cc1f3ce06df59fcf39f4039e5307bb085cde6d7f19fa32b40",
-      "uplift_sha": "sha256:ed62b823e2446c25124bfccb11392ebac7af7684ff7c2442d973f39ed4865ad0",
+      "original_sha": "sha256:8e4c79edf26617bf7abc6b7bfc4b56ee0f8a738367f5676b361808becbbc1e45",
+      "uplift_sha": "sha256:1826489cd63f2edea753eb7ed515498db47167e098c90f39a4516bfc705e279a",
       "uplift_applied": [
         "forms/required-field-feedback",
         "forms/validate-input-after-interaction",
@@ -227,8 +227,8 @@
         "eager-invalid",
         "xss-innerhtml"
       ],
-      "original_sha": "sha256:c98d3f7d447dff82e903b6aa5febd99b4fdd9bfb5abadac804d237152699f131",
-      "uplift_sha": "sha256:166797908d65660c6a0aabb578bffff1d2a6e42f28648043209533ec9182f60f",
+      "original_sha": "sha256:cb4cbb4757a918cc9ff06d81a36ac41633cf2ace3a64c4e3cff8bdbc282d0ed2",
+      "uplift_sha": "sha256:b723c2c7f059b121a37895002042431ec3378b255810860c8100cc43ce20c30b",
       "uplift_applied": [
         "forms/validate-input-after-interaction",
         "security/sanitize-untrusted-html"
@@ -252,8 +252,8 @@
         "no-aria-sync",
         "no-autofill"
       ],
-      "original_sha": "sha256:1e5c8a404854655af7180c1f7e2f54b2e69e58c2377599b76b9dcff98368551a",
-      "uplift_sha": "sha256:1af87e18c2966e5f249c6b2fe16e503a946a32e9dc07c7d50139d7ca6bfc2250",
+      "original_sha": "sha256:7849c978087547770f3b92154551201b8fc4af4c6ac1d52d9624a35f51a6a82d",
+      "uplift_sha": "sha256:b1db0d6b358447ee6c428239465e3223c6499bc3d667b7931b120ad927ed605f",
       "uplift_applied": [
         "forms/required-field-feedback",
         "forms/validate-input-after-interaction",
@@ -282,8 +282,8 @@
         "no-autofill-address",
         "xss-innerhtml"
       ],
-      "original_sha": "sha256:4720c18d4dcedf4b29dee1c4b9cf6b588fb45815b497e6f64a29f78eb468599d",
-      "uplift_sha": "sha256:e95f8a93ab565b71926e7d8f98130af934578e414893515137ce7095e06394d9",
+      "original_sha": "sha256:6dfd2b332126fbfeefb1f21e99d468a98153efd2ae126c3e3c4090f0076c73b1",
+      "uplift_sha": "sha256:b45297c914312f36ba7ac86d9c9f439355a3d6844d13f45f814f5b458b566dec",
       "uplift_applied": [
         "forms/required-field-feedback",
         "forms/validate-input-after-interaction",
@@ -312,8 +312,8 @@
         "no-aria-sync",
         "no-autofill-address"
       ],
-      "original_sha": "sha256:e2544ec73dad9f9da2c0867b07a562d919eeed316847e2f9b5364944fffb146d",
-      "uplift_sha": "sha256:d528745c2698d40c2a8d19679c225cd546358ddabcc55d05132a64ef9aad6b5e",
+      "original_sha": "sha256:e1e3c16b1ff85f09e4ecfb2980ac7b9d98bbfbc1a2bce8bfa339584ae01a4920",
+      "uplift_sha": "sha256:9502cb040eccd177dbcc91052c3100777f5951dbc003c064e69056fc52aebb2c",
       "uplift_applied": [
         "forms/validate-input-after-interaction",
         "accessibility/accessible-error-announcement",
@@ -340,8 +340,8 @@
         "no-autofill-address",
         "xss-innerhtml"
       ],
-      "original_sha": "sha256:b292e473edf5abc543dd594a45516117683b4f2407390c2a55460fcbfee8da76",
-      "uplift_sha": "sha256:1d25b741d67632f64daf839151c11039c3f03a040d434b62f03d65eaabc53f92",
+      "original_sha": "sha256:695f1ce3f52dd9b1a41b9934dfb0e7958c3e0b544a6cfaa2c7b373755ba956a7",
+      "uplift_sha": "sha256:f95b57cc76f208b631d32fdf5b3ab293335b3da73a3e7038b2f4e5f9ea53057e",
       "uplift_applied": [
         "forms/required-field-feedback",
         "forms/validate-input-after-interaction",
@@ -372,8 +372,8 @@
         "no-autofill-address",
         "xss-innerhtml"
       ],
-      "original_sha": "sha256:0d6868c0fb24a23a4985300d4a2d3ee331ed0383a605273e0be70f96fe2c7858",
-      "uplift_sha": "sha256:78087a09274316a068f7c75e8e5827ddc9d6e26de114c4d9cd806dde3eb1c03a",
+      "original_sha": "sha256:aaee5e7431d320fd01a20c6ad55360575c3ea9be2b41948d2ed6a86cc6eaffd8",
+      "uplift_sha": "sha256:9c79458ee0791b5093c992ca2846897ee19ebde6603ce5d8f49f510cb4bbb1ac",
       "uplift_applied": [
         "forms/required-field-feedback",
         "forms/validate-input-after-interaction",
@@ -404,8 +404,8 @@
         "no-autofill-address",
         "xss-innerhtml"
       ],
-      "original_sha": "sha256:c2786e288e63f806fb11765e6ddb2dbfa6539deb6e33a58c2a1f78632b495cee",
-      "uplift_sha": "sha256:c63d3221b52161a3cd2e6ef5e5489852ff1f9209f7daa4b39f8f7bb47cf689bf",
+      "original_sha": "sha256:df7bf31aab0462c37b7a75e1a33a752f41aa7405553a503d48c5d3cf598614b1",
+      "uplift_sha": "sha256:c988c09543f18fd2b6e65cddcaca0cd12e4243fd41cc67a6364bd822873efabe",
       "uplift_applied": [
         "forms/required-field-feedback",
         "forms/validate-input-after-interaction",
@@ -433,8 +433,8 @@
         "no-required",
         "no-autofill-address"
       ],
-      "original_sha": "sha256:45416faa26eb1b6bc43f5b04439720185d71e2b992c3ef83d944d1853d72406b",
-      "uplift_sha": "sha256:f433b629532304c07a8e63fc0353f8daec36f8050d6da05e463c5f6ee1a9d39c",
+      "original_sha": "sha256:94f1de56abe95b474fff619d1527d19cfa6e5900195a54702c54d96bec5e6270",
+      "uplift_sha": "sha256:85cecfb1704c2edfdc01b2aa847ae27c0f6b75cf7d6caa3d065cecb0ce56912e",
       "uplift_applied": [
         "forms/required-field-feedback",
         "forms/autofill-address-form"
@@ -460,8 +460,8 @@
         "no-autofill-address",
         "xss-innerhtml"
       ],
-      "original_sha": "sha256:129cddb9e308c77ca94ef40fe1a583435ed625901445180646f379a1e41686ff",
-      "uplift_sha": "sha256:d3edfd6fe3840ca66401dcc35b79fed84293228670f0e29be72752f0f6308909",
+      "original_sha": "sha256:1714dc31e7654efde5183db04e1ce978934858f54fc1b95e47004fb23a43be34",
+      "uplift_sha": "sha256:227a386c7461d9b41cb4dbfc6f7ceaf6badc2e26c4cba518c3071799c1e231ee",
       "uplift_applied": [
         "forms/required-field-feedback",
         "forms/validate-input-after-interaction",
@@ -489,8 +489,8 @@
         "no-required",
         "xss-innerhtml"
       ],
-      "original_sha": "sha256:9fcbfab6763d314750669480e4d29bfc2c0612b1199e422a6181f58db9fe372d",
-      "uplift_sha": "sha256:c2c461dab49d48ab3cd96387af75932f6fa018294039ac9ea51ee6003e63d208",
+      "original_sha": "sha256:9812e4e1c776d9f6ef4c241da1ad07f41767a1edcbe507be92d34856b24b85fd",
+      "uplift_sha": "sha256:64f8e6a9adf7d58e5052e88d9abd448aacd969c0d9f31efe1fd4004b763d2aa8",
       "uplift_applied": [
         "forms/required-field-feedback",
         "security/sanitize-untrusted-html"
@@ -512,8 +512,8 @@
       "defects": [
         "eager-invalid"
       ],
-      "original_sha": "sha256:b4e2792c30165f6adba32ed2569ba1235ad32178ebe5bbbf17575d2fcf142c37",
-      "uplift_sha": "sha256:0b073ca8c6df749c02bf8a8d74699b706238144507b616da873a3ebc6587f13b",
+      "original_sha": "sha256:d25be2e9262840d583e70df822b0a213ea27545a41309abf80b5adc62a4b0255",
+      "uplift_sha": "sha256:7a4c695fcc82a332728ccb22d885c8d174924501f1d0f131f9863509f2eccde0",
       "uplift_applied": [
         "forms/validate-input-after-interaction"
       ],
@@ -532,8 +532,8 @@
       "defects": [
         "xss-innerhtml"
       ],
-      "original_sha": "sha256:f2d1795c41e5cea8577a318da4181267af60106af0190abaf122e8d851bee8d2",
-      "uplift_sha": "sha256:5fda7ce673ec622296997c119cf225d0abc9919d22e5c222ec73f54db9f388db",
+      "original_sha": "sha256:f112401fa2cc36d62dc6be92cd68daba9211da5690d350b1ae333d58fcfed924",
+      "uplift_sha": "sha256:64a94d7899c3e520fc368f97db0f87254f3d696c1fb14c65938198e61648c6e9",
       "uplift_applied": [
         "security/sanitize-untrusted-html"
       ],
@@ -553,8 +553,8 @@
         "no-required",
         "xss-innerhtml"
       ],
-      "original_sha": "sha256:8cec12c66e57e85d0fc8ba8d88c357b4910fb00b183507dc1ad1fb42e39f0c8c",
-      "uplift_sha": "sha256:ca3080632a12e7d398392d0afe4594268ec97637fe80bd83ecee0709ab8cd569",
+      "original_sha": "sha256:cfd885fd3aef0de00337ba27e377f1fad8aaca71c3423b28786c109cbf1fa677",
+      "uplift_sha": "sha256:4b81fb0721f61c7232413647fba11430ca58b4aef64fb26f7765f9df34e2ee7b",
       "uplift_applied": [
         "forms/required-field-feedback",
         "security/sanitize-untrusted-html"
@@ -576,8 +576,8 @@
       "defects": [
         "xss-innerhtml"
       ],
-      "original_sha": "sha256:7f385ec6bf77e1e43bb188af2cfa3dabc8a673b474d2e29cea41d0e710b92c31",
-      "uplift_sha": "sha256:d37606754cc54c265b263d0fa7a5ec77e860523f5ff0e3e9b25f835a76c11556",
+      "original_sha": "sha256:46cf47f906e4285a5ee71dc828895ece38bf4f110df8614f748bd00ae99fe680",
+      "uplift_sha": "sha256:dd4d0484b89ea515737bf60d16cbddf1aefe8508769d156193f9c38268ee2d7c",
       "uplift_applied": [
         "security/sanitize-untrusted-html"
       ],
@@ -594,8 +594,8 @@
       "archetype": "catalogue",
       "framework": "vue",
       "defects": [],
-      "original_sha": "sha256:02e839e87361910707fca1b504cc9a7f53d1cd2a970d57a1c7e3758a671cdbba",
-      "uplift_sha": "sha256:02e839e87361910707fca1b504cc9a7f53d1cd2a970d57a1c7e3758a671cdbba",
+      "original_sha": "sha256:38cbfa97500534c1f2dddec1d65055e2b4dc41cbed164d30843d4a7d3a9d6de7",
+      "uplift_sha": "sha256:38cbfa97500534c1f2dddec1d65055e2b4dc41cbed164d30843d4a7d3a9d6de7",
       "uplift_applied": [],
       "improved_rules": [],
       "accepted": false,
@@ -610,8 +610,8 @@
       "defects": [
         "xss-innerhtml"
       ],
-      "original_sha": "sha256:98e0c77491a2b66cd8a6c974c08ddcec2e95a23287a41cb25e0162af5377fdb3",
-      "uplift_sha": "sha256:642bf2c486bc967791fea27ce91295b039ce7e42c1afd5c9eeb1395789efb717",
+      "original_sha": "sha256:181bc9038566c890366fc28dfe2d29b9d2b693ef0f602b756a296465205ef7ba",
+      "uplift_sha": "sha256:a95ccea2d2b8eedbfc261c3e7a6e51eb4fa8174399a0f98b01d9440a5c5c6c85",
       "uplift_applied": [
         "security/sanitize-untrusted-html"
       ],
@@ -632,8 +632,8 @@
         "eager-invalid",
         "xss-innerhtml"
       ],
-      "original_sha": "sha256:8231510bb88870b3f48ff8fe0b44cc20d1e8ead79b38a3bafcc1404176ff7608",
-      "uplift_sha": "sha256:4e1a8d91f20a0a0e58bf2364ef9ff254a60cb36864dd16e5366f537efe7491b8",
+      "original_sha": "sha256:e193afe734ff071de606f8ad175c0426d311efab7d8405b442b67e2c49cdfa14",
+      "uplift_sha": "sha256:a8194ab53a01f18c15bb2438430ddc4dfcf6aa9f4786529b8a83557f74e3e900",
       "uplift_applied": [
         "forms/required-field-feedback",
         "forms/validate-input-after-interaction",
@@ -658,8 +658,8 @@
         "no-required",
         "no-aria-sync"
       ],
-      "original_sha": "sha256:b9443a339e2fd4f032b43024feaf56d01392824a5a5b7b3d05b3a1b730111369",
-      "uplift_sha": "sha256:1142d64dade769ca9db88b9472d6ba2b4fd874518446b616e119c2a4c65b6738",
+      "original_sha": "sha256:1a503d9dbe3195eebdcede2dad0d2cd8df0cca4bb5f1c73867e5f84ae7019d1b",
+      "uplift_sha": "sha256:4269efed226bb0a1a5a6ac0a3f88f80a63093035f8183d8b5235b4ef86c252ea",
       "uplift_applied": [
         "forms/required-field-feedback",
         "accessibility/accessible-error-announcement"
@@ -683,8 +683,8 @@
         "no-aria-sync",
         "xss-innerhtml"
       ],
-      "original_sha": "sha256:d8c0702423db9da48ae97aaf63b2baa7b5922916b9d10893c5b98c98812292c8",
-      "uplift_sha": "sha256:bab5b94289aace1261169e9c949d34a69a8e5b6b345ac08175084e227f4bfc29",
+      "original_sha": "sha256:1375c4de29e9e8f90585891a5785759d729334647be285444ce37a028a49bd7a",
+      "uplift_sha": "sha256:7b0e38a676462ca1e781010e5b4ff5909fe77fcd0faa2d97990a09fc0e475db9",
       "uplift_applied": [
         "forms/required-field-feedback",
         "forms/validate-input-after-interaction",
@@ -710,8 +710,8 @@
         "eager-invalid",
         "xss-innerhtml"
       ],
-      "original_sha": "sha256:fb9e295763abe910a29b99f99d52a5cfba28c9e812141b7a77b36faab07b2a28",
-      "uplift_sha": "sha256:7d564a6cfdf68396f6f997698b52577583f8808bf81c6e755d2bbe19baf52ac6",
+      "original_sha": "sha256:db545bc31530b545bbf68de0b9dce34c8c87067a58c837753e999e139092b664",
+      "uplift_sha": "sha256:31cfc00e0855d79e86a48be873e15cbbb6f357b412364e3663bc30f8b7be74a7",
       "uplift_applied": [
         "forms/validate-input-after-interaction",
         "security/sanitize-untrusted-html"
@@ -735,8 +735,8 @@
         "no-aria-sync",
         "xss-innerhtml"
       ],
-      "original_sha": "sha256:345c364461bd0265276a6788bee40177abcd01f723e1343df2a0561d8139a8eb",
-      "uplift_sha": "sha256:1f8a09b7a2d8d31deb900a566363169448a8bf7f85f3c5b4b65e38dd938a1417",
+      "original_sha": "sha256:f57b6c788d575561574abf152ab38cf9563db1f3113b1862e960691402594a10",
+      "uplift_sha": "sha256:8ef8c1d66c5d84e9dbe0645bc73b2d0d0e9b40343391efe8e83e55d37c23904f",
       "uplift_applied": [
         "forms/required-field-feedback",
         "forms/validate-input-after-interaction",
@@ -763,8 +763,8 @@
         "no-aria-sync",
         "xss-innerhtml"
       ],
-      "original_sha": "sha256:8bbdd777c503f9e95d6f0d2957db45dcd46b7e4bea1eee05251a8fcfe56d4c9c",
-      "uplift_sha": "sha256:a8d72cab8967907647b2b971209706753ce9beac705645fb24621b7c9e5c3f75",
+      "original_sha": "sha256:d07cd752a72ad9e4cd0acdf5623cc46861291833646a77c21dfae510623fc360",
+      "uplift_sha": "sha256:7abb69e76a918e03e630610109134b90f34830ee19e74e117aefe4b05a4a5c93",
       "uplift_applied": [
         "forms/validate-input-after-interaction",
         "accessibility/accessible-error-announcement",
@@ -790,8 +790,8 @@
         "no-aria-sync",
         "xss-innerhtml"
       ],
-      "original_sha": "sha256:d11c3e6b9dfa78dc12b6818d20f66dd844c3f4d1378eab490a63fbdd865e6e71",
-      "uplift_sha": "sha256:2a918b7410cd87cae51c96201c1a0c474bb41f356f5eb7962928f770645a4f3c",
+      "original_sha": "sha256:337de0debbbb5c1b5b5335f54c54be774c145c06bfae740ec26fe128f6e56efb",
+      "uplift_sha": "sha256:0e7f0830bfde255d7498deed7f7754d1456bfffb31599938646be642ecb40623",
       "uplift_applied": [
         "forms/required-field-feedback",
         "forms/validate-input-after-interaction",
@@ -818,8 +818,8 @@
         "no-aria-sync",
         "no-autofill-address"
       ],
-      "original_sha": "sha256:8eeb9540b23209d29c1c428b175b3432565a4a979e8f90256f69d351a1a25e97",
-      "uplift_sha": "sha256:6dcd6fae7d2eb1049f7c9ec1160af07ca3ecd886780a702cda31b9bfd83ff28b",
+      "original_sha": "sha256:a65ca4be40a35b2a4a4ddab50496cc3b0e737809b3c78e12074cdfc14ab92899",
+      "uplift_sha": "sha256:31496b40e4d55c054d168cbe8760eebcf4522b348ed1b1b74f6e07da847fa2af",
       "uplift_applied": [
         "forms/validate-input-after-interaction",
         "accessibility/accessible-error-announcement"
@@ -841,8 +841,8 @@
         "no-required",
         "xss-innerhtml"
       ],
-      "original_sha": "sha256:9ab434c4abd7c1f3592f56ef9dcb4d8c67a9e93c635e639e2065113ddb381627",
-      "uplift_sha": "sha256:542c13788f9611c76c319053c386b4d3e32e0470d97fe9ce1d77f702dc9fec98",
+      "original_sha": "sha256:166d4d154fd174e53fe3694b219e05be127332ff0bbd2cca948dcbfbb6b952ea",
+      "uplift_sha": "sha256:da281580a4f4ca2e67114c4dd590ea038fc0dccf5bb844c3ab4ff7eecfdf8a98",
       "uplift_applied": [
         "forms/required-field-feedback",
         "security/sanitize-untrusted-html"
@@ -866,8 +866,8 @@
         "eager-invalid",
         "xss-innerhtml"
       ],
-      "original_sha": "sha256:df839b825903feae101a29104af875b2f2fbc247fa8b18aa716f047d934f3cc5",
-      "uplift_sha": "sha256:62c0dd53f0db7800d026e47fd3ce66677baa2b9b47d59b5d5da41397ecf67775",
+      "original_sha": "sha256:f4fae99b7e3f18b39b8a16075ce7be024d067054d85ef6be34870d1ab31a26ed",
+      "uplift_sha": "sha256:3855b9828885362ca14234326bc69652f2f2e4c8161120b41bcb3e3eae7117e9",
       "uplift_applied": [
         "forms/required-field-feedback",
         "forms/validate-input-after-interaction",
@@ -892,8 +892,8 @@
         "no-aria-sync",
         "xss-innerhtml"
       ],
-      "original_sha": "sha256:9c14900080a3b13768065ee4844a0defd90981d4a6ef710c9e83f6cfc9be4054",
-      "uplift_sha": "sha256:28aef3c3c55aec1495e8164eb123be30ece934ef2f3484ea44b617bbb7b3586e",
+      "original_sha": "sha256:0cbd8adfef639af4f6e46e09a2358359dfaf7f425bcd9f2667a5573954bfafab",
+      "uplift_sha": "sha256:67b80bf89db86b6ef58d3324c202f1b7ea2d068c5ddd08157b0d8c462aaeaa4a",
       "uplift_applied": [
         "accessibility/accessible-error-announcement",
         "security/sanitize-untrusted-html"
@@ -916,8 +916,8 @@
         "eager-invalid",
         "xss-innerhtml"
       ],
-      "original_sha": "sha256:f28792f6a4dbc6456e232371e9e45d5d5bc0ed97be465f7809f36547d62f12e2",
-      "uplift_sha": "sha256:b8940d631ca3bfea1e56431602923d61982a73a2b6d51909dd2c6fe546706ecb",
+      "original_sha": "sha256:93fb6743c9de75b0684959f94b2c6396796807810df7b57f907ba24cd4b56dbb",
+      "uplift_sha": "sha256:ff31adaa3ef1181b21272dd5f4c4540f8cc5420a4b15327f70727a12ea9d1bf1",
       "uplift_applied": [
         "forms/required-field-feedback",
         "forms/validate-input-after-interaction",
@@ -943,8 +943,8 @@
         "eager-invalid",
         "no-aria-sync"
       ],
-      "original_sha": "sha256:0ef5e93445ede90713497bcaa5a719c9ebc9b599267896754e68f1685139f1c0",
-      "uplift_sha": "sha256:bd725dfc0ddbcd59a416edbca7f79f53d7af9f7547e416a645276494f8c1389b",
+      "original_sha": "sha256:e3463432309a4cce6701f126a0a83f05e82dced1cdf766607846f491e6913a23",
+      "uplift_sha": "sha256:26d80f71229875d93cace683d45a5a3058b75a3a0e9af8af990a8f9bb555158d",
       "uplift_applied": [
         "forms/required-field-feedback",
         "forms/validate-input-after-interaction",
@@ -969,8 +969,8 @@
         "eager-invalid",
         "xss-innerhtml"
       ],
-      "original_sha": "sha256:6056c6109f8fe01cccfa4f842df9c795500effa1d4f36f13591b6e099ed55a50",
-      "uplift_sha": "sha256:108c92b40c8926fc708a172c75fb166be5008a743106e146c3d8451f173cf221",
+      "original_sha": "sha256:2a28d826dab7a762f9a46fa2b9204a35d736f2cbd671606d1c16123c347876e7",
+      "uplift_sha": "sha256:36ba7f67f0a0d7a9ee08cca07adfe08a6464e6a767fae65db643f8b00c9fbd11",
       "uplift_applied": [
         "forms/required-field-feedback",
         "forms/validate-input-after-interaction",

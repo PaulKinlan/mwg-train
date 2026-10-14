@@ -9,9 +9,9 @@
 
 | Ordered board | What the raster depicts | SHA-256 of committed bytes | Bytes |
 | --- | --- | --- | ---: |
-| [`step1-form.jpg`](step1-form.jpg) | Studio identity and consultation form | `d2e215fd7f8047606069818583c4160f0002a194dee58f22e50f570124d8e6ec` | 484041 |
-| [`step2-success.jpg`](step2-success.jpg) | Depicted acknowledgement and sample lead reference | `f1c840aa1527daec74837cdde69ae94d7b4b3cde3eb82af702f0797985dcd6c3` | 314966 |
-| [`step3-refusal.jpg`](step3-refusal.jpg) | Invalid-submit refusal: the form re-rendered with a banner and field errors, nothing stored (the contract-required state at plan.md:54, added by mwg-train-cdp0) | `1c2e3377fef36e2a23a91b7f4e7c9bf1bd9a6b3be1ffcfe6f53527439cbf8925` | 407366 |
+| [`step1-form.jpg`](step1-form.jpg) | Studio identity and consultation form | `e3ed49ff25a2f65ca0a79dec64e0d24b0b4626aafffa5b044860f2a6db196ac1` | 376349 |
+| [`step2-success.jpg`](step2-success.jpg) | Depicted acknowledgement and sample lead reference | `ec268f5ce58804555bf1d51d59cc1cf7ad143779a17e0f2c33b3a32dc700011f` | 505172 |
+| [`step3-refusal.jpg`](step3-refusal.jpg) | Invalid-submit refusal: the form re-rendered with a banner and field errors, nothing stored (the contract-required state at plan.md:54, added by mwg-train-cdp0) | `1f27699e3fb408ef7c70553b4ce189d20e4ba8c4cb520d177144e52354a64592` | 437348 |
 
 Hashes identify the handed-off JPEG bytes, not legal rights, visual accuracy or reproducibility. The depicted process includes details beyond the frozen contact-lead functional contract.
 

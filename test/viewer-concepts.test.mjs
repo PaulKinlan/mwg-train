@@ -76,10 +76,10 @@ test('gallery serves the generated archetype reference boards and the authored e
   assert.ok(boardsOnDisk.length > 0, 'this checkout carries at least one designed board');
   assert.equal(gallery.trainingTargets.filter((family) => gallery.archetypes.some(({ id }) => id === family.id)).length, 0,
     'no id is listed in both arms');
-  assert.ok(gallery.journeys.every((journey) => journey.steps.every((step) => step.available)), 'all 61 supplied boards exist');
-  assert.deepEqual(gallery.bookingSteps.map(({ id, available }) => [id, available]), [
-    ['step1-browse', true], ['step2-form', true], ['step3-confirmation', true],
-    ['step4-error', true], ['step5-empty', true],
+  assert.ok(gallery.journeys.every((journey) => journey.steps.every((step) => step.available && step.darkAvailable)), 'all 61 supplied Light & Dark boards exist');
+  assert.deepEqual(gallery.bookingSteps.map(({ id, available, darkAvailable }) => [id, available, darkAvailable]), [
+    ['step1-browse', true, true], ['step2-form', true, true], ['step3-confirmation', true, true],
+    ['step4-error', true, true], ['step5-empty', true, true],
   ]);
   const html = renderConcepts(gallery);
   assert.match(html, /href="\/concepts">concepts<\/a>/);
@@ -184,6 +184,11 @@ test('gallery serves the generated archetype reference boards and the authored e
       assert.equal(response.headers.get('content-type'), 'image/jpeg');
       assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
       assert.equal((await response.arrayBuffer()).byteLength > 1000, true);
+      const darkResponse = await fetch(`${base}/concepts/images/${journey.id}/${step.id}-dark.jpg`);
+      assert.equal(darkResponse.status, 200, `${journey.id}/${step.id}-dark`);
+      assert.equal(darkResponse.headers.get('content-type'), 'image/jpeg');
+      assert.equal(darkResponse.headers.get('x-content-type-options'), 'nosniff');
+      assert.equal((await darkResponse.arrayBuffer()).byteLength > 1000, true);
     }
   }
   const step = await fetch(`${base}/concepts/images/booking/step1-browse.jpg`);

@@ -192,6 +192,14 @@ export const PAGE_CSS = `
   .concept-steps figure { min-width: 0; margin: 0; }
   .concept-steps figcaption { padding-block: 0.45rem; color: var(--muted); overflow-wrap: anywhere; }
   .concept-steps figcaption strong { color: var(--ink); }
+  .concept-theme-set { margin-block: 1rem 1.4rem; padding: 1rem 1.15rem; border: 1px solid var(--line); border-radius: 0.55rem; background: var(--surface); }
+  .concept-theme-set.concept-theme-dark { background: color-mix(in srgb, var(--surface) 88%, #090d16 12%); }
+  .concept-theme-heading { display: flex; flex-wrap: wrap; align-items: center; gap: 0.55rem; margin: 0 0 0.85rem; font-size: 0.98rem; }
+  .theme-pill { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.18rem 0.65rem; border-radius: 999px; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.02em; border: 1px solid var(--line); }
+  .theme-pill-light { background: #fffbeb; color: #78350f; border-color: #fcd34d; }
+  .theme-pill-dark { background: #0f172a; color: #e2e8f0; border-color: #334155; }
+  .eval-target-showcase { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 1.25rem; align-items: start; margin-top: 0.75rem; }
+  .eval-reference-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.85rem; }
   @media (max-width: 55rem) { .tuning-grid, .prompt-comparison-grid, .convergence-grid, .target-boards-pair, .board-generation-grid { grid-template-columns: minmax(0, 1fr); } .tuning-selector { grid-template-columns: repeat(2, minmax(0, 1fr)); } .tuning-selector label, .tuning-selector select, .tuning-selector button { grid-column: auto; grid-row: auto; } .tuning-selector button { grid-column: 1 / -1; } }
   @media (max-width: 35rem) { .tuning-selector, .tuning-settings { grid-template-columns: minmax(0, 1fr); } .tuning-selector button { grid-column: auto; } }
   @media (max-width: 48rem) {

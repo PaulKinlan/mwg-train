@@ -43,7 +43,7 @@ export const EVAL_TARGETS_MANIFEST = 'data/A6_evaluation/targets/manifest.jsonl'
  * booking row carries a different hash: pinning the bytes means the manifest the hashes were read
  * from is provably the committed one.
  */
-export const EVAL_TARGETS_SEAL = 'sha256:4ba07d58873525d57a043cb6b9d76664fc9d8c2952d16aea819b28cfa290d7c4';
+export const EVAL_TARGETS_SEAL = 'sha256:3516cdb630a0969a872a03d27c27bcdd4482c1478a3a4b7105090139cdb88322';
 
 /**
  * The seal recorded in the preregistration (docs/eval/PREREGISTRATION.md and package.json

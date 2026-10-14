@@ -10,10 +10,10 @@
 
 | Ordered board | What the raster depicts | SHA-256 of committed bytes | Bytes |
 | --- | --- | --- | ---: |
-| [`step1-index.jpg`](step1-index.jpg) | Article index with search, tags and excerpt cards | `777ad574785a3c314962b1695ec5d0cfd1c7173edfc6ad1b82718096a86f5dca` | 718523 |
-| [`step2-article.jpg`](step2-article.jpg) | Long-form article reached by deep link, with byline and share | `27c9e095b5fd2a2b9dd4050a7d717709bfd4fb3094d3026f21c43e0051b5b6c0` | 773710 |
-| [`step3-composer.jpg`](step3-composer.jpg) | Author's article composer with preview and publish action | `8727debdc50ddc795af8e8136be10fdc4b07b05fe9dc8cf433c438a659d3fdae` | 638647 |
-| [`step4-empty.jpg`](step4-empty.jpg) | No-results state for an index search | `c2b6945d13d8e37c01e76b5d36aad8499cdc867f5597cd97510351ba830f6cfa` | 208780 |
+| [`step1-index.jpg`](step1-index.jpg) | Article index with search, tags and excerpt cards | `0ade125b0a9e8299b6d085e2312fd6dc7d8e28938c1a7bc33d9c65699d15dca0` | 635903 |
+| [`step2-article.jpg`](step2-article.jpg) | Long-form article reached by deep link, with byline and share | `6ba32a664cfa0292736b0070060f528edd5e131ead42b40915b9d34275dedc32` | 655644 |
+| [`step3-composer.jpg`](step3-composer.jpg) | Author's article composer with preview and publish action | `6746c10e09724c3c7ee0a2359eb98fd42eef44f12fe88ff22eb16790fccb07c9` | 601564 |
+| [`step4-empty.jpg`](step4-empty.jpg) | No-results state for an index search | `7a87d88443ee9b36fd3318f657ab9fd4938e77f0a3514e148a2c04d506995dd6` | 427430 |
 
 Hashes pin the handed-off JPEG bytes, not their generating model, prompt-to-pixel reproducibility or legal status. The corpus must derive from its own approved source and measured records, not these images.
 

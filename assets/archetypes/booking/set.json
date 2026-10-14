@@ -4,12 +4,12 @@
     "target_dir": "docs/design/archetypes/booking",
     "readme": {
       "path": "docs/design/archetypes/booking/README.md",
-      "sha256": "bb405da24ed11e693ae03b99c06f7b563918c643a9b48e7970d8be0989c751b1"
+      "sha256": "893ba3438701fef6f9ece600e47c9e1ea6be0f08aa5096e61c286478526dc6c7"
     },
     "documents": [
       {
         "path": "docs/design/archetypes/booking/demo/compare.html",
-        "sha256": "7c4ddfc1c50c82db976de77a3eca1da0d732d249d1d31ea4be42865bdd415ecb"
+        "sha256": "e1a89e3dcbda4655605347391543d3859797d94fcbb4134e01e3654149f6b05c"
       },
       {
         "path": "docs/design/archetypes/booking/demo/confirmation.html",
@@ -132,7 +132,7 @@
       ],
       "apparatus": true,
       "source": "docs/design/archetypes/booking/demo/compare.html",
-      "sha256": "7c4ddfc1c50c82db976de77a3eca1da0d732d249d1d31ea4be42865bdd415ecb"
+      "sha256": "e1a89e3dcbda4655605347391543d3859797d94fcbb4134e01e3654149f6b05c"
     },
     "confirmation.html": {
       "title": "Booking Confirmation &amp; Receipt — Learning Hub",
@@ -231,26 +231,26 @@
     },
     {
       "name": "step2-form.jpg",
-      "sha256": "60831f850f2a3879aef5f309e4e82b6444731da8008cf2a4bf41db64fb7ac121",
-      "bytes": 511602,
+      "sha256": "0b6e5cefb03cd40201a0fc5ae1a7b22c8b7627231d14d8669aef3837b431f6df",
+      "bytes": 576368,
       "source": "docs/design/archetypes/booking/step2-form.jpg"
     },
     {
       "name": "step3-confirmation.jpg",
-      "sha256": "20bb9ea80ec4b72b95cdddd4d3a94346e64ae6048425ba110348bdf6606fcd6b",
-      "bytes": 390846,
+      "sha256": "c7fb544c6d12593de72dffad6ddb974c71a19c9a1f64f39a4f47765bc6eeae8d",
+      "bytes": 558048,
       "source": "docs/design/archetypes/booking/step3-confirmation.jpg"
     },
     {
       "name": "step4-error.jpg",
-      "sha256": "c4e338cdc2efa296505151a8a3949879a0ac347bb574a3b2d30ff6cda0eece42",
-      "bytes": 503934,
+      "sha256": "94ba77e82cb82c54fe13ad1bd3a0eb47fc13eda81213e79f323a2a176a3e541c",
+      "bytes": 551038,
       "source": "docs/design/archetypes/booking/step4-error.jpg"
     },
     {
       "name": "step5-empty.jpg",
-      "sha256": "e1b9a307a7d2939b47a139fa9f715ef2f6d6fe4c2ba6e9ab712e74fb0e1044c8",
-      "bytes": 375343,
+      "sha256": "f3ccd1a115af983f0a9903f14725c7747d9d77a0f193eaaa61bc2923bc5ecc56",
+      "bytes": 551005,
       "source": "docs/design/archetypes/booking/step5-empty.jpg"
     }
   ],

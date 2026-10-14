@@ -18,10 +18,10 @@
 | Board | Purpose | SHA-256 | Bytes |
 | --- | --- | --- | ---: |
 | [`step1-browse.jpg`](../../design/archetypes/booking/step1-browse.jpg) | weekly timetable browse with search and category chips | `807321bfa27cf76aa50e0c6003486e5b14de83a2ff84a019465d824fce24de0c` | 649719 |
-| [`step2-form.jpg`](../../design/archetypes/booking/step2-form.jpg) | multi-step details and seat selection with a summary card | `60831f850f2a3879aef5f309e4e82b6444731da8008cf2a4bf41db64fb7ac121` | 511602 |
-| [`step3-confirmation.jpg`](../../design/archetypes/booking/step3-confirmation.jpg) | verified booking pass and digital receipt | `20bb9ea80ec4b72b95cdddd4d3a94346e64ae6048425ba110348bdf6606fcd6b` | 390846 |
-| [`step4-error.jpg`](../../design/archetypes/booking/step4-error.jpg) | accessible validation and conflict error states | `c4e338cdc2efa296505151a8a3949879a0ac347bb574a3b2d30ff6cda0eece42` | 503934 |
-| [`step5-empty.jpg`](../../design/archetypes/booking/step5-empty.jpg) | honest empty state with recovery actions | `e1b9a307a7d2939b47a139fa9f715ef2f6d6fe4c2ba6e9ab712e74fb0e1044c8` | 375343 |
+| [`step2-form.jpg`](../../design/archetypes/booking/step2-form.jpg) | multi-step details and seat selection with a summary card | `0b6e5cefb03cd40201a0fc5ae1a7b22c8b7627231d14d8669aef3837b431f6df` | 576368 |
+| [`step3-confirmation.jpg`](../../design/archetypes/booking/step3-confirmation.jpg) | verified booking pass and digital receipt | `c7fb544c6d12593de72dffad6ddb974c71a19c9a1f64f39a4f47765bc6eeae8d` | 558048 |
+| [`step4-error.jpg`](../../design/archetypes/booking/step4-error.jpg) | accessible validation and conflict error states | `94ba77e82cb82c54fe13ad1bd3a0eb47fc13eda81213e79f323a2a176a3e541c` | 551038 |
+| [`step5-empty.jpg`](../../design/archetypes/booking/step5-empty.jpg) | honest empty state with recovery actions | `f3ccd1a115af983f0a9903f14725c7747d9d77a0f193eaaa61bc2923bc5ecc56` | 551005 |
 
 **Reproduction boundary:** image generation is stochastic; these hashes verify the committed bytes, not
 reproducibility from the same prompt. The journey the boards describe - timetable browse, seat selection,

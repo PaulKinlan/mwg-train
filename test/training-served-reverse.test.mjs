@@ -26,7 +26,7 @@ test('every no-list training family is reverse-checked across its seven framewor
     .trim().split('\n').map(JSON.parse).filter((row) => row.variant_of === null);
   const noListFamilies = manifest.filter((family) =>
     !familyArchetype(family, TRAINING_ARCHETYPES[family.archetype]).routes.some((route) => route.kind === 'list'));
-  assert.deepEqual(noListFamilies.map((family) => family.family_id), ['tr-05'],
+  assert.deepEqual(noListFamilies.map((family) => family.family_id), ['tr-05', 'tr-31', 'tr-33', 'tr-35', 'tr-36', 'tr-37'],
     'new no-list families must be added to this reverse-direction guard');
   const out = mkdtempSync(join(tmpdir(), 'mwg-tr05-served-'));
   try {

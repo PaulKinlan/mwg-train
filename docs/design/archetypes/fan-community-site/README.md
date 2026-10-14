@@ -33,11 +33,11 @@
 
 | Ordered board | What the raster depicts | SHA-256 of committed bytes | Bytes |
 | --- | --- | --- | ---: |
-| [`step1-collection.jpg`](step1-collection.jpg) | Canon collection with filters and a bookmark affordance | `5ba6e87369f0f14405ba440f70eb9b2fa1b8ad491396fda9a6dd30117cd0e17d` | 638603 |
-| [`step2-contribution.jpg`](step2-contribution.jpg) | Contribution composer with the review step stated before submission | `cb561c34f8d26e5cb95dd2d56ddff778a90eada5a258348f787ea52595c0c7df` | 383713 |
-| [`step3-my-contributions.jpg`](step3-my-contributions.jpg) | The fan's own contributions with moderation status chips | `6a9c822264758dce4e0f2603c7d376400fa16955a08c9dd499a6e2edb3d04e4a` | 426708 |
-| [`step4-moderation.jpg`](step4-moderation.jpg) | Moderator queue with approve and hold decisions and a stated reason | `247c7e0d1a2c01dff46112db1d824b230f05bf2ca1dfca2d86f0ffce0770dee9` | 543774 |
-| [`step5-visitor.jpg`](step5-visitor.jpg) | Visitor's collection view: published contributions only, no moderator controls | `2f3691c03e0a08c31b0d380dc8d4f23775fb1f591c04d557145ccdd3467fea8a` | 546932 |
+| [`step1-collection.jpg`](step1-collection.jpg) | Canon collection with filters and a bookmark affordance | `bdb30256c1e4259d0efb54c6d8cf6619f67a27d2b150d78d2507f55dea346bb8` | 562989 |
+| [`step2-contribution.jpg`](step2-contribution.jpg) | Contribution composer with the review step stated before submission | `cca66af696b40ba65bba49fc8a92625665b54d5fafe755a50d909f5e52a237cf` | 422384 |
+| [`step3-my-contributions.jpg`](step3-my-contributions.jpg) | The fan's own contributions with moderation status chips | `57552bd442f70daabf3e5f7554a07474d9431cea5d10c501d353d58aaa3633f6` | 471708 |
+| [`step4-moderation.jpg`](step4-moderation.jpg) | Moderator queue with approve and hold decisions and a stated reason | `e1ad96b66b0405783b44fa7355c64ceef3b5bd8dc7ce055da78ea4d910ffcd3a` | 492287 |
+| [`step5-visitor.jpg`](step5-visitor.jpg) | Visitor's collection view: published contributions only, no moderator controls | `527513c535bdbbe3d2f4d53a39b51804a978c939e7201ce0a50d9ba96c0747be` | 605505 |
 
 The digests pin the handed-off JPEG bytes, not their generating model, prompt-to-pixel reproducibility or
 legal status. The corpus must derive from its own approved material, never from these. Per-board

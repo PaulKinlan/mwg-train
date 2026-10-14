@@ -131,7 +131,7 @@ test('the gate passes on the committed records and FAILS when a record loses or 
   const run = (args) => execFileSync(process.execPath, [join(ROOT, 'scripts/check-build-key.mjs'), ...args], { cwd: ROOT, encoding: 'utf8' });
   const pass = run([]);
   assert.match(pass, /check-build-key: PASS/);
-  assert.match(pass, /245 build\(s\)/);
+  assert.match(pass, /308 build\(s\)/);
 
   const dir = mkdtempSync(join(tmpdir(), 'build-key-gate-'));
   try {

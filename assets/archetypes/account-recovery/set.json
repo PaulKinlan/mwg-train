@@ -4,12 +4,12 @@
     "target_dir": "docs/design/archetypes/account-recovery",
     "readme": {
       "path": "docs/design/archetypes/account-recovery/README.md",
-      "sha256": "59af979f1db71531dc3a7d5185223b7878d006350b29b5b63dd2f5e67c24db5e"
+      "sha256": "67fc5690d8f74a5867eee6d1fbaeca37b6533663b3f4aeef12764962db592c61"
     },
     "documents": [
       {
         "path": "docs/design/archetypes/account-recovery/demo/compare.html",
-        "sha256": "190c0a042c163586d44ac1987bff6ea4e5b9e07cecc73bb2d02b49571f748c4a"
+        "sha256": "ab084bfc3d118dd9efc396b1e29f5b800294da325453d7972271ae4f4fd17f11"
       },
       {
         "path": "docs/design/archetypes/account-recovery/demo/index.html",
@@ -72,7 +72,7 @@
       "strings": [],
       "apparatus": true,
       "source": "docs/design/archetypes/account-recovery/demo/compare.html",
-      "sha256": "190c0a042c163586d44ac1987bff6ea4e5b9e07cecc73bb2d02b49571f748c4a"
+      "sha256": "ab084bfc3d118dd9efc396b1e29f5b800294da325453d7972271ae4f4fd17f11"
     },
     "index.html": {
       "title": "Account recovery · visual demo",
@@ -116,14 +116,14 @@
     },
     {
       "name": "step2-sent.jpg",
-      "sha256": "c0a1d752ae068d34fcfb146c4ded4629192ca45a4d46b33ca9113f90984aaa4d",
-      "bytes": 404248,
+      "sha256": "2ebfcab74be289c17db8b585e786cdc6757bd0c88cb81900dd7256cffbbb0eeb",
+      "bytes": 207955,
       "source": "docs/design/archetypes/account-recovery/step2-sent.jpg"
     },
     {
       "name": "step3-refusal.jpg",
-      "sha256": "a51fb224518f52a8519d0c73bb0ffbc3e815fd124e935910fe906d7a2c6b1f00",
-      "bytes": 141923,
+      "sha256": "4d937b3ab1031b82ced3d36d181e2419501f7da22b3eeb6a9460f19515a82b38",
+      "bytes": 284470,
       "source": "docs/design/archetypes/account-recovery/step3-refusal.jpg"
     }
   ],

@@ -4,7 +4,7 @@
     "target_dir": "docs/design/archetypes/catalogue",
     "readme": {
       "path": "docs/design/archetypes/catalogue/README.md",
-      "sha256": "68eb058c6e532480fbd93313050eabbe2d051b2af139e95cf8717c3a867e18dd"
+      "sha256": "788c4fe548228d3a7ea2630310a08c141bc3a08bfba5f82457f5a50cce2d17dc"
     },
     "documents": [
       {
@@ -13,7 +13,7 @@
       },
       {
         "path": "docs/design/archetypes/catalogue/demo/compare.html",
-        "sha256": "cc2fbfd20ca93af913bc034e6262b4978171bca2b5c62becaaedf5bc299cb624"
+        "sha256": "dc066143fcb35fe4afc939c2aa827e02ae8d1d60978dc1183b4ae51a2b390027"
       },
       {
         "path": "docs/design/archetypes/catalogue/demo/empty.html",
@@ -183,7 +183,7 @@
       ],
       "apparatus": true,
       "source": "docs/design/archetypes/catalogue/demo/compare.html",
-      "sha256": "cc2fbfd20ca93af913bc034e6262b4978171bca2b5c62becaaedf5bc299cb624"
+      "sha256": "dc066143fcb35fe4afc939c2aa827e02ae8d1d60978dc1183b4ae51a2b390027"
     },
     "empty.html": {
       "title": "No Matches — Kiln &amp; Copper (static variant)",
@@ -356,14 +356,14 @@
     },
     {
       "name": "step2-cart.jpg",
-      "sha256": "36170d05468183ca262b46d2f187c60d6c41cb29a1081293d5f7f61a30acfae0",
-      "bytes": 448333,
+      "sha256": "864a10b7c056667af9c1972d399d1bff739d780cd673cd3bcc013e1cc6996adc",
+      "bytes": 449337,
       "source": "docs/design/archetypes/catalogue/step2-cart.jpg"
     },
     {
       "name": "step3-empty.jpg",
-      "sha256": "31aff477070366b7cfdfaf076b1cdd1721f97926273d1773b6c206d7ee09203e",
-      "bytes": 352136,
+      "sha256": "9b8a4e58550892fef25ebab0a15c6078d0a40d8781292bfb2ba1be0ec384e9c0",
+      "bytes": 416841,
       "source": "docs/design/archetypes/catalogue/step3-empty.jpg"
     }
   ],
