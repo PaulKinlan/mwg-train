@@ -215,14 +215,20 @@ function trainingLayoutProse(text) {
   return protectedText.restore(prose);
 }
 
-function eventFunctionalLayout(design) {
-  // The authored grammar carries a functional subsection alongside static-demo observations.
-  // Both pattern and training prompts project this ONE source rather than duplicate its bullets.
-  const projection = section(design, 'Grammar and layout')?.split('\n### Functional site projection\n')[1]
-    ?.split('\n### ', 1)[0];
-  // Its explanatory preface distinguishes the demo; only the functional bullets
-  // belong in either build brief.
-  return projection?.match(/^- [\s\S]+/m)?.[0]?.trim() ?? null;
+function eventFunctionalLayout(design, { family = false } = {}) {
+  // One authored projection, with four explicitly classified family-safe roles.
+  // An added demo bullet cannot silently become a family instruction: unclassified
+  // bullets are ignored; changing the role contract fails closed until reviewed.
+  const projection = section(design, 'Grammar and layout')?.split('\n### Functional site projection\n')[1];
+  const shared = projection?.split('\n#### Shared structure\n')[1]?.split('\n#### Pattern-specific details\n')[0];
+  const roles = ['Shell', 'Choices', 'Form', 'Outcome'];
+  const entries = [...(shared?.matchAll(/^- \*\*([A-Za-z]+):\*\* ([^\n]+)$/gm) ?? [])];
+  if (entries.length !== roles.length || entries.some((entry, index) => entry[1] !== roles[index])) return null;
+  const common = entries.map(([, , text]) => `- ${text}`).join('\n');
+  if (family) return common;
+  const pattern = projection?.split('\n#### Pattern-specific details\n')[1];
+  const details = [...(pattern?.matchAll(/^- ([^\n]+)$/gm) ?? [])].map(([, text]) => `- ${text}`);
+  return details.length ? `${details.join('\n')}\n${common}` : null;
 }
 
 function trainingSiteLayout(design, archetype, journey) {
@@ -231,19 +237,14 @@ function trainingSiteLayout(design, archetype, journey) {
   // The shared archetype source also records raster defects and source-vs-board divergences;
   // those observations are not requirements for any family's functional website.
   const structural = trainingLayoutProse(archetype === 'event-registration'
-    ? eventFunctionalLayout(design) ?? '' : TRAINING_LAYOUTS[archetype] ?? layout);
+    ? eventFunctionalLayout(design, { family: true }) ?? '' : TRAINING_LAYOUTS[archetype] ?? layout);
   if (archetype === 'booking') return structural.replace(/\bthe student\b/gi, 'the user');
   if (archetype === 'web-shop') return structural.replace(/configuration selects \(quantity, variant, grind\)/i,
     'the configuration controls this family’s plan declares');
   if (archetype === 'event-registration') {
-    // Share the authored structure, not this archetype demo's measured shell or pricing widget.
-    // Family journeys own their form ID, ticket options and whether any pass/QR is issued.
+    // The shared authored form is generic; only the family journey names its form ID.
     const familyFormId = journey?.match(/\bform#([a-z][a-z0-9-]*)\b/)?.[1];
-    const familyLayout = structural
-      .replace(/\s+capped at `?\d+(?:\.\d+)?rem\b`?/gi, '')
-      .replace(/ and a live estimate clearly marked as illustrative rather than a charge\b/i, '')
-      .replace(/\bThe registration form\b/, familyFormId ? `The form #${familyFormId}` : 'The registration form');
-    return `${familyLayout}\n- Use only ticket options this family’s journey declares; include a pass or QR only when this family’s journey defines one.`;
+    return structural.replace(/\bThe registration form\b/, familyFormId ? `The form #${familyFormId}` : 'The registration form');
   }
   return structural;
 }
