@@ -3,6 +3,7 @@
     "test/check-archetype-frames.test.mjs"
   ],
   ".fleet/coverage-mapping.json": [
+    "test/coverage-map-invariant.test.mjs",
     "test/viewer-concepts-budget-routing.test.mjs"
   ],
   "docs/design/archetypes/scroll-storytelling-launch/README.md": [

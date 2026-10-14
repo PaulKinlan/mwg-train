@@ -301,6 +301,9 @@ function isExempt(file) {
 }
 
 for (const file of changedFiles) {
+  // This independent edge prevents a mapping-only edit from deleting its own hash-test route
+  // and falling back to smoke. The hash test pins the complete declared edge set.
+  if (file === '.fleet/coverage-mapping.json') selectedSuites.add('test/coverage-map-invariant.test.mjs');
   // If the file itself is a test file
   if (file.startsWith('test/') && file.endsWith('.test.mjs')) {
     if (fs.existsSync(path.join(ROOT, file))) {
