@@ -294,6 +294,10 @@ export const DOCUMENTS = {
   // and behave; neither states a measured corpus result.
   'docs/design/archetypes/editorial-blog/design.md': 'design',
   'docs/design/archetypes/editorial-blog/plan.md': 'design',
+  // Proposed scroll-storytelling contracts: authored design and behaviour, explicitly not measured image evidence.
+  'docs/design/archetypes/scroll-storytelling-launch/design.md': 'design',
+  'docs/design/archetypes/scroll-storytelling-launch/plan.md': 'design',
+  'docs/design/archetypes/scroll-storytelling-launch/PROVENANCE.md': 'provenance',
   // The register that pins the new archetype's board bytes and prompt digests, in the same shape as the other
   // design-reference records. Classified as provenance, not as a floor report: it records borrowed reference
   // material and its rights, and states no measured result of the corpus.

@@ -2,6 +2,18 @@
   ".fleet/frame-scan-pins.json": [
     "test/check-archetype-frames.test.mjs"
   ],
+  "docs/design/archetypes/scroll-storytelling-launch/README.md": [
+    "test/scroll-storytelling-prompts.test.mjs"
+  ],
+  "docs/design/archetypes/scroll-storytelling-launch/design.md": [
+    "test/scroll-storytelling-prompts.test.mjs"
+  ],
+  "docs/design/archetypes/scroll-storytelling-launch/plan.md": [
+    "test/scroll-storytelling-prompts.test.mjs"
+  ],
+  "docs/design/archetypes/scroll-storytelling-launch/PROVENANCE.md": [
+    "test/scroll-storytelling-prompts.test.mjs"
+  ],
   "docs/design/archetypes/*/README.md": [
     "test/archetype-boards-generator.test.mjs",
     "test/board-states.test.mjs",
