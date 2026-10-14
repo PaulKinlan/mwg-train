@@ -41,6 +41,31 @@ test('all current prompt and state claims come from real authored sources', () =
   assert.doesNotMatch(html, /<script[^>]*>/, 'reading prompts requires no client JS');
 });
 
+test('event-registration pattern prompt describes a functional event site without demo CSS or form IDs', () => {
+  const gallery = listConcepts(ROOT);
+  const pattern = gallery.patterns.find((item) => item.id === 'event-registration');
+  assert.ok(pattern?.brief?.sitePrompt);
+  const prompt = pattern.brief.sitePrompt;
+  assert.doesNotMatch(prompt, /\.(?:ticket-grid|ticket-row|event-hero|event-pass|capacity-note|pass-status|capacity-dot)\b|#registration-form\b/i,
+    'no demo stylesheet selectors or fixed demo form ID should become build instructions');
+  assert.doesNotMatch(prompt, /(?:^|\n)Read from demo\/|demo\/compare\.html|the two training boards each declare|tr-07 puts|tr-30 puts/i,
+    'a site brief does not need demo-file or unrelated family-board observations');
+  assert.match(prompt, /Layout and components:[\s\S]*ticket options use a two-column grid[\s\S]*registration form[\s\S]*confirmation/i,
+    'retain responsive ticket layout, labelled registration and a confirmation view');
+  const design = readFileSync(join(ROOT, 'docs/design/archetypes/event-registration/design.md'), 'utf8');
+  const authoredTokens = [...design.matchAll(/^\| `(--[a-z-]+)` \| `(#[0-9a-f]{6})` \|/gmi)];
+  assert.equal(authoredTokens.length, 10, 'the authored pattern palette declares ten source-backed colour tokens');
+  const tokenSection = prompt.split('Visual tokens:\n')[1]?.split('\n\nStep-by-step behaviour:')[0] ?? '';
+  for (const [, name, value] of authoredTokens) assert.ok(tokenSection.includes(`- ${name}: ${value}`),
+    `${name} retains its exact authored value without demo selector counts`);
+  for (const id of ['tr-07', 'tr-30']) {
+    const family = gallery.trainingTargets.find((item) => item.id === id);
+    assert.ok(family?.brief?.sitePrompt.includes('Build a functional event registration website'));
+    assert.match(family.brief.sitePrompt, /UI layout:[\s\S]*#(?:observatory-registration-form|registration-form)\b/i,
+      `${id} keeps its plan-owned form ID in the training brief`);
+  }
+});
+
 test('site prompts omit wrapped reference-viewport framing while retaining site layout instructions', () => {
   const gallery = listConcepts(ROOT);
   const prompts = [...gallery.patterns.map((pattern) => pattern.brief.sitePrompt),
