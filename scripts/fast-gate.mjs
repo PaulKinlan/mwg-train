@@ -235,6 +235,14 @@ const checkScriptMap = {
   'scripts/check-served-gap.mjs': 'check:served-gap',
 };
 
+// These committed documents are direct inputs to named checks. Suite edges live separately
+// in .fleet/coverage-mapping.json; neither replaces the generic checks for Markdown.
+const documentCheckSubjects = {
+  'docs/train/corpus/SERVED.md': ['check:served-gap'],
+  'docs/provenance/assets/archetype-asset-sets.md': ['check:archetype-assets'],
+  'docs/provenance/assets/training-reference-boards.md': ['check:archetype-frames'],
+};
+
 // Document & manifest routing: files that are actively checked by the gate
 function routeDocument(file) {
   if (file === 'docs/train/briefs/manifest.jsonl') {
@@ -280,7 +288,7 @@ function routeDocument(file) {
     // Any markdown doc change must pass link and baseline label checks.
     selectedChecks.add('check:doc-links');
     selectedChecks.add('check:baseline-label');
-    if (file === 'docs/train/corpus/SERVED.md') selectedChecks.add('check:served-gap');
+    for (const check of documentCheckSubjects[file] ?? []) selectedChecks.add(check);
     return true;
   }
   return false;

@@ -141,6 +141,9 @@
   "docs/provenance/assets/design-reference-booking.md": [
     "test/design-reference.test.mjs"
   ],
+  "docs/provenance/assets/archetype-asset-sets.md": [
+    "test/archetype-assets.test.mjs"
+  ],
   "docs/provenance/assets/training-frame-crops.json": [
     "test/training-boards-generator.test.mjs",
     "test/check-archetype-frames.test.mjs"

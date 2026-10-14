@@ -56,6 +56,20 @@ test('a SERVED.md edit selects its route comparison check and asserting suite', 
   assert.match(res.stdout, /suites=\[[^\]]*test\/served-routes\.test\.mjs/);
 });
 
+test('provenance registers route to their asserting checks and suites', () => {
+  for (const [file, check, suite] of [
+    ['docs/provenance/assets/archetype-asset-sets.md', 'check:archetype-assets', 'test/archetype-assets.test.mjs'],
+    ['docs/provenance/assets/training-reference-boards.md', 'check:archetype-frames', 'test/training-boards-generator.test.mjs'],
+  ]) {
+    const env = { ...process.env, GIT_CHANGED: file, FAST_GATE_LIST: '1' };
+    const res = spawnSync('node', [FAST_GATE], { cwd: ROOT, env, encoding: 'utf8' });
+    assert.strictEqual(res.status, 0, `${file}: ${res.stderr}`);
+    for (const name of ['check:baseline-label', 'check:doc-links', check, suite]) {
+      assert.ok(res.stdout.includes(name), `${file} must select ${name}: ${res.stdout}`);
+    }
+  }
+});
+
 test('fast-gate routes training briefs manifest to check:brief-schema and check:disjoint', () => {
   const env = { ...process.env, GIT_CHANGED: 'docs/train/briefs/manifest.jsonl' };
   const res = spawnSync('node', [FAST_GATE], { cwd: ROOT, env, encoding: 'utf8' });
