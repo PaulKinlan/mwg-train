@@ -91,6 +91,10 @@ test('gallery serves the generated archetype reference boards and the authored e
     'QR-specific warnings appear beside only the two source-backed QR patterns, plus the page explainer');
   assert.equal((html.match(/no reuse clearance is granted here/g) ?? []).length, qrPatterns.length,
     'both QR-specific notes must independently withhold reuse clearance');
+  assert.equal((html.match(/some records identify provider terms prohibiting use of the image to develop machine-learning models; others say training and output-use rights were not supplied/g) ?? []).length, qrPatterns.length,
+    'both QR-specific notes describe the distinct rights records with parallel clauses');
+  assert.doesNotMatch(html, /provenance for whether provider terms prohibit.*or training and output-use rights were not supplied/i,
+    'the malformed whether/or construction must not return');
   assert.match(html, /id="pattern-course-enrolment"/);
   assert.match(html, /No multi-step reference boards are authored for this pattern yet/);
   assert.match(html, /Image Generation Prompt · inherited single training reference, NOT a step board/);
