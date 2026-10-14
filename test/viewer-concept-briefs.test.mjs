@@ -132,6 +132,8 @@ test('event pattern and training layouts read one authored functional source as 
       'changing the authored cap updates the pattern without a code change');
     assert.match(projectedPattern, /An adaptive selection region/i,
       'changes to the shared structural source update the pattern');
+    assert.match(projectedPattern, /142 \/ 200 seats filled/i,
+      'unclassified authored Shared-structure bullets remain in the archetype pattern');
     assert.doesNotMatch(projectedPattern, /52rem/);
     for (const id of ['tr-07', 'tr-30']) {
       const row = rows.get(id);
@@ -147,6 +149,9 @@ test('event pattern and training layouts read one authored functional source as 
     }
     writeFileSync(join(archetype, 'design.md'), design.replace('#### Pattern-specific details',
       '- **Capacity:** A capacity note reads 142 / 200 seats filled.\n\n#### Pattern-specific details'));
+    assert.match(archetypeBrief(scratch, 'event-registration').sitePrompt,
+      /Layout and components: Not yet documented in this checkout\./,
+      'a new classified shared role also fails the pattern contract closed');
     for (const id of ['tr-07', 'tr-30']) {
       assert.match(trainingBrief(scratch, id, rows.get(id)).sitePrompt, /UI layout: Not yet documented in this checkout\./,
         `${id}: a new classified source role changes the contract and fails closed`);
