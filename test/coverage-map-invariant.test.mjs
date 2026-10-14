@@ -5,7 +5,7 @@ import { resolve } from 'node:path';
 import test from 'node:test';
 
 const ROOT = resolve(import.meta.dirname, '..');
-const EXPECTED_EDGES_SHA256 = 'cd4ca894195eeed5971128587f816a2dff313a08992433685ad678a7901ee228';
+const EXPECTED_EDGES_SHA256 = '2505b10103561ac6df1d1c8e661e9a857ca11f48d9fd6c60b1fd325308345353';
 
 test('the fast-gate coverage contract cannot silently lose any declared suite edge', () => {
   const mapping = JSON.parse(readFileSync(resolve(ROOT, '.fleet/coverage-mapping.json'), 'utf8'));
@@ -25,6 +25,15 @@ test('the puzzle generator and its provenance both route to the no-network attes
     'docs/design/archetypes/browser-puzzle-game/PROVENANCE.md']) {
     assert.ok(mapping[file]?.includes('test/browser-puzzle-board-provenance.test.mjs'),
       `${file} must run the scratch-import and unverified-provenance assertions`);
+  }
+});
+
+test('dark-mode board changes and provenance records route to their byte-identity regression', () => {
+  const mapping = JSON.parse(readFileSync(resolve(ROOT, '.fleet/coverage-mapping.json'), 'utf8'));
+  for (const file of ['docs/design/archetypes/*/dark/*.jpg',
+    'docs/provenance/assets/archetype-dark-boards.json', 'docs/provenance/assets/archetype-dark-boards.md']) {
+    assert.ok(mapping[file]?.includes('test/archetype-dark-provenance.test.mjs'),
+      `${file} must rerun the complete 61-board inventory`);
   }
 });
 
