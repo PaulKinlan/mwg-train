@@ -26,6 +26,24 @@ test('an unavailable browser product is visibly unknown, not invented from a hos
   });
 });
 
+test('the projection retains each input stamp rather than substituting host or fixture defaults', () => {
+  // Synthetic profiles, not measured run evidence. Neither is derived from process.platform/version.
+  const profiles = [
+    { platform: 'darwin', node_version: 'v22.11.0',
+      browser: { product: 'Chrome/144.0.7559.12', protocolVersion: '1.3', revision: '@darwin-fixture' },
+      chrome_version: 'Chrome/144.0.7559.12' },
+    { platform: 'linux', node_version: 'v25.3.0',
+      browser: { product: 'Chromium/155.0.8059.40', protocolVersion: '1.4', revision: '@linux-fixture' },
+      chrome_version: 'Chromium/155.0.8059.40' },
+  ];
+  for (const profile of profiles) {
+    const projected = versionRecord({ ...profile, journeys: [], errors: [] }, {});
+    for (const [key, expected] of Object.entries(profile)) {
+      assert.deepEqual(projected[key], expected, `${profile.platform}/${profile.node_version} ${key}`);
+    }
+  }
+});
+
 test('the returned run record and training-corpus projection keep the measured stamp even on failure', async () => {
   // A real occupied port forces the harness to return before page creation: no Chrome or generated server is run.
   const occupied = createServer();
