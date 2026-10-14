@@ -112,6 +112,25 @@ test('fast-gate selects the suites declared in .fleet/coverage-mapping.json (mwg
   }
 });
 
+test('mapping changes select the edge hash even if its mapping self-entry is deleted', () => {
+  // This belongs in the suite selected by changes to scripts/fast-gate.mjs, NOT the hash
+  // suite itself: removing the independent selector must still leave a failing regression.
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'mwg-fast-gate-self-route-'));
+  try {
+    const mapping = JSON.parse(fs.readFileSync(path.join(ROOT, '.fleet/coverage-mapping.json'), 'utf8'));
+    delete mapping['.fleet/coverage-mapping.json'];
+    const mapPath = path.join(tmp, 'coverage-mapping.json');
+    fs.writeFileSync(mapPath, JSON.stringify(mapping));
+    const env = { ...process.env, GIT_CHANGED: '.fleet/coverage-mapping.json', FAST_GATE_LIST: '1', FAST_GATE_COVERAGE_MAP: mapPath };
+    const res = spawnSync('node', [FAST_GATE], { cwd: ROOT, env, encoding: 'utf8' });
+    assert.strictEqual(res.status, 0, res.stderr);
+    assert.match(res.stdout, /suites=\[[^\]]*test\/coverage-map-invariant\.test\.mjs/,
+      `must select the edge hash independently of the editable mapping: ${res.stdout}`);
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
 test('fast-gate fails closed when the coverage mapping names a suite that does not exist', () => {
   // A contract entry that names a missing suite must fail the gate rather than silently skipping:
   // a skip would let the oracle keep crediting a suite the gate never runs (fleet-r571's drift).
