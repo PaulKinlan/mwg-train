@@ -64,6 +64,14 @@ function declaredTokens(design) {
   return block ? `Palette values from the authored design:\n${block.trim()}` : null;
 }
 
+function familyVisualThesis(design) {
+  // The family design describes a static target after its opening identity sentence. Use only that
+  // authored identity/colour direction; an unknown format must not leak conformance instructions.
+  const thesis = section(design, 'Visual thesis');
+  const marker = "The board's job is to be a *target*:";
+  return thesis?.includes(marker) ? thesis.split(marker, 1)[0].replace(/\bthe board for\b/i, 'the site for').trim() : null;
+}
+
 /** The authored archetype plan/design are the source; this is a readable prompt assembled from them, not model output. */
 export function archetypeBrief(repoRoot, id, trainingImagePrompt = null) {
   if (!ID.test(id)) return null;
@@ -137,8 +145,8 @@ export function trainingBrief(repoRoot, id, row) {
   if (!FAMILY.test(id) || row?.family_id !== id || !ID.test(row?.archetype ?? '') || typeof row.prompt !== 'string') return null;
   const plan = authoredText(repoRoot, 'docs/train/design', id, 'plan.md');
   const design = authoredText(repoRoot, 'docs/train/design', id, 'design.md');
-  // The training design describes a static DOM conformance fixture. For a functional site, use the
-  // archetype's multi-screen design as the layout/component source, but keep this family's exact palette.
+  // The training design describes a static DOM conformance fixture. Use the archetype's multi-screen
+  // layout/components, but not its visual thesis or tokens: those can contradict the family's palette.
   const siteDesign = authoredText(repoRoot, 'docs/design/archetypes', row.archetype, 'design.md') ?? design;
   const imagePrompt = authoredText(repoRoot, 'docs/design/training', id, 'prompt.txt');
   const assertions = Array.isArray(row.assertions) ? row.assertions.filter((assertion) => typeof assertion === 'string') : [];
@@ -147,7 +155,7 @@ export function trainingBrief(repoRoot, id, row) {
       `Build a functional ${row.archetype.replaceAll('-', ' ')} website for this scenario. The image prompt below is an illustration brief; it is not a substitute for implementing the behaviour.`,
       group('Use case', row.prompt),
       group('UI layout', section(siteDesign, 'Grammar and layout')),
-      group('Visual thesis and tokens', [section(siteDesign, 'Visual thesis'), declaredTokens(design), section(siteDesign, 'Token usage')].filter(Boolean).join('\n\n')),
+      group('Family visual direction and tokens', [familyVisualThesis(design), declaredTokens(design), section(design, 'Token usage')].filter(Boolean).join('\n\n')),
       group('Expected components', section(siteDesign, 'Component hierarchy')),
       group('Step-by-step interactions', section(plan, 'Journey')),
       group('Validation and server state', section(plan, 'Validation and states')),

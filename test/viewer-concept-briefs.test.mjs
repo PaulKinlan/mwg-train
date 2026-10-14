@@ -59,6 +59,24 @@ test('site prompts omit wrapped reference-viewport framing while retaining site 
   assert.match(gallery.trainingTargets.find((target) => target.id === 'tr-04').brief.sitePrompt, /summary region/i);
 });
 
+test('training site prompts use family palette and identity, not the archetype target colours', () => {
+  const gallery = listConcepts(ROOT);
+  const tr17 = gallery.trainingTargets.find((target) => target.id === 'tr-17').brief.sitePrompt;
+  assert.match(tr17, /Family visual direction and tokens:[\s\S]*Valley & Moor Livestock Veterinary[\s\S]*light palette/);
+  assert.match(tr17, /--vm-bg: "#f8fafc"/);
+  assert.match(tr17, /booking workbench[\s\S]*two-column grid/, 'the functional archetype layout must remain available');
+  assert.doesNotMatch(tr17, /ground is deep slate|accent is emerald|#10b981/i,
+    'the Evening Class Studio visual thesis and token table cannot override tr-17 light family palette');
+  assert.doesNotMatch(tr17, /The board's job is to be a target|student model's output is measured/i,
+    'static conformance-board goals are not site-building requirements');
+  for (const target of gallery.trainingTargets) {
+    assert.match(target.brief.sitePrompt, /Family visual direction and tokens:[\s\S]*Palette values from the authored design:/,
+      `${target.id} has an exact family palette`);
+    assert.doesNotMatch(target.brief.sitePrompt, /\| Token \| Light \| Dark \|/,
+      `${target.id} must not inherit an unrelated archetype colour table`);
+  }
+});
+
 test('early inline and later fenced image prompts are returned intact, never inferred from filenames', () => {
   const early = readFileSync(join(ROOT, 'docs/design/archetypes/booking/README.md'), 'utf8');
   const late = readFileSync(join(ROOT, 'docs/design/archetypes/community-forum/README.md'), 'utf8');
