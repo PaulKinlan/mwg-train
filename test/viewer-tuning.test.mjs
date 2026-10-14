@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
@@ -116,6 +117,89 @@ test('tuning routes serve only fixed training targets, never eval targets or mut
   const client = await fetch(`${base}/tuning/client.js`);
   assert.equal(client.status, 200);
   assert.match(await client.text(), /source_prompt/);
+});
+
+test('tuning image GETs refuse leaf and ancestor swaps after their path probes', () => {
+  const root = mkdtempSync(join(tmpdir(), 'viewer-tuning-swap-'));
+  const outside = mkdtempSync(join(tmpdir(), 'viewer-tuning-swap-outside-'));
+  try {
+    const targetDir = join(root, 'data/A1_self_generated/targets/tr-01');
+    const boardDir = join(root, 'docs/design/training/tr-01');
+    mkdirSync(targetDir, { recursive: true });
+    mkdirSync(boardDir, { recursive: true });
+    writeFileSync(join(targetDir, 'target.png'), Buffer.from([137, 80, 78, 71]));
+    writeFileSync(join(boardDir, 'reference.jpg'), Buffer.from([0xff, 0xd8, 0xff, 0xd9]));
+    writeFileSync(join(outside, 'target.png'), Buffer.from('OUTSIDE PNG SECRET'));
+    writeFileSync(join(outside, 'reference.jpg'), Buffer.concat([
+      Buffer.from([0xff, 0xd8]), Buffer.from('OUTSIDE JPEG SECRET'), Buffer.from([0xff, 0xd9]),
+    ]));
+    const script = `
+      import assert from 'node:assert/strict';
+      import fs from 'node:fs';
+      import { syncBuiltinESMExports } from 'node:module';
+      import { mkdtempSync, rmSync } from 'node:fs';
+      import { tmpdir } from 'node:os';
+      import { join } from 'node:path';
+      const [root, outside] = process.argv.slice(1);
+      const target = join(root, 'data/A1_self_generated/targets/tr-01/target.png');
+      const boardDir = join(root, 'docs/design/training/tr-01');
+      const board = join(boardDir, 'reference.jpg');
+      const originalRead = fs.readFileSync, originalOpen = fs.openSync;
+      let swaps = 0, insideLegacyRead = false;
+      function swap(file, operation) {
+        if (file === target) {
+          swaps++;
+          fs.renameSync(target, target + '.inside');
+          fs.symlinkSync(join(outside, 'target.png'), target);
+          try { return operation(); }
+          finally { fs.unlinkSync(target); fs.renameSync(target + '.inside', target); }
+        }
+        if (file === board) {
+          swaps++;
+          fs.renameSync(boardDir, boardDir + '.inside');
+          fs.symlinkSync(outside, boardDir, 'dir');
+          try { return operation(); }
+          finally { fs.unlinkSync(boardDir); fs.renameSync(boardDir + '.inside', boardDir); }
+        }
+        return operation();
+      }
+      fs.readFileSync = (file, ...args) => {
+        if (typeof file !== 'string') return originalRead(file, ...args);
+        insideLegacyRead = true;
+        try { return swap(file, () => originalRead(file, ...args)); }
+        finally { insideLegacyRead = false; }
+      };
+      fs.openSync = (file, ...args) => typeof file === 'string' && !insideLegacyRead ?
+        swap(file, () => originalOpen(file, ...args)) : originalOpen(file, ...args);
+      syncBuiltinESMExports();
+      const { createViewer } = await import(process.argv[3]);
+      const stateDir = mkdtempSync(join(tmpdir(), 'viewer-tuning-swap-state-'));
+      const { server, liveServer, pool } = createViewer({ allowAnonymous: true, repoRoot: root,
+        corpusRoot: process.argv[4], stateDir });
+      try {
+        await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+        const base = 'http://127.0.0.1:' + server.address().port;
+        for (const path of ['/tuning/target/tr-01.png', '/tuning/reference/tr-01.jpg']) {
+          const response = await fetch(base + path);
+          assert.equal(response.status, 404, path + ': outside bytes must not be served');
+        }
+        assert.equal(swaps, 2, 'both image opens must encounter a real filesystem swap');
+      } finally {
+        pool.stopAll();
+        await Promise.all([new Promise(resolve => server.close(resolve)),
+          new Promise(resolve => liveServer.close(resolve))]);
+        rmSync(stateDir, { recursive: true, force: true });
+      }
+      console.log('tuning target and board refuse post-probe swaps');
+    `;
+    const output = execFileSync(process.execPath, ['--input-type=module', '-e', script, root, outside,
+      new URL('../src/viewer/server.mjs', import.meta.url).href, join(ROOT, 'pilot')],
+    { encoding: 'utf8', timeout: 15000 });
+    assert.match(output, /tuning target and board refuse post-probe swaps/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+    rmSync(outside, { recursive: true, force: true });
+  }
 });
 
 test('training target route refuses symlinked and non-file images', async (t) => {

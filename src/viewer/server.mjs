@@ -41,7 +41,7 @@ import { dirname, extname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { deflateSync, gzipSync } from 'node:zlib';
 
-import { conceptImage, conceptJourneyStep, conceptTarget, listConcepts, renderConcepts, trainingBoard } from './concepts.mjs';
+import { conceptImage, conceptJourneyStep, conceptTarget, listConcepts, readConfinedImage, renderConcepts, trainingBoard } from './concepts.mjs';
 import { filterProjects, loadCorpus, projectView } from './corpus.mjs';
 import { hashTree } from '../corpus/tree-hash.mjs';
 import { scanTree, scanPairRecords, loadScanConfig, buildMatchers } from './owner-auth.mjs';
@@ -952,8 +952,10 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
             realpathSync(image) !== join(realpathSync(dir), 'target.png')) {
           return textResponse(response, 'target unavailable', 404);
         }
+        const targetBytes = readConfinedImage(repoRoot, image, 'image/png')?.bytes;
+        if (!targetBytes) return textResponse(response, 'target unavailable', 404);
         response.writeHead(200, assetHeaders('image/png'));
-        return response.end(readFileSync(image));
+        return response.end(targetBytes);
       }
       const tuningReference = path.match(/^\/tuning\/reference\/(tr-\d{2})\.jpg$/);
       if (tuningReference && request.method === 'GET') {
@@ -968,8 +970,8 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
         // refuses to render anything whose header is not a JPEG SOI, and this is the same check on the side that
         // actually hands the file to a browser. A file named reference.jpg that is not a JPEG is not a reference
         // board, and would otherwise be served with a content type it does not have and sniffing still permitted.
-        const bytes = readFileSync(image);
-        if (bytes.length < 2 || bytes[0] !== 0xff || bytes[1] !== 0xd8) {
+        const bytes = readConfinedImage(repoRoot, image, 'image/jpeg')?.bytes;
+        if (!bytes || bytes.length < 2 || bytes[0] !== 0xff || bytes[1] !== 0xd8) {
           return textResponse(response, 'reference board unavailable', 404);
         }
         response.writeHead(200, assetHeaders('image/jpeg'));

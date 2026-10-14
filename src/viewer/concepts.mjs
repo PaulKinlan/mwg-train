@@ -174,14 +174,18 @@ function macOSOpenFileMatches(file, expected, opened) {
     realpathSync(dirname(file)) === dirname(expected) && realpathSync(file) === expected;
 }
 
-function readConceptImage(repoRoot, file, type) {
+/** Read an allowlisted image only after the caller has checked its path confinement.
+ *  The opened fd is independently bound to the expected canonical location. */
+export function readConfinedImage(repoRoot, file, type) {
   if (!file) return null;
   let fd;
   try {
     // The path probe can race with a replacement. Open the leaf without following
     // links, then validate the *opened fd's* identity: O_NOFOLLOW alone does not
     // stop a swapped ancestor directory from redirecting the open.
-    const expected = join(realpathSync(repoRoot), relative(repoRoot, file));
+    const underRoot = relative(repoRoot, file);
+    if (!underRoot || underRoot.startsWith('..') || underRoot.startsWith('/')) return null;
+    const expected = join(realpathSync(repoRoot), underRoot);
     fd = openSync(file, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
     const opened = fstatSync(fd, { bigint: true });
     if (!opened.isFile()) return null;
@@ -211,7 +215,7 @@ function readConceptImage(repoRoot, file, type) {
 }
 
 export function conceptImage(repoRoot, name) {
-  return readConceptImage(repoRoot, conceptImageFile(repoRoot, name), 'image/jpeg');
+  return readConfinedImage(repoRoot, conceptImageFile(repoRoot, name), 'image/jpeg');
 }
 
 /** Only fixed archetype/step pairs are public; neither path segment comes from a filesystem listing. */
@@ -222,7 +226,7 @@ function journeyStepFile(repoRoot, archetype, id) {
 }
 
 export function conceptJourneyStep(repoRoot, archetype, id) {
-  return readConceptImage(repoRoot, journeyStepFile(repoRoot, archetype, id), 'image/jpeg');
+  return readConfinedImage(repoRoot, journeyStepFile(repoRoot, archetype, id), 'image/jpeg');
 }
 
 /** Preserve the booking accessor for existing callers and tests. */
@@ -340,7 +344,7 @@ function trainingBoardFile(repoRoot, id) {
 export function trainingBoard(repoRoot, id) {
   if (!trainingFamilies(repoRoot).some((family) => family.id === id)) return null;
   const file = trainingBoardFile(repoRoot, id);
-  return readConceptImage(repoRoot, file, 'image/jpeg');
+  return readConfinedImage(repoRoot, file, 'image/jpeg');
 }
 
 /** Resolve a target only when its arm declares the id and its file remains confined.
@@ -357,7 +361,7 @@ function conceptTargetFile(repoRoot, id) {
 
 /** These are authored A6 targets, not captures of the generated demo. */
 export function conceptTarget(repoRoot, id) {
-  return readConceptImage(repoRoot, conceptTargetFile(repoRoot, id), 'image/png');
+  return readConfinedImage(repoRoot, conceptTargetFile(repoRoot, id), 'image/png');
 }
 
 /** Serve the authored A1 training target for a family: declared in the manifest AND present, confined, under
@@ -365,7 +369,7 @@ export function conceptTarget(repoRoot, id) {
  *  route cannot be used to probe for files the arm never published. */
 export function trainingTarget(repoRoot, id) {
   if (!trainingFamilies(repoRoot).some((family) => family.id === id)) return null;
-  return readConceptImage(repoRoot, trainingTargetFile(repoRoot, id), 'image/png');
+  return readConfinedImage(repoRoot, trainingTargetFile(repoRoot, id), 'image/png');
 }
 
 function boardStateRegister(repoRoot) {
