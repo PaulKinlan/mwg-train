@@ -161,6 +161,15 @@ test('event pattern and training layouts read one authored functional source as 
       ['HTML comment', '<!--\n- **Capacity:** Beside the event hero.\n-->'],
       ['HTML block', '<aside>Beside the event hero.</aside>'],
       ['fenced block', '```text\n- **Capacity:** Beside the event hero.\n```'],
+      ['setext h1', 'Beside the event hero.\n==='],
+      ['setext h2', 'Beside the event hero.\n---'],
+      ['HTML declaration', '<!DOCTYPE html> Beside the event hero.'],
+      ['CDATA block', '<![CDATA[ Beside the event hero. ]]>'],
+      ['processing instruction', '<?xml version=1.0?> Beside the event hero.'],
+      ['footnote-like prose', '[^1]: Beside the event hero.'],
+      ['bare dash and prose', '-\nBeside the event hero.'],
+      ['digit-first prose', '142 Beside the event hero.'],
+      ['unrecognized line', 'Novel block boundary: Beside the event hero.'],
     ];
     for (const [kind, block] of adjacentBlocks) {
       writeFileSync(join(archetype, 'design.md'), design.replace('\n\n#### Pattern-specific details\n',
@@ -169,7 +178,7 @@ test('event pattern and training layouts read one authored functional source as 
       assert.match(patternPrompt, /confirmation\/read-back view/i,
         `${kind}: the genuine Outcome role remains in the pattern`);
       assert.doesNotMatch(patternPrompt, /Beside the event hero/i,
-        `${kind}: non-bullet blocks are not pasted into the pattern`);
+        `${kind}: unclassified non-bullet content must not extend a classified role in the pattern`);
       for (const id of ['tr-07', 'tr-30']) {
         const familyPrompt = trainingBrief(scratch, id, rows.get(id)).sitePrompt;
         assert.match(familyPrompt, /confirmation\/read-back view/i,

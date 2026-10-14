@@ -71,8 +71,9 @@ card, an available-zones panel, photo and reviews to the left of its form card.
 
 These are instructions for an interactive site, not static-board measurements. The four named shared
 roles describe structure usable by an event family; the family journey supplies its control types,
-fields, outcomes and form ID. Unclassified Shared-structure bullets remain pattern guidance,
-not family instructions.
+fields, outcomes and form ID. Continuation lines of the four named family roles must be indented;
+unindented prose cannot extend family instructions. Unclassified Shared-structure bullets remain
+pattern guidance, not family instructions.
 
 #### Shared structure
 

@@ -249,10 +249,12 @@ function markdownBullets(text) {
     // CommonMark unordered list markers are -, * and +; classify before lazy prose.
     const item = line.match(/^\s*[-*+]\s+(\S(?:.*\S)?)\s*$/);
     if (item) {
-      current = { text: item[1].trim() };
+      const content = item[1].trim();
+      current = { text: content, classified: /^\*\*[A-Za-z]+:\*\*/.test(content) };
       bullets.push(current);
-    } else if (current && trimmed) {
-      // Plain prose, including an unindented lazy continuation, belongs to this bullet.
+    } else if (current && trimmed && (!current.classified || /^[ \t]+/.test(line))) {
+      // Only an indented continuation may extend a classified family-safe role.
+      // Unclassified pattern bullets can still use unindented lazy prose.
       current.text += ` ${trimmed}`;
     } else {
       current = null;
