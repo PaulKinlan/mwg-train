@@ -200,20 +200,17 @@ test('the pilot scope table quoted in the docs matches a fresh measurement', () 
 });
 
 test('the headline figure the docs quote is the one the record states', () => {
-  // The prose sites are not tables, so this asserts the current headline and band are quoted rather than
-  // that every number on the page is right - a stale headline is the failure this catches, which is the
-  // failure that actually happened. A review found this checked the band bounds in the corpus README only,
-  // while README.md quotes them too.
+  // The readiness and corpus docs still quote derived figures and must agree with this record.
+  // The root README instead links to the canonical JSON; the cheap README-source suite checks
+  // that link without making every README edit regenerate all 210 training projects.
   const record = JSON.parse(readFileSync(RECORD, 'utf8'));
   const tokens = record.training.total_training_tokens.toLocaleString('en-US');
   const band = record.training.tokens.band.map((n) => n.toLocaleString('en-US'));
-  for (const file of ['README.md', 'docs/train/READINESS-EPIC.md']) {
-    assert.ok(readFileSync(join(ROOT, file), 'utf8').includes(tokens), `${file} must quote the headline ${tokens}`);
-  }
+  const readiness = readFileSync(join(ROOT, 'docs/train/READINESS-EPIC.md'), 'utf8');
+  assert.ok(readiness.includes(tokens), `docs/train/READINESS-EPIC.md must quote the headline ${tokens}`);
+  const corpusReadme = readFileSync(join(ROOT, 'docs/train/corpus/README.md'), 'utf8');
   for (const end of band) {
-    for (const file of ['README.md', 'docs/train/corpus/README.md']) {
-      assert.ok(readFileSync(join(ROOT, file), 'utf8').includes(end), `${file} must quote the band bound ${end}`);
-    }
+    assert.ok(corpusReadme.includes(end), `docs/train/corpus/README.md must quote the band bound ${end}`);
   }
 });
 
