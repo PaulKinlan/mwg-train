@@ -215,21 +215,40 @@ function trainingLayoutProse(text) {
   return protectedText.restore(prose);
 }
 
+function markdownBullets(text) {
+  const bullets = [];
+  let current = null;
+  for (const line of (text ?? '').split('\n')) {
+    const item = line.match(/^\s*[-*]\s+(\S(?:.*\S)?)\s*$/);
+    if (item) {
+      current = { text: item[1].trim() };
+      bullets.push(current);
+    } else if (current && line.trim() && !/^\s*#{2,6} /.test(line)) {
+      // Markdown permits wrapped (including lazy, unindented) list continuations.
+      current.text += ` ${line.trim()}`;
+    } else {
+      current = null;
+    }
+  }
+  return bullets.map(({ text }) => text);
+}
+
 function eventFunctionalLayout(design, { family = false } = {}) {
   // One authored projection, with four explicitly classified family-safe roles.
   // Unclassified shared bullets remain in the pattern, not family prompts;
   // changing the classified role contract fails closed until reviewed.
   const projection = section(design, 'Grammar and layout')?.split('\n### Functional site projection\n')[1];
   const shared = projection?.split('\n#### Shared structure\n')[1]?.split('\n#### Pattern-specific details\n')[0];
+  const sharedBullets = markdownBullets(shared);
+  const role = /^\*\*([A-Za-z]+):\*\*\s*(.+)$/;
+  const entries = sharedBullets.map((text) => text.match(role)).filter(Boolean);
   const roles = ['Shell', 'Choices', 'Form', 'Outcome'];
-  const entries = [...(shared?.matchAll(/^- \*\*([A-Za-z]+):\*\* ([^\n]+)$/gm) ?? [])];
   if (entries.length !== roles.length || entries.some((entry, index) => entry[1] !== roles[index])) return null;
   const common = entries.map(([, , text]) => `- ${text}`).join('\n');
   if (family) return common;
-  const authoredShared = [...(shared?.matchAll(/^- ([^\n]+)$/gm) ?? [])]
-    .map(([, text]) => `- ${text.replace(/^\*\*[A-Za-z]+:\*\* /, '')}`).join('\n');
+  const authoredShared = sharedBullets.map((text) => `- ${text.replace(role, '$2')}`).join('\n');
   const pattern = projection?.split('\n#### Pattern-specific details\n')[1];
-  const details = [...(pattern?.matchAll(/^- ([^\n]+)$/gm) ?? [])].map(([, text]) => `- ${text}`);
+  const details = markdownBullets(pattern).map((text) => `- ${text}`);
   return details.length ? `${details.join('\n')}\n${authoredShared}` : null;
 }
 

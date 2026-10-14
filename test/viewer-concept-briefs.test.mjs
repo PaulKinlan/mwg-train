@@ -119,9 +119,10 @@ test('event pattern and training layouts read one authored functional source as 
       readFileSync(join(ROOT, 'docs/design/archetypes/event-registration', name)));
     writeFileSync(join(archetype, 'design.md'), design
       .replace('capped at `52rem`', 'capped at `54rem`')
-      .replace('A responsive selection region', 'An adaptive selection region')
+      .replace('A responsive selection region adapts to available space and includes',
+        'An adaptive selection region adapts to available space\n  and includes')
       .replace('#### Pattern-specific details',
-        '- A capacity note reads 142 / 200 seats filled beside the event hero.\n\n#### Pattern-specific details'));
+        '  - A capacity note reads 142 / 200 seats filled\n    beside the event hero.\n* A visitor roster appears only in the pattern\nwhen its plan specifies it.\n\n#### Pattern-specific details'));
     for (const id of ['tr-07', 'tr-30']) for (const name of ['plan.md', 'design.md']) {
       writeFileSync(join(scratch, 'docs/train/design', id, name),
         readFileSync(join(ROOT, 'docs/train/design', id, name)));
@@ -130,10 +131,12 @@ test('event pattern and training layouts read one authored functional source as 
     const projectedPattern = archetypeBrief(scratch, 'event-registration').sitePrompt;
     assert.match(projectedPattern, /Layout and components:[\s\S]*54rem/i,
       'changing the authored cap updates the pattern without a code change');
-    assert.match(projectedPattern, /An adaptive selection region/i,
-      'changes to the shared structural source update the pattern');
-    assert.match(projectedPattern, /142 \/ 200 seats filled/i,
-      'unclassified authored Shared-structure bullets remain in the archetype pattern');
+    assert.match(projectedPattern, /An adaptive selection region adapts to available space and includes/i,
+      'a wrapped classified role keeps its continuation in the pattern');
+    assert.match(projectedPattern, /142 \/ 200 seats filled beside the event hero/i,
+      'indented and wrapped Shared-structure bullets remain complete in the pattern');
+    assert.match(projectedPattern, /A visitor roster appears only in the pattern when its plan specifies it/i,
+      'asterisk-marked Shared bullets retain even lazy unindented continuations in the pattern');
     assert.doesNotMatch(projectedPattern, /52rem/);
     for (const id of ['tr-07', 'tr-30']) {
       const row = rows.get(id);
@@ -142,13 +145,13 @@ test('event pattern and training layouts read one authored functional source as 
       const layout = projectedFamily.split('UI layout:\n')[1]?.split('Family visual direction and tokens:')[0] ?? '';
       assert.doesNotMatch(layout, /\b(?:52|54)rem\b|\blive estimate\b/i,
         `${id}: the archetype demo cap and estimate do not become family requirements`);
-      assert.match(layout, /An adaptive selection region/i,
-        `${id}: shared structural source changes still update the family`);
-      assert.doesNotMatch(layout, /142 \/ 200 seats filled/i,
-        `${id}: a new unclassified demo bullet cannot enter the family prompt`);
+      assert.match(layout, /An adaptive selection region adapts to available space and includes/i,
+        `${id}: wrapped classified role remains complete in the family`);
+      assert.doesNotMatch(layout, /142 \/ 200 seats filled|visitor roster/i,
+        `${id}: new indented and asterisk unclassified bullets cannot enter the family prompt`);
     }
     writeFileSync(join(archetype, 'design.md'), design.replace('#### Pattern-specific details',
-      '- **Capacity:** A capacity note reads 142 / 200 seats filled.\n\n#### Pattern-specific details'));
+      '  * **Capacity:** A capacity note reads 142 / 200 seats filled.\n\n#### Pattern-specific details'));
     assert.match(archetypeBrief(scratch, 'event-registration').sitePrompt,
       /Layout and components: Not yet documented in this checkout\./,
       'a new classified shared role also fails the pattern contract closed');
