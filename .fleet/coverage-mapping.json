@@ -146,7 +146,10 @@
     "test/viewer-concepts-delivery.test.mjs"
   ],
   "docs/PIPELINE.md": [
-    "test/reachability.test.mjs"
+    "test/pipeline-docs.test.mjs"
+  ],
+  "docs/design.md": [
+    "test/design-language.test.mjs"
   ],
   "docs/eval/deepseek-cost-projection.md": [
     "test/deepseek-cost-projection.test.mjs"
@@ -157,9 +160,15 @@
   "docs/eval/PREREGISTRATION.md": [
     "test/briefs.test.mjs"
   ],
+  "docs/eval/pricing.sheets.md": [
+    "test/pricing.test.mjs"
+  ],
   "docs/train/READINESS-EPIC.md": [
     "test/reachability.test.mjs",
     "test/tokens-record.test.mjs"
+  ],
+  "docs/train/briefs/EXPANSION-PLAN.md": [
+    "test/expansion-matrix.test.mjs"
   ],
   "docs/eval/decode-config.deepseek-flash.json": [
     "test/decode-config.test.mjs"
