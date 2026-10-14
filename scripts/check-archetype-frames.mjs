@@ -13,6 +13,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import crypto from 'node:crypto';
 import jpeg from 'jpeg-js';
+import { CROP_LEDGER_PATH, cropSourceProblems } from './generate-training-boards.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const ARCHETYPES_DIR = path.join(ROOT, 'docs', 'design', 'archetypes');
@@ -189,6 +190,20 @@ function runCheck() {
   if (failed.length || exempt.length) {
     console.error('check:archetype-frames - FAILED: Concept and training-reference images must have a clean, byte-pinned frame scan.');
     process.exit(1);
+  }
+  const cropLedgerFile = path.join(ROOT, CROP_LEDGER_PATH);
+  if (fs.existsSync(cropLedgerFile)) {
+    let cropProblems;
+    try { cropProblems = cropSourceProblems(JSON.parse(fs.readFileSync(cropLedgerFile, 'utf8'))); }
+    catch (error) { cropProblems = [`unreadable crop ledger: ${error.message}`]; }
+    for (const problem of cropProblems) console.error(`check:archetype-frames - FAILED: ${problem}`);
+    if (cropProblems.length) process.exit(1);
+  } else {
+    const register = path.join(ROOT, 'docs/provenance/assets/training-reference-boards.md');
+    if (fs.existsSync(register) && fs.readFileSync(register, 'utf8').includes('Offline frame removal:')) {
+      console.error('check:archetype-frames - FAILED: register claims cropped originals but the crop ledger is missing');
+      process.exit(1);
+    }
   }
   if (pinClean) {
     fs.writeFileSync(CLEAN_PINS_PATH, JSON.stringify({ schemaVersion: 1, algorithm: SCAN_ALGORITHM, images: hashes }, null, 2) + '\n');

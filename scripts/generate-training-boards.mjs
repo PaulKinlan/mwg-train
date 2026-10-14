@@ -35,6 +35,7 @@
  * `--register` is offline: it verifies committed bytes, then writes the digest register.
  */
 
+import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve, sep } from 'node:path';
@@ -386,7 +387,7 @@ export function boardIsWidescreen(dimensions) {
 }
 
 /** A derived crop keeps the source pixels' shape; only raw image-model output must retain its 16:9 frame. */
-export function derivedCropMatches(dimensions, evidence, boardDigest, bytes) {
+export function derivedCropMatches(dimensions, evidence, boardDigest, bytes, originalSha256) {
   const box = evidence?.box;
   if (!dimensions || !Array.isArray(box) || box.length !== 4 || !box.every(Number.isInteger)) return false;
   const [left, top, right, bottom] = box;
@@ -395,8 +396,53 @@ export function derivedCropMatches(dimensions, evidence, boardDigest, bytes) {
     && dimensions.width === right - left && dimensions.height === bottom - top
     && evidence.derivedDimensions?.[0] === dimensions.width && evidence.derivedDimensions?.[1] === dimensions.height
     && dimensions.width >= 1200 && dimensions.height >= 600 && ratio >= 1.7 && ratio <= 2.2
-    && /^[a-f0-9]{64}$/.test(evidence.sourceSha256 ?? '')
+    && /^[a-f0-9]{64}$/.test(evidence.sourceSha256 ?? '') && originalSha256 === evidence.sourceSha256
     && boardDigest === evidence.derivedSha256 && bytes === evidence.derivedBytes;
+}
+
+/** Bind crop claims to the original Git blobs and crop boxes named by the offline derivation script.
+ * This cheap check does not re-encode pixels: Python --verify remains the full transformation proof.
+ */
+export function cropSourceProblems(ledger, { root = ROOT, originalDigests = new Map() } = {}) {
+  const problems = [];
+  let source;
+  try { source = readFileSync(join(root, 'scripts/crop-training-reference-frames.py'), 'utf8'); }
+  catch { return ['crop source script is missing']; }
+  const pinnedCommit = source.match(/^SOURCE_COMMIT = '([a-f0-9]{40})'$/m)?.[1];
+  const boxes = new Map([...source.matchAll(/'(tr-\d{2})': \((\d+), (\d+), (\d+), (\d+)\)/g)]
+    .map((match) => [match[1], match.slice(2).map(Number)]));
+  if (!pinnedCommit || !ledger || ledger.sourceCommit !== pinnedCommit || !ledger.boards
+      || typeof ledger.boards !== 'object' || Array.isArray(ledger.boards)) {
+    return ['crop ledger has no matching pinned source commit or board map'];
+  }
+  const known = new Set(TRAINING_TARGET_FAMILIES.map((family) => family.family_id));
+  for (const family of boxes.keys()) {
+    if (known.has(family) && !Object.hasOwn(ledger.boards, family)) problems.push(`${family}: pinned crop is missing from the ledger`);
+  }
+  for (const [family, crop] of Object.entries(ledger.boards)) {
+    if (!known.has(family) || !boxes.has(family) || JSON.stringify(crop?.box) !== JSON.stringify(boxes.get(family))) {
+      problems.push(`${family}: crop box differs from the pinned derivation script`);
+      continue;
+    }
+    try {
+      // Hex-only commit and an allowlisted family, passed as argv (never to a shell). A shallow clone without
+      // the source object fails closed rather than treating a 64-hex ledger value as proof of the original.
+      const original = execFileSync('git', ['cat-file', 'blob', '--', `${pinnedCommit}:${boardPath(family)}`],
+        { cwd: root, timeout: 5000, maxBuffer: 8 * 1024 * 1024, stdio: ['ignore', 'pipe', 'ignore'],
+          env: { ...process.env, GIT_TERMINAL_PROMPT: '0' } });
+      const digest = sha256(original);
+      const dimensions = readImageDimensions(original);
+      originalDigests.set(family, digest);
+      if (digest !== crop.sourceSha256 || dimensions?.width !== BOARD_WIDTH
+          || dimensions?.height !== BOARD_HEIGHT) {
+        problems.push(`${family}: source SHA-256 or dimensions differ from the pinned Git original`);
+      }
+    } catch {
+      problems.push(`${family}: pinned Git original is unavailable; fetch the source commit before verifying crops`);
+      return problems; // a shallow clone must fail promptly, not retry 30 missing blobs
+    }
+  }
+  return problems;
 }
 
 /**
@@ -492,6 +538,7 @@ export function inspectCommitted({ root = ROOT, only = null } = {}) {
   const entries = [];
   const problems = [];
   let cropLedger = null;
+  const originalDigests = new Map();
   if (existsSync(join(root, CROP_LEDGER_PATH))) {
     try {
       cropLedger = JSON.parse(readFileSync(join(root, CROP_LEDGER_PATH), 'utf8'));
@@ -502,6 +549,7 @@ export function inspectCommitted({ root = ROOT, only = null } = {}) {
       }
       const known = new Set(TRAINING_TARGET_FAMILIES.map((family) => family.family_id));
       for (const id of Object.keys(cropLedger.boards)) if (!known.has(id)) problems.push(`crop ledger declares unknown family ${id}`);
+      problems.push(...cropSourceProblems(cropLedger, { root, originalDigests }));
     } catch (error) { problems.push(`invalid ${CROP_LEDGER_PATH}: ${error.message}`); cropLedger = null; }
   }
   for (const family of TRAINING_TARGET_FAMILIES) {
@@ -520,8 +568,8 @@ export function inspectCommitted({ root = ROOT, only = null } = {}) {
     }
     const inspected = inspectBoard(bytes);
     const crop = cropLedger?.boards?.[family.family_id] ?? null;
-    if (crop ? !derivedCropMatches(inspected.dimensions, crop, inspected.sha256, inspected.bytes)
-      : !boardIsWidescreen(inspected.dimensions)) {
+    if (crop ? !derivedCropMatches(inspected.dimensions, crop, inspected.sha256, inspected.bytes,
+      originalDigests.get(family.family_id)) : !boardIsWidescreen(inspected.dimensions)) {
       problems.push(`${family.family_id}: ${board} has unverified dimensions, bytes or crop provenance`);
     }
     entries.push({
