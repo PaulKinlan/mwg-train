@@ -79,13 +79,18 @@ test('gallery serves the generated archetype reference boards and the authored e
   assert.match(html, /37 concept boards have committed bytes/);
   assert.match(html, /do not scan depicted codes/i, 'QR-bearing illustrations must retain the safety instruction');
   assert.match(html, /A model ID may be reported rather than attested/, 'an ID alone is not model attestation');
-  assert.match(html, /Concept images are excluded from training unless separately approved/);
-  assert.match(html, /exclusion is not a claim that their rights forbid reuse/, 'policy exclusion must not invent a rights restriction');
+  assert.match(html, /No reuse license or clearance is granted here/, 'a policy exclusion must not read as reuse permission');
+  assert.match(html, /provider terms prohibit using some of these images to develop machine-learning models/);
+  assert.match(html, /for other boards, training and output-use rights were not supplied/, 'different assets have different rights records');
+  assert.match(html, /Concept images remain excluded from training; separate approval must satisfy the applicable terms and rights/);
+  assert.doesNotMatch(html, /exclusion is not a claim that their rights forbid reuse|not a claim about their legal reuse rights/i);
   assert.doesNotMatch(html, /image rights do not permit training reuse/i);
   const qrPatterns = gallery.patterns.filter(({ steps }) => steps.some(({ available, imagePrompt }) => available && /\bQR\b/i.test(imagePrompt ?? '')));
   assert.deepEqual(qrPatterns.map(({ id }) => id), ['booking', 'event-registration']);
   assert.equal((html.match(/do not scan depicted codes/g) ?? []).length, qrPatterns.length + 1,
     'QR-specific warnings appear beside only the two source-backed QR patterns, plus the page explainer');
+  assert.equal((html.match(/no reuse clearance is granted here/g) ?? []).length, qrPatterns.length,
+    'both QR-specific notes must independently withhold reuse clearance');
   assert.match(html, /id="pattern-course-enrolment"/);
   assert.match(html, /No multi-step reference boards are authored for this pattern yet/);
   assert.match(html, /Image Generation Prompt · inherited single training reference, NOT a step board/);
