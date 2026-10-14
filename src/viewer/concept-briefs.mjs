@@ -105,14 +105,110 @@ const TRAINING_WEB_SHOP_COMPONENTS = [
   '- A receipt or confirmation view for the outcome this family actually implements.',
 ].join('\n');
 
+// The shared archetype designs compare multiple reference boards. Their common functional
+// structure belongs in a family prompt; their sibling-specific board observations do not.
+// These projections are derived from each archetype's Grammar and layout / Component hierarchy;
+// the family plan below remains authoritative for fields, routes, IDs and state changes.
+const TRAINING_LAYOUTS = {
+  dashboard: [
+    '- A centred page frame with brand header, navigation, summary region, subject region, inline log form and footer.',
+    '- The summary region presents measured state as metrics or filtered records from this family’s journey; figures keep their units and text status.',
+    '- The subject region shows one identified subject and its detail; the nearby labelled log form changes that state without a wizard.',
+    '- A status view narrows the summary to a filter or risk band, with an explicit empty result and refusal feedback.',
+  ].join('\n'),
+  'support-helpdesk': [
+    '- A brand header and navigation introduce the desk; responsive columns give tickets, the labelled submission form and reference tracking their own readable regions.',
+    '- Ticket cards show a recoverable reference and text status. The form and its receipt/status view are separate screens as the family journey declares.',
+    '- Staff reply and escalation controls appear only if this family’s plan includes them; the empty queue names what matched nothing.',
+  ].join('\n'),
+  'survey-form': [
+    '- A brand header and navigation frame a focused questionnaire card; a supporting hero may use two columns before the single readable form.',
+    '- Use the family plan’s labelled questions and controls, not a count or field list from an illustrative board.',
+    '- Validation names the affected question and is announced. The family journey decides whether questions step, how drafts persist, and which receipt or outcome view follows.',
+    '- A separate empty result view names the filter or response set with no matches.',
+  ].join('\n'),
+  'event-registration': [
+    '- A fluid, narrow page shell keeps the event details and labelled registration form readable as the viewport changes.',
+    '- Tickets are a two-column grid that collapses to one column on narrow screens; only include options the family plan declares.',
+    '- The form #registration-form presents family-defined participation fields, announced validation and a clear refusal state.',
+    '- A confirmation/read-back view shows the stored outcome; include a pass only when the family journey defines one.',
+  ].join('\n'),
+  'docs-site': [
+    '- A brand header and navigation frame a persistent table-of-contents sidebar beside a dominant reading column.',
+    '- Hierarchical headings and an aria-current page marker keep the article structure navigable; code or transcript blocks remain selectable text when declared.',
+    '- The labelled feedback or annotation form belongs on its family-defined route, with a search empty state naming the failed query.',
+  ].join('\n'),
+  'directory-listing': [
+    '- A brand header and navigation lead to a grid or list of entity cards; the filter region sits above or beside the index.',
+    '- An entity profile expands into a split view or dominant reading column, with the family’s own details and photography.',
+    '- The labelled intake form follows this family’s journey, and an empty state explains which search or filter found no results.',
+  ].join('\n'),
+  'expense-tracker': [
+    '- A page frame with brand header, navigation, summary region, aligned ledger grid, labelled intake form and footer.',
+    '- The aggregate total or budget is visible above the ledger. Right-aligned amounts and text status make records scannable.',
+    '- The intake form is open and inline beside or below the ledger as width allows; the family journey defines its fields.',
+    '- A receipt isolates one saved transaction, and the empty state names the absence of entries.',
+  ].join('\n'),
+  'library-catalogue': [
+    '- A responsive frame holds brand header, navigation, catalogue grid, the working form and footer.',
+    '- Labelled search and filter controls come from the family plan; cards expose the subject name, attributes and detail action without inventing a filter field.',
+    '- A separate detail view gives a subject room beyond the card. The family journey determines the reservation form, receipt and any staff view.',
+    '- The empty state explicitly names a search that matched no results.',
+  ].join('\n'),
+};
+
+const TRAINING_COMPONENTS = {
+  dashboard: [
+    '1. Brand header and section navigation with a visible current destination.',
+    '2. Summary region of aligned metrics or filtered rows for this family’s measured state.',
+    '3. Subject detail and a text-labelled status marker; colour never carries status alone.',
+    '4. A labelled inline log form with announced validation and refusal feedback.',
+    '5. Footer plus empty and selected-state panels.',
+  ].join('\n'),
+  'support-helpdesk': [
+    '1. Brand header, navigation and desk introduction.',
+    '2. A labelled ticket submission form with announced errors.',
+    '3. Ticket cards with recoverable reference, owner and text status.',
+    '4. A reference/status view and staff reply controls only as the family plan declares.',
+    '5. Footer, empty queue and refusal feedback.',
+  ].join('\n'),
+  'docs-site': [
+    '1. Brand header and navigation with a visible current destination.',
+    '2. Search and filter controls that retain URL-driven state.',
+    '3. A table-of-contents sidebar and article reading column with hierarchical headings.',
+    '4. Selectable transcript or code content only where the family plan provides it.',
+    '5. A labelled feedback or annotation form and an explicit empty search state.',
+    '6. Footer with contact details.',
+  ].join('\n'),
+  'survey-form': [
+    '1. Brand header, navigation and questionnaire introduction.',
+    '2. A questionnaire card with labelled questions and family-defined controls.',
+    '3. Per-question announced validation and refusal feedback.',
+    '4. The receipt and outcome views declared by this family’s journey.',
+    '5. Footer and an empty result state.',
+  ].join('\n'),
+};
+
+function trainingLayoutProse(text) {
+  // Strip only training-prompt commentary about reference bytes and boards. The
+  // archetype gallery still renders the original source text via siteProse().
+  const functional = text.replace(/The reference board puts them in a\s+right-hand sidebar/gi,
+    'On wide screens a right-hand sidebar can hold them');
+  return functional.split(/\n{2,}/).flatMap((paragraph) => paragraph.split(/(?=^[-*]\s)/m))
+    .filter((unit) => !/\b(?:rasters?|the corpus|both boards|both references|training boards|reference boards?|browser viewports?|(?:tr|fam)-\d{2})\b/i.test(unit) &&
+      !/^\s*(?:\*\*A divergence|The two training boards|The reference establishes the grammar|[-*]\s*The five boards)/i.test(unit))
+    .join('\n')
+    .replace(/(?<![a-z0-9])\.([a-z][a-z0-9-]*)\b/gi, (_, name) => name.replaceAll('-', ' '))
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
 function trainingSiteLayout(design, archetype, journey) {
   const layout = section(design, 'Grammar and layout');
   if (!layout) return null;
   // The shared archetype source also records raster defects and source-vs-board divergences;
   // those observations are not requirements for any family's functional website.
-  const structural = layout.split(/\n{2,}/)
-    .filter((paragraph) => !/^\*\*(?:A divergence recorded|Two observed exceptions|Two observations about this raster)/i.test(paragraph.trim()))
-    .join('\n\n');
+  const structural = trainingLayoutProse(TRAINING_LAYOUTS[archetype] ?? layout);
   if (archetype === 'booking') return structural.replace(/\bthe student\b/gi, 'the user');
   if (archetype === 'web-shop') return structural.replace(/configuration selects \(quantity, variant, grind\)/i,
     'the configuration controls this family’s plan declares');
@@ -130,10 +226,11 @@ function siteComponentHierarchy(design, { trainingArchetype = null } = {}) {
   if (trainingArchetype === 'booking') return TRAINING_BOOKING_COMPONENTS;
   if (trainingArchetype === 'event-registration') return TRAINING_EVENT_COMPONENTS;
   if (trainingArchetype === 'web-shop') return TRAINING_WEB_SHOP_COMPONENTS;
+  if (trainingArchetype && TRAINING_COMPONENTS[trainingArchetype]) return TRAINING_COMPONENTS[trainingArchetype];
   // The archetype design also documents its static demo. The site brief needs its functional
   // components, not the demo file inventory or a state switcher that must never ship as product UI.
   let skipDemoBullet = false;
-  return hierarchy.split(/\n{2,}/)
+  const cleaned = hierarchy.split(/\n{2,}/)
     .filter((paragraph) => !/^Read from\s+`?demo\//i.test(paragraph.trim()))
     .join('\n\n')
     .split('\n')
@@ -147,6 +244,7 @@ function siteComponentHierarchy(design, { trainingArchetype = null } = {}) {
     .replace(/`?demo\/([a-z0-9-]+)\.html`?/gi, (_, page) => `the ${page.replaceAll('-', ' ')} page`)
     .replace(/\n{3,}/g, '\n\n')
     .trim();
+  return trainingArchetype ? trainingLayoutProse(cleaned) : cleaned;
 }
 
 /** The authored archetype plan/design are the source; this is a readable prompt assembled from them, not model output. */

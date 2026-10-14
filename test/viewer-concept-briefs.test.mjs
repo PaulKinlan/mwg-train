@@ -135,10 +135,52 @@ test('training site prompts keep functional components without inheriting demo-o
     const familyFormId = journey.match(/\bform#([a-z][a-z0-9-]*)\b/)?.[1];
     assert.equal(familyFormId, id === 'tr-07' ? 'observatory-registration-form' : 'registration-form');
     assert.ok(layout.includes(`#${familyFormId}`), `${id} layout must use the form ID declared by its own journey`);
-    assert.match(layout, /Tickets are a two-column grid[\s\S]*Radii are spelled literally/i,
-      `${id} keeps the spatial layout rather than deleting the entire authored section`);
+    assert.match(layout, /fluid, narrow page shell[\s\S]*labelled registration form/i,
+      `${id} keeps the responsive shell and registration structure`);
+    assert.match(layout, /Tickets are a two-column grid[\s\S]*announced validation/i,
+      `${id} keeps a responsive option layout and accessible form errors`);
     if (id === 'tr-07') assert.doesNotMatch(layout, /#registration-form\b/,
       'the observatory layout must not contradict its journey with the demo form ID');
+  }
+});
+
+test('every training family receives functional layout and components without shared-board prose', () => {
+  const targets = listConcepts(ROOT).trainingTargets;
+  assert.equal(targets.length, 39);
+  for (const target of targets) {
+    const prompt = target.brief.sitePrompt;
+    const layout = prompt.match(/UI layout:\n([\s\S]*?)(?=\n\nFamily visual direction and tokens:)/)?.[1] ?? '';
+    const components = prompt.match(/Expected components:\n([\s\S]*?)(?=\n\nStep-by-step interactions:)/)?.[1] ?? '';
+    const projected = `${layout}\n${components}`;
+    assert.ok(layout.length > 100 && /\b(?:header|navigation|grid|column|form|sidebar|region)\b/i.test(layout),
+      `${target.id} keeps a real spatial hierarchy, not a heading-only sketch`);
+    assert.ok((components.match(/(?:^|\n)\s*(?:\d+\.|[-*])\s/g) ?? []).length >= 3,
+      `${target.id} keeps at least three functional component details`);
+    assert.match(projected, /\b(?:labelled|label|aria|announced|status|keyboard|focus|validation)\b/i,
+      `${target.id} keeps an accessibility or state instruction`);
+    assert.doesNotMatch(projected, /\b(?:tr|fam)-\d{2}\b/i,
+      `${target.id} cannot cite siblings or static family board IDs in build layout`);
+    assert.doesNotMatch(projected, /\b(?:rasters?|the corpus|both families|both references|both boards|training boards?|reference boards?|demo stylesheet|browser viewports?)\b/i,
+      `${target.id} cannot treat raster/source comparisons as site requirements`);
+    assert.doesNotMatch(projected, /(?:^|[\s(`])\.[a-z][a-z0-9-]*\b/i,
+      `${target.id} cannot inherit archetype demo CSS class inventories`);
+  }
+  for (const [id, structure] of [
+    ['tr-04', /summary region[\s\S]*subject region[\s\S]*inline log form/i],
+    ['tr-08', /responsive columns[\s\S]*receipt\/status view/i],
+    ['tr-10', /questionnaire card[\s\S]*announced/i],
+    ['tr-13', /table-of-contents sidebar[\s\S]*hierarchical headings/i],
+    ['tr-16', /catalogue grid[\s\S]*separate detail view/i],
+    ['tr-38', /collection grid[\s\S]*moderation notice/i],
+  ]) {
+    const prompt = targets.find((target) => target.id === id).brief.sitePrompt;
+    const layout = prompt.match(/UI layout:\n([\s\S]*?)(?=\n\nFamily visual direction and tokens:)/)?.[1] ?? '';
+    assert.match(layout, structure, `${id} retains its archetype's usable spatial or multi-screen structure`);
+  }
+  for (const [id, formId] of [['tr-07', 'observatory-registration-form'], ['tr-30', 'registration-form']]) {
+    const prompt = targets.find((target) => target.id === id).brief.sitePrompt;
+    const layout = prompt.match(/UI layout:\n([\s\S]*?)(?=\n\nFamily visual direction and tokens:)/)?.[1] ?? '';
+    assert.ok(layout.includes(`#${formId}`), `${id} keeps its family plan form ID in layout`);
   }
 });
 
