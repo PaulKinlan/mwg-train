@@ -5,7 +5,7 @@ import { resolve } from 'node:path';
 import test from 'node:test';
 
 const ROOT = resolve(import.meta.dirname, '..');
-const EXPECTED_EDGES_SHA256 = '5af05ec7ac53da985dc282beec115422ae834178d115563418760fe8d046e290';
+const EXPECTED_EDGES_SHA256 = 'cd4ca894195eeed5971128587f816a2dff313a08992433685ad678a7901ee228';
 
 test('the fast-gate coverage contract cannot silently lose any declared suite edge', () => {
   const mapping = JSON.parse(readFileSync(resolve(ROOT, '.fleet/coverage-mapping.json'), 'utf8'));
@@ -17,6 +17,15 @@ test('the fast-gate coverage contract cannot silently lose any declared suite ed
   // this digest in a reviewed test diff; formatting and key order do not change the contract.
   assert.equal(actual, EXPECTED_EDGES_SHA256,
     `coverage edges changed (${edges.length} now); review the mapping diff before updating this digest`);
+});
+
+test('the puzzle generator and its provenance both route to the no-network attestation regression', () => {
+  const mapping = JSON.parse(readFileSync(resolve(ROOT, '.fleet/coverage-mapping.json'), 'utf8'));
+  for (const file of ['scripts/generate-archetype-light-dark.mjs',
+    'docs/design/archetypes/browser-puzzle-game/PROVENANCE.md']) {
+    assert.ok(mapping[file]?.includes('test/browser-puzzle-board-provenance.test.mjs'),
+      `${file} must run the scratch-import and unverified-provenance assertions`);
+  }
 });
 
 test('docs that quote token measurements route to their assertion suite', () => {

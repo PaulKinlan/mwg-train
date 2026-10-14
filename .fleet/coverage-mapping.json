@@ -40,7 +40,11 @@
     "test/browser-puzzle-game-prompts.test.mjs"
   ],
   "docs/design/archetypes/browser-puzzle-game/PROVENANCE.md": [
-    "test/browser-puzzle-game-prompts.test.mjs"
+    "test/browser-puzzle-game-prompts.test.mjs",
+    "test/browser-puzzle-board-provenance.test.mjs"
+  ],
+  "scripts/generate-archetype-light-dark.mjs": [
+    "test/browser-puzzle-board-provenance.test.mjs"
   ],
   "docs/design/archetypes/saas-workspace-board/README.md": [
     "test/saas-workspace-board-prompts.test.mjs"
