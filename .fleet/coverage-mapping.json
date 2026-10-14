@@ -2,6 +2,9 @@
   ".fleet/frame-scan-pins.json": [
     "test/check-archetype-frames.test.mjs"
   ],
+  ".fleet/coverage-mapping.json": [
+    "test/viewer-concepts-budget-routing.test.mjs"
+  ],
   "docs/design/archetypes/scroll-storytelling-launch/README.md": [
     "test/scroll-storytelling-prompts.test.mjs"
   ],
