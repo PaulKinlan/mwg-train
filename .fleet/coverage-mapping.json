@@ -11,7 +11,7 @@
   "docs/design/archetypes/scroll-storytelling-launch/plan.md": [
     "test/scroll-storytelling-prompts.test.mjs"
   ],
-  "docs/provenance/assets/design-reference-scroll-storytelling-launch.md": [
+  "docs/design/archetypes/scroll-storytelling-launch/PROVENANCE.md": [
     "test/scroll-storytelling-prompts.test.mjs"
   ],
   "docs/design/archetypes/*/README.md": [

@@ -3,7 +3,7 @@ archetype: scroll-storytelling-launch
 type: scroll-storytelling-launch
 axis: docs/train/briefs/TYPE-AXIS.md
 boards: docs/design/archetypes/scroll-storytelling-launch/
-register: docs/provenance/assets/design-reference-scroll-storytelling-launch.md
+register: docs/design/archetypes/scroll-storytelling-launch/PROVENANCE.md
 ---
 
 # `scroll-storytelling-launch` — functional contract
@@ -82,5 +82,5 @@ Keep all chapter content in semantic HTML. The Acoustics chapter uses CSS scroll
 
 - Type axis and planned status: [`TYPE-AXIS.md`](../../../train/briefs/TYPE-AXIS.md).
 - Aesthetic decisions: [`design.md`](design.md). Exact future image prompts: [`README.md`](README.md).
-- [Reference asset register](../../../provenance/assets/design-reference-scroll-storytelling-launch.md): deliberately records missing SHA and model evidence until four authorised outputs are actually verified. `excluded_from_training: true`; `approved_for_training: false`.
+- [Local pending provenance](PROVENANCE.md): deliberately records missing SHA and model evidence until four authorised outputs are actually verified. `excluded_from_training: true`; `approved_for_training: false`.
 - Work: `mwg-train-07ka.1`. No existing image grants commercial rights, model identity or performance claims. No new evaluation target is authorised.

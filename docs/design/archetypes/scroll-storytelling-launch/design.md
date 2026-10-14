@@ -2,7 +2,7 @@
 archetype: scroll-storytelling-launch
 type: scroll-storytelling-launch
 boards: docs/design/archetypes/scroll-storytelling-launch/
-register: docs/provenance/assets/design-reference-scroll-storytelling-launch.md
+register: docs/design/archetypes/scroll-storytelling-launch/PROVENANCE.md
 ---
 
 # `scroll-storytelling-launch` — authored visual system
@@ -110,6 +110,6 @@ The four states form one cause-and-effect narrative: the listener first encounte
 ## Provenance
 
 - Functional assertions: [`plan.md`](plan.md). Exact pending image instructions: [`README.md`](README.md).
-- [Pending generation register](../../../provenance/assets/design-reference-scroll-storytelling-launch.md) labels all four missing outputs and their absent digests; images, rights and model attestation cannot be inferred from prompts.
+- [Local pending provenance](PROVENANCE.md) labels all four missing outputs and their absent digests; images, rights and model attestation cannot be inferred from prompts.
 - Modern Web Guidance was consulted for native scroll timelines and motion, CSS anchor support, semantic dialog and layout. Anchors and scroll-driven effects are not Baseline widely available here; the default static steps preserve the content, with explicit support gates and reduced-motion override. No feature is claimed implemented by this planning document.
 - The sealed A6 targets and A1 corpus are unaffected. `excluded_from_training: true`; `approved_for_training: false` for any future illustrative board absent separate clearance.

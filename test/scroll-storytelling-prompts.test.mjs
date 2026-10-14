@@ -9,7 +9,7 @@ import { DESIGN_SECTIONS, PLAN_SECTIONS } from '../src/design/contract.mjs';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const slug = 'scroll-storytelling-launch';
 const archetype = join(ROOT, 'docs/design/archetypes', slug);
-const register = readFileSync(join(ROOT, 'docs/provenance/assets/design-reference-scroll-storytelling-launch.md'), 'utf8');
+const register = readFileSync(join(archetype, 'PROVENANCE.md'), 'utf8');
 const promptText = readFileSync(join(archetype, 'README.md'), 'utf8');
 const names = [
   'step1-hero-overview.jpg',
