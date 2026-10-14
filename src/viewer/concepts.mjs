@@ -1,4 +1,4 @@
-import { accessSync, closeSync, constants, existsSync, fstatSync, lstatSync, openSync, readFileSync, readSync, readdirSync, realpathSync } from 'node:fs';
+import { accessSync, closeSync, constants, fstatSync, lstatSync, openSync, readFileSync, readSync, realpathSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 
 import { escapeHtml, page } from './pages.mjs';
@@ -386,20 +386,22 @@ function boardStateRegister(repoRoot) {
   } catch { return {}; }
 }
 
-export function listConcepts(repoRoot) {
-  const referenceDir = join(repoRoot, 'docs/design/archetypes');
-  const names = existsSync(referenceDir) && !lstatSync(referenceDir).isSymbolicLink() && lstatSync(referenceDir).isDirectory()
-    ? readdirSync(referenceDir).filter((name) => name.endsWith('.jpg')).map((name) => name.slice(0, -4))
-      .filter((name) => !!conceptImageFile(repoRoot, name))
-    : [];
-  const briefRows = trainingBriefs(repoRoot);
-  const states = boardStateRegister(repoRoot);
-  const journeys = Object.entries(JOURNEYS).map(([id, steps]) => ({
+export function listConcepts(repoRoot, { view = 'all', id = null } = {}) {
+  // The index needs declarations and availability, not 66 prompts or JPEG dimensions.
+  // Each detail request reads only the selected brief and board metadata; the default
+  // full view remains available to tools inspecting the complete authored register.
+  const indexOnly = view === 'index';
+  const patternOnly = view === 'pattern';
+  const familyOnly = view === 'family';
+  const names = [...EVAL_TARGETS].filter((name) => !!conceptImageFile(repoRoot, name));
+  const briefRows = indexOnly ? new Map() : trainingBriefs(repoRoot);
+  const states = indexOnly || familyOnly ? {} : boardStateRegister(repoRoot);
+  const journeys = (familyOnly ? [] : Object.entries(JOURNEYS)).map(([id, steps]) => ({
     id, title: id.replaceAll('-', ' '),
     steps: steps.map((step) => ({ ...step, available: !!journeyStepFile(repoRoot, id, step.id) })),
   }));
-  // Booking remains first, including when its first image is absent. Never claim a reference pairing
-  // for a family until an allowlisted image is actually available in the checkout.
+  // Booking remains first, including when its first image is absent. Only the sealed A6 ids
+  // can gain a reference pairing; an extra JPEG in the directory does not declare a new arm.
   const available = journeys.filter((journey) => EVAL_TARGETS.has(journey.id) && journey.steps[0].available).map((journey) => journey.id);
   // The evaluation section lists only the SEALED set: a type authored for the training side (bead mwg-train-efg)
   // has journeys and reference boards and must not be presented as an authored evaluation target, because its pair
@@ -411,36 +413,38 @@ export function listConcepts(repoRoot) {
   // fixed JOURNEYS allowlist; discovering a new file can never publish it as a concept by itself.
   const patternIds = [...new Set([...EVAL_TARGETS, ...TRAINING_ARCHETYPE_IDS, ...BOARDS.map((board) => board.archetype)])].sort();
   return {
-    patterns: patternIds.map((id) => {
-      const brief = archetypeBrief(repoRoot, id, inheritedTrainingPrompt(repoRoot, briefRows, id));
-      const steps = journeys.find((journey) => journey.id === id)?.steps ?? [];
-      return { id, brief, steps: steps.map((step) => ({ ...step,
-        imagePrompt: stepImagePrompt(brief?.readme, `${step.id}.jpg`),
-        state: states[id]?.[`${step.id}.jpg`] ?? null,
+    patterns: patternIds.filter((patternId) => !familyOnly && (!patternOnly || patternId === id)).map((patternId) => {
+      const brief = indexOnly ? null : archetypeBrief(repoRoot, patternId, inheritedTrainingPrompt(repoRoot, briefRows, patternId));
+      const steps = journeys.find((journey) => journey.id === patternId)?.steps ?? [];
+      return { id: patternId, brief, steps: steps.map((step) => ({ ...step,
+        imagePrompt: indexOnly ? null : stepImagePrompt(brief?.readme, `${step.id}.jpg`),
+        state: states[patternId]?.[`${step.id}.jpg`] ?? null,
       })) };
     }),
-    boards: BOARDS.filter((board) => !!journeyStepFile(repoRoot, board.archetype, board.id)),
-    archetypes: archetypes.map((id) => {
-      const first = journeys.find((journey) => journey.id === id)?.steps[0];
-      const stepReference = !names.includes(id) && first?.available;
-      return { id, reference: names.includes(id) || !!stepReference, target: !!conceptTargetFile(repoRoot, id),
-        ...(stepReference ? { referencePath: `/concepts/images/${id}/${first.id}.jpg` } : {}) };
+    boards: familyOnly ? [] : BOARDS.filter((board) => !!journeyStepFile(repoRoot, board.archetype, board.id)),
+    archetypes: archetypes.filter((archetypeId) => !familyOnly && (!patternOnly || archetypeId === id)).map((archetypeId) => {
+      const first = journeys.find((journey) => journey.id === archetypeId)?.steps[0];
+      const stepReference = !names.includes(archetypeId) && first?.available;
+      const targetFile = conceptTargetFile(repoRoot, archetypeId);
+      return { id: archetypeId, reference: names.includes(archetypeId) || !!stepReference,
+        target: !!targetFile,
+        ...(patternOnly && targetFile ? { targetSize: pngSize(targetFile) } : {}),
+        ...(stepReference ? { referencePath: `/concepts/images/${archetypeId}/${first.id}.jpg` } : {}) };
     }),
-    // The training arm is listed whether or not its render is on disk: a declared family with no target yet is an
-    // honest gap to report, not a family to hide. Only the A1 manifest declares these; nothing else adds to them.
-    // The harness target size is measured from the file so the page reserves the box the image will occupy; the
-    // designed board is measured from a bounded head read, and reported without dimensions when it has to be.
-    trainingTargets: trainingFamilies(repoRoot).map((family) => {
-      const target = trainingTargetFile(repoRoot, family.id);
-      const board = trainingBoardFile(repoRoot, family.id);
-      const boardSize = board ? readJpegDimensions(boundedHead(board, 65536)) : null;
-      return { ...family, brief: trainingBrief(repoRoot, family.id, briefRows.get(family.id)),
+    // Only A1 manifest families are declared. The index and pattern pages need metadata,
+    // not every family's prompt or JPEG headers; the selected detail gets the full record.
+    trainingTargets: trainingFamilies(repoRoot).filter((family) => !familyOnly || family.id === id).map((family) => {
+      const detailed = view === 'all' || familyOnly && family.id === id;
+      const target = detailed ? trainingTargetFile(repoRoot, family.id) : null;
+      const board = patternOnly ? null : trainingBoardFile(repoRoot, family.id);
+      const boardSize = detailed && board ? readJpegDimensions(boundedHead(board, 65536)) : null;
+      return { ...family, brief: detailed ? trainingBrief(repoRoot, family.id, briefRows.get(family.id)) : null,
         available: !!target, board: !!board, ...(target ? pngSize(target) : null),
         ...(boardSize ? { boardWidth: boardSize.width, boardHeight: boardSize.height } : {}) };
     }),
     trainingBoardRegister: trainingBoardRegister(repoRoot),
     journeys,
-    bookingSteps: journeys[0].steps,
+    bookingSteps: journeys[0]?.steps ?? [],
   };
 }
 
@@ -480,7 +484,7 @@ const promptDetails = (title, prompt, source) => `<details class="concept-prompt
 const patternCard = ({ id, brief, steps }, families = []) => {
   const subject = patternSubject(id);
   const familyLinks = families.length
-    ? ` · Training families: ${families.map((f) => `<a href="#target-${escapeHtml(f.id)}"><code>${escapeHtml(f.id)}</code>${f.title ? ` (${escapeHtml(f.title)})` : ''}</a>`).join(', ')}`
+    ? ` · Training families: ${families.map((f) => `<a href="/concepts/family/${escapeHtml(f.id)}"><code>${escapeHtml(f.id)}</code>${f.title ? ` (${escapeHtml(f.title)})` : ''}</a>`).join(', ')}`
     : '';
   return `<article id="pattern-${escapeHtml(id)}" class="concept-comparison" aria-labelledby="pattern-heading-${escapeHtml(id)}">
   <h3 id="pattern-heading-${escapeHtml(id)}">${escapeHtml(id.replaceAll('-', ' '))}${subject ? ` · <span class="muted">${escapeHtml(subject)}</span>` : ''}</h3>
@@ -510,12 +514,12 @@ const patternCard = ({ id, brief, steps }, families = []) => {
 </article>`;
 };
 
-const trainingFamilyCard = ({ id, archetype, title, origin, available, width, height, board, boardWidth, boardHeight, brief }, register) => `<article class="concept-comparison" aria-labelledby="target-${escapeHtml(id)}">
+const trainingFamilyCard = ({ id, archetype, title, origin, available, width, height, board, boardWidth, boardHeight, brief }, register, { featured = false } = {}) => `<article class="concept-comparison" aria-labelledby="target-${escapeHtml(id)}">
   <h3 id="target-${escapeHtml(id)}">${escapeHtml(id)}${archetype ? ` · ${escapeHtml(archetype)}` : ''}</h3>
   ${title ? `<p class="muted">${escapeHtml(title)}</p>` : ''}
   <div class="concept-main-board">
     <figure><div class="concept-image-frame">${board
-      ? `<a href="/concepts/references/${escapeHtml(id)}.jpg" aria-label="Open the ${escapeHtml(id)} designed reference board at full size"><img src="/concepts/references/${escapeHtml(id)}.jpg" alt="Designed reference board for training family ${escapeHtml(id)}${archetype ? ` (${escapeHtml(archetype)})` : ''}"${boardWidth && boardHeight ? ` width="${boardWidth}" height="${boardHeight}"` : ''} loading="lazy"></a>`
+      ? `<a href="/concepts/references/${escapeHtml(id)}.jpg" aria-label="Open the ${escapeHtml(id)} designed reference board at full size"><img src="/concepts/references/${escapeHtml(id)}.jpg" alt="Designed reference board for training family ${escapeHtml(id)}${archetype ? ` (${escapeHtml(archetype)})` : ''}"${boardWidth && boardHeight ? ` width="${boardWidth}" height="${boardHeight}"` : ''} loading="${featured ? 'eager' : 'lazy'}"${featured ? ' fetchpriority="high"' : ''}></a>`
       : `<p class="muted">Designed board not generated yet. Expected ${code(`${TRAINING_BOARD_DIR}/${id}/reference.jpg`)}.</p>`}</div><figcaption>Designed reference board${board ? ` · ${code(`${TRAINING_BOARD_DIR}/${id}/reference.jpg`)}` : ' · pending'} — AI-generated illustration, not training evidence and not proof a demo works${board ? (register ? `. Model and digests: ${code(register)}` : `. The register of the model and digests for these boards has not landed in this checkout yet (expected ${code(TRAINING_BOARD_REGISTER)})`) : ''}</figcaption></figure>
   </div>
   ${available ? `<details class="harness-target-drawer"><summary>Inspect A1 Conformance Harness Target (DOM test fixture)</summary>
@@ -535,6 +539,69 @@ const trainingFamilyCard = ({ id, archetype, title, origin, available, width, he
     </details>` : '<p class="notice">Site and image prompts are not both available in this checkout; do not treat an image as a working site specification.</p>'}
 </article>`;
 
+// Page navigation uses native anchors. Legacy /concepts#pattern-... and #target-... hashes
+// still land on the matching index link; every detail document is usable without JS.
+export function renderConceptIndex({ patterns = [], archetypes = [], trainingTargets = [], trainingBoardRegister = null }) {
+  const pictured = patterns.reduce((count, pattern) => count + pattern.steps.filter((step) => step.available).length, 0);
+  const boardCount = trainingTargets.filter((family) => family.board).length;
+  const orderedTargets = [...trainingTargets].sort((a, b) => (Number(b.board) - Number(a.board)) || a.id.localeCompare(b.id));
+  return page('concepts', `
+    <h1>Visual concepts and test instruments</h1>
+    <p class="concept-lede">Choose an authored pattern or training family to inspect its prompt, visual references and checks. The ${archetypes.length} held-out A6 targets remain separate evaluation instruments. These images are references, not screenshots of generated websites or proof a demo works.</p>
+    <nav class="concept-jump" aria-label="Concept sections"><a href="#archetype-patterns">${patterns.length} archetype patterns</a><a href="#training-families">${trainingTargets.length} training families</a><a href="#held-out-evaluation">${archetypes.length} held-out evaluation targets</a></nav>
+    <section class="concept-explainer" aria-labelledby="concept-distinction-heading"><h2 id="concept-distinction-heading">Concept image ≠ conformance image</h2>
+      <p><strong>Concept JPEG:</strong> an AI-generated illustrative reference, not a working build. Text, prices, receipts and QR codes depicted in it are unverified; do not scan depicted codes. A model ID may be reported without attestation. No reuse license or clearance is granted here. Provider terms prohibit using some images to develop machine-learning models; for other boards, training and output-use rights were not supplied. Concept images remain excluded from training; separate approval must satisfy the applicable terms and rights.</p>
+      <p><strong>Conformance harness PNG (A1):</strong> a deterministic headless-Chrome fixture for DOM/layout checks, not the desired production design. It is collapsed under each training family and does not prove an implementation works.</p>
+      <p><strong>A6 target PNG:</strong> an authored, held-out evaluation asset, never part of the training corpus. A pattern&rsquo;s illustrative JPEGs are not paired model outputs.</p>
+    </section>
+    <section id="archetype-patterns" aria-labelledby="patterns-heading"><h2 id="patterns-heading">Archetype patterns · ${patterns.length} authored specifications</h2>
+      <p class="muted">${pictured} pictured states have committed bytes. Each pattern page contains its site brief, per-state image prompts and provenance caveats; missing states are labelled pending.</p>
+      ${patterns.length ? `<nav class="concept-pattern-index" aria-label="Browse archetype patterns"><ul>${patterns.map(({ id }) => {
+        const subject = patternSubject(id);
+        return `<li id="pattern-${escapeHtml(id)}"><a href="/concepts/pattern/${escapeHtml(id)}">${escapeHtml(id.replaceAll('-', ' '))}${subject ? ` — ${escapeHtml(subject)}` : ''}</a></li>`;
+      }).join('')}</ul></nav>` : '<p class="notice">No authored archetype patterns are available in this checkout.</p>'}
+    </section>
+    <section id="training-families" aria-labelledby="training-targets-heading"><h2 id="training-targets-heading">Training families (A1): designed boards and harness targets</h2>
+      <p class="muted">${boardCount} of ${trainingTargets.length} declared families have a designed reference board${trainingBoardRegister ? ` (model and digests: ${code(trainingBoardRegister)})` : `; the provenance register is pending (${code(TRAINING_BOARD_REGISTER)})`}. A designed board is an illustration; the separate A1 harness PNG is a conformance fixture, not a design recommendation or training evidence. No per-step training images are committed.</p>
+      ${orderedTargets.length ? `<nav class="concept-pattern-index" aria-label="Browse training families"><ul>${orderedTargets.map(({ id, archetype, title, board }) => `<li id="target-${escapeHtml(id)}"><a href="/concepts/family/${escapeHtml(id)}"><code>${escapeHtml(id)}</code>${archetype ? ` · ${escapeHtml(archetype)}` : ''}${title ? ` — ${escapeHtml(title)}` : ''}</a> · ${board ? 'Designed board available' : 'Designed board pending'}</li>`).join('')}</ul></nav>` : '<p class="notice">No A1 training families are declared in this checkout.</p>'}
+    </section>
+    <section id="held-out-evaluation" aria-labelledby="eval-targets-heading"><h2 id="eval-targets-heading">Sealed evaluation targets (A6)</h2>
+      <p class="muted">These ${archetypes.length} authored evaluation instruments are never training data. The related pattern pages show illustrative states, not generated output. Provenance: ${code('docs/provenance/assets/eval-targets.md')}.</p>
+      ${archetypes.length ? `<ul>${archetypes.map(({ id, target }) => `<li><a href="/concepts/pattern/${escapeHtml(id)}">${escapeHtml(id.replaceAll('-', ' '))}</a> · ${target ? 'A6 target available' : 'A6 target unavailable'}</li>`).join('')}</ul>` : '<p class="notice">No held-out evaluation targets are available in this checkout.</p>'}
+    </section>`);
+}
+
+export function renderConceptPattern({ patterns = [], archetypes = [], trainingTargets = [] }, id) {
+  const pattern = patterns.find((item) => item.id === id);
+  if (!pattern) return null;
+  const evaluation = archetypes.find((item) => item.id === id);
+  return page('concepts', `
+    <p><a href="/concepts#pattern-${escapeHtml(id)}">← All concepts and training families</a></p>
+    <h1>Archetype pattern: ${escapeHtml(id.replaceAll('-', ' '))}</h1>
+    <p class="muted">Concept JPEGs are illustrations, not working sites or training evidence. No reuse clearance is granted: provider terms prohibit machine-learning development from some images, while other boards have no supplied training or output-use rights. <a href="/concepts#concept-distinction-heading">Read the image and conformance distinctions</a>.</p>
+    <section aria-labelledby="pattern-detail-heading"><h2 id="pattern-detail-heading">Authored pattern and pictured states</h2>
+      ${patternCard(pattern, trainingTargets.filter((family) => family.archetype === id))}
+    </section>
+    ${evaluation ? `<section id="held-out-evaluation" aria-labelledby="eval-detail-heading"><h2 id="eval-detail-heading">Held-out evaluation target (A6)</h2>
+      <p>Separate from training and illustrative JPEGs; not proof of a working site.</p>
+      ${evaluation.target ? `<figure><div class="concept-image-frame"><a href="/concepts/targets/${escapeHtml(id)}.png" aria-label="Open ${escapeHtml(id)} A6 authored evaluation target"><img src="/concepts/targets/${escapeHtml(id)}.png" alt="A6 authored evaluation target for ${escapeHtml(id)}"${evaluation.targetSize?.width && evaluation.targetSize?.height ? ` width="${evaluation.targetSize.width}" height="${evaluation.targetSize.height}"` : ''} loading="lazy"></a></div><figcaption>A6 authored evaluation target · ${code(`data/A6_evaluation/targets/${id}/target.png`)} · provenance ${code('docs/provenance/assets/eval-targets.md')}.</figcaption></figure>` : '<p class="muted">Authored target render unavailable in this checkout.</p>'}
+    </section>` : ''}`);
+}
+
+export function renderConceptFamily({ trainingTargets = [], trainingBoardRegister = null }, id) {
+  const family = trainingTargets.find((item) => item.id === id);
+  if (!family) return null;
+  return page('concepts', `
+    <p><a href="/concepts#target-${escapeHtml(id)}">← All concepts and training families</a></p>
+    <h1>Training family: ${escapeHtml(id)}</h1>
+    <p class="muted">A designed board is an AI-generated illustration, not training evidence or proof a demo works. A1 harness PNGs are deterministic conformance fixtures, not matching designs. No reuse clearance is granted here; consult each board&rsquo;s provenance and applicable provider terms. <a href="/concepts#concept-distinction-heading">Read the A1/A6 and rights distinctions</a>.</p>
+    ${family.archetype ? `<p>Related <a href="/concepts/pattern/${escapeHtml(family.archetype)}">${escapeHtml(family.archetype)} archetype pattern</a>.</p>` : ''}
+    <section aria-labelledby="family-detail-heading"><h2 id="family-detail-heading">Designed board, harness target and authored prompts</h2>
+      ${trainingFamilyCard(family, trainingBoardRegister, { featured: true })}
+    </section>`);
+}
+
+/** Full authored snapshot for offline tools and register tests; the HTTP index uses renderConceptIndex. */
 export function renderConcepts({ patterns = [], archetypes = [], trainingTargets = [], trainingBoardRegister = null }) {
   const pictured = patterns.reduce((count, pattern) => count + pattern.steps.filter((step) => step.available).length, 0);
   const boardCount = trainingTargets.filter((family) => family.board).length;

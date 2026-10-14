@@ -52,9 +52,22 @@ test('/concepts negotiates gzip/deflate without changing its authored HTML or ot
   assert.equal(deflate.headers['content-encoding'], 'deflate');
   assert.deepEqual(gunzipSync(gzip.body), plain.body);
   assert.deepEqual(inflateSync(deflate.body), plain.body);
-  assert.ok(plain.body.includes(Buffer.from('<summary>Site Generation Prompt')), 'native details remain usable without JS');
-  assert.ok(plain.body.length < 1_250_000, 'an expanding single-page prompt index needs a separate layout decision');
+  assert.ok(plain.body.includes(Buffer.from('href="/concepts/pattern/booking"')));
+  assert.ok(plain.body.includes(Buffer.from('href="/concepts/family/tr-01"')));
+  assert.ok(!plain.body.includes(Buffer.from('<summary>Site Generation Prompt')), 'the index must not inline every prompt');
+  assert.ok(plain.body.length < 60_000, 'the no-JS index has a small, bounded HTML budget');
   assert.ok(gzip.body.length < plain.body.length * 0.3, 'gzip must substantially reduce the actual wire bytes');
+  for (const path of ['/pattern/booking', '/family/tr-01']) {
+    const detail = await rawGet(url + path);
+    const packed = await rawGet(url + path, { 'accept-encoding': 'gzip' });
+    assert.equal(detail.status, 200, `${path} serves a detail page`);
+    assert.equal(packed.status, 200);
+    assert.ok(detail.body.includes(Buffer.from('<summary>Site Generation Prompt')), `${path} has native details without JS`);
+    assert.ok(detail.body.length < 160_000, `${path} loads one scope, not all families and patterns`);
+    assert.deepEqual(gunzipSync(packed.body), detail.body);
+    assert.equal(packed.headers['cache-control'], 'private, no-cache');
+    assert.match(packed.headers.etag, /^W\/"[a-f0-9]{64}-gzip"$/);
+  }
   assert.equal(Number(gzip.headers['content-length']), gzip.body.length);
   assert.equal(Number(deflate.headers['content-length']), deflate.body.length);
   for (const response of [plain, gzip, deflate]) {
@@ -92,6 +105,19 @@ test('/concepts revalidates per representation after authentication and respects
     'accept-encoding': 'gzip;q=0,deflate;q=0,identity;q=0' });
   assert.equal(unacceptable.status, 406);
   assert.equal(unacceptable.body.length, 0);
+  for (const path of ['/pattern/booking', '/family/tr-01']) {
+    const detail = await rawGet(url + path, authorized);
+    assert.equal(detail.status, 200);
+    const revalidated = await rawGet(url + path, { ...authorized, 'if-none-match': detail.headers.etag });
+    assert.equal(revalidated.status, 304, `${path} retains private representation-specific 304s`);
+    assert.equal(revalidated.headers.etag, detail.headers.etag);
+    assert.equal((await rawGet(url + path, { 'if-none-match': detail.headers.etag })).status, 401,
+      `${path} must authenticate before revalidation`);
+    const otherEncoding = await rawGet(url + path, { authorization: authorized.authorization,
+      'accept-encoding': 'gzip;q=0,deflate;q=0', 'if-none-match': detail.headers.etag });
+    assert.equal(otherEncoding.status, 200, `${path} cannot 304 a different representation`);
+    assert.notEqual(otherEncoding.headers.etag, detail.headers.etag);
+  }
 });
 
 test('/concepts ETag follows authored source changes while the same viewer process stays running', async (t) => {
@@ -103,12 +129,19 @@ test('/concepts ETag follows authored source changes while the same viewer proce
   writeFileSync(plan, '## Use case\nAn authored booking service.\n## Journey\n1. Choose a place.\n');
   writeFileSync(join(dir, 'design.md'), '## Visual thesis\nAn honest booking page.\n## Grammar and layout\nA calendar beside a form.\n');
   const url = await serve(t, { repoRoot });
-  const before = await rawGet(url);
+  const indexBefore = await rawGet(url);
+  const before = await rawGet(url + '/pattern/booking');
   assert.equal(before.status, 200);
   assert.match(before.body.toString(), /An authored booking service/);
   writeFileSync(plan, readFileSync(plan, 'utf8').replace('booking service', 'booking service with live updates'));
-  const after = await rawGet(url, { 'if-none-match': before.headers.etag });
-  assert.equal(after.status, 200, 'changed source text must not be answered 304 from a stale in-process snapshot');
+  const after = await rawGet(url + '/pattern/booking', { 'if-none-match': before.headers.etag });
+  assert.equal(after.status, 200, 'changed brief must not receive a stale in-process 304');
   assert.notEqual(after.headers.etag, before.headers.etag);
   assert.match(after.body.toString(), /booking service with live updates/);
+  assert.equal((await rawGet(url, { 'if-none-match': indexBefore.headers.etag })).status, 304,
+    'a detail-only text edit does not change the light index representation');
+  writeFileSync(join(dir, 'step1-browse.jpg'), Buffer.from([0xff, 0xd8, 0xff, 0xd9]));
+  const indexAfter = await rawGet(url, { 'if-none-match': indexBefore.headers.etag });
+  assert.equal(indexAfter.status, 200, 'an availability change visible in the index invalidates its own ETag');
+  assert.notEqual(indexAfter.headers.etag, indexBefore.headers.etag);
 });
