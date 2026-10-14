@@ -5,7 +5,7 @@ import { resolve } from 'node:path';
 import test from 'node:test';
 
 const ROOT = resolve(import.meta.dirname, '..');
-const EXPECTED_EDGES_SHA256 = '0643149478240a5b5591415f2db3ff97110f75502241eb18608546b247e16b0d';
+const EXPECTED_EDGES_SHA256 = '0216738f4d4ed324c15fcb898ebac817e62bc83aaeb87a373e669f619a850d8b';
 
 test('the fast-gate coverage contract cannot silently lose any declared suite edge', () => {
   const mapping = JSON.parse(readFileSync(resolve(ROOT, '.fleet/coverage-mapping.json'), 'utf8'));
@@ -26,4 +26,18 @@ test('docs that quote token measurements route to their assertion suite', () => 
   }
   assert.ok(mapping['docs/train/READINESS-EPIC.md'].includes('test/reachability.test.mjs'),
     'the readiness document must retain its reachability coverage');
+});
+
+test('policy and seal documents route to the suites that assert their contents', () => {
+  const mapping = JSON.parse(readFileSync(resolve(ROOT, '.fleet/coverage-mapping.json'), 'utf8'));
+  const required = {
+    'docs/quarantine.md': ['test/docs.test.mjs', 'test/quarantine-store.test.mjs'],
+    'docs/eval/PREREGISTRATION.md': ['test/briefs.test.mjs'],
+    'docs/vocabulary.md': ['test/set-separation.test.mjs'],
+  };
+  for (const [file, suites] of Object.entries(required)) {
+    for (const suite of suites) {
+      assert.ok(mapping[file]?.includes(suite), `${file} must run ${suite} when edited`);
+    }
+  }
 });
