@@ -1,5 +1,5 @@
 import { accessSync, closeSync, constants, existsSync, fstatSync, lstatSync, openSync, readFileSync, readSync, readdirSync, realpathSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { dirname, join, relative } from 'node:path';
 
 import { escapeHtml, page } from './pages.mjs';
 import { readJpegDimensions } from './tuning.mjs';
@@ -162,20 +162,47 @@ function conceptImageFile(repoRoot, name) {
   return confinedFile(root, join(root, 'archetypes'), `${name}.jpg`);
 }
 
+let warnedMissingFdPath = false;
+
+function macOSOpenFileMatches(file, expected, opened) {
+  // Darwin has no procfs fd pathname. Verify the opened inode is still the
+  // regular file at the canonical path and directory, not a switched ancestor.
+  // This is a best-effort identity fallback, not an atomic openat-style walk
+  // against an adversary who repeatedly renames the directory during checks.
+  const current = lstatSync(file, { bigint: true });
+  return current.isFile() && current.dev === opened.dev && current.ino === opened.ino &&
+    realpathSync(dirname(file)) === dirname(expected) && realpathSync(file) === expected;
+}
+
 function readConceptImage(repoRoot, file, type) {
   if (!file) return null;
   let fd;
   try {
     // The path probe can race with a replacement. Open the leaf without following
-    // links, then validate the *opened fd's* canonical location as well: O_NOFOLLOW
-    // alone does not stop a swapped ancestor directory from redirecting the open.
+    // links, then validate the *opened fd's* identity: O_NOFOLLOW alone does not
+    // stop a swapped ancestor directory from redirecting the open.
     const expected = join(realpathSync(repoRoot), relative(repoRoot, file));
     fd = openSync(file, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
-    if (!fstatSync(fd).isFile() || realpathSync(`/proc/self/fd/${fd}`) !== expected) return null;
+    const opened = fstatSync(fd, { bigint: true });
+    if (!opened.isFile()) return null;
+    try {
+      if (realpathSync(`/proc/self/fd/${fd}`) !== expected) return null;
+    } catch (error) {
+      if (error?.code !== 'ENOENT' && error?.code !== 'ENOTDIR') throw error;
+      if (process.platform === 'darwin') {
+        if (!macOSOpenFileMatches(file, expected, opened)) return null;
+      } else {
+        if (!warnedMissingFdPath) {
+          warnedMissingFdPath = true;
+          console.warn('concept image serving unavailable: procfs fd identity cannot be verified on this host');
+        }
+        return null;
+      }
+    }
     return { bytes: readFileSync(fd), type };
   } catch (error) {
-    // Linux procfs is required for the fd identity check; fail closed on hosts
-    // without it. Known read/open races are unavailable images, not HTTP 500s.
+    // Known read/open races are unavailable images, not HTTP 500s. A missing
+    // procfs without a verifiable macOS fallback also fails closed above.
     if (['EACCES', 'EPERM', 'ENOENT', 'ENOTDIR', 'EISDIR', 'ELOOP', 'ESTALE'].includes(error?.code)) return null;
     throw error;
   } finally {
