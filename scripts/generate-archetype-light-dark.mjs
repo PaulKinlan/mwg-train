@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 /**
  * Multimodal reference-conditioned generator for consistent Light Mode & Dark Mode
- * concept board sets across all 21 archetypes in /concepts.
+ * concept board sets for the configured archetypes in /concepts.
+ * Browser-puzzle-game is deliberately blocked: its seven imported boards have no retained
+ * model response or generation prompt, and must not be silently copied from scratch files.
  *
- * For every archetype in JOURNEYS (21 archetypes, 61 steps):
+ * For every configured archetype:
  *   - Light Mode set: docs/design/archetypes/<id>/<stepId>.jpg
  *   - Dark Mode set:  docs/design/archetypes/<id>/dark/<stepId>.jpg
  *
@@ -511,31 +513,6 @@ async function processArchetype(family, config) {
   }
 }
 
-async function installBrowserPuzzleGameFromTmp() {
-  const familyDir = join(ROOT, 'docs/design/archetypes/browser-puzzle-game');
-  const darkDir = join(familyDir, 'dark');
-  mkdirSync(darkDir, { recursive: true });
-  const mapping = [
-    ['/tmp/test-bpg-step2-light.jpg', join(familyDir, 'step2-midgame-interaction.jpg')],
-    ['/tmp/test-bpg-step3-light.jpg', join(familyDir, 'step3-invalid-collision-state.jpg')],
-    ['/tmp/test-bpg-step4-light.jpg', join(familyDir, 'step4-victory-stats-dialog.jpg')],
-    ['/tmp/test-bpg-step1-dark.jpg', join(darkDir, 'step1-board-initial.jpg')],
-    ['/tmp/test-bpg-step2-dark.jpg', join(darkDir, 'step2-midgame-interaction.jpg')],
-    ['/tmp/test-bpg-step3-dark.jpg', join(darkDir, 'step3-invalid-collision-state.jpg')],
-    ['/tmp/test-bpg-step4-dark.jpg', join(darkDir, 'step4-victory-stats-dialog.jpg')],
-  ];
-  if (mapping.every(([src]) => existsSync(src))) {
-    for (const [src, dest] of mapping) {
-      const bytes = readFileSync(src);
-      if (hasBrowserChrome(bytes)) throw new Error(`${src} failed browser chrome check`);
-      writeFileSync(dest, bytes);
-    }
-    console.log('=== [browser-puzzle-game] installed verified Light & Dark sets from /tmp/test-bpg-*.jpg ===');
-    return true;
-  }
-  return false;
-}
-
 async function main() {
   const onlyArg = process.argv.indexOf('--only');
   const only = onlyArg === -1 ? null : process.argv[onlyArg + 1].split(',').map((s) => s.trim());
@@ -543,10 +520,14 @@ async function main() {
   const concurrency = concurrencyArg === -1 ? 4 : Number(process.argv[concurrencyArg + 1]);
 
   if (!only || only.includes('browser-puzzle-game')) {
-    await installBrowserPuzzleGameFromTmp();
+    throw new Error('browser-puzzle-game: seven committed boards have unverified model/prompt provenance; ' +
+      'refusing this family before any paid generation. Obtain original response receipts or ' +
+      'an authorised, attested re-generation plan before enabling it. Use --only for other configured families.');
   }
+  const unknown = only.filter((family) => !Object.hasOwn(ARCHETYPE_CONFIGS, family));
+  if (unknown.length) throw new Error(`no generator configured for: ${unknown.join(', ')}`);
 
-  const entries = Object.entries(ARCHETYPE_CONFIGS).filter(([family]) => !only || only.includes(family));
+  const entries = Object.entries(ARCHETYPE_CONFIGS).filter(([family]) => only.includes(family));
   const queue = [...entries];
   const failures = [];
 
