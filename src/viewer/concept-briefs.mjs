@@ -203,8 +203,8 @@ const TRAINING_COMPONENTS = {
 };
 
 function trainingLayoutProse(text) {
-  // Source-backed CSS examples are runnable contracts, not demo selector inventories.
-  // Protect their fences before filtering board commentary or de-dotting prose labels.
+  // Source-backed fenced CSS and inline class references describe functional layout;
+  // discard only board/demo inventory units, never rewrite authored selector syntax.
   const protectedText = protectFences(text);
   const functional = protectedText.text
     .replace(/The reference board puts them in a\s+right-hand sidebar/gi,
@@ -216,7 +216,6 @@ function trainingLayoutProse(text) {
     .filter((unit) => !/\b(?:rasters?|the corpus|both boards|both references|training boards|reference boards?|browser viewports?|(?:tr|fam)-\d{2})\b/i.test(unit) &&
       !/^\s*(?:\*\*A divergence|The two training boards|The reference establishes the grammar|(?:[-*]\s*)?The five boards)/i.test(unit))
     .join('\n')
-    .replace(/(?<![a-z0-9])\.([a-z][a-z0-9-]*)\b/gi, (_, name) => name.replaceAll('-', ' '))
     .replace(/\n{3,}/g, '\n\n')
     .trim();
   return protectedText.restore(prose);
