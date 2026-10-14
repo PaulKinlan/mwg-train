@@ -6,7 +6,7 @@ import { join, resolve } from 'node:path';
 
 import { createViewer } from '../src/viewer/server.mjs';
 import { computeWordDiff, loadTuningData, renderTuning } from '../src/viewer/tuning.mjs';
-import { CROP_LEDGER_PATH, derivedCropMatches, inspectBoard } from '../scripts/generate-training-boards.mjs';
+import { CROP_LEDGER_PATH, cropSourceProblems, derivedCropMatches, inspectBoard } from '../scripts/generate-training-boards.mjs';
 
 const ROOT = resolve(import.meta.dirname, '..');
 
@@ -182,9 +182,13 @@ test('workbench renders high-fidelity reference board when present, and degrades
   const boardPath = join(ROOT, 'docs', 'design', 'training', 'tr-01', 'reference.jpg');
   const board = jpegDimensions(boardPath);
   assert.ok(board, `expected to read dimensions from ${boardPath}`);
-  const crop = JSON.parse(readFileSync(join(ROOT, CROP_LEDGER_PATH), 'utf8')).boards['tr-01'];
+  const ledger = JSON.parse(readFileSync(join(ROOT, CROP_LEDGER_PATH), 'utf8'));
+  const originalDigests = new Map();
+  assert.deepEqual(cropSourceProblems(ledger, { originalDigests }), []);
+  const crop = ledger.boards['tr-01'];
   const inspected = inspectBoard(readFileSync(boardPath));
-  assert.equal(derivedCropMatches(inspected.dimensions, crop, inspected.sha256, inspected.bytes), true,
+  assert.equal(derivedCropMatches(inspected.dimensions, crop, inspected.sha256, inspected.bytes,
+    originalDigests.get('tr-01')), true,
     'this variable-ratio board must be explained by an exact source-pinned page crop, not silently treated as a raw model image');
   assert.throws(() => assertWidescreen(board.width, board.height, 'tr-01 derived board'), /outside 1\.75-1\.8/,
     'changing the raw 16:9 contract would conceal the difference between a crop and a future model output');

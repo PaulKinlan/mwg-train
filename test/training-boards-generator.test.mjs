@@ -25,6 +25,7 @@ import {
   BOARD_WIDTH,
   REGISTER_PATH,
   CROP_LEDGER_PATH,
+  cropSourceProblems,
   derivedCropMatches,
   artDirectionOf,
   assertWritable,
@@ -210,6 +211,18 @@ test('the committed boards and the register, when the register exists, agree wit
   const ledger = JSON.parse(readFileSync(join(ROOT, CROP_LEDGER_PATH), 'utf8'));
   assert.equal(ledger.sourceCommit.length, 40);
   assert.equal(Object.keys(ledger.boards).length, 30, 'each derived board must have its own source and crop box');
+  const originalDigests = new Map();
+  assert.deepEqual(cropSourceProblems(ledger, { originalDigests }), [], 'Git originals and the pinned crop script bind the ledger source claims');
+  assert.deepEqual(cropSourceProblems({ ...ledger, sourceCommit: '0'.repeat(40) }),
+    ['crop ledger has no matching pinned source commit or board map']);
+  const altered = { ...ledger, boards: { ...ledger.boards,
+    'tr-01': { ...ledger.boards['tr-01'], sourceSha256: '0'.repeat(64) } } };
+  assert.match(cropSourceProblems(altered).join('\n'), /tr-01: source SHA-256 or dimensions differ/,
+    'a plausible 64-hex digest from the ledger must not replace the original Git blob');
+  const shifted = { ...ledger, boards: { ...ledger.boards,
+    'tr-01': { ...ledger.boards['tr-01'], box: [0, 57, 1376, 767] } } };
+  assert.match(cropSourceProblems(shifted).join('\n'), /tr-01: crop box differs/,
+    'a plausible box and matching dimensions must still agree with the pinned derivation script');
   assert.match(register, /Offline frame removal:\*\* 30 committed references/);
   // Resolve each link against the register's own directory instead of hard-coding how far up the tree it sits. This
   // test used to match the literal `../../` prefix and join the remainder to ROOT, which baked the register's depth
@@ -225,8 +238,11 @@ test('the committed boards and the register, when the register exists, agree wit
     assert.equal(boardBytes.length, Number(bytes), `${family}: committed board byte count must match the register`);
     const crop = ledger.boards[family];
     if (crop) {
-      assert.equal(derivedCropMatches({ width: Number(width), height: Number(height) }, crop, boardDigest, boardBytes.length), true,
-        `${family}: actual bytes and dimensions must match a plausible documented page-only crop`);
+      assert.equal(derivedCropMatches({ width: Number(width), height: Number(height) }, crop, boardDigest, boardBytes.length,
+        originalDigests.get(family)), true,
+        `${family}: actual bytes and dimensions must match a real source-bound page-only crop`);
+      assert.equal(derivedCropMatches({ width: Number(width), height: Number(height) }, crop, boardDigest, boardBytes.length), false,
+        `${family}: omitting the original blob must fail closed`);
       assert.ok(register.includes('| `' + BOARD_MODEL + '` | `' + crop.sourceSha256 + '` | `' + crop.box.join(',') + '` |'),
         `${family}: register must display the source SHA and exact crop box beside the derived SHA`);
     } else {
