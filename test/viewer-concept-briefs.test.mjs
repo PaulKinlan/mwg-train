@@ -106,14 +106,33 @@ test('training site prompts keep functional components without inheriting demo-o
   assert.doesNotMatch(tr17, /the student|Evening Class Summary|1\. Select Class/,
     'a farm visit site must not inherit a class-booking audience or step labels');
   for (const id of ['tr-02', 'tr-18', 'tr-26']) {
+    const prompt = targets.find((target) => target.id === id).brief.sitePrompt;
     const components = componentsOf(targets.find((target) => target.id === id));
     assert.doesNotMatch(components, /^Read from\b/m, `${id} must not point at an internal archetype document`);
-    assert.match(components, /product grid[\s\S]*cart drawer or page[\s\S]*receipt page/i,
+    assert.match(components, /product or plan grid[\s\S]*order, cart or subscription summary[\s\S]*receipt or confirmation view/i,
       `${id} retains real storefront components after removing the internal pointer`);
+    assert.doesNotMatch(components, /cart badge|shipping\/payment|#form-error-banner|\btr-26\b|\.subscription-card/i,
+      `${id} must use its own order or subscription fields rather than the demo's`);
+    assert.doesNotMatch(prompt, /configuration selects \(quantity, variant, grind\)/i,
+      `${id} must not inherit another family's grind field`);
   }
-  const tr07 = targets.find((target) => target.id === 'tr-07').brief.sitePrompt;
-  assert.match(tr07, /Expected components:[\s\S]*event hero/i,
-    'wrapped event-registration demo path removal must leave its real event components intact');
+  assert.match(targets.find((target) => target.id === 'tr-26').brief.sitePrompt, /select\[name=grind\]/,
+    'the coffee subscription still gets grind selection from its own plan');
+  const jobBoard = targets.find((target) => target.id === 'tr-12').brief.sitePrompt;
+  assert.match(jobBoard, /UI layout:[\s\S]*application form[\s\S]*empty state/i,
+    'removing raster notes must retain the job-board site structure');
+  assert.doesNotMatch(jobBoard, /Oliver Bennett|CTT-2026-9842|the raster fills the form/i,
+    'a visual reference’s invented applicant and receipt are not functional site requirements');
+  for (const id of ['tr-07', 'tr-30']) {
+    const prompt = targets.find((target) => target.id === id).brief.sitePrompt;
+    const components = componentsOf(targets.find((target) => target.id === id));
+    assert.match(components, /event hero[\s\S]*registration form[\s\S]*confirmation\/read-back view/i,
+      `${id} keeps the reusable event registration structure`);
+    assert.doesNotMatch(components, /Future Web 2026|General Admission|Workshop Pass|142\s*\/\s*200|£120|Attendee name|Dietary preferences|#registration-form|#estimate|#tier-error|#attendee-name/i,
+      `${id} must not inherit event-demo names, counts, prices, fields or DOM IDs`);
+    assert.match(prompt, id === 'tr-07' ? /form#observatory-registration-form/ : /form#registration-form/,
+      `${id} must retain the family plan's actual registration form ID`);
+  }
 });
 
 test('early inline and later fenced image prompts are returned intact, never inferred from filenames', () => {

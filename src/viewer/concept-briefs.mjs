@@ -83,10 +83,48 @@ const TRAINING_BOOKING_COMPONENTS = [
   '- A confirmation ticket for the declared outcome and a separate empty state when there is no booking.',
 ].join('\n');
 
+// The event-registration source separately calls its named conference, prices, DOM IDs and QR pass
+// illustrative demo content. Its reusable hierarchy is an event, family-defined registration controls
+// and a confirmed/read-back state; the family plan is the authority for fields, IDs and capacity rules.
+const TRAINING_EVENT_COMPONENTS = [
+  '- An event hero with this family’s name, date, place and any availability the family can actually verify.',
+  '- A registration form with participation choices, fields, labels and validation from this family’s plan.',
+  '- Accessible selection or quantity controls only for the options this family declares.',
+  '- Inline, announced validation and status text without invented prices, payments or capacity claims.',
+  '- A confirmation/read-back view for the stored registration; include a pass or QR credential only if this family explicitly defines one.',
+].join('\n');
+
+// The web-shop archetype names the canonical demo's cart, shipping/payment fields and tr-26's
+// subscription as though they were interchangeable. The three families have different selection,
+// ordering and update flows; their plans, not this shared component list, specify those fields.
+const TRAINING_WEB_SHOP_COMPONENTS = [
+  '- A persistent header and primary navigation with only the badge or status this family declares.',
+  '- A product or plan grid with the family’s own items and selection controls.',
+  '- An order, cart or subscription summary only as declared by this family’s plan.',
+  '- A form card with the family’s own fields, labels, validation and announced errors.',
+  '- A receipt or confirmation view for the outcome this family actually implements.',
+].join('\n');
+
+function trainingSiteLayout(design, archetype) {
+  const layout = section(design, 'Grammar and layout');
+  if (!layout) return null;
+  // The shared archetype source also records raster defects and source-vs-board divergences;
+  // those observations are not requirements for any family's functional website.
+  const structural = layout.split(/\n{2,}/)
+    .filter((paragraph) => !/^\*\*(?:A divergence recorded|Two observed exceptions|Two observations about this raster)/i.test(paragraph.trim()))
+    .join('\n\n');
+  if (archetype === 'booking') return structural.replace(/\bthe student\b/gi, 'the user');
+  if (archetype === 'web-shop') return structural.replace(/configuration selects \(quantity, variant, grind\)/i,
+    'the configuration controls this family’s plan declares');
+  return structural;
+}
+
 function siteComponentHierarchy(design, { trainingArchetype = null } = {}) {
   const hierarchy = section(design, 'Component hierarchy');
   if (!hierarchy) return null;
   if (trainingArchetype === 'booking') return TRAINING_BOOKING_COMPONENTS;
+  if (trainingArchetype === 'event-registration') return TRAINING_EVENT_COMPONENTS;
+  if (trainingArchetype === 'web-shop') return TRAINING_WEB_SHOP_COMPONENTS;
   // The archetype design also documents its static demo. The site brief needs its functional
   // components, not the demo file inventory or a state switcher that must never ship as product UI.
   let skipDemoBullet = false;
@@ -188,9 +226,7 @@ export function trainingBrief(repoRoot, id, row) {
     sitePrompt: [
       `Build a functional ${row.archetype.replaceAll('-', ' ')} website for this scenario. The image prompt below is an illustration brief; it is not a substitute for implementing the behaviour.`,
       group('Use case', row.prompt),
-      group('UI layout', row.archetype === 'booking'
-        ? section(siteDesign, 'Grammar and layout')?.replace(/\bthe student\b/gi, 'the user')
-        : section(siteDesign, 'Grammar and layout')),
+      group('UI layout', trainingSiteLayout(siteDesign, row.archetype)),
       group('Family visual direction and tokens', [familyVisualThesis(design), declaredTokens(design), section(design, 'Token usage')].filter(Boolean).join('\n\n')),
       group('Expected components', siteComponentHierarchy(siteDesign, { trainingArchetype: siteDesign !== design ? row.archetype : null })),
       group('Step-by-step interactions', section(plan, 'Journey')),
