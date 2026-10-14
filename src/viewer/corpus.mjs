@@ -234,7 +234,7 @@ export function loadCorpus(corpusRoot, runId = null, { includeTraining = false }
             new_security_findings: scored?.decision?.new_security_findings ?? [],
             seeded_defects: entry.defects ?? [],
             original_sha: originalSha,
-            uplifted_sha: scored?.uplifted_sha ?? 'derived-from-verified-original',
+            uplifted_sha: scored?.uplifted_sha ?? null,
             uplift_applied: scored?.uplift?.applied ?? [],
             uplift_skipped: scored?.uplift?.skipped ?? [],
             uplift_failed: scored?.uplift?.failed ?? [],

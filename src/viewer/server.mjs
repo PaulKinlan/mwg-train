@@ -759,8 +759,9 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
 
   /**
    * Where the uplifted tree comes from: the run's kept tree, or a deterministic regeneration with
-   * the repo's uplift tool that MUST reproduce the recorded uplifted sha. Regeneration starts from
-   * the MEASURED original (see above), not whatever the committed tree currently is. Fail-closed:
+   * the repo's uplift tool that MUST reproduce the recorded uplifted sha. An unscored training
+   * original with no recorded uplift sha is original-only, not an uplifted pair. Regeneration starts
+   * from the MEASURED original (see above), not whatever the committed tree currently is. Fail-closed:
    * a regeneration that does not hash to the recorded value is not served at all, and a cached
    * regeneration is re-hashed before every reuse (independent review, 2026-10-08).
    */
@@ -769,7 +770,7 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
     // A kept snapshot is authoritative ONLY if it still hashes to the recorded sha; a decision
     // without a recorded uplift sha cannot vouch for any tree, kept or regenerated.
     if (project.decision && !expected) {
-      return { dir: null, source: 'unrecorded', reason: 'the recorded decision carries no uplift sha, so no uplifted tree can be verified' };
+      return { dir: null, source: 'unrecorded', reason: 'no uplifted sha is recorded for this project, so no uplifted tree can be verified' };
     }
     if (project.upliftedTreeDir && existsSync(project.upliftedTreeDir)) {
       if (expected && hashTree(project.upliftedTreeDir) === expected) {
@@ -791,11 +792,10 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
     if (!expected) {
       return { dir: null, source: 'unrecorded', reason: 'no uplifted sha is recorded for this pair, so a regenerated tree could not be verified' };
     }
-    const derivedFromOriginal = expected === 'derived-from-verified-original' && project.id?.startsWith('tr-');
     const cacheKey = `${project.id}-${expected.replace(/[^a-z0-9]/gi, '').slice(0, 24)}`;
     const cacheDir = join(stateDir, 'uplifted', cacheKey);
     if (existsSync(cacheDir)) {
-      if (!derivedFromOriginal && hashTree(cacheDir) === expected) return { dir: cacheDir, source: 'regenerated-verified', expected };
+      if (hashTree(cacheDir) === expected) return { dir: cacheDir, source: 'regenerated-verified', expected };
       await rm(cacheDir, { recursive: true, force: true });
     }
     mkdirSync(dirname(cacheDir), { recursive: true });
@@ -808,7 +808,7 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
     if (!spec) return { dir: null, source: 'no-spec', reason: 'no spec available to reproduce the uplift with' };
     upliftProject(original.dir, spec, cacheDir);
     const actual = hashTree(cacheDir);
-    if (!derivedFromOriginal && actual !== expected) {
+    if (actual !== expected) {
       await rm(cacheDir, { recursive: true, force: true });
       return {
         dir: null,
@@ -816,7 +816,7 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
         reason: `deterministic regeneration did not reproduce the recorded uplifted sha (expected ${expected}, got ${actual}); refusing to serve an unverified tree`,
       };
     }
-    return { dir: cacheDir, source: 'regenerated-verified', expected: derivedFromOriginal ? actual : expected, actual };
+    return { dir: cacheDir, source: 'regenerated-verified', expected, actual };
   }
 
   function verification(project) {
@@ -1168,10 +1168,10 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
           403, liveOrigin,);
       }
 
-      // The paired tree of a RECORDED pair must resolve, hash-verify and scan clean before either
-      // version serves: a run that measured a pair does not get to serve half of it. A project
-      // with no decision yet is unpaired; its original serves on its own clean scan alone.
-      if (project.decision) {
+      // A SCORED pair must resolve, hash-verify and scan both trees before either version serves.
+      // An unscored training entry records an original sha but no uplift: the original remains
+      // hash-verified above and serves alone. A scored pair cannot serve just its original.
+      if (project.decision && project.decision.has_run !== false) {
         const paired =
           version === 'original' ? await ensureUpliftedTree(project) : await measuredOriginalTree(project);
         const pairedLabel = version === 'original' ? 'uplifted' : 'original';
