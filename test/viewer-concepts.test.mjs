@@ -264,8 +264,9 @@ test('an unreadable JPEG is neither advertised nor allowed to throw from its ima
       fs.accessSync = access;
       syncBuiltinESMExports();
       assert.equal(listConcepts(root).bookingSteps[0].available, true);
-      const read = fs.readFileSync;
+      const read = fs.readFileSync, open = fs.openSync;
       fs.readFileSync = (path, ...args) => path === file ? denied() : read(path, ...args);
+      fs.openSync = (path, ...args) => path === file ? denied() : open(path, ...args);
       syncBuiltinESMExports();
       assert.equal(conceptBookingStep(root, 'step1-browse'), null);
       const { createViewer } = await import(process.argv[3]);
@@ -320,13 +321,14 @@ test('a target or designed board read race returns 404 without weakening manifes
       import { tmpdir } from 'node:os';
       import { join } from 'node:path';
       const root = process.argv[1];
-      const read = fs.readFileSync;
-      fs.readFileSync = (file, ...args) => {
-        if (typeof file === 'string' && (file.endsWith('/target.png') || file.endsWith('/reference.jpg'))) {
-          const error = Error('permission changed after path probe'); error.code = 'EACCES'; throw error;
-        }
-        return read(file, ...args);
+      const read = fs.readFileSync, open = fs.openSync;
+      const denied = (file) => typeof file === 'string' &&
+        (file.endsWith('/target.png') || file.endsWith('/reference.jpg'));
+      const permissionError = () => {
+        const error = Error('permission changed after path probe'); error.code = 'EACCES'; throw error;
       };
+      fs.readFileSync = (file, ...args) => denied(file) ? permissionError() : read(file, ...args);
+      fs.openSync = (file, ...args) => denied(file) ? permissionError() : open(file, ...args);
       syncBuiltinESMExports();
       const { listConcepts, conceptTarget, trainingTarget, trainingBoard } = await import(process.argv[2]);
       const gallery = listConcepts(root);
@@ -362,6 +364,105 @@ test('a target or designed board read race returns 404 without weakening manifes
     assert.deepEqual(conceptTarget(root, 'booking')?.bytes, png, 'a readable A6 target still serves exact bytes');
     assert.deepEqual(trainingTarget(root, 'tr-01')?.bytes, png, 'a readable A1 target still serves exact bytes');
   } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test('image GETs reject leaf and ancestor swaps after the confined path probe', () => {
+  const root = mkdtempSync(join(tmpdir(), 'viewer-concepts-swap-'));
+  const outside = mkdtempSync(join(tmpdir(), 'viewer-concepts-swap-outside-'));
+  try {
+    const booking = join(root, 'data/A6_evaluation/targets/booking');
+    const targets = join(root, 'data/A1_self_generated/targets');
+    const family = join(targets, 'tr-01');
+    const board = join(root, 'docs/design/training/tr-01');
+    for (const dir of [booking, family, board]) mkdirSync(dir, { recursive: true });
+    writeFileSync(join(booking, 'target.png'), Buffer.from([137, 80, 78, 71]));
+    writeFileSync(join(family, 'target.png'), Buffer.from([137, 80, 78, 71]));
+    writeFileSync(join(board, 'reference.jpg'), Buffer.from([0xff, 0xd8, 0xff, 0xd9]));
+    writeFileSync(join(outside, 'target.png'), Buffer.from('OUTSIDE PNG BYTES'));
+    writeFileSync(join(outside, 'reference.jpg'), Buffer.from('OUTSIDE JPEG BYTES'));
+    writeFileSync(join(targets, 'manifest.jsonl'), `${JSON.stringify({
+      arm: 'A1_self_generated', kind: 'asset', family_id: 'tr-01', archetype: 'booking',
+      image_path: 'data/A1_self_generated/targets/tr-01/target.png',
+    })}\n`);
+    // Swap the actual filesystem object exactly when the accessor opens it. The
+    // old read-by-path implementation follows both the leaf and ancestor symlink.
+    // Patching both readFileSync(path) and openSync(path) makes this guard persist
+    // when the implementation changes to readFileSync(fd).
+    const script = `
+      import assert from 'node:assert/strict';
+      import fs from 'node:fs';
+      import { syncBuiltinESMExports } from 'node:module';
+      import { mkdtempSync, rmSync } from 'node:fs';
+      import { tmpdir } from 'node:os';
+      import { join } from 'node:path';
+      const [root, outside] = process.argv.slice(1);
+      const leaf = join(root, 'data/A6_evaluation/targets/booking/target.png');
+      const family = join(root, 'data/A1_self_generated/targets/tr-01');
+      const board = join(root, 'docs/design/training/tr-01');
+      const originalRead = fs.readFileSync, originalOpen = fs.openSync;
+      let swaps = 0;
+      function swap(file, operation) {
+        if (file === leaf) {
+          swaps++;
+          fs.renameSync(leaf, leaf + '.inside');
+          fs.symlinkSync(join(outside, 'target.png'), leaf);
+          try { return operation(); }
+          finally { fs.unlinkSync(leaf); fs.renameSync(leaf + '.inside', leaf); }
+        }
+        const dir = file === join(family, 'target.png') ? family :
+          file === join(board, 'reference.jpg') ? board : null;
+        if (dir) {
+          swaps++;
+          fs.renameSync(dir, dir + '.inside');
+          fs.symlinkSync(outside, dir, 'dir');
+          try { return operation(); }
+          finally { fs.unlinkSync(dir); fs.renameSync(dir + '.inside', dir); }
+        }
+        return operation();
+      }
+      let insideLegacyRead = false;
+      fs.readFileSync = (file, ...args) => {
+        if (typeof file !== 'string') return originalRead(file, ...args);
+        insideLegacyRead = true;
+        try { return swap(file, () => originalRead(file, ...args)); }
+        finally { insideLegacyRead = false; }
+      };
+      fs.openSync = (file, ...args) => typeof file === 'string' && !insideLegacyRead ?
+        swap(file, () => originalOpen(file, ...args)) : originalOpen(file, ...args);
+      syncBuiltinESMExports();
+      const { conceptTarget, trainingTarget, trainingBoard } = await import(process.argv[3]);
+      assert.equal(conceptTarget(root, 'booking'), null, 'leaf swap must not serve outside PNG bytes');
+      assert.equal(trainingTarget(root, 'tr-01'), null, 'ancestor swap must not serve outside PNG bytes');
+      assert.equal(trainingBoard(root, 'tr-01'), null, 'ancestor swap must not serve outside JPEG bytes');
+      const { createViewer } = await import(process.argv[4]);
+      const stateDir = mkdtempSync(join(tmpdir(), 'viewer-concepts-swap-state-'));
+      const { server, liveServer, pool } = createViewer({ allowAnonymous: true, repoRoot: root,
+        corpusRoot: process.argv[5], stateDir });
+      try {
+        await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+        for (const route of ['/concepts/targets/booking.png', '/concepts/targets/tr-01.png',
+          '/concepts/references/tr-01.jpg']) {
+          const response = await fetch('http://127.0.0.1:' + server.address().port + route);
+          assert.equal(response.status, 404, route + ': escaped path must not be served');
+        }
+      } finally {
+        pool.stopAll();
+        await Promise.all([new Promise(resolve => server.close(resolve)),
+          new Promise(resolve => liveServer.close(resolve))]);
+        rmSync(stateDir, { recursive: true, force: true });
+      }
+      assert.ok(swaps >= 6, 'each accessor and GET must exercise a path swap: ' + swaps);
+      console.log('leaf and ancestor swaps refused by accessors and GETs');
+    `;
+    const output = execFileSync(process.execPath, ['--input-type=module', '-e', script, root, outside,
+      new URL('../src/viewer/concepts.mjs', import.meta.url).href,
+      new URL('../src/viewer/server.mjs', import.meta.url).href, join(ROOT, 'pilot')],
+    { encoding: 'utf8', timeout: 15000 });
+    assert.match(output, /leaf and ancestor swaps refused by accessors and GETs/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+    rmSync(outside, { recursive: true, force: true });
+  }
 });
 
 test('future per-archetype references appear in pairs only when their images exist; escape every label', () => {
