@@ -70,7 +70,13 @@ test('training site prompts use family palette and identity, not the archetype t
   assert.doesNotMatch(tr17, /The board's job is to be a target|student model's output is measured/i,
     'static conformance-board goals are not site-building requirements');
   for (const target of gallery.trainingTargets) {
-    assert.match(target.brief.sitePrompt, /Family visual direction and tokens:[\s\S]*Palette values from the authored design:/,
+    const familyDesign = readFileSync(join(ROOT, `docs/train/design/${target.id}/design.md`), 'utf8');
+    const identity = familyDesign.match(/^# `tr-\d{2}` target design — (.+?) — /m)?.[1];
+    assert.ok(identity, `${target.id} design declares a family identity`);
+    const visualDirection = target.brief.sitePrompt.split('Family visual direction and tokens:')[1]
+      ?.split('Palette values from the authored design:')[0] ?? '';
+    assert.ok(visualDirection.includes(identity), `${target.id} retains its authored family identity before the palette`);
+    assert.match(target.brief.sitePrompt, /Palette values from the authored design:/,
       `${target.id} has an exact family palette`);
     assert.doesNotMatch(target.brief.sitePrompt, /\| Token \| Light \| Dark \|/,
       `${target.id} must not inherit an unrelated archetype colour table`);
