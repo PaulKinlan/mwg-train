@@ -5,6 +5,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DESIGN_SECTIONS, PLAN_SECTIONS } from '../src/design/contract.mjs';
+import { readImageDimensions } from '../src/viewer/generate.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const archetype = join(ROOT, 'docs/design/archetypes/realtime-telemetry-dashboard');
@@ -51,6 +52,8 @@ test('four unframed page-only prompts pin actual text hashes and label synthetic
       `${name}: provenance must match the exact prompt UTF-8 bytes`);
     const bytes = readFileSync(join(archetype, name));
     assert.deepEqual([...bytes.subarray(0, 3)], [0xff, 0xd8, 0xff], `${name}: must be a valid JPEG`);
+    assert.deepEqual(readImageDimensions(bytes), { width: 1376, height: 768 },
+      `${name}: committed JPEG pixels must match the 1376×768 provenance and page-size contract`);
     const jpegSha = createHash('sha256').update(bytes).digest('hex');
     assert.match(provenance, new RegExp(`${name.replaceAll('.', '\\.')}[^\\n]*\`${jpegSha}\` · ${bytes.length} bytes · 1376×768`),
       `${name}: provenance must pin the committed JPEG SHA-256, byte length, and 1376×768 dimensions`);
