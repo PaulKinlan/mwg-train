@@ -83,6 +83,24 @@ test('training site prompts use family palette and identity, not the archetype t
   }
 });
 
+test('training site prompts keep functional components without inheriting demo-only files or verification controls', () => {
+  const targets = listConcepts(ROOT).trainingTargets;
+  assert.equal(targets.length, 30);
+  for (const target of targets) {
+    assert.doesNotMatch(target.brief.sitePrompt, /Read from\s+demo\/|\bdemo\/[a-z0-9-]+\.html|demo state switcher|Demo State Switcher|#btn-state-(?:default|error|fill)/i,
+      `${target.id} must not cite a demo file or ship its verification switcher`);
+  }
+  const tr17 = targets.find((target) => target.id === 'tr-17').brief.sitePrompt;
+  assert.match(tr17, /Expected components:[\s\S]*header\.top-bar[\s\S]*nav\.stepper-nav[\s\S]*section\.card\.form-card/,
+    'booking-derived training prompts retain the actual header, stepper and form layout');
+  assert.match(tr17, /#form-error-banner/, 'real inline error feedback remains in the functional site brief');
+  assert.match(tr17, /the confirmation page carries the ticket[\s\S]*the empty page carries the\s+empty card/,
+    'ticket and empty-state components survive without copying demo file paths');
+  const tr07 = targets.find((target) => target.id === 'tr-07').brief.sitePrompt;
+  assert.match(tr07, /Expected components:[\s\S]*event hero/i,
+    'wrapped event-registration demo path removal must leave its real event components intact');
+});
+
 test('early inline and later fenced image prompts are returned intact, never inferred from filenames', () => {
   const early = readFileSync(join(ROOT, 'docs/design/archetypes/booking/README.md'), 'utf8');
   const late = readFileSync(join(ROOT, 'docs/design/archetypes/community-forum/README.md'), 'utf8');

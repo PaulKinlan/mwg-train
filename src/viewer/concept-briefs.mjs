@@ -72,6 +72,28 @@ function familyVisualThesis(design) {
   return thesis?.includes(marker) ? thesis.split(marker, 1)[0].replace(/\bthe board for\b/i, 'the site for').trim() : null;
 }
 
+function siteComponentHierarchy(design) {
+  const hierarchy = section(design, 'Component hierarchy');
+  if (!hierarchy) return null;
+  // The archetype design also documents its static demo. The site brief needs its functional
+  // components, not the demo file inventory or a state switcher that must never ship as product UI.
+  let skipDemoBullet = false;
+  return hierarchy.split(/\n{2,}/)
+    .filter((paragraph) => !/^Read from\s+`?demo\//i.test(paragraph.trim()))
+    .join('\n\n')
+    .split('\n')
+    .filter((line) => {
+      if (/^\s*[-*]\s/.test(line)) skipDemoBullet = /\bdemo state switcher\b/i.test(line);
+      else if (!line.trim()) skipDemoBullet = false;
+      return !skipDemoBullet;
+    })
+    .join('\n')
+    // Keep the ticket/empty-state component description, but not paths into the static demo.
+    .replace(/`?demo\/([a-z0-9-]+)\.html`?/gi, (_, page) => `the ${page.replaceAll('-', ' ')} page`)
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
 /** The authored archetype plan/design are the source; this is a readable prompt assembled from them, not model output. */
 export function archetypeBrief(repoRoot, id, trainingImagePrompt = null) {
   if (!ID.test(id)) return null;
@@ -156,7 +178,7 @@ export function trainingBrief(repoRoot, id, row) {
       group('Use case', row.prompt),
       group('UI layout', section(siteDesign, 'Grammar and layout')),
       group('Family visual direction and tokens', [familyVisualThesis(design), declaredTokens(design), section(design, 'Token usage')].filter(Boolean).join('\n\n')),
-      group('Expected components', section(siteDesign, 'Component hierarchy')),
+      group('Expected components', siteComponentHierarchy(siteDesign)),
       group('Step-by-step interactions', section(plan, 'Journey')),
       group('Validation and server state', section(plan, 'Validation and states')),
       group('Required assertions', assertions.length ? assertions.map((assertion) => `- ${assertion}`).join('\n') : null),
