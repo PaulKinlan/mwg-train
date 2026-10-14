@@ -163,8 +163,8 @@ test('every training family receives functional layout and components without sh
     assert.doesNotMatch(projected, /\b(?:rasters?|the corpus|both families|both references|both boards|training boards?|reference boards?|demo stylesheet|browser viewports?)\b/i,
       `${target.id} cannot treat raster/source comparisons as site requirements`);
     const proseOnly = projected.replace(/```[\s\S]*?```/g, '');
-    assert.doesNotMatch(proseOnly, /(?:^|[\s(`])\.[a-z][a-z0-9-]*\b/i,
-      `${target.id} cannot inherit demo CSS class inventories outside authored fenced code`);
+    assert.doesNotMatch(proseOnly, /\.(?:ticket-grid|ticket-row|event-hero|event-pass|capacity-note|pass-status|capacity-dot)\b/i,
+      `${target.id} cannot inherit event-registration demo stylesheet classes as build instructions`);
     assert.doesNotMatch(projected, /The five boards are laid out on this grammar|as declared and as rendered|date the board was read/i,
       `${target.id} cannot inherit source-board comparisons or observation dates`);
   }
@@ -184,6 +184,32 @@ test('every training family receives functional layout and components without sh
     const prompt = targets.find((target) => target.id === id).brief.sitePrompt;
     const layout = prompt.match(/UI layout:\n([\s\S]*?)(?=\n\nFamily visual direction and tokens:)/)?.[1] ?? '';
     assert.ok(layout.includes(`#${formId}`), `${id} keeps its family plan form ID in layout`);
+  }
+});
+
+test('demo-only selectors are kept out while authored inline class references remain possible', () => {
+  const design = readFileSync(join(ROOT, 'docs/design/archetypes/event-registration/design.md'), 'utf8');
+  assert.match(design, /`\.ticket-grid`|`\.event-pass`/,
+    'the rejected class tokens really occur in the shared static-demo source');
+  const targets = listConcepts(ROOT).trainingTargets.filter((target) => target.archetype === 'event-registration');
+  assert.ok(targets.length > 0);
+  for (const target of targets) {
+    const layout = target.brief.sitePrompt.match(/UI layout:\n([\s\S]*?)(?=\n\nFamily visual direction and tokens:)/)?.[1] ?? '';
+    assert.doesNotMatch(layout, /\.(?:ticket-grid|ticket-row|event-hero|event-pass|capacity-note|pass-status|capacity-dot)\b/i,
+      `${target.id} uses projected site structure, not the static demo stylesheet`);
+  }
+});
+
+test('booking training layouts keep the authored inline .container class reference across all seven families', () => {
+  const source = readFileSync(join(ROOT, 'docs/design/archetypes/booking/design.md'), 'utf8');
+  assert.match(source, /content sits in a `\.container` no wider than `68rem`/,
+    'the selector is authored functional layout guidance, not a demo stylesheet inventory');
+  const bookings = listConcepts(ROOT).trainingTargets.filter((target) => target.archetype === 'booking');
+  assert.equal(bookings.length, 7);
+  for (const target of bookings) {
+    const layout = target.brief.sitePrompt.match(/UI layout:\n([\s\S]*?)(?=\n\nFamily visual direction and tokens:)/)?.[1] ?? '';
+    assert.match(layout, /content sits in a \.container no wider than 68rem/,
+      `${target.id} retains the authored class selector and its width constraint`);
   }
 });
 
