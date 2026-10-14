@@ -4,12 +4,12 @@
     "target_dir": "docs/design/archetypes/event-registration",
     "readme": {
       "path": "docs/design/archetypes/event-registration/README.md",
-      "sha256": "43434757eb95592fead0fba8290b03654de36228a892e912954e17861968185a"
+      "sha256": "6806fb271c748d652bdf28490971f187bac75170ea8be8e4d5fa913309463b7c"
     },
     "documents": [
       {
         "path": "docs/design/archetypes/event-registration/demo/compare.html",
-        "sha256": "046ed36817d0e171ef760b9c0411d1fb20a08485c8ee0673b4558733d2d0da94"
+        "sha256": "a1cc1468c46014c63de32b5e03013260cfbcb622599b8b91628f4becb64954a5"
       },
       {
         "path": "docs/design/archetypes/event-registration/demo/index.html",
@@ -72,7 +72,7 @@
       "strings": [],
       "apparatus": true,
       "source": "docs/design/archetypes/event-registration/demo/compare.html",
-      "sha256": "046ed36817d0e171ef760b9c0411d1fb20a08485c8ee0673b4558733d2d0da94"
+      "sha256": "a1cc1468c46014c63de32b5e03013260cfbcb622599b8b91628f4becb64954a5"
     },
     "index.html": {
       "title": "Future Web 2026 · event registration visual demo",
@@ -135,20 +135,20 @@
   "images": [
     {
       "name": "step1-event.jpg",
-      "sha256": "835a958739512d20e33a77392006d7179d4fd4dcea932f238c4d16176f727342",
-      "bytes": 476978,
+      "sha256": "d9553a3f1b6718f05530ca8eed77878246c84a229fb06f893f0e8de9bcf44e4e",
+      "bytes": 536711,
       "source": "docs/design/archetypes/event-registration/step1-event.jpg"
     },
     {
       "name": "step2-pass.jpg",
-      "sha256": "6d9652b8437048e3f921c588090bc71a671d6038f1d146dc0d3f78b31edd90b3",
-      "bytes": 431314,
+      "sha256": "16e7dc0f62b9e3983366d78d4a5531a17e195d27971a69eca296f6f4cf44b3a0",
+      "bytes": 371540,
       "source": "docs/design/archetypes/event-registration/step2-pass.jpg"
     },
     {
       "name": "step3-refusal.jpg",
-      "sha256": "1722c3bee039d0810fb86dee20e861de708d3dd5b4771d91c02d0fa1117a3e2d",
-      "bytes": 408360,
+      "sha256": "26fe1717f72a4ce671aeb16b154d0ff81e65d8380c9c6ebfabb879af68f48ad8",
+      "bytes": 588057,
       "source": "docs/design/archetypes/event-registration/step3-refusal.jpg"
     }
   ],

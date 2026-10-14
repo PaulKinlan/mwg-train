@@ -4,12 +4,12 @@
     "target_dir": "docs/design/archetypes/booking",
     "readme": {
       "path": "docs/design/archetypes/booking/README.md",
-      "sha256": "1fe83b017139aeb46b527f168af90e69f60aa8f2d1c42bb10c70c0bd3002096c"
+      "sha256": "bb405da24ed11e693ae03b99c06f7b563918c643a9b48e7970d8be0989c751b1"
     },
     "documents": [
       {
         "path": "docs/design/archetypes/booking/demo/compare.html",
-        "sha256": "5ddb619dc281c5b87648bfcc223384f090d8356abd0f2e7e516338d7a43672aa"
+        "sha256": "7c4ddfc1c50c82db976de77a3eca1da0d732d249d1d31ea4be42865bdd415ecb"
       },
       {
         "path": "docs/design/archetypes/booking/demo/confirmation.html",
@@ -132,7 +132,7 @@
       ],
       "apparatus": true,
       "source": "docs/design/archetypes/booking/demo/compare.html",
-      "sha256": "5ddb619dc281c5b87648bfcc223384f090d8356abd0f2e7e516338d7a43672aa"
+      "sha256": "7c4ddfc1c50c82db976de77a3eca1da0d732d249d1d31ea4be42865bdd415ecb"
     },
     "confirmation.html": {
       "title": "Booking Confirmation &amp; Receipt — Learning Hub",
@@ -225,32 +225,32 @@
   "images": [
     {
       "name": "step1-browse.jpg",
-      "sha256": "faadc0cccd460f59761d53c191963e6b31831061b494920e3c4eb695eeefdfa9",
-      "bytes": 663479,
+      "sha256": "807321bfa27cf76aa50e0c6003486e5b14de83a2ff84a019465d824fce24de0c",
+      "bytes": 649719,
       "source": "docs/design/archetypes/booking/step1-browse.jpg"
     },
     {
       "name": "step2-form.jpg",
-      "sha256": "230848d3bd282e7c2cecadea52418cdfd794c0dad8b1e1499c8b360d1992e48e",
-      "bytes": 492023,
+      "sha256": "60831f850f2a3879aef5f309e4e82b6444731da8008cf2a4bf41db64fb7ac121",
+      "bytes": 511602,
       "source": "docs/design/archetypes/booking/step2-form.jpg"
     },
     {
       "name": "step3-confirmation.jpg",
-      "sha256": "31e6ed730371b55a9414c00680c04ce64d43219ca36518dc37e10b2b3f4953d8",
-      "bytes": 406153,
+      "sha256": "20bb9ea80ec4b72b95cdddd4d3a94346e64ae6048425ba110348bdf6606fcd6b",
+      "bytes": 390846,
       "source": "docs/design/archetypes/booking/step3-confirmation.jpg"
     },
     {
       "name": "step4-error.jpg",
-      "sha256": "0b7e463903a1b7c0994ad92513a4087aec8aed5d05cf76b8bab75ad5e815fc72",
-      "bytes": 446021,
+      "sha256": "c4e338cdc2efa296505151a8a3949879a0ac347bb574a3b2d30ff6cda0eece42",
+      "bytes": 503934,
       "source": "docs/design/archetypes/booking/step4-error.jpg"
     },
     {
       "name": "step5-empty.jpg",
-      "sha256": "cf586e1d6f2c2faefa603d0be4fb8b4c7b2f73375e69b23ae44b41931f07170e",
-      "bytes": 455551,
+      "sha256": "e1b9a307a7d2939b47a139fa9f715ef2f6d6fe4c2ba6e9ab712e74fb0e1044c8",
+      "bytes": 375343,
       "source": "docs/design/archetypes/booking/step5-empty.jpg"
     }
   ],

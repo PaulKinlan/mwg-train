@@ -4,12 +4,12 @@
     "target_dir": "docs/design/archetypes/account-recovery",
     "readme": {
       "path": "docs/design/archetypes/account-recovery/README.md",
-      "sha256": "7d2984bbfcdded721bafdb82df999a07baa1fad8859285f567120f4c30c26905"
+      "sha256": "59af979f1db71531dc3a7d5185223b7878d006350b29b5b63dd2f5e67c24db5e"
     },
     "documents": [
       {
         "path": "docs/design/archetypes/account-recovery/demo/compare.html",
-        "sha256": "9682811838720adf99e119e3b7a7ee255578b6cced83fa5dbec8a4768a8036f2"
+        "sha256": "190c0a042c163586d44ac1987bff6ea4e5b9e07cecc73bb2d02b49571f748c4a"
       },
       {
         "path": "docs/design/archetypes/account-recovery/demo/index.html",
@@ -72,7 +72,7 @@
       "strings": [],
       "apparatus": true,
       "source": "docs/design/archetypes/account-recovery/demo/compare.html",
-      "sha256": "9682811838720adf99e119e3b7a7ee255578b6cced83fa5dbec8a4768a8036f2"
+      "sha256": "190c0a042c163586d44ac1987bff6ea4e5b9e07cecc73bb2d02b49571f748c4a"
     },
     "index.html": {
       "title": "Account recovery · visual demo",
@@ -110,20 +110,20 @@
   "images": [
     {
       "name": "step1-request.jpg",
-      "sha256": "4426e0ca71c31013499a820fb8a21aa866b097ddcde61a1b8da302e194b447e2",
-      "bytes": 382476,
+      "sha256": "1a6989fb1979ebd0c7a1b8691f4df0f0843fdec994a8328ad54fc1756d187da2",
+      "bytes": 160681,
       "source": "docs/design/archetypes/account-recovery/step1-request.jpg"
     },
     {
       "name": "step2-sent.jpg",
-      "sha256": "331771485fc540ef064ab9118e627fa860fb304815d62ab1090e4dbcd7bd57e4",
-      "bytes": 389480,
+      "sha256": "c0a1d752ae068d34fcfb146c4ded4629192ca45a4d46b33ca9113f90984aaa4d",
+      "bytes": 404248,
       "source": "docs/design/archetypes/account-recovery/step2-sent.jpg"
     },
     {
       "name": "step3-refusal.jpg",
-      "sha256": "a66fd4abe71f8a6cbe4a87b796e4d0fc74083aaa10af704a8b11560854aee97d",
-      "bytes": 327161,
+      "sha256": "a51fb224518f52a8519d0c73bb0ffbc3e815fd124e935910fe906d7a2c6b1f00",
+      "bytes": 141923,
       "source": "docs/design/archetypes/account-recovery/step3-refusal.jpg"
     }
   ],

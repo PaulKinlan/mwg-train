@@ -17,11 +17,11 @@
 
 | Board | Purpose | SHA-256 | Bytes |
 | --- | --- | --- | ---: |
-| [`step1-browse.jpg`](../../design/archetypes/booking/step1-browse.jpg) | weekly timetable browse with search and category chips | `faadc0cccd460f59761d53c191963e6b31831061b494920e3c4eb695eeefdfa9` | 663479 |
-| [`step2-form.jpg`](../../design/archetypes/booking/step2-form.jpg) | multi-step details and seat selection with a summary card | `230848d3bd282e7c2cecadea52418cdfd794c0dad8b1e1499c8b360d1992e48e` | 492023 |
-| [`step3-confirmation.jpg`](../../design/archetypes/booking/step3-confirmation.jpg) | verified booking pass and digital receipt | `31e6ed730371b55a9414c00680c04ce64d43219ca36518dc37e10b2b3f4953d8` | 406153 |
-| [`step4-error.jpg`](../../design/archetypes/booking/step4-error.jpg) | accessible validation and conflict error states | `0b7e463903a1b7c0994ad92513a4087aec8aed5d05cf76b8bab75ad5e815fc72` | 446021 |
-| [`step5-empty.jpg`](../../design/archetypes/booking/step5-empty.jpg) | honest empty state with recovery actions | `cf586e1d6f2c2faefa603d0be4fb8b4c7b2f73375e69b23ae44b41931f07170e` | 455551 |
+| [`step1-browse.jpg`](../../design/archetypes/booking/step1-browse.jpg) | weekly timetable browse with search and category chips | `807321bfa27cf76aa50e0c6003486e5b14de83a2ff84a019465d824fce24de0c` | 649719 |
+| [`step2-form.jpg`](../../design/archetypes/booking/step2-form.jpg) | multi-step details and seat selection with a summary card | `60831f850f2a3879aef5f309e4e82b6444731da8008cf2a4bf41db64fb7ac121` | 511602 |
+| [`step3-confirmation.jpg`](../../design/archetypes/booking/step3-confirmation.jpg) | verified booking pass and digital receipt | `20bb9ea80ec4b72b95cdddd4d3a94346e64ae6048425ba110348bdf6606fcd6b` | 390846 |
+| [`step4-error.jpg`](../../design/archetypes/booking/step4-error.jpg) | accessible validation and conflict error states | `c4e338cdc2efa296505151a8a3949879a0ac347bb574a3b2d30ff6cda0eece42` | 503934 |
+| [`step5-empty.jpg`](../../design/archetypes/booking/step5-empty.jpg) | honest empty state with recovery actions | `e1b9a307a7d2939b47a139fa9f715ef2f6d6fe4c2ba6e9ab712e74fb0e1044c8` | 375343 |
 
 **Reproduction boundary:** image generation is stochastic; these hashes verify the committed bytes, not
 reproducibility from the same prompt. The journey the boards describe - timetable browse, seat selection,

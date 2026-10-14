@@ -11,7 +11,7 @@
 
 | Ordered board | What the raster depicts | SHA-256 of committed bytes | Bytes |
 | --- | --- | --- | ---: |
-| [`step1-error.jpg`](step1-error.jpg) | Entry form refused on a negative amount, with an accessible inline error beside the field | `9ffea789668cec1a5159ad7bc19dcd652e301307cad9ee8fdee750e2991682ec` | 468796 |
+| [`step1-error.jpg`](step1-error.jpg) | Entry form refused on a negative amount, with an accessible inline error beside the field | `31aad9f3c3c88b1e568aaf7e8a3399dfa0082518d45f78e8af8a592c898482e7` | 489271 |
 
 Hashes pin the handed-off JPEG bytes, not their generating model, prompt-to-pixel reproducibility or legal status. The corpus must derive from its own approved source and measured records, not these images.
 
@@ -20,5 +20,5 @@ Hashes pin the handed-off JPEG bytes, not their generating model, prompt-to-pixe
 ### `step1-error.jpg`
 
 ```text
-High-fidelity, production-quality full-bleed edge-to-edge web canvas with no floating window and no exterior drop shadow of a modern web application UI for a shared household expense ledger, "The Ledger". Step 1: Expense Entry Refusal. Dark slate theme (#0f172a page background, #1e293b card surface, emerald green #10b981 accent). The expense entry form is shown re-rendered after a refused submission: a red alert at the top of the card reads "This expense was not recorded", the Amount field is outlined in red with the inline message "Enter an amount greater than zero", while the Description, Department and Date fields above are filled and unstyled. The form's recorded running total panel beside it still shows its previous value with no new line added. The primary "Record expense" action remains available for correcting and resubmitting, with a secondary "Cancel" link. Modern typography, visible labels, generous padding, accessible contrast.
+Render only a full-bleed, edge-to-edge WEB PAGE canvas at 1376×768 16:9. NO browser chrome, NO macOS traffic lights, NO window frame, NO tab bar, NO address bar, NO exterior drop shadow, NO OS desktop or device mockup. High-fidelity modern web application UI for a shared cooperative & household expenditure ledger, "The Ledger", Step 1: Expense Entry Refusal in CRISP ACCOUNTING PAPER & SPRUCE LIGHT MODE (#f8fafc crisp financial paper background reaching all four edges, #ffffff ledger and form cards with 1px #cbd5e1 accounting rules, #0f172a tabular-numeral ink, deep spruce-teal #0f766e primary button, crimson #b91c1c validation alert). Two-column layout: left shows the expense entry form re-rendered after a refused submission with a red alert banner "This expense was not recorded", the Amount field ("-42.50") outlined in 2px red #b91c1c with inline error "Enter an amount greater than zero", while Description ("Winter Heating Oil"), Department ("Facilities"), and Date ("18 Oct 2026") remain valid and unstyled. Right column shows the running departmental ledger table and unchanged total (£1,840.00) proving no corrupt negative row was added. Primary spruce-teal button "Record expense" and "Cancel" link remain accessible.
 ```

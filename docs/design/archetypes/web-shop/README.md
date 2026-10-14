@@ -11,7 +11,7 @@
 
 | Ordered board | What the raster depicts | SHA-256 of committed bytes | Bytes |
 | --- | --- | --- | ---: |
-| [`step1-empty.jpg`](step1-empty.jpg) | Empty cart with disabled checkout and a path back to the ciders | `9be759c4b80d5e2744a0cae5003cfc9f5b4dca11476879318c9d6b8a65ffe41d` | 366555 |
+| [`step1-empty.jpg`](step1-empty.jpg) | Empty cart with disabled checkout and a path back to the ciders | `f60c29511d31d626bdb90d50e2c9c03fa21bf12399cddbc3f30965ef1b13c25e` | 252242 |
 
 Hashes pin the handed-off JPEG bytes, not their generating model, prompt-to-pixel reproducibility or legal status. The corpus must derive from its own approved source and measured records, not these images.
 
@@ -20,5 +20,5 @@ Hashes pin the handed-off JPEG bytes, not their generating model, prompt-to-pixe
 ### `step1-empty.jpg`
 
 ```text
-High-fidelity, production-quality full-bleed edge-to-edge web canvas with no floating window and no exterior drop shadow of a modern web application UI for a heritage orchard's farm-gate cider shop, "Orchard Row Press". Step 1: Empty Cart. Dark slate theme (#0f172a page background, #1e293b card surface, emerald green #10b981 accent). The cart page shows a small breadcrumb back to the ciders list, the heading "Your order", and a calm empty-state card: a simple line illustration of a wicker basket, the message "No bottles in your order yet", one short line explaining that checkout opens once a bottle is added, and a prominent emerald "Browse the ciders" action that returns to the catalogue. Beneath the card, the checkout control is visibly disabled with the accessible note "Checkout opens once your order has at least one bottle". The shop header carries the orchard name and a cart badge showing 0. Modern typography, generous padding, accessible contrast.
+Render only a full-bleed, edge-to-edge WEB PAGE canvas at 1376×768 16:9. NO browser chrome, NO macOS traffic lights, NO window frame, NO tab bar, NO address bar, NO exterior drop shadow, NO OS desktop or device mockup. High-fidelity modern web application UI for a heritage farm-gate cider orchard and presshouse, "Orchard Row Press · Herefordshire", Step 1: Empty Cart in WARM HARVEST ORCHARD CREAM & RUSSET LIGHT MODE (#fdfbf7 warm pressed-linen page background reaching all four edges, #ffffff empty-basket card with 1px #e7e5e4 warm stone border, #382013 deep orchard-bark brown serif and sans typography, harvest russet-amber #b45309 primary action button). Top orchard header shows a woodcut apple-press emblem, "Orchard Row Press", links to Autumn Pressings, Farm Gate Pickup, Our Orchard, and an order badge reading "Order · 0". Breadcrumb "← Back to Autumn Pressings" and heading "Your order". Centered empty-state card displays a clean botanical line illustration of a woven wicker harvest basket, heading "No bottles in your order yet", copy explaining that farm-gate pickup slot selection and checkout open once at least one bottle or flagon is added, and a prominent russet-amber (#b45309) button "Browse the ciders". Beneath the card, the checkout button is visibly disabled with accessible note "Checkout opens once your order has at least one bottle".
 ```

@@ -9,6 +9,6 @@
 
 | Archetype | Ordered image | SHA-256 (JPEG bytes) | Bytes | SHA-256 (exact UTF-8 prompt) |
 | --- | --- | --- | ---: | --- |
-| [`job-board`](../../design/archetypes/job-board/README.md) | [`step1-error.jpg`](../../design/archetypes/job-board/step1-error.jpg) | `553093b0a39ccc47147b3b439c76213572a8aa195af3253b16e0b7da3f012fcd` | 465855 | `f48f19b234f252a19a0a11e194cddda07d69fc5a9d25b2a2d379e1969e5711e3` |
+| [`job-board`](../../design/archetypes/job-board/README.md) | [`step1-error.jpg`](../../design/archetypes/job-board/step1-error.jpg) | `befb8afad7b3cee36aecec2e3a4687249fd066e765490249d2dcbcb927a3317b` | 389110 | `b5d7fdb8881d2e2bca304c103c99f3a84126b14da9dd8c1a909fb7f1d7d4fd0a` |
 
 The JPEG digest proves only the handed-off file's integrity. The prompt digest proves the transcribed README text is the text that was sent; it does **not** prove that a prompt deterministically recreates these pixels or that the reported model ID was the one executed. The attestation is the gateway's own statement about the model it ran.

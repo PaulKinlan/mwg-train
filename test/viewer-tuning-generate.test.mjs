@@ -84,11 +84,11 @@ test('the request raises max_tokens to the measured image floor, and says so', (
   assert.equal(low.effectiveMaxOutputTokens, MIN_IMAGE_OUTPUT_TOKENS);
   assert.equal(low.body.generationConfig.maxOutputTokens, MIN_IMAGE_OUTPUT_TOKENS);
   assert.equal(low.notes.length, 1, 'raising the operator number must be reported, not silent');
-  assert.match(low.notes[0], /raised from 2048 to 4096/);
+  assert.match(low.notes[0], /raised from 2048 to 8192/);
   assert.deepEqual(low.body.generationConfig.responseModalities, ['IMAGE']);
 
-  const high = buildGenerationRequest({ prompt: 'x', guidance: '', temperature: 0.7, maxTokens: 8192, seed: null });
-  assert.equal(high.effectiveMaxOutputTokens, 8192);
+  const high = buildGenerationRequest({ prompt: 'x', guidance: '', temperature: 0.7, maxTokens: 16384, seed: null });
+  assert.equal(high.effectiveMaxOutputTokens, 16384);
   assert.deepEqual(high.notes, [], 'an operator number above the floor is honoured and is not a note');
 
   const exactly = buildGenerationRequest({ prompt: 'x', guidance: '', temperature: 0.7, maxTokens: MIN_IMAGE_OUTPUT_TOKENS, seed: null });
@@ -208,6 +208,7 @@ test('validation refuses anything the committed tree does not contain, and every
   const allowed = allowedFor();
   assert.equal(allowed.briefIds.size, 60, '30 training families x 2 authored voices');
   assert.ok(allowed.frameworksByBrief.get('tr-01-v1').has('raw'));
+  assert.ok(allowed.frameworksByBrief.get('tr-26-v2').has('hono'), '-v2 voices share their family scaffolded framework arms');
 
   const expect = (draft, code, match) => {
     try {
@@ -283,7 +284,7 @@ test('the generator posts the built request and returns the facts about the byte
   assert.equal(board.requestedMaxOutputTokens, 2048);
   assert.equal(board.effectiveMaxOutputTokens, MIN_IMAGE_OUTPUT_TOKENS);
   assert.equal(board.notes.length, 1, 'the raised floor travels with the result so the page can report it');
-  assert.match(board.notes[0], /raised from 2048 to 4096/);
+  assert.match(board.notes[0], /raised from 2048 to 8192/);
   assert.equal(board.thoughtsTokens, 992);
   assert.equal(board.finishReason, 'STOP');
   // `bytes` is what the route sends; nothing in the result is a path, because nothing is written.
@@ -479,7 +480,7 @@ test('POST /tuning/generate returns the board with its metadata and writes nothi
     assert.equal(response.headers.get('x-mwg-sha256'), createHash('sha256').update(bytes).digest('hex'));
     assert.equal(response.headers.get('x-mwg-requested-max-output-tokens'), '2048');
     assert.equal(response.headers.get('x-mwg-max-output-tokens'), String(MIN_IMAGE_OUTPUT_TOKENS));
-    assert.match(decodeURIComponent(response.headers.get('x-mwg-notes')), /raised from 2048 to 4096/);
+    assert.match(decodeURIComponent(response.headers.get('x-mwg-notes')), /raised from 2048 to 8192/);
     const returned = Buffer.from(await response.arrayBuffer());
     assert.deepEqual(returned, bytes, 'the bytes served are the bytes the model returned, untouched');
     assert.equal(fetchImpl.calls.length, 1);

@@ -302,7 +302,7 @@ export function renderTuning({ data, familyId, variant = 'v1', framework = 'raw'
       <span class="chip" id="draft-word-count">${draftWordCount} words</span>
       <span class="chip" id="draft-delta-pill">Identical to authored voice</span>
       <span class="chip" id="draft-temp-pill">Temp: 0.7</span>
-      <span class="chip" id="draft-tokens-pill">Max tokens: 2048</span>
+      <span class="chip" id="draft-tokens-pill">Max tokens: 8192</span>
       <span class="chip" id="draft-seed-pill">Seed: 42</span>
     </div>
     <p class="muted tuning-hint">Edit the draft in the form below. As you type, this preview updates live so you can judge convergence against the reference target on the left.</p>
@@ -349,6 +349,7 @@ export function renderTuning({ data, familyId, variant = 'v1', framework = 'raw'
           <h3>Authored target design</h3>
           <span class="muted">${dimensionsText}</span>
         </div>
+        <p class="muted tuning-note">Minimal, deterministic HTML/DOM conformance fixture (<code>docs/train/targets/${text(selectedFamily)}/index.html</code>) used by the automated browser harness to verify form IDs, routes, and accessibility — not the production visual design.</p>
         ${targetAvailable ? `
           <div class="target-inspection-frame">
             <a href="/tuning/target/${text(selectedFamily)}.png" target="_blank" rel="noopener" title="Open full size target design">
@@ -366,6 +367,7 @@ export function renderTuning({ data, familyId, variant = 'v1', framework = 'raw'
           <h3>High-fidelity reference board</h3>
           <span class="muted">${refDimensionsText}</span>
         </div>
+        <p class="muted tuning-note">Visual north-star concept board showing what a finished, production-grade website for this brief should look like.</p>
         ${refAvailable && refDims ? `
           <div class="target-inspection-frame">
             <a href="/tuning/reference/${text(selectedFamily)}.jpg" target="_blank" rel="noopener" title="Open full size reference board">
@@ -450,7 +452,7 @@ export function renderTuning({ data, familyId, variant = 'v1', framework = 'raw'
   // 7. Tune a local draft
   const draft = `<section class="panel tuning-editor" aria-labelledby="draft-heading">
     <h2 id="draft-heading">Tune a local draft</h2>
-    <p class="muted">These settings are the hypothesis a generation is run with. They still do not affect the committed template, target or training data by themselves: a generation returns a board to this page, and a draft stays in this browser until it is exported. Generating a board from this model needs at least 4096 output tokens - below that the whole budget goes on thinking and no image comes back - so a smaller number is raised to 4096 for the request and the effective value is reported in the result.</p>
+    <p class="muted">These settings are the hypothesis a generation is run with. They still do not affect the committed template, target or training data by themselves: a generation returns a board to this page, and a draft stays in this browser until it is exported. Generating a board from this model needs at least 8192 output tokens - below that the whole budget can go on thinking and no image comes back - so a smaller number is raised to 8192 for the request and the effective value is reported in the result.</p>
     <noscript><p class="danger">Editing and exporting local drafts requires JavaScript; the authored brief and target above remain readable.</p></noscript>
     <form id="tuning-draft" method="post" action="/tuning" data-brief-id="${text(selectedVariant.brief_id)}" data-framework="${text(selectedFramework)}">
       <div class="tuning-actions">
@@ -463,7 +465,7 @@ export function renderTuning({ data, familyId, variant = 'v1', framework = 'raw'
       <p id="guidance-help" class="muted">Optional. When set, this is sent as the generation's system instruction; when empty, nothing is sent in that field.</p>
       <div class="tuning-settings">
         <div><label for="temperature">Temperature</label><input id="temperature" name="temperature" type="number" min="0" max="2" step="0.1" value="0.7" required></div>
-        <div><label for="max-tokens">Max tokens</label><input id="max-tokens" name="max_tokens" type="number" min="256" max="8192" step="1" value="2048" required></div>
+        <div><label for="max-tokens">Max tokens</label><input id="max-tokens" name="max_tokens" type="number" min="256" max="16384" step="1" value="8192" required></div>
         <div><label for="seed">Seed</label><input id="seed" name="seed" type="number" min="0" max="2147483647" step="1" value="42" required></div>
       </div>
       <div class="tuning-actions"><button type="submit">Export draft JSON</button><button type="button" id="copy-draft">Copy draft JSON</button><button type="button" id="reset-draft">Reset local draft</button></div>

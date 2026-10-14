@@ -4,7 +4,7 @@
     "target_dir": "docs/design/archetypes/catalogue",
     "readme": {
       "path": "docs/design/archetypes/catalogue/README.md",
-      "sha256": "9cad4fb55ee641f90bf475703aa499862e919df694f1a126a0c1b81f5828b1cd"
+      "sha256": "68eb058c6e532480fbd93313050eabbe2d051b2af139e95cf8717c3a867e18dd"
     },
     "documents": [
       {
@@ -13,7 +13,7 @@
       },
       {
         "path": "docs/design/archetypes/catalogue/demo/compare.html",
-        "sha256": "49811fb68196ce47c87e2f3c03eff080886a52e035aef07a2e5302fad23aa0dc"
+        "sha256": "cc2fbfd20ca93af913bc034e6262b4978171bca2b5c62becaaedf5bc299cb624"
       },
       {
         "path": "docs/design/archetypes/catalogue/demo/empty.html",
@@ -183,7 +183,7 @@
       ],
       "apparatus": true,
       "source": "docs/design/archetypes/catalogue/demo/compare.html",
-      "sha256": "49811fb68196ce47c87e2f3c03eff080886a52e035aef07a2e5302fad23aa0dc"
+      "sha256": "cc2fbfd20ca93af913bc034e6262b4978171bca2b5c62becaaedf5bc299cb624"
     },
     "empty.html": {
       "title": "No Matches — Kiln &amp; Copper (static variant)",
@@ -350,20 +350,20 @@
   "images": [
     {
       "name": "step1-grid.jpg",
-      "sha256": "d67e02068c0ac84bf178f3a58b468be1f68b0fd45976177a7d1536078e21a383",
-      "bytes": 541719,
+      "sha256": "93f3b8c5056685e981e523b9c1550dd4d27f55a5a0ecd5fff82b0cf447c7f0cd",
+      "bytes": 525363,
       "source": "docs/design/archetypes/catalogue/step1-grid.jpg"
     },
     {
       "name": "step2-cart.jpg",
-      "sha256": "13a1e108161d5b35d94d3b70058293f94a0468d96e4097bc3e40e60413f42306",
-      "bytes": 463222,
+      "sha256": "36170d05468183ca262b46d2f187c60d6c41cb29a1081293d5f7f61a30acfae0",
+      "bytes": 448333,
       "source": "docs/design/archetypes/catalogue/step2-cart.jpg"
     },
     {
       "name": "step3-empty.jpg",
-      "sha256": "c564732d825446943215fb65d507ecf0a937dd01f36dad15dcfa0d5dc3c32246",
-      "bytes": 394902,
+      "sha256": "31aff477070366b7cfdfaf076b1cdd1721f97926273d1773b6c206d7ee09203e",
+      "bytes": 352136,
       "source": "docs/design/archetypes/catalogue/step3-empty.jpg"
     }
   ],

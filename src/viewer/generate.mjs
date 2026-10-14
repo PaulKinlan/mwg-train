@@ -39,16 +39,16 @@ export const IMAGE_MODEL = 'gemini-nano-banana-2.1';
 export const DEFAULT_IMAGE_ENDPOINT = `https://gemini.int.exe.xyz/v1beta/models/${IMAGE_MODEL}:generateContent`;
 
 /**
- * A MEASURED floor, not a guess. Asking this model for an image with `maxOutputTokens: 2048` (the workbench draft's
- * default) returns HTTP 200, `finishReason: "MAX_TOKENS"` and NO image part: the model spends ~1000 tokens thinking
- * and an image costs ~1300 more, so the budget is gone before any bytes are emitted. The workbench keeps the
- * operator's number as a hypothesis and this floor is applied at request time, reported back in `notes` so the page
- * can say the effective value rather than silently substituting it.
+ * A MEASURED floor, not a guess. Asking this model for an image with `maxOutputTokens: 2048` or `4096` returns HTTP
+ * 200, `finishReason: "MAX_TOKENS"` and NO image part on detailed prompts: the model can spend ~3400 tokens thinking
+ * and an image costs ~1300 more, so a 4096 budget is gone before any bytes are emitted. Raising the floor to 8192
+ * matches `BOARD_MAX_OUTPUT_TOKENS` in `scripts/generate-training-boards.mjs` and is reported back in `notes` when the
+ * operator's requested number is below the floor.
  */
-export const MIN_IMAGE_OUTPUT_TOKENS = 4096;
+export const MIN_IMAGE_OUTPUT_TOKENS = 8192;
 
 /** The workbench form's own upper bound. Kept here so request building cannot exceed what the UI offers. */
-export const MAX_IMAGE_OUTPUT_TOKENS = 8192;
+export const MAX_IMAGE_OUTPUT_TOKENS = 16384;
 
 /** A board is ~0.5 MB; the response is base64 JSON, ~4/3 of that. The cap is enforced WHILE reading, not after: a
  * gateway that streams something unexpected is stopped at the cap instead of being buffered until we can measure it. */
@@ -179,8 +179,16 @@ export function allowedTargetsFromTuningData(data) {
     }
   }
   for (const project of data.projects ?? []) {
-    const set = frameworksByBrief.get(project?.brief_id);
-    if (set && project?.framework) set.add(project.framework);
+    if (!project?.framework) continue;
+    const direct = frameworksByBrief.get(project.brief_id);
+    if (direct) direct.add(project.framework);
+    // Both authored voices (-v1 and -v2) of a training family share the same family_id and the same 7 scaffolded
+    // framework arms in pilot/TRAINING_CORPUS.json (which records the canonical -v1 brief_id on each project row).
+    const familyRows = data.families?.get?.(project.family_id) ?? [];
+    for (const row of familyRows) {
+      const familySet = frameworksByBrief.get(row?.brief_id);
+      if (familySet) familySet.add(project.framework);
+    }
   }
   return { briefIds, frameworksByBrief };
 }
