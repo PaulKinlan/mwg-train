@@ -5,7 +5,7 @@ import { existsSync, mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync 
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
-import { conceptBookingStep, conceptImage, conceptJourneyStep, conceptTarget, listConcepts, renderConcepts, trainingBoard } from '../src/viewer/concepts.mjs';
+import { conceptBookingStep, conceptImage, conceptJourneyStep, conceptTarget, listConcepts, renderConcepts, trainingBoard, trainingTarget } from '../src/viewer/concepts.mjs';
 import { createViewer } from '../src/viewer/server.mjs';
 
 const ROOT = resolve(import.meta.dirname, '..');
@@ -290,6 +290,77 @@ test('an unreadable JPEG is neither advertised nor allowed to throw from its ima
       new URL('../src/viewer/server.mjs', import.meta.url).href, join(ROOT, 'pilot')],
     { encoding: 'utf8', timeout: 12000 });
     assert.match(output, /permission denied in listing and GET without a response crash/);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test('a target or designed board read race returns 404 without weakening manifest or confinement gates', () => {
+  const root = mkdtempSync(join(tmpdir(), 'viewer-concepts-image-race-'));
+  try {
+    const evalDir = join(root, 'data/A6_evaluation/targets/booking');
+    const arm = join(root, 'data/A1_self_generated/targets');
+    const trainingDir = join(arm, 'tr-01');
+    const boardDir = join(root, 'docs/design/training/tr-01');
+    for (const dir of [evalDir, trainingDir, boardDir]) mkdirSync(dir, { recursive: true });
+    const png = Buffer.from([137, 80, 78, 71]);
+    writeFileSync(join(evalDir, 'target.png'), png);
+    writeFileSync(join(trainingDir, 'target.png'), png);
+    writeFileSync(join(boardDir, 'reference.jpg'), Buffer.from([0xff, 0xd8, 0xff, 0xd9]));
+    writeFileSync(join(arm, 'manifest.jsonl'), `${JSON.stringify({
+      arm: 'A1_self_generated', kind: 'asset', family_id: 'tr-01', archetype: 'booking',
+      image_path: 'data/A1_self_generated/targets/tr-01/target.png',
+    })}\n`);
+    // The stat/readability probe succeeds, then a simulated EACCES on the full read
+    // models a permission change or replacement between listing/path validation and GET.
+    // Isolate the fs patch in a child so the result does not depend on the test runner's UID.
+    const script = `
+      import assert from 'node:assert/strict';
+      import fs from 'node:fs';
+      import { syncBuiltinESMExports } from 'node:module';
+      import { mkdtempSync, rmSync } from 'node:fs';
+      import { tmpdir } from 'node:os';
+      import { join } from 'node:path';
+      const root = process.argv[1];
+      const read = fs.readFileSync;
+      fs.readFileSync = (file, ...args) => {
+        if (typeof file === 'string' && (file.endsWith('/target.png') || file.endsWith('/reference.jpg'))) {
+          const error = Error('permission changed after path probe'); error.code = 'EACCES'; throw error;
+        }
+        return read(file, ...args);
+      };
+      syncBuiltinESMExports();
+      const { listConcepts, conceptTarget, trainingTarget, trainingBoard } = await import(process.argv[2]);
+      const gallery = listConcepts(root);
+      assert.equal(gallery.archetypes.find(({ id }) => id === 'booking')?.target, true);
+      assert.equal(gallery.trainingTargets.find(({ id }) => id === 'tr-01')?.available, true);
+      assert.equal(conceptTarget(root, 'booking'), null);
+      assert.equal(trainingTarget(root, 'tr-01'), null);
+      assert.equal(trainingBoard(root, 'tr-01'), null);
+      const { createViewer } = await import(process.argv[3]);
+      const stateDir = mkdtempSync(join(tmpdir(), 'viewer-concepts-image-race-state-'));
+      const { server, liveServer, pool } = createViewer({ allowAnonymous: true, repoRoot: root,
+        corpusRoot: process.argv[4], stateDir });
+      try {
+        await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+        for (const route of ['/concepts/targets/booking.png', '/concepts/targets/tr-01.png',
+          '/concepts/references/tr-01.jpg']) {
+          const response = await fetch('http://127.0.0.1:' + server.address().port + route);
+          assert.equal(response.status, 404, route + ': failed reads are unavailable, not HTTP 500');
+        }
+      } finally {
+        pool.stopAll();
+        await Promise.all([new Promise(resolve => server.close(resolve)),
+          new Promise(resolve => liveServer.close(resolve))]);
+        rmSync(stateDir, { recursive: true, force: true });
+      }
+      console.log('A6, A1 and board GETs safely return 404 after read failure');
+    `;
+    const output = execFileSync(process.execPath, ['--input-type=module', '-e', script, root,
+      new URL('../src/viewer/concepts.mjs', import.meta.url).href,
+      new URL('../src/viewer/server.mjs', import.meta.url).href, join(ROOT, 'pilot')],
+    { encoding: 'utf8', timeout: 12000 });
+    assert.match(output, /A6, A1 and board GETs safely return 404 after read failure/);
+    assert.deepEqual(conceptTarget(root, 'booking')?.bytes, png, 'a readable A6 target still serves exact bytes');
+    assert.deepEqual(trainingTarget(root, 'tr-01')?.bytes, png, 'a readable A1 target still serves exact bytes');
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
 
