@@ -5,7 +5,7 @@ import { resolve } from 'node:path';
 import test from 'node:test';
 
 const ROOT = resolve(import.meta.dirname, '..');
-const EXPECTED_EDGES_SHA256 = '0216738f4d4ed324c15fcb898ebac817e62bc83aaeb87a373e669f619a850d8b';
+const EXPECTED_EDGES_SHA256 = '6c68f5ceba97c5e669bff669eedc3b66a2d373def12edac38d7c62309849b5c4';
 
 test('the fast-gate coverage contract cannot silently lose any declared suite edge', () => {
   const mapping = JSON.parse(readFileSync(resolve(ROOT, '.fleet/coverage-mapping.json'), 'utf8'));
@@ -28,16 +28,22 @@ test('docs that quote token measurements route to their assertion suite', () => 
     'the readiness document must retain its reachability coverage');
 });
 
-test('policy and seal documents route to the suites that assert their contents', () => {
+test('documents with content assertions route to their citing suites', () => {
   const mapping = JSON.parse(readFileSync(resolve(ROOT, '.fleet/coverage-mapping.json'), 'utf8'));
   const required = {
     'docs/quarantine.md': ['test/docs.test.mjs', 'test/quarantine-store.test.mjs'],
     'docs/eval/PREREGISTRATION.md': ['test/briefs.test.mjs'],
     'docs/vocabulary.md': ['test/set-separation.test.mjs'],
+    'docs/PIPELINE.md': ['test/pipeline-docs.test.mjs'],
+    'docs/design.md': ['test/design-language.test.mjs'],
+    'docs/train/briefs/EXPANSION-PLAN.md': ['test/expansion-matrix.test.mjs'],
+    'docs/eval/pricing.sheets.md': ['test/pricing.test.mjs'],
   };
   for (const [file, suites] of Object.entries(required)) {
     for (const suite of suites) {
       assert.ok(mapping[file]?.includes(suite), `${file} must run ${suite} when edited`);
     }
   }
+  assert.deepEqual(mapping['docs/PIPELINE.md'], ['test/pipeline-docs.test.mjs'],
+    'PIPELINE.md must not route to reachability, which does not read it');
 });
