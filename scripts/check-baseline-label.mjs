@@ -373,6 +373,8 @@ export const DOCUMENTS = {
   // published as planning documentation and deliberately kept out of the corpus, so it carries a rights record here
   // rather than a corpus manifest row.
   'docs/provenance/assets/training-reference-boards.md': 'provenance',
+  // Original-to-derived source SHA, explicit crop boxes and output SHA for the unframed planning boards.
+  'docs/provenance/assets/training-frame-crops.json': 'provenance',
   'docs/provenance/assets/reference-board-gaps.md': 'provenance',
   'docs/provenance/assets/board-states.json': 'provenance',
   'docs/provenance/assets/archetype-asset-sets.md': 'provenance',

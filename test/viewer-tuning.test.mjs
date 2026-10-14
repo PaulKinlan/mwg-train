@@ -6,15 +6,14 @@ import { join, resolve } from 'node:path';
 
 import { createViewer } from '../src/viewer/server.mjs';
 import { computeWordDiff, loadTuningData, renderTuning } from '../src/viewer/tuning.mjs';
+import { CROP_LEDGER_PATH, derivedCropMatches, inspectBoard } from '../scripts/generate-training-boards.mjs';
 
 const ROOT = resolve(import.meta.dirname, '..');
 
 // Board dimensions and the widescreen contract, derived rather than restated.
 //
-// A reference board is meant to be a full-bleed 16:9 desktop screenshot, so the thing worth asserting is the ratio,
-// not one particular pair of numbers. The tolerance is deliberately loose enough for the sizes image generators
-// actually emit - the first board is 1376x768, which is 1.792 rather than 1.778 - while still excluding a square card,
-// which is the format this batch replaced.
+// RAW model output remains a 16:9 desktop screenshot. Existing references with browser chrome removed are
+// source-pinned derived crops and have wider ratios so that page content is not clipped or distorted.
 const WIDESCREEN_MIN_RATIO = 1.75;
 const WIDESCREEN_MAX_RATIO = 1.80;
 
@@ -157,7 +156,7 @@ test('workbench renders live target inspection with actual dimensions, manifest 
   assert.match(html, /excluded_from_training: true<\/code> · <code>approved_for_training: false<\/code>/);
 });
 
-test('the widescreen contract rejects the square format it replaced, and accepts the board that shipped', () => {
+test('the raw 16:9 contract rejects square cards; derived page-only crops are checked against their source ledger', () => {
   // The board that shipped, read from disk rather than named here.
   assert.ok(assertWidescreen(1376, 768, 'the 16:9 board') >= WIDESCREEN_MIN_RATIO);
   // And the negative control: the square card this batch replaced must fail, or the contract permits the thing it
@@ -183,7 +182,12 @@ test('workbench renders high-fidelity reference board when present, and degrades
   const boardPath = join(ROOT, 'docs', 'design', 'training', 'tr-01', 'reference.jpg');
   const board = jpegDimensions(boardPath);
   assert.ok(board, `expected to read dimensions from ${boardPath}`);
-  assertWidescreen(board.width, board.height, 'tr-01 reference board');
+  const crop = JSON.parse(readFileSync(join(ROOT, CROP_LEDGER_PATH), 'utf8')).boards['tr-01'];
+  const inspected = inspectBoard(readFileSync(boardPath));
+  assert.equal(derivedCropMatches(inspected.dimensions, crop, inspected.sha256, inspected.bytes), true,
+    'this variable-ratio board must be explained by an exact source-pinned page crop, not silently treated as a raw model image');
+  assert.throws(() => assertWidescreen(board.width, board.height, 'tr-01 derived board'), /outside 1\.75-1\.8/,
+    'changing the raw 16:9 contract would conceal the difference between a crop and a future model output');
   // The page must report what the file actually is, not a number someone typed.
   assert.match(htmlWithRef, new RegExp(`width="${board.width}" height="${board.height}"`));
   assert.match(htmlWithRef, new RegExp(`${board.width} \u00d7 ${board.height} px`));

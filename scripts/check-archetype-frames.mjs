@@ -1,6 +1,6 @@
 /**
- * Detects browser chrome (specifically macOS-style traffic lights) in archetype images.
- * Archetype images are supposed to be clean content without window frames.
+ * Detects browser chrome (specifically macOS-style traffic lights) in archetype and training-reference images.
+ * These images are supposed to be clean page content without window frames.
  * If chrome is detected on an un-exempted image, this check fails closed.
  * 
  * Note: We only check for macOS traffic lights because mwg-train's generated
@@ -16,6 +16,7 @@ import jpeg from 'jpeg-js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const ARCHETYPES_DIR = path.join(ROOT, 'docs', 'design', 'archetypes');
+const TRAINING_DIR = path.join(ROOT, 'docs', 'design', 'training');
 
 // These images were generated with browser chrome before this gate was added.
 // They are exempt by exact content hash to avoid breaking the sealed evaluation corpus.
@@ -28,7 +29,7 @@ const EXEMPT_HASHES = new Set([
  * @param {Buffer} bytes 
  * @returns {boolean} true if chrome is detected
  */
-function hasBrowserChrome(bytes) {
+export function hasBrowserChrome(bytes) {
 
   let rawImageData;
   try {
@@ -43,9 +44,10 @@ function hasBrowserChrome(bytes) {
   const { width, height, data } = rawImageData;
   
   // Traffic light colors: macOS Red, Yellow, Green
-  const isRed = (r, g, b) => r > 180 && g < 130 && b < 130;
-  const isYellow = (r, g, b) => r > 180 && g > 130 && b < 130;
-  const isGreen = (r, g, b) => r < 130 && g > 150 && b < 130;
+  // Require chroma, not merely skin/foliage values that happen to straddle the old broad channel cutoffs.
+  const isRed = (r, g, b) => r > 190 && g < 130 && b < 130 && r - g > 70 && r - b > 70;
+  const isYellow = (r, g, b) => r > 190 && g > 145 && b < 130 && g - b > 55;
+  const isGreen = (r, g, b) => r < 150 && g > 145 && b < 140 && g - r > 45 && g - b > 35;
 
   // Monochrome dark slate dot triplets embedded in desktop-blur wrappers
   const isMonoRed = (r, g, b) => Math.abs(r - 56) <= 3 && Math.abs(g - 66) <= 3 && Math.abs(b - 79) <= 3;
@@ -127,31 +129,31 @@ function findJpegs(dir, list = []) {
   return list;
 }
 
-function runCheck() {
-  const images = findJpegs(ARCHETYPES_DIR);
-  let failed = false;
-
+export function scanFrames({ archetypesDir = ARCHETYPES_DIR, trainingDir = TRAINING_DIR } = {}) {
+  const images = [...findJpegs(archetypesDir), ...findJpegs(trainingDir)];
+  const failed = [];
+  const exempt = [];
   for (const image of images) {
+    // Do not follow a symlink into an unscanned file, even if it happens to contain a valid image.
+    if (fs.lstatSync(image).isSymbolicLink()) { failed.push(image); continue; }
     const bytes = fs.readFileSync(image);
     const hash = crypto.createHash('sha256').update(bytes).digest('hex');
-    
-    if (hasBrowserChrome(bytes)) {
-      const relPath = path.relative(ROOT, image);
-      if (EXEMPT_HASHES.has(hash)) {
-        console.warn(`EXEMPT: Browser chrome detected in ${relPath} (grandfathered image)`);
-      } else {
-        console.error(`check:archetype-frames - FAILED: Browser chrome detected in ${relPath}`);
-        failed = true;
-      }
-    }
+    if (!hasBrowserChrome(bytes)) continue;
+    if (EXEMPT_HASHES.has(hash)) exempt.push(image);
+    else failed.push(image);
   }
+  return { images, failed, exempt };
+}
 
-  if (failed) {
-    console.error(`check:archetype-frames - FAILED: Archetype images must not contain browser/OS window frames.`);
+function runCheck() {
+  const { images, failed, exempt } = scanFrames();
+  for (const image of exempt) console.warn(`EXEMPT: Browser chrome detected in ${path.relative(ROOT, image)} (grandfathered image)`);
+  for (const image of failed) console.error(`check:archetype-frames - FAILED: Browser chrome or unscannable link in ${path.relative(ROOT, image)}`);
+  if (failed.length) {
+    console.error('check:archetype-frames - FAILED: Concept and training-reference images must not contain browser/OS window frames.');
     process.exit(1);
-  } else {
-    console.log(`check:archetype-frames - PASS - checked ${images.length} images for browser chrome`);
   }
+  console.log(`check:archetype-frames - PASS - checked ${images.length} images for browser chrome`);
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

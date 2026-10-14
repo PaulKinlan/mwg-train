@@ -31,8 +31,8 @@
  *   node scripts/generate-training-boards.mjs --write --only tr-01  # retry one family (image generation is stochastic)
  *   node scripts/generate-training-boards.mjs --register            # offline: verify committed bytes and rewrite register
  *
- * `--write` is the only mode that touches the tree, and it is never wired into `npm test` or `check:all`: every check in
- * this repository has to run offline, and this one makes billed model calls.
+ * `--write` is the only mode that makes billed model calls and is never wired into `npm test` or `check:all`.
+ * `--register` is offline: it verifies committed bytes, then writes the digest register.
  */
 
 import { createHash } from 'node:crypto';
@@ -77,6 +77,7 @@ export const BOARD_PROMPT_DATE = '11 October 2026';
 /** Boards, prompts and the register. All three live under `docs/`, which is enforced rather than assumed. */
 export const BOARD_DIR = 'docs/design/training';
 export const REGISTER_PATH = 'docs/provenance/assets/training-reference-boards.md';
+export const CROP_LEDGER_PATH = 'docs/provenance/assets/training-frame-crops.json';
 export const BRIEFS_MANIFEST = 'docs/train/briefs/manifest.jsonl';
 export const DESIGN_DIR = 'docs/train/design';
 
@@ -183,9 +184,8 @@ export function familySources(family, { root = ROOT, briefRows = null } = {}) {
 const sentence = (value) => value.charAt(0).toUpperCase() + value.slice(1);
 
 /**
- * A plausible but invented domain for the board's address bar. The first word of the site's own name plus a word-like
- * TLD chosen deterministically per family, so the chrome reads like a real site instead of a placeholder. It is a
- * fiction baked into an illustrative image and the register says so.
+ * Legacy deterministic fictional hostname from the earlier framed-board prompts. Kept as an exported helper for
+ * archived evidence, but new prompts never put a URL or browser address bar into a concept board.
  */
 const DOMAIN_SUFFIXES = ['community', 'studio', 'works', 'collective', 'site', 'shop', 'club', 'farm'];
 export function inventedDomain(siteName, familyId) {
@@ -261,12 +261,13 @@ export function composePrompt(sources) {
   // Written as instruction prose rather than `LABEL: value` blocks: the first batch's blocks were rendered onto the
   // page on at least one board, which printed "home (/) route" and "locale en-GB" in the hero.
   return [
-    `Create a finished, high-density screenshot of a real production website. The screenshot is ONE browser viewport ` +
-      `plus its chrome, at 16:9 (${BOARD_WIDTH}x${BOARD_HEIGHT}): the browser chrome runs along the top edge - macOS-style ` +
-      `window controls, a single tab, and an address bar reading the URL "https://${inventedDomain(siteName, family.family_id)}${page}" - ` +
-      `and below it the page fills the rest of the image. The image is cropped tight to the page: the content runs past ` +
-      `the left, right and bottom edges and you never see where the page ends horizontally. Draw no desktop wallpaper, no ` +
-      `window shadow, no rounded card, no surrounding margin and no second window or pane. Show exactly one page at one ` +
+    `Create a finished, high-density screenshot of a real production website. Show ONLY the website itself ` +
+      `at 16:9 (${BOARD_WIDTH}x${BOARD_HEIGHT}): its own brand header begins at the image's top edge and the web page ` +
+      `fills the entire viewport edge to edge. Strictly NO browser chrome, macOS traffic lights, OS window controls, ` +
+      `tabs, address or URL bars, browser borders, window frames, desktop backdrop or surrounding margins. The image ` +
+      `is cropped tight to the page: the content runs past the left, right and bottom edges and you never see where the ` +
+      `page ends horizontally. Draw no window shadow, no rounded outer card and no second window or pane. Show exactly ` +
+      `one page at one ` +
       `scroll position, scrolled to the top, with its complete footer visible, and never show the same page twice or ` +
       `split the frame into two panes or a comparison layout. This is a real screenshot, NOT a sketch, NOT a wireframe, ` +
       `NOT a hand-drawn illustration, NOT a diagram, NOT low-fidelity.`,
@@ -286,7 +287,7 @@ export function composePrompt(sources) {
     `Every name, address, brand, institution, price, date, quantity, time and label must be entirely fictional, specific to this subject and internally ` +
       `consistent with the rest of the page; invent fictional entities rather than using real-world ones or writing placeholder brackets. Keep text runs short - ` +
       `headings of two to five words, control labels of one to three words - and ensure all generated text is clean, legible, and correctly spelled with no garbled prose. Include a ` +
-      (family.family_id === 'tr-21' ? `Destination Hospital: Elmwood General Clinic, 142 Elmwood Boulevard. Strictly fictional hospital name and address; do not use Leicester Royal Infirmary or any real NHS site. Render a single centered desktop browser window, single full-bleed page layout, no split-screen or side-by-side duplicate views. ` : '') +
+      (family.family_id === 'tr-21' ? `Destination Hospital: Elmwood General Clinic, 142 Elmwood Boulevard. Strictly fictional hospital name and address; do not use Leicester Royal Infirmary or any real NHS site. Render one full-bleed web page, no split-screen or side-by-side duplicate views. ` : '') +
       `short social-proof row of two or three customer reviews with star ratings wherever the page type allows, each ` +
       `reviewer a different invented name shown beside a small portrait, and a footer carrying the business's contact ` +
       `details. Include at least one large editorial-quality photograph where the subject has something to photograph, ` +
@@ -296,7 +297,7 @@ export function composePrompt(sources) {
       `email provider such as gmail.com or fastmail, a real company or brand name or logo, or provider branding on a map ` +
       `or chart; use only invented fictional organisations, people, addresses and domains.`,
     `This paragraph is instruction for you, not copy for the page: print no URL, query string or slash-path text ` +
-      `anywhere except the address bar, no selector or class name, no locale code, no file name, no date-format token ` +
+      `on the web page; there is no browser address bar. Print no selector or class name, no locale code, no file name, no date-format token ` +
       `such as MM/DD/YYYY, and no other technical detail on the page. Make every total agree with the rows it ` +
       `summarises, and give every row, card and control its own distinct content.`,
     antiPatterns.length ? `Avoid: ${antiPatterns.join('; ')}.` : '',
@@ -384,6 +385,20 @@ export function boardIsWidescreen(dimensions) {
   return ratio > 1.6 && ratio < 1.9;
 }
 
+/** A derived crop keeps the source pixels' shape; only raw image-model output must retain its 16:9 frame. */
+export function derivedCropMatches(dimensions, evidence, boardDigest, bytes) {
+  const box = evidence?.box;
+  if (!dimensions || !Array.isArray(box) || box.length !== 4 || !box.every(Number.isInteger)) return false;
+  const [left, top, right, bottom] = box;
+  const ratio = dimensions.width / dimensions.height;
+  return left >= 0 && top > 0 && right <= BOARD_WIDTH && bottom <= BOARD_HEIGHT && left < right && top < bottom
+    && dimensions.width === right - left && dimensions.height === bottom - top
+    && evidence.derivedDimensions?.[0] === dimensions.width && evidence.derivedDimensions?.[1] === dimensions.height
+    && dimensions.width >= 1200 && dimensions.height >= 600 && ratio >= 1.7 && ratio <= 2.2
+    && /^[a-f0-9]{64}$/.test(evidence.sourceSha256 ?? '')
+    && boardDigest === evidence.derivedSha256 && bytes === evidence.derivedBytes;
+}
+
 /**
  * The register: a generated document, so it cannot drift from the files it describes. `--register` rewrites it from the
  * committed bytes with no network call, which is also what `--check` reads.
@@ -399,8 +414,10 @@ export function renderRegister(entries, { generatedOn = null } = {}) {
     (entry) =>
       `| \`${entry.family}\` | [\`reference.jpg\`](${linkTo(entry.board)}) | \`${entry.boardSha256}\` | ${entry.bytes} | ` +
       `${entry.dimensions ? `${entry.dimensions.width} × ${entry.dimensions.height}` : 'unmeasured'} | ` +
-      `[\`prompt.txt\`](${linkTo(entry.promptFile)}) | \`${entry.promptSha256}\` | \`${entry.model}\` |`,
+      `[\`prompt.txt\`](${linkTo(entry.promptFile)}) | \`${entry.promptSha256}\` | \`${entry.model}\` | ` +
+      (entry.crop ? `\`${entry.crop.sourceSha256}\` | \`${entry.crop.box.join(',')}\` |` : '— | — |'),
   );
+  const crops = entries.filter((entry) => entry.crop);
   const unattested = entries.filter((entry) => entry.model !== BOARD_MODEL);
   return [
     `# Provenance: training-family visual reference boards`,
@@ -412,21 +429,32 @@ export function renderRegister(entries, { generatedOn = null } = {}) {
       `sealed A6 evaluation targets. The A1 conformance instrument is a different file: ` +
       `[\`training-targets.md\`](training-targets.md), \`data/A1_self_generated/targets/<family>/target.png\`, which stays a ` +
       `render of the authored board.`,
-    `- **Generation:** regenerated ${generatedOn ?? 'on request'} by [\`scripts/generate-training-boards.mjs\`](../../../scripts/generate-training-boards.mjs), ` +
+    `- **Original generation:** source boards generated ${generatedOn ?? '2026-10-11'} by [\`scripts/generate-training-boards.mjs\`](../../../scripts/generate-training-boards.mjs), ` +
       `which requests \`${BOARD_MODEL}\` explicitly through the project's model gateway ` +
       `(\`https://gemini.int.exe.xyz/v1beta/models/${BOARD_MODEL}:generateContent\`, overridable with ` +
       `\`MWG_TRAIN_IMAGE_ENDPOINT\`) and **fails closed unless the response's own \`modelVersion\` equals the requested model**. ` +
       `Recorded settings: \`responseModalities: ["IMAGE"]\`, temperature ${BOARD_TEMPERATURE}, \`maxOutputTokens\` ${BOARD_MAX_OUTPUT_TOKENS}; ` +
-      `each board is generated in one ${BOARD_WIDTH}×${BOARD_HEIGHT} 16:9 frame. The attestation is a property of the ` +
-      `gateway's own response, not a cryptographic proof about the pixels, and no seed was set: the bytes are not ` +
-      `reproducible from the same prompt.`,
+      `each ORIGINAL board was generated in one ${BOARD_WIDTH}×${BOARD_HEIGHT} 16:9 frame. The model attestation ` +
+      `applies to those source responses, NOT to the locally cropped JPEG bytes below; no seed was set and the original ` +
+      `images are not reproducible from the same prompt.`,
+    ...(crops.length ? [
+      `- **Offline frame removal:** ${crops.length} committed references are page-only crops from original commit ` +
+        `\`${crops[0].crop.sourceCommit}\`. The exact original SHA-256, crop box [left,top,right,bottom], output ` +
+        `dimensions/bytes and output SHA-256 are pinned in ` +
+        `[\`${CROP_LEDGER_PATH}\`](${linkTo(CROP_LEDGER_PATH)}). ` +
+        `[\`scripts/crop-training-reference-frames.py\`](../../../scripts/crop-training-reference-frames.py) ` +
+        `uses Pillow 12.3.0 at JPEG quality 95/subsampling 0, with no image-model call, scaling or inpainting. ` +
+        `The cropped bytes are DERIVED from attested originals; they are not freshly generated model outputs. ` +
+        `Their varying aspect ratios preserve page content and are not claims of an exact 16:9 render.`,
+    ] : []),
     `- **Prompts:** The boards were generated from an earlier prompt revision. The current canonical prompts are composed deterministically from each family's own committed sources - its canonical (\`-v1\`) row in ` +
       `[\`docs/train/briefs/manifest.jsonl\`](../../train/briefs/manifest.jsonl), its [\`plan.md\`](../../train/design) routes, ` +
       `journeys and fields, and its \`design.md\` palette, typography and anti-patterns. Every prompt names the RECORDED date ` +
       `\`${BOARD_PROMPT_DATE}\` as today and asks for every event after it: the second batch, asked for "the near future" ` +
       `without being told when now was, dated twenty boards in 2023 and 2024. Composing rather than hand-writing means the ` +
       `owner's own description of the site is in every prompt verbatim, and the art direction is the family's own ` +
-      `\`design.md\` rather than a shared template.`,
+      `\`design.md\` rather than a shared template. This newer prompt explicitly forbids browser/OS chrome: ` +
+      `the cropped existing images came from an older framed prompt and do not prove the new instruction was executed by the image model.`,
     `- **Rights:** [Google consumer-account terms](../accounts/google-antigravity-consumer.md) prohibit using AI-generated ` +
       `service content to develop machine-learning models. These boards are **not** corpus material: ` +
       `\`excluded_from_training: true\`, \`approved_for_training: false\`, and in kind \`A3_teacher_generated\` - teacher-model ` +
@@ -442,11 +470,13 @@ export function renderRegister(entries, { generatedOn = null } = {}) {
       ? [`- **UNATTESTED ROWS:** ${unattested.map((entry) => `\`${entry.family}\``).join(', ')} is not attested \`${BOARD_MODEL}\`. This register must not be committed with an unattested row.`]
       : []),
     ``,
-    `| Family | Board | SHA-256 (JPEG bytes) | Bytes | Dimensions | Prompt | SHA-256 (exact UTF-8 prompt) | Model (attested) |`,
-    `| --- | --- | --- | ---: | --- | --- | --- | --- |`,
+    `| Family | Board | SHA-256 (current JPEG bytes) | Bytes | Dimensions | Prompt | SHA-256 (current prompt UTF-8) | Original model (attested) | Original JPEG SHA-256 | Crop box [left,top,right,bottom] |`,
+    `| --- | --- | --- | ---: | --- | --- | --- | --- | --- | --- |`,
     ...rows,
     ``,
-    `The JPEG digests prove the handed-off files' integrity. The boards were generated from an earlier prompt revision; the prompt digests below reflect the current canonical prompts, which append a WCAG contrast direction. Neither is a reproduction claim.`,
+    `The current JPEG SHA-256 pins derived page-only bytes; the original JPEG SHA-256 and boxes bind each ` +
+      `offline transformation to its source. Current prompt digests include the no-browser-chrome direction, ` +
+      `but are NOT the historic prompts used for the original images. No pixel-level model regeneration is claimed.`,
     ``,
   ].join('\n');
 }
@@ -456,6 +486,19 @@ export function inspectCommitted({ root = ROOT, only = null } = {}) {
   const rows = readBriefRows(root);
   const entries = [];
   const problems = [];
+  let cropLedger = null;
+  if (existsSync(join(root, CROP_LEDGER_PATH))) {
+    try {
+      cropLedger = JSON.parse(readFileSync(join(root, CROP_LEDGER_PATH), 'utf8'));
+      if (cropLedger.schemaVersion !== 1 || !/^[a-f0-9]{40}$/.test(cropLedger.sourceCommit ?? '')
+          || cropLedger.sourceDimensions?.[0] !== BOARD_WIDTH || cropLedger.sourceDimensions?.[1] !== BOARD_HEIGHT
+          || !cropLedger.boards || typeof cropLedger.boards !== 'object' || Array.isArray(cropLedger.boards)) {
+        throw new Error('invalid crop-ledger schema or source identity');
+      }
+      const known = new Set(TRAINING_TARGET_FAMILIES.map((family) => family.family_id));
+      for (const id of Object.keys(cropLedger.boards)) if (!known.has(id)) problems.push(`crop ledger declares unknown family ${id}`);
+    } catch (error) { problems.push(`invalid ${CROP_LEDGER_PATH}: ${error.message}`); cropLedger = null; }
+  }
   for (const family of TRAINING_TARGET_FAMILIES) {
     if (only && !only.includes(family.family_id)) continue;
     const board = boardPath(family.family_id);
@@ -471,8 +514,10 @@ export function inspectCommitted({ root = ROOT, only = null } = {}) {
       problems.push(`${family.family_id}: ${promptFile} does not match the prompt composed from its own brief and design.md`);
     }
     const inspected = inspectBoard(bytes);
-    if (!boardIsWidescreen(inspected.dimensions)) {
-      problems.push(`${family.family_id}: ${board} is ${inspected.dimensions ? `${inspected.dimensions.width}x${inspected.dimensions.height}` : 'unmeasurable'}, not a 16:9 board`);
+    const crop = cropLedger?.boards?.[family.family_id] ?? null;
+    if (crop ? !derivedCropMatches(inspected.dimensions, crop, inspected.sha256, inspected.bytes)
+      : !boardIsWidescreen(inspected.dimensions)) {
+      problems.push(`${family.family_id}: ${board} has unverified dimensions, bytes or crop provenance`);
     }
     entries.push({
       family: family.family_id,
@@ -483,6 +528,7 @@ export function inspectCommitted({ root = ROOT, only = null } = {}) {
       dimensions: inspected.dimensions,
       boardSha256: inspected.sha256,
       promptSha256: sha256(prompt),
+      crop: crop ? { ...crop, sourceCommit: cropLedger.sourceCommit } : null,
     });
   }
   return { entries, problems };
