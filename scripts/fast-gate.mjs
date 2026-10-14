@@ -295,8 +295,7 @@ function isExempt(file) {
     file.startsWith('.beads/') ||
     file.startsWith('deploy/') ||
     file === '.gitignore' ||
-    file === 'package-lock.json' ||
-    file === 'scripts/fast-gate.mjs'
+    file === 'package-lock.json'
   );
 }
 
