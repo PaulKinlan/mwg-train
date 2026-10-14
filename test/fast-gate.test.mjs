@@ -123,13 +123,25 @@ test('a selector edit declares its own suite route in the hashed coverage contra
 });
 
 test('the selector cannot be exempt from its declared suite route', () => {
-  // If the mapping edge and name-stem fallback both disappear, isExempt must reject the
-  // selector as unmapped instead of turning a missing self-check into a green smoke run.
-  const source = fs.readFileSync(FAST_GATE, 'utf8');
-  const exemption = source.match(/function isExempt\(file\) \{([\s\S]*?)\n\}/)?.[1];
-  assert.ok(exemption, 'isExempt must remain inspectable');
-  assert.doesNotMatch(exemption, /file\s*===\s*['"]scripts\/fast-gate\.mjs['"]/,
-    'scripts/fast-gate.mjs must fail closed if its mapped suite route is removed');
+  // Run the actual selector in a minimal project with neither the mapping edge nor a
+  // test/fast-gate.test.mjs name-stem fallback. A different spelling of isExempt must
+  // not turn this missing coverage into a green smoke run.
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'mwg-fast-gate-unmapped-self-'));
+  try {
+    const scriptDir = path.join(tmp, 'scripts');
+    fs.mkdirSync(scriptDir);
+    const selector = path.join(scriptDir, 'fast-gate.mjs');
+    fs.copyFileSync(FAST_GATE, selector);
+    const mapPath = path.join(tmp, 'coverage-mapping.json');
+    fs.writeFileSync(mapPath, '{}');
+    const env = { ...process.env, GIT_CHANGED: 'scripts/fast-gate.mjs', FAST_GATE_LIST: '1', FAST_GATE_COVERAGE_MAP: mapPath };
+    const res = spawnSync('node', [selector], { cwd: tmp, env, encoding: 'utf8' });
+    assert.notStrictEqual(res.status, 0, 'an unmapped selector must fail even in list mode');
+    assert.match(res.stderr, /unmapped changed files[\s\S]*scripts\/fast-gate\.mjs/);
+    assert.doesNotMatch(res.stdout, /smoke suite/, 'smoke must not substitute for selector coverage');
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
 });
 
 test('mapping changes select the edge hash even if its mapping self-entry is deleted', () => {
