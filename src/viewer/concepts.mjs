@@ -307,15 +307,22 @@ export function trainingBoard(repoRoot, id) {
   return file ? { bytes: readFileSync(file), type: 'image/jpeg' } : null;
 }
 
-/** These are authored A6 targets, not captures of the generated demo. */
-export function conceptTarget(repoRoot, id) {
+/** Resolve a target only when its arm declares the id and its file remains confined.
+ *  The listing checks this path; the GET is the only caller that reads the full PNG. */
+function conceptTargetFile(repoRoot, id) {
   if (typeof id !== 'string') return null;
   if (EVAL_TARGETS.has(id)) {
     const root = join(repoRoot, 'data/A6_evaluation/targets');
-    const file = confinedFile(root, join(root, id), 'target.png');
-    return file ? { bytes: readFileSync(file), type: 'image/png' } : null;
+    return confinedFile(root, join(root, id), 'target.png');
   }
-  return trainingTarget(repoRoot, id);
+  if (!trainingFamilies(repoRoot).some((family) => family.id === id)) return null;
+  return trainingTargetFile(repoRoot, id);
+}
+
+/** These are authored A6 targets, not captures of the generated demo. */
+export function conceptTarget(repoRoot, id) {
+  const file = conceptTargetFile(repoRoot, id);
+  return file ? { bytes: readFileSync(file), type: 'image/png' } : null;
 }
 
 /** Serve the authored A1 training target for a family: declared in the manifest AND present, confined, under
@@ -375,7 +382,7 @@ export function listConcepts(repoRoot) {
     archetypes: archetypes.map((id) => {
       const first = journeys.find((journey) => journey.id === id)?.steps[0];
       const stepReference = !names.includes(id) && first?.available;
-      return { id, reference: names.includes(id) || !!stepReference, target: !!conceptTarget(repoRoot, id),
+      return { id, reference: names.includes(id) || !!stepReference, target: !!conceptTargetFile(repoRoot, id),
         ...(stepReference ? { referencePath: `/concepts/images/${id}/${first.id}.jpg` } : {}) };
     }),
     // The training arm is listed whether or not its render is on disk: a declared family with no target yet is an

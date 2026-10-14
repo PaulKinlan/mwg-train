@@ -194,7 +194,7 @@ test('gallery serves the generated archetype reference boards and the authored e
   assert.equal((await fetch(`${base}/live/example/original/`)).status, 404);
 });
 
-test('listing checks confined JPEG availability without reading full image bytes', () => {
+test('listing checks confined image availability without reading full JPEG or PNG bytes', () => {
   const root = mkdtempSync(join(tmpdir(), 'viewer-concepts-stat-'));
   try {
     const archetypes = join(root, 'docs/design/archetypes');
@@ -204,12 +204,16 @@ test('listing checks confined JPEG availability without reading full image bytes
     writeFileSync(join(archetypes, 'booking/step1-browse.jpg'), bytes);
     writeFileSync(join(archetypes, 'editorial-blog/step1-index.jpg'), bytes);
     writeFileSync(join(archetypes, 'future-reference.jpg'), bytes);
+    const png = Buffer.from([137, 80, 78, 71]);
+    const targetDir = join(root, 'data/A6_evaluation/targets/booking');
+    mkdirSync(targetDir, { recursive: true });
+    writeFileSync(join(targetDir, 'target.png'), png);
     const script = `
       import fs from 'node:fs';
       import { syncBuiltinESMExports } from 'node:module';
       const read = fs.readFileSync;
       fs.readFileSync = (file, ...args) => {
-        if (typeof file === 'string' && file.endsWith('.jpg')) throw Error('list read full JPEG: ' + file);
+        if (typeof file === 'string' && (file.endsWith('.jpg') || file.endsWith('.png'))) throw Error('list read full image: ' + file);
         return read(file, ...args);
       };
       syncBuiltinESMExports();
@@ -217,15 +221,18 @@ test('listing checks confined JPEG availability without reading full image bytes
       const gallery = listConcepts(process.argv[1]);
       console.log(JSON.stringify({
         booking: gallery.bookingSteps[0].available,
+        target: gallery.archetypes.find(({ id }) => id === 'booking')?.target,
         board: gallery.boards.some(({ archetype, id }) => archetype === 'editorial-blog' && id === 'step1-index'),
         discovered: gallery.archetypes.some(({ id, reference }) => id === 'future-reference' && reference),
       }));
     `;
     const output = execFileSync(process.execPath, ['--input-type=module', '-e', script, root,
       new URL('../src/viewer/concepts.mjs', import.meta.url).href], { encoding: 'utf8', timeout: 10000 });
-    assert.deepEqual(JSON.parse(output), { booking: true, board: true, discovered: true });
+    assert.deepEqual(JSON.parse(output), { booking: true, target: true, board: true, discovered: true });
     assert.deepEqual(conceptBookingStep(root, 'step1-browse')?.bytes, bytes,
-      'the image-serving accessor still reads and returns the exact JPEG bytes');
+      'the JPEG accessor still serves the exact bytes');
+    assert.deepEqual(conceptTarget(root, 'booking')?.bytes, png,
+      'the PNG accessor still serves the exact bytes');
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
 
@@ -321,6 +328,8 @@ test('concept image endpoints refuse traversal, unexpected names, and symlink es
   symlinkSync(outside, join(root, 'data/A6_evaluation/targets/booking/target.png'));
   assert.equal(conceptImage(root, 'booking'), null);
   assert.equal(conceptTarget(root, 'booking'), null);
+  assert.equal(listConcepts(root).archetypes.find(({ id }) => id === 'booking')?.target, false,
+    'the A6 availability flag must refuse a symlink just like its serving accessor');
   assert.equal(conceptImage(root, '../private'), null);
   const base = await serve(t, root);
   for (const path of ['/concepts/images/booking.jpg', '/concepts/targets/booking.png', '/concepts/images/../../private.jpg', '/concepts/images/layout-unknown.jpg', '/concepts/images/%2e%2e%2fprivate.jpg', '/concepts/targets/unknown.png']) {
