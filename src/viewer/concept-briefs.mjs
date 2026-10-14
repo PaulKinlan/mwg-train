@@ -31,11 +31,23 @@ function section(markdown, heading) {
   return text || null;
 }
 
-function siteProse(text) {
+function protectFences(text) {
+  const fences = [];
+  const protectedText = text.replace(/```[^\n]*\n[\s\S]*?\n```/g, (block) => {
+    const marker = `MWGFENCEDCODE${fences.length}MARKER`;
+    fences.push(block);
+    return marker;
+  });
+  return { text: protectedText,
+    restore: (prose) => prose.replace(/MWGFENCEDCODE(\d+)MARKER/g, (_, index) => fences[Number(index)]) };
+}
+
+function siteProse(text, { preserveFences = false } = {}) {
   // A site-generation prompt is not a copy of the conformance fixture's rendering instructions.
   // Keep the authored substance while removing Markdown markup and board-only viewport instructions.
+  const protectedText = preserveFences ? protectFences(text) : { text, restore: (prose) => prose };
   let referenceBullet = false;
-  return text?.split(/\n{2,}/)
+  const prose = protectedText.text?.split(/\n{2,}/)
     .filter((paragraph) => !/^The five boards are laid out on this grammar/i.test(paragraph.trim()))
     .join('\n\n')
     .split('\n')
@@ -53,10 +65,11 @@ function siteProse(text) {
     .replace(/`([^`]+)`/g, '$1')
     .replace(/^>\s?/gm, '')
     .trim();
+  return protectedText.restore(prose);
 }
 
-function group(name, content) {
-  return content ? `${name}:\n${siteProse(content)}` : `${name}: Not yet documented in this checkout.`;
+function group(name, content, options) {
+  return content ? `${name}:\n${siteProse(content, options)}` : `${name}: Not yet documented in this checkout.`;
 }
 
 function declaredTokens(design) {
@@ -190,17 +203,23 @@ const TRAINING_COMPONENTS = {
 };
 
 function trainingLayoutProse(text) {
-  // Strip only training-prompt commentary about reference bytes and boards. The
-  // archetype gallery still renders the original source text via siteProse().
-  const functional = text.replace(/The reference board puts them in a\s+right-hand sidebar/gi,
-    'On wide screens a right-hand sidebar can hold them');
-  return functional.split(/\n{2,}/).flatMap((paragraph) => paragraph.split(/(?=^[-*]\s)/m))
+  // Source-backed CSS examples are runnable contracts, not demo selector inventories.
+  // Protect their fences before filtering board commentary or de-dotting prose labels.
+  const protectedText = protectFences(text);
+  const functional = protectedText.text
+    .replace(/The reference board puts them in a\s+right-hand sidebar/gi,
+      'On wide screens a right-hand sidebar can hold them')
+    .replace(/Page structure top to bottom, as declared and as rendered:/gi,
+      'Page structure top to bottom:')
+    .replace(/, and the date the board was read\b/gi, '');
+  const prose = functional.split(/\n{2,}/).flatMap((paragraph) => paragraph.split(/(?=^[-*]\s)/m))
     .filter((unit) => !/\b(?:rasters?|the corpus|both boards|both references|training boards|reference boards?|browser viewports?|(?:tr|fam)-\d{2})\b/i.test(unit) &&
-      !/^\s*(?:\*\*A divergence|The two training boards|The reference establishes the grammar|[-*]\s*The five boards)/i.test(unit))
+      !/^\s*(?:\*\*A divergence|The two training boards|The reference establishes the grammar|(?:[-*]\s*)?The five boards)/i.test(unit))
     .join('\n')
     .replace(/(?<![a-z0-9])\.([a-z][a-z0-9-]*)\b/gi, (_, name) => name.replaceAll('-', ' '))
     .replace(/\n{3,}/g, '\n\n')
     .trim();
+  return protectedText.restore(prose);
 }
 
 function trainingSiteLayout(design, archetype, journey) {
@@ -330,9 +349,9 @@ export function trainingBrief(repoRoot, id, row) {
     sitePrompt: [
       `Build a functional ${row.archetype.replaceAll('-', ' ')} website for this scenario. The image prompt below is an illustration brief; it is not a substitute for implementing the behaviour.`,
       group('Use case', row.prompt),
-      group('UI layout', trainingSiteLayout(siteDesign, row.archetype, journey)),
+      group('UI layout', trainingSiteLayout(siteDesign, row.archetype, journey), { preserveFences: true }),
       group('Family visual direction and tokens', [familyVisualThesis(design), declaredTokens(design), section(design, 'Token usage')].filter(Boolean).join('\n\n')),
-      group('Expected components', siteComponentHierarchy(siteDesign, { trainingArchetype: siteDesign !== design ? row.archetype : null })),
+      group('Expected components', siteComponentHierarchy(siteDesign, { trainingArchetype: siteDesign !== design ? row.archetype : null }), { preserveFences: true }),
       group('Step-by-step interactions', journey),
       group('Validation and server state', section(plan, 'Validation and states')),
       group('Required assertions', assertions.length ? assertions.map((assertion) => `- ${assertion}`).join('\n') : null),

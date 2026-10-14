@@ -162,8 +162,11 @@ test('every training family receives functional layout and components without sh
       `${target.id} cannot cite siblings or static family board IDs in build layout`);
     assert.doesNotMatch(projected, /\b(?:rasters?|the corpus|both families|both references|both boards|training boards?|reference boards?|demo stylesheet|browser viewports?)\b/i,
       `${target.id} cannot treat raster/source comparisons as site requirements`);
-    assert.doesNotMatch(projected, /(?:^|[\s(`])\.[a-z][a-z0-9-]*\b/i,
-      `${target.id} cannot inherit archetype demo CSS class inventories`);
+    const proseOnly = projected.replace(/```[\s\S]*?```/g, '');
+    assert.doesNotMatch(proseOnly, /(?:^|[\s(`])\.[a-z][a-z0-9-]*\b/i,
+      `${target.id} cannot inherit demo CSS class inventories outside authored fenced code`);
+    assert.doesNotMatch(projected, /The five boards are laid out on this grammar|as declared and as rendered|date the board was read/i,
+      `${target.id} cannot inherit source-board comparisons or observation dates`);
   }
   for (const [id, structure] of [
     ['tr-04', /summary region[\s\S]*subject region[\s\S]*inline log form/i],
@@ -181,6 +184,22 @@ test('every training family receives functional layout and components without sh
     const prompt = targets.find((target) => target.id === id).brief.sitePrompt;
     const layout = prompt.match(/UI layout:\n([\s\S]*?)(?=\n\nFamily visual direction and tokens:)/)?.[1] ?? '';
     assert.ok(layout.includes(`#${formId}`), `${id} keeps its family plan form ID in layout`);
+  }
+});
+
+test('training prompts retain runnable fenced progressive-enhancement CSS for tr-31 and tr-33', () => {
+  const targets = listConcepts(ROOT).trainingTargets;
+  const componentsOf = (id) => targets.find((target) => target.id === id).brief.sitePrompt
+    .match(/Expected components:\n([\s\S]*?)(?=\n\nStep-by-step interactions:)/)?.[1] ?? '';
+  assert.match(componentsOf('tr-31'), /```css[\s\S]*\.anatomy-steps\s*\{[\s\S]*\.driver-label\s*\{[\s\S]*```/,
+    'tr-31 retains runnable progressive-enhancement selectors and their fenced CSS contract');
+  assert.match(componentsOf('tr-33'), /```css[\s\S]*\.issue-table:has\(input\[type="checkbox"\]:checked\) \.bulk-actions\s*\{[\s\S]*\.issue-title:user-invalid\s*\{[\s\S]*```/,
+    'tr-33 retains runnable advanced CSS selectors inside its authored contract');
+  for (const [id, archetype] of [['tr-31', 'scroll-storytelling-launch'], ['tr-33', 'saas-workspace-board']]) {
+    const authored = readFileSync(join(ROOT, 'docs/design/archetypes', archetype, 'design.md'), 'utf8')
+      .match(/^```css\n[\s\S]*?\n```/m)?.[0];
+    assert.ok(authored && componentsOf(id).includes(authored),
+      `${id} copies the authored CSS fence byte-for-byte, including its selector syntax and fallback comments`);
   }
 });
 
