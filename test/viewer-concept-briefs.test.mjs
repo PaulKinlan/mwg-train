@@ -83,6 +83,65 @@ test('training site prompts use family palette and identity, not the archetype t
   }
 });
 
+test('training site prompts keep functional components without inheriting demo-only files or verification controls', () => {
+  const targets = listConcepts(ROOT).trainingTargets;
+  assert.equal(targets.length, 30);
+  for (const target of targets) {
+    assert.doesNotMatch(target.brief.sitePrompt, /Read from\s+demo\/|\bdemo\/[a-z0-9-]+\.html|demo state switcher|Demo State Switcher|#btn-state-(?:default|error|fill)/i,
+      `${target.id} must not cite a demo file or ship its verification switcher`);
+  }
+  const componentsOf = (target) => target.brief.sitePrompt.match(/Expected components:\n([\s\S]*?)(?=\nStep-by-step interactions:)/)?.[1] ?? '';
+  const bookingFamilies = targets.filter((target) => /^Build a functional booking website/.test(target.brief.sitePrompt));
+  assert.equal(bookingFamilies.length, 7);
+  for (const target of bookingFamilies) {
+    const components = componentsOf(target);
+    assert.match(components, /persistent header[\s\S]*progress stepper[\s\S]*labelled summary region[\s\S]*form card[\s\S]*confirmation ticket/,
+      `${target.id} retains the structural booking components`);
+    assert.doesNotMatch(components, /Evening Class Summary|1\. Select Class|Details & Registration|\binstructor\b|Full name|Delivery address|Postcode|#form-heading|#form-error-banner/i,
+      `${target.id} must use its own journey and field labels, never the Evening Class demo values`);
+  }
+  const tr17 = targets.find((target) => target.id === 'tr-17').brief.sitePrompt;
+  assert.match(tr17, /select\[name=species\][\s\S]*form#visit-booking-form/,
+    'the veterinary family plan still supplies its own functional field and form selectors');
+  assert.doesNotMatch(tr17, /the student|Evening Class Summary|1\. Select Class/,
+    'a farm visit site must not inherit a class-booking audience or step labels');
+  for (const id of ['tr-02', 'tr-18', 'tr-26']) {
+    const prompt = targets.find((target) => target.id === id).brief.sitePrompt;
+    const components = componentsOf(targets.find((target) => target.id === id));
+    assert.doesNotMatch(components, /^Read from\b/m, `${id} must not point at an internal archetype document`);
+    assert.match(components, /product or plan grid[\s\S]*order, cart or subscription summary[\s\S]*receipt or confirmation view/i,
+      `${id} retains real storefront components after removing the internal pointer`);
+    assert.doesNotMatch(components, /cart badge|shipping\/payment|#form-error-banner|\btr-26\b|\.subscription-card/i,
+      `${id} must use its own order or subscription fields rather than the demo's`);
+    assert.doesNotMatch(prompt, /configuration selects \(quantity, variant, grind\)/i,
+      `${id} must not inherit another family's grind field`);
+  }
+  assert.match(targets.find((target) => target.id === 'tr-26').brief.sitePrompt, /select\[name=grind\]/,
+    'the coffee subscription still gets grind selection from its own plan');
+  const jobBoard = targets.find((target) => target.id === 'tr-12').brief.sitePrompt;
+  assert.match(jobBoard, /UI layout:[\s\S]*application form[\s\S]*empty state/i,
+    'removing raster notes must retain the job-board site structure');
+  assert.doesNotMatch(jobBoard, /Oliver Bennett|CTT-2026-9842|the raster fills the form/i,
+    'a visual reference’s invented applicant and receipt are not functional site requirements');
+  for (const id of ['tr-07', 'tr-30']) {
+    const prompt = targets.find((target) => target.id === id).brief.sitePrompt;
+    const components = componentsOf(targets.find((target) => target.id === id));
+    assert.match(components, /event hero[\s\S]*registration form[\s\S]*confirmation\/read-back view/i,
+      `${id} keeps the reusable event registration structure`);
+    assert.doesNotMatch(components, /Future Web 2026|General Admission|Workshop Pass|142\s*\/\s*200|£120|Attendee name|Dietary preferences|#registration-form|#estimate|#tier-error|#attendee-name/i,
+      `${id} must not inherit event-demo names, counts, prices, fields or DOM IDs`);
+    const layout = prompt.match(/UI layout:\n([\s\S]*?)(?=\nFamily visual direction and tokens:)/)?.[1] ?? '';
+    const journey = prompt.match(/Step-by-step interactions:\n([\s\S]*?)(?=\nValidation and server state:)/)?.[1] ?? '';
+    const familyFormId = journey.match(/\bform#([a-z][a-z0-9-]*)\b/)?.[1];
+    assert.equal(familyFormId, id === 'tr-07' ? 'observatory-registration-form' : 'registration-form');
+    assert.ok(layout.includes(`#${familyFormId}`), `${id} layout must use the form ID declared by its own journey`);
+    assert.match(layout, /Tickets are a two-column grid[\s\S]*Radii are spelled literally/i,
+      `${id} keeps the spatial layout rather than deleting the entire authored section`);
+    if (id === 'tr-07') assert.doesNotMatch(layout, /#registration-form\b/,
+      'the observatory layout must not contradict its journey with the demo form ID');
+  }
+});
+
 test('early inline and later fenced image prompts are returned intact, never inferred from filenames', () => {
   const early = readFileSync(join(ROOT, 'docs/design/archetypes/booking/README.md'), 'utf8');
   const late = readFileSync(join(ROOT, 'docs/design/archetypes/community-forum/README.md'), 'utf8');
