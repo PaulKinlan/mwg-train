@@ -26,6 +26,18 @@
   "docs/design/archetypes/browser-puzzle-game/PROVENANCE.md": [
     "test/browser-puzzle-game-prompts.test.mjs"
   ],
+  "docs/design/archetypes/saas-workspace-board/README.md": [
+    "test/saas-workspace-board-prompts.test.mjs"
+  ],
+  "docs/design/archetypes/saas-workspace-board/design.md": [
+    "test/saas-workspace-board-prompts.test.mjs"
+  ],
+  "docs/design/archetypes/saas-workspace-board/plan.md": [
+    "test/saas-workspace-board-prompts.test.mjs"
+  ],
+  "docs/design/archetypes/saas-workspace-board/PROVENANCE.md": [
+    "test/saas-workspace-board-prompts.test.mjs"
+  ],
   "docs/design/archetypes/*/README.md": [
     "test/archetype-boards-generator.test.mjs",
     "test/board-states.test.mjs",

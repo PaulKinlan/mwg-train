@@ -1,0 +1,15 @@
+# Kestrel workspace reference-board provenance — pending generation
+
+- **Scope:** four proposed 1376 × 768 unframed page-only concept JPEGs described by the [Kestrel prompts](README.md). **No JPEG exists at this revision.** There is no model request/response, source raster, image byte count, image digest or full-resolution vision verdict. The prompt digests below identify only authored UTF-8 text.
+- **Spend boundary:** `mwg-train-07ka.3` covers the offline contracts/prompts. Generation is a separate owner-approval-gated follow-up; the proposed `gemini-nano-banana-2.1` gateway model is **not** an attested model output. Require a scoped amount, verified exact-SKU tariff and fail-closed reservation before any `--write` call. The no-write `scripts/generate-archetype-boards.mjs --only saas-workspace-board` inventory reported all four images `absent (never generated)`.
+- **Rights:** `excluded_from_training: true`; `approved_for_training: false`. The [consumer-account rights record](../../../provenance/accounts/google-antigravity-consumer.md) does not license AI-generated service content for developing other models. A future image does not grant model-training reuse, exclusive artistic rights or a customer-data entitlement.
+- **Content truth:** Kestrel, Sprint 24, KES-218, Elena Rostova and the issue activity are fictional sample material. The stills cannot prove a real issue database, board/table transitions, container responsiveness, a command execution, authorised bulk write, export or preserved reproduction text. The [plan](plan.md) requires actual browser-driven behaviour and permission checks before any such claim.
+
+| Proposed JPEG | Intended state | SHA-256 of exact UTF-8 prompt block | Model response | JPEG SHA-256 / bytes / dimensions | Vision assessment |
+| --- | --- | --- | --- | --- | --- |
+| `step1-board-and-inspector.jpg` | Kanban and selected inspector | `282602912d7d463e1fe4de15645fd59d1cf51013c2e1eb522da2c5132b52b9d1` | not called | **absent** | pending |
+| `step2-command-palette-popover.jpg` | Nonmodal command and badge actions | `a81b060f445fa05f343c70283c18415367ab996a8ac96b5af2650cf5aa3331f1` | not called | **absent** | pending |
+| `step3-filtered-table-view-transition.jpg` | Filtered table, three checked rows | `d7f60d93a8b218265e447e2927512e848ae1169d3841d2d861145400846f0505` | not called | **absent** | pending |
+| `step4-empty-filter-and-quick-create.jpg` | Zero-match and invalid Quick-Create | `308fbcc1e5e0174fd74d510328eb4a4b13dfcfedb612f8c19c63f6fed4ec4de9` | not called | **absent** | pending |
+
+The [README](README.md) carries the source text for these prompt digests. Compute `sha256(UTF-8 bytes between each \`\`\`text fence, omitting the final linefeed)`. Following authorised generation only, record each actual gateway response's own model identity/settings, original JPEG SHA-256/byte count/measured dimensions, no-frame inspection and any source→derived transformation. Create a global image provenance register when image evidence exists; do not silently replace this pending history or turn prompt SHAs into fictional image hashes.
