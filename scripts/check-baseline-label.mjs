@@ -210,6 +210,8 @@ export const DOCUMENTS = {
   // A reference about the state of the artifacts, not a report of measured floor evidence: it cites
   // check:specs only to show that the frozen trees did not move.
   '.fleet/coverage-mapping.json': 'contract',
+  // Reviewed clean-frame SHA set: evidence of what was scanned, not a floor measurement.
+  '.fleet/frame-scan-pins.json': 'provenance',
   'docs/KNOWN-SINKS.md': 'provenance',
   'docs/PIPELINE.md': 'floor-report',
   // The vocabulary decision (mwg-train-210): what the default is, what the ideal is, and the three
@@ -373,6 +375,8 @@ export const DOCUMENTS = {
   // published as planning documentation and deliberately kept out of the corpus, so it carries a rights record here
   // rather than a corpus manifest row.
   'docs/provenance/assets/training-reference-boards.md': 'provenance',
+  // Original-to-derived source SHA, explicit crop boxes and output SHA for the unframed planning boards.
+  'docs/provenance/assets/training-frame-crops.json': 'provenance',
   'docs/provenance/assets/reference-board-gaps.md': 'provenance',
   'docs/provenance/assets/board-states.json': 'provenance',
   'docs/provenance/assets/archetype-asset-sets.md': 'provenance',

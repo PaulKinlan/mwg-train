@@ -1,0 +1,461 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "903f3a8a003077270e4318184bbaf89a0d61690c",
+  "sourceDimensions": [
+    1376,
+    768
+  ],
+  "transform": "Pillow 12.3.0 JPEG quality=95 subsampling=0; crop only, no resize or inpainting",
+  "boards": {
+    "tr-01": {
+      "box": [
+        0,
+        58,
+        1376,
+        768
+      ],
+      "sourceSha256": "7306da185a82a6772f14fa8e338370b394d593e400ff68550f660cd1c9b372a1",
+      "derivedSha256": "eae265479ad5a85278d60ebca28477d85afbcb5bee494238afb0221a2e3f8fbb",
+      "derivedDimensions": [
+        1376,
+        710
+      ],
+      "derivedBytes": 309239
+    },
+    "tr-02": {
+      "box": [
+        0,
+        42,
+        1376,
+        768
+      ],
+      "sourceSha256": "929a1f251c103275026a64bf991038eb0963f09523fdefc44811ba78b6053acf",
+      "derivedSha256": "16a1cf928140ebd75ca703286e4df3c0ad89f9d89f9d5987258a393027b5ecf8",
+      "derivedDimensions": [
+        1376,
+        726
+      ],
+      "derivedBytes": 338991
+    },
+    "tr-03": {
+      "box": [
+        0,
+        64,
+        1376,
+        768
+      ],
+      "sourceSha256": "8754d2a95813d88e4583c451a1f331e8fbd0163f33bcd321d9edd6d41f7d8310",
+      "derivedSha256": "b2f9358aa1e6d8f26c93267da70b077e4bdc5868fc9302deeedf1713073418a2",
+      "derivedDimensions": [
+        1376,
+        704
+      ],
+      "derivedBytes": 296330
+    },
+    "tr-04": {
+      "box": [
+        0,
+        64,
+        1376,
+        768
+      ],
+      "sourceSha256": "7e48405ede2aeda0ec7a9117a144aa13922a42f77ccd114b354b679ff485e419",
+      "derivedSha256": "0ce63771402eb449fdbcdcb71642a482e3629342925b73456b281c65f5a08486",
+      "derivedDimensions": [
+        1376,
+        704
+      ],
+      "derivedBytes": 293555
+    },
+    "tr-05": {
+      "box": [
+        43,
+        89,
+        1325,
+        715
+      ],
+      "sourceSha256": "2ecfd49ccb12eca5537b18a453579a5a068639d1b4d2d10a3f16d884405b9cf0",
+      "derivedSha256": "5b1fe0acd72b1f1dea50cf8ed5b0e92cb5864cc7946ef3fe1dea77ab46410922",
+      "derivedDimensions": [
+        1282,
+        626
+      ],
+      "derivedBytes": 308157
+    },
+    "tr-06": {
+      "box": [
+        0,
+        62,
+        1376,
+        768
+      ],
+      "sourceSha256": "e6538d008af7c97dec2b84d1053cd15b7a55ef9d6407ea9b0619538bdbbad966",
+      "derivedSha256": "c345a6a87a1462b77919a6a88678d9bbd9a7a9a3c7649b4ae0a83b290a36f173",
+      "derivedDimensions": [
+        1376,
+        706
+      ],
+      "derivedBytes": 333671
+    },
+    "tr-07": {
+      "box": [
+        0,
+        71,
+        1376,
+        768
+      ],
+      "sourceSha256": "db55eaa21f2709e8b2a803302c9b306fc4a92a7fa7329b47b383920382841eda",
+      "derivedSha256": "6636a7a6a322f981d33c3314771723b3f836c3eacf00f04eeb3d2ab462c9cded",
+      "derivedDimensions": [
+        1376,
+        697
+      ],
+      "derivedBytes": 346184
+    },
+    "tr-08": {
+      "box": [
+        0,
+        64,
+        1376,
+        768
+      ],
+      "sourceSha256": "5c6b678c5892ea88b1a6b77ba43472739490342649342780336fb4cbde440f31",
+      "derivedSha256": "cc45bda3359c7d5e1f53553fc2c5d6fc1b49ee35d7ee347233830ea5dc16ae6e",
+      "derivedDimensions": [
+        1376,
+        704
+      ],
+      "derivedBytes": 319817
+    },
+    "tr-09": {
+      "box": [
+        0,
+        65,
+        1376,
+        768
+      ],
+      "sourceSha256": "aaa72aaffa1e92ccbfcf5ad6eca6a1063bf233aebcb22b76be54e9f806689587",
+      "derivedSha256": "b6b3fcc585a229e8240a77f1e8e779351a30888baf89556984b2252be2b6ef22",
+      "derivedDimensions": [
+        1376,
+        703
+      ],
+      "derivedBytes": 326538
+    },
+    "tr-10": {
+      "box": [
+        0,
+        68,
+        1376,
+        768
+      ],
+      "sourceSha256": "9973cdf12940c8cbd822c53848a3e6421a8f6e23a657b02bcf20e00a66ef1cf5",
+      "derivedSha256": "3fdecbf5e1594e0076fdbd17523e637455177006b1a8e866ddeae712e76b4924",
+      "derivedDimensions": [
+        1376,
+        700
+      ],
+      "derivedBytes": 277247
+    },
+    "tr-11": {
+      "box": [
+        0,
+        63,
+        1376,
+        768
+      ],
+      "sourceSha256": "f62ea8763e58b9f33c1cc9e4d961ed4add39248560522aa3243bf0656887fffc",
+      "derivedSha256": "08e6f2e4fc134364bfb10dfd65e10530cde479905d8f0701bd063d83060eaf69",
+      "derivedDimensions": [
+        1376,
+        705
+      ],
+      "derivedBytes": 378279
+    },
+    "tr-12": {
+      "box": [
+        0,
+        75,
+        1376,
+        768
+      ],
+      "sourceSha256": "ab796689a07ea8c7c3161b91802ae4d65ca08ea901b38f00fb22cc59f7afc8ac",
+      "derivedSha256": "f5f77421bd8a2e26b49efca9a65f9db66112d2a20453bf2f442a1a3f82472c7a",
+      "derivedDimensions": [
+        1376,
+        693
+      ],
+      "derivedBytes": 334321
+    },
+    "tr-13": {
+      "box": [
+        0,
+        70,
+        1376,
+        768
+      ],
+      "sourceSha256": "c5f6bfa77991d6bf15589c82de8580900defce5fbd531235dbdc9968bfebf1d1",
+      "derivedSha256": "bc461ed8efa7b802fdb58b5bd84acc3922fd317113b6c424f39311a2c0af6f5e",
+      "derivedDimensions": [
+        1376,
+        698
+      ],
+      "derivedBytes": 334219
+    },
+    "tr-14": {
+      "box": [
+        0,
+        65,
+        1376,
+        768
+      ],
+      "sourceSha256": "244103004266066178a989d8c58e41603e9663fd3f85e08547232b9bfc7031e0",
+      "derivedSha256": "535a88b6b0daa65116375baaae37e08486a1d07f76e099ed551626b49077882e",
+      "derivedDimensions": [
+        1376,
+        703
+      ],
+      "derivedBytes": 301016
+    },
+    "tr-15": {
+      "box": [
+        0,
+        73,
+        1376,
+        768
+      ],
+      "sourceSha256": "0fe0f483645a241ce1ec224ba5aca42f905fef48ceeaec49f8c5928ebcfa7683",
+      "derivedSha256": "09a366017022afcd04cbf7a60753422a76c77c094f30adeb0e6ecb0ea3d782ec",
+      "derivedDimensions": [
+        1376,
+        695
+      ],
+      "derivedBytes": 338030
+    },
+    "tr-16": {
+      "box": [
+        0,
+        59,
+        1376,
+        768
+      ],
+      "sourceSha256": "f0b6b720b9f0757cbfad519918b1251c670df6a3e19c0433cee40d268f869474",
+      "derivedSha256": "2dda485edd7bb56891acd6ffa1d69243be3bc7182161a24e0d46d504d11a36d3",
+      "derivedDimensions": [
+        1376,
+        709
+      ],
+      "derivedBytes": 380322
+    },
+    "tr-17": {
+      "box": [
+        0,
+        70,
+        1376,
+        768
+      ],
+      "sourceSha256": "d46ae4381f05bb1ca0fe8498abc03d5eb8dadffb429661c6de6552d51a87f9b6",
+      "derivedSha256": "7e5cf86302ccc83590a053fe5630b2d623ce927002a29e57ee48cc3ca1721190",
+      "derivedDimensions": [
+        1376,
+        698
+      ],
+      "derivedBytes": 354120
+    },
+    "tr-18": {
+      "box": [
+        0,
+        64,
+        1376,
+        768
+      ],
+      "sourceSha256": "415d776ac70f64aa91d5e8a4b9619fa32536e15b3487db7f335b35bde130af73",
+      "derivedSha256": "0f179542c0552348d8a465b669c7b69c1dbbe672b0df78704683c75272a9ff64",
+      "derivedDimensions": [
+        1376,
+        704
+      ],
+      "derivedBytes": 349162
+    },
+    "tr-19": {
+      "box": [
+        0,
+        65,
+        1376,
+        768
+      ],
+      "sourceSha256": "2d6d678600b9f0f9376e28a5dfbbbf02ebc87c3995cb6c84f0ca2ecf19bd9b8c",
+      "derivedSha256": "a8e46feacf4f3602a6aaabf17ba73f675a2ce01c38126c6667db471ae037a159",
+      "derivedDimensions": [
+        1376,
+        703
+      ],
+      "derivedBytes": 353757
+    },
+    "tr-20": {
+      "box": [
+        0,
+        74,
+        1376,
+        768
+      ],
+      "sourceSha256": "3e000d4f2c68620c312a99ad8e9dba60682deb4d3052c5c7a4035e66cc990097",
+      "derivedSha256": "60fe6f190006ec379c74bb23ef1134d727c784159be044a005b34c92daddbb06",
+      "derivedDimensions": [
+        1376,
+        694
+      ],
+      "derivedBytes": 364669
+    },
+    "tr-21": {
+      "box": [
+        37,
+        70,
+        1334,
+        721
+      ],
+      "sourceSha256": "b11dcdb99a882a37b714918a45592647ea2dda82a564034d32d98228957cb845",
+      "derivedSha256": "b7e1c976184cb8e4b5dabc0e0f1791b4e46d65ebf231487e5054e25d926947b4",
+      "derivedDimensions": [
+        1297,
+        651
+      ],
+      "derivedBytes": 338035
+    },
+    "tr-22": {
+      "box": [
+        0,
+        79,
+        1376,
+        768
+      ],
+      "sourceSha256": "4c6172ec47dfd04a6eada83eb6477c68745e322f572ad9a586ed2668008fc27c",
+      "derivedSha256": "61db3b27ab0f7ee93ecc2aa48c50245d077b7d50e6cbe39c21b9542e8dec46c1",
+      "derivedDimensions": [
+        1376,
+        689
+      ],
+      "derivedBytes": 308255
+    },
+    "tr-23": {
+      "box": [
+        0,
+        71,
+        1376,
+        768
+      ],
+      "sourceSha256": "bfc83830f7c23e315757d1e40a77efdd845e13df855e85401a1eb7612f537bee",
+      "derivedSha256": "d66debadf6c4c797d00651216b3fa56749a241537abeb29ce565d6546019afb3",
+      "derivedDimensions": [
+        1376,
+        697
+      ],
+      "derivedBytes": 303884
+    },
+    "tr-24": {
+      "box": [
+        0,
+        78,
+        1376,
+        750
+      ],
+      "sourceSha256": "68d5aeb07299e1ad260a0b97a5df3d49513dc30cc5e475cf3bf3359ffeff7445",
+      "derivedSha256": "d15e1b1894483e37b3163ebb27fdd383d187cae4fa1490da3fd53c4e43c6de33",
+      "derivedDimensions": [
+        1376,
+        672
+      ],
+      "derivedBytes": 270864
+    },
+    "tr-25": {
+      "box": [
+        41,
+        81,
+        1333,
+        717
+      ],
+      "sourceSha256": "9a0a25e6a516e786d4b0a81957822201b7ce03990b65cc9f64aef2fdfb1d2acc",
+      "derivedSha256": "1899e6d9a854c0bf22d07d2ee8a95a2016d96395651233955e05596c34ddae4d",
+      "derivedDimensions": [
+        1292,
+        636
+      ],
+      "derivedBytes": 306038
+    },
+    "tr-26": {
+      "box": [
+        0,
+        74,
+        1376,
+        768
+      ],
+      "sourceSha256": "0b977d38181b700bd553ef54a718c4df0ad5932769e1c7ece08a78fd1572140f",
+      "derivedSha256": "5970f5270f8646bc6091792ccfa830ab6456f5ad2320ab498d21d22bee4b9d70",
+      "derivedDimensions": [
+        1376,
+        694
+      ],
+      "derivedBytes": 327882
+    },
+    "tr-27": {
+      "box": [
+        0,
+        73,
+        1376,
+        768
+      ],
+      "sourceSha256": "a372431ef4765c26d095b16cf4f12d089a05109addc50778c843610eb2d0b963",
+      "derivedSha256": "6c9a4a65a6cf827d03494889e84c1d046da83dec747c73bd4dbe43d9e4d19971",
+      "derivedDimensions": [
+        1376,
+        695
+      ],
+      "derivedBytes": 342315
+    },
+    "tr-28": {
+      "box": [
+        0,
+        71,
+        1376,
+        768
+      ],
+      "sourceSha256": "d49bbd4b17efa7997468f6d8c6e9956232a8250de8e47ce5cca031b1c410d6d7",
+      "derivedSha256": "95c4246d7f996aaaee312ea4301acd93b05e017cf81d733a465a22fceb8c5813",
+      "derivedDimensions": [
+        1376,
+        697
+      ],
+      "derivedBytes": 351545
+    },
+    "tr-29": {
+      "box": [
+        0,
+        58,
+        1376,
+        768
+      ],
+      "sourceSha256": "ced6b80a2b36f0a0e7eaaed2570fa2723d62a177116bbe578437a98831fb7028",
+      "derivedSha256": "f3b5b19c9a6b8b70bd00965c1ce45ee9cb89e7b0dcaf479a98c8ba96ac3e1265",
+      "derivedDimensions": [
+        1376,
+        710
+      ],
+      "derivedBytes": 422920
+    },
+    "tr-30": {
+      "box": [
+        0,
+        71,
+        1376,
+        768
+      ],
+      "sourceSha256": "d3bc8e0cffac6b45a834a558070da205c4cd7dddad05c7eed817057843613857",
+      "derivedSha256": "83ee4e0cc796446c7189d62ca325ef1a5be719938f908c12c271c508bd661c9d",
+      "derivedDimensions": [
+        1376,
+        697
+      ],
+      "derivedBytes": 293165
+    }
+  }
+}

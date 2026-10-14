@@ -24,6 +24,8 @@ import {
   BOARD_TEMPERATURE,
   BOARD_WIDTH,
   REGISTER_PATH,
+  CROP_LEDGER_PATH,
+  derivedCropMatches,
   artDirectionOf,
   assertWritable,
   boardPath,
@@ -88,10 +90,13 @@ test('every prompt is composed from the family own sources and carries the owner
   assert.match(tr01.prompt, /Use £ prices/, 'en-GB families are priced in sterling');
   assert.match(tr01.prompt, /#0f172a/, 'the design.md palette is carried into the prompt');
   assert.match(tr01.prompt, /Avoid: a calendar widget/, 'the design.md anti-patterns are carried into the prompt');
-  assert.match(tr01.prompt, /ONE browser viewport/);
+  assert.match(tr01.prompt, /ONLY the website itself/);
+  assert.match(tr01.prompt, /Strictly NO browser chrome, macOS traffic lights, OS window controls/);
+  assert.match(tr01.prompt, /tabs, address or URL bars, browser borders, window frames/);
   assert.match(tr01.prompt, /never show the same page twice/, 'the duplicate-frame defect that a 16:9 request can trigger is named');
   assert.match(tr01.prompt, /cropped tight to the page/, 'the frame is pinned: the page fills the image and is cropped to it');
   assert.match(tr01.prompt, /print no URL, query string or slash-path text/, 'the model is told not to print the prompt on the page');
+  assert.doesNotMatch(tr01.prompt, /plus its chrome|anywhere except the address bar|single centered desktop browser window/i);
   // The recorded date, not the wall clock: a prompt that moved with `new Date()` would stop matching every committed
   // prompt.txt the next morning, and the second batch is why it exists - asked for "the near future", the model dated
   // twenty boards in 2023 and 2024.
@@ -105,6 +110,7 @@ test('every prompt is composed from the family own sources and carries the owner
   for (const board of boards) {
     assert.doesNotMatch(board.prompt, /\b(?:header|nav|main|section|form|fieldset|footer|aside)\.[a-z][\w-]*/, `${board.family}: selector syntax leaked into the prompt`);
     assert.doesNotMatch(board.prompt, /#[a-z][\w-]*(?:-form|-grid|-nav)/, `${board.family}: id selector leaked into the prompt`);
+    assert.doesNotMatch(board.prompt, /https:\/\/[^\s"]+\//, `${board.family}: a browser address or URL leaked into the new concept image prompt`);
   }
 
   const tr01Family = TRAINING_TARGET_FAMILIES[0];
@@ -201,6 +207,10 @@ test('the committed boards and the register, when the register exists, agree wit
     return;
   }
   const register = readFileSync(registerPath, 'utf8');
+  const ledger = JSON.parse(readFileSync(join(ROOT, CROP_LEDGER_PATH), 'utf8'));
+  assert.equal(ledger.sourceCommit.length, 40);
+  assert.equal(Object.keys(ledger.boards).length, 30, 'each derived board must have its own source and crop box');
+  assert.match(register, /Offline frame removal:\*\* 30 committed references/);
   // Resolve each link against the register's own directory instead of hard-coding how far up the tree it sits. This
   // test used to match the literal `../../` prefix and join the remainder to ROOT, which baked the register's depth
   // into the test: when the register's links were corrected to `../../design/training/...`, the remainder became
@@ -213,7 +223,16 @@ test('the committed boards and the register, when the register exists, agree wit
     const boardBytes = readFileSync(resolve(registerDir, board));
     assert.equal(sha256(boardBytes), boardDigest, `${family}: committed board digest must match the register`);
     assert.equal(boardBytes.length, Number(bytes), `${family}: committed board byte count must match the register`);
-    assert.equal(boardIsWidescreen({ width: Number(width), height: Number(height) }), true, `${family}: register must only pin 16:9 boards`);
+    const crop = ledger.boards[family];
+    if (crop) {
+      assert.equal(derivedCropMatches({ width: Number(width), height: Number(height) }, crop, boardDigest, boardBytes.length), true,
+        `${family}: actual bytes and dimensions must match a plausible documented page-only crop`);
+      assert.ok(register.includes('| `' + BOARD_MODEL + '` | `' + crop.sourceSha256 + '` | `' + crop.box.join(',') + '` |'),
+        `${family}: register must display the source SHA and exact crop box beside the derived SHA`);
+    } else {
+      assert.equal(boardIsWidescreen({ width: Number(width), height: Number(height) }), true,
+        `${family}: a future uncropped model image must retain the raw 16:9 contract`);
+    }
     assert.equal(sha256(readFileSync(resolve(registerDir, promptFile))), promptDigest, `${family}: committed prompt digest must match the register`);
   }
   assert.doesNotMatch(register, /UNATTESTED ROWS/, 'a committed register may not carry an unattested row');

@@ -1,4 +1,7 @@
 {
+  ".fleet/frame-scan-pins.json": [
+    "test/check-archetype-frames.test.mjs"
+  ],
   "docs/design/archetypes/*/README.md": [
     "test/archetype-boards-generator.test.mjs",
     "test/board-states.test.mjs",
@@ -27,6 +30,21 @@
   ],
   "docs/design/archetypes/event-registration/demo/index.html": [
     "test/demo-verifiers.test.mjs"
+  ],
+  "docs/design/training/tr-*/reference.jpg": [
+    "test/check-archetype-frames.test.mjs",
+    "test/training-boards-generator.test.mjs",
+    "test/viewer-tuning.test.mjs"
+  ],
+  "docs/design/training/tr-*/prompt.txt": [
+    "test/training-boards-generator.test.mjs"
+  ],
+  "docs/provenance/assets/training-frame-crops.json": [
+    "test/training-boards-generator.test.mjs",
+    "test/check-archetype-frames.test.mjs"
+  ],
+  "docs/provenance/assets/training-reference-boards.md": [
+    "test/training-boards-generator.test.mjs"
   ],
   "docs/PIPELINE.md": [
     "test/reachability.test.mjs"
@@ -94,7 +112,16 @@
     "test/capture-site.test.mjs"
   ],
   "scripts/check-archetype-frames.mjs": [
+    "test/check-archetype-frames.test.mjs",
     "test/checks-wired.test.mjs"
+  ],
+  "scripts/crop-training-reference-frames.py": [
+    "test/training-boards-generator.test.mjs",
+    "test/check-archetype-frames.test.mjs"
+  ],
+  "scripts/generate-training-boards.mjs": [
+    "test/training-boards-generator.test.mjs",
+    "test/viewer-tuning.test.mjs"
   ],
   "scripts/check-baseline-label.mjs": [
     "test/baseline-label.test.mjs",

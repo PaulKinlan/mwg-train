@@ -1,6 +1,6 @@
 /**
- * Detects browser chrome (specifically macOS-style traffic lights) in archetype images.
- * Archetype images are supposed to be clean content without window frames.
+ * Detects browser chrome (specifically macOS-style traffic lights) in archetype and training-reference images.
+ * These images are supposed to be clean page content without window frames.
  * If chrome is detected on an un-exempted image, this check fails closed.
  * 
  * Note: We only check for macOS traffic lights because mwg-train's generated
@@ -16,6 +16,9 @@ import jpeg from 'jpeg-js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const ARCHETYPES_DIR = path.join(ROOT, 'docs', 'design', 'archetypes');
+const TRAINING_DIR = path.join(ROOT, 'docs', 'design', 'training');
+const CLEAN_PINS_PATH = path.join(ROOT, '.fleet', 'frame-scan-pins.json');
+const SCAN_ALGORITHM = 'macos-triplets-chroma-v2';
 
 // These images were generated with browser chrome before this gate was added.
 // They are exempt by exact content hash to avoid breaking the sealed evaluation corpus.
@@ -28,7 +31,7 @@ const EXEMPT_HASHES = new Set([
  * @param {Buffer} bytes 
  * @returns {boolean} true if chrome is detected
  */
-function hasBrowserChrome(bytes) {
+export function hasBrowserChrome(bytes) {
 
   let rawImageData;
   try {
@@ -43,9 +46,10 @@ function hasBrowserChrome(bytes) {
   const { width, height, data } = rawImageData;
   
   // Traffic light colors: macOS Red, Yellow, Green
-  const isRed = (r, g, b) => r > 180 && g < 130 && b < 130;
-  const isYellow = (r, g, b) => r > 180 && g > 130 && b < 130;
-  const isGreen = (r, g, b) => r < 130 && g > 150 && b < 130;
+  // Require chroma, not merely skin/foliage values that happen to straddle the old broad channel cutoffs.
+  const isRed = (r, g, b) => r > 190 && g < 130 && b < 130 && r - g > 70 && r - b > 70;
+  const isYellow = (r, g, b) => r > 190 && g > 145 && b < 130 && g - b > 55;
+  const isGreen = (r, g, b) => r < 150 && g > 145 && b < 140 && g - r > 45 && g - b > 35;
 
   // Monochrome dark slate dot triplets embedded in desktop-blur wrappers
   const isMonoRed = (r, g, b) => Math.abs(r - 56) <= 3 && Math.abs(g - 66) <= 3 && Math.abs(b - 79) <= 3;
@@ -127,31 +131,69 @@ function findJpegs(dir, list = []) {
   return list;
 }
 
-function runCheck() {
-  const images = findJpegs(ARCHETYPES_DIR);
-  let failed = false;
-
+export function scanFrames({ archetypesDir = ARCHETYPES_DIR, trainingDir = TRAINING_DIR, root = ROOT, cleanPins = null } = {}) {
+  const images = [...findJpegs(archetypesDir), ...findJpegs(trainingDir)].sort();
+  const failed = [];
+  const exempt = [];
+  const stale = [];
+  const hashes = {};
+  let decoded = 0;
   for (const image of images) {
+    const rel = path.relative(root, image).split(path.sep).join('/');
+    // Do not follow a symlink into an unscanned file, even if it happens to contain a valid image.
+    if (fs.lstatSync(image).isSymbolicLink()) { failed.push(image); continue; }
     const bytes = fs.readFileSync(image);
     const hash = crypto.createHash('sha256').update(bytes).digest('hex');
-    
+    hashes[rel] = hash;
+    // Content-addressed clean evidence: unchanged bytes need no repeat full-JPEG decode on every fast gate.
+    // New or altered images are ALWAYS decoded and fail until a deliberate clean re-pin. A metadata-only
+    // change can never waive the first scan, and the pin file is reviewed alongside the changed JPEG.
+    if (cleanPins?.[rel] === hash) continue;
+    decoded++;
     if (hasBrowserChrome(bytes)) {
-      const relPath = path.relative(ROOT, image);
-      if (EXEMPT_HASHES.has(hash)) {
-        console.warn(`EXEMPT: Browser chrome detected in ${relPath} (grandfathered image)`);
-      } else {
-        console.error(`check:archetype-frames - FAILED: Browser chrome detected in ${relPath}`);
-        failed = true;
-      }
+      if (EXEMPT_HASHES.has(hash)) exempt.push(image);
+      else failed.push(image);
+    } else if (cleanPins) {
+      stale.push(image);
+      failed.push(image);
     }
   }
-
-  if (failed) {
-    console.error(`check:archetype-frames - FAILED: Archetype images must not contain browser/OS window frames.`);
-    process.exit(1);
-  } else {
-    console.log(`check:archetype-frames - PASS - checked ${images.length} images for browser chrome`);
+  if (cleanPins) for (const rel of Object.keys(cleanPins)) {
+    if (Object.hasOwn(hashes, rel)) continue;
+    const removed = path.resolve(root, rel);
+    stale.push(removed);
+    failed.push(removed);
   }
+  return { images, failed, exempt, stale, hashes, decoded };
+}
+
+export function loadCleanPins(file = CLEAN_PINS_PATH) {
+  const data = JSON.parse(fs.readFileSync(file, 'utf8'));
+  if (data.schemaVersion !== 1 || data.algorithm !== SCAN_ALGORITHM || !data.images
+    || typeof data.images !== 'object' || Array.isArray(data.images)
+    || Object.entries(data.images).some(([fileName, hash]) => !/^docs\/design\/(?:archetypes|training)\//.test(fileName)
+      || !/^[a-f0-9]{64}$/.test(hash))) throw new Error('frame scan pins have an invalid version, path or digest');
+  return data.images;
+}
+
+function runCheck() {
+  const pinClean = process.argv.includes('--pin-clean');
+  let cleanPins = null;
+  if (!pinClean) {
+    try { cleanPins = loadCleanPins(); }
+    catch (error) { console.error(`check:archetype-frames - FAILED: ${error.message}; run --pin-clean after inspecting all images`); process.exit(1); }
+  }
+  const { images, failed, exempt, stale, hashes, decoded } = scanFrames({ cleanPins });
+  for (const image of exempt) console.warn(`EXEMPT: Browser chrome detected in ${path.relative(ROOT, image)} (grandfathered image)`);
+  for (const image of failed) console.error(`check:archetype-frames - FAILED: ${stale.includes(image) ? 'unverified changed/unpinned JPEG' : 'browser chrome or unscannable link'} in ${path.relative(ROOT, image)}`);
+  if (failed.length || exempt.length) {
+    console.error('check:archetype-frames - FAILED: Concept and training-reference images must have a clean, byte-pinned frame scan.');
+    process.exit(1);
+  }
+  if (pinClean) {
+    fs.writeFileSync(CLEAN_PINS_PATH, JSON.stringify({ schemaVersion: 1, algorithm: SCAN_ALGORITHM, images: hashes }, null, 2) + '\n');
+    console.log(`check:archetype-frames - PINNED ${images.length} clean images after decoding ${decoded} JPEGs`);
+  } else console.log(`check:archetype-frames - PASS - checked ${images.length} pinned image digests; decoded ${decoded} changed JPEGs`);
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
