@@ -20,6 +20,19 @@ function receipt(arm, options = {}) {
 }
 const complete = () => ARMS.map((arm) => receipt(arm));
 
+test('sealed witnesses require recorded Linux, Node and CDP Chrome versions without a guessed version pin', () => {
+  const brief = SEALED.find((b) => b.split === 'test' && b.task === 'generate');
+  const witness = receipt(ARMS[0], { brief_id: brief.brief_id, platform: 'linux', node_version: 'v0.0.0',
+    chrome_version: 'unverified', browser: { product: 'unverified' } });
+  const audit = evaluatePrimary(SEALED, [witness]);
+  assert.equal(audit.status, 'NOT_EVALUABLE');
+  assert.equal(audit.reportable, false);
+  assert.ok(audit.problems.some((p) => p.code === 'NODE_VERSION_UNRECORDED'));
+  assert.ok(audit.problems.some((p) => p.code === 'CHROME_VERSION_UNRECORDED'));
+  const darwin = evaluatePrimary(SEALED, [{ ...witness, platform: 'darwin' }]);
+  assert.ok(darwin.problems.some((p) => p.code === 'PLATFORM_NOT_LINUX'));
+});
+
 test('input guard runs before audit and reports deterministic errors for malformed collections', () => {
   assert.throws(() => evaluatePrimary(null, []), { name: 'TypeError', message: 'briefs and witnesses must be arrays' });
   assert.throws(() => evaluatePrimary([], null), { name: 'TypeError', message: 'briefs and witnesses must be arrays' });

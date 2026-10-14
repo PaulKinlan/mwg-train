@@ -79,7 +79,9 @@ export function evaluatePrimary(allBriefs, witnesses, { devOnly = false, rulePla
     }
   }
   const briefById = new Map(briefs.map((b) => [b.brief_id, b]));
-  const design = checkDesign(witnesses, briefs);
+  // Dev fixtures are exploratory; production witnesses must at least carry the measured Linux
+  // runtime stamp. Presence and format do NOT attest that a caller-supplied stamp is genuine.
+  const design = checkDesign(witnesses, briefs, ARMS, { requireEnvironment: !devOnly });
   problems.push(...design);
   const cells = [];
   for (const witness of witnesses) {
