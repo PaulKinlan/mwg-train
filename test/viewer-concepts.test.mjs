@@ -494,7 +494,7 @@ test('macOS fd fallback serves verified bytes and missing procfs elsewhere fails
       const realpath = fs.realpathSync, open = fs.openSync;
       fs.realpathSync = (file, ...args) => {
         if (typeof file === 'string' && file.startsWith('/proc/self/fd/')) {
-          const error = Error('procfs not mounted'); error.code = 'ENOENT'; throw error;
+          const error = Error('procfs fd lookup failed'); error.code = process.env.PROCFS_ERR; throw error;
         }
         return realpath(file, ...args);
       };
@@ -554,11 +554,13 @@ test('macOS fd fallback serves verified bytes and missing procfs elsewhere fails
       }
       console.log('macOS fallback serves confined images and rejects a swapped board');
     `;
-    const output = execFileSync(process.execPath, ['--input-type=module', '-e', script, root, outside,
-      new URL('../src/viewer/concepts.mjs', import.meta.url).href,
-      new URL('../src/viewer/server.mjs', import.meta.url).href, join(ROOT, 'pilot')],
-    { encoding: 'utf8', timeout: 15000 });
-    assert.match(output, /macOS fallback serves confined images and rejects a swapped board/);
+    for (const procfsError of ['ENOENT', 'EACCES', 'EPERM']) {
+      const output = execFileSync(process.execPath, ['--input-type=module', '-e', script, root, outside,
+        new URL('../src/viewer/concepts.mjs', import.meta.url).href,
+        new URL('../src/viewer/server.mjs', import.meta.url).href, join(ROOT, 'pilot')],
+      { encoding: 'utf8', timeout: 15000, env: { ...process.env, PROCFS_ERR: procfsError } });
+      assert.match(output, /macOS fallback serves confined images and rejects a swapped board/, procfsError);
+    }
   } finally {
     rmSync(root, { recursive: true, force: true });
     rmSync(outside, { recursive: true, force: true });

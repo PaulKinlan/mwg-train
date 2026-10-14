@@ -188,7 +188,10 @@ function readConceptImage(repoRoot, file, type) {
     try {
       if (realpathSync(`/proc/self/fd/${fd}`) !== expected) return null;
     } catch (error) {
-      if (error?.code !== 'ENOENT' && error?.code !== 'ENOTDIR') throw error;
+      // An fd lookup can be denied by a sandbox as well as absent on this host.
+      // Classify those failures here so Darwin can verify by inode and other
+      // hosts emit the one-shot diagnostic rather than silently returning 404.
+      if (!['ENOENT', 'ENOTDIR', 'EACCES', 'EPERM', 'ELOOP', 'ESTALE'].includes(error?.code)) throw error;
       if (process.platform === 'darwin') {
         if (!macOSOpenFileMatches(file, expected, opened)) return null;
       } else {
