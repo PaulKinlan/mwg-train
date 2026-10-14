@@ -11,6 +11,13 @@
     "test/plan.test.mjs",
     "test/readme-token-source.test.mjs"
   ],
+  "docs/quarantine.md": [
+    "test/docs.test.mjs",
+    "test/quarantine-store.test.mjs"
+  ],
+  "docs/vocabulary.md": [
+    "test/set-separation.test.mjs"
+  ],
   "docs/design/archetypes/scroll-storytelling-launch/README.md": [
     "test/scroll-storytelling-prompts.test.mjs"
   ],
@@ -146,6 +153,9 @@
   ],
   "docs/eval/deepseek-checkpoint-matrix.md": [
     "test/reachability.test.mjs"
+  ],
+  "docs/eval/PREREGISTRATION.md": [
+    "test/briefs.test.mjs"
   ],
   "docs/train/READINESS-EPIC.md": [
     "test/reachability.test.mjs",
