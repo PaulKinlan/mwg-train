@@ -294,6 +294,10 @@ export const DOCUMENTS = {
   'docs/design/archetypes/interactive-product-configurator/design.md': 'design',
   'docs/design/archetypes/interactive-product-configurator/plan.md': 'design',
   'docs/design/archetypes/interactive-product-configurator/PROVENANCE.md': 'provenance',
+  // Resonance Lab is a proposed studio and prompt-only provenance, not verified audio/media evidence.
+  'docs/design/archetypes/developer-media-playground/design.md': 'design',
+  'docs/design/archetypes/developer-media-playground/plan.md': 'design',
+  'docs/design/archetypes/developer-media-playground/PROVENANCE.md': 'provenance',
   // Proposed Signal Grid gameplay and design, with local prompt-only provenance before image approval.
   'docs/design/archetypes/browser-puzzle-game/design.md': 'design',
   'docs/design/archetypes/browser-puzzle-game/plan.md': 'design',
