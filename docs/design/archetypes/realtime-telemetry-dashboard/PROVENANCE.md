@@ -1,0 +1,15 @@
+# NorthSea Grid reference-board provenance — pending generation
+
+- **Status:** the [README](README.md) holds four authored full-bleed 1376 × 768 prompts; **none of the four JPEGs exists**. No image request, gateway response, raster bytes/dimensions/digest, vision inspection, running telemetry source, validated energy model or grid-control connection exists. The SHA-256s below bind prompt text only.
+- **Spend boundary:** `mwg-train-07ka.4` is offline design work. A separate generation bead must secure owner amount-scoped approval, the verified tariff for exact proposed `gemini-nano-banana-2.1` SKU and a fail-closed reservation before `--write`; naming that model is NOT an output attestation. `node scripts/generate-archetype-boards.mjs --only realtime-telemetry-dashboard` was used only for no-write inventory; it reported all four `absent (never generated)`.
+- **Rights:** `excluded_from_training: true`; `approved_for_training: false`. The [consumer-account rights record](../../../provenance/accounts/google-antigravity-consumer.md) does not grant model-training reuse. Any future generated image requires its own rights and source evidence before use beyond design illustration.
+- **Telemetry truth:** NorthSea Grid, Sector B, B-07, samples 412.8 MW / 50.02 Hz / 78.4% / 84.2°C, monetary deltas and incident history are fictional storyboard labels. Images cannot attest measured wind output, an available battery, a real alert, an accurate forecast, a safety margin or physical derating. The [functional plan](plan.md) isolates the simulator and forbids live actuator control.
+
+| Proposed JPEG | Illustrated state | Exact prompt SHA-256 | Model response | JPEG SHA-256 / bytes / dimensions | Vision assessment |
+| --- | --- | --- | --- | --- | --- |
+| `step1-live-overview.jpg` | Simulated Sector B overview | `430f7e26ab7057244d565184d13d4c12200d5ff2c491bfdeb080649adb55a17b` | not called | **absent** | pending |
+| `step2-brush-zoom-and-drilldown.jpg` | B-07 / UTC brush / disabled action | `19a4e682c2f4d2daf0994a9f0859d8e720a94a403c1c418dffaa2aaa2c46b5ea` | not called | **absent** | pending |
+| `step3-scenario-simulator.jpg` | Isolated what-if sliders | `98d6999d7e841b7ae207fee3013f38f5451afede517accd41f51b6d1ac1d0d51` | not called | **absent** | pending |
+| `step4-alert-rule-validation.jpg` | Invalid thresholds / fixture log | `34dd6156348e480c53c798aca4d573b7e1e8f1a7e6681c855c037110506b4d23` | not called | **absent** | pending |
+
+Hash method: `sha256(UTF-8 bytes between each \`\`\`text fence, omitting the final linefeed)`. When images are separately approved and actually generated, preserve the gateway response's own model identity/settings, original JPEG SHA-256/byte count/measured dimensions, full-resolution visual findings and any source→derived transformation with both digests. Publish a separate global asset register only after evidence exists. Never replace these pending prompt hashes with assumed image digests or claim a screenshot proves real grid readings.

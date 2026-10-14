@@ -286,6 +286,10 @@ export const DOCUMENTS = {
   'docs/design/archetypes/event-registration/demo/README.md': 'design',
   'docs/design/archetypes/event-registration/design.md': 'design',
   'docs/design/archetypes/event-registration/plan.md': 'design',
+  // Proposed NorthSea Grid telemetry, not actual sensor/model measurements.
+  'docs/design/archetypes/realtime-telemetry-dashboard/design.md': 'design',
+  'docs/design/archetypes/realtime-telemetry-dashboard/plan.md': 'design',
+  'docs/design/archetypes/realtime-telemetry-dashboard/PROVENANCE.md': 'provenance',
   // Proposed Signal Grid gameplay and design, with local prompt-only provenance before image approval.
   'docs/design/archetypes/browser-puzzle-game/design.md': 'design',
   'docs/design/archetypes/browser-puzzle-game/plan.md': 'design',
