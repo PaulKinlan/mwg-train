@@ -69,14 +69,26 @@ card, an available-zones panel, photo and reviews to the left of its form card.
 
 ### Functional site projection
 
-This layout is for the interactive event site, not the static demo stylesheet or either family's
-fixture-specific form ID. The event's own journey supplies its choices and evidence of capacity.
+These are instructions for an interactive site, not static-board measurements. The four named shared
+roles describe structure usable by an event family; the family journey supplies its control types,
+fields, outcomes and form ID. Unclassified bullets are not family instructions.
 
-- A fluid, narrow page shell capped at `52rem` frames event details and a labelled registration form.
+#### Shared structure
+
+- **Shell:** A fluid, narrow page shell frames event details and a labelled registration form.
+- **Choices:** A responsive selection region adapts to available space and includes only choices and controls the site’s journey declares.
+- **Form:** The registration form presents labelled participation fields from its journey, announced validation and a clear refusal state.
+- **Outcome:** A confirmation/read-back view shows the stored result; include a pass or QR only when the site’s journey defines one.
+
+#### Pattern-specific details
+
+These authored details describe this archetype's pattern, not the controls or measurements of any
+separate training family.
+
+- A fluid, narrow page shell capped at `52rem` frames the event pattern.
 - Tickets are a two-column grid that collapses to one column on narrow screens; ticket rows and labelled quantity controls remain usable at every width.
 - The event hero names the date and location, and shows availability only when backed by actual registration state.
-- The registration form has labelled attendee fields, inline announced validation, a refusal state and a live estimate clearly marked as illustrative rather than a charge.
-- A confirmation/read-back view shows the stored attendee and pass details; an illustrative QR or badge must not claim real entry.
+- A live estimate is clearly marked as illustrative rather than a charge.
 
 ## Typography
 

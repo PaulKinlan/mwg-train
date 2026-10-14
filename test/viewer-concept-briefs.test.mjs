@@ -78,11 +78,11 @@ test('event families inherit structural layout but not the archetype demo cap or
   for (const id of ['tr-07', 'tr-30']) {
     const family = gallery.trainingTargets.find((item) => item.id === id).brief.sitePrompt;
     const layout = family.match(/UI layout:\n([\s\S]*?)(?=\n\nFamily visual direction and tokens:)/)?.[1] ?? '';
-    assert.doesNotMatch(layout, /\bcapped at \d+(?:\.\d+)?rem\b|\blive estimate\b|\b52rem\b/i,
-      `${id} does not inherit demo dimensions or an undeclared estimate`);
-    assert.match(layout, /Tickets are a two-column grid[\s\S]*only ticket options this family’s journey declares/i,
-      `${id} keeps shared responsive structure but uses family authority for options`);
-    assert.match(layout, /include a pass or QR only when this family’s journey defines one/i,
+    assert.doesNotMatch(layout, /\bcapped at \d+(?:\.\d+)?rem\b|\blive estimate\b|\b52rem\b|\bticket rows\b|\bquantity controls\b|\battendee\b/i,
+      `${id} does not inherit demo dimensions or undeclared ticket/attendee/estimate controls`);
+    assert.match(layout, /responsive selection region[\s\S]*only choices and controls the site’s journey declares/i,
+      `${id} gets responsive structure but defers control types to its journey`);
+    assert.match(layout, /a pass or QR only when the site’s journey defines one/i,
       `${id} must not infer issued credentials from an archetype illustration`);
     const plan = readFileSync(join(ROOT, 'docs/train/design', id, 'plan.md'), 'utf8');
     const design = readFileSync(join(ROOT, 'docs/train/design', id, 'design.md'), 'utf8');
@@ -105,38 +105,52 @@ test('event pattern and training layouts read one authored functional source as 
   const training = listConcepts(ROOT).trainingTargets.find((target) => target.id === 'tr-07').brief.sitePrompt;
   assert.match(pattern, /Layout and components:[\s\S]*52rem[\s\S]*two-column grid/i);
   const trainingLayout = training.split('UI layout:\n')[1]?.split('Family visual direction and tokens:')[0] ?? '';
-  assert.match(trainingLayout, /two-column grid/i,
-    'the family keeps the shared responsive structural fact');
+  assert.match(trainingLayout, /responsive selection region/i,
+    'the family keeps the shared responsive structural fact without presuming tickets');
   assert.doesNotMatch(trainingLayout, /52rem|live estimate/i,
     'the demo-only numeric cap and estimate are not shared family facts');
 
   const scratch = mkdtempSync(join(tmpdir(), 'event-layout-source-'));
   try {
     const archetype = join(scratch, 'docs/design/archetypes/event-registration');
-    const family = join(scratch, 'docs/train/design/tr-07');
     mkdirSync(archetype, { recursive: true });
-    mkdirSync(family, { recursive: true });
+    for (const id of ['tr-07', 'tr-30']) mkdirSync(join(scratch, 'docs/train/design', id), { recursive: true });
     for (const name of ['plan.md', 'README.md']) writeFileSync(join(archetype, name),
       readFileSync(join(ROOT, 'docs/design/archetypes/event-registration', name)));
     writeFileSync(join(archetype, 'design.md'), design
       .replace('capped at `52rem`', 'capped at `54rem`')
-      .replace('- Tickets are a two-column grid that collapses', '- Ticket choices use a two-column grid that collapses'));
-    for (const name of ['plan.md', 'design.md']) writeFileSync(join(family, name),
-      readFileSync(join(ROOT, 'docs/train/design/tr-07', name)));
-    const row = trainingBriefs(ROOT).get('tr-07');
-    assert.ok(row, 'the family manifest declares tr-07');
+      .replace('A responsive selection region', 'An adaptive selection region')
+      .replace('#### Pattern-specific details',
+        '- A capacity note reads 142 / 200 seats filled beside the event hero.\n\n#### Pattern-specific details'));
+    for (const id of ['tr-07', 'tr-30']) for (const name of ['plan.md', 'design.md']) {
+      writeFileSync(join(scratch, 'docs/train/design', id, name),
+        readFileSync(join(ROOT, 'docs/train/design', id, name)));
+    }
+    const rows = trainingBriefs(ROOT);
     const projectedPattern = archetypeBrief(scratch, 'event-registration').sitePrompt;
-    const projectedFamily = trainingBrief(scratch, 'tr-07', row).sitePrompt;
     assert.match(projectedPattern, /Layout and components:[\s\S]*54rem/i,
       'changing the authored cap updates the pattern without a code change');
-    assert.doesNotMatch(projectedFamily.split('UI layout:\n')[1]?.split('Family visual direction and tokens:')[0] ?? '',
-      /\b(?:52|54)rem\b|\blive estimate\b/i,
-      'changing the archetype demo cap must not introduce either cap or its estimate into a family site');
-    assert.match(projectedPattern, /Ticket choices use a two-column grid/i,
+    assert.match(projectedPattern, /An adaptive selection region/i,
       'changes to the shared structural source update the pattern');
-    assert.match(projectedFamily, /Ticket choices use a two-column grid/i,
-      'changes to the shared structural source still update the family');
     assert.doesNotMatch(projectedPattern, /52rem/);
+    for (const id of ['tr-07', 'tr-30']) {
+      const row = rows.get(id);
+      assert.ok(row, `the family manifest declares ${id}`);
+      const projectedFamily = trainingBrief(scratch, id, row).sitePrompt;
+      const layout = projectedFamily.split('UI layout:\n')[1]?.split('Family visual direction and tokens:')[0] ?? '';
+      assert.doesNotMatch(layout, /\b(?:52|54)rem\b|\blive estimate\b/i,
+        `${id}: the archetype demo cap and estimate do not become family requirements`);
+      assert.match(layout, /An adaptive selection region/i,
+        `${id}: shared structural source changes still update the family`);
+      assert.doesNotMatch(layout, /142 \/ 200 seats filled/i,
+        `${id}: a new unclassified demo bullet cannot enter the family prompt`);
+    }
+    writeFileSync(join(archetype, 'design.md'), design.replace('#### Pattern-specific details',
+      '- **Capacity:** A capacity note reads 142 / 200 seats filled.\n\n#### Pattern-specific details'));
+    for (const id of ['tr-07', 'tr-30']) {
+      assert.match(trainingBrief(scratch, id, rows.get(id)).sitePrompt, /UI layout: Not yet documented in this checkout\./,
+        `${id}: a new classified source role changes the contract and fails closed`);
+    }
   } finally { rmSync(scratch, { recursive: true, force: true }); }
 });
 
@@ -236,8 +250,8 @@ test('training site prompts keep functional components without inheriting demo-o
     assert.ok(layout.includes(`#${familyFormId}`), `${id} layout must use the form ID declared by its own journey`);
     assert.match(layout, /fluid, narrow page shell[\s\S]*labelled registration form/i,
       `${id} keeps the responsive shell and registration structure`);
-    assert.match(layout, /Tickets are a two-column grid[\s\S]*announced validation/i,
-      `${id} keeps a responsive option layout and accessible form errors`);
+    assert.match(layout, /responsive selection region[\s\S]*announced validation/i,
+      `${id} keeps a responsive family-defined selection region and accessible form errors`);
     if (id === 'tr-07') assert.doesNotMatch(layout, /#registration-form\b/,
       'the observatory layout must not contradict its journey with the demo form ID');
   }
