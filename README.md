@@ -51,9 +51,12 @@ a passing fast gate and `check:all` do not prove that unselected unit suites pas
 `check:portability` is an explicit, expensive local platform check, not CI or a
 replacement for the merger's offline gate. Use the public npm registry for `npm ci`
 if a mirror lacks the exact locked dependencies; record the commit, platform,
-Node and Chrome versions with the resulting test log. macOS verifies local
-development, while canonical sealed evaluation runs on pinned Linux. macOS
-portability does not imply the Linux-only generated-code sandbox is available.
+Node and Chrome versions with the resulting test log. [Local platform run
+evidence](docs/portability/evidence/README.md) records the available Linux log
+and the separately attributed macOS report; these are different source trees.
+macOS verifies local development, while canonical sealed evaluation runs on
+pinned Linux. macOS portability does not imply the Linux-only generated-code
+sandbox is available.
 
 ## The quarantine store
 
