@@ -236,9 +236,14 @@ function trainingSiteLayout(design, archetype, journey) {
   if (archetype === 'web-shop') return structural.replace(/configuration selects \(quantity, variant, grind\)/i,
     'the configuration controls this family’s plan declares');
   if (archetype === 'event-registration') {
-    // The family journey owns its form ID; the shared authored pattern names no demo ID.
+    // Share the authored structure, not this archetype demo's measured shell or pricing widget.
+    // Family journeys own their form ID, ticket options and whether any pass/QR is issued.
     const familyFormId = journey?.match(/\bform#([a-z][a-z0-9-]*)\b/)?.[1];
-    return structural.replace(/\bThe registration form\b/, familyFormId ? `The form #${familyFormId}` : 'The registration form');
+    const familyLayout = structural
+      .replace(/\s+capped at `?\d+(?:\.\d+)?rem\b`?/gi, '')
+      .replace(/ and a live estimate clearly marked as illustrative rather than a charge\b/i, '')
+      .replace(/\bThe registration form\b/, familyFormId ? `The form #${familyFormId}` : 'The registration form');
+    return `${familyLayout}\n- Use only ticket options this family’s journey declares; include a pass or QR only when this family’s journey defines one.`;
   }
   return structural;
 }
