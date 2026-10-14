@@ -122,6 +122,16 @@ test('a selector edit declares its own suite route in the hashed coverage contra
   assert.match(res.stdout, /suites=\[[^\]]*test\/fast-gate\.test\.mjs/);
 });
 
+test('the selector cannot be exempt from its declared suite route', () => {
+  // If the mapping edge and name-stem fallback both disappear, isExempt must reject the
+  // selector as unmapped instead of turning a missing self-check into a green smoke run.
+  const source = fs.readFileSync(FAST_GATE, 'utf8');
+  const exemption = source.match(/function isExempt\(file\) \{([\s\S]*?)\n\}/)?.[1];
+  assert.ok(exemption, 'isExempt must remain inspectable');
+  assert.doesNotMatch(exemption, /file\s*===\s*['"]scripts\/fast-gate\.mjs['"]/,
+    'scripts/fast-gate.mjs must fail closed if its mapped suite route is removed');
+});
+
 test('mapping changes select the edge hash even if its mapping self-entry is deleted', () => {
   // This belongs in the suite selected by changes to scripts/fast-gate.mjs, NOT the hash
   // suite itself: removing the independent selector must still leave a failing regression.
