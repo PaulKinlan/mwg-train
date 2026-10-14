@@ -155,6 +155,8 @@ export const DOCUMENTS = {
   // Per-demo design contracts (mwg-train-tus). Authoring documents, verified against a freshly
   // generated demo by check:design-schema, and deliberately outside the byte-frozen generated trees.
   'deploy/README.md': 'contract',
+  // Portability test-run evidence counts npm tests, not the deterministic guidance floor.
+  'docs/portability/evidence/README.md': 'contract',
   'docs/eval/design/README.md': 'design',
   'docs/eval/design/account-recovery/hono.md': 'design',
   'docs/eval/design/account-recovery/preact.md': 'design',

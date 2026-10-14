@@ -60,6 +60,7 @@ export const CHECKS = [
  * about the environment a check needs, which only a person knows.
  */
 export const EXCLUDED = new Map([
+  ['check:portability', 'opt-in fresh npm ci uses the network and runs the full browser/unit suite, not an offline check'],
   ['check:served-routes', 'requires a spawned HTTP server'],
   ['check:served-routes:strict', 'requires a spawned HTTP server'],
   ['check:cross-arm-parity', 'requires Chrome'],
