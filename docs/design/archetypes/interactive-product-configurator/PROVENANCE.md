@@ -1,0 +1,15 @@
+# Atelier Velo reference-board provenance — pending generation
+
+- **Status:** four 1376 × 768 page-only bicycle-configurator prompts exist in the [README](README.md); **no JPEGs exist**. There is no model request/response, source image bytes/dimensions/digests, vision verdict, product SKU licence, physical geometry inspection, measured mass, price quote or workshop reservation. Prompt digests below bind only authored UTF-8 text.
+- **Spend boundary:** `mwg-train-07ka.5` covers offline plan/design/prompts/tests; image generation is a separate owner amount-scoped approval with verified exact `gemini-nano-banana-2.1` tariff and fail-closed reservation. The model name describes a proposed future request, NOT an attested response. `node scripts/generate-archetype-boards.mjs --only interactive-product-configurator` was a no-write dry run reporting all four `absent (never generated)`; **do not call `--write`** without approval.
+- **Rights:** `excluded_from_training: true`; `approved_for_training: false`. The [consumer-account rights record](../../../provenance/accounts/google-antigravity-consumer.md) does not grant model-training reuse of generated imagery. No real bike photo or commercial rights are asserted.
+- **Truth boundary:** Solstice Ti, geometry, part prices and gram deltas are fictional examples. The Step 2 8.11 kg storyboard estimate assumes an invented 0 g difference for the groupset; it is NOT a measured product. Nominal tyre/mudguard widths do not certify safe clearance, a share link is not a saved reservation, and none of the boards proves interaction. The [plan](plan.md) requires actual physical-source validation and browser-driven tests for any functional claim.
+
+| Proposed JPEG | Illustrated state | Exact prompt SHA-256 | Model response | JPEG SHA-256 / bytes / dimensions | Vision assessment |
+| --- | --- | --- | --- | --- | --- |
+| `step1-frame-and-geometry.jpg` | Raw Ti preview and geometry | `94fa24eeceec9f93fdd6cd06230aec74f8cb4e1d37e43ba60c96900fbcc3343b` | not called | **absent** | pending |
+| `step2-drivetrain-and-wheelset-swap.jpg` | Wheel and group fixture BOM | `0380e97eb83f2296da70c489a875f24df98c2321d6a5c3197bece8b9067ada38` | not called | **absent** | pending |
+| `step3-compatibility-conflict.jpg` | Unresolved tyre/guard fit | `1e912212ab9a3c345cb2b11a252766c1ea1c7f4f891f098f79fa7a43e8564622` | not called | **absent** | pending |
+| `step4-saved-build-comparison-sheet.jpg` | A/B comparison and draft C link | `1ac1f417ae4d5884d2cbb1f46424757d93521de635d905f99c31090aea9c57fd` | not called | **absent** | pending |
+
+Digests are `sha256(UTF-8 bytes between each \`\`\`text fence, omitting the final linefeed)`. Following **authorised** generation record each actual model response identity/settings, original JPEG SHA-256/byte count/measured dimensions, full-resolution visual observations, and any source→derived transformation with both digests. Create a global asset provenance register only after actual JPEG evidence exists. Prompt hashes are not raster hashes; visual inspection does not provide mechanical certification.
