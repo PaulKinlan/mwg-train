@@ -246,7 +246,8 @@ function markdownBullets(text) {
       current = null;
       continue;
     }
-    const item = line.match(/^\s*[-*]\s+(\S(?:.*\S)?)\s*$/);
+    // CommonMark unordered list markers are -, * and +; classify before lazy prose.
+    const item = line.match(/^\s*[-*+]\s+(\S(?:.*\S)?)\s*$/);
     if (item) {
       current = { text: item[1].trim() };
       bullets.push(current);
