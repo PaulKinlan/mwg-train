@@ -290,6 +290,10 @@ export const DOCUMENTS = {
   'docs/design/archetypes/realtime-telemetry-dashboard/design.md': 'design',
   'docs/design/archetypes/realtime-telemetry-dashboard/plan.md': 'design',
   'docs/design/archetypes/realtime-telemetry-dashboard/PROVENANCE.md': 'provenance',
+  // Fictional Atelier Velo product design and prompt provenance, not a measured product record.
+  'docs/design/archetypes/interactive-product-configurator/design.md': 'design',
+  'docs/design/archetypes/interactive-product-configurator/plan.md': 'design',
+  'docs/design/archetypes/interactive-product-configurator/PROVENANCE.md': 'provenance',
   // Proposed Signal Grid gameplay and design, with local prompt-only provenance before image approval.
   'docs/design/archetypes/browser-puzzle-game/design.md': 'design',
   'docs/design/archetypes/browser-puzzle-game/plan.md': 'design',
