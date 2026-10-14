@@ -449,8 +449,12 @@ export function listConcepts(repoRoot, { view = 'all', id = null } = {}) {
       const target = detailed ? trainingTargetFile(repoRoot, family.id) : null;
       const board = patternOnly ? null : trainingBoardFile(repoRoot, family.id);
       const boardSize = detailed && board ? readJpegDimensions(boundedHead(board, 65536)) : null;
-      return { ...family, brief: detailed ? trainingBrief(repoRoot, family.id, briefRows.get(family.id)) : null,
-        available: !!target, board: !!board, ...(target ? pngSize(target) : null),
+      // A skipped probe is unknown, not an unavailable asset. Expose those fields only
+      // in scopes that actually checked them; do not force index/detail HTTP to read all images.
+      return { ...family,
+        ...(detailed ? { brief: trainingBrief(repoRoot, family.id, briefRows.get(family.id)),
+          available: !!target, ...(target ? pngSize(target) : null) } : {}),
+        ...(!patternOnly ? { board: !!board } : {}),
         ...(boardSize ? { boardWidth: boardSize.width, boardHeight: boardSize.height } : {}) };
     }),
     trainingBoardRegister: trainingBoardRegister(repoRoot),
@@ -601,9 +605,10 @@ export function renderConceptPattern({ patterns = [], archetypes = [], trainingT
   const pattern = patterns.find((item) => item.id === id);
   if (!pattern) return null;
   const evaluation = archetypes.find((item) => item.id === id);
-  return page('concepts', `
+  const heading = `Archetype pattern: ${id.replaceAll('-', ' ')}`;
+  return page(heading, `
     <p><a href="/concepts#pattern-${escapeHtml(id)}">← All concepts and training families</a></p>
-    <h1>Archetype pattern: ${escapeHtml(id.replaceAll('-', ' '))}</h1>
+    <h1>${escapeHtml(heading)}</h1>
     <p class="muted">Concept JPEGs are illustrations, not working sites or training evidence. No reuse clearance is granted: provider terms prohibit machine-learning development from some images, while other boards have no supplied training or output-use rights. <a href="/concepts#concept-distinction-heading">Read the image and conformance distinctions</a>.</p>
     <section aria-labelledby="pattern-detail-heading"><h2 id="pattern-detail-heading">Authored pattern and pictured states</h2>
       ${patternCard(pattern, trainingTargets.filter((family) => family.archetype === id))}
@@ -617,9 +622,10 @@ export function renderConceptPattern({ patterns = [], archetypes = [], trainingT
 export function renderConceptFamily({ trainingTargets = [], trainingBoardRegister = null }, id) {
   const family = trainingTargets.find((item) => item.id === id);
   if (!family) return null;
-  return page('concepts', `
+  const heading = `Training family: ${id}`;
+  return page(heading, `
     <p><a href="/concepts#target-${escapeHtml(id)}">← All concepts and training families</a></p>
-    <h1>Training family: ${escapeHtml(id)}</h1>
+    <h1>${escapeHtml(heading)}</h1>
     <p class="muted">A designed board is an AI-generated illustration, not training evidence or proof a demo works. A1 harness PNGs are deterministic conformance fixtures, not matching designs. No reuse clearance is granted here; consult each board&rsquo;s provenance and applicable provider terms. <a href="/concepts#concept-distinction-heading">Read the A1/A6 and rights distinctions</a>.</p>
     ${family.archetype ? `<p>Related <a href="/concepts/pattern/${escapeHtml(family.archetype)}">${escapeHtml(family.archetype)} archetype pattern</a>.</p>` : ''}
     <section aria-labelledby="family-detail-heading"><h2 id="family-detail-heading">Designed board, harness target and authored prompts</h2>

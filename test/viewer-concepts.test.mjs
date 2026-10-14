@@ -204,6 +204,7 @@ test('the no-JS /concepts index links to allowlisted pattern and family pages, n
   const indexResponse = await fetch(`${base}/concepts`);
   assert.equal(indexResponse.status, 200);
   const index = await indexResponse.text();
+  assert.match(index, /<title>concepts — mwg-train corpus viewer<\/title>/);
   assert.match(index, /Concept image ≠ conformance image/);
   assert.match(index, /do not scan depicted codes/i);
   assert.match(index, /No reuse license or clearance is granted here/);
@@ -218,6 +219,8 @@ test('the no-JS /concepts index links to allowlisted pattern and family pages, n
   const pattern = await fetch(`${base}/concepts/pattern/booking`);
   assert.equal(pattern.status, 200);
   const patternHtml = await pattern.text();
+  assert.match(patternHtml, /<title>Archetype pattern: booking — mwg-train corpus viewer<\/title>/,
+    'a detail page must identify its pattern in browser tabs and history');
   assert.match(patternHtml, /<summary>Site Generation Prompt/);
   assert.match(patternHtml, /do not scan depicted codes/i);
   assert.match(patternHtml, /no reuse clearance is granted here/i);
@@ -227,6 +230,8 @@ test('the no-JS /concepts index links to allowlisted pattern and family pages, n
   const family = await fetch(`${base}/concepts/family/tr-01`);
   assert.equal(family.status, 200);
   const familyHtml = await family.text();
+  assert.match(familyHtml, /<title>Training family: tr-01 — mwg-train corpus viewer<\/title>/,
+    'family pages must have a distinct browser title');
   assert.match(familyHtml, /<summary>Site Generation Prompt · functional build/);
   assert.match(familyHtml, /AI-generated illustration, not training evidence and not proof a demo works/i);
   assert.match(familyHtml, /<img src="\/concepts\/references\/tr-01\.jpg"[^>]*width="1376" height="710" loading="eager" fetchpriority="high"/,
@@ -238,7 +243,10 @@ test('the no-JS /concepts index links to allowlisted pattern and family pages, n
     ['/concepts/family/tr-39', 'Training family: tr-39']]) {
     const response = await fetch(`${base}${path}`);
     assert.equal(response.status, 200, `${path} is a declared late expansion`);
-    assert.ok((await response.text()).includes(label), `${path} renders its own page`);
+    const detailHtml = await response.text();
+    assert.ok(detailHtml.includes(label), `${path} renders its own page`);
+    assert.match(detailHtml, new RegExp(`<title>${label} — mwg-train corpus viewer</title>`),
+      `${path} uses the exact detail heading in its document title`);
   }
   for (const path of ['/concepts/pattern/unknown', '/concepts/pattern/tr-01', '/concepts/pattern/..%2f..',
     '/concepts/pattern/booking/extra', '/concepts/family/tr-40', '/concepts/family/tr-1',
@@ -246,6 +254,27 @@ test('the no-JS /concepts index links to allowlisted pattern and family pages, n
     assert.equal((await fetch(`${base}${path}`)).status, 404, `${path} is not declared`);
   }
   assert.equal((await fetch(`${base}/concepts/pattern/booking`, { method: 'POST', headers: { origin: new URL(base).origin } })).status, 404);
+});
+
+test('scoped concept registers omit unchecked metadata rather than claiming missing A1 images and prompts', () => {
+  const full = listConcepts(ROOT);
+  const index = listConcepts(ROOT, { view: 'index' });
+  const pattern = listConcepts(ROOT, { view: 'pattern', id: 'booking' });
+  const family = listConcepts(ROOT, { view: 'family', id: 'tr-01' });
+  assert.equal(full.trainingTargets.length, 39);
+  assert.equal(index.trainingTargets.length, 39);
+  for (const scope of [index, pattern]) {
+    for (const entry of scope.trainingTargets) {
+      const authored = full.trainingTargets.find((target) => target.id === entry.id);
+      assert.ok(authored && authored.available && authored.board);
+      assert.equal(Object.hasOwn(entry, 'available'), false, `${entry.id} has not probed the A1 target`);
+      assert.equal(Object.hasOwn(entry, 'brief'), false, `${entry.id} has not read its family prompt`);
+      if (scope === index) assert.equal(entry.board, authored.board, `${entry.id} index shows truthful board availability`);
+      else assert.equal(Object.hasOwn(entry, 'board'), false, `${entry.id} pattern link has not probed the board`);
+    }
+  }
+  assert.deepEqual(family.trainingTargets[0], full.trainingTargets.find((entry) => entry.id === 'tr-01'),
+    'the selected detail still carries full truthful image and authored prompt metadata');
 });
 
 test('listing checks confined image availability without reading full JPEG or PNG bytes', () => {
