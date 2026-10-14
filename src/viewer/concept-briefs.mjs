@@ -218,14 +218,41 @@ function trainingLayoutProse(text) {
 function markdownBullets(text) {
   const bullets = [];
   let current = null;
+  let fence = null;
+  let comment = false;
   for (const line of (text ?? '').split('\n')) {
+    const trimmed = line.trim();
+    if (comment) {
+      if (trimmed.includes('-->')) comment = false;
+      current = null;
+      continue;
+    }
+    const marker = trimmed.match(/^(`{3,}|~{3,})/);
+    if (marker) {
+      if (fence === null) fence = marker[1][0];
+      else if (fence === marker[1][0]) fence = null;
+      current = null;
+      continue;
+    }
+    if (fence) { current = null; continue; }
+    if (trimmed.startsWith('<!--')) {
+      comment = !trimmed.includes('-->');
+      current = null;
+      continue;
+    }
+    const thematic = /^(?:-{3,}|\*{3,}|_{3,})$/.test(trimmed.replace(/\s+/g, ''));
+    if (thematic || /^\s*(?:\d+[.)]\s+|>|\||#{1,6}\s+|<\/?[A-Za-z][\w-]*\b)/.test(line)) {
+      // A new Markdown block is never the previous role's lazy continuation.
+      current = null;
+      continue;
+    }
     const item = line.match(/^\s*[-*]\s+(\S(?:.*\S)?)\s*$/);
     if (item) {
       current = { text: item[1].trim() };
       bullets.push(current);
-    } else if (current && line.trim() && !/^\s*#{2,6} /.test(line)) {
-      // Markdown permits wrapped (including lazy, unindented) list continuations.
-      current.text += ` ${line.trim()}`;
+    } else if (current && trimmed) {
+      // Plain prose, including an unindented lazy continuation, belongs to this bullet.
+      current.text += ` ${trimmed}`;
     } else {
       current = null;
     }

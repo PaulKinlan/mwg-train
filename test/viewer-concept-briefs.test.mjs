@@ -150,6 +150,32 @@ test('event pattern and training layouts read one authored functional source as 
       assert.doesNotMatch(layout, /142 \/ 200 seats filled|visitor roster/i,
         `${id}: new indented and asterisk unclassified bullets cannot enter the family prompt`);
     }
+    const adjacentBlocks = [
+      ['ordered list', '1. Beside the event hero.'],
+      ['thematic break', '---\nBeside the event hero.'],
+      ['blockquote', '> Beside the event hero.'],
+      ['table row', '| Beside the event hero. | Pattern only |'],
+      ['heading', '# Beside the event hero.'],
+      ['HTML comment', '<!--\n- **Capacity:** Beside the event hero.\n-->'],
+      ['HTML block', '<aside>Beside the event hero.</aside>'],
+      ['fenced block', '```text\n- **Capacity:** Beside the event hero.\n```'],
+    ];
+    for (const [kind, block] of adjacentBlocks) {
+      writeFileSync(join(archetype, 'design.md'), design.replace('\n\n#### Pattern-specific details\n',
+        `\n${block}\n#### Pattern-specific details\n`));
+      const patternPrompt = archetypeBrief(scratch, 'event-registration').sitePrompt;
+      assert.match(patternPrompt, /confirmation\/read-back view/i,
+        `${kind}: the genuine Outcome role remains in the pattern`);
+      assert.doesNotMatch(patternPrompt, /Beside the event hero/i,
+        `${kind}: non-bullet blocks are not pasted into the pattern`);
+      for (const id of ['tr-07', 'tr-30']) {
+        const familyPrompt = trainingBrief(scratch, id, rows.get(id)).sitePrompt;
+        assert.match(familyPrompt, /confirmation\/read-back view/i,
+          `${id}: the genuine Outcome role remains after ${kind}`);
+        assert.doesNotMatch(familyPrompt, /Beside the event hero/i,
+          `${id}: an adjacent ${kind} must not become family Outcome guidance`);
+      }
+    }
     writeFileSync(join(archetype, 'design.md'), design.replace('#### Pattern-specific details',
       '  * **Capacity:** A capacity note reads 142 / 200 seats filled.\n\n#### Pattern-specific details'));
     assert.match(archetypeBrief(scratch, 'event-registration').sitePrompt,
