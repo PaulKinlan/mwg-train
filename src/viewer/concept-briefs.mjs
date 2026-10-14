@@ -217,8 +217,8 @@ function trainingLayoutProse(text) {
 
 function eventFunctionalLayout(design, { family = false } = {}) {
   // One authored projection, with four explicitly classified family-safe roles.
-  // An added demo bullet cannot silently become a family instruction: unclassified
-  // bullets are ignored; changing the role contract fails closed until reviewed.
+  // Unclassified shared bullets remain in the pattern, not family prompts;
+  // changing the classified role contract fails closed until reviewed.
   const projection = section(design, 'Grammar and layout')?.split('\n### Functional site projection\n')[1];
   const shared = projection?.split('\n#### Shared structure\n')[1]?.split('\n#### Pattern-specific details\n')[0];
   const roles = ['Shell', 'Choices', 'Form', 'Outcome'];
@@ -226,9 +226,11 @@ function eventFunctionalLayout(design, { family = false } = {}) {
   if (entries.length !== roles.length || entries.some((entry, index) => entry[1] !== roles[index])) return null;
   const common = entries.map(([, , text]) => `- ${text}`).join('\n');
   if (family) return common;
+  const authoredShared = [...(shared?.matchAll(/^- ([^\n]+)$/gm) ?? [])]
+    .map(([, text]) => `- ${text.replace(/^\*\*[A-Za-z]+:\*\* /, '')}`).join('\n');
   const pattern = projection?.split('\n#### Pattern-specific details\n')[1];
   const details = [...(pattern?.matchAll(/^- ([^\n]+)$/gm) ?? [])].map(([, text]) => `- ${text}`);
-  return details.length ? `${details.join('\n')}\n${common}` : null;
+  return details.length ? `${details.join('\n')}\n${authoredShared}` : null;
 }
 
 function trainingSiteLayout(design, archetype, journey) {
