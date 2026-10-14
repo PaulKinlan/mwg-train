@@ -48,4 +48,13 @@ export const TRAINING_TARGET_FAMILIES = Object.freeze([
   { family_id: 'tr-28', archetype: 'support-helpdesk', title: 'Outdoor equipment loan repair and missing part tickets' },
   { family_id: 'tr-29', archetype: 'expense-tracker', title: 'Memorial tree fund contributions and planting site tracker' },
   { family_id: 'tr-30', archetype: 'event-registration', title: 'Low-tide beach cleanup zone assignment and kit allocation' },
+  { family_id: 'tr-31', archetype: 'scroll-storytelling-launch', title: 'Aether Audio Aether One planar magnetic headphone launch and pre-order' },
+  { family_id: 'tr-32', archetype: 'browser-puzzle-game', title: 'Signal Grid daily frequency routing puzzle and streak leaderboard' },
+  { family_id: 'tr-33', archetype: 'saas-workspace-board', title: 'Kestrel Sprint 24 firmware issue tracker and quick-create workbench' },
+  { family_id: 'tr-34', archetype: 'realtime-telemetry-dashboard', title: 'NorthSea Grid Dogger Bank Sector B offshore wind telemetry and alert rule log' },
+  { family_id: 'tr-35', archetype: 'interactive-product-configurator', title: 'Atelier Velo Solstice Ti custom titanium gravel bike configurator and build reservation' },
+  { family_id: 'tr-36', archetype: 'developer-media-playground', title: 'Resonance Lab WebAudio synth and shader patch playground' },
+  { family_id: 'tr-37', archetype: 'editorial-blog', title: 'The Kiln Chronicle ceramics literary journal and article composer' },
+  { family_id: 'tr-38', archetype: 'fan-community-site', title: 'Lantern Works stop-motion craft archive and moderated contribution registry' },
+  { family_id: 'tr-39', archetype: 'product-card-comparison', title: 'Rig Selection Board GPU benchmark comparison and build selection' },
 ]);

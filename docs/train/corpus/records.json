@@ -3,7 +3,7 @@
   "baseline_label": "mwg-train deterministic baseline",
   "baseline_definition": "the MWG-uplifted (ideal) artefact, and not the default: deterministic repair of a project by our own Modern Web Guidance rule specifications, with no model and no teacher in the loop. The raw pre-uplift artefact is the default and is recorded separately.",
   "baseline_tool": "src/corpus/uplift.mjs",
-  "generated_at": "2026-10-13T07:12:08.663Z",
+  "generated_at": "2026-10-14T11:47:17.064Z",
   "generator": "scripts/train-corpus-run.mjs",
   "corpus": "pilot/TRAINING_CORPUS.json",
   "selection": {
@@ -302,9 +302,9 @@
   },
   "coverage": {
     "scored": 40,
-    "unscored": 170,
-    "total": 210,
-    "reason": "40 projects were selected by the deterministic rule; 40 were driven in the browser. The remaining 170 are scaffolded and hash-recorded in pilot/TRAINING_CORPUS.json but their journeys were NOT run in this pass, so they carry the status \"scaffolded / unverified journey\".",
+    "unscored": 233,
+    "total": 273,
+    "reason": "40 projects were selected by the deterministic rule; 40 were driven in the browser. The remaining 233 are scaffolded and hash-recorded in pilot/TRAINING_CORPUS.json but their journeys were NOT run in this pass, so they carry the status \"scaffolded / unverified journey\".",
     "unscored_projects": [
       {
         "project_id": "tr-01-hono",
@@ -1665,6 +1665,510 @@
         "framework": "svelte",
         "status": "scaffolded / unverified journey",
         "tree_sha": "sha256:7c4c37b170066a786a5622e7603ee4ed81b88d528f297bfc7d1ea096b5114cdb"
+      },
+      {
+        "project_id": "tr-31-hono",
+        "family_id": "tr-31",
+        "archetype": "scroll-storytelling-launch",
+        "framework": "hono",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:461e6484e0e7690deaeab787eff8faf688d36290c6c443fa8d42feb18050f597"
+      },
+      {
+        "project_id": "tr-31-raw",
+        "family_id": "tr-31",
+        "archetype": "scroll-storytelling-launch",
+        "framework": "raw",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:982597a2508b99f04d7959612635e5cee38240834557a456f1a9daa7bc4d9b83"
+      },
+      {
+        "project_id": "tr-31-react",
+        "family_id": "tr-31",
+        "archetype": "scroll-storytelling-launch",
+        "framework": "react",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:c5900ea69b37cab4b0c6f52d812298ced96be30648c5cf0cd7d713b312f4cc23"
+      },
+      {
+        "project_id": "tr-31-preact",
+        "family_id": "tr-31",
+        "archetype": "scroll-storytelling-launch",
+        "framework": "preact",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:065adf1e7c222295c72f5a2519e29a273a2949090e36f75726596f5e47a0e68c"
+      },
+      {
+        "project_id": "tr-31-vue",
+        "family_id": "tr-31",
+        "archetype": "scroll-storytelling-launch",
+        "framework": "vue",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:1fe3327f58342521a5710fa6eaef08196f143516e6a7b820888a619e9374535f"
+      },
+      {
+        "project_id": "tr-31-webcomponents",
+        "family_id": "tr-31",
+        "archetype": "scroll-storytelling-launch",
+        "framework": "webcomponents",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:e6ff27b89cd33bee16b523b3f9aa9860e79721d25c7033ddca63a482d7c3d6e2"
+      },
+      {
+        "project_id": "tr-31-svelte",
+        "family_id": "tr-31",
+        "archetype": "scroll-storytelling-launch",
+        "framework": "svelte",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:4d4483c2d4dd0e31a43da48f82c3616e534bbec510a84b8779747714370ac2ac"
+      },
+      {
+        "project_id": "tr-32-hono",
+        "family_id": "tr-32",
+        "archetype": "browser-puzzle-game",
+        "framework": "hono",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:bbbc0e7eac1b688ca152419ec5c7e1eb2f05f26419e161e7454ed31364b24938"
+      },
+      {
+        "project_id": "tr-32-raw",
+        "family_id": "tr-32",
+        "archetype": "browser-puzzle-game",
+        "framework": "raw",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:010c0a7ca8641c374c9d4e00b981e8a5debcfb7b1f2fab1b4292d182e2b183f7"
+      },
+      {
+        "project_id": "tr-32-react",
+        "family_id": "tr-32",
+        "archetype": "browser-puzzle-game",
+        "framework": "react",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:1eb5a3c76040cf8ed125be03a6056b93c2a6100aa090d7db82dcf0d24f66d7e8"
+      },
+      {
+        "project_id": "tr-32-preact",
+        "family_id": "tr-32",
+        "archetype": "browser-puzzle-game",
+        "framework": "preact",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:bee751bf0a8dbab1e33373f8b1b767735bf4c5e9e22ce75990c925b8dc10ffd3"
+      },
+      {
+        "project_id": "tr-32-vue",
+        "family_id": "tr-32",
+        "archetype": "browser-puzzle-game",
+        "framework": "vue",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:62879a588524b1e369876c15345c1f4846d30b89080f1e333a72a98c9d5acf13"
+      },
+      {
+        "project_id": "tr-32-webcomponents",
+        "family_id": "tr-32",
+        "archetype": "browser-puzzle-game",
+        "framework": "webcomponents",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:b83ccfa75097e961dd31c640fe53f1f0dccf70554ef34da763c4fe6798b1b4d4"
+      },
+      {
+        "project_id": "tr-32-svelte",
+        "family_id": "tr-32",
+        "archetype": "browser-puzzle-game",
+        "framework": "svelte",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:e2ef566a8a4e32ee2b787509025ce8fee117ec304e3b8bb768160afdae32e599"
+      },
+      {
+        "project_id": "tr-33-hono",
+        "family_id": "tr-33",
+        "archetype": "saas-workspace-board",
+        "framework": "hono",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:1b9348010df71a9427df60df52afc7666b0d97ad7b8fd81d240b7a28c9631ad1"
+      },
+      {
+        "project_id": "tr-33-raw",
+        "family_id": "tr-33",
+        "archetype": "saas-workspace-board",
+        "framework": "raw",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:8877625c4945a590e9e9788ecbdcf77feed2556b046947e2590158040e9412ee"
+      },
+      {
+        "project_id": "tr-33-react",
+        "family_id": "tr-33",
+        "archetype": "saas-workspace-board",
+        "framework": "react",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:0fbbc113d99f3005eb9c8e1440679122e1e0938645144c4b13cbf66e3bd5aa83"
+      },
+      {
+        "project_id": "tr-33-preact",
+        "family_id": "tr-33",
+        "archetype": "saas-workspace-board",
+        "framework": "preact",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:b4d1192f1b44fec6a211c3ed963b9f6c03f0b52dba0739a3a5a09ea54f14b52a"
+      },
+      {
+        "project_id": "tr-33-vue",
+        "family_id": "tr-33",
+        "archetype": "saas-workspace-board",
+        "framework": "vue",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:41f1b6a0ee8f1f26ae887444bc339dec6137718ca59b3cc9bfb946de8fd6015f"
+      },
+      {
+        "project_id": "tr-33-webcomponents",
+        "family_id": "tr-33",
+        "archetype": "saas-workspace-board",
+        "framework": "webcomponents",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:e36fbe687b348d0929bb184c848edfe188e4cf90b2f856740dea1cf0ba89222a"
+      },
+      {
+        "project_id": "tr-33-svelte",
+        "family_id": "tr-33",
+        "archetype": "saas-workspace-board",
+        "framework": "svelte",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:43037457b3fb623758c986cb41d41cc669d64552a731f8d81b39ba1a30e47a65"
+      },
+      {
+        "project_id": "tr-34-hono",
+        "family_id": "tr-34",
+        "archetype": "realtime-telemetry-dashboard",
+        "framework": "hono",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:9e87cace020dd334077b462fbf2dd4c1138ebd1842e45079f981a9245623124f"
+      },
+      {
+        "project_id": "tr-34-raw",
+        "family_id": "tr-34",
+        "archetype": "realtime-telemetry-dashboard",
+        "framework": "raw",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:164cbdf86ed625d74b2b54033075c421afe183ee27504266c72487c862b93618"
+      },
+      {
+        "project_id": "tr-34-react",
+        "family_id": "tr-34",
+        "archetype": "realtime-telemetry-dashboard",
+        "framework": "react",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:cb5b3979f7383426958a3c007436f60f0cbaf8327e4766f51818b8c43e62fbd3"
+      },
+      {
+        "project_id": "tr-34-preact",
+        "family_id": "tr-34",
+        "archetype": "realtime-telemetry-dashboard",
+        "framework": "preact",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:d00fe74f46186b7a5cdf37e77396df48ad152eb95f1913e8a0ec568b07dbf07d"
+      },
+      {
+        "project_id": "tr-34-vue",
+        "family_id": "tr-34",
+        "archetype": "realtime-telemetry-dashboard",
+        "framework": "vue",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:f0d1f69dc8ef7257e158f9860dc993c3208a52a7d86e58a15646f39e8dc21f6a"
+      },
+      {
+        "project_id": "tr-34-webcomponents",
+        "family_id": "tr-34",
+        "archetype": "realtime-telemetry-dashboard",
+        "framework": "webcomponents",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:25001290a656277312bd77efa3581ae0ce54950b010684899220ae014c1bba11"
+      },
+      {
+        "project_id": "tr-34-svelte",
+        "family_id": "tr-34",
+        "archetype": "realtime-telemetry-dashboard",
+        "framework": "svelte",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:726e4e8c6b99db86a398eb9f5c878e2f8509d5e2c15f3836b1f58bb117dd4c73"
+      },
+      {
+        "project_id": "tr-35-hono",
+        "family_id": "tr-35",
+        "archetype": "interactive-product-configurator",
+        "framework": "hono",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:75548933289ebd8a9a88b8bc94e72e19dca9dee65ba08b3ba1bdf9f7cc4f46d1"
+      },
+      {
+        "project_id": "tr-35-raw",
+        "family_id": "tr-35",
+        "archetype": "interactive-product-configurator",
+        "framework": "raw",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:994b199db5f1d5fc2e3413bea21337a69cfdcf9b95f66ff32d09b2154f759c63"
+      },
+      {
+        "project_id": "tr-35-react",
+        "family_id": "tr-35",
+        "archetype": "interactive-product-configurator",
+        "framework": "react",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:efb0bfd3d385e7f10f56f140100dd67c8b2c099d6c26a7fd1706c63e9c0bf467"
+      },
+      {
+        "project_id": "tr-35-preact",
+        "family_id": "tr-35",
+        "archetype": "interactive-product-configurator",
+        "framework": "preact",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:27ad5d51825473598233b91ef603447632d240eab13418d57375026d01ef28a6"
+      },
+      {
+        "project_id": "tr-35-vue",
+        "family_id": "tr-35",
+        "archetype": "interactive-product-configurator",
+        "framework": "vue",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:2eaae4e5efa26a683a0183f82d0136014f85c91101a640401b2a875019ccad5c"
+      },
+      {
+        "project_id": "tr-35-webcomponents",
+        "family_id": "tr-35",
+        "archetype": "interactive-product-configurator",
+        "framework": "webcomponents",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:6a4dc329c417df2b3cd33246e9c2dcad34efbb14a502e2361138e2628942fcdf"
+      },
+      {
+        "project_id": "tr-35-svelte",
+        "family_id": "tr-35",
+        "archetype": "interactive-product-configurator",
+        "framework": "svelte",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:a06a6d896fa7462290db55c7f4a1262268bd9ff4618254756ad2708b6b1b97a7"
+      },
+      {
+        "project_id": "tr-36-hono",
+        "family_id": "tr-36",
+        "archetype": "developer-media-playground",
+        "framework": "hono",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:52c23389cf8c59d55da8cd6a1ee0b7fc0f99ad2208c1a909e1ef909ed2dae0b4"
+      },
+      {
+        "project_id": "tr-36-raw",
+        "family_id": "tr-36",
+        "archetype": "developer-media-playground",
+        "framework": "raw",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:79c6593126239eeaf5472aebbd8ae9e1774f65c22e8be62c603419c25eaad410"
+      },
+      {
+        "project_id": "tr-36-react",
+        "family_id": "tr-36",
+        "archetype": "developer-media-playground",
+        "framework": "react",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:490902f1a5c3b36fd1bb8f2292bf4c5c18542119eaa92036052145efd81fbb5d"
+      },
+      {
+        "project_id": "tr-36-preact",
+        "family_id": "tr-36",
+        "archetype": "developer-media-playground",
+        "framework": "preact",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:19d465387d3034ff0edb0b8a16c6b68e97ed2a631caa3f414fce3b9fe90ca4bf"
+      },
+      {
+        "project_id": "tr-36-vue",
+        "family_id": "tr-36",
+        "archetype": "developer-media-playground",
+        "framework": "vue",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:19f4d74fc2fbb1d4e140c0b000067d994c1ca27409bba33c9bf5d3bfe4671ecb"
+      },
+      {
+        "project_id": "tr-36-webcomponents",
+        "family_id": "tr-36",
+        "archetype": "developer-media-playground",
+        "framework": "webcomponents",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:1491de6e2503f8174779654c107c38e92b3edfc8549fc102758afc340d98e7d1"
+      },
+      {
+        "project_id": "tr-36-svelte",
+        "family_id": "tr-36",
+        "archetype": "developer-media-playground",
+        "framework": "svelte",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:5001b86e127edfba8903e4737d9cbbd3cf05b29558300f7ed6ac5a5e04c3be41"
+      },
+      {
+        "project_id": "tr-37-hono",
+        "family_id": "tr-37",
+        "archetype": "editorial-blog",
+        "framework": "hono",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:c568bcc87cd41a9915760c00dce79e423f97b7b107e660611a08d25613ccd392"
+      },
+      {
+        "project_id": "tr-37-raw",
+        "family_id": "tr-37",
+        "archetype": "editorial-blog",
+        "framework": "raw",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:12ca3062e5bd7ef80446a17d6e766a6e8c00fbf7ded2f5fac2a463acc71e23b2"
+      },
+      {
+        "project_id": "tr-37-react",
+        "family_id": "tr-37",
+        "archetype": "editorial-blog",
+        "framework": "react",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:c01669becac10c5c7e7091ecd851df91715040b50ebceb6d6e8ccdefd82ef971"
+      },
+      {
+        "project_id": "tr-37-preact",
+        "family_id": "tr-37",
+        "archetype": "editorial-blog",
+        "framework": "preact",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:3f5fdcb47831b4c5f9cddfb9cc40e4384b71ac44eb69a9bc6e2684b93ec4c059"
+      },
+      {
+        "project_id": "tr-37-vue",
+        "family_id": "tr-37",
+        "archetype": "editorial-blog",
+        "framework": "vue",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:95c4d128609077ec0f4db4e368e2e73f171fc7171e6655309bc32efd26011003"
+      },
+      {
+        "project_id": "tr-37-webcomponents",
+        "family_id": "tr-37",
+        "archetype": "editorial-blog",
+        "framework": "webcomponents",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:40131be8226c0845c6687d47bec8a33a838390f72e8ec33381ee034bedd4f311"
+      },
+      {
+        "project_id": "tr-37-svelte",
+        "family_id": "tr-37",
+        "archetype": "editorial-blog",
+        "framework": "svelte",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:bfa36ae65cfabb710c1918b6ffded894cb21eab4d05d3bf26ad797f9fb43d517"
+      },
+      {
+        "project_id": "tr-38-hono",
+        "family_id": "tr-38",
+        "archetype": "fan-community-site",
+        "framework": "hono",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:719361f1d11421bfc5d575e45e43ecfabb66c9019fd0fee94d58cd5118fdf628"
+      },
+      {
+        "project_id": "tr-38-raw",
+        "family_id": "tr-38",
+        "archetype": "fan-community-site",
+        "framework": "raw",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:34da371c5fa44bf74b772d002d53b43142fa0693c3992506826ec3e1f50e505c"
+      },
+      {
+        "project_id": "tr-38-react",
+        "family_id": "tr-38",
+        "archetype": "fan-community-site",
+        "framework": "react",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:31567690e396d33238ff201b25710490609d2cd207df9a97863ff6c7d48ed272"
+      },
+      {
+        "project_id": "tr-38-preact",
+        "family_id": "tr-38",
+        "archetype": "fan-community-site",
+        "framework": "preact",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:6f2f9113d39f9a0cecf70249f43d7aed6de04bfb4b324d2298776207bdbd73ac"
+      },
+      {
+        "project_id": "tr-38-vue",
+        "family_id": "tr-38",
+        "archetype": "fan-community-site",
+        "framework": "vue",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:b048170fe4e22e68418ef4b7214bb08e3b624a81fb563c37d2141afba801a621"
+      },
+      {
+        "project_id": "tr-38-webcomponents",
+        "family_id": "tr-38",
+        "archetype": "fan-community-site",
+        "framework": "webcomponents",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:34d24e3136491dc06431790bcd2999d3f3bc13f6f28ae7534e185903a35238a2"
+      },
+      {
+        "project_id": "tr-38-svelte",
+        "family_id": "tr-38",
+        "archetype": "fan-community-site",
+        "framework": "svelte",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:a4a009bcc6730e7d096f713f252f824e32006b9aa9c472878e09c54ccc899b76"
+      },
+      {
+        "project_id": "tr-39-hono",
+        "family_id": "tr-39",
+        "archetype": "product-card-comparison",
+        "framework": "hono",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:7f0246776035d656e3e90515161f70cedba08ecda7605c7d358fe4fa33ff6b1b"
+      },
+      {
+        "project_id": "tr-39-raw",
+        "family_id": "tr-39",
+        "archetype": "product-card-comparison",
+        "framework": "raw",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:1b61ebabacb92c6327ca8ccfb44eb265b5ce87f2016f4da02f8fc44411ddd825"
+      },
+      {
+        "project_id": "tr-39-react",
+        "family_id": "tr-39",
+        "archetype": "product-card-comparison",
+        "framework": "react",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:2caf0ddb765fc5670f689f014a7b43e29e649b9f1b0bf684aab43c844acc8fe3"
+      },
+      {
+        "project_id": "tr-39-preact",
+        "family_id": "tr-39",
+        "archetype": "product-card-comparison",
+        "framework": "preact",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:d7dea1e8417d286870d45b2bec27e8529892012c1c628f074124c8e0eff916f1"
+      },
+      {
+        "project_id": "tr-39-vue",
+        "family_id": "tr-39",
+        "archetype": "product-card-comparison",
+        "framework": "vue",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:a8ea2a71b492dac2c6dc6851d3e371a8fb126ec20a6db01f067a847741b7497e"
+      },
+      {
+        "project_id": "tr-39-webcomponents",
+        "family_id": "tr-39",
+        "archetype": "product-card-comparison",
+        "framework": "webcomponents",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:b824e569a10b3db15b52a589ce3ef55970942403ba95a3e4701d779985c745af"
+      },
+      {
+        "project_id": "tr-39-svelte",
+        "family_id": "tr-39",
+        "archetype": "product-card-comparison",
+        "framework": "svelte",
+        "status": "scaffolded / unverified journey",
+        "tree_sha": "sha256:7571fefd50ded5a695d27d259dbd05f5dbfea093847c59ae202e60c5a5438f19"
       }
     ]
   },

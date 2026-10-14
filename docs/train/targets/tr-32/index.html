@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Signal Grid — Daily Frequency Routing Puzzle &amp; Streak Leaderboard</title>
+  <style>
+    :root {
+      --sg-bg: #f6f4ee;
+      --sg-surface: #ffffff;
+      --sg-tile: #ede9fe;
+      --sg-border: #d6d3c9;
+      --sg-teal: #0d9488;
+      --sg-amber: #d97706;
+      --sg-text: #1c1917;
+      --sg-muted: #57534e;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--sg-bg); color: var(--sg-text); line-height: 1.5; padding: 1.5rem; }
+    .sg-wrap { max-width: 1200px; margin: 0 auto; }
+    header.sg-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 1rem; border-bottom: 2px solid var(--sg-text); margin-bottom: 1.5rem; }
+    .sg-brand { font-size: 1.35rem; font-weight: 800; }
+    nav.sg-nav { display: flex; gap: 1rem; }
+    nav.sg-nav a { color: var(--sg-muted); text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+    nav.sg-nav a[aria-current="page"] { color: var(--sg-teal); }
+    main.sg-main { display: grid; grid-template-columns: 1.35fr 1fr; gap: 1.75rem; align-items: start; }
+    section.sg-board-panel { background: var(--sg-surface); border: 1px solid var(--sg-border); border-radius: 10px; padding: 1.5rem; }
+    section.sg-board-panel h1 { font-size: 1.5rem; margin-bottom: 0.4rem; }
+    .sg-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 0.45rem; margin: 1rem 0; }
+    .sg-cell { background: var(--sg-bg); border: 1px solid var(--sg-border); border-radius: 6px; padding: 0.7rem 0.4rem; text-align: center; font-family: ui-monospace, monospace; font-size: 0.82rem; font-weight: 700; }
+    .sg-cell.active { border-color: var(--sg-teal); color: var(--sg-teal); background: var(--sg-tile); }
+    aside.sg-log { background: var(--sg-surface); border: 1px solid var(--sg-border); border-radius: 10px; padding: 1.5rem; }
+    aside.sg-log h2 { font-size: 1.2rem; margin-bottom: 0.75rem; }
+    .sg-field { display: flex; flex-direction: column; gap: 0.3rem; margin-bottom: 0.8rem; }
+    .sg-field label { font-size: 0.85rem; font-weight: 700; }
+    .sg-field input, .sg-field select, .sg-field textarea { padding: 0.55rem 0.7rem; border: 1px solid var(--sg-border); border-radius: 6px; background: var(--sg-bg); color: var(--sg-text); font-size: 0.92rem; }
+    .sg-btn { width: 100%; background: var(--sg-teal); color: var(--sg-surface); border: none; border-radius: 6px; padding: 0.8rem; font-weight: 700; font-size: 0.95rem; cursor: pointer; }
+    footer.sg-footer { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--sg-border); font-size: 0.82rem; color: var(--sg-muted); text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="sg-wrap">
+    <header class="sg-header">
+      <div class="sg-brand">Signal Grid · Daily Puzzle #142</div>
+      <nav class="sg-nav" aria-label="Puzzle Navigation">
+        <a href="/" aria-current="page">Daily Board (Par 14)</a>
+        <a href="/runs">Submitted Runs</a>
+        <a href="/leaderboard">Streak Leaderboard</a>
+      </nav>
+    </header>
+    <main class="sg-main">
+      <section class="sg-board-panel">
+        <h1>Route 440 Hz Teal &amp; 660 Hz Amber Without Collision</h1>
+        <p style="font-size:0.9rem;color:var(--sg-muted)">Place Mirrors (/), Phase Splitters (+), and Harmonic Filters across coordinates A1–F6.</p>
+        <div class="sg-grid" aria-label="6 by 6 Signal Routing Matrix">
+          <div class="sg-cell active">A1 · 440Hz</div><div class="sg-cell">B1 · /</div><div class="sg-cell">C1</div><div class="sg-cell">D1</div><div class="sg-cell">E1</div><div class="sg-cell">F1</div>
+          <div class="sg-cell">A2</div><div class="sg-cell active">B2 · </div><div class="sg-cell">C2</div><div class="sg-cell active">D2 · /</div><div class="sg-cell">E2</div><div class="sg-cell">F2</div>
+          <div class="sg-cell active">A3 · 660Hz</div><div class="sg-cell">B3</div><div class="sg-cell">C3</div><div class="sg-cell active">D4 · Split+</div><div class="sg-cell">E3</div><div class="sg-cell">F3</div>
+          <div class="sg-cell">A4</div><div class="sg-cell">B4</div><div class="sg-cell">C4</div><div class="sg-cell">D4</div><div class="sg-cell active">E4 · Filter</div><div class="sg-cell active">F4 · LOCK</div>
+        </div>
+      </section>
+      <aside class="sg-log">
+        <h2>Record Verified Puzzle Run</h2>
+        <form id="signal-run-form" method="post" action="/runs">
+          <div class="sg-field">
+            <label for="callsign">Operator callsign</label>
+            <input type="text" id="callsign" name="callsign" required placeholder="Tamsin Kale">
+          </div>
+          <div class="sg-field">
+            <label for="moves">Moves used</label>
+            <input type="number" id="moves" name="moves" required value="14">
+          </div>
+          <div class="sg-field">
+            <label for="routing_mode">Signal mode</label>
+            <select id="routing_mode" name="routing_mode" required>
+              <option value="Standard Par 14">Standard Par 14</option>
+              <option value="Phase Splitter" selected>Phase Splitter</option>
+              <option value="Harmonic Lock">Harmonic Lock</option>
+            </select>
+          </div>
+          <div class="sg-field">
+            <label for="solution_summary">Route notes</label>
+            <textarea id="solution_summary" name="solution_summary" rows="2" required placeholder="Phase splitter at D4 locked both receivers cleanly."></textarea>
+          </div>
+          <button type="submit" class="sg-btn">Submit Solution to Daily Leaderboard</button>
+        </form>
+      </aside>
+    </main>
+    <footer class="sg-footer">Signal Grid Logic Press · Daily Puzzle #142 · Keyboard shortcuts: Arrows move · Space place · Z undo</footer>
+  </div>
+</body>
+</html>

@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Resonance Lab — WebAudio Synth &amp; Shader Patch Studio</title>
+  <style>
+    :root {
+      --rl-bg: #141210;
+      --rl-surface: #1e1b18;
+      --rl-card: #282420;
+      --rl-border: #3b352f;
+      --rl-amber: #f59e0b;
+      --rl-emerald: #10b981;
+      --rl-text: #fafaf9;
+      --rl-muted: #a8a29e;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--rl-bg); color: var(--rl-text); line-height: 1.5; padding: 1.5rem; }
+    .rl-wrap { max-width: 1200px; margin: 0 auto; }
+    header.rl-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 1rem; border-bottom: 1px solid var(--rl-border); margin-bottom: 1.5rem; }
+    .rl-brand { font-size: 1.3rem; font-weight: 800; color: var(--rl-amber); }
+    nav.rl-nav { display: flex; gap: 1rem; }
+    nav.rl-nav a { color: var(--rl-muted); text-decoration: none; font-size: 0.9rem; font-weight: 600; }
+    nav.rl-nav a[aria-current="page"] { color: var(--rl-emerald); }
+    main.rl-main { display: grid; grid-template-columns: 1.35fr 1fr; gap: 1.5rem; align-items: start; }
+    section.rl-editor { background: var(--rl-surface); border: 1px solid var(--rl-border); border-radius: 10px; padding: 1.5rem; }
+    section.rl-editor h1 { font-size: 1.45rem; margin-bottom: 0.5rem; }
+    .rl-code { background: var(--rl-card); border: 1px solid var(--rl-border); border-radius: 8px; padding: 1rem; font-family: ui-monospace, monospace; font-size: 0.86rem; color: var(--rl-amber); margin-top: 0.85rem; }
+    aside.rl-export { background: var(--rl-surface); border: 1px solid var(--rl-border); border-radius: 10px; padding: 1.5rem; }
+    aside.rl-export h2 { font-size: 1.2rem; margin-bottom: 0.75rem; }
+    .rl-field { display: flex; flex-direction: column; gap: 0.3rem; margin-bottom: 0.8rem; }
+    .rl-field label { font-size: 0.85rem; font-weight: 600; }
+    .rl-field input, .rl-field select, .rl-field textarea { padding: 0.55rem 0.7rem; border: 1px solid var(--rl-border); border-radius: 6px; background: var(--rl-bg); color: var(--rl-text); font-size: 0.92rem; }
+    .rl-btn { width: 100%; background: var(--rl-amber); color: var(--rl-bg); border: none; border-radius: 6px; padding: 0.8rem; font-weight: 800; cursor: pointer; }
+    footer.rl-footer { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--rl-border); font-size: 0.82rem; color: var(--rl-muted); text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="rl-wrap">
+    <header class="rl-header">
+      <div class="rl-brand">Resonance Lab · Modular WebAudio &amp; Shader Studio</div>
+      <nav class="rl-nav" aria-label="Playground Navigation">
+        <a href="/" aria-current="page">Patch Editor</a>
+        <a href="/patches">Preset Gallery</a>
+        <a href="/patches">Saved Permalinks</a>
+      </nav>
+    </header>
+    <main class="rl-main">
+      <section class="rl-editor">
+        <h1>Chapter 3: Shaping Subtractive Filter Envelopes</h1>
+        <p style="font-size:0.9rem;color:var(--rl-muted)">Playhead 00:42 / 02:15 · Cutoff 680 Hz · Resonance Q 4.2 · Attack 45 ms</p>
+        <div class="rl-code">
+          01 const osc = ctx.createOscillator();<br>
+          02 const filter = ctx.createBiquadFilter();<br>
+          03 filter.type = "lowpass";<br>
+          04 filter.frequency.setValueAtTime(680, ctx.currentTime);
+        </div>
+      </section>
+      <aside class="rl-export">
+        <h2>Export &amp; Persist Synth Patch</h2>
+        <form id="resonance-patch-form" method="post" action="/patches">
+          <div class="rl-field">
+            <label for="patch_name">Patch title</label>
+            <input type="text" id="patch_name" name="patch_name" required placeholder="Warm Analog Filter Sweep">
+          </div>
+          <div class="rl-field">
+            <label for="author">Creator handle</label>
+            <input type="text" id="author" name="author" required placeholder="Devon Kestrel">
+          </div>
+          <div class="rl-field">
+            <label for="synth_engine">Synth engine</label>
+            <select id="synth_engine" name="synth_engine" required>
+              <option value="Biquad Subtractive">Biquad Subtractive</option>
+              <option value="FM Bell Operator" selected>FM Bell Operator</option>
+              <option value="Karplus-Strong String">Karplus-Strong String</option>
+            </select>
+          </div>
+          <div class="rl-field">
+            <label for="cutoff_hz">Filter cutoff (Hz)</label>
+            <input type="number" id="cutoff_hz" name="cutoff_hz" required value="680">
+          </div>
+          <div class="rl-field">
+            <label for="patch_source">DSP patch expression</label>
+            <textarea id="patch_source" name="patch_source" rows="2" required placeholder="filter.frequency.setValueAtTime(680, ctx.currentTime);"></textarea>
+          </div>
+          <button type="submit" class="rl-btn">Save Patch Permalink</button>
+        </form>
+      </aside>
+    </main>
+    <footer class="rl-footer">Resonance Lab Audio DSP · Audio off until Run · Schema-versioned JSON patch registry</footer>
+  </div>
+</body>
+</html>

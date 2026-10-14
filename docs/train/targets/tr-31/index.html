@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Aether Audio — Aether One Planar Magnetic Headphone Launch &amp; Pre-Order</title>
+  <style>
+    :root {
+      --ae-bg: #14110f;
+      --ae-surface: #1f1a17;
+      --ae-card: #29221e;
+      --ae-border: #3d332c;
+      --ae-copper: #d97706;
+      --ae-gold: #f59e0b;
+      --ae-text: #fafaf9;
+      --ae-muted: #a8a29e;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--ae-bg); color: var(--ae-text); line-height: 1.5; padding: 1.5rem; }
+    .ae-wrap { max-width: 1200px; margin: 0 auto; }
+    header.ae-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 1rem; border-bottom: 1px solid var(--ae-border); margin-bottom: 1.5rem; }
+    .ae-brand { font-size: 1.3rem; font-weight: 800; letter-spacing: -0.02em; color: var(--ae-text); }
+    nav.ae-nav { display: flex; gap: 1rem; align-items: center; }
+    nav.ae-nav a { color: var(--ae-muted); text-decoration: none; font-size: 0.9rem; padding: 0.35rem 0.65rem; border-radius: 6px; }
+    nav.ae-nav a[aria-current="page"] { color: var(--ae-gold); background: var(--ae-surface); font-weight: 600; }
+    main.ae-main { display: grid; grid-template-columns: 1.45fr 1fr; gap: 1.75rem; align-items: start; }
+    section.ae-stage { background: var(--ae-surface); border: 1px solid var(--ae-border); border-radius: 12px; padding: 1.75rem; }
+    section.ae-stage h1 { font-size: 1.85rem; margin-bottom: 0.5rem; }
+    .ae-lede { color: var(--ae-muted); margin-bottom: 1.25rem; }
+    .ae-badges { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-bottom: 1.25rem; }
+    .ae-badge { background: var(--ae-card); border: 1px solid var(--ae-border); border-radius: 8px; padding: 0.85rem; }
+    .ae-badge strong { display: block; color: var(--ae-gold); font-size: 1.05rem; }
+    .ae-badge span { font-size: 0.82rem; color: var(--ae-muted); }
+    .ae-anatomy { background: var(--ae-card); border: 1px solid var(--ae-border); border-radius: 10px; padding: 1.25rem; }
+    .ae-anatomy h2 { font-size: 1.15rem; margin-bottom: 0.6rem; color: var(--ae-gold); }
+    .ae-anatomy ul { list-style: none; display: grid; gap: 0.5rem; font-size: 0.9rem; color: var(--ae-muted); }
+    aside.ae-workbench { background: var(--ae-surface); border: 1px solid var(--ae-border); border-radius: 12px; padding: 1.5rem; }
+    aside.ae-workbench h2 { font-size: 1.25rem; margin-bottom: 0.75rem; }
+    .ae-field { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 0.85rem; }
+    .ae-field label { font-size: 0.85rem; font-weight: 600; }
+    .ae-field input, .ae-field select, .ae-field textarea { background: var(--ae-bg); border: 1px solid var(--ae-border); color: var(--ae-text); padding: 0.6rem 0.75rem; border-radius: 6px; font-size: 0.92rem; }
+    .ae-btn { width: 100%; background: var(--ae-copper); color: var(--ae-text); border: none; border-radius: 8px; padding: 0.85rem; font-size: 0.98rem; font-weight: 700; cursor: pointer; }
+    footer.ae-footer { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--ae-border); font-size: 0.82rem; color: var(--ae-muted); display: flex; justify-content: space-between; }
+  </style>
+</head>
+<body>
+  <div class="ae-wrap">
+    <header class="ae-header">
+      <div class="ae-brand">Aether Audio · Aether One</div>
+      <nav class="ae-nav" aria-label="Chapter Navigation">
+        <a href="/" aria-current="page">01 Overview</a>
+        <a href="/preorders">02 Acoustics &amp; Finish</a>
+        <a href="/preorders">03 Pre-Order Batch 04</a>
+      </nav>
+    </header>
+    <main class="ae-main">
+      <section class="ae-stage">
+        <h1>Precision You Can See Through</h1>
+        <p class="ae-lede">Open-back reference planar magnetic headphones milled from raw titanium and warm brushed copper.</p>
+        <div class="ae-badges">
+          <div class="ae-badge"><strong>98 mm Planar</strong><span>2-micron ultra-thin diaphragm</span></div>
+          <div class="ae-badge"><strong>0.04% THD</strong><span>Measured at 1 kHz / 100 dB SPL</span></div>
+          <div class="ae-badge"><strong>310 g Chassis</strong><span>CNC-milled grade-5 titanium</span></div>
+        </div>
+        <div class="ae-anatomy">
+          <h2>Exploded Acoustic Transducer Stack</h2>
+          <ul>
+            <li><strong>Layer 01 — CNC Aluminium Baffle:</strong> Open-grille acoustic lattice minimises standing-wave reflections.</li>
+            <li><strong>Layer 02 — Dual Neodymium Array:</strong> Symmetrical N52 flux field across the entire 98 mm aperture.</li>
+            <li><strong>Layer 03 — 2-Micron Diaphragm:</strong> Vapor-deposited copper trace voice coil with zero break-up modes.</li>
+          </ul>
+        </div>
+      </section>
+      <aside class="ae-workbench">
+        <h2>Reserve Aether One (£649)</h2>
+        <form id="aether-preorder-form" method="post" action="/preorders">
+          <div class="ae-field">
+            <label for="buyer">Full name</label>
+            <input type="text" id="buyer" name="buyer" required placeholder="Clara Vance">
+          </div>
+          <div class="ae-field">
+            <label for="email">Confirmation email</label>
+            <input type="email" id="email" name="email" required placeholder="clara.vance@aether-acoustics.example">
+          </div>
+          <div class="ae-field">
+            <label for="finish">Chassis finish</label>
+            <select id="finish" name="finish" required>
+              <option value="Anodised Obsidian">Anodised Obsidian</option>
+              <option value="Raw Bead-Blasted Titanium">Raw Bead-Blasted Titanium</option>
+              <option value="Warm Brushed Copper" selected>Warm Brushed Copper</option>
+            </select>
+          </div>
+          <div class="ae-field">
+            <label for="earpads">Ear-pad material</label>
+            <select id="earpads" name="earpads" required>
+              <option value="Perforated Lambskin">Perforated Lambskin</option>
+              <option value="Acoustic Micro-Suede" selected>Acoustic Micro-Suede</option>
+            </select>
+          </div>
+          <div class="ae-field">
+            <label for="engraving">Headband engraving note</label>
+            <textarea id="engraving" name="engraving" rows="2" placeholder="Studio Reference Batch 04"></textarea>
+          </div>
+          <button type="submit" class="ae-btn">Pre-order Aether One · £649</button>
+        </form>
+      </aside>
+    </main>
+    <footer class="ae-footer">
+      <span>Aether Audio Ltd · Unit 14 Clerkenwell Workshops, London</span>
+      <span>Ships 18 Nov 2026 · 5-year transducer warranty</span>
+    </footer>
+  </div>
+</body>
+</html>

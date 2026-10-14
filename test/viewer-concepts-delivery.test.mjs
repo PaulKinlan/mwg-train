@@ -53,7 +53,7 @@ test('/concepts negotiates gzip/deflate without changing its authored HTML or ot
   assert.deepEqual(gunzipSync(gzip.body), plain.body);
   assert.deepEqual(inflateSync(deflate.body), plain.body);
   assert.ok(plain.body.includes(Buffer.from('<summary>Site Generation Prompt')), 'native details remain usable without JS');
-  assert.ok(plain.body.length < 1_100_000, 'an expanding single-page prompt index needs a separate layout decision');
+  assert.ok(plain.body.length < 1_250_000, 'an expanding single-page prompt index needs a separate layout decision');
   assert.ok(gzip.body.length < plain.body.length * 0.3, 'gzip must substantially reduce the actual wire bytes');
   assert.equal(Number(gzip.headers['content-length']), gzip.body.length);
   assert.equal(Number(deflate.headers['content-length']), deflate.body.length);

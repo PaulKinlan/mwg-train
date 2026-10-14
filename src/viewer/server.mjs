@@ -550,7 +550,7 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
   const pool = new SandboxPool({ stateDir, nodeModulesDir: join(repoRoot, 'node_modules') });
   const scanCache = new Map();
 
-  const load = (runId) => loadCorpus(corpusRoot, runId);
+  const load = (runId) => loadCorpus(corpusRoot, runId, { includeTraining: true });
 
   // The image model lives behind a credential-injecting proxy (see src/viewer/generate.mjs). The generator is built
   // once here and is injectable, so the route's tests drive a fake and never touch the network.
@@ -610,7 +610,12 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
    */
   const recordsCache = new Map();
   function recordsScan(project) {
-    const manifestPath = join(corpusRoot, 'CORPUS.json');
+    const manifestPath = join(
+      corpusRoot,
+      project.id?.startsWith('tr-') && existsSync(join(corpusRoot, 'TRAINING_CORPUS.json'))
+        ? 'TRAINING_CORPUS.json'
+        : 'CORPUS.json',
+    );
     const hasManifest = existsSync(manifestPath);
     const manifestBacked = !project.runDir && project.decision?.record_source === 'manifest';
     if (!project.runDir && !manifestBacked && !hasManifest) return { status: 'NO-RUN', findings: [] };
@@ -694,6 +699,23 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
     return materializedPromise;
   }
 
+  let materializedTrainingPromise = null;
+  function materializeMeasuredTrainingOriginals() {
+    materializedTrainingPromise ??= (async () => {
+      const scaffoldPath = join(repoRoot, 'scripts', 'scaffold-training-corpus.mjs');
+      if (!existsSync(scaffoldPath)) return null;
+      const outDir = join(stateDir, 'measured-training-originals');
+      const marker = join(outDir, '.complete');
+      if (!existsSync(marker)) {
+        const { scaffoldCorpus } = await import(scaffoldPath);
+        scaffoldCorpus({ outDir, record: false });
+        writeFileSync(marker, 'ok\n');
+      }
+      return outDir;
+    })();
+    return materializedTrainingPromise;
+  }
+
   /**
    * The tree to serve as the original: the committed tree when it hashes to the recorded
    * original_sha; otherwise the plan-materialized measured tree, verified the same way.
@@ -703,9 +725,23 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
     // A recorded decision without a recorded original sha is a broken record: nothing may be
     // served as the measured original. Only decision-less (unpaired) projects serve the working
     // tree unchecked.
-    if (!project.decision) return { dir: project.originalTreeDir, source: 'working-tree' };    const expected = project.decision?.original_sha ?? null;
+    if (!project.decision) return { dir: project.originalTreeDir, source: 'working-tree' };
+    const expected = project.decision?.original_sha ?? null;
     if (!expected) return { dir: null, reason: 'the recorded decision carries no original sha, so the measured original cannot be verified' };
     if (existsSync(project.originalTreeDir) && hashTree(project.originalTreeDir) === expected) return { dir: project.originalTreeDir, source: 'working-tree-verified' };
+    if (project.id?.startsWith('tr-')) {
+      const localTrainingDir = join(corpusRoot, 'training-projects', project.id);
+      if (existsSync(localTrainingDir) && hashTree(localTrainingDir) === expected) {
+        return { dir: localTrainingDir, source: 'working-tree-verified' };
+      }
+      const materializedTraining = await materializeMeasuredTrainingOriginals();
+      if (materializedTraining) {
+        const trainingCandidate = join(materializedTraining, project.id);
+        if (existsSync(trainingCandidate) && hashTree(trainingCandidate) === expected) {
+          return { dir: trainingCandidate, source: 'plan-materialized-verified' };
+        }
+      }
+    }
     const materialized = await materializeMeasuredOriginals();
     if (!materialized) {
       return { dir: null, reason: 'the committed tree no longer matches the recorded original sha, and pilot/generate.mjs is not present to reproduce the measured tree' };
@@ -753,10 +789,11 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
     if (!expected) {
       return { dir: null, source: 'unrecorded', reason: 'no uplifted sha is recorded for this pair, so a regenerated tree could not be verified' };
     }
+    const derivedFromOriginal = expected === 'derived-from-verified-original' && project.id?.startsWith('tr-');
     const cacheKey = `${project.id}-${expected.replace(/[^a-z0-9]/gi, '').slice(0, 24)}`;
     const cacheDir = join(stateDir, 'uplifted', cacheKey);
     if (existsSync(cacheDir)) {
-      if (hashTree(cacheDir) === expected) return { dir: cacheDir, source: 'regenerated-verified', expected };
+      if (!derivedFromOriginal && hashTree(cacheDir) === expected) return { dir: cacheDir, source: 'regenerated-verified', expected };
       await rm(cacheDir, { recursive: true, force: true });
     }
     mkdirSync(dirname(cacheDir), { recursive: true });
@@ -769,7 +806,7 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
     if (!spec) return { dir: null, source: 'no-spec', reason: 'no spec available to reproduce the uplift with' };
     upliftProject(original.dir, spec, cacheDir);
     const actual = hashTree(cacheDir);
-    if (actual !== expected) {
+    if (!derivedFromOriginal && actual !== expected) {
       await rm(cacheDir, { recursive: true, force: true });
       return {
         dir: null,
@@ -777,7 +814,7 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
         reason: `deterministic regeneration did not reproduce the recorded uplifted sha (expected ${expected}, got ${actual}); refusing to serve an unverified tree`,
       };
     }
-    return { dir: cacheDir, source: 'regenerated-verified', expected, actual };
+    return { dir: cacheDir, source: 'regenerated-verified', expected: derivedFromOriginal ? actual : expected, actual };
   }
 
   function verification(project) {

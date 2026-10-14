@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kestrel Workspace — Sprint 24 Firmware Issue Tracker &amp; Inspector</title>
+  <style>
+    :root {
+      --ks-bg: #f8f7f4;
+      --ks-surface: #ffffff;
+      --ks-rail: #f1efe9;
+      --ks-border: #e4e2dd;
+      --ks-emerald: #059669;
+      --ks-amber: #d97706;
+      --ks-text: #18181b;
+      --ks-muted: #52525b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--ks-bg); color: var(--ks-text); line-height: 1.5; padding: 1.5rem; }
+    .ks-wrap { max-width: 1200px; margin: 0 auto; }
+    header.ks-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 1rem; border-bottom: 1px solid var(--ks-border); margin-bottom: 1.5rem; }
+    .ks-brand { font-size: 1.3rem; font-weight: 800; }
+    nav.ks-nav { display: flex; gap: 1rem; }
+    nav.ks-nav a { color: var(--ks-muted); text-decoration: none; font-size: 0.9rem; font-weight: 600; }
+    nav.ks-nav a[aria-current="page"] { color: var(--ks-emerald); }
+    main.ks-main { display: grid; grid-template-columns: 1.4fr 1fr; gap: 1.5rem; align-items: start; }
+    section.ks-board { background: var(--ks-surface); border: 1px solid var(--ks-border); border-radius: 10px; padding: 1.5rem; }
+    section.ks-board h1 { font-size: 1.45rem; margin-bottom: 0.5rem; }
+    .ks-issue-card { background: var(--ks-rail); border: 1px solid var(--ks-border); border-radius: 8px; padding: 0.9rem; margin-top: 0.75rem; }
+    .ks-issue-card strong { color: var(--ks-emerald); font-family: ui-monospace, monospace; font-size: 0.85rem; }
+    aside.ks-inspector { background: var(--ks-surface); border: 1px solid var(--ks-border); border-radius: 10px; padding: 1.5rem; }
+    aside.ks-inspector h2 { font-size: 1.2rem; margin-bottom: 0.75rem; }
+    .ks-field { display: flex; flex-direction: column; gap: 0.3rem; margin-bottom: 0.8rem; }
+    .ks-field label { font-size: 0.85rem; font-weight: 600; }
+    .ks-field input, .ks-field select, .ks-field textarea { padding: 0.55rem 0.7rem; border: 1px solid var(--ks-border); border-radius: 6px; background: var(--ks-bg); color: var(--ks-text); font-size: 0.92rem; }
+    .ks-btn { width: 100%; background: var(--ks-emerald); color: var(--ks-surface); border: none; border-radius: 6px; padding: 0.8rem; font-weight: 700; cursor: pointer; }
+    footer.ks-footer { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--ks-border); font-size: 0.82rem; color: var(--ks-muted); text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="ks-wrap">
+    <header class="ks-header">
+      <div class="ks-brand">Kestrel · Sprint 24: v3.4 Telemetry Release</div>
+      <nav class="ks-nav" aria-label="Workspace Navigation">
+        <a href="/" aria-current="page">Active Sprint (24)</a>
+        <a href="/issues">Grouped Table</a>
+        <a href="/issues">Triage Queue</a>
+      </nav>
+    </header>
+    <main class="ks-main">
+      <section class="ks-board">
+        <h1>Hardware &amp; Firmware Release Board</h1>
+        <p style="font-size:0.9rem;color:var(--ks-muted)">Filter by subsystem (PCB Layout, Firmware, Telemetry) or open Cmd+K command palette.</p>
+        <article class="ks-issue-card">
+          <strong>KES-218 · HIGH · FIRMWARE</strong>
+          <h3 style="font-size:1.02rem;margin:0.25rem 0">Fix SPI bus contention during flash write</h3>
+          <p style="font-size:0.86rem;color:var(--ks-muted)">Assigned to Elena Rostova · DMA ring buffer arbitration under 200Hz telemetry load.</p>
+        </article>
+        <article class="ks-issue-card">
+          <strong>KES-224 · URGENT · TELEMETRY</strong>
+          <h3 style="font-size:1.02rem;margin:0.25rem 0">Calibrate cold-junction thermocouple offset on Rev C board</h3>
+          <p style="font-size:0.86rem;color:var(--ks-muted)">Assigned to Marcus Chen · Verified across −20°C environmental chamber sweep.</p>
+        </article>
+      </section>
+      <aside class="ks-inspector">
+        <h2>Quick-Create Sprint Issue</h2>
+        <form id="kestrel-issue-form" method="post" action="/issues">
+          <div class="ks-field">
+            <label for="title">Issue title</label>
+            <input type="text" id="title" name="title" required placeholder="Fix SPI bus contention during flash write">
+          </div>
+          <div class="ks-field">
+            <label for="assignee">Assignee</label>
+            <input type="text" id="assignee" name="assignee" required placeholder="Elena Rostova">
+          </div>
+          <div class="ks-field">
+            <label for="priority">Priority</label>
+            <select id="priority" name="priority" required>
+              <option value="Normal">Normal</option>
+              <option value="High" selected>High</option>
+              <option value="Urgent">Urgent</option>
+            </select>
+          </div>
+          <div class="ks-field">
+            <label for="component">Subsystem</label>
+            <select id="component" name="component" required>
+              <option value="PCB Layout">PCB Layout</option>
+              <option value="Firmware" selected>Firmware</option>
+              <option value="Telemetry">Telemetry</option>
+            </select>
+          </div>
+          <div class="ks-field">
+            <label for="repro_steps">Reproduction steps</label>
+            <textarea id="repro_steps" name="repro_steps" rows="3" required placeholder="Reflash controller; stream telemetry at 200Hz; observe SPI lock."></textarea>
+          </div>
+          <button type="submit" class="ks-btn">Create Sprint Issue</button>
+        </form>
+      </aside>
+    </main>
+    <footer class="ks-footer">Kestrel Embedded Systems · Sprint 24 · Keyboard navigation enabled</footer>
+  </div>
+</body>
+</html>

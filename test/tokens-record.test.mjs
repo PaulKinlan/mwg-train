@@ -101,7 +101,7 @@ test('HARD REQUIREMENT: the committed training token record matches a fresh meas
     );
 
     // Non-vacuity: the comparison above is only meaningful if the measurement produced a corpus.
-    assert.equal(measured.training.projects.length, 210, 'the measurement must cover the 210 training pairs');
+    assert.equal(measured.training.projects.length, 273, 'the measurement must cover the 273 training pairs');
     assert.ok(measured.training.total_training_tokens > 0, 'the measurement must produce a token total');
   } finally {
     rmSync(dir, { recursive: true, force: true });

@@ -2,7 +2,7 @@
 
 > **mwg-train deterministic baseline** - deterministic output of this repository's own tooling, not an official `web-uplift` result.
 
-Generated 2026-10-13T07:12:08.663Z by `scripts/train-corpus-run.mjs`. 40 sampled pairs, 396 journeys driven, 364 passed.
+Generated 2026-10-14T11:47:17.064Z by `scripts/train-corpus-run.mjs`. 40 sampled pairs, 396 journeys driven, 364 passed.
 
 The SAMPLED projects' numbers come from records produced by driving the project in a real
 browser; the per-project records, screenshots and traces are under the run output directory.
@@ -22,10 +22,10 @@ twice, every framework at least four times (6/6/6/6/6/5/5), all five repair fami
 | status | projects |
 | --- | --- |
 | scored (browser journey run) | 40 |
-| `scaffolded / unverified journey` | 170 |
-| **total** | **210** |
+| `scaffolded / unverified journey` | 233 |
+| **total** | **273** |
 
-Reason: 40 projects were selected by the deterministic rule; 40 were driven in the browser. The remaining 170 are scaffolded and hash-recorded in pilot/TRAINING_CORPUS.json but their journeys were NOT run in this pass, so they carry the status "scaffolded / unverified journey".
+Reason: 40 projects were selected by the deterministic rule; 40 were driven in the browser. The remaining 233 are scaffolded and hash-recorded in pilot/TRAINING_CORPUS.json but their journeys were NOT run in this pass, so they carry the status "scaffolded / unverified journey".
 
 ## Acceptance
 

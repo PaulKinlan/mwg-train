@@ -1,0 +1,590 @@
+{
+  "title": "Kestrel Workspace — Sprint 24 Firmware Issue Tracker & Inspector",
+  "viewport": {
+    "width": 1280,
+    "height": 900
+  },
+  "nodes": [
+    {
+      "tag": "div",
+      "depth": 0,
+      "textLength": 678,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "header",
+      "depth": 1,
+      "textLength": 86,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 2,
+      "textLength": 43,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "nav",
+      "depth": 2,
+      "textLength": 43,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "textLength": 18,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "textLength": 13,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "textLength": 12,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "main",
+      "depth": 1,
+      "textLength": 526,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "section",
+      "depth": 2,
+      "textLength": 428,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h1",
+      "depth": 3,
+      "textLength": 33,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 3,
+      "textLength": 84,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "article",
+      "depth": 3,
+      "textLength": 149,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "strong",
+      "depth": 4,
+      "textLength": 25,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h3",
+      "depth": 4,
+      "textLength": 41,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 4,
+      "textLength": 83,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "article",
+      "depth": 3,
+      "textLength": 162,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "strong",
+      "depth": 4,
+      "textLength": 28,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h3",
+      "depth": 4,
+      "textLength": 58,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 4,
+      "textLength": 76,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "aside",
+      "depth": 2,
+      "textLength": 98,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h2",
+      "depth": 3,
+      "textLength": 25,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "form",
+      "depth": 3,
+      "textLength": 73,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "textLength": 11,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "textLength": 11,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 5,
+      "textLength": 0,
+      "generated": false,
+      "type": "text",
+      "name": "title",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "textLength": 8,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "textLength": 8,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 5,
+      "textLength": 0,
+      "generated": false,
+      "type": "text",
+      "name": "assignee",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "textLength": 8,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "textLength": 8,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "select",
+      "depth": 5,
+      "textLength": 0,
+      "generated": false,
+      "type": null,
+      "name": "priority",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "textLength": 9,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "textLength": 9,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "select",
+      "depth": 5,
+      "textLength": 0,
+      "generated": false,
+      "type": null,
+      "name": "component",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "textLength": 18,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "textLength": 18,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "textarea",
+      "depth": 5,
+      "textLength": 0,
+      "generated": false,
+      "type": null,
+      "name": "repro_steps",
+      "role": null
+    },
+    {
+      "tag": "button",
+      "depth": 4,
+      "textLength": 19,
+      "generated": false,
+      "type": "submit",
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "footer",
+      "depth": 1,
+      "textLength": 66,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    }
+  ],
+  "boxes": [
+    {
+      "tag": "header",
+      "x": 0.0313,
+      "y": 0.0267,
+      "w": 0.9375,
+      "h": 0.0535
+    },
+    {
+      "tag": "nav",
+      "x": 0.6977,
+      "y": 0.032,
+      "w": 0.271,
+      "h": 0.024
+    },
+    {
+      "tag": "main",
+      "x": 0.0313,
+      "y": 0.1069,
+      "w": 0.9375,
+      "h": 0.5981
+    },
+    {
+      "tag": "section",
+      "x": 0.0313,
+      "y": 0.1069,
+      "w": 0.5359,
+      "h": 0.3935
+    },
+    {
+      "tag": "h1",
+      "x": 0.0508,
+      "y": 0.1347,
+      "w": 0.4969,
+      "h": 0.0387
+    },
+    {
+      "tag": "article",
+      "x": 0.0508,
+      "y": 0.2195,
+      "w": 0.4969,
+      "h": 0.1199
+    },
+    {
+      "tag": "h3",
+      "x": 0.0628,
+      "y": 0.2678,
+      "w": 0.4728,
+      "h": 0.0272
+    },
+    {
+      "tag": "article",
+      "x": 0.0508,
+      "y": 0.3528,
+      "w": 0.4969,
+      "h": 0.1199
+    },
+    {
+      "tag": "h3",
+      "x": 0.0628,
+      "y": 0.401,
+      "w": 0.4728,
+      "h": 0.0272
+    },
+    {
+      "tag": "aside",
+      "x": 0.5859,
+      "y": 0.1069,
+      "w": 0.3828,
+      "h": 0.5981
+    },
+    {
+      "tag": "h2",
+      "x": 0.6055,
+      "y": 0.1347,
+      "w": 0.3438,
+      "h": 0.032
+    },
+    {
+      "tag": "form",
+      "x": 0.6055,
+      "y": 0.18,
+      "w": 0.3438,
+      "h": 0.4972
+    },
+    {
+      "tag": "label",
+      "x": 0.6055,
+      "y": 0.18,
+      "w": 0.3438,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.6055,
+      "y": 0.208,
+      "w": 0.3438,
+      "h": 0.0395
+    },
+    {
+      "tag": "label",
+      "x": 0.6055,
+      "y": 0.2617,
+      "w": 0.3438,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.6055,
+      "y": 0.2897,
+      "w": 0.3438,
+      "h": 0.0395
+    },
+    {
+      "tag": "label",
+      "x": 0.6055,
+      "y": 0.3435,
+      "w": 0.3438,
+      "h": 0.0227
+    },
+    {
+      "tag": "select",
+      "x": 0.6055,
+      "y": 0.3715,
+      "w": 0.3438,
+      "h": 0.0418
+    },
+    {
+      "tag": "label",
+      "x": 0.6055,
+      "y": 0.4275,
+      "w": 0.3438,
+      "h": 0.0227
+    },
+    {
+      "tag": "select",
+      "x": 0.6055,
+      "y": 0.4555,
+      "w": 0.3438,
+      "h": 0.0418
+    },
+    {
+      "tag": "label",
+      "x": 0.6055,
+      "y": 0.5114,
+      "w": 0.3438,
+      "h": 0.0227
+    },
+    {
+      "tag": "textarea",
+      "x": 0.6055,
+      "y": 0.5394,
+      "w": 0.3438,
+      "h": 0.0784
+    },
+    {
+      "tag": "button",
+      "x": 0.6055,
+      "y": 0.6321,
+      "w": 0.3438,
+      "h": 0.0451
+    },
+    {
+      "tag": "footer",
+      "x": 0.0313,
+      "y": 0.7405,
+      "w": 0.9375,
+      "h": 0.0408
+    }
+  ],
+  "labels": [
+    {
+      "for": "title",
+      "text": "Issue title"
+    },
+    {
+      "for": "assignee",
+      "text": "Assignee"
+    },
+    {
+      "for": "priority",
+      "text": "Priority"
+    },
+    {
+      "for": "component",
+      "text": "Subsystem"
+    },
+    {
+      "for": "repro_steps",
+      "text": "Reproduction steps"
+    }
+  ],
+  "controls": [
+    {
+      "tag": "input",
+      "type": "text",
+      "name": "title",
+      "label": "Issue title"
+    },
+    {
+      "tag": "input",
+      "type": "text",
+      "name": "assignee",
+      "label": "Assignee"
+    },
+    {
+      "tag": "select",
+      "type": null,
+      "name": "priority",
+      "label": "Priority"
+    },
+    {
+      "tag": "select",
+      "type": null,
+      "name": "component",
+      "label": "Subsystem"
+    },
+    {
+      "tag": "textarea",
+      "type": null,
+      "name": "repro_steps",
+      "label": "Reproduction steps"
+    }
+  ],
+  "headings": [
+    "Hardware & Firmware Release Board",
+    "Fix SPI bus contention during flash write",
+    "Calibrate cold-junction thermocouple offset on Rev C board",
+    "Quick-Create Sprint Issue"
+  ]
+}

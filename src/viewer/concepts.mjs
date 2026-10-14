@@ -438,16 +438,48 @@ export function listConcepts(repoRoot) {
 }
 
 const code = (value) => `<code>${escapeHtml(value)}</code>`;
+
+const ARCHETYPE_SUBJECTS = {
+  'account-recovery': 'Vanguard Identity',
+  booking: 'Evening Class Studio',
+  'browser-puzzle-game': 'Signal Grid — Daily Puzzle #142',
+  catalogue: 'Kanso Studio Tableware',
+  'community-forum': 'The Tune Archive',
+  'contact-lead': 'Atelier Wren Architecture',
+  'developer-media-playground': 'Resonance Lab',
+  'editorial-blog': 'The Kiln Chronicle',
+  'event-registration': 'Future Web 2026 · Barbican',
+  'expense-tracker': 'The Ledger',
+  'fan-community-site': 'Lantern Works Fan Registry',
+  'interactive-product-configurator': 'Atelier Velo — Solstice Ti',
+  'job-board': 'Helix Careers',
+  'library-catalogue': 'The Ashfield Archive',
+  'product-card-comparison': 'Rig Selection Board',
+  'realtime-telemetry-dashboard': 'NorthSea Grid — Dogger Bank Sector B',
+  'restaurant-ordering': 'Hearth & Crumb Bakehouse',
+  'saas-workspace-board': 'Kestrel — Sprint 24: v3.4 Telemetry Release',
+  'scroll-storytelling-launch': 'Aether Audio — Aether One',
+  'survey-form': 'Metro Pulse Transit Survey',
+  'web-shop': 'Orchard Row Press',
+};
+
+const patternSubject = (id) => ARCHETYPE_SUBJECTS[id] ?? null;
+
 const promptDetails = (title, prompt, source) => `<details class="concept-prompt"><summary>${escapeHtml(title)}</summary>
   ${prompt ? `<p class="concept-prompt-copy">${escapeHtml(prompt)}</p>${source ? `<p class="muted">Authored source: ${code(source)}</p>` : ''}`
     : '<p class="muted">No prompt is authored in this checkout. No image or behavior is inferred from a missing file.</p>'}
 </details>`;
 
-const patternCard = ({ id, brief, steps }) => `<article id="pattern-${escapeHtml(id)}" class="concept-comparison" aria-labelledby="pattern-heading-${escapeHtml(id)}">
-  <h3 id="pattern-heading-${escapeHtml(id)}">${escapeHtml(id.replaceAll('-', ' '))}</h3>
-  ${brief ? `<p class="muted">Design and interaction contract: ${code(brief.planSource)} · ${code(brief.designSource)}.</p>
+const patternCard = ({ id, brief, steps }, families = []) => {
+  const subject = patternSubject(id);
+  const familyLinks = families.length
+    ? ` · Training families: ${families.map((f) => `<a href="#target-${escapeHtml(f.id)}"><code>${escapeHtml(f.id)}</code>${f.title ? ` (${escapeHtml(f.title)})` : ''}</a>`).join(', ')}`
+    : '';
+  return `<article id="pattern-${escapeHtml(id)}" class="concept-comparison" aria-labelledby="pattern-heading-${escapeHtml(id)}">
+  <h3 id="pattern-heading-${escapeHtml(id)}">${escapeHtml(id.replaceAll('-', ' '))}${subject ? ` · <span class="muted">${escapeHtml(subject)}</span>` : ''}</h3>
+  ${brief ? `<p class="muted">Design and interaction contract: ${code(brief.planSource)} · ${code(brief.designSource)}${familyLinks}.</p>
     ${promptDetails('Site Generation Prompt', brief.sitePrompt, `${brief.planSource} + ${brief.designSource}`)}`
-    : '<p class="notice">Design specification pending; no generation prompt can be claimed.</p>'}
+    : `<p class="notice">Design specification pending; no generation prompt can be claimed.${familyLinks}</p>`}
   ${steps.length ? `<h4>${steps.filter((step) => step.available).length} pictured state${steps.length === 1 ? '' : 's'} · ${steps.length} declared</h4>
     ${steps.some((step) => step.available && /\bQR\b/i.test(step.imagePrompt ?? '')) ? `<p class="muted">Depicted QR codes are unverified placeholders: do not scan depicted codes. A model ID may be reported rather than attested; check each board&rsquo;s provenance in ${code(`docs/design/archetypes/${id}/README.md`)}. These illustrations remain excluded from training; no reuse clearance is granted here. Check each board&rsquo;s provenance: some records identify provider terms prohibiting use of the image to develop machine-learning models; others say training and output-use rights were not supplied.</p>` : ''}
     <ol class="concept-steps">${steps.map(({ id: stepId, title, available, state, imagePrompt }) => {
@@ -469,6 +501,7 @@ const patternCard = ({ id, brief, steps }) => `<article id="pattern-${escapeHtml
         : promptDetails('Image Generation Prompt · no state image authored', null, null)}`}
   ${brief?.assertions.length ? `<details class="concept-prompt"><summary>Acceptance assertions from the plan · not image verification</summary><ul>${brief.assertions.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul></details>` : ''}
 </article>`;
+};
 
 const trainingFamilyCard = ({ id, archetype, title, origin, available, width, height, board, boardWidth, boardHeight, brief }, register) => `<article class="concept-comparison" aria-labelledby="target-${escapeHtml(id)}">
   <h3 id="target-${escapeHtml(id)}">${escapeHtml(id)}${archetype ? ` · ${escapeHtml(archetype)}` : ''}</h3>
@@ -499,9 +532,15 @@ export function renderConcepts({ patterns = [], archetypes = [], trainingTargets
   const pictured = patterns.reduce((count, pattern) => count + pattern.steps.filter((step) => step.available).length, 0);
   const boardCount = trainingTargets.filter((family) => family.board).length;
   const orderedTargets = [...trainingTargets].sort((a, b) => (Number(b.board) - Number(a.board)) || a.id.localeCompare(b.id));
+  const familiesByArchetype = new Map();
+  for (const family of trainingTargets) {
+    if (!family.archetype) continue;
+    if (!familiesByArchetype.has(family.archetype)) familiesByArchetype.set(family.archetype, []);
+    familiesByArchetype.get(family.archetype).push(family);
+  }
   const trainingSection = orderedTargets.length ? `<div class="concept-board-flow">${orderedTargets.map((family) => trainingFamilyCard(family, trainingBoardRegister)).join('')}</div>`
     : '<p class="notice">No A1 training families are declared in this checkout.</p>';
-  const patternSection = patterns.length ? patterns.map((pattern) => patternCard(pattern)).join('')
+  const patternSection = patterns.length ? patterns.map((pattern) => patternCard(pattern, familiesByArchetype.get(pattern.id) ?? [])).join('')
     : '<p class="notice">No authored archetype patterns are available in this checkout.</p>';
   const evaluationSection = archetypes.length ? archetypes.map(({ id, target }) => `<article class="concept-comparison" aria-labelledby="concept-${escapeHtml(id)}">
     <h3 id="concept-${escapeHtml(id)}">${escapeHtml(id.replaceAll('-', ' '))}</h3>
@@ -523,7 +562,10 @@ export function renderConcepts({ patterns = [], archetypes = [], trainingTargets
     </section>
     <section id="archetype-patterns" aria-labelledby="patterns-heading"><h2 id="patterns-heading">Archetype patterns · ${patterns.length} authored specifications</h2>
       <p class="muted">${pictured} concept boards have committed bytes across these patterns. Patterns without step boards retain their authored design and site briefs but are explicitly marked pending. The step mapping describes what a board depicts; a picture is not a passing browser assertion.</p>
-      ${patterns.length ? `<nav class="concept-pattern-index" aria-label="Jump to an archetype pattern"><ul>${patterns.map(({ id }) => `<li><a href="#pattern-${escapeHtml(id)}">${escapeHtml(id.replaceAll('-', ' '))}</a></li>`).join('')}</ul></nav>` : ''}
+      ${patterns.length ? `<nav class="concept-pattern-index" aria-label="Jump to an archetype pattern"><ul>${patterns.map(({ id }) => {
+        const subject = patternSubject(id);
+        return `<li><a href="#pattern-${escapeHtml(id)}">${escapeHtml(id.replaceAll('-', ' '))}${subject ? ` — ${escapeHtml(subject)}` : ''}</a></li>`;
+      }).join('')}</ul></nav>` : ''}
       ${patternSection}
     </section>
     <section id="training-families" aria-labelledby="training-targets-heading"><h2 id="training-targets-heading">Training families (A1): designed boards and harness targets</h2>

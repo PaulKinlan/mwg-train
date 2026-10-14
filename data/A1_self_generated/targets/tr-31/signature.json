@@ -1,0 +1,713 @@
+{
+  "title": "Aether Audio — Aether One Planar Magnetic Headphone Launch & Pre-Order",
+  "viewport": {
+    "width": 1280,
+    "height": 900
+  },
+  "nodes": [
+    {
+      "tag": "div",
+      "depth": 0,
+      "textLength": 875,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "header",
+      "depth": 1,
+      "textLength": 78,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 2,
+      "textLength": 25,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "nav",
+      "depth": 2,
+      "textLength": 53,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "textLength": 11,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "textLength": 21,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "textLength": 21,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "main",
+      "depth": 1,
+      "textLength": 695,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "section",
+      "depth": 2,
+      "textLength": 563,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h1",
+      "depth": 3,
+      "textLength": 29,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 3,
+      "textLength": 96,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "textLength": 120,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "textLength": 41,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "strong",
+      "depth": 5,
+      "textLength": 12,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "span",
+      "depth": 5,
+      "textLength": 29,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "textLength": 39,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "strong",
+      "depth": 5,
+      "textLength": 9,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "span",
+      "depth": 5,
+      "textLength": 30,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "textLength": 40,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "strong",
+      "depth": 5,
+      "textLength": 13,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "span",
+      "depth": 5,
+      "textLength": 27,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "textLength": 318,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h2",
+      "depth": 4,
+      "textLength": 34,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "ul",
+      "depth": 4,
+      "textLength": 284,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "li",
+      "depth": 5,
+      "textLength": 97,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "strong",
+      "depth": 6,
+      "textLength": 32,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "li",
+      "depth": 5,
+      "textLength": 92,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "strong",
+      "depth": 6,
+      "textLength": 32,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "li",
+      "depth": 5,
+      "textLength": 95,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "strong",
+      "depth": 6,
+      "textLength": 30,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "aside",
+      "depth": 2,
+      "textLength": 132,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h2",
+      "depth": 3,
+      "textLength": 25,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "form",
+      "depth": 3,
+      "textLength": 107,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "textLength": 9,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "textLength": 9,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 5,
+      "textLength": 0,
+      "generated": false,
+      "type": "text",
+      "name": "buyer",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "textLength": 18,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "textLength": 18,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 5,
+      "textLength": 0,
+      "generated": false,
+      "type": "email",
+      "name": "email",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "textLength": 14,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "textLength": 14,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "select",
+      "depth": 5,
+      "textLength": 0,
+      "generated": false,
+      "type": null,
+      "name": "finish",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "textLength": 16,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "textLength": 16,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "select",
+      "depth": 5,
+      "textLength": 0,
+      "generated": false,
+      "type": null,
+      "name": "earpads",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "textLength": 23,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "textLength": 23,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "textarea",
+      "depth": 5,
+      "textLength": 0,
+      "generated": false,
+      "type": null,
+      "name": "engraving",
+      "role": null
+    },
+    {
+      "tag": "button",
+      "depth": 4,
+      "textLength": 27,
+      "generated": false,
+      "type": "submit",
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "footer",
+      "depth": 1,
+      "textLength": 102,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "span",
+      "depth": 2,
+      "textLength": 56,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "span",
+      "depth": 2,
+      "textLength": 46,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    }
+  ],
+  "boxes": [
+    {
+      "tag": "header",
+      "x": 0.0313,
+      "y": 0.0267,
+      "w": 0.9375,
+      "h": 0.0553
+    },
+    {
+      "tag": "nav",
+      "x": 0.5989,
+      "y": 0.0267,
+      "w": 0.3699,
+      "h": 0.0364
+    },
+    {
+      "tag": "main",
+      "x": 0.0313,
+      "y": 0.1087,
+      "w": 0.9375,
+      "h": 0.6034
+    },
+    {
+      "tag": "section",
+      "x": 0.0313,
+      "y": 0.1087,
+      "w": 0.5419,
+      "h": 0.584
+    },
+    {
+      "tag": "h1",
+      "x": 0.0539,
+      "y": 0.1409,
+      "w": 0.4966,
+      "h": 0.0493
+    },
+    {
+      "tag": "h2",
+      "x": 0.0703,
+      "y": 0.434,
+      "w": 0.4638,
+      "h": 0.0307
+    },
+    {
+      "tag": "ul",
+      "x": 0.0703,
+      "y": 0.4753,
+      "w": 0.4638,
+      "h": 0.1618
+    },
+    {
+      "tag": "li",
+      "x": 0.0703,
+      "y": 0.4753,
+      "w": 0.4638,
+      "h": 0.048
+    },
+    {
+      "tag": "li",
+      "x": 0.0703,
+      "y": 0.5322,
+      "w": 0.4638,
+      "h": 0.048
+    },
+    {
+      "tag": "li",
+      "x": 0.0703,
+      "y": 0.5891,
+      "w": 0.4638,
+      "h": 0.048
+    },
+    {
+      "tag": "aside",
+      "x": 0.595,
+      "y": 0.1087,
+      "w": 0.3737,
+      "h": 0.6034
+    },
+    {
+      "tag": "h2",
+      "x": 0.6146,
+      "y": 0.1364,
+      "w": 0.3347,
+      "h": 0.0333
+    },
+    {
+      "tag": "form",
+      "x": 0.6146,
+      "y": 0.1831,
+      "w": 0.3347,
+      "h": 0.5011
+    },
+    {
+      "tag": "label",
+      "x": 0.6146,
+      "y": 0.1831,
+      "w": 0.3347,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.6146,
+      "y": 0.212,
+      "w": 0.3347,
+      "h": 0.0413
+    },
+    {
+      "tag": "label",
+      "x": 0.6146,
+      "y": 0.2684,
+      "w": 0.3347,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.6146,
+      "y": 0.2973,
+      "w": 0.3347,
+      "h": 0.0413
+    },
+    {
+      "tag": "label",
+      "x": 0.6146,
+      "y": 0.3537,
+      "w": 0.3347,
+      "h": 0.0227
+    },
+    {
+      "tag": "select",
+      "x": 0.6146,
+      "y": 0.3826,
+      "w": 0.3347,
+      "h": 0.0435
+    },
+    {
+      "tag": "label",
+      "x": 0.6146,
+      "y": 0.4412,
+      "w": 0.3347,
+      "h": 0.0227
+    },
+    {
+      "tag": "select",
+      "x": 0.6146,
+      "y": 0.4701,
+      "w": 0.3347,
+      "h": 0.0435
+    },
+    {
+      "tag": "label",
+      "x": 0.6146,
+      "y": 0.5287,
+      "w": 0.3347,
+      "h": 0.0227
+    },
+    {
+      "tag": "textarea",
+      "x": 0.6146,
+      "y": 0.5576,
+      "w": 0.3347,
+      "h": 0.0613
+    },
+    {
+      "tag": "button",
+      "x": 0.6146,
+      "y": 0.634,
+      "w": 0.3347,
+      "h": 0.0502
+    },
+    {
+      "tag": "footer",
+      "x": 0.0313,
+      "y": 0.7476,
+      "w": 0.9375,
+      "h": 0.0408
+    }
+  ],
+  "labels": [
+    {
+      "for": "buyer",
+      "text": "Full name"
+    },
+    {
+      "for": "email",
+      "text": "Confirmation email"
+    },
+    {
+      "for": "finish",
+      "text": "Chassis finish"
+    },
+    {
+      "for": "earpads",
+      "text": "Ear-pad material"
+    },
+    {
+      "for": "engraving",
+      "text": "Headband engraving note"
+    }
+  ],
+  "controls": [
+    {
+      "tag": "input",
+      "type": "text",
+      "name": "buyer",
+      "label": "Full name"
+    },
+    {
+      "tag": "input",
+      "type": "email",
+      "name": "email",
+      "label": "Confirmation email"
+    },
+    {
+      "tag": "select",
+      "type": null,
+      "name": "finish",
+      "label": "Chassis finish"
+    },
+    {
+      "tag": "select",
+      "type": null,
+      "name": "earpads",
+      "label": "Ear-pad material"
+    },
+    {
+      "tag": "textarea",
+      "type": null,
+      "name": "engraving",
+      "label": "Headband engraving note"
+    }
+  ],
+  "headings": [
+    "Precision You Can See Through",
+    "Exploded Acoustic Transducer Stack",
+    "Reserve Aether One (£649)"
+  ]
+}

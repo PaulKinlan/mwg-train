@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NorthSea Grid — Dogger Bank Sector B Offshore Wind Telemetry &amp; Alert Log</title>
+  <style>
+    :root {
+      --ns-bg: #121316;
+      --ns-surface: #1c1e24;
+      --ns-card: #252830;
+      --ns-border: #323640;
+      --ns-emerald: #10b981;
+      --ns-amber: #f59e0b;
+      --ns-text: #f4f4f5;
+      --ns-muted: #a1a1aa;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--ns-bg); color: var(--ns-text); line-height: 1.5; padding: 1.5rem; }
+    .ns-wrap { max-width: 1200px; margin: 0 auto; }
+    header.ns-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 1rem; border-bottom: 1px solid var(--ns-border); margin-bottom: 1.5rem; }
+    .ns-brand { font-size: 1.3rem; font-weight: 800; }
+    nav.ns-nav { display: flex; gap: 1rem; }
+    nav.ns-nav a { color: var(--ns-muted); text-decoration: none; font-size: 0.9rem; font-weight: 600; }
+    nav.ns-nav a[aria-current="page"] { color: var(--ns-emerald); }
+    main.ns-main { display: grid; grid-template-columns: 1.4fr 1fr; gap: 1.5rem; align-items: start; }
+    section.ns-telemetry { background: var(--ns-surface); border: 1px solid var(--ns-border); border-radius: 10px; padding: 1.5rem; }
+    section.ns-telemetry h1 { font-size: 1.45rem; margin-bottom: 0.5rem; }
+    .ns-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; margin: 1rem 0; }
+    .ns-kpi { background: var(--ns-card); border: 1px solid var(--ns-border); border-radius: 8px; padding: 0.85rem; }
+    .ns-kpi strong { display: block; font-size: 1.15rem; color: var(--ns-emerald); font-variant-numeric: tabular-nums; }
+    .ns-kpi span { font-size: 0.8rem; color: var(--ns-muted); }
+    aside.ns-alerts { background: var(--ns-surface); border: 1px solid var(--ns-border); border-radius: 10px; padding: 1.5rem; }
+    aside.ns-alerts h2 { font-size: 1.2rem; margin-bottom: 0.75rem; }
+    .ns-field { display: flex; flex-direction: column; gap: 0.3rem; margin-bottom: 0.8rem; }
+    .ns-field label { font-size: 0.85rem; font-weight: 600; }
+    .ns-field input, .ns-field select, .ns-field textarea { padding: 0.55rem 0.7rem; border: 1px solid var(--ns-border); border-radius: 6px; background: var(--ns-bg); color: var(--ns-text); font-size: 0.92rem; }
+    .ns-btn { width: 100%; background: var(--ns-emerald); color: var(--ns-bg); border: none; border-radius: 6px; padding: 0.8rem; font-weight: 800; cursor: pointer; }
+    footer.ns-footer { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--ns-border); font-size: 0.82rem; color: var(--ns-muted); text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="ns-wrap">
+    <header class="ns-header">
+      <div class="ns-brand">NorthSea Grid · Dogger Bank Sector B (Simulation — Not Live)</div>
+      <nav class="ns-nav" aria-label="Telemetry Navigation">
+        <a href="/" aria-current="page">Sector Overview</a>
+        <a href="/alerts">Alert Rules</a>
+        <a href="/incidents">Incident Audit Log</a>
+      </nav>
+    </header>
+    <main class="ns-main">
+      <section class="ns-telemetry">
+        <h1>Offshore Array Generation &amp; Gearbox Thermal Monitor</h1>
+        <p style="font-size:0.9rem;color:var(--ns-muted)">14:00–15:30 UTC brushed window · Turbine B-07 showing 84.2°C oil temperature warning.</p>
+        <div class="ns-kpis">
+          <div class="ns-kpi"><strong>412.8 MW</strong><span>Net Generation</span></div>
+          <div class="ns-kpi"><strong>50.02 Hz</strong><span>Grid Frequency</span></div>
+          <div class="ns-kpi"><strong>78.4%</strong><span>Battery Reserve</span></div>
+          <div class="ns-kpi"><strong style="color:var(--ns-amber)">1 Active</strong><span>B-07 Thermal Warning</span></div>
+        </div>
+      </section>
+      <aside class="ns-alerts">
+        <h2>Configure Thermal Alert Rule</h2>
+        <form id="northsea-alert-form" method="post" action="/alerts">
+          <div class="ns-field">
+            <label for="turbine_id">Turbine unit</label>
+            <select id="turbine_id" name="turbine_id" required>
+              <option value="Turbine B-01">Turbine B-01</option>
+              <option value="Turbine B-07" selected>Turbine B-07</option>
+              <option value="Turbine B-12">Turbine B-12</option>
+            </select>
+          </div>
+          <div class="ns-field">
+            <label for="operator">Duty engineer</label>
+            <input type="text" id="operator" name="operator" required placeholder="Soren Lindqvist">
+          </div>
+          <div class="ns-field">
+            <label for="warning_temp">Warning threshold (°C)</label>
+            <input type="number" id="warning_temp" name="warning_temp" required value="78">
+          </div>
+          <div class="ns-field">
+            <label for="critical_temp">Critical threshold (°C)</label>
+            <input type="number" id="critical_temp" name="critical_temp" required value="88">
+          </div>
+          <div class="ns-field">
+            <label for="dispatch_note">Incident annotation</label>
+            <textarea id="dispatch_note" name="dispatch_note" rows="2" required placeholder="Gearbox oil excursion observed during 14:00 UTC gust window."></textarea>
+          </div>
+          <button type="submit" class="ns-btn">Save Thermal Alert Rule</button>
+        </form>
+      </aside>
+    </main>
+    <footer class="ns-footer">NorthSea Grid Operations · UTC Telemetry Fixture · Accessible Data Table Available</footer>
+  </div>
+</body>
+</html>

@@ -1,6 +1,6 @@
 # Training family specs: `plan.md` and `design.md`
 
-Every training family (`tr-01` .. `tr-30`) has two documents under this directory, because the
+Every training family (`tr-01` .. `tr-39`) has two documents under this directory, because the
 functional contract and the aesthetic system have different sources of truth and different lifetimes.
 
 | Artefact | Scope | States | Checked against |
@@ -66,7 +66,7 @@ nothing depicted is a functional claim about a route, a state or a payment.
 ## Regenerating and checking
 
 ```bash
-npm run scaffold:train-design     # rewrite all 30 families from the brief manifest and target boards
+npm run scaffold:train-design     # rewrite all 39 families from the brief manifest and target boards
 npm run check:train-design        # re-check every claim against those same sources (wired into check:all)
 ```
 

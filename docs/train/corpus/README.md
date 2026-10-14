@@ -31,21 +31,21 @@ That sum is a **serialized pair-volume estimate, not a measurement of generated 
 
 ---
 
-## 1. The `tr-*` Training Corpus (210 Pairs)
-Recorded in `pilot/TRAINING_CORPUS.json`, spanning 30 synthetic families (`tr-01` to `tr-30`) across all 7 frameworks (`hono`, `raw`, `react`, `preact`, `vue`, `webcomponents`, `svelte`), with 25 generate families and 5 repair families (`tr-26` to `tr-30`) with injected defects.
+## 1. The `tr-*` Training Corpus (273 Pairs)
+Recorded in `pilot/TRAINING_CORPUS.json`, spanning 39 synthetic families (`tr-01` to `tr-39`) across all 7 frameworks (`hono`, `raw`, `react`, `preact`, `vue`, `webcomponents`, `svelte`), with 34 generate families and 5 repair families (`tr-26` to `tr-30`) with injected defects.
 
 | Scope | Original (chars) | Uplifted (chars) | Total (chars) | Derived Tokens | Band (±25%) | Role in Sizing |
 |---|---:|---:|---:|---:|---|---|
-| **`app_sources`** | **5,454,540** | **5,602,486** | **11,057,026** | **2,764,257** | **[2,073,192, 3,455,321]** | **PRIMARY headline figure** |
-| `project_manifest` | 26,190 | 26,190 | 52,380 | 13,095 | [9,821, 16,369] | `package.json` dependencies & scripts |
-| `harness_metadata` | 949,094 | 949,094 | 1,898,188 | 474,547 | [355,910, 593,184] | `spec.json` harness metadata (EXCLUDED) |
+| **`app_sources`** | **7,025,348** | **7,207,622** | **14,232,970** | **3,558,243** | **[2,668,682, 4,447,803]** | **PRIMARY headline figure** |
+| `project_manifest` | 34,047 | 34,047 | 68,094 | 17,024 | [12,768, 21,279] | `package.json` dependencies & scripts |
+| `harness_metadata` | 1,216,136 | 1,216,136 | 2,432,272 | 608,068 | [456,051, 760,085] | `spec.json` harness metadata (EXCLUDED) |
 | `prompt` | 0 | 0 | 0 | 0 | [0, 0] | Measured zero (documented gap; see below) |
-| *full_tree (all)* | *6,429,824* | *6,577,770* | *13,007,594* | *3,251,899* | *[2,438,924, 4,064,873]* | *Total on-disk tree for comparison* |
+| *full_tree (all)* | *8,275,531* | *8,457,805* | *16,733,336* | *4,183,334* | *[3,137,501, 5,229,168]* | *Total on-disk tree for comparison* |
 
-- **Headline Characters (`app_sources`):** **11,057,026 characters** (5,454,540 original + 5,602,486 uplifted)
-- **Headline Derived Tokens:** **2,764,257 tokens**
-- **Uncertainty Band:** **[2,073,192, 3,455,321] tokens** (±25% margin)
-- **Epoch Scaling:** 1 epoch = **2,764,257 tokens**; $N$ epochs = $N \times 2,764,257$ tokens.
+- **Headline Characters (`app_sources`):** **14,232,970 characters** (7,025,348 original + 7,207,622 uplifted)
+- **Headline Derived Tokens:** **3,558,243 tokens**
+- **Uncertainty Band:** **[2,668,682, 4,447,803] tokens** (±25% margin)
+- **Epoch Scaling:** 1 epoch = **3,558,243 tokens**; $N$ epochs = $N \times 3,558,243$ tokens.
 
 > **These figures have now moved four times, and what moved them is worth reading.** On
 > 2026-10-08 the headline went 1,477,348 → 1,556,588 → 1,550,364 while all 30 families were re-authored

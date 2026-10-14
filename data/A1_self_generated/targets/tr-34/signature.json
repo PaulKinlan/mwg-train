@@ -1,0 +1,605 @@
+{
+  "title": "NorthSea Grid — Dogger Bank Sector B Offshore Wind Telemetry & Alert Log",
+  "viewport": {
+    "width": 1280,
+    "height": 900
+  },
+  "nodes": [
+    {
+      "tag": "div",
+      "depth": 0,
+      "textLength": 554,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "header",
+      "depth": 1,
+      "textLength": 104,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 2,
+      "textLength": 60,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "nav",
+      "depth": 2,
+      "textLength": 44,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "textLength": 15,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "textLength": 11,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "textLength": 18,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "main",
+      "depth": 1,
+      "textLength": 368,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "section",
+      "depth": 2,
+      "textLength": 228,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h1",
+      "depth": 3,
+      "textLength": 51,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 3,
+      "textLength": 85,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "textLength": 92,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "textLength": 22,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "strong",
+      "depth": 5,
+      "textLength": 8,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "span",
+      "depth": 5,
+      "textLength": 14,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "textLength": 22,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "strong",
+      "depth": 5,
+      "textLength": 8,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "span",
+      "depth": 5,
+      "textLength": 14,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "textLength": 20,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "strong",
+      "depth": 5,
+      "textLength": 5,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "span",
+      "depth": 5,
+      "textLength": 15,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "textLength": 28,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "strong",
+      "depth": 5,
+      "textLength": 8,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "span",
+      "depth": 5,
+      "textLength": 20,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "aside",
+      "depth": 2,
+      "textLength": 140,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h2",
+      "depth": 3,
+      "textLength": 28,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "form",
+      "depth": 3,
+      "textLength": 112,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "textLength": 12,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "textLength": 12,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "select",
+      "depth": 5,
+      "textLength": 0,
+      "generated": false,
+      "type": null,
+      "name": "turbine_id",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "textLength": 13,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "textLength": 13,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 5,
+      "textLength": 0,
+      "generated": false,
+      "type": "text",
+      "name": "operator",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "textLength": 22,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "textLength": 22,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 5,
+      "textLength": 0,
+      "generated": false,
+      "type": "number",
+      "name": "warning_temp",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "textLength": 23,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "textLength": 23,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 5,
+      "textLength": 0,
+      "generated": false,
+      "type": "number",
+      "name": "critical_temp",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "textLength": 19,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "textLength": 19,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "textarea",
+      "depth": 5,
+      "textLength": 0,
+      "generated": false,
+      "type": null,
+      "name": "dispatch_note",
+      "role": null
+    },
+    {
+      "tag": "button",
+      "depth": 4,
+      "textLength": 23,
+      "generated": false,
+      "type": "submit",
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "footer",
+      "depth": 1,
+      "textLength": 82,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    }
+  ],
+  "boxes": [
+    {
+      "tag": "header",
+      "x": 0.0313,
+      "y": 0.0267,
+      "w": 0.9375,
+      "h": 0.0535
+    },
+    {
+      "tag": "nav",
+      "x": 0.6974,
+      "y": 0.032,
+      "w": 0.2714,
+      "h": 0.024
+    },
+    {
+      "tag": "main",
+      "x": 0.0313,
+      "y": 0.1069,
+      "w": 0.9375,
+      "h": 0.577
+    },
+    {
+      "tag": "section",
+      "x": 0.0313,
+      "y": 0.1069,
+      "w": 0.5359,
+      "h": 0.2791
+    },
+    {
+      "tag": "h1",
+      "x": 0.0508,
+      "y": 0.1347,
+      "w": 0.4969,
+      "h": 0.0387
+    },
+    {
+      "tag": "aside",
+      "x": 0.5859,
+      "y": 0.1069,
+      "w": 0.3828,
+      "h": 0.577
+    },
+    {
+      "tag": "h2",
+      "x": 0.6055,
+      "y": 0.1347,
+      "w": 0.3438,
+      "h": 0.032
+    },
+    {
+      "tag": "form",
+      "x": 0.6055,
+      "y": 0.18,
+      "w": 0.3438,
+      "h": 0.4761
+    },
+    {
+      "tag": "label",
+      "x": 0.6055,
+      "y": 0.18,
+      "w": 0.3438,
+      "h": 0.0227
+    },
+    {
+      "tag": "select",
+      "x": 0.6055,
+      "y": 0.208,
+      "w": 0.3438,
+      "h": 0.0418
+    },
+    {
+      "tag": "label",
+      "x": 0.6055,
+      "y": 0.264,
+      "w": 0.3438,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.6055,
+      "y": 0.2919,
+      "w": 0.3438,
+      "h": 0.0395
+    },
+    {
+      "tag": "label",
+      "x": 0.6055,
+      "y": 0.3457,
+      "w": 0.3438,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.6055,
+      "y": 0.3737,
+      "w": 0.3438,
+      "h": 0.0395
+    },
+    {
+      "tag": "label",
+      "x": 0.6055,
+      "y": 0.4275,
+      "w": 0.3438,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.6055,
+      "y": 0.4555,
+      "w": 0.3438,
+      "h": 0.0395
+    },
+    {
+      "tag": "label",
+      "x": 0.6055,
+      "y": 0.5092,
+      "w": 0.3438,
+      "h": 0.0227
+    },
+    {
+      "tag": "textarea",
+      "x": 0.6055,
+      "y": 0.5372,
+      "w": 0.3438,
+      "h": 0.0595
+    },
+    {
+      "tag": "button",
+      "x": 0.6055,
+      "y": 0.611,
+      "w": 0.3438,
+      "h": 0.0451
+    },
+    {
+      "tag": "footer",
+      "x": 0.0313,
+      "y": 0.7194,
+      "w": 0.9375,
+      "h": 0.0408
+    }
+  ],
+  "labels": [
+    {
+      "for": "turbine_id",
+      "text": "Turbine unit"
+    },
+    {
+      "for": "operator",
+      "text": "Duty engineer"
+    },
+    {
+      "for": "warning_temp",
+      "text": "Warning threshold (°C)"
+    },
+    {
+      "for": "critical_temp",
+      "text": "Critical threshold (°C)"
+    },
+    {
+      "for": "dispatch_note",
+      "text": "Incident annotation"
+    }
+  ],
+  "controls": [
+    {
+      "tag": "select",
+      "type": null,
+      "name": "turbine_id",
+      "label": "Turbine unit"
+    },
+    {
+      "tag": "input",
+      "type": "text",
+      "name": "operator",
+      "label": "Duty engineer"
+    },
+    {
+      "tag": "input",
+      "type": "number",
+      "name": "warning_temp",
+      "label": "Warning threshold (°C)"
+    },
+    {
+      "tag": "input",
+      "type": "number",
+      "name": "critical_temp",
+      "label": "Critical threshold (°C)"
+    },
+    {
+      "tag": "textarea",
+      "type": null,
+      "name": "dispatch_note",
+      "label": "Incident annotation"
+    }
+  ],
+  "headings": [
+    "Offshore Array Generation & Gearbox Thermal Monitor",
+    "Configure Thermal Alert Rule"
+  ]
+}

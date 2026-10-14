@@ -206,7 +206,7 @@ test('image dimensions are read from the bytes, including the real committed boa
 
 test('validation refuses anything the committed tree does not contain, and every out-of-range setting', () => {
   const allowed = allowedFor();
-  assert.equal(allowed.briefIds.size, 60, '30 training families x 2 authored voices');
+  assert.equal(allowed.briefIds.size, 78, '39 training families x 2 authored voices');
   assert.ok(allowed.frameworksByBrief.get('tr-01-v1').has('raw'));
   assert.ok(allowed.frameworksByBrief.get('tr-26-v2').has('hono'), '-v2 voices share their family scaffolded framework arms');
 

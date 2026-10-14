@@ -1,0 +1,524 @@
+{
+  "title": "Resonance Lab — WebAudio Synth & Shader Patch Studio",
+  "viewport": {
+    "width": 1280,
+    "height": 900
+  },
+  "nodes": [
+    {
+      "tag": "div",
+      "depth": 0,
+      "textLength": 580,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "header",
+      "depth": 1,
+      "textLength": 90,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 2,
+      "textLength": 48,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "nav",
+      "depth": 2,
+      "textLength": 42,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "textLength": 12,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "textLength": 14,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "textLength": 16,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "main",
+      "depth": 1,
+      "textLength": 406,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "section",
+      "depth": 2,
+      "textLength": 283,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h1",
+      "depth": 3,
+      "textLength": 47,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 3,
+      "textLength": 71,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "textLength": 165,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "br",
+      "depth": 4,
+      "textLength": 0,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "br",
+      "depth": 4,
+      "textLength": 0,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "br",
+      "depth": 4,
+      "textLength": 0,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "aside",
+      "depth": 2,
+      "textLength": 123,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h2",
+      "depth": 3,
+      "textLength": 28,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "form",
+      "depth": 3,
+      "textLength": 95,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "textLength": 11,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "textLength": 11,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 5,
+      "textLength": 0,
+      "generated": false,
+      "type": "text",
+      "name": "patch_name",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "textLength": 14,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "textLength": 14,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 5,
+      "textLength": 0,
+      "generated": false,
+      "type": "text",
+      "name": "author",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "textLength": 12,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "textLength": 12,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "select",
+      "depth": 5,
+      "textLength": 0,
+      "generated": false,
+      "type": null,
+      "name": "synth_engine",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "textLength": 18,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "textLength": 18,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 5,
+      "textLength": 0,
+      "generated": false,
+      "type": "number",
+      "name": "cutoff_hz",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "textLength": 20,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "textLength": 20,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "textarea",
+      "depth": 5,
+      "textLength": 0,
+      "generated": false,
+      "type": null,
+      "name": "patch_source",
+      "role": null
+    },
+    {
+      "tag": "button",
+      "depth": 4,
+      "textLength": 20,
+      "generated": false,
+      "type": "submit",
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "footer",
+      "depth": 1,
+      "textLength": 84,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    }
+  ],
+  "boxes": [
+    {
+      "tag": "header",
+      "x": 0.0313,
+      "y": 0.0267,
+      "w": 0.9375,
+      "h": 0.0535
+    },
+    {
+      "tag": "nav",
+      "x": 0.7061,
+      "y": 0.032,
+      "w": 0.2626,
+      "h": 0.024
+    },
+    {
+      "tag": "main",
+      "x": 0.0313,
+      "y": 0.1069,
+      "w": 0.9375,
+      "h": 0.577
+    },
+    {
+      "tag": "section",
+      "x": 0.0313,
+      "y": 0.1069,
+      "w": 0.5278,
+      "h": 0.2717
+    },
+    {
+      "tag": "h1",
+      "x": 0.0508,
+      "y": 0.1347,
+      "w": 0.4887,
+      "h": 0.0387
+    },
+    {
+      "tag": "aside",
+      "x": 0.5778,
+      "y": 0.1069,
+      "w": 0.391,
+      "h": 0.577
+    },
+    {
+      "tag": "h2",
+      "x": 0.5973,
+      "y": 0.1347,
+      "w": 0.3519,
+      "h": 0.032
+    },
+    {
+      "tag": "form",
+      "x": 0.5973,
+      "y": 0.18,
+      "w": 0.3519,
+      "h": 0.4761
+    },
+    {
+      "tag": "label",
+      "x": 0.5973,
+      "y": 0.18,
+      "w": 0.3519,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.5973,
+      "y": 0.208,
+      "w": 0.3519,
+      "h": 0.0395
+    },
+    {
+      "tag": "label",
+      "x": 0.5973,
+      "y": 0.2617,
+      "w": 0.3519,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.5973,
+      "y": 0.2897,
+      "w": 0.3519,
+      "h": 0.0395
+    },
+    {
+      "tag": "label",
+      "x": 0.5973,
+      "y": 0.3435,
+      "w": 0.3519,
+      "h": 0.0227
+    },
+    {
+      "tag": "select",
+      "x": 0.5973,
+      "y": 0.3715,
+      "w": 0.3519,
+      "h": 0.0418
+    },
+    {
+      "tag": "label",
+      "x": 0.5973,
+      "y": 0.4275,
+      "w": 0.3519,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.5973,
+      "y": 0.4555,
+      "w": 0.3519,
+      "h": 0.0395
+    },
+    {
+      "tag": "label",
+      "x": 0.5973,
+      "y": 0.5092,
+      "w": 0.3519,
+      "h": 0.0227
+    },
+    {
+      "tag": "textarea",
+      "x": 0.5973,
+      "y": 0.5372,
+      "w": 0.3519,
+      "h": 0.0595
+    },
+    {
+      "tag": "button",
+      "x": 0.5973,
+      "y": 0.611,
+      "w": 0.3519,
+      "h": 0.0451
+    },
+    {
+      "tag": "footer",
+      "x": 0.0313,
+      "y": 0.7194,
+      "w": 0.9375,
+      "h": 0.0408
+    }
+  ],
+  "labels": [
+    {
+      "for": "patch_name",
+      "text": "Patch title"
+    },
+    {
+      "for": "author",
+      "text": "Creator handle"
+    },
+    {
+      "for": "synth_engine",
+      "text": "Synth engine"
+    },
+    {
+      "for": "cutoff_hz",
+      "text": "Filter cutoff (Hz)"
+    },
+    {
+      "for": "patch_source",
+      "text": "DSP patch expression"
+    }
+  ],
+  "controls": [
+    {
+      "tag": "input",
+      "type": "text",
+      "name": "patch_name",
+      "label": "Patch title"
+    },
+    {
+      "tag": "input",
+      "type": "text",
+      "name": "author",
+      "label": "Creator handle"
+    },
+    {
+      "tag": "select",
+      "type": null,
+      "name": "synth_engine",
+      "label": "Synth engine"
+    },
+    {
+      "tag": "input",
+      "type": "number",
+      "name": "cutoff_hz",
+      "label": "Filter cutoff (Hz)"
+    },
+    {
+      "tag": "textarea",
+      "type": null,
+      "name": "patch_source",
+      "label": "DSP patch expression"
+    }
+  ],
+  "headings": [
+    "Chapter 3: Shaping Subtractive Filter Envelopes",
+    "Export & Persist Synth Patch"
+  ]
+}

@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rig Selection Board — GPU Benchmark Comparison &amp; Build Selection</title>
+  <style>
+    :root {
+      --rs-bg: #f3f4f6;
+      --rs-surface: #ffffff;
+      --rs-card: #f9fafb;
+      --rs-border: #d1d5db;
+      --rs-cobalt: #0284c7;
+      --rs-emerald: #15803d;
+      --rs-text: #111827;
+      --rs-muted: #4b5563;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--rs-bg); color: var(--rs-text); line-height: 1.5; padding: 1.5rem; }
+    .rs-wrap { max-width: 1200px; margin: 0 auto; }
+    header.rs-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 1rem; border-bottom: 2px solid var(--rs-text); margin-bottom: 1.5rem; }
+    .rs-brand { font-size: 1.35rem; font-weight: 800; }
+    nav.rs-nav { display: flex; gap: 1rem; }
+    nav.rs-nav a { color: var(--rs-muted); text-decoration: none; font-size: 0.9rem; font-weight: 600; }
+    nav.rs-nav a[aria-current="page"] { color: var(--rs-cobalt); }
+    main.rs-main { display: grid; grid-template-columns: 1.4fr 1fr; gap: 1.75rem; align-items: start; }
+    section.rs-matrix { background: var(--rs-surface); border: 1px solid var(--rs-border); border-radius: 8px; padding: 1.5rem; }
+    section.rs-matrix h1 { font-size: 1.45rem; margin-bottom: 0.5rem; }
+    table.rs-table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.88rem; font-variant-numeric: tabular-nums; }
+    table.rs-table th, table.rs-table td { padding: 0.6rem; border-bottom: 1px solid var(--rs-border); text-align: left; }
+    table.rs-table th { background: var(--rs-card); font-weight: 700; }
+    aside.rs-select { background: var(--rs-surface); border: 1px solid var(--rs-border); border-radius: 8px; padding: 1.5rem; }
+    aside.rs-select h2 { font-size: 1.2rem; margin-bottom: 0.75rem; }
+    .rs-field { display: flex; flex-direction: column; gap: 0.3rem; margin-bottom: 0.8rem; }
+    .rs-field label { font-size: 0.85rem; font-weight: 700; }
+    .rs-field input, .rs-field select, .rs-field textarea { padding: 0.55rem 0.7rem; border: 1px solid var(--rs-border); border-radius: 6px; background: var(--rs-bg); color: var(--rs-text); font-size: 0.92rem; }
+    .rs-btn { width: 100%; background: var(--rs-cobalt); color: var(--rs-surface); border: none; border-radius: 6px; padding: 0.85rem; font-weight: 700; cursor: pointer; }
+    footer.rs-footer { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--rs-border); font-size: 0.82rem; color: var(--rs-muted); text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="rs-wrap">
+    <header class="rs-header">
+      <div class="rs-brand">Rig Selection Board · Workstation GPU Catalogue</div>
+      <nav class="rs-nav" aria-label="Comparison Navigation">
+        <a href="/" aria-current="page">Catalogue (24 Cards)</a>
+        <a href="/compare">Side-by-Side Matrix</a>
+        <a href="/selections">Saved Rig Builds</a>
+      </nav>
+    </header>
+    <main class="rs-main">
+      <section class="rs-matrix">
+        <h1>Comparing 3 Workstation Graphics Cards</h1>
+        <p style="font-size:0.9rem;color:var(--rs-muted)">Aligned row-by-row across VRAM capacity, board power draw, slot length, and warranty.</p>
+        <table class="rs-table">
+          <thead>
+            <tr><th>Attribute</th><th>Vector VX-4070</th><th>Northwind Arc A770</th><th>Halcyon RX-7800</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Price</td><td>£549</td><td>£629</td><td><strong>£479 ✓</strong></td></tr>
+            <tr><td>VRAM Memory</td><td>12 GB GDDR6X</td><td><strong>16 GB GDDR6 ✓</strong></td><td><strong>16 GB GDDR6 ✓</strong></td></tr>
+            <tr><td>Power Draw</td><td><strong>200 W ✓</strong></td><td>225 W</td><td>245 W</td></tr>
+            <tr><td>Card Length</td><td>262 mm (2-slot)</td><td>280 mm (adapter incl.)</td><td>302 mm (3 slots needed)</td></tr>
+          </tbody>
+        </table>
+      </section>
+      <aside class="rs-select">
+        <h2>Carry Selected Card Into Build</h2>
+        <form id="rig-selection-form" method="post" action="/selections">
+          <div class="rs-field">
+            <label for="builder_name">Builder name</label>
+            <input type="text" id="builder_name" name="builder_name" required placeholder="Gideon Park">
+          </div>
+          <div class="rs-field">
+            <label for="card_model">Selected graphics card</label>
+            <select id="card_model" name="card_model" required>
+              <option value="Halcyon RX-7800 (16 GB)">Halcyon RX-7800 (16 GB)</option>
+              <option value="Northwind Arc A770 (16 GB)" selected>Northwind Arc A770 (16 GB)</option>
+              <option value="Vector VX-4070 (12 GB)">Vector VX-4070 (12 GB)</option>
+            </select>
+          </div>
+          <div class="rs-field">
+            <label for="psu_wattage">Power supply budget (W)</label>
+            <input type="number" id="psu_wattage" name="psu_wattage" required value="750">
+          </div>
+          <div class="rs-field">
+            <label for="rig_notes">Chassis &amp; thermal notes</label>
+            <textarea id="rig_notes" name="rig_notes" rows="2" required placeholder="Paired with 280mm mesh workstation chassis; 225W TDP within quiet fan curve."></textarea>
+          </div>
+          <button type="submit" class="rs-btn">Continue With This Card</button>
+        </form>
+      </aside>
+    </main>
+    <footer class="rs-footer">Rig Selection Board · Hardware Benchmark Lab · All specifications verified at 22°C ambient</footer>
+  </div>
+</body>
+</html>

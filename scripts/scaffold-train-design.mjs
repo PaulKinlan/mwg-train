@@ -102,6 +102,15 @@ const ARCHETYPE_ANTI_PATTERNS = {
   'expense-tracker': 'a running total that does not match the listed entries',
   'library-catalogue': 'a search that matches nothing rather than saying so',
   'community-forum': 'a posting control offered to a visitor who cannot use it',
+  'scroll-storytelling-launch': 'a scroll animation that blocks reading or ignores reduced-motion preference',
+  'browser-puzzle-game': 'a board state whose outcome is shown by colour alone without text',
+  'saas-workspace-board': 'an issue status badge that cannot be read or changed by keyboard',
+  'realtime-telemetry-dashboard': 'a telemetry chart that hides the numerical value or alert state it reports',
+  'interactive-product-configurator': 'a selected component whose price or weight delta is omitted from the build total',
+  'developer-media-playground': 'an audio or shader control that autoplays before the user activates it',
+  'editorial-blog': 'a long-form article column wider than comfortable reading measure',
+  'fan-community-site': 'an unmoderated submission shown publicly before a moderator decision',
+  'product-card-comparison': 'a comparison row whose unit or scale changes silently between columns',
 };
 const UNIVERSAL_ANTI_PATTERNS = [
   'a second accent colour competing with the primary action',

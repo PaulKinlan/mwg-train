@@ -1,0 +1,464 @@
+{
+  "title": "The Kiln Chronicle — Ceramics Literary Journal & Article Composer",
+  "viewport": {
+    "width": 1280,
+    "height": 900
+  },
+  "nodes": [
+    {
+      "tag": "div",
+      "depth": 0,
+      "textLength": 712,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "header",
+      "depth": 1,
+      "textLength": 72,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 2,
+      "textLength": 33,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "nav",
+      "depth": 2,
+      "textLength": 39,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "textLength": 11,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "textLength": 15,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "textLength": 13,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "main",
+      "depth": 1,
+      "textLength": 561,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "section",
+      "depth": 2,
+      "textLength": 450,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "span",
+      "depth": 3,
+      "textLength": 31,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h1",
+      "depth": 3,
+      "textLength": 46,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 3,
+      "textLength": 48,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "blockquote",
+      "depth": 3,
+      "textLength": 138,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 3,
+      "textLength": 187,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "aside",
+      "depth": 2,
+      "textLength": 111,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h2",
+      "depth": 3,
+      "textLength": 31,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "form",
+      "depth": 3,
+      "textLength": 80,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "textLength": 16,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "textLength": 16,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 5,
+      "textLength": 0,
+      "generated": false,
+      "type": "text",
+      "name": "headline",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "textLength": 13,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "textLength": 13,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 5,
+      "textLength": 0,
+      "generated": false,
+      "type": "text",
+      "name": "byline",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "textLength": 15,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "textLength": 15,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "select",
+      "depth": 5,
+      "textLength": 0,
+      "generated": false,
+      "type": null,
+      "name": "section",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "textLength": 21,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "textLength": 21,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "textarea",
+      "depth": 5,
+      "textLength": 0,
+      "generated": false,
+      "type": null,
+      "name": "body_markdown",
+      "role": null
+    },
+    {
+      "tag": "button",
+      "depth": 4,
+      "textLength": 15,
+      "generated": false,
+      "type": "submit",
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "footer",
+      "depth": 1,
+      "textLength": 79,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    }
+  ],
+  "boxes": [
+    {
+      "tag": "header",
+      "x": 0.0313,
+      "y": 0.0267,
+      "w": 0.9375,
+      "h": 0.0655
+    },
+    {
+      "tag": "nav",
+      "x": 0.713,
+      "y": 0.04,
+      "w": 0.2557,
+      "h": 0.0256
+    },
+    {
+      "tag": "main",
+      "x": 0.0313,
+      "y": 0.1188,
+      "w": 0.9375,
+      "h": 0.5241
+    },
+    {
+      "tag": "section",
+      "x": 0.0313,
+      "y": 0.1188,
+      "w": 0.5242,
+      "h": 0.3947
+    },
+    {
+      "tag": "h1",
+      "x": 0.0539,
+      "y": 0.1795,
+      "w": 0.4789,
+      "h": 0.0939
+    },
+    {
+      "tag": "aside",
+      "x": 0.5804,
+      "y": 0.1188,
+      "w": 0.3883,
+      "h": 0.5241
+    },
+    {
+      "tag": "h2",
+      "x": 0.6,
+      "y": 0.1466,
+      "w": 0.3492,
+      "h": 0.0341
+    },
+    {
+      "tag": "form",
+      "x": 0.6,
+      "y": 0.1941,
+      "w": 0.3492,
+      "h": 0.421
+    },
+    {
+      "tag": "label",
+      "x": 0.6,
+      "y": 0.1941,
+      "w": 0.3492,
+      "h": 0.0242
+    },
+    {
+      "tag": "input",
+      "x": 0.6,
+      "y": 0.2236,
+      "w": 0.3492,
+      "h": 0.0395
+    },
+    {
+      "tag": "label",
+      "x": 0.6,
+      "y": 0.2773,
+      "w": 0.3492,
+      "h": 0.0242
+    },
+    {
+      "tag": "input",
+      "x": 0.6,
+      "y": 0.3068,
+      "w": 0.3492,
+      "h": 0.0395
+    },
+    {
+      "tag": "label",
+      "x": 0.6,
+      "y": 0.3606,
+      "w": 0.3492,
+      "h": 0.0242
+    },
+    {
+      "tag": "select",
+      "x": 0.6,
+      "y": 0.3901,
+      "w": 0.3492,
+      "h": 0.0418
+    },
+    {
+      "tag": "label",
+      "x": 0.6,
+      "y": 0.4461,
+      "w": 0.3492,
+      "h": 0.0242
+    },
+    {
+      "tag": "textarea",
+      "x": 0.6,
+      "y": 0.4756,
+      "w": 0.3492,
+      "h": 0.0784
+    },
+    {
+      "tag": "button",
+      "x": 0.6,
+      "y": 0.5682,
+      "w": 0.3492,
+      "h": 0.0469
+    },
+    {
+      "tag": "footer",
+      "x": 0.0313,
+      "y": 0.6784,
+      "w": 0.9375,
+      "h": 0.0422
+    }
+  ],
+  "labels": [
+    {
+      "for": "headline",
+      "text": "Article headline"
+    },
+    {
+      "for": "byline",
+      "text": "Author byline"
+    },
+    {
+      "for": "section",
+      "text": "Journal section"
+    },
+    {
+      "for": "body_markdown",
+      "text": "Essay body (Markdown)"
+    }
+  ],
+  "controls": [
+    {
+      "tag": "input",
+      "type": "text",
+      "name": "headline",
+      "label": "Article headline"
+    },
+    {
+      "tag": "input",
+      "type": "text",
+      "name": "byline",
+      "label": "Author byline"
+    },
+    {
+      "tag": "select",
+      "type": null,
+      "name": "section",
+      "label": "Journal section"
+    },
+    {
+      "tag": "textarea",
+      "type": null,
+      "name": "body_markdown",
+      "label": "Essay body (Markdown)"
+    }
+  ],
+  "headings": [
+    "What a Reduction Firing Does to a Copper Glaze",
+    "Compose & Publish Journal Essay"
+  ]
+}

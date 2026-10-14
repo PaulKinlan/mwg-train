@@ -51,11 +51,11 @@ test('gallery serves the generated archetype reference boards and the authored e
   assert.equal(gallery.patterns.filter(({ steps }) => steps.length === 0).length, 6, 'missing board sets stay visible');
   assert.ok(gallery.patterns.every(({ brief }) => brief?.sitePrompt.includes('Step-by-step behaviour')));
   assert.ok(gallery.patterns.flatMap(({ steps }) => steps).every(({ imagePrompt }) => imagePrompt), 'every committed step includes its original prompt');
-  // The training arm is the 30 declared families, every one of them backed by a target render on disk, and none of
+  // The training arm is the 39 declared families, every one of them backed by a target render on disk, and none of
   // them is an A6 archetype id: the two arms cannot leak into each other's label space.
-  assert.equal(gallery.trainingTargets.length, 30);
-  assert.deepEqual(gallery.trainingTargets.map(({ id }) => id), Array.from({ length: 30 }, (_, index) => `tr-${String(index + 1).padStart(2, '0')}`));
-  assert.ok(gallery.trainingTargets.every((family) => family.available), 'all 30 declared training targets exist');
+  assert.equal(gallery.trainingTargets.length, 39);
+  assert.deepEqual(gallery.trainingTargets.map(({ id }) => id), Array.from({ length: 39 }, (_, index) => `tr-${String(index + 1).padStart(2, '0')}`));
+  assert.ok(gallery.trainingTargets.every((family) => family.available), 'all 39 declared training targets exist');
   const tr01 = gallery.trainingTargets[0];
   assert.deepEqual(
     (({ id, archetype, title, origin, available, board }) => ({ id, archetype, title, origin, available, board }))(tr01),
@@ -87,7 +87,7 @@ test('gallery serves the generated archetype reference boards and the authored e
   assert.match(html, /not<\/em> the desired production design/);
   assert.match(html, /The proposed 42-family expansion has not landed/);
   assert.match(html, /Sealed evaluation targets \(A6\)/);
-  assert.match(html, /not part of the 30 families above/);
+  assert.match(html, /not part of the 39 families above/);
   assert.match(html, /61 concept boards have committed bytes/);
   assert.match(html, /do not scan depicted codes/i, 'QR-bearing illustrations must retain the safety instruction');
   assert.match(html, /A model ID may be reported rather than attested/, 'an ID alone is not model attestation');
@@ -115,16 +115,16 @@ test('gallery serves the generated archetype reference boards and the authored e
   assert.match(html, /Image Generation Prompt for this state/);
   assert.match(html, /No step-specific browser assertion is registered for this picture/);
   assert.equal((html.match(/aria-labelledby="pattern-heading-[a-z-]+"/g) ?? []).length, 27);
-  assert.equal((html.match(/<summary>Site Generation Prompt/g) ?? []).length, 57);
+  assert.equal((html.match(/<summary>Site Generation Prompt/g) ?? []).length, 66);
   assert.equal((html.match(/<summary>Image Generation Prompt for this state<\/summary>/g) ?? []).length, 61);
   assert.doesNotMatch(html, /(?:src|href)="\/concepts\/images\/layout-(storefront|saas|explainer)\.jpg/, 'retired sketches remain unserved even when their names occur in original prompt text');
   assert.doesNotMatch(html, /<iframe/);
   assert.match(html, new RegExp(`${boardsOnDisk.length} of ${familyIds.length} declared families have a designed reference board`));
-  for (const family of ['tr-01', 'tr-17', 'tr-30']) {
+  for (const family of ['tr-01', 'tr-17', 'tr-30', 'tr-31', 'tr-39']) {
     assert.match(html, new RegExp(`href="/concepts/targets/${family}\\.png"`));
     assert.match(html, new RegExp(`alt="Harness target render, the A1 conformance instrument, for ${family}`));
   }
-  assert.equal((html.match(/\/concepts\/targets\/tr-\d{2}\.png" aria-label/g) ?? []).length, 30);
+  assert.equal((html.match(/\/concepts\/targets\/tr-\d{2}\.png" aria-label/g) ?? []).length, 39);
   assert.equal((html.match(/\/concepts\/references\/tr-\d{2}\.jpg" aria-label/g) ?? []).length, boardsOnDisk.length);
   assert.match(html, /Designed reference board · <code>docs\/design\/training\/tr-01\/reference\.jpg<\/code>/);
   assert.match(html, /Harness target render \(A1 conformance instrument\) · <code>data\/A1_self_generated\/targets\/tr-01\/target\.png<\/code> — a deterministic headless-Chrome render/);
@@ -156,8 +156,8 @@ test('gallery serves the generated archetype reference boards and the authored e
   const boardless = familyIds.find((id) => !boardsOnDisk.includes(id));
   if (boardless) assert.equal((await fetch(`${base}/concepts/references/${boardless}.jpg`)).status, 404, 'a family with no designed board has no board route');
   else assert.equal((await fetch(`${base}/concepts/references/${boardsOnDisk.at(-1)}.jpg`)).status, 200, 'a family with a designed board serves it');
-  assert.equal((await fetch(`${base}/concepts/references/tr-31.jpg`)).status, 404, 'an undeclared family has no board route');
-  assert.equal((await fetch(`${base}/concepts/targets/tr-31.png`)).status, 404);
+  assert.equal((await fetch(`${base}/concepts/references/tr-40.jpg`)).status, 404, 'an undeclared family has no board route');
+  assert.equal((await fetch(`${base}/concepts/targets/tr-40.png`)).status, 404);
   assert.equal((await fetch(`${base}/concepts/targets/tr-1.png`)).status, 404);
   // The retired hand-drawn sketches are no longer served by the viewer at all, while the generated archetype
   // boards the gallery now shows are served through the allowlisted two-segment route.

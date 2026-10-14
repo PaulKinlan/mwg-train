@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Atelier Velo — Solstice Ti Custom Titanium Gravel Bike Configurator</title>
+  <style>
+    :root {
+      --av-bg: #f5f2eb;
+      --av-surface: #ffffff;
+      --av-card: #ebe6dc;
+      --av-border: #d6cfc2;
+      --av-terracotta: #c2410c;
+      --av-bronze: #9a3412;
+      --av-text: #1c1917;
+      --av-muted: #57534e;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--av-bg); color: var(--av-text); line-height: 1.5; padding: 1.5rem; }
+    .av-wrap { max-width: 1200px; margin: 0 auto; }
+    header.av-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 1rem; border-bottom: 2px solid var(--av-terracotta); margin-bottom: 1.5rem; }
+    .av-brand { font-size: 1.35rem; font-weight: 800; }
+    nav.av-nav { display: flex; gap: 1rem; }
+    nav.av-nav a { color: var(--av-muted); text-decoration: none; font-size: 0.9rem; font-weight: 600; }
+    nav.av-nav a[aria-current="page"] { color: var(--av-terracotta); }
+    main.av-main { display: grid; grid-template-columns: 1.35fr 1fr; gap: 1.75rem; align-items: start; }
+    section.av-stage { background: var(--av-surface); border: 1px solid var(--av-border); border-radius: 10px; padding: 1.5rem; }
+    section.av-stage h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+    .av-specs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-top: 1rem; }
+    .av-spec { background: var(--av-card); border: 1px solid var(--av-border); border-radius: 8px; padding: 0.8rem; }
+    .av-spec strong { display: block; color: var(--av-terracotta); }
+    aside.av-config { background: var(--av-surface); border: 1px solid var(--av-border); border-radius: 10px; padding: 1.5rem; }
+    aside.av-config h2 { font-size: 1.2rem; margin-bottom: 0.75rem; }
+    .av-field { display: flex; flex-direction: column; gap: 0.3rem; margin-bottom: 0.8rem; }
+    .av-field label { font-size: 0.85rem; font-weight: 600; }
+    .av-field input, .av-field select, .av-field textarea { padding: 0.55rem 0.7rem; border: 1px solid var(--av-border); border-radius: 6px; background: var(--av-bg); color: var(--av-text); font-size: 0.92rem; }
+    .av-btn { width: 100%; background: var(--av-terracotta); color: var(--av-surface); border: none; border-radius: 6px; padding: 0.85rem; font-weight: 700; cursor: pointer; }
+    footer.av-footer { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--av-border); font-size: 0.82rem; color: var(--av-muted); text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="av-wrap">
+    <header class="av-header">
+      <div class="av-brand">Atelier Velo · Solstice Ti Bespoke Workshop</div>
+      <nav class="av-nav" aria-label="Configurator Navigation">
+        <a href="/" aria-current="page">1. Frame &amp; Drivetrain</a>
+        <a href="/builds">2. Clearance Check</a>
+        <a href="/builds">3. Saved Builds</a>
+      </nav>
+    </header>
+    <main class="av-main">
+      <section class="av-stage">
+        <h1>Solstice Ti — Double-Butted 3Al-2.5V Titanium Gravel Frame</h1>
+        <p style="font-size:0.9rem;color:var(--av-muted)">Live bill of materials and tyre-to-mudguard bridge clearance verification.</p>
+        <div class="av-specs">
+          <div class="av-spec"><strong>56cm Endurance</strong><span>Stack 578 mm · Reach 392 mm</span></div>
+          <div class="av-spec"><strong>8.11 kg Est.</strong><span>With 40mm carbon gravel wheelset</span></div>
+          <div class="av-spec"><strong>£4,550 Total</strong><span>3-week workshop build lead time</span></div>
+        </div>
+      </section>
+      <aside class="av-config">
+        <h2>Save &amp; Reserve Workshop Build Slot</h2>
+        <form id="atelier-build-form" method="post" action="/builds">
+          <div class="av-field">
+            <label for="rider">Rider name</label>
+            <input type="text" id="rider" name="rider" required placeholder="Jules Moreau">
+          </div>
+          <div class="av-field">
+            <label for="frame_size">Frame geometry</label>
+            <select id="frame_size" name="frame_size" required>
+              <option value="52cm Compact">52cm Compact</option>
+              <option value="56cm Endurance" selected>56cm Endurance</option>
+              <option value="58cm Tall">58cm Tall</option>
+            </select>
+          </div>
+          <div class="av-field">
+            <label for="finish">Titanium finish</label>
+            <select id="finish" name="finish" required>
+              <option value="Raw Brushed Ti">Raw Brushed Ti</option>
+              <option value="Anodised Bronze" selected>Anodised Bronze</option>
+              <option value="Slate Cerakote">Slate Cerakote</option>
+            </select>
+          </div>
+          <div class="av-field">
+            <label for="wheelset">Wheelset &amp; tyres</label>
+            <select id="wheelset" name="wheelset" required>
+              <option value="Alloy All-Road 700x38c">Alloy All-Road 700x38c</option>
+              <option value="40mm Deep Carbon Gravel" selected>40mm Deep Carbon Gravel</option>
+              <option value="650b Expedition Dynamo">650b Expedition Dynamo</option>
+            </select>
+          </div>
+          <div class="av-field">
+            <label for="build_notes">Fit &amp; routing notes</label>
+            <textarea id="build_notes" name="build_notes" rows="2" placeholder="Internal dynamo wire routing through fork crown; 90mm stem."></textarea>
+          </div>
+          <button type="submit" class="av-btn">Save Build &amp; Reserve Workshop Slot</button>
+        </form>
+      </aside>
+    </main>
+    <footer class="av-footer">Atelier Velo Framebuilders · Sheffield &amp; Savoy · Custom Titanium Gravel</footer>
+  </div>
+</body>
+</html>

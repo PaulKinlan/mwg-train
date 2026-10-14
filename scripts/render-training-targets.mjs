@@ -96,6 +96,16 @@ async function render() {
         throw new Error(`render-training-targets: no authored source for ${family.family_id} at ${source}`);
       }
 
+      const outDir = join(ROOT, TRAINING_TARGETS_STORAGE, family.family_id);
+      const pngPath = join(outDir, 'target.png');
+      const sigPath = join(outDir, 'signature.json');
+      if (!process.argv.includes('--force') && existsSync(pngPath) && existsSync(sigPath)) {
+        const image = readFileSync(pngPath);
+        const signatureBuffer = readFileSync(sigPath);
+        rows.push(manifestRow(family, image, signatureBuffer));
+        continue;
+      }
+
       // Close every browser in a finally, one at a time
       const chrome = await launchChrome();
       try {

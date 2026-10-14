@@ -77,9 +77,9 @@ export const BATCH_3 = [
             <div class="gn-field">
               <label for="hospital_destination">Hospital Clinic / Treatment Centre</label>
               <select id="hospital_destination" name="hospital_destination" required>
-                <option value="royal-devon">Royal Devon &amp; Exeter Hospital (Wonford)</option>
-                <option value="torbay-eye">Torbay Hospital (Eye Clinic)</option>
-                <option value="community-hosp">Okehampton Community Health Centre</option>
+                <option value="royal-devon">Elmwood Community Hospital</option>
+                <option value="torbay-eye">Oakhaven Eye Clinic</option>
+                <option value="community-hosp">Westford Community Health Centre</option>
               </select>
             </div>
             <div class="gn-field">
@@ -545,7 +545,7 @@ export const BATCH_3 = [
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Voices of the Mill Valley — Elder Oral History Archive &amp; Transcript Index</title>
+  <title>Voices of the Oakhaven Valley — Elder Oral History Archive &amp; Transcript Index</title>
   <style>
     :root {
       --oh-indigo: #1e1b4b;
@@ -583,7 +583,7 @@ export const BATCH_3 = [
 <body>
   <div class="oh-shell">
     <header class="oh-head">
-      <div class="oh-brand">Voices of the Mill Valley</div>
+      <div class="oh-brand">Voices of the Oakhaven Valley</div>
       <nav class="oh-nav" aria-label="Archive Nav">
         <a href="/">About the Project</a>
         <a href="/interviews" aria-current="page">Interview Index</a>
@@ -636,7 +636,7 @@ export const BATCH_3 = [
       </section>
     </main>
     <footer class="oh-foot">
-      <p>Voices of the Mill Valley • County Historical Archive • Digitised with Heritage Lottery Support</p>
+      <p>Voices of the Oakhaven Valley • County Historical Archive • Digitised with Heritage Lottery Support</p>
     </footer>
   </div>
 </body>

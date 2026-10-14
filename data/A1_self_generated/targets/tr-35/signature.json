@@ -1,0 +1,578 @@
+{
+  "title": "Atelier Velo — Solstice Ti Custom Titanium Gravel Bike Configurator",
+  "viewport": {
+    "width": 1280,
+    "height": 900
+  },
+  "nodes": [
+    {
+      "tag": "div",
+      "depth": 0,
+      "textLength": 570,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "header",
+      "depth": 1,
+      "textLength": 97,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 2,
+      "textLength": 43,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "nav",
+      "depth": 2,
+      "textLength": 54,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "textLength": 21,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "textLength": 18,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "a",
+      "depth": 3,
+      "textLength": 15,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "main",
+      "depth": 1,
+      "textLength": 402,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "section",
+      "depth": 2,
+      "textLength": 260,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h1",
+      "depth": 3,
+      "textLength": 58,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "p",
+      "depth": 3,
+      "textLength": 74,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 3,
+      "textLength": 128,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "textLength": 41,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "strong",
+      "depth": 5,
+      "textLength": 14,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "span",
+      "depth": 5,
+      "textLength": 27,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "textLength": 44,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "strong",
+      "depth": 5,
+      "textLength": 12,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "span",
+      "depth": 5,
+      "textLength": 32,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "textLength": 43,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "strong",
+      "depth": 5,
+      "textLength": 12,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "span",
+      "depth": 5,
+      "textLength": 31,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "aside",
+      "depth": 2,
+      "textLength": 142,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "h2",
+      "depth": 3,
+      "textLength": 34,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "form",
+      "depth": 3,
+      "textLength": 108,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "textLength": 10,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "textLength": 10,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "input",
+      "depth": 5,
+      "textLength": 0,
+      "generated": false,
+      "type": "text",
+      "name": "rider",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "textLength": 14,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "textLength": 14,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "select",
+      "depth": 5,
+      "textLength": 0,
+      "generated": false,
+      "type": null,
+      "name": "frame_size",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "textLength": 15,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "textLength": 15,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "select",
+      "depth": 5,
+      "textLength": 0,
+      "generated": false,
+      "type": null,
+      "name": "finish",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "textLength": 16,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "textLength": 16,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "select",
+      "depth": 5,
+      "textLength": 0,
+      "generated": false,
+      "type": null,
+      "name": "wheelset",
+      "role": null
+    },
+    {
+      "tag": "div",
+      "depth": 4,
+      "textLength": 19,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "label",
+      "depth": 5,
+      "textLength": 19,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "textarea",
+      "depth": 5,
+      "textLength": 0,
+      "generated": false,
+      "type": null,
+      "name": "build_notes",
+      "role": null
+    },
+    {
+      "tag": "button",
+      "depth": 4,
+      "textLength": 34,
+      "generated": false,
+      "type": "submit",
+      "name": null,
+      "role": null
+    },
+    {
+      "tag": "footer",
+      "depth": 1,
+      "textLength": 71,
+      "generated": false,
+      "type": null,
+      "name": null,
+      "role": null
+    }
+  ],
+  "boxes": [
+    {
+      "tag": "header",
+      "x": 0.0313,
+      "y": 0.0267,
+      "w": 0.9375,
+      "h": 0.056
+    },
+    {
+      "tag": "nav",
+      "x": 0.6443,
+      "y": 0.0327,
+      "w": 0.3244,
+      "h": 0.024
+    },
+    {
+      "tag": "main",
+      "x": 0.0313,
+      "y": 0.1093,
+      "w": 0.9375,
+      "h": 0.5832
+    },
+    {
+      "tag": "section",
+      "x": 0.0313,
+      "y": 0.1093,
+      "w": 0.526,
+      "h": 0.2969
+    },
+    {
+      "tag": "h1",
+      "x": 0.0508,
+      "y": 0.1371,
+      "w": 0.4869,
+      "h": 0.08
+    },
+    {
+      "tag": "aside",
+      "x": 0.5791,
+      "y": 0.1093,
+      "w": 0.3896,
+      "h": 0.5832
+    },
+    {
+      "tag": "h2",
+      "x": 0.5986,
+      "y": 0.1371,
+      "w": 0.3506,
+      "h": 0.032
+    },
+    {
+      "tag": "form",
+      "x": 0.5986,
+      "y": 0.1824,
+      "w": 0.3506,
+      "h": 0.4823
+    },
+    {
+      "tag": "label",
+      "x": 0.5986,
+      "y": 0.1824,
+      "w": 0.3506,
+      "h": 0.0227
+    },
+    {
+      "tag": "input",
+      "x": 0.5986,
+      "y": 0.2104,
+      "w": 0.3506,
+      "h": 0.0395
+    },
+    {
+      "tag": "label",
+      "x": 0.5986,
+      "y": 0.2642,
+      "w": 0.3506,
+      "h": 0.0227
+    },
+    {
+      "tag": "select",
+      "x": 0.5986,
+      "y": 0.2922,
+      "w": 0.3506,
+      "h": 0.0418
+    },
+    {
+      "tag": "label",
+      "x": 0.5986,
+      "y": 0.3482,
+      "w": 0.3506,
+      "h": 0.0227
+    },
+    {
+      "tag": "select",
+      "x": 0.5986,
+      "y": 0.3761,
+      "w": 0.3506,
+      "h": 0.0418
+    },
+    {
+      "tag": "label",
+      "x": 0.5986,
+      "y": 0.4321,
+      "w": 0.3506,
+      "h": 0.0227
+    },
+    {
+      "tag": "select",
+      "x": 0.5986,
+      "y": 0.4601,
+      "w": 0.3506,
+      "h": 0.0418
+    },
+    {
+      "tag": "label",
+      "x": 0.5986,
+      "y": 0.5161,
+      "w": 0.3506,
+      "h": 0.0227
+    },
+    {
+      "tag": "textarea",
+      "x": 0.5986,
+      "y": 0.5441,
+      "w": 0.3506,
+      "h": 0.0595
+    },
+    {
+      "tag": "button",
+      "x": 0.5986,
+      "y": 0.6179,
+      "w": 0.3506,
+      "h": 0.0469
+    },
+    {
+      "tag": "footer",
+      "x": 0.0313,
+      "y": 0.7281,
+      "w": 0.9375,
+      "h": 0.0408
+    }
+  ],
+  "labels": [
+    {
+      "for": "rider",
+      "text": "Rider name"
+    },
+    {
+      "for": "frame_size",
+      "text": "Frame geometry"
+    },
+    {
+      "for": "finish",
+      "text": "Titanium finish"
+    },
+    {
+      "for": "wheelset",
+      "text": "Wheelset & tyres"
+    },
+    {
+      "for": "build_notes",
+      "text": "Fit & routing notes"
+    }
+  ],
+  "controls": [
+    {
+      "tag": "input",
+      "type": "text",
+      "name": "rider",
+      "label": "Rider name"
+    },
+    {
+      "tag": "select",
+      "type": null,
+      "name": "frame_size",
+      "label": "Frame geometry"
+    },
+    {
+      "tag": "select",
+      "type": null,
+      "name": "finish",
+      "label": "Titanium finish"
+    },
+    {
+      "tag": "select",
+      "type": null,
+      "name": "wheelset",
+      "label": "Wheelset & tyres"
+    },
+    {
+      "tag": "textarea",
+      "type": null,
+      "name": "build_notes",
+      "label": "Fit & routing notes"
+    }
+  ],
+  "headings": [
+    "Solstice Ti — Double-Butted 3Al-2.5V Titanium Gravel Frame",
+    "Save & Reserve Workshop Build Slot"
+  ]
+}

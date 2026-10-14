@@ -18,14 +18,15 @@ import process from 'node:process';
 import { BATCH_1 } from './targets/batch-1.mjs';
 import { BATCH_2 } from './targets/batch-2.mjs';
 import { BATCH_3 } from './targets/batch-3.mjs';
+import { BATCH_4 } from './targets/batch-4.mjs';
 
 const ROOT = resolve(process.cwd());
 const TARGETS_DIR = join(ROOT, 'docs/train/targets');
 
-const ALL_TARGETS = [...BATCH_1, ...BATCH_2, ...BATCH_3];
+const ALL_TARGETS = [...BATCH_1, ...BATCH_2, ...BATCH_3, ...BATCH_4];
 
-if (ALL_TARGETS.length !== 30) {
-  console.error(`Expected 30 targets, found ${ALL_TARGETS.length}`);
+if (ALL_TARGETS.length !== 39) {
+  console.error(`Expected 39 targets, found ${ALL_TARGETS.length}`);
   process.exit(1);
 }
 

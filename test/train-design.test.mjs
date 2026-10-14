@@ -295,7 +295,7 @@ test('a design that declares no tokens at all is rejected', () => {
 test('the committed documents describe the sources they claim: every family has a passing plan and design', () => {
   const rows = readFileSync(join(ROOT, TRAIN_BRIEFS_MANIFEST), 'utf8').split('\n').filter(Boolean).map((line) => JSON.parse(line));
   const families = [...new Set(rows.map((row) => row.family_id))].sort();
-  assert.equal(families.length, 30, 'the training manifest should carry exactly 30 families');
+  assert.equal(families.length, 39, 'the training manifest should carry exactly 39 families');
   for (const family of families) {
     const brief = canonicalBrief(rows, family);
     assert.ok(brief, `${family} has no canonical (-v1) brief row`);

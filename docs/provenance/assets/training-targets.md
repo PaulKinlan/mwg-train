@@ -14,7 +14,7 @@ for that family: what a well-built, accessible modern web application looks like
 tools and patterns the model is trained to emulate. It serves as the reference against which
 training-side conformance and visual similarity can be evaluated.
 
-There are 30 training families (`tr-01` through `tr-30`), corresponding to the synthetic
+There are 39 training families (`tr-01` through `tr-39`), corresponding to the synthetic
 training briefs recorded in `docs/train/briefs/manifest.jsonl`.
 
 ## How they were made

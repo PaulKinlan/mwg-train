@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lantern Works Fan Registry — Stop-Motion Craft Archive &amp; Moderation Queue</title>
+  <style>
+    :root {
+      --lw-bg: #18131a;
+      --lw-surface: #261f29;
+      --lw-card: #312736;
+      --lw-border: #3d3142;
+      --lw-brass: #d97706;
+      --lw-cream: #faf5ff;
+      --lw-muted: #c4b5fd;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--lw-bg); color: var(--lw-cream); line-height: 1.5; padding: 1.5rem; }
+    .lw-wrap { max-width: 1200px; margin: 0 auto; }
+    header.lw-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 1rem; border-bottom: 1px solid var(--lw-border); margin-bottom: 1.5rem; }
+    .lw-brand { font-size: 1.35rem; font-weight: 800; color: var(--lw-cream); }
+    nav.lw-nav { display: flex; gap: 1rem; }
+    nav.lw-nav a { color: var(--lw-muted); text-decoration: none; font-size: 0.9rem; font-weight: 600; }
+    nav.lw-nav a[aria-current="page"] { color: var(--lw-brass); }
+    main.lw-main { display: grid; grid-template-columns: 1.35fr 1fr; gap: 1.75rem; align-items: start; }
+    section.lw-archive { background: var(--lw-surface); border: 1px solid var(--lw-border); border-radius: 10px; padding: 1.5rem; }
+    section.lw-archive h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+    .lw-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; margin-top: 1rem; }
+    .lw-artefact { background: var(--lw-card); border: 1px solid var(--lw-border); border-radius: 8px; padding: 1rem; }
+    .lw-artefact strong { display: block; color: var(--lw-brass); margin-bottom: 0.25rem; }
+    aside.lw-contribute { background: var(--lw-surface); border: 1px solid var(--lw-border); border-radius: 10px; padding: 1.5rem; }
+    aside.lw-contribute h2 { font-size: 1.2rem; margin-bottom: 0.75rem; }
+    .lw-field { display: flex; flex-direction: column; gap: 0.3rem; margin-bottom: 0.8rem; }
+    .lw-field label { font-size: 0.85rem; font-weight: 600; }
+    .lw-field input, .lw-field select, .lw-field textarea { padding: 0.55rem 0.7rem; border: 1px solid var(--lw-border); border-radius: 6px; background: var(--lw-bg); color: var(--lw-cream); font-size: 0.92rem; }
+    .lw-btn { width: 100%; background: var(--lw-brass); color: var(--lw-bg); border: none; border-radius: 6px; padding: 0.85rem; font-weight: 800; cursor: pointer; }
+    footer.lw-footer { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--lw-border); font-size: 0.82rem; color: var(--lw-muted); text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="lw-wrap">
+    <header class="lw-header">
+      <div class="lw-brand">Lantern Works Fan Registry · Stop-Motion Craft Archive</div>
+      <nav class="lw-nav" aria-label="Registry Navigation">
+        <a href="/" aria-current="page">Canon Collection (128)</a>
+        <a href="/contributions">Submit Artefact</a>
+        <a href="/collection">Moderator Queue</a>
+      </nav>
+    </header>
+    <main class="lw-main">
+      <section class="lw-archive">
+        <h1>Verified Puppet Armatures, Miniature Sets &amp; Ephemera</h1>
+        <p style="font-size:0.9rem;color:var(--lw-muted)">Curated by community archivists · Every contribution is reviewed before publication.</p>
+        <div class="lw-grid">
+          <article class="lw-artefact">
+            <strong>Sets and Props · Published</strong>
+            <h3>Set 12 — Harbour Street Cobblestone Rig</h3>
+            <p style="font-size:0.85rem;color:var(--lw-muted)">1:12 scale carved limewood slate roofs and forced-perspective harbour wall.</p>
+          </article>
+          <article class="lw-artefact">
+            <strong>Characters · Published</strong>
+            <h3>The Lamplighter's Waxed Wool Greatcoat</h3>
+            <p style="font-size:0.85rem;color:var(--lw-muted)">Internal annealed aluminium wire hem for frame-by-frame wind ripple.</p>
+          </article>
+        </div>
+      </section>
+      <aside class="lw-contribute">
+        <h2>Contribute to the Registry</h2>
+        <form id="lantern-contribution-form" method="post" action="/contributions">
+          <div class="lw-field">
+            <label for="artefact_title">Artefact title</label>
+            <input type="text" id="artefact_title" name="artefact_title" required placeholder="Harbour Street miniature sodium lamp rig">
+          </div>
+          <div class="lw-field">
+            <label for="contributor">Contributor handle</label>
+            <input type="text" id="contributor" name="contributor" required placeholder="brasslamp">
+          </div>
+          <div class="lw-field">
+            <label for="canon_section">Canon section</label>
+            <select id="canon_section" name="canon_section" required>
+              <option value="Characters">Characters</option>
+              <option value="Sets and Props" selected>Sets and Props</option>
+              <option value="Ephemera">Ephemera</option>
+              <option value="Interviews">Interviews</option>
+            </select>
+          </div>
+          <div class="lw-field">
+            <label for="provenance_notes">Archival &amp; lighting notes</label>
+            <textarea id="provenance_notes" name="provenance_notes" rows="2" required placeholder="Wired with 3V grain-of-wheat bulbs beneath hand-soldered brass hoods for Scene 14."></textarea>
+          </div>
+          <button type="submit" class="lw-btn">Submit for Moderator Review</button>
+        </form>
+      </aside>
+    </main>
+    <footer class="lw-footer">Lantern Works Community Archive · Bristol &amp; Cardiff Miniature Stage Guild</footer>
+  </div>
+</body>
+</html>

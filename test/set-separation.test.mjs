@@ -167,7 +167,7 @@ test('the committed records pass, and the counts cover all three', () => {
   assert.deepEqual(result.findings, [], `committed records should be separated: ${JSON.stringify(result.findings, null, 2)}`);
   assert.equal(result.counts.pilot, 35);
   assert.equal(result.counts.trainingRun, 40);
-  assert.equal(result.counts.trainingCorpus, 210);
+  assert.equal(result.counts.trainingCorpus, 273);
 });
 
 test('the check reads the files it claims to', () => {

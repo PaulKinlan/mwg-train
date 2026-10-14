@@ -468,6 +468,313 @@ const communityForum = {
   passwordField: null,
 };
 
+const scrollStorytellingLaunch = {
+  id: 'scroll-storytelling-launch',
+  title: 'Scroll-driven hardware product launch & pre-order',
+  story: 'An interactive acoustic product launch page presents chaptered specs, finish selection, and a persisted pre-order reservation.',
+  routes: [
+    { method: 'GET', path: '/', kind: 'page' },
+    { method: 'POST', path: '/preorders', kind: 'write', redirect: (ref) => `/preorders/${ref}` },
+    { method: 'GET', path: '/preorders/:ref', kind: 'read-by-reference' },
+    { method: 'GET', path: '/preorders', kind: 'list' },
+  ],
+  fields: [
+    { slug: 'buyer', name: 'buyer', type: 'text', label: 'Full name', autocomplete: 'name' },
+    { slug: 'email', name: 'email', type: 'email', label: 'Confirmation email', autocomplete: 'email' },
+    { slug: 'finish', name: 'finish', type: 'select', label: 'Chassis finish', options: ['Anodised Obsidian', 'Raw Bead-Blasted Titanium', 'Warm Brushed Copper'] },
+    { slug: 'earpads', name: 'earpads', type: 'select', label: 'Ear-pad material', options: ['Perforated Lambskin', 'Acoustic Micro-Suede'] },
+    { slug: 'engraving', name: 'engraving', type: 'textarea', label: 'Headband engraving note' },
+  ],
+  echo: { field: 'buyer', source: 'record' },
+  journey: {
+    startPath: '/',
+    formSelector: 'form#aether-preorder-form',
+    fill: {
+      'input[name=buyer]': 'Clara Vance',
+      'input[name=email]': 'clara.vance@aether-acoustics.example',
+      'textarea[name=engraving]': 'Studio Reference Batch 04',
+    },
+    select: {
+      'select[name=finish]': 'Warm Brushed Copper',
+      'select[name=earpads]': 'Acoustic Micro-Suede',
+    },
+    expectText: 'Clara Vance',
+  },
+  passwordField: null,
+};
+
+const browserPuzzleGame = {
+  id: 'browser-puzzle-game',
+  title: 'Daily grid routing puzzle & streak leaderboard',
+  story: 'A daily frequency-routing logic game records verified puzzle solutions, move counts, and spoiler-free notes to a persistent leaderboard.',
+  routes: [
+    { method: 'GET', path: '/', kind: 'page' },
+    { method: 'POST', path: '/runs', kind: 'write', redirect: (ref) => `/runs/${ref}` },
+    { method: 'GET', path: '/runs/:ref', kind: 'read-by-reference' },
+    { method: 'GET', path: '/leaderboard', kind: 'list' },
+  ],
+  fields: [
+    { slug: 'callsign', name: 'callsign', type: 'text', label: 'Operator callsign', autocomplete: 'username' },
+    { slug: 'moves', name: 'moves', type: 'number', label: 'Moves used' },
+    { slug: 'routing_mode', name: 'routing_mode', type: 'select', label: 'Signal mode', options: ['Standard Par 14', 'Phase Splitter', 'Harmonic Lock'] },
+    { slug: 'solution_summary', name: 'solution_summary', type: 'textarea', label: 'Route notes' },
+  ],
+  echo: { field: 'callsign', source: 'record' },
+  journey: {
+    startPath: '/',
+    formSelector: 'form#signal-run-form',
+    fill: {
+      'input[name=callsign]': 'Tamsin Kale',
+      'input[name=moves]': '14',
+      'textarea[name=solution_summary]': 'Phase splitter at D4 locked both receivers cleanly.',
+    },
+    select: {
+      'select[name=routing_mode]': 'Phase Splitter',
+    },
+    expectText: 'Tamsin Kale',
+  },
+  passwordField: null,
+};
+
+const saasWorkspaceBoard = {
+  id: 'saas-workspace-board',
+  title: 'Keyboard-first sprint issue board & inspector',
+  story: 'A hardware and firmware sprint workspace creates, inspects, filters, and updates engineering issues across board and table views.',
+  routes: [
+    { method: 'GET', path: '/', kind: 'page' },
+    { method: 'POST', path: '/issues', kind: 'write', redirect: (ref) => `/issues/${ref}` },
+    { method: 'GET', path: '/issues/:ref', kind: 'read-by-reference' },
+    { method: 'GET', path: '/issues', kind: 'list' },
+  ],
+  fields: [
+    { slug: 'title', name: 'title', type: 'text', label: 'Issue title' },
+    { slug: 'assignee', name: 'assignee', type: 'text', label: 'Assignee', autocomplete: 'name' },
+    { slug: 'priority', name: 'priority', type: 'select', label: 'Priority', options: ['Normal', 'High', 'Urgent'] },
+    { slug: 'component', name: 'component', type: 'select', label: 'Subsystem', options: ['PCB Layout', 'Firmware', 'Telemetry'] },
+    { slug: 'repro_steps', name: 'repro_steps', type: 'textarea', label: 'Reproduction steps' },
+  ],
+  echo: { field: 'title', source: 'record' },
+  journey: {
+    startPath: '/',
+    formSelector: 'form#kestrel-issue-form',
+    fill: {
+      'input[name=title]': 'Fix SPI bus contention during flash write',
+      'input[name=assignee]': 'Elena Rostova',
+      'textarea[name=repro_steps]': 'Reflash controller; stream telemetry at 200Hz; observe SPI lock.',
+    },
+    select: {
+      'select[name=priority]': 'High',
+      'select[name=component]': 'Firmware',
+    },
+    expectText: 'Fix SPI bus contention during flash write',
+  },
+  passwordField: null,
+};
+
+const realtimeTelemetryDashboard = {
+  id: 'realtime-telemetry-dashboard',
+  title: 'Offshore wind telemetry & alert rule console',
+  story: 'An operations telemetry console monitors sector generation, brushes time windows, and persists validated thermal alert rules to the incident audit log.',
+  routes: [
+    { method: 'GET', path: '/', kind: 'page' },
+    { method: 'POST', path: '/alerts', kind: 'write', redirect: (ref) => `/alerts/${ref}` },
+    { method: 'GET', path: '/alerts/:ref', kind: 'read-by-reference' },
+    { method: 'GET', path: '/incidents', kind: 'list' },
+  ],
+  fields: [
+    { slug: 'turbine_id', name: 'turbine_id', type: 'select', label: 'Turbine unit', options: ['Turbine B-01', 'Turbine B-07', 'Turbine B-12'] },
+    { slug: 'operator', name: 'operator', type: 'text', label: 'Duty engineer', autocomplete: 'name' },
+    { slug: 'warning_temp', name: 'warning_temp', type: 'number', label: 'Warning threshold (°C)' },
+    { slug: 'critical_temp', name: 'critical_temp', type: 'number', label: 'Critical threshold (°C)' },
+    { slug: 'dispatch_note', name: 'dispatch_note', type: 'textarea', label: 'Incident annotation' },
+  ],
+  echo: { field: 'operator', source: 'record' },
+  journey: {
+    startPath: '/',
+    formSelector: 'form#northsea-alert-form',
+    fill: {
+      'input[name=operator]': 'Soren Lindqvist',
+      'input[name=warning_temp]': '78',
+      'input[name=critical_temp]': '88',
+      'textarea[name=dispatch_note]': 'Gearbox oil excursion observed during 14:00 UTC gust window.',
+    },
+    select: {
+      'select[name=turbine_id]': 'Turbine B-07',
+    },
+    expectText: 'Soren Lindqvist',
+  },
+  passwordField: null,
+};
+
+const interactiveProductConfigurator = {
+  id: 'interactive-product-configurator',
+  title: 'Custom bicycle configurator & live bill of materials',
+  story: 'A workshop bicycle configurator checks tyre-and-mudguard clearance compatibility, updates the itemised bill of materials, and saves custom build reservations.',
+  routes: [
+    { method: 'GET', path: '/', kind: 'page' },
+    { method: 'POST', path: '/builds', kind: 'write', redirect: (ref) => `/builds/${ref}` },
+    { method: 'GET', path: '/builds/:ref', kind: 'read-by-reference' },
+    { method: 'GET', path: '/builds', kind: 'list' },
+  ],
+  fields: [
+    { slug: 'rider', name: 'rider', type: 'text', label: 'Rider name', autocomplete: 'name' },
+    { slug: 'frame_size', name: 'frame_size', type: 'select', label: 'Frame geometry', options: ['52cm Compact', '56cm Endurance', '58cm Tall'] },
+    { slug: 'finish', name: 'finish', type: 'select', label: 'Titanium finish', options: ['Raw Brushed Ti', 'Anodised Bronze', 'Slate Cerakote'] },
+    { slug: 'wheelset', name: 'wheelset', type: 'select', label: 'Wheelset & tyres', options: ['Alloy All-Road 700x38c', '40mm Deep Carbon Gravel', '650b Expedition Dynamo'] },
+    { slug: 'build_notes', name: 'build_notes', type: 'textarea', label: 'Fit & routing notes' },
+  ],
+  echo: { field: 'rider', source: 'record' },
+  journey: {
+    startPath: '/',
+    formSelector: 'form#atelier-build-form',
+    fill: {
+      'input[name=rider]': 'Jules Moreau',
+      'textarea[name=build_notes]': 'Internal dynamo wire routing through fork crown; 90mm stem.',
+    },
+    select: {
+      'select[name=frame_size]': '56cm Endurance',
+      'select[name=finish]': 'Anodised Bronze',
+      'select[name=wheelset]': '40mm Deep Carbon Gravel',
+    },
+    expectText: 'Jules Moreau',
+  },
+  passwordField: null,
+};
+
+const developerMediaPlayground = {
+  id: 'developer-media-playground',
+  title: 'WebAudio synth & shader code playground',
+  story: 'An interactive audio-synthesis and shader studio pairs live code editing with time-synced tutorial transcripts and persists exported patches.',
+  routes: [
+    { method: 'GET', path: '/', kind: 'page' },
+    { method: 'POST', path: '/patches', kind: 'write', redirect: (ref) => `/patches/${ref}` },
+    { method: 'GET', path: '/patches/:ref', kind: 'read-by-reference' },
+    { method: 'GET', path: '/patches', kind: 'list' },
+  ],
+  fields: [
+    { slug: 'patch_name', name: 'patch_name', type: 'text', label: 'Patch title' },
+    { slug: 'author', name: 'author', type: 'text', label: 'Creator handle', autocomplete: 'username' },
+    { slug: 'synth_engine', name: 'synth_engine', type: 'select', label: 'Synth engine', options: ['Biquad Subtractive', 'FM Bell Operator', 'Karplus-Strong String'] },
+    { slug: 'cutoff_hz', name: 'cutoff_hz', type: 'number', label: 'Filter cutoff (Hz)' },
+    { slug: 'patch_source', name: 'patch_source', type: 'textarea', label: 'DSP patch expression' },
+  ],
+  echo: { field: 'patch_name', source: 'record' },
+  journey: {
+    startPath: '/',
+    formSelector: 'form#resonance-patch-form',
+    fill: {
+      'input[name=patch_name]': 'Warm Analog Filter Sweep',
+      'input[name=author]': 'Devon Kestrel',
+      'input[name=cutoff_hz]': '680',
+      'textarea[name=patch_source]': 'filter.frequency.setValueAtTime(680, ctx.currentTime);',
+    },
+    select: {
+      'select[name=synth_engine]': 'FM Bell Operator',
+    },
+    expectText: 'Warm Analog Filter Sweep',
+  },
+  passwordField: null,
+};
+
+const editorialBlog = {
+  id: 'editorial-blog',
+  title: 'Editorial publication & article composer',
+  story: 'An independent material-arts journal publishes long-form essays with pull quotes and tag filtering, and persists new articles from its split-pane composer.',
+  routes: [
+    { method: 'GET', path: '/', kind: 'page' },
+    { method: 'POST', path: '/articles', kind: 'write', redirect: (ref) => `/articles/${ref}` },
+    { method: 'GET', path: '/articles/:ref', kind: 'read-by-reference' },
+    { method: 'GET', path: '/articles', kind: 'list' },
+  ],
+  fields: [
+    { slug: 'headline', name: 'headline', type: 'text', label: 'Article headline' },
+    { slug: 'byline', name: 'byline', type: 'text', label: 'Author byline', autocomplete: 'name' },
+    { slug: 'section', name: 'section', type: 'select', label: 'Journal section', options: ['Studio Notes', 'Glaze Chemistry', 'Kiln Firing', 'Workshops'] },
+    { slug: 'body_markdown', name: 'body_markdown', type: 'textarea', label: 'Essay body (Markdown)' },
+  ],
+  echo: { field: 'headline', source: 'record' },
+  journey: {
+    startPath: '/',
+    formSelector: 'form#kiln-article-form',
+    fill: {
+      'input[name=headline]': 'What a reduction firing does to a copper glaze',
+      'input[name=byline]': 'Marguerite Ash',
+      'textarea[name=body_markdown]': 'At cone 10 in a heavy reduction atmosphere, copper carbonate shifts from celadon green to oxblood red.',
+    },
+    select: {
+      'select[name=section]': 'Glaze Chemistry',
+    },
+    expectText: 'What a reduction firing does to a copper glaze',
+  },
+  passwordField: null,
+};
+
+const fanCommunitySite = {
+  id: 'fan-community-site',
+  title: 'Fan craft archive & moderated contribution registry',
+  story: 'A stop-motion animation craft registry lets fans browse canon artefacts, submit annotated contributions for moderation, and track review status.',
+  routes: [
+    { method: 'GET', path: '/', kind: 'page' },
+    { method: 'POST', path: '/contributions', kind: 'write', redirect: (ref) => `/contributions/${ref}` },
+    { method: 'GET', path: '/contributions/:ref', kind: 'read-by-reference' },
+    { method: 'GET', path: '/collection', kind: 'list' },
+  ],
+  fields: [
+    { slug: 'artefact_title', name: 'artefact_title', type: 'text', label: 'Artefact title' },
+    { slug: 'contributor', name: 'contributor', type: 'text', label: 'Contributor handle', autocomplete: 'username' },
+    { slug: 'canon_section', name: 'canon_section', type: 'select', label: 'Canon section', options: ['Characters', 'Sets and Props', 'Ephemera', 'Interviews'] },
+    { slug: 'provenance_notes', name: 'provenance_notes', type: 'textarea', label: 'Archival & lighting notes' },
+  ],
+  echo: { field: 'artefact_title', source: 'record' },
+  journey: {
+    startPath: '/',
+    formSelector: 'form#lantern-contribution-form',
+    fill: {
+      'input[name=artefact_title]': 'Harbour Street miniature sodium lamp rig',
+      'input[name=contributor]': 'brasslamp',
+      'textarea[name=provenance_notes]': 'Wired with 3V grain-of-wheat bulbs beneath hand-soldered brass hoods for Scene 14.',
+    },
+    select: {
+      'select[name=canon_section]': 'Sets and Props',
+    },
+    expectText: 'Harbour Street miniature sodium lamp rig',
+  },
+  passwordField: null,
+};
+
+const productCardComparison = {
+  id: 'product-card-comparison',
+  title: 'Hardware specification comparison & rig selection board',
+  story: 'A technical hardware benchmark catalogue compares multi-attribute cards side by side and carries the chosen component forward into a saved rig build.',
+  routes: [
+    { method: 'GET', path: '/', kind: 'page' },
+    { method: 'POST', path: '/selections', kind: 'write', redirect: (ref) => `/selections/${ref}` },
+    { method: 'GET', path: '/selections/:ref', kind: 'read-by-reference' },
+    { method: 'GET', path: '/compare', kind: 'list' },
+  ],
+  fields: [
+    { slug: 'builder_name', name: 'builder_name', type: 'text', label: 'Builder name', autocomplete: 'name' },
+    { slug: 'card_model', name: 'card_model', type: 'select', label: 'Selected graphics card', options: ['Halcyon RX-7800 (16 GB)', 'Northwind Arc A770 (16 GB)', 'Vector VX-4070 (12 GB)'] },
+    { slug: 'psu_wattage', name: 'psu_wattage', type: 'number', label: 'Power supply budget (W)' },
+    { slug: 'rig_notes', name: 'rig_notes', type: 'textarea', label: 'Chassis & thermal notes' },
+  ],
+  echo: { field: 'builder_name', source: 'record' },
+  journey: {
+    startPath: '/',
+    formSelector: 'form#rig-selection-form',
+    fill: {
+      'input[name=builder_name]': 'Gideon Park',
+      'input[name=psu_wattage]': '750',
+      'textarea[name=rig_notes]': 'Paired with 280mm mesh workstation chassis; 225W TDP within quiet fan curve.',
+    },
+    select: {
+      'select[name=card_model]': 'Northwind Arc A770 (16 GB)',
+    },
+    expectText: 'Gideon Park',
+  },
+  passwordField: null,
+};
+
 export const TRAINING_ARCHETYPES = {
   booking,
   'web-shop': webShop,
@@ -484,6 +791,15 @@ export const TRAINING_ARCHETYPES = {
   'expense-tracker': expenseTracker,
   'library-catalogue': libraryCatalogue,
   'community-forum': communityForum,
+  'scroll-storytelling-launch': scrollStorytellingLaunch,
+  'browser-puzzle-game': browserPuzzleGame,
+  'saas-workspace-board': saasWorkspaceBoard,
+  'realtime-telemetry-dashboard': realtimeTelemetryDashboard,
+  'interactive-product-configurator': interactiveProductConfigurator,
+  'developer-media-playground': developerMediaPlayground,
+  'editorial-blog': editorialBlog,
+  'fan-community-site': fanCommunitySite,
+  'product-card-comparison': productCardComparison,
 };
 
 export const TRAINING_ARCHETYPE_IDS = Object.freeze(Object.keys(TRAINING_ARCHETYPES));

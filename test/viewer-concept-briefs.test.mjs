@@ -24,7 +24,7 @@ test('all current prompt and state claims come from real authored sources', () =
       assert.ok(step.imagePrompt.length > 100);
     }
   }
-  assert.equal(gallery.trainingTargets.length, 30, '12 target expansion families are not fabricated');
+  assert.equal(gallery.trainingTargets.length, 39, '3 remaining target expansion families are not fabricated');
   for (const target of gallery.trainingTargets) {
     assert.ok(target.brief?.sitePrompt.includes('Required assertions:'));
     assert.ok(target.brief.imagePrompt?.length > 100);
@@ -37,7 +37,7 @@ test('all current prompt and state claims come from real authored sources', () =
   assert.equal((html.match(/class="concept-pattern-index"/g) ?? []).length, 1);
   assert.equal((html.match(/href="#pattern-[a-z-]+"/g) ?? []).length, 32, '27 index links plus 5 held-out cross-links');
   assert.equal((html.match(/Image Generation Prompt for this state/g) ?? []).length, 61);
-  assert.equal((html.match(/<summary>Site Generation Prompt/g) ?? []).length, 57);
+  assert.equal((html.match(/<summary>Site Generation Prompt/g) ?? []).length, 66);
   assert.doesNotMatch(html, /<script[^>]*>/, 'reading prompts requires no client JS');
 });
 
@@ -45,7 +45,7 @@ test('site prompts omit wrapped reference-viewport framing while retaining site 
   const gallery = listConcepts(ROOT);
   const prompts = [...gallery.patterns.map((pattern) => pattern.brief.sitePrompt),
     ...gallery.trainingTargets.map((target) => target.brief.sitePrompt)];
-  assert.equal(prompts.length, 57);
+  assert.equal(prompts.length, 66);
   for (const prompt of prompts) {
     assert.doesNotMatch(prompt, /browser viewports?|browser chrome runs|conformance viewport/i);
   }
@@ -85,7 +85,7 @@ test('training site prompts use family palette and identity, not the archetype t
 
 test('training site prompts keep functional components without inheriting demo-only files or verification controls', () => {
   const targets = listConcepts(ROOT).trainingTargets;
-  assert.equal(targets.length, 30);
+  assert.equal(targets.length, 39);
   for (const target of targets) {
     assert.doesNotMatch(target.brief.sitePrompt, /Read from\s+demo\/|\bdemo\/[a-z0-9-]+\.html|demo state switcher|Demo State Switcher|#btn-state-(?:default|error|fill)/i,
       `${target.id} must not cite a demo file or ship its verification switcher`);

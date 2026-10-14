@@ -412,7 +412,7 @@ export function renderLiveIndex({ views, runId, runs, active, viewerOrigin }) {
   const running = active.filter((instance) => projectIds.has(instance.id) &&
     ['original', 'uplifted'].includes(instance.version) && currentRuns.has(instance.runId));
   const projects = visible.length
-    ? `<ul>${visible.map((view) => `<li><a href="${escapeHtml(viewerOrigin)}/project/${encodeURIComponent(view.id)}">${escapeHtml(view.id)}</a> — ${liveLinks(view, '', runId)}</li>`).join('')}</ul>`
+    ? `<ul>${visible.map((view) => `<li><a href="${escapeHtml(viewerOrigin)}/project/${encodeURIComponent(view.id)}">${escapeHtml(view.id)}</a>${view.archetypeTitle ? ` <span class="muted">(${escapeHtml(view.archetypeTitle)})</span>` : ''} — ${liveLinks(view, '', runId)}</li>`).join('')}</ul>`
     : `<p>No corpus projects are available here. Visit the <a href="${escapeHtml(viewerOrigin)}/">viewer index</a> to check the corpus.</p>`;
   const runningList = running.length
     ? `<ul>${running.map(({ id, version, runId: instanceRun }) => {
@@ -452,7 +452,7 @@ export function renderIndex({ views, allViews, filters, runId, runs, yieldReport
   const rows = views
     .map((view) => {
       return `<tr>
-  <td><a href="/project/${escapeHtml(view.id)}${runId ? `?run=${escapeHtml(runId)}` : ''}"><code>${escapeHtml(view.id)}</code></a></td>
+  <td><a href="/project/${escapeHtml(view.id)}${runId ? `?run=${escapeHtml(runId)}` : ''}"><code>${escapeHtml(view.id)}</code></a>${view.archetypeTitle ? `<br><span class="muted">${escapeHtml(view.archetypeTitle)}</span>` : ''}</td>
   <td>${escapeHtml(view.archetype)}</td>
   <td>${escapeHtml(view.framework)}${view.frameworkVersion ? ` <span class="muted">${escapeHtml(view.frameworkVersion)}</span>` : ''}</td>
   <td>${stateBadge(view)}</td>

@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Kiln Chronicle — Ceramics Literary Journal &amp; Article Composer</title>
+  <style>
+    :root {
+      --kc-bg: #fbf9f4;
+      --kc-surface: #ffffff;
+      --kc-border: #d6d3d1;
+      --kc-forest: #14532d;
+      --kc-oxblood: #991b1b;
+      --kc-text: #1c1917;
+      --kc-muted: #57534e;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: "Georgia", serif; background: var(--kc-bg); color: var(--kc-text); line-height: 1.6; padding: 1.5rem; }
+    .kc-wrap { max-width: 1200px; margin: 0 auto; }
+    header.kc-header { display: flex; justify-content: space-between; align-items: baseline; padding-bottom: 1rem; border-bottom: 2px solid var(--kc-oxblood); margin-bottom: 1.5rem; }
+    .kc-brand { font-size: 1.6rem; font-weight: 700; color: var(--kc-text); }
+    nav.kc-nav { display: flex; gap: 1.2rem; font-family: -apple-system, sans-serif; }
+    nav.kc-nav a { color: var(--kc-muted); text-decoration: none; font-size: 0.9rem; font-weight: 600; }
+    nav.kc-nav a[aria-current="page"] { color: var(--kc-forest); }
+    main.kc-main { display: grid; grid-template-columns: 1.35fr 1fr; gap: 2rem; align-items: start; }
+    section.kc-issue { background: var(--kc-surface); border: 1px solid var(--kc-border); border-radius: 8px; padding: 1.75rem; }
+    section.kc-issue h1 { font-size: 1.65rem; margin-bottom: 0.5rem; }
+    .kc-pull { border-left: 3px solid var(--kc-oxblood); padding-left: 1rem; margin: 1rem 0; font-style: italic; color: var(--kc-muted); }
+    aside.kc-composer { background: var(--kc-surface); border: 1px solid var(--kc-border); border-radius: 8px; padding: 1.5rem; font-family: -apple-system, sans-serif; }
+    aside.kc-composer h2 { font-size: 1.2rem; margin-bottom: 0.75rem; color: var(--kc-forest); }
+    .kc-field { display: flex; flex-direction: column; gap: 0.3rem; margin-bottom: 0.8rem; }
+    .kc-field label { font-size: 0.85rem; font-weight: 700; }
+    .kc-field input, .kc-field select, .kc-field textarea { padding: 0.55rem 0.7rem; border: 1px solid var(--kc-border); border-radius: 6px; background: var(--kc-bg); color: var(--kc-text); font-size: 0.92rem; }
+    .kc-btn { width: 100%; background: var(--kc-forest); color: var(--kc-surface); border: none; border-radius: 6px; padding: 0.85rem; font-weight: 700; cursor: pointer; }
+    footer.kc-footer { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--kc-border); font-family: -apple-system, sans-serif; font-size: 0.82rem; color: var(--kc-muted); text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="kc-wrap">
+    <header class="kc-header">
+      <div class="kc-brand">The Kiln Chronicle · Issue No. 18</div>
+      <nav class="kc-nav" aria-label="Editorial Navigation">
+        <a href="/" aria-current="page">Issue Index</a>
+        <a href="/articles">Glaze Chemistry</a>
+        <a href="/articles">Publish Essay</a>
+      </nav>
+    </header>
+    <main class="kc-main">
+      <section class="kc-issue">
+        <span style="font-family:-apple-system,sans-serif;font-size:0.78rem;font-weight:700;color:var(--kc-oxblood);text-transform:uppercase">Editor's Pick · Glaze Chemistry</span>
+        <h1>What a Reduction Firing Does to a Copper Glaze</h1>
+        <p style="font-size:0.9rem;color:var(--kc-muted);margin-bottom:0.75rem">By Marguerite Ash · 12 October 2026 · 7 min read</p>
+        <blockquote class="kc-pull">“Starved of oxygen at cone 10, a half-percent addition of copper carbonate abandons alkaline turquoise and settles into deep oxblood red.”</blockquote>
+        <p style="font-size:0.95rem">Across three decades of wood-and-gas firing in Leach-style downdraft kilns, studio potters have logged damper schedules that turn volatile metallic oxides into durable stoneware surfaces.</p>
+      </section>
+      <aside class="kc-composer">
+        <h2>Compose &amp; Publish Journal Essay</h2>
+        <form id="kiln-article-form" method="post" action="/articles">
+          <div class="kc-field">
+            <label for="headline">Article headline</label>
+            <input type="text" id="headline" name="headline" required placeholder="What a reduction firing does to a copper glaze">
+          </div>
+          <div class="kc-field">
+            <label for="byline">Author byline</label>
+            <input type="text" id="byline" name="byline" required placeholder="Marguerite Ash">
+          </div>
+          <div class="kc-field">
+            <label for="section">Journal section</label>
+            <select id="section" name="section" required>
+              <option value="Studio Notes">Studio Notes</option>
+              <option value="Glaze Chemistry" selected>Glaze Chemistry</option>
+              <option value="Kiln Firing">Kiln Firing</option>
+              <option value="Workshops">Workshops</option>
+            </select>
+          </div>
+          <div class="kc-field">
+            <label for="body_markdown">Essay body (Markdown)</label>
+            <textarea id="body_markdown" name="body_markdown" rows="3" required placeholder="At cone 10 in a heavy reduction atmosphere, copper carbonate shifts from celadon green to oxblood red."></textarea>
+          </div>
+          <button type="submit" class="kc-btn">Publish Article</button>
+        </form>
+      </aside>
+    </main>
+    <footer class="kc-footer">The Kiln Chronicle Quarterly · St Ives &amp; Leach Pottery Archive · ISSN 2049-8821</footer>
+  </div>
+</body>
+</html>
