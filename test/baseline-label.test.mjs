@@ -46,6 +46,13 @@ test('every registered floor report carries the label', () => {
   assert.deepEqual(checkBaselineLabel(REGISTRY), []);
 });
 
+test('Dark board inventory is provenance, not a floor report or an unclassified document', () => {
+  const paths = ['docs/provenance/assets/archetype-dark-boards.json',
+    'docs/provenance/assets/archetype-dark-boards.md'];
+  for (const path of paths) assert.equal(classifyDocument(path), 'provenance');
+  assert.deepEqual(checkDocumentClassification(paths), []);
+});
+
 test('the label is one string shared by every writer', () => {
   assert.equal(BASELINE_LABEL, 'mwg-train deterministic baseline');
   assert.ok(baselineAttributionLine().includes(BASELINE_LABEL));

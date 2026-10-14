@@ -106,6 +106,9 @@
   "docs/design/archetypes/*/plan.md": [
     "test/viewer-concepts-delivery.test.mjs"
   ],
+  "docs/design/archetypes/*/dark/*": [
+    "test/archetype-dark-provenance.test.mjs"
+  ],
   "docs/design/archetypes/*/step*.jpg": [
     "test/board-captions.test.mjs",
     "test/board-states.test.mjs",
@@ -147,6 +150,14 @@
   ],
   "docs/provenance/assets/archetype-asset-sets.md": [
     "test/archetype-assets.test.mjs"
+  ],
+  "docs/provenance/assets/archetype-dark-boards.json": [
+    "test/archetype-dark-provenance.test.mjs",
+    "test/baseline-label.test.mjs"
+  ],
+  "docs/provenance/assets/archetype-dark-boards.md": [
+    "test/archetype-dark-provenance.test.mjs",
+    "test/baseline-label.test.mjs"
   ],
   "docs/provenance/assets/training-frame-crops.json": [
     "test/training-boards-generator.test.mjs",

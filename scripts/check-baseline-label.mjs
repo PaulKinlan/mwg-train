@@ -406,6 +406,10 @@ export const DOCUMENTS = {
   'docs/provenance/assets/reference-board-gaps.md': 'provenance',
   'docs/provenance/assets/board-states.json': 'provenance',
   'docs/provenance/assets/archetype-asset-sets.md': 'provenance',
+  // The Dark concept-board register pins image bytes and explicitly withholds missing
+  // model/prompt and reuse attestations; neither document reports a floor value.
+  'docs/provenance/assets/archetype-dark-boards.json': 'provenance',
+  'docs/provenance/assets/archetype-dark-boards.md': 'provenance',
   // The one HAND-WRITTEN file in an asset store, and deliberately classified by name rather than by
   // pattern: it adjudicates a brand the accepted target states ambiguously or not at all, so a new
   // adjudication has to be classified on purpose instead of inheriting a classification.
