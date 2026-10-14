@@ -19,8 +19,17 @@ async function serve(t, repoRoot) {
 
 test('gallery serves the generated archetype reference boards and the authored eval targets', async (t) => {
   const gallery = listConcepts(ROOT);
-  assert.deepEqual(gallery.boards.map((board) => `${board.archetype}/${board.id}`),
-    ['editorial-blog/step1-index', 'fan-community-site/step4-moderation', 'product-card-comparison/step2-compare']);
+  assert.deepEqual(gallery.boards.map((board) => `${board.archetype}/${board.id}`), [
+    'editorial-blog/step1-index',
+    'fan-community-site/step4-moderation',
+    'product-card-comparison/step2-compare',
+    'scroll-storytelling-launch/step2-scroll-exploded-anatomy',
+    'browser-puzzle-game/step2-midgame-interaction',
+    'saas-workspace-board/step2-command-palette-popover',
+    'realtime-telemetry-dashboard/step2-brush-zoom-and-drilldown',
+    'interactive-product-configurator/step2-drivetrain-and-wheelset-swap',
+    'developer-media-playground/step2-transcript-search-highlight',
+  ]);
   assert.deepEqual(gallery.archetypes, [
     { id: 'booking', reference: true, target: true, referencePath: '/concepts/images/booking/step1-browse.jpg' },
     { id: 'account-recovery', reference: true, target: true, referencePath: '/concepts/images/account-recovery/step1-request.jpg' },
@@ -31,11 +40,13 @@ test('gallery serves the generated archetype reference boards and the authored e
   assert.deepEqual(gallery.journeys.map(({ id, steps }) => [id, steps.length]), [
     ['booking', 5], ['catalogue', 3], ['contact-lead', 3], ['account-recovery', 3], ['event-registration', 3],
     ['editorial-blog', 4], ['fan-community-site', 5], ['product-card-comparison', 4],
+    ['scroll-storytelling-launch', 4], ['browser-puzzle-game', 4], ['saas-workspace-board', 4],
+    ['realtime-telemetry-dashboard', 4], ['interactive-product-configurator', 4], ['developer-media-playground', 4],
     ['community-forum', 1], ['expense-tracker', 1], ['job-board', 1], ['library-catalogue', 1],
     ['restaurant-ordering', 1], ['survey-form', 1], ['web-shop', 1],
   ]);
-  assert.equal(gallery.patterns.length, 21, 'all authored patterns are indexed, not just those with boards');
-  assert.equal(gallery.patterns.flatMap(({ steps }) => steps).filter(({ available }) => available).length, 37);
+  assert.equal(gallery.patterns.length, 27, 'all authored patterns are indexed, not just those with boards');
+  assert.equal(gallery.patterns.flatMap(({ steps }) => steps).filter(({ available }) => available).length, 61);
   assert.equal(gallery.patterns.filter(({ steps }) => steps.length === 0).length, 6, 'missing board sets stay visible');
   assert.ok(gallery.patterns.every(({ brief }) => brief?.sitePrompt.includes('Step-by-step behaviour')));
   assert.ok(gallery.patterns.flatMap(({ steps }) => steps).every(({ imagePrompt }) => imagePrompt), 'every committed step includes its original prompt');
@@ -64,7 +75,7 @@ test('gallery serves the generated archetype reference boards and the authored e
   assert.ok(boardsOnDisk.length > 0, 'this checkout carries at least one designed board');
   assert.equal(gallery.trainingTargets.filter((family) => gallery.archetypes.some(({ id }) => id === family.id)).length, 0,
     'no id is listed in both arms');
-  assert.ok(gallery.journeys.every((journey) => journey.steps.every((step) => step.available)), 'all 37 supplied boards exist');
+  assert.ok(gallery.journeys.every((journey) => journey.steps.every((step) => step.available)), 'all 61 supplied boards exist');
   assert.deepEqual(gallery.bookingSteps.map(({ id, available }) => [id, available]), [
     ['step1-browse', true], ['step2-form', true], ['step3-confirmation', true],
     ['step4-error', true], ['step5-empty', true],
@@ -76,7 +87,7 @@ test('gallery serves the generated archetype reference boards and the authored e
   assert.match(html, /The proposed 42-family expansion has not landed/);
   assert.match(html, /Sealed evaluation targets \(A6\)/);
   assert.match(html, /not part of the 30 families above/);
-  assert.match(html, /37 concept boards have committed bytes/);
+  assert.match(html, /61 concept boards have committed bytes/);
   assert.match(html, /do not scan depicted codes/i, 'QR-bearing illustrations must retain the safety instruction');
   assert.match(html, /A model ID may be reported rather than attested/, 'an ID alone is not model attestation');
   assert.match(html, /No reuse license or clearance is granted here/, 'a policy exclusion must not read as reuse permission');
@@ -102,9 +113,9 @@ test('gallery serves the generated archetype reference boards and the authored e
   assert.match(html, /\/concepts\/images\/community-forum\/step3-refusal\.jpg/);
   assert.match(html, /Image Generation Prompt for this state/);
   assert.match(html, /No step-specific browser assertion is registered for this picture/);
-  assert.equal((html.match(/aria-labelledby="pattern-heading-[a-z-]+"/g) ?? []).length, 21);
-  assert.equal((html.match(/<summary>Site Generation Prompt/g) ?? []).length, 51);
-  assert.equal((html.match(/<summary>Image Generation Prompt for this state<\/summary>/g) ?? []).length, 37);
+  assert.equal((html.match(/aria-labelledby="pattern-heading-[a-z-]+"/g) ?? []).length, 27);
+  assert.equal((html.match(/<summary>Site Generation Prompt/g) ?? []).length, 57);
+  assert.equal((html.match(/<summary>Image Generation Prompt for this state<\/summary>/g) ?? []).length, 61);
   assert.doesNotMatch(html, /(?:src|href)="\/concepts\/images\/layout-(storefront|saas|explainer)\.jpg/, 'retired sketches remain unserved even when their names occur in original prompt text');
   assert.doesNotMatch(html, /<iframe/);
   assert.match(html, new RegExp(`${boardsOnDisk.length} of ${familyIds.length} declared families have a designed reference board`));
@@ -128,7 +139,7 @@ test('gallery serves the generated archetype reference boards and the authored e
   const pageHtml = await page.text();
   assert.match(pageHtml, /Training families \(A1\): designed boards and harness targets/);
   assert.match(pageHtml, /Sealed evaluation targets \(A6\)/);
-  assert.match(pageHtml, /21 archetype patterns/);
+  assert.match(pageHtml, /27 archetype patterns/);
   for (const family of ['tr-01', 'tr-15', 'tr-30']) {
     const render = await fetch(`${base}/concepts/targets/${family}.png`);
     assert.equal(render.status, 200, family);

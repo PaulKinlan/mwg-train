@@ -1,6 +1,6 @@
-# Kestrel sprint workspace — offline image briefs
+# Kestrel sprint workspace — image briefs
 
-**PROMPTS ONLY. Four JPEGs have NOT been generated.** No model request, response attestation, pixel file, byte digest, vision inspection, verified issue database or deployed Kestrel workspace exists for this archetype. The [functional plan](plan.md), [authored design](design.md) and [local pending provenance](PROVENANCE.md) describe intended states, not observed interactions.
+**Status: Four 1376 × 768 unframed reference JPEGs are generated and committed (`mwg-train-t4og`).** See [PROVENANCE.md](PROVENANCE.md) for the exact prompt SHA-256 digests, committed JPEG SHA-256 digests, byte lengths, `1376 × 768` dimensions, and vision review. The [functional plan](plan.md), [authored design](design.md) and [local provenance](PROVENANCE.md) describe intended states, not observed interactions.
 
 **Policy:** `excluded_from_training: true`, `approved_for_training: false`. The fictional workspace, KES IDs, Elena Rostova and release label are sample content, not private customer issues. The [consumer-account terms record](../../../provenance/accounts/google-antigravity-consumer.md) does not grant model-training reuse of future service-generated images. Wait for owner amount-scoped approval, an exact image-model tariff and a fail-closed spend reservation before invoking any writer. This offline README has no paid model outcome.
 

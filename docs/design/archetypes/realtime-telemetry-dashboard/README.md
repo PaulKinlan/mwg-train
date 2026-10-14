@@ -1,6 +1,6 @@
-# NorthSea Grid — offline reference-board briefs
+# NorthSea Grid — reference-board briefs
 
-**PROMPTS ONLY. Four JPEGs have NOT been generated.** No image model request, response metadata, output hash, full-resolution review, live telemetry ingest, forecast or control-room hardware exists here. The [functional plan](plan.md), [visual design](design.md) and [local pending provenance](PROVENANCE.md) describe intended illustration states only. All turbine, power, frequency, oil temperature and economic numbers below are **fictional storyboards**—not Dogger Bank measurements, control setpoints, safety margins or a certified simulation output.
+**Status: Four 1376 × 768 unframed reference JPEGs are generated and committed (`mwg-train-yaed`).** See [PROVENANCE.md](PROVENANCE.md) for the exact prompt SHA-256 digests, committed JPEG SHA-256 digests, byte lengths, `1376 × 768` dimensions, and vision review. No live telemetry ingest, forecast or control-room hardware exists here. The [functional plan](plan.md), [visual design](design.md) and [local provenance](PROVENANCE.md) describe intended illustration states only. All turbine, power, frequency, oil temperature and economic numbers below are **fictional storyboards**—not Dogger Bank measurements, control setpoints, safety margins or a certified simulation output.
 
 **Rights:** `excluded_from_training: true`, `approved_for_training: false`. The [consumer-account rights record](../../../provenance/accounts/google-antigravity-consumer.md) does not grant training reuse of service-generated content. Generating these images requires a separate amount-scoped owner approval, verified exact image-model tariff and fail-closed spend reservation. No `--write` invocation is authorised by this README.
 

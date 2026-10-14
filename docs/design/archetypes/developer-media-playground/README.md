@@ -1,6 +1,6 @@
-# Resonance Lab — offline design-reference prompts
+# Resonance Lab — design-reference prompts
 
-**PROMPTS ONLY. Four JPEGs do NOT exist.** No billed generation, AudioContext, playable sound, verified shader/code sandbox, source transcript, synchronised waveform or clipboard receipt exists here. The [functional plan](plan.md), [visual design](design.md) and [local pending provenance](PROVENANCE.md) describe proposed web-page states, not evidence that a media demo works.
+**Status: Four 1376 × 768 unframed reference JPEGs are generated and committed (`mwg-train-bwnk`).** See [PROVENANCE.md](PROVENANCE.md) for the exact prompt SHA-256 digests, committed JPEG SHA-256 digests, byte lengths, `1376 × 768` dimensions, and vision review. No AudioContext, playable sound, verified shader/code sandbox, source transcript, synchronised waveform or clipboard receipt exists here. The [functional plan](plan.md), [visual design](design.md) and [local provenance](PROVENANCE.md) describe proposed web-page states, not evidence that a media demo works.
 
 **Rights/spend:** `excluded_from_training: true`, `approved_for_training: false`. The [consumer-account rights record](../../../provenance/accounts/google-antigravity-consumer.md) does not confer reuse of future generated images to train another model. A separate owner-approved amount, exact image-model tariff and fail-closed reservation are required before any `--write` gateway call. No audio sample/tutorial licence is established either.
 

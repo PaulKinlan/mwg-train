@@ -11,8 +11,8 @@ const ROOT = resolve(import.meta.dirname, '..');
 
 test('all current prompt and state claims come from real authored sources', () => {
   const gallery = listConcepts(ROOT);
-  assert.equal(gallery.patterns.length, 21);
-  assert.equal(gallery.patterns.flatMap((pattern) => pattern.steps).filter((step) => step.available).length, 37);
+  assert.equal(gallery.patterns.length, 27);
+  assert.equal(gallery.patterns.flatMap((pattern) => pattern.steps).filter((step) => step.available).length, 61);
   for (const pattern of gallery.patterns) {
     const { brief, steps } = pattern;
     assert.ok(brief?.sitePrompt.includes('Use case:'), `${pattern.id} has a complete source-backed site prompt`);
@@ -35,9 +35,9 @@ test('all current prompt and state claims come from real authored sources', () =
     'a functional site brief must not inherit instructions for the static conformance render');
   const html = renderConcepts(gallery);
   assert.equal((html.match(/class="concept-pattern-index"/g) ?? []).length, 1);
-  assert.equal((html.match(/href="#pattern-[a-z-]+"/g) ?? []).length, 26, '21 index links plus 5 held-out cross-links');
-  assert.equal((html.match(/Image Generation Prompt for this state/g) ?? []).length, 37);
-  assert.equal((html.match(/<summary>Site Generation Prompt/g) ?? []).length, 51);
+  assert.equal((html.match(/href="#pattern-[a-z-]+"/g) ?? []).length, 32, '27 index links plus 5 held-out cross-links');
+  assert.equal((html.match(/Image Generation Prompt for this state/g) ?? []).length, 61);
+  assert.equal((html.match(/<summary>Site Generation Prompt/g) ?? []).length, 57);
   assert.doesNotMatch(html, /<script[^>]*>/, 'reading prompts requires no client JS');
 });
 
@@ -45,7 +45,7 @@ test('site prompts omit wrapped reference-viewport framing while retaining site 
   const gallery = listConcepts(ROOT);
   const prompts = [...gallery.patterns.map((pattern) => pattern.brief.sitePrompt),
     ...gallery.trainingTargets.map((target) => target.brief.sitePrompt)];
-  assert.equal(prompts.length, 51);
+  assert.equal(prompts.length, 57);
   for (const prompt of prompts) {
     assert.doesNotMatch(prompt, /browser viewports?|browser chrome runs|conformance viewport/i);
   }

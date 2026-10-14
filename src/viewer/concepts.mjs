@@ -15,6 +15,12 @@ const BOARDS = [
   { archetype: 'editorial-blog', id: 'step1-index', title: 'Blog index', grammar: 'Publishing · Read', note: 'An article index with search, tags and excerpt cards; the article it leads to is reached by its own address.', alt: 'Reference board of a blog article index with search, tag filters and excerpt cards.' },
   { archetype: 'fan-community-site', id: 'step4-moderation', title: 'Moderator queue', grammar: 'Community · Operate', note: 'A moderator deciding whether a fan contribution becomes visible, with the reason the fan will read.', alt: 'Reference board of a moderation queue with approve and hold decisions and a reason field.' },
   { archetype: 'product-card-comparison', id: 'step2-compare', title: 'Card comparison', grammar: 'Commerce · Compare', note: 'Attributes aligned by row across the options being compared, so the differences can be read across.', alt: 'Reference board of a side-by-side product comparison table with aligned attribute rows.' },
+  { archetype: 'scroll-storytelling-launch', id: 'step2-scroll-exploded-anatomy', title: 'Scroll-scrubbed driver anatomy', grammar: 'Launch · Storytelling', note: 'A pinned chapter scrubbing an exploded planar driver with anchor-positioned callouts and a reduced-motion toggle.', alt: 'Reference board of a scroll-scrubbed headphone driver anatomy chapter with anchor callouts.' },
+  { archetype: 'browser-puzzle-game', id: 'step2-midgame-interaction', title: 'Signal routing & oscilloscope', grammar: 'Game · Play', note: 'A keyboard-and-pointer 6x6 signal routing grid with a live waveform oscilloscope and move undo stack.', alt: 'Reference board of a 6x6 browser puzzle game with signal routing and oscilloscope.' },
+  { archetype: 'saas-workspace-board', id: 'step2-command-palette-popover', title: 'Kanban & Cmd+K popover', grammar: 'Workspace · Operate', note: 'A three-pane sprint board with a non-modal popover command palette and anchor-tethered status actions.', alt: 'Reference board of a SaaS sprint board with an open command palette popover and right-hand inspector.' },
+  { archetype: 'realtime-telemetry-dashboard', id: 'step2-brush-zoom-and-drilldown', title: 'Telemetry brush & drill-down', grammar: 'Telemetry · Monitor', note: 'A time-window brush over multi-series wind generation with a turbine drill-down drawer and accessible table.', alt: 'Reference board of an offshore wind telemetry dashboard with a brushed time window and turbine detail drawer.' },
+  { archetype: 'interactive-product-configurator', id: 'step2-drivetrain-and-wheelset-swap', title: 'Live build configurator & BOM', grammar: 'Commerce · Configure', note: 'A split-stage custom bicycle configurator with exclusive step accordions and a live itemised bill of materials.', alt: 'Reference board of a titanium gravel bicycle configurator with wheelset selection and itemised BOM.' },
+  { archetype: 'developer-media-playground', id: 'step2-transcript-search-highlight', title: 'Synth playground & cue transcript', grammar: 'Developer · Experiment', note: 'A split-pane WebAudio/CSS playground with synced tutorial transcript cues and search highlights.', alt: 'Reference board of a developer media playground with code editor, waveform timeline and highlighted transcript.' },
 ];
 // The A6 arm is a SEALED five-archetype evaluation set: fixed by design, held out from the training families, and
 // never extended by a directory listing, so it stays a literal allowlist on purpose - a name from the filesystem must
@@ -78,6 +84,42 @@ const JOURNEYS = {
     { id: 'step2-compare', title: 'Compare attributes' },
     { id: 'step3-selected', title: 'Carry the selection forward' },
     { id: 'step4-empty', title: 'Nothing chosen to compare' },
+  ],
+  'scroll-storytelling-launch': [
+    { id: 'step1-hero-overview', title: 'Hero & sticky chapter nav' },
+    { id: 'step2-scroll-exploded-anatomy', title: 'Scroll-scrubbed driver anatomy' },
+    { id: 'step3-finish-material-switcher', title: 'Finish & ear-pad material switcher' },
+    { id: 'step4-spec-comparison-drawer', title: 'Spec comparison drawer & calculator' },
+  ],
+  'browser-puzzle-game': [
+    { id: 'step1-board-initial', title: 'Initial daily puzzle board' },
+    { id: 'step2-midgame-interaction', title: 'Active signal routing & oscilloscope' },
+    { id: 'step3-invalid-collision-state', title: 'Rejected phase collision at D4' },
+    { id: 'step4-victory-stats-dialog', title: 'Solved puzzle & streak statistics' },
+  ],
+  'saas-workspace-board': [
+    { id: 'step1-board-and-inspector', title: 'Three-pane Kanban & inspector' },
+    { id: 'step2-command-palette-popover', title: 'Cmd+K command palette popover' },
+    { id: 'step3-filtered-table-view-transition', title: 'Grouped table & bulk selection' },
+    { id: 'step4-empty-filter-and-quick-create', title: 'Empty filter & quick-create validation' },
+  ],
+  'realtime-telemetry-dashboard': [
+    { id: 'step1-live-overview', title: 'Simulated sector overview & KPIs' },
+    { id: 'step2-brush-zoom-and-drilldown', title: 'Time-window brush & B-07 drill-down' },
+    { id: 'step3-scenario-simulator', title: 'Dispatch & revenue what-if simulator' },
+    { id: 'step4-alert-rule-validation', title: 'Contradictory alert rule & incident log' },
+  ],
+  'interactive-product-configurator': [
+    { id: 'step1-frame-and-geometry', title: 'Frame size, geometry & finish' },
+    { id: 'step2-drivetrain-and-wheelset-swap', title: 'Drivetrain & wheelset swap' },
+    { id: 'step3-compatibility-conflict', title: 'Tyre/mudguard clearance conflict' },
+    { id: 'step4-saved-build-comparison-sheet', title: 'Saved build comparison & share link' },
+  ],
+  'developer-media-playground': [
+    { id: 'step1-split-pane-playground', title: 'Split-pane playground & transport' },
+    { id: 'step2-transcript-search-highlight', title: 'Transcript search & time cue' },
+    { id: 'step3-syntax-diagnostic-state', title: 'Syntax diagnostic & paused preview' },
+    { id: 'step4-preset-gallery-and-export-dialog', title: 'Preset gallery & patch export' },
   ],
   'community-forum': [{ id: 'step3-refusal', title: 'Reply refusal' }],
   'expense-tracker': [{ id: 'step1-error', title: 'Invalid entry' }],

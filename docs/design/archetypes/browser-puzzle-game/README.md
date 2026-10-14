@@ -1,6 +1,6 @@
-# Signal Grid — offline game-board image briefs
+# Signal Grid — game-board image briefs
 
-**PROMPTS ONLY. Four JPEGs have NOT been generated.** No gateway call, response attestation, committed image, byte digest, puzzle solver or screenshot verification exists for this archetype. These are proposed visual planning references for `mwg-train-07ka.2`. Read the [functional plan](plan.md), [authored design](design.md) and [local pending provenance](PROVENANCE.md) without inferring that a playable game shipped.
+**Status: Four 1376 × 768 unframed reference JPEGs are generated and committed (`mwg-train-1ddf`).** See [PROVENANCE.md](PROVENANCE.md) for the exact prompt SHA-256 digests, committed JPEG SHA-256 digests, byte lengths, `1376 × 768` dimensions, and vision review. Read the [functional plan](plan.md), [authored design](design.md) and [local provenance](PROVENANCE.md) without inferring that a playable game shipped.
 
 **Rights and spending:** `excluded_from_training: true`, `approved_for_training: false`. A later model output needs independent rights and reuse clearance; the [consumer-account rights record](../../../provenance/accounts/google-antigravity-consumer.md) does not grant use of generated service content to develop a model. No image-model calls until explicit amount-scoped approval, exact model tariff and a fail-closed reservation exist. The fictional frequencies are puzzle tokens, not measured acoustic performance; 14-move win, 01:48 timer and browser-local streak figures in the final image are storyboard content, not observed statistics.
 

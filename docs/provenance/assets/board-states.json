@@ -220,5 +220,137 @@
       "kind": "interaction",
       "source": "the refusal is a re-render of the reservation form after a refused submission without a researcher name or with an invalid date (plan.md:120, plan.md:133-137): a state of the form, not a document - the same convention as the Wave 2 refusal boards and booking's step4-error.jpg"
     }
+  },
+  "scroll-storytelling-launch": {
+    "step1-hero-overview.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step2-scroll-exploded-anatomy.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step3-finish-material-switcher.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step4-spec-comparison-drawer.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    }
+  },
+  "browser-puzzle-game": {
+    "step1-board-initial.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step2-midgame-interaction.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step3-invalid-collision-state.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step4-victory-stats-dialog.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    }
+  },
+  "saas-workspace-board": {
+    "step1-board-and-inspector.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step2-command-palette-popover.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step3-filtered-table-view-transition.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step4-empty-filter-and-quick-create.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    }
+  },
+  "realtime-telemetry-dashboard": {
+    "step1-live-overview.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step2-brush-zoom-and-drilldown.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step3-scenario-simulator.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step4-alert-rule-validation.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    }
+  },
+  "interactive-product-configurator": {
+    "step1-frame-and-geometry.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step2-drivetrain-and-wheelset-swap.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step3-compatibility-conflict.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step4-saved-build-comparison-sheet.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    }
+  },
+  "developer-media-playground": {
+    "step1-split-pane-playground.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step2-transcript-search-highlight.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step3-syntax-diagnostic-state.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step4-preset-gallery-and-export-dialog.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    }
   }
 }

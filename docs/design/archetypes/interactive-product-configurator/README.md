@@ -1,6 +1,6 @@
-# Atelier Velo Solstice Ti — offline reference-board briefs
+# Atelier Velo Solstice Ti — reference-board briefs
 
-**PROMPTS ONLY. Four JPEGs do NOT exist.** No image request/model response, measured bicycle mass, licensed photograph, mechanical fit confirmation, available workshop slot or reservation has been obtained. The [plan](plan.md), [visual design](design.md) and [local pending provenance](PROVENANCE.md) specify four illustrations, not a validated physical product or a runnable configurator.
+**Status: Four 1376 × 768 unframed reference JPEGs are generated and committed (`mwg-train-zc18`).** See [PROVENANCE.md](PROVENANCE.md) for the exact prompt SHA-256 digests, committed JPEG SHA-256 digests, byte lengths, `1376 × 768` dimensions, and vision review. No measured bicycle mass, licensed photograph, mechanical fit confirmation, available workshop slot or reservation has been obtained. The [plan](plan.md), [visual design](design.md) and [local provenance](PROVENANCE.md) specify four illustrations, not a validated physical product or a runnable configurator.
 
 **Rights/spend:** `excluded_from_training: true`, `approved_for_training: false`. The [consumer-account rights record](../../../provenance/accounts/google-antigravity-consumer.md) does not establish training reuse of future generated imagery. Any image generation requires separate owner amount-scoped approval, an exact-SKU tariff and fail-closed reservation before a `--write` call. No paid call has been made.
 

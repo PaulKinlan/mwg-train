@@ -44,6 +44,11 @@ test('each of four exact image prompts requests only an unframed full-bleed 1376
     assert.match(prompt, /Aether One/);
     const digest = createHash('sha256').update(prompt).digest('hex');
     assert.match(register, new RegExp(`${name.replaceAll('.', '\\.')}[^\\n]*${digest}`), `${name}: register must carry its actual prompt SHA`);
+    const bytes = readFileSync(join(archetype, name));
+    assert.deepEqual([...bytes.subarray(0, 3)], [0xff, 0xd8, 0xff], `${name}: must be a valid JPEG`);
+    const jpegSha = createHash('sha256').update(bytes).digest('hex');
+    assert.match(register, new RegExp(`${name.replaceAll('.', '\\.')}[^\\n]*\`${jpegSha}\` · ${bytes.length} bytes · 1376×768`),
+      `${name}: register must pin the committed JPEG SHA-256, byte length, and 1376×768 dimensions`);
   }
   assert.match(promptText, /excluded_from_training: true/);
   assert.match(promptText, /approved_for_training: false/);

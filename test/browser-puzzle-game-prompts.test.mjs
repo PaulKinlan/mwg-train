@@ -50,6 +50,11 @@ test('four exact prompts are separately digest-pinned and expressly exclude brow
     const digest = createHash('sha256').update(text).digest('hex');
     assert.match(provenance, new RegExp(`${name.replaceAll('.', '\\.')}[^\\n]*${digest}`),
       `${name}: recorded digest must match the exact parsed UTF-8 prompt`);
+    const bytes = readFileSync(join(archetype, name));
+    assert.deepEqual([...bytes.subarray(0, 3)], [0xff, 0xd8, 0xff], `${name}: must be a valid JPEG`);
+    const jpegSha = createHash('sha256').update(bytes).digest('hex');
+    assert.match(provenance, new RegExp(`${name.replaceAll('.', '\\.')}[^\\n]*\`${jpegSha}\` · ${bytes.length} bytes · 1376×768`),
+      `${name}: provenance must pin the committed JPEG SHA-256, byte length, and 1376×768 dimensions`);
   }
   assert.match(readme, /excluded_from_training: true/);
   assert.match(readme, /approved_for_training: false/);

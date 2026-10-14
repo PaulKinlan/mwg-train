@@ -49,6 +49,11 @@ test('four page-only Resonance Lab briefs forbid framing and pin exact UTF-8 pro
     const digest = createHash('sha256').update(text).digest('hex');
     assert.match(provenance, new RegExp(`${name.replaceAll('.', '\\.')}[^\\n]*${digest}`),
       `${name}: provenance must match actual prompt bytes`);
+    const bytes = readFileSync(join(archetype, name));
+    assert.deepEqual([...bytes.subarray(0, 3)], [0xff, 0xd8, 0xff], `${name}: must be a valid JPEG`);
+    const jpegSha = createHash('sha256').update(bytes).digest('hex');
+    assert.match(provenance, new RegExp(`${name.replaceAll('.', '\\.')}[^\\n]*\`${jpegSha}\` · ${bytes.length} bytes · 1376×768`),
+      `${name}: provenance must pin the committed JPEG SHA-256, byte length, and 1376×768 dimensions`);
   }
   assert.match(blocks[2][2], /Preview paused on last valid build/);
   assert.match(blocks[3][2], /ILLUSTRATIVE resolved-success state/);
