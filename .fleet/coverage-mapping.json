@@ -148,7 +148,8 @@
     "test/reachability.test.mjs"
   ],
   "docs/train/READINESS-EPIC.md": [
-    "test/reachability.test.mjs"
+    "test/reachability.test.mjs",
+    "test/tokens-record.test.mjs"
   ],
   "docs/eval/decode-config.deepseek-flash.json": [
     "test/decode-config.test.mjs"
@@ -182,6 +183,9 @@
   "docs/train/corpus/records.json": [
     "test/corpus-journey-evidence.test.mjs",
     "test/corpus-record-stamp.test.mjs"
+  ],
+  "docs/train/corpus/README.md": [
+    "test/tokens-record.test.mjs"
   ],
   "docs/train/corpus/tokens.json": [
     "test/tokens-record.test.mjs"
