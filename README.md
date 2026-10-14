@@ -26,10 +26,10 @@ Experiment: does training on Modern Web Guidance-applied sites make a model defa
 ## Checks
 
 ```bash
-npm test                    # unit tests and the structural assertions that every check is wired into the gate
-npm run test:fast           # fast gate: runs only the unit tests affected by changes vs origin/main
-npm run build               # the offline checks; the merger runs npm test after it
-npm run check:all           # run exactly the deterministic, offline checks wired into the gate
+npm test                    # full unit suite on demand; not part of the merger's configured gate
+npm run test:fast           # affected unit suites and mapped checks vs origin/main
+npm run build               # alias for npm run check:all; does not run npm test
+npm run check:all           # 27 deterministic offline checks; the merger's full gate, not the unit suite
 npm run check:briefs        # validate + seal the brief manifest
 npm run quotes:verify       # every priced row must re-derive from the page it came from
 npm run quotes:fetch        # re-fetch those pages and report whether they still hash the same
@@ -41,6 +41,12 @@ npm run train:tokens         # measure corpus tokens: pilot (311,516 derived [23
 npm run lint:provenance     # provenance manifest rules
 npm run scan:owner-auth     # owner-auth gate: no owner-identifying material in any corpus tree
 ```
+
+The fleet fast gate (`fleet-check --fast`) runs `scripts/fast-gate.mjs` (also available as
+`npm run test:fast`) to select affected unit suites and mapped checks for the branch diff.
+The merger runs its configured `npm run check:all` once on the merged tree; neither it nor
+`npm run build` runs `npm test`. Run `npm test` explicitly when the full unit suite is needed:
+a passing fast gate and `check:all` do not prove that unselected unit suites pass.
 
 ## The quarantine store
 
