@@ -34,11 +34,18 @@ function section(markdown, heading) {
 function siteProse(text) {
   // A site-generation prompt is not a copy of the conformance fixture's rendering instructions.
   // Keep the authored substance while removing Markdown markup and board-only viewport instructions.
+  let referenceBullet = false;
   return text?.split(/\n{2,}/)
     .filter((paragraph) => !/^The five boards are laid out on this grammar/i.test(paragraph.trim()))
     .join('\n\n')
     .split('\n')
-    .filter((line) => !/\b(?:no media queries|one fixed composition|single inline stylesheet|browser chrome runs|browser viewport|conformance viewport)\b/i.test(line))
+    .filter((line) => {
+      // Wrapped frame bullets carry instructions on later lines too (tabs, address bar, chrome).
+      if (/^\s*[-*]\s/.test(line)) referenceBullet = /\bbrowser viewports?\b/i.test(line);
+      else if (!line.trim()) referenceBullet = false;
+      if (referenceBullet) return false;
+      return !/\b(?:no media queries|one fixed composition|single inline stylesheet|browser chrome runs|browser viewports?|conformance viewport)\b/i.test(line);
+    })
     .join('\n')
     .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
     .replace(/\*\*([^*]+)\*\*/g, '$1')

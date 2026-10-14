@@ -41,6 +41,24 @@ test('all current prompt and state claims come from real authored sources', () =
   assert.doesNotMatch(html, /<script[^>]*>/, 'reading prompts requires no client JS');
 });
 
+test('site prompts omit wrapped reference-viewport framing while retaining site layout instructions', () => {
+  const gallery = listConcepts(ROOT);
+  const prompts = [...gallery.patterns.map((pattern) => pattern.brief.sitePrompt),
+    ...gallery.trainingTargets.map((target) => target.brief.sitePrompt)];
+  assert.equal(prompts.length, 51);
+  for (const prompt of prompts) {
+    assert.doesNotMatch(prompt, /browser viewports?|browser chrome runs|conformance viewport/i);
+  }
+  for (const id of ['dashboard', 'support-helpdesk']) {
+    const prompt = gallery.patterns.find((pattern) => pattern.id === id).brief.sitePrompt;
+    assert.doesNotMatch(prompt, /a single tab and an address bar|visible in both rasters|depict a tab, a URL/i,
+      `${id} must not retain continuation lines from a reference-frame bullet`);
+    assert.match(prompt, /Page structure top to bottom|Step 2 and step 3 are where the multi-step flow earns its name/,
+      `${id} retains the next real site-layout bullet`);
+  }
+  assert.match(gallery.trainingTargets.find((target) => target.id === 'tr-04').brief.sitePrompt, /summary region/i);
+});
+
 test('early inline and later fenced image prompts are returned intact, never inferred from filenames', () => {
   const early = readFileSync(join(ROOT, 'docs/design/archetypes/booking/README.md'), 'utf8');
   const late = readFileSync(join(ROOT, 'docs/design/archetypes/community-forum/README.md'), 'utf8');
