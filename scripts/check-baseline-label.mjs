@@ -286,6 +286,10 @@ export const DOCUMENTS = {
   'docs/design/archetypes/event-registration/demo/README.md': 'design',
   'docs/design/archetypes/event-registration/design.md': 'design',
   'docs/design/archetypes/event-registration/plan.md': 'design',
+  // Proposed Signal Grid gameplay and design, with local prompt-only provenance before image approval.
+  'docs/design/archetypes/browser-puzzle-game/design.md': 'design',
+  'docs/design/archetypes/browser-puzzle-game/plan.md': 'design',
+  'docs/design/archetypes/browser-puzzle-game/PROVENANCE.md': 'provenance',
   // The first archetype authored outside the five evaluation families (bead mwg-train-efg): a board brief whose
   // prompts the generator reads. Classified like the other archetype READMEs that record borrowed reference
   // material and its rights.

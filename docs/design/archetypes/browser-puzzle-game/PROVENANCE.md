@@ -1,0 +1,15 @@
+# Signal Grid reference-board provenance — pending generation
+
+- **Scope:** four proposed 1376 × 768 unframed page-only JPEGs for the [Signal Grid archetype](README.md). **No JPEG exists at this revision.** Four exact UTF-8 prompt blocks exist; no model request, actual gateway response, pixel file, byte size, vision inspection or image SHA-256 is recorded. Prompt SHA-256 attests only the written instructions.
+- **Spend status:** `mwg-train-07ka.2` covers the offline plan/design/prompts; model generation is a separate follow-up pending owner amount-scoped approval, exact `gemini-nano-banana-2.1` tariff and fail-closed reservation. `node scripts/generate-archetype-boards.mjs --only browser-puzzle-game` is an offline dry run that reported all four `absent (never generated)`; **do not invoke `--write`** without approval. The model name describes a proposed request, not an attested response.
+- **Rights:** `excluded_from_training: true`; `approved_for_training: false`. A future model output from the [consumer-account service](../../../provenance/accounts/google-antigravity-consumer.md) is not licensed as training data for another model. Neither a prompt nor a generated image grants commercial product rights or exclusive artwork ownership.
+- **What the frames could not prove:** 440 Hz and 660 Hz are fictional puzzle tokens; collision at D4, 14 accepted moves, 01:48 playtime, 38 games played, 97% win rate, current streak 12, best streak 19 and clipboard confirmation are storyboard states. A still image cannot establish a playable solution, WebAudio, keyboard/pointer parity, accurate stats, saved state or clipboard success. The [functional plan](plan.md) requires driven tests before any such claim.
+
+| Proposed board | Illustrated state | SHA-256 of exact UTF-8 prompt block | Model response | JPEG SHA-256 / bytes / dimensions | Vision verdict |
+| --- | --- | --- | --- | --- | --- |
+| `step1-board-initial.jpg` | Empty daily board and controls | `bbeea22fb3cf8bd1179f0763009050781a2779daa67a9e9dd4298bf47dbc1ecc` | not called | **absent** | pending |
+| `step2-midgame-interaction.jpg` | Nine-piece board and receiver status | `53f6d21441b91f92c3d72df5c219824ea0138dd4ecb1882e922c36c7b13d3df0` | not called | **absent** | pending |
+| `step3-invalid-collision-state.jpg` | Rejected D4 head-on crossing | `bcab1c178627399ad8ee0624e360a950bf999cf589cb30c6a20b492a936ff5e9` | not called | **absent** | pending |
+| `step4-victory-stats-dialog.jpg` | Fictional solved dialog | `3afbc3003ab55bb956aa9628ee7aaacdb9ff9aca0fbb30be587915503bd8ad4b` | not called | **absent** | pending |
+
+The [README](README.md) contains the exact captured text blocks. Prompt hashes use `sha256(bytes between each \`\`\`text fence, excluding the final linefeed)`. After an authorised model call, record each response's own model identity and settings, actual committed JPEG digest/bytes/measured dimensions, detected chrome, full-resolution vision observations and any corrective crop with source→derived digests. Publish a separate global asset register only once original JPEGs and evidence actually exist; do not silently overwrite this pending history.
