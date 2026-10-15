@@ -562,7 +562,14 @@ const patternCard = ({ id, brief, steps }, families = [], { detail = false } = {
   const familyLinks = families.length
     ? ` · Training families: ${families.map((f) => `<a href="/concepts/family/${escapeHtml(f.id)}"><code>${escapeHtml(f.id)}</code>${f.title ? ` (${escapeHtml(f.title)})` : ''}</a>`).join(', ')}`
     : '';
-  const buildLinks = FRAMEWORKS.map((fw) => `<a href="/project/${escapeHtml(id)}-${fw}"><code>${escapeHtml(id)}-${fw}</code></a>`).join(', ');
+  const evalBuilds = EVAL_TARGETS.has(id)
+    ? FRAMEWORKS.map((fw) => `<a href="/project/${escapeHtml(id)}-${fw}"><code>${escapeHtml(id)}-${fw}</code></a>`)
+    : [];
+  const familyBuilds = families.flatMap((f) =>
+    FRAMEWORKS.map((fw) => `<a href="/project/${escapeHtml(f.id)}-${fw}"><code>${escapeHtml(f.id)}-${fw}</code></a>`)
+  );
+  const allBuilds = EVAL_TARGETS.has(id) ? [...evalBuilds, ...familyBuilds] : familyBuilds;
+  const buildLinks = allBuilds.length ? allBuilds.join(', ') : '<span class="muted">no builds registered</span>';
   return `<article id="pattern-${escapeHtml(id)}" class="concept-comparison" aria-labelledby="pattern-heading-${escapeHtml(id)}">
   <h3 id="pattern-heading-${escapeHtml(id)}">${escapeHtml(id.replaceAll('-', ' '))}${subject ? ` · <span class="muted">${escapeHtml(subject)}</span>` : ''}</h3>
   ${brief ? `<p class="muted">Design and interaction contract: ${code(brief.planSource)} · ${code(brief.designSource)}${familyLinks}.</p>
