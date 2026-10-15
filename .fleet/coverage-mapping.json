@@ -408,6 +408,9 @@
     "test/viewer-concept-briefs.test.mjs",
     "test/viewer-concepts.test.mjs"
   ],
+  "src/viewer/corpus.mjs": [
+    "test/viewer-corpus.test.mjs"
+  ],
   "src/viewer/pages.mjs": [
     "test/viewer-concept-briefs.test.mjs",
     "test/viewer-concepts.test.mjs",

@@ -315,6 +315,7 @@ export const PIPELINE_STRIP = `
 Stages 1–6 are built, measured, and active. Roles: <strong>EVAL INSTRUMENT</strong> measures and is never trained on · <strong>DEFAULT</strong> is what we improve FROM · <strong>TRAINING SOURCE</strong> is the disjoint corpus accepted pairs come from · <strong>COST INPUT</strong> prices each accepted pair.</p>`;
 
 export function stateBadge(view) {
+  if (view.historical) return '<span class="badge no-run">NOT REMEASURED</span>';
   if (!view.hasRun) return '<span class="badge no-run">NOT YET RUN</span>';
   if (view.accepted) {
     // The recorded measurement decision and the owner-auth gate are distinct things: a pair is
@@ -495,11 +496,12 @@ export function renderIndex({ views, allViews, filters, runId, runs, yieldReport
     : '<p class="danger">The owner-auth scan configuration is missing or invalid, so no pair can be treated as accepted and live serving is refused (fail-closed).</p>';
 
   const hasRunData = allViews.some((view) => view.hasRun);
+  const hasHistorical = allViews.some((view) => view.historical);
   const activeFilters = ['archetype', 'framework', 'model', 'state', 'rule'].some((key) => filters[key]);
   const emptyMessage = allViews.length === 0
     ? 'No corpus projects are present in this checkout. Point the viewer at a populated corpus.'
     : !hasRunData
-      ? `No pilot run data is present for this selection. ${activeFilters ? 'The current filters also exclude the unrun projects. ' : ''}Run the pilot locally to record decisions, or <a href="/">show all projects</a>.`
+      ? `${hasHistorical ? 'These tree hashes were re-derived; only historical pilot decisions exist for them, not current acceptance measurements.' : 'No pilot run data is present for this selection.'} ${activeFilters ? 'The current filters also exclude the unrun projects. ' : ''}Run the pilot locally to record decisions, or <a href="/">show all projects</a>.`
       : `No projects match these filters. <a href="/">Clear filters</a> to see the full corpus.`;
 
   return page('corpus index', `
@@ -507,8 +509,9 @@ export function renderIndex({ views, allViews, filters, runId, runs, yieldReport
 ${indexBanner({ runEvidence, projectCount: allViews.length, archetypeCount: archetypes.length, armCount: frameworks.length })}
 <details class="pipeline-context"><summary>Pipeline: stages 1–6 measured · training queued</summary>${PIPELINE_STRIP}</details>
 ${scanNotice}
+${hasHistorical ? '<p class="notice">These tree hashes were re-derived from the current plan; the older pilot decisions and yield were not remeasured on these trees. Select the historical pilot run to inspect its original evidence.</p>' : ''}
 <details class="pipeline-context"><summary>Corpus terminology: DEFAULT, IDEAL and acceptance</summary><p class="muted">Roles: <strong>DEFAULT</strong> = raw model output with no MWG and no uplift applied, kept to measure improvement FROM · <strong>IDEAL</strong> = the post-uplift <strong>${BASELINE_LABEL}</strong> to build TOWARDS · <strong>ACCEPTED PAIR</strong> = passed eval acceptance (training data comes only from accepted pairs of the DISJOINT training corpus — the eval set is never trained on) · <strong>REJECTED ATTEMPT</strong> = kept as negative example &amp; repair material.</p></details>
-<p>${counts.accepted} accepted pair(s) · ${counts.rejected} rejected attempt(s) · ${counts.noRun} not yet run — of ${allViews.length} project(s).</p>
+<p>${counts.accepted} accepted pair(s) · ${counts.rejected} rejected attempt(s) · ${counts.noRun} ${hasHistorical ? 'not remeasured / not yet run on current trees' : 'not yet run'} — of ${allViews.length} project(s).</p>
 ${yieldLine}
 <form class="filters" method="get" action="/">
   ${runSelector}
@@ -605,7 +608,9 @@ export function renderProject({ view, runId, runs, liveOrigin }) {
       ? `<form method="get" action="/project/${escapeHtml(view.id)}"><label>run <select name="run">${runs.map((run) => `<option value="${escapeHtml(run)}"${run === runId ? ' selected' : ''}>${escapeHtml(run)}</option>`).join('')}</select></label> <button type="submit">show</button></form>`
       : '';
 
-  const decisionBlock = !view.hasRun
+  const decisionBlock = view.historical
+    ? `<p class="notice">${escapeHtml(view.attribution?.acceptance ?? 'Historical pilot decision only')}. No acceptance measurement was rerun on this tree.</p>`
+    : !view.hasRun
     ? '<p class="notice">No pilot run has recorded an acceptance decision for this project yet (UNKNOWN).</p>'
     : `<div class="panel">
   <h3>${decision.accepted ? 'ACCEPTED PAIR — recorded eval acceptance' : `REJECTED ATTEMPT (${escapeHtml(decision.category)}) — kept as negative example &amp; repair material`}</h3>
