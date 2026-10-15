@@ -1,5 +1,6 @@
+import { existsSync, realpathSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { isAbsolute, resolve } from 'node:path';
+import { isAbsolute, join, resolve } from 'node:path';
 import { isInside } from '../provenance/arms.mjs';
 import { assertQuarantineStore, assertResolvesInside, quarantineRoot, QuarantineError, REPO_ROOT } from '../provenance/store.mjs';
 
@@ -34,15 +35,27 @@ export function resolveCaptureOutputPath(path, { env = process.env, repoRoot = R
       throw new QuarantineError('OUTPUT_OUTSIDE_QUARANTINE', `refusing output path '${destination}': ${err.message}`);
     }
   }
-  const temp = resolve(tmpdir());
-  const testTemp = env.MWG_TRAIN_CAPTURE_TEST_TEMP;
-  if (testTemp && isAbsolute(testTemp) && isInside(temp, resolve(testTemp)) && resolve(testTemp) !== temp
-      && isInside(resolve(testTemp), destination)) {
-    try {
-      assertResolvesInside(temp, resolve(testTemp), 'test temp directory');
-      return assertResolvesInside(resolve(testTemp), destination, 'capture output');
-    } catch (err) {
-      throw new QuarantineError('OUTPUT_OUTSIDE_QUARANTINE', `refusing output path '${destination}': ${err.message}`);
+  const rawTemp = resolve(tmpdir());
+  const temp = existsSync(rawTemp) ? realpathSync(rawTemp) : rawTemp;
+  const rawTestTemp = env.MWG_TRAIN_CAPTURE_TEST_TEMP;
+  if (rawTestTemp && isAbsolute(rawTestTemp)) {
+    let testTemp = resolve(rawTestTemp);
+    let effectiveDest = destination;
+    if (rawTemp !== temp) {
+      if (testTemp === rawTemp || testTemp.startsWith(`${rawTemp}/`)) {
+        testTemp = join(temp, testTemp.slice(rawTemp.length));
+      }
+      if (effectiveDest === rawTemp || effectiveDest.startsWith(`${rawTemp}/`)) {
+        effectiveDest = join(temp, effectiveDest.slice(rawTemp.length));
+      }
+    }
+    if (isInside(temp, testTemp) && testTemp !== temp && isInside(testTemp, effectiveDest)) {
+      try {
+        assertResolvesInside(temp, testTemp, 'test temp directory');
+        return assertResolvesInside(testTemp, effectiveDest, 'capture output');
+      } catch (err) {
+        throw new QuarantineError('OUTPUT_OUTSIDE_QUARANTINE', `refusing output path '${destination}': ${err.message}`);
+      }
     }
   }
   throw new QuarantineError('OUTPUT_OUTSIDE_QUARANTINE', `refusing output path '${destination}': outside quarantine store and explicitly supplied test temp directory`);

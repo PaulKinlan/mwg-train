@@ -5,6 +5,10 @@ import { html } from 'hono/html';
 const body = html`
       <h1>Account sign-in and recovery</h1>
       <p>Sign-up, sign-in with a server session, and a password-reset request.</p>
+      <figure class="reference-board">
+        <img src="/app/step1-request.jpg" alt="Reference board for account-recovery" width="1280" height="900" loading="lazy" decoding="async">
+        <figcaption>Reference board for account-recovery</figcaption>
+      </figure>
     <form id="signup-form" method="post" action="/signup">
       <div role="alert" aria-live="assertive" class="form-status" data-form-status></div>
       <div class="field">

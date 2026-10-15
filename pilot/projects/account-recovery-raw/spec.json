@@ -2,14 +2,70 @@
   "project_id": "account-recovery-raw",
   "archetype": "account-recovery",
   "archetype_title": "Account sign-in and recovery",
+  "assets": {
+    "archetype": "account-recovery",
+    "store": "assets/archetypes/account-recovery",
+    "brand": {
+      "state": "brandless",
+      "name": null,
+      "mark": false,
+      "mark_recorded_not_self_contained": false,
+      "provisional": false
+    },
+    "tokens": {
+      "colors": 10,
+      "fonts": 1,
+      "derived": {
+        "fg": "--text",
+        "bg": "--page",
+        "accent": "--accent",
+        "error": "--error",
+        "fontStack": "--font-sans",
+        "surfaceInput": "--field"
+      }
+    },
+    "copy": [
+      {
+        "page": "compare.html",
+        "title": "Account recovery · visual comparison"
+      },
+      {
+        "page": "index.html",
+        "title": "Account recovery · visual demo"
+      }
+    ],
+    "images": [
+      {
+        "name": "step1-request.jpg",
+        "sha256": "1a6989fb1979ebd0c7a1b8691f4df0f0843fdec994a8328ad54fc1756d187da2",
+        "store_path": "assets/archetypes/account-recovery/step1-request.jpg"
+      },
+      {
+        "name": "step2-sent.jpg",
+        "sha256": "2ebfcab74be289c17db8b585e786cdc6757bd0c88cb81900dd7256cffbbb0eeb",
+        "store_path": "assets/archetypes/account-recovery/step2-sent.jpg"
+      },
+      {
+        "name": "step3-refusal.jpg",
+        "sha256": "4d937b3ab1031b82ced3d36d181e2419501f7da22b3eeb6a9460f19515a82b38",
+        "store_path": "assets/archetypes/account-recovery/step3-refusal.jpg"
+      }
+    ],
+    "rights": {
+      "excluded_from_training": true,
+      "approved_for_training": false,
+      "source": "docs/design/archetypes/account-recovery/README.md:5"
+    }
+  },
   "framework": {
     "name": "raw",
     "version": "platform (no framework)",
     "dialect": "html",
-    "family": "raw-web-platform",
     "markupFile": "app/page.mjs",
     "stylesFile": "app/styles.css",
-    "enhanceFile": "app/enhance.js"
+    "enhanceFile": "app/enhance.js",
+    "serverFile": "server.mjs",
+    "family": "raw-web-platform"
   },
   "routes": [
     {
@@ -49,7 +105,7 @@
       "slug": "password",
       "name": "password",
       "type": "password",
-      "autocomplete": null
+      "autocomplete": "new-password"
     },
     {
       "slug": "displayName",

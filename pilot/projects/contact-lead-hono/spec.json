@@ -2,14 +2,74 @@
   "project_id": "contact-lead-hono",
   "archetype": "contact-lead",
   "archetype_title": "Public-service enquiry form",
+  "assets": {
+    "archetype": "contact-lead",
+    "store": "assets/archetypes/contact-lead",
+    "brand": {
+      "state": "named",
+      "name": "ARKHITECTS Studio",
+      "mark": false,
+      "mark_recorded_not_self_contained": true,
+      "provisional": false
+    },
+    "tokens": {
+      "colors": 22,
+      "fonts": 2,
+      "derived": {
+        "fg": "--text-primary",
+        "bg": "--bg-page",
+        "accent": "--action",
+        "error": "--danger",
+        "fontStack": "--font-sans",
+        "surfaceInput": "--surface-input"
+      }
+    },
+    "copy": [
+      {
+        "page": "compare.html",
+        "title": "Visual design comparison — Contact-lead archetype"
+      },
+      {
+        "page": "index.html",
+        "title": "ARKHITECTS Studio — Request a consultation"
+      },
+      {
+        "page": "success.html",
+        "title": "Consultation Request Received — ARKHITECTS Studio"
+      }
+    ],
+    "images": [
+      {
+        "name": "step1-form.jpg",
+        "sha256": "e3ed49ff25a2f65ca0a79dec64e0d24b0b4626aafffa5b044860f2a6db196ac1",
+        "store_path": "assets/archetypes/contact-lead/step1-form.jpg"
+      },
+      {
+        "name": "step2-success.jpg",
+        "sha256": "ec268f5ce58804555bf1d51d59cc1cf7ad143779a17e0f2c33b3a32dc700011f",
+        "store_path": "assets/archetypes/contact-lead/step2-success.jpg"
+      },
+      {
+        "name": "step3-refusal.jpg",
+        "sha256": "1f27699e3fb408ef7c70553b4ce189d20e4ba8c4cb520d177144e52354a64592",
+        "store_path": "assets/archetypes/contact-lead/step3-refusal.jpg"
+      }
+    ],
+    "rights": {
+      "excluded_from_training": true,
+      "approved_for_training": false,
+      "source": "docs/design/archetypes/contact-lead/README.md:5"
+    }
+  },
   "framework": {
     "name": "hono",
     "version": "4.9.12",
     "dialect": "html",
-    "family": "hono",
     "markupFile": "app/page.mjs",
     "stylesFile": "app/styles.css",
-    "enhanceFile": "app/enhance.js"
+    "enhanceFile": "app/enhance.js",
+    "serverFile": "server.mjs",
+    "family": "hono"
   },
   "routes": [
     {

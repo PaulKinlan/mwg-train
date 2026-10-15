@@ -16,7 +16,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync, spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync } from 'node:fs';
 import http from 'node:http';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
@@ -114,7 +114,7 @@ function createFixtureServer() {
 }
 
 function setupTempQuarantineStore() {
-  const dir = mkdtempSync(join(tmpdir(), 'mwg-quarantine-capture-test-'));
+  const dir = realpathSync(mkdtempSync(join(tmpdir(), 'mwg-quarantine-capture-test-')));
   execFileSync('git', ['init', '-q', dir]);
   execFileSync('git', ['-C', dir, 'remote', 'add', 'origin', 'https://github.example/PaulKinlan/mwg-quarantine']);
   return dir;

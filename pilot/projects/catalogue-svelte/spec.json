@@ -1,0 +1,192 @@
+{
+  "project_id": "catalogue-svelte",
+  "archetype": "catalogue",
+  "archetype_title": "Searchable reference catalogue",
+  "assets": {
+    "archetype": "catalogue",
+    "store": "assets/archetypes/catalogue",
+    "brand": {
+      "state": "named",
+      "name": "Kiln & Copper",
+      "mark": true,
+      "mark_recorded_not_self_contained": false,
+      "provisional": false
+    },
+    "tokens": {
+      "colors": 29,
+      "fonts": 2,
+      "derived": {
+        "fg": "--text-primary",
+        "bg": "--bg-page",
+        "accent": "--action",
+        "error": "--danger",
+        "fontStack": "--font-sans",
+        "surfaceInput": "--surface-input"
+      }
+    },
+    "copy": [
+      {
+        "page": "cart.html",
+        "title": "Your Cart — Kiln &amp; Copper (static variant)"
+      },
+      {
+        "page": "compare.html",
+        "title": "Visual Design Comparison — Catalogue Archetype"
+      },
+      {
+        "page": "empty.html",
+        "title": "No Matches — Kiln &amp; Copper (static variant)"
+      },
+      {
+        "page": "index.html",
+        "title": "Kiln &amp; Copper — Ceramics &amp; Kiln Parts Catalogue"
+      }
+    ],
+    "images": [
+      {
+        "name": "step1-grid.jpg",
+        "sha256": "93f3b8c5056685e981e523b9c1550dd4d27f55a5a0ecd5fff82b0cf447c7f0cd",
+        "store_path": "assets/archetypes/catalogue/step1-grid.jpg"
+      },
+      {
+        "name": "step2-cart.jpg",
+        "sha256": "864a10b7c056667af9c1972d399d1bff739d780cd673cd3bcc013e1cc6996adc",
+        "store_path": "assets/archetypes/catalogue/step2-cart.jpg"
+      },
+      {
+        "name": "step3-empty.jpg",
+        "sha256": "9b8a4e58550892fef25ebab0a15c6078d0a40d8781292bfb2ba1be0ec384e9c0",
+        "store_path": "assets/archetypes/catalogue/step3-empty.jpg"
+      }
+    ],
+    "rights": {
+      "excluded_from_training": true,
+      "approved_for_training": false,
+      "source": "docs/design/archetypes/catalogue/README.md:5"
+    }
+  },
+  "framework": {
+    "name": "svelte",
+    "version": "5.57.2",
+    "dialect": "html",
+    "markupFile": "app/page.svelte",
+    "compiledFile": "app/page.compiled.mjs",
+    "stylesFile": "app/styles.css",
+    "enhanceFile": "app/enhance.js",
+    "serverFile": "server.mjs",
+    "family": "svelte"
+  },
+  "routes": [
+    {
+      "method": "GET",
+      "path": "/",
+      "kind": "page"
+    },
+    {
+      "method": "GET",
+      "path": "/search",
+      "kind": "search"
+    },
+    {
+      "method": "POST",
+      "path": "/cart",
+      "kind": "write-session"
+    },
+    {
+      "method": "GET",
+      "path": "/cart",
+      "kind": "read-session"
+    }
+  ],
+  "fields": [
+    {
+      "slug": "query",
+      "name": "q",
+      "type": "search",
+      "autocomplete": null
+    },
+    {
+      "slug": "quantity",
+      "name": "quantity",
+      "type": "number",
+      "autocomplete": null
+    },
+    {
+      "slug": "item",
+      "name": "item",
+      "type": "text",
+      "autocomplete": null
+    }
+  ],
+  "seeded_defects": [
+    "xss-innerhtml"
+  ],
+  "journey": {
+    "kind": "get-query-reload",
+    "startPath": "/",
+    "formSelector": "form#search-form",
+    "fill": {
+      "input[name=q]": "bearing"
+    },
+    "expectText": "bearing"
+  },
+  "echo_expect": "bearing",
+  "content_journey": {
+    "source": "query",
+    "path": "/search",
+    "param": "q",
+    "inputSelector": "[name=q]",
+    "formSelector": "form#search-form",
+    "echoField": "query"
+  },
+  "echo_source": "query",
+  "write_journey": {
+    "startPath": "/",
+    "formSelector": "form#cart-form",
+    "itemField": "input[name=item]",
+    "fill": {
+      "input[name=quantity]": "2"
+    },
+    "readPath": "/api/records"
+  },
+  "session_routes": [
+    "/cart"
+  ],
+  "echo_container": "#record-echo",
+  "security_journey": null,
+  "session": true,
+  "check_context": {
+    "formSelector": "form#search-form",
+    "primaryField": "[name=q]",
+    "usernameField": "[name=email]",
+    "passwordField": "[name=password]",
+    "addressField": "[name=address]",
+    "postcodeField": "[name=postcode]"
+  },
+  "primaryFields": [
+    {
+      "slug": "query",
+      "name": "q",
+      "elementPattern": "<input[^>]*name=\"q\"[^>]*>",
+      "elementPatternFirst": "<input[^>]*name=\"q\"[^>]*>"
+    },
+    {
+      "slug": "item",
+      "name": "item",
+      "elementPattern": "<input[^>]*name=\"item\"[^>]*>",
+      "elementPatternFirst": "<input[^>]*name=\"item\"[^>]*>"
+    }
+  ],
+  "autofill": {
+    "usernamePattern": "(<input[^>]*type=\"email\"[^>]*>)",
+    "passwordPattern": "(<input[^>]*type=\"password\"[^>]*>)",
+    "streetPattern": "(<input[^>]*name=\"address\"[^>]*>)",
+    "postcodePattern": "(<input[^>]*name=\"postcode\"[^>]*>)"
+  },
+  "required_rules": [
+    "forms/required-field-feedback",
+    "forms/validate-input-after-interaction",
+    "accessibility/accessible-error-announcement",
+    "security/sanitize-untrusted-html"
+  ]
+}

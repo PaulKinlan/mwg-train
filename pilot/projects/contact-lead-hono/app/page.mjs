@@ -3,8 +3,15 @@ import { html } from 'hono/html';
 // One tagged template for the page body, exposed two ways so the route handler can hand Hono a full
 // document and the tests can read the body alone.
 const body = html`
+      <header class="brand" data-asset-store="assets/archetypes/contact-lead">
+        <span class="brand-name">ARKHITECTS Studio</span>
+      </header>
       <h1>Public-service enquiry form</h1>
       <p>A council service takes enquiries, validates them, and shows the enquirer their reference.</p>
+      <figure class="reference-board">
+        <img src="/app/step1-form.jpg" alt="Reference board for contact-lead" width="1280" height="900" loading="lazy" decoding="async">
+        <figcaption>Reference board for contact-lead</figcaption>
+      </figure>
     <form id="enquiry-form" method="post" action="/enquiry">
       <div role="alert" aria-live="assertive" class="form-status" data-form-status></div>
       <div class="field">

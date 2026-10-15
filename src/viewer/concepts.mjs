@@ -550,20 +550,27 @@ const ARCHETYPE_SUBJECTS = {
 
 const patternSubject = (id) => ARCHETYPE_SUBJECTS[id] ?? null;
 
-const promptDetails = (title, prompt, source) => `<details class="concept-prompt"><summary>${escapeHtml(title)}</summary>
-  ${prompt ? `<p class="concept-prompt-copy">${escapeHtml(prompt)}</p>${source ? `<p class="muted">Authored source: ${code(source)}</p>` : ''}`
+const FRAMEWORKS = ['hono', 'raw', 'react', 'preact', 'vue', 'svelte', 'webcomponents'];
+
+const promptDetails = (title, prompt, source, { open = false } = {}) => `<details class="concept-prompt"${open ? ' open' : ''}><summary>${escapeHtml(title)}</summary>
+  ${prompt ? `<pre class="concept-prompt-pre"><code class="concept-prompt-copy">${escapeHtml(prompt)}</code></pre>${source ? `<p class="muted">Authored source: ${code(source)}</p>` : ''}`
     : '<p class="muted">No prompt is authored in this checkout. No image or behavior is inferred from a missing file.</p>'}
 </details>`;
 
-const patternCard = ({ id, brief, steps }, families = []) => {
+const patternCard = ({ id, brief, steps }, families = [], { detail = false } = {}) => {
   const subject = patternSubject(id);
   const familyLinks = families.length
     ? ` · Training families: ${families.map((f) => `<a href="/concepts/family/${escapeHtml(f.id)}"><code>${escapeHtml(f.id)}</code>${f.title ? ` (${escapeHtml(f.title)})` : ''}</a>`).join(', ')}`
     : '';
+  const buildLinks = FRAMEWORKS.map((fw) => `<a href="/project/${escapeHtml(id)}-${fw}"><code>${escapeHtml(id)}-${fw}</code></a>`).join(', ');
   return `<article id="pattern-${escapeHtml(id)}" class="concept-comparison" aria-labelledby="pattern-heading-${escapeHtml(id)}">
   <h3 id="pattern-heading-${escapeHtml(id)}">${escapeHtml(id.replaceAll('-', ' '))}${subject ? ` · <span class="muted">${escapeHtml(subject)}</span>` : ''}</h3>
   ${brief ? `<p class="muted">Design and interaction contract: ${code(brief.planSource)} · ${code(brief.designSource)}${familyLinks}.</p>
-    ${promptDetails('Site Generation Prompt', brief.sitePrompt, `${brief.planSource} + ${brief.designSource}`)}`
+    <p class="muted">Project builds: ${buildLinks}</p>
+    ${brief.simplePrompt ? promptDetails('Simple Generation Prompt ( baseline / zero-shot input )', brief.simplePrompt, brief.planSource) : ''}
+    ${promptDetails('Site Generation Prompt ( full spec + design contract )', brief.sitePrompt, `${brief.planSource} + ${brief.designSource}`, { open: detail })}
+    ${brief.designMarkdown ? promptDetails(`Design Contract (${brief.designSource})`, brief.designMarkdown, brief.designSource) : ''}
+    ${brief.planMarkdown ? promptDetails(`Functional Plan & Acceptance Contract (${brief.planSource})`, brief.planMarkdown, brief.planSource) : ''}`
     : `<p class="notice">Design specification pending; no generation prompt can be claimed.${familyLinks}</p>`}
   ${steps.length ? `<h4>${steps.filter((step) => step.available).length} pictured state${steps.length === 1 ? '' : 's'} · ${steps.length} declared · ${steps.filter((step) => step.darkAvailable).length} dark-mode twin state${steps.length === 1 ? '' : 's'}</h4>
     <p class="muted"><strong>Consistent context-chained Light &amp; Dark Mode sets:</strong> Every step in the Light Mode set uses ${code(`docs/design/archetypes/${id}/design.md`)} and Step 1 Light as reference context; every step in the Dark Mode set uses ${code(`docs/design/archetypes/${id}/design.md`)}, its corresponding Light Mode step, and Step 1 Dark as reference context so layout, navigation, and styling remain consistent throughout.</p>
@@ -603,9 +610,12 @@ const patternCard = ({ id, brief, steps }, families = []) => {
 </article>`;
 };
 
-const trainingFamilyCard = ({ id, archetype, title, origin, available, width, height, board, boardWidth, boardHeight, brief }, register, { featured = false } = {}) => `<article class="concept-comparison" aria-labelledby="target-${escapeHtml(id)}">
+const trainingFamilyCard = ({ id, archetype, title, origin, available, width, height, board, boardWidth, boardHeight, brief }, register, { featured = false, detail = false } = {}) => {
+  const buildLinks = FRAMEWORKS.map((fw) => `<a href="/project/${escapeHtml(id)}-${fw}"><code>${escapeHtml(id)}-${fw}</code></a>`).join(', ');
+  return `<article class="concept-comparison" aria-labelledby="target-${escapeHtml(id)}">
   <h3 id="target-${escapeHtml(id)}">${escapeHtml(id)}${archetype ? ` · ${escapeHtml(archetype)}` : ''}</h3>
   ${title ? `<p class="muted">${escapeHtml(title)}</p>` : ''}
+  <p class="muted">Project builds: ${buildLinks}</p>
   <div class="concept-main-board">
     <figure><div class="concept-image-frame">${board
       ? `<a href="/concepts/references/${escapeHtml(id)}.jpg" aria-label="Open the ${escapeHtml(id)} designed reference board at full size"><img src="/concepts/references/${escapeHtml(id)}.jpg" alt="Designed reference board for training family ${escapeHtml(id)}${archetype ? ` (${escapeHtml(archetype)})` : ''}"${boardWidth && boardHeight ? ` width="${boardWidth}" height="${boardHeight}"` : ''} loading="${featured ? 'eager' : 'lazy'}"${featured ? ' fetchpriority="high"' : ''}></a>`
@@ -614,9 +624,12 @@ const trainingFamilyCard = ({ id, archetype, title, origin, available, width, he
   ${available ? `<details class="harness-target-drawer"><summary>Inspect A1 Conformance Harness Target (DOM test fixture)</summary>
     <figure><div class="concept-image-frame"><a href="/concepts/targets/${escapeHtml(id)}.png" aria-label="Open the ${escapeHtml(id)} harness target render at full size"><img src="/concepts/targets/${escapeHtml(id)}.png" alt="Harness target render, the A1 conformance instrument, for ${escapeHtml(id)}"${width && height ? ` width="${width}" height="${height}"` : ''} loading="lazy"></a></div><figcaption>Harness target render (A1 conformance instrument) · ${code(`${TRAINING_TARGET_DIR}/${id}/target.png`)} — a deterministic headless-Chrome render of ${origin ? code(origin) : 'the family&rsquo;s authored board'}, NOT a designed board. Provenance: ${code('docs/provenance/assets/training-targets.md')}</figcaption></figure>
   </details>` : `<p class="muted">Harness target render pending. Expected ${code(`${TRAINING_TARGET_DIR}/${id}/target.png`)}.</p>`}
-  ${brief ? `${promptDetails('Site Generation Prompt · functional build', brief.sitePrompt,
-    [brief.planSource, brief.designSource, brief.tokenSource].filter(Boolean).join(' + '))}
+  ${brief ? `${brief.simplePrompt ? promptDetails('Simple Generation Prompt ( baseline / zero-shot input )', brief.simplePrompt, brief.planSource) : ''}
+    ${promptDetails('Site Generation Prompt · functional build ( full spec + design contract )', brief.sitePrompt,
+      [brief.planSource, brief.designSource, brief.tokenSource].filter(Boolean).join(' + '), { open: detail })}
     ${promptDetails('Image Generation Prompt · single illustrative home page', brief.imagePrompt, brief.imagePromptSource)}
+    ${brief.designMarkdown ? promptDetails(`Design Contract (${brief.designSource})`, brief.designMarkdown, brief.designSource) : ''}
+    ${brief.planMarkdown ? promptDetails(`Functional Plan & Acceptance Contract (${brief.planSource})`, brief.planMarkdown, brief.planSource) : ''}
     <details class="concept-prompt"><summary>Declared interaction sequence and acceptance checks · no per-step training images</summary>
       <p>The brief declares ${brief.steps.length} test step${brief.steps.length === 1 ? '' : 's'}, not a four-image visual journey. No per-step training boards are committed.</p>
       <ol>${brief.steps.map((step) => `<li>${escapeHtml([step.path ? `Visit ${step.path}` : null,
@@ -627,6 +640,7 @@ const trainingFamilyCard = ({ id, archetype, title, origin, available, width, he
       <p>Required assertions from the brief, not proof that this image meets them:</p><ul>${brief.assertions.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>
     </details>` : '<p class="notice">Site and image prompts are not both available in this checkout; do not treat an image as a working site specification.</p>'}
 </article>`;
+};
 
 // Page navigation uses native anchors. Legacy /concepts#pattern-... and #target-... hashes
 // still land on the matching index link; every detail document is usable without JS.
@@ -670,7 +684,7 @@ export function renderConceptPattern({ patterns = [], archetypes = [], trainingT
     <h1>${escapeHtml(heading)}</h1>
     <p class="muted">Concept JPEGs are illustrations, not working sites or training evidence. No reuse clearance is granted: provider terms prohibit machine-learning development from some images, while other boards have no supplied training or output-use rights. <a href="/concepts#concept-distinction-heading">Read the image and conformance distinctions</a>.</p>
     <section aria-labelledby="pattern-detail-heading"><h2 id="pattern-detail-heading">Authored pattern and pictured states</h2>
-      ${patternCard(pattern, trainingTargets.filter((family) => family.archetype === id))}
+      ${patternCard(pattern, trainingTargets.filter((family) => family.archetype === id), { detail: true })}
     </section>
     ${evaluation ? `<section id="held-out-evaluation" aria-labelledby="eval-detail-heading"><h2 id="eval-detail-heading">Held-out evaluation target (A6)</h2>
       <p>Separate from training and illustrative JPEGs; not proof of a working site.</p>
@@ -688,7 +702,7 @@ export function renderConceptFamily({ trainingTargets = [], trainingBoardRegiste
     <p class="muted">A designed board is an AI-generated illustration, not training evidence or proof a demo works. A1 harness PNGs are deterministic conformance fixtures, not matching designs. No reuse clearance is granted here; consult each board&rsquo;s provenance and applicable provider terms. <a href="/concepts#concept-distinction-heading">Read the A1/A6 and rights distinctions</a>.</p>
     ${family.archetype ? `<p>Related <a href="/concepts/pattern/${escapeHtml(family.archetype)}">${escapeHtml(family.archetype)} archetype pattern</a>.</p>` : ''}
     <section aria-labelledby="family-detail-heading"><h2 id="family-detail-heading">Designed board, harness target and authored prompts</h2>
-      ${trainingFamilyCard(family, trainingBoardRegister, { featured: true })}
+      ${trainingFamilyCard(family, trainingBoardRegister, { featured: true, detail: true })}
     </section>`);
 }
 

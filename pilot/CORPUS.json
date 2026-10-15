@@ -285,8 +285,8 @@
         "no-autofill-address",
         "xss-innerhtml"
       ],
-      "original_sha": "sha256:6dfd2b332126fbfeefb1f21e99d468a98153efd2ae126c3e3c4090f0076c73b1",
-      "uplift_sha": "sha256:b45297c914312f36ba7ac86d9c9f439355a3d6844d13f45f814f5b458b566dec",
+      "original_sha": "sha256:ae86a2b3a37f1d768ed40891ea610916b261164bc0ad4ed6b19381af3f3e8885",
+      "uplift_sha": "sha256:8689fb6190838530e86fdfd0c63771735dfd618d7974875c656ad8758fef3798",
       "uplift_applied": [
         "forms/required-field-feedback",
         "forms/validate-input-after-interaction",
@@ -315,8 +315,8 @@
         "no-aria-sync",
         "no-autofill-address"
       ],
-      "original_sha": "sha256:e1e3c16b1ff85f09e4ecfb2980ac7b9d98bbfbc1a2bce8bfa339584ae01a4920",
-      "uplift_sha": "sha256:9502cb040eccd177dbcc91052c3100777f5951dbc003c064e69056fc52aebb2c",
+      "original_sha": "sha256:1bd8fd90e68bc10989f40c1dd7ebb1bf43b6e30bbfa805dd0b3dee9c486b1c87",
+      "uplift_sha": "sha256:a93f70219fc523cb62d88609fdb7ae21660327709bb0dd86915a5a125a443d53",
       "uplift_applied": [
         "forms/validate-input-after-interaction",
         "accessibility/accessible-error-announcement",
@@ -343,8 +343,8 @@
         "no-autofill-address",
         "xss-innerhtml"
       ],
-      "original_sha": "sha256:695f1ce3f52dd9b1a41b9934dfb0e7958c3e0b544a6cfaa2c7b373755ba956a7",
-      "uplift_sha": "sha256:f95b57cc76f208b631d32fdf5b3ab293335b3da73a3e7038b2f4e5f9ea53057e",
+      "original_sha": "sha256:7aa9815977089f1723cc13836f02e3d3e93c0407c91565c2073ab812089d5854",
+      "uplift_sha": "sha256:435081e0f6d7408b2e8eaf729c931ee5883f9ee938fb25653529753145315eb5",
       "uplift_applied": [
         "forms/required-field-feedback",
         "forms/validate-input-after-interaction",
@@ -375,8 +375,8 @@
         "no-autofill-address",
         "xss-innerhtml"
       ],
-      "original_sha": "sha256:aaee5e7431d320fd01a20c6ad55360575c3ea9be2b41948d2ed6a86cc6eaffd8",
-      "uplift_sha": "sha256:9c79458ee0791b5093c992ca2846897ee19ebde6603ce5d8f49f510cb4bbb1ac",
+      "original_sha": "sha256:b9fc7d634c9bbd23f591cd8a5a6f297033e96a9862be3885ed6d6baad754bc21",
+      "uplift_sha": "sha256:4faf5dce25c3d299b646062594efa2e0284e424d101c5dffb1542317512ac2a7",
       "uplift_applied": [
         "forms/required-field-feedback",
         "forms/validate-input-after-interaction",
@@ -407,8 +407,8 @@
         "no-autofill-address",
         "xss-innerhtml"
       ],
-      "original_sha": "sha256:df7bf31aab0462c37b7a75e1a33a752f41aa7405553a503d48c5d3cf598614b1",
-      "uplift_sha": "sha256:c988c09543f18fd2b6e65cddcaca0cd12e4243fd41cc67a6364bd822873efabe",
+      "original_sha": "sha256:a79b8282fd4de1f8454b63e5ef1b0cec57946321b700f75cd096810915f76dbc",
+      "uplift_sha": "sha256:35dc4d3540898ed920437f4f25879ac3acbd4df6422cad6ced28f3847d0557ae",
       "uplift_applied": [
         "forms/required-field-feedback",
         "forms/validate-input-after-interaction",
@@ -436,8 +436,8 @@
         "no-required",
         "no-autofill-address"
       ],
-      "original_sha": "sha256:94f1de56abe95b474fff619d1527d19cfa6e5900195a54702c54d96bec5e6270",
-      "uplift_sha": "sha256:85cecfb1704c2edfdc01b2aa847ae27c0f6b75cf7d6caa3d065cecb0ce56912e",
+      "original_sha": "sha256:0b13483d9367076a99bdcffb8346ecdacaacd083f5aba81d31551ccdd23f17e6",
+      "uplift_sha": "sha256:bc2ebd405005c9e8ec425db599fda99fc43bee6e242a2881b662f555995188dc",
       "uplift_applied": [
         "forms/required-field-feedback",
         "forms/autofill-address-form"
@@ -463,8 +463,8 @@
         "no-autofill-address",
         "xss-innerhtml"
       ],
-      "original_sha": "sha256:1714dc31e7654efde5183db04e1ce978934858f54fc1b95e47004fb23a43be34",
-      "uplift_sha": "sha256:227a386c7461d9b41cb4dbfc6f7ceaf6badc2e26c4cba518c3071799c1e231ee",
+      "original_sha": "sha256:2d0d2a894bd4a2b9b956555c4c498388e5470db97a3abae7cd75891335d3fc20",
+      "uplift_sha": "sha256:2411663e6b18b4d88211cfbc979dea61a63b1eac2f32176603e6f057ed7f534b",
       "uplift_applied": [
         "forms/required-field-feedback",
         "forms/validate-input-after-interaction",

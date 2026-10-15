@@ -3,8 +3,15 @@ import { html } from 'hono/html';
 // One tagged template for the page body, exposed two ways so the route handler can hand Hono a full
 // document and the tests can read the body alone.
 const body = html`
+      <header class="brand" data-asset-store="assets/archetypes/event-registration">
+        <span class="brand-name">Future Web 2026</span>
+      </header>
       <h1>Event registration with capacity</h1>
       <p>Registration for a limited-capacity event, with a server-enforced waitlist.</p>
+      <figure class="reference-board">
+        <img src="/app/step1-event.jpg" alt="Reference board for event-registration" width="1280" height="900" loading="lazy" decoding="async">
+        <figcaption>Reference board for event-registration</figcaption>
+      </figure>
     <form id="registration-form" method="post" action="/register">
       <div class="field">
       <label for="name">Attendee name</label>

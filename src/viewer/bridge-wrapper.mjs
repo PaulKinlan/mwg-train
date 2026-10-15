@@ -21,6 +21,10 @@
  * a hard cap so a runaway site cannot flood the viewer.
  */
 
+import { existsSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { dirname, join } from 'node:path';
+
 const CAP_BYTES = 16 * 1024 * 1024;
 
 const T_READY = 1;
@@ -47,11 +51,20 @@ async function main() {
   };
   const entry = arg('entry', '/site/server.mjs');
   const port = Number(arg('port', '18080'));
+  const nodeBin = arg('node-bin', existsSync('/node/bin/node') ? '/node/bin/node' : process.execPath);
+  const db = arg('db', existsSync('/data') ? '/data/site.sqlite' : join(tmpdir(), `site-${port}.sqlite`));
 
   const { spawn } = await import('node:child_process');
-  const site = spawn('/node/bin/node', [entry, '--port', String(port), '--db', '/data/site.sqlite'], {
+  const site = spawn(nodeBin, [entry, '--port', String(port), '--db', db], {
+    cwd: dirname(entry),
     stdio: ['ignore', 'pipe', 'pipe'],
   });
+  const cleanup = () => {
+    try { site.kill('SIGTERM'); } catch {}
+  };
+  process.on('exit', cleanup);
+  process.on('SIGTERM', () => { cleanup(); process.exit(0); });
+  process.on('SIGINT', () => { cleanup(); process.exit(0); });
   site.stdout.on('data', (chunk) => log(chunk.toString().trimEnd()));
   site.stderr.on('data', (chunk) => log(chunk.toString().trimEnd()));
   site.on('exit', (code, signal) => {

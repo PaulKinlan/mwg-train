@@ -9,6 +9,8 @@ node_modules
 /embeddeddolt/
 /embeddeddolt.gate.lock
 /last-touched
+/.beads/
+/.beads.gate.lock
 
 # The viewer's runtime state: sandbox bridge sockets and regenerated uplifted trees.
 .viewer-state/

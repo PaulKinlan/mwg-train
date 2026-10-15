@@ -2,14 +2,88 @@
   "project_id": "booking-react",
   "archetype": "booking",
   "archetype_title": "Evening class booking",
+  "assets": {
+    "archetype": "booking",
+    "store": "assets/archetypes/booking",
+    "brand": {
+      "state": "named",
+      "name": "Evening Class Studio",
+      "mark": false,
+      "mark_recorded_not_self_contained": false,
+      "provisional": false
+    },
+    "tokens": {
+      "colors": 25,
+      "fonts": 2,
+      "derived": {
+        "fg": "--text-primary",
+        "bg": "--bg-page",
+        "accent": "--accent",
+        "error": "--error",
+        "fontStack": "--font-sans",
+        "surfaceInput": "--surface-input"
+      }
+    },
+    "copy": [
+      {
+        "page": "compare.html",
+        "title": "Visual Design Comparison — Booking Archetype"
+      },
+      {
+        "page": "confirmation.html",
+        "title": "Booking Confirmation &amp; Receipt — Learning Hub"
+      },
+      {
+        "page": "empty.html",
+        "title": "Schedule Availability — Learning Hub"
+      },
+      {
+        "page": "index.html",
+        "title": "Evening Class Booking — Learning Hub"
+      }
+    ],
+    "images": [
+      {
+        "name": "step1-browse.jpg",
+        "sha256": "807321bfa27cf76aa50e0c6003486e5b14de83a2ff84a019465d824fce24de0c",
+        "store_path": "assets/archetypes/booking/step1-browse.jpg"
+      },
+      {
+        "name": "step2-form.jpg",
+        "sha256": "0b6e5cefb03cd40201a0fc5ae1a7b22c8b7627231d14d8669aef3837b431f6df",
+        "store_path": "assets/archetypes/booking/step2-form.jpg"
+      },
+      {
+        "name": "step3-confirmation.jpg",
+        "sha256": "c7fb544c6d12593de72dffad6ddb974c71a19c9a1f64f39a4f47765bc6eeae8d",
+        "store_path": "assets/archetypes/booking/step3-confirmation.jpg"
+      },
+      {
+        "name": "step4-error.jpg",
+        "sha256": "94ba77e82cb82c54fe13ad1bd3a0eb47fc13eda81213e79f323a2a176a3e541c",
+        "store_path": "assets/archetypes/booking/step4-error.jpg"
+      },
+      {
+        "name": "step5-empty.jpg",
+        "sha256": "f3ccd1a115af983f0a9903f14725c7747d9d77a0f193eaaa61bc2923bc5ecc56",
+        "store_path": "assets/archetypes/booking/step5-empty.jpg"
+      }
+    ],
+    "rights": {
+      "excluded_from_training": true,
+      "approved_for_training": false,
+      "source": "docs/design/archetypes/booking/README.md:7"
+    }
+  },
   "framework": {
     "name": "react",
     "version": "19.2.0",
     "dialect": "react",
-    "family": "react",
     "markupFile": "app/page.mjs",
     "stylesFile": "app/styles.css",
-    "enhanceFile": "app/enhance.js"
+    "enhanceFile": "app/enhance.js",
+    "serverFile": "server.mjs",
+    "family": "react"
   },
   "routes": [
     {

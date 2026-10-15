@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, realpathSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import process from 'node:process';
 
@@ -6,6 +6,41 @@ const REPO_ROOT = resolve(import.meta.dirname, '..');
 const PILOT_PROJECTS_DIR = join(REPO_ROOT, 'pilot', 'projects');
 
 const EXCEPTIONS = [
+  { project: "event-registration-webcomponents", route: "GET /__requests", direction: "served_not_declared", reason: "Harness telemetry route emitted by generator" },
+  { project: "event-registration-svelte", route: "GET /__requests", direction: "served_not_declared", reason: "Harness telemetry route emitted by generator" },
+  { project: "event-registration-vue", route: "GET /__requests", direction: "served_not_declared", reason: "Harness telemetry route emitted by generator" },
+  { project: "event-registration-react", route: "GET /__requests", direction: "served_not_declared", reason: "Harness telemetry route emitted by generator" },
+  { project: "event-registration-raw", route: "GET /__requests", direction: "served_not_declared", reason: "Harness telemetry route emitted by generator" },
+  { project: "event-registration-preact", route: "GET /__requests", direction: "served_not_declared", reason: "Harness telemetry route emitted by generator" },
+  { project: "event-registration-hono", route: "GET /__requests", direction: "served_not_declared", reason: "Harness telemetry route emitted by generator" },
+  { project: "contact-lead-webcomponents", route: "GET /__requests", direction: "served_not_declared", reason: "Harness telemetry route emitted by generator" },
+  { project: "contact-lead-svelte", route: "GET /__requests", direction: "served_not_declared", reason: "Harness telemetry route emitted by generator" },
+  { project: "contact-lead-vue", route: "GET /__requests", direction: "served_not_declared", reason: "Harness telemetry route emitted by generator" },
+  { project: "contact-lead-react", route: "GET /__requests", direction: "served_not_declared", reason: "Harness telemetry route emitted by generator" },
+  { project: "contact-lead-raw", route: "GET /__requests", direction: "served_not_declared", reason: "Harness telemetry route emitted by generator" },
+  { project: "contact-lead-preact", route: "GET /__requests", direction: "served_not_declared", reason: "Harness telemetry route emitted by generator" },
+  { project: "contact-lead-hono", route: "GET /__requests", direction: "served_not_declared", reason: "Harness telemetry route emitted by generator" },
+  { project: "catalogue-webcomponents", route: "GET /__requests", direction: "served_not_declared", reason: "Harness telemetry route emitted by generator" },
+  { project: "catalogue-svelte", route: "GET /__requests", direction: "served_not_declared", reason: "Harness telemetry route emitted by generator" },
+  { project: "catalogue-vue", route: "GET /__requests", direction: "served_not_declared", reason: "Harness telemetry route emitted by generator" },
+  { project: "catalogue-react", route: "GET /__requests", direction: "served_not_declared", reason: "Harness telemetry route emitted by generator" },
+  { project: "catalogue-raw", route: "GET /__requests", direction: "served_not_declared", reason: "Harness telemetry route emitted by generator" },
+  { project: "catalogue-preact", route: "GET /__requests", direction: "served_not_declared", reason: "Harness telemetry route emitted by generator" },
+  { project: "catalogue-hono", route: "GET /__requests", direction: "served_not_declared", reason: "Harness telemetry route emitted by generator" },
+  { project: "booking-webcomponents", route: "GET /__requests", direction: "served_not_declared", reason: "Harness telemetry route emitted by generator" },
+  { project: "booking-svelte", route: "GET /__requests", direction: "served_not_declared", reason: "Harness telemetry route emitted by generator" },
+  { project: "booking-vue", route: "GET /__requests", direction: "served_not_declared", reason: "Harness telemetry route emitted by generator" },
+  { project: "booking-react", route: "GET /__requests", direction: "served_not_declared", reason: "Harness telemetry route emitted by generator" },
+  { project: "booking-raw", route: "GET /__requests", direction: "served_not_declared", reason: "Harness telemetry route emitted by generator" },
+  { project: "booking-preact", route: "GET /__requests", direction: "served_not_declared", reason: "Harness telemetry route emitted by generator" },
+  { project: "booking-hono", route: "GET /__requests", direction: "served_not_declared", reason: "Harness telemetry route emitted by generator" },
+  { project: "account-recovery-webcomponents", route: "GET /__requests", direction: "served_not_declared", reason: "Harness telemetry route emitted by generator" },
+  { project: "account-recovery-svelte", route: "GET /__requests", direction: "served_not_declared", reason: "Harness telemetry route emitted by generator" },
+  { project: "account-recovery-vue", route: "GET /__requests", direction: "served_not_declared", reason: "Harness telemetry route emitted by generator" },
+  { project: "account-recovery-react", route: "GET /__requests", direction: "served_not_declared", reason: "Harness telemetry route emitted by generator" },
+  { project: "account-recovery-raw", route: "GET /__requests", direction: "served_not_declared", reason: "Harness telemetry route emitted by generator" },
+  { project: "account-recovery-preact", route: "GET /__requests", direction: "served_not_declared", reason: "Harness telemetry route emitted by generator" },
+  { project: "account-recovery-hono", route: "GET /__requests", direction: "served_not_declared", reason: "Harness telemetry route emitted by generator" },
   // account-recovery
   { project: "account-recovery-hono", route: "POST /reset", direction: "declared_not_served", reason: "Generator only emits the first write route; /reset is dropped on account-recovery" },
   { project: "account-recovery-hono", route: "GET /search", direction: "served_not_declared", reason: "Generator fallback" },
@@ -31,12 +66,24 @@ const EXCEPTIONS = [
   { project: "account-recovery-react", route: "GET /attendees", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
   { project: "account-recovery-react", route: "GET /cart", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
   { project: "account-recovery-react", route: "GET /search", direction: "served_not_declared", reason: "Generator fallback" },
-  { project: "account-recovery-vue", route: "POST /reset", direction: "declared_not_served", reason: "Generator only emits the first write route; /reset is dropped on account-recovery" },
+{ project: "account-recovery-vue", route: "POST /reset", direction: "declared_not_served", reason: "Generator only emits the first write route; /reset is dropped on account-recovery" },
   { project: "account-recovery-vue", route: "GET /roster", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
   { project: "account-recovery-vue", route: "GET /inbox", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
   { project: "account-recovery-vue", route: "GET /attendees", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
   { project: "account-recovery-vue", route: "GET /cart", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
   { project: "account-recovery-vue", route: "GET /search", direction: "served_not_declared", reason: "Generator fallback" },
+{ project: "account-recovery-svelte", route: "POST /reset", direction: "declared_not_served", reason: "Generator only emits the first write route; /reset is dropped on account-recovery" },
+  { project: "account-recovery-svelte", route: "GET /roster", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
+  { project: "account-recovery-svelte", route: "GET /inbox", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
+  { project: "account-recovery-svelte", route: "GET /attendees", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
+  { project: "account-recovery-svelte", route: "GET /cart", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
+  { project: "account-recovery-svelte", route: "GET /search", direction: "served_not_declared", reason: "Generator fallback" },
+{ project: "account-recovery-webcomponents", route: "POST /reset", direction: "declared_not_served", reason: "Generator only emits the first write route; /reset is dropped on account-recovery" },
+  { project: "account-recovery-webcomponents", route: "GET /roster", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
+  { project: "account-recovery-webcomponents", route: "GET /inbox", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
+  { project: "account-recovery-webcomponents", route: "GET /attendees", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
+  { project: "account-recovery-webcomponents", route: "GET /cart", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
+  { project: "account-recovery-webcomponents", route: "GET /search", direction: "served_not_declared", reason: "Generator fallback" },
 
   // booking
   { project: "booking-hono", route: "GET /search", direction: "served_not_declared", reason: "Generator fallback" },
@@ -55,10 +102,18 @@ const EXCEPTIONS = [
   { project: "booking-react", route: "GET /attendees", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
   { project: "booking-react", route: "GET /cart", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
   { project: "booking-react", route: "GET /search", direction: "served_not_declared", reason: "Generator fallback" },
-  { project: "booking-vue", route: "GET /inbox", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
+{ project: "booking-vue", route: "GET /inbox", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
   { project: "booking-vue", route: "GET /attendees", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
   { project: "booking-vue", route: "GET /cart", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
   { project: "booking-vue", route: "GET /search", direction: "served_not_declared", reason: "Generator fallback" },
+{ project: "booking-svelte", route: "GET /inbox", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
+  { project: "booking-svelte", route: "GET /attendees", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
+  { project: "booking-svelte", route: "GET /cart", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
+  { project: "booking-svelte", route: "GET /search", direction: "served_not_declared", reason: "Generator fallback" },
+{ project: "booking-webcomponents", route: "GET /inbox", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
+  { project: "booking-webcomponents", route: "GET /attendees", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
+  { project: "booking-webcomponents", route: "GET /cart", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
+  { project: "booking-webcomponents", route: "GET /search", direction: "served_not_declared", reason: "Generator fallback" },
 
   // catalogue
   { project: "catalogue-hono", route: "GET /record/:ref", direction: "served_not_declared", reason: "Generator discrepancy" },
@@ -77,10 +132,18 @@ const EXCEPTIONS = [
   { project: "catalogue-react", route: "GET /inbox", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
   { project: "catalogue-react", route: "GET /attendees", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
   { project: "catalogue-react", route: "GET /record/:ref", direction: "served_not_declared", reason: "Generator discrepancy" },
-  { project: "catalogue-vue", route: "GET /roster", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
+{ project: "catalogue-vue", route: "GET /roster", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
   { project: "catalogue-vue", route: "GET /inbox", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
   { project: "catalogue-vue", route: "GET /attendees", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
   { project: "catalogue-vue", route: "GET /record/:ref", direction: "served_not_declared", reason: "Generator discrepancy" },
+{ project: "catalogue-svelte", route: "GET /roster", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
+  { project: "catalogue-svelte", route: "GET /inbox", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
+  { project: "catalogue-svelte", route: "GET /attendees", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
+  { project: "catalogue-svelte", route: "GET /record/:ref", direction: "served_not_declared", reason: "Generator discrepancy" },
+{ project: "catalogue-webcomponents", route: "GET /roster", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
+  { project: "catalogue-webcomponents", route: "GET /inbox", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
+  { project: "catalogue-webcomponents", route: "GET /attendees", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
+  { project: "catalogue-webcomponents", route: "GET /record/:ref", direction: "served_not_declared", reason: "Generator discrepancy" },
 
   // contact-lead
   { project: "contact-lead-hono", route: "GET /search", direction: "served_not_declared", reason: "Generator fallback" },
@@ -99,10 +162,18 @@ const EXCEPTIONS = [
   { project: "contact-lead-react", route: "GET /attendees", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
   { project: "contact-lead-react", route: "GET /cart", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
   { project: "contact-lead-react", route: "GET /search", direction: "served_not_declared", reason: "Generator fallback" },
-  { project: "contact-lead-vue", route: "GET /roster", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
+{ project: "contact-lead-vue", route: "GET /roster", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
   { project: "contact-lead-vue", route: "GET /attendees", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
   { project: "contact-lead-vue", route: "GET /cart", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
   { project: "contact-lead-vue", route: "GET /search", direction: "served_not_declared", reason: "Generator fallback" },
+{ project: "contact-lead-svelte", route: "GET /roster", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
+  { project: "contact-lead-svelte", route: "GET /attendees", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
+  { project: "contact-lead-svelte", route: "GET /cart", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
+  { project: "contact-lead-svelte", route: "GET /search", direction: "served_not_declared", reason: "Generator fallback" },
+{ project: "contact-lead-webcomponents", route: "GET /roster", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
+  { project: "contact-lead-webcomponents", route: "GET /attendees", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
+  { project: "contact-lead-webcomponents", route: "GET /cart", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
+  { project: "contact-lead-webcomponents", route: "GET /search", direction: "served_not_declared", reason: "Generator fallback" },
 
   // event-registration
   { project: "event-registration-hono", route: "GET /search", direction: "served_not_declared", reason: "Generator fallback" },
@@ -121,10 +192,18 @@ const EXCEPTIONS = [
   { project: "event-registration-react", route: "GET /inbox", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
   { project: "event-registration-react", route: "GET /cart", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
   { project: "event-registration-react", route: "GET /search", direction: "served_not_declared", reason: "Generator fallback" },
-  { project: "event-registration-vue", route: "GET /roster", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
+{ project: "event-registration-vue", route: "GET /roster", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
   { project: "event-registration-vue", route: "GET /inbox", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
   { project: "event-registration-vue", route: "GET /cart", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
-  { project: "event-registration-vue", route: "GET /search", direction: "served_not_declared", reason: "Generator fallback" }
+  { project: "event-registration-vue", route: "GET /search", direction: "served_not_declared", reason: "Generator fallback" },
+{ project: "event-registration-svelte", route: "GET /roster", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
+  { project: "event-registration-svelte", route: "GET /inbox", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
+  { project: "event-registration-svelte", route: "GET /cart", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
+  { project: "event-registration-svelte", route: "GET /search", direction: "served_not_declared", reason: "Generator fallback" },
+{ project: "event-registration-webcomponents", route: "GET /roster", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
+  { project: "event-registration-webcomponents", route: "GET /inbox", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
+  { project: "event-registration-webcomponents", route: "GET /cart", direction: "served_not_declared", reason: "Hardcoded generator fallback for list pages when spec lacks capabilities (re-record needed)" },
+  { project: "event-registration-webcomponents", route: "GET /search", direction: "served_not_declared", reason: "Generator fallback" },
 ];
 
 // WHAT THIS CHECK IS AND IS NOT.
@@ -279,7 +358,7 @@ export function checkProjectData(project_id, specRoutes, serverContent) {
   return { name: project_id, declaredNotServed, servedNotDeclared, unparsedRoutes: extracted.unparsed };
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && (import.meta.url === `file://${process.argv[1]}` || import.meta.url === `file://${realpathSync(process.argv[1])}`)) {
   async function main() {
     const start = performance.now();
     let allDirs = [];

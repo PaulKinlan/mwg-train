@@ -1,0 +1,58 @@
+/* webcomponents arm. Responsive first, light and dark, with visible focus. */
+:root {
+  color-scheme: light dark;
+  --bg-page: light-dark(#f1f5f9, #0f172a);
+  --surface-card: light-dark(#ffffff, #1e293b);
+  --surface-card-subtle: light-dark(#f8fafc, #162032);
+  --surface-card-elevated: light-dark(#ffffff, #243248);
+  --surface-input: light-dark(#ffffff, #0f172a);
+  --surface-pill: light-dark(#e2e8f0, #1e293b);
+  --border-subtle: light-dark(#cbd5e1, #334155);
+  --border-highlight: light-dark(#94a3b8, #475569);
+  --border-focus: #10b981;
+  --text-primary: light-dark(#0f172a, #f8fafc);
+  --text-muted: light-dark(#64748b, #94a3b8);
+  --text-inverse: #ffffff;
+  --accent: #10b981;
+  --accent-hover: #059669;
+  --accent-active: #047857;
+  --accent-subtle: light-dark(rgba(16, 185, 129, 0.12), rgba(16, 185, 129, 0.18));
+  --accent-glow: rgba(16, 185, 129, 0.25);
+  --error: #ef4444;
+  --error-surface: light-dark(#fef2f2, #3b1114);
+  --error-bg: light-dark(#fee2e2, rgba(239, 68, 68, 0.15));
+  --error-border: light-dark(#f87171, rgba(239, 68, 68, 0.5));
+  --error-text: light-dark(#991b1b, #fca5a5);
+  --success: #10b981;
+  --success-bg: light-dark(#ecfdf5, rgba(16, 185, 129, 0.15));
+  --success-border: #10b981;
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --arm-fg: var(--text-primary);
+  --arm-bg: var(--bg-page);
+  --arm-accent: var(--accent);
+  --arm-error: var(--error);
+}
+* { box-sizing: border-box; }
+body { margin: 0; padding: 1.5rem; font-family: var(--font-sans); font-size: 16px; line-height: 1.5; color: var(--arm-fg); background: var(--arm-bg); }
+main { max-width: 42rem; margin: 0 auto; }
+header.brand { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; }
+.brand-mark { display: inline-flex; color: var(--arm-accent); }
+.brand-name { font-weight: 700; letter-spacing: 0.01em; }
+figure.reference-board { margin: 0 0 1.25rem; }
+figure.reference-board img { display: block; width: 100%; height: auto; border: 1px solid var(--border-subtle, #cbd5e1); border-radius: 0.5rem; }
+figure.reference-board figcaption { color: var(--text-muted, #64748b); font-size: 0.8125rem; margin-top: 0.35rem; }
+h1 { font-size: 1.6rem; margin-bottom: 0.25rem; }
+.field { display: grid; gap: 0.25rem; margin-bottom: 1rem; }
+label { font-weight: 600; }
+input, textarea, select { font: inherit; padding: 0.6rem; border: 1px solid #8a8f98; border-radius: 0.4rem; width: 100%; }
+input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 3px solid var(--arm-accent); outline-offset: 2px; }
+button { font: inherit; padding: 0.7rem 1.1rem; border-radius: 0.4rem; border: 0; background: var(--arm-accent); color: white; }
+.error-msg { display: none; color: var(--arm-error); font-size: 0.875rem; margin: 0.15rem 0 0; }
+.form-status { min-height: 1.25rem; }
+/* DEFECT: eager :invalid styling reports errors before the user has interacted. */
+input:invalid, textarea:invalid { border-color: var(--arm-error); background-color: #fdecea; }
+input:invalid ~ .error-msg, textarea:invalid ~ .error-msg { display: block; }
+table { border-collapse: collapse; width: 100%; }
+th, td { text-align: left; border-bottom: 1px solid #d5d8dd; padding: 0.4rem 0.3rem; }
+@media (width <= 30rem) { body { padding: 1rem; } h1 { font-size: 1.35rem; } }

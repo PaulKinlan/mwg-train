@@ -2,14 +2,78 @@
   "project_id": "catalogue-vue",
   "archetype": "catalogue",
   "archetype_title": "Searchable reference catalogue",
+  "assets": {
+    "archetype": "catalogue",
+    "store": "assets/archetypes/catalogue",
+    "brand": {
+      "state": "named",
+      "name": "Kiln & Copper",
+      "mark": true,
+      "mark_recorded_not_self_contained": false,
+      "provisional": false
+    },
+    "tokens": {
+      "colors": 29,
+      "fonts": 2,
+      "derived": {
+        "fg": "--text-primary",
+        "bg": "--bg-page",
+        "accent": "--action",
+        "error": "--danger",
+        "fontStack": "--font-sans",
+        "surfaceInput": "--surface-input"
+      }
+    },
+    "copy": [
+      {
+        "page": "cart.html",
+        "title": "Your Cart — Kiln &amp; Copper (static variant)"
+      },
+      {
+        "page": "compare.html",
+        "title": "Visual Design Comparison — Catalogue Archetype"
+      },
+      {
+        "page": "empty.html",
+        "title": "No Matches — Kiln &amp; Copper (static variant)"
+      },
+      {
+        "page": "index.html",
+        "title": "Kiln &amp; Copper — Ceramics &amp; Kiln Parts Catalogue"
+      }
+    ],
+    "images": [
+      {
+        "name": "step1-grid.jpg",
+        "sha256": "93f3b8c5056685e981e523b9c1550dd4d27f55a5a0ecd5fff82b0cf447c7f0cd",
+        "store_path": "assets/archetypes/catalogue/step1-grid.jpg"
+      },
+      {
+        "name": "step2-cart.jpg",
+        "sha256": "864a10b7c056667af9c1972d399d1bff739d780cd673cd3bcc013e1cc6996adc",
+        "store_path": "assets/archetypes/catalogue/step2-cart.jpg"
+      },
+      {
+        "name": "step3-empty.jpg",
+        "sha256": "9b8a4e58550892fef25ebab0a15c6078d0a40d8781292bfb2ba1be0ec384e9c0",
+        "store_path": "assets/archetypes/catalogue/step3-empty.jpg"
+      }
+    ],
+    "rights": {
+      "excluded_from_training": true,
+      "approved_for_training": false,
+      "source": "docs/design/archetypes/catalogue/README.md:5"
+    }
+  },
   "framework": {
     "name": "vue",
     "version": "3.5.22",
     "dialect": "vue",
-    "family": "vue",
     "markupFile": "app/page.mjs",
     "stylesFile": "app/styles.css",
-    "enhanceFile": "app/enhance.js"
+    "enhanceFile": "app/enhance.js",
+    "serverFile": "server.mjs",
+    "family": "vue"
   },
   "routes": [
     {

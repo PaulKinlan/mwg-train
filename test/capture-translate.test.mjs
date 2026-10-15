@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import process from 'node:process';
@@ -447,7 +447,7 @@ test('clean-room boundary: translating and generating does not open or read raw 
 });
 
 test('builds all seven framework arms and publishes the spec to public A4 by default', (t) => {
-  const root = mkdtempSync(join(tmpdir(), 'quarantine-build-'));
+  const root = realpathSync(mkdtempSync(join(tmpdir(), 'quarantine-build-')));
   t.after(() => rmSync(root, { recursive: true, force: true }));
   const publicRepo = gitRepo(join(root, 'mwg-train'), 'https://github.example/PaulKinlan/mwg-train');
   const store = gitRepo(join(root, 'mwg-quarantine'), 'https://github.example/PaulKinlan/mwg-quarantine');
@@ -477,7 +477,7 @@ test('builds all seven framework arms and publishes the spec to public A4 by def
 });
 
 test('explicit output may still target a verified quarantine checkout', (t) => {
-  const root = mkdtempSync(join(tmpdir(), 'capture-explicit-store-'));
+  const root = realpathSync(mkdtempSync(join(tmpdir(), 'capture-explicit-store-')));
   t.after(() => rmSync(root, { recursive: true, force: true }));
   const publicRepo = gitRepo(join(root, 'mwg-train'), 'https://github.example/PaulKinlan/mwg-train');
   const store = gitRepo(join(root, 'mwg-quarantine'), 'https://github.example/PaulKinlan/mwg-quarantine');

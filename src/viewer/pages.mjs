@@ -72,6 +72,10 @@ export const PAGE_CSS = `
   details { margin: 0.45rem 0; }
   summary { cursor: pointer; min-height: 2.75rem; padding: 0.5rem 0; }
   pre { max-width: 100%; padding: 0.8rem; border-radius: 0.45rem; background: var(--ground); overflow-x: auto; font-size: 0.85rem; }
+  pre code { display: block; white-space: pre; line-height: 1.35; overflow-x: auto; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+  blockquote { margin: 1rem 0; padding: 0.6rem 1rem; border-left: 4px solid var(--action); background: var(--surface); color: var(--ink); border-radius: 0 0.45rem 0.45rem 0; }
+  blockquote p { margin: 0; }
+  hr { border: 0; border-top: 1px solid var(--line); margin: 2rem 0; }
   button, select { min-height: 2.75rem; padding: 0.45rem 0.75rem; border: 1px solid var(--control-line); border-radius: 0.45rem; background: var(--surface); color: var(--ink); font: inherit; }
   button { cursor: pointer; border-color: var(--action); background: var(--action); color: var(--ground); font-weight: 700; }
   button:disabled { cursor: not-allowed; border-color: var(--line); background: var(--ground); color: var(--muted); }
@@ -162,16 +166,28 @@ export const PAGE_CSS = `
   .concept-lede { font-size: 1.08rem; max-width: 72ch; }
   .concept-jump { display: flex; flex-wrap: wrap; gap: 0.6rem 1.2rem; padding-block: 0.65rem; border-block: 1px solid var(--line); }
   .concept-jump a { display: inline-flex; align-items: center; min-height: 2.75rem; }
-  .concept-pattern-index { display: block; padding: 0.4rem 0; }
-  .concept-pattern-index ul { columns: 15rem; padding-inline-start: 1.5rem; margin-block: 0.5rem 1.5rem; }
+  .concept-pattern-index { display: block; padding: 0.4rem 0; border-bottom: none; }
+  .concept-pattern-index ul { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 26rem), 1fr)); gap: 0.6rem 1rem; list-style: none; padding: 0; margin-block: 0.5rem 1.5rem; }
   .concept-pattern-index li { break-inside: avoid; padding-block: 0.12rem; }
+  .concept-pattern-index a { display: inline; min-height: 0; padding-inline: 0; }
   .concept-explainer { max-width: 76ch; padding-block: 0.5rem 1.3rem; }
   .concept-explainer p { margin-block: 0.6rem; }
   .concept-board-flow { display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(1.5rem, 3vw, 2.5rem); }
   .concept-comparison figure { min-width: 0; margin: 0; }
-  .concept-prompt { max-width: 75ch; padding-block: 0.2rem; border-bottom: 1px solid var(--line); }
-  .concept-prompt summary { color: var(--action); font-weight: 650; }
-  .concept-prompt-copy { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.55; color: var(--ink); }
+  .concept-prompt { max-width: 80ch; padding-block: 0.3rem; border-bottom: 1px solid var(--line); }
+  .concept-prompt summary { color: var(--action); font-weight: 650; cursor: pointer; padding-block: 0.2rem; }
+  .concept-prompt-pre { margin-block: 0.5rem 0.8rem; border: 1px solid var(--line); background: var(--ground); border-radius: 0.35rem; padding: 0.75rem 1rem; overflow-x: auto; }
+  code.concept-prompt-copy { font-family: var(--code-font, ui-monospace, monospace); font-size: 0.88rem; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.55; color: var(--ink); display: block; background: transparent; padding: 0; border: none; }
+  .score-summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; margin-block: 1rem; }
+  .score-card { border: 1px solid var(--line); border-radius: 0.4rem; padding: 1rem 1.2rem; background: var(--surface); }
+  .score-card h4 { margin: 0 0 0.5rem; font-size: 0.92rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+  .score-card.score-default { border-left: 4px solid var(--line); }
+  .score-card.score-ideal { border-left: 4px solid var(--action); }
+  .score-stat { font-size: 1.05rem; margin: 0 0 0.35rem; font-weight: 600; }
+  .score-num { font-size: 1.35rem; color: var(--ink); }
+  .score-delta { color: var(--action); font-size: 0.95rem; font-weight: bold; margin-left: 0.4rem; }
+  .score-meta { margin: 0; font-size: 0.88rem; color: var(--muted); }
+  .concept-spec-panel { margin-block: 1.2rem; }
   .concept-image-frame a { display: block; background: var(--surface); }
   .concept-comparison { padding-block: 0.6rem 1.5rem; border-top: 1px solid var(--line); }
   .concept-comparison h3 { margin: 0.3rem 0 0.8rem; text-transform: capitalize; }
@@ -248,23 +264,66 @@ export function page(title, body, { navOrigin = '' } = {}) {
 export function renderMarkdown(md) {
   const inline = (text) =>
     escapeHtml(text)
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
       .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
       .replace(/`([^`]+)`/g, '<code>$1</code>')
       .replace(/\*([^*\n]+)\*/g, '<em>$1</em>');
+
   const out = [];
-  let list = null;
+  let inCode = false;
+  let codeLines = [];
+  let inList = null;
+  let inSubList = false;
   let table = null;
+
   const closeBlocks = () => {
-    if (list) { out.push('</ul>'); list = null; }
+    if (inSubList) { out.push('</ul>'); inSubList = false; }
+    if (inList) { out.push(`</${inList}>`); inList = null; }
     if (table) { out.push('</tbody></table></div>'); table = null; }
   };
-  for (const line of md.split('\n')) {
-    if (line.startsWith('## ')) { closeBlocks(); out.push(`<h2>${inline(line.slice(3))}</h2>`); continue; }
-    if (line.startsWith('# ')) { closeBlocks(); out.push(`<h1>${inline(line.slice(2))}</h1>`); continue; }
-    if (line.startsWith('|')) {
-      const cells = line.split('|').slice(1, -1).map((cell) => cell.trim());
-      if (cells.every((cell) => /^:?-+:?$/.test(cell))) continue; // separator row
+
+  for (const rawLine of md.split('\n')) {
+    if (rawLine.trim().startsWith('```')) {
+      if (inCode) {
+        out.push(`<pre><code>${codeLines.map(escapeHtml).join('\n')}</code></pre>`);
+        codeLines = [];
+        inCode = false;
+      } else {
+        closeBlocks();
+        inCode = true;
+        codeLines = [];
+      }
+      continue;
+    }
+
+    if (inCode) {
+      codeLines.push(rawLine);
+      continue;
+    }
+
+    const trimmed = rawLine.trim();
+
+    if (trimmed === '---' || trimmed === '***') {
+      closeBlocks();
+      out.push('<hr>');
+      continue;
+    }
+
+    if (rawLine.startsWith('> ')) {
+      closeBlocks();
+      out.push(`<blockquote><p>${inline(rawLine.slice(2).trim())}</p></blockquote>`);
+      continue;
+    }
+
+    if (rawLine.startsWith('### ')) { closeBlocks(); out.push(`<h3>${inline(rawLine.slice(4))}</h3>`); continue; }
+    if (rawLine.startsWith('## ')) { closeBlocks(); out.push(`<h2>${inline(rawLine.slice(3))}</h2>`); continue; }
+    if (rawLine.startsWith('# ')) { closeBlocks(); out.push(`<h1>${inline(rawLine.slice(2))}</h1>`); continue; }
+
+    if (rawLine.startsWith('|')) {
+      const cells = rawLine.split('|').slice(1, -1).map((cell) => cell.trim());
+      if (cells.every((cell) => /^:?-+:?$/.test(cell))) continue;
       if (!table) {
+        closeBlocks();
         out.push('<div class="table-scroll" role="region" aria-label="Pipeline table" tabindex="0"><table><tbody>');
         out.push(`<tr>${cells.map((cell) => `<th>${inline(cell)}</th>`).join('')}</tr>`);
         table = true;
@@ -273,14 +332,49 @@ export function renderMarkdown(md) {
       }
       continue;
     }
-    if (line.startsWith('- ')) {
-      if (table) { out.push('</tbody></table></div>'); table = null; }
-      if (!list) { out.push('<ul>'); list = true; }
-      out.push(`<li>${inline(line.slice(2))}</li>`);
+
+    const subBulletMatch = rawLine.match(/^\s{2,}[-*]\s+(.*)$/);
+    if (subBulletMatch && inList) {
+      if (!inSubList) {
+        out.push('<ul>');
+        inSubList = true;
+      }
+      out.push(`<li>${inline(subBulletMatch[1])}</li>`);
       continue;
     }
+
+    const bulletMatch = rawLine.match(/^[-*]\s+(.*)$/);
+    if (bulletMatch) {
+      if (table) { out.push('</tbody></table></div>'); table = null; }
+      if (inSubList) { out.push('</ul>'); inSubList = false; }
+      if (inList !== 'ul') {
+        if (inList) out.push(`</${inList}>`);
+        out.push('<ul>');
+        inList = 'ul';
+      }
+      out.push(`<li>${inline(bulletMatch[1])}</li>`);
+      continue;
+    }
+
+    const orderedMatch = rawLine.match(/^\d+\.\s+(.*)$/);
+    if (orderedMatch) {
+      if (table) { out.push('</tbody></table></div>'); table = null; }
+      if (inSubList) { out.push('</ul>'); inSubList = false; }
+      if (inList !== 'ol') {
+        if (inList) out.push(`</${inList}>`);
+        out.push('<ol>');
+        inList = 'ol';
+      }
+      out.push(`<li>${inline(orderedMatch[1])}</li>`);
+      continue;
+    }
+
     closeBlocks();
-    if (line.trim()) out.push(`<p>${inline(line.trim())}</p>`);
+    if (trimmed) out.push(`<p>${inline(trimmed)}</p>`);
+  }
+
+  if (inCode) {
+    out.push(`<pre><code>${codeLines.map(escapeHtml).join('\n')}</code></pre>`);
   }
   closeBlocks();
   return out.join('\n');
@@ -381,12 +475,29 @@ const num = (value) => {
 function attributionBlock(view) {
   const a = view.attribution ?? {};
   const row = (label, value) => `<dt>${label}</dt><dd>${escapeHtml(value ?? 'UNKNOWN (unrecorded)')}</dd>`;
+  const rowRaw = (label, value) => `<dt>${label}</dt><dd>${value}</dd>`;
+
+  const familyMatch = view.id?.match(/^(tr-\d{2})-/);
+  const familyId = familyMatch ? familyMatch[1] : null;
+
+  const archetypeHtml = view.archetype && view.archetype !== 'unknown'
+    ? `<a href="/concepts/pattern/${escapeHtml(view.archetype)}"><code>${escapeHtml(view.archetype)}</code></a>`
+    : 'UNKNOWN (unrecorded)';
+
+  let briefHtml = escapeHtml(a.brief ?? 'UNKNOWN (unrecorded)');
+  if (familyId) {
+    briefHtml = `${escapeHtml(a.brief ?? '')} · <a href="/concepts/family/${escapeHtml(familyId)}"><code>${escapeHtml(familyId)}</code> Concept Family</a>`;
+  } else if (view.archetype && view.archetype !== 'unknown') {
+    briefHtml = `${escapeHtml(a.brief ?? '')} · <a href="/concepts/pattern/${escapeHtml(view.archetype)}"><code>${escapeHtml(view.archetype)}</code> Concept Pattern</a>`;
+  }
+
   return `<section class="panel">
   <h2>attribution</h2>
   <dl>
     ${row('generating model', a.model)}
     ${a.buildKey ? row('build key', a.buildKey) : ''}
-    ${row('brief', a.brief)}
+    ${rowRaw('archetype', archetypeHtml)}
+    ${rowRaw('brief', briefHtml)}
     ${row('framework', a.framework)}
     ${row('generator', a.generator)}
     ${row('acceptance', a.acceptance)}
@@ -546,12 +657,22 @@ function renderRuleRows(view) {
   const after = new Map((view.uplifted?.rules ?? []).map((entry) => [entry.rule, entry]));
   const ruleIds = [...new Set([...before.keys(), ...after.keys()])].sort();
   if (ruleIds.length === 0) return '<p class="muted">no rule measurements recorded</p>';
+
+  let beforePass = 0;
+  let afterPass = 0;
+  let improvedCount = 0;
+  let regressedCount = 0;
+
   const rows = ruleIds
     .map((rule) => {
       const b = before.get(rule);
       const a = after.get(rule);
+      if (b?.status === 'PASS') beforePass++;
+      if (a?.status === 'PASS') afterPass++;
       const improved = b?.status === 'FAIL' && a?.status === 'PASS';
       const regressed = b?.status === 'PASS' && a?.status === 'FAIL';
+      if (improved) improvedCount++;
+      if (regressed) regressedCount++;
       const mark = improved ? ' ↑ improved' : regressed ? ' ↓ REGRESSED' : '';
       return `<tr>
   <td><code>${escapeHtml(rule)}</code>${view.requiredRules.includes(rule) ? ' <span class="muted">(required)</span>' : ''}</td>
@@ -561,7 +682,33 @@ function renderRuleRows(view) {
 </tr>`;
     })
     .join('\n');
-  return `<p class="table-hint" id="rule-table-hint">Scroll sideways to compare every rule at narrow widths.</p><div class="table-scroll" role="region" aria-label="Rule measurements" aria-describedby="rule-table-hint" tabindex="0"><table><caption class="sr-only">Default and ideal rule measurements</caption><thead><tr><th scope="col">rule</th><th scope="col">DEFAULT</th><th scope="col">IDEAL</th><th scope="col">deciding detail</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+
+  const total = ruleIds.length;
+  const beforePct = total > 0 ? Math.round((beforePass / total) * 100) : 0;
+  const afterPct = total > 0 ? Math.round((afterPass / total) * 100) : 0;
+
+  const origSecChecks = view.original?.security ?? [];
+  const origSecPass = origSecChecks.filter((c) => c.status === 'PASS').length;
+  const origJourneys = (view.original?.journeys ?? []).length;
+
+  const upSecChecks = view.uplifted?.security ?? [];
+  const upSecPass = upSecChecks.filter((c) => c.status === 'PASS').length;
+  const upJourneys = (view.uplifted?.journeys ?? []).length;
+
+  const scoreSummary = `<div class="score-summary-grid">
+  <div class="score-card score-default">
+    <h4>DEFAULT (Pre-Uplift / Baseline)</h4>
+    <p class="score-stat"><strong class="score-num">${beforePass} / ${total}</strong> (${beforePct}%) MWG rules passed</p>
+    <p class="score-meta">${origSecPass} / ${origSecChecks.length} security checks passed · ${origJourneys} journey(s) completed</p>
+  </div>
+  <div class="score-card score-ideal">
+    <h4>IDEAL (Post-Uplift / Target)</h4>
+    <p class="score-stat"><strong class="score-num">${afterPass} / ${total}</strong> (${afterPct}%) MWG rules passed ${improvedCount > 0 ? `<span class="score-delta">(+${improvedCount} improved)</span>` : ''}</p>
+    <p class="score-meta">${upSecPass} / ${upSecChecks.length} security checks passed · ${upJourneys} journey(s) completed</p>
+  </div>
+</div>`;
+
+  return `${scoreSummary}<p class="table-hint" id="rule-table-hint">Scroll sideways to compare every rule at narrow widths.</p><div class="table-scroll" role="region" aria-label="Rule measurements" aria-describedby="rule-table-hint" tabindex="0"><table><caption class="sr-only">Default and ideal rule measurements</caption><thead><tr><th scope="col">rule</th><th scope="col">DEFAULT</th><th scope="col">IDEAL</th><th scope="col">deciding detail</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 
 function renderJourney(record, title) {
@@ -600,13 +747,40 @@ function renderShots(view, version, runId) {
     .join('')}</div>`;
 }
 
-export function renderProject({ view, runId, runs, liveOrigin }) {
+export function renderProject({ view, runId, runs, liveOrigin, conceptBrief = null }) {
   const decision = view;
   const runEvidence = !!view.runDir;
   const runSelector =
     runs.length > 0
       ? `<form method="get" action="/project/${escapeHtml(view.id)}"><label>run <select name="run">${runs.map((run) => `<option value="${escapeHtml(run)}"${run === runId ? ' selected' : ''}>${escapeHtml(run)}</option>`).join('')}</select></label> <button type="submit">show</button></form>`
       : '';
+
+  const familyMatch = view.id?.match(/^(tr-\d{2})-/);
+  const familyId = familyMatch ? familyMatch[1] : null;
+  const brief = conceptBrief ?? view.conceptBrief ?? null;
+
+  const conceptSection = brief
+    ? `<section class="panel concept-spec-panel">
+  <h2>Prompts &amp; Concept Specification</h2>
+  <p class="muted">Authored design and interaction contract for <code>${escapeHtml(view.id)}</code>:
+    ${view.archetype && view.archetype !== 'unknown' ? `<a href="/concepts/pattern/${escapeHtml(view.archetype)}">Pattern: <code>${escapeHtml(view.archetype)}</code></a>` : ''}
+    ${familyId ? ` · <a href="/concepts/family/${escapeHtml(familyId)}">Family: <code>${escapeHtml(familyId)}</code></a>` : ''}
+  </p>
+  ${brief.simplePrompt ? `<details class="concept-prompt" open>
+    <summary>Simple Generation Prompt (baseline / zero-shot input)</summary>
+    <pre class="concept-prompt-pre"><code class="concept-prompt-copy">${escapeHtml(brief.simplePrompt)}</code></pre>
+    ${brief.planSource ? `<p class="muted">Authored source: <code>${escapeHtml(brief.planSource)}</code></p>` : ''}
+  </details>` : ''}
+  ${brief.sitePrompt ? `<details class="concept-prompt" open>
+    <summary>Site Generation Prompt (complex / full spec + design contract)</summary>
+    <pre class="concept-prompt-pre"><code class="concept-prompt-copy">${escapeHtml(brief.sitePrompt)}</code></pre>
+    <p class="muted">Authored source: <code>${escapeHtml([brief.planSource, brief.designSource].filter(Boolean).join(' + '))}</code></p>
+  </details>` : ''}
+  ${brief.designMarkdown ? `<details class="concept-prompt"><summary>Design Contract (${escapeHtml(brief.designSource ?? 'design.md')})</summary><pre class="concept-prompt-pre"><code>${escapeHtml(brief.designMarkdown)}</code></pre></details>` : ''}
+  ${brief.planMarkdown ? `<details class="concept-prompt"><summary>Functional Plan &amp; Acceptance Contract (${escapeHtml(brief.planSource ?? 'plan.md')})</summary><pre class="concept-prompt-pre"><code>${escapeHtml(brief.planMarkdown)}</code></pre></details>` : ''}
+  ${brief.assertions?.length ? `<details class="concept-prompt"><summary>Acceptance Contract &amp; Evaluation Checklist (${brief.assertions.length} items)</summary><ul>${brief.assertions.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul></details>` : ''}
+</section>`
+    : '';
 
   const decisionBlock = view.historical
     ? `<p class="notice">${escapeHtml(view.attribution?.acceptance ?? 'Historical pilot decision only')}. No acceptance measurement was rerun on this tree.</p>`
@@ -640,6 +814,7 @@ ${projectBanner({ runEvidence })}
 <p class="muted">${escapeHtml(view.archetype)}${view.archetypeTitle ? ` — ${escapeHtml(view.archetypeTitle)}` : ''} · ${escapeHtml(view.framework)}${view.frameworkVersion ? ` ${escapeHtml(view.frameworkVersion)}` : ''}${view.frameworkFamily ? ` (${escapeHtml(view.frameworkFamily)})` : ''}</p>
 ${runSelector}
 ${attributionBlock(view)}
+${conceptSection}
 <h2>live instances ${verificationBadge(view.verification, 'original')} ${verificationBadge(view.verification, 'uplifted')}</h2>
 <p>${liveLinks(view, liveOrigin, runId)}</p>
 <p class="muted">Live instances are the real servers, sandboxed (no network, no host filesystem, no environment beyond an allowlist), proxied with all owner auth material stripped. Tree SHAs: DEFAULT <span class="sha">${escapeHtml(view.originalSha ?? 'unrecorded')}</span> · IDEAL <span class="sha">${escapeHtml(view.upliftedSha ?? 'unrecorded')}</span></p>

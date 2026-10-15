@@ -90,9 +90,9 @@ Recorded in `pilot/CORPUS.json` from `pilot/plan.json`, covering 34 accepted tem
 |---|---:|---:|---:|---:|---|---|
 | **`app_sources`** | **591,861** | **654,201** | **1,246,062** | **311,516** | **[233,637, 389,394]** | **PRIMARY headline figure** |
 | `project_manifest` | 4,498 | 4,498 | 8,996 | 2,249 | [1,687, 2,811] | `package.json` dependencies & scripts |
-| `harness_metadata` | 174,838 | 174,838 | 349,676 | 87,419 | [65,564, 109,274] | `spec.json` harness metadata (EXCLUDED) |
+| `harness_metadata` | 174,845 | 174,845 | 349,690 | 87,423 | [65,567, 109,278] | `spec.json` harness metadata (EXCLUDED) |
 | `prompt` | 0 | 0 | 0 | 0 | [0, 0] | Measured zero (documented gap; see below) |
-| *full_tree (all)* | *771,197* | *833,537* | *1,604,734* | *401,184* | *[300,888, 501,479]* | *Total on-disk tree for comparison* |
+| *full_tree (all)* | *771,204* | *833,544* | *1,604,748* | *401,187* | *[300,890, 501,484]* | *Total on-disk tree for comparison* |
 
 - **Headline Characters (`app_sources`):** **1,246,062 characters** (591,861 original + 654,201 uplifted)
 - **Headline Derived Tokens:** **311,516 tokens**

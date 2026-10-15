@@ -335,6 +335,24 @@ function eventPatternTokens(design) {
   return tokens.length ? `Exact palette values from the authored design:\n${tokens.join('\n')}` : null;
 }
 
+function archetypeSimplePrompt(id, plan) {
+  const useCase = section(plan, 'Use case');
+  const firstParagraph = useCase?.split(/\n{2,}/)[0]?.replace(/\s+/g, ' ').trim();
+  const useCaseSummary = firstParagraph
+    ? (firstParagraph.endsWith('.') ? firstParagraph.slice(0, -1) : firstParagraph)
+    : `A complete, responsive ${id.replaceAll('-', ' ')} application`;
+  return `Build a complete, responsive ${id.replaceAll('-', ' ')} web application (${useCaseSummary}). Support the full user flow with accessible forms, validation feedback, and server-persisted state across reloads.`;
+}
+
+function trainingSimplePrompt(row) {
+  const routes = row.routes?.length ? row.routes.join(', ') : 'standard routes';
+  const fields = row.fields?.length
+    ? row.fields.map((f) => f.name || f.label).filter(Boolean).slice(0, 5).join(', ')
+    : 'key inputs';
+  const base = row.prompt?.trim() || `Build a functional ${row.archetype?.replaceAll('-', ' ')} website for this scenario.`;
+  return `${base} Implement the core user flow across ${routes} with form controls for ${fields}, accessible validation feedback, and server persistence across page reloads.`;
+}
+
 /** The authored archetype plan/design are the source; this is a readable prompt assembled from them, not model output. */
 export function archetypeBrief(repoRoot, id, trainingImagePrompt = null) {
   if (!ID.test(id)) return null;
@@ -358,11 +376,14 @@ export function archetypeBrief(repoRoot, id, trainingImagePrompt = null) {
   ].join('\n\n');
   return {
     id,
+    simplePrompt: archetypeSimplePrompt(id, plan),
     sitePrompt: eventPattern ? sitePrompt.replace(/\bform#registration-form\b|#registration-form\b/g, 'the registration form') : sitePrompt,
     imagePromptSource: readme ? `docs/design/archetypes/${id}/README.md` : trainingImagePrompt?.source ?? null,
     fallbackImagePrompt: readme ? null : trainingImagePrompt?.text ?? null,
     planSource: `${directory}/${id}/plan.md`,
     designSource: `${directory}/${id}/design.md`,
+    planMarkdown: plan,
+    designMarkdown: design,
     assertions: (section(plan, 'Acceptance criteria') ?? '').split('\n').filter((line) => /^[-*] /.test(line)).map((line) => line.slice(2).trim()),
     readme,
   };
@@ -419,6 +440,7 @@ export function trainingBrief(repoRoot, id, row) {
   const assertions = Array.isArray(row.assertions) ? row.assertions.filter((assertion) => typeof assertion === 'string') : [];
   const journey = section(plan, 'Journey');
   return {
+    simplePrompt: trainingSimplePrompt(row),
     sitePrompt: [
       `Build a functional ${row.archetype.replaceAll('-', ' ')} website for this scenario. The image prompt below is an illustration brief; it is not a substitute for implementing the behaviour.`,
       group('Use case', row.prompt),
@@ -434,6 +456,9 @@ export function trainingBrief(repoRoot, id, row) {
     planSource: plan ? `docs/train/design/${id}/plan.md` : null,
     designSource: siteDesign ? (siteDesign === design ? `docs/train/design/${id}/design.md` : `docs/design/archetypes/${row.archetype}/design.md`) : null,
     tokenSource: design ? `docs/train/design/${id}/design.md` : null,
+    planMarkdown: plan,
+    designMarkdown: design,
+    archetypeDesignMarkdown: siteDesign,
     steps: Array.isArray(row.journey?.steps) ? row.journey.steps.filter((step) => step && typeof step === 'object' && !Array.isArray(step)) : [],
     assertions,
   };

@@ -457,3 +457,41 @@ test('loadCorpus, filterProjects and renderIndex preserve and filter multiple ge
   assert.match(html, /<th scope="col">model<\/th>/);
   assert.match(html, /<td><code>deepseek\/deepseek-flash<\/code><\/td>/);
 });
+
+test('project page renders concept links, prompts in code blocks, and before/after score summary', () => {
+  const root = buildFixtureCorpus();
+  const corpus = loadCorpus(root);
+  const project = corpus.projects.find(({ id }) => id === 'booking-raw');
+  const view = projectView(project);
+  
+  const mockBrief = {
+    simplePrompt: 'Build a booking app with simple prompt.',
+    sitePrompt: 'Build a complete booking site with complex spec.',
+    planSource: 'docs/design/archetypes/booking/plan.md',
+    designSource: 'docs/design/archetypes/booking/design.md',
+    planMarkdown: '## Use case\nBooking plan.\n',
+    designMarkdown: '## Visual thesis\nBooking design.\n',
+    assertions: ['Form submits and reloads.', 'Validation announced.'],
+  };
+
+  const html = renderProject({ view, runId: corpus.runId, runs: corpus.runs, liveOrigin: 'http://127.0.0.1:7701', conceptBrief: mockBrief });
+
+  // Attribution contains link to concepts
+  assert.match(html, /<a href="\/concepts\/pattern\/booking"><code>booking<\/code><\/a>/);
+  assert.match(html, /<a href="\/concepts\/pattern\/booking"><code>booking<\/code> Concept Pattern<\/a>/);
+
+  // Prompts & Concept Specification section
+  assert.match(html, /<h2>Prompts &amp; Concept Specification<\/h2>/);
+  assert.match(html, /<summary>Simple Generation Prompt \(baseline \/ zero-shot input\)<\/summary>/);
+  assert.match(html, /<summary>Site Generation Prompt \(complex \/ full spec \+ design contract\)<\/summary>/);
+  assert.match(html, /<code class="concept-prompt-copy">Build a booking app with simple prompt\.<\/code>/);
+  assert.match(html, /<code class="concept-prompt-copy">Build a complete booking site with complex spec\.<\/code>/);
+  assert.match(html, /<summary>Design Contract \(docs\/design\/archetypes\/booking\/design\.md\)<\/summary>/);
+  assert.match(html, /<summary>Functional Plan &amp; Acceptance Contract \(docs\/design\/archetypes\/booking\/plan\.md\)<\/summary>/);
+  assert.match(html, /Acceptance Contract &amp; Evaluation Checklist \(2 items\)/);
+
+  // Score summary
+  assert.match(html, /DEFAULT \(Pre-Uplift \/ Baseline\)/);
+  assert.match(html, /IDEAL \(Post-Uplift \/ Target\)/);
+  assert.match(html, /class="score-summary-grid"/);
+});

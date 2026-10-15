@@ -34,7 +34,7 @@ Those candidates do not agree, which is recorded rather than resolved:
 - `Learning Hub`
 - `Evening Class Studio`
 
-Adjudicated on 2026-10-11: **Evening Class Studio**. The accepted target's own heading and every one of its five board prompts name 'Evening Class Studio'; the demo page carries 'Learning Hub' instead. The demo's own README states it is an implementation of the visual language ESTABLISHED BY those boards, and it was authored 2026-10-09 while the boards were regenerated and accepted on 2026-10-11, so the boards are the source and 'Learning Hub' is the demo's drift. PROVISIONAL: this is a lane recommendation recorded with its evidence, not an owner decision - Paul should confirm which brand the archetype owns, or rename the demo.
+Adjudicated on 2026-10-13: **Evening Class Studio**. Owner decision (Paul Kinlan, 2026-10-13): 'we probably need both'. The booking archetype retains both brands: 'Evening Class Studio' serves as the primary brand matching the visual reference boards and headings, while 'Learning Hub' is retained as the companion/variant brand from the demo implementation. Both brands are valid and preserved in the archetype.
 
 ## The one hand-written file
 

@@ -6,8 +6,8 @@
  * markup stays plain HTML strings rather than a virtual DOM.
  */
 import { createServer } from 'node:http';
-import { readFileSync } from 'node:fs';
-import { randomUUID } from 'node:crypto';
+import { readFileSync, existsSync } from 'node:fs';
+import { randomUUID, createHash } from 'node:crypto';
 import { DatabaseSync } from 'node:sqlite';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -16,6 +16,39 @@ import { Hono } from 'hono';
 import { renderDocument, renderPage } from './app/page.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
+const ASSET_STORE = "assets/archetypes/catalogue";
+const ASSET_DIGESTS = {"step1-grid.jpg":"93f3b8c5056685e981e523b9c1550dd4d27f55a5a0ecd5fff82b0cf447c7f0cd","step2-cart.jpg":"864a10b7c056667af9c1972d399d1bff739d780cd673cd3bcc013e1cc6996adc","step3-empty.jpg":"9b8a4e58550892fef25ebab0a15c6078d0a40d8781292bfb2ba1be0ec384e9c0"};
+const ASSET_TYPES = { '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp', '.avif': 'image/avif', '.gif': 'image/gif', '.svg': 'image/svg+xml' };
+function decodeAssetName(raw) {
+  // Never throws: a malformed percent-escape (GET /app/%zz) used to raise a URIError out of the request handler
+  // and take the server process down with it. An empty string fails the name pattern below, so the request 404s
+  // the same way an unregistered board does.
+  try {
+    return decodeURIComponent(raw);
+  } catch {
+    return '';
+  }
+}
+
+function readArchetypeAsset(name) {
+  // A name that is not a plain board filename is refused first. The register lookup below would refuse it too,
+  // but this is what keeps a name carrying %, / or .. away from both the filesystem and the register.
+  if (typeof name !== 'string' || !/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(name)) return null;
+  if (!Object.hasOwn(ASSET_DIGESTS, name)) return null;
+  let dir = here;
+  for (let depth = 0; depth < 8; depth += 1) {
+    const candidate = join(dir, ASSET_STORE, 'images', name);
+    if (existsSync(candidate)) {
+      const body = readFileSync(candidate);
+      if (createHash('sha256').update(body).digest('hex') !== ASSET_DIGESTS[name]) return null;
+      return { body, type: ASSET_TYPES[name.slice(name.lastIndexOf('.'))] ?? 'application/octet-stream' };
+    }
+    const parent = dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return null;
+}
 const arg = (name, fallback) => {
   const index = process.argv.indexOf(`--${name}`);
   return index === -1 ? fallback : process.argv[index + 1];
@@ -39,17 +72,33 @@ const requiredFor = (path) => (EXTRA_ACTION !== '' && path === EXTRA_ACTION ? EX
 db.exec('CREATE TABLE IF NOT EXISTS sessions (sid TEXT PRIMARY KEY, ref TEXT NOT NULL, created_at TEXT NOT NULL)');
 const insertSession = db.prepare('INSERT INTO sessions (sid, ref, created_at) VALUES (?, ?, ?)');
 const selectSession = db.prepare('SELECT ref FROM sessions WHERE sid = ?');
+const requestLog = [];
 const app = new Hono();
+app.use('*', async (c, next) => {
+  await next();
+  if (c.req.path !== '/__requests') requestLog.push({ method: c.req.method, path: c.req.path, status: c.res.status });
+});
+app.get('/__requests', (c) => c.json(requestLog));
 
 app.get('/__health', (c) => c.json({ ok: true }));
 
 app.get('/app/:file', (c) => {
-  const name = c.req.param('file');
+  // The param read is INSIDE the try on purpose. Reading it decodes a percent-encoded path segment, and a
+  // malformed escape is a throw; if that escaped the handler the whole server would go down on GET /app/%zz.
+  let name = null;
   try {
+    name = c.req.param('file');
     const body = readFileSync(join(here, 'app', name));
     const type = name.endsWith('.css') ? 'text/css' : name.endsWith('.js') ? 'text/javascript' : 'text/plain';
     return c.body(body, 200, { 'content-type': `${type}; charset=utf-8` });
   } catch {
+    // Not in the tree, so it may be one of the archetype's boards: served from the store, and only if its
+    // bytes still hash to the recorded digest. Kept on the existing single-segment route rather than a new
+    // one deliberately - the route set is compared against the project's specification, and a second route
+    // for assets would have to be declared there and would make the arm differ from its spec.
+    const asset = readArchetypeAsset(name);
+    if (asset) return c.body(asset.body, 200, { 'content-type': asset.type, 'x-asset-source': `${ASSET_STORE}/images`, 'cache-control': 'no-store' });
+
     return c.text('not found', 404);
   }
 });

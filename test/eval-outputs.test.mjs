@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { existsSync, mkdirSync, rmSync, writeFileSync, mkdtempSync, symlinkSync } from 'node:fs';
+import { existsSync, mkdirSync, realpathSync, rmSync, writeFileSync, mkdtempSync, symlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { execSync } from 'node:child_process';
@@ -13,7 +13,7 @@ describe('outputs store', () => {
   let QUARANTINE_REPO;
 
   before(() => {
-    TEST_DIR = mkdtempSync(join(tmpdir(), 'mwg-train-outputs-test-'));
+    TEST_DIR = mkdtempSync(join(realpathSync(tmpdir()), 'mwg-train-outputs-test-'));
     PUBLIC_REPO = join(TEST_DIR, 'public');
     QUARANTINE_REPO = join(TEST_DIR, 'quarantine');
 
@@ -96,7 +96,7 @@ describe('outputs store overwriting', () => {
   let QUARANTINE_REPO;
 
   before(() => {
-    TEST_DIR = mkdtempSync(join(tmpdir(), 'mwg-train-outputs-overwrite-'));
+    TEST_DIR = mkdtempSync(join(realpathSync(tmpdir()), 'mwg-train-outputs-overwrite-'));
     PUBLIC_REPO = join(TEST_DIR, 'public');
     QUARANTINE_REPO = join(TEST_DIR, 'quarantine');
 
@@ -152,7 +152,7 @@ describe('outputs store overwriting', () => {
  */
 describe('storeOutput symlink containment', () => {
   function makeRepo(tag) {
-    const base = mkdtempSync(join(tmpdir(), `mwg-outputs-symlink-${tag}-`));
+    const base = mkdtempSync(join(realpathSync(tmpdir()), `mwg-outputs-symlink-${tag}-`));
     const repoRoot = join(base, 'repo');
     mkdirSync(repoRoot, { recursive: true });
     const source = join(base, 'source');
@@ -251,7 +251,7 @@ describe('storeOutput symlink containment', () => {
   test('a symlink pointing outside the repository is still refused', () => {
     // The regression guard for the half that already worked before mwg-train-vqb7.
     const { base, repoRoot, source } = makeRepo('outside');
-    const outside = mkdtempSync(join(tmpdir(), 'mwg-outputs-outside-'));
+    const outside = mkdtempSync(join(realpathSync(tmpdir()), 'mwg-outputs-outside-'));
     try {
       writeFileSync(join(outside, 'keep.txt'), 'outside');
       const armRoot = join(repoRoot, 'data', 'A1_self_generated');

@@ -2,8 +2,15 @@ import { createSSRApp } from 'vue';
 import { renderToString } from 'vue/server-renderer';
 
 const template = `
+      <header class="brand" data-asset-store="assets/archetypes/booking">
+        <span class="brand-name">Evening Class Studio</span>
+      </header>
       <h1>Evening class booking</h1>
       <p>A training centre takes bookings for evening classes and shows the booking back to the student.</p>
+      <figure class="reference-board">
+        <img src="/app/step1-browse.jpg" alt="Reference board for booking" width="1280" height="900" loading="lazy" decoding="async">
+        <figcaption>Reference board for booking</figcaption>
+      </figure>
     <form id="booking-form" method="post" action="/book">
       <div role="alert" aria-live="assertive" class="form-status" data-form-status></div>
       <div class="field">
@@ -31,13 +38,14 @@ export async function renderPage(data = {}) {
   return renderToString(app);
 }
 
+const escapeTitle = (value) => String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 export async function renderDocument({ title = 'Evening class booking', data = {} } = {}) {
   return `<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>${title}</title>
+    <title>${escapeTitle(title)}</title>
     <link rel="stylesheet" href="/app/styles.css">
   </head>
   <body>

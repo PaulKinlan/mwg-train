@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync, rmSync, symlinkSync, lstatSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, realpathSync, existsSync, rmSync, symlinkSync, lstatSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -9,7 +9,7 @@ import { serializeSft, serializeFiles, projectSources, LORA_SHAPE_CONTEXT, CONSE
 const sha = (s) => `sha256:${createHash('sha256').update(s).digest('hex')}`;
 const tokenizer = (total = 50) => ({ pinned: true, metadata: { source: 'fixture only' }, countBatch: (pairs) => pairs.map(() => ({ prompt: 20, total })) });
 function fixture(edit = (row) => row) {
-  const root = mkdtempSync(join(tmpdir(), 'mwg-sft-test-'));
+  const root = realpathSync(mkdtempSync(join(tmpdir(), 'mwg-sft-test-')));
   mkdirSync(join(root, 'project'));
   writeFileSync(join(root, 'prompt.txt'), 'Build a Hono service with a persisted form and server route.');
   writeFileSync(join(root, 'project', 'server.mjs'), 'export const app = "ok";\n');

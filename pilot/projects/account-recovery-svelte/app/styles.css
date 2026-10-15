@@ -1,0 +1,42 @@
+/* svelte arm. Responsive first, light and dark, with visible focus. */
+:root {
+  color-scheme: light dark;
+  --page: #0f172a;
+  --card: #1e293b;
+  --field: #172235;
+  --border: #64748b;
+  --accent: #10b981;
+  --accent-ink: #04231a;
+  --accent-text: #34d399;
+  --text: #f8fafc;
+  --muted: #cbd5e1;
+  --error: #fca5a5;
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --arm-fg: var(--text);
+  --arm-bg: var(--page);
+  --arm-accent: var(--accent);
+  --arm-error: var(--error);
+}
+* { box-sizing: border-box; }
+body { margin: 0; padding: 1.5rem; font-family: var(--font-sans); font-size: 16px; line-height: 1.5; color: var(--arm-fg); background: var(--arm-bg); }
+main { max-width: 42rem; margin: 0 auto; }
+header.brand { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; }
+.brand-mark { display: inline-flex; color: var(--arm-accent); }
+.brand-name { font-weight: 700; letter-spacing: 0.01em; }
+figure.reference-board { margin: 0 0 1.25rem; }
+figure.reference-board img { display: block; width: 100%; height: auto; border: 1px solid var(--border-subtle, #cbd5e1); border-radius: 0.5rem; }
+figure.reference-board figcaption { color: var(--text-muted, #64748b); font-size: 0.8125rem; margin-top: 0.35rem; }
+h1 { font-size: 1.6rem; margin-bottom: 0.25rem; }
+.field { display: grid; gap: 0.25rem; margin-bottom: 1rem; }
+label { font-weight: 600; }
+input, textarea, select { font: inherit; padding: 0.6rem; border: 1px solid #8a8f98; border-radius: 0.4rem; width: 100%; }
+input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 3px solid var(--arm-accent); outline-offset: 2px; }
+button { font: inherit; padding: 0.7rem 1.1rem; border-radius: 0.4rem; border: 0; background: var(--arm-accent); color: white; }
+.error-msg { display: none; color: var(--arm-error); font-size: 0.875rem; margin: 0.15rem 0 0; }
+.form-status { min-height: 1.25rem; }
+/* DEFECT: eager :invalid styling reports errors before the user has interacted. */
+input:invalid, textarea:invalid { border-color: var(--arm-error); background-color: #fdecea; }
+input:invalid ~ .error-msg, textarea:invalid ~ .error-msg { display: block; }
+table { border-collapse: collapse; width: 100%; }
+th, td { text-align: left; border-bottom: 1px solid #d5d8dd; padding: 0.4rem 0.3rem; }
+@media (width <= 30rem) { body { padding: 1rem; } h1 { font-size: 1.35rem; } }

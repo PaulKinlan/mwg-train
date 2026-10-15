@@ -1,0 +1,175 @@
+{
+  "project_id": "event-registration-webcomponents",
+  "archetype": "event-registration",
+  "archetype_title": "Event registration with capacity",
+  "assets": {
+    "archetype": "event-registration",
+    "store": "assets/archetypes/event-registration",
+    "brand": {
+      "state": "named",
+      "name": "Future Web 2026",
+      "mark": false,
+      "mark_recorded_not_self_contained": false,
+      "provisional": false
+    },
+    "tokens": {
+      "colors": 10,
+      "fonts": 1,
+      "derived": {
+        "fg": "--text",
+        "bg": "--page",
+        "accent": "--accent",
+        "error": "--error",
+        "fontStack": "--font-sans",
+        "surfaceInput": "--field"
+      }
+    },
+    "copy": [
+      {
+        "page": "compare.html",
+        "title": "Event registration · visual comparison"
+      },
+      {
+        "page": "index.html",
+        "title": "Future Web 2026 · event registration visual demo"
+      }
+    ],
+    "images": [
+      {
+        "name": "step1-event.jpg",
+        "sha256": "e55cc58b71b4ac39242682e90e4554897cc0fbb1f3911174251d8a2da0ba3046",
+        "store_path": "assets/archetypes/event-registration/step1-event.jpg"
+      },
+      {
+        "name": "step2-pass.jpg",
+        "sha256": "0315a4fdc6386db4182a5bc119126892ee66d422a0708acb5d474da7d5f68a3a",
+        "store_path": "assets/archetypes/event-registration/step2-pass.jpg"
+      },
+      {
+        "name": "step3-refusal.jpg",
+        "sha256": "4ae22312d61d4ed5e284e81e450fb93e498eb39b83042c66c2979c0736966717",
+        "store_path": "assets/archetypes/event-registration/step3-refusal.jpg"
+      }
+    ],
+    "rights": {
+      "excluded_from_training": true,
+      "approved_for_training": false,
+      "source": "docs/design/archetypes/event-registration/README.md:5"
+    }
+  },
+  "framework": {
+    "name": "webcomponents",
+    "version": "platform (custom elements + shadow DOM)",
+    "dialect": "html",
+    "markupFile": "app/page.mjs",
+    "stylesFile": "app/styles.css",
+    "enhanceFile": "app/enhance.js",
+    "serverFile": "server.mjs",
+    "family": "web-components"
+  },
+  "routes": [
+    {
+      "method": "GET",
+      "path": "/",
+      "kind": "page"
+    },
+    {
+      "method": "POST",
+      "path": "/register",
+      "kind": "write-with-capacity"
+    },
+    {
+      "method": "GET",
+      "path": "/registration/:ref",
+      "kind": "read-by-reference"
+    },
+    {
+      "method": "GET",
+      "path": "/attendees",
+      "kind": "list"
+    }
+  ],
+  "fields": [
+    {
+      "slug": "name",
+      "name": "name",
+      "type": "text",
+      "autocomplete": null
+    },
+    {
+      "slug": "email",
+      "name": "email",
+      "type": "email",
+      "autocomplete": "email"
+    },
+    {
+      "slug": "ticket",
+      "name": "ticket",
+      "type": "select",
+      "autocomplete": null
+    }
+  ],
+  "seeded_defects": [
+    "no-required",
+    "eager-invalid",
+    "xss-innerhtml"
+  ],
+  "journey": {
+    "startPath": "/",
+    "formSelector": "form#registration-form",
+    "fill": {
+      "input[name=name]": "Katherine Johnson",
+      "input[name=email]": "kj@example.test"
+    },
+    "expectText": "Katherine Johnson"
+  },
+  "echo_expect": "Katherine Johnson",
+  "content_journey": {
+    "source": "record",
+    "path": "/registration/REF",
+    "param": null,
+    "inputSelector": "[name=name]",
+    "formSelector": "form#registration-form",
+    "echoField": "name"
+  },
+  "echo_source": "record",
+  "write_journey": null,
+  "session_routes": [],
+  "echo_container": "#record-echo",
+  "security_journey": null,
+  "session": false,
+  "check_context": {
+    "formSelector": "form#registration-form",
+    "primaryField": "[name=name]",
+    "usernameField": "[name=email]",
+    "passwordField": "[name=password]",
+    "addressField": "[name=address]",
+    "postcodeField": "[name=postcode]"
+  },
+  "primaryFields": [
+    {
+      "slug": "name",
+      "name": "name",
+      "elementPattern": "<input[^>]*name=\"name\"[^>]*>",
+      "elementPatternFirst": "<input[^>]*name=\"name\"[^>]*>"
+    },
+    {
+      "slug": "email",
+      "name": "email",
+      "elementPattern": "<input[^>]*name=\"email\"[^>]*>",
+      "elementPatternFirst": "<input[^>]*name=\"email\"[^>]*>"
+    }
+  ],
+  "autofill": {
+    "usernamePattern": "(<input[^>]*type=\"email\"[^>]*>)",
+    "passwordPattern": "(<input[^>]*type=\"password\"[^>]*>)",
+    "streetPattern": "(<input[^>]*name=\"address\"[^>]*>)",
+    "postcodePattern": "(<input[^>]*name=\"postcode\"[^>]*>)"
+  },
+  "required_rules": [
+    "forms/required-field-feedback",
+    "forms/validate-input-after-interaction",
+    "accessibility/accessible-error-announcement",
+    "security/sanitize-untrusted-html"
+  ]
+}

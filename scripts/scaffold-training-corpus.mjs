@@ -406,30 +406,25 @@ function readPreviousRecord(recordPath) {
   }
 }
 
-function main() {
-  const args = parseArgs(process.argv.slice(2));
-  if (args.help) {
-    console.error('usage: node scripts/scaffold-training-corpus.mjs [--out <dir>] [--record <file>] [--families tr-01,tr-02] [--clean] [--allow-shrink]');
-    console.error('  A plain run writes the tracked record. --out relocates the trees and, without --record, the');
-    console.error(`  record goes beside them - so ${TRACKED_RECORD_PATH} is written by a relocated run only when --record names it.`);
-    console.error('  No write shrinks an existing record (fewer projects) unless --allow-shrink is passed.');
-    process.exit(0);
-  }
-
-  const families = canonicalFamilies(args.manifest);
-  const selected = args.families
-    ? families.filter((family) => args.families.split(',').map((id) => id.trim()).includes(family.family_id))
+export function scaffoldCorpus({
+  outDir,
+  record = false,
+  clean = true,
+  families: familyFilter = null,
+  manifest = MANIFEST_PATH,
+  allowShrink = false,
+} = {}) {
+  const families = canonicalFamilies(manifest);
+  const selected = familyFilter
+    ? families.filter((family) => familyFilter.split(',').map((id) => id.trim()).includes(family.family_id))
     : families;
   if (selected.length === 0) {
-    console.error('scaffold-training-corpus: no families selected');
-    process.exit(2);
+    throw new Error('scaffold-training-corpus: no families selected');
   }
 
-  const outDir = resolve(REPO_ROOT, args.out);
-  const target = resolveRecordTarget({ outDir, outGiven: args.outGiven, record: args.record });
-  const recordPath = target.path;
-  if (args.clean) rmSync(outDir, { recursive: true, force: true });
-  mkdirSync(outDir, { recursive: true });
+  const resolvedOut = resolve(REPO_ROOT, outDir);
+  if (clean) rmSync(resolvedOut, { recursive: true, force: true });
+  mkdirSync(resolvedOut, { recursive: true });
 
   const projects = [];
   const byArchetype = {};
@@ -441,8 +436,7 @@ function main() {
   for (const family of selected) {
     const base = TRAINING_ARCHETYPES[family.archetype];
     if (!base) {
-      console.error(`scaffold-training-corpus: unknown archetype '${family.archetype}' for ${family.family_id}`);
-      process.exit(2);
+      throw new Error(`scaffold-training-corpus: unknown archetype '${family.archetype}' for ${family.family_id}`);
     }
     if (!/^tr-\d{2}$/.test(family.family_id)) badFamilies.push(family.family_id);
     // A brief carrying its own schema must have one that builds: authoring a form whose
@@ -451,10 +445,7 @@ function main() {
     if (family.fields || family.journey) {
       const schemaFindings = validateBriefSchema(family);
       if (schemaFindings.length > 0) {
-        for (const finding of schemaFindings) {
-          console.error(`scaffold-training-corpus: ${finding.brief_id} ${finding.at}: ${finding.problem}`);
-        }
-        process.exit(2);
+        throw new Error(`scaffold-training-corpus: ${schemaFindings[0].brief_id} ${schemaFindings[0].at}: ${schemaFindings[0].problem}`);
       }
     }
     const archetype = familyArchetype(family, base);
@@ -468,8 +459,8 @@ function main() {
       // The builder names a project after the archetype; the corpus record names it after the family,
       // because seven families can share one archetype and their projects must not share a directory.
       built.spec.project_id = projectId;
-      writeProjectTree(outDir, projectId, built.files, built.spec);
-      const treeSha = hashTree(join(outDir, projectId));
+      writeProjectTree(resolvedOut, projectId, built.files, built.spec);
+      const treeSha = hashTree(join(resolvedOut, projectId));
       if (pilot.has(treeSha)) collisions.push({ project_id: projectId, tree_sha: treeSha });
       projects.push({
         project_id: projectId,
@@ -504,38 +495,76 @@ function main() {
     }
   }
 
-  const pendingRecord = {
-    $comment:
-      'The training corpus generated from the tr-* briefs: one project per family x framework, each with its tree hash. `node scripts/scaffold-training-corpus.mjs` re-derives every tree; a hash here must never collide with a hash in pilot/CORPUS.json (original or uplift), which is the disjointness the corpus exists to guarantee.',
-    generated_at: new Date().toISOString(),
-    generator: 'scripts/scaffold-training-corpus.mjs',
-    summary: {
-      families: selected.length,
-      frameworks: FRAMEWORK_NAMES.length,
-      projects: projects.length,
-      by_archetype: byArchetype,
-      by_framework: byFramework,
-    },
-    defect_addressability: DEFECT_ADDRESSABILITY,
-    build_key_definition: buildKeyDefinition('pilot/TRAINING_CORPUS.json'),
-    projects,
-  };
-
-  const previousRecord = readPreviousRecord(recordPath);
-  const record = { ...pendingRecord, generated_at: resolveGeneratedAt(previousRecord, pendingRecord) };
-  const refusal = shrinkRefusal({ previous: previousRecord, next: record, recordPath, allowShrink: args.allowShrink });
-  if (refusal) {
-    console.error(refusal);
-    process.exit(1);
+  // The disjointness assertions: every generated tree must be absent from the pilot's recorded
+  // originals and uplifts, and every family id must be a tr-* id (never cf-*/fam-* or a target family).
+  if (badFamilies.length > 0) {
+    throw new Error(`scaffold-training-corpus: BLOCKER - non-tr family ids ${JSON.stringify(badFamilies)}`);
   }
+  if (collisions.length > 0) {
+    throw new Error(`scaffold-training-corpus: BLOCKER - ${collisions.length} training tree(s) reproduce a pilot/evaluation design: ${collisions[0].project_id}`);
+  }
+
+  let writtenRecord = null;
+  if (record) {
+    const recordPath = typeof record === 'string' ? record : join(resolvedOut, 'TRAINING_CORPUS.json');
+    const pendingRecord = {
+      $comment:
+        'The training corpus generated from the tr-* briefs: one project per family x framework, each with its tree hash. `node scripts/scaffold-training-corpus.mjs` re-derives every tree; a hash here must never collide with a hash in pilot/CORPUS.json (original or uplift), which is the disjointness the corpus exists to guarantee.',
+      generated_at: new Date().toISOString(),
+      generator: 'scripts/scaffold-training-corpus.mjs',
+      summary: {
+        families: selected.length,
+        frameworks: FRAMEWORK_NAMES.length,
+        projects: projects.length,
+        by_archetype: byArchetype,
+        by_framework: byFramework,
+      },
+      defect_addressability: DEFECT_ADDRESSABILITY,
+      build_key_definition: buildKeyDefinition('pilot/TRAINING_CORPUS.json'),
+      projects,
+    };
+
+    const previousRecord = readPreviousRecord(recordPath);
+    const resolvedRecord = { ...pendingRecord, generated_at: resolveGeneratedAt(previousRecord, pendingRecord) };
+    const refusal = shrinkRefusal({ previous: previousRecord, next: resolvedRecord, recordPath, allowShrink });
+    if (refusal) throw new Error(refusal);
+    writeRecordAtomically(recordPath, resolvedRecord);
+    writtenRecord = recordPath;
+  }
+
+  return { projects, byArchetype, byFramework, recordPath: writtenRecord };
+}
+
+function main() {
+  const args = parseArgs(process.argv.slice(2));
+  if (args.help) {
+    console.error('usage: node scripts/scaffold-training-corpus.mjs [--out <dir>] [--record <file>] [--families tr-01,tr-02] [--clean] [--allow-shrink]');
+    console.error('  A plain run writes the tracked record. --out relocates the trees and, without --record, the');
+    console.error(`  record goes beside them - so ${TRACKED_RECORD_PATH} is written by a relocated run only when --record names it.`);
+    console.error('  No write shrinks an existing record (fewer projects) unless --allow-shrink is passed.');
+    process.exit(0);
+  }
+
+  const outDir = resolve(REPO_ROOT, args.out);
+  const target = resolveRecordTarget({ outDir, outGiven: args.outGiven, record: args.record });
+  const recordPath = target.path;
+
+  let result;
   try {
-    writeRecordAtomically(recordPath, record);
+    result = scaffoldCorpus({
+      outDir,
+      record: recordPath,
+      clean: args.clean,
+      families: args.families,
+      manifest: args.manifest,
+      allowShrink: args.allowShrink,
+    });
   } catch (error) {
-    console.error(`scaffold-training-corpus: FAILED to write ${recordPath} - ${error.message}. The existing record was left untouched.`);
+    console.error(error.message);
     process.exit(1);
   }
 
-  console.log(`scaffold-training-corpus: wrote ${projects.length} projects to ${args.out}`);
+  console.log(`scaffold-training-corpus: wrote ${result.projects.length} projects to ${args.out}`);
   console.log(`scaffold-training-corpus: record at ${recordPath}`);
   if (target.kind === 'relocated') {
     console.log(
@@ -543,21 +572,9 @@ function main() {
         `(pass --record ${TRACKED_RECORD_PATH} to update it on purpose)`,
     );
   }
-  console.log(`scaffold-training-corpus: frameworks ${JSON.stringify(byFramework)}`);
-
-  // The disjointness assertions: every generated tree must be absent from the pilot's recorded
-  // originals and uplifts, and every family id must be a tr-* id (never cf-*/fam-* or a target family).
-  if (badFamilies.length > 0) {
-    console.error(`scaffold-training-corpus: BLOCKER - non-tr family ids ${JSON.stringify(badFamilies)}`);
-    process.exit(1);
-  }
-  console.log(`scaffold-training-corpus: family ids all tr-* (${selected.length} family(s))`);
-  if (collisions.length > 0) {
-    console.error(`scaffold-training-corpus: BLOCKER - ${collisions.length} training tree(s) reproduce a pilot/evaluation design:`);
-    for (const collision of collisions) console.error(`  - ${collision.project_id} ${collision.tree_sha}`);
-    process.exit(1);
-  }
-  console.log(`scaffold-training-corpus: zero-overlap PASS - 0 of ${projects.length} tree hashes collide with pilot/CORPUS.json (original+uplift)`);
+  console.log(`scaffold-training-corpus: frameworks ${JSON.stringify(result.byFramework)}`);
+  console.log(`scaffold-training-corpus: family ids all tr-* (${result.projects.length / FRAMEWORK_NAMES.length} family(s))`);
+  console.log(`scaffold-training-corpus: zero-overlap PASS - 0 of ${result.projects.length} tree hashes collide with pilot/CORPUS.json (original+uplift)`);
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main();

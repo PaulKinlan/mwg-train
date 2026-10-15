@@ -2,6 +2,10 @@ export async function renderPage(data = {}) {
   return `
       <h1>Account sign-in and recovery</h1>
       <p>Sign-up, sign-in with a server session, and a password-reset request.</p>
+      <figure class="reference-board">
+        <img src="/app/step1-request.jpg" alt="Reference board for account-recovery" width="1280" height="900" loading="lazy" decoding="async">
+        <figcaption>Reference board for account-recovery</figcaption>
+      </figure>
     <form id="signup-form" method="post" action="/signup">
       <div class="field">
       <label for="email">Email</label>
@@ -20,6 +24,7 @@ export async function renderPage(data = {}) {
       </section>`;
 }
 
+const escapeTitle = (value) => String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 export async function renderDocument({ title = 'Account sign-in and recovery', data = {} } = {}) {
   const body = await renderPage(data);
   return `<!doctype html>
@@ -27,7 +32,7 @@ export async function renderDocument({ title = 'Account sign-in and recovery', d
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>${title}</title>
+    <title>${escapeTitle(title)}</title>
     <link rel="stylesheet" href="/app/styles.css">
   </head>
   <body>

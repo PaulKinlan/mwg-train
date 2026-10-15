@@ -44,6 +44,7 @@ import { fileURLToPath } from 'node:url';
 import { deflateSync, gzipSync } from 'node:zlib';
 
 import { conceptImage, conceptJourneyStep, conceptTarget, listConcepts, readConfinedImage, renderConceptFamily, renderConceptIndex, renderConceptPattern, trainingBoard } from './concepts.mjs';
+import { archetypeBrief, trainingBrief, trainingBriefs } from './concept-briefs.mjs';
 import { filterProjects, loadCorpus, projectView } from './corpus.mjs';
 import { hashTree } from '../corpus/tree-hash.mjs';
 import { scanTree, scanPairRecords, loadScanConfig, buildMatchers } from './owner-auth.mjs';
@@ -685,12 +686,16 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
    * that matches the record on disk is used directly; one that cannot be reproduced is refused.
    */
   let materializedPromise = null;
-  function materializeMeasuredOriginals() {
+  function materializeMeasuredOriginals(force = false) {
+    if (force) materializedPromise = null;
     materializedPromise ??= (async () => {
       const generatePath = join(repoRoot, 'pilot', 'generate.mjs');
       if (!existsSync(generatePath)) return null;
       const outDir = join(stateDir, 'measured-originals');
       const marker = join(outDir, '.complete');
+      if (force && existsSync(marker)) {
+        try { rmSync(marker, { force: true }); } catch {}
+      }
       if (!existsSync(marker)) {
         const { generateCorpus } = await import(generatePath);
         generateCorpus({ outDir, planPath: join(repoRoot, 'pilot', 'plan.json') });
@@ -702,12 +707,16 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
   }
 
   let materializedTrainingPromise = null;
-  function materializeMeasuredTrainingOriginals() {
+  function materializeMeasuredTrainingOriginals(force = false) {
+    if (force) materializedTrainingPromise = null;
     materializedTrainingPromise ??= (async () => {
       const scaffoldPath = join(repoRoot, 'scripts', 'scaffold-training-corpus.mjs');
       if (!existsSync(scaffoldPath)) return null;
       const outDir = join(stateDir, 'measured-training-originals');
       const marker = join(outDir, '.complete');
+      if (force && existsSync(marker)) {
+        try { rmSync(marker, { force: true }); } catch {}
+      }
       if (!existsSync(marker)) {
         const { scaffoldCorpus } = await import(scaffoldPath);
         scaffoldCorpus({ outDir, record: false });
@@ -736,20 +745,26 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
       if (existsSync(localTrainingDir) && hashTree(localTrainingDir) === expected) {
         return { dir: localTrainingDir, source: 'working-tree-verified' };
       }
-      const materializedTraining = await materializeMeasuredTrainingOriginals();
-      if (materializedTraining) {
-        const trainingCandidate = join(materializedTraining, project.id);
-        if (existsSync(trainingCandidate) && hashTree(trainingCandidate) === expected) {
-          return { dir: trainingCandidate, source: 'plan-materialized-verified' };
-        }
+      let materializedTraining = await materializeMeasuredTrainingOriginals();
+      let trainingCandidate = materializedTraining ? join(materializedTraining, project.id) : null;
+      if (!trainingCandidate || !existsSync(trainingCandidate) || hashTree(trainingCandidate) !== expected) {
+        materializedTraining = await materializeMeasuredTrainingOriginals(true);
+        trainingCandidate = materializedTraining ? join(materializedTraining, project.id) : null;
+      }
+      if (trainingCandidate && existsSync(trainingCandidate) && hashTree(trainingCandidate) === expected) {
+        return { dir: trainingCandidate, source: 'plan-materialized-verified' };
       }
     }
-    const materialized = await materializeMeasuredOriginals();
+    let materialized = await materializeMeasuredOriginals();
     if (!materialized) {
       return { dir: null, reason: 'the committed tree no longer matches the recorded original sha, and pilot/generate.mjs is not present to reproduce the measured tree' };
     }
-    const candidate = join(materialized, project.id);
-    if (!existsSync(candidate)) return { dir: null, reason: `the plan does not generate ${project.id}` };
+    let candidate = join(materialized, project.id);
+    if (!candidate || !existsSync(candidate) || hashTree(candidate) !== expected) {
+      materialized = await materializeMeasuredOriginals(true);
+      candidate = materialized ? join(materialized, project.id) : null;
+    }
+    if (!candidate || !existsSync(candidate)) return { dir: null, reason: `the plan does not generate ${project.id}` };
     const actual = hashTree(candidate);
     if (actual !== expected) {
       return { dir: null, reason: `neither the committed tree nor the plan-generated tree matches the recorded original sha (${expected}); the measured original cannot be reproduced` };
@@ -1032,8 +1047,23 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
         const project = findProject(corpus, projectMatch[1]);
         if (!project) return textResponse(response, 'no such project', 404);
         const scan = scanFor(project);
+
+        let conceptBrief = null;
+        if (project.id?.startsWith('tr-')) {
+          const familyId = project.id.match(/^(tr-\d{2})-/)?.[1];
+          if (familyId) {
+            const rows = trainingBriefs(repoRoot);
+            const row = rows.get(familyId);
+            if (row) conceptBrief = trainingBrief(repoRoot, familyId, row);
+          }
+        } else if (project.spec?.archetype) {
+          conceptBrief = archetypeBrief(repoRoot, project.spec.archetype);
+        } else if (project.archetype) {
+          conceptBrief = archetypeBrief(repoRoot, project.archetype);
+        }
+
         const view = projectView(project, { scan, verification: verification(project) });
-        return htmlResponse(response, renderProject({ view, runId: corpus.runId, runs: corpus.runs, liveOrigin }), 200, liveOrigin, { formNavigation: true });
+        return htmlResponse(response, renderProject({ view, runId: corpus.runId, runs: corpus.runs, liveOrigin, conceptBrief }), 200, liveOrigin, { formNavigation: true });
       }
 
       const evidenceMatch = path.match(/^\/evidence\/([a-z0-9-]+)\/([a-z0-9.-]+)$/i);

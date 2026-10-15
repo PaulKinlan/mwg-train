@@ -29,8 +29,10 @@
  *     attribute the whole tree through FLEET_LANE.
  */
 import { spawn } from 'node:child_process';
-import { existsSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
+import { existsSync, symlinkSync, unlinkSync } from 'node:fs';
+import { createServer } from 'node:net';
+import { tmpdir } from 'node:os';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { boundedDeviceArgs } from '../sandbox/devices.mjs';
 
@@ -58,6 +60,17 @@ function nodeRuntimeDir() {
   return dirname(dirname(process.execPath));
 }
 
+function getFreePort() {
+  return new Promise((resolvePort, rejectPort) => {
+    const srv = createServer();
+    srv.listen(0, '127.0.0.1', () => {
+      const { port } = srv.address();
+      srv.close((err) => (err ? rejectPort(err) : resolvePort(port)));
+    });
+    srv.on('error', rejectPort);
+  });
+}
+
 function systemBinds() {
   const binds = [];
   for (const dir of ['/usr', '/bin', '/lib', '/lib64']) {
@@ -69,6 +82,7 @@ function systemBinds() {
 }
 
 export class Sandbox {
+  #createdModulesSymlink = null;
   /**
    * @param {object} args
    * @param {string} args.id            instance id (project id + version)
@@ -89,10 +103,65 @@ export class Sandbox {
     this.recvBuffer = Buffer.alloc(0);
     this.ready = false;
     this.logBytes = 0;
+    this.#createdModulesSymlink = null;
   }
 
   async start() {
     if (this.child) return;
+    if (process.platform === 'darwin') {
+      if (this.nodeModulesDir && existsSync(this.nodeModulesDir)) {
+        const localModules = join(this.siteDir, 'node_modules');
+        if (!existsSync(localModules)) {
+          try {
+            symlinkSync(this.nodeModulesDir, localModules, 'dir');
+            this.#createdModulesSymlink = localModules;
+          } catch {
+            /* ignore if unable to symlink (e.g. read-only tree) */
+          }
+        }
+      }
+      const port = await getFreePort();
+      const dbPath = join(tmpdir(), `sandbox-${this.id.replace(/[^a-z0-9_-]/gi, '_')}-${port}.sqlite`);
+      const env = {
+        PATH: process.env.PATH ?? '/usr/bin:/bin',
+        HOME: tmpdir(),
+        NODE_ENV: 'production',
+        TZ: 'UTC',
+        PILOT_PORT: String(port),
+        FLEET_LANE: process.env.FLEET_LANE ?? 'mwg-train-viewer',
+        ...(this.nodeModulesDir ? { NODE_PATH: this.nodeModulesDir } : {}),
+      };
+      const wrapperArgs = [
+        WRAPPER_PATH,
+        '--entry', resolve(this.siteDir, this.entry),
+        '--port', String(port),
+        '--node-bin', process.execPath,
+        '--db', dbPath,
+      ];
+      this.child = spawn(process.execPath, wrapperArgs, {
+        cwd: this.siteDir,
+        env,
+        stdio: ['pipe', 'pipe', 'pipe'],
+      });
+      this.child.stderr.on('data', (chunk) => {
+        this.#appendLog(chunk.toString());
+      });
+      this.child.stdout.on('data', (chunk) => this.#onData(chunk));
+      this.child.on('exit', (code, signal) => {
+        this.#appendLog(`\n[exited code=${code} signal=${signal}]\n`);
+        this.child = null;
+        for (const { reject } of this.pending.values()) reject(new Error('sandbox exited'));
+        this.pending.clear();
+      });
+      this.child.on('error', (err) => {
+        this.#appendLog(`\n[spawn error: ${err.message}]\n`);
+        this.child = null;
+      });
+      this.startedAt = new Date();
+      this.lastUsedAt = this.startedAt;
+      await this.#waitReady();
+      return;
+    }
     const args = [
       '--unshare-all',
       '--die-with-parent',
@@ -246,6 +315,14 @@ ${this.log.slice(-192 * 1024)}`;
   }
 
   stop() {
+    if (this.#createdModulesSymlink) {
+      try {
+        unlinkSync(this.#createdModulesSymlink);
+      } catch {
+        /* already gone */
+      }
+      this.#createdModulesSymlink = null;
+    }
     if (this.child) {
       const child = this.child;
       try {

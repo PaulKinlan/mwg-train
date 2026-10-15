@@ -1036,3 +1036,25 @@ test('a designed board is shown as a designed board: measured, separately labell
   symlinkSync(escaped, join(boards, 'tr-01'));
   assert.equal(trainingBoard(root, 'tr-01'), null, 'a symlinked board directory is not the board directory');
 });
+
+test('pattern and family cards render code blocks, simple and site prompts, design/plan contracts, and project links', async (t) => {
+  const base = await serve(t, ROOT);
+
+  const patternRes = await fetch(`${base}/concepts/pattern/booking`);
+  assert.equal(patternRes.status, 200);
+  const patternHtml = await patternRes.text();
+  assert.match(patternHtml, /<summary>Simple Generation Prompt \( baseline \/ zero-shot input \)<\/summary>/);
+  assert.match(patternHtml, /<summary>Site Generation Prompt \( full spec \+ design contract \)<\/summary>/);
+  assert.match(patternHtml, /<pre class="concept-prompt-pre"><code class="concept-prompt-copy">/);
+  assert.match(patternHtml, /Design Contract \(docs\/design\/archetypes\/booking\/design\.md\)/);
+  assert.match(patternHtml, /Functional Plan &amp; Acceptance Contract \(docs\/design\/archetypes\/booking\/plan\.md\)/);
+  assert.match(patternHtml, /href="\/project\/booking-hono"/);
+
+  const familyRes = await fetch(`${base}/concepts/family/tr-01`);
+  assert.equal(familyRes.status, 200);
+  const familyHtml = await familyRes.text();
+  assert.match(familyHtml, /<summary>Simple Generation Prompt \( baseline \/ zero-shot input \)<\/summary>/);
+  assert.match(familyHtml, /<summary>Site Generation Prompt · functional build \( full spec \+ design contract \)<\/summary>/);
+  assert.match(familyHtml, /<pre class="concept-prompt-pre"><code class="concept-prompt-copy">/);
+  assert.match(familyHtml, /href="\/project\/tr-01-hono"/);
+});

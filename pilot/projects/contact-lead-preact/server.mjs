@@ -4,8 +4,8 @@
  * measures behaviour, and a reviewer has to be able to see what the server does.
  */
 import { createServer } from 'node:http';
-import { readFileSync } from 'node:fs';
-import { randomUUID } from 'node:crypto';
+import { readFileSync, existsSync } from 'node:fs';
+import { randomUUID, createHash } from 'node:crypto';
 import { DatabaseSync } from 'node:sqlite';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -13,6 +13,39 @@ import { fileURLToPath } from 'node:url';
 import { renderDocument } from './app/page.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
+const ASSET_STORE = "assets/archetypes/contact-lead";
+const ASSET_DIGESTS = {"step1-form.jpg":"e3ed49ff25a2f65ca0a79dec64e0d24b0b4626aafffa5b044860f2a6db196ac1","step2-success.jpg":"ec268f5ce58804555bf1d51d59cc1cf7ad143779a17e0f2c33b3a32dc700011f","step3-refusal.jpg":"1f27699e3fb408ef7c70553b4ce189d20e4ba8c4cb520d177144e52354a64592"};
+const ASSET_TYPES = { '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp', '.avif': 'image/avif', '.gif': 'image/gif', '.svg': 'image/svg+xml' };
+function decodeAssetName(raw) {
+  // Never throws: a malformed percent-escape (GET /app/%zz) used to raise a URIError out of the request handler
+  // and take the server process down with it. An empty string fails the name pattern below, so the request 404s
+  // the same way an unregistered board does.
+  try {
+    return decodeURIComponent(raw);
+  } catch {
+    return '';
+  }
+}
+
+function readArchetypeAsset(name) {
+  // A name that is not a plain board filename is refused first. The register lookup below would refuse it too,
+  // but this is what keeps a name carrying %, / or .. away from both the filesystem and the register.
+  if (typeof name !== 'string' || !/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(name)) return null;
+  if (!Object.hasOwn(ASSET_DIGESTS, name)) return null;
+  let dir = here;
+  for (let depth = 0; depth < 8; depth += 1) {
+    const candidate = join(dir, ASSET_STORE, 'images', name);
+    if (existsSync(candidate)) {
+      const body = readFileSync(candidate);
+      if (createHash('sha256').update(body).digest('hex') !== ASSET_DIGESTS[name]) return null;
+      return { body, type: ASSET_TYPES[name.slice(name.lastIndexOf('.'))] ?? 'application/octet-stream' };
+    }
+    const parent = dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return null;
+}
 const arg = (name, fallback) => {
   const index = process.argv.indexOf(`--${name}`);
   return index === -1 ? fallback : process.argv[index + 1];
@@ -61,11 +94,24 @@ const EXTRA_ACTION = "";
 const EXTRA_REQUIRED = [];
 const requiredFor = (path) => (EXTRA_ACTION !== '' && path === EXTRA_ACTION ? EXTRA_REQUIRED : REQUIRED);
 
+// Every request this server answered, in order. The browser's own network log never reported the form
+// POST, so the POST's status was being taken from the page it redirected to - which is how 'the POST
+// succeeded' came to be claimed with no POST observed. The server is the witness for its own writes.
+const requestLog = [];
+
 const server = createServer(async (request, response) => {
   const url = new URL(request.url, `http://${request.headers.host ?? '127.0.0.1'}`);
   const path = url.pathname;
+  if (path !== '/__requests') {
+    const writeHead = response.writeHead.bind(response);
+    response.writeHead = (status, headers) => {
+      requestLog.push({ method: request.method, path, status });
+      return writeHead(status, headers);
+    };
+  }
 
   if (path === '/__health') return json(response, { ok: true });
+  if (path === '/__requests' && request.method === 'GET') return json(response, requestLog);
 
   if (path.startsWith('/app/')) {
     const file = join(here, path);
@@ -75,6 +121,14 @@ const server = createServer(async (request, response) => {
       response.writeHead(200, { 'content-type': `${type}; charset=utf-8` });
       return response.end(body);
     } catch {
+      // Not in the tree, so it may be one of the archetype's boards: served from the store, and only if
+      // its bytes still hash to the recorded digest. The provenance header is deliberate - a reader and a
+      // test can both tell a board of the target from a file the build itself wrote.
+      const asset = readArchetypeAsset(decodeAssetName(path.slice('/app/'.length)));
+      if (asset) {
+        response.writeHead(200, { 'content-type': asset.type, 'x-asset-source': `${ASSET_STORE}/images`, 'cache-control': 'no-store' });
+        return response.end(asset.body);
+      }
       response.writeHead(404);
       return response.end('not found');
     }

@@ -1,7 +1,14 @@
 export async function renderPage(data = {}) {
   return `
+      <header class="brand" data-asset-store="assets/archetypes/event-registration">
+        <span class="brand-name">Future Web 2026</span>
+      </header>
       <h1>Event registration with capacity</h1>
       <p>Registration for a limited-capacity event, with a server-enforced waitlist.</p>
+      <figure class="reference-board">
+        <img src="/app/step1-event.jpg" alt="Reference board for event-registration" width="1280" height="900" loading="lazy" decoding="async">
+        <figcaption>Reference board for event-registration</figcaption>
+      </figure>
     <form id="registration-form" method="post" action="/register">
       <div role="alert" aria-live="assertive" class="form-status" data-form-status></div>
       <div class="field">
@@ -25,6 +32,7 @@ export async function renderPage(data = {}) {
       </section>`;
 }
 
+const escapeTitle = (value) => String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 export async function renderDocument({ title = 'Event registration with capacity', data = {} } = {}) {
   const body = await renderPage(data);
   return `<!doctype html>
@@ -32,7 +40,7 @@ export async function renderDocument({ title = 'Event registration with capacity
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>${title}</title>
+    <title>${escapeTitle(title)}</title>
     <link rel="stylesheet" href="/app/styles.css">
   </head>
   <body>
