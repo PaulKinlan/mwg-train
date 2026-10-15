@@ -2,7 +2,6 @@ import { accessSync, closeSync, constants, fstatSync, lstatSync, openSync, readF
 import { dirname, isAbsolute, join, relative, sep } from 'node:path';
 
 import { escapeHtml, page } from './pages.mjs';
-import { readJpegDimensions } from './tuning.mjs';
 import { TRAINING_ARCHETYPE_IDS } from '../../pilot/training-archetypes.mjs';
 import { archetypeBrief, inheritedTrainingPrompt, stepImagePrompt, trainingBrief, trainingBriefs } from './concept-briefs.mjs';
 
@@ -316,22 +315,63 @@ function pngSize(file) {
   }
 }
 
-/** A bounded read of a file's head: enough for a JPEG SOF marker without pulling a whole 900 KB board into memory
- *  to measure it. A marker that runs past the window yields no size, which is reported as an absent size. */
-function boundedHead(file, bytes) {
+/** Read only JPEG marker headers, seeking over APP/EXIF payloads to the SOF. A fixed
+ *  byte prefix misses legitimate boards whose SOF follows >64 KiB of metadata;
+ *  loading every JPEG body would make a pattern page and offline register costly.
+ *  Unknown or malformed marker chains prove no size, so no dimensions are claimed. */
+function jpegSize(file) {
+  let fd;
   try {
-    const fd = openSync(file, 'r');
-    let head;
-    try {
-      const buffer = Buffer.alloc(bytes);
-      const read = readSync(fd, buffer, 0, bytes, 0);
-      head = read > 0 ? buffer.subarray(0, read) : null;
-    } finally {
-      closeSync(fd);
+    fd = openSync(file, 'r');
+    const stat = fstatSync(fd);
+    if (!stat.isFile() || stat.size < 4) return null;
+    const read = (length, offset) => {
+      const bytes = Buffer.alloc(length);
+      return readSync(fd, bytes, 0, length, offset) === length ? bytes : null;
+    };
+    const soi = read(2, 0);
+    if (soi?.[0] !== 0xff || soi[1] !== 0xd8) return null;
+    let offset = 2;
+    // Limit marker count as well as I/O: even an adversarial chain of tiny
+    // segments must not tie up an authenticated page request indefinitely.
+    for (let count = 0; count < 4096 && offset + 1 < stat.size; count++) {
+      let pair = read(2, offset);
+      if (pair?.[0] !== 0xff) return null;
+      for (let fill = 0; pair[1] === 0xff; fill++) {
+        if (fill >= 16) return null;
+        offset++;
+        pair = offset + 1 < stat.size ? read(2, offset) : null;
+        if (!pair) return null;
+      }
+      const marker = pair[1];
+      if (marker === 0x00 || marker === 0xd9 || marker === 0xda) return null;
+      if (marker === 0xd8 || marker === 0x01 || marker >= 0xd0 && marker <= 0xd7) {
+        offset += 2;
+        continue;
+      }
+      const lengthBytes = read(2, offset + 2);
+      if (!lengthBytes) return null;
+      const length = lengthBytes.readUInt16BE(0);
+      if (length < 2 || offset + length + 2 > stat.size) return null;
+      const isSof = marker >= 0xc0 && marker <= 0xc3 || marker >= 0xc5 && marker <= 0xc7
+        || marker >= 0xc9 && marker <= 0xcb || marker >= 0xcd && marker <= 0xcf;
+      if (isSof) {
+        if (length < 7) return null;
+        const frame = read(5, offset + 4);
+        if (!frame) return null;
+        const width = frame.readUInt16BE(3);
+        const height = frame.readUInt16BE(1);
+        return width > 0 && height > 0 ? { width, height } : null;
+      }
+      offset += 2 + length;
     }
-    return head;
+    return null;
   } catch {
     return null;
+  } finally {
+    if (fd !== undefined) {
+      try { closeSync(fd); } catch { /* A failed metadata probe must not break the page. */ }
+    }
   }
 }
 
@@ -408,14 +448,23 @@ export function listConcepts(repoRoot, { view = 'all', id = null } = {}) {
   const names = [...EVAL_TARGETS].filter((name) => !!conceptImageFile(repoRoot, name));
   const briefRows = indexOnly ? new Map() : trainingBriefs(repoRoot);
   const states = indexOnly || familyOnly ? {} : boardStateRegister(repoRoot);
-  const journeys = (familyOnly ? [] : Object.entries(JOURNEYS)).map(([id, steps]) => ({
-    id, title: id.replaceAll('-', ' '),
-    steps: steps.map((step) => ({
-      ...step,
-      available: !!journeyStepFile(repoRoot, id, step.id),
-      darkAvailable: !!journeyStepFile(repoRoot, id, `${step.id}-dark`),
-    })),
-  }));
+  const journeys = (familyOnly ? [] : Object.entries(JOURNEYS).filter(([journeyId]) => !patternOnly || journeyId === id))
+    .map(([journeyId, steps]) => ({
+      id: journeyId, title: journeyId.replaceAll('-', ' '),
+      steps: steps.map((step) => {
+        const light = journeyStepFile(repoRoot, journeyId, step.id);
+        const dark = journeyStepFile(repoRoot, journeyId, `${step.id}-dark`);
+        // The index remains stat-only; a pattern detail probes only its own bounded
+        // headers. Do not claim a ratio for an image whose bytes prove no size.
+        const measuredLight = !indexOnly && light ? jpegSize(light) : null;
+        const measuredDark = !indexOnly && dark ? jpegSize(dark) : null;
+        const lightSize = measuredLight?.width > 0 && measuredLight?.height > 0 ? measuredLight : null;
+        const darkSize = measuredDark?.width > 0 && measuredDark?.height > 0 ? measuredDark : null;
+        return { ...step, available: !!light, darkAvailable: !!dark,
+          ...(lightSize ? { width: lightSize.width, height: lightSize.height } : {}),
+          ...(darkSize ? { darkWidth: darkSize.width, darkHeight: darkSize.height } : {}) };
+      }),
+    }));
   // Booking remains first, including when its first image is absent. Only the sealed A6 ids
   // can gain a reference pairing; an extra JPEG in the directory does not declare a new arm.
   const available = journeys.filter((journey) => EVAL_TARGETS.has(journey.id) && journey.steps[0].available).map((journey) => journey.id);
@@ -442,9 +491,10 @@ export function listConcepts(repoRoot, { view = 'all', id = null } = {}) {
       const first = journeys.find((journey) => journey.id === archetypeId)?.steps[0];
       const stepReference = !names.includes(archetypeId) && first?.available;
       const targetFile = conceptTargetFile(repoRoot, archetypeId);
+      const targetSize = (patternOnly || view === 'all') && targetFile ? pngSize(targetFile) : null;
       return { id: archetypeId, reference: names.includes(archetypeId) || !!stepReference,
         target: !!targetFile,
-        ...(patternOnly && targetFile ? { targetSize: pngSize(targetFile) } : {}),
+        ...(targetSize ? { targetSize } : {}),
         ...(stepReference ? { referencePath: `/concepts/images/${archetypeId}/${first.id}.jpg` } : {}) };
     }),
     // Only A1 manifest families are declared. The index and pattern pages need metadata,
@@ -453,7 +503,7 @@ export function listConcepts(repoRoot, { view = 'all', id = null } = {}) {
       const detailed = view === 'all' || familyOnly && family.id === id;
       const target = detailed ? trainingTargetFile(repoRoot, family.id) : null;
       const board = patternOnly ? null : trainingBoardFile(repoRoot, family.id);
-      const boardSize = detailed && board ? readJpegDimensions(boundedHead(board, 65536)) : null;
+      const boardSize = detailed && board ? jpegSize(board) : null;
       // A skipped probe is unknown, not an unavailable asset. Expose those fields only
       // in scopes that actually checked them; do not force index/detail HTTP to read all images.
       return { ...family,
@@ -516,7 +566,7 @@ const patternCard = ({ id, brief, steps }, families = []) => {
     ${steps.some((step) => step.available && /\bQR\b/i.test(step.imagePrompt ?? '')) ? `<p class="muted">Depicted QR codes are unverified placeholders: do not scan depicted codes. A model ID may be reported rather than attested; check each board&rsquo;s provenance in ${code(`docs/design/archetypes/${id}/README.md`)}. These illustrations remain excluded from training; no reuse clearance is granted here. Check each board&rsquo;s provenance: some records identify provider terms prohibiting use of the image to develop machine-learning models; others say training and output-use rights were not supplied.</p>` : ''}
     <div class="concept-theme-set concept-theme-light">
       <h5 class="concept-theme-heading"><span class="theme-pill theme-pill-light">☀ Light Mode Set</span> Complete ${steps.length}-step Light Mode UI (${code(`docs/design/archetypes/${id}/step*.jpg`)})</h5>
-      <ol class="concept-steps">${steps.map(({ id: stepId, title, available, state, imagePrompt }) => {
+      <ol class="concept-steps">${steps.map(({ id: stepId, title, available, width, height, state, imagePrompt }) => {
         const path = `/concepts/images/${id}/${stepId}.jpg`;
         const mapped = state?.kind === 'page' ? `Document state at ${state.path ?? 'no confirmed route'}`
           : state?.kind === 'interaction' ? 'Interaction state; no standalone document URL'
@@ -524,7 +574,7 @@ const patternCard = ({ id, brief, steps }, families = []) => {
         const claim = state?.drive?.expectText ? `Assert after the registered interaction: ${state.drive.expectText}`
           : 'No step-specific browser assertion is registered for this picture.';
         return `<li><figure><div class="concept-image-frame">${available
-          ? `<a href="${path}" aria-label="Open ${escapeHtml(id)} ${escapeHtml(title)} concept board"><img src="${path}" alt="Illustrative ${escapeHtml(id)} state: ${escapeHtml(title)}" width="1376" height="768" loading="lazy"></a>`
+          ? `<a href="${path}" aria-label="Open ${escapeHtml(id)} ${escapeHtml(title)} concept board"><img src="${path}" alt="Illustrative ${escapeHtml(id)} state: ${escapeHtml(title)}"${width && height ? ` width="${width}" height="${height}"` : ''} loading="lazy"></a>`
           : `<p class="muted">State image pending: ${code(`docs/design/archetypes/${id}/${stepId}.jpg`)}</p>`}</div>
           <figcaption><strong>${escapeHtml(title)} · Light Mode</strong><p>${escapeHtml(mapped)}. ${escapeHtml(claim)}</p>
           ${state?.source ? `<p class="muted">State mapping: ${escapeHtml(state.source)}</p>` : ''}
@@ -534,10 +584,10 @@ const patternCard = ({ id, brief, steps }, families = []) => {
     </div>
     <div class="concept-theme-set concept-theme-dark">
       <h5 class="concept-theme-heading"><span class="theme-pill theme-pill-dark">☾ Dark Mode Set</span> Complete ${steps.length}-step matching Dark Mode UI (${code(`docs/design/archetypes/${id}/dark/step*.jpg`)})</h5>
-      <ol class="concept-steps concept-steps-dark">${steps.map(({ id: stepId, title, darkAvailable }) => {
+      <ol class="concept-steps concept-steps-dark">${steps.map(({ id: stepId, title, darkAvailable, darkWidth, darkHeight }) => {
         const darkPath = `/concepts/images/${id}/${stepId}-dark.jpg`;
         return `<li><figure><div class="concept-image-frame">${darkAvailable
-          ? `<a href="${darkPath}" aria-label="Open ${escapeHtml(id)} ${escapeHtml(title)} dark mode concept board"><img src="${darkPath}" alt="Illustrative ${escapeHtml(id)} dark mode state: ${escapeHtml(title)}" width="1376" height="768" loading="lazy"></a>`
+          ? `<a href="${darkPath}" aria-label="Open ${escapeHtml(id)} ${escapeHtml(title)} dark mode concept board"><img src="${darkPath}" alt="Illustrative ${escapeHtml(id)} dark mode state: ${escapeHtml(title)}"${darkWidth && darkHeight ? ` width="${darkWidth}" height="${darkHeight}"` : ''} loading="lazy"></a>`
           : `<p class="muted">Dark mode state image pending: ${code(`docs/design/archetypes/${id}/dark/${stepId}.jpg`)}</p>`}</div>
           <figcaption><strong>${escapeHtml(title)} · Dark Mode</strong><p class="muted">Context-chained from ${code(`${stepId}.jpg`)} + ${code('design.md')} dark palette (${code(`docs/design/archetypes/${id}/dark/${stepId}.jpg`)}).</p>
           </figcaption></figure></li>`;
@@ -654,20 +704,20 @@ export function renderConcepts({ patterns = [], archetypes = [], trainingTargets
     : '<p class="notice">No A1 training families are declared in this checkout.</p>';
   const patternSection = patterns.length ? patterns.map((pattern) => patternCard(pattern, familiesByArchetype.get(pattern.id) ?? [])).join('')
     : '<p class="notice">No authored archetype patterns are available in this checkout.</p>';
-  const evaluationSection = archetypes.length ? archetypes.map(({ id, target }) => {
+  const evaluationSection = archetypes.length ? archetypes.map(({ id, target, targetSize }) => {
     const pattern = patterns.find((entry) => entry.id === id);
     const firstStep = pattern?.steps?.[0];
     return `<article class="concept-comparison" aria-labelledby="concept-${escapeHtml(id)}">
     <h3 id="concept-${escapeHtml(id)}">${escapeHtml(id.replaceAll('-', ' '))}${patternSubject(id) ? ` · <span class="muted">${escapeHtml(patternSubject(id))}</span>` : ''}</h3>
     <p>Read the <a href="#pattern-${escapeHtml(id)}">${escapeHtml(id)} pattern, its site prompt and pictured states</a> above. Its illustrative JPEGs are <em>not</em> the target below.</p>
     <div class="eval-target-showcase">
-      ${target ? `<figure><div class="concept-image-frame"><a href="/concepts/targets/${escapeHtml(id)}.png" aria-label="Open ${escapeHtml(id)} A6 authored target render"><img src="/concepts/targets/${escapeHtml(id)}.png" alt="A6 authored evaluation target for ${escapeHtml(id)}" width="1280" height="900" loading="lazy"></a></div>
+      ${target ? `<figure><div class="concept-image-frame"><a href="/concepts/targets/${escapeHtml(id)}.png" aria-label="Open ${escapeHtml(id)} A6 authored target render"><img src="/concepts/targets/${escapeHtml(id)}.png" alt="A6 authored evaluation target for ${escapeHtml(id)}"${targetSize?.width && targetSize?.height ? ` width="${targetSize.width}" height="${targetSize.height}"` : ''} loading="lazy"></a></div>
         <figcaption><strong>A6 authored evaluation target</strong> · ${code(`data/A6_evaluation/targets/${id}/target.png`)} (rendered from ${code(`docs/eval/targets/${id}/index.html`)} + ${code('docs/eval/targets/base.css')}). A fixed evaluation instrument; not an AI-generated concept image or proof of a working site.</figcaption></figure>`
         : '<p class="muted">Authored target render unavailable in this checkout.</p>'}
       ${firstStep?.available ? `<div class="eval-reference-pair">
-        <figure><div class="concept-image-frame"><a href="/concepts/images/${escapeHtml(id)}/${escapeHtml(firstStep.id)}.jpg" aria-label="Open ${escapeHtml(id)} Light Mode Step 1 concept board"><img src="/concepts/images/${escapeHtml(id)}/${escapeHtml(firstStep.id)}.jpg" alt="Light Mode Step 1 concept board for ${escapeHtml(id)}" width="1376" height="768" loading="lazy"></a></div>
+        <figure><div class="concept-image-frame"><a href="/concepts/images/${escapeHtml(id)}/${escapeHtml(firstStep.id)}.jpg" aria-label="Open ${escapeHtml(id)} Light Mode Step 1 concept board"><img src="/concepts/images/${escapeHtml(id)}/${escapeHtml(firstStep.id)}.jpg" alt="Light Mode Step 1 concept board for ${escapeHtml(id)}"${firstStep.width && firstStep.height ? ` width="${firstStep.width}" height="${firstStep.height}"` : ''} loading="lazy"></a></div>
           <figcaption><span class="theme-pill theme-pill-light">☀ Light Mode Step 1</span> ${code(`${id}/${firstStep.id}.jpg`)}</figcaption></figure>
-        ${firstStep.darkAvailable ? `<figure><div class="concept-image-frame"><a href="/concepts/images/${escapeHtml(id)}/${escapeHtml(firstStep.id)}-dark.jpg" aria-label="Open ${escapeHtml(id)} Dark Mode Step 1 concept board"><img src="/concepts/images/${escapeHtml(id)}/${escapeHtml(firstStep.id)}-dark.jpg" alt="Dark Mode Step 1 concept board for ${escapeHtml(id)}" width="1376" height="768" loading="lazy"></a></div>
+        ${firstStep.darkAvailable ? `<figure><div class="concept-image-frame"><a href="/concepts/images/${escapeHtml(id)}/${escapeHtml(firstStep.id)}-dark.jpg" aria-label="Open ${escapeHtml(id)} Dark Mode Step 1 concept board"><img src="/concepts/images/${escapeHtml(id)}/${escapeHtml(firstStep.id)}-dark.jpg" alt="Dark Mode Step 1 concept board for ${escapeHtml(id)}"${firstStep.darkWidth && firstStep.darkHeight ? ` width="${firstStep.darkWidth}" height="${firstStep.darkHeight}"` : ''} loading="lazy"></a></div>
           <figcaption><span class="theme-pill theme-pill-dark">☾ Dark Mode Step 1</span> ${code(`${id}/dark/${firstStep.id}.jpg`)}</figcaption></figure>` : ''}
       </div>` : ''}
     </div>

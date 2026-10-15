@@ -5,7 +5,7 @@ import { existsSync, mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync 
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
-import { conceptBookingStep, conceptImage, conceptJourneyStep, conceptTarget, listConcepts, renderConceptIndex, renderConcepts, trainingBoard, trainingTarget } from '../src/viewer/concepts.mjs';
+import { conceptBookingStep, conceptImage, conceptJourneyStep, conceptTarget, listConcepts, renderConceptIndex, renderConceptPattern, renderConcepts, trainingBoard, trainingTarget } from '../src/viewer/concepts.mjs';
 import { createViewer } from '../src/viewer/server.mjs';
 
 const ROOT = resolve(import.meta.dirname, '..');
@@ -31,13 +31,15 @@ test('gallery serves the generated archetype reference boards and the authored e
     'interactive-product-configurator/step2-drivetrain-and-wheelset-swap',
     'developer-media-playground/step2-transcript-search-highlight',
   ]);
-  assert.deepEqual(gallery.archetypes, [
+  assert.deepEqual(gallery.archetypes.map(({ targetSize, ...row }) => row), [
     { id: 'booking', reference: true, target: true, referencePath: '/concepts/images/booking/step1-browse.jpg' },
     { id: 'account-recovery', reference: true, target: true, referencePath: '/concepts/images/account-recovery/step1-request.jpg' },
     { id: 'catalogue', reference: true, target: true, referencePath: '/concepts/images/catalogue/step1-grid.jpg' },
     { id: 'contact-lead', reference: true, target: true, referencePath: '/concepts/images/contact-lead/step1-form.jpg' },
     { id: 'event-registration', reference: true, target: true, referencePath: '/concepts/images/event-registration/step1-event.jpg' },
   ]);
+  assert.ok(gallery.archetypes.every(({ targetSize }) => targetSize?.width === 1280 && targetSize?.height === 900),
+    'full offline register measures all five committed A6 PNG headers');
   assert.deepEqual(gallery.journeys.map(({ id, steps }) => [id, steps.length]), [
     ['booking', 5], ['catalogue', 3], ['contact-lead', 3], ['account-recovery', 3], ['event-registration', 3],
     ['editorial-blog', 4], ['fan-community-site', 5], ['product-card-comparison', 4],
@@ -879,17 +881,97 @@ test('the A1 target size is measured from the PNG header, never taken from the m
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
 
+test('committed Dark SOF beyond 64 KiB still supplies truthful dimensions for every concept board', () => {
+  const booking = listConcepts(ROOT, { view: 'pattern', id: 'booking' });
+  const step = booking.patterns[0].steps.find((item) => item.id === 'step2-form');
+  assert.deepEqual([step.darkWidth, step.darkHeight], [1376, 768],
+    'the actual booking dark board carries its SOF past the old 64 KiB cutoff');
+  assert.match(renderConceptPattern(booking, 'booking'),
+    /<img src="\/concepts\/images\/booking\/step2-form-dark\.jpg"[^>]*width="1376" height="768"/);
+  const full = renderConcepts(listConcepts(ROOT));
+  const tags = [...full.matchAll(/<img src="\/concepts\/images\/[^\"]+\.jpg"[^>]*>/g)].map((match) => match[0]);
+  assert.ok(tags.length >= 132, 'both pattern and sealed A6 comparison boards are present');
+  for (const tag of tags) assert.match(tag, /width="\d+" height="\d+"/,
+    'all currently committed JPEGs have measurable geometry; no lazy image should lose its ratio');
+});
+
+test('archetype Light and Dark board dimensions come from JPEG bytes in detail and full snapshots', () => {
+  const root = mkdtempSync(join(tmpdir(), 'viewer-concepts-archetype-size-'));
+  try {
+    const boardDir = join(root, 'docs/design/archetypes/booking');
+    mkdirSync(join(boardDir, 'dark'), { recursive: true });
+    mkdirSync(join(root, 'data/A6_evaluation/targets/booking'), { recursive: true });
+    // The same SOF shape used for the A1 board-size check below: the dimensions are
+    // real header bytes, not a value supplied by a manifest or provenance document.
+    const jpeg = (width, height) => {
+      const bytes = Buffer.alloc(23);
+      bytes[0] = 0xff; bytes[1] = 0xd8; bytes[2] = 0xff; bytes[3] = 0xc0;
+      bytes.writeUInt16BE(0x0011, 4); bytes[6] = 8;
+      bytes.writeUInt16BE(height, 7); bytes.writeUInt16BE(width, 9);
+      bytes[11] = 3; bytes[21] = 0xff; bytes[22] = 0xd9;
+      return bytes;
+    };
+    const light = join(boardDir, 'step1-browse.jpg');
+    writeFileSync(light, jpeg(800, 600));
+    writeFileSync(join(boardDir, 'dark/step1-browse.jpg'), jpeg(600, 800));
+    const a6 = Buffer.alloc(24);
+    a6.writeUInt32BE(0x89504e47, 0); a6.writeUInt32BE(0x0d0a1a0a, 4);
+    a6.write('IHDR', 12, 'latin1'); a6.writeUInt32BE(1280, 16); a6.writeUInt32BE(1200, 20);
+    const target = join(root, 'data/A6_evaluation/targets/booking/target.png');
+    writeFileSync(target, a6);
+    const sized = listConcepts(root, { view: 'pattern', id: 'booking' });
+    const step = sized.patterns[0].steps[0];
+    assert.deepEqual([step.width, step.height, step.darkWidth, step.darkHeight], [800, 600, 600, 800]);
+    const index = listConcepts(root, { view: 'index' });
+    assert.equal('width' in index.patterns.find((item) => item.id === 'booking').steps[0], false,
+      'the stat-only index must not read JPEG headers');
+    const app = Buffer.alloc(65537);
+    app[0] = 0xff; app[1] = 0xe1; app.writeUInt16BE(65535, 2);
+    const frame = jpeg(800, 600);
+    writeFileSync(light, Buffer.concat([frame.subarray(0, 2), app, frame.subarray(2)]));
+    const lateSof = listConcepts(root, { view: 'pattern', id: 'booking' }).patterns[0].steps[0];
+    assert.deepEqual([lateSof.width, lateSof.height], [800, 600],
+      'a legal-size APP marker moves SOF past 64 KiB without reading its payload');
+    const lightImage = /<img src="\/concepts\/images\/booking\/step1-browse\.jpg"[^>]*>/g;
+    const darkImage = /<img src="\/concepts\/images\/booking\/step1-browse-dark\.jpg"[^>]*>/g;
+    for (const html of [renderConceptPattern(sized, 'booking'), renderConcepts(listConcepts(root))]) {
+      const lightTags = [...html.matchAll(lightImage)].map((match) => match[0]);
+      const darkTags = [...html.matchAll(darkImage)].map((match) => match[0]);
+      assert.ok(lightTags.length > 0 && darkTags.length > 0, 'both images appear in this view');
+      for (const tag of lightTags) assert.match(tag, /width="800" height="600"/, 'Light board reserves its measured aspect ratio');
+      for (const tag of darkTags) assert.match(tag, /width="600" height="800"/, 'Dark board reserves its measured aspect ratio');
+    }
+    const full = renderConcepts(listConcepts(root));
+    assert.match(full, /<img src="\/concepts\/targets\/booking\.png"[^>]*width="1280" height="1200"/,
+      'the A6 comparison must use the same measured IHDR geometry as the pattern page');
+    // The asset is still listed, but an undecodable header cannot justify a dimension claim.
+    writeFileSync(light, Buffer.from([0xff, 0xd8, 0xff, 0xd9]));
+    const unknown = listConcepts(root, { view: 'pattern', id: 'booking' });
+    assert.equal('width' in unknown.patterns[0].steps[0], false);
+    const markup = renderConceptPattern(unknown, 'booking');
+    const tag = markup.match(lightImage)?.[0];
+    assert.ok(tag);
+    assert.doesNotMatch(tag, /\b(?:width|height)="\d+"/);
+    writeFileSync(target, Buffer.from([137, 80, 78, 71]));
+    const unknownTarget = renderConcepts(listConcepts(root)).match(/<img src="\/concepts\/targets\/booking\.png"[^>]*>/)?.[0];
+    assert.ok(unknownTarget);
+    assert.doesNotMatch(unknownTarget, /\b(?:width|height)="\d+"/,
+      'an unparseable A6 IHDR cannot justify width/height either');
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
 test('a designed board is shown as a designed board: measured, separately labelled, and refused when undeclared', async (t) => {
   const root = mkdtempSync(join(tmpdir(), 'viewer-concepts-board-'));
   t.after(() => rmSync(root, { recursive: true, force: true }));
   const arm = join(root, 'data/A1_self_generated/targets');
   const boards = join(root, 'docs/design/training');
   const png = Buffer.from([137, 80, 78, 71]);
-  const jpeg = Buffer.alloc(20);
+  const jpeg = Buffer.alloc(23);
   jpeg[0] = 0xff; jpeg[1] = 0xd8; jpeg[2] = 0xff; jpeg[3] = 0xc0;
   jpeg.writeUInt16BE(0x0011, 4); jpeg[6] = 8;
   jpeg.writeUInt16BE(768, 7);   // height
   jpeg.writeUInt16BE(1376, 9);  // width
+  jpeg[11] = 3; jpeg[21] = 0xff; jpeg[22] = 0xd9;
   const line = (id) => JSON.stringify({
     id: `target-${id}`, arm: 'A1_self_generated', kind: 'asset', family_id: id, archetype: 'booking',
     title: 'A family', origin: `docs/train/targets/${id}/index.html`,
