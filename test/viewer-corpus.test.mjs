@@ -1,13 +1,15 @@
 /** Corpus discovery and page rendering tests, against a fixture corpus built on disk. */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 
 import { filterProjects, loadCorpus, projectView } from '../src/viewer/corpus.mjs';
 import { renderIndex, renderProject } from '../src/viewer/pages.mjs';
-import { combineScanStatus } from '../src/viewer/server.mjs';
+import { combineScanStatus, createViewer } from '../src/viewer/server.mjs';
+import { hashTree } from '../src/corpus/tree-hash.mjs';
+import { upliftProject } from '../src/corpus/uplift.mjs';
 
 function buildFixtureCorpus() {
   const root = mkdtempSync(join(tmpdir(), 'viewer-corpus-test-'));
@@ -102,6 +104,84 @@ function buildFixtureCorpus() {
   project('contact-lead-raw', { defects: ['xss-innerhtml'] }); // no run recorded
   return root;
 }
+
+test('unscored training original serves verified while missing uplift hash never authorizes an IDEAL tree', async (t) => {
+  const root = mkdtempSync(join(tmpdir(), 'viewer-training-unscored-'));
+  const corpusRoot = join(root, 'pilot');
+  const site = join(corpusRoot, 'training-projects', 'tr-01-raw');
+  const stateDir = join(root, 'state');
+  mkdirSync(site, { recursive: true });
+  writeFileSync(join(site, 'server.mjs'), `import { createServer } from 'node:http';
+const port = Number(process.env.PILOT_PORT);
+createServer((_req, res) => { res.setHeader('content-type', 'text/html'); res.end('<h1>VERIFIED ORIGINAL</h1>'); }).listen(port);\n`);
+  writeFileSync(join(site, 'spec.json'), JSON.stringify({ project_id: 'tr-01-raw', archetype: 'booking',
+    framework: { name: 'raw', dialect: 'html' }, routes: ['/'], required_rules: [] }));
+  const originalSha = hashTree(site);
+  writeFileSync(join(corpusRoot, 'CORPUS.json'), JSON.stringify({ run_id: 'fixture-run', projects: [] }));
+  writeFileSync(join(corpusRoot, 'TRAINING_CORPUS.json'), JSON.stringify({ projects: [
+    { project_id: 'tr-01-raw', family_id: 'tr-01', archetype: 'booking', framework: 'raw', tree_sha: originalSha },
+  ] }));
+  let viewer = null;
+  t.after(async () => {
+    if (viewer) {
+      viewer.pool.stopAll();
+      await Promise.all([new Promise((done) => viewer.server.close(done)),
+        new Promise((done) => viewer.liveServer.close(done))]);
+    }
+    rmSync(root, { recursive: true, force: true });
+  });
+  const project = loadCorpus(corpusRoot, null, { includeTraining: true }).projects[0];
+  const view = projectView(project);
+  assert.equal(project.decision.original_sha, originalSha);
+  assert.equal(project.decision.has_run, false);
+  assert.equal(view.upliftedSha, null, 'missing evidence is never a fabricated *_sha');
+  const html = renderIndex({ views: [view], allViews: [view], filters: {}, runId: null, runs: [],
+    yieldReport: null, scanAvailable: true, liveOrigin: 'http://127.0.0.1:7701' });
+  assert.match(html, /IDEAL not yet uplifted.*no recorded tree hash/);
+  assert.doesNotMatch(html, /action="[^"]*\/live\/tr-01-raw\/uplifted/);
+
+  viewer = createViewer({ corpusRoot, repoRoot: resolve(import.meta.dirname, '..'),
+    stateDir, allowAnonymous: true });
+  await new Promise((done) => viewer.server.listen(0, '127.0.0.1', done));
+  await new Promise((done) => viewer.liveServer.listen(0, '127.0.0.1', done));
+  const live = `http://127.0.0.1:${viewer.liveServer.address().port}`;
+  const index = await fetch(`http://127.0.0.1:${viewer.server.address().port}/`);
+  const indexHtml = await index.text();
+  assert.match(indexHtml, /owner-auth scan: DEFAULT pending.*no IDEAL recorded/);
+  assert.doesNotMatch(indexHtml, /DEFAULT \+ IDEAL pending|action="[^"]*\/live\/tr-01-raw\/uplifted/);
+  const missing = await fetch(`${live}/live/tr-01-raw/uplifted/`);
+  assert.equal(missing.status, 404, 'an unrecorded uplift never serves a self-hashed regeneration');
+  assert.match(await missing.text(), /no uplifted sha|no uplift hash/i);
+  const original = await fetch(`${live}/live/tr-01-raw/original/`);
+  assert.equal(original.status, 200, 'original-only training entries must remain available');
+  assert.match(await original.text(), /VERIFIED ORIGINAL/);
+
+  const scoredRecord = join(root, 'docs/train/corpus/records.json');
+  mkdirSync(join(root, 'docs/train/corpus'), { recursive: true });
+  const record = (uplifted_sha) => writeFileSync(scoredRecord, JSON.stringify({ projects: [
+    { project_id: 'tr-01-raw', decision: { accepted: true }, uplifted_sha },
+  ] }));
+  record('derived-from-verified-original'); // A stale or hostile sentinel must never bypass a scored pair gate.
+  assert.equal((await fetch(`${live}/live/tr-01-raw/original/`)).status, 403,
+    'a scored pair cannot expose its original without a verifiable uplifted sha');
+  const invalid = await fetch(`${live}/live/tr-01-raw/uplifted/`);
+  assert.equal(invalid.status, 404);
+  assert.match(await invalid.text(), /did not reproduce the recorded uplifted sha/);
+
+  const expectedTree = join(root, 'expected-uplift');
+  upliftProject(site, JSON.parse(readFileSync(join(site, 'spec.json'), 'utf8')), expectedTree);
+  const expectedSha = hashTree(expectedTree);
+  record(expectedSha); // Synthetic measured fixture only; no digest is added to a real corpus record.
+  const valid = await fetch(`${live}/live/tr-01-raw/uplifted/`);
+  assert.equal(valid.status, 200, 'a genuinely matching recorded uplifted hash still serves');
+  const cacheDir = join(stateDir, 'uplifted', `tr-01-raw-${expectedSha.replace(/[^a-z0-9]/gi, '').slice(0, 24)}`);
+  assert.equal(hashTree(cacheDir), expectedSha);
+  writeFileSync(join(cacheDir, 'server.mjs'), 'tampered cached code');
+  assert.notEqual(hashTree(cacheDir), expectedSha);
+  assert.equal((await fetch(`${live}/live/tr-01-raw/uplifted/`)).status, 200);
+  assert.ok(existsSync(cacheDir));
+  assert.equal(hashTree(cacheDir), expectedSha, 'a drifted cache must be rebuilt and hash-checked before reuse');
+});
 
 test('loadCorpus discovers projects, the latest run and honest no-run state', (t) => {
   const root = buildFixtureCorpus();

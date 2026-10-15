@@ -333,11 +333,15 @@ export function stateBadge(view) {
   return `<span class="badge rejected" title="${escapeHtml(view.category)}">REJECTED ATTEMPT · ${escapeHtml(view.category)}</span>`;
 }
 
-export function scanBadge(scan) {
+export function scanBadge(scan, { originalOnly = false } = {}) {
   if (!scan) return '<span class="badge no-run">scan: not run</span>';
   if (scan.status === 'PASS') return '<span class="badge scan-pass">owner-auth scan: PASS</span>';
   if (scan.status === 'PARTIAL') {
     const originalPending = scan.original?.status === 'MISSING';
+    if (originalOnly) {
+      const label = originalPending ? 'DEFAULT pending (hash-verified+scanned at serve)' : 'DEFAULT PASS';
+      return `<span class="badge warn">owner-auth scan: ${label}; no IDEAL recorded</span>`;
+    }
     const targetPending = scan.uplifted?.status === 'MISSING';
     const pending = [originalPending && 'DEFAULT', targetPending && 'IDEAL'].filter(Boolean).join(' + ');
     const title = pending
@@ -397,13 +401,15 @@ function liveLinks(view, liveOrigin, runId) {
   // hash-verifies it against the record, and scans it before it is reachable.
   const pairOk = scan && (scan.status === 'PASS' || scan.status === 'PARTIAL');
   const treeOk = (result) => result?.status === 'PASS' || result?.status === 'MISSING';
-  const originalOk = pairOk && treeOk(scan?.original);
-  const upliftedOk = pairOk && treeOk(scan?.uplifted);
+  const originalOk = pairOk && treeOk(scan?.original) && (!view.hasRun || Boolean(view.upliftedSha));
+  const upliftedOk = pairOk && Boolean(view.upliftedSha) && treeOk(scan?.uplifted);
   const why = !scan
     ? 'owner-auth scan cannot run (fail-closed)'
     : !pairOk
       ? `owner-auth scan: ${escapeHtml(scan.status)} - the pair is refused, records included`
-      : null;
+      : view.hasRun && !view.upliftedSha
+        ? 'the scored pair has no recorded uplift hash'
+        : null;
   const runPath = runId ? `/run/${encodeURIComponent(runId)}` : '';
   // A class, not style="display:inline": every style on a viewer page comes from PAGE_CSS, so the CSP can pin the
   // page's style block by hash and does not have to allow inline styles (mwg-train-mslb).
@@ -411,7 +417,12 @@ function liveLinks(view, liveOrigin, runId) {
     ok
       ? `<form class="inline-form" method="post" action="${escapeHtml(liveOrigin)}/live/${escapeHtml(view.id)}/${version}${escapeHtml(runPath)}/start"><button type="submit">serve ${label} live</button></form>`
       : `<button type="button" disabled title="${why ?? `owner-auth scan: ${escapeHtml(scan?.[version]?.status ?? 'ERROR')}`}">serve ${label} live</button>`;
-  return `${button('original', 'DEFAULT', originalOk)} ${button('uplifted', 'IDEAL', upliftedOk)}`;
+  // A missing uplift record is not an action. Keep its reason visible rather than placing
+  // the only explanation in a disabled button's title (which is not keyboard discoverable).
+  const ideal = view.upliftedSha
+    ? button('uplifted', 'IDEAL', upliftedOk)
+    : '<span class="muted">IDEAL not yet uplifted (no recorded tree hash)</span>';
+  return `${button('original', 'DEFAULT', originalOk)} ${ideal}`;
 }
 
 export function renderLiveIndex({ views, runId, runs, active, viewerOrigin }) {
@@ -467,7 +478,7 @@ export function renderIndex({ views, allViews, filters, runId, runs, yieldReport
   <td>${escapeHtml(view.framework)}${view.frameworkVersion ? ` <span class="muted">${escapeHtml(view.frameworkVersion)}</span>` : ''}</td>
   <td><code>${escapeHtml(view.model ?? 'deterministic:no-model')}</code></td>
   <td>${stateBadge(view)}</td>
-  <td>${scanBadge(view.scan)}</td>
+  <td>${scanBadge(view.scan, { originalOnly: !view.hasRun && !!view.originalSha && !view.upliftedSha })}</td>
   <td>${view.improvedRules.length > 0 ? `<span class="chips">${view.improvedRules.map((rule) => `<span class="chip">${escapeHtml(rule)}</span>`).join('')}</span>` : '<span class="muted">—</span>'}</td>
   <td class="sha" title="original ${escapeHtml(view.originalSha ?? 'unrecorded')}">o:${escapeHtml(shortSha(view.originalSha))}<br>u:${escapeHtml(shortSha(view.upliftedSha))}</td>
   <td>${liveLinks(view, liveOrigin, runId)}</td>
@@ -619,7 +630,7 @@ export function renderProject({ view, runId, runs, liveOrigin }) {
 </div>`;
 
   return page(view.id, `
-<h1><code>${escapeHtml(view.id)}</code> ${stateBadge(view)} ${scanBadge(view.scan)}</h1>
+<h1><code>${escapeHtml(view.id)}</code> ${stateBadge(view)} ${scanBadge(view.scan, { originalOnly: !view.hasRun && !!view.originalSha && !view.upliftedSha })}</h1>
 ${projectBanner({ runEvidence })}
 <p class="muted">${escapeHtml(view.archetype)}${view.archetypeTitle ? ` — ${escapeHtml(view.archetypeTitle)}` : ''} · ${escapeHtml(view.framework)}${view.frameworkVersion ? ` ${escapeHtml(view.frameworkVersion)}` : ''}${view.frameworkFamily ? ` (${escapeHtml(view.frameworkFamily)})` : ''}</p>
 ${runSelector}
