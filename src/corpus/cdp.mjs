@@ -97,6 +97,8 @@ export function chromeArgs({ userDataDir, proxy = null, extra = [], unsandboxed 
     '--headless=new',
     '--remote-debugging-port=0',
     `--user-data-dir=${userDataDir}`,
+    // Some root/container hosts cannot start Chrome with user namespaces, but disabling its renderer sandbox is
+    // an explicit operator opt-in, never an automatic platform/root/container fallback (including on macOS).
     ...(unsandboxed ? ['--no-sandbox'] : []),
     '--disable-gpu',
     '--disable-dev-shm-usage',
@@ -521,34 +523,45 @@ export class Page {
     await this.send('Input.dispatchKeyEvent', { type: 'keyUp', ...params });
   }
 
+  /** One trusted printable key press. Chrome's native select type-ahead needs text on keyDown. */
+  async realChar(ch) {
+    const lower = ch.toLowerCase();
+    const letter = /^[a-z]$/.test(lower);
+    const digit = /^[0-9]$/.test(lower);
+    const keyCode = letter ? lower.toUpperCase().charCodeAt(0) : digit || ch === ' ' ? ch.charCodeAt(0) : 0;
+    const code = letter ? `Key${lower.toUpperCase()}` : digit ? `Digit${ch}` : ch === ' ' ? 'Space' : '';
+    const params = { key: ch, code, windowsVirtualKeyCode: keyCode, nativeVirtualKeyCode: keyCode };
+    await this.send('Input.dispatchKeyEvent', { type: 'keyDown', ...params, text: ch, unmodifiedText: ch });
+    await this.send('Input.dispatchKeyEvent', { type: 'keyUp', ...params });
+  }
+
   /**
-   * Choose an option in a `<select>` the way a user does: focus it and press an arrow key until the
-   * wanted option is selected.
-   *
-   * Setting `el.value` and dispatching a synthetic `change` would be shorter and wrong for exactly
-   * the reason `realType` exists: a page that reads its state from real interaction does not see a
-   * synthetic event, so the page under measurement would not be the page a user gets. Arrow keys on
-   * a focused closed select are trusted input, so the browser fires its own `input`/`change` and any
-   * handler the project attached runs.
-   *
-   * The move is relative to wherever the select currently is rather than assumed to start at the
-   * first option, because a project may preselect one.
+   * Choose an option in a `<select>` through the browser's trusted input pipeline. Setting el.value
+   * and dispatching synthetic change would not drive the real interaction handlers being measured.
+   * Linux keeps relative ArrowUp/Down from the current selection. On macOS Chrome 155 headless,
+   * those CDP keys did not change a closed select in an attributed older-tree arm64 run; native
+   * type-ahead through printable keyDown text did. Neither path claims success without readback.
    */
   async selectOption(selector, value) {
-    const { target, current, options } = await this.evaluate(`
+    const { target, current, options, labels } = await this.evaluate(`
       const el = document.querySelector(${JSON.stringify(selector)});
       if (!el) throw new Error('selectOption: no element for ' + ${JSON.stringify(selector)});
       if (el.tagName !== 'SELECT') throw new Error('selectOption: ' + ${JSON.stringify(selector)} + ' is a ' + el.tagName + ', not a select');
       const options = [...el.options].map((option) => option.value);
+      const labels = [...el.options].map((option) => option.label.trim());
       const target = [...el.options].findIndex((option) => option.value === ${JSON.stringify(value)} || option.textContent.trim() === ${JSON.stringify(value)});
       el.focus();
-      return { target, current: el.selectedIndex, options };
+      return { target, current: el.selectedIndex, options, labels };
     `);
     if (target < 0) {
       throw new CdpError('NO_SUCH_OPTION', `${selector} has no option '${value}'; it offers: ${options.join(', ')}`);
     }
-    const key = target > current ? 'ArrowDown' : 'ArrowUp';
-    for (let step = Math.abs(target - current); step > 0; step -= 1) await this.realKey(key);
+    if (process.platform === 'darwin') {
+      await this.#typeAheadOption(labels, target, current);
+    } else {
+      const key = target > current ? 'ArrowDown' : 'ArrowUp';
+      for (let step = Math.abs(target - current); step > 0; step -= 1) await this.realKey(key);
+    }
     // Read the result back rather than trusting that the keys landed. A select that stayed put would
     // submit its default option while the journey reported the option it meant to choose, which is
     // the difference between driving a control and describing one.
@@ -557,6 +570,28 @@ export class Page {
       throw new CdpError('SELECT_NOT_APPLIED', `${selector} is '${settled}' after choosing '${value}'`);
     }
     return true;
+  }
+
+  // Blink resets the native select's type-ahead buffer about 1000ms after its last character.
+  #typeAheadAt = 0;
+
+  /** Type the shortest prefix that distinguishes the target label, then let readback fail closed. */
+  async #typeAheadOption(labels, target, current) {
+    if (target === current) return;
+    const folded = labels.map((label) => label.toLowerCase());
+    const wanted = folded[target];
+    let length = wanted.length;
+    for (let n = 1; n <= wanted.length; n += 1) {
+      const prefix = wanted.slice(0, n);
+      if (!folded.some((label, index) => index !== target && label.startsWith(prefix))) {
+        length = n;
+        break;
+      }
+    }
+    const idle = Date.now() - this.#typeAheadAt;
+    if (idle < 1100) await new Promise((resolve) => setTimeout(resolve, 1100 - idle));
+    for (const ch of wanted.slice(0, length)) await this.realChar(ch);
+    this.#typeAheadAt = Date.now();
   }
 
   /** Type into a field, delete it, and leave the field the way a user leaves a required field empty. */

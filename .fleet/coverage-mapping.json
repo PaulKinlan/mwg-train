@@ -369,6 +369,7 @@
     "test/capture-target-registry.test.mjs"
   ],
   "src/corpus/cdp.mjs": [
+    "test/cdp-select-option.test.mjs",
     "test/capture-flow.test.mjs",
     "test/capture-state.test.mjs",
     "test/chrome-sandbox.test.mjs",
