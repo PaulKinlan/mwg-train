@@ -5,7 +5,7 @@ import { existsSync, mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync 
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
-import { conceptBookingStep, conceptImage, conceptJourneyStep, conceptTarget, listConcepts, renderConceptIndex, renderConcepts, trainingBoard, trainingTarget } from '../src/viewer/concepts.mjs';
+import { conceptBookingStep, conceptImage, conceptJourneyStep, conceptTarget, listConcepts, renderConceptIndex, renderConceptPattern, renderConcepts, trainingBoard, trainingTarget } from '../src/viewer/concepts.mjs';
 import { createViewer } from '../src/viewer/server.mjs';
 
 const ROOT = resolve(import.meta.dirname, '..');
@@ -876,6 +876,51 @@ test('the A1 target size is measured from the PNG header, never taken from the m
     assert.equal(unmeasured.available, true);
     assert.equal('width' in unmeasured, false);
     assert.doesNotMatch(renderConcepts(listConcepts(root)), /width="1280" height="2400"/);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test('archetype Light and Dark board dimensions come from JPEG bytes in detail and full snapshots', () => {
+  const root = mkdtempSync(join(tmpdir(), 'viewer-concepts-archetype-size-'));
+  try {
+    const boardDir = join(root, 'docs/design/archetypes/booking');
+    mkdirSync(join(boardDir, 'dark'), { recursive: true });
+    mkdirSync(join(root, 'data/A6_evaluation/targets/booking'), { recursive: true });
+    // The same SOF shape used for the A1 board-size check below: the dimensions are
+    // real header bytes, not a value supplied by a manifest or provenance document.
+    const jpeg = (width, height) => {
+      const bytes = Buffer.alloc(20);
+      bytes[0] = 0xff; bytes[1] = 0xd8; bytes[2] = 0xff; bytes[3] = 0xc0;
+      bytes.writeUInt16BE(0x0011, 4); bytes[6] = 8;
+      bytes.writeUInt16BE(height, 7); bytes.writeUInt16BE(width, 9);
+      return bytes;
+    };
+    const light = join(boardDir, 'step1-browse.jpg');
+    writeFileSync(light, jpeg(800, 600));
+    writeFileSync(join(boardDir, 'dark/step1-browse.jpg'), jpeg(600, 800));
+    writeFileSync(join(root, 'data/A6_evaluation/targets/booking/target.png'), Buffer.from([137, 80, 78, 71]));
+    const sized = listConcepts(root, { view: 'pattern', id: 'booking' });
+    const step = sized.patterns[0].steps[0];
+    assert.deepEqual([step.width, step.height, step.darkWidth, step.darkHeight], [800, 600, 600, 800]);
+    const index = listConcepts(root, { view: 'index' });
+    assert.equal('width' in index.patterns.find((item) => item.id === 'booking').steps[0], false,
+      'the stat-only index must not read JPEG headers');
+    const lightImage = /<img src="\/concepts\/images\/booking\/step1-browse\.jpg"[^>]*>/g;
+    const darkImage = /<img src="\/concepts\/images\/booking\/step1-browse-dark\.jpg"[^>]*>/g;
+    for (const html of [renderConceptPattern(sized, 'booking'), renderConcepts(listConcepts(root))]) {
+      const lightTags = [...html.matchAll(lightImage)].map((match) => match[0]);
+      const darkTags = [...html.matchAll(darkImage)].map((match) => match[0]);
+      assert.ok(lightTags.length > 0 && darkTags.length > 0, 'both images appear in this view');
+      for (const tag of lightTags) assert.match(tag, /width="800" height="600"/, 'Light board reserves its measured aspect ratio');
+      for (const tag of darkTags) assert.match(tag, /width="600" height="800"/, 'Dark board reserves its measured aspect ratio');
+    }
+    // The asset is still listed, but an undecodable header cannot justify a dimension claim.
+    writeFileSync(light, Buffer.from([0xff, 0xd8, 0xff, 0xd9]));
+    const unknown = listConcepts(root, { view: 'pattern', id: 'booking' });
+    assert.equal('width' in unknown.patterns[0].steps[0], false);
+    const markup = renderConceptPattern(unknown, 'booking');
+    const tag = markup.match(lightImage)?.[0];
+    assert.ok(tag);
+    assert.doesNotMatch(tag, /\b(?:width|height)="\d+"/);
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
 

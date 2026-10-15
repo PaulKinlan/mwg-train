@@ -408,14 +408,23 @@ export function listConcepts(repoRoot, { view = 'all', id = null } = {}) {
   const names = [...EVAL_TARGETS].filter((name) => !!conceptImageFile(repoRoot, name));
   const briefRows = indexOnly ? new Map() : trainingBriefs(repoRoot);
   const states = indexOnly || familyOnly ? {} : boardStateRegister(repoRoot);
-  const journeys = (familyOnly ? [] : Object.entries(JOURNEYS)).map(([id, steps]) => ({
-    id, title: id.replaceAll('-', ' '),
-    steps: steps.map((step) => ({
-      ...step,
-      available: !!journeyStepFile(repoRoot, id, step.id),
-      darkAvailable: !!journeyStepFile(repoRoot, id, `${step.id}-dark`),
-    })),
-  }));
+  const journeys = (familyOnly ? [] : Object.entries(JOURNEYS).filter(([journeyId]) => !patternOnly || journeyId === id))
+    .map(([journeyId, steps]) => ({
+      id: journeyId, title: journeyId.replaceAll('-', ' '),
+      steps: steps.map((step) => {
+        const light = journeyStepFile(repoRoot, journeyId, step.id);
+        const dark = journeyStepFile(repoRoot, journeyId, `${step.id}-dark`);
+        // The index remains stat-only; a pattern detail probes only its own bounded
+        // headers. Do not claim a ratio for an image whose bytes prove no size.
+        const measuredLight = !indexOnly && light ? readJpegDimensions(boundedHead(light, 65536)) : null;
+        const measuredDark = !indexOnly && dark ? readJpegDimensions(boundedHead(dark, 65536)) : null;
+        const lightSize = measuredLight?.width > 0 && measuredLight?.height > 0 ? measuredLight : null;
+        const darkSize = measuredDark?.width > 0 && measuredDark?.height > 0 ? measuredDark : null;
+        return { ...step, available: !!light, darkAvailable: !!dark,
+          ...(lightSize ? { width: lightSize.width, height: lightSize.height } : {}),
+          ...(darkSize ? { darkWidth: darkSize.width, darkHeight: darkSize.height } : {}) };
+      }),
+    }));
   // Booking remains first, including when its first image is absent. Only the sealed A6 ids
   // can gain a reference pairing; an extra JPEG in the directory does not declare a new arm.
   const available = journeys.filter((journey) => EVAL_TARGETS.has(journey.id) && journey.steps[0].available).map((journey) => journey.id);
@@ -516,7 +525,7 @@ const patternCard = ({ id, brief, steps }, families = []) => {
     ${steps.some((step) => step.available && /\bQR\b/i.test(step.imagePrompt ?? '')) ? `<p class="muted">Depicted QR codes are unverified placeholders: do not scan depicted codes. A model ID may be reported rather than attested; check each board&rsquo;s provenance in ${code(`docs/design/archetypes/${id}/README.md`)}. These illustrations remain excluded from training; no reuse clearance is granted here. Check each board&rsquo;s provenance: some records identify provider terms prohibiting use of the image to develop machine-learning models; others say training and output-use rights were not supplied.</p>` : ''}
     <div class="concept-theme-set concept-theme-light">
       <h5 class="concept-theme-heading"><span class="theme-pill theme-pill-light">☀ Light Mode Set</span> Complete ${steps.length}-step Light Mode UI (${code(`docs/design/archetypes/${id}/step*.jpg`)})</h5>
-      <ol class="concept-steps">${steps.map(({ id: stepId, title, available, state, imagePrompt }) => {
+      <ol class="concept-steps">${steps.map(({ id: stepId, title, available, width, height, state, imagePrompt }) => {
         const path = `/concepts/images/${id}/${stepId}.jpg`;
         const mapped = state?.kind === 'page' ? `Document state at ${state.path ?? 'no confirmed route'}`
           : state?.kind === 'interaction' ? 'Interaction state; no standalone document URL'
@@ -524,7 +533,7 @@ const patternCard = ({ id, brief, steps }, families = []) => {
         const claim = state?.drive?.expectText ? `Assert after the registered interaction: ${state.drive.expectText}`
           : 'No step-specific browser assertion is registered for this picture.';
         return `<li><figure><div class="concept-image-frame">${available
-          ? `<a href="${path}" aria-label="Open ${escapeHtml(id)} ${escapeHtml(title)} concept board"><img src="${path}" alt="Illustrative ${escapeHtml(id)} state: ${escapeHtml(title)}" width="1376" height="768" loading="lazy"></a>`
+          ? `<a href="${path}" aria-label="Open ${escapeHtml(id)} ${escapeHtml(title)} concept board"><img src="${path}" alt="Illustrative ${escapeHtml(id)} state: ${escapeHtml(title)}"${width && height ? ` width="${width}" height="${height}"` : ''} loading="lazy"></a>`
           : `<p class="muted">State image pending: ${code(`docs/design/archetypes/${id}/${stepId}.jpg`)}</p>`}</div>
           <figcaption><strong>${escapeHtml(title)} · Light Mode</strong><p>${escapeHtml(mapped)}. ${escapeHtml(claim)}</p>
           ${state?.source ? `<p class="muted">State mapping: ${escapeHtml(state.source)}</p>` : ''}
@@ -534,10 +543,10 @@ const patternCard = ({ id, brief, steps }, families = []) => {
     </div>
     <div class="concept-theme-set concept-theme-dark">
       <h5 class="concept-theme-heading"><span class="theme-pill theme-pill-dark">☾ Dark Mode Set</span> Complete ${steps.length}-step matching Dark Mode UI (${code(`docs/design/archetypes/${id}/dark/step*.jpg`)})</h5>
-      <ol class="concept-steps concept-steps-dark">${steps.map(({ id: stepId, title, darkAvailable }) => {
+      <ol class="concept-steps concept-steps-dark">${steps.map(({ id: stepId, title, darkAvailable, darkWidth, darkHeight }) => {
         const darkPath = `/concepts/images/${id}/${stepId}-dark.jpg`;
         return `<li><figure><div class="concept-image-frame">${darkAvailable
-          ? `<a href="${darkPath}" aria-label="Open ${escapeHtml(id)} ${escapeHtml(title)} dark mode concept board"><img src="${darkPath}" alt="Illustrative ${escapeHtml(id)} dark mode state: ${escapeHtml(title)}" width="1376" height="768" loading="lazy"></a>`
+          ? `<a href="${darkPath}" aria-label="Open ${escapeHtml(id)} ${escapeHtml(title)} dark mode concept board"><img src="${darkPath}" alt="Illustrative ${escapeHtml(id)} dark mode state: ${escapeHtml(title)}"${darkWidth && darkHeight ? ` width="${darkWidth}" height="${darkHeight}"` : ''} loading="lazy"></a>`
           : `<p class="muted">Dark mode state image pending: ${code(`docs/design/archetypes/${id}/dark/${stepId}.jpg`)}</p>`}</div>
           <figcaption><strong>${escapeHtml(title)} · Dark Mode</strong><p class="muted">Context-chained from ${code(`${stepId}.jpg`)} + ${code('design.md')} dark palette (${code(`docs/design/archetypes/${id}/dark/${stepId}.jpg`)}).</p>
           </figcaption></figure></li>`;
@@ -665,9 +674,9 @@ export function renderConcepts({ patterns = [], archetypes = [], trainingTargets
         <figcaption><strong>A6 authored evaluation target</strong> · ${code(`data/A6_evaluation/targets/${id}/target.png`)} (rendered from ${code(`docs/eval/targets/${id}/index.html`)} + ${code('docs/eval/targets/base.css')}). A fixed evaluation instrument; not an AI-generated concept image or proof of a working site.</figcaption></figure>`
         : '<p class="muted">Authored target render unavailable in this checkout.</p>'}
       ${firstStep?.available ? `<div class="eval-reference-pair">
-        <figure><div class="concept-image-frame"><a href="/concepts/images/${escapeHtml(id)}/${escapeHtml(firstStep.id)}.jpg" aria-label="Open ${escapeHtml(id)} Light Mode Step 1 concept board"><img src="/concepts/images/${escapeHtml(id)}/${escapeHtml(firstStep.id)}.jpg" alt="Light Mode Step 1 concept board for ${escapeHtml(id)}" width="1376" height="768" loading="lazy"></a></div>
+        <figure><div class="concept-image-frame"><a href="/concepts/images/${escapeHtml(id)}/${escapeHtml(firstStep.id)}.jpg" aria-label="Open ${escapeHtml(id)} Light Mode Step 1 concept board"><img src="/concepts/images/${escapeHtml(id)}/${escapeHtml(firstStep.id)}.jpg" alt="Light Mode Step 1 concept board for ${escapeHtml(id)}"${firstStep.width && firstStep.height ? ` width="${firstStep.width}" height="${firstStep.height}"` : ''} loading="lazy"></a></div>
           <figcaption><span class="theme-pill theme-pill-light">☀ Light Mode Step 1</span> ${code(`${id}/${firstStep.id}.jpg`)}</figcaption></figure>
-        ${firstStep.darkAvailable ? `<figure><div class="concept-image-frame"><a href="/concepts/images/${escapeHtml(id)}/${escapeHtml(firstStep.id)}-dark.jpg" aria-label="Open ${escapeHtml(id)} Dark Mode Step 1 concept board"><img src="/concepts/images/${escapeHtml(id)}/${escapeHtml(firstStep.id)}-dark.jpg" alt="Dark Mode Step 1 concept board for ${escapeHtml(id)}" width="1376" height="768" loading="lazy"></a></div>
+        ${firstStep.darkAvailable ? `<figure><div class="concept-image-frame"><a href="/concepts/images/${escapeHtml(id)}/${escapeHtml(firstStep.id)}-dark.jpg" aria-label="Open ${escapeHtml(id)} Dark Mode Step 1 concept board"><img src="/concepts/images/${escapeHtml(id)}/${escapeHtml(firstStep.id)}-dark.jpg" alt="Dark Mode Step 1 concept board for ${escapeHtml(id)}"${firstStep.darkWidth && firstStep.darkHeight ? ` width="${firstStep.darkWidth}" height="${firstStep.darkHeight}"` : ''} loading="lazy"></a></div>
           <figcaption><span class="theme-pill theme-pill-dark">☾ Dark Mode Step 1</span> ${code(`${id}/dark/${firstStep.id}.jpg`)}</figcaption></figure>` : ''}
       </div>` : ''}
     </div>
