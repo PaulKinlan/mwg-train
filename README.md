@@ -132,5 +132,24 @@ owner-auth scan (`scripts/scan-owner-auth.mjs`, config `docs/eval/owner-identity
 closed - a pair that cannot be shown free of owner-identifying material (in its trees AND its
 corpus records) is neither accepted nor served.
 
+### Static concept-image trust boundary
+
+The `/concepts` image routes use allowlisted references under the configured `repoRoot`. The
+image reader rejects lexical escapes and symlink leaves, then checks the opened file against
+its expected canonical in-tree path on Linux. On macOS, where the procfs fd pathname is
+unavailable, the inode/path fallback is best-effort against concurrent ancestor swaps. These
+are **pathname-confinement checks, not content-origin or image-provenance attestations**.
+
+The served `repoRoot` is a trusted, host-controlled tree: hostile writes to it are **outside
+this static viewer's threat model**. A writer who can place a hardlink there can give an
+allowlisted in-tree path the same inode as a readable file also named outside the tree;
+`O_NOFOLLOW`, `realpath`, `fstat` dev/inode equality and `/proc/self/fd` pathname equality do
+not prove that the bytes originated inside the tree. Linux `fs.protected_hardlinks` restricts
+which files can be linked (typically to files the writer owns or can read and write), but
+cannot establish provenance for permitted same-user links. This is an accepted residual risk,
+not a claimed hardlink defense. If hostile writers to `repoRoot` become in scope, isolate
+write permissions or require independently verified content pins before serving such files;
+additional pathname checks alone will not authenticate the bytes.
+
 Design decisions and their reasons are recorded in the bead for each change and in the documents
 above; a number in the docs is only as good as the check that recomputes it.
