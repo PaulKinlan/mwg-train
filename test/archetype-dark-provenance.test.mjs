@@ -58,6 +58,12 @@ if (!process.env.DARK_INVENTORY_MUTANT) test('a non-step Dark entry is rejected 
 test('dark-board prose distinguishes image pins from generator attestations and rights', () => {
   const text = readFileSync(join(ROOT, 'docs/provenance/assets/archetype-dark-boards.md'), 'utf8');
   assert.match(text, /61.*committed JPEGs/);
+  assert.match(text, /8c9949eff[\s\S]*21 of 61 boards[\s\S]*12 of 21 archetypes/,
+    'the historical xzs6 theme-coverage correction must name both denominators');
+  assert.match(text, /15409c2b8[\s\S]*61 Dark twins[\s\S]*all 21 archetypes/,
+    'the later current Dark twins must not be confused with xzs6 dark-themed Light boards');
+  assert.equal(new Set(register.boards.map((row) => row.path.split('/')[3])).size, 21,
+    'the current 61 Dark twins span all 21 archetypes, not the historical 12');
   assert.match(text, /54 generator-reported boards/);
   assert.match(text, /Three copied Dark anchors/);
   assert.match(text, /Four browser-puzzle-game Dark imports/);
