@@ -2,7 +2,6 @@ import { accessSync, closeSync, constants, fstatSync, lstatSync, openSync, readF
 import { dirname, isAbsolute, join, relative, sep } from 'node:path';
 
 import { escapeHtml, page } from './pages.mjs';
-import { readJpegDimensions } from './tuning.mjs';
 import { TRAINING_ARCHETYPE_IDS } from '../../pilot/training-archetypes.mjs';
 import { archetypeBrief, inheritedTrainingPrompt, stepImagePrompt, trainingBrief, trainingBriefs } from './concept-briefs.mjs';
 
@@ -316,22 +315,63 @@ function pngSize(file) {
   }
 }
 
-/** A bounded read of a file's head: enough for a JPEG SOF marker without pulling a whole 900 KB board into memory
- *  to measure it. A marker that runs past the window yields no size, which is reported as an absent size. */
-function boundedHead(file, bytes) {
+/** Read only JPEG marker headers, seeking over APP/EXIF payloads to the SOF. A fixed
+ *  byte prefix misses legitimate boards whose SOF follows >64 KiB of metadata;
+ *  loading every JPEG body would make a pattern page and offline register costly.
+ *  Unknown or malformed marker chains prove no size, so no dimensions are claimed. */
+function jpegSize(file) {
+  let fd;
   try {
-    const fd = openSync(file, 'r');
-    let head;
-    try {
-      const buffer = Buffer.alloc(bytes);
-      const read = readSync(fd, buffer, 0, bytes, 0);
-      head = read > 0 ? buffer.subarray(0, read) : null;
-    } finally {
-      closeSync(fd);
+    fd = openSync(file, 'r');
+    const stat = fstatSync(fd);
+    if (!stat.isFile() || stat.size < 4) return null;
+    const read = (length, offset) => {
+      const bytes = Buffer.alloc(length);
+      return readSync(fd, bytes, 0, length, offset) === length ? bytes : null;
+    };
+    const soi = read(2, 0);
+    if (soi?.[0] !== 0xff || soi[1] !== 0xd8) return null;
+    let offset = 2;
+    // Limit marker count as well as I/O: even an adversarial chain of tiny
+    // segments must not tie up an authenticated page request indefinitely.
+    for (let count = 0; count < 4096 && offset + 1 < stat.size; count++) {
+      let pair = read(2, offset);
+      if (pair?.[0] !== 0xff) return null;
+      for (let fill = 0; pair[1] === 0xff; fill++) {
+        if (fill >= 16) return null;
+        offset++;
+        pair = offset + 1 < stat.size ? read(2, offset) : null;
+        if (!pair) return null;
+      }
+      const marker = pair[1];
+      if (marker === 0x00 || marker === 0xd9 || marker === 0xda) return null;
+      if (marker === 0xd8 || marker === 0x01 || marker >= 0xd0 && marker <= 0xd7) {
+        offset += 2;
+        continue;
+      }
+      const lengthBytes = read(2, offset + 2);
+      if (!lengthBytes) return null;
+      const length = lengthBytes.readUInt16BE(0);
+      if (length < 2 || offset + length + 2 > stat.size) return null;
+      const isSof = marker >= 0xc0 && marker <= 0xc3 || marker >= 0xc5 && marker <= 0xc7
+        || marker >= 0xc9 && marker <= 0xcb || marker >= 0xcd && marker <= 0xcf;
+      if (isSof) {
+        if (length < 7) return null;
+        const frame = read(5, offset + 4);
+        if (!frame) return null;
+        const width = frame.readUInt16BE(3);
+        const height = frame.readUInt16BE(1);
+        return width > 0 && height > 0 ? { width, height } : null;
+      }
+      offset += 2 + length;
     }
-    return head;
+    return null;
   } catch {
     return null;
+  } finally {
+    if (fd !== undefined) {
+      try { closeSync(fd); } catch { /* A failed metadata probe must not break the page. */ }
+    }
   }
 }
 
@@ -416,8 +456,8 @@ export function listConcepts(repoRoot, { view = 'all', id = null } = {}) {
         const dark = journeyStepFile(repoRoot, journeyId, `${step.id}-dark`);
         // The index remains stat-only; a pattern detail probes only its own bounded
         // headers. Do not claim a ratio for an image whose bytes prove no size.
-        const measuredLight = !indexOnly && light ? readJpegDimensions(boundedHead(light, 65536)) : null;
-        const measuredDark = !indexOnly && dark ? readJpegDimensions(boundedHead(dark, 65536)) : null;
+        const measuredLight = !indexOnly && light ? jpegSize(light) : null;
+        const measuredDark = !indexOnly && dark ? jpegSize(dark) : null;
         const lightSize = measuredLight?.width > 0 && measuredLight?.height > 0 ? measuredLight : null;
         const darkSize = measuredDark?.width > 0 && measuredDark?.height > 0 ? measuredDark : null;
         return { ...step, available: !!light, darkAvailable: !!dark,
@@ -451,9 +491,10 @@ export function listConcepts(repoRoot, { view = 'all', id = null } = {}) {
       const first = journeys.find((journey) => journey.id === archetypeId)?.steps[0];
       const stepReference = !names.includes(archetypeId) && first?.available;
       const targetFile = conceptTargetFile(repoRoot, archetypeId);
+      const targetSize = (patternOnly || view === 'all') && targetFile ? pngSize(targetFile) : null;
       return { id: archetypeId, reference: names.includes(archetypeId) || !!stepReference,
         target: !!targetFile,
-        ...(patternOnly && targetFile ? { targetSize: pngSize(targetFile) } : {}),
+        ...(targetSize ? { targetSize } : {}),
         ...(stepReference ? { referencePath: `/concepts/images/${archetypeId}/${first.id}.jpg` } : {}) };
     }),
     // Only A1 manifest families are declared. The index and pattern pages need metadata,
@@ -462,7 +503,7 @@ export function listConcepts(repoRoot, { view = 'all', id = null } = {}) {
       const detailed = view === 'all' || familyOnly && family.id === id;
       const target = detailed ? trainingTargetFile(repoRoot, family.id) : null;
       const board = patternOnly ? null : trainingBoardFile(repoRoot, family.id);
-      const boardSize = detailed && board ? readJpegDimensions(boundedHead(board, 65536)) : null;
+      const boardSize = detailed && board ? jpegSize(board) : null;
       // A skipped probe is unknown, not an unavailable asset. Expose those fields only
       // in scopes that actually checked them; do not force index/detail HTTP to read all images.
       return { ...family,
@@ -663,14 +704,14 @@ export function renderConcepts({ patterns = [], archetypes = [], trainingTargets
     : '<p class="notice">No A1 training families are declared in this checkout.</p>';
   const patternSection = patterns.length ? patterns.map((pattern) => patternCard(pattern, familiesByArchetype.get(pattern.id) ?? [])).join('')
     : '<p class="notice">No authored archetype patterns are available in this checkout.</p>';
-  const evaluationSection = archetypes.length ? archetypes.map(({ id, target }) => {
+  const evaluationSection = archetypes.length ? archetypes.map(({ id, target, targetSize }) => {
     const pattern = patterns.find((entry) => entry.id === id);
     const firstStep = pattern?.steps?.[0];
     return `<article class="concept-comparison" aria-labelledby="concept-${escapeHtml(id)}">
     <h3 id="concept-${escapeHtml(id)}">${escapeHtml(id.replaceAll('-', ' '))}${patternSubject(id) ? ` · <span class="muted">${escapeHtml(patternSubject(id))}</span>` : ''}</h3>
     <p>Read the <a href="#pattern-${escapeHtml(id)}">${escapeHtml(id)} pattern, its site prompt and pictured states</a> above. Its illustrative JPEGs are <em>not</em> the target below.</p>
     <div class="eval-target-showcase">
-      ${target ? `<figure><div class="concept-image-frame"><a href="/concepts/targets/${escapeHtml(id)}.png" aria-label="Open ${escapeHtml(id)} A6 authored target render"><img src="/concepts/targets/${escapeHtml(id)}.png" alt="A6 authored evaluation target for ${escapeHtml(id)}" width="1280" height="900" loading="lazy"></a></div>
+      ${target ? `<figure><div class="concept-image-frame"><a href="/concepts/targets/${escapeHtml(id)}.png" aria-label="Open ${escapeHtml(id)} A6 authored target render"><img src="/concepts/targets/${escapeHtml(id)}.png" alt="A6 authored evaluation target for ${escapeHtml(id)}"${targetSize?.width && targetSize?.height ? ` width="${targetSize.width}" height="${targetSize.height}"` : ''} loading="lazy"></a></div>
         <figcaption><strong>A6 authored evaluation target</strong> · ${code(`data/A6_evaluation/targets/${id}/target.png`)} (rendered from ${code(`docs/eval/targets/${id}/index.html`)} + ${code('docs/eval/targets/base.css')}). A fixed evaluation instrument; not an AI-generated concept image or proof of a working site.</figcaption></figure>`
         : '<p class="muted">Authored target render unavailable in this checkout.</p>'}
       ${firstStep?.available ? `<div class="eval-reference-pair">
