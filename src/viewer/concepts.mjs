@@ -174,8 +174,11 @@ function macOSOpenFileMatches(file, expected, opened) {
 }
 
 /** Read only an image path inside the repo root, even when called without an allowlist probe.
- *  The opened fd is independently bound to its expected canonical location. A confined
- *  hardlink can still name externally originated bytes; that provenance policy is separate. */
+ *  This enforces pathname confinement, not content provenance: an in-tree hardlink can
+ *  name the same inode as a file outside repoRoot and still pass the fd/path checks.
+ *  Hostile writes to the configured repoRoot are outside this static viewer's threat model;
+ *  keep it host-controlled (see README's Static concept-image trust boundary).
+ *  Darwin's inode/path fallback is best-effort against concurrent ancestor swaps. */
 export function readConfinedImage(repoRoot, file, type) {
   if (!file) return null;
   let fd;
@@ -192,6 +195,7 @@ export function readConfinedImage(repoRoot, file, type) {
     const opened = fstatSync(fd, { bigint: true });
     if (!opened.isFile()) return null;
     try {
+      // An exact fd pathname is not proof that this inode has no other hardlink outside the tree.
       if (realpathSync(`/proc/self/fd/${fd}`) !== expected) return null;
     } catch (error) {
       // An fd lookup can be denied by a sandbox as well as absent on this host.
