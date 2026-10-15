@@ -279,6 +279,46 @@ test('the default run is the manifest run, not a newer decisionless local run (r
   assert.equal(newer.projects.find((p) => p.id === 'booking-raw').decision, null);
 });
 
+test('a hash-derivation manifest keeps older pilot acceptance visibly historical', (t) => {
+  const root = buildFixtureCorpus();
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const measuredRun = '2026-10-08T00-00-00-000Z';
+  const derivedRun = '2026-10-15T01-00-00-000Z-rederived';
+  writeFileSync(join(root, 'CORPUS.json'), JSON.stringify({
+    run_id: derivedRun, generated_at: '2026-10-15T01:00:01.000Z',
+    run_kind: 'tree-hash-rederivation', measured_run_id: measuredRun,
+    measured_generated_at: '2026-10-08T00:00:00.000Z', generator: 'scripts/scaffold-pilot.mjs',
+    summary: { attempted: 1, accepted: 1, yield: 1 },
+    projects: [{ project_id: 'booking-raw', archetype: 'booking', framework: 'raw', accepted: true,
+      original_sha: 'sha256:aaaa', uplift_sha: 'sha256:bbbb', improved_rules: [], uplift_applied: [] }],
+  }));
+  const derived = loadCorpus(root);
+  const project = derived.projects.find(({ id }) => id === 'booking-raw');
+  assert.equal(derived.runId, derivedRun);
+  assert.equal(project.decision.record_source, 'manifest');
+  assert.match(project.attribution.acceptance, /HISTORICAL PILOT DECISION.*not remeasured/i);
+  assert.match(project.attribution.generator, /tree hashes re-derived.*decisions from/);
+  assert.doesNotMatch(project.attribution.acceptance, /^ACCEPTED PAIR$/);
+  const view = projectView(project);
+  assert.equal(view.hasRun, false, 'a hash-only re-derivation is not a fresh measured pilot run');
+  assert.equal(view.accepted, null);
+  assert.equal(view.historical, true);
+  const html = renderProject({ view, runId: derived.runId, runs: derived.runs, liveOrigin: 'http://127.0.0.1:7701' });
+  assert.match(html, /NOT REMEASURED/);
+  assert.doesNotMatch(html, /ACCEPTED PAIR — recorded eval acceptance/);
+  const index = renderIndex({ views: [view], allViews: [view], filters: {}, runId: derived.runId,
+    runs: derived.runs, yieldReport: derived.yieldReport, scanAvailable: true, liveOrigin: 'http://127.0.0.1:7701' });
+  assert.match(index, /NOT REMEASURED/);
+  assert.doesNotMatch(index, /run <code>[^<]*<\/code>: 1 attempted, 1 accepted/,
+    'historical yield must not be attributed to the new hash-derivation run');
+  const old = loadCorpus(root, measuredRun).projects.find(({ id }) => id === 'booking-raw');
+  assert.equal(old.attribution.acceptance, 'ACCEPTED PAIR',
+    'selecting the original recorded pilot still shows its own measurement decision');
+  assert.match(old.attribution.generator, /2026-10-08T00:00:00\.000Z/,
+    'the original run uses its own measured timestamp, not the later derivation time');
+  assert.doesNotMatch(old.attribution.generator, /2026-10-15T01:00:01\.000Z/);
+});
+
 test('the pair scan combiner: a MISSING original is PARTIAL, never PASS (mixed-state regression)', () => {
   const P = { status: 'PASS', findings: [] };
   const M = { status: 'MISSING', findings: [] };

@@ -1,7 +1,10 @@
 {
-  "$comment": "The corpus the pilot measured: generated projects, their tree hashes, and the hash of the uplift the tool produced from each. `node scripts/pilot-corpus.mjs --verify` re-derives all of it; a mismatch means the measured artefact can no longer be reproduced.",
-  "run_id": "2026-10-13T06-56-34-249Z",
-  "generated_at": "2026-10-13T07:00:03.510Z",
+  "$comment": "Tree hashes were re-derived from the current plan and uplift tool during the distinct run_id/generated_at below. measured_run_id/measured_generated_at identify the older pilot whose decisions and summary are retained; they do NOT assert those historical decisions were measured against the re-derived trees. No pilot browser journeys were rerun.",
+  "run_id": "2026-10-15T00-52-20-112Z-rederived",
+  "generated_at": "2026-10-15T00:52:20.916Z",
+  "run_kind": "tree-hash-rederivation",
+  "measured_run_id": "2026-10-13T06-56-34-249Z",
+  "measured_generated_at": "2026-10-13T07:00:03.510Z",
   "generator": "scripts/scaffold-pilot.mjs",
   "uplift_tool": "src/corpus/uplift.mjs",
   "baseline_label": "mwg-train deterministic baseline",

@@ -5,7 +5,7 @@ import { resolve } from 'node:path';
 import test from 'node:test';
 
 const ROOT = resolve(import.meta.dirname, '..');
-const EXPECTED_EDGES_SHA256 = '32c3d9751471184aabf906e18af7ebbe9f14b4765a12369b3c217af244c02c86';
+const EXPECTED_EDGES_SHA256 = 'dad4c399e5fdaceb2609cece9ff31701b6d116fa27483b194c201af64d3e9883';
 
 test('the fast-gate coverage contract cannot silently lose any declared suite edge', () => {
   const mapping = JSON.parse(readFileSync(resolve(ROOT, '.fleet/coverage-mapping.json'), 'utf8'));
@@ -17,6 +17,16 @@ test('the fast-gate coverage contract cannot silently lose any declared suite ed
   // this digest in a reviewed test diff; formatting and key order do not change the contract.
   assert.equal(actual, EXPECTED_EDGES_SHA256,
     `coverage edges changed (${edges.length} now); review the mapping diff before updating this digest`);
+});
+
+test('pilot corpus metadata serializer and manifest both route to lineage checks', () => {
+  const mapping = JSON.parse(readFileSync(resolve(ROOT, '.fleet/coverage-mapping.json'), 'utf8'));
+  for (const file of ['scripts/pilot-corpus.mjs', 'pilot/CORPUS.json']) {
+    assert.ok(mapping[file]?.includes('test/pilot-corpus-run-metadata.test.mjs'),
+      `${file} must rerun the run-versus-hash-derivation lineage checks`);
+  }
+  assert.ok(mapping['src/viewer/corpus.mjs']?.includes('test/viewer-corpus.test.mjs'),
+    'the current-vs-historical acceptance projection must rerun when its viewer model changes');
 });
 
 test('the puzzle generator and its provenance both route to the no-network attestation regression', () => {

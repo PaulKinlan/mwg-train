@@ -102,6 +102,10 @@ export function loadCorpus(corpusRoot, runId = null, { includeTraining = false }
   // Fill from the manifest only when the view IS the manifest's recorded run (or there are no
   // local runs at all): attributing one run's measurements to another run's view would be a lie.
   const manifestApplies = corpusManifest?.projects && (selectedRun === null || selectedRun === corpusManifest.run_id);
+  const derivedManifest = manifestApplies && corpusManifest?.run_kind === 'tree-hash-rederivation';
+  const generatorAt = manifestApplies ? corpusManifest?.generated_at
+    : corpusManifest?.run_kind === 'tree-hash-rederivation' && selectedRun === corpusManifest.measured_run_id
+      ? corpusManifest.measured_generated_at : null;
   if (manifestApplies) {
     const byId = new Map();
     for (const entry of corpusManifest.projects) {
@@ -276,7 +280,12 @@ export function loadCorpus(corpusRoot, runId = null, { includeTraining = false }
       }
     }
     const decision = project.decision;
-    const hasRun = decision !== null && decision.has_run !== false;
+    // The current hashes reproduce, but a re-derivation is not a browser pilot
+    // that measured acceptance on these trees. Keep the old decision visible
+    // only as historical context, never as a fresh accepted pair.
+    const historical = Boolean(derivedManifest && decision?.record_source === 'manifest');
+    project.historicalDecision = historical;
+    const hasRun = decision !== null && decision.has_run !== false && !historical;
     const recordedModel = project.model ?? decision?.model ?? spec.seeded_by ?? null;
     const recordedBuildKey = project.buildKey ?? decision?.build_key ?? null;
     project.attribution = {
@@ -288,17 +297,20 @@ export function loadCorpus(corpusRoot, runId = null, { includeTraining = false }
         ? `docs/train/briefs/manifest.jsonl → ${project.id} (${spec.archetype_title ?? spec.archetype ?? 'unknown'})`
         : `pilot/plan.json → ${project.id} (archetype: ${spec.archetype ?? decision?.archetype ?? 'unknown'})`,
       framework: frameworkVersion ? `${frameworkName} @ ${frameworkVersion}` : frameworkName,
-      generator: corpusManifest?.generator
-        ? `${corpusManifest.generator} @ ${corpusManifest.generated_at ?? 'UNKNOWN'}${corpusManifest.uplift_tool ? ` (target via ${corpusManifest.uplift_tool})` : ''}`
-        : 'UNKNOWN (no corpus manifest)',
-      acceptance: !hasRun
+      generator: corpusManifest?.generator && generatorAt
+        ? `${corpusManifest.generator} @ ${generatorAt}${corpusManifest.uplift_tool ? ` (target via ${corpusManifest.uplift_tool})` : ''}${historical ? ` (tree hashes re-derived; decisions from ${corpusManifest.measured_run_id} not remeasured)` : ''}`
+        : 'UNKNOWN (no corpus manifest for selected run)',
+      acceptance: historical
+        ? `HISTORICAL PILOT DECISION · ${decision.accepted ? 'accepted' : decision.category ?? 'not accepted'} in ${corpusManifest.measured_run_id}; current tree not remeasured`
+        : !hasRun
         ? 'UNKNOWN (not yet run)'
         : decision.accepted
           ? 'ACCEPTED PAIR'
           : `REJECTED ATTEMPT · ${decision.category ?? 'unspecified'}`,
     };
   }
-  return { corpusRoot, runId: effectiveRunId, runs, projects, yieldReport: yieldReport ?? (corpusManifest ? { summary: corpusManifest.summary } : null), corpusManifest };
+  return { corpusRoot, runId: effectiveRunId, runs, projects,
+    yieldReport: derivedManifest ? null : yieldReport ?? (corpusManifest ? { summary: corpusManifest.summary } : null), corpusManifest };
 }
 
 /**
@@ -308,7 +320,8 @@ export function loadCorpus(corpusRoot, runId = null, { includeTraining = false }
 export function projectView(project, { scan = null, verification = null } = {}) {
   const spec = project.spec ?? {};
   const decision = project.decision ?? null;
-  const hasRun = decision !== null && decision.has_run !== false;
+  const historical = Boolean(project.historicalDecision);
+  const hasRun = decision !== null && decision.has_run !== false && !historical;
   const model = project.model ?? decision?.model ?? spec.seeded_by ?? 'deterministic:no-model';
   const buildKey = project.buildKey ?? decision?.build_key ?? `${project.id}@${model}`;
   return {
@@ -323,6 +336,7 @@ export function projectView(project, { scan = null, verification = null } = {}) 
     requiredRules: spec.required_rules ?? [],
     seededDefects: spec.seeded_defects ?? decision?.seeded_defects ?? [],
     hasRun,
+    historical,
     accepted: hasRun ? (decision?.accepted ?? null) : null,
     category: decision?.category ?? null,
     decisionDetail: decision?.detail ?? [],

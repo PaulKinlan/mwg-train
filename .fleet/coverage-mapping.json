@@ -244,7 +244,11 @@
   ],
   "pilot/CORPUS.json": [
     "test/build-key.test.mjs",
-    "test/training-served-reverse.test.mjs"
+    "test/training-served-reverse.test.mjs",
+    "test/pilot-corpus-run-metadata.test.mjs"
+  ],
+  "scripts/pilot-corpus.mjs": [
+    "test/pilot-corpus-run-metadata.test.mjs"
   ],
   "pilot/training-archetypes.mjs": [
     "test/viewer-concepts-delivery.test.mjs"
@@ -403,6 +407,9 @@
     "test/viewer-concepts-delivery.test.mjs",
     "test/viewer-concept-briefs.test.mjs",
     "test/viewer-concepts.test.mjs"
+  ],
+  "src/viewer/corpus.mjs": [
+    "test/viewer-corpus.test.mjs"
   ],
   "src/viewer/pages.mjs": [
     "test/viewer-concept-briefs.test.mjs",
