@@ -56,7 +56,14 @@ evidence](docs/portability/evidence/README.md) records the available Linux log
 and the separately attributed macOS report; these are different source trees.
 macOS verifies local development, while canonical sealed evaluation runs on
 pinned Linux. macOS portability does not imply the Linux-only generated-code
-sandbox is available.
+sandbox is available. For local macOS browser checks, `src/corpus/cdp.mjs`
+checks the standard `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome`
+and `/Applications/Chromium.app/Contents/MacOS/Chromium` binaries.
+If installed elsewhere, export `CHROME_PATH="/absolute/path/to/Chrome"` **before**
+`npm test` or `npm run check:portability`; a missing browser reports `NO_CHROME`
+with the paths tried and this setting. Chrome's renderer sandbox is on by default
+on either platform; `MWG_ALLOW_UNSANDBOXED_CHROME=1` is an explicit host-risk
+opt-in, never an automatic macOS, root or container fallback.
 
 ## The quarantine store
 

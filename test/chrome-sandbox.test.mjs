@@ -5,11 +5,18 @@ import { mkdtempSync, readFileSync, rmSync, readlinkSync, readdirSync } from 'no
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 
-import { chromeArgs, chromeBinary, chromeIsUnsandboxed, launchChrome } from '../src/corpus/cdp.mjs';
+import { CHROME_CANDIDATES, chromeArgs, chromeBinary, chromeIsUnsandboxed, launchChrome } from '../src/corpus/cdp.mjs';
 
 // The sandbox is not "did Chrome start": --no-sandbox was passed for a long time precisely because Chrome starts
 // either way, and a run that passes looks identical to one that does not. The property that changes is whether a
 // renderer is in its own user namespace, so that is what is measured here (mwg-train-u7ev).
+
+test('standard macOS Chrome binaries are discoverable and a missing binary explains CHROME_PATH', () => {
+  assert.ok(CHROME_CANDIDATES.includes('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'));
+  assert.ok(CHROME_CANDIDATES.includes('/Applications/Chromium.app/Contents/MacOS/Chromium'));
+  assert.throws(() => chromeBinary(['/this/Chrome/binary/does/not/exist']),
+    (error) => error.code === 'NO_CHROME' && /Set CHROME_PATH/.test(error.message));
+});
 
 test('the default launch arguments do not disable the sandbox', () => {
   const args = chromeArgs({ userDataDir: '/tmp/example' });

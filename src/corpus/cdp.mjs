@@ -22,13 +22,15 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import process from 'node:process';
 
-const CHROME_CANDIDATES = [
+export const CHROME_CANDIDATES = Object.freeze([
   process.env.CHROME_PATH,
   '/usr/bin/google-chrome',
   '/usr/bin/google-chrome-stable',
   '/usr/bin/chromium',
   '/usr/bin/chromium-browser',
-].filter(Boolean);
+  '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+  '/Applications/Chromium.app/Contents/MacOS/Chromium',
+].filter(Boolean));
 
 export class CdpError extends Error {
   constructor(code, message) {
@@ -119,8 +121,8 @@ export function chromeArgs({ userDataDir, proxy = null, extra = [], unsandboxed 
   ];
 }
 
-export function chromeBinary() {
-  for (const candidate of CHROME_CANDIDATES) {
+export function chromeBinary(candidates = CHROME_CANDIDATES) {
+  for (const candidate of candidates) {
     try {
       readFileSync(candidate);
       return candidate;
@@ -128,7 +130,7 @@ export function chromeBinary() {
       /* try the next one */
     }
   }
-  throw new CdpError('NO_CHROME', `no Chrome binary found (tried ${CHROME_CANDIDATES.join(', ')})`);
+  throw new CdpError('NO_CHROME', `no Chrome binary found (tried ${candidates.join(', ')}). Set CHROME_PATH to the installed Chrome executable and restart this process.`);
 }
 
 /** A single CDP connection that multiplexes one browser target and its page sessions. */
