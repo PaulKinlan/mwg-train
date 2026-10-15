@@ -363,6 +363,158 @@
       "source_commit": null
     },
     {
+      "path": "docs/design/archetypes/course-enrolment/dark/step1-catalog.jpg",
+      "sha256": "68628a1ac176c62b7cf15423780183733efc844fe159fbaf97f1a955006bf82b",
+      "bytes": 655569,
+      "dimensions": {
+        "width": 1376,
+        "height": 768
+      },
+      "source_status": "generator_reported_no_durable_receipt",
+      "response_model": null,
+      "generation_prompt_sha256": null,
+      "vision_verdict": null,
+      "excluded_from_training": true,
+      "approved_for_training": false,
+      "reuse_clearance": null,
+      "rights_source": "docs/design/archetypes/course-enrolment/README.md",
+      "source_board_sha256": null,
+      "source_commit": null
+    },
+    {
+      "path": "docs/design/archetypes/course-enrolment/dark/step2-syllabus.jpg",
+      "sha256": "b92c5a13485fbdb9304e3099fbc98b4c5b4985ed8c3d334f5af2125ec20d8f89",
+      "bytes": 697495,
+      "dimensions": {
+        "width": 1376,
+        "height": 768
+      },
+      "source_status": "generator_reported_no_durable_receipt",
+      "response_model": null,
+      "generation_prompt_sha256": null,
+      "vision_verdict": null,
+      "excluded_from_training": true,
+      "approved_for_training": false,
+      "reuse_clearance": null,
+      "rights_source": "docs/design/archetypes/course-enrolment/README.md",
+      "source_board_sha256": null,
+      "source_commit": null
+    },
+    {
+      "path": "docs/design/archetypes/course-enrolment/dark/step3-enrol.jpg",
+      "sha256": "9c90de6022ef133d5c59d17884a9ecd5d536e1834ac18387ce7c76466a6d0b80",
+      "bytes": 507852,
+      "dimensions": {
+        "width": 1376,
+        "height": 768
+      },
+      "source_status": "generator_reported_no_durable_receipt",
+      "response_model": null,
+      "generation_prompt_sha256": null,
+      "vision_verdict": null,
+      "excluded_from_training": true,
+      "approved_for_training": false,
+      "reuse_clearance": null,
+      "rights_source": "docs/design/archetypes/course-enrolment/README.md",
+      "source_board_sha256": null,
+      "source_commit": null
+    },
+    {
+      "path": "docs/design/archetypes/course-enrolment/dark/step4-voucher.jpg",
+      "sha256": "02a21b42bb12825da48d49d9065be6f815405d67fb667c5037beebddf5aa8998",
+      "bytes": 463726,
+      "dimensions": {
+        "width": 1376,
+        "height": 768
+      },
+      "source_status": "generator_reported_no_durable_receipt",
+      "response_model": null,
+      "generation_prompt_sha256": null,
+      "vision_verdict": null,
+      "excluded_from_training": true,
+      "approved_for_training": false,
+      "reuse_clearance": null,
+      "rights_source": "docs/design/archetypes/course-enrolment/README.md",
+      "source_board_sha256": null,
+      "source_commit": null
+    },
+    {
+      "path": "docs/design/archetypes/dashboard/dark/step1-overview.jpg",
+      "sha256": "692b11975103696f61085ac6e7316384f7c7dfdfbd19d4635cd71e37e04f6d34",
+      "bytes": 454286,
+      "dimensions": {
+        "width": 1376,
+        "height": 768
+      },
+      "source_status": "generator_reported_no_durable_receipt",
+      "response_model": null,
+      "generation_prompt_sha256": null,
+      "vision_verdict": null,
+      "excluded_from_training": true,
+      "approved_for_training": false,
+      "reuse_clearance": null,
+      "rights_source": "docs/design/archetypes/dashboard/README.md",
+      "source_board_sha256": null,
+      "source_commit": null
+    },
+    {
+      "path": "docs/design/archetypes/dashboard/dark/step2-telemetry.jpg",
+      "sha256": "be143881f724d80718121cffabef0502b82e3ced4d3e5cf58f45a02afdf2c2cd",
+      "bytes": 587947,
+      "dimensions": {
+        "width": 1376,
+        "height": 768
+      },
+      "source_status": "generator_reported_no_durable_receipt",
+      "response_model": null,
+      "generation_prompt_sha256": null,
+      "vision_verdict": null,
+      "excluded_from_training": true,
+      "approved_for_training": false,
+      "reuse_clearance": null,
+      "rights_source": "docs/design/archetypes/dashboard/README.md",
+      "source_board_sha256": null,
+      "source_commit": null
+    },
+    {
+      "path": "docs/design/archetypes/dashboard/dark/step3-credits.jpg",
+      "sha256": "034a7c35815dc4321035f374761081f3c3a5d6a8f9b842a4cd150fc62d1288c1",
+      "bytes": 532803,
+      "dimensions": {
+        "width": 1376,
+        "height": 768
+      },
+      "source_status": "generator_reported_no_durable_receipt",
+      "response_model": null,
+      "generation_prompt_sha256": null,
+      "vision_verdict": null,
+      "excluded_from_training": true,
+      "approved_for_training": false,
+      "reuse_clearance": null,
+      "rights_source": "docs/design/archetypes/dashboard/README.md",
+      "source_board_sha256": null,
+      "source_commit": null
+    },
+    {
+      "path": "docs/design/archetypes/dashboard/dark/step4-log.jpg",
+      "sha256": "d9d319fddee9bfd4c12a5c30344f0190a460a679ee6525d0bbd36173405106fc",
+      "bytes": 588241,
+      "dimensions": {
+        "width": 1376,
+        "height": 768
+      },
+      "source_status": "generator_reported_no_durable_receipt",
+      "response_model": null,
+      "generation_prompt_sha256": null,
+      "vision_verdict": null,
+      "excluded_from_training": true,
+      "approved_for_training": false,
+      "reuse_clearance": null,
+      "rights_source": "docs/design/archetypes/dashboard/README.md",
+      "source_board_sha256": null,
+      "source_commit": null
+    },
+    {
       "path": "docs/design/archetypes/developer-media-playground/dark/step1-split-pane-playground.jpg",
       "sha256": "36e6d33a32970f74ffc94e1dbca622b6b343bc66af37a1f49e81388fcf4113d8",
       "bytes": 534224,
@@ -435,6 +587,158 @@
       "approved_for_training": false,
       "reuse_clearance": null,
       "rights_source": "docs/design/archetypes/developer-media-playground/README.md",
+      "source_board_sha256": null,
+      "source_commit": null
+    },
+    {
+      "path": "docs/design/archetypes/directory-listing/dark/step1-directory.jpg",
+      "sha256": "447909f6812ef55e0ad9c17650b3741da5d68195ee64bd92621f41cc485a09d0",
+      "bytes": 526447,
+      "dimensions": {
+        "width": 1376,
+        "height": 768
+      },
+      "source_status": "generator_reported_no_durable_receipt",
+      "response_model": null,
+      "generation_prompt_sha256": null,
+      "vision_verdict": null,
+      "excluded_from_training": true,
+      "approved_for_training": false,
+      "reuse_clearance": null,
+      "rights_source": "docs/design/archetypes/directory-listing/README.md",
+      "source_board_sha256": null,
+      "source_commit": null
+    },
+    {
+      "path": "docs/design/archetypes/directory-listing/dark/step2-artisan.jpg",
+      "sha256": "40f9f0a910145d7bd300bc387f5b37d2d04c71ba53281d845dd96f4801fa3a90",
+      "bytes": 668254,
+      "dimensions": {
+        "width": 1376,
+        "height": 768
+      },
+      "source_status": "generator_reported_no_durable_receipt",
+      "response_model": null,
+      "generation_prompt_sha256": null,
+      "vision_verdict": null,
+      "excluded_from_training": true,
+      "approved_for_training": false,
+      "reuse_clearance": null,
+      "rights_source": "docs/design/archetypes/directory-listing/README.md",
+      "source_board_sha256": null,
+      "source_commit": null
+    },
+    {
+      "path": "docs/design/archetypes/directory-listing/dark/step3-inquiry.jpg",
+      "sha256": "b0d2de0cdbbb884f7b4f2064145131c465757092c884cecf43bbc39ff6d463dc",
+      "bytes": 511020,
+      "dimensions": {
+        "width": 1376,
+        "height": 768
+      },
+      "source_status": "generator_reported_no_durable_receipt",
+      "response_model": null,
+      "generation_prompt_sha256": null,
+      "vision_verdict": null,
+      "excluded_from_training": true,
+      "approved_for_training": false,
+      "reuse_clearance": null,
+      "rights_source": "docs/design/archetypes/directory-listing/README.md",
+      "source_board_sha256": null,
+      "source_commit": null
+    },
+    {
+      "path": "docs/design/archetypes/directory-listing/dark/step4-empty.jpg",
+      "sha256": "17289a68471c58a7d32cc0e1b802bc2e1e64fab3051eca0c66e610950bb8936b",
+      "bytes": 497462,
+      "dimensions": {
+        "width": 1376,
+        "height": 768
+      },
+      "source_status": "generator_reported_no_durable_receipt",
+      "response_model": null,
+      "generation_prompt_sha256": null,
+      "vision_verdict": null,
+      "excluded_from_training": true,
+      "approved_for_training": false,
+      "reuse_clearance": null,
+      "rights_source": "docs/design/archetypes/directory-listing/README.md",
+      "source_board_sha256": null,
+      "source_commit": null
+    },
+    {
+      "path": "docs/design/archetypes/docs-site/dark/step1-guide.jpg",
+      "sha256": "f3ce211c2002a4edb250d52e2a3befeab0ad3b4ccfd6d0fae382d6e96392f32f",
+      "bytes": 501451,
+      "dimensions": {
+        "width": 1376,
+        "height": 768
+      },
+      "source_status": "generator_reported_no_durable_receipt",
+      "response_model": null,
+      "generation_prompt_sha256": null,
+      "vision_verdict": null,
+      "excluded_from_training": true,
+      "approved_for_training": false,
+      "reuse_clearance": null,
+      "rights_source": "docs/design/archetypes/docs-site/README.md",
+      "source_board_sha256": null,
+      "source_commit": null
+    },
+    {
+      "path": "docs/design/archetypes/docs-site/dark/step2-registry.jpg",
+      "sha256": "a65d31e9289a04e2410f8463ab3028dc816940cab392122a50ccfa08f34b079c",
+      "bytes": 608343,
+      "dimensions": {
+        "width": 1376,
+        "height": 768
+      },
+      "source_status": "generator_reported_no_durable_receipt",
+      "response_model": null,
+      "generation_prompt_sha256": null,
+      "vision_verdict": null,
+      "excluded_from_training": true,
+      "approved_for_training": false,
+      "reuse_clearance": null,
+      "rights_source": "docs/design/archetypes/docs-site/README.md",
+      "source_board_sha256": null,
+      "source_commit": null
+    },
+    {
+      "path": "docs/design/archetypes/docs-site/dark/step3-submit.jpg",
+      "sha256": "4b446393dae15345c64f0852fd9eccf886b44099abcee7777f6a55c05acd45c3",
+      "bytes": 437366,
+      "dimensions": {
+        "width": 1376,
+        "height": 768
+      },
+      "source_status": "generator_reported_no_durable_receipt",
+      "response_model": null,
+      "generation_prompt_sha256": null,
+      "vision_verdict": null,
+      "excluded_from_training": true,
+      "approved_for_training": false,
+      "reuse_clearance": null,
+      "rights_source": "docs/design/archetypes/docs-site/README.md",
+      "source_board_sha256": null,
+      "source_commit": null
+    },
+    {
+      "path": "docs/design/archetypes/docs-site/dark/step4-empty.jpg",
+      "sha256": "28d29cf7410aabccf993e3efa58e0a6f525d83416dade462052e9862b99cd31d",
+      "bytes": 478005,
+      "dimensions": {
+        "width": 1376,
+        "height": 768
+      },
+      "source_status": "generator_reported_no_durable_receipt",
+      "response_model": null,
+      "generation_prompt_sha256": null,
+      "vision_verdict": null,
+      "excluded_from_training": true,
+      "approved_for_training": false,
+      "reuse_clearance": null,
+      "rights_source": "docs/design/archetypes/docs-site/README.md",
       "source_board_sha256": null,
       "source_commit": null
     },
@@ -800,6 +1104,82 @@
       "source_commit": null
     },
     {
+      "path": "docs/design/archetypes/onboarding-auth/dark/step1-register.jpg",
+      "sha256": "e9b1578704199261f8d94203890dc1472e5f4e446a65d9d85ee0c436ac1d7b00",
+      "bytes": 440182,
+      "dimensions": {
+        "width": 1376,
+        "height": 768
+      },
+      "source_status": "generator_reported_no_durable_receipt",
+      "response_model": null,
+      "generation_prompt_sha256": null,
+      "vision_verdict": null,
+      "excluded_from_training": true,
+      "approved_for_training": false,
+      "reuse_clearance": null,
+      "rights_source": "docs/design/archetypes/onboarding-auth/README.md",
+      "source_board_sha256": null,
+      "source_commit": null
+    },
+    {
+      "path": "docs/design/archetypes/onboarding-auth/dark/step2-profile.jpg",
+      "sha256": "8926d9773c4b0807f6e17654b137fd391629c219878fd80ceea4fb866d028b64",
+      "bytes": 464442,
+      "dimensions": {
+        "width": 1376,
+        "height": 768
+      },
+      "source_status": "generator_reported_no_durable_receipt",
+      "response_model": null,
+      "generation_prompt_sha256": null,
+      "vision_verdict": null,
+      "excluded_from_training": true,
+      "approved_for_training": false,
+      "reuse_clearance": null,
+      "rights_source": "docs/design/archetypes/onboarding-auth/README.md",
+      "source_board_sha256": null,
+      "source_commit": null
+    },
+    {
+      "path": "docs/design/archetypes/onboarding-auth/dark/step3-login.jpg",
+      "sha256": "9a8ddafe3c9abc050940d1426734a54a8161b29b092295359704b3fd90d97087",
+      "bytes": 443588,
+      "dimensions": {
+        "width": 1376,
+        "height": 768
+      },
+      "source_status": "generator_reported_no_durable_receipt",
+      "response_model": null,
+      "generation_prompt_sha256": null,
+      "vision_verdict": null,
+      "excluded_from_training": true,
+      "approved_for_training": false,
+      "reuse_clearance": null,
+      "rights_source": "docs/design/archetypes/onboarding-auth/README.md",
+      "source_board_sha256": null,
+      "source_commit": null
+    },
+    {
+      "path": "docs/design/archetypes/onboarding-auth/dark/step4-reset.jpg",
+      "sha256": "a73be6dfe16e087607b8100bc606f75dae51ad03be84ccc12ff58808ecc0de4d",
+      "bytes": 452824,
+      "dimensions": {
+        "width": 1376,
+        "height": 768
+      },
+      "source_status": "generator_reported_no_durable_receipt",
+      "response_model": null,
+      "generation_prompt_sha256": null,
+      "vision_verdict": null,
+      "excluded_from_training": true,
+      "approved_for_training": false,
+      "reuse_clearance": null,
+      "rights_source": "docs/design/archetypes/onboarding-auth/README.md",
+      "source_board_sha256": null,
+      "source_commit": null
+    },
+    {
       "path": "docs/design/archetypes/product-card-comparison/dark/step1-cards.jpg",
       "sha256": "366a8bc926037df2c6252d0932f526fc7085aa4201646f5bf6e6584b2c03a7d2",
       "bytes": 507479,
@@ -1119,6 +1499,82 @@
       "approved_for_training": false,
       "reuse_clearance": null,
       "rights_source": "docs/design/archetypes/scroll-storytelling-launch/README.md",
+      "source_board_sha256": null,
+      "source_commit": null
+    },
+    {
+      "path": "docs/design/archetypes/support-helpdesk/dark/step1-tickets.jpg",
+      "sha256": "f72e595ca9253d42eb5132bdfc4b696a07eee43330e77be4286b68cf989f3612",
+      "bytes": 444243,
+      "dimensions": {
+        "width": 1376,
+        "height": 768
+      },
+      "source_status": "generator_reported_no_durable_receipt",
+      "response_model": null,
+      "generation_prompt_sha256": null,
+      "vision_verdict": null,
+      "excluded_from_training": true,
+      "approved_for_training": false,
+      "reuse_clearance": null,
+      "rights_source": "docs/design/archetypes/support-helpdesk/README.md",
+      "source_board_sha256": null,
+      "source_commit": null
+    },
+    {
+      "path": "docs/design/archetypes/support-helpdesk/dark/step2-submit.jpg",
+      "sha256": "da6d8010d38f82251a9cfea2c9b9d4951210c40a510c9b25f38a3242e96d1725",
+      "bytes": 604867,
+      "dimensions": {
+        "width": 1376,
+        "height": 768
+      },
+      "source_status": "generator_reported_no_durable_receipt",
+      "response_model": null,
+      "generation_prompt_sha256": null,
+      "vision_verdict": null,
+      "excluded_from_training": true,
+      "approved_for_training": false,
+      "reuse_clearance": null,
+      "rights_source": "docs/design/archetypes/support-helpdesk/README.md",
+      "source_board_sha256": null,
+      "source_commit": null
+    },
+    {
+      "path": "docs/design/archetypes/support-helpdesk/dark/step3-ticket.jpg",
+      "sha256": "10fe0eb87cecf9261d498d54a506f9b2c5900b09c8c69bf46ea9d88c7aa4357e",
+      "bytes": 512854,
+      "dimensions": {
+        "width": 1376,
+        "height": 768
+      },
+      "source_status": "generator_reported_no_durable_receipt",
+      "response_model": null,
+      "generation_prompt_sha256": null,
+      "vision_verdict": null,
+      "excluded_from_training": true,
+      "approved_for_training": false,
+      "reuse_clearance": null,
+      "rights_source": "docs/design/archetypes/support-helpdesk/README.md",
+      "source_board_sha256": null,
+      "source_commit": null
+    },
+    {
+      "path": "docs/design/archetypes/support-helpdesk/dark/step4-empty.jpg",
+      "sha256": "a1bea1a7f54b775d2599f6c2acee8adcd0550220533f2e02e3654d7d56ef5da0",
+      "bytes": 415602,
+      "dimensions": {
+        "width": 1376,
+        "height": 768
+      },
+      "source_status": "generator_reported_no_durable_receipt",
+      "response_model": null,
+      "generation_prompt_sha256": null,
+      "vision_verdict": null,
+      "excluded_from_training": true,
+      "approved_for_training": false,
+      "reuse_clearance": null,
+      "rights_source": "docs/design/archetypes/support-helpdesk/README.md",
       "source_board_sha256": null,
       "source_commit": null
     },

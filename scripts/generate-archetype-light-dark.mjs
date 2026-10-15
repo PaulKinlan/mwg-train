@@ -125,8 +125,52 @@ async function generateMultimodal({ images = [], prompt, retries = 3 }) {
  *     - 'dark-anchor':  existing step1 is clean Dark Mode; copy to dark/step1, generate step1 Light, then steps 2..N Light & Dark
  *     - 'reanchor-light': regenerate step1 Light first, then steps 2..N Light & steps 1..N Dark
  *     - 'reanchor-dark':  regenerate dark/step1 first, then step1 Light, then steps 2..N Light & Dark
+ *     - 'fresh-light':  no existing boards; generate step1 Light conditioned on referenceBoard, step1 Dark, then steps 2..N Light & Dark
  */
 const ARCHETYPE_CONFIGS = {
+  // --- 6 Fresh-Light Multi-Step Archetypes (Wave 1) ---
+  'onboarding-auth': {
+    anchorMode: 'fresh-light',
+    referenceBoard: 'docs/design/training/tr-05/reference.jpg',
+    steps: ['step1-register.jpg', 'step2-profile.jpg', 'step3-login.jpg', 'step4-reset.jpg'],
+    lightTheme: 'CRISP BOTANICAL DAYLIGHT LIGHT MODE (#f0fdf4 pale botanical light green page background reaching all four image edges, #ffffff card surfaces with 1px #cbd5e1 hairline borders, #0f172a deep slate ink typography, #14532d dark forest-green primary CTA button)',
+    darkTheme: 'NOCTURNAL BOTANICAL SANCTUARY DARK MODE (#061a0f deep sanctuary moss-black ground reaching all four image edges, #0e2e1c elevated card surfaces with 1px #1d5232 borders, #f0fdf4 crisp pale-mint typography, #86efac luminous mint-green primary CTA button, #f87171 crimson validation alert)',
+  },
+  'course-enrolment': {
+    anchorMode: 'fresh-light',
+    referenceBoard: 'docs/design/training/tr-09/reference.jpg',
+    steps: ['step1-catalog.jpg', 'step2-syllabus.jpg', 'step3-enrol.jpg', 'step4-voucher.jpg'],
+    lightTheme: 'CRISP BOTANICAL DAYLIGHT LIGHT MODE (#f0fdf4 pale natural green paper background reaching all four image edges, #ffffff card surfaces with 1px #bbf7d0 mint-leaf borders, #14532d dark moss ink typography, #14532d deep moss-green primary buttons)',
+    darkTheme: 'FOREST CANOPY NOCTURNE DARK MODE (#07170e deep forest-black ground reaching all four image edges, #0f2b1a elevated card surfaces with 1px #1c5233 borders, #ecfdf5 crisp pale-mint typography, #4ade80 luminous forest-emerald primary buttons, #f87171 crimson validation alert)',
+  },
+  dashboard: {
+    anchorMode: 'fresh-light',
+    referenceBoard: 'docs/design/training/tr-04/reference.jpg',
+    steps: ['step1-overview.jpg', 'step2-telemetry.jpg', 'step3-credits.jpg', 'step4-log.jpg'],
+    lightTheme: 'SOLAR DAYLIGHT PAPER LIGHT MODE (#f8fafc cool daylight sky page ground reaching all four image edges, #ffffff telemetry and meter cards with 1px #e2e8f0 borders, #0f172a deep navy-slate ink typography, #0284c7 solar-sky primary buttons, #facc15 amber status accents)',
+    darkTheme: 'MIDNIGHT SOLAR ARRAY DARK MODE (#080e1a deep nocturnal grid-slate ground reaching all four image edges, #0f192c telemetry and meter card surfaces with 1px #1e2f4f borders, #f8fafc crisp off-white typography, #38bdf8 sky-cyan telemetry accents, #fbbf24 luminous solar-amber primary buttons)',
+  },
+  'directory-listing': {
+    anchorMode: 'fresh-light',
+    referenceBoard: 'docs/design/training/tr-06/reference.jpg',
+    steps: ['step1-directory.jpg', 'step2-artisan.jpg', 'step3-inquiry.jpg', 'step4-empty.jpg'],
+    lightTheme: 'EDITORIAL PARCHMENT LIGHT MODE (#fdfbf7 warm parchment paper background reaching all four image edges, #f5f5f4 tactile stone card surfaces with 1px #e7e5e4 borders, #292524 deep charcoal ink typography, #451a03 deep roasted-bark primary buttons, #b45309 copper secondary accents)',
+    darkTheme: 'ATELIER WORKSHOP OAK DARK MODE (#151210 deep artisan workshop timber ground reaching all four image edges, #221c17 elevated directory cards and profile surfaces with 1px #3b3028 borders, #faf5f0 warm cotton typography, #ea580c warm terracotta-copper primary buttons, #f87171 crimson validation alert)',
+  },
+  'docs-site': {
+    anchorMode: 'fresh-light',
+    referenceBoard: 'docs/design/training/tr-13/reference.jpg',
+    steps: ['step1-guide.jpg', 'step2-registry.jpg', 'step3-submit.jpg', 'step4-empty.jpg'],
+    lightTheme: 'CLEAN EDITORIAL EARTH LIGHT MODE (#ffffff crisp clean white page ground reaching all four image edges, #f8fafc left docs navigation rail, #ffffff main content and protocol card surfaces with 1px #e2e8f0 hairline borders, #292524 deep graphite-ink typography, #3b251a rich loam-brown primary action buttons, #15803d leaf-green status badges)',
+    darkTheme: 'FIELD NOTEBOOK OBSIDIAN DARK MODE (#0f1115 nocturnal field notebook obsidian ground reaching all four image edges, #161a22 left docs navigation rail, #1b202a main content and protocol card surfaces with 1px #28303f hairline borders, #f8fafc crisp ivory-white typography, #d97706 warm amber-gold primary action buttons, #22c55e emerald status badges, #f87171 crimson validation alert)',
+  },
+  'support-helpdesk': {
+    anchorMode: 'fresh-light',
+    referenceBoard: 'docs/design/training/tr-28/reference.jpg',
+    steps: ['step1-tickets.jpg', 'step2-submit.jpg', 'step3-ticket.jpg', 'step4-empty.jpg'],
+    lightTheme: 'EXPEDITION DAYLIGHT LIGHT MODE (#f8fafc crisp light grey page ground reaching all four image edges, #ffffff card surfaces with 1px #e2e8f0 borders, #0f172a deep slate ink typography, #0284c7 bright trail-blue primary action buttons, #16a34a verified green badge, #e11d48 crimson validation alert)',
+    darkTheme: 'ALPINE BASECAMP OBSIDIAN DARK MODE (#0b111a deep nocturnal basecamp slate ground reaching all four image edges, #162030 elevated ticket and repair form card surfaces with 1px #2a3c54 borders, #f8fafc crisp off-white typography, #38bdf8 luminous trail-cyan primary action buttons, #4ade80 verified green badge, #f87171 high-contrast crimson validation alert)',
+  },
   // --- 7 Single-Step Archetypes ---
   'community-forum': {
     anchorMode: 'single-light',
@@ -376,7 +420,53 @@ async function processArchetype(family, config) {
   let step1LightBytes;
   let step1DarkBytes;
 
-  if (config.anchorMode === 'light-anchor') {
+  if (config.anchorMode === 'fresh-light') {
+    const refPath = join(ROOT, config.referenceBoard);
+    if (!existsSync(refPath)) {
+      throw new Error(`referenceBoard not found: ${config.referenceBoard}`);
+    }
+    const refBytes = readFileSync(refPath);
+    const step1Spec = config.lightStepOverrides?.[step1] ?? prompts.get(step1) ?? '';
+
+    if (!existsSync(step1LightPath) || process.argv.includes('--force')) {
+      console.log(`  [${family}] generating Step 1 Light Mode ${step1} (conditioned on reference.jpg + design.md) ...`);
+      step1LightBytes = await generateMultimodal({
+        images: [refBytes],
+        prompt: [
+          ANTI_CHROME_RULES,
+          `Design System Context:\n${designMd}`,
+          `The attached image is the approved reference board for this application family (${family}).`,
+          `Generate the canonical Step 1 Light Mode screen (${step1}) in ${config.lightTheme}.`,
+          `Preserve the brand identity, typography hierarchy, aesthetic character, and clean palette from the reference image, laying out the screen strictly according to the following Step 1 specification:`,
+          step1Spec,
+        ].join('\n\n'),
+      });
+      writeFileSync(step1LightPath, step1LightBytes);
+      console.log(`  [${family}] wrote Light Mode ${step1} (${step1LightBytes.length} bytes)`);
+    } else {
+      step1LightBytes = readFileSync(step1LightPath);
+      console.log(`  [${family}] using existing Light Mode ${step1} (${step1LightBytes.length} bytes)`);
+    }
+
+    if (!existsSync(step1DarkPath) || process.argv.includes('--force')) {
+      console.log(`  [${family}] generating dark/${step1} from Light Mode anchor ...`);
+      step1DarkBytes = await generateMultimodal({
+        images: [step1LightBytes],
+        prompt: [
+          ANTI_CHROME_RULES,
+          `Design System Context:\n${designMd}`,
+          `The attached image is Step 1 (${step1}) in Light Mode (${config.lightTheme}).`,
+          `Generate the exact 1-to-1 DARK MODE twin of this exact Step 1 screen in ${config.darkTheme}.`,
+          `Preserve 100% of the header bar, brand wordmark, navigation items, grid/card geometry, and controls from the attached Step 1 image, translating the surface and ink palette cleanly to ${config.darkTheme}.`,
+        ].join('\n\n'),
+      });
+      writeFileSync(step1DarkPath, step1DarkBytes);
+      console.log(`  [${family}] wrote dark/${step1} (${step1DarkBytes.length} bytes)`);
+    } else {
+      step1DarkBytes = readFileSync(step1DarkPath);
+      console.log(`  [${family}] using existing Dark Mode dark/${step1} (${step1DarkBytes.length} bytes)`);
+    }
+  } else if (config.anchorMode === 'light-anchor') {
     step1LightBytes = readFileSync(step1LightPath);
     console.log(`  [${family}] using existing clean Light Mode anchor ${step1} (${step1LightBytes.length} bytes)`);
     console.log(`  [${family}] generating dark/${step1} from Light Mode anchor ...`);
@@ -481,35 +571,45 @@ async function processArchetype(family, config) {
     const darkPath = join(darkDir, step);
     const stepSpec = config.lightStepOverrides?.[step] ?? prompts.get(step) ?? '';
 
-    console.log(`  [${family}] chaining Light Mode ${step} (conditioned on ${step1} Light + design.md) ...`);
-    const stepLightBytes = await generateMultimodal({
-      images: [step1LightBytes],
-      prompt: [
-        ANTI_CHROME_RULES,
-        `Design System Context:\n${designMd}`,
-        `VISUAL CONTINUITY CONTRACT: The attached image is Step 1 (${step1}) of this exact web application in ${config.lightTheme}.`,
-        `You MUST keep the exact same top header bar, brand logo/wordmark, navigation links, typography, surface colours, border radii, and layout geometry from the attached Step 1 image.`,
-        `Render ${step} in the EXACT SAME ${config.lightTheme} (do NOT switch to dark mode; every surface and background must stay in ${config.lightTheme}):`,
-        stepSpec,
-      ].join('\n\n'),
-    });
-    writeFileSync(lightPath, stepLightBytes);
-    console.log(`  [${family}] wrote Light Mode ${step} (${stepLightBytes.length} bytes)`);
+    let stepLightBytes;
+    if (!existsSync(lightPath) || process.argv.includes('--force')) {
+      console.log(`  [${family}] chaining Light Mode ${step} (conditioned on ${step1} Light + design.md) ...`);
+      stepLightBytes = await generateMultimodal({
+        images: [step1LightBytes],
+        prompt: [
+          ANTI_CHROME_RULES,
+          `Design System Context:\n${designMd}`,
+          `VISUAL CONTINUITY CONTRACT: The attached image is Step 1 (${step1}) of this exact web application in ${config.lightTheme}.`,
+          `You MUST keep the exact same top header bar, brand logo/wordmark, navigation links, typography, surface colours, border radii, and layout geometry from the attached Step 1 image.`,
+          `Render ${step} in the EXACT SAME ${config.lightTheme} (do NOT switch to dark mode; every surface and background must stay in ${config.lightTheme}):`,
+          stepSpec,
+        ].join('\n\n'),
+      });
+      writeFileSync(lightPath, stepLightBytes);
+      console.log(`  [${family}] wrote Light Mode ${step} (${stepLightBytes.length} bytes)`);
+    } else {
+      stepLightBytes = readFileSync(lightPath);
+      console.log(`  [${family}] using existing Light Mode ${step} (${stepLightBytes.length} bytes)`);
+    }
 
-    console.log(`  [${family}] chaining Dark Mode dark/${step} (conditioned on ${step} Light + dark/${step1}) ...`);
-    const stepDarkBytes = await generateMultimodal({
-      images: [stepLightBytes, step1DarkBytes],
-      prompt: [
-        ANTI_CHROME_RULES,
-        `Design System Context:\n${designMd}`,
-        `DUAL-REFERENCE VISUAL CONTINUITY CONTRACT:`,
-        `- Image 1 is the current step (${step}) in Light Mode, showing the exact UI state, components, text, and layout for this step.`,
-        `- Image 2 is Step 1 of the same application in Dark Mode (${config.darkTheme}), showing the exact Dark Mode colour palette, header chrome, and surface styling.`,
-        `Render ${step} (the exact UI state and content of Image 1) in the exact Dark Mode palette and styling of Image 2 (${config.darkTheme}). Every element, label, and layout region from Image 1 must be preserved 1-to-1.`,
-      ].join('\n\n'),
-    });
-    writeFileSync(darkPath, stepDarkBytes);
-    console.log(`  [${family}] wrote Dark Mode dark/${step} (${stepDarkBytes.length} bytes)`);
+    if (!existsSync(darkPath) || process.argv.includes('--force')) {
+      console.log(`  [${family}] chaining Dark Mode dark/${step} (conditioned on ${step} Light + dark/${step1}) ...`);
+      const stepDarkBytes = await generateMultimodal({
+        images: [stepLightBytes, step1DarkBytes],
+        prompt: [
+          ANTI_CHROME_RULES,
+          `Design System Context:\n${designMd}`,
+          `DUAL-REFERENCE VISUAL CONTINUITY CONTRACT:`,
+          `- Image 1 is the current step (${step}) in Light Mode, showing the exact UI state, components, text, and layout for this step.`,
+          `- Image 2 is Step 1 of the same application in Dark Mode (${config.darkTheme}), showing the exact Dark Mode colour palette, header chrome, and surface styling.`,
+          `Render ${step} (the exact UI state and content of Image 1) in the exact Dark Mode palette and styling of Image 2 (${config.darkTheme}). Every element, label, and layout region from Image 1 must be preserved 1-to-1.`,
+        ].join('\n\n'),
+      });
+      writeFileSync(darkPath, stepDarkBytes);
+      console.log(`  [${family}] wrote Dark Mode dark/${step} (${stepDarkBytes.length} bytes)`);
+    } else {
+      console.log(`  [${family}] using existing Dark Mode dark/${step}`);
+    }
   }
 }
 

@@ -352,5 +352,137 @@
       "kind": "absent",
       "source": "this archetype has no demo directory, so nothing serves this state"
     }
+  },
+  "course-enrolment": {
+    "step1-catalog.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step2-syllabus.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step3-enrol.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step4-voucher.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    }
+  },
+  "dashboard": {
+    "step1-overview.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step2-telemetry.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step3-credits.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step4-log.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    }
+  },
+  "directory-listing": {
+    "step1-directory.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step2-artisan.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step3-inquiry.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step4-empty.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    }
+  },
+  "docs-site": {
+    "step1-guide.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step2-registry.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step3-submit.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step4-empty.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    }
+  },
+  "onboarding-auth": {
+    "step1-register.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step2-profile.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step3-login.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step4-reset.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    }
+  },
+  "support-helpdesk": {
+    "step1-tickets.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step2-submit.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step3-ticket.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step4-empty.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    }
   }
 }

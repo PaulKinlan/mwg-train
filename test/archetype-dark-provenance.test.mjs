@@ -51,20 +51,20 @@ if (!process.env.DARK_INVENTORY_MUTANT) test('a non-step Dark entry is rejected 
     encoding: 'utf8', timeout: 8_000, env,
   });
   assert.equal(child.status, 1, child.stdout + child.stderr);
-  assert.match(child.stdout + child.stderr, /this fixed initial register covers the 61 current dark-mode boards/,
+  assert.match(child.stdout + child.stderr, /this fixed initial register covers the 85 current dark-mode boards/,
     'the child inventory must fail because an extra Dark entry was enumerated');
 });
 
 test('dark-board prose distinguishes image pins from generator attestations and rights', () => {
   const text = readFileSync(join(ROOT, 'docs/provenance/assets/archetype-dark-boards.md'), 'utf8');
-  assert.match(text, /61.*committed JPEGs/);
+  assert.match(text, /85.*committed JPEGs/);
   assert.match(text, /8c9949eff[\s\S]*21 of 61 boards[\s\S]*12 of 21 archetypes/,
     'the historical xzs6 theme-coverage correction must name both denominators');
   assert.match(text, /15409c2b8[\s\S]*61 Dark twins[\s\S]*all 21 archetypes/,
     'the later current Dark twins must not be confused with xzs6 dark-themed Light boards');
-  assert.equal(new Set(register.boards.map((row) => row.path.split('/')[3])).size, 21,
-    'the current 61 Dark twins span all 21 archetypes, not the historical 12');
-  assert.match(text, /54 generator-reported boards/);
+  assert.equal(new Set(register.boards.map((row) => row.path.split('/')[3])).size, 27,
+    'the current 85 Dark twins span all 27 archetypes, not the historical 12');
+  assert.match(text, /78 generator-reported boards/);
   assert.match(text, /Three copied Dark anchors/);
   assert.match(text, /Four browser-puzzle-game Dark imports/);
   assert.match(text, /not.*durable per-board model\/prompt attestation/);
@@ -74,7 +74,7 @@ test('dark-board prose distinguishes image pins from generator attestations and 
 
 test('dark-board register enumerates every committed family path and binds each row to actual bytes', () => {
   assert.equal(register.schema_version, 1);
-  assert.equal(paths.length, 61, 'this fixed initial register covers the 61 current dark-mode boards');
+  assert.equal(paths.length, 85, 'this fixed initial register covers the 85 current dark-mode boards');
   assert.deepEqual(register.boards.map(({ path }) => path), paths,
     'no added, omitted, duplicate, or out-of-tree dark JPEG is silently registered');
   for (const row of register.boards) {
