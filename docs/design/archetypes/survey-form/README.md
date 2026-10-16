@@ -11,14 +11,35 @@
 
 | Ordered board | What the raster depicts | SHA-256 of committed bytes | Bytes |
 | --- | --- | --- | ---: |
+| [`step1-questionnaire.jpg`](step1-questionnaire.jpg) | Passenger journey details and route selection questionnaire | `68f21be29cc373fd525735570f8a10c381ad4db7028941a44a3d53af466775a3` | 375809 |
+| [`step2-review.jpg`](step2-review.jpg) | Passenger feedback review and rating confirmation card | `5bfa0843d562454fec31321b5ceea3b3ca7d1be62725ed1be094b0e27d27f652` | 379239 |
 | [`step3-validation.jpg`](step3-validation.jpg) | Questionnaire refused on unanswered mandatory rating questions, with accessible inline errors | `2b948e3b439bca13d7f1226b3bb200d8121316828a60ef7a4ade7ff6d1f235d4` | 426951 |
+| [`step4-submitted.jpg`](step4-submitted.jpg) | Passenger survey submission confirmation and receipt | `1fd478a34fe4ff5c0e77b2865904c7833109cd49dbfdc812746178608ce87361` | 378747 |
 
 Hashes pin the handed-off JPEG bytes, not their generating model, prompt-to-pixel reproducibility or legal status. The corpus must derive from its own approved source and measured records, not these images.
 
 ## Exact generation prompts
 
+### `step1-questionnaire.jpg`
+
+```text
+Create one high-fidelity illustrative 1376×768 16:9 image of the metropolitan transit passenger survey "Metro Pulse · London & South East Rail", STEP 1: Station & Carriage Experience Survey in CIVIC TRANSIT DAYLIGHT LIGHT MODE. Render ONLY a full-bleed, edge-to-edge WEB PAGE canvas. NO browser chrome, NO macOS traffic lights, NO window frame, NO tab bar, NO address bar, NO exterior drop shadow, NO OS desktop or device mockup. Use clean civic daylight #f8fafc paper background reaching all four image edges, clean #ffffff questionnaire card with 2px #cbd5e1 borders, transit roundel navy #1e3a8a header and primary button, and warm signal-amber #d97706 step indicator showing "Step 1 of 4 · Journey & Route Information". Questionnaire displays clean civic form questions: Origin Station dropdown ("London Waterloo"), Destination Station ("Richmond"), Travel Frequency radio pills (Daily Commute, 2-3 Times a Week, Occasional), Travel Time selection, and prominent navy primary button "Continue to Carriage Rating".
+```
+
+### `step2-review.jpg`
+
+```text
+Create one high-fidelity illustrative 1376×768 16:9 image of the metropolitan transit passenger survey "Metro Pulse · London & South East Rail", STEP 2: Passenger Feedback Review in CIVIC TRANSIT DAYLIGHT LIGHT MODE. Render ONLY a full-bleed, edge-to-edge WEB PAGE canvas. NO browser chrome, NO macOS traffic lights, NO window frame, NO tab bar, NO address bar, NO exterior drop shadow, NO OS desktop or device mockup. Preserve the #f8fafc civic paper ground, #ffffff cards with 2px #cbd5e1 borders, #1e3a8a transit navy header, and #d97706 signal-amber step indicator showing "Step 3 of 4 · Review Your Responses". Centered review card with summarized passenger responses organized in clean data rows: Journey (Waterloo to Richmond, Daily Commute), Carriage Experience Ratings (Cleanliness: 4 out of 5, Punctuality: 4 out of 5, Lighting & Safety: 5 out of 5, Information Displays: 4 out of 5), optional commentary box with entered text "Carriage heating was comfortable; morning announcements were clear.", secondary "Edit Responses" links on each row, and primary navy button "Submit Survey Feedback".
+```
+
 ### `step3-validation.jpg`
 
 ```text
 Render only a full-bleed, edge-to-edge WEB PAGE canvas at 1376×768 16:9. NO browser chrome, NO macOS traffic lights, NO window frame, NO tab bar, NO address bar, NO exterior drop shadow, NO OS desktop or device mockup. High-fidelity modern civic web application UI for a metropolitan transit authority passenger survey, "Metro Pulse · London & South East Rail", Step 3: Validation of a Refused Submission in CIVIC TRANSIT DAYLIGHT LIGHT MODE (#f8fafc clean civic daylight paper background reaching all four edges, #ffffff questionnaire card with 2px #cbd5e1 borders, transit roundel navy #1e3a8a top header bar and primary "Continue" button, warm signal-amber #d97706 step progress indicator showing "Step 2 of 4 · Station & Carriage Experience", #0f172a sharp accessible typography). The questionnaire is re-rendered after a refused advance: a high-contrast crimson alert banner (#fef2f2 fill, #dc2626 border) at the top of the card reads "Some required questions still need an answer"; two unanswered 1–5 rating matrix questions ("Platform departure board clarity" and "Evening station lighting & safety") are outlined in 2px red #dc2626 with inline helper message "Please choose a rating" beside each, while the answered questions above keep their selected navy radio pills and normal styling. Primary navy "Continue" button and secondary "Back" link remain visible.
+```
+
+### `step4-submitted.jpg`
+
+```text
+Create one high-fidelity illustrative 1376×768 16:9 image of the metropolitan transit passenger survey "Metro Pulse · London & South East Rail", STEP 4: Survey Submission Confirmed in CIVIC TRANSIT DAYLIGHT LIGHT MODE. Render ONLY a full-bleed, edge-to-edge WEB PAGE canvas. NO browser chrome, NO macOS traffic lights, NO window frame, NO tab bar, NO address bar, NO exterior drop shadow, NO OS desktop or device mockup. Preserve the #f8fafc civic paper background, #ffffff card surfaces, and #1e3a8a transit navy header from Step 1. Amber step indicator reads "Complete · Thank You". Centered confirmation card featuring a green verified transit roundel icon, headline "Thank You for Helping Improve Metro Rail", explanatory text "Your responses have been recorded and will inform station lighting upgrades and carriage maintenance schedules for Q4 2026.", submission reference "#MP-883109", note "No personal data retained", and primary navy button "Return to Rail Network Home".
 ```

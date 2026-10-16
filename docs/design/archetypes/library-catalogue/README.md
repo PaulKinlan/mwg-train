@@ -11,14 +11,35 @@
 
 | Ordered board | What the raster depicts | SHA-256 of committed bytes | Bytes |
 | --- | --- | --- | ---: |
+| [`step1-index.jpg`](step1-index.jpg) | Illuminated manuscript catalogue and special collections search | `e44716e46955978bfbd6ae3589ee9033b73a82e1d0806be2617f48d3cdc887a0` | 576464 |
+| [`step2-specimen.jpg`](step2-specimen.jpg) | Archival specimen viewer and folio provenance record | `fb960143c8811d2f43783f2ae2fc53b8b60b8402d42120120113437b32cf29aa` | 544288 |
 | [`step3-refusal.jpg`](step3-refusal.jpg) | Reservation form refused without a researcher name and with an invalid date, with inline accessible errors | `2304227be44c9a27aa1c022389723e0a4fff7c5d540a1727d9d088f93f87101b` | 430488 |
+| [`step4-empty.jpg`](step4-empty.jpg) | Empty catalog search results with reset filter action | `286008903c54141ec118c561d6dd9fae2784c7a726bcda40d58b0b7361e7c4e0` | 430289 |
 
 Hashes pin the handed-off JPEG bytes, not their generating model, prompt-to-pixel reproducibility or legal status. The corpus must derive from its own approved source and measured records, not these images.
 
 ## Exact generation prompts
 
+### `step1-index.jpg`
+
+```text
+Create one high-fidelity illustrative 1376×768 16:9 image of the historical manuscript archive reading-room reservation service "The Ashfield Archive", STEP 1: Manuscript Catalogue & Index in BODLEIAN ARCHIVAL VELLUM & OXFORD BURGUNDY LIGHT MODE. Render ONLY a full-bleed, edge-to-edge WEB PAGE canvas. NO browser chrome, NO macOS traffic lights, NO window frame, NO tab bar, NO address bar, NO exterior drop shadow, NO OS desktop or device mockup. Use archival cotton-vellum #f8f6f0 page background reaching all four image edges, clean #ffffff card surfaces with 1px #d6d3d1 stone borders, #1c1917 iron-gall ink serif typography, and #7f1d1d Oxford burgundy primary action buttons. Archival masthead displays "The Ashfield Archive · Special Collections & Manuscripts", reading room hours, and links "Catalogue, Reading Room Guidelines, My Requests". Main stage shows an archival search header with century filter pills (15th, 16th, 17th Century, Medieval) and a 3-column catalog grid of illuminated manuscripts and historical folios with call numbers, provenance notes, and burgundy "Request in Reading Room" buttons.
+```
+
+### `step2-specimen.jpg`
+
+```text
+Create one high-fidelity illustrative 1376×768 16:9 image of the historical manuscript archive reading-room reservation service "The Ashfield Archive", STEP 2: Manuscript Detail & Specimen Provenance in BODLEIAN ARCHIVAL VELLUM & OXFORD BURGUNDY LIGHT MODE. Render ONLY a full-bleed, edge-to-edge WEB PAGE canvas. NO browser chrome, NO macOS traffic lights, NO window frame, NO tab bar, NO address bar, NO exterior drop shadow, NO OS desktop or device mockup. Preserve the #f8f6f0 archival vellum ground, #ffffff cards with 1px #d6d3d1 stone borders, #1c1917 iron-gall ink, and #7f1d1d burgundy accents from Step 1. Masthead shows breadcrumb "Catalogue > 17th-Century > MS Ashfield 42". Split view: left 55% displays a detailed archival specimen viewer showing illuminated botanical folios with zoom controls and folio metadata (MS Ashfield 42, 1648, vellum binding, strongroom B); right 45% shows curator notes, historical provenance record, condition report ("Parchment stable, handling with cotton gloves required"), and primary Oxford burgundy button "Reserve Call-Slip for Reading Room".
+```
+
 ### `step3-refusal.jpg`
 
 ```text
 Render only a full-bleed, edge-to-edge WEB PAGE canvas at 1376×768 16:9. NO browser chrome, NO macOS traffic lights, NO window frame, NO tab bar, NO address bar, NO exterior drop shadow, NO OS desktop or device mockup. High-fidelity modern web application UI for a historical manuscript archive's reading-room reservation service, "The Ashfield Archive", Step 3: Reservation Form Refusal in BODLEIAN ARCHIVAL VELLUM & OXFORD BURGUNDY LIGHT MODE (#f8f6f0 archival cotton-vellum page background reaching all four edges, #ffffff reading-room call-slip card with 1px #d6d3d1 stone border, #1c1917 iron-gall ink serif/sans typography, #7f1d1d Oxford burgundy primary action button, #dc2626 validation alert). Top archival masthead shows "The Ashfield Archive · Special Collections Reading Room". Left side shows the selected manuscript summary card ("MS Ashfield 42 · 17th-Century Herbal & Botanical Folios · Strongroom B"). Right side shows the reservation form re-rendered after a refused submission: a crimson alert banner reads "Your reservation could not be submitted", the Researcher name field is outlined in 2px red #dc2626 with inline error "Enter the researcher's name", and the Reservation date field is outlined in 2px red #dc2626 with inline error "Choose a valid date from today onwards", while Manuscript, Accession number, and Reading room desk fields stay valid. Primary Oxford burgundy button "Request reservation" and "Back to the catalogue" link remain visible.
+```
+
+### `step4-empty.jpg`
+
+```text
+Create one high-fidelity illustrative 1376×768 16:9 image of the historical manuscript archive reading-room reservation service "The Ashfield Archive", STEP 4: Empty Search Results in BODLEIAN ARCHIVAL VELLUM & OXFORD BURGUNDY LIGHT MODE. Render ONLY a full-bleed, edge-to-edge WEB PAGE canvas. NO browser chrome, NO macOS traffic lights, NO window frame, NO tab bar, NO address bar, NO exterior drop shadow, NO OS desktop or device mockup. Preserve the #f8f6f0 archival vellum ground, #ffffff cards, and #1c1917 iron-gall ink from Step 1. Masthead shows search bar with active query "astronomical treatises 1350" under "Special Collections". Centered archival empty-state card displays an elegant line illustration of an open vellum codex and quill, headline "No Manuscripts Found in Special Collections", explanatory note "No archival folios or call slips match 'astronomical treatises 1350'. Please verify the century or accession shelfmark, consult our printed index of charters, or contact an archivist.", primary Oxford burgundy button "Reset Search Filters", and secondary link "Browse Full 14th-Century Register".
 ```

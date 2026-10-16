@@ -12,7 +12,7 @@ const ROOT = resolve(import.meta.dirname, '..');
 test('all current prompt and state claims come from real authored sources', () => {
   const gallery = listConcepts(ROOT);
   assert.equal(gallery.patterns.length, 27);
-  assert.equal(gallery.patterns.flatMap((pattern) => pattern.steps).filter((step) => step.available).length, 85);
+  assert.equal(gallery.patterns.flatMap((pattern) => pattern.steps).filter((step) => step.available).length, 106);
   for (const pattern of gallery.patterns) {
     const { brief, steps } = pattern;
     assert.ok(brief?.sitePrompt.includes('Use case:'), `${pattern.id} has a complete source-backed site prompt`);
@@ -36,7 +36,7 @@ test('all current prompt and state claims come from real authored sources', () =
   const html = renderConcepts(gallery);
   assert.equal((html.match(/class="concept-pattern-index"/g) ?? []).length, 1);
   assert.equal((html.match(/href="#pattern-[a-z-]+"/g) ?? []).length, 32, '27 index links plus 5 held-out cross-links');
-  assert.equal((html.match(/Image Generation Prompt for this state/g) ?? []).length, 85);
+  assert.equal((html.match(/Image Generation Prompt for this state/g) ?? []).length, 106);
   assert.equal((html.match(/<summary>Site Generation Prompt/g) ?? []).length, 66);
   assert.doesNotMatch(html, /<script[^>]*>/, 'reading prompts requires no client JS');
 });

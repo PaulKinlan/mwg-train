@@ -43,7 +43,7 @@ test('dark-mode board changes and provenance records route to their byte-identit
   for (const file of ['docs/design/archetypes/*/dark/*',
     'docs/provenance/assets/archetype-dark-boards.json', 'docs/provenance/assets/archetype-dark-boards.md']) {
     assert.ok(mapping[file]?.includes('test/archetype-dark-provenance.test.mjs'),
-      `${file} must rerun the complete 85-board inventory`);
+      `${file} must rerun the complete 106-board inventory`);
   }
   for (const file of ['docs/provenance/assets/archetype-dark-boards.json',
     'docs/provenance/assets/archetype-dark-boards.md']) {

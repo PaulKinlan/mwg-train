@@ -287,9 +287,66 @@
       "source_commit": null
     },
     {
+      "path": "docs/design/archetypes/community-forum/dark/step1-browse.jpg",
+      "sha256": "675a4abb50c65f57e8b358025b666114c64499cecf20f92dd83a6883f8c3b51a",
+      "bytes": 538060,
+      "dimensions": {
+        "width": 1376,
+        "height": 768
+      },
+      "source_status": "generator_reported_no_durable_receipt",
+      "response_model": null,
+      "generation_prompt_sha256": null,
+      "vision_verdict": null,
+      "excluded_from_training": true,
+      "approved_for_training": false,
+      "reuse_clearance": null,
+      "rights_source": "docs/design/archetypes/community-forum/README.md",
+      "source_board_sha256": null,
+      "source_commit": null
+    },
+    {
+      "path": "docs/design/archetypes/community-forum/dark/step2-thread.jpg",
+      "sha256": "73ea5c482d99bb96063d4ca966f2817fdc513f04f3ad2e276856005388d1a18d",
+      "bytes": 518400,
+      "dimensions": {
+        "width": 1376,
+        "height": 768
+      },
+      "source_status": "generator_reported_no_durable_receipt",
+      "response_model": null,
+      "generation_prompt_sha256": null,
+      "vision_verdict": null,
+      "excluded_from_training": true,
+      "approved_for_training": false,
+      "reuse_clearance": null,
+      "rights_source": "docs/design/archetypes/community-forum/README.md",
+      "source_board_sha256": null,
+      "source_commit": null
+    },
+    {
       "path": "docs/design/archetypes/community-forum/dark/step3-refusal.jpg",
       "sha256": "6da8490124df40aa5b5f565e36d28ae90e08e85587f0ecc3186438102e2b0ad0",
       "bytes": 345613,
+      "dimensions": {
+        "width": 1376,
+        "height": 768
+      },
+      "source_status": "generator_reported_no_durable_receipt",
+      "response_model": null,
+      "generation_prompt_sha256": null,
+      "vision_verdict": null,
+      "excluded_from_training": true,
+      "approved_for_training": false,
+      "reuse_clearance": null,
+      "rights_source": "docs/design/archetypes/community-forum/README.md",
+      "source_board_sha256": null,
+      "source_commit": null
+    },
+    {
+      "path": "docs/design/archetypes/community-forum/dark/step4-empty.jpg",
+      "sha256": "2d37b1e3473e74bcba91957d8c9591b5886e29992106c29f4cca89adfb14f075",
+      "bytes": 494901,
       "dimensions": {
         "width": 1376,
         "height": 768
@@ -895,6 +952,63 @@
       "source_commit": null
     },
     {
+      "path": "docs/design/archetypes/expense-tracker/dark/step1-ledger.jpg",
+      "sha256": "7269bdd1a97c5540c750228b2501ed0868b95c19a67ba861ecd563eb093fe8bb",
+      "bytes": 569095,
+      "dimensions": {
+        "width": 1376,
+        "height": 768
+      },
+      "source_status": "generator_reported_no_durable_receipt",
+      "response_model": null,
+      "generation_prompt_sha256": null,
+      "vision_verdict": null,
+      "excluded_from_training": true,
+      "approved_for_training": false,
+      "reuse_clearance": null,
+      "rights_source": "docs/design/archetypes/expense-tracker/README.md",
+      "source_board_sha256": null,
+      "source_commit": null
+    },
+    {
+      "path": "docs/design/archetypes/expense-tracker/dark/step2-entry.jpg",
+      "sha256": "d5e27557fe9f8951acdface7085f28d30a3b68b13f9a9a49cf109e293b817828",
+      "bytes": 445732,
+      "dimensions": {
+        "width": 1376,
+        "height": 768
+      },
+      "source_status": "generator_reported_no_durable_receipt",
+      "response_model": null,
+      "generation_prompt_sha256": null,
+      "vision_verdict": null,
+      "excluded_from_training": true,
+      "approved_for_training": false,
+      "reuse_clearance": null,
+      "rights_source": "docs/design/archetypes/expense-tracker/README.md",
+      "source_board_sha256": null,
+      "source_commit": null
+    },
+    {
+      "path": "docs/design/archetypes/expense-tracker/dark/step3-summary.jpg",
+      "sha256": "bf5d08f38a4fb02a0879f1b11a06ce75072464936b159a0e8769d7d092057033",
+      "bytes": 565079,
+      "dimensions": {
+        "width": 1376,
+        "height": 768
+      },
+      "source_status": "generator_reported_no_durable_receipt",
+      "response_model": null,
+      "generation_prompt_sha256": null,
+      "vision_verdict": null,
+      "excluded_from_training": true,
+      "approved_for_training": false,
+      "reuse_clearance": null,
+      "rights_source": "docs/design/archetypes/expense-tracker/README.md",
+      "source_board_sha256": null,
+      "source_commit": null
+    },
+    {
       "path": "docs/design/archetypes/fan-community-site/dark/step1-collection.jpg",
       "sha256": "5ba6e87369f0f14405ba440f70eb9b2fa1b8ad491396fda9a6dd30117cd0e17d",
       "bytes": 638603,
@@ -1085,9 +1199,123 @@
       "source_commit": null
     },
     {
+      "path": "docs/design/archetypes/job-board/dark/step1-listings.jpg",
+      "sha256": "d472b8580c9f3c538ca90341905af745a954c94608f42161b857188718afec86",
+      "bytes": 557027,
+      "dimensions": {
+        "width": 1376,
+        "height": 768
+      },
+      "source_status": "generator_reported_no_durable_receipt",
+      "response_model": null,
+      "generation_prompt_sha256": null,
+      "vision_verdict": null,
+      "excluded_from_training": true,
+      "approved_for_training": false,
+      "reuse_clearance": null,
+      "rights_source": "docs/design/archetypes/job-board/README.md",
+      "source_board_sha256": null,
+      "source_commit": null
+    },
+    {
+      "path": "docs/design/archetypes/job-board/dark/step2-detail.jpg",
+      "sha256": "57aa0477aa39c693c8483717cefc26fe2666365026ad2b14e8d3571d32782240",
+      "bytes": 492061,
+      "dimensions": {
+        "width": 1376,
+        "height": 768
+      },
+      "source_status": "generator_reported_no_durable_receipt",
+      "response_model": null,
+      "generation_prompt_sha256": null,
+      "vision_verdict": null,
+      "excluded_from_training": true,
+      "approved_for_training": false,
+      "reuse_clearance": null,
+      "rights_source": "docs/design/archetypes/job-board/README.md",
+      "source_board_sha256": null,
+      "source_commit": null
+    },
+    {
+      "path": "docs/design/archetypes/job-board/dark/step3-post.jpg",
+      "sha256": "2f0f707a3debbf1390afb998a89b30641583775ee00e8fe9b81f822568efe783",
+      "bytes": 440544,
+      "dimensions": {
+        "width": 1376,
+        "height": 768
+      },
+      "source_status": "generator_reported_no_durable_receipt",
+      "response_model": null,
+      "generation_prompt_sha256": null,
+      "vision_verdict": null,
+      "excluded_from_training": true,
+      "approved_for_training": false,
+      "reuse_clearance": null,
+      "rights_source": "docs/design/archetypes/job-board/README.md",
+      "source_board_sha256": null,
+      "source_commit": null
+    },
+    {
+      "path": "docs/design/archetypes/library-catalogue/dark/step1-index.jpg",
+      "sha256": "27956b563692050b98af6af1bff4de028457160160b239b078b43a036efa233c",
+      "bytes": 659704,
+      "dimensions": {
+        "width": 1376,
+        "height": 768
+      },
+      "source_status": "generator_reported_no_durable_receipt",
+      "response_model": null,
+      "generation_prompt_sha256": null,
+      "vision_verdict": null,
+      "excluded_from_training": true,
+      "approved_for_training": false,
+      "reuse_clearance": null,
+      "rights_source": "docs/design/archetypes/library-catalogue/README.md",
+      "source_board_sha256": null,
+      "source_commit": null
+    },
+    {
+      "path": "docs/design/archetypes/library-catalogue/dark/step2-specimen.jpg",
+      "sha256": "00d8fe3572e7b9e86a52456981bcb18bb2eef43da6c6c9f9e373139b6cdb44cb",
+      "bytes": 620764,
+      "dimensions": {
+        "width": 1376,
+        "height": 768
+      },
+      "source_status": "generator_reported_no_durable_receipt",
+      "response_model": null,
+      "generation_prompt_sha256": null,
+      "vision_verdict": null,
+      "excluded_from_training": true,
+      "approved_for_training": false,
+      "reuse_clearance": null,
+      "rights_source": "docs/design/archetypes/library-catalogue/README.md",
+      "source_board_sha256": null,
+      "source_commit": null
+    },
+    {
       "path": "docs/design/archetypes/library-catalogue/dark/step3-refusal.jpg",
       "sha256": "4dbbac8efb53471b893e50d45e1a1c0ff3573d8640573e09aeffe20185670cad",
       "bytes": 370569,
+      "dimensions": {
+        "width": 1376,
+        "height": 768
+      },
+      "source_status": "generator_reported_no_durable_receipt",
+      "response_model": null,
+      "generation_prompt_sha256": null,
+      "vision_verdict": null,
+      "excluded_from_training": true,
+      "approved_for_training": false,
+      "reuse_clearance": null,
+      "rights_source": "docs/design/archetypes/library-catalogue/README.md",
+      "source_board_sha256": null,
+      "source_commit": null
+    },
+    {
+      "path": "docs/design/archetypes/library-catalogue/dark/step4-empty.jpg",
+      "sha256": "a72aad076f33bd13f2c052b657d16b53e43cdc305e8b739ac08f25c8b70a2a1d",
+      "bytes": 479016,
       "dimensions": {
         "width": 1376,
         "height": 768
@@ -1351,6 +1579,63 @@
       "source_commit": null
     },
     {
+      "path": "docs/design/archetypes/restaurant-ordering/dark/step1-menu.jpg",
+      "sha256": "d03f9513221deebc498efe3abc74b64d07299ec07942f7e1b46c43164c5a03e2",
+      "bytes": 768130,
+      "dimensions": {
+        "width": 1376,
+        "height": 768
+      },
+      "source_status": "generator_reported_no_durable_receipt",
+      "response_model": null,
+      "generation_prompt_sha256": null,
+      "vision_verdict": null,
+      "excluded_from_training": true,
+      "approved_for_training": false,
+      "reuse_clearance": null,
+      "rights_source": "docs/design/archetypes/restaurant-ordering/README.md",
+      "source_board_sha256": null,
+      "source_commit": null
+    },
+    {
+      "path": "docs/design/archetypes/restaurant-ordering/dark/step2-order.jpg",
+      "sha256": "c7685a837e7b0155172a4199a1ebcb59d4df4488329d88c23958b733542582ca",
+      "bytes": 545266,
+      "dimensions": {
+        "width": 1376,
+        "height": 768
+      },
+      "source_status": "generator_reported_no_durable_receipt",
+      "response_model": null,
+      "generation_prompt_sha256": null,
+      "vision_verdict": null,
+      "excluded_from_training": true,
+      "approved_for_training": false,
+      "reuse_clearance": null,
+      "rights_source": "docs/design/archetypes/restaurant-ordering/README.md",
+      "source_board_sha256": null,
+      "source_commit": null
+    },
+    {
+      "path": "docs/design/archetypes/restaurant-ordering/dark/step3-confirmation.jpg",
+      "sha256": "f1dd11a602d68bdaedc7cf19ed9260d1a44a980c8b19d57f4917146953ae2568",
+      "bytes": 387378,
+      "dimensions": {
+        "width": 1376,
+        "height": 768
+      },
+      "source_status": "generator_reported_no_durable_receipt",
+      "response_model": null,
+      "generation_prompt_sha256": null,
+      "vision_verdict": null,
+      "excluded_from_training": true,
+      "approved_for_training": false,
+      "reuse_clearance": null,
+      "rights_source": "docs/design/archetypes/restaurant-ordering/README.md",
+      "source_board_sha256": null,
+      "source_commit": null
+    },
+    {
       "path": "docs/design/archetypes/saas-workspace-board/dark/step1-board-and-inspector.jpg",
       "sha256": "e35f511a90f1b8df01309ff25079a35a1c02271ffad09d4931e0e0b574c672e6",
       "bytes": 434275,
@@ -1579,6 +1864,44 @@
       "source_commit": null
     },
     {
+      "path": "docs/design/archetypes/survey-form/dark/step1-questionnaire.jpg",
+      "sha256": "e4b1bf2f46ea43f0bd89d35aebe0c5a9cc8c322b8394a25f0f1f139367fa66ac",
+      "bytes": 446083,
+      "dimensions": {
+        "width": 1376,
+        "height": 768
+      },
+      "source_status": "generator_reported_no_durable_receipt",
+      "response_model": null,
+      "generation_prompt_sha256": null,
+      "vision_verdict": null,
+      "excluded_from_training": true,
+      "approved_for_training": false,
+      "reuse_clearance": null,
+      "rights_source": "docs/design/archetypes/survey-form/README.md",
+      "source_board_sha256": null,
+      "source_commit": null
+    },
+    {
+      "path": "docs/design/archetypes/survey-form/dark/step2-review.jpg",
+      "sha256": "f93cc3b22182760ed257ddc80e26a4f3df8345421b3887f2044378dd4da6d3a1",
+      "bytes": 462490,
+      "dimensions": {
+        "width": 1376,
+        "height": 768
+      },
+      "source_status": "generator_reported_no_durable_receipt",
+      "response_model": null,
+      "generation_prompt_sha256": null,
+      "vision_verdict": null,
+      "excluded_from_training": true,
+      "approved_for_training": false,
+      "reuse_clearance": null,
+      "rights_source": "docs/design/archetypes/survey-form/README.md",
+      "source_board_sha256": null,
+      "source_commit": null
+    },
+    {
       "path": "docs/design/archetypes/survey-form/dark/step3-validation.jpg",
       "sha256": "8c80aa7281eb3f9397d48dcefb2f52d4a1301980a33febc3ca7142e5f2cc3c63",
       "bytes": 342343,
@@ -1598,9 +1921,85 @@
       "source_commit": null
     },
     {
+      "path": "docs/design/archetypes/survey-form/dark/step4-submitted.jpg",
+      "sha256": "7d273a7a6b1c21315c13afbd251a59e552647759620968cf52cb27a46b74bd90",
+      "bytes": 359142,
+      "dimensions": {
+        "width": 1376,
+        "height": 768
+      },
+      "source_status": "generator_reported_no_durable_receipt",
+      "response_model": null,
+      "generation_prompt_sha256": null,
+      "vision_verdict": null,
+      "excluded_from_training": true,
+      "approved_for_training": false,
+      "reuse_clearance": null,
+      "rights_source": "docs/design/archetypes/survey-form/README.md",
+      "source_board_sha256": null,
+      "source_commit": null
+    },
+    {
+      "path": "docs/design/archetypes/web-shop/dark/step1-ciders.jpg",
+      "sha256": "2f98194ec0fd3b74ea162e694d7439cda9fd7f0e4d5d836de30644a7b26b79e4",
+      "bytes": 510812,
+      "dimensions": {
+        "width": 1376,
+        "height": 768
+      },
+      "source_status": "generator_reported_no_durable_receipt",
+      "response_model": null,
+      "generation_prompt_sha256": null,
+      "vision_verdict": null,
+      "excluded_from_training": true,
+      "approved_for_training": false,
+      "reuse_clearance": null,
+      "rights_source": "docs/design/archetypes/web-shop/README.md",
+      "source_board_sha256": null,
+      "source_commit": null
+    },
+    {
       "path": "docs/design/archetypes/web-shop/dark/step1-empty.jpg",
       "sha256": "f6f765ba04cf793b97b6e2d4c5f5e65b0529271e4819ef7c5fa60b4c0069e972",
       "bytes": 284829,
+      "dimensions": {
+        "width": 1376,
+        "height": 768
+      },
+      "source_status": "generator_reported_no_durable_receipt",
+      "response_model": null,
+      "generation_prompt_sha256": null,
+      "vision_verdict": null,
+      "excluded_from_training": true,
+      "approved_for_training": false,
+      "reuse_clearance": null,
+      "rights_source": "docs/design/archetypes/web-shop/README.md",
+      "source_board_sha256": null,
+      "source_commit": null
+    },
+    {
+      "path": "docs/design/archetypes/web-shop/dark/step2-preorder.jpg",
+      "sha256": "107cb2a62d3b6982fbd02f55704efab4eea2918ec2804b007e9eced7139278b7",
+      "bytes": 484490,
+      "dimensions": {
+        "width": 1376,
+        "height": 768
+      },
+      "source_status": "generator_reported_no_durable_receipt",
+      "response_model": null,
+      "generation_prompt_sha256": null,
+      "vision_verdict": null,
+      "excluded_from_training": true,
+      "approved_for_training": false,
+      "reuse_clearance": null,
+      "rights_source": "docs/design/archetypes/web-shop/README.md",
+      "source_board_sha256": null,
+      "source_commit": null
+    },
+    {
+      "path": "docs/design/archetypes/web-shop/dark/step3-confirmation.jpg",
+      "sha256": "c89a4aa01fcb72847210e22d37cd8d7083d94b392b7862189cbbc7f3810f1b09",
+      "bytes": 437533,
       "dimensions": {
         "width": 1376,
         "height": 768

@@ -11,11 +11,32 @@
 
 | Ordered board | What the raster depicts | SHA-256 of committed bytes | Bytes |
 | --- | --- | --- | ---: |
+| [`step1-listings.jpg`](step1-listings.jpg) | Open biotechnology and clean technology career listings | `e564d4e234e7c2f4d00b1dca64e1d384cf64d28240126624a8974e27850193d3` | 419204 |
+| [`step2-detail.jpg`](step2-detail.jpg) | Research scientist job specification and laboratory detail | `52c237bf1c39e8db1b8c1280f51e2119dd21cebed4c62c3a4097bc19cd918c0f` | 430919 |
+| [`step3-post.jpg`](step3-post.jpg) | Post a technical or research vacancy intake form | `5c753fb338626ba44a967ffc02fe7c001a79e6a5e817e9ddd5937adc2bab9069` | 420947 |
 | [`step1-error.jpg`](step1-error.jpg) | Vacancy-posting form refused with inline errors on title and contact email | `befb8afad7b3cee36aecec2e3a4687249fd066e765490249d2dcbcb927a3317b` | 389110 |
 
 Hashes pin the handed-off JPEG bytes, not their generating model, prompt-to-pixel reproducibility or legal status. The corpus must derive from its own approved source and measured records, not these images.
 
 ## Exact generation prompts
+
+### `step1-listings.jpg`
+
+```text
+Create one high-fidelity illustrative 1376×768 16:9 image of the clean-economy & biotech career platform "Helix Careers", STEP 1: Open Roles & Biotechnology Listings in CRISP NORDIC BIOTECH DAYLIGHT LIGHT MODE. Render ONLY a full-bleed, edge-to-edge WEB PAGE canvas. NO browser chrome, NO macOS traffic lights, NO window frame, NO tab bar, NO address bar, NO exterior drop shadow, NO OS desktop or device mockup. Use pale clinical mint-ice #f0fdfa page background reaching all four image edges, clean #ffffff card surfaces with 1px #ccfbf1 borders, #134e4a deep pine-teal ink, and #0d9488 clinical teal primary CTA button. Brand header shows "Helix Careers · Life Sciences & Clean Tech", navigation links "Explore Roles, Research Labs, Post a Vacancy", and role count badge "42 open roles". Main stage displays a filter sidebar on the left (Discipline: Synthetic Biology, Fermentation, Clean Agritech; Location: Cambridge BioCampus, Oxford, London) and a two-column card grid of open scientific positions on the right, each with role title, laboratory logo, salary band (£68k–£82k), location tags, and "View Role" teal buttons.
+```
+
+### `step2-detail.jpg`
+
+```text
+Create one high-fidelity illustrative 1376×768 16:9 image of the clean-economy & biotech career platform "Helix Careers", STEP 2: Role Specification & Lab Detail in CRISP NORDIC BIOTECH DAYLIGHT LIGHT MODE. Render ONLY a full-bleed, edge-to-edge WEB PAGE canvas. NO browser chrome, NO macOS traffic lights, NO window frame, NO tab bar, NO address bar, NO exterior drop shadow, NO OS desktop or device mockup. Preserve the #f0fdfa mint-ice ground, #ffffff card surfaces with 1px #ccfbf1 borders, and #0d9488 clinical teal accents from Step 1. Header shows breadcrumb "Roles > Synthetic Biology > Lead Bioprocess Engineer". Two-column layout: left column presents the comprehensive job specification card with role overview, key research responsibilities (scaling microbial fermentation, bioreactor optimization), required qualifications (PhD or 5+ yrs experience), and lab equipment overview; right column displays a sticky overview card with salary "£75,000 – £88,000", Cambridge BioCampus facility badge, closing date "30 Nov 2026", and primary teal button "Apply for this Position".
+```
+
+### `step3-post.jpg`
+
+```text
+Create one high-fidelity illustrative 1376×768 16:9 image of the clean-economy & biotech career platform "Helix Careers", STEP 3: Post a Vacancy Form in CRISP NORDIC BIOTECH DAYLIGHT LIGHT MODE. Render ONLY a full-bleed, edge-to-edge WEB PAGE canvas. NO browser chrome, NO macOS traffic lights, NO window frame, NO tab bar, NO address bar, NO exterior drop shadow, NO OS desktop or device mockup. Preserve the #f0fdfa mint-ice ground, #ffffff structured form cards with 1px #ccfbf1 borders, and #0d9488 clinical teal accents. Header shows "Helix Careers · Employer Portal" with link "← Back to 42 open roles". Centered clean form card titled "Post a Research or Technical Vacancy" with all fields cleanly filled and valid before submission: Job Title ("Senior Fermentation Scientist"), Discipline select ("Microbial Biotechnology"), Laboratory Location ("Cambridge BioCampus · Hybrid"), Salary Band ("£70,000 – £85,000"), Contact Email ("talent@cambridge-bio.test"), and Job Description textarea with Markdown toolbar. Primary teal action button "Post Vacancy (Review Draft)" and secondary "Save Draft".
+```
 
 ### `step1-error.jpg`
 

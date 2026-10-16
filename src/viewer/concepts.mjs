@@ -156,13 +156,48 @@ const JOURNEYS = {
     { id: 'step3-ticket', title: 'Ticket detail & status timeline' },
     { id: 'step4-empty', title: 'No matching tickets found' },
   ],
-  'community-forum': [{ id: 'step3-refusal', title: 'Reply refusal' }],
-  'expense-tracker': [{ id: 'step1-error', title: 'Invalid entry' }],
-  'job-board': [{ id: 'step1-error', title: 'Posting refusal' }],
-  'library-catalogue': [{ id: 'step3-refusal', title: 'Reservation refusal' }],
-  'restaurant-ordering': [{ id: 'step1-error', title: 'Empty checkout refusal' }],
-  'survey-form': [{ id: 'step3-validation', title: 'Required answer validation' }],
-  'web-shop': [{ id: 'step1-empty', title: 'Empty basket' }],
+  'community-forum': [
+    { id: 'step1-browse', title: 'Session tune archive & forum index' },
+    { id: 'step2-thread', title: 'Discussion thread & musician notes' },
+    { id: 'step3-refusal', title: 'Reply refusal' },
+    { id: 'step4-empty', title: 'No matching tunes or notes' },
+  ],
+  'expense-tracker': [
+    { id: 'step1-ledger', title: 'Departmental budget & expenditure ledger' },
+    { id: 'step2-entry', title: 'Record new departmental expense' },
+    { id: 'step3-summary', title: 'Quarterly expenditure summary & breakdown' },
+    { id: 'step1-error', title: 'Invalid entry' },
+  ],
+  'job-board': [
+    { id: 'step1-listings', title: 'Open roles & biotechnology careers' },
+    { id: 'step2-detail', title: 'Senior scientist role & lab specification' },
+    { id: 'step3-post', title: 'Post a biotechnology vacancy' },
+    { id: 'step1-error', title: 'Posting refusal' },
+  ],
+  'library-catalogue': [
+    { id: 'step1-index', title: 'Archival manuscript catalogue & search' },
+    { id: 'step2-specimen', title: 'Botanical folio record & provenance' },
+    { id: 'step3-refusal', title: 'Reservation refusal' },
+    { id: 'step4-empty', title: 'No archival manuscripts found' },
+  ],
+  'restaurant-ordering': [
+    { id: 'step1-menu', title: 'Saturday bakehouse menu & fresh bakes' },
+    { id: 'step2-order', title: 'Bakery basket & collection slot' },
+    { id: 'step3-confirmation', title: 'Bakehouse order confirmation' },
+    { id: 'step1-error', title: 'Empty checkout refusal' },
+  ],
+  'survey-form': [
+    { id: 'step1-questionnaire', title: 'Station & carriage experience survey' },
+    { id: 'step2-review', title: 'Passenger feedback review' },
+    { id: 'step3-validation', title: 'Required answer validation' },
+    { id: 'step4-submitted', title: 'Survey submission confirmed' },
+  ],
+  'web-shop': [
+    { id: 'step1-ciders', title: 'Heritage orchard bottle & flagon selection' },
+    { id: 'step2-preorder', title: 'Farm-gate pre-order & collection reservation' },
+    { id: 'step3-confirmation', title: 'Cider orchard order confirmed' },
+    { id: 'step1-empty', title: 'Empty basket' },
+  ],
 };
 const IMAGE_NAME = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 

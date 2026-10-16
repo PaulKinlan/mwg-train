@@ -171,48 +171,55 @@ const ARCHETYPE_CONFIGS = {
     lightTheme: 'EXPEDITION DAYLIGHT LIGHT MODE (#f8fafc crisp light grey page ground reaching all four image edges, #ffffff card surfaces with 1px #e2e8f0 borders, #0f172a deep slate ink typography, #0284c7 bright trail-blue primary action buttons, #16a34a verified green badge, #e11d48 crimson validation alert)',
     darkTheme: 'ALPINE BASECAMP OBSIDIAN DARK MODE (#0b111a deep nocturnal basecamp slate ground reaching all four image edges, #162030 elevated ticket and repair form card surfaces with 1px #2a3c54 borders, #f8fafc crisp off-white typography, #38bdf8 luminous trail-cyan primary action buttons, #4ade80 verified green badge, #f87171 high-contrast crimson validation alert)',
   },
-  // --- 7 Single-Step Archetypes ---
+  // --- 7 Expanded Multi-Step Archetypes (Wave 2) ---
   'community-forum': {
-    anchorMode: 'single-light',
-    steps: ['step3-refusal.jpg'],
-    lightTheme: 'WARM SONGBOOK PARCHMENT LIGHT MODE (#fefce8 aged songbook parchment page ground, #ffffff note card surfaces, 1px #fde68a luthiery-amber borders, #450a0a deep mahogany ink, #b45309 warm brass-amber primary button, #b91c1c crimson validation alert)',
-    darkTheme: 'EVENING SESSION MAHOGANY DARK MODE (#18110e deep acoustic-mahogany page ground, #261b16 elevated note card surfaces, 1px #3f2e26 warm walnut borders, #faf5f0 warm cream typography, #f59e0b warm brass-amber primary button, #f87171 high-contrast crimson validation alert banner and 2px red field border on #351316 dark crimson alert background)',
+    anchorMode: 'expand-set',
+    anchorStep: 'step3-refusal.jpg',
+    steps: ['step1-browse.jpg', 'step2-thread.jpg', 'step3-refusal.jpg', 'step4-empty.jpg'],
+    lightTheme: 'WARM SONGBOOK PARCHMENT LIGHT MODE (#fefce8 aged songbook parchment page background reaching all four image edges, #ffffff note card surfaces with 1px #fde68a luthiery-amber borders, #450a0a deep mahogany ink text, #b45309 warm brass-amber primary action button)',
+    darkTheme: 'EVENING SESSION MAHOGANY DARK MODE (#18110e deep acoustic-mahogany page ground reaching all four image edges, #261b16 elevated note card surfaces with 1px #3f2e26 warm walnut borders, #faf5f0 warm cream typography, #f59e0b warm brass-amber primary button, #f87171 high-contrast crimson validation alert banner and 2px red field border on #351316 dark crimson alert background)',
   },
   'expense-tracker': {
-    anchorMode: 'single-light',
-    steps: ['step1-error.jpg'],
-    lightTheme: 'CRISP ACCOUNTING PAPER & SPRUCE LIGHT MODE (#f8fafc financial paper ground, #ffffff ledger and form cards, 1px #cbd5e1 accounting rules, #0f172a tabular ink, #0f766e spruce-teal primary button, #b91c1c crimson validation alert)',
-    darkTheme: 'NOCTURNAL FINANCIAL LEDGER DARK MODE (#0b1116 deep slate-ledger page ground, #131d26 elevated form and ledger card surfaces, 1px #243442 accounting grid rules, #f1f5f9 crisp white tabular-numeral ink, #14b8a6 luminous spruce-teal primary button, #f87171 high-contrast crimson validation alert banner and 2px red outline on the -42.50 Amount field)',
+    anchorMode: 'expand-set',
+    anchorStep: 'step1-error.jpg',
+    steps: ['step1-ledger.jpg', 'step2-entry.jpg', 'step3-summary.jpg', 'step1-error.jpg'],
+    lightTheme: 'CRISP ACCOUNTING PAPER & SPRUCE LIGHT MODE (#f8fafc crisp financial paper background reaching all four image edges, #ffffff ledger and form cards with 1px #cbd5e1 accounting rules, #0f172a tabular-numeral ink, #0f766e spruce-teal primary button, #b91c1c crimson validation alert)',
+    darkTheme: 'NOCTURNAL FINANCIAL LEDGER DARK MODE (#0b1116 deep slate-ledger page ground reaching all four image edges, #131d26 elevated form and ledger card surfaces with 1px #243442 accounting grid rules, #f1f5f9 crisp white tabular-numeral ink, #14b8a6 luminous spruce-teal primary button, #f87171 high-contrast crimson validation alert banner and 2px red outline on the -42.50 Amount field)',
   },
   'job-board': {
-    anchorMode: 'single-light',
-    steps: ['step1-error.jpg'],
-    lightTheme: 'CRISP NORDIC BIOTECH DAYLIGHT LIGHT MODE (#f0fdfa pale clinical mint-ice page ground, #ffffff structured form card, 1px #ccfbf1 border, #134e4a deep pine-teal ink, #0d9488 clinical teal primary button, #be123c rose-crimson validation)',
-    darkTheme: 'DEEP LAB OBSIDIAN & BIOLUMINESCENT TEAL DARK MODE (#071314 deep lab-teal page ground, #0f2224 structured form card surface, 1px #1e3f42 border, #f0fdfa crisp mint-white typography, #2dd4bf bioluminescent teal primary button, #fb7185 high-contrast rose-crimson validation banner and 2px red outlines on Job Title and Contact Email)',
+    anchorMode: 'expand-set',
+    anchorStep: 'step1-error.jpg',
+    steps: ['step1-listings.jpg', 'step2-detail.jpg', 'step3-post.jpg', 'step1-error.jpg'],
+    lightTheme: 'CRISP NORDIC BIOTECH DAYLIGHT LIGHT MODE (#f0fdfa pale clinical mint-ice page background reaching all four image edges, #ffffff structured form card with 1px #ccfbf1 border, #134e4a deep pine-teal ink, #0d9488 clinical teal primary button, #be123c rose-crimson validation)',
+    darkTheme: 'DEEP LAB OBSIDIAN & BIOLUMINESCENT TEAL DARK MODE (#071314 deep lab-teal page ground reaching all four image edges, #0f2224 structured form card surface with 1px #1e3f42 border, #f0fdfa crisp mint-white typography, #2dd4bf bioluminescent teal primary button, #fb7185 high-contrast rose-crimson validation banner and 2px red outlines on Job Title and Contact Email)',
   },
   'library-catalogue': {
-    anchorMode: 'single-light',
-    steps: ['step3-refusal.jpg'],
-    lightTheme: 'BODLEIAN ARCHIVAL VELLUM & OXFORD BURGUNDY LIGHT MODE (#f8f6f0 archival cotton-vellum page ground, #ffffff reading-room call-slip card, 1px #d6d3d1 stone border, #1c1917 iron-gall ink, #7f1d1d Oxford burgundy primary button, #dc2626 validation alert)',
-    darkTheme: 'NOCTURNAL READING ROOM OAK & CRIMSON DARK MODE (#141210 dark library-oak page ground, #211e1a reading-room call-slip card surface, 1px #38322c warm stone border, #f5f2eb archival parchment typography, #e11d48 warm Oxford crimson-burgundy primary button, #f87171 high-contrast crimson validation banner and 2px red outlines on Researcher name and Reservation date)',
+    anchorMode: 'expand-set',
+    anchorStep: 'step3-refusal.jpg',
+    steps: ['step1-index.jpg', 'step2-specimen.jpg', 'step3-refusal.jpg', 'step4-empty.jpg'],
+    lightTheme: 'BODLEIAN ARCHIVAL VELLUM & OXFORD BURGUNDY LIGHT MODE (#f8f6f0 archival cotton-vellum page background reaching all four image edges, #ffffff reading-room call-slip card with 1px #d6d3d1 stone border, #1c1917 iron-gall ink, #7f1d1d Oxford burgundy primary button, #dc2626 validation alert)',
+    darkTheme: 'NOCTURNAL READING ROOM OAK & CRIMSON DARK MODE (#141210 dark library-oak page ground reaching all four image edges, #211e1a reading-room call-slip card surface with 1px #38322c warm stone border, #f5f2eb archival parchment typography, #e11d48 warm Oxford crimson-burgundy primary button, #f87171 high-contrast crimson validation banner and 2px red outlines on Researcher name and Reservation date)',
   },
   'restaurant-ordering': {
-    anchorMode: 'single-light',
-    steps: ['step1-error.jpg'],
-    lightTheme: 'WARM SOURDOUGH CRUST & BUTTER-CREAM LIGHT MODE (#fffbeb warm flour-cream page ground, #ffffff card surfaces, 1px #fde68a golden-wheat borders, #451a03 dark roasted-crust espresso ink, #b45309 golden-crust amber primary button, #b91c1c crimson validation alert)',
-    darkTheme: 'WOOD-FIRED HEARTH EVENING DARK MODE (#17110b warm oven-charcoal page ground, #261c12 elevated card surfaces, 1px #3d2d1d warm amber-brown borders, #fef3c7 warm cream typography, #f59e0b golden-amber "Browse the menu" primary button, #f87171 high-contrast crimson validation banner at top of checkout)',
+    anchorMode: 'expand-set',
+    anchorStep: 'step1-error.jpg',
+    steps: ['step1-menu.jpg', 'step2-order.jpg', 'step3-confirmation.jpg', 'step1-error.jpg'],
+    lightTheme: 'WARM SOURDOUGH CRUST & BUTTER-CREAM LIGHT MODE (#fffbeb warm flour-cream page background reaching all four image edges, #ffffff card surfaces with 1px #fde68a golden-wheat borders, #451a03 dark roasted-crust espresso ink, #b45309 golden-crust amber primary button, #b91c1c crimson validation alert)',
+    darkTheme: 'WOOD-FIRED HEARTH EVENING DARK MODE (#17110b warm oven-charcoal page ground reaching all four image edges, #261c12 elevated card surfaces with 1px #3d2d1d warm amber-brown borders, #fef3c7 warm cream typography, #f59e0b golden-amber "Browse the menu" primary button, #f87171 high-contrast crimson validation banner at top of checkout)',
   },
   'survey-form': {
-    anchorMode: 'single-light',
-    steps: ['step3-validation.jpg'],
-    lightTheme: 'CIVIC TRANSIT DAYLIGHT LIGHT MODE (#f8fafc clean civic daylight paper ground, #ffffff questionnaire card, 2px #cbd5e1 borders, #1e3a8a transit roundel navy header and primary Continue button, #d97706 signal-amber progress indicator, #dc2626 crimson alert)',
-    darkTheme: 'NIGHT TUBE CIVIC DARK MODE (#090f1d deep transit-navy page ground, #111c33 elevated questionnaire card surface, 2px #233559 structural borders, #1e3a8a / #3b82f6 luminous royal-blue header and primary Continue button, #f59e0b signal-amber progress indicator, #f8fafc crisp white typography, #f87171 high-contrast crimson alert banner and 2px red outlines on the two unanswered rating rows)',
+    anchorMode: 'expand-set',
+    anchorStep: 'step3-validation.jpg',
+    steps: ['step1-questionnaire.jpg', 'step2-review.jpg', 'step3-validation.jpg', 'step4-submitted.jpg'],
+    lightTheme: 'CIVIC TRANSIT DAYLIGHT LIGHT MODE (#f8fafc clean civic daylight paper background reaching all four image edges, #ffffff questionnaire card with 2px #cbd5e1 borders, #1e3a8a transit roundel navy header and primary Continue button, #d97706 signal-amber progress indicator, #dc2626 crimson alert)',
+    darkTheme: 'NIGHT TUBE CIVIC DARK MODE (#090f1d deep transit-navy page ground reaching all four image edges, #111c33 elevated questionnaire card surface with 2px #233559 structural borders, #1e3a8a / #3b82f6 luminous royal-blue header and primary Continue button, #f59e0b signal-amber progress indicator, #f8fafc crisp white typography, #f87171 high-contrast crimson alert banner and 2px red outlines on the two unanswered rating rows)',
   },
   'web-shop': {
-    anchorMode: 'single-light',
-    steps: ['step1-empty.jpg'],
-    lightTheme: 'WARM HARVEST ORCHARD CREAM & RUSSET LIGHT MODE (#fdfbf7 warm pressed-linen page ground, #ffffff empty-basket card, 1px #e7e5e4 warm stone border, #382013 deep orchard-bark brown ink, #b45309 harvest russet-amber primary button)',
-    darkTheme: 'CELLAR BARREL OAK & RUSSET DARK MODE (#16110d deep cider-cellar oak page ground, #241c15 elevated empty-basket card surface, 1px #3b2e23 warm stone border, #faf6f0 warm linen typography, #f59e0b harvest russet-amber "Browse the ciders" primary button, visibly disabled dark checkout button below)',
+    anchorMode: 'expand-set',
+    anchorStep: 'step1-empty.jpg',
+    steps: ['step1-ciders.jpg', 'step2-preorder.jpg', 'step3-confirmation.jpg', 'step1-empty.jpg'],
+    lightTheme: 'WARM HARVEST ORCHARD CREAM & RUSSET LIGHT MODE (#fdfbf7 warm pressed-linen page background reaching all four image edges, #ffffff empty-basket card with 1px #e7e5e4 warm stone border, #382013 deep orchard-bark brown ink, #b45309 harvest russet-amber primary button)',
+    darkTheme: 'CELLAR BARREL OAK & RUSSET DARK MODE (#16110d deep cider-cellar oak page ground reaching all four image edges, #241c15 elevated empty-basket card surface with 1px #3b2e23 warm stone border, #faf6f0 warm linen typography, #f59e0b harvest russet-amber "Browse the ciders" primary button, visibly disabled dark checkout button below)',
   },
 
   // --- 6 Light-Anchored Multi-Step Archetypes ---
@@ -410,6 +417,72 @@ async function processArchetype(family, config) {
     });
     writeFileSync(darkPath, darkBytes);
     console.log(`  [${family}] wrote dark/${step} (${darkBytes.length} bytes)`);
+    return;
+  }
+
+  if (config.anchorMode === 'expand-set') {
+    const anchorStep = config.anchorStep;
+    const anchorLightPath = join(familyDir, anchorStep);
+    const anchorDarkPath = join(darkDir, anchorStep);
+    if (!existsSync(anchorLightPath) || !existsSync(anchorDarkPath)) {
+      throw new Error(`expand-set requires existing anchor boards: ${anchorLightPath} and ${anchorDarkPath}`);
+    }
+    const anchorLightBytes = readFileSync(anchorLightPath);
+    const anchorDarkBytes = readFileSync(anchorDarkPath);
+    console.log(`  [${family}] using existing anchor Light Mode ${anchorStep} (${anchorLightBytes.length} bytes) and Dark Mode dark/${anchorStep} (${anchorDarkBytes.length} bytes)`);
+
+    for (const step of config.steps) {
+      if (step === anchorStep) {
+        console.log(`  [${family}] skipping anchor board ${step} (preserved byte-identical)`);
+        continue;
+      }
+      const lightPath = join(familyDir, step);
+      const darkPath = join(darkDir, step);
+      const stepSpec = config.lightStepOverrides?.[step] ?? prompts.get(step) ?? '';
+      if (!stepSpec) {
+        throw new Error(`no prompt found for ${family}/${step}`);
+      }
+
+      let stepLightBytes;
+      if (!existsSync(lightPath) || process.argv.includes('--force')) {
+        console.log(`  [${family}] generating Light Mode ${step} (conditioned on ${anchorStep} Light + design.md) ...`);
+        stepLightBytes = await generateMultimodal({
+          images: [anchorLightBytes],
+          prompt: [
+            ANTI_CHROME_RULES,
+            `Design System Context:\n${designMd}`,
+            `VISUAL CONTINUITY CONTRACT: The attached image is the canonical Light Mode UI board (${anchorStep}) of this exact web application (${family}) in ${config.lightTheme}.`,
+            `You MUST keep the exact same top header bar, brand logo/wordmark, navigation links, typography, surface colours, border radii, and aesthetic layout geometry from the attached image.`,
+            `Render ${step} in the EXACT SAME ${config.lightTheme} (do NOT switch to dark mode; every surface and background must stay in ${config.lightTheme}):`,
+            stepSpec,
+          ].join('\n\n'),
+        });
+        writeFileSync(lightPath, stepLightBytes);
+        console.log(`  [${family}] wrote Light Mode ${step} (${stepLightBytes.length} bytes)`);
+      } else {
+        stepLightBytes = readFileSync(lightPath);
+        console.log(`  [${family}] using existing Light Mode ${step} (${stepLightBytes.length} bytes)`);
+      }
+
+      if (!existsSync(darkPath) || process.argv.includes('--force')) {
+        console.log(`  [${family}] generating Dark Mode dark/${step} (conditioned on ${step} Light + dark/${anchorStep}) ...`);
+        const stepDarkBytes = await generateMultimodal({
+          images: [stepLightBytes, anchorDarkBytes],
+          prompt: [
+            ANTI_CHROME_RULES,
+            `Design System Context:\n${designMd}`,
+            `DUAL-REFERENCE VISUAL CONTINUITY CONTRACT:`,
+            `- Image 1 is the current step (${step}) in Light Mode, showing the exact UI state, components, text, and layout for this step.`,
+            `- Image 2 is the canonical Dark Mode board (dark/${anchorStep}) of the same application in ${config.darkTheme}, showing the exact Dark Mode colour palette, header styling, and surface treatment.`,
+            `Render ${step} (the exact UI state and content of Image 1) in the exact Dark Mode palette and styling of Image 2 (${config.darkTheme}). Every element, label, and layout region from Image 1 must be preserved 1-to-1.`,
+          ].join('\n\n'),
+        });
+        writeFileSync(darkPath, stepDarkBytes);
+        console.log(`  [${family}] wrote Dark Mode dark/${step} (${stepDarkBytes.length} bytes)`);
+      } else {
+        console.log(`  [${family}] using existing Dark Mode dark/${step}`);
+      }
+    }
     return;
   }
 

@@ -68,10 +68,25 @@
     }
   },
   "community-forum": {
+    "step1-browse.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step2-thread.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
     "step3-refusal.jpg": {
       "path": null,
       "kind": "interaction",
       "source": "the refusal is a re-render of the reply composer after a refused submission with a missing required note body (plan.md:75-76, fam-14): a state of the form, not a document - the same convention as the Wave 2 refusal boards and booking's step4-error.jpg"
+    },
+    "step4-empty.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
     }
   },
   "contact-lead": {
@@ -158,6 +173,21 @@
     }
   },
   "job-board": {
+    "step1-listings.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step2-detail.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step3-post.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
     "step1-error.jpg": {
       "path": null,
       "kind": "interaction",
@@ -187,6 +217,21 @@
     }
   },
   "web-shop": {
+    "step1-ciders.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step2-preorder.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step3-confirmation.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
     "step1-empty.jpg": {
       "path": null,
       "kind": "interaction",
@@ -194,13 +239,43 @@
     }
   },
   "survey-form": {
+    "step1-questionnaire.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step2-review.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
     "step3-validation.jpg": {
       "path": null,
       "kind": "interaction",
       "source": "the questionnaire page is /survey (pilot/training-archetypes.mjs 'survey-form'), but the refusal only exists after a refused advance with missing mandatory ratings, so no path selects it - a state of the form, not a document (plan.md:127, plan.md:141; the same convention as the Wave 2 refusal boards and booking's step4-error.jpg)"
+    },
+    "step4-submitted.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
     }
   },
   "expense-tracker": {
+    "step1-ledger.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step2-entry.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step3-summary.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
     "step1-error.jpg": {
       "path": null,
       "kind": "interaction",
@@ -208,6 +283,21 @@
     }
   },
   "restaurant-ordering": {
+    "step1-menu.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step2-order.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step3-confirmation.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
     "step1-error.jpg": {
       "path": null,
       "kind": "interaction",
@@ -215,10 +305,25 @@
     }
   },
   "library-catalogue": {
+    "step1-index.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
+    "step2-specimen.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
+    },
     "step3-refusal.jpg": {
       "path": null,
       "kind": "interaction",
       "source": "the refusal is a re-render of the reservation form after a refused submission without a researcher name or with an invalid date (plan.md:120, plan.md:133-137): a state of the form, not a document - the same convention as the Wave 2 refusal boards and booking's step4-error.jpg"
+    },
+    "step4-empty.jpg": {
+      "path": null,
+      "kind": "absent",
+      "source": "this archetype has no demo directory, so nothing serves this state"
     }
   },
   "scroll-storytelling-launch": {

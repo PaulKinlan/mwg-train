@@ -47,11 +47,11 @@ test('gallery serves the generated archetype reference boards and the authored e
     ['realtime-telemetry-dashboard', 4], ['interactive-product-configurator', 4], ['developer-media-playground', 4],
     ['onboarding-auth', 4], ['course-enrolment', 4], ['dashboard', 4],
     ['directory-listing', 4], ['docs-site', 4], ['support-helpdesk', 4],
-    ['community-forum', 1], ['expense-tracker', 1], ['job-board', 1], ['library-catalogue', 1],
-    ['restaurant-ordering', 1], ['survey-form', 1], ['web-shop', 1],
+    ['community-forum', 4], ['expense-tracker', 4], ['job-board', 4], ['library-catalogue', 4],
+    ['restaurant-ordering', 4], ['survey-form', 4], ['web-shop', 4],
   ]);
   assert.equal(gallery.patterns.length, 27, 'all authored patterns are indexed, not just those with boards');
-  assert.equal(gallery.patterns.flatMap(({ steps }) => steps).filter(({ available }) => available).length, 85);
+  assert.equal(gallery.patterns.flatMap(({ steps }) => steps).filter(({ available }) => available).length, 106);
   assert.equal(gallery.patterns.filter(({ steps }) => steps.length === 0).length, 0, 'all authored patterns now have boards');
   assert.ok(gallery.patterns.every(({ brief }) => brief?.sitePrompt.includes('Step-by-step behaviour')));
   assert.ok(gallery.patterns.flatMap(({ steps }) => steps).every(({ imagePrompt }) => imagePrompt), 'every committed step includes its original prompt');
@@ -80,7 +80,7 @@ test('gallery serves the generated archetype reference boards and the authored e
   assert.ok(boardsOnDisk.length > 0, 'this checkout carries at least one designed board');
   assert.equal(gallery.trainingTargets.filter((family) => gallery.archetypes.some(({ id }) => id === family.id)).length, 0,
     'no id is listed in both arms');
-  assert.ok(gallery.journeys.every((journey) => journey.steps.every((step) => step.available && step.darkAvailable)), 'all 85 supplied Light & Dark boards exist');
+  assert.ok(gallery.journeys.every((journey) => journey.steps.every((step) => step.available && step.darkAvailable)), 'all 106 supplied Light & Dark boards exist');
   assert.deepEqual(gallery.bookingSteps.map(({ id, available, darkAvailable }) => [id, available, darkAvailable]), [
     ['step1-browse', true, true], ['step2-form', true, true], ['step3-confirmation', true, true],
     ['step4-error', true, true], ['step5-empty', true, true],
@@ -92,7 +92,7 @@ test('gallery serves the generated archetype reference boards and the authored e
   assert.match(html, /The proposed 42-family expansion has not landed/);
   assert.match(html, /Sealed evaluation targets \(A6\)/);
   assert.match(html, /not part of the 39 families above/);
-  assert.match(html, /85 concept boards have committed bytes/);
+  assert.match(html, /106 concept boards have committed bytes/);
   assert.match(html, /do not scan depicted codes/i, 'QR-bearing illustrations must retain the safety instruction');
   assert.match(html, /A model ID may be reported rather than attested/, 'an ID alone is not model attestation');
   assert.match(html, /No reuse license or clearance is granted here/, 'a policy exclusion must not read as reuse permission');
@@ -102,7 +102,7 @@ test('gallery serves the generated archetype reference boards and the authored e
   assert.doesNotMatch(html, /exclusion is not a claim that their rights forbid reuse|not a claim about their legal reuse rights/i);
   assert.doesNotMatch(html, /image rights do not permit training reuse/i);
   const qrPatterns = gallery.patterns.filter(({ steps }) => steps.some(({ available, imagePrompt }) => available && /\bQR\b/i.test(imagePrompt ?? '')));
-  assert.deepEqual(qrPatterns.map(({ id }) => id), ['booking', 'course-enrolment', 'event-registration']);
+  assert.deepEqual(qrPatterns.map(({ id }) => id), ['booking', 'course-enrolment', 'event-registration', 'restaurant-ordering', 'web-shop']);
   assert.equal((html.match(/do not scan depicted codes/g) ?? []).length, qrPatterns.length + 1,
     'QR-specific warnings appear beside only the source-backed QR patterns, plus the page explainer');
   assert.equal((html.match(/no reuse clearance is granted here/g) ?? []).length, qrPatterns.length,
@@ -119,7 +119,7 @@ test('gallery serves the generated archetype reference boards and the authored e
   assert.match(html, /No step-specific browser assertion is registered for this picture/);
   assert.equal((html.match(/aria-labelledby="pattern-heading-[a-z-]+"/g) ?? []).length, 27);
   assert.equal((html.match(/<summary>Site Generation Prompt/g) ?? []).length, 66);
-  assert.equal((html.match(/<summary>Image Generation Prompt for this state<\/summary>/g) ?? []).length, 85);
+  assert.equal((html.match(/<summary>Image Generation Prompt for this state<\/summary>/g) ?? []).length, 106);
   assert.doesNotMatch(html, /(?:src|href)="\/concepts\/images\/layout-(storefront|saas|explainer)\.jpg/, 'retired sketches remain unserved even when their names occur in original prompt text');
   assert.doesNotMatch(html, /<iframe/);
   assert.match(html, new RegExp(`${boardsOnDisk.length} of ${familyIds.length} declared families have a designed reference board`));

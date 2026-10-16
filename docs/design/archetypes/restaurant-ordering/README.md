@@ -11,11 +11,32 @@
 
 | Ordered board | What the raster depicts | SHA-256 of committed bytes | Bytes |
 | --- | --- | --- | ---: |
+| [`step1-menu.jpg`](step1-menu.jpg) | Saturday bakehouse menu with sourdough loaves and pastries | `5eea6b173a838166eca7021039fb78faaf69bbfc30fe8fc80838643cca880f8b` | 655647 |
+| [`step2-order.jpg`](step2-order.jpg) | Pre-order basket and Saturday collection slot selection | `759b302b6c28c1df5f37bd20f1508f302d51fd990eacd49b7e93a32410ecad77` | 435304 |
+| [`step3-confirmation.jpg`](step3-confirmation.jpg) | Reserved bakehouse order confirmation and collection receipt | `35a6584c6556a301a3b4849e12c3bdede1dbc95d017d1a30b18ff25683623a82` | 323408 |
 | [`step1-error.jpg`](step1-error.jpg) | Checkout refused on an empty order, with an accessible inline error and a path back to the menu | `df333d119db644ef7e40b3a35fbf4de31f9c34a7112fac769b2d249f7dd8446e` | 460334 |
 
 Hashes pin the handed-off JPEG bytes, not their generating model, prompt-to-pixel reproducibility or legal status. The corpus must derive from its own approved source and measured records, not these images.
 
 ## Exact generation prompts
+
+### `step1-menu.jpg`
+
+```text
+Create one high-fidelity illustrative 1376×768 16:9 image of the artisan cottage bakery ordering service "Hearth & Crumb Bakehouse", STEP 1: Saturday Bakehouse Menu & Fresh Bakes in WARM SOURDOUGH CRUST & BUTTER-CREAM LIGHT MODE. Render ONLY a full-bleed, edge-to-edge WEB PAGE canvas. NO browser chrome, NO macOS traffic lights, NO window frame, NO tab bar, NO address bar, NO exterior drop shadow, NO OS desktop or device mockup. Use warm flour-cream #fffbeb page background reaching all four image edges, clean #ffffff card surfaces with 1px #fde68a golden-wheat borders, #451a03 dark roasted-crust espresso ink, and #b45309 golden-crust amber primary action buttons. Top bakery header features wood-fired oven emblem, "Hearth & Crumb Bakehouse", links "Saturday Bake Menu, Pre-Order Policy, Our Flours", and basket summary "Basket (0)". Main stage displays a category-filtered menu (Country Sourdoughs, Heritage Rye, Viennoiserie & Buns) with tempting product cards ("Wildfarmed Country Loaf £5.20", "Seeded Rye Batard £5.60", "Cardamom Morning Bun £3.80"), each showing description, organic flour provenance, baker's notes, and amber "Add to Basket" buttons.
+```
+
+### `step2-order.jpg`
+
+```text
+Create one high-fidelity illustrative 1376×768 16:9 image of the artisan cottage bakery ordering service "Hearth & Crumb Bakehouse", STEP 2: Bakery Basket & Collection Slot in WARM SOURDOUGH CRUST & BUTTER-CREAM LIGHT MODE. Render ONLY a full-bleed, edge-to-edge WEB PAGE canvas. NO browser chrome, NO macOS traffic lights, NO window frame, NO tab bar, NO address bar, NO exterior drop shadow, NO OS desktop or device mockup. Preserve the #fffbeb flour-cream ground, #ffffff cards with 1px #fde68a borders, #451a03 espresso ink, and #b45309 golden-crust amber accents from Step 1. Header shows "Basket (2 items)". Two-column pre-order layout: left column shows order summary card with 2 items ("1x Wildfarmed Country Loaf £5.20", "2x Cardamom Morning Bun £7.60"), quantity steppers, and subtotal £12.80; right column displays Saturday collection slot selector with radio options ("09:00 – 10:00 AM", "10:00 – 11:00 AM · Selected", "11:00 – 12:00 PM"), customer contact inputs (Name, Phone, Email), and primary golden-amber button "Proceed to Checkout".
+```
+
+### `step3-confirmation.jpg`
+
+```text
+Create one high-fidelity illustrative 1376×768 16:9 image of the artisan cottage bakery ordering service "Hearth & Crumb Bakehouse", STEP 3: Bakehouse Order Confirmation in WARM SOURDOUGH CRUST & BUTTER-CREAM LIGHT MODE. Render ONLY a full-bleed, edge-to-edge WEB PAGE canvas. NO browser chrome, NO macOS traffic lights, NO window frame, NO tab bar, NO address bar, NO exterior drop shadow, NO OS desktop or device mockup. Preserve the #fffbeb flour-cream background, #ffffff cards with 1px #fde68a golden-wheat borders, and #451a03 roasted espresso ink. Header shows "Hearth & Crumb Bakehouse" with navigation. Centered tactile receipt card with green verified checkmark, serif headline "Your Saturday Bake is Reserved!", order number "#HC-7104", pickup details (Saturday 24 Oct 2026, Collection Window: 10:00 – 11:00 AM, Hearthside Door), itemized summary of loaves and pastries with total "£12.80 · Paid in advance", pickup barcode / QR pass for collection, primary golden-amber button "Add to Calendar", and secondary button "Download Receipt".
+```
 
 ### `step1-error.jpg`
 

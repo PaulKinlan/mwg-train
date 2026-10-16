@@ -11,14 +11,35 @@
 
 | Ordered board | What the raster depicts | SHA-256 of committed bytes | Bytes |
 | --- | --- | --- | ---: |
+| [`step1-browse.jpg`](step1-browse.jpg) | Session tune archive and folk music forum index | `a8497e67b8668488bfabb55441f913fd581a8447527aa2c673ea9d3a9792f0d6` | 524001 |
+| [`step2-thread.jpg`](step2-thread.jpg) | Discussion thread view with musician notes and ABC notation | `5e68edbec9f03ae6e31685f0560e8a4422db1d641d111310fb348ce703e77347` | 499433 |
 | [`step3-refusal.jpg`](step3-refusal.jpg) | Reply composer refused on an empty required note body, with an inline validation alert | `c00be136e35c3fb8eeebbf9303daad6f88451ae79fe89ccc6fbff6c8a10a23a7` | 453160 |
+| [`step4-empty.jpg`](step4-empty.jpg) | Empty search and category filter state | `d54d576d5043cbffbbe7659f86dec9ad09883f7380298cd3c0d5cf02c59b4cd4` | 475054 |
 
 Hashes pin the handed-off JPEG bytes, not their generating model, prompt-to-pixel reproducibility or legal status. The corpus must derive from its own approved source and measured records, not these images.
 
 ## Exact generation prompts
 
+### `step1-browse.jpg`
+
+```text
+Create one high-fidelity illustrative 1376×768 16:9 image of the folk music community forum and session tune archive "The Tune Archive", STEP 1: Session Tune Archive & Forum Index in WARM SONGBOOK PARCHMENT LIGHT MODE. Render ONLY a full-bleed, edge-to-edge WEB PAGE canvas. NO browser chrome, NO macOS traffic lights, NO window frame, NO tab bar, NO address bar, NO exterior drop shadow, NO OS desktop or device mockup. Use aged songbook parchment #fefce8 page background reaching all four image edges, clean #ffffff card surfaces with 1px #fde68a luthiery-amber borders, #450a0a deep mahogany ink text, and #b45309 warm brass-amber primary action button. Top masthead shows "The Tune Archive", tune filter tags (All Tunes, Reels, Jigs, Hornpipes, Polkas), search bar, and "Post New Tune" button. Main stage displays a two-column layout: left shows a curated list of popular session tunes with tune type badges, key signatures ("The Maid Behind the Bar · D Major Reel", "The Kesh Jig · G Major", "The Butterfly · E Minor Slip Jig"), and contributor counts; right column features active community discussion topics and recent musician annotations with ABC notation snippets.
+```
+
+### `step2-thread.jpg`
+
+```text
+Create one high-fidelity illustrative 1376×768 16:9 image of the folk music community forum and session tune archive "The Tune Archive", STEP 2: Discussion Thread & Musician Notes in WARM SONGBOOK PARCHMENT LIGHT MODE. Render ONLY a full-bleed, edge-to-edge WEB PAGE canvas. NO browser chrome, NO macOS traffic lights, NO window frame, NO tab bar, NO address bar, NO exterior drop shadow, NO OS desktop or device mockup. Preserve the #fefce8 aged songbook parchment background, #ffffff card surfaces with 1px #fde68a amber borders, #450a0a mahogany ink, and #b45309 brass-amber accents from Step 1. Masthead shows breadcrumb "Tunes > Reels > The Maid Behind the Bar". Thread view presents the tune header with title, key, time signature, and embedded ABC notation preview card. Below, an open discussion thread shows musician notes and variations from contributors ("Liam O'Connor", "Siobhan Kelly") detailing regional ornamentation and settings, each with timestamp, vote counter, and "Reply" link. At the bottom, a clean, unsubmitted reply composer card awaits input with Author Name and Note Body fields.
+```
+
 ### `step3-refusal.jpg`
 
 ```text
 Render only a full-bleed, edge-to-edge WEB PAGE canvas at 1376×768 16:9. NO browser chrome, NO macOS traffic lights, NO window frame, NO tab bar, NO address bar, NO exterior drop shadow, NO OS desktop or device mockup. High-fidelity, production-quality full-bleed edge-to-edge web canvas of a modern folk music community forum and session tune archive, "The Tune Archive", Step 3: Reply Composer Refusal in WARM SONGBOOK PARCHMENT LIGHT MODE (#fefce8 aged songbook parchment page background reaching all four edges, #ffffff note card surfaces with 1px #fde68a luthiery-amber borders, #450a0a deep mahogany ink text, #b45309 warm brass-amber primary action button). Top masthead shows "The Tune Archive", tune filter tags (All Tunes, Reels, Jigs, Hornpipes), and thread heading "The Maid Behind the Bar (D Major Reel)". Existing musician notes appear above with contributor names and ABC notation snippets. Below them, the reply composer is re-rendered after a refused submission: a high-contrast crimson alert banner (#fef2f2 background, #b91c1c border and text) at the top of the composer reads "Your note was not posted", the Note body textarea is outlined in 2px red #b91c1c with inline message "Write something before posting" and a visible focus ring, while the Author name field beside it ("Aoife Byrne") is filled and unstyled. The brass-amber "Post note" button remains available.
+```
+
+### `step4-empty.jpg`
+
+```text
+Create one high-fidelity illustrative 1376×768 16:9 image of the folk music community forum and session tune archive "The Tune Archive", STEP 4: Empty Search & Filter State in WARM SONGBOOK PARCHMENT LIGHT MODE. Render ONLY a full-bleed, edge-to-edge WEB PAGE canvas. NO browser chrome, NO macOS traffic lights, NO window frame, NO tab bar, NO address bar, NO exterior drop shadow, NO OS desktop or device mockup. Preserve the #fefce8 aged songbook parchment ground, #ffffff card surfaces, and #450a0a mahogany ink from Step 1. Masthead displays active search query "bourrée d'auvergne" with filter tag "Polkas". Center an honest, helpful empty-state card featuring a clean fiddle-and-scroll line illustration, editorial serif heading "No Tunes or Notes Match Your Search", explanatory copy "We couldn't find any session tunes matching 'bourrée d'auvergne' under the Polka category. Try checking your spelling, removing category filters, or contributing this tune setting to the archive.", primary brass-amber button "Clear All Filters", and secondary button "Contribute a New Tune".
 ```

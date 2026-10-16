@@ -11,11 +11,32 @@
 
 | Ordered board | What the raster depicts | SHA-256 of committed bytes | Bytes |
 | --- | --- | --- | ---: |
+| [`step1-ledger.jpg`](step1-ledger.jpg) | Departmental budget breakdown and expenditure ledger table | `dfb290509fb47c722da5c1c0e86f0505123b7a31f5fb0861223dabc893c43909` | 441512 |
+| [`step2-entry.jpg`](step2-entry.jpg) | Record new departmental expense form with receipt upload | `d138a1e93baacece2703d01d85a2bd0104242974b04808fe9fd263f4848f7833` | 295348 |
+| [`step3-summary.jpg`](step3-summary.jpg) | Quarterly expenditure review and category breakdown | `a6c1bd3441f109699a87bdc9c26753987a51ed2efc7fc8a22b8d92ed3277bbb8` | 477371 |
 | [`step1-error.jpg`](step1-error.jpg) | Entry form refused on a negative amount, with an accessible inline error beside the field | `31aad9f3c3c88b1e568aaf7e8a3399dfa0082518d45f78e8af8a592c898482e7` | 489271 |
 
 Hashes pin the handed-off JPEG bytes, not their generating model, prompt-to-pixel reproducibility or legal status. The corpus must derive from its own approved source and measured records, not these images.
 
 ## Exact generation prompts
+
+### `step1-ledger.jpg`
+
+```text
+Create one high-fidelity illustrative 1376×768 16:9 image of the shared cooperative & household expenditure ledger "The Ledger", STEP 1: Departmental Budget & Expenditure Ledger in CRISP ACCOUNTING PAPER & SPRUCE LIGHT MODE. Render ONLY a full-bleed, edge-to-edge WEB PAGE canvas. NO browser chrome, NO macOS traffic lights, NO window frame, NO tab bar, NO address bar, NO exterior drop shadow, NO OS desktop or device mockup. Use crisp financial paper #f8fafc background reaching all four image edges, clean #ffffff ledger cards with 1px #cbd5e1 accounting rules, #0f172a tabular-numeral ink, and #0f766e spruce-teal primary action button. Top header shows "The Ledger · Cooperative Accounts", period indicator "October 2026", and active balance summary "Total Outlay: £1,840.00 / Monthly Cap: £3,000.00". Two-column layout: left shows department budget breakdown cards (Facilities £820.00, Catering £540.00, Operations £480.00) with subtle progress bars; right displays the full tabular expenditure ledger with columns Date, Description, Department, Amount, and Recorded By, with spruce-teal primary button "Record New Expense".
+```
+
+### `step2-entry.jpg`
+
+```text
+Create one high-fidelity illustrative 1376×768 16:9 image of the shared cooperative & household expenditure ledger "The Ledger", STEP 2: Record New Expense Form in CRISP ACCOUNTING PAPER & SPRUCE LIGHT MODE. Render ONLY a full-bleed, edge-to-edge WEB PAGE canvas. NO browser chrome, NO macOS traffic lights, NO window frame, NO tab bar, NO address bar, NO exterior drop shadow, NO OS desktop or device mockup. Preserve the #f8fafc paper ground, #ffffff cards with 1px #cbd5e1 borders, #0f172a tabular ink, and #0f766e spruce-teal primary button from Step 1. Top navigation and cooperative account header remain consistent. Centered form card titled "Record Departmental Expenditure" with cleanly aligned, valid input fields: Expense Description ("Winter Heating Oil"), Department select ("Facilities"), Date picker ("18 Oct 2026"), Amount in GBP ("£42.50"), Receipt Upload dropzone with attached receipt thumbnail "oil-delivery-receipt.pdf", and Notes textarea. Spruce-teal primary button "Save Expense Record" and secondary "Cancel" link.
+```
+
+### `step3-summary.jpg`
+
+```text
+Create one high-fidelity illustrative 1376×768 16:9 image of the shared cooperative & household expenditure ledger "The Ledger", STEP 3: Quarterly Expenditure Summary & Breakdown in CRISP ACCOUNTING PAPER & SPRUCE LIGHT MODE. Render ONLY a full-bleed, edge-to-edge WEB PAGE canvas. NO browser chrome, NO macOS traffic lights, NO window frame, NO tab bar, NO address bar, NO exterior drop shadow, NO OS desktop or device mockup. Preserve the #f8fafc paper background, #ffffff card surfaces, and #0f766e spruce-teal accents. Header shows "The Ledger · Q4 Financial Review" with export buttons "Export CSV" and "Download Audit PDF". Main stage presents three summary stat cards: "Total Q4 Spend: £5,420.00", "Remaining Budget: £1,580.00", and "Largest Category: Facilities (42%)". Below, a structured data matrix and clean horizontal bar breakdown compare departmental spend against approved allocations across Facilities, Catering, Equipment, and Workshop Maintenance, with verified green status badges.
+```
 
 ### `step1-error.jpg`
 

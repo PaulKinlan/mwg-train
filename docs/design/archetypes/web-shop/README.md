@@ -11,11 +11,32 @@
 
 | Ordered board | What the raster depicts | SHA-256 of committed bytes | Bytes |
 | --- | --- | --- | ---: |
+| [`step1-ciders.jpg`](step1-ciders.jpg) | Heritage single-variety cider and flagon product catalogue | `2711684eb3108c164eb9d53dfaaf86e8972f6f109940b98aad8f4a3a1098c60a` | 421854 |
+| [`step2-preorder.jpg`](step2-preorder.jpg) | Farm-gate pre-order basket and collection reservation | `77665ee8ee2ff3711cb48d426f2bec4540a777988a7b42d5badb40ec5c17042d` | 395772 |
+| [`step3-confirmation.jpg`](step3-confirmation.jpg) | Farm-gate cider order reservation and collection pass | `1b653f8b26486f43bc900f8e6422cec7b22e10b7bc09918c19e34ff6d5f3b0d8` | 361514 |
 | [`step1-empty.jpg`](step1-empty.jpg) | Empty cart with disabled checkout and a path back to the ciders | `f60c29511d31d626bdb90d50e2c9c03fa21bf12399cddbc3f30965ef1b13c25e` | 252242 |
 
 Hashes pin the handed-off JPEG bytes, not their generating model, prompt-to-pixel reproducibility or legal status. The corpus must derive from its own approved source and measured records, not these images.
 
 ## Exact generation prompts
+
+### `step1-ciders.jpg`
+
+```text
+Create one high-fidelity illustrative 1376×768 16:9 image of the heritage cider orchard web shop "Orchard Row Press · Herefordshire", STEP 1: Heritage Orchard Bottle & Flagon Selection in WARM HARVEST ORCHARD CREAM & RUSSET LIGHT MODE. Render ONLY a full-bleed, edge-to-edge WEB PAGE canvas. NO browser chrome, NO macOS traffic lights, NO window frame, NO tab bar, NO address bar, NO exterior drop shadow, NO OS desktop or device mockup. Use warm pressed-linen #fdfbf7 page background reaching all four image edges, clean #ffffff card surfaces with 1px #e7e5e4 warm stone borders, #382013 deep orchard-bark brown serif typography, and harvest russet-amber #b45309 primary action button. Top orchard header features woodcut apple-press emblem, "Orchard Row Press", navigation links "Autumn Pressings, Farm Gate Pickup, Our Orchard", and order badge "Order · 2". Main stage displays a curated 3-column product catalog of single-variety ciders and vintage flagons ("Foxwhelp Single Variety 750ml £8.50", "Dabinett Heritage Vintage 750ml £9.00", "Oak-Aged Kingston Black 1L Flagon £14.50"), with tasting notes, harvest year, ABV percentage, and russet-amber "Add to Order" buttons.
+```
+
+### `step2-preorder.jpg`
+
+```text
+Create one high-fidelity illustrative 1376×768 16:9 image of the heritage cider orchard web shop "Orchard Row Press · Herefordshire", STEP 2: Farm-Gate Pre-Order & Collection Reservation in WARM HARVEST ORCHARD CREAM & RUSSET LIGHT MODE. Render ONLY a full-bleed, edge-to-edge WEB PAGE canvas. NO browser chrome, NO macOS traffic lights, NO window frame, NO tab bar, NO address bar, NO exterior drop shadow, NO OS desktop or device mockup. Preserve the #fdfbf7 pressed-linen ground, #ffffff cards with 1px #e7e5e4 borders, #382013 deep orchard-bark ink, and #b45309 russet-amber accents from Step 1. Header shows "Order · 2 bottles". Two-column layout: left column shows order review card with selected bottles ("1x Dabinett Heritage Vintage £9.00", "1x Oak-Aged Kingston Black Flagon £14.50"), subtotal £23.50, and woodcut apple packaging note; right column displays Farm Gate Pickup selector with collection date ("Saturday 24 October 2026"), collection time slots ("11:00 AM – 1:00 PM · Selected"), customer contact details form, and primary russet-amber button "Confirm Farm Gate Order".
+```
+
+### `step3-confirmation.jpg`
+
+```text
+Create one high-fidelity illustrative 1376×768 16:9 image of the heritage cider orchard web shop "Orchard Row Press · Herefordshire", STEP 3: Cider Orchard Order Confirmed in WARM HARVEST ORCHARD CREAM & RUSSET LIGHT MODE. Render ONLY a full-bleed, edge-to-edge WEB PAGE canvas. NO browser chrome, NO macOS traffic lights, NO window frame, NO tab bar, NO address bar, NO exterior drop shadow, NO OS desktop or device mockup. Preserve the #fdfbf7 pressed-linen background, #ffffff card surfaces with 1px #e7e5e4 stone borders, and #382013 deep bark ink from Step 1. Header displays "Orchard Row Press" with navigation. Centered tactile confirmation card with green botanical harvest badge, headline "Your Farm Gate Order is Reserved!", order number "#ORP-4921", collection summary (Saturday 24 Oct 2026, Presshouse Barn Desk, 11:00 AM – 1:00 PM), itemized receipt for £23.50 with payment status "Paid via card", collection QR code pass, primary russet-amber button "Add to Calendar", and secondary button "Download Receipt".
+```
 
 ### `step1-empty.jpg`
 
