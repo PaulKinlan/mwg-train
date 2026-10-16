@@ -710,7 +710,7 @@ const patternCard = ({ id, brief, steps }, families = [], { detail = false } = {
     <p class="muted"><strong>Project builds:</strong> ${buildLinks}</p>
     <p class="muted"><strong>Prompt &amp; validation alignment:</strong> All ${steps.length} Light Mode and ${steps.length} Dark Mode visual reference boards below are included in the generation prompts to aim for AND used to validate visual and functional equivalence across all 7 framework builds.</p>
     ${brief.simplePrompt ? promptDetails('Simple Generation Prompt ( baseline / zero-shot input )', brief.simplePrompt, brief.planSource) : ''}
-    ${promptDetails('Site Generation Prompt ( full spec + design contract )', brief.sitePrompt, `${brief.planSource} + ${brief.designSource}`, { open: detail })}
+    ${promptDetails('Site Generation Prompt ( full spec + design contract )', brief.sitePrompt, `${brief.planSource} + ${brief.designSource}`)}
     ${brief.designMarkdown ? promptDetails(`Design Contract (${brief.designSource})`, brief.designMarkdown, brief.designSource) : ''}
     ${brief.planMarkdown ? promptDetails(`Functional Plan & Acceptance Contract (${brief.planSource})`, brief.planMarkdown, brief.planSource) : ''}`
     : `<p class="notice">Design specification pending; no generation prompt can be claimed.${familyLinks}</p>`}
@@ -827,7 +827,7 @@ const trainingFamilyCard = ({ id, archetype, title, origin, available, width, he
   </details>` : `<p class="muted">Harness target render pending. Expected ${code(`${TRAINING_TARGET_DIR}/${id}/target.png`)}.</p>`}
   ${brief ? `${brief.simplePrompt ? promptDetails('Simple Generation Prompt ( baseline / zero-shot input )', brief.simplePrompt, brief.planSource) : ''}
     ${promptDetails('Site Generation Prompt · functional build ( full spec + design contract )', brief.sitePrompt,
-      [brief.planSource, brief.designSource, brief.tokenSource].filter(Boolean).join(' + '), { open: detail })}
+      [brief.planSource, brief.designSource, brief.tokenSource].filter(Boolean).join(' + '))}
     ${promptDetails('Image Generation Prompt · single illustrative home page', brief.imagePrompt, brief.imagePromptSource)}
     ${brief.designMarkdown ? promptDetails(`Family Design Contract (${brief.tokenSource ?? brief.designSource})`, brief.designMarkdown, brief.tokenSource ?? brief.designSource) : ''}
     ${brief.planMarkdown ? promptDetails(`Family Functional Plan & Server Contract (${brief.planSource})`, brief.planMarkdown, brief.planSource) : ''}
@@ -893,7 +893,7 @@ export function renderConceptIndex({ patterns = [], archetypes = [], trainingTar
     </section>
     <section id="held-out-evaluation" aria-labelledby="eval-targets-heading"><h2 id="eval-targets-heading">Sealed evaluation targets (A6)</h2>
       <p class="muted">These ${archetypes.length} authored evaluation instruments are never training data. The related pattern pages show illustrative states, not generated output. Provenance: ${code('docs/provenance/assets/eval-targets.md')}.</p>
-      ${archetypes.length ? `<ul>${archetypes.map(({ id, target }) => `<li><a href="/concepts/pattern/${escapeHtml(id)}">${escapeHtml(id.replaceAll('-', ' '))}</a> · ${target ? 'A6 target available' : 'A6 target unavailable'} · Code: ${code(`pilot/projects/${id}-*`)}</li>`).join('')}</ul>` : '<p class="notice">No held-out evaluation targets are available in this checkout.</p>'}
+      ${archetypes.length ? `<ul class="concept-pattern-index-list">${archetypes.map(({ id, target }) => `<li><a href="/concepts/pattern/${escapeHtml(id)}">${escapeHtml(id.replaceAll('-', ' '))}</a> · ${target ? 'A6 target available' : 'A6 target unavailable'} · Code: ${code(`pilot/projects/${id}-*`)}</li>`).join('')}</ul>` : '<p class="notice">No held-out evaluation targets are available in this checkout.</p>'}
     </section>`);
 }
 

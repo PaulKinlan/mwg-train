@@ -169,7 +169,10 @@ export const PAGE_CSS = `
   .concept-pattern-index { display: block; padding: 0.4rem 0; border-bottom: none; }
   .concept-pattern-index ul { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 26rem), 1fr)); gap: 0.6rem 1rem; list-style: none; padding: 0; margin-block: 0.5rem 1.5rem; }
   .concept-pattern-index li { break-inside: avoid; padding-block: 0.12rem; }
-  .concept-pattern-index a { display: inline; min-height: 0; padding-inline: 0; }
+  /* The index links are a list of destinations, not prose, so they carry a 24px hit area (mwg-train-4kel).
+     An inline box is only as tall as its glyphs (19px here), which put the tap target under the floor. */
+  .concept-pattern-index a,
+  .concept-pattern-index-list a { display: inline-block; min-height: 1.5rem; padding-inline: 0; }
   .concept-explainer { max-width: 76ch; padding-block: 0.5rem 1.3rem; }
   .concept-explainer p { margin-block: 0.6rem; }
   .concept-board-flow { display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(1.5rem, 3vw, 2.5rem); }
