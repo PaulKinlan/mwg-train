@@ -69,10 +69,11 @@ Separately, the brief declares a search flow: `/search` with query parameter `q`
 And an update flow: the stored record's `rider` field can be changed to "Jules Moreau (updated)" and read back afterwards.
 
 Reloading the read page must show the same stored values: the page after the redirect is rendered from the
-stored record, not from the submission. Alongside this server-driven route flow, the multi-step Light and
-Dark UI/UX state boards in the parent [`interactive-product-configurator` plan](../../../design/archetypes/interactive-product-configurator/plan.md)
-and [`interactive-product-configurator` design](../../../design/archetypes/interactive-product-configurator/design.md), together with this
-family's [`reference.jpg`](../../../design/training/tr-35/reference.jpg), are supplied in the
+stored record, not from the submission. Alongside this server-driven route flow, this family's unified 4-step
+Light and Dark UI/UX journey boards (`docs/design/training/tr-35/step1-overview.jpg`..`step4-validation.jpg`
+and `docs/design/training/tr-35/dark/step1-overview.jpg`..`step4-validation.jpg`), context-chained
+from [`reference.jpg`](../../../design/training/tr-35/reference.jpg) and [`design.md`](design.md)
+([`journey-prompts.json`](../../../design/training/tr-35/journey-prompts.json)), are supplied in the
 generation prompt to aim for and used to validate visual and interactive parity across all seven frameworks.
 
 ## Validation and states

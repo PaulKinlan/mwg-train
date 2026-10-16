@@ -69,10 +69,11 @@ Separately, the brief declares a search flow: `/search` with query parameter `q`
 And an update flow: the stored record's `buyer` field can be changed to "Clara Vance (updated)" and read back afterwards.
 
 Reloading the read page must show the same stored values: the page after the redirect is rendered from the
-stored record, not from the submission. Alongside this server-driven route flow, the multi-step Light and
-Dark UI/UX state boards in the parent [`scroll-storytelling-launch` plan](../../../design/archetypes/scroll-storytelling-launch/plan.md)
-and [`scroll-storytelling-launch` design](../../../design/archetypes/scroll-storytelling-launch/design.md), together with this
-family's [`reference.jpg`](../../../design/training/tr-31/reference.jpg), are supplied in the
+stored record, not from the submission. Alongside this server-driven route flow, this family's unified 4-step
+Light and Dark UI/UX journey boards (`docs/design/training/tr-31/step1-overview.jpg`..`step4-validation.jpg`
+and `docs/design/training/tr-31/dark/step1-overview.jpg`..`step4-validation.jpg`), context-chained
+from [`reference.jpg`](../../../design/training/tr-31/reference.jpg) and [`design.md`](design.md)
+([`journey-prompts.json`](../../../design/training/tr-31/journey-prompts.json)), are supplied in the
 generation prompt to aim for and used to validate visual and interactive parity across all seven frameworks.
 
 ## Validation and states

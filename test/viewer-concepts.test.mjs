@@ -1060,10 +1060,10 @@ test('pattern and family cards render code blocks, simple and site prompts, desi
   assert.match(familyHtml, /<pre class="concept-prompt-pre"><code class="concept-prompt-copy">/);
   assert.match(familyHtml, /pilot\/projects\/tr-01-\{hono,raw,react,preact,vue,svelte,webcomponents\}/);
   assert.match(familyHtml, /Client \+ Server Architecture &amp; UX Contract/);
-  assert.match(familyHtml, /Complete 5-step Light &amp; Dark Mode UI\/UX Flow/);
-  assert.match(familyHtml, /\/concepts\/images\/booking\/step1-browse\.jpg/);
-  assert.match(familyHtml, /\/concepts\/images\/booking\/step1-browse-dark\.jpg/);
-  assert.match(familyHtml, /Archetype Multi-Step Design Contract \(docs\/design\/archetypes\/booking\/design\.md\)/);
-  assert.match(familyHtml, /Archetype Multi-Step Functional Plan \(docs\/design\/archetypes\/booking\/plan\.md\)/);
+  assert.match(familyHtml, /Complete 4-step Light &amp; Dark Mode UI\/UX Flow/);
+  assert.match(familyHtml, /\/concepts\/family-images\/tr-01\/step1-overview\.jpg/);
+  assert.match(familyHtml, /docs\/design\/training\/tr-01\/dark\/step\*/);
+  assert.match(familyHtml, /Family Design Contract \(docs\/train\/design\/tr-01\/design\.md\)/);
+  assert.match(familyHtml, /Family Functional Plan &amp; Server Contract \(docs\/train\/design\/tr-01\/plan\.md\)/);
   assert.match(familyHtml, /href="\/project\/tr-01-hono"/);
 });

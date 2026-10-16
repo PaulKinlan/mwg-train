@@ -197,6 +197,20 @@
     "test/reachability.test.mjs",
     "test/tokens-record.test.mjs"
   ],
+  "docs/train/UNIFIED-CONCEPTS-EPIC.md": [
+    "test/family-journey-boards.test.mjs",
+    "test/baseline-label.test.mjs"
+  ],
+  "docs/design/training/*/journey-prompts.json": [
+    "test/family-journey-boards.test.mjs",
+    "test/baseline-label.test.mjs"
+  ],
+  "src/train/family-journeys.mjs": [
+    "test/family-journey-boards.test.mjs"
+  ],
+  "scripts/generate-family-journey-boards.mjs": [
+    "test/family-journey-boards.test.mjs"
+  ],
   "docs/train/briefs/EXPANSION-PLAN.md": [
     "test/expansion-matrix.test.mjs"
   ],

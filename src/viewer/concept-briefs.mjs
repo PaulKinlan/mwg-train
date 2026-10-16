@@ -85,6 +85,14 @@ function familyVisualThesis(design) {
   return thesis?.includes(marker) ? thesis.split(marker, 1)[0].replace(/\bthe board for\b/i, 'the site for').trim() : null;
 }
 
+function familySiteName(design, fallback = null) {
+  const heading = design?.match(/^#\s+(.+)$/m)?.[1]?.trim();
+  if (!heading) return fallback;
+  const parts = heading.split(' — ');
+  const name = parts.length > 1 ? parts.slice(1).join(' — ').trim() : '';
+  return name || fallback;
+}
+
 // Booking's authored component list also contains one particular class demo's step names, field
 // labels and selector IDs. Keep its source-backed structure, not those values: the family plan below
 // is the only authority for a bicycle, farm, market or other booking form's actual fields and labels.
@@ -350,7 +358,7 @@ function trainingSimplePrompt(row) {
     ? row.fields.map((f) => f.name || f.label).filter(Boolean).slice(0, 5).join(', ')
     : 'key inputs';
   const base = row.prompt?.trim() || `Build a functional ${row.archetype?.replaceAll('-', ' ')} website for this scenario.`;
-  return `${base} Match the attached visual reference boards (docs/design/training/${row.family_id}/reference.jpg, docs/design/archetypes/${row.archetype}/step*.jpg, and docs/design/archetypes/${row.archetype}/dark/step*.jpg) so all 7 framework builds (pilot/projects/${row.family_id}-{hono,raw,react,preact,vue,svelte,webcomponents}) share the same UI and UX flows. Implement the full client and server interaction flow across ${routes} with form controls for ${fields}, accessible validation feedback, search/filter and server persistence across page reloads.`;
+  return `${base} Match the attached family visual reference boards (docs/design/training/${row.family_id}/reference.jpg, docs/design/training/${row.family_id}/step*.jpg, and docs/design/training/${row.family_id}/dark/step*.jpg) so all 7 framework builds (pilot/projects/${row.family_id}-{hono,raw,react,preact,vue,svelte,webcomponents}) share the exact same brand, UI, and 4-step Light/Dark UX flows. Implement the full client and server interaction flow across ${routes} with form controls for ${fields}, accessible validation feedback, search/filter and server persistence across page reloads.`;
 }
 
 function clientServerArchitectureBlock(id, row) {
@@ -375,7 +383,7 @@ function clientServerArchitectureBlock(id, row) {
     update,
     rules,
     `- Cross-framework target code directories: pilot/projects/${id}-{hono,raw,react,preact,vue,svelte,webcomponents} (all 7 framework implementations must be functionally and visually equivalent).`,
-    `Visual reference inputs (attached in prompt to aim for and validate against):\n- Family designed board: docs/design/training/${id}/reference.jpg (/concepts/references/${id}.jpg)\n- Archetype Light Mode multi-step UX/UI flow: docs/design/archetypes/${row.archetype}/step*.jpg (/concepts/images/${row.archetype}/step*.jpg)\n- Archetype Dark Mode multi-step UX/UI flow: docs/design/archetypes/${row.archetype}/dark/step*.jpg (/concepts/images/${row.archetype}/step*-dark.jpg)`,
+    `Visual reference inputs (attached in prompt to aim for and validate against):\n- Family anchor board: docs/design/training/${id}/reference.jpg (/concepts/references/${id}.jpg)\n- Family 4-step Light Mode UX/UI flow: docs/design/training/${id}/step1-overview.jpg .. step4-validation.jpg (/concepts/family-images/${id}/step*.jpg)\n- Family 4-step Dark Mode UX/UI flow: docs/design/training/${id}/dark/step1-overview.jpg .. step4-validation.jpg (/concepts/family-images/${id}/step*-dark.jpg)`,
   ].filter(Boolean).join('\n');
 }
 
@@ -465,9 +473,18 @@ export function trainingBrief(repoRoot, id, row) {
   // layout/components, but not its visual thesis or tokens: those can contradict the family's palette.
   const siteDesign = authoredText(repoRoot, 'docs/design/archetypes', row.archetype, 'design.md') ?? design;
   const imagePrompt = authoredText(repoRoot, 'docs/design/training', id, 'prompt.txt');
+  const journeyPromptsRaw = authoredText(repoRoot, 'docs/design/training', id, 'journey-prompts.json');
+  let familyJourneySteps = [];
+  if (journeyPromptsRaw) {
+    try {
+      const parsed = JSON.parse(journeyPromptsRaw);
+      if (Array.isArray(parsed?.steps)) familyJourneySteps = parsed.steps;
+    } catch { /* ignore malformed json */ }
+  }
   const assertions = Array.isArray(row.assertions) ? row.assertions.filter((assertion) => typeof assertion === 'string') : [];
   const journey = section(plan, 'Journey');
   return {
+    siteName: familySiteName(design, null),
     simplePrompt: trainingSimplePrompt(row),
     sitePrompt: [
       `Build a functional ${row.archetype.replaceAll('-', ' ')} website for this scenario. The image prompt below is an illustration brief; it is not a substitute for implementing the behaviour.`,
@@ -482,6 +499,8 @@ export function trainingBrief(repoRoot, id, row) {
     ].join('\n\n'),
     imagePrompt,
     imagePromptSource: imagePrompt ? `docs/design/training/${id}/prompt.txt` : null,
+    familyJourneySteps,
+    familyJourneySource: journeyPromptsRaw ? `docs/design/training/${id}/journey-prompts.json` : null,
     planSource: plan ? `docs/train/design/${id}/plan.md` : null,
     designSource: siteDesign ? (siteDesign === design ? `docs/train/design/${id}/design.md` : `docs/design/archetypes/${row.archetype}/design.md`) : null,
     tokenSource: design ? `docs/train/design/${id}/design.md` : null,

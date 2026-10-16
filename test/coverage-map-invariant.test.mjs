@@ -5,7 +5,7 @@ import { resolve } from 'node:path';
 import test from 'node:test';
 
 const ROOT = resolve(import.meta.dirname, '..');
-const EXPECTED_EDGES_SHA256 = '151b745da9e5868277aeaf7ebe4a89757e71bb1c68c93a8e0eeb8626c176940f';
+const EXPECTED_EDGES_SHA256 = '48a4afb5e22acde266f1a53dff730cbadbade833ec09c799e7ed15366ed34e07';
 
 test('the fast-gate coverage contract cannot silently lose any declared suite edge', () => {
   const mapping = JSON.parse(readFileSync(resolve(ROOT, '.fleet/coverage-mapping.json'), 'utf8'));

@@ -469,6 +469,37 @@ function trainingBoardFile(repoRoot, id) {
   return confinedFile(root, join(root, id), 'reference.jpg');
 }
 
+const FAMILY_STEP_IDS = new Set([
+  'step1-overview',
+  'step2-interaction',
+  'step3-outcome',
+  'step4-validation',
+]);
+
+/** Resolve a confined per-family 4-step Light or Dark Mode journey board under docs/design/training/<tr-NN>/. */
+function trainingFamilyStepFile(repoRoot, id, stepId) {
+  if (typeof id !== 'string' || !TRAINING_FAMILY.test(id) || typeof stepId !== 'string') return null;
+  const isDark = stepId.endsWith('-dark');
+  const baseStepId = isDark ? stepId.slice(0, -5) : stepId;
+  if (!FAMILY_STEP_IDS.has(baseStepId)) return null;
+  const root = join(repoRoot, TRAINING_BOARD_DIR);
+  const dir = isDark ? join(root, id, 'dark') : join(root, id);
+  const direct = confinedFile(root, dir, `${baseStepId}.jpg`);
+  if (direct) return direct;
+  // For Step 1 Light, if step1-overview.jpg is not yet generated on disk, reference.jpg IS the Step 1 Light anchor.
+  if (!isDark && baseStepId === 'step1-overview') {
+    return confinedFile(root, join(root, id), 'reference.jpg');
+  }
+  return null;
+}
+
+/** Serve a confined per-family Light or Dark Mode step board (/concepts/family-images/<tr-NN>/<stepId>.jpg). */
+export function trainingFamilyStep(repoRoot, id, stepId) {
+  if (!trainingFamilies(repoRoot).some((family) => family.id === id)) return null;
+  const file = trainingFamilyStepFile(repoRoot, id, stepId);
+  return readConfinedImage(repoRoot, file, 'image/jpeg');
+}
+
 /** Serve the designed reference board for a family: declared by the A1 manifest and present under
  *  docs/design/training/<tr-NN>/reference.jpg. */
 export function trainingBoard(repoRoot, id) {
@@ -584,10 +615,26 @@ export function listConcepts(repoRoot, { view = 'all', id = null } = {}) {
       const target = detailed ? trainingTargetFile(repoRoot, family.id) : null;
       const board = patternOnly ? null : trainingBoardFile(repoRoot, family.id);
       const boardSize = detailed && board ? jpegSize(board) : null;
+      const brief = detailed ? trainingBrief(repoRoot, family.id, briefRows.get(family.id)) : null;
+      if (detailed && brief && Array.isArray(brief.familyJourneySteps)) {
+        brief.familyJourneySteps = brief.familyJourneySteps.map((step) => {
+          const lightFile = trainingFamilyStepFile(repoRoot, family.id, step.id);
+          const darkFile = trainingFamilyStepFile(repoRoot, family.id, `${step.id}-dark`);
+          const lightSize = lightFile ? jpegSize(lightFile) : null;
+          const darkSize = darkFile ? jpegSize(darkFile) : null;
+          return {
+            ...step,
+            available: !!lightFile,
+            darkAvailable: !!darkFile,
+            ...(lightSize ? { width: lightSize.width, height: lightSize.height } : {}),
+            ...(darkSize ? { darkWidth: darkSize.width, darkHeight: darkSize.height } : {}),
+          };
+        });
+      }
       // A skipped probe is unknown, not an unavailable asset. Expose those fields only
       // in scopes that actually checked them; do not force index/detail HTTP to read all images.
       return { ...family,
-        ...(detailed ? { brief: trainingBrief(repoRoot, family.id, briefRows.get(family.id)),
+        ...(detailed ? { brief,
           available: !!target, ...(target ? pngSize(target) : null) } : {}),
         ...(!patternOnly ? { board: !!board } : {}),
         ...(boardSize ? { boardWidth: boardSize.width, boardHeight: boardSize.height } : {}) };
@@ -705,10 +752,10 @@ const patternCard = ({ id, brief, steps }, families = [], { detail = false } = {
 </article>`;
 };
 
-const trainingFamilyCard = ({ id, archetype, title, origin, available, width, height, board, boardWidth, boardHeight, brief }, register, { featured = false, detail = false, pattern = null } = {}) => {
+const trainingFamilyCard = ({ id, archetype, title, origin, available, width, height, board, boardWidth, boardHeight, brief }, register, { featured = false, detail = false } = {}) => {
   const buildLinks = FRAMEWORKS.map((fw) => `<a href="/project/${escapeHtml(id)}-${fw}"><code>${escapeHtml(id)}-${fw}</code></a>`).join(', ');
-  const subject = archetype ? patternSubject(archetype) : null;
-  const patternSteps = pattern?.steps ?? [];
+  const familyBrand = brief?.siteName ?? title ?? null;
+  const familySteps = brief?.familyJourneySteps ?? [];
   const routesList = brief?.routes?.length ? brief.routes.map((r) => code(r)).join(', ') : null;
   const fieldsList = brief?.fields?.length
     ? brief.fields.map((f) => `${code(f.name || f.slug)} (${escapeHtml(f.type || 'text')}${f.required ? ', required' : ''}${f.echoed ? ', echoed' : ''})`).join(', ')
@@ -722,11 +769,11 @@ const trainingFamilyCard = ({ id, archetype, title, origin, available, width, he
     : null;
 
   return `<article class="concept-comparison" aria-labelledby="target-${escapeHtml(id)}">
-  <h3 id="target-${escapeHtml(id)}">${escapeHtml(id)}${archetype ? ` · ${escapeHtml(archetype)}` : ''}${subject ? ` · <span class="muted">${escapeHtml(subject)}</span>` : ''}</h3>
-  ${title ? `<p class="muted"><strong>Scenario:</strong> ${escapeHtml(title)}${archetype ? ` · Pattern: <a href="/concepts/pattern/${escapeHtml(archetype)}"><code>${escapeHtml(archetype)}</code>${subject ? ` (${escapeHtml(subject)})` : ''}</a>` : ''}</p>` : ''}
+  <h3 id="target-${escapeHtml(id)}">${escapeHtml(id)}${archetype ? ` · ${escapeHtml(archetype)}` : ''}${familyBrand ? ` · <span class="muted">${escapeHtml(familyBrand)}</span>` : ''}</h3>
+  ${title ? `<p class="muted"><strong>Scenario:</strong> ${escapeHtml(title)}${archetype ? ` · UX Category: <a href="/concepts/pattern/${escapeHtml(archetype)}"><code>${escapeHtml(archetype)}</code></a>` : ''}</p>` : ''}
   <p class="muted"><strong>Target code directories (7 frameworks):</strong> ${code(`pilot/projects/${id}-{hono,raw,react,preact,vue,svelte,webcomponents}`)}</p>
   <p class="muted"><strong>Project builds:</strong> ${buildLinks}</p>
-  <p class="muted"><strong>Prompt &amp; validation alignment:</strong> The family scenario board (${code(`${TRAINING_BOARD_DIR}/${id}/reference.jpg`)}) and the ${patternSteps.length || 4}-step Light &amp; Dark Mode UX/UI journey boards (${code(`docs/design/archetypes/${archetype ?? 'pattern'}/step*.jpg`)} &amp; ${code(`docs/design/archetypes/${archetype ?? 'pattern'}/dark/step*.jpg`)}) are supplied in the generation prompt to aim for AND used to validate that all 7 framework builds achieve visually and functionally identical client + server UX.</p>
+  <p class="muted"><strong>Prompt &amp; validation alignment:</strong> This family&rsquo;s anchor reference board (${code(`${TRAINING_BOARD_DIR}/${id}/reference.jpg`)}) and its 4-step Light &amp; Dark Mode UX/UI journey boards (${code(`${TRAINING_BOARD_DIR}/${id}/step1-overview.jpg`)} .. ${code('step4-validation.jpg')} &amp; ${code(`${TRAINING_BOARD_DIR}/${id}/dark/step1-overview.jpg`)} .. ${code('step4-validation.jpg')}) share a single unified brand and palette (${code(`docs/train/design/${id}/design.md`)}) and are supplied in the generation prompt to aim for AND used to validate that all 7 framework builds achieve visually and functionally identical client + server UX.</p>
   ${brief && (routesList || fieldsList || rulesList) ? `<div class="concept-explainer">
     <h4>Client + Server Architecture &amp; UX Contract</h4>
     <ul>
@@ -743,34 +790,35 @@ const trainingFamilyCard = ({ id, archetype, title, origin, available, width, he
       ? `<a href="/concepts/references/${escapeHtml(id)}.jpg" aria-label="Open the ${escapeHtml(id)} designed reference board at full size"><img src="/concepts/references/${escapeHtml(id)}.jpg" alt="Designed reference board for training family ${escapeHtml(id)}${archetype ? ` (${escapeHtml(archetype)})` : ''}"${boardWidth && boardHeight ? ` width="${boardWidth}" height="${boardHeight}"` : ''} loading="${featured ? 'eager' : 'lazy'}"${featured ? ' fetchpriority="high"' : ''}></a>`
       : `<p class="muted">Designed board not generated yet. Expected ${code(`${TRAINING_BOARD_DIR}/${id}/reference.jpg`)}.</p>`}</div><figcaption>Designed reference board${board ? ` · ${code(`${TRAINING_BOARD_DIR}/${id}/reference.jpg`)}` : ' · pending'} — AI-generated illustration, not training evidence and not proof a demo works${board ? (register ? `. Model and digests: ${code(register)}` : `. The register of the model and digests for these boards has not landed in this checkout yet (expected ${code(TRAINING_BOARD_REGISTER)})`) : ''}</figcaption></figure>
   </div>
-  ${detail && patternSteps.length ? `<h4>Complete ${patternSteps.length}-step Light &amp; Dark Mode UI/UX Flow (${escapeHtml(archetype)}${subject ? ` · ${escapeHtml(subject)}` : ''})</h4>
-    <p class="muted"><strong>Multi-step interactive journey (${patternSteps.filter((s) => s.available).length} Light + ${patternSteps.filter((s) => s.darkAvailable).length} Dark boards):</strong> Context-chained from ${code(`docs/design/archetypes/${archetype}/design.md`)} so every state (browse/overview, active form &amp; control interaction, confirmation/read-back, validation refusal, and empty search) shares a consistent layout, navigation, and theme across Light and Dark modes.</p>
+  ${detail && familySteps.length ? `<h4>Complete ${familySteps.length}-step Light &amp; Dark Mode UI/UX Flow (${escapeHtml(id)}${familyBrand ? ` · ${escapeHtml(familyBrand)}` : ''})</h4>
+    <p class="muted"><strong>Unified per-family multi-step journey (${familySteps.filter((s) => s.available).length} Light + ${familySteps.filter((s) => s.darkAvailable).length} Dark boards on disk):</strong> Context-chained directly from ${code(`${TRAINING_BOARD_DIR}/${id}/reference.jpg`)}, ${code(`docs/train/design/${id}/design.md`)}, and ${code(`docs/train/design/${id}/plan.md`)} via ${code('scripts/generate-family-journey-boards.mjs')} so Step 1 Light and Steps 2–4 (Light &amp; Dark) share the exact same brand, header, navigation, typography, and colour tokens.</p>
     <div class="concept-theme-set concept-theme-light">
-      <h5 class="concept-theme-heading"><span class="theme-pill theme-pill-light">☀ Light Mode Set</span> Complete ${patternSteps.length}-step Light Mode UI/UX Flow (${code(`docs/design/archetypes/${archetype}/step*.jpg`)})</h5>
-      <ol class="concept-steps">${patternSteps.map(({ id: stepId, title: stepTitle, available: stepAvailable, width: stepW, height: stepH, state, imagePrompt }) => {
-        const path = `/concepts/images/${archetype}/${stepId}.jpg`;
-        const mapped = state?.kind === 'page' ? `Document state at ${state.path ?? 'no confirmed route'}`
-          : state?.kind === 'interaction' ? 'Interaction state; no standalone document URL'
+      <h5 class="concept-theme-heading"><span class="theme-pill theme-pill-light">☀ Light Mode Set</span> Complete ${familySteps.length}-step Light Mode UI/UX Flow (${code(`${TRAINING_BOARD_DIR}/${id}/step*.jpg`)})</h5>
+      <ol class="concept-steps">${familySteps.map(({ id: stepId, title: stepTitle, available: stepAvailable, width: stepW, height: stepH, state, lightPrompt }) => {
+        const path = `/concepts/family-images/${id}/${stepId}.jpg`;
+        const mapped = state?.kind === 'page' ? `Document state at ${state.path ?? '/'}`
+          : state?.kind === 'interaction' ? `Interaction state on ${state.path ?? '/'}`
             : 'Illustrative state in the multi-step UX flow';
-        const claim = state?.drive?.expectText ? `Assert after the registered interaction: ${state.drive.expectText}`
-          : 'Validated via the family client + server acceptance assertions below.';
+        const claim = state?.drive?.expectText ? `Expected state/assertion: ${state.drive.expectText}`
+          : state?.drive?.description ?? 'Validated via the family client + server acceptance assertions below.';
         return `<li><figure><div class="concept-image-frame">${stepAvailable
-          ? `<a href="${path}" aria-label="Open ${escapeHtml(archetype)} ${escapeHtml(stepTitle)} concept board"><img src="${path}" alt="Illustrative ${escapeHtml(archetype)} state: ${escapeHtml(stepTitle)}"${stepW && stepH ? ` width="${stepW}" height="${stepH}"` : ''} loading="lazy"></a>`
-          : `<p class="muted">State image pending: ${code(`docs/design/archetypes/${archetype}/${stepId}.jpg`)}</p>`}</div>
+          ? `<a href="${path}" aria-label="Open ${escapeHtml(id)} ${escapeHtml(stepTitle)} concept board"><img src="${path}" alt="Illustrative ${escapeHtml(id)} state: ${escapeHtml(stepTitle)}"${stepW && stepH ? ` width="${stepW}" height="${stepH}"` : ''} loading="lazy"></a>`
+          : `<p class="muted">Family state board queued for fleet generation: ${code(`${TRAINING_BOARD_DIR}/${id}/${stepId}.jpg`)} (run ${code(`node scripts/generate-family-journey-boards.mjs --write --only ${id}`)})</p>`}</div>
           <figcaption><strong>${escapeHtml(stepTitle)} · Light Mode</strong><p>${escapeHtml(mapped)}. ${escapeHtml(claim)}</p>
-          ${state?.source ? `<p class="muted">State mapping: ${escapeHtml(state.source)}</p>` : ''}
-          ${promptDetails('Step Image Generation Prompt', imagePrompt, pattern?.brief?.imagePromptSource)}
+          ${state?.source ? `<p class="muted">State mapping: ${code(state.source)}</p>` : ''}
+          ${promptDetails('Step Image Generation Prompt (Light Mode)', lightPrompt, brief?.familyJourneySource)}
           </figcaption></figure></li>`;
       }).join('')}</ol>
     </div>
     <div class="concept-theme-set concept-theme-dark">
-      <h5 class="concept-theme-heading"><span class="theme-pill theme-pill-dark">☾ Dark Mode Set</span> Complete ${patternSteps.length}-step matching Dark Mode UI/UX Flow (${code(`docs/design/archetypes/${archetype}/dark/step*.jpg`)})</h5>
-      <ol class="concept-steps concept-steps-dark">${patternSteps.map(({ id: stepId, title: stepTitle, darkAvailable, darkWidth, darkHeight }) => {
-        const darkPath = `/concepts/images/${archetype}/${stepId}-dark.jpg`;
+      <h5 class="concept-theme-heading"><span class="theme-pill theme-pill-dark">☾ Dark Mode Set</span> Complete ${familySteps.length}-step matching Dark Mode UI/UX Flow (${code(`${TRAINING_BOARD_DIR}/${id}/dark/step*.jpg`)})</h5>
+      <ol class="concept-steps concept-steps-dark">${familySteps.map(({ id: stepId, title: stepTitle, darkAvailable, darkWidth, darkHeight, darkPrompt }) => {
+        const darkPath = `/concepts/family-images/${id}/${stepId}-dark.jpg`;
         return `<li><figure><div class="concept-image-frame">${darkAvailable
-          ? `<a href="${darkPath}" aria-label="Open ${escapeHtml(archetype)} ${escapeHtml(stepTitle)} dark mode concept board"><img src="${darkPath}" alt="Illustrative ${escapeHtml(archetype)} dark mode state: ${escapeHtml(stepTitle)}"${darkWidth && darkHeight ? ` width="${darkWidth}" height="${darkHeight}"` : ''} loading="lazy"></a>`
-          : `<p class="muted">Dark mode state image pending: ${code(`docs/design/archetypes/${archetype}/dark/${stepId}.jpg`)}</p>`}</div>
-          <figcaption><strong>${escapeHtml(stepTitle)} · Dark Mode</strong><p class="muted">Context-chained from ${code(`${stepId}.jpg`)} + ${code('design.md')} dark palette (${code(`docs/design/archetypes/${archetype}/dark/${stepId}.jpg`)}).</p>
+          ? `<a href="${darkPath}" aria-label="Open ${escapeHtml(id)} ${escapeHtml(stepTitle)} dark mode concept board"><img src="${darkPath}" alt="Illustrative ${escapeHtml(id)} dark mode state: ${escapeHtml(stepTitle)}"${darkWidth && darkHeight ? ` width="${darkWidth}" height="${darkHeight}"` : ''} loading="lazy"></a>`
+          : `<p class="muted">Family dark mode board queued for fleet generation: ${code(`${TRAINING_BOARD_DIR}/${id}/dark/${stepId}.jpg`)} (run ${code(`node scripts/generate-family-journey-boards.mjs --write --only ${id}`)})</p>`}</div>
+          <figcaption><strong>${escapeHtml(stepTitle)} · Dark Mode</strong><p class="muted">Context-chained 1-to-1 Dark Mode twin of ${code(`${stepId}.jpg`)} (${code(`${TRAINING_BOARD_DIR}/${id}/dark/${stepId}.jpg`)}).</p>
+          ${promptDetails('Step Image Generation Prompt (Dark Mode)', darkPrompt, brief?.familyJourneySource)}
           </figcaption></figure></li>`;
       }).join('')}</ol>
     </div>` : ''}
@@ -782,12 +830,10 @@ const trainingFamilyCard = ({ id, archetype, title, origin, available, width, he
       [brief.planSource, brief.designSource, brief.tokenSource].filter(Boolean).join(' + '), { open: detail })}
     ${promptDetails('Image Generation Prompt · single illustrative home page', brief.imagePrompt, brief.imagePromptSource)}
     ${brief.designMarkdown ? promptDetails(`Family Design Contract (${brief.tokenSource ?? brief.designSource})`, brief.designMarkdown, brief.tokenSource ?? brief.designSource) : ''}
-    ${brief.archetypeDesignMarkdown && brief.archetypeDesignSource ? promptDetails(`Archetype Multi-Step Design Contract (${brief.archetypeDesignSource})`, brief.archetypeDesignMarkdown, brief.archetypeDesignSource) : ''}
     ${brief.planMarkdown ? promptDetails(`Family Functional Plan & Server Contract (${brief.planSource})`, brief.planMarkdown, brief.planSource) : ''}
-    ${brief.archetypePlanMarkdown && brief.archetypePlanSource ? promptDetails(`Archetype Multi-Step Functional Plan (${brief.archetypePlanSource})`, brief.archetypePlanMarkdown, brief.archetypePlanSource) : ''}
     <details class="concept-prompt"${detail ? ' open' : ''}><summary>Unified client + server interaction sequence, multi-step UX flows and acceptance checks</summary>
       ${brief.journeys?.length ? `<p><strong>End-to-end user &amp; server journeys:</strong></p><ul>${brief.journeys.map((j) => `<li>${escapeHtml(j)}</li>`).join('')}</ul>` : ''}
-      ${patternSteps.length ? `<p><strong>Multi-step UI/UX state progression (${escapeHtml(archetype)}):</strong></p><ol>${patternSteps.map((s) => `<li><strong>${escapeHtml(s.title)}</strong> (${code(`${s.id}.jpg`)} / ${code(`dark/${s.id}.jpg`)})${s.state?.path ? ` — route ${code(s.state.path)}` : ''}${s.state?.drive?.expectText ? ` — expects "${escapeHtml(s.state.drive.expectText)}"` : ''}</li>`).join('')}</ol>` : ''}
+      ${familySteps.length ? `<p><strong>Multi-step UI/UX state progression (${escapeHtml(id)}):</strong></p><ol>${familySteps.map((s) => `<li><strong>${escapeHtml(s.title)}</strong> (${code(`${s.id}.jpg`)} / ${code(`dark/${s.id}.jpg`)})${s.state?.path ? ` — route ${code(s.state.path)}` : ''}${s.state?.drive?.expectText ? ` — expects "${escapeHtml(s.state.drive.expectText)}"` : ''}</li>`).join('')}</ol>` : ''}
       <p><strong>Driven client + server harness verification sequence:</strong></p>
       <ol>${brief.steps.map((step) => `<li>${escapeHtml([step.path ? `Visit ${step.path}` : null,
         step.select ? `select ${Object.entries(step.select).map(([selector, value]) => `${selector}: ${value}`).join(', ')}` : null,
@@ -878,7 +924,7 @@ export function renderConceptFamily({ patterns = [], trainingTargets = [], train
     <p><a href="/concepts#target-${escapeHtml(id)}">← All concepts and training families</a></p>
     <h1>${escapeHtml(heading)}</h1>
     <p class="muted">A designed board is an AI-generated illustration, not training evidence or proof a demo works. A1 harness PNGs are deterministic conformance fixtures, not matching designs. No reuse clearance is granted here; consult each board&rsquo;s provenance and applicable provider terms. <a href="/concepts#concept-distinction-heading">Read the A1/A6 and rights distinctions</a>.</p>
-    ${family.archetype ? `<p>Unified with the <a href="/concepts/pattern/${escapeHtml(family.archetype)}">${escapeHtml(family.archetype)} archetype pattern${patternSubject(family.archetype) ? ` (${escapeHtml(patternSubject(family.archetype))})` : ''}</a> · Target code: ${code(`pilot/projects/${id}-{hono,raw,react,preact,vue,svelte,webcomponents}`)}.</p>` : ''}
+    ${family.archetype ? `<p>Unified with the <a href="/concepts/pattern/${escapeHtml(family.archetype)}">${escapeHtml(family.archetype)} archetype pattern</a> · Target code: ${code(`pilot/projects/${id}-{hono,raw,react,preact,vue,svelte,webcomponents}`)}.</p>` : ''}
     <section aria-labelledby="family-detail-heading"><h2 id="family-detail-heading">Unified concept boards, multi-step UX/UI flows, client + server contract and authored prompts</h2>
       ${trainingFamilyCard(family, trainingBoardRegister, { featured: true, detail: true, pattern })}
     </section>`);

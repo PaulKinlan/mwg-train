@@ -43,7 +43,7 @@ import { dirname, extname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { deflateSync, gzipSync } from 'node:zlib';
 
-import { conceptImage, conceptJourneyStep, conceptTarget, listConcepts, readConfinedImage, renderConceptFamily, renderConceptIndex, renderConceptPattern, trainingBoard } from './concepts.mjs';
+import { conceptImage, conceptJourneyStep, conceptTarget, listConcepts, readConfinedImage, renderConceptFamily, renderConceptIndex, renderConceptPattern, trainingBoard, trainingFamilyStep } from './concepts.mjs';
 import { archetypeBrief, trainingBrief, trainingBriefs } from './concept-briefs.mjs';
 import { filterProjects, loadCorpus, projectView } from './corpus.mjs';
 import { hashTree } from '../corpus/tree-hash.mjs';
@@ -902,6 +902,13 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
       if (journeyImageMatch && request.method === 'GET') {
         const image = conceptJourneyStep(repoRoot, journeyImageMatch[1], journeyImageMatch[2]);
         if (!image) return textResponse(response, 'archetype reference unavailable', 404);
+        response.writeHead(200, assetHeaders(image.type));
+        return response.end(image.bytes);
+      }
+      const familyStepImageMatch = path.match(/^\/concepts\/family-images\/(tr-\d{2})\/(step[1-4]-[a-z0-9-]+)\.jpg$/);
+      if (familyStepImageMatch && request.method === 'GET') {
+        const image = trainingFamilyStep(repoRoot, familyStepImageMatch[1], familyStepImageMatch[2]);
+        if (!image) return textResponse(response, 'family step board unavailable', 404);
         response.writeHead(200, assetHeaders(image.type));
         return response.end(image.bytes);
       }
