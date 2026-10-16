@@ -708,11 +708,7 @@ const patternCard = ({ id, brief, steps }, families = [], { detail = false } = {
   ${brief ? `<p class="muted">Design and interaction contract: ${code(brief.planSource)} · ${code(brief.designSource)}${familyLinks}.</p>
     ${codeDirs.length ? `<p class="muted"><strong>Target code directories (7 frameworks):</strong> ${codeDirs.join(' · ')}</p>` : ''}
     <p class="muted"><strong>Project builds:</strong> ${buildLinks}</p>
-    <p class="muted"><strong>Prompt &amp; validation alignment:</strong> All ${steps.length} Light Mode and ${steps.length} Dark Mode visual reference boards below are included in the generation prompts to aim for AND used to validate visual and functional equivalence across all 7 framework builds.</p>
-    ${brief.simplePrompt ? promptDetails('Simple Generation Prompt ( baseline / zero-shot input )', brief.simplePrompt, brief.planSource) : ''}
-    ${promptDetails('Site Generation Prompt ( full spec + design contract )', brief.sitePrompt, `${brief.planSource} + ${brief.designSource}`, { open: detail })}
-    ${brief.designMarkdown ? promptDetails(`Design Contract (${brief.designSource})`, brief.designMarkdown, brief.designSource) : ''}
-    ${brief.planMarkdown ? promptDetails(`Functional Plan & Acceptance Contract (${brief.planSource})`, brief.planMarkdown, brief.planSource) : ''}`
+    <p class="muted"><strong>Prompt &amp; validation alignment:</strong> All ${steps.length} Light Mode and ${steps.length} Dark Mode visual reference boards below are included in the generation prompts to aim for AND used to validate visual and functional equivalence across all 7 framework builds.</p>`
     : `<p class="notice">Design specification pending; no generation prompt can be claimed.${familyLinks}</p>`}
   ${steps.length ? `<h4>${steps.filter((step) => step.available).length} pictured state${steps.length === 1 ? '' : 's'} · ${steps.length} declared · ${steps.filter((step) => step.darkAvailable).length} dark-mode twin state${steps.length === 1 ? '' : 's'}</h4>
     <p class="muted"><strong>Consistent context-chained Light &amp; Dark Mode sets:</strong> Every step in the Light Mode set uses ${code(`docs/design/archetypes/${id}/design.md`)} and Step 1 Light as reference context; every step in the Dark Mode set uses ${code(`docs/design/archetypes/${id}/design.md`)}, its corresponding Light Mode step, and Step 1 Dark as reference context so layout, navigation, and styling remain consistent throughout.</p>
@@ -748,6 +744,10 @@ const patternCard = ({ id, brief, steps }, families = [], { detail = false } = {
     </div>` : `<p class="notice">No multi-step reference boards are authored for this pattern yet. The design and site brief above are available; images and per-state checks are pending.</p>
       ${brief?.fallbackImagePrompt ? promptDetails('Image Generation Prompt · inherited single training reference, NOT a step board', brief.fallbackImagePrompt, brief.imagePromptSource)
         : promptDetails('Image Generation Prompt · no state image authored', null, null)}`}
+  ${brief ? `${brief.simplePrompt ? promptDetails('Simple Generation Prompt ( baseline / zero-shot input )', brief.simplePrompt, brief.planSource) : ''}
+    ${promptDetails('Site Generation Prompt ( full spec + design contract )', brief.sitePrompt, `${brief.planSource} + ${brief.designSource}`)}
+    ${brief.designMarkdown ? promptDetails(`Design Contract (${brief.designSource})`, brief.designMarkdown, brief.designSource) : ''}
+    ${brief.planMarkdown ? promptDetails(`Functional Plan & Acceptance Contract (${brief.planSource})`, brief.planMarkdown, brief.planSource) : ''}` : ''}
   ${brief?.assertions.length ? `<details class="concept-prompt"><summary>Acceptance assertions from the plan · not image verification</summary><ul>${brief.assertions.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul></details>` : ''}
 </article>`;
 };
@@ -827,7 +827,7 @@ const trainingFamilyCard = ({ id, archetype, title, origin, available, width, he
   </details>` : `<p class="muted">Harness target render pending. Expected ${code(`${TRAINING_TARGET_DIR}/${id}/target.png`)}.</p>`}
   ${brief ? `${brief.simplePrompt ? promptDetails('Simple Generation Prompt ( baseline / zero-shot input )', brief.simplePrompt, brief.planSource) : ''}
     ${promptDetails('Site Generation Prompt · functional build ( full spec + design contract )', brief.sitePrompt,
-      [brief.planSource, brief.designSource, brief.tokenSource].filter(Boolean).join(' + '), { open: detail })}
+      [brief.planSource, brief.designSource, brief.tokenSource].filter(Boolean).join(' + '))}
     ${promptDetails('Image Generation Prompt · single illustrative home page', brief.imagePrompt, brief.imagePromptSource)}
     ${brief.designMarkdown ? promptDetails(`Family Design Contract (${brief.tokenSource ?? brief.designSource})`, brief.designMarkdown, brief.tokenSource ?? brief.designSource) : ''}
     ${brief.planMarkdown ? promptDetails(`Family Functional Plan & Server Contract (${brief.planSource})`, brief.planMarkdown, brief.planSource) : ''}
@@ -893,7 +893,7 @@ export function renderConceptIndex({ patterns = [], archetypes = [], trainingTar
     </section>
     <section id="held-out-evaluation" aria-labelledby="eval-targets-heading"><h2 id="eval-targets-heading">Sealed evaluation targets (A6)</h2>
       <p class="muted">These ${archetypes.length} authored evaluation instruments are never training data. The related pattern pages show illustrative states, not generated output. Provenance: ${code('docs/provenance/assets/eval-targets.md')}.</p>
-      ${archetypes.length ? `<ul>${archetypes.map(({ id, target }) => `<li><a href="/concepts/pattern/${escapeHtml(id)}">${escapeHtml(id.replaceAll('-', ' '))}</a> · ${target ? 'A6 target available' : 'A6 target unavailable'} · Code: ${code(`pilot/projects/${id}-*`)}</li>`).join('')}</ul>` : '<p class="notice">No held-out evaluation targets are available in this checkout.</p>'}
+      ${archetypes.length ? `<ul class="concept-pattern-index-list">${archetypes.map(({ id, target }) => `<li><a href="/concepts/pattern/${escapeHtml(id)}">${escapeHtml(id.replaceAll('-', ' '))}</a> · ${target ? 'A6 target available' : 'A6 target unavailable'} · Code: ${code(`pilot/projects/${id}-*`)}</li>`).join('')}</ul>` : '<p class="notice">No held-out evaluation targets are available in this checkout.</p>'}
     </section>`);
 }
 
