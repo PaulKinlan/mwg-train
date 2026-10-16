@@ -350,7 +350,33 @@ function trainingSimplePrompt(row) {
     ? row.fields.map((f) => f.name || f.label).filter(Boolean).slice(0, 5).join(', ')
     : 'key inputs';
   const base = row.prompt?.trim() || `Build a functional ${row.archetype?.replaceAll('-', ' ')} website for this scenario.`;
-  return `${base} Match the attached visual reference boards (docs/design/training/${row.family_id}/reference.jpg and docs/design/archetypes/${row.archetype}/step*.jpg) so all framework builds share the same UI. Implement the core user flow across ${routes} with form controls for ${fields}, accessible validation feedback, and server persistence across page reloads.`;
+  return `${base} Match the attached visual reference boards (docs/design/training/${row.family_id}/reference.jpg, docs/design/archetypes/${row.archetype}/step*.jpg, and docs/design/archetypes/${row.archetype}/dark/step*.jpg) so all 7 framework builds (pilot/projects/${row.family_id}-{hono,raw,react,preact,vue,svelte,webcomponents}) share the same UI and UX flows. Implement the full client and server interaction flow across ${routes} with form controls for ${fields}, accessible validation feedback, search/filter and server persistence across page reloads.`;
+}
+
+function clientServerArchitectureBlock(id, row) {
+  const routes = Array.isArray(row.routes) && row.routes.length ? row.routes.join(', ') : 'declared routes';
+  const persistence = Array.isArray(row.server_persistence) && row.server_persistence.length
+    ? row.server_persistence.map((line) => `- ${line}`).join('\n')
+    : '- Persist submitted records on the server and render them back across page reloads.';
+  const search = row.journey?.search
+    ? `- Search & Filter Flow (GET ${row.journey.search.path}?${row.journey.search.queryParam}=${row.journey.search.query}): filter stored records on the server and render matching items inside ${row.journey.search.resultsSelector}.`
+    : null;
+  const update = row.journey?.update
+    ? `- Update & Mutation Flow: allow updating stored record field "${row.journey.update.field}" to "${row.journey.update.newValue}" and reading back the updated state.`
+    : null;
+  const rules = Array.isArray(row.required_rules) && row.required_rules.length
+    ? `- Modern Web Guidance & Uplift Criteria: enforce ${row.required_rules.join(', ')} across both client interactions and server responses.`
+    : null;
+  return [
+    'Client and server interaction contract:',
+    `- Routes (${routes}): serve both initial HTML/data views and server-side write/mutation handlers so client UI state and server state stay synchronised.`,
+    persistence,
+    search,
+    update,
+    rules,
+    `- Cross-framework target code directories: pilot/projects/${id}-{hono,raw,react,preact,vue,svelte,webcomponents} (all 7 framework implementations must be functionally and visually equivalent).`,
+    `Visual reference inputs (attached in prompt to aim for and validate against):\n- Family designed board: docs/design/training/${id}/reference.jpg (/concepts/references/${id}.jpg)\n- Archetype Light Mode multi-step UX/UI flow: docs/design/archetypes/${row.archetype}/step*.jpg (/concepts/images/${row.archetype}/step*.jpg)\n- Archetype Dark Mode multi-step UX/UI flow: docs/design/archetypes/${row.archetype}/dark/step*.jpg (/concepts/images/${row.archetype}/step*-dark.jpg)`,
+  ].filter(Boolean).join('\n');
 }
 
 /** The authored archetype plan/design are the source; this is a readable prompt assembled from them, not model output. */
@@ -434,6 +460,7 @@ export function trainingBrief(repoRoot, id, row) {
   if (!FAMILY.test(id) || row?.family_id !== id || !ID.test(row?.archetype ?? '') || typeof row.prompt !== 'string') return null;
   const plan = authoredText(repoRoot, 'docs/train/design', id, 'plan.md');
   const design = authoredText(repoRoot, 'docs/train/design', id, 'design.md');
+  const archetypePlan = authoredText(repoRoot, 'docs/design/archetypes', row.archetype, 'plan.md');
   // The training design describes a static DOM conformance fixture. Use the archetype's multi-screen
   // layout/components, but not its visual thesis or tokens: those can contradict the family's palette.
   const siteDesign = authoredText(repoRoot, 'docs/design/archetypes', row.archetype, 'design.md') ?? design;
@@ -451,7 +478,7 @@ export function trainingBrief(repoRoot, id, row) {
       group('Step-by-step interactions', journey),
       group('Validation and server state', section(plan, 'Validation and states')),
       group('Required assertions', assertions.length ? assertions.map((assertion) => `- ${assertion}`).join('\n') : null),
-      `Visual reference inputs (attached in prompt):\n- Family designed board: docs/design/training/${id}/reference.jpg (/concepts/references/${id}.jpg)\n- Archetype Light Mode journey: docs/design/archetypes/${row.archetype}/step*.jpg\n- Archetype Dark Mode journey: docs/design/archetypes/${row.archetype}/dark/step*.jpg`,
+      clientServerArchitectureBlock(id, row),
     ].join('\n\n'),
     imagePrompt,
     imagePromptSource: imagePrompt ? `docs/design/training/${id}/prompt.txt` : null,
@@ -460,7 +487,16 @@ export function trainingBrief(repoRoot, id, row) {
     tokenSource: design ? `docs/train/design/${id}/design.md` : null,
     planMarkdown: plan,
     designMarkdown: design,
+    archetypePlanSource: archetypePlan ? `docs/design/archetypes/${row.archetype}/plan.md` : null,
+    archetypeDesignSource: siteDesign && siteDesign !== design ? `docs/design/archetypes/${row.archetype}/design.md` : null,
+    archetypePlanMarkdown: archetypePlan,
     archetypeDesignMarkdown: siteDesign,
+    routes: Array.isArray(row.routes) ? row.routes : [],
+    fields: Array.isArray(row.fields) ? row.fields : [],
+    serverPersistence: Array.isArray(row.server_persistence) ? row.server_persistence : [],
+    requiredRules: Array.isArray(row.required_rules) ? row.required_rules : [],
+    journey: row.journey ?? null,
+    journeys: Array.isArray(row.journeys) ? row.journeys : [],
     steps: Array.isArray(row.journey?.steps) ? row.journey.steps.filter((step) => step && typeof step === 'object' && !Array.isArray(step)) : [],
     assertions,
   };

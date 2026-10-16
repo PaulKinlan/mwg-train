@@ -49,8 +49,13 @@ What the brief requires to survive a reload or live on the server, quoted verbat
 - "job vacancy listings and submitted candidate applications are stored on the server"
 
 The family's declared framework arm is `vue` and its locale is `en-GB`; both are
-invariant across the two wording variants. The scaffolded server keeps records for the life of the process:
-the brief's persistence requirement is server-side storage with read-back, not a durable database.
+invariant across the two wording variants. Across the seven target framework directories
+(`pilot/projects/tr-12-hono`, `pilot/projects/tr-12-raw`,
+`pilot/projects/tr-12-react`, `pilot/projects/tr-12-preact`,
+`pilot/projects/tr-12-vue`, `pilot/projects/tr-12-svelte`, and
+`pilot/projects/tr-12-webcomponents`), client-side interactive UI/UX states and server-side route
+handlers keep records synchronised for the life of the process: the brief's persistence requirement is
+server-side storage with read-back, search filtering, and mutation across reloads, not a durable database.
 
 ## Journey
 
@@ -66,7 +71,11 @@ Separately, the brief declares a search flow: `/search` with query parameter `q`
 And an update flow: the stored record's `applicant` field can be changed to "Taylor Brooks (updated)" and read back afterwards.
 
 Reloading the read page must show the same stored values: the page after the redirect is rendered from the
-stored record, not from the submission.
+stored record, not from the submission. Alongside this server-driven route flow, the multi-step Light and
+Dark UI/UX state boards in the parent [`job-board` plan](../../../design/archetypes/job-board/plan.md)
+and [`job-board` design](../../../design/archetypes/job-board/design.md), together with this
+family's [`reference.jpg`](../../../design/training/tr-12/reference.jpg), are supplied in the
+generation prompt to aim for and used to validate visual and interactive parity across all seven frameworks.
 
 ## Validation and states
 

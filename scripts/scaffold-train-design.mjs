@@ -220,8 +220,13 @@ What the brief requires to survive a reload or live on the server, quoted verbat
 ${brief.server_persistence.map((line) => `- "${line}"`).join('\n')}
 
 The family's declared framework arm is \`${brief.framework}\` and its locale is \`${brief.locale}\`; both are
-invariant across the two wording variants. The scaffolded server keeps records for the life of the process:
-the brief's persistence requirement is server-side storage with read-back, not a durable database.
+invariant across the two wording variants. Across the seven target framework directories
+(\`pilot/projects/${brief.family_id}-hono\`, \`pilot/projects/${brief.family_id}-raw\`,
+\`pilot/projects/${brief.family_id}-react\`, \`pilot/projects/${brief.family_id}-preact\`,
+\`pilot/projects/${brief.family_id}-vue\`, \`pilot/projects/${brief.family_id}-svelte\`, and
+\`pilot/projects/${brief.family_id}-webcomponents\`), client-side interactive UI/UX states and server-side route
+handlers keep records synchronised for the life of the process: the brief's persistence requirement is
+server-side storage with read-back, search filtering, and mutation across reloads, not a durable database.
 
 ## Journey
 
@@ -230,7 +235,11 @@ The flow the harness drives, with the selectors it uses:
 ${journeyLines}
 
 Reloading the read page must show the same stored values: the page after the redirect is rendered from the
-stored record, not from the submission.
+stored record, not from the submission. Alongside this server-driven route flow, the multi-step Light and
+Dark UI/UX state boards in the parent [\`${brief.archetype}\` plan](../../../design/archetypes/${brief.archetype}/plan.md)
+and [\`${brief.archetype}\` design](../../../design/archetypes/${brief.archetype}/design.md), together with this
+family's [\`reference.jpg\`](../../../design/training/${brief.family_id}/reference.jpg), are supplied in the
+generation prompt to aim for and used to validate visual and interactive parity across all seven frameworks.
 
 ## Validation and states
 

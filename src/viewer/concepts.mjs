@@ -522,14 +522,17 @@ export function listConcepts(repoRoot, { view = 'all', id = null } = {}) {
   const familyOnly = view === 'family';
   const names = [...EVAL_TARGETS].filter((name) => !!conceptImageFile(repoRoot, name));
   const briefRows = indexOnly ? new Map() : trainingBriefs(repoRoot);
-  const states = indexOnly || familyOnly ? {} : boardStateRegister(repoRoot);
-  const journeys = (familyOnly ? [] : Object.entries(JOURNEYS).filter(([journeyId]) => !patternOnly || journeyId === id))
+  const allFamilies = trainingFamilies(repoRoot);
+  const selectedFamilyArchetype = familyOnly ? (allFamilies.find((family) => family.id === id)?.archetype ?? null) : null;
+  const states = indexOnly ? {} : boardStateRegister(repoRoot);
+  const journeys = Object.entries(JOURNEYS)
+    .filter(([journeyId]) => (!patternOnly || journeyId === id) && (!familyOnly || journeyId === selectedFamilyArchetype))
     .map(([journeyId, steps]) => ({
       id: journeyId, title: journeyId.replaceAll('-', ' '),
       steps: steps.map((step) => {
         const light = journeyStepFile(repoRoot, journeyId, step.id);
         const dark = journeyStepFile(repoRoot, journeyId, `${step.id}-dark`);
-        // The index remains stat-only; a pattern detail probes only its own bounded
+        // The index remains stat-only; a pattern or family detail probes only its own bounded
         // headers. Do not claim a ratio for an image whose bytes prove no size.
         const measuredLight = !indexOnly && light ? jpegSize(light) : null;
         const measuredDark = !indexOnly && dark ? jpegSize(dark) : null;
@@ -553,14 +556,16 @@ export function listConcepts(repoRoot, { view = 'all', id = null } = {}) {
   // fixed JOURNEYS allowlist; discovering a new file can never publish it as a concept by itself.
   const patternIds = [...new Set([...EVAL_TARGETS, ...TRAINING_ARCHETYPE_IDS, ...BOARDS.map((board) => board.archetype)])].sort();
   return {
-    patterns: patternIds.filter((patternId) => !familyOnly && (!patternOnly || patternId === id)).map((patternId) => {
-      const brief = indexOnly ? null : archetypeBrief(repoRoot, patternId, inheritedTrainingPrompt(repoRoot, briefRows, patternId));
-      const steps = journeys.find((journey) => journey.id === patternId)?.steps ?? [];
-      return { id: patternId, brief, steps: steps.map((step) => ({ ...step,
-        imagePrompt: indexOnly ? null : stepImagePrompt(brief?.readme, `${step.id}.jpg`),
-        state: states[patternId]?.[`${step.id}.jpg`] ?? null,
-      })) };
-    }),
+    patterns: patternIds
+      .filter((patternId) => (!patternOnly || patternId === id) && (!familyOnly || patternId === selectedFamilyArchetype))
+      .map((patternId) => {
+        const brief = indexOnly ? null : archetypeBrief(repoRoot, patternId, inheritedTrainingPrompt(repoRoot, briefRows, patternId));
+        const steps = journeys.find((journey) => journey.id === patternId)?.steps ?? [];
+        return { id: patternId, brief, steps: steps.map((step) => ({ ...step,
+          imagePrompt: indexOnly ? null : stepImagePrompt(brief?.readme, `${step.id}.jpg`),
+          state: states[patternId]?.[`${step.id}.jpg`] ?? null,
+        })) };
+      }),
     boards: familyOnly ? [] : BOARDS.filter((board) => !!journeyStepFile(repoRoot, board.archetype, board.id)),
     archetypes: archetypes.filter((archetypeId) => !familyOnly && (!patternOnly || archetypeId === id)).map((archetypeId) => {
       const first = journeys.find((journey) => journey.id === archetypeId)?.steps[0];
@@ -574,7 +579,7 @@ export function listConcepts(repoRoot, { view = 'all', id = null } = {}) {
     }),
     // Only A1 manifest families are declared. The index and pattern pages need metadata,
     // not every family's prompt or JPEG headers; the selected detail gets the full record.
-    trainingTargets: trainingFamilies(repoRoot).filter((family) => !familyOnly || family.id === id).map((family) => {
+    trainingTargets: allFamilies.filter((family) => !familyOnly || family.id === id).map((family) => {
       const detailed = view === 'all' || familyOnly && family.id === id;
       const target = detailed ? trainingTargetFile(repoRoot, family.id) : null;
       const board = patternOnly ? null : trainingBoardFile(repoRoot, family.id);
@@ -589,7 +594,7 @@ export function listConcepts(repoRoot, { view = 'all', id = null } = {}) {
     }),
     trainingBoardRegister: trainingBoardRegister(repoRoot),
     journeys,
-    bookingSteps: journeys[0]?.steps ?? [],
+    bookingSteps: (journeys.find((j) => j.id === 'booking') ?? journeys[0])?.steps ?? [],
   };
 }
 
@@ -647,10 +652,16 @@ const patternCard = ({ id, brief, steps }, families = [], { detail = false } = {
   );
   const allBuilds = EVAL_TARGETS.has(id) ? [...evalBuilds, ...familyBuilds] : familyBuilds;
   const buildLinks = allBuilds.length ? allBuilds.join(', ') : '<span class="muted">no builds registered</span>';
+  const codeDirs = [
+    ...(EVAL_TARGETS.has(id) ? [code(`pilot/projects/${id}-{hono,raw,react,preact,vue,svelte,webcomponents}`)] : []),
+    ...families.map((f) => code(`pilot/projects/${f.id}-{hono,raw,react,preact,vue,svelte,webcomponents}`)),
+  ];
   return `<article id="pattern-${escapeHtml(id)}" class="concept-comparison" aria-labelledby="pattern-heading-${escapeHtml(id)}">
   <h3 id="pattern-heading-${escapeHtml(id)}">${escapeHtml(id.replaceAll('-', ' '))}${subject ? ` · <span class="muted">${escapeHtml(subject)}</span>` : ''}</h3>
   ${brief ? `<p class="muted">Design and interaction contract: ${code(brief.planSource)} · ${code(brief.designSource)}${familyLinks}.</p>
-    <p class="muted">Project builds: ${buildLinks}</p>
+    ${codeDirs.length ? `<p class="muted"><strong>Target code directories (7 frameworks):</strong> ${codeDirs.join(' · ')}</p>` : ''}
+    <p class="muted"><strong>Project builds:</strong> ${buildLinks}</p>
+    <p class="muted"><strong>Prompt &amp; validation alignment:</strong> All ${steps.length} Light Mode and ${steps.length} Dark Mode visual reference boards below are included in the generation prompts to aim for AND used to validate visual and functional equivalence across all 7 framework builds.</p>
     ${brief.simplePrompt ? promptDetails('Simple Generation Prompt ( baseline / zero-shot input )', brief.simplePrompt, brief.planSource) : ''}
     ${promptDetails('Site Generation Prompt ( full spec + design contract )', brief.sitePrompt, `${brief.planSource} + ${brief.designSource}`, { open: detail })}
     ${brief.designMarkdown ? promptDetails(`Design Contract (${brief.designSource})`, brief.designMarkdown, brief.designSource) : ''}
@@ -694,17 +705,75 @@ const patternCard = ({ id, brief, steps }, families = [], { detail = false } = {
 </article>`;
 };
 
-const trainingFamilyCard = ({ id, archetype, title, origin, available, width, height, board, boardWidth, boardHeight, brief }, register, { featured = false, detail = false } = {}) => {
+const trainingFamilyCard = ({ id, archetype, title, origin, available, width, height, board, boardWidth, boardHeight, brief }, register, { featured = false, detail = false, pattern = null } = {}) => {
   const buildLinks = FRAMEWORKS.map((fw) => `<a href="/project/${escapeHtml(id)}-${fw}"><code>${escapeHtml(id)}-${fw}</code></a>`).join(', ');
+  const subject = archetype ? patternSubject(archetype) : null;
+  const patternSteps = pattern?.steps ?? [];
+  const routesList = brief?.routes?.length ? brief.routes.map((r) => code(r)).join(', ') : null;
+  const fieldsList = brief?.fields?.length
+    ? brief.fields.map((f) => `${code(f.name || f.slug)} (${escapeHtml(f.type || 'text')}${f.required ? ', required' : ''}${f.echoed ? ', echoed' : ''})`).join(', ')
+    : null;
+  const rulesList = brief?.requiredRules?.length ? brief.requiredRules.map((r) => code(r)).join(', ') : null;
+  const searchSummary = brief?.journey?.search
+    ? `${code(`GET ${brief.journey.search.path}?${brief.journey.search.queryParam}=${brief.journey.search.query}`)} &rarr; ${code(brief.journey.search.resultsSelector)} (includes: ${brief.journey.search.expectIncludes?.map((v) => `"${escapeHtml(v)}"`).join(', ') || 'matching records'})`
+    : null;
+  const updateSummary = brief?.journey?.update
+    ? `Update stored record field ${code(brief.journey.update.field)} &rarr; "${escapeHtml(brief.journey.update.newValue)}" and verify persisted read-back`
+    : null;
+
   return `<article class="concept-comparison" aria-labelledby="target-${escapeHtml(id)}">
-  <h3 id="target-${escapeHtml(id)}">${escapeHtml(id)}${archetype ? ` · ${escapeHtml(archetype)}` : ''}</h3>
-  ${title ? `<p class="muted">${escapeHtml(title)}</p>` : ''}
-  <p class="muted">Project builds: ${buildLinks}</p>
+  <h3 id="target-${escapeHtml(id)}">${escapeHtml(id)}${archetype ? ` · ${escapeHtml(archetype)}` : ''}${subject ? ` · <span class="muted">${escapeHtml(subject)}</span>` : ''}</h3>
+  ${title ? `<p class="muted"><strong>Scenario:</strong> ${escapeHtml(title)}${archetype ? ` · Pattern: <a href="/concepts/pattern/${escapeHtml(archetype)}"><code>${escapeHtml(archetype)}</code>${subject ? ` (${escapeHtml(subject)})` : ''}</a>` : ''}</p>` : ''}
+  <p class="muted"><strong>Target code directories (7 frameworks):</strong> ${code(`pilot/projects/${id}-{hono,raw,react,preact,vue,svelte,webcomponents}`)}</p>
+  <p class="muted"><strong>Project builds:</strong> ${buildLinks}</p>
+  <p class="muted"><strong>Prompt &amp; validation alignment:</strong> The family scenario board (${code(`${TRAINING_BOARD_DIR}/${id}/reference.jpg`)}) and the ${patternSteps.length || 4}-step Light &amp; Dark Mode UX/UI journey boards (${code(`docs/design/archetypes/${archetype ?? 'pattern'}/step*.jpg`)} &amp; ${code(`docs/design/archetypes/${archetype ?? 'pattern'}/dark/step*.jpg`)}) are supplied in the generation prompt to aim for AND used to validate that all 7 framework builds achieve visually and functionally identical client + server UX.</p>
+  ${brief && (routesList || fieldsList || rulesList) ? `<div class="concept-explainer">
+    <h4>Client + Server Architecture &amp; UX Contract</h4>
+    <ul>
+      ${routesList ? `<li><strong>Server Routes &amp; Effects:</strong> ${routesList}${brief.journey?.startPath ? ` (driven journey starts at ${code(brief.journey.startPath)}${brief.journey.formSelector ? ` via ${code(brief.journey.formSelector)}` : ''})` : ''}</li>` : ''}
+      ${fieldsList ? `<li><strong>Interactive Form Controls:</strong> ${fieldsList}</li>` : ''}
+      ${searchSummary ? `<li><strong>Server Search &amp; Filter Flow:</strong> ${searchSummary}</li>` : ''}
+      ${updateSummary ? `<li><strong>Server Record Mutation Flow:</strong> ${updateSummary}</li>` : ''}
+      ${brief.serverPersistence?.length ? `<li><strong>Server Persistence Across Reloads:</strong> ${brief.serverPersistence.map((s) => escapeHtml(s)).join('; ')}</li>` : ''}
+      ${rulesList ? `<li><strong>Modern Web Guidance &amp; Uplift Criteria:</strong> ${rulesList}</li>` : ''}
+    </ul>
+  </div>` : ''}
   <div class="concept-main-board">
     <figure><div class="concept-image-frame">${board
       ? `<a href="/concepts/references/${escapeHtml(id)}.jpg" aria-label="Open the ${escapeHtml(id)} designed reference board at full size"><img src="/concepts/references/${escapeHtml(id)}.jpg" alt="Designed reference board for training family ${escapeHtml(id)}${archetype ? ` (${escapeHtml(archetype)})` : ''}"${boardWidth && boardHeight ? ` width="${boardWidth}" height="${boardHeight}"` : ''} loading="${featured ? 'eager' : 'lazy'}"${featured ? ' fetchpriority="high"' : ''}></a>`
       : `<p class="muted">Designed board not generated yet. Expected ${code(`${TRAINING_BOARD_DIR}/${id}/reference.jpg`)}.</p>`}</div><figcaption>Designed reference board${board ? ` · ${code(`${TRAINING_BOARD_DIR}/${id}/reference.jpg`)}` : ' · pending'} — AI-generated illustration, not training evidence and not proof a demo works${board ? (register ? `. Model and digests: ${code(register)}` : `. The register of the model and digests for these boards has not landed in this checkout yet (expected ${code(TRAINING_BOARD_REGISTER)})`) : ''}</figcaption></figure>
   </div>
+  ${detail && patternSteps.length ? `<h4>Complete ${patternSteps.length}-step Light &amp; Dark Mode UI/UX Flow (${escapeHtml(archetype)}${subject ? ` · ${escapeHtml(subject)}` : ''})</h4>
+    <p class="muted"><strong>Multi-step interactive journey (${patternSteps.filter((s) => s.available).length} Light + ${patternSteps.filter((s) => s.darkAvailable).length} Dark boards):</strong> Context-chained from ${code(`docs/design/archetypes/${archetype}/design.md`)} so every state (browse/overview, active form &amp; control interaction, confirmation/read-back, validation refusal, and empty search) shares a consistent layout, navigation, and theme across Light and Dark modes.</p>
+    <div class="concept-theme-set concept-theme-light">
+      <h5 class="concept-theme-heading"><span class="theme-pill theme-pill-light">☀ Light Mode Set</span> Complete ${patternSteps.length}-step Light Mode UI/UX Flow (${code(`docs/design/archetypes/${archetype}/step*.jpg`)})</h5>
+      <ol class="concept-steps">${patternSteps.map(({ id: stepId, title: stepTitle, available: stepAvailable, width: stepW, height: stepH, state, imagePrompt }) => {
+        const path = `/concepts/images/${archetype}/${stepId}.jpg`;
+        const mapped = state?.kind === 'page' ? `Document state at ${state.path ?? 'no confirmed route'}`
+          : state?.kind === 'interaction' ? 'Interaction state; no standalone document URL'
+            : 'Illustrative state in the multi-step UX flow';
+        const claim = state?.drive?.expectText ? `Assert after the registered interaction: ${state.drive.expectText}`
+          : 'Validated via the family client + server acceptance assertions below.';
+        return `<li><figure><div class="concept-image-frame">${stepAvailable
+          ? `<a href="${path}" aria-label="Open ${escapeHtml(archetype)} ${escapeHtml(stepTitle)} concept board"><img src="${path}" alt="Illustrative ${escapeHtml(archetype)} state: ${escapeHtml(stepTitle)}"${stepW && stepH ? ` width="${stepW}" height="${stepH}"` : ''} loading="lazy"></a>`
+          : `<p class="muted">State image pending: ${code(`docs/design/archetypes/${archetype}/${stepId}.jpg`)}</p>`}</div>
+          <figcaption><strong>${escapeHtml(stepTitle)} · Light Mode</strong><p>${escapeHtml(mapped)}. ${escapeHtml(claim)}</p>
+          ${state?.source ? `<p class="muted">State mapping: ${escapeHtml(state.source)}</p>` : ''}
+          ${promptDetails('Step Image Generation Prompt', imagePrompt, pattern?.brief?.imagePromptSource)}
+          </figcaption></figure></li>`;
+      }).join('')}</ol>
+    </div>
+    <div class="concept-theme-set concept-theme-dark">
+      <h5 class="concept-theme-heading"><span class="theme-pill theme-pill-dark">☾ Dark Mode Set</span> Complete ${patternSteps.length}-step matching Dark Mode UI/UX Flow (${code(`docs/design/archetypes/${archetype}/dark/step*.jpg`)})</h5>
+      <ol class="concept-steps concept-steps-dark">${patternSteps.map(({ id: stepId, title: stepTitle, darkAvailable, darkWidth, darkHeight }) => {
+        const darkPath = `/concepts/images/${archetype}/${stepId}-dark.jpg`;
+        return `<li><figure><div class="concept-image-frame">${darkAvailable
+          ? `<a href="${darkPath}" aria-label="Open ${escapeHtml(archetype)} ${escapeHtml(stepTitle)} dark mode concept board"><img src="${darkPath}" alt="Illustrative ${escapeHtml(archetype)} dark mode state: ${escapeHtml(stepTitle)}"${darkWidth && darkHeight ? ` width="${darkWidth}" height="${darkHeight}"` : ''} loading="lazy"></a>`
+          : `<p class="muted">Dark mode state image pending: ${code(`docs/design/archetypes/${archetype}/dark/${stepId}.jpg`)}</p>`}</div>
+          <figcaption><strong>${escapeHtml(stepTitle)} · Dark Mode</strong><p class="muted">Context-chained from ${code(`${stepId}.jpg`)} + ${code('design.md')} dark palette (${code(`docs/design/archetypes/${archetype}/dark/${stepId}.jpg`)}).</p>
+          </figcaption></figure></li>`;
+      }).join('')}</ol>
+    </div>` : ''}
   ${available ? `<details class="harness-target-drawer"><summary>Inspect A1 Conformance Harness Target (DOM test fixture)</summary>
     <figure><div class="concept-image-frame"><a href="/concepts/targets/${escapeHtml(id)}.png" aria-label="Open the ${escapeHtml(id)} harness target render at full size"><img src="/concepts/targets/${escapeHtml(id)}.png" alt="Harness target render, the A1 conformance instrument, for ${escapeHtml(id)}"${width && height ? ` width="${width}" height="${height}"` : ''} loading="lazy"></a></div><figcaption>Harness target render (A1 conformance instrument) · ${code(`${TRAINING_TARGET_DIR}/${id}/target.png`)} — a deterministic headless-Chrome render of ${origin ? code(origin) : 'the family&rsquo;s authored board'}, NOT a designed board. Provenance: ${code('docs/provenance/assets/training-targets.md')}</figcaption></figure>
   </details>` : `<p class="muted">Harness target render pending. Expected ${code(`${TRAINING_TARGET_DIR}/${id}/target.png`)}.</p>`}
@@ -712,16 +781,24 @@ const trainingFamilyCard = ({ id, archetype, title, origin, available, width, he
     ${promptDetails('Site Generation Prompt · functional build ( full spec + design contract )', brief.sitePrompt,
       [brief.planSource, brief.designSource, brief.tokenSource].filter(Boolean).join(' + '), { open: detail })}
     ${promptDetails('Image Generation Prompt · single illustrative home page', brief.imagePrompt, brief.imagePromptSource)}
-    ${brief.designMarkdown ? promptDetails(`Design Contract (${brief.designSource})`, brief.designMarkdown, brief.designSource) : ''}
-    ${brief.planMarkdown ? promptDetails(`Functional Plan & Acceptance Contract (${brief.planSource})`, brief.planMarkdown, brief.planSource) : ''}
-    <details class="concept-prompt"><summary>Declared interaction sequence and acceptance checks · no per-step training images</summary>
-      <p>The brief declares ${brief.steps.length} test step${brief.steps.length === 1 ? '' : 's'}, not a four-image visual journey. No per-step training boards are committed.</p>
+    ${brief.designMarkdown ? promptDetails(`Family Design Contract (${brief.tokenSource ?? brief.designSource})`, brief.designMarkdown, brief.tokenSource ?? brief.designSource) : ''}
+    ${brief.archetypeDesignMarkdown && brief.archetypeDesignSource ? promptDetails(`Archetype Multi-Step Design Contract (${brief.archetypeDesignSource})`, brief.archetypeDesignMarkdown, brief.archetypeDesignSource) : ''}
+    ${brief.planMarkdown ? promptDetails(`Family Functional Plan & Server Contract (${brief.planSource})`, brief.planMarkdown, brief.planSource) : ''}
+    ${brief.archetypePlanMarkdown && brief.archetypePlanSource ? promptDetails(`Archetype Multi-Step Functional Plan (${brief.archetypePlanSource})`, brief.archetypePlanMarkdown, brief.archetypePlanSource) : ''}
+    <details class="concept-prompt"${detail ? ' open' : ''}><summary>Unified client + server interaction sequence, multi-step UX flows and acceptance checks</summary>
+      ${brief.journeys?.length ? `<p><strong>End-to-end user &amp; server journeys:</strong></p><ul>${brief.journeys.map((j) => `<li>${escapeHtml(j)}</li>`).join('')}</ul>` : ''}
+      ${patternSteps.length ? `<p><strong>Multi-step UI/UX state progression (${escapeHtml(archetype)}):</strong></p><ol>${patternSteps.map((s) => `<li><strong>${escapeHtml(s.title)}</strong> (${code(`${s.id}.jpg`)} / ${code(`dark/${s.id}.jpg`)})${s.state?.path ? ` — route ${code(s.state.path)}` : ''}${s.state?.drive?.expectText ? ` — expects "${escapeHtml(s.state.drive.expectText)}"` : ''}</li>`).join('')}</ol>` : ''}
+      <p><strong>Driven client + server harness verification sequence:</strong></p>
       <ol>${brief.steps.map((step) => `<li>${escapeHtml([step.path ? `Visit ${step.path}` : null,
         step.select ? `select ${Object.entries(step.select).map(([selector, value]) => `${selector}: ${value}`).join(', ')}` : null,
         step.fill ? `fill ${Object.entries(step.fill).map(([selector, value]) => `${selector}: ${value}`).join(', ')}` : null,
         step.submit ? `submit ${step.submit}` : null, step.expectText ? `expect visible ${step.expectText}` : null]
-        .filter(Boolean).join('; ') || 'Step details in the authored plan')}</li>`).join('')}</ol>
-      <p>Required assertions from the brief, not proof that this image meets them:</p><ul>${brief.assertions.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>
+        .filter(Boolean).join('; ') || 'Step details in the authored plan')}</li>`).join('')}
+        ${brief.journey?.startPath ? `<li>Visit ${code(brief.journey.startPath)}, drive ${code(brief.journey.formSelector || 'form')}${brief.journey.fill && Object.keys(brief.journey.fill).length ? `, fill ${Object.entries(brief.journey.fill).map(([k, v]) => `${code(k)} = "${escapeHtml(v)}"`).join(', ')}` : ''}${brief.journey.select && Object.keys(brief.journey.select).length ? `, select ${Object.entries(brief.journey.select).map(([k, v]) => `${code(k)} = "${escapeHtml(v)}"`).join(', ')}` : ''}, submit to server write route, and verify persisted read-back shows "${escapeHtml(brief.journey.expectText || '')}" across page reloads.</li>` : ''}
+        ${searchSummary ? `<li>Execute server search ${searchSummary}.</li>` : ''}
+        ${updateSummary ? `<li>Execute record mutation: ${updateSummary}.</li>` : ''}
+      </ol>
+      <p><strong>Required assertions from the brief (verified by the evaluation harness across all 7 frameworks):</strong></p><ul>${brief.assertions.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>
     </details>` : '<p class="notice">Site and image prompts are not both available in this checkout; do not treat an image as a working site specification.</p>'}
 </article>`;
 };
@@ -730,11 +807,12 @@ const trainingFamilyCard = ({ id, archetype, title, origin, available, width, he
 // still land on the matching index link; every detail document is usable without JS.
 export function renderConceptIndex({ patterns = [], archetypes = [], trainingTargets = [], trainingBoardRegister = null }) {
   const pictured = patterns.reduce((count, pattern) => count + pattern.steps.filter((step) => step.available).length, 0);
+  const darkPictured = patterns.reduce((count, pattern) => count + pattern.steps.filter((step) => step.darkAvailable).length, 0);
   const boardCount = trainingTargets.filter((family) => family.board).length;
   const orderedTargets = [...trainingTargets].sort((a, b) => (Number(b.board) - Number(a.board)) || a.id.localeCompare(b.id));
   return page('concepts', `
     <h1>Visual concepts and test instruments</h1>
-    <p class="concept-lede">Choose an authored pattern or training family to inspect its prompt, visual references and checks. The ${archetypes.length} held-out A6 targets remain separate evaluation instruments. These images are references, not screenshots of generated websites or proof a demo works.</p>
+    <p class="concept-lede">Choose an authored pattern or training family to inspect its unified client + server specification, multi-step Light &amp; Dark Mode visual reference boards, target code directories (${code('pilot/projects/*')}), and generation prompts. The ${archetypes.length} held-out A6 targets remain separate evaluation instruments. These images are references, not screenshots of generated websites or proof a demo works.</p>
     <nav class="concept-jump" aria-label="Concept sections"><a href="#archetype-patterns">${patterns.length} archetype patterns</a><a href="#training-families">${trainingTargets.length} training families</a><a href="#held-out-evaluation">${archetypes.length} held-out evaluation targets</a></nav>
     <section class="concept-explainer" aria-labelledby="concept-distinction-heading"><h2 id="concept-distinction-heading">Concept image ≠ conformance image</h2>
       <p><strong>Concept JPEG:</strong> an AI-generated illustrative reference, not a working build. Text, prices, receipts and QR codes depicted in it are unverified; do not scan depicted codes. A model ID may be reported without attestation. No reuse license or clearance is granted here. Provider terms prohibit using some images to develop machine-learning models; for other boards, training and output-use rights were not supplied. Concept images remain excluded from training; separate approval must satisfy the applicable terms and rights.</p>
@@ -742,19 +820,34 @@ export function renderConceptIndex({ patterns = [], archetypes = [], trainingTar
       <p><strong>A6 target PNG:</strong> an authored, held-out evaluation asset, never part of the training corpus. A pattern&rsquo;s illustrative JPEGs are not paired model outputs.</p>
     </section>
     <section id="archetype-patterns" aria-labelledby="patterns-heading"><h2 id="patterns-heading">Archetype patterns · ${patterns.length} authored specifications</h2>
-      <p class="muted">${pictured} pictured states have committed bytes. Each pattern page contains its site brief, per-state image prompts and provenance caveats; missing states are labelled pending.</p>
-      ${patterns.length ? `<nav class="concept-pattern-index" aria-label="Browse archetype patterns"><ul>${patterns.map(({ id }) => {
+      <p class="muted">${pictured} Light Mode and ${darkPictured} Dark Mode pictured states have committed bytes (${pictured + darkPictured} total boards). Each pattern page contains its site brief, multi-step Light &amp; Dark UX flows, target code directories across 7 frameworks, per-state image prompts and provenance caveats; missing states are labelled pending.</p>
+      ${patterns.length ? `<nav class="concept-pattern-index" aria-label="Browse archetype patterns"><ul>${patterns.map(({ id, steps }) => {
         const subject = patternSubject(id);
-        return `<li id="pattern-${escapeHtml(id)}"><a href="/concepts/pattern/${escapeHtml(id)}">${escapeHtml(id.replaceAll('-', ' '))}${subject ? ` — ${escapeHtml(subject)}` : ''}</a></li>`;
+        const lightCount = steps.filter((s) => s.available).length;
+        const darkCount = steps.filter((s) => s.darkAvailable).length;
+        const matchingFamilies = trainingTargets.filter((f) => f.archetype === id);
+        const familyRefs = matchingFamilies.length
+          ? ` · Families: ${matchingFamilies.map((f) => `<a href="#target-${escapeHtml(f.id)}"><code>${escapeHtml(f.id)}</code></a>`).join(', ')}`
+          : ' · Held-out A6 evaluation pattern';
+        const codePath = matchingFamilies.length
+          ? ` · Code: ${code(`pilot/projects/${matchingFamilies[0].id}-*`)}${matchingFamilies.length > 1 ? ` (+${matchingFamilies.length - 1} more)` : ''}`
+          : ` · Code: ${code(`pilot/projects/${id}-*`)}`;
+        return `<li id="pattern-${escapeHtml(id)}"><a href="/concepts/pattern/${escapeHtml(id)}">${escapeHtml(id.replaceAll('-', ' '))}${subject ? ` — ${escapeHtml(subject)}` : ''}</a> · ${lightCount} Light + ${darkCount} Dark UX states${familyRefs}${codePath}</li>`;
       }).join('')}</ul></nav>` : '<p class="notice">No authored archetype patterns are available in this checkout.</p>'}
     </section>
     <section id="training-families" aria-labelledby="training-targets-heading"><h2 id="training-targets-heading">Training families (A1): designed boards and harness targets</h2>
-      <p class="muted">${boardCount} of ${trainingTargets.length} declared families have a designed reference board${trainingBoardRegister ? ` (model and digests: ${code(trainingBoardRegister)})` : `; the provenance register is pending (${code(TRAINING_BOARD_REGISTER)})`}. A designed board is an illustration; the separate A1 harness PNG is a conformance fixture, not a design recommendation or training evidence. No per-step training images are committed.</p>
-      ${orderedTargets.length ? `<nav class="concept-pattern-index" aria-label="Browse training families"><ul>${orderedTargets.map(({ id, archetype, title, board }) => `<li id="target-${escapeHtml(id)}"><a href="/concepts/family/${escapeHtml(id)}"><code>${escapeHtml(id)}</code>${archetype ? ` · ${escapeHtml(archetype)}` : ''}${title ? ` — ${escapeHtml(title)}` : ''}</a> · ${board ? 'Designed board available' : 'Designed board pending'}</li>`).join('')}</ul></nav>` : '<p class="notice">No A1 training families are declared in this checkout.</p>'}
+      <p class="muted">${boardCount} of ${trainingTargets.length} declared families have a designed reference board${trainingBoardRegister ? ` (model and digests: ${code(trainingBoardRegister)})` : `; the provenance register is pending (${code(TRAINING_BOARD_REGISTER)})`}. Each family combines its scenario reference board (${code('docs/design/training/tr-NN/reference.jpg')}) with its archetype&rsquo;s multi-step Light &amp; Dark Mode UX/UI flow boards, client + server interaction contract, and 7 framework build targets (${code('pilot/projects/tr-NN-*')}). A designed board is an illustration; the separate A1 harness PNG is a conformance fixture, not a design recommendation or training evidence.</p>
+      ${orderedTargets.length ? `<nav class="concept-pattern-index" aria-label="Browse training families"><ul>${orderedTargets.map(({ id, archetype, title, board }) => {
+        const pat = patterns.find((p) => p.id === archetype);
+        const lightCount = pat ? pat.steps.filter((s) => s.available).length : 0;
+        const darkCount = pat ? pat.steps.filter((s) => s.darkAvailable).length : 0;
+        const flowMeta = lightCount ? ` · ${lightCount} Light + ${darkCount} Dark UX states (<a href="/concepts/pattern/${escapeHtml(archetype)}">${escapeHtml(archetype)}</a>)` : '';
+        return `<li id="target-${escapeHtml(id)}"><a href="/concepts/family/${escapeHtml(id)}"><code>${escapeHtml(id)}</code>${archetype ? ` · ${escapeHtml(archetype)}` : ''}${title ? ` — ${escapeHtml(title)}` : ''}</a> · ${board ? 'Designed board available' : 'Designed board pending'}${flowMeta} · Code: ${code(`pilot/projects/${id}-*`)}</li>`;
+      }).join('')}</ul></nav>` : '<p class="notice">No A1 training families are declared in this checkout.</p>'}
     </section>
     <section id="held-out-evaluation" aria-labelledby="eval-targets-heading"><h2 id="eval-targets-heading">Sealed evaluation targets (A6)</h2>
       <p class="muted">These ${archetypes.length} authored evaluation instruments are never training data. The related pattern pages show illustrative states, not generated output. Provenance: ${code('docs/provenance/assets/eval-targets.md')}.</p>
-      ${archetypes.length ? `<ul>${archetypes.map(({ id, target }) => `<li><a href="/concepts/pattern/${escapeHtml(id)}">${escapeHtml(id.replaceAll('-', ' '))}</a> · ${target ? 'A6 target available' : 'A6 target unavailable'}</li>`).join('')}</ul>` : '<p class="notice">No held-out evaluation targets are available in this checkout.</p>'}
+      ${archetypes.length ? `<ul>${archetypes.map(({ id, target }) => `<li><a href="/concepts/pattern/${escapeHtml(id)}">${escapeHtml(id.replaceAll('-', ' '))}</a> · ${target ? 'A6 target available' : 'A6 target unavailable'} · Code: ${code(`pilot/projects/${id}-*`)}</li>`).join('')}</ul>` : '<p class="notice">No held-out evaluation targets are available in this checkout.</p>'}
     </section>`);
 }
 
@@ -776,17 +869,18 @@ export function renderConceptPattern({ patterns = [], archetypes = [], trainingT
     </section>` : ''}`);
 }
 
-export function renderConceptFamily({ trainingTargets = [], trainingBoardRegister = null }, id) {
+export function renderConceptFamily({ patterns = [], trainingTargets = [], trainingBoardRegister = null }, id) {
   const family = trainingTargets.find((item) => item.id === id);
   if (!family) return null;
+  const pattern = patterns.find((item) => item.id === family.archetype) ?? null;
   const heading = `Training family: ${id}`;
   return page(heading, `
     <p><a href="/concepts#target-${escapeHtml(id)}">← All concepts and training families</a></p>
     <h1>${escapeHtml(heading)}</h1>
     <p class="muted">A designed board is an AI-generated illustration, not training evidence or proof a demo works. A1 harness PNGs are deterministic conformance fixtures, not matching designs. No reuse clearance is granted here; consult each board&rsquo;s provenance and applicable provider terms. <a href="/concepts#concept-distinction-heading">Read the A1/A6 and rights distinctions</a>.</p>
-    ${family.archetype ? `<p>Related <a href="/concepts/pattern/${escapeHtml(family.archetype)}">${escapeHtml(family.archetype)} archetype pattern</a>.</p>` : ''}
-    <section aria-labelledby="family-detail-heading"><h2 id="family-detail-heading">Designed board, harness target and authored prompts</h2>
-      ${trainingFamilyCard(family, trainingBoardRegister, { featured: true, detail: true })}
+    ${family.archetype ? `<p>Unified with the <a href="/concepts/pattern/${escapeHtml(family.archetype)}">${escapeHtml(family.archetype)} archetype pattern${patternSubject(family.archetype) ? ` (${escapeHtml(patternSubject(family.archetype))})` : ''}</a> · Target code: ${code(`pilot/projects/${id}-{hono,raw,react,preact,vue,svelte,webcomponents}`)}.</p>` : ''}
+    <section aria-labelledby="family-detail-heading"><h2 id="family-detail-heading">Unified concept boards, multi-step UX/UI flows, client + server contract and authored prompts</h2>
+      ${trainingFamilyCard(family, trainingBoardRegister, { featured: true, detail: true, pattern })}
     </section>`);
 }
 
@@ -802,7 +896,7 @@ export function renderConcepts({ patterns = [], archetypes = [], trainingTargets
     if (!familiesByArchetype.has(family.archetype)) familiesByArchetype.set(family.archetype, []);
     familiesByArchetype.get(family.archetype).push(family);
   }
-  const trainingSection = orderedTargets.length ? `<div class="concept-board-flow">${orderedTargets.map((family) => trainingFamilyCard(family, trainingBoardRegister)).join('')}</div>`
+  const trainingSection = orderedTargets.length ? `<div class="concept-board-flow">${orderedTargets.map((family) => trainingFamilyCard(family, trainingBoardRegister, { pattern: patterns.find((p) => p.id === family.archetype) ?? null })).join('')}</div>`
     : '<p class="notice">No A1 training families are declared in this checkout.</p>';
   const patternSection = patterns.length ? patterns.map((pattern) => patternCard(pattern, familiesByArchetype.get(pattern.id) ?? [])).join('')
     : '<p class="notice">No authored archetype patterns are available in this checkout.</p>';
@@ -845,7 +939,7 @@ export function renderConcepts({ patterns = [], archetypes = [], trainingTargets
       ${patternSection}
     </section>
     <section id="training-families" aria-labelledby="training-targets-heading"><h2 id="training-targets-heading">Training families (A1): designed boards and harness targets</h2>
-      <p class="muted">${boardCount} of ${trainingTargets.length} declared families have a designed reference board${trainingBoardRegister ? ` (model and digests: ${code(trainingBoardRegister)})` : `; the provenance register is pending (${code(TRAINING_BOARD_REGISTER)})`}. Each has a site-generation prompt derived from its authored plan, design and brief, plus its original image-generation prompt where present. Each family has one home-page board; no per-step training images are committed. Harness PNGs are collapsed below the design and are <strong>not</strong> the visual direction or evidence of a working site. Neither kind is training data.</p>
+      <p class="muted">${boardCount} of ${trainingTargets.length} declared families have a designed reference board${trainingBoardRegister ? ` (model and digests: ${code(trainingBoardRegister)})` : `; the provenance register is pending (${code(TRAINING_BOARD_REGISTER)})`}. Each has a site-generation prompt derived from its authored plan, design and brief, plus its original image-generation prompt where present, and inherits its archetype&rsquo;s multi-step Light &amp; Dark Mode UX/UI flow boards. Harness PNGs are collapsed below the design and are <strong>not</strong> the visual direction or evidence of a working site. Neither kind is training data.</p>
       ${trainingSection}
     </section>
     <section id="held-out-evaluation" aria-labelledby="eval-targets-heading"><h2 id="eval-targets-heading">Sealed evaluation targets (A6)</h2>

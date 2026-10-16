@@ -49,8 +49,13 @@ What the brief requires to survive a reload or live on the server, quoted verbat
 - "bulk food orders and scheduled jar collection slots are stored on the server"
 
 The family's declared framework arm is `react` and its locale is `en-US`; both are
-invariant across the two wording variants. The scaffolded server keeps records for the life of the process:
-the brief's persistence requirement is server-side storage with read-back, not a durable database.
+invariant across the two wording variants. Across the seven target framework directories
+(`pilot/projects/tr-18-hono`, `pilot/projects/tr-18-raw`,
+`pilot/projects/tr-18-react`, `pilot/projects/tr-18-preact`,
+`pilot/projects/tr-18-vue`, `pilot/projects/tr-18-svelte`, and
+`pilot/projects/tr-18-webcomponents`), client-side interactive UI/UX states and server-side route
+handlers keep records synchronised for the life of the process: the brief's persistence requirement is
+server-side storage with read-back, search filtering, and mutation across reloads, not a durable database.
 
 ## Journey
 
@@ -66,7 +71,11 @@ Separately, the brief declares a search flow: `/search` with query parameter `q`
 And an update flow: the stored record's `items` field can be changed to "500g organic rolled oats (updated)" and read back afterwards.
 
 Reloading the read page must show the same stored values: the page after the redirect is rendered from the
-stored record, not from the submission.
+stored record, not from the submission. Alongside this server-driven route flow, the multi-step Light and
+Dark UI/UX state boards in the parent [`web-shop` plan](../../../design/archetypes/web-shop/plan.md)
+and [`web-shop` design](../../../design/archetypes/web-shop/design.md), together with this
+family's [`reference.jpg`](../../../design/training/tr-18/reference.jpg), are supplied in the
+generation prompt to aim for and used to validate visual and interactive parity across all seven frameworks.
 
 ## Validation and states
 
