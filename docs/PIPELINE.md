@@ -7,9 +7,9 @@
 The overarching training pipeline implements a closed-loop, model-to-model empirical uplift workflow:
 
 ```
-[Trainable Code Model (e.g. DeepSeek V4.1 Flash)] 
+[Trainable Multimodal Code Model (e.g. DeepSeek V4.1 Flash / Qwen 2.5 VL)] 
        │
-       ▼ (Step 2: Generate against training-side plan.md + design.md specs)
+       ▼ (Step 2: Generate against Visual Reference Boards + plan.md + design.md specs across all 7 frameworks)
 [Raw Base Output] ──► (Step 3: Cordon off immutable baseline comparator checkpoint)
        │
        ▼ (Step 4: Measure baseline with MWG & rendered screenshot vs target image)
@@ -35,11 +35,11 @@ The overarching training pipeline implements a closed-loop, model-to-model empir
 ### The 8-Step Closed-Loop Pipeline:
 1. **Select and Qualify a Trainable Model**:
    - Select a verified trainable base model (open downloadable weights or verified hosted fine-tuning; e.g. DeepSeek V4.1 Flash via Fireworks Dedicated LoRA or private GPU).
-   - In accordance with Paul's clarification, the model performs text reasoning over application code. Visual reference boards serve as targets to compare against and aim for, not direct model prompt inputs.
-   - Run a zero-shot vertical slice (`plan.md + design contract specifications → working app`) before generating bulk data. Reject any base that cannot build functional applications.
+   - Provide the **visual reference boards** (`docs/design/archetypes/<id>/step*.jpg` + `dark/step*.jpg` and `docs/design/training/<tr-NN>/reference.jpg`) directly in the generation prompt alongside `plan.md` and `design.md` so all 7 framework arms (`hono`, `raw`, `react`, `preact`, `vue`, `svelte`, `webcomponents`) generate a consistent, comparable UI, and also use those boards as the visual target to compare rendered screenshots against.
+   - Run a zero-shot vertical slice (`visual reference boards + plan.md + design.md → working app`) before generating bulk data. Reject any base that cannot build functional applications.
 2. **Build the Untouched Default**:
-   - Use the qualified base model to attempt generating web applications from training-side `plan.md` functional specs and `design.md` visual design contracts.
-   - The raw base output is intended to target the authored high-fidelity reference image and functional routes/state described in `plan.md`. Imperfections, semantic gaps, accessibility issues, and MWG defects in this raw generation are expected and preserved—they establish the empirical default to measure improvement *from*.
+   - Use the qualified base model to attempt generating web applications from the visual reference boards, training-side `plan.md` functional specs, and `design.md` visual design contracts across all framework arms.
+   - The raw base output is prompted with and targets the authored high-fidelity reference boards and functional routes/state described in `plan.md`. Imperfections, semantic gaps, accessibility issues, and MWG defects in this raw generation are expected and preserved—they establish the empirical default to measure improvement *from*.
 3. **Cordon Off Baseline Checkpoint**:
    - Store the initial raw model outputs and exact model/revision checkpoint, cordoned off and immutable.
    - This frozen checkpoint serves as the default model / baseline comparator.
@@ -65,17 +65,17 @@ The overarching training pipeline implements a closed-loop, model-to-model empir
 
 | Model Family | Local / Rented GPU (Open Weights) | Hosted Fine-Tuning | Vision Modality (Image -> App) | Feasibility Assessment |
 |---|---|---|---|---|
-| **DeepSeek V4.1 Flash (Paul's provisionally selected student)** | MIT open weights, exact HF revision in [checkpoint matrix](eval/deepseek-checkpoint-matrix.md). Private GPU feasibility still unverified. | Fireworks catalogue lists managed LoRA (262K, 4 × B300 for training); exact account entitlement, provider↔HF weight identity and adapter serving hardware remain unverified. | Pinned model card describes native image-and-text input, but **this experiment feeds it text only**; design images are evaluation targets, not student prompts. | **PROVISIONAL V4.1 RECOMMENDATION** (Paul's 2026-10-10 direction; 2026-10-12 V4 wording awaits ratification). No training until checkpoint binding and budget approval. |
+| **DeepSeek V4.1 Flash (Paul's provisionally selected student)** | MIT open weights, exact HF revision in [checkpoint matrix](eval/deepseek-checkpoint-matrix.md). Private GPU feasibility still unverified. | Fireworks catalogue lists managed LoRA (262K, 4 × B300 for training); exact account entitlement, provider↔HF weight identity and adapter serving hardware remain unverified. | Pinned model card describes native image-and-text input; reference boards are supplied in the generation prompt alongside `plan.md` and `design.md` so all frameworks build the same UI, and are also used as visual evaluation targets. | **PROVISIONAL V4.1 RECOMMENDATION** (Paul's 2026-10-10 direction; 2026-10-12 V4 wording awaits ratification). No training until checkpoint binding and budget approval. |
 | **Qwen 2.5 VL (3B / 7B / 32B / 72B)** | Apache-2.0 open weights. 7B runs LoRA on 24GB VRAM GPU. | Supported on Fireworks (SFT V2 vision-language fine-tuning launched 2025-07-29, JSONL base64, up to 64K context). Also Alibaba DashScope / Model Studio. | **Yes** (Native Vision-Language). Directly consumes design screenshot. | **Primary Vision Evaluation / Comparative Benchmark Model.** Available for visual comparison of rendered app screenshots against targets. |
 | **Qwen3-VL-8B-Instruct** | Apache-2.0 open weights. High coding and vision capability. | Open weights deployable to private GPU / Fireworks Dedicated. `Tunable` flag on shared Fireworks endpoint to be confirmed. | **Yes** (Native Vision-Language). | Alternate multimodal candidate; requires exact-checkpoint qualification under Gate 0. |
 | **GLM (GLM-4.5, GLM-5.3-Flash)** | Open weight releases. | Z.ai BigModel training API; Fireworks Dedicated Training API (GLM 5.3 Flash LoRA with vision training added 2026-09-13). | **Yes** (Multimodal vision training available on GLM 5.3 Flash). | Strong candidate; note that Z.ai API outputs remain quarantined under current data provenance rules. |
 | **Llama (Llama 3.2-Vision, Llama 4 MoE)** | Community licensed open weights. | Supported on Fireworks (Llama SFT V2). | Multimodal on 3.2-Vision. | Viable alternative; verify licence compliance for commercial distillation. |
 | **Proprietary APIs (OpenAI, Anthropic, Google)** | Weights cannot be downloaded or self-hosted. | OpenAI (GPT-4o fine-tuning); Google (Gemini tuning); Claude (Bedrock only). No weight export. | Mixed. | Consumer coding subscriptions (ChatGPT, Claude Max, Antigravity) provide **inference only**, not fine-tuning compute. Outputs carry training restrictions (`docs/provenance/accounts/`). |
 
-### Vision vs Code Generation Pipeline Architecture (Paul's V4.1 Flash Directive)
+### Vision + Code Generation Pipeline Architecture (Paul's V4.1 Flash Directive)
 Under Paul's decision designating **DeepSeek V4.1 Flash** as the default student model:
-- **Core Reasoning in Code/Text**: As Paul clarified, the model's core task is text reasoning over web application code. The primary output is clean, modern, multi-framework web application text.
-- **Role of the Design Image as a Target**: The high-fidelity design image is the **target goal** to aim at and the visual ground truth to compare against—not an input prompt to the code generation model.
+- **Multimodal Prompt Input + Code Reasoning**: Each generation prompt supplies the visual reference boards (`step1..N` Light & Dark JPEGs / `reference.jpg`) alongside `plan.md` and `design.md` so that all 7 framework arms (`hono`, `raw`, `react`, `preact`, `vue`, `svelte`, `webcomponents`) produce the same consistent UI layout, visual hierarchy, and aesthetic.
+- **Dual Role of the Visual Reference Boards (Prompt Input + Evaluation Target)**: The high-fidelity reference boards serve both as **multimodal prompt inputs** guiding UI generation across frameworks and as the **visual ground-truth targets** to compare the rendered browser screenshots against.
 - **The Evaluation Vision Bridge (Decided Architecture)**:
   To bridge the visual target image and the generated text output during the evaluation and curation loop, the pipeline adopts a **hybrid two-stage evaluation bridge**:
   1. *Primary Functional & Structural Gate (Deterministic Text/DOM)*: The generated code is compiled, served, and driven in headless Chrome to assert functional routes, state transitions, DOM elements, accessibility tree, and Modern Web Guidance rules against `plan.md`. This is 100% loss-free, deterministic, and fast.

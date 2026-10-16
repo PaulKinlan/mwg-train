@@ -341,7 +341,7 @@ function archetypeSimplePrompt(id, plan) {
   const useCaseSummary = firstParagraph
     ? (firstParagraph.endsWith('.') ? firstParagraph.slice(0, -1) : firstParagraph)
     : `A complete, responsive ${id.replaceAll('-', ' ')} application`;
-  return `Build a complete, responsive ${id.replaceAll('-', ' ')} web application (${useCaseSummary}). Support the full user flow with accessible forms, validation feedback, and server-persisted state across reloads.`;
+  return `Build a complete, responsive ${id.replaceAll('-', ' ')} web application (${useCaseSummary}) matching the attached visual reference boards (docs/design/archetypes/${id}/step*.jpg and dark/step*.jpg). Support the full user flow with accessible forms, validation feedback, and server-persisted state across reloads.`;
 }
 
 function trainingSimplePrompt(row) {
@@ -350,7 +350,7 @@ function trainingSimplePrompt(row) {
     ? row.fields.map((f) => f.name || f.label).filter(Boolean).slice(0, 5).join(', ')
     : 'key inputs';
   const base = row.prompt?.trim() || `Build a functional ${row.archetype?.replaceAll('-', ' ')} website for this scenario.`;
-  return `${base} Implement the core user flow across ${routes} with form controls for ${fields}, accessible validation feedback, and server persistence across page reloads.`;
+  return `${base} Match the attached visual reference boards (docs/design/training/${row.family_id}/reference.jpg and docs/design/archetypes/${row.archetype}/step*.jpg) so all framework builds share the same UI. Implement the core user flow across ${routes} with form controls for ${fields}, accessible validation feedback, and server persistence across page reloads.`;
 }
 
 /** The authored archetype plan/design are the source; this is a readable prompt assembled from them, not model output. */
@@ -363,7 +363,7 @@ export function archetypeBrief(repoRoot, id, trainingImagePrompt = null) {
   const readme = authoredText(repoRoot, directory, id, 'README.md');
   const eventPattern = id === 'event-registration';
   const sitePrompt = [
-    `Build a complete, interactive ${id.replaceAll('-', ' ')} website. This is a site implementation brief, not an image-generation or model-performance result.`,
+    `Build a complete, interactive ${id.replaceAll('-', ' ')} website matching the attached visual reference boards (docs/design/archetypes/${id}/step*.jpg and docs/design/archetypes/${id}/dark/step*.jpg) so all 7 framework arms (hono, raw, react, preact, vue, svelte, webcomponents) render a consistent UI. This is a site implementation brief, not an image-generation or model-performance result.`,
     group('Use case', section(plan, 'Use case')),
     group('UI composition', eventPattern ? section(design, 'Visual thesis')
       ?.replace(/\s*-\s*see the\s+first anti-pattern below:/i, ':') : section(design, 'Visual thesis')),
@@ -373,6 +373,7 @@ export function archetypeBrief(repoRoot, id, trainingImagePrompt = null) {
     group('Step-by-step behaviour', section(plan, 'Journey')),
     group('Validation and persisted states', section(plan, 'Validation and states')),
     group('Acceptance contract', section(plan, 'Acceptance criteria')),
+    `Visual reference inputs (attached in prompt):\n- Light Mode journey boards: docs/design/archetypes/${id}/step*.jpg (/concepts/images/${id}/step*.jpg)\n- Dark Mode journey boards: docs/design/archetypes/${id}/dark/step*.jpg (/concepts/images/${id}/step*-dark.jpg)`,
   ].join('\n\n');
   return {
     id,
@@ -450,6 +451,7 @@ export function trainingBrief(repoRoot, id, row) {
       group('Step-by-step interactions', journey),
       group('Validation and server state', section(plan, 'Validation and states')),
       group('Required assertions', assertions.length ? assertions.map((assertion) => `- ${assertion}`).join('\n') : null),
+      `Visual reference inputs (attached in prompt):\n- Family designed board: docs/design/training/${id}/reference.jpg (/concepts/references/${id}.jpg)\n- Archetype Light Mode journey: docs/design/archetypes/${row.archetype}/step*.jpg\n- Archetype Dark Mode journey: docs/design/archetypes/${row.archetype}/dark/step*.jpg`,
     ].join('\n\n'),
     imagePrompt,
     imagePromptSource: imagePrompt ? `docs/design/training/${id}/prompt.txt` : null,

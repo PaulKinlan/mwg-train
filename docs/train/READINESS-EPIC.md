@@ -23,11 +23,11 @@ Paul selected DeepSeek V4.1 Flash provisionally (docs/PIPELINE.md §1); V4 versu
 
 1. **Trainable Base Model Matrix & Qualification**:
    - Establish an exact checkpoint matrix detailing open downloadable weights, licence terms (Apache-2.0, MIT), self-hosted rented-GPU feasibility, provider-specific hosted fine-tuning (e.g. Fireworks SFT V2), exact account entitlement, and adapter export/serving options.
-   - Qualify the modality of the **agreed task**, not a different image-input task: per docs/PIPELINE.md §1 the selected student receives text plan/design contract, while the design image is an evaluation target. The pinned [V4.1 model card](https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash/blob/2cba9e42aa026125f3ed06c6d98c1db82f7ca027/README.md) actually reports native image-and-text support; that capability does not change the agreed text-only input. An image-input experiment needs its own owner-approved protocol.
+   - Qualify the modality of the **agreed task**: per docs/PIPELINE.md §1 the pinned [V4.1 model card](https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash/blob/2cba9e42aa026125f3ed06c6d98c1db82f7ca027/README.md) supports native image-and-text input, and the student receives the visual reference boards alongside the text `plan.md` and `design.md` contract so all frameworks generate the same consistent UI, while rendered screenshots are also evaluated against those boards.
 2. **Zero-Shot Task Qualification**:
-   - Run a single-family zero-shot vertical slice (`plan.md + text design contract → working app; compare rendered site to design image`) using the un-tuned base model.
-   - Test whether the base can implement the text-specified layout and substantially functional application; assess the design image only after rendering.
-   - **NO-GO** only on a correctly contracted, adequately budgeted functional slice when the base cannot construct the app. Do not reject the selected student because it cannot consume an image it was never asked to receive.
+   - Run a single-family zero-shot vertical slice (`visual reference boards + plan.md + text design contract → working app; compare rendered site to design image`) using the un-tuned base model.
+   - Test whether the base can implement the specified layout and substantially functional application matching the visual reference boards and acceptance criteria.
+   - **NO-GO** only on a correctly contracted, adequately budgeted functional slice when the base cannot construct the app.
 3. **Hardware & Backend Realism**:
    - The fleet's 2-vCPU / 8GB CPU-only VM cannot train models locally. Planning must target rented GPU compute (RunPod, Lambda) or verified hosted training endpoints (Fireworks).
 

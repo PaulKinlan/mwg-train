@@ -12,7 +12,7 @@ test('renderMarkdown renders docs/PIPELINE.md code blocks, blockquotes, headings
   const html = renderMarkdown(doc);
 
   // Diagrams must be wrapped in <pre><code>, not paragraphs
-  assert.ok(html.includes('<pre><code>[Trainable Code Model (e.g. DeepSeek V4.1 Flash)]'), 'diagrams must render in pre code');
+  assert.ok(html.includes('<pre><code>[Trainable Multimodal Code Model (e.g. DeepSeek V4.1 Flash / Qwen 2.5 VL)]'), 'diagrams must render in pre code');
   assert.doesNotMatch(html, /<p>```<\/p>/, 'must not emit stray p tags around code fences');
 
   // Headings
