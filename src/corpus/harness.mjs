@@ -21,6 +21,7 @@ import { join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 
 import { RULES, SECURITY_CHECKS } from './rules.mjs';
+import { evaluateStateJourney } from './state-persistence.mjs';
 import { completeSelectorFieldName, selectorFieldName } from '../train/brief-schema.mjs';
 
 const READY_TIMEOUT_MS = 20_000;
@@ -239,14 +240,39 @@ export function carryVerdict({ expectations = [], recordText }) {
   return { passed, detail: { steps } };
 }
 
+/** Every declared state check must survive both a return navigation and a real document reload. */
+export function stepStateVerdict(checks = []) {
+  // A static page prefilled with the known fixture value has not demonstrated any carry.
+  const attributed = checks.some(({ kind, baselineDifferent }) => kind === 'draft control' && baselineDifferent === true);
+  const passed = attributed && checks.every(({ navigated, reloaded }) => navigated === true && reloaded === true);
+  return { passed, checks };
+}
+
+async function stepFields(page, url, step) {
+  const fields = [...Object.entries(step.fill ?? {}).map(([selector, value]) => ({ selector, value, kind: 'fill' })),
+    ...Object.entries(step.select ?? {}).map(([selector, value]) => ({ selector, value, kind: 'select' }))];
+  return page.evaluate(`
+    const checks = ${JSON.stringify(fields)}.map(({selector, value, kind}) => {
+      const el = document.querySelector(selector);
+      if (!el) return { selector, ok: false, reason: 'missing control' };
+      if (el.type === 'password') return { selector, ok: false, reason: 'password state must not be persisted' };
+      const actual = kind === 'select' ? el.selectedOptions?.[0] : el;
+      const ok = kind === 'select' ? actual?.value === value || actual?.textContent?.trim() === value : actual?.value === value;
+      return { selector, ok: Boolean(ok) };
+    });
+    return { url: location.href, checks, expectedUrl: ${JSON.stringify(url)} };
+  `);
+}
+
 /** One journey: the archetype's server-persistence flow, driven for real. */
-async function driveJourney(page, base, journey) {
+export async function driveJourney(page, base, journey) {
   const kind = journey.kind ?? 'post-redirect-reload';
   const steps = [];
   const record = (name, detail) => steps.push({ step: name, ...detail });
   // The values a multi-step flow expects a later page to show, captured step by step so the carry
   // verdict can check both the landed page and the final record.
   const expectations = [];
+  const stateChecks = [];
   // Pages the flow visits before the form page. A flow that spans more than one page needs somewhere
   // to say so, and putting them here rather than folding them into `startPath` keeps two things true
   // that the rest of the harness depends on: `startPath` stays the FORM page (the validation-failure
@@ -255,6 +281,7 @@ async function driveJourney(page, base, journey) {
   // form's POST rather than to an earlier page that also submitted.
   for (const [index, step] of (journey.steps ?? []).entries()) {
     await page.goto(`${base}${step.path}`);
+    const baseline = step.fill || step.select ? await stepFields(page, `${base}${step.path}`, step) : null;
     const url = await page.url();
     record('step', { index, url, status: page.network.find((entry) => entry.url === url)?.status ?? null });
     if (step.fill) {
@@ -280,6 +307,27 @@ async function driveJourney(page, base, journey) {
       const landedText = await page.evaluate('return document.body.innerText');
       expectations.push({ index, expectText: step.expectText, pageText: landedText });
       record('step-expect', { index, expectText: step.expectText, visible: landedText.includes(step.expectText) });
+      await page.reload();
+      const reloadedText = await page.evaluate('return document.body.innerText');
+      stateChecks.push({ index, kind: 'carried text on landed page', navigated: landedText.includes(step.expectText), reloaded: reloadedText.includes(step.expectText) });
+      record('step-landed-reload', { index, retained: reloadedText.includes(step.expectText) });
+    }
+    if (step.fill || step.select) {
+      // A submit may have advanced to the next page. Return to this step as a user would, then
+      // force a new document. A live DOM field alone is not evidence of persisted draft state.
+      const stepUrl = `${base}${step.path}`;
+      await page.goto(stepUrl);
+      const revisited = await stepFields(page, stepUrl, step);
+      await page.reload();
+      const reloaded = await stepFields(page, stepUrl, step);
+      for (const [fieldIndex, field] of revisited.checks.entries()) {
+        const checked = { index, kind: 'draft control', selector: field.selector,
+          baselineDifferent: baseline?.checks[fieldIndex]?.ok !== true,
+          navigated: revisited.url === stepUrl && field.ok,
+          reloaded: reloaded.url === stepUrl && reloaded.checks[fieldIndex]?.ok === true };
+        stateChecks.push(checked);
+        record('step-state', checked);
+      }
     }
   }
   await page.goto(`${base}${journey.startPath}`);
@@ -316,7 +364,7 @@ async function driveJourney(page, base, journey) {
 
   // Server persistence: a reload of the same URL must still show the record. This is the clause that
   // separates a real server journey from a client-side illusion.
-  await page.goto(afterSubmit);
+  await page.reload();
   // The echoed value arrives from the JSON endpoint after the page loads, so waiting for the container
   // is part of the assertion: reading too early reported a working server as a broken flow.
   try {
@@ -335,8 +383,9 @@ async function driveJourney(page, base, journey) {
 
   // The carried values must reach the final record, not just the intermediate pages.
   const carry = expectations.length > 0 ? carryVerdict({ expectations, recordText: persisted.text }) : null;
+  const state = (journey.steps ?? []).length > 0 ? stepStateVerdict(stateChecks) : null;
 
-  return { steps, afterSubmit, persistedText: persisted.text, echoedText: persisted.echoed, carry };
+  return { steps, afterSubmit, persistedText: persisted.text, echoedText: persisted.echoed, carry, state };
 }
 
 /** Ask the server what it has answered so far. */
@@ -773,6 +822,11 @@ export async function runProjectVersion({ chrome, projectDir, spec, label, port,
             interfaceContract: spec.interface_contract?.update ?? null,
           }),
         );
+      }
+      if (spec.state_journey) {
+        // Only an explicit contract can name a non-form state transition and its observable result.
+        // The current form-only scaffolds do not gain a fictitious puzzle/workspace verdict.
+        record.journeys.push(await evaluateStateJourney(page, base, spec.state_journey));
       }
       if (spec.content_journey) {
         // The content journey needs the reference the server just issued; without substituting it the

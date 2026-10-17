@@ -478,6 +478,24 @@ export class Page {
     }
   }
 
+  /** Reload the current main frame and wait for a NEW document, not its old complete readyState. */
+  async reload({ timeout = 15_000 } = {}) {
+    const previous = (await this.send('Page.getFrameTree')).frameTree?.frame?.loaderId;
+    if (!previous) throw new CdpError('RELOAD_UNVERIFIED', 'the current frame has no loader ID');
+    await this.send('Page.reload', { ignoreCache: false });
+    const started = Date.now();
+    for (;;) {
+      try {
+        const loader = (await this.send('Page.getFrameTree')).frameTree?.frame?.loaderId;
+        if (loader && loader !== previous && await this.evaluate('return document.readyState') === 'complete') return;
+      } catch {
+        // A navigation destroys the old execution context before the replacement is ready.
+      }
+      if (Date.now() - started > timeout) throw new CdpError('RELOAD_TIMEOUT', 'reload never produced a complete new main-frame document');
+      await new Promise((resolve) => setTimeout(resolve, 60));
+    }
+  }
+
   /**
    * Trusted input, driven through the browser's input pipeline.
    *

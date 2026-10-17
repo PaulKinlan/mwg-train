@@ -25,6 +25,7 @@ import { join } from 'node:path';
 
 import { buildProjectFor } from '../../pilot/frameworks.mjs';
 import { hasArchetypeSet, loadArchetypeSet } from '../design/archetype-assets.mjs';
+import { validateStateJourney } from '../corpus/state-persistence.mjs';
 
 export const SPEC_VERSION = 1;
 export const SPECS_DIR = 'docs/eval/specs';
@@ -308,6 +309,10 @@ export function validateSpec(spec) {
 
   if (!Array.isArray(spec.acceptance) || spec.acceptance.length === 0) at('acceptance', 'must state what has to be true for a pair to count');
 
+  if (spec.state_journey !== undefined) {
+    try { validateStateJourney(spec.state_journey, 'http://127.0.0.1'); }
+    catch (error) { at('state_journey', error.message); }
+  }
   if (!isObject(spec.journey)) at('journey', 'must state the driven journey');
   else {
     if (!isString(spec.journey.startPath)) at('journey.startPath', 'must state where the journey starts');
@@ -932,6 +937,7 @@ export function archetypeFromSpec(spec) {
     fields: spec.fields.map(field),
     echo: spec.echo,
     journey: spec.journey,
+    ...(spec.state_journey ? { stateJourney: spec.state_journey } : {}),
     ...(spec.form ? { form: spec.form } : {}),
     ...(spec.extra_form ? { extraForm: spec.extra_form } : {}),
     ...(spec.write_journey ? { writeJourney: spec.write_journey } : {}),

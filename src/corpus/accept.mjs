@@ -38,6 +38,10 @@ export function journeyWorks(record) {
     }
     const submit = persistence.steps?.find((step) => step.step === 'submit');
     if (submit?.status && submit.status >= 500) problems.push(`the write route answered ${submit.status}`);
+    if (record.expected_step_persistence) {
+      if (persistence.carry?.passed !== true) problems.push('declared multi-step values were not carried through to the submitted record');
+      if (persistence.state?.passed !== true) problems.push('declared draft state did not survive step re-navigation and real document reloads');
+    }
   }
   // The empty-submission journey is an OBSERVATION, not a precondition. Whether an empty form is refused
   // is the property the rules measure on both versions, per arm; requiring it here instead turned the
@@ -52,6 +56,10 @@ export function journeyWorks(record) {
     problems.push(`the write journey's POST was not observed to succeed (status ${write.landedStatus})`);
   } else if (write && write.persisted !== true) {
     problems.push('the write journey did not show the posted value stored by the server');
+  }
+  if (record.expected_state_journey) {
+    const state = record.journeys?.find((journey) => journey.name === 'state-persistence');
+    if (state?.status !== 'PASS') problems.push(`declared non-form state journey was ${state?.status ?? 'not measured'}${state?.detail ? `: ${state.detail}` : ''}`);
   }
   if (record.errors?.length > 0) problems.push(...record.errors);
   return { ok: problems.length === 0, problems };
@@ -87,8 +95,10 @@ export function decidePair({ original, uplifted, spec, uplift }) {
   // not have, so every observation defaulted to 'not-driven' and the section printed
   // '0 of 25 ... 0 accepted it' - an authoritative-looking statement that measured nothing.
   result.validation_observation = validationObservation(original);
-  const originalRunnable = journeyWorks({ ...original, echo_expect: spec.echo_expect, expected_write_journey: Boolean(spec.write_journey) });
-  const upliftedRunnable = journeyWorks({ ...uplifted, echo_expect: spec.echo_expect, expected_write_journey: Boolean(spec.write_journey) });
+  const expectations = { echo_expect: spec.echo_expect, expected_write_journey: Boolean(spec.write_journey),
+    expected_step_persistence: Boolean(spec.journey?.steps?.length), expected_state_journey: Boolean(spec.state_journey) };
+  const originalRunnable = journeyWorks({ ...original, ...expectations });
+  const upliftedRunnable = journeyWorks({ ...uplifted, ...expectations });
 
   if (!originalRunnable.ok) {
     result.category = 'original-not-runnable';

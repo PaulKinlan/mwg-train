@@ -3477,6 +3477,9 @@ export function buildProjectFor(archetype, { frameworkName, defects = [], flags 
     fields: archetype.fields.map((field) => ({ slug: field.slug, name: field.name, type: field.type, autocomplete: field.autocomplete ?? null })),
     seeded_defects: defects,
     journey: archetype.journey,
+    // Future non-form archetypes opt in with an explicit, observable state contract. Do not
+    // silently assign one to today's form-only scaffolds or change their recorded tree hashes.
+    ...(archetype.stateJourney ? { state_journey: archetype.stateJourney } : {}),
     // The value the page must show back after a reload: the echoed field's own input, not the name.
     // The fill keys are selectors with an element prefix (`textarea[name=notes]`), so the expected
     // echoed value is found by suffix. Looking it up as a bare `[name=...]` returned undefined, which

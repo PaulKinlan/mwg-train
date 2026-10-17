@@ -161,7 +161,8 @@ function persistenceOk(record, spec) {
   if (!persistence) return false;
   const expected = spec.echo_expect;
   if (typeof expected !== 'string' || expected === '') return false;
-  return (persistence.echoedText ?? persistence.persistedText ?? '').includes(expected);
+  return (persistence.echoedText ?? persistence.persistedText ?? '').includes(expected) &&
+    (!spec.journey?.steps?.length || persistence.carry?.passed === true && persistence.state?.passed === true);
 }
 
 /** A condensed, self-contained view of one version's journeys and their pass/fail. */
@@ -173,6 +174,7 @@ function journeyResults(record, spec) {
   const content = record.journeys?.find((journey) => journey.name === 'content');
   const search = record.journeys?.find((journey) => journey.name === 'search');
   const update = record.journeys?.find((journey) => journey.name === 'update-existing');
+  const stateJourney = record.journeys?.find((journey) => journey.name === 'state-persistence');
 
   journeys.push({
     name: 'server-persistence',
@@ -182,12 +184,14 @@ function journeyResults(record, spec) {
     // the run, but a reader should not have to take that on trust), and the evidence would live only
     // in the run's output directory.
     steps: (persistence?.steps ?? [])
-      .filter((step) => ['fill', 'select', 'submit', 'reload', 'step', 'step-fill', 'step-select', 'step-submit', 'step-expect'].includes(step.step))
+      .filter((step) => ['fill', 'select', 'submit', 'reload', 'step', 'step-fill', 'step-select', 'step-submit', 'step-expect', 'step-state', 'step-landed-reload'].includes(step.step))
       .map((step) => ({
         step: step.step,
         ...(step.options ? { options: step.options } : {}),
         ...(step.fields ? { fields: step.fields } : {}),
         ...(step.status !== undefined ? { status: step.status } : {}),
+        ...(step.navigated !== undefined ? { navigated: step.navigated, reloaded: step.reloaded } : {}),
+        ...(step.retained !== undefined ? { retained: step.retained } : {}),
       })),
     detail: persistence
       ? {
@@ -199,6 +203,7 @@ function journeyResults(record, spec) {
     // A multi-step flow's carry verdict: the intermediate pages showed the values earlier steps
     // supplied, and those values reached the final record. Absent for a single-page journey.
     ...(persistence?.carry ? { carry: persistence.carry } : {}),
+    ...(persistence?.state ? { state: persistence.state } : {}),
   });
 
   const observation = validationObservation(record);
@@ -219,6 +224,10 @@ function journeyResults(record, spec) {
   }
   if (update) {
     journeys.push({ name: 'update-existing', passed: update.verdict?.passed === true, ref: update.ref ?? null, detail: update.verdict?.detail ?? null });
+  }
+  if (stateJourney) {
+    journeys.push({ name: 'state-persistence', passed: stateJourney.status === 'PASS',
+      status: stateJourney.status, detail: stateJourney.detail, observed: stateJourney.observed ?? null });
   }
   return journeys;
 }
@@ -562,6 +571,7 @@ async function main() {
   const flowCount = (name) => versions.filter((version) => version.journeys.some((journey) => journey.name === name)).length;
   const flowPass = (name) => versions.filter((version) => version.journeys.some((journey) => journey.name === name && journey.passed === true)).length;
   const carried = versions.map((version) => version.journeys.find((journey) => journey.name === 'server-persistence')?.carry).filter(Boolean);
+  const stepStates = versions.map((version) => version.journeys.find((journey) => journey.name === 'server-persistence')?.state).filter(Boolean);
   const scoredIds = new Set(records.map((record) => record.project_id));
   const unscored = allProjects.filter((project) => !scoredIds.has(project.project_id));
   const coverage = {
@@ -591,6 +601,10 @@ async function main() {
     updates_passed: flowPass('update-existing'),
     carries_run: carried.length,
     carries_passed: carried.filter((carry) => carry.passed === true).length,
+    step_states_run: stepStates.length,
+    step_states_passed: stepStates.filter((state) => state.passed === true).length,
+    nonform_states_run: flowCount('state-persistence'),
+    nonform_states_passed: flowPass('state-persistence'),
     acceptance: { attempted: acceptance.attempted, accepted: acceptance.accepted, yield: acceptance.yield },
     by_category: acceptance.by_category,
     by_framework: acceptance.by_framework,
