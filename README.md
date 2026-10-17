@@ -110,7 +110,9 @@ browser diagnostics (modal dialog dismissal, declarative popover dismissal,
 container-size styling, unique view-transition names and child-state `:has()`
 styling). They return NOT_APPLICABLE when no such surface exists and ERROR when
 a declared feature cannot be demonstrated; neither counts as a pass. They do
-not change the preregistered training-pair acceptance gate. Historical runs
+not change the preregistered training-pair acceptance gate. They are reported
+separately from the historical headline, archetype, model and arm totals; adding
+five optional rules never silently changes those denominators. Historical runs
 show these guidance rows as N/A, not as scores inferred from newer code.
 
 ## Corpus viewer (owner-only)

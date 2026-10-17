@@ -40,6 +40,22 @@ test('CLI summarizes only paired verdicts by archetype, model and guidance rule'
   assert.deepEqual(JSON.parse(cli.stdout), report);
 });
 
+test('optional modern diagnostics never inflate the comparable historical headline', () => {
+  const core = { archetype: 'booking', model: 'deterministic:no-model', arm: null, project_id: 'p1',
+    rule: 'forms/required-field-feedback', before: 'PASS', after: 'PASS' };
+  const optional = ['ui-behaviors/platform-controls-dismiss-dialog', 'ui-behaviors/declarative-dialog-popover-control',
+    'css/size-aware-styling', 'ui-behaviors/same-document-transitions', 'css/child-state-based-styling'];
+  const historical = benchmarkOverview({ runId: 'historical', projects: 1, rows: [core] });
+  const fresh = benchmarkOverview({ runId: 'fresh', projects: 1, rows: [core, ...optional.map((rule) => ({ ...core, rule, after: 'FAIL' }))] });
+  assert.deepEqual(fresh.overall, historical.overall);
+  assert.deepEqual(fresh.archetypes, historical.archetypes);
+  assert.deepEqual(fresh.models, historical.models);
+  assert.deepEqual(fresh.arms, historical.arms);
+  assert.deepEqual(fresh.diagnostics, { before: 5, after: 0, comparable: 5, unmeasured: 0, delta: -5 });
+  assert.equal(historical.diagnostics.comparable, 0);
+  assert.match(renderBenchmarkMarkdown(fresh), /Optional diagnostics \(separate, not in headline\): pre 100\.0% \(5\/5\) → post 0\.0% \(0\/5\)/);
+});
+
 test('committed historical pilot joins only matching-run, matching-hash measurements', (t) => {
   const dir = fixture(t, [{ id: 'booking-raw', archetype: 'booking', before: [], after: [] }]);
   const yieldPath = join(dir, 'yield.json');

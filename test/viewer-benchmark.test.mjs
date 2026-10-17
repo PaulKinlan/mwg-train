@@ -28,13 +28,18 @@ test('benchmark route shows unavailable model arms until a measured run exists, 
   const run = join(corpusRoot, 'out', 'run-1');
   mkdirSync(join(run, 'site-raw'), { recursive: true });
   writeFileSync(join(run, 'yield.json'), JSON.stringify({ run_id: 'run-1', decisions: [{ project_id: 'site-raw', archetype: 'booking', framework: 'raw', model: 'provider/model', arm: 'C1' }] }));
-  writeFileSync(join(run, 'site-raw', 'original.json'), JSON.stringify({ rules: [{ rule: 'forms/required', status: 'FAIL' }] }));
-  writeFileSync(join(run, 'site-raw', 'uplifted.json'), JSON.stringify({ rules: [{ rule: 'forms/required', status: 'PASS' }] }));
+  writeFileSync(join(run, 'site-raw', 'original.json'), JSON.stringify({ rules: [
+    { rule: 'forms/required', status: 'FAIL' }, { rule: 'css/size-aware-styling', status: 'PASS' },
+  ] }));
+  writeFileSync(join(run, 'site-raw', 'uplifted.json'), JSON.stringify({ rules: [
+    { rule: 'forms/required', status: 'PASS' }, { rule: 'css/size-aware-styling', status: 'FAIL' },
+  ] }));
   response = await fetch(`${base}/benchmark?run=run-1`);
   html = await response.text();
   assert.equal(response.status, 200);
   assert.match(html, /0\.0% \(0\/1\)/);
   assert.match(html, /100\.0% \(1\/1\)/);
+  assert.match(html, /Optional diagnostics, separate from headline: pre <strong>100\.0% \(1\/1\)<\/strong> → post <strong>0\.0% \(0\/1\)<\/strong>/);
   assert.match(html, /forms\/required/);
   assert.match(html, /provider\/model/);
   assert.equal((await fetch(`${base}/benchmark?run=..%2Fprivate`)).status, 404);
