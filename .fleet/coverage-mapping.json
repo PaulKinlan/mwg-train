@@ -308,6 +308,9 @@
     "test/known-sinks.test.mjs",
     "test/wiki-capability.test.mjs"
   ],
+  "scripts/rebuild-from-spec.mjs": [
+    "test/step-persistence.test.mjs"
+  ],
   "scripts/train-corpus-run.mjs": [
     "test/harness-run-environment.test.mjs",
     "test/step-persistence.test.mjs"

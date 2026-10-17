@@ -19,6 +19,16 @@ const isFail = (entry) => entry?.status === 'FAIL';
 
 import { BASELINE_FIELDS, baselineAttributionLine } from '../eval/ruleset.mjs';
 
+/** Share the spec's acceptance expectations with the pilot and rebuild paths. */
+export function journeyExpectations(spec) {
+  return { echo_expect: spec.echo_expect, expected_write_journey: Boolean(spec.write_journey),
+    expected_step_persistence: Boolean(spec.journey?.steps?.length),
+    // A step can declare navigation and a saved draft without declaring a later text assertion.
+    // Absence is not evidence of failed carry; the draft-state check remains mandatory.
+    expected_step_carry: Boolean(spec.journey?.steps?.some((step) => typeof step.expectText === 'string' && step.expectText.length > 0)),
+    expected_state_journey: Boolean(spec.state_journey) };
+}
+
 /** Did the journey work at all: record found after a reload, validation refused, no server error. */
 export function journeyWorks(record) {
   const persistence = record.journeys?.find((journey) => journey.name === 'server-persistence');
@@ -39,7 +49,7 @@ export function journeyWorks(record) {
     const submit = persistence.steps?.find((step) => step.step === 'submit');
     if (submit?.status && submit.status >= 500) problems.push(`the write route answered ${submit.status}`);
     if (record.expected_step_persistence) {
-      if (persistence.carry?.passed !== true) problems.push('declared multi-step values were not carried through to the submitted record');
+      if (record.expected_step_carry && persistence.carry?.passed !== true) problems.push('declared multi-step values were not carried through to the submitted record');
       if (persistence.state?.passed !== true) problems.push('declared draft state did not survive step re-navigation and real document reloads');
     }
   }
@@ -95,8 +105,7 @@ export function decidePair({ original, uplifted, spec, uplift }) {
   // not have, so every observation defaulted to 'not-driven' and the section printed
   // '0 of 25 ... 0 accepted it' - an authoritative-looking statement that measured nothing.
   result.validation_observation = validationObservation(original);
-  const expectations = { echo_expect: spec.echo_expect, expected_write_journey: Boolean(spec.write_journey),
-    expected_step_persistence: Boolean(spec.journey?.steps?.length), expected_state_journey: Boolean(spec.state_journey) };
+  const expectations = journeyExpectations(spec);
   const originalRunnable = journeyWorks({ ...original, ...expectations });
   const upliftedRunnable = journeyWorks({ ...uplifted, ...expectations });
 

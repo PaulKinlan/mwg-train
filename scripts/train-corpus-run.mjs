@@ -29,7 +29,7 @@ import process from 'node:process';
 import { launchChrome } from '../src/corpus/cdp.mjs';
 import { upliftProject } from '../src/corpus/uplift.mjs';
 import { runProjectVersion, hashTree } from '../src/corpus/harness.mjs';
-import { decidePair, summarizeYield, validationObservation } from '../src/corpus/accept.mjs';
+import { decidePair, journeyExpectations, summarizeYield, validationObservation } from '../src/corpus/accept.mjs';
 import { BASELINE_FIELDS, BASELINE_LABEL, baselineAttributionLine } from '../src/eval/ruleset.mjs';
 
 const REPO_ROOT = resolve(dirname(new URL(import.meta.url).pathname), '..');
@@ -161,8 +161,10 @@ function persistenceOk(record, spec) {
   if (!persistence) return false;
   const expected = spec.echo_expect;
   if (typeof expected !== 'string' || expected === '') return false;
+  const { expected_step_persistence, expected_step_carry } = journeyExpectations(spec);
   return (persistence.echoedText ?? persistence.persistedText ?? '').includes(expected) &&
-    (!spec.journey?.steps?.length || persistence.carry?.passed === true && persistence.state?.passed === true);
+    (!expected_step_persistence || persistence.state?.passed === true &&
+      (!expected_step_carry || persistence.carry?.passed === true));
 }
 
 /** A condensed, self-contained view of one version's journeys and their pass/fail. */
