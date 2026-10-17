@@ -55,6 +55,7 @@ test('the returned run record and training-corpus projection keep the measured s
       projectDir: dir, spec: { project_id: 'test-raw', archetype: 'test', framework: { name: 'raw', version: 'test' } },
       label: 'original', port: occupied.address().port, runDir: dir, dbPath: join(dir, 'test.sqlite') });
     assert.ok(original.errors.some((error) => error.includes('already in use')));
+    assert.deepEqual(original.runtime_quality, { status: 'NOT_MEASURED', reason: 'browser was not sampled' });
     const expected = { platform: process.platform, node_version: process.version,
       browser: { product, protocolVersion: '1.3' }, chrome_version: product };
     for (const [key, value] of Object.entries(expected)) assert.deepEqual(original[key], value, key);

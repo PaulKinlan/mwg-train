@@ -69,6 +69,18 @@ opt-in, never an automatic macOS, root or container fallback.
 
 Teacher-generated material and the reproduction studies live in a **private companion repo** (`mwg-quarantine`, a sibling checkout), never in this public tree: tooling writes quarantined arms there by default, and the public tree receives material only via `npm run promote` (explicit, ledgered, publication-only). See [docs/quarantine.md](docs/quarantine.md).
 
+## Runtime quality observations
+
+A fresh pilot browser run records `runtime_quality` beside each project version's
+functional journeys: a buffered hard-navigation LCP candidate, the slowest
+Event Timing interaction from three trusted clicks on the declared primary
+field, and post-GC retained-node/heap trends across those clicks. These are
+**local diagnostic samples**, not field Core Web Vitals or proof that an app
+has no memory leak. Sub-16-ms interactions may produce no Event Timing entry;
+the report says `NOT_MEASURED`, never zero. A growing CDP node count while the
+live DOM is stable is labelled `SUSPECTED_RETENTION`, not a confirmed detached
+DOM leak. No runtime-quality observation changes training-pair acceptance.
+
 ## Benchmark overview (measured pilot runs)
 
 The owner-only viewer's `/benchmark` route shows a high-level pre/post overview,
