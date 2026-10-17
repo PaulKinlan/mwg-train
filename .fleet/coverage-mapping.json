@@ -287,6 +287,10 @@
   "scripts/pilot-corpus.mjs": [
     "test/pilot-corpus-run-metadata.test.mjs"
   ],
+  "scripts/pilot-records.mjs": [
+    "test/pilot-records-dark.test.mjs",
+    "test/benchmark-report.test.mjs"
+  ],
   "pilot/training-archetypes.mjs": [
     "test/viewer-concepts-delivery.test.mjs"
   ],

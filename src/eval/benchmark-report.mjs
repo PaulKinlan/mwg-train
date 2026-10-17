@@ -103,7 +103,7 @@ export function renderBenchmarkMarkdown(report) {
     ...table('Archetypes', report.archetypes),
     '## Sealed model arms', '', 'C1 = bare base; C2 = base + guidance prompt; T = trained adapter. N/A means no paired measurements were supplied for that arm, not a score of zero.', '',
     ...table('C1 / C2 / T', report.arms), ...table('Recorded model identities (including deterministic controls)', report.models), ...table('Guidance rules', report.rules),
-    'Dark mode is a separate CDP-measured axis: emulated preference or a working theme toggle, computed root color-scheme, changed effective color tokens and sampled text contrast. Reference JPEGs are design illustrations, not proof of runtime behaviour. Missing, ERROR and unpaired verdicts are unmeasured, never passes.', '',
+    'Dark mode is a separate CDP-measured axis: emulated preference or a working theme toggle, computed root color-scheme, changed stylesheet colors or effective tokens, and sampled text contrast. Reference JPEGs are design illustrations, not proof of runtime behaviour. Missing, ERROR and unpaired verdicts are unmeasured, never passes.', '',
     ...table('Dark mode (CDP)', report.darkMode, 'Paired dark checks'),
   ].join('\n');
 }

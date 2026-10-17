@@ -2,7 +2,7 @@
 // not a guidance-rule improvement, and must never inflate the guidance score.
 const MEDIA = (value) => ({ features: value ? [{ name: 'prefers-color-scheme', value }] : [] });
 
-const SNAPSHOT = `
+export const DARK_SNAPSHOT_EXPRESSION = `
   const root = document.documentElement;
   const rootStyle = getComputedStyle(root);
   // Canvas resolves rgb(), color-mix(), oklch() and system colors into measured sRGB bytes.
@@ -80,7 +80,8 @@ function verdict(light, dark, source) {
   if (!lightBg || !darkBg) return { status: 'ERROR', detail: 'opaque page backgrounds could not be measured in both schemes' };
   if (luminance(lightBg) - luminance(darkBg) < 0.03) failures.push('dark theme did not visibly darken the page background');
   const changedTokens = Object.keys(dark.tokens ?? {}).filter((name) => light.tokens?.[name] && light.tokens[name] !== dark.tokens[name]);
-  if (!changedTokens.length) failures.push('no effective authored color token changed with the dark theme');
+  // Computed palette changes can come from a media stylesheet, a dark: utility or direct CSS.
+  // Custom properties are useful evidence when present, not a prerequisite for a real dark theme.
   const sampled = (dark.samples ?? []).map(({ tag, color, background, fontSize, fontWeight }) => {
     const ratio = contrastRatio(color, background);
     const threshold = fontSize >= 24 || fontSize >= 18.66 && fontWeight >= 700 ? 3 : 4.5;
@@ -90,7 +91,7 @@ function verdict(light, dark, source) {
   const bad = sampled.filter(({ ratio, threshold }) => ratio < threshold);
   if (bad.length) failures.push(`${bad.length} of ${sampled.length} sampled visible text surfaces failed WCAG AA contrast`);
   return { status: failures.length ? 'FAIL' : 'PASS', source,
-    detail: failures.length ? failures.join('; ') : `dark scheme activated, ${changedTokens.length} effective token(s) changed, ${sampled.length} text surface(s) met contrast`,
+    detail: failures.length ? failures.join('; ') : `dark scheme activated, ${changedTokens.length ? `${changedTokens.length} effective token(s) changed` : 'computed stylesheet colors changed without custom tokens'}, ${sampled.length} text surface(s) met contrast`,
     observed: { lightBackground: light.background, darkBackground: dark.background, rootScheme: dark.rootScheme,
       changedTokens: changedTokens.slice(0, 12), samples: sampled.length,
       minContrast: Number(Math.min(...sampled.map(({ ratio }) => ratio)).toFixed(2)),
@@ -103,36 +104,39 @@ export async function evaluateDarkMode(page, url) {
   try {
     await page.send('Emulation.setEmulatedMedia', MEDIA('light')); mediaSet = true;
     await page.goto(url);
-    const light = await page.evaluate(SNAPSHOT);
+    const light = await page.evaluate(DARK_SNAPSHOT_EXPRESSION);
     await page.send('Emulation.setEmulatedMedia', MEDIA('dark'));
     await page.goto(url);
-    const dark = await page.evaluate(SNAPSHOT);
+    const dark = await page.evaluate(DARK_SNAPSHOT_EXPRESSION);
     const preference = verdict(light, dark, 'preference');
-    if (preference.status === 'PASS' || preference.status === 'ERROR') return preference;
+    // If the preference visibly changed the palette, a contrast/native-control defect is
+    // measurable even when there is no separate toggle to drive.
+    if (preference.status === 'PASS' || preference.status === 'ERROR' ||
+        preference.observed?.lightBackground !== preference.observed?.darkBackground) return preference;
 
-    // Only try an explicit one-click theme control if the system preference did not activate dark.
-    // The selector is fixed and narrow; a generic settings button is not itself a dark-mode toggle.
+    // Only try an identifiable one-click theme control if the system preference did not activate dark.
+    // Unknown custom toggles cannot justify a FAIL: their activation has not been measured.
     await page.send('Emulation.setEmulatedMedia', MEDIA('light'));
     await page.goto(url);
     const clicked = await page.evaluate(`
-      const toggle = document.querySelector('[data-theme-toggle], button[aria-label*="toggle theme" i], button[aria-label*="toggle dark" i], [role="switch"][aria-label*="dark mode" i]');
+      const toggle = document.querySelector('[data-theme-toggle], button[aria-label*="theme" i], button[aria-label*="dark" i], button.theme, button[class*="theme-toggle" i], [role="switch"][aria-label*="dark mode" i]');
       if (!toggle) return false;
       toggle.click();
       await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
       return true;
     `);
-    if (!clicked) return preference;
-    const toggled = await page.evaluate(SNAPSHOT);
+    if (!clicked) return { status: 'ERROR', detail: 'dark preference did not activate and no identifiable theme toggle could be driven; dark support unmeasured' };
+    const toggled = await page.evaluate(DARK_SNAPSHOT_EXPRESSION);
     const result = verdict(light, toggled, 'toggle');
     // Restore the starting theme before screenshots/security checks reuse the browser session.
     const restored = await page.evaluate(`
-      const toggle = document.querySelector('[data-theme-toggle], button[aria-label*="toggle theme" i], button[aria-label*="toggle dark" i], [role="switch"][aria-label*="dark mode" i]');
+      const toggle = document.querySelector('[data-theme-toggle], button[aria-label*="theme" i], button[aria-label*="dark" i], button.theme, button[class*="theme-toggle" i], [role="switch"][aria-label*="dark mode" i]');
       if (!toggle) return false;
       toggle.click();
       await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
       return true;
     `);
-    const reset = restored && await page.evaluate(SNAPSHOT);
+    const reset = restored && await page.evaluate(DARK_SNAPSHOT_EXPRESSION);
     if (!reset || reset.background !== light.background) return { status: 'ERROR', detail: 'theme toggle could not restore the initial appearance' };
     return result;
   } finally {

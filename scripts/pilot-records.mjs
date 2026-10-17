@@ -49,6 +49,9 @@ function statusMap(entries) {
 function summarizeVersion(record) {
   return {
     rules: statusMap(record.rules),
+    // Preserve an observed CDP verdict separately from pinned guidance rules. Missing on old
+    // runs stays missing: publishing must never manufacture a dark result.
+    ...(record.dark_mode ? { dark_mode: record.dark_mode } : {}),
     security: statusMap(record.security),
     journeys: (record.journeys ?? []).map(journeySummary),
     errors: record.errors ?? [],
@@ -131,7 +134,7 @@ const document = {
   run_id: run.run_id,
   generated_at: run.generated_at,
   summary: run.summary,
-  note: 'Compact per-project evidence for docs/pilot/YIELD.md: journeys and observations, every rule and security status, and the measured tree hashes. Produced by scripts/pilot-records.mjs from a run directory.',
+  note: 'Compact per-project evidence for docs/pilot/YIELD.md: journeys and observations, every rule and security status, optional measured dark-mode verdicts, and the measured tree hashes. Produced by scripts/pilot-records.mjs from a run directory.',
   projects,
 };
 

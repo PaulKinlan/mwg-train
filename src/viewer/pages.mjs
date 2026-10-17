@@ -583,7 +583,7 @@ export function renderBenchmark(report, { runs = [], hasMeasurements = false, so
     ${runLinks ? `<p>Other local run directories: ${runLinks}</p>` : ''}
     ${table('Archetypes', report.archetypes)}<h2>Sealed model arms</h2><p>C1 = bare base; C2 = base + guidance; T = trained adapter. N/A means no measured arm was supplied, not zero.</p>
     ${table('C1 / C2 / T', report.arms)}${table('Recorded model identities', report.models)}${table('Guidance rules', report.rules)}
-    <p class="muted">Dark mode is a separate CDP-measured axis: a working dark preference or theme toggle, root color-scheme, changed effective color tokens and sampled text contrast. Reference JPEGs are illustrations, not runtime evidence. Missing or ERROR verdicts count as unmeasured, never as passes.</p>
+    <p class="muted">Dark mode is a separate CDP-measured axis: a working dark preference or theme toggle, root color-scheme, changed computed stylesheet colors or effective tokens, and sampled text contrast. Reference JPEGs are illustrations, not runtime evidence. Missing or ERROR verdicts count as unmeasured, never as passes.</p>
     ${table('Dark mode (CDP)', report.darkMode)}`);
 }
 
