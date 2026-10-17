@@ -157,7 +157,7 @@ export const MODERN_RULES = Object.freeze({
         // The page belongs to later checks too: do not leave an instrumented platform method.
         await page.evaluate(`window.__mwgTransitionRestore?.(); delete window.__mwgTransitionRestore; delete window.__mwgTransitionProbe; return true`).catch(() => {});
       }
-      const after = await page.evaluate(VISIBLE_TRANSITION_NAMES).catch(() => null);
+      const after = await page.evaluate(`/* post-interaction snapshot */\n${VISIBLE_TRANSITION_NAMES}`).catch(() => null);
       if (after?.duplicates.length) return verdict(rule, 'FAIL', `duplicate visible view-transition-name after interaction: ${after.duplicates.join(', ')}`, { before: result, after, observed });
       if (!observed?.started || !observed.ready || !observed.finished || observed.skipped ||
         !after || !Object.keys(result.names).some((name) => name in after.names)) {
