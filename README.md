@@ -79,7 +79,8 @@ field, and post-GC retained-node/heap trends across those clicks. These are
 has no memory leak. Sub-16-ms interactions may produce no Event Timing entry;
 the report says `NOT_MEASURED`, never zero. A growing CDP node count while the
 live DOM is stable is labelled `SUSPECTED_RETENTION`, not a confirmed detached
-DOM leak. Live DOM includes connected text nodes; if it grows during sampling,
+DOM leak. The connected-node witness includes light DOM, template content, and
+open/closed shadow roots via CDP; if that live tree changes during sampling,
 the retained-node heuristic returns INCONCLUSIVE instead of suspecting a leak.
 No runtime-quality observation changes training-pair acceptance.
 

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { launchChrome } from '../src/corpus/cdp.mjs';
-import { classifyRuntimeSample, installRuntimeObservers, measureRuntimeQuality } from '../src/corpus/eval.mjs';
+import { classifyRuntimeSample, countConnectedDomNodes, installRuntimeObservers, measureRuntimeQuality } from '../src/corpus/eval.mjs';
 
 test('runtime samples refuse missing observations and distinguish retention suspicion from proof', () => {
   const empty = classifyRuntimeSample({ lcp: [], events: [], memory: [] });
@@ -28,6 +28,14 @@ test('runtime samples refuse missing observations and distinguish retention susp
   assert.equal(classifyRuntimeSample({ lcp: [{ startTime: 10, size: 100 }], events: [], memory: liveGrowth }).status, 'PARTIAL');
 });
 
+test('connected-node count includes light DOM, open/closed shadow roots and template content', () => {
+  const tree = { children: [{ shadowRoots: [
+    { shadowRootType: 'open', children: [{ nodeName: 'B' }] },
+    { shadowRootType: 'closed', children: [{ nodeName: 'I' }] },
+  ], templateContent: { children: [{ nodeName: 'SPAN' }] } }] };
+  assert.equal(countConnectedDomNodes(tree), 8);
+});
+
 test('missing trigger and sampling errors retain the same top-level status/reason contract', async () => {
   const page = { goto: async () => {}, waitForSettled: async () => {}, url: async () => 'http://localhost/',
     evaluate: async (source) => source.includes('__mwgRuntimeSample?.lcp') ? [{ startTime: 20, size: 100 }]
@@ -48,11 +56,14 @@ test('a real browser records hard-navigation paint, trusted interaction timing a
     response.setHeader('content-type', 'text/html');
     const action = request.url === '/growing'
       ? `for (let i = 0; i < 90; i++) { const row = document.createElement('p'); row.textContent = 'Connected content ' + i; document.body.append(row); }`
-      : `const detached = document.createElement('div');
+      : request.url === '/shadow'
+        ? `for (let i = 0; i < 90; i++) { const row = document.createElement('span'); row.textContent = 'Live shadow ' + i; window.connectedShadow.append(row); }`
+        : `const detached = document.createElement('div');
         for (let i = 0; i < 90; i++) detached.append(document.createElement('span'));
         (window.retained ||= []).push(detached, new Array(12000).fill('retained'));`;
     response.end(`<!doctype html><html><body><h1>Runtime probe with visible content</h1>
-      <button id="probe">Run interaction</button><script>
+      <button id="probe">Run interaction</button><div id="host"></div><script>
+      if (location.pathname === '/shadow') window.connectedShadow = document.querySelector('#host').attachShadow({ mode: 'closed' });
       document.getElementById('probe').addEventListener('click', () => {
         ${action}
         const until = performance.now() + 65;
@@ -76,6 +87,9 @@ test('a real browser records hard-navigation paint, trusted interaction timing a
     assert.equal(growing.detached_dom.status, 'INCONCLUSIVE', JSON.stringify(growing));
     assert.equal(growing.status, 'PARTIAL', JSON.stringify(growing));
     assert.ok(growing.detached_dom.liveNodeGrowth > 0, JSON.stringify(growing));
+    const shadow = await measureRuntimeQuality(page, { url: `http://127.0.0.1:${server.address().port}/shadow`, interactionSelector: '#probe' });
+    assert.equal(shadow.detached_dom.status, 'INCONCLUSIVE', JSON.stringify(shadow));
+    assert.ok(shadow.detached_dom.liveNodeGrowth > 0, JSON.stringify(shadow));
     await page.close();
   } finally { if (chrome) await chrome.close(); }
 });
