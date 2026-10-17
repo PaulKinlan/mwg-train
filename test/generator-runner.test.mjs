@@ -1,9 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createHmac } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, writeFileSync, existsSync, rmSync, mkdirSync } from 'node:fs';
-import { tmpdir, hostname } from 'node:os';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Readable } from 'node:stream';
@@ -13,7 +12,6 @@ import { decodeConfig, pinnedEvaluationBuildKey } from '../src/eval/decode-confi
 
 const REVISION = '2cba9e42aa026125f3ed06c6d98c1db82f7ca027';
 const MODEL = decodeConfig.build_model;
-const TEST_NOW = new Date('2026-10-13T17:00:00Z');
 const root = () => mkdtempSync(join(tmpdir(), 'mwg-generator-'));
 const options = (outRoot, extra = {}) => ({ family: 'tr-01', framework: 'hono', model: MODEL,
   revision: REVISION, outRoot, ...extra });
@@ -102,6 +100,62 @@ test('untrusted file paths and duplicate files are rejected before writing anyth
   assert.throws(() => parseProjectFiles(JSON.stringify({ files: [{ path: 'a', content: '1' }, { path: 'a', content: '2' }] })));
 });
 
+test('closed no-cap owner decision permits scoped generation without a tariff; cost stays UNVERIFIED', async () => {
+  const dir = root(); let calls = 0;
+  try {
+    const approval = { decision: { id: GENERATION_BEAD, status: 'closed', close_reason:
+      "Owner decision recorded from chat (2026-10-13): 're: 2 - no spend caps, I am ok.' Live DeepSeek V4.1 Flash generation authorised without a dollar cap; log actual usage/spend." }, comments: [] };
+    const live = await generateProject(options(dir, { backend: 'live', endpoint: 'https://example.test/v1/chat/completions',
+      apiKey: 'TOP-SECRET-KEY', ledgerPath: join(dir, 'ledger.jsonl'), approvalComments: () => approval,
+      fetchImpl: async () => { calls += 1; return { ok: true, body: Readable.from([Buffer.from(
+        `data: ${JSON.stringify({ choices: [{ delta: { content: JSON.stringify({ files: [{ path: 'index.html', content: '<p>inert</p>' }] }) }, finish_reason: 'stop' }] })}\n\ndata: ${JSON.stringify({ choices: [], usage: { prompt_tokens: 19, completion_tokens: 42, completion_tokens_details: { reasoning_tokens: 10 } } })}\n\ndata: [DONE]\n\n`)]), status: 200 }; },
+    }));
+    assert.equal(calls, 1);
+    assert.equal(live.status, 'SUCCESS');
+    assert.equal(live.computed_cost_usd, 'UNVERIFIED');
+    assert.equal(live.reasoning_tokens, 10);
+    const ledger = readFileSync(join(dir, 'ledger.jsonl'), 'utf8').trim().split('\n').map(JSON.parse);
+    assert.equal(ledger.length, 2);
+    assert.equal(ledger[0].reservedUsd, 'UNVERIFIED');
+    assert.equal(ledger[1].computedUsd, 'UNVERIFIED');
+    assert.equal(ledger[1].tokens.prompt, 19);
+    assert.ok(!readFileSync(join(live.output_dir, 'run.json'), 'utf8').includes('TOP-SECRET-KEY'));
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('Markdown-wrapped trusted revocation prevents a live fetch or ledger reservation', async () => {
+  const dir = root(); let calls = 0;
+  try {
+    const result = await generateProject(options(dir, { backend: 'live',
+      endpoint: 'https://example.test/v1/chat/completions', apiKey: 'OFFLINE_FAKE_KEY',
+      ledgerPath: join(dir, 'ledger.jsonl'), approvalComments: () => ownerApproval([{
+        issue_id: GENERATION_BEAD, author: 'mwg-train-coord', text: '> **OWNER-AUTHORIZATION-REVOKED**: stop',
+      }]), fetchImpl: () => { calls++; throw Error('network used'); } }));
+    assert.equal(result.status, 'FAILED');
+    assert.equal(calls, 0);
+    assert.match(result.error.message, /revoked/);
+    assert.equal(existsSync(join(dir, 'ledger.jsonl')), false);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('a paid request with unknown provider outcome is recorded but never retried in-place', async () => {
+  const dir = root(); let calls = 0;
+  try {
+    const args = options(dir, { backend: 'live', endpoint: 'https://example.test/v1/chat/completions',
+      apiKey: 'OFFLINE_FAKE_KEY', ledgerPath: join(dir, 'ledger.jsonl'), approvalComments: () => ownerApproval(),
+      fetchImpl: () => { calls++; throw Error('simulated transport loss'); } });
+    const first = await generateProject(args);
+    assert.equal(first.status, 'FAILED');
+    assert.equal(calls, 1);
+    const rows = readFileSync(join(dir, 'ledger.jsonl'), 'utf8').trim().split('\n').map(JSON.parse);
+    assert.deepEqual(rows.map((row) => row.type), ['reserve', 'settle']);
+    assert.equal(rows[1].status, 'unknown');
+    assert.equal(rows[1].computedUsd, 'UNVERIFIED');
+    await assert.rejects(generateProject({ ...args, retry: true }), /RUN_EXISTS|offline retry only/);
+    assert.equal(calls, 1);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
 test('live mode refuses the real undecided bead and never contacts the provider or logs a key', async () => {
   const dir = root(); let calls = 0;
   try {
@@ -117,34 +171,38 @@ test('live mode refuses the real undecided bead and never contacts the provider 
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
-function signedComment({ cap = 20, stop = 50, model = MODEL, expiry = '2030-01-01T00:00:00Z', key = 'test-only', host = hostname() } = {}) {
-  const verbatim = `"Authorised: up to ${cap} USD in total for DeepSeek V4.1 Flash generation; stop and ask at ${stop}%."`;
-  const payload = [GENERATION_BEAD, verbatim, 'generation', model, String(cap), expiry, String(stop), host].join('\n');
-  const signature = createHmac('sha256', key).update(payload).digest('hex');
-  return { id: 'comment-test', issue_id: GENERATION_BEAD, author: 'fleet-manager-coord', text:
-    `OWNER-AUTHORIZATION\nVerbatim: ${verbatim}\nScope: generation\nModel: ${model}\nCap-USD: ${cap}\nExpiry: ${expiry}\nStop-at-pct: ${stop}\nLedger-host: ${host}\nSignature: hmac-sha256:${signature}` };
+function ownerDecision() {
+  return { id: GENERATION_BEAD, status: 'closed', close_reason:
+    "Owner decision recorded from chat (2026-10-13): 're: 2 - no spend caps, I am ok.' Live DeepSeek V4.1 Flash generation authorised without a dollar cap; log actual usage/spend." };
 }
 
-test('authorisation requires signed verbatim owner cap, exact model, scope, expiry and trusted author', () => {
-  const comment = signedComment();
-  assert.equal(verifyGenerationApproval([comment], { key: 'test-only', model: MODEL, now: TEST_NOW }).capUsd, 20);
-  assert.throws(() => verifyGenerationApproval([comment], { key: 'wrong', model: MODEL, now: TEST_NOW }), /NO_OWNER_AUTH/);
-  assert.throws(() => verifyGenerationApproval([{ ...comment, author: 'mwg-train-imp-1' }], { key: 'test-only', model: MODEL, now: TEST_NOW }), /NO_OWNER_AUTH/);
-  assert.throws(() => verifyGenerationApproval([comment], { key: 'test-only', model: 'fireworks/deepseek-v4-flash', now: TEST_NOW }), /NO_OWNER_AUTH/);
-  assert.throws(() => verifyGenerationApproval([signedComment({ expiry: '2020-01-01T00:00:00Z' })], { key: 'test-only', model: MODEL, now: TEST_NOW }), /NO_OWNER_AUTH/);
-  assert.throws(() => verifyGenerationApproval([signedComment({ host: 'another-vm' })], { key: 'test-only', model: MODEL, now: TEST_NOW }), /NO_OWNER_AUTH/);
-  for (const text of [
-    'OWNER-AUTHORIZATION-REVOKED', ' OWNER-AUTHORIZATION-REVOKED ',
-    'OWNER-AUTHORIZATION-REVOKED\nPaul revoked generation',
-    'OWNER-AUTHORIZATION-REVOKED: cap withdrawn', 'OWNER-AUTHORIZATION-REVOKED.',
-    '## OWNER-AUTHORIZATION-REVOKED', '  ### OWNER-AUTHORIZATION-REVOKED: reason',
-  ]) {
-    assert.throws(() => verifyGenerationApproval([comment, { issue_id: GENERATION_BEAD, author: 'fleet-manager-coord', text }],
-      { key: 'test-only', model: MODEL, now: TEST_NOW }), /revoked/);
-  }
+const ownerApproval = (comments = []) => ({ decision: ownerDecision(), comments });
+
+test('no-cap generation authority is the exact closed owner decision, not an actor name or fake scope', () => {
+  assert.equal(verifyGenerationApproval(ownerApproval(), { model: MODEL }).decision, 'no-usd-cap');
+  for (const decision of [
+    { ...ownerDecision(), status: 'open' },
+    { ...ownerDecision(), close_reason: 'I am not worried about cost' },
+    { ...ownerDecision(), id: 'other-bead' },
+  ]) assert.throws(() => verifyGenerationApproval({ decision, comments: [] }, { model: MODEL }), /NO_OWNER_AUTH/);
+  assert.throws(() => verifyGenerationApproval(ownerApproval(), { model: 'fireworks/deepseek-v4-flash' }), /NO_OWNER_AUTH/);
+  assert.throws(() => verifyGenerationApproval({ decision: ownerDecision(), comments: null }, { model: MODEL }), /NO_OWNER_AUTH/);
 });
 
-test('a cited exact-SKU rate and bounded prompt/output are mandatory; a training quote or -0731 rate cannot pass', () => {
+test('any trusted revocation marker anywhere, Markdown-wrapped or suffixed, refuses before another call', () => {
+  for (const text of [
+    'OWNER-AUTHORIZATION-REVOKED', '**OWNER-AUTHORIZATION-REVOKED**',
+    '*owner-authorization-revoked*', '> OWNER-AUTHORIZATION-REVOKED',
+    '- OWNER-AUTHORIZATION-REVOKED: reason', 'This is a note.\n```\nOWNER-AUTHORIZATION-REVOKED.\n```',
+  ]) {
+    assert.throws(() => verifyGenerationApproval(ownerApproval([{ issue_id: GENERATION_BEAD,
+      author: 'mwg-train-coord', text }]), { model: MODEL }), /revoked/, text);
+  }
+  assert.equal(verifyGenerationApproval(ownerApproval([{ issue_id: GENERATION_BEAD,
+    author: 'untrusted-local-actor', text: 'OWNER-AUTHORIZATION-REVOKED' }]), { model: MODEL }).decision, 'no-usd-cap');
+});
+
+test('a cited exact-SKU rate can produce a bounded estimate; training/-0731 rates cannot', () => {
   const tariff = { model: MODEL, scope: 'generation', billingMode: 'per-token', sourceUrl: 'https://fireworks.ai/pricing',
     sourceSha256: 'a'.repeat(64), inputUsdPerMillion: 2, outputUsdPerMillion: 4, reasoningUsdPerMillion: 6, minimumUsd: 1 };
   assert.equal(worstCaseGenerationUsd({ tariff, model: MODEL, promptTokensUpperBound: 100_000, maxOutputTokens: 65_536 }), 1);
@@ -153,22 +211,28 @@ test('a cited exact-SKU rate and bounded prompt/output are mandatory; a training
   assert.throws(() => worstCaseGenerationUsd({ tariff, model: MODEL, promptTokensUpperBound: null, maxOutputTokens: 65_536 }), /UNVERIFIED_COST/);
 });
 
-test('durable reservations count against the cap, are never refunded by unknown settlement and refuse duplicates', () => {
+test('durable no-cap reservations record unknown cost and refuse forged tickets, duplicates and corrupt ledgers', () => {
   const dir = root();
   try {
     const ledgerPath = join(dir, 'private', 'ledger.jsonl');
-    const approval = verifyGenerationApproval([signedComment()], { key: 'test-only', model: MODEL, now: TEST_NOW });
-    assert.throws(() => reserveGeneration({ ledgerPath, approval: { ...approval, capUsd: 1_000_000 },
-      chargeBoundUsd: 6, requestId: 'forged', model: MODEL }), /missing scope, approval or charge bound/);
+    const approval = verifyGenerationApproval(ownerApproval(), { model: MODEL });
+    assert.throws(() => reserveGeneration({ ledgerPath, approval: { ...approval },
+      requestId: 'forged', model: MODEL }), /verified decision/);
     assert.equal(existsSync(ledgerPath), false, 'forged object did not create a ledger');
-    reserveGeneration({ ledgerPath, approval, chargeBoundUsd: 6, requestId: 'one', model: MODEL });
+    reserveGeneration({ ledgerPath, approval, requestId: 'one', model: MODEL, revision: REVISION, projectId: 'tr-01-hono' });
     settleGeneration({ ledgerPath, requestId: 'one', model: MODEL, status: 'unknown' });
-    assert.throws(() => reserveGeneration({ ledgerPath, approval, chargeBoundUsd: 6, requestId: 'two', model: MODEL }), /cap exhausted/);
-    assert.throws(() => reserveGeneration({ ledgerPath, approval, chargeBoundUsd: 1, requestId: 'one', model: MODEL }), /duplicate call/);
-    reserveGeneration({ ledgerPath, approval, chargeBoundUsd: 4, requestId: 'two', model: MODEL });
+    assert.throws(() => reserveGeneration({ ledgerPath, approval, requestId: 'one', model: MODEL }), /duplicate call/);
+    reserveGeneration({ ledgerPath, approval, requestId: 'two', model: MODEL }); // no dollar cap blocks another request
     assert.equal(readFileSync(ledgerPath, 'utf8').trim().split('\n').length, 3);
+    assert.throws(() => settleGeneration({ ledgerPath, requestId: 'one', model: MODEL, status: 'completed' }), /unsettled/);
     mkdirSync(`${ledgerPath}.lock`);
-    assert.throws(() => reserveGeneration({ ledgerPath, approval, chargeBoundUsd: 1, requestId: 'three', model: MODEL }), /lock held/);
+    assert.throws(() => reserveGeneration({ ledgerPath, approval, requestId: 'three', model: MODEL }), /lock held/);
+    rmSync(`${ledgerPath}.lock`, { recursive: true });
+    const cleanLedger = readFileSync(ledgerPath, 'utf8');
+    writeFileSync(ledgerPath, cleanLedger.trimEnd());
+    assert.throws(() => reserveGeneration({ ledgerPath, approval, requestId: 'three', model: MODEL }), /torn ledger/);
+    writeFileSync(ledgerPath, `${cleanLedger}not-json\n`);
+    assert.throws(() => reserveGeneration({ ledgerPath, approval, requestId: 'three', model: MODEL }), /Unexpected token|JSON/);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 

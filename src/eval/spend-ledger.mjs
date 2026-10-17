@@ -1,4 +1,3 @@
-import { createHmac, timingSafeEqual } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { appendFileSync, closeSync, fsyncSync, mkdirSync, openSync, readFileSync, rmdirSync } from 'node:fs';
 import { dirname } from 'node:path';
@@ -6,74 +5,67 @@ import { hostname } from 'node:os';
 
 export const GENERATION_BEAD = 'mwg-train-i5i2.1';
 export const GENERATION_SCOPE = 'generation';
-const TRUSTED_AUTHORS = new Set(['fleet-manager-coord', 'mwg-train-coord', 'paulkinlan']);
+export const GENERATION_MODEL = 'fireworks/deepseek-v4p1-flash';
+// This exact, reviewed owner decision supersedes the earlier amount-scoped planning text. A different
+// close reason, an open bead, or an unreachable Beads remote does NOT silently authorize a live call.
+export const GENERATION_DECISION = "Owner decision recorded from chat (2026-10-13): 're: 2 - no spend caps, I am ok.' Live DeepSeek V4.1 Flash generation authorised without a dollar cap; log actual usage/spend.";
+const TRUSTED_REVOKERS = new Set(['fleet-manager-coord', 'mwg-train-coord', 'paulkinlan']);
 const SHA = /^[a-f0-9]{64}$/;
-// Private capability: only a successfully verified signed comment can mint a reservation ticket.
-// Object-shape checks alone let a future caller forge an approval-shaped object.
 const VERIFIED_APPROVALS = new WeakSet();
 const finitePositive = (value) => typeof value === 'number' && Number.isFinite(value) && value > 0;
+const knownUsd = (value) => value === 'UNVERIFIED' || finitePositive(value);
 
-/** The Beads issue description is not an approval. Only a signed, verbatim owner comment is eligible. */
+/** Refresh the actual closed decision AND comments before every live request, never a cached approval. */
 export function readGenerationApprovalComments() {
-  // Local Beads can lag the owner/hub; a failed sync refuses rather than trusting stale approval.
   execFileSync('bd', ['dolt', 'pull'], { encoding: 'utf8', timeout: 20_000, maxBuffer: 1024 * 1024 });
-  return JSON.parse(execFileSync('bd', ['comments', GENERATION_BEAD, '--json'], {
+  const decisions = JSON.parse(execFileSync('bd', ['show', GENERATION_BEAD, '--json'], {
     encoding: 'utf8', timeout: 15_000, maxBuffer: 1024 * 1024,
   }));
+  const comments = JSON.parse(execFileSync('bd', ['comments', GENERATION_BEAD, '--json'], {
+    encoding: 'utf8', timeout: 15_000, maxBuffer: 1024 * 1024,
+  }));
+  return { decision: decisions?.[0], comments };
 }
 
-/** A hub signature binds the exact quoted owner words and typed scope/cap/model to this bead.
- * Actor names alone are insufficient: BEADS_ACTOR can be supplied by an untrusted local process.
+/** Pin the owner's no-cap decision as code-reviewed policy. A BEADS_ACTOR name alone never grants spend.
+ * A trusted revocation anywhere in a comment (even Markdown-wrapped) stops future calls. Actor names
+ * are spoofable locally, so they are used only to DENY, not to manufacture positive authorization.
  */
-export function verifyGenerationApproval(comments, { key, model, now = new Date(), host = hostname() } = {}) {
-  if (!key || !Array.isArray(comments)) throw new Error('NO_OWNER_AUTH: signed bead comments and verification key required');
-  for (const comment of [...comments].reverse()) {
-    if (comment.issue_id !== GENERATION_BEAD || !TRUSTED_AUTHORS.has(comment.author)) continue;
-    const text = String(comment.text ?? '');
-    // A revocation is fail-closed even when the hub appends a reason/punctuation or formats it
-    // as a Markdown heading. Requiring a trailing newline or word boundary silently re-enables spend.
-    if (text.trimStart().replace(/^#{1,6}\s*/, '').startsWith('OWNER-AUTHORIZATION-REVOKED')) {
+export function verifyGenerationApproval({ decision, comments } = {}, { model, host = hostname() } = {}) {
+  if (model !== GENERATION_MODEL || !host || decision?.id !== GENERATION_BEAD ||
+      decision.status !== 'closed' || decision.close_reason !== GENERATION_DECISION || !Array.isArray(comments)) {
+    throw new Error('NO_OWNER_AUTH: current closed generation decision and comments required for this model');
+  }
+  for (const comment of comments) {
+    if (comment.issue_id === GENERATION_BEAD && TRUSTED_REVOKERS.has(comment.author) &&
+        /OWNER-AUTHORIZATION-REVOKED/i.test(String(comment.text ?? ''))) {
       throw new Error('NO_OWNER_AUTH: generation authorisation was revoked; stop before another request');
     }
-    const lines = Object.fromEntries(text.split('\n').map((line) => {
-      const match = /^([A-Za-z-]+): (.+)$/.exec(line);
-      return match ? [match[1], match[2]] : [null, null];
-    }).filter(([label]) => label));
-    if (!text.startsWith('OWNER-AUTHORIZATION\n') || lines.Scope !== GENERATION_SCOPE || lines.Model !== model ||
-        !host || lines['Ledger-host'] !== host) continue;
-    const cap = Number(lines['Cap-USD']);
-    const stop = Number(lines['Stop-at-pct']);
-    const expiry = Date.parse(lines.Expiry ?? '');
-    if (!/^"Authorised: up to [^"\n]+ USD in total for DeepSeek V4(?:\.1)? Flash generation; stop and ask at [^"\n]+\."$/.test(lines.Verbatim ?? '') ||
-        !finitePositive(cap) || !Number.isInteger(stop) || stop < 1 || stop > 100 ||
-        !Number.isFinite(expiry) || expiry <= now.getTime()) continue;
-    const verbatimCap = /up to ([0-9]+(?:\.[0-9]{1,2})?) USD/.exec(lines.Verbatim)?.[1];
-    const verbatimStop = /stop and ask at ([0-9]+)%\./.exec(lines.Verbatim)?.[1];
-    if (Number(verbatimCap) !== cap || Number(verbatimStop) !== stop) continue;
-    const payload = [GENERATION_BEAD, lines.Verbatim, lines.Scope, lines.Model, lines['Cap-USD'], lines.Expiry, lines['Stop-at-pct'], host].join('\n');
-    const expected = createHmac('sha256', key).update(payload).digest('hex');
-    const signature = lines.Signature?.replace(/^hmac-sha256:/, '');
-    if (!SHA.test(signature ?? '') || !timingSafeEqual(Buffer.from(signature, 'hex'), Buffer.from(expected, 'hex'))) continue;
-    const approval = Object.freeze({ bead: GENERATION_BEAD, scope: GENERATION_SCOPE, capUsd: cap, stopPct: stop,
-      expiry: lines.Expiry, commentId: comment.id, model, host, verbatim: lines.Verbatim });
-    VERIFIED_APPROVALS.add(approval);
-    return approval;
   }
-  throw new Error('NO_OWNER_AUTH: no unexpired, signed verbatim amount-scoped authorisation on the generation bead');
+  // Private capability: a caller cannot reserve using an object that merely resembles an approval.
+  const approval = Object.freeze({ bead: GENERATION_BEAD, scope: GENERATION_SCOPE, model, host,
+    decision: 'no-usd-cap', decisionId: decision.id });
+  VERIFIED_APPROVALS.add(approval);
+  return approval;
 }
 
-/** A quote for this precise inference SKU and billing mode is required. Training and -0731 quotes never match. */
+/** A cited, exact inference SKU is OPTIONAL for no-cap calls, but required to quote a dollar number. */
 export function loadPinnedGenerationTariff(model) {
   const quotes = readFileSync(new URL('../../docs/eval/quotes.jsonl', import.meta.url), 'utf8')
     .split('\n').filter(Boolean).map((line) => JSON.parse(line));
   const quote = quotes.find((entry) => entry.provider === 'Fireworks' && entry.model === model &&
     entry.product === 'inference (exact model)' && entry.mode === 'serverless' &&
     entry.inference_rates?.billingMode === 'per-token' && SHA.test(entry.sha256 ?? ''));
-  if (!quote) throw new Error(`UNVERIFIED_COST: no cited exact-SKU inference quote in docs/eval/quotes.jsonl for ${model}`);
-  return { ...quote.inference_rates, model, scope: GENERATION_SCOPE, sourceUrl: quote.source_url,
+  if (!quote) return null;
+  const rates = quote.inference_rates;
+  if (!finitePositive(rates.inputUsdPerMillion) || !finitePositive(rates.outputUsdPerMillion) ||
+      !finitePositive(rates.reasoningUsdPerMillion) || !Number.isFinite(rates.minimumUsd) || rates.minimumUsd < 0 ||
+      !/^https:\/\//.test(quote.source_url ?? '')) return null;
+  return { ...rates, model, scope: GENERATION_SCOPE, sourceUrl: quote.source_url,
     sourceSha256: quote.sha256, billingMode: 'per-token' };
 }
 
+/** Optional pre-call accounting estimate; absence of a tokenizer/tariff is UNVERIFIED, never $0. */
 export function worstCaseGenerationUsd({ tariff, model, promptTokensUpperBound, maxOutputTokens }) {
   if (tariff?.model !== model || tariff?.scope !== GENERATION_SCOPE || tariff?.billingMode !== 'per-token' ||
       !/^https:\/\//.test(tariff.sourceUrl ?? '') || !SHA.test(tariff.sourceSha256 ?? '') ||
@@ -83,8 +75,6 @@ export function worstCaseGenerationUsd({ tariff, model, promptTokensUpperBound, 
       !Number.isSafeInteger(maxOutputTokens) || maxOutputTokens <= 0) {
     throw new Error('UNVERIFIED_COST: exact-SKU cited inference tariff and bounded tokens required');
   }
-  // Reasoning shares the completion cap. Price ALL completion tokens at the more expensive rate;
-  // never double-count output and reasoning or assume reasoning is free.
   const bound = Math.max(tariff.minimumUsd,
     (promptTokensUpperBound * tariff.inputUsdPerMillion +
       maxOutputTokens * Math.max(tariff.outputUsdPerMillion, tariff.reasoningUsdPerMillion)) / 1_000_000);
@@ -92,57 +82,73 @@ export function worstCaseGenerationUsd({ tariff, model, promptTokensUpperBound, 
   return Math.ceil(bound * 100) / 100;
 }
 
-/** Single-machine reservation under a cross-process lock. Never steal a stale lock automatically:
- * a crashed request could still be running or charged, and an uncertain reservation stays charged.
- * A shared account across VMs requires a single shared atomic ledger/lock, else live calls must refuse.
+/** Reserve a request identity under a durable, single-host lock BEFORE sending any provider bytes.
+ * A no-cap decision removes the dollar ceiling, not duplicate, corrupt-ledger or uncertain-call checks.
  */
-export function reserveGeneration({ ledgerPath, approval, chargeBoundUsd, requestId, model }) {
+export function reserveGeneration({ ledgerPath, approval, chargeBoundUsd = 'UNVERIFIED', requestId, model, revision, projectId }) {
   if (!ledgerPath || !requestId || !approval || !VERIFIED_APPROVALS.has(approval) || approval.bead !== GENERATION_BEAD ||
-      approval.scope !== GENERATION_SCOPE || approval.model !== model || approval.host !== hostname() || !finitePositive(chargeBoundUsd)) {
-    throw new Error('SPEND_GUARD: missing scope, approval or charge bound');
-  }
+      approval.scope !== GENERATION_SCOPE || approval.model !== model || approval.host !== hostname() ||
+      !knownUsd(chargeBoundUsd)) throw new Error('SPEND_GUARD: missing scope, verified decision or cost status');
   mkdirSync(dirname(ledgerPath), { recursive: true, mode: 0o700 });
-  const lockPath = `${ledgerPath}.lock`;
-  try { mkdirSync(lockPath, { mode: 0o700 }); }
-  catch { throw new Error('SPEND_GUARD: ledger lock held or unavailable; refusing live request'); }
-  try {
-    const charges = new Map();
-    try {
-      for (const line of readFileSync(ledgerPath, 'utf8').split('\n').filter(Boolean)) {
-        const entry = JSON.parse(line); // a torn/corrupt ledger fails closed
-        if (entry.scope !== GENERATION_SCOPE || entry.bead !== GENERATION_BEAD || !entry.requestId ||
-            !['reserve', 'settle'].includes(entry.type)) throw new Error('SPEND_GUARD: malformed ledger row');
-        if (entry.type === 'reserve') {
-          if (!finitePositive(entry.reservedUsd) || charges.has(entry.requestId)) throw new Error('SPEND_GUARD: malformed reservation');
-          charges.set(entry.requestId, entry.reservedUsd);
-        } else {
-          if (!charges.has(entry.requestId)) throw new Error('SPEND_GUARD: settlement without reservation');
-          if (typeof entry.actualUsd === 'number' && Number.isFinite(entry.actualUsd)) {
-            charges.set(entry.requestId, Math.max(charges.get(entry.requestId), entry.actualUsd));
-          }
-        }
-      }
-    } catch (error) { if (error.code !== 'ENOENT') throw error; }
-    const used = [...charges.values()].reduce((sum, value) => sum + value, 0);
-    const effectiveCap = approval.capUsd * approval.stopPct / 100;
-    if (charges.has(requestId) || !Number.isFinite(used) || used + chargeBoundUsd > effectiveCap + 1e-9) {
-      throw new Error('SPEND_GUARD: duplicate call or cap exhausted; no request sent');
-    }
+  withLedgerLock(ledgerPath, () => {
+    const requests = readLedger(ledgerPath);
+    if (requests.has(requestId)) throw new Error('SPEND_GUARD: duplicate call; no request sent');
     appendDurable(ledgerPath, { type: 'reserve', bead: GENERATION_BEAD, scope: GENERATION_SCOPE, model,
-      requestId, approvalCommentId: approval.commentId, reservedUsd: chargeBoundUsd, at: new Date().toISOString() });
-  } finally { rmdirSync(lockPath); }
+      revision: revision ?? 'UNVERIFIED', projectId: projectId ?? 'UNVERIFIED', requestId,
+      approvalDecisionId: approval.decisionId, reservedUsd: chargeBoundUsd, at: new Date().toISOString() });
+  });
 }
 
-export function settleGeneration({ ledgerPath, requestId, model, actualUsd = null, status, tokens = null }) {
-  if (!requestId || !model || !['completed', 'failed', 'unknown'].includes(status) ||
-      (actualUsd !== null && (!Number.isFinite(actualUsd) || actualUsd < 0))) throw new Error('SPEND_GUARD: invalid settlement');
-  const lockPath = `${ledgerPath}.lock`;
-  try { mkdirSync(lockPath, { mode: 0o700 }); }
-  catch { throw new Error('SPEND_GUARD: ledger lock held or unavailable; settlement must be reconciled'); }
-  try {
+export function settleGeneration({ ledgerPath, requestId, model, computedUsd = 'UNVERIFIED', status, tokens = null }) {
+  if (!ledgerPath || !requestId || !model || !['completed', 'failed', 'unknown'].includes(status) ||
+      (computedUsd !== 'UNVERIFIED' && !(typeof computedUsd === 'number' && Number.isFinite(computedUsd) && computedUsd >= 0))) {
+    throw new Error('SPEND_GUARD: invalid settlement');
+  }
+  withLedgerLock(ledgerPath, () => {
+    const requests = readLedger(ledgerPath);
+    const reservation = requests.get(requestId);
+    if (!reservation || reservation.model !== model || reservation.settled) {
+      throw new Error('SPEND_GUARD: settlement without matching unsettled reservation');
+    }
     appendDurable(ledgerPath, { type: 'settle', bead: GENERATION_BEAD, scope: GENERATION_SCOPE,
-      requestId, model, actualUsd: actualUsd ?? 'UNVERIFIED', tokens: tokens ?? 'UNVERIFIED', status, at: new Date().toISOString() });
-  } finally { rmdirSync(lockPath); }
+      requestId, model, computedUsd, tokens: tokens ?? 'UNVERIFIED', status, at: new Date().toISOString() });
+  });
+}
+
+function readLedger(path) {
+  const requests = new Map();
+  let content;
+  try { content = readFileSync(path, 'utf8'); }
+  catch (error) { if (error.code === 'ENOENT') return requests; throw error; }
+  if (content && !content.endsWith('\n')) throw new Error('SPEND_GUARD: torn ledger row');
+  const lines = content.split('\n').filter(Boolean);
+  for (const line of lines) {
+    const entry = JSON.parse(line); // torn/corrupt ledger fails closed
+    if (entry.scope !== GENERATION_SCOPE || entry.bead !== GENERATION_BEAD || !entry.requestId ||
+        !['reserve', 'settle'].includes(entry.type)) throw new Error('SPEND_GUARD: malformed ledger row');
+    if (entry.type === 'reserve') {
+      if (requests.has(entry.requestId) || !knownUsd(entry.reservedUsd) || !entry.model) {
+        throw new Error('SPEND_GUARD: malformed reservation');
+      }
+      requests.set(entry.requestId, { model: entry.model, settled: false });
+    } else {
+      const prior = requests.get(entry.requestId);
+      if (!prior || prior.settled || prior.model !== entry.model ||
+          (entry.computedUsd !== 'UNVERIFIED' && !(typeof entry.computedUsd === 'number' &&
+            Number.isFinite(entry.computedUsd) && entry.computedUsd >= 0))) {
+        throw new Error('SPEND_GUARD: malformed settlement');
+      }
+      prior.settled = true;
+    }
+  }
+  return requests;
+}
+
+function withLedgerLock(path, action) {
+  const lockPath = `${path}.lock`;
+  try { mkdirSync(lockPath, { mode: 0o700 }); }
+  catch { throw new Error('SPEND_GUARD: ledger lock held or unavailable; refusing request'); }
+  try { return action(); } finally { rmdirSync(lockPath); }
 }
 
 function appendDurable(path, entry) {

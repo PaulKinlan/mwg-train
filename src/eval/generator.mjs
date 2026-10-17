@@ -67,7 +67,7 @@ export async function streamCompletion({ endpoint, apiKey, payload, fetchImpl = 
     });
     if (!response.ok || !response.body) throw fail('PROVIDER_ERROR', `provider returned HTTP ${response.status}`);
     const decoder = new TextDecoder();
-    let text = ''; let content = ''; let reasoning = ''; let finish = null; let usage = null;
+    let text = ''; let content = ''; let contentBytes = 0; let finish = null; let usage = null;
     for await (const chunk of response.body) {
       text += decoder.decode(chunk, { stream: true });
       if (text.length > 16_000_000) throw fail('OUTPUT_TOO_LARGE', 'stream exceeds limit');
@@ -80,15 +80,19 @@ export async function streamCompletion({ endpoint, apiKey, payload, fetchImpl = 
           if (!data || data === '[DONE]') continue;
           let event;
           try { event = JSON.parse(data); } catch { throw fail('PROVIDER_ERROR', 'malformed streaming event'); }
-          content += event.choices?.[0]?.delta?.content ?? '';
-          reasoning += event.choices?.[0]?.delta?.reasoning_content ?? '';
+          const fragment = event.choices?.[0]?.delta?.content ?? '';
+          if (typeof fragment !== 'string') throw fail('PROVIDER_ERROR', 'non-text content in streaming event');
+          contentBytes += Buffer.byteLength(fragment);
+          if (contentBytes > 12_000_000) throw fail('OUTPUT_TOO_LARGE', 'streamed project exceeds 12 MB');
+          // Do not accumulate reasoning text; provider usage reports reasoning tokens separately.
+          content += fragment;
           finish = event.choices?.[0]?.finish_reason ?? finish;
           usage = event.usage ?? usage;
         }
       }
     }
     if (text.trim() && text.trim() !== 'data: [DONE]') throw fail('PROVIDER_ERROR', 'truncated streaming response');
-    return normaliseCompletion({ choices: [{ message: { content, reasoning_content: reasoning }, finish_reason: finish }], usage });
+    return normaliseCompletion({ choices: [{ message: { content }, finish_reason: finish }], usage });
   } finally { clearTimeout(timer); }
 }
 
@@ -103,8 +107,8 @@ export async function generateProject({ family, framework, model = decodeConfig.
   arm = 'default', guidance = '', backend = 'stub', dryRun = false, outRoot = '.generated-runs',
   sourceRoot = '.', fetchImpl = fetch, canned = stubCompletion(), endpoint = process.env.FIREWORKS_BASE_URL,
   apiKey = process.env.FIREWORKS_API_KEY, ledgerPath = process.env.MWG_SPEND_LEDGER_PATH,
-  authKey = process.env.MWG_AUTH_VERIFY_KEY, promptTokensUpperBound = null,
-  approvalComments = readGenerationApprovalComments, chromeVersion = 'UNVERIFIED', retry = false } = {}) {
+  promptTokensUpperBound = null, approvalComments = readGenerationApprovalComments,
+  chromeVersion = 'UNVERIFIED', retry = false } = {}) {
   if (!FAMILY.test(family ?? '') || !FRAMEWORKS.has(framework) || !SHA.test(revision ?? '')) {
     throw fail('INVALID_IDENTITY', 'training family, supported framework and resolved 40-character model revision required');
   }
@@ -139,7 +143,7 @@ export async function generateProject({ family, framework, model = decodeConfig.
   }
   const started = performance.now();
   const requestId = randomUUID();
-  let chargeBoundUsd = null;
+  let chargeBoundUsd = 'UNVERIFIED';
   let tariff = null;
   let reserved = false;
   const record = { status: 'FAILED', project_id: projectId, family, framework, arm, model,
@@ -149,21 +153,25 @@ export async function generateProject({ family, framework, model = decodeConfig.
     scope: backend === 'live' ? 'generation' : 'offline-stub', bead: backend === 'live' ? 'mwg-train-i5i2.1' : null,
     request_id: requestId, backend, platform: process.platform, node_version: process.version, chrome_version: chromeVersion,
     prompt_tokens: null, completion_tokens: null, reasoning_tokens: null, content_tokens: null,
-    finish_reason: 'UNVERIFIED', projected_cost_usd: 'UNVERIFIED' };
+    finish_reason: 'UNVERIFIED', projected_cost_usd: 'UNVERIFIED', computed_cost_usd: 'UNVERIFIED',
+    cost_source_sha256: 'UNVERIFIED' };
   try {
     let completion;
     if (backend === 'stub') completion = normaliseCompletion(canned);
     else {
-      // No inference quote for either exact DeepSeek SKU is currently pinned. The tariff is an injected
-      // verified quote, NEVER a default or a training/-0731 price. Any missing precondition refuses before fetch.
-      const approval = verifyGenerationApproval(approvalComments(), { key: authKey, model });
-      tariff = loadPinnedGenerationTariff(model);
-      chargeBoundUsd = worstCaseGenerationUsd({ tariff, model, promptTokensUpperBound, maxOutputTokens: request.max_tokens });
       if (!endpoint || !apiKey || !ledgerPath) throw fail('NO_PROVIDER_CONFIG', 'provider endpoint, key and private ledger path required');
       if (!/^https:\/\//.test(endpoint)) throw fail('NO_PROVIDER_CONFIG', 'provider endpoint must be HTTPS');
-      reserveGeneration({ ledgerPath, approval, chargeBoundUsd, requestId, model });
+      // The owner explicitly approved generation without a USD ceiling. Refresh the pinned CLOSED decision
+      // and any trusted revocation before each call. An absent tariff affects accounting, not authority.
+      const approval = verifyGenerationApproval(approvalComments(), { model });
+      try { tariff = loadPinnedGenerationTariff(model); } catch { tariff = null; }
+      if (tariff && Number.isSafeInteger(promptTokensUpperBound) && promptTokensUpperBound > 0) {
+        chargeBoundUsd = worstCaseGenerationUsd({ tariff, model, promptTokensUpperBound, maxOutputTokens: request.max_tokens });
+      }
+      reserveGeneration({ ledgerPath, approval, chargeBoundUsd, requestId, model, revision, projectId });
       reserved = true;
       record.projected_cost_usd = chargeBoundUsd;
+      record.cost_source_sha256 = tariff?.sourceSha256 ?? 'UNVERIFIED';
       completion = await streamCompletion({ endpoint, apiKey, fetchImpl, payload: { model: decodeConfig.model,
         messages: [{ role: 'user', content: prompt }], ...request } });
     }
@@ -187,24 +195,23 @@ export async function generateProject({ family, framework, model = decodeConfig.
       ? String(error.message).replaceAll(apiKey, '[REDACTED]') : error.message };
   } finally {
     record.wall_time_ms = Math.round(performance.now() - started);
-    // If the provider's bill cannot be reconciled, retain the full reservation against the cap.
+    // The API reports usage, not billed dollars. Compute only against an exact cited inference tariff;
+    // otherwise cost is UNVERIFIED, never $0 or a borrowed training/-0731 rate.
     if (reserved) {
       try {
-        const actualUsd = Number.isSafeInteger(record.prompt_tokens) && Number.isSafeInteger(record.reasoning_tokens) &&
-          Number.isSafeInteger(record.content_tokens) && record.content_tokens >= 0
-          ? Math.ceil(100 * Math.max(tariff.minimumUsd,
+        if (tariff && Number.isSafeInteger(record.prompt_tokens) && Number.isSafeInteger(record.reasoning_tokens) &&
+            Number.isSafeInteger(record.content_tokens) && record.content_tokens >= 0) {
+          record.computed_cost_usd = Math.ceil(100 * Math.max(tariff.minimumUsd,
             (record.prompt_tokens * tariff.inputUsdPerMillion + record.reasoning_tokens * tariff.reasoningUsdPerMillion +
-              record.content_tokens * tariff.outputUsdPerMillion) / 1_000_000)) / 100 : null;
-        settleGeneration({ ledgerPath, requestId, model, actualUsd,
-          status: record.status === 'SUCCESS' ? 'completed' : 'unknown',
-          tokens: { prompt: record.prompt_tokens, completion: record.completion_tokens, reasoning: record.reasoning_tokens, content: record.content_tokens } });
-        if (actualUsd !== null && actualUsd > chargeBoundUsd) {
-          record.status = 'FAILED';
-          record.error = { code: 'CHARGE_OVER_BOUND', message: 'provider usage exceeds pre-call reservation; halt and reconcile' };
+              record.content_tokens * tariff.outputUsdPerMillion) / 1_000_000)) / 100;
         }
+        settleGeneration({ ledgerPath, requestId, model, computedUsd: record.computed_cost_usd,
+          status: record.status === 'SUCCESS' ? 'completed' : 'unknown',
+          tokens: { prompt: record.prompt_tokens, completion: record.completion_tokens,
+            reasoning: record.reasoning_tokens, content: record.content_tokens } });
       } catch {
         record.status = 'FAILED';
-        record.error = { code: 'LEDGER_UNSETTLED', message: 'reservation remains charged; reconcile ledger before any further call' };
+        record.error = { code: 'LEDGER_UNSETTLED', message: 'reservation status uncertain; reconcile before any retry' };
       }
     }
     await writeFile(join(base, 'run.json'), `${JSON.stringify(record, null, 2)}\n`, { flag: 'w', mode: 0o600 });
