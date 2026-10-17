@@ -1,12 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, writeFileSync, existsSync, rmSync, mkdirSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync, existsSync, rmSync, rmdirSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Readable } from 'node:stream';
-import { generateProject, buildGenerationPrompt, parseProjectFiles, streamCompletion } from '../src/eval/generator.mjs';
+import { generateProject, buildGenerationPrompt, parseProjectFiles, streamCompletion, rethrowLiveRecoveryMkdirError } from '../src/eval/generator.mjs';
 import { GENERATION_BEAD, verifyGenerationApproval, worstCaseGenerationUsd, reserveGeneration, settleGeneration } from '../src/eval/spend-ledger.mjs';
 import { decodeConfig, pinnedEvaluationBuildKey } from '../src/eval/decode-config.mjs';
 
@@ -252,6 +252,39 @@ test('zero-request preflight refusal does not consume the live identity after co
     assert.equal(corrected.status, 'SUCCESS');
     assert.equal(calls, 1);
     assert.equal(readFileSync(join(dir, 'ledger.jsonl'), 'utf8').trim().split('\n').length, 2);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('a legacy-recovery mkdir race is a fail-closed policy refusal, not raw EEXIST', () => {
+  const raced = Object.assign(new Error('already exists'), { code: 'EEXIST' });
+  assert.throws(() => rethrowLiveRecoveryMkdirError(raced),
+    (error) => error.code === 'RUN_IN_PROGRESS' && /another live run/.test(error.message));
+  const other = Object.assign(new Error('disk full'), { code: 'ENOSPC' });
+  assert.throws(() => rethrowLiveRecoveryMkdirError(other), (error) => error === other);
+});
+
+test('an empty pre-reservation orphan names a safe manual exit, never an automatic paid retry', async () => {
+  const dir = root(); let calls = 0;
+  try {
+    const ledgerPath = join(dir, 'ledger.jsonl');
+    const sse = `data: ${JSON.stringify({ choices: [{ delta: { content: JSON.stringify({ files: [
+      { path: 'index.html', content: '<p>Inert</p>' },
+    ] }) }, finish_reason: 'stop' }] })}\n\ndata: ${JSON.stringify({ choices: [], usage: { prompt_tokens: 10, completion_tokens: 15 } })}\n\ndata: [DONE]\n\n`;
+    const args = options(dir, { backend: 'live', endpoint: 'https://example.test/v1/chat/completions',
+      apiKey: 'OFFLINE_FAKE_KEY', ledgerPath, approvalComments: () => ownerApproval(),
+      fetchImpl: async () => { calls++; return { ok: true, status: 200, body: Readable.from([Buffer.from(sse)]) }; } });
+    const identity = await generateProject({ ...args, dryRun: true });
+    mkdirSync(identity.output_dir, { recursive: true });
+    await assert.rejects(generateProject(args), (error) => error.code === 'RUN_IN_PROGRESS' &&
+      error.message.includes('manual-recovery-of-an-empty-pre-reservation-orphan'));
+    assert.equal(calls, 0);
+    assert.equal(existsSync(ledgerPath), false);
+    // Only an empty, confirmed-unreserved directory can be removed with rmdir, never a paid run.
+    rmdirSync(identity.output_dir);
+    const recovered = await generateProject(args);
+    assert.equal(recovered.status, 'SUCCESS');
+    assert.equal(calls, 1);
+    assert.equal(readFileSync(ledgerPath, 'utf8').trim().split('\n').length, 2);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 

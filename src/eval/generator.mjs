@@ -13,6 +13,12 @@ const ARMS = new Set(['default', 'c1', 'c2', 'c3', 't']);
 const hash = (value) => createHash('sha256').update(value).digest('hex');
 const fail = (code, message) => Object.assign(new Error(message), { code });
 
+/** Only the legacy no-reservation recovery path calls this; classify a racing mkdir without timing-dependent tests. */
+export function rethrowLiveRecoveryMkdirError(error) {
+  if (error?.code === 'EEXIST') throw fail('RUN_IN_PROGRESS', 'another live run reclaimed this identity; inspect its process and ledger');
+  throw error;
+}
+
 export function buildGenerationPrompt({ plan, design, arm, guidance = '' }) {
   if (!ARMS.has(arm)) throw fail('INVALID_ARM', `unknown arm ${arm}`);
   if (typeof plan !== 'string' || !plan.trim() || typeof design !== 'string' || !design.trim()) throw fail('INVALID_SPEC', 'plan.md and design.md are required');
@@ -194,7 +200,11 @@ export async function generateProject({ family, framework, model = decodeConfig.
           throw fail('RUN_IN_PROGRESS', 'live run may be active; inspect before clearing this directory');
         }
         await rm(base, { recursive: true, force: true });
-        await mkdir(base);
+        try { await mkdir(base); }
+        catch (recoveryError) {
+          // A competing generator may reclaim this legacy directory between rm and mkdir.
+          rethrowLiveRecoveryMkdirError(recoveryError);
+        }
       } else {
         if (!retry) throw fail('RUN_EXISTS', 'failed or unfinished run exists; explicit offline retry only');
         await rm(join(base, 'project'), { recursive: true, force: true });
@@ -203,7 +213,7 @@ export async function generateProject({ family, framework, model = decodeConfig.
       if (readError.code !== 'ENOENT') throw readError;
       if (backend === 'live') {
         if (hasGenerationReservation({ ledgerPath, requestId })) throw fail('RUN_EXISTS', 'paid or uncertain live reservation exists');
-        throw fail('RUN_IN_PROGRESS', 'live run without run.json may still be pre-reservation; inspect the process');
+        throw fail('RUN_IN_PROGRESS', 'live run without run.json may still be pre-reservation; quiesce generators, verify no ledger row, then remove only an empty orphan directory (docs/eval/generator-runner.md#manual-recovery-of-an-empty-pre-reservation-orphan)');
       }
       if (!retry) throw fail('RUN_EXISTS', 'unfinished run exists; inspect before retry');
     }
