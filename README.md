@@ -69,6 +69,30 @@ opt-in, never an automatic macOS, root or container fallback.
 
 Teacher-generated material and the reproduction studies live in a **private companion repo** (`mwg-quarantine`, a sibling checkout), never in this public tree: tooling writes quarantined arms there by default, and the public tree receives material only via `npm run promote` (explicit, ledgered, publication-only). See [docs/quarantine.md](docs/quarantine.md).
 
+## Benchmark overview (measured pilot runs)
+
+The owner-only viewer's `/benchmark` route shows a high-level pre/post overview,
+including C1 bare base, C2 guidance and T trained-adapter arms; absent arms show
+N/A, never inferred results. Choose a measured run from the page when available.
+
+The viewer defaults to the committed, **historical** `docs/pilot/records.json`
+paired with `docs/pilot/yield.json` when no local measurement is available;
+these records are a different run from the current re-derived `pilot/CORPUS.json`.
+For the same committed snapshot, run `node scripts/benchmark-report.mjs --run docs/pilot`.
+After `npm run pilot:run` has produced a new measured run, use
+`node scripts/benchmark-report.mjs --run pilot/out/<run-id>` (or append `--json`)
+to compare pre/post guidance-rule adherence across archetypes, models and rules.
+The command reads that run's `yield.json` decisions and per-project `original.json` /
+`uplifted.json` rule verdicts; it does not rerun a browser or derive a score from
+acceptance counts. Scores use only rules measured PASS or FAIL on **both** sides
+of the same project. Missing/ERROR/NOT_APPLICABLE verdicts are excluded and
+counted separately; no paired checks display N/A. The current deterministic
+pilot is labelled `deterministic:no-model`, not credited to a trained model.
+A run with measured model outputs may supply `model` and its preregistered
+`arm` (`C1`, `C2` or `T`) on each decision.
+`pilot/CORPUS.json` alone contains no pre/post rule verdicts and cannot be
+used as a benchmark-score source.
+
 ## Corpus viewer (owner-only)
 
 `npm run viewer -- --corpus pilot` serves the corpus on TWO ports, both fronted by exe.dev auth:

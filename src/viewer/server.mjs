@@ -16,6 +16,7 @@
  * Viewer routes:
  *   GET  /                              index: every project, filters, accept/reject, live links
  *   GET  /project/<id>[?run=]           pair evidence: rules, journeys, security, screenshots
+ *   GET  /benchmark[?run=]              pre/post paired rule scores; historical committed fallback
  *   GET  /evidence/<id>/<file>[?run=]   screenshots and traces, path- and symlink-confined
  *   GET  /concepts                       no-JS index of authored patterns, A1 families and sealed A6 pairs
  *   GET  /concepts/pattern/<id>          one allowlisted pattern with pictured states and prompts
@@ -48,7 +49,8 @@ import { archetypeBrief, trainingBrief, trainingBriefs } from './concept-briefs.
 import { filterProjects, loadCorpus, projectView } from './corpus.mjs';
 import { hashTree } from '../corpus/tree-hash.mjs';
 import { scanTree, scanPairRecords, loadScanConfig, buildMatchers } from './owner-auth.mjs';
-import { renderIndex, renderLiveIndex, renderProject, renderMarkdown, escapeHtml, page, pageStyleHash } from './pages.mjs';
+import { renderIndex, renderBenchmark, renderLiveIndex, renderProject, renderMarkdown, escapeHtml, page, pageStyleHash } from './pages.mjs';
+import { readBenchmarkRun, benchmarkOverview } from '../eval/benchmark-report.mjs';
 import { loadTuningData, renderTuning } from './tuning.mjs';
 import { allowedTargetsFromTuningData, createBoardGenerator, DEFAULT_IMAGE_ENDPOINT, GenerationError, IMAGE_MODEL } from './generate.mjs';
 import { proxyRequest } from './proxy.mjs';
@@ -1012,6 +1014,22 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
         }
         response.writeHead(200, assetHeaders('image/jpeg'));
         return response.end(bytes);
+      }
+
+      if (path === '/benchmark' && request.method === 'GET') {
+        const runs = load(null).runs;
+        const selected = url.searchParams.get('run');
+        if (selected && !runs.includes(selected)) return textResponse(response, 'no such measured run', 404);
+        const runId = selected ?? runs[0] ?? null;
+        const runDir = runId && join(corpusRoot, 'out', runId);
+        const hasMeasurements = Boolean(runDir && existsSync(join(runDir, 'yield.json')));
+        const committedDir = join(repoRoot, 'docs', 'pilot');
+        const committedAvailable = !selected && !hasMeasurements && corpusRoot === resolve(repoRoot, 'pilot')
+          && existsSync(join(committedDir, 'yield.json')) && existsSync(join(committedDir, 'records.json'));
+        const report = benchmarkOverview(hasMeasurements
+          ? readBenchmarkRun(runDir)
+          : committedAvailable ? readBenchmarkRun(committedDir) : { runId, rows: [], projects: 0 });
+        return htmlResponse(response, renderBenchmark(report, { runs, hasMeasurements: hasMeasurements || committedAvailable, source: committedAvailable ? 'committed historical pilot measurement' : null }), 200, liveOrigin);
       }
 
       if (path === '/pipeline' && request.method === 'GET') {
