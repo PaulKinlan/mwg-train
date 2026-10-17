@@ -5,7 +5,7 @@ import { resolve } from 'node:path';
 import test from 'node:test';
 
 const ROOT = resolve(import.meta.dirname, '..');
-const EXPECTED_EDGES_SHA256 = '7059ccbf5b4c7dfce073044c143013fad2e7103a44478693c0ee414dd506b2c0';
+const EXPECTED_EDGES_SHA256 = 'b20279f3815d2df88e0fb7150239b22e182b4ce41038635da188d2bc96f7b99a';
 
 test('the fast-gate coverage contract cannot silently lose any declared suite edge', () => {
   const mapping = JSON.parse(readFileSync(resolve(ROOT, '.fleet/coverage-mapping.json'), 'utf8'));
@@ -26,6 +26,11 @@ test('multi-step reload and opt-in non-form state paths route to their focused r
   assert.ok(mapping['src/corpus/accept.mjs']?.includes('test/step-persistence.test.mjs'));
   assert.ok(mapping['src/corpus/state-persistence.mjs']?.includes('test/state-persistence.test.mjs'));
   assert.ok(mapping['src/eval/spec.mjs']?.includes('test/state-persistence.test.mjs'));
+});
+
+test('runtime quality diagnostics route to their real-browser regression', () => {
+  const mapping = JSON.parse(readFileSync(resolve(ROOT, '.fleet/coverage-mapping.json'), 'utf8'));
+  assert.deepEqual(mapping['src/corpus/eval.mjs'], ['test/runtime-quality.test.mjs']);
 });
 
 test('pilot corpus metadata serializer and manifest both route to lineage checks', () => {
