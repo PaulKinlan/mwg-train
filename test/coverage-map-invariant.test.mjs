@@ -5,7 +5,7 @@ import { resolve } from 'node:path';
 import test from 'node:test';
 
 const ROOT = resolve(import.meta.dirname, '..');
-const EXPECTED_EDGES_SHA256 = '4327b0154c72379324ceda750acbb3f92033de40ccdf8aa1e2d3d6cb0bda49b8';
+const EXPECTED_EDGES_SHA256 = '9dfb125225682693d29a0b41bb5483a047ef2755be9500f434d1e4a3f85d1bd7';
 
 test('the fast-gate coverage contract cannot silently lose any declared suite edge', () => {
   const mapping = JSON.parse(readFileSync(resolve(ROOT, '.fleet/coverage-mapping.json'), 'utf8'));
@@ -17,6 +17,11 @@ test('the fast-gate coverage contract cannot silently lose any declared suite ed
   // this digest in a reviewed test diff; formatting and key order do not change the contract.
   assert.equal(actual, EXPECTED_EDGES_SHA256,
     `coverage edges changed (${edges.length} now); review the mapping diff before updating this digest`);
+});
+
+test('runtime quality diagnostics route to their real-browser regression', () => {
+  const mapping = JSON.parse(readFileSync(resolve(ROOT, '.fleet/coverage-mapping.json'), 'utf8'));
+  assert.deepEqual(mapping['src/corpus/eval.mjs'], ['test/runtime-quality.test.mjs']);
 });
 
 test('pilot corpus metadata serializer and manifest both route to lineage checks', () => {
