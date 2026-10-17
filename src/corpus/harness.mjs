@@ -21,6 +21,7 @@ import { join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 
 import { RULES, SECURITY_CHECKS } from './rules.mjs';
+import { installRuntimeObservers, measureRuntimeQuality } from './eval.mjs';
 import { completeSelectorFieldName, selectorFieldName } from '../train/brief-schema.mjs';
 
 const READY_TIMEOUT_MS = 20_000;
@@ -743,6 +744,7 @@ export async function runProjectVersion({ chrome, projectDir, spec, label, port,
     network: [],
     rules: [],
     security: [],
+    runtime_quality: { status: 'NOT_MEASURED', reason: 'browser was not sampled' },
     errors: [],
   };
 
@@ -751,6 +753,13 @@ export async function runProjectVersion({ chrome, projectDir, spec, label, port,
   try {
     server = await startServer(projectDir, { port, dbPath });
     page = await chrome.newPage({ viewport: { width: 1280, height: 900 } });
+    let runtimeObservers = false;
+    try {
+      await installRuntimeObservers(page);
+      runtimeObservers = true;
+    } catch (error) {
+      record.runtime_quality = { status: 'NOT_MEASURED', reason: `performance observers unavailable: ${error.message}` };
+    }
     const consoleBefore = page.console.length;
     const trace = await page.trace(async () => {
       const journey = await driveJourney(page, base, spec.journey);
@@ -785,6 +794,18 @@ export async function runProjectVersion({ chrome, projectDir, spec, label, port,
     });
     record.trace_path = join(evidenceDir, `${label}-trace.json`);
     writeFileSync(record.trace_path, JSON.stringify({ traceEvents: trace.traceEvents }));
+
+    // Sample a new hard navigation at the unchanged desktop viewport BEFORE evidence capture switches
+    // device metrics to mobile and back. Diagnostic only: noisy lab timings never gate acceptance.
+    if (runtimeObservers) {
+      try {
+        record.runtime_quality = await measureRuntimeQuality(page, {
+          url: `${base}${spec.journey.startPath}`, interactionSelector: spec.check_context?.primaryField,
+        });
+      } catch (error) {
+        record.runtime_quality = { status: 'NOT_MEASURED', reason: `runtime probe failed: ${error.message}` };
+      }
+    }
 
     // The vector runs against the state the journey left behind, and again from a fresh page for the
     // "no error on load" rule.

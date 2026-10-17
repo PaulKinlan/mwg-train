@@ -408,6 +408,9 @@
     "test/chrome-sandbox.test.mjs",
     "test/eval-starters.test.mjs"
   ],
+  "src/corpus/eval.mjs": [
+    "test/runtime-quality.test.mjs"
+  ],
   "src/corpus/harness.mjs": [
     "test/harness-oracle.test.mjs",
     "test/harness-server.test.mjs",
