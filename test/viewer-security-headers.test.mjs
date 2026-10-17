@@ -37,6 +37,25 @@ const directives = (policy) =>
     return [name, rest.join(' ')];
   }));
 
+test('pilot project pairs the authored archetype step boards with its explicit Use Case', async (t) => {
+  const base = await serve(t);
+  const response = await fetch(`${base}/project/booking-raw`);
+  assert.equal(response.status, 200);
+  const html = await response.text();
+  const panel = html.split('id="project-comparison-title"')[1]?.split('</section>')[0];
+  assert.ok(panel, 'top-level comparison appears before long prompt/evaluation content');
+  assert.match(panel, /<strong>Use Case:<\/strong> /);
+  assert.match(panel, /docs\/design\/archetypes\/booking\/step1-[a-z0-9-]+\.jpg/);
+  assert.match(panel, /Rendered screenshots from the selected run/);
+  assert.doesNotMatch(panel, /src="\/concepts\/targets\//, 'A6 sealed target is not a design board');
+  const src = panel.match(/<img src="(\/concepts\/images\/booking\/step1-[a-z0-9-]+\.jpg)"/ )?.[1];
+  assert.ok(src, 'project page embeds the confined authored step route');
+  const board = await fetch(`${base}${src}`);
+  assert.equal(board.status, 200);
+  assert.equal(board.headers.get('content-type'), 'image/jpeg');
+  assert.deepEqual([...new Uint8Array(await board.arrayBuffer()).slice(0, 2)], [0xff, 0xd8]);
+});
+
 test('every viewer response carries a restrictive policy and nosniff', async (t) => {
   const base = await serve(t);
   const routes = ['/', '/concepts', '/concepts/pattern/booking', '/concepts/family/tr-01',

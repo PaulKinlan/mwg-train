@@ -35,6 +35,10 @@ test('offline stub writes inert files and a complete build-keyed run record; res
     assert.equal(first.finish_reason, 'stop');
     assert.equal(first.projected_cost_usd, 'UNVERIFIED');
     assert.ok(first.prompt.includes('Functional plan:') && first.prompt.includes('Visual design contract'));
+    assert.match(first.prompt, /Visual composition requirement:[\s\S]*hero\/media[\s\S]*generic form-only layout/);
+    assert.match(first.prompt, /substantial service hero[\s\S]*tune-up package cards[\s\S]*booking surface/,
+      'the tr-01 text design must carry the authored reference composition into offline generation');
+    assert.match(first.prompt, /Reference JPEGs are illustrative design assets, not supplied model inputs/);
     assert.equal(readFileSync(join(first.project_dir, 'server.mjs'), 'utf8'), "throw new Error('never execute generated code')");
     assert.ok(!existsSync(marker));
     const record = JSON.parse(readFileSync(join(first.output_dir, 'run.json'), 'utf8'));
@@ -82,6 +86,17 @@ test('length with empty content is a recorded failed run, with no app directory'
     assert.equal(existsSync(result.project_dir), false);
     assert.equal(JSON.parse(readFileSync(join(result.output_dir, 'run.json'), 'utf8')).status, 'FAILED');
   } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('visual composition instruction is arm-neutral; sealed targets and image bytes are not inputs', () => {
+  const inputs = { plan: 'Book a bicycle service', design: 'Hero beside package cards and booking controls' };
+  for (const arm of ['default', 'c1', 'c2', 'c3', 't']) {
+    const prompt = buildGenerationPrompt({ ...inputs, arm, ...(arm === 'c2' ? { guidance: 'Rule 1' } : {}) });
+    assert.match(prompt, /Visual composition requirement: Follow the authored design/);
+    assert.match(prompt, /Reference JPEGs are illustrative design assets, not supplied model inputs/);
+    assert.match(prompt, /A1\/A6 conformance targets are separate evaluation instruments/);
+    assert.ok(prompt.includes(inputs.design));
+  }
 });
 
 test('default/C1/C3/T prompts never accept guidance; C2 requires it', () => {

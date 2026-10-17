@@ -191,6 +191,14 @@ export const PAGE_CSS = `
   .score-delta { color: var(--action); font-size: 0.95rem; font-weight: bold; margin-left: 0.4rem; }
   .score-meta { margin: 0; font-size: 0.88rem; color: var(--muted); }
   .concept-spec-panel { margin-block: 1.2rem; }
+  .project-comparison { margin-block: 1.2rem; }
+  .project-comparison-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 33rem), 1fr)); gap: clamp(1rem, 2vw, 1.6rem); align-items: start; }
+  .project-comparison-grid > div { min-width: 0; }
+  .project-comparison figure { margin: 0 0 1.25rem; }
+  .project-comparison figure img { display: block; width: 100%; height: auto; border: 1px solid var(--line); border-radius: 0.4rem; }
+  .project-comparison figcaption { margin-block: 0.4rem; font-size: 0.9rem; color: var(--muted); overflow-wrap: anywhere; }
+  .project-comparison h3 { margin-block: 0 0.6rem; }
+  .project-comparison h4 { margin-block: 0.9rem 0.35rem; }
   .concept-image-frame a { display: block; background: var(--surface); }
   .concept-comparison { padding-block: 0.6rem 1.5rem; border-top: 1px solid var(--line); }
   .concept-comparison h3 { margin: 0.3rem 0 0.8rem; text-transform: capitalize; }
@@ -792,7 +800,30 @@ function renderShots(view, version, runId) {
     .join('')}</div>`;
 }
 
-export function renderProject({ view, runId, runs, liveOrigin, conceptBrief = null }) {
+function renderProjectComparison(view, brief, referenceBoards, runId) {
+  // Only named, confined concept routes enter this section; never point an image at an arbitrary
+  // corpus path, generated site, or A1/A6 conformance target. The server also checks JPEG bytes.
+  const boards = referenceBoards.filter(({ href, width, height }) =>
+    /^\/concepts\/(?:references\/tr-\d{2}|images\/[a-z0-9-]+\/step[1-9][0-9]*-[a-z0-9-]+)\.jpg$/.test(href) &&
+    Number.isInteger(width) && width > 0 && Number.isInteger(height) && height > 0);
+  const figures = boards.map((board, index) => `<figure><a href="${escapeHtml(board.href)}" aria-label="Open ${escapeHtml(board.label)} reference board at full size"><img src="${escapeHtml(board.href)}" alt="${escapeHtml(board.label)}: authored visual layout reference" width="${board.width}" height="${board.height}"${index ? ' loading="lazy"' : ''}></a><figcaption>${escapeHtml(board.label)} · <code>${escapeHtml(board.source)}</code></figcaption></figure>`);
+  return `<section class="panel project-comparison" aria-labelledby="project-comparison-title">
+  <h2 id="project-comparison-title">Use Case and visual reference</h2>
+  <p><strong>Use Case:</strong> ${brief?.useCase ? escapeHtml(brief.useCase) : '<span class="muted">No authored Use Case is available for this project in this checkout.</span>'}</p>
+  <p class="muted">Authored reference boards are design illustrations, not generated-run screenshots or evidence that an interaction works. Screenshots show only what this selected run recorded.</p>
+  <div class="project-comparison-grid">
+    <div><h3>Authored reference ${boards.length === 1 ? 'board' : 'boards'}</h3>
+    ${figures[0] ?? '<p class="muted">No authored reference board is available for this project in this checkout.</p>'}</div>
+    <div><h3>Rendered screenshots from the selected run</h3>
+      <h4>DEFAULT</h4>${renderShots(view, 'original', runId)}
+      <h4>IDEAL</h4>${renderShots(view, 'uplifted', runId)}
+    </div>
+  </div>
+  ${figures.length > 1 ? `<details><summary>View ${figures.length - 1} more authored state boards</summary><div class="project-comparison-grid">${figures.slice(1).join('')}</div></details>` : ''}
+</section>`;
+}
+
+export function renderProject({ view, runId, runs, liveOrigin, conceptBrief = null, referenceBoards = [] }) {
   const decision = view;
   const runEvidence = !!view.runDir;
   const runSelector =
@@ -858,6 +889,7 @@ export function renderProject({ view, runId, runs, liveOrigin, conceptBrief = nu
 ${projectBanner({ runEvidence })}
 <p class="muted">${escapeHtml(view.archetype)}${view.archetypeTitle ? ` — ${escapeHtml(view.archetypeTitle)}` : ''} · ${escapeHtml(view.framework)}${view.frameworkVersion ? ` ${escapeHtml(view.frameworkVersion)}` : ''}${view.frameworkFamily ? ` (${escapeHtml(view.frameworkFamily)})` : ''}</p>
 ${runSelector}
+${renderProjectComparison(view, brief, referenceBoards, runId)}
 ${attributionBlock(view)}
 ${conceptSection}
 <h2>live instances ${verificationBadge(view.verification, 'original')} ${verificationBadge(view.verification, 'uplifted')}</h2>

@@ -1056,21 +1056,28 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
         const scan = scanFor(project);
 
         let conceptBrief = null;
-        if (project.id?.startsWith('tr-')) {
-          const familyId = project.id.match(/^(tr-\d{2})-/)?.[1];
-          if (familyId) {
-            const rows = trainingBriefs(repoRoot);
-            const row = rows.get(familyId);
-            if (row) conceptBrief = trainingBrief(repoRoot, familyId, row);
+        let referenceBoards = [];
+        const familyId = project.id?.match(/^(tr-\d{2})-/)?.[1];
+        const archetypeId = project.spec?.archetype ?? project.archetype;
+        if (familyId) {
+          const row = trainingBriefs(repoRoot).get(familyId);
+          if (row) conceptBrief = trainingBrief(repoRoot, familyId, row);
+          const family = listConcepts(repoRoot, { view: 'family', id: familyId }).trainingTargets.find(({ id }) => id === familyId);
+          if (conceptBrief && family?.board && family.boardWidth > 0 && family.boardHeight > 0) {
+            referenceBoards = [{ href: `/concepts/references/${familyId}.jpg`,
+              source: `docs/design/training/${familyId}/reference.jpg`, label: `${familyId} visual anchor`,
+              width: family.boardWidth, height: family.boardHeight }];
           }
-        } else if (project.spec?.archetype) {
-          conceptBrief = archetypeBrief(repoRoot, project.spec.archetype);
-        } else if (project.archetype) {
-          conceptBrief = archetypeBrief(repoRoot, project.archetype);
+        } else if (archetypeId) {
+          conceptBrief = archetypeBrief(repoRoot, archetypeId);
+          const pattern = listConcepts(repoRoot, { view: 'pattern', id: archetypeId }).patterns.find(({ id }) => id === archetypeId);
+          if (conceptBrief && pattern) referenceBoards = pattern.steps.filter(({ available, width, height }) => available && width > 0 && height > 0)
+            .map(({ id, title, width, height }) => ({ href: `/concepts/images/${archetypeId}/${id}.jpg`,
+              source: `docs/design/archetypes/${archetypeId}/${id}.jpg`, label: title, width, height }));
         }
 
         const view = projectView(project, { scan, verification: verification(project) });
-        return htmlResponse(response, renderProject({ view, runId: corpus.runId, runs: corpus.runs, liveOrigin, conceptBrief }), 200, liveOrigin, { formNavigation: true });
+        return htmlResponse(response, renderProject({ view, runId: corpus.runId, runs: corpus.runs, liveOrigin, conceptBrief, referenceBoards }), 200, liveOrigin, { formNavigation: true });
       }
 
       const evidenceMatch = path.match(/^\/evidence\/([a-z0-9-]+)\/([a-z0-9.-]+)$/i);
