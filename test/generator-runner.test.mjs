@@ -123,7 +123,30 @@ test('closed no-cap owner decision permits scoped generation without a tariff; c
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
-test('deleting paid artifacts cannot resend the same live identity; a distinct arm still can run', async () => {
+test('an offline stub cannot masquerade as a resumed live provider response', async () => {
+  const dir = root(); let calls = 0;
+  try {
+    const base = options(dir);
+    const stub = await generateProject(base);
+    assert.equal(stub.backend, 'stub');
+    const body = `data: ${JSON.stringify({ choices: [{ delta: { content: JSON.stringify({ files: [
+      { path: 'index.html', content: '<p>Mock model response</p>' },
+    ] }) }, finish_reason: 'stop' }] })}\n\ndata: ${JSON.stringify({ choices: [], usage: { prompt_tokens: 20, completion_tokens: 30,
+      completion_tokens_details: { reasoning_tokens: 8 } } })}\n\ndata: [DONE]\n\n`;
+    const live = await generateProject({ ...base, backend: 'live', endpoint: 'https://example.test/v1/chat/completions',
+      apiKey: 'OFFLINE_FAKE_KEY', ledgerPath: join(dir, 'ledger.jsonl'), approvalComments: () => ownerApproval(),
+      fetchImpl: async () => { calls++; return { ok: true, status: 200, body: Readable.from([Buffer.from(body)]) }; } });
+    assert.equal(live.status, 'SUCCESS');
+    assert.equal(live.backend, 'live');
+    assert.equal(live.resumed, undefined);
+    assert.equal(calls, 1, 'a live request must not reuse the stub page');
+    assert.notEqual(live.output_dir, stub.output_dir);
+    assert.equal(readFileSync(join(live.project_dir, 'index.html'), 'utf8'), '<p>Mock model response</p>');
+    assert.equal(readFileSync(join(dir, 'ledger.jsonl'), 'utf8').trim().split('\n').length, 2);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('deleting paid artifacts cannot resend the same live identity; distinct arms and changed prompts remain separate', async () => {
   const dir = root(); let calls = 0;
   try {
     const ledgerPath = join(dir, 'ledger.jsonl');
@@ -147,6 +170,19 @@ test('deleting paid artifacts cannot resend the same live identity; a distinct a
     assert.equal(calls, 2, 'a separate arm is an intentionally distinct generation');
     assert.notEqual(otherArm.request_id, first.request_id);
     assert.equal(readFileSync(ledgerPath, 'utf8').trim().split('\n').length, 4);
+    const sourceRoot = join(dir, 'changed-source');
+    const designDir = join(sourceRoot, 'docs/train/design/tr-01');
+    mkdirSync(designDir, { recursive: true });
+    const plan = readFileSync(new URL('../docs/train/design/tr-01/plan.md', import.meta.url), 'utf8');
+    const design = readFileSync(new URL('../docs/train/design/tr-01/design.md', import.meta.url), 'utf8');
+    writeFileSync(join(designDir, 'plan.md'), `${plan}\nAdditional synthetic prompt detail for this local test.\n`);
+    writeFileSync(join(designDir, 'design.md'), design);
+    const changedPrompt = await generateProject({ ...args, sourceRoot });
+    assert.equal(changedPrompt.status, 'SUCCESS');
+    assert.notEqual(changedPrompt.prompt_sha256, first.prompt_sha256);
+    assert.notEqual(changedPrompt.request_id, first.request_id, 'prompt bytes are part of the ledger identity');
+    assert.equal(calls, 3);
+    assert.equal(readFileSync(ledgerPath, 'utf8').trim().split('\n').length, 6);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
@@ -238,6 +274,10 @@ test('any trusted revocation marker anywhere, Markdown-wrapped or suffixed, refu
     assert.throws(() => verifyGenerationApproval(ownerApproval([{ issue_id: GENERATION_BEAD,
       author, text: '**owner-authorization-revoked**' }]), { model: MODEL }), /revoked/, author);
   }
+  assert.throws(() => verifyGenerationApproval(ownerApproval([{ author: 'paul.kinlan@gmail.com',
+    text: 'OWNER-AUTHORIZATION-REVOKED' }]), { model: MODEL }), /revoked/, 'Beads rows without issue_id still revoke');
+  assert.equal(verifyGenerationApproval(ownerApproval([{ issue_id: 'other-bead', author: 'paul.kinlan@gmail.com',
+    text: 'OWNER-AUTHORIZATION-REVOKED' }]), { model: MODEL }).decision, 'no-usd-cap');
 });
 
 test('a cited exact-SKU rate can produce a bounded estimate; training/-0731 rates cannot', () => {

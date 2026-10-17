@@ -37,7 +37,9 @@ export function verifyGenerationApproval({ decision, comments } = {}, { model, h
     throw new Error('NO_OWNER_AUTH: current closed generation decision and comments required for this model');
   }
   for (const comment of comments) {
-    if (comment.issue_id === GENERATION_BEAD &&
+    // bd comments <bead> is already scoped to this bead. Some client versions omit issue_id;
+    // deny-only markers in those rows still revoke, but an explicitly foreign bead must not.
+    if ((comment.issue_id == null || comment.issue_id === GENERATION_BEAD) &&
         /OWNER-AUTHORIZATION-REVOKED/i.test(String(comment.text ?? ''))) {
       throw new Error('NO_OWNER_AUTH: generation authorisation was revoked; stop before another request');
     }

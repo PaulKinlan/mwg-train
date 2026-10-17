@@ -129,7 +129,8 @@ export async function generateProject({ family, framework, model = decodeConfig.
   const buildKey = evaluationBuildKey({ projectId, model, decodeConfigSha256: decodeSha });
   // Hash the key as a directory name (provider/id contains a slash and must never become a path).
   const keyDirectory = hash(buildKey);
-  const runId = hash([buildKey, revision, arm, promptSha256].join('\n'));
+  // Stub and live outputs must never share a success record: a prior offline stub is not a model call.
+  const runId = hash([buildKey, revision, backend, arm, promptSha256].join('\n'));
   const base = join(resolve(outRoot), keyDirectory, arm, runId);
   const output = { build_key: buildKey, output_dir: base, project_dir: join(base, 'project'), prompt_sha256: promptSha256 };
   if (dryRun) return { ...output, status: 'DRY_RUN', cost: 'UNVERIFIED', prompt };
@@ -146,7 +147,7 @@ export async function generateProject({ family, framework, model = decodeConfig.
   }
   const started = performance.now();
   // The ledger must remember a paid build even if its artifact directory is deleted. Bind live
-  // requests to the deterministic build+revision+arm+prompt identity, not a new UUID per call;
+  // requests to the deterministic build+revision+backend+arm+prompt identity, not a new UUID per call;
   // distinct arms or changed prompts remain independently measurable.
   const requestId = backend === 'live' ? runId : randomUUID();
   let chargeBoundUsd = 'UNVERIFIED';
