@@ -198,7 +198,11 @@ export async function generateProject({ family, framework, model = decodeConfig.
     record.status = 'SUCCESS';
     record.files = files.map((file) => ({ path: file.path, sha256: hash(file.content), bytes: Buffer.byteLength(file.content) }));
   } catch (error) {
-    record.error = { code: error.code ?? 'GENERATION_FAILED', message: apiKey && backend === 'live'
+    // Preserve policy-refusal identity in the run record; a duplicate paid identity must not look
+    // like an ordinary provider failure. No key or raw provider header is stored in this code.
+    const policyCode = /^SPEND_GUARD:/.test(error.message) ? 'SPEND_GUARD' :
+      /^NO_OWNER_AUTH:/.test(error.message) ? 'NO_OWNER_AUTH' : null;
+    record.error = { code: error.code ?? policyCode ?? 'GENERATION_FAILED', message: apiKey && backend === 'live'
       ? String(error.message).replaceAll(apiKey, '[REDACTED]') : error.message };
   } finally {
     record.wall_time_ms = Math.round(performance.now() - started);

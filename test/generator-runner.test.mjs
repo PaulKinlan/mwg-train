@@ -162,6 +162,7 @@ test('deleting paid artifacts cannot resend the same live identity; distinct arm
     rmSync(first.output_dir, { recursive: true, force: true }); // operator removed the only artifact record
     const duplicate = await generateProject(args);
     assert.equal(duplicate.status, 'FAILED');
+    assert.equal(duplicate.error.code, 'SPEND_GUARD');
     assert.match(duplicate.error.message, /duplicate call/);
     assert.equal(calls, 1, 'the private ledger remembers a charged identity after its artifacts vanish');
     assert.equal(readFileSync(ledgerPath, 'utf8').trim().split('\n').length, 2);
@@ -236,7 +237,7 @@ test('live mode refuses the real undecided bead and never contacts the provider 
       fetchImpl: () => { calls += 1; throw Error('network used'); } }));
     assert.equal(result.status, 'FAILED');
     assert.equal(calls, 0);
-    assert.equal(result.error.code, 'GENERATION_FAILED');
+    assert.equal(result.error.code, 'NO_OWNER_AUTH');
     assert.match(result.error.message, /NO_OWNER_AUTH/);
     assert.ok(!readFileSync(join(result.output_dir, 'run.json'), 'utf8').includes('TOP-SECRET-KEY'));
     assert.ok(!existsSync(join(dir, 'ledger.jsonl')));
