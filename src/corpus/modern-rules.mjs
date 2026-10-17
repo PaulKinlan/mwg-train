@@ -4,6 +4,16 @@
 
 const verdict = (rule, status, detail, observed = {}) => ({ rule, status, detail, observed });
 
+const VISIBLE_TRANSITION_NAMES = `
+  const counts = {};
+  for (const element of document.querySelectorAll('*')) {
+    if (element === document.documentElement || !element.checkVisibility()) continue;
+    const name = getComputedStyle(element).viewTransitionName;
+    if (name && name !== 'none') counts[name] = (counts[name] ?? 0) + 1;
+  }
+  return { names: counts, duplicates: Object.entries(counts).filter(([, count]) => count > 1).map(([name]) => name) };
+`;
+
 export const MODERN_RULES = Object.freeze({
   'ui-behaviors/platform-controls-dismiss-dialog': {
     title: 'A modal dialog opens with native modality and an accessible name',
@@ -104,15 +114,7 @@ export const MODERN_RULES = Object.freeze({
     property: 'a declared trusted trigger starts and completes a View Transition with unique visible names',
     async check(page, ctx = {}) {
       const rule = 'ui-behaviors/same-document-transitions';
-      const result = await page.evaluate(`
-        const counts = {};
-        for (const element of document.querySelectorAll('*')) {
-          if (element === document.documentElement || !element.checkVisibility()) continue;
-          const name = getComputedStyle(element).viewTransitionName;
-          if (name && name !== 'none') counts[name] = (counts[name] ?? 0) + 1;
-        }
-        return { names: counts, duplicates: Object.entries(counts).filter(([, count]) => count > 1).map(([name]) => name) };
-      `);
+      const result = await page.evaluate(VISIBLE_TRANSITION_NAMES);
       if (!Object.keys(result.names).length) return verdict(rule, 'NOT_APPLICABLE', 'no visible named view-transition elements were observed');
       if (result.duplicates.length) return verdict(rule, 'FAIL', `duplicate visible view-transition-name: ${result.duplicates.join(', ')}`, result);
       // A CSS name alone is not evidence that the site ever ran a transition. Only a declared
@@ -155,10 +157,13 @@ export const MODERN_RULES = Object.freeze({
         // The page belongs to later checks too: do not leave an instrumented platform method.
         await page.evaluate(`window.__mwgTransitionRestore?.(); delete window.__mwgTransitionRestore; delete window.__mwgTransitionProbe; return true`).catch(() => {});
       }
-      if (!observed?.started || !observed.ready || !observed.finished || observed.skipped) {
-        return verdict(rule, 'ERROR', 'declared trigger did not demonstrate a completed View Transition', { ...result, observed });
+      const after = await page.evaluate(VISIBLE_TRANSITION_NAMES).catch(() => null);
+      if (after?.duplicates.length) return verdict(rule, 'FAIL', `duplicate visible view-transition-name after interaction: ${after.duplicates.join(', ')}`, { before: result, after, observed });
+      if (!observed?.started || !observed.ready || !observed.finished || observed.skipped ||
+        !after || !Object.keys(result.names).some((name) => name in after.names)) {
+        return verdict(rule, 'ERROR', 'declared trigger did not demonstrate a completed View Transition with a shared named element', { before: result, after, observed });
       }
-      return verdict(rule, 'PASS', 'trusted trigger completed a View Transition with unique visible names', { ...result, observed });
+      return verdict(rule, 'PASS', 'trusted trigger completed a View Transition with a shared unique name before and after', { before: result, after, observed });
     },
   },
   'css/child-state-based-styling': {

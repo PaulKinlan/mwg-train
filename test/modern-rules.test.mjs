@@ -29,6 +29,8 @@ test('five optional modern-platform diagnostics observe real browser behaviour a
   const server = createServer((request, response) => {
     response.setHeader('content-type', 'text/html');
     response.end(request.url === '/static' ? html.replace(/<script>[\s\S]*?<\/script>/, '')
+      : request.url === '/duplicate-after' ? html.replace("document.querySelector('.vt').textContent = 'Animated again';",
+        "document.querySelector('.vt').textContent = 'Animated again'; document.querySelector('.vt').insertAdjacentHTML('afterend', '<div class=\"vt\">Duplicate</div>');")
       : request.url === '/broken' ? html.replace('aria-label="Confirm"', '')
         .replace('popovertarget="help"', 'popovertarget="missing"')
         .replace('container-type: inline-size;', '')
@@ -53,6 +55,9 @@ test('five optional modern-platform diagnostics observe real browser behaviour a
     await page.goto(`http://127.0.0.1:${server.address().port}/static`);
     assert.equal((await MODERN_RULES[transitionId].check(page, { viewTransitionTrigger: '#transition' })).status, 'ERROR',
       'a declared trigger with no transition must remain unmeasured');
+    await page.goto(`http://127.0.0.1:${server.address().port}/duplicate-after`);
+    assert.equal((await MODERN_RULES[transitionId].check(page, { viewTransitionTrigger: '#transition' })).status, 'FAIL',
+      'duplicate names created by the transition must not be missed');
     await page.goto(`http://127.0.0.1:${server.address().port}/broken`);
     assert.equal((await MODERN_RULES['ui-behaviors/platform-controls-dismiss-dialog'].check(page, {})).status, 'FAIL');
     for (const id of ['ui-behaviors/declarative-dialog-popover-control', 'css/size-aware-styling', 'css/child-state-based-styling']) {
