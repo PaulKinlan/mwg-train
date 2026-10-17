@@ -5,7 +5,7 @@ import { resolve } from 'node:path';
 import test from 'node:test';
 
 const ROOT = resolve(import.meta.dirname, '..');
-const EXPECTED_EDGES_SHA256 = '4327b0154c72379324ceda750acbb3f92033de40ccdf8aa1e2d3d6cb0bda49b8';
+const EXPECTED_EDGES_SHA256 = 'a6ad9aab249ef97e929f3a36e2f32227d08007d670179cf9df20bbfc6b0aa928';
 
 test('the fast-gate coverage contract cannot silently lose any declared suite edge', () => {
   const mapping = JSON.parse(readFileSync(resolve(ROOT, '.fleet/coverage-mapping.json'), 'utf8'));
@@ -17,6 +17,15 @@ test('the fast-gate coverage contract cannot silently lose any declared suite ed
   // this digest in a reviewed test diff; formatting and key order do not change the contract.
   assert.equal(actual, EXPECTED_EDGES_SHA256,
     `coverage edges changed (${edges.length} now); review the mapping diff before updating this digest`);
+});
+
+test('offline interface candidate source, preview CLI and pending block route to the no-spend regression', () => {
+  const mapping = JSON.parse(readFileSync(resolve(ROOT, '.fleet/coverage-mapping.json'), 'utf8'));
+  for (const file of ['src/eval/interface-candidate.mjs', 'scripts/generate-candidate.mjs',
+    'docs/eval/interface-contract.tr-01.candidate.md', 'docs/eval/PREREGISTRATION.md']) {
+    assert.ok(mapping[file]?.includes('test/interface-candidate.test.mjs'),
+      `${file} must rerun the arm-parity and offline-only candidate checks`);
+  }
 });
 
 test('pilot corpus metadata serializer and manifest both route to lineage checks', () => {

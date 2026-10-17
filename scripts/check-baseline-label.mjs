@@ -383,6 +383,7 @@ export const DOCUMENTS = {
   'docs/eval/deepseek-checkpoint-matrix.md': 'design', // provisional model decision and quote provenance, not a floor result
   'docs/eval/decode-config.deepseek-flash.json': 'config', // proposed request knobs, not a measured floor result
   'docs/eval/evaluator-interface-contract.md': 'design', // preregistration amendment draft, not yet ratified
+  'docs/eval/interface-contract.tr-01.candidate.md': 'design', // fixed offline proposal, not a measured floor or owner-ratified deviation
   'docs/eval/evaluable-primary-endpoint.md': 'design', // unratified endpoint decision memo, not outcome evidence
   'docs/train/memory-containment.md': 'design', // containment boundaries and reaper incident, not a floor report
   'docs/eval/owner-identity.json': 'config',
