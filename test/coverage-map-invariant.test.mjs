@@ -5,7 +5,7 @@ import { resolve } from 'node:path';
 import test from 'node:test';
 
 const ROOT = resolve(import.meta.dirname, '..');
-const EXPECTED_EDGES_SHA256 = 'b20279f3815d2df88e0fb7150239b22e182b4ce41038635da188d2bc96f7b99a';
+const EXPECTED_EDGES_SHA256 = 'f0692ffc6fd18650ede8d670d49cbca036e3dea12927c66c5a10aa7265b14c0c';
 
 test('the fast-gate coverage contract cannot silently lose any declared suite edge', () => {
   const mapping = JSON.parse(readFileSync(resolve(ROOT, '.fleet/coverage-mapping.json'), 'utf8'));
@@ -26,6 +26,7 @@ test('multi-step reload and opt-in non-form state paths route to their focused r
   assert.ok(mapping['src/corpus/accept.mjs']?.includes('test/step-persistence.test.mjs'));
   assert.ok(mapping['src/corpus/state-persistence.mjs']?.includes('test/state-persistence.test.mjs'));
   assert.ok(mapping['src/eval/spec.mjs']?.includes('test/state-persistence.test.mjs'));
+  assert.ok(mapping['scripts/rebuild-from-spec.mjs']?.includes('test/step-persistence.test.mjs'));
 });
 
 test('runtime quality diagnostics route to their real-browser regression', () => {

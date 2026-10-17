@@ -25,7 +25,7 @@ import { mkdirSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import process from 'node:process';
 
-import { journeyWorks } from '../src/corpus/accept.mjs';
+import { journeyExpectations, journeyWorks } from '../src/corpus/accept.mjs';
 import { launchChrome } from '../src/corpus/cdp.mjs';
 import { hashTree, runProjectVersion } from '../src/corpus/harness.mjs';
 import { buildProjectFromSpec, specForFamily } from '../src/eval/spec.mjs';
@@ -144,11 +144,7 @@ async function main() {
           runDir,
           dbPath: join(runDir, `${built.projectId}.sqlite`),
         });
-        const works = journeyWorks({
-          ...record,
-          echo_expect: projectSpec.echo_expect,
-          expected_write_journey: Boolean(projectSpec.write_journey),
-        });
+        const works = journeyWorks({ ...record, ...journeyExpectations(projectSpec) });
         const path = (value) => {
           try {
             return new URL(value).pathname;

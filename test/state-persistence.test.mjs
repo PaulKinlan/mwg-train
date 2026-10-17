@@ -10,8 +10,8 @@ const contract = { startPath: '/workspace', detourPath: '/roadmap',
   actions: [{ type: 'pointer', selector: '#move' }],
   observations: [{ selector: '#issue-status', property: 'text', equals: 'In Progress' }] };
 
-function fakePage({ keepReload = true, keepBack = true, initial = false } = {}) {
-  const calls = []; const entries = []; let index = -1;
+function fakePage({ keepReload = true, keepBack = true, keepSecondReload = true, initial = false } = {}) {
+  const calls = []; const entries = []; let index = -1; let reloads = 0;
   let state = initial ? 'In Progress' : 'Triage'; let href = '';
   const page = {
     calls, network: [],
@@ -21,7 +21,10 @@ function fakePage({ keepReload = true, keepBack = true, initial = false } = {}) 
       page.network.push({ url, status: 200 });
     },
     async url() { return href; },
-    async reload() { calls.push('Page.reload'); if (!keepReload) state = 'Triage'; },
+    async reload() {
+      calls.push('Page.reload'); reloads++;
+      if (!keepReload || (!keepSecondReload && reloads === 2)) state = 'Triage';
+    },
     async realPointer(x, y) { calls.push(`pointer ${x},${y}`); state = 'In Progress'; },
     async evaluate(source) {
       if (source.includes('getBoundingClientRect()')) return { x: 10, y: 20 };
@@ -64,6 +67,32 @@ test('browser Back losing progress fails even when the first reload retained it'
   const result = await evaluateStateJourney(fakePage({ keepBack: false }), BASE, contract);
   assert.equal(result.status, 'FAIL');
   assert.match(result.detail, /browser Back/);
+});
+
+test('a bfcache-only restored page fails the behavioural check after the second new document', async () => {
+  const page = fakePage({ keepSecondReload: false });
+  const result = await evaluateStateJourney(page, BASE, contract);
+  assert.equal(result.status, 'FAIL');
+  assert.match(result.detail, /survived Back only in a cached document, not after reload: #issue-status.text mismatched/);
+  assert.deepEqual(result.observed.failed, [{ selector: '#issue-status', property: 'text', reason: 'mismatched' }]);
+  assert.equal(page.calls.filter((call) => call === 'Page.reload').length, 2);
+});
+
+test('a failed observation reports the selector and whether it is missing or mismatched', async () => {
+  const page = fakePage();
+  const evaluate = page.evaluate.bind(page);
+  page.evaluate = async (source) => source.includes('map(({selector, property') ?
+    [{ found: false, matches: false }, { found: true, matches: false }] : evaluate(source);
+  const result = await evaluateStateJourney(page, BASE, { ...contract, observations: [
+    { selector: '#missing', property: 'value', equals: 'A' },
+    { selector: '#visible', property: 'attribute', attribute: 'aria-pressed', equals: 'true' },
+  ] });
+  assert.equal(result.status, 'FAIL');
+  assert.match(result.detail, /#missing.value missing or not rendered.*#visible.attribute mismatched/);
+  assert.deepEqual(result.observed.failed, [
+    { selector: '#missing', property: 'value', reason: 'missing or not rendered' },
+    { selector: '#visible', property: 'attribute', attribute: 'aria-pressed', reason: 'mismatched' },
+  ]);
 });
 
 test('a static result already present before input cannot claim persistence', async () => {

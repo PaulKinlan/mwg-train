@@ -249,7 +249,7 @@ export function stepStateVerdict(checks = []) {
   return { passed, checks };
 }
 
-async function stepFields(page, url, step) {
+async function stepFields(page, step) {
   const fields = [...Object.entries(step.fill ?? {}).map(([selector, value]) => ({ selector, value, kind: 'fill' })),
     ...Object.entries(step.select ?? {}).map(([selector, value]) => ({ selector, value, kind: 'select' }))];
   return page.evaluate(`
@@ -261,7 +261,7 @@ async function stepFields(page, url, step) {
       const ok = kind === 'select' ? actual?.value === value || actual?.textContent?.trim() === value : actual?.value === value;
       return { selector, ok: Boolean(ok) };
     });
-    return { url: location.href, checks, expectedUrl: ${JSON.stringify(url)} };
+    return { url: location.href, checks };
   `);
 }
 
@@ -282,7 +282,7 @@ export async function driveJourney(page, base, journey) {
   // form's POST rather than to an earlier page that also submitted.
   for (const [index, step] of (journey.steps ?? []).entries()) {
     await page.goto(`${base}${step.path}`);
-    const baseline = step.fill || step.select ? await stepFields(page, `${base}${step.path}`, step) : null;
+    const baseline = step.fill || step.select ? await stepFields(page, step) : null;
     const url = await page.url();
     record('step', { index, url, status: page.network.find((entry) => entry.url === url)?.status ?? null });
     if (step.fill) {
@@ -318,9 +318,9 @@ export async function driveJourney(page, base, journey) {
       // force a new document. A live DOM field alone is not evidence of persisted draft state.
       const stepUrl = `${base}${step.path}`;
       await page.goto(stepUrl);
-      const revisited = await stepFields(page, stepUrl, step);
+      const revisited = await stepFields(page, step);
       await page.reload();
-      const reloaded = await stepFields(page, stepUrl, step);
+      const reloaded = await stepFields(page, step);
       for (const [fieldIndex, field] of revisited.checks.entries()) {
         const checked = { index, kind: 'draft control', selector: field.selector,
           baselineDifferent: baseline?.checks[fieldIndex]?.ok !== true,

@@ -62,6 +62,17 @@ async function observe(page, expectations, { waitMs = 1200 } = {}) {
   }
 }
 
+function observationFailure(detail, expectations, observations) {
+  const failed = expectations.flatMap(({ selector, property, attribute }, index) => {
+    const result = observations[index];
+    return result?.matches ? [] : [{ selector, property, ...(attribute ? { attribute } : {}),
+      reason: result?.found ? 'mismatched' : 'missing or not rendered' }];
+  });
+  return { name: 'state-persistence', status: 'FAIL',
+    detail: `${detail}: ${failed.map(({ selector, property, reason }) => `${selector}.${property} ${reason}`).join('; ')}`,
+    observed: { checks: expectations.length, failed, source: 'CDP rendered DOM' } };
+}
+
 async function drive(page, action) {
   if (action.type === 'type') return page.realType(action.selector, action.value);
   if (action.type === 'select') return page.selectOption(action.selector, action.value);
@@ -115,11 +126,19 @@ export async function evaluateStateJourney(page, base, contract) {
     }
     for (const action of contract.actions) await drive(page, action);
     const observed = await observe(page, contract.observations);
-    if (observed.some(({ matches }) => !matches)) return { name: 'state-persistence', status: 'FAIL', detail: 'interaction did not produce the declared rendered state' };
+    if (observed.some(({ matches }) => !matches)) {
+      return observationFailure('interaction did not produce the declared rendered state', contract.observations, observed);
+    }
     const activeUrl = await page.url();
     await page.reload();
-    if (await page.url() !== activeUrl || (await observe(page, contract.observations)).some(({ matches }) => !matches)) {
-      return { name: 'state-persistence', status: 'FAIL', detail: 'declared rendered state was lost on a true document reload' };
+    const reloadedUrl = await page.url();
+    if (reloadedUrl !== activeUrl) {
+      return { name: 'state-persistence', status: 'FAIL', detail: 'true document reload changed the state page URL',
+        observed: { expectedUrl: activeUrl, actualUrl: reloadedUrl } };
+    }
+    const reloaded = await observe(page, contract.observations);
+    if (reloaded.some(({ matches }) => !matches)) {
+      return observationFailure('declared rendered state was lost on a true document reload', contract.observations, reloaded);
     }
     const before = await page.send('Page.getNavigationHistory');
     const returnEntry = before.entries?.[before.currentIndex]?.id;
@@ -131,14 +150,16 @@ export async function evaluateStateJourney(page, base, contract) {
     const detour = await page.send('Page.getNavigationHistory');
     if (detour.currentIndex <= before.currentIndex) throw new Error('detour did not create a browser history entry');
     await backTo(page, returnEntry, activeUrl);
-    if ((await observe(page, contract.observations)).some(({ matches }) => !matches)) {
-      return { name: 'state-persistence', status: 'FAIL', detail: 'browser Back lost the declared rendered state' };
+    const afterBack = await observe(page, contract.observations);
+    if (afterBack.some(({ matches }) => !matches)) {
+      return observationFailure('browser Back lost the declared rendered state', contract.observations, afterBack);
     }
     // A bfcache restoration alone can look correct even when no state was saved. Require another
     // new document after Back before claiming the journey persisted.
     await page.reload();
-    if ((await observe(page, contract.observations)).some(({ matches }) => !matches)) {
-      return { name: 'state-persistence', status: 'FAIL', detail: 'state survived Back only in a cached document, not after reload' };
+    const afterSecondReload = await observe(page, contract.observations);
+    if (afterSecondReload.some(({ matches }) => !matches)) {
+      return observationFailure('state survived Back only in a cached document, not after reload', contract.observations, afterSecondReload);
     }
     return { name: 'state-persistence', status: 'PASS', detail: 'state changed after trusted input and survived reload, browser Back and a second reload',
       observed: { checks: contract.observations.length, source: 'CDP trusted input + rendered DOM' } };
