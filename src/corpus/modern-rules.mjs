@@ -100,9 +100,9 @@ export const MODERN_RULES = Object.freeze({
     },
   },
   'ui-behaviors/same-document-transitions': {
-    title: 'Visible view-transition names are unique',
-    property: 'no two visible elements currently share a non-none view-transition-name',
-    async check(page) {
+    title: 'A same-document transition runs with unique visible names',
+    property: 'a declared trusted trigger starts and completes a View Transition with unique visible names',
+    async check(page, ctx = {}) {
       const rule = 'ui-behaviors/same-document-transitions';
       const result = await page.evaluate(`
         const counts = {};
@@ -114,8 +114,51 @@ export const MODERN_RULES = Object.freeze({
         return { names: counts, duplicates: Object.entries(counts).filter(([, count]) => count > 1).map(([name]) => name) };
       `);
       if (!Object.keys(result.names).length) return verdict(rule, 'NOT_APPLICABLE', 'no visible named view-transition elements were observed');
-      return verdict(rule, result.duplicates.length ? 'FAIL' : 'PASS',
-        result.duplicates.length ? `duplicate visible view-transition-name: ${result.duplicates.join(', ')}` : 'visible named elements have unique transition names; transition execution was not asserted', result);
+      if (result.duplicates.length) return verdict(rule, 'FAIL', `duplicate visible view-transition-name: ${result.duplicates.join(', ')}`, result);
+      // A CSS name alone is not evidence that the site ever ran a transition. Only a declared
+      // trigger may be driven: guessing an arbitrary navigation can mutate or leave the project.
+      if (!ctx.viewTransitionTrigger) return verdict(rule, 'ERROR', 'named elements exist but no same-document transition trigger was declared', result);
+      const probe = await page.evaluate(`
+        const trigger = document.querySelector(${JSON.stringify(ctx.viewTransitionTrigger)});
+        if (!trigger || !trigger.checkVisibility() || typeof document.startViewTransition !== 'function') return null;
+        const rect = trigger.getBoundingClientRect();
+        if (!rect.width || !rect.height) return null;
+        const original = document.startViewTransition;
+        const ownMethod = Object.hasOwn(document, 'startViewTransition');
+        const state = { started: 0, ready: 0, finished: 0, skipped: 0 };
+        window.__mwgTransitionProbe = state;
+        window.__mwgTransitionRestore = () => {
+          if (ownMethod) document.startViewTransition = original;
+          else delete document.startViewTransition;
+        };
+        document.startViewTransition = function(...args) {
+          const transition = Reflect.apply(original, this, args);
+          state.started += 1;
+          transition.ready.then(() => { state.ready += 1; }, () => { state.skipped += 1; });
+          transition.finished.then(() => { state.finished += 1; }, () => { state.skipped += 1; });
+          return transition;
+        };
+        return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+      `);
+      if (!probe) return verdict(rule, 'ERROR', 'declared transition trigger or browser API was not available', result);
+      let observed;
+      try {
+        await page.realPointer(probe.x, probe.y);
+        const deadline = Date.now() + 2000;
+        const startDeadline = Date.now() + 350;
+        do {
+          observed = await page.evaluate(`return window.__mwgTransitionProbe ?? null`);
+          if (!observed || observed.skipped || observed.finished || (!observed.started && Date.now() >= startDeadline)) break;
+          await new Promise((resolve) => setTimeout(resolve, 50));
+        } while (Date.now() < deadline);
+      } finally {
+        // The page belongs to later checks too: do not leave an instrumented platform method.
+        await page.evaluate(`window.__mwgTransitionRestore?.(); delete window.__mwgTransitionRestore; delete window.__mwgTransitionProbe; return true`).catch(() => {});
+      }
+      if (!observed?.started || !observed.ready || !observed.finished || observed.skipped) {
+        return verdict(rule, 'ERROR', 'declared trigger did not demonstrate a completed View Transition', { ...result, observed });
+      }
+      return verdict(rule, 'PASS', 'trusted trigger completed a View Transition with unique visible names', { ...result, observed });
     },
   },
   'css/child-state-based-styling': {
