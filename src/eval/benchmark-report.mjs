@@ -67,13 +67,19 @@ function summarize(rows) {
 }
 
 export function benchmarkOverview(run) {
-  const group = (key) => [...new Set(run.rows.map((row) => row[key]))].sort().map((name) => ({
-    name, ...summarize(run.rows.filter((row) => row[key] === name)),
+  // The historical headline counted only the original pilot vector. Newly introduced optional
+  // diagnostics stay visible per rule, but cannot silently change its paired denominator.
+  const optional = new Set(MODERN_RULE_IDS);
+  const coreRows = run.rows.filter((row) => !optional.has(row.rule));
+  const diagnosticRows = run.rows.filter((row) => optional.has(row.rule));
+  const group = (key, rows) => [...new Set(rows.map((row) => row[key]))].sort().map((name) => ({
+    name, ...summarize(rows.filter((row) => row[key] === name)),
   }));
-  return { runId: run.runId, projects: run.projects, overall: summarize(run.rows),
-    archetypes: group('archetype'), models: group('model'),
-    arms: ['C1', 'C2', 'T'].map((name) => ({ name, ...summarize(run.rows.filter((row) => row.arm === name)) })),
-    rules: [...group('rule'), ...MODERN_RULE_IDS.filter((id) => !run.rows.some((row) => row.rule === id))
+  return { runId: run.runId, projects: run.projects, overall: summarize(coreRows),
+    diagnostics: summarize(diagnosticRows),
+    archetypes: group('archetype', coreRows), models: group('model', coreRows),
+    arms: ['C1', 'C2', 'T'].map((name) => ({ name, ...summarize(coreRows.filter((row) => row.arm === name)) })),
+    rules: [...group('rule', run.rows), ...MODERN_RULE_IDS.filter((id) => !run.rows.some((row) => row.rule === id))
       .map((name) => ({ name, ...summarize([]) }))].sort((a, b) => a.name.localeCompare(b.name)) };
 }
 
@@ -85,10 +91,12 @@ export function renderBenchmarkMarkdown(report) {
     ...rows.map((row) => `| \`${row.name.replaceAll('|', '\\|')}\` | ${score(row.before, row.comparable)} | ${score(row.after, row.comparable)} | ${row.comparable ? `${row.delta >= 0 ? '+' : ''}${row.delta}` : 'N/A'} | ${row.comparable} | ${row.unmeasured} |`), '',
   ];
   const o = report.overall;
+  const d = report.diagnostics;
   return [
     `# Benchmark overview — ${report.runId}`, '', baselineAttributionLine(), '',
     `Measured projects: ${report.projects}. Pre: **${score(o.before, o.comparable)}** → post: **${score(o.after, o.comparable)}** (${o.comparable ? `${o.delta >= 0 ? '+' : ''}${o.delta}` : 'N/A'} change in passes).`, '',
-    'Scores are PASS / paired PASS-or-FAIL rule checks from the same measured project and rule on both sides. ERROR, NOT_APPLICABLE, missing and unmatched verdicts are excluded from both denominators and counted as unmeasured; these are rule-adherence scores, not visual, functional, or model-quality scores. The deterministic pilot is not a trained-model benchmark. New platform-feature diagnostics are N/A on historical runs and do not change the preregistered acceptance gate.', '',
+    'The headline, archetype, model and arm totals use the historical core rule vector. Optional modern-platform diagnostics are shown per rule but excluded from these totals, so adding them cannot alter the historical denominator. Scores are PASS / paired PASS-or-FAIL checks for the same project and rule on both sides. ERROR, NOT_APPLICABLE, missing and unmatched verdicts are unmeasured, not passes; this is rule adherence, not visual, functional, or model quality. The deterministic pilot is not a trained-model benchmark.', '',
+    `Optional diagnostics (separate, not in headline): pre ${score(d.before, d.comparable)} → post ${score(d.after, d.comparable)}; ${d.unmeasured} unmeasured.`, '',
     ...table('Archetypes', report.archetypes),
     '## Sealed model arms', '', 'C1 = bare base; C2 = base + guidance prompt; T = trained adapter. N/A means no paired measurements were supplied for that arm, not a score of zero.', '',
     ...table('C1 / C2 / T', report.arms), ...table('Recorded model identities (including deterministic controls)', report.models), ...table('Guidance rules', report.rules),
