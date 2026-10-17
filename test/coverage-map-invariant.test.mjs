@@ -5,7 +5,7 @@ import { resolve } from 'node:path';
 import test from 'node:test';
 
 const ROOT = resolve(import.meta.dirname, '..');
-const EXPECTED_EDGES_SHA256 = 'f0692ffc6fd18650ede8d670d49cbca036e3dea12927c66c5a10aa7265b14c0c';
+const EXPECTED_EDGES_SHA256 = '13c924b7ac4fd69eff5e5f693d37da38c1d6c9e8a016e4db370af16ef062873a';
 
 test('the fast-gate coverage contract cannot silently lose any declared suite edge', () => {
   const mapping = JSON.parse(readFileSync(resolve(ROOT, '.fleet/coverage-mapping.json'), 'utf8'));
@@ -32,6 +32,11 @@ test('multi-step reload and opt-in non-form state paths route to their focused r
 test('runtime quality diagnostics route to their real-browser regression', () => {
   const mapping = JSON.parse(readFileSync(resolve(ROOT, '.fleet/coverage-mapping.json'), 'utf8'));
   assert.deepEqual(mapping['src/corpus/eval.mjs'], ['test/runtime-quality.test.mjs']);
+});
+
+test('the harness reruns real-browser isolation of optional diagnostics', () => {
+  const mapping = JSON.parse(readFileSync(resolve(ROOT, '.fleet/coverage-mapping.json'), 'utf8'));
+  assert.ok(mapping['src/corpus/harness.mjs'].includes('test/modern-rules.test.mjs'));
 });
 
 test('pilot corpus metadata serializer and manifest both route to lineage checks', () => {

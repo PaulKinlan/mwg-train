@@ -4,6 +4,7 @@ import { createServer } from 'node:http';
 import { launchChrome } from '../src/corpus/cdp.mjs';
 import { MODERN_RULES, MODERN_RULE_IDS } from '../src/corpus/modern-rules.mjs';
 import { decidePair } from '../src/corpus/accept.mjs';
+import { runOptionalModernRules } from '../src/corpus/harness.mjs';
 
 const html = `<!doctype html><html><head><style>
 .card { background-color: white; }
@@ -31,7 +32,13 @@ test('five optional modern-platform diagnostics observe real browser behaviour a
     response.end(request.url === '/static' ? html.replace(/<script>[\s\S]*?<\/script>/, '')
       : request.url === '/duplicate-after' ? html.replace("document.querySelector('.vt').textContent = 'Animated again';",
         "document.querySelector('.vt').textContent = 'Animated again'; document.querySelector('.vt').insertAdjacentHTML('afterend', '<div class=\"vt\">Duplicate</div>');")
-      : request.url === '/broken' ? html.replace('aria-label="Confirm"', '')
+      : request.url === '/stubborn' ? html.replace('</body>', `<script>
+        document.addEventListener('keydown', (event) => {
+          if (event.key === 'Escape' && document.querySelector('#modal').open) {
+            event.preventDefault(); event.stopImmediatePropagation();
+          }
+        }, true);
+      </script></body>`) : request.url === '/broken' ? html.replace('aria-label="Confirm"', '')
         .replace('popovertarget="help"', 'popovertarget="missing"')
         .replace('container-type: inline-size;', '')
         .replace('background-color: rgb(10, 20, 30);', 'background-color: white;') : html);
@@ -63,6 +70,13 @@ test('five optional modern-platform diagnostics observe real browser behaviour a
     for (const id of ['ui-behaviors/declarative-dialog-popover-control', 'css/size-aware-styling', 'css/child-state-based-styling']) {
       assert.equal((await MODERN_RULES[id].check(page, {})).status, 'ERROR', id);
     }
+    const isolatedUrl = `http://127.0.0.1:${server.address().port}/stubborn`;
+    const isolated = await runOptionalModernRules(page, isolatedUrl, {});
+    assert.equal(isolated.find((result) => result.rule === 'ui-behaviors/platform-controls-dismiss-dialog').status, 'FAIL');
+    assert.equal(isolated.find((result) => result.rule === 'ui-behaviors/declarative-dialog-popover-control').status, 'PASS',
+      'an undismissable dialog cannot taint a working popover on the next pristine page');
+    assert.equal(await page.evaluate(`return document.querySelector('#modal').open`), false,
+      'the final evidence page must not retain the failed modal');
     await page.goto('data:text/html,<html><body><p>No optional features</p></body></html>');
     for (const id of MODERN_RULE_IDS) {
       const result = await MODERN_RULES[id].check(page, {});
