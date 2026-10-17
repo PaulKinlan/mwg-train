@@ -145,7 +145,10 @@ export async function generateProject({ family, framework, model = decodeConfig.
     } catch (readError) { if (readError.code !== 'ENOENT') throw readError; if (!retry) throw fail('RUN_EXISTS', 'unfinished run exists; inspect before retry'); }
   }
   const started = performance.now();
-  const requestId = randomUUID();
+  // The ledger must remember a paid build even if its artifact directory is deleted. Bind live
+  // requests to the deterministic build+revision+arm+prompt identity, not a new UUID per call;
+  // distinct arms or changed prompts remain independently measurable.
+  const requestId = backend === 'live' ? runId : randomUUID();
   let chargeBoundUsd = 'UNVERIFIED';
   let tariff = null;
   let reserved = false;

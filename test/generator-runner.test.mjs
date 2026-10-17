@@ -123,6 +123,33 @@ test('closed no-cap owner decision permits scoped generation without a tariff; c
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
+test('deleting paid artifacts cannot resend the same live identity; a distinct arm still can run', async () => {
+  const dir = root(); let calls = 0;
+  try {
+    const ledgerPath = join(dir, 'ledger.jsonl');
+    const data = JSON.stringify({ files: [{ path: 'index.html', content: '<p>Inert model output</p>' }] });
+    const events = `data: ${JSON.stringify({ choices: [{ delta: { content: data }, finish_reason: 'stop' }] })}\n\ndata: ${JSON.stringify({ choices: [], usage: { prompt_tokens: 19, completion_tokens: 42, completion_tokens_details: { reasoning_tokens: 10 } } })}\n\ndata: [DONE]\n\n`;
+    const args = options(dir, { backend: 'live', endpoint: 'https://example.test/v1/chat/completions',
+      apiKey: 'OFFLINE_FAKE_KEY', ledgerPath, approvalComments: () => ownerApproval(),
+      fetchImpl: async () => { calls++; return { ok: true, status: 200, body: Readable.from([Buffer.from(events)]) }; } });
+    const first = await generateProject(args);
+    assert.equal(first.status, 'SUCCESS');
+    assert.equal(calls, 1);
+    assert.equal(readFileSync(ledgerPath, 'utf8').trim().split('\n').length, 2);
+    rmSync(first.output_dir, { recursive: true, force: true }); // operator removed the only artifact record
+    const duplicate = await generateProject(args);
+    assert.equal(duplicate.status, 'FAILED');
+    assert.match(duplicate.error.message, /duplicate call/);
+    assert.equal(calls, 1, 'the private ledger remembers a charged identity after its artifacts vanish');
+    assert.equal(readFileSync(ledgerPath, 'utf8').trim().split('\n').length, 2);
+    const otherArm = await generateProject({ ...args, arm: 'c1' });
+    assert.equal(otherArm.status, 'SUCCESS');
+    assert.equal(calls, 2, 'a separate arm is an intentionally distinct generation');
+    assert.notEqual(otherArm.request_id, first.request_id);
+    assert.equal(readFileSync(ledgerPath, 'utf8').trim().split('\n').length, 4);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
 test('Markdown-wrapped trusted revocation prevents a live fetch or ledger reservation', async () => {
   const dir = root(); let calls = 0;
   try {
