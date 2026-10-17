@@ -37,13 +37,16 @@ export function classifyRuntimeSample({ lcp, events, memory, interactionsDriven 
   const stableDocuments = samples.length === 4 && samples.every((entry) => entry.documents === 1);
   const retained = samples.map((entry) => entry.nodes - entry.liveNodes);
   const monotonic = retained.length === 4 && retained.every((value, index) => index === 0 || value >= retained[index - 1]);
+  const liveStable = samples.length === 4 && samples.every((entry) => entry.liveNodes === samples[0].liveNodes);
   const growth = samples.length === 4 ? retained[3] - retained[0] : null;
   const heapGrowth = samples.length === 4 ? samples[3].heapBytes - samples[0].heapBytes : null;
   const detachedDom = !stableDocuments || !samples.every((entry) => Number.isFinite(entry.nodes) && Number.isFinite(entry.liveNodes) && Number.isFinite(entry.heapBytes))
     ? { status: 'INCONCLUSIVE', reason: 'four comparable post-GC single-document samples were not available' }
-    : { status: monotonic && growth >= 30 && heapGrowth >= 65_536 ? 'SUSPECTED_RETENTION' : 'NO_GROWTH_OBSERVED',
-        retainedNodeProxyGrowth: growth, heapByteGrowth: heapGrowth, samples: samples.length,
-        note: 'CDP DOM-node count minus live-document elements is a retained-node proxy, not an exact detached-node count; short sampling cannot prove absence of leaks' };
+    : !liveStable ? { status: 'INCONCLUSIVE', reason: 'connected DOM node count changed across interactions; retained-node growth cannot be isolated',
+      liveNodeGrowth: samples[3].liveNodes - samples[0].liveNodes }
+      : { status: monotonic && growth >= 30 && heapGrowth >= 65_536 ? 'SUSPECTED_RETENTION' : 'NO_GROWTH_OBSERVED',
+          retainedNodeProxyGrowth: growth, heapByteGrowth: heapGrowth, samples: samples.length,
+          note: 'CDP DOM-node count minus connected document nodes is a retained-node proxy, not an exact detached-node count; short sampling cannot prove absence of leaks' };
   return { lcp_proxy: lcpProxy, inp_sample: inpSample, detached_dom: detachedDom };
 }
 
@@ -51,7 +54,14 @@ async function memorySample(page) {
   await page.send('HeapProfiler.collectGarbage');
   const [dom, heap, liveNodes] = await Promise.all([
     page.send('Memory.getDOMCounters'), page.send('Runtime.getHeapUsage'),
-    page.evaluate(`return document.querySelectorAll('*').length`),
+    page.evaluate(`
+      // Include connected text/comment nodes: element-only counts mistake newly added text
+      // in a healthy live app for retained detached DOM.
+      const walker = document.createTreeWalker(document, NodeFilter.SHOW_ALL);
+      let count = 0;
+      while (walker.nextNode()) count += 1;
+      return count + 1;
+    `),
   ]);
   return { documents: dom.documents, nodes: dom.nodes, liveNodes, heapBytes: heap.usedSize };
 }

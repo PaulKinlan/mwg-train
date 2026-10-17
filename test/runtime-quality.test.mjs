@@ -16,17 +16,23 @@ test('runtime samples refuse missing observations and distinguish retention susp
   assert.equal(measured.inp_sample.status, 'SLOW_SAMPLE');
   assert.equal(measured.detached_dom.status, 'SUSPECTED_RETENTION');
   assert.equal(classifyRuntimeSample({ lcp: [], events: [], memory: samples.map((row) => ({ ...row, documents: 2 })) }).detached_dom.status, 'INCONCLUSIVE');
+  const liveGrowth = samples.map((row, index) => ({ ...row, liveNodes: 60 + index * 20 }));
+  assert.equal(classifyRuntimeSample({ lcp: [], events: [], memory: liveGrowth }).detached_dom.status, 'INCONCLUSIVE',
+    'a growing live page is not evidence of a retained detached subtree');
 });
 
 test('a real browser records hard-navigation paint, trusted interaction timing and retained detached DOM proxy', async (t) => {
-  const server = createServer((_request, response) => {
+  const server = createServer((request, response) => {
     response.setHeader('content-type', 'text/html');
+    const action = request.url === '/growing'
+      ? `for (let i = 0; i < 90; i++) { const row = document.createElement('p'); row.textContent = 'Connected content ' + i; document.body.append(row); }`
+      : `const detached = document.createElement('div');
+        for (let i = 0; i < 90; i++) detached.append(document.createElement('span'));
+        (window.retained ||= []).push(detached, new Array(12000).fill('retained'));`;
     response.end(`<!doctype html><html><body><h1>Runtime probe with visible content</h1>
       <button id="probe">Run interaction</button><script>
       document.getElementById('probe').addEventListener('click', () => {
-        const detached = document.createElement('div');
-        for (let i = 0; i < 90; i++) detached.append(document.createElement('span'));
-        (window.retained ||= []).push(detached, new Array(12000).fill('retained'));
+        ${action}
         const until = performance.now() + 65;
         while (performance.now() < until) {};
       });</script></body></html>`);
@@ -43,6 +49,9 @@ test('a real browser records hard-navigation paint, trusted interaction timing a
     assert.ok(['OBSERVED', 'SLOW_SAMPLE'].includes(result.inp_sample.status), JSON.stringify(result));
     assert.ok(result.inp_sample.milliseconds >= 16, JSON.stringify(result));
     assert.equal(result.detached_dom.status, 'SUSPECTED_RETENTION', JSON.stringify(result));
+    const growing = await measureRuntimeQuality(page, { url: `http://127.0.0.1:${server.address().port}/growing`, interactionSelector: '#probe' });
+    assert.equal(growing.detached_dom.status, 'INCONCLUSIVE', JSON.stringify(growing));
+    assert.ok(growing.detached_dom.liveNodeGrowth > 0, JSON.stringify(growing));
     await page.close();
   } finally { if (chrome) await chrome.close(); }
 });
