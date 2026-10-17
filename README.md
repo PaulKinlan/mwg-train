@@ -69,6 +69,21 @@ opt-in, never an automatic macOS, root or container fallback.
 
 Teacher-generated material and the reproduction studies live in a **private companion repo** (`mwg-quarantine`, a sibling checkout), never in this public tree: tooling writes quarantined arms there by default, and the public tree receives material only via `npm run promote` (explicit, ledgered, publication-only). See [docs/quarantine.md](docs/quarantine.md).
 
+## Benchmark overview (measured pilot runs)
+
+After `npm run pilot:run` has produced a measured run, use
+`node scripts/benchmark-report.mjs --run pilot/out/<run-id>` (or append `--json`)
+to compare pre/post guidance-rule adherence across archetypes, models and rules.
+The command reads that run's `yield.json` decisions and per-project `original.json` /
+`uplifted.json` rule verdicts; it does not rerun a browser or derive a score from
+acceptance counts. Scores use only rules measured PASS or FAIL on **both** sides
+of the same project. Missing/ERROR/NOT_APPLICABLE verdicts are excluded and
+counted separately; no paired checks display N/A. The current deterministic
+pilot is labelled `deterministic:no-model`, not credited to a trained model.
+A run with measured model outputs may supply `model` on each decision.
+`pilot/CORPUS.json` alone contains no pre/post rule verdicts and cannot be
+used as a benchmark-score source.
+
 ## Corpus viewer (owner-only)
 
 `npm run viewer -- --corpus pilot` serves the corpus on TWO ports, both fronted by exe.dev auth:
