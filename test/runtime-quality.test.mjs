@@ -6,6 +6,8 @@ import { classifyRuntimeSample, installRuntimeObservers, measureRuntimeQuality }
 
 test('runtime samples refuse missing observations and distinguish retention suspicion from proof', () => {
   const empty = classifyRuntimeSample({ lcp: [], events: [], memory: [] });
+  assert.equal(empty.status, 'NOT_MEASURED');
+  assert.equal(typeof empty.reason, 'string');
   assert.equal(empty.lcp_proxy.status, 'NOT_MEASURED');
   assert.equal(empty.inp_sample.status, 'NOT_APPLICABLE');
   assert.equal(classifyRuntimeSample({ lcp: [], events: [], memory: [], interactionsDriven: 3 }).inp_sample.status, 'NOT_MEASURED');
@@ -15,10 +17,30 @@ test('runtime samples refuse missing observations and distinguish retention susp
   assert.equal(measured.lcp_proxy.status, 'OBSERVED');
   assert.equal(measured.inp_sample.status, 'SLOW_SAMPLE');
   assert.equal(measured.detached_dom.status, 'SUSPECTED_RETENTION');
+  assert.equal(measured.status, 'MEASURED');
+  assert.equal(measured.reason, null);
   assert.equal(classifyRuntimeSample({ lcp: [], events: [], memory: samples.map((row) => ({ ...row, documents: 2 })) }).detached_dom.status, 'INCONCLUSIVE');
   const liveGrowth = samples.map((row, index) => ({ ...row, liveNodes: 60 + index * 20 }));
-  assert.equal(classifyRuntimeSample({ lcp: [], events: [], memory: liveGrowth }).detached_dom.status, 'INCONCLUSIVE',
+  const partial = classifyRuntimeSample({ lcp: [], events: [], memory: liveGrowth });
+  assert.equal(partial.detached_dom.status, 'INCONCLUSIVE',
     'a growing live page is not evidence of a retained detached subtree');
+  assert.equal(partial.status, 'NOT_MEASURED');
+  assert.equal(classifyRuntimeSample({ lcp: [{ startTime: 10, size: 100 }], events: [], memory: liveGrowth }).status, 'PARTIAL');
+});
+
+test('missing trigger and sampling errors retain the same top-level status/reason contract', async () => {
+  const page = { goto: async () => {}, waitForSettled: async () => {}, url: async () => 'http://localhost/',
+    evaluate: async (source) => source.includes('__mwgRuntimeSample?.lcp') ? [{ startTime: 20, size: 100 }]
+      : source.includes('querySelector(') ? { x: 1, y: 1 } : null,
+    send: async () => { throw new Error('GC unavailable'); } };
+  const absent = await measureRuntimeQuality(page, { url: 'http://localhost/', interactionSelector: null });
+  assert.equal(absent.status, 'PARTIAL');
+  assert.equal(typeof absent.reason, 'string');
+  assert.equal(absent.inp_sample.status, 'NOT_APPLICABLE');
+  const failed = await measureRuntimeQuality(page, { url: 'http://localhost/', interactionSelector: '#field' });
+  assert.equal(failed.status, 'PARTIAL');
+  assert.equal(typeof failed.reason, 'string');
+  assert.match(failed.note, /GC unavailable/);
 });
 
 test('a real browser records hard-navigation paint, trusted interaction timing and retained detached DOM proxy', async (t) => {
@@ -49,8 +71,10 @@ test('a real browser records hard-navigation paint, trusted interaction timing a
     assert.ok(['OBSERVED', 'SLOW_SAMPLE'].includes(result.inp_sample.status), JSON.stringify(result));
     assert.ok(result.inp_sample.milliseconds >= 16, JSON.stringify(result));
     assert.equal(result.detached_dom.status, 'SUSPECTED_RETENTION', JSON.stringify(result));
+    assert.equal(result.status, 'MEASURED', JSON.stringify(result));
     const growing = await measureRuntimeQuality(page, { url: `http://127.0.0.1:${server.address().port}/growing`, interactionSelector: '#probe' });
     assert.equal(growing.detached_dom.status, 'INCONCLUSIVE', JSON.stringify(growing));
+    assert.equal(growing.status, 'PARTIAL', JSON.stringify(growing));
     assert.ok(growing.detached_dom.liveNodeGrowth > 0, JSON.stringify(growing));
     await page.close();
   } finally { if (chrome) await chrome.close(); }

@@ -47,7 +47,12 @@ export function classifyRuntimeSample({ lcp, events, memory, interactionsDriven 
       : { status: monotonic && growth >= 30 && heapGrowth >= 65_536 ? 'SUSPECTED_RETENTION' : 'NO_GROWTH_OBSERVED',
           retainedNodeProxyGrowth: growth, heapByteGrowth: heapGrowth, samples: samples.length,
           note: 'CDP DOM-node count minus connected document nodes is a retained-node proxy, not an exact detached-node count; short sampling cannot prove absence of leaks' };
-  return { lcp_proxy: lcpProxy, inp_sample: inpSample, detached_dom: detachedDom };
+  const measuredCount = [lcpProxy.status, inpSample.status, detachedDom.status]
+    .filter((status) => ['OBSERVED', 'SLOW_SAMPLE', 'SUSPECTED_RETENTION', 'NO_GROWTH_OBSERVED'].includes(status)).length;
+  const status = measuredCount === 3 ? 'MEASURED' : measuredCount ? 'PARTIAL' : 'NOT_MEASURED';
+  return { status, reason: status === 'MEASURED' ? null : status === 'PARTIAL'
+    ? 'one or more runtime metrics could not be measured' : 'no runtime metric was observed',
+    lcp_proxy: lcpProxy, inp_sample: inpSample, detached_dom: detachedDom };
 }
 
 async function memorySample(page) {
