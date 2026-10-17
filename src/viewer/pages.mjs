@@ -206,7 +206,8 @@ export const PAGE_CSS = `
   .harness-target-drawer summary:hover { color: var(--ink); }
   .harness-target-drawer figure { margin-top: 0.75rem; }
   .concept-comparison figcaption { margin-top: 0.45rem; overflow-wrap: anywhere; }
-  .concept-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr)); gap: 1.5rem; padding-inline-start: 1.6rem; }
+  /* Keep reference boards large enough to inspect; the 88rem page shell permits at most two 38.75rem tracks. */
+  .concept-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 38.75rem), 1fr)); gap: 1.5rem; padding-inline-start: 1.6rem; }
   .concept-steps li { min-width: 0; padding-inline-start: 0.2rem; }
   .concept-steps figure { min-width: 0; margin: 0; }
   .concept-steps figcaption { padding-block: 0.45rem; color: var(--muted); overflow-wrap: anywhere; }
