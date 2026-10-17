@@ -147,6 +147,19 @@ createServer((_req, res) => { res.setHeader('content-type', 'text/html'); res.en
   const live = `http://127.0.0.1:${viewer.liveServer.address().port}`;
   const index = await fetch(`http://127.0.0.1:${viewer.server.address().port}/`);
   const indexHtml = await index.text();
+  const trainingPage = await fetch(`http://127.0.0.1:${viewer.server.address().port}/project/tr-01-raw`);
+  assert.equal(trainingPage.status, 200);
+  const trainingHtml = await trainingPage.text();
+  assert.match(trainingHtml, /<strong>Use Case:<\/strong> I operate a mobile bicycle repair van/);
+  assert.match(trainingHtml, /src="\/concepts\/references\/tr-01\.jpg"[^>]*width="\d+" height="\d+"/);
+  assert.match(trainingHtml, /docs\/design\/training\/tr-01\/reference\.jpg/);
+  assert.match(trainingHtml, /Rendered screenshots from the selected run[\s\S]*no evidence directory recorded/);
+  assert.doesNotMatch(trainingHtml, /<img[^>]+(?:A1_self_generated|concepts\/targets)/,
+    'the A1 conformance instrument must not become a visual reference');
+  const image = await fetch(`http://127.0.0.1:${viewer.server.address().port}/concepts/references/tr-01.jpg`);
+  assert.equal(image.status, 200);
+  assert.equal(image.headers.get('content-type'), 'image/jpeg');
+  assert.deepEqual([...new Uint8Array(await image.arrayBuffer()).slice(0, 2)], [0xff, 0xd8]);
   assert.match(indexHtml, /owner-auth scan: DEFAULT pending.*no IDEAL recorded/);
   assert.doesNotMatch(indexHtml, /DEFAULT \+ IDEAL pending|action="[^"]*\/live\/tr-01-raw\/uplifted/);
   const missing = await fetch(`${live}/live/tr-01-raw/uplifted/`);
@@ -456,6 +469,27 @@ test('loadCorpus, filterProjects and renderIndex preserve and filter multiple ge
   assert.match(html, /<select name="model">[\s\S]*<option value="deepseek\/deepseek-flash" selected>deepseek\/deepseek-flash<\/option>/);
   assert.match(html, /<th scope="col">model<\/th>/);
   assert.match(html, /<td><code>deepseek\/deepseek-flash<\/code><\/td>/);
+});
+
+test('project comparison places escaped Use Case and authored boards beside recorded screenshots', (t) => {
+  const root = buildFixtureCorpus();
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const corpus = loadCorpus(root);
+  const view = projectView(corpus.projects.find(({ id }) => id === 'booking-raw'));
+  const html = renderProject({ view, runId: corpus.runId, runs: corpus.runs, liveOrigin: 'http://127.0.0.1:7701',
+    conceptBrief: { useCase: 'Book a <script>service</script> and see a receipt.' },
+    referenceBoards: [
+      { href: '/concepts/images/booking/step1-browse.jpg', source: 'docs/design/archetypes/booking/step1-browse.jpg', label: 'Browse <offers>', width: 1376, height: 768 },
+      { href: 'javascript:alert(1)', source: 'hostile', label: 'Injected board', width: 1, height: 1 },
+    ] });
+  assert.match(html, /<h2 id="project-comparison-title">Use Case and visual reference<\/h2>/);
+  assert.match(html, /Use Case:<\/strong> Book a &lt;script&gt;service&lt;\/script&gt;/);
+  assert.match(html, /src="\/concepts\/images\/booking\/step1-browse\.jpg"[^>]*width="1376" height="768"/);
+  assert.match(html, /Browse &lt;offers&gt;/);
+  assert.doesNotMatch(html, /javascript:alert|Injected board|<script>service<\/script>/);
+  const comparison = html.split('id="project-comparison-title"')[1].split('</section>')[0];
+  assert.match(comparison, /Rendered screenshots from the selected run[\s\S]*\/evidence\/booking-raw\/original-desktop\.png/);
+  assert.ok(html.indexOf('id="project-comparison-title"') < html.indexOf('Prompts &amp; Concept Specification'), 'visual evidence should precede lengthy prompts');
 });
 
 test('project page renders concept links, prompts in code blocks, and before/after score summary', () => {

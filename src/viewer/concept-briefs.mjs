@@ -411,6 +411,7 @@ export function archetypeBrief(repoRoot, id, trainingImagePrompt = null) {
   ].join('\n\n');
   return {
     id,
+    useCase: siteProse(section(plan, 'Use case')?.split(/\n{2,}/)[0] ?? ''),
     simplePrompt: archetypeSimplePrompt(id, plan),
     sitePrompt: eventPattern ? sitePrompt.replace(/\bform#registration-form\b|#registration-form\b/g, 'the registration form') : sitePrompt,
     imagePromptSource: readme ? `docs/design/archetypes/${id}/README.md` : trainingImagePrompt?.source ?? null,
@@ -485,6 +486,7 @@ export function trainingBrief(repoRoot, id, row) {
   const journey = section(plan, 'Journey');
   return {
     siteName: familySiteName(design, null),
+    useCase: row.prompt.trim() || siteProse(section(plan, 'Use case') ?? ''),
     simplePrompt: trainingSimplePrompt(row),
     sitePrompt: [
       `Build a functional ${row.archetype.replaceAll('-', ' ')} website for this scenario. The image prompt below is an illustration brief; it is not a substitute for implementing the behaviour.`,

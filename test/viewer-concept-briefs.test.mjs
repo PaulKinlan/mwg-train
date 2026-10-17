@@ -16,6 +16,7 @@ test('all current prompt and state claims come from real authored sources', () =
   for (const pattern of gallery.patterns) {
     const { brief, steps } = pattern;
     assert.ok(brief?.sitePrompt.includes('Use case:'), `${pattern.id} has a complete source-backed site prompt`);
+    assert.ok(brief.useCase?.trim(), `${pattern.id} has an explicit authored Use Case for its project page`);
     assert.ok(brief.sitePrompt.includes('Layout and components:'));
     assert.ok(brief.sitePrompt.includes('Step-by-step behaviour:'));
     if (!steps.length) assert.ok(brief.fallbackImagePrompt, `${pattern.id} names its inherited, non-step training prompt`);
@@ -27,6 +28,7 @@ test('all current prompt and state claims come from real authored sources', () =
   assert.equal(gallery.trainingTargets.length, 39, '3 remaining target expansion families are not fabricated');
   for (const target of gallery.trainingTargets) {
     assert.ok(target.brief?.sitePrompt.includes('Required assertions:'));
+    assert.ok(target.brief.useCase?.trim(), `${target.id} has a manifest-backed Use Case for its project page`);
     assert.ok(target.brief.imagePrompt?.length > 100);
   }
   assert.match(gallery.trainingTargets[0].brief.sitePrompt, /Palette values from the authored design:[\s\S]*#0f172a/,
