@@ -22,6 +22,8 @@ export function readBenchmarkRun(runPath) {
     // on their decision; never label this control as a real model from the project name.
     const model = decision.model ?? 'deterministic:no-model';
     if (typeof model !== 'string' || !model.trim()) throw new Error(`benchmark: ${id} has invalid model`);
+    const arm = decision.arm ?? null;
+    if (arm !== null && !['C1', 'C2', 'T'].includes(arm)) throw new Error(`benchmark: ${id} has unknown model arm`);
     const before = readJson(join(dir, id, 'original.json'));
     const after = readJson(join(dir, id, 'uplifted.json'));
     if (!Array.isArray(before.rules) || !Array.isArray(after.rules)) throw new Error(`benchmark: ${id} has no measured rule arrays`);
@@ -36,7 +38,7 @@ export function readBenchmarkRun(runPath) {
     const pre = toMap(before);
     const post = toMap(after);
     for (const rule of new Set([...pre.keys(), ...post.keys()])) {
-      rows.push({ archetype: decision.archetype, model, rule,
+      rows.push({ archetype: decision.archetype, model, arm, rule,
         before: pre.get(rule) ?? null, after: post.get(rule) ?? null, project_id: id });
     }
   }
@@ -56,7 +58,9 @@ export function benchmarkOverview(run) {
     name, ...summarize(run.rows.filter((row) => row[key] === name)),
   }));
   return { runId: run.runId, projects: run.projects, overall: summarize(run.rows),
-    archetypes: group('archetype'), models: group('model'), rules: group('rule') };
+    archetypes: group('archetype'), models: group('model'),
+    arms: ['C1', 'C2', 'T'].map((name) => ({ name, ...summarize(run.rows.filter((row) => row.arm === name)) })),
+    rules: group('rule') };
 }
 
 export function renderBenchmarkMarkdown(report) {
@@ -71,6 +75,8 @@ export function renderBenchmarkMarkdown(report) {
     `# Benchmark overview — ${report.runId}`, '', baselineAttributionLine(), '',
     `Measured projects: ${report.projects}. Pre: **${score(o.before, o.comparable)}** → post: **${score(o.after, o.comparable)}** (${o.delta >= 0 ? '+' : ''}${o.delta} passes).`, '',
     'Scores are PASS / paired PASS-or-FAIL rule checks from the same measured project and rule on both sides. ERROR, NOT_APPLICABLE, missing and unmatched verdicts are excluded from both denominators and counted as unmeasured; these are rule-adherence scores, not visual, functional, or model-quality scores. The deterministic pilot is not a trained-model benchmark.', '',
-    ...table('Archetypes', report.archetypes), ...table('Models', report.models), ...table('Guidance rules', report.rules),
+    ...table('Archetypes', report.archetypes),
+    '## Sealed model arms', '', 'C1 = bare base; C2 = base + guidance prompt; T = trained adapter. N/A means no paired measurements were supplied for that arm, not a score of zero.', '',
+    ...table('C1 / C2 / T', report.arms), ...table('Recorded model identities (including deterministic controls)', report.models), ...table('Guidance rules', report.rules),
   ].join('\n');
 }

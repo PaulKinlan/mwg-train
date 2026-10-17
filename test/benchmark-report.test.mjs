@@ -29,6 +29,7 @@ test('CLI summarizes only paired verdicts by archetype, model and guidance rule'
   assert.deepEqual(report.overall, { before: 1, after: 2, comparable: 3, unmeasured: 3, delta: 1 });
   assert.deepEqual(report.archetypes.map(({ name, comparable }) => [name, comparable]), [['booking', 2], ['catalogue', 1]]);
   assert.deepEqual(report.models.map(({ name, comparable }) => [name, comparable]), [['deterministic:no-model', 2], ['provider/model-a', 1]]);
+  assert.deepEqual(report.arms.map(({ name, comparable }) => [name, comparable]), [['C1', 0], ['C2', 0], ['T', 0]]);
   assert.deepEqual(report.rules.find(({ name }) => name === 'forms/required'), { name: 'forms/required', before: 0, after: 1, comparable: 2, unmeasured: 0, delta: 1 });
   assert.match(renderBenchmarkMarkdown(report), /Pre: \*\*33\.3% \(1\/3\)\*\* → post: \*\*66\.7% \(2\/3\)\*\*/);
   assert.match(renderBenchmarkMarkdown(report), /mwg-train deterministic baseline/);

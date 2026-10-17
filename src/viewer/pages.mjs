@@ -254,7 +254,7 @@ export function page(title, body, { navOrigin = '' } = {}) {
 <style>${PAGE_CSS}</style>
 </head>
 <body>
-<nav aria-label="Primary"><a href="${base}/">corpus index</a> · <a href="${base}/concepts">concepts</a> · <a href="${base}/tuning">prompt workbench</a> · <a href="${base}/pipeline">pipeline</a></nav>
+<nav aria-label="Primary"><a href="${base}/">corpus index</a> · <a href="${base}/concepts">concepts</a> · <a href="${base}/benchmark">benchmark</a> · <a href="${base}/tuning">prompt workbench</a> · <a href="${base}/pipeline">pipeline</a></nav>
 <main id="content">${body}</main>
 </body>
 </html>`;
@@ -560,6 +560,20 @@ export function renderLiveIndex({ views, runId, runs, active, viewerOrigin }) {
 <p class="muted">These sites run on a separate origin so their code cannot read <a href="${escapeHtml(viewerOrigin)}/">viewer evidence</a>. Start a site below, then open its sandboxed page. Sites that fail owner-auth checks cannot start.</p>
 <h2>Available corpus projects</h2>${projects}
 <h2>Running sites</h2>${runningList}`, { navOrigin: viewerOrigin });
+}
+
+export function renderBenchmark(report, { runs = [], hasMeasurements = false } = {}) {
+  const score = (pass, total) => total ? `${(pass / total * 100).toFixed(1)}% (${pass}/${total})` : 'N/A';
+  const table = (title, rows) => `<section><h2>${escapeHtml(title)}</h2><p class="table-hint">Scroll sideways to compare scores at narrow widths.</p><div class="table-scroll" role="region" aria-label="${escapeHtml(title)} scores" tabindex="0"><table><caption class="sr-only">${escapeHtml(title)} pre and post scores</caption><thead><tr><th scope="col">Name</th><th scope="col">Pre</th><th scope="col">Post</th><th scope="col">Change in passes</th><th scope="col">Paired checks</th><th scope="col">Unmeasured</th></tr></thead><tbody>${rows.map((row) => `<tr><th scope="row">${escapeHtml(row.name)}</th><td>${score(row.before, row.comparable)}</td><td>${score(row.after, row.comparable)}</td><td>${row.delta >= 0 ? '+' : ''}${row.delta}</td><td>${row.comparable}</td><td>${row.unmeasured}</td></tr>`).join('') || '<tr><td colspan="6">No measurements recorded.</td></tr>'}</tbody></table></div></section>`;
+  const runLinks = runs.map((run) => `<a href="/benchmark?run=${encodeURIComponent(run)}">${escapeHtml(run)}</a>`).join(' · ');
+  const o = report.overall;
+  return page('benchmark', `<h1>Benchmark overview</h1><p class="muted">${escapeHtml(BASELINE_LABEL)} · run ${escapeHtml(report.runId ?? 'not selected')}</p>
+    <p>Pre: <strong>${score(o.before, o.comparable)}</strong> → post: <strong>${score(o.after, o.comparable)}</strong> (${o.delta >= 0 ? '+' : ''}${o.delta} passes across ${report.projects} measured projects).</p>
+    ${hasMeasurements ? '' : '<p class="notice">No paired rule measurements for this run. Committed corpus summaries are not scores; run the pilot and choose its measured run.</p>'}
+    <p class="muted">Scores count PASS among the same project/rule checks measured PASS or FAIL before and after. ERROR, NOT_APPLICABLE or unmatched checks are unmeasured, not passes. This is guidance-rule adherence, not visual or functional quality; the deterministic pilot is not a trained model.</p>
+    ${runLinks ? `<p>Measured run directories: ${runLinks}</p>` : ''}
+    ${table('Archetypes', report.archetypes)}<h2>Sealed model arms</h2><p>C1 = bare base; C2 = base + guidance; T = trained adapter. N/A means no measured arm was supplied, not zero.</p>
+    ${table('C1 / C2 / T', report.arms)}${table('Recorded model identities', report.models)}${table('Guidance rules', report.rules)}`);
 }
 
 export function renderIndex({ views, allViews, filters, runId, runs, yieldReport, scanAvailable, liveOrigin }) {

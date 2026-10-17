@@ -71,6 +71,10 @@ Teacher-generated material and the reproduction studies live in a **private comp
 
 ## Benchmark overview (measured pilot runs)
 
+The owner-only viewer's `/benchmark` route shows a high-level pre/post overview,
+including C1 bare base, C2 guidance and T trained-adapter arms; absent arms show
+N/A, never inferred results. Choose a measured run from the page when available.
+
 After `npm run pilot:run` has produced a measured run, use
 `node scripts/benchmark-report.mjs --run pilot/out/<run-id>` (or append `--json`)
 to compare pre/post guidance-rule adherence across archetypes, models and rules.
@@ -80,7 +84,8 @@ acceptance counts. Scores use only rules measured PASS or FAIL on **both** sides
 of the same project. Missing/ERROR/NOT_APPLICABLE verdicts are excluded and
 counted separately; no paired checks display N/A. The current deterministic
 pilot is labelled `deterministic:no-model`, not credited to a trained model.
-A run with measured model outputs may supply `model` on each decision.
+A run with measured model outputs may supply `model` and its preregistered
+`arm` (`C1`, `C2` or `T`) on each decision.
 `pilot/CORPUS.json` alone contains no pre/post rule verdicts and cannot be
 used as a benchmark-score source.
 
