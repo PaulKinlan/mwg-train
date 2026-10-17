@@ -151,8 +151,17 @@ test('a paid request with unknown provider outcome is recorded but never retried
     assert.deepEqual(rows.map((row) => row.type), ['reserve', 'settle']);
     assert.equal(rows[1].status, 'unknown');
     assert.equal(rows[1].computedUsd, 'UNVERIFIED');
-    await assert.rejects(generateProject({ ...args, retry: true }), /RUN_EXISTS|offline retry only/);
+    const refusesLiveRetry = (error) => error.code === 'LIVE_RETRY_UNSUPPORTED';
+    await assert.rejects(generateProject({ ...args, retry: true }), refusesLiveRetry);
     assert.equal(calls, 1);
+    // A kill between the paid call and run.json can leave its directory and ledger reservation behind.
+    rmSync(join(first.output_dir, 'run.json'));
+    await assert.rejects(generateProject({ ...args, retry: true }), refusesLiveRetry);
+    assert.equal(calls, 1, 'an interrupted live identity is never sent twice');
+    assert.equal(readFileSync(join(dir, 'ledger.jsonl'), 'utf8').trim().split('\n').length, 2);
+    const fresh = options(join(dir, 'fresh'), { ...args, outRoot: join(dir, 'fresh'), retry: true });
+    await assert.rejects(generateProject(fresh), refusesLiveRetry);
+    assert.equal(calls, 1, 'live --retry is forbidden even for a new identity');
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 

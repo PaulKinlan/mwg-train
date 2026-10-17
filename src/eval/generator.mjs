@@ -114,6 +114,9 @@ export async function generateProject({ family, framework, model = decodeConfig.
   }
   if (model !== decodeConfig.build_model) throw fail('UNPINNED_MODEL', 'chosen model differs from proposed pinned decode config; ratify a new config before spending');
   if (!['stub', 'live'].includes(backend)) throw fail('INVALID_BACKEND', 'only stub or guarded live are supported');
+  // A SIGKILL can leave the paid reservation and project directory but no run.json. Never let
+  // --retry override that ambiguity or start another live request, even on a fresh identity.
+  if (backend === 'live' && retry) throw fail('LIVE_RETRY_UNSUPPORTED', 'live --retry is forbidden; reconcile any earlier request before a new identity');
   const source = resolve(sourceRoot);
   const plan = await readFile(join(source, 'docs/train/design', family, 'plan.md'), 'utf8');
   const design = await readFile(join(source, 'docs/train/design', family, 'design.md'), 'utf8');
