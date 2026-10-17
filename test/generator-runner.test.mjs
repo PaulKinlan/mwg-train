@@ -263,6 +263,61 @@ test('a legacy-recovery mkdir race is a fail-closed policy refusal, not raw EEXI
   assert.throws(() => rethrowLiveRecoveryMkdirError(other), (error) => error === other);
 });
 
+test('a racing legacy-recovery mkdir is classified through generateProject, without provider or ledger activity', () => {
+  const dir = root();
+  try {
+    // A child-only module shim fails exactly the second mkdir(base), not the initial EEXIST
+    // that enters recovery. No timing, shared machine state, or production injection API.
+    const generatorUrl = new URL('../src/eval/generator.mjs', import.meta.url).href;
+    const shim = [
+      "import { promises as fs } from 'node:fs';",
+      'export const readFile = fs.readFile, writeFile = fs.writeFile, rm = fs.rm;',
+      'let baseMkdirCount = 0;',
+      'export async function mkdir(path, options) {',
+      "  if (path === process.env.MWG_RACE_DIR && ++baseMkdirCount === 2) throw Object.assign(new Error('racing mkdir'), { code: 'EEXIST' });",
+      '  return fs.mkdir(path, options);',
+      '}',
+    ].join('\n');
+    const loaderPath = join(dir, 'race-loader.mjs');
+    writeFileSync(loaderPath, `export function resolve(specifier, context, nextResolve) {
+      if (specifier === 'node:fs/promises' && context.parentURL?.startsWith(${JSON.stringify(generatorUrl)})) {
+        return { url: ${JSON.stringify(`data:text/javascript,${encodeURIComponent(shim)}`)}, shortCircuit: true };
+      }
+      return nextResolve(specifier, context);
+    }`);
+    const probe = String.raw`
+      import { mkdirSync, writeFileSync, existsSync } from 'node:fs';
+      import { join } from 'node:path';
+      const moduleUrl = process.env.MWG_GENERATOR_MODULE;
+      const { generateProject } = await import(moduleUrl);
+      const { decodeConfig } = await import(new URL('./decode-config.mjs', moduleUrl));
+      const outRoot = join(process.env.MWG_TEST_ROOT, 'runs');
+      const ledgerPath = join(process.env.MWG_TEST_ROOT, 'ledger.jsonl');
+      let requests = 0;
+      const args = { family: 'tr-01', framework: 'hono', model: decodeConfig.build_model,
+        revision: process.env.MWG_TEST_REVISION, outRoot, ledgerPath, backend: 'live',
+        endpoint: 'https://example.test/v1/chat/completions', apiKey: 'OFFLINE_FAKE_KEY',
+        approvalComments: () => JSON.parse(process.env.MWG_APPROVAL_JSON),
+        fetchImpl: async () => { requests++; throw Error('no provider call expected'); } };
+      const identity = await generateProject({ ...args, dryRun: true });
+      process.env.MWG_RACE_DIR = identity.output_dir;
+      mkdirSync(identity.output_dir, { recursive: true });
+      writeFileSync(join(identity.output_dir, 'run.json'), JSON.stringify({ status: 'FAILED', error: { code: 'NO_PROVIDER_CONFIG' } }));
+      let refusal;
+      try { await generateProject(args); } catch (error) { refusal = { code: error.code, message: error.message }; }
+      console.log(JSON.stringify({ refusal, requests, ledgerExists: existsSync(ledgerPath) }));`;
+    const result = JSON.parse(execFileSync(process.execPath,
+      ['--no-warnings', '--loader', loaderPath, '--input-type=module', '--eval', probe],
+      { encoding: 'utf8', timeout: 20_000, env: { PATH: process.env.PATH, HOME: dir,
+        MWG_GENERATOR_MODULE: generatorUrl, MWG_TEST_ROOT: dir, MWG_TEST_REVISION: REVISION,
+        MWG_APPROVAL_JSON: JSON.stringify(ownerApproval()) } }));
+    assert.equal(result.refusal?.code, 'RUN_IN_PROGRESS');
+    assert.match(result.refusal.message, /another live run reclaimed this identity/);
+    assert.equal(result.requests, 0);
+    assert.equal(result.ledgerExists, false);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
 test('an empty pre-reservation orphan names a safe manual exit, never an automatic paid retry', async () => {
   const dir = root(); let calls = 0;
   try {
