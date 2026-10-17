@@ -198,8 +198,10 @@ test('any trusted revocation marker anywhere, Markdown-wrapped or suffixed, refu
     assert.throws(() => verifyGenerationApproval(ownerApproval([{ issue_id: GENERATION_BEAD,
       author: 'mwg-train-coord', text }]), { model: MODEL }), /revoked/, text);
   }
-  assert.equal(verifyGenerationApproval(ownerApproval([{ issue_id: GENERATION_BEAD,
-    author: 'untrusted-local-actor', text: 'OWNER-AUTHORIZATION-REVOKED' }]), { model: MODEL }).decision, 'no-usd-cap');
+  for (const author of ['antigravity-assistant', 'paul.kinlan@gmail.com', 'untrusted-local-actor']) {
+    assert.throws(() => verifyGenerationApproval(ownerApproval([{ issue_id: GENERATION_BEAD,
+      author, text: '**owner-authorization-revoked**' }]), { model: MODEL }), /revoked/, author);
+  }
 });
 
 test('a cited exact-SKU rate can produce a bounded estimate; training/-0731 rates cannot', () => {

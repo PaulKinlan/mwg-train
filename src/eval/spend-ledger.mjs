@@ -9,7 +9,6 @@ export const GENERATION_MODEL = 'fireworks/deepseek-v4p1-flash';
 // This exact, reviewed owner decision supersedes the earlier amount-scoped planning text. A different
 // close reason, an open bead, or an unreachable Beads remote does NOT silently authorize a live call.
 export const GENERATION_DECISION = "Owner decision recorded from chat (2026-10-13): 're: 2 - no spend caps, I am ok.' Live DeepSeek V4.1 Flash generation authorised without a dollar cap; log actual usage/spend.";
-const TRUSTED_REVOKERS = new Set(['fleet-manager-coord', 'mwg-train-coord', 'paulkinlan']);
 const SHA = /^[a-f0-9]{64}$/;
 const VERIFIED_APPROVALS = new WeakSet();
 const finitePositive = (value) => typeof value === 'number' && Number.isFinite(value) && value > 0;
@@ -28,8 +27,9 @@ export function readGenerationApprovalComments() {
 }
 
 /** Pin the owner's no-cap decision as code-reviewed policy. A BEADS_ACTOR name alone never grants spend.
- * A trusted revocation anywhere in a comment (even Markdown-wrapped) stops future calls. Actor names
- * are spoofable locally, so they are used only to DENY, not to manufacture positive authorization.
+ * A revocation marker anywhere in ANY comment on this bead stops future calls. Beads actor identities
+ * can be spoofed and change across the hub/owner dashboard: a deny-only check must not miss a real
+ * revocation by relying on an incomplete allowlist. False-positive denial is safer than paid spend.
  */
 export function verifyGenerationApproval({ decision, comments } = {}, { model, host = hostname() } = {}) {
   if (model !== GENERATION_MODEL || !host || decision?.id !== GENERATION_BEAD ||
@@ -37,7 +37,7 @@ export function verifyGenerationApproval({ decision, comments } = {}, { model, h
     throw new Error('NO_OWNER_AUTH: current closed generation decision and comments required for this model');
   }
   for (const comment of comments) {
-    if (comment.issue_id === GENERATION_BEAD && TRUSTED_REVOKERS.has(comment.author) &&
+    if (comment.issue_id === GENERATION_BEAD &&
         /OWNER-AUTHORIZATION-REVOKED/i.test(String(comment.text ?? ''))) {
       throw new Error('NO_OWNER_AUTH: generation authorisation was revoked; stop before another request');
     }
