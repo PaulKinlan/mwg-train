@@ -492,15 +492,20 @@ test('every check compiles every browser expression it can reach', async () => {
           assert.equal(typeof expression, 'string', id + ': evaluate was not given a string');
           new Function('(async () => { ' + expression + ' })()');
           compiled.push(expression);
+          if (id === 'ui-behaviors/same-document-transitions' && value !== undefined) {
+            if (expression.includes('const counts = {}')) return { names: { 'demo-item': 1 }, duplicates: [] };
+            if (expression.includes('const trigger =')) return { x: 10, y: 10 };
+            if (expression.includes('return window.__mwgTransitionProbe')) return { started: 1, ready: 1, finished: 1, skipped: 0 };
+          }
           return value;
         },
-        async touchEmpty() {}, async goto() {}, async waitFor() {}, async realType() {}, async click() {},
+        async touchEmpty() {}, async goto() {}, async waitFor() {}, async realType() {}, async realPointer() {}, async click() {},
         async realKey() {}, async url() { return ''; }, async cookies() { return []; },
       };
       const ctx = {
         primaryField: '[name=name]', formSelector: 'form', usernameField: '[name=email]',
         passwordField: '[name=password]', addressField: '[name=address]', postcodeField: '[name=postcode]',
-        base: 'http://127.0.0.1', startPath: '/', journey: { submitContent: async () => true },
+        base: 'http://127.0.0.1', startPath: '/', viewTransitionTrigger: '#transition', journey: { submitContent: async () => true },
       };
       try {
         await check.check(stub, ctx);

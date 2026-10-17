@@ -19,15 +19,22 @@ const html = `<!doctype html><html><head><style>
 <div class="container"><p class="target">Responsive</p></div>
 <div class="card"><input type="checkbox" aria-label="Active"></div>
 <div class="vt">Animated</div>
+<button id="transition" type="button">Animate</button>
+<script>document.querySelector('#transition').addEventListener('click', () => document.startViewTransition(() => {
+  document.querySelector('.vt').textContent = 'Animated again';
+}));</script>
 </body></html>`;
 
 test('five optional modern-platform diagnostics observe real browser behaviour and honest applicability', async (t) => {
   const server = createServer((request, response) => {
     response.setHeader('content-type', 'text/html');
-    response.end(request.url === '/broken' ? html.replace('aria-label="Confirm"', '')
-      .replace('popovertarget="help"', 'popovertarget="missing"')
-      .replace('container-type: inline-size;', '')
-      .replace('background-color: rgb(10, 20, 30);', 'background-color: white;') : html);
+    response.end(request.url === '/static' ? html.replace(/<script>[\s\S]*?<\/script>/, '')
+      : request.url === '/duplicate-after' ? html.replace("document.querySelector('.vt').textContent = 'Animated again';",
+        "document.querySelector('.vt').textContent = 'Animated again'; document.querySelector('.vt').insertAdjacentHTML('afterend', '<div class=\"vt\">Duplicate</div>');")
+      : request.url === '/broken' ? html.replace('aria-label="Confirm"', '')
+        .replace('popovertarget="help"', 'popovertarget="missing"')
+        .replace('container-type: inline-size;', '')
+        .replace('background-color: rgb(10, 20, 30);', 'background-color: white;') : html);
   });
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
   t.after(() => server.close());
@@ -36,13 +43,21 @@ test('five optional modern-platform diagnostics observe real browser behaviour a
     chrome = await launchChrome();
     const page = await chrome.newPage();
     await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const transitionId = 'ui-behaviors/same-document-transitions';
+    assert.equal((await MODERN_RULES[transitionId].check(page, {})).status, 'ERROR', 'a styled element alone cannot prove execution');
     for (const id of MODERN_RULE_IDS) {
-      const result = await MODERN_RULES[id].check(page, {});
+      const result = await MODERN_RULES[id].check(page, id === transitionId ? { viewTransitionTrigger: '#transition' } : {});
       assert.equal(result.status, 'PASS', `${id}: ${JSON.stringify(result)}`);
       assert.equal(result.rule, id);
     }
     await page.evaluate(`document.querySelectorAll('.vt').forEach((element) => element.insertAdjacentHTML('afterend','<div class="vt">Duplicate</div>')); return true`);
-    assert.equal((await MODERN_RULES['ui-behaviors/same-document-transitions'].check(page, {})).status, 'FAIL');
+    assert.equal((await MODERN_RULES[transitionId].check(page, {})).status, 'FAIL');
+    await page.goto(`http://127.0.0.1:${server.address().port}/static`);
+    assert.equal((await MODERN_RULES[transitionId].check(page, { viewTransitionTrigger: '#transition' })).status, 'ERROR',
+      'a declared trigger with no transition must remain unmeasured');
+    await page.goto(`http://127.0.0.1:${server.address().port}/duplicate-after`);
+    assert.equal((await MODERN_RULES[transitionId].check(page, { viewTransitionTrigger: '#transition' })).status, 'FAIL',
+      'duplicate names created by the transition must not be missed');
     await page.goto(`http://127.0.0.1:${server.address().port}/broken`);
     assert.equal((await MODERN_RULES['ui-behaviors/platform-controls-dismiss-dialog'].check(page, {})).status, 'FAIL');
     for (const id of ['ui-behaviors/declarative-dialog-popover-control', 'css/size-aware-styling', 'css/child-state-based-styling']) {
