@@ -75,7 +75,11 @@ The owner-only viewer's `/benchmark` route shows a high-level pre/post overview,
 including C1 bare base, C2 guidance and T trained-adapter arms; absent arms show
 N/A, never inferred results. Choose a measured run from the page when available.
 
-After `npm run pilot:run` has produced a measured run, use
+The viewer defaults to the committed, **historical** `docs/pilot/records.json`
+paired with `docs/pilot/yield.json` when no local measurement is available;
+these records are a different run from the current re-derived `pilot/CORPUS.json`.
+For the same committed snapshot, run `node scripts/benchmark-report.mjs --run docs/pilot`.
+After `npm run pilot:run` has produced a new measured run, use
 `node scripts/benchmark-report.mjs --run pilot/out/<run-id>` (or append `--json`)
 to compare pre/post guidance-rule adherence across archetypes, models and rules.
 The command reads that run's `yield.json` decisions and per-project `original.json` /

@@ -38,6 +38,21 @@ test('CLI summarizes only paired verdicts by archetype, model and guidance rule'
   assert.deepEqual(JSON.parse(cli.stdout), report);
 });
 
+test('committed historical pilot joins only matching-run, matching-hash measurements', (t) => {
+  const dir = fixture(t, [{ id: 'booking-raw', archetype: 'booking', before: [], after: [] }]);
+  const yieldPath = join(dir, 'yield.json');
+  writeFileSync(yieldPath, JSON.stringify({ run_id: 'measured-1', decisions: [{ project_id: 'booking-raw', archetype: 'booking', framework: 'raw', original_sha: 'pre', uplifted_sha: 'post' }] }));
+  const records = { run_id: 'measured-1', projects: [{ project_id: 'booking-raw', original_sha: 'pre', uplifted_sha: 'post', original: { rules: { 'forms/required': 'FAIL' } }, uplifted: { rules: { 'forms/required': 'PASS' } } }] };
+  writeFileSync(join(dir, 'records.json'), JSON.stringify(records));
+  assert.equal(benchmarkOverview(readBenchmarkRun(dir)).overall.after, 1);
+  records.run_id = 'other-run';
+  writeFileSync(join(dir, 'records.json'), JSON.stringify(records));
+  assert.throws(() => readBenchmarkRun(dir), /not from the same measured run/);
+  records.run_id = 'measured-1'; records.projects[0].original_sha = 'other-tree';
+  writeFileSync(join(dir, 'records.json'), JSON.stringify(records));
+  assert.throws(() => readBenchmarkRun(dir), /hashes do not match/);
+});
+
 test('no measured pairs show N/A, not a made-up zero score', (t) => {
   const dir = fixture(t, [{ id: 'booking-raw', archetype: 'booking', before: [rule('a', 'ERROR')], after: [rule('a', 'NOT_APPLICABLE')] }]);
   const report = benchmarkOverview(readBenchmarkRun(dir));
