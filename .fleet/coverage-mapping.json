@@ -270,7 +270,11 @@
     "test/served-routes.test.mjs"
   ],
   "docs/train/corpus/README.md": [
-    "test/tokens-record.test.mjs"
+    "test/tokens-record.test.mjs",
+    "test/step-persistence.test.mjs"
+  ],
+  "docs/eval/state-persistence-contract.md": [
+    "test/state-persistence.test.mjs"
   ],
   "docs/train/corpus/tokens.json": [
     "test/tokens-record.test.mjs"
@@ -296,12 +300,17 @@
     "test/scaffold-training-corpus-record.test.mjs"
   ],
   "pilot/frameworks.mjs": [
+    "test/state-persistence.test.mjs",
     "test/training-served-reverse.test.mjs",
     "test/frameworks.test.mjs",
     "test/reflected-title-escape.test.mjs",
     "test/reflected-title-helper.test.mjs",
     "test/known-sinks.test.mjs",
     "test/wiki-capability.test.mjs"
+  ],
+  "scripts/train-corpus-run.mjs": [
+    "test/harness-run-environment.test.mjs",
+    "test/step-persistence.test.mjs"
   ],
   "scripts/fast-gate.mjs": [
     "test/fast-gate.test.mjs"
@@ -402,13 +411,22 @@
     "test/capture-target-registry.test.mjs"
   ],
   "src/corpus/cdp.mjs": [
+    "test/cdp-reload.test.mjs",
     "test/cdp-select-option.test.mjs",
     "test/capture-flow.test.mjs",
     "test/capture-state.test.mjs",
     "test/chrome-sandbox.test.mjs",
     "test/eval-starters.test.mjs"
   ],
+  "src/corpus/accept.mjs": [
+    "test/step-persistence.test.mjs",
+    "test/corpus.test.mjs"
+  ],
+  "src/corpus/state-persistence.mjs": [
+    "test/state-persistence.test.mjs"
+  ],
   "src/corpus/harness.mjs": [
+    "test/step-persistence.test.mjs",
     "test/harness-oracle.test.mjs",
     "test/harness-server.test.mjs",
     "test/corpus-flows-harness.test.mjs",
@@ -423,6 +441,10 @@
   ],
   "src/eval/generated-server.mjs": [
     "test/generated-server-env.test.mjs"
+  ],
+  "src/eval/spec.mjs": [
+    "test/spec.test.mjs",
+    "test/state-persistence.test.mjs"
   ],
   "src/train/backends/fireworks.mjs": [
     "test/seam.test.mjs"
