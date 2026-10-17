@@ -101,6 +101,15 @@ export function reserveGeneration({ ledgerPath, approval, chargeBoundUsd = 'UNVE
   });
 }
 
+/** Read-only reservation check for a pre-request artifact left by an interrupted older runner.
+ * The ledger, not a removable run directory, is authoritative for possibly paid requests.
+ */
+export function hasGenerationReservation({ ledgerPath, requestId }) {
+  if (!ledgerPath || !requestId) throw new Error('SPEND_GUARD: ledger path and request ID required');
+  mkdirSync(dirname(ledgerPath), { recursive: true, mode: 0o700 });
+  return withLedgerLock(ledgerPath, () => readLedger(ledgerPath).has(requestId));
+}
+
 export function settleGeneration({ ledgerPath, requestId, model, computedUsd = 'UNVERIFIED', status, tokens = null }) {
   if (!ledgerPath || !requestId || !model || !['completed', 'failed', 'unknown'].includes(status) ||
       (computedUsd !== 'UNVERIFIED' && !(typeof computedUsd === 'number' && Number.isFinite(computedUsd) && computedUsd >= 0))) {

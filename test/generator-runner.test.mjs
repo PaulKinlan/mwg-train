@@ -223,9 +223,80 @@ test('a paid request with unknown provider outcome is recorded but never retried
     await assert.rejects(generateProject({ ...args, retry: true }), refusesLiveRetry);
     assert.equal(calls, 1, 'an interrupted live identity is never sent twice');
     assert.equal(readFileSync(join(dir, 'ledger.jsonl'), 'utf8').trim().split('\n').length, 2);
+    rmSync(first.output_dir, { recursive: true, force: true });
+    const noPaidRetry = await generateProject(args);
+    assert.equal(noPaidRetry.status, 'FAILED');
+    assert.equal(noPaidRetry.error.code, 'SPEND_GUARD');
+    assert.equal(calls, 1, 'a failed, possibly paid identity cannot resend after artifact deletion');
+    assert.equal(readFileSync(join(dir, 'ledger.jsonl'), 'utf8').trim().split('\n').length, 2);
     const fresh = options(join(dir, 'fresh'), { ...args, outRoot: join(dir, 'fresh'), retry: true });
     await assert.rejects(generateProject(fresh), refusesLiveRetry);
     assert.equal(calls, 1, 'live --retry is forbidden even for a new identity');
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('zero-request preflight refusal does not consume the live identity after configuration is corrected', async () => {
+  const dir = root(); let calls = 0;
+  try {
+    const body = `data: ${JSON.stringify({ choices: [{ delta: { content: JSON.stringify({ files: [
+      { path: 'index.html', content: '<p>Inert</p>' },
+    ] }) }, finish_reason: 'stop' }] })}\n\ndata: ${JSON.stringify({ choices: [], usage: { prompt_tokens: 10, completion_tokens: 15 } })}\n\ndata: [DONE]\n\n`;
+    const args = options(dir, { backend: 'live', endpoint: 'https://example.test/v1/chat/completions',
+      apiKey: '', ledgerPath: '', approvalComments: () => ownerApproval(),
+      fetchImpl: async () => { calls++; return { ok: true, status: 200, body: Readable.from([Buffer.from(body)]) }; } });
+    const refused = await generateProject(args);
+    assert.equal(refused.status, 'FAILED');
+    assert.equal(refused.error.code, 'NO_PROVIDER_CONFIG');
+    assert.equal(existsSync(refused.output_dir), false, 'no run identity allocated before credential checks');
+    const corrected = await generateProject({ ...args, apiKey: 'OFFLINE_FAKE_KEY', ledgerPath: join(dir, 'ledger.jsonl') });
+    assert.equal(corrected.status, 'SUCCESS');
+    assert.equal(calls, 1);
+    assert.equal(readFileSync(join(dir, 'ledger.jsonl'), 'utf8').trim().split('\n').length, 2);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('a legacy failed preflight directory without a reservation is recoverable but an unfinished directory is not', async () => {
+  const dir = root(); let calls = 0;
+  try {
+    const ledgerPath = join(dir, 'ledger.jsonl');
+    const args = options(dir, { backend: 'live', endpoint: 'https://example.test/v1/chat/completions',
+      apiKey: 'OFFLINE_FAKE_KEY', ledgerPath, approvalComments: () => ownerApproval(),
+      fetchImpl: async () => { calls++; return { ok: true, status: 200, body: Readable.from([Buffer.from(
+        `data: ${JSON.stringify({ choices: [{ delta: { content: JSON.stringify({ files: [
+          { path: 'index.html', content: '<p>Inert</p>' },
+        ] }) }, finish_reason: 'stop' }] })}\n\ndata: ${JSON.stringify({ choices: [], usage: { prompt_tokens: 10, completion_tokens: 15 } })}\n\ndata: [DONE]\n\n`)]), }; } });
+    const identity = await generateProject({ ...args, dryRun: true });
+    mkdirSync(identity.output_dir, { recursive: true });
+    await assert.rejects(generateProject(args), (error) => error.code === 'RUN_IN_PROGRESS');
+    assert.equal(calls, 0);
+    writeFileSync(join(identity.output_dir, 'run.json'), JSON.stringify({ status: 'FAILED', backend: 'live',
+      error: { code: 'NO_PROVIDER_CONFIG' } }));
+    const recovered = await generateProject(args);
+    assert.equal(recovered.status, 'SUCCESS');
+    assert.equal(calls, 1);
+    assert.equal(readFileSync(ledgerPath, 'utf8').trim().split('\n').length, 2);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('an unreadable owner decision or corrupt ledger refuses with a policy code and no paid identity burn', async () => {
+  const dir = root(); let calls = 0;
+  try {
+    const ledgerPath = join(dir, 'ledger.jsonl');
+    const args = options(dir, { backend: 'live', endpoint: 'https://example.test/v1/chat/completions',
+      apiKey: 'OFFLINE_FAKE_KEY', ledgerPath,
+      fetchImpl: () => { calls++; throw Error('provider must not be contacted'); } });
+    const authFailure = await generateProject({ ...args, approvalComments: () => {
+      const error = new Error('bd dolt pull timed out'); error.code = 'ETIMEDOUT'; throw error;
+    } });
+    assert.equal(authFailure.status, 'FAILED');
+    assert.equal(authFailure.error.code, 'NO_OWNER_AUTH');
+    assert.equal(existsSync(authFailure.output_dir), false);
+    writeFileSync(ledgerPath, 'not-json-at-all\n');
+    const ledgerFailure = await generateProject({ ...args, approvalComments: () => ownerApproval() });
+    assert.equal(ledgerFailure.status, 'FAILED');
+    assert.equal(ledgerFailure.error.code, 'SPEND_GUARD');
+    assert.equal(existsSync(ledgerFailure.output_dir), false);
+    assert.equal(calls, 0);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
@@ -239,7 +310,8 @@ test('live mode refuses the real undecided bead and never contacts the provider 
     assert.equal(calls, 0);
     assert.equal(result.error.code, 'NO_OWNER_AUTH');
     assert.match(result.error.message, /NO_OWNER_AUTH/);
-    assert.ok(!readFileSync(join(result.output_dir, 'run.json'), 'utf8').includes('TOP-SECRET-KEY'));
+    assert.equal(existsSync(result.output_dir), false, 'a denied, zero-request identity is not allocated');
+    assert.ok(!JSON.stringify(result).includes('TOP-SECRET-KEY'));
     assert.ok(!existsSync(join(dir, 'ledger.jsonl')));
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });

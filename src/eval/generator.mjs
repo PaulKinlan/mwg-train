@@ -4,7 +4,7 @@ import { join, resolve, sep } from 'node:path';
 import { performance } from 'node:perf_hooks';
 import { evaluationBuildKey } from './build-key.mjs';
 import { decodeConfig, decodeConfigSha256 } from './decode-config.mjs';
-import { readGenerationApprovalComments, verifyGenerationApproval, loadPinnedGenerationTariff, worstCaseGenerationUsd, reserveGeneration, settleGeneration } from './spend-ledger.mjs';
+import { readGenerationApprovalComments, verifyGenerationApproval, loadPinnedGenerationTariff, worstCaseGenerationUsd, hasGenerationReservation, reserveGeneration, settleGeneration } from './spend-ledger.mjs';
 
 const SHA = /^[a-f0-9]{40}$/;
 const FAMILY = /^tr-\d{2}$/;
@@ -134,24 +134,81 @@ export async function generateProject({ family, framework, model = decodeConfig.
   const base = join(resolve(outRoot), keyDirectory, arm, runId);
   const output = { build_key: buildKey, output_dir: base, project_dir: join(base, 'project'), prompt_sha256: promptSha256 };
   if (dryRun) return { ...output, status: 'DRY_RUN', cost: 'UNVERIFIED', prompt };
+  // A failed preflight has sent nothing and must not consume this identity. No run directory or
+  // ledger reservation is created until the endpoint and current owner decision are verified.
+  const preflightFailure = (code, error) => ({ ...output, status: 'FAILED', backend,
+    error: { code, message: apiKey ? String(error.message).replaceAll(apiKey, '[REDACTED]') : String(error.message) } });
+  let approval = null;
+  let chargeBoundUsd = 'UNVERIFIED';
+  let tariff = null;
+  if (backend === 'live') {
+    if (!endpoint || !apiKey || !ledgerPath) return preflightFailure('NO_PROVIDER_CONFIG',
+      fail('NO_PROVIDER_CONFIG', 'provider endpoint, key and private ledger path required'));
+    if (!/^https:\/\//.test(endpoint)) return preflightFailure('NO_PROVIDER_CONFIG',
+      fail('NO_PROVIDER_CONFIG', 'provider endpoint must be HTTPS'));
+    try { approval = verifyGenerationApproval(approvalComments(), { model }); }
+    catch (error) { return preflightFailure('NO_OWNER_AUTH', error); }
+    try { tariff = loadPinnedGenerationTariff(model); } catch { tariff = null; }
+    if (tariff && Number.isSafeInteger(promptTokensUpperBound) && promptTokensUpperBound > 0) {
+      try { chargeBoundUsd = worstCaseGenerationUsd({ tariff, model, promptTokensUpperBound, maxOutputTokens: request.max_tokens }); }
+      catch (error) { return preflightFailure('SPEND_GUARD', error); }
+    }
+  }
+  // The ledger must remember a paid build even if its artifact directory is deleted. Bind live
+  // requests to the deterministic build+revision+backend+arm+prompt identity, not a new UUID per call;
+  // distinct arms or changed prompts remain independently measurable.
+  const requestId = backend === 'live' ? runId : randomUUID();
+  if (backend === 'live') {
+    // Validate ledger readability and prior paid identity BEFORE any run directory is allocated.
+    // This read is not a reservation; reserveGeneration rechecks atomically under the same lock.
+    let priorReservation;
+    try { priorReservation = hasGenerationReservation({ ledgerPath, requestId }); }
+    catch (error) { return preflightFailure('SPEND_GUARD', error); }
+    if (priorReservation) {
+      try {
+        const prior = JSON.parse(await readFile(join(base, 'run.json'), 'utf8'));
+        if (prior.status === 'SUCCESS' && prior.backend === 'live') return { ...output, ...prior, resumed: true };
+      } catch { /* An absent or incomplete artifact never overrides a durable reservation. */ }
+      return preflightFailure('SPEND_GUARD', new Error('SPEND_GUARD: duplicate call; no request sent'));
+    }
+  }
   await mkdir(join(resolve(outRoot), keyDirectory, arm), { recursive: true });
   try { await mkdir(base); }
   catch (error) {
     if (error.code !== 'EEXIST') throw error;
     try {
       const record = JSON.parse(await readFile(join(base, 'run.json'), 'utf8'));
-      if (record.status === 'SUCCESS') return { ...output, ...record, resumed: true };
-      if (!retry || backend === 'live') throw fail('RUN_EXISTS', 'failed or unfinished run exists; explicit offline retry only');
-      await rm(join(base, 'project'), { recursive: true, force: true });
-    } catch (readError) { if (readError.code !== 'ENOENT') throw readError; if (!retry) throw fail('RUN_EXISTS', 'unfinished run exists; inspect before retry'); }
+      if (record.status === 'SUCCESS') {
+        if (backend === 'live' && !hasGenerationReservation({ ledgerPath, requestId })) {
+          throw fail('SPEND_GUARD', 'live success lacks a durable reservation; refusing unverified artifact');
+        }
+        return { ...output, ...record, resumed: true };
+      }
+      if (backend === 'live') {
+        if (hasGenerationReservation({ ledgerPath, requestId })) {
+          throw fail('RUN_EXISTS', 'paid or uncertain live reservation exists; this identity cannot retry');
+        }
+        // Older runners wrote failed preflight records before checking credentials/authority.
+        // Only a known pre-request refusal with NO ledger row is safe to replace.
+        if (!['NO_PROVIDER_CONFIG', 'NO_OWNER_AUTH', 'SPEND_GUARD'].includes(record.error?.code)) {
+          throw fail('RUN_IN_PROGRESS', 'live run may be active; inspect before clearing this directory');
+        }
+        await rm(base, { recursive: true, force: true });
+        await mkdir(base);
+      } else {
+        if (!retry) throw fail('RUN_EXISTS', 'failed or unfinished run exists; explicit offline retry only');
+        await rm(join(base, 'project'), { recursive: true, force: true });
+      }
+    } catch (readError) {
+      if (readError.code !== 'ENOENT') throw readError;
+      if (backend === 'live') {
+        if (hasGenerationReservation({ ledgerPath, requestId })) throw fail('RUN_EXISTS', 'paid or uncertain live reservation exists');
+        throw fail('RUN_IN_PROGRESS', 'live run without run.json may still be pre-reservation; inspect the process');
+      }
+      if (!retry) throw fail('RUN_EXISTS', 'unfinished run exists; inspect before retry');
+    }
   }
   const started = performance.now();
-  // The ledger must remember a paid build even if its artifact directory is deleted. Bind live
-  // requests to the deterministic build+revision+backend+arm+prompt identity, not a new UUID per call;
-  // distinct arms or changed prompts remain independently measurable.
-  const requestId = backend === 'live' ? runId : randomUUID();
-  let chargeBoundUsd = 'UNVERIFIED';
-  let tariff = null;
   let reserved = false;
   const record = { status: 'FAILED', project_id: projectId, family, framework, arm, model,
     resolved_revision: revision, build_key: buildKey, decode_config_sha256: decodeSha, decode_config: request,
@@ -166,15 +223,8 @@ export async function generateProject({ family, framework, model = decodeConfig.
     let completion;
     if (backend === 'stub') completion = normaliseCompletion(canned);
     else {
-      if (!endpoint || !apiKey || !ledgerPath) throw fail('NO_PROVIDER_CONFIG', 'provider endpoint, key and private ledger path required');
-      if (!/^https:\/\//.test(endpoint)) throw fail('NO_PROVIDER_CONFIG', 'provider endpoint must be HTTPS');
-      // The owner explicitly approved generation without a USD ceiling. Refresh the pinned CLOSED decision
-      // and any trusted revocation before each call. An absent tariff affects accounting, not authority.
-      const approval = verifyGenerationApproval(approvalComments(), { model });
-      try { tariff = loadPinnedGenerationTariff(model); } catch { tariff = null; }
-      if (tariff && Number.isSafeInteger(promptTokensUpperBound) && promptTokensUpperBound > 0) {
-        chargeBoundUsd = worstCaseGenerationUsd({ tariff, model, promptTokensUpperBound, maxOutputTokens: request.max_tokens });
-      }
+      // The owner explicitly approved generation without a USD ceiling. The current CLOSED decision
+      // was refreshed before allocating this run directory; reservation remains atomic and precedes fetch.
       reserveGeneration({ ledgerPath, approval, chargeBoundUsd, requestId, model, revision, projectId });
       reserved = true;
       record.projected_cost_usd = chargeBoundUsd;
@@ -198,12 +248,11 @@ export async function generateProject({ family, framework, model = decodeConfig.
     record.status = 'SUCCESS';
     record.files = files.map((file) => ({ path: file.path, sha256: hash(file.content), bytes: Buffer.byteLength(file.content) }));
   } catch (error) {
-    // Preserve policy-refusal identity in the run record; a duplicate paid identity must not look
-    // like an ordinary provider failure. No key or raw provider header is stored in this code.
-    const policyCode = /^SPEND_GUARD:/.test(error.message) ? 'SPEND_GUARD' :
-      /^NO_OWNER_AUTH:/.test(error.message) ? 'NO_OWNER_AUTH' : null;
-    record.error = { code: error.code ?? policyCode ?? 'GENERATION_FAILED', message: apiKey && backend === 'live'
-      ? String(error.message).replaceAll(apiKey, '[REDACTED]') : error.message };
+    // Only the reservation site is reachable while live is unreserved; classify by that stage,
+    // never by an error-message prefix or a raw OS code (e.g. JSON.parse or ETIMEDOUT).
+    record.error = { code: backend === 'live' && !reserved ? 'SPEND_GUARD' : error.code ?? 'GENERATION_FAILED',
+      message: apiKey && backend === 'live'
+        ? String(error.message).replaceAll(apiKey, '[REDACTED]') : error.message };
   } finally {
     record.wall_time_ms = Math.round(performance.now() - started);
     // The API reports usage, not billed dollars. Compute only against an exact cited inference tariff;
@@ -225,7 +274,13 @@ export async function generateProject({ family, framework, model = decodeConfig.
         record.error = { code: 'LEDGER_UNSETTLED', message: 'reservation status uncertain; reconcile before any retry' };
       }
     }
-    await writeFile(join(base, 'run.json'), `${JSON.stringify(record, null, 2)}\n`, { flag: 'w', mode: 0o600 });
+    if (backend === 'live' && !reserved) {
+      // Reserve can refuse or fail before any request. Remove only our just-created empty run dir;
+      // an appended-but-uncertain ledger row still prevents a second paid call on the next attempt.
+      await rm(base, { recursive: true, force: true });
+    } else {
+      await writeFile(join(base, 'run.json'), `${JSON.stringify(record, null, 2)}\n`, { flag: 'w', mode: 0o600 });
+    }
   }
   return { ...output, ...record };
 }
