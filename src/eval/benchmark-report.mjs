@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { baselineAttributionLine } from './ruleset.mjs';
+import { MODERN_RULE_IDS } from '../corpus/rules.mjs';
 
 const readJson = (path) => JSON.parse(readFileSync(path, 'utf8'));
 const validId = (value) => typeof value === 'string' && value.length > 0 && !/[/\\]|^\.|\.\./.test(value);
@@ -72,7 +73,8 @@ export function benchmarkOverview(run) {
   return { runId: run.runId, projects: run.projects, overall: summarize(run.rows),
     archetypes: group('archetype'), models: group('model'),
     arms: ['C1', 'C2', 'T'].map((name) => ({ name, ...summarize(run.rows.filter((row) => row.arm === name)) })),
-    rules: group('rule') };
+    rules: [...group('rule'), ...MODERN_RULE_IDS.filter((id) => !run.rows.some((row) => row.rule === id))
+      .map((name) => ({ name, ...summarize([]) }))].sort((a, b) => a.name.localeCompare(b.name)) };
 }
 
 export function renderBenchmarkMarkdown(report) {
@@ -86,7 +88,7 @@ export function renderBenchmarkMarkdown(report) {
   return [
     `# Benchmark overview — ${report.runId}`, '', baselineAttributionLine(), '',
     `Measured projects: ${report.projects}. Pre: **${score(o.before, o.comparable)}** → post: **${score(o.after, o.comparable)}** (${o.comparable ? `${o.delta >= 0 ? '+' : ''}${o.delta}` : 'N/A'} change in passes).`, '',
-    'Scores are PASS / paired PASS-or-FAIL rule checks from the same measured project and rule on both sides. ERROR, NOT_APPLICABLE, missing and unmatched verdicts are excluded from both denominators and counted as unmeasured; these are rule-adherence scores, not visual, functional, or model-quality scores. The deterministic pilot is not a trained-model benchmark.', '',
+    'Scores are PASS / paired PASS-or-FAIL rule checks from the same measured project and rule on both sides. ERROR, NOT_APPLICABLE, missing and unmatched verdicts are excluded from both denominators and counted as unmeasured; these are rule-adherence scores, not visual, functional, or model-quality scores. The deterministic pilot is not a trained-model benchmark. New platform-feature diagnostics are N/A on historical runs and do not change the preregistered acceptance gate.', '',
     ...table('Archetypes', report.archetypes),
     '## Sealed model arms', '', 'C1 = bare base; C2 = base + guidance prompt; T = trained adapter. N/A means no paired measurements were supplied for that arm, not a score of zero.', '',
     ...table('C1 / C2 / T', report.arms), ...table('Recorded model identities (including deterministic controls)', report.models), ...table('Guidance rules', report.rules),

@@ -91,7 +91,13 @@ pilot is labelled `deterministic:no-model`, not credited to a trained model.
 A run with measured model outputs may supply `model` and its preregistered
 `arm` (`C1`, `C2` or `T`) on each decision.
 `pilot/CORPUS.json` alone contains no pre/post rule verdicts and cannot be
-used as a benchmark-score source.
+used as a benchmark-score source. Fresh pilot runs also record five optional
+browser diagnostics (modal dialog dismissal, declarative popover dismissal,
+container-size styling, unique view-transition names and child-state `:has()`
+styling). They return NOT_APPLICABLE when no such surface exists and ERROR when
+a declared feature cannot be demonstrated; neither counts as a pass. They do
+not change the preregistered training-pair acceptance gate. Historical runs
+show these guidance rows as N/A, not as scores inferred from newer code.
 
 ## Corpus viewer (owner-only)
 

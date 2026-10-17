@@ -494,7 +494,7 @@ test('every check compiles every browser expression it can reach', async () => {
           compiled.push(expression);
           return value;
         },
-        async touchEmpty() {}, async goto() {}, async waitFor() {}, async realType() {},
+        async touchEmpty() {}, async goto() {}, async waitFor() {}, async realType() {}, async click() {},
         async realKey() {}, async url() { return ''; }, async cookies() { return []; },
       };
       const ctx = {

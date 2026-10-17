@@ -16,6 +16,9 @@
  * Rule ids are real ids from the pinned Modern Web Guidance snapshot (docs/eval/rules.json), so a
  * brief that names one can be validated against the vocabulary it came from.
  */
+import { MODERN_RULES, MODERN_RULE_IDS } from './modern-rules.mjs';
+
+export { MODERN_RULE_IDS };
 export const MWG_SNAPSHOT = '2026_09_04-7de96777';
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -281,6 +284,8 @@ export const RULES = Object.freeze({
       return { rule: 'forms/autofill-address-form', status: findings.length === 0 ? 'PASS' : 'FAIL', detail: findings.join('; '), observed: facts };
     },
   },
+
+  ...MODERN_RULES,
 
   'security/sanitize-untrusted-html': {
     title: 'User-supplied markup is not inserted as live HTML',

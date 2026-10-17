@@ -145,6 +145,9 @@ export function decidePair({ original, uplifted, spec, uplift }) {
   const originalRules = byRule(original);
   const upliftedRules = byRule(uplifted);
   for (const [rule, after] of upliftedRules) {
+    // Optional diagnostics are evidence, not preregistered acceptance gates. A new optional
+    // FAIL -> PASS must not turn a rejected pair into approved training data.
+    if (!declared.includes(rule)) continue;
     const before = originalRules.get(rule);
     if (!before) continue;
     if (isFail(before) && isPass(after)) result.improved_rules.push(rule);
@@ -153,6 +156,7 @@ export function decidePair({ original, uplifted, spec, uplift }) {
     if (isPass(before) && (isFail(after) || after.status === 'ERROR')) result.regressed_rules.push(rule);
   }
   for (const [rule, before] of originalRules) {
+    if (!declared.includes(rule)) continue;
     if (before.status === 'PASS' && !upliftedRules.has(rule)) {
       result.regressed_rules.push(`${rule} (measured before, absent after)`);
     }
