@@ -20,7 +20,7 @@ import { createConnection } from 'node:net';
 import { join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 
-import { RULES, SECURITY_CHECKS } from './rules.mjs';
+import { RULES, SECURITY_CHECKS, MODERN_RULE_IDS } from './rules.mjs';
 import { completeSelectorFieldName, selectorFieldName } from '../train/brief-schema.mjs';
 
 const READY_TIMEOUT_MS = 20_000;
@@ -841,13 +841,23 @@ export async function runProjectVersion({ chrome, projectDir, spec, label, port,
     for (const [ruleId, rule] of Object.entries(RULES)) {
       // The spec is snake_case; reading `requiredRules` silently disabled the filter, which is how a
       // rule the project does not even exercise got measured and reported as a gap.
-      if (spec.required_rules && !spec.required_rules.includes(ruleId)) continue;
+      if (MODERN_RULE_IDS.includes(ruleId) || (spec.required_rules && !spec.required_rules.includes(ruleId))) continue;
       try {
         // Every rule starts from a pristine page. Two rules here assert something about a page nobody
         // has touched yet, and without this they inherited the previous rule's interaction and
         // reported the uplift as a regression for fixing the thing the previous rule had just checked.
         await page.goto(`${base}${spec.journey.startPath}`);
         record.rules.push(await rule.check(page, ruleContext));
+      } catch (error) {
+        record.rules.push({ rule: ruleId, status: 'ERROR', detail: error.message });
+      }
+    }
+    // Optional feature diagnostics share one fresh page. They are recorded for every project so
+    // the benchmark can report coverage, but do not change the sealed acceptance denominator.
+    await page.goto(`${base}${spec.journey.startPath}`);
+    for (const ruleId of MODERN_RULE_IDS) {
+      try {
+        record.rules.push(await RULES[ruleId].check(page, ruleContext));
       } catch (error) {
         record.rules.push({ rule: ruleId, status: 'ERROR', detail: error.message });
       }

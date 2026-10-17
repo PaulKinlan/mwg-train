@@ -54,6 +54,12 @@ test('audit sealed manifest preserves primary 50-generate vs four repair seconda
     { 'accessibility/accessibility': 47, 'forms/forms': 14, 'html/html': 6 });
 });
 
+test('pilot-only modern diagnostics cannot claim sealed automated coverage', () => {
+  const audit = auditPrimaryCoverage([{ ...dev, split: 'test', required_rules: ['ui-behaviors/declarative-dialog-popover-control'] }]);
+  assert.equal(audit.per_rule[0].implemented_automated_check, false);
+  assert.equal(audit.automated_pairs, 0);
+});
+
 test('a sealed empty run is NOT_EVALUABLE, not a model failure or a 0% pass rate', () => {
   const result = evaluatePrimary(SEALED, []);
   assert.equal(result.status, 'NOT_EVALUABLE');

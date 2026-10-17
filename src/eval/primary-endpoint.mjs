@@ -6,10 +6,11 @@
 import { ARMS, checkDesign, pairedDifference, passRate } from './endpoint.mjs';
 import { sealHash } from './prereg.mjs';
 import { EVAL_SEAL } from '../train/disjoint.mjs';
-import { MWG_RULE_IDS } from '../corpus/rules.mjs';
+import { MWG_RULE_IDS, MODERN_RULE_IDS } from '../corpus/rules.mjs';
 
 export const UMBRELLA_IDS = Object.freeze(['accessibility/accessibility', 'forms/forms', 'html/html']);
-const CHECKERS = new Set(MWG_RULE_IDS);
+// Pilot-only diagnostics do not yet attest a sealed brief's journey or endpoint.
+const CHECKERS = new Set(MWG_RULE_IDS.filter((id) => !MODERN_RULE_IDS.includes(id)));
 const sha = /^sha256:[a-f0-9]{64}$/;
 const own = (obj, key) => Object.prototype.hasOwnProperty.call(obj, key);
 const tally = (records) => records.reduce((acc, row) => { acc[row] = (acc[row] ?? 0) + 1; return acc; }, {});

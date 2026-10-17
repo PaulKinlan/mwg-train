@@ -21,6 +21,8 @@ test('benchmark route shows unavailable model arms until a measured run exists, 
   assert.equal(response.status, 200);
   assert.match(html, /No paired rule measurements/);
   assert.match(html, /C1 \/ C2 \/ T/);
+  assert.match(html, /css\/child-state-based-styling/);
+  assert.match(html, /ui-behaviors\/platform-controls-dismiss-dialog/);
   assert.match(html, /N\/A/);
 
   const run = join(corpusRoot, 'out', 'run-1');
