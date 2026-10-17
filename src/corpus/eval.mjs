@@ -79,6 +79,9 @@ function verdict(light, dark, source) {
   const lightBg = rgb(light.background); const darkBg = rgb(dark.background);
   if (!lightBg || !darkBg) return { status: 'ERROR', detail: 'opaque page backgrounds could not be measured in both schemes' };
   if (luminance(lightBg) - luminance(darkBg) < 0.03) failures.push('dark theme did not visibly darken the page background');
+  // A barely-grey page can darken relative to white yet remain plainly light. Require
+  // a genuinely dark, opaque canvas independently of how the author styled it.
+  if (luminance(darkBg) > 0.2) failures.push('dark page background remains too light');
   const changedTokens = Object.keys(dark.tokens ?? {}).filter((name) => light.tokens?.[name] && light.tokens[name] !== dark.tokens[name]);
   // Computed palette changes can come from a media stylesheet, a dark: utility or direct CSS.
   // Custom properties are useful evidence when present, not a prerequisite for a real dark theme.
@@ -109,13 +112,14 @@ export async function evaluateDarkMode(page, url) {
     await page.goto(url);
     const dark = await page.evaluate(DARK_SNAPSHOT_EXPRESSION);
     const preference = verdict(light, dark, 'preference');
-    // If the preference visibly changed the palette, a contrast/native-control defect is
-    // measurable even when there is no separate toggle to drive.
-    if (preference.status === 'PASS' || preference.status === 'ERROR' ||
-        preference.observed?.lightBackground !== preference.observed?.darkBackground) return preference;
+    if (preference.status === 'PASS' || preference.status === 'ERROR') return preference;
 
-    // Only try an identifiable one-click theme control if the system preference did not activate dark.
-    // Unknown custom toggles cannot justify a FAIL: their activation has not been measured.
+    // A failed preference is not the final verdict if a working explicit toggle exists.
+    // Only an actually visible palette change makes the failed preference itself measurable;
+    // comparing color strings would mistake #fff -> #fdfdfd for activated dark mode.
+    const lightBg = rgb(light.background); const darkBg = rgb(dark.background);
+    const preferenceChanged = Boolean(lightBg && darkBg && luminance(lightBg) - luminance(darkBg) >= 0.03);
+    // Unknown custom toggles cannot justify a FAIL when the preference did not visibly change.
     await page.send('Emulation.setEmulatedMedia', MEDIA('light'));
     await page.goto(url);
     const clicked = await page.evaluate(`
@@ -125,7 +129,8 @@ export async function evaluateDarkMode(page, url) {
       await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
       return true;
     `);
-    if (!clicked) return { status: 'ERROR', detail: 'dark preference did not activate and no identifiable theme toggle could be driven; dark support unmeasured' };
+    if (!clicked) return preferenceChanged ? preference :
+      { status: 'ERROR', detail: 'dark preference did not activate and no identifiable theme toggle could be driven; dark support unmeasured' };
     const toggled = await page.evaluate(DARK_SNAPSHOT_EXPRESSION);
     const result = verdict(light, toggled, 'toggle');
     // Restore the starting theme before screenshots/security checks reuse the browser session.

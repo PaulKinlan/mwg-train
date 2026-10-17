@@ -66,6 +66,21 @@ test('no solid background or sampled text is unmeasured rather than a manufactur
   assert.equal((await evaluateDarkMode(fakePage(LIGHT, { ...DARK, samples: [] }), 'http://127.0.0.1/')).status, 'ERROR');
 });
 
+test('a recognisable toggle wins when an imperceptible media override changes only the background string', async () => {
+  const marginal = { ...LIGHT, prefersDark: true, rootScheme: 'light', background: 'rgb(253, 253, 253)' };
+  const toggled = { ...DARK, prefersDark: false, rootScheme: 'dark' };
+  let media = 'light'; let clicks = 0;
+  const page = { async send(_method, args) { media = args.features[0]?.value ?? 'restored'; },
+    async goto() {}, async evaluate(source) {
+      if (source.includes('toggle.click()')) { clicks++; return true; }
+      return clicks % 2 ? toggled : media === 'dark' ? marginal : LIGHT;
+    } };
+  const result = await evaluateDarkMode(page, 'http://127.0.0.1/');
+  assert.equal(result.status, 'PASS');
+  assert.equal(result.source, 'toggle');
+  assert.equal(clicks, 2, 'restore the working toggle after the explicit check');
+});
+
 test('an explicit one-click theme toggle can activate dark when system preference cannot, and must restore', async () => {
   const nonAdaptiveDark = { ...LIGHT, prefersDark: true };
   const toggleDark = { ...DARK, prefersDark: false, rootScheme: 'dark' };
@@ -138,6 +153,18 @@ test('the injected CDP snapshot itself samples styles, token effects, canvas col
   const result = await evaluateDarkMode(page, 'http://127.0.0.1/');
   assert.equal(result.status, 'PASS');
   assert.equal(result.observed.minContrast > 4.5, true);
+});
+
+test('light grey remains a measured dark-mode failure despite a readable tokenless stylesheet', async () => {
+  const grey = { ...DARK, background: 'rgb(200, 200, 200)', tokens: {},
+    samples: [{ tag: 'p', color: 'rgb(17, 24, 39)', background: 'rgb(200, 200, 200)', fontSize: 16, fontWeight: 400 }] };
+  const page = fakePage({ ...LIGHT, tokens: {} }, grey);
+  const result = await evaluateDarkMode(page, 'http://127.0.0.1/');
+  assert.equal(result.status, 'FAIL');
+  assert.equal(result.source, 'preference');
+  assert.match(result.detail, /dark page background remains too light/);
+  assert.equal(result.observed.darkBackground, 'rgb(200, 200, 200)');
+  assert.ok(result.observed.minContrast >= 4.5);
 });
 
 test('a direct-stylesheet dark theme passes without CSS custom-property tokens', async () => {
