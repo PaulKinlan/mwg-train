@@ -22,6 +22,7 @@ import { setTimeout as delay } from 'node:timers/promises';
 
 import { RULES, SECURITY_CHECKS, MODERN_RULE_IDS } from './rules.mjs';
 import { evaluateStateJourney } from './state-persistence.mjs';
+import { evaluateDarkMode } from './eval.mjs';
 import { completeSelectorFieldName, selectorFieldName } from '../train/brief-schema.mjs';
 
 const READY_TIMEOUT_MS = 20_000;
@@ -915,6 +916,13 @@ export async function runProjectVersion({ chrome, projectDir, spec, label, port,
       } catch (error) {
         record.rules.push({ rule: ruleId, status: 'ERROR', detail: error.message });
       }
+    }
+    // Dark-mode behaviour has its own axis: it is not one of the pinned MWG guidance rules.
+    // Measure both schemes with CDP and restore media before evidence/security reuse this page.
+    try {
+      record.dark_mode = await evaluateDarkMode(page, `${base}${spec.journey.startPath}`);
+    } catch (error) {
+      record.dark_mode = { status: 'ERROR', detail: error.message };
     }
     const evidence = await captureEvidence(page, evidenceDir, label, chrome.version);
     record.screenshots = { desktop: evidence.screenshot, mobile: evidence.mobileShot };

@@ -11,10 +11,10 @@ function fixture(t, projects) {
   t.after(() => rmSync(dir, { recursive: true, force: true }));
   const write = (path, data) => writeFileSync(path, JSON.stringify(data));
   write(join(dir, 'yield.json'), { run_id: 'measured-1', decisions: projects.map(({ id, archetype, model }) => ({ project_id: id, archetype, framework: 'raw', ...(model ? { model } : {}) })) });
-  for (const { id, before, after } of projects) {
+  for (const { id, before, after, darkBefore, darkAfter } of projects) {
     mkdirSync(join(dir, id));
-    write(join(dir, id, 'original.json'), { rules: before });
-    write(join(dir, id, 'uplifted.json'), { rules: after });
+    write(join(dir, id, 'original.json'), { rules: before, ...(darkBefore ? { dark_mode: { status: darkBefore } } : {}) });
+    write(join(dir, id, 'uplifted.json'), { rules: after, ...(darkAfter ? { dark_mode: { status: darkAfter } } : {}) });
   }
   return dir;
 }
@@ -40,6 +40,29 @@ test('CLI summarizes only paired verdicts by archetype, model and guidance rule'
   assert.deepEqual(JSON.parse(cli.stdout), report);
 });
 
+test('dark-mode CDP scores remain separate from guidance rules and never backfill historical measurements', (t) => {
+  const dir = fixture(t, [
+    { id: 'booking-raw', archetype: 'booking', before: [rule('forms/required', 'PASS')], after: [rule('forms/required', 'PASS')], darkBefore: 'FAIL', darkAfter: 'PASS' },
+    { id: 'catalogue-raw', archetype: 'catalogue', before: [], after: [], darkBefore: 'ERROR', darkAfter: 'PASS' },
+  ]);
+  const report = benchmarkOverview(readBenchmarkRun(dir));
+  assert.deepEqual(report.overall, { before: 1, after: 1, comparable: 1, unmeasured: 0, delta: 0 }, 'dark checks cannot inflate guidance scores');
+  assert.deepEqual(report.darkMode, [
+    { name: 'All projects', before: 0, after: 1, comparable: 1, unmeasured: 1, delta: 1 },
+    { name: 'booking', before: 0, after: 1, comparable: 1, unmeasured: 0, delta: 1 },
+    { name: 'catalogue', before: 0, after: 0, comparable: 0, unmeasured: 1, delta: 0 },
+  ]);
+  assert.match(renderBenchmarkMarkdown(report), /Dark mode \(CDP\)[\s\S]*Paired dark checks[\s\S]*0\.0% \(0\/1\).*100\.0% \(1\/1\)/);
+  const records = { run_id: 'measured-1', projects: [
+    { project_id: 'booking-raw', original_sha: 'pre', uplifted_sha: 'post', original: { rules: {}, dark_mode: { status: 'FAIL' } }, uplifted: { rules: {}, dark_mode: { status: 'PASS' } } },
+    { project_id: 'catalogue-raw', original_sha: 'pre', uplifted_sha: 'post', original: { rules: {} }, uplifted: { rules: {} } },
+  ] };
+  writeFileSync(join(dir, 'records.json'), JSON.stringify(records));
+  writeFileSync(join(dir, 'yield.json'), JSON.stringify({ run_id: 'measured-1', decisions: records.projects.map(({ project_id, original_sha, uplifted_sha }) => ({ project_id, original_sha, uplifted_sha, archetype: project_id.split('-')[0], framework: 'raw' })) }));
+  assert.deepEqual(benchmarkOverview(readBenchmarkRun(dir)).darkMode, report.darkMode,
+    'committed matching-run and matching-hash records preserve only their own dark-mode verdicts');
+});
+
 test('committed historical pilot joins only matching-run, matching-hash measurements', (t) => {
   const dir = fixture(t, [{ id: 'booking-raw', archetype: 'booking', before: [], after: [] }]);
   const yieldPath = join(dir, 'yield.json');
@@ -60,6 +83,7 @@ test('no measured pairs show N/A, not a made-up zero score', (t) => {
   const report = benchmarkOverview(readBenchmarkRun(dir));
   assert.equal(report.overall.comparable, 0);
   assert.match(renderBenchmarkMarkdown(report), /Pre: \*\*N\/A\*\* → post: \*\*N\/A\*\*/);
+  assert.deepEqual(report.darkMode[0], { name: 'All projects', before: 0, after: 0, comparable: 0, unmeasured: 1, delta: 0 });
 });
 
 test('missing measurements and duplicate project/rule identities refuse instead of hiding gaps', (t) => {

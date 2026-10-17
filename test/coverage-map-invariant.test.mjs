@@ -5,7 +5,7 @@ import { resolve } from 'node:path';
 import test from 'node:test';
 
 const ROOT = resolve(import.meta.dirname, '..');
-const EXPECTED_EDGES_SHA256 = '7059ccbf5b4c7dfce073044c143013fad2e7103a44478693c0ee414dd506b2c0';
+const EXPECTED_EDGES_SHA256 = 'c098022f7801d4975b49c6c2e3a9779e5f39fde37e5f004110b143896bcccc73';
 
 test('the fast-gate coverage contract cannot silently lose any declared suite edge', () => {
   const mapping = JSON.parse(readFileSync(resolve(ROOT, '.fleet/coverage-mapping.json'), 'utf8'));
@@ -19,13 +19,17 @@ test('the fast-gate coverage contract cannot silently lose any declared suite ed
     `coverage edges changed (${edges.length} now); review the mapping diff before updating this digest`);
 });
 
-test('multi-step reload and opt-in non-form state paths route to their focused regressions', () => {
+test('multi-step state, CDP dark evaluator and benchmark route to focused regressions', () => {
   const mapping = JSON.parse(readFileSync(resolve(ROOT, '.fleet/coverage-mapping.json'), 'utf8'));
   assert.ok(mapping['src/corpus/cdp.mjs']?.includes('test/cdp-reload.test.mjs'));
   assert.ok(mapping['src/corpus/harness.mjs']?.includes('test/step-persistence.test.mjs'));
   assert.ok(mapping['src/corpus/accept.mjs']?.includes('test/step-persistence.test.mjs'));
   assert.ok(mapping['src/corpus/state-persistence.mjs']?.includes('test/state-persistence.test.mjs'));
   assert.ok(mapping['src/eval/spec.mjs']?.includes('test/state-persistence.test.mjs'));
+  assert.ok(mapping['src/corpus/eval.mjs']?.includes('test/corpus-dark-mode.test.mjs'));
+  assert.ok(mapping['src/corpus/harness.mjs']?.includes('test/corpus-dark-mode.test.mjs'));
+  assert.ok(mapping['src/eval/benchmark-report.mjs']?.includes('test/benchmark-report.test.mjs'));
+  assert.ok(mapping['src/eval/benchmark-report.mjs']?.includes('test/viewer-benchmark.test.mjs'));
 });
 
 test('pilot corpus metadata serializer and manifest both route to lineage checks', () => {

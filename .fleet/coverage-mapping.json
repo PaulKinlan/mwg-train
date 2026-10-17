@@ -425,8 +425,12 @@
   "src/corpus/state-persistence.mjs": [
     "test/state-persistence.test.mjs"
   ],
+  "src/corpus/eval.mjs": [
+    "test/corpus-dark-mode.test.mjs"
+  ],
   "src/corpus/harness.mjs": [
     "test/step-persistence.test.mjs",
+    "test/corpus-dark-mode.test.mjs",
     "test/harness-oracle.test.mjs",
     "test/harness-server.test.mjs",
     "test/corpus-flows-harness.test.mjs",
@@ -445,6 +449,10 @@
   "src/eval/spec.mjs": [
     "test/spec.test.mjs",
     "test/state-persistence.test.mjs"
+  ],
+  "src/eval/benchmark-report.mjs": [
+    "test/benchmark-report.test.mjs",
+    "test/viewer-benchmark.test.mjs"
   ],
   "src/train/backends/fireworks.mjs": [
     "test/seam.test.mjs"
@@ -468,6 +476,7 @@
     "test/viewer-corpus.test.mjs"
   ],
   "src/viewer/pages.mjs": [
+    "test/viewer-benchmark.test.mjs",
     "test/viewer-concept-briefs.test.mjs",
     "test/viewer-concepts.test.mjs",
     "test/viewer-live-index.test.mjs",
