@@ -5,7 +5,7 @@ import { resolve } from 'node:path';
 import test from 'node:test';
 
 const ROOT = resolve(import.meta.dirname, '..');
-const EXPECTED_EDGES_SHA256 = 'f381780e1b057a4e19cc3a4003f6f22c2d04b6650e3b3654643afc71ac0ddfde';
+const EXPECTED_EDGES_SHA256 = 'a65bc2c2a4bf995fe760089a2af10481366944e14591293afe7bce9ffe9b031f';
 
 test('the fast-gate coverage contract cannot silently lose any declared suite edge', () => {
   const mapping = JSON.parse(readFileSync(resolve(ROOT, '.fleet/coverage-mapping.json'), 'utf8'));
@@ -38,6 +38,7 @@ test('changes to optional browser diagnostics rerun their real-browser regressio
   const mapping = JSON.parse(readFileSync(resolve(ROOT, '.fleet/coverage-mapping.json'), 'utf8'));
   assert.ok(mapping['src/corpus/harness.mjs'].includes('test/modern-rules.test.mjs'));
   assert.ok(mapping['src/corpus/modern-rules.mjs'].includes('test/modern-rules.test.mjs'));
+  assert.ok(mapping['src/corpus/modern-rules.mjs'].includes('test/view-transition-callback.test.mjs'));
 });
 
 test('pilot corpus metadata serializer and manifest both route to lineage checks', () => {

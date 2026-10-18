@@ -123,7 +123,7 @@ export const MODERN_RULES = Object.freeze({
   },
   'ui-behaviors/same-document-transitions': {
     title: 'A same-document transition runs with unique visible names',
-    property: 'a declared trusted trigger starts and completes a View Transition with unique visible names',
+    property: 'a declared trusted trigger updates a shared uniquely named element inside a completed View Transition',
     async check(page, ctx = {}) {
       const rule = 'ui-behaviors/same-document-transitions';
       const result = await page.evaluate(VISIBLE_TRANSITION_NAMES);
@@ -139,13 +139,50 @@ export const MODERN_RULES = Object.freeze({
         if (!rect.width || !rect.height) return null;
         const original = document.startViewTransition;
         const ownMethod = Object.hasOwn(document, 'startViewTransition');
-        const state = { started: 0, ready: 0, finished: 0, skipped: 0 };
+        const snapshot = () => { ${VISIBLE_TRANSITION_NAMES} };
+        const state = { started: 0, ready: 0, finished: 0, skipped: 0, updates: [] };
         window.__mwgTransitionProbe = state;
         window.__mwgTransitionRestore = () => {
           if (ownMethod) document.startViewTransition = original;
           else delete document.startViewTransition;
         };
         document.startViewTransition = function(...args) {
+          const update = typeof args[0] === 'function' ? args[0] : args[0]?.update;
+          if (typeof update === 'function') {
+            const wrapped = function(...parameters) {
+              // Pointer hover and CSS animations can change computed styles without an update.
+              // Observe only DOM mutations during the transition's own update callback.
+              const before = snapshot();
+              const named = [...document.querySelectorAll('*')].filter((element) => {
+                const name = getComputedStyle(element).viewTransitionName;
+                return name && name !== 'none' && element.checkVisibility();
+              });
+              const relevant = (record) => named.some((element) => {
+                const target = record.target.nodeType === 1 ? record.target : record.target.parentElement;
+                if (!target) return false;
+                if (record.type === 'attributes') {
+                  return ['class', 'style', 'hidden', 'src', 'srcset', 'width', 'height'].includes(record.attributeName) &&
+                    (element === target || element.contains(target) || target.contains(element));
+                }
+                if (element === target || element.contains(target)) return true;
+                return record.type === 'childList' && [...record.addedNodes, ...record.removedNodes]
+                  .some((node) => node === element || (node.nodeType === 1 && node.contains(element)));
+              });
+              let mutated = false;
+              const observer = new MutationObserver((records) => { if (records.some(relevant)) mutated = true; });
+              observer.observe(document, { subtree: true, attributes: true, childList: true, characterData: true });
+              let outcome;
+              try { outcome = Reflect.apply(update, this, parameters); }
+              catch (error) { observer.disconnect(); throw error; }
+              return Promise.resolve(outcome).then((value) => {
+                if (observer.takeRecords().some(relevant)) mutated = true;
+                observer.disconnect();
+                if (state.updates.length < 8) state.updates.push({ before, after: snapshot(), mutated });
+                return value;
+              }, (error) => { observer.disconnect(); throw error; });
+            };
+            args[0] = typeof args[0] === 'function' ? wrapped : { ...args[0], update: wrapped };
+          }
           const transition = Reflect.apply(original, this, args);
           state.started += 1;
           transition.ready.then(() => { state.ready += 1; }, () => { state.skipped += 1; });
@@ -175,11 +212,13 @@ export const MODERN_RULES = Object.freeze({
       if (!observed?.started || !observed.ready || !observed.finished || observed.skipped || !sharedNames.length) {
         return verdict(rule, 'ERROR', 'declared trigger did not demonstrate a completed View Transition with a shared named element', { before: result, after, observed });
       }
-      const changedNames = sharedNames.filter((name) => result.signatures[name] !== after.signatures[name]);
+      const changedNames = sharedNames.filter((name) => observed.updates?.some((update) =>
+        update.mutated && name in update.before.names && name in update.after.names &&
+        update.before.signatures[name] !== update.after.signatures[name]));
       if (!changedNames.length) {
-        return verdict(rule, 'ERROR', 'transition completed without an observable change in a shared named element', { before: result, after, observed });
+        return verdict(rule, 'ERROR', 'transition update callback did not visibly change a shared named element', { before: result, after, observed });
       }
-      return verdict(rule, 'PASS', 'trusted trigger changed a shared unique named element in a completed View Transition',
+      return verdict(rule, 'PASS', 'trusted trigger visibly updated a shared unique named element during a completed View Transition',
         { before: result, after, observed, changedNames });
     },
   },
