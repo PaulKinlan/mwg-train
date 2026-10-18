@@ -757,6 +757,23 @@ async function captureEvidence(page, dir, label, protocol) {
 }
 
 /** A measured runtime stamp, including runs that later fail to start their server. */
+export async function runOptionalModernRules(page, url, context) {
+  const results = [];
+  for (const ruleId of MODERN_RULE_IDS) {
+    try {
+      // Each optional rule may mutate or even fail to dismiss top-layer UI. Isolation prevents
+      // a broken dialog from manufacturing a popover failure on the next rule.
+      await page.goto(url);
+      results.push(await RULES[ruleId].check(page, context));
+    } catch (error) {
+      results.push({ rule: ruleId, status: 'ERROR', detail: error.message });
+    }
+  }
+  // Evidence must show the journey's landing page, not a diagnostic's leftover modal.
+  await page.goto(url);
+  return results;
+}
+
 export function runEnvironment(chrome) {
   const browser = chrome?.version ?? null; // Browser.getVersion from the live CDP connection.
   return {
@@ -927,16 +944,9 @@ export async function runProjectVersion({ chrome, projectDir, spec, label, port,
         record.rules.push({ rule: ruleId, status: 'ERROR', detail: error.message });
       }
     }
-    // Optional feature diagnostics share one fresh page. They are recorded for every project so
-    // the benchmark can report coverage, but do not change the sealed acceptance denominator.
-    await page.goto(`${base}${spec.journey.startPath}`);
-    for (const ruleId of MODERN_RULE_IDS) {
-      try {
-        record.rules.push(await RULES[ruleId].check(page, ruleContext));
-      } catch (error) {
-        record.rules.push({ rule: ruleId, status: 'ERROR', detail: error.message });
-      }
-    }
+    // Optional diagnostics are observed for every project, never added to the sealed acceptance
+    // denominator. Each starts fresh and the landing page is restored before screenshots.
+    record.rules.push(...await runOptionalModernRules(page, `${base}${spec.journey.startPath}`, ruleContext));
     const evidence = await captureEvidence(page, evidenceDir, label, chrome.version);
     record.screenshots = { desktop: evidence.screenshot, mobile: evidence.mobileShot };
     // The security checks need the cookie jar and the page as the journey left it.

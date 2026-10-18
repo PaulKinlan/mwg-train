@@ -436,7 +436,8 @@
     "test/harness-oracle.test.mjs",
     "test/harness-server.test.mjs",
     "test/corpus-flows-harness.test.mjs",
-    "test/corpus-flows.test.mjs"
+    "test/corpus-flows.test.mjs",
+    "test/modern-rules.test.mjs"
   ],
   "src/eval/build-key.mjs": [
     "test/build-key.test.mjs",
