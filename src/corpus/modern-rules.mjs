@@ -5,13 +5,25 @@
 const verdict = (rule, status, detail, observed = {}) => ({ rule, status, detail, observed });
 
 const VISIBLE_TRANSITION_NAMES = `
-  const counts = {};
+  const counts = {}, signatures = {};
   for (const element of document.querySelectorAll('*')) {
     if (element === document.documentElement || !element.checkVisibility()) continue;
-    const name = getComputedStyle(element).viewTransitionName;
-    if (name && name !== 'none') counts[name] = (counts[name] ?? 0) + 1;
+    const style = getComputedStyle(element);
+    const name = style.viewTransitionName;
+    if (!name || name === 'none') continue;
+    counts[name] = (counts[name] ?? 0) + 1;
+    const rect = element.getBoundingClientRect();
+    // The API completing is not itself evidence of an update: compare rendered content/geometry/style.
+    // Bound text and image inventory so a named page-sized container cannot explode the run record.
+    signatures[name] = JSON.stringify([
+      (element.innerText ?? element.textContent ?? '').trim().slice(0, 512),
+      ...[rect.x, rect.y, rect.width, rect.height].map((value) => Math.round(value * 10) / 10),
+      style.color, style.backgroundColor, style.backgroundImage, style.opacity, style.transform,
+      [element, ...element.querySelectorAll('img')].filter((image) => image.localName === 'img')
+        .slice(0, 8).map((image) => image.currentSrc),
+    ]);
   }
-  return { names: counts, duplicates: Object.entries(counts).filter(([, count]) => count > 1).map(([name]) => name) };
+  return { names: counts, signatures, duplicates: Object.entries(counts).filter(([, count]) => count > 1).map(([name]) => name) };
 `;
 
 export const MODERN_RULES = Object.freeze({
@@ -159,11 +171,16 @@ export const MODERN_RULES = Object.freeze({
       }
       const after = await page.evaluate(`/* post-interaction snapshot */\n${VISIBLE_TRANSITION_NAMES}`).catch(() => null);
       if (after?.duplicates.length) return verdict(rule, 'FAIL', `duplicate visible view-transition-name after interaction: ${after.duplicates.join(', ')}`, { before: result, after, observed });
-      if (!observed?.started || !observed.ready || !observed.finished || observed.skipped ||
-        !after || !Object.keys(result.names).some((name) => name in after.names)) {
+      const sharedNames = Object.keys(result.names).filter((name) => name in (after?.names ?? {}));
+      if (!observed?.started || !observed.ready || !observed.finished || observed.skipped || !sharedNames.length) {
         return verdict(rule, 'ERROR', 'declared trigger did not demonstrate a completed View Transition with a shared named element', { before: result, after, observed });
       }
-      return verdict(rule, 'PASS', 'trusted trigger completed a View Transition with a shared unique name before and after', { before: result, after, observed });
+      const changedNames = sharedNames.filter((name) => result.signatures[name] !== after.signatures[name]);
+      if (!changedNames.length) {
+        return verdict(rule, 'ERROR', 'transition completed without an observable change in a shared named element', { before: result, after, observed });
+      }
+      return verdict(rule, 'PASS', 'trusted trigger changed a shared unique named element in a completed View Transition',
+        { before: result, after, observed, changedNames });
     },
   },
   'css/child-state-based-styling': {

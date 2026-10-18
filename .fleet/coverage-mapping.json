@@ -439,6 +439,9 @@
     "test/corpus-flows.test.mjs",
     "test/modern-rules.test.mjs"
   ],
+  "src/corpus/modern-rules.mjs": [
+    "test/modern-rules.test.mjs"
+  ],
   "src/eval/build-key.mjs": [
     "test/build-key.test.mjs",
     "test/decode-config.test.mjs"
