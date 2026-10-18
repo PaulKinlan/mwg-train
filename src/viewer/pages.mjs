@@ -11,6 +11,7 @@ import { createHash } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { BASELINE_LABEL } from '../eval/ruleset.mjs';
+import { optionalDiagnosticNote } from '../eval/benchmark-report.mjs';
 
 export function escapeHtml(value) {
   return String(value ?? '')
@@ -572,7 +573,7 @@ export function renderLiveIndex({ views, runId, runs, active, viewerOrigin }) {
 
 export function renderBenchmark(report, { runs = [], hasMeasurements = false, source = null } = {}) {
   const score = (pass, total) => total ? `${(pass / total * 100).toFixed(1)}% (${pass}/${total})` : 'N/A';
-  const table = (title, rows) => `<section><h2>${escapeHtml(title)}</h2><p class="table-hint">Scroll sideways to compare scores at narrow widths.</p><div class="table-scroll" role="region" aria-label="${escapeHtml(title)} scores" tabindex="0"><table><caption class="sr-only">${escapeHtml(title)} pre and post scores</caption><thead><tr><th scope="col">Name</th><th scope="col">Pre</th><th scope="col">Post</th><th scope="col">Change in passes</th><th scope="col">Paired checks</th><th scope="col">Unmeasured</th></tr></thead><tbody>${rows.map((row) => `<tr><th scope="row">${escapeHtml(row.name)}</th><td>${score(row.before, row.comparable)}</td><td>${score(row.after, row.comparable)}</td><td>${row.comparable ? `${row.delta >= 0 ? '+' : ''}${row.delta}` : 'N/A'}</td><td>${row.comparable}</td><td>${row.unmeasured}</td></tr>`).join('') || '<tr><td colspan="6">No measurements recorded.</td></tr>'}</tbody></table></div></section>`;
+  const table = (title, rows) => `<section><h2>${escapeHtml(title)}</h2><p class="table-hint">Scroll sideways to compare scores at narrow widths.</p><div class="table-scroll" role="region" aria-label="${escapeHtml(title)} scores" tabindex="0"><table><caption class="sr-only">${escapeHtml(title)} pre and post scores</caption><thead><tr><th scope="col">Name</th><th scope="col">Pre</th><th scope="col">Post</th><th scope="col">Change in passes</th><th scope="col">Paired checks</th><th scope="col">Unmeasured</th></tr></thead><tbody>${rows.map((row) => `<tr><th scope="row">${row.optional ? '<span class="badge no-run">Optional · not in headline</span> ' : ''}${escapeHtml(row.name)}</th><td>${score(row.before, row.comparable)}</td><td>${score(row.after, row.comparable)}</td><td>${row.comparable ? `${row.delta >= 0 ? '+' : ''}${row.delta}` : 'N/A'}</td><td>${row.comparable}</td><td>${row.recorded === false ? 'not recorded' : row.unmeasured}</td></tr>`).join('') || '<tr><td colspan="6">No measurements recorded.</td></tr>'}</tbody></table></div></section>`;
   const runLinks = runs.map((run) => `<a href="/benchmark?run=${encodeURIComponent(run)}">${escapeHtml(run)}</a>`).join(' · ');
   const o = report.overall;
   const d = report.diagnostics;
@@ -581,7 +582,7 @@ export function renderBenchmark(report, { runs = [], hasMeasurements = false, so
     <p>Pre: <strong>${score(o.before, o.comparable)}</strong> → post: <strong>${score(o.after, o.comparable)}</strong> (${o.comparable ? `${o.delta >= 0 ? '+' : ''}${o.delta}` : 'N/A'} change in passes across ${report.projects} measured projects).</p>
     ${hasMeasurements ? '' : '<p class="notice">No paired rule measurements for this run. Committed corpus summaries are not scores; run the pilot and choose its measured run.</p>'}
     <p class="muted">Headline, archetype, model and arm scores use the historical core rule vector. Optional modern-platform diagnostics appear per rule but never enter those totals. Scores count PASS among the same project/rule checks measured PASS or FAIL before and after. ERROR, NOT_APPLICABLE or unmatched checks are unmeasured, not passes. This is guidance-rule adherence, not visual or functional quality; the deterministic pilot is not a trained model.</p>
-    <p>Optional diagnostics, separate from headline: pre <strong>${score(d.before, d.comparable)}</strong> → post <strong>${score(d.after, d.comparable)}</strong>; ${d.unmeasured} unmeasured.</p>
+    <p>Optional diagnostics, separate from headline: pre <strong>${score(d.before, d.comparable)}</strong> → post <strong>${score(d.after, d.comparable)}</strong>; ${optionalDiagnosticNote(report)}.</p>
     ${runLinks ? `<p>Other local run directories: ${runLinks}</p>` : ''}
     ${table('Archetypes', report.archetypes)}<h2>Sealed model arms</h2><p>C1 = bare base; C2 = base + guidance; T = trained adapter. N/A means no measured arm was supplied, not zero.</p>
     ${table('C1 / C2 / T', report.arms)}${table('Recorded model identities', report.models)}${table('Guidance rules', report.rules)}`);

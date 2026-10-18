@@ -23,6 +23,9 @@ test('benchmark route shows unavailable model arms until a measured run exists, 
   assert.match(html, /C1 \/ C2 \/ T/);
   assert.match(html, /css\/child-state-based-styling/);
   assert.match(html, /ui-behaviors\/platform-controls-dismiss-dialog/);
+  assert.match(html, /Optional diagnostics, separate from headline: pre <strong>N\/A<\/strong> → post <strong>N\/A<\/strong>; not recorded in this run\./);
+  assert.doesNotMatch(html, /0 unmeasured/);
+  assert.match(html, /<th scope="row"><span class="badge no-run">Optional · not in headline<\/span> css\/size-aware-styling<\/th>[^<]*<td>N\/A<\/td><td>N\/A<\/td><td>N\/A<\/td><td>0<\/td><td>not recorded<\/td>/);
   assert.match(html, /N\/A/);
 
   const run = join(corpusRoot, 'out', 'run-1');
@@ -41,7 +44,11 @@ test('benchmark route shows unavailable model arms until a measured run exists, 
   assert.ok(headline, 'the overall score must have its own headline paragraph');
   assert.match(headline, /Pre: <strong>0\.0% \(0\/1\)<\/strong> → post: <strong>100\.0% \(1\/1\)<\/strong>/,
     'the core headline cannot borrow matching percentages from the optional diagnostics paragraph');
-  assert.match(html, /Optional diagnostics, separate from headline: pre <strong>100\.0% \(1\/1\)<\/strong> → post <strong>0\.0% \(0\/1\)<\/strong>/);
+  assert.match(html, /Optional diagnostics, separate from headline: pre <strong>100\.0% \(1\/1\)<\/strong> → post <strong>0\.0% \(0\/1\)<\/strong>; 4 optional rules not recorded in this run\./);
+  assert.match(html, /<th scope="row"><span class="badge no-run">Optional · not in headline<\/span> css\/size-aware-styling<\/th>[^<]*<td>100\.0% \(1\/1\)<\/td><td>0\.0% \(0\/1\)<\/td>/);
+  assert.match(html, /<th scope="row">forms\/required<\/th>/);
+  assert.match(html, /<th scope="row">booking<\/th><td>0\.0% \(0\/1\)<\/td><td>100\.0% \(1\/1\)<\/td><td>\+1<\/td><td>1<\/td><td>0<\/td>/,
+    'non-rule tables must keep their measured unmeasured counts');
   assert.match(html, /forms\/required/);
   assert.match(html, /provider\/model/);
   assert.equal((await fetch(`${base}/benchmark?run=..%2Fprivate`)).status, 404);

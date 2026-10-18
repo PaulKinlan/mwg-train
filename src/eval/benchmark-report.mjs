@@ -79,8 +79,19 @@ export function benchmarkOverview(run) {
     diagnostics: summarize(diagnosticRows),
     archetypes: group('archetype', coreRows), models: group('model', coreRows),
     arms: ['C1', 'C2', 'T'].map((name) => ({ name, ...summarize(coreRows.filter((row) => row.arm === name)) })),
-    rules: [...group('rule', run.rows), ...MODERN_RULE_IDS.filter((id) => !run.rows.some((row) => row.rule === id))
-      .map((name) => ({ name, ...summarize([]) }))].sort((a, b) => a.name.localeCompare(b.name)) };
+    rules: [...group('rule', run.rows).map((row) => ({ ...row, optional: optional.has(row.name), recorded: true })),
+      ...MODERN_RULE_IDS.filter((id) => !run.rows.some((row) => row.rule === id))
+        .map((name) => ({ name, ...summarize([]), optional: true, recorded: false }))]
+      .sort((a, b) => a.name.localeCompare(b.name)) };
+}
+
+export function optionalDiagnosticNote(report) {
+  const d = report.diagnostics;
+  if (!d.comparable && !d.unmeasured) return 'not recorded in this run';
+  const absent = report.rules.filter((row) => row.optional && !row.recorded).length;
+  if (!absent) return `${d.unmeasured} unmeasured`;
+  const observed = d.unmeasured ? `${d.unmeasured} recorded check${d.unmeasured === 1 ? '' : 's'} unmeasured; ` : '';
+  return `${observed}${absent} optional rule${absent === 1 ? '' : 's'} not recorded in this run`;
 }
 
 export function renderBenchmarkMarkdown(report) {
@@ -88,7 +99,7 @@ export function renderBenchmarkMarkdown(report) {
   const table = (title, rows) => [
     `## ${title}`, '', '| Name | Pre score | Post score | Δ pass | Paired rule checks | Unmeasured |',
     '| --- | ---: | ---: | ---: | ---: | ---: |',
-    ...rows.map((row) => `| \`${row.name.replaceAll('|', '\\|')}\` | ${score(row.before, row.comparable)} | ${score(row.after, row.comparable)} | ${row.comparable ? `${row.delta >= 0 ? '+' : ''}${row.delta}` : 'N/A'} | ${row.comparable} | ${row.unmeasured} |`), '',
+    ...rows.map((row) => `| \`${row.name.replaceAll('|', '\\|')}\`${row.optional ? ' (optional; not in headline)' : ''} | ${score(row.before, row.comparable)} | ${score(row.after, row.comparable)} | ${row.comparable ? `${row.delta >= 0 ? '+' : ''}${row.delta}` : 'N/A'} | ${row.comparable} | ${row.recorded === false ? 'not recorded' : row.unmeasured} |`), '',
   ];
   const o = report.overall;
   const d = report.diagnostics;
@@ -96,7 +107,7 @@ export function renderBenchmarkMarkdown(report) {
     `# Benchmark overview — ${report.runId}`, '', baselineAttributionLine(), '',
     `Measured projects: ${report.projects}. Pre: **${score(o.before, o.comparable)}** → post: **${score(o.after, o.comparable)}** (${o.comparable ? `${o.delta >= 0 ? '+' : ''}${o.delta}` : 'N/A'} change in passes).`, '',
     'The headline, archetype, model and arm totals use the historical core rule vector. Optional modern-platform diagnostics are shown per rule but excluded from these totals, so adding them cannot alter the historical denominator. Scores are PASS / paired PASS-or-FAIL checks for the same project and rule on both sides. ERROR, NOT_APPLICABLE, missing and unmatched verdicts are unmeasured, not passes; this is rule adherence, not visual, functional, or model quality. The deterministic pilot is not a trained-model benchmark.', '',
-    `Optional diagnostics (separate, not in headline): pre ${score(d.before, d.comparable)} → post ${score(d.after, d.comparable)}; ${d.unmeasured} unmeasured.`, '',
+    `Optional diagnostics (separate, not in headline): pre ${score(d.before, d.comparable)} → post ${score(d.after, d.comparable)}; ${optionalDiagnosticNote(report)}.`, '',
     ...table('Archetypes', report.archetypes),
     '## Sealed model arms', '', 'C1 = bare base; C2 = base + guidance prompt; T = trained adapter. N/A means no paired measurements were supplied for that arm, not a score of zero.', '',
     ...table('C1 / C2 / T', report.arms), ...table('Recorded model identities (including deterministic controls)', report.models), ...table('Guidance rules', report.rules),
