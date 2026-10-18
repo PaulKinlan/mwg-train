@@ -12,14 +12,24 @@ test('runtime samples refuse missing observations and distinguish retention susp
   assert.equal(empty.inp_sample.status, 'NOT_APPLICABLE');
   assert.equal(classifyRuntimeSample({ lcp: [], events: [], memory: [], interactionsDriven: 3 }).inp_sample.status, 'NOT_MEASURED');
   assert.equal(empty.detached_dom.status, 'INCONCLUSIVE');
-  const samples = [0, 20, 40, 60].map((extra, index) => ({ documents: 1, nodes: 100 + extra, liveNodes: 60, heapBytes: 100_000 + index * 40_000 }));
+  const samples = [0, 20, 40, 60].map((extra, index) => ({ documents: 1, expectedDocuments: 1, browsingContexts: 1,
+    nodes: 100 + extra, liveNodes: 60, heapBytes: 100_000 + index * 40_000 }));
   const measured = classifyRuntimeSample({ lcp: [{ startTime: 175, size: 1000 }], events: [{ interactionId: 3, duration: 240 }], memory: samples });
   assert.equal(measured.lcp_proxy.status, 'OBSERVED');
   assert.equal(measured.inp_sample.status, 'SLOW_SAMPLE');
   assert.equal(measured.detached_dom.status, 'SUSPECTED_RETENTION');
   assert.equal(measured.status, 'MEASURED');
   assert.equal(measured.reason, null);
-  assert.equal(classifyRuntimeSample({ lcp: [], events: [], memory: samples.map((row) => ({ ...row, documents: 2 })) }).detached_dom.status, 'INCONCLUSIVE');
+  const template = samples.map((row) => ({ ...row, documents: 2, expectedDocuments: 2 }));
+  const templateResult = classifyRuntimeSample({ lcp: [], events: [], memory: template });
+  assert.equal(templateResult.detached_dom.status, 'SUSPECTED_RETENTION');
+  assert.deepEqual(templateResult.detached_dom.documentCounts, [2, 2, 2, 2]);
+  assert.equal(classifyRuntimeSample({ lcp: [], events: [], memory: samples.map((row) => ({ ...row, documents: 2 })) }).detached_dom.status, 'INCONCLUSIVE',
+    'an unexplained extra Document remains non-comparable');
+  assert.equal(classifyRuntimeSample({ lcp: [], events: [], memory: template.map((row, index) => ({ ...row, documents: index ? 2 : 1 })) }).detached_dom.status, 'INCONCLUSIVE',
+    'the first snapshot must not race the template owner-document materialisation');
+  assert.equal(classifyRuntimeSample({ lcp: [], events: [], memory: template.map((row) => ({ ...row, browsingContexts: 2 })) }).detached_dom.status, 'INCONCLUSIVE',
+    'a genuine child browsing context cannot masquerade as a template owner');
   const liveGrowth = samples.map((row, index) => ({ ...row, liveNodes: 60 + index * 20 }));
   const partial = classifyRuntimeSample({ lcp: [], events: [], memory: liveGrowth });
   assert.equal(partial.detached_dom.status, 'INCONCLUSIVE',
@@ -54,15 +64,17 @@ test('missing trigger and sampling errors retain the same top-level status/reaso
 test('a real browser records hard-navigation paint, trusted interaction timing and retained detached DOM proxy', async (t) => {
   const server = createServer((request, response) => {
     response.setHeader('content-type', 'text/html');
-    const action = request.url === '/growing'
+    const action = request.url === '/growing' || request.url === '/growing-template'
       ? `for (let i = 0; i < 90; i++) { const row = document.createElement('p'); row.textContent = 'Connected content ' + i; document.body.append(row); }`
       : request.url === '/shadow'
         ? `for (let i = 0; i < 90; i++) { const row = document.createElement('span'); row.textContent = 'Live shadow ' + i; window.connectedShadow.append(row); }`
         : `const detached = document.createElement('div');
         for (let i = 0; i < 90; i++) detached.append(document.createElement('span'));
         (window.retained ||= []).push(detached, new Array(12000).fill('retained'));`;
+    const template = request.url?.includes('template') ? '<template id="inert"></template>' : '';
+    const frame = request.url === '/iframe' ? '<iframe srcdoc="<p>child document</p>"></iframe>' : '';
     response.end(`<!doctype html><html><body><h1>Runtime probe with visible content</h1>
-      <button id="probe">Run interaction</button><div id="host"></div><script>
+      <button id="probe">Run interaction</button><div id="host"></div>${template}${frame}<script>
       if (location.pathname === '/shadow') window.connectedShadow = document.querySelector('#host').attachShadow({ mode: 'closed' });
       document.getElementById('probe').addEventListener('click', () => {
         ${action}
@@ -90,6 +102,18 @@ test('a real browser records hard-navigation paint, trusted interaction timing a
     const shadow = await measureRuntimeQuality(page, { url: `http://127.0.0.1:${server.address().port}/shadow`, interactionSelector: '#probe' });
     assert.equal(shadow.detached_dom.status, 'INCONCLUSIVE', JSON.stringify(shadow));
     assert.ok(shadow.detached_dom.liveNodeGrowth > 0, JSON.stringify(shadow));
+    const templateLeak = await measureRuntimeQuality(page, { url: `http://127.0.0.1:${server.address().port}/leak-template`, interactionSelector: '#probe' });
+    assert.equal(templateLeak.detached_dom.status, 'SUSPECTED_RETENTION', JSON.stringify(templateLeak));
+    assert.equal(templateLeak.status, 'MEASURED', JSON.stringify(templateLeak));
+    assert.ok(templateLeak.detached_dom.retainedNodeProxyGrowth >= 30, JSON.stringify(templateLeak));
+    assert.deepEqual(templateLeak.detached_dom.documentCounts, [2, 2, 2, 2]);
+    const growingTemplate = await measureRuntimeQuality(page, { url: `http://127.0.0.1:${server.address().port}/growing-template`, interactionSelector: '#probe' });
+    assert.equal(growingTemplate.detached_dom.status, 'INCONCLUSIVE', JSON.stringify(growingTemplate));
+    assert.ok(growingTemplate.detached_dom.liveNodeGrowth > 0, JSON.stringify(growingTemplate));
+    const iframe = await measureRuntimeQuality(page, { url: `http://127.0.0.1:${server.address().port}/iframe`, interactionSelector: '#probe' });
+    assert.equal(iframe.detached_dom.status, 'INCONCLUSIVE', JSON.stringify(iframe));
+    assert.match(iframe.detached_dom.reason, /single-browsing-context/);
+    assert.ok(iframe.detached_dom.browsingContexts.some((n) => n > 1), JSON.stringify(iframe));
     await page.close();
   } finally { if (chrome) await chrome.close(); }
 });

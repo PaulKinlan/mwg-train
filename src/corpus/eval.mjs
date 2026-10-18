@@ -34,18 +34,27 @@ export function classifyRuntimeSample({ lcp, events, memory, interactionsDriven 
         interactions: new Set(interactions.map((entry) => entry.interactionId)).size,
         source: 'largest observed Event Timing interaction in this lab probe; not field INP' };
   const samples = Array.isArray(memory) ? memory : [];
-  const stableDocuments = samples.length === 4 && samples.every((entry) => entry.documents === 1);
+  // A template has one inert contents-owner Document shared by its fragments. It is not a
+  // second browsing context or a leak. Still refuse an extra frame, an unexplained Document,
+  // or a document count that changes during the four post-GC samples.
+  const expectedDocuments = samples[0]?.expectedDocuments;
+  const stableDocuments = samples.length === 4 && Number.isInteger(expectedDocuments) &&
+    samples.every((entry) => entry.browsingContexts === 1 && entry.expectedDocuments === expectedDocuments &&
+      entry.documents === expectedDocuments);
   const retained = samples.map((entry) => entry.nodes - entry.liveNodes);
   const monotonic = retained.length === 4 && retained.every((value, index) => index === 0 || value >= retained[index - 1]);
   const liveStable = samples.length === 4 && samples.every((entry) => entry.liveNodes === samples[0].liveNodes);
   const growth = samples.length === 4 ? retained[3] - retained[0] : null;
   const heapGrowth = samples.length === 4 ? samples[3].heapBytes - samples[0].heapBytes : null;
   const detachedDom = !stableDocuments || !samples.every((entry) => Number.isFinite(entry.nodes) && Number.isFinite(entry.liveNodes) && Number.isFinite(entry.heapBytes))
-    ? { status: 'INCONCLUSIVE', reason: 'four comparable post-GC single-document samples were not available' }
+    ? { status: 'INCONCLUSIVE', reason: 'four comparable post-GC single-browsing-context samples were not available',
+      documentCounts: samples.map((entry) => entry.documents), expectedDocuments,
+      browsingContexts: samples.map((entry) => entry.browsingContexts) }
     : !liveStable ? { status: 'INCONCLUSIVE', reason: 'connected DOM node count changed across interactions; retained-node growth cannot be isolated',
       liveNodeGrowth: samples[3].liveNodes - samples[0].liveNodes }
       : { status: monotonic && growth >= 30 && heapGrowth >= 65_536 ? 'SUSPECTED_RETENTION' : 'NO_GROWTH_OBSERVED',
           retainedNodeProxyGrowth: growth, heapByteGrowth: heapGrowth, samples: samples.length,
+          documentCounts: samples.map((entry) => entry.documents), expectedDocuments,
           note: 'CDP DOM-node count minus connected document nodes is a retained-node proxy, not an exact detached-node count; short sampling cannot prove absence of leaks' };
   const measuredCount = [lcpProxy.status, inpSample.status, detachedDom.status]
     .filter((status) => ['OBSERVED', 'SLOW_SAMPLE', 'SUSPECTED_RETENTION', 'NO_GROWTH_OBSERVED'].includes(status)).length;
@@ -55,11 +64,11 @@ export function classifyRuntimeSample({ lcp, events, memory, interactionsDriven 
     lcp_proxy: lcpProxy, inp_sample: inpSample, detached_dom: detachedDom };
 }
 
-export function countConnectedDomNodes(root) {
-  // CDP pierces both open and closed shadow trees and exposes template content. A page
+function connectedDomWitness(root) {
+  // CDP pierces both open and closed shadow trees and exposes template fragments. A page
   // TreeWalker only sees light DOM, incorrectly labelling healthy component growth as retention.
   const pending = [root];
-  let count = 0;
+  let count = 0; let hasTemplate = false;
   while (pending.length) {
     const node = pending.pop();
     if (!node) continue;
@@ -67,20 +76,33 @@ export function countConnectedDomNodes(root) {
     for (const key of ['children', 'shadowRoots', 'pseudoElements']) {
       for (const child of node[key] ?? []) pending.push(child);
     }
-    if (node.templateContent) pending.push(node.templateContent);
+    if (node.templateContent) { hasTemplate = true; pending.push(node.templateContent); }
     if (node.contentDocument) pending.push(node.contentDocument);
   }
-  return count;
+  return { count, hasTemplate };
+}
+
+export function countConnectedDomNodes(root) {
+  return connectedDomWitness(root).count;
+}
+
+function frameCount(frameTree) {
+  if (!frameTree) return NaN;
+  return 1 + (frameTree.childFrames ?? []).reduce((total, child) => total + frameCount(child), 0);
 }
 
 async function memorySample(page) {
   await page.send('HeapProfiler.collectGarbage');
-  const [dom, heap, tree] = await Promise.all([
-    page.send('Memory.getDOMCounters'), page.send('Runtime.getHeapUsage'),
-    page.send('DOM.getDocument', { depth: -1, pierce: true }),
+  // Pierce first: this materialises the template contents-owner Document. Concurrent
+  // counters could race the first walk and report 1,2,2,2 on the same unchanged page.
+  const tree = await page.send('DOM.getDocument', { depth: -1, pierce: true });
+  const [dom, heap, frames] = await Promise.all([
+    page.send('Memory.getDOMCounters'), page.send('Runtime.getHeapUsage'), page.send('Page.getFrameTree'),
   ]);
-  return { documents: dom.documents, nodes: dom.nodes,
-    liveNodes: countConnectedDomNodes(tree.root), heapBytes: heap.usedSize };
+  const witness = connectedDomWitness(tree.root);
+  return { documents: dom.documents, expectedDocuments: 1 + Number(witness.hasTemplate),
+    browsingContexts: frameCount(frames.frameTree), nodes: dom.nodes,
+    liveNodes: witness.count, heapBytes: heap.usedSize };
 }
 
 /** Run after the functional and security checks, on the same isolated page. */
