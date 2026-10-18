@@ -108,7 +108,7 @@ A run with measured model outputs may supply `model` and its preregistered
 `pilot/CORPUS.json` alone contains no pre/post rule verdicts and cannot be
 used as a benchmark-score source. Fresh pilot runs also record five optional
 browser diagnostics (modal dialog dismissal, declarative popover dismissal,
-container-size styling, unique view-transition names and child-state `:has()`
+container-size styling, a declared trusted View Transition with unique visible names before and after, and child-state `:has()`
 styling). They return NOT_APPLICABLE when no such surface exists and ERROR when
 a declared feature cannot be demonstrated; neither counts as a pass. They do
 not change the preregistered training-pair acceptance gate. They are reported

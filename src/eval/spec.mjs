@@ -85,6 +85,10 @@ export function validateSpec(spec) {
   const at = (path, message) => problems.push(`${path}: ${message}`);
   if (!isObject(spec)) return ['spec: not an object'];
   if (spec.spec_version !== SPEC_VERSION) at('spec_version', `expected ${SPEC_VERSION}`);
+  if (spec.view_transition_trigger !== undefined &&
+    (!isString(spec.view_transition_trigger) || !spec.view_transition_trigger.trim())) {
+    at('view_transition_trigger', 'must be a non-empty CSS selector for a trusted same-document transition control');
+  }
 
   for (const key of ['family_id', 'title', 'story']) if (!isString(spec[key])) at(key, 'must be a non-empty string');
   if (spec.family_id !== undefined && !/^[a-z0-9-]+$/.test(spec.family_id)) at('family_id', 'must be a kebab-case id');
@@ -945,6 +949,7 @@ export function archetypeFromSpec(spec) {
     ...(spec.session === undefined ? {} : { session: spec.session }),
     ...(spec.capacity === undefined ? {} : { capacity: spec.capacity }),
     ...(spec.password_field === undefined ? {} : { passwordField: spec.password_field }),
+    ...(spec.view_transition_trigger === undefined ? {} : { viewTransitionTrigger: spec.view_transition_trigger }),
     ...(spec.capabilities === undefined ? {} : { capabilities: spec.capabilities }),
     ...(spec.pricing_tiers === undefined ? {} : { pricingTiers: spec.pricing_tiers }),
     // Carried under its own name: the spec key and the archetype key agree here (`checkout` is one word),
