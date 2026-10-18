@@ -55,20 +55,32 @@ export function classifyRuntimeSample({ lcp, events, memory, interactionsDriven 
     lcp_proxy: lcpProxy, inp_sample: inpSample, detached_dom: detachedDom };
 }
 
+export function countConnectedDomNodes(root) {
+  // CDP pierces both open and closed shadow trees and exposes template content. A page
+  // TreeWalker only sees light DOM, incorrectly labelling healthy component growth as retention.
+  const pending = [root];
+  let count = 0;
+  while (pending.length) {
+    const node = pending.pop();
+    if (!node) continue;
+    count += 1;
+    for (const key of ['children', 'shadowRoots', 'pseudoElements']) {
+      for (const child of node[key] ?? []) pending.push(child);
+    }
+    if (node.templateContent) pending.push(node.templateContent);
+    if (node.contentDocument) pending.push(node.contentDocument);
+  }
+  return count;
+}
+
 async function memorySample(page) {
   await page.send('HeapProfiler.collectGarbage');
-  const [dom, heap, liveNodes] = await Promise.all([
+  const [dom, heap, tree] = await Promise.all([
     page.send('Memory.getDOMCounters'), page.send('Runtime.getHeapUsage'),
-    page.evaluate(`
-      // Include connected text/comment nodes: element-only counts mistake newly added text
-      // in a healthy live app for retained detached DOM.
-      const walker = document.createTreeWalker(document, NodeFilter.SHOW_ALL);
-      let count = 0;
-      while (walker.nextNode()) count += 1;
-      return count + 1;
-    `),
+    page.send('DOM.getDocument', { depth: -1, pierce: true }),
   ]);
-  return { documents: dom.documents, nodes: dom.nodes, liveNodes, heapBytes: heap.usedSize };
+  return { documents: dom.documents, nodes: dom.nodes,
+    liveNodes: countConnectedDomNodes(tree.root), heapBytes: heap.usedSize };
 }
 
 /** Run after the functional and security checks, on the same isolated page. */
