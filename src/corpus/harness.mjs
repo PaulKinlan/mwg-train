@@ -756,7 +756,7 @@ async function captureEvidence(page, dir, label, protocol) {
   return { screenshot, mobileShot, tracePath };
 }
 
-/** A measured runtime stamp, including runs that later fail to start their server. */
+/** Isolate optional rule checks so one diagnostic cannot change the next rule's starting page. */
 export async function runOptionalModernRules(page, url, context) {
   const results = [];
   for (const ruleId of MODERN_RULE_IDS) {
@@ -774,6 +774,7 @@ export async function runOptionalModernRules(page, url, context) {
   return results;
 }
 
+/** A measured runtime stamp, including runs that later fail to start their server. */
 export function runEnvironment(chrome) {
   const browser = chrome?.version ?? null; // Browser.getVersion from the live CDP connection.
   return {
