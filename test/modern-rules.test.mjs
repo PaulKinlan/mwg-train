@@ -34,6 +34,9 @@ test('five optional modern-platform diagnostics observe real browser behaviour a
     response.end(request.url === '/static' ? html.replace(/<script>[\s\S]*?<\/script>/, '')
       : request.url === '/duplicate-after' ? html.replace("document.querySelector('.vt').textContent = 'Animated again';",
         "document.querySelector('.vt').textContent = 'Animated again'; document.querySelector('.vt').insertAdjacentHTML('afterend', '<div class=\"vt\">Duplicate</div>');")
+      : request.url === '/no-change' ? html.replace("document.querySelector('.vt').textContent = 'Animated again';", '')
+      : request.url === '/style-change' ? html.replace("document.querySelector('.vt').textContent = 'Animated again';",
+        "document.querySelector('.vt').style.backgroundColor = 'red';")
       : request.url === '/stubborn' ? html.replace('</body>', `<script>
         sessionStorage.setItem('__mwgOptionalLoadCount', String(Number(sessionStorage.getItem('__mwgOptionalLoadCount') ?? 0) + 1));
         document.addEventListener('keydown', (event) => {
@@ -72,6 +75,12 @@ test('five optional modern-platform diagnostics observe real browser behaviour a
     await page.goto(`http://127.0.0.1:${server.address().port}/duplicate-after`);
     assert.equal((await MODERN_RULES[transitionId].check(page, { viewTransitionTrigger: '#transition' })).status, 'FAIL',
       'duplicate names created by the transition must not be missed');
+    await page.goto(`http://127.0.0.1:${server.address().port}/no-change`);
+    assert.equal((await MODERN_RULES[transitionId].check(page, { viewTransitionTrigger: '#transition' })).status, 'ERROR',
+      'a completed transition with an empty callback must not count as a demonstrated change');
+    await page.goto(`http://127.0.0.1:${server.address().port}/style-change`);
+    assert.equal((await MODERN_RULES[transitionId].check(page, { viewTransitionTrigger: '#transition' })).status, 'PASS',
+      'a computed visual change without changing text is still observable');
     await page.goto(`http://127.0.0.1:${server.address().port}/broken`);
     assert.equal((await MODERN_RULES['ui-behaviors/platform-controls-dismiss-dialog'].check(page, {})).status, 'FAIL');
     for (const id of ['ui-behaviors/declarative-dialog-popover-control', 'css/size-aware-styling', 'css/child-state-based-styling']) {
