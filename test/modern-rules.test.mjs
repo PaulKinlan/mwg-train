@@ -140,9 +140,25 @@ createServer((req, res) => {
     const evidencePages = [];
     const observedChrome = { version: chrome.version, newPage: async (options) => {
       const page = await chrome.newPage(options);
+      // Count navigations only after the first optional diagnostic has opened the fixture's modal.
+      // Four later rule resets plus the extra restore must happen before the desktop screenshot.
+      const navigationsAfterDialog = [];
+      let dialogDriven = false;
+      const click = page.click.bind(page);
+      page.click = async (selector, ...args) => {
+        const result = await click(selector, ...args);
+        if (selector === 'button[commandfor="modal"][command="show-modal"]') dialogDriven = true;
+        return result;
+      };
+      const goto = page.goto.bind(page);
+      page.goto = async (url, ...args) => {
+        if (dialogDriven) navigationsAfterDialog.push(url);
+        return goto(url, ...args);
+      };
       const screenshot = page.screenshot.bind(page);
       page.screenshot = async (...args) => {
-        evidencePages.push({ url: await page.url(), modalOpen: await page.evaluate(`return document.querySelector('#modal')?.open ?? false`) });
+        evidencePages.push({ url: await page.url(), modalOpen: await page.evaluate(`return document.querySelector('#modal')?.open ?? false`),
+          navigationsAfterDialog: [...navigationsAfterDialog] });
         return screenshot(...args);
       };
       return page;
@@ -160,8 +176,9 @@ createServer((req, res) => {
       'a failed modal must not taint the popover on the next fresh page');
     assert.ok(existsSync(record.screenshots?.desktop), 'the production evidence capture must run');
     if (process.env.MWG_TEST_SCREENSHOT_PATH) copyFileSync(record.screenshots.desktop, process.env.MWG_TEST_SCREENSHOT_PATH);
-    assert.deepEqual(evidencePages[0], { url: `http://127.0.0.1:${port}/`, modalOpen: false },
-      'desktop evidence must see the restored landing page, not the opened modal');
+    assert.deepEqual(evidencePages[0], { url: `http://127.0.0.1:${port}/`, modalOpen: false,
+      navigationsAfterDialog: Array(MODERN_RULE_IDS.length).fill(`http://127.0.0.1:${port}/`) },
+      'each later diagnostic must start fresh, followed by the extra landing-page restore before evidence');
   } finally {
     if (chrome) await chrome.close();
     rmSync(dir, { recursive: true, force: true });
