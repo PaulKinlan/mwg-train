@@ -12,6 +12,7 @@ const FAMILY = /^tr-\d{2}$/;
 const FRAMEWORKS = new Set(['hono', 'raw', 'react', 'preact', 'vue', 'webcomponents', 'svelte']);
 const ARMS = new Set(['default', 'c1', 'c2', 'c3', 't']);
 const RATIFIED_DECODE_SHA256 = '59c4e99faaa64669571c499689ed1116785471034e76c5255bbb1572c0011a20';
+export const NATIVE_DEEPSEEK_BASE_URL = 'https://deepseek.int.exe.xyz/v1';
 const hash = (value) => createHash('sha256').update(value).digest('hex');
 const fail = (code, message) => Object.assign(new Error(message), { code });
 
@@ -19,6 +20,20 @@ const fail = (code, message) => Object.assign(new Error(message), { code });
 export function rethrowLiveRecoveryMkdirError(error) {
   if (error?.code === 'EEXIST') throw fail('RUN_IN_PROGRESS', 'another live run reclaimed this identity; inspect its process and ledger');
   throw error;
+}
+
+/** The operator supplies a BASE URL; never post a credential to an unapproved origin or path. */
+export function nativeCompletionEndpoint(baseUrl, { injectedFetch = false } = {}) {
+  if (!baseUrl) throw fail('NO_PROVIDER_CONFIG', 'native DeepSeek integration base URL is required');
+  let url;
+  try { url = new URL(baseUrl); } catch { throw fail('NO_PROVIDER_CONFIG', 'invalid native DeepSeek base URL'); }
+  if (url.protocol !== 'https:' || url.username || url.password || url.search || url.hash ||
+      (url.pathname !== '/v1' && url.pathname !== '/v1/' &&
+        !(injectedFetch && url.pathname === '/v1/chat/completions')) ||
+      (!injectedFetch && url.href.replace(/\/$/, '') !== NATIVE_DEEPSEEK_BASE_URL)) {
+    throw fail('NO_PROVIDER_CONFIG', 'unapproved native DeepSeek HTTPS integration base URL');
+  }
+  return `${url.origin}/v1/chat/completions`;
 }
 
 export function buildGenerationPrompt({ plan, design, arm, guidance = '', interfaceContract = '' }) {
@@ -57,6 +72,7 @@ export function normaliseCompletion(payload) {
   const usage = payload?.usage ?? {};
   return {
     content: choice?.message?.content ?? '', finish_reason: choice?.finish_reason ?? 'UNVERIFIED',
+    provider_response_model: payload?.model ?? 'UNVERIFIED',
     prompt_tokens: usage.prompt_tokens ?? null,
     completion_tokens: usage.completion_tokens ?? null,
     reasoning_tokens: usage.completion_tokens_details?.reasoning_tokens ?? null,
@@ -76,7 +92,7 @@ export async function streamCompletion({ endpoint, apiKey, payload, fetchImpl = 
     });
     if (!response.ok || !response.body) throw fail('PROVIDER_ERROR', `provider returned HTTP ${response.status}`);
     const decoder = new TextDecoder();
-    let text = ''; let content = ''; let contentBytes = 0; let finish = null; let usage = null;
+    let text = ''; let content = ''; let contentBytes = 0; let finish = null; let usage = null; let responseModel = null;
     for await (const chunk of response.body) {
       text += decoder.decode(chunk, { stream: true });
       if (text.length > 16_000_000) throw fail('OUTPUT_TOO_LARGE', 'stream exceeds limit');
@@ -89,6 +105,7 @@ export async function streamCompletion({ endpoint, apiKey, payload, fetchImpl = 
           if (!data || data === '[DONE]') continue;
           let event;
           try { event = JSON.parse(data); } catch { throw fail('PROVIDER_ERROR', 'malformed streaming event'); }
+          if (typeof event.model === 'string') responseModel = event.model;
           const fragment = event.choices?.[0]?.delta?.content ?? '';
           if (typeof fragment !== 'string') throw fail('PROVIDER_ERROR', 'non-text content in streaming event');
           contentBytes += Buffer.byteLength(fragment);
@@ -101,7 +118,7 @@ export async function streamCompletion({ endpoint, apiKey, payload, fetchImpl = 
       }
     }
     if (text.trim() && text.trim() !== 'data: [DONE]') throw fail('PROVIDER_ERROR', 'truncated streaming response');
-    return normaliseCompletion({ choices: [{ message: { content }, finish_reason: finish }], usage });
+    return normaliseCompletion({ model: responseModel, choices: [{ message: { content }, finish_reason: finish }], usage });
   } finally { clearTimeout(timer); }
 }
 
@@ -114,14 +131,14 @@ export function stubCompletion() {
 
 export async function generateProject({ family, framework, model = decodeConfig.build_model, revision,
   arm = 'default', guidance = '', backend = 'stub', dryRun = false, outRoot = '.generated-runs',
-  sourceRoot = '.', fetchImpl = fetch, canned = stubCompletion(), endpoint = process.env.FIREWORKS_BASE_URL,
-  apiKey = process.env.FIREWORKS_API_KEY, ledgerPath = process.env.MWG_SPEND_LEDGER_PATH,
+  sourceRoot = '.', fetchImpl = fetch, canned = stubCompletion(), endpoint = process.env.DEEPSEEK_BASE_URL,
+  apiKey = process.env.DEEPSEEK_API_KEY, ledgerPath = process.env.MWG_SPEND_LEDGER_PATH,
   promptTokensUpperBound = null, approvalComments = readGenerationApprovalComments,
   chromeVersion = 'UNVERIFIED', retry = false } = {}) {
   if (!FAMILY.test(family ?? '') || !FRAMEWORKS.has(framework) || !SHA.test(revision ?? '')) {
-    throw fail('INVALID_IDENTITY', 'training family, supported framework and resolved 40-character model revision required');
+    throw fail('INVALID_IDENTITY', 'training family, supported framework and caller-supplied 40-character HF reference required');
   }
-  if (model !== decodeConfig.build_model) throw fail('UNPINNED_MODEL', 'chosen model differs from proposed pinned decode config; ratify a new config before spending');
+  if (model !== decodeConfig.build_model) throw fail('UNPINNED_MODEL', 'chosen model differs from owner-ratified native DeepSeek config; ratify a new identity before spending');
   if (!['stub', 'live'].includes(backend)) throw fail('INVALID_BACKEND', 'only stub or guarded live are supported');
   // A SIGKILL can leave the paid reservation and project directory but no run.json. Never let
   // --retry override that ambiguity or start another live request, even on a fresh identity.
@@ -153,15 +170,20 @@ export async function generateProject({ family, framework, model = decodeConfig.
   let approval = null;
   let chargeBoundUsd = 'UNVERIFIED';
   let tariff = null;
+  let requestEndpoint = null;
   if (backend === 'live') {
     if (!contract || interfaceContractSha256 !== RATIFIED_TR01_INTERFACE_SHA256 ||
         decodeConfigSha256(request) !== RATIFIED_DECODE_SHA256 || !decodeConfig.status.startsWith('ratified-owner-')) {
       return preflightFailure('UNRATIFIED_INTERFACE', fail('UNRATIFIED_INTERFACE', 'exact owner-ratified tr-01 interface and decode request required'));
     }
-    if (!endpoint || !apiKey || !ledgerPath) return preflightFailure('NO_PROVIDER_CONFIG',
-      fail('NO_PROVIDER_CONFIG', 'provider endpoint, key and private ledger path required'));
-    if (!/^https:\/\//.test(endpoint)) return preflightFailure('NO_PROVIDER_CONFIG',
-      fail('NO_PROVIDER_CONFIG', 'provider endpoint must be HTTPS'));
+    if (!apiKey || !ledgerPath) return preflightFailure('NO_PROVIDER_CONFIG',
+      fail('NO_PROVIDER_CONFIG', 'native DeepSeek API key and private ledger path required'));
+    if (decodeConfig.build_model !== 'deepseek/deepseek-flash' || decodeConfig.model !== 'deepseek-flash' ||
+        decodeConfig.integration_base_url !== NATIVE_DEEPSEEK_BASE_URL) {
+      return preflightFailure('UNPINNED_MODEL', fail('UNPINNED_MODEL', 'native DeepSeek model or integration pin changed'));
+    }
+    try { requestEndpoint = nativeCompletionEndpoint(endpoint, { injectedFetch: fetchImpl !== fetch }); }
+    catch (error) { return preflightFailure('NO_PROVIDER_CONFIG', error); }
     try { approval = verifyGenerationApproval(approvalComments(), { model }); }
     catch (error) { return preflightFailure('NO_OWNER_AUTH', error); }
     try { tariff = loadPinnedGenerationTariff(model); } catch { tariff = null; }
@@ -231,13 +253,17 @@ export async function generateProject({ family, framework, model = decodeConfig.
   const started = performance.now();
   let reserved = false;
   const record = { status: 'FAILED', project_id: projectId, family, framework, arm, model,
-    resolved_revision: revision, build_key: buildKey, decode_config_sha256: decodeSha, decode_config: request,
+    caller_supplied_revision: revision, resolved_revision: 'UNVERIFIED', build_key: buildKey,
+    decode_config_sha256: decodeSha, decode_config: request,
+    provider_request_model: backend === 'live' ? decodeConfig.model : null,
+    provider_response_model: 'UNVERIFIED', request_endpoint: backend === 'live' ? requestEndpoint : null,
     transport: { stream: backend === 'live' }, time_limit_ms: backend === 'live' ? 20 * 60_000 : null,
     prompt_sha256: promptSha256, interface_contract_sha256: output.interface_contract_sha256,
     plan_sha256: hash(plan), design_sha256: hash(design), prompt,
     scope: backend === 'live' ? 'generation' : 'offline-stub', bead: backend === 'live' ? 'mwg-train-i5i2.1' : null,
     request_id: requestId, backend, platform: process.platform, node_version: process.version, chrome_version: chromeVersion,
     prompt_tokens: null, completion_tokens: null, reasoning_tokens: null, content_tokens: null,
+    raw_response_file: null, raw_response_sha256: null, raw_response_bytes: null,
     finish_reason: 'UNVERIFIED', projected_cost_usd: 'UNVERIFIED', computed_cost_usd: 'UNVERIFIED',
     cost_source_sha256: 'UNVERIFIED' };
   try {
@@ -250,11 +276,20 @@ export async function generateProject({ family, framework, model = decodeConfig.
       reserved = true;
       record.projected_cost_usd = chargeBoundUsd;
       record.cost_source_sha256 = tariff?.sourceSha256 ?? 'UNVERIFIED';
-      completion = await streamCompletion({ endpoint, apiKey, fetchImpl, payload: { model: decodeConfig.model,
+      completion = await streamCompletion({ endpoint: requestEndpoint, apiKey, fetchImpl, payload: { model: decodeConfig.model,
         messages: [{ role: 'user', content: prompt }], ...request } });
     }
     Object.assign(record, { prompt_tokens: completion.prompt_tokens, completion_tokens: completion.completion_tokens,
-      reasoning_tokens: completion.reasoning_tokens, content_tokens: completion.content_tokens, finish_reason: completion.finish_reason });
+      reasoning_tokens: completion.reasoning_tokens, content_tokens: completion.content_tokens, finish_reason: completion.finish_reason,
+      provider_response_model: completion.provider_response_model ?? 'UNVERIFIED' });
+    if (backend === 'live') {
+      // Preserve paid response DATA before JSON validation. Failed parses are still consumed identities.
+      const raw = completion.content;
+      record.raw_response_file = 'model-response.txt';
+      record.raw_response_sha256 = hash(raw);
+      record.raw_response_bytes = Buffer.byteLength(raw);
+      await writeFile(join(base, record.raw_response_file), raw, { flag: 'wx', mode: 0o600 });
+    }
     if (completion.finish_reason === 'length' && !completion.content.trim()) throw fail('EMPTY_LENGTH', 'generation exhausted its token budget with empty content');
     if (completion.finish_reason !== 'stop') throw fail('BAD_FINISH', `generation finished with ${completion.finish_reason}`);
     const files = parseProjectFiles(completion.content);

@@ -26,6 +26,8 @@ test('ratified tr-01 block and decode pins are binding §14 rows without changin
   assert.ok(prereg.includes(`\`${decodeConfigSha256(decodeConfig.request)}\``));
   assert.match(prereg, /Paul selected Option A via coord relay 2026-10-18 23:14Z/);
   assert.match(prereg, /Paul ratified Option A\/decode config via coord relay 2026-10-18 23:14Z/);
+  assert.match(prereg, /Supersede the previously named Fireworks inference route/);
+  assert.match(prereg, /native DeepSeek integration `https:\/\/deepseek\.int\.exe\.xyz\/v1` with request model `deepseek-flash`/);
   assert.equal(decodeConfig.status.startsWith('ratified-owner-2026-10-18'), true);
 });
 
@@ -93,7 +95,7 @@ test('offline CLI previews a pinned prompt and rejects paid flags without alloca
     const argv = [SCRIPT, '--family', 'tr-01', '--framework', 'hono', '--revision', REVISION,
       '--source', dir, '--dry-run', 'true'];
     const result = JSON.parse(execFileSync(process.execPath, argv, { cwd: repo, encoding: 'utf8', timeout: 10_000,
-      env: { ...process.env, FIREWORKS_API_KEY: 'DO-NOT-USE-FAKE-KEY', FIREWORKS_BASE_URL: 'https://example.invalid/v1/chat/completions' } }));
+      env: { ...process.env, DEEPSEEK_API_KEY: 'DO-NOT-USE-FAKE-KEY', DEEPSEEK_BASE_URL: 'https://deepseek.int.exe.xyz/v1' } }));
     assert.equal(result.status, 'RATIFIED_OFFLINE_PREVIEW');
     assert.equal(result.ratified, true);
     assert.equal(result.provider_requests, 0);

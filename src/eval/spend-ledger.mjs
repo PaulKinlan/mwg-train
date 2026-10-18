@@ -5,7 +5,9 @@ import { hostname } from 'node:os';
 
 export const GENERATION_BEAD = 'mwg-train-i5i2.1';
 export const GENERATION_SCOPE = 'generation';
-export const GENERATION_MODEL = 'fireworks/deepseek-v4p1-flash';
+// Code-pinned owner decision authorises DeepSeek V4.1 Flash generation; the 2026-10-18
+// hub/coord provider choice binds this policy to the native integration, not Fireworks.
+export const GENERATION_MODEL = 'deepseek/deepseek-flash';
 // This exact, reviewed owner decision supersedes the earlier amount-scoped planning text. A different
 // close reason, an open bead, or an unreachable Beads remote does NOT silently authorize a live call.
 export const GENERATION_DECISION = "Owner decision recorded from chat (2026-10-13): 're: 2 - no spend caps, I am ok.' Live DeepSeek V4.1 Flash generation authorised without a dollar cap; log actual usage/spend.";
@@ -55,7 +57,7 @@ export function verifyGenerationApproval({ decision, comments } = {}, { model, h
 export function loadPinnedGenerationTariff(model) {
   const quotes = readFileSync(new URL('../../docs/eval/quotes.jsonl', import.meta.url), 'utf8')
     .split('\n').filter(Boolean).map((line) => JSON.parse(line));
-  const quote = quotes.find((entry) => entry.provider === 'Fireworks' && entry.model === model &&
+  const quote = quotes.find((entry) => entry.provider === 'DeepSeek' && entry.model === model &&
     entry.product === 'inference (exact model)' && entry.mode === 'serverless' &&
     entry.inference_rates?.billingMode === 'per-token' && SHA.test(entry.sha256 ?? ''));
   if (!quote) return null;

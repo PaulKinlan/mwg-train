@@ -1,12 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, writeFileSync, existsSync, rmSync, rmdirSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Readable } from 'node:stream';
-import { generateProject, buildGenerationPrompt, parseProjectFiles, streamCompletion, rethrowLiveRecoveryMkdirError } from '../src/eval/generator.mjs';
+import { generateProject, buildGenerationPrompt, parseProjectFiles, streamCompletion, rethrowLiveRecoveryMkdirError, nativeCompletionEndpoint, NATIVE_DEEPSEEK_BASE_URL } from '../src/eval/generator.mjs';
 import { GENERATION_BEAD, verifyGenerationApproval, worstCaseGenerationUsd, reserveGeneration, settleGeneration } from '../src/eval/spend-ledger.mjs';
 import { decodeConfig, pinnedEvaluationBuildKey } from '../src/eval/decode-config.mjs';
 
@@ -43,7 +44,8 @@ test('offline stub writes inert files and a complete build-keyed run record; res
     assert.ok(!existsSync(marker));
     const record = JSON.parse(readFileSync(join(first.output_dir, 'run.json'), 'utf8'));
     assert.equal(record.status, 'SUCCESS');
-    assert.equal(record.resolved_revision, REVISION);
+    assert.equal(record.caller_supplied_revision, REVISION);
+    assert.equal(record.resolved_revision, 'UNVERIFIED', 'a caller-supplied HF hash is not native-provider attestation');
     assert.ok(record.prompt_sha256 && record.node_version && record.platform);
     assert.equal((await generateProject(options(dir, { canned: canned(project(marker)) }))).resumed, true);
   } finally { rmSync(dir, { recursive: true, force: true }); }
@@ -116,25 +118,86 @@ test('untrusted file paths and duplicate files are rejected before writing anyth
 });
 
 test('closed no-cap owner decision permits scoped generation without a tariff; cost stays UNVERIFIED', async () => {
-  const dir = root(); let calls = 0;
+  const dir = root(); let calls = 0; let posted;
   try {
     const approval = { decision: { id: GENERATION_BEAD, status: 'closed', close_reason:
       "Owner decision recorded from chat (2026-10-13): 're: 2 - no spend caps, I am ok.' Live DeepSeek V4.1 Flash generation authorised without a dollar cap; log actual usage/spend." }, comments: [] };
-    const live = await generateProject(options(dir, { backend: 'live', endpoint: 'https://example.test/v1/chat/completions',
+    const live = await generateProject(options(dir, { backend: 'live', endpoint: NATIVE_DEEPSEEK_BASE_URL,
       apiKey: 'TOP-SECRET-KEY', ledgerPath: join(dir, 'ledger.jsonl'), approvalComments: () => approval,
-      fetchImpl: async () => { calls += 1; return { ok: true, body: Readable.from([Buffer.from(
-        `data: ${JSON.stringify({ choices: [{ delta: { content: JSON.stringify({ files: [{ path: 'index.html', content: '<p>inert</p>' }] }) }, finish_reason: 'stop' }] })}\n\ndata: ${JSON.stringify({ choices: [], usage: { prompt_tokens: 19, completion_tokens: 42, completion_tokens_details: { reasoning_tokens: 10 } } })}\n\ndata: [DONE]\n\n`)]), status: 200 }; },
+      fetchImpl: async (url, init) => {
+        calls += 1;
+        posted = { url, body: JSON.parse(init.body) };
+        assert.equal(readFileSync(join(dir, 'ledger.jsonl'), 'utf8').trim().split('\n').length, 1,
+          'durable reservation must be on disk before the mock provider is contacted');
+        return { ok: true, body: Readable.from([Buffer.from(
+        `data: ${JSON.stringify({ model: 'deepseek-flash', choices: [{ delta: { content: JSON.stringify({ files: [{ path: 'index.html', content: '<p>inert</p>' }] }) }, finish_reason: 'stop' }] })}\n\ndata: ${JSON.stringify({ choices: [], usage: { prompt_tokens: 19, completion_tokens: 42, completion_tokens_details: { reasoning_tokens: 10 } } })}\n\ndata: [DONE]\n\n`)]), status: 200 };
+      },
     }));
     assert.equal(calls, 1);
+    assert.equal(posted.url, 'https://deepseek.int.exe.xyz/v1/chat/completions');
+    assert.equal(posted.body.model, 'deepseek-flash');
+    assert.equal(posted.body.reasoning_effort, 'high');
+    assert.equal(posted.body.max_tokens, 65536);
+    assert.equal(posted.body.stream, true);
     assert.equal(live.status, 'SUCCESS');
+    assert.equal(live.provider_response_model, 'deepseek-flash');
+    assert.equal(live.resolved_revision, 'UNVERIFIED');
     assert.equal(live.computed_cost_usd, 'UNVERIFIED');
     assert.equal(live.reasoning_tokens, 10);
+    assert.equal(live.raw_response_file, 'model-response.txt');
+    const raw = readFileSync(join(live.output_dir, live.raw_response_file), 'utf8');
+    assert.equal(live.raw_response_sha256, createHash('sha256').update(raw).digest('hex'));
+    assert.equal(live.raw_response_bytes, Buffer.byteLength(raw));
     const ledger = readFileSync(join(dir, 'ledger.jsonl'), 'utf8').trim().split('\n').map(JSON.parse);
     assert.equal(ledger.length, 2);
     assert.equal(ledger[0].reservedUsd, 'UNVERIFIED');
     assert.equal(ledger[1].computedUsd, 'UNVERIFIED');
     assert.equal(ledger[1].tokens.prompt, 19);
     assert.ok(!readFileSync(join(live.output_dir, 'run.json'), 'utf8').includes('TOP-SECRET-KEY'));
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('native DeepSeek rejects wrong origins and credential-bearing URLs before allocation or authority lookup', async () => {
+  assert.equal(nativeCompletionEndpoint(`${NATIVE_DEEPSEEK_BASE_URL}/`), `${NATIVE_DEEPSEEK_BASE_URL}/chat/completions`);
+  for (const baseUrl of ['https://evil.example/v1', 'http://deepseek.int.exe.xyz/v1',
+    'https://user:pass@deepseek.int.exe.xyz/v1', 'https://deepseek.int.exe.xyz/v1?key=secret',
+    'https://deepseek.int.exe.xyz/v1/chat/completions']) {
+    assert.throws(() => nativeCompletionEndpoint(baseUrl), (error) => error.code === 'NO_PROVIDER_CONFIG');
+  }
+  const dir = root();
+  try {
+    const refused = await generateProject(options(join(dir, 'out'), { backend: 'live',
+      endpoint: 'https://evil.example/v1', apiKey: 'FAKE_KEY', ledgerPath: join(dir, 'ledger.jsonl'),
+      approvalComments: () => { throw new Error('authority lookup must not run'); } }));
+    assert.equal(refused.status, 'FAILED');
+    assert.equal(refused.error.code, 'NO_PROVIDER_CONFIG');
+    assert.equal(existsSync(refused.output_dir), false);
+    assert.equal(existsSync(join(dir, 'ledger.jsonl')), false);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('invalid paid JSON remains a private raw artifact and cannot be retried', async () => {
+  const dir = root(); let calls = 0;
+  try {
+    const args = options(dir, { backend: 'live', endpoint: NATIVE_DEEPSEEK_BASE_URL,
+      apiKey: 'FAKE_KEY', ledgerPath: join(dir, 'ledger.jsonl'), approvalComments: () => ownerApproval(),
+      fetchImpl: async () => { calls++; return { ok: true, status: 200, body: Readable.from([
+        Buffer.from(`data: ${JSON.stringify({ choices: [{ delta: { content: 'not json' }, finish_reason: 'stop' }] })}\n\ndata: [DONE]\n\n`),
+      ]) }; } });
+    const first = await generateProject(args);
+    assert.equal(first.status, 'FAILED');
+    assert.equal(first.error.code, 'INVALID_OUTPUT');
+    assert.equal(readFileSync(join(first.output_dir, 'model-response.txt'), 'utf8'), 'not json');
+    assert.equal(first.raw_response_sha256, createHash('sha256').update('not json').digest('hex'));
+    assert.equal(existsSync(first.project_dir), false);
+    assert.equal(calls, 1);
+    const ledger = readFileSync(join(dir, 'ledger.jsonl'), 'utf8').trim().split('\n').map(JSON.parse);
+    assert.deepEqual(ledger.map((row) => row.type), ['reserve', 'settle']);
+    assert.equal(ledger[1].status, 'unknown');
+    const second = await generateProject(args);
+    assert.equal(second.status, 'FAILED');
+    assert.equal(second.error.code, 'SPEND_GUARD');
+    assert.equal(calls, 1);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
@@ -433,7 +496,7 @@ test('no-cap generation authority is the exact closed owner decision, not an act
     { ...ownerDecision(), close_reason: 'I am not worried about cost' },
     { ...ownerDecision(), id: 'other-bead' },
   ]) assert.throws(() => verifyGenerationApproval({ decision, comments: [] }, { model: MODEL }), /NO_OWNER_AUTH/);
-  assert.throws(() => verifyGenerationApproval(ownerApproval(), { model: 'fireworks/deepseek-v4-flash' }), /NO_OWNER_AUTH/);
+  assert.throws(() => verifyGenerationApproval(ownerApproval(), { model: 'fireworks/deepseek-v4p1-flash' }), /NO_OWNER_AUTH/);
   assert.throws(() => verifyGenerationApproval({ decision: ownerDecision(), comments: null }, { model: MODEL }), /NO_OWNER_AUTH/);
 });
 

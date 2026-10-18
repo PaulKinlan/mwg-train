@@ -21,14 +21,17 @@ test('stream transport does not fork the pinned build key, but decoding knobs st
   }
 });
 
-test('the pinned Fireworks decoding policy identifies itself by the effective request digest', () => {
+test('the pinned native DeepSeek decoding policy identifies itself by the effective request digest', () => {
   assert.equal(decodeConfig.request.max_tokens, 65536);
   assert.equal(decodeConfig.request.reasoning_effort, 'high');
   assert.equal(Object.hasOwn(decodeConfig.request, 'temperature'), false);
   assert.equal(decodeConfig.retrieved_at, '2026-10-13');
   assert.ok(decodeConfig.sources.every((source) => source.url.startsWith('https://')));
   const key = pinnedEvaluationBuildKey({ projectId: 'tr-01-hono' });
-  assert.equal(key, `tr-01-hono@fireworks/deepseek-v4p1-flash@decode-sha256:${decodeConfigSha256()}`);
+  assert.equal(decodeConfig.model, 'deepseek-flash');
+  assert.equal(decodeConfig.integration_base_url, 'https://deepseek.int.exe.xyz/v1');
+  assert.equal(decodeConfig.provider_checkpoint_attestation, 'UNVERIFIED');
+  assert.equal(key, `tr-01-hono@deepseek/deepseek-flash@decode-sha256:${decodeConfigSha256()}`);
   assert.notEqual(decodeConfigSha256({ ...decodeConfig.request, max_tokens: 16384 }), decodeConfigSha256());
   assert.notEqual(evaluationBuildKey({ projectId: 'tr-01-hono', model: decodeConfig.build_model, decodeConfigSha256: 'a'.repeat(64) }), key);
   assert.throws(() => pinnedEvaluationBuildKey({ projectId: 'tr-01-hono', model: 'other/model' }), /model does not match/);
