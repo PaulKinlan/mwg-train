@@ -1,5 +1,5 @@
 {
-  "status": "proposed-offline; requires provider and Paul ratification before first billable run",
+  "status": "ratified-owner-2026-10-18; provider acceptance and resolved checkpoint UNVERIFIED",
   "retrieved_at": "2026-10-13",
   "provider": "fireworks",
   "model": "accounts/fireworks/models/deepseek-v4p1-flash",
@@ -29,5 +29,5 @@
       "supports": "DeepSeek thinking mode: temperature has no effect, top_p operates at 0.95–1.0, and thought tokens share completion budget. DeepSeek native docs are not a guarantee that Fireworks' gateway behaves identically."
     }
   ],
-  "budget_reason": "An earlier 16384-token attempt ended with no content; a reported 65536-token attempt produced 31603 reasoning tokens then an app. This is a proposed equal budget for all arms, not proof of model capability."
+  "budget_reason": "An earlier 16384-token attempt ended with no content; a reported 65536-token attempt produced 31603 reasoning tokens then an app. Paul ratified this equal budget for tr-01 on 2026-10-18 via coord; provider support and model capability remain unverified."
 }

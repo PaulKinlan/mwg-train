@@ -1,6 +1,6 @@
-# Candidate interface block for tr-01 (v1; NOT RATIFIED)
+# Ratified interface block for tr-01 (V1; candidate filename retained for provenance)
 
-This is a proposed, arm-independent addition to the model prompt. It is **not** a change to the sealed brief, a permission to call a model, or a claim that this is the evaluator's adopted contract. The owner must ratify the exact bytes and decode request in PREREGISTRATION.md §14 before any billable run. The same bytes must later be used for default/C1/C2/C3/T and the prompt half of training pairs; no arm-specific route hints.
+Paul selected Option A via coord on 2026-10-18, before any live tr-01 run; the exact block below is pinned in PREREGISTRATION.md §14. This arm-independent prompt addition is **not** a change to sealed briefs or permission to execute generated code. Use the same bytes for default/C1/C2/C3/T and, before any training, the prompt half of tr-01 training pairs; no arm-specific route hints. Provider support and the model's functional outcome are still unmeasured.
 
 ## Proposed block (append verbatim after every arm's plan and visual design)
 

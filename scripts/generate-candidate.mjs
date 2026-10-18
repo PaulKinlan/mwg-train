@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** Offline-only candidate prompt preview. No provider, ledger, app files or paid retry path. */
+/** Offline-only preview of the ratified tr-01 contract. No provider, ledger, app files or paid retry path. */
 import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
@@ -32,7 +32,7 @@ export async function main(argv = process.argv.slice(2)) {
   const decode_config_sha256 = decodeConfigSha256(decodeConfig.request);
   const build_key = evaluationBuildKey({ projectId: `tr-01-${args.framework}`,
     model: decodeConfig.build_model, decodeConfigSha256: decode_config_sha256 });
-  const result = { status: 'CANDIDATE_OFFLINE_ONLY', ratified: false, provider_requests: 0,
+  const result = { status: 'RATIFIED_OFFLINE_PREVIEW', ratified: true, provider_requests: 0,
     family: 'tr-01', framework: args.framework, arm, model: decodeConfig.build_model,
     caller_supplied_revision: args.revision, build_key, decode_config_sha256,
     interface_contract_sha256: candidateInterfaceSha256, prompt_sha256: hash(prompt), prompt };

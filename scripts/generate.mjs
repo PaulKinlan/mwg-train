@@ -1,6 +1,7 @@
 #!/usr/bin/env node
-/** Offline by default. --live remains fail-closed until owner authorisation, exact SKU quote and
- * conservative token bound exist; generated source is only written as data, never executed here.
+/** Offline by default. Live generation needs the exact owner decision, ratified family contract,
+ * provider configuration and pre-request ledger reservation. A cited SKU quote is optional under
+ * Paul's no-cap decision; generated files remain inert data and are never executed here.
  */
 import { readFile } from 'node:fs/promises';
 import { generateProject } from '../src/eval/generator.mjs';

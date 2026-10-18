@@ -5,7 +5,7 @@ import { resolve } from 'node:path';
 import test from 'node:test';
 
 const ROOT = resolve(import.meta.dirname, '..');
-const EXPECTED_EDGES_SHA256 = '6613ca672fe96b53e05455f3baca302a32724fffdbd213c67ed30e476f2f557d';
+const EXPECTED_EDGES_SHA256 = 'ecccab873a9c1a84a1bfa5bd3b500c477c4adf55c8235ae87ff4ce4fd32219f7';
 
 test('the fast-gate coverage contract cannot silently lose any declared suite edge', () => {
   const mapping = JSON.parse(readFileSync(resolve(ROOT, '.fleet/coverage-mapping.json'), 'utf8'));
@@ -41,9 +41,10 @@ test('changes to optional browser diagnostics rerun their real-browser regressio
   assert.ok(mapping['src/corpus/modern-rules.mjs'].includes('test/view-transition-callback.test.mjs'));
 });
 
-test('offline interface candidate source, preview CLI and contract block route to the no-spend regression', () => {
+test('ratified interface source, preview CLI and contract block route to the no-spend regression', () => {
   const mapping = JSON.parse(readFileSync(resolve(ROOT, '.fleet/coverage-mapping.json'), 'utf8'));
-  for (const file of ['src/eval/interface-candidate.mjs', 'scripts/generate-candidate.mjs',
+  for (const file of ['src/eval/interface-contract.mjs', 'src/eval/interface-candidate.mjs',
+    'src/eval/generator.mjs', 'scripts/generate-candidate.mjs', 'docs/eval/decode-config.deepseek-flash.json',
     'docs/eval/interface-contract.tr-01.candidate.md', 'docs/eval/PREREGISTRATION.md']) {
     assert.ok(mapping[file]?.includes('test/interface-candidate.test.mjs'),
       `${file} must rerun the arm-parity and contract checks`);
