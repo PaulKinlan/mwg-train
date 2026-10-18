@@ -231,6 +231,18 @@ test('the declared password selector reaches the context the rules read, and mat
   }
 });
 
+test('an optional declared View Transition control reaches the generated browser-check context', () => {
+  const spec = { ...read('booking'), view_transition_trigger: '#transition' };
+  assert.deepEqual(validateSpec(spec), []);
+  assert.equal(buildProjectFromSpec({ spec, frameworkName: 'raw' }).spec.check_context.viewTransitionTrigger, '#transition');
+  assert.equal(buildProjectFromSpec({ spec: read('booking'), frameworkName: 'raw' }).spec.check_context.viewTransitionTrigger, undefined,
+    'a project without a declared transition must not receive a guessed trigger');
+  for (const invalid of [null, '', '  ', 12]) {
+    assert.ok(validateSpec({ ...spec, view_transition_trigger: invalid }).some((problem) => problem.startsWith('view_transition_trigger:')),
+      `invalid trigger ${JSON.stringify(invalid)} must be refused`);
+  }
+});
+
 test('a specification that is missing a functional fact is refused, not rebuilt', () => {
   const good = read('booking');
   const clone = () => structuredClone(good);

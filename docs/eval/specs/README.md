@@ -26,6 +26,7 @@ So each family has a file here. It is the durable copy.
 | `form`, `extra_form`, `write_journey`, `security_journey` | the second form and the other driven journeys, where the family has them |
 | `echo` | the value shown back to the user, and where it comes from (a record reference, a query, a session) |
 | `session`, `capacity`, `password_field` | the session-backed and capacity-bounded behaviours, and the selector the security rules use to find the password input |
+| `view_transition_trigger` (optional) | a CSS selector for a visible, trusted control that runs a same-document View Transition on the actual project page; forwarded as `check_context.viewTransitionTrigger` for optional browser diagnostics only |
 | `acceptance` | the properties that make a pair count, stated as behaviour rather than as a test id |
 
 The `effect` of a route and the `acceptance` list are the point of the whole exercise: they are the
@@ -70,7 +71,10 @@ acceptance function.
 The specification is not uniformly executable, and it should not pretend to be.
 
 - **Executable**: `routes` (method, path, kind, redirect template), `fields`, `journey`, `form`,
-  `extra_form`, `write_journey`, `security_journey`, `echo`, `session`, `capacity`, `password_field`.
+  `extra_form`, `write_journey`, `security_journey`, `echo`, `session`, `capacity`, `password_field`,
+  and optional `view_transition_trigger`. The selector only enables a diagnostic when the project actually
+  implements a named transition; current pilot scaffolds do not, so none declares it. A missing or inert
+  trigger remains ERROR, never a synthetic PASS.
   These are what the templates consume, and the byte-for-byte rebuild test is what proves they are
   sufficient.
 - **Checked against the executable part**: `validation.required_fields` (against the fields),

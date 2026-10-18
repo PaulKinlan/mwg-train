@@ -3512,6 +3512,8 @@ export function buildProjectFor(archetype, { frameworkName, defects = [], flags 
       primaryField: `[name=${archetype.fields[0].name}]`,
       usernameField: `[name=email]`,
       passwordField: archetype.passwordField ?? `[name=password]`,
+      // Only an authored, real trigger can prove a View Transition. A named style alone cannot.
+      ...(archetype.viewTransitionTrigger ? { viewTransitionTrigger: archetype.viewTransitionTrigger } : {}),
       addressField: '[name=address]',
       postcodeField: '[name=postcode]',
     },

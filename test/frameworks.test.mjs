@@ -39,6 +39,14 @@ test('buildProjectFor validates defect names', () => {
   }, /unknown defect tokens \[xss-innerhtmlx\]/);
 });
 
+test('only an authored View Transition trigger reaches the optional browser-check context', () => {
+  const archetype = TRAINING_ARCHETYPES['booking'];
+  const authored = buildProjectFor({ ...archetype, viewTransitionTrigger: '#transition' }, { frameworkName: 'raw' });
+  assert.equal(authored.spec.check_context.viewTransitionTrigger, '#transition');
+  assert.equal(buildProjectFor(archetype, { frameworkName: 'raw' }).spec.check_context.viewTransitionTrigger, undefined,
+    'a missing trigger must not be guessed from CSS or form controls');
+});
+
 // The canonical set and the generator can drift apart: someone adds a
 // defects.includes('new-thing') branch and forgets the map, and buildProjectFor then REJECTS a name the
 // generator implements. Sourcing the set from the map and asserting it equals the tokens the generator

@@ -1,10 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
+import { readFileSync } from 'node:fs';
 import { launchChrome } from '../src/corpus/cdp.mjs';
 import { MODERN_RULES, MODERN_RULE_IDS } from '../src/corpus/modern-rules.mjs';
 import { decidePair } from '../src/corpus/accept.mjs';
 import { runOptionalModernRules } from '../src/corpus/harness.mjs';
+import { buildProjectFromSpec } from '../src/eval/spec.mjs';
 
 const html = `<!doctype html><html><head><style>
 .card { background-color: white; }
@@ -51,9 +53,13 @@ test('five optional modern-platform diagnostics observe real browser behaviour a
     const page = await chrome.newPage();
     await page.goto(`http://127.0.0.1:${server.address().port}/`);
     const transitionId = 'ui-behaviors/same-document-transitions';
+    const declared = JSON.parse(readFileSync(new URL('../docs/eval/specs/booking.json', import.meta.url), 'utf8'));
+    declared.view_transition_trigger = '#transition';
+    const checkContext = buildProjectFromSpec({ spec: declared, frameworkName: 'raw' }).spec.check_context;
+    assert.equal(checkContext.viewTransitionTrigger, '#transition', 'the authored spec must reach the browser-check context');
     assert.equal((await MODERN_RULES[transitionId].check(page, {})).status, 'ERROR', 'a styled element alone cannot prove execution');
     for (const id of MODERN_RULE_IDS) {
-      const result = await MODERN_RULES[id].check(page, id === transitionId ? { viewTransitionTrigger: '#transition' } : {});
+      const result = await MODERN_RULES[id].check(page, id === transitionId ? checkContext : {});
       assert.equal(result.status, 'PASS', `${id}: ${JSON.stringify(result)}`);
       assert.equal(result.rule, id);
     }
