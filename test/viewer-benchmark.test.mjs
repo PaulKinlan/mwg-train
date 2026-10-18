@@ -37,8 +37,10 @@ test('benchmark route shows unavailable model arms until a measured run exists, 
   response = await fetch(`${base}/benchmark?run=run-1`);
   html = await response.text();
   assert.equal(response.status, 200);
-  assert.match(html, /0\.0% \(0\/1\)/);
-  assert.match(html, /100\.0% \(1\/1\)/);
+  const headline = html.match(/<p>Pre: <strong>[^<]+<\/strong> → post: <strong>[^<]+<\/strong>[^<]*<\/p>/)?.[0];
+  assert.ok(headline, 'the overall score must have its own headline paragraph');
+  assert.match(headline, /Pre: <strong>0\.0% \(0\/1\)<\/strong> → post: <strong>100\.0% \(1\/1\)<\/strong>/,
+    'the core headline cannot borrow matching percentages from the optional diagnostics paragraph');
   assert.match(html, /Optional diagnostics, separate from headline: pre <strong>100\.0% \(1\/1\)<\/strong> → post <strong>0\.0% \(0\/1\)<\/strong>/);
   assert.match(html, /forms\/required/);
   assert.match(html, /provider\/model/);
