@@ -30,10 +30,12 @@ test('CLI summarizes only paired verdicts by archetype, model and guidance rule'
   assert.deepEqual(report.archetypes.map(({ name, comparable }) => [name, comparable]), [['booking', 2], ['catalogue', 1]]);
   assert.deepEqual(report.models.map(({ name, comparable }) => [name, comparable]), [['deterministic:no-model', 2], ['provider/model-a', 1]]);
   assert.deepEqual(report.arms.map(({ name, comparable }) => [name, comparable]), [['C1', 0], ['C2', 0], ['T', 0]]);
-  assert.deepEqual(report.rules.find(({ name }) => name === 'css/child-state-based-styling'), { name: 'css/child-state-based-styling', before: 0, after: 0, comparable: 0, unmeasured: 0, delta: 0 });
-  assert.match(renderBenchmarkMarkdown(report), /`css\/child-state-based-styling` \| N\/A \| N\/A \| N\/A/);
-  assert.deepEqual(report.rules.find(({ name }) => name === 'forms/required'), { name: 'forms/required', before: 0, after: 1, comparable: 2, unmeasured: 0, delta: 1 });
+  assert.deepEqual(report.rules.find(({ name }) => name === 'css/child-state-based-styling'), { name: 'css/child-state-based-styling', before: 0, after: 0, comparable: 0, unmeasured: 0, delta: 0, optional: true, recorded: false });
+  assert.match(renderBenchmarkMarkdown(report), /`css\/child-state-based-styling` \(optional; not in headline\) \| N\/A \| N\/A \| N\/A \| 0 \| not recorded/);
+  assert.deepEqual(report.rules.find(({ name }) => name === 'forms/required'), { name: 'forms/required', before: 0, after: 1, comparable: 2, unmeasured: 0, delta: 1, optional: false, recorded: true });
   assert.match(renderBenchmarkMarkdown(report), /Pre: \*\*33\.3% \(1\/3\)\*\* → post: \*\*66\.7% \(2\/3\)\*\*/);
+  assert.match(renderBenchmarkMarkdown(report), /\| `booking` \| 50\.0% \(1\/2\) \| 100\.0% \(2\/2\) \| \+1 \| 2 \| 1 \|/,
+    'archetype rows must keep their measured unmeasured count');
   assert.match(renderBenchmarkMarkdown(report), /mwg-train deterministic baseline/);
   const cli = spawnSync(process.execPath, ['scripts/benchmark-report.mjs', '--run', dir, '--json'], { encoding: 'utf8' });
   assert.equal(cli.status, 0, cli.stderr);
@@ -53,7 +55,17 @@ test('optional modern diagnostics never inflate the comparable historical headli
   assert.deepEqual(fresh.arms, historical.arms);
   assert.deepEqual(fresh.diagnostics, { before: 5, after: 0, comparable: 5, unmeasured: 0, delta: -5 });
   assert.equal(historical.diagnostics.comparable, 0);
-  assert.match(renderBenchmarkMarkdown(fresh), /Optional diagnostics \(separate, not in headline\): pre 100\.0% \(5\/5\) → post 0\.0% \(0\/5\)/);
+  assert.match(renderBenchmarkMarkdown(historical), /Optional diagnostics \(separate, not in headline\): pre N\/A → post N\/A; not recorded in this run\./);
+  assert.doesNotMatch(renderBenchmarkMarkdown(historical), /0 unmeasured/);
+  assert.ok(historical.rules.filter((row) => row.optional).every((row) => row.recorded === false));
+  assert.ok(fresh.rules.filter((row) => row.optional).every((row) => row.recorded === true));
+  assert.match(renderBenchmarkMarkdown(fresh), /Optional diagnostics \(separate, not in headline\): pre 100\.0% \(5\/5\) → post 0\.0% \(0\/5\); 0 unmeasured/);
+
+  const partial = benchmarkOverview({ runId: 'partial', projects: 1, rows: [core,
+    { ...core, rule: optional[0], after: 'FAIL' }, { ...core, rule: optional[1], after: 'ERROR' }] });
+  assert.deepEqual(partial.overall, historical.overall);
+  assert.match(renderBenchmarkMarkdown(partial), /1 recorded check unmeasured; 3 optional rules not recorded in this run/);
+  assert.match(renderBenchmarkMarkdown(partial), /`ui-behaviors\/declarative-dialog-popover-control` \(optional; not in headline\) \| N\/A \| N\/A \| N\/A \| 0 \| 1/);
 });
 
 test('committed historical pilot joins only matching-run, matching-hash measurements', (t) => {
