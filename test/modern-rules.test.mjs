@@ -1,11 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
-import { readFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { createServer as createPortReservation } from 'node:net';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { launchChrome } from '../src/corpus/cdp.mjs';
 import { MODERN_RULES, MODERN_RULE_IDS } from '../src/corpus/modern-rules.mjs';
 import { decidePair } from '../src/corpus/accept.mjs';
-import { runOptionalModernRules } from '../src/corpus/harness.mjs';
+import { runOptionalModernRules, runProjectVersion } from '../src/corpus/harness.mjs';
 import { buildProjectFromSpec } from '../src/eval/spec.mjs';
 
 const html = `<!doctype html><html><head><style>
@@ -94,6 +97,66 @@ test('five optional modern-platform diagnostics observe real browser behaviour a
     }
     await page.close();
   } finally { if (chrome) await chrome.close(); }
+});
+
+test('the production corpus runner includes optional diagnostics and restores the evidence page', async () => {
+  // Hand-authored local fixture; do not execute a generated project outside its approved sandbox.
+  const dir = mkdtempSync(join(tmpdir(), 'mwg-modern-callsite-'));
+  const projectDir = join(dir, 'project');
+  let chrome;
+  try {
+    mkdirSync(projectDir);
+    writeFileSync(join(projectDir, 'server.mjs'), `
+import { createServer } from 'node:http';
+const form = '<!doctype html><html><body><h1>Trusted harness fixture</h1>'
+  + '<form action="/saved" method="get"><label>Note<input id="note" name="note" required></label><button>Save</button></form>'
+  + '<button commandfor="modal" command="show-modal">Open dialog</button>'
+  + '<dialog id="modal" aria-label="Modal"><button commandfor="modal" command="close">Close</button></dialog>'
+  + '<button popovertarget="help">Help</button><div id="help" popover="auto">Help text</div>'
+  + '<script>document.addEventListener("keydown", e => { if (e.key === "Escape" && document.querySelector("#modal").open) { e.preventDefault(); e.stopImmediatePropagation(); } }, true);</script></body></html>';
+createServer((req, res) => {
+  const url = new URL(req.url, 'http://127.0.0.1');
+  res.setHeader('content-type', url.pathname === '/__health' ? 'application/json' : 'text/html; charset=utf-8');
+  if (url.pathname === '/__health') return res.end('{"ok":true}');
+  if (url.pathname === '/') return res.end(form);
+  if (url.pathname === '/saved') return res.end('<!doctype html><html><body><div id="record-echo">Saved note</div></body></html>');
+  res.writeHead(404); res.end('not found');
+}).listen(Number(process.env.PILOT_PORT), '127.0.0.1');
+`);
+    const reservation = createPortReservation();
+    await new Promise((resolve) => reservation.listen(0, '127.0.0.1', resolve));
+    const port = reservation.address().port;
+    await new Promise((resolve) => reservation.close(resolve));
+    chrome = await launchChrome();
+    const evidencePages = [];
+    const observedChrome = { version: chrome.version, newPage: async (options) => {
+      const page = await chrome.newPage(options);
+      const screenshot = page.screenshot.bind(page);
+      page.screenshot = async (...args) => {
+        evidencePages.push({ url: await page.url(), modalOpen: await page.evaluate(`return document.querySelector('#modal')?.open ?? false`) });
+        return screenshot(...args);
+      };
+      return page;
+    } };
+    const record = await runProjectVersion({ chrome: observedChrome, projectDir, runDir: dir,
+      dbPath: join(dir, 'fixture.sqlite'), label: 'trusted', port,
+      spec: { project_id: 'modern-callsite-fixture', archetype: 'fixture', framework: { name: 'raw', version: 'fixture' },
+        journey: { kind: 'get-query-reload', startPath: '/', formSelector: 'form', fill: { '#note': 'Saved note' } },
+        required_rules: [], check_context: {} } });
+    assert.deepEqual(record.errors, [], JSON.stringify(record.errors));
+    assert.deepEqual(record.rules.map((result) => result.rule), [...MODERN_RULE_IDS],
+      'removing the production runOptionalModernRules call must turn this assertion red');
+    assert.equal(record.rules.find((result) => result.rule === 'ui-behaviors/platform-controls-dismiss-dialog')?.status, 'FAIL');
+    assert.equal(record.rules.find((result) => result.rule === 'ui-behaviors/declarative-dialog-popover-control')?.status, 'PASS',
+      'a failed modal must not taint the popover on the next fresh page');
+    assert.ok(existsSync(record.screenshots?.desktop), 'the production evidence capture must run');
+    if (process.env.MWG_TEST_SCREENSHOT_PATH) copyFileSync(record.screenshots.desktop, process.env.MWG_TEST_SCREENSHOT_PATH);
+    assert.deepEqual(evidencePages[0], { url: `http://127.0.0.1:${port}/`, modalOpen: false },
+      'desktop evidence must see the restored landing page, not the opened modal');
+  } finally {
+    if (chrome) await chrome.close();
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 test('optional diagnostic improvements do not create an accepted training pair', () => {
