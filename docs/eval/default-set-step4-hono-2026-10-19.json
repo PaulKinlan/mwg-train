@@ -111,6 +111,7 @@
     "Visual assessment is qualitative against an authored desktop reference image not supplied during generation. No authored mobile board or numeric visual score.",
     "Generated servers ran in Linux bubblewrap; generated client JavaScript ran in contained Chrome. macOS sample is post-evaluation and not yet reproduced.",
     "The baseline metadata describes the separate deterministic ideal comparator, not this generated default arm or a model training input.",
+    "Historical Step 4 receipts did not pin the source instrument: UNRECORDED_AT_RUN does not imply the latest commit measured them. Superseded receipt hashes were recomputed from retained private bytes; no old receipt was rewritten.",
     "Local read-only SHA-256 archive is not WORM or off-VM immutable. Exact served model checkpoint remains UNVERIFIED."
   ],
   "families": [
@@ -119,6 +120,8 @@
       "project_id": "tr-01-hono",
       "generation": "SUCCESS",
       "functional": "MEASURED",
+      "instrument_revision": "UNRECORDED_AT_RUN",
+      "superseded_functional_receipts": [],
       "headroom": {
         "passed": 5,
         "failed": 0,
@@ -237,6 +240,8 @@
       "project_id": "tr-02-hono",
       "generation": "SUCCESS",
       "functional": "MEASURED",
+      "instrument_revision": "UNRECORDED_AT_RUN",
+      "superseded_functional_receipts": [],
       "headroom": {
         "passed": 5,
         "failed": 0,
@@ -363,6 +368,8 @@
       "project_id": "tr-04-hono",
       "generation": "SUCCESS",
       "functional": "MEASURED",
+      "instrument_revision": "UNRECORDED_AT_RUN",
+      "superseded_functional_receipts": [],
       "headroom": {
         "passed": 5,
         "failed": 0,
@@ -476,6 +483,42 @@
       "project_id": "tr-05-hono",
       "generation": "SUCCESS",
       "functional": "MEASURED",
+      "instrument_revision": "UNRECORDED_AT_RUN",
+      "superseded_functional_receipts": [
+        {
+          "functional_receipt_sha256": "2f76811801d24b2774bd4b7c08355ae12c124ac418cd82a3260a14ce8369d963",
+          "sha256_provenance": "recomputed_from_retained_receipt",
+          "instrument_revision": "UNRECORDED_AT_RUN",
+          "identity_pins": "ABSENT_AT_RUN",
+          "change": "measurement_revised",
+          "headroom": {
+            "passed": 2,
+            "failed": 1,
+            "not_checkable": 3,
+            "rate": 0.6666666666666666,
+            "ceiling": false
+          },
+          "changed_parts": [
+            "multi-step-carry",
+            "search"
+          ]
+        },
+        {
+          "functional_receipt_sha256": "c4a40411bc9722f46783946803835aba65c190261de8efd735bfa1c4a7672345",
+          "sha256_provenance": "recomputed_from_retained_receipt",
+          "instrument_revision": "UNRECORDED_AT_RUN",
+          "identity_pins": "ABSENT_AT_RUN",
+          "change": "identity_pins_added",
+          "headroom": {
+            "passed": 4,
+            "failed": 0,
+            "not_checkable": 2,
+            "rate": 1,
+            "ceiling": true
+          },
+          "changed_parts": []
+        }
+      ],
       "headroom": {
         "passed": 4,
         "failed": 0,
@@ -582,6 +625,8 @@
       "project_id": "tr-06-hono",
       "generation": "SUCCESS",
       "functional": "MEASURED",
+      "instrument_revision": "UNRECORDED_AT_RUN",
+      "superseded_functional_receipts": [],
       "headroom": {
         "passed": 4,
         "failed": 1,
@@ -695,6 +740,26 @@
       "project_id": "tr-07-hono",
       "generation": "SUCCESS",
       "functional": "MEASURED",
+      "instrument_revision": "UNRECORDED_AT_RUN",
+      "superseded_functional_receipts": [
+        {
+          "functional_receipt_sha256": "75b036083151eaff28988f52ce285a9142be50d520ee0cabb4fe830e80d09fb0",
+          "sha256_provenance": "recomputed_from_retained_receipt",
+          "instrument_revision": "UNRECORDED_AT_RUN",
+          "identity_pins": "PRESENT",
+          "change": "search_control_corrected",
+          "headroom": {
+            "passed": 4,
+            "failed": 0,
+            "not_checkable": 3,
+            "rate": 1,
+            "ceiling": true
+          },
+          "changed_parts": [
+            "search"
+          ]
+        }
+      ],
       "headroom": {
         "passed": 5,
         "failed": 0,
@@ -816,6 +881,8 @@
       "project_id": "tr-09-hono",
       "generation": "SUCCESS",
       "functional": "MEASURED",
+      "instrument_revision": "UNRECORDED_AT_RUN",
+      "superseded_functional_receipts": [],
       "headroom": {
         "passed": 5,
         "failed": 0,
@@ -929,6 +996,8 @@
       "project_id": "tr-10-hono",
       "generation": "SUCCESS",
       "functional": "MEASURED",
+      "instrument_revision": "UNRECORDED_AT_RUN",
+      "superseded_functional_receipts": [],
       "headroom": {
         "passed": 4,
         "failed": 1,
@@ -1047,6 +1116,8 @@
       "project_id": "tr-11-hono",
       "generation": "SUCCESS",
       "functional": "MEASURED",
+      "instrument_revision": "UNRECORDED_AT_RUN",
+      "superseded_functional_receipts": [],
       "headroom": {
         "passed": 5,
         "failed": 0,
@@ -1165,6 +1236,8 @@
       "project_id": "tr-12-hono",
       "generation": "SUCCESS",
       "functional": "MEASURED",
+      "instrument_revision": "UNRECORDED_AT_RUN",
+      "superseded_functional_receipts": [],
       "headroom": {
         "passed": 5,
         "failed": 0,
@@ -1283,6 +1356,8 @@
       "project_id": "tr-13-hono",
       "generation": "SUCCESS",
       "functional": "MEASURED",
+      "instrument_revision": "UNRECORDED_AT_RUN",
+      "superseded_functional_receipts": [],
       "headroom": {
         "passed": 5,
         "failed": 0,
@@ -1409,6 +1484,8 @@
       "project_id": "tr-15-hono",
       "generation": "SUCCESS",
       "functional": "MEASURED",
+      "instrument_revision": "UNRECORDED_AT_RUN",
+      "superseded_functional_receipts": [],
       "headroom": {
         "passed": 4,
         "failed": 0,
@@ -1534,6 +1611,8 @@
       "project_id": "tr-17-hono",
       "generation": "SUCCESS",
       "functional": "MEASURED",
+      "instrument_revision": "UNRECORDED_AT_RUN",
+      "superseded_functional_receipts": [],
       "headroom": {
         "passed": 5,
         "failed": 0,
@@ -1652,6 +1731,8 @@
       "project_id": "tr-18-hono",
       "generation": "SUCCESS",
       "functional": "MEASURED",
+      "instrument_revision": "UNRECORDED_AT_RUN",
+      "superseded_functional_receipts": [],
       "headroom": {
         "passed": 5,
         "failed": 0,
@@ -1770,6 +1851,8 @@
       "project_id": "tr-19-hono",
       "generation": "SUCCESS",
       "functional": "MEASURED",
+      "instrument_revision": "UNRECORDED_AT_RUN",
+      "superseded_functional_receipts": [],
       "headroom": {
         "passed": 5,
         "failed": 0,
@@ -1888,6 +1971,8 @@
       "project_id": "tr-20-hono",
       "generation": "SUCCESS",
       "functional": "MEASURED",
+      "instrument_revision": "UNRECORDED_AT_RUN",
+      "superseded_functional_receipts": [],
       "headroom": {
         "passed": 5,
         "failed": 0,
@@ -2009,6 +2094,8 @@
       "project_id": "tr-22-hono",
       "generation": "SUCCESS",
       "functional": "MEASURED",
+      "instrument_revision": "UNRECORDED_AT_RUN",
+      "superseded_functional_receipts": [],
       "headroom": {
         "passed": 4,
         "failed": 0,
@@ -2134,6 +2221,8 @@
       "project_id": "tr-24-hono",
       "generation": "SUCCESS",
       "functional": "MEASURED",
+      "instrument_revision": "UNRECORDED_AT_RUN",
+      "superseded_functional_receipts": [],
       "headroom": {
         "passed": 4,
         "failed": 0,
@@ -2251,6 +2340,8 @@
       "project_id": "tr-25-hono",
       "generation": "SUCCESS",
       "functional": "MEASURED",
+      "instrument_revision": "UNRECORDED_AT_RUN",
+      "superseded_functional_receipts": [],
       "headroom": {
         "passed": 4,
         "failed": 0,
@@ -2364,6 +2455,8 @@
       "project_id": "tr-26-hono",
       "generation": "SUCCESS",
       "functional": "MEASURED",
+      "instrument_revision": "UNRECORDED_AT_RUN",
+      "superseded_functional_receipts": [],
       "headroom": {
         "passed": 2,
         "failed": 2,
@@ -2493,6 +2586,8 @@
       "project_id": "tr-29-hono",
       "generation": "SUCCESS",
       "functional": "MEASURED",
+      "instrument_revision": "UNRECORDED_AT_RUN",
+      "superseded_functional_receipts": [],
       "headroom": {
         "passed": 5,
         "failed": 0,
@@ -2611,6 +2706,8 @@
       "project_id": "tr-30-hono",
       "generation": "SUCCESS",
       "functional": "MEASURED",
+      "instrument_revision": "UNRECORDED_AT_RUN",
+      "superseded_functional_receipts": [],
       "headroom": {
         "passed": 5,
         "failed": 0,

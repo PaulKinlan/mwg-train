@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { prepareDefaultStep4, RATIFIED_STEP4_ROW_SHA256, step4RatificationRow } from '../src/eval/default-step4-preflight.mjs';
-import { buildPublicStep4Report, publicJourneyPart } from '../src/eval/default-step4-report.mjs';
+import { buildPublicStep4Report, publicJourneyPart, REQUIRED_SUPERSEDED } from '../src/eval/default-step4-report.mjs';
 import { classifyDocument } from '../scripts/check-baseline-label.mjs';
 import { BASELINE_FIELDS } from '../src/eval/ruleset.mjs';
 
@@ -38,7 +38,39 @@ function fixture() {
     visualVerdicts[family.family] = 'PARTIALLY_SIMILAR';
     visualHashes[family.family] = 'd'.repeat(64);
   }
-  return { scoreReceipts, smokeReceipts, scoreHashes, smokeHashes, visualVerdicts, visualHashes };
+  const historical = (family, statuses, change, sha256, pins) => {
+    const receipt = structuredClone(scoreReceipts[family]);
+    receipt.kind = 'step4-functional-pilot';
+    receipt.project_id = tranche.run_records.find((row) => row.family === family).project_id;
+    receipt.journey_parts = statuses.map(([name, status]) => ({ name, status, detail: privateMarker }));
+    receipt.headroom = { passed: statuses.filter(([, status]) => status === 'PASS').length,
+      failed: statuses.filter(([, status]) => status === 'FAIL').length,
+      not_checkable: statuses.filter(([, status]) => status === 'NOT_CHECKABLE').length + receipt.required_rules.length };
+    const denominator = receipt.headroom.passed + receipt.headroom.failed;
+    receipt.headroom.rate = denominator ? receipt.headroom.passed / denominator : null;
+    receipt.headroom.ceiling = denominator ? receipt.headroom.rate >= 0.9 : null;
+    receipt.attempts = { 'secret-private-value': privateMarker, file: '/home/exedev/.fleet/receipt' };
+    if (!pins) { delete receipt.brief_sha256; delete receipt.journey_sha256; }
+    return { receipt, sha256, change };
+  };
+  const part = (name, status = 'PASS') => [name, status];
+  scoreReceipts['tr-05'].journey_parts = [part('server-persistence'), part('multi-step-carry'),
+    part('empty-form-validation'), part('search')].map(([name, status]) => ({ name, status, detail: {} }));
+  scoreReceipts['tr-05'].headroom = { passed: 4, failed: 0, not_checkable: 2, coverage_incomplete: true, rate: 1, ceiling: true };
+  scoreReceipts['tr-07'].journey_parts = [...scoreReceipts['tr-05'].journey_parts, { name: 'update-existing', status: 'PASS', detail: {} }];
+  scoreReceipts['tr-07'].headroom = { passed: 5, failed: 0, not_checkable: 2, coverage_incomplete: true, rate: 1, ceiling: true };
+  const supersededReceipts = {
+    'tr-05': [
+      historical('tr-05', [part('server-persistence'), part('multi-step-carry', 'FAIL'),
+        part('empty-form-validation'), part('search', 'NOT_CHECKABLE')], 'measurement_revised', REQUIRED_SUPERSEDED['tr-05'][0], false),
+      historical('tr-05', [part('server-persistence'), part('multi-step-carry'),
+        part('empty-form-validation'), part('search')], 'identity_pins_added', REQUIRED_SUPERSEDED['tr-05'][1], false),
+    ],
+    'tr-07': [historical('tr-07', [part('server-persistence'), part('multi-step-carry'),
+      part('empty-form-validation'), part('search', 'NOT_CHECKABLE'), part('update-existing')],
+    'search_control_corrected', REQUIRED_SUPERSEDED['tr-07'][0], true)],
+  };
+  return { scoreReceipts, smokeReceipts, scoreHashes, smokeHashes, visualVerdicts, visualHashes, supersededReceipts };
 }
 
 test('public report keeps all thirty identities, quarantines failures and never copies raw fixture or private paths', () => {
@@ -56,7 +88,15 @@ test('public report keeps all thirty identities, quarantines failures and never 
   assert.equal(text.includes(privateMarker), false);
   assert.equal(text.includes('/home/exedev/.fleet'), false);
   assert.equal(text.includes('pageText'), false);
-  assert.equal(report.families.find((row) => row.family === 'tr-05').visual.numeric_score, null);
+  const tr05 = report.families.find((row) => row.family === 'tr-05');
+  assert.equal(tr05.visual.numeric_score, null);
+  assert.equal(tr05.instrument_revision, 'UNRECORDED_AT_RUN');
+  assert.deepEqual(tr05.superseded_functional_receipts.map((row) => row.headroom.ceiling), [false, true]);
+  assert.deepEqual(tr05.superseded_functional_receipts.map((row) => row.functional_receipt_sha256), REQUIRED_SUPERSEDED['tr-05']);
+  assert.equal(tr05.superseded_functional_receipts[0].headroom.rate, 2 / 3);
+  assert.equal(tr05.superseded_functional_receipts[0].identity_pins, 'ABSENT_AT_RUN');
+  assert.equal(tr05.superseded_functional_receipts[0].instrument_revision, 'UNRECORDED_AT_RUN');
+  assert.deepEqual(report.families.find((row) => row.family === 'tr-07').superseded_functional_receipts.map((row) => row.functional_receipt_sha256), REQUIRED_SUPERSEDED['tr-07']);
 });
 
 test('published Step 4 report stays sanitized and agrees with its readable summary', () => {
@@ -70,6 +110,18 @@ test('published Step 4 report stays sanitized and agrees with its readable summa
   assert.equal(report.counts.required_not_checkable, 44);
   assert.equal(report.counts.journey_pass + report.counts.journey_fail + report.counts.journey_not_checkable, 109);
   assert.equal(report.families.filter((row) => row.visual?.verdict === 'DISSIMILAR').length, 4);
+  const tr05 = report.families.find((row) => row.family === 'tr-05');
+  const tr07 = report.families.find((row) => row.family === 'tr-07');
+  assert.deepEqual(tr05.superseded_functional_receipts.map((row) => row.functional_receipt_sha256), REQUIRED_SUPERSEDED['tr-05']);
+  assert.deepEqual(tr05.superseded_functional_receipts[0].headroom, {
+    passed: 2, failed: 1, not_checkable: 3, rate: 2 / 3, ceiling: false,
+  });
+  assert.deepEqual(tr05.superseded_functional_receipts[0].changed_parts, ['multi-step-carry', 'search']);
+  assert.equal(tr05.superseded_functional_receipts[1].identity_pins, 'ABSENT_AT_RUN');
+  assert.deepEqual(tr07.superseded_functional_receipts.map((row) => row.functional_receipt_sha256), REQUIRED_SUPERSEDED['tr-07']);
+  assert.deepEqual(tr07.superseded_functional_receipts[0].changed_parts, ['search']);
+  assert.equal(report.families.filter((row) => row.generation === 'SUCCESS').every((row) => row.instrument_revision === 'UNRECORDED_AT_RUN'), true);
+  assert.match(summary, /Historical Step 4 receipts.*UNRECORDED_AT_RUN/);
   assert.equal(report.families.filter((row) => row.generation === 'SUCCESS').every((row) =>
     /^[a-f0-9]{64}$/.test(row.functional_receipt_sha256) && /^[a-f0-9]{64}$/.test(row.screenshot_receipt_sha256)), true);
   assert.equal(reportText.includes('/home/exedev/'), false);
@@ -87,4 +139,13 @@ test('public report refuses mismatched run, ratification and headroom rather tha
   inputs.scoreReceipts['tr-05'].headroom.passed = 0;
   assert.throws(() => buildPublicStep4Report({ tranche, prepared, ...inputs }), /REPORT_HEADROOM_MISMATCH/);
   assert.throws(() => publicJourneyPart({ name: 'other', status: 'PASS', detail: privateMarker }), /REPORT_INVALID_PART/);
+  const missingLineage = fixture();
+  delete missingLineage.supersededReceipts['tr-05'];
+  assert.throws(() => buildPublicStep4Report({ tranche, prepared, ...missingLineage }), /REPORT_SUPERSESSION_MISSING/);
+  const forged = fixture();
+  forged.supersededReceipts['tr-05'][0].receipt.headroom.ceiling = true;
+  assert.throws(() => buildPublicStep4Report({ tranche, prepared, ...forged }), /REPORT_SUPERSESSION_MISMATCH/);
+  const mismatched = fixture();
+  mismatched.scoreReceipts['tr-05'].instrument_sha256 = 'a'.repeat(64);
+  assert.throws(() => buildPublicStep4Report({ tranche, prepared, ...mismatched }), /REPORT_INSTRUMENT_MISMATCH/);
 });
