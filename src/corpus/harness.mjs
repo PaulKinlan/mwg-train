@@ -20,6 +20,7 @@ import { join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 
 import { startCorpusSandbox } from './sandbox.mjs';
+import { decoyValueForControl } from './search-decoy.mjs';
 import { RULES, SECURITY_CHECKS, MODERN_RULE_IDS } from './rules.mjs';
 import { evaluateStateJourney } from './state-persistence.mjs';
 import { installRuntimeObservers, measureRuntimeQuality } from './eval.mjs';
@@ -465,11 +466,11 @@ export async function driveSearchJourney(page, base, journey, search, { seedFiel
   // filter had worked and the decoy was a false decoy. Every field is replaced now, in a shape its type
   // accepts, and the guard below refuses to run at all if some value still contains a query word.
   // The shape has to come from the INPUT'S TYPE, not from the value's spelling. Guessing from the string put
-  // '+44 7700 900001' into a `type=date` control, the browser refused the form, the decoy record was never
-  // created, and twenty projects reported "the decoy is missing from the unfiltered listing" - a control that
-  // had failed to be established, reported as a filter failure. The element is asked instead, and the
-  // fallback is indexed rather than the field name, because a field named `plot` put the query word into the
-  // decoy and made the guard fire on the corpus's own vocabulary.
+  // '+44 7700 900001' into a `type=date` control and prevented the decoy from being stored. Dates and
+  // numbers preserve their fixture values: event schedules and party-size arithmetic can make arbitrary
+  // replacements invalid. The query-leak guard below refuses preserved values containing the search word.
+  // Other fields use type-valid replacements with an indexed fallback, so a field named `plot` does not put
+  // the query word into its decoy and falsely trigger the guard.
   // The preceding update journey may leave this page on a record route. Inspect controls on the
   // actual create form, not whichever document the last independent journey happened to leave open.
   await page.goto(`${base}${journey.startPath}`);
@@ -477,23 +478,9 @@ export async function driveSearchJourney(page, base, journey, search, { seedFiel
     const el = document.querySelector(selector);
     return [selector, el ? (el.type || el.tagName.toLowerCase()) : 'text'];
   }))`);
-  const byType = (type, index) => {
-    switch (String(type).toLowerCase()) {
-      case 'date': return '2027-01-02';
-      case 'datetime-local': return '2027-01-02T03:04';
-      case 'time': return '09:30';
-      case 'month': return '2027-01';
-      case 'week': return '2027-W01';
-      case 'number': case 'range': return '1';
-      case 'email': return `zzz-decoy-${suffix}@example.test`;
-      case 'password': return `Zz9!${suffix}2026Q`; // A decoy blocked by strength validation is no search control.
-      case 'tel': return '+44 7700 900001';
-      case 'url': return `https://zzz-decoy.example.test/${suffix}`;
-      default: return `${decoyToken}-${index}`;
-    }
-  };
   const decoyValues = Object.fromEntries(
-    Object.entries(journey.fill ?? {}).map(([selector], index) => [selector, byType(controlTypes?.[selector] ?? 'text', index)]),
+    Object.entries(journey.fill ?? {}).map(([selector, original], index) => [selector,
+      decoyValueForControl(controlTypes?.[selector] ?? 'text', { original, token: decoyToken, suffix, index })]),
   );
   const words = String(search.query ?? '')
     .split(/\s+/)

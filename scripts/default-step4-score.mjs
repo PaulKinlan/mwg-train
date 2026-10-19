@@ -95,7 +95,9 @@ export async function scoreDefaultFamily({ family, archiveRoot, evidenceRoot }) 
       brief_sha256: selected.brief_sha256, journey_sha256: selected.journey_sha256,
       excluded_from_training: true, sandbox: server.mechanism,
       journey_parts: journeyParts, required_rules: rules, applicable_diagnostics: diagnostics, headroom: ceiling,
+      coverage_incomplete: ceiling.coverage_incomplete,
       attempts, visual_verdict: 'NOT_MEASURED', limitations: [
+        'Two or more required-rule umbrellas have no exact checker; headroom is over checkable components only and incomplete coverage is not proof of full MWG conformance.',
         'Only the structured canonical brief journey and exact implemented rules were driven; prose login/authorization assertions remain NOT_CHECKABLE.',
         'The generated server ran in bubblewrap; client JavaScript ran in contained, egress-blocked Chrome.',
         'Local archive is read-only but not WORM/off-VM; served checkpoint and macOS sample remain unverified.',
@@ -103,6 +105,7 @@ export async function scoreDefaultFamily({ family, archiveRoot, evidenceRoot }) 
     verifyArchiveFamily({ archiveRoot, row: archived }); // Any changed byte invalidates the run.
     writeFileSync(join(destination, 'receipt.json'), `${JSON.stringify(receipt, null, 2)}\n`, { flag: 'wx', mode: 0o600 });
     return { kind: receipt.kind, family, sandbox: receipt.sandbox, headroom: ceiling,
+      coverage_incomplete: ceiling.coverage_incomplete,
       required_not_checkable: rules.filter((entry) => entry.status === 'NOT_CHECKABLE').length,
       diagnostic_checkable: diagnostics.filter((entry) => entry.status === 'PASS' || entry.status === 'FAIL').length,
       visual_verdict: receipt.visual_verdict };
