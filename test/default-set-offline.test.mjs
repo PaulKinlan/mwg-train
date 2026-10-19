@@ -109,6 +109,14 @@ test('public checkout and symlinked archive aliases refuse before writing paid b
   execFileSync('git', ['-C', publicRepo, 'remote', 'add', 'archive', 'https://example.invalid/example/private-repo.git']);
   assert.equal(assertPrivateArchiveRoot(join(privateCheckout, 'paid-output'), { repoRoot: publicRepo }),
     join(privateCheckout, 'paid-output'), 'an extra public remote must not make private origin look public');
+  writeFileSync(join(privateCheckout, 'private.txt'), 'private fixture');
+  execFileSync('git', ['-C', privateCheckout, 'add', 'private.txt']);
+  execFileSync('git', ['-C', privateCheckout, '-c', 'user.name=Test', '-c', 'user.email=test@example.test',
+    'commit', '--quiet', '-m', 'private fixture']);
+  const privateClone = join(temp, 'private-clone');
+  execFileSync('git', ['clone', '--quiet', privateCheckout, privateClone]);
+  assert.equal(assertPrivateArchiveRoot(join(privateClone, 'paid-output'), { repoRoot: publicRepo }),
+    join(privateClone, 'paid-output'), 'a local clone of the real private companion remains valid');
   // The real call must also refuse a public checkout path without creating the archive directory.
   const runDir = join(temp, 'run');
   writeFileSync(join(runDir, 'run.json'), JSON.stringify({ status: 'FAILED', backend: 'live', arm: 'default',
