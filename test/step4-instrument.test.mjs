@@ -47,6 +47,26 @@ test('digest pins transitive local imports rather than only the entry points', (
   assert.notEqual(step4InstrumentDigest(root), original);
 });
 
+test('legal same-line static and comment-separated dynamic imports cannot hide a changed source', (t) => {
+  const root = fixture(t);
+  const rogue = join(root, 'src/corpus/rogue.mjs');
+  writeFileSync(rogue, 'export const rogue = 1;\n');
+  const harness = join(root, 'src/corpus/harness.mjs');
+  writeFileSync(harness, "const pre = 1; import { rogue } from './rogue.mjs';\nexport { rogue, pre };\n");
+  assert.ok(step4InstrumentFiles(root).includes('src/corpus/rogue.mjs'));
+  const staticDigest = step4InstrumentDigest(root);
+  writeFileSync(rogue, 'export const rogue = 2;\n');
+  assert.notEqual(step4InstrumentDigest(root), staticDigest);
+
+  writeFileSync(harness, "const module = await import/*comment*/(( './rogue.mjs' ));\nexport const value = module.rogue;\n");
+  assert.ok(step4InstrumentFiles(root).includes('src/corpus/rogue.mjs'));
+  const dynamicDigest = step4InstrumentDigest(root);
+  writeFileSync(rogue, 'export const rogue = 3;\n');
+  assert.notEqual(step4InstrumentDigest(root), dynamicDigest);
+  writeFileSync(harness, 'await import(/*not a literal*/ process.env.MODULE);\n');
+  assert.throws(() => step4InstrumentDigest(root), /INSTRUMENT_DYNAMIC_IMPORT/);
+});
+
 test('real Step 4 import closure includes persistence and modern rules', () => {
   const root = new URL('..', import.meta.url).pathname;
   const files = step4InstrumentFiles(root);
@@ -68,6 +88,8 @@ test('digest fails closed on missing or symlinked sources, unpinned packages and
   assert.throws(() => step4InstrumentDigest(root), /INSTRUMENT_UNPINNED_DEPENDENCY/);
   writeFileSync(state, 'await import(maybeModule);\n');
   assert.throws(() => step4InstrumentDigest(root), /INSTRUMENT_DYNAMIC_IMPORT/);
+  writeFileSync(state, 'import { invalid from \"./rules.mjs\";\n');
+  assert.throws(() => step4InstrumentDigest(root), /INSTRUMENT_PARSE_FAILURE/);
 });
 
 test('receipt writer refuses a changed imported source and leaves no misleading receipt', (t) => {
