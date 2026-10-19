@@ -44,6 +44,19 @@ test('the projection retains each input stamp rather than substituting host or f
   }
 });
 
+test('aggregate corpus projection preserves measured sandbox and heap-only memory containment', () => {
+  const record = { platform: 'linux', node_version: 'v22.11.0',
+    browser: { product: 'Chrome/140.0.7339.80' }, chrome_version: 'Chrome/140.0.7339.80',
+    sandbox: 'bubblewrap', memoryContainment: { mode: 'heap-only', nodeHeapMb: 512, rssContained: false },
+    journeys: [], errors: [], console: [] };
+  const projected = versionRecord(record, {});
+  assert.equal(projected.sandbox, record.sandbox);
+  assert.deepEqual(projected.memoryContainment, record.memoryContainment);
+  const unavailable = versionRecord({ ...record, sandbox: null, memoryContainment: null }, {});
+  assert.equal(unavailable.sandbox, null, 'do not invent a sandbox on pre-launch failures');
+  assert.equal(unavailable.memoryContainment, null, 'do not invent memory containment on pre-launch failures');
+});
+
 test('the returned run record and training-corpus projection keep the measured stamp even on failure', async () => {
   // A real occupied port forces the harness to return before page creation: no Chrome or generated server is run.
   const occupied = createServer();
@@ -61,6 +74,8 @@ test('the returned run record and training-corpus projection keep the measured s
     for (const [key, value] of Object.entries(expected)) assert.deepEqual(original[key], value, key);
     const projected = versionRecord(original, {});
     for (const [key, value] of Object.entries(expected)) assert.deepEqual(projected[key], value, key);
+    assert.equal(projected.sandbox, null, 'no sandbox launched on occupied-port failure');
+    assert.equal(projected.memoryContainment, null, 'no server memory cap on occupied-port failure');
     assert.throws(() => versionRecord({ ...original, chrome_version: null }, {}), /missing measured.*browser/i);
     assert.throws(() => versionRecord({ ...original, platform: undefined }, {}), /missing measured.*platform/i);
   } finally {

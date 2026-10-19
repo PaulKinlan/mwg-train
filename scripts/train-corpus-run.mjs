@@ -250,6 +250,8 @@ export function versionRecord(record, spec) {
     node_version: record.node_version,
     browser: record.browser,
     chrome_version: record.chrome_version,
+    sandbox: record.sandbox ?? null,
+    memoryContainment: record.memoryContainment ?? null,
     persistence_ok: persistenceOk(record, spec),
     validation_observation: validationObservation(record),
     journeys: journeyResults(record, spec),
