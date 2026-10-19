@@ -255,6 +255,12 @@
   "docs/eval/default-set-hono-tranche-2026-10-19.json": [
     "test/default-set-tranche.test.mjs"
   ],
+  "docs/eval/default-set-step4-hono-2026-10-19.json": [
+    "test/default-step4-report.test.mjs"
+  ],
+  "docs/eval/default-set-step4-2026-10-19.md": [
+    "test/default-step4-report.test.mjs"
+  ],
   "docs/eval/evaluator-interface-contract.md": [
     "test/harness-oracle.test.mjs",
     "test/interface-candidate.test.mjs"
