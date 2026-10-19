@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { CdpError, Page } from '../src/corpus/cdp.mjs';
@@ -18,6 +18,15 @@ const evidence = (t) => {
 test('live-slice CLI refuses to run without an explicit quarantined project and evidence directory', () => {
   const result = spawnSync(process.execPath, [script], { encoding: 'utf8', timeout: 5000 });
   assert.equal(result.status, 1);
+  assert.match(result.stderr, /usage: verify-tr01-live-slice\.mjs/);
+});
+
+test('a symlinked CLI invocation cannot silently exit 0 without running the verifier', (t) => {
+  const dir = evidence(t);
+  const link = join(dir, 'live-slice.mjs');
+  symlinkSync(script, link);
+  const result = spawnSync(process.execPath, [link], { encoding: 'utf8', timeout: 5000 });
+  assert.equal(result.status, 1, 'invoking through a symlink must reach the usage guard');
   assert.match(result.stderr, /usage: verify-tr01-live-slice\.mjs/);
 });
 

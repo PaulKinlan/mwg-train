@@ -2,7 +2,7 @@
 // node scripts/verify-tr01-live-slice.mjs <read-only project directory> <private evidence directory>
 import assert from 'node:assert/strict';
 import { createServer } from 'node:net';
-import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
@@ -127,6 +127,15 @@ try {
 }
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+function isDirectExecution() {
+  if (!process.argv[1]) return false;
+  try {
+    return realpathSync(process.argv[1]) === fileURLToPath(import.meta.url);
+  } catch {
+    return resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+  }
+}
+
+if (isDirectExecution()) {
   await verifyTr01LiveSlice({ project: process.argv[2], evidenceDir: process.argv[3] });
 }
