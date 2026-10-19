@@ -380,6 +380,8 @@ export const DOCUMENTS = {
   'docs/eval/PREREGISTRATION.md': 'contract',
   'docs/eval/generator-runner.md': 'contract', // implementation and fail-closed spend requirements, no new measured floor
   'docs/eval/tr-01-live-slice-2026-10-19.md': 'provenance', // provider response/ledger hashes, not a deterministic floor or functional verdict
+  'docs/eval/default-set-hono-slice.json': 'config', // unguided 30-family plan, not generated outcomes
+  'docs/eval/default-set-offline-prep.md': 'provenance', // nonbillable dry-run/cordon status, not a measured default floor
   'docs/eval/state-persistence-contract.md': 'contract', // browser evaluator contract; no model-quality or historical-score claim
   'docs/eval/deepseek-cost-projection.md': 'floor-report', // quotes deterministic corpus characters; model costs remain conditional and unmeasured
   'docs/eval/deepseek-checkpoint-matrix.md': 'design', // provisional model decision and quote provenance, not a floor result
