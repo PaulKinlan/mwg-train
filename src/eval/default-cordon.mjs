@@ -76,7 +76,7 @@ function remoteEvidence(url, dir, publicRepo, publicIdentity, publicCommonDir, v
     if (!remotes.length) return 'unknown';
     const evidence = remotes.flatMap((name) => remoteUrls(target, name).map((remote) => remoteEvidence(remote,
       target, publicRepo, publicIdentity, publicCommonDir, new Set(visited), depth + 1)));
-    return evidence.includes('public') ? 'public' : evidence.every((kind) => kind === 'private') ? 'private' : 'unknown';
+    return evidence.includes('public') ? 'public' : evidence.includes('private') ? 'private' : 'unknown';
   } catch { return 'unknown'; }
 }
 /** Refuse a public checkout (including symlink aliases and sibling worktrees) BEFORE creating anything. */
