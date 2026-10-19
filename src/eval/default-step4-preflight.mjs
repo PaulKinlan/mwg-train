@@ -11,7 +11,13 @@ const fail = (code, detail) => { throw new Error(`${code}: ${detail}`); };
 
 // The headroom universe/threshold/action must be approved as one exact §14 row before a generated
 // default is driven. A code change with independent review is required to set this digest.
-export const RATIFIED_STEP4_ROW_SHA256 = null;
+export const RATIFIED_STEP4_ROW_SHA256 = 'fa36c8d60ef1fde8e30243bf8715de935ca2bfdadc22e36709dd587015cc716e';
+export function step4RatificationRow(markdown) {
+  const rows = String(markdown).split('\n').filter((line) =>
+    line.startsWith('| 2026-10-19 19:20Z, before any Step 4 default score |'));
+  if (rows.length !== 1) fail('RATIFICATION_MISSING', 'expected one owner-ratified Step 4 §14 row');
+  return rows[0];
+}
 export function assertStep4Ratification(rowText) {
   if (!RATIFIED_STEP4_ROW_SHA256 || typeof rowText !== 'string' ||
       hash(rowText) !== RATIFIED_STEP4_ROW_SHA256) fail('RATIFICATION_MISSING', 'no reviewed Step 4 §14 headroom row is pinned');
@@ -23,7 +29,8 @@ function rulePlan(ids) {
 }
 
 /** Pure inventory: no private archive, generated source, browser or provider is accessed here. */
-export function prepareDefaultStep4({ tranche, briefs }) {
+export function prepareDefaultStep4({ tranche, briefs, ratificationRow = null }) {
+  if (ratificationRow !== null) assertStep4Ratification(ratificationRow);
   if (tranche?.kind !== 'untouched-default-tranche-metadata' || tranche?.arm !== 'default' ||
       tranche?.framework !== 'hono' || tranche?.run_records?.length !== 30 ||
       tranche.excluded_from_training !== true || tranche.approved_for_training !== false)
@@ -55,12 +62,14 @@ export function prepareDefaultStep4({ tranche, briefs }) {
     const primaryFields = firstRequired ? Object.keys(brief.journey.fill).filter((selector) => selectorFieldName(selector) === firstRequired.name) : [];
     if (primaryFields.length !== 1) fail('ADAPTER_AMBIGUOUS', `${family} has no unique required primary field`);
     return { family, project_id: run.project_id, request_id: run.request_id, eligibility,
+      brief_sha256: hash(JSON.stringify(brief)), journey_sha256: hash(JSON.stringify(brief.journey)),
       required_rules: rulePlan(brief.required_rules), applicable_diagnostics: rulePlan(brief.applicable_rules),
       ...(eligibility === 'ELIGIBLE' ? { adapter: { journey: structuredClone(brief.journey),
         primaryField: primaryFields[0], echoedField: echoed[0].name, echoedSelector: echoSelectors[0],
         framework: 'hono', archetype: brief.archetype } } : {}) };
   });
-  return { kind: 'step4-preflight-only', tranche_manifest_index_sha256: index, ratification: 'MISSING', families: prepared };
+  return { kind: 'step4-preflight-only', tranche_manifest_index_sha256: index,
+    ratification: ratificationRow === null ? 'MISSING' : 'RATIFIED', families: prepared };
 }
 
 // Direct invocation reads only public metadata and prints no fixture values, browser outcomes or scores.
@@ -68,7 +77,8 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   const root = fileURLToPath(new URL('../..', import.meta.url));
   const tranche = JSON.parse(readFileSync(`${root}/docs/eval/default-set-hono-tranche-2026-10-19.json`, 'utf8'));
   const briefs = readFileSync(`${root}/docs/train/briefs/manifest.jsonl`, 'utf8').trim().split('\n').map(JSON.parse);
-  const plan = prepareDefaultStep4({ tranche, briefs });
+  const ratificationRow = step4RatificationRow(readFileSync(`${root}/docs/eval/PREREGISTRATION.md`, 'utf8'));
+  const plan = prepareDefaultStep4({ tranche, briefs, ratificationRow });
   const eligible = plan.families.filter((row) => row.eligibility === 'ELIGIBLE');
   const required = eligible.flatMap((row) => row.required_rules);
   const applicable = eligible.flatMap((row) => row.applicable_diagnostics);

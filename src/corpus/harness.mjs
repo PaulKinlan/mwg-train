@@ -449,7 +449,7 @@ async function driveWriteJourney(page, base, writeJourney) {
  * The token is seeded into the journey's ECHOED field (`seedField`, the field the record page shows
  * back): that is the one field the harness knows becomes searchable record text.
  */
-async function driveSearchJourney(page, base, journey, search, { seedField }) {
+export async function driveSearchJourney(page, base, journey, search, { seedField }) {
   if (!seedField) throw new Error('search journey: the journey has no echoed field to seed through');
   const suffix = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
   // The matching record is created by the brief's OWN journey, so what the search must find is the record
@@ -470,6 +470,9 @@ async function driveSearchJourney(page, base, journey, search, { seedField }) {
   // had failed to be established, reported as a filter failure. The element is asked instead, and the
   // fallback is indexed rather than the field name, because a field named `plot` put the query word into the
   // decoy and made the guard fire on the corpus's own vocabulary.
+  // The preceding update journey may leave this page on a record route. Inspect controls on the
+  // actual create form, not whichever document the last independent journey happened to leave open.
+  await page.goto(`${base}${journey.startPath}`);
   const controlTypes = await page.evaluate(`return Object.fromEntries(${JSON.stringify(Object.keys(journey.fill ?? {}))}.map((selector) => {
     const el = document.querySelector(selector);
     return [selector, el ? (el.type || el.tagName.toLowerCase()) : 'text'];
@@ -483,6 +486,7 @@ async function driveSearchJourney(page, base, journey, search, { seedField }) {
       case 'week': return '2027-W01';
       case 'number': case 'range': return '1';
       case 'email': return `zzz-decoy-${suffix}@example.test`;
+      case 'password': return `Zz9!${suffix}2026Q`; // A decoy blocked by strength validation is no search control.
       case 'tel': return '+44 7700 900001';
       case 'url': return `https://zzz-decoy.example.test/${suffix}`;
       default: return `${decoyToken}-${index}`;
@@ -661,7 +665,7 @@ export async function driveUpdateJourney(page, base, journey, update, { recordUr
 }
 
 /** The validation-failure path: submitting an empty form must not silently succeed. */
-async function driveValidationFailure(page, base, journey) {
+export async function driveValidationFailure(page, base, journey) {
   await page.goto(`${base}${journey.startPath}`);
   const beforeUrl = await page.url();
   const before = page.network.length;

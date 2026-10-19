@@ -2,16 +2,20 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { assertStep4Ratification, prepareDefaultStep4 } from '../src/eval/default-step4-preflight.mjs';
+import { assertStep4Ratification, prepareDefaultStep4, step4RatificationRow } from '../src/eval/default-step4-preflight.mjs';
 
 const path = (relative) => fileURLToPath(new URL(relative, import.meta.url));
 const tranche = JSON.parse(readFileSync(path('../docs/eval/default-set-hono-tranche-2026-10-19.json'), 'utf8'));
 const briefs = readFileSync(path('../docs/train/briefs/manifest.jsonl'), 'utf8').trim().split('\n').map(JSON.parse);
+const ratificationRow = step4RatificationRow(readFileSync(path('../docs/eval/PREREGISTRATION.md'), 'utf8'));
 const copy = (value) => structuredClone(value);
 
-test('Step 4 collect cannot use unratified headroom semantics', () => {
+test('Step 4 collects only against the exact owner-ratified §14 row', () => {
+  assert.doesNotThrow(() => assertStep4Ratification(ratificationRow));
+  assert.throws(() => assertStep4Ratification(ratificationRow.replace('>=90%', '>=80%')), /RATIFICATION_MISSING/);
   assert.throws(() => assertStep4Ratification('a plausible 90% row'), /RATIFICATION_MISSING/);
-  assert.throws(() => assertStep4Ratification(''), /RATIFICATION_MISSING/);
+  assert.throws(() => step4RatificationRow('no §14 table'), /RATIFICATION_MISSING/);
+  assert.equal(prepareDefaultStep4({ tranche, briefs, ratificationRow }).ratification, 'RATIFIED');
 });
 
 test('the public first tranche yields an offline-only canonical brief and rule plan', () => {
