@@ -1,3 +1,4 @@
+import { parse } from 'acorn';
 import { createHash } from 'node:crypto';
 import { lstatSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve, sep } from 'node:path';
@@ -8,8 +9,26 @@ export const STEP4_INSTRUMENT_ENTRYPOINTS = Object.freeze([
 ]);
 
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
-const staticImports = /(?:^|\n)[ \t]*(?:import|export)\s+(?:[^'";]*?\bfrom\s*)?['"]([^'"\n]+)['"]/g;
-const dynamicImports = /\bimport\s*\(\s*['"]([^'"\n]+)['"]\s*\)/g;
+function sourceImports(source, name) {
+  let ast;
+  try { ast = parse(source, { ecmaVersion: 'latest', sourceType: 'module' }); }
+  catch (error) { throw Error(`INSTRUMENT_PARSE_FAILURE: ${name}: ${error.message}`); }
+  const specifiers = [];
+  const walk = (node) => {
+    if (!node || typeof node !== 'object') return;
+    if (Array.isArray(node)) { for (const entry of node) walk(entry); return; }
+    if (node.type === 'ImportDeclaration' || node.type === 'ExportNamedDeclaration' || node.type === 'ExportAllDeclaration') {
+      if (node.source) specifiers.push(node.source.value);
+    } else if (node.type === 'ImportExpression') {
+      if (node.source?.type !== 'Literal' || typeof node.source.value !== 'string')
+        throw Error(`INSTRUMENT_DYNAMIC_IMPORT: ${name}`);
+      specifiers.push(node.source.value);
+    }
+    for (const value of Object.values(node)) if (value && typeof value === 'object') walk(value);
+  };
+  walk(ast);
+  return specifiers;
+}
 
 /** Resolve all locally imported source bytes. Reject packages, unknown dynamic imports and outside paths. */
 function collectStep4Sources(root) {
@@ -24,13 +43,24 @@ function collectStep4Sources(root) {
     if (realpathSync(path) !== path || !lstatSync(path).isFile()) throw Error(`INSTRUMENT_UNSAFE_SOURCE: ${name}`);
     const bytes = readFileSync(path);
     visited.set(name, sha256(bytes));
-    const source = bytes.toString('utf8');
-    const statics = [...source.matchAll(staticImports)];
-    const dynamics = [...source.matchAll(dynamicImports)];
-    if (dynamics.length !== [...source.matchAll(/\bimport\s*\(/g)].length)
-      throw Error(`INSTRUMENT_DYNAMIC_IMPORT: ${name}`);
-    for (const [, specifier] of [...statics, ...dynamics]) {
+    for (const specifier of sourceImports(bytes.toString('utf8'), name)) {
       if (specifier.startsWith('node:')) continue;
+      if (specifier === 'acorn') {
+        // The parser itself is executable instrument code. Include its installed bytes and
+        // the pinned dependency identity rather than trusting a bare-package import.
+        for (const dependency of ['node_modules/acorn/package.json', 'node_modules/acorn/dist/acorn.mjs', 'package-lock.json']) {
+          const installed = join(base, dependency);
+          if (realpathSync(installed) !== installed || !lstatSync(installed).isFile())
+            throw Error(`INSTRUMENT_UNSAFE_SOURCE: ${dependency}`);
+          visited.set(dependency, sha256(readFileSync(installed)));
+        }
+        const installedVersion = JSON.parse(readFileSync(join(base, 'node_modules/acorn/package.json'), 'utf8')).version;
+        const lock = JSON.parse(readFileSync(join(base, 'package-lock.json'), 'utf8'));
+        if (lock.packages?.['node_modules/acorn']?.version !== installedVersion ||
+            !lock.packages?.['']?.dependencies?.acorn)
+          throw Error('INSTRUMENT_UNPINNED_DEPENDENCY: acorn version differs from lockfile');
+        continue;
+      }
       if (!specifier.startsWith('./') && !specifier.startsWith('../'))
         throw Error(`INSTRUMENT_UNPINNED_DEPENDENCY: ${name}`);
       visit(resolve(dirname(path), specifier));
