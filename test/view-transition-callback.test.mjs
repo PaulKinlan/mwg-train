@@ -5,11 +5,6 @@ import { launchChrome } from '../src/corpus/cdp.mjs';
 import { MODERN_RULES } from '../src/corpus/modern-rules.mjs';
 
 const cases = {
-  hover: {
-    style: '.vt { display: block; width: 260px; } .vt:hover { background-color: rgb(0, 128, 255); }',
-    body: '<div class="vt">Panel <button id="transition">Animate</button></div>',
-    update: '() => {}',
-  },
   preclick: {
     style: '',
     body: '<div class="vt">Panel</div><button id="transition">Animate</button>',
@@ -33,7 +28,7 @@ const cases = {
   },
 };
 
-test('only changes witnessed inside a View Transition update count, not hover or passive animation', async () => {
+test('only changes witnessed inside a View Transition update count, not pre-click or passive animation', async () => {
   const server = createServer((request, response) => {
     const fixture = cases[request.url.slice(1)];
     response.setHeader('content-type', 'text/html');
@@ -47,12 +42,18 @@ test('only changes witnessed inside a View Transition update count, not hover or
     chrome = await launchChrome();
     const page = await chrome.newPage();
     const rule = MODERN_RULES['ui-behaviors/same-document-transitions'];
-    for (const [name, expected] of [['hover', 'ERROR'], ['preclick', 'ERROR'], ['animated', 'ERROR'], ['style', 'PASS'], ['async', 'PASS']]) {
+    for (const [name, expected] of [['preclick', 'ERROR'], ['animated', 'ERROR'], ['style', 'PASS'], ['async', 'PASS']]) {
       await page.goto(`http://127.0.0.1:${server.address().port}/${name}`);
       const result = await rule.check(page, { viewTransitionTrigger: '#transition' });
       assert.equal(result.status, expected, `${name}: ${JSON.stringify(result)}`);
       assert.equal(result.observed.observed.started, 1, `${name}: actual browser transition must execute`);
       assert.equal(result.observed.observed.updates[0].mutated, expected === 'PASS', `${name}: callback mutation witness`);
+      if (name === 'preclick' || name === 'style') {
+        const color = await page.evaluate('return getComputedStyle(document.querySelector(".vt")).backgroundColor');
+        assert.equal(color, name === 'style' ? 'rgb(255, 0, 0)' : 'rgb(0, 128, 255)', `${name}: visible panel color`);
+        if (process.env.MWG_TRANSITION_EVIDENCE_DIR)
+          await page.screenshot(`${process.env.MWG_TRANSITION_EVIDENCE_DIR}/${name}.png`);
+      }
       if (name === 'preclick') {
         assert.notEqual(result.observed.before.signatures['demo-item'], result.observed.after.signatures['demo-item'],
           'a pre-callback style change must make the old wall-clock signature false-PASS');

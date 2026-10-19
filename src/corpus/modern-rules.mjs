@@ -150,7 +150,7 @@ export const MODERN_RULES = Object.freeze({
           const update = typeof args[0] === 'function' ? args[0] : args[0]?.update;
           if (typeof update === 'function') {
             const wrapped = function(...parameters) {
-              // Pointer hover and CSS animations can change computed styles without an update.
+              // Computed styles can change without a callback update (for example, CSS animations).
               // Observe only DOM mutations during the transition's own update callback.
               const before = snapshot();
               const named = [...document.querySelectorAll('*')].filter((element) => {
