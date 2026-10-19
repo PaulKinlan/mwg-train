@@ -34,9 +34,23 @@ test('every family has its own pinned, plan-derived Option A interface, without 
   assert.match(cleanup, /\/cleanups\/:id\/register/);
   assert.match(cleanup, /\/passes\/:id/);
   assert.match(cleanup, /`volunteer`/);
+  const credit = familyInterfaceContract('tr-04', planOf('tr-04')).text;
+  assert.match(credit, /:\s?account.*stable create-time reference, NOT the mutable `account` field value/);
+  assert.match(credit, /do not re-key the route or the \/api\/record\/\{ref\} lookup/);
   const profile = familyInterfaceContract('tr-05', planOf('tr-05')).text;
   assert.match(profile, /\/volunteer\/profile/);
+  assert.match(profile, /never return plaintext or hash through the read-back page/);
+  assert.match(profile, /named non-credential fields/);
   assert.doesNotMatch(profile, /No update flow is declared.*Update: edit/s);
+});
+
+test('plan extraction rejects ambiguous read-back and reworded update instead of weakening a pin', () => {
+  assert.throws(() => familyInterfaceContract('tr-05', planOf('tr-05').replace(
+    'redirects to /volunteer/profile', 'redirects to /not-a-declared-route')),
+  /FAMILY_INTERFACE_INVALID/);
+  assert.throws(() => familyInterfaceContract('tr-02', planOf('tr-02').replace(
+    'And an update flow:', 'An update flow:')),
+  /FAMILY_INTERFACE_INVALID/);
 });
 
 test('tr-02..tr-30 dry-runs pin each family contract across all arms without spending or writes', async (t) => {
