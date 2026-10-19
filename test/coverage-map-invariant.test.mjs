@@ -5,7 +5,7 @@ import { resolve } from 'node:path';
 import test from 'node:test';
 
 const ROOT = resolve(import.meta.dirname, '..');
-const EXPECTED_EDGES_SHA256 = '651fa1843be192db5078ddc8c37d2d257b3a79269e820c69d0455d3af3378663';
+const EXPECTED_EDGES_SHA256 = '6439beb67d6120c3d7ccb462262731db6f3cf389801f971a6818850620b34d43';
 
 test('the fast-gate coverage contract cannot silently lose any declared suite edge', () => {
   const mapping = JSON.parse(readFileSync(resolve(ROOT, '.fleet/coverage-mapping.json'), 'utf8'));
@@ -99,6 +99,8 @@ test('documents with content assertions route to their citing suites', () => {
     'docs/quarantine.md': ['test/docs.test.mjs', 'test/quarantine-store.test.mjs'],
     'docs/eval/PREREGISTRATION.md': ['test/briefs.test.mjs'],
     'docs/eval/default-set-hono-tranche-2026-10-19.json': ['test/default-set-tranche.test.mjs'],
+    'docs/eval/default-set-step4-hono-2026-10-19.json': ['test/default-step4-report.test.mjs'],
+    'docs/eval/default-set-step4-2026-10-19.md': ['test/default-step4-report.test.mjs'],
     'docs/vocabulary.md': ['test/set-separation.test.mjs'],
     'docs/PIPELINE.md': ['test/pipeline-docs.test.mjs'],
     'docs/design.md': ['test/design-language.test.mjs'],

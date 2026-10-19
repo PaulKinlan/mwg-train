@@ -382,6 +382,8 @@ export const DOCUMENTS = {
   'docs/eval/tr-01-live-slice-2026-10-19.md': 'provenance', // provider response/ledger hashes, not a deterministic floor or functional verdict
   'docs/eval/default-set-hono-slice.json': 'config', // unguided 30-family plan, not generated outcomes
   'docs/eval/default-set-hono-tranche-2026-10-19.json': 'provenance', // private originals' hashes and generation outcomes, not an evaluated model floor
+  'docs/eval/default-set-step4-2026-10-19.md': 'floor-report', // measured default-arm journeys, rule diagnostics and qualitative board verdicts
+  'docs/eval/default-set-step4-hono-2026-10-19.json': 'floor-report', // sanitized machine-readable Step 4 measurements with the same attribution
   'docs/eval/family-interface-v1.hashes.json': 'config', // reviewed per-family prompt pins, not model output or floor measurements
   'docs/eval/default-set-offline-prep.md': 'provenance', // generation/cordon accounting, not a functional model floor
   'docs/eval/state-persistence-contract.md': 'contract', // browser evaluator contract; no model-quality or historical-score claim

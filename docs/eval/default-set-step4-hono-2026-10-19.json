@@ -1,0 +1,2728 @@
+{
+  "kind": "default-set-step4-sanitized-report",
+  "attribution": "mwg-train deterministic baseline",
+  "baseline_label": "mwg-train deterministic baseline",
+  "baseline_definition": "the MWG-uplifted (ideal) artefact, and not the default: deterministic repair of a project by our own Modern Web Guidance rule specifications, with no model and no teacher in the loop. The raw pre-uplift artefact is the default and is recorded separately.",
+  "baseline_tool": "src/corpus/uplift.mjs",
+  "training_exclusion": true,
+  "manifest_index_sha256": "c7f497b478daa858806c635a44d2bba4ec53f28690dff1388c79779d90a25226",
+  "ratification_row_sha256": "fa36c8d60ef1fde8e30243bf8715de935ca2bfdadc22e36709dd587015cc716e",
+  "framework": "hono",
+  "arm": "default",
+  "counts": {
+    "identities": 30,
+    "success": 22,
+    "model_length": 5,
+    "transport_unevaluable": 3,
+    "ceiling_families": 19,
+    "required_rule_pairs": 44,
+    "required_not_checkable": 44,
+    "applicable_diagnostic_pairs": 105,
+    "applicable_diagnostic_pass": 1,
+    "applicable_diagnostic_fail": 27,
+    "applicable_diagnostic_not_checkable": 77,
+    "journey_pass": 100,
+    "journey_fail": 4,
+    "journey_not_checkable": 5
+  },
+  "required_rule_counts": {
+    "accessibility/accessibility": {
+      "pass": 0,
+      "fail": 0,
+      "not_checkable": 21
+    },
+    "css/responsive-design": {
+      "pass": 0,
+      "fail": 0,
+      "not_checkable": 1
+    },
+    "forms/forms": {
+      "pass": 0,
+      "fail": 0,
+      "not_checkable": 21
+    },
+    "security/security": {
+      "pass": 0,
+      "fail": 0,
+      "not_checkable": 1
+    }
+  },
+  "applicable_diagnostic_rule_counts": {
+    "accessibility/accessibility": {
+      "pass": 0,
+      "fail": 0,
+      "not_checkable": 22
+    },
+    "accessibility/accessible-error-announcement": {
+      "pass": 0,
+      "fail": 9,
+      "not_checkable": 1
+    },
+    "css/css-layout": {
+      "pass": 0,
+      "fail": 0,
+      "not_checkable": 2
+    },
+    "css/responsive-design": {
+      "pass": 0,
+      "fail": 0,
+      "not_checkable": 12
+    },
+    "forms/autofill-sign-in-form": {
+      "pass": 0,
+      "fail": 0,
+      "not_checkable": 1
+    },
+    "forms/autofill-sign-up-form": {
+      "pass": 0,
+      "fail": 1,
+      "not_checkable": 0
+    },
+    "forms/forms": {
+      "pass": 0,
+      "fail": 0,
+      "not_checkable": 21
+    },
+    "forms/ime-safe-enter-submit": {
+      "pass": 0,
+      "fail": 0,
+      "not_checkable": 2
+    },
+    "forms/required-field-feedback": {
+      "pass": 1,
+      "fail": 17,
+      "not_checkable": 1
+    },
+    "security/security": {
+      "pass": 0,
+      "fail": 0,
+      "not_checkable": 1
+    },
+    "ui-atoms/responsive-table": {
+      "pass": 0,
+      "fail": 0,
+      "not_checkable": 14
+    }
+  },
+  "limitations": [
+    "Headroom is per-family over observable structured journeys only; all required-rule IDs on eligible families are umbrellas without exact checkers. It is not a complete MWG or prose-assertion evaluation.",
+    "Transport-unevaluable cells are not model failures; model-length cells are generation failures with no runnable project. No paid identity was retried.",
+    "At or above 90% of a family’s checkable parts: CEILING, exclude improvement claim and pause promotion until a separately preregistered expanded held-out endpoint.",
+    "Visual assessment is qualitative against an authored desktop reference image not supplied during generation. No authored mobile board or numeric visual score.",
+    "Generated servers ran in Linux bubblewrap; generated client JavaScript ran in contained Chrome. macOS sample is post-evaluation and not yet reproduced.",
+    "The baseline metadata describes the separate deterministic ideal comparator, not this generated default arm or a model training input.",
+    "Local read-only SHA-256 archive is not WORM or off-VM immutable. Exact served model checkpoint remains UNVERIFIED."
+  ],
+  "families": [
+    {
+      "family": "tr-01",
+      "project_id": "tr-01-hono",
+      "generation": "SUCCESS",
+      "functional": "MEASURED",
+      "headroom": {
+        "passed": 5,
+        "failed": 0,
+        "not_checkable": 2,
+        "coverage_incomplete": true,
+        "rate": 1,
+        "ceiling": true
+      },
+      "journey_parts": [
+        {
+          "name": "server-persistence",
+          "status": "PASS",
+          "detail": {
+            "submitStatus": 200,
+            "reloadObserved": true,
+            "expectedVisible": true,
+            "serverRecordPresent": true,
+            "apiStatus": 200
+          }
+        },
+        {
+          "name": "multi-step-carry",
+          "status": "PASS",
+          "detail": {
+            "carryPassed": true,
+            "draftStateDiagnostic": true
+          }
+        },
+        {
+          "name": "empty-form-validation",
+          "status": "PASS",
+          "detail": {
+            "observation": "refused-observed"
+          }
+        },
+        {
+          "name": "search",
+          "status": "PASS",
+          "detail": {
+            "control_established": true,
+            "expected_value_found": true,
+            "excluded_value_absent": true
+          }
+        },
+        {
+          "name": "update-existing",
+          "status": "PASS",
+          "detail": {
+            "visibleAfterReload": true,
+            "newValueStored": true,
+            "oldValueGone": true,
+            "rowCountUnchanged": true,
+            "comparedAsField": true,
+            "apiStatus": 200
+          }
+        }
+      ],
+      "required_rules": [
+        {
+          "rule_id": "forms/forms",
+          "status": "NOT_CHECKABLE",
+          "reason": "no exact implemented checker"
+        },
+        {
+          "rule_id": "accessibility/accessibility",
+          "status": "NOT_CHECKABLE",
+          "reason": "no exact implemented checker"
+        }
+      ],
+      "applicable_diagnostics": [
+        {
+          "rule_id": "forms/forms",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        },
+        {
+          "rule_id": "forms/required-field-feedback",
+          "status": "FAIL",
+          "reason": "missing_associated_error_text,colour_only_error"
+        },
+        {
+          "rule_id": "accessibility/accessibility",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        },
+        {
+          "rule_id": "accessibility/accessible-error-announcement",
+          "status": "FAIL",
+          "reason": "missing_aria_invalid,invalid_state_not_observed"
+        },
+        {
+          "rule_id": "css/responsive-design",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        }
+      ],
+      "visual": {
+        "verdict": "PARTIALLY_SIMILAR",
+        "desktop": "EVALUATED",
+        "mobile": "EVALUATED",
+        "label": "similarity to authored board, image not supplied during generation",
+        "numeric_score": null,
+        "target_sha256": "eae265479ad5a85278d60ebca28477d85afbcb5bee494238afb0221a2e3f8fbb",
+        "desktop_sha256": "4a76f2bc6fcafbc314fe249ed46d5e6f3b65cd53b77c9dd3dde7b527df6df88b",
+        "mobile_sha256": "250d9bca714bfe24f012c2703cbafbf2638c336c16b483b0b65f09d562ac5fce",
+        "evidence_sha256": "6ab1008a72b259b2047045aab71dd6de94ad5f0a1212325a8f2668e93138f676"
+      },
+      "archive_manifest_sha256": "a1b2f1431d937fe6e36ff126b9b6c50166a96c1827c5fc9bab6d041fb8715c9d",
+      "functional_receipt_sha256": "65ba66eb4a555026f1ebf86ebb35c6834a94efd978c74d015e0fb3b7d99e01ae",
+      "screenshot_receipt_sha256": "e44210f113f67ff5f3453d6fb761e1ea15e62aea10d1518263b31e492055c802",
+      "brief_sha256": "049a2697ba6bf86ffe3ec2e73b572fea6e9acf411f97674c39847a1b2b1962a3",
+      "journey_sha256": "53ba1062d04c5c543fc866b6a3ca26003ba97bb692c08d6e66fb306dd94eb030"
+    },
+    {
+      "family": "tr-02",
+      "project_id": "tr-02-hono",
+      "generation": "SUCCESS",
+      "functional": "MEASURED",
+      "headroom": {
+        "passed": 5,
+        "failed": 0,
+        "not_checkable": 2,
+        "coverage_incomplete": true,
+        "rate": 1,
+        "ceiling": true
+      },
+      "journey_parts": [
+        {
+          "name": "server-persistence",
+          "status": "PASS",
+          "detail": {
+            "submitStatus": 200,
+            "reloadObserved": true,
+            "expectedVisible": true,
+            "serverRecordPresent": true,
+            "apiStatus": 200
+          }
+        },
+        {
+          "name": "multi-step-carry",
+          "status": "PASS",
+          "detail": {
+            "carryPassed": true,
+            "draftStateDiagnostic": true
+          }
+        },
+        {
+          "name": "empty-form-validation",
+          "status": "PASS",
+          "detail": {
+            "observation": "refused-observed"
+          }
+        },
+        {
+          "name": "search",
+          "status": "PASS",
+          "detail": {
+            "control_established": true,
+            "expected_value_found": true,
+            "excluded_value_absent": true
+          }
+        },
+        {
+          "name": "update-existing",
+          "status": "PASS",
+          "detail": {
+            "visibleAfterReload": true,
+            "newValueStored": true,
+            "oldValueGone": true,
+            "rowCountUnchanged": true,
+            "comparedAsField": true,
+            "apiStatus": 200
+          }
+        }
+      ],
+      "required_rules": [
+        {
+          "rule_id": "forms/forms",
+          "status": "NOT_CHECKABLE",
+          "reason": "no exact implemented checker"
+        },
+        {
+          "rule_id": "accessibility/accessibility",
+          "status": "NOT_CHECKABLE",
+          "reason": "no exact implemented checker"
+        }
+      ],
+      "applicable_diagnostics": [
+        {
+          "rule_id": "forms/forms",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        },
+        {
+          "rule_id": "forms/required-field-feedback",
+          "status": "FAIL",
+          "reason": "missing_associated_error_text,colour_only_error"
+        },
+        {
+          "rule_id": "accessibility/accessibility",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        },
+        {
+          "rule_id": "css/css-layout",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        },
+        {
+          "rule_id": "ui-atoms/responsive-table",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        }
+      ],
+      "visual": {
+        "verdict": "PARTIALLY_SIMILAR",
+        "desktop": "EVALUATED",
+        "mobile": "EVALUATED",
+        "label": "similarity to authored board, image not supplied during generation",
+        "numeric_score": null,
+        "target_sha256": "16a1cf928140ebd75ca703286e4df3c0ad89f9d89f9d5987258a393027b5ecf8",
+        "desktop_sha256": "f3256fc1b78a5fde656cd88a96e606d13974ddb5cae46bf03520abe2253cb320",
+        "mobile_sha256": "b505b822158ef1cbaee90ff2b8fcb28c2c83508c23aff05997b2935e8570f09d",
+        "evidence_sha256": "195a434c40c20e303e8db463302f1bdbe513395eb52cc18572a47199a4d3058b"
+      },
+      "archive_manifest_sha256": "0c73acd5cb54fdb6e2a7babe77922fedf4fc37032f13185d77850feefbd008ed",
+      "functional_receipt_sha256": "3a0fe0ab18c97a045b061d740598364256a22c3c13fb92b560f272b23254adf6",
+      "screenshot_receipt_sha256": "1800689370f3a75e714f2fd663d9427ed41181ef36a60076dd57dada57f4374e",
+      "brief_sha256": "42e2e8f7bbce457f1bc392ac74006d05aed6d8d7fb25c5a764fb75a64d5fe5a8",
+      "journey_sha256": "712abcbfd923cf0f732dcc953bc21e9231ff539b27fbe9913607c350604ef741"
+    },
+    {
+      "family": "tr-03",
+      "project_id": "tr-03-hono",
+      "generation": "TRANSPORT_UNEVALUABLE",
+      "functional": "NOT_RUN",
+      "visual": "NOT_RUN",
+      "retry": false
+    },
+    {
+      "family": "tr-04",
+      "project_id": "tr-04-hono",
+      "generation": "SUCCESS",
+      "functional": "MEASURED",
+      "headroom": {
+        "passed": 5,
+        "failed": 0,
+        "not_checkable": 2,
+        "coverage_incomplete": true,
+        "rate": 1,
+        "ceiling": true
+      },
+      "journey_parts": [
+        {
+          "name": "server-persistence",
+          "status": "PASS",
+          "detail": {
+            "submitStatus": 200,
+            "reloadObserved": true,
+            "expectedVisible": true,
+            "serverRecordPresent": true,
+            "apiStatus": 200
+          }
+        },
+        {
+          "name": "multi-step-carry",
+          "status": "PASS",
+          "detail": {
+            "carryPassed": true,
+            "draftStateDiagnostic": false
+          }
+        },
+        {
+          "name": "empty-form-validation",
+          "status": "PASS",
+          "detail": {
+            "observation": "refused-observed"
+          }
+        },
+        {
+          "name": "search",
+          "status": "PASS",
+          "detail": {
+            "control_established": true,
+            "expected_value_found": true,
+            "excluded_value_absent": true
+          }
+        },
+        {
+          "name": "update-existing",
+          "status": "PASS",
+          "detail": {
+            "visibleAfterReload": true,
+            "newValueStored": true,
+            "oldValueGone": true,
+            "rowCountUnchanged": true,
+            "comparedAsField": true,
+            "apiStatus": 200
+          }
+        }
+      ],
+      "required_rules": [
+        {
+          "rule_id": "accessibility/accessibility",
+          "status": "NOT_CHECKABLE",
+          "reason": "no exact implemented checker"
+        },
+        {
+          "rule_id": "css/responsive-design",
+          "status": "NOT_CHECKABLE",
+          "reason": "no exact implemented checker"
+        }
+      ],
+      "applicable_diagnostics": [
+        {
+          "rule_id": "accessibility/accessibility",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        },
+        {
+          "rule_id": "css/responsive-design",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        },
+        {
+          "rule_id": "css/css-layout",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        },
+        {
+          "rule_id": "ui-atoms/responsive-table",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        }
+      ],
+      "visual": {
+        "verdict": "DISSIMILAR",
+        "desktop": "EVALUATED",
+        "mobile": "EVALUATED",
+        "label": "similarity to authored board, image not supplied during generation",
+        "numeric_score": null,
+        "target_sha256": "0ce63771402eb449fdbcdcb71642a482e3629342925b73456b281c65f5a08486",
+        "desktop_sha256": "ab38484f9a14fd41ef76b85e75eb615cc162be2dd11e6994d02c236aed7b91db",
+        "mobile_sha256": "a448e7acf7c9b9208609d2dbde29790a888bb9e7e04c6f25ce3f9fd8920b975f",
+        "evidence_sha256": "195a434c40c20e303e8db463302f1bdbe513395eb52cc18572a47199a4d3058b"
+      },
+      "archive_manifest_sha256": "c9de353201aedfb583d88d3e980693e07e35544ce84ddf623227cdd548a045d5",
+      "functional_receipt_sha256": "d5cc485158a540654f1e9af81c66e0218b6a4ed37177c5f79741580228d84791",
+      "screenshot_receipt_sha256": "5a74e9e09088eaeaf87bc521753c9ccecc483b1e473193f82cbbc07ca60d01c7",
+      "brief_sha256": "58252f3a952a569bb2eafef4160ef294f9aa170eedd23fa87db5f9836b9958a0",
+      "journey_sha256": "126469945539876fed7364ff73a7fd645573a5fba7597fa21db85d12a8ac9942"
+    },
+    {
+      "family": "tr-05",
+      "project_id": "tr-05-hono",
+      "generation": "SUCCESS",
+      "functional": "MEASURED",
+      "headroom": {
+        "passed": 4,
+        "failed": 0,
+        "not_checkable": 2,
+        "coverage_incomplete": true,
+        "rate": 1,
+        "ceiling": true
+      },
+      "journey_parts": [
+        {
+          "name": "server-persistence",
+          "status": "PASS",
+          "detail": {
+            "submitStatus": 200,
+            "reloadObserved": true,
+            "expectedVisible": true,
+            "serverRecordPresent": true,
+            "apiStatus": 200
+          }
+        },
+        {
+          "name": "multi-step-carry",
+          "status": "PASS",
+          "detail": {
+            "carryPassed": true,
+            "draftStateDiagnostic": false
+          }
+        },
+        {
+          "name": "empty-form-validation",
+          "status": "PASS",
+          "detail": {
+            "observation": "refused-observed"
+          }
+        },
+        {
+          "name": "search",
+          "status": "PASS",
+          "detail": {
+            "control_established": true,
+            "expected_value_found": true,
+            "excluded_value_absent": true
+          }
+        }
+      ],
+      "required_rules": [
+        {
+          "rule_id": "forms/forms",
+          "status": "NOT_CHECKABLE",
+          "reason": "no exact implemented checker"
+        },
+        {
+          "rule_id": "security/security",
+          "status": "NOT_CHECKABLE",
+          "reason": "no exact implemented checker"
+        }
+      ],
+      "applicable_diagnostics": [
+        {
+          "rule_id": "forms/forms",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        },
+        {
+          "rule_id": "forms/autofill-sign-up-form",
+          "status": "FAIL",
+          "reason": "autocomplete_token_mismatch"
+        },
+        {
+          "rule_id": "forms/autofill-sign-in-form",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        },
+        {
+          "rule_id": "accessibility/accessibility",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        },
+        {
+          "rule_id": "security/security",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        }
+      ],
+      "visual": {
+        "verdict": "PARTIALLY_SIMILAR",
+        "desktop": "EVALUATED",
+        "mobile": "EVALUATED",
+        "label": "similarity to authored board, image not supplied during generation",
+        "numeric_score": null,
+        "target_sha256": "5b1fe0acd72b1f1dea50cf8ed5b0e92cb5864cc7946ef3fe1dea77ab46410922",
+        "desktop_sha256": "f954e788eb1ed7c2d9aa177818c7ffca6c11a8b70bc3b647e442ded2d04b49e8",
+        "mobile_sha256": "7750cb4a8b1a5d2c20efe06969f9dea613068f02a829696c5272bc55bf28e985",
+        "evidence_sha256": "e747e918354aba76c12cd1ee47b707c85dc1cddb7ff763148397afb755c7d50a"
+      },
+      "archive_manifest_sha256": "da820174b5c02bbeb09685271803edbcbdfb6d92fe0ec9ea52331239e297bd3e",
+      "functional_receipt_sha256": "39497f3c6d7c886f4a0d558a0e359b4c6e6bcea12de86d91e13206bd7e05b651",
+      "screenshot_receipt_sha256": "1fb68737ebb27f6bc2e69655edf9231d360d1322f5c5dfcc8c4ba78196e024ad",
+      "brief_sha256": "a94e7baee81adf324c768340890d47f31401f6c64bbc801171f071493bf6061c",
+      "journey_sha256": "5196f9e745a0c3797a691386db77935f14d1a739dbd2eaee9dc2e666b4624f0d"
+    },
+    {
+      "family": "tr-06",
+      "project_id": "tr-06-hono",
+      "generation": "SUCCESS",
+      "functional": "MEASURED",
+      "headroom": {
+        "passed": 4,
+        "failed": 1,
+        "not_checkable": 2,
+        "coverage_incomplete": true,
+        "rate": 0.8,
+        "ceiling": false
+      },
+      "journey_parts": [
+        {
+          "name": "server-persistence",
+          "status": "PASS",
+          "detail": {
+            "submitStatus": 200,
+            "reloadObserved": true,
+            "expectedVisible": true,
+            "serverRecordPresent": true,
+            "apiStatus": 200
+          }
+        },
+        {
+          "name": "multi-step-carry",
+          "status": "FAIL",
+          "detail": {
+            "carryPassed": false,
+            "draftStateDiagnostic": false
+          }
+        },
+        {
+          "name": "empty-form-validation",
+          "status": "PASS",
+          "detail": {
+            "observation": "refused-observed"
+          }
+        },
+        {
+          "name": "search",
+          "status": "PASS",
+          "detail": {
+            "control_established": true,
+            "expected_value_found": true,
+            "excluded_value_absent": true
+          }
+        },
+        {
+          "name": "update-existing",
+          "status": "PASS",
+          "detail": {
+            "visibleAfterReload": true,
+            "newValueStored": true,
+            "oldValueGone": true,
+            "rowCountUnchanged": true,
+            "comparedAsField": true,
+            "apiStatus": 200
+          }
+        }
+      ],
+      "required_rules": [
+        {
+          "rule_id": "accessibility/accessibility",
+          "status": "NOT_CHECKABLE",
+          "reason": "no exact implemented checker"
+        },
+        {
+          "rule_id": "forms/forms",
+          "status": "NOT_CHECKABLE",
+          "reason": "no exact implemented checker"
+        }
+      ],
+      "applicable_diagnostics": [
+        {
+          "rule_id": "accessibility/accessibility",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        },
+        {
+          "rule_id": "css/responsive-design",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        },
+        {
+          "rule_id": "forms/forms",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        },
+        {
+          "rule_id": "ui-atoms/responsive-table",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        }
+      ],
+      "visual": {
+        "verdict": "DISSIMILAR",
+        "desktop": "EVALUATED",
+        "mobile": "EVALUATED",
+        "label": "similarity to authored board, image not supplied during generation",
+        "numeric_score": null,
+        "target_sha256": "c345a6a87a1462b77919a6a88678d9bbd9a7a9a3c7649b4ae0a83b290a36f173",
+        "desktop_sha256": "3a65bad60e0c80feee01dcde962314c6000b40c257ed40df7ca020e6f692e72e",
+        "mobile_sha256": "d3176ac103a86172cb32710fa178e2bfc429a4e4889923700b85f2648df67988",
+        "evidence_sha256": "195a434c40c20e303e8db463302f1bdbe513395eb52cc18572a47199a4d3058b"
+      },
+      "archive_manifest_sha256": "4446245ec626ab09a2e967b78938a336836aa909091931629ad9f6e398b57258",
+      "functional_receipt_sha256": "082687ad48d770250296332f66dec8f054faa8737d653cabcf7db9fe417a9f45",
+      "screenshot_receipt_sha256": "0a618a301758146c49093bae4926b58ede6027bbcf388facd5a401422e06549d",
+      "brief_sha256": "ef44fa286da454bba5fd4f8ffb306274ba1f705d13a64a0dbbdc7b6d8a969b98",
+      "journey_sha256": "c842d11aa297bedd6ff8d1f43b80aa9e7f16be4474697a71ba26ad29d71a127e"
+    },
+    {
+      "family": "tr-07",
+      "project_id": "tr-07-hono",
+      "generation": "SUCCESS",
+      "functional": "MEASURED",
+      "headroom": {
+        "passed": 5,
+        "failed": 0,
+        "not_checkable": 2,
+        "coverage_incomplete": true,
+        "rate": 1,
+        "ceiling": true
+      },
+      "journey_parts": [
+        {
+          "name": "server-persistence",
+          "status": "PASS",
+          "detail": {
+            "submitStatus": 200,
+            "reloadObserved": true,
+            "expectedVisible": true,
+            "serverRecordPresent": true,
+            "apiStatus": 200
+          }
+        },
+        {
+          "name": "multi-step-carry",
+          "status": "PASS",
+          "detail": {
+            "carryPassed": true,
+            "draftStateDiagnostic": true
+          }
+        },
+        {
+          "name": "empty-form-validation",
+          "status": "PASS",
+          "detail": {
+            "observation": "refused-observed"
+          }
+        },
+        {
+          "name": "search",
+          "status": "PASS",
+          "detail": {
+            "control_established": true,
+            "expected_value_found": true,
+            "excluded_value_absent": true
+          }
+        },
+        {
+          "name": "update-existing",
+          "status": "PASS",
+          "detail": {
+            "visibleAfterReload": true,
+            "newValueStored": true,
+            "oldValueGone": true,
+            "rowCountUnchanged": true,
+            "comparedAsField": true,
+            "apiStatus": 200
+          }
+        }
+      ],
+      "required_rules": [
+        {
+          "rule_id": "forms/forms",
+          "status": "NOT_CHECKABLE",
+          "reason": "no exact implemented checker"
+        },
+        {
+          "rule_id": "accessibility/accessibility",
+          "status": "NOT_CHECKABLE",
+          "reason": "no exact implemented checker"
+        }
+      ],
+      "applicable_diagnostics": [
+        {
+          "rule_id": "forms/forms",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        },
+        {
+          "rule_id": "forms/required-field-feedback",
+          "status": "FAIL",
+          "reason": "missing_associated_error_text,colour_only_error"
+        },
+        {
+          "rule_id": "accessibility/accessibility",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        },
+        {
+          "rule_id": "accessibility/accessible-error-announcement",
+          "status": "FAIL",
+          "reason": "missing_aria_invalid,invalid_state_not_observed"
+        }
+      ],
+      "visual": {
+        "verdict": "PARTIALLY_SIMILAR",
+        "desktop": "EVALUATED",
+        "mobile": "EVALUATED",
+        "label": "similarity to authored board, image not supplied during generation",
+        "numeric_score": null,
+        "target_sha256": "6636a7a6a322f981d33c3314771723b3f836c3eacf00f04eeb3d2ab462c9cded",
+        "desktop_sha256": "3d43780c7a083fec8807db3d737e9f4ec389bd7324abd95276f187924213fac8",
+        "mobile_sha256": "030d915e941ac892ae871526911362db10a732bff7af75aff78ed83bbad6802b",
+        "evidence_sha256": "195a434c40c20e303e8db463302f1bdbe513395eb52cc18572a47199a4d3058b"
+      },
+      "archive_manifest_sha256": "e67f1ecaec6b524fc0b14b95f1d68075cc5092a47f29102895d1aa149c8c8a21",
+      "functional_receipt_sha256": "dd121eb7aad06e353057a3d656581f1c44c3ae83a50e33667307d33cd32db5ea",
+      "screenshot_receipt_sha256": "f3a23850ddb3000ff0dc80d6126cab45f62178e44a9c12ff5fb17cf9b02fc528",
+      "brief_sha256": "cea27738c800b73e241078c43bbb97de7bf9abae88adadf0023de1dd32adea05",
+      "journey_sha256": "ae3d72b15dac1d30b46d5f3516f1a5470d161e19c811d5b251715ec21eed3ebe"
+    },
+    {
+      "family": "tr-08",
+      "project_id": "tr-08-hono",
+      "generation": "TRANSPORT_UNEVALUABLE",
+      "functional": "NOT_RUN",
+      "visual": "NOT_RUN",
+      "retry": false
+    },
+    {
+      "family": "tr-09",
+      "project_id": "tr-09-hono",
+      "generation": "SUCCESS",
+      "functional": "MEASURED",
+      "headroom": {
+        "passed": 5,
+        "failed": 0,
+        "not_checkable": 2,
+        "coverage_incomplete": true,
+        "rate": 1,
+        "ceiling": true
+      },
+      "journey_parts": [
+        {
+          "name": "server-persistence",
+          "status": "PASS",
+          "detail": {
+            "submitStatus": 200,
+            "reloadObserved": true,
+            "expectedVisible": true,
+            "serverRecordPresent": true,
+            "apiStatus": 200
+          }
+        },
+        {
+          "name": "multi-step-carry",
+          "status": "PASS",
+          "detail": {
+            "carryPassed": true,
+            "draftStateDiagnostic": true
+          }
+        },
+        {
+          "name": "empty-form-validation",
+          "status": "PASS",
+          "detail": {
+            "observation": "refused-observed"
+          }
+        },
+        {
+          "name": "search",
+          "status": "PASS",
+          "detail": {
+            "control_established": true,
+            "expected_value_found": true,
+            "excluded_value_absent": true
+          }
+        },
+        {
+          "name": "update-existing",
+          "status": "PASS",
+          "detail": {
+            "visibleAfterReload": true,
+            "newValueStored": true,
+            "oldValueGone": true,
+            "rowCountUnchanged": true,
+            "comparedAsField": true,
+            "apiStatus": 200
+          }
+        }
+      ],
+      "required_rules": [
+        {
+          "rule_id": "forms/forms",
+          "status": "NOT_CHECKABLE",
+          "reason": "no exact implemented checker"
+        },
+        {
+          "rule_id": "accessibility/accessibility",
+          "status": "NOT_CHECKABLE",
+          "reason": "no exact implemented checker"
+        }
+      ],
+      "applicable_diagnostics": [
+        {
+          "rule_id": "forms/forms",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        },
+        {
+          "rule_id": "forms/required-field-feedback",
+          "status": "FAIL",
+          "reason": "colour_only_error"
+        },
+        {
+          "rule_id": "accessibility/accessibility",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        },
+        {
+          "rule_id": "css/responsive-design",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        }
+      ],
+      "visual": {
+        "verdict": "PARTIALLY_SIMILAR",
+        "desktop": "EVALUATED",
+        "mobile": "EVALUATED",
+        "label": "similarity to authored board, image not supplied during generation",
+        "numeric_score": null,
+        "target_sha256": "b6b3fcc585a229e8240a77f1e8e779351a30888baf89556984b2252be2b6ef22",
+        "desktop_sha256": "6b0cd9c44eb423269e5918d17de7f2b4fce4fa09c2912122b099deeefce177cc",
+        "mobile_sha256": "36cc68c5874c41f8e951bd3e401b82d2300724f57b8b444dd28acf84c5652d42",
+        "evidence_sha256": "195a434c40c20e303e8db463302f1bdbe513395eb52cc18572a47199a4d3058b"
+      },
+      "archive_manifest_sha256": "1e3ff56ca20a85d13a87aebb5d32d7c95a78af07ced973d742547c34bac05e8d",
+      "functional_receipt_sha256": "32606e6c55d407b136df4edfd0bec4c8eef8408ec354beb2be5fab1d4a9c643a",
+      "screenshot_receipt_sha256": "e9f0f3c57a0f27e62aed59601d50d667f21a4a2b2c483053f2a0e19e7095d9cf",
+      "brief_sha256": "320d0a71f59a5756f6237268a7d31f8edb8574cbc5fd9464332df954f0a46fe4",
+      "journey_sha256": "b1bcfc1992f4e31ecb7d67ae75c14449d3e451ef65e616cbcc776779147cd502"
+    },
+    {
+      "family": "tr-10",
+      "project_id": "tr-10-hono",
+      "generation": "SUCCESS",
+      "functional": "MEASURED",
+      "headroom": {
+        "passed": 4,
+        "failed": 1,
+        "not_checkable": 2,
+        "coverage_incomplete": true,
+        "rate": 0.8,
+        "ceiling": false
+      },
+      "journey_parts": [
+        {
+          "name": "server-persistence",
+          "status": "PASS",
+          "detail": {
+            "submitStatus": 200,
+            "reloadObserved": true,
+            "expectedVisible": true,
+            "serverRecordPresent": true,
+            "apiStatus": 200
+          }
+        },
+        {
+          "name": "multi-step-carry",
+          "status": "FAIL",
+          "detail": {
+            "carryPassed": false,
+            "draftStateDiagnostic": false
+          }
+        },
+        {
+          "name": "empty-form-validation",
+          "status": "PASS",
+          "detail": {
+            "observation": "refused-observed"
+          }
+        },
+        {
+          "name": "search",
+          "status": "PASS",
+          "detail": {
+            "control_established": true,
+            "expected_value_found": true,
+            "excluded_value_absent": true
+          }
+        },
+        {
+          "name": "update-existing",
+          "status": "PASS",
+          "detail": {
+            "visibleAfterReload": true,
+            "newValueStored": true,
+            "oldValueGone": true,
+            "rowCountUnchanged": true,
+            "comparedAsField": true,
+            "apiStatus": 200
+          }
+        }
+      ],
+      "required_rules": [
+        {
+          "rule_id": "forms/forms",
+          "status": "NOT_CHECKABLE",
+          "reason": "no exact implemented checker"
+        },
+        {
+          "rule_id": "accessibility/accessibility",
+          "status": "NOT_CHECKABLE",
+          "reason": "no exact implemented checker"
+        }
+      ],
+      "applicable_diagnostics": [
+        {
+          "rule_id": "forms/forms",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        },
+        {
+          "rule_id": "forms/required-field-feedback",
+          "status": "FAIL",
+          "reason": "missing_associated_error_text,colour_only_error"
+        },
+        {
+          "rule_id": "accessibility/accessibility",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        },
+        {
+          "rule_id": "accessibility/accessible-error-announcement",
+          "status": "FAIL",
+          "reason": "missing_aria_invalid,invalid_state_not_observed"
+        },
+        {
+          "rule_id": "ui-atoms/responsive-table",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        }
+      ],
+      "visual": {
+        "verdict": "PARTIALLY_SIMILAR",
+        "desktop": "EVALUATED",
+        "mobile": "EVALUATED",
+        "label": "similarity to authored board, image not supplied during generation",
+        "numeric_score": null,
+        "target_sha256": "3fdecbf5e1594e0076fdbd17523e637455177006b1a8e866ddeae712e76b4924",
+        "desktop_sha256": "ddcc11d7fd22fb99edd29a6d48f845d25962ddbd7321f4ec566563c776b713a3",
+        "mobile_sha256": "6fff6ff1a7cc273244c943541ed261067b08935dd487713922bdefde83a80f51",
+        "evidence_sha256": "7d544ea7b3714e9bc952f23b074dd0a7f12e6ca84a712411e03629541a94d23a"
+      },
+      "archive_manifest_sha256": "62d236bce1b24bd159ff7def3a8bc301496eb8fdec5d365a61bff18dce8e1525",
+      "functional_receipt_sha256": "d5a54c59f6715927dbe1f44f0e9241addfe8dfdfd7b8b18dad5f0740b6467d2b",
+      "screenshot_receipt_sha256": "8881de3c31fd3e3f69794a4ebec20354614be80afff80d8f450b7816694e7744",
+      "brief_sha256": "6c564df4d0c39ddeed05384f3cb16b0369960db1b5344e6d48843e78778e0156",
+      "journey_sha256": "00510dc0c553495e7d4abc93f9857ca6352b2ee44773c297ab0a862e141e0f53"
+    },
+    {
+      "family": "tr-11",
+      "project_id": "tr-11-hono",
+      "generation": "SUCCESS",
+      "functional": "MEASURED",
+      "headroom": {
+        "passed": 5,
+        "failed": 0,
+        "not_checkable": 2,
+        "coverage_incomplete": true,
+        "rate": 1,
+        "ceiling": true
+      },
+      "journey_parts": [
+        {
+          "name": "server-persistence",
+          "status": "PASS",
+          "detail": {
+            "submitStatus": 200,
+            "reloadObserved": true,
+            "expectedVisible": true,
+            "serverRecordPresent": true,
+            "apiStatus": 200
+          }
+        },
+        {
+          "name": "multi-step-carry",
+          "status": "PASS",
+          "detail": {
+            "carryPassed": true,
+            "draftStateDiagnostic": false
+          }
+        },
+        {
+          "name": "empty-form-validation",
+          "status": "PASS",
+          "detail": {
+            "observation": "refused-observed"
+          }
+        },
+        {
+          "name": "search",
+          "status": "PASS",
+          "detail": {
+            "control_established": true,
+            "expected_value_found": true,
+            "excluded_value_absent": true
+          }
+        },
+        {
+          "name": "update-existing",
+          "status": "PASS",
+          "detail": {
+            "visibleAfterReload": true,
+            "newValueStored": true,
+            "oldValueGone": true,
+            "rowCountUnchanged": true,
+            "comparedAsField": true,
+            "apiStatus": 200
+          }
+        }
+      ],
+      "required_rules": [
+        {
+          "rule_id": "forms/forms",
+          "status": "NOT_CHECKABLE",
+          "reason": "no exact implemented checker"
+        },
+        {
+          "rule_id": "accessibility/accessibility",
+          "status": "NOT_CHECKABLE",
+          "reason": "no exact implemented checker"
+        }
+      ],
+      "applicable_diagnostics": [
+        {
+          "rule_id": "forms/forms",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        },
+        {
+          "rule_id": "forms/required-field-feedback",
+          "status": "FAIL",
+          "reason": "missing_associated_error_text,colour_only_error"
+        },
+        {
+          "rule_id": "accessibility/accessibility",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        },
+        {
+          "rule_id": "css/responsive-design",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        },
+        {
+          "rule_id": "ui-atoms/responsive-table",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        }
+      ],
+      "visual": {
+        "verdict": "PARTIALLY_SIMILAR",
+        "desktop": "EVALUATED",
+        "mobile": "EVALUATED",
+        "label": "similarity to authored board, image not supplied during generation",
+        "numeric_score": null,
+        "target_sha256": "08e6f2e4fc134364bfb10dfd65e10530cde479905d8f0701bd063d83060eaf69",
+        "desktop_sha256": "ed86a49d6f4418cd7dbeb234e7036cf04841773d89a5b06dab32a4c54ce96728",
+        "mobile_sha256": "3f568912751e7f36eba2e9427ce4f0e4651d9b4003c33290f86a5263967b035b",
+        "evidence_sha256": "7d544ea7b3714e9bc952f23b074dd0a7f12e6ca84a712411e03629541a94d23a"
+      },
+      "archive_manifest_sha256": "e32ce5da6ceae671974bb148b8058a09b923f0f0f886e0716aba0b75173b7887",
+      "functional_receipt_sha256": "c6eaa0613c2e5af36a61be4d7250d5de6f61e1ab128c29cae2b47495f1a0b9f6",
+      "screenshot_receipt_sha256": "f078c76f7efc140556e10f8a2949567e49c12963d87ac880400b753df4d35885",
+      "brief_sha256": "68e35db80d78915d149b70e15811bb9b66faa4ccce95dab86efcfb2fa82e0c20",
+      "journey_sha256": "dcfc859b842999fc2604e47b5ac73f74467f305d04105aed6aaeaaaf3052e85f"
+    },
+    {
+      "family": "tr-12",
+      "project_id": "tr-12-hono",
+      "generation": "SUCCESS",
+      "functional": "MEASURED",
+      "headroom": {
+        "passed": 5,
+        "failed": 0,
+        "not_checkable": 2,
+        "coverage_incomplete": true,
+        "rate": 1,
+        "ceiling": true
+      },
+      "journey_parts": [
+        {
+          "name": "server-persistence",
+          "status": "PASS",
+          "detail": {
+            "submitStatus": 200,
+            "reloadObserved": true,
+            "expectedVisible": true,
+            "serverRecordPresent": true,
+            "apiStatus": 200
+          }
+        },
+        {
+          "name": "multi-step-carry",
+          "status": "PASS",
+          "detail": {
+            "carryPassed": true,
+            "draftStateDiagnostic": true
+          }
+        },
+        {
+          "name": "empty-form-validation",
+          "status": "PASS",
+          "detail": {
+            "observation": "refused-observed"
+          }
+        },
+        {
+          "name": "search",
+          "status": "PASS",
+          "detail": {
+            "control_established": true,
+            "expected_value_found": true,
+            "excluded_value_absent": true
+          }
+        },
+        {
+          "name": "update-existing",
+          "status": "PASS",
+          "detail": {
+            "visibleAfterReload": true,
+            "newValueStored": true,
+            "oldValueGone": true,
+            "rowCountUnchanged": true,
+            "comparedAsField": true,
+            "apiStatus": 200
+          }
+        }
+      ],
+      "required_rules": [
+        {
+          "rule_id": "accessibility/accessibility",
+          "status": "NOT_CHECKABLE",
+          "reason": "no exact implemented checker"
+        },
+        {
+          "rule_id": "forms/forms",
+          "status": "NOT_CHECKABLE",
+          "reason": "no exact implemented checker"
+        }
+      ],
+      "applicable_diagnostics": [
+        {
+          "rule_id": "accessibility/accessibility",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        },
+        {
+          "rule_id": "forms/forms",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        },
+        {
+          "rule_id": "forms/required-field-feedback",
+          "status": "FAIL",
+          "reason": "missing_associated_error_text,colour_only_error"
+        },
+        {
+          "rule_id": "css/responsive-design",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        },
+        {
+          "rule_id": "ui-atoms/responsive-table",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        }
+      ],
+      "visual": {
+        "verdict": "DISSIMILAR",
+        "desktop": "EVALUATED",
+        "mobile": "EVALUATED",
+        "label": "similarity to authored board, image not supplied during generation",
+        "numeric_score": null,
+        "target_sha256": "f5f77421bd8a2e26b49efca9a65f9db66112d2a20453bf2f442a1a3f82472c7a",
+        "desktop_sha256": "41119f51a4cb5721400307d07d76005c273a4c0b59cd197633720148736ebfe8",
+        "mobile_sha256": "a9045a7142f422871eb48b5cbe68d39bb6aedc6f32570607ac1c6fdf63f9411d",
+        "evidence_sha256": "7d544ea7b3714e9bc952f23b074dd0a7f12e6ca84a712411e03629541a94d23a"
+      },
+      "archive_manifest_sha256": "830c6a1eaf6fbd75268f141edef85535232495310fc0b63bf4f238290ec35a71",
+      "functional_receipt_sha256": "67efd2a8810eae4c16a039449c20abe841da4101212080cd8b2389a2d814d5b0",
+      "screenshot_receipt_sha256": "b2419c37f8d30236aef9c9075934fbb519fb5b33411a02b97bf39e673157b021",
+      "brief_sha256": "1acc85f6be7516dc7892b41e0acd3966666b1ea53dfccccb86e66ba47e3fe9b1",
+      "journey_sha256": "c8cd1d8b07b6ca052de2e200e8bb3d22e8ba6b4b5b7dfb153eb5b9689c4bfda8"
+    },
+    {
+      "family": "tr-13",
+      "project_id": "tr-13-hono",
+      "generation": "SUCCESS",
+      "functional": "MEASURED",
+      "headroom": {
+        "passed": 5,
+        "failed": 0,
+        "not_checkable": 2,
+        "coverage_incomplete": true,
+        "rate": 1,
+        "ceiling": true
+      },
+      "journey_parts": [
+        {
+          "name": "server-persistence",
+          "status": "PASS",
+          "detail": {
+            "submitStatus": 200,
+            "reloadObserved": true,
+            "expectedVisible": true,
+            "serverRecordPresent": true,
+            "apiStatus": 200
+          }
+        },
+        {
+          "name": "multi-step-carry",
+          "status": "PASS",
+          "detail": {
+            "carryPassed": true,
+            "draftStateDiagnostic": true
+          }
+        },
+        {
+          "name": "empty-form-validation",
+          "status": "PASS",
+          "detail": {
+            "observation": "refused-observed"
+          }
+        },
+        {
+          "name": "search",
+          "status": "PASS",
+          "detail": {
+            "control_established": true,
+            "expected_value_found": true,
+            "excluded_value_absent": true
+          }
+        },
+        {
+          "name": "update-existing",
+          "status": "PASS",
+          "detail": {
+            "visibleAfterReload": true,
+            "newValueStored": true,
+            "oldValueGone": true,
+            "rowCountUnchanged": true,
+            "comparedAsField": true,
+            "apiStatus": 200
+          }
+        }
+      ],
+      "required_rules": [
+        {
+          "rule_id": "accessibility/accessibility",
+          "status": "NOT_CHECKABLE",
+          "reason": "no exact implemented checker"
+        },
+        {
+          "rule_id": "forms/forms",
+          "status": "NOT_CHECKABLE",
+          "reason": "no exact implemented checker"
+        }
+      ],
+      "applicable_diagnostics": [
+        {
+          "rule_id": "accessibility/accessibility",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        },
+        {
+          "rule_id": "forms/forms",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        },
+        {
+          "rule_id": "forms/required-field-feedback",
+          "status": "FAIL",
+          "reason": "missing_associated_error_text,colour_only_error"
+        },
+        {
+          "rule_id": "css/responsive-design",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        },
+        {
+          "rule_id": "ui-atoms/responsive-table",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        }
+      ],
+      "visual": {
+        "verdict": "PARTIALLY_SIMILAR",
+        "desktop": "EVALUATED",
+        "mobile": "EVALUATED",
+        "label": "similarity to authored board, image not supplied during generation",
+        "numeric_score": null,
+        "target_sha256": "bc461ed8efa7b802fdb58b5bd84acc3922fd317113b6c424f39311a2c0af6f5e",
+        "desktop_sha256": "c7d3c8df4461b11963f1f40b2bb8c9276709a4b5419c6ec338e8ab2674a60040",
+        "mobile_sha256": "5e6b437747cc280c9dec6caa5ef212e40bca5ab0e130dc8b45b8290509905dc5",
+        "evidence_sha256": "7d544ea7b3714e9bc952f23b074dd0a7f12e6ca84a712411e03629541a94d23a"
+      },
+      "archive_manifest_sha256": "b0b0eb73cc97dfc192b81956d6ef5cd0e2a2ea9ca73a0d9df9f419c797ded1eb",
+      "functional_receipt_sha256": "a0a0c99d1be0d250122f9280bcb1bbd348223c3f68ae658aa5e628e97bcf0b60",
+      "screenshot_receipt_sha256": "21c0d017f54c4e9c405bccdeb10444a4d16118ade1592a0c43e1effbedc0d8f2",
+      "brief_sha256": "16ee04fc9810c15906441e5e2e06412af8214479fdbdb48d778a89dc74524fec",
+      "journey_sha256": "f7f3ba20ddb3c3fcc57400cd6e6cda99957733cc2099ca2312f360a18d49885a"
+    },
+    {
+      "family": "tr-14",
+      "project_id": "tr-14-hono",
+      "generation": "MODEL_LENGTH_NO_PROJECT",
+      "functional": "NOT_RUN",
+      "visual": "NOT_RUN",
+      "retry": false
+    },
+    {
+      "family": "tr-15",
+      "project_id": "tr-15-hono",
+      "generation": "SUCCESS",
+      "functional": "MEASURED",
+      "headroom": {
+        "passed": 4,
+        "failed": 0,
+        "not_checkable": 3,
+        "coverage_incomplete": true,
+        "rate": 1,
+        "ceiling": true
+      },
+      "journey_parts": [
+        {
+          "name": "server-persistence",
+          "status": "PASS",
+          "detail": {
+            "submitStatus": 200,
+            "reloadObserved": true,
+            "expectedVisible": true,
+            "serverRecordPresent": true,
+            "apiStatus": 200
+          }
+        },
+        {
+          "name": "multi-step-carry",
+          "status": "PASS",
+          "detail": {
+            "carryPassed": true,
+            "draftStateDiagnostic": true
+          }
+        },
+        {
+          "name": "empty-form-validation",
+          "status": "PASS",
+          "detail": {
+            "observation": "refused-observed"
+          }
+        },
+        {
+          "name": "search",
+          "status": "NOT_CHECKABLE",
+          "detail": {
+            "control_established": false,
+            "reason": "matching_or_decoy_control_not_established"
+          }
+        },
+        {
+          "name": "update-existing",
+          "status": "PASS",
+          "detail": {
+            "visibleAfterReload": true,
+            "newValueStored": true,
+            "oldValueGone": true,
+            "rowCountUnchanged": true,
+            "comparedAsField": true,
+            "apiStatus": 200
+          }
+        }
+      ],
+      "required_rules": [
+        {
+          "rule_id": "forms/forms",
+          "status": "NOT_CHECKABLE",
+          "reason": "no exact implemented checker"
+        },
+        {
+          "rule_id": "accessibility/accessibility",
+          "status": "NOT_CHECKABLE",
+          "reason": "no exact implemented checker"
+        }
+      ],
+      "applicable_diagnostics": [
+        {
+          "rule_id": "forms/forms",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        },
+        {
+          "rule_id": "forms/required-field-feedback",
+          "status": "FAIL",
+          "reason": "missing_associated_error_text,colour_only_error"
+        },
+        {
+          "rule_id": "accessibility/accessibility",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        },
+        {
+          "rule_id": "accessibility/accessible-error-announcement",
+          "status": "FAIL",
+          "reason": "missing_aria_invalid,invalid_state_not_observed"
+        },
+        {
+          "rule_id": "ui-atoms/responsive-table",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        }
+      ],
+      "visual": {
+        "verdict": "PARTIALLY_SIMILAR",
+        "desktop": "EVALUATED",
+        "mobile": "EVALUATED",
+        "label": "similarity to authored board, image not supplied during generation",
+        "numeric_score": null,
+        "target_sha256": "09a366017022afcd04cbf7a60753422a76c77c094f30adeb0e6ecb0ea3d782ec",
+        "desktop_sha256": "5caf857f2bc97c2d60023ae8905124601ea3b61c9bc48933cb87b540f5db80c3",
+        "mobile_sha256": "5c8b80b6ef3a2e9e55374eeafec08309c387ab2af4e571e10f7262451a535783",
+        "evidence_sha256": "9c6e3aa2d451f904f83abe24cac5b8c5e6fac48ad26965703bb759a649320d4f"
+      },
+      "archive_manifest_sha256": "3230ad50b67179b6331ad6e45b46141709f59fc89efcc92c3817d0eb6020f126",
+      "functional_receipt_sha256": "002071319f4df11de77fe7fe47e1d6000f3f95573b565815f2c3c55a8064d989",
+      "screenshot_receipt_sha256": "084989115518099405d8e9fd25324bb9468ad1acc1e0c7bda4b02ce3f4aee24c",
+      "brief_sha256": "1ae664c8525094c4aacb7dbd8cf9fa706e29f25a41ea7b7c8a666f5e48092d3e",
+      "journey_sha256": "bc28bbabbc72e0c99b832d2ffac371e5eacf220a6fabdddd7467d1269775801c"
+    },
+    {
+      "family": "tr-16",
+      "project_id": "tr-16-hono",
+      "generation": "MODEL_LENGTH_NO_PROJECT",
+      "functional": "NOT_RUN",
+      "visual": "NOT_RUN",
+      "retry": false
+    },
+    {
+      "family": "tr-17",
+      "project_id": "tr-17-hono",
+      "generation": "SUCCESS",
+      "functional": "MEASURED",
+      "headroom": {
+        "passed": 5,
+        "failed": 0,
+        "not_checkable": 2,
+        "coverage_incomplete": true,
+        "rate": 1,
+        "ceiling": true
+      },
+      "journey_parts": [
+        {
+          "name": "server-persistence",
+          "status": "PASS",
+          "detail": {
+            "submitStatus": 200,
+            "reloadObserved": true,
+            "expectedVisible": true,
+            "serverRecordPresent": true,
+            "apiStatus": 200
+          }
+        },
+        {
+          "name": "multi-step-carry",
+          "status": "PASS",
+          "detail": {
+            "carryPassed": true,
+            "draftStateDiagnostic": false
+          }
+        },
+        {
+          "name": "empty-form-validation",
+          "status": "PASS",
+          "detail": {
+            "observation": "refused-observed"
+          }
+        },
+        {
+          "name": "search",
+          "status": "PASS",
+          "detail": {
+            "control_established": true,
+            "expected_value_found": true,
+            "excluded_value_absent": true
+          }
+        },
+        {
+          "name": "update-existing",
+          "status": "PASS",
+          "detail": {
+            "visibleAfterReload": true,
+            "newValueStored": true,
+            "oldValueGone": true,
+            "rowCountUnchanged": true,
+            "comparedAsField": true,
+            "apiStatus": 200
+          }
+        }
+      ],
+      "required_rules": [
+        {
+          "rule_id": "forms/forms",
+          "status": "NOT_CHECKABLE",
+          "reason": "no exact implemented checker"
+        },
+        {
+          "rule_id": "accessibility/accessibility",
+          "status": "NOT_CHECKABLE",
+          "reason": "no exact implemented checker"
+        }
+      ],
+      "applicable_diagnostics": [
+        {
+          "rule_id": "forms/forms",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        },
+        {
+          "rule_id": "forms/required-field-feedback",
+          "status": "FAIL",
+          "reason": "missing_associated_error_text,colour_only_error"
+        },
+        {
+          "rule_id": "accessibility/accessibility",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        },
+        {
+          "rule_id": "accessibility/accessible-error-announcement",
+          "status": "FAIL",
+          "reason": "missing_aria_invalid,invalid_state_not_observed"
+        },
+        {
+          "rule_id": "css/responsive-design",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        }
+      ],
+      "visual": {
+        "verdict": "PARTIALLY_SIMILAR",
+        "desktop": "EVALUATED",
+        "mobile": "EVALUATED",
+        "label": "similarity to authored board, image not supplied during generation",
+        "numeric_score": null,
+        "target_sha256": "7e5cf86302ccc83590a053fe5630b2d623ce927002a29e57ee48cc3ca1721190",
+        "desktop_sha256": "f5f990cdf2c076b9b74dc07351458eb41ad873460333194083023eda13b5a88d",
+        "mobile_sha256": "c14954b4831bdf845a075b79a5d7079c9a86b571f46eadcec636d0c6d001ba57",
+        "evidence_sha256": "9c6e3aa2d451f904f83abe24cac5b8c5e6fac48ad26965703bb759a649320d4f"
+      },
+      "archive_manifest_sha256": "bc7f45ddf1ba419d63a8a03f1d30ccd15de85353f69a86dcc75d7eab68896dbc",
+      "functional_receipt_sha256": "ddb1ddd9de693aecaa5674bfd20e20ec73f67bf45eee38f35bf39b9c28765ed2",
+      "screenshot_receipt_sha256": "3bd4ece15b7e607cc66eed6fd3fe9e5faa5543c4e956f0a957271156fbb476bd",
+      "brief_sha256": "d602d0d065ee74b237304123da6516ce83084f20f21df4669317a95006fba671",
+      "journey_sha256": "a80f8bcf7c803d8190523e3e8e8a663cc5ca7b3f59e6e3c188974b83d8053592"
+    },
+    {
+      "family": "tr-18",
+      "project_id": "tr-18-hono",
+      "generation": "SUCCESS",
+      "functional": "MEASURED",
+      "headroom": {
+        "passed": 5,
+        "failed": 0,
+        "not_checkable": 2,
+        "coverage_incomplete": true,
+        "rate": 1,
+        "ceiling": true
+      },
+      "journey_parts": [
+        {
+          "name": "server-persistence",
+          "status": "PASS",
+          "detail": {
+            "submitStatus": 200,
+            "reloadObserved": true,
+            "expectedVisible": true,
+            "serverRecordPresent": true,
+            "apiStatus": 200
+          }
+        },
+        {
+          "name": "multi-step-carry",
+          "status": "PASS",
+          "detail": {
+            "carryPassed": true,
+            "draftStateDiagnostic": false
+          }
+        },
+        {
+          "name": "empty-form-validation",
+          "status": "PASS",
+          "detail": {
+            "observation": "refused-observed"
+          }
+        },
+        {
+          "name": "search",
+          "status": "PASS",
+          "detail": {
+            "control_established": true,
+            "expected_value_found": true,
+            "excluded_value_absent": true
+          }
+        },
+        {
+          "name": "update-existing",
+          "status": "PASS",
+          "detail": {
+            "visibleAfterReload": true,
+            "newValueStored": true,
+            "oldValueGone": true,
+            "rowCountUnchanged": true,
+            "comparedAsField": true,
+            "apiStatus": 200
+          }
+        }
+      ],
+      "required_rules": [
+        {
+          "rule_id": "forms/forms",
+          "status": "NOT_CHECKABLE",
+          "reason": "no exact implemented checker"
+        },
+        {
+          "rule_id": "accessibility/accessibility",
+          "status": "NOT_CHECKABLE",
+          "reason": "no exact implemented checker"
+        }
+      ],
+      "applicable_diagnostics": [
+        {
+          "rule_id": "forms/forms",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        },
+        {
+          "rule_id": "forms/required-field-feedback",
+          "status": "FAIL",
+          "reason": "missing_associated_error_text,colour_only_error"
+        },
+        {
+          "rule_id": "accessibility/accessibility",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        },
+        {
+          "rule_id": "css/responsive-design",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        },
+        {
+          "rule_id": "ui-atoms/responsive-table",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        }
+      ],
+      "visual": {
+        "verdict": "PARTIALLY_SIMILAR",
+        "desktop": "EVALUATED",
+        "mobile": "EVALUATED",
+        "label": "similarity to authored board, image not supplied during generation",
+        "numeric_score": null,
+        "target_sha256": "0f179542c0552348d8a465b669c7b69c1dbbe672b0df78704683c75272a9ff64",
+        "desktop_sha256": "24d37051e0f6ae294bf0a7c80429fbc0f5564cc28ee6f9149a30ddc6180ec955",
+        "mobile_sha256": "a548b3ddbe939132897d36baec0d97713ecbed3935a964e456b26849a0aca523",
+        "evidence_sha256": "9c6e3aa2d451f904f83abe24cac5b8c5e6fac48ad26965703bb759a649320d4f"
+      },
+      "archive_manifest_sha256": "f3b2c980d86536cf53ae423a2edcb2b8343dcadf41d715c032241d03e6d49bd3",
+      "functional_receipt_sha256": "90e4f375f2bb38c8d8eaa452afe55fd05e99afe4419d387ca91afc17a51b85a7",
+      "screenshot_receipt_sha256": "711888348d51491d9e94c45fc094f269c244a8041cc739710c7ef5b00738f33b",
+      "brief_sha256": "fba390904e42bafe2308caa50e8fb092df5c82a1a59c4389730623ab0db749c3",
+      "journey_sha256": "3498ce683faad35eef98227f91ece3e0dcad71ccef0fa6164c3dca7e4f778be9"
+    },
+    {
+      "family": "tr-19",
+      "project_id": "tr-19-hono",
+      "generation": "SUCCESS",
+      "functional": "MEASURED",
+      "headroom": {
+        "passed": 5,
+        "failed": 0,
+        "not_checkable": 2,
+        "coverage_incomplete": true,
+        "rate": 1,
+        "ceiling": true
+      },
+      "journey_parts": [
+        {
+          "name": "server-persistence",
+          "status": "PASS",
+          "detail": {
+            "submitStatus": 200,
+            "reloadObserved": true,
+            "expectedVisible": true,
+            "serverRecordPresent": true,
+            "apiStatus": 200
+          }
+        },
+        {
+          "name": "multi-step-carry",
+          "status": "PASS",
+          "detail": {
+            "carryPassed": true,
+            "draftStateDiagnostic": false
+          }
+        },
+        {
+          "name": "empty-form-validation",
+          "status": "PASS",
+          "detail": {
+            "observation": "refused-observed"
+          }
+        },
+        {
+          "name": "search",
+          "status": "PASS",
+          "detail": {
+            "control_established": true,
+            "expected_value_found": true,
+            "excluded_value_absent": true
+          }
+        },
+        {
+          "name": "update-existing",
+          "status": "PASS",
+          "detail": {
+            "visibleAfterReload": true,
+            "newValueStored": true,
+            "oldValueGone": true,
+            "rowCountUnchanged": true,
+            "comparedAsField": true,
+            "apiStatus": 200
+          }
+        }
+      ],
+      "required_rules": [
+        {
+          "rule_id": "forms/forms",
+          "status": "NOT_CHECKABLE",
+          "reason": "no exact implemented checker"
+        },
+        {
+          "rule_id": "accessibility/accessibility",
+          "status": "NOT_CHECKABLE",
+          "reason": "no exact implemented checker"
+        }
+      ],
+      "applicable_diagnostics": [
+        {
+          "rule_id": "forms/forms",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        },
+        {
+          "rule_id": "forms/required-field-feedback",
+          "status": "FAIL",
+          "reason": "missing_associated_error_text,colour_only_error"
+        },
+        {
+          "rule_id": "accessibility/accessibility",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        },
+        {
+          "rule_id": "accessibility/accessible-error-announcement",
+          "status": "FAIL",
+          "reason": "missing_aria_invalid,invalid_state_not_observed"
+        },
+        {
+          "rule_id": "ui-atoms/responsive-table",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        }
+      ],
+      "visual": {
+        "verdict": "PARTIALLY_SIMILAR",
+        "desktop": "EVALUATED",
+        "mobile": "EVALUATED",
+        "label": "similarity to authored board, image not supplied during generation",
+        "numeric_score": null,
+        "target_sha256": "a8e46feacf4f3602a6aaabf17ba73f675a2ce01c38126c6667db471ae037a159",
+        "desktop_sha256": "d05af981712ef0aa0f594ba33a5321ef3e70b9f4a6f9125fc5bc32bc220e6206",
+        "mobile_sha256": "53512e441b99b2981f507b761abebe70d2eb107d9eefa766411bd80900759b89",
+        "evidence_sha256": "9c6e3aa2d451f904f83abe24cac5b8c5e6fac48ad26965703bb759a649320d4f"
+      },
+      "archive_manifest_sha256": "ac5680574bf15c40dadc62711181b8ae1b7c824cb7f06df7870b4ac2517b8ffc",
+      "functional_receipt_sha256": "e5cabd2c8ad4567733292e6c38b7633994cd309a4759ac31f38140573f064113",
+      "screenshot_receipt_sha256": "5d2070cabd55e78649c9561e3f7ae7f1ebaadc8d4e1ca794c2bdf4b0a7ebc4ac",
+      "brief_sha256": "7c04b17bce8ac66d5944f3538dd3891319382a9d8bff0696819d9aea26d3a7b1",
+      "journey_sha256": "b0c7b01ef886c0037866fce4785fe16a9689e24c811c40cee6a135106167da53"
+    },
+    {
+      "family": "tr-20",
+      "project_id": "tr-20-hono",
+      "generation": "SUCCESS",
+      "functional": "MEASURED",
+      "headroom": {
+        "passed": 5,
+        "failed": 0,
+        "not_checkable": 2,
+        "coverage_incomplete": true,
+        "rate": 1,
+        "ceiling": true
+      },
+      "journey_parts": [
+        {
+          "name": "server-persistence",
+          "status": "PASS",
+          "detail": {
+            "submitStatus": 200,
+            "reloadObserved": true,
+            "expectedVisible": true,
+            "serverRecordPresent": true,
+            "apiStatus": 200
+          }
+        },
+        {
+          "name": "multi-step-carry",
+          "status": "PASS",
+          "detail": {
+            "carryPassed": true,
+            "draftStateDiagnostic": false
+          }
+        },
+        {
+          "name": "empty-form-validation",
+          "status": "PASS",
+          "detail": {
+            "observation": "refused-observed"
+          }
+        },
+        {
+          "name": "search",
+          "status": "PASS",
+          "detail": {
+            "control_established": true,
+            "expected_value_found": true,
+            "excluded_value_absent": true
+          }
+        },
+        {
+          "name": "update-existing",
+          "status": "PASS",
+          "detail": {
+            "visibleAfterReload": true,
+            "newValueStored": true,
+            "oldValueGone": true,
+            "rowCountUnchanged": true,
+            "comparedAsField": true,
+            "apiStatus": 200
+          }
+        }
+      ],
+      "required_rules": [
+        {
+          "rule_id": "accessibility/accessibility",
+          "status": "NOT_CHECKABLE",
+          "reason": "no exact implemented checker"
+        },
+        {
+          "rule_id": "forms/forms",
+          "status": "NOT_CHECKABLE",
+          "reason": "no exact implemented checker"
+        }
+      ],
+      "applicable_diagnostics": [
+        {
+          "rule_id": "accessibility/accessibility",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        },
+        {
+          "rule_id": "forms/forms",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        },
+        {
+          "rule_id": "forms/required-field-feedback",
+          "status": "FAIL",
+          "reason": "missing_associated_error_text,colour_only_error"
+        },
+        {
+          "rule_id": "css/responsive-design",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        }
+      ],
+      "visual": {
+        "verdict": "PARTIALLY_SIMILAR",
+        "desktop": "EVALUATED",
+        "mobile": "EVALUATED",
+        "label": "similarity to authored board, image not supplied during generation",
+        "numeric_score": null,
+        "target_sha256": "60fe6f190006ec379c74bb23ef1134d727c784159be044a005b34c92daddbb06",
+        "desktop_sha256": "4e95103b509d4acbc2367e2216ac2b051914eeda5086c20a498bed811679c265",
+        "mobile_sha256": "c51607d7e1f7c12d92bebe69db2574c05efcb79bd7daecc3dbb0cacb52e9a7ee",
+        "evidence_sha256": "b875e9d610e44c5b7ac683c844d22a9fe039bf88959f7008d0e24109e3fc0835"
+      },
+      "archive_manifest_sha256": "a84c9de2a76c92a5f1cd9a28c21f21192724fdc7b1413606d44b147f1477369e",
+      "functional_receipt_sha256": "e8be84e252fc1b393a5a32e392860aadb8a76fcb4f94dca116201a434db1afc0",
+      "screenshot_receipt_sha256": "22cab5093f22e6d73fa2429559a0b2c9ec701cfe3418c299d08da2f4ed51a006",
+      "brief_sha256": "90d7651eb3fcf455ffd2457c528a1d301d3ed8052b304bbe935bbcb629702220",
+      "journey_sha256": "be7083e872b2949cc0d055f1868510ccd7e6bb8871da710d63bccd4ea3b65069"
+    },
+    {
+      "family": "tr-21",
+      "project_id": "tr-21-hono",
+      "generation": "MODEL_LENGTH_NO_PROJECT",
+      "functional": "NOT_RUN",
+      "visual": "NOT_RUN",
+      "retry": false
+    },
+    {
+      "family": "tr-22",
+      "project_id": "tr-22-hono",
+      "generation": "SUCCESS",
+      "functional": "MEASURED",
+      "headroom": {
+        "passed": 4,
+        "failed": 0,
+        "not_checkable": 3,
+        "coverage_incomplete": true,
+        "rate": 1,
+        "ceiling": true
+      },
+      "journey_parts": [
+        {
+          "name": "server-persistence",
+          "status": "PASS",
+          "detail": {
+            "submitStatus": 200,
+            "reloadObserved": true,
+            "expectedVisible": true,
+            "serverRecordPresent": true,
+            "apiStatus": 200
+          }
+        },
+        {
+          "name": "multi-step-carry",
+          "status": "PASS",
+          "detail": {
+            "carryPassed": true,
+            "draftStateDiagnostic": false
+          }
+        },
+        {
+          "name": "empty-form-validation",
+          "status": "PASS",
+          "detail": {
+            "observation": "refused-observed"
+          }
+        },
+        {
+          "name": "search",
+          "status": "NOT_CHECKABLE",
+          "detail": {
+            "control_established": false,
+            "reason": "matching_or_decoy_control_not_established"
+          }
+        },
+        {
+          "name": "update-existing",
+          "status": "PASS",
+          "detail": {
+            "visibleAfterReload": true,
+            "newValueStored": true,
+            "oldValueGone": true,
+            "rowCountUnchanged": true,
+            "comparedAsField": true,
+            "apiStatus": 200
+          }
+        }
+      ],
+      "required_rules": [
+        {
+          "rule_id": "accessibility/accessibility",
+          "status": "NOT_CHECKABLE",
+          "reason": "no exact implemented checker"
+        },
+        {
+          "rule_id": "forms/forms",
+          "status": "NOT_CHECKABLE",
+          "reason": "no exact implemented checker"
+        }
+      ],
+      "applicable_diagnostics": [
+        {
+          "rule_id": "accessibility/accessibility",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        },
+        {
+          "rule_id": "forms/forms",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        },
+        {
+          "rule_id": "forms/required-field-feedback",
+          "status": "FAIL",
+          "reason": "missing_associated_error_text,colour_only_error"
+        },
+        {
+          "rule_id": "css/responsive-design",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        },
+        {
+          "rule_id": "ui-atoms/responsive-table",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        }
+      ],
+      "visual": {
+        "verdict": "DISSIMILAR",
+        "desktop": "EVALUATED",
+        "mobile": "EVALUATED",
+        "label": "similarity to authored board, image not supplied during generation",
+        "numeric_score": null,
+        "target_sha256": "61db3b27ab0f7ee93ecc2aa48c50245d077b7d50e6cbe39c21b9542e8dec46c1",
+        "desktop_sha256": "525d36c8678d9529fe9c447c8198a23795f3e67dc5fbb1952e6507200c32ca20",
+        "mobile_sha256": "f004cf1f57022aac37d19a2b6d782e6c926edcba76deb413af49e71c61d21f07",
+        "evidence_sha256": "b875e9d610e44c5b7ac683c844d22a9fe039bf88959f7008d0e24109e3fc0835"
+      },
+      "archive_manifest_sha256": "6b6663873b8399b35de75b9862bf9a2d49d1ab35cb59cf635dc18df094b4ec13",
+      "functional_receipt_sha256": "fcca6f0d5830c2ce61f2769f9fd616d674ecf775686eda7bcea3b250d3b16cb2",
+      "screenshot_receipt_sha256": "061467137756b57b53dec012e570f712fa6bdab2fdb59bd8186952c054419d40",
+      "brief_sha256": "001962ce839156c9c0c74f84a091d5785e9c30800bc5c707450a814c9e1ad65d",
+      "journey_sha256": "0a5c948ae4f2d05ca3295a548bae9a37c0eda568cc735879b42aedc935cdc615"
+    },
+    {
+      "family": "tr-23",
+      "project_id": "tr-23-hono",
+      "generation": "MODEL_LENGTH_NO_PROJECT",
+      "functional": "NOT_RUN",
+      "visual": "NOT_RUN",
+      "retry": false
+    },
+    {
+      "family": "tr-24",
+      "project_id": "tr-24-hono",
+      "generation": "SUCCESS",
+      "functional": "MEASURED",
+      "headroom": {
+        "passed": 4,
+        "failed": 0,
+        "not_checkable": 3,
+        "coverage_incomplete": true,
+        "rate": 1,
+        "ceiling": true
+      },
+      "journey_parts": [
+        {
+          "name": "server-persistence",
+          "status": "PASS",
+          "detail": {
+            "submitStatus": 200,
+            "reloadObserved": true,
+            "expectedVisible": true,
+            "serverRecordPresent": true,
+            "apiStatus": 200
+          }
+        },
+        {
+          "name": "multi-step-carry",
+          "status": "PASS",
+          "detail": {
+            "carryPassed": true,
+            "draftStateDiagnostic": true
+          }
+        },
+        {
+          "name": "empty-form-validation",
+          "status": "PASS",
+          "detail": {
+            "observation": "refused-observed"
+          }
+        },
+        {
+          "name": "search",
+          "status": "NOT_CHECKABLE",
+          "detail": {
+            "control_established": false,
+            "reason": "matching_or_decoy_control_not_established"
+          }
+        },
+        {
+          "name": "update-existing",
+          "status": "PASS",
+          "detail": {
+            "visibleAfterReload": true,
+            "newValueStored": true,
+            "oldValueGone": true,
+            "rowCountUnchanged": true,
+            "comparedAsField": true,
+            "apiStatus": 200
+          }
+        }
+      ],
+      "required_rules": [
+        {
+          "rule_id": "forms/forms",
+          "status": "NOT_CHECKABLE",
+          "reason": "no exact implemented checker"
+        },
+        {
+          "rule_id": "accessibility/accessibility",
+          "status": "NOT_CHECKABLE",
+          "reason": "no exact implemented checker"
+        }
+      ],
+      "applicable_diagnostics": [
+        {
+          "rule_id": "forms/forms",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        },
+        {
+          "rule_id": "forms/required-field-feedback",
+          "status": "FAIL",
+          "reason": "missing_associated_error_text,colour_only_error"
+        },
+        {
+          "rule_id": "accessibility/accessibility",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        },
+        {
+          "rule_id": "accessibility/accessible-error-announcement",
+          "status": "FAIL",
+          "reason": "missing_aria_invalid,invalid_state_not_observed"
+        },
+        {
+          "rule_id": "ui-atoms/responsive-table",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        }
+      ],
+      "visual": {
+        "verdict": "PARTIALLY_SIMILAR",
+        "desktop": "EVALUATED",
+        "mobile": "EVALUATED",
+        "label": "similarity to authored board, image not supplied during generation",
+        "numeric_score": null,
+        "target_sha256": "d15e1b1894483e37b3163ebb27fdd383d187cae4fa1490da3fd53c4e43c6de33",
+        "desktop_sha256": "f06ec35179e8041d19a0c6b0bd2363238cc4148492efb5f35549c1d4926238a4",
+        "mobile_sha256": "d5850b2b32132415ca6440542c1933e66943efd1e6729ef51d57a4913051fd13",
+        "evidence_sha256": "b875e9d610e44c5b7ac683c844d22a9fe039bf88959f7008d0e24109e3fc0835"
+      },
+      "archive_manifest_sha256": "af2b4f40c844c5b5ecfb0b23858c982ef2c12b93b26a2a0dbd91dbe9b45def61",
+      "functional_receipt_sha256": "147b3e0c49907ab050c8a91895a503c8b3b3dcd266879dc9b7c8c2293cdb3329",
+      "screenshot_receipt_sha256": "d0bab038f428071a3b392a7b3befb74839a3bbe5052c06d2c74f498d68183c5a",
+      "brief_sha256": "0a1f46009b6e3d908c982bdebcf9867b04ce46cc66620bfae553a0d3538200bc",
+      "journey_sha256": "a95f7b8f547c483ff1d4a488607b422a37191f105af4f4ffe65972e9ad9d75d6"
+    },
+    {
+      "family": "tr-25",
+      "project_id": "tr-25-hono",
+      "generation": "SUCCESS",
+      "functional": "MEASURED",
+      "headroom": {
+        "passed": 4,
+        "failed": 0,
+        "not_checkable": 3,
+        "coverage_incomplete": true,
+        "rate": 1,
+        "ceiling": true
+      },
+      "journey_parts": [
+        {
+          "name": "server-persistence",
+          "status": "PASS",
+          "detail": {
+            "submitStatus": 200,
+            "reloadObserved": true,
+            "expectedVisible": true,
+            "serverRecordPresent": true,
+            "apiStatus": 200
+          }
+        },
+        {
+          "name": "multi-step-carry",
+          "status": "PASS",
+          "detail": {
+            "carryPassed": true,
+            "draftStateDiagnostic": false
+          }
+        },
+        {
+          "name": "empty-form-validation",
+          "status": "PASS",
+          "detail": {
+            "observation": "refused-observed"
+          }
+        },
+        {
+          "name": "search",
+          "status": "PASS",
+          "detail": {
+            "control_established": true,
+            "expected_value_found": true,
+            "excluded_value_absent": true
+          }
+        },
+        {
+          "name": "update-existing",
+          "status": "NOT_CHECKABLE",
+          "detail": {
+            "reason": "stable_ref_edit_form_record_api_or_row_count_not_established"
+          }
+        }
+      ],
+      "required_rules": [
+        {
+          "rule_id": "accessibility/accessibility",
+          "status": "NOT_CHECKABLE",
+          "reason": "no exact implemented checker"
+        },
+        {
+          "rule_id": "forms/forms",
+          "status": "NOT_CHECKABLE",
+          "reason": "no exact implemented checker"
+        }
+      ],
+      "applicable_diagnostics": [
+        {
+          "rule_id": "accessibility/accessibility",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        },
+        {
+          "rule_id": "forms/forms",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        },
+        {
+          "rule_id": "forms/required-field-feedback",
+          "status": "FAIL",
+          "reason": "missing_associated_error_text,colour_only_error"
+        },
+        {
+          "rule_id": "css/responsive-design",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        },
+        {
+          "rule_id": "ui-atoms/responsive-table",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        }
+      ],
+      "visual": {
+        "verdict": "PARTIALLY_SIMILAR",
+        "desktop": "EVALUATED",
+        "mobile": "EVALUATED",
+        "label": "similarity to authored board, image not supplied during generation",
+        "numeric_score": null,
+        "target_sha256": "1899e6d9a854c0bf22d07d2ee8a95a2016d96395651233955e05596c34ddae4d",
+        "desktop_sha256": "19b5727c75f8dbed00623b419ebe2ba0f43c8aa2a9f61ae6c2c5fb399b918b2c",
+        "mobile_sha256": "ac9ebb5f0a27f3ae81a357cd8e1ba9a22c80fbd02f96d0f4633321daf758cafb",
+        "evidence_sha256": "b875e9d610e44c5b7ac683c844d22a9fe039bf88959f7008d0e24109e3fc0835"
+      },
+      "archive_manifest_sha256": "dc21a0e65701e78446db6c87e701ba9f89b64ac7763253ab36f0f7c8724eec9b",
+      "functional_receipt_sha256": "ae03faf03557484a0128e3e53ce8ef6f499e5d3dca02f2dcebe1789aeb34762a",
+      "screenshot_receipt_sha256": "c96102092290a465e37b639ab3a12666310995733571cae5144095bff4b18251",
+      "brief_sha256": "3403589efc646c08c669cc9c6a44aeaf85f223a202cc2febd3abb853a87dcb53",
+      "journey_sha256": "c2810f8845a1e53ea8a47e931d5be7613c0f4b0f6de1f7fe6939ad7d2362c2e5"
+    },
+    {
+      "family": "tr-26",
+      "project_id": "tr-26-hono",
+      "generation": "SUCCESS",
+      "functional": "MEASURED",
+      "headroom": {
+        "passed": 2,
+        "failed": 2,
+        "not_checkable": 3,
+        "coverage_incomplete": true,
+        "rate": 0.5,
+        "ceiling": false
+      },
+      "journey_parts": [
+        {
+          "name": "server-persistence",
+          "status": "PASS",
+          "detail": {
+            "submitStatus": 200,
+            "reloadObserved": true,
+            "expectedVisible": true,
+            "serverRecordPresent": true,
+            "apiStatus": 200
+          }
+        },
+        {
+          "name": "multi-step-carry",
+          "status": "PASS",
+          "detail": {
+            "carryPassed": true,
+            "draftStateDiagnostic": true
+          }
+        },
+        {
+          "name": "empty-form-validation",
+          "status": "FAIL",
+          "detail": {
+            "observation": "accepted-empty"
+          }
+        },
+        {
+          "name": "search",
+          "status": "FAIL",
+          "detail": {
+            "control_established": true,
+            "expected_value_found": false,
+            "excluded_value_absent": true
+          }
+        },
+        {
+          "name": "update-existing",
+          "status": "NOT_CHECKABLE",
+          "detail": {
+            "reason": "stable_ref_edit_form_record_api_or_row_count_not_established"
+          }
+        }
+      ],
+      "required_rules": [
+        {
+          "rule_id": "forms/forms",
+          "status": "NOT_CHECKABLE",
+          "reason": "no exact implemented checker"
+        },
+        {
+          "rule_id": "accessibility/accessibility",
+          "status": "NOT_CHECKABLE",
+          "reason": "no exact implemented checker"
+        }
+      ],
+      "applicable_diagnostics": [
+        {
+          "rule_id": "forms/forms",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        },
+        {
+          "rule_id": "forms/required-field-feedback",
+          "status": "NOT_CHECKABLE",
+          "reason": "checker_not_measured"
+        },
+        {
+          "rule_id": "forms/ime-safe-enter-submit",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        },
+        {
+          "rule_id": "accessibility/accessibility",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        },
+        {
+          "rule_id": "accessibility/accessible-error-announcement",
+          "status": "NOT_CHECKABLE",
+          "reason": "checker_not_measured"
+        }
+      ],
+      "visual": {
+        "verdict": "PARTIALLY_SIMILAR",
+        "desktop": "EVALUATED",
+        "mobile": "EVALUATED",
+        "label": "similarity to authored board, image not supplied during generation",
+        "numeric_score": null,
+        "target_sha256": "5970f5270f8646bc6091792ccfa830ab6456f5ad2320ab498d21d22bee4b9d70",
+        "desktop_sha256": "8eb4c28d29d8cedbc3d6065f38d408fddebcb99ab3a36be439f1c068d5b33e82",
+        "mobile_sha256": "c408b28c4d173a1f1e9af2328fa9593569e690d85c46b91132de3469feb4a310",
+        "evidence_sha256": "a5d8e07ecf78e8f51db60fee7929f8a2900942b56913708946edb7e119158555"
+      },
+      "archive_manifest_sha256": "83c64b715dea288182a4f00a0b906314373859e1e29a8caa39dbc459ba586fc8",
+      "functional_receipt_sha256": "6cc33d3c818211b7f3e5d16e754fc536bcfcdad991e6507a6801ea328a90fdb9",
+      "screenshot_receipt_sha256": "3f59123006faf2cc80cf619453f7ce5256c1333ae8ff0f1b81f0195bb5947925",
+      "brief_sha256": "5a4d4f26555b0afbf071217a02e484a96287088c8f4cbf7de588303eb1a950a3",
+      "journey_sha256": "6c1258d7a3967da2f85fc465c74b8f6162af78460da6d05fa3122d11c76b4ddc"
+    },
+    {
+      "family": "tr-27",
+      "project_id": "tr-27-hono",
+      "generation": "TRANSPORT_UNEVALUABLE",
+      "functional": "NOT_RUN",
+      "visual": "NOT_RUN",
+      "retry": false
+    },
+    {
+      "family": "tr-28",
+      "project_id": "tr-28-hono",
+      "generation": "MODEL_LENGTH_NO_PROJECT",
+      "functional": "NOT_RUN",
+      "visual": "NOT_RUN",
+      "retry": false
+    },
+    {
+      "family": "tr-29",
+      "project_id": "tr-29-hono",
+      "generation": "SUCCESS",
+      "functional": "MEASURED",
+      "headroom": {
+        "passed": 5,
+        "failed": 0,
+        "not_checkable": 2,
+        "coverage_incomplete": true,
+        "rate": 1,
+        "ceiling": true
+      },
+      "journey_parts": [
+        {
+          "name": "server-persistence",
+          "status": "PASS",
+          "detail": {
+            "submitStatus": 200,
+            "reloadObserved": true,
+            "expectedVisible": true,
+            "serverRecordPresent": true,
+            "apiStatus": 200
+          }
+        },
+        {
+          "name": "multi-step-carry",
+          "status": "PASS",
+          "detail": {
+            "carryPassed": true,
+            "draftStateDiagnostic": true
+          }
+        },
+        {
+          "name": "empty-form-validation",
+          "status": "PASS",
+          "detail": {
+            "observation": "refused-observed"
+          }
+        },
+        {
+          "name": "search",
+          "status": "PASS",
+          "detail": {
+            "control_established": true,
+            "expected_value_found": true,
+            "excluded_value_absent": true
+          }
+        },
+        {
+          "name": "update-existing",
+          "status": "PASS",
+          "detail": {
+            "visibleAfterReload": true,
+            "newValueStored": true,
+            "oldValueGone": true,
+            "rowCountUnchanged": true,
+            "comparedAsField": true,
+            "apiStatus": 200
+          }
+        }
+      ],
+      "required_rules": [
+        {
+          "rule_id": "forms/forms",
+          "status": "NOT_CHECKABLE",
+          "reason": "no exact implemented checker"
+        },
+        {
+          "rule_id": "accessibility/accessibility",
+          "status": "NOT_CHECKABLE",
+          "reason": "no exact implemented checker"
+        }
+      ],
+      "applicable_diagnostics": [
+        {
+          "rule_id": "forms/forms",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        },
+        {
+          "rule_id": "forms/required-field-feedback",
+          "status": "PASS",
+          "reason": "exact_checker_passed"
+        },
+        {
+          "rule_id": "accessibility/accessibility",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        },
+        {
+          "rule_id": "accessibility/accessible-error-announcement",
+          "status": "FAIL",
+          "reason": "missing_aria_invalid,invalid_state_not_observed"
+        },
+        {
+          "rule_id": "ui-atoms/responsive-table",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        }
+      ],
+      "visual": {
+        "verdict": "PARTIALLY_SIMILAR",
+        "desktop": "EVALUATED",
+        "mobile": "EVALUATED",
+        "label": "similarity to authored board, image not supplied during generation",
+        "numeric_score": null,
+        "target_sha256": "f3b5b19c9a6b8b70bd00965c1ce45ee9cb89e7b0dcaf479a98c8ba96ac3e1265",
+        "desktop_sha256": "ef618a46321be6a24711861c5e6fa6e8cc6d6625d9046be9dc8c516f51017b14",
+        "mobile_sha256": "0772112e7f92f9b3c7d22155f8891e0c132a6ec1c1f26bf427adc1dbe424e646",
+        "evidence_sha256": "a5d8e07ecf78e8f51db60fee7929f8a2900942b56913708946edb7e119158555"
+      },
+      "archive_manifest_sha256": "4afff115d3ca61ba2fcbf00edf9e50f1f1bab23fcd136c4d6960dd3023bdfd47",
+      "functional_receipt_sha256": "8f774cd597c7f3bb759eeda7163fdeca2af6a60e35ac5e9c5c1a40d2565b734d",
+      "screenshot_receipt_sha256": "3db6caa5f85a3f2d5987ef1c4916f2316d5ef6751836a7c63d32bfdc52a96ff6",
+      "brief_sha256": "c37533e605e39c641c138675512b98220026fb238a6ee71ea2f80b568afe477d",
+      "journey_sha256": "52da7bc79437dc03614e9aed6fc7b43e21dfd274aa7e3d7bac1400ba2038c55b"
+    },
+    {
+      "family": "tr-30",
+      "project_id": "tr-30-hono",
+      "generation": "SUCCESS",
+      "functional": "MEASURED",
+      "headroom": {
+        "passed": 5,
+        "failed": 0,
+        "not_checkable": 2,
+        "coverage_incomplete": true,
+        "rate": 1,
+        "ceiling": true
+      },
+      "journey_parts": [
+        {
+          "name": "server-persistence",
+          "status": "PASS",
+          "detail": {
+            "submitStatus": 200,
+            "reloadObserved": true,
+            "expectedVisible": true,
+            "serverRecordPresent": true,
+            "apiStatus": 200
+          }
+        },
+        {
+          "name": "multi-step-carry",
+          "status": "PASS",
+          "detail": {
+            "carryPassed": true,
+            "draftStateDiagnostic": false
+          }
+        },
+        {
+          "name": "empty-form-validation",
+          "status": "PASS",
+          "detail": {
+            "observation": "refused-observed"
+          }
+        },
+        {
+          "name": "search",
+          "status": "PASS",
+          "detail": {
+            "control_established": true,
+            "expected_value_found": true,
+            "excluded_value_absent": true
+          }
+        },
+        {
+          "name": "update-existing",
+          "status": "PASS",
+          "detail": {
+            "visibleAfterReload": true,
+            "newValueStored": true,
+            "oldValueGone": true,
+            "rowCountUnchanged": true,
+            "comparedAsField": true,
+            "apiStatus": 200
+          }
+        }
+      ],
+      "required_rules": [
+        {
+          "rule_id": "forms/forms",
+          "status": "NOT_CHECKABLE",
+          "reason": "no exact implemented checker"
+        },
+        {
+          "rule_id": "accessibility/accessibility",
+          "status": "NOT_CHECKABLE",
+          "reason": "no exact implemented checker"
+        }
+      ],
+      "applicable_diagnostics": [
+        {
+          "rule_id": "forms/forms",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        },
+        {
+          "rule_id": "forms/required-field-feedback",
+          "status": "FAIL",
+          "reason": "colour_only_error"
+        },
+        {
+          "rule_id": "forms/ime-safe-enter-submit",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        },
+        {
+          "rule_id": "accessibility/accessibility",
+          "status": "NOT_CHECKABLE",
+          "reason": "no_exact_checker"
+        },
+        {
+          "rule_id": "accessibility/accessible-error-announcement",
+          "status": "FAIL",
+          "reason": "missing_aria_invalid,invalid_state_not_observed"
+        }
+      ],
+      "visual": {
+        "verdict": "PARTIALLY_SIMILAR",
+        "desktop": "EVALUATED",
+        "mobile": "EVALUATED",
+        "label": "similarity to authored board, image not supplied during generation",
+        "numeric_score": null,
+        "target_sha256": "83ee4e0cc796446c7189d62ca325ef1a5be719938f908c12c271c508bd661c9d",
+        "desktop_sha256": "d31bce4e57c3a11d5630472f62cf4b825b75454e3269aa8974d8570d2c24ab77",
+        "mobile_sha256": "09c4b2bed9b2da46d18df5f97f6330d137ac72b52a766eeee386ba6f59eb66c9",
+        "evidence_sha256": "a5d8e07ecf78e8f51db60fee7929f8a2900942b56913708946edb7e119158555"
+      },
+      "archive_manifest_sha256": "54e9088a2268522fb666762d4e01def246e1e1719d8a4e7f003a6b33517c2ac4",
+      "functional_receipt_sha256": "acc2d136ee76e77486d0a8b0c80e18f98125113def2c15632f6a4ec81d6f6f18",
+      "screenshot_receipt_sha256": "4fe42418980a35e59bdd71e1d9305fc72463a9020e57c6be46eeec7f9d240f80",
+      "brief_sha256": "6a9183e491e38802e71d6daa7021be24a123324f80af0d59cdc99cbe01ad825b",
+      "journey_sha256": "3c7f3696cb2c26282e272a151ebce016573149c46c857e5dff79a9eaaf853ce6"
+    }
+  ]
+}
