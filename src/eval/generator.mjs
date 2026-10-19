@@ -11,7 +11,8 @@ const SHA = /^[a-f0-9]{40}$/;
 const FAMILY = /^tr-\d{2}$/;
 const FRAMEWORKS = new Set(['hono', 'raw', 'react', 'preact', 'vue', 'webcomponents', 'svelte']);
 const ARMS = new Set(['default', 'c1', 'c2', 'c3', 't']);
-// Author-pinned effective request. Owner approval of these exact knobs is tracked separately.
+// Author-pinned effective request, separately owner-ratified on 2026-10-19 (§14).
+// The config status is checked before spending; this constant alone is not approval.
 export const PINNED_TR01_DECODE_SHA256 = '59c4e99faaa64669571c499689ed1116785471034e76c5255bbb1572c0011a20';
 export const NATIVE_DEEPSEEK_BASE_URL = 'https://deepseek.int.exe.xyz/v1';
 const hash = (value) => createHash('sha256').update(value).digest('hex');

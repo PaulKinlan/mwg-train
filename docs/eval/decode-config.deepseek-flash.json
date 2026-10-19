@@ -1,5 +1,5 @@
 {
-  "status": "author-proposed-2026-10-18; exact decode knobs await recorded owner decision; no billed calls",
+  "status": "ratified-owner-2026-10-19; exact knobs approved via coord, provider acceptance and resolved checkpoint UNVERIFIED",
   "public_source_retrieved_at": "2026-10-13",
   "native_route_selected_at": "2026-10-18T23:52:00Z",
   "provider": "deepseek",
@@ -24,5 +24,5 @@
       "supports": "Published DeepSeek thinking-mode guidance on output budget and omitted temperature; it does not attest that the private integration accepts reasoning_effort=high, the selected max_tokens, or an immutable HF checkpoint."
     }
   ],
-  "budget_reason": "An earlier 16384-token attempt ended with no content; a reported 65536-token attempt produced 31603 reasoning tokens then an app on a historical route. The author proposes this same request on every tr-01 arm to avoid unequal budgets; Paul selected native DeepSeek integration via coord/hub at 23:52Z but has not approved these exact decode knobs. Parameter support, model version and checkpoint parity remain unverified."
+  "budget_reason": "An earlier 16384-token attempt ended with no content; a reported 65536-token attempt produced 31603 reasoning tokens then an app on a historical route. The author proposed this same request on every tr-01 arm to avoid unequal budgets; Paul selected the native DeepSeek integration via coord/hub on 2026-10-18 at 23:52Z and separately approved these exact decode knobs via fleet-manager/coord at 2026-10-19 01:42Z, recorded by mwg-train-coord on mwg-train-i5i2.11.1 at 02:13Z. Parameter support, model version and checkpoint parity remain unverified."
 }

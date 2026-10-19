@@ -16,7 +16,7 @@ const SCRIPT = fileURLToPath(new URL('../scripts/generate-candidate.mjs', import
 const REVISION = '2cba9e42aa026125f3ed06c6d98c1db82f7ca027';
 
 // No test uses a provider, the real spend ledger, generated app execution, or local machine state.
-test('owner-approved Option A and author-proposed exact decode pin have truthful binding §14 rows', () => {
+test('owner-approved Option A and separately approved exact decode pin have truthful binding §14 rows', () => {
   const prereg = readFileSync(join(repo, 'docs/eval/PREREGISTRATION.md'), 'utf8');
   const blockFile = readFileSync(join(repo, 'docs/eval/interface-contract.tr-01.candidate.md'), 'utf8');
   assert.equal(candidateInterfaceSha256, hash(candidateInterfaceText));
@@ -25,11 +25,12 @@ test('owner-approved Option A and author-proposed exact decode pin have truthful
   assert.ok(prereg.includes(`\`${candidateInterfaceSha256}\``));
   assert.ok(prereg.includes(`\`${decodeConfigSha256(decodeConfig.request)}\``));
   assert.match(prereg, /Paul approved the drafted Option A server\/DOM row via 2026-10-13 relay on mwg-train-i5i2\.6/);
-  assert.match(prereg, /no recorded owner approval of the exact decode knobs/);
+  assert.match(prereg, /no recorded owner approval of the exact decode knobs/); // historical proposal, not ratification
+  assert.match(prereg, /Paul's decision relayed by fleet-manager\/coord at 2026-10-19 01:42Z, recorded by mwg-train-coord on mwg-train-i5i2\.11\.1 at 02:13Z/);
   assert.doesNotMatch(prereg, /Paul ratified Option A\/decode config via coord relay 2026-10-18 23:14Z/);
   assert.match(prereg, /Supersede the previously named Fireworks inference route/);
   assert.match(prereg, /native DeepSeek integration `https:\/\/deepseek\.int\.exe\.xyz\/v1` with request model `deepseek-flash`/);
-  assert.equal(decodeConfig.status.startsWith('author-proposed-2026-10-18'), true);
+  assert.equal(decodeConfig.status.startsWith('ratified-owner-2026-10-19'), true);
 });
 
 test('all generation arms receive the identical candidate interface suffix without leaking C2 guidance', () => {
@@ -75,14 +76,6 @@ test('live runner dry-run uses the identical ratified block and decode pin for e
     assert.equal(result.prompt_sha256, hash(result.prompt));
     assert.equal(result.prompt.includes('C2-only guidance token'), arm === 'c2');
   }
-  const unapproved = await generateProject({ family: 'tr-01', framework: 'hono', revision: REVISION,
-    backend: 'live', endpoint: 'https://deepseek.int.exe.xyz/v1', apiKey: 'fake-key',
-    ledgerPath: join(dir, 'never-created-ledger.jsonl'), sourceRoot: dir, outRoot,
-    fetchImpl: async () => { fetchCalls++; throw new Error('unapproved decode must not fetch'); },
-    approvalComments: () => { throw new Error('owner decision lookup must not be used for unratified knobs'); } });
-  assert.equal(unapproved.status, 'FAILED');
-  assert.equal(unapproved.error.code, 'UNRATIFIED_INTERFACE');
-  assert.equal(existsSync(join(dir, 'never-created-ledger.jsonl')), false);
   const denied = await generateProject({ family: 'tr-02', framework: 'hono', revision: REVISION,
     backend: 'live', endpoint: 'https://example.invalid/v1/chat/completions', apiKey: 'fake-key',
     ledgerPath: join(dir, 'unused-ledger.json'), sourceRoot: dir, outRoot,
@@ -147,8 +140,8 @@ test('offline CLI previews a pinned prompt and rejects paid flags without alloca
       '--source', dir, '--dry-run', 'true'];
     const result = JSON.parse(execFileSync(process.execPath, argv, { cwd: repo, encoding: 'utf8', timeout: 10_000,
       env: { ...process.env, DEEPSEEK_API_KEY: 'DO-NOT-USE-FAKE-KEY', DEEPSEEK_BASE_URL: 'https://deepseek.int.exe.xyz/v1' } }));
-    assert.equal(result.status, 'UNRATIFIED_OFFLINE_PREVIEW');
-    assert.equal(result.ratified, false);
+    assert.equal(result.status, 'RATIFIED_OFFLINE_PREVIEW');
+    assert.equal(result.ratified, true);
     assert.equal(result.provider_requests, 0);
     assert.equal(result.interface_contract_sha256, candidateInterfaceSha256);
     assert.equal(result.decode_config_sha256, decodeConfigSha256(decodeConfig.request));
