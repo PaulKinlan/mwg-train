@@ -48,8 +48,15 @@ test('plan extraction rejects ambiguous read-back and reworded update instead of
   assert.throws(() => familyInterfaceContract('tr-05', planOf('tr-05').replace(
     'redirects to /volunteer/profile', 'redirects to /not-a-declared-route')),
   /FAMILY_INTERFACE_INVALID/);
-  assert.throws(() => familyInterfaceContract('tr-02', planOf('tr-02').replace(
-    'And an update flow:', 'An update flow:')),
+  for (const replacement of ['An update flow:', 'And an edit flow:', '']) {
+    assert.throws(() => familyInterfaceContract('tr-02', planOf('tr-02').replace(
+      'And an update flow:', replacement)), /FAMILY_INTERFACE_INVALID/,
+    `tr-02 must not silently lose its update requirement (${replacement || 'deleted'})`);
+  }
+  assert.match(familyInterfaceContract('tr-05', planOf('tr-05')).text,
+    /No update flow is declared for this family/);
+  assert.throws(() => familyInterfaceContract('tr-05', planOf('tr-05').replace(
+    '## Validation and states', 'And an update flow: the stored record\'s `volunteer` field can be changed to "Other".\n\n## Validation and states')),
   /FAMILY_INTERFACE_INVALID/);
 });
 

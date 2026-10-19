@@ -37,12 +37,15 @@ export function familyInterfaceContract(family, plan) {
   const readBack = routeRows.find((row) => row.role.startsWith('read-back')) ??
     routeRows.find((row) => row.path !== '/' && criteria.some((criterion) =>
       criterion.startsWith(`- GET ${row.path} `) || redirectTargets.includes(row.path)));
+  // Only tr-05 has no update journey in the pinned corpus; missing or paraphrased
+  // updates for every other family must fail before a future interface re-pin.
   if (!title || fields.length !== Number(fieldsMatch?.[1]) || !required.length ||
       required.some((field) => !fields.includes(field)) || !form || !routeRows.some((row) => row.path === '/') ||
       !readBack || !search || !criteria.length ||
       routeRows.some((row) => !row.path.startsWith('/')) ||
-      (/update flow/i.test(journey ?? '') && !update) ||
-      (update && !fields.includes(update[1]))) fail(family, 'plan route/field/journey/criteria extraction incomplete');
+      (!update && family !== 'tr-05') ||
+      (update && (family === 'tr-05' || !fields.includes(update[1]))))
+    fail(family, 'plan route/field/journey/criteria extraction incomplete');
   const mutableReadBackParam = update && readBack.path.split('/').includes(`:${update[1]}`);
   const text = `BEGIN ${family.toUpperCase()} EVALUATOR INTERFACE V1\n` +
 `Build a runnable Node website with server.mjs; accept --port and --db and serve GET /__health with HTTP 200. Keep the plan's records on the server across browser reloads for the lifetime of the process, never browser-only storage as source of truth. Do not run generated code during generation. This contract is identical for default/C1/C2/C3/T; do not add routes or fields from unrelated families.\n\n` +
