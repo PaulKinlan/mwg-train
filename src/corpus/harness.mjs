@@ -768,6 +768,7 @@ export async function runProjectVersion({ chrome, projectDir, spec, label, port,
     label,
     base_url: base,
     sandbox: null,
+    memoryContainment: null,
     started_at: new Date().toISOString(),
     ...runEnvironment(chrome),
     journeys: [],
@@ -784,6 +785,8 @@ export async function runProjectVersion({ chrome, projectDir, spec, label, port,
   try {
     server = await startServer(projectDir, { port, dbPath });
     record.sandbox = server.mechanism;
+    // Heap-only mitigates Node old-space, but native Buffer and child RSS remain unbounded.
+    record.memoryContainment = server.memoryContainment;
     page = await chrome.newPage({ viewport: { width: 1280, height: 900 } });
     let runtimeObservers = false;
     try {
