@@ -293,6 +293,10 @@ test('deleted paid artifacts cannot resend; distinct arms stay separate and unpi
     const design = readFileSync(new URL('../docs/train/design/tr-01/design.md', import.meta.url), 'utf8');
     writeFileSync(join(designDir, 'plan.md'), plan);
     writeFileSync(join(designDir, 'design.md'), `${design}\nAdditional synthetic prompt detail for this local test.\n`);
+    const changedPreview = await generateProject({ ...args, sourceRoot, dryRun: true });
+    assert.equal(changedPreview.status, 'DRY_RUN');
+    assert.notEqual(changedPreview.output_dir, first.output_dir,
+      'changed prompt bytes still produce a separate ledger identity if later ratified');
     const changedPrompt = await generateProject({ ...args, sourceRoot });
     assert.equal(changedPrompt.status, 'FAILED');
     assert.equal(changedPrompt.error.code, 'UNRATIFIED_DESIGN');

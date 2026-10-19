@@ -195,8 +195,8 @@ export async function generateProject({ family, framework, model = decodeConfig.
     }
     try { requestEndpoint = nativeCompletionEndpoint(endpoint); }
     catch (error) { return preflightFailure('NO_PROVIDER_CONFIG', error); }
-    // Interface pins cover derived text, not the full plan embedded in the paid prompt.
-    // Guard all 39 plans (including tr-01) before approval lookup, ledger writes or fetch.
+    // Interface pins cover derived text, not the full plan or design embedded in the paid prompt.
+    // Guard all 39 families (including tr-01) before approval lookup, ledger writes or fetch.
     if (hash(plan) !== familyInterfacePins.plan_sha256?.[family])
       return preflightFailure('UNRATIFIED_PLAN', fail('UNRATIFIED_PLAN', 'review and re-pin the exact family plan before paid generation'));
     if (hash(design) !== familyInterfacePins.design_sha256?.[family])
