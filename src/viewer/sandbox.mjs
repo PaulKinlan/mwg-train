@@ -89,7 +89,15 @@ export class Sandbox {
    * @param {string} args.siteDir       the tree to serve; mounted read-only at /site
    * @param {string} [args.entry]       entry point relative to /site, default server.mjs
    */
-  constructor({ id, siteDir, entry = 'server.mjs', nodeModulesDir = null }) {
+  constructor({ id, siteDir, entry = 'server.mjs', nodeModulesDir = null, cpuSeconds = null, nodeHeapMb = null }) {
+    if (cpuSeconds !== null && (!Number.isSafeInteger(cpuSeconds) || cpuSeconds < 1)) {
+      throw new TypeError('cpuSeconds must be a positive integer or null');
+    }
+    if (nodeHeapMb !== null && (!Number.isSafeInteger(nodeHeapMb) || nodeHeapMb < 64 || nodeHeapMb > 4096)) {
+      throw new TypeError('nodeHeapMb must be an integer from 64 to 4096 or null');
+    }
+    this.cpuSeconds = cpuSeconds;
+    this.nodeHeapMb = nodeHeapMb;
     this.id = id;
     this.siteDir = siteDir;
     this.entry = entry;
@@ -172,6 +180,8 @@ export class Sandbox {
       '--setenv', 'TZ', 'UTC',
       '--setenv', 'PILOT_PORT', String(SANDBOX_PORT),
       '--setenv', 'FLEET_LANE', process.env.FLEET_LANE ?? 'mwg-train-viewer',
+      // Heap mitigation for generated corpus sites; this is NOT a native RSS or child-process cap.
+      ...(this.nodeHeapMb === null ? [] : ['--setenv', 'NODE_OPTIONS', `--max-old-space-size=${this.nodeHeapMb}`]),
       '--ro-bind', nodeRuntimeDir(), '/node',
       ...systemBinds(),
       '--ro-bind', this.siteDir, '/site',
@@ -186,7 +196,10 @@ export class Sandbox {
       // explicit child mounts: /tmp, /data and /dev retain their independent size/writability.
       '--remount-ro', '/',
       '--',
-      '/node/bin/node', '/viewer/bridge-wrapper.mjs', '--entry', `/site/${this.entry}`, '--port', String(SANDBOX_PORT),
+      ...(this.cpuSeconds === null
+        ? ['/node/bin/node', '/viewer/bridge-wrapper.mjs']
+        : ['/bin/sh', '-c', 'ulimit -t "$1" || exit 1; shift; exec /node/bin/node /viewer/bridge-wrapper.mjs "$@"', 'corpus-cpu-limit', String(this.cpuSeconds)]),
+      '--entry', `/site/${this.entry}`, '--port', String(SANDBOX_PORT),
     ];
     this.child = spawn('bwrap', args, { stdio: ['pipe', 'pipe', 'pipe'] });
     this.child.stderr.on('data', (chunk) => {

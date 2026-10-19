@@ -13,21 +13,19 @@
  * It never asserts on source code. Everything it reports is something the browser observed, because
  * the whole point of the pilot is that a tidy diff is not evidence that a site works.
  */
-import { spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { createConnection } from 'node:net';
 import { join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 
+import { startCorpusSandbox } from './sandbox.mjs';
 import { RULES, SECURITY_CHECKS, MODERN_RULE_IDS } from './rules.mjs';
 import { evaluateStateJourney } from './state-persistence.mjs';
 import { installRuntimeObservers, measureRuntimeQuality } from './eval.mjs';
 import { completeSelectorFieldName, selectorFieldName } from '../train/brief-schema.mjs';
 
-const READY_TIMEOUT_MS = 20_000;
-
-/** Start a project's server and wait for it to answer. */
+/** Start a project's server only inside the namespace sandbox. */
 /**
  * Does anything at all answer on this port? A raw TCP connect, not an HTTP request: the question is "is a
  * process listening", and the leaked server that motivated this (mwg-train-jxz7) served HTTP, but anything
@@ -46,7 +44,7 @@ function portAcceptsConnections(port, timeoutMs = 500) {
   });
 }
 
-export async function startServer(projectDir, { port, dbPath }) {
+export async function startServer(projectDir, { port }) {
   // mwg-train-jxz7. A server leaked by an earlier run (a booking arm, still alive 1h26m later) was sitting on a
   // sweep port, and this function's health poll happily accepted ITS answers: every capture for that arm then
   // measured the WRONG APPLICATION, and the plain capture of it succeeded silently. The health check proves
@@ -58,48 +56,13 @@ export async function startServer(projectDir, { port, dbPath }) {
       `startServer: port ${port} is already in use by another process, so measuring it would measure that process and not ${projectDir}. A server leaked from an earlier run survives its sweep - stop whatever is listening on ${port} and run again (mwg-train-jxz7).`,
     );
   }
-  const child = spawn(process.execPath, [join(projectDir, 'server.mjs'), '--port', String(port), '--db', dbPath], {
-    cwd: projectDir,
-    stdio: ['ignore', 'pipe', 'pipe'],
-    env: { ...process.env, NODE_ENV: 'test', PILOT_PORT: String(port) },
-  });
-  let log = '';
-  child.stdout.on('data', (chunk) => {
-    log += chunk.toString();
-  });
-  child.stderr.on('data', (chunk) => {
-    log += chunk.toString();
-  });
-  const started = Date.now();
-  while (Date.now() - started < READY_TIMEOUT_MS) {
-    let response = null;
-    try {
-      response = await fetch(`http://127.0.0.1:${port}/__health`, { signal: AbortSignal.timeout(1500) });
-    } catch {
-      /* keep waiting */
-    }
-    if (response && response.ok) {
-      // The belt to the pre-flight check above: a child that has already exited cannot be the process that
-      // answered, so health passing here means somebody else owns the port. Thrown outside the fetch's try so
-      // the catch above cannot swallow it.
-      if (child.exitCode !== null) {
-        throw new Error(
-          `startServer: the spawned server for ${projectDir} exited (code ${child.exitCode}) while port ${port} answered its health check, so the answering process is not the one this run spawned - another server is holding the port. Stop it and run again (mwg-train-jxz7). Child log:\n${log}`,
-        );
-      }
-      return { child, log: () => log };
-    }
-    await delay(120);
-  }
-  child.kill('SIGKILL');
-  throw new Error(`server did not become ready in ${READY_TIMEOUT_MS}ms:\n${log}`);
+  // startCorpusSandbox binds the bridge to 127.0.0.1 itself; a race after this preflight
+  // fails on EADDRINUSE instead of accepting an unrelated server's health response.
+  return startCorpusSandbox(projectDir, { port });
 }
 
 export async function stopServer(server) {
-  if (!server?.child) return;
-  server.child.kill('SIGTERM');
-  await delay(150);
-  if (!server.child.killed) server.child.kill('SIGKILL');
+  await server?.stop();
 }
 
 /**
@@ -804,6 +767,7 @@ export async function runProjectVersion({ chrome, projectDir, spec, label, port,
     dialect: spec.framework.dialect,
     label,
     base_url: base,
+    sandbox: null,
     started_at: new Date().toISOString(),
     ...runEnvironment(chrome),
     journeys: [],
@@ -819,6 +783,7 @@ export async function runProjectVersion({ chrome, projectDir, spec, label, port,
   let page = null;
   try {
     server = await startServer(projectDir, { port, dbPath });
+    record.sandbox = server.mechanism;
     page = await chrome.newPage({ viewport: { width: 1280, height: 900 } });
     let runtimeObservers = false;
     try {

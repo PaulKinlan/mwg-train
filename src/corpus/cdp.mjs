@@ -94,7 +94,7 @@ export function allowedCallerArgs(args = []) {
   return args.filter((arg) => CALLER_ARG_ALLOWLIST.includes(String(arg)));
 }
 
-export function chromeArgs({ userDataDir, proxy = null, extra = [], unsandboxed = false, url = 'about:blank' } = {}) {
+export function chromeArgs({ userDataDir, proxy = null, blockEgress = false, extra = [], unsandboxed = false, url = 'about:blank' } = {}) {
   return [
     '--headless=new',
     '--remote-debugging-port=0',
@@ -112,7 +112,11 @@ export function chromeArgs({ userDataDir, proxy = null, extra = [], unsandboxed 
     '--disable-features=Translate,BackForwardCache,AcceptCHFrame,MediaRouter,OptimizationHints',
     '--force-color-profile=srgb',
     '--window-size=1280,900',
-    ...(proxy ? [`--proxy-server=${proxy}`] : []),
+    ...(blockEgress ? [
+      '--proxy-server=http://127.0.0.1:9',
+      // NOT a UDP boundary: a literal-IP STUN listener still received 4 packets with this flag.
+      '--force-webrtc-ip-handling-policy=disable_non_proxied_udp',
+    ] : proxy ? [`--proxy-server=${proxy}`] : []),
     // Only allowlisted caller arguments pass. Not "the sandbox-disabling ones are refused": a caller cannot widen
     // this process's reach by naming a flag, and a flag Chromium adds next year is refused because it is not on the
     // list rather than because somebody remembered to add it to a refusal list.
@@ -216,7 +220,10 @@ async function fetchJson(url, attempts = 40) {
  * One browser at a time is a fleet rule (the reaper kills orphans and the box has two cores), so the
  * harness reuses a single instance across projects and closes it in a finally block.
  */
-export async function launchChrome({ proxy = null, args = [] } = {}) {
+export async function launchChrome({ proxy = null, allowEgress = false, disableWebRtc = true, args = [] } = {}) {
+  // A custom proxy does not implicitly permit egress; an exception must be explicit.
+  const blockEgress = !allowEgress;
+  if (blockEgress && proxy) throw new CdpError('EGRESS_PROXY_CONFLICT', 'containment cannot share a custom proxy');
   const userDataDir = mkdtempSync(join(tmpdir(), 'mwg-chrome-'));
   const binary = chromeBinary();
   const unsandboxed = chromeIsUnsandboxed();
@@ -239,14 +246,17 @@ export async function launchChrome({ proxy = null, args = [] } = {}) {
   }
   const child = spawn(
     binary,
-    chromeArgs({ userDataDir, proxy, extra: args, unsandboxed }),
+    chromeArgs({ userDataDir, proxy, blockEgress, extra: args, unsandboxed }),
     {
       stdio: ['ignore', 'pipe', 'pipe'],
       // Its own process group, so the whole tree - zygotes, gpu, network, and anything the browser spawns
       // that does not carry the profile directory on its command line - can be killed together. Killing
       // only the parent left pieces behind.
       detached: true,
-      env: { ...process.env, TMPDIR: userDataDir, TEMP: userDataDir, TMP: userDataDir },
+      env: {
+        PATH: '/usr/bin:/bin', HOME: userDataDir, XDG_CONFIG_HOME: userDataDir, XDG_CACHE_HOME: userDataDir,
+        LANG: 'C.UTF-8', TZ: 'UTC', TMPDIR: userDataDir, TEMP: userDataDir, TMP: userDataDir,
+      },
     },
   );
 
@@ -371,15 +381,30 @@ export async function launchChrome({ proxy = null, args = [] } = {}) {
       const { sessionId } = await connection.send('Target.attachToTarget', { targetId, flatten: true });
       const session = { connection, sessionId, targetId };
       await connection.send('Page.enable', {}, sessionId);
+      if (disableWebRtc) {
+        // Install in the page's own world before navigation, including its same-origin frames.
+        // Opaque sandboxed srcdoc frames are NOT covered: a non-loopback UDP listener received
+        // 4 STUN packets, versus 4 with neutering off. Flattened Target.setAutoAttach with
+        // waitForDebuggerOnStart, child-session Page injection + Runtime.evaluate, and
+        // Runtime.runIfWaitingForDebugger still yielded 4 packets (2026-10-13, esqc).
+        // Non-configurable accessors prevent generated code from restoring the constructors.
+        await connection.send('Page.addScriptToEvaluateOnNewDocument', { source: `
+          for (const name of ['RTCPeerConnection', 'webkitRTCPeerConnection']) {
+            Object.defineProperty(window, name, { configurable: false, get: () => undefined });
+          }
+        ` }, sessionId);
+      }
       await connection.send('Runtime.enable', {}, sessionId);
       await connection.send('Network.enable', {}, sessionId);
+      const page = new Page(session, viewport);
+      if (blockEgress) await page.blockEgress();
       if (mobile) {
         await connection.send('Emulation.setDeviceMetricsOverride', { width: viewport.width, height: viewport.height, deviceScaleFactor: 2, mobile: true, screenWidth: viewport.width, screenHeight: viewport.height }, sessionId);
         await connection.send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 }, sessionId);
       } else {
         await connection.send('Emulation.setDeviceMetricsOverride', { width: viewport.width, height: viewport.height, deviceScaleFactor: 1, mobile: false }, sessionId);
       }
-      return new Page(session, viewport);
+      return page;
     },
     async close() {
       try {
@@ -422,7 +447,26 @@ export class Page {
     this.console = [];
     this.network = [];
     this.requests = new Map();
+    this.blockedRequests = [];
+    this.allowedOrigin = null;
     this.#observe();
+  }
+
+  // Fetch interception is installed before navigating to the untrusted document. Only the origin
+  // explicitly driven by goto() is permitted; other loopback services are not part of the harness.
+  async blockEgress() {
+    const { connection, sessionId } = this.session;
+    connection.on('Fetch.requestPaused', (params, sid) => {
+      if (sid !== sessionId) return;
+      const url = new URL(params.request.url);
+      const denied = url.origin !== this.allowedOrigin;
+      connection.send(denied ? 'Fetch.failRequest' : 'Fetch.continueRequest',
+        denied ? { requestId: params.requestId, errorReason: 'BlockedByClient' } : { requestId: params.requestId },
+        sessionId).then(() => {
+        if (denied) this.blockedRequests.push(params.request.url);
+      }).catch((error) => { this.egressError = error; });
+    });
+    await this.send('Fetch.enable', { patterns: [{ urlPattern: '*', requestStage: 'Request' }] });
   }
 
   #observe() {
@@ -450,6 +494,7 @@ export class Page {
   }
 
   send(method, params) {
+    if (this.egressError) throw this.egressError;
     return this.session.connection.send(method, params, this.sessionId);
   }
 
@@ -463,6 +508,12 @@ export class Page {
    * Waiting on observable state (URL, readyState) instead of an event removes the race.
    */
   async goto(url, { timeout = 15_000 } = {}) {
+    // The harness navigates to its own forwarder before generated code executes. Lock the page to
+    // that one origin; later page-controlled navigations cannot grant themselves another local port.
+    const destination = new URL(url);
+    if (!this.allowedOrigin && destination.protocol === 'http:' && destination.hostname === '127.0.0.1') {
+      this.allowedOrigin = destination.origin;
+    }
     await this.send('Page.navigate', { url });
     const started = Date.now();
     for (;;) {
