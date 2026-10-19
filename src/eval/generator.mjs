@@ -4,12 +4,17 @@ import { join, resolve, sep } from 'node:path';
 import { performance } from 'node:perf_hooks';
 import { evaluationBuildKey } from './build-key.mjs';
 import { decodeConfig, decodeConfigSha256 } from './decode-config.mjs';
+import { interfaceContractText, interfaceContractSha256, RATIFIED_TR01_INTERFACE_SHA256 } from './interface-contract.mjs';
 import { readGenerationApprovalComments, verifyGenerationApproval, loadPinnedGenerationTariff, worstCaseGenerationUsd, hasGenerationReservation, reserveGeneration, settleGeneration } from './spend-ledger.mjs';
 
 const SHA = /^[a-f0-9]{40}$/;
 const FAMILY = /^tr-\d{2}$/;
 const FRAMEWORKS = new Set(['hono', 'raw', 'react', 'preact', 'vue', 'webcomponents', 'svelte']);
 const ARMS = new Set(['default', 'c1', 'c2', 'c3', 't']);
+// Author-pinned effective request, separately owner-ratified on 2026-10-19 (§14).
+// The config status is checked before spending; this constant alone is not approval.
+export const PINNED_TR01_DECODE_SHA256 = '59c4e99faaa64669571c499689ed1116785471034e76c5255bbb1572c0011a20';
+export const NATIVE_DEEPSEEK_BASE_URL = 'https://deepseek.int.exe.xyz/v1';
 const hash = (value) => createHash('sha256').update(value).digest('hex');
 const fail = (code, message) => Object.assign(new Error(message), { code });
 
@@ -19,14 +24,28 @@ export function rethrowLiveRecoveryMkdirError(error) {
   throw error;
 }
 
-export function buildGenerationPrompt({ plan, design, arm, guidance = '' }) {
+/** The operator supplies a BASE URL; never post a credential to an unapproved origin or path. */
+export function nativeCompletionEndpoint(baseUrl) {
+  if (!baseUrl) throw fail('NO_PROVIDER_CONFIG', 'native DeepSeek integration base URL is required');
+  let url;
+  try { url = new URL(baseUrl); } catch { throw fail('NO_PROVIDER_CONFIG', 'invalid native DeepSeek base URL'); }
+  if (url.protocol !== 'https:' || url.username || url.password || url.search || url.hash ||
+      (url.pathname !== '/v1' && url.pathname !== '/v1/') ||
+      url.href.replace(/\/$/, '') !== NATIVE_DEEPSEEK_BASE_URL) {
+    throw fail('NO_PROVIDER_CONFIG', 'unapproved native DeepSeek HTTPS integration base URL');
+  }
+  return `${url.origin}/v1/chat/completions`;
+}
+
+export function buildGenerationPrompt({ plan, design, arm, guidance = '', interfaceContract = '' }) {
   if (!ARMS.has(arm)) throw fail('INVALID_ARM', `unknown arm ${arm}`);
   if (typeof plan !== 'string' || !plan.trim() || typeof design !== 'string' || !design.trim()) throw fail('INVALID_SPEC', 'plan.md and design.md are required');
   if (arm !== 'c2' && guidance) throw fail('SET_SEPARATION', 'only C2 may receive guidance; default/C1/C3/T must not receive MWG context');
   if (arm === 'c2' && !guidance.trim()) throw fail('MISSING_GUIDANCE', 'C2 requires explicit pinned guidance');
   const context = arm === 'c2' ? `\nApplicable guidance (C2 only):\n${guidance}\n` : '';
   // C3 generates the same unguided base as C1; a separate deterministic uplift stage operates afterward.
-  return `Create a runnable website from the following text specifications. Return ONLY a JSON object {"files":[{"path":"relative/file","content":"file bytes as text"}]}. Include all routes and server persistence described by the plan. Do not execute or inspect generated code here.\n\nFunctional plan:\n${plan}\n\nVisual composition requirement: Follow the authored design's section hierarchy and spatial layout, including its named navigation, hero/media, service or content cards, form placement and interactive widgets where specified. Preserve the plan's working routes, controls, validation and persisted state rather than replacing the site with a generic form-only layout. Adapt the composition to narrow screens without copying any static conformance-viewport instruction. Reference JPEGs are illustrative design assets, not supplied model inputs; do not embed a JPEG as the website or invent unseen image content, prices, customer details or confirmed outcomes. A1/A6 conformance targets are separate evaluation instruments, not generation inputs.\n\nVisual design contract (authored text only):\n${design}\n${context}`;
+  const base = `Create a runnable website from the following text specifications. Return ONLY a JSON object {"files":[{"path":"relative/file","content":"file bytes as text"}]}. Include all routes and server persistence described by the plan. Do not execute or inspect generated code here.\n\nFunctional plan:\n${plan}\n\nVisual composition requirement: Follow the authored design's section hierarchy and spatial layout, including its named navigation, hero/media, service or content cards, form placement and interactive widgets where specified. Preserve the plan's working routes, controls, validation and persisted state rather than replacing the site with a generic form-only layout. Adapt the composition to narrow screens without copying any static conformance-viewport instruction. Reference JPEGs are illustrative design assets, not supplied model inputs; do not embed a JPEG as the website or invent unseen image content, prices, customer details or confirmed outcomes. A1/A6 conformance targets are separate evaluation instruments, not generation inputs.\n\nVisual design contract (authored text only):\n${design}\n${context}`;
+  return interfaceContract ? `${base.trimEnd()}\n\nEvaluator interface contract (identical for every arm):\n${interfaceContract}` : base;
 }
 
 /** Treat model output as untrusted DATA. No child process, dynamic import, eval or package install here. */
@@ -54,6 +73,7 @@ export function normaliseCompletion(payload) {
   const usage = payload?.usage ?? {};
   return {
     content: choice?.message?.content ?? '', finish_reason: choice?.finish_reason ?? 'UNVERIFIED',
+    provider_response_model: payload?.model ?? 'UNVERIFIED',
     prompt_tokens: usage.prompt_tokens ?? null,
     completion_tokens: usage.completion_tokens ?? null,
     reasoning_tokens: usage.completion_tokens_details?.reasoning_tokens ?? null,
@@ -64,6 +84,9 @@ export function normaliseCompletion(payload) {
 
 /** Stream chunks for progress without an idle timeout; a hard 20-minute bound still applies. */
 export async function streamCompletion({ endpoint, apiKey, payload, fetchImpl = fetch, maxMs = 20 * 60_000 }) {
+  // Defense in depth: direct callers and injected fetch implementations cannot relax the origin pin.
+  if (endpoint !== `${NATIVE_DEEPSEEK_BASE_URL}/chat/completions`)
+    throw fail('NO_PROVIDER_CONFIG', 'unapproved native DeepSeek completion endpoint');
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), maxMs);
   try {
@@ -73,7 +96,7 @@ export async function streamCompletion({ endpoint, apiKey, payload, fetchImpl = 
     });
     if (!response.ok || !response.body) throw fail('PROVIDER_ERROR', `provider returned HTTP ${response.status}`);
     const decoder = new TextDecoder();
-    let text = ''; let content = ''; let contentBytes = 0; let finish = null; let usage = null;
+    let text = ''; let content = ''; let contentBytes = 0; let finish = null; let usage = null; let responseModel = null;
     for await (const chunk of response.body) {
       text += decoder.decode(chunk, { stream: true });
       if (text.length > 16_000_000) throw fail('OUTPUT_TOO_LARGE', 'stream exceeds limit');
@@ -86,6 +109,7 @@ export async function streamCompletion({ endpoint, apiKey, payload, fetchImpl = 
           if (!data || data === '[DONE]') continue;
           let event;
           try { event = JSON.parse(data); } catch { throw fail('PROVIDER_ERROR', 'malformed streaming event'); }
+          if (typeof event.model === 'string') responseModel = event.model;
           const fragment = event.choices?.[0]?.delta?.content ?? '';
           if (typeof fragment !== 'string') throw fail('PROVIDER_ERROR', 'non-text content in streaming event');
           contentBytes += Buffer.byteLength(fragment);
@@ -98,7 +122,7 @@ export async function streamCompletion({ endpoint, apiKey, payload, fetchImpl = 
       }
     }
     if (text.trim() && text.trim() !== 'data: [DONE]') throw fail('PROVIDER_ERROR', 'truncated streaming response');
-    return normaliseCompletion({ choices: [{ message: { content }, finish_reason: finish }], usage });
+    return normaliseCompletion({ model: responseModel, choices: [{ message: { content }, finish_reason: finish }], usage });
   } finally { clearTimeout(timer); }
 }
 
@@ -111,14 +135,14 @@ export function stubCompletion() {
 
 export async function generateProject({ family, framework, model = decodeConfig.build_model, revision,
   arm = 'default', guidance = '', backend = 'stub', dryRun = false, outRoot = '.generated-runs',
-  sourceRoot = '.', fetchImpl = fetch, canned = stubCompletion(), endpoint = process.env.FIREWORKS_BASE_URL,
-  apiKey = process.env.FIREWORKS_API_KEY, ledgerPath = process.env.MWG_SPEND_LEDGER_PATH,
+  sourceRoot = '.', fetchImpl = fetch, canned = stubCompletion(), endpoint = process.env.DEEPSEEK_BASE_URL,
+  apiKey = process.env.DEEPSEEK_API_KEY, ledgerPath = process.env.MWG_SPEND_LEDGER_PATH,
   promptTokensUpperBound = null, approvalComments = readGenerationApprovalComments,
   chromeVersion = 'UNVERIFIED', retry = false } = {}) {
   if (!FAMILY.test(family ?? '') || !FRAMEWORKS.has(framework) || !SHA.test(revision ?? '')) {
-    throw fail('INVALID_IDENTITY', 'training family, supported framework and resolved 40-character model revision required');
+    throw fail('INVALID_IDENTITY', 'training family, supported framework and caller-supplied 40-character HF reference required');
   }
-  if (model !== decodeConfig.build_model) throw fail('UNPINNED_MODEL', 'chosen model differs from proposed pinned decode config; ratify a new config before spending');
+  if (model !== decodeConfig.build_model) throw fail('UNPINNED_MODEL', 'chosen model differs from the code-pinned native DeepSeek identity; approve a new identity before spending');
   if (!['stub', 'live'].includes(backend)) throw fail('INVALID_BACKEND', 'only stub or guarded live are supported');
   // A SIGKILL can leave the paid reservation and project directory but no run.json. Never let
   // --retry override that ambiguity or start another live request, even on a fresh identity.
@@ -126,7 +150,10 @@ export async function generateProject({ family, framework, model = decodeConfig.
   const source = resolve(sourceRoot);
   const plan = await readFile(join(source, 'docs/train/design', family, 'plan.md'), 'utf8');
   const design = await readFile(join(source, 'docs/train/design', family, 'design.md'), 'utf8');
-  const prompt = buildGenerationPrompt({ plan, design, arm, guidance });
+  // Only tr-01 has an owner-approved Option A concept and an exact author-pinned V1 block.
+  // Other families may preview offline, not spend.
+  const contract = family === 'tr-01' ? interfaceContractText : '';
+  const prompt = buildGenerationPrompt({ plan, design, arm, guidance, interfaceContract: contract });
   const promptSha256 = hash(prompt);
   // Streaming is a transport detail, not a decode knob: the evaluator and runner must share one key.
   const request = decodeConfig.request;
@@ -138,7 +165,8 @@ export async function generateProject({ family, framework, model = decodeConfig.
   // Stub and live outputs must never share a success record: a prior offline stub is not a model call.
   const runId = hash([buildKey, revision, backend, arm, promptSha256].join('\n'));
   const base = join(resolve(outRoot), keyDirectory, arm, runId);
-  const output = { build_key: buildKey, output_dir: base, project_dir: join(base, 'project'), prompt_sha256: promptSha256 };
+  const output = { build_key: buildKey, output_dir: base, project_dir: join(base, 'project'), prompt_sha256: promptSha256,
+    decode_config_sha256: decodeSha, interface_contract_sha256: contract ? interfaceContractSha256 : null };
   if (dryRun) return { ...output, status: 'DRY_RUN', cost: 'UNVERIFIED', prompt };
   // A failed preflight has sent nothing and must not consume this identity. No run directory or
   // ledger reservation is created until the endpoint and current owner decision are verified.
@@ -147,11 +175,20 @@ export async function generateProject({ family, framework, model = decodeConfig.
   let approval = null;
   let chargeBoundUsd = 'UNVERIFIED';
   let tariff = null;
+  let requestEndpoint = null;
   if (backend === 'live') {
-    if (!endpoint || !apiKey || !ledgerPath) return preflightFailure('NO_PROVIDER_CONFIG',
-      fail('NO_PROVIDER_CONFIG', 'provider endpoint, key and private ledger path required'));
-    if (!/^https:\/\//.test(endpoint)) return preflightFailure('NO_PROVIDER_CONFIG',
-      fail('NO_PROVIDER_CONFIG', 'provider endpoint must be HTTPS'));
+    if (!contract || interfaceContractSha256 !== RATIFIED_TR01_INTERFACE_SHA256 ||
+        decodeConfigSha256(request) !== PINNED_TR01_DECODE_SHA256 || !decodeConfig.status.startsWith('ratified-owner-')) {
+      return preflightFailure('UNRATIFIED_INTERFACE', fail('UNRATIFIED_INTERFACE', 'exact owner-ratified tr-01 interface and decode request required'));
+    }
+    if (!apiKey || !ledgerPath) return preflightFailure('NO_PROVIDER_CONFIG',
+      fail('NO_PROVIDER_CONFIG', 'native DeepSeek API key and private ledger path required'));
+    if (decodeConfig.build_model !== 'deepseek/deepseek-flash' || decodeConfig.model !== 'deepseek-flash' ||
+        decodeConfig.integration_base_url !== NATIVE_DEEPSEEK_BASE_URL) {
+      return preflightFailure('UNPINNED_MODEL', fail('UNPINNED_MODEL', 'native DeepSeek model or integration pin changed'));
+    }
+    try { requestEndpoint = nativeCompletionEndpoint(endpoint); }
+    catch (error) { return preflightFailure('NO_PROVIDER_CONFIG', error); }
     try { approval = verifyGenerationApproval(approvalComments(), { model }); }
     catch (error) { return preflightFailure('NO_OWNER_AUTH', error); }
     try { tariff = loadPinnedGenerationTariff(model); } catch { tariff = null; }
@@ -221,12 +258,17 @@ export async function generateProject({ family, framework, model = decodeConfig.
   const started = performance.now();
   let reserved = false;
   const record = { status: 'FAILED', project_id: projectId, family, framework, arm, model,
-    resolved_revision: revision, build_key: buildKey, decode_config_sha256: decodeSha, decode_config: request,
+    caller_supplied_revision: revision, resolved_revision: 'UNVERIFIED', build_key: buildKey,
+    decode_config_sha256: decodeSha, decode_config: request,
+    provider_request_model: backend === 'live' ? decodeConfig.model : null,
+    provider_response_model: 'UNVERIFIED', request_endpoint: backend === 'live' ? requestEndpoint : null,
     transport: { stream: backend === 'live' }, time_limit_ms: backend === 'live' ? 20 * 60_000 : null,
-    prompt_sha256: promptSha256, plan_sha256: hash(plan), design_sha256: hash(design), prompt,
+    prompt_sha256: promptSha256, interface_contract_sha256: output.interface_contract_sha256,
+    plan_sha256: hash(plan), design_sha256: hash(design), prompt,
     scope: backend === 'live' ? 'generation' : 'offline-stub', bead: backend === 'live' ? 'mwg-train-i5i2.1' : null,
     request_id: requestId, backend, platform: process.platform, node_version: process.version, chrome_version: chromeVersion,
     prompt_tokens: null, completion_tokens: null, reasoning_tokens: null, content_tokens: null,
+    raw_response_file: null, raw_response_sha256: null, raw_response_bytes: null,
     finish_reason: 'UNVERIFIED', projected_cost_usd: 'UNVERIFIED', computed_cost_usd: 'UNVERIFIED',
     cost_source_sha256: 'UNVERIFIED' };
   try {
@@ -239,11 +281,20 @@ export async function generateProject({ family, framework, model = decodeConfig.
       reserved = true;
       record.projected_cost_usd = chargeBoundUsd;
       record.cost_source_sha256 = tariff?.sourceSha256 ?? 'UNVERIFIED';
-      completion = await streamCompletion({ endpoint, apiKey, fetchImpl, payload: { model: decodeConfig.model,
+      completion = await streamCompletion({ endpoint: requestEndpoint, apiKey, fetchImpl, payload: { model: decodeConfig.model,
         messages: [{ role: 'user', content: prompt }], ...request } });
     }
     Object.assign(record, { prompt_tokens: completion.prompt_tokens, completion_tokens: completion.completion_tokens,
-      reasoning_tokens: completion.reasoning_tokens, content_tokens: completion.content_tokens, finish_reason: completion.finish_reason });
+      reasoning_tokens: completion.reasoning_tokens, content_tokens: completion.content_tokens, finish_reason: completion.finish_reason,
+      provider_response_model: completion.provider_response_model ?? 'UNVERIFIED' });
+    if (backend === 'live') {
+      // Preserve paid response DATA before JSON validation. Failed parses are still consumed identities.
+      const raw = completion.content;
+      record.raw_response_file = 'model-response.txt';
+      record.raw_response_sha256 = hash(raw);
+      record.raw_response_bytes = Buffer.byteLength(raw);
+      await writeFile(join(base, record.raw_response_file), raw, { flag: 'wx', mode: 0o600 });
+    }
     if (completion.finish_reason === 'length' && !completion.content.trim()) throw fail('EMPTY_LENGTH', 'generation exhausted its token budget with empty content');
     if (completion.finish_reason !== 'stop') throw fail('BAD_FINISH', `generation finished with ${completion.finish_reason}`);
     const files = parseProjectFiles(completion.content);

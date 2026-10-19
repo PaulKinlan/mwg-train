@@ -194,8 +194,22 @@
     "test/generator-runner.test.mjs",
     "test/corpus.test.mjs"
   ],
-  "src/eval/generator.mjs": [
+  "scripts/generate-candidate.mjs": [
+    "test/interface-candidate.test.mjs"
+  ],
+  "src/eval/interface-candidate.mjs": [
+    "test/interface-candidate.test.mjs"
+  ],
+  "src/eval/interface-contract.mjs": [
+    "test/interface-candidate.test.mjs",
     "test/generator-runner.test.mjs"
+  ],
+  "docs/eval/interface-contract.tr-01.candidate.md": [
+    "test/interface-candidate.test.mjs"
+  ],
+  "src/eval/generator.mjs": [
+    "test/generator-runner.test.mjs",
+    "test/interface-candidate.test.mjs"
   ],
   "src/eval/spend-ledger.mjs": [
     "test/generator-runner.test.mjs"
@@ -207,7 +221,8 @@
     "test/reachability.test.mjs"
   ],
   "docs/eval/PREREGISTRATION.md": [
-    "test/briefs.test.mjs"
+    "test/briefs.test.mjs",
+    "test/interface-candidate.test.mjs"
   ],
   "docs/eval/pricing.sheets.md": [
     "test/pricing.test.mjs"
@@ -234,10 +249,12 @@
     "test/expansion-matrix.test.mjs"
   ],
   "docs/eval/decode-config.deepseek-flash.json": [
-    "test/decode-config.test.mjs"
+    "test/decode-config.test.mjs",
+    "test/interface-candidate.test.mjs"
   ],
   "docs/eval/evaluator-interface-contract.md": [
-    "test/harness-oracle.test.mjs"
+    "test/harness-oracle.test.mjs",
+    "test/interface-candidate.test.mjs"
   ],
   "docs/eval/evaluable-primary-endpoint.md": [
     "test/evaluable-primary-endpoint.test.mjs"

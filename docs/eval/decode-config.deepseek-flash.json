@@ -1,9 +1,12 @@
 {
-  "status": "proposed-offline; requires provider and Paul ratification before first billable run",
-  "retrieved_at": "2026-10-13",
-  "provider": "fireworks",
-  "model": "accounts/fireworks/models/deepseek-v4p1-flash",
-  "build_model": "fireworks/deepseek-v4p1-flash",
+  "status": "ratified-owner-2026-10-19; exact knobs approved via coord, provider acceptance and resolved checkpoint UNVERIFIED",
+  "public_source_retrieved_at": "2026-10-13",
+  "native_route_selected_at": "2026-10-18T23:52:00Z",
+  "provider": "deepseek",
+  "model": "deepseek-flash",
+  "build_model": "deepseek/deepseek-flash",
+  "integration_base_url": "https://deepseek.int.exe.xyz/v1",
+  "provider_checkpoint_attestation": "UNVERIFIED",
   "request": {
     "reasoning_effort": "high",
     "max_tokens": 65536,
@@ -17,17 +20,9 @@
   },
   "sources": [
     {
-      "url": "https://docs.fireworks.ai/api-reference/post-chatcompletions",
-      "supports": "OpenAI-compatible chat endpoint; max_tokens limits generated tokens, stop names stop sequences, top_p is a nucleus parameter."
-    },
-    {
-      "url": "https://docs.fireworks.ai/guides/reasoning",
-      "supports": "Reasoning-effort setting and reasoning output; provider-specific behavior must be preflighted on the selected deployment."
-    },
-    {
       "url": "https://api-docs.deepseek.com/guides/thinking_mode/",
-      "supports": "DeepSeek thinking mode: temperature has no effect, top_p operates at 0.95–1.0, and thought tokens share completion budget. DeepSeek native docs are not a guarantee that Fireworks' gateway behaves identically."
+      "supports": "Published DeepSeek thinking-mode guidance on output budget and omitted temperature; it does not attest that the private integration accepts reasoning_effort=high, the selected max_tokens, or an immutable HF checkpoint."
     }
   ],
-  "budget_reason": "An earlier 16384-token attempt ended with no content; a reported 65536-token attempt produced 31603 reasoning tokens then an app. This is a proposed equal budget for all arms, not proof of model capability."
+  "budget_reason": "An earlier 16384-token attempt ended with no content; a reported 65536-token attempt produced 31603 reasoning tokens then an app on a historical route. The author proposed this same request on every tr-01 arm to avoid unequal budgets; Paul selected the native DeepSeek integration via coord/hub on 2026-10-18 at 23:52Z and separately approved these exact decode knobs via fleet-manager/coord at 2026-10-19 01:42Z, recorded by mwg-train-coord on mwg-train-i5i2.11.1 at 02:13Z. Parameter support, model version and checkpoint parity remain unverified."
 }
