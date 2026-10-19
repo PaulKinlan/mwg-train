@@ -1,12 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, readFileSync, readdirSync, lstatSync, rmSync, symlinkSync, writeFileSync, chmodSync } from 'node:fs';
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, readdirSync, lstatSync, rmSync, symlinkSync, writeFileSync, chmodSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
+import { execFileSync } from 'node:child_process';
 import { validateSlice, preflight } from '../scripts/default-set-preflight.mjs';
 import manifest from '../docs/eval/default-set-hono-slice.json' with { type: 'json' };
-import { cordonDefaultRun } from '../src/eval/default-cordon.mjs';
+import { assertPrivateArchiveRoot, cordonDefaultRun } from '../src/eval/default-cordon.mjs';
+import { main as cordonMain } from '../scripts/default-set-cordon.mjs';
 
 const sha = (value) => createHash('sha256').update(value).digest('hex');
 function removePrivateTree(root) {
@@ -19,14 +21,8 @@ function removePrivateTree(root) {
   rmSync(root, { recursive: true, force: true });
 }
 
-test('cordon CLI refuses absent private paths without touching provider or archive', async () => {
-  const original = process.argv;
-  try {
-    process.argv = [process.execPath, 'test/default-set-offline.test.mjs'];
-    await assert.rejects(import('../scripts/default-set-cordon.mjs'), /usage: default-set-cordon\.mjs/);
-  } finally {
-    process.argv = original;
-  }
+test('cordon CLI refuses absent private paths without touching provider or archive', () => {
+  assert.throws(() => cordonMain([]), /usage: default-set-cordon\.mjs/);
 });
 
 test('initial tranche is 30 disjoint unguided Hono identities and extension stays reserved', async () => {
@@ -44,6 +40,36 @@ test('initial tranche is 30 disjoint unguided Hono identities and extension stay
   assert.ok(seen.every((row) => row.dryRun && row.backend === 'stub' && row.guidance === '' && row.arm === 'default'));
 });
 
+test('public checkout and symlinked archive aliases refuse before writing paid bytes', (t) => {
+  const temp = mkdtempSync(join(tmpdir(), 'cordon-public-guard-'));
+  t.after(() => removePrivateTree(temp));
+  const publicRepo = join(temp, 'repo');
+  mkdirSync(publicRepo);
+  mkdirSync(join(temp, 'run'));
+  const alias = join(temp, 'repo-alias');
+  symlinkSync(publicRepo, alias, 'dir');
+  assert.throws(() => assertPrivateArchiveRoot(join(publicRepo, 'docs', 'raw'), { repoRoot: publicRepo }), /STORE_INSIDE_PUBLIC/);
+  assert.throws(() => assertPrivateArchiveRoot(join(alias, 'docs', 'raw'), { repoRoot: publicRepo }), /STORE_INSIDE_PUBLIC/);
+  assert.throws(() => assertPrivateArchiveRoot(join(temp, 'run', 'archive'), { repoRoot: publicRepo, sourceRoot: join(temp, 'run') }), /STORE_INSIDE_PUBLIC/);
+  assert.equal(assertPrivateArchiveRoot(join(temp, 'private', 'archive'), { repoRoot: publicRepo }), join(temp, 'private', 'archive'));
+  const siblingPublicCheckout = join(temp, 'another-public-checkout');
+  mkdirSync(siblingPublicCheckout);
+  const publicOrigin = 'https://example.invalid/example/public-checkout.git';
+  for (const checkout of [publicRepo, siblingPublicCheckout]) {
+    execFileSync('git', ['init', '--quiet', checkout]);
+    execFileSync('git', ['-C', checkout, 'remote', 'add', 'origin', publicOrigin]);
+  }
+  assert.throws(() => assertPrivateArchiveRoot(join(siblingPublicCheckout, 'paid-output'), { repoRoot: publicRepo }),
+    /STORE_INSIDE_PUBLIC.*another public checkout/);
+  // The real call must also refuse a public checkout path without creating the archive directory.
+  const runDir = join(temp, 'run');
+  writeFileSync(join(runDir, 'run.json'), JSON.stringify({ status: 'FAILED', backend: 'live', arm: 'default',
+    project_id: 'tr-04-hono', request_id: 'a'.repeat(64), prompt_sha256: 'b'.repeat(64) }));
+  const publicDestination = join(new URL('..', import.meta.url).pathname, 'docs', `.cordon-test-${process.pid}`);
+  assert.throws(() => cordonDefaultRun({ runDir, archiveRoot: publicDestination }), /STORE_INSIDE_PUBLIC/);
+  assert.equal(existsSync(publicDestination), false);
+});
+
 test('private cordon retains paid success bytes and hashes; repeat verifies, corruption and symlink refuse', (t) => {
   const temp = mkdtempSync(join(tmpdir(), 'default-cordon-'));
   t.after(() => removePrivateTree(temp));
@@ -57,6 +83,11 @@ test('private cordon retains paid success bytes and hashes; repeat verifies, cor
     interface_contract_sha256: 'e'.repeat(64), finish_reason: 'stop' };
   writeFileSync(join(runDir, 'run.json'), JSON.stringify(record));
   writeFileSync(join(runDir, 'model-response.txt'), raw);
+  assert.throws(() => {
+    writeFileSync(join(runDir, 'run.json'), JSON.stringify({ ...record, raw_response_sha256: null }));
+    try { cordonDefaultRun({ runDir, archiveRoot: join(temp, 'archive') }); }
+    finally { writeFileSync(join(runDir, 'run.json'), JSON.stringify(record)); }
+  }, /CORDON_RAW_MISMATCH/);
   writeFileSync(join(runDir, 'project', 'server.mjs'), 'inert data');
   const archiveRoot = join(temp, 'archive');
   const first = cordonDefaultRun({ runDir, archiveRoot });

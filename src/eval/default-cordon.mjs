@@ -1,11 +1,44 @@
 // Copy inert paid-response bytes into a private, content-checked comparator cordon.
 // This never executes generated code or requests a model. Permissions are not remote durability.
 import { createHash } from 'node:crypto';
-import { constants, chmodSync, copyFileSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
-import { join, resolve, relative, sep } from 'node:path';
+import { execFileSync } from 'node:child_process';
+import { constants, chmodSync, copyFileSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import { dirname, join, resolve, relative, sep } from 'node:path';
+import { REPO_ROOT, repoIdentity } from '../provenance/store.mjs';
 
 const digest = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const inside = (root, path) => path === root || path.startsWith(`${root}${sep}`);
+function existingAncestor(path) {
+  let ancestor = path;
+  while (!existsSync(ancestor)) {
+    const next = dirname(ancestor);
+    if (next === ancestor) throw new Error('CORDON_DESTINATION_INVALID: no existing ancestor');
+    ancestor = next;
+  }
+  return ancestor;
+}
+function gitOrigin(dir) {
+  try {
+    return execFileSync('git', ['-C', dir, 'remote', 'get-url', 'origin'],
+      { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 2000 }).trim();
+  } catch { return null; }
+}
+/** Refuse a public checkout (including symlink aliases and sibling worktrees) BEFORE creating anything. */
+export function assertPrivateArchiveRoot(archiveRoot, { repoRoot = REPO_ROOT, sourceRoot = null } = {}) {
+  const root = resolve(archiveRoot);
+  const ancestor = existingAncestor(root);
+  const realRoot = resolve(realpathSync(ancestor), relative(ancestor, root));
+  const realRepo = realpathSync(repoRoot);
+  if (inside(realRepo, realRoot) || (sourceRoot && inside(realpathSync(sourceRoot), realRoot))) {
+    throw new Error('STORE_INSIDE_PUBLIC: cordon archive must be outside the public checkout and paid source');
+  }
+  // A different worktree of this same public repo is just as publishable as this one.
+  const publicIdentity = repoIdentity(gitOrigin(realRepo));
+  if (publicIdentity && repoIdentity(gitOrigin(realpathSync(ancestor))) === publicIdentity) {
+    throw new Error('STORE_INSIDE_PUBLIC: cordon archive resolves inside another public checkout');
+  }
+  return root;
+}
 function scan(root, dir = root) {
   const entries = [];
   for (const name of readdirSync(dir).sort()) {
@@ -51,11 +84,13 @@ export function cordonDefaultRun({ runDir, archiveRoot }) {
       !/^[0-9a-f]{64}$/.test(record.request_id ?? '') || !/^[0-9a-f]{64}$/.test(record.prompt_sha256 ?? ''))
     throw new Error('CORDON_NOT_LIVE_DEFAULT: paid run identity is incomplete or wrong arm');
   const rawPath = join(source, 'model-response.txt');
-  if (record.raw_response_sha256 && (!existsSync(rawPath) || digest(readFileSync(rawPath)) !== record.raw_response_sha256))
+  const hasRaw = existsSync(rawPath);
+  if (hasRaw !== Boolean(record.raw_response_sha256) ||
+      (hasRaw && digest(readFileSync(rawPath)) !== record.raw_response_sha256))
     throw new Error('CORDON_RAW_MISMATCH: retained response differs from run record');
   const sourceFiles = scan(source);
   if (!sourceFiles.some((file) => file.path === 'run.json')) throw new Error('CORDON_NO_RECORD');
-  const root = resolve(archiveRoot);
+  const root = assertPrivateArchiveRoot(archiveRoot, { sourceRoot: source });
   mkdirSync(root, { recursive: true, mode: 0o700 });
   const dest = join(root, `${record.project_id}-${record.request_id}`);
   if (existsSync(dest)) {
