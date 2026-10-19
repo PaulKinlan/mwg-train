@@ -291,8 +291,8 @@ test('deleting paid artifacts cannot resend the same live identity; distinct arm
     mkdirSync(designDir, { recursive: true });
     const plan = readFileSync(new URL('../docs/train/design/tr-01/plan.md', import.meta.url), 'utf8');
     const design = readFileSync(new URL('../docs/train/design/tr-01/design.md', import.meta.url), 'utf8');
-    writeFileSync(join(designDir, 'plan.md'), `${plan}\nAdditional synthetic prompt detail for this local test.\n`);
-    writeFileSync(join(designDir, 'design.md'), design);
+    writeFileSync(join(designDir, 'plan.md'), plan);
+    writeFileSync(join(designDir, 'design.md'), `${design}\nAdditional synthetic prompt detail for this local test.\n`);
     const changedPrompt = await generateProject({ ...args, sourceRoot });
     assert.equal(changedPrompt.status, 'SUCCESS');
     assert.notEqual(changedPrompt.prompt_sha256, first.prompt_sha256);
