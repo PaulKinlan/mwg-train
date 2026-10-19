@@ -387,6 +387,10 @@
     "test/served-routes.test.mjs",
     "test/generated-server-env.test.mjs"
   ],
+  "scripts/verify-tr01-live-slice.mjs": [
+    "test/live-slice-verdict.test.mjs",
+    "test/tr01-live-slice-cli.test.mjs"
+  ],
   "scripts/verify-account-recovery-demo.mjs": [
     "test/demo-verifiers.test.mjs"
   ],

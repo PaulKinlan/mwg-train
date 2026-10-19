@@ -5,7 +5,7 @@ import { resolve } from 'node:path';
 import test from 'node:test';
 
 const ROOT = resolve(import.meta.dirname, '..');
-const EXPECTED_EDGES_SHA256 = '6439beb67d6120c3d7ccb462262731db6f3cf389801f971a6818850620b34d43';
+const EXPECTED_EDGES_SHA256 = '7bca4c4d562974ad363b2225d124442e2b718fe4b184afb5d6bd3a1673b418b4';
 
 test('the fast-gate coverage contract cannot silently lose any declared suite edge', () => {
   const mapping = JSON.parse(readFileSync(resolve(ROOT, '.fleet/coverage-mapping.json'), 'utf8'));
@@ -91,6 +91,13 @@ test('docs that quote token measurements route to their assertion suite', () => 
   }
   assert.ok(mapping['docs/train/READINESS-EPIC.md'].includes('test/reachability.test.mjs'),
     'the readiness document must retain its reachability coverage');
+});
+
+test('the tr-01 live verifier routes to both transport decision and CLI regressions', () => {
+  const mapping = JSON.parse(readFileSync(resolve(ROOT, '.fleet/coverage-mapping.json'), 'utf8'));
+  assert.deepEqual(mapping['scripts/verify-tr01-live-slice.mjs'], [
+    'test/live-slice-verdict.test.mjs', 'test/tr01-live-slice-cli.test.mjs',
+  ]);
 });
 
 test('documents with content assertions route to their citing suites', () => {
