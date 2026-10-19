@@ -69,6 +69,46 @@ test('public checkout and symlinked archive aliases refuse before writing paid b
   execFileSync('git', ['-C', siblingPublicCheckout, 'remote', 'rename', 'upstream', 'origin']);
   assert.throws(() => assertPrivateArchiveRoot(join(siblingPublicCheckout, 'paid-output'), { repoRoot: publicRepo }),
     /STORE_INSIDE_PUBLIC.*another public checkout/);
+  writeFileSync(join(publicRepo, 'public.txt'), 'public fixture');
+  execFileSync('git', ['-C', publicRepo, 'add', 'public.txt']);
+  execFileSync('git', ['-C', publicRepo, '-c', 'user.name=Test', '-c', 'user.email=test@example.test',
+    'commit', '--quiet', '-m', 'public fixture']);
+  const localClone = join(temp, 'local-clone');
+  execFileSync('git', ['clone', '--quiet', publicRepo, localClone]);
+  for (const candidate of [localClone, join(temp, 'file-clone')]) {
+    if (candidate !== localClone) execFileSync('git', ['clone', '--quiet', `file://${publicRepo}`, candidate]);
+    const archive = join(candidate, 'paid-output');
+    assert.throws(() => assertPrivateArchiveRoot(archive, { repoRoot: publicRepo }), /STORE_INSIDE_PUBLIC/);
+    assert.equal(existsSync(archive), false, 'local-path clone must not gain a paid archive');
+  }
+  const chainedClone = join(temp, 'clone-of-clone');
+  execFileSync('git', ['clone', '--quiet', join(temp, 'file-clone'), chainedClone]);
+  assert.throws(() => assertPrivateArchiveRoot(join(chainedClone, 'paid-output'), { repoRoot: publicRepo }),
+    /STORE_INSIDE_PUBLIC/, 'follow a bounded local remote chain to the public repo');
+  execFileSync('git', ['-C', localClone, 'remote', 'set-url', 'origin', '../repo']);
+  assert.throws(() => assertPrivateArchiveRoot(join(localClone, 'paid-output'), { repoRoot: publicRepo }),
+    /STORE_INSIDE_PUBLIC/, 'relative local remotes must resolve against the checkout');
+  execFileSync('git', ['-C', localClone, 'remote', 'remove', 'origin']);
+  assert.throws(() => assertPrivateArchiveRoot(join(localClone, 'paid-output'), { repoRoot: publicRepo }),
+    /STORE_NOT_PRIVATE/, 'remote-stripped clone must fail closed');
+  const unverified = join(temp, 'unverified-git');
+  execFileSync('git', ['init', '--quiet', unverified]);
+  assert.throws(() => assertPrivateArchiveRoot(join(unverified, 'paid-output'), { repoRoot: publicRepo }),
+    /STORE_NOT_PRIVATE/, 'a bare git init gives no evidence of a private destination');
+  assert.equal(existsSync(join(unverified, 'paid-output')), false);
+  const malformed = join(temp, 'malformed-git');
+  mkdirSync(join(malformed, '.git'), { recursive: true });
+  assert.throws(() => assertPrivateArchiveRoot(join(malformed, 'paid-output'), { repoRoot: publicRepo }),
+    /STORE_NOT_PRIVATE/, 'an unreadable Git marker cannot be mistaken for a plain private directory');
+  assert.equal(existsSync(join(malformed, 'paid-output')), false);
+  const privateCheckout = join(temp, 'private-repo');
+  execFileSync('git', ['init', '--quiet', privateCheckout]);
+  execFileSync('git', ['-C', privateCheckout, 'remote', 'add', 'origin', 'https://example.invalid/example/private-repo.git']);
+  assert.equal(assertPrivateArchiveRoot(join(privateCheckout, 'paid-output'), { repoRoot: publicRepo }),
+    join(privateCheckout, 'paid-output'));
+  execFileSync('git', ['-C', publicRepo, 'remote', 'add', 'archive', 'https://example.invalid/example/private-repo.git']);
+  assert.equal(assertPrivateArchiveRoot(join(privateCheckout, 'paid-output'), { repoRoot: publicRepo }),
+    join(privateCheckout, 'paid-output'), 'an extra public remote must not make private origin look public');
   // The real call must also refuse a public checkout path without creating the archive directory.
   const runDir = join(temp, 'run');
   writeFileSync(join(runDir, 'run.json'), JSON.stringify({ status: 'FAILED', backend: 'live', arm: 'default',

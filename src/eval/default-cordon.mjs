@@ -4,6 +4,7 @@ import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { constants, chmodSync, copyFileSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve, relative, sep } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { REPO_ROOT, repoIdentity } from '../provenance/store.mjs';
 
 const digest = (bytes) => createHash('sha256').update(bytes).digest('hex');
@@ -27,17 +28,49 @@ function existingAncestor(path) {
     }
   }
 }
-function gitIdentities(dir) {
+const git = (dir, ...args) => execFileSync('git', ['-C', dir, ...args],
+  { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 2000 }).trim();
+function gitCheckout(dir) {
+  try { return git(dir, 'rev-parse', '--show-toplevel'); }
+  catch (error) {
+    if (error.code === 'ETIMEDOUT' || error.killed)
+      throw new Error('STORE_NOT_PRIVATE: Git destination verification timed out');
+    // A plain private directory is safe; a bare or malformed Git repo is unverified.
+    try { if (git(dir, 'rev-parse', '--is-bare-repository') === 'true') return dir; }
+    catch { /* Look for an unreadable Git checkout before allowing a plain directory. */ }
+    for (let ancestor = dir;; ancestor = dirname(ancestor)) {
+      try { lstatSync(join(ancestor, '.git')); throw new Error('STORE_NOT_PRIVATE: unreadable Git destination'); }
+      catch (markerError) { if (markerError.code !== 'ENOENT') throw markerError; }
+      if (dirname(ancestor) === ancestor) break;
+    }
+    return null;
+  }
+}
+function gitCommonDir(dir) {
+  try { return realpathSync(git(dir, 'rev-parse', '--path-format=absolute', '--git-common-dir')); }
+  catch { return null; }
+}
+// Never treat a filesystem path as owner/repo: repoIdentity would parse its final two components.
+const networkRemote = (url) => /^(?:(?!file:)[a-z][a-z\d+.-]*:\/\/|[^/@:]+@[^/:]+:)/i.test(url);
+function remoteEvidence(url, dir, publicRepo, publicIdentity, publicCommonDir, visited = new Set(), depth = 0) {
+  if (networkRemote(url)) {
+    const identity = repoIdentity(url);
+    return !identity || !publicIdentity ? 'unknown' : identity === publicIdentity ? 'public' : 'private';
+  }
+  if (depth >= 3) return 'unknown';
+  let target;
+  try { target = realpathSync(url.startsWith('file://') ? fileURLToPath(url) : resolve(dir, url)); }
+  catch { return 'unknown'; }
+  if (target === publicRepo || (publicCommonDir && gitCommonDir(target) === publicCommonDir)) return 'public';
+  if (visited.has(target)) return 'unknown';
+  visited.add(target);
   try {
-    const remotes = execFileSync('git', ['-C', dir, 'remote'],
-      { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 2000 }).trim().split('\n').filter(Boolean);
-    return new Set(remotes.map((name) => {
-      try {
-        return repoIdentity(execFileSync('git', ['-C', dir, 'remote', 'get-url', name],
-          { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 2000 }).trim());
-      } catch { return null; }
-    }).filter(Boolean));
-  } catch { return new Set(); }
+    const remotes = git(target, 'remote').split('\n').filter(Boolean);
+    if (!remotes.length) return 'unknown';
+    const evidence = remotes.map((name) => remoteEvidence(git(target, 'remote', 'get-url', name),
+      target, publicRepo, publicIdentity, publicCommonDir, visited, depth + 1));
+    return evidence.includes('public') ? 'public' : evidence.includes('private') ? 'private' : 'unknown';
+  } catch { return 'unknown'; }
 }
 /** Refuse a public checkout (including symlink aliases and sibling worktrees) BEFORE creating anything. */
 export function assertPrivateArchiveRoot(archiveRoot, { repoRoot = REPO_ROOT, sourceRoot = null } = {}) {
@@ -48,13 +81,33 @@ export function assertPrivateArchiveRoot(archiveRoot, { repoRoot = REPO_ROOT, so
   if (inside(realRepo, realRoot) || (sourceRoot && inside(realpathSync(sourceRoot), realRoot))) {
     throw new Error('STORE_INSIDE_PUBLIC: cordon archive must be outside the public checkout and paid source');
   }
-  // A different worktree of this same public repo is just as publishable as this one.
-  const publicIdentities = gitIdentities(realRepo);
-  const destinationIdentities = gitIdentities(realpathSync(ancestor));
-  if ([...publicIdentities].some((identity) => destinationIdentities.has(identity))) {
+  // Plain private directories are allowed. Git destinations require positive evidence of a
+  // non-public origin: a no-remote checkout could just be a public clone with its remote removed.
+  const destination = gitCheckout(realpathSync(ancestor));
+  if (!destination) return root;
+  const publicCommonDir = gitCommonDir(realRepo);
+  if (publicCommonDir && gitCommonDir(destination) === publicCommonDir)
     throw new Error('STORE_INSIDE_PUBLIC: cordon archive resolves inside another public checkout');
+  let publicIdentity = null;
+  try {
+    const publicOrigin = git(realRepo, 'remote', 'get-url', 'origin');
+    if (networkRemote(publicOrigin)) publicIdentity = repoIdentity(publicOrigin);
+  } catch { /* No canonical public origin: Git destinations remain unverified. */ }
+  try {
+    const remotes = git(destination, 'remote').split('\n').filter(Boolean);
+    let privateOrigin = false;
+    for (const name of remotes) {
+      const evidence = remoteEvidence(git(destination, 'remote', 'get-url', name), destination,
+        realRepo, publicIdentity, publicCommonDir);
+      if (evidence === 'public')
+        throw new Error('STORE_INSIDE_PUBLIC: cordon archive resolves inside another public checkout');
+      if (name === 'origin' && evidence === 'private') privateOrigin = true;
+    }
+    if (privateOrigin) return root;
+  } catch (error) {
+    if (error.message.startsWith('STORE_INSIDE_PUBLIC:')) throw error;
   }
-  return root;
+  throw new Error('STORE_NOT_PRIVATE: Git archive destination has no verified non-public origin');
 }
 function scan(root, dir = root) {
   const entries = [];
