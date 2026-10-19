@@ -4,6 +4,9 @@ const hash = (text) => createHash('sha256').update(text).digest('hex');
 const fail = (family, detail) => { throw new Error(`FAMILY_INTERFACE_INVALID ${family}: ${detail}`); };
 const section = (plan, heading) => plan.match(new RegExp(`^## ${heading}\\n([\\s\\S]*?)(?=^## |$(?![\\s\\S]))`, 'm'))?.[1];
 const list = (text) => [...text.matchAll(/`([^`]+)`/g)].map((match) => match[1]);
+// The only family with no update flow must preserve its reviewed Journey verbatim.
+// Re-pin deliberately when changing that section, even for a non-functional edit.
+const TR05_JOURNEY_SHA256 = 'd379562c510a436fd8601f7c7948bc2332e95d837ca4c8ac55ada0d9019bbb61';
 
 /**
  * A family-parameterized version of the owner-approved Option A concept, not a literal copy of
@@ -17,6 +20,8 @@ export function familyInterfaceContract(family, plan) {
   const useCase = section(plan, 'Use case');
   const routes = section(plan, 'Routes and effects');
   const journey = section(plan, 'Journey');
+  if (family === 'tr-05' && hash(journey ?? '') !== TR05_JOURNEY_SHA256)
+    fail(family, 'Journey differs from the reviewed no-update section; review and re-pin before deriving an interface');
   const validation = section(plan, 'Validation and states');
   const acceptance = section(plan, 'Acceptance criteria');
   const titlePrefix = `# \`${family}\` functional specification — `;
@@ -29,9 +34,6 @@ export function familyInterfaceContract(family, plan) {
     .map((match) => ({ path: match[1], role: match[2].trim() }));
   const search = journey?.match(/Separately, the brief declares a search flow: `([^`]+)` with query parameter `([^`]+)`="([^"]+)" lists "([^"]+)" inside `([^`]+)` and does not list "([^"]+)"/);
   const update = journey?.match(/And an update flow: the stored record's `([^`]+)` field can be changed to "([^"]+)"/);
-  // tr-05 alone has no update in the pinned Journey. A paraphrased new one must not
-  // silently yield its byte-identical "No update flow" pinned contract.
-  const updateIntent = /(?:update|edit|modification)\s+(?:flow|journey)\b|(?:can|may|should) be (?:set|changed|edited|updated|modified|amended)\b|\b(?:edit|edits|edited|editing|modify|modifies|modified|amend|amends|amended|chang(?:e|es|ed|ing)|mutat(?:e|es|ed|ing)|mutab(?:le|ility)|PATCH|PUT)\b/i.test(journey ?? '');
   const criteria = acceptance?.split('\n').filter((line) => /^- /.test(line)) ?? [];
   const redirectTargets = criteria.flatMap((criterion) =>
     [...criterion.matchAll(/\bredirects to (\/[^\s,;)]+)/g)].map((match) => match[1]));
@@ -40,9 +42,7 @@ export function familyInterfaceContract(family, plan) {
   const readBack = routeRows.find((row) => row.role.startsWith('read-back')) ??
     routeRows.find((row) => row.path !== '/' && criteria.some((criterion) =>
       criterion.startsWith(`- GET ${row.path} `) || redirectTargets.includes(row.path)));
-  // Only tr-05 has no update journey in the pinned corpus; missing or paraphrased
-  // updates for every other family must fail before a future interface re-pin.
-  if (!update && updateIntent) fail(family, 'plan declares an update journey the extraction could not match');
+  // Every other family must expose an extractable update journey before re-pinning.
   if (!title || fields.length !== Number(fieldsMatch?.[1]) || !required.length ||
       required.some((field) => !fields.includes(field)) || !form || !routeRows.some((row) => row.path === '/') ||
       !readBack || !search || !criteria.length ||
