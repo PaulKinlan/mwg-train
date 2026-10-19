@@ -2,10 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, writeFileSync, existsSync, rmSync, rmdirSync, mkdirSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync, existsSync, rmSync, rmdirSync, mkdirSync, cpSync, copyFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { Readable } from 'node:stream';
 import { generateProject, buildGenerationPrompt, parseProjectFiles, streamCompletion, rethrowLiveRecoveryMkdirError, nativeCompletionEndpoint, NATIVE_DEEPSEEK_BASE_URL } from '../src/eval/generator.mjs';
 import { GENERATION_BEAD, verifyGenerationApproval, worstCaseGenerationUsd, reserveGeneration, settleGeneration } from '../src/eval/spend-ledger.mjs';
@@ -180,6 +180,35 @@ test('native DeepSeek rejects wrong origins and credential-bearing URLs before a
     assert.equal(calls, 0, 'an injected fetch cannot bypass the pinned origin or receive the key');
     assert.equal(existsSync(refused.output_dir), false);
     assert.equal(existsSync(join(dir, 'ledger.jsonl')), false);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('an injected fetch cannot exfiltrate a fake key even with a test-only approved decode config', async () => {
+  const dir = root(); let calls = 0;
+  try {
+    const fixture = join(dir, 'fixture');
+    mkdirSync(join(fixture, 'docs/eval'), { recursive: true });
+    mkdirSync(join(fixture, 'docs/train/design/tr-01'), { recursive: true });
+    cpSync(fileURLToPath(new URL('../src/eval', import.meta.url)), join(fixture, 'src/eval'), { recursive: true });
+    const docs = fileURLToPath(new URL('../docs/eval/', import.meta.url));
+    copyFileSync(join(docs, 'interface-contract.tr-01.candidate.md'), join(fixture, 'docs/eval/interface-contract.tr-01.candidate.md'));
+    const config = JSON.parse(readFileSync(join(docs, 'decode-config.deepseek-flash.json'), 'utf8'));
+    config.status = 'ratified-owner-TEST-FIXTURE-ONLY'; // no actual owner decision is implied
+    writeFileSync(join(fixture, 'docs/eval/decode-config.deepseek-flash.json'), JSON.stringify(config));
+    writeFileSync(join(fixture, 'docs/train/design/tr-01/plan.md'), 'Synthetic plan');
+    writeFileSync(join(fixture, 'docs/train/design/tr-01/design.md'), 'Synthetic design');
+    const isolated = await import(pathToFileURL(join(fixture, 'src/eval/generator.mjs')).href);
+    const ledgerPath = join(dir, 'never-created-ledger.jsonl');
+    const denied = await isolated.generateProject({ family: 'tr-01', framework: 'hono', model: config.build_model,
+      revision: REVISION, sourceRoot: fixture, outRoot: join(dir, 'runs'), backend: 'live',
+      endpoint: 'https://evil.example/v1/chat/completions', apiKey: 'FAKE-NON-SECRET-KEY', ledgerPath,
+      approvalComments: () => { throw new Error('authority lookup must not run for bad origin'); },
+      fetchImpl: (_url, _init) => { calls++; throw new Error('fake key forwarded'); } });
+    assert.equal(denied.status, 'FAILED');
+    assert.equal(denied.error.code, 'NO_PROVIDER_CONFIG');
+    assert.equal(calls, 0);
+    assert.equal(existsSync(ledgerPath), false);
+    assert.equal(existsSync(denied.output_dir), false);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
