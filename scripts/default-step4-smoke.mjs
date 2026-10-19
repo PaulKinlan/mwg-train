@@ -11,7 +11,7 @@ import { assertStep4Ratification, prepareDefaultStep4, step4RatificationRow } fr
 import { requireCorpusSandbox } from '../src/corpus/sandbox.mjs';
 import { startServer } from '../src/corpus/harness.mjs';
 import { launchChrome } from '../src/corpus/cdp.mjs';
-import { step4InstrumentDigest } from '../src/eval/step4-instrument.mjs';
+import { step4InstrumentDigest, writeStep4Receipt } from '../src/eval/step4-instrument.mjs';
 
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const root = fileURLToPath(new URL('..', import.meta.url));
@@ -107,16 +107,14 @@ export async function smokeDefaultFamily({ family, archiveRoot, evidenceRoot }) 
       } finally { await page.close(); }
     }
     verifyArchiveFamily({ archiveRoot, row }); // An archive mutation during execution invalidates the evidence.
-    if (step4InstrumentDigest(root) !== instrumentSha256) throw Error('INSTRUMENT_MUTATED_DURING_RUN');
     const receipt = { kind: 'step4-smoke-only', family, project_id: row.project_id, request_id: row.request_id,
       sandbox: server.mechanism, archive_manifest_sha256: source.archive_manifest_sha256,
       brief_sha256: selected.brief_sha256, journey_sha256: selected.journey_sha256,
-      instrument_sha256: instrumentSha256,
       visual_target: `docs/design/training/${family}/reference.jpg`, visual_target_sha256: visualTargetSha256,
       image_supplied_during_generation: false,
       ratification_row_sha256: sha256(ratificationRow), screenshots, excluded_from_training: true,
       visual_verdict: 'NOT_MEASURED', functional_verdict: 'NOT_MEASURED', rule_verdict: 'NOT_MEASURED' };
-    writeFileSync(join(destination, 'receipt.json'), `${JSON.stringify(receipt, null, 2)}\n`, { flag: 'wx', mode: 0o600 });
+    writeStep4Receipt({ root, instrumentSha256, destination, receipt });
     return { kind: receipt.kind, family, sandbox: receipt.sandbox, screenshot_count: screenshots.length,
       functional_verdict: receipt.functional_verdict, visual_verdict: receipt.visual_verdict };
   } finally {

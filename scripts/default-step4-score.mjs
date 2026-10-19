@@ -11,7 +11,7 @@ import { RULES } from '../src/corpus/rules.mjs';
 import { assertPrivateArchiveRoot } from '../src/eval/default-cordon.mjs';
 import { prepareDefaultStep4, step4RatificationRow, assertStep4Ratification } from '../src/eval/default-step4-preflight.mjs';
 import { journeyComponentVerdicts, requiredRuleVerdicts, headroom } from '../src/eval/default-step4-verdict.mjs';
-import { step4InstrumentDigest } from '../src/eval/step4-instrument.mjs';
+import { step4InstrumentDigest, writeStep4Receipt } from '../src/eval/step4-instrument.mjs';
 import { availablePort, verifyArchiveFamily } from './default-step4-smoke.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
@@ -92,11 +92,10 @@ export async function scoreDefaultFamily({ family, archiveRoot, evidenceRoot }) 
     const rules = requiredRuleVerdicts(selected.required_rules, requiredChecks);
     const diagnostics = requiredRuleVerdicts(selected.applicable_diagnostics, [...requiredChecks, ...diagnosticChecks]);
     const ceiling = headroom(journeyParts, rules);
-    if (step4InstrumentDigest(root) !== instrumentSha256) throw Error('INSTRUMENT_MUTATED_DURING_RUN');
     const receipt = { kind: 'step4-functional-pilot', family, project_id: archived.project_id, request_id: archived.request_id,
       ratification_row_sha256: sha256(ratificationRow), archive_manifest_sha256: source.archive_manifest_sha256,
       brief_sha256: selected.brief_sha256, journey_sha256: selected.journey_sha256,
-      instrument_sha256: instrumentSha256, excluded_from_training: true, sandbox: server.mechanism,
+      excluded_from_training: true, sandbox: server.mechanism,
       journey_parts: journeyParts, required_rules: rules, applicable_diagnostics: diagnostics, headroom: ceiling,
       coverage_incomplete: ceiling.coverage_incomplete,
       attempts, visual_verdict: 'NOT_MEASURED', limitations: [
@@ -106,7 +105,7 @@ export async function scoreDefaultFamily({ family, archiveRoot, evidenceRoot }) 
         'Local archive is read-only but not WORM/off-VM; served checkpoint and macOS sample remain unverified.',
       ] };
     verifyArchiveFamily({ archiveRoot, row: archived }); // Any changed byte invalidates the run.
-    writeFileSync(join(destination, 'receipt.json'), `${JSON.stringify(receipt, null, 2)}\n`, { flag: 'wx', mode: 0o600 });
+    writeStep4Receipt({ root, instrumentSha256, destination, receipt });
     return { kind: receipt.kind, family, sandbox: receipt.sandbox, headroom: ceiling,
       coverage_incomplete: ceiling.coverage_incomplete,
       required_not_checkable: rules.filter((entry) => entry.status === 'NOT_CHECKABLE').length,
