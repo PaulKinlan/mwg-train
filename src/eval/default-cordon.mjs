@@ -28,8 +28,15 @@ function existingAncestor(path) {
     }
   }
 }
+// Ambient GIT_DIR/GIT_WORK_TREE (and other GIT_* selectors) override -C and can
+// make an unrelated destination look like the public checkout. Probe only dir.
+const gitEnv = () => Object.fromEntries(Object.entries(process.env).filter(([key]) => !key.startsWith('GIT_')));
 const git = (dir, ...args) => execFileSync('git', ['-C', dir, ...args],
-  { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 2000 }).trim();
+  { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 2000, env: gitEnv() }).trim();
+const remoteUrls = (dir, name) => [...new Set([
+  ...git(dir, 'remote', 'get-url', '--all', name).split('\n'),
+  ...git(dir, 'remote', 'get-url', '--push', '--all', name).split('\n'),
+].filter(Boolean))];
 function gitCheckout(dir) {
   try { return git(dir, 'rev-parse', '--show-toplevel'); }
   catch (error) {
@@ -67,8 +74,8 @@ function remoteEvidence(url, dir, publicRepo, publicIdentity, publicCommonDir, v
   try {
     const remotes = git(target, 'remote').split('\n').filter(Boolean);
     if (!remotes.length) return 'unknown';
-    const evidence = remotes.map((name) => remoteEvidence(git(target, 'remote', 'get-url', name),
-      target, publicRepo, publicIdentity, publicCommonDir, visited, depth + 1));
+    const evidence = remotes.flatMap((name) => remoteUrls(target, name).map((remote) => remoteEvidence(remote,
+      target, publicRepo, publicIdentity, publicCommonDir, new Set(visited), depth + 1)));
     return evidence.includes('public') ? 'public' : evidence.includes('private') ? 'private' : 'unknown';
   } catch { return 'unknown'; }
 }
@@ -97,11 +104,11 @@ export function assertPrivateArchiveRoot(archiveRoot, { repoRoot = REPO_ROOT, so
     const remotes = git(destination, 'remote').split('\n').filter(Boolean);
     let privateOrigin = false;
     for (const name of remotes) {
-      const evidence = remoteEvidence(git(destination, 'remote', 'get-url', name), destination,
-        realRepo, publicIdentity, publicCommonDir);
-      if (evidence === 'public')
+      const evidence = remoteUrls(destination, name).map((remote) => remoteEvidence(remote, destination,
+        realRepo, publicIdentity, publicCommonDir));
+      if (evidence.includes('public'))
         throw new Error('STORE_INSIDE_PUBLIC: cordon archive resolves inside another public checkout');
-      if (name === 'origin' && evidence === 'private') privateOrigin = true;
+      if (name === 'origin' && evidence.length && evidence.every((kind) => kind === 'private')) privateOrigin = true;
     }
     if (privateOrigin) return root;
   } catch (error) {

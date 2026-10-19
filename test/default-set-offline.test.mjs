@@ -117,6 +117,36 @@ test('public checkout and symlinked archive aliases refuse before writing paid b
   execFileSync('git', ['clone', '--quiet', privateCheckout, privateClone]);
   assert.equal(assertPrivateArchiveRoot(join(privateClone, 'paid-output'), { repoRoot: publicRepo }),
     join(privateClone, 'paid-output'), 'a local clone of the real private companion remains valid');
+  execFileSync('git', ['-C', privateCheckout, 'remote', 'set-url', '--push', 'origin', publicOrigin]);
+  assert.throws(() => assertPrivateArchiveRoot(join(privateCheckout, 'paid-output'), { repoRoot: publicRepo }),
+    /STORE_INSIDE_PUBLIC/, 'a private fetch URL cannot hide a public push URL');
+  assert.equal(existsSync(join(privateCheckout, 'paid-output')), false);
+  execFileSync('git', ['-C', privateCheckout, 'config', '--unset-all', 'remote.origin.pushurl']);
+  execFileSync('git', ['-C', privateCheckout, 'remote', 'set-url', '--push', 'origin',
+    'https://example.invalid/example/private-repo.git']);
+  execFileSync('git', ['-C', privateCheckout, 'remote', 'set-url', '--add', '--push', 'origin', publicOrigin]);
+  assert.throws(() => assertPrivateArchiveRoot(join(privateCheckout, 'paid-output'), { repoRoot: publicRepo }),
+    /STORE_INSIDE_PUBLIC/, 'a second public push URL cannot hide behind the first private push URL');
+  execFileSync('git', ['-C', privateCheckout, 'config', '--unset-all', 'remote.origin.pushurl']);
+  execFileSync('git', ['-C', privateCheckout, 'remote', 'set-url', '--add', 'origin', publicOrigin]);
+  assert.throws(() => assertPrivateArchiveRoot(join(privateCheckout, 'paid-output'), { repoRoot: publicRepo }),
+    /STORE_INSIDE_PUBLIC/, 'a second public fetch URL cannot hide behind the first private URL');
+  execFileSync('git', ['-C', privateCheckout, 'remote', 'set-url', '--delete', 'origin', publicOrigin]);
+  const unknownMirror = join(temp, 'unverified-mirror');
+  execFileSync('git', ['init', '--quiet', unknownMirror]);
+  execFileSync('git', ['-C', privateCheckout, 'remote', 'add', 'mirror', unknownMirror]);
+  assert.equal(assertPrivateArchiveRoot(join(privateClone, 'paid-output'), { repoRoot: publicRepo }),
+    join(privateClone, 'paid-output'), 'an unknown ancillary mirror cannot negate a positively private origin');
+  execFileSync('git', ['-C', privateCheckout, 'remote', 'set-url', '--push', 'mirror', publicOrigin]);
+  assert.throws(() => assertPrivateArchiveRoot(join(privateClone, 'paid-output'), { repoRoot: publicRepo }),
+    /STORE_INSIDE_PUBLIC/, 'a local remote chain must inspect an intermediate public push URL');
+  execFileSync('git', ['-C', privateCheckout, 'remote', 'remove', 'mirror']);
+  const cleanPrivate = join(temp, 'private', 'archive');
+  const script = `import { assertPrivateArchiveRoot } from ${JSON.stringify(new URL('../src/eval/default-cordon.mjs', import.meta.url).href)}; ` +
+    `process.stdout.write(assertPrivateArchiveRoot(${JSON.stringify(cleanPrivate)}, { repoRoot: ${JSON.stringify(publicRepo)} }));`;
+  assert.equal(execFileSync(process.execPath, ['--input-type=module', '-e', script], { encoding: 'utf8', timeout: 2000,
+    env: { ...process.env, GIT_DIR: join(publicRepo, '.git'), GIT_WORK_TREE: publicRepo } }), cleanPrivate,
+  'ambient Git selectors must not contaminate a plain private directory');
   // The real call must also refuse a public checkout path without creating the archive directory.
   const runDir = join(temp, 'run');
   writeFileSync(join(runDir, 'run.json'), JSON.stringify({ status: 'FAILED', backend: 'live', arm: 'default',
