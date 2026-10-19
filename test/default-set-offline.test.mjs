@@ -4,11 +4,11 @@ import { mkdtempSync, mkdirSync, readFileSync, readdirSync, lstatSync, rmSync, s
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
-import { validateSlice, preflight, manifestPath } from '../scripts/default-set-preflight.mjs';
+import { validateSlice, preflight } from '../scripts/default-set-preflight.mjs';
+import manifest from '../docs/eval/default-set-hono-slice.json' with { type: 'json' };
 import { cordonDefaultRun } from '../src/eval/default-cordon.mjs';
 
 const sha = (value) => createHash('sha256').update(value).digest('hex');
-const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
 function removePrivateTree(root) {
   const openDirectories = (path) => {
     if (!lstatSync(path).isDirectory()) return;
