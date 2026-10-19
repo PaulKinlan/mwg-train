@@ -261,7 +261,7 @@ test('an offline stub cannot masquerade as a resumed live provider response', as
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
-test('deleting paid artifacts cannot resend the same live identity; distinct arms and changed prompts remain separate', async () => {
+test('deleted paid artifacts cannot resend; distinct arms stay separate and unpinned design changes refuse', async () => {
   const dir = root(); let calls = 0;
   try {
     const ledgerPath = join(dir, 'ledger.jsonl');
@@ -294,11 +294,12 @@ test('deleting paid artifacts cannot resend the same live identity; distinct arm
     writeFileSync(join(designDir, 'plan.md'), plan);
     writeFileSync(join(designDir, 'design.md'), `${design}\nAdditional synthetic prompt detail for this local test.\n`);
     const changedPrompt = await generateProject({ ...args, sourceRoot });
-    assert.equal(changedPrompt.status, 'SUCCESS');
+    assert.equal(changedPrompt.status, 'FAILED');
+    assert.equal(changedPrompt.error.code, 'UNRATIFIED_DESIGN');
     assert.notEqual(changedPrompt.prompt_sha256, first.prompt_sha256);
-    assert.notEqual(changedPrompt.request_id, first.request_id, 'prompt bytes are part of the ledger identity');
-    assert.equal(calls, 3);
-    assert.equal(readFileSync(ledgerPath, 'utf8').trim().split('\n').length, 6);
+    assert.equal(calls, 2, 'unreviewed design bytes must never call the provider');
+    assert.equal(existsSync(changedPrompt.output_dir), false);
+    assert.equal(readFileSync(ledgerPath, 'utf8').trim().split('\n').length, 4);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
