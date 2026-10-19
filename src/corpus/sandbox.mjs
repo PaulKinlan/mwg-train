@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { createServer } from 'node:http';
 import { resolve } from 'node:path';
 
+import { generatedServerMemoryMb } from '../eval/generated-server.mjs';
 import { Sandbox } from '../viewer/sandbox.mjs';
 
 /** Refuse before starting any generated code if the namespace mechanism is unavailable. */
@@ -27,12 +28,14 @@ const CORPUS_WALL_MS = 120_000;
 
 /** Expose a sandboxed server on host loopback, preserving root-relative URLs verbatim. */
 export async function startCorpusSandbox(projectDir, { port, cpuSeconds = CORPUS_CPU_SECONDS, wallMs = CORPUS_WALL_MS }) {
-  requireCorpusSandbox();
+  const mechanism = requireCorpusSandbox();
+  const nodeHeapMb = generatedServerMemoryMb();
   const sandbox = new Sandbox({
     id: `corpus:${process.pid}:${port}:${Date.now()}`,
     siteDir: resolve(projectDir),
     nodeModulesDir: resolve(import.meta.dirname, '../../node_modules'),
     cpuSeconds,
+    nodeHeapMb,
   });
   let listener;
   let wallTimer;
@@ -92,7 +95,8 @@ export async function startCorpusSandbox(projectDir, { port, cpuSeconds = CORPUS
     // Independent of any stalled Chrome journey: the server cannot remain alive past this deadline.
     wallTimer = setTimeout(() => void stop(), wallMs);
     wallTimer.unref();
-    return { port: listener.address().port, child: sandbox.child, log: () => sandbox.log, stop, sandbox };
+    return { port: listener.address().port, child: sandbox.child, log: () => sandbox.log, stop, sandbox, mechanism,
+      memoryContainment: { mode: 'heap-only', nodeHeapMb, rssContained: false } };
   } catch (error) {
     await stop();
     throw error;

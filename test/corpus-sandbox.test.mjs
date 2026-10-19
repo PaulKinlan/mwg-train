@@ -194,6 +194,35 @@ async function loopbackGet(port, path) {
   return { status: response.status, body: await response.json() };
 }
 
+test('generated corpus server receives a bounded V8 heap without parent NODE_OPTIONS',
+  { skip: process.platform !== 'linux' || !available, timeout: 15_000 }, async (t) => {
+    const temp = mkdtempSync(join(tmpdir(), 'corpus-heap-test-'));
+    t.after(() => rmSync(temp, { recursive: true, force: true }));
+    writeFileSync(join(temp, 'server.mjs'), `
+import { createServer } from 'node:http';
+import { getHeapStatistics } from 'node:v8';
+createServer((_req, res) => res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({
+  heapLimitMb: Math.round(getHeapStatistics().heap_size_limit / 1048576),
+  nodeOptions: process.env.NODE_OPTIONS,
+}))).listen(Number(process.env.PILOT_PORT), '127.0.0.1');
+`);
+    const priorOptions = process.env.NODE_OPTIONS;
+    process.env.NODE_OPTIONS = '--max-old-space-size=2048';
+    let server;
+    try {
+      server = await startCorpusSandbox(temp, { port: 0 });
+    } finally {
+      if (priorOptions === undefined) delete process.env.NODE_OPTIONS;
+      else process.env.NODE_OPTIONS = priorOptions;
+    }
+    t.after(() => server.stop());
+    const { body } = await loopbackGet(server.port, '/');
+    assert.equal(server.mechanism, requireCorpusSandbox());
+    assert.deepEqual(server.memoryContainment, { mode: 'heap-only', nodeHeapMb: 512, rssContained: false });
+    assert.equal(body.nodeOptions, '--max-old-space-size=512');
+    assert.ok(body.heapLimitMb < 1024, `actual generated site heap ${body.heapLimitMb}MB is not bounded`);
+  });
+
 test('CPU limit kills a spinner only when enabled; wall-clock limit closes the listener',
   { skip: process.platform !== 'linux' || !available, timeout: 30_000 }, async (t) => {
     const temp = mkdtempSync(join(tmpdir(), 'corpus-cpu-test-'));
@@ -250,7 +279,7 @@ createServer((_req, res) => res.writeHead(200).end('ok')).listen(Number(process.
       label: 'probe', port, runDir: temp, dbPath: join(temp, 'db.sqlite'),
     });
     assert.deepEqual(record.errors, ['browser probe ended']);
-    assert.equal(record.sandbox, 'bubblewrap');
+    assert.equal(record.sandbox, requireCorpusSandbox());
     assert.equal(record.platform, 'linux');
     await assert.rejects(fetch(`http://127.0.0.1:${port}/__health`), 'run finally closed listener');
   });
