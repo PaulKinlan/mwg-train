@@ -280,6 +280,8 @@ createServer((_req, res) => res.writeHead(200).end('ok')).listen(Number(process.
     });
     assert.deepEqual(record.errors, ['browser probe ended']);
     assert.equal(record.sandbox, requireCorpusSandbox());
+    assert.deepEqual(record.memoryContainment, { mode: 'heap-only', nodeHeapMb: 512, rssContained: false },
+      'a failed browser run must disclose the generated server memory boundary without claiming an RSS cap');
     assert.equal(record.platform, 'linux');
     await assert.rejects(fetch(`http://127.0.0.1:${port}/__health`), 'run finally closed listener');
   });
