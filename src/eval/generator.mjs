@@ -195,10 +195,16 @@ export async function generateProject({ family, framework, model = decodeConfig.
     }
     try { requestEndpoint = nativeCompletionEndpoint(endpoint); }
     catch (error) { return preflightFailure('NO_PROVIDER_CONFIG', error); }
-    // Interface pins cover derived text, not the full plan embedded in the paid prompt.
-    // Guard all 39 plans (including tr-01) before approval lookup, ledger writes or fetch.
+    // Interface pins cover derived text, not the full plan or design embedded in the paid prompt.
+    // Guard all 39 families (including tr-01) before approval lookup, ledger writes or fetch.
     if (hash(plan) !== familyInterfacePins.plan_sha256?.[family])
       return preflightFailure('UNRATIFIED_PLAN', fail('UNRATIFIED_PLAN', 'review and re-pin the exact family plan before paid generation'));
+    if (hash(design) !== familyInterfacePins.design_sha256?.[family])
+      return preflightFailure('UNRATIFIED_DESIGN', fail('UNRATIFIED_DESIGN', 'review and re-pin the exact family design before paid generation'));
+    // No C2 guidance has been ratified yet. Keep offline previews, but never send arbitrary
+    // caller-supplied guidance in a paid C2 request until its family digest is reviewed.
+    if (arm === 'c2' && hash(guidance) !== familyInterfacePins.guidance_sha256?.[family])
+      return preflightFailure('UNRATIFIED_GUIDANCE', fail('UNRATIFIED_GUIDANCE', 'review and pin the exact C2 guidance before paid generation'));
     try { approval = verifyGenerationApproval(approvalComments(), { model }); }
     catch (error) { return preflightFailure('NO_OWNER_AUTH', error); }
     try { tariff = loadPinnedGenerationTariff(model); } catch { tariff = null; }
