@@ -7,6 +7,8 @@ import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { validateSlice, preflight } from '../scripts/default-set-preflight.mjs';
 import manifest from '../docs/eval/default-set-hono-slice.json' with { type: 'json' };
+import familyPins from '../docs/eval/family-interface-v1.hashes.json' with { type: 'json' };
+import { RATIFIED_TR01_INTERFACE_SHA256 } from '../src/eval/interface-contract.mjs';
 import { assertPrivateArchiveRoot, cordonDefaultRun } from '../src/eval/default-cordon.mjs';
 import { main as cordonMain } from '../scripts/default-set-cordon.mjs';
 
@@ -33,7 +35,7 @@ test('initial tranche is 30 disjoint unguided Hono identities and extension stay
   const rows = await preflight({ manifest, revision: 'a'.repeat(40), generate: async (params) => {
     seen.push(params);
     return { status: 'DRY_RUN', prompt_sha256: sha(params.family), decode_config_sha256: sha('decode'),
-      interface_contract_sha256: params.family === 'tr-01' ? sha('interface') : null };
+      interface_contract_sha256: params.family === 'tr-01' ? RATIFIED_TR01_INTERFACE_SHA256 : familyPins.sha256[params.family] };
   } });
   assert.equal(rows.length, 30);
   assert.deepEqual(seen.map(({ family }) => family), manifest.initial_families);

@@ -5,6 +5,8 @@ import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { generateProject } from '../src/eval/generator.mjs';
 import { decodeConfig } from '../src/eval/decode-config.mjs';
+import { RATIFIED_TR01_INTERFACE_SHA256 } from '../src/eval/interface-contract.mjs';
+import familyPins from '../docs/eval/family-interface-v1.hashes.json' with { type: 'json' };
 
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
 export const manifestPath = resolve(root, 'docs/eval/default-set-hono-slice.json');
@@ -29,7 +31,10 @@ export async function preflight({ manifest = JSON.parse(readFileSync(manifestPat
   for (const family of families) {
     const result = await generate({ family, framework: manifest.framework, model: decodeConfig.build_model,
       revision, arm: 'default', backend: 'stub', dryRun: true, guidance: '', sourceRoot });
-    if (result.status !== 'DRY_RUN') throw new Error(`DEFAULT_PREFLIGHT_FAILED: ${family} did not dry-run`);
+    if (result.status !== 'DRY_RUN' || result.interface_contract_sha256 !==
+        (family === 'tr-01' ? RATIFIED_TR01_INTERFACE_SHA256 : familyPins.sha256[family])) {
+      throw new Error(`DEFAULT_PREFLIGHT_FAILED: ${family} did not dry-run with a pinned interface`);
+    }
     rows.push({ family, framework: manifest.framework, prompt_sha256: result.prompt_sha256,
       decode_config_sha256: result.decode_config_sha256, interface_contract_sha256: result.interface_contract_sha256,
       status: result.status });

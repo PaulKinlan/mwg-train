@@ -5,6 +5,8 @@ import { performance } from 'node:perf_hooks';
 import { evaluationBuildKey } from './build-key.mjs';
 import { decodeConfig, decodeConfigSha256 } from './decode-config.mjs';
 import { interfaceContractText, interfaceContractSha256, RATIFIED_TR01_INTERFACE_SHA256 } from './interface-contract.mjs';
+import { familyInterfaceContract } from './family-interface.mjs';
+import familyInterfacePins from '../../docs/eval/family-interface-v1.hashes.json' with { type: 'json' };
 import { readGenerationApprovalComments, verifyGenerationApproval, loadPinnedGenerationTariff, worstCaseGenerationUsd, hasGenerationReservation, reserveGeneration, settleGeneration } from './spend-ledger.mjs';
 
 const SHA = /^[a-f0-9]{40}$/;
@@ -150,9 +152,12 @@ export async function generateProject({ family, framework, model = decodeConfig.
   const source = resolve(sourceRoot);
   const plan = await readFile(join(source, 'docs/train/design', family, 'plan.md'), 'utf8');
   const design = await readFile(join(source, 'docs/train/design', family, 'design.md'), 'utf8');
-  // Only tr-01 has an owner-approved Option A concept and an exact author-pinned V1 block.
-  // Other families may preview offline, not spend.
-  const contract = family === 'tr-01' ? interfaceContractText : '';
+  // Preserve the already-paid tr-01 prompt byte-for-byte. For other families the approved Option A
+  // concept is derived from THEIR plan and pinned by family, not copied from tr-01 bicycle routes.
+  const interfaceVersion = family === 'tr-01'
+    ? { text: interfaceContractText, sha256: interfaceContractSha256 }
+    : familyInterfaceContract(family, plan);
+  const contract = interfaceVersion.text;
   const prompt = buildGenerationPrompt({ plan, design, arm, guidance, interfaceContract: contract });
   const promptSha256 = hash(prompt);
   // Streaming is a transport detail, not a decode knob: the evaluator and runner must share one key.
@@ -166,7 +171,7 @@ export async function generateProject({ family, framework, model = decodeConfig.
   const runId = hash([buildKey, revision, backend, arm, promptSha256].join('\n'));
   const base = join(resolve(outRoot), keyDirectory, arm, runId);
   const output = { build_key: buildKey, output_dir: base, project_dir: join(base, 'project'), prompt_sha256: promptSha256,
-    decode_config_sha256: decodeSha, interface_contract_sha256: contract ? interfaceContractSha256 : null };
+    decode_config_sha256: decodeSha, interface_contract_sha256: interfaceVersion.sha256 };
   if (dryRun) return { ...output, status: 'DRY_RUN', cost: 'UNVERIFIED', prompt };
   // A failed preflight has sent nothing and must not consume this identity. No run directory or
   // ledger reservation is created until the endpoint and current owner decision are verified.
@@ -177,9 +182,10 @@ export async function generateProject({ family, framework, model = decodeConfig.
   let tariff = null;
   let requestEndpoint = null;
   if (backend === 'live') {
-    if (!contract || interfaceContractSha256 !== RATIFIED_TR01_INTERFACE_SHA256 ||
+    const pinnedInterface = family === 'tr-01' ? RATIFIED_TR01_INTERFACE_SHA256 : familyInterfacePins.sha256[family];
+    if (!contract || interfaceVersion.sha256 !== pinnedInterface ||
         decodeConfigSha256(request) !== PINNED_TR01_DECODE_SHA256 || !decodeConfig.status.startsWith('ratified-owner-')) {
-      return preflightFailure('UNRATIFIED_INTERFACE', fail('UNRATIFIED_INTERFACE', 'exact owner-ratified tr-01 interface and decode request required'));
+      return preflightFailure('UNRATIFIED_INTERFACE', fail('UNRATIFIED_INTERFACE', 'exact approved family-specific Option A interface and decode request required'));
     }
     if (!apiKey || !ledgerPath) return preflightFailure('NO_PROVIDER_CONFIG',
       fail('NO_PROVIDER_CONFIG', 'native DeepSeek API key and private ledger path required'));
