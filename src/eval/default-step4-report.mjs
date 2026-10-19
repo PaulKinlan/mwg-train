@@ -8,6 +8,15 @@ import { BASELINE_FIELDS } from './ruleset.mjs';
 
 const FAILURES = new Set(['MODEL_LENGTH_NO_PROJECT', 'TRANSPORT_UNEVALUABLE']);
 const VISUAL = new Set(['SIMILAR', 'PARTIALLY_SIMILAR', 'DISSIMILAR', 'UNASSESSABLE']);
+// The sealed tranche's known local remeasurements must not disappear on report regeneration.
+export const REQUIRED_SUPERSEDED = Object.freeze({
+  'tr-05': [
+    '2f76811801d24b2774bd4b7c08355ae12c124ac418cd82a3260a14ce8369d963',
+    'c4a40411bc9722f46783946803835aba65c190261de8efd735bfa1c4a7672345',
+  ],
+  'tr-07': ['75b036083151eaff28988f52ce285a9142be50d520ee0cabb4fe830e80d09fb0'],
+});
+const SUPERSESSION_REASONS = new Set(['measurement_revised', 'identity_pins_added', 'search_control_corrected']);
 const requireHash = (value, label) => {
   if (!/^[a-f0-9]{64}$/.test(value ?? '')) throw Error(`REPORT_IDENTITY_MISMATCH: ${label} has no SHA-256`);
   return value;
@@ -43,6 +52,47 @@ export function publicJourneyPart(part) {
   return { name, status, detail: safe };
 }
 
+export function publicSupersededReceipt({ receipt, sha256, change }, { family, publicRow, currentScore }) {
+  if (!SUPERSESSION_REASONS.has(change) || receipt?.kind !== 'step4-functional-pilot' ||
+      receipt.family !== family.family || receipt.project_id !== publicRow.project_id ||
+      receipt.request_id !== publicRow.request_id || receipt.archive_manifest_sha256 !== publicRow.manifest_sha256 ||
+      receipt.ratification_row_sha256 !== RATIFIED_STEP4_ROW_SHA256 || receipt.sandbox !== 'bubblewrap' ||
+      receipt.excluded_from_training !== true)
+    throw Error(`REPORT_SUPERSESSION_MISMATCH: ${family.family} historical identity`);
+  const pinsAbsent = receipt.brief_sha256 == null && receipt.journey_sha256 == null;
+  const pinsPresent = receipt.brief_sha256 === family.brief_sha256 && receipt.journey_sha256 === family.journey_sha256;
+  if (!pinsAbsent && !pinsPresent) throw Error(`REPORT_SUPERSESSION_MISMATCH: ${family.family} historical pins`);
+  const valid = new Set(['PASS', 'FAIL', 'NOT_CHECKABLE']);
+  const parts = receipt.journey_parts;
+  if (!Array.isArray(parts) || parts.length === 0 || !Array.isArray(receipt.required_rules) ||
+      receipt.required_rules.length !== family.required_rules.length ||
+      receipt.required_rules.some((rule, index) => rule.name !== family.required_rules[index].rule_id || rule.status !== 'NOT_CHECKABLE') ||
+      parts.some((part) => !currentScore.journey_parts.some((current) => current.name === part.name) || !valid.has(part.status)) ||
+      new Set(parts.map((part) => part.name)).size !== parts.length)
+    throw Error(`REPORT_SUPERSESSION_MISMATCH: ${family.family} historical parts`);
+  const passed = parts.filter((part) => part.status === 'PASS').length;
+  const failed = parts.filter((part) => part.status === 'FAIL').length;
+  const notCheckable = parts.filter((part) => part.status === 'NOT_CHECKABLE').length + receipt.required_rules.length;
+  if (receipt.headroom?.passed !== passed || receipt.headroom.failed !== failed ||
+      receipt.headroom.not_checkable !== notCheckable ||
+      receipt.headroom.rate !== (passed + failed ? passed / (passed + failed) : null) ||
+      receipt.headroom.ceiling !== (passed + failed ? passed / (passed + failed) >= 0.9 : null))
+    throw Error(`REPORT_SUPERSESSION_MISMATCH: ${family.family} historical headroom`);
+  const previous = new Map(parts.map((part) => [part.name, part.status]));
+  const changedParts = currentScore.journey_parts.filter((part) => previous.get(part.name) !== part.status).map((part) => part.name);
+  if ((change === 'measurement_revised' && changedParts.length === 0) ||
+      (change === 'identity_pins_added' && !pinsAbsent) ||
+      (change === 'search_control_corrected' && (previous.get('search') !== 'NOT_CHECKABLE' ||
+        !currentScore.journey_parts.some((part) => part.name === 'search' && part.status === 'PASS'))))
+    throw Error(`REPORT_SUPERSESSION_MISMATCH: ${family.family} change code not substantiated`);
+  return { functional_receipt_sha256: requireHash(sha256, 'superseded receipt'),
+    sha256_provenance: 'recomputed_from_retained_receipt',
+    instrument_revision: receipt.instrument_sha256 ? requireHash(receipt.instrument_sha256, 'instrument') : 'UNRECORDED_AT_RUN',
+    identity_pins: pinsPresent ? 'PRESENT' : 'ABSENT_AT_RUN', change,
+    headroom: { passed, failed, not_checkable: notCheckable, rate: receipt.headroom.rate, ceiling: receipt.headroom.ceiling },
+    changed_parts: changedParts };
+}
+
 function ruleCounts(rows) {
   return Object.fromEntries([...new Set(rows.map((row) => row.rule_id))].sort().map((id) => [id, {
     pass: rows.filter((row) => row.rule_id === id && row.status === 'PASS').length,
@@ -51,7 +101,7 @@ function ruleCounts(rows) {
   }]));
 }
 
-export function buildPublicStep4Report({ tranche, prepared, scoreReceipts, smokeReceipts, scoreHashes, smokeHashes, visualVerdicts, visualHashes }) {
+export function buildPublicStep4Report({ tranche, prepared, scoreReceipts, smokeReceipts, scoreHashes, smokeHashes, visualVerdicts, visualHashes, supersededReceipts = {} }) {
   if (prepared?.kind !== 'step4-preflight-only' || prepared.ratification !== 'RATIFIED' ||
       prepared.families.length !== 30 || tranche?.run_records?.length !== 30)
     throw Error('REPORT_IDENTITY_MISMATCH: preregistered thirty-family tranche required');
@@ -107,6 +157,15 @@ export function buildPublicStep4Report({ tranche, prepared, scoreReceipts, smoke
           observed.status === 'PASS' ? 'exact_checker_passed' : observed.status === 'NOT_CHECKABLE' ? 'checker_not_measured' :
           reasons.length ? reasons.join(',') : 'exact_checker_failed_private_detail' };
     });
+    const lineage = supersededReceipts[family.family] ?? [];
+    const expectedHashes = REQUIRED_SUPERSEDED[family.family] ?? [];
+    if (lineage.length !== expectedHashes.length || lineage.some((entry, index) => entry.sha256 !== expectedHashes[index] ||
+        entry.sha256 === scoreHashes[family.family]))
+      throw Error(`REPORT_SUPERSESSION_MISSING: ${family.family}`);
+    const superseded = lineage.map((entry) => publicSupersededReceipt(entry, { family, publicRow, currentScore: score }));
+    const instrument = score.instrument_sha256 ?? null;
+    if (instrument !== (smoke.instrument_sha256 ?? null)) throw Error(`REPORT_INSTRUMENT_MISMATCH: ${family.family}`);
+    const instrumentRevision = instrument ? requireHash(instrument, 'instrument') : 'UNRECORDED_AT_RUN';
     const journey = score.journey_parts.map(publicJourneyPart);
     const passed = journey.filter((part) => part.status === 'PASS').length;
     const failed = journey.filter((part) => part.status === 'FAIL').length;
@@ -117,7 +176,8 @@ export function buildPublicStep4Report({ tranche, prepared, scoreReceipts, smoke
         score.headroom.ceiling !== (passed + failed ? passed / (passed + failed) >= 0.9 : null))
       throw Error(`REPORT_HEADROOM_MISMATCH: ${family.family}`);
     return { family: family.family, project_id: family.project_id, generation: 'SUCCESS',
-      functional: 'MEASURED', headroom: score.headroom, journey_parts: journey,
+      functional: 'MEASURED', instrument_revision: instrumentRevision, superseded_functional_receipts: superseded,
+      headroom: score.headroom, journey_parts: journey,
       required_rules: required, applicable_diagnostics: diagnostics,
       visual: { verdict: visual, desktop: 'EVALUATED', mobile: 'EVALUATED',
         label: 'similarity to authored board, image not supplied during generation', numeric_score: null,
@@ -158,6 +218,7 @@ export function buildPublicStep4Report({ tranche, prepared, scoreReceipts, smoke
       'Visual assessment is qualitative against an authored desktop reference image not supplied during generation. No authored mobile board or numeric visual score.',
       'Generated servers ran in Linux bubblewrap; generated client JavaScript ran in contained Chrome. macOS sample is post-evaluation and not yet reproduced.',
       'The baseline metadata describes the separate deterministic ideal comparator, not this generated default arm or a model training input.',
+      'Historical Step 4 receipts did not pin the source instrument: UNRECORDED_AT_RUN does not imply the latest commit measured them. Superseded receipt hashes were recomputed from retained private bytes; no old receipt was rewritten.',
       'Local read-only SHA-256 archive is not WORM or off-VM immutable. Exact served model checkpoint remains UNVERIFIED.',
     ], families };
 }
@@ -206,6 +267,18 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   const prepared = prepareDefaultStep4({ tranche, briefs, ratificationRow });
   const { found: scoreReceipts, hashes: scoreHashes } = scan(inventory.functional_roots, 'mwg-train-step4-functional-');
   const { found: smokeReceipts, hashes: smokeHashes } = scan(inventory.smoke_roots, 'mwg-train-step4-smoke-');
+  const supersededReceipts = {};
+  for (const [family, records] of Object.entries(inventory.superseded_functional ?? {})) {
+    const publicRow = tranche.run_records.find((row) => row.family === family);
+    if (!publicRow || !Object.hasOwn(REQUIRED_SUPERSEDED, family) || !Array.isArray(records))
+      throw Error(`REPORT_SUPERSESSION_MISMATCH: ${family}`);
+    supersededReceipts[family] = records.map(({ root: name, change }) => {
+      if (typeof name !== 'string' || !name.startsWith('mwg-train-step4-functional-') || basename(name) !== name)
+        throw Error(`REPORT_PRIVATE_INPUT: unsafe superseded root for ${family}`);
+      const loaded = load(join(name, `${family}-${publicRow.request_id}`, 'receipt.json'));
+      return { receipt: loaded.body, sha256: loaded.sha256, change };
+    });
+  }
   const visualVerdicts = {}, visualHashes = {};
   for (const [family, record] of Object.entries(inventory.visual ?? {})) {
     if (!VISUAL.has(record.verdict)) throw Error(`REPORT_INVALID_VISUAL: ${family}`);
@@ -222,7 +295,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     visualHashes[family] = visualEvidence.sha256;
   }
   const report = buildPublicStep4Report({ tranche, prepared, scoreReceipts, smokeReceipts,
-    scoreHashes, smokeHashes, visualVerdicts, visualHashes });
+    scoreHashes, smokeHashes, visualVerdicts, visualHashes, supersededReceipts });
   const publicJson = `${JSON.stringify(report, null, 2)}\n`;
   if (publicJson.includes(privateRoot) || publicJson.includes('/home/exedev/') || publicJson.includes('file:'))
     throw Error('REPORT_PRIVATE_OUTPUT: source path escaped sanitization');

@@ -11,6 +11,7 @@ import { RULES } from '../src/corpus/rules.mjs';
 import { assertPrivateArchiveRoot } from '../src/eval/default-cordon.mjs';
 import { prepareDefaultStep4, step4RatificationRow, assertStep4Ratification } from '../src/eval/default-step4-preflight.mjs';
 import { journeyComponentVerdicts, requiredRuleVerdicts, headroom } from '../src/eval/default-step4-verdict.mjs';
+import { step4InstrumentDigest, writeStep4Receipt } from '../src/eval/step4-instrument.mjs';
 import { availablePort, verifyArchiveFamily } from './default-step4-smoke.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
@@ -29,6 +30,7 @@ export async function scoreDefaultFamily({ family, archiveRoot, evidenceRoot }) 
   const archived = tranche.run_records.find((row) => row.family === family);
   const source = verifyArchiveFamily({ archiveRoot, row: archived });
   requireCorpusSandbox();
+  const instrumentSha256 = step4InstrumentDigest(root);
   const evidence = assertPrivateArchiveRoot(evidenceRoot, { sourceRoot: resolve(archiveRoot) });
   mkdirSync(evidence, { recursive: true, mode: 0o700 });
   const destination = join(evidence, `${family}-${archived.request_id}`);
@@ -103,7 +105,7 @@ export async function scoreDefaultFamily({ family, archiveRoot, evidenceRoot }) 
         'Local archive is read-only but not WORM/off-VM; served checkpoint and macOS sample remain unverified.',
       ] };
     verifyArchiveFamily({ archiveRoot, row: archived }); // Any changed byte invalidates the run.
-    writeFileSync(join(destination, 'receipt.json'), `${JSON.stringify(receipt, null, 2)}\n`, { flag: 'wx', mode: 0o600 });
+    writeStep4Receipt({ root, instrumentSha256, destination, receipt });
     return { kind: receipt.kind, family, sandbox: receipt.sandbox, headroom: ceiling,
       coverage_incomplete: ceiling.coverage_incomplete,
       required_not_checkable: rules.filter((entry) => entry.status === 'NOT_CHECKABLE').length,

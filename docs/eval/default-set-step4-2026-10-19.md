@@ -17,9 +17,9 @@
 | tr-02 | 5/5 | 2 | CEILING | partial | — |
 | tr-03 | — | — | transport-unevaluable | — | no project; no retry |
 | tr-04 | 5/5 | 2 | CEILING | dissimilar | — |
-| tr-05 | 4/4 | 2 | CEILING | partial | no update declared |
+| tr-05 | 4/4 | 2 | CEILING | partial | supersedes an instrument-invalid 2/3 below-ceiling v1 and 4/4 intermediate v2; all receipts retained, no update declared |
 | tr-06 | 4/5 | 2 | below | dissimilar | declared carry FAIL |
-| tr-07 | 5/5 | 2 | CEILING | partial | search decoy corrected in a new *local-evaluation* receipt; original retained |
+| tr-07 | 5/5 | 2 | CEILING | partial | supersedes a 4/4 receipt with search NOT_CHECKABLE; decoy corrected in local evaluation, original retained |
 | tr-08 | — | — | transport-unevaluable | — | no project; no retry |
 | tr-09 | 5/5 | 2 | CEILING | partial | — |
 | tr-10 | 4/5 | 2 | below | partial | declared carry FAIL |
@@ -44,4 +44,4 @@
 | tr-29 | 5/5 | 2 | CEILING | partial | — |
 | tr-30 | 5/5 | 2 | CEILING | partial | — |
 
-**Method and limits.** Linux is the canonical run: generated servers ran through the bubblewrap corpus path; generated client JavaScript ran in ephemeral, egress-blocked Chrome. Private screenshot and functional receipts include sandbox mechanisms, hash-pinned archive/brief/journey identities and preregistration digest. A priority-merger preemption restarted one batch, so duplicate destinations refused overwrite; existing receipts were retained and only the missing `tr-25` *local evaluation* was completed in a fresh evidence root. The source archive is locally read-only and SHA-256 checked, **not** WORM or off-VM immutable. The serving checkpoint remains `UNVERIFIED`; a macOS sample is approved as **post-evaluation** work and has not been reproduced. Do not present this as an exact-checkpoint, immutable-comparator, cross-platform floor. The full suite belongs to the merger's union tree, not this implementer branch.
+**Method and limits.** Linux is the canonical run: generated servers ran through the bubblewrap corpus path; generated client JavaScript ran in ephemeral, egress-blocked Chrome. Current private screenshot and functional receipts include sandbox mechanisms, hash-pinned archive/brief/journey identities and preregistration digest. Historical Step 4 receipts predate the first committed scorer and do not identify their actual source bytes: the precise instrument revision is `UNRECORDED_AT_RUN`, not the later commit. Superseded receipt SHA-256 values in the public JSON were recomputed from retained private bytes; the originals were not rewritten. Future receipts pin the transitive local module source bytes of the Step 4 scorer and smoke entry points by a digest captured and rechecked within each run; this is not a Node runtime or OS-image digest. A priority-merger preemption restarted one batch, so duplicate destinations refused overwrite; existing receipts were retained and only the missing `tr-25` *local evaluation* was completed in a fresh evidence root. The source archive is locally read-only and SHA-256 checked, **not** WORM or off-VM immutable. The serving checkpoint remains `UNVERIFIED`; a macOS sample is approved as **post-evaluation** work and has not been reproduced. Do not present this as an exact-checkpoint, immutable-comparator, cross-platform floor. The full suite belongs to the merger's union tree, not this implementer branch.

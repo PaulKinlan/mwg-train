@@ -11,6 +11,7 @@ import { assertStep4Ratification, prepareDefaultStep4, step4RatificationRow } fr
 import { requireCorpusSandbox } from '../src/corpus/sandbox.mjs';
 import { startServer } from '../src/corpus/harness.mjs';
 import { launchChrome } from '../src/corpus/cdp.mjs';
+import { step4InstrumentDigest, writeStep4Receipt } from '../src/eval/step4-instrument.mjs';
 
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const root = fileURLToPath(new URL('..', import.meta.url));
@@ -75,6 +76,7 @@ export async function smokeDefaultFamily({ family, archiveRoot, evidenceRoot }) 
   if (!lstatSync(visualTarget).isFile()) throw Error('TARGET_AMBIGUOUS: authored reference is not a regular file');
   const visualTargetSha256 = sha256(readFileSync(visualTarget));
   requireCorpusSandbox();
+  const instrumentSha256 = step4InstrumentDigest(root);
   const evidence = assertPrivateArchiveRoot(evidenceRoot, { sourceRoot: resolve(archiveRoot) });
   mkdirSync(evidence, { recursive: true, mode: 0o700 });
   const destination = join(evidence, `${family}-${row.request_id}`);
@@ -112,7 +114,7 @@ export async function smokeDefaultFamily({ family, archiveRoot, evidenceRoot }) 
       image_supplied_during_generation: false,
       ratification_row_sha256: sha256(ratificationRow), screenshots, excluded_from_training: true,
       visual_verdict: 'NOT_MEASURED', functional_verdict: 'NOT_MEASURED', rule_verdict: 'NOT_MEASURED' };
-    writeFileSync(join(destination, 'receipt.json'), `${JSON.stringify(receipt, null, 2)}\n`, { flag: 'wx', mode: 0o600 });
+    writeStep4Receipt({ root, instrumentSha256, destination, receipt });
     return { kind: receipt.kind, family, sandbox: receipt.sandbox, screenshot_count: screenshots.length,
       functional_verdict: receipt.functional_verdict, visual_verdict: receipt.visual_verdict };
   } finally {

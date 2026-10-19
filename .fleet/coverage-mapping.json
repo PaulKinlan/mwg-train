@@ -200,6 +200,9 @@
   "src/eval/interface-candidate.mjs": [
     "test/interface-candidate.test.mjs"
   ],
+  "src/eval/step4-instrument.mjs": [
+    "test/step4-instrument.test.mjs"
+  ],
   "src/eval/interface-contract.mjs": [
     "test/interface-candidate.test.mjs",
     "test/generator-runner.test.mjs"
