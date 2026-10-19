@@ -48,6 +48,10 @@ test('public checkout and symlinked archive aliases refuse before writing paid b
   mkdirSync(join(temp, 'run'));
   const alias = join(temp, 'repo-alias');
   symlinkSync(publicRepo, alias, 'dir');
+  const dangling = join(temp, 'dangling-public-alias');
+  symlinkSync(join(publicRepo, 'docs', 'not-created'), dangling, 'dir');
+  assert.throws(() => assertPrivateArchiveRoot(join(dangling, 'raw'), { repoRoot: publicRepo }), /DANGLING_SYMLINK/);
+  assert.equal(existsSync(join(publicRepo, 'docs', 'not-created')), false);
   assert.throws(() => assertPrivateArchiveRoot(join(publicRepo, 'docs', 'raw'), { repoRoot: publicRepo }), /STORE_INSIDE_PUBLIC/);
   assert.throws(() => assertPrivateArchiveRoot(join(alias, 'docs', 'raw'), { repoRoot: publicRepo }), /STORE_INSIDE_PUBLIC/);
   assert.throws(() => assertPrivateArchiveRoot(join(temp, 'run', 'archive'), { repoRoot: publicRepo, sourceRoot: join(temp, 'run') }), /STORE_INSIDE_PUBLIC/);
@@ -55,10 +59,12 @@ test('public checkout and symlinked archive aliases refuse before writing paid b
   const siblingPublicCheckout = join(temp, 'another-public-checkout');
   mkdirSync(siblingPublicCheckout);
   const publicOrigin = 'https://example.invalid/example/public-checkout.git';
-  for (const checkout of [publicRepo, siblingPublicCheckout]) {
-    execFileSync('git', ['init', '--quiet', checkout]);
-    execFileSync('git', ['-C', checkout, 'remote', 'add', 'origin', publicOrigin]);
-  }
+  for (const checkout of [publicRepo, siblingPublicCheckout]) execFileSync('git', ['init', '--quiet', checkout]);
+  execFileSync('git', ['-C', publicRepo, 'remote', 'add', 'origin', publicOrigin]);
+  execFileSync('git', ['-C', siblingPublicCheckout, 'remote', 'add', 'upstream', publicOrigin]);
+  assert.throws(() => assertPrivateArchiveRoot(join(siblingPublicCheckout, 'paid-output'), { repoRoot: publicRepo }),
+    /STORE_INSIDE_PUBLIC.*another public checkout/);
+  execFileSync('git', ['-C', siblingPublicCheckout, 'remote', 'rename', 'upstream', 'origin']);
   assert.throws(() => assertPrivateArchiveRoot(join(siblingPublicCheckout, 'paid-output'), { repoRoot: publicRepo }),
     /STORE_INSIDE_PUBLIC.*another public checkout/);
   // The real call must also refuse a public checkout path without creating the archive directory.
