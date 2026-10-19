@@ -1,6 +1,9 @@
 {
   "kind": "default-set-step4-sanitized-report",
   "attribution": "mwg-train deterministic baseline",
+  "baseline_label": "mwg-train deterministic baseline",
+  "baseline_definition": "the MWG-uplifted (ideal) artefact, and not the default: deterministic repair of a project by our own Modern Web Guidance rule specifications, with no model and no teacher in the loop. The raw pre-uplift artefact is the default and is recorded separately.",
+  "baseline_tool": "src/corpus/uplift.mjs",
   "training_exclusion": true,
   "manifest_index_sha256": "c7f497b478daa858806c635a44d2bba4ec53f28690dff1388c79779d90a25226",
   "ratification_row_sha256": "fa36c8d60ef1fde8e30243bf8715de935ca2bfdadc22e36709dd587015cc716e",
@@ -107,6 +110,7 @@
     "At or above 90% of a family’s checkable parts: CEILING, exclude improvement claim and pause promotion until a separately preregistered expanded held-out endpoint.",
     "Visual assessment is qualitative against an authored desktop reference image not supplied during generation. No authored mobile board or numeric visual score.",
     "Generated servers ran in Linux bubblewrap; generated client JavaScript ran in contained Chrome. macOS sample is post-evaluation and not yet reproduced.",
+    "The baseline metadata describes the separate deterministic ideal comparator, not this generated default arm or a model training input.",
     "Local read-only SHA-256 archive is not WORM or off-VM immutable. Exact served model checkpoint remains UNVERIFIED."
   ],
   "families": [

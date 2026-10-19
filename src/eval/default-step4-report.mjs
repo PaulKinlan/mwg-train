@@ -4,6 +4,7 @@ import { homedir } from 'node:os';
 import { basename, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { prepareDefaultStep4, RATIFIED_STEP4_ROW_SHA256, step4RatificationRow } from './default-step4-preflight.mjs';
+import { BASELINE_FIELDS } from './ruleset.mjs';
 
 const FAILURES = new Set(['MODEL_LENGTH_NO_PROJECT', 'TRANSPORT_UNEVALUABLE']);
 const VISUAL = new Set(['SIMILAR', 'PARTIALLY_SIMILAR', 'DISSIMILAR', 'UNASSESSABLE']);
@@ -135,7 +136,8 @@ export function buildPublicStep4Report({ tranche, prepared, scoreReceipts, smoke
   const diagnostics = successes.flatMap((row) => row.applicable_diagnostics);
   const journey = successes.flatMap((row) => row.journey_parts);
   return { kind: 'default-set-step4-sanitized-report', attribution: 'mwg-train deterministic baseline',
-    training_exclusion: true, manifest_index_sha256: requireHash(prepared.tranche_manifest_index_sha256, 'tranche'),
+    ...BASELINE_FIELDS, training_exclusion: true,
+    manifest_index_sha256: requireHash(prepared.tranche_manifest_index_sha256, 'tranche'),
     ratification_row_sha256: RATIFIED_STEP4_ROW_SHA256, framework: 'hono', arm: 'default',
     counts: { identities: 30, success: successes.length, model_length: families.filter((row) => row.generation === 'MODEL_LENGTH_NO_PROJECT').length,
       transport_unevaluable: families.filter((row) => row.generation === 'TRANSPORT_UNEVALUABLE').length,
@@ -155,6 +157,7 @@ export function buildPublicStep4Report({ tranche, prepared, scoreReceipts, smoke
       'At or above 90% of a family’s checkable parts: CEILING, exclude improvement claim and pause promotion until a separately preregistered expanded held-out endpoint.',
       'Visual assessment is qualitative against an authored desktop reference image not supplied during generation. No authored mobile board or numeric visual score.',
       'Generated servers ran in Linux bubblewrap; generated client JavaScript ran in contained Chrome. macOS sample is post-evaluation and not yet reproduced.',
+      'The baseline metadata describes the separate deterministic ideal comparator, not this generated default arm or a model training input.',
       'Local read-only SHA-256 archive is not WORM or off-VM immutable. Exact served model checkpoint remains UNVERIFIED.',
     ], families };
 }

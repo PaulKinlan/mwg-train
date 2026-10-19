@@ -1,6 +1,6 @@
 # Untouched default set — Step 4, first Hono tranche (2026-10-19)
 
-**Attribution: mwg-train deterministic baseline.** This is an **evaluation of the generated default arm**, not a training result. The [sanitized per-family and per-rule record](default-set-step4-hono-2026-10-19.json) names deciding booleans, statuses, SHA-256 evidence anchors and the exact preregistration row. The [generation register](default-set-hono-tranche-2026-10-19.json) has all 30 paid identities. Full responses, projects, browser screenshots and visual-review prose remain in owner-only `~/.fleet/` storage, outside the public repository and excluded from training. No paid identity was retried.
+**Attribution: mwg-train deterministic baseline.** This is an **evaluation of the generated default arm**, not a training result. The required baseline metadata names the separate, deterministically uplifted ideal comparator; it does **not** mean the default generation or this evaluation used that uplift. The [sanitized per-family and per-rule record](default-set-step4-hono-2026-10-19.json) names deciding booleans, statuses, SHA-256 evidence anchors and the exact preregistration row. The [generation register](default-set-hono-tranche-2026-10-19.json) has all 30 paid identities. Full responses, projects, browser screenshots and visual-review prose remain in owner-only `~/.fleet/` storage, outside the public repository and excluded from training. No paid identity was retried.
 
 ## Result and headroom action
 

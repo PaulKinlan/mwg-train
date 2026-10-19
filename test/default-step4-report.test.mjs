@@ -4,6 +4,8 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { prepareDefaultStep4, RATIFIED_STEP4_ROW_SHA256, step4RatificationRow } from '../src/eval/default-step4-preflight.mjs';
 import { buildPublicStep4Report, publicJourneyPart } from '../src/eval/default-step4-report.mjs';
+import { classifyDocument } from '../scripts/check-baseline-label.mjs';
+import { BASELINE_FIELDS } from '../src/eval/ruleset.mjs';
 
 const path = (relative) => fileURLToPath(new URL(relative, import.meta.url));
 const tranche = JSON.parse(readFileSync(path('../docs/eval/default-set-hono-tranche-2026-10-19.json'), 'utf8'));
@@ -61,6 +63,7 @@ test('published Step 4 report stays sanitized and agrees with its readable summa
   const reportText = readFileSync(path('../docs/eval/default-set-step4-hono-2026-10-19.json'), 'utf8');
   const summary = readFileSync(path('../docs/eval/default-set-step4-2026-10-19.md'), 'utf8');
   const report = JSON.parse(reportText);
+  for (const [key, value] of Object.entries(BASELINE_FIELDS)) assert.equal(report[key], value);
   assert.equal(report.counts.identities, 30);
   assert.equal(report.counts.success, 22);
   assert.equal(report.counts.ceiling_families, 19);
@@ -72,6 +75,8 @@ test('published Step 4 report stays sanitized and agrees with its readable summa
   assert.equal(reportText.includes('/home/exedev/'), false);
   assert.equal(summary.includes('19 of 22 runnable families'), true);
   assert.equal(summary.includes('mwg-train deterministic baseline'), true);
+  assert.equal(classifyDocument('docs/eval/default-set-step4-2026-10-19.md'), 'floor-report');
+  assert.equal(classifyDocument('docs/eval/default-set-step4-hono-2026-10-19.json'), 'floor-report');
 });
 
 test('public report refuses mismatched run, ratification and headroom rather than publishing invented rates', () => {
