@@ -48,7 +48,7 @@ test('plan extraction rejects ambiguous read-back and reworded update instead of
   assert.throws(() => familyInterfaceContract('tr-05', planOf('tr-05').replace(
     'redirects to /volunteer/profile', 'redirects to /not-a-declared-route')),
   /FAMILY_INTERFACE_INVALID/);
-  for (const replacement of ['An update flow:', 'And an edit flow:', '']) {
+  for (const replacement of ['An update flow:', 'And an edit flow:', 'And a modification flow:', '']) {
     assert.throws(() => familyInterfaceContract('tr-02', planOf('tr-02').replace(
       'And an update flow:', replacement)), /FAMILY_INTERFACE_INVALID/,
     `tr-02 must not silently lose its update requirement (${replacement || 'deleted'})`);
@@ -58,6 +58,46 @@ test('plan extraction rejects ambiguous read-back and reworded update instead of
   assert.throws(() => familyInterfaceContract('tr-05', planOf('tr-05').replace(
     '## Validation and states', 'And an update flow: the stored record\'s `volunteer` field can be changed to "Other".\n\n## Validation and states')),
   /FAMILY_INTERFACE_INVALID/);
+});
+
+test('tr-05 rejects an unextractable update journey without changing its pinned no-update bytes', () => {
+  const original = planOf('tr-05');
+  const baseline = familyInterfaceContract('tr-05', original);
+  assert.equal(baseline.sha256, pins.sha256['tr-05']);
+  assert.match(baseline.text, /No update flow is declared for this family/);
+  for (const sentence of [
+    'An edit flow: the stored record\'s `volunteer` field can be changed to "Other".',
+    'An update flow: the stored record\'s `volunteer` field can be changed to "Other".',
+    'And an update flow: the stored record\'s volunteer field can be changed to "Other".',
+    'And an update flow: the stored record\'s `volunteer` field can be  changed to "Other".',
+    'And an update flow: the stored record\'s `volunteer` field can be changed to “Other”.',
+    'And a modification flow: the stored record\'s `volunteer` field can be set to "Other".',
+    'The stored record may be amended later; its `volunteer` field changes.',
+    'The stored record is mutable after login.',
+    'PATCH /volunteer/profile updates the stored record.',
+  ]) {
+    const mutated = original.replace('## Validation and states', `${sentence}\n\n## Validation and states`);
+    assert.throws(() => familyInterfaceContract('tr-05', mutated), /FAMILY_INTERFACE_INVALID tr-05/, sentence);
+  }
+  assert.equal(familyInterfaceContract('tr-05', original.replace('## Validation and states',
+    'The volunteer may log out afterwards.\n\n## Validation and states')).sha256, baseline.sha256);
+});
+
+test('tr-05 paraphrased update refuses live generation before spending or writing', async (t) => {
+  const dir = mkdtempSync(join(tmpdir(), 'mwg-tr05-update-'));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  const familyDir = join(dir, 'docs/train/design/tr-05');
+  mkdirSync(familyDir, { recursive: true });
+  writeFileSync(join(familyDir, 'plan.md'), planOf('tr-05').replace('## Validation and states',
+    'An edit flow: the stored record\'s `volunteer` field can be changed to "Other".\n\n## Validation and states'));
+  writeFileSync(join(familyDir, 'design.md'), readFileSync(join(root, 'docs/train/design/tr-05/design.md'), 'utf8'));
+  const outRoot = join(dir, 'never-created');
+  let calls = 0;
+  await assert.rejects(generateProject({ family: 'tr-05', framework: 'hono', revision, backend: 'live',
+    sourceRoot: dir, outRoot, apiKey: 'fake-key', fetchImpl: async () => { calls++; throw Error('must not call'); } }),
+  /FAMILY_INTERFACE_INVALID tr-05/);
+  assert.equal(calls, 0);
+  assert.equal(existsSync(outRoot), false);
 });
 
 test('tr-02..tr-30 dry-runs pin each family contract across all arms without spending or writes', async (t) => {

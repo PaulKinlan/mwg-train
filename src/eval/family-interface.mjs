@@ -29,6 +29,9 @@ export function familyInterfaceContract(family, plan) {
     .map((match) => ({ path: match[1], role: match[2].trim() }));
   const search = journey?.match(/Separately, the brief declares a search flow: `([^`]+)` with query parameter `([^`]+)`="([^"]+)" lists "([^"]+)" inside `([^`]+)` and does not list "([^"]+)"/);
   const update = journey?.match(/And an update flow: the stored record's `([^`]+)` field can be changed to "([^"]+)"/);
+  // tr-05 alone has no update in the pinned Journey. A paraphrased new one must not
+  // silently yield its byte-identical "No update flow" pinned contract.
+  const updateIntent = /(?:update|edit|modification)\s+(?:flow|journey)\b|(?:can|may|should) be (?:set|changed|edited|updated|modified|amended)\b|\b(?:edit|edits|edited|editing|modify|modifies|modified|amend|amends|amended|chang(?:e|es|ed|ing)|mutat(?:e|es|ed|ing)|mutab(?:le|ility)|PATCH|PUT)\b/i.test(journey ?? '');
   const criteria = acceptance?.split('\n').filter((line) => /^- /.test(line)) ?? [];
   const redirectTargets = criteria.flatMap((criterion) =>
     [...criterion.matchAll(/\bredirects to (\/[^\s,;)]+)/g)].map((match) => match[1]));
@@ -39,6 +42,7 @@ export function familyInterfaceContract(family, plan) {
       criterion.startsWith(`- GET ${row.path} `) || redirectTargets.includes(row.path)));
   // Only tr-05 has no update journey in the pinned corpus; missing or paraphrased
   // updates for every other family must fail before a future interface re-pin.
+  if (!update && updateIntent) fail(family, 'plan declares an update journey the extraction could not match');
   if (!title || fields.length !== Number(fieldsMatch?.[1]) || !required.length ||
       required.some((field) => !fields.includes(field)) || !form || !routeRows.some((row) => row.path === '/') ||
       !readBack || !search || !criteria.length ||
