@@ -67,6 +67,23 @@ test('legal same-line static and comment-separated dynamic imports cannot hide a
   assert.throws(() => step4InstrumentDigest(root), /INSTRUMENT_DYNAMIC_IMPORT/);
 });
 
+test('require(esm) and Function/eval-constructed imports fail closed instead of silently escaping the digest', (t) => {
+  const root = fixture(t);
+  const harness = join(root, 'src/corpus/harness.mjs');
+  const cases = [
+    "import { createRequire } from 'node:module';\nconst r = createRequire(import.meta.url);\nr('./rogue.mjs');\n",
+    "import { createRequire as makeRequire } from 'node:module';\nconst r = makeRequire(import.meta.url);\nr('./rogue.mjs');\n",
+    "const load = new Function('s', 'return import(s)');\nawait load('./rogue.mjs');\n",
+    "const load = Function('s', 'return import(s)');\nawait load('./rogue.mjs');\n",
+    "eval('import(\"./rogue.mjs\")');\n",
+    "const r = module.require;\nr('./rogue.mjs');\n",
+  ];
+  for (const source of cases) {
+    writeFileSync(harness, source);
+    assert.throws(() => step4InstrumentDigest(root), /INSTRUMENT_DYNAMIC_LOAD/, source);
+  }
+});
+
 test('real Step 4 import closure includes persistence and modern rules', () => {
   const root = new URL('..', import.meta.url).pathname;
   const files = step4InstrumentFiles(root);

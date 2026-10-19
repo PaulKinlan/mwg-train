@@ -17,6 +17,11 @@ function sourceImports(source, name) {
   const walk = (node) => {
     if (!node || typeof node !== 'object') return;
     if (Array.isArray(node)) { for (const entry of node) walk(entry); return; }
+    // Node can execute modules without an ImportExpression (require(esm),
+    // new Function('return import(...)'), eval). Refuse those constructs rather
+    // than silently claiming a complete parsed-import closure.
+    if (node.type === 'Identifier' && ['createRequire', 'require', 'Function', 'eval'].includes(node.name))
+      throw Error(`INSTRUMENT_DYNAMIC_LOAD: ${name} uses ${node.name}`);
     if (node.type === 'ImportDeclaration' || node.type === 'ExportNamedDeclaration' || node.type === 'ExportAllDeclaration') {
       if (node.source) specifiers.push(node.source.value);
     } else if (node.type === 'ImportExpression') {
