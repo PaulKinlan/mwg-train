@@ -1,17 +1,30 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, existsSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { familyInterfaceContract } from '../src/eval/family-interface.mjs';
-import { generateProject } from '../src/eval/generator.mjs';
+import { generateProject, NATIVE_DEEPSEEK_BASE_URL } from '../src/eval/generator.mjs';
 import { interfaceContractText, interfaceContractSha256 } from '../src/eval/interface-contract.mjs';
 import pins from '../docs/eval/family-interface-v1.hashes.json' with { type: 'json' };
+import tranche from '../docs/eval/default-set-hono-tranche-2026-10-19.json' with { type: 'json' };
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const revision = '2cba9e42aa026125f3ed06c6d98c1db82f7ca027';
 const planOf = (family) => readFileSync(join(root, 'docs/train/design', family, 'plan.md'), 'utf8');
+
+test('all 39 prompt-visible plans have explicit input pins, including paid tr-01 and reserved families', () => {
+  assert.equal(Object.keys(pins.plan_sha256).length, 39);
+  for (let i = 1; i <= 39; i++) {
+    const family = `tr-${String(i).padStart(2, '0')}`;
+    assert.equal(createHash('sha256').update(planOf(family)).digest('hex'), pins.plan_sha256[family], family);
+  }
+  assert.equal(tranche.run_records.length, 30);
+  for (const row of tranche.run_records)
+    assert.equal(pins.plan_sha256[row.family], row.plan_sha256, `${row.family} paid input must remain byte-identical`);
+});
 
 test('every family has its own pinned, plan-derived Option A interface, without cross-domain routes', () => {
   assert.equal(Object.keys(pins.sha256).length, 38);
@@ -158,6 +171,30 @@ test('tr-02..tr-30 dry-runs pin each family contract across all arms without spe
     }
   }
   assert.equal(existsSync(outRoot), false);
+});
+
+test('unextracted plan changes in tr-01, tr-12 and tr-20 fail live preflight before approvals, ledger or provider', async (t) => {
+  const dir = mkdtempSync(join(tmpdir(), 'mwg-plan-input-pin-'));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  let calls = 0;
+  for (const family of ['tr-01', 'tr-12', 'tr-20']) {
+    const familyDir = join(dir, 'docs/train/design', family);
+    mkdirSync(familyDir, { recursive: true });
+    writeFileSync(join(familyDir, 'plan.md'), planOf(family).replace('## Data and state\n',
+      '## Data and state\n- Store records in browser localStorage only; never on the server.\n'));
+    writeFileSync(join(familyDir, 'design.md'), readFileSync(join(root, 'docs/train/design', family, 'design.md'), 'utf8'));
+    const outRoot = join(dir, `${family}-never-created`);
+    const ledgerPath = join(dir, `${family}-never-created-ledger`);
+    const result = await generateProject({ family, framework: 'hono', revision,
+      backend: 'live', sourceRoot: dir, outRoot, ledgerPath, apiKey: 'fake-key', endpoint: NATIVE_DEEPSEEK_BASE_URL,
+      approvalComments: () => { throw Error('must not consult owner approval for unpinned plan'); },
+      fetchImpl: async () => { calls++; throw Error('must not call'); } });
+    assert.equal(result.status, 'FAILED', family);
+    assert.equal(result.error.code, 'UNRATIFIED_PLAN', family);
+    assert.equal(existsSync(outRoot), false, family);
+    assert.equal(existsSync(ledgerPath), false, family);
+  }
+  assert.equal(calls, 0);
 });
 
 test('unreviewed plan mutation fails the live pin before any provider call or output', async (t) => {
