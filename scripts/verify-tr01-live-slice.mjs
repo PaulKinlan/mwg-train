@@ -2,16 +2,20 @@
 // node scripts/verify-tr01-live-slice.mjs <read-only project directory> <private evidence directory>
 import assert from 'node:assert/strict';
 import { createServer } from 'node:net';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { startServer } from '../src/corpus/harness.mjs';
 import { launchChrome } from '../src/corpus/cdp.mjs';
+import { screenshotTimeoutVerdict } from '../src/eval/live-slice-verdict.mjs';
 
 const [project, evidenceDir] = process.argv.slice(2);
 if (!project || !evidenceDir) throw new Error('usage: verify-tr01-live-slice.mjs <project> <evidenceDir>');
 if (process.platform !== 'linux') throw new Error('Linux-only evidence run: macOS requires its own independent host');
 mkdirSync(evidenceDir, { recursive: true, mode: 0o700 });
+// Reusing an evidence directory must not leave a prior ACCEPT or screenshot as evidence for this run.
+for (const name of ['verdict.json', 'desktop-form.png', 'mobile-form.png', 'desktop-validation.png',
+  'desktop-confirmation.png', 'mobile-confirmation.png']) rmSync(join(evidenceDir, name), { force: true });
 const reservation = createServer();
 const port = await new Promise((resolve, reject) => {
   reservation.on('error', reject);
@@ -109,6 +113,12 @@ try {
     sandbox: server.mechanism, browserEgress: 'default contained' };
   writeFileSync(join(evidenceDir, 'verdict.json'), `${JSON.stringify({ verdict: 'ACCEPT_LINUX_FUNCTION', checks }, null, 2)}\n`, { mode: 0o600 });
   console.log(JSON.stringify({ verdict: 'ACCEPT_LINUX_FUNCTION', checks }));
+} catch (error) {
+  const inconclusive = screenshotTimeoutVerdict(error, checks);
+  if (!inconclusive) throw error;
+  writeFileSync(join(evidenceDir, 'verdict.json'), `${JSON.stringify(inconclusive, null, 2)}\n`, { mode: 0o600 });
+  console.error(JSON.stringify(inconclusive));
+  process.exitCode = 2; // instrument failure, distinct from behaviour/assertion exit 1
 } finally {
   await chrome?.close();
   await server?.stop();
