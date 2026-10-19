@@ -11,7 +11,8 @@ const SHA = /^[a-f0-9]{40}$/;
 const FAMILY = /^tr-\d{2}$/;
 const FRAMEWORKS = new Set(['hono', 'raw', 'react', 'preact', 'vue', 'webcomponents', 'svelte']);
 const ARMS = new Set(['default', 'c1', 'c2', 'c3', 't']);
-const RATIFIED_DECODE_SHA256 = '59c4e99faaa64669571c499689ed1116785471034e76c5255bbb1572c0011a20';
+// Author-pinned effective request. Owner approval of these exact knobs is tracked separately.
+export const PINNED_TR01_DECODE_SHA256 = '59c4e99faaa64669571c499689ed1116785471034e76c5255bbb1572c0011a20';
 export const NATIVE_DEEPSEEK_BASE_URL = 'https://deepseek.int.exe.xyz/v1';
 const hash = (value) => createHash('sha256').update(value).digest('hex');
 const fail = (code, message) => Object.assign(new Error(message), { code });
@@ -23,14 +24,13 @@ export function rethrowLiveRecoveryMkdirError(error) {
 }
 
 /** The operator supplies a BASE URL; never post a credential to an unapproved origin or path. */
-export function nativeCompletionEndpoint(baseUrl, { injectedFetch = false } = {}) {
+export function nativeCompletionEndpoint(baseUrl) {
   if (!baseUrl) throw fail('NO_PROVIDER_CONFIG', 'native DeepSeek integration base URL is required');
   let url;
   try { url = new URL(baseUrl); } catch { throw fail('NO_PROVIDER_CONFIG', 'invalid native DeepSeek base URL'); }
   if (url.protocol !== 'https:' || url.username || url.password || url.search || url.hash ||
-      (url.pathname !== '/v1' && url.pathname !== '/v1/' &&
-        !(injectedFetch && url.pathname === '/v1/chat/completions')) ||
-      (!injectedFetch && url.href.replace(/\/$/, '') !== NATIVE_DEEPSEEK_BASE_URL)) {
+      (url.pathname !== '/v1' && url.pathname !== '/v1/') ||
+      url.href.replace(/\/$/, '') !== NATIVE_DEEPSEEK_BASE_URL) {
     throw fail('NO_PROVIDER_CONFIG', 'unapproved native DeepSeek HTTPS integration base URL');
   }
   return `${url.origin}/v1/chat/completions`;
@@ -83,6 +83,9 @@ export function normaliseCompletion(payload) {
 
 /** Stream chunks for progress without an idle timeout; a hard 20-minute bound still applies. */
 export async function streamCompletion({ endpoint, apiKey, payload, fetchImpl = fetch, maxMs = 20 * 60_000 }) {
+  // Defense in depth: direct callers and injected fetch implementations cannot relax the origin pin.
+  if (endpoint !== `${NATIVE_DEEPSEEK_BASE_URL}/chat/completions`)
+    throw fail('NO_PROVIDER_CONFIG', 'unapproved native DeepSeek completion endpoint');
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), maxMs);
   try {
@@ -138,7 +141,7 @@ export async function generateProject({ family, framework, model = decodeConfig.
   if (!FAMILY.test(family ?? '') || !FRAMEWORKS.has(framework) || !SHA.test(revision ?? '')) {
     throw fail('INVALID_IDENTITY', 'training family, supported framework and caller-supplied 40-character HF reference required');
   }
-  if (model !== decodeConfig.build_model) throw fail('UNPINNED_MODEL', 'chosen model differs from owner-ratified native DeepSeek config; ratify a new identity before spending');
+  if (model !== decodeConfig.build_model) throw fail('UNPINNED_MODEL', 'chosen model differs from the code-pinned native DeepSeek identity; approve a new identity before spending');
   if (!['stub', 'live'].includes(backend)) throw fail('INVALID_BACKEND', 'only stub or guarded live are supported');
   // A SIGKILL can leave the paid reservation and project directory but no run.json. Never let
   // --retry override that ambiguity or start another live request, even on a fresh identity.
@@ -146,7 +149,8 @@ export async function generateProject({ family, framework, model = decodeConfig.
   const source = resolve(sourceRoot);
   const plan = await readFile(join(source, 'docs/train/design', family, 'plan.md'), 'utf8');
   const design = await readFile(join(source, 'docs/train/design', family, 'design.md'), 'utf8');
-  // Only tr-01 has an owner-ratified interface. Other families may preview offline, not spend.
+  // Only tr-01 has an owner-approved Option A concept and an exact author-pinned V1 block.
+  // Other families may preview offline, not spend.
   const contract = family === 'tr-01' ? interfaceContractText : '';
   const prompt = buildGenerationPrompt({ plan, design, arm, guidance, interfaceContract: contract });
   const promptSha256 = hash(prompt);
@@ -173,7 +177,7 @@ export async function generateProject({ family, framework, model = decodeConfig.
   let requestEndpoint = null;
   if (backend === 'live') {
     if (!contract || interfaceContractSha256 !== RATIFIED_TR01_INTERFACE_SHA256 ||
-        decodeConfigSha256(request) !== RATIFIED_DECODE_SHA256 || !decodeConfig.status.startsWith('ratified-owner-')) {
+        decodeConfigSha256(request) !== PINNED_TR01_DECODE_SHA256 || !decodeConfig.status.startsWith('ratified-owner-')) {
       return preflightFailure('UNRATIFIED_INTERFACE', fail('UNRATIFIED_INTERFACE', 'exact owner-ratified tr-01 interface and decode request required'));
     }
     if (!apiKey || !ledgerPath) return preflightFailure('NO_PROVIDER_CONFIG',
@@ -182,7 +186,7 @@ export async function generateProject({ family, framework, model = decodeConfig.
         decodeConfig.integration_base_url !== NATIVE_DEEPSEEK_BASE_URL) {
       return preflightFailure('UNPINNED_MODEL', fail('UNPINNED_MODEL', 'native DeepSeek model or integration pin changed'));
     }
-    try { requestEndpoint = nativeCompletionEndpoint(endpoint, { injectedFetch: fetchImpl !== fetch }); }
+    try { requestEndpoint = nativeCompletionEndpoint(endpoint); }
     catch (error) { return preflightFailure('NO_PROVIDER_CONFIG', error); }
     try { approval = verifyGenerationApproval(approvalComments(), { model }); }
     catch (error) { return preflightFailure('NO_OWNER_AUTH', error); }

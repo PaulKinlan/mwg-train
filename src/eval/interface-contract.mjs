@@ -1,8 +1,9 @@
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 
-// Paul's 2026-10-18 Option A decision ratified the exact tr-01 V1 block. The document
-// retains its candidate filename as the immutable source reviewed before ratification.
+// Paul approved the drafted Option A server/DOM row on 2026-10-13 (i5i2.6).
+// The exact V1 bytes are author-pinned for review, not separately approved verbatim by Paul.
+// The document retains its candidate filename for provenance.
 const source = readFileSync(new URL('../../docs/eval/interface-contract.tr-01.candidate.md', import.meta.url), 'utf8');
 const marker = /^BEGIN TR-01 EVALUATOR INTERFACE V1\n[\s\S]*?^END TR-01 EVALUATOR INTERFACE V1\n/mg;
 const matches = [...source.matchAll(marker)];

@@ -159,18 +159,25 @@ test('closed no-cap owner decision permits scoped generation without a tariff; c
 
 test('native DeepSeek rejects wrong origins and credential-bearing URLs before allocation or authority lookup', async () => {
   assert.equal(nativeCompletionEndpoint(`${NATIVE_DEEPSEEK_BASE_URL}/`), `${NATIVE_DEEPSEEK_BASE_URL}/chat/completions`);
+  let streamCalls = 0;
+  await assert.rejects(streamCompletion({ endpoint: 'https://evil.example/v1/chat/completions',
+    apiKey: 'FAKE_KEY', payload: {}, fetchImpl: () => { streamCalls++; throw Error('key forwarded'); } }),
+  (error) => error.code === 'NO_PROVIDER_CONFIG');
+  assert.equal(streamCalls, 0, 'even direct stream callers cannot forward a key off origin');
   for (const baseUrl of ['https://evil.example/v1', 'http://deepseek.int.exe.xyz/v1',
     'https://user:pass@deepseek.int.exe.xyz/v1', 'https://deepseek.int.exe.xyz/v1?key=secret',
     'https://deepseek.int.exe.xyz/v1/chat/completions']) {
     assert.throws(() => nativeCompletionEndpoint(baseUrl), (error) => error.code === 'NO_PROVIDER_CONFIG');
   }
-  const dir = root();
+  const dir = root(); let calls = 0;
   try {
     const refused = await generateProject(options(join(dir, 'out'), { backend: 'live',
-      endpoint: 'https://evil.example/v1', apiKey: 'FAKE_KEY', ledgerPath: join(dir, 'ledger.jsonl'),
-      approvalComments: () => { throw new Error('authority lookup must not run'); } }));
+      endpoint: 'https://evil.example/v1/chat/completions', apiKey: 'FAKE_KEY', ledgerPath: join(dir, 'ledger.jsonl'),
+      approvalComments: () => { throw new Error('authority lookup must not run'); },
+      fetchImpl: () => { calls++; throw new Error('fake fetch saw a paid key'); } }));
     assert.equal(refused.status, 'FAILED');
     assert.equal(refused.error.code, 'NO_PROVIDER_CONFIG');
+    assert.equal(calls, 0, 'an injected fetch cannot bypass the pinned origin or receive the key');
     assert.equal(existsSync(refused.output_dir), false);
     assert.equal(existsSync(join(dir, 'ledger.jsonl')), false);
   } finally { rmSync(dir, { recursive: true, force: true }); }
@@ -211,7 +218,7 @@ test('an offline stub cannot masquerade as a resumed live provider response', as
       { path: 'index.html', content: '<p>Mock model response</p>' },
     ] }) }, finish_reason: 'stop' }] })}\n\ndata: ${JSON.stringify({ choices: [], usage: { prompt_tokens: 20, completion_tokens: 30,
       completion_tokens_details: { reasoning_tokens: 8 } } })}\n\ndata: [DONE]\n\n`;
-    const live = await generateProject({ ...base, backend: 'live', endpoint: 'https://example.test/v1/chat/completions',
+    const live = await generateProject({ ...base, backend: 'live', endpoint: NATIVE_DEEPSEEK_BASE_URL,
       apiKey: 'OFFLINE_FAKE_KEY', ledgerPath: join(dir, 'ledger.jsonl'), approvalComments: () => ownerApproval(),
       fetchImpl: async () => { calls++; return { ok: true, status: 200, body: Readable.from([Buffer.from(body)]) }; } });
     assert.equal(live.status, 'SUCCESS');
@@ -230,7 +237,7 @@ test('deleting paid artifacts cannot resend the same live identity; distinct arm
     const ledgerPath = join(dir, 'ledger.jsonl');
     const data = JSON.stringify({ files: [{ path: 'index.html', content: '<p>Inert model output</p>' }] });
     const events = `data: ${JSON.stringify({ choices: [{ delta: { content: data }, finish_reason: 'stop' }] })}\n\ndata: ${JSON.stringify({ choices: [], usage: { prompt_tokens: 19, completion_tokens: 42, completion_tokens_details: { reasoning_tokens: 10 } } })}\n\ndata: [DONE]\n\n`;
-    const args = options(dir, { backend: 'live', endpoint: 'https://example.test/v1/chat/completions',
+    const args = options(dir, { backend: 'live', endpoint: NATIVE_DEEPSEEK_BASE_URL,
       apiKey: 'OFFLINE_FAKE_KEY', ledgerPath, approvalComments: () => ownerApproval(),
       fetchImpl: async () => { calls++; return { ok: true, status: 200, body: Readable.from([Buffer.from(events)]) }; } });
     const first = await generateProject(args);
@@ -269,7 +276,7 @@ test('Markdown-wrapped trusted revocation prevents a live fetch or ledger reserv
   const dir = root(); let calls = 0;
   try {
     const result = await generateProject(options(dir, { backend: 'live',
-      endpoint: 'https://example.test/v1/chat/completions', apiKey: 'OFFLINE_FAKE_KEY',
+      endpoint: NATIVE_DEEPSEEK_BASE_URL, apiKey: 'OFFLINE_FAKE_KEY',
       ledgerPath: join(dir, 'ledger.jsonl'), approvalComments: () => ownerApproval([{
         issue_id: GENERATION_BEAD, author: 'mwg-train-coord', text: '> **OWNER-AUTHORIZATION-REVOKED**: stop',
       }]), fetchImpl: () => { calls++; throw Error('network used'); } }));
@@ -283,7 +290,7 @@ test('Markdown-wrapped trusted revocation prevents a live fetch or ledger reserv
 test('a paid request with unknown provider outcome is recorded but never retried in-place', async () => {
   const dir = root(); let calls = 0;
   try {
-    const args = options(dir, { backend: 'live', endpoint: 'https://example.test/v1/chat/completions',
+    const args = options(dir, { backend: 'live', endpoint: NATIVE_DEEPSEEK_BASE_URL,
       apiKey: 'OFFLINE_FAKE_KEY', ledgerPath: join(dir, 'ledger.jsonl'), approvalComments: () => ownerApproval(),
       fetchImpl: () => { calls++; throw Error('simulated transport loss'); } });
     const first = await generateProject(args);
@@ -319,7 +326,7 @@ test('zero-request preflight refusal does not consume the live identity after co
     const body = `data: ${JSON.stringify({ choices: [{ delta: { content: JSON.stringify({ files: [
       { path: 'index.html', content: '<p>Inert</p>' },
     ] }) }, finish_reason: 'stop' }] })}\n\ndata: ${JSON.stringify({ choices: [], usage: { prompt_tokens: 10, completion_tokens: 15 } })}\n\ndata: [DONE]\n\n`;
-    const args = options(dir, { backend: 'live', endpoint: 'https://example.test/v1/chat/completions',
+    const args = options(dir, { backend: 'live', endpoint: NATIVE_DEEPSEEK_BASE_URL,
       apiKey: '', ledgerPath: '', approvalComments: () => ownerApproval(),
       fetchImpl: async () => { calls++; return { ok: true, status: 200, body: Readable.from([Buffer.from(body)]) }; } });
     const refused = await generateProject(args);
@@ -374,7 +381,7 @@ test('a racing legacy-recovery mkdir is classified through generateProject, with
       let requests = 0;
       const args = { family: 'tr-01', framework: 'hono', model: decodeConfig.build_model,
         revision: process.env.MWG_TEST_REVISION, outRoot, ledgerPath, backend: 'live',
-        endpoint: 'https://example.test/v1/chat/completions', apiKey: 'OFFLINE_FAKE_KEY',
+        endpoint: 'https://deepseek.int.exe.xyz/v1', apiKey: 'OFFLINE_FAKE_KEY',
         approvalComments: () => JSON.parse(process.env.MWG_APPROVAL_JSON),
         fetchImpl: async () => { requests++; throw Error('no provider call expected'); } };
       const identity = await generateProject({ ...args, dryRun: true });
@@ -403,7 +410,7 @@ test('an empty pre-reservation orphan names a safe manual exit, never an automat
     const sse = `data: ${JSON.stringify({ choices: [{ delta: { content: JSON.stringify({ files: [
       { path: 'index.html', content: '<p>Inert</p>' },
     ] }) }, finish_reason: 'stop' }] })}\n\ndata: ${JSON.stringify({ choices: [], usage: { prompt_tokens: 10, completion_tokens: 15 } })}\n\ndata: [DONE]\n\n`;
-    const args = options(dir, { backend: 'live', endpoint: 'https://example.test/v1/chat/completions',
+    const args = options(dir, { backend: 'live', endpoint: NATIVE_DEEPSEEK_BASE_URL,
       apiKey: 'OFFLINE_FAKE_KEY', ledgerPath, approvalComments: () => ownerApproval(),
       fetchImpl: async () => { calls++; return { ok: true, status: 200, body: Readable.from([Buffer.from(sse)]) }; } });
     const identity = await generateProject({ ...args, dryRun: true });
@@ -425,7 +432,7 @@ test('a legacy failed preflight directory without a reservation is recoverable b
   const dir = root(); let calls = 0;
   try {
     const ledgerPath = join(dir, 'ledger.jsonl');
-    const args = options(dir, { backend: 'live', endpoint: 'https://example.test/v1/chat/completions',
+    const args = options(dir, { backend: 'live', endpoint: NATIVE_DEEPSEEK_BASE_URL,
       apiKey: 'OFFLINE_FAKE_KEY', ledgerPath, approvalComments: () => ownerApproval(),
       fetchImpl: async () => { calls++; return { ok: true, status: 200, body: Readable.from([Buffer.from(
         `data: ${JSON.stringify({ choices: [{ delta: { content: JSON.stringify({ files: [
@@ -448,7 +455,7 @@ test('an unreadable owner decision or corrupt ledger refuses with a policy code 
   const dir = root(); let calls = 0;
   try {
     const ledgerPath = join(dir, 'ledger.jsonl');
-    const args = options(dir, { backend: 'live', endpoint: 'https://example.test/v1/chat/completions',
+    const args = options(dir, { backend: 'live', endpoint: NATIVE_DEEPSEEK_BASE_URL,
       apiKey: 'OFFLINE_FAKE_KEY', ledgerPath,
       fetchImpl: () => { calls++; throw Error('provider must not be contacted'); } });
     const authFailure = await generateProject({ ...args, approvalComments: () => {
@@ -469,7 +476,7 @@ test('an unreadable owner decision or corrupt ledger refuses with a policy code 
 test('live mode refuses the real undecided bead and never contacts the provider or logs a key', async () => {
   const dir = root(); let calls = 0;
   try {
-    const result = await generateProject(options(dir, { backend: 'live', endpoint: 'https://example.test/v1/chat/completions',
+    const result = await generateProject(options(dir, { backend: 'live', endpoint: NATIVE_DEEPSEEK_BASE_URL,
       apiKey: 'TOP-SECRET-KEY', ledgerPath: join(dir, 'ledger.jsonl'), authKey: 'test-only', approvalComments: () => [],
       fetchImpl: () => { calls += 1; throw Error('network used'); } }));
     assert.equal(result.status, 'FAILED');
@@ -565,7 +572,7 @@ test('streaming chat stays open across reasoning chunks and records usage, witho
     ].join('\n\n') + '\n\n';
     return { ok: true, body: Readable.from([Buffer.from(events)]) };
   };
-  const answer = await streamCompletion({ endpoint: 'https://example.test/v1/chat/completions', apiKey: 'test-only',
+  const answer = await streamCompletion({ endpoint: `${NATIVE_DEEPSEEK_BASE_URL}/chat/completions`, apiKey: 'test-only',
     payload: { model: 'fake', messages: [{ role: 'user', content: 'Hi' }] }, fetchImpl });
   assert.equal(request.stream, true);
   assert.equal(answer.finish_reason, 'stop');

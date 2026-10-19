@@ -25,7 +25,8 @@ test('the pinned native DeepSeek decoding policy identifies itself by the effect
   assert.equal(decodeConfig.request.max_tokens, 65536);
   assert.equal(decodeConfig.request.reasoning_effort, 'high');
   assert.equal(Object.hasOwn(decodeConfig.request, 'temperature'), false);
-  assert.equal(decodeConfig.retrieved_at, '2026-10-13');
+  assert.equal(decodeConfig.public_source_retrieved_at, '2026-10-13');
+  assert.equal(decodeConfig.native_route_selected_at, '2026-10-18T23:52:00Z');
   assert.ok(decodeConfig.sources.every((source) => source.url.startsWith('https://')));
   const key = pinnedEvaluationBuildKey({ projectId: 'tr-01-hono' });
   assert.equal(decodeConfig.model, 'deepseek-flash');

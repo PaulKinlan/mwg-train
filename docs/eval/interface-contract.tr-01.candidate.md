@@ -1,6 +1,6 @@
 # Ratified interface block for tr-01 (V1; candidate filename retained for provenance)
 
-Paul selected Option A via coord on 2026-10-18, before any live tr-01 run; the exact block below is pinned in PREREGISTRATION.md §14. This arm-independent prompt addition is **not** a change to sealed briefs or permission to execute generated code. Use the same bytes for default/C1/C2/C3/T and, before any training, the prompt half of tr-01 training pairs; no arm-specific route hints. Provider support and the model's functional outcome are still unmeasured.
+Paul approved the drafted Option A server/DOM row via the 2026-10-13 coord relay on `mwg-train-i5i2.6` (“re: 5 sure”); the exact V1 bytes below were author-pinned for review in PREREGISTRATION.md §14 on 2026-10-18, not separately approved verbatim by Paul. This arm-independent prompt addition is **not** a change to sealed briefs or permission to execute generated code. Use the same bytes for default/C1/C2/C3/T and, before any training, the prompt half of tr-01 training pairs; no arm-specific route hints. Provider support and the model's functional outcome are still unmeasured.
 
 ## Proposed block (append verbatim after every arm's plan and visual design)
 

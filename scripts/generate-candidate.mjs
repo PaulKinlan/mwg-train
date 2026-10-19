@@ -4,6 +4,8 @@ import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { buildOfflineCandidatePrompt, candidateInterfaceSha256 } from '../src/eval/interface-candidate.mjs';
+import { RATIFIED_TR01_INTERFACE_SHA256 } from '../src/eval/interface-contract.mjs';
+import { PINNED_TR01_DECODE_SHA256 } from '../src/eval/generator.mjs';
 import { decodeConfig, decodeConfigSha256 } from '../src/eval/decode-config.mjs';
 import { evaluationBuildKey } from '../src/eval/build-key.mjs';
 
@@ -32,7 +34,11 @@ export async function main(argv = process.argv.slice(2)) {
   const decode_config_sha256 = decodeConfigSha256(decodeConfig.request);
   const build_key = evaluationBuildKey({ projectId: `tr-01-${args.framework}`,
     model: decodeConfig.build_model, decodeConfigSha256: decode_config_sha256 });
-  const result = { status: 'RATIFIED_OFFLINE_PREVIEW', ratified: true, provider_requests: 0,
+  const onPin = candidateInterfaceSha256 === RATIFIED_TR01_INTERFACE_SHA256 &&
+    decode_config_sha256 === PINNED_TR01_DECODE_SHA256;
+  const ratified = onPin && decodeConfig.status.startsWith('ratified-owner-');
+  const result = { status: !onPin ? 'OFF_PIN_OFFLINE_PREVIEW' : ratified ? 'RATIFIED_OFFLINE_PREVIEW' : 'UNRATIFIED_OFFLINE_PREVIEW',
+    ratified, provider_requests: 0,
     family: 'tr-01', framework: args.framework, arm, model: decodeConfig.build_model,
     caller_supplied_revision: args.revision, build_key, decode_config_sha256,
     interface_contract_sha256: candidateInterfaceSha256, prompt_sha256: hash(prompt), prompt };
