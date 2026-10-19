@@ -192,6 +192,7 @@ test('an injected fetch cannot exfiltrate a fake key even with a test-only appro
     cpSync(fileURLToPath(new URL('../src/eval', import.meta.url)), join(fixture, 'src/eval'), { recursive: true });
     const docs = fileURLToPath(new URL('../docs/eval/', import.meta.url));
     copyFileSync(join(docs, 'interface-contract.tr-01.candidate.md'), join(fixture, 'docs/eval/interface-contract.tr-01.candidate.md'));
+    copyFileSync(join(docs, 'family-interface-v1.hashes.json'), join(fixture, 'docs/eval/family-interface-v1.hashes.json'));
     const config = JSON.parse(readFileSync(join(docs, 'decode-config.deepseek-flash.json'), 'utf8'));
     config.status = 'ratified-owner-TEST-FIXTURE-ONLY'; // no actual owner decision is implied
     writeFileSync(join(fixture, 'docs/eval/decode-config.deepseek-flash.json'), JSON.stringify(config));

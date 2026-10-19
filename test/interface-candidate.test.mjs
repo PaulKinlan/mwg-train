@@ -52,13 +52,14 @@ test('all generation arms receive the identical candidate interface suffix witho
     (error) => error.code === 'SET_SEPARATION');
 });
 
-test('live runner dry-run uses the identical ratified block and decode pin for every tr-01 arm, refusing other families', async (t) => {
+test('live runner keeps ratified tr-01 identity across arms and refuses an unapproved endpoint for tr-02', async (t) => {
   const dir = mkdtempSync(join(tmpdir(), 'mwg-ratified-interface-'));
   t.after(() => rmSync(dir, { recursive: true, force: true }));
   for (const family of ['tr-01', 'tr-02']) {
     const input = join(dir, 'docs/train/design', family);
     mkdirSync(input, { recursive: true });
-    writeFileSync(join(input, 'plan.md'), 'Synthetic functional plan.');
+    writeFileSync(join(input, 'plan.md'), family === 'tr-02'
+      ? readFileSync(join(repo, 'docs/train/design/tr-02/plan.md'), 'utf8') : 'Synthetic functional plan.');
     writeFileSync(join(input, 'design.md'), 'Synthetic visual design.');
   }
   const outRoot = join(dir, 'never-created');
@@ -80,9 +81,9 @@ test('live runner dry-run uses the identical ratified block and decode pin for e
     backend: 'live', endpoint: 'https://example.invalid/v1/chat/completions', apiKey: 'fake-key',
     ledgerPath: join(dir, 'unused-ledger.json'), sourceRoot: dir, outRoot,
     fetchImpl: async () => { fetchCalls++; throw new Error('provider must not be called'); },
-    approvalComments: () => { throw new Error('unratified family must refuse before authority lookup'); } });
+    approvalComments: () => { throw new Error('unapproved endpoint must refuse before authority lookup'); } });
   assert.equal(denied.status, 'FAILED');
-  assert.equal(denied.error.code, 'UNRATIFIED_INTERFACE');
+  assert.equal(denied.error.code, 'NO_PROVIDER_CONFIG');
   assert.equal(fetchCalls, 0);
   assert.equal(existsSync(outRoot), false);
 });
@@ -97,7 +98,7 @@ test('offline CLI rejects a mutated interface block or decode request as off-pin
     mkdirSync(input, { recursive: true });
     cpSync(join(repo, 'src/eval'), join(source, 'src/eval'), { recursive: true });
     copyFileSync(SCRIPT, join(source, 'scripts/generate-candidate.mjs'));
-    for (const name of ['interface-contract.tr-01.candidate.md', 'decode-config.deepseek-flash.json']) {
+    for (const name of ['interface-contract.tr-01.candidate.md', 'decode-config.deepseek-flash.json', 'family-interface-v1.hashes.json']) {
       copyFileSync(join(repo, 'docs/eval', name), join(source, 'docs/eval', name));
     }
     writeFileSync(join(input, 'plan.md'), 'Synthetic functional plan.');
