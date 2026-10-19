@@ -10,18 +10,34 @@ const digest = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const inside = (root, path) => path === root || path.startsWith(`${root}${sep}`);
 function existingAncestor(path) {
   let ancestor = path;
-  while (!existsSync(ancestor)) {
-    const next = dirname(ancestor);
-    if (next === ancestor) throw new Error('CORDON_DESTINATION_INVALID: no existing ancestor');
-    ancestor = next;
+  for (;;) {
+    try {
+      const stat = lstatSync(ancestor);
+      // existsSync follows links and treats a dangling alias as an absent path. Refuse the
+      // alias here, before mkdir, rather than relying on a later ENOENT from the copy.
+      if (stat.isSymbolicLink() && !existsSync(ancestor)) {
+        throw new Error('DANGLING_SYMLINK: cordon archive root crosses an unresolved symlink');
+      }
+      return ancestor;
+    } catch (error) {
+      if (error.code !== 'ENOENT') throw error;
+      const next = dirname(ancestor);
+      if (next === ancestor) throw new Error('CORDON_DESTINATION_INVALID: no existing ancestor');
+      ancestor = next;
+    }
   }
-  return ancestor;
 }
-function gitOrigin(dir) {
+function gitIdentities(dir) {
   try {
-    return execFileSync('git', ['-C', dir, 'remote', 'get-url', 'origin'],
-      { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 2000 }).trim();
-  } catch { return null; }
+    const remotes = execFileSync('git', ['-C', dir, 'remote'],
+      { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 2000 }).trim().split('\n').filter(Boolean);
+    return new Set(remotes.map((name) => {
+      try {
+        return repoIdentity(execFileSync('git', ['-C', dir, 'remote', 'get-url', name],
+          { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 2000 }).trim());
+      } catch { return null; }
+    }).filter(Boolean));
+  } catch { return new Set(); }
 }
 /** Refuse a public checkout (including symlink aliases and sibling worktrees) BEFORE creating anything. */
 export function assertPrivateArchiveRoot(archiveRoot, { repoRoot = REPO_ROOT, sourceRoot = null } = {}) {
@@ -33,8 +49,9 @@ export function assertPrivateArchiveRoot(archiveRoot, { repoRoot = REPO_ROOT, so
     throw new Error('STORE_INSIDE_PUBLIC: cordon archive must be outside the public checkout and paid source');
   }
   // A different worktree of this same public repo is just as publishable as this one.
-  const publicIdentity = repoIdentity(gitOrigin(realRepo));
-  if (publicIdentity && repoIdentity(gitOrigin(realpathSync(ancestor))) === publicIdentity) {
+  const publicIdentities = gitIdentities(realRepo);
+  const destinationIdentities = gitIdentities(realpathSync(ancestor));
+  if ([...publicIdentities].some((identity) => destinationIdentities.has(identity))) {
     throw new Error('STORE_INSIDE_PUBLIC: cordon archive resolves inside another public checkout');
   }
   return root;
