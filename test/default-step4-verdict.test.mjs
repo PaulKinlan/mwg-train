@@ -1,11 +1,19 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { headroom, journeyComponentVerdicts, requiredRuleVerdicts } from '../src/eval/default-step4-verdict.mjs';
+import { scoreDefaultFamily } from '../scripts/default-step4-score.mjs';
 
 const journey = { expectText: 'Ada', steps: [{ path: '/intake' }], search: { path: '/search' } };
 const persistence = { steps: [{ step: 'submit', status: 302 }, { step: 'reload' }], persistedText: 'Ada saved',
   serverWitness: { status: 200, shape: 'records', expectedRecordPresent: true },
   state: { passed: false }, carry: { passed: true } }; // draft retention is diagnostic, not a declared carry requirement.
+
+test('the scoring entry point quarantines failed and unknown paid identities before touching the archive', async () => {
+  for (const family of ['tr-03', 'tr-14', 'tr-31']) {
+    await assert.rejects(scoreDefaultFamily({ family, archiveRoot: '/nonexistent', evidenceRoot: '/nonexistent' }),
+      /GENERATION_QUARANTINE/);
+  }
+});
 
 test('a driven journey counts each observable component once; umbrella rules stay uncheckable', () => {
   const parts = journeyComponentVerdicts({ journey, persistence,
