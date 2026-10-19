@@ -3,13 +3,15 @@
 import assert from 'node:assert/strict';
 import { createServer } from 'node:net';
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import { startServer } from '../src/corpus/harness.mjs';
 import { launchChrome } from '../src/corpus/cdp.mjs';
 import { liveSliceTimeoutVerdict } from '../src/eval/live-slice-verdict.mjs';
 
-const [project, evidenceDir] = process.argv.slice(2);
+// Inject only the two containment launchers for offline fault tests; the CLI uses their real defaults.
+export async function verifyTr01LiveSlice({ project, evidenceDir, start = startServer, launch = launchChrome }) {
 if (!project || !evidenceDir) throw new Error('usage: verify-tr01-live-slice.mjs <project> <evidenceDir>');
 if (process.platform !== 'linux') throw new Error('Linux-only evidence run: macOS requires its own independent host');
 mkdirSync(evidenceDir, { recursive: true, mode: 0o700 });
@@ -30,9 +32,9 @@ const checks = {};
 const base = `http://127.0.0.1:${port}`;
 const text = (page) => page.evaluate('return document.body.innerText');
 try {
-  server = await startServer(project, { port });
+  server = await start(project, { port });
   assert.equal(server.mechanism, 'bubblewrap');
-  chrome = await launchChrome();
+  chrome = await launch();
   const page = await chrome.newPage({ viewport: { width: 1280, height: 900 } });
   await page.goto(`${base}/`);
   assert.match(await text(page), /VeloFix/);
@@ -122,4 +124,9 @@ try {
 } finally {
   await chrome?.close();
   await server?.stop();
+}
+}
+
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  await verifyTr01LiveSlice({ project: process.argv[2], evidenceDir: process.argv[3] });
 }
