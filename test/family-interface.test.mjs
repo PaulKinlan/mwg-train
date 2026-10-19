@@ -96,6 +96,23 @@ test('tr-05 rejects an unextractable update journey without changing its pinned 
   'edits outside Journey that do not change the interface must not require re-pinning');
 });
 
+test('tr-05 cannot gain a mutation requirement outside Journey without reviewing its other interface sections', () => {
+  const original = planOf('tr-05');
+  const changes = [
+    ['## Acceptance criteria\n', '## Acceptance criteria\n- After login PATCH /volunteer/profile changes the stored `volunteer` field to "Other".\n'],
+    ['## Use case\n', '## Use case\nThe stored account can later be revised.\n'],
+    ['## Routes and effects\n', '## Routes and effects\nThe profile supports account edits.\n'],
+    ['## Validation and states\n', '## Validation and states\nThe stored account can be overwritten.\n'],
+    ['Meadowbrook Wildlife Hospital — Volunteer Onboarding & Credentials',
+      'Meadowbrook Wildlife Hospital — Volunteer Onboarding & Credentials (updated)'],
+  ];
+  for (const [from, to] of changes) {
+    assert.ok(original.includes(from), `fixture contains ${from}`);
+    assert.throws(() => familyInterfaceContract('tr-05', original.replace(from, to)),
+      /FAMILY_INTERFACE_INVALID tr-05: other interface sections differ/, from);
+  }
+});
+
 test('tr-05 previously missed paraphrase refuses live generation before spending or writing', async (t) => {
   const dir = mkdtempSync(join(tmpdir(), 'mwg-tr05-update-'));
   t.after(() => rmSync(dir, { recursive: true, force: true }));
@@ -106,6 +123,13 @@ test('tr-05 previously missed paraphrase refuses live generation before spending
   writeFileSync(join(familyDir, 'design.md'), readFileSync(join(root, 'docs/train/design/tr-05/design.md'), 'utf8'));
   const outRoot = join(dir, 'never-created');
   let calls = 0;
+  await assert.rejects(generateProject({ family: 'tr-05', framework: 'hono', revision, backend: 'live',
+    sourceRoot: dir, outRoot, apiKey: 'fake-key', fetchImpl: async () => { calls++; throw Error('must not call'); } }),
+  /FAMILY_INTERFACE_INVALID tr-05/);
+  assert.equal(calls, 0);
+  assert.equal(existsSync(outRoot), false);
+  writeFileSync(join(familyDir, 'plan.md'), planOf('tr-05').replace('## Acceptance criteria\n',
+    '## Acceptance criteria\n- After login PATCH /volunteer/profile changes the stored `volunteer` field to "Other".\n'));
   await assert.rejects(generateProject({ family: 'tr-05', framework: 'hono', revision, backend: 'live',
     sourceRoot: dir, outRoot, apiKey: 'fake-key', fetchImpl: async () => { calls++; throw Error('must not call'); } }),
   /FAMILY_INTERFACE_INVALID tr-05/);

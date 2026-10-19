@@ -7,6 +7,9 @@ const list = (text) => [...text.matchAll(/`([^`]+)`/g)].map((match) => match[1])
 // The only family with no update flow must preserve its reviewed Journey verbatim.
 // Re-pin deliberately when changing that section, even for a non-functional edit.
 const TR05_JOURNEY_SHA256 = 'd379562c510a436fd8601f7c7948bc2332e95d837ca4c8ac55ada0d9019bbb61';
+// These sections also supply the no-update contract. Pin their raw, ordered bytes so
+// a mutation requirement outside Journey cannot be ratified beside "No update flow".
+const TR05_OTHER_INTERFACE_SECTIONS_SHA256 = '368327b684dc58e4af82432bd84b771d86c7f9b762643db65d7ba740bb05293d';
 
 /**
  * A family-parameterized version of the owner-approved Option A concept, not a literal copy of
@@ -26,6 +29,8 @@ export function familyInterfaceContract(family, plan) {
   const acceptance = section(plan, 'Acceptance criteria');
   const titlePrefix = `# \`${family}\` functional specification — `;
   const title = plan.split('\n').find((line) => line.startsWith(titlePrefix))?.slice(titlePrefix.length);
+  if (family === 'tr-05' && hash(JSON.stringify([title, useCase, routes, validation, acceptance])) !== TR05_OTHER_INTERFACE_SECTIONS_SHA256)
+    fail(family, 'other interface sections differ from the reviewed no-update plan; review and re-pin before deriving an interface');
   const fieldsMatch = useCase?.match(/The form the journey drives carries (\d+) fields: ([^\n]+)/);
   const fields = list(fieldsMatch?.[2] ?? '');
   const required = list(validation?.match(/\*\*Required fields:\*\* ([^\n]+)/)?.[1] ?? '');
