@@ -75,21 +75,34 @@ test('tr-05 rejects an unextractable update journey without changing its pinned 
     'The stored record may be amended later; its `volunteer` field changes.',
     'The stored record is mutable after login.',
     'PATCH /volunteer/profile updates the stored record.',
+    'The stored record\'s volunteer field is updated to "Other" after login.',
+    'The stored record\'s volunteer field is replaced with "Other" after login.',
+    'After login the volunteer can revise the stored choice to "Other".',
+    'After login the volunteer field is overwritten with "Other".',
+    'After login the volunteer field is switched to "Other".',
+    'After login the volunteer field is altered to "Other".',
   ]) {
     const mutated = original.replace('## Validation and states', `${sentence}\n\n## Validation and states`);
     assert.throws(() => familyInterfaceContract('tr-05', mutated), /FAMILY_INTERFACE_INVALID tr-05/, sentence);
   }
-  assert.equal(familyInterfaceContract('tr-05', original.replace('## Validation and states',
-    'The volunteer may log out afterwards.\n\n## Validation and states')).sha256, baseline.sha256);
+  assert.throws(() => familyInterfaceContract('tr-05', original.replace('## Validation and states',
+    'The volunteer may log out afterwards.\n\n## Validation and states')), /FAMILY_INTERFACE_INVALID tr-05/,
+  'even benign Journey edits must be reviewed before re-pinning');
+  assert.throws(() => familyInterfaceContract('tr-05', original.replace('The flow the harness drives,',
+    'The flow the harness drives ,')), /FAMILY_INTERFACE_INVALID tr-05/,
+  'whitespace-only Journey edits must also fail closed');
+  assert.equal(familyInterfaceContract('tr-05', original.replace('Task: `generate`.',
+    'Task: `generate` (reviewed).')).sha256, baseline.sha256,
+  'edits outside Journey that do not change the interface must not require re-pinning');
 });
 
-test('tr-05 paraphrased update refuses live generation before spending or writing', async (t) => {
+test('tr-05 previously missed paraphrase refuses live generation before spending or writing', async (t) => {
   const dir = mkdtempSync(join(tmpdir(), 'mwg-tr05-update-'));
   t.after(() => rmSync(dir, { recursive: true, force: true }));
   const familyDir = join(dir, 'docs/train/design/tr-05');
   mkdirSync(familyDir, { recursive: true });
   writeFileSync(join(familyDir, 'plan.md'), planOf('tr-05').replace('## Validation and states',
-    'An edit flow: the stored record\'s `volunteer` field can be changed to "Other".\n\n## Validation and states'));
+    'The stored record\'s volunteer field is replaced with "Other" after login.\n\n## Validation and states'));
   writeFileSync(join(familyDir, 'design.md'), readFileSync(join(root, 'docs/train/design/tr-05/design.md'), 'utf8'));
   const outRoot = join(dir, 'never-created');
   let calls = 0;
