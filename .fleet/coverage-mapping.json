@@ -252,6 +252,9 @@
     "test/decode-config.test.mjs",
     "test/interface-candidate.test.mjs"
   ],
+  "docs/eval/default-set-hono-tranche-2026-10-19.json": [
+    "test/default-set-tranche.test.mjs"
+  ],
   "docs/eval/evaluator-interface-contract.md": [
     "test/harness-oracle.test.mjs",
     "test/interface-candidate.test.mjs"
