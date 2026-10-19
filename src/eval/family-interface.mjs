@@ -4,12 +4,9 @@ const hash = (text) => createHash('sha256').update(text).digest('hex');
 const fail = (family, detail) => { throw new Error(`FAMILY_INTERFACE_INVALID ${family}: ${detail}`); };
 const section = (plan, heading) => plan.match(new RegExp(`^## ${heading}\\n([\\s\\S]*?)(?=^## |$(?![\\s\\S]))`, 'm'))?.[1];
 const list = (text) => [...text.matchAll(/`([^`]+)`/g)].map((match) => match[1]);
-// The only family with no update flow must preserve its reviewed Journey verbatim.
-// Re-pin deliberately when changing that section, even for a non-functional edit.
-const TR05_JOURNEY_SHA256 = 'd379562c510a436fd8601f7c7948bc2332e95d837ca4c8ac55ada0d9019bbb61';
-// These sections also supply the no-update contract. Pin their raw, ordered bytes so
-// a mutation requirement outside Journey cannot be ratified beside "No update flow".
-const TR05_OTHER_INTERFACE_SECTIONS_SHA256 = '368327b684dc58e4af82432bd84b771d86c7f9b762643db65d7ba740bb05293d';
+// tr-05 alone has no update flow. The whole plan is sent to the paid model, so
+// pin every prompt-visible byte, not just sections extracted into the interface.
+const TR05_PLAN_SHA256 = '2a1bb0c1f75cfcfe5d8620ffddcae425dcccd2de4dde0970c783eed1f286cfa7';
 
 /**
  * A family-parameterized version of the owner-approved Option A concept, not a literal copy of
@@ -20,17 +17,15 @@ export function familyInterfaceContract(family, plan) {
   if (!/^tr-(?:0[1-9]|[12]\d|3\d)$/.test(family)) fail(family, 'expected tr-01..tr-39');
   if (typeof plan !== 'string' || !plan.includes(`# \`${family}\` functional specification`))
     fail(family, 'plan family heading mismatch');
+  if (family === 'tr-05' && hash(plan) !== TR05_PLAN_SHA256)
+    fail(family, 'plan differs from the reviewed no-update input; review and re-pin before deriving an interface');
   const useCase = section(plan, 'Use case');
   const routes = section(plan, 'Routes and effects');
   const journey = section(plan, 'Journey');
-  if (family === 'tr-05' && hash(journey ?? '') !== TR05_JOURNEY_SHA256)
-    fail(family, 'Journey differs from the reviewed no-update section; review and re-pin before deriving an interface');
   const validation = section(plan, 'Validation and states');
   const acceptance = section(plan, 'Acceptance criteria');
   const titlePrefix = `# \`${family}\` functional specification — `;
   const title = plan.split('\n').find((line) => line.startsWith(titlePrefix))?.slice(titlePrefix.length);
-  if (family === 'tr-05' && hash(JSON.stringify([title, useCase, routes, validation, acceptance])) !== TR05_OTHER_INTERFACE_SECTIONS_SHA256)
-    fail(family, 'other interface sections differ from the reviewed no-update plan; review and re-pin before deriving an interface');
   const fieldsMatch = useCase?.match(/The form the journey drives carries (\d+) fields: ([^\n]+)/);
   const fields = list(fieldsMatch?.[2] ?? '');
   const required = list(validation?.match(/\*\*Required fields:\*\* ([^\n]+)/)?.[1] ?? '');

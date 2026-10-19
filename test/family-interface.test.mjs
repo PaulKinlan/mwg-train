@@ -91,12 +91,12 @@ test('tr-05 rejects an unextractable update journey without changing its pinned 
   assert.throws(() => familyInterfaceContract('tr-05', original.replace('The flow the harness drives,',
     'The flow the harness drives ,')), /FAMILY_INTERFACE_INVALID tr-05/,
   'whitespace-only Journey edits must also fail closed');
-  assert.equal(familyInterfaceContract('tr-05', original.replace('Task: `generate`.',
-    'Task: `generate` (reviewed).')).sha256, baseline.sha256,
-  'edits outside Journey that do not change the interface must not require re-pinning');
+  assert.throws(() => familyInterfaceContract('tr-05', original.replace('Task: `generate`.',
+    'Task: `generate` (reviewed).')), /FAMILY_INTERFACE_INVALID tr-05: plan differs/,
+  'even non-interface edits reach the paid prompt and require re-pinning');
 });
 
-test('tr-05 cannot gain a mutation requirement outside Journey without reviewing its other interface sections', () => {
+test('tr-05 cannot change any paid-prompt plan bytes without reviewing the whole plan', () => {
   const original = planOf('tr-05');
   const changes = [
     ['## Acceptance criteria\n', '## Acceptance criteria\n- After login PATCH /volunteer/profile changes the stored `volunteer` field to "Other".\n'],
@@ -105,11 +105,14 @@ test('tr-05 cannot gain a mutation requirement outside Journey without reviewing
     ['## Validation and states\n', '## Validation and states\nThe stored account can be overwritten.\n'],
     ['Meadowbrook Wildlife Hospital — Volunteer Onboarding & Credentials',
       'Meadowbrook Wildlife Hospital — Volunteer Onboarding & Credentials (updated)'],
+    ['## Data and state\n', '## Data and state\n- After login PATCH /volunteer/profile changes the stored volunteer field to "Other".\n'],
+    ['## Use case\n', 'Post-login editing of the saved volunteer account is required.\n\n## Use case\n'],
+    ['## Provenance\n', '## Provenance\nA harmless provenance note.\n'],
   ];
   for (const [from, to] of changes) {
     assert.ok(original.includes(from), `fixture contains ${from}`);
     assert.throws(() => familyInterfaceContract('tr-05', original.replace(from, to)),
-      /FAMILY_INTERFACE_INVALID tr-05: other interface sections differ/, from);
+      /FAMILY_INTERFACE_INVALID tr-05: plan differs/, from);
   }
 });
 
@@ -133,6 +136,13 @@ test('tr-05 previously missed paraphrase refuses live generation before spending
   await assert.rejects(generateProject({ family: 'tr-05', framework: 'hono', revision, backend: 'live',
     sourceRoot: dir, outRoot, apiKey: 'fake-key', fetchImpl: async () => { calls++; throw Error('must not call'); } }),
   /FAMILY_INTERFACE_INVALID tr-05/);
+  assert.equal(calls, 0);
+  assert.equal(existsSync(outRoot), false);
+  writeFileSync(join(familyDir, 'plan.md'), planOf('tr-05').replace('## Data and state\n',
+    '## Data and state\n- After login PATCH /volunteer/profile changes the stored volunteer field to "Other".\n'));
+  await assert.rejects(generateProject({ family: 'tr-05', framework: 'hono', revision, backend: 'live',
+    sourceRoot: dir, outRoot, apiKey: 'fake-key', fetchImpl: async () => { calls++; throw Error('must not call'); } }),
+  /FAMILY_INTERFACE_INVALID tr-05: plan differs/);
   assert.equal(calls, 0);
   assert.equal(existsSync(outRoot), false);
 });
