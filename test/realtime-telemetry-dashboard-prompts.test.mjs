@@ -83,9 +83,10 @@ test('four unframed page-only prompts pin actual text hashes and label synthetic
 });
 
 test('every chart brief requires a monotonic UTC axis, a brush drawn under its own label, and single-value UTC columns', () => {
-  // mwg-train-zb74: step 1 read 08:00 - 18:00 - 10:00 and packed two times into one UTC cell; step 2 drew
-  // its 14:00-15:30 brush over the 06:00-08:00 region. A quantitative axis that contradicts itself is not
-  // illustrative content, so the brief has to state the two arithmetic invariants, not just ask for a chart.
+  // mwg-train-zb74: step 1 read 08:00 - 18:00 - 10:00 and packed two times into one UTC cell; step 2 shaded
+  // from the 14:00 tick that follows 18:00 across the 12:00 tick, not the 14:00-to-15:30 span its label prints.
+  // A quantitative axis that contradicts itself is not illustrative content, so the brief has to state the two
+  // arithmetic invariants, not just ask for a chart.
   assert.match(readme, /Time-axis rule for every board/, 'the shared rule must precede the step briefs');
   for (const name of ['step1-live-overview.jpg', 'step2-brush-zoom-and-drilldown.jpg', 'step3-scenario-simulator.jpg']) {
     const text = promptNamed(name);
@@ -109,7 +110,8 @@ test('the pending-verification list holds a returned board to the axis, brush an
   assert.match(section, /03:00, 06:00, 08:00, 10:00, 12:00, 14:00 progress and no 18:00 sits between 08:00 and 10:00/,
     'the observed 18:00 misplacement must be named as the failure to look for');
   assert.match(section, /Brush under its own label:[\s\S]*sits directly over the times printed on its label/);
-  assert.match(section, /never the 06:00–08:00 region/, 'the observed step 2 brush offset must be named');
+  assert.match(section, /its axis reads 03:00, 06:00, 08:00, 18:00, 14:00, 12:00, 14:00, and the shading starts at the fifth tick \(14:00\), crosses the sixth \(12:00\) and stops about half-way to the seventh \(14:00\), leaving the 06:00 and 08:00 ticks unshaded/,
+    'the observed step 2 brush placement must be named as it was measured');
   assert.match(section, /Single-value UTC columns:[\s\S]*exactly one time value per row/);
   assert.match(section, /known deviation recorded in \[PROVENANCE\.md\]\(PROVENANCE\.md\)/,
     'a board that fails the list is a recorded deviation, not a pass');
@@ -148,7 +150,12 @@ test('the register keeps each generation-input digest and records the axis devia
   assert.match(deviation, /18:00 sits between 08:00 and 10:00/, 'the observed axis order must be recorded');
   assert.match(deviation, /packs two values into the UTC cell \(`14:32:05 02:00`\)/,
     'the packed UTC cell must be recorded');
-  assert.match(deviation, /over the 06:00–08:00 region/, 'the brush-to-label mismatch must be recorded');
+  assert.match(deviation, /03:00 – 06:00 – 08:00 – 18:00 – 14:00 – 12:00 – 14:00/,
+    'the observed step 2 axis order must be recorded');
+  assert.match(deviation, /starts at that fifth tick \(14:00\), runs across the sixth tick \(12:00\) and stops about half-way to the seventh tick \(14:00\), leaving the 06:00 and 08:00 ticks unshaded/,
+    'the brush-to-label mismatch must be recorded where the shading actually sits');
+  assert.match(deviation, /shaded band occupies columns 432–568/,
+    'the brush placement must be pinned to a measurement, not an impression');
   assert.match(deviation, /telemetry-axis-drift\.png/);
   assert.match(deviation, /telemetry-brush-window\.png/);
   assert.match(deviation, /bytes stay in the tree unchanged/,
