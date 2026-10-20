@@ -1,6 +1,18 @@
 {
   "schemaVersion": 1,
-  "algorithm": "macos-triplets-chroma-v2",
+  "algorithm": "window-chrome-v3",
+  "reviewedFindings": {
+    "docs/design/archetypes/browser-puzzle-game/dark/step4-victory-stats-dialog.jpg": {
+      "sha256": "ab24fd06a6c5f4a23f9c5b05232762a84097b521dfa28579f4544a5b2c0226db",
+      "finding": "monochrome \"- [] X\" minimise/maximise/close glyph triad in the top-right corner of the victory dialog",
+      "bead": "mwg-train-m5ws"
+    },
+    "docs/design/archetypes/browser-puzzle-game/step4-victory-stats-dialog.jpg": {
+      "sha256": "c2a8f75fa417d8106ef2ad18d6647a5d9ad7d16e957c6c3085640f70b64b68a4",
+      "finding": "monochrome \"- [] X\" minimise/maximise/close glyph triad in the top-right corner of the victory dialog",
+      "bead": "mwg-train-m5ws"
+    }
+  },
   "images": {
     "docs/design/archetypes/account-recovery/dark/step1-request.jpg": "63255c8d7029db7c3c31a02a04a5c4bcb255e428180f8e7f62ba654fd0f6b70e",
     "docs/design/archetypes/account-recovery/dark/step2-sent.jpg": "d33b25b1865e59129f3b05fa9607422b7745984dce51be9c3ff56e1c67611c24",

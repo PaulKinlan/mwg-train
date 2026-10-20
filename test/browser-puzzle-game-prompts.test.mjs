@@ -37,6 +37,33 @@ test('browser puzzle plan and design use the archetype contracts and distinguish
   assert.match(plan, /Planning only/);
 });
 
+const prompts = (readmeText) => [...readmeText.matchAll(/###\s*`(step\d+[a-z0-9-]*\.jpg)`\s*\n+```text\n([\s\S]*?)\n```/g)];
+
+/** The authored prompt block for one board. */
+const promptsNamed = (readmeText, name) => {
+  const block = prompts(readmeText).find(([, board]) => board === name);
+  assert.ok(block, `README must author a prompt for ${name}`);
+  return block[2];
+};
+
+test('the Step 4 brief names OS window controls, the one piece of chrome the board actually drew', () => {
+  // mwg-train-m5ws: "NO window frame" did not stop a generated panel being drawn with a monochrome
+  // "- [] X" set, and the gate could not see it. The brief now names the glyphs and the dialog repeats it.
+  const step4 = promptsNamed(readme, 'step4-victory-stats-dialog.jpg');
+  assert.match(step4, /NO OS window controls on the dialog or on any panel/);
+  for (const glyph of ['minimise', 'maximise', 'close']) {
+    assert.ok(step4.includes(glyph), `the exclusion must name ${glyph}, not just "window controls"`);
+  }
+  assert.match(step4, /no “- \[\] X” triad/);
+  assert.match(step4, /monochrome or coloured/);
+  assert.match(step4, /no title bar and no window controls of any kind/,
+    'the dialog description repeats the rule where the defect appeared');
+  assert.match(provenance, /Window-control deviation \(mwg-train-m5ws\)/,
+    'the committed boards that still draw one are recorded as a reviewed deviation');
+  assert.match(provenance, /reviewedFindings[\s\S]*mwg-train-m5ws/,
+    'the deviation names where it is recorded and which bead accepts it');
+});
+
 test('four exact prompts are separately digest-pinned and expressly exclude browser framing', () => {
   const blocks = [...readme.matchAll(/###\s*`(step\d+[a-z0-9-]*\.jpg)`\s*\n+```text\n([\s\S]*?)\n```/g)];
   assert.deepEqual(blocks.map(([, name]) => name), names);

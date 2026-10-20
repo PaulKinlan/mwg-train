@@ -57,7 +57,7 @@ import {
   familySources,
   inspectBoard,
 } from './generate-training-boards.mjs';
-import { hasBrowserChrome, scanFrames } from './check-archetype-frames.mjs';
+import { frameScanPinDocument, hasBrowserChrome, loadScanPins, scanFrames } from './check-archetype-frames.mjs';
 import { TRAINING_TARGET_FAMILIES } from '../src/train/targets.mjs';
 import {
   FAMILY_BOARD_HEIGHT,
@@ -73,8 +73,6 @@ import {
 const ROOT = resolve(import.meta.dirname, '..');
 const TIMEOUT_MS = 180_000;
 const TEMPERATURE = 0.4;
-const CLEAN_PINS_PATH = join(ROOT, '.fleet', 'frame-scan-pins.json');
-const SCAN_ALGORITHM = 'macos-triplets-chroma-v2';
 
 export const FAMILY_JOURNEY_REGISTER_PATH = 'docs/provenance/assets/training-family-journeys.md';
 
@@ -339,13 +337,18 @@ export function renderFamilyJourneyRegister(rows, { generatedOn = '2026-10-16' }
 }
 
 export function updateCleanFramePins({ root = ROOT } = {}) {
-  const { images, failed, exempt, hashes, decoded } = scanFrames({ root, cleanPins: null });
+  // A re-pin replaces the digests but must not drop the reviewed deviations they were reviewed against:
+  // the record is re-checked below against the bytes actually committed.
+  let reviewedFindings = {};
+  try { reviewedFindings = loadScanPins(join(root, '.fleet', 'frame-scan-pins.json')).reviewedFindings; }
+  catch (error) { if (error.code !== 'ENOENT') throw error; }
+  const { images, failed, exempt, pinnedFindings, hashes, decoded } = scanFrames({ root, cleanPins: null, reviewedFindings });
   if (failed.length || exempt.length) {
     throw new Error(`frame scan failed on ${failed.length + exempt.length} image(s): ${failed.map((f) => relative(root, f)).join(', ')}`);
   }
   writeFileSync(
     join(root, '.fleet', 'frame-scan-pins.json'),
-    `${JSON.stringify({ schemaVersion: 1, algorithm: SCAN_ALGORITHM, images: hashes }, null, 2)}\n`,
+    `${JSON.stringify(frameScanPinDocument({ images: hashes, reviewedFindings: pinnedFindings }), null, 2)}\n`,
   );
   return { totalPinned: images.length, decoded };
 }
