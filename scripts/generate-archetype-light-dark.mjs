@@ -4,6 +4,9 @@
  * concept board sets for the configured archetypes in /concepts.
  * Browser-puzzle-game is deliberately blocked: its seven imported boards have no retained
  * model response or generation prompt, and must not be silently copied from scratch files.
+ * Interactive-product-configurator is blocked too: its only Step 1 board predates the pinned
+ * step names and every Dark prompt preserves the attached image's labels, so a run would copy
+ * the pinned-against labels forward instead of drawing them (mwg-train-601b review).
  *
  * For every configured archetype:
  *   - Light Mode set: docs/design/archetypes/<id>/<stepId>.jpg
@@ -700,6 +703,19 @@ async function main() {
     throw new Error('browser-puzzle-game: seven committed boards have unverified model/prompt provenance; ' +
       'refusing this family before any paid generation. Obtain original response receipts or ' +
       'an authorised, attested re-generation plan before enabling it. Use --only for other configured families.');
+  }
+  // Fail closed (mwg-train-601b review, P1). The committed Step 1 board predates the pinned step names - its nav
+  // band reads "01. Frame & Geometry | 02. Drivetrain | 03. Cockpit", it has no 04. Compare & Share entry, and its
+  // panel headings substitute steps 1 and 2 - so it is not a conforming anchor. The Dark Step 1 generation and the
+  // Step 2..4 Dark prompts all tell the model to preserve the attached image's labels, so a run would propagate the
+  // drift the pin forbids rather than draw the pinned names. No conforming Light or Dark anchor exists yet.
+  if (only?.includes('interactive-product-configurator')) {
+    throw new Error('interactive-product-configurator: the committed Step 1 board is not a conforming anchor ' +
+      '(nav band "01. Frame & Geometry | 02. Drivetrain | 03. Cockpit" with no 04. Compare & Share, and steps 1-2 ' +
+      'panel headings substituted), and every Dark prompt requires preserving the attached image\'s labels. ' +
+      'Refusing this family before any paid generation so a run cannot propagate the labels the step-name pin ' +
+      'forbids. Provide verified conforming Step 1 Light and Dark anchor boards and remove this guard in a ' +
+      'reviewed diff.');
   }
   const unknown = only.filter((family) => !Object.hasOwn(ARCHETYPE_CONFIGS, family));
   if (unknown.length) throw new Error(`no generator configured for: ${unknown.join(', ')}`);

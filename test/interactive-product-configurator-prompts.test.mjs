@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -159,6 +160,39 @@ test('the Light/Dark generator override prose carries the same pinned step names
       assert.ok(PINNED_LABELS.has(label), `${board}: generator override step label "${label}" is not pinned`);
     }
   }
+});
+
+test('the Light/Dark generator fails closed rather than generating from the non-conforming Step 1 anchor', () => {
+  // The committed Step 1 board still draws the pre-pin band, and the Dark prompts tell the model to preserve the
+  // attached image's labels, so any run of this family would carry those labels into new boards. The generator has
+  // to refuse before it reads a board or calls a model, whatever else the invocation selects (mwg-train-601b review).
+  const script = join(ROOT, 'scripts/generate-archetype-light-dark.mjs');
+  const run = (args) => spawnSync(process.execPath, [script, ...args], {
+    encoding: 'utf8',
+    timeout: 8000,
+    env: { ...process.env, MWG_TRAIN_IMAGE_ENDPOINT: 'http://127.0.0.1:1/unreachable' },
+  });
+
+  for (const args of [
+    ['--only', 'interactive-product-configurator'],
+    ['--only', 'interactive-product-configurator', '--force'],
+    ['--only', 'saas-workspace-board,interactive-product-configurator'],
+  ]) {
+    const refused = run(args);
+    assert.equal(refused.status, 1, `${args.join(' ')}: ${refused.stderr}`);
+    assert.match(refused.stderr, /interactive-product-configurator.*not a conforming anchor/i,
+      `${args.join(' ')}: the refusal must name the family and the anchor that blocks it`);
+    assert.match(refused.stderr, /verified conforming Step 1 Light and Dark anchor boards/i,
+      `${args.join(' ')}: the refusal must say what a later run needs`);
+    assert.doesNotMatch(refused.stdout, /=== \[/,
+      `${args.join(' ')}: the family must be refused before it reads boards or calls a model`);
+    assert.doesNotMatch(refused.stdout, /All requested.*generated/);
+  }
+
+  // The guard is family-scoped: a different configured family still starts its normal run.
+  const other = run(['--only', 'saas-workspace-board']);
+  assert.match(other.stdout, /=== \[saas-workspace-board\]/, 'the guard must not refuse unrelated families');
+  assert.doesNotMatch(other.stderr, /interactive-product-configurator/);
 });
 
 test('provenance records the pinned names, the amended brief digests and every committed board that deviates', () => {
