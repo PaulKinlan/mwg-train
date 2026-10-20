@@ -113,12 +113,31 @@ test('a prompt carrying the other theme\'s clause fails', () => {
   assert.ok(found.includes('PROMPT_CONTRADICTS_CONTROL_STATE'), found.join(', '));
 });
 
+test('a twin pair whose rows declare the same theme fails, because the pair cannot show the switch', () => {
+  // The second reported defect (mwg-train-zeci review): top-level step 3 and step 4 were declared Night beside
+  // their Night dark/ twins, so those pairs marked the same segment while the other pairs still contrasted.
+  const rows = [
+    { board: 'step1-board-initial.jpg', theme: 'Night', active: 'NIGHT' },
+    { board: 'step2-midgame-interaction.jpg', theme: 'Light', active: 'DAYLIGHT' },
+    { board: 'dark/step1-board-initial.jpg', theme: 'Night', active: 'NIGHT' },
+    { board: 'dark/step2-midgame-interaction.jpg', theme: 'Night', active: 'NIGHT' },
+  ];
+  const prompts = {
+    'step1-board-initial.jpg': prompt(NIGHT_MODE, 'Night'),
+    'step2-midgame-interaction.jpg': prompt(LIGHT_MODE, 'Light'),
+  };
+  const found = codes(stateControlFindings({ readmeText: fixture({ rows, prompts }), boards: BOARDS }));
+  assert.deepEqual(found, ['TWIN_PAIR_INVARIANT'],
+    'the same-theme pair must be the only finding; a contrasting pair alongside it must not change the verdict');
+});
+
 test('a table relabelled to one theme fails instead of passing vacuously', () => {
   // Every row relabelled Light/DAYLIGHT, while the prompts still declare NIGHT MODE.
   const rows = ROWS.map((row) => ({ ...row, theme: 'Light', active: 'DAYLIGHT' }));
   const prompts = { ...PROMPTS, 'dark/step1-board-initial.jpg': prompt(LIGHT_MODE, 'Light') };
   const found = codes(stateControlFindings({ readmeText: fixture({ rows, prompts }), boards: BOARDS }));
   assert.ok(found.includes('DARK_TWIN_NOT_NIGHT'), found.join(', '));
+  assert.ok(found.includes('TWIN_PAIR_INVARIANT'), `every pair now marks the same segment: ${found.join(', ')}`);
   assert.ok(found.includes('TWIN_PAIR_WITHOUT_CONTRAST'), found.join(', '));
 });
 
