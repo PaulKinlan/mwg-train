@@ -218,6 +218,7 @@ const checkScriptMap = {
   'scripts/rebuild-from-spec.mjs': 'check:specs',
   'scripts/check-archetype-assets.mjs': 'check:archetype-assets',
   'scripts/check-archetype-frames.mjs': 'check:archetype-frames',
+  'scripts/check-state-controls.mjs': 'check:state-controls',
   'scripts/check-build-key.mjs': 'check:build-key',
   'scripts/pilot-corpus.mjs': 'check:pilot-corpus',
   'scripts/check-set-separation.mjs': 'check:set-separation',
@@ -282,6 +283,15 @@ function routeDocument(file) {
     // select nothing at all, so a framed board could land with the smoke suite as its only gate.
     selectedChecks.add('check:archetype-frames');
     selectedChecks.add('check:board-captions');
+    return true;
+  }
+  if (file.startsWith('docs/design/archetypes/') && /\/README\.md$/.test(file)) {
+    // An archetype README is the generation brief: its prompt blocks are what a regeneration reads, and
+    // its theme-control table is what stops a twin-invariant control landing. `check:state-controls`
+    // checks the families that declare one, so an edit here has to run it.
+    selectedChecks.add('check:state-controls');
+    selectedChecks.add('check:doc-links');
+    selectedChecks.add('check:baseline-label');
     return true;
   }
   if (file.endsWith('.md')) {

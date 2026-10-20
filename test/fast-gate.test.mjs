@@ -286,3 +286,13 @@ test('a reference board change runs the framing and caption checks', () => {
   assert.ok(res.stdout.includes('check:board-captions'), `captions must run for a board: ${res.stdout}`);
   assert.ok(res.stdout.includes('test/board-states.test.mjs'), `classification must run for a board: ${res.stdout}`);
 });
+
+// An archetype README is the generation brief, so the theme-control contract it states is only a gate
+// if a README edit runs it (mwg-train-zeci).
+test('an archetype README change runs the theme-control brief gate', () => {
+  const env = { ...process.env, GIT_CHANGED: 'docs/design/archetypes/browser-puzzle-game/README.md', FAST_GATE_LIST: '1' };
+  const res = spawnSync('node', [FAST_GATE], { cwd: ROOT, env, encoding: 'utf8' });
+  assert.strictEqual(res.status, 0, res.stderr);
+  assert.ok(res.stdout.includes('check:state-controls'), `the brief gate must run for a README: ${res.stdout}`);
+  assert.ok(res.stdout.includes('check:baseline-label'), `and keep its routed checks: ${res.stdout}`);
+});
