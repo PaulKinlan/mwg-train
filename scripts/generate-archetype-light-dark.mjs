@@ -4,6 +4,9 @@
  * concept board sets for the configured archetypes in /concepts.
  * Browser-puzzle-game is deliberately blocked: its seven imported boards have no retained
  * model response or generation prompt, and must not be silently copied from scratch files.
+ * Interactive-product-configurator is blocked too: its only Step 1 board predates the pinned
+ * step names and every Dark prompt preserves the attached image's labels, so a run would copy
+ * the pinned-against labels forward instead of drawing them (mwg-train-601b review).
  *
  * For every configured archetype:
  *   - Light Mode set: docs/design/archetypes/<id>/<stepId>.jpg
@@ -126,8 +129,12 @@ async function generateMultimodal({ images = [], prompt, retries = 3 }) {
  *     - 'reanchor-light': regenerate step1 Light first, then steps 2..N Light & steps 1..N Dark
  *     - 'reanchor-dark':  regenerate dark/step1 first, then step1 Light, then steps 2..N Light & Dark
  *     - 'fresh-light':  no existing boards; generate step1 Light conditioned on referenceBoard, step1 Dark, then steps 2..N Light & Dark
+ *
+ * Exported so test/interactive-product-configurator-prompts.test.mjs can assert the pinned step-name labels on the
+ * override prose that regenerates the committed Light/Dark sets: reading this file as text would check a copy, not
+ * the strings that are actually sent.
  */
-const ARCHETYPE_CONFIGS = {
+export const ARCHETYPE_CONFIGS = {
   // --- 6 Fresh-Light Multi-Step Archetypes (Wave 1) ---
   'onboarding-auth': {
     anchorMode: 'fresh-light',
@@ -287,9 +294,9 @@ const ARCHETYPE_CONFIGS = {
     lightTheme: 'SUNLIT LIMESTONE WORKSHOP DAYLIGHT LIGHT MODE (#f5f4f0 warm limestone page ground, #eae8e1 left 60% bicycle preview stage, #ffffff right 40% accordion control panel and comparison sheet with 1px #d6d3cd stone borders, #1c1917 deep charcoal ink, #b45309 warm anodised-bronze / amber selection accent)',
     darkTheme: 'BESPOKE TITANIUM WORKSHOP DARK MODE (#0f172a dark slate page ground, #152033 left 60% bicycle preview stage, #1e293b right 40% accordion control panel and comparison sheet with 1px #334155 borders, #f8fafc crisp white typography, #f59e0b warm amber selection accent)',
     lightStepOverrides: {
-      'step2-drivetrain-and-wheelset-swap.jpg': 'Step 2: Drivetrain & Wheelset Selection in SUNLIT LIMESTONE WORKSHOP DAYLIGHT LIGHT MODE (#f5f4f0 warm limestone page ground, #eae8e1 left 60% bicycle stage, #ffffff right 40% accordion panel with 1px #d6d3cd borders, #1c1917 charcoal ink, #b45309 warm bronze-amber selection accent). Preserve the exact Atelier Velo header, split layout, and side-profile titanium gravel bike from Step 1. RIGHT: accordion "1. Frame Size & Titanium Finish" CLOSED with summary "56cm · Raw Brushed Ti"; accordion "2. Drivetrain & Wheelset" OPEN with selected options "40mm Deep Carbon Gravel Wheelset (+£620, −310g illustration estimate)" and "1x12 Wireless Electronic Mullet Groupset (+£450, 0g difference assumed for this STORYBOARD only)". LEFT: show deep carbon rims and tan-wall gravel tyres on the same bike silhouette. Sticky bottom BOM strip lists base £3,480, carbon wheel +£620, mullet group +£450, sum "£4,550 · Est. 8.11 kg".',
-      'step3-compatibility-conflict.jpg': 'Step 3: Tyre/Mudguard Compatibility Conflict in SUNLIT LIMESTONE WORKSHOP DAYLIGHT LIGHT MODE (#f5f4f0 warm limestone page ground, #eae8e1 left 60% bicycle stage, #ffffff right 40% accordion panel with 1px #d6d3cd borders, #1c1917 charcoal ink, #b45309 warm bronze-amber accent, #b91c1c crimson-amber conflict callout). Preserve the exact Atelier Velo header, split layout, and titanium gravel bike from Step 1. RIGHT accordion "3. Tyres, Mudguards & Dynamo Lighting" OPEN: checked tyres "650b x 2.1\\" Knobby Trail Tyres" next to selected "45mm Full-Coverage Alloy Mudguards". Show a clear warning callout card with text "Clearance conflict: 650b x 2.1\\" tyres (53mm) exceed the 45mm mudguard bridge clearance", plus two replacement buttons "Switch to 58mm Expedition Mudguards (+£35)" and "Switch to 700c x 38mm Slick Tyres". Beneath them show "Fit remains unverified until manufacturer clearances checked; reservation unavailable".',
-      'step4-saved-build-comparison-sheet.jpg': 'Step 4: Saved Build Comparison & Draft Share Link in SUNLIT LIMESTONE WORKSHOP DAYLIGHT LIGHT MODE (#f5f4f0 warm limestone page ground, #ffffff comparison sheet with 1px #d6d3cd stone borders, #1c1917 charcoal ink, #b45309 warm bronze-amber highlights). Keep the Atelier Velo header and bicycle preview stage visible. Open a clean in-page #ffffff comparison sheet (NO OS window controls) with two saved builds side by side: "Build A — Alpine Fast Packing · Est. 8.11 kg · £4,550" and "Build B — Four-Season Randonneur · Est. 9.38 kg · £3,690", aligning rows for frame, finish, wheels, tyres, mudguards, and dynamo. A separate CURRENT DRAFT C share-link field in page UI contains "?size=56&finish=bronze&wheels=carbon40&dynamo=son28". Show a "Save & Reserve Workshop Slot" button alongside "Saved locally · Workshop slot not yet reserved".',
+      'step2-drivetrain-and-wheelset-swap.jpg': 'Step 2: Drivetrain & Wheelset Selection in SUNLIT LIMESTONE WORKSHOP DAYLIGHT LIGHT MODE (#f5f4f0 warm limestone page ground, #eae8e1 left 60% bicycle stage, #ffffff right 40% accordion panel with 1px #d6d3cd borders, #1c1917 charcoal ink, #b45309 warm bronze-amber selection accent). Preserve the exact Atelier Velo header, split layout, and side-profile titanium gravel bike from Step 1. RIGHT: a step-nav band reading exactly "01. Frame & Geometry | 02. Drivetrain | 03. Cockpit & Upgrades | 04. Compare & Share" with "02. Drivetrain" active; accordion heading "1. Frame & Geometry" CLOSED with summary "56cm · Raw Brushed Ti"; accordion heading "2. Drivetrain" OPEN with selected options "40mm Deep Carbon Gravel Wheelset (+£620, −310g illustration estimate)" and "1x12 Wireless Electronic Mullet Groupset (+£450, 0g difference assumed for this STORYBOARD only)"; accordion heading "3. Cockpit & Upgrades" CLOSED. LEFT: show deep carbon rims and tan-wall gravel tyres on the same bike silhouette. Sticky bottom BOM strip lists base £3,480, carbon wheel +£620, mullet group +£450, sum "£4,550 · Est. 8.11 kg".',
+      'step3-compatibility-conflict.jpg': 'Step 3: Tyre/Mudguard Compatibility Conflict in SUNLIT LIMESTONE WORKSHOP DAYLIGHT LIGHT MODE (#f5f4f0 warm limestone page ground, #eae8e1 left 60% bicycle stage, #ffffff right 40% accordion panel with 1px #d6d3cd borders, #1c1917 charcoal ink, #b45309 warm bronze-amber accent, #b91c1c crimson-amber conflict callout). Preserve the exact Atelier Velo header, split layout, and titanium gravel bike from Step 1. RIGHT: a step-nav band reading exactly "01. Frame & Geometry | 02. Drivetrain | 03. Cockpit & Upgrades | 04. Compare & Share" with "03. Cockpit & Upgrades" active; accordion headings "1. Frame & Geometry" and "2. Drivetrain" CLOSED above the OPEN accordion heading "3. Cockpit & Upgrades", whose rows are the tyres, mudguards and dynamo-lighting choices: checked tyres "650b x 2.1\\" Knobby Trail Tyres" next to selected "45mm Full-Coverage Alloy Mudguards". Show a clear warning callout card with text "Clearance conflict: 650b x 2.1\\" tyres (53mm) exceed the 45mm mudguard bridge clearance", plus two replacement buttons "Switch to 58mm Expedition Mudguards (+£35)" and "Switch to 700c x 38mm Slick Tyres". Beneath them show "Fit remains unverified until manufacturer clearances checked; reservation unavailable".',
+      'step4-saved-build-comparison-sheet.jpg': 'Step 4: Saved Build Comparison & Draft Share Link in SUNLIT LIMESTONE WORKSHOP DAYLIGHT LIGHT MODE (#f5f4f0 warm limestone page ground, #ffffff comparison sheet with 1px #d6d3cd stone borders, #1c1917 charcoal ink, #b45309 warm bronze-amber highlights). Keep the Atelier Velo header and bicycle preview stage visible. A step-nav band reads exactly "01. Frame & Geometry | 02. Drivetrain | 03. Cockpit & Upgrades | 04. Compare & Share" with "04. Compare & Share" active. Open the clean in-page #ffffff comparison sheet headed "4. Compare & Share" (NO OS window controls) with two saved builds side by side: "Build A — Alpine Fast Packing · Est. 8.11 kg · £4,550" and "Build B — Four-Season Randonneur · Est. 9.38 kg · £3,690", aligning rows for frame, finish, wheels, tyres, mudguards, and dynamo. A separate CURRENT DRAFT C share-link field in page UI contains "?size=56&finish=bronze&wheels=carbon40&dynamo=son28". Show a "Save & Reserve Workshop Slot" button alongside "Saved locally · Workshop slot not yet reserved".',
     },
   },
 
@@ -696,6 +703,19 @@ async function main() {
     throw new Error('browser-puzzle-game: seven committed boards have unverified model/prompt provenance; ' +
       'refusing this family before any paid generation. Obtain original response receipts or ' +
       'an authorised, attested re-generation plan before enabling it. Use --only for other configured families.');
+  }
+  // Fail closed (mwg-train-601b review, P1). The committed Step 1 board predates the pinned step names - its nav
+  // band reads "01. Frame & Geometry | 02. Drivetrain | 03. Cockpit", it has no 04. Compare & Share entry, and its
+  // panel headings substitute steps 1 and 2 - so it is not a conforming anchor. The Dark Step 1 generation and the
+  // Step 2..4 Dark prompts all tell the model to preserve the attached image's labels, so a run would propagate the
+  // drift the pin forbids rather than draw the pinned names. No conforming Light or Dark anchor exists yet.
+  if (only?.includes('interactive-product-configurator')) {
+    throw new Error('interactive-product-configurator: the committed Step 1 board is not a conforming anchor ' +
+      '(nav band "01. Frame & Geometry | 02. Drivetrain | 03. Cockpit" with no 04. Compare & Share, and steps 1-2 ' +
+      'panel headings substituted), and every Dark prompt requires preserving the attached image\'s labels. ' +
+      'Refusing this family before any paid generation so a run cannot propagate the labels the step-name pin ' +
+      'forbids. Provide verified conforming Step 1 Light and Dark anchor boards and remove this guard in a ' +
+      'reviewed diff.');
   }
   const unknown = only.filter((family) => !Object.hasOwn(ARCHETYPE_CONFIGS, family));
   if (unknown.length) throw new Error(`no generator configured for: ${unknown.join(', ')}`);

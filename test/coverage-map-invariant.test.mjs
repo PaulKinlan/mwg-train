@@ -5,7 +5,10 @@ import { resolve } from 'node:path';
 import test from 'node:test';
 
 const ROOT = resolve(import.meta.dirname, '..');
-const EXPECTED_EDGES_SHA256 = 'e402d781cbc80c956757e3fd24e9bb6e1e767f3adcbf6b56dd66e6b8b8e2951c';
+// 2026-10-20 (mwg-train-601b): scripts/generate-archetype-light-dark.mjs also routes to
+// test/interactive-product-configurator-prompts.test.mjs, which now asserts the pinned step-name labels on the
+// interactive-product-configurator override prose that regenerates the served Light set and its Dark twins.
+const EXPECTED_EDGES_SHA256 = '9e3c451f6e7b53c1dff6042284e6913393b6a7b25003252c7e33589ade373c01';
 
 test('the fast-gate coverage contract cannot silently lose any declared suite edge', () => {
   const mapping = JSON.parse(readFileSync(resolve(ROOT, '.fleet/coverage-mapping.json'), 'utf8'));
