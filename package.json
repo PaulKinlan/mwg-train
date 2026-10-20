@@ -65,6 +65,7 @@
     "label:baseline": "node scripts/label-baseline.mjs",
     "check:board-captions": "node scripts/check-board-captions.mjs",
     "check:board-states": "node scripts/check-board-states.mjs",
+    "check:state-controls": "node scripts/check-state-controls.mjs",
     "check:portability": "npm ci && npm test"
   },
   "license": "UNLICENSED",

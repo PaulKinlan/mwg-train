@@ -50,7 +50,7 @@ test('four exact prompts are separately digest-pinned and expressly exclude brow
     assert.match(text, /6×6/);
     const digest = createHash('sha256').update(text).digest('hex');
     assert.match(provenance, new RegExp(`${name.replaceAll('.', '\\.')}[^\\n]*${digest}`),
-      `${name}: recorded digest must match the exact parsed UTF-8 prompt`);
+      `${name}: the current authored brief digest must appear on its row, beside any preserved generation-input receipt`);
     const bytes = readFileSync(join(archetype, name));
     assert.deepEqual([...bytes.subarray(0, 3)], [0xff, 0xd8, 0xff], `${name}: must be a valid JPEG`);
     assert.deepEqual(readImageDimensions(bytes), { width: 1376, height: 768 },
