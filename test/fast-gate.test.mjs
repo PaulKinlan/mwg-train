@@ -56,8 +56,7 @@ test('a SERVED.md edit selects its route comparison check and asserting suite', 
   assert.match(res.stdout, /suites=\[[^\]]*test\/served-routes\.test\.mjs/);
 });
 
-test('provenance registers route to their asserting checks and suites', () => {
-  for (const [file, check, suite] of [
+test('provenance registers route to their asserting checks and suites', () => {  for (const [file, check, suite] of [
     ['docs/provenance/assets/archetype-asset-sets.md', 'check:archetype-assets', 'test/archetype-assets.test.mjs'],
     ['docs/provenance/assets/training-reference-boards.md', 'check:archetype-frames', 'test/training-boards-generator.test.mjs'],
   ]) {
@@ -67,6 +66,18 @@ test('provenance registers route to their asserting checks and suites', () => {
     for (const name of ['check:baseline-label', 'check:doc-links', check, suite]) {
       assert.ok(res.stdout.includes(name), `${file} must select ${name}: ${res.stdout}`);
     }
+  }
+});
+
+test('an archetype store file routes to the check that re-derives it', () => {
+  // The store is half generated (set.json) and half hand-written (decisions.json). Mapping only the generated
+  // half left an edit to a decision - the file that settles a brand conflict, and the one that can go stale -
+  // with no check at all.
+  for (const file of ['assets/archetypes/booking/set.json', 'assets/archetypes/booking/decisions.json']) {
+    const env = { ...process.env, GIT_CHANGED: file, FAST_GATE_LIST: '1' };
+    const res = spawnSync('node', [FAST_GATE], { cwd: ROOT, env, encoding: 'utf8' });
+    assert.strictEqual(res.status, 0, `${file}: ${res.stderr}`);
+    assert.ok(res.stdout.includes('check:archetype-assets'), `${file} must select check:archetype-assets: ${res.stdout}`);
   }
 });
 

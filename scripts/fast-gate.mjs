@@ -273,7 +273,11 @@ function routeDocument(file) {
     selectedChecks.add('lint:provenance');
     return true;
   }
-  if (file.startsWith('assets/archetypes/') && file.endsWith('/set.json')) {
+  if (file.startsWith('assets/archetypes/') && (file.endsWith('/set.json') || file.endsWith('/decisions.json'))) {
+    // Both files in the store are what `check:archetype-assets` re-derives: a decision is checked for
+    // staleness, for naming a brand the target no longer states, and for declaring variants the target does
+    // not keep. Mapping only set.json let an edit to the hand-written half of the store select nothing, which
+    // is the half a gate is needed for.
     selectedChecks.add('check:archetype-assets');
     return true;
   }
