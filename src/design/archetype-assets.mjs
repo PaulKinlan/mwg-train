@@ -101,6 +101,42 @@ function readAdjudication(dir) {
 }
 
 /**
+ * The brands one copy slot says its page renders, checked against the set's own identities.
+ *
+ * A page title states one brand or none. The builder refuses a title that names more than one brand, or one
+ * the set does not support, so this repeats the same two rules: a build must never record a copy slot the
+ * gate would have rejected, and a set whose copy names a second site is exactly how two builds of one
+ * archetype come to look like two products. Returns the distinct names the slot states.
+ */
+function copySlotBrands({ archetype, page, slot, supported, brandless }) {
+  const declared = slot?.brands;
+  if (declared !== undefined) {
+    require(Array.isArray(declared), `the copy slot for '${page}' of '${archetype}' lists its brands as something other than a list`);
+  }
+  const single = slot?.brand ?? null;
+  if (single !== null) require(typeof single === 'string' && single.trim() !== '', `the copy slot for '${page}' of '${archetype}' records a brand that is not a name`);
+  const stated = [...new Set([...(declared ?? []), ...(single === null ? [] : [single])])];
+  for (const name of stated) {
+    require(typeof name === 'string' && name.trim() !== '', `the copy slot for '${page}' of '${archetype}' records a brand that is not a name`);
+  }
+  // Ambiguity first: a slot naming two sites is unresolvable whatever the names are, and reporting an
+  // unsupported name instead would point a reader at the wrong defect.
+  require(
+    stated.length <= 1,
+    `the copy slot for '${page}' of '${archetype}' states more than one brand (${stated.map((name) => JSON.stringify(name)).join(' and ')}), so a build cannot tell which the page renders`,
+  );
+  for (const name of stated) {
+    require(
+      supported.includes(name),
+      brandless
+        ? `the copy slot for '${page}' of '${archetype}' states the brand ${JSON.stringify(name)}, but the set is brandless, so a build cannot tell which identity the page renders`
+        : `the copy slot for '${page}' of '${archetype}' states the brand ${JSON.stringify(name)}, which is neither the set's brand nor one of its variants (${supported.join(', ')})`,
+    );
+  }
+  return stated;
+}
+
+/**
  * Load one archetype's set.
  *
  * @param {string} archetype  the store's archetype id, e.g. 'booking'
@@ -138,6 +174,20 @@ export function loadArchetypeSet(archetype, { root = REPO_ROOT, verifyImages = t
   for (const variant of variants) {
     require(typeof variant === 'string' && variant.trim() !== '', `the asset set for '${archetype}' lists a brand variant with no name`);
   }
+  // The builder's own consistency rules, mirrored here rather than trusted: a set that breaks one of them is
+  // not a set it wrote, and a build must not render from a record the gate would have refused.
+  require(
+    !brandless || variants.length === 0,
+    `the asset set for '${archetype}' is brandless and still lists the brand variant(s) ${variants.map((variant) => JSON.stringify(variant)).join(', ')}, so a build cannot tell which identity to render`,
+  );
+  if (!brandless) {
+    require(
+      !variants.includes(brand.site_name),
+      `the asset set for '${archetype}' lists ${JSON.stringify(brand.site_name)} as both its brand and a supported variant, so a build cannot tell which record to render`,
+    );
+  }
+  // The identities a build may render: the primary brand, then the variants that coexist with it.
+  const supportedBrands = brandless ? [] : [brand.site_name, ...variants];
 
   const tokens = set.tokens ?? {};
   for (const group of ['colors', 'fonts']) {
@@ -161,13 +211,20 @@ export function loadArchetypeSet(archetype, { root = REPO_ROOT, verifyImages = t
   }
 
   const copy = set.copy ?? {};
-  const copySlots = Object.entries(copy).map(([page, slot]) => ({
-    page,
-    title: typeof slot?.title === 'string' ? slot.title : null,
-    strings: Array.isArray(slot?.strings) ? slot.strings.length : 0,
-    sha256: typeof slot?.sha256 === 'string' ? slot.sha256 : null,
-    apparatus: slot?.apparatus === true,
-  }));
+  const copySlots = Object.entries(copy).map(([page, slot]) => {
+    const brands = copySlotBrands({ archetype, page, slot, supported: supportedBrands, brandless });
+    return {
+      page,
+      title: typeof slot?.title === 'string' ? slot.title : null,
+      // The brand this page states in its own title, checked against the set's own identities: null when the
+      // title names none, and every name it states in `brands` so a caller can see what was checked.
+      brand: brands.length === 1 ? brands[0] : null,
+      brands,
+      strings: Array.isArray(slot?.strings) ? slot.strings.length : 0,
+      sha256: typeof slot?.sha256 === 'string' ? slot.sha256 : null,
+      apparatus: slot?.apparatus === true,
+    };
+  });
   require(copySlots.length > 0, `the asset set for '${archetype}' has no copy slots`);
 
   const images = set.images;
@@ -292,15 +349,30 @@ export function renderTokenDeclarations(set, { indent = '  ' } = {}) {
 /**
  * The brand a build carries: the archetype's own name and mark, or an explicit 'this target has none'.
  *
- * The adjudication state travels with it. A name that is still a lane recommendation is usable evidence for a
- * build but it must not be presented as settled, so a consumer that records what it built can record that
- * too. Booking's brand is settled and dual: 'Evening Class Studio' is primary and 'Learning Hub' a supported
- * variant (owner decision, mwg-train-4xg).
+ * A build renders the primary brand unless it asks for a supported variant, and what it asked for is
+ * returned as `variant` so the build can record which identity it rendered instead of that being inferred
+ * from a page. A name the set does not support is refused: rendering a brand the store never recorded is
+ * the drift this module exists to prevent, and a variant is only supported because a decision says so. The
+ * adjudication state travels with the brand too. A name that is still a lane recommendation is usable
+ * evidence for a build but it must not be presented as settled, so a consumer that records what it built can
+ * record that as well. Booking's brand is settled and dual: 'Evening Class Studio' is primary and
+ * 'Learning Hub' a supported variant (owner decision, mwg-train-4xg).
  */
-export function brandFor(set) {
+export function brandFor(set, { variant = null } = {}) {
+  const supported = set.brand.variants ?? [];
+  if (variant !== null) {
+    require(typeof variant === 'string' && variant.trim() !== '', `a brand variant must be a name, not ${JSON.stringify(variant)}`);
+    require(set.brand.state === 'named', `the '${set.archetype}' asset set is brandless, so it has no ${JSON.stringify(variant)} variant to render`);
+    require(
+      variant === set.brand.name || supported.includes(variant),
+      `'${variant}' is not a brand variant of '${set.archetype}'; it supports ${[set.brand.name, ...supported].map((name) => JSON.stringify(name)).join(', ')}`,
+    );
+  }
   return {
     state: set.brand.state,
-    name: set.brand.name,
+    name: variant ?? set.brand.name,
+    variant,
+    supported_variants: supported,
     mark: set.brand.mark_self_contained ? set.brand.mark : null,
     mark_recorded_not_self_contained: set.brand.mark !== null && !set.brand.mark_self_contained,
     provisional: set.adjudication.provisional.includes('brand'),
@@ -312,10 +384,17 @@ export function imageRegister(set) {
   return set.images.map(({ name, sha256, store_path }) => ({ name, sha256, store_path }));
 }
 
-/** The whole set, as the build's spec records it. Digest-bearing, byte-free, and explicit about rights. */
-export function assetManifest(set) {
+/**
+ * The whole set, as the build's spec records it. Digest-bearing, byte-free, and explicit about rights.
+ *
+ * `variant` selects which supported brand identity the build rendered; it is recorded, with the identities
+ * the set supports, so a spec says which brand its pages carry rather than leaving a reader to guess. Those
+ * two keys appear only on a build that chose a variant: a build that renders the primary brand keeps the
+ * spec it always had, and the pilot corpus keeps the tree hashes it recorded.
+ */
+export function assetManifest(set, { variant = null } = {}) {
   const palette = derivePalette(set);
-  const brand = brandFor(set);
+  const brand = brandFor(set, { variant });
   return {
     archetype: set.archetype,
     store: `${STORE_DIR}/${set.archetype}`,
@@ -324,6 +403,7 @@ export function assetManifest(set) {
     brand: {
       state: brand.state,
       name: brand.name,
+      ...(brand.variant === null ? {} : { variant: brand.variant, supported_variants: brand.supported_variants }),
       mark: brand.mark !== null,
       mark_recorded_not_self_contained: brand.mark_recorded_not_self_contained,
       provisional: brand.provisional,

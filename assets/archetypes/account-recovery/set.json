@@ -71,16 +71,16 @@
     "compare.html": {
       "title": "Account recovery · visual comparison",
       "lang": "en",
-      "brand": null,
       "strings": [],
       "apparatus": true,
       "source": "docs/design/archetypes/account-recovery/demo/compare.html",
-      "sha256": "ab084bfc3d118dd9efc396b1e29f5b800294da325453d7972271ae4f4fd17f11"
+      "sha256": "ab084bfc3d118dd9efc396b1e29f5b800294da325453d7972271ae4f4fd17f11",
+      "brand": null,
+      "brands": []
     },
     "index.html": {
       "title": "Account recovery · visual demo",
       "lang": "en",
-      "brand": null,
       "strings": [
         "Reset Your Password",
         "Enter the email associated with your account to preview the recovery journey.",
@@ -108,7 +108,9 @@
       ],
       "apparatus": false,
       "source": "docs/design/archetypes/account-recovery/demo/index.html",
-      "sha256": "de8abebdc8397fbb3f895436b389bbe9eb08a205d5a734edb174d9a5abc340a8"
+      "sha256": "de8abebdc8397fbb3f895436b389bbe9eb08a205d5a734edb174d9a5abc340a8",
+      "brand": null,
+      "brands": []
     }
   },
   "images": [

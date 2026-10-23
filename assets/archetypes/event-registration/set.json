@@ -71,16 +71,16 @@
     "compare.html": {
       "title": "Event registration · visual comparison",
       "lang": "en",
-      "brand": null,
       "strings": [],
       "apparatus": true,
       "source": "docs/design/archetypes/event-registration/demo/compare.html",
-      "sha256": "4b31359d730be7fa8ad67753109216dc6cf11426d842257920c16a43413631a4"
+      "sha256": "4b31359d730be7fa8ad67753109216dc6cf11426d842257920c16a43413631a4",
+      "brand": null,
+      "brands": []
     },
     "index.html": {
       "title": "Future Web 2026 · event registration visual demo",
       "lang": "en",
-      "brand": null,
       "strings": [
         "Future Web 2026",
         "24–25 October · Barbican Centre, London",
@@ -133,7 +133,11 @@
       ],
       "apparatus": false,
       "source": "docs/design/archetypes/event-registration/demo/index.html",
-      "sha256": "249a0f0ed849b0a7510b78e6447720694244402a242f37074c64dd06b2f64719"
+      "sha256": "249a0f0ed849b0a7510b78e6447720694244402a242f37074c64dd06b2f64719",
+      "brand": "Future Web 2026",
+      "brands": [
+        "Future Web 2026"
+      ]
     }
   },
   "images": [

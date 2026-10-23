@@ -8,7 +8,9 @@
  * asked to build the archetype is given what it needs to render the intended UI.
  */
 import assert from 'node:assert/strict';
-import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';import { tmpdir } from 'node:os';
+import { createHash } from 'node:crypto';
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
@@ -27,7 +29,13 @@ import {
   setDocument,
   setProblems,
   sha256,
+  writeSets,
 } from '../scripts/build-archetype-assets.mjs';
+import {
+  assetManifest,
+  brandFor,
+  loadArchetypeSet,
+} from '../src/design/archetype-assets.mjs';
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -218,6 +226,62 @@ test('a brand the target keeps beside its primary one is a declared variant, not
   );
 });
 
+test('a page title that states two brands is a finding, not a recorded absence of one', () => {
+  // The set used to record a title naming both brands as "no brand stated", which is the one answer that
+  // hides the contradiction: a build reading it cannot tell whether the page adopts neither brand or both.
+  withTarget(
+    {
+      readme: `# Visual reference: Booking (Evening Class Studio)\n\n${RIGHTS_README}`,
+      indexHtml: '<title>Booking Confirmation — Evening Class Studio · Learning Hub</title><a class="brand"><span>Learning Hub</span></a><p>Book a class.</p>',
+      css: PALETTE,
+    },
+    (root) => {
+      mkdirSync(join(root, STORE_DIR, 'booking'), { recursive: true });
+      writeFileSync(
+        join(root, STORE_DIR, 'booking/decisions.json'),
+        JSON.stringify({ brand: { siteName: 'Evening Class Studio', variants: ['Learning Hub'], because: "owner: 'we probably need both'", decided_on: '2026-10-13' } }),
+      );
+      const set = buildAll(root, ['booking'])[0];
+      const slot = setDocument(set).copy['index.html'];
+      assert.equal(slot.brand, null, 'a title stating two brands adopts neither');
+      assert.deepEqual(slot.brands.sort(), ['Evening Class Studio', 'Learning Hub'], 'both are recorded, so the contradiction is visible in the set');
+      assert.equal(setProblems(set).filter((problem) => problem.includes('states more than one brand')).length, 1, 'and it is a finding rather than null');
+      // Fail closed at both ends: the gate reports it, and the builder refuses to write the set at all.
+      assert.ok(inspectCommitted(root, ['booking']).findings.some((finding) => finding.includes('states more than one brand')), 'the gate reports the contradiction');
+      assert.throws(() => writeSets(root, [set]), /refusing to write an incomplete set/);
+    },
+  );
+});
+
+test('a page title that names a brand the target does not state is a finding, not "no brand"', () => {
+  withTarget(
+    {
+      readme: `# Visual reference: Booking (Evening Class Studio)\n\n${RIGHTS_README}`,
+      indexHtml: '<title>Booking Confirmation — Northwind Studio</title><a class="brand"><span>Evening Class Studio</span></a><p>Book a class.</p>',
+      css: PALETTE,
+    },
+    (root) => {
+      const set = buildAll(root, ['booking'])[0];
+      assert.deepEqual(setDocument(set).copy['index.html'].brands, [], 'the title states none of the target own names');
+      assert.equal(setProblems(set).filter((problem) => problem.includes('Northwind Studio') && problem.includes('brand position')).length, 1, 'a name in the brand position is not silently read as no brand');
+
+      // The same position naming the brand the target does state is not a finding, and is recorded.
+      writeFileSync(
+        join(root, 'docs/design/archetypes/booking/demo/index.html'),
+        '<title>Booking Confirmation — Evening Class Studio</title><a class="brand"><span>Evening Class Studio</span></a><p>Book a class.</p>',
+      );
+      const adopted = buildAll(root, ['booking'])[0];
+      assert.deepEqual(setProblems(adopted), []);
+      assert.equal(setDocument(adopted).copy['index.html'].brand, 'Evening Class Studio');
+
+      // A description in the brand position on the demo own comparison page is apparatus, not an unknown brand.
+      writeFileSync(join(root, 'docs/design/archetypes/booking/demo/compare.html'), '<title>Visual Design Comparison — Booking Archetype</title><div class="comparison-grid"><p>Side by side.</p></div>');
+      const withApparatus = buildAll(root, ['booking'])[0];
+      assert.equal(setProblems(withApparatus).filter((problem) => problem.includes('brand position')).length, 0, 'the comparison page describes the artefact rather than naming a site');
+    },
+  );
+});
+
 test('a target that states no brand is a problem until the absence is adjudicated', () => {
   withTarget(
     { readme: `# Account recovery — illustrative references\n\n${RIGHTS_README}`, indexHtml: '<h1>Reset Your Password</h1><p>Enter the email for your account.</p>', css: PALETTE },
@@ -358,3 +422,92 @@ test('the set is not corpus: nothing in it claims to be a functional or training
   }
 });
 
+/**
+ * A throwaway store holding one complete set, so the consumer's own rules can be exercised on a fixture.
+ *
+ * The board's digest is computed from the bytes written beside it, so a set the fixture writes is one the
+ * loader accepts by default - each assertion below then changes exactly one record.
+ */
+function withConsumerStore(mutate, body) {
+  const root = mkdtempSync(join(tmpdir(), 'archetype-consumer-'));
+  const dir = join(root, STORE_DIR, 'fixture');
+  const bytes = Buffer.from('board');
+  mkdirSync(join(dir, 'images'), { recursive: true });
+  writeFileSync(join(dir, 'images/board.jpg'), bytes);
+  const document = {
+    archetype: 'fixture',
+    brand: { site_name: 'Fixture Co', brandless: false, variants: [] },
+    tokens: { colors: { '--text-primary': '#111111' }, fonts: { '--font-sans': 'system-ui, sans-serif' } },
+    copy: { 'index.html': { title: 'Book a table — Fixture Co', brand: 'Fixture Co', brands: ['Fixture Co'], strings: ['Book a table'] } },
+    images: [{ name: 'board.jpg', sha256: createHash('sha256').update(bytes).digest('hex'), bytes: bytes.length, source: `${STORE_DIR}/fixture/images/board.jpg` }],
+    rights: { excluded_from_training: true, approved_for_training: false },
+  };
+  const write = (next) => writeFileSync(join(dir, 'set.json'), JSON.stringify(next));
+  write(mutate(document));
+  try {
+    return body({ root, document, write });
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+}
+
+test('the consumer refuses the brand contradictions the builder refuses', () => {
+  withConsumerStore((document) => document, ({ root, document, write }) => {
+    assert.equal(loadArchetypeSet('fixture', { root }).copy[0].brand, 'Fixture Co', 'a copy slot naming the set brand loads, and is recorded');
+
+    // The builder refuses a name declared as both the brand and its own variant; a set that has it is not
+    // one the builder wrote, and a build consuming it could not tell the two records apart.
+    write({ ...document, brand: { site_name: 'Fixture Co', brandless: false, variants: ['Fixture Co'] } });
+    assert.throws(() => loadArchetypeSet('fixture', { root }), /as both its brand and a supported variant/);
+
+    // A brandless set has no identity for a variant to coexist with.
+    write({ ...document, brand: { site_name: null, brandless: true, variants: ['Alt Co'] } });
+    assert.throws(() => loadArchetypeSet('fixture', { root }), /brandless and still lists the brand variant/);
+
+    // A copy slot naming a second site is the builder's copy-slot finding, arriving at the consumer.
+    write({ ...document, copy: { 'index.html': { title: 'Book a table — Other Co', brand: 'Other Co', brands: ['Other Co'], strings: ['Book a table'] } } });
+    assert.throws(() => loadArchetypeSet('fixture', { root }), /neither the set's brand nor one of its variants/);
+
+    // And so is a slot that states two brands, which no build can resolve.
+    write({ ...document, copy: { 'index.html': { title: 'Fixture Co · Other Co', brand: null, brands: ['Fixture Co', 'Other Co'], strings: ['Book a table'] } } });
+    assert.throws(() => loadArchetypeSet('fixture', { root }), /states more than one brand/);
+
+    // A declared variant is a supported identity, so a page rendering it is not a contradiction.
+    write({
+      ...document,
+      brand: { site_name: 'Fixture Co', brandless: false, variants: ['Alt Co'] },
+      copy: { 'index.html': { title: 'Book a table — Alt Co', brand: 'Alt Co', brands: ['Alt Co'], strings: ['Book a table'] } },
+    });
+    assert.equal(loadArchetypeSet('fixture', { root }).copy[0].brand, 'Alt Co');
+  });
+});
+
+test('a build can select and record a supported variant, and is refused one the set does not record', () => {
+  const booking = loadArchetypeSet('booking');
+  assert.deepEqual(booking.brand.variants, ['Learning Hub'], 'the store records the second identity the owner kept');
+
+  const primary = brandFor(booking);
+  assert.equal(primary.name, 'Evening Class Studio');
+  assert.equal(primary.variant, null, 'a build that asks for nothing renders the primary brand');
+  assert.deepEqual(primary.supported_variants, ['Learning Hub']);
+
+  // The variant is selectable, and the choice travels: a spec says which identity its pages carry rather
+  // than leaving a reader to infer it from the markup.
+  const variant = brandFor(booking, { variant: 'Learning Hub' });
+  assert.equal(variant.name, 'Learning Hub');
+  assert.equal(variant.variant, 'Learning Hub');
+  const manifest = assetManifest(booking, { variant: 'Learning Hub' });
+  assert.equal(manifest.brand.name, 'Learning Hub');
+  assert.equal(manifest.brand.variant, 'Learning Hub');
+  assert.deepEqual(manifest.brand.supported_variants, ['Learning Hub']);
+  // A build that renders the primary brand carries the spec it always had: the pilot corpus records the tree
+  // hash of every arm, and a new key in every spec would move all of them for no change in what was built.
+  assert.equal('variant' in assetManifest(booking).brand, false, 'a default build records no variant');
+  assert.equal('variant' in assetManifest(booking, { variant: 'Evening Class Studio' }).brand, true, 'a build that chose the primary explicitly still says so');
+
+  assert.throws(() => brandFor(booking, { variant: 'Neither Brand' }), /is not a brand variant/);
+  assert.throws(() => brandFor(booking, { variant: '' }), /must be a name/);
+  const brandless = loadArchetypeSet('account-recovery');
+  assert.equal(brandFor(brandless).name, null);
+  assert.throws(() => brandFor(brandless, { variant: 'Learning Hub' }), /brandless, so it has no/);
+});

@@ -170,6 +170,62 @@ export function copyTexts(html) {
   return texts;
 }
 
+/**
+ * The separator a page title puts between its description and the site it belongs to.
+ *
+ * 'Booking Confirmation & Receipt — Learning Hub' names the page first and the site last. These are the
+ * separators the accepted targets use, plus the ASCII hyphen, which is the commonest way to write the same
+ * thing. A title with no separator makes no brand claim in its tail, so there is nothing to read there.
+ */
+const TITLE_BRAND_SEPARATOR = /\s+[—–·|-]\s+/;
+
+/** The fragment a page title puts in the brand position: the text after its last separator, parenthetical removed. */
+export function titleBrandPosition(title) {
+  if (typeof title !== 'string') return '';
+  const parts = title.split(TITLE_BRAND_SEPARATOR);
+  if (parts.length < 2) return '';
+  return parts[parts.length - 1].replace(/\s*\([^)]*\)\s*$/, '').trim();
+}
+
+/**
+ * The brands a page title states, read from names the target itself supplies.
+ *
+ * A title's brand is not guessed from its wording: a title states a brand when it contains a name that the
+ * target, or the decision that settles its brand, calls its own. `strong` are the names the target states as
+ * its site (a brand element, the README's own heading); `declared` adds the primary brand and supported
+ * variants a decision records, which is how a target with no brand element at all (event-registration) still
+ * has a title that names it. Two kinds of candidate are therefore deliberately left out by callers:
+ *
+ *   - `demo-title`, because that candidate was lifted out of a page title in the first place, so matching it
+ *     would make any title its own brand and could make one title look like two brands.
+ *   - a page-copy candidate (an h1/heading phrase), because 'Find Your Next Evening Class — Learning Hub' is
+ *     a description and a brand, not two brands.
+ *
+ * Returns every distinct name found, in the order given, so a caller can tell "no brand" from "two brands"
+ * rather than collapsing both to null.
+ */
+export function statedTitleBrands(title, { strong = [], declared = [] } = {}) {
+  if (typeof title !== 'string' || title.trim() === '') return [];
+  const text = unescapeEntities(title);
+  const stated = [];
+  for (const value of [...strong, ...declared]) {
+    if (typeof value === 'string' && value !== '' && text.includes(value) && !stated.includes(value)) stated.push(value);
+  }
+  return stated;
+}
+
+/**
+ * A copy slot's brand record: the single brand its title adopts, and every brand the title states.
+ *
+ * `brand` is null only when the title adopts no brand of the set's own - a comparison page describes the
+ * artefact, and a page whose title names none is legitimately without one. A title naming two brands keeps
+ * both in `brands` so the contradiction is visible rather than silently flattened to "no brand".
+ */
+function titleBrandView(slot, names) {
+  const stated = statedTitleBrands(slot.title, names);
+  return { brand: stated.length === 1 ? stated[0] : null, brands: stated };
+}
+
 /** The accepted target's palette and typography: its custom properties, plus any font family it sets outright. */
 export function extractTokens(css, source) {
   const colors = {};
@@ -327,25 +383,15 @@ export function extractSet(root, id) {
   const indexHtml = readFileSync(join(root, indexRel), 'utf8');
 
   const brand = extractBrand({ archetype: id, readme, readmePath, indexHtml, indexPath: indexRel });
-  // A document's own title names the brand the page renders. Reading it here is what keeps a set from
-  // publishing a brand and copy slots that carry a different one: 'Booking Confirmation - Learning Hub' is
-  // honest once the decision declares Learning Hub a supported variant, and a finding when it does not.
-  const strongBrands = [...new Set(brand.candidates.filter((candidate) => candidate.strength === 'strong').map((candidate) => candidate.value))];
 
   const copy = {};
   for (const rel of documents) {
     const html = readFileSync(join(root, rel), 'utf8');
     const title = /<title>([^<]*)<\/title>/i.exec(html);
     const lang = /<html\b[^>]*\blang="([^"]*)"/i.exec(html);
-    const titleText = title ? unescapeEntities(title[1].trim()) : null;
-    const titleBrands = titleText === null ? [] : strongBrands.filter((value) => titleText.includes(value));
     copy[rel.split('/').pop()] = {
       title: title ? title[1].trim() : null,
       lang: lang ? lang[1] : null,
-      // The brand this document states in its own title, or null when it names none (a comparison page is
-      // the demo's apparatus and describes the artefact rather than adopting a name). Two matches are
-      // recorded as no single brand, because a title naming both does not tell a build which to render.
-      brand: titleBrands.length === 1 ? titleBrands[0] : null,
       strings: copyTexts(html).map((entry) => entry.text),
       // The comparison page is the demo's own apparatus - it shows the boards side by side. It carries
       // no archetype copy by design, so requiring copy from it would fail correct work.
@@ -430,13 +476,32 @@ export function setProblems(set) {
   if (Object.keys(set.tokens.colors).length === 0) problems.push('no palette: the target stylesheet declares no colour custom properties');
   if (Object.keys(set.tokens.fonts).length === 0) problems.push('no typography: the target stylesheet declares no font stack');
   if (Object.keys(set.copy).length === 0) problems.push('no copy: no demo document was read');
+  // The brand names the set publishes: the decision's primary brand and the variants it supports. A page
+  // title is checked against these rather than against itself, so "the set says one thing and its copy says
+  // another" is a finding in either direction.
+  const declaredBrands = siteName ? [siteName, ...variants] : [];
   for (const [document, entry] of Object.entries(set.copy)) {
     if (entry.strings.length === 0 && !entry.apparatus) problems.push(`${document}: no user-facing copy was extracted`);
-    // A page title carrying a second brand is only coherent if that brand is one the archetype supports.
-    // Otherwise the set publishes a brand plus copy that renders a different one, and two builds of the
-    // same archetype end up looking like two products.
-    if (entry.brand && entry.brand !== siteName && !variants.includes(entry.brand)) {
-      problems.push(`${document}: its title states the brand ${JSON.stringify(entry.brand)}, which is neither the set's brand nor a supported variant in decisions.json`);
+    // A page title states one brand or none, and a title that states two is a contradiction no build can
+    // resolve: recording it as "no brand" is what let a set publish a brand while its copy named another.
+    const stated = statedTitleBrands(entry.title, { strong: set.brand.strong, declared: declaredBrands });
+    if (stated.length > 1) {
+      problems.push(`${document}: its title states more than one brand (${stated.map((value) => JSON.stringify(value)).join(' and ')}), so a build cannot tell which the page renders`);
+    } else if (stated.length === 1) {
+      // A page title carrying a second brand is only coherent if that brand is one the archetype supports.
+      // Otherwise the set publishes a brand plus copy that renders a different one, and two builds of the
+      // same archetype end up looking like two products.
+      if (!declaredBrands.includes(stated[0])) {
+        problems.push(`${document}: its title states the brand ${JSON.stringify(stated[0])}, which is neither the set's brand nor a supported variant in decisions.json`);
+      }
+    } else if (siteName && !entry.apparatus) {
+      // A title with a brand position and no brand the set knows is an unrecognised brand, not "no brand":
+      // 'Booking Confirmation - Northwind Studio' would otherwise publish a copy slot that names a site the
+      // set cannot identify, and a build rendering it would look like it invented a second product.
+      const claim = titleBrandPosition(entry.title);
+      if (claim !== '') {
+        problems.push(`${document}: its title puts ${JSON.stringify(claim)} in the brand position, but the accepted target does not state it as a brand; name a supported brand there or drop the separator, because the set cannot say which site the page belongs to`);
+      }
     }
   }
   if (set.images.length === 0) problems.push('no imagery: the target has no step board to extract');
@@ -454,6 +519,7 @@ export function setDocument(set) {
     ? (decision.brandless ? null : decision.siteName)
     : (set.brand.strong.length === 1 ? set.brand.strong[0] : null);
   const variants = decision && !decision.brandless ? (decision.variants ?? []) : [];
+  const declaredBrands = siteName ? [siteName, ...variants] : [];
   return {
     archetype: set.archetype,
     extracted_from: set.extracted_from,
@@ -469,7 +535,10 @@ export function setDocument(set) {
       decided: decision,
     },
     tokens: set.tokens,
-    copy: set.copy,
+    // Each copy slot records the brand its own title states, checked against the brand and variants the
+    // decision declares: a title that names one is recorded, a title that names none records none, and a
+    // title naming two keeps both so the contradiction setProblems reports is visible in the set itself.
+    copy: Object.fromEntries(Object.entries(set.copy).map(([page, slot]) => [page, { ...slot, ...titleBrandView(slot, { strong: set.brand.strong, declared: declaredBrands }) }])),
     images: set.images.map(({ name, sha256: digest, bytes, source }) => ({ name, sha256: digest, bytes, source })),
     rights: set.rights,
   };

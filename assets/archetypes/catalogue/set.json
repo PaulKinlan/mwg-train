@@ -103,7 +103,6 @@
     "cart.html": {
       "title": "Your Cart — Kiln &amp; Copper (static variant)",
       "lang": "en",
-      "brand": "Kiln & Copper",
       "strings": [
         "Slide-over cart drawer",
         "Static variant of board 2: the drawer over the dimmed catalogue. Every line, price and total below is hand-written markup, not your saved cart.",
@@ -165,12 +164,15 @@
       ],
       "apparatus": false,
       "source": "docs/design/archetypes/catalogue/demo/cart.html",
-      "sha256": "95c0ea51e898d93e9d8e9ceb4e719e6d90b9ca7e92908ff641f3005cc53620fc"
+      "sha256": "95c0ea51e898d93e9d8e9ceb4e719e6d90b9ca7e92908ff641f3005cc53620fc",
+      "brand": "Kiln & Copper",
+      "brands": [
+        "Kiln & Copper"
+      ]
     },
     "compare.html": {
       "title": "Visual Design Comparison — Catalogue Archetype",
       "lang": "en",
-      "brand": null,
       "strings": [
         "Visual design reference comparison",
         "Each reference board from",
@@ -186,12 +188,13 @@
       ],
       "apparatus": true,
       "source": "docs/design/archetypes/catalogue/demo/compare.html",
-      "sha256": "dc066143fcb35fe4afc939c2aa827e02ae8d1d60978dc1183b4ae51a2b390027"
+      "sha256": "dc066143fcb35fe4afc939c2aa827e02ae8d1d60978dc1183b4ae51a2b390027",
+      "brand": null,
+      "brands": []
     },
     "empty.html": {
       "title": "No Matches — Kiln &amp; Copper (static variant)",
       "lang": "en",
-      "brand": "Kiln & Copper",
       "strings": [
         "Search the catalogue",
         "Static variant of board 3: a search that matched nothing, with the category filters still in place. Submitting the form here hands the query to the live demo at",
@@ -220,12 +223,15 @@
       ],
       "apparatus": false,
       "source": "docs/design/archetypes/catalogue/demo/empty.html",
-      "sha256": "b552aea3ba9a3f0600a3b298c5f2aa807fcb56cd0e047165cdd9a6af0f87d078"
+      "sha256": "b552aea3ba9a3f0600a3b298c5f2aa807fcb56cd0e047165cdd9a6af0f87d078",
+      "brand": "Kiln & Copper",
+      "brands": [
+        "Kiln & Copper"
+      ]
     },
     "index.html": {
       "title": "Kiln &amp; Copper — Ceramics &amp; Kiln Parts Catalogue",
       "lang": "en",
-      "brand": "Kiln & Copper",
       "strings": [
         "Cart",
         "0",
@@ -349,7 +355,11 @@
       ],
       "apparatus": false,
       "source": "docs/design/archetypes/catalogue/demo/index.html",
-      "sha256": "fdad7913149c813506ef04c367704c6bbafcca99c3dd16572976f6da95a971f8"
+      "sha256": "fdad7913149c813506ef04c367704c6bbafcca99c3dd16572976f6da95a971f8",
+      "brand": "Kiln & Copper",
+      "brands": [
+        "Kiln & Copper"
+      ]
     }
   },
   "images": [

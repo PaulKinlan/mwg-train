@@ -132,19 +132,19 @@
     "compare.html": {
       "title": "Visual Design Comparison — Booking Archetype",
       "lang": "en",
-      "brand": null,
       "strings": [
         "Visual Design Reference Comparison",
         "Side-by-side audit mapping the Nano Banana visual reference boards to the implemented booking design target."
       ],
       "apparatus": true,
       "source": "docs/design/archetypes/booking/demo/compare.html",
-      "sha256": "e1a89e3dcbda4655605347391543d3859797d94fcbb4134e01e3654149f6b05c"
+      "sha256": "e1a89e3dcbda4655605347391543d3859797d94fcbb4134e01e3654149f6b05c",
+      "brand": null,
+      "brands": []
     },
     "confirmation.html": {
       "title": "Booking Confirmation &amp; Receipt — Learning Hub",
       "lang": "en",
-      "brand": "Learning Hub",
       "strings": [
         "Booking Confirmation & Receipt",
         "Step 3: Verified Pass & Class Schedule",
@@ -162,12 +162,15 @@
       ],
       "apparatus": false,
       "source": "docs/design/archetypes/booking/demo/confirmation.html",
-      "sha256": "9a5b9511f9273c9235e16fa39d3c6a8a9667b1089794279a54d3943d58837fc7"
+      "sha256": "9a5b9511f9273c9235e16fa39d3c6a8a9667b1089794279a54d3943d58837fc7",
+      "brand": "Learning Hub",
+      "brands": [
+        "Learning Hub"
+      ]
     },
     "empty.html": {
       "title": "Schedule Availability — Learning Hub",
       "lang": "en",
-      "brand": "Learning Hub",
       "strings": [
         "Find Your Next Evening Class",
         "Weekly Class Schedule & Availability",
@@ -176,12 +179,15 @@
       ],
       "apparatus": false,
       "source": "docs/design/archetypes/booking/demo/empty.html",
-      "sha256": "4e131736b6542926746a89d6c7c1f619c6a431fd3e6decd3abb3fedc1450c2bd"
+      "sha256": "4e131736b6542926746a89d6c7c1f619c6a431fd3e6decd3abb3fedc1450c2bd",
+      "brand": "Learning Hub",
+      "brands": [
+        "Learning Hub"
+      ]
     },
     "index.html": {
       "title": "Evening Class Booking — Learning Hub",
       "lang": "en",
-      "brand": "Learning Hub",
       "strings": [
         "Find Your Next Evening Class",
         "Step 2: Details & Registration",
@@ -229,7 +235,11 @@
       ],
       "apparatus": false,
       "source": "docs/design/archetypes/booking/demo/index.html",
-      "sha256": "8531d202bc9a6ff5707d3992834bb15fafc9112b59c71b7d700efa8c46aad27e"
+      "sha256": "8531d202bc9a6ff5707d3992834bb15fafc9112b59c71b7d700efa8c46aad27e",
+      "brand": "Learning Hub",
+      "brands": [
+        "Learning Hub"
+      ]
     }
   },
   "images": [
