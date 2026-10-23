@@ -77,19 +77,76 @@ export async function stopServer(server) {
  */
 
 /**
+ * The rows of a `/api/records` body, or null when the body is not a shape this harness can read.
+ */
+function parseRecordRows(body) {
+  try {
+    const parsed = JSON.parse(body);
+    if (Array.isArray(parsed)) return parsed;
+    if (parsed && Array.isArray(parsed.records)) return parsed.records;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * How many rows a `/api/records` body holds, or null when the body is not a shape this harness can
  * count. The row count is the update flow's "did not create a second row" witness, so an
  * uncountable body must fail the verdict rather than waive it.
  */
 export function recordRowCount(body) {
-  try {
-    const parsed = JSON.parse(body);
-    if (Array.isArray(parsed)) return parsed.length;
-    if (parsed && Array.isArray(parsed.records)) return parsed.records.length;
-    return null;
-  } catch {
-    return null;
+  return parseRecordRows(body)?.length ?? null;
+}
+
+/** A record's own identity as a comparable string, or null when the row exposes none. */
+function recordRef(row) {
+  if (!row || typeof row !== 'object') return null;
+  const ref = row.ref ?? row.id;
+  const text = ref === undefined || ref === null ? '' : String(ref).trim();
+  return text === '' ? null : text;
+}
+
+/** Normalised, de-duplicated record identities from whatever the caller observed. */
+function refList(refs) {
+  if (!Array.isArray(refs)) return [];
+  return [...new Set(refs.map((ref) => (ref === undefined || ref === null ? '' : String(ref).trim())).filter(Boolean))];
+}
+
+/**
+ * The identities of the record the flow itself just SEEDED, bound from the server's own listings
+ * rather than invented by the driver. `field` is the echoed field the flow wrote and `value` the
+ * value it wrote there, so the row that carries it is the record the query must return; a row whose
+ * named field disagrees with `value` is not a match, and only when the listing renames that field
+ * does the whole row's string values stand in.
+ *
+ * The match must be the record seeded by THIS flow, not merely a row that holds the same value: an
+ * earlier journey in the same project writes the brief's own record first, so "some row carries the
+ * value" is satisfied by a record that was already stored and whose persistence says nothing about
+ * this seed. `beforeText` is the listing read immediately BEFORE the seed and `afterText` the one
+ * read after it; only identities that appear in the after listing and not in the before listing can
+ * be the newly seeded record.
+ *
+ * Either listing being unreadable binds nothing, and the verdict fails closed rather than falling
+ * back to the weaker "some record identity came back" assertion.
+ */
+export function seededMatchRefs({ beforeText, afterText, field, value }) {
+  if (typeof value !== 'string' || value === '') return [];
+  const beforeRows = parseRecordRows(typeof beforeText === 'string' ? beforeText : '');
+  const afterRows = parseRecordRows(typeof afterText === 'string' ? afterText : '');
+  if (!beforeRows || !afterRows) return [];
+  const preexisting = new Set(beforeRows.map(recordRef).filter(Boolean));
+  const refs = [];
+  for (const row of afterRows) {
+    if (!row || typeof row !== 'object' || Array.isArray(row)) continue;
+    const holdsValue = field && Object.hasOwn(row, field)
+      ? String(row[field] ?? '') === value
+      : Object.values(row).some((cell) => typeof cell === 'string' && cell === value);
+    if (!holdsValue) continue;
+    const ref = recordRef(row);
+    if (ref && !preexisting.has(ref) && !refs.includes(ref)) refs.push(ref);
   }
+  return refs;
 }
 
 /**
@@ -99,8 +156,26 @@ export function recordRowCount(body) {
  * only proves filtering if the server actually HOLDS that token, so every excluded token must be
  * present in the UNFILTERED listing (`unfilteredText`). A filtered page that omits a record the
  * server never had is consistent with a search that ignores its query entirely.
+ *
+ * The text assertions alone cannot show that a STORED matching record came back: a results page that
+ * echoes the query in its own heading and renders an empty list satisfies every one of them. So the
+ * observed result identities (`filteredRefs`, the results container's `[data-ref]` values) must be
+ * non-empty when `includes` is declared, and `matchRefs` - the identity of the record this journey
+ * seeded, from `seededMatchRefs` - must be non-empty and one of the observed identities.
+ *
+ * An unbound `matchRefs` fails the verdict: a search whose seeded record the harness could not name
+ * has not been shown to return that record, and the weaker text-and-non-empty-result check is the
+ * check a query echo passes.
  */
-export function searchVerdict({ containerFound, filteredText, filteredRefs = [], unfilteredText, includes = [], excludes = [] }) {
+export function searchVerdict({
+  containerFound,
+  filteredText,
+  filteredRefs = [],
+  unfilteredText,
+  includes = [],
+  excludes = [],
+  matchRefs = [],
+}) {
   const filtered = typeof filteredText === 'string' ? filteredText : '';
   const unfiltered = typeof unfilteredText === 'string' ? unfilteredText : '';
   const includesFound = includes.filter((token) => filtered.includes(token));
@@ -108,10 +183,19 @@ export function searchVerdict({ containerFound, filteredText, filteredRefs = [],
   const excludesLeaked = excludes.filter((token) => filtered.includes(token));
   const controlPresent = excludes.filter((token) => unfiltered.includes(token));
   const controlMissing = excludes.filter((token) => !unfiltered.includes(token));
+  const observedRefs = refList(filteredRefs);
+  const wantedRefs = refList(matchRefs);
+  const matchRefHits = wantedRefs.filter((ref) => observedRefs.includes(ref));
+  const refsObserved = observedRefs.length > 0;
+  const matchRefBound = wantedRefs.length > 0;
+  const matchRefMissing = matchRefBound && matchRefHits.length === 0;
   const passed =
     containerFound === true &&
     includes.length > 0 &&
     includesMissing.length === 0 &&
+    refsObserved &&
+    matchRefBound &&
+    !matchRefMissing &&
     excludesLeaked.length === 0 &&
     excludes.length > 0 &&
     controlMissing.length === 0;
@@ -124,7 +208,12 @@ export function searchVerdict({ containerFound, filteredText, filteredRefs = [],
       excludesLeaked,
       controlPresent,
       controlMissing,
-      filteredRefs,
+      filteredRefs: observedRefs,
+      refsObserved,
+      matchRefs: wantedRefs,
+      matchRefBound,
+      matchRefHits,
+      matchRefMissing,
     },
   };
 }
@@ -448,7 +537,11 @@ async function driveWriteJourney(page, base, writeJourney) {
  * record that was never written and would prove nothing about filtering.
  *
  * The token is seeded into the journey's ECHOED field (`seedField`, the field the record page shows
- * back): that is the one field the harness knows becomes searchable record text.
+ * back): that is the one field the harness knows becomes searchable record text. That seeded value is
+ * then bound to the record identity the server issued AFTER the seed and did not list before it, so
+ * the verdict asks for THAT record rather than for words the results page can echo on its own or for
+ * an earlier record holding the same value. A seed the harness cannot bind that way fails the
+ * verdict: there is no weaker check left that a query echo does not satisfy.
  */
 export async function driveSearchJourney(page, base, journey, search, { seedField }) {
   if (!seedField) throw new Error('search journey: the journey has no echoed field to seed through');
@@ -505,6 +598,14 @@ export async function driveSearchJourney(page, base, journey, search, { seedFiel
     }
     await page.submit(journey.formSelector ?? 'form');
   };
+  // Read what the server holds BEFORE seeding: the search must return the record seeded HERE, so a
+  // record already carrying the same echoed value (the brief's own create journey writes one first)
+  // must not be able to stand in for a seed that never persisted (mwg-train-rssc).
+  const before = await page.evaluate(`
+    const response = await fetch('/api/records');
+    return { status: response.status, body: (await response.text()).slice(0, 20000) };
+  `);
+
   await seedRecord(false);
   await seedRecord(true);
 
@@ -514,6 +615,20 @@ export async function driveSearchJourney(page, base, journey, search, { seedFiel
     const response = await fetch('/api/records');
     return { status: response.status, body: (await response.text()).slice(0, 20000) };
   `);
+
+  // Which stored record must come back: the one this journey just seeded with the echoed value, read back
+  // as the identity the server handed out. Only an identity that appears after the seed and not in the
+  // before listing can be that record. Without it the verdict can only ask whether the words appeared -
+  // and a page heading that echoes the query answers that with an empty result list underneath it
+  // (mwg-train-rssc).
+  const seedSelector = Object.keys(journey.fill ?? {}).find((selector) => selectorFieldName(selector) === seedField);
+  const seededValue = seedSelector ? String(valuesFor(false)[seedSelector]) : journey.expectText;
+  const matchRefs = seededMatchRefs({
+    beforeText: before.status === 200 ? before.body : '',
+    afterText: unfiltered.status === 200 ? unfiltered.body : '',
+    field: seedField,
+    value: seededValue,
+  });
 
   const url = `${base}${search.path}?${search.queryParam}=${encodeURIComponent(search.query)}`;
   await page.goto(url);
@@ -539,11 +654,13 @@ export async function driveSearchJourney(page, base, journey, search, { seedFiel
     unfilteredText: unfiltered.status === 200 ? unfiltered.body : '',
     includes: search.expectIncludes ?? [],
     excludes: [...(search.expectAbsent ?? []), decoyToken],
+    matchRefs,
   });
   return {
     name: 'search',
     path: url,
-    seeded: { match: 'the brief\'s own create journey', decoy: decoyToken },
+    seeded: { match: 'the brief\'s own create journey', decoy: decoyToken, matchRefs },
+    beforeStatus: before.status,
     unfilteredStatus: unfiltered.status,
     containerFound,
     verdict,
