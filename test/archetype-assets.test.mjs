@@ -282,6 +282,38 @@ test('a page title that names a brand the target does not state is a finding, no
   );
 });
 
+test('a title that names the set brand and an unknown one in the brand position is still a finding', () => {
+  // The position used to be read only when the title stated no brand, so 'Evening Class Studio Booking -
+  // Northwind Studio' recorded the set's own brand from its description and never examined the site after
+  // the separator: a set published a copy slot belonging to a site it could not identify, with a record that
+  // looked perfectly consistent. The two ends of the title are checked independently.
+  withTarget(
+    {
+      readme: `# Visual reference: Booking (Evening Class Studio)\n\n${RIGHTS_README}`,
+      indexHtml: '<title>Evening Class Studio Booking — Northwind Studio</title><a class="brand"><span>Evening Class Studio</span></a><p>Book a class.</p>',
+      css: PALETTE,
+    },
+    (root) => {
+      const set = buildAll(root, ['booking'])[0];
+      assert.equal(setDocument(set).copy['index.html'].brand, 'Evening Class Studio', 'the record itself looks consistent - the title states the set brand, and the slot records it');
+      assert.equal(setProblems(set).filter((problem) => problem.includes('brand position') && problem.includes('Northwind Studio')).length, 1, 'the unknown site after the separator is a finding even though the title names the set brand');
+      // Fail closed at both ends: the gate reports it, and the builder refuses to write the set at all.
+      assert.ok(inspectCommitted(root, ['booking']).findings.some((finding) => finding.includes('Northwind Studio')), 'the gate reports the unknown brand');
+      assert.throws(() => writeSets(root, [set]), /refusing to write an incomplete set/);
+
+      // The same position is what the accepted targets actually put there - a description of the page, in the
+      // page's own wording ('Kiln & Copper - Ceramics & Kiln Parts Catalogue', 'ARKHITECTS Studio - Request a
+      // consultation') - and is not a finding.
+      writeFileSync(
+        join(root, 'docs/design/archetypes/booking/demo/index.html'),
+        '<title>Evening Class Studio Booking — Book a class</title><a class="brand"><span>Evening Class Studio</span></a><p>Book a class.</p>',
+      );
+      const described = buildAll(root, ['booking'])[0];
+      assert.deepEqual(setProblems(described), [], 'a position the page itself uses describes the page rather than naming another site');
+    },
+  );
+});
+
 test('a target that states no brand is a problem until the absence is adjudicated', () => {
   withTarget(
     { readme: `# Account recovery — illustrative references\n\n${RIGHTS_README}`, indexHtml: '<h1>Reset Your Password</h1><p>Enter the email for your account.</p>', css: PALETTE },
@@ -480,6 +512,50 @@ test('the consumer refuses the brand contradictions the builder refuses', () => 
     });
     assert.equal(loadArchetypeSet('fixture', { root }).copy[0].brand, 'Alt Co');
   });
+});
+
+test('the consumer reads the brand position of a title, not the slot fields that agree with themselves', () => {
+  withConsumerStore((document) => document, ({ root, document, write }) => {
+    // The record claims no brand at all, which is what made the set look consistent: the title is the claim,
+    // and a build rendering a page for a site the store cannot name is the drift this module prevents.
+    write({ ...document, copy: { 'index.html': { title: 'Book a table — Northwind Studio', brand: null, brands: [], strings: ['Book a table'] } } });
+    assert.throws(() => loadArchetypeSet('fixture', { root }), /Northwind Studio.*brand position|brand position.*Northwind Studio/);
+
+    // A supported brand in the title's description does not make an unknown one after the separator
+    // acceptable - the same case the builder now refuses from the target.
+    write({ ...document, copy: { 'index.html': { title: 'Fixture Co Booking — Northwind Studio', brand: null, brands: [], strings: ['Book a table'] } } });
+    assert.throws(() => loadArchetypeSet('fixture', { root }), /Northwind Studio/);
+
+    // A brandless set has no identity for the brand position to name.
+    write({
+      ...document,
+      brand: { site_name: null, brandless: true, variants: [] },
+      copy: { 'index.html': { title: 'Book a table — Northwind Studio', brand: null, brands: [], strings: ['Book a table'] } },
+    });
+    assert.throws(() => loadArchetypeSet('fixture', { root }), /brandless and the page never uses that name/);
+
+    // The identities the set supports - the primary brand and its declared variants - are what the position
+    // is validated against.
+    write({
+      ...document,
+      brand: { site_name: 'Fixture Co', brandless: false, variants: ['Alt Co'] },
+      copy: { 'index.html': { title: 'Book a table — Alt Co', brand: null, brands: [], strings: ['Book a table'] } },
+    });
+    assert.deepEqual(loadArchetypeSet('fixture', { root }).copy[0].brands, [], 'a supported variant in the brand position is not an unknown brand');
+
+    // A description in that position is the page describing itself, which the accepted targets do
+    // ('Kiln & Copper — Ceramics & Kiln Parts Catalogue'), and an apparatus page describes the demo.
+    write({ ...document, copy: { 'index.html': { title: 'Book a table — Reserve your seat', brand: null, brands: [], strings: ['Reserve your seat'] } } });
+    assert.deepEqual(loadArchetypeSet('fixture', { root }).copy[0].brands, []);
+    write({ ...document, copy: { 'compare.html': { title: 'Visual comparison — Northwind Studio', brand: null, brands: [], strings: [], apparatus: true } } });
+    assert.equal(loadArchetypeSet('fixture', { root }).copy.length, 1, 'an apparatus title describes the demo rather than naming a site');
+  });
+});
+
+test('every committed set is one the consumer can load', () => {
+  // The consumer repeats the builder's rules, so a rule tightened in one place and not the other shows up as
+  // the store failing to load for the builds that draw on it.
+  for (const id of archetypeIds(repoRoot)) assert.doesNotThrow(() => loadArchetypeSet(id), `${id}: the committed set is refused by its own consumer`);
 });
 
 test('a build can select and record a supported variant, and is refused one the set does not record', () => {

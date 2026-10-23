@@ -179,10 +179,15 @@ export function copyTexts(html) {
  */
 const TITLE_BRAND_SEPARATOR = /\s+[—–·|-]\s+/;
 
-/** The fragment a page title puts in the brand position: the text after its last separator, parenthetical removed. */
+/**
+ * The fragment a page title puts in the brand position: the text after its last separator, parenthetical removed.
+ *
+ * Entities are decoded so the fragment can be compared with a brand name read out of the markup: catalogue's
+ * title states `Kiln &amp; Copper`, and the brand the target states is `Kiln & Copper`.
+ */
 export function titleBrandPosition(title) {
   if (typeof title !== 'string') return '';
-  const parts = title.split(TITLE_BRAND_SEPARATOR);
+  const parts = unescapeEntities(title).split(TITLE_BRAND_SEPARATOR);
   if (parts.length < 2) return '';
   return parts[parts.length - 1].replace(/\s*\([^)]*\)\s*$/, '').trim();
 }
@@ -212,6 +217,49 @@ export function statedTitleBrands(title, { strong = [], declared = [] } = {}) {
     if (typeof value === 'string' && value !== '' && text.includes(value) && !stated.includes(value)) stated.push(value);
   }
   return stated;
+}
+
+/**
+ * The words a page states, lowercased, so a title fragment can be checked against the page's own text.
+ *
+ * Whole tokens, not substrings: a page whose copy says 'northwindshire' has not said 'Northwind', and a
+ * substring test would let an unknown brand through on a coincidence of spelling.
+ */
+function pageWords(texts) {
+  const words = new Set();
+  for (const text of texts) {
+    if (typeof text !== 'string') continue;
+    for (const word of text.toLowerCase().match(/[a-z0-9][a-z0-9'’.-]*/g) ?? []) words.add(word);
+  }
+  return words;
+}
+
+/** The capitalised words of a name: the proper nouns a site name is built from. */
+function properNouns(text) {
+  return [...new Set(text.match(/[A-Za-z][A-Za-z'’.-]*/g) ?? [])].filter((word) => /^[A-Z]/.test(word));
+}
+
+/**
+ * The name a page title puts in its brand position that is neither a supported identity nor the page's own
+ * wording, or null when the position is one of those two things.
+ *
+ * A position that is not a brand the set supports cannot simply be refused, because three accepted targets
+ * put a page description there: 'Kiln & Copper - Ceramics & Kiln Parts Catalogue' and 'ARKHITECTS Studio -
+ * Request a consultation' name the site first, and 'Future Web 2026 - event registration visual demo'
+ * describes the page. What separates those from a site name is that the page itself says them: every
+ * capitalised word of a description appears in the page's own copy. 'Northwind Studio' appears nowhere in
+ * the page, so a title ending in it claims a site the set cannot identify.
+ *
+ * The check is independent of the brands the title states elsewhere. It used to run only when the title
+ * stated none, so 'Evening Class Studio Booking - Northwind Studio' named a supported brand in its
+ * description, recorded that brand, and published a page belonging to a second site unchallenged.
+ */
+export function unrecognisedTitleBrand(slot, supported) {
+  const claim = titleBrandPosition(slot?.title);
+  if (claim === '' || supported.includes(claim)) return null;
+  const words = pageWords(Array.isArray(slot?.strings) ? slot.strings : []);
+  const unseen = properNouns(claim).filter((word) => !words.has(word.toLowerCase()));
+  return unseen.length === 0 ? null : claim;
 }
 
 /**
@@ -494,13 +542,16 @@ export function setProblems(set) {
       if (!declaredBrands.includes(stated[0])) {
         problems.push(`${document}: its title states the brand ${JSON.stringify(stated[0])}, which is neither the set's brand nor a supported variant in decisions.json`);
       }
-    } else if (siteName && !entry.apparatus) {
-      // A title with a brand position and no brand the set knows is an unrecognised brand, not "no brand":
-      // 'Booking Confirmation - Northwind Studio' would otherwise publish a copy slot that names a site the
-      // set cannot identify, and a build rendering it would look like it invented a second product.
-      const claim = titleBrandPosition(entry.title);
-      if (claim !== '') {
-        problems.push(`${document}: its title puts ${JSON.stringify(claim)} in the brand position, but the accepted target does not state it as a brand; name a supported brand there or drop the separator, because the set cannot say which site the page belongs to`);
+    }
+    // The brand position is checked whatever the title states elsewhere. Reading it only when the title
+    // stated no brand let 'Evening Class Studio Booking - Northwind Studio' through: the title named the
+    // set's own brand in its description, so the position was never examined and the set published a copy
+    // slot belonging to a site it could not identify. The apparatus pages stay exempt - their titles
+    // describe the demo, not the site the archetype renders.
+    if (!entry.apparatus) {
+      const claim = unrecognisedTitleBrand(entry, declaredBrands);
+      if (claim !== null) {
+        problems.push(`${document}: its title puts ${JSON.stringify(claim)} in the brand position, which is neither the set's brand, a supported variant, nor wording the page itself uses; a build reading it cannot tell which site the page belongs to, so name a supported brand there or describe the page`);
       }
     }
   }

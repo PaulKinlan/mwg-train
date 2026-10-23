@@ -101,6 +101,58 @@ function readAdjudication(dir) {
 }
 
 /**
+ * Where a page title puts its site name, and what it puts there.
+ *
+ * Mirrors scripts/build-archetype-assets.mjs, deliberately: the builder and this reader have to agree about
+ * where a title's brand claim sits, or a build renders a page the gate would have refused. The separator is
+ * the ones the accepted targets use plus the ASCII hyphen, and the fragment after the last one is the brand
+ * position, with a trailing parenthetical removed.
+ */
+const TITLE_BRAND_SEPARATOR = /\s+[—–·|-]\s+/;
+
+function unescapeHtml(value) {
+  return value
+    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, ' ');
+}
+
+function titleBrandPosition(title) {
+  if (typeof title !== 'string') return '';
+  const parts = unescapeHtml(title).split(TITLE_BRAND_SEPARATOR);
+  if (parts.length < 2) return '';
+  return parts[parts.length - 1].replace(/\s*\([^)]*\)\s*$/, '').trim();
+}
+
+/** The words a page states, lowercased, so a title fragment can be checked against the page's own text. */
+function pageWords(texts) {
+  const words = new Set();
+  for (const text of Array.isArray(texts) ? texts : []) {
+    if (typeof text !== 'string') continue;
+    for (const word of text.toLowerCase().match(/[a-z0-9][a-z0-9'’.-]*/g) ?? []) words.add(word);
+  }
+  return words;
+}
+
+/**
+ * The site name a copy slot's title puts in its brand position that the set does not support and the page
+ * itself never uses, or null.
+ *
+ * Three accepted targets put a page description in that position ('Kiln & Copper - Ceramics & Kiln Parts
+ * Catalogue', 'ARKHITECTS Studio - Request a consultation', 'Future Web 2026 - event registration visual
+ * demo'), so a position that is not a supported identity is not automatically wrong: a description is the
+ * page's own wording, and every capitalised word of it appears in the copy the page states. A name that
+ * appears nowhere on the page - 'Northwind Studio' - is a site the set cannot identify.
+ */
+function unrecognisedTitleBrand(slot, supported) {
+  const claim = titleBrandPosition(slot?.title);
+  if (claim === '' || supported.includes(claim)) return null;
+  const words = pageWords(slot?.strings);
+  const unseen = (claim.match(/[A-Za-z][A-Za-z'’.-]*/g) ?? [])
+    .filter((word) => /^[A-Z]/.test(word) && !words.has(word.toLowerCase()));
+  return unseen.length === 0 ? null : claim;
+}
+
+/**
  * The brands one copy slot says its page renders, checked against the set's own identities.
  *
  * A page title states one brand or none. The builder refuses a title that names more than one brand, or one
@@ -131,6 +183,19 @@ function copySlotBrands({ archetype, page, slot, supported, brandless }) {
       brandless
         ? `the copy slot for '${page}' of '${archetype}' states the brand ${JSON.stringify(name)}, but the set is brandless, so a build cannot tell which identity the page renders`
         : `the copy slot for '${page}' of '${archetype}' states the brand ${JSON.stringify(name)}, which is neither the set's brand nor one of its variants (${supported.join(', ')})`,
+    );
+  }
+  // The title's own brand position, checked against the identities the set supports rather than against the
+  // fields the slot records. A set.json that says `brand: null` while its title ends in a site name is the
+  // record trusting itself: the builder refuses such a title, so a build must not render from one, and the
+  // unknown name in the position is the content of the defect rather than the field being empty.
+  if (slot?.apparatus !== true) {
+    const claim = unrecognisedTitleBrand(slot, supported);
+    require(
+      claim === null,
+      brandless
+        ? `the copy slot for '${page}' of '${archetype}' puts ${JSON.stringify(claim)} in its title's brand position, but the set is brandless and the page never uses that name, so a build cannot tell which site the page belongs to`
+        : `the copy slot for '${page}' of '${archetype}' puts ${JSON.stringify(claim)} in its title's brand position, which is neither a supported identity (${supported.join(', ')}) nor wording the page itself uses, so a build cannot tell which site the page belongs to`,
     );
   }
   return stated;
