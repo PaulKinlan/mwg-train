@@ -29,22 +29,48 @@ test('recordRowCount is null for a body it cannot count, so the count check fail
 
 test('seededMatchRefs binds the echoed value to the record identity the server issued', () => {
   const refs = seededMatchRefs({
-    unfilteredText: '[{"ref":"r-match","customer":"Ada Lovelace"},{"ref":"r-decoy","customer":"zzz-decoy-X"}]',
+    beforeText: '[]',
+    afterText: '[{"ref":"r-match","customer":"Ada Lovelace"},{"ref":"r-decoy","customer":"zzz-decoy-X"}]',
     field: 'customer',
     value: 'Ada Lovelace',
   });
   assert.deepEqual(refs, ['r-match']);
 });
 
+test('seededMatchRefs binds only the record that appeared AFTER the before listing, so a pre-existing row with the same value cannot stand in (mwg-train-rssc)', () => {
+  // The harness's own create journey writes the brief's record first, WITH the echoed value. If the
+  // search seed then fails to persist, the listing still holds a row carrying that value - and taking
+  // every matching row let that stale record answer for the seed.
+  const refs = seededMatchRefs({
+    beforeText: '[{"ref":"r-old","customer":"Ada Lovelace"}]',
+    afterText: '[{"ref":"r-old","customer":"Ada Lovelace"},{"ref":"r-new","customer":"Ada Lovelace"},{"ref":"r-decoy","customer":"zzz-decoy-X"}]',
+    field: 'customer',
+    value: 'Ada Lovelace',
+  });
+  assert.deepEqual(refs, ['r-new']);
+});
+
+test('seededMatchRefs binds nothing when the seed did not persist, even though a pre-existing row holds the value', () => {
+  const refs = seededMatchRefs({
+    beforeText: '[{"ref":"r-old","customer":"Ada Lovelace"}]',
+    afterText: '[{"ref":"r-old","customer":"Ada Lovelace"},{"ref":"r-decoy","customer":"zzz-decoy-X"}]',
+    field: 'customer',
+    value: 'Ada Lovelace',
+  });
+  assert.deepEqual(refs, []);
+});
+
 test('seededMatchRefs binds nothing from a listing it cannot read, a value no row holds, or no seeded value', () => {
-  assert.deepEqual(seededMatchRefs({ unfilteredText: 'not json', field: 'customer', value: 'Ada Lovelace' }), []);
-  assert.deepEqual(seededMatchRefs({ unfilteredText: '[{"ref":"r-decoy","customer":"zzz-decoy-X"}]', field: 'customer', value: 'Ada Lovelace' }), []);
-  assert.deepEqual(seededMatchRefs({ unfilteredText: '[{"ref":"r-match","customer":"Ada Lovelace"}]', field: 'customer', value: '' }), []);
+  assert.deepEqual(seededMatchRefs({ beforeText: 'not json', afterText: '[{"ref":"r-match","customer":"Ada Lovelace"}]', field: 'customer', value: 'Ada Lovelace' }), []);
+  assert.deepEqual(seededMatchRefs({ beforeText: '[]', afterText: 'not json', field: 'customer', value: 'Ada Lovelace' }), []);
+  assert.deepEqual(seededMatchRefs({ beforeText: '[]', afterText: '[{"ref":"r-decoy","customer":"zzz-decoy-X"}]', field: 'customer', value: 'Ada Lovelace' }), []);
+  assert.deepEqual(seededMatchRefs({ beforeText: '[]', afterText: '[{"ref":"r-match","customer":"Ada Lovelace"}]', field: 'customer', value: '' }), []);
 });
 
 test('seededMatchRefs falls back to the whole row when the listing renames the echoed field, and reads a wrapped body', () => {
   const refs = seededMatchRefs({
-    unfilteredText: '{"records":[{"id":"r-2","label":"Ada Lovelace"}]}',
+    beforeText: '{"records":[]}',
+    afterText: '{"records":[{"id":"r-2","label":"Ada Lovelace"}]}',
     field: 'customer',
     value: 'Ada Lovelace',
   });
@@ -59,21 +85,65 @@ test('searchVerdict passes when the container holds the expected tokens, hides t
     unfilteredText: '[{"note":"organic-apples-abc123"},{"note":"zzz-unmatched-abc123"}]',
     includes: ['organic-apples-abc123'],
     excludes: ['zzz-unmatched-abc123'],
+    matchRefs: ['ref-1'],
   });
-  assert.equal(verdict.passed, true);
+  assert.equal(verdict.passed, true, JSON.stringify(verdict.detail));
   assert.deepEqual(verdict.detail.includesMissing, []);
   assert.deepEqual(verdict.detail.excludesLeaked, []);
   assert.deepEqual(verdict.detail.controlMissing, []);
   assert.deepEqual(verdict.detail.filteredRefs, ['ref-1']);
 });
 
+test('searchVerdict fails closed when the seeded record identity is unbound (mwg-train-rssc)', () => {
+  // An unreadable listing, a seed that did not persist, or a results container the driver could not
+  // bind to a stored record all leave matchRefs empty. The old verdict then fell through to
+  // "non-empty results contain the query words", which a page echoing the query satisfies.
+  const verdict = searchVerdict({
+    containerFound: true,
+    filteredText: 'Search for Ada Lovelace: Ada Lovelace',
+    filteredRefs: ['r-any'],
+    unfilteredText: '[{"ref":"r-match","customer":"Ada Lovelace"},{"ref":"r-decoy","customer":"zzz-decoy-X"}]',
+    includes: ['Ada Lovelace'],
+    excludes: ['zzz-decoy-X'],
+    matchRefs: [],
+  });
+  assert.equal(verdict.passed, false, 'a search whose seeded record was never bound is not proven');
+  assert.equal(verdict.detail.matchRefBound, false);
+  assert.equal(verdict.detail.matchRefMissing, false);
+  assert.deepEqual(verdict.detail.matchRefHits, []);
+});
+
+test('searchVerdict fails when a pre-existing record with the seeded value comes back instead of the newly seeded one (mwg-train-rssc)', () => {
+  // before/after listings prove WHICH record this journey seeded: r-new. The results page returns the
+  // record an earlier journey already stored (r-old), which carries the same echoed value.
+  const beforeText = '[{"ref":"r-old","customer":"Ada Lovelace"}]';
+  const afterText = '[{"ref":"r-old","customer":"Ada Lovelace"},{"ref":"r-new","customer":"Ada Lovelace"},{"ref":"r-decoy","customer":"zzz-decoy-X"}]';
+  const matchRefs = seededMatchRefs({ beforeText, afterText, field: 'customer', value: 'Ada Lovelace' });
+  assert.deepEqual(matchRefs, ['r-new']);
+  const verdict = searchVerdict({
+    containerFound: true,
+    filteredText: 'Search for Ada Lovelace: Ada Lovelace',
+    filteredRefs: ['r-old'],
+    unfilteredText: afterText,
+    includes: ['Ada Lovelace'],
+    excludes: ['zzz-decoy-X'],
+    matchRefs,
+  });
+  assert.equal(verdict.passed, false, 'an earlier record is not evidence that the search seed persisted');
+  assert.equal(verdict.detail.matchRefBound, true);
+  assert.equal(verdict.detail.matchRefMissing, true);
+  assert.deepEqual(verdict.detail.matchRefHits, []);
+});
+
 test('searchVerdict fails when an expected token is missing from the filtered results', () => {
   const verdict = searchVerdict({
     containerFound: true,
     filteredText: 'Results: nothing relevant',
+    filteredRefs: ['r-1'],
     unfilteredText: 'wanted-token zzz-unmatched',
     includes: ['wanted-token'],
     excludes: ['zzz-unmatched'],
+    matchRefs: ['r-1'],
   });
   assert.equal(verdict.passed, false);
   assert.deepEqual(verdict.detail.includesMissing, ['wanted-token']);
@@ -83,9 +153,11 @@ test('searchVerdict fails when an excluded token leaks into the filtered results
   const verdict = searchVerdict({
     containerFound: true,
     filteredText: 'organic-apples zzz-unmatched',
+    filteredRefs: ['r-1'],
     unfilteredText: 'organic-apples zzz-unmatched',
     includes: ['organic-apples'],
     excludes: ['zzz-unmatched'],
+    matchRefs: ['r-1'],
   });
   assert.equal(verdict.passed, false);
   assert.deepEqual(verdict.detail.excludesLeaked, ['zzz-unmatched']);
@@ -95,9 +167,11 @@ test('searchVerdict fails when the excluded token is absent from the UNFILTERED 
   const verdict = searchVerdict({
     containerFound: true,
     filteredText: 'organic-apples',
+    filteredRefs: ['r-1'],
     unfilteredText: 'organic-apples only',
     includes: ['organic-apples'],
     excludes: ['zzz-unmatched'],
+    matchRefs: ['r-1'],
   });
   assert.equal(verdict.passed, false);
   assert.deepEqual(verdict.detail.controlMissing, ['zzz-unmatched']);
@@ -108,9 +182,11 @@ test('searchVerdict fails when the results container never rendered, even if the
   const verdict = searchVerdict({
     containerFound: false,
     filteredText: 'organic-apples',
+    filteredRefs: ['r-1'],
     unfilteredText: 'organic-apples zzz-unmatched',
     includes: ['organic-apples'],
     excludes: ['zzz-unmatched'],
+    matchRefs: ['r-1'],
   });
   assert.equal(verdict.passed, false);
   assert.equal(verdict.detail.containerFound, false);
@@ -120,9 +196,11 @@ test('searchVerdict fails with no excluded token at all: a search with nothing t
   const verdict = searchVerdict({
     containerFound: true,
     filteredText: 'organic-apples',
+    filteredRefs: ['r-1'],
     unfilteredText: 'organic-apples',
     includes: ['organic-apples'],
     excludes: [],
+    matchRefs: ['r-1'],
   });
   assert.equal(verdict.passed, false);
 });
@@ -131,9 +209,11 @@ test('searchVerdict reports every missing and leaked token when several are decl
   const verdict = searchVerdict({
     containerFound: true,
     filteredText: 'alpha beta-out',
+    filteredRefs: ['r-1'],
     unfilteredText: 'alpha beta-out gamma-out',
     includes: ['alpha', 'beta', 'gamma'],
     excludes: ['beta-out', 'gamma-out'],
+    matchRefs: ['r-1'],
   });
   assert.equal(verdict.passed, false);
   // Substring matching: 'beta-out' contains 'beta', so only 'gamma' is reported missing.
@@ -147,7 +227,7 @@ test('searchVerdict fails on an empty result list under a page that echoes the q
   // on the server, and the includes/excludes/control assertions all line up. Before the identity check,
   // this passed - the query echo was doing all the work.
   const unfilteredText = '[{"ref":"r-match","customer":"Ada Lovelace"},{"ref":"r-decoy","customer":"zzz-decoy-X"}]';
-  const matchRefs = seededMatchRefs({ unfilteredText, field: 'customer', value: 'Ada Lovelace' });
+  const matchRefs = seededMatchRefs({ beforeText: '[]', afterText: unfilteredText, field: 'customer', value: 'Ada Lovelace' });
   assert.deepEqual(matchRefs, ['r-match']);
   const verdict = searchVerdict({
     containerFound: true,
@@ -171,9 +251,10 @@ test('searchVerdict fails when the results container exposes no returned record 
     containerFound: true,
     filteredText: 'Search for Ada Lovelace',
     filteredRefs: [],
-    unfilteredText: '[{"customer":"Ada Lovelace"},{"customer":"zzz-decoy-X"}]',
+    unfilteredText: '[{"ref":"r-match","customer":"Ada Lovelace"},{"ref":"r-decoy","customer":"zzz-decoy-X"}]',
     includes: ['Ada Lovelace'],
     excludes: ['zzz-decoy-X'],
+    matchRefs: ['r-match'],
   });
   assert.equal(verdict.passed, false);
   assert.equal(verdict.detail.refsObserved, false);

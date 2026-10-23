@@ -114,27 +114,37 @@ function refList(refs) {
 }
 
 /**
- * The identities of the record(s) the flow itself SEEDED, bound from the server's own unfiltered
- * listing rather than invented by the driver. `field` is the echoed field the flow wrote and `value`
- * the value it wrote there, so the row that carries it is the record the query must return; a row
- * whose named field disagrees with `value` is not a match, and only when the listing renames that
- * field does the whole row's string values stand in.
+ * The identities of the record the flow itself just SEEDED, bound from the server's own listings
+ * rather than invented by the driver. `field` is the echoed field the flow wrote and `value` the
+ * value it wrote there, so the row that carries it is the record the query must return; a row whose
+ * named field disagrees with `value` is not a match, and only when the listing renames that field
+ * does the whole row's string values stand in.
  *
- * A listing this harness cannot read binds nothing: the verdict then falls back to the weaker
- * "some record identity came back" assertion rather than passing on text alone.
+ * The match must be the record seeded by THIS flow, not merely a row that holds the same value: an
+ * earlier journey in the same project writes the brief's own record first, so "some row carries the
+ * value" is satisfied by a record that was already stored and whose persistence says nothing about
+ * this seed. `beforeText` is the listing read immediately BEFORE the seed and `afterText` the one
+ * read after it; only identities that appear in the after listing and not in the before listing can
+ * be the newly seeded record.
+ *
+ * Either listing being unreadable binds nothing, and the verdict fails closed rather than falling
+ * back to the weaker "some record identity came back" assertion.
  */
-export function seededMatchRefs({ unfilteredText, field, value }) {
+export function seededMatchRefs({ beforeText, afterText, field, value }) {
   if (typeof value !== 'string' || value === '') return [];
-  const rows = parseRecordRows(typeof unfilteredText === 'string' ? unfilteredText : '') ?? [];
+  const beforeRows = parseRecordRows(typeof beforeText === 'string' ? beforeText : '');
+  const afterRows = parseRecordRows(typeof afterText === 'string' ? afterText : '');
+  if (!beforeRows || !afterRows) return [];
+  const preexisting = new Set(beforeRows.map(recordRef).filter(Boolean));
   const refs = [];
-  for (const row of rows) {
+  for (const row of afterRows) {
     if (!row || typeof row !== 'object' || Array.isArray(row)) continue;
     const holdsValue = field && Object.hasOwn(row, field)
       ? String(row[field] ?? '') === value
       : Object.values(row).some((cell) => typeof cell === 'string' && cell === value);
     if (!holdsValue) continue;
     const ref = recordRef(row);
-    if (ref && !refs.includes(ref)) refs.push(ref);
+    if (ref && !preexisting.has(ref) && !refs.includes(ref)) refs.push(ref);
   }
   return refs;
 }
@@ -150,8 +160,12 @@ export function seededMatchRefs({ unfilteredText, field, value }) {
  * The text assertions alone cannot show that a STORED matching record came back: a results page that
  * echoes the query in its own heading and renders an empty list satisfies every one of them. So the
  * observed result identities (`filteredRefs`, the results container's `[data-ref]` values) must be
- * non-empty when `includes` is declared, and when the caller can name the seeded record's identity
- * (`matchRefs`, from `seededMatchRefs`) at least one of them must be among the observed ones.
+ * non-empty when `includes` is declared, and `matchRefs` - the identity of the record this journey
+ * seeded, from `seededMatchRefs` - must be non-empty and one of the observed identities.
+ *
+ * An unbound `matchRefs` fails the verdict: a search whose seeded record the harness could not name
+ * has not been shown to return that record, and the weaker text-and-non-empty-result check is the
+ * check a query echo passes.
  */
 export function searchVerdict({
   containerFound,
@@ -173,12 +187,14 @@ export function searchVerdict({
   const wantedRefs = refList(matchRefs);
   const matchRefHits = wantedRefs.filter((ref) => observedRefs.includes(ref));
   const refsObserved = observedRefs.length > 0;
-  const matchRefMissing = wantedRefs.length > 0 && matchRefHits.length === 0;
+  const matchRefBound = wantedRefs.length > 0;
+  const matchRefMissing = matchRefBound && matchRefHits.length === 0;
   const passed =
     containerFound === true &&
     includes.length > 0 &&
     includesMissing.length === 0 &&
     refsObserved &&
+    matchRefBound &&
     !matchRefMissing &&
     excludesLeaked.length === 0 &&
     excludes.length > 0 &&
@@ -195,6 +211,7 @@ export function searchVerdict({
       filteredRefs: observedRefs,
       refsObserved,
       matchRefs: wantedRefs,
+      matchRefBound,
       matchRefHits,
       matchRefMissing,
     },
@@ -521,8 +538,10 @@ async function driveWriteJourney(page, base, writeJourney) {
  *
  * The token is seeded into the journey's ECHOED field (`seedField`, the field the record page shows
  * back): that is the one field the harness knows becomes searchable record text. That seeded value is
- * then bound to the record identity the server itself issued, so the verdict asks for THAT record
- * rather than for words the results page can echo on its own.
+ * then bound to the record identity the server issued AFTER the seed and did not list before it, so
+ * the verdict asks for THAT record rather than for words the results page can echo on its own or for
+ * an earlier record holding the same value. A seed the harness cannot bind that way fails the
+ * verdict: there is no weaker check left that a query echo does not satisfy.
  */
 export async function driveSearchJourney(page, base, journey, search, { seedField }) {
   if (!seedField) throw new Error('search journey: the journey has no echoed field to seed through');
@@ -579,6 +598,14 @@ export async function driveSearchJourney(page, base, journey, search, { seedFiel
     }
     await page.submit(journey.formSelector ?? 'form');
   };
+  // Read what the server holds BEFORE seeding: the search must return the record seeded HERE, so a
+  // record already carrying the same echoed value (the brief's own create journey writes one first)
+  // must not be able to stand in for a seed that never persisted (mwg-train-rssc).
+  const before = await page.evaluate(`
+    const response = await fetch('/api/records');
+    return { status: response.status, body: (await response.text()).slice(0, 20000) };
+  `);
+
   await seedRecord(false);
   await seedRecord(true);
 
@@ -590,13 +617,15 @@ export async function driveSearchJourney(page, base, journey, search, { seedFiel
   `);
 
   // Which stored record must come back: the one this journey just seeded with the echoed value, read back
-  // as the identity the server handed out. Without it the verdict can only ask whether the words appeared -
+  // as the identity the server handed out. Only an identity that appears after the seed and not in the
+  // before listing can be that record. Without it the verdict can only ask whether the words appeared -
   // and a page heading that echoes the query answers that with an empty result list underneath it
   // (mwg-train-rssc).
   const seedSelector = Object.keys(journey.fill ?? {}).find((selector) => selectorFieldName(selector) === seedField);
   const seededValue = seedSelector ? String(valuesFor(false)[seedSelector]) : journey.expectText;
   const matchRefs = seededMatchRefs({
-    unfilteredText: unfiltered.status === 200 ? unfiltered.body : '',
+    beforeText: before.status === 200 ? before.body : '',
+    afterText: unfiltered.status === 200 ? unfiltered.body : '',
     field: seedField,
     value: seededValue,
   });
@@ -630,7 +659,8 @@ export async function driveSearchJourney(page, base, journey, search, { seedFiel
   return {
     name: 'search',
     path: url,
-    seeded: { match: 'the brief\'s own create journey', decoy: decoyToken },
+    seeded: { match: 'the brief\'s own create journey', decoy: decoyToken, matchRefs },
+    beforeStatus: before.status,
     unfilteredStatus: unfiltered.status,
     containerFound,
     verdict,
