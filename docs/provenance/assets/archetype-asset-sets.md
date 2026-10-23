@@ -15,7 +15,7 @@ store, the register or the target have moved apart.
 | Set | Brand | Palette colours | Copy documents | State boards | Brand adjudicated |
 | --- | --- | ---: | ---: | ---: | --- |
 | `account-recovery/set.json` | _deliberately unbranded_ | 10 | 2 | 3 | yes (deliberately unbranded) |
-| `booking/set.json` | `Evening Class Studio` | 25 | 4 | 5 | **yes** (see decisions.json) |
+| `booking/set.json` | `Evening Class Studio` (variants: `Learning Hub`) | 25 | 4 | 5 | **yes** (see decisions.json) |
 | `catalogue/set.json` | `Kiln & Copper` | 29 | 4 | 3 | no |
 | `contact-lead/set.json` | `ARKHITECTS Studio` | 22 | 3 | 3 | no |
 | `event-registration/set.json` | `Future Web 2026` | 10 | 2 | 3 | **yes** (see decisions.json) |
@@ -35,11 +35,11 @@ store, the register or the target have moved apart.
 ### booking
 
 - Target: `docs/design/archetypes/booking`
-- Readme: `docs/design/archetypes/booking/README.md` (sha256 `893ba3438701fef6f9ece600e47c9e1ea6be0f08aa5096e61c286478526dc6c7`)
+- Readme: `docs/design/archetypes/booking/README.md` (sha256 `3387e345eca1d6a83e7fdf617e368046063670f34db556a455ac29196cacdb44`)
 - Stylesheet: `docs/design/archetypes/booking/demo/styles.css` (sha256 `b0fba0e3633d6b7c8d1098729c32c2431f07e4e672094d91753e3f38328b71a3`)
 - Documents: `docs/design/archetypes/booking/demo/compare.html`, `docs/design/archetypes/booking/demo/confirmation.html`, `docs/design/archetypes/booking/demo/empty.html`, `docs/design/archetypes/booking/demo/index.html`
 - Rights: `excluded_from_training: true`, `approved_for_training: false` from `docs/design/archetypes/booking/README.md:7`
-- Brand: `Evening Class Studio` (adjudicated: Owner decision (Paul Kinlan, 2026-10-13): 'we probably need both'. The booking archetype retains both brands: 'Evening Class Studio' serves as the primary brand matching the visual reference boards and headings, while 'Learning Hub' is retained as the companion/variant brand from the demo implementation. Both brands are valid and preserved in the archetype. — 2026-10-13)
+- Brand: `Evening Class Studio` with supported variants `Learning Hub` (adjudicated: Owner decision (Paul Kinlan, 2026-10-13): 'we probably need both'. The booking archetype keeps both brands rather than resolving to one: 'Evening Class Studio' is the primary brand, the name in this archetype's own heading and on all five reference boards, and 'Learning Hub' is a supported variant of the same archetype - the brand the interactive demo's product pages state in their own titles. A build renders the primary brand unless it is deliberately building the Learning Hub variant, and the demo is not drift to be renamed. — 2026-10-13)
 - Boards: `step1-browse.jpg` sha256 `807321bfa27cf76aa50e0c6003486e5b14de83a2ff84a019465d824fce24de0c`; `step2-form.jpg` sha256 `0b6e5cefb03cd40201a0fc5ae1a7b22c8b7627231d14d8669aef3837b431f6df`; `step3-confirmation.jpg` sha256 `c7fb544c6d12593de72dffad6ddb974c71a19c9a1f64f39a4f47765bc6eeae8d`; `step4-error.jpg` sha256 `94ba77e82cb82c54fe13ad1bd3a0eb47fc13eda81213e79f323a2a176a3e541c`; `step5-empty.jpg` sha256 `f3ccd1a115af983f0a9903f14725c7747d9d77a0f193eaaa61bc2923bc5ecc56`
 
 ### catalogue

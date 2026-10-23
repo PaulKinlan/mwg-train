@@ -75,15 +75,15 @@ export function hasArchetypeSet(archetype, { root = REPO_ROOT } = {}) {
 }
 
 /**
- * A decision the store's own author recorded where the accepted target contradicts itself.
+ * A decision the store's own author recorded where the accepted target states more than one brand.
  *
- * `decisions.json` is the only hand-written file in the store, and it carries no structured state: the
- * provenance is prose that states PROVISIONAL in capitals when the value is a lane recommendation
- * rather than an owner decision. That is why this reads the marker rather than a field, and why the
- * state it produces is reported to the caller instead of being acted on quietly. (The file's own
- * $comment promises that check:archetype-assets fails on an unadjudicated or stale decision; that check
- * reads neither this file nor the marker today, which is a gap this module does not paper over: it
- * simply refuses to pretend the brand is settled.)
+ * `decisions.json` is the only hand-written file in the store, and its provenance is prose that states
+ * PROVISIONAL in capitals when the value is a lane recommendation rather than an owner decision. That is why
+ * this reads the marker rather than a field, and why the state it produces is reported to the caller instead
+ * of being acted on quietly: a name Paul has not confirmed must not be presented as settled. Booking's brand
+ * is confirmed - the owner kept both names ('we probably need both', mwg-train-4xg) - so its primary brand is
+ * confirmed and its second brand is listed in `variants`. `check:archetype-assets` reads this file for the
+ * primary brand and its variants, but not for the marker, so the marker is surfaced here rather than assumed.
  */
 function readAdjudication(dir) {
   const path = join(dir, DECISIONS_FILE);
@@ -129,6 +129,14 @@ export function loadArchetypeSet(archetype, { root = REPO_ROOT, verifyImages = t
   const mark = brand.mark?.value ?? null;
   if (mark !== null) {
     require(typeof mark === 'string' && /^\s*<svg[\s>]/.test(mark), `the mark recorded for '${archetype}' is not an inline svg fragment`);
+  }
+  // Brand identities the archetype keeps beside its primary one, declared in decisions.json and extracted
+  // into the set. A build renders `site_name` by default; a build deliberately rendering a variant can see
+  // that the name is supported instead of looking like it invented a second brand (booking: mwg-train-4xg).
+  const variants = brand.variants ?? [];
+  require(Array.isArray(variants), `the brand variants of '${archetype}' are not a list`);
+  for (const variant of variants) {
+    require(typeof variant === 'string' && variant.trim() !== '', `the asset set for '${archetype}' lists a brand variant with no name`);
   }
 
   const tokens = set.tokens ?? {};
@@ -191,6 +199,7 @@ export function loadArchetypeSet(archetype, { root = REPO_ROOT, verifyImages = t
     brand: {
       state: brandless ? 'brandless' : 'named',
       name: brandless ? null : brand.site_name,
+      variants,
       mark,
       // A mark that pulls a symbol in from the target's own page (<use href="#mark-studio">) is still
       // recorded, but it is not self-contained: emitting it into a different document renders nothing.
@@ -283,9 +292,10 @@ export function renderTokenDeclarations(set, { indent = '  ' } = {}) {
 /**
  * The brand a build carries: the archetype's own name and mark, or an explicit 'this target has none'.
  *
- * The adjudication state travels with it. A name Paul has not confirmed is usable evidence for a build
- * but it must not be presented as settled, so a consumer that records what it built can record that
- * too, and mwg-train-4xg stays the thing that resolves it.
+ * The adjudication state travels with it. A name that is still a lane recommendation is usable evidence for a
+ * build but it must not be presented as settled, so a consumer that records what it built can record that
+ * too. Booking's brand is settled and dual: 'Evening Class Studio' is primary and 'Learning Hub' a supported
+ * variant (owner decision, mwg-train-4xg).
  */
 export function brandFor(set) {
   return {

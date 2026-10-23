@@ -27,14 +27,14 @@ The accepted target is deliberately unbranded: it names no site, and the store r
 - `Account recovery` — from `docs/design/archetypes/account-recovery/demo/index.html:7` (demo-title, weak candidate)
 - `Reset Your Password` — from `docs/design/archetypes/account-recovery/demo/index.html:16` (demo-heading, weak candidate)
 
-
 Recorded on 2026-10-11: deliberately unbranded. The accepted target depicts an unbranded journey: its demo carries no brand element, its own heading is 'Reset Your Password', and its README names no site. The store records the absence rather than inventing a brand the design never had - a framework build for this archetype should look like the target, and the target has no site name to render.
 
 ## The one hand-written file
 
 `decisions.json` is the only file here that is not generated, and it exists only where the target does not speak
-with one voice about its own brand: it records which candidate was chosen - or that the target is deliberately
-unbranded - why, and when, so the ambiguity is adjudicated in the open instead of being resolved by whichever value
-the extractor happened to read last. When the target stops being ambiguous the decision becomes stale and
+with one voice about its own brand: it records which candidate is the primary brand - or that the target is
+deliberately unbranded - which candidates are supported variants that coexist with it, why, and when, so the
+ambiguity is adjudicated in the open instead of being resolved by whichever value the extractor happened to read
+last. When the target stops being ambiguous the decision becomes stale and
 `check:archetype-assets` fails until it is deleted.
 

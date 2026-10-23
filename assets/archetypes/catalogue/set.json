@@ -32,6 +32,7 @@
   "brand": {
     "site_name": "Kiln & Copper",
     "brandless": false,
+    "variants": [],
     "candidates": [
       {
         "value": "Kiln & Copper",
@@ -102,6 +103,7 @@
     "cart.html": {
       "title": "Your Cart — Kiln &amp; Copper (static variant)",
       "lang": "en",
+      "brand": "Kiln & Copper",
       "strings": [
         "Slide-over cart drawer",
         "Static variant of board 2: the drawer over the dimmed catalogue. Every line, price and total below is hand-written markup, not your saved cart.",
@@ -168,6 +170,7 @@
     "compare.html": {
       "title": "Visual Design Comparison — Catalogue Archetype",
       "lang": "en",
+      "brand": null,
       "strings": [
         "Visual design reference comparison",
         "Each reference board from",
@@ -188,6 +191,7 @@
     "empty.html": {
       "title": "No Matches — Kiln &amp; Copper (static variant)",
       "lang": "en",
+      "brand": "Kiln & Copper",
       "strings": [
         "Search the catalogue",
         "Static variant of board 3: a search that matched nothing, with the category filters still in place. Submitting the form here hands the query to the live demo at",
@@ -221,6 +225,7 @@
     "index.html": {
       "title": "Kiln &amp; Copper — Ceramics &amp; Kiln Parts Catalogue",
       "lang": "en",
+      "brand": "Kiln & Copper",
       "strings": [
         "Cart",
         "0",

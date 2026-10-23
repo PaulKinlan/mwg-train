@@ -28,6 +28,7 @@
   "brand": {
     "site_name": "ARKHITECTS Studio",
     "brandless": false,
+    "variants": [],
     "candidates": [
       {
         "value": "ARKHITECTS Studio",
@@ -91,6 +92,7 @@
     "compare.html": {
       "title": "Visual design comparison — Contact-lead archetype",
       "lang": "en",
+      "brand": null,
       "strings": [
         "Visual design reference comparison",
         "Each reference board from",
@@ -113,6 +115,7 @@
     "index.html": {
       "title": "ARKHITECTS Studio — Request a consultation",
       "lang": "en",
+      "brand": "ARKHITECTS Studio",
       "strings": [
         "ARKHITECTS",
         "Studio",
@@ -169,6 +172,7 @@
     "success.html": {
       "title": "Consultation Request Received — ARKHITECTS Studio",
       "lang": "en",
+      "brand": "ARKHITECTS Studio",
       "strings": [
         "Sample view — this page was opened directly rather than submitted, so the details below are the reference board's illustrative example, not an enquiry you sent.",
         "JavaScript is off, so this page cannot read your answers back out of the URL. The details below are the reference board's illustrative example, not necessarily your enquiry.",

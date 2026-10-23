@@ -4,7 +4,7 @@
     "target_dir": "docs/design/archetypes/booking",
     "readme": {
       "path": "docs/design/archetypes/booking/README.md",
-      "sha256": "893ba3438701fef6f9ece600e47c9e1ea6be0f08aa5096e61c286478526dc6c7"
+      "sha256": "3387e345eca1d6a83e7fdf617e368046063670f34db556a455ac29196cacdb44"
     },
     "documents": [
       {
@@ -32,6 +32,9 @@
   "brand": {
     "site_name": "Evening Class Studio",
     "brandless": false,
+    "variants": [
+      "Learning Hub"
+    ],
     "candidates": [
       {
         "value": "Learning Hub",
@@ -84,7 +87,10 @@
     "decided": {
       "siteName": "Evening Class Studio",
       "brandless": false,
-      "because": "Owner decision (Paul Kinlan, 2026-10-13): 'we probably need both'. The booking archetype retains both brands: 'Evening Class Studio' serves as the primary brand matching the visual reference boards and headings, while 'Learning Hub' is retained as the companion/variant brand from the demo implementation. Both brands are valid and preserved in the archetype.",
+      "variants": [
+        "Learning Hub"
+      ],
+      "because": "Owner decision (Paul Kinlan, 2026-10-13): 'we probably need both'. The booking archetype keeps both brands rather than resolving to one: 'Evening Class Studio' is the primary brand, the name in this archetype's own heading and on all five reference boards, and 'Learning Hub' is a supported variant of the same archetype - the brand the interactive demo's product pages state in their own titles. A build renders the primary brand unless it is deliberately building the Learning Hub variant, and the demo is not drift to be renamed.",
       "decided_on": "2026-10-13"
     }
   },
@@ -126,6 +132,7 @@
     "compare.html": {
       "title": "Visual Design Comparison — Booking Archetype",
       "lang": "en",
+      "brand": null,
       "strings": [
         "Visual Design Reference Comparison",
         "Side-by-side audit mapping the Nano Banana visual reference boards to the implemented booking design target."
@@ -137,6 +144,7 @@
     "confirmation.html": {
       "title": "Booking Confirmation &amp; Receipt — Learning Hub",
       "lang": "en",
+      "brand": "Learning Hub",
       "strings": [
         "Booking Confirmation & Receipt",
         "Step 3: Verified Pass & Class Schedule",
@@ -159,6 +167,7 @@
     "empty.html": {
       "title": "Schedule Availability — Learning Hub",
       "lang": "en",
+      "brand": "Learning Hub",
       "strings": [
         "Find Your Next Evening Class",
         "Weekly Class Schedule & Availability",
@@ -172,6 +181,7 @@
     "index.html": {
       "title": "Evening Class Booking — Learning Hub",
       "lang": "en",
+      "brand": "Learning Hub",
       "strings": [
         "Find Your Next Evening Class",
         "Step 2: Details & Registration",

@@ -23,6 +23,7 @@ import {
   extractTokens,
   inspectCommitted,
   renderRegister,
+  renderStoreReadme,
   setDocument,
   setProblems,
   sha256,
@@ -165,6 +166,54 @@ test('an adjudicated conflict resolves, and every way it can go stale is a findi
       assert.deepEqual(contradicting.brand.strong, ['Learning Hub']);
       assert.ok(contradicting.brand.distinct.includes('Evening Class Studio'), 'it survives as a weak candidate, which is how this hid before');
       assert.equal(setProblems(contradicting).filter((problem) => problem.includes('contradicts it')).length, 1, 'a decision contradicting the target single brand is a finding');
+    },
+  );
+});
+
+test('a brand the target keeps beside its primary one is a declared variant, not an unresolved conflict', () => {
+  withTarget(
+    {
+      readme: `# Visual reference: Booking (Evening Class Studio)\n\n${RIGHTS_README}`,
+      indexHtml: '<title>Booking Confirmation &amp; Receipt — Learning Hub</title><a class="brand"><span>Learning Hub</span></a><p>Book a class.</p>',
+      css: PALETTE,
+    },
+    (root) => {
+      mkdirSync(join(root, STORE_DIR, 'booking'), { recursive: true });
+      const decide = (entry) => writeFileSync(join(root, STORE_DIR, 'booking/decisions.json'), JSON.stringify({ brand: entry }));
+
+      // Before the decision the two strong candidates are an unadjudicated conflict - and the copy title that
+      // states the second brand is a finding too, because the set would publish a brand its copy contradicts.
+      const unresolved = buildAll(root, ['booking'])[0];
+      assert.equal(setProblems(unresolved).filter((problem) => problem.includes('has not been adjudicated')).length, 1);
+      assert.equal(setProblems(unresolved).filter((problem) => problem.includes('neither the set\'s brand nor a supported variant')).length, 1);
+
+      // The owner keeps both brands. The variant is declared, carried into the set and rendered as supported,
+      // rather than being resolved into a primary and a silent deletion of the second name.
+      decide({ siteName: 'Evening Class Studio', variants: ['Learning Hub'], because: "owner: 'we probably need both'", decided_on: '2026-10-13' });
+      const dual = buildAll(root, ['booking'])[0];
+      assert.deepEqual(setProblems(dual), [], 'a declared variant is not a problem');
+      const document = setDocument(dual);
+      assert.equal(document.brand.site_name, 'Evening Class Studio');
+      assert.deepEqual(document.brand.variants, ['Learning Hub'], 'the variant travels with the set');
+      assert.equal(document.copy['index.html'].brand, 'Learning Hub', 'the copy slot records the brand its title states');
+      const readme = renderStoreReadme(document, []);
+      assert.match(readme, /supported variants of the same archetype/);
+      assert.match(readme, /`Learning Hub` — the brand stated by `index.html`/);
+      assert.doesNotMatch(readme, /do not agree, which is recorded rather than resolved/, 'a declared variant is not left looking unresolved');
+
+      // A variant the target does not state is a claim about a product that no longer exists.
+      decide({ siteName: 'Evening Class Studio', variants: ['Neither Brand'], because: 'x', decided_on: '2026-10-13' });
+      const stale = buildAll(root, ['booking'])[0];
+      assert.equal(setProblems(stale).filter((problem) => problem.includes('does not state; the decision is stale')).length, 1);
+
+      // A name cannot be both the primary brand and its own variant.
+      decide({ siteName: 'Evening Class Studio', variants: ['Evening Class Studio'], because: 'x', decided_on: '2026-10-13' });
+      const sameBoth = buildAll(root, ['booking'])[0];
+      assert.equal(setProblems(sameBoth).filter((problem) => problem.includes('as both the site name and a supported variant')).length, 1);
+
+      // A brandless target has no primary brand for a variant to coexist with.
+      decide({ brandless: true, variants: ['Learning Hub'], because: 'x', decided_on: '2026-10-13' });
+      assert.throws(() => buildAll(root, ['booking']), /a brandless decision cannot also declare variants/);
     },
   );
 });

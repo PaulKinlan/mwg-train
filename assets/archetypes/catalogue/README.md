@@ -30,12 +30,12 @@ node scripts/build-archetype-assets.mjs --write --only catalogue
 
 
 
-
 ## The one hand-written file
 
 `decisions.json` is the only file here that is not generated, and it exists only where the target does not speak
-with one voice about its own brand: it records which candidate was chosen - or that the target is deliberately
-unbranded - why, and when, so the ambiguity is adjudicated in the open instead of being resolved by whichever value
-the extractor happened to read last. When the target stops being ambiguous the decision becomes stale and
+with one voice about its own brand: it records which candidate is the primary brand - or that the target is
+deliberately unbranded - which candidates are supported variants that coexist with it, why, and when, so the
+ambiguity is adjudicated in the open instead of being resolved by whichever value the extractor happened to read
+last. When the target stops being ambiguous the decision becomes stale and
 `check:archetype-assets` fails until it is deleted.
 

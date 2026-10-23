@@ -29,18 +29,18 @@ node scripts/build-archetype-assets.mjs --write --only booking
 - `Evening Class Booking` — from `docs/design/archetypes/booking/demo/index.html:7` (demo-title, weak candidate)
 - `Find Your Next Evening Class` — from `docs/design/archetypes/booking/demo/index.html:39` (demo-heading, weak candidate)
 
-Those candidates do not agree, which is recorded rather than resolved:
+The target states more than one brand, and the recorded decision keeps both rather than deleting one: **Evening Class Studio** is the primary brand a build renders, and these are supported variants of the same archetype:
 
-- `Learning Hub`
-- `Evening Class Studio`
+- `Learning Hub` — the brand stated by `confirmation.html`, `empty.html`, `index.html`
 
-Adjudicated on 2026-10-13: **Evening Class Studio**. Owner decision (Paul Kinlan, 2026-10-13): 'we probably need both'. The booking archetype retains both brands: 'Evening Class Studio' serves as the primary brand matching the visual reference boards and headings, while 'Learning Hub' is retained as the companion/variant brand from the demo implementation. Both brands are valid and preserved in the archetype.
+Adjudicated on 2026-10-13: **Evening Class Studio** (supported variants: `Learning Hub`). Owner decision (Paul Kinlan, 2026-10-13): 'we probably need both'. The booking archetype keeps both brands rather than resolving to one: 'Evening Class Studio' is the primary brand, the name in this archetype's own heading and on all five reference boards, and 'Learning Hub' is a supported variant of the same archetype - the brand the interactive demo's product pages state in their own titles. A build renders the primary brand unless it is deliberately building the Learning Hub variant, and the demo is not drift to be renamed.
 
 ## The one hand-written file
 
 `decisions.json` is the only file here that is not generated, and it exists only where the target does not speak
-with one voice about its own brand: it records which candidate was chosen - or that the target is deliberately
-unbranded - why, and when, so the ambiguity is adjudicated in the open instead of being resolved by whichever value
-the extractor happened to read last. When the target stops being ambiguous the decision becomes stale and
+with one voice about its own brand: it records which candidate is the primary brand - or that the target is
+deliberately unbranded - which candidates are supported variants that coexist with it, why, and when, so the
+ambiguity is adjudicated in the open instead of being resolved by whichever value the extractor happened to read
+last. When the target stops being ambiguous the decision becomes stale and
 `check:archetype-assets` fails until it is deleted.
 

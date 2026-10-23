@@ -231,6 +231,16 @@ Criterion 4 is the one that is easiest to fake and hardest to check: a reference
   password field and no security journey. The record names neither the cookie nor the failing attribute,
   and the pilot serves over `http://127.0.0.1`, where a `Secure` cookie cannot be set at all. This
   document therefore records the status and does not claim to know what produced it.
+- **The archetype carries two brand identities, and both are supported.** The owner decided on 2026-10-13
+  that booking keeps both brands rather than resolving to one ('we probably need both', bead `mwg-train-4xg`):
+  `Evening Class Studio` is the primary brand - this document's heading and the wordmark on all five reference
+  boards - and `Learning Hub` is a supported variant, the brand the `demo/` product pages state in their own
+  titles.
+  A build renders the primary brand unless it deliberately builds the variant, and records which; neither name is
+  drift to be renamed. The choice and the variant list are recorded in
+  [`assets/archetypes/booking/decisions.json`](../../../../assets/archetypes/booking/decisions.json), and
+  `npm run check:archetype-assets` fails if a copy slot states a brand that is neither the set's brand nor a
+  declared variant, or if a declared variant is no longer stated by the target.
 - **The visual target is hand-written and static.** `demo/` holds a browse-and-form page with a state
   switcher, a confirmation page and an empty page, plus `compare.html` and its stylesheet; the five boards
   are the reference pictures. The demo's own README records the boundaries: it is not the sealed

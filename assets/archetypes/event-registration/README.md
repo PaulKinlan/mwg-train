@@ -27,14 +27,14 @@ node scripts/build-archetype-assets.mjs --write --only event-registration
 - `Future Web 2026` — from `docs/design/archetypes/event-registration/demo/index.html:7` (demo-title, weak candidate)
 - `Future Web 2026` — from `docs/design/archetypes/event-registration/demo/index.html:15` (demo-heading, weak candidate)
 
-
 Adjudicated on 2026-10-11: **Future Web 2026**. The accepted target has no brand element. Its demo's own h1 names the event - 'Future Web 2026', with '24-25 October - Barbican Centre, London' - and for an event-registration site the event is the site's name. The candidate is weak (a heading can be a page title), which is exactly why the choice is recorded here with its evidence rather than extracted silently.
 
 ## The one hand-written file
 
 `decisions.json` is the only file here that is not generated, and it exists only where the target does not speak
-with one voice about its own brand: it records which candidate was chosen - or that the target is deliberately
-unbranded - why, and when, so the ambiguity is adjudicated in the open instead of being resolved by whichever value
-the extractor happened to read last. When the target stops being ambiguous the decision becomes stale and
+with one voice about its own brand: it records which candidate is the primary brand - or that the target is
+deliberately unbranded - which candidates are supported variants that coexist with it, why, and when, so the
+ambiguity is adjudicated in the open instead of being resolved by whichever value the extractor happened to read
+last. When the target stops being ambiguous the decision becomes stale and
 `check:archetype-assets` fails until it is deleted.
 

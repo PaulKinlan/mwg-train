@@ -1,11 +1,10 @@
 {
-  "$comment": "The only hand-written file in this store. It exists only where the accepted target contradicts itself, and check:archetype-assets fails while a contradiction is unadjudicated OR while a decision has gone stale. Delete it the moment the target speaks with one voice.",
+  "$comment": "The only hand-written file in this store. It exists only where the accepted target states more than one brand, and check:archetype-assets fails while a contradiction is unadjudicated OR while a decision has gone stale. `variants` lists the brand identities the archetype keeps beside its primary one (owner decision, mwg-train-4xg). Delete it the moment the target speaks with one voice.",
   "archetype": "booking",
   "brand": {
     "siteName": "Evening Class Studio",
-    "primaryBrand": "Evening Class Studio",
-    "variantBrand": "Learning Hub",
-    "because": "Owner decision (Paul Kinlan, 2026-10-13): 'we probably need both'. The booking archetype retains both brands: 'Evening Class Studio' serves as the primary brand matching the visual reference boards and headings, while 'Learning Hub' is retained as the companion/variant brand from the demo implementation. Both brands are valid and preserved in the archetype.",
+    "variants": ["Learning Hub"],
+    "because": "Owner decision (Paul Kinlan, 2026-10-13): 'we probably need both'. The booking archetype keeps both brands rather than resolving to one: 'Evening Class Studio' is the primary brand, the name in this archetype's own heading and on all five reference boards, and 'Learning Hub' is a supported variant of the same archetype - the brand the interactive demo's product pages state in their own titles. A build renders the primary brand unless it is deliberately building the Learning Hub variant, and the demo is not drift to be renamed.",
     "decided_on": "2026-10-13"
   }
 }

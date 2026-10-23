@@ -22,7 +22,10 @@
  *
  * Two files in the store are not derived from the target. `decisions.json` records an adjudication where the
  * target contradicts itself about its own brand - it is hand-written, deliberate, and the gate fails while a
- * contradiction is unadjudicated or while an adjudication has gone stale.
+ * contradiction is unadjudicated or while an adjudication has gone stale. A decision can also declare
+ * supported VARIANTS: brand identities the target keeps beside its primary one rather than resolving to it.
+ * Booking keeps both brands on the owner's decision ('we probably need both', mwg-train-4xg), so a second
+ * brand in a target is recorded as coexisting - never silently picked, and never treated as drift to delete.
  */
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
@@ -63,6 +66,12 @@ function lineOf(text, index) {
   let line = 1;
   for (let i = 0; i < index && i < text.length; i += 1) if (text[i] === '\n') line += 1;
   return line;
+}
+
+function unescapeEntities(value) {
+  return value
+    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, ' ');
 }
 
 /** Remove `<tag ...>...</tag>` blocks, e.g. scripts and stylesheets, so their text is never read as copy. */
@@ -212,9 +221,6 @@ export function extractTokens(css, source) {
  */
 export function extractBrand({ archetype, readme, readmePath, indexHtml, indexPath }) {
   const candidates = [];
-  const unescapeEntities = (value) => value
-    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, ' ');
   const textOf = (html) => html
     .replace(/<svg\b[\s\S]*?<\/svg>/gi, ' ')
     .replace(/<[^>]*>/g, '\n')
@@ -320,14 +326,26 @@ export function extractSet(root, id) {
   if (!indexRel) throw new Error(`${id}: the accepted target has no demo document to read`);
   const indexHtml = readFileSync(join(root, indexRel), 'utf8');
 
+  const brand = extractBrand({ archetype: id, readme, readmePath, indexHtml, indexPath: indexRel });
+  // A document's own title names the brand the page renders. Reading it here is what keeps a set from
+  // publishing a brand and copy slots that carry a different one: 'Booking Confirmation - Learning Hub' is
+  // honest once the decision declares Learning Hub a supported variant, and a finding when it does not.
+  const strongBrands = [...new Set(brand.candidates.filter((candidate) => candidate.strength === 'strong').map((candidate) => candidate.value))];
+
   const copy = {};
   for (const rel of documents) {
     const html = readFileSync(join(root, rel), 'utf8');
     const title = /<title>([^<]*)<\/title>/i.exec(html);
     const lang = /<html\b[^>]*\blang="([^"]*)"/i.exec(html);
+    const titleText = title ? unescapeEntities(title[1].trim()) : null;
+    const titleBrands = titleText === null ? [] : strongBrands.filter((value) => titleText.includes(value));
     copy[rel.split('/').pop()] = {
       title: title ? title[1].trim() : null,
       lang: lang ? lang[1] : null,
+      // The brand this document states in its own title, or null when it names none (a comparison page is
+      // the demo's apparatus and describes the artefact rather than adopting a name). Two matches are
+      // recorded as no single brand, because a title naming both does not tell a build which to render.
+      brand: titleBrands.length === 1 ? titleBrands[0] : null,
       strings: copyTexts(html).map((entry) => entry.text),
       // The comparison page is the demo's own apparatus - it shows the boards side by side. It carries
       // no archetype copy by design, so requiring copy from it would fail correct work.
@@ -341,7 +359,6 @@ export function extractSet(root, id) {
     ? extractTokens(readFileSync(join(root, stylesPath), 'utf8'), stylesPath)
     : { colors: {}, fonts: {}, source: null };
 
-  const brand = extractBrand({ archetype: id, readme, readmePath, indexHtml, indexPath: indexRel });
   const rights = extractRights(readme, readmePath);
 
   const targetDir = join(root, targetPath);
@@ -373,6 +390,10 @@ export function extractSet(root, id) {
 export function setProblems(set) {
   const problems = [];
   const decision = set.decision;
+  const variants = decision && !decision.brandless ? (decision.variants ?? []) : [];
+  const siteName = decision
+    ? (decision.brandless ? null : decision.siteName)
+    : (set.brand.strong.length === 1 ? set.brand.strong[0] : null);
   if (!decision) {
     if (set.brand.strong.length === 0) {
       problems.push('the target states no brand outright - no brand element and no heading parenthetical - so decisions.json has to record either the brand or that the target is deliberately unbranded; a page title is a description, not a site name');
@@ -397,11 +418,26 @@ export function setProblems(set) {
       );
     }
   }
+  // A declared variant is a brand the target keeps beside its primary one. Naming one the target does not
+  // state is a claim about a product that no longer exists, exactly like an unstated primary brand.
+  for (const variant of variants) {
+    if (variant === siteName) {
+      problems.push(`decisions.json lists ${JSON.stringify(variant)} as both the site name and a supported variant, so a build cannot tell which record to render`);
+    } else if (!set.brand.distinct.includes(variant)) {
+      problems.push(`decisions.json lists the brand variant ${JSON.stringify(variant)}, which the target does not state; the decision is stale`);
+    }
+  }
   if (Object.keys(set.tokens.colors).length === 0) problems.push('no palette: the target stylesheet declares no colour custom properties');
   if (Object.keys(set.tokens.fonts).length === 0) problems.push('no typography: the target stylesheet declares no font stack');
   if (Object.keys(set.copy).length === 0) problems.push('no copy: no demo document was read');
   for (const [document, entry] of Object.entries(set.copy)) {
     if (entry.strings.length === 0 && !entry.apparatus) problems.push(`${document}: no user-facing copy was extracted`);
+    // A page title carrying a second brand is only coherent if that brand is one the archetype supports.
+    // Otherwise the set publishes a brand plus copy that renders a different one, and two builds of the
+    // same archetype end up looking like two products.
+    if (entry.brand && entry.brand !== siteName && !variants.includes(entry.brand)) {
+      problems.push(`${document}: its title states the brand ${JSON.stringify(entry.brand)}, which is neither the set's brand nor a supported variant in decisions.json`);
+    }
   }
   if (set.images.length === 0) problems.push('no imagery: the target has no step board to extract');
   if (!set.rights) problems.push('no rights statement in the target: the set cannot inherit a rights boundary it was never given');
@@ -417,12 +453,16 @@ export function setDocument(set) {
   const siteName = decision
     ? (decision.brandless ? null : decision.siteName)
     : (set.brand.strong.length === 1 ? set.brand.strong[0] : null);
+  const variants = decision && !decision.brandless ? (decision.variants ?? []) : [];
   return {
     archetype: set.archetype,
     extracted_from: set.extracted_from,
     brand: {
       site_name: siteName,
       brandless: decision ? decision.brandless : false,
+      // The brand identities this archetype supports beside its primary one, declared in decisions.json.
+      // A build renders `site_name` unless it is deliberately building a variant, and records which.
+      variants,
       candidates: set.brand.candidates,
       conflicts: set.brand.conflicts,
       mark: set.brand.mark,
@@ -440,6 +480,18 @@ export function renderStoreReadme(document, problems) {
   const brandLine = brand.brandless
     ? 'The accepted target is deliberately unbranded: it names no site, and the store records that instead of inventing one.'
     : (brand.site_name ? `**${brand.site_name}**` : '**unresolved**');
+  const variants = brand.variants ?? [];
+  const renderedBy = (name) => Object.entries(document.copy)
+    .filter(([, slot]) => slot.brand === name)
+    .map(([page]) => `\`${page}\``);
+  const variantBlock = variants.length === 0 ? '' : `The target states more than one brand, and the recorded decision keeps both rather than deleting one: **${brand.site_name}** is the primary brand a build renders, and these are supported variants of the same archetype:
+
+${variants.map((name) => {
+    const pages = renderedBy(name);
+    return `- \`${name}\`${pages.length > 0 ? ` — the brand stated by ${pages.join(', ')}` : ''}`;
+  }).join('\n')}
+
+`;
   return `# ${document.archetype} asset set
 
 The shared assets for the \`${document.archetype}\` archetype: what every framework build for it draws
@@ -468,15 +520,15 @@ ${brandLine}
 
 ${brand.candidates.length === 0 ? 'No brand candidate was found in the target.' : brand.candidates.map((candidate) => `- \`${candidate.value}\` — from \`${candidate.source}\` (${candidate.kind}, ${candidate.strength} candidate)`).join('\n')}
 
-${brand.conflicts.length > 0 ? `Those candidates do not agree, which is recorded rather than resolved:\n\n${brand.conflicts.map((conflict) => conflict.values.map((value) => `- \`${value}\``).join('\n')).join('\n')}\n` : ''}
-${brand.decided ? `${brand.decided.brandless ? 'Recorded on' : 'Adjudicated on'} ${brand.decided.decided_on}: ${brand.decided.brandless ? 'deliberately unbranded' : `**${brand.decided.siteName}**`}. ${brand.decided.because}` : ''}
+${brand.conflicts.length > 0 && variants.length === 0 ? `Those candidates do not agree, which is recorded rather than resolved:\n\n${brand.conflicts.map((conflict) => conflict.values.map((value) => `- \`${value}\``).join('\n')).join('\n')}\n\n` : ''}${variantBlock}${brand.decided ? `${brand.decided.brandless ? 'Recorded on' : 'Adjudicated on'} ${brand.decided.decided_on}: ${brand.decided.brandless ? 'deliberately unbranded' : `**${brand.decided.siteName}**`}${variants.length > 0 ? ` (supported variants: ${variants.map((name) => `\`${name}\``).join(', ')})` : ''}. ${brand.decided.because}` : ''}
 
 ## The one hand-written file
 
 \`decisions.json\` is the only file here that is not generated, and it exists only where the target does not speak
-with one voice about its own brand: it records which candidate was chosen - or that the target is deliberately
-unbranded - why, and when, so the ambiguity is adjudicated in the open instead of being resolved by whichever value
-the extractor happened to read last. When the target stops being ambiguous the decision becomes stale and
+with one voice about its own brand: it records which candidate is the primary brand - or that the target is
+deliberately unbranded - which candidates are supported variants that coexist with it, why, and when, so the
+ambiguity is adjudicated in the open instead of being resolved by whichever value the extractor happened to read
+last. When the target stops being ambiguous the decision becomes stale and
 \`check:archetype-assets\` fails until it is deleted.
 
 ${problems.length > 0 ? `## Open problems\n\n${problems.map((problem) => `- ${problem}`).join('\n')}\n` : ''}`;
@@ -484,8 +536,10 @@ ${problems.length > 0 ? `## Open problems\n\n${problems.map((problem) => `- ${pr
 
 export function renderRegister(documents) {
   const rows = [];
+  const variantsOf = (document) => document.brand.variants ?? [];
+  const brandCell = (document) => `${document.brand.site_name ? `\`${document.brand.site_name}\`` : (document.brand.brandless ? '_deliberately unbranded_' : '**unresolved**')}${variantsOf(document).length > 0 ? ` (variants: ${variantsOf(document).map((name) => `\`${name}\``).join(', ')})` : ''}`;
   for (const document of documents) {
-    rows.push(`| \`${document.archetype}/set.json\` | ${document.brand.site_name ? `\`${document.brand.site_name}\`` : (document.brand.brandless ? '_deliberately unbranded_' : '**unresolved**')} | ${Object.keys(document.tokens.colors).length} | ${Object.keys(document.copy).length} | ${document.images.length} | ${document.brand.decided ? (document.brand.brandless ? 'yes (deliberately unbranded)' : '**yes** (see decisions.json)') : 'no'} |`);
+    rows.push(`| \`${document.archetype}/set.json\` | ${brandCell(document)} | ${Object.keys(document.tokens.colors).length} | ${Object.keys(document.copy).length} | ${document.images.length} | ${document.brand.decided ? (document.brand.brandless ? 'yes (deliberately unbranded)' : '**yes** (see decisions.json)') : 'no'} |`);
   }
   return `# Archetype asset sets
 
@@ -514,7 +568,7 @@ ${documents.map((document) => `### ${document.archetype}
 - Stylesheet: ${document.extracted_from.stylesheet ? `\`${document.extracted_from.stylesheet.path}\` (sha256 \`${document.extracted_from.stylesheet.sha256}\`)` : 'none'}
 - Documents: ${document.extracted_from.documents.map((doc) => `\`${doc.path}\``).join(', ')}
 - Rights: ${document.rights ? `\`excluded_from_training: ${document.rights.excluded_from_training}\`, \`approved_for_training: ${document.rights.approved_for_training}\` from \`${document.rights.source}\`` : '**not stated by the target**'}
-- Brand: ${document.brand.site_name ? `\`${document.brand.site_name}\`` : '**unresolved**'}${document.brand.decided ? ` (adjudicated: ${document.brand.decided.because} — ${document.brand.decided.decided_on})` : ''}
+- Brand: ${document.brand.site_name ? `\`${document.brand.site_name}\`` : '**unresolved**'}${(document.brand.variants ?? []).length > 0 ? ` with supported variants ${document.brand.variants.map((name) => `\`${name}\``).join(', ')}` : ''}${document.brand.decided ? ` (adjudicated: ${document.brand.decided.because} — ${document.brand.decided.decided_on})` : ''}
 - Boards: ${document.images.map((image) => `\`${image.name}\` sha256 \`${image.sha256}\``).join('; ')}
 `).join('\n')}
 ## What this register does not claim
@@ -544,7 +598,23 @@ export function readDecision(root, id) {
   const entry = parsed.brand ?? parsed;
   if (!entry.because || !entry.decided_on) throw new Error(`${relative(root, path)}: a decision needs because and decided_on`);
   if (!entry.siteName && !entry.brandless) throw new Error(`${relative(root, path)}: a decision needs siteName, or brandless: true for a target deliberately without one`);
-  return { siteName: entry.siteName ?? null, brandless: entry.brandless === true, because: entry.because, decided_on: entry.decided_on };
+  // Supported variants are brand identities the target keeps beside its primary one. They are declared here
+  // rather than derived, because "both brands are intended" is a product decision and not something the
+  // extractor can read off a page; whether the target still states each of them is checked in setProblems.
+  const declared = entry.variants ?? [];
+  if (!Array.isArray(declared) || declared.some((variant) => typeof variant !== 'string' || variant.trim() === '')) {
+    throw new Error(`${relative(root, path)}: variants must be an array of brand names`);
+  }
+  if (entry.brandless && declared.length > 0) {
+    throw new Error(`${relative(root, path)}: a brandless decision cannot also declare variants`);
+  }
+  return {
+    siteName: entry.siteName ?? null,
+    brandless: entry.brandless === true,
+    variants: [...new Set(declared.map((variant) => variant.trim()))],
+    because: entry.because,
+    decided_on: entry.decided_on,
+  };
 }
 
 export function buildAll(root, ids = archetypeIds(root)) {

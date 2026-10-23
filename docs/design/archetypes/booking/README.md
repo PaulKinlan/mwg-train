@@ -9,6 +9,29 @@
 - **Handoff and Provenance:** REGENERATED on 2026-10-11 UTC with `model: gemini-nano-banana-2.1` passed explicitly to the project's model gateway, replacing the 2026-10-09 boards (the owner rejected those on sight; bead `mwg-train-c1c`). The first set was produced with no explicit `model` and fell back to `gemini-3-pro-image`, which its records could report but never attest. `scripts/generate-archetype-boards.mjs` now requires the gateway's own `modelVersion` attestation to equal the requested model before it writes a board, and all five boards are attested `gemini-nano-banana-2.1`. Recorded settings: `responseModalities: ["IMAGE"]`, temperature 0.7, `maxOutputTokens` 8192. The prompts are unchanged from the recorded tool calls.
 - **Illustrative content warning:** Names, contact details, domains, dates, class prices, seat availability, paid receipts and QR codes in the raster mockups are unverified placeholders. Do not treat them as real bookings or payment proof; do not scan the depicted QR code as an application action. These JPEGs are visual references, not functioning interfaces.
 
+## Brand identity
+
+This archetype supports **two coexisting brand identities**. The journal owner confirmed on 2026-10-13 that both
+are kept (*"we probably need both"*, bead `mwg-train-4xg`): neither is an error, and neither is drift to be renamed.
+
+- **Evening Class Studio** — the primary brand. It is this document's heading and the wordmark all five reference
+  boards render, and it is the name a framework build of this archetype renders by default.
+- **Learning Hub** — the supported variant. The interactive demo under [`demo/`](demo/README.md) implements the same
+  archetype under this name, and states it in its own brand element and in the titles of its three product pages
+  (`index.html`, `confirmation.html`, `empty.html`). Its comparison page describes the artefact rather than
+  adopting a name, so it states neither brand.
+
+The two names describe one archetype - the same contract, the same journey, the same copy structure - rendered
+under either brand. What must not happen is a page that mixes them: a document carrying the primary brand in its
+body and the variant in its title is the contradiction this section exists to prevent. A build therefore renders
+one identity consistently, and records which.
+
+The decision travels with the extracted assets, not only with this document: each demo document's copy slot records
+the brand its own title states, and
+[`decisions.json`](../../../../assets/archetypes/booking/decisions.json) lists `Learning Hub` as a supported variant of the
+`Evening Class Studio` primary brand. `npm run check:archetype-assets` fails if a copy slot states a brand that is
+neither the set's brand nor a declared variant, or if a declared variant is no longer stated by the target.
+
 ## Multi-Step Journey & State Reference Boards
 
 1. **Step 1: Browse & Schedule Selection**

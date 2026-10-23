@@ -24,6 +24,7 @@
   "brand": {
     "site_name": null,
     "brandless": true,
+    "variants": [],
     "candidates": [
       {
         "value": "Account recovery",
@@ -43,6 +44,7 @@
     "decided": {
       "siteName": null,
       "brandless": true,
+      "variants": [],
       "because": "The accepted target depicts an unbranded journey: its demo carries no brand element, its own heading is 'Reset Your Password', and its README names no site. The store records the absence rather than inventing a brand the design never had - a framework build for this archetype should look like the target, and the target has no site name to render.",
       "decided_on": "2026-10-11"
     }
@@ -69,6 +71,7 @@
     "compare.html": {
       "title": "Account recovery · visual comparison",
       "lang": "en",
+      "brand": null,
       "strings": [],
       "apparatus": true,
       "source": "docs/design/archetypes/account-recovery/demo/compare.html",
@@ -77,6 +80,7 @@
     "index.html": {
       "title": "Account recovery · visual demo",
       "lang": "en",
+      "brand": null,
       "strings": [
         "Reset Your Password",
         "Enter the email associated with your account to preview the recovery journey.",

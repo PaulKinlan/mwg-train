@@ -24,6 +24,7 @@
   "brand": {
     "site_name": "Future Web 2026",
     "brandless": false,
+    "variants": [],
     "candidates": [
       {
         "value": "Future Web 2026",
@@ -43,6 +44,7 @@
     "decided": {
       "siteName": "Future Web 2026",
       "brandless": false,
+      "variants": [],
       "because": "The accepted target has no brand element. Its demo's own h1 names the event - 'Future Web 2026', with '24-25 October - Barbican Centre, London' - and for an event-registration site the event is the site's name. The candidate is weak (a heading can be a page title), which is exactly why the choice is recorded here with its evidence rather than extracted silently.",
       "decided_on": "2026-10-11"
     }
@@ -69,6 +71,7 @@
     "compare.html": {
       "title": "Event registration · visual comparison",
       "lang": "en",
+      "brand": null,
       "strings": [],
       "apparatus": true,
       "source": "docs/design/archetypes/event-registration/demo/compare.html",
@@ -77,6 +80,7 @@
     "index.html": {
       "title": "Future Web 2026 · event registration visual demo",
       "lang": "en",
+      "brand": null,
       "strings": [
         "Future Web 2026",
         "24–25 October · Barbican Centre, London",

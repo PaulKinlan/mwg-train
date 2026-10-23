@@ -3,6 +3,12 @@
 - **Archetype:** `booking` (Evening class booking)
 - **Status:** Illustrative visual design target and demonstration.
 - **Policy:** `excluded_from_training: true`, `approved_for_training: false`.
+- **Brand:** `Learning Hub` - this demo implements the **Learning Hub** variant of the `booking` archetype. The
+  archetype keeps two coexisting brands (`Evening Class Studio` primary, `Learning Hub` variant; owner decision
+  2026-10-13, bead `mwg-train-4xg`), recorded in
+  [`assets/archetypes/booking/decisions.json`](../../../../../assets/archetypes/booking/decisions.json). Every page
+  here states the variant in its own title and brand element. Do not rename these pages to the primary brand: a
+  build that renders the primary brand rewrites these strings instead of mixing the two names on one page.
 - **Boundaries:**
   - **Not the sealed evaluation target:** This demonstration does not modify or replace `docs/eval/targets/booking/` (whose manifest digest is pinned by `EVAL_TARGETS_SEAL`).
   - **Not part of pilot:** This demo lives outside `pilot/**` and `data/A6_evaluation/**` and is not measured by the pilot; nothing in it is corpus input. Regenerating this archetype's reference boards does change `pilot/CORPUS.json`, because each built arm embeds its board's digest through the spec - the deframing in `190ae1c` recorded all seven of booking's rows there.
