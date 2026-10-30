@@ -209,10 +209,16 @@ The gate, enforced by code (`scripts/scan-owner-auth.mjs`, driven by `docs/eval/
 **One entry point produces a verdict.** `analyseSealed()` in `src/eval/endpoint.mjs` checks the
 sealed universe (every brief in the `test` split, task `generate`, and the set hashing to the seal
 in §13) and a complete design before it computes anything, and returns the problems instead of a
-number when either fails. `pairedDifference()` and `decide()` are primitives that compute over
-whatever brief list they are given — useful for exploration, and not the preregistered analysis.
-Calling them directly over the dev split produces a decision that looks reportable and is not, which
-is why the checked path exists and `test/endpoint.test.mjs` proves it refuses that case.
+number when either fails. The seal must be supplied: a call that omits it is refused, so the §13
+check cannot be skipped by leaving an option out. It also forwards the §4 secondary comparisons to
+`decide()` — blocker finding rates with a family-clustered interval on the strong-control
+comparisons, and cost per pass plus the already-modern change counts on the primary one — reading
+`inference_tokens`, `changed_pages` and `regressions` from the result rows and reporting a comparison
+as unmeasured, rather than "not worse", when those records are absent. `pairedDifference()` and
+`decide()` are primitives that compute over whatever brief list they are given — useful for
+exploration, and not the preregistered analysis. Calling them directly over the dev split produces a
+decision that looks reportable and is not, which is why the checked path exists and
+`test/endpoint.test.mjs` proves it refuses that case.
 
 ## 9. Instrumentation: human
 

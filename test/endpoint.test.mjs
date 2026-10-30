@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { ARMS, EndpointError, analyseSealed, briefPasses, checkDesign, checkUniverse, decide, failureTaxonomy, pairedDifference, passRate, perFamily, perRule, rng } from '../src/eval/endpoint.mjs';
+import { ALREADY_MODERN_MARKER, sealHash } from '../src/eval/prereg.mjs';
 
 const RULE = 'accessibility/accessibility';
 
@@ -321,8 +322,116 @@ test('a reportable verdict goes through the checked entry point', () => {
   // the right split but the wrong seal is still refused
   assert.equal(analyseSealed(testResults, testBriefs, { seal: 'sha256:deadbeef' }).ok, false);
   // complete design + sealed set produces the verdict, and it knows it lacks the strong controls
-  const decided = analyseSealed(testResults, testBriefs, { iterations: 200 });
+  const decided = analyseSealed(testResults, testBriefs, { seal: sealHash(testBriefs), iterations: 200 });
   assert.equal(decided.ok, true);
   assert.ok(decided.decision);
   assert.equal(decided.controls.length, 2);
+});
+
+/**
+ * A complete, sealed universe: whole families with two variants each, plus optional already-modern
+ * briefs, evaluated in every arm. `perArm(arm, brief)` supplies the cell-specific fields.
+ */
+function sealedFixture({ families = 4, alreadyModern = 0, perArm = () => ({}) } = {}) {
+  const briefs = [];
+  for (let f = 1; f <= families; f += 1) {
+    const family = `fam-${String(f).padStart(2, '0')}`;
+    for (const v of [1, 2]) briefs.push(brief(family, v, { split: 'test', task: 'generate' }));
+  }
+  for (let m = 1; m <= alreadyModern; m += 1) {
+    briefs.push(brief(`modern-${String(m).padStart(2, '0')}`, 1, {
+      split: 'test', task: 'generate', non_goals: [`no new pages`, ALREADY_MODERN_MARKER],
+    }));
+  }
+  const results = briefs.flatMap((b) => ARMS.map((arm) => result(b.brief_id, arm, perArm(arm, b))));
+  return { briefs, results, seal: sealHash(briefs) };
+}
+
+test('the reportable entry point refuses to run without the pinned seal', () => {
+  // `seal` used to default to null, which meant `checkUniverse` skipped the seal check entirely: an
+  // unsealed or resealed brief set produced a decision indistinguishable from a preregistered one.
+  const { briefs, results, seal } = sealedFixture();
+  for (const [options, code] of [
+    [{}, 'SEAL_REQUIRED'],
+    [{ seal: null }, 'SEAL_REQUIRED'],
+    [{ seal: '' }, 'SEAL_REQUIRED'],
+    [{ seal: 'sha256:deadbeef' }, 'SEAL_INVALID'],
+    [{ seal: 'not-a-hash' }, 'SEAL_INVALID'],
+  ]) {
+    const refused = analyseSealed(results, briefs, { iterations: 50, ...options });
+    assert.equal(refused.ok, false, JSON.stringify(options));
+    assert.equal(refused.decision, null, JSON.stringify(options));
+    assert.ok(refused.problems.some((p) => p.code === code), `${JSON.stringify(options)}: ${JSON.stringify(refused.problems)}`);
+  }
+  assert.equal(analyseSealed(results, briefs, { seal, iterations: 50 }).ok, true, 'the pinned seal still produces a verdict');
+});
+
+test('a rise in blocker findings reaches the decision as a negative', () => {
+  // The trained arm records an accessibility finding in every family while both strong controls
+  // record none. decide() only sees this if analyseSealed forwards blocker_rates and blocker_cis.
+  const { briefs, results, seal } = sealedFixture({
+    perArm: (arm) => (arm === 'T_trained_adapter' ? { blocker_accessibility: 1 } : {}),
+  });
+  const decided = analyseSealed(results, briefs, { seal, iterations: 200 });
+  assert.equal(decided.ok, true);
+  for (const control of decided.controls) {
+    assert.equal(control.blocker_rates.blocker_accessibility.T_trained_adapter, 1);
+    assert.equal(control.blocker_rates.blocker_accessibility[control.arm_b], 0);
+    assert.ok(control.blocker_cis.blocker_accessibility[0] > 0, 'every resample shows the rise');
+  }
+  assert.equal(decided.decision.negative, true);
+  assert.ok(decided.decision.negative_reasons.some((reason) => /more accessibility findings than C2_base_mwg_prompt/.test(reason)),
+    JSON.stringify(decided.decision.negative_reasons));
+});
+
+test('an unrecorded blocker count counts as a finding in the comparison', () => {
+  // Fail closed, as briefPasses does: a missing count is not a measured zero.
+  const { briefs, results, seal } = sealedFixture({
+    perArm: (arm) => (arm === 'T_trained_adapter' ? { blocker_accessibility: undefined, blocker_security: undefined } : {}),
+  });
+  const decided = analyseSealed(results, briefs, { seal, iterations: 50 });
+  assert.equal(decided.controls[0].blocker_rates.blocker_accessibility.T_trained_adapter, 1);
+  assert.equal(decided.controls[0].blocker_rates.blocker_accessibility.C1_bare_base, 0);
+});
+
+test('worse cost per pass reaches the decision as a negative', () => {
+  // Spend and passes both come from the result rows, because only the run knows its usage.
+  const { briefs, results, seal } = sealedFixture({
+    perArm: (arm) => (arm === 'T_trained_adapter' ? { inference_tokens: 100 } : { inference_tokens: 10 }),
+  });
+  const decided = analyseSealed(results, briefs, { seal, iterations: 200 });
+  assert.equal(decided.primary.cost_detail.metric, 'inference_tokens_per_pass');
+  assert.equal(decided.primary.cost_detail.T_trained_adapter.per_pass, 100);
+  assert.equal(decided.primary.cost_detail.C1_bare_base.per_pass, 10);
+  assert.equal(decided.primary.cost_per_pass_worse, true);
+  assert.equal(decided.decision.negative, true);
+  assert.ok(decided.decision.negative_reasons.includes('worse cost per pass'), JSON.stringify(decided.decision.negative_reasons));
+});
+
+test('over-application on an already-modern brief reaches the decision as a negative', () => {
+  const { briefs, results, seal } = sealedFixture({
+    alreadyModern: 1,
+    perArm: (arm, b) => (arm === 'T_trained_adapter' && b.brief_id.startsWith('modern-')
+      ? { changed_pages: 4, regressions: 1 }
+      : { changed_pages: 0, regressions: 0 }),
+  });
+  const decided = analyseSealed(results, briefs, { seal, iterations: 200 });
+  assert.equal(decided.primary.over_application_detail.already_modern_briefs, 1);
+  assert.deepEqual(decided.primary.over_application_detail.T_trained_adapter, { changed_pages: 4, regressions: 1 });
+  assert.deepEqual(decided.primary.over_application_detail.C1_bare_base, { changed_pages: 0, regressions: 0 });
+  assert.equal(decided.primary.over_application_worse, true);
+  assert.equal(decided.decision.negative, true);
+  assert.ok(decided.decision.negative_reasons.some((reason) => /already-modern/.test(reason)), JSON.stringify(decided.decision.negative_reasons));
+});
+
+test('a comparison with no recorded cost or change count is unmeasured, never \'not worse\'', () => {
+  // No inference_tokens anywhere and no already-modern brief in the sealed set. Asserting `false`
+  // would claim a check passed that was never run; `null` plus the reason is the honest answer.
+  const { briefs, results, seal } = sealedFixture();
+  const decided = analyseSealed(results, briefs, { seal, iterations: 50 });
+  assert.equal(decided.primary.cost_per_pass_worse, null);
+  assert.match(decided.primary.cost_detail.unmeasured, /inference_tokens/);
+  assert.equal(decided.primary.over_application_worse, null);
+  assert.match(decided.primary.over_application_detail.unmeasured, /already-modern/);
+  assert.equal(decided.decision.negative, false, 'unmeasured is not a negative, and not a clean bill either');
 });
