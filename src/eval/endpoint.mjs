@@ -5,10 +5,13 @@
  * them so the analysis is fixed in advance rather than chosen after seeing the numbers, and so the
  * decision rule cannot quietly become whatever the data supported.
  *
- * Nothing here reads the network or the filesystem: it takes result records and returns pass rates,
- * a cluster bootstrap interval over prompt families, and a decision. See
+ * Nothing here reads the network or the filesystem: it takes result records and the sealed manifest's
+ * rows and returns pass rates, a cluster bootstrap interval over prompt families, and a decision. See
  * docs/eval/PREREGISTRATION.md sections 3, 4 and 6.
  */
+
+import { ALREADY_MODERN_MARKER, sealHash } from './prereg.mjs';
+import { EVAL_SEAL } from '../train/disjoint.mjs';
 
 export const ARMS = Object.freeze(['C1_bare_base', 'C2_base_mwg_prompt', 'C3_base_uplift_tool', 'T_trained_adapter']);
 export const DESCRIPTIVE_ARMS = Object.freeze(['D_teacher']);
@@ -113,7 +116,7 @@ export function checkDesign(results, briefs, arms = ARMS, { requireEnvironment =
       }
     }
     if (!briefIds.has(result?.brief_id)) {
-      problems.push({ code: 'UNKNOWN_BRIEF', brief_id: result?.brief_id, arm: result?.arm, message: 'result for a brief that is not in the sealed set' });
+      problems.push({ code: 'UNKNOWN_BRIEF', brief_id: result?.brief_id, arm: result?.arm, message: 'result for a brief that is not in the sealed universe being analysed' });
       continue;
     }
     const key = `${result.brief_id}::${result.arm}`;
@@ -130,21 +133,88 @@ export function checkDesign(results, briefs, arms = ARMS, { requireEnvironment =
   return problems;
 }
 
+/** The seal the brief set must hash to: `sha256:` and 64 lowercase hex digits, as `sealHash` emits. */
+const SEAL_PATTERN = /^sha256:[a-f0-9]{64}$/;
+
+/**
+ * The seal is not optional on a reportable verdict, and the caller does not get to choose it.
+ *
+ * Two refusals live here, both about the same issue. First the seal must be supplied and well formed,
+ * because `checkUniverse` only compares the seal when one is supplied and a default of `null` let a
+ * reportable call skip the §13 check entirely. Second it must BE the pinned seal, and the briefs must
+ * hash to it: comparing the caller's hash against the caller's briefs made "reportable" a property of
+ * the argument, so any set a caller had just sealed themselves produced a decision indistinguishable
+ * from a preregistered one. The pin is `EVAL_SEAL`, the constant `check:briefs` enforces and
+ * `test/briefs.test.mjs` checks against the hash recorded in PREREGISTRATION §13.
+ */
+function sealProblems(seal, briefs) {
+  if (typeof seal !== 'string' || !SEAL_PATTERN.test(seal)) {
+    if (seal === null || seal === undefined || seal === '') {
+      return [{ code: 'SEAL_REQUIRED', brief_id: '(set)', message: 'the reportable endpoint needs the pinned brief-set seal (PREREGISTRATION §13); none was supplied' }];
+    }
+    return [{ code: 'SEAL_INVALID', brief_id: '(set)', message: `the seal must be a sha256 hash of the brief set; found ${JSON.stringify(seal)}` }];
+  }
+  const problems = [];
+  if (seal !== EVAL_SEAL) {
+    problems.push({ code: 'SEAL_MISMATCH', brief_id: '(set)', expected: EVAL_SEAL, actual: seal,
+      message: `the seal supplied is ${seal}, not the pinned preregistered seal ${EVAL_SEAL}; the reporting hash is fixed in advance, not nominated by the caller` });
+  }
+  const actual = Array.isArray(briefs) ? sealHash(briefs) : null;
+  if (actual !== EVAL_SEAL) {
+    problems.push({ code: 'SEAL_MISMATCH', brief_id: '(set)', expected: EVAL_SEAL, actual,
+      message: actual === null
+        ? 'the briefs must be the rows of the sealed manifest; nothing else can be sealed against §13'
+        : `the brief manifest hashes to ${actual}, not the pinned §13 seal ${EVAL_SEAL}; an edited or resealed manifest is not reportable` });
+  }
+  return problems;
+}
+
 /**
  * The sanctioned entry point for a *reportable* verdict.
  *
  * `pairedDifference` and `decide` are primitives: they compute over whatever brief list they are
  * handed, which is what exploratory work needs and exactly what a preregistered result must not do.
- * This is the function that refuses - it enforces the sealed universe (split, task, and the seal of
- * the set) and a complete design before any number is produced, and returns the problems instead of
- * a verdict when either fails. A consequence worth stating plainly: if you call the primitives
- * directly you are not running the preregistered analysis, whatever the output looks like.
+ * `briefs` is the sealed manifest itself, not a set the caller already filtered: the pinned seal is
+ * checked over the whole manifest before the primary universe is selected from it, so the briefs a
+ * verdict is computed over are determined by §13 rather than by what was passed in. The function then
+ * enforces a complete design over the `test`/`generate` selection before any number is produced, and
+ * returns the problems instead of a verdict when either check fails. A seal problem is returned on its
+ * own: until the manifest is the sealed one, nothing about the design is meaningful. A consequence
+ * worth stating plainly: if you call the primitives directly you are not running the preregistered
+ * analysis, whatever the output looks like.
+ *
+ * It also forwards every secondary comparison `decide` reads (PREREGISTRATION §4 and §7) rather than
+ * handing it bare pass-rate differences: blocker finding rates with their own family-clustered
+ * interval on the primary comparison against the unguided base (C1) and on each strong control, and
+ * cost per pass plus already-modern change counts on the primary one. Those come from the
+ * caller-supplied result rows - `inference_tokens` for the cost, `changed_pages` and `regressions` for
+ * the already-modern briefs - because the diff and usage numbers are produced by the run, not by this
+ * module. A comparison whose inputs are missing is left `null` with the reason recorded in its
+ * `*_detail`, never asserted as "not worse".
  */
 export function analyseSealed(results, briefs, { seal = null, arms = ARMS, iterations = 5000, seed = 20261008 } = {}) {
-  const problems = [...checkUniverse(briefs, { requireSeal: seal }), ...checkDesign(results, briefs, arms)];
+  const sealFindings = sealProblems(seal, briefs);
+  if (sealFindings.length > 0) return { ok: false, problems: sealFindings, decision: null, primary: null, controls: [] };
+  const sealedBriefs = briefs.filter((brief) => brief?.split === 'test' && brief?.task === 'generate');
+  // The seal has authenticated the manifest, so this filter is the preregistered selection rule. The
+  // universe check still runs on the result: the filter and §6/§7 have to agree, so a regression in
+  // either one refuses the verdict instead of quietly narrowing or widening the denominator.
+  const problems = [...checkUniverse(sealedBriefs), ...checkDesign(results, sealedBriefs, arms)];
   if (problems.length > 0) return { ok: false, problems, decision: null, primary: null, controls: [] };
-  const primary = pairedDifference(results, briefs, 'T_trained_adapter', 'C1_bare_base', { iterations, seed });
-  const controls = ['C2_base_mwg_prompt', 'C3_base_uplift_tool'].map((arm) => pairedDifference(results, briefs, 'T_trained_adapter', arm, { iterations, seed }));
+  const blockerRatesByArm = blockerRates(results, sealedBriefs, arms);
+  // The blocker comparison against C1 travels on the primary comparison: a rise against the unguided
+  // base is a preregistered negative in its own right (§4), and the strong controls are not the only
+  // arm a regression can be measured against. decide() reads it there.
+  const primary = Object.assign(pairedDifference(results, sealedBriefs, 'T_trained_adapter', 'C1_bare_base', { iterations, seed }),
+    costComparison(results, sealedBriefs), overApplicationComparison(results, sealedBriefs), {
+      blocker_rates: blockerRatesByArm,
+      blocker_cis: blockerDifferenceCis(results, sealedBriefs, 'T_trained_adapter', 'C1_bare_base', { iterations, seed }),
+    });
+  const controls = ['C2_base_mwg_prompt', 'C3_base_uplift_tool'].map((arm) => ({
+    ...pairedDifference(results, sealedBriefs, 'T_trained_adapter', arm, { iterations, seed }),
+    blocker_rates: blockerRatesByArm,
+    blocker_cis: blockerDifferenceCis(results, sealedBriefs, 'T_trained_adapter', arm, { iterations, seed }),
+  }));
   return { ok: true, problems: [], decision: decide(primary, controls), primary, controls };
 }
 
@@ -200,7 +270,15 @@ export function pairedDifference(results, briefs, armA, armB, { iterations = 500
     return n === 0 ? 0 : sum / n;
   };
 
-  const point = deltaFor(briefs);
+  return { arm_a: armA, arm_b: armB, ...familyBootstrap(briefs, deltaFor, { iterations, seed }), briefs: briefs.length };
+}
+
+/**
+ * The cluster bootstrap itself: resample whole FAMILIES, because variants of one family are not
+ * independent observations (PREREGISTRATION §3). `delta` is any per-brief statistic, so the pass-rate
+ * comparison and the blocker-rate comparison share one resampling rule instead of two that can drift.
+ */
+function familyBootstrap(briefs, delta, { iterations, seed }) {
   const families = new Map();
   for (const brief of briefs) {
     if (!families.has(brief.family_id)) families.set(brief.family_id, []);
@@ -215,19 +293,127 @@ export function pairedDifference(results, briefs, armA, armB, { iterations = 500
     for (let c = 0; c < clusters.length; c += 1) {
       sample.push(...clusters[Math.floor(random() * clusters.length)]);
     }
-    deltas.push(deltaFor(sample));
+    deltas.push(delta(sample));
   }
   deltas.sort((x, y) => x - y);
   const at = (q) => deltas[Math.min(deltas.length - 1, Math.max(0, Math.floor(q * deltas.length)))];
+  return { point: delta(briefs), ci95: [at(0.025), at(0.975)], iterations, seed, families: clusters.length };
+}
+
+function cell(results, brief, arm) {
+  return results.find((r) => r.brief_id === brief.brief_id && r.arm === arm);
+}
+
+/**
+ * Did one cell record a blocker finding? Fail closed, exactly as `briefPasses` does: an accessibility
+ * or security count that was never recorded is not a measured zero, so it counts as a finding here
+ * too. Defaulting it to 0 would let the one check that catches a real regression go quiet.
+ */
+function blockerFlagged(result, blocker) {
+  const findings = result?.[blocker];
+  return !(typeof findings === 'number' && Number.isFinite(findings) && findings === 0);
+}
+
+/**
+ * The share of sealed briefs with at least one accessibility/security finding, per arm. This is the
+ * rate `decide` compares against the trained arm; the denominator is the sealed set, so a missing
+ * cell cannot shrink it (the design check has already refused that case).
+ */
+function blockerRates(results, briefs, arms = ARMS) {
+  const rates = {};
+  for (const blocker of BLOCKER_CHECKS) {
+    rates[blocker] = {};
+    for (const arm of arms) {
+      const flagged = briefs.filter((brief) => blockerFlagged(cell(results, brief, arm), blocker)).length;
+      rates[blocker][arm] = briefs.length === 0 ? 0 : flagged / briefs.length;
+    }
+  }
+  return rates;
+}
+
+/** 95% family-clustered interval on the paired blocker-rate difference, per blocker. */
+function blockerDifferenceCis(results, briefs, armA, armB, { iterations, seed }) {
+  const cis = {};
+  for (const blocker of BLOCKER_CHECKS) {
+    const a = new Map(briefs.map((brief) => [brief.brief_id, blockerFlagged(cell(results, brief, armA), blocker)]));
+    const b = new Map(briefs.map((brief) => [brief.brief_id, blockerFlagged(cell(results, brief, armB), blocker)]));
+    const delta = (sample) => (sample.length === 0 ? 0 : sample.reduce((sum, brief) =>
+      sum + ((a.get(brief.brief_id) ? 1 : 0) - (b.get(brief.brief_id) ? 1 : 0)), 0) / sample.length);
+    cis[blocker] = familyBootstrap(briefs, delta, { iterations, seed }).ci95;
+  }
+  return cis;
+}
+
+function isCount(value) {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0;
+}
+
+/**
+ * Inference tokens per passing brief for one arm (PREREGISTRATION §5, §7). A partial sum is not a
+ * cost: one cell without its recorded `inference_tokens` makes the whole comparison unmeasured rather
+ * than flattering the arm that did not report. Infinity is the honest per-pass cost of an arm that
+ * passed nothing while spending tokens.
+ */
+function costPerPass(results, briefs, arm) {
+  let tokens = 0;
+  let passes = 0;
+  for (const brief of briefs) {
+    const result = cell(results, brief, arm);
+    if (!isCount(result?.inference_tokens)) return null;
+    tokens += result.inference_tokens;
+    if (briefPasses(result, brief.required_rules)) passes += 1;
+  }
+  return { tokens, passes, per_pass: passes === 0 ? Infinity : tokens / passes };
+}
+
+/**
+ * Worse cost-adjusted performance against the unguided base (PREREGISTRATION §4, negative).
+ * `decide` reads this flag from the primary comparison, so it is measured over exactly that pair.
+ */
+function costComparison(results, briefs, armA = 'T_trained_adapter', armB = 'C1_bare_base') {
+  const a = costPerPass(results, briefs, armA);
+  const b = costPerPass(results, briefs, armB);
+  const unmeasured = a === null ? `${armA} has a cell without a recorded inference_tokens count`
+    : b === null ? `${armB} has a cell without a recorded inference_tokens count` : null;
   return {
-    arm_a: armA,
-    arm_b: armB,
-    point,
-    ci95: [at(0.025), at(0.975)],
-    iterations,
-    seed,
-    families: clusters.length,
-    briefs: briefs.length,
+    cost_per_pass_worse: unmeasured === null ? a.per_pass > b.per_pass : null,
+    cost_detail: { metric: 'inference_tokens_per_pass', unmeasured, [armA]: a, [armB]: b },
+  };
+}
+
+/**
+ * Increased over-application on the already-modern briefs (PREREGISTRATION §4, §7): more pages changed
+ * or more regressions introduced than the comparison arm, over the briefs whose `non_goals` carry the
+ * already-modern marker. Reported as a change count, never folded into the pass rate.
+ */
+function overApplicationComparison(results, briefs, armA = 'T_trained_adapter', armB = 'C1_bare_base') {
+  const alreadyModern = briefs.filter((brief) => (brief.non_goals ?? []).includes(ALREADY_MODERN_MARKER));
+  if (alreadyModern.length === 0) {
+    return {
+      over_application_worse: null,
+      over_application_detail: { already_modern_briefs: 0, unmeasured: 'the sealed set carries no already-modern brief' },
+    };
+  }
+  const totals = (arm) => {
+    let changedPages = 0;
+    let regressions = 0;
+    for (const brief of alreadyModern) {
+      const result = cell(results, brief, arm);
+      if (!isCount(result?.changed_pages) || !isCount(result?.regressions)) return null;
+      changedPages += result.changed_pages;
+      regressions += result.regressions;
+    }
+    return { changed_pages: changedPages, regressions };
+  };
+  const a = totals(armA);
+  const b = totals(armB);
+  const unmeasured = a === null ? `${armA} has an already-modern cell without changed_pages/regressions`
+    : b === null ? `${armB} has an already-modern cell without changed_pages/regressions` : null;
+  return {
+    over_application_worse: unmeasured === null
+      ? a.changed_pages > b.changed_pages || a.regressions > b.regressions
+      : null,
+    over_application_detail: { already_modern_briefs: alreadyModern.length, unmeasured, [armA]: a, [armB]: b },
   };
 }
 
@@ -263,14 +449,17 @@ export function decide(primary, controls) {
 
   const negativeReasons = [];
   if (primary.ci95[1] < 0) negativeReasons.push('functional pass rate below the unguided base with an interval excluding zero');
-  for (const control of controls) {
+  // The primary comparison against C1 is read here too, not just the strong controls: a blocker rise
+  // against the unguided base is a preregistered negative (§4), and attaching the rates only to C2 and
+  // C3 made exactly that comparison invisible to the decision.
+  for (const comparison of [primary, ...controls]) {
     // Default the treated arm rather than reading an undefined key: a silent miss here would drop a
     // real regression from the negative classification.
-    const armA = control.arm_a ?? 'T_trained_adapter';
-    const armB = control.arm_b;
+    const armA = comparison.arm_a ?? 'T_trained_adapter';
+    const armB = comparison.arm_b;
     for (const blocker of BLOCKER_CHECKS) {
-      const delta = (control.blocker_rates?.[blocker]?.[armA] ?? 0) - (control.blocker_rates?.[blocker]?.[armB] ?? 0);
-      if (delta > 0 && (control.blocker_cis?.[blocker]?.[0] ?? -1) > 0) {
+      const delta = (comparison.blocker_rates?.[blocker]?.[armA] ?? 0) - (comparison.blocker_rates?.[blocker]?.[armB] ?? 0);
+      if (delta > 0 && (comparison.blocker_cis?.[blocker]?.[0] ?? -1) > 0) {
         negativeReasons.push(`more ${blocker.replace('blocker_', '')} findings than ${armB}, interval excluding zero`);
       }
     }
@@ -322,8 +511,6 @@ export function perFamily(results, briefs, arms = ARMS) {
   }
   return rows.sort((a, b) => a.family_id.localeCompare(b.family_id));
 }
-
-import { sealHash } from './prereg.mjs';
 
 /**
  * Per-rule application rate with the applicable denominator. A rule no brief required is omitted.
