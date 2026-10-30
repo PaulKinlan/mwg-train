@@ -95,7 +95,8 @@ non-inferiority margin against the strong controls is **−5 percentage points**
 - **Null.** The interval for δ(C1) is compatible with no useful improvement (it overlaps zero, or
   its upper bound is below the +10pp minimum effect).
 - **Negative.** Any of: the functional pass rate falls below C1 with an interval excluding zero; a
-  **rise** in blocker security or accessibility findings; increased over-application or regression
+  **rise** in blocker security or accessibility findings, measured against C1 and separately against
+  each strong control; increased over-application or regression
   on the already-modern briefs; or worse cost-adjusted performance (passes per million inference
   tokens or per GPU-minute). A prettier screenshot or a higher frequency of rule-sounding names is
   not evidence against a negative; it is the shape a negative often takes.
@@ -206,12 +207,16 @@ The gate, enforced by code (`scripts/scan-owner-auth.mjs`, driven by `docs/eval/
 4. The forbidden-pattern list (`docs/eval/owner-identity.json`) is versioned with the corpus;
    changing it after the freeze is a deviation recorded in §14.
 
-**One entry point produces a verdict.** `analyseSealed()` in `src/eval/endpoint.mjs` checks the
-sealed universe (every brief in the `test` split, task `generate`, and the set hashing to the seal
-in §13) and a complete design before it computes anything, and returns the problems instead of a
-number when either fails. The seal must be supplied: a call that omits it is refused, so the §13
-check cannot be skipped by leaving an option out. It also forwards the §4 secondary comparisons to
-`decide()` — blocker finding rates with a family-clustered interval on the strong-control
+**One entry point produces a verdict.** `analyseSealed()` in `src/eval/endpoint.mjs` takes the
+sealed manifest, verifies that the **whole** manifest hashes to the seal in §13 and that the seal
+supplied by the caller is that same pinned value, and only then selects the primary universe (every
+brief in the `test` split, task `generate`) and checks the design. It returns the problems instead of
+a number when any of that fails. The seal must be supplied: a call that omits it is refused, so the
+§13 check cannot be skipped by leaving an option out, and a caller-supplied hash is compared against
+the pinned one — a valid hash of a set the caller had just sealed is `SEAL_MISMATCH`, not the expected
+value, because the briefs a verdict is computed over are fixed by §13 rather than by what was passed
+in. It also forwards the §4 secondary comparisons to `decide()` — blocker finding rates with a
+family-clustered interval on the primary comparison against C1 and on both strong-control
 comparisons, and cost per pass plus the already-modern change counts on the primary one — reading
 `inference_tokens`, `changed_pages` and `regressions` from the result rows and reporting a comparison
 as unmeasured, rather than "not worse", when those records are absent. `pairedDifference()` and

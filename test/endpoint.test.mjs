@@ -1,8 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 
 import { ARMS, EndpointError, analyseSealed, briefPasses, checkDesign, checkUniverse, decide, failureTaxonomy, pairedDifference, passRate, perFamily, perRule, rng } from '../src/eval/endpoint.mjs';
-import { ALREADY_MODERN_MARKER, sealHash } from '../src/eval/prereg.mjs';
+import { ALREADY_MODERN_MARKER, parseBriefs, sealHash } from '../src/eval/prereg.mjs';
+import { EVAL_SEAL } from '../src/train/disjoint.mjs';
 
 const RULE = 'accessibility/accessibility';
 
@@ -34,6 +36,26 @@ function result(briefId, arm, overrides = {}) {
     browser: { product: 'Chrome/155.0.8059.39' },
     ...overrides,
   };
+}
+
+// The reportable entry point takes the sealed manifest and refuses anything that does not hash to the
+// pinned §13 seal, so a synthetic brief set can only ever exercise that refusal. `MANIFEST` is every
+// row the seal covers; `PRIMARY` is the universe the endpoint covers: test split, generation task
+// (§6/§7), selected inside `analyseSealed` rather than trusted from the caller.
+const MANIFEST = parseBriefs(readFileSync(new URL('../docs/eval/briefs/manifest.jsonl', import.meta.url), 'utf8'));
+const PRIMARY = MANIFEST.filter((brief) => brief.split === 'test' && brief.task === 'generate');
+
+/** A result for a sealed brief whose declared rule bundle is fully applied. */
+function sealedResult(brief, arm, overrides = {}) {
+  return result(brief.brief_id, arm, {
+    rule_results: Object.fromEntries((brief.required_rules ?? []).map((rule) => [rule, true])),
+    ...overrides,
+  });
+}
+
+/** A complete design over the sealed primary universe: one cell per brief and arm. */
+function sealedResults(perArm = () => ({})) {
+  return PRIMARY.flatMap((brief) => ARMS.map((arm) => sealedResult(brief, arm, perArm(arm, brief))));
 }
 
 test('the primary endpoint needs all five criteria', () => {
@@ -74,6 +96,7 @@ test('evaluation refuses unrecorded or non-Linux runtime instead of trusting pla
   const briefs = [brief('f1', 1)];
   const complete = ARMS.map((arm) => result(briefs[0].brief_id, arm));
   assert.deepEqual(checkDesign(complete, briefs), []);
+  const sealed = sealedResults();
   for (const [changed, expected] of [
     [{ platform: 'darwin' }, 'PLATFORM_NOT_LINUX'],
     [{ platform: undefined }, 'PLATFORM_NOT_LINUX'],
@@ -85,10 +108,13 @@ test('evaluation refuses unrecorded or non-Linux runtime instead of trusting pla
   ]) {
     const altered = [{ ...complete[0], ...changed }, ...complete.slice(1)];
     assert.ok(checkDesign(altered, briefs).some((p) => p.code === expected), JSON.stringify(changed));
-    const sealed = analyseSealed(altered, briefs, { iterations: 10 });
-    assert.equal(sealed.ok, false);
-    assert.equal(sealed.decision, null);
-    assert.ok(sealed.problems.some((p) => p.code === expected));
+    // The same alteration inside the sealed universe: the seal passes, so the runtime record is what
+    // refuses the verdict - otherwise this assertion would be satisfied by a seal failure instead.
+    const sealedAltered = [{ ...sealed[0], ...changed }, ...sealed.slice(1)];
+    const reportable = analyseSealed(sealedAltered, MANIFEST, { seal: EVAL_SEAL, iterations: 10 });
+    assert.equal(reportable.ok, false, JSON.stringify(changed));
+    assert.equal(reportable.decision, null, JSON.stringify(changed));
+    assert.deepEqual(reportable.problems.map((p) => p.code), [expected], JSON.stringify(changed));
   }
 });
 
@@ -307,81 +333,154 @@ test('a reportable verdict goes through the checked entry point', () => {
     { brief_id: 'd1', family_id: 'd1', split: 'dev', task: 'generate', required_rules: [] },
     { brief_id: 'd2', family_id: 'd2', split: 'dev', task: 'generate', required_rules: [] },
   ];
-  const devResults = ['T_trained_adapter', 'C1_bare_base', 'C2_base_mwg_prompt', 'C3_base_uplift_tool'].flatMap((arm) =>
-    devBriefs.map((brief) => result(brief.brief_id, arm, { functional: arm === 'T_trained_adapter', rule_results: {} })),
-  );
-  const refused = analyseSealed(devResults, devBriefs, { seal: 'sha256:91d75f29afe10fa419b53fc412abdfaf970068d7725fe40c69894e64c36ed59e' });
-  assert.equal(refused.ok, false, 'a dev split must not produce a verdict');
-  assert.ok(refused.problems.some((p) => p.code === 'OUTSIDE_SEALED_SPLIT'));
-  assert.equal(refused.decision, null);
+  const devResults = ARMS.flatMap((arm) => devBriefs.map((brief) => result(brief.brief_id, arm)));
+  // the arithmetic happily produces a number for the dev split...
+  assert.equal(typeof passRate(devResults, devBriefs, 'T_trained_adapter'), 'number');
+  // ...and the door refuses it: the set cannot hash to the sealed manifest, whether or not the caller
+  // supplies the hash of the set they just built.
+  for (const seal of [sealHash(devBriefs), EVAL_SEAL]) {
+    const refused = analyseSealed(devResults, devBriefs, { seal, iterations: 20 });
+    assert.equal(refused.ok, false, seal);
+    assert.equal(refused.decision, null, seal);
+    assert.ok(refused.problems.length > 0 && refused.problems.every((p) => p.code === 'SEAL_MISMATCH'), JSON.stringify(refused.problems));
+  }
 
-  const testBriefs = devBriefs.map((brief, index) => ({ ...brief, brief_id: `t${index + 1}`, family_id: `t${index + 1}`, split: 'test' }));
-  const testResults = ['T_trained_adapter', 'C1_bare_base', 'C2_base_mwg_prompt', 'C3_base_uplift_tool'].flatMap((arm) =>
-    testBriefs.map((brief) => result(brief.brief_id, arm, { rule_results: {} })),
-  );
-  // the right split but the wrong seal is still refused
-  assert.equal(analyseSealed(testResults, testBriefs, { seal: 'sha256:deadbeef' }).ok, false);
-  // complete design + sealed set produces the verdict, and it knows it lacks the strong controls
-  const decided = analyseSealed(testResults, testBriefs, { seal: sealHash(testBriefs), iterations: 200 });
-  assert.equal(decided.ok, true);
+  const decided = analyseSealed(sealedResults(), MANIFEST, { seal: EVAL_SEAL, iterations: 100 });
+  assert.equal(decided.ok, true, JSON.stringify(decided.problems));
   assert.ok(decided.decision);
-  assert.equal(decided.controls.length, 2);
+  assert.deepEqual(decided.controls.map((control) => control.arm_b), ['C2_base_mwg_prompt', 'C3_base_uplift_tool']);
+  assert.equal(decided.primary.arm_b, 'C1_bare_base');
+  assert.equal(decided.primary.briefs, PRIMARY.length);
 });
 
 /**
- * A complete, sealed universe: whole families with two variants each, plus optional already-modern
- * briefs, evaluated in every arm. `perArm(arm, brief)` supplies the cell-specific fields.
+ * A complete, sealed universe: the committed manifest, evaluated in every arm. `perArm(arm, brief)`
+ * supplies the cell-specific fields. The manifest is the real one rather than a fixture because the
+ * seal covers it: any other set is refused before a number is produced.
  */
-function sealedFixture({ families = 4, alreadyModern = 0, perArm = () => ({}) } = {}) {
-  const briefs = [];
-  for (let f = 1; f <= families; f += 1) {
-    const family = `fam-${String(f).padStart(2, '0')}`;
-    for (const v of [1, 2]) briefs.push(brief(family, v, { split: 'test', task: 'generate' }));
-  }
-  for (let m = 1; m <= alreadyModern; m += 1) {
-    briefs.push(brief(`modern-${String(m).padStart(2, '0')}`, 1, {
-      split: 'test', task: 'generate', non_goals: [`no new pages`, ALREADY_MODERN_MARKER],
-    }));
-  }
-  const results = briefs.flatMap((b) => ARMS.map((arm) => result(b.brief_id, arm, perArm(arm, b))));
-  return { briefs, results, seal: sealHash(briefs) };
+function sealedFixture({ perArm = () => ({}) } = {}) {
+  return { briefs: MANIFEST, results: sealedResults(perArm), seal: EVAL_SEAL };
 }
 
-test('the reportable entry point refuses to run without the pinned seal', () => {
+test('the reportable entry point refuses anything but the pinned seal', () => {
   // `seal` used to default to null, which meant `checkUniverse` skipped the seal check entirely: an
   // unsealed or resealed brief set produced a decision indistinguishable from a preregistered one.
-  const { briefs, results, seal } = sealedFixture();
+  // It is now also pinned: a caller supplies the §13 value, and any other value is refused, so a
+  // caller cannot nominate the hash their own briefs happen to hash to.
+  const { briefs, results } = sealedFixture();
   for (const [options, code] of [
     [{}, 'SEAL_REQUIRED'],
     [{ seal: null }, 'SEAL_REQUIRED'],
     [{ seal: '' }, 'SEAL_REQUIRED'],
     [{ seal: 'sha256:deadbeef' }, 'SEAL_INVALID'],
     [{ seal: 'not-a-hash' }, 'SEAL_INVALID'],
+    // well formed, but not the hash the preregistration records
+    [{ seal: `sha256:${'0'.repeat(64)}` }, 'SEAL_MISMATCH'],
+    // the tempting shortcut: the hash of the briefs being analysed rather than of the whole manifest
+    [{ seal: sealHash(PRIMARY) }, 'SEAL_MISMATCH'],
   ]) {
-    const refused = analyseSealed(results, briefs, { iterations: 50, ...options });
+    const refused = analyseSealed(results, briefs, { iterations: 20, ...options });
     assert.equal(refused.ok, false, JSON.stringify(options));
     assert.equal(refused.decision, null, JSON.stringify(options));
     assert.ok(refused.problems.some((p) => p.code === code), `${JSON.stringify(options)}: ${JSON.stringify(refused.problems)}`);
   }
-  assert.equal(analyseSealed(results, briefs, { seal, iterations: 50 }).ok, true, 'the pinned seal still produces a verdict');
+  assert.equal(analyseSealed(results, briefs, { seal: EVAL_SEAL, iterations: 20 }).ok, true, 'the pinned seal still produces a verdict');
+});
+
+test('the seal is checked against the manifest, so an edited or resealed set is refused', () => {
+  const tampered = MANIFEST.map((brief) => ({ ...brief }));
+  tampered[0].prompt = `${tampered[0].prompt} (edited after the seal)`;
+  const editedSeal = sealHash(tampered);
+  assert.notEqual(editedSeal, EVAL_SEAL, 'the fixture must actually move the seal');
+
+  // The pinned seal does not match the manifest any more.
+  const refused = analyseSealed(sealedResults(), tampered, { seal: EVAL_SEAL, iterations: 20 });
+  assert.equal(refused.ok, false);
+  assert.equal(refused.decision, null);
+  assert.ok(refused.problems.some((p) => p.code === 'SEAL_MISMATCH' && p.actual === editedSeal), JSON.stringify(refused.problems));
+
+  // ...and quoting the seal of the edited set instead does not help: it is not the pinned one.
+  const resealed = analyseSealed(sealedResults(), tampered, { seal: editedSeal, iterations: 20 });
+  assert.equal(resealed.ok, false);
+  assert.equal(resealed.decision, null);
+  assert.ok(resealed.problems.some((p) => p.code === 'SEAL_MISMATCH' && p.expected === EVAL_SEAL), JSON.stringify(resealed.problems));
+});
+
+test('the analysed universe is selected from the sealed manifest, not supplied by the caller', () => {
+  const results = sealedResults();
+  const decided = analyseSealed(results, MANIFEST, { seal: EVAL_SEAL, iterations: 20 });
+  assert.equal(decided.ok, true, JSON.stringify(decided.problems));
+  assert.equal(decided.primary.briefs, PRIMARY.length, 'the 50 generation test briefs, not all 79 rows');
+  assert.ok(PRIMARY.every((row) => row.split === 'test' && row.task === 'generate'));
+
+  // A sealed repair brief is outside the primary endpoint (§7), so a result for one is refused rather
+  // than folded into the denominator.
+  const repair = MANIFEST.find((row) => row.split === 'test' && row.task === 'repair');
+  const refused = analyseSealed([...results, sealedResult(repair, 'T_trained_adapter')], MANIFEST, { seal: EVAL_SEAL, iterations: 20 });
+  assert.equal(refused.ok, false);
+  assert.equal(refused.decision, null);
+  assert.ok(refused.problems.some((p) => p.code === 'UNKNOWN_BRIEF' && p.brief_id === repair.brief_id), JSON.stringify(refused.problems));
 });
 
 test('a rise in blocker findings reaches the decision as a negative', () => {
-  // The trained arm records an accessibility finding in every family while both strong controls
-  // record none. decide() only sees this if analyseSealed forwards blocker_rates and blocker_cis.
+  // The trained arm records an accessibility finding in every brief while every other arm records
+  // none. decide() only sees this if analyseSealed forwards blocker_rates and blocker_cis.
   const { briefs, results, seal } = sealedFixture({
     perArm: (arm) => (arm === 'T_trained_adapter' ? { blocker_accessibility: 1 } : {}),
   });
-  const decided = analyseSealed(results, briefs, { seal, iterations: 200 });
-  assert.equal(decided.ok, true);
+  const decided = analyseSealed(results, briefs, { seal, iterations: 100 });
+  assert.equal(decided.ok, true, JSON.stringify(decided.problems));
+  assert.equal(decided.primary.blocker_rates.blocker_accessibility.T_trained_adapter, 1);
+  assert.equal(decided.primary.blocker_rates.blocker_accessibility.C1_bare_base, 0);
+  assert.ok(decided.primary.blocker_cis.blocker_accessibility[0] > 0, 'every resample shows the rise against C1');
   for (const control of decided.controls) {
     assert.equal(control.blocker_rates.blocker_accessibility.T_trained_adapter, 1);
     assert.equal(control.blocker_rates.blocker_accessibility[control.arm_b], 0);
-    assert.ok(control.blocker_cis.blocker_accessibility[0] > 0, 'every resample shows the rise');
+    assert.ok(control.blocker_cis.blocker_accessibility[0] > 0, `every resample shows the rise against ${control.arm_b}`);
   }
   assert.equal(decided.decision.negative, true);
-  assert.ok(decided.decision.negative_reasons.some((reason) => /more accessibility findings than C2_base_mwg_prompt/.test(reason)),
+  for (const arm of ['C1_bare_base', 'C2_base_mwg_prompt', 'C3_base_uplift_tool']) {
+    assert.ok(decided.decision.negative_reasons.includes(`more accessibility findings than ${arm}, interval excluding zero`),
+      `${arm}: ${JSON.stringify(decided.decision.negative_reasons)}`);
+  }
+});
+
+test('a blocker rise against C1 alone is enough for a negative', () => {
+  // The trained arm and both strong controls record the same security findings, so those comparisons
+  // show no rise at all. Only the unguided base (C1) is clean. Attaching blocker rates to C2 and C3
+  // only, as the entry point used to, made this reportable verdict carry no negative.
+  const trainedAndStrong = new Set(['T_trained_adapter', 'C2_base_mwg_prompt', 'C3_base_uplift_tool']);
+  const { briefs, results, seal } = sealedFixture({
+    perArm: (arm, b) => (trainedAndStrong.has(arm) && b.stratum === 'A_familiar' ? { blocker_security: 1 } : {}),
+  });
+  const decided = analyseSealed(results, briefs, { seal, iterations: 100 });
+  assert.equal(decided.ok, true, JSON.stringify(decided.problems));
+
+  const rates = decided.primary.blocker_rates.blocker_security;
+  assert.ok(rates.T_trained_adapter > 0, 'the trained arm records findings');
+  assert.equal(rates.C1_bare_base, 0);
+  assert.ok(decided.primary.blocker_cis.blocker_security[0] > 0, 'the interval on the rise against C1 excludes zero');
+  for (const control of decided.controls) {
+    assert.equal(control.blocker_cis.blocker_security[0], 0, `no rise against ${control.arm_b}`);
+  }
+
+  assert.equal(decided.decision.negative, true);
+  assert.ok(decided.decision.negative_reasons.includes('more security findings than C1_bare_base, interval excluding zero'),
     JSON.stringify(decided.decision.negative_reasons));
+  assert.ok(!decided.decision.negative_reasons.some((reason) => /more security findings than C[23]_/.test(reason)),
+    JSON.stringify(decided.decision.negative_reasons));
+});
+
+test('a blocker finding in the base arm is not a rise in the trained arm', () => {
+  // Sign check: the comparison is T - C1, so findings that only C1 records must not become a negative.
+  const { briefs, results, seal } = sealedFixture({
+    perArm: (arm) => (arm === 'C1_bare_base' ? { blocker_security: 1 } : {}),
+  });
+  const decided = analyseSealed(results, briefs, { seal, iterations: 50 });
+  assert.equal(decided.primary.blocker_rates.blocker_security.C1_bare_base, 1);
+  assert.equal(decided.primary.blocker_rates.blocker_security.T_trained_adapter, 0);
+  assert.ok(decided.primary.blocker_cis.blocker_security[1] < 0, 'the trained arm is the cleaner one');
+  assert.equal(decided.decision.negative, false, JSON.stringify(decided.decision.negative_reasons));
 });
 
 test('an unrecorded blocker count counts as a finding in the comparison', () => {
@@ -389,9 +488,10 @@ test('an unrecorded blocker count counts as a finding in the comparison', () => 
   const { briefs, results, seal } = sealedFixture({
     perArm: (arm) => (arm === 'T_trained_adapter' ? { blocker_accessibility: undefined, blocker_security: undefined } : {}),
   });
-  const decided = analyseSealed(results, briefs, { seal, iterations: 50 });
+  const decided = analyseSealed(results, briefs, { seal, iterations: 20 });
+  assert.equal(decided.primary.blocker_rates.blocker_accessibility.T_trained_adapter, 1);
+  assert.equal(decided.primary.blocker_rates.blocker_accessibility.C1_bare_base, 0);
   assert.equal(decided.controls[0].blocker_rates.blocker_accessibility.T_trained_adapter, 1);
-  assert.equal(decided.controls[0].blocker_rates.blocker_accessibility.C1_bare_base, 0);
 });
 
 test('worse cost per pass reaches the decision as a negative', () => {
@@ -399,7 +499,7 @@ test('worse cost per pass reaches the decision as a negative', () => {
   const { briefs, results, seal } = sealedFixture({
     perArm: (arm) => (arm === 'T_trained_adapter' ? { inference_tokens: 100 } : { inference_tokens: 10 }),
   });
-  const decided = analyseSealed(results, briefs, { seal, iterations: 200 });
+  const decided = analyseSealed(results, briefs, { seal, iterations: 50 });
   assert.equal(decided.primary.cost_detail.metric, 'inference_tokens_per_pass');
   assert.equal(decided.primary.cost_detail.T_trained_adapter.per_pass, 100);
   assert.equal(decided.primary.cost_detail.C1_bare_base.per_pass, 10);
@@ -409,15 +509,18 @@ test('worse cost per pass reaches the decision as a negative', () => {
 });
 
 test('over-application on an already-modern brief reaches the decision as a negative', () => {
+  const alreadyModern = new Set(PRIMARY
+    .filter((b) => (b.non_goals ?? []).includes(ALREADY_MODERN_MARKER))
+    .map((b) => b.brief_id));
+  assert.equal(alreadyModern.size, 8, 'PREREGISTRATION §13 records 8 already-modern rows inside C');
   const { briefs, results, seal } = sealedFixture({
-    alreadyModern: 1,
-    perArm: (arm, b) => (arm === 'T_trained_adapter' && b.brief_id.startsWith('modern-')
+    perArm: (arm, b) => (arm === 'T_trained_adapter' && alreadyModern.has(b.brief_id)
       ? { changed_pages: 4, regressions: 1 }
       : { changed_pages: 0, regressions: 0 }),
   });
-  const decided = analyseSealed(results, briefs, { seal, iterations: 200 });
-  assert.equal(decided.primary.over_application_detail.already_modern_briefs, 1);
-  assert.deepEqual(decided.primary.over_application_detail.T_trained_adapter, { changed_pages: 4, regressions: 1 });
+  const decided = analyseSealed(results, briefs, { seal, iterations: 50 });
+  assert.equal(decided.primary.over_application_detail.already_modern_briefs, alreadyModern.size);
+  assert.deepEqual(decided.primary.over_application_detail.T_trained_adapter, { changed_pages: 4 * alreadyModern.size, regressions: alreadyModern.size });
   assert.deepEqual(decided.primary.over_application_detail.C1_bare_base, { changed_pages: 0, regressions: 0 });
   assert.equal(decided.primary.over_application_worse, true);
   assert.equal(decided.decision.negative, true);
@@ -425,8 +528,9 @@ test('over-application on an already-modern brief reaches the decision as a nega
 });
 
 test('a comparison with no recorded cost or change count is unmeasured, never \'not worse\'', () => {
-  // No inference_tokens anywhere and no already-modern brief in the sealed set. Asserting `false`
-  // would claim a check passed that was never run; `null` plus the reason is the honest answer.
+  // No inference_tokens anywhere and no changed_pages/regressions on the already-modern briefs.
+  // Asserting `false` would claim a check passed that was never run; `null` plus the reason is the
+  // honest answer.
   const { briefs, results, seal } = sealedFixture();
   const decided = analyseSealed(results, briefs, { seal, iterations: 50 });
   assert.equal(decided.primary.cost_per_pass_worse, null);
