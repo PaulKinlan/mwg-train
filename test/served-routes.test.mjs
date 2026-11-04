@@ -624,8 +624,9 @@ const fixtureProject = () => ({
 
 /**
  * A generated project shaped enough for probeProject: a write route that redirects, and a read-by-reference route
- * that reads the record back. `location` is either a literal target the fixture emits, or one of the two forms that
- * can only be built once the prober has allocated its port.
+ * that reads the record back. `location` is either a literal target the fixture emits, `'absent'` for a 3xx written
+ * with no Location header at all, or one of the two forms that can only be built once the prober has allocated its
+ * port.
  */
 function writeRedirectFixtureProject(root, { location }) {
   const dir = join(root, FIXTURE_PROJECT_ID);
@@ -651,6 +652,8 @@ function writeRedirectFixtureProject(root, { location }) {
       : location === 'absolute-local'
         ? '`http://127.0.0.1:${port}/things/42`'
         : JSON.stringify(location);
+  // A 302 written with an empty header object is a redirect that names nowhere, which a generated server can emit.
+  const redirectHeaders = location === 'absent' ? '{}' : `{ location: ${target} }`;
   // Node builtins only: the sandbox mounts the project directory and the node runtime, never this repository's
   // node_modules, so a fixture that imported a framework would be testing the sandbox, not the prober.
   writeFileSync(
@@ -660,7 +663,7 @@ const portIndex = process.argv.indexOf('--port');
 const port = portIndex === -1 ? 0 : Number(process.argv[portIndex + 1]);
 const server = http.createServer((request, response) => {
   if (request.method === 'POST') {
-    response.writeHead(302, { location: ${target} });
+    response.writeHead(302, ${redirectHeaders});
     response.end('created');
     return;
   }
@@ -706,7 +709,8 @@ test('a redirect target is adopted only when it names the server under test', ()
     ['a private network address', 'http://10.0.0.5:45999/records/42'],
     ['an arbitrary external host', 'http://evil.example/records/42'],
     ['a scheme-relative target naming an external host', '//evil.example/records/42'],
-    ['credentials in the authority', `http://127.0.0.1:${port}@evil.example/records/42`],
+    ['credentials in the authority of the tested host', `http://user:pass@127.0.0.1:${port}/records/42`],
+    ['credentials in the authority of another host', `http://127.0.0.1:${port}@evil.example/records/42`],
     ['https, which the tested server does not serve', `https://127.0.0.1:${port}/records/42`],
     ['a file URL', 'file:///etc/passwd'],
     ['a javascript URL', 'javascript:alert(1)'],
@@ -724,6 +728,14 @@ test('a redirect target is adopted only when it names the server under test', ()
   assert.throws(
     () => resolveRecordRedirect('http://169.254.169.254/latest/meta-data/', port),
     /169\.254\.169\.254/,
+  );
+
+  // Credentials are refused on their own account rather than because the authority named the wrong host. A target
+  // that is correct in host and port and carries a userinfo component isolates that check, so the code is asserted.
+  assert.throws(
+    () => resolveRecordRedirect(`http://user:pass@127.0.0.1:${port}/records/42`, port),
+    (error) => error instanceof RedirectTargetError && error.code === 'credentials',
+    'a same-origin target with credentials is refused as credentials, not as a host mismatch',
   );
 });
 
@@ -814,6 +826,36 @@ test('end to end: a redirect to the cloud metadata address fails the write route
     assert.equal(report.errors, 1);
     const read = report.routes.find((route) => route.declared_path === '/things/:id');
     assert.equal(read.probed_with_created_record, false, 'the refused reference must not become the probe URL');
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+// Review P1: `if (location)` skipped the validation for a 3xx written without a Location header, so a write route
+// that answered 302 and named nowhere was classified `served` and the run reported the route as measured. A 3xx is
+// the claim "the record is that way"; with no header there is no reference, so the route check has failed.
+test('end to end: a redirect with no Location header fails the write route', async (t) => {
+  if (!sandboxAvailable()) {
+    t.skip('bubblewrap unavailable; no generated code run without it');
+    return;
+  }
+  const root = mkdtempSync(join(tmpdir(), 'llda-no-location-'));
+  try {
+    writeRedirectFixtureProject(root, { location: 'absent' });
+    const report = await probeProject(fixtureProject(), root);
+    const write = report.routes.find((route) => route.declared_method === 'POST');
+    assert.equal(write.status, 302, 'the server did answer the write route');
+    assert.equal(write.outcome, 'error', 'a 3xx that names no reference is a failed route check, not a served route');
+    assert.equal(write.is_served, false);
+    assert.match(write.error, /refused the redirect target/);
+    assert.match(write.error, /no Location header/);
+    assert.equal(report.errors, 1);
+    assert.equal(report.served, 1, 'the read route is still served; only the write route failed');
+
+    // Nothing was adopted, so the read-by-reference route probed its declared path rather than an empty URL.
+    const read = report.routes.find((route) => route.declared_path === '/things/:id');
+    assert.equal(read.probed_path, '/things/1');
+    assert.equal(read.probed_with_created_record, false);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

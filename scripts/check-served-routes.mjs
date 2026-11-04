@@ -275,7 +275,10 @@ export function resolveRecordRedirect(location, port) {
   const origin = `http://127.0.0.1:${port}`;
   const raw = String(location ?? '').trim();
   if (raw === '') {
-    throw new RedirectTargetError('empty', 'the server sent an empty Location header, so there is no record to read');
+    throw new RedirectTargetError(
+      'empty',
+      'the server answered with a redirect and no Location header, so there is no record to read',
+    );
   }
   let target;
   try {
@@ -492,20 +495,22 @@ export async function probeProject(project, projectsRoot) {
         let isServed = outcome === 'served';
         let redirectRefusal = null;
         if (method === 'POST' && status >= 300 && status < 400) {
+          // A 3xx is read for the record reference whether or not the server supplied a Location header: a redirect
+          // that names nowhere has no reference, and resolveRecordRedirect() refuses an absent header the same way
+          // it refuses one that names another host. Guarding this with `if (location)` classified a 3xx with no
+          // Location as a served route, which is a write route reported measured with nothing to read back.
           const location = res.headers.get('location');
-          if (location) {
-            try {
-              recordUrl = resolveRecordRedirect(location, port);
-            } catch (err) {
-              if (!(err instanceof RedirectTargetError)) throw err;
-              recordUrl = null;
-              // The write route was answered, but the reference it handed back names somewhere this prober never
-              // validated. Reporting it as served and silently dropping the redirect is how a run looks clean while
-              // a request the host should never have made was one line away.
-              outcome = 'error';
-              isServed = false;
-              redirectRefusal = err.message;
-            }
+          try {
+            recordUrl = resolveRecordRedirect(location, port);
+          } catch (err) {
+            if (!(err instanceof RedirectTargetError)) throw err;
+            recordUrl = null;
+            // The write route was answered, but the reference it handed back names somewhere this prober never
+            // validated. Reporting it as served and silently dropping the redirect is how a run looks clean while
+            // a request the host should never have made was one line away.
+            outcome = 'error';
+            isServed = false;
+            redirectRefusal = err.message;
           }
         }
 
