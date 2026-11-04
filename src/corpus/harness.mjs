@@ -853,6 +853,11 @@ export function runEnvironment(chrome) {
     node_version: process.version,
     browser,
     chrome_version: typeof browser?.product === 'string' && browser.product ? browser.product : null,
+    // The browser's containment posture, carried from the handle so a committed record can attest whether the
+    // renderer sandbox was on for this run (mwg-train-ry4q). null, never a guessed 'sandboxed': a handle that does
+    // not disclose the posture - a launch that failed before a handle existed, or a test fixture - must read as
+    // unknown rather than claim the host was protected.
+    chrome_sandbox: chrome?.sandbox ?? null,
   };
 }
 

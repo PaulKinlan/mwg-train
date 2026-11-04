@@ -1,9 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, rmSync, readlinkSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
+import { fileURLToPath } from 'node:url';
 
 import { CHROME_CANDIDATES, chromeArgs, chromeBinary, chromeIsUnsandboxed, launchChrome } from '../src/corpus/cdp.mjs';
 
@@ -121,6 +122,37 @@ test('the real launch path drives generated JS with the sandbox on', async (t) =
     return { title: document.title, text: node.textContent };
   `);
   assert.deepEqual(result, { title: 'sandboxed', text: 'generated code ran' });
+});
+
+test('the real launch path discloses its containment posture on the handle it returns', async (t) => {
+  // mwg-train-ry4q: the posture used to be decided inside launchChrome and then dropped, so a corpus record built
+  // from the handle could not tell a sandboxed run from an opt-out run. A handle that says nothing is the bug, so
+  // this asserts the disclosure on the handle launchChrome actually returns, next to the launch that made it.
+  assert.equal(chromeIsUnsandboxed(), false, 'this process must hold the default posture for the assertion below');
+  const chrome = await launchChrome();
+  t.after(() => chrome.close());
+  assert.deepEqual(chrome.sandbox, { sandboxed: true, optIn: null });
+  const launched = chromeArgs({ userDataDir: '/tmp/example' });
+  assert.equal(launched.includes('--no-sandbox'), !chrome.sandbox.sandboxed,
+    'the disclosed posture must match the arguments a launch in this environment carries');
+});
+
+test('the opt-in posture is disclosed as unsandboxed, not merely launched without the flag', () => {
+  // The environment is set for a child process rather than this one: a launch that mutates process.env would leak
+  // the host-risk opt-in into every later test in this file, which is the failure mode the opt-in exists to avoid.
+  const cdp = fileURLToPath(new URL('../src/corpus/cdp.mjs', import.meta.url));
+  const probe = `
+    const { launchChrome } = await import(${JSON.stringify(cdp)});
+    const chrome = await launchChrome();
+    try { process.stdout.write(JSON.stringify(chrome.sandbox)); } finally { await chrome.close(); }
+  `;
+  const result = spawnSync(process.execPath, ['--input-type=module', '--eval', probe], {
+    encoding: 'utf8',
+    timeout: 60_000,
+    env: { ...process.env, MWG_ALLOW_UNSANDBOXED_CHROME: '1' },
+  });
+  assert.equal(result.status, 0, `the opted-in launch must report its posture: ${result.stderr}`);
+  assert.deepEqual(JSON.parse(result.stdout), { sandboxed: false, optIn: 'MWG_ALLOW_UNSANDBOXED_CHROME=1' });
 });
 
 // The measurement needs /proc, so it is Linux-only. Where it cannot be measured it is better to say so than to assert

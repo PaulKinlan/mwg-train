@@ -252,6 +252,10 @@ export function versionRecord(record, spec) {
     chrome_version: record.chrome_version,
     sandbox: record.sandbox ?? null,
     memoryContainment: record.memoryContainment ?? null,
+    // The browser's own containment, projected for the same reason the generated server's sandbox is: the committed
+    // record is what a reviewer reads later, and `sandbox` above is the server's mechanism, not the browser's. A
+    // historical row predates the field, so absence stays null instead of being filled in from this run's host.
+    chrome_sandbox: record.chrome_sandbox ?? null,
     persistence_ok: persistenceOk(record, spec),
     validation_observation: validationObservation(record),
     journeys: journeyResults(record, spec),
