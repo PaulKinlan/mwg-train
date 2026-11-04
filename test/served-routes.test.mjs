@@ -5,6 +5,7 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import http from 'node:http';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import test from 'node:test';
@@ -16,7 +17,8 @@ import {
   evaluateServedGap,
   extractUnservedRoutes,
 } from '../scripts/check-served-gap.mjs';
-import { runVerdict } from '../scripts/check-served-routes.mjs';
+import { probeProject, RedirectTargetError, resolveRecordRedirect, runVerdict } from '../scripts/check-served-routes.mjs';
+import { sandboxAvailable } from '../src/eval/generated-server.mjs';
 
 const ROOT = resolve(import.meta.dirname, '..');
 const SCRIPT = join(ROOT, 'scripts', 'check-served-routes.mjs');
@@ -602,5 +604,217 @@ test('check-served-gap: a document whose gap-section heading has been renamed or
     assert.ok(threw, 'CLI must exit non-zero for renamed heading');
   } finally {
     rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// mwg-train-llda. The prober probed a read-by-reference route with whatever the generated server put in a Location
+// header: `recordUrl.startsWith('http') ? recordUrl : ...` meant an answer of `302 http://169.254.169.254/...`, or a
+// redirect to another loopback service, became a request this host made on the server's behalf. The header is a claim
+// by model-generated code, so the target it names is now a question the prober answers, not an instruction it follows.
+// The unit cases pin the decision; the end-to-end cases drive probeProject, which is the loop that used to act on the
+// raw header, against a fixture server that redirects wherever the case says.
+const FIXTURE_PROJECT_ID = 'llda-fixture-probe';
+
+const fixtureProject = () => ({
+  project_id: FIXTURE_PROJECT_ID,
+  family_id: 'tr-00',
+  archetype: 'fixture',
+  framework: 'raw',
+});
+
+/**
+ * A generated project shaped enough for probeProject: a write route that redirects, and a read-by-reference route
+ * that reads the record back. `location` is either a literal target the fixture emits, or one of the two forms that
+ * can only be built once the prober has allocated its port.
+ */
+function writeRedirectFixtureProject(root, { location }) {
+  const dir = join(root, FIXTURE_PROJECT_ID);
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(
+    join(dir, 'spec.json'),
+    JSON.stringify(
+      {
+        project_id: FIXTURE_PROJECT_ID,
+        routes: [
+          { path: '/things', method: 'POST', kind: 'write' },
+          { path: '/things/:id', method: 'GET', kind: 'read-by-reference' },
+        ],
+        fields: [{ name: 'title', type: 'text' }],
+      },
+      null,
+      2,
+    ),
+  );
+  const target =
+    location === 'relative'
+      ? "'/things/42'"
+      : location === 'absolute-local'
+        ? '`http://127.0.0.1:${port}/things/42`'
+        : JSON.stringify(location);
+  // Node builtins only: the sandbox mounts the project directory and the node runtime, never this repository's
+  // node_modules, so a fixture that imported a framework would be testing the sandbox, not the prober.
+  writeFileSync(
+    join(dir, 'server.mjs'),
+    `import http from 'node:http';
+const portIndex = process.argv.indexOf('--port');
+const port = portIndex === -1 ? 0 : Number(process.argv[portIndex + 1]);
+const server = http.createServer((request, response) => {
+  if (request.method === 'POST') {
+    response.writeHead(302, { location: ${target} });
+    response.end('created');
+    return;
+  }
+  response.writeHead(200, { 'content-type': 'text/plain' });
+  response.end(request.url === '/things/42' ? 'the created record' : 'root');
+});
+server.listen(port, '127.0.0.1');
+`,
+  );
+  return root;
+}
+
+/** Start a loopback listener that records every request, to prove a refused redirect was never fetched. */
+async function startCanary() {
+  const hits = [];
+  const server = http.createServer((request, response) => {
+    hits.push(`${request.method} ${request.url}`);
+    response.end('canary');
+  });
+  await new Promise((resolveListen) => server.listen(0, '127.0.0.1', resolveListen));
+  return {
+    port: server.address().port,
+    hits,
+    close: () => new Promise((resolveClose) => server.close(resolveClose)),
+  };
+}
+
+test('a redirect target is adopted only when it names the server under test', () => {
+  const port = 45999;
+  const origin = `http://127.0.0.1:${port}`;
+
+  // Adopted: a relative target, and the two spellings of the tested origin. These are the legitimate shapes a
+  // generated server produces, and refusing them would break the read-by-reference probe the redirect exists for.
+  assert.equal(resolveRecordRedirect('/records/42', port), `${origin}/records/42`);
+  assert.equal(resolveRecordRedirect('records/42', port), `${origin}/records/42`);
+  assert.equal(resolveRecordRedirect(`${origin}/records/42`, port), `${origin}/records/42`);
+  assert.equal(resolveRecordRedirect(`http://localhost:${port}/records/42?tab=1`, port), `${origin}/records/42?tab=1`);
+
+  const refused = [
+    ['another port on loopback', `http://127.0.0.1:${port + 1}/records/42`],
+    ['a loopback address with no port, which means port 80', 'http://127.0.0.1/records/42'],
+    ['the cloud metadata address', 'http://169.254.169.254/latest/meta-data/iam/security-credentials/'],
+    ['a private network address', 'http://10.0.0.5:45999/records/42'],
+    ['an arbitrary external host', 'http://evil.example/records/42'],
+    ['a scheme-relative target naming an external host', '//evil.example/records/42'],
+    ['credentials in the authority', `http://127.0.0.1:${port}@evil.example/records/42`],
+    ['https, which the tested server does not serve', `https://127.0.0.1:${port}/records/42`],
+    ['a file URL', 'file:///etc/passwd'],
+    ['a javascript URL', 'javascript:alert(1)'],
+    ['an empty header', ''],
+  ];
+  for (const [description, target] of refused) {
+    assert.throws(
+      () => resolveRecordRedirect(target, port),
+      (error) => error instanceof RedirectTargetError,
+      `${description} must be refused`,
+    );
+  }
+
+  // A refusal a reader cannot act on is a refusal they cannot check: the message names what the server sent.
+  assert.throws(
+    () => resolveRecordRedirect('http://169.254.169.254/latest/meta-data/', port),
+    /169\.254\.169\.254/,
+  );
+});
+
+test('end to end: a relative redirect is adopted as the record a read-by-reference route reads', async (t) => {
+  if (!sandboxAvailable()) {
+    t.skip('bubblewrap unavailable; no generated code run without it');
+    return;
+  }
+  const root = mkdtempSync(join(tmpdir(), 'llda-relative-'));
+  try {
+    writeRedirectFixtureProject(root, { location: 'relative' });
+    const report = await probeProject(fixtureProject(), root);
+    assert.equal(report.server_ready, true);
+    const read = report.routes.find((route) => route.declared_path === '/things/:id');
+    assert.equal(read.probed_path, 'the reference the server returned');
+    assert.equal(read.probed_with_created_record, true);
+    assert.equal(read.status, 200);
+    assert.equal(read.is_served, true);
+    assert.equal(report.errors, 0, 'a redirect inside the tested server is not an error');
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('end to end: an absolute redirect naming the tested origin is adopted as a relative one is', async (t) => {
+  if (!sandboxAvailable()) {
+    t.skip('bubblewrap unavailable; no generated code run without it');
+    return;
+  }
+  const root = mkdtempSync(join(tmpdir(), 'llda-absolute-local-'));
+  try {
+    writeRedirectFixtureProject(root, { location: 'absolute-local' });
+    const report = await probeProject(fixtureProject(), root);
+    const read = report.routes.find((route) => route.declared_path === '/things/:id');
+    assert.equal(read.probed_path, 'the reference the server returned');
+    assert.equal(read.probed_with_created_record, true);
+    assert.equal(read.status, 200);
+    assert.equal(report.errors, 0);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('end to end: a redirect to another loopback port is refused, fails the write route, and is never fetched', async (t) => {
+  if (!sandboxAvailable()) {
+    t.skip('bubblewrap unavailable; no generated code run without it');
+    return;
+  }
+  const canary = await startCanary();
+  const root = mkdtempSync(join(tmpdir(), 'llda-other-port-'));
+  try {
+    // A live service on an unexpected loopback port, which is the case that can be observed rather than argued: the
+    // broken prober would have fetched it, and the canary would have the request to show for it.
+    writeRedirectFixtureProject(root, { location: `http://127.0.0.1:${canary.port}/stolen-record` });
+    const report = await probeProject(fixtureProject(), root);
+
+    assert.deepEqual(canary.hits, [], 'the prober must not fetch a redirect that names another port');
+    const write = report.routes.find((route) => route.declared_method === 'POST');
+    assert.equal(write.outcome, 'error', 'a refused redirect target is a failed route check, not a served route');
+    assert.equal(write.is_served, false);
+    assert.match(write.error, /refused the redirect target/);
+    assert.match(write.error, new RegExp(String(canary.port)), 'the failure names the port it refused');
+    assert.equal(report.errors, 1);
+
+    // No reference was adopted, so the read-by-reference route fell back to its declared path.
+    const read = report.routes.find((route) => route.declared_path === '/things/:id');
+    assert.equal(read.probed_path, '/things/1');
+    assert.equal(read.probed_with_created_record, false);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+    await canary.close();
+  }
+});
+
+test('end to end: a redirect to the cloud metadata address fails the write route instead of being followed', async (t) => {
+  if (!sandboxAvailable()) {
+    t.skip('bubblewrap unavailable; no generated code run without it');
+    return;
+  }
+  const root = mkdtempSync(join(tmpdir(), 'llda-metadata-'));
+  try {
+    writeRedirectFixtureProject(root, { location: 'http://169.254.169.254/latest/meta-data/' });
+    const report = await probeProject(fixtureProject(), root);
+    const write = report.routes.find((route) => route.declared_method === 'POST');
+    assert.equal(write.outcome, 'error');
+    assert.equal(write.is_served, false);
+    assert.match(write.error, /169\.254\.169\.254/, 'the failure names the destination it refused');
+    assert.equal(report.errors, 1);
+    const read = report.routes.find((route) => route.declared_path === '/things/:id');
+    assert.equal(read.probed_with_created_record, false, 'the refused reference must not become the probe URL');
+  } finally {
+    rmSync(root, { recursive: true, force: true });
   }
 });
