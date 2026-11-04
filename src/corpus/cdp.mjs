@@ -370,6 +370,14 @@ export async function launchChrome({ proxy = null, allowEgress = false, disableW
   return {
     version: built.version,
     /**
+     * The sandbox posture this browser was actually launched with, stated on the handle because nothing else on it
+     * says so. Without it a corpus record is silent on whether generated code ran behind a renderer sandbox or
+     * shared this host with one (mwg-train-ry4q): both postures start Chrome, drive pages and produce a passing run,
+     * so the record is the only place the difference can survive. `optIn` names the variable that turned the sandbox
+     * off, and is null when the renderer sandbox is on.
+     */
+    sandbox: { sandboxed: !unsandboxed, optIn: unsandboxed ? 'MWG_ALLOW_UNSANDBOXED_CHROME=1' : null },
+    /**
      * `isolate: true` puts the page in its own browser context, which is a separate cookie jar. Without it a
      * second page shares the first one's cookies, so a check that means to drive a DIFFERENT person is
      * silently driving the same session - the workspace membership check reported the owner's cookie as a
