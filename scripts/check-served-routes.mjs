@@ -23,6 +23,11 @@
  *   HTTP status >= 500 or connection failure counts as ERROR.
  *   Write routes are probed with POST, and read-by-reference routes with a record the server
  *   itself created - a 404 for a ref that was never written is the correct answer, not a gap.
+ *   The reference is adopted only when the redirect NAMES THE SERVER UNDER TEST: a relative target, or the
+ *   tested http://127.0.0.1:<port>/ origin (mwg-train-llda). A Location header naming any other host or port,
+ *   credentials, or another scheme is refused and fails the write route, because following it would make this
+ *   prober issue a request to a destination the generated server chose - another loopback service, a private
+ *   address, cloud metadata, or an arbitrary host.
  *
  * Verdict (mwg-train-xku). A run that could not MEASURE is not a run that measured everything and found it
  * fine. This script used to print "MEASURED - 0/0 declared route(s) served across 7 project(s) (0 not
@@ -233,6 +238,81 @@ function fillParams(routePath) {
     .replace(/:[A-Za-z_][A-Za-z0-9_]*/g, '1');
 }
 
+/**
+ * Hostnames a generated server may name in a Location header, because they are how this prober addresses the server
+ * it started itself.
+ */
+const LOCAL_REDIRECT_HOSTNAMES = new Set(['127.0.0.1', 'localhost']);
+
+/**
+ * A redirect whose target this prober will not follow, with a code so a caller can tell a policy refusal from a
+ * server that merely answered with an error.
+ */
+export class RedirectTargetError extends Error {
+  constructor(code, message) {
+    super(message);
+    this.name = 'RedirectTargetError';
+    this.code = code;
+  }
+}
+
+/**
+ * The one URL a generated server's redirect may send this prober to, or a refusal (mwg-train-llda).
+ *
+ * The Location header arrives from model-generated code, so it is a claim by the code under test, not an instruction.
+ * Adopting it meant a server could answer a write route with `302 http://169.254.169.254/latest/meta-data/`, another
+ * loopback service, or any host it liked, and the prober would fetch it and file the answer as a route result. The
+ * redirect is constrained the same way src/capture/proxy.mjs constrains a browser: the destination is not taken from
+ * the untrusted value, it is rebuilt from the origin this prober validated (127.0.0.1 and the port it allocated) and
+ * only the path and query are carried over. The address policy in src/capture/ip-ranges.mjs is the capture-side
+ * version of the same judgment; here it is simpler and stricter, because one specific local server is the whole of
+ * what a route probe may reach.
+ *
+ * Throws RedirectTargetError rather than returning null: a redirect that points elsewhere is a failed measurement, and
+ * a caller that quietly dropped it would report the write route as served.
+ */
+export function resolveRecordRedirect(location, port) {
+  const origin = `http://127.0.0.1:${port}`;
+  const raw = String(location ?? '').trim();
+  if (raw === '') {
+    throw new RedirectTargetError(
+      'empty',
+      'the server answered with a redirect and no Location header, so there is no record to read',
+    );
+  }
+  let target;
+  try {
+    target = new URL(raw, `${origin}/`);
+  } catch {
+    throw new RedirectTargetError('unparsable', `the Location header is not a URL: ${JSON.stringify(raw)}`);
+  }
+  if (target.protocol !== 'http:') {
+    throw new RedirectTargetError(
+      'scheme',
+      `the Location header names ${target.protocol} rather than http: on the server under test: ${JSON.stringify(raw)}`,
+    );
+  }
+  if (target.username || target.password) {
+    throw new RedirectTargetError(
+      'credentials',
+      `the Location header carries credentials in its authority: ${JSON.stringify(raw)}`,
+    );
+  }
+  if (!LOCAL_REDIRECT_HOSTNAMES.has(target.hostname)) {
+    throw new RedirectTargetError(
+      'host',
+      `the Location header names ${target.hostname}, not the server under test (${origin}): ${JSON.stringify(raw)}`,
+    );
+  }
+  if (target.port !== String(port)) {
+    throw new RedirectTargetError(
+      'port',
+      `the Location header names port ${target.port || '(the scheme default)'} rather than the tested port ${port}: ${JSON.stringify(raw)}`,
+    );
+  }
+  return `${origin}${target.pathname}${target.search}`;
+}
+
 function classifyStatus(status) {
   if (status >= 200 && status < 400) return 'served';
   if (status === 404 || status === 405) return 'not-served';
@@ -296,7 +376,9 @@ function selectProjects(corpus, options) {
   return [...byArchetype.values()].slice(0, limit);
 }
 
-async function probeProject(project, projectsRoot) {
+// Exported so a regression test can drive the real probe loop against a fixture project instead of only exercising
+// the guard in isolation: the decision is worth little without the loop that used to act on the raw header.
+export async function probeProject(project, projectsRoot) {
   const projectDir = isAbsolute(projectsRoot)
     ? join(projectsRoot, project.project_id)
     : join(REPO_ROOT, projectsRoot, project.project_id);
@@ -392,8 +474,12 @@ async function probeProject(project, projectsRoot) {
       // nothing about whether it is served, and the earlier baseline wrongly reported every write
       // route as missing on exactly that mistake.
       let url = `http://127.0.0.1:${port}${probePath}`;
+      let probedRecord = false;
       if (method === 'GET' && (r.kind ?? '') === 'read-by-reference' && recordUrl) {
-        url = recordUrl.startsWith('http') ? recordUrl : `http://127.0.0.1:${port}${recordUrl}`;
+        // Already constrained to this server's origin by resolveRecordRedirect(), so there is no untrusted URL left
+        // to adopt here: the reference the server handed back was accepted only because it named this server.
+        url = recordUrl;
+        probedRecord = true;
       }
 
       try {
@@ -405,22 +491,39 @@ async function probeProject(project, projectsRoot) {
           signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
         });
         const status = res.status;
+        let outcome = classifyStatus(status);
+        let isServed = outcome === 'served';
+        let redirectRefusal = null;
         if (method === 'POST' && status >= 300 && status < 400) {
+          // A 3xx is read for the record reference whether or not the server supplied a Location header: a redirect
+          // that names nowhere has no reference, and resolveRecordRedirect() refuses an absent header the same way
+          // it refuses one that names another host. Guarding this with `if (location)` classified a 3xx with no
+          // Location as a served route, which is a write route reported measured with nothing to read back.
           const location = res.headers.get('location');
-          if (location) recordUrl = location;
+          try {
+            recordUrl = resolveRecordRedirect(location, port);
+          } catch (err) {
+            if (!(err instanceof RedirectTargetError)) throw err;
+            recordUrl = null;
+            // The write route was answered, but the reference it handed back names somewhere this prober never
+            // validated. Reporting it as served and silently dropping the redirect is how a run looks clean while
+            // a request the host should never have made was one line away.
+            outcome = 'error';
+            isServed = false;
+            redirectRefusal = err.message;
+          }
         }
-        const outcome = classifyStatus(status);
-        const isServed = outcome === 'served';
 
         routeResults.push({
           declared_path: r.path,
-          probed_path: url === `http://127.0.0.1:${port}${probePath}` ? probePath : 'the reference the server returned',
+          probed_path: probedRecord ? 'the reference the server returned' : probePath,
           declared_method: method,
           kind: r.kind ?? 'unknown',
           status,
           outcome,
           is_served: isServed,
-          probed_with_created_record: Boolean(recordUrl) && (r.kind ?? '') === 'read-by-reference',
+          probed_with_created_record: probedRecord,
+          ...(redirectRefusal ? { error: `refused the redirect target: ${redirectRefusal}` } : {}),
         });
       } catch (err) {
         routeResults.push({
