@@ -50,17 +50,30 @@ const dir = mkdtempSync(join(tmpdir(), `checkout-verify-${ARM}-`));
 writeProject(dir, { projectId, files, spec: projectSpec, includeDependencies: true });
 symlinkSync(join(ROOT, 'node_modules'), join(dir, 'node_modules'), 'dir');
 const base = `http://127.0.0.1:${PORT}`;
-const server = startGeneratedServer({
-  projectDir: dir,
-  port: PORT,
-  dbPath: join(dir, 'verify.sqlite'),
-  stdio: ['ignore', 'ignore', 'pipe'],
-  // Not detached: this script kills the sandbox by pid, and the kernel tears the whole PID
-  // namespace down with it, so nothing is left behind either way.
-  detached: false,
-});
+// A launch that fails closed - no bubblewrap and no documented opt-in - used to throw here, before any report existed,
+// so the run whose containment a reviewer most needs to read was the one that left no file at all (mwg-train-hogz
+// review). The failure is recorded and the report is written below with `sandboxPosture: null`: nothing launched, so
+// there is no containment to state, and a missing report cannot be told from a verifier that was never run.
+let server = null;
+let startupError = null;
+try {
+  server = startGeneratedServer({
+    projectDir: dir,
+    port: PORT,
+    dbPath: join(dir, 'verify.sqlite'),
+    stdio: ['ignore', 'ignore', 'pipe'],
+    // Not detached: this script kills the sandbox by pid, and the kernel tears the whole PID
+    // namespace down with it, so nothing is left behind either way.
+    detached: false,
+  });
+} catch (error) {
+  startupError = error;
+}
+// Every screenshot this run captured, so the report can be written whether or not the journey got that far.
+const shots = [];
 let chrome;
 try {
+  if (startupError) throw startupError;
   let up = false;
   for (let attempt = 0; attempt < 40 && !up; attempt += 1) {
     await sleep(250);
@@ -104,6 +117,7 @@ try {
   check('the total adds up', figure(checkout, 'checkout-total') === money(subtotal + shippingOf('Standard') + tax), money(subtotal + shippingOf('Standard') + tax));
   const checkoutShot = join(SHOTS, `checkout-${ARM}.png`);
   await page.screenshot(checkoutShot);
+  shots.push(checkoutShot);
 
   // Choosing the other tier re-derives the total in the page the visitor is looking at.
   await page.selectOption('select[name=shipping]', 'Express');
@@ -114,6 +128,7 @@ try {
   check('the chosen tier changes the total', figure(express, 'checkout-total') === money(expressTotal), money(expressTotal));
   const expressShot = join(SHOTS, `checkout-express-${ARM}.png`);
   await page.screenshot(expressShot);
+  shots.push(expressShot);
 
   // Pay: the card is typed into the form, and nothing about it is stored.
   await page.type('#card', '4242424242424242');
@@ -128,6 +143,7 @@ try {
   check('the receipt carries its reference', figure(receipt, 'receipt-ref') === receiptUrl.split('/').pop(), receiptUrl.split('/').pop());
   const receiptShot = join(SHOTS, `receipt-${ARM}.png`);
   await page.screenshot(receiptShot);
+  shots.push(receiptShot);
 
   // A paid checkout consumes the cart, and the receipt is durable: a reload re-reads it.
   await page.goto(`${base}/checkout/receipt/${receiptUrl.split('/').pop()}`);
@@ -149,19 +165,31 @@ try {
   // the ordinary checkout page under a file name claiming it was the decline.
   const declinedShot = join(SHOTS, `checkout-declined-${ARM}.png`);
   await page.screenshot(declinedShot);
+  shots.push(declinedShot);
   check('the decline screenshot is of the declined page', figure(await page.content(), 'decline-reason') !== undefined, declinedShot);
   await page.goto(`${base}/cart`);
   const afterDecline = await page.content();
   check('the declined payment kept the cart', /1 line\(s\), 1 item\(s\)/.test(afterDecline), '1 line, 1 item');
-
-  writeFileSync(join(SHOTS, `report-${ARM}.json`), `${JSON.stringify({ arm: ARM, base, checks, shots: [checkoutShot, expressShot, receiptShot, declinedShot] }, null, 2)}\n`);
 } catch (error) {
-  check('the browser journey ran to completion', false, error.stack ?? String(error));
+  // Named for where it failed: a report a reviewer cannot tell "the launch was refused" from "the journey broke" in
+  // would be the same class of defect this fix exists to prevent.
+  check(
+    error === startupError ? 'the generated server started' : 'the browser journey ran to completion',
+    false,
+    error.stack ?? String(error),
+  );
 } finally {
   if (chrome) await chrome.close();
-  server.kill('SIGKILL');
+  server?.kill('SIGKILL');
   rmSync(dir, { recursive: true, force: true });
 }
+
+// Written on every path, including the one where the launch threw: the report is the evidence, and a run that could not
+// start is the case where "what contained the generated code" has the clearest answer - nothing did, because nothing ran.
+writeFileSync(
+  join(SHOTS, `report-${ARM}.json`),
+  `${JSON.stringify({ arm: ARM, base, sandboxPosture: server?.sandboxPosture ?? null, checks, shots }, null, 2)}\n`,
+);
 const failed = checks.filter((entry) => !entry.ok);
 console.log(`\n${checks.length - failed.length}/${checks.length} checks passed (evidence in ${SHOTS})`);
 if (failed.length > 0) process.exitCode = 1;

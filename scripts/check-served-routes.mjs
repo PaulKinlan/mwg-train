@@ -391,6 +391,7 @@ export async function probeProject(project, projectsRoot) {
       archetype: project.archetype,
       framework: project.framework,
       error: 'spec.json not found',
+      sandboxPosture: null,
       routes: [],
       served: 0,
       not_served: 0,
@@ -446,6 +447,7 @@ export async function probeProject(project, projectsRoot) {
         framework: project.framework,
         server_ready: false,
         error: 'server failed to start or poll / timed out',
+        sandboxPosture: child?.sandboxPosture ?? null,
         routes: routeResults,
         served: 0,
         not_served: 0,
@@ -554,6 +556,9 @@ export async function probeProject(project, projectsRoot) {
     archetype: project.archetype,
     framework: project.framework,
     server_ready: true,
+    // The containment posture the probe actually launched, from the handle (mwg-train-hogz): a route report that
+    // cannot say whether generated code ran under bubblewrap or on the host is a measurement of unknown provenance.
+    sandboxPosture: child?.sandboxPosture ?? null,
     routes: routeResults,
     served: servedCount,
     not_served: notServedCount,

@@ -881,6 +881,7 @@ export async function runProjectVersion({ chrome, projectDir, spec, label, port,
     label,
     base_url: base,
     sandbox: null,
+    sandbox_opt_in: null,
     memoryContainment: null,
     started_at: new Date().toISOString(),
     ...runEnvironment(chrome),
@@ -897,7 +898,13 @@ export async function runProjectVersion({ chrome, projectDir, spec, label, port,
   let page = null;
   try {
     server = await startServer(projectDir, { port, dbPath });
-    record.sandbox = server.mechanism;
+    // The generated server's containment posture, carried from the handle so a committed record can attest it
+    // (mwg-train-hogz). `sandbox` stays the mechanism string the corpus rows and step-4 reports already read;
+    // `sandbox_opt_in` names the variable that allowed a host run. A handle that discloses no posture of its own
+    // still contributes a mechanism when it states one; anything else records null rather than assumed containment,
+    // for the same reason the browser posture does.
+    record.sandbox = server.sandboxPosture?.mechanism ?? server.mechanism ?? null;
+    record.sandbox_opt_in = server.sandboxPosture?.optIn ?? null;
     // Heap-only mitigates Node old-space, but native Buffer and child RSS remain unbounded.
     record.memoryContainment = server.memoryContainment;
     page = await chrome.newPage({ viewport: { width: 1280, height: 900 } });

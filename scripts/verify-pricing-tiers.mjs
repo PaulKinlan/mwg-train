@@ -41,17 +41,30 @@ const dir = mkdtempSync(join(tmpdir(), `pricing-verify-${ARM}-`));
 writeProject(dir, { projectId, files, spec: projectSpec, includeDependencies: true });
 symlinkSync(join(ROOT, 'node_modules'), join(dir, 'node_modules'), 'dir');
 const base = `http://127.0.0.1:${PORT}`;
-const server = startGeneratedServer({
-  projectDir: dir,
-  port: PORT,
-  dbPath: join(dir, 'verify.sqlite'),
-  stdio: ['ignore', 'ignore', 'pipe'],
-  // Not detached: this script kills the sandbox by pid, and the kernel tears the whole PID
-  // namespace down with it, so nothing is left behind either way.
-  detached: false,
-});
+// A launch that fails closed - no bubblewrap and no documented opt-in - used to throw here, before any report existed,
+// so the run whose containment a reviewer most needs to read was the one that left no file at all (mwg-train-hogz
+// review). The failure is recorded and the report is written below with `sandboxPosture: null`: nothing launched, so
+// there is no containment to state, and a missing report cannot be told from a verifier that was never run.
+let server = null;
+let startupError = null;
+try {
+  server = startGeneratedServer({
+    projectDir: dir,
+    port: PORT,
+    dbPath: join(dir, 'verify.sqlite'),
+    stdio: ['ignore', 'ignore', 'pipe'],
+    // Not detached: this script kills the sandbox by pid, and the kernel tears the whole PID
+    // namespace down with it, so nothing is left behind either way.
+    detached: false,
+  });
+} catch (error) {
+  startupError = error;
+}
+// Every screenshot this run captured, so the report can be written whether or not the journey got that far.
+const shots = [];
 let chrome;
 try {
+  if (startupError) throw startupError;
   let up = false;
   for (let attempt = 0; attempt < 40 && !up; attempt += 1) {
     await sleep(250);
@@ -67,6 +80,7 @@ try {
   await page.goto(`${base}/pricing`);
   const monthlyShot = join(SHOTS, `pricing-monthly-${ARM}.png`);
   await page.screenshot(monthlyShot);
+  shots.push(monthlyShot);
   const monthlyLabels = [];
   for (const [index, tier] of tiers.entries()) {
     const label = await text(`#price-${index}`);
@@ -95,6 +109,7 @@ try {
   check('the tiers compare as a table, in words', table.rows > 0 && table.included && table.excluded, tableCheck);
   const annualShot = join(SHOTS, `pricing-annual-${ARM}.png`);
   await page.screenshot(annualShot);
+  shots.push(annualShot);
 
   // 3. Select the middle tier and reach the next step, where the choice was recorded.
   await page.click('section[aria-labelledby="tier-1"] button[type=submit]');
@@ -108,19 +123,31 @@ try {
   check('the next step names the derived price', chosenPrice === `GBP ${middle.monthly * policy}`, String(chosenPrice));
   const confirmationShot = join(SHOTS, `pricing-confirmation-${ARM}.png`);
   await page.screenshot(confirmationShot);
+  shots.push(confirmationShot);
 
   // 4. The choice is server state: a reload still shows it.
   await page.goto(confirmationUrl);
   check('the selection survives a reload', (await text('#chosen-tier')) === middle.name, String(await text('#chosen-tier')));
-
-  writeFileSync(join(SHOTS, `report-${ARM}.json`), `${JSON.stringify({ arm: ARM, base, checks, shots: [monthlyShot, annualShot, confirmationShot] }, null, 2)}\n`);
 } catch (error) {
-  check('the browser journey ran to completion', false, error.stack ?? String(error));
+  // Named for where it failed: a report a reviewer cannot tell "the launch was refused" from "the journey broke" in
+  // would be the same class of defect this fix exists to prevent.
+  check(
+    error === startupError ? 'the generated server started' : 'the browser journey ran to completion',
+    false,
+    error.stack ?? String(error),
+  );
 } finally {
   if (chrome) await chrome.close();
-  server.kill('SIGKILL');
+  server?.kill('SIGKILL');
   rmSync(dir, { recursive: true, force: true });
 }
+
+// Written on every path, including the one where the launch threw: the report is the evidence, and a run that could not
+// start is the case where "what contained the generated code" has the clearest answer - nothing did, because nothing ran.
+writeFileSync(
+  join(SHOTS, `report-${ARM}.json`),
+  `${JSON.stringify({ arm: ARM, base, sandboxPosture: server?.sandboxPosture ?? null, checks, shots }, null, 2)}\n`,
+);
 const failed = checks.filter((entry) => !entry.ok);
 console.log(`\n${checks.length - failed.length}/${checks.length} checks passed (evidence in ${SHOTS})`);
 if (failed.length > 0) process.exitCode = 1;

@@ -95,7 +95,11 @@ export async function startCorpusSandbox(projectDir, { port, cpuSeconds = CORPUS
     // Independent of any stalled Chrome journey: the server cannot remain alive past this deadline.
     wallTimer = setTimeout(() => void stop(), wallMs);
     wallTimer.unref();
+    // The containment posture, in the same shape startGeneratedServer stamps on its handle (mwg-train-hogz): this
+    // launch fails closed without bubblewrap, so the mechanism is the only value it can report and there is no opt-in
+    // to name. A caller recording metadata reads this rather than inferring containment from `mechanism` alone.
     return { port: listener.address().port, child: sandbox.child, log: () => sandbox.log, stop, sandbox, mechanism,
+      sandboxPosture: { mechanism, optIn: null },
       memoryContainment: { mode: 'heap-only', nodeHeapMb, rssContained: false } };
   } catch (error) {
     await stop();

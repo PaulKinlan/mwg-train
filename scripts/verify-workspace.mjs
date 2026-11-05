@@ -40,15 +40,25 @@ const { projectId, files, spec } = buildProjectFromSpec({ spec: workspaceSpec(),
 const dir = mkdtempSync(join(tmpdir(), `workspace-belief-${ARM}-`));
 writeProject(dir, { projectId, files, spec, includeDependencies: true });
 symlinkSync(join(ROOT, 'node_modules'), join(dir, 'node_modules'), 'dir');
-const server = startGeneratedServer({
-  projectDir: dir,
-  port: PORT,
-  dbPath: join(dir, 'belief.sqlite'),
-  stdio: ['ignore', 'ignore', 'pipe'],
-  // Not detached: this script kills the sandbox by pid, and the kernel tears the whole PID
-  // namespace down with it, so nothing is left behind either way.
-  detached: false,
-});
+// A launch that fails closed - no bubblewrap and no documented opt-in - used to throw here, before any report existed,
+// so the run whose containment a reviewer most needs to read was the one that left no file at all (mwg-train-hogz
+// review). The failure is recorded and the report is written below with `sandboxPosture: null`: nothing launched, so
+// there is no containment to state, and a missing report cannot be told from a verifier that was never run.
+let server = null;
+let startupError = null;
+try {
+  server = startGeneratedServer({
+    projectDir: dir,
+    port: PORT,
+    dbPath: join(dir, 'belief.sqlite'),
+    stdio: ['ignore', 'ignore', 'pipe'],
+    // Not detached: this script kills the sandbox by pid, and the kernel tears the whole PID
+    // namespace down with it, so nothing is left behind either way.
+    detached: false,
+  });
+} catch (error) {
+  startupError = error;
+}
 let browser;
 const base = `http://127.0.0.1:${PORT}`;
 // `evaluate` wraps its argument in an async function BODY, so a bare expression is a statement and comes
@@ -81,6 +91,7 @@ const fillAndSubmit = async (page, values, submitSelector) => {
 };
 
 try {
+  if (startupError) throw startupError;
   let up = false;
   for (let attempt = 0; attempt < 40 && !up; attempt += 1) {
     await new Promise((done) => setTimeout(done, 250));
@@ -192,13 +203,26 @@ check(`${ARM}: signing out ended the session`, afterSignOut.includes('/login'), 
   await member.screenshot(join(SHOTS, `workspace-member-refused-${ARM}.png`));
 
   check(`${ARM}: no password is readable on any page the browser saw`, !(await member.content()).includes(MEMBER.password) && !(await owner.content()).includes(OWNER.password), 'the rendered markup never contains a credential');
+} catch (error) {
+  // Named for where it failed: a report a reviewer cannot tell "the launch was refused" from "the journey broke" in
+  // would be the same class of defect this fix exists to prevent.
+  check(
+    error === startupError ? `${ARM}: the generated server started` : `${ARM}: the browser journey ran to completion`,
+    false,
+    error.stack ?? String(error),
+  );
 } finally {
   if (browser) await browser.close().catch(() => {});
-  server.kill('SIGKILL');
+  server?.kill('SIGKILL');
   rmSync(dir, { recursive: true, force: true });
 }
 
+// Written on every path, including the one where the launch threw: the report is the evidence, and a run that could not
+// start is the case where "what contained the generated code" has the clearest answer - nothing did, because nothing ran.
 const failed = checks.filter((entry) => !entry.ok);
-writeFileSync(join(SHOTS, `workspace-${ARM}-report.json`), `${JSON.stringify({ arm: ARM, checks }, null, 2)}\n`);
+writeFileSync(
+  join(SHOTS, `workspace-${ARM}-report.json`),
+  `${JSON.stringify({ arm: ARM, sandboxPosture: server?.sandboxPosture ?? null, checks }, null, 2)}\n`,
+);
 console.log(`\n${checks.length - failed.length}/${checks.length} checks passed (${ARM}); evidence in ${SHOTS}`);
 process.exit(failed.length === 0 ? 0 : 1);

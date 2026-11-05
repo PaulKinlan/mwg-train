@@ -84,6 +84,23 @@ test('aggregate corpus projection preserves measured sandbox and heap-only memor
   assert.equal(unavailable.chrome_sandbox, null, 'do not invent a browser posture on pre-launch failures');
 });
 
+test('the corpus projection keeps the sandbox mechanism and the opt-in that allowed it', () => {
+  // mwg-train-hogz: a row saying 'host-opt-in' without naming the variable leaves a reviewer guessing what let
+  // generated code out of the sandbox, and a contained run must not inherit an opt-in from anywhere.
+  const base = { platform: 'linux', node_version: 'v22.11.0',
+    browser: { product: 'Chrome/140.0.7339.80' }, chrome_version: 'Chrome/140.0.7339.80',
+    journeys: [], errors: [], console: [] };
+  const optedIn = versionRecord({ ...base, sandbox: 'host-opt-in', sandbox_opt_in: 'MWG_ALLOW_UNSANDBOXED_GENERATED_SERVER=1' }, {});
+  assert.equal(optedIn.sandbox, 'host-opt-in');
+  assert.equal(optedIn.sandbox_opt_in, 'MWG_ALLOW_UNSANDBOXED_GENERATED_SERVER=1',
+    'the committed row must name the variable that allowed the host run');
+  const contained = versionRecord({ ...base, sandbox: 'bubblewrap' }, {});
+  assert.equal(contained.sandbox_opt_in, null, 'a contained run names no opt-in, and an absent one is never invented');
+  const historical = versionRecord({ ...base }, {});
+  assert.equal(historical.sandbox, null, 'a row that predates the field is unknown, not assumed contained');
+  assert.equal(historical.sandbox_opt_in, null);
+});
+
 test('the returned run record and training-corpus projection keep the measured stamp even on failure', async () => {
   // A real occupied port forces the harness to return before page creation: no Chrome or generated server is run.
   const occupied = createServer();
@@ -102,6 +119,7 @@ test('the returned run record and training-corpus projection keep the measured s
     const projected = versionRecord(original, {});
     for (const [key, value] of Object.entries(expected)) assert.deepEqual(projected[key], value, key);
     assert.equal(projected.sandbox, null, 'no sandbox launched on occupied-port failure');
+    assert.equal(projected.sandbox_opt_in, null, 'no server posture on occupied-port failure, and none invented');
     assert.equal(projected.memoryContainment, null, 'no server memory cap on occupied-port failure');
     assert.equal(projected.chrome_sandbox, null, 'a handle that disclosed no posture records none');
     assert.throws(() => versionRecord({ ...original, chrome_version: null }, {}), /missing measured.*browser/i);

@@ -35,6 +35,8 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(HERE, '..', '..');
 const TMPFS_BYTES = 64 * 1024 * 1024;
 const DEFAULT_MEMORY_MB = 512;
+/** The variable that lets a host run generated code without the namespace sandbox. Named in the launch receipt. */
+const SANDBOX_OPT_IN_VARIABLE = 'MWG_ALLOW_UNSANDBOXED_GENERATED_SERVER';
 
 /** Mitigation only: V8 old-space does NOT bound RSS, Buffers/native allocations or child processes. */
 export function generatedServerMemoryMb(value = process.env.MWG_GENERATED_SERVER_MEMORY_MB) {
@@ -54,6 +56,24 @@ function memoryStatus(child, memoryMb, hasPrivateTmp) {
     reason: 'no host cgroup attachment: V8 old-space and private /tmp limits are mitigations only' };
   process.stderr.write(`WARNING: generated-server RSS is NOT contained: V8 old-space configured to ${memoryMb}MB` +
     `${hasPrivateTmp ? ', private /tmp at 64MB' : ', no private /tmp'}; native Buffers and subprocesses remain unbounded.\n`);
+  return child;
+}
+
+/**
+ * Stamp the launch handle with the containment posture the launch actually ran under (mwg-train-hogz).
+ *
+ * A warning on stderr is not a receipt: a verifier that records its own output never sees it, and a passing run looks
+ * the same whether generated code ran behind a PID namespace or beside the operator's processes. `mechanism` names
+ * what contained the server - 'bubblewrap' - or what did not: 'host-opt-in' for a launch the operator allowed with
+ * SANDBOX_OPT_IN_VARIABLE, 'host-prefer' for the test-side fallback that needs no variable at all. `optIn` names the
+ * variable that allowed a host run and is null whenever the server was contained.
+ *
+ * The field is `sandboxPosture` rather than the Chrome handle's `sandbox` because a server handle already uses that
+ * word for its sandbox process (src/corpus/sandbox.mjs), and a lookup that can silently read the wrong object is the
+ * failure this receipt exists to prevent.
+ */
+function discloseSandboxPosture(child, mechanism, optIn = null) {
+  child.sandboxPosture = { mechanism, optIn };
   return child;
 }
 
@@ -171,7 +191,9 @@ export function sandboxArgs({ projectDir, port, dbPath, memoryMb = generatedServ
  * Fails closed. If bubblewrap is missing the launch throws rather than quietly running generated code on the
  * host, because the value of this function is the guarantee, and a silent downgrade would mean the probe reported
  * a measurement it was not entitled to make. MWG_ALLOW_UNSANDBOXED_GENERATED_SERVER=1 is the documented escape
- * hatch for a machine that genuinely cannot sandbox (macOS, some CI); it prints a warning naming what is lost.
+ * hatch for a machine that genuinely cannot sandbox (macOS, some CI); it prints a warning naming what is lost, and
+ * the returned handle states it as `sandboxPosture: { mechanism, optIn }` so a caller recording metadata can attest
+ * containment instead of repeating the warning.
  */
 let warnedPortableFallback = false;
 
@@ -199,7 +221,7 @@ export function startGeneratedServer({
       detached,
       env: generatedServerEnv(),
     });
-    return memoryStatus(child, memoryMb, true);
+    return discloseSandboxPosture(memoryStatus(child, memoryMb, true), 'bubblewrap');
   }
   // 'prefer' is the test-side policy (mwg-train-pdsb): the unit suites have to run on a machine with no
   // bubblewrap, so the sandbox is used when it is there and the allowlisted environment is the floor when it is
@@ -221,9 +243,9 @@ export function startGeneratedServer({
       detached,
       env: { ...generatedServerEnv(), NODE_OPTIONS: heapOption(memoryMb) },
     });
-    return memoryStatus(child, memoryMb, false);
+    return discloseSandboxPosture(memoryStatus(child, memoryMb, false), 'host-prefer');
   }
-  if (process.env.MWG_ALLOW_UNSANDBOXED_GENERATED_SERVER !== '1') {
+  if (process.env[SANDBOX_OPT_IN_VARIABLE] !== '1') {
     throw new Error(
       `Refusing to start a generated server without a sandbox: bubblewrap not found at ${bwrapPath()} on ${process.platform} ` +
         '(mwg-train-6wpn). Stripping the environment is not sufficient - a same-user process can read the parent\'s ' +
@@ -241,5 +263,5 @@ export function startGeneratedServer({
     detached,
     env: { ...generatedServerEnv(), NODE_OPTIONS: heapOption(memoryMb) },
   });
-  return memoryStatus(child, memoryMb, false);
+  return discloseSandboxPosture(memoryStatus(child, memoryMb, false), 'host-opt-in', `${SANDBOX_OPT_IN_VARIABLE}=1`);
 }

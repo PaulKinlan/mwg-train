@@ -44,13 +44,16 @@ function bareTree() {
   return dir;
 }
 
-function runCli(cwd, args = []) {
+// `env` is merged over the parent's environment because the launch posture is decided from the CLI process's own
+// environment: a case that has to run the prober on the host can only express that by setting it here.
+function runCli(cwd, args = [], env = {}) {
   try {
     const stdout = execFileSync(process.execPath, [join(cwd, 'scripts', 'check-served-routes.mjs'), ...args], {
       cwd,
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'pipe'],
       timeout: 120000,
+      env: { ...process.env, ...env },
     });
     return { code: 0, stdout, stderr: '' };
   } catch (err) {
@@ -859,4 +862,106 @@ test('end to end: a redirect with no Location header fails the write route', asy
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
+});
+
+// mwg-train-hogz review P1. probeProject decided whether model-authored code ran behind a PID namespace, returned a
+// handle carrying that decision, and then wrote a project row that said nothing about it: a contained probe and one
+// that ran the server beside the operator's processes produced the same report, so the JSON could not attest the
+// measurement it presented. The cases below read the posture back out of what the run emits, under each launch
+// posture the prober can take, so a dropped field, a constant, or a posture taken from anywhere but the launch
+// fails one of them.
+
+/** A corpus of exactly the fixture project, so the CLI reports on it rather than on the gitignored generated set. */
+function writeFixtureCorpus(dir) {
+  const corpusPath = join(dir, 'corpus.json');
+  const manifestPath = join(dir, 'manifest.jsonl');
+  writeFileSync(corpusPath, JSON.stringify({ projects: [fixtureProject()] }, null, 2));
+  writeFileSync(manifestPath, `${JSON.stringify({ family_id: 'tr-00' })}\n`);
+  return { corpusPath, manifestPath };
+}
+
+test('the emitted route report names the containment the probe launched under', async (t) => {
+  if (!sandboxAvailable()) {
+    t.skip('bubblewrap unavailable; no generated code run without it');
+    return;
+  }
+  const root = mkdtempSync(join(tmpdir(), 'hogz-emitted-posture-'));
+  try {
+    writeRedirectFixtureProject(root, { location: 'relative' });
+    const { corpusPath, manifestPath } = writeFixtureCorpus(root);
+    const outPath = join(root, 'served-routes.json');
+    // The real CLI, not the exported function: what a reviewer reads later is the file it writes.
+    const run = runCli(ROOT, [
+      '--projects', root, '--corpus', corpusPath, '--manifest', manifestPath, '--out', outPath,
+    ]);
+    assert.equal(run.code, 0, `the fixture probe must measure every declared route:\n${run.stdout}${run.stderr}`);
+
+    const emitted = JSON.parse(readFileSync(outPath, 'utf8'));
+    assert.equal(emitted.projects.length, 1);
+    assert.equal(emitted.projects[0].server_ready, true, 'the row describes a server that really ran');
+    assert.equal(emitted.summary.served, 2, 'and routes that really served');
+    assert.deepEqual(
+      emitted.projects[0].sandboxPosture,
+      { mechanism: 'bubblewrap', optIn: null },
+      'the emitted report must state the containment the probe launched, and a contained run names no opt-in',
+    );
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('a probe launched on the host writes the opt-in that allowed it into its report', async (t) => {
+  // The documented escape hatch: no bubblewrap here, and the operator said to run anyway. The probe must still
+  // measure the routes - and must say which variable let model-authored code run beside their processes, because
+  // that is the one fact that separates this report from a contained one. Driven through the CLI rather than the
+  // exported function because the launch policy is read from the prober's own environment, and because the file the
+  // CLI writes is what a reviewer reads later: a posture that survives probeProject but is dropped on the way into
+  // JSON would pass a test of the return value alone.
+  const root = mkdtempSync(join(tmpdir(), 'hogz-host-posture-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+
+  writeRedirectFixtureProject(root, { location: 'relative' });
+  const { corpusPath, manifestPath } = writeFixtureCorpus(root);
+  const outPath = join(root, 'served-routes.json');
+  const run = runCli(
+    ROOT,
+    ['--projects', root, '--corpus', corpusPath, '--manifest', manifestPath, '--out', outPath],
+    { MWG_BWRAP_PATH: '/nonexistent/bwrap', MWG_ALLOW_UNSANDBOXED_GENERATED_SERVER: '1' },
+  );
+  assert.equal(run.code, 0, `a host launch still measures every declared route:\n${run.stdout}${run.stderr}`);
+
+  const emitted = JSON.parse(readFileSync(outPath, 'utf8'));
+  assert.equal(emitted.projects.length, 1);
+  assert.equal(emitted.projects[0].server_ready, true, 'the row describes a server that really ran');
+  assert.equal(emitted.summary.served, 2, 'and routes that really served');
+  assert.deepEqual(
+    emitted.projects[0].sandboxPosture,
+    { mechanism: 'host-opt-in', optIn: 'MWG_ALLOW_UNSANDBOXED_GENERATED_SERVER=1' },
+    'a host run that names no opt-in leaves a reviewer unable to tell what let the server out of the sandbox',
+  );
+});
+
+test('a project the prober could not start is written with a null posture rather than losing the field', async (t) => {
+  // No spec.json, so no server is launched and there is no posture to state. The field has to be there as null:
+  // a consumer that reads a missing key cannot tell "nothing launched" from "a report written before the field
+  // existed", and those deserve different answers. The run FAILS - an unmeasured project is not a measurement - and
+  // the report is still the file a reviewer opens, so the field is asserted there rather than on a return value the
+  // CLI would have wrapped.
+  const root = mkdtempSync(join(tmpdir(), 'hogz-no-spec-posture-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+
+  const { corpusPath, manifestPath } = writeFixtureCorpus(root);
+  const outPath = join(root, 'served-routes.json');
+  const run = runCli(ROOT, ['--projects', root, '--corpus', corpusPath, '--manifest', manifestPath, '--out', outPath]);
+  assert.equal(run.code, 1, `an unmeasured project must fail the run:\n${run.stdout}${run.stderr}`);
+
+  const emitted = JSON.parse(readFileSync(outPath, 'utf8'));
+  assert.equal(emitted.projects.length, 1);
+  assert.equal(emitted.projects[0].error, 'spec.json not found');
+  assert.ok('sandboxPosture' in emitted.projects[0], 'an unmeasured row still states the field');
+  assert.equal(
+    emitted.projects[0].sandboxPosture,
+    null,
+    'and states it as null rather than inventing a containment',
+  );
 });
