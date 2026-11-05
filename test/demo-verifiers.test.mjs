@@ -56,8 +56,9 @@ test('the demo acceptance verifiers pass against their committed comparison page
  * mwg-train-hogz review P1. A capability verifier writes its own report JSON, so the fact that decided whether
  * model-authored code ran behind a PID namespace or beside the operator's processes never reached the file it
  * emitted: the report read the same either way, and the field was not there at all. These runs drive one verifier
- * through both postures it can launch under and read the posture back out of the file it wrote, so a dropped field,
- * a constant, or a posture taken from anything but the launch fails one of them.
+ * through both postures it can launch under, and through the one it cannot launch under at all, reading the posture
+ * back out of the file it wrote each time: a dropped field, a constant, or a posture taken from anything but the
+ * launch fails one of them.
  */
 const REPORT_VERIFIER = 'scripts/verify-pricing-tiers.mjs';
 
@@ -73,15 +74,20 @@ async function freePort() {
   return port;
 }
 
-/** Run the verifier for real and return the report it emitted, which is the evidence a reviewer reads. */
-async function pricingVerifierReport(shots, env = {}) {
+/** Run the verifier for real and return what it did; whether it wrote a report is part of the evidence. */
+async function runPricingVerifier(shots, env) {
   const port = await freePort();
-  const result = spawnSync('node', [path.join(ROOT, REPORT_VERIFIER)], {
+  return spawnSync('node', [path.join(ROOT, REPORT_VERIFIER)], {
     cwd: ROOT,
     encoding: 'utf8',
     timeout: 240_000,
-    env: { ...process.env, PRICING_SHOTS: shots, PRICING_ARM: 'raw', PRICING_PORT: String(port), ...env },
+    env: { ...env, PRICING_SHOTS: shots, PRICING_ARM: 'raw', PRICING_PORT: String(port) },
   });
+}
+
+/** A passing run's report, parsed: the evidence a reviewer reads. */
+async function pricingVerifierReport(shots, overrides = {}) {
+  const result = await runPricingVerifier(shots, { ...process.env, ...overrides });
   assert.strictEqual(
     result.status,
     0,
@@ -120,5 +126,31 @@ test('a verifier report names the opt-in that allowed a host run', async (t) => 
     report.sandboxPosture,
     { mechanism: 'host-opt-in', optIn: 'MWG_ALLOW_UNSANDBOXED_GENERATED_SERVER=1' },
     'a host run that names no opt-in leaves a reviewer unable to tell what let the server out of the sandbox',
+  );
+});
+
+test('a verifier whose server will not start still writes a report, stating a null posture', async (t) => {
+  // The launch fails closed: bubblewrap is not at that path and the operator did not set the documented opt-in. That is
+  // the run a reviewer most needs the containment of - nothing was contained because nothing was launched - and it used
+  // to throw before any report existed, so the only trace was a terminal the reviewer does not have. `sandboxPosture:
+  // null` is the honest answer here, and it has to be IN the file: an absent report and an absent key are
+  // indistinguishable from a verifier that was never run.
+  const shots = mkdtempSync(path.join(tmpdir(), 'hogz-verifier-blocked-'));
+  t.after(() => rmSync(shots, { recursive: true, force: true }));
+
+  const env = { ...process.env, MWG_BWRAP_PATH: '/nonexistent/bwrap' };
+  delete env.MWG_ALLOW_UNSANDBOXED_GENERATED_SERVER;
+  const result = await runPricingVerifier(shots, env);
+  assert.strictEqual(
+    result.status,
+    1,
+    `a verifier whose server never started must fail:\n${`${result.stdout ?? ''}${result.stderr ?? ''}`.slice(-800)}`,
+  );
+
+  const report = JSON.parse(readFileSync(path.join(shots, 'report-raw.json'), 'utf8'));
+  assert.equal(report.sandboxPosture, null, 'nothing launched, so the report states no containment rather than none it can attest');
+  assert.ok(
+    report.checks.some((entry) => !entry.ok && /Refusing to start a generated server/.test(entry.detail)),
+    'and the failure that stopped it is in the report, not only on a terminal',
   );
 });

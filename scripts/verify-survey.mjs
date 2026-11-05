@@ -49,17 +49,30 @@ const dir = mkdtempSync(join(tmpdir(), `survey-verify-${ARM}-`));
 writeProject(dir, { projectId, files, spec: projectSpec, includeDependencies: true });
 symlinkSync(join(ROOT, 'node_modules'), join(dir, 'node_modules'), 'dir');
 const base = `http://127.0.0.1:${PORT}`;
-const server = startGeneratedServer({
-  projectDir: dir,
-  port: PORT,
-  dbPath: join(dir, 'verify.sqlite'),
-  stdio: ['ignore', 'ignore', 'pipe'],
-  // Not detached: this script kills the sandbox by pid, and the kernel tears the whole PID
-  // namespace down with it, so nothing is left behind either way.
-  detached: false,
-});
+// A launch that fails closed - no bubblewrap and no documented opt-in - used to throw here, before any report existed,
+// so the run whose containment a reviewer most needs to read was the one that left no file at all (mwg-train-hogz
+// review). The failure is recorded and the report is written below with `sandboxPosture: null`: nothing launched, so
+// there is no containment to state, and a missing report cannot be told from a verifier that was never run.
+let server = null;
+let startupError = null;
+try {
+  server = startGeneratedServer({
+    projectDir: dir,
+    port: PORT,
+    dbPath: join(dir, 'verify.sqlite'),
+    stdio: ['ignore', 'ignore', 'pipe'],
+    // Not detached: this script kills the sandbox by pid, and the kernel tears the whole PID
+    // namespace down with it, so nothing is left behind either way.
+    detached: false,
+  });
+} catch (error) {
+  startupError = error;
+}
+// Every screenshot this run captured, so the report can be written whether or not the journey got that far.
+const shots = [];
 let chrome;
 try {
+  if (startupError) throw startupError;
   let up = false;
   for (let attempt = 0; attempt < 40 && !up; attempt += 1) {
     await sleep(250);
@@ -89,6 +102,7 @@ try {
   check('the survey asks its first question', questionOn(first) === 'applicant', textOf(first, 'survey-progress'));
   const firstShot = join(SHOTS, `survey-first-${ARM}.png`);
   await page.screenshot(firstShot);
+  shots.push(firstShot);
 
   await answerQuestion('applicant', 'A household in Leeds');
   const secondUrl = await page.url();
@@ -102,6 +116,7 @@ try {
   check('the income question was not asked', skipped.includes(LABEL.household_income) === false, 'no income question');
   const skippedShot = join(SHOTS, `survey-branch-skipped-${ARM}.png`);
   await page.screenshot(skippedShot);
+  shots.push(skippedShot);
 
   await answerQuestion('notes', 'Nothing else to add');
   await page.goto(`${base}/survey/review`);
@@ -111,6 +126,7 @@ try {
   check('each answer can be changed', /href="\/survey\?question=residency"/.test(review), 'change link present');
   const reviewShot = join(SHOTS, `survey-review-${ARM}.png`);
   await page.screenshot(reviewShot);
+  shots.push(reviewShot);
 
   // Going back to change an answer brings the conditional questions back into the flow.
   await page.goto(`${base}/survey?question=residency&from=review`);
@@ -134,6 +150,7 @@ try {
   check('the result is readable by reference', textOf(result, 'survey-reference') === resultUrl.split('/').pop(), resultUrl.split('/').pop());
   const resultShot = join(SHOTS, `survey-result-${ARM}.png`);
   await page.screenshot(resultShot);
+  shots.push(resultShot);
 
   // THE STALE ANSWER: answer as an English household, then change that answer so the questions it
   // answered are hidden, and check the outcome no longer reflects the hidden answer.
@@ -155,6 +172,7 @@ try {
   check('the review says income was not asked', /survey-skipped/.test(changedReview) && /household_income/.test(changedReview), 'income listed as not asked');
   const changedReviewShot = join(SHOTS, `survey-after-change-${ARM}.png`);
   await page.screenshot(changedReviewShot);
+  shots.push(changedReviewShot);
   await page.submit('form[action="/survey/submit"]');
   const changedResult = await page.content();
   check(
@@ -164,18 +182,27 @@ try {
   );
   const staleShot = join(SHOTS, `survey-stale-answer-${ARM}.png`);
   await page.screenshot(staleShot);
-
-  writeFileSync(
-    join(SHOTS, `report-${ARM}.json`),
-    `${JSON.stringify({ arm: ARM, base, sandboxPosture: server.sandboxPosture, checks, shots: [firstShot, skippedShot, reviewShot, resultShot, changedReviewShot, staleShot] }, null, 2)}\n`,
-  );
+  shots.push(staleShot);
 } catch (error) {
-  check('the browser journey ran to completion', false, error.stack ?? String(error));
+  // Named for where it failed: a report a reviewer cannot tell "the launch was refused" from "the journey broke" in
+  // would be the same class of defect this fix exists to prevent.
+  check(
+    error === startupError ? 'the generated server started' : 'the browser journey ran to completion',
+    false,
+    error.stack ?? String(error),
+  );
 } finally {
   if (chrome) await chrome.close();
-  server.kill('SIGKILL');
+  server?.kill('SIGKILL');
   rmSync(dir, { recursive: true, force: true });
 }
+
+// Written on every path, including the one where the launch threw: the report is the evidence, and a run that could not
+// start is the case where "what contained the generated code" has the clearest answer - nothing did, because nothing ran.
+writeFileSync(
+  join(SHOTS, `report-${ARM}.json`),
+  `${JSON.stringify({ arm: ARM, base, sandboxPosture: server?.sandboxPosture ?? null, checks, shots }, null, 2)}\n`,
+);
 const failed = checks.filter((entry) => !entry.ok);
 console.log(`\n${checks.length - failed.length}/${checks.length} checks passed (evidence in ${SHOTS})`);
 if (failed.length > 0) process.exitCode = 1;
