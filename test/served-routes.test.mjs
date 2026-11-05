@@ -860,3 +860,92 @@ test('end to end: a redirect with no Location header fails the write route', asy
     rmSync(root, { recursive: true, force: true });
   }
 });
+
+// mwg-train-hogz review P1. probeProject decided whether model-authored code ran behind a PID namespace, returned a
+// handle carrying that decision, and then wrote a project row that said nothing about it: a contained probe and one
+// that ran the server beside the operator's processes produced the same report, so the JSON could not attest the
+// measurement it presented. The cases below read the posture back out of what the run emits, under each launch
+// posture the prober can take, so a dropped field, a constant, or a posture taken from anywhere but the launch
+// fails one of them.
+
+/** A corpus of exactly the fixture project, so the CLI reports on it rather than on the gitignored generated set. */
+function writeFixtureCorpus(dir) {
+  const corpusPath = join(dir, 'corpus.json');
+  const manifestPath = join(dir, 'manifest.jsonl');
+  writeFileSync(corpusPath, JSON.stringify({ projects: [fixtureProject()] }, null, 2));
+  writeFileSync(manifestPath, `${JSON.stringify({ family_id: 'tr-00' })}\n`);
+  return { corpusPath, manifestPath };
+}
+
+test('the emitted route report names the containment the probe launched under', async () => {
+  if (!sandboxAvailable()) {
+    t.skip('bubblewrap unavailable; no generated code run without it');
+    return;
+  }
+  const root = mkdtempSync(join(tmpdir(), 'hogz-emitted-posture-'));
+  try {
+    writeRedirectFixtureProject(root, { location: 'relative' });
+    const { corpusPath, manifestPath } = writeFixtureCorpus(root);
+    const outPath = join(root, 'served-routes.json');
+    // The real CLI, not the exported function: what a reviewer reads later is the file it writes.
+    const run = runCli(ROOT, [
+      '--projects', root, '--corpus', corpusPath, '--manifest', manifestPath, '--out', outPath,
+    ]);
+    assert.equal(run.code, 0, `the fixture probe must measure every declared route:\n${run.stdout}${run.stderr}`);
+
+    const emitted = JSON.parse(readFileSync(outPath, 'utf8'));
+    assert.equal(emitted.projects.length, 1);
+    assert.equal(emitted.projects[0].server_ready, true, 'the row describes a server that really ran');
+    assert.equal(emitted.summary.served, 2, 'and routes that really served');
+    assert.deepEqual(
+      emitted.projects[0].sandboxPosture,
+      { mechanism: 'bubblewrap', optIn: null },
+      'the emitted report must state the containment the probe launched, and a contained run names no opt-in',
+    );
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('a probe launched on the host names the opt-in that allowed it', async (t) => {
+  // The documented escape hatch: no bubblewrap here, and the operator said to run anyway. The probe must still
+  // measure the routes - and must say which variable let model-authored code run beside their processes, because
+  // that is the one fact that separates this report from a contained one.
+  const saved = {
+    MWG_BWRAP_PATH: process.env.MWG_BWRAP_PATH,
+    MWG_ALLOW_UNSANDBOXED_GENERATED_SERVER: process.env.MWG_ALLOW_UNSANDBOXED_GENERATED_SERVER,
+  };
+  process.env.MWG_BWRAP_PATH = '/nonexistent/bwrap';
+  process.env.MWG_ALLOW_UNSANDBOXED_GENERATED_SERVER = '1';
+  const root = mkdtempSync(join(tmpdir(), 'hogz-host-posture-'));
+  t.after(() => {
+    for (const [name, value] of Object.entries(saved)) {
+      if (value === undefined) delete process.env[name];
+      else process.env[name] = value;
+    }
+    rmSync(root, { recursive: true, force: true });
+  });
+
+  writeRedirectFixtureProject(root, { location: 'relative' });
+  const report = await probeProject(fixtureProject(), root);
+  assert.equal(report.server_ready, true, 'a host launch still measures the routes it reports');
+  assert.equal(report.served, 2);
+  assert.deepEqual(
+    report.sandboxPosture,
+    { mechanism: 'host-opt-in', optIn: 'MWG_ALLOW_UNSANDBOXED_GENERATED_SERVER=1' },
+    'a host run that names no opt-in leaves a reviewer unable to tell what let the server out of the sandbox',
+  );
+});
+
+test('a project the prober could not start reports a null posture rather than dropping the field', async (t) => {
+  // No spec.json, so no server is launched and there is no posture to state. The field has to be there as null:
+  // a consumer that reads a missing key cannot tell "nothing launched" from "a report written before the field
+  // existed", and those deserve different answers.
+  const root = mkdtempSync(join(tmpdir(), 'hogz-no-spec-posture-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+
+  const report = await probeProject(fixtureProject(), root);
+  assert.equal(report.error, 'spec.json not found');
+  assert.ok('sandboxPosture' in report, 'an unmeasured row still states the field');
+  assert.equal(report.sandboxPosture, null, 'and states it as null rather than inventing a containment');
+});
