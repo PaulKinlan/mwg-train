@@ -103,7 +103,7 @@ try {
   check('the cart survives a reload', /2 line\(s\), 5 item\(s\)/.test(reloaded), 'reload of /cart');
   check('the reloaded cart still carries both variants', reloaded.includes(firstVariant) && reloaded.includes(secondVariant), `${firstVariant} + ${secondVariant}`);
 
-  writeFileSync(join(SHOTS, `report-${ARM}.json`), `${JSON.stringify({ arm: ARM, base, checks, shots: [firstShot, secondShot] }, null, 2)}\n`);
+  writeFileSync(join(SHOTS, `report-${ARM}.json`), `${JSON.stringify({ arm: ARM, base, sandboxPosture: server.sandboxPosture, checks, shots: [firstShot, secondShot] }, null, 2)}\n`);
 } catch (error) {
   check('the browser journey ran to completion', false, error.stack ?? String(error));
 } finally {

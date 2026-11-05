@@ -218,6 +218,8 @@ createServer((_req, res) => res.writeHead(200, { 'content-type': 'application/js
     t.after(() => server.stop());
     const { body } = await loopbackGet(server.port, '/');
     assert.equal(server.mechanism, requireCorpusSandbox());
+    assert.deepEqual(server.sandboxPosture, { mechanism: requireCorpusSandbox(), optIn: null },
+      'the handle states the containment in the same shape a generated-server launch reports (mwg-train-hogz)');
     assert.deepEqual(server.memoryContainment, { mode: 'heap-only', nodeHeapMb: 512, rssContained: false });
     assert.equal(body.nodeOptions, '--max-old-space-size=512');
     assert.ok(body.heapLimitMb < 1024, `actual generated site heap ${body.heapLimitMb}MB is not bounded`);
@@ -280,6 +282,7 @@ createServer((_req, res) => res.writeHead(200).end('ok')).listen(Number(process.
     });
     assert.deepEqual(record.errors, ['browser probe ended']);
     assert.equal(record.sandbox, requireCorpusSandbox());
+    assert.equal(record.sandbox_opt_in, null, 'this launch fails closed, so no opt-in can be named for it');
     assert.deepEqual(record.memoryContainment, { mode: 'heap-only', nodeHeapMb: 512, rssContained: false },
       'a failed browser run must disclose the generated server memory boundary without claiming an RSS cap');
     assert.equal(record.platform, 'linux');

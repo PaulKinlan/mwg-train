@@ -199,6 +199,6 @@ check(`${ARM}: signing out ended the session`, afterSignOut.includes('/login'), 
 }
 
 const failed = checks.filter((entry) => !entry.ok);
-writeFileSync(join(SHOTS, `workspace-${ARM}-report.json`), `${JSON.stringify({ arm: ARM, checks }, null, 2)}\n`);
+writeFileSync(join(SHOTS, `workspace-${ARM}-report.json`), `${JSON.stringify({ arm: ARM, sandboxPosture: server.sandboxPosture, checks }, null, 2)}\n`);
 console.log(`\n${checks.length - failed.length}/${checks.length} checks passed (${ARM}); evidence in ${SHOTS}`);
 process.exit(failed.length === 0 ? 0 : 1);

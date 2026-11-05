@@ -251,6 +251,10 @@ export function versionRecord(record, spec) {
     browser: record.browser,
     chrome_version: record.chrome_version,
     sandbox: record.sandbox ?? null,
+    // The opt-in that allowed a host run, projected beside the mechanism for the same reason: a row that says
+    // 'host-opt-in' without naming the variable leaves a reviewer guessing what let generated code out of the
+    // sandbox (mwg-train-hogz). A historical row predates the field, so absence stays null.
+    sandbox_opt_in: record.sandbox_opt_in ?? null,
     memoryContainment: record.memoryContainment ?? null,
     // The browser's own containment, projected for the same reason the generated server's sandbox is: the committed
     // record is what a reviewer reads later, and `sandbox` above is the server's mechanism, not the browser's. A

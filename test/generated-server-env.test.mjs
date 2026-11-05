@@ -159,6 +159,8 @@ test('a generated server cannot read the operator environment out of /proc', asy
   let child = null;
   try {
     child = startGeneratedServer({ projectDir: dir, port: 0, dbPath: join(dbDir, 'x.sqlite') });
+    assert.deepEqual(child.sandboxPosture, { mechanism: 'bubblewrap', optIn: null },
+      'the handle the real launch returns states the containment the launch enforced (mwg-train-hogz)');
     await waitForFile(reportFile);
     assert.ok(existsSync(reportFile), 'the generated server ran inside the sandbox and reported what it saw');
     const report = JSON.parse(readFileSync(reportFile, 'utf8'));
@@ -244,6 +246,80 @@ test('an unknown sandbox mode is refused rather than guessed', () => {
     () => startGeneratedServer({ projectDir: '/tmp', port: 1, dbPath: '/tmp/x.sqlite', sandbox: 'maybe' }),
     /sandbox must be 'require' or 'prefer'/,
   );
+});
+
+// mwg-train-hogz. The opt-in used to be a warning on stderr and nothing else, so a verifier that records its own
+// output could not say whether generated code ran behind a PID namespace or beside the operator's processes. Each
+// test below drives one branch and asserts the receipt on the handle AGAINST the launch that happened - the binary
+// spawned and the environment it was given - because a receipt that is a constant would pass every one of them.
+function capturingSpawn() {
+  const calls = [];
+  const spawnImpl = (command, args, options) => {
+    calls.push({ command, args, options });
+    return { pid: 0, unref() {}, on() {} };
+  };
+  return { calls, spawnImpl };
+}
+
+const withEnv = (t, values) => {
+  const saved = {};
+  for (const [name, value] of Object.entries(values)) {
+    saved[name] = process.env[name];
+    if (value === undefined) delete process.env[name];
+    else process.env[name] = value;
+  }
+  t.after(() => {
+    for (const [name, value] of Object.entries(saved)) {
+      if (value === undefined) delete process.env[name];
+      else process.env[name] = value;
+    }
+  });
+};
+
+test('a sandboxed launch reports bubblewrap on the handle it returns',
+  { skip: process.platform !== 'linux' ? "the sandbox branch needs Linux's bubblewrap" : false }, (t) => {
+    // MWG_BWRAP_PATH only has to exist for sandboxAvailable() to pick the branch; the spawn is stubbed, so no
+    // generated code runs and the assertion is about the receipt, not about a server that happened to start.
+    const dir = mkdtempSync(join(tmpdir(), 'generated-receipt-bwrap-'));
+    t.after(() => rmSync(dir, { recursive: true, force: true }));
+    const fakeBwrap = join(dir, 'bwrap');
+    writeFileSync(fakeBwrap, '#!/bin/sh\nexit 0\n', { mode: 0o700 });
+    withEnv(t, { MWG_BWRAP_PATH: fakeBwrap });
+    const { calls, spawnImpl } = capturingSpawn();
+    const child = startGeneratedServer({ projectDir: dir, port: 1, dbPath: join(dir, 'x.sqlite'), spawnImpl });
+    assert.deepEqual(child.sandboxPosture, { mechanism: 'bubblewrap', optIn: null });
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0].command, fakeBwrap, 'the disclosed mechanism must be the process that was launched');
+    assert.ok(calls[0].args.includes('--unshare-pid'), 'and it must be the namespace that contains the server');
+  });
+
+test('an opted-in host launch names the variable that allowed it, not just an unsandboxed process', (t) => {
+  withEnv(t, { MWG_BWRAP_PATH: '/nonexistent/bwrap', MWG_ALLOW_UNSANDBOXED_GENERATED_SERVER: '1' });
+  const { calls, spawnImpl } = capturingSpawn();
+  const child = startGeneratedServer({ projectDir: '/tmp', port: 1, dbPath: '/tmp/x.sqlite', spawnImpl });
+  assert.deepEqual(child.sandboxPosture, { mechanism: 'host-opt-in', optIn: 'MWG_ALLOW_UNSANDBOXED_GENERATED_SERVER=1' });
+  assert.equal(calls[0].command, process.execPath, 'the disclosed mechanism must be the process that was launched');
+  assert.equal(
+    calls[0].options.env.MWG_ALLOW_UNSANDBOXED_GENERATED_SERVER,
+    undefined,
+    'the opt-in stays on the receipt, not in the generated server it describes',
+  );
+  assert.ok(
+    calls[0].args.includes('server.mjs') && !calls[0].args.includes('--unshare-pid'),
+    'and no namespace flag was passed to the process that was launched',
+  );
+});
+
+test("the test-side 'prefer' fallback is a host launch with no opt-in on the receipt", (t) => {
+  withEnv(t, { MWG_BWRAP_PATH: '/nonexistent/bwrap', MWG_ALLOW_UNSANDBOXED_GENERATED_SERVER: undefined });
+  const { calls, spawnImpl } = capturingSpawn();
+  const child = startGeneratedServer({ projectDir: '/tmp', port: 1, dbPath: '/tmp/x.sqlite', sandbox: 'prefer', spawnImpl });
+  assert.deepEqual(
+    child.sandboxPosture,
+    { mechanism: 'host-prefer', optIn: null },
+    'a fallback that needs no variable must not claim one, and a host run must never read as bubblewrap',
+  );
+  assert.equal(calls[0].command, process.execPath, 'the disclosed mechanism must be the process that was launched');
 });
 
 test('the launch refuses to run generated code unsandboxed rather than quietly downgrading', async () => {

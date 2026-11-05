@@ -113,7 +113,7 @@ try {
   await page.goto(confirmationUrl);
   check('the selection survives a reload', (await text('#chosen-tier')) === middle.name, String(await text('#chosen-tier')));
 
-  writeFileSync(join(SHOTS, `report-${ARM}.json`), `${JSON.stringify({ arm: ARM, base, checks, shots: [monthlyShot, annualShot, confirmationShot] }, null, 2)}\n`);
+  writeFileSync(join(SHOTS, `report-${ARM}.json`), `${JSON.stringify({ arm: ARM, base, sandboxPosture: server.sandboxPosture, checks, shots: [monthlyShot, annualShot, confirmationShot] }, null, 2)}\n`);
 } catch (error) {
   check('the browser journey ran to completion', false, error.stack ?? String(error));
 } finally {

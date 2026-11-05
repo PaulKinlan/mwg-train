@@ -167,7 +167,7 @@ try {
 
   writeFileSync(
     join(SHOTS, `report-${ARM}.json`),
-    `${JSON.stringify({ arm: ARM, base, checks, shots: [firstShot, skippedShot, reviewShot, resultShot, changedReviewShot, staleShot] }, null, 2)}\n`,
+    `${JSON.stringify({ arm: ARM, base, sandboxPosture: server.sandboxPosture, checks, shots: [firstShot, skippedShot, reviewShot, resultShot, changedReviewShot, staleShot] }, null, 2)}\n`,
   );
 } catch (error) {
   check('the browser journey ran to completion', false, error.stack ?? String(error));

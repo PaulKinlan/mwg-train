@@ -154,7 +154,7 @@ try {
   const afterDecline = await page.content();
   check('the declined payment kept the cart', /1 line\(s\), 1 item\(s\)/.test(afterDecline), '1 line, 1 item');
 
-  writeFileSync(join(SHOTS, `report-${ARM}.json`), `${JSON.stringify({ arm: ARM, base, checks, shots: [checkoutShot, expressShot, receiptShot, declinedShot] }, null, 2)}\n`);
+  writeFileSync(join(SHOTS, `report-${ARM}.json`), `${JSON.stringify({ arm: ARM, base, sandboxPosture: server.sandboxPosture, checks, shots: [checkoutShot, expressShot, receiptShot, declinedShot] }, null, 2)}\n`);
 } catch (error) {
   check('the browser journey ran to completion', false, error.stack ?? String(error));
 } finally {
