@@ -184,13 +184,15 @@ function sealProblems(seal, briefs) {
  * analysis, whatever the output looks like.
  *
  * It also forwards every secondary comparison `decide` reads (PREREGISTRATION §4 and §7) rather than
- * handing it bare pass-rate differences: blocker finding rates with their own family-clustered
- * interval on the primary comparison against the unguided base (C1) and on each strong control, and
- * cost per pass plus already-modern change counts on the primary one. Those come from the
- * caller-supplied result rows - `inference_tokens` for the cost, `changed_pages` and `regressions` for
- * the already-modern briefs - because the diff and usage numbers are produced by the run, not by this
- * module. A comparison whose inputs are missing is left `null` with the reason recorded in its
- * `*_detail`, never asserted as "not worse".
+ * handing it bare pass-rate differences: blocker finding rates and mean finding counts per brief, each
+ * with their own family-clustered interval, on the primary comparison against the unguided base (C1)
+ * and on each strong control, and cost per pass plus already-modern change counts on the primary one.
+ * The count comparison carries §4's "rise in findings" on its own: two findings on every affected
+ * brief and one on the same briefs are the same incidence and a different finding rate. Those come
+ * from the caller-supplied result rows - `inference_tokens` for the cost, `changed_pages` and
+ * `regressions` for the already-modern briefs - because the diff and usage numbers are produced by
+ * the run, not by this module. A comparison whose inputs are missing is left `null` with the reason
+ * recorded in its `*_detail`, never asserted as "not worse".
  */
 export function analyseSealed(results, briefs, { seal = null, arms = ARMS, iterations = 5000, seed = 20261008 } = {}) {
   const sealFindings = sealProblems(seal, briefs);
@@ -202,18 +204,22 @@ export function analyseSealed(results, briefs, { seal = null, arms = ARMS, itera
   const problems = [...checkUniverse(sealedBriefs), ...checkDesign(results, sealedBriefs, arms)];
   if (problems.length > 0) return { ok: false, problems, decision: null, primary: null, controls: [] };
   const blockerRatesByArm = blockerRates(results, sealedBriefs, arms);
+  const blockerCountsByArm = blockerCounts(results, sealedBriefs, arms);
   // The blocker comparison against C1 travels on the primary comparison: a rise against the unguided
   // base is a preregistered negative in its own right (§4), and the strong controls are not the only
   // arm a regression can be measured against. decide() reads it there.
-  const primary = Object.assign(pairedDifference(results, sealedBriefs, 'T_trained_adapter', 'C1_bare_base', { iterations, seed }),
-    costComparison(results, sealedBriefs), overApplicationComparison(results, sealedBriefs), {
-      blocker_rates: blockerRatesByArm,
-      blocker_cis: blockerDifferenceCis(results, sealedBriefs, 'T_trained_adapter', 'C1_bare_base', { iterations, seed }),
-    });
-  const controls = ['C2_base_mwg_prompt', 'C3_base_uplift_tool'].map((arm) => ({
-    ...pairedDifference(results, sealedBriefs, 'T_trained_adapter', arm, { iterations, seed }),
+  const blockerComparison = (arm) => ({
     blocker_rates: blockerRatesByArm,
     blocker_cis: blockerDifferenceCis(results, sealedBriefs, 'T_trained_adapter', arm, { iterations, seed }),
+    blocker_counts: blockerCountsByArm,
+    blocker_count_cis: blockerDifferenceCis(results, sealedBriefs, 'T_trained_adapter', arm, { iterations, seed }, blockerFindingCount),
+  });
+  const primary = Object.assign(pairedDifference(results, sealedBriefs, 'T_trained_adapter', 'C1_bare_base', { iterations, seed }),
+    costComparison(results, sealedBriefs), overApplicationComparison(results, sealedBriefs),
+    blockerComparison('C1_bare_base'));
+  const controls = ['C2_base_mwg_prompt', 'C3_base_uplift_tool'].map((arm) => ({
+    ...pairedDifference(results, sealedBriefs, 'T_trained_adapter', arm, { iterations, seed }),
+    ...blockerComparison(arm),
   }));
   return { ok: true, problems: [], decision: decide(primary, controls), primary, controls };
 }
@@ -314,10 +320,33 @@ function blockerFlagged(result, blocker) {
   return !(typeof findings === 'number' && Number.isFinite(findings) && findings === 0);
 }
 
+/** Incidence of a blocker finding in one cell: the value the `blocker_rates` share is computed from. */
+function blockerIncidence(result, blocker) {
+  return blockerFlagged(result, blocker) ? 1 : 0;
+}
+
 /**
- * The share of sealed briefs with at least one accessibility/security finding, per arm. This is the
- * rate `decide` compares against the trained arm; the denominator is the sealed set, so a missing
- * cell cannot shrink it (the design check has already refused that case).
+ * How many accessibility/security findings one cell recorded, fail-closed like `blockerFlagged`.
+ *
+ * PREREGISTRATION §4 makes "a rise in findings" a negative, and a rise is a count, not a flag: two
+ * security findings on every affected brief against one on the same briefs leaves the share of
+ * briefs with any finding unchanged, so an incidence-only comparison records no negative at all. The
+ * count is therefore the cell's recorded number of findings, with the same floor for the cases the
+ * flag catches: a count that was never recorded is not a measured zero, so it enters as the one
+ * finding it demonstrably is (an unrecorded count, or a negative one, must never let an arm look
+ * cleaner than a measured zero).
+ */
+function blockerFindingCount(result, blocker) {
+  const findings = result?.[blocker];
+  if (isCount(findings) && findings > 0) return findings;
+  return blockerFlagged(result, blocker) ? 1 : 0;
+}
+
+/**
+ * The share of sealed briefs with at least one accessibility/security finding, per arm. The
+ * denominator is the sealed set, so a missing cell cannot shrink it (the design check has already
+ * refused that case). Reported alongside `blockerCounts`: the share is what a reader can compare to
+ * a brief, the mean count is what §4's "rise in findings" is actually measured on.
  */
 function blockerRates(results, briefs, arms = ARMS) {
   const rates = {};
@@ -331,14 +360,35 @@ function blockerRates(results, briefs, arms = ARMS) {
   return rates;
 }
 
-/** 95% family-clustered interval on the paired blocker-rate difference, per blocker. */
-function blockerDifferenceCis(results, briefs, armA, armB, { iterations, seed }) {
+/**
+ * Mean accessibility/security findings per sealed brief, per arm - the count `decide` compares. Two
+ * findings on every brief and one finding on every brief are the same incidence and different totals,
+ * and only the total is the finding rate §4 names.
+ */
+function blockerCounts(results, briefs, arms = ARMS) {
+  const counts = {};
+  for (const blocker of BLOCKER_CHECKS) {
+    counts[blocker] = {};
+    for (const arm of arms) {
+      const findings = briefs.reduce((sum, brief) => sum + blockerFindingCount(cell(results, brief, arm), blocker), 0);
+      counts[blocker][arm] = briefs.length === 0 ? 0 : findings / briefs.length;
+    }
+  }
+  return counts;
+}
+
+/**
+ * 95% family-clustered interval on the paired blocker difference, per blocker. `valueOf` is the
+ * per-cell statistic, so the incidence comparison and the finding-count comparison share one
+ * resampling rule instead of two that can drift apart.
+ */
+function blockerDifferenceCis(results, briefs, armA, armB, { iterations, seed }, valueOf = blockerIncidence) {
   const cis = {};
   for (const blocker of BLOCKER_CHECKS) {
-    const a = new Map(briefs.map((brief) => [brief.brief_id, blockerFlagged(cell(results, brief, armA), blocker)]));
-    const b = new Map(briefs.map((brief) => [brief.brief_id, blockerFlagged(cell(results, brief, armB), blocker)]));
+    const a = new Map(briefs.map((brief) => [brief.brief_id, valueOf(cell(results, brief, armA), blocker)]));
+    const b = new Map(briefs.map((brief) => [brief.brief_id, valueOf(cell(results, brief, armB), blocker)]));
     const delta = (sample) => (sample.length === 0 ? 0 : sample.reduce((sum, brief) =>
-      sum + ((a.get(brief.brief_id) ? 1 : 0) - (b.get(brief.brief_id) ? 1 : 0)), 0) / sample.length);
+      sum + (a.get(brief.brief_id) - b.get(brief.brief_id)), 0) / sample.length);
     cis[blocker] = familyBootstrap(briefs, delta, { iterations, seed }).ci95;
   }
   return cis;
@@ -452,15 +502,25 @@ export function decide(primary, controls) {
   // The primary comparison against C1 is read here too, not just the strong controls: a blocker rise
   // against the unguided base is a preregistered negative (§4), and attaching the rates only to C2 and
   // C3 made exactly that comparison invisible to the decision.
+  //
+  // Two measures, deliberately: the share of briefs with any finding, and the mean number of findings
+  // per brief. §4's negative is a rise in findings, and incidence alone cannot see one - two security
+  // findings on every affected brief against one on the same briefs is the same share and twice the
+  // findings, so an incidence-only comparison reports no negative while the trained arm got worse.
   for (const comparison of [primary, ...controls]) {
     // Default the treated arm rather than reading an undefined key: a silent miss here would drop a
     // real regression from the negative classification.
     const armA = comparison.arm_a ?? 'T_trained_adapter';
     const armB = comparison.arm_b;
     for (const blocker of BLOCKER_CHECKS) {
+      const label = blocker.replace('blocker_', '');
       const delta = (comparison.blocker_rates?.[blocker]?.[armA] ?? 0) - (comparison.blocker_rates?.[blocker]?.[armB] ?? 0);
       if (delta > 0 && (comparison.blocker_cis?.[blocker]?.[0] ?? -1) > 0) {
-        negativeReasons.push(`more ${blocker.replace('blocker_', '')} findings than ${armB}, interval excluding zero`);
+        negativeReasons.push(`more ${label} findings than ${armB}, interval excluding zero`);
+      }
+      const countDelta = (comparison.blocker_counts?.[blocker]?.[armA] ?? 0) - (comparison.blocker_counts?.[blocker]?.[armB] ?? 0);
+      if (countDelta > 0 && (comparison.blocker_count_cis?.[blocker]?.[0] ?? -1) > 0) {
+        negativeReasons.push(`more ${label} findings per brief than ${armB}, interval excluding zero`);
       }
     }
   }

@@ -492,6 +492,59 @@ test('an unrecorded blocker count counts as a finding in the comparison', () => 
   assert.equal(decided.primary.blocker_rates.blocker_accessibility.T_trained_adapter, 1);
   assert.equal(decided.primary.blocker_rates.blocker_accessibility.C1_bare_base, 0);
   assert.equal(decided.controls[0].blocker_rates.blocker_accessibility.T_trained_adapter, 1);
+  // The count comparison carries the same floor: an unrecorded count is one finding, never a zero that
+  // would let the trained arm look cleaner than an arm which recorded nothing at all.
+  assert.equal(decided.primary.blocker_counts.blocker_accessibility.T_trained_adapter, 1);
+  assert.equal(decided.primary.blocker_counts.blocker_accessibility.C1_bare_base, 0);
+  assert.ok(decided.primary.blocker_count_cis.blocker_accessibility[0] > 0);
+});
+
+test('more findings on the same affected briefs is a negative, not a tie', () => {
+  // The trained arm records two security findings on every brief; C1 records one on those same
+  // briefs. The share of briefs with any finding is 1 in both arms, so an incidence-only comparison
+  // reports no rise at all - which is the bug: §4's negative is a rise in FINDINGS, and the trained
+  // arm has twice as many.
+  const { briefs, results, seal } = sealedFixture({
+    perArm: (arm) => ({ blocker_security: arm === 'T_trained_adapter' ? 2 : 1 }),
+  });
+  const decided = analyseSealed(results, briefs, { seal, iterations: 100 });
+  assert.equal(decided.ok, true, JSON.stringify(decided.problems));
+
+  assert.equal(decided.primary.blocker_rates.blocker_security.T_trained_adapter, 1);
+  assert.equal(decided.primary.blocker_rates.blocker_security.C1_bare_base, 1);
+  assert.equal(decided.primary.blocker_cis.blocker_security[0], 0, 'incidence is identical, so that comparison sees no rise');
+
+  assert.equal(decided.primary.blocker_counts.blocker_security.T_trained_adapter, 2);
+  assert.equal(decided.primary.blocker_counts.blocker_security.C1_bare_base, 1);
+  assert.ok(decided.primary.blocker_count_cis.blocker_security[0] > 0,
+    'every resample shows the higher finding count against C1');
+
+  assert.equal(decided.decision.negative, true);
+  assert.ok(decided.decision.negative_reasons.includes('more security findings per brief than C1_bare_base, interval excluding zero'),
+    JSON.stringify(decided.decision.negative_reasons));
+  assert.ok(!decided.decision.negative_reasons.includes('more security findings than C1_bare_base, interval excluding zero'),
+    'the incidence comparison saw no rise, and must not claim one');
+});
+
+test('a finding count that does not rise leaves the verdict clean', () => {
+  // The same counts in every arm: no rise in incidence, no rise in findings, no negative.
+  const equal = sealedFixture({ perArm: () => ({ blocker_security: 2, blocker_accessibility: 1 }) });
+  const tied = analyseSealed(equal.results, equal.briefs, { seal: equal.seal, iterations: 50 });
+  assert.equal(tied.ok, true, JSON.stringify(tied.problems));
+  assert.equal(tied.primary.blocker_counts.blocker_security.T_trained_adapter, 2);
+  assert.equal(tied.primary.blocker_counts.blocker_security.C1_bare_base, 2);
+  assert.deepEqual(tied.primary.blocker_count_cis.blocker_security, [0, 0]);
+  assert.equal(tied.decision.negative, false, JSON.stringify(tied.decision.negative_reasons));
+
+  // Sign check on the count comparison: findings only C1 records are not a rise in the trained arm.
+  const cleaner = sealedFixture({
+    perArm: (arm) => (arm === 'C1_bare_base' ? { blocker_security: 2 } : { blocker_security: 0 }),
+  });
+  const decided = analyseSealed(cleaner.results, cleaner.briefs, { seal: cleaner.seal, iterations: 50 });
+  assert.equal(decided.primary.blocker_counts.blocker_security.C1_bare_base, 2);
+  assert.equal(decided.primary.blocker_counts.blocker_security.T_trained_adapter, 0);
+  assert.ok(decided.primary.blocker_count_cis.blocker_security[1] < 0, 'the trained arm is the cleaner one');
+  assert.equal(decided.decision.negative, false, JSON.stringify(decided.decision.negative_reasons));
 });
 
 test('worse cost per pass reaches the decision as a negative', () => {
