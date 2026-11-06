@@ -401,8 +401,10 @@ function isCount(value) {
 /**
  * Inference tokens per passing brief for one arm (PREREGISTRATION §5, §7). A partial sum is not a
  * cost: one cell without its recorded `inference_tokens` makes the whole comparison unmeasured rather
- * than flattering the arm that did not report. Infinity is the honest per-pass cost of an arm that
- * passed nothing while spending tokens.
+ * than flattering the arm that did not report. An arm that passed nothing has no tokens-per-pass at
+ * all, so `per_pass` is `null` and `passes` carries the zero: `Infinity` is not a cost this report can
+ * carry, because JSON writes it as `null` anyway and `Infinity > Infinity` is `false`, which reads as
+ * "not worse" for a comparison between two arms that measured nothing.
  */
 function costPerPass(results, briefs, arm) {
   let tokens = 0;
@@ -413,7 +415,20 @@ function costPerPass(results, briefs, arm) {
     tokens += result.inference_tokens;
     if (briefPasses(result, brief.required_rules)) passes += 1;
   }
-  return { tokens, passes, per_pass: passes === 0 ? Infinity : tokens / passes };
+  return { tokens, passes, per_pass: passes === 0 ? null : tokens / passes };
+}
+
+/**
+ * Why tokens per pass cannot be compared, or `null` when both arms have a measured cost. A missing
+ * count is unmeasured for the arm that did not report it; zero passes is unmeasured for the pair,
+ * because there is no per-pass figure to order and no arm to prefer when neither passed a brief.
+ */
+function unmeasuredCostReason(a, b, armA, armB) {
+  if (a === null) return `${armA} has a cell without a recorded inference_tokens count`;
+  if (b === null) return `${armB} has a cell without a recorded inference_tokens count`;
+  const zeroPassArms = [[armA, a], [armB, b]].filter(([, cost]) => cost.passes === 0).map(([arm]) => arm);
+  if (zeroPassArms.length === 0) return null;
+  return `${zeroPassArms.join(' and ')} passed no sealed brief, so inference tokens per pass is unmeasured`;
 }
 
 /**
@@ -423,8 +438,7 @@ function costPerPass(results, briefs, arm) {
 function costComparison(results, briefs, armA = 'T_trained_adapter', armB = 'C1_bare_base') {
   const a = costPerPass(results, briefs, armA);
   const b = costPerPass(results, briefs, armB);
-  const unmeasured = a === null ? `${armA} has a cell without a recorded inference_tokens count`
-    : b === null ? `${armB} has a cell without a recorded inference_tokens count` : null;
+  const unmeasured = unmeasuredCostReason(a, b, armA, armB);
   return {
     cost_per_pass_worse: unmeasured === null ? a.per_pass > b.per_pass : null,
     cost_detail: { metric: 'inference_tokens_per_pass', unmeasured, [armA]: a, [armB]: b },
