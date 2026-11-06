@@ -101,6 +101,17 @@ non-inferiority margin against the strong controls is **−5 percentage points**
   tokens or per GPU-minute). A prettier screenshot or a higher frequency of rule-sounding names is
   not evidence against a negative; it is the shape a negative often takes.
 
+**A rise in findings is a rise in the number of findings**, so the blocker comparison is measured on
+both of: the **share** of sealed briefs recording at least one accessibility/security finding, and the
+**mean number of findings per brief**, each reported per arm with the same family-clustered 95%
+interval on the paired difference against C1 and against each strong control. The share alone cannot
+see a regression that keeps every affected brief affected: two security findings on every affected
+brief against one finding on those same briefs has identical incidence and twice the findings, and
+would otherwise record no negative at all. Either measure rising with an interval excluding zero is
+the negative. An unrecorded finding count is not a measured zero — it enters the comparison as the one
+finding it demonstrably is — and a missing cell is refused by the design check before any of this is
+computed, so a comparison with no recorded count never reads as clean.
+
 The study is powered for a **large** effect only. With 32 sealed test families (see §6: 10
 in-family, 20 out-of-family, 2 repair) the interval on δ is dominated by between-family variance; a
 genuine +5pp improvement is not resolvable here and will not be claimed. This is a limitation, not a
@@ -215,14 +226,14 @@ a number when any of that fails. The seal must be supplied: a call that omits it
 §13 check cannot be skipped by leaving an option out, and a caller-supplied hash is compared against
 the pinned one — a valid hash of a set the caller had just sealed is `SEAL_MISMATCH`, not the expected
 value, because the briefs a verdict is computed over are fixed by §13 rather than by what was passed
-in. It also forwards the §4 secondary comparisons to `decide()` — blocker finding rates with a
-family-clustered interval on the primary comparison against C1 and on both strong-control
-comparisons, and cost per pass plus the already-modern change counts on the primary one — reading
-`inference_tokens`, `changed_pages` and `regressions` from the result rows and reporting a comparison
-as unmeasured, rather than "not worse", when those records are absent. `pairedDifference()` and
-`decide()` are primitives that compute over whatever brief list they are given — useful for
-exploration, and not the preregistered analysis. Calling them directly over the dev split produces a
-decision that looks reportable and is not, which is why the checked path exists and
+in. It also forwards the §4 secondary comparisons to `decide()` — blocker finding rates and mean
+finding counts per brief, each with a family-clustered interval, on the primary comparison against C1
+and on both strong-control comparisons, and cost per pass plus the already-modern change counts on the
+primary one — reading `inference_tokens`, `changed_pages` and `regressions` from the result rows and
+reporting a comparison as unmeasured, rather than "not worse", when those records are absent.
+`pairedDifference()` and `decide()` are primitives that compute over whatever brief list they are given
+— useful for exploration, and not the preregistered analysis. Calling them directly over the dev split
+produces a decision that looks reportable and is not, which is why the checked path exists and
 `test/endpoint.test.mjs` proves it refuses that case.
 
 ## 9. Instrumentation: human
