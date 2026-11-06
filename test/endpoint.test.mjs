@@ -592,3 +592,58 @@ test('a comparison with no recorded cost or change count is unmeasured, never \'
   assert.match(decided.primary.over_application_detail.unmeasured, /already-modern/);
   assert.equal(decided.decision.negative, false, 'unmeasured is not a negative, and not a clean bill either');
 });
+
+test('zero passes in both arms makes cost per pass unmeasured, not \'not worse\'', () => {
+  // Both arms spend tokens and pass nothing. `Infinity > Infinity` is `false`, so the flag used to read
+  // `cost_per_pass_worse: false`: a comparison asserted as "not worse" that measured nothing, and whose
+  // detail lost its Infinity to `null` on the way into JSON. Unmeasured is the honest answer.
+  const { briefs, results, seal } = sealedFixture({
+    perArm: () => ({ inference_tokens: 100, functional: false }),
+  });
+  const decided = analyseSealed(results, briefs, { seal, iterations: 20 });
+  assert.equal(decided.ok, true, JSON.stringify(decided.problems));
+
+  const detail = decided.primary.cost_detail;
+  assert.equal(detail.T_trained_adapter.passes, 0);
+  assert.equal(detail.C1_bare_base.passes, 0);
+  assert.equal(detail.T_trained_adapter.per_pass, null, 'zero passes has no per-pass cost to report');
+  assert.equal(detail.C1_bare_base.per_pass, null);
+  assert.equal(decided.primary.cost_per_pass_worse, null, 'never `false` for a comparison that was not measured');
+  assert.match(detail.unmeasured, /T_trained_adapter and C1_bare_base passed no sealed brief/);
+  assert.deepEqual(JSON.parse(JSON.stringify(detail)), detail, 'the detail survives JSON serialisation unchanged');
+  assert.ok(!decided.decision.negative_reasons.includes('worse cost per pass'), JSON.stringify(decided.decision.negative_reasons));
+});
+
+test('a trained arm with zero passes has no per-pass cost to compare against the base', () => {
+  const { briefs, results, seal } = sealedFixture({
+    perArm: (arm) => (arm === 'T_trained_adapter' ? { inference_tokens: 100, functional: false } : { inference_tokens: 10 }),
+  });
+  const decided = analyseSealed(results, briefs, { seal, iterations: 20 });
+  assert.equal(decided.ok, true, JSON.stringify(decided.problems));
+
+  const detail = decided.primary.cost_detail;
+  assert.equal(detail.T_trained_adapter.passes, 0);
+  assert.ok(detail.C1_bare_base.passes > 0, 'the base arm passed briefs, so it has a measured cost');
+  assert.equal(detail.T_trained_adapter.per_pass, null);
+  assert.equal(decided.primary.cost_per_pass_worse, null);
+  assert.match(detail.unmeasured, /T_trained_adapter passed no sealed brief/);
+  assert.ok(!detail.unmeasured.includes('C1_bare_base'), 'the measured arm is not named as the unmeasured one');
+  assert.ok(!decided.decision.negative_reasons.includes('worse cost per pass'), JSON.stringify(decided.decision.negative_reasons));
+});
+
+test('a base arm with zero passes has no per-pass cost to compare against the trained arm', () => {
+  const { briefs, results, seal } = sealedFixture({
+    perArm: (arm) => (arm === 'C1_bare_base' ? { inference_tokens: 10, functional: false } : { inference_tokens: 100 }),
+  });
+  const decided = analyseSealed(results, briefs, { seal, iterations: 20 });
+  assert.equal(decided.ok, true, JSON.stringify(decided.problems));
+
+  const detail = decided.primary.cost_detail;
+  assert.equal(detail.C1_bare_base.passes, 0);
+  assert.ok(detail.T_trained_adapter.passes > 0, 'the trained arm passed briefs, so it has a measured cost');
+  assert.equal(detail.C1_bare_base.per_pass, null);
+  assert.equal(decided.primary.cost_per_pass_worse, null);
+  assert.match(detail.unmeasured, /C1_bare_base passed no sealed brief/);
+  assert.ok(!detail.unmeasured.includes('T_trained_adapter'), 'the measured arm is not named as the unmeasured one');
+  assert.ok(!decided.decision.negative_reasons.includes('worse cost per pass'), JSON.stringify(decided.decision.negative_reasons));
+});
