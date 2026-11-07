@@ -81,6 +81,29 @@ export function stripBlocks(html, tag) {
 }
 
 /**
+ * An opening tag's attributes, read pairwise so a quoted value is stepped over as one token.
+ *
+ * A tag's text cannot be searched for the substring `class=`: `<main title="contains class=toolbar">`
+ * carries no class attribute at all, yet a substring match reads `toolbar"` as its class value and the
+ * element is stripped as chrome. Values are therefore consumed by their own quoted (or unquoted) branch,
+ * which is what keeps the contents of another attribute's value out of the attribute list.
+ */
+const ATTRIBUTE = /([^\s"'>/=]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/g;
+
+/** Attributes of an opening tag as name → value; a tag name is not an attribute and duplicates keep the first. */
+export function attributesOf(tagText) {
+  const attributes = new Map();
+  const tagName = /^<\s*[a-zA-Z][a-zA-Z0-9-]*/.exec(tagText);
+  ATTRIBUTE.lastIndex = tagName ? tagName[0].length : 0;
+  let match;
+  while ((match = ATTRIBUTE.exec(tagText)) !== null) {
+    const name = match[1].toLowerCase();
+    if (!attributes.has(name)) attributes.set(name, match[2] ?? match[3] ?? match[4] ?? '');
+  }
+  return attributes;
+}
+
+/**
  * The value of a tag's `class` attribute, whichever way the document spells it.
  *
  * HTML permits `class="demo-chrome"`, `class='demo-chrome'` and `class=demo-chrome`. Matching only the
@@ -88,11 +111,9 @@ export function stripBlocks(html, tag) {
  * chrome container written that way survived the strip and its control labels were extracted as the
  * archetype's own copy.
  */
-const CLASS_ATTRIBUTE = /(?:^|\s)class\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i;
-
 export function classAttribute(tagText) {
-  const match = CLASS_ATTRIBUTE.exec(tagText);
-  return match ? (match[1] ?? match[2] ?? match[3]) : null;
+  const classes = attributesOf(tagText).get('class');
+  return classes === undefined ? null : classes;
 }
 
 /**
@@ -106,9 +127,9 @@ export function classAttribute(tagText) {
 export function stripChrome(html) {
   let out = html;
   for (;;) {
-    // Only tags that carry a `class` attribute can be chrome. The attribute name is anchored to
-    // whitespace so `data-class=...` is not read as one.
-    const open = /<([a-z]+)\b[^>]*?\sclass\s*=[^>]*>/gi;
+    // A tag ends at the first `>` outside a quoted value, so `title="contains class=toolbar"` stays one
+    // tag whose class attribute is genuinely absent rather than a chrome element with class `toolbar"`.
+    const open = /<([a-z][a-z0-9-]*)\b(?:[^>"']|"[^"]*"|'[^']*')*>/gi;
     let match;
     let removed = false;
     while ((match = open.exec(out)) !== null) {

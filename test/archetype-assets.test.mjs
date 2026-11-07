@@ -18,6 +18,7 @@ import {
   STORE_DIR,
   archetypeIds,
   assertWritable,
+  attributesOf,
   buildAll,
   classAttribute,
   copyTexts,
@@ -27,6 +28,7 @@ import {
   setDocument,
   setProblems,
   sha256,
+  stripChrome,
 } from '../scripts/build-archetype-assets.mjs';
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -230,6 +232,33 @@ test('a class attribute is read in all three HTML spellings', () => {
   assert.equal(classAttribute('<div class="">'), '');
   assert.equal(classAttribute('<div data-class="state-switcher">'), null, 'data-class is not the class attribute');
   assert.equal(classAttribute('<div hidden>'), null);
+});
+
+test('a class attribute quoted inside another attribute value is not a class attribute', () => {
+  // `title="contains class=toolbar"` holds the substring `class=toolbar` without carrying a class
+  // attribute at all. Reading the tag as searchable text returned `toolbar"` as its class, so an
+  // element the demo meant to keep was stripped as chrome along with everything inside it.
+  assert.equal(classAttribute('<main title="contains class=toolbar">'), null);
+  assert.equal(classAttribute("<main title='contains class=\"toolbar\"'>"), null);
+  assert.equal(classAttribute('<main data-note="class=state-switcher">'), null);
+  assert.deepEqual(
+    [...attributesOf(`<div class = 'board toolbar' hidden title="x class=toolbar" data-class="state-switcher">`)],
+    [['class', 'board toolbar'], ['hidden', ''], ['title', 'x class=toolbar'], ['data-class', 'state-switcher']],
+  );
+});
+
+test('an element whose attribute value mentions a chrome class keeps its copy', () => {
+  const main = '<main title="contains class=toolbar"><h1>Retain me</h1></main>';
+  const cases = {
+    'double-quoted mention of an unquoted class': main,
+    'single-quoted mention of a double-quoted class': `<main title='contains class="toolbar"'><h1>Retain me</h1></main>`,
+    'mention of a single-quoted state switcher': `<main data-note="class='state-switcher'"><h1>Retain me</h1></main>`,
+    'mention of a comparison grid': '<section aria-label="class=comparison-grid"><p>Retain me</p></section>',
+  };
+  for (const [label, html] of Object.entries(cases)) {
+    assert.equal(stripChrome(html), html, `${label} was stripped as chrome`);
+    assert.deepEqual(copyTexts(html).map((entry) => entry.text), ['Retain me'], `${label} lost its copy`);
+  }
 });
 
 test('demo chrome is not read as copy when its class is single-quoted or unquoted', () => {
