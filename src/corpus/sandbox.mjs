@@ -5,12 +5,26 @@ import { resolve } from 'node:path';
 import { generatedServerMemoryMb } from '../eval/generated-server.mjs';
 import { Sandbox } from '../viewer/sandbox.mjs';
 
+/**
+ * The mechanism every corpus row and step-4 receipt from this launcher records (mwg-train-7nji).
+ *
+ * This is the ISOLATED tier: the site runs under the viewer's bubblewrap sandbox with `--unshare-all`, so it has its
+ * own network namespace with no route to the host loopback or its proxies, and no repository is mounted inside it.
+ * `src/eval/generated-server.mjs` runs the SAME tool at a weaker posture - it keeps the host network namespace and
+ * mounts the repository read-only - and stamps `GENERATED_SERVER_SANDBOX_MECHANISM` for it. One shared 'bubblewrap'
+ * label for both made a report unable to say which containment it measured.
+ *
+ * The spelling is also what retained step-4 receipts already record, and `src/eval/default-step4-report.mjs`
+ * validates those historical bytes against it, so this is a fixed value rather than a label free to be renamed.
+ */
+export const CORPUS_SANDBOX_MECHANISM = 'bubblewrap';
+
 /** Refuse before starting any generated code if the namespace mechanism is unavailable. */
 export function requireCorpusSandbox({ platform = process.platform, bwrapAvailable = hasBwrap() } = {}) {
   if (platform !== 'linux' || !bwrapAvailable) {
     throw new Error(`cannot run generated project on ${platform}: bubblewrap (bwrap) Linux namespace sandbox is ${platform === 'linux' ? 'unavailable' : 'unsupported'}; refusing unsandboxed execution`);
   }
-  return 'bubblewrap';
+  return CORPUS_SANDBOX_MECHANISM;
 }
 
 function hasBwrap() {
@@ -97,7 +111,9 @@ export async function startCorpusSandbox(projectDir, { port, cpuSeconds = CORPUS
     wallTimer.unref();
     // The containment posture, in the same shape startGeneratedServer stamps on its handle (mwg-train-hogz): this
     // launch fails closed without bubblewrap, so the mechanism is the only value it can report and there is no opt-in
-    // to name. A caller recording metadata reads this rather than inferring containment from `mechanism` alone.
+    // to name. A caller recording metadata reads this rather than inferring containment from `mechanism` alone, and
+    // the mechanism names THIS tier - every namespace unshared, no repository mount - rather than the eval launcher's
+    // shared-network one (mwg-train-7nji).
     return { port: listener.address().port, child: sandbox.child, log: () => sandbox.log, stop, sandbox, mechanism,
       sandboxPosture: { mechanism, optIn: null },
       memoryContainment: { mode: 'heap-only', nodeHeapMb, rssContained: false } };

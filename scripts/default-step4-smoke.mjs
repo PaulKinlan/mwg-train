@@ -75,7 +75,9 @@ export async function smokeDefaultFamily({ family, archiveRoot, evidenceRoot }) 
   const visualTarget = join(root, 'docs/design/training', family, 'reference.jpg');
   if (!lstatSync(visualTarget).isFile()) throw Error('TARGET_AMBIGUOUS: authored reference is not a regular file');
   const visualTargetSha256 = sha256(readFileSync(visualTarget));
-  requireCorpusSandbox();
+  // The tier this receipt is entitled to claim, taken from the launcher that will stamp it rather than repeated as a
+  // literal: 'bubblewrap' is the fully isolated corpus tier, not the shared-network eval one (mwg-train-7nji).
+  const corpusMechanism = requireCorpusSandbox();
   const instrumentSha256 = step4InstrumentDigest(root);
   const evidence = assertPrivateArchiveRoot(evidenceRoot, { sourceRoot: resolve(archiveRoot) });
   mkdirSync(evidence, { recursive: true, mode: 0o700 });
@@ -85,7 +87,7 @@ export async function smokeDefaultFamily({ family, archiveRoot, evidenceRoot }) 
   try {
     const port = await availablePort();
     server = await startServer(source.project, { port });
-    assert.equal(server.mechanism, 'bubblewrap');
+    assert.equal(server.mechanism, corpusMechanism);
     chrome = await launchChrome();
     const screenshots = [];
     for (const [name, viewport] of [ ['desktop', { width: 1376, height: 768 }], ['mobile', { width: 390, height: 844 }] ]) {
