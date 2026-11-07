@@ -18,7 +18,9 @@ import {
   STORE_DIR,
   archetypeIds,
   assertWritable,
+  attributesOf,
   buildAll,
+  classAttribute,
   copyTexts,
   extractTokens,
   inspectCommitted,
@@ -26,6 +28,7 @@ import {
   setDocument,
   setProblems,
   sha256,
+  stripChrome,
 } from '../scripts/build-archetype-assets.mjs';
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -216,6 +219,101 @@ test('the demo own controls are not read as the archetype copy', () => {
     <main><h1>Reset Your Password</h1><p>Enter the email associated with your account.</p></main>`;
   const texts = copyTexts(html).map((entry) => entry.text);
   assert.deepEqual(texts, ['Reset Your Password', 'Enter the email associated with your account.']);
+});
+
+test('a class attribute is read in all three HTML spellings', () => {
+  // HTML permits all three, so chrome detection cannot depend on the demos having picked one. This was a
+  // real defect: a single-quoted or unquoted toolbar class was not seen at all, so its control labels
+  // were extracted as the archetype's own copy.
+  assert.equal(classAttribute('<div class="state-switcher">'), 'state-switcher');
+  assert.equal(classAttribute("<div class='state-switcher'>"), 'state-switcher');
+  assert.equal(classAttribute('<div class=state-switcher>'), 'state-switcher');
+  assert.equal(classAttribute('<div  class = "board toolbar"  hidden>'), 'board toolbar');
+  assert.equal(classAttribute('<div class="">'), '');
+  assert.equal(classAttribute('<div data-class="state-switcher">'), null, 'data-class is not the class attribute');
+  assert.equal(classAttribute('<div hidden>'), null);
+});
+
+test('a class attribute quoted inside another attribute value is not a class attribute', () => {
+  // `title="contains class=toolbar"` holds the substring `class=toolbar` without carrying a class
+  // attribute at all. Reading the tag as searchable text returned `toolbar"` as its class, so an
+  // element the demo meant to keep was stripped as chrome along with everything inside it.
+  assert.equal(classAttribute('<main title="contains class=toolbar">'), null);
+  assert.equal(classAttribute("<main title='contains class=\"toolbar\"'>"), null);
+  assert.equal(classAttribute('<main data-note="class=state-switcher">'), null);
+  assert.deepEqual(
+    [...attributesOf(`<div class = 'board toolbar' hidden title="x class=toolbar" data-class="state-switcher">`)],
+    [['class', 'board toolbar'], ['hidden', ''], ['title', 'x class=toolbar'], ['data-class', 'state-switcher']],
+  );
+});
+
+test('an element whose attribute value mentions a chrome class keeps its copy', () => {
+  const main = '<main title="contains class=toolbar"><h1>Retain me</h1></main>';
+  const cases = {
+    'double-quoted mention of an unquoted class': main,
+    'single-quoted mention of a double-quoted class': `<main title='contains class="toolbar"'><h1>Retain me</h1></main>`,
+    'mention of a single-quoted state switcher': `<main data-note="class='state-switcher'"><h1>Retain me</h1></main>`,
+    'mention of a comparison grid': '<section aria-label="class=comparison-grid"><p>Retain me</p></section>',
+  };
+  for (const [label, html] of Object.entries(cases)) {
+    assert.equal(stripChrome(html), html, `${label} was stripped as chrome`);
+    assert.deepEqual(copyTexts(html).map((entry) => entry.text), ['Retain me'], `${label} lost its copy`);
+  }
+});
+
+test('demo chrome is not read as copy when its class is single-quoted or unquoted', () => {
+  const main = '<main><h1>Reset Your Password</h1><p>Enter the email associated with your account.</p></main>';
+  const cases = {
+    "single-quoted": "<div class='state-switcher'><span>Design States:</span><button>Boards Comparison</button></div>",
+    unquoted: '<div class=state-switcher><span>Design States:</span><button>Boards Comparison</button></div>',
+    'single-quoted comparison grid': "<section class='comparison-grid'><p>Visual Design Reference Comparison</p></section>",
+    'unquoted toolbar': '<aside class=toolbar><button>Switch board</button></aside>',
+  };
+  for (const [label, chrome] of Object.entries(cases)) {
+    const texts = copyTexts(`${chrome}${main}`).map((entry) => entry.text);
+    assert.deepEqual(texts, ['Reset Your Password', 'Enter the email associated with your account.'], `${label} chrome leaked into the copy`);
+  }
+});
+
+test('a tag spelled inside an attribute value is not a nested element of the chrome container', () => {
+  // The depth walk looked for nested same-name tags with a quote-blind `[^>]*`, so the `<div>` typed
+  // inside `title="x > <div>"` counted as a real child. The depth then never returned to zero before
+  // the document ended, and the strip ran to the end of the file, taking the archetype's own <main> and
+  // its copy with it - which reads as "the target has no copy" rather than as a parser bug.
+  const main = '<main><h1>Retain me</h1></main>';
+  const cases = {
+    'a tag and a `>` in a double-quoted attribute': `<div class="toolbar"><div title="x > <div>"></div></div>${main}`,
+    'a tag in a single-quoted attribute': `<div class='toolbar'><div title='<div>'></div></div>${main}`,
+    'a close tag in an attribute': `<div class="toolbar"><div title="</div>"></div></div>${main}`,
+    'a look-alike of the container spelled in a child attribute': `<section class="comparison-grid"><div title="<section>"><p>ctrl</p></div></section>${main}`,
+  };
+  for (const [label, html] of Object.entries(cases)) {
+    assert.equal(stripChrome(html), main, `${label} stripped past the chrome container`);
+    assert.deepEqual(copyTexts(html).map((entry) => entry.text), ['Retain me'], `${label} lost the copy after the chrome`);
+  }
+});
+
+test('a genuinely nested element of the chrome container name is still stripped with it', () => {
+  // Reading tags as a stream must not go the other way and stop at the first close tag, leaving the
+  // container's own tail behind as if it were copy.
+  const main = '<main><h1>Retain me</h1></main>';
+  const cases = {
+    'nested same-name child': `<div class="toolbar"><div><span>ctrl</span></div></div>${main}`,
+    'nested same-name child with a look-alike tag in its attribute': `<div class="toolbar"><div title="<div>"><div>ctrl</div></div></div>${main}`,
+    'nested chrome within chrome': `<div class="toolbar"><div class="toolbar">inner</div><span>ctrl</span></div>${main}`,
+  };
+  for (const [label, html] of Object.entries(cases)) {
+    assert.equal(stripChrome(html), main, `${label} was not stripped to the container's end`);
+    assert.deepEqual(copyTexts(html).map((entry) => entry.text), ['Retain me'], `${label} leaked chrome into the copy`);
+  }
+});
+
+test('a single-quoted class on a content element still keeps its own copy', () => {
+  // The stripping must stay confined to chrome: widening the class match must not start dropping the
+  // archetype's own elements when the demo happens to quote them with single quotes.
+  const texts = copyTexts("<main class='page'><h1 class='title'>Reset Your Password</h1><p>Enter your email.</p></main>")
+    .map((entry) => entry.text);
+  assert.deepEqual(texts, ['Reset Your Password', 'Enter your email.']);
 });
 
 test('the store can only ever be written inside assets/ and docs/', () => {

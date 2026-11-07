@@ -81,6 +81,52 @@ export function stripBlocks(html, tag) {
 }
 
 /**
+ * An opening tag's attributes, read pairwise so a quoted value is stepped over as one token.
+ *
+ * A tag's text cannot be searched for the substring `class=`: `<main title="contains class=toolbar">`
+ * carries no class attribute at all, yet a substring match reads `toolbar"` as its class value and the
+ * element is stripped as chrome. Values are therefore consumed by their own quoted (or unquoted) branch,
+ * which is what keeps the contents of another attribute's value out of the attribute list.
+ */
+const ATTRIBUTE = /([^\s"'>/=]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/g;
+
+/** Attributes of an opening tag as name → value; a tag name is not an attribute and duplicates keep the first. */
+export function attributesOf(tagText) {
+  const attributes = new Map();
+  const tagName = /^<\s*[a-zA-Z][a-zA-Z0-9-]*/.exec(tagText);
+  ATTRIBUTE.lastIndex = tagName ? tagName[0].length : 0;
+  let match;
+  while ((match = ATTRIBUTE.exec(tagText)) !== null) {
+    const name = match[1].toLowerCase();
+    if (!attributes.has(name)) attributes.set(name, match[2] ?? match[3] ?? match[4] ?? '');
+  }
+  return attributes;
+}
+
+/**
+ * One tag, opening or closing, with its name in group 1.
+ *
+ * The attribute branch steps over a quoted value as one token, so a tag ends at the first `>` that is
+ * genuinely outside its attributes. A quote-blind `<div[^>]*>` instead stops inside `title="x > <div>"`
+ * and leaves the rest of the value looking like markup, which is how `stripChrome` used to see a phantom
+ * child element and run out of document before its depth count reached zero.
+ */
+const TAG = /<\/?([a-z][a-z0-9-]*)\b(?:[^>"']|"[^"]*"|'[^']*')*>/i;
+
+/**
+ * The value of a tag's `class` attribute, whichever way the document spells it.
+ *
+ * HTML permits `class="demo-chrome"`, `class='demo-chrome'` and `class=demo-chrome`. Matching only the
+ * double-quoted spelling meant the other two were not recognised as an element's class at all, so a
+ * chrome container written that way survived the strip and its control labels were extracted as the
+ * archetype's own copy.
+ */
+export function classAttribute(tagText) {
+  const classes = attributesOf(tagText).get('class');
+  return classes === undefined ? null : classes;
+}
+
+/**
  * Remove an element whose opening tag carries a chrome class, with everything inside it.
  *
  * Depth-aware rather than a regex, because a greedy match would swallow the rest of the document and a
@@ -91,19 +137,25 @@ export function stripBlocks(html, tag) {
 export function stripChrome(html) {
   let out = html;
   for (;;) {
-    const open = /<([a-z]+)\b[^>]*class="[^"]*"[^>]*>/gi;
+    // One stream of tags, each ending at the first `>` outside a quoted value. Reading the document as
+    // tags rather than as searchable text is what keeps `title="contains class=toolbar"` from turning
+    // into a chrome element, and keeps a look-alike `<div>` inside any attribute value from counting.
+    const tags = new RegExp(TAG.source, 'gi');
     let match;
     let removed = false;
-    while ((match = open.exec(out)) !== null) {
+    while ((match = tags.exec(out)) !== null) {
       const [tagText, tagName] = match;
-      if (!/class="([^"]*)"/.test(tagText) || !DEMO_CHROME_CLASS.test(/class="([^"]*)"/.exec(tagText)[1])) continue;
-      // Walk forward counting same-name opens and closes to find this element's end.
-      const scanner = new RegExp(`<${tagName}\\b[^>]*>|</${tagName}\\s*>`, 'gi');
-      scanner.lastIndex = match.index + tagText.length;
+      if (tagText.startsWith('</')) continue;
+      const classes = classAttribute(tagText);
+      if (classes === null || !DEMO_CHROME_CLASS.test(classes)) continue;
+      // Keep walking the same tag stream, counting only this element's own name, to find its end. A tag
+      // spelled inside an attribute value is part of the tag holding it and never reaches this stream, so
+      // the count follows the real nesting.
       let depth = 1;
-      let step;
       let end = -1;
-      while ((step = scanner.exec(out)) !== null) {
+      let step;
+      while ((step = tags.exec(out)) !== null) {
+        if (step[1].toLowerCase() !== tagName.toLowerCase()) continue;
         if (step[0].startsWith('</')) depth -= 1;
         else depth += 1;
         if (depth === 0) {
