@@ -104,6 +104,16 @@ export function attributesOf(tagText) {
 }
 
 /**
+ * One tag, opening or closing, with its name in group 1.
+ *
+ * The attribute branch steps over a quoted value as one token, so a tag ends at the first `>` that is
+ * genuinely outside its attributes. A quote-blind `<div[^>]*>` instead stops inside `title="x > <div>"`
+ * and leaves the rest of the value looking like markup, which is how `stripChrome` used to see a phantom
+ * child element and run out of document before its depth count reached zero.
+ */
+const TAG = /<\/?([a-z][a-z0-9-]*)\b(?:[^>"']|"[^"]*"|'[^']*')*>/i;
+
+/**
  * The value of a tag's `class` attribute, whichever way the document spells it.
  *
  * HTML permits `class="demo-chrome"`, `class='demo-chrome'` and `class=demo-chrome`. Matching only the
@@ -127,22 +137,25 @@ export function classAttribute(tagText) {
 export function stripChrome(html) {
   let out = html;
   for (;;) {
-    // A tag ends at the first `>` outside a quoted value, so `title="contains class=toolbar"` stays one
-    // tag whose class attribute is genuinely absent rather than a chrome element with class `toolbar"`.
-    const open = /<([a-z][a-z0-9-]*)\b(?:[^>"']|"[^"]*"|'[^']*')*>/gi;
+    // One stream of tags, each ending at the first `>` outside a quoted value. Reading the document as
+    // tags rather than as searchable text is what keeps `title="contains class=toolbar"` from turning
+    // into a chrome element, and keeps a look-alike `<div>` inside any attribute value from counting.
+    const tags = new RegExp(TAG.source, 'gi');
     let match;
     let removed = false;
-    while ((match = open.exec(out)) !== null) {
+    while ((match = tags.exec(out)) !== null) {
       const [tagText, tagName] = match;
+      if (tagText.startsWith('</')) continue;
       const classes = classAttribute(tagText);
       if (classes === null || !DEMO_CHROME_CLASS.test(classes)) continue;
-      // Walk forward counting same-name opens and closes to find this element's end.
-      const scanner = new RegExp(`<${tagName}\\b[^>]*>|</${tagName}\\s*>`, 'gi');
-      scanner.lastIndex = match.index + tagText.length;
+      // Keep walking the same tag stream, counting only this element's own name, to find its end. A tag
+      // spelled inside an attribute value is part of the tag holding it and never reaches this stream, so
+      // the count follows the real nesting.
       let depth = 1;
-      let step;
       let end = -1;
-      while ((step = scanner.exec(out)) !== null) {
+      let step;
+      while ((step = tags.exec(out)) !== null) {
+        if (step[1].toLowerCase() !== tagName.toLowerCase()) continue;
         if (step[0].startsWith('</')) depth -= 1;
         else depth += 1;
         if (depth === 0) {

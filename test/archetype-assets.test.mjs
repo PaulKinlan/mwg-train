@@ -275,6 +275,39 @@ test('demo chrome is not read as copy when its class is single-quoted or unquote
   }
 });
 
+test('a tag spelled inside an attribute value is not a nested element of the chrome container', () => {
+  // The depth walk looked for nested same-name tags with a quote-blind `[^>]*`, so the `<div>` typed
+  // inside `title="x > <div>"` counted as a real child. The depth then never returned to zero before
+  // the document ended, and the strip ran to the end of the file, taking the archetype's own <main> and
+  // its copy with it - which reads as "the target has no copy" rather than as a parser bug.
+  const main = '<main><h1>Retain me</h1></main>';
+  const cases = {
+    'a tag and a `>` in a double-quoted attribute': `<div class="toolbar"><div title="x > <div>"></div></div>${main}`,
+    'a tag in a single-quoted attribute': `<div class='toolbar'><div title='<div>'></div></div>${main}`,
+    'a close tag in an attribute': `<div class="toolbar"><div title="</div>"></div></div>${main}`,
+    'a look-alike of the container spelled in a child attribute': `<section class="comparison-grid"><div title="<section>"><p>ctrl</p></div></section>${main}`,
+  };
+  for (const [label, html] of Object.entries(cases)) {
+    assert.equal(stripChrome(html), main, `${label} stripped past the chrome container`);
+    assert.deepEqual(copyTexts(html).map((entry) => entry.text), ['Retain me'], `${label} lost the copy after the chrome`);
+  }
+});
+
+test('a genuinely nested element of the chrome container name is still stripped with it', () => {
+  // Reading tags as a stream must not go the other way and stop at the first close tag, leaving the
+  // container's own tail behind as if it were copy.
+  const main = '<main><h1>Retain me</h1></main>';
+  const cases = {
+    'nested same-name child': `<div class="toolbar"><div><span>ctrl</span></div></div>${main}`,
+    'nested same-name child with a look-alike tag in its attribute': `<div class="toolbar"><div title="<div>"><div>ctrl</div></div></div>${main}`,
+    'nested chrome within chrome': `<div class="toolbar"><div class="toolbar">inner</div><span>ctrl</span></div>${main}`,
+  };
+  for (const [label, html] of Object.entries(cases)) {
+    assert.equal(stripChrome(html), main, `${label} was not stripped to the container's end`);
+    assert.deepEqual(copyTexts(html).map((entry) => entry.text), ['Retain me'], `${label} leaked chrome into the copy`);
+  }
+});
+
 test('a single-quoted class on a content element still keeps its own copy', () => {
   // The stripping must stay confined to chrome: widening the class match must not start dropping the
   // archetype's own elements when the demo happens to quote them with single quotes.
