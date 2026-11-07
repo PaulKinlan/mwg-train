@@ -81,6 +81,21 @@ export function stripBlocks(html, tag) {
 }
 
 /**
+ * The value of a tag's `class` attribute, whichever way the document spells it.
+ *
+ * HTML permits `class="demo-chrome"`, `class='demo-chrome'` and `class=demo-chrome`. Matching only the
+ * double-quoted spelling meant the other two were not recognised as an element's class at all, so a
+ * chrome container written that way survived the strip and its control labels were extracted as the
+ * archetype's own copy.
+ */
+const CLASS_ATTRIBUTE = /(?:^|\s)class\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i;
+
+export function classAttribute(tagText) {
+  const match = CLASS_ATTRIBUTE.exec(tagText);
+  return match ? (match[1] ?? match[2] ?? match[3]) : null;
+}
+
+/**
  * Remove an element whose opening tag carries a chrome class, with everything inside it.
  *
  * Depth-aware rather than a regex, because a greedy match would swallow the rest of the document and a
@@ -91,12 +106,15 @@ export function stripBlocks(html, tag) {
 export function stripChrome(html) {
   let out = html;
   for (;;) {
-    const open = /<([a-z]+)\b[^>]*class="[^"]*"[^>]*>/gi;
+    // Only tags that carry a `class` attribute can be chrome. The attribute name is anchored to
+    // whitespace so `data-class=...` is not read as one.
+    const open = /<([a-z]+)\b[^>]*?\sclass\s*=[^>]*>/gi;
     let match;
     let removed = false;
     while ((match = open.exec(out)) !== null) {
       const [tagText, tagName] = match;
-      if (!/class="([^"]*)"/.test(tagText) || !DEMO_CHROME_CLASS.test(/class="([^"]*)"/.exec(tagText)[1])) continue;
+      const classes = classAttribute(tagText);
+      if (classes === null || !DEMO_CHROME_CLASS.test(classes)) continue;
       // Walk forward counting same-name opens and closes to find this element's end.
       const scanner = new RegExp(`<${tagName}\\b[^>]*>|</${tagName}\\s*>`, 'gi');
       scanner.lastIndex = match.index + tagText.length;

@@ -19,6 +19,7 @@ import {
   archetypeIds,
   assertWritable,
   buildAll,
+  classAttribute,
   copyTexts,
   extractTokens,
   inspectCommitted,
@@ -216,6 +217,41 @@ test('the demo own controls are not read as the archetype copy', () => {
     <main><h1>Reset Your Password</h1><p>Enter the email associated with your account.</p></main>`;
   const texts = copyTexts(html).map((entry) => entry.text);
   assert.deepEqual(texts, ['Reset Your Password', 'Enter the email associated with your account.']);
+});
+
+test('a class attribute is read in all three HTML spellings', () => {
+  // HTML permits all three, so chrome detection cannot depend on the demos having picked one. This was a
+  // real defect: a single-quoted or unquoted toolbar class was not seen at all, so its control labels
+  // were extracted as the archetype's own copy.
+  assert.equal(classAttribute('<div class="state-switcher">'), 'state-switcher');
+  assert.equal(classAttribute("<div class='state-switcher'>"), 'state-switcher');
+  assert.equal(classAttribute('<div class=state-switcher>'), 'state-switcher');
+  assert.equal(classAttribute('<div  class = "board toolbar"  hidden>'), 'board toolbar');
+  assert.equal(classAttribute('<div class="">'), '');
+  assert.equal(classAttribute('<div data-class="state-switcher">'), null, 'data-class is not the class attribute');
+  assert.equal(classAttribute('<div hidden>'), null);
+});
+
+test('demo chrome is not read as copy when its class is single-quoted or unquoted', () => {
+  const main = '<main><h1>Reset Your Password</h1><p>Enter the email associated with your account.</p></main>';
+  const cases = {
+    "single-quoted": "<div class='state-switcher'><span>Design States:</span><button>Boards Comparison</button></div>",
+    unquoted: '<div class=state-switcher><span>Design States:</span><button>Boards Comparison</button></div>',
+    'single-quoted comparison grid': "<section class='comparison-grid'><p>Visual Design Reference Comparison</p></section>",
+    'unquoted toolbar': '<aside class=toolbar><button>Switch board</button></aside>',
+  };
+  for (const [label, chrome] of Object.entries(cases)) {
+    const texts = copyTexts(`${chrome}${main}`).map((entry) => entry.text);
+    assert.deepEqual(texts, ['Reset Your Password', 'Enter the email associated with your account.'], `${label} chrome leaked into the copy`);
+  }
+});
+
+test('a single-quoted class on a content element still keeps its own copy', () => {
+  // The stripping must stay confined to chrome: widening the class match must not start dropping the
+  // archetype's own elements when the demo happens to quote them with single quotes.
+  const texts = copyTexts("<main class='page'><h1 class='title'>Reset Your Password</h1><p>Enter your email.</p></main>")
+    .map((entry) => entry.text);
+  assert.deepEqual(texts, ['Reset Your Password', 'Enter your email.']);
 });
 
 test('the store can only ever be written inside assets/ and docs/', () => {
