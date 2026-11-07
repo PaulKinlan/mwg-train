@@ -29,7 +29,9 @@ export async function scoreDefaultFamily({ family, archiveRoot, evidenceRoot }) 
   if (!selected || selected.eligibility !== 'ELIGIBLE') throw Error('GENERATION_QUARANTINE: no runnable default for family');
   const archived = tranche.run_records.find((row) => row.family === family);
   const source = verifyArchiveFamily({ archiveRoot, row: archived });
-  requireCorpusSandbox();
+  // The tier this receipt is entitled to claim, taken from the launcher that will stamp it rather than repeated as a
+  // literal: 'bubblewrap' is the fully isolated corpus tier, not the shared-network eval one (mwg-train-7nji).
+  const corpusMechanism = requireCorpusSandbox();
   const instrumentSha256 = step4InstrumentDigest(root);
   const evidence = assertPrivateArchiveRoot(evidenceRoot, { sourceRoot: resolve(archiveRoot) });
   mkdirSync(evidence, { recursive: true, mode: 0o700 });
@@ -40,7 +42,7 @@ export async function scoreDefaultFamily({ family, archiveRoot, evidenceRoot }) 
   try {
     const port = await availablePort();
     server = await startServer(source.project, { port });
-    if (server.mechanism !== 'bubblewrap') throw Error('SANDBOX_UNAVAILABLE: generated server has no bubblewrap receipt');
+    if (server.mechanism !== corpusMechanism) throw Error('SANDBOX_UNAVAILABLE: generated server has no bubblewrap receipt');
     chrome = await launchChrome();
     page = await chrome.newPage({ viewport: { width: 1376, height: 768 } });
     const base = `http://127.0.0.1:${port}`;

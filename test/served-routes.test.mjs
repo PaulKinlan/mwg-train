@@ -18,7 +18,7 @@ import {
   extractUnservedRoutes,
 } from '../scripts/check-served-gap.mjs';
 import { probeProject, RedirectTargetError, resolveRecordRedirect, runVerdict } from '../scripts/check-served-routes.mjs';
-import { sandboxAvailable } from '../src/eval/generated-server.mjs';
+import { GENERATED_SERVER_SANDBOX_MECHANISM, sandboxAvailable } from '../src/eval/generated-server.mjs';
 
 const ROOT = resolve(import.meta.dirname, '..');
 const SCRIPT = join(ROOT, 'scripts', 'check-served-routes.mjs');
@@ -902,8 +902,8 @@ test('the emitted route report names the containment the probe launched under', 
     assert.equal(emitted.summary.served, 2, 'and routes that really served');
     assert.deepEqual(
       emitted.projects[0].sandboxPosture,
-      { mechanism: 'bubblewrap', optIn: null },
-      'the emitted report must state the containment the probe launched, and a contained run names no opt-in',
+      { mechanism: GENERATED_SERVER_SANDBOX_MECHANISM, optIn: null },
+      'the emitted report must state the containment the probe launched - the shared-network tier, not the corpus one - and a contained run names no opt-in',
     );
   } finally {
     rmSync(root, { recursive: true, force: true });

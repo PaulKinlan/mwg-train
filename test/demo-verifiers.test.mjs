@@ -7,7 +7,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { sandboxAvailable } from '../src/eval/generated-server.mjs';
+import { GENERATED_SERVER_SANDBOX_MECHANISM, sandboxAvailable } from '../src/eval/generated-server.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -107,8 +107,8 @@ test('a verifier report states the containment it launched under', async (t) => 
   const report = await pricingVerifierReport(shots);
   assert.deepEqual(
     report.sandboxPosture,
-    { mechanism: 'bubblewrap', optIn: null },
-    'the emitted report must name the containment the verifier launched, and a contained run names no opt-in',
+    { mechanism: GENERATED_SERVER_SANDBOX_MECHANISM, optIn: null },
+    'the emitted report must name the containment the verifier launched - the shared-network tier, not the corpus one - and a contained run names no opt-in',
   );
 });
 

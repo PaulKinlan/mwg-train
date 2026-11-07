@@ -7,6 +7,7 @@ import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import { startServer } from '../src/corpus/harness.mjs';
+import { CORPUS_SANDBOX_MECHANISM } from '../src/corpus/sandbox.mjs';
 import { launchChrome } from '../src/corpus/cdp.mjs';
 import { liveSliceTimeoutVerdict } from '../src/eval/live-slice-verdict.mjs';
 
@@ -33,7 +34,9 @@ const base = `http://127.0.0.1:${port}`;
 const text = (page) => page.evaluate('return document.body.innerText');
 try {
   server = await start(project, { port });
-  assert.equal(server.mechanism, 'bubblewrap');
+  // The isolated corpus tier by name: the eval launcher's shared-network posture is a different, weaker receipt
+  // (mwg-train-7nji), and this slice claims the fully unshared one.
+  assert.equal(server.mechanism, CORPUS_SANDBOX_MECHANISM);
   chrome = await launch();
   const page = await chrome.newPage({ viewport: { width: 1280, height: 900 } });
   await page.goto(`${base}/`);

@@ -13,8 +13,10 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import test from 'node:test';
 
+import { CORPUS_SANDBOX_MECHANISM } from '../src/corpus/sandbox.mjs';
 import {
   GENERATED_SERVER_ENV_ALLOWLIST,
+  GENERATED_SERVER_SANDBOX_MECHANISM,
   generatedServerEnv,
   sandboxArgs,
   sandboxAvailable,
@@ -159,7 +161,7 @@ test('a generated server cannot read the operator environment out of /proc', asy
   let child = null;
   try {
     child = startGeneratedServer({ projectDir: dir, port: 0, dbPath: join(dbDir, 'x.sqlite') });
-    assert.deepEqual(child.sandboxPosture, { mechanism: 'bubblewrap', optIn: null },
+    assert.deepEqual(child.sandboxPosture, { mechanism: GENERATED_SERVER_SANDBOX_MECHANISM, optIn: null },
       'the handle the real launch returns states the containment the launch enforced (mwg-train-hogz)');
     await waitForFile(reportFile);
     assert.ok(existsSync(reportFile), 'the generated server ran inside the sandbox and reported what it saw');
@@ -276,7 +278,7 @@ const withEnv = (t, values) => {
   });
 };
 
-test('a sandboxed launch reports bubblewrap on the handle it returns',
+test('a sandboxed launch reports the shared-network bubblewrap tier on the handle it returns',
   { skip: process.platform !== 'linux' ? "the sandbox branch needs Linux's bubblewrap" : false }, (t) => {
     // MWG_BWRAP_PATH only has to exist for sandboxAvailable() to pick the branch; the spawn is stubbed, so no
     // generated code runs and the assertion is about the receipt, not about a server that happened to start.
@@ -287,10 +289,40 @@ test('a sandboxed launch reports bubblewrap on the handle it returns',
     withEnv(t, { MWG_BWRAP_PATH: fakeBwrap });
     const { calls, spawnImpl } = capturingSpawn();
     const child = startGeneratedServer({ projectDir: dir, port: 1, dbPath: join(dir, 'x.sqlite'), spawnImpl });
-    assert.deepEqual(child.sandboxPosture, { mechanism: 'bubblewrap', optIn: null });
+    assert.deepEqual(child.sandboxPosture, { mechanism: GENERATED_SERVER_SANDBOX_MECHANISM, optIn: null });
     assert.equal(calls.length, 1);
     assert.equal(calls[0].command, fakeBwrap, 'the disclosed mechanism must be the process that was launched');
     assert.ok(calls[0].args.includes('--unshare-pid'), 'and it must be the namespace that contains the server');
+  });
+
+test('the eval launch and the corpus launch name distinct containment tiers (mwg-train-7nji)',
+  { skip: process.platform !== 'linux' ? "the sandbox branch needs Linux's bubblewrap" : false }, (t) => {
+    // Both launchers run bubblewrap, and stamping plain 'bubblewrap' for both made a verification report, a step-4
+    // receipt and a corpus row unable to say which containment they described: the corpus launcher unshares every
+    // namespace and mounts no repository, while this one keeps the host network namespace - the prober reaches the
+    // server over loopback - and mounts the repository read-only for in-repo projects.
+    const dir = mkdtempSync(join(tmpdir(), 'generated-receipt-tier-'));
+    t.after(() => rmSync(dir, { recursive: true, force: true }));
+    const fakeBwrap = join(dir, 'bwrap');
+    writeFileSync(fakeBwrap, '#!/bin/sh\nexit 0\n', { mode: 0o700 });
+    withEnv(t, { MWG_BWRAP_PATH: fakeBwrap });
+    const { calls, spawnImpl } = capturingSpawn();
+    const child = startGeneratedServer({ projectDir: dir, port: 1, dbPath: join(dir, 'x.sqlite'), spawnImpl });
+
+    // The two receipts a run can carry, pinned literally: renaming either tier has to be a reviewed decision, not a
+    // quiet drift that puts the two postures back under one label.
+    assert.equal(child.sandboxPosture.mechanism, 'bubblewrap-shared-net');
+    assert.equal(CORPUS_SANDBOX_MECHANISM, 'bubblewrap');
+    assert.notEqual(
+      child.sandboxPosture.mechanism,
+      CORPUS_SANDBOX_MECHANISM,
+      'a report that reads the same string for both tiers cannot distinguish a fully isolated run from an eval run',
+    );
+
+    // And the name has to describe the launch rather than decorate it: the network namespace is NOT unshared here,
+    // which is exactly what the corpus tier does unshare.
+    assert.ok(!calls[0].args.includes('--unshare-net'), 'the shared-network tier must not unshare the network');
+    assert.ok(!calls[0].args.includes('--unshare-all'), "and must not claim the corpus tier's namespace set");
   });
 
 test('an opted-in host launch names the variable that allowed it, not just an unsandboxed process', (t) => {

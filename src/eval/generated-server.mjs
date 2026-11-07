@@ -38,6 +38,18 @@ const DEFAULT_MEMORY_MB = 512;
 /** The variable that lets a host run generated code without the namespace sandbox. Named in the launch receipt. */
 const SANDBOX_OPT_IN_VARIABLE = 'MWG_ALLOW_UNSANDBOXED_GENERATED_SERVER';
 
+/**
+ * The mechanism this launcher stamps: bubblewrap, at the SHARED-NETWORK tier of it (mwg-train-7nji).
+ *
+ * The namespaces are not all unshared here. The prober and the verifier scripts reach these servers over host
+ * loopback, so the host network namespace stays (see the module comment), and a project inside the repository has
+ * the whole repository mounted read-only so its harness can walk up to its inputs. That is a weaker posture than
+ * `src/corpus/sandbox.mjs`, which launches with `--unshare-all` and mounts no repository and records
+ * `CORPUS_SANDBOX_MECHANISM`. Stamping plain 'bubblewrap' for both left a verification report, a step-4 receipt and
+ * a corpus row unable to say which of the two containments it measured.
+ */
+export const GENERATED_SERVER_SANDBOX_MECHANISM = 'bubblewrap-shared-net';
+
 /** Mitigation only: V8 old-space does NOT bound RSS, Buffers/native allocations or child processes. */
 export function generatedServerMemoryMb(value = process.env.MWG_GENERATED_SERVER_MEMORY_MB) {
   if (value === undefined) return DEFAULT_MEMORY_MB;
@@ -64,9 +76,11 @@ function memoryStatus(child, memoryMb, hasPrivateTmp) {
  *
  * A warning on stderr is not a receipt: a verifier that records its own output never sees it, and a passing run looks
  * the same whether generated code ran behind a PID namespace or beside the operator's processes. `mechanism` names
- * what contained the server - 'bubblewrap' - or what did not: 'host-opt-in' for a launch the operator allowed with
- * SANDBOX_OPT_IN_VARIABLE, 'host-prefer' for the test-side fallback that needs no variable at all. `optIn` names the
- * variable that allowed a host run and is null whenever the server was contained.
+ * what contained the server - GENERATED_SERVER_SANDBOX_MECHANISM, this launcher's shared-network bubblewrap tier,
+ * which is deliberately not the string `src/corpus/sandbox.mjs` stamps for its fully isolated tier - or what did not:
+ * 'host-opt-in' for a launch the operator allowed with SANDBOX_OPT_IN_VARIABLE, 'host-prefer' for the test-side
+ * fallback that needs no variable at all. `optIn` names the variable that allowed a host run and is null whenever the
+ * server was contained.
  *
  * The field is `sandboxPosture` rather than the Chrome handle's `sandbox` because a server handle already uses that
  * word for its sandbox process (src/corpus/sandbox.mjs), and a lookup that can silently read the wrong object is the
@@ -221,7 +235,7 @@ export function startGeneratedServer({
       detached,
       env: generatedServerEnv(),
     });
-    return discloseSandboxPosture(memoryStatus(child, memoryMb, true), 'bubblewrap');
+    return discloseSandboxPosture(memoryStatus(child, memoryMb, true), GENERATED_SERVER_SANDBOX_MECHANISM);
   }
   // 'prefer' is the test-side policy (mwg-train-pdsb): the unit suites have to run on a machine with no
   // bubblewrap, so the sandbox is used when it is there and the allowlisted environment is the floor when it is
