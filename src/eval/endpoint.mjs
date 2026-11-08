@@ -56,8 +56,10 @@ export function briefPasses(result, requiredRules) {
   for (const blocker of BLOCKER_CHECKS) {
     // Fail closed: a result that never recorded the accessibility or security finding count has not
     // demonstrated zero findings, and defaulting a missing count to 0 would let an unevaluated
-    // blocker pass the endpoint.
-    if (typeof result[blocker] !== 'number' || !Number.isFinite(result[blocker]) || result[blocker] > 0) return false;
+    // blocker pass the endpoint. The count must be exactly zero, not merely "not positive":
+    // `blockerFlagged` treats every measured value other than 0 as a finding, so a negative count
+    // accepted here would pass the endpoint while counting against the arm in the §4 comparison.
+    if (result[blocker] !== 0) return false;
   }
   return true;
 }
