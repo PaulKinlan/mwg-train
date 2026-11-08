@@ -371,10 +371,19 @@ test('the launch refuses to run generated code unsandboxed rather than quietly d
 });
 
 // Files that start a generated server with a deliberate exception, each with the owner and the reason. An entry
-// here is a debt, not an exemption: the same test fails if the file is FIXED without removing the entry, so this
-// list can only shrink by someone doing the work.
-const KNOWN_UNFIXED = {
-  'src/corpus/harness.mjs': 'mwg-train-i5i2.5 (owner: mwg-train-hud) - the harness sandbox bead; it starts servers itself until that lands',
+// here is a debt, not an exemption: the test below fails when a listed file stops starting a server directly, so an
+// entry cannot outlive the defect it was filed for and the list can only shrink by someone doing the work. Empty
+// today (src/corpus/harness.mjs went through startCorpusSandbox); a new entry needs an owner and a reason.
+const KNOWN_UNFIXED = {};
+
+// Not debt, and not expiring by doing the work: the one launch that has to stay unsandboxed.
+// test/corpus-sandbox.test.mjs runs the same generated project twice - once through the launcher, once through a
+// hand-rolled spawn - and the second is the positive control. A control routed through the sandbox could not show
+// that the sandbox denials mean anything, so it is exempt by path. It still has to keep matching a call site, the
+// same as KNOWN_UNFIXED, because a control with no unsandboxed launch is no longer a control.
+const DELIBERATE_UNSANDBOXED = {
+  'test/corpus-sandbox.test.mjs':
+    'the positive control for the sandbox denials: an unsandboxed launch of the same project is what it measures against',
 };
 
 // The test tree is scanned too (mwg-train-pdsb): every unit suite used to launch arms with its own inline spawn, so
@@ -420,13 +429,12 @@ test('every call site that starts a generated server goes through the sandbox', 
       if (relative.endsWith('.mjs')) files.push(relative);
     }
   }
+  const waived = new Set();
   for (const relative of files.sort()) {
     const callSites = startsGeneratedServer(readFileSync(join(ROOT, relative), 'utf8'));
     if (callSites.length === 0) continue;
-    const exempt = KNOWN_UNFIXED[relative];
-    if (exempt) {
-      // Both directions, so the list cannot rot: a fixed exception must be removed from it, or this fails.
-      assert.ok(callSites.length > 0, `${relative} is listed as a known exception (${exempt})`);
+    if (KNOWN_UNFIXED[relative] || DELIBERATE_UNSANDBOXED[relative]) {
+      waived.add(relative);
       continue;
     }
     for (const site of callSites) offenders.push(`${relative}:${site.line}`);
@@ -436,5 +444,18 @@ test('every call site that starts a generated server goes through the sandbox', 
     [],
     'these spawn a generated server directly instead of through startGeneratedServer (src/eval/generated-server.mjs), ' +
       'so the sandbox is bypassed:\n  ' + offenders.join('\n  '),
+  );
+
+  // The other direction, which a file with zero matching calls could never report: a waiver whose file no longer
+  // starts a generated server directly has outlived its reason. Left in place it would let that same file start one
+  // again without anyone re-opening the decision, so a stale waiver fails here instead of waiting to be noticed.
+  const stale = [...Object.keys(KNOWN_UNFIXED), ...Object.keys(DELIBERATE_UNSANDBOXED)].filter(
+    (relative) => !waived.has(relative),
+  );
+  assert.deepEqual(
+    stale,
+    [],
+    'these are waived from the sandbox scan but no longer start a generated server directly, so the waiver has ' +
+      'outlived its reason and must be removed:\n  ' + stale.join('\n  '),
   );
 });
