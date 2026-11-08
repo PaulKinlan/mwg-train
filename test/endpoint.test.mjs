@@ -305,6 +305,15 @@ test('a result without explicit blocker counts does not pass the endpoint', () =
   assert.equal(briefPasses({ ...noBlockers, blocker_accessibility: 1, blocker_security: 0 }, ['accessibility/accessibility']), false);
 });
 
+test('a negative blocker count is not a measured zero', () => {
+  // "Not positive" is not "none": `blockerFlagged` treats every measured value other than 0 as a
+  // finding, so a pass rule that only rejected positive counts let a negative one through here while
+  // still counting against its arm in the §4 comparison.
+  const rules = ['accessibility/accessibility'];
+  assert.equal(briefPasses(result('b', 'T', { blocker_accessibility: -1 }), rules), false, 'negative a11y count must fail');
+  assert.equal(briefPasses(result('b', 'T', { blocker_security: -1 }), rules), false, 'negative security count must fail');
+});
+
 test('the universe the verdict is computed over is checked, not assumed', () => {
   const briefs = [
     { brief_id: 'dev-01', family_id: 'dev-01', split: 'dev', task: 'generate' },
@@ -497,6 +506,21 @@ test('an unrecorded blocker count counts as a finding in the comparison', () => 
   assert.equal(decided.primary.blocker_counts.blocker_accessibility.T_trained_adapter, 1);
   assert.equal(decided.primary.blocker_counts.blocker_accessibility.C1_bare_base, 0);
   assert.ok(decided.primary.blocker_count_cis.blocker_accessibility[0] > 0);
+});
+
+test('a negative blocker count does not pass the primary endpoint', () => {
+  // The endpoint and the comparison have to agree on what "no finding" means. A cell recording -1 for
+  // every brief used to pass the endpoint (the rule only rejected counts above zero) while the same
+  // value registered as a finding, so the arm was rewarded and penalised for one number.
+  const { briefs, results, seal } = sealedFixture({
+    perArm: (arm) => (arm === 'T_trained_adapter' ? { blocker_accessibility: -1 } : {}),
+  });
+  const decided = analyseSealed(results, briefs, { seal, iterations: 20 });
+  assert.equal(decided.ok, true, JSON.stringify(decided.problems));
+  assert.equal(passRate(results, PRIMARY, 'T_trained_adapter'), 0, 'a negative count never passes the endpoint');
+  assert.ok(decided.primary.point < 0, 'an arm whose cells all recorded -1 cannot beat C1 on the primary endpoint');
+  assert.equal(decided.primary.blocker_rates.blocker_accessibility.T_trained_adapter, 1,
+    'the same count is still a finding in the blocker comparison');
 });
 
 test('more findings on the same affected briefs is a negative, not a tie', () => {
